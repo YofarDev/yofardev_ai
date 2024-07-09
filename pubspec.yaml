@@ -1,0 +1,39 @@
+name: yofardev_ai
+description: "A new Flutter project."
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.3 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_tts: ^4.0.2
+  google_generative_ai: ^0.4.3
+  just_audio: ^0.9.38
+  path_provider: ^2.1.3
+  shared_preferences: ^2.2.3
+  audio_analyzer:
+    path: /Users/yofardev/development/Projects/Flutter/PLUGINS/audio_analyzer
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.5
+  nested: ^1.0.0
+  flutter_parsed_text: ^2.2.1
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  lint:
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
+    - assets/sound_effects/
+    - assets/base/
