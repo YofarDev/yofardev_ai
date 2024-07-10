@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_tts: ^4.0.2
   google_generative_ai: ^0.4.3
   just_audio: ^0.9.38
@@ -35,21 +37,16 @@ dev_dependencies:
     sdk: flutter
 
   lint:
-  flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.1
 
 
-flutter_launcher_icons:
-  android: "launcher_icon"
-  image_path: "assets/logo.jpeg"
-  min_sdk_android: 21 # android min sdk min:16, default 21
-
 flutter_native_splash:
-  color: "#436fff"
-  image: "assets/logo.jpeg"
+  color: "#438EFF"
+  image: "assets/splash.png"
   android_12:
-    color: "#436fff"
-    icon_background_color: "#436fff"
+    color: "#438EFF"
+    icon_background_color: "#438EFF"
+    image: "assets/splash.png"
 
  
 

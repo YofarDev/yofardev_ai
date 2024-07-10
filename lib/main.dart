@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
-
 
 import 'logic/chat/chats_cubit.dart';
 import 'logic/talking/talking_cubit.dart';
@@ -26,6 +26,12 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
+        supportedLocales: const <Locale>[Locale('fr')],
+        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,

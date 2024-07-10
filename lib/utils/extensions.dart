@@ -30,7 +30,7 @@ extension RemoveEmojis on String {
 extension DateTimeExtension on DateTime {
   // Format : 'Le 10 mai 2022 à 14h30'
   String toLongLocalDateString() {
-    return DateFormat('EEEE d MMMM yyyy à HH:mm').format(this);
+    return DateFormat('EEEE d MMMM yyyy à HH:mm', 'fr').format(this);
   }
 }
 

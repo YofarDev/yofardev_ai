@@ -173,9 +173,18 @@ class _AiTextInputState extends State<AiTextInput> {
             children: <Widget>[
               if (_speechEnabled)
                 IconButton(
-                  icon: const Icon(Icons.mic),
+                  icon: Icon(
+                    Icons.mic,
+                    color: _speechToText.isListening ? Colors.red : null,
+                  ),
                   onPressed: () async {
-                    await _speechToText.listen(onResult: _onSpeechResult);
+                    if (_speechToText.isListening) {
+                      await _speechToText.stop();
+                    } else {
+                      await _speechToText.listen(
+                          onResult: _onSpeechResult, localeId: 'fr_FR');
+                    }
+                    setState(() {});
                   },
                 ),
               if (_controller.text.isNotEmpty)
@@ -231,12 +240,9 @@ class _AiTextInputState extends State<AiTextInput> {
       );
 
   void _onSpeechResult(SpeechRecognitionResult result) {
-    final StringBuffer sb = StringBuffer();
-    sb.write(_controller.text);
-    sb.write(' ');
-    sb.write(result.recognizedWords);
     setState(() {
-      _controller.text = sb.toString();
+      _controller.text = result.recognizedWords;
+      print(result.recognizedWords);
     });
   }
 }
