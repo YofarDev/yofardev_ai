@@ -36,62 +36,83 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   void setCurrentChat(Chat chat) {
     emit(state.copyWith(currentChat: chat));
+    ChatHistoryService().setCurrentChatId(chat.id);
   }
 
   void setOpenedChat(Chat chat) {
     emit(state.copyWith(openedChat: chat));
   }
 
-  // Text only version
-  void onTextPromptSubmitted(String prompt) async {
-    Chat openedChat = state.openedChat;
-    final List<ChatEntry> entries = openedChat.entries;
-    entries.add(
-      ChatEntry(text: prompt, isFromUser: true, timestamp: DateTime.now()),
+  Future<Map<String, dynamic>> askYofardev(
+    String prompt, {
+    required bool onlyText,
+    String? attachedImage,
+  }) async {
+    Chat chat = onlyText ? state.openedChat : state.currentChat;
+    final List<ChatEntry> entries = <ChatEntry>[...chat.entries];
+    final ChatEntry newUserEntry = ChatEntry(
+      text: prompt,
+      isFromUser: true,
+      timestamp: DateTime.now(),
+      attachedImage: attachedImage ?? '',
     );
-    openedChat = openedChat.copyWith(entries: entries);
+    entries.add(newUserEntry);
+    chat = chat.copyWith(entries: entries);
     emit(
       state.copyWith(
-        openedChat: openedChat,
+        openedChat: onlyText ? chat : null,
+        currentChat: onlyText ? null : chat,
         status: ChatsStatus.typing,
       ),
     );
     final Map<String, dynamic> responseMap =
-        await LlmService().askYofardevAi(prompt, openedChat);
+        await LlmService().askYofardevAi(chat);
     final String answerText =
         "${responseMap['text'] ?? ''} ${(responseMap['annotations'] as List<String>).join(' ')}";
-    entries.add(
-      ChatEntry(
-        text: answerText,
-        isFromUser: false,
-        timestamp: DateTime.now(),
-      ),
+    final ChatEntry newModelEntry = ChatEntry(
+      text: answerText,
+      isFromUser: false,
+      timestamp: DateTime.now(),
     );
-    openedChat = openedChat.copyWith(entries: entries);
-
+    entries.add(newModelEntry);
+    chat = chat.copyWith(entries: entries);
     emit(
       state.copyWith(
-        openedChat: openedChat,
+        openedChat: onlyText ? chat : null,
+        currentChat: onlyText ? null : chat,
         status: ChatsStatus.success,
       ),
     );
-    final List<BgImages> bgs =
-        (responseMap['annotations'] as List<String>).getBgImages();
-    if (bgs.length == 1) {
-      setBgImage(bgs.first);
+    await ChatHistoryService().updateChat(
+      chatId: chat.id,
+      updatedChat: chat,
+    );
+    if (onlyText) {
+      final List<BgImages> bgs =
+          (responseMap['annotations'] as List<String>).getBgImages();
+      if (bgs.length == 1) {
+        setBgImage(bgs.first);
+      }
     }
+    return responseMap;
   }
 
-  void setBgImage(BgImages bgImage) async {
+  void setBgImage(BgImages bgImage, {bool currentOnly = false}) async {
     emit(state.copyWith(status: ChatsStatus.updating));
-    await ChatHistoryService().updateBgImage(state.openedChat.id, bgImage);
-    final Chat chat = state.openedChat.copyWith(bgImages: bgImage);
+    await ChatHistoryService().updateBgImage(
+      currentOnly ? state.currentChat.id : state.openedChat.id,
+      bgImage,
+    );
+    Chat chat = currentOnly ? state.currentChat : state.openedChat;
+    chat = chat.copyWith(bgImages: bgImage);
     emit(
       state.copyWith(
-        openedChat: chat,
+        openedChat: currentOnly ? null : chat,
         currentChat: state.currentChat.id == chat.id
             ? chat
-            : null,
+            : currentOnly
+                ? chat
+                : null,
         status: ChatsStatus.success,
       ),
     );
@@ -104,6 +125,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       state.copyWith(
         chatsList: <Chat>[newChat, ...state.chatsList],
         status: ChatsStatus.success,
+        currentChat: newChat,
       ),
     );
   }

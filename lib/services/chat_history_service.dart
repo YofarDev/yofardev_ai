@@ -2,7 +2,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/bg_images.dart';
 import '../models/chat.dart';
-import '../models/chat_entry.dart';
 
 class ChatHistoryService {
   Future<Chat> createNewChat() async {
@@ -26,22 +25,10 @@ class ChatHistoryService {
 
   Future<void> updateChat({
     required String chatId,
-    required String userPrompt,
-    required String modelResonse,
+    required Chat updatedChat,
   }) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final DateTime now = DateTime.now();
-    Chat? chat = await getChat(chatId);
-    if (chat == null) return;
-    final List<ChatEntry> fullChat = chat.entries;
-    final ChatEntry userEntry =
-        ChatEntry(isFromUser: true, text: userPrompt, timestamp: now);
-    fullChat.add(userEntry);
-    final ChatEntry modelEntry =
-        ChatEntry(isFromUser: false, text: modelResonse, timestamp: now);
-    fullChat.add(modelEntry);
-    chat = chat.copyWith(entries: fullChat);
-    await prefs.setString(chatId, chat.toJson());
+    await prefs.setString(chatId, updatedChat.toJson());
     await updateChatsList(chatId);
     await setCurrentChatId(chatId);
   }
@@ -85,11 +72,11 @@ class ChatHistoryService {
     return list;
   }
 
-Future<Chat> getCurrentChat() async {
-  final String currentChatId = await _getCurrentChatId();
-  final Chat chat = await getChat(currentChatId) ?? await createNewChat();
-  return chat;
-}
+  Future<Chat> getCurrentChat() async {
+    final String currentChatId = await _getCurrentChatId();
+    final Chat chat = await getChat(currentChatId) ?? await createNewChat();
+    return chat;
+  }
 
   Future<String> _getCurrentChatId() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -13,7 +13,7 @@ class Chat extends Equatable {
   const Chat({
     this.id = '',
     this.entries = const <ChatEntry>[],
-    this.bgImages = BgImages.mountainsAndLake,
+    this.bgImages = BgImages.lake,
   });
 
   Chat copyWith({
@@ -42,12 +42,16 @@ class Chat extends Equatable {
   factory Chat.fromMap(Map<String, dynamic> map) {
     return Chat(
       id: map['id'] as String? ?? '',
-      entries: List<ChatEntry>.from((map['entries'] as List<dynamic>? ?? <String>[]).map((dynamic x) => ChatEntry.fromMap(x as Map<String, dynamic>))),
-      bgImages: (map['bgImages'] as String? ?? '').getBgImageFromString() ?? BgImages.mountainsAndLake,
+      entries: List<ChatEntry>.from((map['entries'] as List<dynamic>? ??
+              <String>[])
+          .map((dynamic x) => ChatEntry.fromMap(x as Map<String, dynamic>)),),
+      bgImages: (map['bgImages'] as String? ?? '').getBgImageFromString() ??
+          BgImages.lake,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory Chat.fromJson(String source) => Chat.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Chat.fromJson(String source) =>
+      Chat.fromMap(json.decode(source) as Map<String, dynamic>);
 }

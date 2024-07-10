@@ -24,6 +24,10 @@ dependencies:
   flutter_parsed_text: ^2.2.1
   intl: ^0.19.0
   lottie: ^3.1.2
+  image_picker: ^1.1.2
+  path: ^1.9.0
+  speech_to_text: ^6.6.2
+  permission_handler: ^11.3.1
 
 
 dev_dependencies:
@@ -31,6 +35,23 @@ dev_dependencies:
     sdk: flutter
 
   lint:
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.1
+
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  image_path: "assets/logo.jpeg"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+
+flutter_native_splash:
+  color: "#436fff"
+  image: "assets/logo.jpeg"
+  android_12:
+    color: "#436fff"
+    icon_background_color: "#436fff"
+
+ 
 
 flutter:
   uses-material-design: true

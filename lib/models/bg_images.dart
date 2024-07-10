@@ -1,7 +1,7 @@
 import 'dart:math';
 
 enum BgImages {
-  mountainsAndLake,
+  lake,
   beach,
   forest,
   street,
@@ -17,6 +17,7 @@ enum BgImages {
   parisianCafe,
   office,
   japaneseGarden,
+  snowyMountain,
 }
 
 extension BgImagesStrExtension on String {

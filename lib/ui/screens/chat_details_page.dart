@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
@@ -194,15 +196,29 @@ class ChatDetailsPage extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (chat[index].attachedImage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image.file(
+                          File(chat[index].attachedImage),
+                          fit: BoxFit.cover,
+                          width: 100,
+                          height: 100,
+                        ),
+                      ),
+                    ),
+                  ),
                 if (index == 0 && isTyping)
                   Row(
                     children: <Widget>[
                       _circleAvater(),
                       Lottie.asset(
                         'assets/lotties/typing.json',
-
                         height: 60,
-                        //   repeat: true,
                       ),
                     ],
                   ),

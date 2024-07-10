@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
@@ -80,8 +81,15 @@ class _HomeState extends State<Home> {
                     ),
                     Positioned.fill(
                       top: null,
-                      child:
-                          Image.asset('assets/base.png', fit: BoxFit.contain),
+                      child: GestureDetector(
+                        onDoubleTap: () {
+                          context.read<ChatsCubit>().createNewChat();
+                        },
+                        child: Image.asset(
+                          'assets/base.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                     if (_mapValues != null)
                       BlinkingEyes(
@@ -91,17 +99,14 @@ class _HomeState extends State<Home> {
                         eyesWidth: _mapValues!['newEyesWidth'] ?? 0,
                         eyesHeight: _mapValues!['newEyesHeight'] ?? 0,
                       ),
-                    const Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                      child: AiTextInput(),
-                    ),
                     if (isLoading)
                       Positioned(
-                        bottom: (_mapValues?['newHeight'] ?? 0) - 130,
-                        left: 140,
-                        child: const CircularProgressIndicator(),
+                        bottom: (_mapValues?['newHeight'] ?? 0) - 140,
+                        left: 130,
+                        child: Lottie.asset(
+                          'assets/lotties/typing.json',
+                          height: 60,
+                        ),
                       ),
                     if (_mapValues != null)
                       TalkingMouth(
@@ -110,19 +115,27 @@ class _HomeState extends State<Home> {
                         mouthWidth: _mapValues!['newMouthWidth'] ?? 0,
                         mouthHeight: _mapValues!['newMouthHeight'] ?? 0,
                       ),
+                    const Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      child: AiTextInput(),
+                    ),
                     Positioned(
                       right: 8,
-                      top: 28,
-                      child: AppIconButton(
-                        icon: Icons.chat_bubble_outline_rounded,
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<dynamic>(
-                              builder: (BuildContext context) =>
-                                  const ChatsListPage(),
-                            ),
-                          );
-                        },
+                      top: 8,
+                      child: SafeArea(
+                        child: AppIconButton(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<dynamic>(
+                                builder: (BuildContext context) =>
+                                    const ChatsListPage(),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],

@@ -4,10 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../models/answer.dart';
-import '../../models/chat.dart';
 import '../../models/sound_effects.dart';
-import '../../services/chat_history_service.dart';
-import '../../services/llm_service.dart';
 import '../../services/tts_service.dart';
 
 part 'talking_state.dart';
@@ -15,11 +12,10 @@ part 'talking_state.dart';
 class TalkingCubit extends Cubit<TalkingState> {
   TalkingCubit() : super(const TalkingState());
 
-  void onTextPromptSubmitted(String prompt) async {
-    emit(state.copyWith(status: TalkingStatus.loading, prompt: prompt));
-    final Chat currentChat = await ChatHistoryService().getCurrentChat();
-    final Map<String, dynamic> responseMap =
-        await LlmService().askYofardevAi(prompt, currentChat);
+  Future<void> prepareToSpeak(
+    Map<String, dynamic> responseMap,
+    ) async {
+    emit(state.copyWith(status: TalkingStatus.loading));        
     final String answerText = responseMap['text'] as String? ?? '';
     final String audioPath =
         await TtsService().textToFrenchMaleVoice(answerText);
@@ -36,6 +32,10 @@ class TalkingCubit extends Cubit<TalkingState> {
         ),
       ),
     );
+  }
+
+  void isLoading(){
+    emit(state.copyWith(status: TalkingStatus.loading));
   }
 
   void updateMouthState(MouthState mouthState) {
