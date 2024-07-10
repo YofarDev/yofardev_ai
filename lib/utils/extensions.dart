@@ -1,3 +1,7 @@
+import 'package:intl/intl.dart';
+
+import '../models/bg_images.dart';
+
 extension RemoveEmojis on String {
   String removeEmojis() {
     final RegExp emojiRegex = RegExp(
@@ -21,6 +25,24 @@ extension RemoveEmojis on String {
 
     return replaceAll(emojiRegex, '');
   }
+}
 
+extension DateTimeExtension on DateTime {
+  // Format : 'Le 10 mai 2022 à 14h30'
+  String toLongLocalDateString() {
+    return DateFormat('EEEE d MMMM yyyy à HH:mm').format(this);
+  }
+}
 
+extension AnnotationsExtension on List<String> {
+  List<BgImages> getBgImages()  {
+    final List<BgImages> bgImagesList = <BgImages>[];
+    for (final String annotation in this) {
+      final BgImages? bgImage = annotation.getBgImageFromString();
+      if (bgImage != null) {
+        bgImagesList.add(bgImage);
+      }
+    }
+    return bgImagesList;
+  }
 }

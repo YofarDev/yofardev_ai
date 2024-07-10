@@ -5,37 +5,45 @@ import '../models/chat.dart';
 import '../models/chat_entry.dart';
 
 class ChatHistoryService {
-  Future<void> saveChat({
+  Future<Chat> createNewChat() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String newChatId = DateTime.now().toIso8601String();
+    BgImages? bgImage;
+    final Chat newChat =
+        Chat(id: newChatId, bgImages: bgImage.getRandomBgImage());
+    await prefs.setString(newChatId, newChat.toJson());
+    await updateChatsList(newChatId);
+    await setCurrentChatId(newChatId);
+    return newChat;
+  }
+
+  Future<Chat?> getChat(String chatId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? chatJson = prefs.getString(chatId);
+    if (chatJson == null) return null;
+    return Chat.fromJson(chatJson);
+  }
+
+  Future<void> updateChat({
     required String chatId,
     required String userPrompt,
     required String modelResonse,
   }) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final DateTime now = DateTime.now();
-    final List<ChatEntry> fullChat = await getChat(chatId) ?? <ChatEntry>[];
+    Chat? chat = await getChat(chatId);
+    if (chat == null) return;
+    final List<ChatEntry> fullChat = chat.entries;
     final ChatEntry userEntry =
         ChatEntry(isFromUser: true, text: userPrompt, timestamp: now);
     fullChat.add(userEntry);
     final ChatEntry modelEntry =
         ChatEntry(isFromUser: false, text: modelResonse, timestamp: now);
     fullChat.add(modelEntry);
-    final List<String> chatEntries =
-        fullChat.map((ChatEntry entry) => entry.toJson()).toList();
-    await prefs.setStringList(chatId, chatEntries);
+    chat = chat.copyWith(entries: fullChat);
+    await prefs.setString(chatId, chat.toJson());
     await updateChatsList(chatId);
-  }
-
-  Future<List<ChatEntry>?> getChat(String chatId) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final List<String>? chatEntries = prefs.getStringList(chatId);
-    if (chatEntries != null) {
-      final List<ChatEntry> list = <ChatEntry>[];
-      for (final String chatEntry in chatEntries) {
-        list.add(ChatEntry.fromJson(chatEntry));
-      }
-      return list;
-    }
-    return null;
+    await setCurrentChatId(chatId);
   }
 
   Future<void> deleteChat(String chatId) async {
@@ -66,22 +74,27 @@ class ChatHistoryService {
     return chatsList;
   }
 
-  Future<List<Chat>> getHistoryList() async {
+  Future<List<Chat>> getChatsList() async {
     final List<Chat> list = <Chat>[];
     final List<String> chatIds = await _getHistoryIds();
     for (final String chatId in chatIds) {
-      final List<ChatEntry> chat = await getChat(chatId) ?? <ChatEntry>[];
-      list.add(
-        Chat(id: chatId, entries: chat, bgImages: BgImages.mountainsAndLake),
-      );
+      final Chat? chat = await getChat(chatId);
+      if (chat == null) continue;
+      list.add(chat);
     }
     return list;
   }
 
-  Future<String> getCurrentChatId() async {
+Future<Chat> getCurrentChat() async {
+  final String currentChatId = await _getCurrentChatId();
+  final Chat chat = await getChat(currentChatId) ?? await createNewChat();
+  return chat;
+}
+
+  Future<String> _getCurrentChatId() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String currentChat =
-        prefs.getString('currentChat') ?? await setNewChatId();
+        prefs.getString('currentChat') ?? (await createNewChat()).id;
     return currentChat;
   }
 
@@ -90,10 +103,10 @@ class ChatHistoryService {
     await prefs.setString('currentChat', chatId);
   }
 
-  Future<String> setNewChatId() async {
+  Future<void> updateBgImage(String chatId, BgImages bgImage) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String newChatId = DateTime.now().toIso8601String();
-    await prefs.setString('currentChat', newChatId);
-    return newChatId;
+    Chat currentChat = await getChat(chatId) ?? await createNewChat();
+    currentChat = currentChat.copyWith(bgImages: bgImage);
+    await prefs.setString(chatId, currentChat.toJson());
   }
 }

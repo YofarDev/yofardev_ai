@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../logic/avatar/avatar_cubit.dart';
+import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
-import '../../services/chat_history_service.dart';
 import '../../utils/app_utils.dart';
 import '../widgets/ai_text_input.dart';
+import '../widgets/app_icon_button.dart';
 import '../widgets/blinking_eyes.dart';
 import '../widgets/talking_mouth.dart';
-import 'list_history_page.dart';
+import 'chats_list_page.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -59,8 +59,8 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AvatarCubit, AvatarState>(
-      builder: (BuildContext context, AvatarState avatarState) {
+    return BlocBuilder<ChatsCubit, ChatsState>(
+      builder: (BuildContext context, ChatsState chatsState) {
         return BlocBuilder<TalkingCubit, TalkingState>(
           builder: (BuildContext context, TalkingState state) {
             final bool isLoading = state.status == TalkingStatus.loading;
@@ -74,20 +74,14 @@ class _HomeState extends State<Home> {
                   children: <Widget>[
                     Positioned.fill(
                       child: Image.asset(
-                        'assets/base/${avatarState.bgImage.name}.jpeg',
+                        'assets/base/${chatsState.currentChat.bgImages.name}.jpeg',
                         fit: BoxFit.cover,
                       ),
                     ),
                     Positioned.fill(
                       top: null,
-                      child: GestureDetector(
-                        onTap: () async {
-                          await ChatHistoryService().setNewChatId();
-                          debugPrint('New chat created');
-                        },
-                        child:
-                            Image.asset('assets/base.png', fit: BoxFit.contain),
-                      ),
+                      child:
+                          Image.asset('assets/base.png', fit: BoxFit.contain),
                     ),
                     if (_mapValues != null)
                       BlinkingEyes(
@@ -119,19 +113,16 @@ class _HomeState extends State<Home> {
                     Positioned(
                       right: 8,
                       top: 28,
-                      child: IconButton(
+                      child: AppIconButton(
+                        icon: Icons.chat_bubble_outline_rounded,
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<dynamic>(
                               builder: (BuildContext context) =>
-                                  const ListHistoryPage(),
+                                  const ChatsListPage(),
                             ),
                           );
                         },
-                        icon: const Icon(
-                          Icons.chat_bubble_outline_rounded,
-                          color: Colors.black,
-                        ),
                       ),
                     ),
                   ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../logic/history/history_cubit.dart';
+import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import 'current_prompt_text.dart';
 
@@ -74,7 +74,7 @@ class _AiTextInputState extends State<AiTextInput> {
           final String prompt = _controller.text;
           _controller.clear();
           if (widget.onlyText) {
-            context.read<HistoryCubit>().onTextPromptSubmitted(prompt);
+            context.read<ChatsCubit>().onTextPromptSubmitted(prompt);
           } else {
             context.read<TalkingCubit>().onTextPromptSubmitted(prompt);
           }

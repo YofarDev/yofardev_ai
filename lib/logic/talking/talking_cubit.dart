@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../models/answer.dart';
+import '../../models/chat.dart';
 import '../../models/sound_effects.dart';
+import '../../services/chat_history_service.dart';
 import '../../services/llm_service.dart';
 import '../../services/tts_service.dart';
 
@@ -15,8 +17,9 @@ class TalkingCubit extends Cubit<TalkingState> {
 
   void onTextPromptSubmitted(String prompt) async {
     emit(state.copyWith(status: TalkingStatus.loading, prompt: prompt));
+    final Chat currentChat = await ChatHistoryService().getCurrentChat();
     final Map<String, dynamic> responseMap =
-        await LlmService().askYofardevAi(prompt);
+        await LlmService().askYofardevAi(prompt, currentChat);
     final String answerText = responseMap['text'] as String? ?? '';
     final String audioPath =
         await TtsService().textToFrenchMaleVoice(answerText);
@@ -54,7 +57,7 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
     if (state.answer.annotations.isNotEmpty) {
       for (final String annotation in state.answer.annotations) {
-        final SoundEffects? soundEffect = getSoundEffectFromString(annotation);
+        final SoundEffects? soundEffect = annotation.getSoundEffectFromString();
         if (soundEffect != null) {
           final AudioPlayer player = AudioPlayer();
           await player.setAsset(soundEffect.getPath());

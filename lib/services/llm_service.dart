@@ -1,21 +1,24 @@
+import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../models/bg_images.dart';
+import '../models/chat.dart';
 import '../models/chat_entry.dart';
 import '../models/sound_effects.dart';
 import '../utils/app_utils.dart';
 import '../utils/extensions.dart';
-import 'avatar_service.dart';
 import 'chat_history_service.dart';
 
 class LlmService {
-  Future<Map<String, dynamic>> askYofardevAi(String prompt) async {
+  Future<Map<String, dynamic>> askYofardevAi(
+    String prompt,
+    Chat currentChat,
+  ) async {
     const String apiKey = 'AIzaSyDkC65Fjz3tLOqdPkzQy4VEbcZHCYJdWQ8';
-    final String currentChatId = await ChatHistoryService().getCurrentChatId();
     final GenerativeModel model = GenerativeModel(
       model: 'gemini-1.5-pro',
       apiKey: apiKey,
-      systemInstruction: Content.system(await _getSystemPrompt()),
+      systemInstruction: Content.system(_getSystemPrompt(currentChat)),
       safetySettings: <SafetySetting>[
         SafetySetting(HarmCategory.harassment, HarmBlockThreshold.none),
         SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.none),
@@ -24,16 +27,18 @@ class LlmService {
         //   SafetySetting(HarmCategory.unspecified, HarmBlockThreshold.none),
       ],
     );
-    final ChatSession chat = model.startChat(
+    final ChatSession chatSession = model.startChat(
       history: <Content>[
-        ...await _getChatHistory(currentChatId),
+        ..._getChatHistory(currentChat),
       ],
     );
     final Content content = Content.text(prompt);
-    final GenerateContentResponse response = await chat.sendMessage(content);
+    final GenerateContentResponse response =
+        await chatSession.sendMessage(content);
+    debugPrint(response.text);
     final String responseText = (response.text ?? "").removeEmojis().trim();
-    await ChatHistoryService().saveChat(
-      chatId: currentChatId,
+    await ChatHistoryService().updateChat(
+      chatId: currentChat.id,
       userPrompt: prompt,
       modelResonse: responseText,
     );
@@ -42,9 +47,9 @@ class LlmService {
     return responseMap;
   }
 
-  Future<String> _getSystemPrompt() async {
-    const String base =
-        "Tu es Yofardev AI, l'avatar IA d'un développeur sarcastique. Tu es généralement positif, mais n'hésite pas à pointer du doigt les bêtises avec humour.  Tu privilégies les réponses courtes et précises, avec une touche d'humour pince-sans-rire. L'utilisateur ne voit pas tes réponses sous forme de texte, mais les entends en audio grâce à un plugin TTS.";
+  String _getSystemPrompt(Chat currentChat) {
+    final String base =
+        "Tu es Yofardev AI, l'avatar IA d'un développeur sarcastique. Tu es généralement positif, mais n'hésite pas à pointer du doigt les bêtises avec humour.  Tu privilégies les réponses courtes et précises, avec une touche d'humour pince-sans-rire. L'utilisateur ne voit pas tes réponses sous forme de texte, mais les entends en audio grâce à un plugin TTS. Date du jour : ${DateTime.now()}";
     final StringBuffer soundEffectsList = StringBuffer();
     for (final SoundEffects soundEffect in SoundEffects.values) {
       soundEffectsList.write("[$soundEffect], ");
@@ -55,20 +60,14 @@ class LlmService {
     for (final BgImages bg in BgImages.values) {
       backgroundList.write("[$bg], ");
     }
-    final BgImages currentBg = await AvatarService().getCurrentBg();
     final String backgroundPrompt =
-        "Tu peux également choisir le fond d'écran dans laquelle ton personnage se trouve, ce qui modifiera visuellement ce que voit l'utilisateur. Voici la liste des choix disponibles : $backgroundList. Actuellement c'est : $currentBg.";
+        "Tu peux également changer le fond d'écran dans lequel ton personnage se trouve à la demande de l'utilisateur (où dans de rares cas, de ton propre chef si tu penses que c'est adapté au contexte). Voici la liste des choix disponibles : $backgroundList. Actuellement c'est : ${currentChat.bgImages}.";
     return "$base\n$soundEffectsPrompt\n$backgroundPrompt";
   }
 
-  Future<List<Content>> _getChatHistory(String currentChatId) async {
-    final List<ChatEntry>? chat =
-        await ChatHistoryService().getChat(currentChatId);
-    if (chat == null) {
-      return <Content>[];
-    }
+  List<Content> _getChatHistory(Chat chat) {
     final List<Content> contents = <Content>[];
-    for (final ChatEntry entry in chat) {
+    for (final ChatEntry entry in chat.entries) {
       final String value = entry.text;
       Content c;
       if (entry.isFromUser) {

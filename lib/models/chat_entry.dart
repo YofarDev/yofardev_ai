@@ -17,12 +17,12 @@ class ChatEntry extends Equatable {
   List<Object> get props => <Object>[isFromUser, text, timestamp];
 
   ChatEntry copyWith({
-    bool? fromUser,
+    bool? isFromUser,
     String? text,
     DateTime? timestamp,
   }) {
     return ChatEntry(
-      isFromUser: fromUser ?? this.isFromUser,
+      isFromUser: isFromUser ?? this.isFromUser,
       text: text ?? this.text,
       timestamp: timestamp ?? this.timestamp,
     );

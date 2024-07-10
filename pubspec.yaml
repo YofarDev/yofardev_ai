@@ -22,6 +22,8 @@ dependencies:
   equatable: ^2.0.5
   nested: ^1.0.0
   flutter_parsed_text: ^2.2.1
+  intl: ^0.19.0
+  lottie: ^3.1.2
 
 
 dev_dependencies:
@@ -37,3 +39,4 @@ flutter:
     - assets/
     - assets/sound_effects/
     - assets/base/
+    - assets/lotties/

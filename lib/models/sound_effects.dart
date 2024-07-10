@@ -6,17 +6,23 @@ enum SoundEffects {
   glassBreak,
   sadTrombone,
   magicWand,
+  frenchTheme,
 }
 
-SoundEffects? getSoundEffectFromString(String soundEffectString) {
-  final String enumString =
-      soundEffectString.split('.').last.replaceAll('[', '').replaceAll(']', '');
-  try {
-    return SoundEffects.values.firstWhere(
-      (SoundEffects e) => e.toString().split('.').last == enumString,
-    );
-  } catch (e) {
-    return null;
+extension SoundEffectsStrExtension on String {
+  SoundEffects? getSoundEffectFromString() {
+    final String enumString = 
+        split('.')
+        .last
+        .replaceAll('[', '')
+        .replaceAll(']', '');
+    try {
+      return SoundEffects.values.firstWhere(
+        (SoundEffects e) => e.toString().split('.').last == enumString,
+      );
+    } catch (e) {
+      return null;
+    }
   }
 }
 

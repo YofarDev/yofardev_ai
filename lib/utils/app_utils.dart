@@ -52,7 +52,7 @@ class AppUtils {
     final String textWithoutAnnotations = input.replaceAll(regExp, '').trim();
     return <String, dynamic>{
       'text': textWithoutAnnotations,
-      'annotations': annotations,
+      'annotations': annotations.map((String a) => '[$a]').toList(),
     };
   }
 }
