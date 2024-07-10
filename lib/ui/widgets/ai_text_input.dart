@@ -135,6 +135,7 @@ class _AiTextInputState extends State<AiTextInput> {
         onSubmitted: (_) async {
           if (!widget.onlyText) {
             FocusScope.of(context).requestFocus(_inputFocus);
+          if (_controller.text.isEmpty) return;
             context.read<TalkingCubit>().isLoading();
           }
           if (_controller.text.isEmpty) return;
@@ -182,7 +183,7 @@ class _AiTextInputState extends State<AiTextInput> {
                       await _speechToText.stop();
                     } else {
                       await _speechToText.listen(
-                          onResult: _onSpeechResult, localeId: 'fr_FR');
+                          onResult: _onSpeechResult, localeId: 'fr_FR',);
                     }
                     setState(() {});
                   },
@@ -242,7 +243,6 @@ class _AiTextInputState extends State<AiTextInput> {
   void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
       _controller.text = result.recognizedWords;
-      print(result.recognizedWords);
     });
   }
 }

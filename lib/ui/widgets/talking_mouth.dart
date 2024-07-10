@@ -50,12 +50,12 @@ class TalkingMouth extends StatelessWidget {
 
   void _startTalking(BuildContext context, Answer answer) async {
     final AudioPlayer player = AudioPlayer();
-    await player.setFilePath(answer.audioPath);
-    player.play();
+    await player.setFilePath(answer.audioPath, initialPosition: Duration.zero);
     final int totalFrames = answer.amplitudes.length;
     final int updateInterval =
         (player.duration!.inMilliseconds / totalFrames).round();
     int currentIndex = 0;
+    player.play();
     Timer.periodic(Duration(milliseconds: updateInterval), (Timer timer) {
       if (currentIndex >= totalFrames) {
         timer.cancel();

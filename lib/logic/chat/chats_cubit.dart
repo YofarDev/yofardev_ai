@@ -13,6 +13,12 @@ part 'chats_state.dart';
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit() : super(const ChatsState());
 
+  final LlmService _llmService = LlmService();
+
+  // void init() async {
+  //   await _llmService.initialize(state.currentChat);
+  // }
+
   void getCurrentChat() async {
     emit(state.copyWith(status: ChatsStatus.loading));
     final Chat currentChat = await ChatHistoryService().getCurrentChat();
@@ -66,7 +72,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       ),
     );
     final Map<String, dynamic> responseMap =
-        await LlmService().askYofardevAi(chat);
+        await _llmService.askYofardevAi(chat);
     final String answerText =
         "${responseMap['text'] ?? ''} ${(responseMap['annotations'] as List<String>).join(' ')}";
     final ChatEntry newModelEntry = ChatEntry(

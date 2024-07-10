@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../logic/chat/chats_cubit.dart';
@@ -28,6 +29,14 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _initMap();
+    _initAudioPlayer();
+  }
+
+  // to avoid a weird bug when first sound is played
+  void _initAudioPlayer() async{
+    final AudioPlayer player = AudioPlayer();
+     await player.setAsset('assets/silence.mp3');
+    player.play();
   }
 
   void _initMap() async {
