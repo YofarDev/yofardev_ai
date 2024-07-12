@@ -1,14 +1,17 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/avatar_backgrounds.dart';
+import '../models/avatar.dart';
 import '../models/chat.dart';
+import '../utils/extensions.dart';
 
 class ChatHistoryService {
   Future<Chat> createNewChat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String newChatId = DateTime.now().toIso8601String();
-    AvatarBackgrounds? bgImage;
-    final Chat newChat = Chat(id: newChatId, bg: bgImage.getRandomBgImage());
+    final AvatarBackgrounds randomBg =
+        EnumUtils.getRandomValue(AvatarBackgrounds.values);
+    final Chat newChat =
+        Chat(id: newChatId, avatar: Avatar(background: randomBg));
     await _removeEmptyChats();
     await prefs.setString(newChatId, newChat.toJson());
     await updateChatsList(newChatId);
@@ -91,10 +94,10 @@ class ChatHistoryService {
     await prefs.setString('currentChat', chatId);
   }
 
-  Future<void> updateBgImage(String chatId, AvatarBackgrounds bgImage) async {
+  Future<void> updateAvatar(String chatId, Avatar avatar) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     Chat currentChat = await getChat(chatId) ?? await createNewChat();
-    currentChat = currentChat.copyWith(bg: bgImage);
+    currentChat = currentChat.copyWith(avatar: avatar);
     await prefs.setString(chatId, currentChat.toJson());
   }
 

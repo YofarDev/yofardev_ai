@@ -2,40 +2,40 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 
-import 'avatar_backgrounds.dart';
+import 'avatar.dart';
 import 'chat_entry.dart';
 
 class Chat extends Equatable {
   final String id;
   final List<ChatEntry> entries;
-  final AvatarBackgrounds bg;
+  final Avatar avatar;
 
   const Chat({
     this.id = '',
     this.entries = const <ChatEntry>[],
-    this.bg = AvatarBackgrounds.lake,
+    this.avatar = const Avatar(),
   });
 
   Chat copyWith({
     String? id,
     List<ChatEntry>? entries,
-    AvatarBackgrounds? bg,
+    Avatar? avatar,
   }) {
     return Chat(
       id: id ?? this.id,
       entries: entries ?? this.entries,
-      bg: bg ?? this.bg,
+      avatar: avatar ?? this.avatar,
     );
   }
 
   @override
-  List<Object> get props => <Object>[id, entries];
+  List<Object> get props => <Object>[id, entries, avatar];
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
       'entries': entries.map((ChatEntry x) => x.toMap()).toList(),
-      'bgImages': bg.name,
+      'avatar': avatar.toMap(),
     };
   }
 
@@ -45,9 +45,9 @@ class Chat extends Equatable {
       entries: List<ChatEntry>.from(
         (map['entries'] as List<dynamic>? ?? <String>[])
             .map((dynamic x) => ChatEntry.fromMap(x as Map<String, dynamic>)),
+      
       ),
-      bg: (map['bgImages'] as String? ?? '').getBgImageFromString() ??
-          AvatarBackgrounds.lake,
+      avatar: Avatar.fromMap(map['avatar'] as Map<String, dynamic>),
     );
   }
 

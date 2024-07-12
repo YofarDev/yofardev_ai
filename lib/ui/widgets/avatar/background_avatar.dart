@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../logic/chat/chats_cubit.dart';
-import '../../../models/avatar_backgrounds.dart';
+import '../../../logic/avatar/avatar_cubit.dart';
+import '../../../logic/avatar/avatar_state.dart';
+import '../../../models/avatar.dart';
 
 class BackgroundAvatar extends StatelessWidget {
   const BackgroundAvatar({
@@ -11,11 +12,11 @@ class BackgroundAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ChatsCubit, ChatsState>(
-      builder: (BuildContext context, ChatsState state) {
+    return BlocBuilder<AvatarCubit, AvatarState>(
+      builder: (BuildContext context, AvatarState state) {
         return Positioned.fill(
           child: Image.asset(
-            state.currentChat.bg.getPath(),
+            state.avatar.background.getPath(),
             fit: BoxFit.cover,
           ),
         );

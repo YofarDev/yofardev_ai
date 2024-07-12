@@ -6,7 +6,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../models/avatar.dart';
-import '../models/avatar_backgrounds.dart';
 import '../models/chat.dart';
 import '../models/chat_entry.dart';
 import '../models/sound_effects.dart';
@@ -52,7 +51,8 @@ class LlmService {
     final GenerateContentResponse response =
         await _chatSession.sendMessage(lastEntry);
     debugPrint(response.text);
-    final String responseText = (response.text ?? "").removeEmojis().trim();
+    final String responseText =
+        (response.text ?? "").removeEmojis().trim();
     final Map<String, dynamic> responseMap =
         AppUtils().splitStringAndAnnotations(responseText);
     return responseMap;
@@ -98,10 +98,9 @@ class LlmService {
   Future<List<Content>> _getChatHistory(Chat chat) async {
     final List<Content> contents = <Content>[];
     for (final ChatEntry entry in chat.entries) {
-    final  String value = entry.text;
+      final String value = entry.text;
       Content c;
       if (entry.isFromUser) {
-
         if (entry.attachedImage.isNotEmpty && chat.entries.last == entry) {
           final Uint8List imageBytes =
               await File(entry.attachedImage).readAsBytes();

@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../models/avatar.dart';
+import '../../models/chat.dart';
+import '../../res/app_constants.dart';
+import '../../services/chat_history_service.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
@@ -22,8 +27,10 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
   }
 
-  void resetAvatar(){
-    emit(state.copyWith(avatar: const Avatar()));
+  void loadAvatar(String chatId) async {
+    final Chat chat = await ChatHistoryService().getChat(chatId) ??
+        await ChatHistoryService().createNewChat();
+    emit(state.copyWith(avatar: chat.avatar));
   }
 
   void changeTopAvatar() {
@@ -57,38 +64,50 @@ class AvatarCubit extends Cubit<AvatarState> {
             : AvatarSpecials.onScreen;
     emit(
       state.copyWith(
+        statusAnimation: specials == AvatarSpecials.outOfScreen
+            ? AvatarStatusAnimation.leaving
+            : AvatarStatusAnimation.coming,
         avatar: state.avatar.copyWith(specials: specials),
       ),
     );
   }
 
-  void onNewAvatarConfig(AvatarConfig avatarConfig) {
+  void onNewAvatarConfig(String chatId, AvatarConfig avatarConfig) {
     if (avatarConfig.specials.contains(AvatarSpecials.outOfScreen) &&
         avatarConfig.specials.contains(AvatarSpecials.onScreen)) {
-      _outAndInAnimation(avatarConfig);
+      _goAndComeBack(chatId, avatarConfig);
     } else {
       if (avatarConfig.specials.isNotEmpty) {
         changeOutOfScreenStatus();
       }
-      _updateAvatar(avatarConfig);
+      _updateAvatar(chatId, avatarConfig);
     }
   }
 
-  void _updateAvatar(AvatarConfig avatarConfig) {
+  void _updateAvatar(String chatId, AvatarConfig avatarConfig) {
     final Avatar avatar = state.avatar.copyWith(
       top: avatarConfig.top.lastOrNull,
       bottom: avatarConfig.bottom.lastOrNull,
       glasses: avatarConfig.glasses.lastOrNull,
       specials: avatarConfig.specials.lastOrNull,
+      background: avatarConfig.backgrounds.lastOrNull,
     );
     emit(state.copyWith(avatar: avatar));
+    ChatHistoryService().updateAvatar(chatId, avatar);
   }
 
-  void _outAndInAnimation(AvatarConfig avatarConfig) async {
+  void _goAndComeBack(String chatId, AvatarConfig avatarConfig) async {
     changeOutOfScreenStatus();
-    _updateAvatar(avatarConfig);
-    await Future<dynamic>.delayed(const Duration(seconds: 4));
+    await Future<dynamic>.delayed(
+      Duration(seconds: AppConstants().movingAvatarDuration),
+    );
+    _updateAvatar(chatId, avatarConfig);
     changeOutOfScreenStatus();
+    _updateAvatar(
+      chatId,
+      avatarConfig
+          .copyWith(specials: <AvatarSpecials>[AvatarSpecials.onScreen]),
+    );
   }
 
   void toggleGlasses() {
@@ -101,4 +120,12 @@ class AvatarCubit extends Cubit<AvatarState> {
       ),
     );
   }
+
+  AvatarConfig setAvatarConfigFromNewAnswer(List<String> annotations) {
+    final AvatarConfig avatarConfig = annotations.getAvatarConfig();
+    emit(state.copyWith(avatarConfig: avatarConfig));
+    return avatarConfig;
+  }
+
+  
 }

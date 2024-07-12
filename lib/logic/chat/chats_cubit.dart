@@ -2,7 +2,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../models/avatar.dart';
-import '../../models/avatar_backgrounds.dart';
 import '../../models/chat.dart';
 import '../../models/chat_entry.dart';
 import '../../services/chat_history_service.dart';
@@ -16,7 +15,6 @@ class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit() : super(const ChatsState());
 
   final LlmService _llmService = LlmService();
-
 
   void getCurrentChat() async {
     emit(state.copyWith(status: ChatsStatus.loading));
@@ -49,7 +47,7 @@ class ChatsCubit extends Cubit<ChatsState> {
   }
 
   String _addPrePrompt(Avatar avatar, String prompt) =>
-      "{[${DateTime.now().toLongLocalDateString()}]\n$avatar[${state.currentChat.bg}]\nCette partie n'est pas visible par l'utilisateur, n'en tenez pas compte dans votre réponse.}\n$prompt";
+      "{[${DateTime.now().toLongLocalDateString()}]\n$avatar\nCette partie n'est pas visible par l'utilisateur, n'en tenez pas compte dans votre réponse.}\n$prompt";
 
   Future<Map<String, dynamic>> askYofardev(
     String prompt, {
@@ -76,6 +74,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     );
     final Map<String, dynamic> responseMap = await _llmService
         .askYofardevAi(chat, onlyText: onlyText, avatar: avatar);
+    responseMap['chatId'] = chat.id;
     final String answerText =
         "${responseMap['text'] ?? ''} ${(responseMap['annotations'] as List<String>).join(' ')}";
     final ChatEntry newModelEntry = ChatEntry(
@@ -96,34 +95,43 @@ class ChatsCubit extends Cubit<ChatsState> {
       chatId: chat.id,
       updatedChat: chat,
     );
-    if (onlyText) {
-      final List<AvatarBackgrounds> bgs =
-          (responseMap['annotations'] as List<String>).getBgImages();
-      if (bgs.length == 1) {
-        setBgImage(bgs.first);
-      }
-    }
     return responseMap;
   }
 
-  void setBgImage(AvatarBackgrounds bgImage, {bool currentOnly = false}) async {
+  void updateBackgroundOpenedChat(AvatarBackgrounds bg) async {
     emit(state.copyWith(status: ChatsStatus.updating));
-    await ChatHistoryService().updateBgImage(
-      currentOnly ? state.currentChat.id : state.openedChat.id,
-      bgImage,
-    );
-    Chat chat = currentOnly ? state.currentChat : state.openedChat;
-    chat = chat.copyWith(bg: bgImage);
+    final Chat chat = state.openedChat;
     emit(
       state.copyWith(
-        openedChat: currentOnly ? null : chat,
-        currentChat: state.currentChat.id == chat.id
-            ? chat
-            : currentOnly
-                ? chat
-                : null,
+        openedChat: chat.copyWith(avatar: chat.avatar.copyWith(background: bg)),
         status: ChatsStatus.success,
       ),
+    );
+    await ChatHistoryService().updateAvatar(
+      chat.id,
+      chat.avatar.copyWith(background: bg),
+    );
+  }
+
+  void updateAvatarOpenedChat(AvatarConfig avatarConfig) async {
+    emit(state.copyWith(status: ChatsStatus.updating));
+    final Chat chat = state.openedChat;
+    final Avatar avatar = chat.avatar.copyWith(
+      top: avatarConfig.top.lastOrNull,
+      bottom: avatarConfig.bottom.lastOrNull,
+      background: avatarConfig.backgrounds.lastOrNull,
+      glasses: avatarConfig.glasses.lastOrNull,
+      specials: avatarConfig.specials.lastOrNull,
+    );
+    emit(
+      state.copyWith(
+        openedChat: chat.copyWith(avatar: avatar),
+        status: ChatsStatus.success,
+      ),
+    );
+    await ChatHistoryService().updateAvatar(
+      chat.id,
+      avatar,
     );
   }
 
@@ -137,6 +145,6 @@ class ChatsCubit extends Cubit<ChatsState> {
         currentChat: newChat,
       ),
     );
-    avatarCubit.resetAvatar();
+    avatarCubit.loadAvatar(newChat.id);
   }
 }

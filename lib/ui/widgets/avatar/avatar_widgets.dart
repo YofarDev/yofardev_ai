@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../logic/avatar/avatar_cubit.dart';
 import '../../../logic/avatar/avatar_state.dart';
 import '../../../models/avatar.dart';
+import '../../../res/app_constants.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';
 import 'clothes.dart';
@@ -26,7 +27,7 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(seconds: 4),
+      duration: Duration(seconds: AppConstants().movingAvatarDuration),
       vsync: this,
     );
 

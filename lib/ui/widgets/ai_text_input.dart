@@ -12,7 +12,6 @@ import 'package:speech_to_text/speech_to_text.dart';
 import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
-import '../../models/avatar_backgrounds.dart';
 import '../../models/chat_entry.dart';
 import '../../utils/extensions.dart';
 import 'current_prompt_text.dart';
@@ -63,66 +62,50 @@ class _AiTextInputState extends State<AiTextInput> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<TalkingCubit, TalkingState>(
-      listenWhen: (TalkingState previous, TalkingState current) =>
-          previous.status != current.status,
-      listener: (BuildContext context, TalkingState state) {
-        if (state.status == TalkingStatus.success) {
-          final List<AvatarBackgrounds> bgs =
-              state.answer.annotations.getBgImages();
-          if (bgs.length == 1) {
-            final AvatarBackgrounds bgImage = bgs.first;
-            if (!mounted) return;
-            context.read<ChatsCubit>().setBgImage(bgImage, currentOnly: true);
-          }
-        }
-      },
-      child: BlocBuilder<ChatsCubit, ChatsState>(
-        builder: (BuildContext context, ChatsState state) {
-          return BlocBuilder<TalkingCubit, TalkingState>(
-            builder: (BuildContext context, TalkingState talkingState) {
-              ChatEntry? lastUserEntry;
-              if (state.currentChat.entries.isNotEmpty) {
-                lastUserEntry = state.currentChat.entries
-                    .lastWhere((ChatEntry c) => c.isFromUser);
-              }
-              return Column(
-                children: <Widget>[
-                  if (_pickedImage != null)
-                    _buildPickedImage(_pickedImage!.path),
-                  Stack(
-                    children: <Widget>[
-                      Opacity(
-                        opacity: talkingState.status == TalkingStatus.initial
-                            ? 1
-                            : widget.onlyText
-                                ? 1
-                                : 0,
-                        child: _buildTextField(),
-                      ),
-                      if (talkingState.status != TalkingStatus.initial &&
-                          !widget.onlyText &&
-                          lastUserEntry != null)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Flexible(
-                              child: CurrentPromptText(
-                                prompt: lastUserEntry.text.getVisiblePrompt(),
-                              ),
+    return BlocBuilder<ChatsCubit, ChatsState>(
+      builder: (BuildContext context, ChatsState state) {
+        return BlocBuilder<TalkingCubit, TalkingState>(
+          builder: (BuildContext context, TalkingState talkingState) {
+            ChatEntry? lastUserEntry;
+            if (state.currentChat.entries.isNotEmpty) {
+              lastUserEntry = state.currentChat.entries
+                  .lastWhere((ChatEntry c) => c.isFromUser);
+            }
+            return Column(
+              children: <Widget>[
+                if (_pickedImage != null) _buildPickedImage(_pickedImage!.path),
+                Stack(
+                  children: <Widget>[
+                    Opacity(
+                      opacity: talkingState.status == TalkingStatus.initial
+                          ? 1
+                          : widget.onlyText
+                              ? 1
+                              : 0,
+                      child: _buildTextField(),
+                    ),
+                    if (talkingState.status != TalkingStatus.initial &&
+                        !widget.onlyText &&
+                        lastUserEntry != null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Flexible(
+                            child: CurrentPromptText(
+                              prompt: lastUserEntry.text.getVisiblePrompt(),
                             ),
-                            if (lastUserEntry.attachedImage.isNotEmpty)
-                              _buildPickedImage(lastUserEntry.attachedImage),
-                          ],
-                        ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          );
-        },
-      ),
+                          ),
+                          if (lastUserEntry.attachedImage.isNotEmpty)
+                            _buildPickedImage(lastUserEntry.attachedImage),
+                        ],
+                      ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -134,32 +117,7 @@ class _AiTextInputState extends State<AiTextInput> {
         onChanged: (_) {
           setState(() {});
         },
-        onSubmitted: (_) async {
-          if (!widget.onlyText) {
-            FocusScope.of(context).requestFocus(_inputFocus);
-            if (_controller.text.isEmpty) return;
-            context.read<TalkingCubit>().isLoading();
-          }
-          if (_controller.text.isEmpty) return;
-          final String prompt = _controller.text;
-          final String? attachedImage = _pickedImage?.path;
-          _controller.clear();
-          setState(() {
-            _pickedImage = null;
-          });
-
-          final Map<String, dynamic> responseMap =
-              await context.read<ChatsCubit>().askYofardev(
-                    prompt,
-                    attachedImage: attachedImage,
-                    onlyText: widget.onlyText,
-                    avatar: context.read<AvatarCubit>().state.avatar,
-                  );
-          if (!widget.onlyText) {
-            if (!mounted) return;
-            context.read<TalkingCubit>().prepareToSpeak(responseMap);
-          }
-        },
+        onSubmitted: _onTextSubmitted,
         cursorColor: Colors.blue,
         textCapitalization: TextCapitalization.sentences,
         decoration: InputDecoration(
@@ -249,5 +207,34 @@ class _AiTextInputState extends State<AiTextInput> {
     setState(() {
       _controller.text = result.recognizedWords;
     });
+  }
+
+  void _onTextSubmitted(String text ) async {
+    if (!widget.onlyText) {
+      FocusScope.of(context).requestFocus(_inputFocus);
+      if (_controller.text.isEmpty) return;
+      context.read<TalkingCubit>().isLoading();
+    }
+    if (_controller.text.isEmpty) return;
+    final String prompt = _controller.text;
+    final String? attachedImage = _pickedImage?.path;
+    _controller.clear();
+    setState(() {
+      _pickedImage = null;
+    });
+    final Map<String, dynamic> responseMap =
+        await context.read<ChatsCubit>().askYofardev(
+              prompt,
+              attachedImage: attachedImage,
+              onlyText: widget.onlyText,
+              avatar: context.read<AvatarCubit>().state.avatar,
+            );
+    if (!mounted) return;
+    context.read<AvatarCubit>().setAvatarConfigFromNewAnswer(
+        responseMap['annotations'] as List<String>,);
+    if (!widget.onlyText) {
+      if (!mounted) return;
+      context.read<TalkingCubit>().prepareToSpeak(responseMap );
+    }
   }
 }

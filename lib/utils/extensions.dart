@@ -1,6 +1,6 @@
-import 'package:intl/intl.dart';
+import 'dart:math';
 
-import '../models/avatar_backgrounds.dart';
+import 'package:intl/intl.dart';
 
 extension RemoveEmojis on String {
   String removeEmojis() {
@@ -34,19 +34,6 @@ extension DateTimeExtension on DateTime {
   }
 }
 
-extension AnnotationsExtension on List<String> {
-  List<AvatarBackgrounds> getBgImages() {
-    final List<AvatarBackgrounds> bgImagesList = <AvatarBackgrounds>[];
-    for (final String annotation in this) {
-      final AvatarBackgrounds? bgImage = annotation.getBgImageFromString();
-      if (bgImage != null) {
-        bgImagesList.add(bgImage);
-      }
-    }
-    return bgImagesList;
-  }
-}
-
 extension StringExtensions on String {
   String getVisiblePrompt() {
     final RegExp regex = RegExp(
@@ -61,9 +48,26 @@ extension StringExtensions on String {
 extension EnumByNameExtension on Object {
   static T? enumFromString<T extends Enum>(List<T> values, String name) {
     try {
-      return values.firstWhere((element) => element.name == name);
+      return values.firstWhere((T element) => element.name == name);
     } catch (e) {
       return null;
     }
+  }
+}
+
+extension EnumUtils on Enum {
+  String serialize() => name;
+
+  static T deserialize<T extends Enum>(List<T> values, String value) {
+    final String enumName = value.split('.').last.replaceAll(']', '');
+    return values.firstWhere(
+      (T e) => e.name == enumName,
+      orElse: () => values.first,
+    );
+  }
+
+  static T getRandomValue<T extends Enum>(List<T> values) {
+    final Random random = Random();
+    return values[random.nextInt(values.length)];
   }
 }

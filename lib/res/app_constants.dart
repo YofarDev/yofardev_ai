@@ -8,4 +8,5 @@ class AppConstants {
   double mouthY = 617;
   double sunglassesX = 209;
   double sunglassesY = 425;
+  int movingAvatarDuration = 3;
 }

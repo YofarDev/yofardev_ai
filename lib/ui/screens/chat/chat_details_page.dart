@@ -6,8 +6,10 @@ import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../logic/avatar/avatar_cubit.dart';
+import '../../../logic/avatar/avatar_state.dart';
 import '../../../logic/chat/chats_cubit.dart';
-import '../../../models/avatar_backgrounds.dart';
+import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';
 import '../../../models/sound_effects.dart';
@@ -20,57 +22,71 @@ class ChatDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ChatsCubit, ChatsState>(
-      buildWhen: (ChatsState previous, ChatsState current) =>
-          previous.status != current.status,
-      builder: (BuildContext context, ChatsState state) {
-        final Chat chat = state.openedChat;
-        return Scaffold(
-          body: Stack(
-            children: <Widget>[
-              Positioned.fill(
-                child: Opacity(
-                  opacity: 0.3,
-                  child: Image.asset(
-                    chat.bg.getPath(),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
+    return BlocListener<AvatarCubit, AvatarState>(
+      listenWhen: (AvatarState previous, AvatarState current) =>
+          previous.avatarConfig != current.avatarConfig,
+      listener: (BuildContext context, AvatarState state) {
+        context.read<AvatarCubit>().onNewAvatarConfig(
+              context.read<ChatsCubit>().state.openedChat.id,
+              state.avatarConfig,
+            );
+      },
+      child: BlocBuilder<AvatarCubit, AvatarState>(
+        builder: (BuildContext context, AvatarState avatarState) {
+          return BlocBuilder<ChatsCubit, ChatsState>(
+            buildWhen: (ChatsState previous, ChatsState current) =>
+                previous.status != current.status,
+            builder: (BuildContext context, ChatsState state) {
+              final Chat chat = state.openedChat;
+              return Scaffold(
+                body: Stack(
                   children: <Widget>[
-                    Expanded(
-                      child: _buildConversation(
-                        context,
-                        chat.entries.reversed.toList(),
-                        state.status == ChatsStatus.typing,
+                    Positioned.fill(
+                      child: Opacity(
+                        opacity: 0.3,
+                        child: Image.asset(
+                          state.openedChat.avatar.background.getPath(),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                    const AiTextInput(
-                      onlyText: true,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: <Widget>[
+                          Expanded(
+                            child: _buildConversation(
+                              context,
+                              chat.entries.reversed.toList(),
+                              state.status == ChatsStatus.typing,
+                            ),
+                          ),
+                          const AiTextInput(
+                            onlyText: true,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    Positioned(
+                      left: 8,
+                      top: 8,
+                      child: SafeArea(
+                        child: AppIconButton(
+                          icon: Icons.arrow_back_ios_new_outlined,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              Positioned(
-                left: 8,
-                top: 8,
-                child: SafeArea(
-                  child: AppIconButton(
-                    icon: Icons.arrow_back_ios_new_outlined,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -153,20 +169,24 @@ class ChatDetailsPage extends StatelessWidget {
                               MatchText(
                                 pattern: r'\[AvatarBackgrounds\.(.*?)\]',
                                 onTap: (String p0) async {
-                                  final AvatarBackgrounds? bgImage =
-                                      p0.getBgImageFromString();
-                                  if (bgImage == null) return;
+                                  final AvatarBackgrounds bgImage =
+                                      EnumUtils.deserialize(
+                                    AvatarBackgrounds.values,
+                                    p0,
+                                  );
                                   context
                                       .read<ChatsCubit>()
-                                      .setBgImage(bgImage);
+                                      .updateBackgroundOpenedChat(bgImage);
                                 },
                                 renderWidget: ({
                                   required String pattern,
                                   required String text,
                                 }) {
-                                  final AvatarBackgrounds? bg =
-                                      text.getBgImageFromString();
-                                  if (bg == null) return Container();
+                                  final AvatarBackgrounds bg =
+                                      EnumUtils.deserialize(
+                                    AvatarBackgrounds.values,
+                                    text,
+                                  );
                                   return Padding(
                                     padding: const EdgeInsets.all(2),
                                     child: ClipRRect(
@@ -183,14 +203,6 @@ class ChatDetailsPage extends StatelessWidget {
                               ),
                             ],
                           ),
-
-                          // Text(
-                          //   chat[index].text,
-                          //   textAlign: isFromUser ? TextAlign.right : TextAlign.left,
-                          //   style: TextStyle(
-                          //     color: isFromUser ? Colors.white : Colors.black,
-                          //   ),
-                          // ),
                         ),
                       ),
                     ],

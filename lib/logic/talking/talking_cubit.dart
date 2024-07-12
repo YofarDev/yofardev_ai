@@ -14,10 +14,8 @@ part 'talking_state.dart';
 class TalkingCubit extends Cubit<TalkingState> {
   TalkingCubit() : super(const TalkingState());
 
-  Future<void> prepareToSpeak(
-    Map<String, dynamic> responseMap,
-    ) async {
-    emit(state.copyWith(status: TalkingStatus.loading));        
+  Future<void> prepareToSpeak(Map<String, dynamic> responseMap) async {
+    emit(state.copyWith(status: TalkingStatus.loading));
     final String answerText = responseMap['text'] as String? ?? '';
     final String audioPath =
         await TtsService().textToFrenchMaleVoice(answerText);
@@ -26,6 +24,7 @@ class TalkingCubit extends Cubit<TalkingState> {
       state.copyWith(
         status: TalkingStatus.success,
         answer: Answer(
+          chatId: responseMap['chatId'] as String? ?? '',
           answerText: answerText,
           audioPath: audioPath,
           amplitudes: amplitudes,
@@ -36,7 +35,7 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
-  void isLoading(){
+  void isLoading() {
     emit(state.copyWith(status: TalkingStatus.loading));
   }
 
