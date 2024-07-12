@@ -9,9 +9,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
-import '../../models/bg_images.dart';
+import '../../models/avatar_backgrounds.dart';
 import '../../models/chat_entry.dart';
 import '../../utils/extensions.dart';
 import 'current_prompt_text.dart';
@@ -67,9 +68,10 @@ class _AiTextInputState extends State<AiTextInput> {
           previous.status != current.status,
       listener: (BuildContext context, TalkingState state) {
         if (state.status == TalkingStatus.success) {
-          final List<BgImages> bgs = state.answer.annotations.getBgImages();
+          final List<AvatarBackgrounds> bgs =
+              state.answer.annotations.getBgImages();
           if (bgs.length == 1) {
-            final BgImages bgImage = bgs.first;
+            final AvatarBackgrounds bgImage = bgs.first;
             if (!mounted) return;
             context.read<ChatsCubit>().setBgImage(bgImage, currentOnly: true);
           }
@@ -106,7 +108,7 @@ class _AiTextInputState extends State<AiTextInput> {
                           children: <Widget>[
                             Flexible(
                               child: CurrentPromptText(
-                                prompt: lastUserEntry.text,
+                                prompt: lastUserEntry.text.getVisiblePrompt(),
                               ),
                             ),
                             if (lastUserEntry.attachedImage.isNotEmpty)
@@ -135,7 +137,7 @@ class _AiTextInputState extends State<AiTextInput> {
         onSubmitted: (_) async {
           if (!widget.onlyText) {
             FocusScope.of(context).requestFocus(_inputFocus);
-          if (_controller.text.isEmpty) return;
+            if (_controller.text.isEmpty) return;
             context.read<TalkingCubit>().isLoading();
           }
           if (_controller.text.isEmpty) return;
@@ -151,6 +153,7 @@ class _AiTextInputState extends State<AiTextInput> {
                     prompt,
                     attachedImage: attachedImage,
                     onlyText: widget.onlyText,
+                    avatar: context.read<AvatarCubit>().state.avatar,
                   );
           if (!widget.onlyText) {
             if (!mounted) return;
@@ -183,7 +186,9 @@ class _AiTextInputState extends State<AiTextInput> {
                       await _speechToText.stop();
                     } else {
                       await _speechToText.listen(
-                          onResult: _onSpeechResult, localeId: 'fr_FR',);
+                        onResult: _onSpeechResult,
+                        localeId: 'fr_FR',
+                      );
                     }
                     setState(() {});
                   },

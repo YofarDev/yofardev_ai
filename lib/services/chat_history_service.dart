@@ -1,18 +1,19 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/bg_images.dart';
+import '../models/avatar_backgrounds.dart';
 import '../models/chat.dart';
 
 class ChatHistoryService {
   Future<Chat> createNewChat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String newChatId = DateTime.now().toIso8601String();
-    BgImages? bgImage;
-    final Chat newChat =
-        Chat(id: newChatId, bgImages: bgImage.getRandomBgImage());
+    AvatarBackgrounds? bgImage;
+    final Chat newChat = Chat(id: newChatId, bg: bgImage.getRandomBgImage());
+    await _removeEmptyChats();
     await prefs.setString(newChatId, newChat.toJson());
     await updateChatsList(newChatId);
     await setCurrentChatId(newChatId);
+
     return newChat;
   }
 
@@ -90,10 +91,20 @@ class ChatHistoryService {
     await prefs.setString('currentChat', chatId);
   }
 
-  Future<void> updateBgImage(String chatId, BgImages bgImage) async {
+  Future<void> updateBgImage(String chatId, AvatarBackgrounds bgImage) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     Chat currentChat = await getChat(chatId) ?? await createNewChat();
-    currentChat = currentChat.copyWith(bgImages: bgImage);
+    currentChat = currentChat.copyWith(bg: bgImage);
     await prefs.setString(chatId, currentChat.toJson());
+  }
+
+  Future<void> _removeEmptyChats() async {
+    final List<String> chatIds = await _getHistoryIds();
+    for (final String chatId in chatIds) {
+      final Chat? chat = await getChat(chatId);
+      if (chat == null || chat.entries.isEmpty) {
+        await deleteChat(chatId);
+      }
+    }
   }
 }

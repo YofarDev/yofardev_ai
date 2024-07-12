@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../models/bg_images.dart';
+import '../models/avatar_backgrounds.dart';
 
 extension RemoveEmojis on String {
   String removeEmojis() {
@@ -35,14 +35,35 @@ extension DateTimeExtension on DateTime {
 }
 
 extension AnnotationsExtension on List<String> {
-  List<BgImages> getBgImages()  {
-    final List<BgImages> bgImagesList = <BgImages>[];
+  List<AvatarBackgrounds> getBgImages() {
+    final List<AvatarBackgrounds> bgImagesList = <AvatarBackgrounds>[];
     for (final String annotation in this) {
-      final BgImages? bgImage = annotation.getBgImageFromString();
+      final AvatarBackgrounds? bgImage = annotation.getBgImageFromString();
       if (bgImage != null) {
         bgImagesList.add(bgImage);
       }
     }
     return bgImagesList;
+  }
+}
+
+extension StringExtensions on String {
+  String getVisiblePrompt() {
+    final RegExp regex = RegExp(
+      r'\{[^}]*\}|\[(?!SoundEffects\.|AvatarBackgrounds\.)[^\]]*\]',
+      dotAll: true,
+    );
+    final String result = replaceAll(regex, '');
+    return result.trim();
+  }
+}
+
+extension EnumByNameExtension on Object {
+  static T? enumFromString<T extends Enum>(List<T> values, String name) {
+    try {
+      return values.firstWhere((element) => element.name == name);
+    } catch (e) {
+      return null;
+    }
   }
 }

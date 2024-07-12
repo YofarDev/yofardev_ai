@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,6 +57,7 @@ class TalkingCubit extends Cubit<TalkingState> {
         status: TalkingStatus.initial,
       ),
     );
+    await File(state.answer.audioPath).delete();
     if (state.answer.annotations.isNotEmpty) {
       for (final String annotation in state.answer.annotations) {
         final SoundEffects? soundEffect = annotation.getSoundEffectFromString();

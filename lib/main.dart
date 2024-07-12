@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
 
+import 'logic/avatar/avatar_cubit.dart';
 import 'logic/chat/chats_cubit.dart';
 import 'logic/talking/talking_cubit.dart';
 import 'ui/screens/home.dart';
@@ -23,6 +24,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<ChatsCubit>(
           create: (BuildContext context) => ChatsCubit()..getCurrentChat(),
+        ),
+        BlocProvider<AvatarCubit>(
+          create: (BuildContext context) => AvatarCubit(),
         ),
       ],
       child: MaterialApp(

@@ -18,6 +18,7 @@ class CurrentPromptText extends StatelessWidget {
         ),
         child: Text(
           prompt,
+          textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 20,
             color: Colors.white,

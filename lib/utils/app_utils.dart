@@ -23,7 +23,8 @@ class AppUtils {
     final double newBaseWidth = screenSize.width * scaleFactor;
     final double newBaseHeight = originalHeight * scaleFactor;
     final double newMouthX = mouthX * scaleFactor;
-    final double newMouthY = (originalHeight - mouthY - mouthHeight) * scaleFactor;
+    final double newMouthY =
+        (originalHeight - mouthY - mouthHeight) * scaleFactor;
     final double newMouthWidth = mouthWidth * scaleFactor;
     final double newMouthHeight = mouthHeight * scaleFactor;
     return <String, double>{
@@ -40,8 +41,11 @@ class AppUtils {
       'newMouthY': newMouthY,
       'newMouthWidth': newMouthWidth,
       'newMouthHeight': newMouthHeight,
-    
     };
+  }
+
+  double getInvertedY({required double itemY, required double itemHeight, required double scaleFactor, required double baseOriginalHeight}) {
+    return (baseOriginalHeight - itemY - itemHeight) * scaleFactor;
   }
 
   Map<String, dynamic> splitStringAndAnnotations(String input) {
