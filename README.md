@@ -11,7 +11,7 @@ Yofardev AI is a small fun project to kind of bring life to a Large Language Mod
 
 ## Demo
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/nzVYq8lGkHI?si=-QPRsZxKil1nqm_v" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![Demo Video](https://img.youtube.com/vi/nzVYq8lGkHI/0.jpg)](https://www.youtube.com/watch?v=nzVYq8lGkHI)
 
 ## Requirements
 
