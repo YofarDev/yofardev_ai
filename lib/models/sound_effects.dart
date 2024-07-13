@@ -7,6 +7,12 @@ enum SoundEffects {
   sadTrombone,
   magicWand,
   frenchTheme,
+  batmanTheme,
+  oldPhoneRingtone,
+  policeSiren,
+  hallelujah,
+  doorKnocking,
+  asianTheme,
 }
 
 extension SoundEffectsStrExtension on String {

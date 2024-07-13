@@ -64,4 +64,7 @@ flutter:
     - assets/avatar/mouth/
     - assets/avatar/accessories/
     - assets/avatar/backgrounds/
+    - assets/avatar/costumes/
+    - assets/avatar/top/
+    - assets/avatar/bottom/
 

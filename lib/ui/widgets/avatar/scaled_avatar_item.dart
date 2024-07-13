@@ -52,7 +52,7 @@ class _ScaledAvatarItemState extends State<ScaledAvatarItem> {
   Widget build(BuildContext context) {
     return BlocBuilder<AvatarCubit, AvatarState>(
       builder: (BuildContext context, AvatarState state) {
-        if (state.status != AvatarStatus.ready ||
+        if (state.status == AvatarStatus.initial ||
             _itemOriginalHeight == null ||
             _itemOriginalWidth == null) return Container();
         return Positioned(

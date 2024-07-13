@@ -17,9 +17,16 @@ class TalkingCubit extends Cubit<TalkingState> {
   Future<void> prepareToSpeak(Map<String, dynamic> responseMap) async {
     emit(state.copyWith(status: TalkingStatus.loading));
     final String answerText = responseMap['text'] as String? ?? '';
-    final String audioPath =
-        await TtsService().textToFrenchMaleVoice(answerText);
-    final List<int> amplitudes = await AudioAnalyzer().getAmplitudes(audioPath);
+    final String textToAudio =
+        answerText.replaceAll('...', '').replaceAll('*', '');
+    final String audioPath = textToAudio.isEmpty
+        ? ''
+        : await TtsService().textToFrenchMaleVoice(
+            textToAudio,
+          );
+    final List<int> amplitudes = textToAudio.isEmpty
+        ? <int>[]
+        : await AudioAnalyzer().getAmplitudes(audioPath);
     emit(
       state.copyWith(
         status: TalkingStatus.success,
@@ -35,8 +42,9 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
-  void isLoading() {
-    emit(state.copyWith(status: TalkingStatus.loading));
+  void setLoadingStatus(bool isLoading) {
+    emit(state.copyWith(
+        status: isLoading ? TalkingStatus.loading : TalkingStatus.initial));
   }
 
   void updateMouthState(MouthState mouthState) {
@@ -48,7 +56,7 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
-  void stopTalking() async {
+  void stopTalking({bool noFile = false}) async {
     emit(
       state.copyWith(
         isTalking: false,
@@ -56,16 +64,18 @@ class TalkingCubit extends Cubit<TalkingState> {
         status: TalkingStatus.initial,
       ),
     );
-    await File(state.answer.audioPath).delete();
+    if (!noFile) await File(state.answer.audioPath).delete();
     if (state.answer.annotations.isNotEmpty) {
+      final List<SoundEffects> soundEffects = <SoundEffects>[];
       for (final String annotation in state.answer.annotations) {
         final SoundEffects? soundEffect = annotation.getSoundEffectFromString();
-        if (soundEffect != null) {
-          final AudioPlayer player = AudioPlayer();
-          await player.setAsset(soundEffect.getPath());
-          await player.play();
-          player.dispose();
-        }
+        if (soundEffect != null) soundEffects.add(soundEffect);
+      }
+      if (soundEffects.isNotEmpty) {
+        final AudioPlayer player = AudioPlayer();
+        await player.setAsset(soundEffects.last.getPath());
+        await player.play();
+        player.dispose();
       }
     }
   }

@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../l10n/localization_manager.dart';
 import '../../models/avatar.dart';
 import '../../models/chat.dart';
 import '../../models/chat_entry.dart';
@@ -47,9 +49,9 @@ class ChatsCubit extends Cubit<ChatsState> {
   }
 
   String _addPrePrompt(Avatar avatar, String prompt) =>
-      "{[${DateTime.now().toLongLocalDateString()}]\n$avatar\nCette partie n'est pas visible par l'utilisateur, n'en tenez pas compte dans votre réponse.}\n$prompt";
+      "{[${DateTime.now().toLongLocalDateString()}]\n$avatar\n${localized.hiddenPart}}\n$prompt";
 
-  Future<Map<String, dynamic>> askYofardev(
+  Future<Map<String, dynamic>?> askYofardev(
     String prompt, {
     required bool onlyText,
     String? attachedImage,
@@ -72,30 +74,41 @@ class ChatsCubit extends Cubit<ChatsState> {
         status: ChatsStatus.typing,
       ),
     );
-    final Map<String, dynamic> responseMap = await _llmService
-        .askYofardevAi(chat, onlyText: onlyText, avatar: avatar);
-    responseMap['chatId'] = chat.id;
-    final String answerText =
-        "${responseMap['text'] ?? ''} ${(responseMap['annotations'] as List<String>).join(' ')}";
-    final ChatEntry newModelEntry = ChatEntry(
-      text: answerText,
-      isFromUser: false,
-      timestamp: DateTime.now(),
-    );
-    entries.add(newModelEntry);
-    chat = chat.copyWith(entries: entries);
-    emit(
-      state.copyWith(
-        openedChat: onlyText ? chat : null,
-        currentChat: onlyText ? null : chat,
-        status: ChatsStatus.success,
-      ),
-    );
-    await ChatHistoryService().updateChat(
-      chatId: chat.id,
-      updatedChat: chat,
-    );
-    return responseMap;
+    try {
+      final Map<String, dynamic> responseMap = await _llmService
+          .askYofardevAi(chat, onlyText: onlyText, avatar: avatar);
+      responseMap['chatId'] = chat.id;
+      final String answerText =
+          "${responseMap['text'] ?? ''} ${(responseMap['annotations'] as List<String>).join(' ')}";
+      final ChatEntry newModelEntry = ChatEntry(
+        text: answerText,
+        isFromUser: false,
+        timestamp: DateTime.now(),
+      );
+      entries.add(newModelEntry);
+      chat = chat.copyWith(entries: entries);
+      emit(
+        state.copyWith(
+          openedChat: onlyText ? chat : null,
+          currentChat: onlyText ? null : chat,
+          status: ChatsStatus.success,
+        ),
+      );
+      await ChatHistoryService().updateChat(
+        chatId: chat.id,
+        updatedChat: chat,
+      );
+      return responseMap;
+    } catch (e) {
+      debugPrint(e.toString());
+      emit(
+        state.copyWith(
+          status: ChatsStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
+      return null;
+    }
   }
 
   void updateBackgroundOpenedChat(AvatarBackgrounds bg) async {
@@ -122,6 +135,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       background: avatarConfig.backgrounds.lastOrNull,
       glasses: avatarConfig.glasses.lastOrNull,
       specials: avatarConfig.specials.lastOrNull,
+      costume: avatarConfig.costume.lastOrNull,
     );
     emit(
       state.copyWith(

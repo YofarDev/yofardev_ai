@@ -38,6 +38,7 @@ class TalkingMouth extends StatelessWidget {
   }
 
   void _startTalking(BuildContext context, Answer answer) async {
+    if (answer.amplitudes.isEmpty) return context.read<TalkingCubit>().stopTalking(noFile: true);
     final AudioPlayer player = AudioPlayer();
     await player.setFilePath(answer.audioPath, initialPosition: Duration.zero);
     final int totalFrames = answer.amplitudes.length;

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 
+import 'extensions.dart';
+
 class ProgressiveVolumeControl {
   final double _minVolume;
   final Duration _fadeDuration;
@@ -29,12 +31,27 @@ class ProgressiveVolumeControl {
     //  _maxVolume = _currentVolume;
   }
 
-  void startVolumeFade(bool increase, ) async {
+  void setVolume(bool isOnScreen) async {
+    double target;
+    if (isOnScreen) {
+      target = 0.8;
+    } else {
+      target = _minVolume;
+    }
+    await FlutterVolumeController.updateShowSystemUI(false);
+    await FlutterVolumeController.setVolume(target);
+    "Setting volume to $target".printCyanLog();
+  }
+
+  void startVolumeFade(
+    bool increase,
+  ) async {
     await FlutterVolumeController.updateShowSystemUI(false);
     _timer?.cancel();
 
     final double startVolume = _currentVolume;
     _targetVolume = increase ? 0.8 : _minVolume;
+    "Fading volume to $_targetVolume".printCyanLog();
 
     int elapsedSteps = 0;
     _timer = Timer.periodic(

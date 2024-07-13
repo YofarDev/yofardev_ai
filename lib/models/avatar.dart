@@ -22,9 +22,12 @@ enum AvatarBackgrounds {
   office,
   japaneseGarden,
   snowyMountain,
+  balconyViewOfCityByNight,
+  cityscrape,
+  tropicalIsland,
 }
 
-enum AvatarTop { noHat, beanie }
+enum AvatarTop { noHat, beanie, backwardsCap, frenchBeret }
 
 enum AvatarBottom { pinkHoodie, longCoat, tshirt }
 
@@ -32,18 +35,22 @@ enum AvatarGlasses { glasses, sunglasses }
 
 enum AvatarSpecials { onScreen, outOfScreen }
 
+enum AvatarCostume { none, batman }
+
 class Avatar extends Equatable {
   final AvatarBackgrounds background;
   final AvatarTop top;
   final AvatarBottom bottom;
   final AvatarGlasses glasses;
   final AvatarSpecials specials;
+  final AvatarCostume costume;
   const Avatar({
     this.background = AvatarBackgrounds.snowyMountain,
     this.top = AvatarTop.noHat,
     this.bottom = AvatarBottom.pinkHoodie,
     this.glasses = AvatarGlasses.glasses,
     this.specials = AvatarSpecials.onScreen,
+    this.costume = AvatarCostume.none,
   });
 
   @override
@@ -54,6 +61,7 @@ class Avatar extends Equatable {
       bottom,
       glasses,
       specials,
+      costume,
     ];
   }
 
@@ -63,6 +71,7 @@ class Avatar extends Equatable {
     AvatarBottom? bottom,
     AvatarGlasses? glasses,
     AvatarSpecials? specials,
+    AvatarCostume? costume,
   }) {
     return Avatar(
       background: background ?? this.background,
@@ -70,12 +79,13 @@ class Avatar extends Equatable {
       bottom: bottom ?? this.bottom,
       glasses: glasses ?? this.glasses,
       specials: specials ?? this.specials,
+      costume: costume ?? this.costume,
     );
   }
 
   @override
   String toString() {
-    return "Current settings : [$background][$top][$bottom][$glasses][$specials]";
+    return "Current Yofardev AI settings : [$background][$top][$bottom][$glasses][$specials][$costume]";
   }
 
   Map<String, dynamic> toMap() {
@@ -85,6 +95,7 @@ class Avatar extends Equatable {
       'bottom': bottom.name,
       'glasses': glasses.name,
       'specials': specials.name,
+      'costume': costume.name,
     };
   }
 
@@ -107,6 +118,10 @@ class Avatar extends Equatable {
         AvatarSpecials.values,
         map['specials'] as String,
       ),
+      costume: EnumUtils.deserialize(
+        AvatarCostume.values,
+        map['costume'] as String,
+      ),
     );
   }
 
@@ -122,6 +137,7 @@ class AvatarConfig extends Equatable {
   final List<AvatarBottom> bottom;
   final List<AvatarGlasses> glasses;
   final List<AvatarSpecials> specials;
+  final List<AvatarCostume> costume;
 
   const AvatarConfig({
     this.backgrounds = const <AvatarBackgrounds>[],
@@ -129,6 +145,7 @@ class AvatarConfig extends Equatable {
     this.bottom = const <AvatarBottom>[],
     this.glasses = const <AvatarGlasses>[],
     this.specials = const <AvatarSpecials>[],
+    this.costume = const <AvatarCostume>[],
   });
   
   @override
@@ -139,6 +156,7 @@ class AvatarConfig extends Equatable {
       bottom,
       glasses,
       specials,
+      costume,
     ];
   }
 
@@ -148,6 +166,7 @@ class AvatarConfig extends Equatable {
     List<AvatarBottom>? bottom,
     List<AvatarGlasses>? glasses,
     List<AvatarSpecials>? specials,
+    List<AvatarCostume>? costume,
   }) {
     return AvatarConfig(
       backgrounds: backgrounds ?? this.backgrounds,
@@ -155,6 +174,7 @@ class AvatarConfig extends Equatable {
       bottom: bottom ?? this.bottom,
       glasses: glasses ?? this.glasses,
       specials: specials ?? this.specials,
+      costume: costume ?? this.costume,
     );
   }
 }
@@ -166,6 +186,7 @@ extension AvatarExtensions on List<String> {
     final List<AvatarBottom> bottom = <AvatarBottom>[];
     final List<AvatarGlasses> glasses = <AvatarGlasses>[];
     final List<AvatarSpecials> specials = <AvatarSpecials>[];
+    final List<AvatarCostume> costume = <AvatarCostume>[];
     for (final String annotation in this) {
       final String str = annotation.replaceAll('[', '').replaceAll(']', '');
       final List<String> parts = str.split('.');
@@ -206,6 +227,15 @@ extension AvatarExtensions on List<String> {
             if (specialsAvatar != null) {
               specials.add(specialsAvatar);
             }
+          case 'AvatarCostume':
+            final AvatarCostume? costumeAvatar =
+                EnumByNameExtension.enumFromString(
+              AvatarCostume.values,
+              value,
+            );
+            if (costumeAvatar != null) {
+              costume.add(costumeAvatar);
+            }
         }
       }
     }
@@ -215,6 +245,7 @@ extension AvatarExtensions on List<String> {
       bottom: bottom,
       glasses: glasses,
       specials: specials,
+      costume: costume,
     );
   }
 }

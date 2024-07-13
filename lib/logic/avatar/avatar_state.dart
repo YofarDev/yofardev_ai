@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 
 import '../../models/avatar.dart';
 
-enum AvatarStatus { initial, ready }
-enum AvatarStatusAnimation {initial, leaving, coming }
+enum AvatarStatus { initial, ready, loading }
+enum AvatarStatusAnimation {initial, leaving, coming, transition }
 
 class AvatarState extends Equatable {
   final AvatarStatus status;

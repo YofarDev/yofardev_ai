@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../../l10n/localization_manager.dart';
 import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
@@ -62,50 +64,66 @@ class _AiTextInputState extends State<AiTextInput> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ChatsCubit, ChatsState>(
-      builder: (BuildContext context, ChatsState state) {
-        return BlocBuilder<TalkingCubit, TalkingState>(
-          builder: (BuildContext context, TalkingState talkingState) {
-            ChatEntry? lastUserEntry;
-            if (state.currentChat.entries.isNotEmpty) {
-              lastUserEntry = state.currentChat.entries
-                  .lastWhere((ChatEntry c) => c.isFromUser);
-            }
-            return Column(
-              children: <Widget>[
-                if (_pickedImage != null) _buildPickedImage(_pickedImage!.path),
-                Stack(
-                  children: <Widget>[
-                    Opacity(
-                      opacity: talkingState.status == TalkingStatus.initial
-                          ? 1
-                          : widget.onlyText
-                              ? 1
-                              : 0,
-                      child: _buildTextField(),
-                    ),
-                    if (talkingState.status != TalkingStatus.initial &&
-                        !widget.onlyText &&
-                        lastUserEntry != null)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Flexible(
-                            child: CurrentPromptText(
-                              prompt: lastUserEntry.text.getVisiblePrompt(),
-                            ),
-                          ),
-                          if (lastUserEntry.attachedImage.isNotEmpty)
-                            _buildPickedImage(lastUserEntry.attachedImage),
-                        ],
-                      ),
-                  ],
-                ),
-              ],
-            );
-          },
-        );
+    return BlocListener<ChatsCubit, ChatsState>(
+      listenWhen: (ChatsState previous, ChatsState current) =>
+          previous.status != current.status,
+      listener: (BuildContext context, ChatsState state) {
+        if (state.status == ChatsStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+          context.read<TalkingCubit>().setLoadingStatus(false);
+        }
       },
+      child: BlocBuilder<ChatsCubit, ChatsState>(
+        builder: (BuildContext context, ChatsState state) {
+          return BlocBuilder<TalkingCubit, TalkingState>(
+            builder: (BuildContext context, TalkingState talkingState) {
+              ChatEntry? lastUserEntry;
+              if (state.currentChat.entries.isNotEmpty) {
+                lastUserEntry = state.currentChat.entries
+                    .lastWhere((ChatEntry c) => c.isFromUser);
+              }
+              return Column(
+                children: <Widget>[
+                  if (_pickedImage != null)
+                    _buildPickedImage(_pickedImage!.path),
+                  Stack(
+                    children: <Widget>[
+                      Opacity(
+                        opacity: talkingState.status == TalkingStatus.initial
+                            ? 1
+                            : widget.onlyText
+                                ? 1
+                                : 0,
+                        child: _buildTextField(),
+                      ),
+                      if (talkingState.status != TalkingStatus.initial &&
+                          !widget.onlyText &&
+                          lastUserEntry != null)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Flexible(
+                              child: CurrentPromptText(
+                                prompt: lastUserEntry.text.getVisiblePrompt(),
+                              ),
+                            ),
+                            if (lastUserEntry.attachedImage.isNotEmpty)
+                              _buildPickedImage(lastUserEntry.attachedImage),
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -120,6 +138,8 @@ class _AiTextInputState extends State<AiTextInput> {
         onSubmitted: _onTextSubmitted,
         cursorColor: Colors.blue,
         textCapitalization: TextCapitalization.sentences,
+        maxLines: 3,
+        minLines: 1,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white.withOpacity(0.3),
@@ -143,9 +163,15 @@ class _AiTextInputState extends State<AiTextInput> {
                     if (_speechToText.isListening) {
                       await _speechToText.stop();
                     } else {
+                      final Locale deviceLocale =
+                          PlatformDispatcher.instance.locales.first;
                       await _speechToText.listen(
                         onResult: _onSpeechResult,
-                        localeId: 'fr_FR',
+                        localeId: deviceLocale.languageCode == 'fr'
+                            ? 'fr_FR'
+                            : 'en_US',
+                        listenOptions:
+                            SpeechListenOptions(partialResults: false),
                       );
                     }
                     setState(() {});
@@ -179,7 +205,7 @@ class _AiTextInputState extends State<AiTextInput> {
           final String fileName = path.basename(picked.path);
           final File savedImage = File('${appDir.path}/$fileName');
           await File(picked.path).copy(savedImage.path);
-          _controller.text = 'Décris cette image';
+          _controller.text = localized.describeThisImage;
           if (!mounted) return;
           setState(() {
             _pickedImage = savedImage;
@@ -207,13 +233,14 @@ class _AiTextInputState extends State<AiTextInput> {
     setState(() {
       _controller.text = result.recognizedWords;
     });
+    _onTextSubmitted(_controller.text);
   }
 
-  void _onTextSubmitted(String text ) async {
+  void _onTextSubmitted(String text) async {
     if (!widget.onlyText) {
       FocusScope.of(context).requestFocus(_inputFocus);
       if (_controller.text.isEmpty) return;
-      context.read<TalkingCubit>().isLoading();
+      context.read<TalkingCubit>().setLoadingStatus(true);
     }
     if (_controller.text.isEmpty) return;
     final String prompt = _controller.text;
@@ -222,19 +249,21 @@ class _AiTextInputState extends State<AiTextInput> {
     setState(() {
       _pickedImage = null;
     });
-    final Map<String, dynamic> responseMap =
+    final Map<String, dynamic>? responseMap =
         await context.read<ChatsCubit>().askYofardev(
               prompt,
               attachedImage: attachedImage,
               onlyText: widget.onlyText,
               avatar: context.read<AvatarCubit>().state.avatar,
             );
+    if (responseMap == null) return;
     if (!mounted) return;
     context.read<AvatarCubit>().setAvatarConfigFromNewAnswer(
-        responseMap['annotations'] as List<String>,);
+          responseMap['annotations'] as List<String>,
+        );
     if (!widget.onlyText) {
       if (!mounted) return;
-      context.read<TalkingCubit>().prepareToSpeak(responseMap );
+      context.read<TalkingCubit>().prepareToSpeak(responseMap);
     }
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../logic/avatar/avatar_cubit.dart';
 import '../../../logic/avatar/avatar_state.dart';
+import '../../../models/avatar.dart';
 import '../../../res/app_constants.dart';
 
 class BaseAvatar extends StatelessWidget {
@@ -22,9 +23,13 @@ class BaseAvatar extends StatelessWidget {
                   onTap: () {
                     context.read<AvatarCubit>().changeBottomAvatar();
                   },
-                  child: Image.asset(
-                    'assets/avatar/${state.avatar.bottom.name}.png',
-                  ),
+                  child: state.avatar.costume == AvatarCostume.none
+                      ? Image.asset(
+                          'assets/avatar/bottom/${state.avatar.bottom.name}.png',
+                        )
+                      : Image.asset(
+                          'assets/avatar/costumes/emptyBot.png',
+                        ),
                 ),
               ),
               Positioned.fill(
@@ -34,9 +39,13 @@ class BaseAvatar extends StatelessWidget {
                   onTap: () {
                     context.read<AvatarCubit>().changeTopAvatar();
                   },
-                  child: Image.asset(
-                    'assets/avatar/${state.avatar.top.name}.png',
-                  ),
+                  child: state.avatar.costume == AvatarCostume.none
+                      ? Image.asset(
+                          'assets/avatar/top/${state.avatar.top.name}.png',
+                        )
+                      : Image.asset(
+                          'assets/avatar/costumes/emptyTop.png',
+                        ),
                 ),
               ),
             ],

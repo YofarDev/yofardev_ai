@@ -9,6 +9,7 @@ import '../../../res/app_constants.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';
 import 'clothes.dart';
+import 'costume.dart';
 import 'talking_mouth.dart';
 
 class AvatarWidgets extends StatefulWidget {
@@ -68,9 +69,10 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
               children: <Widget>[
                 const BaseAvatar(),
                 const BlinkingEyes(),
-                if (state.avatar.glasses == AvatarGlasses.sunglasses)
+                if (state.avatar.glasses == AvatarGlasses.sunglasses && state.avatar.costume == AvatarCostume.none)
                   const Clothes(name: 'sunglasses'),
                 const TalkingMouth(),
+                if (state.avatar.costume != AvatarCostume.none) const Costume(),
               ],
             ),
           ),

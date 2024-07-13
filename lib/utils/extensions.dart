@@ -1,5 +1,7 @@
 import 'dart:math';
+import 'dart:ui';
 
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 extension RemoveEmojis on String {
@@ -28,9 +30,10 @@ extension RemoveEmojis on String {
 }
 
 extension DateTimeExtension on DateTime {
-  // Format : 'Le 10 mai 2022 à 14h30'
+  // Format : '10 mai 2022 - 14:30'
   String toLongLocalDateString() {
-    return DateFormat('EEEE d MMMM yyyy à HH:mm', 'fr').format(this);
+    final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
+    return DateFormat('EEEE d MMMM yyyy - HH:mm', deviceLocale.languageCode).format(this);
   }
 }
 
@@ -70,4 +73,32 @@ extension EnumUtils on Enum {
     final Random random = Random();
     return values[random.nextInt(values.length)];
   }
+}
+
+extension ColorfulLogs on String {
+  String toRedLog() =>  "'\x1B[31m$this\x1B[0m'";
+  String toGreenLog() => "'\x1B[32m$this\x1B[0m'";
+  String toYellowLog() =>  "'\x1B[33m$this\x1B[0m'";
+  String toBlueLog() =>  "'\x1B[34m$this\x1B[0m'";
+  String toWhiteLog() => "'\x1B[37m$this\x1B[0m'";
+  String toCyanLog() => "'\x1B[36m$this\x1B[0m'";
+  String toMagentaLog() =>"'\x1B[35m$this\x1B[0m'";
+
+
+  void printRedLog() =>
+    split('\n').forEach((String element) => debugPrint(element.toRedLog()));
+  void printGreenLog() =>
+      split('\n').forEach((String element) => debugPrint(element.toGreenLog()));
+  void printYellowLog() =>
+      split('\n').forEach((String element) => debugPrint(element.toYellowLog()));
+  void printBlueLog() =>
+      split('\n').forEach((String element) => debugPrint(element.toBlueLog()));
+  void printWhiteLog() =>
+      split('\n').forEach((String element) => debugPrint(element.toWhiteLog()));
+  void printCyanLog() =>
+      split('\n').forEach((String element) => debugPrint(element.toCyanLog()));
+  void printMagentaLog() =>
+      split('\n').forEach((String element) => debugPrint(element.toMagentaLog()));
+  
+
 }
