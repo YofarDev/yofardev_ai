@@ -15,7 +15,7 @@ import 'ui/pages/home.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
-  await LocalizationManager().initialize(deviceLocale);
+  await LocalizationManager().initialize(deviceLocale.languageCode);
   runApp(const MyApp());
 }
 

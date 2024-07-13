@@ -17,5 +17,8 @@ String get customizationPrompt;
 String get listChats;
 String get hiddenPart;
 String get describeThisImage;
+String get settingsSubstring;
+String get enableSoundEffects;
+String get loadDefaultSystemPrompt;
 
 }

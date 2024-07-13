@@ -34,30 +34,6 @@ class AvatarCubit extends Cubit<AvatarState> {
     emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));
   }
 
-  void changeTopAvatar() {
-    final AvatarTop current = state.avatar.top;
-    const List<AvatarTop> topAvatars = AvatarTop.values;
-    final int index = topAvatars.indexOf(current);
-    final int newIndex = index != topAvatars.length - 1 ? index + 1 : 0;
-    emit(
-      state.copyWith(
-        avatar: state.avatar.copyWith(top: topAvatars[newIndex]),
-      ),
-    );
-  }
-
-  void changeBottomAvatar() {
-    final AvatarBottom current = state.avatar.bottom;
-    const List<AvatarBottom> bottomAvatars = AvatarBottom.values;
-    final int index = bottomAvatars.indexOf(current);
-    final int newIndex = index != bottomAvatars.length - 1 ? index + 1 : 0;
-    emit(
-      state.copyWith(
-        avatar: state.avatar.copyWith(bottom: bottomAvatars[newIndex]),
-      ),
-    );
-  }
-
   void _goAndComeBack(String chatId, AvatarConfig avatarConfig) async {
     onAnimationStatusChanged(true);
     await Future<dynamic>.delayed(
@@ -96,7 +72,8 @@ class AvatarCubit extends Cubit<AvatarState> {
       if (avatarConfig.specials.isNotEmpty &&
           avatarConfig.specials.first != state.avatar.specials) {
         onAnimationStatusChanged(
-            state.avatar.specials == AvatarSpecials.onScreen);
+          state.avatar.specials == AvatarSpecials.onScreen,
+        );
       }
       _updateAvatar(chatId, avatarConfig);
     }

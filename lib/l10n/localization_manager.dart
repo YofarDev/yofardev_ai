@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'language_en.dart';
 import 'language_fr.dart';
 import 'languages.dart';
@@ -11,11 +9,11 @@ class LocalizationManager {
 
   Languages? _currentLanguage;
 
-  Future<void> initialize(Locale locale) async {
-    if (locale.languageCode == 'en' || locale.languageCode == 'fr') {
-      _currentLanguage = await _loadLanguage(locale);
+  Future<void> initialize(String languageCode) async {
+    if (languageCode == 'en' || languageCode == 'fr') {
+      _currentLanguage = await _loadLanguage(languageCode);
     } else {
-      _currentLanguage = await _loadLanguage(const Locale('en'));
+      _currentLanguage = await _loadLanguage('en');
     }
   }
 
@@ -26,8 +24,8 @@ class LocalizationManager {
     return _currentLanguage!;
   }
 
-  Future<Languages> _loadLanguage(Locale locale) async {
-    switch (locale.languageCode) {
+  Future<Languages> _loadLanguage(String languageCode) async {
+    switch (languageCode) {
       case 'fr':
         return LanguageFr();
       case 'en':

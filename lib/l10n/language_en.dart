@@ -25,5 +25,11 @@ String get listChats => "List of chats";
 String get hiddenPart => "This part is not visible to the user, do not take it into account in your response.";
 @override
 String get describeThisImage => "Describe this image";
+@override
+String get settingsSubstring => "Start a new chat after any settings change";
+@override
+String get enableSoundEffects => "Enable sound effects";
+@override
+String get loadDefaultSystemPrompt => "Load the default system prompt";
 
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/answer.dart';
 import '../../../res/app_constants.dart';
@@ -38,7 +39,13 @@ class TalkingMouth extends StatelessWidget {
   }
 
   void _startTalking(BuildContext context, Answer answer) async {
-    if (answer.amplitudes.isEmpty) return context.read<TalkingCubit>().stopTalking(noFile: true);
+    if (answer.amplitudes.isEmpty) {
+      return context.read<TalkingCubit>().stopTalking(
+            noFile: true,
+            noSoundEffects:
+                context.read<ChatsCubit>().state.soundEffectsEnabled,
+          );
+    }
     final AudioPlayer player = AudioPlayer();
     await player.setFilePath(answer.audioPath, initialPosition: Duration.zero);
     final int totalFrames = answer.amplitudes.length;
@@ -50,7 +57,10 @@ class TalkingMouth extends StatelessWidget {
       if (currentIndex >= totalFrames) {
         timer.cancel();
         player.dispose();
-        context.read<TalkingCubit>().stopTalking();
+        context.read<TalkingCubit>().stopTalking(
+              noSoundEffects:
+                  context.read<ChatsCubit>().state.soundEffectsEnabled,
+            );
         return;
       } else {
         context.read<TalkingCubit>().updateMouthState(

@@ -8,7 +8,7 @@ String get appName => "Yofardev AI";
 @override
 String get empty => "(vide)";
 @override
-String get settings => "Options";
+String get settings => "Paramètres";
 @override
 String get baseSystemPrompt => "Tu es Yofardev AI, l'avatar d'un assistant sarcastique. Tu es généralement positif, mais n'hésite pas à employer un ton légèrement moqueur. Tu privilégies les réponses courtes et précises, avec une touche d'humour pince-sans-rire. Visuellement, tu es représenté comme un beau jeune homme aux cheveux et aux yeux bruns dans un style d'anime. Tu portes un sweat à capuche rose et des lunettes noires, avec une expression neutre/sérieuse. Si une image ressemble à cette description, demande si c'est toi.";
 @override
@@ -25,5 +25,11 @@ String get listChats => "Liste des chats";
 String get hiddenPart => "Cette partie n'est pas visible par l'utilisateur, n'en tenez pas compte dans votre réponse.";
 @override
 String get describeThisImage => "Décris cette image";
+@override
+String get settingsSubstring => "Démarrez un nouveau chat après avoir modifié les paramètres";
+@override
+String get enableSoundEffects => "Activer les effets sonores";
+@override
+String get loadDefaultSystemPrompt => "Charger le prompt système par défaut";
 
 }

@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -31,9 +30,8 @@ extension RemoveEmojis on String {
 
 extension DateTimeExtension on DateTime {
   // Format : '10 mai 2022 - 14:30'
-  String toLongLocalDateString() {
-    final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
-    return DateFormat('EEEE d MMMM yyyy - HH:mm', deviceLocale.languageCode).format(this);
+  String toLongLocalDateString({String language = 'en'}) {
+    return DateFormat('EEEE d MMMM yyyy - HH:mm', language).format(this);
   }
 }
 

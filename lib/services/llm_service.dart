@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../l10n/localization_manager.dart';
@@ -65,7 +64,7 @@ class LlmService {
   }
 
   Future<String> _getSystemPrompt(Chat currentChat) async {
-    final String base = await SettingsService().getBaseSystemPrompt();
+    final String base = await SettingsService().getBaseSystemPrompt() ?? localized.baseSystemPrompt;
     final StringBuffer soundEffectsList = StringBuffer();
     for (final SoundEffects soundEffect in SoundEffects.values) {
       soundEffectsList.write("[$soundEffect], ");

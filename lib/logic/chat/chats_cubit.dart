@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +10,7 @@ import '../../models/chat.dart';
 import '../../models/chat_entry.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/llm_service.dart';
+import '../../services/settings_service.dart';
 import '../../utils/extensions.dart';
 import '../avatar/avatar_cubit.dart';
 
@@ -21,7 +24,26 @@ class ChatsCubit extends Cubit<ChatsState> {
   void getCurrentChat() async {
     emit(state.copyWith(status: ChatsStatus.loading));
     final Chat currentChat = await ChatHistoryService().getCurrentChat();
-    emit(state.copyWith(status: ChatsStatus.success, currentChat: currentChat));
+    final bool soundEffectsEnabled = await SettingsService().getSoundEffects();
+    final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
+    emit(
+      state.copyWith(
+        status: ChatsStatus.success,
+        currentChat: currentChat,
+        soundEffectsEnabled: soundEffectsEnabled,
+        currentLanguage: deviceLocale.languageCode,
+      ),
+    );
+  }
+
+  void setCurrentLanguage(String language) async {
+    await LocalizationManager().initialize(language);
+    emit(state.copyWith(currentLanguage: language));
+  }
+
+  void setSoundEffects(bool soundEffectsEnabled) async {
+    emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled));
+    await SettingsService().setSoundEffects(soundEffectsEnabled);
   }
 
   void fetchChatsList() async {
@@ -49,7 +71,7 @@ class ChatsCubit extends Cubit<ChatsState> {
   }
 
   String _addPrePrompt(Avatar avatar, String prompt) =>
-      "{[${DateTime.now().toLongLocalDateString()}]\n$avatar\n${localized.hiddenPart}}\n$prompt";
+      "{[${DateTime.now().toLongLocalDateString(language: state.currentLanguage)}]\n$avatar\n${localized.hiddenPart}}\n$prompt";
 
   Future<Map<String, dynamic>?> askYofardev(
     String prompt, {

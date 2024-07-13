@@ -12,45 +12,63 @@ class HomeButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      right: 8,
-      top: 8,
-      child: SafeArea(
-        child: Column(
-          children: <Widget>[
-            AppIconButton(
-              icon: Icons.chat_bubble_outline_rounded,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<dynamic>(
-                    builder: (BuildContext context) => const ChatsListPage(),
+    return BlocBuilder<ChatsCubit, ChatsState>(
+      builder: (BuildContext context, ChatsState state) {
+        return Positioned(
+          right: 8,
+          top: 8,
+          child: SafeArea(
+            child: Column(
+              children: <Widget>[
+                // emoji flag fr : 🇫🇷 emoji flag en : 🇬🇧
+                GestureDetector(
+                  onTap: () {
+                    context.read<ChatsCubit>().setCurrentLanguage(
+                          state.currentLanguage == 'fr' ? 'en' : 'fr',
+                        );
+                  },
+                  child: Text(
+                    state.currentLanguage == 'fr' ? '🇫🇷' : '🇬🇧',
+                    style: const TextStyle(fontSize: 16),
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: 8),
+                AppIconButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<dynamic>(
+                        builder: (BuildContext context) =>
+                            const ChatsListPage(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+                AppIconButton(
+                  icon: Icons.add_outlined,
+                  onPressed: () {
+                    context
+                        .read<ChatsCubit>()
+                        .createNewChat(context.read<AvatarCubit>());
+                  },
+                ),
+                const SizedBox(height: 8),
+                AppIconButton(
+                  icon: Icons.settings_rounded,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<dynamic>(
+                        builder: (BuildContext context) => const SettingsPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            AppIconButton(
-              icon: Icons.add_outlined,
-              onPressed: () {
-                context
-                    .read<ChatsCubit>()
-                    .createNewChat(context.read<AvatarCubit>());
-              },
-            ),
-            const SizedBox(height: 8),
-            AppIconButton(
-              icon: Icons.settings_rounded,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<dynamic>(
-                    builder: (BuildContext context) => const SettingsPage(),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

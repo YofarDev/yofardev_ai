@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../l10n/localization_manager.dart';
+import '../../../logic/chat/chats_cubit.dart';
 import '../../../models/sound_effects.dart';
 import '../../../services/settings_service.dart';
 
@@ -23,8 +25,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _loadSettings() async {
-    _apiKeyController.text =await SettingsService().getApiKey();
-    _baseSystemPromptController.text = await SettingsService().getBaseSystemPrompt();
+    _apiKeyController.text = await SettingsService().getApiKey();
+    _baseSystemPromptController.text =
+        await SettingsService().getBaseSystemPrompt() ?? '';
     setState(() {});
   }
 
@@ -42,37 +45,103 @@ class _SettingsPageState extends State<SettingsPage> {
             icon: const Icon(Icons.save),
             onPressed: () async {
               await SettingsService().setApiKey(_apiKeyController.text);
-              await SettingsService().setBaseSystemPrompt(_baseSystemPromptController.text);
-              Navigator.of(context).pop();
+              await SettingsService()
+                  .setBaseSystemPrompt(_baseSystemPromptController.text)
+                  .then((_) {
+                Navigator.of(context).pop();
+              });
             },
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: <Widget>[
-            _buildApiKeyField(),
-            _buildBaseSystemPromptField(),
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                localized.settingsSubstring,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              _buildApiKeyField(),
+              const SizedBox(height: 16),
+              _buildBaseSystemPromptField(),
+              const SizedBox(height: 16),
+              _buildSoundEffectsCheckbox(),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildApiKeyField() => TextFormField(
-        controller: _apiKeyController,
-        decoration: const InputDecoration(
-          hintText: "Google API Key",
-        ),
+  Widget _buildApiKeyField() => _textField(
+        _apiKeyController,
+        hintText: "Google API Key",
+        prefixIcon: Icons.vpn_key,
       );
 
-  Widget _buildBaseSystemPromptField() => TextFormField(
-        controller: _baseSystemPromptController,
-        decoration: const InputDecoration(
-          hintText: "Base system prompt",
+  Widget _buildBaseSystemPromptField() => Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          _textField(
+            _baseSystemPromptController,
+            hintText: localized.baseSystemPrompt,
+            minLines: 8,
+            maxLines: 20,
+          ),
+          MaterialButton(
+            onPressed: () {
+              _baseSystemPromptController.text = localized.baseSystemPrompt;
+            },
+            child: Text(localized.loadDefaultSystemPrompt),
+          ),
+        ],
+      );
+
+  Widget _textField(
+    TextEditingController controller, {
+    String? hintText,
+    int? maxLines,
+    int? minLines,
+    IconData? prefixIcon,
+  }) =>
+      TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          hintText: hintText,
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
         ),
-        minLines: 8,
-        maxLines: 20,
+        minLines: minLines,
+        maxLines: maxLines,
+      );
+
+  Widget _buildSoundEffectsCheckbox() => BlocBuilder<ChatsCubit, ChatsState>(
+        builder: (BuildContext context, ChatsState state) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                localized.enableSoundEffects,
+                style: const TextStyle(fontSize: 20),
+              ),
+              Switch(
+                value: state.soundEffectsEnabled,
+                onChanged: (bool value) {
+                  context.read<ChatsCubit>().setSoundEffects(value);
+                },
+              ),
+            ],
+          );
+        },
       );
 }

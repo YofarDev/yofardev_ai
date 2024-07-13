@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -163,11 +162,9 @@ class _AiTextInputState extends State<AiTextInput> {
                     if (_speechToText.isListening) {
                       await _speechToText.stop();
                     } else {
-                      final Locale deviceLocale =
-                          PlatformDispatcher.instance.locales.first;
                       await _speechToText.listen(
                         onResult: _onSpeechResult,
-                        localeId: deviceLocale.languageCode == 'fr'
+                        localeId: context.read<ChatsCubit>().state.currentLanguage == 'fr'
                             ? 'fr_FR'
                             : 'en_US',
                         listenOptions:
@@ -263,7 +260,7 @@ class _AiTextInputState extends State<AiTextInput> {
         );
     if (!widget.onlyText) {
       if (!mounted) return;
-      context.read<TalkingCubit>().prepareToSpeak(responseMap);
+      context.read<TalkingCubit>().prepareToSpeak(responseMap, context.read<ChatsCubit>().state.currentLanguage);
     }
   }
 }

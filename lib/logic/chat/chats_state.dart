@@ -1,5 +1,6 @@
 
 
+
 part of 'chats_cubit.dart';
 
 enum ChatsStatus { loading, success, updating, typing, error }
@@ -10,12 +11,16 @@ class ChatsState extends Equatable {
   final Chat currentChat;
   final Chat openedChat;
   final String errorMessage;
+  final bool soundEffectsEnabled;
+  final String currentLanguage;
   const ChatsState({
     this.status = ChatsStatus.loading,
     this.chatsList = const <Chat>[],
     this.currentChat = const Chat(),
      this.openedChat = const Chat(),
     this.errorMessage = '',
+    this.soundEffectsEnabled = true,
+    this.currentLanguage = 'fr',
   });
 
   @override
@@ -26,6 +31,8 @@ class ChatsState extends Equatable {
       currentChat,
       openedChat,
       errorMessage,
+      soundEffectsEnabled,
+      currentLanguage,
     ];
   }
 
@@ -35,6 +42,8 @@ class ChatsState extends Equatable {
     Chat? currentChat,
     Chat? openedChat,
     String? errorMessage,
+    bool? soundEffectsEnabled,
+    String? currentLanguage,
   }) {
     return ChatsState(
       status: status ?? this.status,
@@ -42,6 +51,8 @@ class ChatsState extends Equatable {
       currentChat: currentChat ?? this.currentChat,
       openedChat: openedChat ?? this.openedChat,
       errorMessage: errorMessage ?? this.errorMessage,
+      soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
+      currentLanguage: currentLanguage ?? this.currentLanguage,
     );
   }
 }

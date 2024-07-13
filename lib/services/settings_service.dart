@@ -10,11 +10,11 @@ class SettingsService {
   }
 
   Future<String> getApiKey() async {
-    // await dotenv.load();
-    // final String? apiKey = dotenv.env['GOOGLE_KEY'] ;
-    // if (apiKey != null) {
-    //   return apiKey;
-    // }
+    await dotenv.load();
+    final String? apiKey = dotenv.env['GOOGLE_KEY'] ;
+    if (apiKey != null) {
+      return apiKey;
+    }
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('apiKey') ?? '';
   }
@@ -25,8 +25,18 @@ class SettingsService {
     await prefs.setString('baseSystemPrompt', baseSystemPrompt);
   }
 
-  Future<String> getBaseSystemPrompt() async {
+  Future<String?> getBaseSystemPrompt() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('baseSystemPrompt') ?? localized.baseSystemPrompt;
+  }
+
+  Future<void> setSoundEffects(bool soundEffects) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('soundEffects', soundEffects);
+  }
+
+  Future<bool> getSoundEffects() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('soundEffects') ?? true;
   }
 }

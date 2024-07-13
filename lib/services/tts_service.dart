@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -28,23 +27,18 @@ class TtsService {
     return '${documentsDir.path}/Music';
   }
 
-  Future<String> textToFrenchMaleVoice(String text) async {
+  Future<String> textToFrenchMaleVoice({required String text, required String language}) async {
     final FlutterTts flutterTts = FlutterTts();
-    final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
-    switch (deviceLocale.languageCode) {
+    switch (language) {
       case 'fr':
         await flutterTts.setLanguage("fr-FR");
         await flutterTts.setVoice(
           <String, String>{"name": "fr-fr-x-frd-local", "locale": "fr-FR"},
         );
-      case 'en':
+      default:
         await flutterTts.setLanguage("en-US");
         await flutterTts.setVoice(
           <String, String>{"name": "en-us-x-iom-local", "locale": "en-US"},
-        );
-      default:
-        throw Exception(
-          'Unsupported language code: ${deviceLocale.languageCode}',
         );
     }
 
