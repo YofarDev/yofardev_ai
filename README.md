@@ -6,7 +6,12 @@ Yofardev AI is a small fun project to kind of bring life to a Large Language Mod
 
 ## Demo
 
-![Demo Video](readme/demo1.mp4)
+<p align="center">
+  <img src="screenshots/1.png" width="20%" />
+  <img src="screenshots/2.png" width="20%" />
+  <img src="screenshots/3.png" width="20%" />
+  <img src="screenshots/4.png" width="20%" />
+</p>
 
 ## Requirements
 
@@ -27,21 +32,23 @@ Yofardev AI is a small fun project to kind of bring life to a Large Language Mod
 
 ## Known Issues
 
-- The LLM currently tends to overuse sound effects. You can disable sound effects completely in the settings.
+- The LLM currently tends to overuse sound effects for no reason. You can disable sound effects completely in the settings.
+- The fading volume when the avatar is leaving and coming back is a bit glitchy (in the demo video, it was video editing because it didn't record the effect).
+- Sometimes the lip-sync stop working, need to find out why.
+- The batman costume is horrible
 
 ## Future Improvements
 
 - An interrupt button to stop the AI's response mid-sentence would be a good idea.
 - The only reason I didn't make the app ios compatible, is because I had to write android native code to get the amplitude of audio files (for the lip-sync) and I have almost 0 experience with swift, but it may be easy to do.
 
-
 ## License
 
-This project is licensed under the [Insert chosen license here] License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Tools used
 
 - Google's Gemini 1.5-flash as backend LLM (it's actually better than I thought, and it's free)
 - Text-to-speech is made localy with android's TTS engine through the flutter_tts plugin
 
-Except for the Gemini API, everything is local. Even chat history is only stored in the cache of the app.
+Except for the Gemini API, everything is local. Even history of chats are only stored in the cache of the app.
