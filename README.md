@@ -9,7 +9,9 @@ Yofardev AI is a small fun project to kind of bring life to a Large Language Mod
   <img src="screenshots/4.png" width="20%" />
 </p>
 
-## Demo
+Except for the Gemini API, everything is local. Even history of chats are only stored in the cache of the app.
+
+## Demo Video on YouTube
 
 [![Demo Video](https://img.youtube.com/vi/nzVYq8lGkHI/0.jpg)](https://www.youtube.com/watch?v=nzVYq8lGkHI)
 
@@ -51,5 +53,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Google's Gemini 1.5-flash as backend LLM (it's actually better than I thought, and it's free)
 - Text-to-speech is made localy with android's TTS engine through the flutter_tts plugin
 - Stable Diffusion 1.5 for the avatar, customizations and backgrounds (AnyLora Anime Mix), with a custom LORA for the character
-
-Except for the Gemini API, everything is local. Even history of chats are only stored in the cache of the app.
