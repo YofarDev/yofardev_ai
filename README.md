@@ -2,16 +2,16 @@
 
 Yofardev AI is a small fun project to kind of bring life to a Large Language Model (LLM) through an animated avatar. Users can interact with the AI assistant through text (or dictate to text), and the app responds with generated text2speech, and lip-synced animations.
 
-[Insert a screenshot or GIF here]
-
-## Demo
-
 <p align="center">
   <img src="screenshots/1.png" width="20%" />
   <img src="screenshots/2.png" width="20%" />
   <img src="screenshots/3.png" width="20%" />
   <img src="screenshots/4.png" width="20%" />
 </p>
+
+## Demo
+
+![Demo Video](https://www.youtube.com/watch?v=nzVYq8lGkHI)
 
 ## Requirements
 
@@ -35,7 +35,7 @@ Yofardev AI is a small fun project to kind of bring life to a Large Language Mod
 - The LLM currently tends to overuse sound effects for no reason. You can disable sound effects completely in the settings.
 - The fading volume when the avatar is leaving and coming back is a bit glitchy (in the demo video, it was video editing because it didn't record the effect).
 - Sometimes the lip-sync stop working, need to find out why.
-- The batman costume is horrible
+- The batman costume is
 
 ## Future Improvements
 
