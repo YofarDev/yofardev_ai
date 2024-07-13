@@ -50,5 +50,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Google's Gemini 1.5-flash as backend LLM (it's actually better than I thought, and it's free)
 - Text-to-speech is made localy with android's TTS engine through the flutter_tts plugin
+- Stable Diffusion 1.5 for the avatar, customizations and backgrounds (AnyLora Anime Mix), with a custom LORA for the character
 
 Except for the Gemini API, everything is local. Even history of chats are only stored in the cache of the app.
