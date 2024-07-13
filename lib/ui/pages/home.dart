@@ -63,7 +63,8 @@ class _HomeState extends State<Home> {
           previous.statusAnimation != current.statusAnimation ||
           previous.status != current.status,
       listener: (BuildContext context, AvatarState state) {
-        if (state.status == AvatarStatus.ready && state.statusAnimation == AvatarStatusAnimation.initial) {
+        if (state.status == AvatarStatus.ready &&
+            state.statusAnimation == AvatarStatusAnimation.initial) {
           _volumeControl
               .setVolume(state.avatar.specials == AvatarSpecials.onScreen);
         } else {

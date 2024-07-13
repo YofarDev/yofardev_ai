@@ -133,7 +133,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     }
   }
 
-  void updateBackgroundOpenedChat(AvatarBackgrounds bg) async {
+  Future<void> updateBackgroundOpenedChat(AvatarBackgrounds bg) async {
     emit(state.copyWith(status: ChatsStatus.updating));
     final Chat chat = state.openedChat;
     emit(

@@ -119,7 +119,11 @@ class ChatDetailsPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Center(
                       child: Text(
-                        chat[index].timestamp.toLongLocalDateString(language:context.read<ChatsCubit>().state.currentLanguage),
+                        chat[index].timestamp.toLongLocalDateString(
+                            language: context
+                                .read<ChatsCubit>()
+                                .state
+                                .currentLanguage),
                         style: const TextStyle(
                           color: Colors.black54,
                           fontWeight: FontWeight.bold,
@@ -174,9 +178,27 @@ class ChatDetailsPage extends StatelessWidget {
                                     AvatarBackgrounds.values,
                                     p0,
                                   );
-                                  context
+                                await  context
                                       .read<ChatsCubit>()
                                       .updateBackgroundOpenedChat(bgImage);
+                                  if (context
+                                          .read<ChatsCubit>()
+                                          .state
+                                          .currentChat
+                                          .id ==
+                                      context
+                                          .read<ChatsCubit>()
+                                          .state
+                                          .openedChat
+                                          .id) {
+                                    context.read<AvatarCubit>().loadAvatar(
+                                          context
+                                              .read<ChatsCubit>()
+                                              .state
+                                              .openedChat
+                                              .id,
+                                        );
+                                  }
                                 },
                                 renderWidget: ({
                                   required String pattern,
