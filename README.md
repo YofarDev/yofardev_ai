@@ -11,6 +11,18 @@ Yofardev AI is a small fun project that brings life to a Large Language Model (L
 
 Except for the Gemini API, everything is local. Even history of chats are only stored in the cache of the app.
 
+## Features
+
+- Native text-to-speech and lip-synced animations (customizable voices)
+- You can ask Yofardev AI to change clothes and background (sometimes it doesn't want to do it)
+- Yofardev AI can play a sound effect at the end of its answer (you can disable it in the settings)
+- Yofardev AI can analyze images
+- Yofardev AI can leave and come back of the screen
+- History of chats (text version, stored locally)
+- Customizable system prompt
+- English and French supported
+- Free and open source
+
 ## Demo Video on YouTube
 
 [![Demo Video](https://img.youtube.com/vi/nzVYq8lGkHI/0.jpg)](https://www.youtube.com/watch?v=nzVYq8lGkHI)
@@ -50,7 +62,6 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 ## Known Issues
 
 - The LLM currently tends to overuse sound effects for no reason. You can disable sound effects completely in the settings.
-- The fading volume when the avatar is leaving and coming back is a bit glitchy (in the demo video, it was video editing because it didn't record the effect).
 - Sometimes the lip-sync stop working, need to find out why.
 - The batman costume is horrible
 
