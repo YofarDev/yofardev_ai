@@ -1,4 +1,4 @@
-# Yofardev AI
+# [iOS/Android]Yofardev AI
 
 Yofardev AI is a small fun project that brings life to a Large Language Model (LLM) through an animated avatar. Users can interact with the AI assistant through text (or dictate to text), and the app responds with generated text-to-speech and lip-synced animations.
 
