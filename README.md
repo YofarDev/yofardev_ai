@@ -17,6 +17,8 @@ Except for the Gemini API, everything is local. Even history of chats are only s
 
 ## Requirements
 
+To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_ai/releases/) directly, or to build it you need to have the following:
+
 - Flutter (>=3.4.3 <4.0.0)
 - Android SDK
 - Google API key for Gemini 1.5-flash (you can set it up directly in app)
@@ -37,7 +39,7 @@ Except for the Gemini API, everything is local. Even history of chats are only s
 - The LLM currently tends to overuse sound effects for no reason. You can disable sound effects completely in the settings.
 - The fading volume when the avatar is leaving and coming back is a bit glitchy (in the demo video, it was video editing because it didn't record the effect).
 - Sometimes the lip-sync stop working, need to find out why.
-- The batman costume is
+- The batman costume is horrible
 
 ## Future Improvements
 

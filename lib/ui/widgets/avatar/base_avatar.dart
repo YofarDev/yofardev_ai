@@ -21,7 +21,7 @@ class BaseAvatar extends StatelessWidget {
                 top: null,
                 child: GestureDetector(
                   onTap: () {
-                 //   context.read<AvatarCubit>().changeBottomAvatar();
+                    //   context.read<AvatarCubit>().changeBottomAvatar();
                   },
                   child: state.avatar.costume == AvatarCostume.none
                       ? Image.asset(
@@ -37,7 +37,7 @@ class BaseAvatar extends StatelessWidget {
                 bottom: AppConstants().topAvatarInvertedY * state.scaleFactor,
                 child: GestureDetector(
                   onTap: () {
-                //    context.read<AvatarCubit>().changeTopAvatar();
+                    //    context.read<AvatarCubit>().changeTopAvatar();
                   },
                   child: state.avatar.costume == AvatarCostume.none
                       ? Image.asset(

@@ -28,10 +28,11 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _initAudioPlayer();
+    _initVolumeControl();
+    // to avoid a bug where MediaQuery.of(context).size return 0 in release mode
+    WidgetsBinding.instance.addPersistentFrameCallback((_) {
       _initAvatar();
-      _initAudioPlayer();
-      _initVolumeControl();
     });
   }
 
