@@ -9,7 +9,6 @@ Yofardev AI is a small fun project that brings life to a Large Language Model (L
   <img src="screenshots/4.png" width="20%" />
 </p>
 
-Except for the Gemini API, everything is local. Even history of chats are only stored in the cache of the app.
 
 ## Features
 
