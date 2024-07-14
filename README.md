@@ -27,13 +27,20 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 ## Installation
 
 1. Clone the repository:
-   `git clone https://github.com/YofarDev/yofardev_ai.git`
+
+- `git clone https://github.com/YofarDev/yofardev_ai.git`
+
 2. Navigate to the project directory:
-   `cd yofardev_ai`
+
+- `cd yofardev_ai`
+
 3. Install dependencies:
-   `flutter pub get`
+
+- `flutter pub get`
+
 4. Run the app:
-   `flutter run`
+
+- `flutter run`
 
 ## Platforms
 
@@ -50,6 +57,7 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 ## Future Improvements
 
 - An interrupt button to stop the AI's response mid-sentence would be a good idea.
+- Make it web compatible?
 
 ## License
 
