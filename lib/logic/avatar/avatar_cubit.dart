@@ -31,7 +31,10 @@ class AvatarCubit extends Cubit<AvatarState> {
     emit(state.copyWith(status: AvatarStatus.loading));
     final Chat chat = await ChatHistoryService().getChat(chatId) ??
         await ChatHistoryService().createNewChat();
-    emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));
+    emit(state.copyWith(
+      avatar: chat.avatar,
+      status: AvatarStatus.ready,
+    ),);
   }
 
   void _goAndComeBack(String chatId, AvatarConfig avatarConfig) async {

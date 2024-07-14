@@ -36,9 +36,10 @@ packages:
   audio_analyzer:
     dependency: "direct main"
     description:
-      path: "/Users/yofardev/development/Projects/Flutter/PLUGINS/audio_analyzer"
-      relative: false
-    source: path
+      name: audio_analyzer
+      sha256: aae6389b37d11ef3486f52072cc71a60bae2685fb3508bf263f697900a54abf2
+      url: "https://pub.dev"
+    source: hosted
     version: "0.0.2"
   audio_session:
     dependency: transitive

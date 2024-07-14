@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/chat/chats_cubit.dart';
+import '../../logic/talking/talking_cubit.dart';
 import '../pages/chat/chats_list_page.dart';
 import '../pages/settings/settings_page.dart';
 import 'app_icon_button.dart';
@@ -48,9 +49,10 @@ class HomeButtons extends StatelessWidget {
                 AppIconButton(
                   icon: Icons.add_outlined,
                   onPressed: () {
-                    context
-                        .read<ChatsCubit>()
-                        .createNewChat(context.read<AvatarCubit>());
+                    context.read<ChatsCubit>().createNewChat(
+                          context.read<AvatarCubit>(),
+                          context.read<TalkingCubit>(),
+                        );
                   },
                 ),
                 const SizedBox(height: 8),

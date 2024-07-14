@@ -14,6 +14,17 @@ part 'talking_state.dart';
 class TalkingCubit extends Cubit<TalkingState> {
   TalkingCubit() : super(const TalkingState());
 
+  void init() {
+    emit(
+      state.copyWith(
+        status: TalkingStatus.initial,
+        isTalking: false,
+        mouthState: MouthState.closed,
+        answer: const Answer(),
+      ),
+    );
+  }
+
   Future<void> prepareToSpeak(
     Map<String, dynamic> responseMap,
     String language,
@@ -30,7 +41,7 @@ class TalkingCubit extends Cubit<TalkingState> {
           );
     final List<int> amplitudes = textToAudio.isEmpty
         ? <int>[]
-        : await AudioAnalyzer().getAmplitudes(audioPath);        
+        : await AudioAnalyzer().getAmplitudes(audioPath);
     emit(
       state.copyWith(
         status: TalkingStatus.success,

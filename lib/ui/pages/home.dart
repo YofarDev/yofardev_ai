@@ -52,9 +52,7 @@ class _HomeState extends State<Home> {
   }
 
   void _initVolumeControl() async {
-    _volumeControl = ProgressiveVolumeControl(
-      fadeDuration: Duration(seconds: AppConstants().movingAvatarDuration),
-    );
+    _volumeControl = ProgressiveVolumeControl();
   }
 
   @override
@@ -64,16 +62,10 @@ class _HomeState extends State<Home> {
           previous.statusAnimation != current.statusAnimation ||
           previous.status != current.status,
       listener: (BuildContext context, AvatarState state) {
-        if (state.status == AvatarStatus.ready &&
-            state.statusAnimation == AvatarStatusAnimation.initial) {
-          _volumeControl
-              .setVolume(state.avatar.specials == AvatarSpecials.onScreen);
-        } else {
-          if (state.statusAnimation == AvatarStatusAnimation.initial) return;
-          _volumeControl.startVolumeFade(
-            state.statusAnimation != AvatarStatusAnimation.leaving,
-          );
-        }
+        if (state.statusAnimation == AvatarStatusAnimation.initial) return;
+        _volumeControl.startVolumeFade(
+          state.statusAnimation != AvatarStatusAnimation.leaving,
+        );
       },
       child: BlocListener<ChatsCubit, ChatsState>(
         listenWhen: (ChatsState previous, ChatsState current) =>

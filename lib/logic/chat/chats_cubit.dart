@@ -13,6 +13,7 @@ import '../../services/llm_service.dart';
 import '../../services/settings_service.dart';
 import '../../utils/extensions.dart';
 import '../avatar/avatar_cubit.dart';
+import '../talking/talking_cubit.dart';
 
 part 'chats_state.dart';
 
@@ -171,7 +172,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     );
   }
 
-  void createNewChat(AvatarCubit avatarCubit) async {
+  void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
     emit(state.copyWith(status: ChatsStatus.updating));
     final Chat newChat = await ChatHistoryService().createNewChat();
     emit(
@@ -182,5 +183,6 @@ class ChatsCubit extends Cubit<ChatsState> {
       ),
     );
     avatarCubit.loadAvatar(newChat.id);
+    talkingCubit.init();
   }
 }

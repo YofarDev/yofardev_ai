@@ -7,6 +7,7 @@ import '../../../l10n/localization_manager.dart';
 import '../../../logic/avatar/avatar_cubit.dart';
 import '../../../logic/avatar/avatar_state.dart';
 import '../../../logic/chat/chats_cubit.dart';
+import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../utils/extensions.dart';
@@ -29,9 +30,10 @@ class ChatsListPage extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.add_circle_outlined),
                   onPressed: () {
-                    context
-                        .read<ChatsCubit>()
-                        .createNewChat(context.read<AvatarCubit>());
+                    context.read<ChatsCubit>().createNewChat(
+                          context.read<AvatarCubit>(),
+                          context.read<TalkingCubit>(),
+                        );
                     context.read<ChatsCubit>().fetchChatsList();
                   },
                 ),
@@ -41,7 +43,7 @@ class ChatsListPage extends StatelessWidget {
               children: <Widget>[
                 if (!isLoading)
                   if (state.chatsList.isEmpty)
-                     Center(child: Text(localized.empty))
+                    Center(child: Text(localized.empty))
                   else
                     _buildList(context, state.chatsList, state.currentChat),
                 if (isLoading) const CircularProgressIndicator(),
