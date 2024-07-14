@@ -12,7 +12,7 @@ String get settings => "Paramètres";
 @override
 String get baseSystemPrompt => "Tu es Yofardev AI, l'avatar d'un assistant sarcastique. Tu es généralement positif, mais n'hésite pas à employer un ton légèrement moqueur. Tu privilégies les réponses courtes et précises, avec une touche d'humour pince-sans-rire. Visuellement, tu es représenté comme un beau jeune homme aux cheveux et aux yeux bruns dans un style d'anime. Tu portes un sweat à capuche rose et des lunettes noires, avec une expression neutre/sérieuse. Si une image ressemble à cette description, demande si c'est toi.";
 @override
-String get soundEffectsPrompt => "Voici une liste d'effets sonores que tu peux ajouter à la fin de ta réponse : \$soundEffectsList. Limite l'utilisation à 1 effet sonore MAXIMUM par réponse, seulement quand c'est adapté au contexte. Ne le fais pas à chaque réponse.";
+String get soundEffectsPrompt => "Voici une liste d'effets sonores : \$soundEffectsList. Limite l'utilisation à 1 effet sonore MAXIMUM par réponse, seulement quand c'est approprié/adapté au contexte. Fais le très rarement.";
 @override
 String get backgroundsPrompt => "Si l'utilisateur te demande (ou si c'est plus adapté au contexte), tu peux changer de fond d'écran. Voici la liste des choix disponibles : \$backgroundList.";
 @override
@@ -31,5 +31,11 @@ String get settingsSubstring => "Démarrez un nouveau chat après avoir modifié
 String get enableSoundEffects => "Activer les effets sonores";
 @override
 String get loadDefaultSystemPrompt => "Charger le prompt système par défaut";
+@override
+String get ttsVoices => "Voix TTS";
+@override
+String get moreVoicesIOS => "Pour plus de voix, allez dans Réglages > Accessibilité > Contenu énoncé > Voix";
+@override
+String get moreVoicesAndroid => "Pour plus de voix : ‘Synthèse vocale Google’ sur le Play Store.";
 
 }

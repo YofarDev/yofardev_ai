@@ -20,5 +20,8 @@ String get describeThisImage;
 String get settingsSubstring;
 String get enableSoundEffects;
 String get loadDefaultSystemPrompt;
+String get ttsVoices;
+String get moreVoicesIOS;
+String get moreVoicesAndroid;
 
 }

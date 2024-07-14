@@ -64,6 +64,22 @@ class HomeButtons extends StatelessWidget {
                     );
                   },
                 ),
+                const SizedBox(height: 8),
+                // AppIconButton(
+                //   icon: Icons.info_outline_rounded,
+                //   onPressed: () async {
+                //     final ByteData byteData =
+                //         await rootBundle.load('assets/test.mp3');
+                //     final Directory tempDir = await getTemporaryDirectory();
+                //     final String tempPath = tempDir.path;
+                //     final File file = File('$tempPath/test.mp3');
+                //     await file.writeAsBytes(byteData.buffer.asUint8List());
+                //     final List<int> amplitudes =
+                //         await AudioAnalyzer().getAmplitudes(file.path);
+                //     print(amplitudes);
+                //     print(amplitudes.length);
+                //   },
+                // ),
               ],
             ),
           ),

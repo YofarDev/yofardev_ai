@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -84,19 +85,19 @@ extension ColorfulLogs on String {
 
 
   void printRedLog() =>
-    split('\n').forEach((String element) => debugPrint(element.toRedLog()));
+    split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toRedLog() : element));
   void printGreenLog() =>
-      split('\n').forEach((String element) => debugPrint(element.toGreenLog()));
+      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toGreenLog() : element));
   void printYellowLog() =>
-      split('\n').forEach((String element) => debugPrint(element.toYellowLog()));
+      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toYellowLog() : element));
   void printBlueLog() =>
-      split('\n').forEach((String element) => debugPrint(element.toBlueLog()));
+      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toBlueLog() : element));
   void printWhiteLog() =>
-      split('\n').forEach((String element) => debugPrint(element.toWhiteLog()));
+      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toWhiteLog() : element));
   void printCyanLog() =>
-      split('\n').forEach((String element) => debugPrint(element.toCyanLog()));
+      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toCyanLog() : element));
   void printMagentaLog() =>
-      split('\n').forEach((String element) => debugPrint(element.toMagentaLog()));
+      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toMagentaLog() : element));
   
 
 }

@@ -12,7 +12,7 @@ String get settings => "Settings";
 @override
 String get baseSystemPrompt => "You are Yofardev AI, the avatar of a sarcastic assistant. You are generally positive, but don't hesitate to use a slightly mocking tone. You prefer short and precise answers, with a touch of deadpan humor. Visually, you are represented as a handsome young man with brown hair and eyes in an anime style. You wear a pink hoodie and black glasses, with a neutral/serious expression. If an image resembles this description, ask if it's you.";
 @override
-String get soundEffectsPrompt => "Here is a list of sound effects that you can add at the end of your response: \$soundEffectsList. Limit the use to 1 sound effect MAXIMUM per response, only when it's appropriate to the context. Don't do it for every response.";
+String get soundEffectsPrompt => "Here is a list of sound effects: \$soundEffectsList. Limit the use to 1 sound effect MAXIMUM per response, only when it is appropriate/relevant to the context. Use it very rarely.";
 @override
 String get backgroundsPrompt => "If the user asks you (or if it's more appropriate to the context), you can change the background. Here is the list of available choices: \$backgroundList.";
 @override
@@ -31,5 +31,11 @@ String get settingsSubstring => "Start a new chat after any settings change";
 String get enableSoundEffects => "Enable sound effects";
 @override
 String get loadDefaultSystemPrompt => "Load the default system prompt";
+@override
+String get ttsVoices => "TTS Voices";
+@override
+String get moreVoicesIOS => "For more voices, go to Settings > Accessibility > Spoken Content > Voices";
+@override
+String get moreVoicesAndroid => "For more voices : ‘Google Text-to-Speech’ on the Play Store";
 
 }

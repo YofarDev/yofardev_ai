@@ -1,6 +1,12 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/localization_manager.dart';
+import '../models/voice.dart';
+import '../res/app_constants.dart';
 
 class SettingsService {
   Future<void> setApiKey(String apiKey) async {
@@ -9,15 +15,16 @@ class SettingsService {
   }
 
   Future<String> getApiKey() async {
-    // await dotenv.load();
-    // final String? apiKey = dotenv.env['GOOGLE_KEY'] ;
-    // if (apiKey != null) {
-    //   return apiKey;
-    // }
+    if (kDebugMode) {
+      await dotenv.load();
+      final String? apiKey = dotenv.env['GOOGLE_KEY'];
+      if (apiKey != null) {
+        return apiKey;
+      }
+    }
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('apiKey') ?? '';
   }
-
 
   Future<void> setBaseSystemPrompt(String baseSystemPrompt) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -37,5 +44,31 @@ class SettingsService {
   Future<bool> getSoundEffects() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool('soundEffects') ?? true;
+  }
+
+  Future<void> setTtsVoice(String name, String language) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('ttsVoice_$language', name);
+  }
+
+  Future<String> getTtsVoice(String language) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? voiceName = prefs.getString('ttsVoice_$language');
+    if (voiceName != null) return voiceName;
+    if (Platform.isAndroid) {
+      if (language == 'fr') {
+        return AppConstants.frenchAndroidVoice;
+      } else {
+        return AppConstants.englishAndroidVoice;
+      }
+    } else if (Platform.isIOS) {
+      if (language == 'fr') {
+        return AppConstants.frenchIOSVoice;
+      } else {
+        return AppConstants.englishIOSVoice;
+      }
+    } else {
+      throw Exception('Unsupported platform');
+    }
   }
 }

@@ -9,4 +9,10 @@ class AppConstants {
   double sunglassesX = 209;
   double sunglassesY = 425;
   int movingAvatarDuration = 3;
+
+  // Voices
+  static String frenchAndroidVoice = "fr-fr-x-frd-local";
+  static String frenchIOSVoice = "Thomas";
+  static String englishAndroidVoice = "en-us-x-iom-local";
+  static String englishIOSVoice = "Fred";
 }

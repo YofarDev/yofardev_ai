@@ -1,6 +1,6 @@
 # Yofardev AI
 
-Yofardev AI is a small fun project to kind of bring life to a Large Language Model (LLM) through an animated avatar. Users can interact with the AI assistant through text (or dictate to text), and the app responds with generated text2speech, and lip-synced animations.
+Yofardev AI is a small fun project that brings life to a Large Language Model (LLM) through an animated avatar. Users can interact with the AI assistant through text (or dictate to text), and the app responds with generated text-to-speech and lip-synced animations.
 
 <p align="center">
   <img src="screenshots/1.png" width="20%" />
@@ -17,10 +17,11 @@ Except for the Gemini API, everything is local. Even history of chats are only s
 
 ## Requirements
 
-To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_ai/releases/) directly, or to build it you need to have the following:
+To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_ai/releases/) directly for Android, or build it yourself. To build it, you need:
 
 - Flutter (>=3.4.3 <4.0.0)
-- Android SDK
+- Android SDK (for Android builds)
+- Xcode (for iOS builds)
 - Google API key for Gemini 1.5-flash (you can set it up directly in app)
 
 ## Installation
@@ -34,6 +35,11 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 4. Run the app:
    `flutter run`
 
+## Platforms
+
+- Android: Fully supported
+- iOS: Now compatible and working (recommended voice for english is Evan-Enhanced)
+
 ## Known Issues
 
 - The LLM currently tends to overuse sound effects for no reason. You can disable sound effects completely in the settings.
@@ -44,7 +50,6 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 ## Future Improvements
 
 - An interrupt button to stop the AI's response mid-sentence would be a good idea.
-- The only reason I didn't make the app ios compatible, is because I had to write android native code to get the amplitude of audio files (for the lip-sync) and I have almost 0 experience with swift, but it may be easy to do.
 
 ## License
 
