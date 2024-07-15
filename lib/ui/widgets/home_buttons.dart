@@ -21,7 +21,6 @@ class HomeButtons extends StatelessWidget {
           child: SafeArea(
             child: Column(
               children: <Widget>[
-                // emoji flag fr : 🇫🇷 emoji flag en : 🇬🇧
                 GestureDetector(
                   onTap: () {
                     context.read<ChatsCubit>().setCurrentLanguage(
@@ -38,9 +37,9 @@ class HomeButtons extends StatelessWidget {
                   icon: Icons.chat_bubble_outline_rounded,
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute<dynamic>(
-                        builder: (BuildContext context) =>
-                            const ChatsListPage(),
+                      PageRouteBuilder<dynamic>(
+                        pageBuilder: (_, __, ___) => const ChatsListPage(),
+                        transitionDuration: Duration.zero,
                       ),
                     );
                   },
@@ -60,28 +59,14 @@ class HomeButtons extends StatelessWidget {
                   icon: Icons.settings_rounded,
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute<dynamic>(
-                        builder: (BuildContext context) => const SettingsPage(),
+                      PageRouteBuilder<dynamic>(
+                        pageBuilder: (_, __, ___) => const SettingsPage(),
+                        transitionDuration: Duration.zero,
                       ),
                     );
                   },
                 ),
                 const SizedBox(height: 8),
-                // AppIconButton(
-                //   icon: Icons.info_outline_rounded,
-                //   onPressed: () async {
-                //     final ByteData byteData =
-                //         await rootBundle.load('assets/test.mp3');
-                //     final Directory tempDir = await getTemporaryDirectory();
-                //     final String tempPath = tempDir.path;
-                //     final File file = File('$tempPath/test.mp3');
-                //     await file.writeAsBytes(byteData.buffer.asUint8List());
-                //     final List<int> amplitudes =
-                //         await AudioAnalyzer().getAmplitudes(file.path);
-                //     print(amplitudes);
-                //     print(amplitudes.length);
-                //   },
-                // ),
               ],
             ),
           ),
@@ -89,30 +74,4 @@ class HomeButtons extends StatelessWidget {
       },
     );
   }
-
-  // void _testFunction(BuildContext context) async {
-  //   final String chatId =
-  //                   context.read<ChatsCubit>().state.currentChat.id;
-  //               final AvatarConfig avatarConfig = AvatarConfig(
-  //                 backgrounds: <AvatarBackgrounds>[
-  //                   EnumUtils.getRandomValue(AvatarBackgrounds.values),
-  //                 ],
-  //                 top: <AvatarTop>[EnumUtils.getRandomValue(AvatarTop.values)],
-  //                 bottom: <AvatarBottom>[
-  //                   EnumUtils.getRandomValue(AvatarBottom.values),
-  //                 ],
-  //                 glasses: <AvatarGlasses>[
-  //                   EnumUtils.getRandomValue(AvatarGlasses.values),
-  //                 ],
-  //                 specials: AvatarSpecials.values,
-  //                 costume: const <AvatarCostume>[AvatarCostume.batman],
-  //               );
-  //               final AudioPlayer player = AudioPlayer();
-  //               await player.setAsset('assets/sound_effects/frenchTheme.wav');
-  //               player.play();
-  //               // ignore: use_build_context_synchronously
-  //               context
-  //                   .read<AvatarCubit>()
-  //                   .onNewAvatarConfig(chatId, avatarConfig);
-  // }
 }

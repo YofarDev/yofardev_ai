@@ -26,8 +26,8 @@ class Clothes extends StatelessWidget {
         Cloth(
           name: 'sunglasses',
           path: 'assets/avatar/accessories/sunglasses.png',
-          x: AppConstants().sunglassesX,
-          y: AppConstants().sunglassesY,
+          x: AppConstants.sunglassesX,
+          y: AppConstants.sunglassesY,
           opacity: 0.9,
         ),
 

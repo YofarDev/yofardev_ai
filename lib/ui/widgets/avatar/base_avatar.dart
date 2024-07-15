@@ -34,7 +34,7 @@ class BaseAvatar extends StatelessWidget {
               ),
               Positioned.fill(
                 top: null,
-                bottom: AppConstants().topAvatarInvertedY * state.scaleFactor,
+                bottom: AppConstants.topAvatarInvertedY * state.scaleFactor,
                 child: GestureDetector(
                   onTap: () {
                     //    context.read<AvatarCubit>().changeTopAvatar();
@@ -45,6 +45,7 @@ class BaseAvatar extends StatelessWidget {
                         )
                       : Image.asset(
                           'assets/avatar/costumes/emptyTop.png',
+                          
                         ),
                 ),
               ),

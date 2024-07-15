@@ -1,12 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/localization_manager.dart';
-import '../models/voice.dart';
 import '../res/app_constants.dart';
+import '../utils/platform_utils.dart';
 
 class SettingsService {
   Future<void> setApiKey(String apiKey) async {
@@ -55,20 +53,28 @@ class SettingsService {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? voiceName = prefs.getString('ttsVoice_$language');
     if (voiceName != null) return voiceName;
-    if (Platform.isAndroid) {
-      if (language == 'fr') {
-        return AppConstants.frenchAndroidVoice;
-      } else {
-        return AppConstants.englishAndroidVoice;
-      }
-    } else if (Platform.isIOS) {
-      if (language == 'fr') {
-        return AppConstants.frenchIOSVoice;
-      } else {
-        return AppConstants.englishIOSVoice;
-      }
-    } else {
-      throw Exception('Unsupported platform');
+    final String platform = checkPlatform();
+    switch (platform) {
+      case 'Android':
+        if (language == 'fr') {
+          return AppConstants.frenchAndroidVoice;
+        } else {
+          return AppConstants.englishAndroidVoice;
+        }
+      case 'iOS':
+        if (language == 'fr') {
+          return AppConstants.frenchIOSVoice;
+        } else {
+          return AppConstants.englishIOSVoice;
+        }
+      case 'Web':
+        if (language == 'fr') {
+          return 'Thomas (French (France))';
+        } else {
+          return 'Google UK English Male';
+        }
+      default:
+        throw Exception('Unsupported platform');
     }
   }
 }

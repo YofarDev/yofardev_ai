@@ -15,8 +15,8 @@ Yofardev AI is a small fun project that brings life to a Large Language Model (L
 - Native text-to-speech and lip-synced animations (customizable voices)
 - You can ask Yofardev AI to change clothes and background (sometimes it doesn't want to do it)
 - Yofardev AI can play a sound effect at the end of its answer (you can disable it in the settings)
-- Yofardev AI can analyze images
-- Yofardev AI can leave and come back of the screen
+- It can analyze images
+- It can leave and come back of the screen
 - History of chats (text version, stored locally)
 - Customizable system prompt
 - English and French supported

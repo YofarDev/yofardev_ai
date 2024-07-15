@@ -1,8 +1,9 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import 'platform_utils.dart';
 
 extension RemoveEmojis on String {
   String removeEmojis() {
@@ -75,29 +76,47 @@ extension EnumUtils on Enum {
 }
 
 extension ColorfulLogs on String {
-  String toRedLog() =>  "'\x1B[31m$this\x1B[0m'";
+  String toRedLog() => "'\x1B[31m$this\x1B[0m'";
   String toGreenLog() => "'\x1B[32m$this\x1B[0m'";
-  String toYellowLog() =>  "'\x1B[33m$this\x1B[0m'";
-  String toBlueLog() =>  "'\x1B[34m$this\x1B[0m'";
+  String toYellowLog() => "'\x1B[33m$this\x1B[0m'";
+  String toBlueLog() => "'\x1B[34m$this\x1B[0m'";
   String toWhiteLog() => "'\x1B[37m$this\x1B[0m'";
   String toCyanLog() => "'\x1B[36m$this\x1B[0m'";
-  String toMagentaLog() =>"'\x1B[35m$this\x1B[0m'";
+  String toMagentaLog() => "'\x1B[35m$this\x1B[0m'";
 
-
-  void printRedLog() =>
-    split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toRedLog() : element));
-  void printGreenLog() =>
-      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toGreenLog() : element));
-  void printYellowLog() =>
-      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toYellowLog() : element));
-  void printBlueLog() =>
-      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toBlueLog() : element));
-  void printWhiteLog() =>
-      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toWhiteLog() : element));
-  void printCyanLog() =>
-      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toCyanLog() : element));
-  void printMagentaLog() =>
-      split('\n').forEach((String element) => debugPrint(Platform.isAndroid ? element.toMagentaLog() : element));
-  
-
+  void printRedLog() => split('\n').forEach(
+        (String element) => debugPrint(
+          checkPlatform() == 'Android' ? element.toRedLog() : element,
+        ),
+      );
+  void printGreenLog() => split('\n').forEach(
+        (String element) => debugPrint(
+          checkPlatform() == 'Android' ? element.toGreenLog() : element,
+        ),
+      );
+  void printYellowLog() => split('\n').forEach(
+        (String element) => debugPrint(
+          checkPlatform() == 'Android' ? element.toYellowLog() : element,
+        ),
+      );
+  void printBlueLog() => split('\n').forEach(
+        (String element) => debugPrint(
+          checkPlatform() == 'Android' ? element.toBlueLog() : element,
+        ),
+      );
+  void printWhiteLog() => split('\n').forEach(
+        (String element) => debugPrint(
+          checkPlatform() == 'Android' ? element.toWhiteLog() : element,
+        ),
+      );
+  void printCyanLog() => split('\n').forEach(
+        (String element) => debugPrint(
+          checkPlatform() == 'Android' ? element.toCyanLog() : element,
+        ),
+      );
+  void printMagentaLog() => split('\n').forEach(
+        (String element) => debugPrint(
+          checkPlatform() == 'Android' ? element.toMagentaLog() : element,
+        ),
+      );
 }

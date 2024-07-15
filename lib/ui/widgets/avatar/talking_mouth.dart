@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/answer.dart';
 import '../../../res/app_constants.dart';
+import '../../../utils/platform_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class TalkingMouth extends StatelessWidget {
@@ -21,17 +23,22 @@ class TalkingMouth extends StatelessWidget {
       listenWhen: (TalkingState previous, TalkingState current) =>
           previous.status != current.status,
       listener: (BuildContext context, TalkingState state) {
-        if (state.status == TalkingStatus.success &&
-            state.answer.audioPath.isNotEmpty) {
-          _startTalking(context, state.answer);
+        if (state.status == TalkingStatus.success) {
+          if (checkPlatform() == 'Web') {
+            _fakeTalking(context);
+          } else {
+            _startTalking(context, state.answer);
+          }
         }
       },
       child: BlocBuilder<TalkingCubit, TalkingState>(
         builder: (BuildContext context, TalkingState state) {
           return ScaledAvatarItem(
-            path: _getMouthPath(state.mouthState),
-            itemX: AppConstants().mouthX,
-            itemY: AppConstants().mouthY,
+            path: state.isTalking
+                ? _getMouthPath(state.mouthState)
+                : _getMouthPath(MouthState.closed),
+            itemX: AppConstants.mouthX,
+            itemY: AppConstants.mouthY,
           );
         },
       ),
@@ -68,6 +75,19 @@ class TalkingMouth extends StatelessWidget {
             );
         currentIndex++;
       }
+    });
+  }
+
+  void _fakeTalking(BuildContext context) async {
+    final int amplitude = Random().nextInt(25);
+    if (!context.read<TalkingCubit>().state.isTalking) return;
+    context.read<TalkingCubit>().updateMouthState(
+          _getMouthState(amplitude),
+        );
+    await Future<dynamic>.delayed(
+      const Duration(milliseconds: 100),
+    ).then((_) {
+      _fakeTalking(context);
     });
   }
 

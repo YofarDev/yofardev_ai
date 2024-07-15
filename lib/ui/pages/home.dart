@@ -7,13 +7,16 @@ import '../../logic/avatar/avatar_state.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../models/avatar.dart';
+import '../../res/app_colors.dart';
 import '../../res/app_constants.dart';
+import '../../utils/platform_utils.dart';
 import '../../utils/volume_fader.dart';
 import '../widgets/ai_text_input.dart';
 import '../widgets/avatar/avatar_widgets.dart';
 import '../widgets/avatar/background_avatar.dart';
 import '../widgets/avatar/thinking_animation.dart';
 import '../widgets/home_buttons.dart';
+import '../widgets/world_borders.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -28,26 +31,29 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    _initAudioPlayer();
-    _initVolumeControl();
-    // to avoid a bug where MediaQuery.of(context).size return 0 in release mode
-    WidgetsBinding.instance.addPersistentFrameCallback((_) {
-      _initAvatar();
+    if (checkPlatform() != 'Web') {
+      _initVolumeControl();
+    }
+    if (checkPlatform() == 'Android') {
+      // to avoid a weird bug when first sound is played
+      _initAudioPlayer();
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateAvatarValuesBasedOnScreenWidth();
     });
   }
 
-  // to avoid a weird bug when first sound is played
   void _initAudioPlayer() async {
     final AudioPlayer player = AudioPlayer();
     await player.setAsset('assets/sound_effects/_silence.mp3');
     player.play();
   }
 
-  void _initAvatar() async {
-    context.read<AvatarCubit>().initBaseValues(
-          originalWidth: AppConstants().avatarWidth,
-          originalHeight: AppConstants().avatarHeight,
-          screenWidth: MediaQuery.of(context).size.width,
+  void _updateAvatarValuesBasedOnScreenWidth() async {
+    context.read<AvatarCubit>().setValuesBasedOnScreenWidth(
+          screenWidth: MediaQuery.of(context).size.width > AppConstants.maxWidth
+              ? AppConstants.maxWidth
+              : MediaQuery.of(context).size.width,
         );
   }
 
@@ -57,6 +63,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    _updateAvatarValuesBasedOnScreenWidth();
     return BlocListener<AvatarCubit, AvatarState>(
       listenWhen: (AvatarState previous, AvatarState current) =>
           previous.statusAnimation != current.statusAnimation ||
@@ -91,24 +98,40 @@ class _HomeState extends State<Home> {
               return BlocBuilder<TalkingCubit, TalkingState>(
                 builder: (BuildContext context, TalkingState state) {
                   final bool isLoading = state.status == TalkingStatus.loading;
-                  return Scaffold(
-                    backgroundColor: Colors.blue,
-                    body: Stack(
-                      fit: StackFit.expand,
-                      alignment: Alignment.topCenter,
-                      children: <Widget>[
-                        const BackgroundAvatar(),
-                        const AvatarWidgets(),
-                        if (isLoading) const ThinkingAnimation(),
-                        const Positioned(
-                          left: 16,
-                          right: 16,
-                          bottom: 16,
-                          child: AiTextInput(),
+                  Widget w = Stack(
+                    fit: StackFit.expand,
+                    alignment: Alignment.topCenter,
+                    children: <Widget>[
+                      const BackgroundAvatar(),
+                      const AvatarWidgets(),
+                      if (isLoading) const ThinkingAnimation(),
+                      const Positioned(
+                        left: 8,
+                        right: 8,
+                        bottom: 16,
+                        child: AiTextInput(),
+                      ),
+                      const HomeButtons(),
+                    ],
+                  );
+                  w = Stack(
+                    children: <Widget>[
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: AppConstants.maxWidth,
+                          ),
+                          child: w,
                         ),
-                        const HomeButtons(),
-                      ],
-                    ),
+                      ),
+                      if (MediaQuery.of(context).size.width >
+                          AppConstants.maxWidth)
+                        const WorldBorders(),
+                    ],
+                  );
+                  return Scaffold(
+                    backgroundColor: AppColors.background,
+                    body: w,
                   );
                 },
               );

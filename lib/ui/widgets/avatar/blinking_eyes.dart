@@ -48,8 +48,8 @@ class _BlinkingEyesState extends State<BlinkingEyes>
   Widget build(BuildContext context) {
     return ScaledAvatarItem(
       path: 'assets/avatar/eyes_closed.png',
-      itemX: AppConstants().eyesX,
-      itemY: AppConstants().eyesY,
+      itemX: AppConstants.eyesX,
+      itemY: AppConstants.eyesY,
       display: _eyesClosed,
     );
   }

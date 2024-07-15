@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../models/answer.dart';
@@ -31,15 +32,15 @@ class TalkingCubit extends Cubit<TalkingState> {
   ) async {
     emit(state.copyWith(status: TalkingStatus.loading));
     final String answerText = responseMap['text'] as String? ?? '';
-    final String textToAudio =
+    final String textToSay =
         answerText.replaceAll('...', '').replaceAll('*', '');
-    final String audioPath = textToAudio.isEmpty
+    final String audioPath = textToSay.isEmpty
         ? ''
         : await TtsService().textToFrenchMaleVoice(
-            text: textToAudio,
+            text: textToSay,
             language: language,
           );
-    final List<int> amplitudes = textToAudio.isEmpty
+    final List<int> amplitudes = (textToSay.isEmpty || audioPath.isEmpty)
         ? <int>[]
         : await AudioAnalyzer().getAmplitudes(audioPath);
     emit(
@@ -55,6 +56,36 @@ class TalkingCubit extends Cubit<TalkingState> {
         ),
       ),
     );
+  }
+
+  void speakForWeb(
+    Map<String, dynamic> responseMap,
+    String language,
+  ) async {
+    emit(state.copyWith(status: TalkingStatus.loading));
+    final String answerText = responseMap['text'] as String? ?? '';
+    final String textToSay =
+        answerText.replaceAll('...', '').replaceAll('*', '');
+    final FlutterTts tts = await TtsService().getFlutterTts(
+      text: textToSay,
+      language: language,
+    );
+    tts.setCompletionHandler(() {
+      stopTalking(noFile: true);
+    });
+    emit(
+      state.copyWith(
+        status: TalkingStatus.success,
+        isTalking: true,
+        answer: Answer(
+          chatId: responseMap['chatId'] as String? ?? '',
+          answerText: answerText,
+          annotations:
+              responseMap['annotations'] as List<String>? ?? <String>[],
+        ),
+      ),
+    );
+    tts.speak(textToSay);
   }
 
   void setLoadingStatus(bool isLoading) {

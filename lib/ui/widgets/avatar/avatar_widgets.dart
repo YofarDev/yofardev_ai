@@ -28,7 +28,7 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: Duration(seconds: AppConstants().movingAvatarDuration),
+      duration: Duration(seconds: AppConstants.movingAvatarDuration),
       vsync: this,
     );
 

@@ -1,7 +1,5 @@
 // ignore_for_file: avoid_dynamic_calls, use_build_context_synchronously
 
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -10,7 +8,10 @@ import '../../../l10n/localization_manager.dart';
 import '../../../logic/chat/chats_cubit.dart';
 import '../../../models/sound_effects.dart';
 import '../../../models/voice.dart';
+import '../../../res/app_constants.dart';
 import '../../../services/settings_service.dart';
+import '../../../utils/platform_utils.dart';
+import '../../widgets/world_borders.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -24,7 +25,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _baseSystemPromptController =
       TextEditingController();
   final List<Voice> _voices = <Voice>[];
-  late Voice _selectedVoice;
+  Voice? _selectedVoice;
   bool _isSoundEffectsEnabled = true;
 
   @override
@@ -47,7 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final FlutterTts flutterTts = FlutterTts();
     final List<dynamic> voices = await flutterTts.getVoices as List<dynamic>;
     for (final dynamic voice in voices) {
-      if (Platform.isIOS && (voice['gender'] != 'male')) continue;
+      if (checkPlatform() == 'iOS' && (voice['gender'] != 'male')) continue;
       if ((voice['locale'] as String)
           .startsWith(context.read<ChatsCubit>().state.currentLanguage)) {
         _voices.add(
@@ -61,7 +62,11 @@ class _SettingsPageState extends State<SettingsPage> {
     _voices.sort((Voice a, Voice b) => a.locale.compareTo(b.locale));
     final String name = await SettingsService()
         .getTtsVoice(context.read<ChatsCubit>().state.currentLanguage);
-    _selectedVoice = _voices.firstWhere((Voice voice) => voice.name == name);
+    try {
+      _selectedVoice = _voices.firstWhere((Voice voice) => voice.name == name);
+    } catch (e) {
+      _selectedVoice = _voices.first;
+    }
 
     setState(() {});
   }
@@ -73,7 +78,54 @@ class _SettingsPageState extends State<SettingsPage> {
       soundEffectsList.write("[$soundEffect], ");
     }
     return Scaffold(
-      appBar: AppBar(
+      body: Stack(
+        children: <Widget>[
+          if (MediaQuery.of(context).size.width > AppConstants.maxWidth)
+            const WorldBorders(),
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: AppConstants.maxWidth,
+              ),
+              child: Column(
+                children: <Widget>[
+                  _buildAppBar(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            localized.settingsSubstring,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildApiKeyField(),
+                          const SizedBox(height: 16),
+                          _buildBaseSystemPromptField(),
+                          const SizedBox(height: 16),
+                          _buildSoundEffectsCheckbox(),
+                          const SizedBox(height: 16),
+                          _dropdownVoices(),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppBar() => AppBar(
         title: Text(localized.settings),
         actions: <Widget>[
           IconButton(
@@ -87,44 +139,20 @@ class _SettingsPageState extends State<SettingsPage> {
               context
                   .read<ChatsCubit>()
                   .setSoundEffects(_isSoundEffectsEnabled);
-              await SettingsService()
-                  .setTtsVoice(
-                _selectedVoice.name,
-                context.read<ChatsCubit>().state.currentLanguage,
-              )
-                  .then((_) {
-                Navigator.of(context).pop();
-              });
+              if (_selectedVoice != null) {
+                await SettingsService()
+                    .setTtsVoice(
+                  _selectedVoice!.name,
+                  context.read<ChatsCubit>().state.currentLanguage,
+                )
+                    .then((_) {
+                  Navigator.of(context).pop();
+                });
+              }
             },
           ),
         ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                localized.settingsSubstring,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              _buildApiKeyField(),
-              const SizedBox(height: 16),
-              _buildBaseSystemPromptField(),
-              const SizedBox(height: 16),
-              _buildSoundEffectsCheckbox(),
-              const SizedBox(height: 16),
-              _dropdownVoices(),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+      );
 
   Widget _buildApiKeyField() => _textField(
         _apiKeyController,
@@ -205,7 +233,7 @@ class _SettingsPageState extends State<SettingsPage> {
               localized.ttsVoices,
               style: const TextStyle(fontSize: 20),
             ),
-            if (_selectedVoice.locale.isEmpty)
+            if (_selectedVoice?.locale.isEmpty ?? true)
               Container()
             else
               Align(
@@ -223,12 +251,24 @@ class _SettingsPageState extends State<SettingsPage> {
                       setState(() {
                         _selectedVoice = value;
                       });
+                      final String text =
+                          context.read<ChatsCubit>().state.currentLanguage ==
+                                  'fr'
+                              ? "Bonjour, c'est un test"
+                              : 'Hello, this is a test';
+                      final FlutterTts tts = FlutterTts();
+                      tts.setLanguage(value.locale);
+                      tts.setVoice(<String, String>{
+                        "name": value.name,
+                        "locale": value.locale,
+                      });
+                      await FlutterTts().speak(text);
                     }
                   },
                 ),
               ),
-            if (Platform.isAndroid) Text(localized.moreVoicesAndroid),
-            if (Platform.isIOS) Text(localized.moreVoicesIOS),
+            if (checkPlatform() == 'Android') Text(localized.moreVoicesAndroid),
+            if (checkPlatform() == 'iOS') Text(localized.moreVoicesIOS),
           ],
         ),
       );

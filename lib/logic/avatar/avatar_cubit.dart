@@ -11,17 +11,24 @@ import 'avatar_state.dart';
 class AvatarCubit extends Cubit<AvatarState> {
   AvatarCubit() : super(const AvatarState());
 
-  void initBaseValues({
-    required double originalWidth,
-    required double originalHeight,
+  void setValuesBasedOnScreenWidth({
     required double screenWidth,
   }) {
-    final double scaleFactor = screenWidth / originalWidth;
+    final double scaleFactor = screenWidth / AppConstants.avatarWidth;
     emit(
       state.copyWith(
         status: AvatarStatus.ready,
-        baseOriginalWidth: originalWidth,
-        baseOriginalHeight: originalHeight,
+        baseOriginalWidth: AppConstants.avatarWidth,
+        baseOriginalHeight: AppConstants.avatarHeight,
+        scaleFactor: scaleFactor,
+      ),
+    );
+  }
+
+  void onScreenSizeChanged(double screenWidth) {
+    final double scaleFactor = screenWidth / state.baseOriginalWidth;
+    emit(
+      state.copyWith(
         scaleFactor: scaleFactor,
       ),
     );
@@ -31,16 +38,18 @@ class AvatarCubit extends Cubit<AvatarState> {
     emit(state.copyWith(status: AvatarStatus.loading));
     final Chat chat = await ChatHistoryService().getChat(chatId) ??
         await ChatHistoryService().createNewChat();
-    emit(state.copyWith(
-      avatar: chat.avatar,
-      status: AvatarStatus.ready,
-    ),);
+    emit(
+      state.copyWith(
+        avatar: chat.avatar,
+        status: AvatarStatus.ready,
+      ),
+    );
   }
 
   void _goAndComeBack(String chatId, AvatarConfig avatarConfig) async {
     onAnimationStatusChanged(true);
     await Future<dynamic>.delayed(
-      Duration(seconds: AppConstants().movingAvatarDuration),
+      Duration(seconds: AppConstants.movingAvatarDuration),
     );
     _updateAvatar(chatId, avatarConfig);
     emit(state.copyWith(statusAnimation: AvatarStatusAnimation.initial));

@@ -1,32 +1,35 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../utils/platform_utils.dart';
 import 'settings_service.dart';
 
 class TtsService {
   Future<String> getMusicDirectoryPath() async {
-    if (Platform.isAndroid) {
-      try {
-        final List<Directory>? externalStorageDirectories =
-            await getExternalStorageDirectories();
-        if (externalStorageDirectories != null &&
-            externalStorageDirectories.isNotEmpty) {
-          final String path = externalStorageDirectories[0].path;
-          final String musicPath =
-              '${path.replaceAll(RegExp('/Android/data/.*'), '')}/Music';
-          return musicPath;
+    final String platform = checkPlatform();
+    switch (platform) {
+      case 'Android':
+        try {
+          final List<Directory>? externalStorageDirectories =
+              await getExternalStorageDirectories();
+          if (externalStorageDirectories != null &&
+              externalStorageDirectories.isNotEmpty) {
+            final String path = externalStorageDirectories[0].path;
+            final String musicPath =
+                '${path.replaceAll(RegExp('/Android/data/.*'), '')}/Music';
+            return musicPath;
+          } else {
+            throw Exception("External storage not found");
+          }
+        } catch (e) {
+          throw Exception("Error getting music directory: $e");
         }
-      } catch (e) {
-        debugPrint("Error getting music directory: $e");
-      }
+      default:
+        final Directory documentsDir = await getApplicationDocumentsDirectory();
+        return documentsDir.path;
     }
-
-    // Fallback to the documents directory if not on Android or if there was an error
-    final Directory documentsDir = await getApplicationDocumentsDirectory();
-    return documentsDir.path;
   }
 
   Future<String> textToFrenchMaleVoice({
@@ -35,14 +38,14 @@ class TtsService {
   }) async {
     final FlutterTts flutterTts = FlutterTts();
     final String locale = language == 'fr' ? 'fr-FR' : 'en-US';
-     await flutterTts.setLanguage(locale);
-        await flutterTts.setVoice(
-          <String, String>{
-            "name": await SettingsService().getTtsVoice(language),
-            "locale": locale,
-          },
-        );
-    if (Platform.isIOS) {
+    await flutterTts.setLanguage(locale);
+    await flutterTts.setVoice(
+      <String, String>{
+        "name": await SettingsService().getTtsVoice(language),
+        "locale": locale,
+      },
+    );
+    if (checkPlatform() == 'iOS') {
       await flutterTts.setSharedInstance(true);
       await flutterTts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,
@@ -56,12 +59,32 @@ class TtsService {
     }
     final String musicDirectoryPath = await getMusicDirectoryPath();
     final String filename =
-        "${DateTime.now().millisecondsSinceEpoch}${Platform.isAndroid ? '.wav' : '.caf'}";
+        "${DateTime.now().millisecondsSinceEpoch}${checkPlatform() == 'iOS' ? '.caf' : '.wav'}";
     final String filePath = '$musicDirectoryPath/$filename';
-
     await flutterTts.awaitSynthCompletion(true);
     await flutterTts.synthesizeToFile(text, filename);
 
     return filePath;
   }
+
+  Future<FlutterTts> getFlutterTts({
+    required String text,
+    required String language,
+  }) async {
+    final FlutterTts flutterTts = FlutterTts();
+    final String locale = language == 'fr' ? 'fr-FR' : 'en-US';
+    await flutterTts.setLanguage(locale);
+    await flutterTts.setVoice(
+      <String, String>{
+        "name": await SettingsService().getTtsVoice(language),
+        "locale": locale,
+      },
+    );
+    return flutterTts;
+  }
+
+
+
+
+
 }

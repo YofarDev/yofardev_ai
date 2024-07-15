@@ -10,7 +10,9 @@ import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
+import '../../../res/app_constants.dart';
 import '../../../utils/extensions.dart';
+import '../../widgets/world_borders.dart';
 import 'chat_details_page.dart';
 
 class ChatsListPage extends StatelessWidget {
@@ -24,29 +26,29 @@ class ChatsListPage extends StatelessWidget {
         final bool isLoading = state.status == ChatsStatus.loading;
         return SafeArea(
           child: Scaffold(
-            appBar: AppBar(
-              title: Text(localized.listChats),
-              actions: <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outlined),
-                  onPressed: () {
-                    context.read<ChatsCubit>().createNewChat(
-                          context.read<AvatarCubit>(),
-                          context.read<TalkingCubit>(),
-                        );
-                    context.read<ChatsCubit>().fetchChatsList();
-                  },
-                ),
-              ],
-            ),
-            body: Column(
+            body: Stack(
               children: <Widget>[
-                if (!isLoading)
-                  if (state.chatsList.isEmpty)
-                    Center(child: Text(localized.empty))
-                  else
-                    _buildList(context, state.chatsList, state.currentChat),
-                if (isLoading) const CircularProgressIndicator(),
+                if (MediaQuery.of(context).size.width > AppConstants.maxWidth)
+                  const WorldBorders(),
+                Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: AppConstants.maxWidth,
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        _buildAppBar(context),
+                        if (!isLoading)
+                          if (state.chatsList.isEmpty)
+                            Center(child: Text(localized.empty))
+                          else
+                            _buildList(
+                                context, state.chatsList, state.currentChat,),
+                        if (isLoading) const CircularProgressIndicator(),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -54,6 +56,22 @@ class ChatsListPage extends StatelessWidget {
       },
     );
   }
+
+  Widget _buildAppBar(BuildContext context) => AppBar(
+        title: Text(localized.listChats),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.add_circle_outlined),
+            onPressed: () {
+              context.read<ChatsCubit>().createNewChat(
+                    context.read<AvatarCubit>(),
+                    context.read<TalkingCubit>(),
+                  );
+              context.read<ChatsCubit>().fetchChatsList();
+            },
+          ),
+        ],
+      );
 
   Widget _buildList(BuildContext context, List<Chat> list, Chat currentChat) =>
       BlocBuilder<AvatarCubit, AvatarState>(
@@ -93,9 +111,10 @@ class ChatsListPage extends StatelessWidget {
                             context.read<ChatsCubit>().setOpenedChat(chat);
                             Navigator.of(context)
                                 .push(
-                              MaterialPageRoute<dynamic>(
-                                builder: (BuildContext context) =>
+                              PageRouteBuilder<dynamic>(
+                                pageBuilder: (_, __, ___) =>
                                     const ChatDetailsPage(),
+                                transitionDuration: Duration.zero,
                               ),
                             )
                                 .then((_) {

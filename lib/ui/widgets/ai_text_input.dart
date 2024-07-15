@@ -2,9 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -15,7 +12,9 @@ import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../models/chat_entry.dart';
 import '../../utils/extensions.dart';
+import '../../utils/platform_utils.dart';
 import 'current_prompt_text.dart';
+import 'picker_buttons.dart';
 
 class AiTextInput extends StatefulWidget {
   final bool onlyText;
@@ -126,91 +125,91 @@ class _AiTextInputState extends State<AiTextInput> {
     );
   }
 
-  Widget _buildTextField() => TextField(
-        focusNode: _inputFocus,
-        autofocus: true,
-        controller: _controller,
-        keyboardType: TextInputType.text,
-        onChanged: (_) {
-          setState(() {});
-        },
-        onSubmitted: _onTextSubmitted,
-        cursorColor: Colors.blue,
-        textCapitalization: TextCapitalization.sentences,
-        maxLines: 3,
-        minLines: 1,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.3),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          suffixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              if (_speechEnabled)
-                IconButton(
-                  icon: Icon(
-                    Icons.mic,
-                    color: _speechToText.isListening ? Colors.red : null,
-                  ),
-                  onPressed: () async {
-                    if (_speechToText.isListening) {
-                      await _speechToText.stop();
-                    } else {
-                      await _speechToText.listen(
-                        onResult: _onSpeechResult,
-                        localeId: context.read<ChatsCubit>().state.currentLanguage == 'fr'
-                            ? 'fr_FR'
-                            : 'en_US',
-                        listenOptions:
-                            SpeechListenOptions(partialResults: false),
-                      );
-                    }
-                    setState(() {});
-                  },
+  Widget _buildTextField() => Row(
+        children: <Widget>[
+     if (checkPlatform() != 'Web')     PickerButtons(onImageSelected: _onImageSelected),
+          Expanded(
+            child: TextField(
+              focusNode: _inputFocus,
+              autofocus: true,
+              controller: _controller,
+              keyboardType: TextInputType.text,
+              onChanged: (_) {
+                setState(() {});
+              },
+              onSubmitted: _onTextSubmitted,
+              cursorColor: Colors.blue,
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: 3,
+              minLines: 1,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.3),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
-              if (_controller.text.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _controller.clear();
-                    _pickedImage = null;
-                    setState(() {});
-                  },
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
-            ],
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    if (_speechEnabled)
+                      IconButton(
+                        icon: Icon(
+                          Icons.mic,
+                          color: _speechToText.isListening ? Colors.red : null,
+                        ),
+                        onPressed: () async {
+                          if (_speechToText.isListening) {
+                            await _speechToText.stop();
+                          } else {
+                            await _speechToText.listen(
+                              onResult: _onSpeechResult,
+                              localeId: context
+                                          .read<ChatsCubit>()
+                                          .state
+                                          .currentLanguage ==
+                                      'fr'
+                                  ? 'fr_FR'
+                                  : 'en_US',
+                              listenOptions:
+                                  SpeechListenOptions(partialResults: false),
+                            );
+                          }
+                          setState(() {});
+                        },
+                      ),
+                    if (_controller.text.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _controller.clear();
+                          _pickedImage = null;
+                          setState(() {});
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          prefixIcon: _imagePickerButton(),
-        ),
+        ],
       );
 
-  Widget _imagePickerButton() {
-    return IconButton(
-      icon: const Icon(Icons.image_outlined),
-      onPressed: () async {
-        _inputFocus.unfocus();
-        final ImagePicker picker = ImagePicker();
-        final XFile? picked =
-            await picker.pickImage(source: ImageSource.gallery);
-        if (picked != null) {
-          final Directory appDir = await getApplicationDocumentsDirectory();
-          final String fileName = path.basename(picked.path);
-          final File savedImage = File('${appDir.path}/$fileName');
-          await File(picked.path).copy(savedImage.path);
-          _controller.text = localized.describeThisImage;
-          if (!mounted) return;
-          setState(() {
-            _pickedImage = savedImage;
-          });
-          FocusScope.of(context).requestFocus(_inputFocus);
-        }
-      },
-    );
+  void _onImageSelected(File? file) async {
+    _inputFocus.unfocus();
+    if (file != null) {
+      _controller.text = localized.describeThisImage;
+      setState(() {
+        _pickedImage = file;
+      });
+    }
+    // to reopen the keyboard
+    await Future<dynamic>.delayed(const Duration(milliseconds: 50)).then((_) {
+      FocusScope.of(context).requestFocus(_inputFocus);
+    });
   }
 
   Widget _buildPickedImage(String path) => Padding(
@@ -260,7 +259,17 @@ class _AiTextInputState extends State<AiTextInput> {
         );
     if (!widget.onlyText) {
       if (!mounted) return;
-      context.read<TalkingCubit>().prepareToSpeak(responseMap, context.read<ChatsCubit>().state.currentLanguage);
+      if (checkPlatform() == 'Web') {
+        context.read<TalkingCubit>().speakForWeb(
+              responseMap,
+              context.read<ChatsCubit>().state.currentLanguage,
+            );
+      } else {
+        context.read<TalkingCubit>().prepareToSpeak(
+              responseMap,
+              context.read<ChatsCubit>().state.currentLanguage,
+            );
+      }
     }
   }
 }
