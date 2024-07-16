@@ -8,9 +8,12 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../l10n/localization_manager.dart';
 import '../../logic/avatar/avatar_cubit.dart';
+import '../../logic/avatar/avatar_state.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
+import '../../models/avatar.dart';
 import '../../models/chat_entry.dart';
+import '../../services/tts_service.dart';
 import '../../utils/extensions.dart';
 import '../../utils/platform_utils.dart';
 import 'current_prompt_text.dart';
@@ -76,47 +79,58 @@ class _AiTextInputState extends State<AiTextInput> {
           context.read<TalkingCubit>().setLoadingStatus(false);
         }
       },
-      child: BlocBuilder<ChatsCubit, ChatsState>(
-        builder: (BuildContext context, ChatsState state) {
-          return BlocBuilder<TalkingCubit, TalkingState>(
-            builder: (BuildContext context, TalkingState talkingState) {
-              ChatEntry? lastUserEntry;
-              if (state.currentChat.entries.isNotEmpty) {
-                lastUserEntry = state.currentChat.entries
-                    .lastWhere((ChatEntry c) => c.isFromUser);
-              }
-              return Column(
-                children: <Widget>[
-                  if (_pickedImage != null)
-                    _buildPickedImage(_pickedImage!.path),
-                  Stack(
+      child: BlocBuilder<AvatarCubit, AvatarState>(
+        builder: (BuildContext context, AvatarState avatarState) {
+          return BlocBuilder<ChatsCubit, ChatsState>(
+            builder: (BuildContext context, ChatsState state) {
+              return BlocBuilder<TalkingCubit, TalkingState>(
+                builder: (BuildContext context, TalkingState talkingState) {
+                  ChatEntry? lastUserEntry;
+                  if (state.currentChat.entries.isNotEmpty) {
+                    lastUserEntry = state.currentChat.entries
+                        .lastWhere((ChatEntry c) => c.isFromUser);
+                  }
+                  return Column(
                     children: <Widget>[
-                      Opacity(
-                        opacity: talkingState.status == TalkingStatus.initial
-                            ? 1
-                            : widget.onlyText
-                                ? 1
-                                : 0,
-                        child: _buildTextField(),
-                      ),
-                      if (talkingState.status != TalkingStatus.initial &&
-                          !widget.onlyText &&
-                          lastUserEntry != null)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Flexible(
-                              child: CurrentPromptText(
-                                prompt: lastUserEntry.text.getVisiblePrompt(),
-                              ),
+                      if (_pickedImage != null)
+                        _buildPickedImage(_pickedImage!.path),
+                      Stack(
+                        children: <Widget>[
+                          Opacity(
+                            opacity:
+                                talkingState.status == TalkingStatus.initial
+                                    ? 1
+                                    : widget.onlyText
+                                        ? 1
+                                        : 0,
+                            child: _buildTextField(
+                              avatarState.avatar,
+                              state.currentLanguage,
                             ),
-                            if (lastUserEntry.attachedImage.isNotEmpty)
-                              _buildPickedImage(lastUserEntry.attachedImage),
-                          ],
-                        ),
+                          ),
+                          if (talkingState.status != TalkingStatus.initial &&
+                              !widget.onlyText &&
+                              lastUserEntry != null)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Flexible(
+                                  child: CurrentPromptText(
+                                    prompt:
+                                        lastUserEntry.text.getVisiblePrompt(),
+                                  ),
+                                ),
+                                if (lastUserEntry.attachedImage.isNotEmpty)
+                                  _buildPickedImage(
+                                    lastUserEntry.attachedImage,
+                                  ),
+                              ],
+                            ),
+                        ],
+                      ),
                     ],
-                  ),
-                ],
+                  );
+                },
               );
             },
           );
@@ -125,9 +139,10 @@ class _AiTextInputState extends State<AiTextInput> {
     );
   }
 
-  Widget _buildTextField() => Row(
+  Widget _buildTextField(Avatar currentAvatar, String currentLanguage) => Row(
         children: <Widget>[
-     if (checkPlatform() != 'Web')     PickerButtons(onImageSelected: _onImageSelected),
+          if (checkPlatform() != 'Web')
+            PickerButtons(onImageSelected: _onImageSelected),
           Expanded(
             child: TextField(
               focusNode: _inputFocus,
@@ -137,7 +152,10 @@ class _AiTextInputState extends State<AiTextInput> {
               onChanged: (_) {
                 setState(() {});
               },
-              onSubmitted: _onTextSubmitted,
+              onSubmitted: (_) => _onTextSubmitted(
+                currentAvatar: currentAvatar,
+                currentLanguage: currentLanguage,
+              ),
               cursorColor: Colors.blue,
               textCapitalization: TextCapitalization.sentences,
               maxLines: 3,
@@ -166,7 +184,12 @@ class _AiTextInputState extends State<AiTextInput> {
                             await _speechToText.stop();
                           } else {
                             await _speechToText.listen(
-                              onResult: _onSpeechResult,
+                              onResult: (SpeechRecognitionResult result) =>
+                                  _onSpeechResult(
+                                result,
+                                currentAvatar: currentAvatar,
+                                currentLanguage: currentLanguage,
+                              ),
                               localeId: context
                                           .read<ChatsCubit>()
                                           .state
@@ -225,14 +248,25 @@ class _AiTextInputState extends State<AiTextInput> {
         ),
       );
 
-  void _onSpeechResult(SpeechRecognitionResult result) {
+  void _onSpeechResult(
+    SpeechRecognitionResult result, {
+    required Avatar currentAvatar,
+    required String currentLanguage,
+  }) {
     setState(() {
       _controller.text = result.recognizedWords;
     });
-    _onTextSubmitted(_controller.text);
+    if (_controller.text.isEmpty) return;
+    _onTextSubmitted(
+      currentAvatar: currentAvatar,
+      currentLanguage: currentLanguage,
+    );
   }
 
-  void _onTextSubmitted(String text) async {
+  void _onTextSubmitted({
+    required Avatar currentAvatar,
+    required String currentLanguage,
+  }) async {
     if (!widget.onlyText) {
       FocusScope.of(context).requestFocus(_inputFocus);
       if (_controller.text.isEmpty) return;
@@ -250,24 +284,32 @@ class _AiTextInputState extends State<AiTextInput> {
               prompt,
               attachedImage: attachedImage,
               onlyText: widget.onlyText,
-              avatar: context.read<AvatarCubit>().state.avatar,
+              avatar: currentAvatar,
             );
     if (responseMap == null) return;
     if (!mounted) return;
-    context.read<AvatarCubit>().setAvatarConfigFromNewAnswer(
-          responseMap['annotations'] as List<String>,
-        );
+    final AvatarConfig config =
+        context.read<AvatarCubit>().setAvatarConfigFromNewAnswer(
+              responseMap['annotations'] as List<String>,
+            );
     if (!widget.onlyText) {
       if (!mounted) return;
+      final VoiceEffect voiceEffect =
+          (config.specials.contains(AvatarSpecials.outOfScreen) ||
+                  config.costume.isEmpty)
+              ? currentAvatar.costume.getVoiceEffect()
+              : config.costume.last.getVoiceEffect();
       if (checkPlatform() == 'Web') {
         context.read<TalkingCubit>().speakForWeb(
               responseMap,
-              context.read<ChatsCubit>().state.currentLanguage,
+              currentLanguage,
+              voiceEffect,
             );
       } else {
         context.read<TalkingCubit>().prepareToSpeak(
               responseMap,
-              context.read<ChatsCubit>().state.currentLanguage,
+              currentLanguage,
+              voiceEffect,
             );
       }
     }

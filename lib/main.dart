@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
@@ -16,6 +17,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
   await LocalizationManager().initialize(deviceLocale.languageCode);
+  SystemChrome.setPreferredOrientations(
+    <DeviceOrientation>[DeviceOrientation.portraitUp],
+  );
   runApp(const MyApp());
 }
 
@@ -30,7 +34,7 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => TalkingCubit(),
         ),
         BlocProvider<ChatsCubit>(
-          create: (BuildContext context) => ChatsCubit()..getCurrentChat(),
+          create: (BuildContext context) => ChatsCubit()..init(),
         ),
         BlocProvider<AvatarCubit>(
           create: (BuildContext context) => AvatarCubit(),

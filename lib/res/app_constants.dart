@@ -12,6 +12,9 @@ class AppConstants {
   static int movingAvatarDuration = 3;
   static double loadingX = 326;
   static double loadingInvertedY = 900;
+  static double robocopLaserY = 444;
+  static double robocopLaserXLeft = 216;
+  static double robocopLaserXRight = 616;
 
   // Platforms dimensions
   static double maxWidth = 640;

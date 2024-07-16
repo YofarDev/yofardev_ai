@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 
+import '../services/tts_service.dart';
 import '../utils/extensions.dart';
 
 enum AvatarBackgrounds {
@@ -35,7 +36,7 @@ enum AvatarGlasses { glasses, sunglasses }
 
 enum AvatarSpecials { onScreen, outOfScreen }
 
-enum AvatarCostume { none, batman }
+enum AvatarCostume { none, batman, robocop }
 
 class Avatar extends Equatable {
   final AvatarBackgrounds background;
@@ -147,7 +148,7 @@ class AvatarConfig extends Equatable {
     this.specials = const <AvatarSpecials>[],
     this.costume = const <AvatarCostume>[],
   });
-  
+
   @override
   List<Object> get props {
     return <Object>[
@@ -196,7 +197,8 @@ extension AvatarExtensions on List<String> {
         switch (type) {
           case 'AvatarBackgrounds':
             final AvatarBackgrounds? background =
-                EnumByNameExtension.enumFromString(AvatarBackgrounds.values, value);
+                EnumByNameExtension.enumFromString(
+                    AvatarBackgrounds.values, value,);
             if (background != null) {
               backgrounds.add(background);
             }
@@ -253,6 +255,27 @@ extension AvatarExtensions on List<String> {
 // EXTENSIONS
 
 extension BgImagesExtension on AvatarBackgrounds? {
-
   String getPath() => 'assets/avatar/backgrounds/${this!.name}.jpeg';
+}
+
+extension CostumeExtension on AvatarCostume {
+  VoiceEffect getVoiceEffect() {
+    switch (this) {
+      case AvatarCostume.batman:
+        return VoiceEffect(
+          pitch: 0.7,
+          speedRate: 0.4,
+        );
+      case AvatarCostume.robocop:
+        return VoiceEffect(
+          pitch: 0.5,
+          speedRate: 0.25,
+        );
+      default:
+        return VoiceEffect(
+          pitch: 1,
+          speedRate: 0.5,
+        );
+    }
+  }
 }

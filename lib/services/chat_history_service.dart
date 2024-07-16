@@ -1,8 +1,11 @@
+import 'dart:ui';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/avatar.dart';
 import '../models/chat.dart';
 import '../utils/extensions.dart';
+import 'settings_service.dart';
 
 class ChatHistoryService {
   Future<Chat> createNewChat() async {
@@ -10,13 +13,17 @@ class ChatHistoryService {
     final String newChatId = DateTime.now().toIso8601String();
     final AvatarBackgrounds randomBg =
         EnumUtils.getRandomValue(AvatarBackgrounds.values);
-    final Chat newChat =
-        Chat(id: newChatId, avatar: Avatar(background: randomBg));
+    final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
+    final Chat newChat = Chat(
+      id: newChatId,
+      avatar: Avatar(background: randomBg),
+      language: deviceLocale.languageCode,
+      systemPrompt: await SettingsService().getBaseSystemPrompt(),
+    );
     await _removeEmptyChats();
     await prefs.setString(newChatId, newChat.toJson());
     await updateChatsList(newChatId);
     await setCurrentChatId(newChatId);
-
     return newChat;
   }
 

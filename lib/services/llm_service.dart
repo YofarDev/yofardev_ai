@@ -64,7 +64,7 @@ class LlmService {
   }
 
   Future<String> _getSystemPrompt(Chat currentChat) async {
-    final String base = await SettingsService().getBaseSystemPrompt() ?? localized.baseSystemPrompt;
+    final String base = currentChat.systemPrompt ?? localized.baseSystemPrompt;
     final StringBuffer soundEffectsList = StringBuffer();
     for (final SoundEffects soundEffect in SoundEffects.values) {
       soundEffectsList.write("[$soundEffect], ");

@@ -26,10 +26,8 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
-  Future<void> prepareToSpeak(
-    Map<String, dynamic> responseMap,
-    String language,
-  ) async {
+  Future<void> prepareToSpeak(Map<String, dynamic> responseMap, String language,
+      VoiceEffect voiceEffect,) async {
     emit(state.copyWith(status: TalkingStatus.loading));
     final String answerText = responseMap['text'] as String? ?? '';
     final String textToSay =
@@ -39,6 +37,7 @@ class TalkingCubit extends Cubit<TalkingState> {
         : await TtsService().textToFrenchMaleVoice(
             text: textToSay,
             language: language,
+            voiceEffect: voiceEffect,
           );
     final List<int> amplitudes = (textToSay.isEmpty || audioPath.isEmpty)
         ? <int>[]
@@ -61,6 +60,7 @@ class TalkingCubit extends Cubit<TalkingState> {
   void speakForWeb(
     Map<String, dynamic> responseMap,
     String language,
+    VoiceEffect voiceEffect,
   ) async {
     emit(state.copyWith(status: TalkingStatus.loading));
     final String answerText = responseMap['text'] as String? ?? '';
@@ -69,6 +69,7 @@ class TalkingCubit extends Cubit<TalkingState> {
     final FlutterTts tts = await TtsService().getFlutterTts(
       text: textToSay,
       language: language,
+      voiceEffect: voiceEffect,
     );
     tts.setCompletionHandler(() {
       stopTalking(noFile: true);
@@ -85,6 +86,7 @@ class TalkingCubit extends Cubit<TalkingState> {
         ),
       ),
     );
+
     tts.speak(textToSay);
   }
 

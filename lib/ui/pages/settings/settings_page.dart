@@ -24,6 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _baseSystemPromptController =
       TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final List<Voice> _voices = <Voice>[];
   Voice? _selectedVoice;
   bool _isSoundEffectsEnabled = true;
@@ -39,6 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _apiKeyController.text = await SettingsService().getApiKey();
     _baseSystemPromptController.text =
         await SettingsService().getBaseSystemPrompt() ?? '';
+    _usernameController.text = await SettingsService().getUsername() ?? '';
     _isSoundEffectsEnabled =
         context.read<ChatsCubit>().state.soundEffectsEnabled;
     setState(() {});
@@ -71,6 +73,28 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {});
   }
 
+  void _onSaveButtonPressed() async {
+    await SettingsService().setApiKey(_apiKeyController.text);
+    if (_baseSystemPromptController.text.isNotEmpty) {
+      await SettingsService()
+          .setBaseSystemPrompt(_baseSystemPromptController.text);
+    }
+    if (_usernameController.text.isNotEmpty) {
+      await SettingsService().setUsername(_usernameController.text);
+    }
+    context.read<ChatsCubit>().setSoundEffects(_isSoundEffectsEnabled);
+    if (_selectedVoice != null) {
+      await SettingsService()
+          .setTtsVoice(
+        _selectedVoice!.name,
+        context.read<ChatsCubit>().state.currentLanguage,
+      )
+          .then((_) {
+        Navigator.of(context).pop();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final StringBuffer soundEffectsList = StringBuffer();
@@ -87,12 +111,13 @@ class _SettingsPageState extends State<SettingsPage> {
               constraints: BoxConstraints(
                 maxWidth: AppConstants.maxWidth,
               ),
-              child: Column(
-                children: <Widget>[
-                  _buildAppBar(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: SingleChildScrollView(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    _buildAppBar(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
@@ -108,6 +133,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(height: 16),
                           _buildBaseSystemPromptField(),
                           const SizedBox(height: 16),
+                          _usernameField(),
+                          const SizedBox(height: 16),
                           _buildSoundEffectsCheckbox(),
                           const SizedBox(height: 16),
                           _dropdownVoices(),
@@ -115,8 +142,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -130,26 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: () async {
-              await SettingsService().setApiKey(_apiKeyController.text);
-              if (_baseSystemPromptController.text.isNotEmpty) {
-                await SettingsService()
-                    .setBaseSystemPrompt(_baseSystemPromptController.text);
-              }
-              context
-                  .read<ChatsCubit>()
-                  .setSoundEffects(_isSoundEffectsEnabled);
-              if (_selectedVoice != null) {
-                await SettingsService()
-                    .setTtsVoice(
-                  _selectedVoice!.name,
-                  context.read<ChatsCubit>().state.currentLanguage,
-                )
-                    .then((_) {
-                  Navigator.of(context).pop();
-                });
-              }
-            },
+            onPressed: _onSaveButtonPressed,
           ),
         ],
       );
@@ -158,6 +166,12 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiKeyController,
         hintText: "Google API Key",
         prefixIcon: Icons.vpn_key,
+      );
+
+  Widget _usernameField() => _textField(
+        _usernameController,
+        hintText: localized.username,
+        prefixIcon: Icons.person,
       );
 
   Widget _buildBaseSystemPromptField() => Column(

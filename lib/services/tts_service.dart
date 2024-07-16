@@ -35,6 +35,7 @@ class TtsService {
   Future<String> textToFrenchMaleVoice({
     required String text,
     required String language,
+    required VoiceEffect voiceEffect,
   }) async {
     final FlutterTts flutterTts = FlutterTts();
     final String locale = language == 'fr' ? 'fr-FR' : 'en-US';
@@ -45,6 +46,8 @@ class TtsService {
         "locale": locale,
       },
     );
+      await flutterTts.setSpeechRate(voiceEffect.speedRate);
+      await flutterTts.setPitch(voiceEffect.pitch);
     if (checkPlatform() == 'iOS') {
       await flutterTts.setSharedInstance(true);
       await flutterTts.setIosAudioCategory(
@@ -70,6 +73,7 @@ class TtsService {
   Future<FlutterTts> getFlutterTts({
     required String text,
     required String language,
+    required VoiceEffect voiceEffect,
   }) async {
     final FlutterTts flutterTts = FlutterTts();
     final String locale = language == 'fr' ? 'fr-FR' : 'en-US';
@@ -80,11 +84,18 @@ class TtsService {
         "locale": locale,
       },
     );
+    await flutterTts.setSpeechRate(voiceEffect.speedRate);
+    await flutterTts.setPitch(voiceEffect.pitch);
     return flutterTts;
   }
+}
 
+class VoiceEffect {
+  final double pitch;
+  final double speedRate;
 
-
-
-
+  VoiceEffect({
+    required this.pitch,
+    required this.speedRate,
+  });
 }

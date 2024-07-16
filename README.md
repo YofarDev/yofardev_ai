@@ -1,6 +1,8 @@
-# Yofardev AI (iOS & Android)
+# Yofardev AI (iOS & Android & Web)
 
 Yofardev AI is a small fun project that brings life to a Large Language Model (LLM) through an animated avatar. Users can interact with the AI assistant through text (or dictate to text), and the app responds with generated text-to-speech and lip-synced animations.
+
+[Free web demo](https://yofardev-ai.web.app) (not all features available because of platform limitations). You need to set your Google Api Key in the settings
 
 <p align="center">
   <img src="screenshots/1.png" width="20%" />
@@ -8,7 +10,6 @@ Yofardev AI is a small fun project that brings life to a Large Language Model (L
   <img src="screenshots/3.png" width="20%" />
   <img src="screenshots/4.png" width="20%" />
 </p>
-
 
 ## Features
 
@@ -55,19 +56,19 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 
 ## Platforms
 
-- Android: Fully supported
-- iOS: Now compatible and working (recommended voice for english is Evan-Enhanced)
+- Android & iOS: Fully supported
+- Web : it's more limited. The tts library I'm using don't let you access the bytes on web, so for the lip sync I just display random mouth states while it's talking. Also there is no image vision, no "spatialization" of voice when avatar is leaving/coming
 
 ## Known Issues
 
 - The LLM currently tends to overuse sound effects for no reason. You can disable sound effects completely in the settings.
 - Sometimes the lip-sync stop working, need to find out why.
-- The batman costume is horrible
+- You can type and send another prompt while it's talking, and then you can have multiple tts playing at the same time.
+- The batman costume is meh
 
 ## Future Improvements
 
 - An interrupt button to stop the AI's response mid-sentence would be a good idea.
-- Make it web compatible?
 
 ## License
 

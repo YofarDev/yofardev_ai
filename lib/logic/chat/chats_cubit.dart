@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,22 +20,43 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   final LlmService _llmService = LlmService();
 
+  void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
+    emit(state.copyWith(status: ChatsStatus.updating));
+    final Chat newChat = await ChatHistoryService().createNewChat();
+    emit(
+      state.copyWith(
+        chatsList: <Chat>[newChat, ...state.chatsList],
+        status: ChatsStatus.success,
+        currentChat: newChat,
+      ),
+    );
+    avatarCubit.loadAvatar(newChat.id);
+    talkingCubit.init();
+  }
+
+  void init() async {
+    getCurrentChat();
+    setCurrentLanguage(await SettingsService().getLanguage() ?? 'en');
+  }
+
+
+
   void getCurrentChat() async {
     emit(state.copyWith(status: ChatsStatus.loading));
     final Chat currentChat = await ChatHistoryService().getCurrentChat();
     final bool soundEffectsEnabled = await SettingsService().getSoundEffects();
-    final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
     emit(
       state.copyWith(
         status: ChatsStatus.success,
         currentChat: currentChat,
         soundEffectsEnabled: soundEffectsEnabled,
-        currentLanguage: deviceLocale.languageCode,
+        currentLanguage: await SettingsService().getLanguage() ?? currentChat.language,
       ),
     );
   }
 
   void setCurrentLanguage(String language) async {
+    await SettingsService().setLanguage(language);
     await LocalizationManager().initialize(language);
     emit(state.copyWith(currentLanguage: language));
   }
@@ -71,8 +90,10 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(openedChat: chat));
   }
 
-  String _addPrePrompt(Avatar avatar, String prompt) =>
-      "{[${DateTime.now().toLongLocalDateString(language: state.currentLanguage)}]\n$avatar\n${localized.hiddenPart}}\n$prompt";
+  Future<String> _addPrePrompt(Avatar avatar, String prompt) async {
+    final String? username = await SettingsService().getUsername();
+    return "{[${DateTime.now().toLongLocalDateString()}]\n$avatar${username != null ? "\nUsername is : $username" : ''}\n${localized.hiddenPart}}\n$prompt";
+  }
 
   Future<Map<String, dynamic>?> askYofardev(
     String prompt, {
@@ -83,7 +104,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     Chat chat = onlyText ? state.openedChat : state.currentChat;
     final List<ChatEntry> entries = <ChatEntry>[...chat.entries];
     final ChatEntry newUserEntry = ChatEntry(
-      text: _addPrePrompt(avatar, prompt),
+      text: await _addPrePrompt(avatar, prompt),
       isFromUser: true,
       timestamp: DateTime.now(),
       attachedImage: attachedImage ?? '',
@@ -170,19 +191,5 @@ class ChatsCubit extends Cubit<ChatsState> {
       chat.id,
       avatar,
     );
-  }
-
-  void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
-    emit(state.copyWith(status: ChatsStatus.updating));
-    final Chat newChat = await ChatHistoryService().createNewChat();
-    emit(
-      state.copyWith(
-        chatsList: <Chat>[newChat, ...state.chatsList],
-        status: ChatsStatus.success,
-        currentChat: newChat,
-      ),
-    );
-    avatarCubit.loadAvatar(newChat.id);
-    talkingCubit.init();
   }
 }

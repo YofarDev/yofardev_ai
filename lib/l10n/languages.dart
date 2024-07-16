@@ -23,5 +23,6 @@ String get loadDefaultSystemPrompt;
 String get ttsVoices;
 String get moreVoicesIOS;
 String get moreVoicesAndroid;
+String get username;
 
 }

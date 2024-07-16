@@ -28,7 +28,7 @@ class BaseAvatar extends StatelessWidget {
                           'assets/avatar/bottom/${state.avatar.bottom.name}.png',
                         )
                       : Image.asset(
-                          'assets/avatar/costumes/emptyBot.png',
+                          'assets/avatar/bottom/emptyBot.png',
                         ),
                 ),
               ),
@@ -44,7 +44,7 @@ class BaseAvatar extends StatelessWidget {
                           'assets/avatar/top/${state.avatar.top.name}.png',
                         )
                       : Image.asset(
-                          'assets/avatar/costumes/emptyTop.png',
+                          'assets/avatar/top/emptyTop.png',
                           
                         ),
                 ),

@@ -37,5 +37,7 @@ String get ttsVoices => "TTS Voices";
 String get moreVoicesIOS => "For more voices, go to Settings > Accessibility > Spoken Content > Voices";
 @override
 String get moreVoicesAndroid => "For more voices : ‘Google Text-to-Speech’ on the Play Store";
+@override
+String get username => "Your name";
 
 }
