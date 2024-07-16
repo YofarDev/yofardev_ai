@@ -3,7 +3,7 @@ class AppConstants {
   static double avatarHeight = 1280;
   static double avatarWidth = 1024;
   static double topAvatarInvertedY = 662;
-  static double eyesX = 221;
+  static double eyesX = 226;
   static double eyesY = 428;
   static double mouthX = 326;
   static double mouthY = 617;

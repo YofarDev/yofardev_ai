@@ -64,7 +64,7 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 - The LLM currently tends to overuse sound effects for no reason. You can disable sound effects completely in the settings.
 - Sometimes the lip-sync stop working, need to find out why.
 - You can type and send another prompt while it's talking, and then you can have multiple tts playing at the same time.
-- The batman costume is meh
+- The batman costume is horrible
 
 ## Future Improvements
 

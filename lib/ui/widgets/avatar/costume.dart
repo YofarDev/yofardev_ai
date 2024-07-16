@@ -25,7 +25,7 @@ class _CostumeState extends State<Costume> with SingleTickerProviderStateMixin {
     _controller = AnimationController(
       duration: const Duration(milliseconds: 3000),
       vsync: this,
-    )..repeat(reverse: true);
+    );
 
     _animation = Tween<double>(
       begin: AppConstants.robocopLaserXLeft,
@@ -48,6 +48,9 @@ class _CostumeState extends State<Costume> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return BlocBuilder<AvatarCubit, AvatarState>(
       builder: (BuildContext context, AvatarState state) {
+        if (state.avatar.costume == AvatarCostume.robocop) {
+          _controller.repeat(reverse: true);
+        }
         return Stack(
           children: <Widget>[
             Positioned.fill(
@@ -73,8 +76,8 @@ class _CostumeState extends State<Costume> with SingleTickerProviderStateMixin {
             left: _animation.value * scaleFactor,
             child: CustomPaint(
               size: Size(
-                _sizeLaser  * scaleFactor,
-                _sizeLaser  * scaleFactor,
+                _sizeLaser * scaleFactor,
+                _sizeLaser * scaleFactor,
               ),
               painter: GlowingLaser(radius: _sizeLaser * scaleFactor),
             ),

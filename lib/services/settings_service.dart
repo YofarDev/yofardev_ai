@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/localization_manager.dart';
@@ -12,11 +13,11 @@ class SettingsService {
 
   Future<String> getApiKey() async {
     // if (kDebugMode) {
-    //   await dotenv.load();
-    //   final String? apiKey = dotenv.env['GOOGLE_KEY'];
-    //   if (apiKey != null) {
-    //     return apiKey;
-    //   }
+      await dotenv.load();
+      final String? apiKey = dotenv.env['GOOGLE_KEY'];
+      if (apiKey != null) {
+        return apiKey;
+      }
     // }
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('apiKey') ?? '';

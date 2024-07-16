@@ -14,6 +14,7 @@ enum SoundEffects {
   doorKnocking,
   asianTheme,
   robotWalking,
+  uwu,
 }
 
 extension SoundEffectsStrExtension on String {

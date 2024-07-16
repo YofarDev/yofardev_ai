@@ -26,17 +26,22 @@ enum AvatarBackgrounds {
   balconyViewOfCityByNight,
   cityscrape,
   tropicalIsland,
+  swimmingPool,
+  hallMansion,
+  facadeMansion,
+  artGallery,
+  cinema,
 }
 
-enum AvatarTop { noHat, beanie, backwardsCap, frenchBeret }
+enum AvatarTop { noHat, beanie, backwardsCap, frenchBeret, swimCap }
 
-enum AvatarBottom { pinkHoodie, longCoat, tshirt }
+enum AvatarBottom { pinkHoodie, longCoat, tshirt, underwear, swimsuit }
 
 enum AvatarGlasses { glasses, sunglasses }
 
 enum AvatarSpecials { onScreen, outOfScreen }
 
-enum AvatarCostume { none, batman, robocop }
+enum AvatarCostume { none, batman, robocop, soubrette }
 
 class Avatar extends Equatable {
   final AvatarBackgrounds background;
@@ -198,7 +203,9 @@ extension AvatarExtensions on List<String> {
           case 'AvatarBackgrounds':
             final AvatarBackgrounds? background =
                 EnumByNameExtension.enumFromString(
-                    AvatarBackgrounds.values, value,);
+              AvatarBackgrounds.values,
+              value,
+            );
             if (background != null) {
               backgrounds.add(background);
             }
@@ -255,7 +262,9 @@ extension AvatarExtensions on List<String> {
 // EXTENSIONS
 
 extension BgImagesExtension on AvatarBackgrounds? {
-  String getPath() => 'assets/avatar/backgrounds/${this!.name}.jpeg';
+  String getPath() {
+    return 'assets/avatar/backgrounds/${this!.name}.jpeg';
+  }
 }
 
 extension CostumeExtension on AvatarCostume {
