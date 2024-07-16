@@ -41,6 +41,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
+        title: 'Yofardev AI',
         debugShowCheckedModeBanner: false,
           supportedLocales: const <Locale>[
           Locale('fr'),
