@@ -9,7 +9,7 @@ import '../../../res/app_constants.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';
 import 'clothes.dart';
-import 'costume.dart';
+import 'costumes/costume.dart';
 import 'talking_mouth.dart';
 
 class AvatarWidgets extends StatefulWidget {

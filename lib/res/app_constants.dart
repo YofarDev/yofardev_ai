@@ -15,6 +15,10 @@ class AppConstants {
   static double robocopLaserY = 444;
   static double robocopLaserXLeft = 216;
   static double robocopLaserXRight = 616;
+  static double soubretteFeatherDusterHeight = 940;
+  static double soubretteFeatherDusterWidth = 342;
+  static double soubretteFeatherDusterY = 683;
+  static double soubretteFeatherDusterX = -200;
 
   // Platforms dimensions
   static double maxWidth = 640;
