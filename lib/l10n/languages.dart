@@ -9,11 +9,6 @@ return Localizations.of<Languages>(context, Languages)!;
 String get appName;
 String get empty;
 String get settings;
-String get baseSystemPrompt;
-String get soundEffectsPrompt;
-String get backgroundsPrompt;
-String get leavePrompt;
-String get customizationPrompt;
 String get listChats;
 String get hiddenPart;
 String get describeThisImage;
@@ -24,5 +19,9 @@ String get ttsVoices;
 String get moreVoicesIOS;
 String get moreVoicesAndroid;
 String get username;
+String get userMessage;
+String get currentDate;
+String get currentAvatarConfig;
+String get currentUsername;
 
 }

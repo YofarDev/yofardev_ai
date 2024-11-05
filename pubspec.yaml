@@ -18,8 +18,7 @@ dependencies:
   just_audio: ^0.9.38
   path_provider: ^2.1.3
   shared_preferences: ^2.2.3
-  audio_analyzer: 
-    path: /Users/yofardev/development/Projects/Flutter/PLUGINS/_audio_analyzer
+  audio_analyzer: ^0.0.2
   flutter_bloc: ^8.1.6
   equatable: ^2.0.5
   nested: ^1.0.0
@@ -34,6 +33,8 @@ dependencies:
   flutter_volume_controller: ^1.3.2
   universal_html: ^2.2.4
   http: ^1.2.1
+  llm_api_picker:
+    path: /Users/yofardev/development/Projects/Flutter/PLUGINS/llm_api_picker
 
 
 dev_dependencies:
@@ -69,4 +70,5 @@ flutter:
     - assets/avatar/costumes/
     - assets/avatar/top/
     - assets/avatar/bottom/
+    - assets/txt/
 

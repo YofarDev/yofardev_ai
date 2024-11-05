@@ -1,32 +1,37 @@
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+
+import 'avatar.dart';
 
 class ChatEntry extends Equatable {
   final bool isFromUser;
-  final String text;
+  final String body;
   final DateTime timestamp;
   final String attachedImage;
 
   const ChatEntry({
     required this.isFromUser,
-    required this.text,
+    required this.body,
     required this.timestamp,
     this.attachedImage = '',
   });
 
   @override
-  List<Object> get props => <Object>[isFromUser, text, timestamp, attachedImage];
+  List<Object> get props =>
+      <Object>[isFromUser, body, timestamp, attachedImage];
 
   ChatEntry copyWith({
     bool? isFromUser,
-    String? text,
+    String? body,
     DateTime? timestamp,
     String? attachedImage,
   }) {
     return ChatEntry(
       isFromUser: isFromUser ?? this.isFromUser,
-      text: text ?? this.text,
+      body: body ?? this.body,
       timestamp: timestamp ?? this.timestamp,
       attachedImage: attachedImage ?? this.attachedImage,
     );
@@ -35,7 +40,7 @@ class ChatEntry extends Equatable {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'fromUser': isFromUser,
-      'text': text,
+      'body': body,
       'timestamp': timestamp.millisecondsSinceEpoch,
       'attachedImage': attachedImage,
     };
@@ -44,7 +49,7 @@ class ChatEntry extends Equatable {
   factory ChatEntry.fromMap(Map<String, dynamic> map) {
     return ChatEntry(
       isFromUser: map['fromUser'] as bool? ?? false,
-      text: map['text'] as String? ?? '',
+      body: map['body'] as String? ?? '',
       timestamp:
           DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int? ?? 0),
       attachedImage: map['attachedImage'] as String? ?? '',
@@ -55,4 +60,32 @@ class ChatEntry extends Equatable {
 
   factory ChatEntry.fromJson(String source) =>
       ChatEntry.fromMap(json.decode(source) as Map<String, dynamic>);
+}
+
+extension ListChatEntryExtension on List<ChatEntry> {
+  Future<List<Content>> getGeminiHistory() async {
+    final List<Content> history = <Content>[];
+    for (final ChatEntry entry in this) {
+      if (entry.isFromUser) {
+        history.add(Content.text(entry.body));
+      } else {
+        history.add(Content.model(<Part>[TextPart(entry.body)]));
+      }
+    }
+    return history;
+  }
+}
+
+extension ChatEntryExtension on ChatEntry {
+  AvatarConfig getAvatarConfig() {
+    try {
+      final String body = this.body;
+      if (body.isEmpty) return const AvatarConfig();
+      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
+      return AvatarConfig.fromMap(map);
+    } catch (e) {
+      debugPrint('getAvatarConfig(): Error parsing avatar config: $e');
+      return const AvatarConfig();
+    }
+  }
 }

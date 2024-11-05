@@ -1,17 +1,19 @@
 import 'package:equatable/equatable.dart';
 
+import 'avatar.dart';
+
 class Answer extends Equatable {
   final String chatId;
   final String answerText;
   final String audioPath;
   final List<int> amplitudes;
-  final List<String> annotations;
+  final AvatarConfig avatarConfig;
   const Answer({
     this.chatId = '',
     this.answerText = '',
     this.audioPath = '',
     this.amplitudes = const <int>[],
-    this.annotations = const <String>[],
+    this.avatarConfig = const AvatarConfig(),
   });
 
   @override
@@ -20,7 +22,7 @@ class Answer extends Equatable {
         answerText,
         audioPath,
         amplitudes,
-        annotations,
+        avatarConfig,
       ];
 
   Answer copyWith({
@@ -28,14 +30,14 @@ class Answer extends Equatable {
     String? answerText,
     String? audioPath,
     List<int>? amplitudes,
-    List<String>? annotations,
+    AvatarConfig? avatarConfig,
   }) {
     return Answer(
       chatId: chatId ?? this.chatId,
       answerText: answerText ?? this.answerText,
       audioPath: audioPath ?? this.audioPath,
       amplitudes: amplitudes ?? this.amplitudes,
-      annotations: annotations ?? this.annotations,
+      avatarConfig: avatarConfig ?? this.avatarConfig,
     );
   }
 }

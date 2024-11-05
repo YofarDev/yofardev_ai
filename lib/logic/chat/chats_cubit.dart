@@ -6,8 +6,8 @@ import '../../l10n/localization_manager.dart';
 import '../../models/avatar.dart';
 import '../../models/chat.dart';
 import '../../models/chat_entry.dart';
+import '../../repositories/yofardev_repository.dart';
 import '../../services/chat_history_service.dart';
-import '../../services/llm_service.dart';
 import '../../services/settings_service.dart';
 import '../../utils/extensions.dart';
 import '../avatar/avatar_cubit.dart';
@@ -17,8 +17,6 @@ part 'chats_state.dart';
 
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit() : super(const ChatsState());
-
-  final LlmService _llmService = LlmService();
 
   void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
     emit(state.copyWith(status: ChatsStatus.updating));
@@ -39,8 +37,6 @@ class ChatsCubit extends Cubit<ChatsState> {
     setCurrentLanguage(await SettingsService().getLanguage() ?? 'en');
   }
 
-
-
   void getCurrentChat() async {
     emit(state.copyWith(status: ChatsStatus.loading));
     final Chat currentChat = await ChatHistoryService().getCurrentChat();
@@ -50,7 +46,8 @@ class ChatsCubit extends Cubit<ChatsState> {
         status: ChatsStatus.success,
         currentChat: currentChat,
         soundEffectsEnabled: soundEffectsEnabled,
-        currentLanguage: await SettingsService().getLanguage() ?? currentChat.language,
+        currentLanguage:
+            await SettingsService().getLanguage() ?? currentChat.language,
       ),
     );
   }
@@ -92,10 +89,10 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   Future<String> _addPrePrompt(Avatar avatar, String prompt) async {
     final String? username = await SettingsService().getUsername();
-    return "{[${DateTime.now().toLongLocalDateString()}]\n$avatar${username != null ? "\nUsername is : $username" : ''}\n${localized.hiddenPart}}\n$prompt";
+    return "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${username != null ? "${localized.currentUsername} : $username" : ''}\n${localized.userMessage} : \n'''$prompt'''";
   }
 
-  Future<Map<String, dynamic>?> askYofardev(
+  Future<ChatEntry?> askYofardev(
     String prompt, {
     required bool onlyText,
     String? attachedImage,
@@ -104,7 +101,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     Chat chat = onlyText ? state.openedChat : state.currentChat;
     final List<ChatEntry> entries = <ChatEntry>[...chat.entries];
     final ChatEntry newUserEntry = ChatEntry(
-      text: await _addPrePrompt(avatar, prompt),
+      body: await _addPrePrompt(avatar, prompt),
       isFromUser: true,
       timestamp: DateTime.now(),
       attachedImage: attachedImage ?? '',
@@ -119,16 +116,9 @@ class ChatsCubit extends Cubit<ChatsState> {
       ),
     );
     try {
-      final Map<String, dynamic> responseMap = await _llmService
-          .askYofardevAi(chat, onlyText: onlyText, avatar: avatar);
-      responseMap['chatId'] = chat.id;
-      final String answerText =
-          "${responseMap['text'] ?? ''} ${(responseMap['annotations'] as List<String>).join(' ')}";
-      final ChatEntry newModelEntry = ChatEntry(
-        text: answerText,
-        isFromUser: false,
-        timestamp: DateTime.now(),
-      );
+      final ChatEntry newModelEntry =
+          await YofardevRepository.askYofardevAi(chat);
+      final List<ChatEntry> entries = <ChatEntry>[...chat.entries];
       entries.add(newModelEntry);
       chat = chat.copyWith(entries: entries);
       emit(
@@ -142,7 +132,7 @@ class ChatsCubit extends Cubit<ChatsState> {
         chatId: chat.id,
         updatedChat: chat,
       );
-      return responseMap;
+      return newModelEntry;
     } catch (e) {
       debugPrint(e.toString());
       emit(
@@ -174,12 +164,12 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(status: ChatsStatus.updating));
     final Chat chat = state.openedChat;
     final Avatar avatar = chat.avatar.copyWith(
-      top: avatarConfig.top.lastOrNull,
-      bottom: avatarConfig.bottom.lastOrNull,
-      background: avatarConfig.backgrounds.lastOrNull,
-      glasses: avatarConfig.glasses.lastOrNull,
-      specials: avatarConfig.specials.lastOrNull,
-      costume: avatarConfig.costume.lastOrNull,
+      hat: avatarConfig.hat,
+      top: avatarConfig.top,
+      background: avatarConfig.background,
+      glasses: avatarConfig.glasses,
+      specials: avatarConfig.specials,
+      costume: avatarConfig.costume,
     );
     emit(
       state.copyWith(

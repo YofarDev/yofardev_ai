@@ -39,12 +39,9 @@ extension DateTimeExtension on DateTime {
 
 extension StringExtensions on String {
   String getVisiblePrompt() {
-    final RegExp regex = RegExp(
-      r'\{[^}]*\}|\[(?!SoundEffects\.|AvatarBackgrounds\.)[^\]]*\]',
-      dotAll: true,
-    );
-    final String result = replaceAll(regex, '');
-    return result.trim();
+    final List<String> parts = split("'''");
+    final String message = parts[1];
+    return message.trim();
   }
 }
 
@@ -72,6 +69,13 @@ extension EnumUtils on Enum {
   static T getRandomValue<T extends Enum>(List<T> values) {
     final Random random = Random();
     return values[random.nextInt(values.length)];
+  }
+
+  static T? firstOrNull<T extends Enum>(List<T> values, String enumName) {
+   // debugPrint('firstOrNull(): $enumName');
+    return values.any((T e) => e.name == enumName)
+        ? values.firstWhere((T e) => e.name == enumName)
+        : null;
   }
 }
 

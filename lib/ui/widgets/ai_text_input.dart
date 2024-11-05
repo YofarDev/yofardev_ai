@@ -104,8 +104,9 @@ class _AiTextInputState extends State<AiTextInput> {
                                         ? 1
                                         : 0,
                             child: _buildTextField(
-                              avatarState.avatar,
-                              state.currentLanguage,
+                              currentAvatar: avatarState.avatar,
+                              currentLanguage: state.currentLanguage,
+                              chatId: state.currentChat.id,
                             ),
                           ),
                           if (talkingState.status != TalkingStatus.initial &&
@@ -117,7 +118,7 @@ class _AiTextInputState extends State<AiTextInput> {
                                 Flexible(
                                   child: CurrentPromptText(
                                     prompt:
-                                        lastUserEntry.text.getVisiblePrompt(),
+                                        lastUserEntry.body.getVisiblePrompt(),
                                   ),
                                 ),
                                 if (lastUserEntry.attachedImage.isNotEmpty)
@@ -139,7 +140,12 @@ class _AiTextInputState extends State<AiTextInput> {
     );
   }
 
-  Widget _buildTextField(Avatar currentAvatar, String currentLanguage) => Row(
+  Widget _buildTextField({
+    required Avatar currentAvatar,
+    required String currentLanguage,
+    required String chatId,
+  }) =>
+      Row(
         children: <Widget>[
           if (checkPlatform() != 'Web')
             PickerButtons(onImageSelected: _onImageSelected),
@@ -155,6 +161,7 @@ class _AiTextInputState extends State<AiTextInput> {
               onSubmitted: (_) => _onTextSubmitted(
                 currentAvatar: currentAvatar,
                 currentLanguage: currentLanguage,
+                chatId: chatId,
               ),
               cursorColor: Colors.blue,
               textCapitalization: TextCapitalization.sentences,
@@ -189,6 +196,7 @@ class _AiTextInputState extends State<AiTextInput> {
                                 result,
                                 currentAvatar: currentAvatar,
                                 currentLanguage: currentLanguage,
+                                chatId: chatId,
                               ),
                               localeId: context
                                           .read<ChatsCubit>()
@@ -252,6 +260,7 @@ class _AiTextInputState extends State<AiTextInput> {
     SpeechRecognitionResult result, {
     required Avatar currentAvatar,
     required String currentLanguage,
+    required String chatId,
   }) {
     setState(() {
       _controller.text = result.recognizedWords;
@@ -260,12 +269,14 @@ class _AiTextInputState extends State<AiTextInput> {
     _onTextSubmitted(
       currentAvatar: currentAvatar,
       currentLanguage: currentLanguage,
+      chatId: chatId,
     );
   }
 
   void _onTextSubmitted({
     required Avatar currentAvatar,
     required String currentLanguage,
+    required String chatId,
   }) async {
     if (!widget.onlyText) {
       FocusScope.of(context).requestFocus(_inputFocus);
@@ -279,37 +290,34 @@ class _AiTextInputState extends State<AiTextInput> {
     setState(() {
       _pickedImage = null;
     });
-    final Map<String, dynamic>? responseMap =
-        await context.read<ChatsCubit>().askYofardev(
-              prompt,
-              attachedImage: attachedImage,
-              onlyText: widget.onlyText,
-              avatar: currentAvatar,
-            );
-    if (responseMap == null) return;
+    final ChatEntry? modelAnswer = await context.read<ChatsCubit>().askYofardev(
+          prompt,
+          attachedImage: attachedImage,
+          onlyText: widget.onlyText,
+          avatar: currentAvatar,
+        );
+    if (modelAnswer == null) return;
     if (!mounted) return;
-    final AvatarConfig config =
-        context.read<AvatarCubit>().setAvatarConfigFromNewAnswer(
-              responseMap['annotations'] as List<String>,
-            );
+    final AvatarConfig config = modelAnswer.getAvatarConfig();
     if (!widget.onlyText) {
       if (!mounted) return;
       final VoiceEffect voiceEffect =
-          (config.specials.contains(AvatarSpecials.outOfScreen) ||
-                  config.costume.isEmpty)
+          (config.specials == AvatarSpecials.outOfScreen ||
+                  config.costume == null)
               ? currentAvatar.costume.getVoiceEffect()
-              : config.costume.last.getVoiceEffect();
+              : config.costume!.getVoiceEffect();
       if (checkPlatform() == 'Web') {
         context.read<TalkingCubit>().speakForWeb(
-              responseMap,
+              modelAnswer,
               currentLanguage,
               voiceEffect,
             );
       } else {
         context.read<TalkingCubit>().prepareToSpeak(
-              responseMap,
-              currentLanguage,
-              voiceEffect,
+              chatId: chatId,
+              entry: modelAnswer,
+              language: currentLanguage,
+              voiceEffect: voiceEffect,
             );
       }
     }

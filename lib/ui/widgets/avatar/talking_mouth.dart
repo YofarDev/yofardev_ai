@@ -49,7 +49,7 @@ class TalkingMouth extends StatelessWidget {
     if (answer.amplitudes.isEmpty) {
       return context.read<TalkingCubit>().stopTalking(
             noFile: true,
-            noSoundEffects:
+            soundEffectsEnabled:
                 context.read<ChatsCubit>().state.soundEffectsEnabled,
           );
     }
@@ -65,7 +65,7 @@ class TalkingMouth extends StatelessWidget {
         timer.cancel();
         player.dispose();
         context.read<TalkingCubit>().stopTalking(
-              noSoundEffects:
+              soundEffectsEnabled:
                   context.read<ChatsCubit>().state.soundEffectsEnabled,
             );
         return;

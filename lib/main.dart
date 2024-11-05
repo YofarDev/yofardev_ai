@@ -11,6 +11,7 @@ import 'l10n/localization_manager.dart';
 import 'logic/avatar/avatar_cubit.dart';
 import 'logic/chat/chats_cubit.dart';
 import 'logic/talking/talking_cubit.dart';
+import 'res/app_constants.dart';
 import 'ui/pages/home.dart';
 
 void main() async {
@@ -40,25 +41,35 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => AvatarCubit(),
         ),
       ],
-      child: MaterialApp(
-        title: 'Yofardev AI',
-        debugShowCheckedModeBanner: false,
-          supportedLocales: const <Locale>[
-          Locale('fr'),
-          Locale('en'),
-        ],
-        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
-          AppLocalizationsDelegate(), 
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
+      child: ColoredBox(
+        color:Colors.blue,
+        child: ClipRRect(
+          child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: AppConstants.maxWidth),
+            child: Center(
+              child: MaterialApp(
+                title: 'Yofardev AI',
+                debugShowCheckedModeBanner: false,
+                  supportedLocales: const <Locale>[
+                  Locale('fr'),
+                  Locale('en'),
+                ],
+                localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+                  AppLocalizationsDelegate(), 
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                theme: ThemeData(
+                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                  useMaterial3: true,
+                ),
+                home: const Home(),
+                 
+              ),
+            ),
+          ),
         ),
-        home: const Home(),
-         
       ),
     );
   }

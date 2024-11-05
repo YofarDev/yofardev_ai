@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/widgets.dart';
 
 import 'avatar.dart';
 import 'chat_entry.dart';
@@ -11,15 +10,14 @@ class Chat extends Equatable {
   final List<ChatEntry> entries;
   final Avatar avatar;
   final String language;
-  final String? systemPrompt;
+  final String systemPrompt;
 
   const Chat({
     this.id = '',
     this.entries = const <ChatEntry>[],
     this.avatar = const Avatar(),
     this.language = 'en',
-    this.systemPrompt,
-    
+    this.systemPrompt = '',
   });
 
   Chat copyWith({
@@ -27,14 +25,14 @@ class Chat extends Equatable {
     List<ChatEntry>? entries,
     Avatar? avatar,
     String? language,
-    ValueGetter<String?>? systemPrompt,
+    String? systemPrompt,
   }) {
     return Chat(
       id: id ?? this.id,
       entries: entries ?? this.entries,
       avatar: avatar ?? this.avatar,
       language: language ?? this.language,
-      systemPrompt: systemPrompt != null ? systemPrompt() : this.systemPrompt,
+      systemPrompt: systemPrompt ?? this.systemPrompt,
     );
   }
 
@@ -65,11 +63,10 @@ class Chat extends Equatable {
       entries: List<ChatEntry>.from(
         (map['entries'] as List<dynamic>? ?? <String>[])
             .map((dynamic x) => ChatEntry.fromMap(x as Map<String, dynamic>)),
-      
       ),
       avatar: Avatar.fromMap(map['avatar'] as Map<String, dynamic>),
       language: map['language'] as String,
-      systemPrompt: map['systemPrompt'] as String?,
+      systemPrompt: map['systemPrompt'] as String? ?? '',
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 
 import '../services/tts_service.dart';
 import '../utils/extensions.dart';
+import 'sound_effects.dart';
 
 enum AvatarBackgrounds {
   lake,
@@ -33,27 +34,27 @@ enum AvatarBackgrounds {
   cinema,
 }
 
-enum AvatarTop { noHat, beanie, backwardsCap, frenchBeret, swimCap }
+enum AvatarHat { noHat, beanie, backwardsCap, frenchBeret, swimCap }
 
-enum AvatarBottom { pinkHoodie, longCoat, tshirt, underwear, swimsuit }
+enum AvatarTop { pinkHoodie, longCoat, tshirt, underwear, swimsuit }
 
 enum AvatarGlasses { glasses, sunglasses }
 
-enum AvatarSpecials { onScreen, outOfScreen }
+enum AvatarSpecials { onScreen, outOfScreen, leaveAndComeBack }
 
 enum AvatarCostume { none, batman, robocop, soubrette }
 
 class Avatar extends Equatable {
   final AvatarBackgrounds background;
+  final AvatarHat hat;
   final AvatarTop top;
-  final AvatarBottom bottom;
   final AvatarGlasses glasses;
   final AvatarSpecials specials;
   final AvatarCostume costume;
   const Avatar({
     this.background = AvatarBackgrounds.snowyMountain,
-    this.top = AvatarTop.noHat,
-    this.bottom = AvatarBottom.pinkHoodie,
+    this.hat = AvatarHat.noHat,
+    this.top = AvatarTop.pinkHoodie,
     this.glasses = AvatarGlasses.glasses,
     this.specials = AvatarSpecials.onScreen,
     this.costume = AvatarCostume.none,
@@ -63,8 +64,8 @@ class Avatar extends Equatable {
   List<Object> get props {
     return <Object>[
       background,
+      hat,
       top,
-      bottom,
       glasses,
       specials,
       costume,
@@ -73,16 +74,16 @@ class Avatar extends Equatable {
 
   Avatar copyWith({
     AvatarBackgrounds? background,
+    AvatarHat? hat,
     AvatarTop? top,
-    AvatarBottom? bottom,
     AvatarGlasses? glasses,
     AvatarSpecials? specials,
     AvatarCostume? costume,
   }) {
     return Avatar(
       background: background ?? this.background,
+      hat: hat ?? this.hat,
       top: top ?? this.top,
-      bottom: bottom ?? this.bottom,
       glasses: glasses ?? this.glasses,
       specials: specials ?? this.specials,
       costume: costume ?? this.costume,
@@ -91,14 +92,14 @@ class Avatar extends Equatable {
 
   @override
   String toString() {
-    return "Current Yofardev AI settings : [$background][$top][$bottom][$glasses][$specials][$costume]";
+    return '"background": "${background.name}"\n"hat": "${hat.name}"\n"top": "${top.name}"\n"glasses": "${glasses.name}"\n"specials": "${specials.name}"\n"costume": "${costume.name}"';
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'background': background.name,
-      'top': top.name,
-      'bottom': bottom.name,
+      'top': hat.name,
+      'bottom': top.name,
       'glasses': glasses.name,
       'specials': specials.name,
       'costume': costume.name,
@@ -111,9 +112,9 @@ class Avatar extends Equatable {
         AvatarBackgrounds.values,
         map['background'] as String,
       ),
-      top: EnumUtils.deserialize(AvatarTop.values, map['top'] as String),
-      bottom: EnumUtils.deserialize(
-        AvatarBottom.values,
+      hat: EnumUtils.deserialize(AvatarHat.values, map['top'] as String),
+      top: EnumUtils.deserialize(
+        AvatarTop.values,
         map['bottom'] as String,
       ),
       glasses: EnumUtils.deserialize(
@@ -138,123 +139,94 @@ class Avatar extends Equatable {
 }
 
 class AvatarConfig extends Equatable {
-  final List<AvatarBackgrounds> backgrounds;
-  final List<AvatarTop> top;
-  final List<AvatarBottom> bottom;
-  final List<AvatarGlasses> glasses;
-  final List<AvatarSpecials> specials;
-  final List<AvatarCostume> costume;
+  final AvatarBackgrounds? background;
+  final AvatarHat? hat;
+  final AvatarTop? top;
+  final AvatarGlasses? glasses;
+  final AvatarSpecials? specials;
+  final AvatarCostume? costume;
+  final SoundEffects? soundEffect;
 
   const AvatarConfig({
-    this.backgrounds = const <AvatarBackgrounds>[],
-    this.top = const <AvatarTop>[],
-    this.bottom = const <AvatarBottom>[],
-    this.glasses = const <AvatarGlasses>[],
-    this.specials = const <AvatarSpecials>[],
-    this.costume = const <AvatarCostume>[],
+    this.background,
+    this.hat,
+    this.top,
+    this.glasses,
+    this.specials,
+    this.costume,
+    this.soundEffect,
   });
 
+  factory AvatarConfig.fromMap(Map<String, dynamic> map) {
+    return AvatarConfig(
+      background: map['background'] != null
+          ? EnumUtils.firstOrNull(
+              AvatarBackgrounds.values,
+              map['background'] as String,
+            )
+          : null,
+      hat: map['hat'] != null
+          ? EnumUtils.firstOrNull(AvatarHat.values, map['hat'] as String)
+          : null,
+      top: map['top'] != null
+          ? EnumUtils.firstOrNull(AvatarTop.values, map['top'] as String)
+          : null,
+      glasses: map['glasses'] != null
+          ? EnumUtils.firstOrNull(
+              AvatarGlasses.values,
+              map['glasses'] as String,
+            )
+          : null,
+      specials: map['specials'] != null ? EnumUtils.firstOrNull(
+              AvatarSpecials.values,
+              map['specials'] as String,
+            )
+          : null,
+      costume: map['costume'] != null
+          ? EnumUtils.firstOrNull(
+              AvatarCostume.values,
+              map['costume'] as String,
+            )
+          : null,
+      soundEffect: map['soundEffect'] != null
+          ? EnumUtils.firstOrNull(
+              SoundEffects.values,
+              map['soundEffect'] as String,
+            )
+          : null,
+    );
+  }
+
   @override
-  List<Object> get props {
-    return <Object>[
-      backgrounds,
+  List<Object?> get props {
+    return <Object?>[
+      background,
+      hat,
       top,
-      bottom,
       glasses,
       specials,
       costume,
+      soundEffect,
     ];
   }
 
   AvatarConfig copyWith({
-    List<AvatarBackgrounds>? backgrounds,
-    List<AvatarTop>? top,
-    List<AvatarBottom>? bottom,
-    List<AvatarGlasses>? glasses,
-    List<AvatarSpecials>? specials,
-    List<AvatarCostume>? costume,
+    AvatarBackgrounds? background,
+    AvatarHat? hat,
+    AvatarTop? top,
+    AvatarGlasses? glasses,
+    AvatarSpecials? specials,
+    AvatarCostume? costume,
+    SoundEffects? soundEffect,
   }) {
     return AvatarConfig(
-      backgrounds: backgrounds ?? this.backgrounds,
+      background: background ?? this.background,
+      hat: hat ?? this.hat,
       top: top ?? this.top,
-      bottom: bottom ?? this.bottom,
       glasses: glasses ?? this.glasses,
       specials: specials ?? this.specials,
       costume: costume ?? this.costume,
-    );
-  }
-}
-
-extension AvatarExtensions on List<String> {
-  AvatarConfig getAvatarConfig() {
-    final List<AvatarBackgrounds> backgrounds = <AvatarBackgrounds>[];
-    final List<AvatarTop> top = <AvatarTop>[];
-    final List<AvatarBottom> bottom = <AvatarBottom>[];
-    final List<AvatarGlasses> glasses = <AvatarGlasses>[];
-    final List<AvatarSpecials> specials = <AvatarSpecials>[];
-    final List<AvatarCostume> costume = <AvatarCostume>[];
-    for (final String annotation in this) {
-      final String str = annotation.replaceAll('[', '').replaceAll(']', '');
-      final List<String> parts = str.split('.');
-      if (parts.length == 2) {
-        final String type = parts[0];
-        final String value = parts[1];
-        switch (type) {
-          case 'AvatarBackgrounds':
-            final AvatarBackgrounds? background =
-                EnumByNameExtension.enumFromString(
-              AvatarBackgrounds.values,
-              value,
-            );
-            if (background != null) {
-              backgrounds.add(background);
-            }
-          case 'AvatarTop':
-            final AvatarTop? topAvatar =
-                EnumByNameExtension.enumFromString(AvatarTop.values, value);
-            if (topAvatar != null) {
-              top.add(topAvatar);
-            }
-          case 'AvatarBottom':
-            final AvatarBottom? bottomAvatar =
-                EnumByNameExtension.enumFromString(AvatarBottom.values, value);
-            if (bottomAvatar != null) {
-              bottom.add(bottomAvatar);
-            }
-          case 'AvatarGlasses':
-            final AvatarGlasses? glassesAvatar =
-                EnumByNameExtension.enumFromString(AvatarGlasses.values, value);
-            if (glassesAvatar != null) {
-              glasses.add(glassesAvatar);
-            }
-          case 'AvatarSpecials':
-            final AvatarSpecials? specialsAvatar =
-                EnumByNameExtension.enumFromString(
-              AvatarSpecials.values,
-              value,
-            );
-            if (specialsAvatar != null) {
-              specials.add(specialsAvatar);
-            }
-          case 'AvatarCostume':
-            final AvatarCostume? costumeAvatar =
-                EnumByNameExtension.enumFromString(
-              AvatarCostume.values,
-              value,
-            );
-            if (costumeAvatar != null) {
-              costume.add(costumeAvatar);
-            }
-        }
-      }
-    }
-    return AvatarConfig(
-      backgrounds: backgrounds,
-      top: top,
-      bottom: bottom,
-      glasses: glasses,
-      specials: specials,
-      costume: costume,
+      soundEffect: soundEffect ?? this.soundEffect,
     );
   }
 }

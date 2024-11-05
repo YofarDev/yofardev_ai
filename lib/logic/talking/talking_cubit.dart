@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:audio_analyzer/audio_analyzer.dart';
@@ -7,8 +8,10 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../models/answer.dart';
+import '../../models/chat_entry.dart';
 import '../../models/sound_effects.dart';
 import '../../services/tts_service.dart';
+import '../../utils/extensions.dart';
 
 part 'talking_state.dart';
 
@@ -26,12 +29,21 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
-  Future<void> prepareToSpeak(Map<String, dynamic> responseMap, String language,
-      VoiceEffect voiceEffect,) async {
+  Future<void> prepareToSpeak({
+    required String chatId,
+    required ChatEntry entry,
+    required String language,
+    required VoiceEffect voiceEffect,
+  }) async {
     emit(state.copyWith(status: TalkingStatus.loading));
-    final String answerText = responseMap['text'] as String? ?? '';
-    final String textToSay =
-        answerText.replaceAll('...', '').replaceAll('*', '');
+    final Map<String, dynamic> map =
+        json.decode(entry.body) as Map<String, dynamic>;
+    final String answerText = map['message'] as String? ?? '';
+    final String textToSay = answerText
+        .replaceAll('...', '')
+        .replaceAll('*', '')
+        .removeEmojis()
+        .trim();
     final String audioPath = textToSay.isEmpty
         ? ''
         : await TtsService().textToFrenchMaleVoice(
@@ -46,24 +58,25 @@ class TalkingCubit extends Cubit<TalkingState> {
       state.copyWith(
         status: TalkingStatus.success,
         answer: Answer(
-          chatId: responseMap['chatId'] as String? ?? '',
+          chatId: chatId,
           answerText: answerText,
           audioPath: audioPath,
           amplitudes: amplitudes,
-          annotations:
-              responseMap['annotations'] as List<String>? ?? <String>[],
+          avatarConfig: entry.getAvatarConfig(),
         ),
       ),
     );
   }
 
   void speakForWeb(
-    Map<String, dynamic> responseMap,
+    ChatEntry entry,
     String language,
     VoiceEffect voiceEffect,
   ) async {
     emit(state.copyWith(status: TalkingStatus.loading));
-    final String answerText = responseMap['text'] as String? ?? '';
+    final Map<String, dynamic> map =
+        json.decode(entry.body) as Map<String, dynamic>;
+    final String answerText = map['message'] as String? ?? '';
     final String textToSay =
         answerText.replaceAll('...', '').replaceAll('*', '');
     final FlutterTts tts = await TtsService().getFlutterTts(
@@ -79,10 +92,7 @@ class TalkingCubit extends Cubit<TalkingState> {
         status: TalkingStatus.success,
         isTalking: true,
         answer: Answer(
-          chatId: responseMap['chatId'] as String? ?? '',
           answerText: answerText,
-          annotations:
-              responseMap['annotations'] as List<String>? ?? <String>[],
         ),
       ),
     );
@@ -107,7 +117,10 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
-  void stopTalking({bool noFile = false, bool noSoundEffects = false}) async {
+  void stopTalking({
+    bool noFile = false,
+    bool soundEffectsEnabled = false,
+  }) async {
     emit(
       state.copyWith(
         isTalking: false,
@@ -116,17 +129,11 @@ class TalkingCubit extends Cubit<TalkingState> {
       ),
     );
     if (!noFile) await File(state.answer.audioPath).delete();
-    if (!noSoundEffects || state.answer.annotations.isEmpty) return;
-    final List<SoundEffects> soundEffects = <SoundEffects>[];
-    for (final String annotation in state.answer.annotations) {
-      final SoundEffects? soundEffect = annotation.getSoundEffectFromString();
-      if (soundEffect != null) soundEffects.add(soundEffect);
-    }
-    if (soundEffects.isNotEmpty) {
-      final AudioPlayer player = AudioPlayer();
-      await player.setAsset(soundEffects.last.getPath());
-      await player.play();
-      player.dispose();
-    }
+    if (!soundEffectsEnabled) return;
+    if (state.answer.avatarConfig.soundEffect == null) return;
+    final AudioPlayer player = AudioPlayer();
+    await player.setAsset(state.answer.avatarConfig.soundEffect!.getPath());
+    await player.play();
+    player.dispose();
   }
 }

@@ -17,7 +17,7 @@ class ChatsState extends Equatable {
     this.status = ChatsStatus.loading,
     this.chatsList = const <Chat>[],
     this.currentChat = const Chat(),
-     this.openedChat = const Chat(),
+    this.openedChat = const Chat(),
     this.errorMessage = '',
     this.soundEffectsEnabled = true,
     this.currentLanguage = 'fr',

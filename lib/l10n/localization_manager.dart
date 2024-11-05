@@ -8,8 +8,10 @@ class LocalizationManager {
   LocalizationManager._internal();
 
   Languages? _currentLanguage;
+  static late String code;
 
   Future<void> initialize(String languageCode) async {
+    code = languageCode;
     if (languageCode == 'en' || languageCode == 'fr') {
       _currentLanguage = await _loadLanguage(languageCode);
     } else {
@@ -38,3 +40,5 @@ class LocalizationManager {
 
 // Global accessor function
 Languages get localized => LocalizationManager().currentLanguage;
+
+String get languageCode => LocalizationManager.code;

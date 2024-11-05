@@ -25,7 +25,7 @@ class BaseAvatar extends StatelessWidget {
                   },
                   child: state.avatar.costume == AvatarCostume.none
                       ? Image.asset(
-                          'assets/avatar/bottom/${state.avatar.bottom == AvatarBottom.underwear ? AvatarBottom.swimsuit.name : state.avatar.bottom.name}.png',
+                          'assets/avatar/bottom/${state.avatar.top == AvatarTop.underwear ? AvatarTop.swimsuit.name : state.avatar.top.name}.png',
                         )
                       : Image.asset(
                           'assets/avatar/bottom/emptyBot.png',
@@ -41,7 +41,7 @@ class BaseAvatar extends StatelessWidget {
                   },
                   child: state.avatar.costume == AvatarCostume.none
                       ? Image.asset(
-                          'assets/avatar/top/${state.avatar.top.name}.png',
+                          'assets/avatar/top/${state.avatar.hat.name}.png',
                         )
                       : Image.asset(
                           'assets/avatar/top/emptyTop.png',

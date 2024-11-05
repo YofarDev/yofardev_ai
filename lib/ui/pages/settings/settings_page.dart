@@ -3,15 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:llm_api_picker/llm_api_picker.dart';
 
 import '../../../l10n/localization_manager.dart';
 import '../../../logic/chat/chats_cubit.dart';
 import '../../../models/sound_effects.dart';
 import '../../../models/voice.dart';
-import '../../../res/app_constants.dart';
 import '../../../services/settings_service.dart';
 import '../../../utils/platform_utils.dart';
-import '../../widgets/world_borders.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -21,7 +20,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _baseSystemPromptController =
       TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
@@ -37,9 +35,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _loadSettings() async {
-    _apiKeyController.text = await SettingsService().getApiKey();
     _baseSystemPromptController.text =
-        await SettingsService().getBaseSystemPrompt() ?? '';
+        await SettingsService().getBaseSystemPrompt();
     _usernameController.text = await SettingsService().getUsername() ?? '';
     _isSoundEffectsEnabled =
         context.read<ChatsCubit>().state.soundEffectsEnabled;
@@ -74,7 +71,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _onSaveButtonPressed() async {
-    await SettingsService().setApiKey(_apiKeyController.text);
     if (_baseSystemPromptController.text.isNotEmpty) {
       await SettingsService()
           .setBaseSystemPrompt(_baseSystemPromptController.text);
@@ -102,52 +98,39 @@ class _SettingsPageState extends State<SettingsPage> {
       soundEffectsList.write("[$soundEffect], ");
     }
     return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          if (MediaQuery.of(context).size.width > AppConstants.maxWidth)
-            const WorldBorders(),
-          Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: AppConstants.maxWidth,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    _buildAppBar(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            localized.settingsSubstring,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildApiKeyField(),
-                          const SizedBox(height: 16),
-                          _buildBaseSystemPromptField(),
-                          const SizedBox(height: 16),
-                          _usernameField(),
-                          const SizedBox(height: 16),
-                          _buildSoundEffectsCheckbox(),
-                          const SizedBox(height: 16),
-                          _dropdownVoices(),
-                          const SizedBox(height: 32),
-                        ],
-                      ),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            _buildAppBar(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    localized.settingsSubstring,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildApiKeyField(),
+                  // const SizedBox(height: 16),
+                  // _buildBaseSystemPromptField(),
+                  const SizedBox(height: 16),
+                  _usernameField(),
+                  const SizedBox(height: 16),
+                  _buildSoundEffectsCheckbox(),
+                  const SizedBox(height: 16),
+                  _dropdownVoices(),
+                  const SizedBox(height: 32),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -162,10 +145,15 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       );
 
-  Widget _buildApiKeyField() => _textField(
-        _apiKeyController,
-        hintText: "Google API Key",
-        prefixIcon: Icons.vpn_key,
+  Widget _buildApiKeyField() => ElevatedButton(
+        child: const Text('Api Picker'),
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<dynamic>(
+              builder: (BuildContext context) => const LLMApiPickerPage(),
+            ),
+          );
+        },
       );
 
   Widget _usernameField() => _textField(
@@ -179,13 +167,13 @@ class _SettingsPageState extends State<SettingsPage> {
         children: <Widget>[
           _textField(
             _baseSystemPromptController,
-            hintText: localized.baseSystemPrompt,
             minLines: 8,
             maxLines: 20,
           ),
           MaterialButton(
-            onPressed: () {
-              _baseSystemPromptController.text = localized.baseSystemPrompt;
+            onPressed: () async {
+              _baseSystemPromptController.text =
+                  await SettingsService().getBaseSystemPrompt();
             },
             child: Text(localized.loadDefaultSystemPrompt),
           ),

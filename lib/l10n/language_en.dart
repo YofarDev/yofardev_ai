@@ -10,16 +10,6 @@ String get empty => "(empty)";
 @override
 String get settings => "Settings";
 @override
-String get baseSystemPrompt => "You are Yofardev AI, the avatar of a sarcastic assistant. You are generally positive, but don't hesitate to use a slightly mocking tone. You prefer short and precise answers, with a touch of deadpan humor. Visually, you are represented as a handsome young man with brown hair and eyes in an anime style. You wear a pink hoodie and black glasses, with a neutral/serious expression. If an image resembles this description, ask if it's you.";
-@override
-String get soundEffectsPrompt => "Here is a list of sound effects: \$soundEffectsList. Limit the use to 1 sound effect MAXIMUM per response, only when it is appropriate/relevant to the context. Use it very rarely.";
-@override
-String get backgroundsPrompt => "If the user asks you (or if it's more appropriate to the context), you can change the background. Here is the list of available choices: \$backgroundList.";
-@override
-String get leavePrompt => "You can leave or return to the screen: ";
-@override
-String get customizationPrompt => "Here is the list of available customizations:\n\$customizationList.\nThe text preceding each message surrounded by {} is not visible to the user.";
-@override
 String get listChats => "List of chats";
 @override
 String get hiddenPart => "This part is not visible to the user, do not take it into account in your response.";
@@ -39,5 +29,13 @@ String get moreVoicesIOS => "For more voices, go to Settings > Accessibility > S
 String get moreVoicesAndroid => "For more voices : ‘Google Text-to-Speech’ on the Play Store";
 @override
 String get username => "Your name";
+@override
+String get userMessage => "User’s message";
+@override
+String get currentDate => "Current date";
+@override
+String get currentAvatarConfig => "Current avatar configuration";
+@override
+String get currentUsername => "User’s name";
 
 }

@@ -10,9 +10,7 @@ import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
-import '../../../res/app_constants.dart';
 import '../../../utils/extensions.dart';
-import '../../widgets/world_borders.dart';
 import 'chat_details_page.dart';
 
 class ChatsListPage extends StatelessWidget {
@@ -26,29 +24,19 @@ class ChatsListPage extends StatelessWidget {
         final bool isLoading = state.status == ChatsStatus.loading;
         return SafeArea(
           child: Scaffold(
-            body: Stack(
+            body: Column(
               children: <Widget>[
-                if (MediaQuery.of(context).size.width > AppConstants.maxWidth)
-                  const WorldBorders(),
-                Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: AppConstants.maxWidth,
+                _buildAppBar(context),
+                if (!isLoading)
+                  if (state.chatsList.isEmpty)
+                    Center(child: Text(localized.empty))
+                  else
+                    _buildList(
+                      context,
+                      state.chatsList,
+                      state.currentChat,
                     ),
-                    child: Column(
-                      children: <Widget>[
-                        _buildAppBar(context),
-                        if (!isLoading)
-                          if (state.chatsList.isEmpty)
-                            Center(child: Text(localized.empty))
-                          else
-                            _buildList(
-                                context, state.chatsList, state.currentChat,),
-                        if (isLoading) const CircularProgressIndicator(),
-                      ],
-                    ),
-                  ),
-                ),
+                if (isLoading) const CircularProgressIndicator(),
               ],
             ),
           ),
@@ -167,7 +155,7 @@ class ChatsListPage extends StatelessWidget {
                                     child: Text(
                                       chat.entries.isEmpty
                                           ? localized.empty
-                                          : chat.entries.first.text
+                                          : chat.entries.first.body
                                               .getVisiblePrompt(),
                                       textAlign: TextAlign.center,
                                       maxLines: 1,

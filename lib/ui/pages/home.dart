@@ -6,7 +6,6 @@ import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/avatar/avatar_state.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
-import '../../models/avatar.dart';
 import '../../res/app_colors.dart';
 import '../../res/app_constants.dart';
 import '../../utils/platform_utils.dart';
@@ -16,7 +15,6 @@ import '../widgets/avatar/avatar_widgets.dart';
 import '../widgets/avatar/background_avatar.dart';
 import '../widgets/avatar/thinking_animation.dart';
 import '../widgets/home_buttons.dart';
-import '../widgets/world_borders.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -76,22 +74,18 @@ class _HomeState extends State<Home> {
       },
       child: BlocListener<ChatsCubit, ChatsState>(
         listenWhen: (ChatsState previous, ChatsState current) =>
-            previous.currentChat != current.currentChat,
+            previous.currentChat.id != current.currentChat.id,
         listener: (BuildContext context, ChatsState state) {
           context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
         },
         child: BlocListener<TalkingCubit, TalkingState>(
           listenWhen: (TalkingState previous, TalkingState current) =>
-              previous.answer.annotations != current.answer.annotations,
-          listener: (BuildContext context, TalkingState state) {
-            if (state.answer.annotations.isNotEmpty) {
-              final AvatarConfig avatarConfig = context
-                  .read<AvatarCubit>()
-                  .setAvatarConfigFromNewAnswer(state.answer.annotations);
-              context
-                  .read<AvatarCubit>()
-                  .onNewAvatarConfig(state.answer.chatId, avatarConfig);
-            }
+              previous.answer != current.answer,
+          listener: (BuildContext context, TalkingState talkingState) {
+            context.read<AvatarCubit>().onNewAvatarConfig(
+                  talkingState.answer.chatId,
+                  talkingState.answer.avatarConfig,
+                );
           },
           child: BlocBuilder<AvatarCubit, AvatarState>(
             builder: (BuildContext context, AvatarState avatarState) {
@@ -124,9 +118,6 @@ class _HomeState extends State<Home> {
                           child: w,
                         ),
                       ),
-                      if (MediaQuery.of(context).size.width >
-                          AppConstants.maxWidth)
-                        const WorldBorders(),
                     ],
                   );
                   return Scaffold(

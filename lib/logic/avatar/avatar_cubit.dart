@@ -57,7 +57,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     _updateAvatar(
       chatId,
       avatarConfig
-          .copyWith(specials: <AvatarSpecials>[AvatarSpecials.onScreen]),
+          .copyWith(specials: AvatarSpecials.onScreen),
     );
   }
 
@@ -77,19 +77,15 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void onNewAvatarConfig(String chatId, AvatarConfig avatarConfig) async {
     emit(state.copyWith(statusAnimation: AvatarStatusAnimation.initial));
-    // if animation of both leaving and coming back
-    if (avatarConfig.specials.contains(AvatarSpecials.outOfScreen) &&
-        avatarConfig.specials.contains(AvatarSpecials.onScreen)) {
+    if (avatarConfig.specials == AvatarSpecials.leaveAndComeBack) {
       _goAndComeBack(chatId, avatarConfig);
     } else {
-      // if only one of the animation
-      if (avatarConfig.specials.isNotEmpty &&
-          avatarConfig.specials.first != state.avatar.specials) {
+      if (avatarConfig.specials != null) {
         onAnimationStatusChanged(
           state.avatar.specials == AvatarSpecials.onScreen,
         );
         // we wait it's out of screen before to update appearance
-        if (avatarConfig.specials.contains(AvatarSpecials.outOfScreen)) {
+        if (avatarConfig.specials == AvatarSpecials.outOfScreen) {
           await Future<dynamic>.delayed(
             Duration(seconds: AppConstants.movingAvatarDuration),
           );
@@ -101,12 +97,12 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void _updateAvatar(String chatId, AvatarConfig avatarConfig) {
     final Avatar avatar = state.avatar.copyWith(
-      top: avatarConfig.top.lastOrNull,
-      bottom: avatarConfig.bottom.lastOrNull,
-      glasses: avatarConfig.glasses.lastOrNull,
-      specials: avatarConfig.specials.lastOrNull,
-      background: avatarConfig.backgrounds.lastOrNull,
-      costume: avatarConfig.costume.lastOrNull,
+      hat: avatarConfig.hat,
+      top: avatarConfig.top,
+      glasses: avatarConfig.glasses,
+      specials: avatarConfig.specials,
+      background: avatarConfig.background,
+      costume: avatarConfig.costume,
     );
     emit(state.copyWith(avatar: avatar));
     ChatHistoryService().updateAvatar(chatId, avatar);
@@ -121,11 +117,5 @@ class AvatarCubit extends Cubit<AvatarState> {
         avatar: state.avatar.copyWith(glasses: glasses),
       ),
     );
-  }
-
-  AvatarConfig setAvatarConfigFromNewAnswer(List<String> annotations) {
-    final AvatarConfig avatarConfig = annotations.getAvatarConfig();
-    emit(state.copyWith(avatarConfig: avatarConfig));
-    return avatarConfig;
   }
 }

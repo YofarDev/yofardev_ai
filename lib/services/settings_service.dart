@@ -1,4 +1,4 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/localization_manager.dart';
@@ -6,23 +6,6 @@ import '../res/app_constants.dart';
 import '../utils/platform_utils.dart';
 
 class SettingsService {
-  Future<void> setApiKey(String apiKey) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('apiKey', apiKey);
-  }
-
-  Future<String> getApiKey() async {
-    // if (kDebugMode) {
-      await dotenv.load();
-      final String? apiKey = dotenv.env['GOOGLE_KEY'];
-      if (apiKey != null) {
-        return apiKey;
-      }
-    // }
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('apiKey') ?? '';
-  }
-
   Future<void> setUsername(String username) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', username);
@@ -48,9 +31,10 @@ class SettingsService {
     await prefs.setString('baseSystemPrompt', baseSystemPrompt);
   }
 
-  Future<String?> getBaseSystemPrompt() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('baseSystemPrompt') ?? localized.baseSystemPrompt;
+  Future<String> getBaseSystemPrompt() async {
+    final String baseSystemPrompt = await rootBundle
+        .loadString('assets/txt/system_prompt_$languageCode.txt');
+    return baseSystemPrompt;
   }
 
   Future<void> setSoundEffects(bool soundEffects) async {

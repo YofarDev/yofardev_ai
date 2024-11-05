@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/avatar.dart';
 import '../models/chat.dart';
+import '../repositories/yofardev_repository.dart';
 import '../utils/extensions.dart';
-import 'settings_service.dart';
 
 class ChatHistoryService {
   Future<Chat> createNewChat() async {
@@ -18,7 +18,7 @@ class ChatHistoryService {
       id: newChatId,
       avatar: Avatar(background: randomBg),
       language: deviceLocale.languageCode,
-      systemPrompt: await SettingsService().getBaseSystemPrompt(),
+      systemPrompt: await YofardevRepository.getSystemPrompt(),
     );
     await _removeEmptyChats();
     await prefs.setString(newChatId, newChat.toJson());

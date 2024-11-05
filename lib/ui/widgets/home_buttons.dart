@@ -58,10 +58,15 @@ class HomeButtons extends StatelessWidget {
                 AppIconButton(
                   icon: Icons.settings_rounded,
                   onPressed: () {
+                    // Navigator.of(context).push(
+                    //   PageRouteBuilder<dynamic>(
+                    //     pageBuilder: (_, __, ___) => const SettingsPage(),
+                    //     transitionDuration: Duration.zero,
+                    //   ),
+                    // );
                     Navigator.of(context).push(
-                      PageRouteBuilder<dynamic>(
-                        pageBuilder: (_, __, ___) => const SettingsPage(),
-                        transitionDuration: Duration.zero,
+                      MaterialPageRoute<dynamic>(
+                        builder: (BuildContext context) => const SettingsPage(),
                       ),
                     );
                   },

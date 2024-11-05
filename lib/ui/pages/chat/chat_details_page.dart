@@ -13,11 +13,9 @@ import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';
 import '../../../models/sound_effects.dart';
-import '../../../res/app_constants.dart';
 import '../../../utils/extensions.dart';
 import '../../widgets/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
-import '../../widgets/world_borders.dart';
 
 class ChatDetailsPage extends StatelessWidget {
   const ChatDetailsPage();
@@ -43,56 +41,42 @@ class ChatDetailsPage extends StatelessWidget {
               return Scaffold(
                 body: Stack(
                   children: <Widget>[
-                    if (MediaQuery.of(context).size.width >
-                        AppConstants.maxWidth)
-                      const WorldBorders(),
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: AppConstants.maxWidth,
+                    Positioned.fill(
+                      child: Opacity(
+                        opacity: 0.3,
+                        child: Image.asset(
+                          state.openedChat.avatar.background.getPath(),
+                          fit: BoxFit.cover,
                         ),
-                        child: Stack(
-                          children: <Widget>[
-                            Positioned.fill(
-                              child: Opacity(
-                                opacity: 0.3,
-                                child: Image.asset(
-                                  state.openedChat.avatar.background.getPath(),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: <Widget>[
+                          Expanded(
+                            child: _buildConversation(
+                              context,
+                              chat.entries.reversed.toList(),
+                              state.status == ChatsStatus.typing,
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Column(
-                                children: <Widget>[
-                                  Expanded(
-                                    child: _buildConversation(
-                                      context,
-                                      chat.entries.reversed.toList(),
-                                      state.status == ChatsStatus.typing,
-                                    ),
-                                  ),
-                                  const AiTextInput(
-                                    onlyText: true,
-                                  ),
-                                  const SizedBox(height: 8),
-                                ],
-                              ),
-                            ),
-                            Positioned(
-                              left: 8,
-                              top: 8,
-                              child: SafeArea(
-                                child: AppIconButton(
-                                  icon: Icons.arrow_back_ios_new_outlined,
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
+                          const AiTextInput(
+                            onlyText: true,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      left: 8,
+                      top: 8,
+                      child: SafeArea(
+                        child: AppIconButton(
+                          icon: Icons.arrow_back_ios_new_outlined,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
                         ),
                       ),
                     ),
@@ -165,7 +149,7 @@ class ChatDetailsPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ParsedText(
-                            text: chat[index].text.getVisiblePrompt(),
+                            text: chat[index].body.getVisiblePrompt(),
                             style: TextStyle(
                               color: isFromUser ? Colors.white : Colors.black,
                             ),
