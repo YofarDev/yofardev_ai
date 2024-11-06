@@ -71,7 +71,7 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
                 if (!state.avatar.hideBlinkingEyes) const BlinkingEyes(),
                 if (state.avatar.displaySunglasses)
                   const Clothes(name: 'sunglasses'),
-                 const TalkingMouth(),
+              if (!state.avatar.hideTalkingMouth)   const TalkingMouth(),
                 if (state.avatar.costume != AvatarCostume.none)
                   const CostumeWidget(),
               ],

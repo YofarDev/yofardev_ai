@@ -86,6 +86,9 @@ class _HomeState extends State<Home> {
                   talkingState.answer.chatId,
                   talkingState.answer.avatarConfig,
                 );
+            if (talkingState.status == TalkingStatus.success) {
+              _playTts(talkingState.answer.audioPath);
+            }
           },
           child: BlocBuilder<AvatarCubit, AvatarState>(
             builder: (BuildContext context, AvatarState avatarState) {
@@ -131,5 +134,17 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
+  }
+
+  void _playTts(String audioPath) async {
+    final AudioPlayer player = AudioPlayer();
+    await player.setFilePath(audioPath, initialPosition: Duration.zero);
+    player.play().then((_) {
+      player.dispose();
+      context.read<TalkingCubit>().stopTalking(
+            soundEffectsEnabled:
+                context.read<ChatsCubit>().state.soundEffectsEnabled,
+          );
+    });
   }
 }

@@ -142,6 +142,8 @@ class Avatar extends Equatable {
 
   bool get hideBaseAvatar => costume == AvatarCostume.singularity;
 
+  bool get hideTalkingMouth => costume == AvatarCostume.singularity;
+
   bool get displaySunglasses =>
       glasses == AvatarGlasses.sunglasses && costume == AvatarCostume.none;
 }
@@ -264,7 +266,7 @@ extension CostumeExtension on AvatarCostume {
       case AvatarCostume.singularity:
         return VoiceEffect(
           pitch: 0.6,
-          speedRate: 0.45,
+          speedRate: 0.6,
         );
       default:
         return VoiceEffect(

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../logic/avatar/avatar_cubit.dart';
 import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/answer.dart';
@@ -24,6 +25,7 @@ class TalkingMouth extends StatelessWidget {
           previous.status != current.status,
       listener: (BuildContext context, TalkingState state) {
         if (state.status == TalkingStatus.success) {
+          if (context.read<AvatarCubit>().state.avatar.hideTalkingMouth) return;
           if (checkPlatform() == 'Web') {
             _fakeTalking(context);
           } else {
@@ -59,15 +61,10 @@ class TalkingMouth extends StatelessWidget {
     final int updateInterval =
         (player.duration!.inMilliseconds / totalFrames).round();
     int currentIndex = 0;
-    player.play();
     Timer.periodic(Duration(milliseconds: updateInterval), (Timer timer) {
       if (currentIndex >= totalFrames) {
         timer.cancel();
         player.dispose();
-        context.read<TalkingCubit>().stopTalking(
-              soundEffectsEnabled:
-                  context.read<ChatsCubit>().state.soundEffectsEnabled,
-            );
         return;
       } else {
         try {
@@ -76,6 +73,8 @@ class TalkingMouth extends StatelessWidget {
               );
           currentIndex++;
         } catch (e) {
+          timer.cancel();
+          player.dispose();
           debugPrint('talking mouth error: $e');
         }
       }
