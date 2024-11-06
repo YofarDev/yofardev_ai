@@ -68,6 +68,7 @@ flutter:
     - assets/avatar/accessories/
     - assets/avatar/backgrounds/
     - assets/avatar/costumes/
+    - assets/avatar/costumes/singularity/
     - assets/avatar/top/
     - assets/avatar/bottom/
     - assets/txt/

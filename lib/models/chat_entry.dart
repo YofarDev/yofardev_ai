@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
+import '../utils/extensions.dart';
 import 'avatar.dart';
 
 class ChatEntry extends Equatable {
@@ -60,6 +61,12 @@ class ChatEntry extends Equatable {
 
   factory ChatEntry.fromJson(String source) =>
       ChatEntry.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  String getMessage({bool isFromUser = false}) {
+    if (isFromUser) return body.getVisiblePrompt();
+    final Map<String, dynamic> map = json.decode(body) as Map<String, dynamic>;
+    return map['message'] as String? ?? '';
+  }
 }
 
 extension ListChatEntryExtension on List<ChatEntry> {

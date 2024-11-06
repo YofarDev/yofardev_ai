@@ -45,3 +45,5 @@ linter:
    
     use_function_type_syntax_for_parameters: true
     use_rethrow_when_possible: true
+
+    use_build_context_synchronously: false

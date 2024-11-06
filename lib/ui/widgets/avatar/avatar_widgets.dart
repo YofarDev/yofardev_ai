@@ -9,7 +9,7 @@ import '../../../res/app_constants.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';
 import 'clothes.dart';
-import 'costumes/costume.dart';
+import 'costumes/costume_widget.dart';
 import 'talking_mouth.dart';
 
 class AvatarWidgets extends StatefulWidget {
@@ -67,12 +67,13 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
             position: _positionAnimation,
             child: Stack(
               children: <Widget>[
-                const BaseAvatar(),
-                const BlinkingEyes(),
-                if (state.avatar.glasses == AvatarGlasses.sunglasses && state.avatar.costume == AvatarCostume.none)
+                if (!state.avatar.hideBaseAvatar) const BaseAvatar(),
+                if (!state.avatar.hideBlinkingEyes) const BlinkingEyes(),
+                if (state.avatar.displaySunglasses)
                   const Clothes(name: 'sunglasses'),
-                const TalkingMouth(),
-                if (state.avatar.costume != AvatarCostume.none) const Costume(),
+                 const TalkingMouth(),
+                if (state.avatar.costume != AvatarCostume.none)
+                  const CostumeWidget(),
               ],
             ),
           ),

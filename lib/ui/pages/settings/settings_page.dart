@@ -162,23 +162,6 @@ class _SettingsPageState extends State<SettingsPage> {
         prefixIcon: Icons.person,
       );
 
-  Widget _buildBaseSystemPromptField() => Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: <Widget>[
-          _textField(
-            _baseSystemPromptController,
-            minLines: 8,
-            maxLines: 20,
-          ),
-          MaterialButton(
-            onPressed: () async {
-              _baseSystemPromptController.text =
-                  await SettingsService().getBaseSystemPrompt();
-            },
-            child: Text(localized.loadDefaultSystemPrompt),
-          ),
-        ],
-      );
 
   Widget _textField(
     TextEditingController controller, {

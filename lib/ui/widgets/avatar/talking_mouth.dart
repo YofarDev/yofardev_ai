@@ -70,10 +70,14 @@ class TalkingMouth extends StatelessWidget {
             );
         return;
       } else {
-        context.read<TalkingCubit>().updateMouthState(
-              _getMouthState(answer.amplitudes[currentIndex]),
-            );
-        currentIndex++;
+        try {
+          context.read<TalkingCubit>().updateMouthState(
+                _getMouthState(answer.amplitudes[currentIndex]),
+              );
+          currentIndex++;
+        } catch (e) {
+          debugPrint('talking mouth error: $e');
+        }
       }
     });
   }

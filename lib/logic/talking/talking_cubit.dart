@@ -36,9 +36,7 @@ class TalkingCubit extends Cubit<TalkingState> {
     required VoiceEffect voiceEffect,
   }) async {
     emit(state.copyWith(status: TalkingStatus.loading));
-    final Map<String, dynamic> map =
-        json.decode(entry.body) as Map<String, dynamic>;
-    final String answerText = map['message'] as String? ?? '';
+    final String answerText = entry.getMessage();
     final String textToSay = answerText
         .replaceAll('...', '')
         .replaceAll('*', '')

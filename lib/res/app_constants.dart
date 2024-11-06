@@ -25,8 +25,8 @@ class AppConstants {
 
   // Voices
   static String frenchAndroidVoice = "fr-fr-x-frd-local";
-  static String frenchIOSVoice = "Thomas";
   static String englishAndroidVoice = "en-us-x-iom-local";
+  static String frenchIOSVoice = "Thomas";
   static String englishIOSVoice = "Fred";
 
   // Other

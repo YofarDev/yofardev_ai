@@ -53,9 +53,8 @@ class SettingsService {
   }
 
   Future<String> getTtsVoice(String language) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? voiceName = prefs.getString('ttsVoice_$language');
-    if (voiceName != null) return voiceName;
+    // final SharedPreferences prefs = await SharedPreferences.getInstance();
+    // final String? voiceName = prefs.getString('ttsVoice_$language');
     final String platform = checkPlatform();
     switch (platform) {
       case 'Android':

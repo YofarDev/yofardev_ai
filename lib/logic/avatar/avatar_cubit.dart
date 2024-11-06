@@ -56,8 +56,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     onAnimationStatusChanged(false);
     _updateAvatar(
       chatId,
-      avatarConfig
-          .copyWith(specials: AvatarSpecials.onScreen),
+      avatarConfig.copyWith(specials: AvatarSpecials.onScreen),
     );
   }
 
@@ -80,7 +79,8 @@ class AvatarCubit extends Cubit<AvatarState> {
     if (avatarConfig.specials == AvatarSpecials.leaveAndComeBack) {
       _goAndComeBack(chatId, avatarConfig);
     } else {
-      if (avatarConfig.specials != null) {
+      if (avatarConfig.specials != null &&
+          avatarConfig.specials != state.previousSpecialsState) {
         onAnimationStatusChanged(
           state.avatar.specials == AvatarSpecials.onScreen,
         );
@@ -104,7 +104,12 @@ class AvatarCubit extends Cubit<AvatarState> {
       background: avatarConfig.background,
       costume: avatarConfig.costume,
     );
-    emit(state.copyWith(avatar: avatar));
+    emit(
+      state.copyWith(
+        avatar: avatar,
+        previousSpecialsState: avatarConfig.specials,
+      ),
+    );
     ChatHistoryService().updateAvatar(chatId, avatar);
   }
 

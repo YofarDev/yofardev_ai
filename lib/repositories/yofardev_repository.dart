@@ -21,12 +21,14 @@ class YofardevRepository {
     }
     final String prompt = entries.last.body;
     entries.removeLast();
-    final String? answer = await llm.LLMRepository().promptCurrentModel(
+    String? answer = await llm.LLMRepository().promptCurrentModel(
       prompt: prompt,
       previousConversation: entries,
       systemPrompt: chat.systemPrompt,
     );
     if (answer != null) {
+      answer = answer =
+          answer.substring(answer.indexOf('{'), answer.indexOf('}') + 1);
       return ChatEntry(
         body: answer,
         isFromUser: false,

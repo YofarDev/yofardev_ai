@@ -46,8 +46,8 @@ class TtsService {
         "locale": locale,
       },
     );
-      await flutterTts.setSpeechRate(voiceEffect.speedRate);
-      await flutterTts.setPitch(voiceEffect.pitch);
+    await flutterTts.setSpeechRate(voiceEffect.speedRate);
+    await flutterTts.setPitch(voiceEffect.pitch);
     if (checkPlatform() == 'iOS') {
       await flutterTts.setSharedInstance(true);
       await flutterTts.setIosAudioCategory(

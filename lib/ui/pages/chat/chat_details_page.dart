@@ -17,9 +17,15 @@ import '../../../utils/extensions.dart';
 import '../../widgets/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
 
-class ChatDetailsPage extends StatelessWidget {
+class ChatDetailsPage extends StatefulWidget {
   const ChatDetailsPage();
 
+  @override
+  State<ChatDetailsPage> createState() => _ChatDetailsPageState();
+}
+
+class _ChatDetailsPageState extends State<ChatDetailsPage> {
+  bool _showEverything = false;
   @override
   Widget build(BuildContext context) {
     return BlocListener<AvatarCubit, AvatarState>(
@@ -76,6 +82,22 @@ class ChatDetailsPage extends StatelessWidget {
                           icon: Icons.arrow_back_ios_new_outlined,
                           onPressed: () {
                             Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: SafeArea(
+                        child: AppIconButton(
+                          icon: _showEverything
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          onPressed: () {
+                            setState(() {
+                              _showEverything = !_showEverything;
+                            });
                           },
                         ),
                       ),
@@ -149,7 +171,10 @@ class ChatDetailsPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ParsedText(
-                            text: chat[index].body.getVisiblePrompt(),
+                            text: _showEverything
+                                ? chat[index].body
+                                : chat[index]
+                                    .getMessage(isFromUser: isFromUser),
                             style: TextStyle(
                               color: isFromUser ? Colors.white : Colors.black,
                             ),
@@ -269,7 +294,7 @@ class ChatDetailsPage extends StatelessWidget {
         padding: EdgeInsets.only(right: 8),
         child: CircleAvatar(
           backgroundColor: Colors.blue,
-          foregroundImage: AssetImage("assets/avatar/base.png"),
+          foregroundImage: AssetImage("assets/icon.png"),
         ),
       );
 }

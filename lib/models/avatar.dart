@@ -32,6 +32,7 @@ enum AvatarBackgrounds {
   facadeMansion,
   artGallery,
   cinema,
+  deepSpace,
 }
 
 enum AvatarHat { noHat, beanie, backwardsCap, frenchBeret, swimCap }
@@ -42,7 +43,7 @@ enum AvatarGlasses { glasses, sunglasses }
 
 enum AvatarSpecials { onScreen, outOfScreen, leaveAndComeBack }
 
-enum AvatarCostume { none, batman, robocop, soubrette }
+enum AvatarCostume { none, batman, robocop, soubrette, singularity }
 
 class Avatar extends Equatable {
   final AvatarBackgrounds background;
@@ -136,6 +137,13 @@ class Avatar extends Equatable {
 
   factory Avatar.fromJson(String source) =>
       Avatar.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  bool get hideBlinkingEyes => costume == AvatarCostume.singularity;
+
+  bool get hideBaseAvatar => costume == AvatarCostume.singularity;
+
+  bool get displaySunglasses =>
+      glasses == AvatarGlasses.sunglasses && costume == AvatarCostume.none;
 }
 
 class AvatarConfig extends Equatable {
@@ -177,7 +185,8 @@ class AvatarConfig extends Equatable {
               map['glasses'] as String,
             )
           : null,
-      specials: map['specials'] != null ? EnumUtils.firstOrNull(
+      specials: map['specials'] != null
+          ? EnumUtils.firstOrNull(
               AvatarSpecials.values,
               map['specials'] as String,
             )
@@ -251,6 +260,11 @@ extension CostumeExtension on AvatarCostume {
         return VoiceEffect(
           pitch: 0.5,
           speedRate: 0.25,
+        );
+      case AvatarCostume.singularity:
+        return VoiceEffect(
+          pitch: 0.6,
+          speedRate: 0.45,
         );
       default:
         return VoiceEffect(
