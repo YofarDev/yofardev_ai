@@ -34,7 +34,9 @@ dependencies:
   universal_html: ^2.2.4
   http: ^1.2.1
   llm_api_picker:
-    path: /Users/yofardev/development/Projects/Flutter/PLUGINS/llm_api_picker
+    path: /Users/yofardev/development/Projects/Flutter/_utils/PLUGINS/llm_api_picker
+  geocoding: ^3.0.0
+  geolocator: ^13.0.2
 
 
 dev_dependencies:

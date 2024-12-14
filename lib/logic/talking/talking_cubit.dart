@@ -75,15 +75,21 @@ class TalkingCubit extends Cubit<TalkingState> {
     final Map<String, dynamic> map =
         json.decode(entry.body) as Map<String, dynamic>;
     final String answerText = map['message'] as String? ?? '';
-    final String textToSay =
-        answerText.replaceAll('...', '').replaceAll('*', '');
+    final String textToSay = answerText
+        .replaceAll('...', '')
+        .replaceAll('*', '')
+        .removeEmojis()
+        .trim();
     final FlutterTts tts = await TtsService().getFlutterTts(
       text: textToSay,
       language: language,
       voiceEffect: voiceEffect,
     );
     tts.setCompletionHandler(() {
-      stopTalking(noFile: true);
+      stopTalking(
+        noFile: true,
+        soundEffectsEnabled: true,
+      );
     });
     emit(
       state.copyWith(
@@ -91,6 +97,7 @@ class TalkingCubit extends Cubit<TalkingState> {
         isTalking: true,
         answer: Answer(
           answerText: answerText,
+          avatarConfig: entry.getAvatarConfig(),
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../logic/avatar/avatar_cubit.dart';
 import '../../../../logic/avatar/avatar_state.dart';
 import '../../../../res/app_constants.dart';
+import '../../../../utils/app_utils.dart';
 
 class SoubretteFeatherDuster extends StatefulWidget {
   const SoubretteFeatherDuster({super.key});
@@ -58,7 +59,9 @@ class _SoubretteFeatherDusterState extends State<SoubretteFeatherDuster>
                     Alignment.bottomCenter, // Align rotation to bottom center
                 transform: Matrix4.identity()..rotateZ(_animation.value),
                 child: Image.asset(
-                  'assets/avatar/costumes/feather_duster.png',
+                  AppUtils.fixAssetsPath(
+                    'assets/avatar/costumes/feather_duster.png',
+                  ),
                   width: AppConstants.soubretteFeatherDusterWidth * scaleFactor,
                   height:
                       AppConstants.soubretteFeatherDusterHeight * scaleFactor,

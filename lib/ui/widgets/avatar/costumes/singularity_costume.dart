@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../logic/talking/talking_cubit.dart';
+import '../../../../utils/app_utils.dart';
 import '../../../../utils/platform_utils.dart';
 
 class SingularityCostume extends StatefulWidget {
@@ -73,7 +74,7 @@ class _SingularityCostumeState extends State<SingularityCostume> {
           previous.status != current.status,
       listener: (BuildContext context, TalkingState state) {
         if (state.status == TalkingStatus.success) {
-          if (checkPlatform() == 'Web') {
+          if (PlatformUtils.checkPlatform() == 'Web') {
             _fakeTalking();
           } else {
             _startTalking(state.answer.amplitudes);
@@ -103,14 +104,18 @@ class _SingularityCostumeState extends State<SingularityCostume> {
             ),
           ),
           Image.asset(
-            'assets/avatar/costumes/singularity/singularity_$_currentImageIndex.png',
+            AppUtils.fixAssetsPath(
+              'assets/avatar/costumes/singularity/singularity_$_currentImageIndex.png',
+            ),
             key: ValueKey<int>(_currentImageIndex),
             fit: BoxFit.cover,
           ),
           AnimatedSwitcher(
             duration: widget.fadeDuration,
             child: Image.asset(
-              'assets/avatar/costumes/singularity/singularity_$_currentImageIndex.png',
+              AppUtils.fixAssetsPath(
+                'assets/avatar/costumes/singularity/singularity_$_currentImageIndex.png',
+              ),
               key: ValueKey<int>(_currentImageIndex),
               fit: BoxFit.cover,
             ),

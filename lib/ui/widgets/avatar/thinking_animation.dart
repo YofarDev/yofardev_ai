@@ -5,6 +5,7 @@ import 'package:lottie/lottie.dart';
 import '../../../logic/avatar/avatar_cubit.dart';
 import '../../../logic/avatar/avatar_state.dart';
 import '../../../res/app_constants.dart';
+import '../../../utils/app_utils.dart';
 
 class ThinkingAnimation extends StatelessWidget {
   const ThinkingAnimation({super.key});
@@ -17,7 +18,7 @@ class ThinkingAnimation extends StatelessWidget {
           bottom: MediaQuery.of(context).viewInsets.bottom + AppConstants.loadingInvertedY * state.scaleFactor,
           left: AppConstants.loadingX * state.scaleFactor,
           child: Lottie.asset(
-            'assets/lotties/typing.json',
+            AppUtils.fixAssetsPath('assets/lotties/typing.json'),
             height: 60,
           ),
         );

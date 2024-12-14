@@ -13,6 +13,7 @@ import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';
 import '../../../models/sound_effects.dart';
+import '../../../utils/app_utils.dart';
 import '../../../utils/extensions.dart';
 import '../../widgets/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
@@ -279,7 +280,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                     children: <Widget>[
                       _circleAvater(),
                       Lottie.asset(
-                        'assets/lotties/typing.json',
+                        AppUtils.fixAssetsPath('assets/lotties/typing.json'),
                         height: 60,
                       ),
                     ],
@@ -290,11 +291,12 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         },
       );
 
-  Widget _circleAvater() => const Padding(
-        padding: EdgeInsets.only(right: 8),
+  Widget _circleAvater() => Padding(
+        padding: const EdgeInsets.only(right: 8),
         child: CircleAvatar(
           backgroundColor: Colors.blue,
-          foregroundImage: AssetImage("assets/icon.png"),
+          foregroundImage:
+              AssetImage(AppUtils.fixAssetsPath("assets/icon.png")),
         ),
       );
 }

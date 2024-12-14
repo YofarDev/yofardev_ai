@@ -49,6 +49,7 @@ class _AiTextInputState extends State<AiTextInput> {
   }
 
   void _initSpeechToText() async {
+    if (PlatformUtils.checkPlatform() == 'Web') return;
     final PermissionStatus status = await Permission.microphone.request();
     if (status.isGranted) {
       _speechToText = SpeechToText();
@@ -147,7 +148,7 @@ class _AiTextInputState extends State<AiTextInput> {
   }) =>
       Row(
         children: <Widget>[
-          if (checkPlatform() != 'Web')
+          if (PlatformUtils.checkPlatform() != 'Web')
             PickerButtons(onImageSelected: _onImageSelected),
           Expanded(
             child: TextField(
@@ -306,7 +307,7 @@ class _AiTextInputState extends State<AiTextInput> {
                   config.costume == null)
               ? currentAvatar.costume.getVoiceEffect()
               : config.costume!.getVoiceEffect();
-      if (checkPlatform() == 'Web') {
+      if (PlatformUtils.checkPlatform() == 'Web') {
         context.read<TalkingCubit>().speakForWeb(
               modelAnswer,
               currentLanguage,

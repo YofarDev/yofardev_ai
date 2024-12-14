@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
+import '../../services/news_service.dart';
 import '../pages/chat/chats_list_page.dart';
 import '../pages/settings/settings_page.dart';
 import 'app_icon_button.dart';
@@ -54,24 +56,30 @@ class HomeButtons extends StatelessWidget {
                         );
                   },
                 ),
-                const SizedBox(height: 8),
-                AppIconButton(
-                  icon: Icons.settings_rounded,
-                  onPressed: () {
-                    // Navigator.of(context).push(
-                    //   PageRouteBuilder<dynamic>(
-                    //     pageBuilder: (_, __, ___) => const SettingsPage(),
-                    //     transitionDuration: Duration.zero,
-                    //   ),
-                    // );
-                    Navigator.of(context).push(
-                      MaterialPageRoute<dynamic>(
-                        builder: (BuildContext context) => const SettingsPage(),
-                      ),
-                    );
-                  },
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: AppIconButton(
+                    icon: Icons.settings_rounded,
+                    onPressed: () async {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<dynamic>(
+                          builder: (BuildContext context) =>
+                              const SettingsPage(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 8),
+                if (kDebugMode)
+                  AppIconButton(
+                    icon: Icons.do_not_touch,
+                    onPressed: () async {
+                      final String test =
+                          await NewsService.getMostPopularNewsOfTheDay();
+                      print(test);
+                    },
+                  ),
               ],
             ),
           ),

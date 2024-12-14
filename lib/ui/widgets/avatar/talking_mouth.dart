@@ -10,6 +10,7 @@ import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/answer.dart';
 import '../../../res/app_constants.dart';
+import '../../../utils/app_utils.dart';
 import '../../../utils/platform_utils.dart';
 import 'scaled_avatar_item.dart';
 
@@ -26,7 +27,7 @@ class TalkingMouth extends StatelessWidget {
       listener: (BuildContext context, TalkingState state) {
         if (state.status == TalkingStatus.success) {
           if (context.read<AvatarCubit>().state.avatar.hideTalkingMouth) return;
-          if (checkPlatform() == 'Web') {
+          if (PlatformUtils.checkPlatform() == 'Web') {
             _fakeTalking(context);
           } else {
             _startTalking(context, state.answer);
@@ -103,6 +104,6 @@ class TalkingMouth extends StatelessWidget {
   }
 
   String _getMouthPath(MouthState mouthState) {
-    return 'assets/avatar/mouth/mouth_${mouthState.name}.png';
+    return AppUtils.fixAssetsPath('assets/avatar/mouth/mouth_${mouthState.name}.png');
   }
 }

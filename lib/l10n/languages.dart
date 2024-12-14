@@ -23,5 +23,6 @@ String get userMessage;
 String get currentDate;
 String get currentAvatarConfig;
 String get currentUsername;
+String get resultsFunctionCalling;
 
 }

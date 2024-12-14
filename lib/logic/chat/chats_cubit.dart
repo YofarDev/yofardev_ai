@@ -10,6 +10,7 @@ import '../../repositories/yofardev_repository.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/settings_service.dart';
 import '../../utils/extensions.dart';
+import '../../utils/platform_utils.dart';
 import '../avatar/avatar_cubit.dart';
 import '../talking/talking_cubit.dart';
 
@@ -34,7 +35,11 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   void init() async {
     getCurrentChat();
-    setCurrentLanguage(await SettingsService().getLanguage() ?? 'en');
+    setCurrentLanguage(
+      PlatformUtils.checkPlatform() == 'Web'
+          ? "fr"
+          : await SettingsService().getLanguage() ?? 'fr',
+    );
   }
 
   void getCurrentChat() async {
@@ -87,9 +92,16 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(openedChat: chat));
   }
 
-  Future<String> _addPrePrompt(Avatar avatar, String prompt) async {
+  Future<String> _getWrappedUserMessage({
+    required String lastUserMessage,
+    required Avatar avatar,
+  }) async {
+    final List<Map<String, dynamic>> functionsResults =
+        await YofardevRepository.getFunctionsResults(
+      lastUserMessage: lastUserMessage,
+    );
     final String? username = await SettingsService().getUsername();
-    return "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${username != null ? "${localized.currentUsername} : $username" : ''}\n${localized.userMessage} : \n'''$prompt'''";
+    return "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${username != null ? "${localized.currentUsername} : $username" : ''}${functionsResults.isNotEmpty ? "${localized.resultsFunctionCalling} :\n$functionsResults\n\n" : ''}${localized.userMessage} : \n'''$lastUserMessage'''";
   }
 
   Future<ChatEntry?> askYofardev(
@@ -101,7 +113,8 @@ class ChatsCubit extends Cubit<ChatsState> {
     Chat chat = onlyText ? state.openedChat : state.currentChat;
     final List<ChatEntry> entries = <ChatEntry>[...chat.entries];
     final ChatEntry newUserEntry = ChatEntry(
-      body: await _addPrePrompt(avatar, prompt),
+      body:
+          await _getWrappedUserMessage(lastUserMessage: prompt, avatar: avatar),
       isFromUser: true,
       timestamp: DateTime.now(),
       attachedImage: attachedImage ?? '',

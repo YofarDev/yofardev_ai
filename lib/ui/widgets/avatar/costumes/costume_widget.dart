@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../logic/avatar/avatar_cubit.dart';
 import '../../../../logic/avatar/avatar_state.dart';
 import '../../../../models/avatar.dart';
+import '../../../../utils/app_utils.dart';
 import 'robocop_animated_eyes.dart';
 import 'singularity_costume.dart';
 import 'soubrette_feather_duster.dart';
@@ -21,7 +22,9 @@ class CostumeWidget extends StatelessWidget {
               Positioned.fill(
                 top: null,
                 child: Image.asset(
-                  'assets/avatar/costumes/${state.avatar.costume.name}.png',
+                  AppUtils.fixAssetsPath(
+                    'assets/avatar/costumes/${state.avatar.costume.name}.png',
+                  ),
                   fit: BoxFit.fitWidth,
                 ),
               )

@@ -25,7 +25,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.example.yofardev_ai"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

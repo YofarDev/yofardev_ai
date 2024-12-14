@@ -8,7 +8,7 @@ import 'settings_service.dart';
 
 class TtsService {
   Future<String> getMusicDirectoryPath() async {
-    final String platform = checkPlatform();
+    final String platform = PlatformUtils.checkPlatform();
     switch (platform) {
       case 'Android':
         try {
@@ -48,7 +48,7 @@ class TtsService {
     );
     await flutterTts.setSpeechRate(voiceEffect.speedRate);
     await flutterTts.setPitch(voiceEffect.pitch);
-    if (checkPlatform() == 'iOS') {
+    if (PlatformUtils.checkPlatform() == 'iOS') {
       await flutterTts.setSharedInstance(true);
       await flutterTts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,
@@ -62,7 +62,7 @@ class TtsService {
     }
     final String musicDirectoryPath = await getMusicDirectoryPath();
     final String filename =
-        "${DateTime.now().millisecondsSinceEpoch}${checkPlatform() == 'iOS' ? '.caf' : '.wav'}";
+        "${DateTime.now().millisecondsSinceEpoch}${PlatformUtils.checkPlatform() == 'iOS' ? '.caf' : '.wav'}";
     final String filePath = '$musicDirectoryPath/$filename';
     await flutterTts.awaitSynthCompletion(true);
     await flutterTts.synthesizeToFile(text, filename);

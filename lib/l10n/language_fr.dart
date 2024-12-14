@@ -37,5 +37,7 @@ String get currentDate => "Date actuelle";
 String get currentAvatarConfig => "Configuration de l’avatar actuelle";
 @override
 String get currentUsername => "Nom de l’utilisateur";
+@override
+String get resultsFunctionCalling => "Résultats de functions calling";
 
 }

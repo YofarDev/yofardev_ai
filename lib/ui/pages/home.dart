@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/avatar/avatar_state.dart';
@@ -8,6 +9,7 @@ import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../res/app_colors.dart';
 import '../../res/app_constants.dart';
+import '../../utils/app_utils.dart';
 import '../../utils/platform_utils.dart';
 import '../../utils/volume_fader.dart';
 import '../widgets/ai_text_input.dart';
@@ -29,10 +31,12 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    if (checkPlatform() != 'Web') {
+    if (PlatformUtils.checkPlatform() != 'Web') {
       _initVolumeControl();
+    } else {
+      _setDefaultApiKey();
     }
-    if (checkPlatform() == 'Android') {
+    if (PlatformUtils.checkPlatform() == 'Android') {
       // to avoid a weird bug when first sound is played
       _initAudioPlayer();
     }
@@ -41,9 +45,19 @@ class _HomeState extends State<Home> {
     });
   }
 
+  void _setDefaultApiKey() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    if ((prefs.getString("google_api_key") ?? "").isNotEmpty) return;
+    const String googleApiKey = 'API KEY HERE';
+    if (googleApiKey.isNotEmpty) {
+      prefs.setString('google_api_key', googleApiKey);
+    }
+  }
+
   void _initAudioPlayer() async {
     final AudioPlayer player = AudioPlayer();
-    await player.setAsset('assets/sound_effects/_silence.mp3');
+    await player
+        .setAsset(AppUtils.fixAssetsPath('assets/sound_effects/_silence.mp3'));
     player.play();
   }
 
@@ -56,6 +70,7 @@ class _HomeState extends State<Home> {
   }
 
   void _initVolumeControl() async {
+    if (PlatformUtils.checkPlatform() == 'Web') return;
     _volumeControl = ProgressiveVolumeControl();
   }
 
@@ -68,9 +83,11 @@ class _HomeState extends State<Home> {
           previous.status != current.status,
       listener: (BuildContext context, AvatarState state) {
         if (state.statusAnimation == AvatarStatusAnimation.initial) return;
-        _volumeControl.startVolumeFade(
-          state.statusAnimation != AvatarStatusAnimation.leaving,
-        );
+        if (PlatformUtils.checkPlatform() != 'Web') {
+          _volumeControl.startVolumeFade(
+            state.statusAnimation != AvatarStatusAnimation.leaving,
+          );
+        }
       },
       child: BlocListener<ChatsCubit, ChatsState>(
         listenWhen: (ChatsState previous, ChatsState current) =>

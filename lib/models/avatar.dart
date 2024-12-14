@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
 import '../services/tts_service.dart';
+import '../utils/app_utils.dart';
 import '../utils/extensions.dart';
+import '../utils/platform_utils.dart';
 import 'sound_effects.dart';
 
 enum AvatarBackgrounds {
@@ -33,9 +35,10 @@ enum AvatarBackgrounds {
   artGallery,
   cinema,
   deepSpace,
+  christmasLivingRoom,
 }
 
-enum AvatarHat { noHat, beanie, backwardsCap, frenchBeret, swimCap }
+enum AvatarHat { noHat, beanie, backwardsCap, frenchBeret, swimCap, santaHat }
 
 enum AvatarTop { pinkHoodie, longCoat, tshirt, underwear, swimsuit }
 
@@ -246,7 +249,9 @@ class AvatarConfig extends Equatable {
 
 extension BgImagesExtension on AvatarBackgrounds? {
   String getPath() {
-    return 'assets/avatar/backgrounds/${this!.name}.jpeg';
+    return AppUtils.fixAssetsPath(
+      'assets/avatar/backgrounds/${this!.name}.jpeg',
+    );
   }
 }
 
@@ -255,7 +260,7 @@ extension CostumeExtension on AvatarCostume {
     switch (this) {
       case AvatarCostume.batman:
         return VoiceEffect(
-          pitch: 0.7,
+          pitch: PlatformUtils.checkPlatform() == 'Web' ? 0.1 : 0.7,
           speedRate: 0.4,
         );
       case AvatarCostume.robocop:
@@ -271,7 +276,7 @@ extension CostumeExtension on AvatarCostume {
       default:
         return VoiceEffect(
           pitch: 1,
-          speedRate: 0.5,
+          speedRate: PlatformUtils.checkPlatform() == 'Web' ? 1 : 0.5,
         );
     }
   }

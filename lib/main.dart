@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
 
@@ -21,6 +22,7 @@ void main() async {
   SystemChrome.setPreferredOrientations(
     <DeviceOrientation>[DeviceOrientation.portraitUp],
   );
+  await dotenv.load();
   runApp(const MyApp());
 }
 
@@ -42,30 +44,30 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: ColoredBox(
-        color:Colors.blue,
+        color: Colors.blue,
         child: ClipRRect(
           child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: AppConstants.maxWidth),
+            constraints: BoxConstraints(maxWidth: AppConstants.maxWidth),
             child: Center(
               child: MaterialApp(
                 title: 'Yofardev AI',
                 debugShowCheckedModeBanner: false,
-                  supportedLocales: const <Locale>[
+                supportedLocales: const <Locale>[
                   Locale('fr'),
                   Locale('en'),
                 ],
                 localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
-                  AppLocalizationsDelegate(), 
+                  AppLocalizationsDelegate(),
                   GlobalMaterialLocalizations.delegate,
                   GlobalWidgetsLocalizations.delegate,
                   GlobalCupertinoLocalizations.delegate,
                 ],
                 theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                  colorScheme:
+                      ColorScheme.fromSeed(seedColor: Colors.deepPurple),
                   useMaterial3: true,
                 ),
                 home: const Home(),
-                 
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/localization_manager.dart';
 import '../res/app_constants.dart';
+import '../utils/app_utils.dart';
 import '../utils/platform_utils.dart';
 
 class SettingsService {
@@ -32,8 +33,9 @@ class SettingsService {
   }
 
   Future<String> getBaseSystemPrompt() async {
-    final String baseSystemPrompt = await rootBundle
-        .loadString('assets/txt/system_prompt_$languageCode.txt');
+    final String baseSystemPrompt = await rootBundle.loadString(
+      AppUtils.fixAssetsPath('assets/txt/system_prompt_$languageCode.txt'),
+    );
     return baseSystemPrompt;
   }
 
@@ -55,7 +57,7 @@ class SettingsService {
   Future<String> getTtsVoice(String language) async {
     // final SharedPreferences prefs = await SharedPreferences.getInstance();
     // final String? voiceName = prefs.getString('ttsVoice_$language');
-    final String platform = checkPlatform();
+    final String platform = PlatformUtils.checkPlatform();
     switch (platform) {
       case 'Android':
         if (language == 'fr') {

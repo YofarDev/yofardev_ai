@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../res/app_constants.dart';
+import '../../../utils/app_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class BlinkingEyes extends StatefulWidget {
@@ -47,7 +48,7 @@ class _BlinkingEyesState extends State<BlinkingEyes>
   @override
   Widget build(BuildContext context) {
     return ScaledAvatarItem(
-      path: 'assets/avatar/closed_eyes.png',
+      path: AppUtils.fixAssetsPath('assets/avatar/closed_eyes.png'),
       itemX: AppConstants.eyesX,
       itemY: AppConstants.eyesY,
       display: _eyesClosed,

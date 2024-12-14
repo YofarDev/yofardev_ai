@@ -90,37 +90,37 @@ extension ColorfulLogs on String {
 
   void printRedLog() => split('\n').forEach(
         (String element) => debugPrint(
-          checkPlatform() == 'Android' ? element.toRedLog() : element,
+         PlatformUtils. checkPlatform() == 'Android' ? element.toRedLog() : element,
         ),
       );
   void printGreenLog() => split('\n').forEach(
         (String element) => debugPrint(
-          checkPlatform() == 'Android' ? element.toGreenLog() : element,
+          PlatformUtils. checkPlatform() == 'Android' ? element.toGreenLog() : element,
         ),
       );
   void printYellowLog() => split('\n').forEach(
         (String element) => debugPrint(
-          checkPlatform() == 'Android' ? element.toYellowLog() : element,
+         PlatformUtils.  checkPlatform() == 'Android' ? element.toYellowLog() : element,
         ),
       );
   void printBlueLog() => split('\n').forEach(
         (String element) => debugPrint(
-          checkPlatform() == 'Android' ? element.toBlueLog() : element,
+        PlatformUtils.   checkPlatform() == 'Android' ? element.toBlueLog() : element,
         ),
       );
   void printWhiteLog() => split('\n').forEach(
         (String element) => debugPrint(
-          checkPlatform() == 'Android' ? element.toWhiteLog() : element,
+         PlatformUtils.  checkPlatform() == 'Android' ? element.toWhiteLog() : element,
         ),
       );
   void printCyanLog() => split('\n').forEach(
         (String element) => debugPrint(
-          checkPlatform() == 'Android' ? element.toCyanLog() : element,
+         PlatformUtils.  checkPlatform() == 'Android' ? element.toCyanLog() : element,
         ),
       );
   void printMagentaLog() => split('\n').forEach(
         (String element) => debugPrint(
-          checkPlatform() == 'Android' ? element.toMagentaLog() : element,
+        PlatformUtils.   checkPlatform() == 'Android' ? element.toMagentaLog() : element,
         ),
       );
 }

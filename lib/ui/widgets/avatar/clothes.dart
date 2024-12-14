@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../res/app_constants.dart';
+import '../../../utils/app_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class Clothes extends StatelessWidget {
@@ -25,7 +26,7 @@ class Clothes extends StatelessWidget {
   List<Cloth> get clothesList => <Cloth>[
         Cloth(
           name: 'sunglasses',
-          path: 'assets/avatar/accessories/sunglasses.png',
+          path: AppUtils.fixAssetsPath('assets/avatar/accessories/sunglasses.png'),
           x: AppConstants.sunglassesX,
           y: AppConstants.sunglassesY,
           opacity: 0.9,

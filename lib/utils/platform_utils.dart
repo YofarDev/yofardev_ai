@@ -1,15 +1,18 @@
-// Conditional import
-import 'platform_io.dart' if (dart.library.html) 'platform_web.dart'
-    as platform;
+import 'dart:io';
 
-String checkPlatform() {
-  if (platform.isAndroid) {
-    return 'Android';
-  } else if (platform.isIOS) {
-    return 'iOS';
-  } else if (platform.isWeb) {
-    return 'Web';
-  } else {
-    return 'Other';
+import 'package:flutter/foundation.dart';
+
+
+class PlatformUtils {
+
+  static String checkPlatform() {
+    if (kIsWeb) return 'Web';
+    if (Platform.isAndroid) {
+      return 'Android';
+    } else if (Platform.isIOS) {
+      return 'iOS';
+    } else {
+      return 'Other';
+    }
   }
 }

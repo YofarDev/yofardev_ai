@@ -47,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final FlutterTts flutterTts = FlutterTts();
     final List<dynamic> voices = await flutterTts.getVoices as List<dynamic>;
     for (final dynamic voice in voices) {
-      if (checkPlatform() == 'iOS' && (voice['gender'] != 'male')) continue;
+      if (PlatformUtils.checkPlatform() == 'iOS' && (voice['gender'] != 'male')) continue;
       if ((voice['locale'] as String)
           .startsWith(context.read<ChatsCubit>().state.currentLanguage)) {
         _voices.add(
@@ -150,7 +150,7 @@ class _SettingsPageState extends State<SettingsPage> {
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute<dynamic>(
-              builder: (BuildContext context) => const LLMApiPickerPage(),
+              builder: (BuildContext context) => const LlmApiPickerSettingsPage(),
             ),
           );
         },
@@ -252,8 +252,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
               ),
-            if (checkPlatform() == 'Android') Text(localized.moreVoicesAndroid),
-            if (checkPlatform() == 'iOS') Text(localized.moreVoicesIOS),
+            if (PlatformUtils.checkPlatform() == 'Android') Text(localized.moreVoicesAndroid),
+            if (PlatformUtils.checkPlatform() == 'iOS') Text(localized.moreVoicesIOS),
           ],
         ),
       );

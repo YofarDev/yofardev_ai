@@ -1,3 +1,5 @@
+import '../utils/app_utils.dart';
+
 enum SoundEffects {
   spookyTheme,
   drumsRoll,
@@ -15,6 +17,7 @@ enum SoundEffects {
   asianTheme,
   robotWalking,
   uwu,
+  christmasBells,
 }
 
 extension SoundEffectsStrExtension on String {
@@ -36,6 +39,6 @@ extension SoundEffectsStrExtension on String {
 
 extension SoundEffectsExtension on SoundEffects {
   String getPath() {
-    return 'assets/sound_effects/$name.wav';
+    return AppUtils.fixAssetsPath('assets/sound_effects/$name.wav');
   }
 }
