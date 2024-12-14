@@ -97,7 +97,7 @@ class YofardevRepository {
       description:
           'Returns an array of the most shared articles on NYTimes.com in the last 24 hours',
       parameters: <String, dynamic>{},
-      function: (String location) async =>
+      function: () async =>
           await NewsService.getMostPopularNewsOfTheDay(),
     ),
   ];
