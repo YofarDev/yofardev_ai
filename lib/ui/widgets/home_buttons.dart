@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
-import '../../services/news_service.dart';
+import '../../repositories/yofardev_repository.dart';
 import '../pages/chat/chats_list_page.dart';
 import '../pages/settings/settings_page.dart';
 import 'app_icon_button.dart';
@@ -75,9 +75,14 @@ class HomeButtons extends StatelessWidget {
                   AppIconButton(
                     icon: Icons.do_not_touch,
                     onPressed: () async {
-                      final String test =
-                          await NewsService.getMostPopularNewsOfTheDay();
-                      print(test);
+                      final List<Map<String, dynamic>> t =
+                          await YofardevRepository().getFunctionsResults(
+                        lastUserMessage:
+                            'Ca fait combien 1+1? Et fais un moi un résumé de la fusion nuéclaire sur wikipédia',
+                      );
+                      debugPrint(
+                        t.toString(),
+                      );
                     },
                   ),
               ],

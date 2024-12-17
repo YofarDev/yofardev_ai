@@ -13,11 +13,10 @@ class NewsService {
       final Uri url = Uri.parse(
         "$_baseUrl?api-key=$apiKey",
       );
-      print(url);
       final http.Response response = await http.get(url);
       if (response.statusCode == 200) {
         final dynamic data = jsonDecode(response.body);
-        final List<dynamic> results = data['results'] as List<dynamic>;
+        final List<dynamic> results = (data as Map<String, dynamic>)['results'] as List<dynamic>;
         final List<Map<String, dynamic>> news = <Map<String, dynamic>>[];
         for (final dynamic result in results) {
           final String title =

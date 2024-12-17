@@ -87,9 +87,12 @@ class _AiTextInputState extends State<AiTextInput> {
               return BlocBuilder<TalkingCubit, TalkingState>(
                 builder: (BuildContext context, TalkingState talkingState) {
                   ChatEntry? lastUserEntry;
-                  if (state.currentChat.entries.isNotEmpty) {
-                    lastUserEntry = state.currentChat.entries
-                        .lastWhere((ChatEntry c) => c.isFromUser);
+                  if (state.currentChat.entries.isNotEmpty &&
+                      state.currentChat.entries.last.entryType ==
+                          EntryType.user) {
+                    lastUserEntry = state.currentChat.entries.lastWhere(
+                      (ChatEntry c) => c.entryType == EntryType.user,
+                    );
                   }
                   return Column(
                     children: <Widget>[
@@ -122,9 +125,9 @@ class _AiTextInputState extends State<AiTextInput> {
                                         lastUserEntry.body.getVisiblePrompt(),
                                   ),
                                 ),
-                                if (lastUserEntry.attachedImage.isNotEmpty)
+                                if (lastUserEntry.attachedImage != null)
                                   _buildPickedImage(
-                                    lastUserEntry.attachedImage,
+                                    lastUserEntry.attachedImage!,
                                   ),
                               ],
                             ),

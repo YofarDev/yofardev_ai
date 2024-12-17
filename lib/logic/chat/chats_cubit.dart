@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../l10n/localization_manager.dart';
 import '../../models/avatar.dart';
@@ -18,6 +21,8 @@ part 'chats_state.dart';
 
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit() : super(const ChatsState());
+
+
 
   void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
     emit(state.copyWith(status: ChatsStatus.updating));
@@ -92,16 +97,46 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(openedChat: chat));
   }
 
-  Future<String> _getWrappedUserMessage({
+  Future<ChatEntry> _getNewEntry({
     required String lastUserMessage,
     required Avatar avatar,
+    required bool onlyText,
+    String? attachedImage,
   }) async {
     final List<Map<String, dynamic>> functionsResults =
-        await YofardevRepository.getFunctionsResults(
+        await YofardevRepository().getFunctionsResults(
       lastUserMessage: lastUserMessage,
     );
+    if (functionsResults.isNotEmpty) {
+      final ChatEntry functionCallingEntry = ChatEntry(
+        id: const Uuid().v4(),
+        entryType: EntryType.functionCalling,
+        body: jsonEncode(functionsResults),
+        timestamp: DateTime.now(),
+      );
+      Chat chat = onlyText ? state.openedChat : state.currentChat;
+      chat = chat.copyWith(
+        entries: <ChatEntry>[...chat.entries, functionCallingEntry],
+      );
+      emit(
+        state.copyWith(
+          openedChat: onlyText ? chat : null,
+          currentChat: onlyText ? null : chat,
+        ),
+      );
+    }
+    final String languageCode = await SettingsService().getLanguage() ?? 'fr';
     final String? username = await SettingsService().getUsername();
-    return "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${username != null ? "${localized.currentUsername} : $username" : ''}${functionsResults.isNotEmpty ? "${localized.resultsFunctionCalling} :\n$functionsResults\n\n" : ''}${localized.userMessage} : \n'''$lastUserMessage'''";
+    final String wrappedUserMessage =
+        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${username != null ? "${localized.currentUsername} : $username" : ''}${functionsResults.isNotEmpty ? "${localized.resultsFunctionCalling} :\n$functionsResults\n\n" : ''}${localized.userMessage} : \n'''$lastUserMessage'''";
+    final ChatEntry newUserEntry = ChatEntry(
+      id: const Uuid().v4(),
+      entryType: EntryType.user,
+      body: wrappedUserMessage,
+      timestamp: DateTime.now(),
+      attachedImage: attachedImage,
+    );
+    return newUserEntry;
   }
 
   Future<ChatEntry?> askYofardev(
@@ -111,28 +146,49 @@ class ChatsCubit extends Cubit<ChatsState> {
     required Avatar avatar,
   }) async {
     Chat chat = onlyText ? state.openedChat : state.currentChat;
-    final List<ChatEntry> entries = <ChatEntry>[...chat.entries];
-    final ChatEntry newUserEntry = ChatEntry(
-      body:
-          await _getWrappedUserMessage(lastUserMessage: prompt, avatar: avatar),
-      isFromUser: true,
+    final String temporaryId = const Uuid().v4();
+    final ChatEntry temporaryEntry = ChatEntry(
+      id: temporaryId,
+      entryType: EntryType.user,
+      body: "${localized.userMessage} : \n'''$prompt'''",
       timestamp: DateTime.now(),
-      attachedImage: attachedImage ?? '',
+      attachedImage: attachedImage,
     );
-    entries.add(newUserEntry);
-    chat = chat.copyWith(entries: entries);
+    chat = chat.copyWith(entries: <ChatEntry>[...chat.entries, temporaryEntry]);
+    emit(
+      state.copyWith(
+        status: ChatsStatus.typing,
+        openedChat: onlyText ? chat : null,
+        currentChat: onlyText ? null : chat,
+      ),
+    );
+    final ChatEntry userEntry = await _getNewEntry(
+      lastUserMessage: prompt,
+      avatar: avatar,
+      attachedImage: attachedImage,
+      onlyText: onlyText,
+    );
+    chat = onlyText
+        ? state.openedChat
+        : state.currentChat; // need to get updated chat
+    chat = chat.copyWith(entries: <ChatEntry>[...chat.entries]);
+    final int index = chat.entries.indexWhere(
+      (ChatEntry element) => element.id == temporaryId,
+    );
+    chat.entries[index] = userEntry;
     emit(
       state.copyWith(
         openedChat: onlyText ? chat : null,
         currentChat: onlyText ? null : chat,
-        status: ChatsStatus.typing,
       ),
     );
     try {
       final ChatEntry newModelEntry =
           await YofardevRepository.askYofardevAi(chat);
-      final List<ChatEntry> entries = <ChatEntry>[...chat.entries];
-      entries.add(newModelEntry);
+      final List<ChatEntry> entries = <ChatEntry>[
+        ...chat.entries,
+        newModelEntry,
+      ];
       chat = chat.copyWith(entries: entries);
       emit(
         state.copyWith(

@@ -10,6 +10,7 @@ import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
+import '../../../models/chat_entry.dart';
 import '../../../utils/extensions.dart';
 import 'chat_details_page.dart';
 
@@ -155,7 +156,13 @@ class ChatsListPage extends StatelessWidget {
                                     child: Text(
                                       chat.entries.isEmpty
                                           ? localized.empty
-                                          : chat.entries.first.body
+                                          : chat.entries
+                                              .firstWhere(
+                                                (ChatEntry entry) =>
+                                                    entry.entryType ==
+                                                    EntryType.user,
+                                              )
+                                              .body
                                               .getVisiblePrompt(),
                                       textAlign: TextAlign.center,
                                       maxLines: 1,

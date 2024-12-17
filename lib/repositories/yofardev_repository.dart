@@ -1,18 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:llm_api_picker/llm_api_picker.dart' as llm;
 import 'package:llm_api_picker/llm_api_picker.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/avatar.dart';
 import '../models/chat.dart';
 import '../models/chat_entry.dart';
 import '../models/sound_effects.dart';
-import '../services/news_service.dart';
 import '../services/settings_service.dart';
-import '../services/weather_service.dart';
-
-typedef WeatherFunction = Future<String> Function(String location);
-typedef NewsFunction = Future<String> Function();
+import '../utils/functions_helper.dart';
 
 class YofardevRepository {
+  final llm.LLMRepository _repo = llm.LLMRepository();
+
   static Future<ChatEntry> askYofardevAi(Chat chat) async {
     final llm.LlmApi? api = await llm.LLMRepository.getCurrentApi();
     if (api == null) {
@@ -20,14 +20,14 @@ class YofardevRepository {
     }
     final List<llm.Message> messages = <llm.Message>[];
     for (final ChatEntry entry in chat.entries) {
+      if (entry.entryType == EntryType.functionCalling) continue;
       messages.add(
         llm.Message(
-          role: entry.isFromUser
+          role: entry.entryType == EntryType.user
               ? llm.MessageRole.user
               : llm.MessageRole.assistant,
           body: entry.body,
-          attachedImage:
-              entry.attachedImage.isNotEmpty ? entry.attachedImage : null,
+          attachedImage: entry.attachedImage,
         ),
       );
     }
@@ -40,85 +40,104 @@ class YofardevRepository {
     answer =
         answer = answer.substring(answer.indexOf('{'), answer.indexOf('}') + 1);
     return ChatEntry(
+      id: const Uuid().v4(),
       body: answer,
-      isFromUser: false,
+      entryType: EntryType.yofardev,
       timestamp: DateTime.now(),
     );
   }
 
-  static Future<List<Map<String, dynamic>>> getFunctionsResults({
+  ///////////////////////////////// FUNCTIONS CALL /////////////////////////////////
+
+  Future<List<Map<String, dynamic>>> getFunctionsResults({
     required String lastUserMessage,
+    List<FunctionInfo>? nextStepFunctions,
+    String? previousResponse,
+    List<Map<String, dynamic>>? previousResults,
   }) async {
     final llm.LlmApi? api = await llm.LLMRepository.getCurrentApi();
     if (api == null) {
       throw Exception('No API selected');
     }
     // Query model first for function calling
-    final List<FunctionInfo> functionsCalled =
-        await llm.LLMRepository.checkFunctionsCalling(
+    final (String, List<llm.FunctionInfo>) items =
+        await _repo.checkFunctionsCalling(
       api: api,
-      functions: _functions,
+      functions: nextStepFunctions ?? FunctionsHelper.getFunctions,
       lastUserMessage: lastUserMessage,
+      previousResponse: previousResponse,
+      previousResults: previousResults?.toString(),
     );
+    final List<FunctionInfo> functionsCalled = items.$2;
     final List<Map<String, dynamic>> functionsResults =
         <Map<String, dynamic>>[];
+    final List<FunctionInfo> next = <FunctionInfo>[];
     for (final FunctionInfo functionInfo in functionsCalled) {
       final Map<String, dynamic> result = <String, dynamic>{
         'name': functionInfo.name,
         'parameters': functionInfo.parameters,
-        'result':
-            await _callFunction(functionInfo.name, functionInfo.parameters),
+        'result': await _callFunction(functionInfo, functionInfo.parameters),
       };
       functionsResults.add(result);
+      if (functionInfo.isMultiStep) next.add(functionInfo);
+    }
+    if (next.isNotEmpty) {
+      final List<Map<String, dynamic>> previousResults =
+          <Map<String, dynamic>>[];
+      for (final FunctionInfo functionInfo in next) {
+        final int index = functionsResults.indexWhere(
+          (Map<String, dynamic> result) => result['name'] == functionInfo.name,
+        );
+        if (index != -1) {
+          previousResults.add(functionsResults[index]);
+        }
+      }
+      final List<Map<String, dynamic>> nextResults = await getFunctionsResults(
+        lastUserMessage: lastUserMessage,
+        nextStepFunctions: next.map((FunctionInfo x) => x.nextStep!).toList(),
+        previousResponse: items.$1,
+        previousResults: previousResults,
+      );
+      functionsResults.removeWhere(
+        (Map<String, dynamic> result) => next.any(
+          (llm.FunctionInfo function) => function.name == result['name'],
+        ),
+      );
+      functionsResults.addAll(nextResults);
     }
     return functionsResults;
   }
 
-  ///////////////////////////////// FUNCTIONS CALL /////////////////////////////////
-
-  static final List<FunctionInfo> _functions = <FunctionInfo>[
-    FunctionInfo(
-      name: 'getCurrentWeather',
-      description: 'Returns the current weather',
-      parameters: <String, dynamic>{
-        'type': 'object',
-        'properties': <String, dynamic>{
-          'location': <String, dynamic>{
-            'type': 'string',
-            'description': 'The location to get the weather for',
-          },
-        },
-      },
-      function: (String location) async =>
-          await WeatherService.getCurrentWeather(location),
-    ),
-    FunctionInfo(
-      name: 'getMostPopularNewsOfTheDay',
-      description:
-          'Returns an array of the most shared articles on NYTimes.com in the last 24 hours',
-      parameters: <String, dynamic>{},
-      function: () async =>
-          await NewsService.getMostPopularNewsOfTheDay(),
-    ),
-  ];
-
   static Future<String> _callFunction(
-    String functionName,
+    FunctionInfo functionInfo,
     Map<String, dynamic>? parameters,
   ) async {
-    final FunctionInfo functionInfo = _functions.firstWhere(
-      (FunctionInfo e) => e.name == functionName,
-      orElse: () => throw ArgumentError('Function not found: $functionName'),
-    );
-    final Function function = functionInfo.function;
-    if (function is WeatherFunction) {
-      final String location =
-          parameters?['location'] as String? ?? 'Default Location';
-      return function(location);
-    } else if (function is NewsFunction) {
-      return function();
-    } else {
-      throw ArgumentError('Invalid function type for: $functionName');
+    final String functionName = functionInfo.name;
+
+    switch (functionName) {
+      case 'getCurrentWeather':
+        final String location = parameters?['location'] as String? ?? 'current';
+        return FunctionsHelper.getCurrentWeather(location);
+      case 'getMostPopularNewsOfTheDay':
+        return FunctionsHelper.getMostPopularNewsOfTheDay();
+      case 'characterCounter':
+        final String text = parameters?['text'] as String? ?? '';
+        final String character = parameters?['character'] as String? ?? '';
+        return FunctionsHelper.characterCounterFunction(text, character)
+            .toString();
+      case 'calculateExpression':
+        final String expression = parameters?['expression'] as String? ?? '';
+        return FunctionsHelper.calculatorFunction(expression)?.toString() ??
+            'Invalid expression';
+      case 'searchWikipedia':
+        final String query = parameters?['query'] as String? ?? '';
+        return FunctionsHelper.searchWikipediaFunction(query);
+      case 'getWikipediaPage':
+        final String title = parameters?['title'] as String? ?? '';
+        return FunctionsHelper.getWikiPage(title);
+      default:
+        debugPrint('Invalid function name: $functionName');
+        return 'null';
     }
   }
 
@@ -126,7 +145,6 @@ class YofardevRepository {
 
   static Future<String> getSystemPrompt() async {
     String systemPrompt = await SettingsService().getBaseSystemPrompt();
-
     final StringBuffer backgroundList = StringBuffer();
     for (final AvatarBackgrounds bg in AvatarBackgrounds.values) {
       backgroundList.write("${bg.name}, ");

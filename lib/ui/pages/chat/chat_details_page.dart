@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import '../../../utils/app_utils.dart';
 import '../../../utils/extensions.dart';
 import '../../widgets/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
+import 'image_full_screen.dart';
 
 class ChatDetailsPage extends StatefulWidget {
   const ChatDetailsPage();
@@ -122,176 +124,155 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         itemCount: chat.length,
         reverse: true,
         itemBuilder: (BuildContext context, int index) {
-          final bool isFromUser = chat[index].isFromUser;
-
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: 8,
-              left: isFromUser
-                  ? isTyping
-                      ? 0
-                      : 32
-                  : 0,
-              right: isFromUser ? 0 : 32,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                if (index == chat.length - 1)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Center(
-                      child: Text(
-                        chat[index].timestamp.toLongLocalDateString(
-                              language: context
-                                  .read<ChatsCubit>()
-                                  .state
-                                  .currentLanguage,
-                            ),
-                        style: const TextStyle(
-                          color: Colors.black54,
-                          fontWeight: FontWeight.bold,
-                        ),
+          return Column(
+            children: <Widget>[
+              if (index == chat.length - 1)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text(
+                      chat[index].timestamp.toLongLocalDateString(
+                            language: context
+                                .read<ChatsCubit>()
+                                .state
+                                .currentLanguage,
+                          ),
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                SizedBox(
-                  width: double.infinity,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: isFromUser
-                        ? MainAxisAlignment.end
-                        : MainAxisAlignment.start,
-                    children: <Widget>[
-                      if (!isFromUser) _circleAvater(),
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: isFromUser ? Colors.blue : Colors.pink[50],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ParsedText(
-                            text: _showEverything
-                                ? chat[index].body
-                                : chat[index]
-                                    .getMessage(isFromUser: isFromUser),
-                            style: TextStyle(
-                              color: isFromUser ? Colors.white : Colors.black,
-                            ),
-                            parse: <MatchText>[
-                              MatchText(
-                                pattern: r'\[SoundEffects\.(.*?)\]',
-                                onTap: (String p0) async {
-                                  final SoundEffects? soundEffect =
-                                      p0.getSoundEffectFromString();
-                                  if (soundEffect == null) return;
-                                  final AudioPlayer player = AudioPlayer();
-                                  await player.setAsset(soundEffect.getPath());
-                                  await player.play();
-                                  player.dispose();
-                                },
-                                renderWidget: ({
-                                  required String pattern,
-                                  required String text,
-                                }) =>
-                                    const Icon(Icons.volume_up_outlined),
-                              ),
-                              MatchText(
-                                pattern: r'\[AvatarBackgrounds\.(.*?)\]',
-                                onTap: (String p0) async {
-                                  final AvatarBackgrounds bgImage =
-                                      EnumUtils.deserialize(
-                                    AvatarBackgrounds.values,
-                                    p0,
-                                  );
-                                  await context
-                                      .read<ChatsCubit>()
-                                      .updateBackgroundOpenedChat(bgImage)
-                                      .then((_) {
-                                    if (context
-                                            .read<ChatsCubit>()
-                                            .state
-                                            .currentChat
-                                            .id ==
-                                        context
-                                            .read<ChatsCubit>()
-                                            .state
-                                            .openedChat
-                                            .id) {
-                                      context.read<AvatarCubit>().loadAvatar(
-                                            context
-                                                .read<ChatsCubit>()
-                                                .state
-                                                .openedChat
-                                                .id,
-                                          );
-                                    }
-                                  });
-                                },
-                                renderWidget: ({
-                                  required String pattern,
-                                  required String text,
-                                }) {
-                                  final AvatarBackgrounds bg =
-                                      EnumUtils.deserialize(
-                                    AvatarBackgrounds.values,
-                                    text,
-                                  );
-                                  return Padding(
-                                    padding: const EdgeInsets.all(2),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: Image.asset(
-                                        bg.getPath(),
-                                        fit: BoxFit.cover,
-                                        height: 36,
-                                        width: 36,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-                if (chat[index].attachedImage.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: Image.file(
-                          File(chat[index].attachedImage),
-                          fit: BoxFit.cover,
-                          width: 100,
-                          height: 100,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (index == 0 && isTyping)
-                  Row(
-                    children: <Widget>[
-                      _circleAvater(),
-                      Lottie.asset(
-                        AppUtils.fixAssetsPath('assets/lotties/typing.json'),
-                        height: 60,
-                      ),
-                    ],
-                  ),
-              ],
-            ),
+              if (chat[index].entryType == EntryType.functionCalling)
+                _functionCallingItem(chat[index].body)
+              else
+                _buildMessageItem(chat, index, isTyping),
+            ],
           );
         },
       );
 
-  Widget _circleAvater() => Padding(
+  Widget _buildMessageItem(List<ChatEntry> entries, int index, bool isTyping) {
+    final bool isFromUser = entries[index].entryType == EntryType.user;
+    String soundEffect = '';
+    if (!isFromUser) {
+      final dynamic json = jsonDecode(entries[index].body);
+      soundEffect =
+          (json as Map<String, dynamic>)['soundEffect'] as String? ?? '';
+    }
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: 8,
+        left: isFromUser
+            ? isTyping
+                ? 0
+                : 32
+            : 0,
+        right: isFromUser ? 0 : 32,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(
+            width: double.infinity,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment:
+                  isFromUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+              children: <Widget>[
+                if (!isFromUser) _circleAvatar(),
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: !isFromUser ? Colors.blue : Colors.pink[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        ParsedText(
+                          selectable: true,
+                          text: _showEverything
+                              ? entries[index].body
+                              : entries[index]
+                                  .getMessage(isFromUser: isFromUser),
+                          style: TextStyle(
+                            color: !isFromUser ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        if (soundEffect.isNotEmpty)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: InkWell(
+                              onTap: () async {
+                                final SoundEffects? sound =
+                                    soundEffect.getSoundEffectFromString();
+                                if (sound == null) return;
+                                final AudioPlayer player = AudioPlayer();
+                                await player.setAsset(sound.getPath());
+                                await player.play();
+                                player.dispose();
+                              },
+                              child: const Icon(
+                                Icons.volume_up_outlined,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (entries[index].attachedImage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<dynamic>(
+                          builder: (BuildContext context) => ImageFullScreen(
+                            imagePath: entries[index].attachedImage!,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Hero(
+                      tag: entries[index].attachedImage!,
+                      child: Image.file(
+                        File(entries[index].attachedImage!),
+                        fit: BoxFit.cover,
+                        width: 100,
+                        height: 100,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (index == 0 && isTyping)
+            Row(
+              children: <Widget>[
+                _circleAvatar(),
+                Lottie.asset(
+                  AppUtils.fixAssetsPath('assets/lotties/typing.json'),
+                  height: 60,
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circleAvatar() => Padding(
         padding: const EdgeInsets.only(right: 8),
         child: CircleAvatar(
           backgroundColor: Colors.blue,
@@ -299,4 +280,42 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
               AssetImage(AppUtils.fixAssetsPath("assets/icon.png")),
         ),
       );
+
+  Widget _functionCallingItem(String function) {
+    final StringBuffer bf = StringBuffer();
+    final List<dynamic> map = jsonDecode(function) as List<dynamic>;
+    for (int i = 0; i < map.length; i++) {
+      bf.write(
+        '${(map[i] as Map<String, dynamic>)["name"]}(${(map[i] as Map<String, dynamic>)["parameters"]})${i == map.length - 1 ? '' : '\n'}',
+      );
+    }
+    if (bf.isNotEmpty && bf.toString().endsWith('\n')) {}
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          color: Colors.black.withOpacity(0.3),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Flexible(
+              child: Text(
+                bf.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

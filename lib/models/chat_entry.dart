@@ -2,36 +2,41 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:uuid/uuid.dart';
 
 import '../utils/extensions.dart';
 import 'avatar.dart';
 
+enum EntryType { user, yofardev, functionCalling }
+
 class ChatEntry extends Equatable {
-  final bool isFromUser;
+  final String id;
+  final EntryType entryType;
   final String body;
   final DateTime timestamp;
-  final String attachedImage;
+  final String? attachedImage;
 
   const ChatEntry({
-    required this.isFromUser,
+    required this.id,
+    required this.entryType,
     required this.body,
     required this.timestamp,
-    this.attachedImage = '',
+    this.attachedImage,
   });
 
   @override
-  List<Object> get props =>
-      <Object>[isFromUser, body, timestamp, attachedImage];
+  List<Object?> get props =>
+      <Object?>[entryType, body, timestamp, attachedImage];
 
   ChatEntry copyWith({
-    bool? isFromUser,
+    EntryType? entryType,
     String? body,
     DateTime? timestamp,
     String? attachedImage,
   }) {
     return ChatEntry(
-      isFromUser: isFromUser ?? this.isFromUser,
+      id: id,
+      entryType: entryType ?? this.entryType,
       body: body ?? this.body,
       timestamp: timestamp ?? this.timestamp,
       attachedImage: attachedImage ?? this.attachedImage,
@@ -40,7 +45,8 @@ class ChatEntry extends Equatable {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'fromUser': isFromUser,
+      'id': id,
+      'entryType': entryType.name,
       'body': body,
       'timestamp': timestamp.millisecondsSinceEpoch,
       'attachedImage': attachedImage,
@@ -49,11 +55,15 @@ class ChatEntry extends Equatable {
 
   factory ChatEntry.fromMap(Map<String, dynamic> map) {
     return ChatEntry(
-      isFromUser: map['fromUser'] as bool? ?? false,
+      id: map['id'] as String? ?? const Uuid().v4(),
+      entryType: EntryType.values.firstWhere(
+        (EntryType e) => e.name == map['entryType'],
+        orElse: () => EntryType.user,
+      ),
       body: map['body'] as String? ?? '',
       timestamp:
           DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int? ?? 0),
-      attachedImage: map['attachedImage'] as String? ?? '',
+      attachedImage: map['attachedImage'] as String?,
     );
   }
 
@@ -67,19 +77,10 @@ class ChatEntry extends Equatable {
     final Map<String, dynamic> map = json.decode(body) as Map<String, dynamic>;
     return map['message'] as String? ?? '';
   }
-}
 
-extension ListChatEntryExtension on List<ChatEntry> {
-  Future<List<Content>> getGeminiHistory() async {
-    final List<Content> history = <Content>[];
-    for (final ChatEntry entry in this) {
-      if (entry.isFromUser) {
-        history.add(Content.text(entry.body));
-      } else {
-        history.add(Content.model(<Part>[TextPart(entry.body)]));
-      }
-    }
-    return history;
+  @override
+  String toString() {
+    return 'ChatEntry(entryType: $entryType, body: $body, timestamp: $timestamp, attachedImage: $attachedImage)';
   }
 }
 

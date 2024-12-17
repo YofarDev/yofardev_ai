@@ -3,7 +3,7 @@
 
 part of 'chats_cubit.dart';
 
-enum ChatsStatus { loading, success, updating, typing, error }
+enum ChatsStatus { loading, success, updating,  typing, error }
 
 class ChatsState extends Equatable {
   final ChatsStatus status;
@@ -24,8 +24,8 @@ class ChatsState extends Equatable {
   });
 
   @override
-  List<Object> get props {
-    return <Object>[
+  List<Object?> get props {
+    return <Object?>[
       status,
       chatsList,
       currentChat,
@@ -44,6 +44,7 @@ class ChatsState extends Equatable {
     String? errorMessage,
     bool? soundEffectsEnabled,
     String? currentLanguage,
+
   }) {
     return ChatsState(
       status: status ?? this.status,

@@ -40,7 +40,7 @@ enum AvatarBackgrounds {
 
 enum AvatarHat { noHat, beanie, backwardsCap, frenchBeret, swimCap, santaHat }
 
-enum AvatarTop { pinkHoodie, longCoat, tshirt, underwear, swimsuit }
+enum AvatarTop { pinkHoodie, longCoat, tshirt, underwear, swimsuit, christmasSweater }
 
 enum AvatarGlasses { glasses, sunglasses }
 
@@ -96,7 +96,7 @@ class Avatar extends Equatable {
 
   @override
   String toString() {
-    return '"background": "${background.name}"\n"hat": "${hat.name}"\n"top": "${top.name}"\n"glasses": "${glasses.name}"\n"specials": "${specials.name}"\n"costume": "${costume.name}"';
+    return '"background": "${background.name}",\n"hat": "${hat.name}",\n"top": "${top.name}",\n"glasses": "${glasses.name}",\n"specials": "${specials.name}",\n"costume": "${costume.name}",';
   }
 
   Map<String, dynamic> toMap() {
