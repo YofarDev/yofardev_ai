@@ -1,7 +1,6 @@
-
 part of 'talking_cubit.dart';
 
-enum TalkingStatus { initial, loading, success, failure }
+enum TalkingStatus { initial, loading,  success, failure }
 
 enum MouthState { open, closed, semi, slightly, wide }
 

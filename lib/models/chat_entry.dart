@@ -75,7 +75,8 @@ class ChatEntry extends Equatable {
   String getMessage({bool isFromUser = false}) {
     if (isFromUser) return body.getVisiblePrompt();
     final Map<String, dynamic> map = json.decode(body) as Map<String, dynamic>;
-    return map['message'] as String? ?? '';
+    final String message = map['message'] as String? ?? '';
+    return message;
   }
 
   @override

@@ -29,6 +29,8 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
+
+
   Future<void> prepareToSpeak({
     required String chatId,
     required ChatEntry entry,
@@ -87,7 +89,7 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
     tts.setCompletionHandler(() {
       stopTalking(
-        noFile: true,
+        removeFile: false,
         soundEffectsEnabled: true,
       );
     });
@@ -123,17 +125,18 @@ class TalkingCubit extends Cubit<TalkingState> {
   }
 
   void stopTalking({
-    bool noFile = false,
+    bool removeFile = true,
     bool soundEffectsEnabled = false,
+    bool updateStatus = true,
   }) async {
     emit(
       state.copyWith(
         isTalking: false,
         mouthState: MouthState.closed,
-        status: TalkingStatus.initial,
+        status: updateStatus ? TalkingStatus.initial : null,
       ),
     );
-    if (!noFile) await File(state.answer.audioPath).delete();
+    if (removeFile) await File(state.answer.audioPath).delete();
     if (!soundEffectsEnabled) return;
     if (state.answer.avatarConfig.soundEffect == null) return;
     final AudioPlayer player = AudioPlayer();

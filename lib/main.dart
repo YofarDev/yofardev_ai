@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +18,7 @@ import 'ui/pages/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Alarm.init();
   final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
   await LocalizationManager().initialize(deviceLocale.languageCode);
   SystemChrome.setPreferredOrientations(

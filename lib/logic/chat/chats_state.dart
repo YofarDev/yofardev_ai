@@ -1,9 +1,6 @@
-
-
-
 part of 'chats_cubit.dart';
 
-enum ChatsStatus { loading, success, updating,  typing, error }
+enum ChatsStatus { loading, success, updating, typing, error }
 
 class ChatsState extends Equatable {
   final ChatsStatus status;
@@ -13,6 +10,9 @@ class ChatsState extends Equatable {
   final String errorMessage;
   final bool soundEffectsEnabled;
   final String currentLanguage;
+  final List<Map<String, dynamic>> audioPathsWaitingSentences;
+  final bool initializing;
+
   const ChatsState({
     this.status = ChatsStatus.loading,
     this.chatsList = const <Chat>[],
@@ -21,6 +21,8 @@ class ChatsState extends Equatable {
     this.errorMessage = '',
     this.soundEffectsEnabled = true,
     this.currentLanguage = 'fr',
+    this.audioPathsWaitingSentences = const <Map<String, dynamic>>[],
+    this.initializing = true,
   });
 
   @override
@@ -33,6 +35,8 @@ class ChatsState extends Equatable {
       errorMessage,
       soundEffectsEnabled,
       currentLanguage,
+      audioPathsWaitingSentences,
+      initializing,
     ];
   }
 
@@ -44,7 +48,8 @@ class ChatsState extends Equatable {
     String? errorMessage,
     bool? soundEffectsEnabled,
     String? currentLanguage,
-
+    List<Map<String, dynamic>>? audioPathsWaitingSentences,
+    bool? initializing,
   }) {
     return ChatsState(
       status: status ?? this.status,
@@ -54,6 +59,9 @@ class ChatsState extends Equatable {
       errorMessage: errorMessage ?? this.errorMessage,
       soundEffectsEnabled: soundEffectsEnabled ?? this.soundEffectsEnabled,
       currentLanguage: currentLanguage ?? this.currentLanguage,
+      audioPathsWaitingSentences:
+          audioPathsWaitingSentences ?? this.audioPathsWaitingSentences,
+          initializing: initializing ?? this.initializing,
     );
   }
 }

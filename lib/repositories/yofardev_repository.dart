@@ -49,12 +49,12 @@ class YofardevRepository {
 
   ///////////////////////////////// FUNCTIONS CALL /////////////////////////////////
 
-  Future<List<Map<String, dynamic>>> getFunctionsResults({
+  Stream<Map<String, dynamic>> getFunctionsResultsStream({
     required String lastUserMessage,
     List<FunctionInfo>? nextStepFunctions,
     String? previousResponse,
     List<Map<String, dynamic>>? previousResults,
-  }) async {
+  }) async* {
     final llm.LlmApi? api = await llm.LLMRepository.getCurrentApi();
     if (api == null) {
       throw Exception('No API selected');
@@ -69,44 +69,26 @@ class YofardevRepository {
       previousResults: previousResults?.toString(),
     );
     final List<FunctionInfo> functionsCalled = items.$2;
-    final List<Map<String, dynamic>> functionsResults =
-        <Map<String, dynamic>>[];
-    final List<FunctionInfo> next = <FunctionInfo>[];
     for (final FunctionInfo functionInfo in functionsCalled) {
       final Map<String, dynamic> result = <String, dynamic>{
         'name': functionInfo.name,
         'parameters': functionInfo.parameters,
         'result': await _callFunction(functionInfo, functionInfo.parameters),
+        'intermediate' : functionInfo.isMultiStep,
       };
-      functionsResults.add(result);
-      if (functionInfo.isMultiStep) next.add(functionInfo);
-    }
-    if (next.isNotEmpty) {
-      final List<Map<String, dynamic>> previousResults =
-          <Map<String, dynamic>>[];
-      for (final FunctionInfo functionInfo in next) {
-        final int index = functionsResults.indexWhere(
-          (Map<String, dynamic> result) => result['name'] == functionInfo.name,
+      yield result;
+
+      if (functionInfo.isMultiStep) {
+        yield* getFunctionsResultsStream(
+          lastUserMessage: lastUserMessage,
+          nextStepFunctions: <llm.FunctionInfo>[functionInfo.nextStep!],
+          previousResponse: items.$1,
+          previousResults: <Map<String, dynamic>>[result],
         );
-        if (index != -1) {
-          previousResults.add(functionsResults[index]);
-        }
       }
-      final List<Map<String, dynamic>> nextResults = await getFunctionsResults(
-        lastUserMessage: lastUserMessage,
-        nextStepFunctions: next.map((FunctionInfo x) => x.nextStep!).toList(),
-        previousResponse: items.$1,
-        previousResults: previousResults,
-      );
-      functionsResults.removeWhere(
-        (Map<String, dynamic> result) => next.any(
-          (llm.FunctionInfo function) => function.name == result['name'],
-        ),
-      );
-      functionsResults.addAll(nextResults);
     }
-    return functionsResults;
   }
+
 
   static Future<String> _callFunction(
     FunctionInfo functionInfo,
@@ -117,24 +99,64 @@ class YofardevRepository {
     switch (functionName) {
       case 'getCurrentWeather':
         final String location = parameters?['location'] as String? ?? 'current';
-        return FunctionsHelper.getCurrentWeather(location);
+        return (functionInfo.function as Function(String))(location)
+            as Future<String>;
       case 'getMostPopularNewsOfTheDay':
-        return FunctionsHelper.getMostPopularNewsOfTheDay();
+        return (functionInfo.function as Function())() as Future<String>;
       case 'characterCounter':
         final String text = parameters?['text'] as String? ?? '';
         final String character = parameters?['character'] as String? ?? '';
-        return FunctionsHelper.characterCounterFunction(text, character)
-            .toString();
+        final double response = await (functionInfo.function as Function(
+          String,
+          String,
+        ))(text, character) as double;
+        return response.toString();
       case 'calculateExpression':
         final String expression = parameters?['expression'] as String? ?? '';
-        return FunctionsHelper.calculatorFunction(expression)?.toString() ??
-            'Invalid expression';
+        final double? response = await (functionInfo.function as Function(
+          String,
+        ))(expression) as double?;
+        return response?.toString() ?? 'Invalid expression';
       case 'searchWikipedia':
         final String query = parameters?['query'] as String? ?? '';
-        return FunctionsHelper.searchWikipediaFunction(query);
+        return (functionInfo.function as Function(String))(query)
+            as Future<String>;
       case 'getWikipediaPage':
         final String title = parameters?['title'] as String? ?? '';
-        return FunctionsHelper.getWikiPage(title);
+        return (functionInfo.function as Function(String))(title)
+            as Future<String>;
+      case 'setAlarm':
+        final int minutesFromNow = parameters?['minutesFromNow'] as int? ?? 0;
+        final String message =
+            parameters?['message'] as String? ?? 'Hello world!';
+        return (functionInfo.function as Function(int, String))(
+          minutesFromNow,
+          message,
+        ) as Future<String>;
+      case 'searchGoogle':
+        final String query = parameters?['query'] as String? ?? '';
+        final List<Map<String, dynamic>> response =
+            await (functionInfo.function as Function(String))(query)
+                as List<Map<String, dynamic>>;
+        return response.toString();
+      case 'getHtmlFromUrl':
+        final String url = parameters?['url'] as String? ?? '';
+        return (functionInfo.function as Function(String))(url)
+            as Future<String>;
+      case 'summarizeWebPage':
+        final String html = parameters?['html'] as String? ?? '';
+        final String originalPrompt =
+            parameters?['originalPrompt'] as String? ?? '';
+        return (functionInfo.function as Function(String, String))(
+          html,
+          originalPrompt,
+        ) as Future<String>;
+      case 'multiStepsFunction':
+      case 'multiStepsFunction2':
+      case 'multiStepsFunction3':
+        final String password = parameters?['password'] as String? ?? '';
+        return (functionInfo.function as Function(String))(password)
+            as Future<String>;
       default:
         debugPrint('Invalid function name: $functionName');
         return 'null';

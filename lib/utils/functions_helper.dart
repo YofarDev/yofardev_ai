@@ -2,34 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:llm_api_picker/llm_api_picker.dart';
 import 'package:math_expressions/math_expressions.dart';
 
+import '../services/alarm_service.dart';
+import '../services/google_search_service.dart';
 import '../services/news_service.dart';
 import '../services/weather_service.dart';
 import '../services/wikipedia_service.dart';
 
-typedef WeatherFunction = Future<String> Function(String location);
-typedef NewsFunction = Future<String> Function();
-typedef CharacterCounterFunction = int Function(
-  String text,
-  String characterToCount,
-);
-typedef CalculatorFunction = double? Function(String expression);
-typedef SearchWikipediaFunction = Future<String> Function(String query);
-typedef GetWikipediaPageFunction = Future<String> Function(String title);
-
 class FunctionsHelper {
-  static const WeatherFunction getCurrentWeather =
-      WeatherService.getCurrentWeather;
-  static const NewsFunction getMostPopularNewsOfTheDay =
-      NewsService.getMostPopularNewsOfTheDay;
-  static const SearchWikipediaFunction searchWikipediaFunction =
-      WikipediaService.searchWikipedia;
-  static const GetWikipediaPageFunction getWikiPage =
-      WikipediaService.getWikipediaPage;
-  static const CalculatorFunction calculatorFunction =
-      FunctionsHelper.getResultOfMathExpression;
-  static const CharacterCounterFunction characterCounterFunction =
-      FunctionsHelper.getCharacterCount;
-
   static final List<FunctionInfo> getFunctions = <FunctionInfo>[
     FunctionInfo(
       name: 'getCurrentWeather',
@@ -43,14 +22,14 @@ class FunctionsHelper {
           },
         },
       },
-      function: getCurrentWeather,
+      function: (String location) => WeatherService.getCurrentWeather(location),
     ),
     FunctionInfo(
       name: 'getMostPopularNewsOfTheDay',
       description:
           'Returns an array of the most shared articles on NYTimes.com in the last 24 hours',
       parameters: <String, dynamic>{},
-      function: getMostPopularNewsOfTheDay,
+      function: () => NewsService.getMostPopularNewsOfTheDay(),
     ),
     FunctionInfo(
       name: 'characterCounter',
@@ -69,7 +48,8 @@ class FunctionsHelper {
           },
         },
       },
-      function: getCharacterCount,
+      function: (String text, String character) =>
+          FunctionsHelper.getCharacterCount(text, character),
     ),
     FunctionInfo(
       name: 'calculateExpression',
@@ -85,7 +65,7 @@ class FunctionsHelper {
         },
       },
       function: (String expression) =>
-          FunctionsHelper.calculatorFunction(expression),
+          FunctionsHelper.getResultOfMathExpression(expression),
     ),
     FunctionInfo(
       name: 'searchWikipedia',
@@ -100,7 +80,7 @@ class FunctionsHelper {
           },
         },
       },
-      function: searchWikipediaFunction,
+      function: (String query) => WikipediaService.searchWikipedia(query),
       nextStep: FunctionInfo(
         name: 'getWikipediaPage',
         description: 'Returns the content of a Wikipedia page',
@@ -113,9 +93,68 @@ class FunctionsHelper {
             },
           },
         },
-        function: getWikiPage,
+        function: (String title) => WikipediaService.getWikipediaPage(title),
       ),
     ),
+    FunctionInfo(
+      name: 'setAlarm',
+      description: 'Sets an alarm for a specific time',
+      parameters: <String, dynamic>{
+        'type': 'object',
+        'properties': <String, dynamic>{
+          'minutesFromNow': <String, dynamic>{
+            'type': 'number',
+            'description': 'The number of minutes from now to set the alarm',
+          },
+          'message': <String, dynamic>{
+            'type': 'string',
+            'description': 'The message to display in the alarm notification',
+          },
+        },
+      },
+      function: (int minutesFromNow, String message) =>
+          AlarmService.setAlarm(minutesFromNow, message),
+    ),
+    FunctionInfo(
+      name: 'searchGoogle',
+      description: 'Searches Google for a given query and returns the results',
+      parameters: <String, dynamic>{
+        'query': <String, dynamic>{
+          'type': 'string',
+          'description': 'The query to search for',
+        },
+      },
+      function: (String query) => GoogleSearchService.searchGoogle(query),
+      nextStep: FunctionInfo(
+        name: 'getHtmlFromUrl',
+        description: 'Gets the HTML content of a given URL',
+        parameters: <String, dynamic>{
+          'url': <String, dynamic>{
+            'type': 'string',
+            'description': 'The URL to get the HTML content from',
+          },
+        },
+        function: (String url) => GoogleSearchService.getHtmlFromUrl(url),
+        nextStep: FunctionInfo(
+          name: 'summarizeWebPage',
+          description: 'Summarizes a web page based on the given HTML content',
+          parameters: <String, dynamic>{
+            'html': <String, dynamic>{
+              'type': 'string',
+              'description': 'The HTML content of the web page',
+            },
+            'originalPrompt': <String, dynamic>{
+              'type': 'string',
+              'description':
+                  'The original prompt used to generate the HTML content',
+            },
+          },
+          function: (String html, String originalPrompt) =>
+              FunctionsHelper.sumUpWebPage(html, originalPrompt),
+        ),
+      ),
+    ),
+    // Test.multiStepsFunction,
   ];
 
   static int getCharacterCount(
@@ -144,5 +183,21 @@ class FunctionsHelper {
       debugPrint(e.toString());
       return null;
     }
+  }
+
+  static Future<String> sumUpWebPage(String html, String originalPrompt) async {
+    final String response = await LLMRepository.promptModel(
+      systemPrompt:
+          'You are a helpful assistant that summarizes web pages based on an user request. You only answer with the text summary, remove html tags and do NOT add additional comments.',
+      messages: <Message>[
+        Message(
+          role: MessageRole.user,
+          body:
+              'Here is the original user’s message : $originalPrompt\nAfter a web query search, we got the following html web page result. Make a text summary with all relevant informations : \n$html',
+        ),
+      ],
+    );
+    debugPrint(response);
+    return response;
   }
 }

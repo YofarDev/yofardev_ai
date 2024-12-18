@@ -16,6 +16,7 @@ import '../../models/chat_entry.dart';
 import '../../services/tts_service.dart';
 import '../../utils/extensions.dart';
 import '../../utils/platform_utils.dart';
+import '../pages/chat/widgets/function_calling_widget.dart';
 import 'current_prompt_text.dart';
 import 'picker_buttons.dart';
 
@@ -87,13 +88,27 @@ class _AiTextInputState extends State<AiTextInput> {
               return BlocBuilder<TalkingCubit, TalkingState>(
                 builder: (BuildContext context, TalkingState talkingState) {
                   ChatEntry? lastUserEntry;
-                  if (state.currentChat.entries.isNotEmpty &&
-                      state.currentChat.entries.last.entryType ==
-                          EntryType.user) {
-                    lastUserEntry = state.currentChat.entries.lastWhere(
-                      (ChatEntry c) => c.entryType == EntryType.user,
-                    );
+                  final List<ChatEntry> lastFunctionCallEntries = <ChatEntry>[];
+                  if (state.currentChat.entries.isNotEmpty) {
+                    if (state.currentChat.entries.last.entryType ==
+                        EntryType.user) {
+                      lastUserEntry = state.currentChat.entries.lastWhere(
+                        (ChatEntry c) => c.entryType == EntryType.user,
+                      );
+                    }
+                    if (state.currentChat.entries.last.entryType ==
+                        EntryType.functionCalling) {
+                      for (final ChatEntry entry
+                          in state.currentChat.entries.reversed) {
+                        if (entry.entryType == EntryType.functionCalling) {
+                          lastFunctionCallEntries.add(entry);
+                        } else {
+                          break;
+                        }
+                      }
+                    }
                   }
+
                   return Column(
                     children: <Widget>[
                       if (_pickedImage != null)
@@ -112,6 +127,15 @@ class _AiTextInputState extends State<AiTextInput> {
                               currentLanguage: state.currentLanguage,
                               chatId: state.currentChat.id,
                             ),
+                          ),
+                          Column(
+                            children: <Widget>[
+                              ...lastFunctionCallEntries.map(
+                                (ChatEntry entry) => FunctionCallingWidget(
+                                  functionCallingText: entry.body,
+                                ),
+                              ),
+                            ],
                           ),
                           if (talkingState.status != TalkingStatus.initial &&
                               !widget.onlyText &&

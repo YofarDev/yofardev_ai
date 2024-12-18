@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,6 +20,7 @@ import '../../../utils/extensions.dart';
 import '../../widgets/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
 import 'image_full_screen.dart';
+import 'widgets/function_calling_widget.dart';
 
 class ChatDetailsPage extends StatefulWidget {
   const ChatDetailsPage();
@@ -43,8 +45,8 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
       child: BlocBuilder<AvatarCubit, AvatarState>(
         builder: (BuildContext context, AvatarState avatarState) {
           return BlocBuilder<ChatsCubit, ChatsState>(
-            buildWhen: (ChatsState previous, ChatsState current) =>
-                previous.status != current.status,
+            // buildWhen: (ChatsState previous, ChatsState current) =>
+            //     previous.status != current.status,
             builder: (BuildContext context, ChatsState state) {
               final Chat chat = state.openedChat;
               return Scaffold(
@@ -145,7 +147,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                   ),
                 ),
               if (chat[index].entryType == EntryType.functionCalling)
-                _functionCallingItem(chat[index].body)
+                FunctionCallingWidget(functionCallingText: chat[index].body)
               else
                 _buildMessageItem(chat, index, isTyping),
             ],
@@ -281,41 +283,5 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         ),
       );
 
-  Widget _functionCallingItem(String function) {
-    final StringBuffer bf = StringBuffer();
-    final List<dynamic> map = jsonDecode(function) as List<dynamic>;
-    for (int i = 0; i < map.length; i++) {
-      bf.write(
-        '${(map[i] as Map<String, dynamic>)["name"]}(${(map[i] as Map<String, dynamic>)["parameters"]})${i == map.length - 1 ? '' : '\n'}',
-      );
-    }
-    if (bf.isNotEmpty && bf.toString().endsWith('\n')) {}
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          color: Colors.black.withOpacity(0.3),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Flexible(
-              child: Text(
-                bf.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

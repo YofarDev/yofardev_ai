@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,8 +12,10 @@ import '../../models/avatar.dart';
 import '../../models/chat.dart';
 import '../../models/chat_entry.dart';
 import '../../repositories/yofardev_repository.dart';
+import '../../services/cache_service.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/settings_service.dart';
+import '../../services/tts_service.dart';
 import '../../utils/extensions.dart';
 import '../../utils/platform_utils.dart';
 import '../avatar/avatar_cubit.dart';
@@ -22,15 +26,13 @@ part 'chats_state.dart';
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit() : super(const ChatsState());
 
-
-
   void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
     emit(state.copyWith(status: ChatsStatus.updating));
     final Chat newChat = await ChatHistoryService().createNewChat();
     emit(
       state.copyWith(
-        chatsList: <Chat>[newChat, ...state.chatsList],
         status: ChatsStatus.success,
+        chatsList: <Chat>[newChat, ...state.chatsList],
         currentChat: newChat,
       ),
     );
@@ -44,6 +46,56 @@ class ChatsCubit extends Cubit<ChatsState> {
       PlatformUtils.checkPlatform() == 'Web'
           ? "fr"
           : await SettingsService().getLanguage() ?? 'fr',
+    );
+  }
+
+  Future<void> prepareWaitingSentences(List<String> sentences) async {
+    // await CacheService.clearWaitingSentencesMap(state.currentLanguage);
+    final List<Map<String, dynamic>> map =
+        await CacheService.getWaitingSentencesMap(state.currentLanguage) ??
+            <Map<String, dynamic>>[];
+    for (final String sentence in sentences) {
+      if (map.any(
+        (Map<String, dynamic> element) => element['sentence'] == sentence,
+      )) {
+        continue;
+      } else {
+        final String audioPath = await TtsService().textToFrenchMaleVoice(
+          text: sentence,
+          language: state.currentLanguage,
+          voiceEffect: AvatarCostume.none.getVoiceEffect(),
+        );
+        final List<int> amplitudes =
+            await AudioAnalyzer().getAmplitudes(audioPath);
+        map.add(<String, dynamic>{
+          'sentence': sentence,
+          'audioPath': audioPath,
+          'amplitudes': amplitudes,
+        });
+        emit(
+          state.copyWith(
+            audioPathsWaitingSentences: map,
+          ),
+        );
+      }
+    }
+    await CacheService.setWaitingSentencesMap(map, state.currentLanguage);
+    await Future<dynamic>.delayed(const Duration(seconds: 3));
+    emit(
+      state.copyWith(
+        audioPathsWaitingSentences: map,
+        initializing: false,
+      ),
+    );
+  }
+
+  void shuffleWaitingSentences() async {
+    final List<Map<String, dynamic>> list = state.audioPathsWaitingSentences;
+    list.shuffle();
+    emit(
+      state.copyWith(
+        audioPathsWaitingSentences: list,
+      ),
     );
   }
 
@@ -97,17 +149,31 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(openedChat: chat));
   }
 
-  Future<ChatEntry> _getNewEntry({
+  Future<ChatEntry> getNewEntry({
     required String lastUserMessage,
     required Avatar avatar,
     required bool onlyText,
     String? attachedImage,
   }) async {
-    final List<Map<String, dynamic>> functionsResults =
-        await YofardevRepository().getFunctionsResults(
+    final StreamController<List<Map<String, dynamic>>> streamController =
+        StreamController<List<Map<String, dynamic>>>();
+    final List<Map<String, dynamic>> previousResults = <Map<String, dynamic>>[];
+    YofardevRepository()
+        .getFunctionsResultsStream(
       lastUserMessage: lastUserMessage,
+    )
+        .listen(
+      (Map<String, dynamic> result) {
+        final List<Map<String, dynamic>> newResults = <Map<String, dynamic>>[
+          result,
+        ];
+        streamController.add(newResults);
+        previousResults.add(result);
+      },
+      onDone: () => streamController.close(),
     );
-    if (functionsResults.isNotEmpty) {
+    await for (final List<Map<String, dynamic>> functionsResults
+        in streamController.stream) {
       final ChatEntry functionCallingEntry = ChatEntry(
         id: const Uuid().v4(),
         entryType: EntryType.functionCalling,
@@ -125,10 +191,28 @@ class ChatsCubit extends Cubit<ChatsState> {
         ),
       );
     }
+    final List<Map<String, dynamic>> finalResultsToSend =
+        <Map<String, dynamic>>[];
+    for (final Map<String, dynamic> item in previousResults) {
+      if (item['intermediate'] != true) {
+        item.remove('intermediate');
+        for (final String key in item.keys) {
+          if (key != 'result') {
+            String value = item[key].toString();
+            if (value.characters.length > 200) {
+              value = '${value.substring(0, 200)} [...]';
+            }
+            value = '${value.replaceAll('\n', '')}\n';
+            item[key] = value;
+          }
+        }
+        finalResultsToSend.add(item);
+      }
+    }
     final String languageCode = await SettingsService().getLanguage() ?? 'fr';
     final String? username = await SettingsService().getUsername();
     final String wrappedUserMessage =
-        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${username != null ? "${localized.currentUsername} : $username" : ''}${functionsResults.isNotEmpty ? "${localized.resultsFunctionCalling} :\n$functionsResults\n\n" : ''}${localized.userMessage} : \n'''$lastUserMessage'''";
+        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${username != null ? "${localized.currentUsername} : $username\n" : ''}${finalResultsToSend.isNotEmpty ? "${localized.resultsFunctionCalling} :\n$finalResultsToSend\n\n" : ''}${localized.userMessage} : \n'''$lastUserMessage'''";
     final ChatEntry newUserEntry = ChatEntry(
       id: const Uuid().v4(),
       entryType: EntryType.user,
@@ -136,6 +220,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       timestamp: DateTime.now(),
       attachedImage: attachedImage,
     );
+
     return newUserEntry;
   }
 
@@ -162,7 +247,7 @@ class ChatsCubit extends Cubit<ChatsState> {
         currentChat: onlyText ? null : chat,
       ),
     );
-    final ChatEntry userEntry = await _getNewEntry(
+    final ChatEntry userEntry = await getNewEntry(
       lastUserMessage: prompt,
       avatar: avatar,
       attachedImage: attachedImage,

@@ -3,7 +3,7 @@ description: "Animated AI avatar"
 
 publish_to: "none"
 
-version: 1.0.1+1
+version: 2.0.0+1
 
 environment:
   sdk: ">=3.4.3 <4.0.0"
@@ -39,7 +39,11 @@ dependencies:
   geolocator: ^13.0.2
   uuid: ^4.5.1
   math_expressions: ^2.6.0
-
+  alarm: ^4.1.1
+  shimmer: ^3.0.0
+  flutter_inappwebview: ^6.1.5
+  html: ^0.15.5
+  html_parser_plus: ^0.1.4
 
 dev_dependencies:
   flutter_test:
