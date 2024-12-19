@@ -6,6 +6,7 @@ import '../services/tts_service.dart';
 import '../utils/app_utils.dart';
 import '../utils/extensions.dart';
 import '../utils/platform_utils.dart';
+import 'chat.dart';
 import 'sound_effects.dart';
 
 enum AvatarBackgrounds {
@@ -38,9 +39,25 @@ enum AvatarBackgrounds {
   christmasLivingRoom,
 }
 
-enum AvatarHat { noHat, beanie, backwardsCap, frenchBeret, swimCap, santaHat }
+enum AvatarHat {
+  noHat,
+  beanie,
+  backwardsCap,
+  frenchBeret,
+  swimCap,
+  santaHat,
+  redMagaCap,
+}
 
-enum AvatarTop { pinkHoodie, longCoat, tshirt, underwear, swimsuit, christmasSweater }
+enum AvatarTop {
+  pinkHoodie,
+  longCoat,
+  tshirt,
+  underwear,
+  swimsuit,
+  christmasSweater,
+  blackSuitAndTie,
+}
 
 enum AvatarGlasses { glasses, sunglasses }
 
@@ -56,7 +73,7 @@ class Avatar extends Equatable {
   final AvatarSpecials specials;
   final AvatarCostume costume;
   const Avatar({
-    this.background = AvatarBackgrounds.snowyMountain,
+    this.background = AvatarBackgrounds.lake,
     this.hat = AvatarHat.noHat,
     this.top = AvatarTop.pinkHoodie,
     this.glasses = AvatarGlasses.glasses,
@@ -278,6 +295,52 @@ extension CostumeExtension on AvatarCostume {
           pitch: 1,
           speedRate: PlatformUtils.checkPlatform() == 'Web' ? 1 : 0.5,
         );
+    }
+  }
+}
+
+extension ChatPersonaAvatar on ChatPersona {
+  Avatar getDefaultAvatar() {
+    switch (this) {
+      case ChatPersona.philosopher:
+        return const Avatar(
+          background: AvatarBackgrounds.artGallery,
+          hat: AvatarHat.frenchBeret,
+          top: AvatarTop.longCoat,
+        );
+      case ChatPersona.psychologist:
+        return const Avatar(
+          background: AvatarBackgrounds.library,
+          top: AvatarTop.blackSuitAndTie,
+        );
+      case ChatPersona.conservative:
+        return const Avatar(
+          background: AvatarBackgrounds.mall,
+          hat: AvatarHat.redMagaCap,
+          top: AvatarTop.tshirt,
+          glasses: AvatarGlasses.sunglasses,
+        );
+      case ChatPersona.coach:
+        return const Avatar(
+          background: AvatarBackgrounds.swimmingPool,
+          hat: AvatarHat.backwardsCap,
+          glasses: AvatarGlasses.sunglasses,
+          top: AvatarTop.swimsuit,
+        );
+      case ChatPersona.doomer:
+        return const Avatar(
+          background: AvatarBackgrounds.bedroom,
+          top: AvatarTop.underwear,
+        );
+      case ChatPersona.geek:
+        return const Avatar(
+          background: AvatarBackgrounds.office,
+          top: AvatarTop.christmasSweater,
+        );
+      default:
+        final AvatarBackgrounds randomBg =
+            EnumUtils.getRandomValue(AvatarBackgrounds.values);
+        return Avatar(background: randomBg);
     }
   }
 }

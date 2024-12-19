@@ -2,11 +2,25 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/localization_manager.dart';
+import '../models/chat.dart';
 import '../res/app_constants.dart';
 import '../utils/app_utils.dart';
 import '../utils/platform_utils.dart';
 
 class SettingsService {
+  Future<void> setPersona(ChatPersona persona) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('persona', persona.name);
+  }
+
+  Future<ChatPersona> getPersona() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? persona = prefs.getString('persona');
+    return persona != null
+        ? ChatPersona.values.byName(persona)
+        : ChatPersona.normal;
+  }
+
   Future<void> setUsername(String username) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', username);

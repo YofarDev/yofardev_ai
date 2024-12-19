@@ -5,20 +5,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/avatar.dart';
 import '../models/chat.dart';
 import '../repositories/yofardev_repository.dart';
-import '../utils/extensions.dart';
+import 'settings_service.dart';
 
 class ChatHistoryService {
   Future<Chat> createNewChat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String newChatId = DateTime.now().toIso8601String();
-    final AvatarBackgrounds randomBg =
-        EnumUtils.getRandomValue(AvatarBackgrounds.values);
     final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
+    final ChatPersona persona = await SettingsService().getPersona();
     final Chat newChat = Chat(
       id: newChatId,
-      avatar: Avatar(background: randomBg),
+      avatar: persona.getDefaultAvatar(),
       language: deviceLocale.languageCode,
       systemPrompt: await YofardevRepository.getSystemPrompt(),
+      persona: persona,
     );
     await _removeEmptyChats();
     await prefs.setString(newChatId, newChat.toJson());

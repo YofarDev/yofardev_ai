@@ -7,6 +7,7 @@ import 'package:llm_api_picker/llm_api_picker.dart';
 
 import '../../../l10n/localization_manager.dart';
 import '../../../logic/chat/chats_cubit.dart';
+import '../../../models/chat.dart';
 import '../../../models/sound_effects.dart';
 import '../../../models/voice.dart';
 import '../../../services/settings_service.dart';
@@ -26,6 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final List<Voice> _voices = <Voice>[];
   Voice? _selectedVoice;
   bool _isSoundEffectsEnabled = true;
+  ChatPersona _persona = ChatPersona.assistant;
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _baseSystemPromptController.text =
         await SettingsService().getBaseSystemPrompt();
     _usernameController.text = await SettingsService().getUsername() ?? '';
+    _persona = await SettingsService().getPersona();
     _isSoundEffectsEnabled =
         context.read<ChatsCubit>().state.soundEffectsEnabled;
     setState(() {});
@@ -47,7 +50,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final FlutterTts flutterTts = FlutterTts();
     final List<dynamic> voices = await flutterTts.getVoices as List<dynamic>;
     for (final dynamic voice in voices) {
-      if (PlatformUtils.checkPlatform() == 'iOS' && (voice['gender'] != 'male')) continue;
+      if (PlatformUtils.checkPlatform() == 'iOS' && (voice['gender'] != 'male'))
+        continue;
       if ((voice['locale'] as String)
           .startsWith(context.read<ChatsCubit>().state.currentLanguage)) {
         _voices.add(
@@ -120,8 +124,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   // const SizedBox(height: 16),
                   // _buildBaseSystemPromptField(),
                   const SizedBox(height: 16),
-                  _usernameField(),
+                  _buildUsernameField(),
                   const SizedBox(height: 16),
+                  _dropdownChatPersonas(),
+                  const SizedBox(height: 16),
+
                   _buildSoundEffectsCheckbox(),
                   const SizedBox(height: 16),
                   _dropdownVoices(),
@@ -145,23 +152,61 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       );
 
+  Widget _dropdownChatPersonas() => Container(
+        padding: const EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              localized.personaAssistant,
+              style: const TextStyle(fontSize: 20),
+            ),
+            DropdownButton<String>(
+              value: _persona.name,
+              items: ChatPersona.values
+                  .map<String>((ChatPersona value) => value.name)
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(value.toUpperCase()),
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  _persona = ChatPersona.values.byName(newValue);
+                  SettingsService().setPersona(_persona);
+                  setState(() {});
+                }
+              },
+            ),
+          ],
+        ),
+      );
+
   Widget _buildApiKeyField() => ElevatedButton(
         child: const Text('Api Picker'),
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute<dynamic>(
-              builder: (BuildContext context) => const LlmApiPickerSettingsPage(),
+              builder: (BuildContext context) =>
+                  const LlmApiPickerSettingsPage(),
             ),
           );
         },
       );
 
-  Widget _usernameField() => _textField(
+  Widget _buildUsernameField() => _textField(
         _usernameController,
         hintText: localized.username,
         prefixIcon: Icons.person,
       );
-
 
   Widget _textField(
     TextEditingController controller, {
@@ -252,8 +297,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
               ),
-            if (PlatformUtils.checkPlatform() == 'Android') Text(localized.moreVoicesAndroid),
-            if (PlatformUtils.checkPlatform() == 'iOS') Text(localized.moreVoicesIOS),
+            if (PlatformUtils.checkPlatform() == 'Android')
+              Text(localized.moreVoicesAndroid),
+            if (PlatformUtils.checkPlatform() == 'iOS')
+              Text(localized.moreVoicesIOS),
           ],
         ),
       );

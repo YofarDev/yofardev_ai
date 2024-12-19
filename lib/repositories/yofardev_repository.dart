@@ -1,13 +1,18 @@
+// ignore_for_file: join_return_with_assignment
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:llm_api_picker/llm_api_picker.dart' as llm;
 import 'package:llm_api_picker/llm_api_picker.dart';
 import 'package:uuid/uuid.dart';
 
+import '../l10n/localization_manager.dart';
 import '../models/avatar.dart';
 import '../models/chat.dart';
 import '../models/chat_entry.dart';
 import '../models/sound_effects.dart';
 import '../services/settings_service.dart';
+import '../utils/app_utils.dart';
 import '../utils/functions_helper.dart';
 
 class YofardevRepository {
@@ -74,10 +79,10 @@ class YofardevRepository {
         'name': functionInfo.name,
         'parameters': functionInfo.parameters,
         'result': await _callFunction(functionInfo, functionInfo.parameters),
-        'intermediate' : functionInfo.isMultiStep,
+        'intermediate': functionInfo.isMultiStep,
       };
+      debugPrint('Function results: $result');
       yield result;
-
       if (functionInfo.isMultiStep) {
         yield* getFunctionsResultsStream(
           lastUserMessage: lastUserMessage,
@@ -89,6 +94,7 @@ class YofardevRepository {
     }
   }
 
+  
 
   static Future<String> _callFunction(
     FunctionInfo functionInfo,
@@ -106,10 +112,10 @@ class YofardevRepository {
       case 'characterCounter':
         final String text = parameters?['text'] as String? ?? '';
         final String character = parameters?['character'] as String? ?? '';
-        final double response = await (functionInfo.function as Function(
+        final int response = await (functionInfo.function as Function(
           String,
           String,
-        ))(text, character) as double;
+        ))(text, character) as int;
         return response.toString();
       case 'calculateExpression':
         final String expression = parameters?['expression'] as String? ?? '';
@@ -211,9 +217,26 @@ class YofardevRepository {
     for (final SoundEffects soundEffect in SoundEffects.values) {
       soundEffectsList.write("${soundEffect.name}, ");
     }
-    return systemPrompt.replaceAll(
+    systemPrompt = systemPrompt.replaceAll(
       '\$soundEffectsList',
       soundEffectsList.toString(),
     );
+    final String? username = await SettingsService().getUsername();
+
+    systemPrompt = systemPrompt.replaceAll(
+      '\$USERNAME',
+      username != null ? "${localized.currentUsername} : $username\n" : '',
+    );
+    final ChatPersona persona = await SettingsService().getPersona();
+    final String personaStr = await rootBundle.loadString(
+      AppUtils.fixAssetsPath(
+        'assets/txt/persona_${persona.name}_$languageCode.txt',
+      ),
+    );
+    systemPrompt = systemPrompt.replaceAll(
+      '\$PERSONA',
+      personaStr,
+    );
+    return systemPrompt;
   }
 }

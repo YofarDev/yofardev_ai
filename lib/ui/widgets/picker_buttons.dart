@@ -35,7 +35,7 @@ class PickerButtons extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withOpacity(0.7),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           child: Icon(

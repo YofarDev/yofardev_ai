@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -70,11 +69,28 @@ class HomeButtons extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (kDebugMode)
-                  AppIconButton(
-                    icon: Icons.do_not_touch,
-                    onPressed: () async {},
-                  ),
+                BlocBuilder<ChatsCubit, ChatsState>(
+                  builder: (BuildContext context, ChatsState state) {
+                    return AppIconButton(
+                      icon: state.functionCallingEnabled
+                          ? Icons.code
+                          : Icons.code_off,
+                      onPressed: () async {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              state.functionCallingEnabled
+                                  ? 'Function calling OFF'
+                                  : 'Function calling ON',
+                            ),
+                            duration: const Duration(milliseconds: 500),
+                          ),
+                        );
+                        context.read<ChatsCubit>().toggleFunctionCalling();
+                      },
+                    );
+                  },
+                ),
               ],
             ),
           ),

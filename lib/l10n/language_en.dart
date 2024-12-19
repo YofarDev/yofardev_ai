@@ -39,5 +39,7 @@ String get currentAvatarConfig => "Current avatar configuration";
 String get currentUsername => "User’s name";
 @override
 String get resultsFunctionCalling => "Function calling results";
+@override
+String get personaAssistant => "Assistant’s persona";
 
 }

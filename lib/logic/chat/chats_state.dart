@@ -12,6 +12,7 @@ class ChatsState extends Equatable {
   final String currentLanguage;
   final List<Map<String, dynamic>> audioPathsWaitingSentences;
   final bool initializing;
+  final bool functionCallingEnabled;
 
   const ChatsState({
     this.status = ChatsStatus.loading,
@@ -23,6 +24,7 @@ class ChatsState extends Equatable {
     this.currentLanguage = 'fr',
     this.audioPathsWaitingSentences = const <Map<String, dynamic>>[],
     this.initializing = true,
+    this.functionCallingEnabled = true,
   });
 
   @override
@@ -37,6 +39,7 @@ class ChatsState extends Equatable {
       currentLanguage,
       audioPathsWaitingSentences,
       initializing,
+      functionCallingEnabled,
     ];
   }
 
@@ -50,6 +53,7 @@ class ChatsState extends Equatable {
     String? currentLanguage,
     List<Map<String, dynamic>>? audioPathsWaitingSentences,
     bool? initializing,
+    bool? functionCallingEnabled,
   }) {
     return ChatsState(
       status: status ?? this.status,
@@ -61,7 +65,9 @@ class ChatsState extends Equatable {
       currentLanguage: currentLanguage ?? this.currentLanguage,
       audioPathsWaitingSentences:
           audioPathsWaitingSentences ?? this.audioPathsWaitingSentences,
-          initializing: initializing ?? this.initializing,
+      initializing: initializing ?? this.initializing,
+      functionCallingEnabled:
+          functionCallingEnabled ?? this.functionCallingEnabled,
     );
   }
 }

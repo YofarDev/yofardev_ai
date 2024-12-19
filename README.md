@@ -1,8 +1,14 @@
-# Yofardev AI (iOS & Android & Web)
+# Yofardev AI (Flutter)
 
-Yofardev AI is a small fun project that brings life to a Large Language Model (LLM) through an animated avatar. Users can interact with the AI assistant through text (or dictate to text), and the app responds with generated text-to-speech and lip-synced animations.
+Yofardev AI is a small fun (& open source) project that brings life to a Large Language Model (LLM) through an animated avatar. Users can interact with the AI assistant through text (or dictate to text), and the app responds with generated text-to-speech and lip-synced animations.
 
-[Free web demo](https://yofardev-ai.web.app) (not all features available because of platform limitations). You need to set your Google Api Key in the settings
+It can now call functions (like searching on internet, getting weather, etc.).
+
+[Free web demo (old version)](https://yofardev-ai.web.app) (not all features available because of platform limitations). You need to set either a Google Api Key, or you can set up a LLM with the OpenAI format.
+
+Most of time, I use the Gemini 1.5-flash model, because it's free, fast and reliable. 
+
+Also, the app is probably only working on Android (needs to test more on iOS).
 
 <p align="center">
   <img src="screenshots/1.png" width="20%" />
@@ -11,19 +17,36 @@ Yofardev AI is a small fun project that brings life to a Large Language Model (L
   <img src="screenshots/4.png" width="20%" />
 </p>
 
+<p align="center">
+  <img src="screenshots/5.png" width="20%" />
+  <img src="screenshots/6.png" width="20%" />
+  <img src="screenshots/7.png" width="20%" />
+  <img src="screenshots/8.png" width="20%" />
+</p>
+
+## New Features in 2.0
+
+- Function calling :
+	* **`getCurrentWeather(location: string)`**
+   	* **`getMostPopularNewsOfTheDay()`**
+	* **`searchGoogle(query: string)`**
+	* And more...
+- You can pick a persona for your assistant (normal, coach, philosopher, conservative...)
+- Not limited to only Gemini. Set your OpenAI format LLM (cloud or local)
+
+
+
 ## Features
 
 - Native text-to-speech and lip-synced animations (customizable voices)
-- You can ask Yofardev AI to change clothes and background (sometimes it doesn't want to do it)
-- Yofardev AI can play a sound effect at the end of its answer (you can disable it in the settings)
+- The assistant can switch between multiple assets (backgrounds, costumes, etc.)
+- The assistant can play sound effects
 - It can analyze images
-- It can leave and come back of the screen
+- Has some specials animations and voice effects based on its costume
 - History of chats (text version, stored locally)
-- Customizable system prompt
 - English and French supported
-- Free and open source
 
-## Demo Video on YouTube
+## Demo Video on YouTube (old version)
 
 [![Demo Video](https://img.youtube.com/vi/nzVYq8lGkHI/0.jpg)](https://www.youtube.com/watch?v=nzVYq8lGkHI)
 
@@ -33,8 +56,7 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 
 - Flutter (>=3.4.3 <4.0.0)
 - Android SDK (for Android builds)
-- Xcode (for iOS builds)
-- Google API key for Gemini 1.5-flash (you can set it up directly in app)
+- Api Key for a LLM service if you use a cloud service, or you can use a local one if it has the OpenAI format
 
 ## Installation
 
@@ -56,15 +78,13 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 
 ## Platforms
 
-- Android & iOS: Fully supported
-- Web : it's more limited. The tts library I'm using don't let you access the bytes on web, so for the lip sync I just display random mouth states while it's talking. Also there is no image vision, no "spatialization" of voice when avatar is leaving/coming
+- Android: Fully supported
+- iOS: it's not far from being supported but some packages need additional steps, I may do it later
+- Web : some features are missing because of platform limitations.
 
 ## Known Issues
 
-- The LLM currently tends to overuse sound effects for no reason. You can disable sound effects completely in the settings.
-- Sometimes the lip-sync stop working, need to find out why.
-- You can type and send another prompt while it's talking, and then you can have multiple tts playing at the same time.
-- The batman costume is horrible
+- Internet search can fail if the website has heavy scraping protection
 
 ## Future Improvements
 
@@ -76,6 +96,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Tools used
 
-- Google's Gemini 1.5-flash as backend LLM (it's actually better than I thought, and it's free)
-- Text-to-speech is made localy with android's TTS engine through the flutter_tts plugin
 - Stable Diffusion 1.5 for the avatar, customizations and backgrounds (AnyLora Anime Mix), with a custom LORA for the character

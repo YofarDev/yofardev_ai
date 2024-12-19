@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -68,6 +67,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                           Expanded(
                             child: _buildConversation(
                               context,
+                              chat.persona,
                               chat.entries.reversed.toList(),
                               state.status == ChatsStatus.typing,
                             ),
@@ -119,6 +119,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
 
   Widget _buildConversation(
     BuildContext contex,
+    ChatPersona persona,
     List<ChatEntry> chat,
     bool isTyping,
   ) =>
@@ -128,6 +129,11 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         itemBuilder: (BuildContext context, int index) {
           return Column(
             children: <Widget>[
+              if (index == chat.length - 1 && _showEverything)
+                Text(
+                  "Persona : ${persona.name}",
+                  style: const TextStyle(fontSize: 10),
+                ),
               if (index == chat.length - 1)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -282,6 +288,4 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
               AssetImage(AppUtils.fixAssetsPath("assets/icon.png")),
         ),
       );
-
-
 }

@@ -5,12 +5,24 @@ import 'package:equatable/equatable.dart';
 import 'avatar.dart';
 import 'chat_entry.dart';
 
+enum ChatPersona {
+  assistant,
+  normal,
+  doomer,
+  conservative,
+  philosopher,
+  geek,
+  coach,
+  psychologist
+}
+
 class Chat extends Equatable {
   final String id;
   final List<ChatEntry> entries;
   final Avatar avatar;
   final String language;
   final String systemPrompt;
+  final ChatPersona persona;
 
   const Chat({
     this.id = '',
@@ -18,6 +30,7 @@ class Chat extends Equatable {
     this.avatar = const Avatar(),
     this.language = 'en',
     this.systemPrompt = '',
+    this.persona = ChatPersona.normal,
   });
 
   Chat copyWith({
@@ -26,6 +39,7 @@ class Chat extends Equatable {
     Avatar? avatar,
     String? language,
     String? systemPrompt,
+    ChatPersona? persona,
   }) {
     return Chat(
       id: id ?? this.id,
@@ -33,6 +47,7 @@ class Chat extends Equatable {
       avatar: avatar ?? this.avatar,
       language: language ?? this.language,
       systemPrompt: systemPrompt ?? this.systemPrompt,
+      persona: persona ?? this.persona,
     );
   }
 
@@ -44,6 +59,7 @@ class Chat extends Equatable {
       avatar,
       language,
       systemPrompt,
+      persona,
     ];
   }
 
@@ -54,6 +70,7 @@ class Chat extends Equatable {
       'avatar': avatar.toMap(),
       'language': language,
       'systemPrompt': systemPrompt,
+      'persona': persona.name,
     };
   }
 
@@ -67,6 +84,7 @@ class Chat extends Equatable {
       avatar: Avatar.fromMap(map['avatar'] as Map<String, dynamic>),
       language: map['language'] as String,
       systemPrompt: map['systemPrompt'] as String? ?? '',
+      persona: ChatPersona.values.byName(map['persona'] as String? ?? 'normal'),
     );
   }
 

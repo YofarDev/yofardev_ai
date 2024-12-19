@@ -39,5 +39,7 @@ String get currentAvatarConfig => "Configuration de l’avatar actuelle";
 String get currentUsername => "Nom de l’utilisateur";
 @override
 String get resultsFunctionCalling => "Résultats de functions calling";
+@override
+String get personaAssistant => "Personnalité de l’assistant";
 
 }

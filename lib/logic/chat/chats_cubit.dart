@@ -49,6 +49,14 @@ class ChatsCubit extends Cubit<ChatsState> {
     );
   }
 
+  void toggleFunctionCalling() {
+    emit(
+      state.copyWith(
+        functionCallingEnabled: !state.functionCallingEnabled,
+      ),
+    );
+  }
+
   Future<void> prepareWaitingSentences(List<String> sentences) async {
     // await CacheService.clearWaitingSentencesMap(state.currentLanguage);
     final List<Map<String, dynamic>> map =
@@ -149,11 +157,10 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(openedChat: chat));
   }
 
-  Future<ChatEntry> getNewEntry({
+  Future<List<Map<String, dynamic>>> _checkFunctionCalling({
     required String lastUserMessage,
     required Avatar avatar,
     required bool onlyText,
-    String? attachedImage,
   }) async {
     final StreamController<List<Map<String, dynamic>>> streamController =
         StreamController<List<Map<String, dynamic>>>();
@@ -209,10 +216,26 @@ class ChatsCubit extends Cubit<ChatsState> {
         finalResultsToSend.add(item);
       }
     }
+    return finalResultsToSend;
+  }
+
+  Future<ChatEntry> _getNewEntry({
+    required String lastUserMessage,
+    required Avatar avatar,
+    required bool onlyText,
+    String? attachedImage,
+  }) async {
+    final List<Map<String, dynamic>> finalResultsToSend =
+        state.functionCallingEnabled
+            ? await _checkFunctionCalling(
+                lastUserMessage: lastUserMessage,
+                avatar: avatar,
+                onlyText: onlyText,
+              )
+            : <Map<String, dynamic>>[];
     final String languageCode = await SettingsService().getLanguage() ?? 'fr';
-    final String? username = await SettingsService().getUsername();
     final String wrappedUserMessage =
-        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${username != null ? "${localized.currentUsername} : $username\n" : ''}${finalResultsToSend.isNotEmpty ? "${localized.resultsFunctionCalling} :\n$finalResultsToSend\n\n" : ''}${localized.userMessage} : \n'''$lastUserMessage'''";
+        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}${finalResultsToSend.isNotEmpty ? "\n${localized.resultsFunctionCalling} :\n$finalResultsToSend\n" : ''}\n${localized.userMessage} : \n'''$lastUserMessage'''";
     final ChatEntry newUserEntry = ChatEntry(
       id: const Uuid().v4(),
       entryType: EntryType.user,
@@ -247,7 +270,7 @@ class ChatsCubit extends Cubit<ChatsState> {
         currentChat: onlyText ? null : chat,
       ),
     );
-    final ChatEntry userEntry = await getNewEntry(
+    final ChatEntry userEntry = await _getNewEntry(
       lastUserMessage: prompt,
       avatar: avatar,
       attachedImage: attachedImage,

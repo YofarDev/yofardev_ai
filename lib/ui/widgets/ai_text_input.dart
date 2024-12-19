@@ -197,7 +197,7 @@ class _AiTextInputState extends State<AiTextInput> {
               minLines: 1,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.3),
+                fillColor: Colors.white.withOpacity(0.7),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
