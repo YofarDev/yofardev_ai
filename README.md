@@ -100,4 +100,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Tools used
 
+- For LLM integration I use my own package : [llm\_api_picker](https://github.com/YofarDev/llm_api_picker/)
 - Stable Diffusion 1.5 for the avatar, customizations and backgrounds (AnyLora Anime Mix), with a custom LORA for the character
