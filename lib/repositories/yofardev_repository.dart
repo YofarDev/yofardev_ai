@@ -18,7 +18,7 @@ import '../utils/functions_helper.dart';
 class YofardevRepository {
   final llm.LLMRepository _repo = llm.LLMRepository();
 
-  static Future<ChatEntry> askYofardevAi(Chat chat) async {
+  Future<ChatEntry> askYofardevAi(Chat chat) async {
     final llm.LlmApi? api = await llm.LLMRepository.getCurrentApi();
     if (api == null) {
       throw Exception('No API selected');
@@ -51,6 +51,8 @@ class YofardevRepository {
       timestamp: DateTime.now(),
     );
   }
+
+  
 
   ///////////////////////////////// FUNCTIONS CALL /////////////////////////////////
 

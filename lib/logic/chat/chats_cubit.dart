@@ -26,6 +26,8 @@ part 'chats_state.dart';
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit() : super(const ChatsState());
 
+  late YofardevRepository _yofardevRepository;
+
   void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
     emit(state.copyWith(status: ChatsStatus.updating));
     final Chat newChat = await ChatHistoryService().createNewChat();
@@ -58,6 +60,11 @@ class ChatsCubit extends Cubit<ChatsState> {
   }
 
   Future<void> prepareWaitingSentences(List<String> sentences) async {
+    if (PlatformUtils.checkPlatform() == 'Web') {
+      emit(state.copyWith(initializing: false));
+      return;
+    }
+    emit(state.copyWith(initializing: true));
     // await CacheService.clearWaitingSentencesMap(state.currentLanguage);
     final List<Map<String, dynamic>> map =
         await CacheService.getWaitingSentencesMap(state.currentLanguage) ??
@@ -88,7 +95,6 @@ class ChatsCubit extends Cubit<ChatsState> {
       }
     }
     await CacheService.setWaitingSentencesMap(map, state.currentLanguage);
-    await Future<dynamic>.delayed(const Duration(seconds: 3));
     emit(
       state.copyWith(
         audioPathsWaitingSentences: map,
@@ -165,7 +171,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     final StreamController<List<Map<String, dynamic>>> streamController =
         StreamController<List<Map<String, dynamic>>>();
     final List<Map<String, dynamic>> previousResults = <Map<String, dynamic>>[];
-    YofardevRepository()
+   _yofardevRepository
         .getFunctionsResultsStream(
       lastUserMessage: lastUserMessage,
     )
@@ -174,6 +180,7 @@ class ChatsCubit extends Cubit<ChatsState> {
         final List<Map<String, dynamic>> newResults = <Map<String, dynamic>>[
           result,
         ];
+        debugPrint('functionCalling result: $result');
         streamController.add(newResults);
         previousResults.add(result);
       },
@@ -253,6 +260,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     String? attachedImage,
     required Avatar avatar,
   }) async {
+    _yofardevRepository = YofardevRepository();
     Chat chat = onlyText ? state.openedChat : state.currentChat;
     final String temporaryId = const Uuid().v4();
     final ChatEntry temporaryEntry = ChatEntry(
@@ -292,7 +300,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     );
     try {
       final ChatEntry newModelEntry =
-          await YofardevRepository.askYofardevAi(chat);
+          await _yofardevRepository.askYofardevAi(chat);
       final List<ChatEntry> entries = <ChatEntry>[
         ...chat.entries,
         newModelEntry,

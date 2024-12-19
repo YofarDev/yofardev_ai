@@ -7,6 +7,7 @@ import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../l10n/localization_manager.dart';
 import '../../../logic/avatar/avatar_cubit.dart';
 import '../../../logic/avatar/avatar_state.dart';
 import '../../../logic/chat/chats_cubit.dart';
@@ -18,6 +19,7 @@ import '../../../utils/app_utils.dart';
 import '../../../utils/extensions.dart';
 import '../../widgets/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
+import '../../widgets/function_calling_button.dart';
 import 'image_full_screen.dart';
 import 'widgets/function_calling_widget.dart';
 
@@ -95,15 +97,21 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                       right: 8,
                       top: 8,
                       child: SafeArea(
-                        child: AppIconButton(
-                          icon: _showEverything
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          onPressed: () {
-                            setState(() {
-                              _showEverything = !_showEverything;
-                            });
-                          },
+                        child: Column(
+                          children: <Widget>[
+                            AppIconButton(
+                              icon: _showEverything
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              onPressed: () {
+                                setState(() {
+                                  _showEverything = !_showEverything;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            const FunctionCallingButton(),
+                          ],
                         ),
                       ),
                     ),
@@ -202,7 +210,10 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                         ParsedText(
                           selectable: true,
                           text: _showEverything
-                              ? entries[index].body
+                              ? _limitParamaterSize(
+                                  entries[index].body,
+                                  isFromUser,
+                                )
                               : entries[index]
                                   .getMessage(isFromUser: isFromUser),
                           style: TextStyle(
@@ -288,4 +299,27 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
               AssetImage(AppUtils.fixAssetsPath("assets/icon.png")),
         ),
       );
+
+  String _limitParamaterSize(String body, bool isFromUser) {
+    if (!isFromUser) return body;
+    try {
+      const int limit = 2000;
+      if (body.length > limit) {
+        final String reduced = '${body.substring(0, limit)} [...]';
+        String userMessage = '';
+        final int startIndex = body.indexOf("'''");
+        final int endIndex = body.lastIndexOf("'''");
+        if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+          userMessage = body.substring(startIndex + 3, endIndex);
+        } else {
+          return body;
+        }
+        return "$reduced\n${localized.userMessage} : \n'''$userMessage'''";
+      }
+      return body;
+    } catch (e) {
+      debugPrint('Error: $e');
+      return body;
+    }
+  }
 }

@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:llm_api_picker/llm_api_picker.dart';
 import 'package:math_expressions/math_expressions.dart';
 
+import '../res/app_constants.dart';
 import '../services/alarm_service.dart';
 import '../services/google_search_service.dart';
 import '../services/news_service.dart';
 import '../services/weather_service.dart';
 import '../services/wikipedia_service.dart';
+import 'extensions.dart';
 
 class FunctionsHelper {
   static final List<FunctionInfo> getFunctions = <FunctionInfo>[
@@ -197,7 +199,6 @@ class FunctionsHelper {
         ),
       ],
     );
-    debugPrint(response);
-    return response;
+    return response.limitWords(AppConstants.maxWordsLimit);
   }
 }

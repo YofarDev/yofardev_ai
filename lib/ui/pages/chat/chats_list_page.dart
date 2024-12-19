@@ -12,6 +12,7 @@ import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';
 import '../../../utils/extensions.dart';
+import '../../widgets/constrained_width.dart';
 import 'chat_details_page.dart';
 
 class ChatsListPage extends StatelessWidget {
@@ -102,7 +103,8 @@ class ChatsListPage extends StatelessWidget {
                                 .push(
                               PageRouteBuilder<dynamic>(
                                 pageBuilder: (_, __, ___) =>
-                                    const ChatDetailsPage(),
+                                    const ConstrainedWidth(
+                                        child: ChatDetailsPage()),
                                 transitionDuration: Duration.zero,
                               ),
                             )

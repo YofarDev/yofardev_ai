@@ -41,7 +41,6 @@ dependencies:
   math_expressions: ^2.6.0
   alarm: ^4.1.1
   shimmer: ^3.0.0
-  flutter_inappwebview: ^6.1.5
   html: ^0.15.5
   html_parser_plus: ^0.1.4
 

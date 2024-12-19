@@ -9,7 +9,7 @@ class NewsService {
 
   static Future<String> getMostPopularNewsOfTheDay() async {
     try {
-      final String apiKey = dotenv.env['NYT_KEY'] ?? '';
+      final String apiKey = dotenv.env['NEWYORKTIMES_KEY'] ?? '';
       final Uri url = Uri.parse(
         "$_baseUrl?api-key=$apiKey",
       );

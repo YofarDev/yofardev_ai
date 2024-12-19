@@ -32,4 +32,6 @@ class AppConstants {
   // Other
   static double pickedImageMaxWidth = 1024;
   static double pickedImageMaxHeight = 1024;
+
+  static int maxWordsLimit = 2000;
 }

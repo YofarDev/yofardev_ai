@@ -8,6 +8,9 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart' as htmlParser;
 import 'package:http/http.dart' as http;
 
+import '../res/app_constants.dart';
+import '../utils/extensions.dart';
+
 class GoogleSearchService {
   static Future<List<Map<String, dynamic>>> searchGoogle(String query) async {
     try {
@@ -73,7 +76,8 @@ class GoogleSearchService {
       final http.Response response =
           await http.get(Uri.parse(url), headers: headless ? null : headers);
       if (response.statusCode == 200) {
-        return getHtmlReduced(response.body);
+        return (await getHtmlReduced(response.body))
+            .limitWords(AppConstants.maxWordsLimit);
       } else {
         debugPrint('Failed to load page: ${response.statusCode}');
         if (!headless) return response.body;

@@ -4,9 +4,9 @@ Yofardev AI is a small fun (& open source) project that brings life to a Large L
 
 It can now call functions (like searching on internet, getting weather, etc.).
 
-[Free web demo (old version)](https://yofardev-ai.web.app) (not all features available because of platform limitations). You need to set either a Google Api Key, or you can set up a LLM with the OpenAI format.
+[Free web demo](https://yofardev-ai.web.app) (not all features available because of platform limitations). You need to set either a Google Api Key, or you can set up a LLM with the OpenAI format. Some functions calling won't work on this version.
 
-Most of time, I use the Gemini 1.5-flash model, because it's free, fast and reliable. 
+Most of time, I use the Gemini flash model (1.5 or 2.0), because it's free, fast and reliable. 
 
 Also, the app is probably only working on Android (needs to test more on iOS).
 
@@ -24,16 +24,18 @@ Also, the app is probably only working on Android (needs to test more on iOS).
   <img src="screenshots/8.png" width="20%" />
 </p>
 
-## New Features in 2.0
+## New features in v2.0
 
-- Function calling :
+- Function calling (work in progress, not always perfect) :
 	* **`getCurrentWeather(location: string)`**
-   	* **`getMostPopularNewsOfTheDay()`**
+  * **`getMostPopularNewsOfTheDay()`**
 	* **`searchGoogle(query: string)`**
 	* And more...
+	 <p>
+<img src="screenshots/9.png" width="20%" /></p>
 - You can pick a persona for your assistant (normal, coach, philosopher, conservative...)
 - Not limited to only Gemini. Set your OpenAI format LLM (cloud or local)
-
+- It doesn't send a sound effect every message anymore!!
 
 
 ## Features
@@ -48,11 +50,11 @@ Also, the app is probably only working on Android (needs to test more on iOS).
 
 ## Demo Video on YouTube (old version)
 
-[![Demo Video](https://img.youtube.com/vi/nzVYq8lGkHI/0.jpg)](https://www.youtube.com/watch?v=nzVYq8lGkHI)
+[![Demo Video](https://img.youtube.com/vi/UXpE2vQsJhY/0.jpg)](https://www.youtube.com/watch?v=UXpE2vQsJhY)
 
 ## Requirements
 
-To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_ai/releases/) directly for Android, or build it yourself. To build it, you need:
+To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_ai/releases/) directly for Android, or build it yourself (I didn't provide any api keys, so most of function calling won't work). To build it, you need:
 
 - Flutter (>=3.4.3 <4.0.0)
 - Android SDK (for Android builds)
@@ -72,23 +74,25 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 
 - `flutter pub get`
 
+4. (optional) Make a .env at the root of project and add your environment variables (for some function calling):
+
+- `OPEN_WEATHER_KEY=` 
+- `NEWYORKTIMES_KEY=` 
+- `GOOGLE_SEARCH_KEY=` 
+- `GOOGLE_SEARCH_ENGINE_ID=`
+
 4. Run the app:
 
 - `flutter run`
 
 ## Platforms
 
-- Android: Fully supported
-- iOS: it's not far from being supported but some packages need additional steps, I may do it later
+- Android & iOS: Fully supported
 - Web : some features are missing because of platform limitations.
 
 ## Known Issues
 
-- Internet search can fail if the website has heavy scraping protection
-
-## Future Improvements
-
-- An interrupt button to stop the AI's response mid-sentence would be a good idea.
+- Function calling like internet search are not always reliable.
 
 ## License
 

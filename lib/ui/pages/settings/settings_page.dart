@@ -12,6 +12,7 @@ import '../../../models/sound_effects.dart';
 import '../../../models/voice.dart';
 import '../../../services/settings_service.dart';
 import '../../../utils/platform_utils.dart';
+import '../../widgets/constrained_width.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -47,11 +48,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _loadTtsVoices() async {
+    if (PlatformUtils.checkPlatform() == 'Web') {
+      return;
+    }
     final FlutterTts flutterTts = FlutterTts();
     final List<dynamic> voices = await flutterTts.getVoices as List<dynamic>;
     for (final dynamic voice in voices) {
-      if (PlatformUtils.checkPlatform() == 'iOS' && (voice['gender'] != 'male'))
+      if (PlatformUtils.checkPlatform() == 'iOS' && (voice['gender'] != 'male')) {
         continue;
+      }
       if ((voice['locale'] as String)
           .startsWith(context.read<ChatsCubit>().state.currentLanguage)) {
         _voices.add(
@@ -131,7 +136,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                   _buildSoundEffectsCheckbox(),
                   const SizedBox(height: 16),
-                  _dropdownVoices(),
+                  if (PlatformUtils.checkPlatform() != 'Web') _dropdownVoices(),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -196,7 +201,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Navigator.of(context).push(
             MaterialPageRoute<dynamic>(
               builder: (BuildContext context) =>
-                  const LlmApiPickerSettingsPage(),
+                  const ConstrainedWidth(child: LlmApiPickerSettingsPage()),
             ),
           );
         },

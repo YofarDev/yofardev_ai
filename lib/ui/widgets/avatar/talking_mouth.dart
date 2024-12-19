@@ -32,7 +32,9 @@ class _TalkingMouthState extends State<TalkingMouth> {
           previous.status != current.status,
       listener: (BuildContext context, TalkingState state) {
         _waitingTalking = state.status == TalkingStatus.loading;
-        if (_waitingTalking) _startWaitingTalking();
+        if (_waitingTalking && PlatformUtils.checkPlatform() != 'Web') {
+          _startWaitingTalking();
+        }
         if (state.status == TalkingStatus.success) {
           if (context.read<AvatarCubit>().state.avatar.hideTalkingMouth) return;
           if (PlatformUtils.checkPlatform() == 'Web') {

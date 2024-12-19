@@ -7,6 +7,8 @@ import '../../logic/talking/talking_cubit.dart';
 import '../pages/chat/chats_list_page.dart';
 import '../pages/settings/settings_page.dart';
 import 'app_icon_button.dart';
+import 'constrained_width.dart';
+import 'function_calling_button.dart';
 
 class HomeButtons extends StatelessWidget {
   const HomeButtons({super.key});
@@ -38,7 +40,8 @@ class HomeButtons extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       PageRouteBuilder<dynamic>(
-                        pageBuilder: (_, __, ___) => const ChatsListPage(),
+                        pageBuilder: (_, __, ___) =>
+                            const ConstrainedWidth(child: ChatsListPage()),
                         transitionDuration: Duration.zero,
                       ),
                     );
@@ -62,35 +65,14 @@ class HomeButtons extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute<dynamic>(
                           builder: (BuildContext context) =>
-                              const SettingsPage(),
+                              const ConstrainedWidth(child: SettingsPage()),
                         ),
                       );
                     },
                   ),
                 ),
                 const SizedBox(height: 8),
-                BlocBuilder<ChatsCubit, ChatsState>(
-                  builder: (BuildContext context, ChatsState state) {
-                    return AppIconButton(
-                      icon: state.functionCallingEnabled
-                          ? Icons.code
-                          : Icons.code_off,
-                      onPressed: () async {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              state.functionCallingEnabled
-                                  ? 'Function calling OFF'
-                                  : 'Function calling ON',
-                            ),
-                            duration: const Duration(milliseconds: 500),
-                          ),
-                        );
-                        context.read<ChatsCubit>().toggleFunctionCalling();
-                      },
-                    );
-                  },
-                ),
+                const FunctionCallingButton(),
               ],
             ),
           ),

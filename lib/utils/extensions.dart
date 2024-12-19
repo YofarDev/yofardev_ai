@@ -43,6 +43,15 @@ extension StringExtensions on String {
     final String message = parts[1];
     return message.trim();
   }
+
+  String limitWords(int wordLimit) {
+    if (isEmpty) return '';
+    final List<String> words = split(' ');
+    if (words.length <= wordLimit) {
+      return this;
+    }
+    return '${words.take(wordLimit).join(' ')}...';
+  }
 }
 
 extension EnumByNameExtension on Object {
