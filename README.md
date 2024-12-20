@@ -48,7 +48,7 @@ Also, the app is probably only working on Android (needs to test more on iOS).
 - History of chats (text version, stored locally)
 - English and French supported
 
-## Demo Video on YouTube (old version)
+## Demo Video on YouTube
 
 [![Demo Video](https://img.youtube.com/vi/UXpE2vQsJhY/0.jpg)](https://www.youtube.com/watch?v=UXpE2vQsJhY)
 
