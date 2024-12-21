@@ -18,7 +18,7 @@ class BlinkingEyes extends StatefulWidget {
 class _BlinkingEyesState extends State<BlinkingEyes>
     with TickerProviderStateMixin {
   late Timer _timer;
-  bool _eyesClosed = false;
+  String _eyeState = 'open';
 
   @override
   void initState() {
@@ -31,11 +31,19 @@ class _BlinkingEyesState extends State<BlinkingEyes>
 
   void _blinkEyes() async {
     setState(() {
-      _eyesClosed = true;
+      _eyeState = 'half_closed';
+    });
+    await Future<dynamic>.delayed(const Duration(milliseconds: 25));
+    setState(() {
+      _eyeState = 'closed';
     });
     await Future<dynamic>.delayed(const Duration(milliseconds: 100));
     setState(() {
-      _eyesClosed = false;
+      _eyeState = 'half_closed';
+    });
+    await Future<dynamic>.delayed(const Duration(milliseconds: 25));
+    setState(() {
+      _eyeState = 'open';
     });
   }
 
@@ -47,11 +55,21 @@ class _BlinkingEyesState extends State<BlinkingEyes>
 
   @override
   Widget build(BuildContext context) {
-    return ScaledAvatarItem(
-      path: AppUtils.fixAssetsPath('assets/avatar/closed_eyes.png'),
-      itemX: AppConstants.eyesX,
-      itemY: AppConstants.eyesY,
-      display: _eyesClosed,
+    return Stack(
+      children: <Widget>[
+        ScaledAvatarItem(
+          path: AppUtils.fixAssetsPath('assets/avatar/half_closed_eyes.png'),
+          itemX: AppConstants.eyesX,
+          itemY: AppConstants.eyesY,
+          display: _eyeState == 'half_closed',
+        ),
+        ScaledAvatarItem(
+          path: AppUtils.fixAssetsPath('assets/avatar/closed_eyes.png'),
+          itemX: AppConstants.eyesX,
+          itemY: AppConstants.eyesY,
+          display: _eyeState == 'closed',
+        ),
+      ],
     );
   }
 }
