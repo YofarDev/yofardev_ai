@@ -41,6 +41,7 @@ class YofardevRepository {
       systemPrompt: chat.systemPrompt,
       api: api,
       returnJson: true,
+      debugLogs: true,
     );
     answer =
         answer = answer.substring(answer.indexOf('{'), answer.indexOf('}') + 1);
@@ -52,7 +53,7 @@ class YofardevRepository {
     );
   }
 
-  
+                                                                                                                                      
 
   ///////////////////////////////// FUNCTIONS CALL /////////////////////////////////
 
