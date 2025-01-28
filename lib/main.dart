@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
+import 'package:screen_retriever/screen_retriever.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
@@ -19,15 +21,31 @@ import 'utils/platform_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+  final Display primaryDisplay = await screenRetriever.getPrimaryDisplay();
+
+  final double displayHeight = primaryDisplay.size.height * 0.8;
+  final WindowOptions windowOptions = WindowOptions(
+    size: Size(displayHeight * 9 / 16, displayHeight),
+    center: true,
+    skipTaskbar: false,
+  );
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
 
   final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
   await LocalizationManager().initialize(deviceLocale.languageCode);
-  if (PlatformUtils.checkPlatform() != 'Web') {
+  if (PlatformUtils.checkPlatform() != 'Web' &&
+      PlatformUtils.checkPlatform() != 'MacOS') {
     await Alarm.init();
-    await dotenv.load();
     SystemChrome.setPreferredOrientations(
       <DeviceOrientation>[DeviceOrientation.portraitUp],
     );
+  }
+  if (PlatformUtils.checkPlatform() != 'Web') {
+    await dotenv.load();
   }
   runApp(
     const MyApp(),

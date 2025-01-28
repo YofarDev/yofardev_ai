@@ -15,57 +15,51 @@ class FunctionsHelper {
     FunctionInfo(
       name: 'getCurrentWeather',
       description: 'Returns the current weather',
-      parameters: <String, dynamic>{
-        'type': 'object',
-        'properties': <String, dynamic>{
-          'location': <String, dynamic>{
-            'type': 'string',
-            'description': 'The location to get the weather for',
-          },
-        },
-      },
+      parameters: <Parameter>[
+        Parameter(
+          name: 'location',
+          description: 'The location to get the weather for',
+          type: 'string',
+        ),
+      ],
       function: (String location) => WeatherService.getCurrentWeather(location),
     ),
     FunctionInfo(
       name: 'getMostPopularNewsOfTheDay',
       description:
           'Returns an array of the most shared articles on NYTimes.com in the last 24 hours',
-      parameters: <String, dynamic>{},
+      parameters: <Parameter>[],
       function: () => NewsService.getMostPopularNewsOfTheDay(),
     ),
     FunctionInfo(
       name: 'characterCounter',
       description:
           'Returns the number of times a specific character appears in a string',
-      parameters: <String, dynamic>{
-        'type': 'object',
-        'properties': <String, dynamic>{
-          'text': <String, dynamic>{
-            'type': 'string',
-            'description': 'The string to count characters in',
-          },
-          'character': <String, dynamic>{
-            'type': 'string',
-            'description': 'The character to count',
-          },
-        },
-      },
+      parameters: <Parameter>[
+        Parameter(
+          name: 'text',
+          description: 'The string to count characters in',
+          type: 'string',
+        ),
+        Parameter(
+          name: 'character',
+          description: 'The character to count',
+          type: 'string',
+        ),
+      ],
       function: (String text, String character) =>
           FunctionsHelper.getCharacterCount(text, character),
     ),
     FunctionInfo(
       name: 'calculateExpression',
       description: 'Evaluates a mathematical expression and returns the result',
-      parameters: <String, dynamic>{
-        'type': 'object',
-        'properties': <String, dynamic>{
-          'expression': <String, dynamic>{
-            'type': 'string',
-            'description':
-                'The mathematical expression to evaluate (e.g., "3 * (2 + 4)").',
-          },
-        },
-      },
+      parameters: <Parameter>[
+        Parameter(
+          name: 'expression',
+          description: 'The mathematical expression to evaluate',
+          type: 'string',
+        ),
+      ],
       function: (String expression) =>
           FunctionsHelper.getResultOfMathExpression(expression),
     ),
@@ -73,84 +67,83 @@ class FunctionsHelper {
       name: 'searchWikipedia',
       description:
           'Returns a list of Wikipedia pages that match a search query',
-      parameters: <String, dynamic>{
-        'type': 'object',
-        'properties': <String, dynamic>{
-          'query': <String, dynamic>{
-            'type': 'string',
-            'description': 'The topic to search for',
-          },
-        },
-      },
+      parameters: <Parameter>[
+        Parameter(
+          name: 'query',
+          description: 'The search query',
+          type: 'string',
+        ),
+      ],
       function: (String query) => WikipediaService.searchWikipedia(query),
       nextStep: FunctionInfo(
         name: 'getWikipediaPage',
         description: 'Returns the content of a Wikipedia page',
-        parameters: <String, dynamic>{
-          'type': 'object',
-          'properties': <String, dynamic>{
-            'title': <String, dynamic>{
-              'type': 'string',
-              'description': 'The title of the Wikipedia page to open',
-            },
-          },
-        },
+        parameters: <Parameter>[
+          Parameter(
+            name: 'title',
+            description: 'The title of the Wikipedia page to open',
+            type: 'string',
+          ),
+        ],
         function: (String title) => WikipediaService.getWikipediaPage(title),
       ),
     ),
     FunctionInfo(
       name: 'setAlarm',
       description: 'Sets an alarm for a specific time',
-      parameters: <String, dynamic>{
-        'type': 'object',
-        'properties': <String, dynamic>{
-          'minutesFromNow': <String, dynamic>{
-            'type': 'number',
-            'description': 'The number of minutes from now to set the alarm',
-          },
-          'message': <String, dynamic>{
-            'type': 'string',
-            'description': 'The message to display in the alarm notification',
-          },
-        },
-      },
+      parameters: <Parameter>[
+        Parameter(
+          name: 'minutesFromNow',
+          description: 'The number of minutes from now to set the alarm',
+          type: 'number',
+        ),
+        Parameter(
+          name: 'message',
+          description: 'The message to display in the alarm notification',
+          type: 'string',
+        ),
+      ],
       function: (int minutesFromNow, String message) =>
           AlarmService.setAlarm(minutesFromNow, message),
     ),
     FunctionInfo(
       name: 'searchGoogle',
       description: 'Searches Google for a given query and returns the results',
-      parameters: <String, dynamic>{
-        'query': <String, dynamic>{
-          'type': 'string',
-          'description': 'The query to search for',
-        },
-      },
+      parameters: <Parameter>[
+        Parameter(
+          name: 'query',
+          description: 'The query to search for',
+          type: 'string',
+        ),
+      ],
       function: (String query) => GoogleSearchService.searchGoogle(query),
       nextStep: FunctionInfo(
         name: 'getHtmlFromUrl',
         description: 'Gets the HTML content of a given URL',
-        parameters: <String, dynamic>{
-          'url': <String, dynamic>{
-            'type': 'string',
-            'description': 'The URL to get the HTML content from',
-          },
-        },
+        parameters: <Parameter>[
+          Parameter(
+            name: 'url',
+            description: 'The URL to get the HTML content from',
+            type: 'string',
+          ),
+        ],
         function: (String url) => GoogleSearchService.getHtmlFromUrl(url),
         nextStep: FunctionInfo(
           name: 'summarizeWebPage',
           description: 'Summarizes a web page based on the given HTML content',
-          parameters: <String, dynamic>{
-            'html': <String, dynamic>{
-              'type': 'string',
-              'description': 'The HTML content of the web page',
-            },
-            'originalPrompt': <String, dynamic>{
-              'type': 'string',
-              'description':
+          parameters: <Parameter>[
+            Parameter(
+              name: 'html',
+              description: 'The HTML content of the web page',
+              type: 'string',
+            ),
+            Parameter(
+              name: 'originalPrompt',
+              description:
                   'The original prompt used to generate the HTML content',
-            },
-          },
+              type: 'string',
+            ),
+          ],
           function: (String html, String originalPrompt) =>
               FunctionsHelper.sumUpWebPage(html, originalPrompt),
         ),

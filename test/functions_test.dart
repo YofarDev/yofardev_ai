@@ -4,10 +4,10 @@ import 'package:yofardev_ai/utils/functions_helper.dart';
 void main() {
   group('FunctionsHelper - calculatorFunction', () {
     test('should return the correct result for a valid expression', () {
-      expect(FunctionsHelper.calculatorFunction('2 + 2'), equals(4.0));
-      expect(FunctionsHelper.calculatorFunction('123456*654332'), equals(80781211392));
-      expect(FunctionsHelper.calculatorFunction('10 / 2'), equals(5.0));
-      expect(FunctionsHelper.calculatorFunction('2^3'), equals(8.0));
+      expect(FunctionsHelper.getResultOfMathExpression('2 + 2'), equals(4.0));
+      expect(FunctionsHelper.getResultOfMathExpression('123456*654332'), equals(80781211392));
+      expect(FunctionsHelper.getResultOfMathExpression('10 / 2'), equals(5.0));
+      expect(FunctionsHelper.getResultOfMathExpression('2^3'), equals(8.0));
     });
   });
 

@@ -11,8 +11,14 @@ class PlatformUtils {
       return 'Android';
     } else if (Platform.isIOS) {
       return 'iOS';
+    } else if (Platform.isMacOS) {
+      return 'MacOS';
+    } else if (Platform.isWindows) {
+      return 'Windows';
+    } else if (Platform.isLinux) {
+      return 'Linux';
     } else {
-      return 'Other';
+      return 'Unknown';
     }
   }
 }

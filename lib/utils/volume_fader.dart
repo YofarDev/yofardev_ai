@@ -47,7 +47,9 @@ class ProgressiveVolumeControl {
       increase: increase,
       currentVolume: currentVolume,
       targetVolume: targetVolume,
-    )) return;
+    )) {
+      return;
+    }
     "Fading volume ${increase ? 'up' : 'down'} to $targetVolume".printCyanLog();
     const double increment = 0.03;
     final int vector = increase ? 1 : -1;

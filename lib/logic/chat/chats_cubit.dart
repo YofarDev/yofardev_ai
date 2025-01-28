@@ -45,7 +45,7 @@ class ChatsCubit extends Cubit<ChatsState> {
   void init() async {
     getCurrentChat();
     setCurrentLanguage(
-      PlatformUtils.checkPlatform() == 'Web'
+      PlatformUtils.checkPlatform() == 'Web' || PlatformUtils.checkPlatform() == 'MacOS'
           ? "fr"
           : await SettingsService().getLanguage() ?? 'fr',
     );
