@@ -54,7 +54,9 @@ class _ScaledAvatarItemState extends State<ScaledAvatarItem> {
       builder: (BuildContext context, AvatarState state) {
         if (state.status == AvatarStatus.initial ||
             _itemOriginalHeight == null ||
-            _itemOriginalWidth == null) return Container();
+            _itemOriginalWidth == null) {
+          return const SizedBox.shrink();
+        }
         return Positioned(
           left: widget.itemX * state.scaleFactor,
           bottom: MediaQuery.of(context).viewInsets.bottom +

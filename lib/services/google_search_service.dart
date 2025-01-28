@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:html/dom.dart';
-import 'package:html/parser.dart' as htmlParser;
+import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 
 import '../res/app_constants.dart';
@@ -47,7 +47,7 @@ class GoogleSearchService {
   }
 
   static Future<String> getHtmlReduced(String html) async {
-    final Document document = htmlParser.parse(html);
+    final Document document = html_parser.parse(html);
     // Remove <script> and <style> tags
     document
         .querySelectorAll('script, style')

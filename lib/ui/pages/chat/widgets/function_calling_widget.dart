@@ -39,7 +39,7 @@ class FunctionCallingWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 0.3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

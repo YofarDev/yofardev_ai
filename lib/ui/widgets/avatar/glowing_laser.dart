@@ -15,12 +15,12 @@ class GlowingLaser extends CustomPainter {
 
     // Draw the outer glow
     final Paint paint = Paint()
-      ..color = color.withOpacity(0.2)
+      ..color = color.withValues(alpha: 0.2)
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius);
     canvas.drawCircle(center, radius * 4, paint);
 
     // Draw the middle glow
-    paint.color = color.withOpacity(0.25);
+    paint.color = color.withValues(alpha: 0.25);
     paint.maskFilter = MaskFilter.blur(BlurStyle.normal, radius);
     canvas.drawCircle(center, radius * 1.5, paint);
 

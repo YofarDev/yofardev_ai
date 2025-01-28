@@ -51,8 +51,12 @@ class _AiTextInputState extends State<AiTextInput> {
 
   void _initSpeechToText() async {
     if (PlatformUtils.checkPlatform() == 'Web') return;
-    final PermissionStatus status = await Permission.microphone.request();
-    if (status.isGranted) {
+    bool enable = false;
+    if (PlatformUtils.checkPlatform() != 'MacOS') {
+      final PermissionStatus status = await Permission.microphone.request();
+      enable = status.isGranted;
+    }
+    if (enable) {
       _speechToText = SpeechToText();
       _speechEnabled = await _speechToText.initialize();
       setState(() {});
@@ -197,7 +201,7 @@ class _AiTextInputState extends State<AiTextInput> {
               minLines: 1,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.7),
+                fillColor: Colors.white.withValues(alpha: 0.7),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),

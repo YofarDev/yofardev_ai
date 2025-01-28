@@ -91,6 +91,12 @@ class SettingsService {
         } else {
           return 'Google UK English Male';
         }
+      case 'MacOS':
+        if (language == 'fr') {
+          return 'Nicolas (Enhanced)';
+        } else {
+          return 'Lee (Premium)';
+        }
       default:
         throw Exception('Unsupported platform');
     }

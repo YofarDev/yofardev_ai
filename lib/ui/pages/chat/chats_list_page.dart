@@ -92,7 +92,7 @@ class ChatsListPage extends StatelessWidget {
                           child: BackdropFilter(
                             filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
                             child: Container(
-                              color: Colors.black.withOpacity(0),
+                              color: Colors.black.withValues(alpha: 0.2),
                             ),
                           ),
                         ),
@@ -104,7 +104,8 @@ class ChatsListPage extends StatelessWidget {
                               PageRouteBuilder<dynamic>(
                                 pageBuilder: (_, __, ___) =>
                                     const ConstrainedWidth(
-                                        child: ChatDetailsPage()),
+                                  child: ChatDetailsPage(),
+                                ),
                                 transitionDuration: Duration.zero,
                               ),
                             )
@@ -129,8 +130,8 @@ class ChatsListPage extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
                                       color: (chat.id == currentChat.id)
-                                          ? Colors.blue.withOpacity(0.8)
-                                          : Colors.black.withOpacity(0.2),
+                                          ? Colors.blue.withValues(alpha: 0.8)
+                                          : Colors.black.withValues(alpha: 0.2),
                                     ),
                                     child: const Icon(
                                       Icons.check_circle_outlined,
@@ -181,7 +182,8 @@ class ChatsListPage extends StatelessWidget {
                                   height: 36,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
-                                    color: Colors.red[600]!.withOpacity(0.5),
+                                    color:
+                                        Colors.red[600]!.withValues(alpha: 0.5),
                                   ),
                                   child: IconButton(
                                     icon: const Icon(

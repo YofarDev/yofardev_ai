@@ -44,7 +44,6 @@ class WikipediaService {
     final Uri url = Uri.parse(
       'https://en.wikipedia.org/w/api.php?action=query&titles=$title&prop=extracts&format=json',
     );
-    print(url);
     final http.Response response = await http.get(url);
     if (response.statusCode == 200) {
       final dynamic data = jsonDecode(response.body);

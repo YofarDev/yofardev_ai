@@ -62,7 +62,7 @@ class TtsService {
     }
     final String musicDirectoryPath = await getMusicDirectoryPath();
     final String filename =
-        "${DateTime.now().millisecondsSinceEpoch}${PlatformUtils.checkPlatform() == 'iOS' ? '.caf' : '.wav'}";
+        "${DateTime.now().millisecondsSinceEpoch}${PlatformUtils.checkPlatform() == 'iOS' || PlatformUtils.checkPlatform() == 'MacOS' ? '.caf' : '.wav'}";
     final String filePath = '$musicDirectoryPath/$filename';
     await flutterTts.awaitSynthCompletion(true);
     await flutterTts.synthesizeToFile(text, filename);

@@ -32,7 +32,7 @@ class YofardevRepository {
               ? llm.MessageRole.user
               : llm.MessageRole.assistant,
           body: entry.body,
-          attachedImage: entry.attachedImage,
+          attachedFile: entry.attachedImage,
         ),
       );
     }
@@ -81,7 +81,7 @@ class YofardevRepository {
       final Map<String, dynamic> result = <String, dynamic>{
         'name': functionInfo.name,
         'parameters': functionInfo.parameters,
-        'result': await _callFunction(functionInfo, functionInfo.parameters),
+        'result': await _callFunction(functionInfo, functionInfo.parametersCalled),
         'intermediate': functionInfo.isMultiStep,
       };
       debugPrint('Function results: $result');
