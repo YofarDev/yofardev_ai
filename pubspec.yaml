@@ -3,7 +3,7 @@ description: "Animated AI avatar"
 
 publish_to: "none"
 
-version: 2.0.1+1
+version: 2.0.2+1
 
 environment:
   sdk: ">=3.4.3 <4.0.0"

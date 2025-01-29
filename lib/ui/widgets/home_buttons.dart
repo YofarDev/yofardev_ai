@@ -1,15 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../logic/avatar/avatar_cubit.dart';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
-import '../../services/settings_service.dart';
-import '../../utils/platform_utils.dart';
 import '../pages/chat/chats_list_page.dart';
 import '../pages/settings/settings_page.dart';
 import 'app_icon_button.dart';
@@ -79,31 +73,6 @@ class HomeButtons extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const FunctionCallingButton(),
-                IconButton(
-                  onPressed: () async {
-                    final FlutterTts flutterTts = FlutterTts();
-
-                    await flutterTts.setLanguage('fr-FR');
-                    await flutterTts.setVoice(<String, String>{
-                      "name": await SettingsService().getTtsVoice('fr'),
-                      "locale": 'fr-FR',
-                    });
-                    final String musicDirectoryPath =
-                        (await getApplicationDocumentsDirectory()).path;
-                    final String filename =
-                        "${DateTime.now().millisecondsSinceEpoch}${PlatformUtils.checkPlatform() == 'iOS' || PlatformUtils.checkPlatform() == 'MacOS' ? '.caf' : '.wav'}";
-                    final String filePath = '$musicDirectoryPath/$filename';
-                    await flutterTts.awaitSynthCompletion(true);
-                    final File textFile = File('$musicDirectoryPath/test.txt');
-                    await textFile.writeAsString('This is a test text file.');
-
-                    await flutterTts.synthesizeToFile(
-                      'Bonjour ceci est un test. Oui baguette',
-                      filePath,
-                    );
-                  },
-                  icon: const Icon(Icons.account_box_outlined),
-                ),
               ],
             ),
           ),

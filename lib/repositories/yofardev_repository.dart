@@ -80,7 +80,7 @@ class YofardevRepository {
     for (final FunctionInfo functionInfo in functionsCalled) {
       final Map<String, dynamic> result = <String, dynamic>{
         'name': functionInfo.name,
-        'parameters': functionInfo.parameters,
+        'parameters': functionInfo.parametersCalled,
         'result': await _callFunction(functionInfo, functionInfo.parametersCalled),
         'intermediate': functionInfo.isMultiStep,
       };
