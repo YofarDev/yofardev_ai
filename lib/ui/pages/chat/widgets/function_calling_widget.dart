@@ -16,22 +16,15 @@ class FunctionCallingWidget extends StatelessWidget {
     final StringBuffer bf = StringBuffer();
     final List<dynamic> map = jsonDecode(functionCallingText) as List<dynamic>;
     for (int i = 0; i < map.length; i++) {
-      final List<String> keys = ((map[i] as Map<String, dynamic>)["parameters"]
-              as Map<String, dynamic>)
-          .keys
-          .toList();
+      if (i > 0) bf.write('\n');
+      bf.write('➡️ ${map[i]["name"]}(');
+      final Map<String, dynamic> mapParameters =
+          map[i]["parameters"] as Map<String, dynamic>;
+      final List<String> keys = mapParameters.keys.toList();
       for (final String key in keys) {
-        String value =
-            (map[i]["parameters"] as Map<String, dynamic>)[key].toString();
-        if (value.length > 100) {
-          value = '${value.substring(0, 100)}[...]';
-        }
-        (map[i]["parameters"] as Map<String, dynamic>)[key] = value;
+        bf.write('"$key": "${mapParameters[key]}"');
       }
-      final String parameters = jsonEncode(map[i]["parameters"]);
-      bf.write(
-        '➡️ ${(map[i] as Map<String, dynamic>)["name"]}($parameters)${i == map.length - 1 ? '' : '\n'}',
-      );
+      bf.write(')');
     }
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

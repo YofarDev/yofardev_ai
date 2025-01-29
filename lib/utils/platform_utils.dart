@@ -21,4 +21,9 @@ class PlatformUtils {
       return 'Unknown';
     }
   }
+
+  static bool isMobile() {
+    final String platform = checkPlatform();
+    return platform == 'Android' || platform == 'iOS';
+  }
 }

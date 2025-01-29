@@ -1,4 +1,4 @@
-package com.example.yofardev_ai
+package fr.yofardev.yofardev_ai
 
 import io.flutter.embedding.android.FlutterActivity
 

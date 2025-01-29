@@ -21,20 +21,20 @@ import 'utils/platform_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
-  final Display primaryDisplay = await screenRetriever.getPrimaryDisplay();
-
-  final double displayHeight = primaryDisplay.size.height * 0.8;
-  final WindowOptions windowOptions = WindowOptions(
-    size: Size(displayHeight * 9 / 16, displayHeight),
-    center: true,
-    skipTaskbar: false,
-  );
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
-
+  if (!PlatformUtils.isMobile()) {
+    await windowManager.ensureInitialized();
+    final Display primaryDisplay = await screenRetriever.getPrimaryDisplay();
+    final double displayHeight = primaryDisplay.size.height * 0.8;
+    final WindowOptions windowOptions = WindowOptions(
+      size: Size(displayHeight * 9 / 16, displayHeight),
+      center: true,
+      skipTaskbar: false,
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
   final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
   await LocalizationManager().initialize(deviceLocale.languageCode);
   if (PlatformUtils.checkPlatform() != 'Web' &&
