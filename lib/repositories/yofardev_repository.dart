@@ -3,7 +3,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:llm_api_picker/llm_api_picker.dart' as llm;
-import 'package:llm_api_picker/llm_api_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../l10n/localization_manager.dart';
@@ -23,21 +22,8 @@ class YofardevRepository {
     if (api == null) {
       throw Exception('No API selected');
     }
-    final List<llm.Message> messages = <llm.Message>[];
-    for (final ChatEntry entry in chat.entries) {
-      if (entry.entryType == EntryType.functionCalling) continue;
-      messages.add(
-        llm.Message(
-          role: entry.entryType == EntryType.user
-              ? llm.MessageRole.user
-              : llm.MessageRole.assistant,
-          body: entry.body,
-          attachedFile: entry.attachedImage,
-        ),
-      );
-    }
     String? answer = await llm.LLMRepository.promptModel(
-      messages: messages,
+      messages: chat.llmMessages,
       systemPrompt: chat.systemPrompt,
       api: api,
       returnJson: true,
@@ -53,14 +39,11 @@ class YofardevRepository {
     );
   }
 
-                                                                                                                                      
-
   ///////////////////////////////// FUNCTIONS CALL /////////////////////////////////
 
   Stream<Map<String, dynamic>> getFunctionsResultsStream({
+    required Chat chat,
     required String lastUserMessage,
-    List<FunctionInfo>? nextStepFunctions,
-    String? previousResponse,
     List<Map<String, dynamic>>? previousResults,
   }) async* {
     final llm.LlmApi? api = await llm.LLMRepository.getCurrentApi();
@@ -71,101 +54,68 @@ class YofardevRepository {
     final (String, List<llm.FunctionInfo>) items =
         await _repo.checkFunctionsCalling(
       api: api,
-      functions: nextStepFunctions ?? FunctionsHelper.getFunctions,
+      functions: FunctionsHelper.getFunctions,
+      messages: chat.llmMessages,
       lastUserMessage: lastUserMessage,
-      previousResponse: previousResponse,
-      previousResults: previousResults?.toString(),
     );
-    final List<FunctionInfo> functionsCalled = items.$2;
-    for (final FunctionInfo functionInfo in functionsCalled) {
+    final List<llm.FunctionInfo> functionsCalled = items.$2;
+    for (final llm.FunctionInfo functionInfo in functionsCalled) {
       final Map<String, dynamic> result = <String, dynamic>{
         'name': functionInfo.name,
         'parameters': functionInfo.parametersCalled,
-        'result': await _callFunction(functionInfo, functionInfo.parametersCalled),
-        'intermediate': functionInfo.isMultiStep,
+        'result':
+            await _callFunction(functionInfo, functionInfo.parametersCalled),
       };
       debugPrint('Function results: $result');
       yield result;
-      if (functionInfo.isMultiStep) {
-        yield* getFunctionsResultsStream(
-          lastUserMessage: lastUserMessage,
-          nextStepFunctions: <llm.FunctionInfo>[functionInfo.nextStep!],
-          previousResponse: items.$1,
-          previousResults: <Map<String, dynamic>>[result],
-        );
-      }
     }
   }
 
-  
-
   static Future<String> _callFunction(
-    FunctionInfo functionInfo,
-    Map<String, dynamic>? parameters,
+    llm.FunctionInfo functionInfo,
+    Map<String, dynamic>? parametersCalled,
   ) async {
     final String functionName = functionInfo.name;
 
     switch (functionName) {
       case 'getCurrentWeather':
-        final String location = parameters?['location'] as String? ?? 'current';
+        final String location = parametersCalled?['location'] as String? ?? 'current';
         return (functionInfo.function as Function(String))(location)
             as Future<String>;
-      case 'getMostPopularNewsOfTheDay':
-        return (functionInfo.function as Function())() as Future<String>;
       case 'characterCounter':
-        final String text = parameters?['text'] as String? ?? '';
-        final String character = parameters?['character'] as String? ?? '';
+        final String text = parametersCalled?['text'] as String? ?? '';
+        final String character = parametersCalled?['character'] as String? ?? '';
         final int response = await (functionInfo.function as Function(
           String,
           String,
         ))(text, character) as int;
         return response.toString();
       case 'calculateExpression':
-        final String expression = parameters?['expression'] as String? ?? '';
+        final String expression = parametersCalled?['expression'] as String? ?? '';
         final double? response = await (functionInfo.function as Function(
           String,
         ))(expression) as double?;
         return response?.toString() ?? 'Invalid expression';
-      case 'searchWikipedia':
-        final String query = parameters?['query'] as String? ?? '';
-        return (functionInfo.function as Function(String))(query)
-            as Future<String>;
-      case 'getWikipediaPage':
-        final String title = parameters?['title'] as String? ?? '';
-        return (functionInfo.function as Function(String))(title)
-            as Future<String>;
       case 'setAlarm':
-        final int minutesFromNow = parameters?['minutesFromNow'] as int? ?? 0;
+        final int minutesFromNow = parametersCalled?['minutesFromNow'] as int? ?? 0;
         final String message =
-            parameters?['message'] as String? ?? 'Hello world!';
+            parametersCalled?['message'] as String? ?? 'Hello world!';
         return (functionInfo.function as Function(int, String))(
           minutesFromNow,
           message,
         ) as Future<String>;
       case 'searchGoogle':
-        final String query = parameters?['query'] as String? ?? '';
+        final String query = parametersCalled?['query'] as String? ?? '';
         final List<Map<String, dynamic>> response =
             await (functionInfo.function as Function(String))(query)
                 as List<Map<String, dynamic>>;
         return response.toString();
-      case 'getHtmlFromUrl':
-        final String url = parameters?['url'] as String? ?? '';
-        return (functionInfo.function as Function(String))(url)
-            as Future<String>;
-      case 'summarizeWebPage':
-        final String html = parameters?['html'] as String? ?? '';
-        final String originalPrompt =
-            parameters?['originalPrompt'] as String? ?? '';
-        return (functionInfo.function as Function(String, String))(
-          html,
-          originalPrompt,
-        ) as Future<String>;
-      case 'multiStepsFunction':
-      case 'multiStepsFunction2':
-      case 'multiStepsFunction3':
-        final String password = parameters?['password'] as String? ?? '';
-        return (functionInfo.function as Function(String))(password)
-            as Future<String>;
+         case 'getTextContentFromWebsite':
+        final String url = parametersCalled?['url'] as String? ?? '';
+        final String response = await (functionInfo.function as Function(
+          String,
+        ))(url) as String;
+        return response;
       default:
         debugPrint('Invalid function name: $functionName');
         return 'null';
