@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
+import 'package:llm_api_picker/llm_api_picker.dart' as llm;
 
 import 'avatar.dart';
 import 'chat_entry.dart';
@@ -92,4 +93,23 @@ class Chat extends Equatable {
 
   factory Chat.fromJson(String source) =>
       Chat.fromMap(json.decode(source) as Map<String, dynamic>);
+}
+
+extension ChatExtension on Chat {
+  List<llm.Message> get llmMessages {
+    final List<llm.Message> messages = <llm.Message>[];
+    for (final ChatEntry entry in entries) {
+      if (entry.entryType == EntryType.functionCalling) continue;
+      messages.add(
+        llm.Message(
+          role: entry.entryType == EntryType.user
+              ? llm.MessageRole.user
+              : llm.MessageRole.assistant,
+          body: entry.body,
+          attachedFile: entry.attachedImage,
+        ),
+      );
+    }
+    return messages;
+  }
 }

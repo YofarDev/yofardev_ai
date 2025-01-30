@@ -45,7 +45,8 @@ class ChatsCubit extends Cubit<ChatsState> {
   void init() async {
     getCurrentChat();
     setCurrentLanguage(
-      PlatformUtils.checkPlatform() == 'Web' || PlatformUtils.checkPlatform() == 'MacOS'
+      PlatformUtils.checkPlatform() == 'Web' ||
+              PlatformUtils.checkPlatform() == 'MacOS'
           ? "fr"
           : await SettingsService().getLanguage() ?? 'fr',
     );
@@ -171,8 +172,9 @@ class ChatsCubit extends Cubit<ChatsState> {
     final StreamController<List<Map<String, dynamic>>> streamController =
         StreamController<List<Map<String, dynamic>>>();
     final List<Map<String, dynamic>> previousResults = <Map<String, dynamic>>[];
-   _yofardevRepository
+    _yofardevRepository
         .getFunctionsResultsStream(
+      chat: onlyText ? state.openedChat : state.currentChat,
       lastUserMessage: lastUserMessage,
     )
         .listen(

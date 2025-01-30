@@ -8,9 +8,6 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 
-import '../res/app_constants.dart';
-import '../utils/extensions.dart';
-
 class GoogleSearchService {
   static Future<List<Map<String, dynamic>>> searchGoogle(String query) async {
     try {
@@ -61,31 +58,5 @@ class GoogleSearchService {
     final String textSummary =
         document.body!.text.trim().replaceAll(RegExp(r"\s+"), " ");
     return textSummary;
-  }
-
-  static Future<String> getHtmlFromUrl(
-    String url, {
-    bool headless = true,
-  }) async {
-    try {
-      final Map<String, String> headers = <String, String>{
-        'Accept': 'text/html',
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
-      };
-      final http.Response response =
-          await http.get(Uri.parse(url), headers: headless ? null : headers);
-      if (response.statusCode == 200) {
-        return (await getHtmlReduced(response.body))
-            .limitWords(AppConstants.maxWordsLimit);
-      } else {
-        debugPrint('Failed to load page: ${response.statusCode}');
-        if (!headless) return response.body;
-        await Future<dynamic>.delayed(const Duration(seconds: 1));
-        return getHtmlFromUrl(url, headless: false);
-      }
-    } catch (e) {
-      return 'Error loading page: $e';
-    }
   }
 }

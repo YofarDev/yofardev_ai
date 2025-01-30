@@ -1,14 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:llm_api_picker/llm_api_picker.dart';
 import 'package:math_expressions/math_expressions.dart';
 
-import '../res/app_constants.dart';
 import '../services/alarm_service.dart';
 import '../services/google_search_service.dart';
 import '../services/news_service.dart';
 import '../services/weather_service.dart';
-import '../services/wikipedia_service.dart';
-import 'extensions.dart';
 
 class FunctionsHelper {
   static final List<FunctionInfo> getFunctions = <FunctionInfo>[
@@ -64,31 +64,6 @@ class FunctionsHelper {
           FunctionsHelper.getResultOfMathExpression(expression),
     ),
     FunctionInfo(
-      name: 'searchWikipedia',
-      description:
-          'Returns a list of Wikipedia pages that match a search query',
-      parameters: <Parameter>[
-        Parameter(
-          name: 'query',
-          description: 'The search query',
-          type: 'string',
-        ),
-      ],
-      function: (String query) => WikipediaService.searchWikipedia(query),
-      nextStep: FunctionInfo(
-        name: 'getWikipediaPage',
-        description: 'Returns the content of a Wikipedia page',
-        parameters: <Parameter>[
-          Parameter(
-            name: 'title',
-            description: 'The title of the Wikipedia page to open',
-            type: 'string',
-          ),
-        ],
-        function: (String title) => WikipediaService.getWikipediaPage(title),
-      ),
-    ),
-    FunctionInfo(
       name: 'setAlarm',
       description: 'Sets an alarm for a specific time',
       parameters: <Parameter>[
@@ -117,37 +92,18 @@ class FunctionsHelper {
         ),
       ],
       function: (String query) => GoogleSearchService.searchGoogle(query),
-      nextStep: FunctionInfo(
-        name: 'getHtmlFromUrl',
-        description: 'Gets the HTML content of a given URL',
-        parameters: <Parameter>[
-          Parameter(
-            name: 'url',
-            description: 'The URL to get the HTML content from',
-            type: 'string',
-          ),
-        ],
-        function: (String url) => GoogleSearchService.getHtmlFromUrl(url),
-        nextStep: FunctionInfo(
-          name: 'summarizeWebPage',
-          description: 'Summarizes a web page based on the given HTML content',
-          parameters: <Parameter>[
-            Parameter(
-              name: 'html',
-              description: 'The HTML content of the web page',
-              type: 'string',
-            ),
-            Parameter(
-              name: 'originalPrompt',
-              description:
-                  'The original prompt used to generate the HTML content',
-              type: 'string',
-            ),
-          ],
-          function: (String html, String originalPrompt) =>
-              FunctionsHelper.sumUpWebPage(html, originalPrompt),
+    ),
+    FunctionInfo(
+      name: 'getTextContentFromWebsite',
+      description: 'Get the rendered text content of a webpage.',
+      parameters: <Parameter>[
+        Parameter(
+          name: 'url',
+          type: 'String',
+          description: 'The URL of the webpage.',
         ),
-      ),
+      ],
+      function: (String url) => getRenderedTextOfWebsite(url),
     ),
     // Test.multiStepsFunction,
   ];
@@ -180,18 +136,28 @@ class FunctionsHelper {
     }
   }
 
-  static Future<String> sumUpWebPage(String html, String originalPrompt) async {
-    final String response = await LLMRepository.promptModel(
-      systemPrompt:
-          'You are a helpful assistant that summarizes web pages based on an user request. You only answer with the text summary, remove html tags and do NOT add additional comments.',
-      messages: <Message>[
-        Message(
-          role: MessageRole.user,
-          body:
-              'Here is the original user’s message : $originalPrompt\nAfter a web query search, we got the following html web page result. Make a text summary with all relevant informations : \n$html',
-        ),
-      ],
+  static Future<String> getRenderedTextOfWebsite(String url) async {
+    final Uri uri = Uri.parse(url);
+    final Completer<String> completer = Completer<String>();
+    final HeadlessInAppWebView headlessWebView = HeadlessInAppWebView(
+      initialUrlRequest: URLRequest(url: WebUri.uri(uri)),
+      onLoadStop: (InAppWebViewController controller, WebUri? url) async {
+        try {
+          // Extract text using JavaScript
+          final String results = await controller.evaluateJavascript(
+                source: "document.body.innerText;",
+              ) as String? ??
+              'null';
+          completer.complete(results);
+        } catch (e) {
+          completer.completeError(e);
+        }
+      },
     );
-    return response.limitWords(AppConstants.maxWordsLimit);
+    await headlessWebView.run();
+    return completer.future.whenComplete(() {
+      // Dispose the headlessWebView once the future completes
+      headlessWebView.dispose();
+    });
   }
 }
