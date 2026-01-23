@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
-import 'package:llm_api_picker/llm_api_picker.dart' as llm;
 
 import 'avatar.dart';
 import 'chat_entry.dart';
+import 'llm/llm_message.dart';
 
 enum ChatPersona {
   assistant,
@@ -96,15 +96,15 @@ class Chat extends Equatable {
 }
 
 extension ChatExtension on Chat {
-  List<llm.Message> get llmMessages {
-    final List<llm.Message> messages = <llm.Message>[];
+  List<LlmMessage> get llmMessages {
+    final List<LlmMessage> messages = <LlmMessage>[];
     for (final ChatEntry entry in entries) {
       if (entry.entryType == EntryType.functionCalling) continue;
       messages.add(
-        llm.Message(
+        LlmMessage(
           role: entry.entryType == EntryType.user
-              ? llm.MessageRole.user
-              : llm.MessageRole.assistant,
+              ? LlmMessageRole.user
+              : LlmMessageRole.assistant,
           body: entry.body,
           attachedFile: entry.attachedImage,
         ),

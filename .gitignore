@@ -47,3 +47,5 @@ app.*.map.json
 
 /screenshots/base.psd
 .env
+CLAUDE.md
+GEMINI.md

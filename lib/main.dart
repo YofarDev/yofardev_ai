@@ -15,6 +15,7 @@ import 'l10n/localization_manager.dart';
 import 'logic/avatar/avatar_cubit.dart';
 import 'logic/chat/chats_cubit.dart';
 import 'logic/talking/talking_cubit.dart';
+import 'services/tts_service.dart';
 import 'ui/pages/home.dart';
 import 'ui/widgets/constrained_width.dart';
 import 'utils/platform_utils.dart';
@@ -46,6 +47,8 @@ void main() async {
   }
   if (PlatformUtils.checkPlatform() != 'Web') {
     await dotenv.load();
+    // Initialize SupertonicTTS for mobile/desktop platforms
+    await TtsService.initSupertonic();
   }
   runApp(
     const MyApp(),

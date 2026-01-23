@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:llm_api_picker/llm_api_picker.dart';
 
 import '../../../l10n/localization_manager.dart';
 import '../../../logic/chat/chats_cubit.dart';
@@ -13,6 +12,7 @@ import '../../../models/voice.dart';
 import '../../../services/settings_service.dart';
 import '../../../utils/platform_utils.dart';
 import '../../widgets/constrained_width.dart';
+import 'llm/llm_selection_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -201,7 +201,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Navigator.of(context).push(
             MaterialPageRoute<dynamic>(
               builder: (BuildContext context) =>
-                  const ConstrainedWidth(child: LlmApiPickerSettingsPage()),
+                  const ConstrainedWidth(child: LlmSelectionPage()),
             ),
           );
         },

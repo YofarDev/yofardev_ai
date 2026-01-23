@@ -13,7 +13,7 @@ class FunctionCallingButton extends StatelessWidget {
       builder: (BuildContext context, ChatsState state) {
         return AppIconButton(
           icon: state.functionCallingEnabled ? Icons.code : Icons.code_off,
-          onPressed: () async {
+          onPressed: ()  {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(

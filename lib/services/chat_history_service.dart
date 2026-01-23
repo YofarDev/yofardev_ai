@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/avatar.dart';
 import '../models/chat.dart';
-import '../repositories/yofardev_repository.dart';
+import 'prompt_service.dart';
 import 'settings_service.dart';
 
 class ChatHistoryService {
@@ -17,7 +17,7 @@ class ChatHistoryService {
       id: newChatId,
       avatar: persona.getDefaultAvatar(),
       language: deviceLocale.languageCode,
-      systemPrompt: await YofardevRepository.getSystemPrompt(),
+      systemPrompt: await PromptService().getSystemPrompt(),
       persona: persona,
     );
     await _removeEmptyChats();

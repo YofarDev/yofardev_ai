@@ -61,7 +61,7 @@ class HomeButtons extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 8),
                   child: AppIconButton(
                     icon: Icons.settings_rounded,
-                    onPressed: () async {
+                    onPressed: ()  {
                       Navigator.of(context).push(
                         MaterialPageRoute<dynamic>(
                           builder: (BuildContext context) =>

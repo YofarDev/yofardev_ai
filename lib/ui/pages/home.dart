@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
@@ -55,7 +57,7 @@ class _HomeState extends State<Home> {
     _player.play();
   }
 
-  void _updateAvatarValuesBasedOnScreenWidth() async {
+  void _updateAvatarValuesBasedOnScreenWidth() {
     context.read<AvatarCubit>().setValuesBasedOnScreenWidth(
           screenWidth: MediaQuery.of(context).size.width > AppConstants.maxWidth
               ? AppConstants.maxWidth
@@ -63,7 +65,7 @@ class _HomeState extends State<Home> {
         );
   }
 
-  void _initVolumeControl() async {
+  void _initVolumeControl() {
     if (PlatformUtils.checkPlatform() == 'Web') return;
     _volumeControl = ProgressiveVolumeControl();
   }
@@ -212,16 +214,29 @@ class _HomeState extends State<Home> {
     bool? soundEffectsEnabled,
     bool updateStatus = true,
   }) async {
+    // Check if file exists before playing
+    final File audioFile = File(audioPath);
+    if (!await audioFile.exists()) {
+      debugPrint('⚠️  Audio file not found: $audioPath');
+      return;
+    }
+
+    debugPrint('🎵 Playing TTS: $audioPath');
     await _player.stop();
-    await _player.setFilePath(audioPath, initialPosition: Duration.zero);
-    await _player.play().then((_) async {
-      await _player.stop();
-      context.read<TalkingCubit>().stopTalking(
-            soundEffectsEnabled: soundEffectsEnabled ??
-                context.read<ChatsCubit>().state.soundEffectsEnabled,
-            removeFile: removeFile,
-            updateStatus: updateStatus,
-          );
-    });
+
+    try {
+      await _player.setFilePath(audioPath, initialPosition: Duration.zero);
+      await _player.play().then((_) async {
+        await _player.stop();
+        context.read<TalkingCubit>().stopTalking(
+              soundEffectsEnabled: soundEffectsEnabled ??
+                  context.read<ChatsCubit>().state.soundEffectsEnabled,
+              removeFile: removeFile,
+              updateStatus: updateStatus,
+            );
+      });
+    } catch (e) {
+      debugPrint('❌ Error playing TTS: $e');
+    }
   }
 }

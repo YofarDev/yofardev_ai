@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -68,6 +69,13 @@ class _TalkingMouthState extends State<TalkingMouth> {
     int i = 0;
     while (_waitingTalking) {
       await Future<void>.delayed(const Duration(milliseconds: 500));
+
+      // Check if we have waiting sentences
+      if (context.read<ChatsCubit>().state.audioPathsWaitingSentences.isEmpty) {
+        await Future<void>.delayed(const Duration(seconds: 3));
+        continue;
+      }
+
       final String audioPath = context
           .read<ChatsCubit>()
           .state
@@ -76,6 +84,19 @@ class _TalkingMouthState extends State<TalkingMouth> {
           .read<ChatsCubit>()
           .state
           .audioPathsWaitingSentences[i]['amplitudes'] as List<int>;
+
+      // Check if file exists before playing
+      if (!await File(audioPath).exists()) {
+        debugPrint('⚠️  Waiting audio file not found: $audioPath');
+        i++;
+        if (i >=
+            context.read<ChatsCubit>().state.audioPathsWaitingSentences.length) {
+          i = 0;
+        }
+        await Future<void>.delayed(const Duration(seconds: 3));
+        continue;
+      }
+
       final int duration = await _startTalking(
         context,
         audioPath,
@@ -103,9 +124,31 @@ class _TalkingMouthState extends State<TalkingMouth> {
           );
       return 0;
     }
+
+    debugPrint('🎵 Loading audio file: $audioPath');
+
+    // Verify file exists before loading
+    final File audioFile = File(audioPath);
+    if (!await audioFile.exists()) {
+      debugPrint('❌ Audio file does not exist: $audioPath');
+      return 0;
+    }
+
+    final int fileSize = await audioFile.length();
+    debugPrint('📁 Audio file size: $fileSize bytes');
+
     final AudioPlayer player =
         AudioPlayer(); // player only used to get the duration here
-    await player.setFilePath(audioPath, initialPosition: Duration.zero);
+
+    try {
+      await player.setFilePath(audioPath, initialPosition: Duration.zero);
+      debugPrint('✅ Audio loaded successfully, duration: ${player.duration}');
+    } catch (e) {
+      debugPrint('❌ Failed to load audio: $e');
+      await player.dispose();
+      return 0;
+    }
+
     final int totalFrames = amplitudes.length;
     final int updateInterval =
         (player.duration!.inMilliseconds / totalFrames).round();

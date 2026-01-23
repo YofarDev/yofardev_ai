@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
+  flutter_onnxruntime
   flutter_volume_controller
   screen_retriever_linux
   window_manager

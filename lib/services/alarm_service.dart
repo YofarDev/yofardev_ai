@@ -24,6 +24,7 @@ class AlarmService {
           DateTime.now().add(Duration(minutes: minutesFromNow));
       final AlarmSettings alarmSettings = AlarmSettings(
         id: Random().nextInt(100),
+        volumeSettings: VolumeSettings.fixed(volume: 100),
         dateTime: dateTime,
         warningNotificationOnKill: Platform.isIOS,
         assetAudioPath: 'assets/chillAlarm.mp3',

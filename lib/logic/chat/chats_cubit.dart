@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:equatable/equatable.dart';
@@ -104,7 +103,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     );
   }
 
-  void shuffleWaitingSentences() async {
+  void shuffleWaitingSentences() {
     final List<Map<String, dynamic>> list = state.audioPathsWaitingSentences;
     list.shuffle();
     emit(
@@ -164,87 +163,15 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(openedChat: chat));
   }
 
-  Future<List<Map<String, dynamic>>> _checkFunctionCalling({
-    required String lastUserMessage,
-    required Avatar avatar,
-    required bool onlyText,
-  }) async {
-    final StreamController<List<Map<String, dynamic>>> streamController =
-        StreamController<List<Map<String, dynamic>>>();
-    final List<Map<String, dynamic>> previousResults = <Map<String, dynamic>>[];
-    _yofardevRepository
-        .getFunctionsResultsStream(
-      chat: onlyText ? state.openedChat : state.currentChat,
-      lastUserMessage: lastUserMessage,
-    )
-        .listen(
-      (Map<String, dynamic> result) {
-        final List<Map<String, dynamic>> newResults = <Map<String, dynamic>>[
-          result,
-        ];
-        debugPrint('functionCalling result: $result');
-        streamController.add(newResults);
-        previousResults.add(result);
-      },
-      onDone: () => streamController.close(),
-    );
-    await for (final List<Map<String, dynamic>> functionsResults
-        in streamController.stream) {
-      final ChatEntry functionCallingEntry = ChatEntry(
-        id: const Uuid().v4(),
-        entryType: EntryType.functionCalling,
-        body: jsonEncode(functionsResults),
-        timestamp: DateTime.now(),
-      );
-      Chat chat = onlyText ? state.openedChat : state.currentChat;
-      chat = chat.copyWith(
-        entries: <ChatEntry>[...chat.entries, functionCallingEntry],
-      );
-      emit(
-        state.copyWith(
-          openedChat: onlyText ? chat : null,
-          currentChat: onlyText ? null : chat,
-        ),
-      );
-    }
-    final List<Map<String, dynamic>> finalResultsToSend =
-        <Map<String, dynamic>>[];
-    for (final Map<String, dynamic> item in previousResults) {
-      if (item['intermediate'] != true) {
-        item.remove('intermediate');
-        for (final String key in item.keys) {
-          if (key != 'result') {
-            String value = item[key].toString();
-            if (value.characters.length > 200) {
-              value = '${value.substring(0, 200)} [...]';
-            }
-            value = '${value.replaceAll('\n', '')}\n';
-            item[key] = value;
-          }
-        }
-        finalResultsToSend.add(item);
-      }
-    }
-    return finalResultsToSend;
-  }
-
   Future<ChatEntry> _getNewEntry({
     required String lastUserMessage,
     required Avatar avatar,
     required bool onlyText,
     String? attachedImage,
   }) async {
-    final List<Map<String, dynamic>> finalResultsToSend =
-        state.functionCallingEnabled
-            ? await _checkFunctionCalling(
-                lastUserMessage: lastUserMessage,
-                avatar: avatar,
-                onlyText: onlyText,
-              )
-            : <Map<String, dynamic>>[];
     final String languageCode = await SettingsService().getLanguage() ?? 'fr';
     final String wrappedUserMessage =
-        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}${finalResultsToSend.isNotEmpty ? "\n${localized.resultsFunctionCalling} :\n$finalResultsToSend\n" : ''}\n${localized.userMessage} : \n'''$lastUserMessage'''";
+        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${localized.userMessage} : \n'''$lastUserMessage'''";
     final ChatEntry newUserEntry = ChatEntry(
       id: const Uuid().v4(),
       entryType: EntryType.user,
@@ -302,7 +229,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     );
     try {
       final ChatEntry newModelEntry =
-          await _yofardevRepository.askYofardevAi(chat);
+          await _yofardevRepository.askYofardevAi(chat, userEntry.body);
       final List<ChatEntry> entries = <ChatEntry>[
         ...chat.entries,
         newModelEntry,
