@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../models/avatar.dart';
 import '../../models/chat.dart';
 import '../../res/app_constants.dart';
@@ -10,6 +11,8 @@ import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
   AvatarCubit() : super(const AvatarState());
+
+  ChatHistoryService get _chatHistoryService => getIt<ChatHistoryService>();
 
   void setValuesBasedOnScreenWidth({
     required double screenWidth,
@@ -36,8 +39,8 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void loadAvatar(String chatId) async {
     emit(state.copyWith(status: AvatarStatus.loading));
-    final Chat chat = await ChatHistoryService().getChat(chatId) ??
-        await ChatHistoryService().createNewChat();
+    final Chat chat = await _chatHistoryService.getChat(chatId) ??
+        await _chatHistoryService.createNewChat();
     emit(
       state.copyWith(
         avatar: chat.avatar,
@@ -110,7 +113,7 @@ class AvatarCubit extends Cubit<AvatarState> {
         previousSpecialsState: avatarConfig.specials,
       ),
     );
-    ChatHistoryService().updateAvatar(chatId, avatar);
+    _chatHistoryService.updateAvatar(chatId, avatar);
   }
 
   void toggleGlasses() {
