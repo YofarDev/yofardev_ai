@@ -2,11 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../features/avatar/bloc/avatar_cubit.dart';
+import '../../features/chat/bloc/chats_cubit.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
 import '../../features/demo/services/demo_controller.dart';
 import '../../features/demo/services/demo_service.dart';
 import '../../features/settings/bloc/settings_cubit.dart';
-import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/settings_service.dart';
