@@ -12,9 +12,9 @@ import 'package:window_manager/window_manager.dart';
 
 import 'core/di/service_locator.dart';
 import 'features/avatar/bloc/avatar_cubit.dart';
+import 'features/chat/bloc/chats_cubit.dart';
 import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
-import 'features/chat/bloc/chats_cubit.dart';
 import 'logic/talking/talking_cubit.dart';
 import 'services/tts_service.dart';
 import 'ui/pages/home.dart';

@@ -5,8 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../../l10n/localization_manager.dart';
 import '../../../features/chat/bloc/chats_cubit.dart';
+import '../../../l10n/localization_manager.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';

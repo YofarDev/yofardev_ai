@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../l10n/localization_manager.dart';
+import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';
@@ -18,7 +19,6 @@ import '../../../services/tts_service.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/platform_utils.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
-import '../../../logic/talking/talking_cubit.dart';
 
 part 'chat_state.dart';
 

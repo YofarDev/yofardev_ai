@@ -114,7 +114,7 @@ String _limitParameterSize(
       } else {
         return body;
       }
-      final localized = LocalizationManager();
+      final LocalizationManager localized = LocalizationManager();
       return "$reduced\n${localized.currentLanguage.userMessage} : \n'''$userMessage'''";
     }
     return body;

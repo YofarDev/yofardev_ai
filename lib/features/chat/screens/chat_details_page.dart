@@ -110,7 +110,7 @@ class _ChatContent extends StatelessWidget {
               persona: chat.persona,
               isTyping: isTyping,
               showEverything: showEverything,
-              onImageTap: (path) {
+              onImageTap: (String path) {
                 Navigator.of(context).push(
                   MaterialPageRoute<dynamic>(
                     builder: (BuildContext context) =>
