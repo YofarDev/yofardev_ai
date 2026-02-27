@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/logic/chat/chats_cubit.dart';
+import 'package:yofardev_ai/features/chat/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/models/avatar.dart';
 import 'package:yofardev_ai/models/chat.dart';
 // Note: chats_state.dart is a part file, accessible through chats_cubit.dart
