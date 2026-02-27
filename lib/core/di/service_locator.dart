@@ -5,6 +5,7 @@ import 'package:yofardev_ai/core/services/llm/fake_llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart';
+import 'package:yofardev_ai/features/demo/bloc/demo_cubit.dart';
 import 'package:yofardev_ai/features/demo/services/demo_controller.dart';
 import 'package:yofardev_ai/features/demo/services/demo_service.dart';
 import 'package:yofardev_ai/features/settings/bloc/settings_cubit.dart';
@@ -51,6 +52,9 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<AvatarCubit>(() => AvatarCubit());
   getIt.registerFactory<TalkingCubit>(() => TalkingCubit());
   getIt.registerFactory<ChatsCubit>(() => ChatsCubit());
+  getIt.registerFactory<DemoCubit>(
+    () => DemoCubit(getIt<DemoController>()),
+  );
   getIt.registerFactory<SettingsCubit>(
     () => SettingsCubit(settingsService: getIt<SettingsService>()),
   );
