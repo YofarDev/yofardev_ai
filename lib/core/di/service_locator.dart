@@ -1,9 +1,8 @@
 import 'package:get_it/get_it.dart';
-
-import '../../logic/avatar/avatar_cubit.dart';
-import '../../logic/chat/chats_cubit.dart';
-import '../../logic/talking/talking_cubit.dart';
-import '../../services/chat_history_service.dart';
+import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart';
+import 'package:yofardev_ai/logic/chat/chats_cubit.dart';
+import 'package:yofardev_ai/logic/talking/talking_cubit.dart';
+import 'package:yofardev_ai/services/chat_history_service.dart';
 
 final GetIt getIt = GetIt.instance;
 

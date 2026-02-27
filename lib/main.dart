@@ -13,7 +13,7 @@ import 'package:window_manager/window_manager.dart';
 import 'core/di/service_locator.dart';
 import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
-import 'logic/avatar/avatar_cubit.dart';
+import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart'';
 import 'logic/chat/chats_cubit.dart';
 import 'logic/talking/talking_cubit.dart';
 import 'services/tts_service.dart';

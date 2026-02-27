@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/logic/avatar/avatar_cubit.dart';
-import 'package:yofardev_ai/logic/avatar/avatar_state.dart';
+import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart';
+import 'package:yofardev_ai/features/avatar/bloc/avatar_state.dart';
 import 'package:yofardev_ai/models/avatar.dart';
 
 void main() {

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../logic/avatar/avatar_cubit.dart';
-import '../../logic/avatar/avatar_state.dart';
+import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart'';
+import 'package:yofardev_ai/features/avatar/bloc/avatar_state.dart'';
 import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../res/app_colors.dart';
