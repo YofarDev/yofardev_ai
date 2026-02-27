@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../logic/chat/chats_cubit.dart';
+import '../../../../features/chat/bloc/chats_cubit.dart';
 import '../../../../models/chat.dart';
 import '../../../../models/chat_entry.dart';
 import '../../../../ui/pages/chat/widgets/function_calling_widget.dart';

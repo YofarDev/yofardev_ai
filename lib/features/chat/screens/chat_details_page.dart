@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../../logic/chat/chats_cubit.dart';
+import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../ui/pages/chat/image_full_screen.dart';

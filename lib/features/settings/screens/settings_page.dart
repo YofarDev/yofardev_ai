@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../l10n/localization_manager.dart';
-import '../../../logic/chat/chats_cubit.dart';
+import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../models/chat.dart';
 import '../../../models/voice.dart';
 import '../../../utils/platform_utils.dart';

@@ -10,7 +10,7 @@ import 'package:lottie/lottie.dart';
 import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../l10n/localization_manager.dart';
-import '../../../logic/chat/chats_cubit.dart';
+import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';

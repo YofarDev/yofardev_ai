@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/avatar/bloc/avatar_cubit.dart';
-import '../../logic/chat/chats_cubit.dart';
+import '../../features/chat/bloc/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../pages/chat/chats_list_page.dart';
 import '../pages/settings/settings_page.dart';

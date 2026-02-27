@@ -6,7 +6,7 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../features/avatar/bloc/avatar_cubit.dart';
 import '../../features/avatar/bloc/avatar_state.dart';
-import '../../logic/chat/chats_cubit.dart';
+import '../../features/chat/bloc/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../res/app_colors.dart';
 import '../../res/app_constants.dart';

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/services/llm/fake_llm_service.dart';
-import '../../../logic/chat/chats_cubit.dart';
+import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
 import '../models/demo_script.dart';
