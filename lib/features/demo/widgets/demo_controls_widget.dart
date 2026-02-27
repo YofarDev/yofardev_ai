@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:yofardev_ai/features/demo/bloc/demo_cubit.dart';
-import 'package:yofardev_ai/features/demo/models/demo_script.dart';
+import '../bloc/demo_cubit.dart';
+import '../models/demo_script.dart';
 
 /// Demo controls widget for selecting and starting demos
 ///
@@ -96,7 +96,7 @@ class _DemoScriptList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<DemoScript> scripts = DemoScripts.all;
+    const List<DemoScript> scripts = DemoScripts.all;
 
     if (scripts.isEmpty) {
       return const Padding(

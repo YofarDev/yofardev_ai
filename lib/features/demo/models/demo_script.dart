@@ -24,7 +24,7 @@ class FakeLlmResponse {
 
   /// Convert to JSON
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'jsonBody': jsonBody,
       'audioPath': audioPath,
       'amplitudes': amplitudes,
@@ -69,7 +69,7 @@ class DemoScript {
 
   /// Convert to JSON
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'name': name,
       'description': description,
       'initialBackground': initialBackground,
@@ -92,7 +92,6 @@ class DemoScripts {
   static const DemoScript beachDemo = DemoScript(
     name: 'Plage Demo',
     description: 'Office → Plage → Maillot de bain',
-    initialBackground: 'office',
     responses: <FakeLlmResponse>[
       FakeLlmResponse(
         jsonBody:

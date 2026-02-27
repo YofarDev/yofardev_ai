@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:yofardev_ai/features/demo/models/demo_script.dart';
-import 'package:yofardev_ai/features/demo/services/demo_controller.dart';
+import '../models/demo_script.dart';
+import '../services/demo_controller.dart';
 
 /// Demo state
 class DemoState {

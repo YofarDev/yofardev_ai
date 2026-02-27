@@ -1,15 +1,14 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart';
-import 'package:yofardev_ai/features/demo/models/demo_script.dart';
-import 'package:yofardev_ai/features/demo/services/demo_controller.dart';
-import 'package:yofardev_ai/core/services/llm/fake_llm_service.dart';
-import 'package:yofardev_ai/logic/chat/chats_cubit.dart';
-import 'package:yofardev_ai/models/avatar.dart';
+import '../../../core/services/llm/fake_llm_service.dart';
+import '../../../logic/chat/chats_cubit.dart';
+import '../../../models/avatar.dart';
+import '../../avatar/bloc/avatar_cubit.dart';
+import '../models/demo_script.dart';
+import 'demo_controller.dart';
 
 /// Service for managing demo mode
 ///

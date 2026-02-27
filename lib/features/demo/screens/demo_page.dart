@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:yofardev_ai/core/services/llm/fake_llm_service.dart';
-import 'package:yofardev_ai/core/di/service_locator.dart';
-import 'package:yofardev_ai/features/demo/bloc/demo_cubit.dart';
-import 'package:yofardev_ai/features/demo/widgets/demo_controls_widget.dart';
+import '../../../core/di/service_locator.dart';
+import '../../../core/services/llm/fake_llm_service.dart';
+import '../bloc/demo_cubit.dart';
+import '../widgets/demo_controls_widget.dart';
 
 /// Demo controls page for managing demo mode
 ///

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:yofardev_ai/features/demo/bloc/demo_cubit.dart';
+import '../bloc/demo_cubit.dart';
 
 /// Overlay widget that shows the demo countdown
 class DemoCountdownOverlay extends StatelessWidget {
@@ -18,7 +18,7 @@ class DemoCountdownOverlay extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return Container(
+        return ColoredBox(
           color: Colors.black.withValues(alpha: 0.7),
           child: Center(
             child: TweenAnimationBuilder<double>(

@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:yofardev_ai/models/llm/function_info.dart';
-import 'package:yofardev_ai/models/llm/llm_config.dart';
-import 'package:yofardev_ai/models/llm/llm_message.dart';
-import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
-import 'package:yofardev_ai/features/demo/models/demo_script.dart';
+import '../../../features/demo/models/demo_script.dart';
+import '../../../models/llm/function_info.dart';
+import '../../../models/llm/llm_config.dart';
+import '../../../models/llm/llm_message.dart';
+import 'llm_service_interface.dart';
 
 /// Fake LLM service that returns pre-scripted responses for demo mode
 ///
@@ -58,7 +58,7 @@ class FakeLlmService implements LlmServiceInterface {
 
     final FakeLlmResponse response = _responseQueue[_currentIndex];
     _currentIndex++;
-    debugPrint('FakeLlmService returning response ${_currentIndex}/${_responseQueue.length}');
+    debugPrint('FakeLlmService returning response $_currentIndex/${_responseQueue.length}');
     return response;
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/chat.dart';
 import '../../../l10n/localization_manager.dart';
+import '../../../models/chat.dart';
 
 /// Dropdown widget for selecting chat persona
 class PersonaDropdown extends StatelessWidget {

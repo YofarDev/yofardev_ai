@@ -1,18 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
-import 'package:yofardev_ai/core/services/llm/fake_llm_service.dart';
-import 'package:yofardev_ai/core/services/llm/llm_service.dart';
-import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
-import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart';
-import 'package:yofardev_ai/features/demo/bloc/demo_cubit.dart';
-import 'package:yofardev_ai/features/demo/services/demo_controller.dart';
-import 'package:yofardev_ai/features/demo/services/demo_service.dart';
-import 'package:yofardev_ai/features/settings/bloc/settings_cubit.dart';
-import 'package:yofardev_ai/logic/chat/chats_cubit.dart';
-import 'package:yofardev_ai/logic/talking/talking_cubit.dart';
-import 'package:yofardev_ai/services/chat_history_service.dart';
-import 'package:yofardev_ai/services/settings_service.dart';
+import '../../features/avatar/bloc/avatar_cubit.dart';
+import '../../features/demo/bloc/demo_cubit.dart';
+import '../../features/demo/services/demo_controller.dart';
+import '../../features/demo/services/demo_service.dart';
+import '../../features/settings/bloc/settings_cubit.dart';
+import '../../logic/chat/chats_cubit.dart';
+import '../../logic/talking/talking_cubit.dart';
+import '../../services/chat_history_service.dart';
+import '../../services/settings_service.dart';
+import '../services/llm/fake_llm_service.dart';
+import '../services/llm/llm_service.dart';
+import '../services/llm/llm_service_interface.dart';
 
 final GetIt getIt = GetIt.instance;
 

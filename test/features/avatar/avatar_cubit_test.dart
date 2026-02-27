@@ -153,7 +153,6 @@ void main() {
           hat: AvatarHat.frenchBeret,
           top: AvatarTop.longCoat,
           glasses: AvatarGlasses.sunglasses,
-          specials: AvatarSpecials.onScreen,
           costume: AvatarCostume.batman,
         );
 
@@ -197,7 +196,7 @@ void main() {
           glasses: AvatarGlasses.sunglasses,
         );
         const Avatar withGlasses = Avatar(
-          glasses: AvatarGlasses.glasses,
+          
         );
         const Avatar batmanCostume = Avatar(
           glasses: AvatarGlasses.sunglasses,

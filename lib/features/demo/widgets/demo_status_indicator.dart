@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:yofardev_ai/features/demo/bloc/demo_cubit.dart';
+import '../bloc/demo_cubit.dart';
 
 /// Status indicator showing demo mode is active
 class DemoStatusIndicator extends StatelessWidget {

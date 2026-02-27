@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../ui/widgets/constrained_width.dart';
 import '../../../ui/pages/settings/llm/llm_selection_page.dart';
+import '../../../ui/widgets/constrained_width.dart';
 
 /// Button to navigate to LLM API selection page
 class ApiPickerButton extends StatelessWidget {

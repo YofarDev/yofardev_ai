@@ -64,7 +64,6 @@ enum AvatarCostume { none, batman, robocop, soubrette, singularity }
 
 @freezed
 class Avatar with _$Avatar {
-  const Avatar._();
 
   const factory Avatar({
     @Default(AvatarBackgrounds.lake) AvatarBackgrounds background,
@@ -74,6 +73,7 @@ class Avatar with _$Avatar {
     @Default(AvatarSpecials.onScreen) AvatarSpecials specials,
     @Default(AvatarCostume.none) AvatarCostume costume,
   }) = _Avatar;
+  const Avatar._();
 
   factory Avatar.fromJson(Map<String, dynamic> json) =>
       _$AvatarFromJson(json);
@@ -90,7 +90,6 @@ class Avatar with _$Avatar {
 
 @freezed
 class AvatarConfig with _$AvatarConfig {
-  const AvatarConfig._();
 
   const factory AvatarConfig({
     AvatarBackgrounds? background,
@@ -101,6 +100,7 @@ class AvatarConfig with _$AvatarConfig {
     AvatarCostume? costume,
     @SoundEffectConverter() SoundEffects? soundEffect,
   }) = _AvatarConfig;
+  const AvatarConfig._();
 
   factory AvatarConfig.fromJson(Map<String, dynamic> json) =>
       _$AvatarConfigFromJson(json);

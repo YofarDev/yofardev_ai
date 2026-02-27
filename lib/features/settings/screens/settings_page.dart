@@ -8,7 +8,6 @@ import '../../../logic/chat/chats_cubit.dart';
 import '../../../models/chat.dart';
 import '../../../models/voice.dart';
 import '../../../utils/platform_utils.dart';
-import '../../../ui/pages/settings/llm/llm_selection_page.dart';
 import '../bloc/settings_cubit.dart';
 import '../bloc/settings_state.dart';
 import '../widgets/api_picker_button.dart';

@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:yofardev_ai/models/llm/function_info.dart';
-import 'package:yofardev_ai/models/llm/llm_config.dart';
-import 'package:yofardev_ai/models/llm/llm_message.dart';
-import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
+import '../../../models/llm/function_info.dart';
+import '../../../models/llm/llm_config.dart';
+import '../../../models/llm/llm_message.dart';
+import 'llm_service_interface.dart';
 
 /// Real LLM service implementation using OpenAI-compatible APIs
 class LlmService implements LlmServiceInterface {

@@ -44,7 +44,7 @@ class SettingsCubit extends Cubit<SettingsState> {
         baseSystemPrompt: baseSystemPrompt,
       ));
     } catch (e) {
-      emit(SettingsError('Failed to load settings: ${e.toString()}'));
+      emit(SettingsError('Failed to load settings: $e'));
     }
   }
 
@@ -107,7 +107,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       ));
     } catch (e) {
       emit(currentState.copyWith(isLoadingVoices: false));
-      emit(SettingsError('Failed to load voices: ${e.toString()}'));
+      emit(SettingsError('Failed to load voices: $e'));
     }
   }
 
@@ -120,7 +120,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       await _settingsService.setUsername(username);
       emit(currentState.copyWith(username: username));
     } catch (e) {
-      emit(SettingsError('Failed to update username: ${e.toString()}'));
+      emit(SettingsError('Failed to update username: $e'));
     }
   }
 
@@ -133,7 +133,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       await _settingsService.setPersona(persona);
       emit(currentState.copyWith(persona: persona));
     } catch (e) {
-      emit(SettingsError('Failed to update persona: ${e.toString()}'));
+      emit(SettingsError('Failed to update persona: $e'));
     }
   }
 
@@ -148,7 +148,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       await _settingsService.setSoundEffects(enabled);
       emit(currentState.copyWith(soundEffectsEnabled: enabled));
     } catch (e) {
-      emit(SettingsError('Failed to update sound effects: ${e.toString()}'));
+      emit(SettingsError('Failed to update sound effects: $e'));
     }
   }
 
@@ -161,7 +161,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       await _settingsService.setTtsVoice(voice.name, language);
       emit(currentState.copyWith(selectedVoice: voice));
     } catch (e) {
-      emit(SettingsError('Failed to update voice: ${e.toString()}'));
+      emit(SettingsError('Failed to update voice: $e'));
     }
   }
 
@@ -174,7 +174,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       await _settingsService.setBaseSystemPrompt(prompt);
       emit(currentState.copyWith(baseSystemPrompt: prompt));
     } catch (e) {
-      emit(SettingsError('Failed to update system prompt: ${e.toString()}'));
+      emit(SettingsError('Failed to update system prompt: $e'));
     }
   }
 
@@ -190,7 +190,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       // Return to loaded state after navigation
       emit(currentState);
     } catch (e) {
-      emit(SettingsError('Failed to save settings: ${e.toString()}'));
+      emit(SettingsError('Failed to save settings: $e'));
     }
   }
 
