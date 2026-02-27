@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/demo/models/demo_script.dart';

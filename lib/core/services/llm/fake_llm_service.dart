@@ -45,7 +45,6 @@ class FakeLlmService implements LlmServiceInterface {
   }
 
   /// Deactivate fake LLM mode
-  @override
   void deactivate() {
     _isActive = false;
     _responseQueue.clear();
