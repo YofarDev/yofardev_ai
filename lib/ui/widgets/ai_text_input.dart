@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -17,6 +16,7 @@ import '../../services/tts_service.dart';
 import '../../utils/extensions.dart';
 import '../../utils/platform_utils.dart';
 import '../pages/chat/widgets/function_calling_widget.dart';
+import 'ai_text_input/speech_to_text_handler.dart';
 import 'current_prompt_text.dart';
 import 'glassmorphic_text_field.dart';
 import 'picker_buttons.dart';
@@ -33,15 +33,15 @@ class _AiTextInputState extends State<AiTextInput> {
   final FocusNode _inputFocus = FocusNode();
   final TextEditingController _controller = TextEditingController();
   File? _pickedImage;
-  SpeechToText? _speechToText;
-  bool _speechEnabled = false;
+  final SpeechToTextHandler _speechHandler = SpeechToTextHandler();
 
-  bool get _isSpeechListening => _speechToText?.isListening ?? false;
+  bool get _isSpeechListening => _speechHandler.isSpeechListening;
+  bool get _speechEnabled => _speechHandler.isSpeechEnabled;
 
   @override
   void initState() {
     super.initState();
-    _initSpeechToText();
+    _speechHandler.initialize();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!widget.onlyText) {
         FocusScope.of(context).requestFocus(_inputFocus);
@@ -49,23 +49,10 @@ class _AiTextInputState extends State<AiTextInput> {
     });
   }
 
-  void _initSpeechToText() async {
-    if (PlatformUtils.checkPlatform() == 'Web') return;
-    bool enable = false;
-    if (PlatformUtils.checkPlatform() != 'MacOS') {
-      final PermissionStatus status = await Permission.microphone.request();
-      enable = status.isGranted;
-    }
-    if (enable) {
-      _speechToText = SpeechToText();
-      _speechEnabled = await _speechToText!.initialize();
-      setState(() {});
-    }
-  }
-
   @override
   void dispose() {
     _inputFocus.dispose();
+    _speechHandler.dispose();
     super.dispose();
   }
 
@@ -201,9 +188,9 @@ class _AiTextInputState extends State<AiTextInput> {
           isSpeechListening: _isSpeechListening,
           onSpeechPressed: () async {
             if (_isSpeechListening) {
-              await _speechToText?.stop();
+              await _speechHandler.stopListening();
             } else {
-              await _speechToText?.listen(
+              await _speechHandler.startListening(
                 onResult: (SpeechRecognitionResult result) => _onSpeechResult(
                   result,
                   currentAvatar: currentAvatar,
@@ -214,7 +201,6 @@ class _AiTextInputState extends State<AiTextInput> {
                     context.read<ChatsCubit>().state.currentLanguage == 'fr'
                     ? 'fr_FR'
                     : 'en_US',
-                listenOptions: SpeechListenOptions(partialResults: false),
               );
             }
             setState(() {});
