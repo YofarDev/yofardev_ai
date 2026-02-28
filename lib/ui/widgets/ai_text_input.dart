@@ -6,10 +6,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../../features/avatar/bloc/avatar_cubit.dart';
+import '../../features/avatar/bloc/avatar_state.dart';
+import '../../features/chat/bloc/chats_cubit.dart';
 import '../../l10n/localization_manager.dart';
-import '../../logic/avatar/avatar_cubit.dart';
-import '../../logic/avatar/avatar_state.dart';
-import '../../logic/chat/chats_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../models/avatar.dart';
 import '../../models/chat_entry.dart';

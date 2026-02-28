@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../l10n/localization_manager.dart';
-import '../../../logic/chat/chats_cubit.dart';
 import '../../../models/chat.dart';
 import '../../../models/sound_effects.dart';
 import '../../../models/voice.dart';

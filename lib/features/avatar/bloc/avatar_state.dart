@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/avatar.dart';
+import '../../../models/avatar.dart';
 
 enum AvatarStatus { initial, ready, loading }
 

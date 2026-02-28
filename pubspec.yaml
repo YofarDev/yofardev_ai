@@ -44,6 +44,7 @@ dependencies:
   window_manager: ^0.5.1
   screen_retriever: ^0.2.0
   flutter_inappwebview: ^6.1.5
+  get_it: ^9.2.1
   freezed_annotation: ^3.1.0
   freezed: ^3.2.5
   json_annotation: ^4.11.0
@@ -52,11 +53,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  build_runner: ^2.11.1
+  freezed: ^3.2.5
+  json_serializable: ^6.13.0
   lint:
   flutter_native_splash: ^2.4.1
-  build_runner: ^2.11.1
-  json_serializable: ^6.13.0
 
 
 flutter_native_splash:

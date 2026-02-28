@@ -3,10 +3,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../features/avatar/bloc/avatar_cubit.dart';
+import '../../../features/avatar/bloc/avatar_state.dart';
+import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../l10n/localization_manager.dart';
-import '../../../logic/avatar/avatar_cubit.dart';
-import '../../../logic/avatar/avatar_state.dart';
-import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';

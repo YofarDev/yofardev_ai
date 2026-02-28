@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../../logic/avatar/avatar_cubit.dart';
-import '../../../logic/avatar/avatar_state.dart';
+import '../../../features/avatar/bloc/avatar_cubit.dart';
+import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../res/app_constants.dart';
 import '../../../utils/app_utils.dart';
 
