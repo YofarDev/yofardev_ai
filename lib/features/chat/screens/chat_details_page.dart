@@ -14,7 +14,7 @@ import '../widgets/message_list.dart';
 /// Chat details screen - simplified coordinator
 /// Reduced from 326 → 131 lines (60% reduction)
 class ChatDetailsPage extends StatefulWidget {
-  const ChatDetailsPage();
+  const ChatDetailsPage({super.key});
 
   @override
   State<ChatDetailsPage> createState() => _ChatDetailsPageState();
@@ -30,9 +30,9 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
           previous.avatarConfig != current.avatarConfig,
       listener: (BuildContext context, AvatarState state) {
         context.read<AvatarCubit>().onNewAvatarConfig(
-              context.read<ChatsCubit>().state.openedChat.id,
-              state.avatarConfig,
-            );
+          context.read<ChatsCubit>().state.openedChat.id,
+          state.avatarConfig,
+        );
       },
       child: BlocBuilder<AvatarCubit, AvatarState>(
         builder: (BuildContext context, AvatarState avatarState) {
@@ -78,10 +78,7 @@ class _BackgroundImage extends StatelessWidget {
     return Positioned.fill(
       child: Opacity(
         opacity: 0.3,
-        child: Image.asset(
-          avatar.background.getPath(),
-          fit: BoxFit.cover,
-        ),
+        child: Image.asset(avatar.background.getPath(), fit: BoxFit.cover),
       ),
     );
   }
@@ -120,9 +117,7 @@ class _ChatContent extends StatelessWidget {
               },
             ),
           ),
-          const AiTextInput(
-            onlyText: true,
-          ),
+          const AiTextInput(onlyText: true),
           const SizedBox(height: 8),
         ],
       ),

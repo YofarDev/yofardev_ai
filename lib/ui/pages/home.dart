@@ -42,8 +42,8 @@ class _HomeState extends State<Home> {
     }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _updateAvatarValuesBasedOnScreenWidth();
-      final String sentencesStr =
-          await DefaultAssetBundle.of(context).loadString(
+      final String
+      sentencesStr = await DefaultAssetBundle.of(context).loadString(
         'assets/txt/waiting_sentences_${context.read<ChatsCubit>().state.currentLanguage}.txt',
       );
       final List<String> sentences = sentencesStr.split('\n');
@@ -53,17 +53,18 @@ class _HomeState extends State<Home> {
 
   void _initAudioPlayer() async {
     _player = AudioPlayer();
-    await _player
-        .setAsset(AppUtils.fixAssetsPath('assets/sound_effects/_silence.mp3'));
+    await _player.setAsset(
+      AppUtils.fixAssetsPath('assets/sound_effects/_silence.mp3'),
+    );
     _player.play();
   }
 
   void _updateAvatarValuesBasedOnScreenWidth() {
     context.read<AvatarCubit>().setValuesBasedOnScreenWidth(
-          screenWidth: MediaQuery.of(context).size.width > AppConstants.maxWidth
-              ? AppConstants.maxWidth
-              : MediaQuery.of(context).size.width,
-        );
+      screenWidth: MediaQuery.of(context).size.width > AppConstants.maxWidth
+          ? AppConstants.maxWidth
+          : MediaQuery.of(context).size.width,
+    );
   }
 
   void _initVolumeControl() {
@@ -72,9 +73,9 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _prepareWaitingTTS(String language) async {
-    final String sentencesStr = await DefaultAssetBundle.of(context).loadString(
-      'assets/txt/waiting_sentences_$language.txt',
-    );
+    final String sentencesStr = await DefaultAssetBundle.of(
+      context,
+    ).loadString('assets/txt/waiting_sentences_$language.txt');
     final List<String> sentences = sentencesStr.split('\n');
     context.read<ChatsCubit>().prepareWaitingSentences(sentences);
   }
@@ -131,9 +132,9 @@ class _HomeState extends State<Home> {
                   previous.answer != current.answer,
               listener: (BuildContext context, TalkingState talkingState) {
                 context.read<AvatarCubit>().onNewAvatarConfig(
-                      talkingState.answer.chatId,
-                      talkingState.answer.avatarConfig,
-                    );
+                  talkingState.answer.chatId,
+                  talkingState.answer.avatarConfig,
+                );
 
                 if (talkingState.status == TalkingStatus.success) {
                   _playTts(talkingState.answer.audioPath);
@@ -193,10 +194,12 @@ class _HomeState extends State<Home> {
     while (_isTalkingWaitingSentences) {
       await Future<void>.delayed(const Duration(milliseconds: 500));
       if (_player.playing) continue;
-      final String audioPath = context
-          .read<ChatsCubit>()
-          .state
-          .audioPathsWaitingSentences[i]['audioPath'] as String;
+      final String audioPath =
+          context
+                  .read<ChatsCubit>()
+                  .state
+                  .audioPathsWaitingSentences[i]['audioPath']
+              as String;
       await _playTts(
         audioPath,
         removeFile: false,
@@ -221,7 +224,7 @@ class _HomeState extends State<Home> {
     // Check if file exists before playing
     final File audioFile = File(audioPath);
     if (!await audioFile.exists()) {
-     // debugPrint('⚠️  Audio file not found: $audioPath');
+      // debugPrint('⚠️  Audio file not found: $audioPath');
       return;
     }
 
@@ -233,11 +236,12 @@ class _HomeState extends State<Home> {
       await _player.play().then((_) async {
         await _player.stop();
         context.read<TalkingCubit>().stopTalking(
-              soundEffectsEnabled: soundEffectsEnabled ??
-                  context.read<ChatsCubit>().state.soundEffectsEnabled,
-              removeFile: removeFile,
-              updateStatus: updateStatus,
-            );
+          soundEffectsEnabled:
+              soundEffectsEnabled ??
+              context.read<ChatsCubit>().state.soundEffectsEnabled,
+          removeFile: removeFile,
+          updateStatus: updateStatus,
+        );
       });
     } catch (e) {
       debugPrint('❌ Error playing TTS: $e');

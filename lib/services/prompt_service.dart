@@ -13,19 +13,40 @@ class PromptService {
 
     // Replace lists
     systemPrompt = _replacePlaceholder(
-        systemPrompt, r'$backgroundList', AvatarBackgrounds.values);
-    systemPrompt =
-        _replacePlaceholder(systemPrompt, r'$hatList', AvatarHat.values);
-    systemPrompt =
-        _replacePlaceholder(systemPrompt, r'$topList', AvatarTop.values);
+      systemPrompt,
+      r'$backgroundList',
+      AvatarBackgrounds.values,
+    );
     systemPrompt = _replacePlaceholder(
-        systemPrompt, r'$glassesList', AvatarGlasses.values);
+      systemPrompt,
+      r'$hatList',
+      AvatarHat.values,
+    );
     systemPrompt = _replacePlaceholder(
-        systemPrompt, r'$specialsList', AvatarSpecials.values);
+      systemPrompt,
+      r'$topList',
+      AvatarTop.values,
+    );
     systemPrompt = _replacePlaceholder(
-        systemPrompt, r'$costumeList', AvatarCostume.values);
+      systemPrompt,
+      r'$glassesList',
+      AvatarGlasses.values,
+    );
     systemPrompt = _replacePlaceholder(
-        systemPrompt, r'$soundEffectsList', SoundEffects.values);
+      systemPrompt,
+      r'$specialsList',
+      AvatarSpecials.values,
+    );
+    systemPrompt = _replacePlaceholder(
+      systemPrompt,
+      r'$costumeList',
+      AvatarCostume.values,
+    );
+    systemPrompt = _replacePlaceholder(
+      systemPrompt,
+      r'$soundEffectsList',
+      SoundEffects.values,
+    );
 
     // Replace user info
     final String? username = await SettingsService().getUsername();
@@ -46,7 +67,10 @@ class PromptService {
   }
 
   String _replacePlaceholder(
-      String text, String placeholder, List<Enum> values) {
+    String text,
+    String placeholder,
+    List<Enum> values,
+  ) {
     final StringBuffer buffer = StringBuffer();
     for (final Enum value in values) {
       buffer.write("${value.name}, ");

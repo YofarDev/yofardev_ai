@@ -13,10 +13,7 @@ class LoadingAvatarWidget extends StatelessWidget {
       child: Shimmer.fromColors(
         baseColor: Colors.grey,
         highlightColor: AppColors.pink,
-        child: Image.asset(
-          'assets/avatar/base.png',
-          fit: BoxFit.contain,
-        ),
+        child: Image.asset('assets/avatar/base.png', fit: BoxFit.contain),
       ),
     );
   }

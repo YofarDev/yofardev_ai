@@ -36,17 +36,11 @@ void main() {
 
         chatsCubit.toggleFunctionCalling();
 
-        expect(
-          chatsCubit.state.functionCallingEnabled,
-          !initialValue,
-        );
+        expect(chatsCubit.state.functionCallingEnabled, !initialValue);
 
         chatsCubit.toggleFunctionCalling();
 
-        expect(
-          chatsCubit.state.functionCallingEnabled,
-          initialValue,
-        );
+        expect(chatsCubit.state.functionCallingEnabled, initialValue);
       });
     });
 
@@ -66,18 +60,13 @@ void main() {
 
         chatsCubit.setSoundEffects(newSoundEffectsEnabled);
 
-        expect(
-          chatsCubit.state.soundEffectsEnabled,
-          newSoundEffectsEnabled,
-        );
+        expect(chatsCubit.state.soundEffectsEnabled, newSoundEffectsEnabled);
       });
     });
 
     group('setCurrentChat', () {
       test('should update current chat', () {
-        const Chat testChat = Chat(
-          id: 'test-chat-id',
-        );
+        const Chat testChat = Chat(id: 'test-chat-id');
 
         chatsCubit.setCurrentChat(testChat);
 
@@ -88,10 +77,7 @@ void main() {
 
     group('setOpenedChat', () {
       test('should update opened chat', () {
-        const Chat testChat = Chat(
-          id: 'opened-chat-id',
-          language: 'fr',
-        );
+        const Chat testChat = Chat(id: 'opened-chat-id', language: 'fr');
 
         chatsCubit.setOpenedChat(testChat);
 
@@ -110,9 +96,7 @@ void main() {
 
         // Emit state with test data
         chatsCubit.emit(
-          chatsCubit.state.copyWith(
-            audioPathsWaitingSentences: originalList,
-          ),
+          chatsCubit.state.copyWith(audioPathsWaitingSentences: originalList),
         );
 
         final List<Map<String, dynamic>> beforeShuffle =
@@ -134,10 +118,8 @@ void main() {
     });
 
     group('updateBackgroundOpenedChat', () {
-      test('should update background of opened chat', () async {
-        const Chat testChat = Chat(
-          id: 'test-chat',
-        );
+      test('should update background of opened chat', () {
+        const Chat testChat = Chat(id: 'test-chat');
 
         chatsCubit.setOpenedChat(testChat);
         // Note: This method is async but we don't await in test
@@ -153,10 +135,8 @@ void main() {
     });
 
     group('updateAvatarOpenedChat', () {
-      test('should update avatar config of opened chat', () async {
-        const Chat testChat = Chat(
-          id: 'test-chat',
-        );
+      test('should update avatar config of opened chat', () {
+        const Chat testChat = Chat(id: 'test-chat');
 
         const AvatarConfig newConfig = AvatarConfig(
           background: AvatarBackgrounds.beach,
@@ -173,20 +153,12 @@ void main() {
           chatsCubit.state.openedChat.avatar.background,
           AvatarBackgrounds.beach,
         );
-        expect(
-          chatsCubit.state.openedChat.avatar.hat,
-          AvatarHat.frenchBeret,
-        );
-        expect(
-          chatsCubit.state.openedChat.avatar.top,
-          AvatarTop.longCoat,
-        );
+        expect(chatsCubit.state.openedChat.avatar.hat, AvatarHat.frenchBeret);
+        expect(chatsCubit.state.openedChat.avatar.top, AvatarTop.longCoat);
       });
 
-      test('should update only specified avatar fields', () async {
-        const Chat testChat = Chat(
-          id: 'test-chat',
-        );
+      test('should update only specified avatar fields', () {
+        const Chat testChat = Chat(id: 'test-chat');
 
         const AvatarConfig partialConfig = AvatarConfig(
           hat: AvatarHat.beanie,
@@ -196,19 +168,13 @@ void main() {
         chatsCubit.setOpenedChat(testChat);
         chatsCubit.updateAvatarOpenedChat(partialConfig);
 
-        expect(
-          chatsCubit.state.openedChat.avatar.hat,
-          AvatarHat.beanie,
-        );
+        expect(chatsCubit.state.openedChat.avatar.hat, AvatarHat.beanie);
         // Unchanged fields
         expect(
           chatsCubit.state.openedChat.avatar.background,
           AvatarBackgrounds.lake,
         );
-        expect(
-          chatsCubit.state.openedChat.avatar.top,
-          AvatarTop.pinkHoodie,
-        );
+        expect(chatsCubit.state.openedChat.avatar.top, AvatarTop.pinkHoodie);
         expect(
           chatsCubit.state.openedChat.avatar.glasses,
           AvatarGlasses.glasses,
@@ -253,8 +219,10 @@ void main() {
         expect(newState.chatsList, state.chatsList);
         expect(newState.currentChat, state.currentChat);
         expect(newState.openedChat, state.openedChat);
-        expect(newState.audioPathsWaitingSentences,
-            state.audioPathsWaitingSentences);
+        expect(
+          newState.audioPathsWaitingSentences,
+          state.audioPathsWaitingSentences,
+        );
         expect(newState.initializing, state.initializing);
       });
 
@@ -309,8 +277,8 @@ void main() {
         expect(
           state.props.length,
           11, // status, chatsList, currentChat, openedChat, errorMessage,
-             // soundEffectsEnabled, currentLanguage, audioPathsWaitingSentences,
-             // initializing, functionCallingEnabled
+          // soundEffectsEnabled, currentLanguage, audioPathsWaitingSentences,
+          // initializing, functionCallingEnabled
         );
       });
 
@@ -349,8 +317,7 @@ void main() {
 
   group('ChatEntry model', () {
     test('should create entry with all fields', () {
-      final DateTime now = DateTime(2024);
-      const ChatEntry entry = ChatEntry(
+      final ChatEntry entry = ChatEntry(
         id: 'test-id',
         entryType: EntryType.user,
         body: 'Test message',
@@ -365,7 +332,7 @@ void main() {
     });
 
     test('should copy with new values', () {
-      const ChatEntry entry = ChatEntry(
+      final ChatEntry entry = ChatEntry(
         id: 'test-id',
         entryType: EntryType.user,
         body: 'Original message',
@@ -385,7 +352,7 @@ void main() {
     });
 
     test('should serialize and deserialize correctly', () {
-      const ChatEntry entry = ChatEntry(
+      final ChatEntry entry = ChatEntry(
         id: 'test-id',
         entryType: EntryType.functionCalling,
         body: 'Test body',
@@ -416,7 +383,7 @@ void main() {
     });
 
     test('should convert to and from JSON', () {
-      const ChatEntry entry = ChatEntry(
+      final ChatEntry entry = ChatEntry(
         id: 'test-id',
         entryType: EntryType.user,
         body: 'Test message',
@@ -432,7 +399,7 @@ void main() {
     });
 
     test('props should include all fields except id', () {
-      const ChatEntry entry = ChatEntry(
+      final ChatEntry entry = ChatEntry(
         id: 'test-id',
         entryType: EntryType.user,
         body: 'Test',
@@ -474,12 +441,10 @@ void main() {
     });
 
     test('should copy with new values', () {
-      const Chat chat = Chat(
-        id: 'original-id',
-      );
+      const Chat chat = Chat(id: 'original-id');
 
       final List<ChatEntry> newEntries = <ChatEntry>[
-        const ChatEntry(
+        ChatEntry(
           id: 'entry1',
           entryType: EntryType.user,
           body: 'Hello',
@@ -501,7 +466,7 @@ void main() {
     });
 
     test('should serialize and deserialize correctly', () {
-      const Chat chat = Chat(
+      final Chat chat = Chat(
         id: 'test-id',
         entries: <ChatEntry>[
           ChatEntry(
@@ -528,9 +493,7 @@ void main() {
     });
 
     test('should convert to and from JSON', () {
-      const Chat chat = Chat(
-        id: 'test-id',
-      );
+      const Chat chat = Chat(id: 'test-id');
 
       final String json = chat.toJson();
       final Chat fromJson = Chat.fromJson(json);

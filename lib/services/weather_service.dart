@@ -40,9 +40,11 @@ class WeatherService {
         final Map<String, dynamic> map = <String, dynamic>{
           'description':
               ((data as Map<String, dynamic>)['weather'] as List<dynamic>)
-                      .first['description'] as String? ??
-                  '',
-          'temperature_celsius': (data['main'] as Map<String, dynamic>)['temp'] as double?,
+                      .first['description']
+                  as String? ??
+              '',
+          'temperature_celsius':
+              (data['main'] as Map<String, dynamic>)['temp'] as double?,
         };
         return jsonEncode(map);
       } else {

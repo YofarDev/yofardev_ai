@@ -62,7 +62,9 @@ class DemoScript {
       description: json['description'] as String,
       initialBackground: json['initialBackground'] as String? ?? 'office',
       responses: (json['responses'] as List<dynamic>)
-          .map((dynamic e) => FakeLlmResponse.fromJson(e as Map<String, dynamic>))
+          .map(
+            (dynamic e) => FakeLlmResponse.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
     );
   }

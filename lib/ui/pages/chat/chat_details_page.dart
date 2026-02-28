@@ -3,29 +3,22 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_parsed_text/flutter_parsed_text.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../features/chat/bloc/chats_cubit.dart';
-import '../../../l10n/localization_manager.dart';
 import '../../../models/avatar.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';
-import '../../../models/sound_effects.dart';
-import '../../../utils/app_utils.dart';
-import '../../../utils/extensions.dart';
+import '../../../res/app_colors.dart';
 import '../../widgets/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/function_calling_button.dart';
-import 'image_full_screen.dart';
-import 'widgets/function_calling_widget.dart';
+import 'widgets/chat_conversation_list.dart';
 
 class ChatDetailsPage extends StatefulWidget {
-  const ChatDetailsPage();
+  const ChatDetailsPage({super.key});
 
   @override
   State<ChatDetailsPage> createState() => _ChatDetailsPageState();
@@ -33,6 +26,7 @@ class ChatDetailsPage extends StatefulWidget {
 
 class _ChatDetailsPageState extends State<ChatDetailsPage> {
   bool _showEverything = false;
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<AvatarCubit, AvatarState>(
@@ -40,86 +34,46 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
           previous.avatarConfig != current.avatarConfig,
       listener: (BuildContext context, AvatarState state) {
         context.read<AvatarCubit>().onNewAvatarConfig(
-              context.read<ChatsCubit>().state.openedChat.id,
-              state.avatarConfig,
-            );
+          context.read<ChatsCubit>().state.openedChat.id,
+          state.avatarConfig,
+        );
       },
       child: BlocBuilder<AvatarCubit, AvatarState>(
         builder: (BuildContext context, AvatarState avatarState) {
           return BlocBuilder<ChatsCubit, ChatsState>(
-            // buildWhen: (ChatsState previous, ChatsState current) =>
-            //     previous.status != current.status,
             builder: (BuildContext context, ChatsState state) {
               final Chat chat = state.openedChat;
               return Scaffold(
                 body: Stack(
                   children: <Widget>[
-                    Positioned.fill(
-                      child: Opacity(
-                        opacity: 0.3,
-                        child: Image.asset(
-                          state.openedChat.avatar.background.getPath(),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
+                    const _BackgroundLayers(),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         children: <Widget>[
                           Expanded(
-                            child: _buildConversation(
-                              context,
-                              chat.persona,
-                              chat.entries.reversed.toList(),
-                              state.status == ChatsStatus.typing,
+                            child: ChatConversationList(
+                              persona: chat.persona,
+                              entries: chat.entries.reversed.toList(),
+                              isTyping: state.status == ChatsStatus.typing,
+                              showEverything: _showEverything,
+                              limitParameterSize: _limitParamaterSize,
                             ),
                           ),
-                          const AiTextInput(
-                            onlyText: true,
-                          ),
+                          const AiTextInput(onlyText: true),
                           const SizedBox(height: 8),
                         ],
                       ),
                     ),
-                    Positioned(
-                      left: 8,
-                      top: 8,
-                      child: SafeArea(
-                        child: AppIconButton(
-                          icon: Icons.arrow_back_ios_new_outlined,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: SafeArea(
-                        child: Column(
-                          children: <Widget>[
-                            AppIconButton(
-                              icon: _showEverything
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              onPressed: () {
-                                setState(() {
-                                  _showEverything = !_showEverything;
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 8),
-                            AppIconButton(
-                              icon: Icons.download,
-                              onPressed: () => _downloadConversation(context),
-                            ),
-                            const SizedBox(height: 8),
-                            const FunctionCallingButton(),
-                          ],
-                        ),
-                      ),
+                    const _TopLeftBackButton(),
+                    _TopRightActions(
+                      showEverything: _showEverything,
+                      onToggleVisibility: () {
+                        setState(() {
+                          _showEverything = !_showEverything;
+                        });
+                      },
+                      onDownload: () => _downloadConversation(context),
                     ),
                   ],
                 ),
@@ -130,181 +84,6 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
       ),
     );
   }
-
-  Widget _buildConversation(
-    BuildContext contex,
-    ChatPersona persona,
-    List<ChatEntry> chat,
-    bool isTyping,
-  ) =>
-      ListView.builder(
-        itemCount: chat.length,
-        reverse: true,
-        itemBuilder: (BuildContext context, int index) {
-          return Column(
-            children: <Widget>[
-              if (index == chat.length - 1 && _showEverything)
-                Text(
-                  "Persona : ${persona.name}",
-                  style: const TextStyle(fontSize: 10),
-                ),
-              if (index == chat.length - 1)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: Text(
-                      chat[index].timestamp.toLongLocalDateString(
-                            language: context
-                                .read<ChatsCubit>()
-                                .state
-                                .currentLanguage,
-                          ),
-                      style: const TextStyle(
-                        color: Colors.black54,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              if (chat[index].entryType == EntryType.functionCalling)
-                FunctionCallingWidget(functionCallingText: chat[index].body)
-              else
-                _buildMessageItem(chat, index, isTyping),
-            ],
-          );
-        },
-      );
-
-  Widget _buildMessageItem(List<ChatEntry> entries, int index, bool isTyping) {
-    final bool isFromUser = entries[index].entryType == EntryType.user;
-    String soundEffect = '';
-    if (!isFromUser) {
-      final dynamic json = jsonDecode(entries[index].body);
-      soundEffect =
-          (json as Map<String, dynamic>)['soundEffect'] as String? ?? '';
-    }
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: 8,
-        left: isFromUser
-            ? isTyping
-                ? 0
-                : 32
-            : 0,
-        right: isFromUser ? 0 : 32,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          SizedBox(
-            width: double.infinity,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment:
-                  isFromUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-              children: <Widget>[
-                if (!isFromUser) _circleAvatar(),
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: !isFromUser ? Colors.blue : Colors.pink[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: <Widget>[
-                        ParsedText(
-                          selectable: true,
-                          text: _showEverything
-                              ? _limitParamaterSize(
-                                  entries[index].body,
-                                  isFromUser,
-                                )
-                              : entries[index]
-                                  .getMessage(isFromUser: isFromUser),
-                          style: TextStyle(
-                            color: !isFromUser ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        if (soundEffect.isNotEmpty)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: InkWell(
-                              onTap: () async {
-                                final SoundEffects? sound =
-                                    soundEffect.getSoundEffectFromString();
-                                if (sound == null) return;
-                                final AudioPlayer player = AudioPlayer();
-                                await player.setAsset(sound.getPath());
-                                await player.play();
-                                player.dispose();
-                              },
-                              child: const Icon(
-                                Icons.volume_up_outlined,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (entries[index].attachedImage != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<dynamic>(
-                          builder: (BuildContext context) => ImageFullScreen(
-                            imagePath: entries[index].attachedImage!,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Hero(
-                      tag: entries[index].attachedImage!,
-                      child: Image.file(
-                        File(entries[index].attachedImage!),
-                        fit: BoxFit.cover,
-                        width: 100,
-                        height: 100,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          if (index == 0 && isTyping)
-            Row(
-              children: <Widget>[
-                _circleAvatar(),
-                Lottie.asset(
-                  AppUtils.fixAssetsPath('assets/lotties/typing.json'),
-                  height: 60,
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _circleAvatar() => Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: CircleAvatar(
-          backgroundColor: Colors.blue,
-          foregroundImage:
-              AssetImage(AppUtils.fixAssetsPath("assets/icon.png")),
-        ),
-      );
 
   String _limitParamaterSize(String body, bool isFromUser) {
     if (!isFromUser) return body;
@@ -320,7 +99,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         } else {
           return body;
         }
-        return "$reduced\n${localized.userMessage} : \n'''$userMessage'''";
+        return "$reduced\nUser's message : \n'''$userMessage'''";
       }
       return body;
     } catch (e) {
@@ -333,7 +112,6 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
     try {
       final Chat chat = context.read<ChatsCubit>().state.openedChat;
 
-      // Create a structured JSON object with all conversation data
       final Map<String, dynamic> conversationData = <String, dynamic>{
         'metadata': <String, dynamic>{
           'chat_id': chat.id,
@@ -346,32 +124,39 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
               : DateTime.now().toIso8601String(),
           'exported_at': DateTime.now().toIso8601String(),
         },
-        'entries': chat.entries.map((ChatEntry entry) => <String, dynamic>{
-          'id': entry.id,
-          'type': entry.entryType.name,
-          'body': entry.body,
-          'timestamp': entry.timestamp.toIso8601String(),
-          'attached_image': entry.attachedImage,
-        }).toList(),
+        'entries': chat.entries
+            .map(
+              (ChatEntry entry) => <String, dynamic>{
+                'id': entry.id,
+                'type': entry.entryType.name,
+                'body': entry.body,
+                'timestamp': entry.timestamp.toIso8601String(),
+                'attached_image': entry.attachedImage,
+              },
+            )
+            .toList(),
       };
 
-      final String jsonString = const JsonEncoder.withIndent('  ').convert(conversationData);
+      final String jsonString = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(conversationData);
       final DateTime now = DateTime.now();
       final String fileName =
           'chat_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}.json';
 
-      // Get Downloads directory
       Directory? downloadsDir;
       if (Platform.isMacOS || Platform.isLinux) {
         downloadsDir = Directory('${Platform.environment['HOME']}/Downloads');
       } else if (Platform.isWindows) {
-        downloadsDir = Directory('${Platform.environment['USERPROFILE']}\\Downloads');
+        downloadsDir = Directory(
+          '${Platform.environment['USERPROFILE']}\\Downloads',
+        );
       } else {
-        // For mobile platforms or others, use app documents directory
         downloadsDir = await getApplicationDocumentsDirectory();
       }
 
-      final String filePath = '${downloadsDir.path}${Platform.pathSeparator}$fileName';
+      final String filePath =
+          '${downloadsDir.path}${Platform.pathSeparator}$fileName';
       final File file = File(filePath);
       await file.writeAsString(jsonString);
 
@@ -380,10 +165,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
           SnackBar(
             content: Text('Conversation downloaded: $fileName'),
             duration: const Duration(seconds: 3),
-            action: SnackBarAction(
-              label: 'OK',
-              onPressed: () {},
-            ),
+            action: SnackBarAction(label: 'OK', onPressed: () {}),
           ),
         );
       }
@@ -398,5 +180,111 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         );
       }
     }
+  }
+}
+
+class _BackgroundLayers extends StatelessWidget {
+  const _BackgroundLayers();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ChatsCubit, ChatsState>(
+      builder: (BuildContext context, ChatsState state) {
+        return Stack(
+          children: <Widget>[
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[AppColors.background, AppColors.surface],
+                  ),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.15,
+                child: Image.asset(
+                  state.openedChat.avatar.background.getPath(),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[
+                      AppColors.surface.withValues(alpha: 0.6),
+                      AppColors.surface.withValues(alpha: 0.3),
+                      AppColors.surface.withValues(alpha: 0.6),
+                    ],
+                    stops: const <double>[0.0, 0.5, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _TopLeftBackButton extends StatelessWidget {
+  const _TopLeftBackButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: 8,
+      top: 8,
+      child: SafeArea(
+        child: AppIconButton(
+          icon: Icons.arrow_back_ios_new_outlined,
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _TopRightActions extends StatelessWidget {
+  final bool showEverything;
+  final VoidCallback onToggleVisibility;
+  final VoidCallback onDownload;
+
+  const _TopRightActions({
+    required this.showEverything,
+    required this.onToggleVisibility,
+    required this.onDownload,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      right: 8,
+      top: 8,
+      child: SafeArea(
+        child: Column(
+          children: <Widget>[
+            AppIconButton(
+              icon: showEverything ? Icons.visibility : Icons.visibility_off,
+              onPressed: onToggleVisibility,
+            ),
+            const SizedBox(height: 8),
+            AppIconButton(icon: Icons.download, onPressed: onDownload),
+            const SizedBox(height: 8),
+            const FunctionCallingButton(),
+          ],
+        ),
+      ),
+    );
   }
 }

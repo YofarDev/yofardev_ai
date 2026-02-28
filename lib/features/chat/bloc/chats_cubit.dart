@@ -52,11 +52,7 @@ class ChatsCubit extends Cubit<ChatsState> {
   }
 
   void toggleFunctionCalling() {
-    emit(
-      state.copyWith(
-        functionCallingEnabled: !state.functionCallingEnabled,
-      ),
-    );
+    emit(state.copyWith(functionCallingEnabled: !state.functionCallingEnabled));
   }
 
   Future<void> prepareWaitingSentences(List<String> sentences) async {
@@ -68,7 +64,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     // await CacheService.clearWaitingSentencesMap(state.currentLanguage);
     final List<Map<String, dynamic>> map =
         await CacheService.getWaitingSentencesMap(state.currentLanguage) ??
-            <Map<String, dynamic>>[];
+        <Map<String, dynamic>>[];
     for (final String sentence in sentences) {
       if (map.any(
         (Map<String, dynamic> element) => element['sentence'] == sentence,
@@ -80,37 +76,25 @@ class ChatsCubit extends Cubit<ChatsState> {
           language: state.currentLanguage,
           voiceEffect: AvatarCostume.none.getVoiceEffect(),
         );
-        final List<int> amplitudes =
-            await AudioAnalyzer().getAmplitudes(audioPath);
+        final List<int> amplitudes = await AudioAnalyzer().getAmplitudes(
+          audioPath,
+        );
         map.add(<String, dynamic>{
           'sentence': sentence,
           'audioPath': audioPath,
           'amplitudes': amplitudes,
         });
-        emit(
-          state.copyWith(
-            audioPathsWaitingSentences: map,
-          ),
-        );
+        emit(state.copyWith(audioPathsWaitingSentences: map));
       }
     }
     await CacheService.setWaitingSentencesMap(map, state.currentLanguage);
-    emit(
-      state.copyWith(
-        audioPathsWaitingSentences: map,
-        initializing: false,
-      ),
-    );
+    emit(state.copyWith(audioPathsWaitingSentences: map, initializing: false));
   }
 
   void shuffleWaitingSentences() {
     final List<Map<String, dynamic>> list = state.audioPathsWaitingSentences;
     list.shuffle();
-    emit(
-      state.copyWith(
-        audioPathsWaitingSentences: list,
-      ),
-    );
+    emit(state.copyWith(audioPathsWaitingSentences: list));
   }
 
   void getCurrentChat() async {
@@ -141,8 +125,9 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   void fetchChatsList() async {
     emit(state.copyWith(status: ChatsStatus.loading));
-    final List<Chat> chatsList =
-        (await ChatHistoryService().getChatsList()).reversed.toList();
+    final List<Chat> chatsList = (await ChatHistoryService().getChatsList())
+        .reversed
+        .toList();
     emit(state.copyWith(status: ChatsStatus.success, chatsList: chatsList));
   }
 
@@ -245,18 +230,12 @@ class ChatsCubit extends Cubit<ChatsState> {
           status: ChatsStatus.success,
         ),
       );
-      await ChatHistoryService().updateChat(
-        chatId: chat.id,
-        updatedChat: chat,
-      );
+      await ChatHistoryService().updateChat(chatId: chat.id, updatedChat: chat);
       return newModelEntry;
     } catch (e) {
       debugPrint(e.toString());
       emit(
-        state.copyWith(
-          status: ChatsStatus.error,
-          errorMessage: e.toString(),
-        ),
+        state.copyWith(status: ChatsStatus.error, errorMessage: e.toString()),
       );
       return null;
     }
@@ -294,9 +273,6 @@ class ChatsCubit extends Cubit<ChatsState> {
         status: ChatsStatus.success,
       ),
     );
-    await ChatHistoryService().updateAvatar(
-      chat.id,
-      avatar,
-    );
+    await ChatHistoryService().updateAvatar(chat.id, avatar);
   }
 }

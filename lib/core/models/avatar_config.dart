@@ -64,7 +64,6 @@ enum AvatarCostume { none, batman, robocop, soubrette, singularity }
 
 @freezed
 class Avatar with _$Avatar {
-
   const factory Avatar({
     @Default(AvatarBackgrounds.lake) AvatarBackgrounds background,
     @Default(AvatarHat.noHat) AvatarHat hat,
@@ -75,8 +74,7 @@ class Avatar with _$Avatar {
   }) = _Avatar;
   const Avatar._();
 
-  factory Avatar.fromJson(Map<String, dynamic> json) =>
-      _$AvatarFromJson(json);
+  factory Avatar.fromJson(Map<String, dynamic> json) => _$AvatarFromJson(json);
 
   bool get hideBlinkingEyes => costume == AvatarCostume.singularity;
 
@@ -90,7 +88,6 @@ class Avatar with _$Avatar {
 
 @freezed
 class AvatarConfig with _$AvatarConfig {
-
   const factory AvatarConfig({
     AvatarBackgrounds? background,
     AvatarHat? hat,

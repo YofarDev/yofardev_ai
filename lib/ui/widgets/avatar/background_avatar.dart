@@ -6,9 +6,7 @@ import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../models/avatar.dart';
 
 class BackgroundAvatar extends StatelessWidget {
-  const BackgroundAvatar({
-    super.key,
-  });
+  const BackgroundAvatar({super.key});
 
   @override
   Widget build(BuildContext context) {

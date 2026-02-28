@@ -10,10 +10,10 @@ class SoubretteFeatherDuster extends StatefulWidget {
   const SoubretteFeatherDuster({super.key});
 
   @override
-  _SoubretteFeatherDusterState createState() => _SoubretteFeatherDusterState();
+  SoubretteFeatherDusterState createState() => SoubretteFeatherDusterState();
 }
 
-class _SoubretteFeatherDusterState extends State<SoubretteFeatherDuster>
+class SoubretteFeatherDusterState extends State<SoubretteFeatherDuster>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -26,14 +26,8 @@ class _SoubretteFeatherDusterState extends State<SoubretteFeatherDuster>
       vsync: this,
     )..repeat(reverse: true, period: const Duration(milliseconds: 3000));
 
-    _animation = Tween<double>(
-      begin: 0,
-      end: 3.14 / 3,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOutCirc,
-      ),
+    _animation = Tween<double>(begin: 0, end: 3.14 / 3).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCirc),
     );
   }
 

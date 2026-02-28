@@ -25,10 +25,10 @@ class ScaledAvatarItem extends StatefulWidget {
   });
 
   @override
-  _ScaledAvatarItemState createState() => _ScaledAvatarItemState();
+  ScaledAvatarItemState createState() => ScaledAvatarItemState();
 }
 
-class _ScaledAvatarItemState extends State<ScaledAvatarItem> {
+class ScaledAvatarItemState extends State<ScaledAvatarItem> {
   double? _itemOriginalHeight;
   double? _itemOriginalWidth;
 
@@ -40,8 +40,9 @@ class _ScaledAvatarItemState extends State<ScaledAvatarItem> {
 
   void _initValues() async {
     final ByteData baseImg = await rootBundle.load(widget.path);
-    final ui.Image decodedBaseImage =
-        await decodeImageFromList(baseImg.buffer.asUint8List());
+    final ui.Image decodedBaseImage = await decodeImageFromList(
+      baseImg.buffer.asUint8List(),
+    );
     setState(() {
       _itemOriginalHeight = decodedBaseImage.height.toDouble();
       _itemOriginalWidth = decodedBaseImage.width.toDouble();
@@ -59,7 +60,8 @@ class _ScaledAvatarItemState extends State<ScaledAvatarItem> {
         }
         return Positioned(
           left: widget.itemX * state.scaleFactor,
-          bottom: MediaQuery.of(context).viewInsets.bottom +
+          bottom:
+              MediaQuery.of(context).viewInsets.bottom +
               AppUtils().getInvertedY(
                 itemY: widget.itemY,
                 itemHeight: _itemOriginalHeight!,

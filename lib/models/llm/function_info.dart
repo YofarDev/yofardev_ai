@@ -30,9 +30,6 @@ class Parameter {
   });
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'type': type,
-      'description': description,
-    };
+    return <String, dynamic>{'type': type, 'description': description};
   }
 }

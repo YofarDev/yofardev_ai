@@ -53,9 +53,7 @@ class LlmService implements LlmServiceInterface {
       return null;
     }
     try {
-      return _configs.firstWhere(
-        (LlmConfig c) => c.id == _currentConfigId,
-      );
+      return _configs.firstWhere((LlmConfig c) => c.id == _currentConfigId);
     } catch (_) {
       if (_configs.isNotEmpty) return _configs.first;
       return null;
@@ -103,8 +101,9 @@ class LlmService implements LlmServiceInterface {
 
   Future<void> _saveToPrefs() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String jsonString =
-        json.encode(_configs.map((LlmConfig c) => c.toMap()).toList());
+    final String jsonString = json.encode(
+      _configs.map((LlmConfig c) => c.toMap()).toList(),
+    );
     await prefs.setString(_configsKey, jsonString);
   }
 
@@ -138,7 +137,8 @@ class LlmService implements LlmServiceInterface {
 
     if (debugLogs) {
       debugPrint(
-          'Sending request to ${activeConfig.baseUrl}/chat/completions with model ${activeConfig.model.trim()}');
+        'Sending request to ${activeConfig.baseUrl}/chat/completions with model ${activeConfig.model.trim()}',
+      );
     }
 
     try {
@@ -156,8 +156,9 @@ class LlmService implements LlmServiceInterface {
       }
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json
-            .decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        final Map<String, dynamic> data =
+            json.decode(utf8.decode(response.bodyBytes))
+                as Map<String, dynamic>;
         final List<dynamic> choices = data['choices'] as List<dynamic>;
         final Map<String, dynamic> firstChoice =
             choices[0] as Map<String, dynamic>;
@@ -181,10 +182,13 @@ class LlmService implements LlmServiceInterface {
     required List<LlmMessage> messages,
     required String lastUserMessage,
   }) async {
-    final List<Map<String, dynamic>> apiMessages =
-        messages.map((LlmMessage m) => m.toMap()).toList();
-    apiMessages
-        .add(<String, dynamic>{'role': 'user', 'content': lastUserMessage});
+    final List<Map<String, dynamic>> apiMessages = messages
+        .map((LlmMessage m) => m.toMap())
+        .toList();
+    apiMessages.add(<String, dynamic>{
+      'role': 'user',
+      'content': lastUserMessage,
+    });
 
     final List<Map<String, dynamic>> tools = functions.map((FunctionInfo f) {
       return <String, dynamic>{
@@ -195,15 +199,16 @@ class LlmService implements LlmServiceInterface {
           'parameters': <String, dynamic>{
             'type': 'object',
             'properties': Map<String, dynamic>.fromEntries(
-              f.parameters.map((Parameter p) =>
-                  MapEntry<String, dynamic>(p.name, p.toMap())),
+              f.parameters.map(
+                (Parameter p) => MapEntry<String, dynamic>(p.name, p.toMap()),
+              ),
             ),
             'required': f.parameters
                 .where((Parameter p) => p.isRequired)
                 .map((Parameter p) => p.name)
                 .toList(),
           },
-        }
+        },
       };
     }).toList();
 
@@ -225,8 +230,9 @@ class LlmService implements LlmServiceInterface {
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json
-            .decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        final Map<String, dynamic> data =
+            json.decode(utf8.decode(response.bodyBytes))
+                as Map<String, dynamic>;
         final List<dynamic> choices = data['choices'] as List<dynamic>;
         final Map<String, dynamic> firstChoice =
             choices[0] as Map<String, dynamic>;
@@ -247,21 +253,24 @@ class LlmService implements LlmServiceInterface {
             final String argsJson = functionMap['arguments'] as String;
 
             // Find the original function info
-            final FunctionInfo originalFunc =
-                functions.firstWhere((FunctionInfo f) => f.name == funcName);
+            final FunctionInfo originalFunc = functions.firstWhere(
+              (FunctionInfo f) => f.name == funcName,
+            );
 
             // Decode args
             final Map<String, dynamic> args =
                 json.decode(argsJson) as Map<String, dynamic>;
 
             // Return a new FunctionInfo with called parameters
-            calledFunctions.add(FunctionInfo(
-              name: originalFunc.name,
-              description: originalFunc.description,
-              parameters: originalFunc.parameters,
-              function: originalFunc.function,
-              parametersCalled: args,
-            ));
+            calledFunctions.add(
+              FunctionInfo(
+                name: originalFunc.name,
+                description: originalFunc.description,
+                parameters: originalFunc.parameters,
+                function: originalFunc.function,
+                parametersCalled: args,
+              ),
+            );
           }
         }
 

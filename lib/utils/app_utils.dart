@@ -13,7 +13,8 @@ class AppUtils {
   }
 
   static String fixAssetsPath(String path) {
-    final bool isWebDeployed = PlatformUtils.checkPlatform() == 'Web' && !kDebugMode;
+    final bool isWebDeployed =
+        PlatformUtils.checkPlatform() == 'Web' && !kDebugMode;
     if (isWebDeployed) {
       // return "yofardev-ai/$path";
       return path;

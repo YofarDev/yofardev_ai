@@ -16,6 +16,7 @@ import 'features/chat/bloc/chats_cubit.dart';
 import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
 import 'logic/talking/talking_cubit.dart';
+import 'res/app_theme.dart';
 import 'services/tts_service.dart';
 import 'ui/pages/home.dart';
 import 'ui/widgets/constrained_width.dart';
@@ -30,6 +31,7 @@ void main() async {
     final double displayHeight = primaryDisplay.size.height * 0.8;
     final WindowOptions windowOptions = WindowOptions(
       size: Size(displayHeight * 9 / 16, displayHeight),
+      title: "Yofardev AI",
       center: true,
       skipTaskbar: false,
     );
@@ -43,18 +45,16 @@ void main() async {
   if (PlatformUtils.checkPlatform() != 'Web' &&
       PlatformUtils.checkPlatform() != 'MacOS') {
     await Alarm.init();
-    SystemChrome.setPreferredOrientations(
-      <DeviceOrientation>[DeviceOrientation.portraitUp],
-    );
+    SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+      DeviceOrientation.portraitUp,
+    ]);
   }
   if (PlatformUtils.checkPlatform() != 'Web') {
     await dotenv.load();
     // Initialize SupertonicTTS for mobile/desktop platforms
     await TtsService.initSupertonic();
   }
-  runApp(
-    const MyApp(),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -77,20 +77,14 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Yofardev AI',
         debugShowCheckedModeBanner: false,
-        supportedLocales: const <Locale>[
-          Locale('fr'),
-          Locale('en'),
-        ],
+        supportedLocales: const <Locale>[Locale('fr'), Locale('en')],
         localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
           AppLocalizationsDelegate(),
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.lightTheme,
         home: const ConstrainedWidth(child: Home()),
       ),
     );

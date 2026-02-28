@@ -12,7 +12,8 @@ part of 'sound_effects.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 SoundEffect _$SoundEffectFromJson(Map<String, dynamic> json) {
   return _SoundEffect.fromJson(json);
@@ -37,8 +38,9 @@ mixin _$SoundEffect {
 /// @nodoc
 abstract class $SoundEffectCopyWith<$Res> {
   factory $SoundEffectCopyWith(
-          SoundEffect value, $Res Function(SoundEffect) then) =
-      _$SoundEffectCopyWithImpl<$Res, SoundEffect>;
+    SoundEffect value,
+    $Res Function(SoundEffect) then,
+  ) = _$SoundEffectCopyWithImpl<$Res, SoundEffect>;
   @useResult
   $Res call({String name, String path, double volume});
 }
@@ -57,25 +59,24 @@ class _$SoundEffectCopyWithImpl<$Res, $Val extends SoundEffect>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? name = null,
-    Object? path = null,
-    Object? volume = null,
-  }) {
-    return _then(_value.copyWith(
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      path: null == path
-          ? _value.path
-          : path // ignore: cast_nullable_to_non_nullable
-              as String,
-      volume: null == volume
-          ? _value.volume
-          : volume // ignore: cast_nullable_to_non_nullable
-              as double,
-    ) as $Val);
+  $Res call({Object? name = null, Object? path = null, Object? volume = null}) {
+    return _then(
+      _value.copyWith(
+            name: null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            path: null == path
+                ? _value.path
+                : path // ignore: cast_nullable_to_non_nullable
+                      as String,
+            volume: null == volume
+                ? _value.volume
+                : volume // ignore: cast_nullable_to_non_nullable
+                      as double,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -83,8 +84,9 @@ class _$SoundEffectCopyWithImpl<$Res, $Val extends SoundEffect>
 abstract class _$$SoundEffectImplCopyWith<$Res>
     implements $SoundEffectCopyWith<$Res> {
   factory _$$SoundEffectImplCopyWith(
-          _$SoundEffectImpl value, $Res Function(_$SoundEffectImpl) then) =
-      __$$SoundEffectImplCopyWithImpl<$Res>;
+    _$SoundEffectImpl value,
+    $Res Function(_$SoundEffectImpl) then,
+  ) = __$$SoundEffectImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String name, String path, double volume});
@@ -95,40 +97,42 @@ class __$$SoundEffectImplCopyWithImpl<$Res>
     extends _$SoundEffectCopyWithImpl<$Res, _$SoundEffectImpl>
     implements _$$SoundEffectImplCopyWith<$Res> {
   __$$SoundEffectImplCopyWithImpl(
-      _$SoundEffectImpl _value, $Res Function(_$SoundEffectImpl) _then)
-      : super(_value, _then);
+    _$SoundEffectImpl _value,
+    $Res Function(_$SoundEffectImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SoundEffect
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? name = null,
-    Object? path = null,
-    Object? volume = null,
-  }) {
-    return _then(_$SoundEffectImpl(
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      path: null == path
-          ? _value.path
-          : path // ignore: cast_nullable_to_non_nullable
-              as String,
-      volume: null == volume
-          ? _value.volume
-          : volume // ignore: cast_nullable_to_non_nullable
-              as double,
-    ));
+  $Res call({Object? name = null, Object? path = null, Object? volume = null}) {
+    return _then(
+      _$SoundEffectImpl(
+        name: null == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        path: null == path
+            ? _value.path
+            : path // ignore: cast_nullable_to_non_nullable
+                  as String,
+        volume: null == volume
+            ? _value.volume
+            : volume // ignore: cast_nullable_to_non_nullable
+                  as double,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$SoundEffectImpl implements _SoundEffect {
-  const _$SoundEffectImpl(
-      {required this.name, required this.path, this.volume = 1.0});
+  const _$SoundEffectImpl({
+    required this.name,
+    required this.path,
+    this.volume = 1.0,
+  });
 
   factory _$SoundEffectImpl.fromJson(Map<String, dynamic> json) =>
       _$$SoundEffectImplFromJson(json);
@@ -170,17 +174,16 @@ class _$SoundEffectImpl implements _SoundEffect {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$SoundEffectImplToJson(
-      this,
-    );
+    return _$$SoundEffectImplToJson(this);
   }
 }
 
 abstract class _SoundEffect implements SoundEffect {
-  const factory _SoundEffect(
-      {required final String name,
-      required final String path,
-      final double volume}) = _$SoundEffectImpl;
+  const factory _SoundEffect({
+    required final String name,
+    required final String path,
+    final double volume,
+  }) = _$SoundEffectImpl;
 
   factory _SoundEffect.fromJson(Map<String, dynamic> json) =
       _$SoundEffectImpl.fromJson;

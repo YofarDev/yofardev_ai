@@ -14,12 +14,12 @@ class CalculatorTool extends AgentTool {
 
   @override
   List<Parameter> get parameters => <Parameter>[
-        Parameter(
-          name: 'expression',
-          description: 'The mathematical expression to evaluate',
-          type: 'string',
-        ),
-      ];
+    Parameter(
+      name: 'expression',
+      description: 'The mathematical expression to evaluate',
+      type: 'string',
+    ),
+  ];
 
   @override
   Future<String> execute(Map<String, dynamic> args) async {

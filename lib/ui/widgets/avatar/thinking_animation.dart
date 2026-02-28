@@ -15,7 +15,9 @@ class ThinkingAnimation extends StatelessWidget {
     return BlocBuilder<AvatarCubit, AvatarState>(
       builder: (BuildContext context, AvatarState state) {
         return Positioned(
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppConstants.loadingInvertedY * state.scaleFactor,
+          bottom:
+              MediaQuery.of(context).viewInsets.bottom +
+              AppConstants.loadingInvertedY * state.scaleFactor,
           left: AppConstants.loadingX * state.scaleFactor,
           child: Lottie.asset(
             AppUtils.fixAssetsPath('assets/lotties/typing.json'),

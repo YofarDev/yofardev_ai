@@ -4,10 +4,7 @@ class GlowingLaser extends CustomPainter {
   final Color color;
   final double radius;
 
-  GlowingLaser({
-    this.color = Colors.red,
-    this.radius = 10,
-  });
+  GlowingLaser({this.color = Colors.red, this.radius = 10});
 
   @override
   void paint(Canvas canvas, Size size) {

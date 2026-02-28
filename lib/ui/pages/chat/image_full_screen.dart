@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 
 class ImageFullScreen extends StatelessWidget {
   final String imagePath;
-  const ImageFullScreen({
-    super.key,
-    required this.imagePath,
-  });
+  const ImageFullScreen({super.key, required this.imagePath});
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +15,7 @@ class ImageFullScreen extends StatelessWidget {
       ),
       backgroundColor: Colors.black,
       body: Center(
-        child: Hero(
-          tag: imagePath,
-          child: Image.file(File(imagePath)),
-        ),
+        child: Hero(tag: imagePath, child: Image.file(File(imagePath))),
       ),
     );
   }

@@ -18,12 +18,12 @@ class Answer extends Equatable {
 
   @override
   List<Object> get props => <Object>[
-        chatId,
-        answerText,
-        audioPath,
-        amplitudes,
-        avatarConfig,
-      ];
+    chatId,
+    answerText,
+    audioPath,
+    amplitudes,
+    avatarConfig,
+  ];
 
   Answer copyWith({
     String? chatId,

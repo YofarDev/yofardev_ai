@@ -46,18 +46,22 @@ class DemoCubit extends Cubit<DemoState> {
   final DemoController _demoController;
 
   void _onControllerChanged() {
-    emit(state.copyWith(
-      status: _demoController.status,
-      countdownValue: _demoController.countdownValue,
-    ));
+    emit(
+      state.copyWith(
+        status: _demoController.status,
+        countdownValue: _demoController.countdownValue,
+      ),
+    );
   }
 
   /// Start a demo with the given script
   void startDemo(DemoScript script) {
-    emit(state.copyWith(
-      currentScript: script,
-      remainingResponses: script.responses.length,
-    ));
+    emit(
+      state.copyWith(
+        currentScript: script,
+        remainingResponses: script.responses.length,
+      ),
+    );
   }
 
   /// Update the remaining responses count

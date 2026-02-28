@@ -26,11 +26,14 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
     super.initState();
     _labelController = TextEditingController(text: widget.config?.label ?? '');
     _baseUrlController = TextEditingController(
-        text: widget.config?.baseUrl ?? 'https://api.openai.com/v1');
-    _apiKeyController =
-        TextEditingController(text: widget.config?.apiKey ?? '');
-    _modelController =
-        TextEditingController(text: widget.config?.model ?? 'gpt-3.5-turbo');
+      text: widget.config?.baseUrl ?? 'https://api.openai.com/v1',
+    );
+    _apiKeyController = TextEditingController(
+      text: widget.config?.apiKey ?? '',
+    );
+    _modelController = TextEditingController(
+      text: widget.config?.model ?? 'gpt-3.5-turbo',
+    );
     _temperature = widget.config?.temperature ?? 0.7;
     _responseFormatType =
         widget.config?.responseFormatType ?? ResponseFormatType.jsonObject;
@@ -74,8 +77,9 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(widget.config == null ? 'Add LLM Config' : 'Edit LLM Config'),
+        title: Text(
+          widget.config == null ? 'Add LLM Config' : 'Edit LLM Config',
+        ),
         actions: <Widget>[
           IconButton(icon: const Icon(Icons.save), onPressed: _save),
         ],
@@ -88,8 +92,9 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
             children: <Widget>[
               TextFormField(
                 controller: _labelController,
-                decoration:
-                    const InputDecoration(labelText: 'Label (e.g. My OpenAI)'),
+                decoration: const InputDecoration(
+                  labelText: 'Label (e.g. My OpenAI)',
+                ),
                 validator: (String? v) =>
                     v == null || v.isEmpty ? 'Required' : null,
               ),
@@ -115,7 +120,8 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
               TextFormField(
                 controller: _modelController,
                 decoration: const InputDecoration(
-                    labelText: 'Model Name (e.g. gpt-4o)'),
+                  labelText: 'Model Name (e.g. gpt-4o)',
+                ),
                 validator: (String? v) =>
                     v == null || v.isEmpty ? 'Required' : null,
               ),

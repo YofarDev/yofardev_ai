@@ -47,16 +47,18 @@ class YofardevAgent {
       debugPrint('🔍 Checking for function calls...');
       final Stopwatch functionCheckStopwatch = Stopwatch()..start();
 
-      final (String, List<FunctionInfo>) functionCheck =
-          await _llmService.checkFunctionsCalling(
-        api: config,
-        functions: ToolRegistry.functionInfos,
-        messages: chat.llmMessages,
-        lastUserMessage: userMessage,
-      );
+      final (String, List<FunctionInfo>) functionCheck = await _llmService
+          .checkFunctionsCalling(
+            api: config,
+            functions: ToolRegistry.functionInfos,
+            messages: chat.llmMessages,
+            lastUserMessage: userMessage,
+          );
 
       functionCheckStopwatch.stop();
-      debugPrint('✅ Function check completed in ${functionCheckStopwatch.elapsedMilliseconds}ms');
+      debugPrint(
+        '✅ Function check completed in ${functionCheckStopwatch.elapsedMilliseconds}ms',
+      );
 
       functionsToCall.addAll(functionCheck.$2);
 
@@ -68,10 +70,12 @@ class YofardevAgent {
           final AgentTool? tool = ToolRegistry.getTool(info.name);
           if (tool != null) {
             debugPrint(
-                'Executing tool: ${tool.name} with args: ${info.parametersCalled}');
+              'Executing tool: ${tool.name} with args: ${info.parametersCalled}',
+            );
             try {
-              final dynamic result = await tool
-                  .execute(info.parametersCalled ?? <String, dynamic>{});
+              final dynamic result = await tool.execute(
+                info.parametersCalled ?? <String, dynamic>{},
+              );
               toolResults.add(<String, dynamic>{
                 'name': tool.name,
                 'result': result,
@@ -96,15 +100,18 @@ class YofardevAgent {
     finalUserPrompt.write(userMessage);
     if (toolResults.isNotEmpty) {
       finalUserPrompt.write(
-          '\n\n[System: The following functions were executed based on your request. Use their results to answer the user.]\n');
+        '\n\n[System: The following functions were executed based on your request. Use their results to answer the user.]\n',
+      );
       for (final Map<String, dynamic> res in toolResults) {
         finalUserPrompt.write(
-            'Function: ${res['name']}\nParams: ${res['parameters']}\nResult: ${res['result']}\n---\n');
+          'Function: ${res['name']}\nParams: ${res['parameters']}\nResult: ${res['result']}\n---\n',
+        );
       }
     }
 
-    final List<LlmMessage> conversation =
-        List<LlmMessage>.from(chat.llmMessages);
+    final List<LlmMessage> conversation = List<LlmMessage>.from(
+      chat.llmMessages,
+    );
 
     if (conversation.isNotEmpty && toolResults.isNotEmpty) {
       // Logic to append context.
@@ -113,26 +120,32 @@ class YofardevAgent {
       if (lastMsg.role == LlmMessageRole.user) {
         // Replace the last user message with the augmented one
         conversation.removeLast();
-        conversation.add(LlmMessage(
-          role: LlmMessageRole.user,
-          body: finalUserPrompt.toString(),
-          attachedFile: lastMsg.attachedFile,
-        ));
+        conversation.add(
+          LlmMessage(
+            role: LlmMessageRole.user,
+            body: finalUserPrompt.toString(),
+            attachedFile: lastMsg.attachedFile,
+          ),
+        );
       } else {
-        conversation.add(LlmMessage(
-          role: LlmMessageRole.user,
-          body: finalUserPrompt.toString(),
-        ));
+        conversation.add(
+          LlmMessage(
+            role: LlmMessageRole.user,
+            body: finalUserPrompt.toString(),
+          ),
+        );
       }
     } else {
       if (conversation.isNotEmpty &&
           conversation.last.role == LlmMessageRole.user) {
         // Already there
       } else {
-        conversation.add(LlmMessage(
-          role: LlmMessageRole.user,
-          body: finalUserPrompt.toString(),
-        ));
+        conversation.add(
+          LlmMessage(
+            role: LlmMessageRole.user,
+            body: finalUserPrompt.toString(),
+          ),
+        );
       }
     }
 
@@ -149,7 +162,9 @@ class YofardevAgent {
     );
 
     generationStopwatch.stop();
-    debugPrint('✅ LLM generation completed in ${generationStopwatch.elapsedMilliseconds}ms');
+    debugPrint(
+      '✅ LLM generation completed in ${generationStopwatch.elapsedMilliseconds}ms',
+    );
 
     if (rawResponse == null) {
       throw Exception('Failed to get response from LLM');
@@ -181,7 +196,9 @@ class YofardevAgent {
     }
 
     llmStopwatch.stop();
-    debugPrint('🎉 Total LLM time: ${llmStopwatch.elapsedMilliseconds}ms (${llmStopwatch.elapsedMilliseconds / 1000}s)');
+    debugPrint(
+      '🎉 Total LLM time: ${llmStopwatch.elapsedMilliseconds}ms (${llmStopwatch.elapsedMilliseconds / 1000}s)',
+    );
 
     return ChatEntry(
       id: const Uuid().v4(),

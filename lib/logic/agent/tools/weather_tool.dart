@@ -12,12 +12,12 @@ class WeatherTool extends AgentTool {
 
   @override
   List<Parameter> get parameters => <Parameter>[
-        Parameter(
-          name: 'location',
-          description: 'The location to get the weather for',
-          type: 'string',
-        ),
-      ];
+    Parameter(
+      name: 'location',
+      description: 'The location to get the weather for',
+      type: 'string',
+    ),
+  ];
 
   @override
   Future<String> execute(Map<String, dynamic> args) async {

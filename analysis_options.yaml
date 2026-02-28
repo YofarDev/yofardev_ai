@@ -1,49 +1,44 @@
-include: package:lint/analysis_options.yaml
+# Include the official Flutter linting rules as a baseline
+# This provides a comprehensive set of best practices maintained by the Flutter team
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - '**/*.g.dart'
+    - '**/*.freezed.dart'
+
 
 linter:
   rules:
-    # ------ Disable individual rules ----- #
-    #                 ---                   #
-    # Turn off what you don't like.         #
-    # ------------------------------------- #
-
-    # Use parameter order as in json response
+    # ------ Parameter Ordering ------ #
+    # When disabled, allows you to order named parameters however you want
+    # Useful when matching the order of fields in JSON responses or API models
+    # Example: You can put optional parameters before required ones if that matches your JSON
     always_put_required_named_parameters_first: false
-
-    # Util classes are awesome!
+    
+    # ------ Class Structure ------ #
+    # When disabled, allows utility/helper classes with only static members
+    # Useful for: Math utilities, Constants classes, Helper functions grouped logically
+    # Example: class StringUtils { static String capitalize(String s) {...} }
     avoid_classes_with_only_static_members: false
-
-    # ------ Enable individual rules ------ #
-    #                 ---                   #
-    # These rules here are good but too     #
-    # opinionated to enable them by default #
-    # ------------------------------------- #
-
-    # Make constructors the first thing in every class
-    #sort_constructors_first: true
-
-    # The new tabs vs. spaces. Choose wisely
-    #prefer_single_quotes: false
-    #prefer_double_quotes: false
-
-    # Good packages document everything
-    #public_member_api_docs: true
-
-    # Blindly follow the Flutter code style, which prefers types everywhere
+    
+    # ------ Type Annotations ------ #
+    # When enabled, requires explicit types everywhere instead of using 'var' or type inference
+    # Pros: More explicit, better for tooling, clearer intent
+    # Cons: More verbose, can be redundant (e.g., 'String name = String();')
+    # Example: Requires 'final String name = "John"' instead of 'final name = "John"'
     always_specify_types: true
-
-    # Back to the 80s
-    #lines_longer_than_80_chars: true
-
-    sort_pub_dependencies: false
-
-    avoid_void_async: false
-
-    always_use_package_imports: false
+    
+    # ------ Import Style ------ #
+    # When enabled, requires relative imports within your own package
+    # Example: import '../../models/user.dart' instead of import 'package:my_app/models/user.dart'
+    # Benefits: Easier refactoring, shorter import paths, clearer project structure
     prefer_relative_imports: true
-    avoid_relative_lib_imports: false
-   
-    use_function_type_syntax_for_parameters: true
-    use_rethrow_when_possible: true
-
+    
+    # ------ BuildContext Usage ------ #
+    # When disabled, allows using BuildContext across async gaps without warnings
+    # The rule has many false positives, especially with mounted checks
+    # Example: Allows 'await future; Navigator.pop(context)' without warnings
     use_build_context_synchronously: false
+
+    unintended_html_in_doc_comment: false

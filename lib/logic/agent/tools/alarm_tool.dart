@@ -12,23 +12,23 @@ class AlarmTool extends AgentTool {
 
   @override
   List<Parameter> get parameters => <Parameter>[
-        Parameter(
-          name: 'minutesFromNow',
-          description: 'The number of minutes from now to set the alarm',
-          type: 'number',
-        ),
-        Parameter(
-          name: 'message',
-          description: 'The message to display in the alarm notification',
-          type: 'string',
-        ),
-      ];
+    Parameter(
+      name: 'minutesFromNow',
+      description: 'The number of minutes from now to set the alarm',
+      type: 'number',
+    ),
+    Parameter(
+      name: 'message',
+      description: 'The message to display in the alarm notification',
+      type: 'string',
+    ),
+  ];
 
   @override
   Future<String> execute(Map<String, dynamic> args) async {
     final int minutesFromNow = args['minutesFromNow'] as int? ?? 0;
     final String message = args['message'] as String? ?? 'Hello world!';
-    
+
     // Call the existing service
     await AlarmService.setAlarm(minutesFromNow, message);
     return 'Alarm set for $minutesFromNow minutes from now with message: "$message"';

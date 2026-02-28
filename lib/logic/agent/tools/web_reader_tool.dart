@@ -14,28 +14,30 @@ class WebReaderTool extends AgentTool {
 
   @override
   List<Parameter> get parameters => <Parameter>[
-        Parameter(
-          name: 'url',
-          type: 'string',
-          description: 'The URL of the webpage.',
-        ),
-      ];
+    Parameter(
+      name: 'url',
+      type: 'string',
+      description: 'The URL of the webpage.',
+    ),
+  ];
 
   @override
   Future<String> execute(Map<String, dynamic> args) async {
     final String url = args['url'] as String? ?? '';
     final Uri uri = Uri.parse(url);
     final Completer<String> completer = Completer<String>();
-    
+
     // Note: HeadlessInAppWebView might need to be run on the main thread or have platform specific constraints.
     // Assuming the previous implementation worked, we replicate it here.
     final HeadlessInAppWebView headlessWebView = HeadlessInAppWebView(
       initialUrlRequest: URLRequest(url: WebUri.uri(uri)),
       onLoadStop: (InAppWebViewController controller, WebUri? url) async {
         try {
-          final String results = await controller.evaluateJavascript(
-                source: "document.body.innerText;",
-              ) as String? ??
+          final String results =
+              await controller.evaluateJavascript(
+                    source: "document.body.innerText;",
+                  )
+                  as String? ??
               'null';
           completer.complete(results);
         } catch (e) {

@@ -11,8 +11,8 @@ class AlarmService {
   static Future<void> checkAndroidScheduleExactAlarmPermission() async {
     final PermissionStatus status = await Permission.scheduleExactAlarm.status;
     if (status.isDenied) {
-      final PermissionStatus res =
-          await Permission.scheduleExactAlarm.request();
+      final PermissionStatus res = await Permission.scheduleExactAlarm
+          .request();
       debugPrint(res.toString());
     }
   }
@@ -20,8 +20,9 @@ class AlarmService {
   static Future<String> setAlarm(int minutesFromNow, String message) async {
     try {
       await checkAndroidScheduleExactAlarmPermission();
-      final DateTime dateTime =
-          DateTime.now().add(Duration(minutes: minutesFromNow));
+      final DateTime dateTime = DateTime.now().add(
+        Duration(minutes: minutesFromNow),
+      );
       final AlarmSettings alarmSettings = AlarmSettings(
         id: Random().nextInt(100),
         volumeSettings: VolumeSettings.fixed(volume: 100),

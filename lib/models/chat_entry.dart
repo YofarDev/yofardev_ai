@@ -25,8 +25,12 @@ class ChatEntry extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      <Object?>[entryType, body, timestamp, attachedImage];
+  List<Object?> get props => <Object?>[
+    entryType,
+    body,
+    timestamp,
+    attachedImage,
+  ];
 
   ChatEntry copyWith({
     EntryType? entryType,
@@ -61,8 +65,9 @@ class ChatEntry extends Equatable {
         orElse: () => EntryType.user,
       ),
       body: map['body'] as String? ?? '',
-      timestamp:
-          DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int? ?? 0),
+      timestamp: DateTime.fromMillisecondsSinceEpoch(
+        map['timestamp'] as int? ?? 0,
+      ),
       attachedImage: map['attachedImage'] as String?,
     );
   }
@@ -84,7 +89,8 @@ class ChatEntry extends Equatable {
         cleanedBody = cleanedBody.substring(jsonStart, jsonEnd + 1);
       }
 
-      final Map<String, dynamic> map = json.decode(cleanedBody) as Map<String, dynamic>;
+      final Map<String, dynamic> map =
+          json.decode(cleanedBody) as Map<String, dynamic>;
       final String message = map['message'] as String? ?? '';
       return message;
     } catch (e) {
@@ -119,7 +125,9 @@ extension ChatEntryExtension on ChatEntry {
       return AvatarConfig.fromMap(map);
     } catch (e) {
       debugPrint('getAvatarConfig(): Error parsing avatar config: $e');
-      final String bodyPreview = body.length > 200 ? '${body.substring(0, 200)}...' : body;
+      final String bodyPreview = body.length > 200
+          ? '${body.substring(0, 200)}...'
+          : body;
       debugPrint('getAvatarConfig(): Body was: $bodyPreview');
       return const AvatarConfig();
     }

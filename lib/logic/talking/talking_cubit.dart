@@ -29,8 +29,6 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
-
-
   Future<void> prepareToSpeak({
     required String chatId,
     required ChatEntry entry,
@@ -82,17 +80,16 @@ class TalkingCubit extends Cubit<TalkingState> {
         .replaceAll('*', '')
         .removeEmojis()
         .trim();
-    final FlutterTts tts = await TtsService().getFlutterTts(
-      text: textToSay,
-      language: language,
-      voiceEffect: voiceEffect,
-    );
+
+    final FlutterTts tts = FlutterTts();
+    await tts.setLanguage(language == 'fr' ? 'fr-FR' : 'en-US');
+    await tts.setSpeechRate(voiceEffect.speedRate);
+    await tts.setPitch(voiceEffect.pitch);
+
     tts.setCompletionHandler(() {
-      stopTalking(
-        removeFile: false,
-        soundEffectsEnabled: true,
-      );
+      stopTalking(removeFile: false, soundEffectsEnabled: true);
     });
+
     emit(
       state.copyWith(
         status: TalkingStatus.success,
@@ -104,7 +101,7 @@ class TalkingCubit extends Cubit<TalkingState> {
       ),
     );
 
-    tts.speak(textToSay);
+    await tts.speak(textToSay);
   }
 
   void setLoadingStatus(bool isLoading) {
@@ -116,12 +113,7 @@ class TalkingCubit extends Cubit<TalkingState> {
   }
 
   void updateMouthState(MouthState mouthState) {
-    emit(
-      state.copyWith(
-        mouthState: mouthState,
-        isTalking: true,
-      ),
-    );
+    emit(state.copyWith(mouthState: mouthState, isTalking: true));
   }
 
   void stopTalking({

@@ -66,8 +66,11 @@ class _ServiceSwitcher extends StatelessWidget {
                           ),
                           Text(
                             isUsingFake ? 'Fake (Demo Mode)' : 'Real (API)',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: isUsingFake ? Colors.orange : Colors.blue,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: isUsingFake
+                                      ? Colors.orange
+                                      : Colors.blue,
                                 ),
                           ),
                         ],
@@ -87,8 +90,8 @@ class _ServiceSwitcher extends StatelessWidget {
                       ? 'Using pre-scripted responses. No API calls will be made.'
                       : 'Using real LLM API. Requires valid configuration.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -103,7 +106,11 @@ class _ServiceSwitcher extends StatelessWidget {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(useFake ? 'Switched to Fake LLM Service' : 'Switched to Real LLM Service'),
+        content: Text(
+          useFake
+              ? 'Switched to Fake LLM Service'
+              : 'Switched to Real LLM Service',
+        ),
         duration: const Duration(seconds: 2),
       ),
     );

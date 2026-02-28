@@ -10,10 +10,10 @@ class RobocopAnimatedEyes extends StatefulWidget {
   const RobocopAnimatedEyes({super.key});
 
   @override
-  _RobocopAnimatedEyesState createState() => _RobocopAnimatedEyesState();
+  RobocopAnimatedEyesState createState() => RobocopAnimatedEyesState();
 }
 
-class _RobocopAnimatedEyesState extends State<RobocopAnimatedEyes>
+class RobocopAnimatedEyesState extends State<RobocopAnimatedEyes>
     with SingleTickerProviderStateMixin {
   final int _sizeLaser = 20;
   late AnimationController _controller;
@@ -30,12 +30,7 @@ class _RobocopAnimatedEyesState extends State<RobocopAnimatedEyes>
     _animation = Tween<double>(
       begin: AppConstants.robocopLaserXLeft,
       end: AppConstants.robocopLaserXRight,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -53,14 +48,12 @@ class _RobocopAnimatedEyesState extends State<RobocopAnimatedEyes>
           animation: _animation,
           builder: (BuildContext context, Widget? child) {
             return Positioned(
-              bottom: (AppConstants.avatarHeight - AppConstants.robocopLaserY) *
+              bottom:
+                  (AppConstants.avatarHeight - AppConstants.robocopLaserY) *
                   scaleFactor,
               left: _animation.value * scaleFactor,
               child: CustomPaint(
-                size: Size(
-                  _sizeLaser * scaleFactor,
-                  _sizeLaser * scaleFactor,
-                ),
+                size: Size(_sizeLaser * scaleFactor, _sizeLaser * scaleFactor),
                 painter: GlowingLaser(radius: _sizeLaser * scaleFactor),
               ),
             );

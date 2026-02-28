@@ -26,8 +26,8 @@ class HomeButtons extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     context.read<ChatsCubit>().setCurrentLanguage(
-                          state.currentLanguage == 'fr' ? 'en' : 'fr',
-                        );
+                      state.currentLanguage == 'fr' ? 'en' : 'fr',
+                    );
                   },
                   child: Text(
                     state.currentLanguage == 'fr' ? '🇫🇷' : '🇬🇧',
@@ -52,16 +52,16 @@ class HomeButtons extends StatelessWidget {
                   icon: Icons.add_outlined,
                   onPressed: () {
                     context.read<ChatsCubit>().createNewChat(
-                          context.read<AvatarCubit>(),
-                          context.read<TalkingCubit>(),
-                        );
+                      context.read<AvatarCubit>(),
+                      context.read<TalkingCubit>(),
+                    );
                   },
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: AppIconButton(
                     icon: Icons.settings_rounded,
-                    onPressed: ()  {
+                    onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<dynamic>(
                           builder: (BuildContext context) =>

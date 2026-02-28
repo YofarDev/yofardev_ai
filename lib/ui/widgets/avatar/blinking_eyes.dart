@@ -7,15 +7,13 @@ import '../../../utils/app_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class BlinkingEyes extends StatefulWidget {
-  const BlinkingEyes({
-    super.key,
-  });
+  const BlinkingEyes({super.key});
 
   @override
-  _BlinkingEyesState createState() => _BlinkingEyesState();
+  BlinkingEyesState createState() => BlinkingEyesState();
 }
 
-class _BlinkingEyesState extends State<BlinkingEyes>
+class BlinkingEyesState extends State<BlinkingEyes>
     with TickerProviderStateMixin {
   late Timer _timer;
   String _eyeState = 'open';

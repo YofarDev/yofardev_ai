@@ -1,6 +1,6 @@
 part of 'talking_cubit.dart';
 
-enum TalkingStatus { initial, loading,  success, failure }
+enum TalkingStatus { initial, loading, success, failure }
 
 enum MouthState { open, closed, semi, slightly, wide }
 
@@ -19,12 +19,7 @@ class TalkingState extends Equatable {
 
   @override
   List<Object> get props {
-    return <Object>[
-      status,
-      answer,
-      mouthState,
-      isTalking,
-    ];
+    return <Object>[status, answer, mouthState, isTalking];
   }
 
   TalkingState copyWith({

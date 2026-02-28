@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../logic/avatar/avatar_cubit.dart';
-import '../logic/chat/chats_cubit.dart';
+import '../features/avatar/bloc/avatar_cubit.dart';
+import '../features/chat/bloc/chats_cubit.dart';
 import '../models/avatar.dart';
 import '../models/demo_script.dart';
 import '../services/demo_controller.dart';

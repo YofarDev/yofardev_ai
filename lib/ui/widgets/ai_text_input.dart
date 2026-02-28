@@ -18,14 +18,12 @@ import '../../utils/extensions.dart';
 import '../../utils/platform_utils.dart';
 import '../pages/chat/widgets/function_calling_widget.dart';
 import 'current_prompt_text.dart';
+import 'glassmorphic_text_field.dart';
 import 'picker_buttons.dart';
 
 class AiTextInput extends StatefulWidget {
   final bool onlyText;
-  const AiTextInput({
-    super.key,
-    this.onlyText = false,
-  });
+  const AiTextInput({super.key, this.onlyText = false});
 
   @override
   State<AiTextInput> createState() => _AiTextInputState();
@@ -35,8 +33,10 @@ class _AiTextInputState extends State<AiTextInput> {
   final FocusNode _inputFocus = FocusNode();
   final TextEditingController _controller = TextEditingController();
   File? _pickedImage;
-  late SpeechToText _speechToText;
+  SpeechToText? _speechToText;
   bool _speechEnabled = false;
+
+  bool get _isSpeechListening => _speechToText?.isListening ?? false;
 
   @override
   void initState() {
@@ -58,7 +58,7 @@ class _AiTextInputState extends State<AiTextInput> {
     }
     if (enable) {
       _speechToText = SpeechToText();
-      _speechEnabled = await _speechToText.initialize();
+      _speechEnabled = await _speechToText!.initialize();
       setState(() {});
     }
   }
@@ -122,10 +122,10 @@ class _AiTextInputState extends State<AiTextInput> {
                           Opacity(
                             opacity:
                                 talkingState.status == TalkingStatus.initial
-                                    ? 1
-                                    : widget.onlyText
-                                        ? 1
-                                        : 0,
+                                ? 1
+                                : widget.onlyText
+                                ? 1
+                                : 0,
                             child: _buildTextField(
                               currentAvatar: avatarState.avatar,
                               currentLanguage: state.currentLanguage,
@@ -149,8 +149,8 @@ class _AiTextInputState extends State<AiTextInput> {
                               children: <Widget>[
                                 Flexible(
                                   child: CurrentPromptText(
-                                    prompt:
-                                        lastUserEntry.body.getVisiblePrompt(),
+                                    prompt: lastUserEntry.body
+                                        .getVisiblePrompt(),
                                   ),
                                 ),
                                 if (lastUserEntry.attachedImage != null)
@@ -176,90 +176,53 @@ class _AiTextInputState extends State<AiTextInput> {
     required Avatar currentAvatar,
     required String currentLanguage,
     required String chatId,
-  }) =>
-      Row(
-        children: <Widget>[
-          if (PlatformUtils.checkPlatform() != 'Web')
-            PickerButtons(onImageSelected: _onImageSelected),
-          Expanded(
-            child: TextField(
-              focusNode: _inputFocus,
-              autofocus: true,
-              controller: _controller,
-              keyboardType: TextInputType.text,
-              onChanged: (_) {
-                setState(() {});
-              },
-              onSubmitted: (_) => _onTextSubmitted(
-                currentAvatar: currentAvatar,
-                currentLanguage: currentLanguage,
-                chatId: chatId,
-              ),
-              cursorColor: Colors.blue,
-              textCapitalization: TextCapitalization.sentences,
-              maxLines: 3,
-              minLines: 1,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.7),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    if (_speechEnabled)
-                      IconButton(
-                        icon: Icon(
-                          Icons.mic,
-                          color: _speechToText.isListening ? Colors.red : null,
-                        ),
-                        onPressed: () async {
-                          if (_speechToText.isListening) {
-                            await _speechToText.stop();
-                          } else {
-                            await _speechToText.listen(
-                              onResult: (SpeechRecognitionResult result) =>
-                                  _onSpeechResult(
-                                result,
-                                currentAvatar: currentAvatar,
-                                currentLanguage: currentLanguage,
-                                chatId: chatId,
-                              ),
-                              localeId: context
-                                          .read<ChatsCubit>()
-                                          .state
-                                          .currentLanguage ==
-                                      'fr'
-                                  ? 'fr_FR'
-                                  : 'en_US',
-                              listenOptions:
-                                  SpeechListenOptions(partialResults: false),
-                            );
-                          }
-                          setState(() {});
-                        },
-                      ),
-                    if (_controller.text.isNotEmpty)
-                      IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _controller.clear();
-                          _pickedImage = null;
-                          setState(() {});
-                        },
-                      ),
-                  ],
-                ),
-              ),
-            ),
+  }) => Row(
+    children: <Widget>[
+      if (PlatformUtils.checkPlatform() != 'Web')
+        PickerButtons(onImageSelected: _onImageSelected),
+      Expanded(
+        child: GlassmorphicTextField(
+          focusNode: _inputFocus,
+          autofocus: true,
+          controller: _controller,
+          keyboardType: TextInputType.text,
+          onChanged: (_) {
+            setState(() {});
+          },
+          onSubmitted: (_) => _onTextSubmitted(
+            currentAvatar: currentAvatar,
+            currentLanguage: currentLanguage,
+            chatId: chatId,
           ),
-        ],
-      );
+          textCapitalization: TextCapitalization.sentences,
+          maxLines: 3,
+          minLines: 1,
+          enableSpeechToText: _speechEnabled,
+          isSpeechListening: _isSpeechListening,
+          onSpeechPressed: () async {
+            if (_isSpeechListening) {
+              await _speechToText?.stop();
+            } else {
+              await _speechToText?.listen(
+                onResult: (SpeechRecognitionResult result) => _onSpeechResult(
+                  result,
+                  currentAvatar: currentAvatar,
+                  currentLanguage: currentLanguage,
+                  chatId: chatId,
+                ),
+                localeId:
+                    context.read<ChatsCubit>().state.currentLanguage == 'fr'
+                    ? 'fr_FR'
+                    : 'en_US',
+                listenOptions: SpeechListenOptions(partialResults: false),
+              );
+            }
+            setState(() {});
+          },
+        ),
+      ),
+    ],
+  );
 
   void _onImageSelected(File? file) async {
     _inputFocus.unfocus();
@@ -276,17 +239,12 @@ class _AiTextInputState extends State<AiTextInput> {
   }
 
   Widget _buildPickedImage(String path) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
-          child: Image.file(
-            File(path),
-            fit: BoxFit.cover,
-            width: 100,
-            height: 100,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.all(8.0),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(8.0),
+      child: Image.file(File(path), fit: BoxFit.cover, width: 100, height: 100),
+    ),
+  );
 
   void _onSpeechResult(
     SpeechRecognitionResult result, {
@@ -323,11 +281,11 @@ class _AiTextInputState extends State<AiTextInput> {
       _pickedImage = null;
     });
     final ChatEntry? modelAnswer = await context.read<ChatsCubit>().askYofardev(
-          prompt,
-          attachedImage: attachedImage,
-          onlyText: widget.onlyText,
-          avatar: currentAvatar,
-        );
+      prompt,
+      attachedImage: attachedImage,
+      onlyText: widget.onlyText,
+      avatar: currentAvatar,
+    );
     if (modelAnswer == null) return;
     if (!mounted) return;
     final AvatarConfig config = modelAnswer.getAvatarConfig();
@@ -335,22 +293,22 @@ class _AiTextInputState extends State<AiTextInput> {
       if (!mounted) return;
       final VoiceEffect voiceEffect =
           (config.specials == AvatarSpecials.outOfScreen ||
-                  config.costume == null)
-              ? currentAvatar.costume.getVoiceEffect()
-              : config.costume!.getVoiceEffect();
+              config.costume == null)
+          ? currentAvatar.costume.getVoiceEffect()
+          : config.costume!.getVoiceEffect();
       if (PlatformUtils.checkPlatform() == 'Web') {
         context.read<TalkingCubit>().speakForWeb(
-              modelAnswer,
-              currentLanguage,
-              voiceEffect,
-            );
+          modelAnswer,
+          currentLanguage,
+          voiceEffect,
+        );
       } else {
         context.read<TalkingCubit>().prepareToSpeak(
-              chatId: chatId,
-              entry: modelAnswer,
-              language: currentLanguage,
-              voiceEffect: voiceEffect,
-            );
+          chatId: chatId,
+          entry: modelAnswer,
+          language: currentLanguage,
+          voiceEffect: voiceEffect,
+        );
       }
     }
   }

@@ -14,7 +14,7 @@ enum ChatPersona {
   philosopher,
   geek,
   coach,
-  psychologist
+  psychologist,
 }
 
 class Chat extends Equatable {
@@ -54,14 +54,7 @@ class Chat extends Equatable {
 
   @override
   List<Object?> get props {
-    return <Object?>[
-      id,
-      entries,
-      avatar,
-      language,
-      systemPrompt,
-      persona,
-    ];
+    return <Object?>[id, entries, avatar, language, systemPrompt, persona];
   }
 
   Map<String, dynamic> toMap() {
@@ -79,8 +72,9 @@ class Chat extends Equatable {
     return Chat(
       id: map['id'] as String? ?? '',
       entries: List<ChatEntry>.from(
-        (map['entries'] as List<dynamic>? ?? <String>[])
-            .map((dynamic x) => ChatEntry.fromMap(x as Map<String, dynamic>)),
+        (map['entries'] as List<dynamic>? ?? <String>[]).map(
+          (dynamic x) => ChatEntry.fromMap(x as Map<String, dynamic>),
+        ),
       ),
       avatar: Avatar.fromMap(map['avatar'] as Map<String, dynamic>),
       language: map['language'] as String,

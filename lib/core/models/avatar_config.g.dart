@@ -7,21 +7,23 @@ part of 'avatar_config.dart';
 // **************************************************************************
 
 _$AvatarImpl _$$AvatarImplFromJson(Map<String, dynamic> json) => _$AvatarImpl(
-      background:
-          $enumDecodeNullable(_$AvatarBackgroundsEnumMap, json['background']) ??
-              AvatarBackgrounds.lake,
-      hat: $enumDecodeNullable(_$AvatarHatEnumMap, json['hat']) ??
-          AvatarHat.noHat,
-      top: $enumDecodeNullable(_$AvatarTopEnumMap, json['top']) ??
-          AvatarTop.pinkHoodie,
-      glasses: $enumDecodeNullable(_$AvatarGlassesEnumMap, json['glasses']) ??
-          AvatarGlasses.glasses,
-      specials:
-          $enumDecodeNullable(_$AvatarSpecialsEnumMap, json['specials']) ??
-              AvatarSpecials.onScreen,
-      costume: $enumDecodeNullable(_$AvatarCostumeEnumMap, json['costume']) ??
-          AvatarCostume.none,
-    );
+  background:
+      $enumDecodeNullable(_$AvatarBackgroundsEnumMap, json['background']) ??
+      AvatarBackgrounds.lake,
+  hat: $enumDecodeNullable(_$AvatarHatEnumMap, json['hat']) ?? AvatarHat.noHat,
+  top:
+      $enumDecodeNullable(_$AvatarTopEnumMap, json['top']) ??
+      AvatarTop.pinkHoodie,
+  glasses:
+      $enumDecodeNullable(_$AvatarGlassesEnumMap, json['glasses']) ??
+      AvatarGlasses.glasses,
+  specials:
+      $enumDecodeNullable(_$AvatarSpecialsEnumMap, json['specials']) ??
+      AvatarSpecials.onScreen,
+  costume:
+      $enumDecodeNullable(_$AvatarCostumeEnumMap, json['costume']) ??
+      AvatarCostume.none,
+);
 
 Map<String, dynamic> _$$AvatarImplToJson(_$AvatarImpl instance) =>
     <String, dynamic>{
@@ -104,15 +106,18 @@ const _$AvatarCostumeEnumMap = {
 
 _$AvatarConfigImpl _$$AvatarConfigImplFromJson(Map<String, dynamic> json) =>
     _$AvatarConfigImpl(
-      background:
-          $enumDecodeNullable(_$AvatarBackgroundsEnumMap, json['background']),
+      background: $enumDecodeNullable(
+        _$AvatarBackgroundsEnumMap,
+        json['background'],
+      ),
       hat: $enumDecodeNullable(_$AvatarHatEnumMap, json['hat']),
       top: $enumDecodeNullable(_$AvatarTopEnumMap, json['top']),
       glasses: $enumDecodeNullable(_$AvatarGlassesEnumMap, json['glasses']),
       specials: $enumDecodeNullable(_$AvatarSpecialsEnumMap, json['specials']),
       costume: $enumDecodeNullable(_$AvatarCostumeEnumMap, json['costume']),
-      soundEffect:
-          const SoundEffectConverter().fromJson(json['soundEffect'] as String?),
+      soundEffect: const SoundEffectConverter().fromJson(
+        json['soundEffect'] as String?,
+      ),
     );
 
 Map<String, dynamic> _$$AvatarConfigImplToJson(_$AvatarConfigImpl instance) =>

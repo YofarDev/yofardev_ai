@@ -83,10 +83,7 @@ class _DemoControlsState extends State<DemoControls> {
               onPressed: status == DemoStatus.idle ? _startDemo : null,
               backgroundColor: Colors.blue,
               heroTag: 'demo_btn',
-              child: const Icon(
-                Icons.play_arrow,
-                size: 20,
-              ),
+              child: const Icon(Icons.play_arrow, size: 20),
             ),
           if (status != DemoStatus.countdown) const SizedBox(height: 8),
           // Status indicator
@@ -99,10 +96,7 @@ class _DemoControlsState extends State<DemoControls> {
               ),
               child: Text(
                 _getStatusText(status),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
             ),
         ],

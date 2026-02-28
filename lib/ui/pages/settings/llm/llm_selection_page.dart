@@ -36,7 +36,8 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
     Navigator.of(context)
         .push(
           MaterialPageRoute<void>(
-              builder: (BuildContext context) => const LlmConfigPage()),
+            builder: (BuildContext context) => const LlmConfigPage(),
+          ),
         )
         .then((_) => _refresh());
   }
@@ -45,7 +46,8 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
     Navigator.of(context)
         .push(
           MaterialPageRoute<void>(
-              builder: (BuildContext context) => LlmConfigPage(config: config)),
+            builder: (BuildContext context) => LlmConfigPage(config: config),
+          ),
         )
         .then((_) => _refresh());
   }
@@ -58,11 +60,13 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
         content: Text('Are you sure you want to delete "${config.label}"?'),
         actions: <Widget>[
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete')),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -83,9 +87,7 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('LLM Provider Selection'),
-      ),
+      appBar: AppBar(title: const Text('LLM Provider Selection')),
       body: _configs.isEmpty
           ? Center(
               child: Column(
@@ -94,7 +96,9 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                   const Text('No LLM configurations found.'),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                      onPressed: _onAdd, child: const Text('Add Provider')),
+                    onPressed: _onAdd,
+                    child: const Text('Add Provider'),
+                  ),
                 ],
               ),
             )
@@ -104,8 +108,10 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                 final LlmConfig config = _configs[index];
 
                 return Card(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: ListTile(
                     // ignore: deprecated_member_use
                     leading: Radio<String>(
@@ -115,18 +121,22 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                       // ignore: deprecated_member_use
                       onChanged: _onSelect,
                     ),
-                    title: Text(config.label,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(
+                      config.label,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: Text('${config.model} @ ${config.baseUrl}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () => _onEdit(config)),
+                          icon: const Icon(Icons.edit),
+                          onPressed: () => _onEdit(config),
+                        ),
                         IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () => _onDelete(config)),
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _onDelete(config),
+                        ),
                       ],
                     ),
                     onTap: () => _onSelect(config.id),

@@ -15,9 +15,7 @@ import '../../../utils/platform_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class TalkingMouth extends StatefulWidget {
-  const TalkingMouth({
-    super.key,
-  });
+  const TalkingMouth({super.key});
 
   @override
   State<TalkingMouth> createState() => _TalkingMouthState();
@@ -43,11 +41,7 @@ class _TalkingMouthState extends State<TalkingMouth> {
           } else {
             final String audioPath = state.answer.audioPath;
             final List<int> amplitudes = state.answer.amplitudes;
-            _startTalking(
-              context,
-              audioPath,
-              amplitudes,
-            );
+            _startTalking(context, audioPath, amplitudes);
           }
         }
       },
@@ -76,32 +70,36 @@ class _TalkingMouthState extends State<TalkingMouth> {
         continue;
       }
 
-      final String audioPath = context
-          .read<ChatsCubit>()
-          .state
-          .audioPathsWaitingSentences[i]['audioPath'] as String;
-      final List<int> amplitudes = context
-          .read<ChatsCubit>()
-          .state
-          .audioPathsWaitingSentences[i]['amplitudes'] as List<int>;
+      final String audioPath =
+          context
+                  .read<ChatsCubit>()
+                  .state
+                  .audioPathsWaitingSentences[i]['audioPath']
+              as String;
+      final List<int> amplitudes =
+          context
+                  .read<ChatsCubit>()
+                  .state
+                  .audioPathsWaitingSentences[i]['amplitudes']
+              as List<int>;
 
       // Check if file exists before playing
       if (!await File(audioPath).exists()) {
         debugPrint('⚠️  Waiting audio file not found: $audioPath');
         i++;
         if (i >=
-            context.read<ChatsCubit>().state.audioPathsWaitingSentences.length) {
+            context
+                .read<ChatsCubit>()
+                .state
+                .audioPathsWaitingSentences
+                .length) {
           i = 0;
         }
         await Future<void>.delayed(const Duration(seconds: 3));
         continue;
       }
 
-      final int duration = await _startTalking(
-        context,
-        audioPath,
-        amplitudes,
-      );
+      final int duration = await _startTalking(context, audioPath, amplitudes);
       await Future<dynamic>.delayed(Duration(milliseconds: duration));
       i++;
       if (i >=
@@ -119,9 +117,11 @@ class _TalkingMouthState extends State<TalkingMouth> {
   ) async {
     if (amplitudes.isEmpty) {
       context.read<TalkingCubit>().stopTalking(
-            soundEffectsEnabled:
-                context.read<ChatsCubit>().state.soundEffectsEnabled,
-          );
+        soundEffectsEnabled: context
+            .read<ChatsCubit>()
+            .state
+            .soundEffectsEnabled,
+      );
       return 0;
     }
 
@@ -150,8 +150,8 @@ class _TalkingMouthState extends State<TalkingMouth> {
     }
 
     final int totalFrames = amplitudes.length;
-    final int updateInterval =
-        (player.duration!.inMilliseconds / totalFrames).round();
+    final int updateInterval = (player.duration!.inMilliseconds / totalFrames)
+        .round();
     int currentIndex = 0;
     Timer.periodic(Duration(milliseconds: updateInterval), (Timer timer) async {
       if (currentIndex >= totalFrames) {
@@ -161,8 +161,8 @@ class _TalkingMouthState extends State<TalkingMouth> {
       } else {
         try {
           context.read<TalkingCubit>().updateMouthState(
-                _getMouthState(amplitudes[currentIndex]),
-              );
+            _getMouthState(amplitudes[currentIndex]),
+          );
           currentIndex++;
         } catch (e) {
           timer.cancel();
@@ -177,12 +177,8 @@ class _TalkingMouthState extends State<TalkingMouth> {
   void _fakeTalking(BuildContext context) async {
     final int amplitude = Random().nextInt(25);
     if (!context.read<TalkingCubit>().state.isTalking) return;
-    context.read<TalkingCubit>().updateMouthState(
-          _getMouthState(amplitude),
-        );
-    await Future<dynamic>.delayed(
-      const Duration(milliseconds: 100),
-    ).then((_) {
+    context.read<TalkingCubit>().updateMouthState(_getMouthState(amplitude));
+    await Future<dynamic>.delayed(const Duration(milliseconds: 100)).then((_) {
       _fakeTalking(context);
     });
   }

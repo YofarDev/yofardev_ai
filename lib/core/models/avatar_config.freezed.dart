@@ -12,7 +12,8 @@ part of 'avatar_config.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 Avatar _$AvatarFromJson(Map<String, dynamic> json) {
   return _Avatar.fromJson(json);
@@ -41,13 +42,14 @@ abstract class $AvatarCopyWith<$Res> {
   factory $AvatarCopyWith(Avatar value, $Res Function(Avatar) then) =
       _$AvatarCopyWithImpl<$Res, Avatar>;
   @useResult
-  $Res call(
-      {AvatarBackgrounds background,
-      AvatarHat hat,
-      AvatarTop top,
-      AvatarGlasses glasses,
-      AvatarSpecials specials,
-      AvatarCostume costume});
+  $Res call({
+    AvatarBackgrounds background,
+    AvatarHat hat,
+    AvatarTop top,
+    AvatarGlasses glasses,
+    AvatarSpecials specials,
+    AvatarCostume costume,
+  });
 }
 
 /// @nodoc
@@ -72,49 +74,54 @@ class _$AvatarCopyWithImpl<$Res, $Val extends Avatar>
     Object? specials = null,
     Object? costume = null,
   }) {
-    return _then(_value.copyWith(
-      background: null == background
-          ? _value.background
-          : background // ignore: cast_nullable_to_non_nullable
-              as AvatarBackgrounds,
-      hat: null == hat
-          ? _value.hat
-          : hat // ignore: cast_nullable_to_non_nullable
-              as AvatarHat,
-      top: null == top
-          ? _value.top
-          : top // ignore: cast_nullable_to_non_nullable
-              as AvatarTop,
-      glasses: null == glasses
-          ? _value.glasses
-          : glasses // ignore: cast_nullable_to_non_nullable
-              as AvatarGlasses,
-      specials: null == specials
-          ? _value.specials
-          : specials // ignore: cast_nullable_to_non_nullable
-              as AvatarSpecials,
-      costume: null == costume
-          ? _value.costume
-          : costume // ignore: cast_nullable_to_non_nullable
-              as AvatarCostume,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            background: null == background
+                ? _value.background
+                : background // ignore: cast_nullable_to_non_nullable
+                      as AvatarBackgrounds,
+            hat: null == hat
+                ? _value.hat
+                : hat // ignore: cast_nullable_to_non_nullable
+                      as AvatarHat,
+            top: null == top
+                ? _value.top
+                : top // ignore: cast_nullable_to_non_nullable
+                      as AvatarTop,
+            glasses: null == glasses
+                ? _value.glasses
+                : glasses // ignore: cast_nullable_to_non_nullable
+                      as AvatarGlasses,
+            specials: null == specials
+                ? _value.specials
+                : specials // ignore: cast_nullable_to_non_nullable
+                      as AvatarSpecials,
+            costume: null == costume
+                ? _value.costume
+                : costume // ignore: cast_nullable_to_non_nullable
+                      as AvatarCostume,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$AvatarImplCopyWith<$Res> implements $AvatarCopyWith<$Res> {
   factory _$$AvatarImplCopyWith(
-          _$AvatarImpl value, $Res Function(_$AvatarImpl) then) =
-      __$$AvatarImplCopyWithImpl<$Res>;
+    _$AvatarImpl value,
+    $Res Function(_$AvatarImpl) then,
+  ) = __$$AvatarImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {AvatarBackgrounds background,
-      AvatarHat hat,
-      AvatarTop top,
-      AvatarGlasses glasses,
-      AvatarSpecials specials,
-      AvatarCostume costume});
+  $Res call({
+    AvatarBackgrounds background,
+    AvatarHat hat,
+    AvatarTop top,
+    AvatarGlasses glasses,
+    AvatarSpecials specials,
+    AvatarCostume costume,
+  });
 }
 
 /// @nodoc
@@ -122,8 +129,9 @@ class __$$AvatarImplCopyWithImpl<$Res>
     extends _$AvatarCopyWithImpl<$Res, _$AvatarImpl>
     implements _$$AvatarImplCopyWith<$Res> {
   __$$AvatarImplCopyWithImpl(
-      _$AvatarImpl _value, $Res Function(_$AvatarImpl) _then)
-      : super(_value, _then);
+    _$AvatarImpl _value,
+    $Res Function(_$AvatarImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of Avatar
   /// with the given fields replaced by the non-null parameter values.
@@ -137,46 +145,48 @@ class __$$AvatarImplCopyWithImpl<$Res>
     Object? specials = null,
     Object? costume = null,
   }) {
-    return _then(_$AvatarImpl(
-      background: null == background
-          ? _value.background
-          : background // ignore: cast_nullable_to_non_nullable
-              as AvatarBackgrounds,
-      hat: null == hat
-          ? _value.hat
-          : hat // ignore: cast_nullable_to_non_nullable
-              as AvatarHat,
-      top: null == top
-          ? _value.top
-          : top // ignore: cast_nullable_to_non_nullable
-              as AvatarTop,
-      glasses: null == glasses
-          ? _value.glasses
-          : glasses // ignore: cast_nullable_to_non_nullable
-              as AvatarGlasses,
-      specials: null == specials
-          ? _value.specials
-          : specials // ignore: cast_nullable_to_non_nullable
-              as AvatarSpecials,
-      costume: null == costume
-          ? _value.costume
-          : costume // ignore: cast_nullable_to_non_nullable
-              as AvatarCostume,
-    ));
+    return _then(
+      _$AvatarImpl(
+        background: null == background
+            ? _value.background
+            : background // ignore: cast_nullable_to_non_nullable
+                  as AvatarBackgrounds,
+        hat: null == hat
+            ? _value.hat
+            : hat // ignore: cast_nullable_to_non_nullable
+                  as AvatarHat,
+        top: null == top
+            ? _value.top
+            : top // ignore: cast_nullable_to_non_nullable
+                  as AvatarTop,
+        glasses: null == glasses
+            ? _value.glasses
+            : glasses // ignore: cast_nullable_to_non_nullable
+                  as AvatarGlasses,
+        specials: null == specials
+            ? _value.specials
+            : specials // ignore: cast_nullable_to_non_nullable
+                  as AvatarSpecials,
+        costume: null == costume
+            ? _value.costume
+            : costume // ignore: cast_nullable_to_non_nullable
+                  as AvatarCostume,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$AvatarImpl extends _Avatar {
-  const _$AvatarImpl(
-      {this.background = AvatarBackgrounds.lake,
-      this.hat = AvatarHat.noHat,
-      this.top = AvatarTop.pinkHoodie,
-      this.glasses = AvatarGlasses.glasses,
-      this.specials = AvatarSpecials.onScreen,
-      this.costume = AvatarCostume.none})
-      : super._();
+  const _$AvatarImpl({
+    this.background = AvatarBackgrounds.lake,
+    this.hat = AvatarHat.noHat,
+    this.top = AvatarTop.pinkHoodie,
+    this.glasses = AvatarGlasses.glasses,
+    this.specials = AvatarSpecials.onScreen,
+    this.costume = AvatarCostume.none,
+  }) : super._();
 
   factory _$AvatarImpl.fromJson(Map<String, dynamic> json) =>
       _$$AvatarImplFromJson(json);
@@ -223,7 +233,14 @@ class _$AvatarImpl extends _Avatar {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType, background, hat, top, glasses, specials, costume);
+    runtimeType,
+    background,
+    hat,
+    top,
+    glasses,
+    specials,
+    costume,
+  );
 
   /// Create a copy of Avatar
   /// with the given fields replaced by the non-null parameter values.
@@ -235,20 +252,19 @@ class _$AvatarImpl extends _Avatar {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$AvatarImplToJson(
-      this,
-    );
+    return _$$AvatarImplToJson(this);
   }
 }
 
 abstract class _Avatar extends Avatar {
-  const factory _Avatar(
-      {final AvatarBackgrounds background,
-      final AvatarHat hat,
-      final AvatarTop top,
-      final AvatarGlasses glasses,
-      final AvatarSpecials specials,
-      final AvatarCostume costume}) = _$AvatarImpl;
+  const factory _Avatar({
+    final AvatarBackgrounds background,
+    final AvatarHat hat,
+    final AvatarTop top,
+    final AvatarGlasses glasses,
+    final AvatarSpecials specials,
+    final AvatarCostume costume,
+  }) = _$AvatarImpl;
   const _Avatar._() : super._();
 
   factory _Avatar.fromJson(Map<String, dynamic> json) = _$AvatarImpl.fromJson;
@@ -302,17 +318,19 @@ mixin _$AvatarConfig {
 /// @nodoc
 abstract class $AvatarConfigCopyWith<$Res> {
   factory $AvatarConfigCopyWith(
-          AvatarConfig value, $Res Function(AvatarConfig) then) =
-      _$AvatarConfigCopyWithImpl<$Res, AvatarConfig>;
+    AvatarConfig value,
+    $Res Function(AvatarConfig) then,
+  ) = _$AvatarConfigCopyWithImpl<$Res, AvatarConfig>;
   @useResult
-  $Res call(
-      {AvatarBackgrounds? background,
-      AvatarHat? hat,
-      AvatarTop? top,
-      AvatarGlasses? glasses,
-      AvatarSpecials? specials,
-      AvatarCostume? costume,
-      @SoundEffectConverter() SoundEffects? soundEffect});
+  $Res call({
+    AvatarBackgrounds? background,
+    AvatarHat? hat,
+    AvatarTop? top,
+    AvatarGlasses? glasses,
+    AvatarSpecials? specials,
+    AvatarCostume? costume,
+    @SoundEffectConverter() SoundEffects? soundEffect,
+  });
 }
 
 /// @nodoc
@@ -338,36 +356,39 @@ class _$AvatarConfigCopyWithImpl<$Res, $Val extends AvatarConfig>
     Object? costume = freezed,
     Object? soundEffect = freezed,
   }) {
-    return _then(_value.copyWith(
-      background: freezed == background
-          ? _value.background
-          : background // ignore: cast_nullable_to_non_nullable
-              as AvatarBackgrounds?,
-      hat: freezed == hat
-          ? _value.hat
-          : hat // ignore: cast_nullable_to_non_nullable
-              as AvatarHat?,
-      top: freezed == top
-          ? _value.top
-          : top // ignore: cast_nullable_to_non_nullable
-              as AvatarTop?,
-      glasses: freezed == glasses
-          ? _value.glasses
-          : glasses // ignore: cast_nullable_to_non_nullable
-              as AvatarGlasses?,
-      specials: freezed == specials
-          ? _value.specials
-          : specials // ignore: cast_nullable_to_non_nullable
-              as AvatarSpecials?,
-      costume: freezed == costume
-          ? _value.costume
-          : costume // ignore: cast_nullable_to_non_nullable
-              as AvatarCostume?,
-      soundEffect: freezed == soundEffect
-          ? _value.soundEffect
-          : soundEffect // ignore: cast_nullable_to_non_nullable
-              as SoundEffects?,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            background: freezed == background
+                ? _value.background
+                : background // ignore: cast_nullable_to_non_nullable
+                      as AvatarBackgrounds?,
+            hat: freezed == hat
+                ? _value.hat
+                : hat // ignore: cast_nullable_to_non_nullable
+                      as AvatarHat?,
+            top: freezed == top
+                ? _value.top
+                : top // ignore: cast_nullable_to_non_nullable
+                      as AvatarTop?,
+            glasses: freezed == glasses
+                ? _value.glasses
+                : glasses // ignore: cast_nullable_to_non_nullable
+                      as AvatarGlasses?,
+            specials: freezed == specials
+                ? _value.specials
+                : specials // ignore: cast_nullable_to_non_nullable
+                      as AvatarSpecials?,
+            costume: freezed == costume
+                ? _value.costume
+                : costume // ignore: cast_nullable_to_non_nullable
+                      as AvatarCostume?,
+            soundEffect: freezed == soundEffect
+                ? _value.soundEffect
+                : soundEffect // ignore: cast_nullable_to_non_nullable
+                      as SoundEffects?,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -375,18 +396,20 @@ class _$AvatarConfigCopyWithImpl<$Res, $Val extends AvatarConfig>
 abstract class _$$AvatarConfigImplCopyWith<$Res>
     implements $AvatarConfigCopyWith<$Res> {
   factory _$$AvatarConfigImplCopyWith(
-          _$AvatarConfigImpl value, $Res Function(_$AvatarConfigImpl) then) =
-      __$$AvatarConfigImplCopyWithImpl<$Res>;
+    _$AvatarConfigImpl value,
+    $Res Function(_$AvatarConfigImpl) then,
+  ) = __$$AvatarConfigImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {AvatarBackgrounds? background,
-      AvatarHat? hat,
-      AvatarTop? top,
-      AvatarGlasses? glasses,
-      AvatarSpecials? specials,
-      AvatarCostume? costume,
-      @SoundEffectConverter() SoundEffects? soundEffect});
+  $Res call({
+    AvatarBackgrounds? background,
+    AvatarHat? hat,
+    AvatarTop? top,
+    AvatarGlasses? glasses,
+    AvatarSpecials? specials,
+    AvatarCostume? costume,
+    @SoundEffectConverter() SoundEffects? soundEffect,
+  });
 }
 
 /// @nodoc
@@ -394,8 +417,9 @@ class __$$AvatarConfigImplCopyWithImpl<$Res>
     extends _$AvatarConfigCopyWithImpl<$Res, _$AvatarConfigImpl>
     implements _$$AvatarConfigImplCopyWith<$Res> {
   __$$AvatarConfigImplCopyWithImpl(
-      _$AvatarConfigImpl _value, $Res Function(_$AvatarConfigImpl) _then)
-      : super(_value, _then);
+    _$AvatarConfigImpl _value,
+    $Res Function(_$AvatarConfigImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of AvatarConfig
   /// with the given fields replaced by the non-null parameter values.
@@ -410,51 +434,53 @@ class __$$AvatarConfigImplCopyWithImpl<$Res>
     Object? costume = freezed,
     Object? soundEffect = freezed,
   }) {
-    return _then(_$AvatarConfigImpl(
-      background: freezed == background
-          ? _value.background
-          : background // ignore: cast_nullable_to_non_nullable
-              as AvatarBackgrounds?,
-      hat: freezed == hat
-          ? _value.hat
-          : hat // ignore: cast_nullable_to_non_nullable
-              as AvatarHat?,
-      top: freezed == top
-          ? _value.top
-          : top // ignore: cast_nullable_to_non_nullable
-              as AvatarTop?,
-      glasses: freezed == glasses
-          ? _value.glasses
-          : glasses // ignore: cast_nullable_to_non_nullable
-              as AvatarGlasses?,
-      specials: freezed == specials
-          ? _value.specials
-          : specials // ignore: cast_nullable_to_non_nullable
-              as AvatarSpecials?,
-      costume: freezed == costume
-          ? _value.costume
-          : costume // ignore: cast_nullable_to_non_nullable
-              as AvatarCostume?,
-      soundEffect: freezed == soundEffect
-          ? _value.soundEffect
-          : soundEffect // ignore: cast_nullable_to_non_nullable
-              as SoundEffects?,
-    ));
+    return _then(
+      _$AvatarConfigImpl(
+        background: freezed == background
+            ? _value.background
+            : background // ignore: cast_nullable_to_non_nullable
+                  as AvatarBackgrounds?,
+        hat: freezed == hat
+            ? _value.hat
+            : hat // ignore: cast_nullable_to_non_nullable
+                  as AvatarHat?,
+        top: freezed == top
+            ? _value.top
+            : top // ignore: cast_nullable_to_non_nullable
+                  as AvatarTop?,
+        glasses: freezed == glasses
+            ? _value.glasses
+            : glasses // ignore: cast_nullable_to_non_nullable
+                  as AvatarGlasses?,
+        specials: freezed == specials
+            ? _value.specials
+            : specials // ignore: cast_nullable_to_non_nullable
+                  as AvatarSpecials?,
+        costume: freezed == costume
+            ? _value.costume
+            : costume // ignore: cast_nullable_to_non_nullable
+                  as AvatarCostume?,
+        soundEffect: freezed == soundEffect
+            ? _value.soundEffect
+            : soundEffect // ignore: cast_nullable_to_non_nullable
+                  as SoundEffects?,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$AvatarConfigImpl extends _AvatarConfig {
-  const _$AvatarConfigImpl(
-      {this.background,
-      this.hat,
-      this.top,
-      this.glasses,
-      this.specials,
-      this.costume,
-      @SoundEffectConverter() this.soundEffect})
-      : super._();
+  const _$AvatarConfigImpl({
+    this.background,
+    this.hat,
+    this.top,
+    this.glasses,
+    this.specials,
+    this.costume,
+    @SoundEffectConverter() this.soundEffect,
+  }) : super._();
 
   factory _$AvatarConfigImpl.fromJson(Map<String, dynamic> json) =>
       _$$AvatarConfigImplFromJson(json);
@@ -499,8 +525,16 @@ class _$AvatarConfigImpl extends _AvatarConfig {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, background, hat, top, glasses,
-      specials, costume, soundEffect);
+  int get hashCode => Object.hash(
+    runtimeType,
+    background,
+    hat,
+    top,
+    glasses,
+    specials,
+    costume,
+    soundEffect,
+  );
 
   /// Create a copy of AvatarConfig
   /// with the given fields replaced by the non-null parameter values.
@@ -512,22 +546,20 @@ class _$AvatarConfigImpl extends _AvatarConfig {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$AvatarConfigImplToJson(
-      this,
-    );
+    return _$$AvatarConfigImplToJson(this);
   }
 }
 
 abstract class _AvatarConfig extends AvatarConfig {
-  const factory _AvatarConfig(
-          {final AvatarBackgrounds? background,
-          final AvatarHat? hat,
-          final AvatarTop? top,
-          final AvatarGlasses? glasses,
-          final AvatarSpecials? specials,
-          final AvatarCostume? costume,
-          @SoundEffectConverter() final SoundEffects? soundEffect}) =
-      _$AvatarConfigImpl;
+  const factory _AvatarConfig({
+    final AvatarBackgrounds? background,
+    final AvatarHat? hat,
+    final AvatarTop? top,
+    final AvatarGlasses? glasses,
+    final AvatarSpecials? specials,
+    final AvatarCostume? costume,
+    @SoundEffectConverter() final SoundEffects? soundEffect,
+  }) = _$AvatarConfigImpl;
   const _AvatarConfig._() : super._();
 
   factory _AvatarConfig.fromJson(Map<String, dynamic> json) =

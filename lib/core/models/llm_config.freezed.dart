@@ -12,7 +12,8 @@ part of 'llm_config.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 LlmConfig _$LlmConfigFromJson(Map<String, dynamic> json) {
   return _LlmConfig.fromJson(json);
@@ -54,13 +55,14 @@ abstract class $LlmConfigCopyWith<$Res> {
   factory $LlmConfigCopyWith(LlmConfig value, $Res Function(LlmConfig) then) =
       _$LlmConfigCopyWithImpl<$Res, LlmConfig>;
   @useResult
-  $Res call(
-      {String id,
-      String label,
-      String baseUrl,
-      String apiKey,
-      String model,
-      double temperature});
+  $Res call({
+    String id,
+    String label,
+    String baseUrl,
+    String apiKey,
+    String model,
+    double temperature,
+  });
 }
 
 /// @nodoc
@@ -85,32 +87,35 @@ class _$LlmConfigCopyWithImpl<$Res, $Val extends LlmConfig>
     Object? model = null,
     Object? temperature = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      label: null == label
-          ? _value.label
-          : label // ignore: cast_nullable_to_non_nullable
-              as String,
-      baseUrl: null == baseUrl
-          ? _value.baseUrl
-          : baseUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-      apiKey: null == apiKey
-          ? _value.apiKey
-          : apiKey // ignore: cast_nullable_to_non_nullable
-              as String,
-      model: null == model
-          ? _value.model
-          : model // ignore: cast_nullable_to_non_nullable
-              as String,
-      temperature: null == temperature
-          ? _value.temperature
-          : temperature // ignore: cast_nullable_to_non_nullable
-              as double,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            label: null == label
+                ? _value.label
+                : label // ignore: cast_nullable_to_non_nullable
+                      as String,
+            baseUrl: null == baseUrl
+                ? _value.baseUrl
+                : baseUrl // ignore: cast_nullable_to_non_nullable
+                      as String,
+            apiKey: null == apiKey
+                ? _value.apiKey
+                : apiKey // ignore: cast_nullable_to_non_nullable
+                      as String,
+            model: null == model
+                ? _value.model
+                : model // ignore: cast_nullable_to_non_nullable
+                      as String,
+            temperature: null == temperature
+                ? _value.temperature
+                : temperature // ignore: cast_nullable_to_non_nullable
+                      as double,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -118,17 +123,19 @@ class _$LlmConfigCopyWithImpl<$Res, $Val extends LlmConfig>
 abstract class _$$LlmConfigImplCopyWith<$Res>
     implements $LlmConfigCopyWith<$Res> {
   factory _$$LlmConfigImplCopyWith(
-          _$LlmConfigImpl value, $Res Function(_$LlmConfigImpl) then) =
-      __$$LlmConfigImplCopyWithImpl<$Res>;
+    _$LlmConfigImpl value,
+    $Res Function(_$LlmConfigImpl) then,
+  ) = __$$LlmConfigImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String label,
-      String baseUrl,
-      String apiKey,
-      String model,
-      double temperature});
+  $Res call({
+    String id,
+    String label,
+    String baseUrl,
+    String apiKey,
+    String model,
+    double temperature,
+  });
 }
 
 /// @nodoc
@@ -136,8 +143,9 @@ class __$$LlmConfigImplCopyWithImpl<$Res>
     extends _$LlmConfigCopyWithImpl<$Res, _$LlmConfigImpl>
     implements _$$LlmConfigImplCopyWith<$Res> {
   __$$LlmConfigImplCopyWithImpl(
-      _$LlmConfigImpl _value, $Res Function(_$LlmConfigImpl) _then)
-      : super(_value, _then);
+    _$LlmConfigImpl _value,
+    $Res Function(_$LlmConfigImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LlmConfig
   /// with the given fields replaced by the non-null parameter values.
@@ -151,45 +159,48 @@ class __$$LlmConfigImplCopyWithImpl<$Res>
     Object? model = null,
     Object? temperature = null,
   }) {
-    return _then(_$LlmConfigImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      label: null == label
-          ? _value.label
-          : label // ignore: cast_nullable_to_non_nullable
-              as String,
-      baseUrl: null == baseUrl
-          ? _value.baseUrl
-          : baseUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-      apiKey: null == apiKey
-          ? _value.apiKey
-          : apiKey // ignore: cast_nullable_to_non_nullable
-              as String,
-      model: null == model
-          ? _value.model
-          : model // ignore: cast_nullable_to_non_nullable
-              as String,
-      temperature: null == temperature
-          ? _value.temperature
-          : temperature // ignore: cast_nullable_to_non_nullable
-              as double,
-    ));
+    return _then(
+      _$LlmConfigImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        label: null == label
+            ? _value.label
+            : label // ignore: cast_nullable_to_non_nullable
+                  as String,
+        baseUrl: null == baseUrl
+            ? _value.baseUrl
+            : baseUrl // ignore: cast_nullable_to_non_nullable
+                  as String,
+        apiKey: null == apiKey
+            ? _value.apiKey
+            : apiKey // ignore: cast_nullable_to_non_nullable
+                  as String,
+        model: null == model
+            ? _value.model
+            : model // ignore: cast_nullable_to_non_nullable
+                  as String,
+        temperature: null == temperature
+            ? _value.temperature
+            : temperature // ignore: cast_nullable_to_non_nullable
+                  as double,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$LlmConfigImpl implements _LlmConfig {
-  const _$LlmConfigImpl(
-      {required this.id,
-      required this.label,
-      required this.baseUrl,
-      required this.apiKey,
-      required this.model,
-      this.temperature = 0.7});
+  const _$LlmConfigImpl({
+    required this.id,
+    required this.label,
+    required this.baseUrl,
+    required this.apiKey,
+    required this.model,
+    this.temperature = 0.7,
+  });
 
   factory _$LlmConfigImpl.fromJson(Map<String, dynamic> json) =>
       _$$LlmConfigImplFromJson(json);
@@ -254,20 +265,19 @@ class _$LlmConfigImpl implements _LlmConfig {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$LlmConfigImplToJson(
-      this,
-    );
+    return _$$LlmConfigImplToJson(this);
   }
 }
 
 abstract class _LlmConfig implements LlmConfig {
-  const factory _LlmConfig(
-      {required final String id,
-      required final String label,
-      required final String baseUrl,
-      required final String apiKey,
-      required final String model,
-      final double temperature}) = _$LlmConfigImpl;
+  const factory _LlmConfig({
+    required final String id,
+    required final String label,
+    required final String baseUrl,
+    required final String apiKey,
+    required final String model,
+    final double temperature,
+  }) = _$LlmConfigImpl;
 
   factory _LlmConfig.fromJson(Map<String, dynamic> json) =
       _$LlmConfigImpl.fromJson;

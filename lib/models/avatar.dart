@@ -83,14 +83,7 @@ class Avatar extends Equatable {
 
   @override
   List<Object> get props {
-    return <Object>[
-      background,
-      hat,
-      top,
-      glasses,
-      specials,
-      costume,
-    ];
+    return <Object>[background, hat, top, glasses, specials, costume];
   }
 
   Avatar copyWith({
@@ -134,10 +127,7 @@ class Avatar extends Equatable {
         map['background'] as String,
       ),
       hat: EnumUtils.deserialize(AvatarHat.values, map['top'] as String),
-      top: EnumUtils.deserialize(
-        AvatarTop.values,
-        map['bottom'] as String,
-      ),
+      top: EnumUtils.deserialize(AvatarTop.values, map['bottom'] as String),
       glasses: EnumUtils.deserialize(
         AvatarGlasses.values,
         map['glasses'] as String,
@@ -281,15 +271,9 @@ extension CostumeExtension on AvatarCostume {
           speedRate: 0.4,
         );
       case AvatarCostume.robocop:
-        return VoiceEffect(
-          pitch: 0.5,
-          speedRate: 0.25,
-        );
+        return VoiceEffect(pitch: 0.5, speedRate: 0.25);
       case AvatarCostume.singularity:
-        return VoiceEffect(
-          pitch: 0.6,
-          speedRate: 0.6,
-        );
+        return VoiceEffect(pitch: 0.6, speedRate: 0.6);
       default:
         return VoiceEffect(
           pitch: 1,
@@ -338,8 +322,9 @@ extension ChatPersonaAvatar on ChatPersona {
           top: AvatarTop.christmasSweater,
         );
       default:
-        final AvatarBackgrounds randomBg =
-            EnumUtils.getRandomValue(AvatarBackgrounds.values);
+        final AvatarBackgrounds randomBg = EnumUtils.getRandomValue(
+          AvatarBackgrounds.values,
+        );
         return Avatar(background: randomBg);
     }
   }

@@ -10,8 +10,8 @@ class SoundCubit extends Cubit<SoundState> {
   final SoundService _soundService;
 
   SoundCubit({required SoundService soundService})
-      : _soundService = soundService,
-        super(const SoundInitial());
+    : _soundService = soundService,
+      super(const SoundInitial());
 
   Future<void> playSound(String soundName) async {
     try {

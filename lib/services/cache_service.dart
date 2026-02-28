@@ -16,9 +16,7 @@ class CacheService {
     final List<Map<String, dynamic>> results = <Map<String, dynamic>>[];
     for (final dynamic item in toList) {
       final Map<String, dynamic> map = item as Map<String, dynamic>;
-      map['amplitudes'] =
-          (map['amplitudes'] as List<dynamic>)
-              .cast<int>();
+      map['amplitudes'] = (map['amplitudes'] as List<dynamic>).cast<int>();
       results.add(item);
     }
     return results;

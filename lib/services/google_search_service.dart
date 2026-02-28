@@ -52,11 +52,15 @@ class GoogleSearchService {
         .forEach((element) => element.remove());
     if (document.body == null) return html;
     // Remove comments
-    document.body!.innerHtml =
-        document.body!.innerHtml.replaceAll(RegExp(r"<!--(.|\n)*?-->"), "");
+    document.body!.innerHtml = document.body!.innerHtml.replaceAll(
+      RegExp(r"<!--(.|\n)*?-->"),
+      "",
+    );
     // Extract text content, trim, and collapse whitespace
-    final String textSummary =
-        document.body!.text.trim().replaceAll(RegExp(r"\s+"), " ");
+    final String textSummary = document.body!.text.trim().replaceAll(
+      RegExp(r"\s+"),
+      " ",
+    );
     return textSummary;
   }
 }

@@ -49,8 +49,9 @@ class MessageBubble extends StatelessWidget {
             width: double.infinity,
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment:
-                  isFromUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+              mainAxisAlignment: isFromUser
+                  ? MainAxisAlignment.end
+                  : MainAxisAlignment.start,
               children: <Widget>[
                 if (!isFromUser) const _CircleAvatar(),
                 Flexible(
@@ -96,11 +97,7 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-String _limitParameterSize(
-  String body,
-  bool isFromUser,
-  BuildContext context,
-) {
+String _limitParameterSize(String body, bool isFromUser, BuildContext context) {
   if (!isFromUser) return body;
   try {
     const int limit = 2000;
@@ -133,8 +130,7 @@ class _CircleAvatar extends StatelessWidget {
       padding: const EdgeInsets.only(right: 8),
       child: CircleAvatar(
         backgroundColor: Colors.blue,
-        foregroundImage:
-            AssetImage(AppUtils.fixAssetsPath("assets/icon.png")),
+        foregroundImage: AssetImage(AppUtils.fixAssetsPath("assets/icon.png")),
       ),
     );
   }
@@ -158,10 +154,7 @@ class _SoundEffectButton extends StatelessWidget {
           await player.play();
           player.dispose();
         },
-        child: const Icon(
-          Icons.volume_up_outlined,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.volume_up_outlined, color: Colors.white),
       ),
     );
   }
@@ -171,10 +164,7 @@ class _AttachedImage extends StatelessWidget {
   final String imagePath;
   final VoidCallback? onTap;
 
-  const _AttachedImage({
-    required this.imagePath,
-    this.onTap,
-  });
+  const _AttachedImage({required this.imagePath, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -219,7 +209,7 @@ class _TypingIndicator extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.3),
+                  color: Colors.blue.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: const Center(

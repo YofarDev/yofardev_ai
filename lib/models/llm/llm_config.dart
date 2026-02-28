@@ -111,6 +111,13 @@ class LlmConfig extends Equatable {
       LlmConfig.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  List<Object?> get props =>
-      <Object?>[id, label, baseUrl, apiKey, model, temperature, responseFormatType];
+  List<Object?> get props => <Object?>[
+    id,
+    label,
+    baseUrl,
+    apiKey,
+    model,
+    temperature,
+    responseFormatType,
+  ];
 }

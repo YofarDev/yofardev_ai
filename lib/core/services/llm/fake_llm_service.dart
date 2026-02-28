@@ -58,7 +58,9 @@ class FakeLlmService implements LlmServiceInterface {
 
     final FakeLlmResponse response = _responseQueue[_currentIndex];
     _currentIndex++;
-    debugPrint('FakeLlmService returning response $_currentIndex/${_responseQueue.length}');
+    debugPrint(
+      'FakeLlmService returning response $_currentIndex/${_responseQueue.length}',
+    );
     return response;
   }
 
@@ -145,7 +147,9 @@ class FakeLlmService implements LlmServiceInterface {
     required String lastUserMessage,
   }) async {
     if (!_isActive || !hasMore) {
-      debugPrint('FakeLlmService: not active or no more responses for function calling');
+      debugPrint(
+        'FakeLlmService: not active or no more responses for function calling',
+      );
       return ('', <FunctionInfo>[]);
     }
 

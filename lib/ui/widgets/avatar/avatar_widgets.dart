@@ -16,10 +16,10 @@ class AvatarWidgets extends StatefulWidget {
   const AvatarWidgets({super.key});
 
   @override
-  _AvatarWidgetsState createState() => _AvatarWidgetsState();
+  AvatarWidgetsState createState() => AvatarWidgetsState();
 }
 
-class _AvatarWidgetsState extends State<AvatarWidgets>
+class AvatarWidgetsState extends State<AvatarWidgets>
     with TickerProviderStateMixin {
   late AnimationController _horizontalController;
   late Animation<Offset> _horizontalAnimation;
@@ -37,15 +37,16 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
       vsync: this,
     );
 
-    _horizontalAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(-1.5, 0), // Slide out to the left
-    ).animate(
-      CurvedAnimation(
-        parent: _horizontalController,
-        curve: Curves.easeInOut,
-      ),
-    );
+    _horizontalAnimation =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-1.5, 0), // Slide out to the left
+        ).animate(
+          CurvedAnimation(
+            parent: _horizontalController,
+            curve: Curves.easeInOut,
+          ),
+        );
 
     // Vertical animation (for clothes changes) - faster
     _verticalController = AnimationController(
@@ -53,15 +54,13 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
       vsync: this,
     );
 
-    _verticalAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, 1.5), // Slide down out of screen
-    ).animate(
-      CurvedAnimation(
-        parent: _verticalController,
-        curve: Curves.easeInOut,
-      ),
-    );
+    _verticalAnimation =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0, 1.5), // Slide down out of screen
+        ).animate(
+          CurvedAnimation(parent: _verticalController, curve: Curves.easeInOut),
+        );
   }
 
   @override
@@ -111,11 +110,13 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
 
   Widget _buildAnimatedAvatar(AvatarState state) {
     // Use vertical animation for dropping/rising, horizontal for others
-    final bool useVertical = state.statusAnimation == AvatarStatusAnimation.dropping ||
+    final bool useVertical =
+        state.statusAnimation == AvatarStatusAnimation.dropping ||
         state.statusAnimation == AvatarStatusAnimation.rising;
 
-    final Animation<Offset> animation =
-        useVertical ? _verticalAnimation : _horizontalAnimation;
+    final Animation<Offset> animation = useVertical
+        ? _verticalAnimation
+        : _horizontalAnimation;
 
     return SlideTransition(
       position: animation,
@@ -123,11 +124,9 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
         children: <Widget>[
           if (!state.avatar.hideBaseAvatar) const BaseAvatar(),
           if (!state.avatar.hideBlinkingEyes) const BlinkingEyes(),
-          if (state.avatar.displaySunglasses)
-            const Clothes(name: 'sunglasses'),
+          if (state.avatar.displaySunglasses) const Clothes(name: 'sunglasses'),
           if (!state.avatar.hideTalkingMouth) const TalkingMouth(),
-          if (state.avatar.costume != AvatarCostume.none)
-            const CostumeWidget(),
+          if (state.avatar.costume != AvatarCostume.none) const CostumeWidget(),
         ],
       ),
     );

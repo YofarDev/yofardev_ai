@@ -61,10 +61,7 @@ class _DateHeader extends StatelessWidget {
   final int entryIndex;
   final List<ChatEntry> entries;
 
-  const _DateHeader({
-    required this.entryIndex,
-    required this.entries,
-  });
+  const _DateHeader({required this.entryIndex, required this.entries});
 
   @override
   Widget build(BuildContext context) {
@@ -73,9 +70,8 @@ class _DateHeader extends StatelessWidget {
       child: Center(
         child: Text(
           entries[entryIndex].timestamp.toLongLocalDateString(
-                language:
-                    context.read<ChatsCubit>().state.currentLanguage,
-              ),
+            language: context.read<ChatsCubit>().state.currentLanguage,
+          ),
           style: const TextStyle(
             color: Colors.black54,
             fontWeight: FontWeight.bold,

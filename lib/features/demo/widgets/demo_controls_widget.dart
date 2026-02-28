@@ -34,9 +34,7 @@ class DemoControlsWidget extends StatelessWidget {
                 const SizedBox(height: 16),
                 if (state.isActive) ...<Widget>[
                   _ActiveDemoInfo(state: state),
-                ] else ...<Widget>[
-                  _DemoScriptList(state: state),
-                ],
+                ] else ...<Widget>[_DemoScriptList(state: state)],
               ],
             ),
           ),
@@ -59,9 +57,9 @@ class _ActiveDemoInfo extends StatelessWidget {
         if (state.currentScript != null)
           Text(
             'Running: ${state.currentScript!.name}',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         const SizedBox(height: 8),
         Text(
@@ -108,14 +106,9 @@ class _DemoScriptList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Available Demos',
-          style: Theme.of(context).textTheme.labelLarge,
-        ),
+        Text('Available Demos', style: Theme.of(context).textTheme.labelLarge),
         const SizedBox(height: 8),
-        ...scripts.map((DemoScript script) => _DemoScriptTile(
-              script: script,
-            )),
+        ...scripts.map((DemoScript script) => _DemoScriptTile(script: script)),
       ],
     );
   }

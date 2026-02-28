@@ -37,30 +37,34 @@ void main() {
       expect(cubit.state, equals(const SoundInitial()));
     });
 
-    test('emits [SoundPlaying, SoundInitial] when playSound succeeds',
-        () async {
-      // Arrange
-      mockSoundService.shouldFail = false;
+    test(
+      'emits [SoundPlaying, SoundInitial] when playSound succeeds',
+      () async {
+        // Arrange
+        mockSoundService.shouldFail = false;
 
-      // Act
-      final List<SoundState> states = <SoundState>[];
-      final StreamSubscription<SoundState> subscription = cubit.stream.listen(states.add);
+        // Act
+        final List<SoundState> states = <SoundState>[];
+        final StreamSubscription<SoundState> subscription = cubit.stream.listen(
+          states.add,
+        );
 
-      // Trigger the action
-      await cubit.playSound('test');
+        // Trigger the action
+        await cubit.playSound('test');
 
-      // Give it a moment to emit all states
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+        // Give it a moment to emit all states
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-      // Assert
-      expect(
-        states,
-        const <SoundState>[SoundPlaying('test'), SoundInitial()],
-      );
-      expect(mockSoundService.lastPlayedSound, 'test');
+        // Assert
+        expect(states, const <SoundState>[
+          SoundPlaying('test'),
+          SoundInitial(),
+        ]);
+        expect(mockSoundService.lastPlayedSound, 'test');
 
-      await subscription.cancel();
-    });
+        await subscription.cancel();
+      },
+    );
 
     test('emits SoundError when playSound fails', () async {
       // Arrange
@@ -69,7 +73,9 @@ void main() {
 
       // Act
       final List<SoundState> states = <SoundState>[];
-      final StreamSubscription<SoundState> subscription = cubit.stream.listen(states.add);
+      final StreamSubscription<SoundState> subscription = cubit.stream.listen(
+        states.add,
+      );
 
       // Trigger the action
       await cubit.playSound('test');
@@ -78,10 +84,10 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
       // Assert
-      expect(
-        states,
-        const <SoundState>[SoundPlaying('test'), SoundError('Exception: Sound not found')],
-      );
+      expect(states, const <SoundState>[
+        SoundPlaying('test'),
+        SoundError('Exception: Sound not found'),
+      ]);
       expect(mockSoundService.lastPlayedSound, 'test');
 
       await subscription.cancel();
@@ -94,12 +100,13 @@ void main() {
       // Act - first call
       final List<SoundState> firstStates = <SoundState>[];
       int firstEmitCount = 0;
-      final StreamSubscription<SoundState> firstSubscription = cubit.stream.listen((SoundState state) {
-        if (firstEmitCount < 2) {
-          firstStates.add(state);
-          firstEmitCount++;
-        }
-      });
+      final StreamSubscription<SoundState> firstSubscription = cubit.stream
+          .listen((SoundState state) {
+            if (firstEmitCount < 2) {
+              firstStates.add(state);
+              firstEmitCount++;
+            }
+          });
 
       await cubit.playSound('sound1');
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -108,26 +115,27 @@ void main() {
       // Act - second call
       final List<SoundState> secondStates = <SoundState>[];
       int secondEmitCount = 0;
-      final StreamSubscription<SoundState> secondSubscription = cubit.stream.listen((SoundState state) {
-        if (secondEmitCount < 2) {
-          secondStates.add(state);
-          secondEmitCount++;
-        }
-      });
+      final StreamSubscription<SoundState> secondSubscription = cubit.stream
+          .listen((SoundState state) {
+            if (secondEmitCount < 2) {
+              secondStates.add(state);
+              secondEmitCount++;
+            }
+          });
 
       await cubit.playSound('sound2');
       await Future<void>.delayed(const Duration(milliseconds: 100));
       await secondSubscription.cancel();
 
       // Assert
-      expect(
-        firstStates,
-        const <SoundState>[SoundPlaying('sound1'), SoundInitial()],
-      );
-      expect(
-        secondStates,
-        const <SoundState>[SoundPlaying('sound2'), SoundInitial()],
-      );
+      expect(firstStates, const <SoundState>[
+        SoundPlaying('sound1'),
+        SoundInitial(),
+      ]);
+      expect(secondStates, const <SoundState>[
+        SoundPlaying('sound2'),
+        SoundInitial(),
+      ]);
       expect(mockSoundService.lastPlayedSound, 'sound2');
     });
 
@@ -139,12 +147,13 @@ void main() {
       // Act - first call fails
       final List<SoundState> firstStates = <SoundState>[];
       int firstEmitCount = 0;
-      final StreamSubscription<SoundState> firstSubscription = cubit.stream.listen((SoundState state) {
-        if (firstEmitCount < 2) {
-          firstStates.add(state);
-          firstEmitCount++;
-        }
-      });
+      final StreamSubscription<SoundState> firstSubscription = cubit.stream
+          .listen((SoundState state) {
+            if (firstEmitCount < 2) {
+              firstStates.add(state);
+              firstEmitCount++;
+            }
+          });
 
       await cubit.playSound('sound1');
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -156,26 +165,27 @@ void main() {
       // Act - second call succeeds
       final List<SoundState> secondStates = <SoundState>[];
       int secondEmitCount = 0;
-      final StreamSubscription<SoundState> secondSubscription = cubit.stream.listen((SoundState state) {
-        if (secondEmitCount < 2) {
-          secondStates.add(state);
-          secondEmitCount++;
-        }
-      });
+      final StreamSubscription<SoundState> secondSubscription = cubit.stream
+          .listen((SoundState state) {
+            if (secondEmitCount < 2) {
+              secondStates.add(state);
+              secondEmitCount++;
+            }
+          });
 
       await cubit.playSound('sound2');
       await Future<void>.delayed(const Duration(milliseconds: 100));
       await secondSubscription.cancel();
 
       // Assert
-      expect(
-        firstStates,
-        const <SoundState>[SoundPlaying('sound1'), SoundError('Exception: First error')],
-      );
-      expect(
-        secondStates,
-        const <SoundState>[SoundPlaying('sound2'), SoundInitial()],
-      );
+      expect(firstStates, const <SoundState>[
+        SoundPlaying('sound1'),
+        SoundError('Exception: First error'),
+      ]);
+      expect(secondStates, const <SoundState>[
+        SoundPlaying('sound2'),
+        SoundInitial(),
+      ]);
       expect(mockSoundService.lastPlayedSound, 'sound2');
     });
   });

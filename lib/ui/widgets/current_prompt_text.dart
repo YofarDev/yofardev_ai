@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 
 class CurrentPromptText extends StatelessWidget {
   final String prompt;
-  const CurrentPromptText({
-    super.key,
-    required this.prompt,
-  });
+  const CurrentPromptText({super.key, required this.prompt});
 
   @override
   Widget build(BuildContext context) {

@@ -38,10 +38,7 @@ void main() {
     test('should have stop method', () {
       // Current method signature:
       // Future<void> stop()
-      expect(
-        'stop method calls _player.stop()',
-        isNotNull,
-      );
+      expect('stop method calls _player.stop()', isNotNull);
     });
 
     test('should use just_audio AudioPlayer', () {

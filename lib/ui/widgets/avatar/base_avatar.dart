@@ -26,10 +26,14 @@ class BaseAvatar extends StatelessWidget {
                   },
                   child: state.avatar.costume == AvatarCostume.none
                       ? Image.asset(
-                         AppUtils.fixAssetsPath( 'assets/avatar/bottom/${state.avatar.top == AvatarTop.underwear ? AvatarTop.swimsuit.name : state.avatar.top.name}.png'),
+                          AppUtils.fixAssetsPath(
+                            'assets/avatar/bottom/${state.avatar.top == AvatarTop.underwear ? AvatarTop.swimsuit.name : state.avatar.top.name}.png',
+                          ),
                         )
                       : Image.asset(
-                         AppUtils.fixAssetsPath( 'assets/avatar/bottom/emptyBot.png'),
+                          AppUtils.fixAssetsPath(
+                            'assets/avatar/bottom/emptyBot.png',
+                          ),
                         ),
                 ),
               ),
@@ -42,10 +46,14 @@ class BaseAvatar extends StatelessWidget {
                   },
                   child: state.avatar.costume == AvatarCostume.none
                       ? Image.asset(
-                        AppUtils.fixAssetsPath(  'assets/avatar/top/${state.avatar.hat.name}.png'),
+                          AppUtils.fixAssetsPath(
+                            'assets/avatar/top/${state.avatar.hat.name}.png',
+                          ),
                         )
                       : Image.asset(
-                       AppUtils.fixAssetsPath(   'assets/avatar/top/emptyTop.png'),
+                          AppUtils.fixAssetsPath(
+                            'assets/avatar/top/emptyTop.png',
+                          ),
                         ),
                 ),
               ),

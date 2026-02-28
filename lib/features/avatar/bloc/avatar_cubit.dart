@@ -14,9 +14,7 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   ChatHistoryService get _chatHistoryService => getIt<ChatHistoryService>();
 
-  void setValuesBasedOnScreenWidth({
-    required double screenWidth,
-  }) {
+  void setValuesBasedOnScreenWidth({required double screenWidth}) {
     final double scaleFactor = screenWidth / AppConstants.avatarWidth;
     emit(
       state.copyWith(
@@ -30,23 +28,15 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void onScreenSizeChanged(double screenWidth) {
     final double scaleFactor = screenWidth / state.baseOriginalWidth;
-    emit(
-      state.copyWith(
-        scaleFactor: scaleFactor,
-      ),
-    );
+    emit(state.copyWith(scaleFactor: scaleFactor));
   }
 
   void loadAvatar(String chatId) async {
     emit(state.copyWith(status: AvatarStatus.loading));
-    final Chat chat = await _chatHistoryService.getChat(chatId) ??
+    final Chat chat =
+        await _chatHistoryService.getChat(chatId) ??
         await _chatHistoryService.createNewChat();
-    emit(
-      state.copyWith(
-        avatar: chat.avatar,
-        status: AvatarStatus.ready,
-      ),
-    );
+    emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));
   }
 
   void _goAndComeBack(String chatId, AvatarConfig avatarConfig) async {
@@ -70,8 +60,9 @@ class AvatarCubit extends Cubit<AvatarState> {
             ? AvatarStatusAnimation.leaving
             : AvatarStatusAnimation.coming,
         avatar: state.avatar.copyWith(
-          specials:
-              leaving ? AvatarSpecials.outOfScreen : AvatarSpecials.onScreen,
+          specials: leaving
+              ? AvatarSpecials.outOfScreen
+              : AvatarSpecials.onScreen,
         ),
       ),
     );
@@ -120,10 +111,6 @@ class AvatarCubit extends Cubit<AvatarState> {
     final AvatarGlasses glasses = state.avatar.glasses == AvatarGlasses.glasses
         ? AvatarGlasses.sunglasses
         : AvatarGlasses.glasses;
-    emit(
-      state.copyWith(
-        avatar: state.avatar.copyWith(glasses: glasses),
-      ),
-    );
+    emit(state.copyWith(avatar: state.avatar.copyWith(glasses: glasses)));
   }
 }

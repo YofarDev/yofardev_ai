@@ -22,19 +22,17 @@ class ProgressiveVolumeControl {
   }
 
   void _setListener() {
-    FlutterVolumeController.addListener(
-      (double value) {
-        if (!_init) {
-          _init = true;
-          return;
-        }
-        if (_programmaticallyChangingVolume) {
-          return;
-        }
-        "Volume changed to $value".printBlueLog();
-        _initialVolume = value;
-      },
-    );
+    FlutterVolumeController.addListener((double value) {
+      if (!_init) {
+        _init = true;
+        return;
+      }
+      if (_programmaticallyChangingVolume) {
+        return;
+      }
+      "Volume changed to $value".printBlueLog();
+      _initialVolume = value;
+    });
   }
 
   void startVolumeFade(bool increase) async {
@@ -53,23 +51,22 @@ class ProgressiveVolumeControl {
     "Fading volume ${increase ? 'up' : 'down'} to $targetVolume".printCyanLog();
     const double increment = 0.03;
     final int vector = increase ? 1 : -1;
-    _timer = Timer.periodic(
-      const Duration(milliseconds: 100),
-      (Timer timer) async {
-        if (beyondTargetVolume(
-          increase: increase,
-          currentVolume: currentVolume,
-          targetVolume: targetVolume,
-        )) {
-          cancel();
-          "Fading done".toYellowLog();
-          return;
-        }
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (
+      Timer timer,
+    ) async {
+      if (beyondTargetVolume(
+        increase: increase,
+        currentVolume: currentVolume,
+        targetVolume: targetVolume,
+      )) {
+        cancel();
+        "Fading done".toYellowLog();
+        return;
+      }
 
-        currentVolume += vector * increment;
-        await FlutterVolumeController.setVolume(currentVolume);
-      },
-    );
+      currentVolume += vector * increment;
+      await FlutterVolumeController.setVolume(currentVolume);
+    });
   }
 
   void cancel() {

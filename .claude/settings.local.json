@@ -23,7 +23,9 @@
       "Bash(find lib:*)",
       "Bash(rm:*)",
       "Bash(cp:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(perl:*)",
+      "Bash(dart apply:*)"
     ]
   }
 }

@@ -6,7 +6,6 @@ import '../../features/chat/bloc/chats_cubit.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
 import '../../features/demo/services/demo_controller.dart';
 import '../../features/demo/services/demo_service.dart';
-import '../../features/settings/bloc/settings_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/settings_service.dart';
@@ -21,15 +20,11 @@ Future<void> setupServiceLocator() async {
   if (kDebugMode) {
     // In debug mode, use FakeLlmService by default for easier testing
     // This can be changed via settings
-    getIt.registerLazySingleton<LlmServiceInterface>(
-      () => FakeLlmService(),
-    );
+    getIt.registerLazySingleton<LlmServiceInterface>(() => FakeLlmService());
     debugPrint('Registered FakeLlmService (debug mode)');
   } else {
     // In release mode, always use real LlmService
-    getIt.registerLazySingleton<LlmServiceInterface>(
-      () => LlmService(),
-    );
+    getIt.registerLazySingleton<LlmServiceInterface>(() => LlmService());
     debugPrint('Registered LlmService (release mode)');
   }
 
@@ -52,12 +47,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<AvatarCubit>(() => AvatarCubit());
   getIt.registerFactory<TalkingCubit>(() => TalkingCubit());
   getIt.registerFactory<ChatsCubit>(() => ChatsCubit());
-  getIt.registerFactory<DemoCubit>(
-    () => DemoCubit(getIt<DemoController>()),
-  );
-  getIt.registerFactory<SettingsCubit>(
-    () => SettingsCubit(settingsService: getIt<SettingsService>()),
-  );
+  getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
 
   // TODO: Register SoundCubit as factory once SoundService is implemented
   // getIt.registerFactory<SoundCubit>(() => SoundCubit(
@@ -77,9 +67,7 @@ void switchLlmService(bool useFakeService) {
     debugPrint('Switched to FakeLlmService');
   } else {
     getIt.unregister<LlmServiceInterface>();
-    getIt.registerLazySingleton<LlmServiceInterface>(
-      () => getIt<LlmService>(),
-    );
+    getIt.registerLazySingleton<LlmServiceInterface>(() => getIt<LlmService>());
     debugPrint('Switched to LlmService');
   }
 }

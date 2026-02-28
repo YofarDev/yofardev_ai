@@ -27,18 +27,14 @@ class DemoStatusIndicator extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Icon(
-                Icons.play_circle,
-                color: Colors.white,
-                size: 16,
-              ),
+              const Icon(Icons.play_circle, color: Colors.white, size: 16),
               const SizedBox(width: 6),
               Text(
                 'DEMO',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (state.remainingResponses > 0) ...<Widget>[
                 const SizedBox(width: 8),
@@ -50,9 +46,9 @@ class DemoStatusIndicator extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   '${state.remainingResponses} left',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: Colors.white),
                 ),
               ],
             ],

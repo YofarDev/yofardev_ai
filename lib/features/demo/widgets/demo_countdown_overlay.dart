@@ -27,10 +27,7 @@ class DemoCountdownOverlay extends StatelessWidget {
               builder: (BuildContext context, double value, Widget? child) {
                 return Transform.scale(
                   scale: value,
-                  child: Opacity(
-                    opacity: value,
-                    child: child,
-                  ),
+                  child: Opacity(opacity: value, child: child),
                 );
               },
               child: Container(
@@ -44,9 +41,9 @@ class DemoCountdownOverlay extends StatelessWidget {
                   child: Text(
                     '${state.countdownValue}',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

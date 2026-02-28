@@ -6,11 +6,11 @@ enum AvatarStatus { initial, ready, loading }
 
 enum AvatarStatusAnimation {
   initial,
-  leaving,      // Horizontal slide out (left)
-  coming,       // Horizontal slide in (from left)
-  transition,   // General transition
-  dropping,     // Vertical slide down (for clothes change)
-  rising,       // Vertical slide up (return after clothes change)
+  leaving, // Horizontal slide out (left)
+  coming, // Horizontal slide in (from left)
+  transition, // General transition
+  dropping, // Vertical slide down (for clothes change)
+  rising, // Vertical slide up (return after clothes change)
 }
 
 class AvatarState extends Equatable {
@@ -31,7 +31,7 @@ class AvatarState extends Equatable {
     this.scaleFactor = 1,
     this.avatar = const Avatar(),
     this.avatarConfig = const AvatarConfig(),
-    this.previousSpecialsState =  AvatarSpecials.onScreen,
+    this.previousSpecialsState = AvatarSpecials.onScreen,
   });
 
   @override
@@ -66,7 +66,8 @@ class AvatarState extends Equatable {
       scaleFactor: scaleFactor ?? this.scaleFactor,
       avatar: avatar ?? this.avatar,
       avatarConfig: avatarConfig ?? this.avatarConfig,
-      previousSpecialsState: previousSpecialsState ?? this.previousSpecialsState,
+      previousSpecialsState:
+          previousSpecialsState ?? this.previousSpecialsState,
     );
   }
 }

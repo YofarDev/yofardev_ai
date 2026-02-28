@@ -30,7 +30,10 @@ void main() {
 
         expect(avatarCubit.state.status, AvatarStatus.ready);
         expect(avatarCubit.state.baseOriginalWidth, avatarWidth);
-        expect(avatarCubit.state.baseOriginalHeight, 1280.0); // AppConstants.avatarHeight
+        expect(
+          avatarCubit.state.baseOriginalHeight,
+          1280.0,
+        ); // AppConstants.avatarHeight
         expect(avatarCubit.state.scaleFactor, screenWidth / avatarWidth);
       });
     });
@@ -47,35 +50,35 @@ void main() {
     });
 
     group('onAnimationStatusChanged', () {
-      test('should update animation status to leaving when leaving is true', () {
-        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400.0);
+      test(
+        'should update animation status to leaving when leaving is true',
+        () {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400.0);
 
-        avatarCubit.onAnimationStatusChanged(true);
+          avatarCubit.onAnimationStatusChanged(true);
 
-        expect(
-          avatarCubit.state.statusAnimation,
-          AvatarStatusAnimation.leaving,
-        );
-        expect(
-          avatarCubit.state.avatar.specials,
-          AvatarSpecials.outOfScreen,
-        );
-      });
+          expect(
+            avatarCubit.state.statusAnimation,
+            AvatarStatusAnimation.leaving,
+          );
+          expect(avatarCubit.state.avatar.specials, AvatarSpecials.outOfScreen);
+        },
+      );
 
-      test('should update animation status to coming when leaving is false', () {
-        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400.0);
+      test(
+        'should update animation status to coming when leaving is false',
+        () {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400.0);
 
-        avatarCubit.onAnimationStatusChanged(false);
+          avatarCubit.onAnimationStatusChanged(false);
 
-        expect(
-          avatarCubit.state.statusAnimation,
-          AvatarStatusAnimation.coming,
-        );
-        expect(
-          avatarCubit.state.avatar.specials,
-          AvatarSpecials.onScreen,
-        );
-      });
+          expect(
+            avatarCubit.state.statusAnimation,
+            AvatarStatusAnimation.coming,
+          );
+          expect(avatarCubit.state.avatar.specials, AvatarSpecials.onScreen);
+        },
+      );
     });
 
     group('toggleGlasses', () {
@@ -85,17 +88,11 @@ void main() {
         final AvatarGlasses initialGlasses = avatarCubit.state.avatar.glasses;
         avatarCubit.toggleGlasses();
 
-        expect(
-          avatarCubit.state.avatar.glasses != initialGlasses,
-          isTrue,
-        );
+        expect(avatarCubit.state.avatar.glasses != initialGlasses, isTrue);
 
         avatarCubit.toggleGlasses();
 
-        expect(
-          avatarCubit.state.avatar.glasses,
-          initialGlasses,
-        );
+        expect(avatarCubit.state.avatar.glasses, initialGlasses);
       });
     });
 
@@ -192,12 +189,8 @@ void main() {
       });
 
       test('should correctly determine sunglasses display', () {
-        const Avatar withSunglasses = Avatar(
-          glasses: AvatarGlasses.sunglasses,
-        );
-        const Avatar withGlasses = Avatar(
-          
-        );
+        const Avatar withSunglasses = Avatar(glasses: AvatarGlasses.sunglasses);
+        const Avatar withGlasses = Avatar();
         const Avatar batmanCostume = Avatar(
           glasses: AvatarGlasses.sunglasses,
           costume: AvatarCostume.batman,

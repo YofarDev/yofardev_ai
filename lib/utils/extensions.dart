@@ -98,52 +98,50 @@ extension ColorfulLogs on String {
   String toMagentaLog() => "'\x1B[35m$this\x1B[0m'";
 
   void printRedLog() => split('\n').forEach(
-        (String element) => debugPrint(
-          PlatformUtils.checkPlatform() == 'Android'
-              ? element.toRedLog()
-              : element,
-        ),
-      );
+    (String element) => debugPrint(
+      PlatformUtils.checkPlatform() == 'Android' ? element.toRedLog() : element,
+    ),
+  );
   void printGreenLog() => split('\n').forEach(
-        (String element) => debugPrint(
-          PlatformUtils.checkPlatform() == 'Android'
-              ? element.toGreenLog()
-              : element,
-        ),
-      );
+    (String element) => debugPrint(
+      PlatformUtils.checkPlatform() == 'Android'
+          ? element.toGreenLog()
+          : element,
+    ),
+  );
   void printYellowLog() => split('\n').forEach(
-        (String element) => debugPrint(
-          PlatformUtils.checkPlatform() == 'Android'
-              ? element.toYellowLog()
-              : element,
-        ),
-      );
+    (String element) => debugPrint(
+      PlatformUtils.checkPlatform() == 'Android'
+          ? element.toYellowLog()
+          : element,
+    ),
+  );
   void printBlueLog() => split('\n').forEach(
-        (String element) => debugPrint(
-          PlatformUtils.checkPlatform() == 'Android'
-              ? element.toBlueLog()
-              : element,
-        ),
-      );
+    (String element) => debugPrint(
+      PlatformUtils.checkPlatform() == 'Android'
+          ? element.toBlueLog()
+          : element,
+    ),
+  );
   void printWhiteLog() => split('\n').forEach(
-        (String element) => debugPrint(
-          PlatformUtils.checkPlatform() == 'Android'
-              ? element.toWhiteLog()
-              : element,
-        ),
-      );
+    (String element) => debugPrint(
+      PlatformUtils.checkPlatform() == 'Android'
+          ? element.toWhiteLog()
+          : element,
+    ),
+  );
   void printCyanLog() => split('\n').forEach(
-        (String element) => debugPrint(
-          PlatformUtils.checkPlatform() == 'Android'
-              ? element.toCyanLog()
-              : element,
-        ),
-      );
+    (String element) => debugPrint(
+      PlatformUtils.checkPlatform() == 'Android'
+          ? element.toCyanLog()
+          : element,
+    ),
+  );
   void printMagentaLog() => split('\n').forEach(
-        (String element) => debugPrint(
-          PlatformUtils.checkPlatform() == 'Android'
-              ? element.toMagentaLog()
-              : element,
-        ),
-      );
+    (String element) => debugPrint(
+      PlatformUtils.checkPlatform() == 'Android'
+          ? element.toMagentaLog()
+          : element,
+    ),
+  );
 }

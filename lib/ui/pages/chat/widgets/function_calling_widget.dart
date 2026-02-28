@@ -6,10 +6,7 @@ import 'package:flutter/material.dart';
 
 class FunctionCallingWidget extends StatelessWidget {
   final String functionCallingText;
-  const FunctionCallingWidget({
-    super.key,
-    required this.functionCallingText,
-  });
+  const FunctionCallingWidget({super.key, required this.functionCallingText});
 
   @override
   Widget build(BuildContext context) {
