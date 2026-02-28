@@ -13,7 +13,7 @@ import '../../../core/models/avatar_config.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';
 import '../../../res/app_colors.dart';
-import '../../widgets/ai_text_input.dart';
+import '../widgets/ai_text_input/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/function_calling_button.dart';
 import '../widgets/chat_conversation_list.dart';

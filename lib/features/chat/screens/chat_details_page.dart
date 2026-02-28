@@ -7,7 +7,7 @@ import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../models/chat.dart';
 import 'image_full_screen.dart';
-import '../../../ui/widgets/ai_text_input.dart';
+import '../widgets/ai_text_input/ai_text_input.dart';
 import '../widgets/chat_app_bar.dart';
 import '../widgets/message_list.dart';
 
