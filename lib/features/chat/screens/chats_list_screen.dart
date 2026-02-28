@@ -10,8 +10,8 @@ import '../../../models/chat.dart';
 import '../../../res/app_colors.dart';
 import '../../../utils/extensions.dart';
 import '../../widgets/constrained_width.dart';
-import 'chat_details_page.dart';
-import 'widgets/chat_list_empty_state.dart';
+import 'chat_details_screen.dart';
+import '../widgets/chat_list_empty_state.dart';
 import 'widgets/chat_list_item.dart';
 
 class ChatsListPage extends StatefulWidget {

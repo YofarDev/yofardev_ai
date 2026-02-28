@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../features/chat/bloc/chats_cubit.dart';
 import '../../../../models/chat.dart';
 import '../../../../models/chat_entry.dart';
-import '../../../../ui/pages/chat/widgets/function_calling_widget.dart';
+import 'function_calling_widget.dart';
 import '../../../../utils/extensions.dart';
 import 'message_bubble.dart';
 

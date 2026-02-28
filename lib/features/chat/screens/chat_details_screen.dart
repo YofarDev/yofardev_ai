@@ -16,7 +16,7 @@ import '../../../res/app_colors.dart';
 import '../../widgets/ai_text_input.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/function_calling_button.dart';
-import 'widgets/chat_conversation_list.dart';
+import '../widgets/chat_conversation_list.dart';
 
 class ChatDetailsPage extends StatefulWidget {
   const ChatDetailsPage({super.key});
