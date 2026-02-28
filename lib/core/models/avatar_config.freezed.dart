@@ -35,10 +35,6 @@ bool operator ==(Object other) {
 @override
 int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume);
 
-@override
-String toString() {
-  return 'Avatar(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume)';
-}
 
 
 }
@@ -238,10 +234,6 @@ bool operator ==(Object other) {
 @override
 int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume);
 
-@override
-String toString() {
-  return 'Avatar(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume)';
-}
 
 
 }

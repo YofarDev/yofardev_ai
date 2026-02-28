@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/models/avatar.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/models/chat.dart';
 import 'package:yofardev_ai/models/chat_entry.dart';
 import 'package:yofardev_ai/models/llm/llm_message.dart';

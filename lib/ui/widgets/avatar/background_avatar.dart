@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../../models/avatar.dart';
+import '../../../core/models/avatar_config.dart';
 
 class BackgroundAvatar extends StatelessWidget {
   const BackgroundAvatar({super.key});

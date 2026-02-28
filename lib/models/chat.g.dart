@@ -15,7 +15,9 @@ _Chat _$ChatFromJson(Map<String, dynamic> json) => _Chat(
       const <ChatEntry>[],
   avatar: json['avatar'] == null
       ? const Avatar()
-      : Avatar.fromJson(json['avatar'] as String),
+      : const AvatarJsonConverter().fromJson(
+          json['avatar'] as Map<String, dynamic>,
+        ),
   language: json['language'] as String? ?? 'en',
   systemPrompt: json['systemPrompt'] as String? ?? '',
   persona:
@@ -26,7 +28,7 @@ _Chat _$ChatFromJson(Map<String, dynamic> json) => _Chat(
 Map<String, dynamic> _$ChatToJson(_Chat instance) => <String, dynamic>{
   'id': instance.id,
   'entries': instance.entries,
-  'avatar': instance.avatar,
+  'avatar': const AvatarJsonConverter().toJson(instance.avatar),
   'language': instance.language,
   'systemPrompt': instance.systemPrompt,
   'persona': _$ChatPersonaEnumMap[instance.persona]!,

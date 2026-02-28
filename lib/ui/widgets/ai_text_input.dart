@@ -11,7 +11,7 @@ import '../../features/avatar/bloc/avatar_state.dart';
 import '../../features/chat/bloc/chats_cubit.dart';
 import '../../l10n/localization_manager.dart';
 import '../../logic/talking/talking_cubit.dart';
-import '../../models/avatar.dart';
+import '../../core/models/avatar_config.dart';
 import '../../models/chat_entry.dart';
 import '../../services/tts_service.dart';
 import '../../utils/extensions.dart';

@@ -1,11 +1,22 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'avatar.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'chat_entry.dart';
 import 'llm/llm_message.dart';
 
 part 'chat.freezed.dart';
 part 'chat.g.dart';
+
+// JsonConverter for Avatar to handle custom serialization
+class AvatarJsonConverter implements JsonConverter<Avatar, Map<String, dynamic>> {
+  const AvatarJsonConverter();
+
+  @override
+  Avatar fromJson(Map<String, dynamic> json) => Avatar.fromMap(json);
+
+  @override
+  Map<String, dynamic> toJson(Avatar object) => object.toMap();
+}
 
 enum ChatPersona {
   assistant,
@@ -25,7 +36,7 @@ sealed class Chat with _$Chat {
   const factory Chat({
     @Default('') String id,
     @Default(<ChatEntry>[]) List<ChatEntry> entries,
-    @Default(Avatar()) Avatar avatar,
+    @AvatarJsonConverter() @Default(Avatar()) Avatar avatar,
     @Default('en') String language,
     @Default('') String systemPrompt,
     @Default(ChatPersona.normal) ChatPersona persona,

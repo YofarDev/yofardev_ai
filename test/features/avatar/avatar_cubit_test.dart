@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/bloc/avatar_state.dart';
-import 'package:yofardev_ai/models/avatar.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
 
 void main() {
   group('AvatarCubit', () {
@@ -164,13 +164,13 @@ void main() {
         expect(deserialized.costume, avatar.costume);
       });
 
-      test('props should include all fields', () {
-        const Avatar avatar = Avatar();
+      test('should support value equality', () {
+        const Avatar avatar1 = Avatar();
+        const Avatar avatar2 = Avatar();
+        const Avatar avatar3 = Avatar(background: AvatarBackgrounds.beach);
 
-        expect(
-          avatar.props.length,
-          6, // background, hat, top, glasses, specials, costume
-        );
+        expect(avatar1, equals(avatar2));
+        expect(avatar1, isNot(equals(avatar3)));
       });
 
       test('should correctly determine costume visibility', () {
@@ -228,13 +228,15 @@ void main() {
         expect(newConfig.hat, config.hat);
       });
 
-      test('props should include all fields', () {
-        const AvatarConfig config = AvatarConfig();
-
-        expect(
-          config.props.length,
-          7, // background, hat, top, glasses, specials, costume, soundEffect
+      test('should support value equality', () {
+        const AvatarConfig config1 = AvatarConfig();
+        const AvatarConfig config2 = AvatarConfig();
+        const AvatarConfig config3 = AvatarConfig(
+          background: AvatarBackgrounds.beach,
         );
+
+        expect(config1, equals(config2));
+        expect(config1, isNot(equals(config3)));
       });
     });
   });

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/service_locator.dart';
-import '../../../models/avatar.dart';
+import '../../../core/models/avatar_config.dart';
 import '../../../models/chat.dart';
 import '../../../res/app_constants.dart';
 import '../../../services/chat_history_service.dart';
@@ -91,12 +91,12 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void _updateAvatar(String chatId, AvatarConfig avatarConfig) {
     final Avatar avatar = state.avatar.copyWith(
-      hat: avatarConfig.hat,
-      top: avatarConfig.top,
-      glasses: avatarConfig.glasses,
-      specials: avatarConfig.specials,
-      background: avatarConfig.background,
-      costume: avatarConfig.costume,
+      hat: avatarConfig.hat ?? state.avatar.hat,
+      top: avatarConfig.top ?? state.avatar.top,
+      glasses: avatarConfig.glasses ?? state.avatar.glasses,
+      specials: avatarConfig.specials ?? state.avatar.specials,
+      background: avatarConfig.background ?? state.avatar.background,
+      costume: avatarConfig.costume ?? state.avatar.costume,
     );
     emit(
       state.copyWith(

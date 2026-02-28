@@ -4,7 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../utils/extensions.dart';
 import '../utils/logger.dart';
-import 'avatar.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
 
 part 'chat_entry.freezed.dart';
 part 'chat_entry.g.dart';

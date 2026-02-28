@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../features/avatar/bloc/avatar_cubit.dart';
 import '../features/chat/bloc/chats_cubit.dart';
-import '../models/avatar.dart';
+import '../core/models/avatar_config.dart';
 import '../models/demo_script.dart';
 import '../services/demo_controller.dart';
 import '../services/fake_llm_service.dart';

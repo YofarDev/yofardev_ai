@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../l10n/localization_manager.dart';
 import '../../../logic/talking/talking_cubit.dart';
-import '../../../models/avatar.dart';
+import '../../../core/models/avatar_config.dart';
 import '../../../models/chat.dart';
 import '../../../models/chat_entry.dart';
 import '../../../repositories/yofardev_repository.dart';
@@ -268,12 +268,12 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(status: ChatsStatus.updating));
     final Chat chat = state.openedChat;
     final Avatar avatar = chat.avatar.copyWith(
-      hat: avatarConfig.hat,
-      top: avatarConfig.top,
-      background: avatarConfig.background,
-      glasses: avatarConfig.glasses,
-      specials: avatarConfig.specials,
-      costume: avatarConfig.costume,
+      hat: avatarConfig.hat ?? chat.avatar.hat,
+      top: avatarConfig.top ?? chat.avatar.top,
+      background: avatarConfig.background ?? chat.avatar.background,
+      glasses: avatarConfig.glasses ?? chat.avatar.glasses,
+      specials: avatarConfig.specials ?? chat.avatar.specials,
+      costume: avatarConfig.costume ?? chat.avatar.costume,
     );
     emit(
       state.copyWith(

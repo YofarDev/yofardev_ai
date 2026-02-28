@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Chat {
 
- String get id; List<ChatEntry> get entries; Avatar get avatar; String get language; String get systemPrompt; ChatPersona get persona;
+ String get id; List<ChatEntry> get entries;@AvatarJsonConverter() Avatar get avatar; String get language; String get systemPrompt; ChatPersona get persona;
 /// Create a copy of Chat
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,11 +48,11 @@ abstract mixin class $ChatCopyWith<$Res>  {
   factory $ChatCopyWith(Chat value, $Res Function(Chat) _then) = _$ChatCopyWithImpl;
 @useResult
 $Res call({
- String id, List<ChatEntry> entries, Avatar avatar, String language, String systemPrompt, ChatPersona persona
+ String id, List<ChatEntry> entries,@AvatarJsonConverter() Avatar avatar, String language, String systemPrompt, ChatPersona persona
 });
 
 
-
+$AvatarCopyWith<$Res> get avatar;
 
 }
 /// @nodoc
@@ -76,7 +76,16 @@ as String,persona: null == persona ? _self.persona : persona // ignore: cast_nul
 as ChatPersona,
   ));
 }
-
+/// Create a copy of Chat
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AvatarCopyWith<$Res> get avatar {
+  
+  return $AvatarCopyWith<$Res>(_self.avatar, (value) {
+    return _then(_self.copyWith(avatar: value));
+  });
+}
 }
 
 
@@ -155,7 +164,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  List<ChatEntry> entries,  Avatar avatar,  String language,  String systemPrompt,  ChatPersona persona)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  List<ChatEntry> entries, @AvatarJsonConverter()  Avatar avatar,  String language,  String systemPrompt,  ChatPersona persona)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Chat() when $default != null:
 return $default(_that.id,_that.entries,_that.avatar,_that.language,_that.systemPrompt,_that.persona);case _:
@@ -176,7 +185,7 @@ return $default(_that.id,_that.entries,_that.avatar,_that.language,_that.systemP
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  List<ChatEntry> entries,  Avatar avatar,  String language,  String systemPrompt,  ChatPersona persona)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  List<ChatEntry> entries, @AvatarJsonConverter()  Avatar avatar,  String language,  String systemPrompt,  ChatPersona persona)  $default,) {final _that = this;
 switch (_that) {
 case _Chat():
 return $default(_that.id,_that.entries,_that.avatar,_that.language,_that.systemPrompt,_that.persona);}
@@ -193,7 +202,7 @@ return $default(_that.id,_that.entries,_that.avatar,_that.language,_that.systemP
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  List<ChatEntry> entries,  Avatar avatar,  String language,  String systemPrompt,  ChatPersona persona)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  List<ChatEntry> entries, @AvatarJsonConverter()  Avatar avatar,  String language,  String systemPrompt,  ChatPersona persona)?  $default,) {final _that = this;
 switch (_that) {
 case _Chat() when $default != null:
 return $default(_that.id,_that.entries,_that.avatar,_that.language,_that.systemPrompt,_that.persona);case _:
@@ -208,7 +217,7 @@ return $default(_that.id,_that.entries,_that.avatar,_that.language,_that.systemP
 @JsonSerializable()
 
 class _Chat extends Chat {
-  const _Chat({this.id = '', final  List<ChatEntry> entries = const <ChatEntry>[], this.avatar = const Avatar(), this.language = 'en', this.systemPrompt = '', this.persona = ChatPersona.normal}): _entries = entries,super._();
+  const _Chat({this.id = '', final  List<ChatEntry> entries = const <ChatEntry>[], @AvatarJsonConverter() this.avatar = const Avatar(), this.language = 'en', this.systemPrompt = '', this.persona = ChatPersona.normal}): _entries = entries,super._();
   factory _Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);
 
 @override@JsonKey() final  String id;
@@ -219,7 +228,7 @@ class _Chat extends Chat {
   return EqualUnmodifiableListView(_entries);
 }
 
-@override@JsonKey() final  Avatar avatar;
+@override@JsonKey()@AvatarJsonConverter() final  Avatar avatar;
 @override@JsonKey() final  String language;
 @override@JsonKey() final  String systemPrompt;
 @override@JsonKey() final  ChatPersona persona;
@@ -257,11 +266,11 @@ abstract mixin class _$ChatCopyWith<$Res> implements $ChatCopyWith<$Res> {
   factory _$ChatCopyWith(_Chat value, $Res Function(_Chat) _then) = __$ChatCopyWithImpl;
 @override @useResult
 $Res call({
- String id, List<ChatEntry> entries, Avatar avatar, String language, String systemPrompt, ChatPersona persona
+ String id, List<ChatEntry> entries,@AvatarJsonConverter() Avatar avatar, String language, String systemPrompt, ChatPersona persona
 });
 
 
-
+@override $AvatarCopyWith<$Res> get avatar;
 
 }
 /// @nodoc
@@ -286,7 +295,16 @@ as ChatPersona,
   ));
 }
 
-
+/// Create a copy of Chat
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AvatarCopyWith<$Res> get avatar {
+  
+  return $AvatarCopyWith<$Res>(_self.avatar, (value) {
+    return _then(_self.copyWith(avatar: value));
+  });
+}
 }
 
 // dart format on

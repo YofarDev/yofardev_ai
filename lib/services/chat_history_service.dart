@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/avatar.dart';
+import '../core/models/avatar_config.dart';
 import '../models/chat.dart';
 import 'prompt_service.dart';
 import 'settings_service.dart';

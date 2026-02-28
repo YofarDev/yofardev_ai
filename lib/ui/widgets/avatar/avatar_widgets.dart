@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../../models/avatar.dart';
+import '../../../core/models/avatar_config.dart';
 import '../../../res/app_constants.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';

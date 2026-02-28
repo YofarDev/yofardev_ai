@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-
+$AvatarConfigCopyWith<$Res> get avatarConfig;
 
 }
 /// @nodoc
@@ -72,7 +72,16 @@ as List<int>,avatarConfig: null == avatarConfig ? _self.avatarConfig : avatarCon
 as AvatarConfig,
   ));
 }
-
+/// Create a copy of Answer
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AvatarConfigCopyWith<$Res> get avatarConfig {
+  
+  return $AvatarConfigCopyWith<$Res>(_self.avatarConfig, (value) {
+    return _then(_self.copyWith(avatarConfig: value));
+  });
+}
 }
 
 
@@ -253,7 +262,7 @@ $Res call({
 });
 
 
-
+@override $AvatarConfigCopyWith<$Res> get avatarConfig;
 
 }
 /// @nodoc
@@ -277,7 +286,16 @@ as AvatarConfig,
   ));
 }
 
-
+/// Create a copy of Answer
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AvatarConfigCopyWith<$Res> get avatarConfig {
+  
+  return $AvatarConfigCopyWith<$Res>(_self.avatarConfig, (value) {
+    return _then(_self.copyWith(avatarConfig: value));
+  });
+}
 }
 
 // dart format on

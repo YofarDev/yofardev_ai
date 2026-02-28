@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/models/answer.dart';
-import 'package:yofardev_ai/models/avatar.dart';
 
 void main() {
   group('Answer', () {

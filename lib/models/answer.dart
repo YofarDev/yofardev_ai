@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'avatar.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
 
 part 'answer.freezed.dart';
 

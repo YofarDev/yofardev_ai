@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 
 import '../l10n/localization_manager.dart';
-import '../models/avatar.dart';
+import '../core/models/avatar_config.dart';
 import '../models/chat.dart';
 import '../models/sound_effects.dart';
 import '../utils/app_utils.dart';
