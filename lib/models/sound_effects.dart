@@ -18,6 +18,7 @@ enum SoundEffects {
   robotWalking,
   uwu,
   christmasBells,
+  whoosh,
 }
 
 extension SoundEffectsStrExtension on String {

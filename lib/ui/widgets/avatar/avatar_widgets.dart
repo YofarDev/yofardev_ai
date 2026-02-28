@@ -20,32 +20,54 @@ class AvatarWidgets extends StatefulWidget {
 }
 
 class _AvatarWidgetsState extends State<AvatarWidgets>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _positionAnimation;
+    with TickerProviderStateMixin {
+  late AnimationController _horizontalController;
+  late Animation<Offset> _horizontalAnimation;
+
+  late AnimationController _verticalController;
+  late Animation<Offset> _verticalAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+
+    // Horizontal animation (for location changes)
+    _horizontalController = AnimationController(
       duration: Duration(seconds: AppConstants.movingAvatarDuration),
       vsync: this,
     );
 
-    _positionAnimation = Tween<Offset>(
+    _horizontalAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: const Offset(-1.5, 0),
+      end: const Offset(-1.5, 0), // Slide out to the left
     ).animate(
       CurvedAnimation(
-        parent: _controller,
-        curve: Curves.linear,
+        parent: _horizontalController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    // Vertical animation (for clothes changes) - faster
+    _verticalController = AnimationController(
+      duration: const Duration(milliseconds: 600), // Quicker drop
+      vsync: this,
+    );
+
+    _verticalAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0, 1.5), // Slide down out of screen
+    ).animate(
+      CurvedAnimation(
+        parent: _verticalController,
+        curve: Curves.easeInOut,
       ),
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _horizontalController.dispose();
+    _verticalController.dispose();
     super.dispose();
   }
 
@@ -55,30 +77,59 @@ class _AvatarWidgetsState extends State<AvatarWidgets>
       builder: (BuildContext context, AvatarState state) {
         return BlocListener<AvatarCubit, AvatarState>(
           listenWhen: (AvatarState previous, AvatarState current) =>
-              previous.avatar.specials != current.avatar.specials,
+              previous.statusAnimation != current.statusAnimation,
           listener: (BuildContext context, AvatarState state) {
-            if (state.avatar.specials == AvatarSpecials.outOfScreen) {
-              _controller.forward();
-            } else {
-              _controller.reverse();
-            }
+            _handleAnimationChange(state.statusAnimation);
           },
-          child: SlideTransition(
-            position: _positionAnimation,
-            child: Stack(
-              children: <Widget>[
-                if (!state.avatar.hideBaseAvatar) const BaseAvatar(),
-                if (!state.avatar.hideBlinkingEyes) const BlinkingEyes(),
-                if (state.avatar.displaySunglasses)
-                  const Clothes(name: 'sunglasses'),
-              if (!state.avatar.hideTalkingMouth)   const TalkingMouth(),
-                if (state.avatar.costume != AvatarCostume.none)
-                  const CostumeWidget(),
-              ],
-            ),
-          ),
+          child: _buildAnimatedAvatar(state),
         );
       },
+    );
+  }
+
+  void _handleAnimationChange(AvatarStatusAnimation statusAnimation) {
+    switch (statusAnimation) {
+      case AvatarStatusAnimation.leaving:
+        // Horizontal slide out (location change)
+        _horizontalController.forward();
+      case AvatarStatusAnimation.coming:
+        // Horizontal slide in
+        _horizontalController.reverse();
+      case AvatarStatusAnimation.dropping:
+        // Vertical slide down (clothes change)
+        _verticalController.forward();
+      case AvatarStatusAnimation.rising:
+        // Vertical slide up
+        _verticalController.reverse();
+      case AvatarStatusAnimation.initial:
+      case AvatarStatusAnimation.transition:
+        // Reset both animations
+        _horizontalController.reset();
+        _verticalController.reset();
+    }
+  }
+
+  Widget _buildAnimatedAvatar(AvatarState state) {
+    // Use vertical animation for dropping/rising, horizontal for others
+    final bool useVertical = state.statusAnimation == AvatarStatusAnimation.dropping ||
+        state.statusAnimation == AvatarStatusAnimation.rising;
+
+    final Animation<Offset> animation =
+        useVertical ? _verticalAnimation : _horizontalAnimation;
+
+    return SlideTransition(
+      position: animation,
+      child: Stack(
+        children: <Widget>[
+          if (!state.avatar.hideBaseAvatar) const BaseAvatar(),
+          if (!state.avatar.hideBlinkingEyes) const BlinkingEyes(),
+          if (state.avatar.displaySunglasses)
+            const Clothes(name: 'sunglasses'),
+          if (!state.avatar.hideTalkingMouth) const TalkingMouth(),
+          if (state.avatar.costume != AvatarCostume.none)
+            const CostumeWidget(),
+        ],
+      ),
     );
   }
 }

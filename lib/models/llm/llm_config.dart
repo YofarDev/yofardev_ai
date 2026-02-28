@@ -3,6 +3,21 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:uuid/uuid.dart';
 
+/// Response format type for JSON mode
+enum ResponseFormatType {
+  /// OpenAI-compatible: {"type": "json_object"}
+  jsonObject,
+
+  /// Some local providers: {"type": "json_schema"}
+  jsonSchema,
+
+  /// Fallback: no response_format sent, relies on prompt instructions
+  text,
+
+  /// Don't send response_format parameter at all
+  none,
+}
+
 class LlmConfig extends Equatable {
   final String id;
   final String label;
@@ -10,6 +25,7 @@ class LlmConfig extends Equatable {
   final String apiKey;
   final String model;
   final double temperature;
+  final ResponseFormatType responseFormatType;
 
   const LlmConfig({
     required this.id,
@@ -18,6 +34,7 @@ class LlmConfig extends Equatable {
     required this.apiKey,
     required this.model,
     this.temperature = 0.7,
+    this.responseFormatType = ResponseFormatType.jsonObject,
   });
 
   factory LlmConfig.create({
@@ -26,6 +43,7 @@ class LlmConfig extends Equatable {
     required String apiKey,
     required String model,
     double temperature = 0.7,
+    ResponseFormatType responseFormatType = ResponseFormatType.jsonObject,
   }) {
     return LlmConfig(
       id: const Uuid().v4(),
@@ -34,6 +52,7 @@ class LlmConfig extends Equatable {
       apiKey: apiKey,
       model: model,
       temperature: temperature,
+      responseFormatType: responseFormatType,
     );
   }
 
@@ -44,6 +63,7 @@ class LlmConfig extends Equatable {
     String? apiKey,
     String? model,
     double? temperature,
+    ResponseFormatType? responseFormatType,
   }) {
     return LlmConfig(
       id: id ?? this.id,
@@ -52,6 +72,7 @@ class LlmConfig extends Equatable {
       apiKey: apiKey ?? this.apiKey,
       model: model ?? this.model,
       temperature: temperature ?? this.temperature,
+      responseFormatType: responseFormatType ?? this.responseFormatType,
     );
   }
 
@@ -63,6 +84,7 @@ class LlmConfig extends Equatable {
       'apiKey': apiKey,
       'model': model,
       'temperature': temperature,
+      'responseFormatType': responseFormatType.name,
     };
   }
 
@@ -74,6 +96,12 @@ class LlmConfig extends Equatable {
       apiKey: map['apiKey'] as String? ?? '',
       model: map['model'] as String? ?? '',
       temperature: (map['temperature'] as num?)?.toDouble() ?? 0.7,
+      responseFormatType: map['responseFormatType'] != null
+          ? ResponseFormatType.values.firstWhere(
+              (ResponseFormatType e) => e.name == map['responseFormatType'],
+              orElse: () => ResponseFormatType.jsonObject,
+            )
+          : ResponseFormatType.jsonObject,
     );
   }
 
@@ -83,6 +111,6 @@ class LlmConfig extends Equatable {
       LlmConfig.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  List<Object> get props =>
-      <Object>[id, label, baseUrl, apiKey, model, temperature];
+  List<Object?> get props =>
+      <Object?>[id, label, baseUrl, apiKey, model, temperature, responseFormatType];
 }

@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../logic/avatar/avatar_cubit.dart';
+import '../../../logic/avatar/avatar_state.dart';
 import '../../../logic/chat/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../res/app_constants.dart';
@@ -25,42 +26,67 @@ class TalkingMouth extends StatefulWidget {
 
 class _TalkingMouthState extends State<TalkingMouth> {
   bool _waitingTalking = false;
+  Timer? _talkingTimer;
+  AudioPlayer? _currentPlayer;
+
+  @override
+  void dispose() {
+    _talkingTimer?.cancel();
+    _currentPlayer?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<TalkingCubit, TalkingState>(
-      listenWhen: (TalkingState previous, TalkingState current) =>
-          previous.status != current.status,
-      listener: (BuildContext context, TalkingState state) {
-        _waitingTalking = state.status == TalkingStatus.loading;
-        if (_waitingTalking && PlatformUtils.checkPlatform() != 'Web') {
-          _startWaitingTalking();
-        }
-        if (state.status == TalkingStatus.success) {
-          if (context.read<AvatarCubit>().state.avatar.hideTalkingMouth) return;
-          if (PlatformUtils.checkPlatform() == 'Web') {
-            _fakeTalking(context);
-          } else {
-            final String audioPath = state.answer.audioPath;
-            final List<int> amplitudes = state.answer.amplitudes;
-            _startTalking(
-              context,
-              audioPath,
-              amplitudes,
-            );
-          }
+    return BlocListener<AvatarCubit, AvatarState>(
+      listenWhen: (AvatarState previous, AvatarState current) =>
+          previous.avatar.costume != current.avatar.costume,
+      listener: (BuildContext context, AvatarState state) {
+        // If costume changed to one that hides talking mouth, stop the animation
+        if (state.avatar.hideTalkingMouth) {
+          _talkingTimer?.cancel();
+          _currentPlayer?.dispose();
+          _currentPlayer = null;
+          context.read<TalkingCubit>().stopTalking(
+                soundEffectsEnabled:
+                    context.read<ChatsCubit>().state.soundEffectsEnabled,
+              );
         }
       },
-      child: BlocBuilder<TalkingCubit, TalkingState>(
-        builder: (BuildContext context, TalkingState state) {
-          return ScaledAvatarItem(
-            path: state.isTalking
-                ? _getMouthPath(state.mouthState)
-                : _getMouthPath(MouthState.closed),
-            itemX: AppConstants.mouthX,
-            itemY: AppConstants.mouthY,
-          );
+      child: BlocListener<TalkingCubit, TalkingState>(
+        listenWhen: (TalkingState previous, TalkingState current) =>
+            previous.status != current.status,
+        listener: (BuildContext context, TalkingState state) {
+          _waitingTalking = state.status == TalkingStatus.loading;
+          if (_waitingTalking && PlatformUtils.checkPlatform() != 'Web') {
+            _startWaitingTalking();
+          }
+          if (state.status == TalkingStatus.success) {
+            if (context.read<AvatarCubit>().state.avatar.hideTalkingMouth) return;
+            if (PlatformUtils.checkPlatform() == 'Web') {
+              _fakeTalking(context);
+            } else {
+              final String audioPath = state.answer.audioPath;
+              final List<int> amplitudes = state.answer.amplitudes;
+              _startTalking(
+                context,
+                audioPath,
+                amplitudes,
+              );
+            }
+          }
         },
+        child: BlocBuilder<TalkingCubit, TalkingState>(
+          builder: (BuildContext context, TalkingState state) {
+            return ScaledAvatarItem(
+              path: state.isTalking
+                  ? _getMouthPath(state.mouthState)
+                  : _getMouthPath(MouthState.closed),
+              itemX: AppConstants.mouthX,
+              itemY: AppConstants.mouthY,
+            );
+          },
+        ),
       ),
     );
   }
@@ -87,7 +113,6 @@ class _TalkingMouthState extends State<TalkingMouth> {
 
       // Check if file exists before playing
       if (!await File(audioPath).exists()) {
-        debugPrint('⚠️  Waiting audio file not found: $audioPath');
         i++;
         if (i >=
             context.read<ChatsCubit>().state.audioPathsWaitingSentences.length) {
@@ -117,6 +142,10 @@ class _TalkingMouthState extends State<TalkingMouth> {
     String audioPath,
     List<int> amplitudes,
   ) async {
+    // Cancel any existing timer before starting a new one
+    _talkingTimer?.cancel();
+    _currentPlayer?.dispose();
+
     if (amplitudes.isEmpty) {
       context.read<TalkingCubit>().stopTalking(
             soundEffectsEnabled:
@@ -139,6 +168,7 @@ class _TalkingMouthState extends State<TalkingMouth> {
 
     final AudioPlayer player =
         AudioPlayer(); // player only used to get the duration here
+    _currentPlayer = player;
 
     try {
       await player.setFilePath(audioPath, initialPosition: Duration.zero);
@@ -146,6 +176,7 @@ class _TalkingMouthState extends State<TalkingMouth> {
     } catch (e) {
       debugPrint('❌ Failed to load audio: $e');
       await player.dispose();
+      _currentPlayer = null;
       return 0;
     }
 
@@ -153,10 +184,22 @@ class _TalkingMouthState extends State<TalkingMouth> {
     final int updateInterval =
         (player.duration!.inMilliseconds / totalFrames).round();
     int currentIndex = 0;
-    Timer.periodic(Duration(milliseconds: updateInterval), (Timer timer) async {
+
+    _talkingTimer = Timer.periodic(Duration(milliseconds: updateInterval), (Timer timer) async {
+      // Check if costume changed to one that hides talking mouth
+      if (context.read<AvatarCubit>().state.avatar.hideTalkingMouth) {
+        timer.cancel();
+        await player.dispose();
+        _currentPlayer = null;
+        _talkingTimer = null;
+        return;
+      }
+
       if (currentIndex >= totalFrames) {
         timer.cancel();
         await player.dispose();
+        _currentPlayer = null;
+        _talkingTimer = null;
         return;
       } else {
         try {
@@ -167,6 +210,8 @@ class _TalkingMouthState extends State<TalkingMouth> {
         } catch (e) {
           timer.cancel();
           await player.dispose();
+          _currentPlayer = null;
+          _talkingTimer = null;
           debugPrint('talking mouth error: $e');
         }
       }

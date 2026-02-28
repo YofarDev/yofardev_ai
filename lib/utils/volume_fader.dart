@@ -5,7 +5,7 @@ import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'extensions.dart';
 
 class ProgressiveVolumeControl {
-  final double _minVolume = 0.4;
+  final double _minVolume = 0.5;
   Timer? _timer;
   bool _init = false;
   bool _programmaticallyChangingVolume = false;

@@ -102,7 +102,7 @@ class ChatsListPage extends StatelessWidget {
                             Navigator.of(context)
                                 .push(
                               PageRouteBuilder<dynamic>(
-                                pageBuilder: (_, __, ___) =>
+                                pageBuilder: (_, _, _) =>
                                     const ConstrainedWidth(
                                   child: ChatDetailsPage(),
                                 ),

@@ -40,7 +40,7 @@ class HomeButtons extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       PageRouteBuilder<dynamic>(
-                        pageBuilder: (_, __, ___) =>
+                        pageBuilder: (_, _, _) =>
                             const ConstrainedWidth(child: ChatsListPage()),
                         transitionDuration: Duration.zero,
                       ),

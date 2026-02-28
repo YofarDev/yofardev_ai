@@ -74,9 +74,24 @@ class ChatEntry extends Equatable {
 
   String getMessage({bool isFromUser = false}) {
     if (isFromUser) return body.getVisiblePrompt();
-    final Map<String, dynamic> map = json.decode(body) as Map<String, dynamic>;
-    final String message = map['message'] as String? ?? '';
-    return message;
+    try {
+      // Try to extract valid JSON if the response contains extra text
+      String cleanedBody = body.trim();
+      final int jsonStart = cleanedBody.indexOf('{');
+      final int jsonEnd = cleanedBody.lastIndexOf('}');
+
+      if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
+        cleanedBody = cleanedBody.substring(jsonStart, jsonEnd + 1);
+      }
+
+      final Map<String, dynamic> map = json.decode(cleanedBody) as Map<String, dynamic>;
+      final String message = map['message'] as String? ?? '';
+      return message;
+    } catch (e) {
+      debugPrint('getMessage(): Error parsing JSON, using body as-is: $e');
+      // If JSON parsing fails, return the body as-is (might be plain text)
+      return body.getVisiblePrompt();
+    }
   }
 
   @override
@@ -88,12 +103,24 @@ class ChatEntry extends Equatable {
 extension ChatEntryExtension on ChatEntry {
   AvatarConfig getAvatarConfig() {
     try {
-      final String body = this.body;
+      String body = this.body;
       if (body.isEmpty) return const AvatarConfig();
+
+      // Try to extract valid JSON if the response contains extra text
+      body = body.trim();
+      final int jsonStart = body.indexOf('{');
+      final int jsonEnd = body.lastIndexOf('}');
+
+      if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
+        body = body.substring(jsonStart, jsonEnd + 1);
+      }
+
       final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
       return AvatarConfig.fromMap(map);
     } catch (e) {
       debugPrint('getAvatarConfig(): Error parsing avatar config: $e');
+      final String bodyPreview = body.length > 200 ? '${body.substring(0, 200)}...' : body;
+      debugPrint('getAvatarConfig(): Body was: $bodyPreview');
       return const AvatarConfig();
     }
   }

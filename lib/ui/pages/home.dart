@@ -18,6 +18,7 @@ import '../widgets/avatar/avatar_widgets.dart';
 import '../widgets/avatar/background_avatar.dart';
 import '../widgets/avatar/loading_avatar_widget.dart';
 import '../widgets/avatar/thinking_animation.dart';
+import '../widgets/demo/demo_controls.dart';
 import '../widgets/home_buttons.dart';
 
 class Home extends StatefulWidget {
@@ -91,9 +92,11 @@ class _HomeState extends State<Home> {
       listenWhen: (AvatarState previous, AvatarState current) =>
           previous.statusAnimation != current.statusAnimation ||
           previous.status != current.status,
-      listener: (BuildContext context, AvatarState state) {
+      listener: (BuildContext context, AvatarState state) async {
         if (state.statusAnimation == AvatarStatusAnimation.initial) return;
         if (PlatformUtils.checkPlatform() != 'Web') {
+          // Add a small delay to sync volume fade with the visual animation
+          await Future<void>.delayed(const Duration(milliseconds: 800));
           _volumeControl.startVolumeFade(
             state.statusAnimation != AvatarStatusAnimation.leaving,
           );
@@ -162,6 +165,7 @@ class _HomeState extends State<Home> {
                                   child: AiTextInput(),
                                 ),
                               const HomeButtons(),
+                              const DemoControls(),
                             ],
                           );
 
@@ -217,7 +221,7 @@ class _HomeState extends State<Home> {
     // Check if file exists before playing
     final File audioFile = File(audioPath);
     if (!await audioFile.exists()) {
-      debugPrint('⚠️  Audio file not found: $audioPath');
+     // debugPrint('⚠️  Audio file not found: $audioPath');
       return;
     }
 

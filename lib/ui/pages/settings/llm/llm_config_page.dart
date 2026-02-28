@@ -19,6 +19,7 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
   late TextEditingController _apiKeyController;
   late TextEditingController _modelController;
   double _temperature = 0.7;
+  ResponseFormatType _responseFormatType = ResponseFormatType.jsonObject;
 
   @override
   void initState() {
@@ -31,6 +32,8 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
     _modelController =
         TextEditingController(text: widget.config?.model ?? 'gpt-3.5-turbo');
     _temperature = widget.config?.temperature ?? 0.7;
+    _responseFormatType =
+        widget.config?.responseFormatType ?? ResponseFormatType.jsonObject;
   }
 
   @override
@@ -51,6 +54,7 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
               apiKey: _apiKeyController.text,
               model: _modelController.text,
               temperature: _temperature,
+              responseFormatType: _responseFormatType,
             )
           : widget.config!.copyWith(
               label: _labelController.text,
@@ -58,6 +62,7 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
               apiKey: _apiKeyController.text,
               model: _modelController.text,
               temperature: _temperature,
+              responseFormatType: _responseFormatType,
             );
 
       await LlmService().saveConfig(newConfig);
@@ -128,6 +133,37 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
                   ),
                   Text(_temperature.toStringAsFixed(1)),
                 ],
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<ResponseFormatType>(
+                initialValue: _responseFormatType,
+                decoration: const InputDecoration(
+                  labelText: 'JSON Response Format',
+                  helperText: 'Format for JSON mode responses',
+                ),
+                items: const <DropdownMenuItem<ResponseFormatType>>[
+                  DropdownMenuItem<ResponseFormatType>(
+                    value: ResponseFormatType.jsonObject,
+                    child: Text('json_object (OpenAI)'),
+                  ),
+                  DropdownMenuItem<ResponseFormatType>(
+                    value: ResponseFormatType.jsonSchema,
+                    child: Text('json_schema (Some local APIs)'),
+                  ),
+                  DropdownMenuItem<ResponseFormatType>(
+                    value: ResponseFormatType.text,
+                    child: Text('text (Generic)'),
+                  ),
+                  DropdownMenuItem<ResponseFormatType>(
+                    value: ResponseFormatType.none,
+                    child: Text('none (No format, use prompt only)'),
+                  ),
+                ],
+                onChanged: (ResponseFormatType? value) {
+                  if (value != null) {
+                    setState(() => _responseFormatType = value);
+                  }
+                },
               ),
             ],
           ),

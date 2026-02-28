@@ -5,11 +5,24 @@ PODS:
     - Flutter
   - audio_session (0.0.1):
     - Flutter
+  - CwlCatchException (2.2.1):
+    - CwlCatchExceptionSupport (~> 2.2.1)
+  - CwlCatchExceptionSupport (2.2.1)
   - Flutter (1.0.0)
   - flutter_fgbg (0.0.1):
     - Flutter
+  - flutter_inappwebview_ios (0.0.1):
+    - Flutter
+    - flutter_inappwebview_ios/Core (= 0.0.1)
+    - OrderedSet (~> 6.0.3)
+  - flutter_inappwebview_ios/Core (0.0.1):
+    - Flutter
+    - OrderedSet (~> 6.0.3)
   - flutter_native_splash (2.4.3):
     - Flutter
+  - flutter_onnxruntime (0.0.1):
+    - Flutter
+    - onnxruntime-objc (= 1.22.0)
   - flutter_tts (0.0.1):
     - Flutter
   - flutter_volume_controller (0.0.1):
@@ -18,23 +31,31 @@ PODS:
     - Flutter
   - geolocator_apple (1.2.0):
     - Flutter
+    - FlutterMacOS
   - image_picker_ios (0.0.1):
     - Flutter
   - just_audio (0.0.1):
     - Flutter
-  - path_provider_foundation (0.0.1):
-    - Flutter
     - FlutterMacOS
+  - onnxruntime-c (1.22.0)
+  - onnxruntime-objc (1.22.0):
+    - onnxruntime-objc/Core (= 1.22.0)
+  - onnxruntime-objc/Core (1.22.0):
+    - onnxruntime-c (= 1.22.0)
+  - OrderedSet (6.0.3)
+  - package_info_plus (0.4.5):
+    - Flutter
   - permission_handler_apple (9.3.0):
     - Flutter
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - speech_to_text (0.0.1):
+  - speech_to_text (7.2.0):
+    - CwlCatchException
     - Flutter
     - FlutterMacOS
-    - Try
-  - Try (2.1.1)
+  - supertonic_flutter (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - alarm (from `.symlinks/plugins/alarm/ios`)
@@ -42,21 +63,28 @@ DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - Flutter (from `Flutter`)
   - flutter_fgbg (from `.symlinks/plugins/flutter_fgbg/ios`)
+  - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
+  - flutter_onnxruntime (from `.symlinks/plugins/flutter_onnxruntime/ios`)
   - flutter_tts (from `.symlinks/plugins/flutter_tts/ios`)
   - flutter_volume_controller (from `.symlinks/plugins/flutter_volume_controller/ios`)
   - geocoding_ios (from `.symlinks/plugins/geocoding_ios/ios`)
-  - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
+  - geolocator_apple (from `.symlinks/plugins/geolocator_apple/darwin`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
-  - just_audio (from `.symlinks/plugins/just_audio/ios`)
-  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - just_audio (from `.symlinks/plugins/just_audio/darwin`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - speech_to_text (from `.symlinks/plugins/speech_to_text/darwin`)
+  - supertonic_flutter (from `.symlinks/plugins/supertonic_flutter/ios`)
 
 SPEC REPOS:
   trunk:
-    - Try
+    - CwlCatchException
+    - CwlCatchExceptionSupport
+    - onnxruntime-c
+    - onnxruntime-objc
+    - OrderedSet
 
 EXTERNAL SOURCES:
   alarm:
@@ -69,8 +97,12 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_fgbg:
     :path: ".symlinks/plugins/flutter_fgbg/ios"
+  flutter_inappwebview_ios:
+    :path: ".symlinks/plugins/flutter_inappwebview_ios/ios"
   flutter_native_splash:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
+  flutter_onnxruntime:
+    :path: ".symlinks/plugins/flutter_onnxruntime/ios"
   flutter_tts:
     :path: ".symlinks/plugins/flutter_tts/ios"
   flutter_volume_controller:
@@ -78,39 +110,48 @@ EXTERNAL SOURCES:
   geocoding_ios:
     :path: ".symlinks/plugins/geocoding_ios/ios"
   geolocator_apple:
-    :path: ".symlinks/plugins/geolocator_apple/ios"
+    :path: ".symlinks/plugins/geolocator_apple/darwin"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   just_audio:
-    :path: ".symlinks/plugins/just_audio/ios"
-  path_provider_foundation:
-    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+    :path: ".symlinks/plugins/just_audio/darwin"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   speech_to_text:
     :path: ".symlinks/plugins/speech_to_text/darwin"
+  supertonic_flutter:
+    :path: ".symlinks/plugins/supertonic_flutter/ios"
 
 SPEC CHECKSUMS:
-  alarm: 6c1f6a9688f94cd6bf8f104c67cc26e78c9d8d13
+  alarm: 014238c72c402fa2eb09665369e354ebcd2debce
   audio_analyzer: 7c8a8a84d878a45d428e3824ded43025c3108169
-  audio_session: 088d2483ebd1dc43f51d253d4a1c517d9a2e7207
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  audio_session: 19e9480dbdd4e5f6c4543826b2e8b0e4ab6145fe
+  CwlCatchException: 7acc161b299a6de7f0a46a6ed741eae2c8b4d75a
+  CwlCatchExceptionSupport: 54ccab8d8c78907b57f99717fb19d4cc3bce02dc
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_fgbg: 31c0d1140a131daea2d342121808f6aa0dcd879d
-  flutter_native_splash: e8a1e01082d97a8099d973f919f57904c925008a
+  flutter_inappwebview_ios: 6f63631e2c62a7c350263b13fa5427aedefe81d4
+  flutter_native_splash: df59bb2e1421aa0282cb2e95618af4dcb0c56c29
+  flutter_onnxruntime: 10fc424fe0dee257c621c8c3f2eb6c29556e7135
   flutter_tts: 0f492aab6accf87059b72354fcb4ba934304771d
   flutter_volume_controller: e4d5832f08008180f76e30faf671ffd5a425e529
-  geocoding_ios: d7460f56e80e118d57678efe5c2cdc888739ff18
-  geolocator_apple: 9bcea1918ff7f0062d98345d238ae12718acfbc1
-  image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
-  just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
-  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  geocoding_ios: eafacae6ad11a1eb56681f7d11df602a5fd49416
+  geolocator_apple: 66b711889fd333205763b83c9dcf0a57a28c7afd
+  image_picker_ios: 4f2f91b01abdb52842a8e277617df877e40f905b
+  just_audio: a42c63806f16995daf5b219ae1d679deb76e6a79
+  onnxruntime-c: 7f778680e96145956c0a31945f260321eed2611a
+  onnxruntime-objc: 83d28b87525bd971259a66e153ea32b5d023de19
+  OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
+  package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
-  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
-  speech_to_text: 627d3fd2194770b51abb324ba45c2d39398f24a8
-  Try: 5ef669ae832617b3cee58cb2c6f99fb767a4ff96
+  shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
+  speech_to_text: 87bf9298952e8d9073be1b6aade6d5758db5170c
+  supertonic_flutter: e76006bfbe41d7f49911bc365666bbf073b4ab53
 
-PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
+PODFILE CHECKSUM: 73e820f7780fc5127c6cf9ace58572f526e3af20
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

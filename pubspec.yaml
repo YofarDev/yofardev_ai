@@ -3,10 +3,10 @@ description: "Animated AI avatar"
 
 publish_to: "none"
 
-version: 2.1.0+1
+version: 2.2.0+5
 
 environment:
-  sdk: ">=3.4.3 <4.0.0"
+  sdk: ">=3.8.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -44,6 +44,10 @@ dependencies:
   window_manager: ^0.5.1
   screen_retriever: ^0.2.0
   flutter_inappwebview: ^6.1.5
+  freezed_annotation: ^3.1.0
+  freezed: ^3.2.5
+  json_annotation: ^4.11.0
+  google_fonts: ^8.0.2
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +55,8 @@ dev_dependencies:
 
   lint:
   flutter_native_splash: ^2.4.1
+  build_runner: ^2.11.1
+  json_serializable: ^6.13.0
 
 
 flutter_native_splash:

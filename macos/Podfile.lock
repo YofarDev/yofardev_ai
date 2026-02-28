@@ -13,7 +13,7 @@ PODS:
     - OrderedSet (~> 6.0.3)
   - flutter_onnxruntime (0.0.1):
     - FlutterMacOS
-    - onnxruntime-objc (= 1.21.0)
+    - onnxruntime-objc (= 1.22.0)
   - flutter_tts (0.0.1):
     - FlutterMacOS
   - flutter_volume_controller (0.0.1):
@@ -25,11 +25,11 @@ PODS:
   - just_audio (0.0.1):
     - Flutter
     - FlutterMacOS
-  - onnxruntime-c (1.21.0)
-  - onnxruntime-objc (1.21.0):
-    - onnxruntime-objc/Core (= 1.21.0)
-  - onnxruntime-objc/Core (1.21.0):
-    - onnxruntime-c (= 1.21.0)
+  - onnxruntime-c (1.22.0)
+  - onnxruntime-objc (1.22.0):
+    - onnxruntime-objc/Core (= 1.22.0)
+  - onnxruntime-objc/Core (1.22.0):
+    - onnxruntime-c (= 1.22.0)
   - OrderedSet (6.0.3)
   - package_info_plus (0.0.1):
     - FlutterMacOS
@@ -114,14 +114,14 @@ SPEC CHECKSUMS:
   CwlCatchExceptionSupport: 54ccab8d8c78907b57f99717fb19d4cc3bce02dc
   file_selector_macos: 3e56eaea051180007b900eacb006686fd54da150
   flutter_inappwebview_macos: bdf207b8f4ebd58e86ae06cd96b147de99a67c9b
-  flutter_onnxruntime: e6887abc1032d3e5c92f84b912ad42c33e9ce1c9
+  flutter_onnxruntime: f95d4d22cbeebd530948a4c9541be1e3a62073f0
   flutter_tts: 64651204e5d276ffea5a910f942d5e9785a96085
   flutter_volume_controller: 25d09126b0d695560f11c80b1311d5063fed882f
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   geolocator_apple: 66b711889fd333205763b83c9dcf0a57a28c7afd
   just_audio: a42c63806f16995daf5b219ae1d679deb76e6a79
-  onnxruntime-c: ac65025f01072d25d7d394a2b43ac30d9397b260
-  onnxruntime-objc: 5fa03134356d47b642ec85b1023d9907a123d201
+  onnxruntime-c: 7f778680e96145956c0a31945f260321eed2611a
+  onnxruntime-objc: 83d28b87525bd971259a66e153ea32b5d023de19
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
   package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b
   screen_retriever_macos: 776e0fa5d42c6163d2bf772d22478df4b302b161

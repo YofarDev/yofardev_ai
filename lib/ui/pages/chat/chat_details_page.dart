@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../l10n/localization_manager.dart';
 import '../../../logic/avatar/avatar_cubit.dart';
@@ -108,6 +109,11 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                                   _showEverything = !_showEverything;
                                 });
                               },
+                            ),
+                            const SizedBox(height: 8),
+                            AppIconButton(
+                              icon: Icons.download,
+                              onPressed: () => _downloadConversation(context),
                             ),
                             const SizedBox(height: 8),
                             const FunctionCallingButton(),
@@ -320,6 +326,77 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
     } catch (e) {
       debugPrint('Error: $e');
       return body;
+    }
+  }
+
+  Future<void> _downloadConversation(BuildContext context) async {
+    try {
+      final Chat chat = context.read<ChatsCubit>().state.openedChat;
+
+      // Create a structured JSON object with all conversation data
+      final Map<String, dynamic> conversationData = <String, dynamic>{
+        'metadata': <String, dynamic>{
+          'chat_id': chat.id,
+          'persona': chat.persona.name,
+          'language': chat.language,
+          'system_prompt': chat.systemPrompt,
+          'avatar_config': chat.avatar.toMap(),
+          'created_at': chat.entries.isNotEmpty
+              ? chat.entries.first.timestamp.toIso8601String()
+              : DateTime.now().toIso8601String(),
+          'exported_at': DateTime.now().toIso8601String(),
+        },
+        'entries': chat.entries.map((ChatEntry entry) => <String, dynamic>{
+          'id': entry.id,
+          'type': entry.entryType.name,
+          'body': entry.body,
+          'timestamp': entry.timestamp.toIso8601String(),
+          'attached_image': entry.attachedImage,
+        }).toList(),
+      };
+
+      final String jsonString = const JsonEncoder.withIndent('  ').convert(conversationData);
+      final DateTime now = DateTime.now();
+      final String fileName =
+          'chat_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}.json';
+
+      // Get Downloads directory
+      Directory? downloadsDir;
+      if (Platform.isMacOS || Platform.isLinux) {
+        downloadsDir = Directory('${Platform.environment['HOME']}/Downloads');
+      } else if (Platform.isWindows) {
+        downloadsDir = Directory('${Platform.environment['USERPROFILE']}\\Downloads');
+      } else {
+        // For mobile platforms or others, use app documents directory
+        downloadsDir = await getApplicationDocumentsDirectory();
+      }
+
+      final String filePath = '${downloadsDir.path}${Platform.pathSeparator}$fileName';
+      final File file = File(filePath);
+      await file.writeAsString(jsonString);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Conversation downloaded: $fileName'),
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'OK',
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error downloading conversation: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to download: $e'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 }

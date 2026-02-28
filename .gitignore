@@ -49,3 +49,4 @@ app.*.map.json
 .env
 CLAUDE.md
 GEMINI.md
+.claude/settings.local.json

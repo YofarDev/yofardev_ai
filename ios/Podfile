@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-# platform :ios, '12.0'
+platform :ios, '16.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -28,7 +28,7 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_frameworks!
+  use_frameworks! :linkage => :static
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
@@ -40,5 +40,30 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # Fix for static linking issue with onnxruntime
+    target.build_configurations.each do |config|
+      config.build_settings['ONLY_ACTIVE_ARCH'] = 'YES'
+      config.build_settings['EXCLUDED_ARCHS'] = 'i386'
+    end
+  end
+
+  # Fix static linking issues
+  installer.pods_project.main_group['Pods'].children.each do |c|
+    if c.name == 'Pods'
+      c.files.each do |f|
+        if f.path.end_with?('Pods.xcodeproj')
+          project = Xcodeproj::Project.open(f.path)
+          project.targets.each do |t|
+            if t.name == 'Pods-Runner'
+              t.build_configurations.each do |config|
+                config.build_settings['MACH_O_TYPE'] = 'mh_dylib'
+              end
+            end
+          end
+          project.save
+        end
+      end
+    end
   end
 end

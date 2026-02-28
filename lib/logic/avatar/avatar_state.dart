@@ -4,7 +4,14 @@ import '../../models/avatar.dart';
 
 enum AvatarStatus { initial, ready, loading }
 
-enum AvatarStatusAnimation { initial, leaving, coming, transition }
+enum AvatarStatusAnimation {
+  initial,
+  leaving,      // Horizontal slide out (left)
+  coming,       // Horizontal slide in (from left)
+  transition,   // General transition
+  dropping,     // Vertical slide down (for clothes change)
+  rising,       // Vertical slide up (return after clothes change)
+}
 
 class AvatarState extends Equatable {
   final AvatarStatus status;

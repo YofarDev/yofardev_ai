@@ -228,8 +228,11 @@ class ChatsCubit extends Cubit<ChatsState> {
       ),
     );
     try {
-      final ChatEntry newModelEntry =
-          await _yofardevRepository.askYofardevAi(chat, userEntry.body);
+      final ChatEntry newModelEntry = await _yofardevRepository.askYofardevAi(
+        chat,
+        userEntry.body,
+        functionCallingEnabled: state.functionCallingEnabled,
+      );
       final List<ChatEntry> entries = <ChatEntry>[
         ...chat.entries,
         newModelEntry,

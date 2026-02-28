@@ -6,7 +6,7 @@ part 'chat_entry.g.dart';
 /// Freezed ChatEntry model with union types
 /// Replaces manual implementation with immutable, type-safe model
 @freezed
-class ChatEntry with _$ChatEntry {
+abstract class ChatEntry with _$ChatEntry {
   const factory ChatEntry.text({
     required String id,
     required String content,

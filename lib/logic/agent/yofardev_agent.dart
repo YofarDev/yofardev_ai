@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
@@ -19,10 +20,12 @@ class YofardevAgent {
   /// [chat] contains the conversation history.
   /// [userMessage] is the new message from the user.
   /// [systemPrompt] is the personality/context instructions.
+  /// [functionCallingEnabled] whether to use function calling (default: true).
   Future<ChatEntry> ask({
     required Chat chat,
     required String userMessage,
     required String systemPrompt,
+    bool functionCallingEnabled = true,
   }) async {
     final Stopwatch llmStopwatch = Stopwatch()..start();
     debugPrint('⏱️  Starting LLM request...');
@@ -36,49 +39,56 @@ class YofardevAgent {
     }
 
     // 1. Check if we need to call any tools (Functions)
-    debugPrint('🔍 Checking for function calls...');
-    final Stopwatch functionCheckStopwatch = Stopwatch()..start();
-
-    final (String, List<FunctionInfo>) functionCheck =
-        await _llmService.checkFunctionsCalling(
-      api: config,
-      functions: ToolRegistry.functionInfos,
-      messages: chat.llmMessages,
-      lastUserMessage: userMessage,
-    );
-
-    functionCheckStopwatch.stop();
-    debugPrint('✅ Function check completed in ${functionCheckStopwatch.elapsedMilliseconds}ms');
-
-    final List<FunctionInfo> functionsToCall = functionCheck.$2;
+    // ignore: prefer_final_locals
+    List<FunctionInfo> functionsToCall = <FunctionInfo>[];
     final List<Map<String, dynamic>> toolResults = <Map<String, dynamic>>[];
 
-    // 2. Execute tools if any were selected
-    if (functionsToCall.isNotEmpty) {
-      debugPrint('🔧 Agent decided to call ${functionsToCall.length} tools.');
+    if (functionCallingEnabled) {
+      debugPrint('🔍 Checking for function calls...');
+      final Stopwatch functionCheckStopwatch = Stopwatch()..start();
 
-      for (final FunctionInfo info in functionsToCall) {
-        final AgentTool? tool = ToolRegistry.getTool(info.name);
-        if (tool != null) {
-          debugPrint(
-              'Executing tool: ${tool.name} with args: ${info.parametersCalled}');
-          try {
-            final dynamic result = await tool
-                .execute(info.parametersCalled ?? <String, dynamic>{});
-            toolResults.add(<String, dynamic>{
-              'name': tool.name,
-              'result': result,
-              'parameters': info.parametersCalled,
-            });
-          } catch (e) {
-            toolResults.add(<String, dynamic>{
-              'name': tool.name,
-              'result': 'Error executing tool: $e',
-              'parameters': info.parametersCalled,
-            });
+      final (String, List<FunctionInfo>) functionCheck =
+          await _llmService.checkFunctionsCalling(
+        api: config,
+        functions: ToolRegistry.functionInfos,
+        messages: chat.llmMessages,
+        lastUserMessage: userMessage,
+      );
+
+      functionCheckStopwatch.stop();
+      debugPrint('✅ Function check completed in ${functionCheckStopwatch.elapsedMilliseconds}ms');
+
+      functionsToCall.addAll(functionCheck.$2);
+
+      // 2. Execute tools if any were selected
+      if (functionsToCall.isNotEmpty) {
+        debugPrint('🔧 Agent decided to call ${functionsToCall.length} tools.');
+
+        for (final FunctionInfo info in functionsToCall) {
+          final AgentTool? tool = ToolRegistry.getTool(info.name);
+          if (tool != null) {
+            debugPrint(
+                'Executing tool: ${tool.name} with args: ${info.parametersCalled}');
+            try {
+              final dynamic result = await tool
+                  .execute(info.parametersCalled ?? <String, dynamic>{});
+              toolResults.add(<String, dynamic>{
+                'name': tool.name,
+                'result': result,
+                'parameters': info.parametersCalled,
+              });
+            } catch (e) {
+              toolResults.add(<String, dynamic>{
+                'name': tool.name,
+                'result': 'Error executing tool: $e',
+                'parameters': info.parametersCalled,
+              });
+            }
           }
         }
       }
+    } else {
+      debugPrint('🔇 Function calling is disabled');
     }
 
     // 3. Construct the prompt for the final response
@@ -152,7 +162,19 @@ class YofardevAgent {
       final int jsonStart = response.indexOf('{');
       final int jsonEnd = response.lastIndexOf('}');
       if (jsonStart != -1 && jsonEnd != -1) {
-        response = response.substring(jsonStart, jsonEnd + 1);
+        final String extracted = response.substring(jsonStart, jsonEnd + 1);
+        debugPrint('📄 Extracted JSON: $extracted');
+
+        // Validate that the extracted JSON is actually valid
+        try {
+          json.decode(extracted);
+          response = extracted;
+        } catch (e) {
+          debugPrint('⚠️ Extracted JSON is invalid: $e');
+          debugPrint('⚠️ Using raw response instead');
+        }
+      } else {
+        debugPrint('⚠️ No JSON object found in response');
       }
     } catch (e) {
       debugPrint('Failed to extract JSON from response: $e');

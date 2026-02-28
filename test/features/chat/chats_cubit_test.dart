@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/logic/chat/chats_cubit.dart';
+import 'package:yofardev_ai/models/chat.dart';
 
 void main() {
   late ChatsCubit cubit;
@@ -22,12 +23,12 @@ void main() {
     test('has correct initial properties', () {
       expect(cubit.state.currentLanguage, isNotNull);
       expect(cubit.state.functionCallingEnabled, isTrue);
-      expect(cubit.state.initializing, isFalse);
+      expect(cubit.state.initializing, isTrue);
     });
 
-    test('currentChat and openedChat start null', () {
-      expect(cubit.state.currentChat, isNull);
-      expect(cubit.state.openedChat, isNull);
+    test('currentChat and openedChat start with default Chat', () {
+      expect(cubit.state.currentChat, isA<Chat>());
+      expect(cubit.state.openedChat, isA<Chat>());
     });
 
     test('errorMessage is empty initially', () {
