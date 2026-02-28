@@ -11,6 +11,7 @@ import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../res/app_constants.dart';
 import '../../../utils/app_utils.dart';
+import '../../../utils/logger.dart';
 import '../../../utils/platform_utils.dart';
 import 'scaled_avatar_item.dart';
 
@@ -85,7 +86,10 @@ class _TalkingMouthState extends State<TalkingMouth> {
 
       // Check if file exists before playing
       if (!await File(audioPath).exists()) {
-        debugPrint('⚠️  Waiting audio file not found: $audioPath');
+        AppLogger.warning(
+          'Waiting audio file not found: $audioPath',
+          tag: 'TalkingMouth',
+        );
         i++;
         if (i >=
             context
@@ -125,26 +129,32 @@ class _TalkingMouthState extends State<TalkingMouth> {
       return 0;
     }
 
-    debugPrint('🎵 Loading audio file: $audioPath');
+    AppLogger.debug('Loading audio file: $audioPath', tag: 'TalkingMouth');
 
     // Verify file exists before loading
     final File audioFile = File(audioPath);
     if (!await audioFile.exists()) {
-      debugPrint('❌ Audio file does not exist: $audioPath');
+      AppLogger.error(
+        'Audio file does not exist: $audioPath',
+        tag: 'TalkingMouth',
+      );
       return 0;
     }
 
     final int fileSize = await audioFile.length();
-    debugPrint('📁 Audio file size: $fileSize bytes');
+    AppLogger.debug('Audio file size: $fileSize bytes', tag: 'TalkingMouth');
 
     final AudioPlayer player =
         AudioPlayer(); // player only used to get the duration here
 
     try {
       await player.setFilePath(audioPath, initialPosition: Duration.zero);
-      debugPrint('✅ Audio loaded successfully, duration: ${player.duration}');
+      AppLogger.debug(
+        'Audio loaded successfully, duration: ${player.duration}',
+        tag: 'TalkingMouth',
+      );
     } catch (e) {
-      debugPrint('❌ Failed to load audio: $e');
+      AppLogger.error('Failed to load audio', tag: 'TalkingMouth', error: e);
       await player.dispose();
       return 0;
     }
@@ -167,7 +177,7 @@ class _TalkingMouthState extends State<TalkingMouth> {
         } catch (e) {
           timer.cancel();
           await player.dispose();
-          debugPrint('talking mouth error: $e');
+          AppLogger.error('Talking mouth error', tag: 'TalkingMouth', error: e);
         }
       }
     });

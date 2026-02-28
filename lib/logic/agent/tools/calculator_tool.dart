@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:math_expressions/math_expressions.dart';
 
 import '../../../models/llm/function_info.dart';
+import '../../../utils/logger.dart';
 import '../agent_tool.dart';
 
 class CalculatorTool extends AgentTool {
@@ -32,7 +32,11 @@ class CalculatorTool extends AgentTool {
       final double result = evaluator.evaluate(exp).toDouble();
       return result.toString();
     } catch (e) {
-      debugPrint('CalculatorTool error: $e');
+      AppLogger.error(
+        'Error evaluating expression',
+        tag: 'CalculatorTool',
+        error: e,
+      );
       return 'Invalid expression';
     }
   }

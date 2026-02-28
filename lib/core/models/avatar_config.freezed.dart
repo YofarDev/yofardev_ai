@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,582 +9,553 @@ part of 'avatar_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
-Avatar _$AvatarFromJson(Map<String, dynamic> json) {
-  return _Avatar.fromJson(json);
-}
 
 /// @nodoc
 mixin _$Avatar {
-  AvatarBackgrounds get background => throw _privateConstructorUsedError;
-  AvatarHat get hat => throw _privateConstructorUsedError;
-  AvatarTop get top => throw _privateConstructorUsedError;
-  AvatarGlasses get glasses => throw _privateConstructorUsedError;
-  AvatarSpecials get specials => throw _privateConstructorUsedError;
-  AvatarCostume get costume => throw _privateConstructorUsedError;
+
+ AvatarBackgrounds get background; AvatarHat get hat; AvatarTop get top; AvatarGlasses get glasses; AvatarSpecials get specials; AvatarCostume get costume;
+/// Create a copy of Avatar
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AvatarCopyWith<Avatar> get copyWith => _$AvatarCopyWithImpl<Avatar>(this as Avatar, _$identity);
 
   /// Serializes this Avatar to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of Avatar
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AvatarCopyWith<Avatar> get copyWith => throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Avatar&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume);
+
+@override
+String toString() {
+  return 'Avatar(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $AvatarCopyWith<$Res> {
-  factory $AvatarCopyWith(Avatar value, $Res Function(Avatar) then) =
-      _$AvatarCopyWithImpl<$Res, Avatar>;
-  @useResult
-  $Res call({
-    AvatarBackgrounds background,
-    AvatarHat hat,
-    AvatarTop top,
-    AvatarGlasses glasses,
-    AvatarSpecials specials,
-    AvatarCostume costume,
-  });
-}
+abstract mixin class $AvatarCopyWith<$Res>  {
+  factory $AvatarCopyWith(Avatar value, $Res Function(Avatar) _then) = _$AvatarCopyWithImpl;
+@useResult
+$Res call({
+ AvatarBackgrounds background, AvatarHat hat, AvatarTop top, AvatarGlasses glasses, AvatarSpecials specials, AvatarCostume costume
+});
 
+
+
+
+}
 /// @nodoc
-class _$AvatarCopyWithImpl<$Res, $Val extends Avatar>
+class _$AvatarCopyWithImpl<$Res>
     implements $AvatarCopyWith<$Res> {
-  _$AvatarCopyWithImpl(this._value, this._then);
+  _$AvatarCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final Avatar _self;
+  final $Res Function(Avatar) _then;
 
-  /// Create a copy of Avatar
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? background = null,
-    Object? hat = null,
-    Object? top = null,
-    Object? glasses = null,
-    Object? specials = null,
-    Object? costume = null,
-  }) {
-    return _then(
-      _value.copyWith(
-            background: null == background
-                ? _value.background
-                : background // ignore: cast_nullable_to_non_nullable
-                      as AvatarBackgrounds,
-            hat: null == hat
-                ? _value.hat
-                : hat // ignore: cast_nullable_to_non_nullable
-                      as AvatarHat,
-            top: null == top
-                ? _value.top
-                : top // ignore: cast_nullable_to_non_nullable
-                      as AvatarTop,
-            glasses: null == glasses
-                ? _value.glasses
-                : glasses // ignore: cast_nullable_to_non_nullable
-                      as AvatarGlasses,
-            specials: null == specials
-                ? _value.specials
-                : specials // ignore: cast_nullable_to_non_nullable
-                      as AvatarSpecials,
-            costume: null == costume
-                ? _value.costume
-                : costume // ignore: cast_nullable_to_non_nullable
-                      as AvatarCostume,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of Avatar
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? background = null,Object? hat = null,Object? top = null,Object? glasses = null,Object? specials = null,Object? costume = null,}) {
+  return _then(_self.copyWith(
+background: null == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
+as AvatarBackgrounds,hat: null == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
+as AvatarHat,top: null == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
+as AvatarTop,glasses: null == glasses ? _self.glasses : glasses // ignore: cast_nullable_to_non_nullable
+as AvatarGlasses,specials: null == specials ? _self.specials : specials // ignore: cast_nullable_to_non_nullable
+as AvatarSpecials,costume: null == costume ? _self.costume : costume // ignore: cast_nullable_to_non_nullable
+as AvatarCostume,
+  ));
 }
 
-/// @nodoc
-abstract class _$$AvatarImplCopyWith<$Res> implements $AvatarCopyWith<$Res> {
-  factory _$$AvatarImplCopyWith(
-    _$AvatarImpl value,
-    $Res Function(_$AvatarImpl) then,
-  ) = __$$AvatarImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({
-    AvatarBackgrounds background,
-    AvatarHat hat,
-    AvatarTop top,
-    AvatarGlasses glasses,
-    AvatarSpecials specials,
-    AvatarCostume costume,
-  });
 }
 
-/// @nodoc
-class __$$AvatarImplCopyWithImpl<$Res>
-    extends _$AvatarCopyWithImpl<$Res, _$AvatarImpl>
-    implements _$$AvatarImplCopyWith<$Res> {
-  __$$AvatarImplCopyWithImpl(
-    _$AvatarImpl _value,
-    $Res Function(_$AvatarImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of Avatar
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? background = null,
-    Object? hat = null,
-    Object? top = null,
-    Object? glasses = null,
-    Object? specials = null,
-    Object? costume = null,
-  }) {
-    return _then(
-      _$AvatarImpl(
-        background: null == background
-            ? _value.background
-            : background // ignore: cast_nullable_to_non_nullable
-                  as AvatarBackgrounds,
-        hat: null == hat
-            ? _value.hat
-            : hat // ignore: cast_nullable_to_non_nullable
-                  as AvatarHat,
-        top: null == top
-            ? _value.top
-            : top // ignore: cast_nullable_to_non_nullable
-                  as AvatarTop,
-        glasses: null == glasses
-            ? _value.glasses
-            : glasses // ignore: cast_nullable_to_non_nullable
-                  as AvatarGlasses,
-        specials: null == specials
-            ? _value.specials
-            : specials // ignore: cast_nullable_to_non_nullable
-                  as AvatarSpecials,
-        costume: null == costume
-            ? _value.costume
-            : costume // ignore: cast_nullable_to_non_nullable
-                  as AvatarCostume,
-      ),
-    );
-  }
+/// Adds pattern-matching-related methods to [Avatar].
+extension AvatarPatterns on Avatar {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Avatar value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Avatar() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Avatar value)  $default,){
+final _that = this;
+switch (_that) {
+case _Avatar():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Avatar value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Avatar() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AvatarBackgrounds background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Avatar() when $default != null:
+return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AvatarBackgrounds background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)  $default,) {final _that = this;
+switch (_that) {
+case _Avatar():
+return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AvatarBackgrounds background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)?  $default,) {final _that = this;
+switch (_that) {
+case _Avatar() when $default != null:
+return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$AvatarImpl extends _Avatar {
-  const _$AvatarImpl({
-    this.background = AvatarBackgrounds.lake,
-    this.hat = AvatarHat.noHat,
-    this.top = AvatarTop.pinkHoodie,
-    this.glasses = AvatarGlasses.glasses,
-    this.specials = AvatarSpecials.onScreen,
-    this.costume = AvatarCostume.none,
-  }) : super._();
 
-  factory _$AvatarImpl.fromJson(Map<String, dynamic> json) =>
-      _$$AvatarImplFromJson(json);
+class _Avatar extends Avatar {
+  const _Avatar({this.background = AvatarBackgrounds.lake, this.hat = AvatarHat.noHat, this.top = AvatarTop.pinkHoodie, this.glasses = AvatarGlasses.glasses, this.specials = AvatarSpecials.onScreen, this.costume = AvatarCostume.none}): super._();
+  factory _Avatar.fromJson(Map<String, dynamic> json) => _$AvatarFromJson(json);
 
-  @override
-  @JsonKey()
-  final AvatarBackgrounds background;
-  @override
-  @JsonKey()
-  final AvatarHat hat;
-  @override
-  @JsonKey()
-  final AvatarTop top;
-  @override
-  @JsonKey()
-  final AvatarGlasses glasses;
-  @override
-  @JsonKey()
-  final AvatarSpecials specials;
-  @override
-  @JsonKey()
-  final AvatarCostume costume;
+@override@JsonKey() final  AvatarBackgrounds background;
+@override@JsonKey() final  AvatarHat hat;
+@override@JsonKey() final  AvatarTop top;
+@override@JsonKey() final  AvatarGlasses glasses;
+@override@JsonKey() final  AvatarSpecials specials;
+@override@JsonKey() final  AvatarCostume costume;
 
-  @override
-  String toString() {
-    return 'Avatar(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume)';
-  }
+/// Create a copy of Avatar
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AvatarCopyWith<_Avatar> get copyWith => __$AvatarCopyWithImpl<_Avatar>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AvatarImpl &&
-            (identical(other.background, background) ||
-                other.background == background) &&
-            (identical(other.hat, hat) || other.hat == hat) &&
-            (identical(other.top, top) || other.top == top) &&
-            (identical(other.glasses, glasses) || other.glasses == glasses) &&
-            (identical(other.specials, specials) ||
-                other.specials == specials) &&
-            (identical(other.costume, costume) || other.costume == costume));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    background,
-    hat,
-    top,
-    glasses,
-    specials,
-    costume,
-  );
-
-  /// Create a copy of Avatar
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AvatarImplCopyWith<_$AvatarImpl> get copyWith =>
-      __$$AvatarImplCopyWithImpl<_$AvatarImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$AvatarImplToJson(this);
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$AvatarToJson(this, );
 }
 
-abstract class _Avatar extends Avatar {
-  const factory _Avatar({
-    final AvatarBackgrounds background,
-    final AvatarHat hat,
-    final AvatarTop top,
-    final AvatarGlasses glasses,
-    final AvatarSpecials specials,
-    final AvatarCostume costume,
-  }) = _$AvatarImpl;
-  const _Avatar._() : super._();
-
-  factory _Avatar.fromJson(Map<String, dynamic> json) = _$AvatarImpl.fromJson;
-
-  @override
-  AvatarBackgrounds get background;
-  @override
-  AvatarHat get hat;
-  @override
-  AvatarTop get top;
-  @override
-  AvatarGlasses get glasses;
-  @override
-  AvatarSpecials get specials;
-  @override
-  AvatarCostume get costume;
-
-  /// Create a copy of Avatar
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AvatarImplCopyWith<_$AvatarImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Avatar&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume));
 }
 
-AvatarConfig _$AvatarConfigFromJson(Map<String, dynamic> json) {
-  return _AvatarConfig.fromJson(json);
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume);
+
+@override
+String toString() {
+  return 'Avatar(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume)';
 }
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AvatarCopyWith<$Res> implements $AvatarCopyWith<$Res> {
+  factory _$AvatarCopyWith(_Avatar value, $Res Function(_Avatar) _then) = __$AvatarCopyWithImpl;
+@override @useResult
+$Res call({
+ AvatarBackgrounds background, AvatarHat hat, AvatarTop top, AvatarGlasses glasses, AvatarSpecials specials, AvatarCostume costume
+});
+
+
+
+
+}
+/// @nodoc
+class __$AvatarCopyWithImpl<$Res>
+    implements _$AvatarCopyWith<$Res> {
+  __$AvatarCopyWithImpl(this._self, this._then);
+
+  final _Avatar _self;
+  final $Res Function(_Avatar) _then;
+
+/// Create a copy of Avatar
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? background = null,Object? hat = null,Object? top = null,Object? glasses = null,Object? specials = null,Object? costume = null,}) {
+  return _then(_Avatar(
+background: null == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
+as AvatarBackgrounds,hat: null == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
+as AvatarHat,top: null == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
+as AvatarTop,glasses: null == glasses ? _self.glasses : glasses // ignore: cast_nullable_to_non_nullable
+as AvatarGlasses,specials: null == specials ? _self.specials : specials // ignore: cast_nullable_to_non_nullable
+as AvatarSpecials,costume: null == costume ? _self.costume : costume // ignore: cast_nullable_to_non_nullable
+as AvatarCostume,
+  ));
+}
+
+
+}
+
 
 /// @nodoc
 mixin _$AvatarConfig {
-  AvatarBackgrounds? get background => throw _privateConstructorUsedError;
-  AvatarHat? get hat => throw _privateConstructorUsedError;
-  AvatarTop? get top => throw _privateConstructorUsedError;
-  AvatarGlasses? get glasses => throw _privateConstructorUsedError;
-  AvatarSpecials? get specials => throw _privateConstructorUsedError;
-  AvatarCostume? get costume => throw _privateConstructorUsedError;
-  @SoundEffectConverter()
-  SoundEffects? get soundEffect => throw _privateConstructorUsedError;
+
+ AvatarBackgrounds? get background; AvatarHat? get hat; AvatarTop? get top; AvatarGlasses? get glasses; AvatarSpecials? get specials; AvatarCostume? get costume;@SoundEffectConverter() SoundEffects? get soundEffect;
+/// Create a copy of AvatarConfig
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AvatarConfigCopyWith<AvatarConfig> get copyWith => _$AvatarConfigCopyWithImpl<AvatarConfig>(this as AvatarConfig, _$identity);
 
   /// Serializes this AvatarConfig to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of AvatarConfig
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AvatarConfigCopyWith<AvatarConfig> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarConfig&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume)&&(identical(other.soundEffect, soundEffect) || other.soundEffect == soundEffect));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume,soundEffect);
+
+@override
+String toString() {
+  return 'AvatarConfig(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume, soundEffect: $soundEffect)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $AvatarConfigCopyWith<$Res> {
-  factory $AvatarConfigCopyWith(
-    AvatarConfig value,
-    $Res Function(AvatarConfig) then,
-  ) = _$AvatarConfigCopyWithImpl<$Res, AvatarConfig>;
-  @useResult
-  $Res call({
-    AvatarBackgrounds? background,
-    AvatarHat? hat,
-    AvatarTop? top,
-    AvatarGlasses? glasses,
-    AvatarSpecials? specials,
-    AvatarCostume? costume,
-    @SoundEffectConverter() SoundEffects? soundEffect,
-  });
-}
+abstract mixin class $AvatarConfigCopyWith<$Res>  {
+  factory $AvatarConfigCopyWith(AvatarConfig value, $Res Function(AvatarConfig) _then) = _$AvatarConfigCopyWithImpl;
+@useResult
+$Res call({
+ AvatarBackgrounds? background, AvatarHat? hat, AvatarTop? top, AvatarGlasses? glasses, AvatarSpecials? specials, AvatarCostume? costume,@SoundEffectConverter() SoundEffects? soundEffect
+});
 
+
+
+
+}
 /// @nodoc
-class _$AvatarConfigCopyWithImpl<$Res, $Val extends AvatarConfig>
+class _$AvatarConfigCopyWithImpl<$Res>
     implements $AvatarConfigCopyWith<$Res> {
-  _$AvatarConfigCopyWithImpl(this._value, this._then);
+  _$AvatarConfigCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final AvatarConfig _self;
+  final $Res Function(AvatarConfig) _then;
 
-  /// Create a copy of AvatarConfig
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? background = freezed,
-    Object? hat = freezed,
-    Object? top = freezed,
-    Object? glasses = freezed,
-    Object? specials = freezed,
-    Object? costume = freezed,
-    Object? soundEffect = freezed,
-  }) {
-    return _then(
-      _value.copyWith(
-            background: freezed == background
-                ? _value.background
-                : background // ignore: cast_nullable_to_non_nullable
-                      as AvatarBackgrounds?,
-            hat: freezed == hat
-                ? _value.hat
-                : hat // ignore: cast_nullable_to_non_nullable
-                      as AvatarHat?,
-            top: freezed == top
-                ? _value.top
-                : top // ignore: cast_nullable_to_non_nullable
-                      as AvatarTop?,
-            glasses: freezed == glasses
-                ? _value.glasses
-                : glasses // ignore: cast_nullable_to_non_nullable
-                      as AvatarGlasses?,
-            specials: freezed == specials
-                ? _value.specials
-                : specials // ignore: cast_nullable_to_non_nullable
-                      as AvatarSpecials?,
-            costume: freezed == costume
-                ? _value.costume
-                : costume // ignore: cast_nullable_to_non_nullable
-                      as AvatarCostume?,
-            soundEffect: freezed == soundEffect
-                ? _value.soundEffect
-                : soundEffect // ignore: cast_nullable_to_non_nullable
-                      as SoundEffects?,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of AvatarConfig
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? background = freezed,Object? hat = freezed,Object? top = freezed,Object? glasses = freezed,Object? specials = freezed,Object? costume = freezed,Object? soundEffect = freezed,}) {
+  return _then(_self.copyWith(
+background: freezed == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
+as AvatarBackgrounds?,hat: freezed == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
+as AvatarHat?,top: freezed == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
+as AvatarTop?,glasses: freezed == glasses ? _self.glasses : glasses // ignore: cast_nullable_to_non_nullable
+as AvatarGlasses?,specials: freezed == specials ? _self.specials : specials // ignore: cast_nullable_to_non_nullable
+as AvatarSpecials?,costume: freezed == costume ? _self.costume : costume // ignore: cast_nullable_to_non_nullable
+as AvatarCostume?,soundEffect: freezed == soundEffect ? _self.soundEffect : soundEffect // ignore: cast_nullable_to_non_nullable
+as SoundEffects?,
+  ));
 }
 
-/// @nodoc
-abstract class _$$AvatarConfigImplCopyWith<$Res>
-    implements $AvatarConfigCopyWith<$Res> {
-  factory _$$AvatarConfigImplCopyWith(
-    _$AvatarConfigImpl value,
-    $Res Function(_$AvatarConfigImpl) then,
-  ) = __$$AvatarConfigImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({
-    AvatarBackgrounds? background,
-    AvatarHat? hat,
-    AvatarTop? top,
-    AvatarGlasses? glasses,
-    AvatarSpecials? specials,
-    AvatarCostume? costume,
-    @SoundEffectConverter() SoundEffects? soundEffect,
-  });
 }
 
-/// @nodoc
-class __$$AvatarConfigImplCopyWithImpl<$Res>
-    extends _$AvatarConfigCopyWithImpl<$Res, _$AvatarConfigImpl>
-    implements _$$AvatarConfigImplCopyWith<$Res> {
-  __$$AvatarConfigImplCopyWithImpl(
-    _$AvatarConfigImpl _value,
-    $Res Function(_$AvatarConfigImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of AvatarConfig
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? background = freezed,
-    Object? hat = freezed,
-    Object? top = freezed,
-    Object? glasses = freezed,
-    Object? specials = freezed,
-    Object? costume = freezed,
-    Object? soundEffect = freezed,
-  }) {
-    return _then(
-      _$AvatarConfigImpl(
-        background: freezed == background
-            ? _value.background
-            : background // ignore: cast_nullable_to_non_nullable
-                  as AvatarBackgrounds?,
-        hat: freezed == hat
-            ? _value.hat
-            : hat // ignore: cast_nullable_to_non_nullable
-                  as AvatarHat?,
-        top: freezed == top
-            ? _value.top
-            : top // ignore: cast_nullable_to_non_nullable
-                  as AvatarTop?,
-        glasses: freezed == glasses
-            ? _value.glasses
-            : glasses // ignore: cast_nullable_to_non_nullable
-                  as AvatarGlasses?,
-        specials: freezed == specials
-            ? _value.specials
-            : specials // ignore: cast_nullable_to_non_nullable
-                  as AvatarSpecials?,
-        costume: freezed == costume
-            ? _value.costume
-            : costume // ignore: cast_nullable_to_non_nullable
-                  as AvatarCostume?,
-        soundEffect: freezed == soundEffect
-            ? _value.soundEffect
-            : soundEffect // ignore: cast_nullable_to_non_nullable
-                  as SoundEffects?,
-      ),
-    );
-  }
+/// Adds pattern-matching-related methods to [AvatarConfig].
+extension AvatarConfigPatterns on AvatarConfig {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AvatarConfig value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AvatarConfig() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AvatarConfig value)  $default,){
+final _that = this;
+switch (_that) {
+case _AvatarConfig():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AvatarConfig value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AvatarConfig() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AvatarBackgrounds? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AvatarConfig() when $default != null:
+return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume,_that.soundEffect);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AvatarBackgrounds? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect)  $default,) {final _that = this;
+switch (_that) {
+case _AvatarConfig():
+return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume,_that.soundEffect);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AvatarBackgrounds? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect)?  $default,) {final _that = this;
+switch (_that) {
+case _AvatarConfig() when $default != null:
+return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume,_that.soundEffect);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$AvatarConfigImpl extends _AvatarConfig {
-  const _$AvatarConfigImpl({
-    this.background,
-    this.hat,
-    this.top,
-    this.glasses,
-    this.specials,
-    this.costume,
-    @SoundEffectConverter() this.soundEffect,
-  }) : super._();
 
-  factory _$AvatarConfigImpl.fromJson(Map<String, dynamic> json) =>
-      _$$AvatarConfigImplFromJson(json);
+class _AvatarConfig extends AvatarConfig {
+  const _AvatarConfig({this.background, this.hat, this.top, this.glasses, this.specials, this.costume, @SoundEffectConverter() this.soundEffect}): super._();
+  factory _AvatarConfig.fromJson(Map<String, dynamic> json) => _$AvatarConfigFromJson(json);
 
-  @override
-  final AvatarBackgrounds? background;
-  @override
-  final AvatarHat? hat;
-  @override
-  final AvatarTop? top;
-  @override
-  final AvatarGlasses? glasses;
-  @override
-  final AvatarSpecials? specials;
-  @override
-  final AvatarCostume? costume;
-  @override
-  @SoundEffectConverter()
-  final SoundEffects? soundEffect;
+@override final  AvatarBackgrounds? background;
+@override final  AvatarHat? hat;
+@override final  AvatarTop? top;
+@override final  AvatarGlasses? glasses;
+@override final  AvatarSpecials? specials;
+@override final  AvatarCostume? costume;
+@override@SoundEffectConverter() final  SoundEffects? soundEffect;
 
-  @override
-  String toString() {
-    return 'AvatarConfig(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume, soundEffect: $soundEffect)';
-  }
+/// Create a copy of AvatarConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AvatarConfigCopyWith<_AvatarConfig> get copyWith => __$AvatarConfigCopyWithImpl<_AvatarConfig>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AvatarConfigImpl &&
-            (identical(other.background, background) ||
-                other.background == background) &&
-            (identical(other.hat, hat) || other.hat == hat) &&
-            (identical(other.top, top) || other.top == top) &&
-            (identical(other.glasses, glasses) || other.glasses == glasses) &&
-            (identical(other.specials, specials) ||
-                other.specials == specials) &&
-            (identical(other.costume, costume) || other.costume == costume) &&
-            (identical(other.soundEffect, soundEffect) ||
-                other.soundEffect == soundEffect));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    background,
-    hat,
-    top,
-    glasses,
-    specials,
-    costume,
-    soundEffect,
-  );
-
-  /// Create a copy of AvatarConfig
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AvatarConfigImplCopyWith<_$AvatarConfigImpl> get copyWith =>
-      __$$AvatarConfigImplCopyWithImpl<_$AvatarConfigImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$AvatarConfigImplToJson(this);
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$AvatarConfigToJson(this, );
 }
 
-abstract class _AvatarConfig extends AvatarConfig {
-  const factory _AvatarConfig({
-    final AvatarBackgrounds? background,
-    final AvatarHat? hat,
-    final AvatarTop? top,
-    final AvatarGlasses? glasses,
-    final AvatarSpecials? specials,
-    final AvatarCostume? costume,
-    @SoundEffectConverter() final SoundEffects? soundEffect,
-  }) = _$AvatarConfigImpl;
-  const _AvatarConfig._() : super._();
-
-  factory _AvatarConfig.fromJson(Map<String, dynamic> json) =
-      _$AvatarConfigImpl.fromJson;
-
-  @override
-  AvatarBackgrounds? get background;
-  @override
-  AvatarHat? get hat;
-  @override
-  AvatarTop? get top;
-  @override
-  AvatarGlasses? get glasses;
-  @override
-  AvatarSpecials? get specials;
-  @override
-  AvatarCostume? get costume;
-  @override
-  @SoundEffectConverter()
-  SoundEffects? get soundEffect;
-
-  /// Create a copy of AvatarConfig
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AvatarConfigImplCopyWith<_$AvatarConfigImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AvatarConfig&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume)&&(identical(other.soundEffect, soundEffect) || other.soundEffect == soundEffect));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume,soundEffect);
+
+@override
+String toString() {
+  return 'AvatarConfig(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume, soundEffect: $soundEffect)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AvatarConfigCopyWith<$Res> implements $AvatarConfigCopyWith<$Res> {
+  factory _$AvatarConfigCopyWith(_AvatarConfig value, $Res Function(_AvatarConfig) _then) = __$AvatarConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ AvatarBackgrounds? background, AvatarHat? hat, AvatarTop? top, AvatarGlasses? glasses, AvatarSpecials? specials, AvatarCostume? costume,@SoundEffectConverter() SoundEffects? soundEffect
+});
+
+
+
+
+}
+/// @nodoc
+class __$AvatarConfigCopyWithImpl<$Res>
+    implements _$AvatarConfigCopyWith<$Res> {
+  __$AvatarConfigCopyWithImpl(this._self, this._then);
+
+  final _AvatarConfig _self;
+  final $Res Function(_AvatarConfig) _then;
+
+/// Create a copy of AvatarConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? background = freezed,Object? hat = freezed,Object? top = freezed,Object? glasses = freezed,Object? specials = freezed,Object? costume = freezed,Object? soundEffect = freezed,}) {
+  return _then(_AvatarConfig(
+background: freezed == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
+as AvatarBackgrounds?,hat: freezed == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
+as AvatarHat?,top: freezed == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
+as AvatarTop?,glasses: freezed == glasses ? _self.glasses : glasses // ignore: cast_nullable_to_non_nullable
+as AvatarGlasses?,specials: freezed == specials ? _self.specials : specials // ignore: cast_nullable_to_non_nullable
+as AvatarSpecials?,costume: freezed == costume ? _self.costume : costume // ignore: cast_nullable_to_non_nullable
+as AvatarCostume?,soundEffect: freezed == soundEffect ? _self.soundEffect : soundEffect // ignore: cast_nullable_to_non_nullable
+as SoundEffects?,
+  ));
+}
+
+
+}
+
+// dart format on

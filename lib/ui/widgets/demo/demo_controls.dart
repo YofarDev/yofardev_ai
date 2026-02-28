@@ -8,10 +8,10 @@ class DemoControls extends StatefulWidget {
   const DemoControls({super.key});
 
   @override
-  State<DemoControls> createState() => _DemoControlsState();
+  State<DemoControls> createState() => DemoControlsState();
 }
 
-class _DemoControlsState extends State<DemoControls> {
+class DemoControlsState extends State<DemoControls> {
   final DemoService _demoService = DemoService();
 
   @override
@@ -30,39 +30,27 @@ class _DemoControlsState extends State<DemoControls> {
     super.dispose();
   }
 
-  Future<void> _startDemo() async {
+  Future<void> startDemo() async {
     await _demoService.activateDemo(
       context: context,
       script: DemoScripts.beachDemo,
     );
   }
 
+  DemoStatus get status => _demoService.controller.status;
+  int get countdownValue => _demoService.controller.countdownValue;
+  bool get isActive => _demoService.isActive;
+  int get remainingResponses => _demoService.fakeLlmService.remainingResponses;
+
   @override
   Widget build(BuildContext context) {
-    // Only show in debug mode
-    bool isDebug = false;
-    assert(() {
-      isDebug = true;
-      return true;
-    }());
-
-    if (!isDebug) return const SizedBox.shrink();
-
-    final DemoStatus status = _demoService.controller.status;
-
-    // Hide everything when demo is active (user is typing naturally)
-    if (_demoService.isActive) {
-      return const SizedBox.shrink();
-    }
-
     return Positioned(
       top: 60,
       right: 16,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
-          // Countdown or button
-          if (status == DemoStatus.countdown)
+          if (_demoService.controller.status == DemoStatus.countdown)
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -77,17 +65,10 @@ class _DemoControlsState extends State<DemoControls> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            )
-          else
-            FloatingActionButton.small(
-              onPressed: status == DemoStatus.idle ? _startDemo : null,
-              backgroundColor: Colors.blue,
-              heroTag: 'demo_btn',
-              child: const Icon(Icons.play_arrow, size: 20),
             ),
-          if (status != DemoStatus.countdown) const SizedBox(height: 8),
-          // Status indicator
-          if (status != DemoStatus.countdown)
+          if (_demoService.controller.status != DemoStatus.countdown)
+            const SizedBox(height: 8),
+          if (_demoService.controller.status != DemoStatus.countdown)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -95,7 +76,7 @@ class _DemoControlsState extends State<DemoControls> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                _getStatusText(status),
+                _getStatusText(_demoService.controller.status),
                 style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
             ),

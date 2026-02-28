@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
@@ -17,19 +16,29 @@ import '../../../services/chat_history_service.dart';
 import '../../../services/settings_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../utils/extensions.dart';
+import '../../../utils/logger.dart';
 import '../../../utils/platform_utils.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
 
 part 'chat_state.dart';
 
 class ChatsCubit extends Cubit<ChatsState> {
-  ChatsCubit() : super(const ChatsState());
+  ChatsCubit({
+    required ChatHistoryService chatHistoryService,
+    required SettingsService settingsService,
+    required YofardevRepository yofardevRepository,
+  }) : _chatHistoryService = chatHistoryService,
+       _settingsService = settingsService,
+       _yofardevRepository = yofardevRepository,
+       super(const ChatsState());
 
-  late YofardevRepository _yofardevRepository;
+  late final ChatHistoryService _chatHistoryService;
+  late final SettingsService _settingsService;
+  late final YofardevRepository _yofardevRepository;
 
   void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
     emit(state.copyWith(status: ChatsStatus.updating));
-    final Chat newChat = await ChatHistoryService().createNewChat();
+    final Chat newChat = await _chatHistoryService.createNewChat();
     emit(
       state.copyWith(
         status: ChatsStatus.success,
@@ -47,7 +56,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       PlatformUtils.checkPlatform() == 'Web' ||
               PlatformUtils.checkPlatform() == 'MacOS'
           ? "fr"
-          : await SettingsService().getLanguage() ?? 'fr',
+          : await _settingsService.getLanguage() ?? 'fr',
     );
   }
 
@@ -99,33 +108,33 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   void getCurrentChat() async {
     emit(state.copyWith(status: ChatsStatus.loading));
-    final Chat currentChat = await ChatHistoryService().getCurrentChat();
-    final bool soundEffectsEnabled = await SettingsService().getSoundEffects();
+    final Chat currentChat = await _chatHistoryService.getCurrentChat();
+    final bool soundEffectsEnabled = await _settingsService.getSoundEffects();
     emit(
       state.copyWith(
         status: ChatsStatus.success,
         currentChat: currentChat,
         soundEffectsEnabled: soundEffectsEnabled,
         currentLanguage:
-            await SettingsService().getLanguage() ?? currentChat.language,
+            await _settingsService.getLanguage() ?? currentChat.language,
       ),
     );
   }
 
   void setCurrentLanguage(String language) async {
-    await SettingsService().setLanguage(language);
+    await _settingsService.setLanguage(language);
     await LocalizationManager().initialize(language);
     emit(state.copyWith(currentLanguage: language));
   }
 
   void setSoundEffects(bool soundEffectsEnabled) async {
     emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled));
-    await SettingsService().setSoundEffects(soundEffectsEnabled);
+    await _settingsService.setSoundEffects(soundEffectsEnabled);
   }
 
   void fetchChatsList() async {
     emit(state.copyWith(status: ChatsStatus.loading));
-    final List<Chat> chatsList = (await ChatHistoryService().getChatsList())
+    final List<Chat> chatsList = (await _chatHistoryService.getChatsList())
         .reversed
         .toList();
     emit(state.copyWith(status: ChatsStatus.success, chatsList: chatsList));
@@ -133,7 +142,7 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   void deleteChat(String id) async {
     emit(state.copyWith(status: ChatsStatus.updating));
-    await ChatHistoryService().deleteChat(id);
+    await _chatHistoryService.deleteChat(id);
     final List<Chat> chatsList = state.chatsList;
     chatsList.removeWhere((Chat element) => element.id == id);
     emit(state.copyWith(chatsList: chatsList, status: ChatsStatus.success));
@@ -141,7 +150,7 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   void setCurrentChat(Chat chat) {
     emit(state.copyWith(currentChat: chat));
-    ChatHistoryService().setCurrentChatId(chat.id);
+    _chatHistoryService.setCurrentChatId(chat.id);
   }
 
   void setOpenedChat(Chat chat) {
@@ -154,7 +163,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     required bool onlyText,
     String? attachedImage,
   }) async {
-    final String languageCode = await SettingsService().getLanguage() ?? 'fr';
+    final String languageCode = await _settingsService.getLanguage() ?? 'fr';
     final String wrappedUserMessage =
         "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${localized.userMessage} : \n'''$lastUserMessage'''";
     final ChatEntry newUserEntry = ChatEntry(
@@ -174,7 +183,6 @@ class ChatsCubit extends Cubit<ChatsState> {
     String? attachedImage,
     required Avatar avatar,
   }) async {
-    _yofardevRepository = YofardevRepository();
     Chat chat = onlyText ? state.openedChat : state.currentChat;
     final String temporaryId = const Uuid().v4();
     final ChatEntry temporaryEntry = ChatEntry(
@@ -230,10 +238,10 @@ class ChatsCubit extends Cubit<ChatsState> {
           status: ChatsStatus.success,
         ),
       );
-      await ChatHistoryService().updateChat(chatId: chat.id, updatedChat: chat);
+      await _chatHistoryService.updateChat(chatId: chat.id, updatedChat: chat);
       return newModelEntry;
     } catch (e) {
-      debugPrint(e.toString());
+      AppLogger.error('Error sending text message', tag: 'ChatsCubit', error: e);
       emit(
         state.copyWith(status: ChatsStatus.error, errorMessage: e.toString()),
       );
@@ -250,7 +258,7 @@ class ChatsCubit extends Cubit<ChatsState> {
         status: ChatsStatus.success,
       ),
     );
-    await ChatHistoryService().updateAvatar(
+    await _chatHistoryService.updateAvatar(
       chat.id,
       chat.avatar.copyWith(background: bg),
     );
@@ -273,6 +281,6 @@ class ChatsCubit extends Cubit<ChatsState> {
         status: ChatsStatus.success,
       ),
     );
-    await ChatHistoryService().updateAvatar(chat.id, avatar);
+    await _chatHistoryService.updateAvatar(chat.id, avatar);
   }
 }

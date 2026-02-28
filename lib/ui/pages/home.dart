@@ -1,18 +1,13 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:just_audio/just_audio.dart';
 
 import '../../features/avatar/bloc/avatar_cubit.dart';
 import '../../features/avatar/bloc/avatar_state.dart';
 import '../../features/chat/bloc/chats_cubit.dart';
+import '../../logic/home/home_cubit.dart';
 import '../../logic/talking/talking_cubit.dart';
 import '../../res/app_colors.dart';
-import '../../res/app_constants.dart';
-import '../../utils/app_utils.dart';
 import '../../utils/platform_utils.dart';
-import '../../utils/volume_fader.dart';
 import '../widgets/ai_text_input.dart';
 import '../widgets/avatar/avatar_widgets.dart';
 import '../widgets/avatar/background_avatar.dart';
@@ -29,19 +24,36 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  late ProgressiveVolumeControl _volumeControl;
-  late AudioPlayer _player;
   bool _isTalkingWaitingSentences = false;
+  final GlobalKey<DemoControlsState> _demoKey = GlobalKey();
+  int _tapCount = 0;
+  DateTime? _lastTapTime;
+
+  void _handleTripleTap() {
+    final DateTime now = DateTime.now();
+    if (_lastTapTime != null &&
+        now.difference(_lastTapTime!).inMilliseconds < 500) {
+      _tapCount++;
+    } else {
+      _tapCount = 1;
+    }
+    _lastTapTime = now;
+
+    if (_tapCount >= 3) {
+      _tapCount = 0;
+      _demoKey.currentState?.startDemo();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    if (PlatformUtils.checkPlatform() != 'Web') {
-      _initVolumeControl();
-      _initAudioPlayer(); // to avoid a weird bug when first sound is played
-    }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _updateAvatarValuesBasedOnScreenWidth();
+      context.read<AvatarCubit>().setValuesBasedOnScreenWidth(
+        screenWidth: MediaQuery.of(context).size.width > 800
+            ? 800
+            : MediaQuery.of(context).size.width,
+      );
       final String
       sentencesStr = await DefaultAssetBundle.of(context).loadString(
         'assets/txt/waiting_sentences_${context.read<ChatsCubit>().state.currentLanguage}.txt',
@@ -49,27 +61,6 @@ class _HomeState extends State<Home> {
       final List<String> sentences = sentencesStr.split('\n');
       context.read<ChatsCubit>().prepareWaitingSentences(sentences);
     });
-  }
-
-  void _initAudioPlayer() async {
-    _player = AudioPlayer();
-    await _player.setAsset(
-      AppUtils.fixAssetsPath('assets/sound_effects/_silence.mp3'),
-    );
-    _player.play();
-  }
-
-  void _updateAvatarValuesBasedOnScreenWidth() {
-    context.read<AvatarCubit>().setValuesBasedOnScreenWidth(
-      screenWidth: MediaQuery.of(context).size.width > AppConstants.maxWidth
-          ? AppConstants.maxWidth
-          : MediaQuery.of(context).size.width,
-    );
-  }
-
-  void _initVolumeControl() {
-    if (PlatformUtils.checkPlatform() == 'Web') return;
-    _volumeControl = ProgressiveVolumeControl();
   }
 
   Future<void> _prepareWaitingTTS(String language) async {
@@ -81,104 +72,121 @@ class _HomeState extends State<Home> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-    _player.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    _updateAvatarValuesBasedOnScreenWidth();
-    return BlocListener<AvatarCubit, AvatarState>(
-      listenWhen: (AvatarState previous, AvatarState current) =>
-          previous.statusAnimation != current.statusAnimation ||
-          previous.status != current.status,
-      listener: (BuildContext context, AvatarState state) async {
-        if (state.statusAnimation == AvatarStatusAnimation.initial) return;
-        if (PlatformUtils.checkPlatform() != 'Web') {
-          // Add a small delay to sync volume fade with the visual animation
-          await Future<void>.delayed(const Duration(milliseconds: 800));
-          _volumeControl.startVolumeFade(
+    return BlocProvider<HomeCubit>(
+      create: (BuildContext context) => HomeCubit()..initialize(),
+      child: BlocListener<AvatarCubit, AvatarState>(
+        listenWhen: (AvatarState previous, AvatarState current) =>
+            previous.statusAnimation != current.statusAnimation ||
+            previous.status != current.status,
+        listener: (BuildContext context, AvatarState state) async {
+          if (state.statusAnimation == AvatarStatusAnimation.initial) return;
+          context.read<HomeCubit>().startVolumeFade(
             state.statusAnimation != AvatarStatusAnimation.leaving,
           );
-        }
-      },
-      child: BlocListener<TalkingCubit, TalkingState>(
-        listenWhen: (TalkingState previous, TalkingState current) =>
-            previous.status != current.status,
-        listener: (BuildContext context, TalkingState state) {
-          _isTalkingWaitingSentences = state.status == TalkingStatus.loading;
-          if (_isTalkingWaitingSentences) {
-            if (PlatformUtils.checkPlatform() == 'Web') {
-              return;
-            }
-            _startWaitingTtsLoop();
-          }
         },
-        child: BlocListener<ChatsCubit, ChatsState>(
-          listenWhen: (ChatsState previous, ChatsState current) =>
-              previous.currentLanguage != current.currentLanguage,
-          listener: (BuildContext context, ChatsState state) {
-            _prepareWaitingTTS(state.currentLanguage);
+        child: BlocListener<TalkingCubit, TalkingState>(
+          listenWhen: (TalkingState previous, TalkingState current) =>
+              previous.status != current.status,
+          listener: (BuildContext context, TalkingState state) {
+            _isTalkingWaitingSentences = state.status == TalkingStatus.loading;
+            if (_isTalkingWaitingSentences) {
+              if (PlatformUtils.checkPlatform() == 'Web') {
+                return;
+              }
+              context.read<HomeCubit>().startWaitingTtsLoop();
+              _startWaitingTtsLoop();
+            } else {
+              context.read<HomeCubit>().stopWaitingTtsLoop();
+            }
           },
           child: BlocListener<ChatsCubit, ChatsState>(
             listenWhen: (ChatsState previous, ChatsState current) =>
-                previous.currentChat.id != current.currentChat.id,
+                previous.currentLanguage != current.currentLanguage,
             listener: (BuildContext context, ChatsState state) {
-              context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
+              _prepareWaitingTTS(state.currentLanguage);
             },
-            child: BlocListener<TalkingCubit, TalkingState>(
-              listenWhen: (TalkingState previous, TalkingState current) =>
-                  previous.answer != current.answer,
-              listener: (BuildContext context, TalkingState talkingState) {
-                context.read<AvatarCubit>().onNewAvatarConfig(
-                  talkingState.answer.chatId,
-                  talkingState.answer.avatarConfig,
-                );
-
-                if (talkingState.status == TalkingStatus.success) {
-                  _playTts(talkingState.answer.audioPath);
-                }
+            child: BlocListener<ChatsCubit, ChatsState>(
+              listenWhen: (ChatsState previous, ChatsState current) =>
+                  previous.currentChat.id != current.currentChat.id,
+              listener: (BuildContext context, ChatsState state) {
+                context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
               },
-              child: BlocBuilder<ChatsCubit, ChatsState>(
-                builder: (BuildContext context, ChatsState chatsState) {
-                  return BlocBuilder<AvatarCubit, AvatarState>(
-                    builder: (BuildContext context, AvatarState avatarState) {
-                      return BlocBuilder<TalkingCubit, TalkingState>(
-                        builder: (BuildContext context, TalkingState state) {
-                          final bool isLoading =
-                              state.status == TalkingStatus.loading;
-                          final Widget w = Stack(
-                            fit: StackFit.expand,
-                            alignment: Alignment.topCenter,
-                            children: <Widget>[
-                              const BackgroundAvatar(),
-                              if (!chatsState.initializing)
-                                const AvatarWidgets()
-                              else
-                                const LoadingAvatarWidget(),
-                              if (isLoading) const ThinkingAnimation(),
-                              if (!chatsState.initializing)
-                                const Positioned(
-                                  left: 8,
-                                  right: 8,
-                                  bottom: 16,
-                                  child: AiTextInput(),
-                                ),
-                              const HomeButtons(),
-                              const DemoControls(),
-                            ],
-                          );
-
-                          return Scaffold(
-                            backgroundColor: AppColors.background,
-                            body: w,
-                          );
-                        },
-                      );
-                    },
+              child: BlocListener<TalkingCubit, TalkingState>(
+                listenWhen: (TalkingState previous, TalkingState current) =>
+                    previous.answer != current.answer,
+                listener: (BuildContext context, TalkingState talkingState) {
+                  context.read<AvatarCubit>().onNewAvatarConfig(
+                    talkingState.answer.chatId,
+                    talkingState.answer.avatarConfig,
                   );
+
+                  if (talkingState.status == TalkingStatus.success) {
+                    context.read<HomeCubit>().playTts(
+                      talkingState.answer.audioPath,
+                      removeFile: true,
+                      soundEffectsEnabled: context
+                          .read<ChatsCubit>()
+                          .state
+                          .soundEffectsEnabled,
+                      updateStatus: true,
+                      onComplete: () {
+                        context.read<TalkingCubit>().stopTalking(
+                          soundEffectsEnabled: context
+                              .read<ChatsCubit>()
+                              .state
+                              .soundEffectsEnabled,
+                          removeFile: true,
+                          updateStatus: true,
+                        );
+                      },
+                    );
+                  }
                 },
+                child: BlocBuilder<ChatsCubit, ChatsState>(
+                  builder: (BuildContext context, ChatsState chatsState) {
+                    return BlocBuilder<AvatarCubit, AvatarState>(
+                      builder: (BuildContext context, AvatarState avatarState) {
+                        return BlocBuilder<TalkingCubit, TalkingState>(
+                          builder: (BuildContext context, TalkingState state) {
+                            final bool isLoading =
+                                state.status == TalkingStatus.loading;
+                            final Widget w = GestureDetector(
+                              onTap: _handleTripleTap,
+                              behavior: HitTestBehavior.translucent,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                alignment: Alignment.topCenter,
+                                children: <Widget>[
+                                  const BackgroundAvatar(),
+                                  if (!chatsState.initializing)
+                                    const AvatarWidgets()
+                                  else
+                                    const LoadingAvatarWidget(),
+                                  if (isLoading) const ThinkingAnimation(),
+                                  if (!chatsState.initializing)
+                                    const Positioned(
+                                      left: 8,
+                                      right: 8,
+                                      bottom: 16,
+                                      child: AiTextInput(),
+                                    ),
+                                  const HomeButtons(),
+                                  DemoControls(key: _demoKey),
+                                ],
+                              ),
+                            );
+
+                            return Scaffold(
+                              backgroundColor: AppColors.background,
+                              body: w,
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -188,63 +196,29 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _startWaitingTtsLoop() async {
-    await _player.stop();
     context.read<ChatsCubit>().shuffleWaitingSentences();
     int i = 0;
-    while (_isTalkingWaitingSentences) {
+    while (_isTalkingWaitingSentences && context.mounted) {
       await Future<void>.delayed(const Duration(milliseconds: 500));
-      if (_player.playing) continue;
-      final String audioPath =
-          context
-                  .read<ChatsCubit>()
-                  .state
-                  .audioPathsWaitingSentences[i]['audioPath']
-              as String;
-      await _playTts(
+      final List<Map<String, dynamic>> audioPaths = context
+          .read<ChatsCubit>()
+          .state
+          .audioPathsWaitingSentences;
+      if (audioPaths.isEmpty) break;
+
+      final String audioPath = audioPaths[i]['audioPath'] as String;
+      context.read<HomeCubit>().playTts(
         audioPath,
         removeFile: false,
         soundEffectsEnabled: false,
         updateStatus: false,
+        onComplete: () {},
       );
       i++;
-      if (i >=
-          context.read<ChatsCubit>().state.audioPathsWaitingSentences.length) {
+      if (i >= audioPaths.length) {
         i = 0;
       }
       await Future<void>.delayed(const Duration(seconds: 3));
-    }
-  }
-
-  Future<void> _playTts(
-    String audioPath, {
-    bool removeFile = true,
-    bool? soundEffectsEnabled,
-    bool updateStatus = true,
-  }) async {
-    // Check if file exists before playing
-    final File audioFile = File(audioPath);
-    if (!await audioFile.exists()) {
-      // debugPrint('⚠️  Audio file not found: $audioPath');
-      return;
-    }
-
-    debugPrint('🎵 Playing TTS: $audioPath');
-    await _player.stop();
-
-    try {
-      await _player.setFilePath(audioPath, initialPosition: Duration.zero);
-      await _player.play().then((_) async {
-        await _player.stop();
-        context.read<TalkingCubit>().stopTalking(
-          soundEffectsEnabled:
-              soundEffectsEnabled ??
-              context.read<ChatsCubit>().state.soundEffectsEnabled,
-          removeFile: removeFile,
-          updateStatus: updateStatus,
-        );
-      });
-    } catch (e) {
-      debugPrint('❌ Error playing TTS: $e');
     }
   }
 }

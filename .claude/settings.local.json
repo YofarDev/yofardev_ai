@@ -25,7 +25,9 @@
       "Bash(cp:*)",
       "Bash(find:*)",
       "Bash(perl:*)",
-      "Bash(dart apply:*)"
+      "Bash(dart apply:*)",
+      "Bash(flutter:*)",
+      "Bash(dart:*)"
     ]
   }
 }

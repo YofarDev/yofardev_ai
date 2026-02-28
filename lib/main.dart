@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => TalkingCubit(),
         ),
         BlocProvider<ChatsCubit>(
-          create: (BuildContext context) => ChatsCubit()..init(),
+          create: (BuildContext context) => getIt<ChatsCubit>()..init(),
         ),
         BlocProvider<AvatarCubit>(
           create: (BuildContext context) => AvatarCubit(),

@@ -63,7 +63,7 @@ enum AvatarSpecials { onScreen, outOfScreen, leaveAndComeBack }
 enum AvatarCostume { none, batman, robocop, soubrette, singularity }
 
 @freezed
-class Avatar with _$Avatar {
+sealed class Avatar with _$Avatar {
   const factory Avatar({
     @Default(AvatarBackgrounds.lake) AvatarBackgrounds background,
     @Default(AvatarHat.noHat) AvatarHat hat,
@@ -87,7 +87,7 @@ class Avatar with _$Avatar {
 }
 
 @freezed
-class AvatarConfig with _$AvatarConfig {
+sealed class AvatarConfig with _$AvatarConfig {
   const factory AvatarConfig({
     AvatarBackgrounds? background,
     AvatarHat? hat,

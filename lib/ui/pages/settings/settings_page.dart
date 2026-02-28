@@ -206,103 +206,103 @@ class SettingsPageState extends State<SettingsPage> {
   );
 
   Widget _buildUsernameField() => Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: <Color>[
-              AppColors.glassSurface.withValues(alpha: 0.12),
-              AppColors.glassSurface.withValues(alpha: 0.06),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppColors.glassBorder.withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: TextFormField(
-              controller: _usernameController,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurface,
-                  ),
-              decoration: InputDecoration(
-                hintText: localized.username,
-                hintStyle: TextStyle(
-                  color: AppColors.onSurface.withValues(alpha: 0.5),
-                ),
-                prefixIcon: Icon(
-                  Icons.person_outline,
-                  color: AppColors.onSurface.withValues(alpha: 0.7),
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-              ),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: <Color>[
+          AppColors.glassSurface.withValues(alpha: 0.12),
+          AppColors.glassSurface.withValues(alpha: 0.06),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: AppColors.glassBorder.withValues(alpha: 0.4),
+        width: 1.5,
+      ),
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: TextFormField(
+          controller: _usernameController,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurface),
+          decoration: InputDecoration(
+            hintText: localized.username,
+            hintStyle: TextStyle(
+              color: AppColors.onSurface.withValues(alpha: 0.5),
+            ),
+            prefixIcon: Icon(
+              Icons.person_outline,
+              color: AppColors.onSurface.withValues(alpha: 0.7),
+            ),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   Widget _buildSoundEffectsCheckbox() => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: <Color>[
-              AppColors.glassSurface.withValues(alpha: 0.12),
-              AppColors.glassSurface.withValues(alpha: 0.06),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppColors.glassBorder.withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: <Color>[
+          AppColors.glassSurface.withValues(alpha: 0.12),
+          AppColors.glassSurface.withValues(alpha: 0.06),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: AppColors.glassBorder.withValues(alpha: 0.4),
+        width: 1.5,
+      ),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Row(
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: <Color>[
-                        AppColors.warning.withValues(alpha: 0.2),
-                        AppColors.warning.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.volume_up_outlined,
-                    color: AppColors.warning,
-                    size: 20,
-                  ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: <Color>[
+                    AppColors.warning.withValues(alpha: 0.2),
+                    AppColors.warning.withValues(alpha: 0.1),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  localized.enableSoundEffects,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                ),
-              ],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.volume_up_outlined,
+                color: AppColors.warning,
+                size: 20,
+              ),
             ),
-            GlassmorphicSwitch(
-              value: _isSoundEffectsEnabled,
-              onChanged: (bool value) {
-                setState(() {
-                  _isSoundEffectsEnabled = value;
-                });
-              },
+            const SizedBox(width: 12),
+            Text(
+              localized.enableSoundEffects,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: AppColors.onSurface),
             ),
           ],
         ),
-      );
+        GlassmorphicSwitch(
+          value: _isSoundEffectsEnabled,
+          onChanged: (bool value) {
+            setState(() {
+              _isSoundEffectsEnabled = value;
+            });
+          },
+        ),
+      ],
+    ),
+  );
 }

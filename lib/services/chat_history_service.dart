@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +22,10 @@ class ChatHistoryService {
       persona: persona,
     );
     await _removeEmptyChats();
-    await prefs.setString(newChatId, newChat.toJson());
+    await prefs.setString(
+      newChatId,
+      json.encode(newChat.toMap()),
+    );
     await updateChatsList(newChatId);
     await setCurrentChatId(newChatId);
     return newChat;
@@ -31,7 +35,9 @@ class ChatHistoryService {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? chatJson = prefs.getString(chatId);
     if (chatJson == null) return null;
-    return Chat.fromJson(chatJson);
+    return Chat.fromMap(
+      json.decode(chatJson) as Map<String, dynamic>,
+    );
   }
 
   Future<void> updateChat({
@@ -39,7 +45,10 @@ class ChatHistoryService {
     required Chat updatedChat,
   }) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(chatId, updatedChat.toJson());
+    await prefs.setString(
+      chatId,
+      json.encode(updatedChat.toMap()),
+    );
     await updateChatsList(chatId);
     await setCurrentChatId(chatId);
   }
@@ -105,7 +114,10 @@ class ChatHistoryService {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     Chat currentChat = await getChat(chatId) ?? await createNewChat();
     currentChat = currentChat.copyWith(avatar: avatar);
-    await prefs.setString(chatId, currentChat.toJson());
+    await prefs.setString(
+      chatId,
+      json.encode(currentChat.toMap()),
+    );
   }
 
   Future<void> _removeEmptyChats() async {

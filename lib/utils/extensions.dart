@@ -1,8 +1,8 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'logger.dart';
 import 'platform_utils.dart';
 
 extension RemoveEmojis on String {
@@ -39,9 +39,18 @@ extension DateTimeExtension on DateTime {
 
 extension StringExtensions on String {
   String getVisiblePrompt() {
+    if (contains('"message"')) {
+      final RegExp regex = RegExp(r'"message"\s*:\s*"(.+?)"');
+      final Match? match = regex.firstMatch(this);
+      if (match != null) {
+        return match.group(1) ?? this;
+      }
+    }
     final List<String> parts = split("'''");
-    final String message = parts[1];
-    return message.trim();
+    if (parts.length > 1) {
+      return parts[1].trim();
+    }
+    return this;
   }
 
   String limitWords(int wordLimit) {
@@ -98,50 +107,57 @@ extension ColorfulLogs on String {
   String toMagentaLog() => "'\x1B[35m$this\x1B[0m'";
 
   void printRedLog() => split('\n').forEach(
-    (String element) => debugPrint(
+    (String element) => AppLogger.debug(
       PlatformUtils.checkPlatform() == 'Android' ? element.toRedLog() : element,
+      tag: 'Extensions',
     ),
   );
   void printGreenLog() => split('\n').forEach(
-    (String element) => debugPrint(
+    (String element) => AppLogger.debug(
       PlatformUtils.checkPlatform() == 'Android'
           ? element.toGreenLog()
           : element,
+      tag: 'Extensions',
     ),
   );
   void printYellowLog() => split('\n').forEach(
-    (String element) => debugPrint(
+    (String element) => AppLogger.debug(
       PlatformUtils.checkPlatform() == 'Android'
           ? element.toYellowLog()
           : element,
+      tag: 'Extensions',
     ),
   );
   void printBlueLog() => split('\n').forEach(
-    (String element) => debugPrint(
+    (String element) => AppLogger.debug(
       PlatformUtils.checkPlatform() == 'Android'
           ? element.toBlueLog()
           : element,
+      tag: 'Extensions',
     ),
   );
   void printWhiteLog() => split('\n').forEach(
-    (String element) => debugPrint(
+    (String element) => AppLogger.debug(
       PlatformUtils.checkPlatform() == 'Android'
           ? element.toWhiteLog()
           : element,
+      tag: 'Extensions',
     ),
   );
   void printCyanLog() => split('\n').forEach(
-    (String element) => debugPrint(
+    (String element) => AppLogger.debug(
       PlatformUtils.checkPlatform() == 'Android'
           ? element.toCyanLog()
           : element,
+      tag: 'Extensions',
     ),
   );
   void printMagentaLog() => split('\n').forEach(
-    (String element) => debugPrint(
+    (String element) => AppLogger.debug(
       PlatformUtils.checkPlatform() == 'Android'
           ? element.toMagentaLog()
           : element,
+      tag: 'Extensions',
     ),
   );
 }

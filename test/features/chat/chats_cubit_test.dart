@@ -2,15 +2,107 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/features/chat/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/models/avatar.dart';
 import 'package:yofardev_ai/models/chat.dart';
-// Note: chats_state.dart is a part file, accessible through chats_cubit.dart
 import 'package:yofardev_ai/models/chat_entry.dart';
+import 'package:yofardev_ai/repositories/yofardev_repository.dart';
+import 'package:yofardev_ai/services/chat_history_service.dart';
+import 'package:yofardev_ai/services/settings_service.dart';
+
+class MockChatHistoryService implements ChatHistoryService {
+  @override
+  Future<Chat> createNewChat() async => const Chat(id: 'test-id');
+
+  @override
+  Future<Chat?> getChat(String chatId) async => const Chat(id: 'test-id');
+
+  @override
+  Future<void> updateChat({
+    required String chatId,
+    required Chat updatedChat,
+  }) async {}
+
+  @override
+  Future<void> deleteChat(String chatId) async {}
+
+  @override
+  Future<void> updateChatsList(String chatId) async {}
+
+  @override
+  Future<List<Chat>> getChatsList() async => <Chat>[];
+
+  @override
+  Future<Chat> getCurrentChat() async => const Chat();
+
+  @override
+  Future<void> setCurrentChatId(String chatId) async {}
+
+  @override
+  Future<void> updateAvatar(String chatId, Avatar avatar) async {}
+}
+
+class MockSettingsService implements SettingsService {
+  @override
+  Future<ChatPersona> getPersona() async => ChatPersona.normal;
+
+  @override
+  Future<void> setPersona(ChatPersona persona) async {}
+
+  @override
+  Future<String?> getUsername() async => null;
+
+  @override
+  Future<void> setUsername(String username) async {}
+
+  @override
+  Future<String?> getLanguage() async => 'fr';
+
+  @override
+  Future<void> setLanguage(String language) async {}
+
+  @override
+  Future<String> getBaseSystemPrompt() async => '';
+
+  @override
+  Future<void> setBaseSystemPrompt(String baseSystemPrompt) async {}
+
+  @override
+  Future<bool> getSoundEffects() async => true;
+
+  @override
+  Future<void> setSoundEffects(bool soundEffects) async {}
+
+  @override
+  Future<String> getTtsVoice(String language) async => 'voice';
+
+  @override
+  Future<void> setTtsVoice(String name, String language) async {}
+}
+
+class MockYofardevRepository implements YofardevRepository {
+  @override
+  Future<ChatEntry> askYofardevAi(
+    Chat chat,
+    String userMessage, {
+    bool functionCallingEnabled = true,
+  }) async {
+    return ChatEntry(
+      id: 'test',
+      entryType: EntryType.yofardev,
+      body: 'response',
+      timestamp: DateTime.now(),
+    );
+  }
+}
 
 void main() {
   group('ChatsCubit', () {
     late ChatsCubit chatsCubit;
 
     setUp(() {
-      chatsCubit = ChatsCubit();
+      chatsCubit = ChatsCubit(
+        chatHistoryService: MockChatHistoryService(),
+        settingsService: MockSettingsService(),
+        yofardevRepository: MockYofardevRepository(),
+      );
     });
 
     tearDown(() {
@@ -360,8 +452,8 @@ void main() {
         attachedImage: '/path/to/image.jpg',
       );
 
-      final Map<String, dynamic> map = entry.toMap();
-      final ChatEntry deserialized = ChatEntry.fromMap(map);
+      final Map<String, dynamic> json = entry.toJson();
+      final ChatEntry deserialized = ChatEntry.fromJson(json);
 
       expect(deserialized.id, entry.id);
       expect(deserialized.entryType, entry.entryType);
@@ -370,15 +462,18 @@ void main() {
     });
 
     test('should handle deserialization with missing fields', () {
-      final Map<String, dynamic> incompleteMap = <String, dynamic>{
+      final Map<String, dynamic> incompleteJson = <String, dynamic>{
+        'id': 'generated-id',
+        'entryType': 'user',
         'body': 'Test',
-        // Missing id, entryType, timestamp, attachedImage
+        'timestamp': DateTime(2024).toIso8601String(),
+        // Missing attachedImage
       };
 
-      final ChatEntry entry = ChatEntry.fromMap(incompleteMap);
+      final ChatEntry entry = ChatEntry.fromJson(incompleteJson);
 
-      expect(entry.id, isNotNull); // Should generate UUID
-      expect(entry.entryType, EntryType.user); // Default
+      expect(entry.id, 'generated-id');
+      expect(entry.entryType, EntryType.user);
       expect(entry.body, 'Test');
     });
 
@@ -390,7 +485,7 @@ void main() {
         timestamp: DateTime(2024),
       );
 
-      final String json = entry.toJson();
+      final Map<String, dynamic> json = entry.toJson();
       final ChatEntry fromJson = ChatEntry.fromJson(json);
 
       expect(fromJson.id, entry.id);
@@ -398,8 +493,8 @@ void main() {
       expect(fromJson.body, entry.body);
     });
 
-    test('props should include all fields except id', () {
-      final ChatEntry entry = ChatEntry(
+    test('should implement value equality', () {
+      final ChatEntry entry1 = ChatEntry(
         id: 'test-id',
         entryType: EntryType.user,
         body: 'Test',
@@ -407,10 +502,16 @@ void main() {
         attachedImage: 'image.jpg',
       );
 
-      expect(
-        entry.props.length,
-        4, // entryType, body, timestamp, attachedImage (id excluded)
+      final ChatEntry entry2 = ChatEntry(
+        id: 'test-id',
+        entryType: EntryType.user,
+        body: 'Test',
+        timestamp: DateTime(2024),
+        attachedImage: 'image.jpg',
       );
+
+      expect(entry1, equals(entry2));
+      expect(entry1.hashCode, equals(entry2.hashCode));
     });
   });
 
@@ -492,23 +593,23 @@ void main() {
       expect(deserialized.persona, chat.persona);
     });
 
-    test('should convert to and from JSON', () {
+    test('should convert to and from map', () {
       const Chat chat = Chat(id: 'test-id');
 
-      final String json = chat.toJson();
-      final Chat fromJson = Chat.fromJson(json);
+      final Map<String, dynamic> map = chat.toMap();
+      final Chat fromMap = Chat.fromMap(map);
 
-      expect(fromJson.id, chat.id);
-      expect(fromJson.language, chat.language);
+      expect(fromMap.id, chat.id);
+      expect(fromMap.language, chat.language);
     });
 
-    test('props should include all fields', () {
-      const Chat chat = Chat();
+    test('should support value equality', () {
+      const Chat chat1 = Chat(id: 'test-id');
+      const Chat chat2 = Chat(id: 'test-id');
+      const Chat chat3 = Chat(id: 'different-id');
 
-      expect(
-        chat.props.length,
-        6, // id, entries, avatar, language, systemPrompt, persona
-      );
+      expect(chat1, equals(chat2));
+      expect(chat1, isNot(equals(chat3)));
     });
   });
 

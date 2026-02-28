@@ -1,11 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../features/avatar/bloc/avatar_cubit.dart';
+import '../../../utils/logger.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../models/avatar.dart';
@@ -103,7 +104,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
       }
       return body;
     } catch (e) {
-      debugPrint('Error: $e');
+      AppLogger.error('Error limiting parameter size', tag: 'ChatDetails', error: e);
       return body;
     }
   }
@@ -170,7 +171,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         );
       }
     } catch (e) {
-      debugPrint('Error downloading conversation: $e');
+      AppLogger.error('Error downloading conversation', tag: 'ChatDetails', error: e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

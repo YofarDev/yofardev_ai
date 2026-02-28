@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../utils/logger.dart';
 import '../../../core/services/llm/fake_llm_service.dart';
 import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../models/avatar.dart';
@@ -39,7 +40,7 @@ class DemoService {
     required BuildContext context,
     required DemoScript script,
   }) async {
-    debugPrint('Activating demo: ${script.name}');
+    AppLogger.info('Activating demo: ${script.name}', tag: 'DemoService');
 
     // Set initial background
     final AvatarCubit avatarCubit = context.read<AvatarCubit>();
@@ -56,7 +57,7 @@ class DemoService {
         chatId,
         AvatarConfig(background: initialBg),
       );
-      debugPrint('Set initial background to: ${initialBg.name}');
+      AppLogger.debug('Set initial background to: ${initialBg.name}', tag: 'DemoService');
     }
 
     // Start countdown
@@ -66,21 +67,21 @@ class DemoService {
     _fakeLlmService.activate(script.responses);
     _demoController.activate();
 
-    debugPrint('Demo activated with ${script.responses.length} responses');
+    AppLogger.info('Demo activated with ${script.responses.length} responses', tag: 'DemoService');
   }
 
   /// Deactivate demo mode
   ///
   /// Resets the fake LLM service and demo controller
   void deactivateDemo() {
-    debugPrint('Deactivating demo mode');
+    AppLogger.info('Deactivating demo mode', tag: 'DemoService');
     _fakeLlmService.deactivate();
     _demoController.reset();
   }
 
   /// Reset the current demo to the beginning
   void resetDemo() {
-    debugPrint('Resetting demo to beginning');
+    AppLogger.info('Resetting demo to beginning', tag: 'DemoService');
     _fakeLlmService.reset();
     _demoController.reset();
   }

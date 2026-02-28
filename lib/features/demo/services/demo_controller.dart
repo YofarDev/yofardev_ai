@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../../utils/logger.dart';
+
 /// Demo status enum
 enum DemoStatus {
   /// Demo mode is idle/not active
@@ -51,7 +53,7 @@ class DemoController extends ChangeNotifier {
     for (int i = 3; i > 0; i--) {
       _countdownValue = i;
       notifyListeners();
-      debugPrint('Demo countdown: $i');
+      AppLogger.debug('Demo countdown: $i', tag: 'DemoController');
       await Future<void>.delayed(const Duration(seconds: 1));
     }
     _countdownValue = 0;
@@ -61,20 +63,20 @@ class DemoController extends ChangeNotifier {
   /// Mark demo as active
   void activate() {
     _setStatus(DemoStatus.active);
-    debugPrint('Demo activated');
+    AppLogger.info('Demo activated', tag: 'DemoController');
   }
 
   /// Mark demo as completed
   void complete() {
     _setStatus(DemoStatus.completed);
-    debugPrint('Demo completed');
+    AppLogger.info('Demo completed', tag: 'DemoController');
   }
 
   /// Reset demo state to idle
   void reset() {
     _setStatus(DemoStatus.idle);
     _countdownValue = 0;
-    debugPrint('Demo reset');
+    AppLogger.info('Demo reset', tag: 'DemoController');
   }
 
   @override

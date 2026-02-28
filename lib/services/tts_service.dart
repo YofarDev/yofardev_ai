@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supertonic_flutter/supertonic_flutter.dart';
 
+import '../utils/logger.dart';
 import '../utils/platform_utils.dart';
 
 class TtsService {
@@ -12,17 +12,23 @@ class TtsService {
   /// Initialize SupertonicTTS engine
   static Future<void> initSupertonic() async {
     if (_supertonicTTS != null && _supertonicTTS!.isInitialized) {
-      debugPrint('SupertonicTTS already initialized');
+      AppLogger.info('SupertonicTTS already initialized', tag: 'TtsService');
       return;
     }
 
     try {
-      debugPrint('Initializing SupertonicTTS...');
+      AppLogger.info('Initializing SupertonicTTS...', tag: 'TtsService');
       _supertonicTTS = SupertonicTTS();
       await _supertonicTTS!.initialize();
-      debugPrint('✅ SupertonicTTS initialized successfully!');
+      AppLogger.info(
+        'SupertonicTTS initialized successfully!',
+        tag: 'TtsService',
+      );
     } catch (e) {
-      debugPrint('❌ Failed to initialize SupertonicTTS: $e');
+      AppLogger.error(
+        'Failed to initialize SupertonicTTS: $e',
+        tag: 'TtsService',
+      );
       _supertonicTTS = null;
       rethrow;
     }
@@ -65,8 +71,9 @@ class TtsService {
     required VoiceEffect voiceEffect,
   }) async {
     final Stopwatch totalStopwatch = Stopwatch()..start();
-    debugPrint(
-      '⏱️  Starting TTS generation for: "${text.substring(0, text.length > 50 ? 50 : text.length)}..."',
+    AppLogger.debug(
+      'Starting TTS generation for: "${text.substring(0, text.length > 50 ? 50 : text.length)}..."',
+      tag: 'TtsService',
     );
 
     // Ensure SupertonicTTS is initialized
@@ -77,24 +84,27 @@ class TtsService {
     // If initialization succeeded, use it
     if (_supertonicTTS != null && _supertonicTTS!.isInitialized) {
       try {
-        debugPrint('🎵 Using SupertonicTTS for synthesis');
+        AppLogger.debug('Using SupertonicTTS for synthesis', tag: 'TtsService');
         final String result = await _synthesizeWithSupertonic(
           text: text,
           language: language,
           voiceEffect: voiceEffect,
         );
         totalStopwatch.stop();
-        debugPrint(
-          '🎉 Total TTS time: ${totalStopwatch.elapsedMilliseconds}ms (${totalStopwatch.elapsedMilliseconds / 1000}s)',
+        AppLogger.debug(
+          'Total TTS time: ${totalStopwatch.elapsedMilliseconds}ms (${totalStopwatch.elapsedMilliseconds / 1000}s)',
+          tag: 'TtsService',
         );
         return result;
       } catch (e) {
-        debugPrint('❌ SupertonicTTS failed: $e');
+        AppLogger.error('SupertonicTTS failed: $e', tag: 'TtsService');
         rethrow;
       }
     }
 
-    throw Exception('SupertonicTTS is not available. Please initialize it first.');
+    throw Exception(
+      'SupertonicTTS is not available. Please initialize it first.',
+    );
   }
 
   Future<String> _synthesizeWithSupertonic({
@@ -107,7 +117,10 @@ class TtsService {
     // Create config based on VoiceEffect
     const TTSConfig config = TTSConfig(speechSpeed: 1);
 
-    debugPrint('🎙️ Synthesizing with SupertonicTTS: "$text"');
+    AppLogger.debug(
+      'Synthesizing with SupertonicTTS: "$text"',
+      tag: 'TtsService',
+    );
 
     // Synthesize speech
     final TTSResult result = await _supertonicTTS!.synthesize(
@@ -118,11 +131,13 @@ class TtsService {
     );
 
     synthesisStopwatch.stop();
-    debugPrint(
-      '✅ SupertonicTTS synthesis completed in ${synthesisStopwatch.elapsedMilliseconds}ms',
+    AppLogger.debug(
+      'SupertonicTTS synthesis completed in ${synthesisStopwatch.elapsedMilliseconds}ms',
+      tag: 'TtsService',
     );
-    debugPrint(
-      '   Audio: ${result.duration}s, ${result.sampleRate}Hz, ${result.audioData.length} samples',
+    AppLogger.debug(
+      'Audio: ${result.duration}s, ${result.sampleRate}Hz, ${result.audioData.length} samples',
+      tag: 'TtsService',
     );
 
     // Save to file
@@ -132,20 +147,23 @@ class TtsService {
     final String filename = '$timestamp.wav';
     final String filePath = '$musicDirectoryPath/$filename';
 
-    debugPrint('💾 Saving WAV file to: $filePath');
+    AppLogger.debug('Saving WAV file to: $filePath', tag: 'TtsService');
 
     final File file = File(filePath);
     await file.writeAsBytes(result.toWavBytes());
 
     fileStopwatch.stop();
-    debugPrint('✅ File saved in ${fileStopwatch.elapsedMilliseconds}ms');
+    AppLogger.debug(
+      'File saved in ${fileStopwatch.elapsedMilliseconds}ms',
+      tag: 'TtsService',
+    );
 
     // Verify file exists and check size
     if (await file.exists()) {
       final int fileSize = await file.length();
-      debugPrint('✅ WAV file created: $fileSize bytes');
+      AppLogger.debug('WAV file created: $fileSize bytes', tag: 'TtsService');
     } else {
-      debugPrint('❌ Failed to create WAV file!');
+      AppLogger.error('Failed to create WAV file!', tag: 'TtsService');
     }
 
     return filePath;

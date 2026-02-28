@@ -2,11 +2,12 @@
 
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
+
+import '../../utils/logger.dart';
 
 class GoogleSearchService {
   static Future<List<Map<String, dynamic>>> searchGoogle(String query) async {
@@ -38,7 +39,7 @@ class GoogleSearchService {
         );
       }
     } catch (e) {
-      debugPrint('Error searching google : $e');
+      AppLogger.debug('Error searching google : $e', tag: 'GoogleSearch');
       return <Map<String, dynamic>>[];
     }
   }

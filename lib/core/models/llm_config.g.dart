@@ -6,17 +6,16 @@ part of 'llm_config.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$LlmConfigImpl _$$LlmConfigImplFromJson(Map<String, dynamic> json) =>
-    _$LlmConfigImpl(
-      id: json['id'] as String,
-      label: json['label'] as String,
-      baseUrl: json['baseUrl'] as String,
-      apiKey: json['apiKey'] as String,
-      model: json['model'] as String,
-      temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
-    );
+_LlmConfig _$LlmConfigFromJson(Map<String, dynamic> json) => _LlmConfig(
+  id: json['id'] as String,
+  label: json['label'] as String,
+  baseUrl: json['baseUrl'] as String,
+  apiKey: json['apiKey'] as String,
+  model: json['model'] as String,
+  temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
+);
 
-Map<String, dynamic> _$$LlmConfigImplToJson(_$LlmConfigImpl instance) =>
+Map<String, dynamic> _$LlmConfigToJson(_LlmConfig instance) =>
     <String, dynamic>{
       'id': instance.id,
       'label': instance.label,

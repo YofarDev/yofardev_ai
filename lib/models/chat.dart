@@ -1,10 +1,11 @@
-import 'dart:convert';
-
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'avatar.dart';
 import 'chat_entry.dart';
 import 'llm/llm_message.dart';
+
+part 'chat.freezed.dart';
+part 'chat.g.dart';
 
 enum ChatPersona {
   assistant,
@@ -17,50 +18,26 @@ enum ChatPersona {
   psychologist,
 }
 
-class Chat extends Equatable {
-  final String id;
-  final List<ChatEntry> entries;
-  final Avatar avatar;
-  final String language;
-  final String systemPrompt;
-  final ChatPersona persona;
+@freezed
+sealed class Chat with _$Chat {
+  const Chat._();
 
-  const Chat({
-    this.id = '',
-    this.entries = const <ChatEntry>[],
-    this.avatar = const Avatar(),
-    this.language = 'en',
-    this.systemPrompt = '',
-    this.persona = ChatPersona.normal,
-  });
+  const factory Chat({
+    @Default('') String id,
+    @Default(<ChatEntry>[]) List<ChatEntry> entries,
+    @Default(Avatar()) Avatar avatar,
+    @Default('en') String language,
+    @Default('') String systemPrompt,
+    @Default(ChatPersona.normal) ChatPersona persona,
+  }) = _Chat;
 
-  Chat copyWith({
-    String? id,
-    List<ChatEntry>? entries,
-    Avatar? avatar,
-    String? language,
-    String? systemPrompt,
-    ChatPersona? persona,
-  }) {
-    return Chat(
-      id: id ?? this.id,
-      entries: entries ?? this.entries,
-      avatar: avatar ?? this.avatar,
-      language: language ?? this.language,
-      systemPrompt: systemPrompt ?? this.systemPrompt,
-      persona: persona ?? this.persona,
-    );
-  }
+  factory Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);
 
-  @override
-  List<Object?> get props {
-    return <Object?>[id, entries, avatar, language, systemPrompt, persona];
-  }
-
+  // Backward compatibility: keep toMap/fromMap for existing code
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
-      'entries': entries.map((ChatEntry x) => x.toMap()).toList(),
+      'entries': entries.map((ChatEntry x) => x.toJson()).toList(),
       'avatar': avatar.toMap(),
       'language': language,
       'systemPrompt': systemPrompt,
@@ -72,21 +49,18 @@ class Chat extends Equatable {
     return Chat(
       id: map['id'] as String? ?? '',
       entries: List<ChatEntry>.from(
-        (map['entries'] as List<dynamic>? ?? <String>[]).map(
-          (dynamic x) => ChatEntry.fromMap(x as Map<String, dynamic>),
-        ),
+        (map['entries'] as List<dynamic>? ?? <String>[])
+            .map((dynamic x) => ChatEntry.fromJson(x as Map<String, dynamic>)),
       ),
-      avatar: Avatar.fromMap(map['avatar'] as Map<String, dynamic>),
-      language: map['language'] as String,
+      avatar: Avatar.fromMap(
+        map['avatar'] as Map<String, dynamic>? ?? <String, dynamic>{},
+      ),
+      language: map['language'] as String? ?? 'en',
       systemPrompt: map['systemPrompt'] as String? ?? '',
       persona: ChatPersona.values.byName(map['persona'] as String? ?? 'normal'),
     );
   }
 
-  String toJson() => json.encode(toMap());
-
-  factory Chat.fromJson(String source) =>
-      Chat.fromMap(json.decode(source) as Map<String, dynamic>);
 }
 
 extension ChatExtension on Chat {

@@ -9,7 +9,7 @@ part 'llm_config.g.dart';
 /// Contains all necessary information to connect to an LLM provider
 /// including endpoint, authentication, and generation parameters.
 @freezed
-class LlmConfig with _$LlmConfig {
+sealed class LlmConfig with _$LlmConfig {
   const factory LlmConfig({
     /// Unique identifier for this configuration
     required String id,

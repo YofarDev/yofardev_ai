@@ -9,6 +9,7 @@ import '../../../../l10n/localization_manager.dart';
 import '../../../../models/chat_entry.dart';
 import '../../../../models/sound_effects.dart';
 import '../../../../utils/app_utils.dart';
+import '../../../../utils/logger.dart';
 
 /// Message bubble widget for individual chat messages
 /// Extracted from chat_details_page.dart (326 → 180 lines)
@@ -116,7 +117,11 @@ String _limitParameterSize(String body, bool isFromUser, BuildContext context) {
     }
     return body;
   } catch (e) {
-    debugPrint('Error: $e');
+    AppLogger.error(
+      'Error limiting parameter size',
+      tag: 'MessageBubble',
+      error: e,
+    );
     return body;
   }
 }

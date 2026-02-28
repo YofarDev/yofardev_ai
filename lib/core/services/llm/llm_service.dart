@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../utils/logger.dart';
 import '../../../models/llm/function_info.dart';
 import '../../../models/llm/llm_config.dart';
 import '../../../models/llm/llm_message.dart';
@@ -36,7 +36,7 @@ class LlmService implements LlmServiceInterface {
             .map((dynamic e) => LlmConfig.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint('Error loading LLM configs: $e');
+        AppLogger.error('Error loading LLM configs', tag: 'LlmService', error: e);
       }
     }
 
@@ -136,8 +136,9 @@ class LlmService implements LlmServiceInterface {
     }
 
     if (debugLogs) {
-      debugPrint(
+      AppLogger.debug(
         'Sending request to ${activeConfig.baseUrl}/chat/completions with model ${activeConfig.model.trim()}',
+        tag: 'LlmService',
       );
     }
 
@@ -152,7 +153,7 @@ class LlmService implements LlmServiceInterface {
       );
 
       if (debugLogs) {
-        debugPrint('Response status: ${response.statusCode}');
+        AppLogger.debug('Response status: ${response.statusCode}', tag: 'LlmService');
       }
 
       if (response.statusCode == 200) {
@@ -166,11 +167,11 @@ class LlmService implements LlmServiceInterface {
             firstChoice['message'] as Map<String, dynamic>;
         return message['content'] as String?;
       } else {
-        debugPrint('LLM API Error: ${response.body}');
+        AppLogger.error('LLM API Error: ${response.body}', tag: 'LlmService');
         return null;
       }
     } catch (e) {
-      debugPrint('Exception calling LLM API: $e');
+      AppLogger.error('Exception calling LLM API', tag: 'LlmService', error: e);
       return null;
     }
   }
@@ -276,11 +277,11 @@ class LlmService implements LlmServiceInterface {
 
         return (message['content'] as String? ?? '', calledFunctions);
       } else {
-        debugPrint('LLM API Error (checkFunctions): ${response.body}');
+        AppLogger.error('LLM API Error (checkFunctions): ${response.body}', tag: 'LlmService');
         return ('', <FunctionInfo>[]);
       }
     } catch (e) {
-      debugPrint('Exception calling LLM API (checkFunctions): $e');
+      AppLogger.error('Exception calling LLM API (checkFunctions)', tag: 'LlmService', error: e);
       return ('', <FunctionInfo>[]);
     }
   }

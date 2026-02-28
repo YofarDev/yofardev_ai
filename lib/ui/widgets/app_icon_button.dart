@@ -97,7 +97,7 @@ class _AppIconButtonState extends State<AppIconButton>
                 icon: Icon(
                   widget.icon,
                   size: widget.iconSize,
-                  color: AppColors.onSurface,
+                  color: _isHovered ? AppColors.primary : AppColors.onSurface,
                 ),
                 tooltip: widget.tooltip,
                 padding: EdgeInsets.zero,

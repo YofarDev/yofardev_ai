@@ -2,9 +2,9 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:alarm/alarm.dart';
-import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../utils/logger.dart';
 import '../utils/extensions.dart';
 
 class AlarmService {
@@ -13,7 +13,7 @@ class AlarmService {
     if (status.isDenied) {
       final PermissionStatus res = await Permission.scheduleExactAlarm
           .request();
-      debugPrint(res.toString());
+      AppLogger.debug(res.toString(), tag: 'AlarmService');
     }
   }
 

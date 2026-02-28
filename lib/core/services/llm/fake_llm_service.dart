@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-
 import '../../../features/demo/models/demo_script.dart';
 import '../../../models/llm/function_info.dart';
 import '../../../models/llm/llm_config.dart';
 import '../../../models/llm/llm_message.dart';
+import '../../../utils/logger.dart';
 import 'llm_service_interface.dart';
 
 /// Fake LLM service that returns pre-scripted responses for demo mode
@@ -41,7 +40,10 @@ class FakeLlmService implements LlmServiceInterface {
     _responseQueue.addAll(responses);
     _currentIndex = 0;
     _isActive = true;
-    debugPrint('FakeLlmService activated with ${responses.length} responses');
+    AppLogger.info(
+      'FakeLlmService activated with ${responses.length} responses',
+      tag: 'FakeLlmService',
+    );
   }
 
   /// Deactivate fake LLM mode
@@ -49,7 +51,7 @@ class FakeLlmService implements LlmServiceInterface {
     _isActive = false;
     _responseQueue.clear();
     _currentIndex = 0;
-    debugPrint('FakeLlmService deactivated');
+    AppLogger.info('FakeLlmService deactivated', tag: 'FakeLlmService');
   }
 
   /// Get the next fake response (returns null if no more responses or not active)
@@ -58,8 +60,9 @@ class FakeLlmService implements LlmServiceInterface {
 
     final FakeLlmResponse response = _responseQueue[_currentIndex];
     _currentIndex++;
-    debugPrint(
+    AppLogger.debug(
       'FakeLlmService returning response $_currentIndex/${_responseQueue.length}',
+      tag: 'FakeLlmService',
     );
     return response;
   }
@@ -78,7 +81,7 @@ class FakeLlmService implements LlmServiceInterface {
   /// Reset to the beginning of the script
   void reset() {
     _currentIndex = 0;
-    debugPrint('FakeLlmService reset to beginning');
+    AppLogger.info('FakeLlmService reset to beginning', tag: 'FakeLlmService');
   }
 
   // LlmServiceInterface implementation
@@ -86,7 +89,7 @@ class FakeLlmService implements LlmServiceInterface {
   @override
   Future<void> init() async {
     // No initialization needed for fake service
-    debugPrint('FakeLlmService initialized');
+    AppLogger.info('FakeLlmService initialized', tag: 'FakeLlmService');
   }
 
   @override
@@ -104,19 +107,28 @@ class FakeLlmService implements LlmServiceInterface {
   @override
   Future<void> saveConfig(LlmConfig config) async {
     // No-op - fake service doesn't save configs
-    debugPrint('FakeLlmService: saveConfig is a no-op');
+    AppLogger.warning(
+      'FakeLlmService: saveConfig is a no-op',
+      tag: 'FakeLlmService',
+    );
   }
 
   @override
   Future<void> deleteConfig(String id) async {
     // No-op - fake service doesn't manage configs
-    debugPrint('FakeLlmService: deleteConfig is a no-op');
+    AppLogger.warning(
+      'FakeLlmService: deleteConfig is a no-op',
+      tag: 'FakeLlmService',
+    );
   }
 
   @override
   Future<void> setCurrentConfig(String id) async {
     // No-op - fake service doesn't manage configs
-    debugPrint('FakeLlmService: setCurrentConfig is a no-op');
+    AppLogger.warning(
+      'FakeLlmService: setCurrentConfig is a no-op',
+      tag: 'FakeLlmService',
+    );
   }
 
   @override
@@ -128,13 +140,19 @@ class FakeLlmService implements LlmServiceInterface {
     bool debugLogs = false,
   }) async {
     if (!_isActive || !hasMore) {
-      debugPrint('FakeLlmService: not active or no more responses');
+      AppLogger.debug(
+        'FakeLlmService: not active or no more responses',
+        tag: 'FakeLlmService',
+      );
       return null;
     }
 
     final FakeLlmResponse response = getNextResponse()!;
     if (debugLogs) {
-      debugPrint('FakeLlmService: Returning fake response');
+      AppLogger.debug(
+        'FakeLlmService: Returning fake response',
+        tag: 'FakeLlmService',
+      );
     }
     return response.jsonBody;
   }
@@ -147,8 +165,9 @@ class FakeLlmService implements LlmServiceInterface {
     required String lastUserMessage,
   }) async {
     if (!_isActive || !hasMore) {
-      debugPrint(
+      AppLogger.debug(
         'FakeLlmService: not active or no more responses for function calling',
+        tag: 'FakeLlmService',
       );
       return ('', <FunctionInfo>[]);
     }

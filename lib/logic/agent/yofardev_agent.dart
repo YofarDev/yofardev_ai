@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../models/chat.dart';
@@ -10,6 +9,7 @@ import '../../models/llm/function_info.dart';
 import '../../models/llm/llm_config.dart';
 import '../../models/llm/llm_message.dart';
 import '../../services/llm_service.dart';
+import '../../../utils/logger.dart';
 import 'tool_registry.dart';
 
 class YofardevAgent {
@@ -28,7 +28,7 @@ class YofardevAgent {
     bool functionCallingEnabled = true,
   }) async {
     final Stopwatch llmStopwatch = Stopwatch()..start();
-    debugPrint('⏱️  Starting LLM request...');
+    AppLogger.info('Starting LLM request...', tag: 'YofardevAgent');
 
     // Ensure service is initialized (safe to call multiple times or check internally)
     await _llmService.init();
@@ -44,7 +44,7 @@ class YofardevAgent {
     final List<Map<String, dynamic>> toolResults = <Map<String, dynamic>>[];
 
     if (functionCallingEnabled) {
-      debugPrint('🔍 Checking for function calls...');
+      AppLogger.info('Checking for function calls...', tag: 'YofardevAgent');
       final Stopwatch functionCheckStopwatch = Stopwatch()..start();
 
       final (String, List<FunctionInfo>) functionCheck = await _llmService
@@ -56,21 +56,26 @@ class YofardevAgent {
           );
 
       functionCheckStopwatch.stop();
-      debugPrint(
-        '✅ Function check completed in ${functionCheckStopwatch.elapsedMilliseconds}ms',
+      AppLogger.info(
+        'Function check completed in ${functionCheckStopwatch.elapsedMilliseconds}ms',
+        tag: 'YofardevAgent',
       );
 
       functionsToCall.addAll(functionCheck.$2);
 
       // 2. Execute tools if any were selected
       if (functionsToCall.isNotEmpty) {
-        debugPrint('🔧 Agent decided to call ${functionsToCall.length} tools.');
+        AppLogger.info(
+          'Agent decided to call ${functionsToCall.length} tools.',
+          tag: 'YofardevAgent',
+        );
 
         for (final FunctionInfo info in functionsToCall) {
           final AgentTool? tool = ToolRegistry.getTool(info.name);
           if (tool != null) {
-            debugPrint(
+            AppLogger.debug(
               'Executing tool: ${tool.name} with args: ${info.parametersCalled}',
+              tag: 'YofardevAgent',
             );
             try {
               final dynamic result = await tool.execute(
@@ -92,7 +97,7 @@ class YofardevAgent {
         }
       }
     } else {
-      debugPrint('🔇 Function calling is disabled');
+      AppLogger.info('Function calling is disabled', tag: 'YofardevAgent');
     }
 
     // 3. Construct the prompt for the final response
@@ -150,7 +155,7 @@ class YofardevAgent {
     }
 
     // 4. Get the final answer
-    debugPrint('💬 Generating final response...');
+    AppLogger.info('Generating final response...', tag: 'YofardevAgent');
     final Stopwatch generationStopwatch = Stopwatch()..start();
 
     final String? rawResponse = await _llmService.promptModel(
@@ -162,8 +167,9 @@ class YofardevAgent {
     );
 
     generationStopwatch.stop();
-    debugPrint(
-      '✅ LLM generation completed in ${generationStopwatch.elapsedMilliseconds}ms',
+    AppLogger.info(
+      'LLM generation completed in ${generationStopwatch.elapsedMilliseconds}ms',
+      tag: 'YofardevAgent',
     );
 
     if (rawResponse == null) {
@@ -178,26 +184,36 @@ class YofardevAgent {
       final int jsonEnd = response.lastIndexOf('}');
       if (jsonStart != -1 && jsonEnd != -1) {
         final String extracted = response.substring(jsonStart, jsonEnd + 1);
-        debugPrint('📄 Extracted JSON: $extracted');
+        AppLogger.debug('Extracted JSON: $extracted', tag: 'YofardevAgent');
 
         // Validate that the extracted JSON is actually valid
         try {
           json.decode(extracted);
           response = extracted;
         } catch (e) {
-          debugPrint('⚠️ Extracted JSON is invalid: $e');
-          debugPrint('⚠️ Using raw response instead');
+          AppLogger.warning(
+            'Extracted JSON is invalid: $e',
+            tag: 'YofardevAgent',
+          );
+          AppLogger.warning('Using raw response instead', tag: 'YofardevAgent');
         }
       } else {
-        debugPrint('⚠️ No JSON object found in response');
+        AppLogger.warning(
+          'No JSON object found in response',
+          tag: 'YofardevAgent',
+        );
       }
     } catch (e) {
-      debugPrint('Failed to extract JSON from response: $e');
+      AppLogger.error(
+        'Failed to extract JSON from response: $e',
+        tag: 'YofardevAgent',
+      );
     }
 
     llmStopwatch.stop();
-    debugPrint(
-      '🎉 Total LLM time: ${llmStopwatch.elapsedMilliseconds}ms (${llmStopwatch.elapsedMilliseconds / 1000}s)',
+    AppLogger.info(
+      'Total LLM time: ${llmStopwatch.elapsedMilliseconds}ms (${llmStopwatch.elapsedMilliseconds / 1000}s)',
+      tag: 'YofardevAgent',
     );
 
     return ChatEntry(

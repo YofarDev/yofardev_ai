@@ -74,7 +74,14 @@ class AppTheme {
             }
             return null;
           }),
-          foregroundColor: WidgetStateProperty.all(AppColors.onSurface),
+          foregroundColor: WidgetStateProperty.resolveWith<Color?>((
+            Set<WidgetState> states,
+          ) {
+            if (states.contains(WidgetState.hovered)) {
+              return AppColors.primary;
+            }
+            return AppColors.onSurface;
+          }),
           overlayColor: WidgetStateProperty.resolveWith<Color?>((
             Set<WidgetState> states,
           ) {

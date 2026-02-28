@@ -6,7 +6,7 @@ part of 'avatar_config.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AvatarImpl _$$AvatarImplFromJson(Map<String, dynamic> json) => _$AvatarImpl(
+_Avatar _$AvatarFromJson(Map<String, dynamic> json) => _Avatar(
   background:
       $enumDecodeNullable(_$AvatarBackgroundsEnumMap, json['background']) ??
       AvatarBackgrounds.lake,
@@ -25,15 +25,14 @@ _$AvatarImpl _$$AvatarImplFromJson(Map<String, dynamic> json) => _$AvatarImpl(
       AvatarCostume.none,
 );
 
-Map<String, dynamic> _$$AvatarImplToJson(_$AvatarImpl instance) =>
-    <String, dynamic>{
-      'background': _$AvatarBackgroundsEnumMap[instance.background]!,
-      'hat': _$AvatarHatEnumMap[instance.hat]!,
-      'top': _$AvatarTopEnumMap[instance.top]!,
-      'glasses': _$AvatarGlassesEnumMap[instance.glasses]!,
-      'specials': _$AvatarSpecialsEnumMap[instance.specials]!,
-      'costume': _$AvatarCostumeEnumMap[instance.costume]!,
-    };
+Map<String, dynamic> _$AvatarToJson(_Avatar instance) => <String, dynamic>{
+  'background': _$AvatarBackgroundsEnumMap[instance.background]!,
+  'hat': _$AvatarHatEnumMap[instance.hat]!,
+  'top': _$AvatarTopEnumMap[instance.top]!,
+  'glasses': _$AvatarGlassesEnumMap[instance.glasses]!,
+  'specials': _$AvatarSpecialsEnumMap[instance.specials]!,
+  'costume': _$AvatarCostumeEnumMap[instance.costume]!,
+};
 
 const _$AvatarBackgroundsEnumMap = {
   AvatarBackgrounds.lake: 'lake',
@@ -104,8 +103,8 @@ const _$AvatarCostumeEnumMap = {
   AvatarCostume.singularity: 'singularity',
 };
 
-_$AvatarConfigImpl _$$AvatarConfigImplFromJson(Map<String, dynamic> json) =>
-    _$AvatarConfigImpl(
+_AvatarConfig _$AvatarConfigFromJson(Map<String, dynamic> json) =>
+    _AvatarConfig(
       background: $enumDecodeNullable(
         _$AvatarBackgroundsEnumMap,
         json['background'],
@@ -120,7 +119,7 @@ _$AvatarConfigImpl _$$AvatarConfigImplFromJson(Map<String, dynamic> json) =>
       ),
     );
 
-Map<String, dynamic> _$$AvatarConfigImplToJson(_$AvatarConfigImpl instance) =>
+Map<String, dynamic> _$AvatarConfigToJson(_AvatarConfig instance) =>
     <String, dynamic>{
       'background': _$AvatarBackgroundsEnumMap[instance.background],
       'hat': _$AvatarHatEnumMap[instance.hat],

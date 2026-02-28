@@ -1,20 +1,14 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/llm/function_info.dart';
 import '../models/llm/llm_config.dart';
 import '../models/llm/llm_message.dart';
-
-class ResponseFormatException implements Exception {
-  final String message;
-  ResponseFormatException(this.message);
-
-  @override
-  String toString() => 'ResponseFormatException: $message';
-}
+import '../utils/logger.dart';
+import 'llm/llm_api_helper.dart';
+import 'llm/llm_exceptions.dart';
+import 'llm/llm_function_calling.dart';
 
 class LlmService {
   static const String _configsKey = 'llm_configs';
@@ -44,7 +38,7 @@ class LlmService {
             .map((dynamic e) => LlmConfig.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint('Error loading LLM configs: $e');
+        AppLogger.error('Error loading LLM configs: $e', tag: 'LlmService');
       }
     }
 
@@ -65,7 +59,10 @@ class LlmService {
           }
         });
       } catch (e) {
-        debugPrint('Error loading detected formats: $e');
+        AppLogger.error(
+          'Error loading detected formats: $e',
+          tag: 'LlmService',
+        );
       }
     }
   }
@@ -142,99 +139,13 @@ class LlmService {
   ) async {
     _detectedFormats[configId] = format;
     await _saveToPrefs();
-    debugPrint('💾 Saved detected format for $configId: ${format.name}');
+    AppLogger.debug(
+      'Saved detected format for $configId: ${format.name}',
+      tag: 'LlmService',
+    );
   }
 
-  // --- API Interaction ---
-
-  Future<String?> _promptModelWithFormat({
-    required List<LlmMessage> messages,
-    required String systemPrompt,
-    required LlmConfig config,
-    required ResponseFormatType responseFormatType,
-    bool debugLogs = false,
-  }) async {
-    final List<Map<String, dynamic>> apiMessages = <Map<String, dynamic>>[
-      <String, dynamic>{'role': 'system', 'content': systemPrompt},
-      ...messages.map((LlmMessage m) => m.toMap()),
-    ];
-
-    final Map<String, dynamic> body = <String, dynamic>{
-      'model': config.model.trim(),
-      'messages': apiMessages,
-      'temperature': config.temperature,
-    };
-
-    // Apply response format based on the type
-    switch (responseFormatType) {
-      case ResponseFormatType.jsonObject:
-        body['response_format'] = <String, String>{'type': 'json_object'};
-      case ResponseFormatType.jsonSchema:
-        body['response_format'] = <String, String>{'type': 'json_schema'};
-      case ResponseFormatType.text:
-        body['response_format'] = <String, String>{'type': 'text'};
-      case ResponseFormatType.none:
-        // Don't send response_format, rely on prompt instructions
-        break;
-    }
-
-    if (debugLogs && body.containsKey('response_format')) {
-      debugPrint('🔧 response_format set to: ${body['response_format']}');
-    }
-
-    if (debugLogs) {
-      debugPrint('🌐 Sending request to ${config.baseUrl}/chat/completions');
-      debugPrint('📦 Model: ${config.model.trim()}');
-      debugPrint('🌡️ Temperature: ${config.temperature}');
-    }
-
-    try {
-      final http.Response response = await http.post(
-        Uri.parse('${config.baseUrl}/chat/completions'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${config.apiKey}',
-        },
-        body: json.encode(body),
-      );
-
-      if (debugLogs) {
-        debugPrint('✅ Response status: ${response.statusCode}');
-      }
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data =
-            json.decode(utf8.decode(response.bodyBytes))
-                as Map<String, dynamic>;
-        final List<dynamic> choices = data['choices'] as List<dynamic>;
-        final Map<String, dynamic> firstChoice =
-            choices[0] as Map<String, dynamic>;
-        final Map<String, dynamic> message =
-            firstChoice['message'] as Map<String, dynamic>;
-        return message['content'] as String?;
-      } else {
-        final String errorBody = response.body;
-        debugPrint(
-          '❌ LLM API Error (Status ${response.statusCode}): $errorBody',
-        );
-        // Return special error marker for response_format issues
-        if (response.statusCode == 400 &&
-            errorBody.contains('response_format')) {
-          throw ResponseFormatException('Invalid response_format type');
-        }
-        return null;
-      }
-    } on ResponseFormatException {
-      rethrow;
-    } catch (e, stackTrace) {
-      debugPrint('💥 Exception calling LLM API: $e');
-      if (debugLogs) {
-        debugPrint('🔍 Stack trace: $stackTrace');
-      }
-      return null;
-    }
-  }
-
+  /// Prompt the LLM model with optional JSON response and automatic format detection
   Future<String?> promptModel({
     required List<LlmMessage> messages,
     required String systemPrompt,
@@ -249,7 +160,7 @@ class LlmService {
 
     // If not requesting JSON, just call directly without response_format
     if (!returnJson) {
-      return _promptModelWithFormat(
+      return LlmApiHelper.promptModelWithFormat(
         messages: messages,
         systemPrompt: systemPrompt,
         config: activeConfig,
@@ -265,20 +176,26 @@ class LlmService {
     if (_detectedFormats.containsKey(activeConfig.id)) {
       formatToTry = _detectedFormats[activeConfig.id]!;
       if (debugLogs) {
-        debugPrint('🔍 Using previously detected format: ${formatToTry.name}');
+        AppLogger.debug(
+          'Using previously detected format: ${formatToTry.name}',
+          tag: 'LlmService',
+        );
       }
     } else {
       // Use the configured format
       formatToTry = activeConfig.responseFormatType;
       if (debugLogs) {
-        debugPrint('🔍 Using configured format: ${formatToTry.name}');
+        AppLogger.debug(
+          'Using configured format: ${formatToTry.name}',
+          tag: 'LlmService',
+        );
       }
     }
 
     // Try the initial format
     String? result;
     try {
-      result = await _promptModelWithFormat(
+      result = await LlmApiHelper.promptModelWithFormat(
         messages: messages,
         systemPrompt: systemPrompt,
         config: activeConfig,
@@ -287,7 +204,10 @@ class LlmService {
       );
     } on ResponseFormatException {
       if (debugLogs) {
-        debugPrint('⚠️ Response format not accepted, will try fallback');
+        AppLogger.debug(
+          'Response format not accepted, will try fallback',
+          tag: 'LlmService',
+        );
       }
       result = null;
     }
@@ -299,7 +219,10 @@ class LlmService {
     // If initial attempt failed and we haven't auto-detected yet, try fallback
     if (!_detectedFormats.containsKey(activeConfig.id)) {
       if (debugLogs) {
-        debugPrint('🔄 Initial format failed, trying automatic detection...');
+        AppLogger.debug(
+          'Initial format failed, trying automatic detection...',
+          tag: 'LlmService',
+        );
       }
 
       // Try other formats in order
@@ -314,12 +237,15 @@ class LlmService {
         if (format == formatToTry) continue; // Skip the one we already tried
 
         if (debugLogs) {
-          debugPrint('🔄 Trying fallback format: ${format.name}');
+          AppLogger.debug(
+            'Trying fallback format: ${format.name}',
+            tag: 'LlmService',
+          );
         }
 
         String? fallbackResult;
         try {
-          fallbackResult = await _promptModelWithFormat(
+          fallbackResult = await LlmApiHelper.promptModelWithFormat(
             messages: messages,
             systemPrompt: systemPrompt,
             config: activeConfig,
@@ -329,7 +255,10 @@ class LlmService {
         } on ResponseFormatException {
           // This format also doesn't work, try next one
           if (debugLogs) {
-            debugPrint('⚠️ Format ${format.name} not accepted');
+            AppLogger.debug(
+              'Format ${format.name} not accepted',
+              tag: 'LlmService',
+            );
           }
           continue;
         }
@@ -338,7 +267,10 @@ class LlmService {
           // Success! Save this format for future use
           await _saveDetectedFormat(activeConfig.id, format);
           if (debugLogs) {
-            debugPrint('✅ Auto-detected working format: ${format.name}');
+            AppLogger.debug(
+              'Auto-detected working format: ${format.name}',
+              tag: 'LlmService',
+            );
           }
           return fallbackResult;
         }
@@ -347,134 +279,23 @@ class LlmService {
 
     // All formats failed
     if (debugLogs) {
-      debugPrint('❌ All response format attempts failed');
+      AppLogger.debug('All response format attempts failed', tag: 'LlmService');
     }
     return null;
   }
 
+  /// Check if the LLM wants to call any functions
   Future<(String, List<FunctionInfo>)> checkFunctionsCalling({
     required LlmConfig api,
     required List<FunctionInfo> functions,
     required List<LlmMessage> messages,
     required String lastUserMessage,
   }) async {
-    final List<Map<String, dynamic>> apiMessages = messages
-        .map((LlmMessage m) => m.toMap())
-        .toList();
-    apiMessages.add(<String, dynamic>{
-      'role': 'user',
-      'content': lastUserMessage,
-    });
-
-    final List<Map<String, dynamic>> tools = functions.map((FunctionInfo f) {
-      return <String, dynamic>{
-        'type': 'function',
-        'function': <String, dynamic>{
-          'name': f.name,
-          'description': f.description,
-          'parameters': <String, dynamic>{
-            'type': 'object',
-            'properties': Map<String, dynamic>.fromEntries(
-              f.parameters.map(
-                (Parameter p) => MapEntry<String, dynamic>(p.name, p.toMap()),
-              ),
-            ),
-            'required': f.parameters
-                .where((Parameter p) => p.isRequired)
-                .map((Parameter p) => p.name)
-                .toList(),
-          },
-        },
-      };
-    }).toList();
-
-    final Map<String, dynamic> body = <String, dynamic>{
-      'model': api.model.trim(),
-      'messages': apiMessages,
-      'tools': tools,
-      'tool_choice': 'auto',
-    };
-
-    debugPrint(
-      '🔧 checkFunctionsCalling: Requesting with model ${api.model.trim()}',
+    return LlmFunctionCallingHelper.checkFunctionsCalling(
+      api: api,
+      functions: functions,
+      messages: messages,
+      lastUserMessage: lastUserMessage,
     );
-    debugPrint(
-      '📋 Available tools: ${functions.map((FunctionInfo f) => f.name).join(", ")}',
-    );
-
-    try {
-      final http.Response response = await http.post(
-        Uri.parse('${api.baseUrl}/chat/completions'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${api.apiKey}',
-        },
-        body: json.encode(body),
-      );
-
-      debugPrint(
-        '✅ checkFunctionsCalling: Response status ${response.statusCode}',
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data =
-            json.decode(utf8.decode(response.bodyBytes))
-                as Map<String, dynamic>;
-        final List<dynamic> choices = data['choices'] as List<dynamic>;
-        final Map<String, dynamic> firstChoice =
-            choices[0] as Map<String, dynamic>;
-        final Map<String, dynamic> message =
-            firstChoice['message'] as Map<String, dynamic>;
-
-        final List<FunctionInfo> calledFunctions = <FunctionInfo>[];
-
-        if (message['tool_calls'] != null) {
-          debugPrint('🔧 Tool calls detected: ${message['tool_calls']}');
-          final List<dynamic> toolCalls =
-              message['tool_calls'] as List<dynamic>;
-          for (final dynamic toolCall in toolCalls) {
-            final Map<String, dynamic> toolCallMap =
-                toolCall as Map<String, dynamic>;
-            final Map<String, dynamic> functionMap =
-                toolCallMap['function'] as Map<String, dynamic>;
-            final String funcName = functionMap['name'] as String;
-            final String argsJson = functionMap['arguments'] as String;
-
-            // Find the original function info
-            final FunctionInfo originalFunc = functions.firstWhere(
-              (FunctionInfo f) => f.name == funcName,
-            );
-
-            // Decode args
-            final Map<String, dynamic> args =
-                json.decode(argsJson) as Map<String, dynamic>;
-
-            // Return a new FunctionInfo with called parameters
-            calledFunctions.add(
-              FunctionInfo(
-                name: originalFunc.name,
-                description: originalFunc.description,
-                parameters: originalFunc.parameters,
-                function: originalFunc.function,
-                parametersCalled: args,
-              ),
-            );
-          }
-        } else {
-          debugPrint('💬 No tool calls, returning text response');
-        }
-
-        return (message['content'] as String? ?? '', calledFunctions);
-      } else {
-        debugPrint(
-          '❌ LLM API Error (checkFunctions, Status ${response.statusCode}): ${response.body}',
-        );
-        return ('', <FunctionInfo>[]);
-      }
-    } catch (e, stackTrace) {
-      debugPrint('💥 Exception calling LLM API (checkFunctions): $e');
-      debugPrint('🔍 Stack trace: $stackTrace');
-      return ('', <FunctionInfo>[]);
-    }
   }
 }
