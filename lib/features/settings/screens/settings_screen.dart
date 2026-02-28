@@ -12,10 +12,10 @@ import '../../../models/sound_effects.dart';
 import '../../../res/app_colors.dart';
 import '../../../services/settings_service.dart';
 import '../../widgets/constrained_width.dart';
-import 'widgets/settings_app_bar.dart';
-import 'widgets/username_field.dart';
-import 'widgets/persona_dropdown.dart';
-import 'widgets/sound_effects_toggle.dart';
+import '../widgets/settings_app_bar.dart';
+import '../widgets/username_field.dart';
+import '../widgets/persona_dropdown.dart';
+import '../widgets/sound_effects_toggle.dart';
 import 'llm/llm_selection_page.dart';
 
 class SettingsPage extends StatefulWidget {
