@@ -1,13 +1,13 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../l10n/localization_manager.dart';
-import '../models/chat.dart';
-import '../res/app_constants.dart';
-import '../utils/app_utils.dart';
-import '../utils/platform_utils.dart';
+import '../../../../l10n/localization_manager.dart';
+import '../../../chat/domain/models/chat.dart';
+import '../../../../core/res/app_constants.dart';
+import '../../../../core/utils/app_utils.dart';
+import '../../../../core/utils/platform_utils.dart';
 
-class SettingsService {
+class SettingsLocalDatasource {
   Future<void> setPersona(ChatPersona persona) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('persona', persona.name);
