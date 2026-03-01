@@ -7,7 +7,6 @@ import '../utils/logger.dart';
 import 'avatar_config.dart';
 
 part 'chat_entry.freezed.dart';
-part 'chat_entry.g.dart';
 
 enum EntryType { user, yofardev, functionCalling }
 
@@ -31,7 +30,26 @@ sealed class ChatEntry with _$ChatEntry {
         processedJson['timestamp'] as int,
       ).toIso8601String();
     }
-    return _$ChatEntryFromJson(processedJson);
+    return ChatEntry(
+      id: processedJson['id'] as String,
+      entryType: EnumUtils.deserialize(
+        EntryType.values,
+        processedJson['entryType'] as String,
+      ),
+      body: processedJson['body'] as String,
+      timestamp: DateTime.parse(processedJson['timestamp'] as String),
+      attachedImage: processedJson['attachedImage'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'entryType': entryType.name,
+      'body': body,
+      'timestamp': timestamp.toIso8601String(),
+      'attachedImage': attachedImage,
+    };
   }
 }
 

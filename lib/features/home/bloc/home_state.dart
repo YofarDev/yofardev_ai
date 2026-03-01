@@ -1,18 +1,12 @@
-part of 'home_cubit.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class HomeState {
-  final bool isInitialized;
-  final bool isPlayingWaitingTts;
+part 'home_state.freezed.dart';
 
-  const HomeState({
-    this.isInitialized = false,
-    this.isPlayingWaitingTts = false,
-  });
-
-  HomeState copyWith({bool? isInitialized, bool? isPlayingWaitingTts}) {
-    return HomeState(
-      isInitialized: isInitialized ?? this.isInitialized,
-      isPlayingWaitingTts: isPlayingWaitingTts ?? this.isPlayingWaitingTts,
-    );
-  }
+@freezed
+sealed class HomeState with _$HomeState {
+  const factory HomeState({
+    @Default(false) bool isInitialized,
+    @Default(false) bool isFading,
+    @Default(false) bool isPlayingWaitingLoop,
+  }) = _HomeState;
 }

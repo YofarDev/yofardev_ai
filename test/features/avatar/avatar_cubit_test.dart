@@ -98,7 +98,10 @@ void main() {
 
     group('AvatarState', () {
       test('should copy with new values correctly', () {
-        const AvatarState state = AvatarState();
+        const AvatarState state = AvatarState(
+          avatar: Avatar(),
+          avatarConfig: AvatarConfig(),
+        );
         final AvatarState newState = state.copyWith(
           status: AvatarStatus.ready,
           scaleFactor: 2.0,
@@ -110,13 +113,23 @@ void main() {
         expect(newState.avatar, state.avatar);
       });
 
-      test('props should include all fields', () {
-        const AvatarState state = AvatarState();
-
-        expect(
-          state.props.length,
-          8, // status, statusAnimation, baseOriginalWidth, baseOriginalHeight, scaleFactor, avatar, avatarConfig, previousSpecialsState
+      test('should support value equality', () {
+        const AvatarState state1 = AvatarState(
+          avatar: Avatar(),
+          avatarConfig: AvatarConfig(),
         );
+        const AvatarState state2 = AvatarState(
+          avatar: Avatar(),
+          avatarConfig: AvatarConfig(),
+        );
+        const AvatarState state3 = AvatarState(
+          avatar: Avatar(),
+          avatarConfig: AvatarConfig(),
+          status: AvatarStatus.ready,
+        );
+
+        expect(state1, equals(state2));
+        expect(state1, isNot(equals(state3)));
       });
     });
 

@@ -57,6 +57,9 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                         });
                       },
                       showEverything: _showEverything,
+                      isFunctionCallingEnabled: state.functionCallingEnabled,
+                      onFunctionCallingToggle: () =>
+                          context.read<ChatsCubit>().toggleFunctionCalling(),
                     ),
                   ],
                 ),

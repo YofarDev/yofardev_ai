@@ -1,12 +1,15 @@
+import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/repositories/yofardev_repository.dart';
 import 'package:yofardev_ai/core/services/chat_history_service.dart';
 import 'package:yofardev_ai/core/services/settings_service.dart';
+import 'package:yofardev_ai/core/services/tts_service.dart';
 import 'package:yofardev_ai/features/chat/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/chat/bloc/chats_state.dart';
+import 'package:yofardev_ai/l10n/localization_manager.dart';
 
 class MockChatHistoryService implements ChatHistoryService {
   @override
@@ -107,6 +110,9 @@ void main() {
         chatHistoryService: MockChatHistoryService(),
         settingsService: MockSettingsService(),
         yofardevRepository: MockYofardevRepository(),
+        ttsService: TtsService(),
+        audioAnalyzer: AudioAnalyzer(),
+        localizationManager: LocalizationManager(),
       );
     });
 

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/utils/logger.dart';
+import 'home_state.dart';
 
 /// HomeCubit manages home page specific state and actions
 class HomeCubit extends Cubit<HomeState> {
@@ -56,44 +57,4 @@ class HomeCubit extends Cubit<HomeState> {
       AppLogger.error('Error playing TTS', tag: 'HomeCubit', error: e);
     }
   }
-}
-
-/// Home state
-class HomeState {
-  final bool isInitialized;
-  final bool isFading;
-  final bool isPlayingWaitingLoop;
-
-  const HomeState({
-    this.isInitialized = false,
-    this.isFading = false,
-    this.isPlayingWaitingLoop = false,
-  });
-
-  HomeState copyWith({
-    bool? isInitialized,
-    bool? isFading,
-    bool? isPlayingWaitingLoop,
-  }) {
-    return HomeState(
-      isInitialized: isInitialized ?? this.isInitialized,
-      isFading: isFading ?? this.isFading,
-      isPlayingWaitingLoop: isPlayingWaitingLoop ?? this.isPlayingWaitingLoop,
-    );
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is HomeState &&
-          runtimeType == other.runtimeType &&
-          isInitialized == other.isInitialized &&
-          isFading == other.isFading &&
-          isPlayingWaitingLoop == other.isPlayingWaitingLoop;
-
-  @override
-  int get hashCode =>
-      isInitialized.hashCode ^
-      isFading.hashCode ^
-      isPlayingWaitingLoop.hashCode;
 }

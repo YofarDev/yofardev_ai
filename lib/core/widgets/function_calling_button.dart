@@ -1,33 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../features/chat/bloc/chats_cubit.dart';
-import '../../features/chat/bloc/chats_state.dart';
 import 'app_icon_button.dart';
 
 class FunctionCallingButton extends StatelessWidget {
-  const FunctionCallingButton({super.key});
+  final bool isEnabled;
+  final VoidCallback onToggle;
+
+  const FunctionCallingButton({
+    required this.isEnabled,
+    required this.onToggle,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ChatsCubit, ChatsState>(
-      builder: (BuildContext context, ChatsState state) {
-        return AppIconButton(
-          icon: state.functionCallingEnabled ? Icons.code : Icons.code_off,
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  state.functionCallingEnabled
-                      ? 'Function calling OFF'
-                      : 'Function calling ON',
-                ),
-                duration: const Duration(milliseconds: 500),
-              ),
-            );
-            context.read<ChatsCubit>().toggleFunctionCalling();
-          },
+    return AppIconButton(
+      icon: isEnabled ? Icons.code : Icons.code_off,
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isEnabled ? 'Function calling OFF' : 'Function calling ON',
+            ),
+            duration: const Duration(milliseconds: 500),
+          ),
         );
+        onToggle();
       },
     );
   }

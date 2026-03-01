@@ -1,15 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../core/services/sound_service_interface.dart';
 import 'sound_state.dart';
 
-/// Abstract interface for SoundService to allow for dependency injection
-abstract class SoundService {
-  Future<void> playSound(String soundName);
-}
-
 class SoundCubit extends Cubit<SoundState> {
-  final SoundService _soundService;
+  final ISoundService _soundService;
 
-  SoundCubit({required SoundService soundService})
+  SoundCubit({required ISoundService soundService})
     : _soundService = soundService,
       super(const SoundInitial());
 

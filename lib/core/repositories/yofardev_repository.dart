@@ -3,7 +3,7 @@
 import '../services/agent/yofardev_agent.dart';
 import '../models/chat.dart';
 import '../models/chat_entry.dart';
-import '../../features/demo/models/demo_script.dart';
+import '../models/demo_script.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/prompt_service.dart';
 

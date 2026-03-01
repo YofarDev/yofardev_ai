@@ -122,7 +122,7 @@ class TalkingCubit extends Cubit<TalkingState> {
       state.copyWith(
         isTalking: false,
         mouthState: MouthState.closed,
-        status: updateStatus ? TalkingStatus.initial : null,
+        status: updateStatus ? TalkingStatus.initial : state.status,
       ),
     );
     if (removeFile) await File(state.answer.audioPath).delete();

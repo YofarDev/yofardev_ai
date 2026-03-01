@@ -1,33 +1,20 @@
-import '../models/demo_script.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../../core/models/demo_script.dart';
 import '../services/demo_controller.dart';
 
-/// Demo state
-class DemoState {
-  final DemoStatus status;
-  final int countdownValue;
-  final DemoScript? currentScript;
-  final int remainingResponses;
+part 'demo_state.freezed.dart';
 
-  const DemoState({
-    this.status = DemoStatus.idle,
-    this.countdownValue = 0,
-    this.currentScript,
-    this.remainingResponses = 0,
-  });
+@freezed
+sealed class DemoState with _$DemoState {
+  const DemoState._();
 
-  DemoState copyWith({
-    DemoStatus? status,
-    int? countdownValue,
+  const factory DemoState({
+    @Default(DemoStatus.idle) DemoStatus status,
+    @Default(0) int countdownValue,
     DemoScript? currentScript,
-    int? remainingResponses,
-  }) {
-    return DemoState(
-      status: status ?? this.status,
-      countdownValue: countdownValue ?? this.countdownValue,
-      currentScript: currentScript ?? this.currentScript,
-      remainingResponses: remainingResponses ?? this.remainingResponses,
-    );
-  }
+    @Default(0) int remainingResponses,
+  }) = _DemoState;
 
   bool get isIdle => status == DemoStatus.idle;
   bool get isCountingDown => status == DemoStatus.countdown;

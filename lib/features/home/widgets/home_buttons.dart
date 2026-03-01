@@ -16,69 +16,79 @@ class HomeButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ChatsCubit, ChatsState>(
-      builder: (BuildContext context, ChatsState state) {
-        return Positioned(
-          right: 8,
-          top: 8,
-          child: SafeArea(
-            child: Column(
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () {
-                    context.read<ChatsCubit>().setCurrentLanguage(
-                      state.currentLanguage == 'fr' ? 'en' : 'fr',
-                    );
-                  },
-                  child: Text(
-                    state.currentLanguage == 'fr' ? '🇫🇷' : '🇬🇧',
-                    style: const TextStyle(fontSize: 16),
+    return BlocListener<ChatsCubit, ChatsState>(
+      listener: (BuildContext context, ChatsState state) {
+        if (state.chatCreated) {
+          // Handle cross-feature coordination when chat is created
+          context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
+          context.read<TalkingCubit>().init();
+        }
+      },
+      child: BlocBuilder<ChatsCubit, ChatsState>(
+        builder: (BuildContext context, ChatsState state) {
+          return Positioned(
+            right: 8,
+            top: 8,
+            child: SafeArea(
+              child: Column(
+                children: <Widget>[
+                  GestureDetector(
+                    onTap: () {
+                      context.read<ChatsCubit>().setCurrentLanguage(
+                        state.currentLanguage == 'fr' ? 'en' : 'fr',
+                      );
+                    },
+                    child: Text(
+                      state.currentLanguage == 'fr' ? '🇫🇷' : '🇬🇧',
+                      style: const TextStyle(fontSize: 16),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                AppIconButton(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder<dynamic>(
-                        pageBuilder: (_, _, _) =>
-                            const ConstrainedWidth(child: ChatsListPage()),
-                        transitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-                AppIconButton(
-                  icon: Icons.add_outlined,
-                  onPressed: () {
-                    context.read<ChatsCubit>().createNewChat(
-                      context.read<AvatarCubit>(),
-                      context.read<TalkingCubit>(),
-                    );
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: AppIconButton(
-                    icon: Icons.settings_rounded,
+                  const SizedBox(height: 8),
+                  AppIconButton(
+                    icon: Icons.chat_bubble_outline_rounded,
                     onPressed: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute<dynamic>(
-                          builder: (BuildContext context) =>
-                              const ConstrainedWidth(child: SettingsPage()),
+                        PageRouteBuilder<dynamic>(
+                          pageBuilder: (_, _, _) =>
+                              const ConstrainedWidth(child: ChatsListPage()),
+                          transitionDuration: Duration.zero,
                         ),
                       );
                     },
                   ),
-                ),
-                const SizedBox(height: 8),
-                const FunctionCallingButton(),
-              ],
+                  const SizedBox(height: 8),
+                  AppIconButton(
+                    icon: Icons.add_outlined,
+                    onPressed: () {
+                      context.read<ChatsCubit>().createNewChat();
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: AppIconButton(
+                      icon: Icons.settings_rounded,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<dynamic>(
+                            builder: (BuildContext context) =>
+                                const ConstrainedWidth(child: SettingsPage()),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  FunctionCallingButton(
+                    isEnabled: state.functionCallingEnabled,
+                    onToggle: () =>
+                        context.read<ChatsCubit>().toggleFunctionCalling(),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

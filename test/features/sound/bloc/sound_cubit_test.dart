@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/services/sound_service_interface.dart';
 import 'package:yofardev_ai/features/sound/bloc/sound_cubit.dart';
 import 'package:yofardev_ai/features/sound/bloc/sound_state.dart';
 
 // Mock SoundService implementation for testing
-class MockSoundService implements SoundService {
+class MockSoundService implements ISoundService {
   bool shouldFail = false;
   String? failureMessage;
   String? lastPlayedSound;

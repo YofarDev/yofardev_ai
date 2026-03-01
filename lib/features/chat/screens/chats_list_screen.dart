@@ -32,36 +32,47 @@ class _ChatsListPageState extends State<ChatsListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ChatsCubit, ChatsState>(
-      builder: (BuildContext context, ChatsState state) {
-        final bool isLoading = state.status == ChatsStatus.loading;
-        return SafeArea(
-          child: Scaffold(
-            body: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: <Color>[AppColors.background, AppColors.surface],
+    return BlocListener<ChatsCubit, ChatsState>(
+      listener: (BuildContext context, ChatsState state) {
+        if (state.chatCreated) {
+          // Handle cross-feature coordination when chat is created
+          context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
+          context.read<TalkingCubit>().init();
+          // Refresh the chat list after creation
+          context.read<ChatsCubit>().fetchChatsList();
+        }
+      },
+      child: BlocBuilder<ChatsCubit, ChatsState>(
+        builder: (BuildContext context, ChatsState state) {
+          final bool isLoading = state.status == ChatsStatus.loading;
+          return SafeArea(
+            child: Scaffold(
+              body: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[AppColors.background, AppColors.surface],
+                  ),
+                ),
+                child: Column(
+                  children: <Widget>[
+                    _buildAppBar(context),
+                    if (isLoading)
+                      const Expanded(
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (state.chatsList.isEmpty)
+                      const ChatListEmptyState()
+                    else
+                      _buildList(context, state.chatsList, state.currentChat),
+                  ],
                 ),
               ),
-              child: Column(
-                children: <Widget>[
-                  _buildAppBar(context),
-                  if (isLoading)
-                    const Expanded(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (state.chatsList.isEmpty)
-                    const ChatListEmptyState()
-                  else
-                    _buildList(context, state.chatsList, state.currentChat),
-                ],
-              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -111,11 +122,7 @@ class _ChatsListPageState extends State<ChatsListPage> {
             child: IconButton(
               icon: const Icon(Icons.add_circle_outlined),
               onPressed: () {
-                context.read<ChatsCubit>().createNewChat(
-                  context.read<AvatarCubit>(),
-                  context.read<TalkingCubit>(),
-                );
-                context.read<ChatsCubit>().fetchChatsList();
+                context.read<ChatsCubit>().createNewChat();
               },
               tooltip: 'Create new chat',
             ),

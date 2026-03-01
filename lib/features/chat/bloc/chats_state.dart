@@ -20,6 +20,7 @@ sealed class ChatsState with _$ChatsState {
     List<Map<String, dynamic>> audioPathsWaitingSentences,
     @Default(true) bool initializing,
     @Default(true) bool functionCallingEnabled,
+    @Default(false) bool chatCreated,
   }) = _ChatsState;
 
   factory ChatsState.initial() => ChatsState(

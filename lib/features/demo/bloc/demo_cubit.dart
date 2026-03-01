@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../models/demo_script.dart';
+import '../../../core/models/demo_script.dart';
 import '../services/demo_controller.dart';
 import 'demo_state.dart';
 

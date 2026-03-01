@@ -11,7 +11,6 @@ part of 'chat_entry.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$ChatEntry {
 
@@ -22,8 +21,6 @@ mixin _$ChatEntry {
 @pragma('vm:prefer-inline')
 $ChatEntryCopyWith<ChatEntry> get copyWith => _$ChatEntryCopyWithImpl<ChatEntry>(this as ChatEntry, _$identity);
 
-  /// Serializes this ChatEntry to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.entryType, entryType) || other.entryType == entryType)&&(identical(other.body, body) || other.body == body)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.attachedImage, attachedImage) || other.attachedImage == attachedImage));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,entryType,body,timestamp,attachedImage);
 
@@ -204,11 +201,11 @@ return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attach
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _ChatEntry extends ChatEntry {
   const _ChatEntry({required this.id, required this.entryType, required this.body, required this.timestamp, this.attachedImage}): super._();
-  factory _ChatEntry.fromJson(Map<String, dynamic> json) => _$ChatEntryFromJson(json);
+  
 
 @override final  String id;
 @override final  EntryType entryType;
@@ -222,17 +219,14 @@ class _ChatEntry extends ChatEntry {
 @pragma('vm:prefer-inline')
 _$ChatEntryCopyWith<_ChatEntry> get copyWith => __$ChatEntryCopyWithImpl<_ChatEntry>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$ChatEntryToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.entryType, entryType) || other.entryType == entryType)&&(identical(other.body, body) || other.body == body)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.attachedImage, attachedImage) || other.attachedImage == attachedImage));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,entryType,body,timestamp,attachedImage);
 

@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../l10n/localization_manager.dart';
-import '../../../features/talking/bloc/talking_cubit.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../core/models/chat.dart';
 import '../../../core/models/chat_entry.dart';
@@ -17,7 +16,6 @@ import '../../../core/services/tts_service.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/utils/platform_utils.dart';
-import '../../avatar/bloc/avatar_cubit.dart';
 import 'chats_state.dart';
 
 class ChatsCubit extends Cubit<ChatsState> {
@@ -25,16 +23,25 @@ class ChatsCubit extends Cubit<ChatsState> {
     required ChatHistoryService chatHistoryService,
     required SettingsService settingsService,
     required YofardevRepository yofardevRepository,
+    required TtsService ttsService,
+    required AudioAnalyzer audioAnalyzer,
+    required LocalizationManager localizationManager,
   }) : _chatHistoryService = chatHistoryService,
        _settingsService = settingsService,
        _yofardevRepository = yofardevRepository,
+       _ttsService = ttsService,
+       _audioAnalyzer = audioAnalyzer,
+       _localizationManager = localizationManager,
        super(ChatsState.initial());
 
-  late final ChatHistoryService _chatHistoryService;
-  late final SettingsService _settingsService;
-  late final YofardevRepository _yofardevRepository;
+  final ChatHistoryService _chatHistoryService;
+  final SettingsService _settingsService;
+  final YofardevRepository _yofardevRepository;
+  final TtsService _ttsService;
+  final AudioAnalyzer _audioAnalyzer;
+  final LocalizationManager _localizationManager;
 
-  void createNewChat(AvatarCubit avatarCubit, TalkingCubit talkingCubit) async {
+  void createNewChat() async {
     emit(state.copyWith(status: ChatsStatus.updating));
     final Chat newChat = await _chatHistoryService.createNewChat();
     emit(
@@ -42,10 +49,11 @@ class ChatsCubit extends Cubit<ChatsState> {
         status: ChatsStatus.success,
         chatsList: <Chat>[newChat, ...state.chatsList],
         currentChat: newChat,
+        chatCreated: true,
       ),
     );
-    avatarCubit.loadAvatar(newChat.id);
-    talkingCubit.init();
+    // Reset the chatCreated flag after emitting
+    emit(state.copyWith(chatCreated: false));
   }
 
   void init() async {
@@ -78,12 +86,12 @@ class ChatsCubit extends Cubit<ChatsState> {
       )) {
         continue;
       } else {
-        final String audioPath = await TtsService().textToFrenchMaleVoice(
+        final String audioPath = await _ttsService.textToFrenchMaleVoice(
           text: sentence,
           language: state.currentLanguage,
           voiceEffect: AvatarCostume.none.getVoiceEffect(),
         );
-        final List<int> amplitudes = await AudioAnalyzer().getAmplitudes(
+        final List<int> amplitudes = await _audioAnalyzer.getAmplitudes(
           audioPath,
         );
         map.add(<String, dynamic>{
@@ -123,7 +131,7 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   void setCurrentLanguage(String language) async {
     await _settingsService.setLanguage(language);
-    await LocalizationManager().initialize(language);
+    await _localizationManager.initialize(language);
     emit(state.copyWith(currentLanguage: language));
   }
 

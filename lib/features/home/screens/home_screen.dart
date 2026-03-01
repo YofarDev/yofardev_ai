@@ -26,7 +26,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isTalkingWaitingSentences = false;
-  final GlobalKey _demoKey = GlobalKey();
   int _tapCount = 0;
   DateTime? _lastTapTime;
 

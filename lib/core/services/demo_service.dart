@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/avatar/bloc/avatar_cubit.dart';
 import '../../features/chat/bloc/chats_cubit.dart';
 import '../models/avatar_config.dart';
-import '../../features/demo/models/demo_script.dart';
+import '../models/demo_script.dart';
 import '../../features/demo/services/demo_controller.dart';
 import 'llm/fake_llm_service.dart';
 

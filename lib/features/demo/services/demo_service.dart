@@ -7,8 +7,8 @@ import '../../../core/utils/logger.dart';
 import '../../../core/services/llm/fake_llm_service.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../../core/models/avatar_config.dart';
+import '../../../core/models/demo_script.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
-import '../models/demo_script.dart';
 import 'demo_controller.dart';
 
 /// Service for managing demo mode

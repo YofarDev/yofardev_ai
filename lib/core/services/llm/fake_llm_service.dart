@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import '../../../features/demo/models/demo_script.dart';
+import '../../models/demo_script.dart';
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';

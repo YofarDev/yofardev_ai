@@ -1,6 +1,8 @@
+import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../../l10n/localization_manager.dart';
 import '../utils/logger.dart';
 
 import '../../features/avatar/bloc/avatar_cubit.dart';
@@ -8,10 +10,14 @@ import '../../features/chat/bloc/chats_cubit.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
 import '../../features/demo/services/demo_controller.dart';
 import '../../features/demo/services/demo_service.dart';
+import '../../features/sound/bloc/sound_cubit.dart';
 import '../../features/talking/bloc/talking_cubit.dart';
 import '../repositories/yofardev_repository.dart';
+import '../services/agent/sound_service.dart';
 import '../services/chat_history_service.dart';
+import '../services/sound_service_interface.dart';
 import '../services/settings_service.dart';
+import '../services/tts_service.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_service.dart';
 import '../services/llm/llm_service_interface.dart';
@@ -49,9 +55,12 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<ChatHistoryService>(() => ChatHistoryService());
   getIt.registerLazySingleton<SettingsService>(() => SettingsService());
   getIt.registerLazySingleton<YofardevRepository>(() => YofardevRepository());
+  getIt.registerLazySingleton<TtsService>(() => TtsService());
+  getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());
+  getIt.registerLazySingleton<LocalizationManager>(() => LocalizationManager());
 
-  // TODO: Register SoundService as lazy singleton when implementation is available
-  // getIt.registerLazySingleton<SoundService>(() => SoundService());
+  // Sound services
+  getIt.registerLazySingleton<SoundService>(() => SoundService());
 
   // BLoCs / Cubits
   getIt.registerFactory<AvatarCubit>(() => AvatarCubit());
@@ -61,14 +70,15 @@ Future<void> setupServiceLocator() async {
       chatHistoryService: getIt<ChatHistoryService>(),
       settingsService: getIt<SettingsService>(),
       yofardevRepository: getIt<YofardevRepository>(),
+      ttsService: getIt<TtsService>(),
+      audioAnalyzer: getIt<AudioAnalyzer>(),
+      localizationManager: getIt<LocalizationManager>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
-
-  // TODO: Register SoundCubit as factory once SoundService is implemented
-  // getIt.registerFactory<SoundCubit>(() => SoundCubit(
-  //   soundService: getIt<SoundService>(),
-  // ));
+  getIt.registerFactory<SoundCubit>(
+    () => SoundCubit(soundService: getIt<ISoundService>()),
+  );
 }
 
 /// Switch between real and fake LLM service

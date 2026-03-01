@@ -1,30 +1,12 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-abstract class SoundState extends Equatable {
-  const SoundState();
+part 'sound_state.freezed.dart';
 
-  @override
-  List<Object?> get props => <Object?>[];
-}
+@freezed
+sealed class SoundState with _$SoundState {
+  const factory SoundState.initial() = SoundInitial;
 
-class SoundInitial extends SoundState {
-  const SoundInitial();
-}
+  const factory SoundState.playing(String soundName) = SoundPlaying;
 
-class SoundPlaying extends SoundState {
-  final String soundName;
-
-  const SoundPlaying(this.soundName);
-
-  @override
-  List<Object?> get props => <Object?>[soundName];
-}
-
-class SoundError extends SoundState {
-  final String message;
-
-  const SoundError(this.message);
-
-  @override
-  List<Object?> get props => <Object?>[message];
+  const factory SoundState.error(String message) = SoundError;
 }

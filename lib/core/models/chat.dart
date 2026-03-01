@@ -43,7 +43,7 @@ sealed class Chat with _$Chat {
     @Default(ChatPersona.normal) ChatPersona persona,
   }) = _Chat;
 
-  factory Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);
+  factory Chat.fromJson(Map<String, dynamic> json) => Chat.fromMap(json);
 
   // Backward compatibility: keep toMap/fromMap for existing code
   Map<String, dynamic> toMap() {

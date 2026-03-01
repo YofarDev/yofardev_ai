@@ -10,7 +10,8 @@ import '../../../core/services/chat_history_service.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
-  AvatarCubit() : super(const AvatarState());
+  AvatarCubit()
+    : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()));
 
   ChatHistoryService get _chatHistoryService => getIt<ChatHistoryService>();
 
@@ -101,7 +102,8 @@ class AvatarCubit extends Cubit<AvatarState> {
     emit(
       state.copyWith(
         avatar: avatar,
-        previousSpecialsState: avatarConfig.specials,
+        previousSpecialsState:
+            avatarConfig.specials ?? state.previousSpecialsState,
       ),
     );
     _chatHistoryService.updateAvatar(chatId, avatar);

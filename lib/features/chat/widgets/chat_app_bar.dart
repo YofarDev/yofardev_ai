@@ -9,12 +9,16 @@ class ChatAppBar extends StatelessWidget {
   final VoidCallback onBackPressed;
   final VoidCallback onVisibilityToggle;
   final bool showEverything;
+  final bool isFunctionCallingEnabled;
+  final VoidCallback onFunctionCallingToggle;
 
   const ChatAppBar({
     super.key,
     required this.onBackPressed,
     required this.onVisibilityToggle,
     required this.showEverything,
+    required this.isFunctionCallingEnabled,
+    required this.onFunctionCallingToggle,
   });
 
   @override
@@ -44,7 +48,10 @@ class ChatAppBar extends StatelessWidget {
                   onPressed: onVisibilityToggle,
                 ),
                 const SizedBox(height: 8),
-                const FunctionCallingButton(),
+                FunctionCallingButton(
+                  isEnabled: isFunctionCallingEnabled,
+                  onToggle: onFunctionCallingToggle,
+                ),
               ],
             ),
           ),

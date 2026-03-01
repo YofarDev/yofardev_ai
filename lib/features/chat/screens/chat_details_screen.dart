@@ -76,6 +76,12 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                         });
                       },
                       onDownload: () => _downloadConversation(context),
+                      isFunctionCallingEnabled: context
+                          .read<ChatsCubit>()
+                          .state
+                          .functionCallingEnabled,
+                      onFunctionCallingToggle: () =>
+                          context.read<ChatsCubit>().toggleFunctionCalling(),
                     ),
                   ],
                 ),
@@ -269,11 +275,15 @@ class _TopRightActions extends StatelessWidget {
   final bool showEverything;
   final VoidCallback onToggleVisibility;
   final VoidCallback onDownload;
+  final bool isFunctionCallingEnabled;
+  final VoidCallback onFunctionCallingToggle;
 
   const _TopRightActions({
     required this.showEverything,
     required this.onToggleVisibility,
     required this.onDownload,
+    required this.isFunctionCallingEnabled,
+    required this.onFunctionCallingToggle,
   });
 
   @override
@@ -291,7 +301,10 @@ class _TopRightActions extends StatelessWidget {
             const SizedBox(height: 8),
             AppIconButton(icon: Icons.download, onPressed: onDownload),
             const SizedBox(height: 8),
-            const FunctionCallingButton(),
+            FunctionCallingButton(
+              isEnabled: isFunctionCallingEnabled,
+              onToggle: onFunctionCallingToggle,
+            ),
           ],
         ),
       ),

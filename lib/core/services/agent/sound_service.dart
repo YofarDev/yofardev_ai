@@ -1,21 +1,21 @@
 import 'package:just_audio/just_audio.dart';
 
 import '../../models/sound_effects.dart';
+import '../sound_service_interface.dart';
 
-class SoundService {
-  static final SoundService _instance = SoundService._internal();
-  factory SoundService() => _instance;
-  SoundService._internal();
-
+class SoundService implements ISoundService {
   final AudioPlayer _player = AudioPlayer();
 
-  Future<void> playSoundEffect(
-    SoundEffects soundEffect, {
-    double volume = 1.0,
-  }) async {
+  @override
+  Future<void> playSound(String soundName) async {
+    final SoundEffects? soundEffect = SoundEffects.fromString(soundName);
+    if (soundEffect == null) {
+      return;
+    }
+
     try {
       await _player.setAsset(soundEffect.getPath());
-      await _player.setVolume(volume);
+      await _player.setVolume(1.0);
       await _player.play();
     } catch (e) {
       // Silently fail if sound file doesn't exist or can't be played
