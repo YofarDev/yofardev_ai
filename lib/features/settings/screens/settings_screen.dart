@@ -76,51 +76,55 @@ class SettingsPageState extends State<SettingsPage> {
             colors: <Color>[AppColors.background, AppColors.surface],
           ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              SettingsAppBar(onSave: _onSaveButtonPressed),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    const SizedBox(height: 16),
-                    Text(
-                      localized.settingsSubstring,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.onSurface.withValues(alpha: 0.7),
+        child: Column(
+          children: <Widget>[
+            SafeArea(
+              bottom: false,
+              child: SettingsAppBar(onSave: _onSaveButtonPressed),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const SizedBox(height: 16),
+                      Text(
+                        localized.settingsSubstring,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.onSurface.withValues(alpha: 0.7),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildApiKeyField(),
-                    const SizedBox(height: 16),
-                    UsernameField(controller: _usernameController),
-                    const SizedBox(height: 16),
-                    PersonaDropdown(
-                      value: _persona,
-                      onChanged: (ChatPersona newValue) {
-                        _persona = newValue;
-                        SettingsService().setPersona(_persona);
-                        setState(() {});
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    SoundEffectsToggle(
-                      value: _isSoundEffectsEnabled,
-                      onChanged: (bool value) {
-                        setState(() {
-                          _isSoundEffectsEnabled = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: 20),
+                      _buildApiKeyField(),
+                      const SizedBox(height: 16),
+                      UsernameField(controller: _usernameController),
+                      const SizedBox(height: 16),
+                      PersonaDropdown(
+                        value: _persona,
+                        onChanged: (ChatPersona newValue) {
+                          _persona = newValue;
+                          SettingsService().setPersona(_persona);
+                          setState(() {});
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      SoundEffectsToggle(
+                        value: _isSoundEffectsEnabled,
+                        onChanged: (bool value) {
+                          setState(() {
+                            _isSoundEffectsEnabled = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

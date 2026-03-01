@@ -26,11 +26,20 @@ class SettingsAppBar extends StatelessWidget {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Text(
-            localized.settings,
-            style: Theme.of(context).textTheme.headlineSmall,
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+            tooltip: 'Back',
+            color: AppColors.onSurface.withValues(alpha: 0.7),
+          ),
+          Expanded(
+            child: Center(
+              child: Text(
+                localized.settings,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ),
           ),
           Container(
             decoration: BoxDecoration(
