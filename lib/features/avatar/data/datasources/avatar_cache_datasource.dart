@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-class CacheService {
+class AvatarCacheDatasource {
   static String waitingSentencesKey = 'WAITING_SENTENCES';
 
   static Future<List<Map<String, dynamic>>?> getWaitingSentencesMap(
