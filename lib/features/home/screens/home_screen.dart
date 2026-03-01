@@ -12,7 +12,6 @@ import '../../avatar/widgets/thinking_animation.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
 import '../../chat/widgets/ai_text_input/ai_text_input.dart';
-import '../../demo/widgets/demo_controls_widget.dart';
 import '../../talking/bloc/talking_cubit.dart';
 import '../../talking/bloc/talking_state.dart';
 import '../bloc/home_cubit.dart';
@@ -175,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: AiTextInput(),
                                     ),
                                   const HomeButtons(),
-                                  DemoControlsWidget(key: _demoKey),
+                                  //   DemoControlsWidget(key: _demoKey),
                                 ],
                               ),
                             );
