@@ -1,17 +1,15 @@
 // ignore_for_file: avoid_dynamic_calls, use_build_context_synchronously
 
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../features/chat/bloc/chats_cubit.dart';
+import '../../chat/bloc/chats_cubit.dart';
 import '../../../l10n/localization_manager.dart';
-import '../../../models/chat.dart';
-import '../../../models/sound_effects.dart';
-import '../../../res/app_colors.dart';
-import '../../../services/settings_service.dart';
-import '../../widgets/constrained_width.dart';
+import '../../../core/models/chat.dart';
+import '../../../core/models/sound_effects.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../core/services/settings_service.dart';
+import '../../../core/widgets/constrained_width.dart';
 import '../widgets/settings_app_bar.dart';
 import '../widgets/username_field.dart';
 import '../widgets/persona_dropdown.dart';

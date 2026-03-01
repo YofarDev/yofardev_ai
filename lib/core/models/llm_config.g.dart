@@ -13,6 +13,12 @@ _LlmConfig _$LlmConfigFromJson(Map<String, dynamic> json) => _LlmConfig(
   apiKey: json['apiKey'] as String,
   model: json['model'] as String,
   temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
+  responseFormatType:
+      $enumDecodeNullable(
+        _$ResponseFormatTypeEnumMap,
+        json['responseFormatType'],
+      ) ??
+      ResponseFormatType.jsonObject,
 );
 
 Map<String, dynamic> _$LlmConfigToJson(_LlmConfig instance) =>
@@ -23,4 +29,13 @@ Map<String, dynamic> _$LlmConfigToJson(_LlmConfig instance) =>
       'apiKey': instance.apiKey,
       'model': instance.model,
       'temperature': instance.temperature,
+      'responseFormatType':
+          _$ResponseFormatTypeEnumMap[instance.responseFormatType]!,
     };
+
+const _$ResponseFormatTypeEnumMap = {
+  ResponseFormatType.none: 'none',
+  ResponseFormatType.jsonObject: 'jsonObject',
+  ResponseFormatType.jsonSchema: 'jsonSchema',
+  ResponseFormatType.text: 'text',
+};

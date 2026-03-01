@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../res/app_colors.dart';
+import '../../../core/res/app_colors.dart';
 
 /// Modern glassmorphic chat message bubble with gradient accents
 class ModernChatBubble extends StatelessWidget {

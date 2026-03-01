@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../../models/llm/llm_config.dart';
-import '../../models/llm/llm_message.dart';
+import '../../models/llm_config.dart';
+import '../../models/llm_message.dart';
 import '../../utils/logger.dart';
 import 'llm_exceptions.dart';
 

@@ -6,10 +6,10 @@ import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../l10n/localization_manager.dart';
-import '../../../../models/chat_entry.dart';
-import '../../../../models/sound_effects.dart';
-import '../../../../utils/app_utils.dart';
-import '../../../../utils/logger.dart';
+import '../../../core/models/chat_entry.dart';
+import '../../../core/models/sound_effects.dart';
+import '../../../core/utils/app_utils.dart';
+import '../../../core/utils/logger.dart';
 
 /// Message bubble widget for individual chat messages
 /// Extracted from chat_details_page.dart (326 → 180 lines)

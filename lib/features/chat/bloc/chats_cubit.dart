@@ -18,7 +18,7 @@ import '../../../core/utils/extensions.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/utils/platform_utils.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
-import 'chat_state.dart';
+import 'chats_state.dart';
 
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit({
@@ -28,7 +28,7 @@ class ChatsCubit extends Cubit<ChatsState> {
   }) : _chatHistoryService = chatHistoryService,
        _settingsService = settingsService,
        _yofardevRepository = yofardevRepository,
-       super(const ChatsState());
+       super(ChatsState.initial());
 
   late final ChatHistoryService _chatHistoryService;
   late final SettingsService _settingsService;
@@ -194,8 +194,8 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(
       state.copyWith(
         status: ChatsStatus.typing,
-        openedChat: onlyText ? chat : null,
-        currentChat: onlyText ? null : chat,
+        openedChat: onlyText ? chat : state.openedChat,
+        currentChat: onlyText ? state.currentChat : chat,
       ),
     );
     final ChatEntry userEntry = await _getNewEntry(
@@ -214,8 +214,8 @@ class ChatsCubit extends Cubit<ChatsState> {
     chat.entries[index] = userEntry;
     emit(
       state.copyWith(
-        openedChat: onlyText ? chat : null,
-        currentChat: onlyText ? null : chat,
+        openedChat: onlyText ? chat : state.openedChat,
+        currentChat: onlyText ? state.currentChat : chat,
       ),
     );
     try {
@@ -231,8 +231,8 @@ class ChatsCubit extends Cubit<ChatsState> {
       chat = chat.copyWith(entries: entries);
       emit(
         state.copyWith(
-          openedChat: onlyText ? chat : null,
-          currentChat: onlyText ? null : chat,
+          openedChat: onlyText ? chat : state.openedChat,
+          currentChat: onlyText ? state.currentChat : chat,
           status: ChatsStatus.success,
         ),
       );

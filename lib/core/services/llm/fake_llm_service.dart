@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import '../../../features/demo/models/demo_script.dart';
-import '../../models/llm/function_info.dart';
-import '../../models/llm/llm_config.dart';
-import '../../models/llm/llm_message.dart';
+import '../../models/function_info.dart';
+import '../../models/llm_config.dart';
+import '../../models/llm_message.dart';
 import '../../utils/logger.dart';
 import 'llm_service_interface.dart';
 

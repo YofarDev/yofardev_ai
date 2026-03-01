@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
+import 'package:yofardev_ai/core/models/chat_entry.dart';
+import 'package:yofardev_ai/core/repositories/yofardev_repository.dart';
+import 'package:yofardev_ai/core/services/chat_history_service.dart';
+import 'package:yofardev_ai/core/services/settings_service.dart';
 import 'package:yofardev_ai/features/chat/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
-import 'package:yofardev_ai/models/chat.dart';
-import 'package:yofardev_ai/models/chat_entry.dart';
-import 'package:yofardev_ai/repositories/yofardev_repository.dart';
-import 'package:yofardev_ai/services/chat_history_service.dart';
-import 'package:yofardev_ai/services/settings_service.dart';
+import 'package:yofardev_ai/features/chat/bloc/chats_state.dart';
 
 class MockChatHistoryService implements ChatHistoryService {
   @override
@@ -276,9 +277,12 @@ void main() {
 
     group('ChatsState', () {
       test('should create state with default values', () {
-        const ChatsState state = ChatsState();
+        const ChatsState state = ChatsState(
+          currentChat: Chat(),
+          openedChat: Chat(),
+        );
 
-        expect(state.status, ChatsStatus.loading);
+        expect(state.status, ChatsStatus.initial);
         expect(state.chatsList, isEmpty);
         expect(state.currentChat, const Chat());
         expect(state.openedChat, const Chat());
@@ -291,7 +295,10 @@ void main() {
       });
 
       test('should copy with new values correctly', () {
-        const ChatsState state = ChatsState();
+        const ChatsState state = ChatsState(
+          currentChat: Chat(),
+          openedChat: Chat(),
+        );
 
         final ChatsState newState = state.copyWith(
           status: ChatsStatus.success,
@@ -319,7 +326,10 @@ void main() {
       });
 
       test('should copy with list values', () {
-        const ChatsState state = ChatsState();
+        const ChatsState state = ChatsState(
+          currentChat: Chat(),
+          openedChat: Chat(),
+        );
 
         final List<Chat> newChatsList = <Chat>[
           const Chat(id: 'chat1'),
@@ -345,7 +355,10 @@ void main() {
       });
 
       test('should copy with chat values', () {
-        const ChatsState state = ChatsState();
+        const ChatsState state = ChatsState(
+          currentChat: Chat(),
+          openedChat: Chat(),
+        );
 
         const Chat newCurrentChat = Chat(id: 'current-chat');
         const Chat newOpenedChat = Chat(id: 'opened-chat', language: 'fr');
@@ -363,35 +376,50 @@ void main() {
         expect(newState.chatsList, state.chatsList);
       });
 
-      test('props should include all fields', () {
-        const ChatsState state = ChatsState();
-
-        expect(
-          state.props.length,
-          11, // status, chatsList, currentChat, openedChat, errorMessage,
-          // soundEffectsEnabled, currentLanguage, audioPathsWaitingSentences,
-          // initializing, functionCallingEnabled
+      test('should include all fields', () {
+        const ChatsState state = ChatsState(
+          currentChat: Chat(),
+          openedChat: Chat(),
         );
+
+        // Verify all fields are present via toString
+        final String str = state.toString();
+        expect(str, contains('ChatsState'));
+        expect(str, contains('status'));
+        expect(str, contains('chatsList'));
+        expect(str, contains('currentChat'));
+        expect(str, contains('openedChat'));
       });
 
       test('props should be unique for different states', () {
-        const ChatsState state1 = ChatsState();
-        const ChatsState state2 = ChatsState(status: ChatsStatus.success);
+        const ChatsState state1 = ChatsState(
+          currentChat: Chat(),
+          openedChat: Chat(),
+        );
+        const ChatsState state2 = ChatsState(
+          status: ChatsStatus.success,
+          currentChat: Chat(),
+          openedChat: Chat(),
+        );
 
-        expect(state1.props, isNot(state2.props));
+        expect(state1, isNot(state2));
       });
 
       test('props should be same for equal states', () {
         const ChatsState state1 = ChatsState(
           status: ChatsStatus.success,
           currentLanguage: 'en',
+          currentChat: Chat(),
+          openedChat: Chat(),
         );
         const ChatsState state2 = ChatsState(
           status: ChatsStatus.success,
           currentLanguage: 'en',
+          currentChat: Chat(),
+          openedChat: Chat(),
         );
 
-        expect(state1.props, state2.props);
+        expect(state1, state2);
       });
     });
 

@@ -6,11 +6,11 @@ import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../../../models/chat_entry.dart';
-import '../../../../models/sound_effects.dart';
-import '../../../../res/app_colors.dart';
-import '../../../../utils/app_utils.dart';
-import '../../../widgets/chat/modern_chat_bubble.dart';
+import '../../../core/models/chat_entry.dart';
+import '../../../core/models/sound_effects.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../core/utils/app_utils.dart';
+import 'modern_chat_bubble.dart';
 import '../widgets/chat_avatar.dart';
 
 class ChatMessageItem extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../utils/logger.dart';
+import '../../../core/utils/logger.dart';
 
 /// HomeCubit manages home page specific state and actions
 class HomeCubit extends Cubit<HomeState> {

@@ -4,6 +4,21 @@ import 'package:uuid/uuid.dart';
 part 'llm_config.freezed.dart';
 part 'llm_config.g.dart';
 
+/// Response format types for LLM API requests
+enum ResponseFormatType {
+  /// No specific format requested
+  none,
+
+  /// JSON object response
+  jsonObject,
+
+  /// JSON Schema response
+  jsonSchema,
+
+  /// Plain text response
+  text,
+}
+
 /// Configuration for LLM API connections
 ///
 /// Contains all necessary information to connect to an LLM provider
@@ -29,6 +44,10 @@ sealed class LlmConfig with _$LlmConfig {
     /// Temperature for text generation (0.0 - 2.0)
     /// Lower = more focused, Higher = more creative
     @Default(0.7) double temperature,
+
+    /// Response format type for JSON mode
+    @Default(ResponseFormatType.jsonObject)
+    ResponseFormatType responseFormatType,
   }) = _LlmConfig;
 
   factory LlmConfig.fromJson(Map<String, dynamic> json) =>
@@ -41,6 +60,7 @@ sealed class LlmConfig with _$LlmConfig {
     required String apiKey,
     required String model,
     double temperature = 0.7,
+    ResponseFormatType responseFormatType = ResponseFormatType.jsonObject,
   }) {
     return LlmConfig(
       id: const Uuid().v4(),
@@ -49,6 +69,7 @@ sealed class LlmConfig with _$LlmConfig {
       apiKey: apiKey,
       model: model,
       temperature: temperature,
+      responseFormatType: responseFormatType,
     );
   }
 }

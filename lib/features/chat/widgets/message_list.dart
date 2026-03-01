@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../features/chat/bloc/chats_cubit.dart';
-import '../../../../models/chat.dart';
-import '../../../../models/chat_entry.dart';
+import '../../../core/models/chat.dart';
+import '../../../core/models/chat_entry.dart';
 import 'function_calling_widget.dart';
-import '../../../../utils/extensions.dart';
+import '../../../core/utils/extensions.dart';
 import 'message_bubble.dart';
 
 /// Message list with reversed ListView

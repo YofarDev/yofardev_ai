@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/chat/bloc/chats_cubit.dart';
+import '../../features/chat/bloc/chats_state.dart';
 import 'app_icon_button.dart';
 
 class FunctionCallingButton extends StatelessWidget {

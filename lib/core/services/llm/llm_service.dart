@@ -4,9 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/logger.dart';
-import '../../models/llm/function_info.dart';
-import '../../models/llm/llm_config.dart';
-import '../../models/llm/llm_message.dart';
+import '../../models/function_info.dart';
+import '../../models/llm_config.dart';
+import '../../models/llm_message.dart';
 import 'llm_service_interface.dart';
 
 /// Real LLM service implementation using OpenAI-compatible APIs
@@ -33,7 +33,7 @@ class LlmService implements LlmServiceInterface {
       try {
         final List<dynamic> list = json.decode(configsJson) as List<dynamic>;
         _configs = list
-            .map((dynamic e) => LlmConfig.fromMap(e as Map<String, dynamic>))
+            .map((dynamic e) => LlmConfig.fromJson(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
         AppLogger.error(
@@ -106,7 +106,7 @@ class LlmService implements LlmServiceInterface {
   Future<void> _saveToPrefs() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String jsonString = json.encode(
-      _configs.map((LlmConfig c) => c.toMap()).toList(),
+      _configs.map((LlmConfig c) => c.toJson()).toList(),
     );
     await prefs.setString(_configsKey, jsonString);
   }

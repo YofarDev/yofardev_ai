@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/logic/agent/tools/calculator_tool.dart';
-import 'package:yofardev_ai/logic/agent/tools/character_counter_tool.dart';
+import 'package:yofardev_ai/core/services/agent/calculator_tool.dart';
+import 'package:yofardev_ai/core/services/agent/character_counter_tool.dart';
 
 void main() {
   group('CalculatorTool', () {

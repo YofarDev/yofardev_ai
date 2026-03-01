@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../res/app_colors.dart';
+import '../../res/app_colors.dart';
 
 class CosmicTextField extends StatelessWidget {
   final TextEditingController? controller;

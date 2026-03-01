@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../features/avatar/bloc/avatar_cubit.dart';
-import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../core/models/avatar_config.dart';
-import '../../../models/chat.dart';
-import 'image_full_screen.dart';
+import '../../../core/models/chat.dart';
+import '../../avatar/bloc/avatar_cubit.dart';
+import '../../avatar/bloc/avatar_state.dart';
+import '../bloc/chats_cubit.dart';
+import '../bloc/chats_state.dart';
 import '../widgets/ai_text_input/ai_text_input.dart';
 import '../widgets/chat_app_bar.dart';
 import '../widgets/message_list.dart';
+import 'image_full_screen.dart';
 
 /// Chat details screen - simplified coordinator
 /// Reduced from 326 → 131 lines (60% reduction)

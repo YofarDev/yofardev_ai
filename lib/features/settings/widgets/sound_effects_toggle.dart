@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../res/app_colors.dart';
-import '../../../models/sound_effects.dart';
-import '../../l10n/localization_manager.dart';
-import '../../widgets/settings/glassmorphic_switch.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../l10n/localization_manager.dart';
 
 class SoundEffectsToggle extends StatelessWidget {
   final bool value;
@@ -62,7 +60,7 @@ class SoundEffectsToggle extends StatelessWidget {
               ),
             ],
           ),
-          GlassmorphicSwitch(value: value, onChanged: onChanged),
+          Switch(value: value, onChanged: onChanged),
         ],
       ),
     );

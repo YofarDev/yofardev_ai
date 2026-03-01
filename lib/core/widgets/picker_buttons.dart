@@ -6,8 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
-import '../../res/app_constants.dart';
-import 'glassmorphic_icon_button.dart';
+import '../res/app_constants.dart';
+import 'glassmorphic/glassmorphic_icon_button.dart';
 
 class PickerButtons extends StatelessWidget {
   final Function(File? file) onImageSelected;

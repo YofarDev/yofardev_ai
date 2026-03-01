@@ -13,14 +13,15 @@ import 'package:window_manager/window_manager.dart';
 import 'core/di/service_locator.dart';
 import 'features/avatar/bloc/avatar_cubit.dart';
 import 'features/chat/bloc/chats_cubit.dart';
+import 'features/demo/bloc/demo_cubit.dart';
 import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
-import 'logic/talking/talking_cubit.dart';
-import 'res/app_theme.dart';
-import 'services/tts_service.dart';
+import 'features/talking/bloc/talking_cubit.dart';
+import 'core/res/app_theme.dart';
+import 'core/services/tts_service.dart';
 import 'features/home/screens/home_screen.dart';
 import 'core/widgets/constrained_width.dart';
-import 'utils/platform_utils.dart';
+import 'core/utils/platform_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +73,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<AvatarCubit>(
           create: (BuildContext context) => AvatarCubit(),
+        ),
+        BlocProvider<DemoCubit>(
+          create: (BuildContext context) => getIt<DemoCubit>(),
         ),
       ],
       child: MaterialApp(

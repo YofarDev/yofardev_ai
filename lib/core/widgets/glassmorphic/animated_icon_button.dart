@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../res/app_colors.dart';
+import '../../res/app_colors.dart';
 
 class AnimatedIconButton extends StatefulWidget {
   final IconData icon;

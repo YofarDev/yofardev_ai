@@ -22,8 +22,17 @@ sealed class ChatEntry with _$ChatEntry {
   }) = _ChatEntry;
   const ChatEntry._();
 
-  factory ChatEntry.fromJson(Map<String, dynamic> json) =>
-      _$ChatEntryFromJson(json);
+  factory ChatEntry.fromJson(Map<String, dynamic> json) {
+    // Handle timestamp format migration from int (milliseconds) to String (ISO8601)
+    final Map<String, dynamic> processedJson = Map<String, dynamic>.from(json);
+    if (processedJson['timestamp'] is int) {
+      // Old format: timestamp as int (milliseconds since epoch)
+      processedJson['timestamp'] = DateTime.fromMillisecondsSinceEpoch(
+        processedJson['timestamp'] as int,
+      ).toIso8601String();
+    }
+    return _$ChatEntryFromJson(processedJson);
+  }
 }
 
 extension ChatEntryExtension on ChatEntry {

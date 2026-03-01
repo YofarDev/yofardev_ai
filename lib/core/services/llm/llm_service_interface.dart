@@ -1,6 +1,6 @@
-import '../../models/llm/function_info.dart';
-import '../../models/llm/llm_config.dart';
-import '../../models/llm/llm_message.dart';
+import '../../models/function_info.dart';
+import '../../models/llm_config.dart';
+import '../../models/llm_message.dart';
 
 /// Interface for LLM service implementations
 ///

@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../features/avatar/bloc/avatar_cubit.dart';
-import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../../features/chat/bloc/chats_cubit.dart';
-import '../../../logic/home/home_cubit.dart';
-import '../../../logic/talking/talking_cubit.dart';
-import '../../../res/app_colors.dart';
-import '../../utils/platform_utils.dart';
-import '../../chat/widgets/ai_text_input/ai_text_input.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../core/utils/platform_utils.dart';
+import '../../avatar/bloc/avatar_cubit.dart';
+import '../../avatar/bloc/avatar_state.dart';
 import '../../avatar/widgets/avatar_widgets.dart';
 import '../../avatar/widgets/background_avatar.dart';
 import '../../avatar/widgets/loading_avatar_widget.dart';
 import '../../avatar/widgets/thinking_animation.dart';
+import '../../chat/bloc/chats_cubit.dart';
+import '../../chat/bloc/chats_state.dart';
+import '../../chat/widgets/ai_text_input/ai_text_input.dart';
 import '../../demo/widgets/demo_controls_widget.dart';
-import '../../../ui/widgets/home_buttons.dart';
+import '../../talking/bloc/talking_cubit.dart';
+import '../../talking/bloc/talking_state.dart';
+import '../bloc/home_cubit.dart';
+import '../widgets/home_buttons.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +27,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isTalkingWaitingSentences = false;
-  final GlobalKey<DemoControlsState> _demoKey = GlobalKey();
+  final GlobalKey _demoKey = GlobalKey();
   int _tapCount = 0;
   DateTime? _lastTapTime;
 
@@ -41,7 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_tapCount >= 3) {
       _tapCount = 0;
-      _demoKey.currentState?.startDemo();
+      // Demo mode activation - will need a demo script
+      // context.read<DemoCubit>().startDemo(script);
     }
   }
 
@@ -172,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: AiTextInput(),
                                     ),
                                   const HomeButtons(),
-                                  DemoControls(key: _demoKey),
+                                  DemoControlsWidget(key: _demoKey),
                                 ],
                               ),
                             );

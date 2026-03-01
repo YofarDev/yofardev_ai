@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../res/app_colors.dart';
-import '../../l10n/localization_manager.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../l10n/localization_manager.dart';
 
 class SettingsAppBar extends StatelessWidget {
   final VoidCallback onSave;

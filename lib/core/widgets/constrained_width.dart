@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../res/app_constants.dart';
+import '../res/app_constants.dart';
 
 class ConstrainedWidth extends StatelessWidget {
   final Widget child;

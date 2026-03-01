@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../../features/avatar/bloc/avatar_state.dart';
-import '../../../../res/app_constants.dart';
-import '../../../../utils/app_utils.dart';
+import '../../../../core/res/app_constants.dart';
+import '../../../../core/utils/app_utils.dart';
 
 class SoubretteFeatherDuster extends StatefulWidget {
   const SoubretteFeatherDuster({super.key});

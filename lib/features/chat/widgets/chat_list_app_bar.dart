@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../res/app_colors.dart';
+import '../../../core/res/app_colors.dart';
 import '../../../../l10n/localization_manager.dart';
 
 /// App bar for the chats list page

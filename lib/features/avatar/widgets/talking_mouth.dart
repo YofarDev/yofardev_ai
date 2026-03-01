@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../talking/bloc/talking_state.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -6,13 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../../features/avatar/bloc/avatar_cubit.dart';
-import '../../../features/chat/bloc/chats_cubit.dart';
-import '../../../logic/talking/talking_cubit.dart';
-import '../../../res/app_constants.dart';
-import '../../utils/app_utils.dart';
-import '../../utils/logger.dart';
-import '../../utils/platform_utils.dart';
+import '../bloc/avatar_cubit.dart';
+import '../../chat/bloc/chats_cubit.dart';
+import '../../talking/bloc/talking_cubit.dart';
+import '../../../core/res/app_constants.dart';
+import '../../../core/utils/app_utils.dart';
+import '../../../core/utils/logger.dart';
+import '../../../core/utils/platform_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class TalkingMouth extends StatefulWidget {
@@ -71,12 +72,10 @@ class _TalkingMouthState extends State<TalkingMouth> {
         continue;
       }
 
-      final String audioPath =
-          context
-                  .read<ChatsCubit>()
-                  .state
-                  .audioPathsWaitingSentences[i]['audioPath']
-              as String;
+      final String audioPath = context
+          .read<ChatsCubit>()
+          .state
+          .audioPathsWaitingSentences[i]['audioPath'];
       final List<int> amplitudes =
           context
                   .read<ChatsCubit>()

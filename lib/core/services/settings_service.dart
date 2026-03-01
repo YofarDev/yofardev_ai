@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../l10n/localization_manager.dart';
+import '../../l10n/localization_manager.dart';
 import '../models/chat.dart';
 import '../res/app_constants.dart';
 import '../utils/app_utils.dart';

@@ -1,8 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import '../../../res/app_colors.dart';
-import '../../l10n/localization_manager.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../l10n/localization_manager.dart';
 
 class UsernameField extends StatelessWidget {
   final TextEditingController controller;

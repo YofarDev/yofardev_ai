@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../res/app_colors.dart';
+import '../../../core/res/app_colors.dart';
 
 class LoadingAvatarWidget extends StatelessWidget {
   const LoadingAvatarWidget({super.key});

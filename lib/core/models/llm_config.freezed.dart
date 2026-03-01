@@ -22,7 +22,8 @@ mixin _$LlmConfig {
  String get apiKey;/// Model name to use (e.g., "gpt-4o", "llama3")
  String get model;/// Temperature for text generation (0.0 - 2.0)
 /// Lower = more focused, Higher = more creative
- double get temperature;
+ double get temperature;/// Response format type for JSON mode
+ ResponseFormatType get responseFormatType;
 /// Create a copy of LlmConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -35,16 +36,16 @@ $LlmConfigCopyWith<LlmConfig> get copyWith => _$LlmConfigCopyWithImpl<LlmConfig>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmConfig&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.apiKey, apiKey) || other.apiKey == apiKey)&&(identical(other.model, model) || other.model == model)&&(identical(other.temperature, temperature) || other.temperature == temperature));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmConfig&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.apiKey, apiKey) || other.apiKey == apiKey)&&(identical(other.model, model) || other.model == model)&&(identical(other.temperature, temperature) || other.temperature == temperature)&&(identical(other.responseFormatType, responseFormatType) || other.responseFormatType == responseFormatType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,label,baseUrl,apiKey,model,temperature);
+int get hashCode => Object.hash(runtimeType,id,label,baseUrl,apiKey,model,temperature,responseFormatType);
 
 @override
 String toString() {
-  return 'LlmConfig(id: $id, label: $label, baseUrl: $baseUrl, apiKey: $apiKey, model: $model, temperature: $temperature)';
+  return 'LlmConfig(id: $id, label: $label, baseUrl: $baseUrl, apiKey: $apiKey, model: $model, temperature: $temperature, responseFormatType: $responseFormatType)';
 }
 
 
@@ -55,7 +56,7 @@ abstract mixin class $LlmConfigCopyWith<$Res>  {
   factory $LlmConfigCopyWith(LlmConfig value, $Res Function(LlmConfig) _then) = _$LlmConfigCopyWithImpl;
 @useResult
 $Res call({
- String id, String label, String baseUrl, String apiKey, String model, double temperature
+ String id, String label, String baseUrl, String apiKey, String model, double temperature, ResponseFormatType responseFormatType
 });
 
 
@@ -72,7 +73,7 @@ class _$LlmConfigCopyWithImpl<$Res>
 
 /// Create a copy of LlmConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? baseUrl = null,Object? apiKey = null,Object? model = null,Object? temperature = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? baseUrl = null,Object? apiKey = null,Object? model = null,Object? temperature = null,Object? responseFormatType = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -80,7 +81,8 @@ as String,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nul
 as String,apiKey: null == apiKey ? _self.apiKey : apiKey // ignore: cast_nullable_to_non_nullable
 as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as String,temperature: null == temperature ? _self.temperature : temperature // ignore: cast_nullable_to_non_nullable
-as double,
+as double,responseFormatType: null == responseFormatType ? _self.responseFormatType : responseFormatType // ignore: cast_nullable_to_non_nullable
+as ResponseFormatType,
   ));
 }
 
@@ -162,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String label,  String baseUrl,  String apiKey,  String model,  double temperature)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String label,  String baseUrl,  String apiKey,  String model,  double temperature,  ResponseFormatType responseFormatType)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LlmConfig() when $default != null:
-return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_that.temperature);case _:
+return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_that.temperature,_that.responseFormatType);case _:
   return orElse();
 
 }
@@ -183,10 +185,10 @@ return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String label,  String baseUrl,  String apiKey,  String model,  double temperature)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String label,  String baseUrl,  String apiKey,  String model,  double temperature,  ResponseFormatType responseFormatType)  $default,) {final _that = this;
 switch (_that) {
 case _LlmConfig():
-return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_that.temperature);}
+return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_that.temperature,_that.responseFormatType);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -200,10 +202,10 @@ return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String label,  String baseUrl,  String apiKey,  String model,  double temperature)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String label,  String baseUrl,  String apiKey,  String model,  double temperature,  ResponseFormatType responseFormatType)?  $default,) {final _that = this;
 switch (_that) {
 case _LlmConfig() when $default != null:
-return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_that.temperature);case _:
+return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_that.temperature,_that.responseFormatType);case _:
   return null;
 
 }
@@ -215,7 +217,7 @@ return $default(_that.id,_that.label,_that.baseUrl,_that.apiKey,_that.model,_tha
 @JsonSerializable()
 
 class _LlmConfig implements LlmConfig {
-  const _LlmConfig({required this.id, required this.label, required this.baseUrl, required this.apiKey, required this.model, this.temperature = 0.7});
+  const _LlmConfig({required this.id, required this.label, required this.baseUrl, required this.apiKey, required this.model, this.temperature = 0.7, this.responseFormatType = ResponseFormatType.jsonObject});
   factory _LlmConfig.fromJson(Map<String, dynamic> json) => _$LlmConfigFromJson(json);
 
 /// Unique identifier for this configuration
@@ -231,6 +233,8 @@ class _LlmConfig implements LlmConfig {
 /// Temperature for text generation (0.0 - 2.0)
 /// Lower = more focused, Higher = more creative
 @override@JsonKey() final  double temperature;
+/// Response format type for JSON mode
+@override@JsonKey() final  ResponseFormatType responseFormatType;
 
 /// Create a copy of LlmConfig
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmConfig&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.apiKey, apiKey) || other.apiKey == apiKey)&&(identical(other.model, model) || other.model == model)&&(identical(other.temperature, temperature) || other.temperature == temperature));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmConfig&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.apiKey, apiKey) || other.apiKey == apiKey)&&(identical(other.model, model) || other.model == model)&&(identical(other.temperature, temperature) || other.temperature == temperature)&&(identical(other.responseFormatType, responseFormatType) || other.responseFormatType == responseFormatType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,label,baseUrl,apiKey,model,temperature);
+int get hashCode => Object.hash(runtimeType,id,label,baseUrl,apiKey,model,temperature,responseFormatType);
 
 @override
 String toString() {
-  return 'LlmConfig(id: $id, label: $label, baseUrl: $baseUrl, apiKey: $apiKey, model: $model, temperature: $temperature)';
+  return 'LlmConfig(id: $id, label: $label, baseUrl: $baseUrl, apiKey: $apiKey, model: $model, temperature: $temperature, responseFormatType: $responseFormatType)';
 }
 
 
@@ -265,7 +269,7 @@ abstract mixin class _$LlmConfigCopyWith<$Res> implements $LlmConfigCopyWith<$Re
   factory _$LlmConfigCopyWith(_LlmConfig value, $Res Function(_LlmConfig) _then) = __$LlmConfigCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String label, String baseUrl, String apiKey, String model, double temperature
+ String id, String label, String baseUrl, String apiKey, String model, double temperature, ResponseFormatType responseFormatType
 });
 
 
@@ -282,7 +286,7 @@ class __$LlmConfigCopyWithImpl<$Res>
 
 /// Create a copy of LlmConfig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? baseUrl = null,Object? apiKey = null,Object? model = null,Object? temperature = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? baseUrl = null,Object? apiKey = null,Object? model = null,Object? temperature = null,Object? responseFormatType = null,}) {
   return _then(_LlmConfig(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -290,7 +294,8 @@ as String,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nul
 as String,apiKey: null == apiKey ? _self.apiKey : apiKey // ignore: cast_nullable_to_non_nullable
 as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as String,temperature: null == temperature ? _self.temperature : temperature // ignore: cast_nullable_to_non_nullable
-as double,
+as double,responseFormatType: null == responseFormatType ? _self.responseFormatType : responseFormatType // ignore: cast_nullable_to_non_nullable
+as ResponseFormatType,
   ));
 }
 

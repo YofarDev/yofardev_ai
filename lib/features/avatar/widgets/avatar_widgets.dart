@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../features/avatar/bloc/avatar_cubit.dart';
+import '../bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../core/models/avatar_config.dart';
-import '../../../res/app_constants.dart';
+import '../../../core/res/app_constants.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';
 import 'clothes.dart';

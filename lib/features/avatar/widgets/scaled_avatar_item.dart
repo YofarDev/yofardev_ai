@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../features/avatar/bloc/avatar_cubit.dart';
+import '../bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../utils/app_utils.dart';
+import '../../../core/utils/app_utils.dart';
 
 class ScaledAvatarItem extends StatefulWidget {
   final String path;

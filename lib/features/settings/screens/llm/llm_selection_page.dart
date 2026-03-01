@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/llm/llm_config.dart';
-import '../../../../services/llm_service.dart';
+import '../../../../core/models/llm_config.dart';
+import '../../../../core/services/llm/llm_service.dart';
 import 'llm_config_page.dart';
 
 class LlmSelectionPage extends StatefulWidget {

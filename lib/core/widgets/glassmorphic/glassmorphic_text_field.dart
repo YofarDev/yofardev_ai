@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../res/app_colors.dart';
-import 'glassmorphic/animated_icon_button.dart';
+import 'animated_icon_button.dart';
 
 class GlassmorphicTextField extends StatefulWidget {
   final TextEditingController? controller;

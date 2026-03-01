@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
-import 'package:yofardev_ai/models/sound_effects.dart';
+import 'package:yofardev_ai/core/models/sound_effects.dart';
 
 void main() {
   group('Avatar (Freezed)', () {

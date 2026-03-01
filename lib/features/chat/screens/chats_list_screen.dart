@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../features/avatar/bloc/avatar_cubit.dart';
-import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../../features/chat/bloc/chats_cubit.dart';
+import '../../avatar/bloc/avatar_cubit.dart';
+import '../../avatar/bloc/avatar_state.dart';
+import '../bloc/chats_cubit.dart';
+import '../bloc/chats_state.dart';
 import '../../../l10n/localization_manager.dart';
-import '../../../logic/talking/talking_cubit.dart';
-import '../../../models/chat.dart';
-import '../../../res/app_colors.dart';
-import '../../utils/extensions.dart';
-import '../../widgets/constrained_width.dart';
+import '../../talking/bloc/talking_cubit.dart';
+import '../../../core/models/chat.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../core/utils/extensions.dart';
+import '../../../core/widgets/constrained_width.dart';
 import 'chat_details_screen.dart';
 import '../widgets/chat_list_empty_state.dart';
-import 'widgets/chat_list_item.dart';
+import '../widgets/chat_list_item.dart';
 
 class ChatsListPage extends StatefulWidget {
   const ChatsListPage({super.key});

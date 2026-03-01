@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../res/app_colors.dart';
+import '../../res/app_colors.dart';
 
 /// Animated cosmic gradient mesh background
 class GradientBackground extends StatefulWidget {

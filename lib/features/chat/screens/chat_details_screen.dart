@@ -5,17 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../../features/avatar/bloc/avatar_cubit.dart';
-import '../../utils/logger.dart';
-import '../../../features/avatar/bloc/avatar_state.dart';
-import '../../../features/chat/bloc/chats_cubit.dart';
+import '../../avatar/bloc/avatar_cubit.dart';
+import '../../avatar/bloc/avatar_state.dart';
+import '../bloc/chats_cubit.dart';
+import '../bloc/chats_state.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/models/avatar_config.dart';
-import '../../../models/chat.dart';
-import '../../../models/chat_entry.dart';
-import '../../../res/app_colors.dart';
+import '../../../core/models/chat.dart';
+import '../../../core/models/chat_entry.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../core/widgets/app_icon_button.dart';
+import '../../../core/widgets/function_calling_button.dart';
 import '../widgets/ai_text_input/ai_text_input.dart';
-import '../../widgets/app_icon_button.dart';
-import '../../widgets/function_calling_button.dart';
 import '../widgets/chat_conversation_list.dart';
 
 class ChatDetailsPage extends StatefulWidget {

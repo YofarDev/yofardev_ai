@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../res/app_colors.dart';
-import '../../../../utils/app_utils.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../core/utils/app_utils.dart';
 
 class ChatAvatar extends StatelessWidget {
   final double size;

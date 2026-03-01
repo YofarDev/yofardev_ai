@@ -1,12 +1,13 @@
 import 'dart:async';
+import '../../../talking/bloc/talking_state.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../logic/talking/talking_cubit.dart';
-import '../../../../utils/app_utils.dart';
-import '../../../../utils/platform_utils.dart';
+import '../../../talking/bloc/talking_cubit.dart';
+import '../../../../core/utils/app_utils.dart';
+import '../../../../core/utils/platform_utils.dart';
 
 class SingularityCostume extends StatefulWidget {
   final Duration switchDuration;

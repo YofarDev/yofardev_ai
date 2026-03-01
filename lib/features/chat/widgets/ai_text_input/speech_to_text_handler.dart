@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../utils/platform_utils.dart';
+import '../../../../core/utils/platform_utils.dart';
 
 class SpeechToTextHandler {
   SpeechToText? _speechToText;

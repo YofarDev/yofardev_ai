@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../utils/logger.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/services/llm/fake_llm_service.dart';
-import '../../../features/chat/bloc/chats_cubit.dart';
+import '../../chat/bloc/chats_cubit.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
 import '../models/demo_script.dart';

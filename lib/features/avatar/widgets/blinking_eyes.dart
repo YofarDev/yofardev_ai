@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../../res/app_constants.dart';
-import '../../utils/app_utils.dart';
+import '../../../core/res/app_constants.dart';
+import '../../../core/utils/app_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class BlinkingEyes extends StatefulWidget {
