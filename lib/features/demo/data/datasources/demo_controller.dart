@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../core/utils/logger.dart';
+import '../../../../core/utils/logger.dart';
 
 /// Demo status enum
 enum DemoStatus {
