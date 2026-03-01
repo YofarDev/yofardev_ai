@@ -1,15 +1,15 @@
 import 'package:flutter/services.dart';
 
-import '../../l10n/localization_manager.dart';
-import '../models/avatar_config.dart';
-import '../models/chat.dart';
-import '../models/sound_effects.dart';
-import '../utils/app_utils.dart';
-import 'settings_service.dart';
+import '../../../../l10n/localization_manager.dart';
+import '../../../avatar/domain/models/avatar_config.dart';
+import '../../../chat/domain/models/chat.dart';
+import '../../../../../core/models/sound_effects.dart';
+import '../../../../../core/utils/app_utils.dart';
+import '../../../settings/data/datasources/settings_local_datasource.dart';
 
-class PromptService {
+class PromptDatasource {
   Future<String> getSystemPrompt() async {
-    String systemPrompt = await SettingsService().getBaseSystemPrompt();
+    String systemPrompt = await SettingsLocalDatasource().getBaseSystemPrompt();
 
     // Replace lists
     systemPrompt = _replacePlaceholder(
@@ -49,14 +49,14 @@ class PromptService {
     );
 
     // Replace user info
-    final String? username = await SettingsService().getUsername();
+    final String? username = await SettingsLocalDatasource().getUsername();
     systemPrompt = systemPrompt.replaceAll(
       r'$USERNAME',
       username != null ? "${localized.currentUsername} : $username\n" : '',
     );
 
     // Replace Persona
-    final ChatPersona persona = await SettingsService().getPersona();
+    final ChatPersona persona = await SettingsLocalDatasource().getPersona();
     final String personaStr = await rootBundle.loadString(
       AppUtils.fixAssetsPath(
         'assets/txt/persona_${persona.name}_$languageCode.txt',
