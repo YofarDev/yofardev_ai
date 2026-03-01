@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'avatar_config.dart';
+import '../../../avatar/domain/models/avatar_config.dart';
 import 'chat_entry.dart';
-import 'llm_message.dart';
+import '../../../../core/models/llm_message.dart';
 
 part 'chat.freezed.dart';
 part 'chat.g.dart';
