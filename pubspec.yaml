@@ -49,6 +49,7 @@ dependencies:
   freezed: ^3.2.5
   json_annotation: ^4.11.0
   google_fonts: ^8.0.2
+  fpdart: ^1.2.0
 
 dev_dependencies:
   flutter_test:
