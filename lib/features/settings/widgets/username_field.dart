@@ -31,9 +31,9 @@ class UsernameField extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: TextFormField(
             controller: controller,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurface,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurface),
             decoration: InputDecoration(
               hintText: localized.username,
               hintStyle: TextStyle(

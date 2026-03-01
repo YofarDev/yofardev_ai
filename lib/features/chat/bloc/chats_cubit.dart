@@ -1,26 +1,24 @@
 import 'dart:async';
 
 import 'package:audio_analyzer/audio_analyzer.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../l10n/localization_manager.dart';
-import '../../../logic/talking/talking_cubit.dart';
+import '../../../features/talking/bloc/talking_cubit.dart';
 import '../../../core/models/avatar_config.dart';
-import '../../../models/chat.dart';
-import '../../../models/chat_entry.dart';
-import '../../../repositories/yofardev_repository.dart';
-import '../../../services/cache_service.dart';
-import '../../../services/chat_history_service.dart';
-import '../../../services/settings_service.dart';
-import '../../../services/tts_service.dart';
-import '../../../utils/extensions.dart';
-import '../../../utils/logger.dart';
-import '../../../utils/platform_utils.dart';
+import '../../../core/models/chat.dart';
+import '../../../core/models/chat_entry.dart';
+import '../../../core/repositories/yofardev_repository.dart';
+import '../../../core/services/cache_service.dart';
+import '../../../core/services/chat_history_service.dart';
+import '../../../core/services/settings_service.dart';
+import '../../../core/services/tts_service.dart';
+import '../../../core/utils/extensions.dart';
+import '../../../core/utils/logger.dart';
+import '../../../core/utils/platform_utils.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
-
-part 'chat_state.dart';
+import 'chat_state.dart';
 
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit({
@@ -241,7 +239,11 @@ class ChatsCubit extends Cubit<ChatsState> {
       await _chatHistoryService.updateChat(chatId: chat.id, updatedChat: chat);
       return newModelEntry;
     } catch (e) {
-      AppLogger.error('Error sending text message', tag: 'ChatsCubit', error: e);
+      AppLogger.error(
+        'Error sending text message',
+        tag: 'ChatsCubit',
+        error: e,
+      );
       emit(
         state.copyWith(status: ChatsStatus.error, errorMessage: e.toString()),
       );

@@ -4,9 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/service_locator.dart';
 import '../../../core/models/avatar_config.dart';
-import '../../../models/chat.dart';
-import '../../../res/app_constants.dart';
-import '../../../services/chat_history_service.dart';
+import '../../../core/models/chat.dart';
+import '../../../core/res/app_constants.dart';
+import '../../../core/services/chat_history_service.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {

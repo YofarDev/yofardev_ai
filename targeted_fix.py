@@ -1,0 +1,108 @@
+import os
+import re
+
+def fix_file(filepath, replacements):
+    """Apply replacements to a file"""
+    try:
+        with open(filepath, 'r') as f:
+            content = f.read()
+
+        original = content
+
+        for pattern, replacement in replacements:
+            content = content.replace(pattern, replacement)
+
+        if content != original:
+            with open(filepath, 'w') as f:
+                f.write(content)
+            return True
+        return False
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+
+print("Fixing agent tools...")
+
+# Fix agent tool files - they're all in the same directory
+agent_tools = [
+    'lib/core/services/agent/alarm_tool.dart',
+    'lib/core/services/agent/calculator_tool.dart',
+    'lib/core/services/agent/character_counter_tool.dart',
+    'lib/core/services/agent/google_search_tool.dart',
+    'lib/core/services/agent/news_tool.dart',
+    'lib/core/services/agent/weather_tool.dart',
+    'lib/core/services/agent/web_reader_tool.dart',
+]
+
+for tool in agent_tools:
+    if os.path.exists(tool):
+        fix_file(tool, [
+            "import '../agent_tool.dart'", "import 'agent_tool.dart'",
+            "import '../alarm_service.dart'", "import 'alarm_service.dart'",
+            "import '../google_search_service.dart'", "import 'google_search_service.dart'",
+            "import '../news_service.dart'", "import 'news_service.dart'",
+            "import '../weather_service.dart'", "import 'weather_service.dart'",
+            "import '../web_reader_tool.dart'", "import 'web_reader_tool.dart'",
+            "import '../../../services/weather_service.dart'", "import 'weather_service.dart'",
+            "import '../../../services/google_search_service.dart'", "import 'google_search_service.dart'",
+            "import '../../../services/news_service.dart'", "import 'news_service.dart'",
+            "import '../../../services/web_reader_service.dart'", "import 'web_reader_tool.dart'",
+        ])
+        print(f"Fixed: {tool}")
+
+# Fix tool_registry
+fix_file('lib/core/services/agent/tool_registry.dart', [
+    "import 'tools/alarm_tool.dart'", "import 'alarm_tool.dart'",
+    "import 'tools/calculator_tool.dart'", "import 'calculator_tool.dart'",
+    "import 'tools/character_counter_tool.dart'", "import 'character_counter_tool.dart'",
+    "import 'tools/google_search_tool.dart'", "import 'google_search_tool.dart'",
+    "import 'tools/news_tool.dart'", "import 'news_tool.dart'",
+    "import 'tools/weather_tool.dart'", "import 'weather_tool.dart'",
+    "import 'tools/web_reader_tool.dart'", "import 'web_reader_tool.dart'",
+])
+print("Fixed: tool_registry.dart")
+
+# Fix yofardev_agent
+fix_file('lib/core/services/agent/yofardev_agent.dart', [
+    "import '../../models/llm/llm_config.dart'", "import '../../models/llm_config.dart'",
+    "import '../../models/llm/llm_message.dart'", "import '../../models/llm_message.dart'",
+])
+print("Fixed: yofardev_agent.dart")
+
+# Fix fake_llm_service
+fix_file('lib/core/services/llm/fake_llm_service.dart', [
+    "import '../../models/llm/function_info.dart'", "import '../../models/function_info.dart'",
+    "import '../../models/llm/llm_config.dart'", "import '../../models/llm_config.dart'",
+])
+print("Fixed: fake_llm_service.dart")
+
+# Fix llm_service
+fix_file('lib/core/services/llm/llm_service.dart', [
+    "import '../../models/llm/llm_config.dart'", "import '../../models/llm_config.dart'",
+    "import '../../models/llm/llm_message.dart'", "import '../../models/llm_message.dart'",
+])
+print("Fixed: llm_service.dart")
+
+# Fix chat_history_service
+fix_file('lib/core/services/chat_history_service.dart', [
+    "import '../core/models/avatar_config.dart'", "import '../models/avatar_config.dart'",
+])
+print("Fixed: chat_history_service.dart")
+
+# Fix demo_service
+fix_file('lib/core/services/demo_service.dart', [
+    "import '../features/avatar/bloc/avatar_cubit.dart'", "import '../../features/avatar/bloc/avatar_cubit.dart'",
+    "import '../features/chat/bloc/chats_cubit.dart'", "import '../../features/chat/bloc/chats_cubit.dart'",
+    "import '../core/models/avatar_config.dart'", "import '../../models/avatar_config.dart'",
+    "import '../models/demo_script.dart'", "import '../../models/demo_script.dart'",
+    "import '../services/fake_llm_service.dart'", "import '../llm/fake_llm_service.dart'",
+])
+print("Fixed: demo_service.dart")
+
+# Fix yofardev_repository
+fix_file('lib/core/repositories/yofardev_repository.dart', [
+    "import '../models/demo_script.dart'", "import '../../features/demo/models/demo_script.dart'",
+])
+print("Fixed: yofardev_repository.dart")
+
+print("\nDone fixing imports!")

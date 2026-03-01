@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../utils/logger.dart';
-import '../../../models/llm/function_info.dart';
-import '../../../models/llm/llm_config.dart';
-import '../../../models/llm/llm_message.dart';
+import '../../utils/logger.dart';
+import '../../models/llm/function_info.dart';
+import '../../models/llm/llm_config.dart';
+import '../../models/llm/llm_message.dart';
 import 'llm_service_interface.dart';
 
 /// Real LLM service implementation using OpenAI-compatible APIs
@@ -36,7 +36,11 @@ class LlmService implements LlmServiceInterface {
             .map((dynamic e) => LlmConfig.fromMap(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        AppLogger.error('Error loading LLM configs', tag: 'LlmService', error: e);
+        AppLogger.error(
+          'Error loading LLM configs',
+          tag: 'LlmService',
+          error: e,
+        );
       }
     }
 
@@ -153,7 +157,10 @@ class LlmService implements LlmServiceInterface {
       );
 
       if (debugLogs) {
-        AppLogger.debug('Response status: ${response.statusCode}', tag: 'LlmService');
+        AppLogger.debug(
+          'Response status: ${response.statusCode}',
+          tag: 'LlmService',
+        );
       }
 
       if (response.statusCode == 200) {
@@ -277,11 +284,18 @@ class LlmService implements LlmServiceInterface {
 
         return (message['content'] as String? ?? '', calledFunctions);
       } else {
-        AppLogger.error('LLM API Error (checkFunctions): ${response.body}', tag: 'LlmService');
+        AppLogger.error(
+          'LLM API Error (checkFunctions): ${response.body}',
+          tag: 'LlmService',
+        );
         return ('', <FunctionInfo>[]);
       }
     } catch (e) {
-      AppLogger.error('Exception calling LLM API (checkFunctions)', tag: 'LlmService', error: e);
+      AppLogger.error(
+        'Exception calling LLM API (checkFunctions)',
+        tag: 'LlmService',
+        error: e,
+      );
       return ('', <FunctionInfo>[]);
     }
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../res/app_constants.dart';
-import '../../../utils/app_utils.dart';
+import '../../utils/app_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class Clothes extends StatelessWidget {

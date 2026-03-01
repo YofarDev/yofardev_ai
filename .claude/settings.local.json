@@ -27,7 +27,9 @@
       "Bash(perl:*)",
       "Bash(dart apply:*)",
       "Bash(flutter:*)",
-      "Bash(dart:*)"
+      "Bash(dart:*)",
+      "Bash(python3:*)",
+      "Bash(grep:*)"
     ]
   }
 }

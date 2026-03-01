@@ -8,7 +8,7 @@ import '../../../l10n/localization_manager.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../models/chat.dart';
 import '../../../res/app_colors.dart';
-import '../../../utils/extensions.dart';
+import '../../utils/extensions.dart';
 import '../../widgets/constrained_width.dart';
 import 'chat_details_screen.dart';
 import '../widgets/chat_list_empty_state.dart';
@@ -124,11 +124,7 @@ class _ChatsListPageState extends State<ChatsListPage> {
     );
   }
 
-  Widget _buildList(
-    BuildContext context,
-    List<Chat> list,
-    Chat currentChat,
-  ) =>
+  Widget _buildList(BuildContext context, List<Chat> list, Chat currentChat) =>
       BlocBuilder<AvatarCubit, AvatarState>(
         builder: (BuildContext context, AvatarState avatarState) {
           return Expanded(
@@ -151,7 +147,8 @@ class _ChatsListPageState extends State<ChatsListPage> {
                   timeLabel: timeLabel,
                   messageCount: chat.entries.length,
                   onTap: () => _openChat(context, chat),
-                  onDismissed: () => context.read<ChatsCubit>().deleteChat(chat.id),
+                  onDismissed: () =>
+                      context.read<ChatsCubit>().deleteChat(chat.id),
                   onDismissConfirm: () => _confirmDelete(context),
                 );
               },

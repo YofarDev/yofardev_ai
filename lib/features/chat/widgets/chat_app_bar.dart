@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../ui/widgets/app_icon_button.dart';
-import '../../../ui/widgets/function_calling_button.dart';
+import '../../../core/widgets/app_icon_button.dart';
+import '../../../core/widgets/function_calling_button.dart';
 
 /// Chat app bar with back and action buttons
 /// Extracted from chat_details_page.dart (326 → 60 lines)

@@ -10,9 +10,9 @@ import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../logic/talking/talking_cubit.dart';
 import '../../../res/app_constants.dart';
-import '../../../utils/app_utils.dart';
-import '../../../utils/logger.dart';
-import '../../../utils/platform_utils.dart';
+import '../../utils/app_utils.dart';
+import '../../utils/logger.dart';
+import '../../utils/platform_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class TalkingMouth extends StatefulWidget {

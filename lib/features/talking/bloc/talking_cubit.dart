@@ -1,0 +1,136 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:audio_analyzer/audio_analyzer.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:just_audio/just_audio.dart';
+
+import '../../../core/models/answer.dart';
+import '../../../core/models/chat_entry.dart';
+import '../../../core/services/tts_service.dart';
+import '../../../core/utils/extensions.dart';
+import 'talking_state.dart';
+
+class TalkingCubit extends Cubit<TalkingState> {
+  TalkingCubit() : super(const TalkingState());
+
+  void init() {
+    emit(
+      state.copyWith(
+        status: TalkingStatus.initial,
+        isTalking: false,
+        mouthState: MouthState.closed,
+        answer: const Answer(),
+      ),
+    );
+  }
+
+  Future<void> prepareToSpeak({
+    required String chatId,
+    required ChatEntry entry,
+    required String language,
+    required VoiceEffect voiceEffect,
+  }) async {
+    emit(state.copyWith(status: TalkingStatus.loading));
+    final String answerText = entry.getMessage();
+    final String textToSay = answerText
+        .replaceAll('...', '')
+        .replaceAll('*', '')
+        .removeEmojis()
+        .trim();
+    final String audioPath = textToSay.isEmpty
+        ? ''
+        : await TtsService().textToFrenchMaleVoice(
+            text: textToSay,
+            language: language,
+            voiceEffect: voiceEffect,
+          );
+    final List<int> amplitudes = (textToSay.isEmpty || audioPath.isEmpty)
+        ? <int>[]
+        : await AudioAnalyzer().getAmplitudes(audioPath);
+    emit(
+      state.copyWith(
+        status: TalkingStatus.success,
+        answer: Answer(
+          chatId: chatId,
+          answerText: answerText,
+          audioPath: audioPath,
+          amplitudes: amplitudes,
+          avatarConfig: entry.getAvatarConfig(),
+        ),
+      ),
+    );
+  }
+
+  void speakForWeb(
+    ChatEntry entry,
+    String language,
+    VoiceEffect voiceEffect,
+  ) async {
+    emit(state.copyWith(status: TalkingStatus.loading));
+    final Map<String, dynamic> map =
+        json.decode(entry.body) as Map<String, dynamic>;
+    final String answerText = map['message'] as String? ?? '';
+    final String textToSay = answerText
+        .replaceAll('...', '')
+        .replaceAll('*', '')
+        .removeEmojis()
+        .trim();
+
+    final FlutterTts tts = FlutterTts();
+    await tts.setLanguage(language == 'fr' ? 'fr-FR' : 'en-US');
+    await tts.setSpeechRate(voiceEffect.speedRate);
+    await tts.setPitch(voiceEffect.pitch);
+
+    tts.setCompletionHandler(() {
+      stopTalking(removeFile: false, soundEffectsEnabled: true);
+    });
+
+    emit(
+      state.copyWith(
+        status: TalkingStatus.success,
+        isTalking: true,
+        answer: Answer(
+          answerText: answerText,
+          avatarConfig: entry.getAvatarConfig(),
+        ),
+      ),
+    );
+
+    await tts.speak(textToSay);
+  }
+
+  void setLoadingStatus(bool isLoading) {
+    emit(
+      state.copyWith(
+        status: isLoading ? TalkingStatus.loading : TalkingStatus.initial,
+      ),
+    );
+  }
+
+  void updateMouthState(MouthState mouthState) {
+    emit(state.copyWith(mouthState: mouthState, isTalking: true));
+  }
+
+  void stopTalking({
+    bool removeFile = true,
+    bool soundEffectsEnabled = false,
+    bool updateStatus = true,
+  }) async {
+    emit(
+      state.copyWith(
+        isTalking: false,
+        mouthState: MouthState.closed,
+        status: updateStatus ? TalkingStatus.initial : null,
+      ),
+    );
+    if (removeFile) await File(state.answer.audioPath).delete();
+    if (!soundEffectsEnabled) return;
+    if (state.answer.avatarConfig.soundEffect == null) return;
+    final AudioPlayer player = AudioPlayer();
+    await player.setAsset(state.answer.avatarConfig.soundEffect!.getPath());
+    await player.play();
+    player.dispose();
+  }
+}

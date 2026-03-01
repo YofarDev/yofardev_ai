@@ -63,7 +63,9 @@ void main() {
         hat: AvatarHat.noHat,
       );
 
-      final Avatar copied = original.copyWith(background: AvatarBackgrounds.beach);
+      final Avatar copied = original.copyWith(
+        background: AvatarBackgrounds.beach,
+      );
 
       expect(copied.background, AvatarBackgrounds.beach);
       expect(copied.hat, original.hat);
@@ -94,24 +96,27 @@ void main() {
       expect(singularity.hideTalkingMouth, true);
     });
 
-    test('displaySunglasses should be true only with sunglasses and no costume', () {
-      const Avatar withSunglasses = Avatar(
-        glasses: AvatarGlasses.sunglasses,
-        costume: AvatarCostume.none,
-      );
-      const Avatar withSunglassesAndCostume = Avatar(
-        glasses: AvatarGlasses.sunglasses,
-        costume: AvatarCostume.batman,
-      );
-      const Avatar withoutSunglasses = Avatar(
-        glasses: AvatarGlasses.glasses,
-        costume: AvatarCostume.none,
-      );
+    test(
+      'displaySunglasses should be true only with sunglasses and no costume',
+      () {
+        const Avatar withSunglasses = Avatar(
+          glasses: AvatarGlasses.sunglasses,
+          costume: AvatarCostume.none,
+        );
+        const Avatar withSunglassesAndCostume = Avatar(
+          glasses: AvatarGlasses.sunglasses,
+          costume: AvatarCostume.batman,
+        );
+        const Avatar withoutSunglasses = Avatar(
+          glasses: AvatarGlasses.glasses,
+          costume: AvatarCostume.none,
+        );
 
-      expect(withSunglasses.displaySunglasses, true);
-      expect(withSunglassesAndCostume.displaySunglasses, false);
-      expect(withoutSunglasses.displaySunglasses, false);
-    });
+        expect(withSunglasses.displaySunglasses, true);
+        expect(withSunglassesAndCostume.displaySunglasses, false);
+        expect(withoutSunglasses.displaySunglasses, false);
+      },
+    );
   });
 
   group('AvatarConfig (Freezed)', () {

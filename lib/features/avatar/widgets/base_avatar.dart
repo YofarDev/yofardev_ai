@@ -5,7 +5,7 @@ import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../res/app_constants.dart';
-import '../../../utils/app_utils.dart';
+import '../../utils/app_utils.dart';
 
 class BaseAvatar extends StatelessWidget {
   const BaseAvatar({super.key});

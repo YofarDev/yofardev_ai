@@ -78,11 +78,7 @@ class ChatListItem extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Icon(
-            Icons.delete_outline_rounded,
-            color: AppColors.error,
-            size: 22,
-          ),
+          Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
         ],
       ),
     );
@@ -95,12 +91,8 @@ class ChatListItem extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            AppColors.glassSurface.withValues(
-              alpha: isSelected ? 0.2 : 0.12,
-            ),
-            AppColors.glassSurface.withValues(
-              alpha: isSelected ? 0.1 : 0.06,
-            ),
+            AppColors.glassSurface.withValues(alpha: isSelected ? 0.2 : 0.12),
+            AppColors.glassSurface.withValues(alpha: isSelected ? 0.1 : 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -125,17 +117,12 @@ class ChatListItem extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: <Widget>[
                 _buildIndicatorDot(),
                 const SizedBox(width: 14),
-                Expanded(
-                  child: _buildChatPreview(context),
-                ),
+                Expanded(child: _buildChatPreview(context)),
                 const SizedBox(width: 8),
                 Icon(
                   Icons.chevron_right_rounded,
@@ -159,15 +146,10 @@ class ChatListItem extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: isSelected
             ? LinearGradient(
-                colors: <Color>[
-                  AppColors.primary,
-                  AppColors.secondary,
-                ],
+                colors: <Color>[AppColors.primary, AppColors.secondary],
               )
             : null,
-        color: isSelected
-            ? null
-            : AppColors.onSurface.withValues(alpha: 0.15),
+        color: isSelected ? null : AppColors.onSurface.withValues(alpha: 0.15),
       ),
     );
   }
@@ -191,26 +173,20 @@ class ChatListItem extends StatelessWidget {
             Text(
               '$messageCount messages',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurface.withValues(
-                  alpha: 0.45,
-                ),
+                color: AppColors.onSurface.withValues(alpha: 0.45),
               ),
             ),
             if (timeLabel.isNotEmpty) ...<Widget>[
               Text(
                 ' · ',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurface.withValues(
-                    alpha: 0.3,
-                  ),
+                  color: AppColors.onSurface.withValues(alpha: 0.3),
                 ),
               ),
               Text(
                 timeLabel,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurface.withValues(
-                    alpha: 0.45,
-                  ),
+                  color: AppColors.onSurface.withValues(alpha: 0.45),
                 ),
               ),
             ],

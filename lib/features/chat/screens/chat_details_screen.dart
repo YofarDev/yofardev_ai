@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../features/avatar/bloc/avatar_cubit.dart';
-import '../../../utils/logger.dart';
+import '../../utils/logger.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../core/models/avatar_config.dart';
@@ -104,7 +104,11 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
       }
       return body;
     } catch (e) {
-      AppLogger.error('Error limiting parameter size', tag: 'ChatDetails', error: e);
+      AppLogger.error(
+        'Error limiting parameter size',
+        tag: 'ChatDetails',
+        error: e,
+      );
       return body;
     }
   }
@@ -171,7 +175,11 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         );
       }
     } catch (e) {
-      AppLogger.error('Error downloading conversation', tag: 'ChatDetails', error: e);
+      AppLogger.error(
+        'Error downloading conversation',
+        tag: 'ChatDetails',
+        error: e,
+      );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

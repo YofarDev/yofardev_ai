@@ -5,7 +5,7 @@ import 'package:lottie/lottie.dart';
 import '../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../features/avatar/bloc/avatar_state.dart';
 import '../../../res/app_constants.dart';
-import '../../../utils/app_utils.dart';
+import '../../utils/app_utils.dart';
 
 class ThinkingAnimation extends StatelessWidget {
   const ThinkingAnimation({super.key});

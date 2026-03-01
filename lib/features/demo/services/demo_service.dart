@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../utils/logger.dart';
+import '../../utils/logger.dart';
 import '../../../core/services/llm/fake_llm_service.dart';
 import '../../../features/chat/bloc/chats_cubit.dart';
 import '../../../core/models/avatar_config.dart';
@@ -57,7 +57,10 @@ class DemoService {
         chatId,
         AvatarConfig(background: initialBg),
       );
-      AppLogger.debug('Set initial background to: ${initialBg.name}', tag: 'DemoService');
+      AppLogger.debug(
+        'Set initial background to: ${initialBg.name}',
+        tag: 'DemoService',
+      );
     }
 
     // Start countdown
@@ -67,7 +70,10 @@ class DemoService {
     _fakeLlmService.activate(script.responses);
     _demoController.activate();
 
-    AppLogger.info('Demo activated with ${script.responses.length} responses', tag: 'DemoService');
+    AppLogger.info(
+      'Demo activated with ${script.responses.length} responses',
+      tag: 'DemoService',
+    );
   }
 
   /// Deactivate demo mode

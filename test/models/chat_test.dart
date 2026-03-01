@@ -53,15 +53,9 @@ void main() {
     });
 
     test('should copy with new values', () {
-      const Chat original = Chat(
-        id: 'chat1',
-        language: 'en',
-      );
+      const Chat original = Chat(id: 'chat1', language: 'en');
 
-      final Chat copied = original.copyWith(
-        id: 'chat2',
-        language: 'fr',
-      );
+      final Chat copied = original.copyWith(id: 'chat2', language: 'fr');
 
       expect(copied.id, 'chat2');
       expect(copied.language, 'fr');
@@ -71,10 +65,7 @@ void main() {
     });
 
     test('should copy with partial values', () {
-      const Chat original = Chat(
-        id: 'chat1',
-        language: 'en',
-      );
+      const Chat original = Chat(id: 'chat1', language: 'en');
 
       final Chat copied = original.copyWith(language: 'fr');
 
@@ -160,10 +151,7 @@ void main() {
     });
 
     test('should handle empty entries list', () {
-      const Chat chat = Chat(
-        id: 'chat123',
-        entries: <ChatEntry>[],
-      );
+      const Chat chat = Chat(id: 'chat123', entries: <ChatEntry>[]);
 
       expect(chat.entries, isEmpty);
       expect(chat.entries.length, 0);
@@ -196,7 +184,10 @@ void main() {
 
       expect(llmMessages.length, 2);
       expect(llmMessages[0].role, LlmMessageRole.user);
-      expect(llmMessages[1].role, LlmMessageRole.assistant); // yofardev is assistant
+      expect(
+        llmMessages[1].role,
+        LlmMessageRole.assistant,
+      ); // yofardev is assistant
     });
 
     test('ChatExtension.llmMessages should handle attached images', () {

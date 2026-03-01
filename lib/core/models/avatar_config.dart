@@ -1,11 +1,11 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../models/chat.dart';
-import '../../models/sound_effects.dart';
-import '../../services/tts_service.dart';
-import '../../utils/app_utils.dart';
-import '../../utils/extensions.dart';
-import '../../utils/platform_utils.dart';
+import 'chat.dart';
+import 'sound_effects.dart';
+import '../services/tts_service.dart';
+import '../utils/app_utils.dart';
+import '../utils/extensions.dart';
+import '../utils/platform_utils.dart';
 
 part 'avatar_config.freezed.dart';
 part 'avatar_config.g.dart';

@@ -1,4 +1,5 @@
-part of 'chats_cubit.dart';
+import 'package:equatable/equatable.dart';
+import '../../../core/models/chat.dart';
 
 enum ChatsStatus { loading, success, updating, typing, error }
 

@@ -44,10 +44,7 @@ void main() {
     });
 
     test('should copy with new values', () {
-      const Answer original = Answer(
-        chatId: 'chat1',
-        answerText: 'Hello',
-      );
+      const Answer original = Answer(chatId: 'chat1', answerText: 'Hello');
 
       final Answer copied = original.copyWith(
         chatId: 'chat2',
@@ -62,10 +59,7 @@ void main() {
     });
 
     test('should copy with partial values', () {
-      const Answer original = Answer(
-        chatId: 'chat1',
-        answerText: 'Hello',
-      );
+      const Answer original = Answer(chatId: 'chat1', answerText: 'Hello');
 
       final Answer copied = original.copyWith(answerText: 'Hi');
 

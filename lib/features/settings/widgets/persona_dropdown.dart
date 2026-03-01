@@ -23,10 +23,15 @@ class PersonaDropdown extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(localized.personaAssistant, style: const TextStyle(fontSize: 20)),
+          Text(
+            localized.personaAssistant,
+            style: const TextStyle(fontSize: 20),
+          ),
           DropdownButton<ChatPersona>(
             value: value,
-            items: ChatPersona.values.map<DropdownMenuItem<ChatPersona>>((ChatPersona value) {
+            items: ChatPersona.values.map<DropdownMenuItem<ChatPersona>>((
+              ChatPersona value,
+            ) {
               return DropdownMenuItem<ChatPersona>(
                 value: value,
                 child: Padding(

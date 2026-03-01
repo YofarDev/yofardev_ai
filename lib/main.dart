@@ -18,8 +18,8 @@ import 'l10n/localization_manager.dart';
 import 'logic/talking/talking_cubit.dart';
 import 'res/app_theme.dart';
 import 'services/tts_service.dart';
-import 'ui/pages/home.dart';
-import 'ui/widgets/constrained_width.dart';
+import 'features/home/screens/home_screen.dart';
+import 'core/widgets/constrained_width.dart';
 import 'utils/platform_utils.dart';
 
 void main() async {
@@ -85,7 +85,7 @@ class MyApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         theme: AppTheme.lightTheme,
-        home: const ConstrainedWidth(child: Home()),
+        home: const ConstrainedWidth(child: HomeScreen()),
       ),
     );
   }

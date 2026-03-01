@@ -56,16 +56,13 @@ class SoundEffectsToggle extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 localized.enableSoundEffects,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.onSurface,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: AppColors.onSurface),
               ),
             ],
           ),
-          GlassmorphicSwitch(
-            value: value,
-            onChanged: onChanged,
-          ),
+          GlassmorphicSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );

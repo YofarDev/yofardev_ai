@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import '../../../features/demo/models/demo_script.dart';
-import '../../../models/llm/function_info.dart';
-import '../../../models/llm/llm_config.dart';
-import '../../../models/llm/llm_message.dart';
-import '../../../utils/logger.dart';
+import '../../models/llm/function_info.dart';
+import '../../models/llm/llm_config.dart';
+import '../../models/llm/llm_message.dart';
+import '../../utils/logger.dart';
 import 'llm_service_interface.dart';
 
 /// Fake LLM service that returns pre-scripted responses for demo mode
