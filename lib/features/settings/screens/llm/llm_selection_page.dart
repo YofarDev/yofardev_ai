@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/models/llm_config.dart';
+import '../../../../core/res/app_colors.dart';
 import '../../../../core/services/llm/llm_service.dart';
 import 'llm_config_page.dart';
 
@@ -93,7 +94,12 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  const Text('No LLM configurations found.'),
+                  Text(
+                    'No LLM configurations found.',
+                    style: TextStyle(
+                      color: AppColors.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _onAdd,
@@ -123,18 +129,29 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                     ),
                     title: Text(
                       config.label,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.onSurface,
+                      ),
                     ),
-                    subtitle: Text('${config.model} @ ${config.baseUrl}'),
+                    subtitle: Text(
+                      '${config.model} @ ${config.baseUrl}',
+                      style: TextStyle(
+                        color: AppColors.onSurface.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         IconButton(
                           icon: const Icon(Icons.edit),
+                          color: AppColors.onSurface.withValues(alpha: 0.7),
                           onPressed: () => _onEdit(config),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete),
+                          color: AppColors.error.withValues(alpha: 0.8),
                           onPressed: () => _onDelete(config),
                         ),
                       ],

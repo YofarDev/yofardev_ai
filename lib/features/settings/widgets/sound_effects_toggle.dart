@@ -60,7 +60,14 @@ class SoundEffectsToggle extends StatelessWidget {
               ),
             ],
           ),
-          Switch(value: value, onChanged: onChanged),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: AppColors.primary,
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: AppColors.onSurface.withValues(alpha: 0.5),
+            inactiveTrackColor: AppColors.onSurface.withValues(alpha: 0.2),
+          ),
         ],
       ),
     );

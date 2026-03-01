@@ -3,17 +3,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../chat/bloc/chats_cubit.dart';
-import '../../../l10n/localization_manager.dart';
 import '../../../core/models/chat.dart';
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/widgets/constrained_width.dart';
-import '../widgets/settings_app_bar.dart';
-import '../widgets/username_field.dart';
+import '../../../l10n/localization_manager.dart';
+import '../../chat/bloc/chats_cubit.dart';
 import '../widgets/persona_dropdown.dart';
+import '../widgets/settings_app_bar.dart';
 import '../widgets/sound_effects_toggle.dart';
+import '../widgets/username_field.dart';
 import 'llm/llm_selection_page.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -86,6 +86,7 @@ class SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
+                    const SizedBox(height: 16),
                     Text(
                       localized.settingsSubstring,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -125,15 +126,37 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildApiKeyField() => ElevatedButton(
-    child: const Text('Api Picker'),
-    onPressed: () {
-      Navigator.of(context).push(
-        MaterialPageRoute<dynamic>(
-          builder: (BuildContext context) =>
-              const ConstrainedWidth(child: LlmSelectionPage()),
-        ),
-      );
-    },
+  Widget _buildApiKeyField() => Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: <Color>[
+          AppColors.primary.withValues(alpha: 0.15),
+          AppColors.primary.withValues(alpha: 0.08),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: AppColors.primary.withValues(alpha: 0.4),
+        width: 1.5,
+      ),
+    ),
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        foregroundColor: AppColors.primary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      child: const Text('API Picker'),
+      onPressed: () {
+        Navigator.of(context).push(
+          MaterialPageRoute<dynamic>(
+            builder: (BuildContext context) =>
+                const ConstrainedWidth(child: LlmSelectionPage()),
+          ),
+        );
+      },
+    ),
   );
 }

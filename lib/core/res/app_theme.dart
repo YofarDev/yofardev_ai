@@ -28,14 +28,35 @@ class AppTheme {
         iconTheme: const IconThemeData(color: AppColors.onSurface),
       ),
 
-      // Card Theme - Glassmorphic
-      cardTheme: const CardThemeData(
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
-          side: BorderSide(color: AppColors.glassBorder),
+      // Card Theme - Glassmorphic dark
+      cardTheme: CardThemeData(
+        elevation: 4,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: AppColors.glassBorder, width: 1),
         ),
-        color: AppColors.glassSurface,
+        color: AppColors.glassSurface.withValues(alpha: 0.6),
+        shadowColor: AppColors.surface.withValues(alpha: 0.5),
+      ),
+
+      // Radio buttons for dark theme
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith<Color>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return AppColors.onSurface.withValues(alpha: 0.6);
+        }),
+        overlayColor: WidgetStateProperty.resolveWith<Color>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary.withValues(alpha: 0.2);
+          }
+          return AppColors.onSurface.withValues(alpha: 0.1);
+        }),
       ),
 
       // Input Decoration
@@ -104,10 +125,15 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
 
-      // List Tile Theme
+      // List Tile Theme - Dark glassmorphic
       listTileTheme: ListTileThemeData(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        iconColor: AppColors.onSurface.withValues(alpha: 0.7),
+        textColor: AppColors.onSurface,
+        tileColor: AppColors.glassSurface.withValues(alpha: 0.4),
+        selectedTileColor: AppColors.primary.withValues(alpha: 0.15),
+        selectedColor: AppColors.primary,
       ),
 
       // SnackBar Theme

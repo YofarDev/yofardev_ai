@@ -17,9 +17,9 @@ class AppColors {
   static const Color surface = Color(0xFF141829);
   static const Color onSurface = Color(0xFFF5F5F7);
 
-  // Glassmorphic Surfaces
-  static const Color glassSurface = Color(0xFFFFFFFF);
-  static const Color glassBorder = Color(0xFFE0E5EC);
+  // Glassmorphic Surfaces - Dark semi-transparent for cosmic theme
+  static const Color glassSurface = Color(0xFF1A1F35);
+  static const Color glassBorder = Color(0xFF2A3148);
 
   // Accent Colors
   static const Color accent = Color(0xFF7B61FF);

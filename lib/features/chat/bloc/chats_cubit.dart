@@ -99,7 +99,9 @@ class ChatsCubit extends Cubit<ChatsState> {
   }
 
   void shuffleWaitingSentences() {
-    final List<Map<String, dynamic>> list = state.audioPathsWaitingSentences;
+    final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+      state.audioPathsWaitingSentences,
+    );
     list.shuffle();
     emit(state.copyWith(audioPathsWaitingSentences: list));
   }

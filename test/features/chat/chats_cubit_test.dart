@@ -41,6 +41,8 @@ class MockChatHistoryService implements ChatHistoryService {
 }
 
 class MockSettingsService implements SettingsService {
+  String _language = 'en';
+
   @override
   Future<ChatPersona> getPersona() async => ChatPersona.normal;
 
@@ -54,10 +56,12 @@ class MockSettingsService implements SettingsService {
   Future<void> setUsername(String username) async {}
 
   @override
-  Future<String?> getLanguage() async => 'fr';
+  Future<String?> getLanguage() async => _language;
 
   @override
-  Future<void> setLanguage(String language) async {}
+  Future<void> setLanguage(String language) async {
+    _language = language;
+  }
 
   @override
   Future<String> getBaseSystemPrompt() async => '';
@@ -138,7 +142,7 @@ void main() {
     });
 
     group('setCurrentLanguage', () {
-      test('should update current language', () {
+      test('should update current language', () async {
         const String newLanguage = 'en';
 
         chatsCubit.setCurrentLanguage(newLanguage);
@@ -425,11 +429,13 @@ void main() {
 
     group('ChatsStatus enum', () {
       test('should have all required values', () {
-        expect(ChatsStatus.values.length, 5);
+        expect(ChatsStatus.values.length, 7);
+        expect(ChatsStatus.values, contains(ChatsStatus.initial));
         expect(ChatsStatus.values, contains(ChatsStatus.loading));
-        expect(ChatsStatus.values, contains(ChatsStatus.success));
         expect(ChatsStatus.values, contains(ChatsStatus.updating));
+        expect(ChatsStatus.values, contains(ChatsStatus.loaded));
         expect(ChatsStatus.values, contains(ChatsStatus.typing));
+        expect(ChatsStatus.values, contains(ChatsStatus.success));
         expect(ChatsStatus.values, contains(ChatsStatus.error));
       });
     });
