@@ -3,12 +3,12 @@ import 'dart:ui';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/avatar_config.dart';
-import '../models/chat.dart';
-import 'prompt_service.dart';
-import 'settings_service.dart';
+import '../../domain/models/chat.dart';
+import '../../../avatar/domain/models/avatar_config.dart';
+import '../../../../core/services/prompt_service.dart';
+import '../../../../core/services/settings_service.dart';
 
-class ChatHistoryService {
+class ChatLocalDatasource {
   Future<Chat> createNewChat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String newChatId = DateTime.now().toIso8601String();
