@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 
-import '../../models/chat.dart';
-import '../../models/chat_entry.dart';
+import '../../features/chat/domain/models/chat.dart';
+import '../../features/chat/domain/models/chat_entry.dart';
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';

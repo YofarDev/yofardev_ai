@@ -2,7 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'chat.dart';
 import 'sound_effects.dart';
-import '../services/tts_service.dart';
+import '../../features/sound/data/datasources/tts_datasource.dart';
 import '../utils/app_utils.dart';
 import '../utils/extensions.dart';
 import '../utils/platform_utils.dart';

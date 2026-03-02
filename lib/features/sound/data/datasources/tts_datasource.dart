@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:supertonic_flutter/supertonic_flutter.dart';
 
-import '../utils/logger.dart';
-import '../utils/platform_utils.dart';
+import '../../../../core/utils/logger.dart';
+import '../../../../core/utils/platform_utils.dart';
 
-class TtsService {
+class TtsDatasource {
   static SupertonicTTS? _supertonicTTS;
 
   /// Initialize SupertonicTTS engine

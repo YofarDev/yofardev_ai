@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import '../models/chat.dart';
-import '../models/chat_entry.dart';
+import '../../features/chat/domain/models/chat.dart';
+import '../../features/chat/domain/models/chat_entry.dart';
 import '../../../avatar/domain/models/avatar_config.dart';
 
 abstract class ChatRepository {

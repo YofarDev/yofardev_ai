@@ -1,28 +1,46 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../models/sound_effects.dart';
-import '../sound_service_interface.dart';
+import '../../../core/models/sound_effects.dart';
+import '../datasources/tts_datasource.dart';
+import '../../domain/repositories/sound_repository.dart';
 
-class SoundService implements ISoundService {
+class SoundRepositoryImpl implements SoundRepository {
   final AudioPlayer _player = AudioPlayer();
 
   @override
-  Future<void> playSound(String soundName) async {
-    final SoundEffects? soundEffect = SoundEffects.fromString(soundName);
-    if (soundEffect == null) {
-      return;
-    }
-
+  Future<Either<Exception, void>> play(String soundPath) async {
     try {
+      final SoundEffects? soundEffect = SoundEffects.fromString(soundPath);
+      if (soundEffect == null) {
+        return const Right(null);
+      }
+
       await _player.setAsset(soundEffect.getPath());
       await _player.setVolume(1.0);
       await _player.play();
+      return const Right(null);
     } catch (e) {
-      // Silently fail if sound file doesn't exist or can't be played
+      return Left(Exception(e.toString()));
     }
   }
 
-  Future<void> stop() async {
-    await _player.stop();
+  @override
+  Future<Either<Exception, void>> stop() async {
+    try {
+      await _player.stop();
+      return const Right(null);
+    } catch (e) {
+      return Left(Exception(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Exception, bool>> get isPlaying async {
+    try {
+      return Right(_player.playing);
+    } catch (e) {
+      return Left(Exception(e.toString()));
+    }
   }
 }

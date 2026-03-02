@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/models/demo_script.dart';
-import '../services/demo_controller.dart';
+import '../data/datasources/demo_controller.dart';
 import 'demo_state.dart';
 
 /// Demo cubit for managing demo mode state

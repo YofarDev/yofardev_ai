@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../core/models/demo_script.dart';
-import '../services/demo_controller.dart';
+import '../data/datasources/demo_controller.dart';
 
 part 'demo_state.freezed.dart';
 
