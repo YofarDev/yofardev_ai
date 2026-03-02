@@ -25,12 +25,12 @@ $AnswerCopyWith<Answer> get copyWith => _$AnswerCopyWithImpl<Answer>(this as Ans
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Answer&&(identical(other.chatId, chatId) || other.chatId == chatId)&&(identical(other.answerText, answerText) || other.answerText == answerText)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&const DeepCollectionEquality().equals(other.amplitudes, amplitudes)&&(identical(other.avatarConfig, avatarConfig) || other.avatarConfig == avatarConfig));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Answer&&(identical(other.chatId, chatId) || other.chatId == chatId)&&(identical(other.answerText, answerText) || other.answerText == answerText)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&const DeepCollectionEquality().equals(other.amplitudes, amplitudes)&&const DeepCollectionEquality().equals(other.avatarConfig, avatarConfig));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,chatId,answerText,audioPath,const DeepCollectionEquality().hash(amplitudes),avatarConfig);
+int get hashCode => Object.hash(runtimeType,chatId,answerText,audioPath,const DeepCollectionEquality().hash(amplitudes),const DeepCollectionEquality().hash(avatarConfig));
 
 @override
 String toString() {
@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-$AvatarConfigCopyWith<$Res> get avatarConfig;
+
 
 }
 /// @nodoc
@@ -62,26 +62,17 @@ class _$AnswerCopyWithImpl<$Res>
 
 /// Create a copy of Answer
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? chatId = null,Object? answerText = null,Object? audioPath = null,Object? amplitudes = null,Object? avatarConfig = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? chatId = null,Object? answerText = null,Object? audioPath = null,Object? amplitudes = null,Object? avatarConfig = freezed,}) {
   return _then(_self.copyWith(
 chatId: null == chatId ? _self.chatId : chatId // ignore: cast_nullable_to_non_nullable
 as String,answerText: null == answerText ? _self.answerText : answerText // ignore: cast_nullable_to_non_nullable
 as String,audioPath: null == audioPath ? _self.audioPath : audioPath // ignore: cast_nullable_to_non_nullable
 as String,amplitudes: null == amplitudes ? _self.amplitudes : amplitudes // ignore: cast_nullable_to_non_nullable
-as List<int>,avatarConfig: null == avatarConfig ? _self.avatarConfig : avatarConfig // ignore: cast_nullable_to_non_nullable
+as List<int>,avatarConfig: freezed == avatarConfig ? _self.avatarConfig : avatarConfig // ignore: cast_nullable_to_non_nullable
 as AvatarConfig,
   ));
 }
-/// Create a copy of Answer
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$AvatarConfigCopyWith<$Res> get avatarConfig {
-  
-  return $AvatarConfigCopyWith<$Res>(_self.avatarConfig, (value) {
-    return _then(_self.copyWith(avatarConfig: value));
-  });
-}
+
 }
 
 
@@ -238,12 +229,12 @@ _$AnswerCopyWith<_Answer> get copyWith => __$AnswerCopyWithImpl<_Answer>(this, _
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Answer&&(identical(other.chatId, chatId) || other.chatId == chatId)&&(identical(other.answerText, answerText) || other.answerText == answerText)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&const DeepCollectionEquality().equals(other._amplitudes, _amplitudes)&&(identical(other.avatarConfig, avatarConfig) || other.avatarConfig == avatarConfig));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Answer&&(identical(other.chatId, chatId) || other.chatId == chatId)&&(identical(other.answerText, answerText) || other.answerText == answerText)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&const DeepCollectionEquality().equals(other._amplitudes, _amplitudes)&&const DeepCollectionEquality().equals(other.avatarConfig, avatarConfig));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,chatId,answerText,audioPath,const DeepCollectionEquality().hash(_amplitudes),avatarConfig);
+int get hashCode => Object.hash(runtimeType,chatId,answerText,audioPath,const DeepCollectionEquality().hash(_amplitudes),const DeepCollectionEquality().hash(avatarConfig));
 
 @override
 String toString() {
@@ -262,7 +253,7 @@ $Res call({
 });
 
 
-@override $AvatarConfigCopyWith<$Res> get avatarConfig;
+
 
 }
 /// @nodoc
@@ -275,27 +266,18 @@ class __$AnswerCopyWithImpl<$Res>
 
 /// Create a copy of Answer
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? chatId = null,Object? answerText = null,Object? audioPath = null,Object? amplitudes = null,Object? avatarConfig = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? chatId = null,Object? answerText = null,Object? audioPath = null,Object? amplitudes = null,Object? avatarConfig = freezed,}) {
   return _then(_Answer(
 chatId: null == chatId ? _self.chatId : chatId // ignore: cast_nullable_to_non_nullable
 as String,answerText: null == answerText ? _self.answerText : answerText // ignore: cast_nullable_to_non_nullable
 as String,audioPath: null == audioPath ? _self.audioPath : audioPath // ignore: cast_nullable_to_non_nullable
 as String,amplitudes: null == amplitudes ? _self._amplitudes : amplitudes // ignore: cast_nullable_to_non_nullable
-as List<int>,avatarConfig: null == avatarConfig ? _self.avatarConfig : avatarConfig // ignore: cast_nullable_to_non_nullable
+as List<int>,avatarConfig: freezed == avatarConfig ? _self.avatarConfig : avatarConfig // ignore: cast_nullable_to_non_nullable
 as AvatarConfig,
   ));
 }
 
-/// Create a copy of Answer
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$AvatarConfigCopyWith<$Res> get avatarConfig {
-  
-  return $AvatarConfigCopyWith<$Res>(_self.avatarConfig, (value) {
-    return _then(_self.copyWith(avatarConfig: value));
-  });
-}
+
 }
 
 // dart format on
