@@ -14,6 +14,8 @@ import '../../features/sound/bloc/sound_cubit.dart';
 import '../../features/talking/bloc/talking_cubit.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
 import '../../features/sound/data/repositories/sound_repository_impl.dart';
+import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
+import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
