@@ -1,20 +1,31 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fpdart/src/either.dart';
 
-import '../../../core/services/sound_service_interface.dart';
+import '../domain/repositories/sound_repository.dart';
 import 'sound_state.dart';
 
 class SoundCubit extends Cubit<SoundState> {
-  final ISoundService _soundService;
+  final SoundRepository _soundRepository;
 
-  SoundCubit({required ISoundService soundService})
-    : _soundService = soundService,
+  SoundCubit({required SoundRepository soundRepository})
+    : _soundRepository = soundRepository,
       super(const SoundInitial());
 
   Future<void> playSound(String soundName) async {
     try {
       emit(SoundPlaying(soundName));
-      await _soundService.playSound(soundName);
-      emit(const SoundInitial());
+      final Either<Exception, void> result = await _soundRepository.play(
+        soundName,
+      );
+      result.fold(
+        (Exception error) {
+          emit(SoundError(error.toString()));
+          emit(const SoundInitial());
+        },
+        (_) {
+          emit(const SoundInitial());
+        },
+      );
     } catch (e) {
       emit(SoundError(e.toString()));
     }

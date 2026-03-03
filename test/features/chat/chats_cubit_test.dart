@@ -1,103 +1,121 @@
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/core/models/chat.dart';
-import 'package:yofardev_ai/core/models/chat_entry.dart';
-import 'package:yofardev_ai/core/repositories/yofardev_repository.dart';
-import 'package:yofardev_ai/core/services/chat_history_service.dart';
-import 'package:yofardev_ai/core/services/settings_service.dart';
-import 'package:yofardev_ai/core/services/tts_service.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:yofardev_ai/features/avatar/domain/models/avatar_config.dart';
 import 'package:yofardev_ai/features/chat/bloc/chats_cubit.dart';
-import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/chat/bloc/chats_state.dart';
+import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
+import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
+import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/l10n/localization_manager.dart';
 
-class MockChatHistoryService implements ChatHistoryService {
+class MockChatRepository implements ChatRepository {
   @override
-  Future<Chat> createNewChat() async => const Chat(id: 'test-id');
-
-  @override
-  Future<Chat?> getChat(String chatId) async => const Chat(id: 'test-id');
-
-  @override
-  Future<void> updateChat({
-    required String chatId,
-    required Chat updatedChat,
-  }) async {}
-
-  @override
-  Future<void> deleteChat(String chatId) async {}
-
-  @override
-  Future<void> updateChatsList(String chatId) async {}
-
-  @override
-  Future<List<Chat>> getChatsList() async => <Chat>[];
-
-  @override
-  Future<Chat> getCurrentChat() async => const Chat();
-
-  @override
-  Future<void> setCurrentChatId(String chatId) async {}
-
-  @override
-  Future<void> updateAvatar(String chatId, Avatar avatar) async {}
-}
-
-class MockSettingsService implements SettingsService {
-  String _language = 'en';
-
-  @override
-  Future<ChatPersona> getPersona() async => ChatPersona.normal;
-
-  @override
-  Future<void> setPersona(ChatPersona persona) async {}
-
-  @override
-  Future<String?> getUsername() async => null;
-
-  @override
-  Future<void> setUsername(String username) async {}
-
-  @override
-  Future<String?> getLanguage() async => _language;
-
-  @override
-  Future<void> setLanguage(String language) async {
-    _language = language;
+  Future<Either<Exception, Chat>> createNewChat() async {
+    return Right(const Chat(id: 'test-id'));
   }
 
   @override
-  Future<String> getBaseSystemPrompt() async => '';
+  Future<Either<Exception, Chat>> getCurrentChat() async {
+    return Right(const Chat(id: 'test-id'));
+  }
 
   @override
-  Future<void> setBaseSystemPrompt(String baseSystemPrompt) async {}
+  Future<Either<Exception, Chat?>> getChat(String id) async {
+    return Right(const Chat(id: 'test-id'));
+  }
 
   @override
-  Future<bool> getSoundEffects() async => true;
+  Future<Either<Exception, void>> updateChat({
+    required String id,
+    required Chat updatedChat,
+  }) async {
+    return const Right(null);
+  }
 
   @override
-  Future<void> setSoundEffects(bool soundEffects) async {}
+  Future<Either<Exception, void>> deleteChat(String id) async {
+    return const Right(null);
+  }
 
   @override
-  Future<String> getTtsVoice(String language) async => 'voice';
+  Future<Either<Exception, List<Chat>>> getChatsList() async {
+    return Right(<Chat>[]);
+  }
 
   @override
-  Future<void> setTtsVoice(String name, String language) async {}
-}
+  Future<Either<Exception, void>> setCurrentChatId(String chatId) async {
+    return const Right(null);
+  }
 
-class MockYofardevRepository implements YofardevRepository {
   @override
-  Future<ChatEntry> askYofardevAi(
+  Future<Either<Exception, ChatEntry>> askYofardevAi(
     Chat chat,
     String userMessage, {
     bool functionCallingEnabled = true,
   }) async {
-    return ChatEntry(
-      id: 'test',
-      entryType: EntryType.yofardev,
-      body: 'response',
-      timestamp: DateTime.now(),
+    return Right(
+      ChatEntry(
+        id: 'test',
+        entryType: EntryType.yofardev,
+        body: 'response',
+        timestamp: DateTime.now(),
+      ),
     );
+  }
+
+  @override
+  Future<Either<Exception, void>> updateAvatar(
+    String chatId,
+    Avatar avatar,
+  ) async {
+    return const Right(null);
+  }
+}
+
+class MockSettingsRepository implements SettingsRepository {
+  String _language = 'en';
+
+  @override
+  Future<Either<Exception, String?>> getLanguage() async {
+    return Right(_language);
+  }
+
+  @override
+  Future<Either<Exception, void>> setLanguage(String language) async {
+    _language = language;
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Exception, bool>> getSoundEffects() async {
+    return const Right(true);
+  }
+
+  @override
+  Future<Either<Exception, void>> setSoundEffects(bool soundEffects) async {
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Exception, String?>> getUsername() async {
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Exception, void>> setUsername(String username) async {
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Exception, String>> getSystemPrompt() async {
+    return const Right('');
+  }
+
+  @override
+  Future<Either<Exception, void>> setSystemPrompt(String prompt) async {
+    return const Right(null);
   }
 }
 
@@ -107,10 +125,8 @@ void main() {
 
     setUp(() {
       chatsCubit = ChatsCubit(
-        chatHistoryService: MockChatHistoryService(),
-        settingsService: MockSettingsService(),
-        yofardevRepository: MockYofardevRepository(),
-        ttsService: TtsService(),
+        chatRepository: MockChatRepository(),
+        settingsRepository: MockSettingsRepository(),
         audioAnalyzer: AudioAnalyzer(),
         localizationManager: LocalizationManager(),
       );
@@ -151,17 +167,17 @@ void main() {
       test('should update current language', () async {
         const String newLanguage = 'en';
 
-        chatsCubit.setCurrentLanguage(newLanguage);
+        await chatsCubit.setCurrentLanguage(newLanguage);
 
         expect(chatsCubit.state.currentLanguage, newLanguage);
       });
     });
 
     group('setSoundEffects', () {
-      test('should update sound effects enabled', () {
+      test('should update sound effects enabled', () async {
         const bool newSoundEffectsEnabled = false;
 
-        chatsCubit.setSoundEffects(newSoundEffectsEnabled);
+        await chatsCubit.setSoundEffects(newSoundEffectsEnabled);
 
         expect(chatsCubit.state.soundEffectsEnabled, newSoundEffectsEnabled);
       });

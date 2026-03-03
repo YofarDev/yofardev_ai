@@ -7,9 +7,9 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../core/models/answer.dart';
-import '../../../core/models/chat_entry.dart';
-import '../../../core/services/tts_service.dart';
 import '../../../core/utils/extensions.dart';
+import '../../chat/domain/models/chat_entry.dart';
+import '../../sound/data/datasources/tts_datasource.dart';
 import 'talking_state.dart';
 
 class TalkingCubit extends Cubit<TalkingState> {
@@ -41,7 +41,7 @@ class TalkingCubit extends Cubit<TalkingState> {
         .trim();
     final String audioPath = textToSay.isEmpty
         ? ''
-        : await TtsService().textToFrenchMaleVoice(
+        : await TtsDatasource().textToFrenchMaleVoice(
             text: textToSay,
             language: language,
             voiceEffect: voiceEffect,

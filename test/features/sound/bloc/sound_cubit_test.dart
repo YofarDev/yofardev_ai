@@ -1,32 +1,44 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/core/services/sound_service_interface.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:yofardev_ai/features/sound/domain/repositories/sound_repository.dart';
 import 'package:yofardev_ai/features/sound/bloc/sound_cubit.dart';
 import 'package:yofardev_ai/features/sound/bloc/sound_state.dart';
 
 // Mock SoundService implementation for testing
-class MockSoundService implements ISoundService {
+class MockSoundRepository implements SoundRepository {
   bool shouldFail = false;
   String? failureMessage;
   String? lastPlayedSound;
 
   @override
-  Future<void> playSound(String soundName) async {
+  Future<Either<Exception, void>> play(String soundName) async {
     lastPlayedSound = soundName;
     if (shouldFail) {
-      throw Exception(failureMessage ?? 'Sound not found');
+      return Left(Exception(failureMessage ?? 'Sound not found'));
     }
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Exception, void>> stop() async {
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Exception, bool>> get isPlaying async {
+    return const Right(false);
   }
 }
 
 void main() {
-  late MockSoundService mockSoundService;
+  late MockSoundRepository mockSoundRepository;
   late SoundCubit cubit;
 
   setUp(() {
-    mockSoundService = MockSoundService();
-    cubit = SoundCubit(soundService: mockSoundService);
+    mockSoundRepository = MockSoundRepository();
+    cubit = SoundCubit(soundRepository: mockSoundRepository);
   });
 
   tearDown(() {
@@ -42,7 +54,7 @@ void main() {
       'emits [SoundPlaying, SoundInitial] when playSound succeeds',
       () async {
         // Arrange
-        mockSoundService.shouldFail = false;
+        mockSoundRepository.shouldFail = false;
 
         // Act
         final List<SoundState> states = <SoundState>[];
@@ -61,7 +73,7 @@ void main() {
           SoundPlaying('test'),
           SoundInitial(),
         ]);
-        expect(mockSoundService.lastPlayedSound, 'test');
+        expect(mockSoundRepository.lastPlayedSound, 'test');
 
         await subscription.cancel();
       },
@@ -69,8 +81,8 @@ void main() {
 
     test('emits SoundError when playSound fails', () async {
       // Arrange
-      mockSoundService.shouldFail = true;
-      mockSoundService.failureMessage = 'Sound not found';
+      mockSoundRepository.shouldFail = true;
+      mockSoundRepository.failureMessage = 'Sound not found';
 
       // Act
       final List<SoundState> states = <SoundState>[];
@@ -88,15 +100,16 @@ void main() {
       expect(states, const <SoundState>[
         SoundPlaying('test'),
         SoundError('Exception: Sound not found'),
+        SoundInitial(),
       ]);
-      expect(mockSoundService.lastPlayedSound, 'test');
+      expect(mockSoundRepository.lastPlayedSound, 'test');
 
       await subscription.cancel();
     });
 
     test('multiple playSound calls work correctly', () async {
       // Arrange
-      mockSoundService.shouldFail = false;
+      mockSoundRepository.shouldFail = false;
 
       // Act - first call
       final List<SoundState> firstStates = <SoundState>[];
@@ -137,13 +150,13 @@ void main() {
         SoundPlaying('sound2'),
         SoundInitial(),
       ]);
-      expect(mockSoundService.lastPlayedSound, 'sound2');
+      expect(mockSoundRepository.lastPlayedSound, 'sound2');
     });
 
     test('recovers from error state', () async {
       // Arrange
-      mockSoundService.shouldFail = true;
-      mockSoundService.failureMessage = 'First error';
+      mockSoundRepository.shouldFail = true;
+      mockSoundRepository.failureMessage = 'First error';
 
       // Act - first call fails
       final List<SoundState> firstStates = <SoundState>[];
@@ -161,7 +174,7 @@ void main() {
       await firstSubscription.cancel();
 
       // Arrange - now succeed
-      mockSoundService.shouldFail = false;
+      mockSoundRepository.shouldFail = false;
 
       // Act - second call succeeds
       final List<SoundState> secondStates = <SoundState>[];
@@ -187,7 +200,7 @@ void main() {
         SoundPlaying('sound2'),
         SoundInitial(),
       ]);
-      expect(mockSoundService.lastPlayedSound, 'sound2');
+      expect(mockSoundRepository.lastPlayedSound, 'sound2');
     });
   });
 }

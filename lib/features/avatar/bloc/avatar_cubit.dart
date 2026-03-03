@@ -1,19 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../core/di/service_locator.dart';
-import '../../../core/models/avatar_config.dart';
-import '../../../core/models/chat.dart';
 import '../../../core/res/app_constants.dart';
-import '../../../core/services/chat_history_service.dart';
+import '../../chat/domain/models/chat.dart';
+import '../domain/models/avatar_config.dart';
+import '../domain/repositories/avatar_repository.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
   AvatarCubit()
     : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()));
 
-  ChatHistoryService get _chatHistoryService => getIt<ChatHistoryService>();
+  AvatarRepository get _avatarRepository => getIt<AvatarRepository>();
 
   void setValuesBasedOnScreenWidth({required double screenWidth}) {
     final double scaleFactor = screenWidth / AppConstants.avatarWidth;
@@ -34,10 +35,17 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void loadAvatar(String chatId) async {
     emit(state.copyWith(status: AvatarStatus.loading));
-    final Chat chat =
-        await _chatHistoryService.getChat(chatId) ??
-        await _chatHistoryService.createNewChat();
-    emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));
+    final Either<Exception, Chat> result = await _avatarRepository.getChat(
+      chatId,
+    );
+    result.fold(
+      (Exception error) {
+        emit(state.copyWith(status: AvatarStatus.initial));
+      },
+      (Chat chat) {
+        emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));
+      },
+    );
   }
 
   void _goAndComeBack(String chatId, AvatarConfig avatarConfig) async {
@@ -106,7 +114,7 @@ class AvatarCubit extends Cubit<AvatarState> {
             avatarConfig.specials ?? state.previousSpecialsState,
       ),
     );
-    _chatHistoryService.updateAvatar(chatId, avatar);
+    _avatarRepository.updateAvatar(chatId, avatar);
   }
 
   void toggleGlasses() {

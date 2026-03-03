@@ -1,14 +1,15 @@
 // ignore_for_file: join_return_with_assignment
 
 import 'package:fpdart/fpdart.dart';
+
+import '../../../../core/services/agent/yofardev_agent.dart';
+import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../../avatar/domain/models/avatar_config.dart';
-import '../../domain/repositories/chat_repository.dart';
+import '../../../demo/domain/models/demo_script.dart';
+import '../../../home/data/datasources/prompt_datasource.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/models/chat_entry.dart';
-import '../../../demo/domain/models/demo_script.dart';
-import '../../../../core/services/agent/yofardev_agent.dart';
-import '../../../home/data/datasources/prompt_datasource.dart';
-import '../../../../core/services/llm/fake_llm_service.dart';
+import '../../domain/repositories/chat_repository.dart';
 import '../datasources/chat_local_datasource.dart';
 
 class YofardevRepositoryImpl implements ChatRepository {
@@ -21,9 +22,9 @@ class YofardevRepositoryImpl implements ChatRepository {
   Future<Either<Exception, Chat>> createNewChat() async {
     try {
       final Chat chat = await _chatDatasource.createNewChat();
-      return Right(chat);
+      return Right<Exception, Chat>(chat);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, Chat>(Exception(e.toString()));
     }
   }
 
@@ -31,9 +32,9 @@ class YofardevRepositoryImpl implements ChatRepository {
   Future<Either<Exception, Chat?>> getChat(String id) async {
     try {
       final Chat? chat = await _chatDatasource.getChat(id);
-      return Right(chat);
+      return Right<Exception, Chat?>(chat);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, Chat?>(Exception(e.toString()));
     }
   }
 
@@ -41,9 +42,9 @@ class YofardevRepositoryImpl implements ChatRepository {
   Future<Either<Exception, List<Chat>>> getChatsList() async {
     try {
       final List<Chat> chats = await _chatDatasource.getChatsList();
-      return Right(chats);
+      return Right<Exception, List<Chat>>(chats);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, List<Chat>>(Exception(e.toString()));
     }
   }
 
@@ -54,9 +55,9 @@ class YofardevRepositoryImpl implements ChatRepository {
   }) async {
     try {
       await _chatDatasource.updateChat(chatId: id, updatedChat: updatedChat);
-      return const Right(null);
+      return const Right<Exception, void>(null);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, void>(Exception(e.toString()));
     }
   }
 
@@ -64,9 +65,9 @@ class YofardevRepositoryImpl implements ChatRepository {
   Future<Either<Exception, void>> deleteChat(String id) async {
     try {
       await _chatDatasource.deleteChat(id);
-      return const Right(null);
+      return const Right<Exception, void>(null);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, void>(Exception(e.toString()));
     }
   }
 
@@ -74,9 +75,9 @@ class YofardevRepositoryImpl implements ChatRepository {
   Future<Either<Exception, void>> setCurrentChatId(String id) async {
     try {
       await _chatDatasource.setCurrentChatId(id);
-      return const Right(null);
+      return const Right<Exception, void>(null);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, void>(Exception(e.toString()));
     }
   }
 
@@ -84,9 +85,9 @@ class YofardevRepositoryImpl implements ChatRepository {
   Future<Either<Exception, Chat>> getCurrentChat() async {
     try {
       final Chat chat = await _chatDatasource.getCurrentChat();
-      return Right(chat);
+      return Right<Exception, Chat>(chat);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, Chat>(Exception(e.toString()));
     }
   }
 
@@ -97,9 +98,9 @@ class YofardevRepositoryImpl implements ChatRepository {
   ) async {
     try {
       await _chatDatasource.updateAvatar(chatId, avatar);
-      return const Right(null);
+      return const Right<Exception, void>(null);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, void>(Exception(e.toString()));
     }
   }
 
@@ -117,7 +118,7 @@ class YofardevRepositoryImpl implements ChatRepository {
           // Wait 600ms to simulate LLM processing
           await Future<void>.delayed(const Duration(milliseconds: 600));
 
-          return Right(
+          return Right<Exception, ChatEntry>(
             ChatEntry(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               entryType: EntryType.yofardev,
@@ -129,15 +130,15 @@ class YofardevRepositoryImpl implements ChatRepository {
       }
 
       // Fall back to real LLM
-      final entry = await _agent.ask(
+      final ChatEntry entry = await _agent.ask(
         chat: chat,
         userMessage: userMessage,
         systemPrompt: await _promptService.getSystemPrompt(),
         functionCallingEnabled: functionCallingEnabled,
       );
-      return Right(entry);
+      return Right<Exception, ChatEntry>(entry);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, ChatEntry>(Exception(e.toString()));
     }
   }
 }

@@ -25,12 +25,12 @@ $DemoStateCopyWith<DemoState> get copyWith => _$DemoStateCopyWithImpl<DemoState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoState&&(identical(other.status, status) || other.status == status)&&(identical(other.countdownValue, countdownValue) || other.countdownValue == countdownValue)&&const DeepCollectionEquality().equals(other.currentScript, currentScript)&&(identical(other.remainingResponses, remainingResponses) || other.remainingResponses == remainingResponses));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoState&&(identical(other.status, status) || other.status == status)&&(identical(other.countdownValue, countdownValue) || other.countdownValue == countdownValue)&&(identical(other.currentScript, currentScript) || other.currentScript == currentScript)&&(identical(other.remainingResponses, remainingResponses) || other.remainingResponses == remainingResponses));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,countdownValue,const DeepCollectionEquality().hash(currentScript),remainingResponses);
+int get hashCode => Object.hash(runtimeType,status,countdownValue,currentScript,remainingResponses);
 
 @override
 String toString() {
@@ -221,12 +221,12 @@ _$DemoStateCopyWith<_DemoState> get copyWith => __$DemoStateCopyWithImpl<_DemoSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DemoState&&(identical(other.status, status) || other.status == status)&&(identical(other.countdownValue, countdownValue) || other.countdownValue == countdownValue)&&const DeepCollectionEquality().equals(other.currentScript, currentScript)&&(identical(other.remainingResponses, remainingResponses) || other.remainingResponses == remainingResponses));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DemoState&&(identical(other.status, status) || other.status == status)&&(identical(other.countdownValue, countdownValue) || other.countdownValue == countdownValue)&&(identical(other.currentScript, currentScript) || other.currentScript == currentScript)&&(identical(other.remainingResponses, remainingResponses) || other.remainingResponses == remainingResponses));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,countdownValue,const DeepCollectionEquality().hash(currentScript),remainingResponses);
+int get hashCode => Object.hash(runtimeType,status,countdownValue,currentScript,remainingResponses);
 
 @override
 String toString() {

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../core/models/chat.dart';
+import '../domain/models/chat.dart';
 
 enum ChatsStatus { loading, success, updating, typing, error }
 

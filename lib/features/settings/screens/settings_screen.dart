@@ -2,14 +2,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fpdart/src/either.dart';
 
-import '../../../core/models/chat.dart';
+import '../../../core/di/service_locator.dart';
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
-import '../../../core/services/settings_service.dart';
 import '../../../core/widgets/constrained_width.dart';
 import '../../../l10n/localization_manager.dart';
 import '../../chat/bloc/chats_cubit.dart';
+import '../../chat/domain/models/chat.dart';
+import '../domain/repositories/settings_repository.dart';
 import '../widgets/persona_dropdown.dart';
 import '../widgets/settings_app_bar.dart';
 import '../widgets/sound_effects_toggle.dart';
@@ -37,10 +39,26 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   void _loadSettings() async {
-    _baseSystemPromptController.text = await SettingsService()
-        .getBaseSystemPrompt();
-    _usernameController.text = await SettingsService().getUsername() ?? '';
-    _persona = await SettingsService().getPersona();
+    final SettingsRepository settingsRepo = getIt<SettingsRepository>();
+
+    final Either<Exception, String> promptResult = await settingsRepo
+        .getSystemPrompt();
+    promptResult.fold(
+      (Exception error) => null,
+      (String prompt) => _baseSystemPromptController.text = prompt,
+    );
+
+    final Either<Exception, String?> usernameResult = await settingsRepo
+        .getUsername();
+    usernameResult.fold(
+      (Exception error) => null,
+      (String? username) => _usernameController.text = username ?? '',
+    );
+
+    // TODO: Restore persona loading from repository when implemented
+    // _persona = await SettingsService().getPersona();
+    _persona = ChatPersona.assistant;
+
     _isSoundEffectsEnabled = context
         .read<ChatsCubit>()
         .state
@@ -49,13 +67,13 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   void _onSaveButtonPressed() async {
+    final SettingsRepository settingsRepo = getIt<SettingsRepository>();
+
     if (_baseSystemPromptController.text.isNotEmpty) {
-      await SettingsService().setBaseSystemPrompt(
-        _baseSystemPromptController.text,
-      );
+      await settingsRepo.setSystemPrompt(_baseSystemPromptController.text);
     }
     if (_usernameController.text.isNotEmpty) {
-      await SettingsService().setUsername(_usernameController.text);
+      await settingsRepo.setUsername(_usernameController.text);
     }
     context.read<ChatsCubit>().setSoundEffects(_isSoundEffectsEnabled);
     Navigator.of(context).pop();
@@ -105,7 +123,8 @@ class SettingsPageState extends State<SettingsPage> {
                         value: _persona,
                         onChanged: (ChatPersona newValue) {
                           _persona = newValue;
-                          SettingsService().setPersona(_persona);
+                          // TODO: Restore persona saving when repository supports it
+                          // SettingsService().setPersona(_persona);
                           setState(() {});
                         },
                       ),

@@ -6,9 +6,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
-import '../../../../core/models/avatar_config.dart';
-import '../../../../core/models/chat_entry.dart';
-import '../../../../core/services/tts_service.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/widgets/current_prompt_text.dart';
@@ -17,10 +14,13 @@ import '../../../../core/widgets/picker_buttons.dart';
 import '../../../../l10n/localization_manager.dart';
 import '../../../avatar/bloc/avatar_cubit.dart';
 import '../../../avatar/bloc/avatar_state.dart';
+import '../../../avatar/domain/models/avatar_config.dart';
+import '../../../sound/data/datasources/tts_datasource.dart';
 import '../../../talking/bloc/talking_cubit.dart';
 import '../../../talking/bloc/talking_state.dart';
 import '../../bloc/chats_cubit.dart';
 import '../../bloc/chats_state.dart';
+import '../../domain/models/chat_entry.dart';
 import '../function_calling_widget.dart';
 
 class AiTextInput extends StatefulWidget {

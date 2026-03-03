@@ -3,7 +3,7 @@ import '../bloc/demo_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/demo_cubit.dart';
-import '../../../core/models/demo_script.dart';
+import '../domain/models/demo_script.dart';
 
 /// Demo controls widget for selecting and starting demos
 ///

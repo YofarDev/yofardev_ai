@@ -25,12 +25,12 @@ $AvatarStateCopyWith<AvatarState> get copyWith => _$AvatarStateCopyWithImpl<Avat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarState&&(identical(other.status, status) || other.status == status)&&(identical(other.statusAnimation, statusAnimation) || other.statusAnimation == statusAnimation)&&(identical(other.baseOriginalWidth, baseOriginalWidth) || other.baseOriginalWidth == baseOriginalWidth)&&(identical(other.baseOriginalHeight, baseOriginalHeight) || other.baseOriginalHeight == baseOriginalHeight)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&const DeepCollectionEquality().equals(other.avatar, avatar)&&const DeepCollectionEquality().equals(other.avatarConfig, avatarConfig)&&const DeepCollectionEquality().equals(other.previousSpecialsState, previousSpecialsState));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarState&&(identical(other.status, status) || other.status == status)&&(identical(other.statusAnimation, statusAnimation) || other.statusAnimation == statusAnimation)&&(identical(other.baseOriginalWidth, baseOriginalWidth) || other.baseOriginalWidth == baseOriginalWidth)&&(identical(other.baseOriginalHeight, baseOriginalHeight) || other.baseOriginalHeight == baseOriginalHeight)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&(identical(other.avatar, avatar) || other.avatar == avatar)&&(identical(other.avatarConfig, avatarConfig) || other.avatarConfig == avatarConfig)&&(identical(other.previousSpecialsState, previousSpecialsState) || other.previousSpecialsState == previousSpecialsState));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,statusAnimation,baseOriginalWidth,baseOriginalHeight,scaleFactor,const DeepCollectionEquality().hash(avatar),const DeepCollectionEquality().hash(avatarConfig),const DeepCollectionEquality().hash(previousSpecialsState));
+int get hashCode => Object.hash(runtimeType,status,statusAnimation,baseOriginalWidth,baseOriginalHeight,scaleFactor,avatar,avatarConfig,previousSpecialsState);
 
 @override
 String toString() {
@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-
+$AvatarCopyWith<$Res> get avatar;$AvatarConfigCopyWith<$Res> get avatarConfig;
 
 }
 /// @nodoc
@@ -62,20 +62,38 @@ class _$AvatarStateCopyWithImpl<$Res>
 
 /// Create a copy of AvatarState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? statusAnimation = null,Object? baseOriginalWidth = null,Object? baseOriginalHeight = null,Object? scaleFactor = null,Object? avatar = freezed,Object? avatarConfig = freezed,Object? previousSpecialsState = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? statusAnimation = null,Object? baseOriginalWidth = null,Object? baseOriginalHeight = null,Object? scaleFactor = null,Object? avatar = null,Object? avatarConfig = null,Object? previousSpecialsState = null,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AvatarStatus,statusAnimation: null == statusAnimation ? _self.statusAnimation : statusAnimation // ignore: cast_nullable_to_non_nullable
 as AvatarStatusAnimation,baseOriginalWidth: null == baseOriginalWidth ? _self.baseOriginalWidth : baseOriginalWidth // ignore: cast_nullable_to_non_nullable
 as double,baseOriginalHeight: null == baseOriginalHeight ? _self.baseOriginalHeight : baseOriginalHeight // ignore: cast_nullable_to_non_nullable
 as double,scaleFactor: null == scaleFactor ? _self.scaleFactor : scaleFactor // ignore: cast_nullable_to_non_nullable
-as double,avatar: freezed == avatar ? _self.avatar : avatar // ignore: cast_nullable_to_non_nullable
-as Avatar,avatarConfig: freezed == avatarConfig ? _self.avatarConfig : avatarConfig // ignore: cast_nullable_to_non_nullable
-as AvatarConfig,previousSpecialsState: freezed == previousSpecialsState ? _self.previousSpecialsState : previousSpecialsState // ignore: cast_nullable_to_non_nullable
+as double,avatar: null == avatar ? _self.avatar : avatar // ignore: cast_nullable_to_non_nullable
+as Avatar,avatarConfig: null == avatarConfig ? _self.avatarConfig : avatarConfig // ignore: cast_nullable_to_non_nullable
+as AvatarConfig,previousSpecialsState: null == previousSpecialsState ? _self.previousSpecialsState : previousSpecialsState // ignore: cast_nullable_to_non_nullable
 as AvatarSpecials,
   ));
 }
-
+/// Create a copy of AvatarState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AvatarCopyWith<$Res> get avatar {
+  
+  return $AvatarCopyWith<$Res>(_self.avatar, (value) {
+    return _then(_self.copyWith(avatar: value));
+  });
+}/// Create a copy of AvatarState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AvatarConfigCopyWith<$Res> get avatarConfig {
+  
+  return $AvatarConfigCopyWith<$Res>(_self.avatarConfig, (value) {
+    return _then(_self.copyWith(avatarConfig: value));
+  });
+}
 }
 
 
@@ -229,12 +247,12 @@ _$AvatarStateCopyWith<_AvatarState> get copyWith => __$AvatarStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AvatarState&&(identical(other.status, status) || other.status == status)&&(identical(other.statusAnimation, statusAnimation) || other.statusAnimation == statusAnimation)&&(identical(other.baseOriginalWidth, baseOriginalWidth) || other.baseOriginalWidth == baseOriginalWidth)&&(identical(other.baseOriginalHeight, baseOriginalHeight) || other.baseOriginalHeight == baseOriginalHeight)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&const DeepCollectionEquality().equals(other.avatar, avatar)&&const DeepCollectionEquality().equals(other.avatarConfig, avatarConfig)&&const DeepCollectionEquality().equals(other.previousSpecialsState, previousSpecialsState));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AvatarState&&(identical(other.status, status) || other.status == status)&&(identical(other.statusAnimation, statusAnimation) || other.statusAnimation == statusAnimation)&&(identical(other.baseOriginalWidth, baseOriginalWidth) || other.baseOriginalWidth == baseOriginalWidth)&&(identical(other.baseOriginalHeight, baseOriginalHeight) || other.baseOriginalHeight == baseOriginalHeight)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&(identical(other.avatar, avatar) || other.avatar == avatar)&&(identical(other.avatarConfig, avatarConfig) || other.avatarConfig == avatarConfig)&&(identical(other.previousSpecialsState, previousSpecialsState) || other.previousSpecialsState == previousSpecialsState));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,statusAnimation,baseOriginalWidth,baseOriginalHeight,scaleFactor,const DeepCollectionEquality().hash(avatar),const DeepCollectionEquality().hash(avatarConfig),const DeepCollectionEquality().hash(previousSpecialsState));
+int get hashCode => Object.hash(runtimeType,status,statusAnimation,baseOriginalWidth,baseOriginalHeight,scaleFactor,avatar,avatarConfig,previousSpecialsState);
 
 @override
 String toString() {
@@ -253,7 +271,7 @@ $Res call({
 });
 
 
-
+@override $AvatarCopyWith<$Res> get avatar;@override $AvatarConfigCopyWith<$Res> get avatarConfig;
 
 }
 /// @nodoc
@@ -266,21 +284,39 @@ class __$AvatarStateCopyWithImpl<$Res>
 
 /// Create a copy of AvatarState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? statusAnimation = null,Object? baseOriginalWidth = null,Object? baseOriginalHeight = null,Object? scaleFactor = null,Object? avatar = freezed,Object? avatarConfig = freezed,Object? previousSpecialsState = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? statusAnimation = null,Object? baseOriginalWidth = null,Object? baseOriginalHeight = null,Object? scaleFactor = null,Object? avatar = null,Object? avatarConfig = null,Object? previousSpecialsState = null,}) {
   return _then(_AvatarState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AvatarStatus,statusAnimation: null == statusAnimation ? _self.statusAnimation : statusAnimation // ignore: cast_nullable_to_non_nullable
 as AvatarStatusAnimation,baseOriginalWidth: null == baseOriginalWidth ? _self.baseOriginalWidth : baseOriginalWidth // ignore: cast_nullable_to_non_nullable
 as double,baseOriginalHeight: null == baseOriginalHeight ? _self.baseOriginalHeight : baseOriginalHeight // ignore: cast_nullable_to_non_nullable
 as double,scaleFactor: null == scaleFactor ? _self.scaleFactor : scaleFactor // ignore: cast_nullable_to_non_nullable
-as double,avatar: freezed == avatar ? _self.avatar : avatar // ignore: cast_nullable_to_non_nullable
-as Avatar,avatarConfig: freezed == avatarConfig ? _self.avatarConfig : avatarConfig // ignore: cast_nullable_to_non_nullable
-as AvatarConfig,previousSpecialsState: freezed == previousSpecialsState ? _self.previousSpecialsState : previousSpecialsState // ignore: cast_nullable_to_non_nullable
+as double,avatar: null == avatar ? _self.avatar : avatar // ignore: cast_nullable_to_non_nullable
+as Avatar,avatarConfig: null == avatarConfig ? _self.avatarConfig : avatarConfig // ignore: cast_nullable_to_non_nullable
+as AvatarConfig,previousSpecialsState: null == previousSpecialsState ? _self.previousSpecialsState : previousSpecialsState // ignore: cast_nullable_to_non_nullable
 as AvatarSpecials,
   ));
 }
 
-
+/// Create a copy of AvatarState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AvatarCopyWith<$Res> get avatar {
+  
+  return $AvatarCopyWith<$Res>(_self.avatar, (value) {
+    return _then(_self.copyWith(avatar: value));
+  });
+}/// Create a copy of AvatarState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AvatarConfigCopyWith<$Res> get avatarConfig {
+  
+  return $AvatarConfigCopyWith<$Res>(_self.avatarConfig, (value) {
+    return _then(_self.copyWith(avatarConfig: value));
+  });
+}
 }
 
 // dart format on

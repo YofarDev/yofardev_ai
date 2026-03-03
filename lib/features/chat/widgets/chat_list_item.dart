@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/models/chat.dart';
 import '../../../core/res/app_colors.dart';
+import '../domain/models/chat.dart';
 
 /// A single chat item in the chats list
 class ChatListItem extends StatelessWidget {

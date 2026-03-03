@@ -7,15 +7,16 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../avatar/bloc/avatar_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
+import '../../avatar/domain/models/avatar_config.dart';
 import '../bloc/chats_cubit.dart';
 import '../bloc/chats_state.dart';
 import '../../../core/utils/logger.dart';
-import '../../../core/models/avatar_config.dart';
-import '../../../core/models/chat.dart';
-import '../../../core/models/chat_entry.dart';
+
 import '../../../core/res/app_colors.dart';
 import '../../../core/widgets/app_icon_button.dart';
 import '../../../core/widgets/function_calling_button.dart';
+import '../domain/models/chat.dart';
+import '../domain/models/chat_entry.dart';
 import '../widgets/ai_text_input/ai_text_input.dart';
 import '../widgets/chat_conversation_list.dart';
 

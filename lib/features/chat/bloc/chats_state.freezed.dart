@@ -25,12 +25,12 @@ $ChatsStateCopyWith<ChatsState> get copyWith => _$ChatsStateCopyWithImpl<ChatsSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.chatsList, chatsList)&&const DeepCollectionEquality().equals(other.currentChat, currentChat)&&const DeepCollectionEquality().equals(other.openedChat, openedChat)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.functionCallingEnabled, functionCallingEnabled) || other.functionCallingEnabled == functionCallingEnabled)&&(identical(other.chatCreated, chatCreated) || other.chatCreated == chatCreated));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.chatsList, chatsList)&&(identical(other.currentChat, currentChat) || other.currentChat == currentChat)&&(identical(other.openedChat, openedChat) || other.openedChat == openedChat)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.functionCallingEnabled, functionCallingEnabled) || other.functionCallingEnabled == functionCallingEnabled)&&(identical(other.chatCreated, chatCreated) || other.chatCreated == chatCreated));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(chatsList),const DeepCollectionEquality().hash(currentChat),const DeepCollectionEquality().hash(openedChat),errorMessage,soundEffectsEnabled,currentLanguage,const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing,functionCallingEnabled,chatCreated);
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(chatsList),currentChat,openedChat,errorMessage,soundEffectsEnabled,currentLanguage,const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing,functionCallingEnabled,chatCreated);
 
 @override
 String toString() {
@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-
+$ChatCopyWith<$Res> get currentChat;$ChatCopyWith<$Res> get openedChat;
 
 }
 /// @nodoc
@@ -62,12 +62,12 @@ class _$ChatsStateCopyWithImpl<$Res>
 
 /// Create a copy of ChatsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? chatsList = null,Object? currentChat = freezed,Object? openedChat = freezed,Object? errorMessage = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? functionCallingEnabled = null,Object? chatCreated = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? chatsList = null,Object? currentChat = null,Object? openedChat = null,Object? errorMessage = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? functionCallingEnabled = null,Object? chatCreated = null,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ChatsStatus,chatsList: null == chatsList ? _self.chatsList : chatsList // ignore: cast_nullable_to_non_nullable
-as List<Chat>,currentChat: freezed == currentChat ? _self.currentChat : currentChat // ignore: cast_nullable_to_non_nullable
-as Chat,openedChat: freezed == openedChat ? _self.openedChat : openedChat // ignore: cast_nullable_to_non_nullable
+as List<Chat>,currentChat: null == currentChat ? _self.currentChat : currentChat // ignore: cast_nullable_to_non_nullable
+as Chat,openedChat: null == openedChat ? _self.openedChat : openedChat // ignore: cast_nullable_to_non_nullable
 as Chat,errorMessage: null == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String,soundEffectsEnabled: null == soundEffectsEnabled ? _self.soundEffectsEnabled : soundEffectsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,currentLanguage: null == currentLanguage ? _self.currentLanguage : currentLanguage // ignore: cast_nullable_to_non_nullable
@@ -78,7 +78,25 @@ as bool,chatCreated: null == chatCreated ? _self.chatCreated : chatCreated // ig
 as bool,
   ));
 }
-
+/// Create a copy of ChatsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ChatCopyWith<$Res> get currentChat {
+  
+  return $ChatCopyWith<$Res>(_self.currentChat, (value) {
+    return _then(_self.copyWith(currentChat: value));
+  });
+}/// Create a copy of ChatsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ChatCopyWith<$Res> get openedChat {
+  
+  return $ChatCopyWith<$Res>(_self.openedChat, (value) {
+    return _then(_self.copyWith(openedChat: value));
+  });
+}
 }
 
 
@@ -247,12 +265,12 @@ _$ChatsStateCopyWith<_ChatsState> get copyWith => __$ChatsStateCopyWithImpl<_Cha
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._chatsList, _chatsList)&&const DeepCollectionEquality().equals(other.currentChat, currentChat)&&const DeepCollectionEquality().equals(other.openedChat, openedChat)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.functionCallingEnabled, functionCallingEnabled) || other.functionCallingEnabled == functionCallingEnabled)&&(identical(other.chatCreated, chatCreated) || other.chatCreated == chatCreated));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._chatsList, _chatsList)&&(identical(other.currentChat, currentChat) || other.currentChat == currentChat)&&(identical(other.openedChat, openedChat) || other.openedChat == openedChat)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.functionCallingEnabled, functionCallingEnabled) || other.functionCallingEnabled == functionCallingEnabled)&&(identical(other.chatCreated, chatCreated) || other.chatCreated == chatCreated));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_chatsList),const DeepCollectionEquality().hash(currentChat),const DeepCollectionEquality().hash(openedChat),errorMessage,soundEffectsEnabled,currentLanguage,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing,functionCallingEnabled,chatCreated);
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_chatsList),currentChat,openedChat,errorMessage,soundEffectsEnabled,currentLanguage,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing,functionCallingEnabled,chatCreated);
 
 @override
 String toString() {
@@ -271,7 +289,7 @@ $Res call({
 });
 
 
-
+@override $ChatCopyWith<$Res> get currentChat;@override $ChatCopyWith<$Res> get openedChat;
 
 }
 /// @nodoc
@@ -284,12 +302,12 @@ class __$ChatsStateCopyWithImpl<$Res>
 
 /// Create a copy of ChatsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? chatsList = null,Object? currentChat = freezed,Object? openedChat = freezed,Object? errorMessage = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? functionCallingEnabled = null,Object? chatCreated = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? chatsList = null,Object? currentChat = null,Object? openedChat = null,Object? errorMessage = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? functionCallingEnabled = null,Object? chatCreated = null,}) {
   return _then(_ChatsState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ChatsStatus,chatsList: null == chatsList ? _self._chatsList : chatsList // ignore: cast_nullable_to_non_nullable
-as List<Chat>,currentChat: freezed == currentChat ? _self.currentChat : currentChat // ignore: cast_nullable_to_non_nullable
-as Chat,openedChat: freezed == openedChat ? _self.openedChat : openedChat // ignore: cast_nullable_to_non_nullable
+as List<Chat>,currentChat: null == currentChat ? _self.currentChat : currentChat // ignore: cast_nullable_to_non_nullable
+as Chat,openedChat: null == openedChat ? _self.openedChat : openedChat // ignore: cast_nullable_to_non_nullable
 as Chat,errorMessage: null == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String,soundEffectsEnabled: null == soundEffectsEnabled ? _self.soundEffectsEnabled : soundEffectsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,currentLanguage: null == currentLanguage ? _self.currentLanguage : currentLanguage // ignore: cast_nullable_to_non_nullable
@@ -301,7 +319,25 @@ as bool,
   ));
 }
 
-
+/// Create a copy of ChatsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ChatCopyWith<$Res> get currentChat {
+  
+  return $ChatCopyWith<$Res>(_self.currentChat, (value) {
+    return _then(_self.copyWith(currentChat: value));
+  });
+}/// Create a copy of ChatsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ChatCopyWith<$Res> get openedChat {
+  
+  return $ChatCopyWith<$Res>(_self.openedChat, (value) {
+    return _then(_self.copyWith(openedChat: value));
+  });
+}
 }
 
 // dart format on

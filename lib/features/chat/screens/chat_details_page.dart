@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/models/avatar_config.dart';
-import '../../../core/models/chat.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
+import '../../avatar/domain/models/avatar_config.dart';
 import '../bloc/chats_cubit.dart';
 import '../bloc/chats_state.dart';
+import '../domain/models/chat.dart';
 import '../widgets/ai_text_input/ai_text_input.dart';
 import '../widgets/chat_app_bar.dart';
 import '../widgets/message_list.dart';
