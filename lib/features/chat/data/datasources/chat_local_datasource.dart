@@ -5,20 +5,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/models/chat.dart';
 import '../../../avatar/domain/models/avatar_config.dart';
-import '../../../../core/services/prompt_service.dart';
-import '../../../../core/services/settings_service.dart';
+import '../../../home/data/datasources/prompt_datasource.dart';
+import '../../../settings/data/datasources/settings_local_datasource.dart';
 
 class ChatLocalDatasource {
   Future<Chat> createNewChat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String newChatId = DateTime.now().toIso8601String();
     final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
-    final ChatPersona persona = await SettingsService().getPersona();
+    final ChatPersona persona = await SettingsLocalDatasource().getPersona();
     final Chat newChat = Chat(
       id: newChatId,
       avatar: persona.getDefaultAvatar(),
       language: deviceLocale.languageCode,
-      systemPrompt: await PromptService().getSystemPrompt(),
+      systemPrompt: await PromptDatasource().getSystemPrompt(),
       persona: persona,
     );
     await _removeEmptyChats();
