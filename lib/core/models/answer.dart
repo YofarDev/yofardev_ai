@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'avatar_config.dart';
+import '../../features/avatar/domain/models/avatar_config.dart';
 
 part 'answer.freezed.dart';
 
