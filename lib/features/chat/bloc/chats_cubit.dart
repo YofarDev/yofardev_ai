@@ -366,6 +366,8 @@ class ChatsCubit extends Cubit<ChatsState> {
           );
           // Update chat with new entries
           _chatRepository.updateChat(id: chat.id, updatedChat: chat);
+          // Trigger title generation after first user message
+          _triggerTitleGenerationIfNeeded(chat);
           // Return the last entry (which should be the actual response)
           return newEntries.isNotEmpty ? newEntries.last : null;
         },
@@ -787,6 +789,19 @@ class ChatsCubit extends Cubit<ChatsState> {
   Future<void> close() async {
     await _ttsAudioSubscription?.cancel();
     await super.close();
+  }
+
+  void _triggerTitleGenerationIfNeeded(Chat chat) {
+    final bool hasOnlyOneUserMessage =
+        chat.entries
+            .where((ChatEntry e) => e.entryType == EntryType.user)
+            .length ==
+        1;
+
+    if (hasOnlyOneUserMessage && !chat.titleGenerated) {
+      // Fire and forget - don't await
+      generateTitleForChat(chat.id);
+    }
   }
 
   /// Removes a sentence from the queue after it has been played by TalkingMouth
