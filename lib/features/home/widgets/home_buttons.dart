@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../avatar/bloc/avatar_cubit.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
 import '../../talking/bloc/talking_cubit.dart';
-import '../../chat/screens/chats_list_screen.dart';
-import '../../settings/screens/settings_screen.dart';
 import '../../../core/widgets/app_icon_button.dart';
-import '../../../core/widgets/constrained_width.dart';
 import '../../../core/widgets/function_calling_button.dart';
+import '../../../core/router/route_constants.dart';
 
 class HomeButtons extends StatelessWidget {
   const HomeButtons({super.key});
@@ -47,13 +46,7 @@ class HomeButtons extends StatelessWidget {
                   AppIconButton(
                     icon: Icons.chat_bubble_outline_rounded,
                     onPressed: () {
-                      Navigator.of(context).push(
-                        PageRouteBuilder<dynamic>(
-                          pageBuilder: (_, _, _) =>
-                              const ConstrainedWidth(child: ChatsListPage()),
-                          transitionDuration: Duration.zero,
-                        ),
-                      );
+                      context.go(RouteConstants.chats);
                     },
                   ),
                   const SizedBox(height: 8),
@@ -68,12 +61,7 @@ class HomeButtons extends StatelessWidget {
                     child: AppIconButton(
                       icon: Icons.settings_rounded,
                       onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<dynamic>(
-                            builder: (BuildContext context) =>
-                                const ConstrainedWidth(child: SettingsPage()),
-                          ),
-                        );
+                        context.go(RouteConstants.settings);
                       },
                     ),
                   ),

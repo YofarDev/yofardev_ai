@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../domain/models/avatar_config.dart';
+import '../../../core/models/avatar_config.dart';
 
 part 'avatar_state.freezed.dart';
 

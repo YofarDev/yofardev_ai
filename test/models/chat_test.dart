@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/llm_message.dart';
-import 'package:yofardev_ai/features/avatar/domain/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 

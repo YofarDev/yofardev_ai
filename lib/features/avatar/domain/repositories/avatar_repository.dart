@@ -1,5 +1,5 @@
 import 'package:fpdart/fpdart.dart';
-import '../models/avatar_config.dart';
+import '../../../../core/models/avatar_config.dart';
 import '../../../chat/domain/models/chat.dart';
 
 abstract class AvatarRepository {

@@ -4,7 +4,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/services/agent/yofardev_agent.dart';
 import '../../../../core/services/llm/fake_llm_service.dart';
-import '../../../avatar/domain/models/avatar_config.dart';
+import '../../../../core/models/avatar_config.dart';
 import '../../../demo/domain/models/demo_script.dart';
 import '../../../home/data/datasources/prompt_datasource.dart';
 import '../../domain/models/chat.dart';

@@ -5,17 +5,12 @@ import '../../../core/res/app_colors.dart';
 import '../../../core/utils/platform_utils.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
-import '../../avatar/widgets/avatar_widgets.dart';
-import '../../avatar/widgets/background_avatar.dart';
-import '../../avatar/widgets/loading_avatar_widget.dart';
-import '../../avatar/widgets/thinking_animation.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
-import '../../chat/widgets/ai_text_input/ai_text_input.dart';
 import '../../talking/bloc/talking_cubit.dart';
 import '../../talking/bloc/talking_state.dart';
 import '../bloc/home_cubit.dart';
-import '../widgets/home_buttons.dart';
+import '../widgets/home_content_stack.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -150,37 +145,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (BuildContext context, AvatarState avatarState) {
                         return BlocBuilder<TalkingCubit, TalkingState>(
                           builder: (BuildContext context, TalkingState state) {
-                            final bool isLoading =
-                                state.status == TalkingStatus.loading;
-                            final Widget w = GestureDetector(
-                              onTap: _handleTripleTap,
-                              behavior: HitTestBehavior.translucent,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                alignment: Alignment.topCenter,
-                                children: <Widget>[
-                                  const BackgroundAvatar(),
-                                  if (!chatsState.initializing)
-                                    const AvatarWidgets()
-                                  else
-                                    const LoadingAvatarWidget(),
-                                  if (isLoading) const ThinkingAnimation(),
-                                  if (!chatsState.initializing)
-                                    const Positioned(
-                                      left: 8,
-                                      right: 8,
-                                      bottom: 16,
-                                      child: AiTextInput(),
-                                    ),
-                                  const HomeButtons(),
-                                  //   DemoControlsWidget(key: _demoKey),
-                                ],
-                              ),
-                            );
-
                             return Scaffold(
                               backgroundColor: AppColors.background,
-                              body: w,
+                              body: HomeContentStack(
+                                chatsState: chatsState,
+                                talkingState: state,
+                                onTripleTap: _handleTripleTap,
+                              ),
                             );
                           },
                         );

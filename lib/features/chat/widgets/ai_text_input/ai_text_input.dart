@@ -14,7 +14,7 @@ import '../../../../core/widgets/picker_buttons.dart';
 import '../../../../l10n/localization_manager.dart';
 import '../../../avatar/bloc/avatar_cubit.dart';
 import '../../../avatar/bloc/avatar_state.dart';
-import '../../../avatar/domain/models/avatar_config.dart';
+import '../../../../core/models/avatar_config.dart';
 import '../../../sound/data/datasources/tts_datasource.dart';
 import '../../../talking/bloc/talking_cubit.dart';
 import '../../../talking/bloc/talking_state.dart';

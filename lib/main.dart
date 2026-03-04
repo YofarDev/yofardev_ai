@@ -11,6 +11,7 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core/di/service_locator.dart';
+import 'core/router/app_router.dart';
 import 'features/avatar/bloc/avatar_cubit.dart';
 import 'features/chat/bloc/chats_cubit.dart';
 import 'features/demo/bloc/demo_cubit.dart';
@@ -18,8 +19,6 @@ import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
 import 'features/talking/bloc/talking_cubit.dart';
 import 'core/res/app_theme.dart';
-import 'features/home/screens/home_screen.dart';
-import 'core/widgets/constrained_width.dart';
 import 'core/utils/platform_utils.dart';
 
 void main() async {
@@ -76,7 +75,7 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => getIt<DemoCubit>(),
         ),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: 'Yofardev AI',
         debugShowCheckedModeBanner: false,
         supportedLocales: const <Locale>[Locale('fr'), Locale('en')],
@@ -87,7 +86,7 @@ class MyApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         theme: AppTheme.lightTheme,
-        home: const ConstrainedWidth(child: HomeScreen()),
+        routerConfig: AppRouter.router,
       ),
     );
   }

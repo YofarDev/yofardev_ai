@@ -4,9 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/models/avatar_config.dart';
 import '../../../core/res/app_constants.dart';
 import '../../chat/domain/models/chat.dart';
-import '../domain/models/avatar_config.dart';
 import '../domain/repositories/avatar_repository.dart';
 import 'avatar_state.dart';
 

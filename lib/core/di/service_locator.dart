@@ -6,10 +6,12 @@ import '../../l10n/localization_manager.dart';
 import '../utils/logger.dart';
 
 import '../../features/avatar/bloc/avatar_cubit.dart';
+import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/chat/bloc/chats_cubit.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
 import '../../features/demo/data/datasources/demo_controller.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
+import '../../features/demo/domain/repositories/demo_repository.dart';
 import '../../features/sound/bloc/sound_cubit.dart';
 import '../../features/talking/bloc/talking_cubit.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
@@ -54,10 +56,17 @@ Future<void> setupServiceLocator() async {
 
   // Demo services
   getIt.registerLazySingleton<DemoController>(() => DemoController());
-  getIt.registerLazySingleton<DemoService>(() => DemoService());
+  getIt.registerLazySingleton<DemoService>(() {
+    final DemoService service = DemoService();
+    service.setRepository(getIt<DemoRepository>());
+    return service;
+  });
 
   // Data sources
   getIt.registerLazySingleton<ChatLocalDatasource>(() => ChatLocalDatasource());
+  getIt.registerLazySingleton<AvatarLocalDatasource>(
+    () => AvatarLocalDatasource(),
+  );
   getIt.registerLazySingleton<SettingsLocalDatasource>(
     () => SettingsLocalDatasource(),
   );
@@ -70,6 +79,12 @@ Future<void> setupServiceLocator() async {
     () => SettingsRepositoryImpl(),
   );
   getIt.registerLazySingleton<SoundRepository>(() => SoundRepositoryImpl());
+  getIt.registerLazySingleton<DemoRepository>(
+    () => DemoRepositoryImpl(
+      chatRepository: getIt<ChatRepository>(),
+      avatarRepository: getIt<AvatarRepository>(),
+    ),
+  );
 
   // Other services
   getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());

@@ -9,7 +9,7 @@ import '../../../core/utils/extensions.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/utils/platform_utils.dart';
 import '../../../l10n/localization_manager.dart';
-import '../../avatar/domain/models/avatar_config.dart';
+import '../../../core/models/avatar_config.dart';
 import '../../settings/domain/repositories/settings_repository.dart';
 import '../domain/models/chat.dart';
 import '../domain/models/chat_entry.dart';

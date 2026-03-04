@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/res/app_colors.dart';
+import '../../../../core/router/route_constants.dart';
 import '../../../../core/services/llm/llm_service.dart';
-import 'llm_config_page.dart';
 
 class LlmSelectionPage extends StatefulWidget {
   const LlmSelectionPage({super.key});
@@ -34,23 +35,13 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
   }
 
   void _onAdd() {
-    Navigator.of(context)
-        .push(
-          MaterialPageRoute<void>(
-            builder: (BuildContext context) => const LlmConfigPage(),
-          ),
-        )
-        .then((_) => _refresh());
+    context.go(RouteConstants.llmConfig);
+    // Note: refresh will be called when returning via router
   }
 
   void _onEdit(LlmConfig config) {
-    Navigator.of(context)
-        .push(
-          MaterialPageRoute<void>(
-            builder: (BuildContext context) => LlmConfigPage(config: config),
-          ),
-        )
-        .then((_) => _refresh());
+    context.go(RouteConstants.llmConfig);
+    // Note: refresh will be called when returning via router
   }
 
   void _onDelete(LlmConfig config) async {

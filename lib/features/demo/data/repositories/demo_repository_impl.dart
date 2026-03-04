@@ -1,20 +1,18 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fpdart/src/either.dart';
 
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/llm/fake_llm_service.dart';
-import '../../../chat/bloc/chats_cubit.dart';
-import '../../../avatar/domain/models/avatar_config.dart';
-import '../../../avatar/bloc/avatar_cubit.dart';
+import '../../../../core/models/avatar_config.dart';
 import '../../domain/models/demo_script.dart';
+import '../../domain/repositories/demo_repository.dart';
 import '../datasources/demo_controller.dart';
 
 /// Service for managing demo mode
 ///
-/// Coordinates the demo controller, fake LLM service, and avatar
-/// to provide a scripted demo experience
+/// Coordinates the demo controller, fake LLM service, and repository
+/// to provide a scripted demo experience without direct UI dependencies
 class DemoService {
   static final DemoService _instance = DemoService._internal();
   factory DemoService() => _instance;
@@ -22,6 +20,14 @@ class DemoService {
 
   final DemoController _demoController = DemoController();
   final FakeLlmService _fakeLlmService = FakeLlmService();
+
+  DemoRepository? _repository;
+
+  /// Set the repository for demo operations
+  /// Call this during app initialization
+  void setRepository(DemoRepository repository) {
+    _repository = repository;
+  }
 
   DemoController get controller => _demoController;
   FakeLlmService get fakeLlmService => _fakeLlmService;
@@ -37,30 +43,26 @@ class DemoService {
   /// Sets the initial avatar background, starts countdown,
   /// and activates the fake LLM service with scripted responses
   Future<void> activateDemo({
-    required BuildContext context,
+    required String chatId,
     required DemoScript script,
   }) async {
     AppLogger.info('Activating demo: ${script.name}', tag: 'DemoService');
 
-    // Set initial background
-    final AvatarCubit avatarCubit = context.read<AvatarCubit>();
-    final Avatar currentAvatar = avatarCubit.state.avatar;
-
-    final AvatarBackgrounds initialBg = AvatarBackgrounds.values.firstWhere(
-      (AvatarBackgrounds bg) => bg.name == script.initialBackground,
-      orElse: () => AvatarBackgrounds.office,
-    );
-
-    if (currentAvatar.background != initialBg) {
-      final String chatId = context.read<ChatsCubit>().state.currentChat.id;
-      avatarCubit.onNewAvatarConfig(
-        chatId,
-        AvatarConfig(background: initialBg),
+    // Set initial background using repository
+    if (_repository != null) {
+      final AvatarBackgrounds initialBg = AvatarBackgrounds.values.firstWhere(
+        (AvatarBackgrounds bg) => bg.name == script.initialBackground,
+        orElse: () => AvatarBackgrounds.office,
       );
-      AppLogger.debug(
-        'Set initial background to: ${initialBg.name}',
-        tag: 'DemoService',
-      );
+
+      final Either<Exception, void> result = await _repository!
+          .setAvatarBackground(chatId, initialBg);
+      if (result.isRight()) {
+        AppLogger.debug(
+          'Set initial background to: ${initialBg.name}',
+          tag: 'DemoService',
+        );
+      }
     }
 
     // Start countdown

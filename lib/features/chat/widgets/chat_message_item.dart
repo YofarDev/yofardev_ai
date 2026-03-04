@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
+import '../../../core/router/route_constants.dart';
 import '../../../core/utils/app_utils.dart';
 import '../domain/models/chat_entry.dart';
 import 'modern_chat_bubble.dart';
@@ -161,12 +163,7 @@ class _AttachedImage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.0),
           child: GestureDetector(
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<dynamic>(
-                  builder: (BuildContext context) =>
-                      _ImageFullScreen(imagePath: imagePath),
-                ),
-              );
+              context.go('${RouteConstants.imageFullScreen}?path=$imagePath');
             },
             child: Hero(
               tag: imagePath,

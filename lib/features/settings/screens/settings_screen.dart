@@ -3,20 +3,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/src/either.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/di/service_locator.dart';
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
-import '../../../core/widgets/constrained_width.dart';
 import '../../../l10n/localization_manager.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/domain/models/chat.dart';
 import '../domain/repositories/settings_repository.dart';
+import '../widgets/api_key_field.dart';
 import '../widgets/persona_dropdown.dart';
 import '../widgets/settings_app_bar.dart';
 import '../widgets/sound_effects_toggle.dart';
 import '../widgets/username_field.dart';
-import 'llm/llm_selection_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -76,7 +76,7 @@ class SettingsPageState extends State<SettingsPage> {
       await settingsRepo.setUsername(_usernameController.text);
     }
     context.read<ChatsCubit>().setSoundEffects(_isSoundEffectsEnabled);
-    Navigator.of(context).pop();
+    context.pop();
   }
 
   @override
@@ -115,7 +115,7 @@ class SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      _buildApiKeyField(),
+                      const ApiKeyField(),
                       const SizedBox(height: 16),
                       UsernameField(controller: _usernameController),
                       const SizedBox(height: 16),
@@ -148,38 +148,4 @@ class SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-
-  Widget _buildApiKeyField() => Container(
-    width: double.infinity,
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: <Color>[
-          AppColors.primary.withValues(alpha: 0.15),
-          AppColors.primary.withValues(alpha: 0.08),
-        ],
-      ),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(
-        color: AppColors.primary.withValues(alpha: 0.4),
-        width: 1.5,
-      ),
-    ),
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        foregroundColor: AppColors.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-      child: const Text('API Picker'),
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute<dynamic>(
-            builder: (BuildContext context) =>
-                const ConstrainedWidth(child: LlmSelectionPage()),
-          ),
-        );
-      },
-    ),
-  );
 }

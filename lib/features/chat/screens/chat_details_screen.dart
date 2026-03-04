@@ -3,13 +3,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../avatar/bloc/avatar_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
-import '../../avatar/domain/models/avatar_config.dart';
 import '../bloc/chats_cubit.dart';
 import '../bloc/chats_state.dart';
+import '../../../core/models/avatar_config.dart';
 import '../../../core/utils/logger.dart';
 
 import '../../../core/res/app_colors.dart';
@@ -264,7 +265,7 @@ class _TopLeftBackButton extends StatelessWidget {
         child: AppIconButton(
           icon: Icons.arrow_back_ios_new_outlined,
           onPressed: () {
-            Navigator.of(context).pop();
+            context.pop();
           },
         ),
       ),

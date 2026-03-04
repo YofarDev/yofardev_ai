@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../features/avatar/bloc/avatar_cubit.dart';
 import '../../../../features/avatar/bloc/avatar_state.dart';
+import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/app_utils.dart';
-import '../../domain/models/avatar_config.dart';
 import 'robocop_animated_eyes.dart';
 import 'singularity_costume.dart';
 import 'soubrette_feather_duster.dart';
