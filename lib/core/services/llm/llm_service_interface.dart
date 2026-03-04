@@ -1,6 +1,7 @@
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
+import '../../models/llm_task_type.dart';
 import 'llm_stream_chunk.dart';
 
 /// Interface for LLM service implementations
@@ -62,4 +63,13 @@ abstract class LlmServiceInterface {
 
   /// Whether this service is active (for fake/demo service)
   bool get isActive;
+
+  // NEW METHODS:
+  /// Get the LLM configuration for a specific task type
+  /// Falls back to current/default config if task-specific config not found
+  LlmConfig? getConfigForTask(LlmTaskType task);
+
+  /// Generate a title for a chat based on the first user message
+  /// Returns null if generation fails or no config is available
+  Future<String?> generateTitle(String firstUserMessage, {LlmConfig? config});
 }
