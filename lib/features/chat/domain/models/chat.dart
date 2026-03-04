@@ -41,6 +41,9 @@ sealed class Chat with _$Chat {
     @Default('en') String language,
     @Default('') String systemPrompt,
     @Default(ChatPersona.normal) ChatPersona persona,
+    // NEW FIELDS:
+    @Default('') String title,
+    @Default(false) bool titleGenerated,
   }) = _Chat;
 
   factory Chat.fromJson(Map<String, dynamic> json) => Chat.fromMap(json);
@@ -54,6 +57,9 @@ sealed class Chat with _$Chat {
       'language': language,
       'systemPrompt': systemPrompt,
       'persona': persona.name,
+      // NEW FIELDS:
+      'title': title,
+      'titleGenerated': titleGenerated,
     };
   }
 
@@ -71,6 +77,9 @@ sealed class Chat with _$Chat {
       language: map['language'] as String? ?? 'en',
       systemPrompt: map['systemPrompt'] as String? ?? '',
       persona: ChatPersona.values.byName(map['persona'] as String? ?? 'normal'),
+      // NEW FIELDS (with defaults for backward compatibility):
+      title: map['title'] as String? ?? '',
+      titleGenerated: map['titleGenerated'] as bool? ?? false,
     );
   }
 }
