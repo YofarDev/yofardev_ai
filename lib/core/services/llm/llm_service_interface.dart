@@ -1,6 +1,7 @@
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
+import 'llm_stream_chunk.dart';
 
 /// Interface for LLM service implementations
 ///
@@ -28,6 +29,18 @@ abstract class LlmServiceInterface {
   ///
   /// Returns the response content as a string, or null if failed
   Future<String?> promptModel({
+    required List<LlmMessage> messages,
+    required String systemPrompt,
+    LlmConfig? config,
+    bool returnJson = false,
+    bool debugLogs = false,
+  });
+
+  /// Send a prompt to the LLM model with streaming response
+  ///
+  /// Returns a Stream of LlmStreamChunk for real-time processing
+  /// Use this for faster UI feedback and progressive TTS generation
+  Stream<LlmStreamChunk> promptModelStream({
     required List<LlmMessage> messages,
     required String systemPrompt,
     LlmConfig? config,
