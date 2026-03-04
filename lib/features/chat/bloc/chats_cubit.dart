@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
@@ -29,7 +30,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
     required LocalizationManager localizationManager,
-    required TtsQueueManager ttsQueueManager,
+    TtsQueueManager? ttsQueueManager, // Optional for now
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _localizationManager = localizationManager,
@@ -39,9 +40,12 @@ class ChatsCubit extends Cubit<ChatsState> {
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
   final LocalizationManager _localizationManager;
-  final TtsQueueManager _ttsQueueManager;
+  final TtsQueueManager? _ttsQueueManager;
 
   final StreamProcessorService _streamProcessor = StreamProcessorService();
+
+  // Subscription to TTS audio stream
+  StreamSubscription<String>? _ttsAudioSubscription;
 
   void createNewChat() async {
     emit(state.copyWith(status: ChatsStatus.updating));
@@ -280,6 +284,13 @@ class ChatsCubit extends Cubit<ChatsState> {
     String? attachedImage,
     required Avatar avatar,
   }) async {
+    // Clear old cached audio paths to prevent playback of non-existent files
+    if (state.audioPathsWaitingSentences.isNotEmpty) {
+      emit(
+        state.copyWith(audioPathsWaitingSentences: <Map<String, dynamic>>[]),
+      );
+    }
+
     Chat chat = onlyText ? state.openedChat : state.currentChat;
     final String temporaryId = const Uuid().v4();
     final ChatEntry temporaryEntry = ChatEntry(
@@ -377,6 +388,13 @@ class ChatsCubit extends Cubit<ChatsState> {
     String? attachedImage,
     required Avatar avatar,
   }) async {
+    // Clear old cached audio paths to prevent playback of non-existent files
+    if (state.audioPathsWaitingSentences.isNotEmpty) {
+      emit(
+        state.copyWith(audioPathsWaitingSentences: <Map<String, dynamic>>[]),
+      );
+    }
+
     Chat chat = onlyText ? state.openedChat : state.currentChat;
     final String temporaryId = const Uuid().v4();
 
@@ -400,6 +418,47 @@ class ChatsCubit extends Cubit<ChatsState> {
         currentChat: onlyText ? state.currentChat : chat,
       ),
     );
+
+    // Subscribe to TTS audio stream if manager is available
+    _ttsAudioSubscription?.cancel();
+    AppLogger.debug(
+      'TTS Queue Manager available: ${_ttsQueueManager != null}',
+      tag: 'ChatsCubit',
+    );
+    if (_ttsQueueManager != null) {
+      AppLogger.debug('Subscribing to TTS audio stream', tag: 'ChatsCubit');
+      _ttsAudioSubscription = _ttsQueueManager.audioStream.listen(
+        (String audioPath) {
+          AppLogger.debug(
+            'Received TTS audio path: $audioPath',
+            tag: 'ChatsCubit',
+          );
+          // Get amplitudes from audio file
+          _getAudioAmplitudes(audioPath).then((List<int> amplitudes) {
+            AppLogger.debug(
+              'Extracted ${amplitudes.length} amplitudes for $audioPath',
+              tag: 'ChatsCubit',
+            );
+            final List<Map<String, dynamic>> currentList =
+                List<Map<String, dynamic>>.from(
+                  state.audioPathsWaitingSentences,
+                );
+            currentList.add(<String, dynamic>{
+              'audioPath': audioPath,
+              'amplitudes': amplitudes,
+            });
+            emit(state.copyWith(audioPathsWaitingSentences: currentList));
+          });
+        },
+        onError: (Object e) {
+          AppLogger.error(
+            'TTS audio stream error',
+            tag: 'ChatsCubit',
+            error: e,
+          );
+        },
+      );
+    }
 
     final ChatEntry userEntry = await _getNewEntry(
       lastUserMessage: prompt,
@@ -495,8 +554,8 @@ class ChatsCubit extends Cubit<ChatsState> {
               ),
             );
 
-            // Enqueue for TTS
-            _ttsQueueManager.enqueue(
+            // Enqueue for TTS if manager is available
+            _ttsQueueManager?.enqueue(
               text: text,
               language: state.currentLanguage,
               voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
@@ -516,6 +575,9 @@ class ChatsCubit extends Cubit<ChatsState> {
           },
         );
       }
+
+      // Don't cancel subscription here - TTS is still generating asynchronously
+      // Subscription will be replaced when next message starts
 
       // Final update
       final ChatEntry finalEntry = streamingEntry.copyWith(
@@ -552,6 +614,9 @@ class ChatsCubit extends Cubit<ChatsState> {
           streamingContent: '',
         ),
       );
+      // Cancel subscription on error
+      await _ttsAudioSubscription?.cancel();
+      _ttsAudioSubscription = null;
       return null;
     }
   }
@@ -580,5 +645,37 @@ class ChatsCubit extends Cubit<ChatsState> {
     final Chat updatedChat = chat.copyWith(avatar: avatar);
     emit(state.copyWith(openedChat: updatedChat, status: ChatsStatus.success));
     await _chatRepository.updateAvatar(chat.id, avatar);
+  }
+
+  /// Extract amplitudes from audio file for mouth animation
+  Future<List<int>> _getAudioAmplitudes(String audioPath) async {
+    try {
+      return await AudioAnalyzer().getAmplitudes(audioPath);
+    } catch (e) {
+      AppLogger.error(
+        'Failed to extract amplitudes from $audioPath',
+        tag: 'ChatsCubit',
+        error: e,
+      );
+      // Return default amplitudes for smooth animation
+      return List<int>.filled(50, 15);
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    await _ttsAudioSubscription?.cancel();
+    await super.close();
+  }
+
+  /// Removes a sentence from the queue after it has been played by TalkingMouth
+  void removeWaitingSentence(String audioPath) {
+    final List<Map<String, dynamic>> currentList =
+        List<Map<String, dynamic>>.from(state.audioPathsWaitingSentences);
+
+    currentList.removeWhere(
+      (Map<String, dynamic> element) => element['audioPath'] == audioPath,
+    );
+    emit(state.copyWith(audioPathsWaitingSentences: currentList));
   }
 }

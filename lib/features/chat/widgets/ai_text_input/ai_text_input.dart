@@ -15,7 +15,6 @@ import '../../../../l10n/localization_manager.dart';
 import '../../../avatar/bloc/avatar_cubit.dart';
 import '../../../avatar/bloc/avatar_state.dart';
 import '../../../../core/models/avatar_config.dart';
-import '../../../sound/data/datasources/tts_datasource.dart';
 import '../../../talking/bloc/talking_cubit.dart';
 import '../../../talking/bloc/talking_state.dart';
 import '../../bloc/chats_cubit.dart';
@@ -282,36 +281,21 @@ class _AiTextInputState extends State<AiTextInput> {
     setState(() {
       _pickedImage = null;
     });
-    final ChatEntry? modelAnswer = await context.read<ChatsCubit>().askYofardev(
-      prompt,
-      attachedImage: attachedImage,
-      onlyText: widget.onlyText,
-      avatar: currentAvatar,
-    );
+
+    // Use streaming method for real-time LLM + TTS
+    final ChatEntry? modelAnswer = await context
+        .read<ChatsCubit>()
+        .askYofardevStream(
+          prompt,
+          attachedImage: attachedImage,
+          onlyText: widget.onlyText,
+          avatar: currentAvatar,
+        );
+
     if (modelAnswer == null) return;
     if (!mounted) return;
-    final AvatarConfig config = modelAnswer.getAvatarConfig();
-    if (!widget.onlyText) {
-      if (!mounted) return;
-      final VoiceEffect voiceEffect =
-          (config.specials == AvatarSpecials.outOfScreen ||
-              config.costume == null)
-          ? currentAvatar.costume.getVoiceEffect()
-          : config.costume!.getVoiceEffect();
-      if (PlatformUtils.checkPlatform() == 'Web') {
-        context.read<TalkingCubit>().speakForWeb(
-          modelAnswer,
-          currentLanguage,
-          voiceEffect,
-        );
-      } else {
-        context.read<TalkingCubit>().prepareToSpeak(
-          chatId: chatId,
-          entry: modelAnswer,
-          language: currentLanguage,
-          voiceEffect: voiceEffect,
-        );
-      }
-    }
+
+    // TTS is handled automatically during streaming via TtsQueueManager
+    // TalkingMouth will play audio from queue regardless of loading state
   }
 }

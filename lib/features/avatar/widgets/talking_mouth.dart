@@ -62,54 +62,81 @@ class _TalkingMouthState extends State<TalkingMouth> {
   }
 
   Future<void> _startWaitingTalking() async {
-    int i = 0;
-    while (_waitingTalking) {
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+    // Keep the loop alive if we are explicitly waiting OR if there's unplayed audio in the queue
+    while (_waitingTalking ||
+        context
+            .read<ChatsCubit>()
+            .state
+            .audioPathsWaitingSentences
+            .isNotEmpty) {
+      final ChatsCubit chatsCubit = context.read<ChatsCubit>();
+      final List<Map<String, dynamic>> queue =
+          chatsCubit.state.audioPathsWaitingSentences;
 
-      // Check if we have waiting sentences
-      if (context.read<ChatsCubit>().state.audioPathsWaitingSentences.isEmpty) {
-        await Future<void>.delayed(const Duration(seconds: 3));
+      if (queue.isEmpty) {
+        // If we are no longer waiting but queue is empty, wait a moment.
+        // TTS might still be processing the last sentence.
+        if (!_waitingTalking) {
+          await Future<void>.delayed(
+            const Duration(milliseconds: 1500),
+          ); // Grace period
+          if (context
+              .read<ChatsCubit>()
+              .state
+              .audioPathsWaitingSentences
+              .isEmpty) {
+            break; // Truly done generating and playing
+          }
+          continue;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 500));
         continue;
       }
 
-      final String audioPath = context
-          .read<ChatsCubit>()
-          .state
-          .audioPathsWaitingSentences[i]['audioPath'];
-      final List<int> amplitudes =
-          context
-                  .read<ChatsCubit>()
-                  .state
-                  .audioPathsWaitingSentences[i]['amplitudes']
-              as List<int>;
+      // 1. Consume the FIRST item in the queue (FIFO logic)
+      final Map<String, dynamic> audioData = queue.first;
+      final String audioPath = audioData['audioPath'] as String;
+      final List<int> amplitudes = audioData['amplitudes'] as List<int>;
 
-      // Check if file exists before playing
+      // 2. Check if file exists before playing
       if (!await File(audioPath).exists()) {
         AppLogger.warning(
           'Waiting audio file not found: $audioPath',
           tag: 'TalkingMouth',
         );
-        i++;
-        if (i >=
-            context
-                .read<ChatsCubit>()
-                .state
-                .audioPathsWaitingSentences
-                .length) {
-          i = 0;
+        // Remove missing file so we don't get stuck
+        if (mounted) {
+          chatsCubit.removeWaitingSentence(audioPath);
         }
-        await Future<void>.delayed(const Duration(seconds: 3));
         continue;
       }
 
+      // 3. Play the audio and animate mouth
       final int duration = await _startTalking(context, audioPath, amplitudes);
-      await Future<dynamic>.delayed(Duration(milliseconds: duration));
-      i++;
-      if (i >=
-          context.read<ChatsCubit>().state.audioPathsWaitingSentences.length) {
-        i = 0;
+
+      // Wait for the exact duration of the audio to finish playing
+      if (duration > 0) {
+        await Future<dynamic>.delayed(Duration(milliseconds: duration));
+      } else {
+        await Future<dynamic>.delayed(
+          const Duration(milliseconds: 100),
+        ); // Fallback
       }
-      await Future<void>.delayed(const Duration(seconds: 3));
+
+      // 4. Remove the played audio from the queue
+      if (mounted) {
+        chatsCubit.removeWaitingSentence(audioPath);
+      }
+    }
+
+    // Ensure mouth closes completely when everything is finished
+    if (mounted) {
+      context.read<TalkingCubit>().stopTalking(
+        soundEffectsEnabled: context
+            .read<ChatsCubit>()
+            .state
+            .soundEffectsEnabled,
+      );
     }
   }
 
@@ -142,6 +169,9 @@ class _TalkingMouthState extends State<TalkingMouth> {
 
     try {
       await player.setFilePath(audioPath, initialPosition: Duration.zero);
+
+      // 🟢 THIS IS THE MISSING LINE! Start playing the audio
+      player.play();
     } catch (e) {
       AppLogger.error('Failed to load audio', tag: 'TalkingMouth', error: e);
       await player.dispose();
