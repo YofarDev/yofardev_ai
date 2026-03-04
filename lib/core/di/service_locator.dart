@@ -9,6 +9,7 @@ import '../../features/avatar/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/chat/bloc/chats_cubit.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
+import '../../features/settings/bloc/settings_cubit.dart';
 import '../../features/demo/data/datasources/demo_controller.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
@@ -108,6 +109,12 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
   getIt.registerFactory<SoundCubit>(
     () => SoundCubit(soundRepository: getIt<SoundRepository>()),
+  );
+  getIt.registerFactory<SettingsCubit>(
+    () => SettingsCubit(
+      settingsRepository: getIt<SettingsRepository>(),
+      llmService: getIt<LlmServiceInterface>(),
+    ),
   );
 }
 
