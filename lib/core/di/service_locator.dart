@@ -22,6 +22,7 @@ import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
+import '../../features/sound/domain/tts_queue_manager.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/settings/data/datasources/settings_local_datasource.dart';
 import '../../features/sound/data/datasources/tts_datasource.dart';
@@ -71,6 +72,9 @@ Future<void> setupServiceLocator() async {
     () => SettingsLocalDatasource(),
   );
   getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
+  getIt.registerLazySingleton<TtsQueueManager>(
+    () => TtsQueueManager(ttsDatasource: getIt<TtsDatasource>()),
+  );
 
   // Repositories (register implementations as interfaces)
   getIt.registerLazySingleton<ChatRepository>(() => YofardevRepositoryImpl());
