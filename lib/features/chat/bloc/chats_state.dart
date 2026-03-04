@@ -4,7 +4,16 @@ import '../domain/models/chat.dart';
 
 part 'chats_state.freezed.dart';
 
-enum ChatsStatus { initial, loading, updating, loaded, typing, success, error }
+enum ChatsStatus {
+  initial,
+  loading,
+  updating,
+  loaded,
+  typing,
+  success,
+  streaming,
+  error,
+}
 
 @freezed
 sealed class ChatsState with _$ChatsState {
@@ -21,11 +30,17 @@ sealed class ChatsState with _$ChatsState {
     @Default(true) bool initializing,
     @Default(true) bool functionCallingEnabled,
     @Default(false) bool chatCreated,
+    // NEW:
+    @Default('') String streamingContent,
+    @Default(0) int streamingSentenceCount,
   }) = _ChatsState;
 
   factory ChatsState.initial() => const ChatsState(
     currentChat: Chat(),
     openedChat: Chat(),
     status: ChatsStatus.loading,
+    // NEW:
+    streamingContent: '',
+    streamingSentenceCount: 0,
   );
 }
