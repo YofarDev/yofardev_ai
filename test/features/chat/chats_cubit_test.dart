@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/features/chat/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/features/chat/bloc/chats_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
@@ -126,6 +127,16 @@ class MockSettingsRepository implements SettingsRepository {
 
   @override
   Future<Either<Exception, void>> setPersona(ChatPersona persona) async {
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
+    return const Right<Exception, TaskLlmConfig>(TaskLlmConfig());
+  }
+
+  @override
+  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
     return const Right<Exception, void>(null);
   }
 }

@@ -1,5 +1,7 @@
+import 'package:dartz/dartz.dart' as dartz;
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/models/task_llm_config.dart';
 import '../../../chat/domain/models/chat.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/settings_local_datasource.dart';
@@ -105,5 +107,25 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e) {
       return Left<Exception, void>(Exception(e.toString()));
     }
+  }
+
+  @override
+  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
+    final dartz.Either<Exception, TaskLlmConfig> dartzResult = await _datasource
+        .getTaskLlmConfig();
+    return dartzResult.fold(
+      (Exception left) => Left<Exception, TaskLlmConfig>(left),
+      (TaskLlmConfig right) => Right<Exception, TaskLlmConfig>(right),
+    );
+  }
+
+  @override
+  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
+    final dartz.Either<Exception, void> dartzResult = await _datasource
+        .setTaskLlmConfig(config);
+    return dartzResult.fold(
+      (Exception left) => Left<Exception, void>(left),
+      (void right) => Right<Exception, void>(right),
+    );
   }
 }
