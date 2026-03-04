@@ -67,7 +67,7 @@ abstract class LlmServiceInterface {
   // NEW METHODS:
   /// Get the LLM configuration for a specific task type
   /// Falls back to current/default config if task-specific config not found
-  LlmConfig? getConfigForTask(LlmTaskType task);
+  Future<LlmConfig?> getConfigForTask(LlmTaskType task);
 
   /// Generate a title for a chat based on the first user message
   /// Returns null if generation fails or no config is available

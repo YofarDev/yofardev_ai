@@ -4,6 +4,7 @@ import '../../../../features/demo/domain/models/demo_script.dart';
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
+import '../../models/llm_task_type.dart';
 import '../../utils/logger.dart';
 import 'llm_service_interface.dart';
 import 'llm_stream_chunk.dart';
@@ -211,5 +212,28 @@ class FakeLlmService implements LlmServiceInterface {
     // In a real demo script, you might want to simulate function calls
     final FakeLlmResponse response = getNextResponse()!;
     return (response.jsonBody, <FunctionInfo>[]);
+  }
+
+  @override
+  Future<LlmConfig?> getConfigForTask(LlmTaskType task) async {
+    // Fake service doesn't use task-specific configs
+    AppLogger.debug(
+      'FakeLlmService: getConfigForTask returning null (not implemented)',
+      tag: 'FakeLlmService',
+    );
+    return null;
+  }
+
+  @override
+  Future<String?> generateTitle(
+    String firstUserMessage, {
+    LlmConfig? config,
+  }) async {
+    // Fake service doesn't generate titles
+    AppLogger.debug(
+      'FakeLlmService: generateTitle returning null (not implemented)',
+      tag: 'FakeLlmService',
+    );
+    return null;
   }
 }

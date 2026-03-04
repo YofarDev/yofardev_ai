@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:dartz/dartz.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,6 +9,9 @@ import '../../utils/logger.dart';
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
+import '../../models/llm_task_type.dart';
+import '../../models/task_llm_config.dart';
+import '../../../features/settings/data/datasources/settings_local_datasource.dart';
 import 'llm_service_interface.dart';
 import 'llm_stream_chunk.dart';
 
@@ -41,6 +45,7 @@ class LlmService implements LlmServiceInterface {
   final http.Client _client;
   List<LlmConfig> _configs = <LlmConfig>[];
   String? _currentConfigId;
+  final SettingsLocalDatasource _settingsDatasource = SettingsLocalDatasource();
 
   @override
   Future<void> init() async {
@@ -426,6 +431,107 @@ class LlmService implements LlmServiceInterface {
         error: e,
       );
       return ('', <FunctionInfo>[]);
+    }
+  }
+
+  Future<TaskLlmConfig> _getTaskConfigFromSettings() async {
+    try {
+      final Either<Exception, TaskLlmConfig> result = await _settingsDatasource
+          .getTaskLlmConfig();
+      return result.getOrElse(() => const TaskLlmConfig());
+    } catch (e) {
+      AppLogger.error(
+        'Failed to load task config',
+        tag: 'LlmService',
+        error: e,
+      );
+      return const TaskLlmConfig();
+    }
+  }
+
+  String? _getConfigIdForTask(LlmTaskType task, TaskLlmConfig config) {
+    switch (task) {
+      case LlmTaskType.assistant:
+        return config.assistantLlmId;
+      case LlmTaskType.titleGeneration:
+        return config.titleGenerationLlmId;
+      case LlmTaskType.functionCalling:
+        return config.functionCallingLlmId;
+    }
+  }
+
+  @override
+  Future<LlmConfig?> getConfigForTask(LlmTaskType task) async {
+    try {
+      final TaskLlmConfig taskConfig = await _getTaskConfigFromSettings();
+      final String? configId = _getConfigIdForTask(task, taskConfig);
+
+      if (configId != null) {
+        try {
+          return _configs.firstWhere((LlmConfig c) => c.id == configId);
+        } catch (e) {
+          AppLogger.warning(
+            'Task-specific LLM config not found: $configId for task ${task.name}',
+            tag: 'LlmService',
+          );
+        }
+      }
+
+      // Fallback to current/default config
+      final LlmConfig? defaultConfig = getCurrentConfig();
+      if (defaultConfig == null) {
+        AppLogger.error(
+          'No LLM configuration available for task: ${task.name}',
+          tag: 'LlmService',
+        );
+      }
+      return defaultConfig;
+    } catch (e) {
+      AppLogger.error(
+        'Failed to get config for task: ${task.name}',
+        tag: 'LlmService',
+        error: e,
+      );
+      return getCurrentConfig();
+    }
+  }
+
+  @override
+  Future<String?> generateTitle(
+    String firstUserMessage, {
+    LlmConfig? config,
+  }) async {
+    try {
+      final LlmConfig? activeConfig =
+          config ?? await getConfigForTask(LlmTaskType.titleGeneration);
+      if (activeConfig == null) {
+        AppLogger.error(
+          'No LLM config available for title generation',
+          tag: 'LlmService',
+        );
+        return null;
+      }
+
+      final List<LlmMessage> messages = <LlmMessage>[
+        LlmMessage(
+          role: LlmMessageRole.user,
+          body:
+              'Generate a concise title (max 5 words) for this chat: $firstUserMessage',
+        ),
+      ];
+
+      final String? result = await promptModel(
+        messages: messages,
+        systemPrompt:
+            'You are a helpful assistant that generates short, descriptive chat titles. Return only the title, no quotes or extra text.',
+        config: activeConfig,
+        returnJson: false,
+      );
+
+      return result?.trim();
+    } catch (e) {
+      AppLogger.error('Title generation failed', tag: 'LlmService', error: e);
+      return null;
     }
   }
 
