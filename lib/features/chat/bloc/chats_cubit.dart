@@ -725,6 +725,64 @@ class ChatsCubit extends Cubit<ChatsState> {
     );
   }
 
+  Future<void> generateTitleForChat(String chatId) async {
+    final Chat? chat = _getChatById(chatId);
+    if (chat == null || chat.titleGenerated || chat.entries.isEmpty) return;
+
+    // Prevent duplicate generation attempts
+    final bool isAlreadyGenerating = state.generatingTitleChatIds.contains(
+      chatId,
+    );
+    if (isAlreadyGenerating) return;
+
+    // Add to generating set
+    final Set<String> newGeneratingIds = <String>{
+      ...state.generatingTitleChatIds,
+      chatId,
+    };
+    emit(state.copyWith(generatingTitleChatIds: newGeneratingIds));
+
+    try {
+      final String? firstUserMessage = _getFirstUserMessage(chat);
+      if (firstUserMessage == null || firstUserMessage.isEmpty) return;
+
+      final String? title = await _llmService.generateTitle(firstUserMessage);
+
+      if (title != null && title.isNotEmpty && title.length <= 100) {
+        final String sanitizedTitle = _sanitizeTitle(title);
+
+        final Chat updatedChat = chat.copyWith(
+          title: sanitizedTitle,
+          titleGenerated: true,
+        );
+
+        await _chatRepository.updateChat(id: chatId, updatedChat: updatedChat);
+        _updateChatInState(updatedChat);
+
+        AppLogger.info(
+          'Title generated for chat $chatId: $sanitizedTitle',
+          tag: 'ChatsCubit',
+        );
+      } else {
+        AppLogger.warning(
+          'Generated title was invalid or too long: "$title" (${title?.length} chars)',
+          tag: 'ChatsCubit',
+        );
+      }
+    } catch (e) {
+      AppLogger.error(
+        'Failed to generate title for chat $chatId',
+        tag: 'ChatsCubit',
+        error: e,
+      );
+    } finally {
+      // Remove from generating set
+      final Set<String> updatedIds = state.generatingTitleChatIds.toSet()
+        ..remove(chatId);
+      emit(state.copyWith(generatingTitleChatIds: updatedIds));
+    }
+  }
+
   @override
   Future<void> close() async {
     await _ttsAudioSubscription?.cancel();
