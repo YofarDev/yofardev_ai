@@ -21,7 +21,11 @@ class YofardevAgent {
   /// [userMessage] is the new message from the user.
   /// [systemPrompt] is the personality/context instructions.
   /// [functionCallingEnabled] whether to use function calling (default: true).
-  Future<ChatEntry> ask({
+  ///
+  /// Returns a list of [ChatEntry] including:
+  /// - One entry per tool called (if any) with EntryType.functionCalling
+  /// - One entry for the final response with EntryType.yofardev
+  Future<List<ChatEntry>> ask({
     required Chat chat,
     required String userMessage,
     required String systemPrompt,
@@ -41,6 +45,10 @@ class YofardevAgent {
     final List<Map<String, dynamic>> toolResults = <Map<String, dynamic>>[];
 
     if (functionCallingEnabled) {
+      AppLogger.debug(
+        'Function calling enabled, checking if tools are needed...',
+        tag: 'YofardevAgent',
+      );
       final (String, List<FunctionInfo>) functionCheck = await _llmService
           .checkFunctionsCalling(
             api: config,
@@ -50,6 +58,10 @@ class YofardevAgent {
           );
 
       functionsToCall.addAll(functionCheck.$2);
+      AppLogger.debug(
+        'LLM returned ${functionsToCall.length} tool calls: ${functionsToCall.map((FunctionInfo f) => f.name).join(", ")}',
+        tag: 'YofardevAgent',
+      );
 
       // 2. Execute tools if any were selected
       if (functionsToCall.isNotEmpty) {
@@ -80,6 +92,11 @@ class YofardevAgent {
           }
         }
       }
+    } else {
+      AppLogger.debug(
+        'Function calling is disabled, skipping tool check',
+        tag: 'YofardevAgent',
+      );
     }
 
     // 3. Construct the prompt for the final response
@@ -177,11 +194,46 @@ class YofardevAgent {
       );
     }
 
-    return ChatEntry(
-      id: const Uuid().v4(),
-      body: response,
-      entryType: EntryType.yofardev,
-      timestamp: DateTime.now(),
+    // Build the list of entries to return
+    final List<ChatEntry> entries = <ChatEntry>[];
+
+    // Add function call entries first (if any)
+    if (toolResults.isNotEmpty) {
+      for (final Map<String, dynamic> result in toolResults) {
+        // Format as a list containing the function data (as expected by FunctionCallingWidget)
+        final List<Map<String, dynamic>> functionDataList =
+            <Map<String, dynamic>>[
+              <String, dynamic>{
+                'name': result['name'] as String,
+                'parameters': result['parameters'] as Map<String, dynamic>,
+              },
+            ];
+        entries.add(
+          ChatEntry(
+            id: const Uuid().v4(),
+            entryType: EntryType.functionCalling,
+            body: json.encode(functionDataList),
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
+    }
+
+    // Add the final response entry
+    entries.add(
+      ChatEntry(
+        id: const Uuid().v4(),
+        body: response,
+        entryType: EntryType.yofardev,
+        timestamp: DateTime.now(),
+      ),
     );
+
+    AppLogger.debug(
+      'Returning ${entries.length} entries: ${entries.where((ChatEntry e) => e.entryType == EntryType.functionCalling).length} function calls, 1 response',
+      tag: 'YofardevAgent',
+    );
+
+    return entries;
   }
 }

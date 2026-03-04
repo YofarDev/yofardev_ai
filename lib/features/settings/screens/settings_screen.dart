@@ -91,7 +91,7 @@ class SettingsPageState extends State<SettingsPage> {
     }
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,

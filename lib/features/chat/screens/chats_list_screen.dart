@@ -44,7 +44,7 @@ class _ChatsListPageState extends State<ChatsListPage> {
           return SafeArea(
             child: Scaffold(
               body: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

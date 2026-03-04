@@ -16,11 +16,11 @@ void main() {
     });
 
     test('should create instance with provided values', () {
-      final AvatarConfig avatarConfig = AvatarConfig(
+      const AvatarConfig avatarConfig = AvatarConfig(
         background: AvatarBackgrounds.beach,
         hat: AvatarHat.beanie,
       );
-      final Answer answer = Answer(
+      const Answer answer = Answer(
         chatId: 'chat123',
         answerText: 'Hello',
         audioPath: '/path/to/audio.mp3',
@@ -69,13 +69,13 @@ void main() {
     });
 
     test('should replace avatarConfig with new value in copyWith', () {
-      final Answer original = Answer(
+      const Answer original = Answer(
         chatId: 'chat1',
         avatarConfig: AvatarConfig(background: AvatarBackgrounds.forest),
       );
 
       final Answer withNewConfig = original.copyWith(
-        avatarConfig: AvatarConfig(background: AvatarBackgrounds.beach),
+        avatarConfig: const AvatarConfig(background: AvatarBackgrounds.beach),
       );
 
       expect(withNewConfig.avatarConfig.background, AvatarBackgrounds.beach);

@@ -12,17 +12,17 @@ import 'package:yofardev_ai/l10n/localization_manager.dart';
 class MockChatRepository implements ChatRepository {
   @override
   Future<Either<Exception, Chat>> createNewChat() async {
-    return Right<Exception, Chat>(const Chat(id: 'test-id'));
+    return const Right<Exception, Chat>(Chat(id: 'test-id'));
   }
 
   @override
   Future<Either<Exception, Chat>> getCurrentChat() async {
-    return Right<Exception, Chat>(const Chat(id: 'test-id'));
+    return const Right<Exception, Chat>(Chat(id: 'test-id'));
   }
 
   @override
   Future<Either<Exception, Chat?>> getChat(String id) async {
-    return Right<Exception, Chat?>(const Chat(id: 'test-id'));
+    return const Right<Exception, Chat?>(Chat(id: 'test-id'));
   }
 
   @override
@@ -40,7 +40,7 @@ class MockChatRepository implements ChatRepository {
 
   @override
   Future<Either<Exception, List<Chat>>> getChatsList() async {
-    return Right<Exception, List<Chat>>(<Chat>[]);
+    return const Right<Exception, List<Chat>>(<Chat>[]);
   }
 
   @override
@@ -49,19 +49,19 @@ class MockChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Either<Exception, ChatEntry>> askYofardevAi(
+  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
     Chat chat,
     String userMessage, {
     bool functionCallingEnabled = true,
   }) async {
-    return Right<Exception, ChatEntry>(
+    return Right<Exception, List<ChatEntry>>(<ChatEntry>[
       ChatEntry(
         id: 'test',
         entryType: EntryType.yofardev,
         body: 'response',
         timestamp: DateTime.now(),
       ),
-    );
+    ]);
   }
 
   @override

@@ -12,7 +12,7 @@ void main() {
       const Chat chat = Chat();
       expect(chat.id, '');
       expect(chat.entries, <ChatEntry>[]);
-      expect(chat.avatar, Avatar());
+      expect(chat.avatar, const Avatar());
       expect(chat.language, 'en');
       expect(chat.systemPrompt, '');
       expect(chat.persona, ChatPersona.normal);

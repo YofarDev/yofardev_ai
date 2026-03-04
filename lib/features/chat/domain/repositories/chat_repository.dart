@@ -16,7 +16,7 @@ abstract class ChatRepository {
   Future<Either<Exception, void>> setCurrentChatId(String id);
   Future<Either<Exception, Chat>> getCurrentChat();
   Future<Either<Exception, void>> updateAvatar(String chatId, Avatar avatar);
-  Future<Either<Exception, ChatEntry>> askYofardevAi(
+  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
     Chat chat,
     String userMessage, {
     bool functionCallingEnabled = true,

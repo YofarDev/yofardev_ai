@@ -45,8 +45,8 @@ class _GradientBackgroundState extends State<GradientBackground>
       children: <Widget>[
         // Base gradient
         Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: AppColors.gradientMesh,

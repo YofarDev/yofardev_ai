@@ -66,7 +66,7 @@ class ChatListItem extends StatelessWidget {
           width: 1.5,
         ),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Text(
@@ -77,7 +77,7 @@ class ChatListItem extends StatelessWidget {
               fontSize: 13,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
         ],
       ),
@@ -145,7 +145,7 @@ class ChatListItem extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: isSelected
-            ? LinearGradient(
+            ? const LinearGradient(
                 colors: <Color>[AppColors.primary, AppColors.secondary],
               )
             : null,

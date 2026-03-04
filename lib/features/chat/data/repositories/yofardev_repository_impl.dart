@@ -105,7 +105,7 @@ class YofardevRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Either<Exception, ChatEntry>> askYofardevAi(
+  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
     Chat chat,
     String userMessage, {
     bool functionCallingEnabled = true,
@@ -118,27 +118,27 @@ class YofardevRepositoryImpl implements ChatRepository {
           // Wait 600ms to simulate LLM processing
           await Future<void>.delayed(const Duration(milliseconds: 600));
 
-          return Right<Exception, ChatEntry>(
+          return Right<Exception, List<ChatEntry>>(<ChatEntry>[
             ChatEntry(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               entryType: EntryType.yofardev,
               body: fakeResponse.jsonBody,
               timestamp: DateTime.now(),
             ),
-          );
+          ]);
         }
       }
 
       // Fall back to real LLM
-      final ChatEntry entry = await _agent.ask(
+      final List<ChatEntry> entries = await _agent.ask(
         chat: chat,
         userMessage: userMessage,
         systemPrompt: await _promptService.getSystemPrompt(),
         functionCallingEnabled: functionCallingEnabled,
       );
-      return Right<Exception, ChatEntry>(entry);
+      return Right<Exception, List<ChatEntry>>(entries);
     } catch (e) {
-      return Left<Exception, ChatEntry>(Exception(e.toString()));
+      return Left<Exception, List<ChatEntry>>(Exception(e.toString()));
     }
   }
 }

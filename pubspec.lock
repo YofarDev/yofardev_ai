@@ -101,10 +101,10 @@ packages:
     dependency: transitive
     description:
       name: build_config
-      sha256: "4f64382b97504dc2fcdf487d5aae33418e08b4703fc21249e4db6d804a4d0187"
+      sha256: "4070d2a59f8eec34c97c86ceb44403834899075f66e8a9d59706f8e7834f6f71"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.0"
+    version: "1.3.0"
   build_daemon:
     dependency: transitive
     description:
@@ -117,10 +117,10 @@ packages:
     dependency: "direct dev"
     description:
       name: build_runner
-      sha256: "39ad4ca8a2876779737c60e4228b4bcd35d4352ef7e14e47514093edc012c734"
+      sha256: fae5c4fc1a73b7dee94b6c54e86101e5030a8e42112e61203f464495011a20a1
       url: "https://pub.dev"
     source: hosted
-    version: "2.11.1"
+    version: "2.12.1"
   built_collection:
     dependency: transitive
     description:
@@ -402,10 +402,10 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_lints
-      sha256: "3105dc8492f6183fb076ccf1f351ac3d60564bff92e20bfc4af9cc1651f4e7e1"
+      sha256: "9e8c3858111da373efc5aa341de011d9bd23e2c5c5e0c62bccf32438e192d7b1"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.0"
+    version: "3.0.2"
   flutter_localizations:
     dependency: "direct main"
     description: flutter
@@ -451,8 +451,8 @@ packages:
   flutter_tts:
     dependency: "direct main"
     description:
-      path: "/Users/yofardev/development/Projects/Flutter/_utils/PLUGINS/flutter_tts"
-      relative: false
+      path: "packages/flutter_tts"
+      relative: true
     source: path
     version: "4.2.3"
   flutter_volume_controller:
@@ -832,10 +832,10 @@ packages:
     dependency: transitive
     description:
       name: lints
-      sha256: "12f842a479589fea194fe5c5a3095abc7be0c1f2ddfa9a0e76aed1dbd26a87df"
+      sha256: cbf8d4b858bb0134ef3ef87841abdf8d63bfc255c266b7bf6b39daa1085c4290
       url: "https://pub.dev"
     source: hosted
-    version: "6.1.0"
+    version: "3.0.0"
   logger:
     dependency: transitive
     description:
@@ -1340,10 +1340,11 @@ packages:
   supertonic_flutter:
     dependency: "direct main"
     description:
-      path: "/Users/yofardev/development/Projects/Flutter/_utils/PLUGINS/supertonic_flutter"
-      relative: false
-    source: path
-    version: "0.1.2"
+      name: supertonic_flutter
+      sha256: "1d384dc3ffc4d7ac03546209bb80a7af58f7f43582651e3b76f0c34acaa06f3a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.3"
   synchronized:
     dependency: transitive
     description:

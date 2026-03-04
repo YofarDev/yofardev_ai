@@ -304,7 +304,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       ),
     );
     try {
-      final Either<Exception, ChatEntry> result = await _chatRepository
+      final Either<Exception, List<ChatEntry>> result = await _chatRepository
           .askYofardevAi(
             chat,
             userEntry.body,
@@ -325,10 +325,10 @@ class ChatsCubit extends Cubit<ChatsState> {
           );
           return null;
         },
-        (ChatEntry newModelEntry) {
+        (List<ChatEntry> newEntries) {
           final List<ChatEntry> entries = <ChatEntry>[
             ...chat.entries,
-            newModelEntry,
+            ...newEntries,
           ];
           chat = chat.copyWith(entries: entries);
           emit(
@@ -338,9 +338,10 @@ class ChatsCubit extends Cubit<ChatsState> {
               status: ChatsStatus.success,
             ),
           );
-          // Update chat with new entry
+          // Update chat with new entries
           _chatRepository.updateChat(id: chat.id, updatedChat: chat);
-          return newModelEntry;
+          // Return the last entry (which should be the actual response)
+          return newEntries.isNotEmpty ? newEntries.last : null;
         },
       );
     } catch (e) {

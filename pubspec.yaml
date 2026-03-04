@@ -14,9 +14,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_tts:
-    path: /Users/yofardev/development/Projects/Flutter/_utils/PLUGINS/flutter_tts
-  supertonic_flutter:
-    path: /Users/yofardev/development/Projects/Flutter/_utils/PLUGINS/supertonic_flutter
+    path: ./packages/flutter_tts
+  supertonic_flutter: ^0.1.3
   just_audio: ^0.10.5
   path_provider: ^2.1.5
   shared_preferences: ^2.5.4

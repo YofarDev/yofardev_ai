@@ -45,7 +45,7 @@ class SoundEffectsToggle extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.volume_up_outlined,
                   color: AppColors.warning,
                   size: 20,

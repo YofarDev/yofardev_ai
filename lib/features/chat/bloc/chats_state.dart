@@ -23,9 +23,9 @@ sealed class ChatsState with _$ChatsState {
     @Default(false) bool chatCreated,
   }) = _ChatsState;
 
-  factory ChatsState.initial() => ChatsState(
-    currentChat: const Chat(),
-    openedChat: const Chat(),
+  factory ChatsState.initial() => const ChatsState(
+    currentChat: Chat(),
+    openedChat: Chat(),
     status: ChatsStatus.loading,
   );
 }
