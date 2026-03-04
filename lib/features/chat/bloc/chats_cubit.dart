@@ -4,13 +4,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/services/stream_processor/sentence_chunk.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/utils/platform_utils.dart';
 import '../../../l10n/localization_manager.dart';
 import '../../../core/models/avatar_config.dart';
+import '../../../core/models/llm_config.dart';
+import '../../../core/models/llm_message.dart';
+import '../../../core/services/llm/llm_service.dart';
+import '../../../core/services/stream_processor/stream_processor_service.dart';
 import '../../avatar/data/datasources/avatar_cache_datasource.dart';
+import '../../home/data/datasources/prompt_datasource.dart';
 import '../../settings/domain/repositories/settings_repository.dart';
+import '../../sound/data/datasources/tts_datasource.dart';
+import '../../sound/domain/tts_queue_manager.dart';
 import '../domain/models/chat.dart';
 import '../domain/models/chat_entry.dart';
 import '../domain/repositories/chat_repository.dart';
@@ -21,14 +29,19 @@ class ChatsCubit extends Cubit<ChatsState> {
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
     required LocalizationManager localizationManager,
+    required TtsQueueManager ttsQueueManager,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _localizationManager = localizationManager,
+       _ttsQueueManager = ttsQueueManager,
        super(ChatsState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
   final LocalizationManager _localizationManager;
+  final TtsQueueManager _ttsQueueManager;
+
+  final StreamProcessorService _streamProcessor = StreamProcessorService();
 
   void createNewChat() async {
     emit(state.copyWith(status: ChatsStatus.updating));
@@ -352,6 +365,192 @@ class ChatsCubit extends Cubit<ChatsState> {
       );
       emit(
         state.copyWith(status: ChatsStatus.error, errorMessage: e.toString()),
+      );
+      return null;
+    }
+  }
+
+  /// Send message with streaming response and real-time TTS
+  Future<ChatEntry?> askYofardevStream(
+    String prompt, {
+    required bool onlyText,
+    String? attachedImage,
+    required Avatar avatar,
+  }) async {
+    Chat chat = onlyText ? state.openedChat : state.currentChat;
+    final String temporaryId = const Uuid().v4();
+
+    // Add user entry immediately
+    final ChatEntry temporaryEntry = ChatEntry(
+      id: temporaryId,
+      entryType: EntryType.user,
+      body: "${localized.userMessage} : \n'''$prompt'''",
+      timestamp: DateTime.now(),
+      attachedImage: attachedImage,
+    );
+
+    chat = chat.copyWith(entries: <ChatEntry>[...chat.entries, temporaryEntry]);
+
+    emit(
+      state.copyWith(
+        status: ChatsStatus.streaming,
+        streamingContent: '',
+        streamingSentenceCount: 0,
+        openedChat: onlyText ? chat : state.openedChat,
+        currentChat: onlyText ? state.currentChat : chat,
+      ),
+    );
+
+    final ChatEntry userEntry = await _getNewEntry(
+      lastUserMessage: prompt,
+      avatar: avatar,
+      attachedImage: attachedImage,
+      onlyText: onlyText,
+    );
+
+    chat = onlyText ? state.openedChat : state.currentChat;
+    final List<ChatEntry> mutableEntries = List<ChatEntry>.from(chat.entries);
+    final int index = mutableEntries.indexWhere(
+      (ChatEntry element) => element.id == temporaryId,
+    );
+    mutableEntries[index] = userEntry;
+    chat = chat.copyWith(entries: mutableEntries);
+
+    // Create streaming response entry
+    final ChatEntry streamingEntry = ChatEntry(
+      id: const Uuid().v4(),
+      entryType: EntryType.yofardev,
+      body: '',
+      timestamp: DateTime.now(),
+    );
+
+    chat = chat.copyWith(entries: <ChatEntry>[...chat.entries, streamingEntry]);
+
+    emit(
+      state.copyWith(
+        openedChat: onlyText ? chat : state.openedChat,
+        currentChat: onlyText ? state.currentChat : chat,
+      ),
+    );
+
+    try {
+      final LlmService llmService = LlmService();
+      await llmService.init();
+
+      final LlmConfig? config = llmService.getCurrentConfig();
+      if (config == null) {
+        emit(
+          state.copyWith(
+            status: ChatsStatus.error,
+            errorMessage: 'No LLM configuration selected',
+          ),
+        );
+        return null;
+      }
+
+      // Get system prompt
+      final PromptDatasource promptService = PromptDatasource();
+      final String systemPrompt = await promptService.getSystemPrompt();
+
+      // Build messages
+      final List<LlmMessage> messages = chat.llmMessages;
+
+      // Start streaming
+      final StringBuffer contentBuffer = StringBuffer();
+      int sentenceCount = 0;
+
+      await for (final SentenceChunk sentenceChunk
+          in _streamProcessor.processStream(
+            llmService.promptModelStream(
+              messages: messages,
+              systemPrompt: systemPrompt,
+              config: config,
+              returnJson: true,
+            ),
+          )) {
+        sentenceChunk.when(
+          sentence: (String text, int index) {
+            // Add to streaming content
+            contentBuffer.write(' $text');
+            sentenceCount++;
+
+            // Update UI
+            final ChatEntry updatedEntry = streamingEntry.copyWith(
+              body: contentBuffer.toString(),
+            );
+
+            final List<ChatEntry> updatedEntries = List<ChatEntry>.from(
+              chat.entries,
+            );
+            updatedEntries[updatedEntries.length - 1] = updatedEntry;
+
+            chat = chat.copyWith(entries: updatedEntries);
+
+            emit(
+              state.copyWith(
+                streamingContent: contentBuffer.toString(),
+                streamingSentenceCount: sentenceCount,
+                openedChat: onlyText ? chat : state.openedChat,
+                currentChat: onlyText ? state.currentChat : chat,
+              ),
+            );
+
+            // Enqueue for TTS
+            _ttsQueueManager.enqueue(
+              text: text,
+              language: state.currentLanguage,
+              voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+            );
+          },
+          metadata: (Map<String, dynamic> json) {
+            // Handle any metadata if needed
+          },
+          complete: () {
+            AppLogger.debug(
+              'Stream complete with $sentenceCount sentences',
+              tag: 'ChatsCubit',
+            );
+          },
+          error: (String message) {
+            AppLogger.error('Stream error: $message', tag: 'ChatsCubit');
+          },
+        );
+      }
+
+      // Final update
+      final ChatEntry finalEntry = streamingEntry.copyWith(
+        body: contentBuffer.toString(),
+      );
+
+      final List<ChatEntry> finalEntries = List<ChatEntry>.from(chat.entries);
+      finalEntries[finalEntries.length - 1] = finalEntry;
+      chat = chat.copyWith(entries: finalEntries);
+
+      emit(
+        state.copyWith(
+          openedChat: onlyText ? chat : state.openedChat,
+          currentChat: onlyText ? state.currentChat : chat,
+          status: ChatsStatus.success,
+          streamingContent: '',
+        ),
+      );
+
+      // Save to repository
+      await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
+
+      return finalEntry;
+    } catch (e) {
+      AppLogger.error(
+        'Error in streaming message',
+        tag: 'ChatsCubit',
+        error: e,
+      );
+      emit(
+        state.copyWith(
+          status: ChatsStatus.error,
+          errorMessage: e.toString(),
+          streamingContent: '',
+        ),
       );
       return null;
     }

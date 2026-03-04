@@ -7,6 +7,8 @@ import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
+import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
 import 'package:yofardev_ai/l10n/localization_manager.dart';
 
 class MockChatRepository implements ChatRepository {
@@ -128,15 +130,30 @@ class MockSettingsRepository implements SettingsRepository {
   }
 }
 
+class MockTtsDatasource extends TtsDatasource {
+  @override
+  Future<String> textToFrenchMaleVoice({
+    required String text,
+    required String language,
+    required VoiceEffect voiceEffect,
+  }) async {
+    // Return a dummy path for testing
+    return '/tmp/test.wav';
+  }
+}
+
 void main() {
   group('ChatsCubit', () {
     late ChatsCubit chatsCubit;
+    late TtsQueueManager mockTtsQueueManager;
 
     setUp(() {
+      mockTtsQueueManager = TtsQueueManager(ttsDatasource: MockTtsDatasource());
       chatsCubit = ChatsCubit(
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
         localizationManager: LocalizationManager(),
+        ttsQueueManager: mockTtsQueueManager,
       );
     });
 

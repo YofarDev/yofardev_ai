@@ -102,6 +102,7 @@ Future<void> setupServiceLocator() async {
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
       localizationManager: getIt<LocalizationManager>(),
+      ttsQueueManager: getIt<TtsQueueManager>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
