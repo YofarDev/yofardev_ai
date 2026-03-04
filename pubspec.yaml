@@ -60,6 +60,7 @@ dev_dependencies:
   flutter_native_splash: ^2.4.1
 
 
+  mocktail: any
 flutter_native_splash:
   color: "#438EFF"
   image: "assets/splash.png"

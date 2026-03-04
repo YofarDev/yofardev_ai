@@ -115,10 +115,7 @@ switch (_that) {
 case _LlmStreamChunkText():
 return text(_that);case _LlmStreamChunkError():
 return error(_that);case _LlmStreamChunkComplete():
-return complete(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return complete(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -183,10 +180,7 @@ switch (_that) {
 case _LlmStreamChunkText():
 return text(_that.content,_that.isComplete);case _LlmStreamChunkError():
 return error(_that.message);case _LlmStreamChunkComplete():
-return complete();case _:
-  throw StateError('Unexpected subclass');
-
-}
+return complete();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

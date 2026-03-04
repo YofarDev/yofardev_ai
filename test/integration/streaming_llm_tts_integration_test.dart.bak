@@ -35,13 +35,13 @@ void main() {
       // Setup default mocks
       when(
         () => mockChatRepo.getCurrentChat(),
-      ).thenAnswer((_) async => const Right(_fakeChat));
+      ).thenAnswer((_) async => const Right<Chat>(_fakeChat));
       when(
         () => mockSettingsRepo.getLanguage(),
-      ).thenAnswer((_) async => const Right('fr'));
+      ).thenAnswer((_) async => const Right<String>('fr'));
       when(
         () => mockSettingsRepo.getSoundEffects(),
-      ).thenAnswer((_) async => const Right(true));
+      ).thenAnswer((_) async => const Right<bool>(true));
 
       ttsQueue = TtsQueueManager(ttsDatasource: mockTtsDatasource);
 
