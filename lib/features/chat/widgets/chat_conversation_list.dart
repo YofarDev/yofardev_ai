@@ -14,6 +14,7 @@ class ChatConversationList extends StatelessWidget {
   final List<ChatEntry> entries;
   final bool isTyping;
   final bool showEverything;
+  final bool isStreaming;
   final String Function(String, bool) limitParameterSize;
 
   const ChatConversationList({
@@ -22,6 +23,7 @@ class ChatConversationList extends StatelessWidget {
     required this.entries,
     required this.isTyping,
     required this.showEverything,
+    required this.isStreaming,
     required this.limitParameterSize,
   });
 
@@ -48,6 +50,7 @@ class ChatConversationList extends StatelessWidget {
                 index: index,
                 isTyping: isTyping,
                 showEverything: showEverything,
+                isStreaming: isStreaming,
                 limitParameterSize: limitParameterSize,
               ),
           ],

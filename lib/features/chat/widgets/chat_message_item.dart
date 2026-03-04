@@ -20,6 +20,7 @@ class ChatMessageItem extends StatelessWidget {
   final int index;
   final bool isTyping;
   final bool showEverything;
+  final bool isStreaming;
   final String Function(String, bool) limitParameterSize;
 
   const ChatMessageItem({
@@ -28,6 +29,7 @@ class ChatMessageItem extends StatelessWidget {
     required this.index,
     required this.isTyping,
     required this.showEverything,
+    required this.isStreaming,
     required this.limitParameterSize,
   });
 
@@ -59,6 +61,7 @@ class ChatMessageItem extends StatelessWidget {
             showAvatar: !isFromUser,
             avatar: const ChatAvatar(),
             timestamp: _formatTime(entries[index].timestamp),
+            isStreaming: isStreaming && !isFromUser,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[

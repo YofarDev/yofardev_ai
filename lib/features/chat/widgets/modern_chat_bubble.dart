@@ -15,6 +15,7 @@ class ModernChatBubble extends StatelessWidget {
     this.onAvatarTap,
     this.timestamp,
     this.padding,
+    this.isStreaming = false,
   });
 
   final Widget child;
@@ -24,6 +25,7 @@ class ModernChatBubble extends StatelessWidget {
   final VoidCallback? onAvatarTap;
   final String? timestamp;
   final EdgeInsetsGeometry? padding;
+  final bool isStreaming;
 
   // Fix #7: Extract shared BorderRadius to avoid duplication
   BorderRadius get _bubbleRadius => BorderRadius.only(
@@ -149,6 +151,20 @@ class ModernChatBubble extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.onSurface.withValues(alpha: 0.5),
                           fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  if (isStreaming)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primary.withValues(alpha: 0.8),
+                          ),
                         ),
                       ),
                     ),

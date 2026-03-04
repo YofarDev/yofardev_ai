@@ -60,6 +60,8 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                               persona: chat.persona,
                               entries: chat.entries.reversed.toList(),
                               isTyping: state.status == ChatsStatus.typing,
+                              isStreaming:
+                                  state.status == ChatsStatus.streaming,
                               showEverything: _showEverything,
                               limitParameterSize: _limitParamaterSize,
                             ),
