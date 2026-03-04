@@ -6,6 +6,7 @@ import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
 import '../../utils/logger.dart';
 import 'llm_service_interface.dart';
+import 'llm_stream_chunk.dart';
 
 /// Fake LLM service that returns pre-scripted responses for demo mode
 ///
@@ -155,6 +156,40 @@ class FakeLlmService implements LlmServiceInterface {
       );
     }
     return response.jsonBody;
+  }
+
+  @override
+  Stream<LlmStreamChunk> promptModelStream({
+    required List<LlmMessage> messages,
+    required String systemPrompt,
+    LlmConfig? config,
+    bool returnJson = false,
+    bool debugLogs = false,
+  }) async* {
+    if (!_isActive || !hasMore) {
+      AppLogger.debug(
+        'FakeLlmService: not active or no more responses for streaming',
+        tag: 'FakeLlmService',
+      );
+      yield const LlmStreamChunk.error(
+        'Fake LLM service is not active or no more responses',
+      );
+      return;
+    }
+
+    final FakeLlmResponse response = getNextResponse()!;
+
+    // Simulate streaming by yielding the full response at once
+    // In a real demo, you might want to split this into chunks
+    if (debugLogs) {
+      AppLogger.debug(
+        'FakeLlmService: Streaming fake response',
+        tag: 'FakeLlmService',
+      );
+    }
+
+    yield LlmStreamChunk.text(content: response.jsonBody, isComplete: true);
+    yield const LlmStreamChunk.complete();
   }
 
   @override
