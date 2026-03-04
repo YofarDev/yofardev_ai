@@ -35,12 +35,14 @@ class ChatsCubit extends Cubit<ChatsState> {
        _settingsRepository = settingsRepository,
        _localizationManager = localizationManager,
        _ttsQueueManager = ttsQueueManager,
+       _llmService = LlmService(),
        super(ChatsState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
   final LocalizationManager _localizationManager;
   final TtsQueueManager? _ttsQueueManager;
+  final LlmService _llmService;
 
   final StreamProcessorService _streamProcessor = StreamProcessorService();
 
@@ -660,6 +662,67 @@ class ChatsCubit extends Cubit<ChatsState> {
       // Return default amplitudes for smooth animation
       return List<int>.filled(50, 15);
     }
+  }
+
+  Chat? _getChatById(String chatId) {
+    try {
+      return state.chatsList.firstWhere((Chat chat) => chat.id == chatId);
+    } catch (_) {
+      return state.currentChat.id == chatId ? state.currentChat : null;
+    }
+  }
+
+  String? _getFirstUserMessage(Chat chat) {
+    try {
+      return chat.entries
+          .where((ChatEntry e) => e.entryType == EntryType.user)
+          .firstOrNull
+          ?.body
+          .getVisiblePrompt();
+    } catch (e) {
+      AppLogger.error(
+        'Failed to extract first user message',
+        tag: 'ChatsCubit',
+        error: e,
+      );
+      return null;
+    }
+  }
+
+  String _sanitizeTitle(String title) {
+    // Remove excessive whitespace
+    String sanitized = title.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    // Remove any quotes the LLM might have added
+    sanitized = sanitized.replaceAll(RegExp(r'''^["']|["']$'''), '');
+
+    // Truncate if still too long
+    if (sanitized.length > 50) {
+      sanitized = '${sanitized.substring(0, 47)}...';
+    }
+
+    return sanitized;
+  }
+
+  void _updateChatInState(Chat updatedChat) {
+    final List<Chat> updatedChatsList = state.chatsList.map((Chat chat) {
+      return chat.id == updatedChat.id ? updatedChat : chat;
+    }).toList();
+
+    final Chat current = state.currentChat.id == updatedChat.id
+        ? updatedChat
+        : state.currentChat;
+    final Chat opened = state.openedChat.id == updatedChat.id
+        ? updatedChat
+        : state.openedChat;
+
+    emit(
+      state.copyWith(
+        chatsList: updatedChatsList,
+        currentChat: current,
+        openedChat: opened,
+      ),
+    );
   }
 
   @override
