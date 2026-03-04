@@ -33,6 +33,8 @@ sealed class ChatsState with _$ChatsState {
     // NEW:
     @Default('') String streamingContent,
     @Default(0) int streamingSentenceCount,
+    // NEW FIELD:
+    @Default(<String>{}) Set<String> generatingTitleChatIds,
   }) = _ChatsState;
 
   factory ChatsState.initial() => const ChatsState(
@@ -42,5 +44,7 @@ sealed class ChatsState with _$ChatsState {
     // NEW:
     streamingContent: '',
     streamingSentenceCount: 0,
+    // NEW FIELD:
+    generatingTitleChatIds: <String>{},
   );
 }
