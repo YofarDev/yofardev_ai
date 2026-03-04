@@ -1,5 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../chat/domain/models/chat.dart';
+
 abstract class SettingsRepository {
   Future<Either<Exception, String?>> getLanguage();
   Future<Either<Exception, void>> setLanguage(String language);
@@ -9,4 +11,6 @@ abstract class SettingsRepository {
   Future<Either<Exception, void>> setUsername(String username);
   Future<Either<Exception, String>> getSystemPrompt();
   Future<Either<Exception, void>> setSystemPrompt(String prompt);
+  Future<Either<Exception, ChatPersona>> getPersona();
+  Future<Either<Exception, void>> setPersona(ChatPersona persona);
 }

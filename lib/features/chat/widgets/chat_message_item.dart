@@ -163,7 +163,7 @@ class _AttachedImage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.0),
           child: GestureDetector(
             onTap: () {
-              context.go('${RouteConstants.imageFullScreen}?path=$imagePath');
+              context.push('${RouteConstants.imageFullScreen}?path=$imagePath');
             },
             child: Hero(
               tag: imagePath,
@@ -175,29 +175,6 @@ class _AttachedImage extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ImageFullScreen extends StatelessWidget {
-  final String imagePath;
-
-  const _ImageFullScreen({required this.imagePath});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Center(
-        child: Hero(
-          tag: imagePath,
-          child: InteractiveViewer(child: Image.file(File(imagePath))),
         ),
       ),
     );

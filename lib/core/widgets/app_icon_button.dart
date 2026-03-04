@@ -99,6 +99,11 @@ class _AppIconButtonState extends State<AppIconButton>
                   size: widget.iconSize,
                   color: _isHovered ? AppColors.primary : AppColors.onSurface,
                 ),
+                style: IconButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12), // your radius
+                  ),
+                ),
                 tooltip: widget.tooltip,
                 padding: EdgeInsets.zero,
                 constraints: BoxConstraints(

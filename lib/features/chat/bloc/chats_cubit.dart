@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/src/either.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/utils/extensions.dart';
@@ -10,6 +9,7 @@ import '../../../core/utils/logger.dart';
 import '../../../core/utils/platform_utils.dart';
 import '../../../l10n/localization_manager.dart';
 import '../../../core/models/avatar_config.dart';
+import '../../avatar/data/datasources/avatar_cache_datasource.dart';
 import '../../settings/domain/repositories/settings_repository.dart';
 import '../domain/models/chat.dart';
 import '../domain/models/chat_entry.dart';
@@ -20,17 +20,14 @@ class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
-    required AudioAnalyzer audioAnalyzer,
     required LocalizationManager localizationManager,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
-       _audioAnalyzer = audioAnalyzer,
        _localizationManager = localizationManager,
        super(ChatsState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
-  final AudioAnalyzer _audioAnalyzer;
   final LocalizationManager _localizationManager;
 
   void createNewChat() async {
@@ -84,8 +81,29 @@ class ChatsCubit extends Cubit<ChatsState> {
       emit(state.copyWith(initializing: false));
       return;
     }
-    // TODO: Re-implement waiting sentences without CacheService
-    emit(state.copyWith(initializing: false));
+    try {
+      final List<Map<String, dynamic>>? cachedSentences =
+          await AvatarCacheDatasource.getWaitingSentencesMap(
+            state.currentLanguage,
+          );
+      if (cachedSentences != null) {
+        emit(
+          state.copyWith(
+            audioPathsWaitingSentences: cachedSentences,
+            initializing: false,
+          ),
+        );
+      } else {
+        emit(state.copyWith(initializing: false));
+      }
+    } catch (e) {
+      AppLogger.error(
+        'Failed to load waiting sentences',
+        tag: 'ChatsCubit',
+        error: e,
+      );
+      emit(state.copyWith(initializing: false));
+    }
   }
 
   void shuffleWaitingSentences() {
@@ -273,11 +291,12 @@ class ChatsCubit extends Cubit<ChatsState> {
       onlyText: onlyText,
     );
     chat = onlyText ? state.openedChat : state.currentChat;
-    chat = chat.copyWith(entries: <ChatEntry>[...chat.entries]);
-    final int index = chat.entries.indexWhere(
+    final List<ChatEntry> mutableEntries = List<ChatEntry>.from(chat.entries);
+    final int index = mutableEntries.indexWhere(
       (ChatEntry element) => element.id == temporaryId,
     );
-    chat.entries[index] = userEntry;
+    mutableEntries[index] = userEntry;
+    chat = chat.copyWith(entries: mutableEntries);
     emit(
       state.copyWith(
         openedChat: onlyText ? chat : state.openedChat,
@@ -291,7 +310,7 @@ class ChatsCubit extends Cubit<ChatsState> {
             userEntry.body,
             functionCallingEnabled: state.functionCallingEnabled,
           );
-      result.fold(
+      return result.fold(
         (Exception error) {
           AppLogger.error(
             'Error sending text message',
@@ -324,7 +343,6 @@ class ChatsCubit extends Cubit<ChatsState> {
           return newModelEntry;
         },
       );
-      return null;
     } catch (e) {
       AppLogger.error(
         'Error sending text message',

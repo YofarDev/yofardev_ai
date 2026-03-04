@@ -43,7 +43,7 @@ class AvatarLocalDatasource {
       final Chat? currentChat = await getChat(chatId);
 
       if (currentChat == null) {
-        return Left(Exception('Chat not found: $chatId'));
+        return Left<Exception, void>(Exception('Chat not found: $chatId'));
       }
 
       final Chat updatedChat = currentChat.copyWith(avatar: avatar);
@@ -52,14 +52,14 @@ class AvatarLocalDatasource {
         json.encode(updatedChat.toMap()),
       );
 
-      return const Right(null);
+      return const Right<Exception, void>(null);
     } catch (e) {
       AppLogger.error(
         'Failed to update avatar',
         tag: 'AvatarLocalDatasource',
         error: e,
       );
-      return Left(Exception('Failed to update avatar: $e'));
+      return Left<Exception, void>(Exception('Failed to update avatar: $e'));
     }
   }
 }

@@ -1,4 +1,3 @@
-import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
@@ -13,17 +12,17 @@ import 'package:yofardev_ai/l10n/localization_manager.dart';
 class MockChatRepository implements ChatRepository {
   @override
   Future<Either<Exception, Chat>> createNewChat() async {
-    return Right(const Chat(id: 'test-id'));
+    return Right<Exception, Chat>(const Chat(id: 'test-id'));
   }
 
   @override
   Future<Either<Exception, Chat>> getCurrentChat() async {
-    return Right(const Chat(id: 'test-id'));
+    return Right<Exception, Chat>(const Chat(id: 'test-id'));
   }
 
   @override
   Future<Either<Exception, Chat?>> getChat(String id) async {
-    return Right(const Chat(id: 'test-id'));
+    return Right<Exception, Chat?>(const Chat(id: 'test-id'));
   }
 
   @override
@@ -31,22 +30,22 @@ class MockChatRepository implements ChatRepository {
     required String id,
     required Chat updatedChat,
   }) async {
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 
   @override
   Future<Either<Exception, void>> deleteChat(String id) async {
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 
   @override
   Future<Either<Exception, List<Chat>>> getChatsList() async {
-    return Right(<Chat>[]);
+    return Right<Exception, List<Chat>>(<Chat>[]);
   }
 
   @override
   Future<Either<Exception, void>> setCurrentChatId(String chatId) async {
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 
   @override
@@ -55,7 +54,7 @@ class MockChatRepository implements ChatRepository {
     String userMessage, {
     bool functionCallingEnabled = true,
   }) async {
-    return Right(
+    return Right<Exception, ChatEntry>(
       ChatEntry(
         id: 'test',
         entryType: EntryType.yofardev,
@@ -70,7 +69,7 @@ class MockChatRepository implements ChatRepository {
     String chatId,
     Avatar avatar,
   ) async {
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 }
 
@@ -79,43 +78,53 @@ class MockSettingsRepository implements SettingsRepository {
 
   @override
   Future<Either<Exception, String?>> getLanguage() async {
-    return Right(_language);
+    return Right<Exception, String?>(_language);
   }
 
   @override
   Future<Either<Exception, void>> setLanguage(String language) async {
     _language = language;
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 
   @override
   Future<Either<Exception, bool>> getSoundEffects() async {
-    return const Right(true);
+    return const Right<Exception, bool>(true);
   }
 
   @override
   Future<Either<Exception, void>> setSoundEffects(bool soundEffects) async {
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 
   @override
   Future<Either<Exception, String?>> getUsername() async {
-    return const Right(null);
+    return const Right<Exception, String?>(null);
   }
 
   @override
   Future<Either<Exception, void>> setUsername(String username) async {
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 
   @override
   Future<Either<Exception, String>> getSystemPrompt() async {
-    return const Right('');
+    return const Right<Exception, String>('');
   }
 
   @override
   Future<Either<Exception, void>> setSystemPrompt(String prompt) async {
-    return const Right(null);
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, ChatPersona>> getPersona() async {
+    return const Right<Exception, ChatPersona>(ChatPersona.assistant);
+  }
+
+  @override
+  Future<Either<Exception, void>> setPersona(ChatPersona persona) async {
+    return const Right<Exception, void>(null);
   }
 }
 
@@ -127,7 +136,6 @@ void main() {
       chatsCubit = ChatsCubit(
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
-        audioAnalyzer: AudioAnalyzer(),
         localizationManager: LocalizationManager(),
       );
     });

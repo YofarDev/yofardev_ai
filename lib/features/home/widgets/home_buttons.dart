@@ -46,7 +46,7 @@ class HomeButtons extends StatelessWidget {
                   AppIconButton(
                     icon: Icons.chat_bubble_outline_rounded,
                     onPressed: () {
-                      context.go(RouteConstants.chats);
+                      context.push(RouteConstants.chats);
                     },
                   ),
                   const SizedBox(height: 8),
@@ -61,7 +61,7 @@ class HomeButtons extends StatelessWidget {
                     child: AppIconButton(
                       icon: Icons.settings_rounded,
                       onPressed: () {
-                        context.go(RouteConstants.settings);
+                        context.push(RouteConstants.settings);
                       },
                     ),
                   ),

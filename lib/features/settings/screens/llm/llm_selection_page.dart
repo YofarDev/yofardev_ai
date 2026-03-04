@@ -35,12 +35,12 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
   }
 
   void _onAdd() {
-    context.go(RouteConstants.llmConfig);
+    context.push(RouteConstants.llmConfig);
     // Note: refresh will be called when returning via router
   }
 
   void _onEdit(LlmConfig config) {
-    context.go(RouteConstants.llmConfig);
+    context.push(RouteConstants.llmConfig);
     // Note: refresh will be called when returning via router
   }
 

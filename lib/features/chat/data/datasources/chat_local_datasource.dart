@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,20 +10,28 @@ import '../../../home/data/datasources/prompt_datasource.dart';
 import '../../../settings/data/datasources/settings_local_datasource.dart';
 
 class ChatLocalDatasource {
+  static const String _chatPrefix = 'chat_';
+
   Future<Chat> createNewChat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String newChatId = DateTime.now().toIso8601String();
     final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
     final ChatPersona persona = await SettingsLocalDatasource().getPersona();
+    final Avatar defaultAvatar = persona.getDefaultAvatar();
+    final AvatarBackgrounds randomBackground = AvatarBackgrounds
+        .values[Random().nextInt(AvatarBackgrounds.values.length)];
     final Chat newChat = Chat(
       id: newChatId,
-      avatar: persona.getDefaultAvatar(),
+      avatar: defaultAvatar.copyWith(background: randomBackground),
       language: deviceLocale.languageCode,
       systemPrompt: await PromptDatasource().getSystemPrompt(),
       persona: persona,
     );
     await _removeEmptyChats();
-    await prefs.setString(newChatId, json.encode(newChat.toMap()));
+    await prefs.setString(
+      '$_chatPrefix$newChatId',
+      json.encode(newChat.toMap()),
+    );
     await updateChatsList(newChatId);
     await setCurrentChatId(newChatId);
     return newChat;
@@ -30,7 +39,7 @@ class ChatLocalDatasource {
 
   Future<Chat?> getChat(String chatId) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? chatJson = prefs.getString(chatId);
+    final String? chatJson = prefs.getString('$_chatPrefix$chatId');
     if (chatJson == null) return null;
     return Chat.fromMap(json.decode(chatJson) as Map<String, dynamic>);
   }
@@ -40,14 +49,17 @@ class ChatLocalDatasource {
     required Chat updatedChat,
   }) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(chatId, json.encode(updatedChat.toMap()));
+    await prefs.setString(
+      '$_chatPrefix$chatId',
+      json.encode(updatedChat.toMap()),
+    );
     await updateChatsList(chatId);
     await setCurrentChatId(chatId);
   }
 
   Future<void> deleteChat(String chatId) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove(chatId);
+    await prefs.remove('$_chatPrefix$chatId');
     final List<String> chatsList =
         prefs.getStringList('chatsList') ?? <String>[];
     if (chatsList.contains(chatId)) {
@@ -106,7 +118,10 @@ class ChatLocalDatasource {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     Chat currentChat = await getChat(chatId) ?? await createNewChat();
     currentChat = currentChat.copyWith(avatar: avatar);
-    await prefs.setString(chatId, json.encode(currentChat.toMap()));
+    await prefs.setString(
+      '$_chatPrefix$chatId',
+      json.encode(currentChat.toMap()),
+    );
   }
 
   Future<void> _removeEmptyChats() async {

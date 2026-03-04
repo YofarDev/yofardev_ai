@@ -39,7 +39,7 @@ class ApiKeyField extends StatelessWidget {
         ),
         child: const Text('API Picker'),
         onPressed: () {
-          context.go(RouteConstants.llmSelection);
+          context.push(RouteConstants.llmSelection);
         },
       ),
     );

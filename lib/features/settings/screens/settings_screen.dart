@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/src/either.dart';
+import 'package:fpdart/fpdart.dart' hide State;
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/service_locator.dart';
@@ -55,9 +55,12 @@ class SettingsPageState extends State<SettingsPage> {
       (String? username) => _usernameController.text = username ?? '',
     );
 
-    // TODO: Restore persona loading from repository when implemented
-    // _persona = await SettingsService().getPersona();
-    _persona = ChatPersona.assistant;
+    final Either<Exception, ChatPersona> personaResult = await settingsRepo
+        .getPersona();
+    personaResult.fold(
+      (Exception error) => _persona = ChatPersona.assistant,
+      (ChatPersona persona) => _persona = persona,
+    );
 
     _isSoundEffectsEnabled = context
         .read<ChatsCubit>()
@@ -75,6 +78,7 @@ class SettingsPageState extends State<SettingsPage> {
     if (_usernameController.text.isNotEmpty) {
       await settingsRepo.setUsername(_usernameController.text);
     }
+    await settingsRepo.setPersona(_persona);
     context.read<ChatsCubit>().setSoundEffects(_isSoundEffectsEnabled);
     context.pop();
   }
@@ -123,8 +127,6 @@ class SettingsPageState extends State<SettingsPage> {
                         value: _persona,
                         onChanged: (ChatPersona newValue) {
                           _persona = newValue;
-                          // TODO: Restore persona saving when repository supports it
-                          // SettingsService().setPersona(_persona);
                           setState(() {});
                         },
                       ),

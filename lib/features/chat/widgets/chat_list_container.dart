@@ -64,7 +64,7 @@ class ChatListContainer extends StatelessWidget {
   void _openChat(BuildContext context, Chat chat) {
     context.read<ChatsCubit>().setCurrentChat(chat);
     context.read<ChatsCubit>().setOpenedChat(chat);
-    context.go('${RouteConstants.chats}/${chat.id}');
+    context.push('${RouteConstants.chats}/${chat.id}');
   }
 
   Future<bool> _confirmDelete(BuildContext context) async {

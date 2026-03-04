@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/logger.dart';
 import '../../avatar/widgets/avatar_widgets.dart';
 import '../../avatar/widgets/background_avatar.dart';
 import '../../avatar/widgets/loading_avatar_widget.dart';
@@ -32,6 +33,11 @@ class HomeContentStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isLoading = talkingState.status == TalkingStatus.loading;
+
+    AppLogger.info(
+      'HomeContentStack build - initializing: ${chatsState.initializing}, will show: ${!chatsState.initializing ? "AvatarWidgets" : "LoadingAvatarWidget"}',
+      tag: 'HomeContentStack',
+    );
 
     return GestureDetector(
       onTap: onTripleTap,

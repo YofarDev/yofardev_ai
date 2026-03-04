@@ -16,19 +16,21 @@ class MockSoundRepository implements SoundRepository {
   Future<Either<Exception, void>> play(String soundName) async {
     lastPlayedSound = soundName;
     if (shouldFail) {
-      return Left(Exception(failureMessage ?? 'Sound not found'));
+      return Left<Exception, void>(
+        Exception(failureMessage ?? 'Sound not found'),
+      );
     }
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 
   @override
   Future<Either<Exception, void>> stop() async {
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 
   @override
   Future<Either<Exception, bool>> get isPlaying async {
-    return const Right(false);
+    return const Right<Exception, bool>(false);
   }
 }
 

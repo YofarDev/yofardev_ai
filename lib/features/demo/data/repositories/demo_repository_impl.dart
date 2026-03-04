@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:fpdart/src/either.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/llm/fake_llm_service.dart';

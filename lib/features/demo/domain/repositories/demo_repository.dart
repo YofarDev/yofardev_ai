@@ -44,12 +44,12 @@ class DemoRepositoryImpl implements DemoRepository {
         chatId,
       );
       if (chatResult.isLeft()) {
-        return Left(Exception('Chat not found: $chatId'));
+        return Left<Exception, void>(Exception('Chat not found: $chatId'));
       }
 
       final Chat? chat = chatResult.getOrElse((Exception _) => null);
       if (chat == null) {
-        return Left(Exception('Chat not found: $chatId'));
+        return Left<Exception, void>(Exception('Chat not found: $chatId'));
       }
 
       // Create new avatar with updated background
@@ -58,7 +58,9 @@ class DemoRepositoryImpl implements DemoRepository {
       // Update avatar
       return avatarRepository.updateAvatar(chatId, newAvatar);
     } catch (e) {
-      return Left(Exception('Failed to set avatar background: $e'));
+      return Left<Exception, void>(
+        Exception('Failed to set avatar background: $e'),
+      );
     }
   }
 
@@ -68,20 +70,22 @@ class DemoRepositoryImpl implements DemoRepository {
       final Either<Exception, Chat> chatResult = await chatRepository
           .getCurrentChat();
       if (chatResult.isLeft()) {
-        return Left(Exception('No current chat'));
+        return Left<Exception, String>(Exception('No current chat'));
       }
       final Chat chat = chatResult.getOrElse(
         (Exception _) => throw Exception('Unreachable'),
       );
-      return Right(chat.id);
+      return Right<Exception, String>(chat.id);
     } catch (e) {
-      return Left(Exception('Failed to get current chat: $e'));
+      return Left<Exception, String>(
+        Exception('Failed to get current chat: $e'),
+      );
     }
   }
 
   @override
   Future<Either<Exception, void>> updateChatForDemo(String chatId) async {
     // This can be used for any demo-specific chat updates
-    return const Right(null);
+    return const Right<Exception, void>(null);
   }
 }

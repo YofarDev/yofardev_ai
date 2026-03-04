@@ -13,11 +13,11 @@ class AvatarRepositoryImpl implements AvatarRepository {
     try {
       final Chat? chat = await _datasource.getChat(id);
       if (chat == null) {
-        return Left(Exception('Chat not found'));
+        return Left<Exception, Chat>(Exception('Chat not found'));
       }
-      return Right(chat);
+      return Right<Exception, Chat>(chat);
     } catch (e) {
-      return Left(Exception(e.toString()));
+      return Left<Exception, Chat>(Exception(e.toString()));
     }
   }
 

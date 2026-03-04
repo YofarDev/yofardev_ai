@@ -128,8 +128,6 @@ class _TalkingMouthState extends State<TalkingMouth> {
       return 0;
     }
 
-    AppLogger.debug('Loading audio file: $audioPath', tag: 'TalkingMouth');
-
     // Verify file exists before loading
     final File audioFile = File(audioPath);
     if (!await audioFile.exists()) {
@@ -140,18 +138,10 @@ class _TalkingMouthState extends State<TalkingMouth> {
       return 0;
     }
 
-    final int fileSize = await audioFile.length();
-    AppLogger.debug('Audio file size: $fileSize bytes', tag: 'TalkingMouth');
-
-    final AudioPlayer player =
-        AudioPlayer(); // player only used to get the duration here
+    final AudioPlayer player = AudioPlayer();
 
     try {
       await player.setFilePath(audioPath, initialPosition: Duration.zero);
-      AppLogger.debug(
-        'Audio loaded successfully, duration: ${player.duration}',
-        tag: 'TalkingMouth',
-      );
     } catch (e) {
       AppLogger.error('Failed to load audio', tag: 'TalkingMouth', error: e);
       await player.dispose();

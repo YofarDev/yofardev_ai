@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -125,7 +124,9 @@ class TalkingCubit extends Cubit<TalkingState> {
         status: updateStatus ? TalkingStatus.initial : state.status,
       ),
     );
-    if (removeFile) await File(state.answer.audioPath).delete();
+    // We purposefully do not delete the file here anymore to prevent a race condition
+    // where the newly generated TTS file gets deleted if stopTalking is called by
+    // another component. Cleanup is now safely handled in TtsDatasource.
     if (!soundEffectsEnabled) return;
     if (state.answer.avatarConfig.soundEffect == null) return;
     final AudioPlayer player = AudioPlayer();

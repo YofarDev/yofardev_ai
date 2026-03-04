@@ -15,9 +15,11 @@ import 'core/router/app_router.dart';
 import 'features/avatar/bloc/avatar_cubit.dart';
 import 'features/chat/bloc/chats_cubit.dart';
 import 'features/demo/bloc/demo_cubit.dart';
+import 'features/sound/data/datasources/tts_datasource.dart';
 import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
 import 'features/talking/bloc/talking_cubit.dart';
+import 'features/home/bloc/home_cubit.dart';
 import 'core/res/app_theme.dart';
 import 'core/utils/platform_utils.dart';
 
@@ -50,7 +52,7 @@ void main() async {
   }
   if (PlatformUtils.checkPlatform() != 'Web') {
     await dotenv.load();
-    // TODO: Initialize TTS datasource if needed
+    await TtsDatasource.initSupertonic();
   }
   runApp(const MyApp());
 }
@@ -73,6 +75,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<DemoCubit>(
           create: (BuildContext context) => getIt<DemoCubit>(),
+        ),
+        BlocProvider<HomeCubit>(
+          create: (BuildContext context) => HomeCubit()..initialize(),
         ),
       ],
       child: MaterialApp.router(

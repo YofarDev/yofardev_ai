@@ -97,7 +97,6 @@ Future<void> setupServiceLocator() async {
     () => ChatsCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
-      audioAnalyzer: getIt<AudioAnalyzer>(),
       localizationManager: getIt<LocalizationManager>(),
     ),
   );

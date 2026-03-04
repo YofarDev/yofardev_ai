@@ -7,7 +7,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
 import '../res/app_constants.dart';
-import 'glassmorphic/glassmorphic_icon_button.dart';
+import 'app_icon_button.dart';
 
 class PickerButtons extends StatelessWidget {
   final Function(File? file) onImageSelected;
@@ -20,15 +20,19 @@ class PickerButtons extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         if (!kIsWeb)
-          GlassmorphicIconButton(
-            icon: Icons.image_outlined,
+          AppIconButton(
             onPressed: _onGalleryPickerButtonPressed,
+            icon: Icons.image_outlined,
           ),
-        const SizedBox(width: 8),
-        GlassmorphicIconButton(
-          icon: Icons.camera_alt_outlined,
-          onPressed: _onTakePhotoButtonPressed,
-        ),
+
+        if (Platform.isAndroid || Platform.isIOS)
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: AppIconButton(
+              onPressed: _onTakePhotoButtonPressed,
+              icon: Icons.camera_alt_outlined,
+            ),
+          ),
         const SizedBox(width: 8),
       ],
     );

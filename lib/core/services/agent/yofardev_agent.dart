@@ -27,9 +27,6 @@ class YofardevAgent {
     required String systemPrompt,
     bool functionCallingEnabled = true,
   }) async {
-    final Stopwatch llmStopwatch = Stopwatch()..start();
-    AppLogger.info('Starting LLM request...', tag: 'YofardevAgent');
-
     // Ensure service is initialized (safe to call multiple times or check internally)
     await _llmService.init();
 
@@ -44,9 +41,6 @@ class YofardevAgent {
     final List<Map<String, dynamic>> toolResults = <Map<String, dynamic>>[];
 
     if (functionCallingEnabled) {
-      AppLogger.info('Checking for function calls...', tag: 'YofardevAgent');
-      final Stopwatch functionCheckStopwatch = Stopwatch()..start();
-
       final (String, List<FunctionInfo>) functionCheck = await _llmService
           .checkFunctionsCalling(
             api: config,
@@ -55,28 +49,13 @@ class YofardevAgent {
             lastUserMessage: userMessage,
           );
 
-      functionCheckStopwatch.stop();
-      AppLogger.info(
-        'Function check completed in ${functionCheckStopwatch.elapsedMilliseconds}ms',
-        tag: 'YofardevAgent',
-      );
-
       functionsToCall.addAll(functionCheck.$2);
 
       // 2. Execute tools if any were selected
       if (functionsToCall.isNotEmpty) {
-        AppLogger.info(
-          'Agent decided to call ${functionsToCall.length} tools.',
-          tag: 'YofardevAgent',
-        );
-
         for (final FunctionInfo info in functionsToCall) {
           final AgentTool? tool = ToolRegistry.getTool(info.name);
           if (tool != null) {
-            AppLogger.debug(
-              'Executing tool: ${tool.name} with args: ${info.parametersCalled}',
-              tag: 'YofardevAgent',
-            );
             try {
               final dynamic result = await tool.execute(
                 info.parametersCalled ?? <String, dynamic>{},
@@ -87,6 +66,11 @@ class YofardevAgent {
                 'parameters': info.parametersCalled,
               });
             } catch (e) {
+              AppLogger.error(
+                'Tool execution error: ${tool.name}',
+                tag: 'YofardevAgent',
+                error: e,
+              );
               toolResults.add(<String, dynamic>{
                 'name': tool.name,
                 'result': 'Error executing tool: $e',
@@ -96,8 +80,6 @@ class YofardevAgent {
           }
         }
       }
-    } else {
-      AppLogger.info('Function calling is disabled', tag: 'YofardevAgent');
     }
 
     // 3. Construct the prompt for the final response
@@ -155,21 +137,12 @@ class YofardevAgent {
     }
 
     // 4. Get the final answer
-    AppLogger.info('Generating final response...', tag: 'YofardevAgent');
-    final Stopwatch generationStopwatch = Stopwatch()..start();
-
     final String? rawResponse = await _llmService.promptModel(
       messages: conversation,
       systemPrompt: systemPrompt,
       config: config,
       returnJson: true,
-      debugLogs: true,
-    );
-
-    generationStopwatch.stop();
-    AppLogger.info(
-      'LLM generation completed in ${generationStopwatch.elapsedMilliseconds}ms',
-      tag: 'YofardevAgent',
+      debugLogs: false,
     );
 
     if (rawResponse == null) {
@@ -184,7 +157,6 @@ class YofardevAgent {
       final int jsonEnd = response.lastIndexOf('}');
       if (jsonStart != -1 && jsonEnd != -1) {
         final String extracted = response.substring(jsonStart, jsonEnd + 1);
-        AppLogger.debug('Extracted JSON: $extracted', tag: 'YofardevAgent');
 
         // Validate that the extracted JSON is actually valid
         try {
@@ -192,29 +164,18 @@ class YofardevAgent {
           response = extracted;
         } catch (e) {
           AppLogger.warning(
-            'Extracted JSON is invalid: $e',
+            'Invalid JSON extracted, using raw response',
             tag: 'YofardevAgent',
           );
-          AppLogger.warning('Using raw response instead', tag: 'YofardevAgent');
         }
-      } else {
-        AppLogger.warning(
-          'No JSON object found in response',
-          tag: 'YofardevAgent',
-        );
       }
     } catch (e) {
       AppLogger.error(
-        'Failed to extract JSON from response: $e',
+        'Failed to extract JSON from response',
         tag: 'YofardevAgent',
+        error: e,
       );
     }
-
-    llmStopwatch.stop();
-    AppLogger.info(
-      'Total LLM time: ${llmStopwatch.elapsedMilliseconds}ms (${llmStopwatch.elapsedMilliseconds / 1000}s)',
-      tag: 'YofardevAgent',
-    );
 
     return ChatEntry(
       id: const Uuid().v4(),

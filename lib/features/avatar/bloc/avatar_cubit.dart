@@ -40,7 +40,10 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
     result.fold(
       (Exception error) {
-        emit(state.copyWith(status: AvatarStatus.initial));
+        // This is expected for new chats - no custom avatar saved yet
+        // Keep status as 'ready' to show default avatar on error
+        // 'initial' would hide the avatar completely
+        emit(state.copyWith(status: AvatarStatus.ready));
       },
       (Chat chat) {
         emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));

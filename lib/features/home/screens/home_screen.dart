@@ -4,12 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/utils/platform_utils.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
+import '../bloc/home_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
 import '../../talking/bloc/talking_cubit.dart';
 import '../../talking/bloc/talking_state.dart';
-import '../bloc/home_cubit.dart';
 import '../widgets/home_content_stack.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -45,11 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      context.read<AvatarCubit>().setValuesBasedOnScreenWidth(
-        screenWidth: MediaQuery.of(context).size.width > 800
-            ? 800
-            : MediaQuery.of(context).size.width,
-      );
+      final double screenWidth = MediaQuery.of(context).size.width > 800
+          ? 800
+          : MediaQuery.of(context).size.width;
+      final AvatarCubit avatarCubit = context.read<AvatarCubit>();
+      avatarCubit.setValuesBasedOnScreenWidth(screenWidth: screenWidth);
       final String
       sentencesStr = await DefaultAssetBundle.of(context).loadString(
         'assets/txt/waiting_sentences_${context.read<ChatsCubit>().state.currentLanguage}.txt',
@@ -69,96 +69,96 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<HomeCubit>(
-      create: (BuildContext context) => HomeCubit()..initialize(),
-      child: BlocListener<AvatarCubit, AvatarState>(
-        listenWhen: (AvatarState previous, AvatarState current) =>
-            previous.statusAnimation != current.statusAnimation ||
+    return BlocListener<AvatarCubit, AvatarState>(
+      listenWhen: (AvatarState previous, AvatarState current) =>
+          previous.statusAnimation != current.statusAnimation ||
+          previous.status != current.status,
+      listener: (BuildContext context, AvatarState state) async {
+        if (state.statusAnimation == AvatarStatusAnimation.initial) return;
+        context.read<HomeCubit>().startVolumeFade(
+          state.statusAnimation != AvatarStatusAnimation.leaving,
+        );
+      },
+      child: BlocListener<TalkingCubit, TalkingState>(
+        listenWhen: (TalkingState previous, TalkingState current) =>
             previous.status != current.status,
-        listener: (BuildContext context, AvatarState state) async {
-          if (state.statusAnimation == AvatarStatusAnimation.initial) return;
-          context.read<HomeCubit>().startVolumeFade(
-            state.statusAnimation != AvatarStatusAnimation.leaving,
-          );
-        },
-        child: BlocListener<TalkingCubit, TalkingState>(
-          listenWhen: (TalkingState previous, TalkingState current) =>
-              previous.status != current.status,
-          listener: (BuildContext context, TalkingState state) {
-            _isTalkingWaitingSentences = state.status == TalkingStatus.loading;
-            if (_isTalkingWaitingSentences) {
-              if (PlatformUtils.checkPlatform() == 'Web') {
-                return;
-              }
-              context.read<HomeCubit>().startWaitingTtsLoop();
-              _startWaitingTtsLoop();
-            } else {
-              context.read<HomeCubit>().stopWaitingTtsLoop();
+        listener: (BuildContext context, TalkingState state) {
+          _isTalkingWaitingSentences = state.status == TalkingStatus.loading;
+          if (_isTalkingWaitingSentences) {
+            if (PlatformUtils.checkPlatform() == 'Web') {
+              return;
             }
+            context.read<HomeCubit>().startWaitingTtsLoop();
+            _startWaitingTtsLoop();
+          } else {
+            context.read<HomeCubit>().stopWaitingTtsLoop();
+          }
+        },
+        child: BlocListener<ChatsCubit, ChatsState>(
+          listenWhen: (ChatsState previous, ChatsState current) =>
+              previous.currentLanguage != current.currentLanguage,
+          listener: (BuildContext context, ChatsState state) {
+            _prepareWaitingTTS(state.currentLanguage);
           },
           child: BlocListener<ChatsCubit, ChatsState>(
             listenWhen: (ChatsState previous, ChatsState current) =>
-                previous.currentLanguage != current.currentLanguage,
+                previous.currentChat.id != current.currentChat.id ||
+                (previous.status == ChatsStatus.loading &&
+                    (current.status == ChatsStatus.success ||
+                        current.status == ChatsStatus.loaded)),
             listener: (BuildContext context, ChatsState state) {
-              _prepareWaitingTTS(state.currentLanguage);
+              context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
             },
-            child: BlocListener<ChatsCubit, ChatsState>(
-              listenWhen: (ChatsState previous, ChatsState current) =>
-                  previous.currentChat.id != current.currentChat.id,
-              listener: (BuildContext context, ChatsState state) {
-                context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
-              },
-              child: BlocListener<TalkingCubit, TalkingState>(
-                listenWhen: (TalkingState previous, TalkingState current) =>
-                    previous.answer != current.answer,
-                listener: (BuildContext context, TalkingState talkingState) {
-                  context.read<AvatarCubit>().onNewAvatarConfig(
-                    talkingState.answer.chatId,
-                    talkingState.answer.avatarConfig,
-                  );
+            child: BlocListener<TalkingCubit, TalkingState>(
+              listenWhen: (TalkingState previous, TalkingState current) =>
+                  previous.answer != current.answer,
+              listener: (BuildContext context, TalkingState talkingState) {
+                context.read<AvatarCubit>().onNewAvatarConfig(
+                  talkingState.answer.chatId,
+                  talkingState.answer.avatarConfig,
+                );
 
-                  if (talkingState.status == TalkingStatus.success) {
-                    context.read<HomeCubit>().playTts(
-                      talkingState.answer.audioPath,
-                      removeFile: true,
-                      soundEffectsEnabled: context
-                          .read<ChatsCubit>()
-                          .state
-                          .soundEffectsEnabled,
-                      updateStatus: true,
-                      onComplete: () {
-                        context.read<TalkingCubit>().stopTalking(
-                          soundEffectsEnabled: context
-                              .read<ChatsCubit>()
-                              .state
-                              .soundEffectsEnabled,
-                          removeFile: true,
-                          updateStatus: true,
-                        );
-                      },
-                    );
-                  }
+                if (talkingState.status == TalkingStatus.success) {
+                  context.read<HomeCubit>().playTts(
+                    talkingState.answer.audioPath,
+                    removeFile: true,
+                    soundEffectsEnabled: context
+                        .read<ChatsCubit>()
+                        .state
+                        .soundEffectsEnabled,
+                    updateStatus: true,
+                    onComplete: () {
+                      context.read<TalkingCubit>().stopTalking(
+                        soundEffectsEnabled: context
+                            .read<ChatsCubit>()
+                            .state
+                            .soundEffectsEnabled,
+                        removeFile: true,
+                        updateStatus: true,
+                      );
+                    },
+                  );
+                }
+              },
+              child: BlocBuilder<ChatsCubit, ChatsState>(
+                builder: (BuildContext context, ChatsState chatsState) {
+                  return BlocBuilder<AvatarCubit, AvatarState>(
+                    builder: (BuildContext context, AvatarState avatarState) {
+                      return BlocBuilder<TalkingCubit, TalkingState>(
+                        builder: (BuildContext context, TalkingState state) {
+                          return Scaffold(
+                            backgroundColor: AppColors.background,
+                            body: HomeContentStack(
+                              chatsState: chatsState,
+                              talkingState: state,
+                              onTripleTap: _handleTripleTap,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
                 },
-                child: BlocBuilder<ChatsCubit, ChatsState>(
-                  builder: (BuildContext context, ChatsState chatsState) {
-                    return BlocBuilder<AvatarCubit, AvatarState>(
-                      builder: (BuildContext context, AvatarState avatarState) {
-                        return BlocBuilder<TalkingCubit, TalkingState>(
-                          builder: (BuildContext context, TalkingState state) {
-                            return Scaffold(
-                              backgroundColor: AppColors.background,
-                              body: HomeContentStack(
-                                chatsState: chatsState,
-                                talkingState: state,
-                                onTripleTap: _handleTripleTap,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
               ),
             ),
           ),
