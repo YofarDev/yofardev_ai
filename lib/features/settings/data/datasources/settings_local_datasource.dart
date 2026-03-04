@@ -1,13 +1,57 @@
+import 'dart:convert';
+
+import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../l10n/localization_manager.dart';
 import '../../../chat/domain/models/chat.dart';
+import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/res/app_constants.dart';
 import '../../../../core/utils/app_utils.dart';
 import '../../../../core/utils/platform_utils.dart';
 
 class SettingsLocalDatasource {
+  // NEW
+  static const String _keyTaskLlmConfig = 'task_llm_config';
+
+  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? json = prefs.getString(_keyTaskLlmConfig);
+
+      if (json == null) {
+        const TaskLlmConfig defaultConfig = TaskLlmConfig();
+        return const Right<Exception, TaskLlmConfig>(defaultConfig);
+      }
+
+      final Map<String, dynamic> data =
+          jsonDecode(json) as Map<String, dynamic>;
+      final TaskLlmConfig parsedConfig = TaskLlmConfig.fromJson(data);
+      final Either<Exception, TaskLlmConfig> result =
+          Right<Exception, TaskLlmConfig>(parsedConfig);
+      return result;
+    } catch (e) {
+      return Left<Exception, TaskLlmConfig>(
+        Exception('Failed to load task LLM config: $e'),
+      );
+    }
+  }
+
+  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String json = jsonEncode(config.toJson());
+      await prefs.setString(_keyTaskLlmConfig, json);
+      const Either<Exception, void> result = Right<Exception, void>(null);
+      return result;
+    } catch (e) {
+      return Left<Exception, void>(
+        Exception('Failed to save task LLM config: $e'),
+      );
+    }
+  }
+
   Future<void> setPersona(ChatPersona persona) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('persona', persona.name);
