@@ -6,11 +6,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/models/chat.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../home/data/datasources/prompt_datasource.dart';
 import '../../../settings/data/datasources/settings_local_datasource.dart';
 
 class ChatLocalDatasource {
   static const String _chatPrefix = 'chat_';
+  static const String _chatMigrationKey = 'chat_title_migration_v1';
+
+  ChatLocalDatasource() {
+    _migrateChatDataIfNeeded();
+  }
 
   Future<Chat> createNewChat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -131,6 +137,46 @@ class ChatLocalDatasource {
       if (chat == null || chat.entries.isEmpty) {
         await deleteChat(chatId);
       }
+    }
+  }
+
+  Future<void> _migrateChatDataIfNeeded() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final bool hasMigrated = prefs.getBool(_chatMigrationKey) ?? false;
+
+      if (!hasMigrated) {
+        AppLogger.info(
+          'Starting chat title migration',
+          tag: 'ChatLocalDatasource',
+        );
+
+        final List<Chat> chats = await getChatsList();
+
+        // Add title/titleGenerated fields to all existing chats
+        for (final Chat chat in chats) {
+          final Chat migratedChat = chat.copyWith(
+            title: chat.title.isNotEmpty ? chat.title : '',
+            titleGenerated: chat.titleGenerated,
+          );
+          await prefs.setString(
+            '$_chatPrefix${chat.id}',
+            json.encode(migratedChat.toMap()),
+          );
+        }
+
+        await prefs.setBool(_chatMigrationKey, true);
+        AppLogger.info(
+          'Chat title migration complete',
+          tag: 'ChatLocalDatasource',
+        );
+      }
+    } catch (e) {
+      AppLogger.error(
+        'Chat migration failed',
+        tag: 'ChatLocalDatasource',
+        error: e,
+      );
     }
   }
 }
