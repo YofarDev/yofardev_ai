@@ -19,7 +19,9 @@ import '../../features/demo/data/datasources/demo_controller.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
 import '../../features/sound/bloc/sound_cubit.dart';
-import '../../features/talking/bloc/talking_cubit.dart';
+import '../../features/talking/presentation/bloc/talking_cubit.dart';
+import '../../features/talking/domain/repositories/talking_repository.dart';
+import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
 import '../../features/sound/data/repositories/sound_repository_impl.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
@@ -91,6 +93,9 @@ Future<void> setupServiceLocator() async {
     () => SettingsRepositoryImpl(),
   );
   getIt.registerLazySingleton<SoundRepository>(() => SoundRepositoryImpl());
+  getIt.registerLazySingleton<TalkingRepository>(
+    () => TalkingRepositoryImpl(getIt<TtsService>()),
+  );
   getIt.registerLazySingleton<DemoRepository>(
     () => DemoRepositoryImpl(
       chatRepository: getIt<ChatRepository>(),
@@ -111,7 +116,9 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<AvatarCubit>(
     () => AvatarCubit(getIt<AvatarRepository>()),
   );
-  getIt.registerFactory<TalkingCubit>(() => TalkingCubit(getIt<TtsService>()));
+  getIt.registerFactory<TalkingCubit>(
+    () => TalkingCubit(getIt<TalkingRepository>()),
+  );
   getIt.registerFactory<ChatTitleCubit>(
     () => ChatTitleCubit(chatRepository: getIt<ChatRepository>()),
   );

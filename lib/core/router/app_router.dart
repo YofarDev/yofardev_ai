@@ -9,9 +9,7 @@ import '../../features/settings/screens/llm/llm_config_page.dart';
 import '../../features/settings/screens/llm/llm_selection_page.dart';
 import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
-import '../../core/di/service_locator.dart';
 import '../../core/widgets/constrained_width.dart';
-import '../../features/settings/domain/repositories/settings_repository.dart';
 import 'route_constants.dart';
 
 /// Application router configuration using go_router.
@@ -56,11 +54,7 @@ class AppRouter {
         pageBuilder: (BuildContext context, GoRouterState state) =>
             MaterialPage<void>(
               key: state.pageKey,
-              child: ConstrainedWidth(
-                child: SettingsPage(
-                  settingsRepository: getIt<SettingsRepository>(),
-                ),
-              ),
+              child: const ConstrainedWidth(child: SettingsPage()),
             ),
         routes: <RouteBase>[
           GoRoute(

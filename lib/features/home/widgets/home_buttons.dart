@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
-import '../../talking/bloc/talking_cubit.dart';
+import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../core/widgets/app_icon_button.dart';
 import '../../../core/widgets/function_calling_button.dart';
 import '../../../core/router/route_constants.dart';

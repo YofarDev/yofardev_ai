@@ -6,7 +6,7 @@ import '../../avatar/bloc/avatar_cubit.dart';
 import '../bloc/chats_cubit.dart';
 import '../bloc/chats_state.dart';
 import '../../../l10n/localization_manager.dart';
-import '../../talking/bloc/talking_cubit.dart';
+import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../widgets/chat_list_container.dart';
 import '../widgets/chat_list_empty_state.dart';

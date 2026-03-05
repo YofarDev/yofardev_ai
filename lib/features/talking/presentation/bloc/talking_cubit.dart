@@ -1,11 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/repositories/talking_repository.dart';
 import 'talking_state.dart';
-import '../../../core/services/audio/tts_service.dart';
 
+/// Cubit responsible for managing TTS playback state
+///
+/// This cubit abstracts the TTS service through a repository,
+/// allowing for proper separation of concerns and testability.
 class TalkingCubit extends Cubit<TalkingState> {
-  TalkingCubit(this._ttsService) : super(const TalkingState.idle());
+  TalkingCubit(this._repository) : super(const TalkingState.idle());
 
-  final TtsService _ttsService;
+  final TalkingRepository _repository;
 
   /// Initialize the cubit
   Future<void> init() async {
@@ -16,7 +20,7 @@ class TalkingCubit extends Cubit<TalkingState> {
   /// Play a waiting sentence - does NOT show thinking animation
   Future<void> playWaitingSentence(String sentence) async {
     emit(const TalkingState.waiting()); // NOT loading!
-    await _ttsService.playWaitingSentence(sentence);
+    await _repository.playWaitingSentence(sentence);
   }
 
   /// Generate TTS for speech - SHOWS thinking animation
@@ -25,7 +29,7 @@ class TalkingCubit extends Cubit<TalkingState> {
 
     try {
       // Generate TTS...
-      await _ttsService.speak(text);
+      await _repository.generateSpeech(text);
       emit(const TalkingState.speaking());
     } catch (e) {
       emit(TalkingState.error(e.toString()));
@@ -34,7 +38,7 @@ class TalkingCubit extends Cubit<TalkingState> {
 
   /// Stop all TTS playback
   Future<void> stop() async {
-    await _ttsService.stop();
+    await _repository.stop();
     emit(const TalkingState.idle());
   }
 

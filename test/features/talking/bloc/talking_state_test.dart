@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/features/talking/bloc/talking_cubit.dart';
-import 'package:yofardev_ai/features/talking/bloc/talking_state.dart';
+import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
+import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
+import 'package:yofardev_ai/features/talking/data/repositories/talking_repository_impl.dart';
 import 'package:yofardev_ai/core/services/audio/tts_service.dart';
 
 void main() {
@@ -9,7 +10,8 @@ void main() {
 
   setUp(() {
     ttsService = TtsService();
-    cubit = TalkingCubit(ttsService);
+    final TalkingRepositoryImpl repository = TalkingRepositoryImpl(ttsService);
+    cubit = TalkingCubit(repository);
   });
 
   tearDown(() {

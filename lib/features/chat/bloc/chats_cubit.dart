@@ -14,8 +14,6 @@ import 'chats_state.dart';
 ///
 /// This cubit provides a simplified API that coordinates between
 /// the specialized cubits (ChatListCubit, ChatMessageCubit, ChatTitleCubit).
-///
-/// Kept lean (<300 lines) by delegating to specialized cubits.
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit({
     required ChatRepository chatRepository,
@@ -247,45 +245,16 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(status: ChatsStatus.success));
   }
 
-  /// Prepare waiting sentences for TTS (now handled by ChatTtsCubit)
-  @Deprecated('Use ChatTtsCubit.prepareWaitingSentences instead')
-  Future<void> prepareWaitingSentences(dynamic language) async {
-    emit(state.copyWith(initializing: false));
-  }
-
-  /// Shuffle waiting sentences (now handled by ChatTtsCubit)
-  @Deprecated('Use ChatTtsCubit.shuffleWaitingSentences instead')
-  void shuffleWaitingSentences() {
-    final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
-      state.audioPathsWaitingSentences,
-    );
-    list.shuffle();
-    emit(state.copyWith(audioPathsWaitingSentences: list));
-  }
-
-  /// Remove a waiting sentence (now handled by ChatTtsCubit)
-  @Deprecated('Use ChatTtsCubit.removeWaitingSentence instead')
-  void removeWaitingSentence(String audioPath) {
-    final List<Map<String, dynamic>> currentList =
-        List<Map<String, dynamic>>.from(state.audioPathsWaitingSentences);
-    currentList.removeWhere(
-      (Map<String, dynamic> element) => element['audioPath'] == audioPath,
-    );
-    emit(state.copyWith(audioPathsWaitingSentences: currentList));
-  }
-
-  /// Generate title for a chat (now handled by ChatTitleCubit)
-  @Deprecated('Use ChatTitleCubit.generateTitle instead')
-  Future<void> generateTitleForChat(String chatId) async {
-    final Set<String> newIds = <String>{
-      ...state.generatingTitleChatIds,
-      chatId,
-    };
-    emit(state.copyWith(generatingTitleChatIds: newIds));
-  }
+  // Getters for convenience
+  Chat get currentChat => state.currentChat;
+  Chat get openedChat => state.openedChat;
+  ChatsStatus get status => state.status;
+  String get currentLanguage => state.currentLanguage;
+  bool get soundEffectsEnabled => state.soundEffectsEnabled;
+  bool get functionCallingEnabled => state.functionCallingEnabled;
 
   /// Stream a message to Yofardev (now handled by ChatMessageCubit)
-  @Deprecated('Use ChatMessageCubit.askYofardevStream instead')
+  /// Kept for backward compatibility
   Future<ChatEntry?> askYofardevStream(
     String prompt, {
     bool? onlyText,
@@ -299,11 +268,35 @@ class ChatsCubit extends Cubit<ChatsState> {
     return null;
   }
 
-  // Getters for convenience
-  Chat get currentChat => state.currentChat;
-  Chat get openedChat => state.openedChat;
-  ChatsStatus get status => state.status;
-  String get currentLanguage => state.currentLanguage;
-  bool get soundEffectsEnabled => state.soundEffectsEnabled;
-  bool get functionCallingEnabled => state.functionCallingEnabled;
+  /// Prepare waiting sentences (now handled by ChatTtsCubit)
+  /// Kept for backward compatibility
+  Future<void> prepareWaitingSentences(dynamic language) async {
+    AppLogger.warning(
+      'prepareWaitingSentences called on ChatsCubit - use ChatTtsCubit instead',
+      tag: 'ChatsCubit',
+    );
+  }
+
+  /// Shuffle waiting sentences (now handled by ChatTtsCubit)
+  /// Kept for backward compatibility
+  void shuffleWaitingSentences() {
+    AppLogger.warning(
+      'shuffleWaitingSentences called on ChatsCubit - use ChatTtsCubit instead',
+      tag: 'ChatsCubit',
+    );
+  }
+
+  /// Generate title for a chat (now handled by ChatTitleCubit)
+  /// Kept for backward compatibility
+  Future<void> generateTitleForChat(String chatId) async {
+    AppLogger.warning(
+      'generateTitleForChat called on ChatsCubit - use ChatTitleCubit instead',
+      tag: 'ChatsCubit',
+    );
+    final Set<String> newIds = <String>{
+      ...state.generatingTitleChatIds,
+      chatId,
+    };
+    emit(state.copyWith(generatingTitleChatIds: newIds));
+  }
 }

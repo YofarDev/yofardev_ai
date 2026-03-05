@@ -7,8 +7,8 @@ import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
 import '../../demo/bloc/demo_cubit.dart';
 import '../../demo/domain/models/demo_script.dart';
-import '../../talking/bloc/talking_cubit.dart';
-import '../../talking/bloc/talking_state.dart';
+import '../../talking/presentation/bloc/talking_cubit.dart';
+import '../../talking/presentation/bloc/talking_state.dart';
 import '../widgets/home_bloc_listeners.dart';
 import '../widgets/home_content_stack.dart';
 

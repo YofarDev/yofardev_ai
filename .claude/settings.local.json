@@ -42,7 +42,8 @@
       "Bash(/tmp/fix_title_tests.py:*)",
       "Bash(rtk proxy:*)",
       "Bash(fanal:*)",
-      "Bash(/tmp/main_fix.dart:*)"
+      "Bash(/tmp/main_fix.dart:*)",
+      "Bash(do:*)"
     ]
   }
 }

@@ -1,11 +1,11 @@
 import 'dart:async';
-import '../../../talking/bloc/talking_state.dart';
+import '../../../talking/presentation/bloc/talking_state.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../talking/bloc/talking_cubit.dart';
+import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../../core/utils/app_utils.dart';
 import '../../../../core/utils/platform_utils.dart';
 

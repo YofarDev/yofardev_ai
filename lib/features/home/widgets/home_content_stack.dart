@@ -7,7 +7,7 @@ import '../../avatar/widgets/loading_avatar_widget.dart';
 import '../../avatar/widgets/thinking_animation.dart';
 import '../../chat/bloc/chats_state.dart';
 import '../../chat/widgets/ai_text_input/ai_text_input.dart';
-import '../../talking/bloc/talking_state.dart';
+import '../../talking/presentation/bloc/talking_state.dart';
 import 'home_buttons.dart';
 
 /// The main content stack for the home screen.

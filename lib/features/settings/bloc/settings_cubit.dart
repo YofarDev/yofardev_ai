@@ -1,10 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/models/task_llm_config.dart';
 import '../../../core/models/llm_config.dart';
+import '../../../core/models/task_llm_config.dart';
 import '../../../core/services/llm/llm_service_interface.dart';
 import '../../../core/utils/logger.dart';
+import '../../chat/domain/models/chat.dart';
 import '../../settings/domain/repositories/settings_repository.dart';
 import 'settings_state.dart';
 
@@ -66,6 +67,49 @@ class SettingsCubit extends Cubit<SettingsState> {
         error: error,
       ),
       (_) => emit(state.copyWith(taskLlmConfig: config)),
+    );
+  }
+
+  /// Set the system prompt
+  Future<void> setSystemPrompt(String prompt) async {
+    final Either<Exception, void> result = await _settingsRepository
+        .setSystemPrompt(prompt);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to set system prompt',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => null, // Don't need to emit, value is stored in repository
+    );
+  }
+
+  /// Set the username
+  Future<void> setUsername(String username) async {
+    final Either<Exception, void> result = await _settingsRepository
+        .setUsername(username);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to set username',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => null, // Don't need to emit, value is stored in repository
+    );
+  }
+
+  /// Set the persona
+  Future<void> setPersona(ChatPersona persona) async {
+    final Either<Exception, void> result = await _settingsRepository.setPersona(
+      persona,
+    );
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to set persona',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => null, // Don't need to emit, value is stored in repository
     );
   }
 }

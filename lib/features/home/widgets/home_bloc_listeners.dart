@@ -5,8 +5,8 @@ import '../../avatar/bloc/avatar_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
-import '../../talking/bloc/talking_cubit.dart';
-import '../../talking/bloc/talking_state.dart';
+import '../../talking/presentation/bloc/talking_cubit.dart';
+import '../../talking/presentation/bloc/talking_state.dart';
 import '../bloc/home_cubit.dart';
 
 /// Combines all BlocListeners for HomeScreen using MultiBlocListener

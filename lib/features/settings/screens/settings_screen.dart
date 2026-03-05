@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart' hide State;
 import 'package:go_router/go_router.dart';
 
 import '../../../core/models/sound_effects.dart';
@@ -10,7 +9,7 @@ import '../../../core/res/app_colors.dart';
 import '../../../l10n/localization_manager.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/domain/models/chat.dart';
-import '../domain/repositories/settings_repository.dart';
+import '../bloc/settings_cubit.dart';
 import '../widgets/api_key_field.dart';
 import '../widgets/persona_dropdown.dart';
 import '../widgets/settings_app_bar.dart';
@@ -18,12 +17,7 @@ import '../widgets/sound_effects_toggle.dart';
 import '../widgets/username_field.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({
-    super.key,
-    required this.settingsRepository,
-  });
-
-  final SettingsRepository settingsRepository;
+  const SettingsPage({super.key});
 
   @override
   SettingsPageState createState() => SettingsPageState();
@@ -43,27 +37,10 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   void _loadSettings() async {
-    final Either<Exception, String> promptResult = await widget.settingsRepository
-        .getSystemPrompt();
-    promptResult.fold(
-      (Exception error) => null,
-      (String prompt) => _baseSystemPromptController.text = prompt,
-    );
+    final SettingsCubit settingsCubit = context.read<SettingsCubit>();
+    await settingsCubit.loadSettings();
 
-    final Either<Exception, String?> usernameResult = await widget.settingsRepository
-        .getUsername();
-    usernameResult.fold(
-      (Exception error) => null,
-      (String? username) => _usernameController.text = username ?? '',
-    );
-
-    final Either<Exception, ChatPersona> personaResult = await widget.settingsRepository
-        .getPersona();
-    personaResult.fold(
-      (Exception error) => _persona = ChatPersona.assistant,
-      (ChatPersona persona) => _persona = persona,
-    );
-
+    // Load additional settings from ChatsCubit for sound effects
     _isSoundEffectsEnabled = context
         .read<ChatsCubit>()
         .state
@@ -72,13 +49,15 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   void _onSaveButtonPressed() async {
+    final SettingsCubit settingsCubit = context.read<SettingsCubit>();
+
     if (_baseSystemPromptController.text.isNotEmpty) {
-      await widget.settingsRepository.setSystemPrompt(_baseSystemPromptController.text);
+      await settingsCubit.setSystemPrompt(_baseSystemPromptController.text);
     }
     if (_usernameController.text.isNotEmpty) {
-      await widget.settingsRepository.setUsername(_usernameController.text);
+      await settingsCubit.setUsername(_usernameController.text);
     }
-    await widget.settingsRepository.setPersona(_persona);
+    await settingsCubit.setPersona(_persona);
     context.read<ChatsCubit>().setSoundEffects(_isSoundEffectsEnabled);
     context.pop();
   }
