@@ -43,4 +43,28 @@ class LanguageEn extends Languages {
   String get resultsFunctionCalling => "Function calling results";
   @override
   String get personaAssistant => "Assistant’s persona";
+
+  ///   Task LLM Config   ///
+  @override
+  String get newChat => "New chat";
+  @override
+  String get taskLlmConfig => "Task LLM Configuration";
+  @override
+  String get assistantTask => "Assistant";
+  @override
+  String get titleTask => "Title Generation";
+  @override
+  String get functionCallingTask => "Function Calling";
+  @override
+  String get useDefaultLlm => "Use default LLM";
+  @override
+  String get taskLlmNote =>
+      "Note: If no LLM is selected for a task, the default assistant LLM will be used.";
+  @override
+  String get taskLlmDescription => "LLM used for main chat responses";
+  @override
+  String get titleLlmDescription => "LLM used to generate chat titles";
+  @override
+  String get functionCallingLlmDescription =>
+      "LLM used for tool/function detection";
 }

@@ -25,4 +25,16 @@ abstract class Languages {
   String get currentUsername;
   String get resultsFunctionCalling;
   String get personaAssistant;
+
+  ///   Task LLM Config   ///
+  String get newChat;
+  String get taskLlmConfig;
+  String get assistantTask;
+  String get titleTask;
+  String get functionCallingTask;
+  String get useDefaultLlm;
+  String get taskLlmNote;
+  String get taskLlmDescription;
+  String get titleLlmDescription;
+  String get functionCallingLlmDescription;
 }

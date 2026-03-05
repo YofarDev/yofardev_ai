@@ -44,4 +44,30 @@ class LanguageFr extends Languages {
   String get resultsFunctionCalling => "Résultats de functions calling";
   @override
   String get personaAssistant => "Personnalité de l’assistant";
+
+  ///   Task LLM Config   ///
+  @override
+  String get newChat => "Nouvelle conversation";
+  @override
+  String get taskLlmConfig => "Configuration LLM par tâche";
+  @override
+  String get assistantTask => "Assistant";
+  @override
+  String get titleTask => "Génération de titre";
+  @override
+  String get functionCallingTask => "Appel de fonctions";
+  @override
+  String get useDefaultLlm => "Utiliser le LLM par défaut";
+  @override
+  String get taskLlmNote =>
+      "Note: Si aucun LLM n’est sélectionné pour une tâche, le LLM assistant par défaut sera utilisé.";
+  @override
+  String get taskLlmDescription =>
+      "LLM utilisé pour les réponses principales du chat";
+  @override
+  String get titleLlmDescription =>
+      "LLM utilisé pour générer les titres des conversations";
+  @override
+  String get functionCallingLlmDescription =>
+      "LLM utilisé pour la détection d’outils/fonctions";
 }
