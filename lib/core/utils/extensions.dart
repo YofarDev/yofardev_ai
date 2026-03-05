@@ -2,9 +2,6 @@ import 'dart:math';
 
 import 'package:intl/intl.dart';
 
-import 'logger.dart';
-import 'platform_utils.dart';
-
 extension RemoveEmojis on String {
   String removeEmojis() {
     final RegExp emojiRegex = RegExp(
@@ -90,74 +87,8 @@ extension EnumUtils on Enum {
   }
 
   static T? firstOrNull<T extends Enum>(List<T> values, String enumName) {
-    // debugPrint('firstOrNull(): $enumName');
     return values.any((T e) => e.name == enumName)
         ? values.firstWhere((T e) => e.name == enumName)
         : null;
   }
-}
-
-extension ColorfulLogs on String {
-  String toRedLog() => "'\x1B[31m$this\x1B[0m'";
-  String toGreenLog() => "'\x1B[32m$this\x1B[0m'";
-  String toYellowLog() => "'\x1B[33m$this\x1B[0m'";
-  String toBlueLog() => "'\x1B[34m$this\x1B[0m'";
-  String toWhiteLog() => "'\x1B[37m$this\x1B[0m'";
-  String toCyanLog() => "'\x1B[36m$this\x1B[0m'";
-  String toMagentaLog() => "'\x1B[35m$this\x1B[0m'";
-
-  void printRedLog() => split('\n').forEach(
-    (String element) => AppLogger.debug(
-      PlatformUtils.checkPlatform() == 'Android' ? element.toRedLog() : element,
-      tag: 'Extensions',
-    ),
-  );
-  void printGreenLog() => split('\n').forEach(
-    (String element) => AppLogger.debug(
-      PlatformUtils.checkPlatform() == 'Android'
-          ? element.toGreenLog()
-          : element,
-      tag: 'Extensions',
-    ),
-  );
-  void printYellowLog() => split('\n').forEach(
-    (String element) => AppLogger.debug(
-      PlatformUtils.checkPlatform() == 'Android'
-          ? element.toYellowLog()
-          : element,
-      tag: 'Extensions',
-    ),
-  );
-  void printBlueLog() => split('\n').forEach(
-    (String element) => AppLogger.debug(
-      PlatformUtils.checkPlatform() == 'Android'
-          ? element.toBlueLog()
-          : element,
-      tag: 'Extensions',
-    ),
-  );
-  void printWhiteLog() => split('\n').forEach(
-    (String element) => AppLogger.debug(
-      PlatformUtils.checkPlatform() == 'Android'
-          ? element.toWhiteLog()
-          : element,
-      tag: 'Extensions',
-    ),
-  );
-  void printCyanLog() => split('\n').forEach(
-    (String element) => AppLogger.debug(
-      PlatformUtils.checkPlatform() == 'Android'
-          ? element.toCyanLog()
-          : element,
-      tag: 'Extensions',
-    ),
-  );
-  void printMagentaLog() => split('\n').forEach(
-    (String element) => AppLogger.debug(
-      PlatformUtils.checkPlatform() == 'Android'
-          ? element.toMagentaLog()
-          : element,
-      tag: 'Extensions',
-    ),
-  );
 }

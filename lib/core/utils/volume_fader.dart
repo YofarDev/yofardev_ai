@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 
-import 'extensions.dart';
-
 class ProgressiveVolumeControl {
   final double _minVolume = 0.5;
   Timer? _timer;
@@ -30,7 +28,6 @@ class ProgressiveVolumeControl {
       if (_programmaticallyChangingVolume) {
         return;
       }
-      "Volume changed to $value".printBlueLog();
       _initialVolume = value;
     });
   }
@@ -48,7 +45,6 @@ class ProgressiveVolumeControl {
     )) {
       return;
     }
-    "Fading volume ${increase ? 'up' : 'down'} to $targetVolume".printCyanLog();
     const double increment = 0.03;
     final int vector = increase ? 1 : -1;
     _timer = Timer.periodic(const Duration(milliseconds: 100), (
@@ -60,7 +56,6 @@ class ProgressiveVolumeControl {
         targetVolume: targetVolume,
       )) {
         cancel();
-        "Fading done".toYellowLog();
         return;
       }
 

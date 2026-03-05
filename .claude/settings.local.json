@@ -32,7 +32,8 @@
       "Bash(grep:*)",
       "Bash(do echo:*)",
       "Bash(fimp:*)",
-      "Bash(flutter test:*)"
+      "Bash(flutter test:*)",
+      "Bash(cloc:*)"
     ]
   }
 }
