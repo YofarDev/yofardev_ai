@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
 import '../../features/chat/screens/image_full_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/settings/bloc/settings_cubit.dart';
 import '../../features/settings/screens/llm/llm_config_page.dart';
 import '../../features/settings/screens/llm/llm_selection_page.dart';
 import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../core/di/service_locator.dart';
 import '../../core/widgets/constrained_width.dart';
 import 'route_constants.dart';
 
@@ -73,15 +76,19 @@ class AppRouter {
                       child: const ConstrainedWidth(child: LlmConfigPage()),
                     ),
               ),
+              GoRoute(
+                path: 'task-llm',
+                pageBuilder: (BuildContext context, GoRouterState state) {
+                  return MaterialPage<void>(
+                    key: state.pageKey,
+                    child: BlocProvider<SettingsCubit>(
+                      create: (BuildContext context) => getIt<SettingsCubit>(),
+                      child: const ConstrainedWidth(child: TaskLlmConfigPage()),
+                    ),
+                  );
+                },
+              ),
             ],
-          ),
-          GoRoute(
-            path: 'task-llm',
-            pageBuilder: (BuildContext context, GoRouterState state) =>
-                MaterialPage<void>(
-                  key: state.pageKey,
-                  child: const ConstrainedWidth(child: TaskLlmConfigPage()),
-                ),
           ),
         ],
       ),
