@@ -30,6 +30,7 @@ import '../../features/sound/data/datasources/tts_datasource.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_service.dart';
 import '../services/llm/llm_service_interface.dart';
+import '../services/audio/tts_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -93,11 +94,13 @@ Future<void> setupServiceLocator() async {
 
   // Other services
   getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());
+  // Audio service - single source of truth for TTS
+  getIt.registerLazySingleton<TtsService>(() => TtsService());
   getIt.registerLazySingleton<LocalizationManager>(() => LocalizationManager());
 
   // BLoCs / Cubits
   getIt.registerFactory<AvatarCubit>(() => AvatarCubit());
-  getIt.registerFactory<TalkingCubit>(() => TalkingCubit());
+  getIt.registerFactory<TalkingCubit>(() => TalkingCubit(getIt<TtsService>()));
   getIt.registerFactory<ChatsCubit>(
     () => ChatsCubit(
       chatRepository: getIt<ChatRepository>(),

@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: <SingleChildWidget>[
         BlocProvider<TalkingCubit>(
-          create: (BuildContext context) => TalkingCubit(),
+          create: (BuildContext context) => getIt<TalkingCubit>(),
         ),
         BlocProvider<ChatsCubit>(
           create: (BuildContext context) => getIt<ChatsCubit>()..init(),
