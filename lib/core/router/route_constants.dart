@@ -13,6 +13,7 @@ class RouteConstants {
   static const String settings = '/settings';
   static const String llmSelection = '/settings/llm';
   static const String llmConfig = '/settings/llm/config';
+  static const String taskLlmConfig = '/settings/task-llm';
 
   // Image routes
   static const String imageFullScreen = '/image/:path';
