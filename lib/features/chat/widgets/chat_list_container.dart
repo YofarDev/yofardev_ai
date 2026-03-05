@@ -93,12 +93,24 @@ class ChatListContainer extends StatelessWidget {
 
   String _resolvePreview(Chat chat) {
     if (chat.entries.isEmpty) return localized.empty;
+
+    // NEW: Use title if available and generated
+    if (chat.titleGenerated && chat.title.isNotEmpty) {
+      return chat.title;
+    }
+
+    // Fall back to existing preview logic
     for (int i = chat.entries.length - 1; i >= 0; i--) {
       final String body = chat.entries[i].body;
       if (body.trim().isEmpty) continue;
       try {
         final String visible = body.getVisiblePrompt();
-        if (visible.trim().isNotEmpty) return visible;
+        if (visible.trim().isNotEmpty) {
+          // NEW: Truncate first message for temporary title
+          return visible.length > 50
+              ? '${visible.substring(0, 47)}...'
+              : visible;
+        }
       } catch (_) {
         final String raw = body.trim();
         if (raw.isNotEmpty) return raw;
