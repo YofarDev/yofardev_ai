@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../../core/utils/app_utils.dart';
 import '../../../../core/utils/platform_utils.dart';
+import '../../../../core/res/app_colors.dart';
 
 class SingularityCostume extends StatefulWidget {
   final Duration switchDuration;
@@ -92,10 +93,10 @@ class _SingularityCostumeState extends State<SingularityCostume> {
                 height: 1,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(50),
-                  color: Colors.amber[200],
+                  color: AppColors.warning,
                   boxShadow: <BoxShadow>[
                     BoxShadow(
-                      color: Colors.amber[100]!,
+                      color: AppColors.warning.withValues(alpha: 0.7),
                       blurRadius: 80,
                       spreadRadius: 80 + _amplitude,
                     ),

@@ -33,19 +33,24 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
   ChatMessageCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
+    required LlmService llmService,
+    required StreamProcessorService streamProcessor,
+    required PromptDatasource promptDatasource,
     TtsQueueManager? ttsQueueManager,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
+       _llmService = llmService,
+       _streamProcessor = streamProcessor,
+       _promptDatasource = promptDatasource,
        _ttsQueueManager = ttsQueueManager,
-       _llmService = LlmService(),
-       _streamProcessor = StreamProcessorService(),
        super(ChatMessageState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
-  final TtsQueueManager? _ttsQueueManager;
   final LlmService _llmService;
   final StreamProcessorService _streamProcessor;
+  final PromptDatasource _promptDatasource;
+  final TtsQueueManager? _ttsQueueManager;
 
   Future<void> prepareWaitingSentences(String language) async {
     if (PlatformUtils.checkPlatform() == 'Web') {
@@ -92,7 +97,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     emit(state.copyWith(audioPathsWaitingSentences: currentList));
   }
 
-  Future<ChatEntry?> askYofardev(
+  Future<void> askYofardev(
     String prompt, {
     required bool onlyText,
     String? attachedImage,
@@ -136,7 +141,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
       final Either<Exception, List<ChatEntry>> result = await _chatRepository
           .askYofardevAi(chat, userEntry.body, functionCallingEnabled: true);
 
-      return result.fold(
+      result.fold(
         (Exception error) {
           AppLogger.error(
             'Error sending text message',
@@ -149,7 +154,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
               errorMessage: error.toString(),
             ),
           );
-          return null;
+          return;
         },
         (List<ChatEntry> newEntries) {
           final List<ChatEntry> entries = <ChatEntry>[
@@ -174,11 +179,11 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
           errorMessage: e.toString(),
         ),
       );
-      return null;
+      return;
     }
   }
 
-  Future<ChatEntry?> askYofardevStream(
+  Future<void> askYofardevStream(
     String prompt, {
     required bool onlyText,
     String? attachedImage,
@@ -241,11 +246,10 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
             errorMessage: 'No LLM configuration selected',
           ),
         );
-        return null;
+        return;
       }
 
-      final PromptDatasource promptService = PromptDatasource();
-      final String systemPrompt = await promptService.getSystemPrompt();
+      final String systemPrompt = await _promptDatasource.getSystemPrompt();
 
       final StringBuffer contentBuffer = StringBuffer();
       int sentenceCount = 0;
@@ -316,7 +320,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
 
       await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 
-      return finalEntry;
+      return;
     } catch (e) {
       AppLogger.error(
         'Error in streaming message',
@@ -330,7 +334,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
           streamingContent: '',
         ),
       );
-      return null;
+      return;
     }
   }
 

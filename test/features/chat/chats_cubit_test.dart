@@ -181,6 +181,17 @@ void main() {
       expect(chatsCubit.state.functionCallingEnabled, isTrue);
     });
 
+    test('init should set initializing to false', () async {
+      // Initially true
+      expect(chatsCubit.state.initializing, isTrue);
+
+      // Call init
+      await chatsCubit.init();
+
+      // Should be false after init completes
+      expect(chatsCubit.state.initializing, isFalse);
+    });
+
     group('toggleFunctionCalling', () {
       test('should toggle function calling enabled state', () {
         final bool initialValue = chatsCubit.state.functionCallingEnabled;

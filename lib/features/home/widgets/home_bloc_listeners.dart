@@ -5,6 +5,8 @@ import '../../avatar/bloc/avatar_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
+import '../../chat/bloc/chat_message_cubit.dart';
+import '../../chat/bloc/chat_message_state.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
 import '../bloc/home_cubit.dart';
@@ -28,6 +30,15 @@ class HomeBlocListeners extends StatelessWidget {
         ),
         BlocListener<TalkingCubit, TalkingState>(
           listener: _onTalkingStateChanged,
+        ),
+        BlocListener<ChatMessageCubit, ChatMessageState>(
+          listenWhen: (ChatMessageState previous, ChatMessageState current) =>
+              current.status == ChatMessageStatus.success ||
+              current.status == ChatMessageStatus.error,
+          listener: (BuildContext context, ChatMessageState state) {
+            // Reset loading status when streaming completes or errors
+            context.read<TalkingCubit>().setLoadingStatus(false);
+          },
         ),
         BlocListener<ChatsCubit, ChatsState>(
           listenWhen: (ChatsState previous, ChatsState current) =>

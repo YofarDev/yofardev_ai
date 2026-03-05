@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/res/app_colors.dart';
+
 class GlowingLaser extends CustomPainter {
   final Color color;
   final double radius;
 
-  GlowingLaser({this.color = Colors.red, this.radius = 10});
+  GlowingLaser({this.color = AppColors.error, this.radius = 10});
 
   @override
   void paint(Canvas canvas, Size size) {

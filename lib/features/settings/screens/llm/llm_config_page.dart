@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/models/llm_config.dart';
-import '../../../../core/services/llm/llm_service.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/services/llm/llm_service_interface.dart';
 
 class LlmConfigPage extends StatefulWidget {
   final LlmConfig? config;
@@ -68,7 +69,7 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
               responseFormatType: _responseFormatType,
             );
 
-      await LlmService().saveConfig(newConfig);
+      await getIt<LlmServiceInterface>().saveConfig(newConfig);
       if (mounted) Navigator.pop(context);
     }
   }

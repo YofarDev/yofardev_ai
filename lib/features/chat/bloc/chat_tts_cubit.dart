@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/services/audio/audio_amplitude_service.dart';
+import '../../../core/services/audio/audio_player_service.dart';
 import '../../../core/utils/logger.dart';
 import '../../sound/domain/tts_queue_manager.dart';
+import '../../talking/presentation/bloc/talking_cubit.dart';
 import 'chat_tts_state.dart';
 
 /// Cubit responsible for managing TTS audio state
@@ -12,22 +14,30 @@ import 'chat_tts_state.dart';
 /// Handles:
 /// - TTS audio queue state
 /// - Audio amplitude extraction
+/// - TTS audio playback
 /// - TTS stream subscriptions
 class ChatTtsCubit extends Cubit<ChatTtsState> {
   ChatTtsCubit({
     required TtsQueueManager ttsQueueManager,
     required AudioAmplitudeService audioAmplitudeService,
+    required AudioPlayerService audioPlayerService,
+    required TalkingCubit talkingCubit,
   }) : _ttsQueueManager = ttsQueueManager,
        _audioAmplitudeService = audioAmplitudeService,
+       _audioPlayerService = audioPlayerService,
+       _talkingCubit = talkingCubit,
        super(ChatTtsState.initial()) {
     _subscribeToTtsStream();
   }
 
   final TtsQueueManager _ttsQueueManager;
   final AudioAmplitudeService _audioAmplitudeService;
+  final AudioPlayerService _audioPlayerService;
+  final TalkingCubit _talkingCubit;
   StreamSubscription<String>? _ttsAudioSubscription;
+  StreamSubscription<void>? _playbackSubscription;
 
-  /// Subscribe to TTS audio stream to update audio paths with amplitudes
+  /// Subscribe to TTS audio stream to play audio and extract amplitudes
   void _subscribeToTtsStream() {
     _ttsAudioSubscription?.cancel();
     AppLogger.debug('Subscribing to TTS audio stream', tag: 'ChatTtsCubit');
@@ -37,7 +47,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
           'Received TTS audio path: $audioPath',
           tag: 'ChatTtsCubit',
         );
-        _extractAmplitudes(audioPath);
+        _playAndExtractAmplitudes(audioPath);
       },
       onError: (Object e) {
         AppLogger.error(
@@ -49,15 +59,26 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     );
   }
 
-  /// Extract amplitudes from audio file and add to state
-  Future<void> _extractAmplitudes(String audioPath) async {
+  /// Play audio and extract amplitudes
+  Future<void> _playAndExtractAmplitudes(String audioPath) async {
     try {
+      // Update TalkingCubit to show speaking state
+      _talkingCubit.setLoadingStatus(false); // First, stop loading state
+      
+      // Play the audio
+      await _audioPlayerService.play(audioPath);
+      
+      // Update TalkingCubit to speaking state
+      _talkingCubit.generateSpeech(''); // Trigger speaking state
+      
+      // Extract amplitudes for animation
       final List<int> amplitudes = await _audioAmplitudeService
           .extractAmplitudes(audioPath);
       AppLogger.debug(
         'Extracted ${amplitudes.length} amplitudes for $audioPath',
         tag: 'ChatTtsCubit',
       );
+      
       final List<Map<String, dynamic>> currentList =
           List<Map<String, dynamic>>.from(state.audioPathsWaitingSentences);
       currentList.add(<String, dynamic>{
@@ -65,9 +86,18 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         'amplitudes': amplitudes,
       });
       emit(state.copyWith(audioPathsWaitingSentences: currentList));
+      
+      // Wait for playback to complete, then return to idle
+      _playbackSubscription?.cancel();
+      _playbackSubscription = _audioPlayerService.onPlaybackComplete.listen(
+        (_) {
+          AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
+          _talkingCubit.stop(); // Return to idle state
+        },
+      );
     } catch (e) {
       AppLogger.error(
-        'Failed to extract amplitudes for $audioPath',
+        'Failed to play/extract amplitudes for $audioPath',
         tag: 'ChatTtsCubit',
         error: e,
       );
@@ -116,6 +146,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   @override
   Future<void> close() async {
     await _ttsAudioSubscription?.cancel();
+    await _playbackSubscription?.cancel();
     await super.close();
   }
 }

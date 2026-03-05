@@ -29,9 +29,10 @@ class ChatsCubit extends Cubit<ChatsState> {
   final LocalizationManager _localizationManager;
 
   /// Initialize the chat system
-  void init() async {
+  Future<void> init() async {
     await getCurrentChat();
     await _loadSettings();
+    emit(state.copyWith(initializing: false));
   }
 
   /// Load user settings (language, sound effects)

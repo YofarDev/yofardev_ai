@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/widgets/current_prompt_text.dart';
@@ -14,12 +15,13 @@ import '../../../../core/widgets/picker_buttons.dart';
 import '../../../../l10n/localization_manager.dart';
 import '../../../avatar/bloc/avatar_cubit.dart';
 import '../../../avatar/bloc/avatar_state.dart';
-import '../../../../core/models/avatar_config.dart';
 import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../talking/presentation/bloc/talking_state.dart';
+import '../../bloc/chat_message_cubit.dart';
 import '../../bloc/chats_cubit.dart';
 import '../../bloc/chats_state.dart';
 import '../../domain/models/chat_entry.dart';
+import '../../domain/models/chat.dart';
 import '../function_calling_widget.dart';
 
 class AiTextInput extends StatefulWidget {
@@ -129,7 +131,7 @@ class _AiTextInputState extends State<AiTextInput> {
                             child: _buildTextField(
                               currentAvatar: avatarState.avatar,
                               currentLanguage: state.currentLanguage,
-                              chatId: state.currentChat.id,
+                              currentChat: state.currentChat,
                             ),
                           ),
                           Column(
@@ -175,7 +177,7 @@ class _AiTextInputState extends State<AiTextInput> {
   Widget _buildTextField({
     required Avatar currentAvatar,
     required String currentLanguage,
-    required String chatId,
+    required Chat currentChat,
   }) => Row(
     children: <Widget>[
       if (PlatformUtils.checkPlatform() != 'Web')
@@ -192,7 +194,7 @@ class _AiTextInputState extends State<AiTextInput> {
           onSubmitted: (_) => _onTextSubmitted(
             currentAvatar: currentAvatar,
             currentLanguage: currentLanguage,
-            chatId: chatId,
+            currentChat: currentChat,
           ),
           textCapitalization: TextCapitalization.sentences,
           maxLines: 3,
@@ -208,7 +210,7 @@ class _AiTextInputState extends State<AiTextInput> {
                   result,
                   currentAvatar: currentAvatar,
                   currentLanguage: currentLanguage,
-                  chatId: chatId,
+                  currentChat: currentChat,
                 ),
                 localeId:
                     context.read<ChatsCubit>().state.currentLanguage == 'fr'
@@ -250,7 +252,7 @@ class _AiTextInputState extends State<AiTextInput> {
     SpeechRecognitionResult result, {
     required Avatar currentAvatar,
     required String currentLanguage,
-    required String chatId,
+    required Chat currentChat,
   }) {
     setState(() {
       _controller.text = result.recognizedWords;
@@ -259,14 +261,14 @@ class _AiTextInputState extends State<AiTextInput> {
     _onTextSubmitted(
       currentAvatar: currentAvatar,
       currentLanguage: currentLanguage,
-      chatId: chatId,
+      currentChat: currentChat,
     );
   }
 
   void _onTextSubmitted({
     required Avatar currentAvatar,
     required String currentLanguage,
-    required String chatId,
+    required Chat currentChat,
   }) async {
     if (!widget.onlyText) {
       FocusScope.of(context).requestFocus(_inputFocus);
@@ -281,17 +283,16 @@ class _AiTextInputState extends State<AiTextInput> {
       _pickedImage = null;
     });
 
-    // Use streaming method for real-time LLM + TTS
-    final ChatEntry? modelAnswer = await context
-        .read<ChatsCubit>()
-        .askYofardevStream(
-          prompt,
-          attachedImage: attachedImage,
-          onlyText: widget.onlyText,
-          avatar: currentAvatar,
-        );
+    // Use ChatMessageCubit for streaming (replaces deprecated ChatsCubit.askYofardevStream)
+    await context.read<ChatMessageCubit>().askYofardevStream(
+      prompt,
+      onlyText: widget.onlyText,
+      attachedImage: attachedImage,
+      avatar: currentAvatar,
+      currentChat: currentChat,
+      language: currentLanguage,
+    );
 
-    if (modelAnswer == null) return;
     if (!mounted) return;
 
     // TTS is handled automatically during streaming via TtsQueueManager

@@ -11,7 +11,7 @@ class LoadingAvatarWidget extends StatelessWidget {
     return Positioned.fill(
       top: null,
       child: Shimmer.fromColors(
-        baseColor: Colors.grey,
+        baseColor: AppColors.onSurface.withValues(alpha: 0.3),
         highlightColor: AppColors.pink,
         child: Image.asset('assets/avatar/base.png', fit: BoxFit.contain),
       ),

@@ -8,12 +8,16 @@ import '../../models/llm_task_type.dart';
 import '../../utils/logger.dart';
 import 'llm_service_interface.dart';
 import 'llm_stream_chunk.dart';
+import 'llm_service.dart';
 
 /// Fake LLM service that returns pre-scripted responses for demo mode
 ///
 /// This service implements the same interface as the real LLM service but
 /// returns queued responses instead of making API calls. This allows for
 /// natural user typing while responses are injected from a demo script.
+///
+/// Config management operations are delegated to the real LlmService
+/// to ensure configs are always accessible.
 class FakeLlmService implements LlmServiceInterface {
   static final FakeLlmService _instance = FakeLlmService._internal();
 
@@ -21,7 +25,10 @@ class FakeLlmService implements LlmServiceInterface {
     return _instance;
   }
 
-  FakeLlmService._internal();
+  FakeLlmService._internal() : _realService = LlmService();
+
+  // Real service for config management
+  final LlmService _realService;
 
   final List<FakeLlmResponse> _responseQueue = <FakeLlmResponse>[];
   bool _isActive = false;
@@ -90,48 +97,33 @@ class FakeLlmService implements LlmServiceInterface {
 
   @override
   Future<void> init() async {
-    // No initialization needed for fake service
+    // Initialize both services
+    await _realService.init();
     AppLogger.info('FakeLlmService initialized', tag: 'FakeLlmService');
   }
 
   @override
-  List<LlmConfig> getAllConfigs() {
-    // Return empty list - fake service doesn't use configs
-    return const <LlmConfig>[];
-  }
+  List<LlmConfig> getAllConfigs() => _realService.getAllConfigs();
 
   @override
-  LlmConfig? getCurrentConfig() {
-    // Return null - fake service doesn't use configs
-    return null;
-  }
+  LlmConfig? getCurrentConfig() => _realService.getCurrentConfig();
 
   @override
-  Future<void> saveConfig(LlmConfig config) async {
-    // No-op - fake service doesn't save configs
-    AppLogger.warning(
-      'FakeLlmService: saveConfig is a no-op',
-      tag: 'FakeLlmService',
-    );
-  }
+  Future<void> saveConfig(LlmConfig config) => _realService.saveConfig(config);
 
   @override
-  Future<void> deleteConfig(String id) async {
-    // No-op - fake service doesn't manage configs
-    AppLogger.warning(
-      'FakeLlmService: deleteConfig is a no-op',
-      tag: 'FakeLlmService',
-    );
-  }
+  Future<void> deleteConfig(String id) => _realService.deleteConfig(id);
 
   @override
-  Future<void> setCurrentConfig(String id) async {
-    // No-op - fake service doesn't manage configs
-    AppLogger.warning(
-      'FakeLlmService: setCurrentConfig is a no-op',
-      tag: 'FakeLlmService',
-    );
-  }
+  Future<void> setCurrentConfig(String id) => _realService.setCurrentConfig(id);
+
+  @override
+  Future<LlmConfig?> getConfigForTask(LlmTaskType task) =>
+      _realService.getConfigForTask(task);
+
+  @override
+  Future<String?> generateTitle(String firstUserMessage, {LlmConfig? config}) =>
+      _realService.generateTitle(firstUserMessage, config: config);
 
   @override
   Future<String?> promptModel({
@@ -212,28 +204,5 @@ class FakeLlmService implements LlmServiceInterface {
     // In a real demo script, you might want to simulate function calls
     final FakeLlmResponse response = getNextResponse()!;
     return (response.jsonBody, <FunctionInfo>[]);
-  }
-
-  @override
-  Future<LlmConfig?> getConfigForTask(LlmTaskType task) async {
-    // Fake service doesn't use task-specific configs
-    AppLogger.debug(
-      'FakeLlmService: getConfigForTask returning null (not implemented)',
-      tag: 'FakeLlmService',
-    );
-    return null;
-  }
-
-  @override
-  Future<String?> generateTitle(
-    String firstUserMessage, {
-    LlmConfig? config,
-  }) async {
-    // Fake service doesn't generate titles
-    AppLogger.debug(
-      'FakeLlmService: generateTitle returning null (not implemented)',
-      tag: 'FakeLlmService',
-    );
-    return null;
   }
 }

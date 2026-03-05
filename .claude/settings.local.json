@@ -43,7 +43,22 @@
       "Bash(rtk proxy:*)",
       "Bash(fanal:*)",
       "Bash(/tmp/main_fix.dart:*)",
-      "Bash(do:*)"
+      "Bash(do:*)",
+      "Bash(/tmp/fix_config_page.py:*)",
+      "Bash(for f in /Users/yofardev/development/Projects/Flutter/yofardev_ai/lib/features/*/bloc/*_state.dart /Users/yofardev/development/Projects/Flutter/yofardev_ai/lib/features/*/*/bloc/*_state.dart)",
+      "Read(//Users/yofardev/development/Projects/Flutter/yofardev_ai/**)",
+      "Bash(done)",
+      "Bash(/tmp/fix_imports.py:*)",
+      "Bash(/tmp/fix_config_page_imports.py:*)",
+      "Bash(/tmp/fix_selection_page_imports.py:*)",
+      "Bash(/tmp/fix_config_imports2.py:*)",
+      "Bash(/tmp/fix_selection_imports2.py:*)",
+      "Bash(/tmp/fix_getit_imports.py:*)",
+      "Bash(uv run:*)",
+      "Bash(/tmp/remove_buildAppBar.py:*)",
+      "Bash(/tmp/add_import.py:*)",
+      "Bash(/tmp/export.sh:*)",
+      "Bash(./context-export/__HOW_TO_USE__.txt:*)"
     ]
   }
 }

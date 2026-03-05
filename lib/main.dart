@@ -16,6 +16,7 @@ import 'features/avatar/bloc/avatar_cubit.dart';
 import 'features/chat/bloc/chats_cubit.dart';
 import 'features/chat/bloc/chat_list_cubit.dart';
 import 'features/chat/bloc/chat_message_cubit.dart';
+import 'features/chat/bloc/chat_tts_cubit.dart';
 import 'features/demo/bloc/demo_cubit.dart';
 import 'features/sound/data/datasources/tts_datasource.dart';
 import 'l10n/app_localization_delegate.dart';
@@ -78,6 +79,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<ChatMessageCubit>(
           create: (BuildContext context) => getIt<ChatMessageCubit>(),
+        ),
+        BlocProvider<ChatTtsCubit>(
+          create: (BuildContext context) => getIt<ChatTtsCubit>(),
         ),
         BlocProvider<AvatarCubit>(
           create: (BuildContext context) => getIt<AvatarCubit>(),

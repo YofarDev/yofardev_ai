@@ -2,43 +2,45 @@ import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../l10n/localization_manager.dart';
-import '../utils/logger.dart';
-
 import '../../features/avatar/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
-import '../../features/chat/bloc/chat_title_cubit.dart';
-import '../../features/chat/bloc/chats_cubit.dart';
+import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
+import '../../features/avatar/domain/repositories/avatar_repository.dart';
 import '../../features/chat/bloc/chat_list_cubit.dart';
 import '../../features/chat/bloc/chat_message_cubit.dart';
+import '../../features/chat/bloc/chat_title_cubit.dart';
 import '../../features/chat/bloc/chat_tts_cubit.dart';
+import '../../features/chat/bloc/chats_cubit.dart';
+import '../../features/chat/data/datasources/chat_local_datasource.dart';
+import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
+import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
-import '../../features/settings/bloc/settings_cubit.dart';
-import '../../features/home/bloc/home_cubit.dart';
 import '../../features/demo/data/datasources/demo_controller.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
-import '../../features/sound/bloc/sound_cubit.dart';
-import '../../features/talking/presentation/bloc/talking_cubit.dart';
-import '../../features/talking/domain/repositories/talking_repository.dart';
-import '../../features/talking/data/repositories/talking_repository_impl.dart';
-import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
-import '../../features/sound/data/repositories/sound_repository_impl.dart';
-import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
+import '../../features/home/bloc/home_cubit.dart';
+import '../../features/home/data/datasources/prompt_datasource.dart';
+import '../../features/settings/bloc/settings_cubit.dart';
+import '../../features/settings/data/datasources/settings_local_datasource.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
-import '../../features/chat/domain/repositories/chat_repository.dart';
-import '../../features/avatar/domain/repositories/avatar_repository.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
+import '../../features/sound/bloc/sound_cubit.dart';
+import '../../features/sound/data/datasources/tts_datasource.dart';
+import '../../features/sound/data/repositories/sound_repository_impl.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/sound/domain/tts_queue_manager.dart';
-import '../../features/chat/data/datasources/chat_local_datasource.dart';
-import '../../features/settings/data/datasources/settings_local_datasource.dart';
-import '../../features/sound/data/datasources/tts_datasource.dart';
+import '../../features/talking/data/repositories/talking_repository_impl.dart';
+import '../../features/talking/domain/repositories/talking_repository.dart';
+import '../../features/talking/presentation/bloc/talking_cubit.dart';
+import '../../l10n/localization_manager.dart';
+import '../services/audio/audio_amplitude_service.dart';
+import '../services/audio/audio_player_service.dart';
+import '../services/audio/tts_service.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_service.dart';
 import '../services/llm/llm_service_interface.dart';
-import '../services/audio/audio_amplitude_service.dart';
-import '../services/audio/tts_service.dart';
+import '../services/stream_processor/stream_processor_service.dart';
+import '../utils/logger.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -107,10 +109,19 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());
   // Audio service - single source of truth for TTS
   getIt.registerLazySingleton<TtsService>(() => TtsService());
+  getIt.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
   getIt.registerLazySingleton<AudioAmplitudeService>(
     () => AudioAmplitudeService(),
   );
   getIt.registerLazySingleton<LocalizationManager>(() => LocalizationManager());
+
+  // Stream processor service
+  getIt.registerLazySingleton<StreamProcessorService>(
+    () => StreamProcessorService(),
+  );
+
+  // Prompt datasource
+  getIt.registerLazySingleton<PromptDatasource>(() => PromptDatasource());
 
   // BLoCs / Cubits
   getIt.registerFactory<AvatarCubit>(
@@ -120,13 +131,18 @@ Future<void> setupServiceLocator() async {
     () => TalkingCubit(getIt<TalkingRepository>()),
   );
   getIt.registerFactory<ChatTitleCubit>(
-    () => ChatTitleCubit(chatRepository: getIt<ChatRepository>()),
+    () => ChatTitleCubit(
+      chatRepository: getIt<ChatRepository>(),
+      llmService: getIt<LlmService>(),
+    ),
   );
   // Chat cubits - split by responsibility
   getIt.registerFactory<ChatTtsCubit>(
     () => ChatTtsCubit(
       ttsQueueManager: getIt<TtsQueueManager>(),
       audioAmplitudeService: getIt<AudioAmplitudeService>(),
+      audioPlayerService: getIt<AudioPlayerService>(),
+      talkingCubit: getIt<TalkingCubit>(),
     ),
   );
   getIt.registerFactory<ChatsCubit>(
@@ -147,6 +163,9 @@ Future<void> setupServiceLocator() async {
     () => ChatMessageCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
+      llmService: getIt<LlmService>(),
+      streamProcessor: getIt<StreamProcessorService>(),
+      promptDatasource: getIt<PromptDatasource>(),
       ttsQueueManager: getIt<TtsQueueManager>(),
     ),
   );

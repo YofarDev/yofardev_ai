@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/models/llm_config.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/res/app_colors.dart';
 import '../../../../core/router/route_constants.dart';
-import '../../../../core/services/llm/llm_service.dart';
+import '../../../../core/services/llm/llm_service_interface.dart';
 
 class LlmSelectionPage extends StatefulWidget {
   const LlmSelectionPage({super.key});
@@ -14,7 +15,7 @@ class LlmSelectionPage extends StatefulWidget {
 }
 
 class _LlmSelectionPageState extends State<LlmSelectionPage> {
-  final LlmService _llmService = LlmService();
+  final LlmServiceInterface _llmService = getIt<LlmServiceInterface>();
   List<LlmConfig> _configs = <LlmConfig>[];
   String? _selectedId;
 

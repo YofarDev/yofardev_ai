@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../res/app_colors.dart';
+
 class CurrentPromptText extends StatelessWidget {
   final String prompt;
   const CurrentPromptText({super.key, required this.prompt});
@@ -10,7 +12,7 @@ class CurrentPromptText extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.4),
+          color: AppColors.onSurface.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
@@ -18,7 +20,7 @@ class CurrentPromptText extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 20,
-            color: Colors.white,
+            color: AppColors.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),

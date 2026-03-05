@@ -17,9 +17,9 @@ import 'chat_title_state.dart';
 class ChatTitleCubit extends Cubit<ChatTitleState> {
   ChatTitleCubit({
     required ChatRepository chatRepository,
-    LlmService? llmService,
+    required LlmService llmService,
   }) : _chatRepository = chatRepository,
-       _llmService = llmService ?? LlmService(),
+       _llmService = llmService,
        super(const ChatTitleState());
 
   final ChatRepository _chatRepository;
@@ -46,8 +46,8 @@ class ChatTitleCubit extends Cubit<ChatTitleState> {
     );
 
     try {
-      final String? firstUserMessage = _getFirstUserMessage(chat);
-      if (firstUserMessage == null || firstUserMessage.isEmpty) return;
+      final String firstUserMessage = _getFirstUserMessage(chat);
+      if (firstUserMessage.isEmpty) return;
 
       // Initialize LLM service if needed
       await _llmService.init();
@@ -108,20 +108,21 @@ class ChatTitleCubit extends Cubit<ChatTitleState> {
     return userMessageCount == 1 && !chat.titleGenerated;
   }
 
-  String? _getFirstUserMessage(Chat chat) {
+  String _getFirstUserMessage(Chat chat) {
     try {
       return chat.entries
-          .where((ChatEntry e) => e.entryType == EntryType.user)
-          .firstOrNull
-          ?.body
-          .getVisiblePrompt();
+              .where((ChatEntry e) => e.entryType == EntryType.user)
+              .firstOrNull
+              ?.body
+              .getVisiblePrompt() ??
+          '';
     } catch (e) {
       AppLogger.error(
         'Failed to extract first user message',
         tag: 'ChatTitle',
         error: e,
       );
-      return null;
+      return '';
     }
   }
 
