@@ -4,12 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/utils/platform_utils.dart';
 import '../../avatar/bloc/avatar_cubit.dart';
-import '../bloc/home_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
 import '../../chat/bloc/chats_cubit.dart';
 import '../../chat/bloc/chats_state.dart';
+import '../../demo/bloc/demo_cubit.dart';
+import '../../demo/domain/models/demo_script.dart';
 import '../../talking/bloc/talking_cubit.dart';
 import '../../talking/bloc/talking_state.dart';
+import '../bloc/home_cubit.dart';
 import '../widgets/home_content_stack.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -36,8 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_tapCount >= 3) {
       _tapCount = 0;
-      // Demo mode activation - will need a demo script
-      // context.read<DemoCubit>().startDemo(script);
+      context.read<DemoCubit>().startDemo(DemoScripts.beachDemo);
     }
   }
 
@@ -151,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             body: HomeContentStack(
                               chatsState: chatsState,
                               talkingState: state,
+
                               onTripleTap: _handleTripleTap,
                             ),
                           );

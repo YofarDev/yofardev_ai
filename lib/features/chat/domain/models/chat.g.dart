@@ -23,6 +23,8 @@ _Chat _$ChatFromJson(Map<String, dynamic> json) => _Chat(
   persona:
       $enumDecodeNullable(_$ChatPersonaEnumMap, json['persona']) ??
       ChatPersona.normal,
+  title: json['title'] as String? ?? '',
+  titleGenerated: json['titleGenerated'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ChatToJson(_Chat instance) => <String, dynamic>{
@@ -32,6 +34,8 @@ Map<String, dynamic> _$ChatToJson(_Chat instance) => <String, dynamic>{
   'language': instance.language,
   'systemPrompt': instance.systemPrompt,
   'persona': _$ChatPersonaEnumMap[instance.persona]!,
+  'title': instance.title,
+  'titleGenerated': instance.titleGenerated,
 };
 
 const _$ChatPersonaEnumMap = {

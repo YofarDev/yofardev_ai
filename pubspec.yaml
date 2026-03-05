@@ -13,8 +13,7 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  flutter_tts:
-    path: ./packages/flutter_tts
+  flutter_tts: ^4.2.5
   supertonic_flutter: ^0.1.3
   just_audio: ^0.10.5
   path_provider: ^2.1.5
@@ -51,6 +50,7 @@ dependencies:
   fpdart: ^1.2.0
   go_router: ^17.1.0
 
+  dartz: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
