@@ -7,7 +7,7 @@ import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../domain/models/demo_script.dart';
 import '../../domain/repositories/demo_repository.dart';
-import '../datasources/demo_controller.dart';
+import '../../../../core/services/demo_controller.dart';
 
 /// Service for managing demo mode
 ///

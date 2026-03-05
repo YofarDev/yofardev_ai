@@ -100,6 +100,11 @@ class LlmService implements LlmServiceInterface {
       );
     }
 
+    AppLogger.info(
+      'LLM request: model=${activeConfig.model.trim()}, messages=${apiMessages.length}',
+      tag: 'LlmService',
+    );
+
     try {
       final http.Response response = await _httpClient.post(
         Uri.parse('${activeConfig.baseUrl}/chat/completions'),
@@ -126,6 +131,7 @@ class LlmService implements LlmServiceInterface {
             choices[0] as Map<String, dynamic>;
         final Map<String, dynamic> message =
             firstChoice['message'] as Map<String, dynamic>;
+        AppLogger.info('LLM response received: status=200', tag: 'LlmService');
         return message['content'] as String?;
       } else {
         AppLogger.error('LLM API Error: ${response.body}', tag: 'LlmService');
@@ -174,6 +180,11 @@ class LlmService implements LlmServiceInterface {
       );
     }
 
+    AppLogger.info(
+      'LLM stream started: model=${activeConfig.model.trim()}, messages=${apiMessages.length}',
+      tag: 'LlmService',
+    );
+
     try {
       final http.StreamedResponse response = await _httpClient.send(
         http.Request(
@@ -208,6 +219,7 @@ class LlmService implements LlmServiceInterface {
         final String data = line.substring(6); // Remove 'data: ' prefix
         if (data.trim() == '[DONE]') {
           yield const LlmStreamChunk.complete();
+          AppLogger.info('LLM stream completed', tag: 'LlmService');
           break;
         }
 
@@ -293,6 +305,20 @@ class LlmService implements LlmServiceInterface {
       'tool_choice': 'auto',
     };
 
+    // DIAGNOSTIC: Log function calling request details
+    AppLogger.debug(
+      'Sending function calling request to ${api.baseUrl}/chat/completions\n'
+      'Model: ${api.model.trim()}\n'
+      'Tools: ${tools.map((Map<String, dynamic> t) => t['function']['name']).join(", ")}\n'
+      'Messages count: ${apiMessages.length}',
+      tag: 'LlmService',
+    );
+
+    AppLogger.info(
+      'Function calling request: model=${api.model.trim()}, tools=${tools.length}, messages=${apiMessages.length}',
+      tag: 'LlmService',
+    );
+
     try {
       final http.Response response = await _httpClient.post(
         Uri.parse('${api.baseUrl}/chat/completions'),
@@ -313,11 +339,34 @@ class LlmService implements LlmServiceInterface {
         final Map<String, dynamic> message =
             firstChoice['message'] as Map<String, dynamic>;
 
+        // DIAGNOSTIC: Log function calling response
+        AppLogger.debug(
+          'Function calling response received\n'
+          'Tool calls: ${message['tool_calls'] != null ? (message['tool_calls'] as List<dynamic>).length : 0}\n'
+          'Has content: ${message['content'] != null}',
+          tag: 'LlmService',
+        );
+
         final List<FunctionInfo> calledFunctions = <FunctionInfo>[];
+
+        final int toolCallsCount = message['tool_calls'] != null
+            ? (message['tool_calls'] as List<dynamic>).length
+            : 0;
+        AppLogger.info(
+          'Function calling response: status=200, tool_calls=$toolCallsCount, has_content=${message['content'] != null}',
+          tag: 'LlmService',
+        );
 
         if (message['tool_calls'] != null) {
           final List<dynamic> toolCalls =
               message['tool_calls'] as List<dynamic>;
+
+          // DIAGNOSTIC: Log detected tool calls
+          AppLogger.debug(
+            'LLM detected ${toolCalls.length} tool calls',
+            tag: 'LlmService',
+          );
+
           for (final dynamic toolCall in toolCalls) {
             final Map<String, dynamic> toolCallMap =
                 toolCall as Map<String, dynamic>;
@@ -345,8 +394,20 @@ class LlmService implements LlmServiceInterface {
                 parametersCalled: args,
               ),
             );
+
+            // DIAGNOSTIC: Log each detected function
+            AppLogger.debug(
+              'Detected function: $funcName with args: $args',
+              tag: 'LlmService',
+            );
           }
         }
+
+        // DIAGNOSTIC: Log final result
+        AppLogger.debug(
+          'Function calling check complete: ${calledFunctions.length} functions detected',
+          tag: 'LlmService',
+        );
 
         return (message['content'] as String? ?? '', calledFunctions);
       } else {

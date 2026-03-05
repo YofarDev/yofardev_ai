@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../features/chat/bloc/chats_cubit.dart';
+import '../../../core/models/chat.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/utils/extensions.dart';
-import '../domain/models/chat.dart';
 import '../domain/models/chat_entry.dart';
 import '../widgets/chat_message_item.dart';
 import 'function_calling_widget.dart';

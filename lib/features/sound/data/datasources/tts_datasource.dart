@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:supertonic_flutter/supertonic_flutter.dart';
 
+import '../../../../core/models/voice_effect.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
 
@@ -176,11 +177,4 @@ class TtsDatasource {
   /// Check if SupertonicTTS is available
   static bool get isSupertonicAvailable =>
       _supertonicTTS != null && _supertonicTTS!.isInitialized;
-}
-
-class VoiceEffect {
-  final double pitch;
-  final double speedRate;
-
-  VoiceEffect({required this.pitch, required this.speedRate});
 }

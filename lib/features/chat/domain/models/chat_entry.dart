@@ -56,28 +56,36 @@ sealed class ChatEntry with _$ChatEntry {
 extension ChatEntryExtension on ChatEntry {
   String getMessage({bool isFromUser = false}) {
     if (isFromUser) return body.getVisiblePrompt();
+
+    // Try to parse as JSON and extract the "message" field
     try {
-      // Try to extract valid JSON if the response contains extra text
       String cleanedBody = body.trim();
       final int jsonStart = cleanedBody.indexOf('{');
       final int jsonEnd = cleanedBody.lastIndexOf('}');
 
+      // Only attempt JSON parsing if we can find a JSON object
       if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
         cleanedBody = cleanedBody.substring(jsonStart, jsonEnd + 1);
-      }
 
-      final Map<String, dynamic> map =
-          json.decode(cleanedBody) as Map<String, dynamic>;
-      final String message = map['message'] as String? ?? '';
-      return message;
+        final Map<String, dynamic> map =
+            json.decode(cleanedBody) as Map<String, dynamic>;
+        final String? message = map['message'] as String?;
+
+        // If we found a "message" field in JSON, return it
+        if (message != null && message.isNotEmpty) {
+          return message;
+        }
+      }
     } catch (e) {
-      AppLogger.error(
-        'Error parsing JSON, using body as-is',
+      // Silently handle JSON parsing errors - the response might be plain text
+      AppLogger.debug(
+        'Response is not valid JSON, treating as plain text',
         tag: 'ChatEntry',
-        error: e,
       );
-      return body.getVisiblePrompt();
     }
+
+    // Fallback: treat the body as plain text
+    return body.getVisiblePrompt();
   }
 
   AvatarConfig getAvatarConfig() {
@@ -90,23 +98,21 @@ extension ChatEntryExtension on ChatEntry {
       final int jsonStart = body.indexOf('{');
       final int jsonEnd = body.lastIndexOf('}');
 
+      // Only attempt JSON parsing if we can find a JSON object
       if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
         body = body.substring(jsonStart, jsonEnd + 1);
-      }
 
-      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
-      return AvatarConfig.fromMap(map);
+        final Map<String, dynamic> map =
+            jsonDecode(body) as Map<String, dynamic>;
+        return AvatarConfig.fromMap(map);
+      }
     } catch (e) {
-      AppLogger.error(
-        'Error parsing avatar config',
+      // Silently handle JSON parsing errors - the response might be plain text
+      AppLogger.debug(
+        'Response is not valid JSON for avatar config, using default',
         tag: 'ChatEntry',
-        error: e,
       );
-      final String bodyPreview = body.length > 200
-          ? '${body.substring(0, 200)}...'
-          : body;
-      AppLogger.debug('Body was: $bodyPreview', tag: 'ChatEntry');
-      return const AvatarConfig();
     }
+    return const AvatarConfig();
   }
 }

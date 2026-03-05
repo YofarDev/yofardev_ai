@@ -58,7 +58,9 @@
       "Bash(/tmp/remove_buildAppBar.py:*)",
       "Bash(/tmp/add_import.py:*)",
       "Bash(/tmp/export.sh:*)",
-      "Bash(./context-export/__HOW_TO_USE__.txt:*)"
+      "Bash(./context-export/__HOW_TO_USE__.txt:*)",
+      "Bash(context-export/DIRECTORY_STRUCTURE.txt:*)",
+      "Bash(context-export/README.md:*)"
     ]
   }
 }

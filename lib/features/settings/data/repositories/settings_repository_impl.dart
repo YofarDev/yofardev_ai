@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart' as dartz;
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/models/chat.dart';
 import '../../../../core/models/task_llm_config.dart';
-import '../../../chat/domain/models/chat.dart';
+import '../../../../core/services/settings_local_datasource.dart';
 import '../../domain/repositories/settings_repository.dart';
-import '../datasources/settings_local_datasource.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsLocalDatasource _datasource = SettingsLocalDatasource();

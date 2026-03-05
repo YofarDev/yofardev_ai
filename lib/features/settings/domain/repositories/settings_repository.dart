@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../chat/domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 import '../../../../core/models/task_llm_config.dart';
 
 abstract class SettingsRepository {

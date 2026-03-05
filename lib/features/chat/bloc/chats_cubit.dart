@@ -246,6 +246,18 @@ class ChatsCubit extends Cubit<ChatsState> {
     emit(state.copyWith(status: ChatsStatus.success));
   }
 
+  /// Update the chat state (both current and opened) without saving to the repo
+  /// Ideal for rapid real-time streaming updates
+  void updateChatStreaming(Chat chat) {
+    emit(
+      state.copyWith(
+        currentChat: chat,
+        openedChat: chat,
+        status: ChatsStatus.streaming,
+      ),
+    );
+  }
+
   // Getters for convenience
   Chat get currentChat => state.currentChat;
   Chat get openedChat => state.openedChat;
@@ -256,14 +268,14 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   /// Stream a message to Yofardev (now handled by ChatMessageCubit)
   /// Kept for backward compatibility
-  Future<ChatEntry?> askYofardevStream(
+  Future<ChatEntry?> askYofardev(
     String prompt, {
     bool? onlyText,
     String? attachedImage,
     Avatar? avatar,
   }) async {
     AppLogger.warning(
-      'askYofardevStream called on ChatsCubit - use ChatMessageCubit instead',
+      'askYofardev called on ChatsCubit - use ChatMessageCubit instead',
       tag: 'ChatsCubit',
     );
     return null;

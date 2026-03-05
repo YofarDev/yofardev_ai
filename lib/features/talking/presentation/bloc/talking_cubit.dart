@@ -36,6 +36,12 @@ class TalkingCubit extends Cubit<TalkingState> {
     }
   }
 
+  /// Set speaking state directly without generating TTS
+  /// Used when TTS is already generated externally
+  void setSpeakingState() {
+    emit(const TalkingState.speaking());
+  }
+
   /// Stop all TTS playback
   Future<void> stop() async {
     await _repository.stop();

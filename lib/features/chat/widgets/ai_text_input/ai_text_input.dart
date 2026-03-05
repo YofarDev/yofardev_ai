@@ -283,17 +283,25 @@ class _AiTextInputState extends State<AiTextInput> {
       _pickedImage = null;
     });
 
-    // Use ChatMessageCubit for streaming (replaces deprecated ChatsCubit.askYofardevStream)
-    await context.read<ChatMessageCubit>().askYofardevStream(
+    // Use ChatMessageCubit for streaming (replaces deprecated ChatMessageCubit.askYofardev)
+    await context.read<ChatMessageCubit>().askYofardev(
       prompt,
       onlyText: widget.onlyText,
       attachedImage: attachedImage,
       avatar: currentAvatar,
       currentChat: currentChat,
       language: currentLanguage,
+      onChatUpdated: (Chat updatedChat) {
+        if (mounted) {
+          context.read<ChatsCubit>().updateChatStreaming(updatedChat);
+        }
+      },
     );
 
     if (!mounted) return;
+
+    // Reset UI state to success once the streaming request safely returns
+    context.read<ChatsCubit>().resetStatus();
 
     // TTS is handled automatically during streaming via TtsQueueManager
     // TalkingMouth will play audio from queue regardless of loading state

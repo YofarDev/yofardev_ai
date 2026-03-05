@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/res/app_colors.dart';
 import '../../../l10n/localization_manager.dart';
-import '../../chat/domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 
 class PersonaDropdown extends StatelessWidget {
   final ChatPersona value;

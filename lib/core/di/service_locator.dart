@@ -15,13 +15,10 @@ import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
-import '../../features/demo/data/datasources/demo_controller.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
 import '../../features/home/bloc/home_cubit.dart';
-import '../../features/home/data/datasources/prompt_datasource.dart';
 import '../../features/settings/bloc/settings_cubit.dart';
-import '../../features/settings/data/datasources/settings_local_datasource.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/sound/bloc/sound_cubit.dart';
@@ -36,9 +33,12 @@ import '../../l10n/localization_manager.dart';
 import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
 import '../services/audio/tts_service.dart';
+import '../services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_service.dart';
 import '../services/llm/llm_service_interface.dart';
+import '../services/prompt_datasource.dart';
+import '../services/settings_local_datasource.dart';
 import '../services/stream_processor/stream_processor_service.dart';
 import '../utils/logger.dart';
 
@@ -130,7 +130,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<TalkingCubit>(
     () => TalkingCubit(getIt<TalkingRepository>()),
   );
-  getIt.registerFactory<ChatTitleCubit>(
+  getIt.registerLazySingleton<ChatTitleCubit>(
     () => ChatTitleCubit(
       chatRepository: getIt<ChatRepository>(),
       llmService: getIt<LlmService>(),
@@ -167,6 +167,7 @@ Future<void> setupServiceLocator() async {
       streamProcessor: getIt<StreamProcessorService>(),
       promptDatasource: getIt<PromptDatasource>(),
       ttsQueueManager: getIt<TtsQueueManager>(),
+      chatTitleCubit: getIt<ChatTitleCubit>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));

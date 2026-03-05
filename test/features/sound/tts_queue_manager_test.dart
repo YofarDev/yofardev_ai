@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
-import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
+import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
+import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
+import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
 
 class MockTtsDatasource extends Mock implements TtsDatasource {}
 

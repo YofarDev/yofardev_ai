@@ -4,8 +4,8 @@ import 'sound_effects.dart';
 import '../utils/app_utils.dart';
 import '../utils/extensions.dart';
 import '../utils/platform_utils.dart';
-import '../../features/chat/domain/models/chat.dart';
-import '../../features/sound/data/datasources/tts_datasource.dart';
+import 'chat.dart';
+import 'voice_effect.dart';
 
 part 'avatar_config.freezed.dart';
 part 'avatar_config.g.dart';

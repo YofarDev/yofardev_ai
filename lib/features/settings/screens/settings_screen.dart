@@ -8,7 +8,7 @@ import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../l10n/localization_manager.dart';
 import '../../chat/bloc/chats_cubit.dart';
-import '../../chat/domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 import '../bloc/settings_cubit.dart';
 import '../widgets/api_key_field.dart';
 import '../widgets/persona_dropdown.dart';

@@ -1,11 +1,11 @@
 import 'package:flutter/services.dart';
 
-import '../../../../l10n/localization_manager.dart';
-import '../../../../core/models/avatar_config.dart';
-import '../../../chat/domain/models/chat.dart';
-import '../../../../../core/models/sound_effects.dart';
-import '../../../../../core/utils/app_utils.dart';
-import '../../../settings/data/datasources/settings_local_datasource.dart';
+import '../../l10n/localization_manager.dart';
+import '../models/avatar_config.dart';
+import '../models/chat.dart';
+import '../models/sound_effects.dart';
+import '../utils/app_utils.dart';
+import 'settings_local_datasource.dart';
 
 class PromptDatasource {
   Future<String> getSystemPrompt() async {

@@ -166,6 +166,12 @@ class YofardevAgent {
       throw Exception('Failed to get response from LLM');
     }
 
+    // DIAGNOSTIC: Log what we actually received from LLM
+    AppLogger.debug(
+      'Raw LLM response: "${rawResponse.length > 200 ? "${rawResponse.substring(0, 200)}..." : rawResponse}"',
+      tag: 'YofardevAgent',
+    );
+
     String response = rawResponse;
 
     // 5. Parse JSON
@@ -220,14 +226,20 @@ class YofardevAgent {
     }
 
     // Add the final response entry
-    entries.add(
-      ChatEntry(
-        id: const Uuid().v4(),
-        body: response,
-        entryType: EntryType.yofardev,
-        timestamp: DateTime.now(),
-      ),
+    final ChatEntry responseEntry = ChatEntry(
+      id: const Uuid().v4(),
+      body: response,
+      entryType: EntryType.yofardev,
+      timestamp: DateTime.now(),
     );
+
+    // DIAGNOSTIC: Log what's being stored in ChatEntry
+    AppLogger.debug(
+      'Storing in ChatEntry.body: "${response.length > 200 ? "${response.substring(0, 200)}..." : response}"',
+      tag: 'YofardevAgent',
+    );
+
+    entries.add(responseEntry);
 
     AppLogger.debug(
       'Returning ${entries.length} entries: ${entries.where((ChatEntry e) => e.entryType == EntryType.functionCalling).length} function calls, 1 response',

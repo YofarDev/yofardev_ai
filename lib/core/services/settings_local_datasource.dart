@@ -4,12 +4,12 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../l10n/localization_manager.dart';
-import '../../../chat/domain/models/chat.dart';
-import '../../../../core/models/task_llm_config.dart';
-import '../../../../core/res/app_constants.dart';
-import '../../../../core/utils/app_utils.dart';
-import '../../../../core/utils/platform_utils.dart';
+import '../../l10n/localization_manager.dart';
+import '../models/chat.dart';
+import '../models/task_llm_config.dart';
+import '../res/app_constants.dart';
+import '../utils/app_utils.dart';
+import '../utils/platform_utils.dart';
 
 class SettingsLocalDatasource {
   // NEW

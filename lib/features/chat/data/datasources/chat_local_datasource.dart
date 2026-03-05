@@ -7,8 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/chat.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../home/data/datasources/prompt_datasource.dart';
-import '../../../settings/data/datasources/settings_local_datasource.dart';
+import '../../../../core/services/prompt_datasource.dart';
+import '../../../../core/services/settings_local_datasource.dart';
 
 class ChatLocalDatasource {
   static const String _chatPrefix = 'chat_';

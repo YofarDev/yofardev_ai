@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../sound/data/datasources/tts_datasource.dart';
+import '../../../../core/models/voice_effect.dart';
 
 part 'tts_queue_item.freezed.dart';
 

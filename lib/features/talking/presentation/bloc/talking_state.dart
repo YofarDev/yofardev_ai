@@ -25,7 +25,7 @@ sealed class TalkingState with _$TalkingState {
 extension TalkingStateX on TalkingState {
   /// Should we show the thinking animation?
   bool get shouldShowTalking {
-    return this is GeneratingState;
+    return this is GeneratingState || this is SpeakingState;
   }
 
   /// Are we currently playing audio?

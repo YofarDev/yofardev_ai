@@ -1,8 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/chat.dart';
 import 'chat_entry.dart';
 import '../../../../core/models/llm_message.dart';
+
+// Export ChatPersona from core for convenience
+export '../../../../core/models/chat.dart' show ChatPersona;
 
 part 'chat.freezed.dart';
 part 'chat.g.dart';
@@ -17,17 +21,6 @@ class AvatarJsonConverter
 
   @override
   Map<String, dynamic> toJson(Avatar object) => object.toMap();
-}
-
-enum ChatPersona {
-  assistant,
-  normal,
-  doomer,
-  conservative,
-  philosopher,
-  geek,
-  coach,
-  psychologist,
 }
 
 @freezed

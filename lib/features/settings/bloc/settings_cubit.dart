@@ -5,7 +5,7 @@ import '../../../core/models/llm_config.dart';
 import '../../../core/models/task_llm_config.dart';
 import '../../../core/services/llm/llm_service_interface.dart';
 import '../../../core/utils/logger.dart';
-import '../../chat/domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 import '../../settings/domain/repositories/settings_repository.dart';
 import 'settings_state.dart';
 

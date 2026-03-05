@@ -64,13 +64,13 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     try {
       // Update TalkingCubit to show speaking state
       _talkingCubit.setLoadingStatus(false); // First, stop loading state
-      
+
       // Play the audio
       await _audioPlayerService.play(audioPath);
-      
+
       // Update TalkingCubit to speaking state
-      _talkingCubit.generateSpeech(''); // Trigger speaking state
-      
+      _talkingCubit.setSpeakingState(); // Trigger speaking state
+
       // Extract amplitudes for animation
       final List<int> amplitudes = await _audioAmplitudeService
           .extractAmplitudes(audioPath);
@@ -78,7 +78,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         'Extracted ${amplitudes.length} amplitudes for $audioPath',
         tag: 'ChatTtsCubit',
       );
-      
+
       final List<Map<String, dynamic>> currentList =
           List<Map<String, dynamic>>.from(state.audioPathsWaitingSentences);
       currentList.add(<String, dynamic>{
@@ -86,15 +86,15 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         'amplitudes': amplitudes,
       });
       emit(state.copyWith(audioPathsWaitingSentences: currentList));
-      
+
       // Wait for playback to complete, then return to idle
       _playbackSubscription?.cancel();
-      _playbackSubscription = _audioPlayerService.onPlaybackComplete.listen(
-        (_) {
-          AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
-          _talkingCubit.stop(); // Return to idle state
-        },
-      );
+      _playbackSubscription = _audioPlayerService.onPlaybackComplete.listen((
+        _,
+      ) {
+        AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
+        _talkingCubit.stop(); // Return to idle state
+      });
     } catch (e) {
       AppLogger.error(
         'Failed to play/extract amplitudes for $audioPath',

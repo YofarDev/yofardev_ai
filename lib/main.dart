@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
 import 'package:screen_retriever/screen_retriever.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core/di/service_locator.dart';
@@ -16,6 +17,7 @@ import 'features/avatar/bloc/avatar_cubit.dart';
 import 'features/chat/bloc/chats_cubit.dart';
 import 'features/chat/bloc/chat_list_cubit.dart';
 import 'features/chat/bloc/chat_message_cubit.dart';
+import 'features/chat/bloc/chat_title_cubit.dart';
 import 'features/chat/bloc/chat_tts_cubit.dart';
 import 'features/demo/bloc/demo_cubit.dart';
 import 'features/sound/data/datasources/tts_datasource.dart';
@@ -45,8 +47,12 @@ void main() async {
       await windowManager.focus();
     });
   }
+  // Load saved language preference, falling back to device locale
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final String? savedLanguage = prefs.getString('language');
   final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
-  await LocalizationManager().initialize(deviceLocale.languageCode);
+  final String initialLanguage = savedLanguage ?? deviceLocale.languageCode;
+  await LocalizationManager().initialize(initialLanguage);
   if (PlatformUtils.checkPlatform() != 'Web' &&
       PlatformUtils.checkPlatform() != 'MacOS') {
     await Alarm.init();
@@ -80,7 +86,11 @@ class MyApp extends StatelessWidget {
         BlocProvider<ChatMessageCubit>(
           create: (BuildContext context) => getIt<ChatMessageCubit>(),
         ),
+        BlocProvider<ChatTitleCubit>(
+          create: (BuildContext context) => getIt<ChatTitleCubit>(),
+        ),
         BlocProvider<ChatTtsCubit>(
+          lazy: false,
           create: (BuildContext context) => getIt<ChatTtsCubit>(),
         ),
         BlocProvider<AvatarCubit>(

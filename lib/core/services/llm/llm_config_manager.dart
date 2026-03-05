@@ -7,7 +7,7 @@ import '../../models/llm_config.dart';
 import '../../models/llm_task_type.dart';
 import '../../models/task_llm_config.dart';
 import '../../utils/logger.dart';
-import '../../../features/settings/data/datasources/settings_local_datasource.dart';
+import '../../services/settings_local_datasource.dart';
 
 class LlmConfigManager {
   static const String _configsKey = 'llm_configs';
