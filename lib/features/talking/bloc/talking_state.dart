@@ -1,21 +1,32 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../core/models/answer.dart';
-
 part 'talking_state.freezed.dart';
 
-enum TalkingStatus { initial, loading, success, failure }
-
-enum MouthState { open, closed, semi, slightly, wide }
-
 @freezed
-sealed class TalkingState with _$TalkingState {
-  const TalkingState._();
+class TalkingState with _$TalkingState {
+  const factory TalkingState.idle() = IdleState;
 
-  const factory TalkingState({
-    @Default(TalkingStatus.initial) TalkingStatus status,
-    @Default(Answer()) Answer answer,
-    @Default(MouthState.closed) MouthState mouthState,
-    @Default(false) bool isTalking,
-  }) = _TalkingState;
+  /// Playing waiting sentences - NO thinking animation
+  const factory TalkingState.waiting() = WaitingState;
+
+  /// Generating TTS - SHOWS thinking animation
+  const factory TalkingState.generating() = GeneratingState;
+
+  /// Playing TTS response
+  const factory TalkingState.speaking() = SpeakingState;
+
+  /// Error occurred
+  const factory TalkingState.error(String message) = ErrorState;
+}
+
+extension TalkingStateX on TalkingState {
+  /// Should we show the thinking animation?
+  bool get shouldShowTalking {
+    return this is GeneratingState;
+  }
+
+  /// Are we currently playing audio?
+  bool get isPlaying {
+    return this is WaitingState || this is SpeakingState;
+  }
 }

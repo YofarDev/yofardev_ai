@@ -1,137 +1,53 @@
-import 'dart:convert';
-
-import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:just_audio/just_audio.dart';
-
-import '../../../core/models/answer.dart';
-import '../../../core/utils/extensions.dart';
-import '../../chat/domain/models/chat_entry.dart';
-import '../../sound/data/datasources/tts_datasource.dart';
 import 'talking_state.dart';
+import '../../../core/services/audio/tts_service.dart';
 
 class TalkingCubit extends Cubit<TalkingState> {
-  TalkingCubit() : super(const TalkingState());
+  TalkingCubit(this._ttsService) : super(const TalkingState.idle());
 
-  void init() {
-    emit(
-      state.copyWith(
-        status: TalkingStatus.initial,
-        isTalking: false,
-        mouthState: MouthState.closed,
-        answer: const Answer(),
-      ),
-    );
+  final TtsService _ttsService;
+
+  /// Play a waiting sentence - does NOT show thinking animation
+  Future<void> playWaitingSentence(String sentence) async {
+    emit(const TalkingState.waiting()); // NOT loading!
+    await _ttsService.playWaitingSentence(sentence);
   }
 
-  Future<void> prepareToSpeak({
-    required String chatId,
-    required ChatEntry entry,
-    required String language,
-    required VoiceEffect voiceEffect,
-  }) async {
-    emit(state.copyWith(status: TalkingStatus.loading));
-    final String answerText = entry.getMessage();
-    final String textToSay = answerText
-        .replaceAll('...', '')
-        .replaceAll('*', '')
-        .removeEmojis()
-        .trim();
-    final String audioPath = textToSay.isEmpty
-        ? ''
-        : await TtsDatasource().textToFrenchMaleVoice(
-            text: textToSay,
-            language: language,
-            voiceEffect: voiceEffect,
-          );
-    final List<int> amplitudes = (textToSay.isEmpty || audioPath.isEmpty)
-        ? <int>[]
-        : await AudioAnalyzer().getAmplitudes(audioPath);
-    emit(
-      state.copyWith(
-        status: TalkingStatus.success,
-        answer: Answer(
-          chatId: chatId,
-          answerText: answerText,
-          audioPath: audioPath,
-          amplitudes: amplitudes,
-          avatarConfig: entry.getAvatarConfig(),
-        ),
-      ),
-    );
+  /// Generate TTS for speech - SHOWS thinking animation
+  Future<void> generateSpeech(String text) async {
+    emit(const TalkingState.generating()); // Separate state!
+
+    try {
+      // Generate TTS...
+      await _ttsService.speak(text);
+      emit(const TalkingState.speaking());
+    } catch (e) {
+      emit(TalkingState.error(e.toString()));
+    }
   }
 
-  void speakForWeb(
-    ChatEntry entry,
-    String language,
-    VoiceEffect voiceEffect,
-  ) async {
-    emit(state.copyWith(status: TalkingStatus.loading));
-    final Map<String, dynamic> map =
-        json.decode(entry.body) as Map<String, dynamic>;
-    final String answerText = map['message'] as String? ?? '';
-    final String textToSay = answerText
-        .replaceAll('...', '')
-        .replaceAll('*', '')
-        .removeEmojis()
-        .trim();
-
-    final FlutterTts tts = FlutterTts();
-    await tts.setLanguage(language == 'fr' ? 'fr-FR' : 'en-US');
-    await tts.setSpeechRate(voiceEffect.speedRate);
-    await tts.setPitch(voiceEffect.pitch);
-
-    tts.setCompletionHandler(() {
-      stopTalking(removeFile: false, soundEffectsEnabled: true);
-    });
-
-    emit(
-      state.copyWith(
-        status: TalkingStatus.success,
-        isTalking: true,
-        answer: Answer(
-          answerText: answerText,
-          avatarConfig: entry.getAvatarConfig(),
-        ),
-      ),
-    );
-
-    await tts.speak(textToSay);
+  /// Stop all TTS playback
+  Future<void> stop() async {
+    await _ttsService.stop();
+    emit(const TalkingState.idle());
   }
 
+  /// Legacy methods for backward compatibility (will be removed in future refactor)
+  @Deprecated('Use generateSpeech() instead')
   void setLoadingStatus(bool isLoading) {
-    emit(
-      state.copyWith(
-        status: isLoading ? TalkingStatus.loading : TalkingStatus.initial,
-      ),
-    );
+    if (isLoading) {
+      emit(const TalkingState.generating());
+    } else {
+      emit(const TalkingState.idle());
+    }
   }
 
-  void updateMouthState(MouthState mouthState) {
-    emit(state.copyWith(mouthState: mouthState, isTalking: true));
-  }
-
+  @Deprecated('Use stop() instead')
   void stopTalking({
     bool removeFile = true,
     bool soundEffectsEnabled = false,
     bool updateStatus = true,
-  }) async {
-    emit(
-      state.copyWith(
-        isTalking: false,
-        mouthState: MouthState.closed,
-        status: updateStatus ? TalkingStatus.initial : state.status,
-      ),
-    );
-    // We purposefully do not delete the file here anymore to prevent a race condition
-    // where the newly generated TTS file gets deleted if stopTalking is called by
-    // another component. Cleanup is now safely handled in TtsDatasource.
-    if (!soundEffectsEnabled) return;
-    if (state.answer.avatarConfig.soundEffect == null) return;
-    final AudioPlayer player = AudioPlayer();
-    await player.setAsset(state.answer.avatarConfig.soundEffect!.getPath());
-    await player.play();
-    player.dispose();
+  }) {
+    stop();
   }
 }

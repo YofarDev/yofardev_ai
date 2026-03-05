@@ -1,19 +1,10 @@
-import 'dart:async';
-import '../../talking/bloc/talking_state.dart';
-import 'dart:io';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:just_audio/just_audio.dart';
 
-import '../bloc/avatar_cubit.dart';
-import '../../chat/bloc/chats_cubit.dart';
 import '../../talking/bloc/talking_cubit.dart';
+import '../../talking/bloc/talking_state.dart';
 import '../../../core/res/app_constants.dart';
 import '../../../core/utils/app_utils.dart';
-import '../../../core/utils/logger.dart';
-import '../../../core/utils/platform_utils.dart';
 import 'scaled_avatar_item.dart';
 
 class TalkingMouth extends StatefulWidget {
@@ -24,200 +15,24 @@ class TalkingMouth extends StatefulWidget {
 }
 
 class _TalkingMouthState extends State<TalkingMouth> {
-  bool _waitingTalking = false;
-
   @override
   Widget build(BuildContext context) {
-    return BlocListener<TalkingCubit, TalkingState>(
-      listenWhen: (TalkingState previous, TalkingState current) =>
-          previous.status != current.status,
-      listener: (BuildContext context, TalkingState state) {
-        _waitingTalking = state.status == TalkingStatus.loading;
-        if (_waitingTalking && PlatformUtils.checkPlatform() != 'Web') {
-          _startWaitingTalking();
+    return BlocBuilder<TalkingCubit, TalkingState>(
+      builder: (BuildContext context, TalkingState state) {
+        // Show thinking only when generating, NOT waiting
+        if (state.shouldShowTalking) {
+          return const ThinkingAnimation();
         }
-        if (state.status == TalkingStatus.success) {
-          if (context.read<AvatarCubit>().state.avatar.hideTalkingMouth) return;
-          if (PlatformUtils.checkPlatform() == 'Web') {
-            _fakeTalking(context);
-          } else {
-            final String audioPath = state.answer.audioPath;
-            final List<int> amplitudes = state.answer.amplitudes;
-            _startTalking(context, audioPath, amplitudes);
-          }
-        }
-      },
-      child: BlocBuilder<TalkingCubit, TalkingState>(
-        builder: (BuildContext context, TalkingState state) {
-          return ScaledAvatarItem(
-            path: state.isTalking
-                ? _getMouthPath(state.mouthState)
-                : _getMouthPath(MouthState.closed),
-            itemX: AppConstants.mouthX,
-            itemY: AppConstants.mouthY,
-          );
-        },
-      ),
-    );
-  }
 
-  Future<void> _startWaitingTalking() async {
-    // Keep the loop alive if we are explicitly waiting OR if there's unplayed audio in the queue
-    while (_waitingTalking ||
-        context
-            .read<ChatsCubit>()
-            .state
-            .audioPathsWaitingSentences
-            .isNotEmpty) {
-      final ChatsCubit chatsCubit = context.read<ChatsCubit>();
-      final List<Map<String, dynamic>> queue =
-          chatsCubit.state.audioPathsWaitingSentences;
-
-      if (queue.isEmpty) {
-        // If we are no longer waiting but queue is empty, wait a moment.
-        // TTS might still be processing the last sentence.
-        if (!_waitingTalking) {
-          await Future<void>.delayed(
-            const Duration(milliseconds: 1500),
-          ); // Grace period
-          if (context
-              .read<ChatsCubit>()
-              .state
-              .audioPathsWaitingSentences
-              .isEmpty) {
-            break; // Truly done generating and playing
-          }
-          continue;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 500));
-        continue;
-      }
-
-      // 1. Consume the FIRST item in the queue (FIFO logic)
-      final Map<String, dynamic> audioData = queue.first;
-      final String audioPath = audioData['audioPath'] as String;
-      final List<int> amplitudes = audioData['amplitudes'] as List<int>;
-
-      // 2. Check if file exists before playing
-      if (!await File(audioPath).exists()) {
-        AppLogger.warning(
-          'Waiting audio file not found: $audioPath',
-          tag: 'TalkingMouth',
+        // For now, show idle mouth for all states
+        // In future, will integrate with actual TTS playback to animate mouth
+        return ScaledAvatarItem(
+          path: _getMouthPath(MouthState.closed),
+          itemX: AppConstants.mouthX,
+          itemY: AppConstants.mouthY,
         );
-        // Remove missing file so we don't get stuck
-        if (mounted) {
-          chatsCubit.removeWaitingSentence(audioPath);
-        }
-        continue;
-      }
-
-      // 3. Play the audio and animate mouth
-      final int duration = await _startTalking(context, audioPath, amplitudes);
-
-      // Wait for the exact duration of the audio to finish playing
-      if (duration > 0) {
-        await Future<dynamic>.delayed(Duration(milliseconds: duration));
-      } else {
-        await Future<dynamic>.delayed(
-          const Duration(milliseconds: 100),
-        ); // Fallback
-      }
-
-      // 4. Remove the played audio from the queue
-      if (mounted) {
-        chatsCubit.removeWaitingSentence(audioPath);
-      }
-    }
-
-    // Ensure mouth closes completely when everything is finished
-    if (mounted) {
-      context.read<TalkingCubit>().stopTalking(
-        soundEffectsEnabled: context
-            .read<ChatsCubit>()
-            .state
-            .soundEffectsEnabled,
-      );
-    }
-  }
-
-  Future<int> _startTalking(
-    BuildContext context,
-    String audioPath,
-    List<int> amplitudes,
-  ) async {
-    if (amplitudes.isEmpty) {
-      context.read<TalkingCubit>().stopTalking(
-        soundEffectsEnabled: context
-            .read<ChatsCubit>()
-            .state
-            .soundEffectsEnabled,
-      );
-      return 0;
-    }
-
-    // Verify file exists before loading
-    final File audioFile = File(audioPath);
-    if (!await audioFile.exists()) {
-      AppLogger.error(
-        'Audio file does not exist: $audioPath',
-        tag: 'TalkingMouth',
-      );
-      return 0;
-    }
-
-    final AudioPlayer player = AudioPlayer();
-
-    try {
-      await player.setFilePath(audioPath, initialPosition: Duration.zero);
-
-      // 🟢 THIS IS THE MISSING LINE! Start playing the audio
-      player.play();
-    } catch (e) {
-      AppLogger.error('Failed to load audio', tag: 'TalkingMouth', error: e);
-      await player.dispose();
-      return 0;
-    }
-
-    final int totalFrames = amplitudes.length;
-    final int updateInterval = (player.duration!.inMilliseconds / totalFrames)
-        .round();
-    int currentIndex = 0;
-    Timer.periodic(Duration(milliseconds: updateInterval), (Timer timer) async {
-      if (currentIndex >= totalFrames) {
-        timer.cancel();
-        await player.dispose();
-        return;
-      } else {
-        try {
-          context.read<TalkingCubit>().updateMouthState(
-            _getMouthState(amplitudes[currentIndex]),
-          );
-          currentIndex++;
-        } catch (e) {
-          timer.cancel();
-          await player.dispose();
-          AppLogger.error('Talking mouth error', tag: 'TalkingMouth', error: e);
-        }
-      }
-    });
-    return player.duration!.inMilliseconds;
-  }
-
-  void _fakeTalking(BuildContext context) async {
-    final int amplitude = Random().nextInt(25);
-    if (!context.read<TalkingCubit>().state.isTalking) return;
-    context.read<TalkingCubit>().updateMouthState(_getMouthState(amplitude));
-    await Future<dynamic>.delayed(const Duration(milliseconds: 100)).then((_) {
-      _fakeTalking(context);
-    });
-  }
-
-  MouthState _getMouthState(int amplitude) {
-    if (amplitude == 0) return MouthState.closed;
-    if (amplitude <= 5) return MouthState.slightly;
-    if (amplitude <= 12) return MouthState.semi;
-    if (amplitude <= 18) return MouthState.open;
-    return MouthState.wide;
+      },
+    );
   }
 
   String _getMouthPath(MouthState mouthState) {
@@ -226,3 +41,22 @@ class _TalkingMouthState extends State<TalkingMouth> {
     );
   }
 }
+
+// Placeholder for thinking animation widget
+class ThinkingAnimation extends StatelessWidget {
+  const ThinkingAnimation({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaledAvatarItem(
+      path: AppUtils.fixAssetsPath('assets/avatar/mouth/mouth_closed.png'),
+      itemX: AppConstants.mouthX,
+      itemY: AppConstants.mouthY,
+    );
+  }
+}
+
+enum MouthState { closed, semi, open }
+
+// TODO: Remove these after full migration - keeping for compilation compatibility
+// These will be replaced with proper imports from the new architecture

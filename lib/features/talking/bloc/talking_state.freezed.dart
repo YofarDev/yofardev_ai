@@ -14,73 +14,30 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TalkingState {
 
- TalkingStatus get status; Answer get answer; MouthState get mouthState; bool get isTalking;
-/// Create a copy of TalkingState
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$TalkingStateCopyWith<TalkingState> get copyWith => _$TalkingStateCopyWithImpl<TalkingState>(this as TalkingState, _$identity);
+
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TalkingState&&(identical(other.status, status) || other.status == status)&&(identical(other.answer, answer) || other.answer == answer)&&(identical(other.mouthState, mouthState) || other.mouthState == mouthState)&&(identical(other.isTalking, isTalking) || other.isTalking == isTalking));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TalkingState);
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,answer,mouthState,isTalking);
+int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'TalkingState(status: $status, answer: $answer, mouthState: $mouthState, isTalking: $isTalking)';
+  return 'TalkingState()';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $TalkingStateCopyWith<$Res>  {
-  factory $TalkingStateCopyWith(TalkingState value, $Res Function(TalkingState) _then) = _$TalkingStateCopyWithImpl;
-@useResult
-$Res call({
- TalkingStatus status, Answer answer, MouthState mouthState, bool isTalking
-});
-
-
-$AnswerCopyWith<$Res> get answer;
-
-}
-/// @nodoc
-class _$TalkingStateCopyWithImpl<$Res>
-    implements $TalkingStateCopyWith<$Res> {
-  _$TalkingStateCopyWithImpl(this._self, this._then);
-
-  final TalkingState _self;
-  final $Res Function(TalkingState) _then;
-
-/// Create a copy of TalkingState
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? answer = null,Object? mouthState = null,Object? isTalking = null,}) {
-  return _then(_self.copyWith(
-status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as TalkingStatus,answer: null == answer ? _self.answer : answer // ignore: cast_nullable_to_non_nullable
-as Answer,mouthState: null == mouthState ? _self.mouthState : mouthState // ignore: cast_nullable_to_non_nullable
-as MouthState,isTalking: null == isTalking ? _self.isTalking : isTalking // ignore: cast_nullable_to_non_nullable
-as bool,
-  ));
-}
-/// Create a copy of TalkingState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$AnswerCopyWith<$Res> get answer {
-  
-  return $AnswerCopyWith<$Res>(_self.answer, (value) {
-    return _then(_self.copyWith(answer: value));
-  });
-}
+class $TalkingStateCopyWith<$Res>  {
+$TalkingStateCopyWith(TalkingState _, $Res Function(TalkingState) __);
 }
 
 
@@ -98,11 +55,15 @@ extension TalkingStatePatterns on TalkingState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _TalkingState value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( IdleState value)?  idle,TResult Function( WaitingState value)?  waiting,TResult Function( GeneratingState value)?  generating,TResult Function( SpeakingState value)?  speaking,TResult Function( ErrorState value)?  error,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _TalkingState() when $default != null:
-return $default(_that);case _:
+case IdleState() when idle != null:
+return idle(_that);case WaitingState() when waiting != null:
+return waiting(_that);case GeneratingState() when generating != null:
+return generating(_that);case SpeakingState() when speaking != null:
+return speaking(_that);case ErrorState() when error != null:
+return error(_that);case _:
   return orElse();
 
 }
@@ -120,11 +81,18 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _TalkingState value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( IdleState value)  idle,required TResult Function( WaitingState value)  waiting,required TResult Function( GeneratingState value)  generating,required TResult Function( SpeakingState value)  speaking,required TResult Function( ErrorState value)  error,}){
 final _that = this;
 switch (_that) {
-case _TalkingState():
-return $default(_that);}
+case IdleState():
+return idle(_that);case WaitingState():
+return waiting(_that);case GeneratingState():
+return generating(_that);case SpeakingState():
+return speaking(_that);case ErrorState():
+return error(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -138,11 +106,15 @@ return $default(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _TalkingState value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( IdleState value)?  idle,TResult? Function( WaitingState value)?  waiting,TResult? Function( GeneratingState value)?  generating,TResult? Function( SpeakingState value)?  speaking,TResult? Function( ErrorState value)?  error,}){
 final _that = this;
 switch (_that) {
-case _TalkingState() when $default != null:
-return $default(_that);case _:
+case IdleState() when idle != null:
+return idle(_that);case WaitingState() when waiting != null:
+return waiting(_that);case GeneratingState() when generating != null:
+return generating(_that);case SpeakingState() when speaking != null:
+return speaking(_that);case ErrorState() when error != null:
+return error(_that);case _:
   return null;
 
 }
@@ -159,10 +131,14 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TalkingStatus status,  Answer answer,  MouthState mouthState,  bool isTalking)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function()?  waiting,TResult Function()?  generating,TResult Function()?  speaking,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _TalkingState() when $default != null:
-return $default(_that.status,_that.answer,_that.mouthState,_that.isTalking);case _:
+case IdleState() when idle != null:
+return idle();case WaitingState() when waiting != null:
+return waiting();case GeneratingState() when generating != null:
+return generating();case SpeakingState() when speaking != null:
+return speaking();case ErrorState() when error != null:
+return error(_that.message);case _:
   return orElse();
 
 }
@@ -180,10 +156,17 @@ return $default(_that.status,_that.answer,_that.mouthState,_that.isTalking);case
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TalkingStatus status,  Answer answer,  MouthState mouthState,  bool isTalking)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function()  waiting,required TResult Function()  generating,required TResult Function()  speaking,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
-case _TalkingState():
-return $default(_that.status,_that.answer,_that.mouthState,_that.isTalking);}
+case IdleState():
+return idle();case WaitingState():
+return waiting();case GeneratingState():
+return generating();case SpeakingState():
+return speaking();case ErrorState():
+return error(_that.message);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -197,10 +180,14 @@ return $default(_that.status,_that.answer,_that.mouthState,_that.isTalking);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TalkingStatus status,  Answer answer,  MouthState mouthState,  bool isTalking)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function()?  waiting,TResult? Function()?  generating,TResult? Function()?  speaking,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
-case _TalkingState() when $default != null:
-return $default(_that.status,_that.answer,_that.mouthState,_that.isTalking);case _:
+case IdleState() when idle != null:
+return idle();case WaitingState() when waiting != null:
+return waiting();case GeneratingState() when generating != null:
+return generating();case SpeakingState() when speaking != null:
+return speaking();case ErrorState() when error != null:
+return error(_that.message);case _:
   return null;
 
 }
@@ -211,82 +198,195 @@ return $default(_that.status,_that.answer,_that.mouthState,_that.isTalking);case
 /// @nodoc
 
 
-class _TalkingState extends TalkingState {
-  const _TalkingState({this.status = TalkingStatus.initial, this.answer = const Answer(), this.mouthState = MouthState.closed, this.isTalking = false}): super._();
+class IdleState implements TalkingState {
+  const IdleState();
   
 
-@override@JsonKey() final  TalkingStatus status;
-@override@JsonKey() final  Answer answer;
-@override@JsonKey() final  MouthState mouthState;
-@override@JsonKey() final  bool isTalking;
 
-/// Create a copy of TalkingState
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$TalkingStateCopyWith<_TalkingState> get copyWith => __$TalkingStateCopyWithImpl<_TalkingState>(this, _$identity);
+
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TalkingState&&(identical(other.status, status) || other.status == status)&&(identical(other.answer, answer) || other.answer == answer)&&(identical(other.mouthState, mouthState) || other.mouthState == mouthState)&&(identical(other.isTalking, isTalking) || other.isTalking == isTalking));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IdleState);
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,answer,mouthState,isTalking);
+int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'TalkingState(status: $status, answer: $answer, mouthState: $mouthState, isTalking: $isTalking)';
+  return 'TalkingState.idle()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class WaitingState implements TalkingState {
+  const WaitingState();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WaitingState);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'TalkingState.waiting()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class GeneratingState implements TalkingState {
+  const GeneratingState();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GeneratingState);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'TalkingState.generating()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class SpeakingState implements TalkingState {
+  const SpeakingState();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SpeakingState);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'TalkingState.speaking()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class ErrorState implements TalkingState {
+  const ErrorState(this.message);
+  
+
+ final  String message;
+
+/// Create a copy of TalkingState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ErrorStateCopyWith<ErrorState> get copyWith => _$ErrorStateCopyWithImpl<ErrorState>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ErrorState&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'TalkingState.error(message: $message)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$TalkingStateCopyWith<$Res> implements $TalkingStateCopyWith<$Res> {
-  factory _$TalkingStateCopyWith(_TalkingState value, $Res Function(_TalkingState) _then) = __$TalkingStateCopyWithImpl;
-@override @useResult
+abstract mixin class $ErrorStateCopyWith<$Res> implements $TalkingStateCopyWith<$Res> {
+  factory $ErrorStateCopyWith(ErrorState value, $Res Function(ErrorState) _then) = _$ErrorStateCopyWithImpl;
+@useResult
 $Res call({
- TalkingStatus status, Answer answer, MouthState mouthState, bool isTalking
+ String message
 });
 
 
-@override $AnswerCopyWith<$Res> get answer;
+
 
 }
 /// @nodoc
-class __$TalkingStateCopyWithImpl<$Res>
-    implements _$TalkingStateCopyWith<$Res> {
-  __$TalkingStateCopyWithImpl(this._self, this._then);
+class _$ErrorStateCopyWithImpl<$Res>
+    implements $ErrorStateCopyWith<$Res> {
+  _$ErrorStateCopyWithImpl(this._self, this._then);
 
-  final _TalkingState _self;
-  final $Res Function(_TalkingState) _then;
+  final ErrorState _self;
+  final $Res Function(ErrorState) _then;
 
 /// Create a copy of TalkingState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? answer = null,Object? mouthState = null,Object? isTalking = null,}) {
-  return _then(_TalkingState(
-status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as TalkingStatus,answer: null == answer ? _self.answer : answer // ignore: cast_nullable_to_non_nullable
-as Answer,mouthState: null == mouthState ? _self.mouthState : mouthState // ignore: cast_nullable_to_non_nullable
-as MouthState,isTalking: null == isTalking ? _self.isTalking : isTalking // ignore: cast_nullable_to_non_nullable
-as bool,
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(ErrorState(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
-/// Create a copy of TalkingState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$AnswerCopyWith<$Res> get answer {
-  
-  return $AnswerCopyWith<$Res>(_self.answer, (value) {
-    return _then(_self.copyWith(answer: value));
-  });
-}
+
 }
 
 // dart format on
