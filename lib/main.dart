@@ -14,6 +14,8 @@ import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
 import 'features/avatar/bloc/avatar_cubit.dart';
 import 'features/chat/bloc/chats_cubit.dart';
+import 'features/chat/bloc/chat_list_cubit.dart';
+import 'features/chat/bloc/chat_message_cubit.dart';
 import 'features/demo/bloc/demo_cubit.dart';
 import 'features/sound/data/datasources/tts_datasource.dart';
 import 'l10n/app_localization_delegate.dart';
@@ -69,6 +71,12 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<ChatsCubit>(
           create: (BuildContext context) => getIt<ChatsCubit>()..init(),
+        ),
+        BlocProvider<ChatListCubit>(
+          create: (BuildContext context) => getIt<ChatListCubit>()..init(),
+        ),
+        BlocProvider<ChatMessageCubit>(
+          create: (BuildContext context) => getIt<ChatMessageCubit>(),
         ),
         BlocProvider<AvatarCubit>(
           create: (BuildContext context) => AvatarCubit(),

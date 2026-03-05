@@ -89,10 +89,7 @@ return idle(_that);case WaitingState():
 return waiting(_that);case GeneratingState():
 return generating(_that);case SpeakingState():
 return speaking(_that);case ErrorState():
-return error(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return error(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -163,10 +160,7 @@ return idle();case WaitingState():
 return waiting();case GeneratingState():
 return generating();case SpeakingState():
 return speaking();case ErrorState():
-return error(_that.message);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

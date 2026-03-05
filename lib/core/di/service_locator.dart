@@ -7,7 +7,10 @@ import '../utils/logger.dart';
 
 import '../../features/avatar/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
+import '../../features/chat/bloc/chat_title_cubit.dart';
 import '../../features/chat/bloc/chats_cubit.dart';
+import '../../features/chat/bloc/chat_list_cubit.dart';
+import '../../features/chat/bloc/chat_message_cubit.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
 import '../../features/settings/bloc/settings_cubit.dart';
 import '../../features/demo/data/datasources/demo_controller.dart';
@@ -30,6 +33,7 @@ import '../../features/sound/data/datasources/tts_datasource.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_service.dart';
 import '../services/llm/llm_service_interface.dart';
+import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/tts_service.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -96,17 +100,38 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());
   // Audio service - single source of truth for TTS
   getIt.registerLazySingleton<TtsService>(() => TtsService());
+  getIt.registerLazySingleton<AudioAmplitudeService>(
+    () => AudioAmplitudeService(),
+  );
   getIt.registerLazySingleton<LocalizationManager>(() => LocalizationManager());
 
   // BLoCs / Cubits
   getIt.registerFactory<AvatarCubit>(() => AvatarCubit());
   getIt.registerFactory<TalkingCubit>(() => TalkingCubit(getIt<TtsService>()));
+  getIt.registerFactory<ChatTitleCubit>(
+    () => ChatTitleCubit(chatRepository: getIt<ChatRepository>()),
+  );
   getIt.registerFactory<ChatsCubit>(
     () => ChatsCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
       localizationManager: getIt<LocalizationManager>(),
+      audioAmplitudeService: getIt<AudioAmplitudeService>(),
       ttsQueueManager: getIt<TtsQueueManager>(),
+    ),
+  );
+  // New split cubits
+  getIt.registerFactory<ChatListCubit>(
+    () => ChatListCubit(
+      chatRepository: getIt<ChatRepository>(),
+      settingsRepository: getIt<SettingsRepository>(),
+      localizationManager: getIt<LocalizationManager>(),
+    ),
+  );
+  getIt.registerFactory<ChatMessageCubit>(
+    () => ChatMessageCubit(
+      chatRepository: getIt<ChatRepository>(),
+      settingsRepository: getIt<SettingsRepository>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));

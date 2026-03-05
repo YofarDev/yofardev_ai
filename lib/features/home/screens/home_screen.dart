@@ -48,7 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
           : MediaQuery.of(context).size.width;
       final AvatarCubit avatarCubit = context.read<AvatarCubit>();
       avatarCubit.setValuesBasedOnScreenWidth(screenWidth: screenWidth);
-      final String sentencesStr = await DefaultAssetBundle.of(context).loadString(
+      final String
+      sentencesStr = await DefaultAssetBundle.of(context).loadString(
         'assets/txt/waiting_sentences_${context.read<ChatsCubit>().state.currentLanguage}.txt',
       );
       final List<String> sentences = sentencesStr.split('\n');

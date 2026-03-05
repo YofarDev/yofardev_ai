@@ -11,6 +11,7 @@ import 'package:yofardev_ai/features/settings/domain/repositories/settings_repos
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
 import 'package:yofardev_ai/l10n/localization_manager.dart';
+import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
 
 class MockChatRepository implements ChatRepository {
   @override
@@ -161,6 +162,7 @@ void main() {
     setUp(() {
       mockTtsQueueManager = TtsQueueManager(ttsDatasource: MockTtsDatasource());
       chatsCubit = ChatsCubit(
+        audioAmplitudeService: AudioAmplitudeService(),
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
         localizationManager: LocalizationManager(),

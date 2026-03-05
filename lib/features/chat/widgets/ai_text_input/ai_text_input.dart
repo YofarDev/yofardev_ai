@@ -121,8 +121,7 @@ class _AiTextInputState extends State<AiTextInput> {
                       Stack(
                         children: <Widget>[
                           Opacity(
-                            opacity:
-                                talkingState.status == TalkingStatus.initial
+                            opacity: talkingState.status == TalkingStatus.idle
                                 ? 1
                                 : widget.onlyText
                                 ? 1

@@ -10,16 +10,15 @@ import '../../avatar/bloc/avatar_cubit.dart';
 import '../../avatar/bloc/avatar_state.dart';
 import '../bloc/chats_cubit.dart';
 import '../bloc/chats_state.dart';
-import '../../../core/models/avatar_config.dart';
 import '../../../core/utils/logger.dart';
 
-import '../../../core/res/app_colors.dart';
 import '../../../core/widgets/app_icon_button.dart';
-import '../../../core/widgets/function_calling_button.dart';
 import '../domain/models/chat.dart';
 import '../domain/models/chat_entry.dart';
 import '../widgets/ai_text_input/ai_text_input.dart';
 import '../widgets/chat_conversation_list.dart';
+import '../widgets/chat_details_actions.dart';
+import '../widgets/chat_details_background.dart';
 
 class ChatDetailsPage extends StatefulWidget {
   const ChatDetailsPage({super.key});
@@ -50,7 +49,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
               return Scaffold(
                 body: Stack(
                   children: <Widget>[
-                    const _BackgroundLayers(),
+                    const ChatDetailsBackground(),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
@@ -72,7 +71,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                       ),
                     ),
                     const _TopLeftBackButton(),
-                    _TopRightActions(
+                    ChatDetailsActions(
                       showEverything: _showEverything,
                       onToggleVisibility: () {
                         setState(() {
@@ -203,58 +202,6 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
   }
 }
 
-class _BackgroundLayers extends StatelessWidget {
-  const _BackgroundLayers();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<ChatsCubit, ChatsState>(
-      builder: (BuildContext context, ChatsState state) {
-        return Stack(
-          children: <Widget>[
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[AppColors.background, AppColors.surface],
-                  ),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.15,
-                child: Image.asset(
-                  state.openedChat.avatar.background.getPath(),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: <Color>[
-                      AppColors.surface.withValues(alpha: 0.6),
-                      AppColors.surface.withValues(alpha: 0.3),
-                      AppColors.surface.withValues(alpha: 0.6),
-                    ],
-                    stops: const <double>[0.0, 0.5, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
 class _TopLeftBackButton extends StatelessWidget {
   const _TopLeftBackButton();
 
@@ -269,47 +216,6 @@ class _TopLeftBackButton extends StatelessWidget {
           onPressed: () {
             context.pop();
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _TopRightActions extends StatelessWidget {
-  final bool showEverything;
-  final VoidCallback onToggleVisibility;
-  final VoidCallback onDownload;
-  final bool isFunctionCallingEnabled;
-  final VoidCallback onFunctionCallingToggle;
-
-  const _TopRightActions({
-    required this.showEverything,
-    required this.onToggleVisibility,
-    required this.onDownload,
-    required this.isFunctionCallingEnabled,
-    required this.onFunctionCallingToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      right: 8,
-      top: 8,
-      child: SafeArea(
-        child: Column(
-          children: <Widget>[
-            AppIconButton(
-              icon: showEverything ? Icons.visibility : Icons.visibility_off,
-              onPressed: onToggleVisibility,
-            ),
-            const SizedBox(height: 8),
-            AppIconButton(icon: Icons.download, onPressed: onDownload),
-            const SizedBox(height: 8),
-            FunctionCallingButton(
-              isEnabled: isFunctionCallingEnabled,
-              onToggle: onFunctionCallingToggle,
-            ),
-          ],
         ),
       ),
     );

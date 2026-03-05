@@ -7,6 +7,12 @@ class TalkingCubit extends Cubit<TalkingState> {
 
   final TtsService _ttsService;
 
+  /// Initialize the cubit
+  Future<void> init() async {
+    // Initialization logic if needed
+    emit(const TalkingState.idle());
+  }
+
   /// Play a waiting sentence - does NOT show thinking animation
   Future<void> playWaitingSentence(String sentence) async {
     emit(const TalkingState.waiting()); // NOT loading!

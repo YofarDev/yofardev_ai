@@ -8,6 +8,10 @@ import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/l10n/localization_manager.dart';
+import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
+import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
+
+import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
 
 /// Mock repository that tracks updates
 class TrackingMockChatRepository implements ChatRepository {
@@ -158,12 +162,14 @@ void main() {
     late TrackingMockChatRepository mockChatRepository;
     late MockSettingsRepository mockSettingsRepository;
     late LocalizationManager localizationManager;
+    late TtsQueueManager ttsQueueManager;
     late ChatsCubit cubit;
 
     setUp(() {
       mockChatRepository = TrackingMockChatRepository();
       mockSettingsRepository = MockSettingsRepository();
       localizationManager = LocalizationManager();
+      ttsQueueManager = TtsQueueManager(ttsDatasource: TtsDatasource());
     });
 
     tearDown(() {
@@ -190,9 +196,11 @@ void main() {
 
       // Act
       cubit = ChatsCubit(
+        audioAmplitudeService: AudioAmplitudeService(),
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         localizationManager: localizationManager,
+        ttsQueueManager: ttsQueueManager,
       );
 
       cubit.getCurrentChat();
@@ -215,9 +223,11 @@ void main() {
 
       // Act
       cubit = ChatsCubit(
+        audioAmplitudeService: AudioAmplitudeService(),
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         localizationManager: localizationManager,
+        ttsQueueManager: ttsQueueManager,
       );
 
       cubit.getCurrentChat();
@@ -247,9 +257,11 @@ void main() {
 
       // Act
       cubit = ChatsCubit(
+        audioAmplitudeService: AudioAmplitudeService(),
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         localizationManager: localizationManager,
+        ttsQueueManager: ttsQueueManager,
       );
 
       cubit.getCurrentChat();
@@ -287,9 +299,11 @@ void main() {
 
       // Act
       cubit = ChatsCubit(
+        audioAmplitudeService: AudioAmplitudeService(),
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         localizationManager: localizationManager,
+        ttsQueueManager: ttsQueueManager,
       );
 
       cubit.getCurrentChat();
@@ -329,9 +343,11 @@ void main() {
 
       // Act
       cubit = ChatsCubit(
+        audioAmplitudeService: AudioAmplitudeService(),
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         localizationManager: localizationManager,
+        ttsQueueManager: ttsQueueManager,
       );
 
       cubit.getCurrentChat();
@@ -364,9 +380,11 @@ void main() {
 
       // Act
       cubit = ChatsCubit(
+        audioAmplitudeService: AudioAmplitudeService(),
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         localizationManager: localizationManager,
+        ttsQueueManager: ttsQueueManager,
       );
 
       cubit.getCurrentChat();

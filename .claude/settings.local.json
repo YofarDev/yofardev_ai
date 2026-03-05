@@ -33,7 +33,14 @@
       "Bash(do echo:*)",
       "Bash(fimp:*)",
       "Bash(flutter test:*)",
-      "Bash(cloc:*)"
+      "Bash(cloc:*)",
+      "Bash(/tmp/service_locator_patch.dart:*)",
+      "Read(//tmp/**)",
+      "Bash(/tmp/apply_edits.sh:*)",
+      "Bash(/tmp/fix_chat_title.sh:*)",
+      "Bash(/tmp/fix_tests.sh:*)",
+      "Bash(/tmp/fix_title_tests.py:*)",
+      "Bash(rtk proxy:*)"
     ]
   }
 }

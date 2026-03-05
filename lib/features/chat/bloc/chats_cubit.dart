@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
@@ -14,6 +13,7 @@ import '../../../core/models/avatar_config.dart';
 import '../../../core/models/llm_config.dart';
 import '../../../core/models/llm_message.dart';
 import '../../../core/services/llm/llm_service.dart';
+import '../../../core/services/audio/audio_amplitude_service.dart';
 import '../../../core/services/stream_processor/stream_processor_service.dart';
 import '../../avatar/data/datasources/avatar_cache_datasource.dart';
 import '../../home/data/datasources/prompt_datasource.dart';
@@ -31,11 +31,13 @@ class ChatsCubit extends Cubit<ChatsState> {
     required SettingsRepository settingsRepository,
     required LocalizationManager localizationManager,
     TtsQueueManager? ttsQueueManager, // Optional for now
+    required AudioAmplitudeService audioAmplitudeService,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _localizationManager = localizationManager,
        _ttsQueueManager = ttsQueueManager,
        _llmService = LlmService(),
+       _audioAmplitudeService = audioAmplitudeService,
        super(ChatsState.initial());
 
   final ChatRepository _chatRepository;
@@ -43,6 +45,7 @@ class ChatsCubit extends Cubit<ChatsState> {
   final LocalizationManager _localizationManager;
   final TtsQueueManager? _ttsQueueManager;
   final LlmService _llmService;
+  final AudioAmplitudeService _audioAmplitudeService;
 
   final StreamProcessorService _streamProcessor = StreamProcessorService();
 
@@ -438,7 +441,9 @@ class ChatsCubit extends Cubit<ChatsState> {
             tag: 'ChatsCubit',
           );
           // Get amplitudes from audio file
-          _getAudioAmplitudes(audioPath).then((List<int> amplitudes) {
+          _audioAmplitudeService.extractAmplitudes(audioPath).then((
+            List<int> amplitudes,
+          ) {
             AppLogger.debug(
               'Extracted ${amplitudes.length} amplitudes for $audioPath',
               tag: 'ChatsCubit',
@@ -649,21 +654,6 @@ class ChatsCubit extends Cubit<ChatsState> {
     final Chat updatedChat = chat.copyWith(avatar: avatar);
     emit(state.copyWith(openedChat: updatedChat, status: ChatsStatus.success));
     await _chatRepository.updateAvatar(chat.id, avatar);
-  }
-
-  /// Extract amplitudes from audio file for mouth animation
-  Future<List<int>> _getAudioAmplitudes(String audioPath) async {
-    try {
-      return await AudioAnalyzer().getAmplitudes(audioPath);
-    } catch (e) {
-      AppLogger.error(
-        'Failed to extract amplitudes from $audioPath',
-        tag: 'ChatsCubit',
-        error: e,
-      );
-      // Return default amplitudes for smooth animation
-      return List<int>.filled(50, 15);
-    }
   }
 
   Chat? _getChatById(String chatId) {
