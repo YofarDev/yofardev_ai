@@ -22,6 +22,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Load all settings
   Future<void> loadSettings() async {
+    // Initialize LLM service if not already done
+    await _llmService.init();
+
     // Load task LLM config
     await loadTaskLlmConfig();
 

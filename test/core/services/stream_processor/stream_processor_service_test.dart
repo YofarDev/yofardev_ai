@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
@@ -29,14 +30,14 @@ void main() {
       final List<SentenceChunk> sentences = results
           .where(
             (SentenceChunk r) =>
-                r.maybeWhen(sentence: (_, __) => true, orElse: () => false),
+                r.maybeWhen(sentence: (_, _) => true, orElse: () => false),
           )
           .toList();
 
       expect(sentences.length, greaterThanOrEqualTo(1));
       final SentenceChunk firstSentence = sentences.first;
       final String sentenceText = firstSentence.maybeWhen(
-        sentence: (String text, __) => text,
+        sentence: (String text, _) => text,
         orElse: () => '',
       );
       expect(sentenceText, contains('Hello world'));
@@ -63,14 +64,14 @@ void main() {
       final List<SentenceChunk> sentences = results
           .where(
             (SentenceChunk r) =>
-                r.maybeWhen(sentence: (_, __) => true, orElse: () => false),
+                r.maybeWhen(sentence: (_, _) => true, orElse: () => false),
           )
           .toList();
 
       expect(sentences.length, greaterThan(0));
       final SentenceChunk firstSentence = sentences.first;
       final String sentenceText = firstSentence.maybeWhen(
-        sentence: (String text, __) => text,
+        sentence: (String text, _) => text,
         orElse: () => '',
       );
       expect(sentenceText, contains('Hello world'));

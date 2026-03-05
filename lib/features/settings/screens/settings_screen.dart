@@ -85,7 +85,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Widget _buildTaskLlmConfigTile(BuildContext context) {
     return InkWell(
-      onTap: () => context.push("/settings/task-llm"),
+      onTap: () => context.push("/settings/llm/task-llm"),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
