@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/di/service_locator.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../core/res/app_constants.dart';
 import '../../chat/domain/models/chat.dart';
@@ -11,10 +10,10 @@ import '../domain/repositories/avatar_repository.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
-  AvatarCubit()
+  AvatarCubit(this._avatarRepository)
     : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()));
 
-  AvatarRepository get _avatarRepository => getIt<AvatarRepository>();
+  final AvatarRepository _avatarRepository;
 
   void setValuesBasedOnScreenWidth({required double screenWidth}) {
     final double scaleFactor = screenWidth / AppConstants.avatarWidth;

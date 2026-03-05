@@ -1,14 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/features/avatar/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/bloc/avatar_state.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
+
+class MockAvatarRepository extends Mock implements AvatarRepository {}
 
 void main() {
   group('AvatarCubit', () {
     late AvatarCubit avatarCubit;
+    late MockAvatarRepository mockAvatarRepository;
 
     setUp(() {
-      avatarCubit = AvatarCubit();
+      mockAvatarRepository = MockAvatarRepository();
+      avatarCubit = AvatarCubit(mockAvatarRepository);
     });
 
     tearDown(() {

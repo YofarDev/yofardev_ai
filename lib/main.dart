@@ -22,6 +22,7 @@ import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
 import 'features/talking/bloc/talking_cubit.dart';
 import 'features/home/bloc/home_cubit.dart';
+import 'features/settings/bloc/settings_cubit.dart';
 import 'core/res/app_theme.dart';
 import 'core/utils/platform_utils.dart';
 
@@ -79,13 +80,16 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => getIt<ChatMessageCubit>(),
         ),
         BlocProvider<AvatarCubit>(
-          create: (BuildContext context) => AvatarCubit(),
+          create: (BuildContext context) => getIt<AvatarCubit>(),
         ),
         BlocProvider<DemoCubit>(
           create: (BuildContext context) => getIt<DemoCubit>(),
         ),
+        BlocProvider<SettingsCubit>(
+          create: (BuildContext context) => getIt<SettingsCubit>(),
+        ),
         BlocProvider<HomeCubit>(
-          create: (BuildContext context) => HomeCubit()..initialize(),
+          create: (BuildContext context) => getIt<HomeCubit>()..initialize(),
         ),
       ],
       child: MaterialApp.router(

@@ -11,8 +11,10 @@ import '../../features/chat/bloc/chat_title_cubit.dart';
 import '../../features/chat/bloc/chats_cubit.dart';
 import '../../features/chat/bloc/chat_list_cubit.dart';
 import '../../features/chat/bloc/chat_message_cubit.dart';
+import '../../features/chat/bloc/chat_tts_cubit.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
 import '../../features/settings/bloc/settings_cubit.dart';
+import '../../features/home/bloc/home_cubit.dart';
 import '../../features/demo/data/datasources/demo_controller.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
@@ -106,21 +108,27 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<LocalizationManager>(() => LocalizationManager());
 
   // BLoCs / Cubits
-  getIt.registerFactory<AvatarCubit>(() => AvatarCubit());
+  getIt.registerFactory<AvatarCubit>(
+    () => AvatarCubit(getIt<AvatarRepository>()),
+  );
   getIt.registerFactory<TalkingCubit>(() => TalkingCubit(getIt<TtsService>()));
   getIt.registerFactory<ChatTitleCubit>(
     () => ChatTitleCubit(chatRepository: getIt<ChatRepository>()),
+  );
+  // Chat cubits - split by responsibility
+  getIt.registerFactory<ChatTtsCubit>(
+    () => ChatTtsCubit(
+      ttsQueueManager: getIt<TtsQueueManager>(),
+      audioAmplitudeService: getIt<AudioAmplitudeService>(),
+    ),
   );
   getIt.registerFactory<ChatsCubit>(
     () => ChatsCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
       localizationManager: getIt<LocalizationManager>(),
-      audioAmplitudeService: getIt<AudioAmplitudeService>(),
-      ttsQueueManager: getIt<TtsQueueManager>(),
     ),
   );
-  // New split cubits
   getIt.registerFactory<ChatListCubit>(
     () => ChatListCubit(
       chatRepository: getIt<ChatRepository>(),
@@ -132,6 +140,7 @@ Future<void> setupServiceLocator() async {
     () => ChatMessageCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
+      ttsQueueManager: getIt<TtsQueueManager>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
@@ -144,6 +153,7 @@ Future<void> setupServiceLocator() async {
       llmService: getIt<LlmServiceInterface>(),
     ),
   );
+  getIt.registerFactory<HomeCubit>(() => HomeCubit());
 }
 
 /// Switch between real and fake LLM service

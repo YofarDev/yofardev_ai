@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
 import '../../features/chat/screens/image_full_screen.dart';
 import '../../features/home/screens/home_screen.dart';
-import '../../features/settings/bloc/settings_cubit.dart';
 import '../../features/settings/screens/llm/llm_config_page.dart';
 import '../../features/settings/screens/llm/llm_selection_page.dart';
 import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/widgets/constrained_width.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
 import 'route_constants.dart';
 
 /// Application router configuration using go_router.
@@ -57,7 +56,11 @@ class AppRouter {
         pageBuilder: (BuildContext context, GoRouterState state) =>
             MaterialPage<void>(
               key: state.pageKey,
-              child: const ConstrainedWidth(child: SettingsPage()),
+              child: ConstrainedWidth(
+                child: SettingsPage(
+                  settingsRepository: getIt<SettingsRepository>(),
+                ),
+              ),
             ),
         routes: <RouteBase>[
           GoRoute(
@@ -81,10 +84,7 @@ class AppRouter {
                 pageBuilder: (BuildContext context, GoRouterState state) {
                   return MaterialPage<void>(
                     key: state.pageKey,
-                    child: BlocProvider<SettingsCubit>(
-                      create: (BuildContext context) => getIt<SettingsCubit>(),
-                      child: const ConstrainedWidth(child: TaskLlmConfigPage()),
-                    ),
+                    child: const ConstrainedWidth(child: TaskLlmConfigPage()),
                   );
                 },
               ),

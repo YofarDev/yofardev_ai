@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 import 'package:go_router/go_router.dart';
 
-import '../../../core/di/service_locator.dart';
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../l10n/localization_manager.dart';
@@ -19,7 +18,12 @@ import '../widgets/sound_effects_toggle.dart';
 import '../widgets/username_field.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({
+    super.key,
+    required this.settingsRepository,
+  });
+
+  final SettingsRepository settingsRepository;
 
   @override
   SettingsPageState createState() => SettingsPageState();
@@ -39,23 +43,21 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   void _loadSettings() async {
-    final SettingsRepository settingsRepo = getIt<SettingsRepository>();
-
-    final Either<Exception, String> promptResult = await settingsRepo
+    final Either<Exception, String> promptResult = await widget.settingsRepository
         .getSystemPrompt();
     promptResult.fold(
       (Exception error) => null,
       (String prompt) => _baseSystemPromptController.text = prompt,
     );
 
-    final Either<Exception, String?> usernameResult = await settingsRepo
+    final Either<Exception, String?> usernameResult = await widget.settingsRepository
         .getUsername();
     usernameResult.fold(
       (Exception error) => null,
       (String? username) => _usernameController.text = username ?? '',
     );
 
-    final Either<Exception, ChatPersona> personaResult = await settingsRepo
+    final Either<Exception, ChatPersona> personaResult = await widget.settingsRepository
         .getPersona();
     personaResult.fold(
       (Exception error) => _persona = ChatPersona.assistant,
@@ -70,15 +72,13 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   void _onSaveButtonPressed() async {
-    final SettingsRepository settingsRepo = getIt<SettingsRepository>();
-
     if (_baseSystemPromptController.text.isNotEmpty) {
-      await settingsRepo.setSystemPrompt(_baseSystemPromptController.text);
+      await widget.settingsRepository.setSystemPrompt(_baseSystemPromptController.text);
     }
     if (_usernameController.text.isNotEmpty) {
-      await settingsRepo.setUsername(_usernameController.text);
+      await widget.settingsRepository.setUsername(_usernameController.text);
     }
-    await settingsRepo.setPersona(_persona);
+    await widget.settingsRepository.setPersona(_persona);
     context.read<ChatsCubit>().setSoundEffects(_isSoundEffectsEnabled);
     context.pop();
   }

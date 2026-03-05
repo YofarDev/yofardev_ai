@@ -7,43 +7,54 @@ import 'package:uuid/uuid.dart';
 import '../../../core/services/stream_processor/sentence_chunk.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../core/utils/logger.dart';
+import '../../../core/utils/platform_utils.dart';
+import '../../../l10n/localization_manager.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../core/models/llm_config.dart';
+import '../../sound/data/datasources/tts_datasource.dart';
 import '../../../core/services/llm/llm_service.dart';
 import '../../../core/services/stream_processor/stream_processor_service.dart';
-import '../../../l10n/localization_manager.dart';
+import '../../avatar/data/datasources/avatar_cache_datasource.dart';
 import '../../home/data/datasources/prompt_datasource.dart';
 import '../../settings/domain/repositories/settings_repository.dart';
+import '../../sound/domain/tts_queue_manager.dart';
 import '../domain/models/chat.dart';
 import '../domain/models/chat_entry.dart';
 import '../domain/repositories/chat_repository.dart';
 import 'chat_message_state.dart';
 
+/// Cubit responsible for chat message operations
+///
+/// Handles:
+/// - Sending messages (non-streaming)
+/// - Streaming messages with real-time TTS
+/// - Message state management
 class ChatMessageCubit extends Cubit<ChatMessageState> {
   ChatMessageCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
+    TtsQueueManager? ttsQueueManager,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
+       _ttsQueueManager = ttsQueueManager,
        _llmService = LlmService(),
        _streamProcessor = StreamProcessorService(),
        super(ChatMessageState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
+  final TtsQueueManager? _ttsQueueManager;
   final LlmService _llmService;
   final StreamProcessorService _streamProcessor;
 
-  void setLanguage(String language) {}
-
   Future<void> prepareWaitingSentences(String language) async {
-    if (language == 'Web') {
+    if (PlatformUtils.checkPlatform() == 'Web') {
       emit(state.copyWith(initializing: false));
       return;
     }
     try {
       final List<Map<String, dynamic>>? cachedSentences =
-          await _getWaitingSentencesMap(language);
+          await AvatarCacheDatasource.getWaitingSentencesMap(language);
       if (cachedSentences != null) {
         emit(
           state.copyWith(
@@ -62,12 +73,6 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
       );
       emit(state.copyWith(initializing: false));
     }
-  }
-
-  Future<List<Map<String, dynamic>>?> _getWaitingSentencesMap(
-    String language,
-  ) async {
-    return null;
   }
 
   void shuffleWaitingSentences() {
@@ -179,6 +184,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     String? attachedImage,
     required Avatar avatar,
     required Chat currentChat,
+    required String language,
   }) async {
     emit(
       state.copyWith(
@@ -257,15 +263,39 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
           sentence: (String text, int index) {
             contentBuffer.write(' $text');
             sentenceCount++;
+
+            final ChatEntry updatedEntry = streamingEntry.copyWith(
+              body: contentBuffer.toString(),
+            );
+
+            final List<ChatEntry> updatedEntries = List<ChatEntry>.from(
+              chat.entries,
+            );
+            updatedEntries[updatedEntries.length - 1] = updatedEntry;
+
+            chat = chat.copyWith(entries: updatedEntries);
+
             emit(
               state.copyWith(
                 streamingContent: contentBuffer.toString(),
                 streamingSentenceCount: sentenceCount,
               ),
             );
+
+            // Enqueue for TTS if manager is available
+            _ttsQueueManager?.enqueue(
+              text: text,
+              language: language,
+              voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+            );
           },
           metadata: (_) {},
-          complete: () {},
+          complete: () {
+            AppLogger.debug(
+              'Stream complete with $sentenceCount sentences',
+              tag: 'ChatMessageCubit',
+            );
+          },
           error: (String msg) {
             AppLogger.error('Stream error: $msg', tag: 'ChatMessageCubit');
           },
@@ -323,83 +353,5 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
       timestamp: DateTime.now(),
       attachedImage: attachedImage,
     );
-  }
-
-  String _sanitizeTitle(String title) {
-    String sanitized = title.replaceAll(RegExp(r'\s+'), ' ').trim();
-    sanitized = sanitized.replaceAll(RegExp(r'''^["']|["']$'''), '');
-    if (sanitized.length > 50) {
-      sanitized = '${sanitized.substring(0, 47)}...';
-    }
-    return sanitized;
-  }
-
-  String? _getFirstUserMessage(Chat chat) {
-    try {
-      return chat.entries
-          .where((ChatEntry e) => e.entryType == EntryType.user)
-          .firstOrNull
-          ?.body
-          .getVisiblePrompt();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  Future<void> generateTitleForChat(Chat chat) async {
-    if (chat.titleGenerated || chat.entries.isEmpty) return;
-
-    final bool isAlreadyGenerating = state.generatingTitleChatIds.contains(
-      chat.id,
-    );
-    if (isAlreadyGenerating) return;
-
-    final Set<String> newGeneratingIds = <String>{
-      ...state.generatingTitleChatIds,
-      chat.id,
-    };
-    emit(state.copyWith(generatingTitleChatIds: newGeneratingIds));
-
-    try {
-      final String? firstUserMessage = _getFirstUserMessage(chat);
-      if (firstUserMessage == null || firstUserMessage.isEmpty) return;
-
-      final String? title = await _llmService.generateTitle(firstUserMessage);
-
-      if (title != null && title.isNotEmpty && title.length <= 100) {
-        final String sanitizedTitle = _sanitizeTitle(title);
-        final Chat updatedChat = chat.copyWith(
-          title: sanitizedTitle,
-          titleGenerated: true,
-        );
-        await _chatRepository.updateChat(id: chat.id, updatedChat: updatedChat);
-        AppLogger.info(
-          'Title generated: $sanitizedTitle',
-          tag: 'ChatMessageCubit',
-        );
-      }
-    } catch (e) {
-      AppLogger.error(
-        'Failed to generate title',
-        tag: 'ChatMessageCubit',
-        error: e,
-      );
-    } finally {
-      final Set<String> updatedIds = state.generatingTitleChatIds.toSet()
-        ..remove(chat.id);
-      emit(state.copyWith(generatingTitleChatIds: updatedIds));
-    }
-  }
-
-  void triggerTitleGenerationIfNeeded(Chat chat) {
-    final bool hasOnlyOneUserMessage =
-        chat.entries
-            .where((ChatEntry e) => e.entryType == EntryType.user)
-            .length ==
-        1;
-
-    if (hasOnlyOneUserMessage && !chat.titleGenerated) {
-      generateTitleForChat(chat);
-    }
   }
 }
