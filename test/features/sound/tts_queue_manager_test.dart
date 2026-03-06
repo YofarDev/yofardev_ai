@@ -237,12 +237,12 @@ void main() {
       );
 
       // Wait for enqueue to complete
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future<dynamic>.delayed(const Duration(milliseconds: 100));
       expect(queueManager.queue.length, greaterThan(0));
 
       // Act
       await interruptionService.interrupt();
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future<dynamic>.delayed(const Duration(milliseconds: 200));
 
       // Assert
       expect(queueManager.queue.length, 0);
