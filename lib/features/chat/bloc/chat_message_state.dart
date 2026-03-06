@@ -2,7 +2,15 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'chat_message_state.freezed.dart';
 
-enum ChatMessageStatus { initial, loading, typing, streaming, success, error }
+enum ChatMessageStatus {
+  initial,
+  loading,
+  typing,
+  streaming,
+  success,
+  error,
+  interrupted,
+}
 
 @freezed
 sealed class ChatMessageState with _$ChatMessageState {
@@ -18,7 +26,4 @@ sealed class ChatMessageState with _$ChatMessageState {
   }) = _ChatMessageState;
 
   factory ChatMessageState.initial() => const ChatMessageState();
-
-  /// Streaming was interrupted by user
-  const factory ChatMessageState.interrupted() = _Interrupted;
 }

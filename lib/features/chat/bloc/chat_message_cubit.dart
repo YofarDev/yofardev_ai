@@ -12,6 +12,7 @@ import '../../../l10n/localization_manager.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../core/models/llm_config.dart';
 import '../../../core/models/voice_effect.dart';
+import '../../../core/services/audio/interruption_service.dart';
 import '../../../core/services/llm/llm_service.dart';
 import '../../../core/services/prompt_datasource.dart';
 import '../../../core/services/stream_processor/stream_processor_service.dart';
@@ -37,6 +38,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     required LlmService llmService,
     required StreamProcessorService streamProcessor,
     required PromptDatasource promptDatasource,
+    required InterruptionService interruptionService,
     TtsQueueManager? ttsQueueManager,
     ChatTitleCubit? chatTitleCubit,
   }) : _chatRepository = chatRepository,
@@ -44,17 +46,35 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
        _llmService = llmService,
        _streamProcessor = streamProcessor,
        _promptDatasource = promptDatasource,
+       _interruptionService = interruptionService,
        _ttsQueueManager = ttsQueueManager,
        _chatTitleCubit = chatTitleCubit,
-       super(ChatMessageState.initial());
+       super(ChatMessageState.initial()) {
+    // Listen to interruption stream
+    _interruptionSubscription = _interruptionService.interruptionStream.listen((
+      _,
+    ) {
+      if (state.status == ChatMessageStatus.streaming) {
+        emit(
+          state.copyWith(
+            status: ChatMessageStatus.interrupted,
+            streamingContent: '',
+          ),
+        );
+      }
+    });
+  }
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
   final LlmService _llmService;
   final StreamProcessorService _streamProcessor;
   final PromptDatasource _promptDatasource;
+  final InterruptionService _interruptionService;
   final TtsQueueManager? _ttsQueueManager;
   final ChatTitleCubit? _chatTitleCubit;
+
+  StreamSubscription<void>? _interruptionSubscription;
 
   Future<void> prepareWaitingSentences(String language) async {
     if (PlatformUtils.checkPlatform() == 'Web') {
@@ -223,6 +243,13 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
           ),
         );
         await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
+
+        // Generate title if needed
+        final ChatTitleCubit? titleCubit = _chatTitleCubit;
+        if (titleCubit != null && titleCubit.shouldGenerateTitle(chat)) {
+          titleCubit.generateTitle(chat.id, chat);
+        }
+
         return;
       }
 
@@ -231,6 +258,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
       final String systemPrompt = await _promptDatasource.getSystemPrompt();
 
       final StringBuffer contentBuffer = StringBuffer();
+      String? fullJsonResponse;
       int sentenceCount = 0;
 
       await for (final SentenceChunk sentenceChunk
@@ -275,7 +303,12 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
               );
             }
           },
-          metadata: (_) {},
+          metadata: (Map<String, dynamic> json) {
+            // Capture the full JSON response
+            if (json.containsKey('fullJson')) {
+              fullJsonResponse = json['fullJson'] as String?;
+            }
+          },
           complete: () {
             AppLogger.debug(
               'Stream complete with $sentenceCount sentences',
@@ -288,8 +321,9 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
         );
       }
 
+      // Use the full JSON if available, otherwise fall back to the content buffer
       final ChatEntry finalEntry = streamingEntry.copyWith(
-        body: contentBuffer.toString(),
+        body: fullJsonResponse ?? contentBuffer.toString(),
       );
 
       final List<ChatEntry> finalEntries = List<ChatEntry>.from(chat.entries);
@@ -345,5 +379,11 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
       timestamp: DateTime.now(),
       attachedImage: attachedImage,
     );
+  }
+
+  @override
+  Future<void> close() async {
+    await _interruptionSubscription?.cancel();
+    return super.close();
   }
 }

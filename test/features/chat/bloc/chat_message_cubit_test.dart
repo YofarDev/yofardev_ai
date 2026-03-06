@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart';
@@ -6,8 +8,10 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
+import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
+import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/features/chat/bloc/chat_message_cubit.dart';
 import 'package:yofardev_ai/features/chat/bloc/chat_message_state.dart';
@@ -222,6 +226,9 @@ class MockTtsQueueManager implements TtsQueueManager {
   void setPaused(bool paused) {}
 }
 
+class MockStreamProcessorService extends Mock
+    implements StreamProcessorService {}
+
 void main() {
   // Initialize Flutter test bindings
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -234,6 +241,7 @@ void main() {
     late MockHttpClient mockHttpClient;
     late MockPromptDatasource mockPromptDatasource;
     late MockTtsQueueManager mockTtsManager;
+    late InterruptionService interruptionService;
 
     setUpAll(() {
       registerFallbackValue(
@@ -250,6 +258,7 @@ void main() {
       mockHttpClient = MockHttpClient();
       mockPromptDatasource = MockPromptDatasource();
       mockTtsManager = MockTtsQueueManager();
+      interruptionService = InterruptionService();
 
       LlmService.setTestClient(mockHttpClient);
       llmService = LlmService();
@@ -260,12 +269,14 @@ void main() {
         llmService: llmService,
         streamProcessor: StreamProcessorService(),
         promptDatasource: mockPromptDatasource,
+        interruptionService: interruptionService,
         ttsQueueManager: mockTtsManager,
       );
     });
 
     tearDown(() {
       cubit.close();
+      interruptionService.dispose();
       LlmService.resetTestClient();
     });
 
@@ -522,6 +533,86 @@ void main() {
         expect(ChatMessageStatus.values, contains(ChatMessageStatus.success));
         expect(ChatMessageStatus.values, contains(ChatMessageStatus.error));
       });
+    });
+
+    group('Interruption', () {
+      late MockChatRepository mockChatRepository;
+      late MockSettingsRepository mockSettingsRepository;
+      late LlmService mockLlmService;
+      late MockHttpClient mockHttpClient;
+      late MockStreamProcessorService mockStreamProcessor;
+      late MockPromptDatasource mockPromptDatasource;
+      late InterruptionService interruptionService;
+
+      setUp(() {
+        mockChatRepository = MockChatRepository();
+        mockSettingsRepository = MockSettingsRepository();
+        mockHttpClient = MockHttpClient();
+        mockStreamProcessor = MockStreamProcessorService();
+        mockPromptDatasource = MockPromptDatasource();
+        interruptionService = InterruptionService();
+
+        LlmService.setTestClient(mockHttpClient);
+        mockLlmService = LlmService();
+
+        // Setup common mock behaviors
+        when(
+          () => mockSettingsRepository.getLanguage(),
+        ).thenAnswer((_) async => const Right('fr'));
+        when(
+          () => mockPromptDatasource.getSystemPrompt(),
+        ).thenAnswer((_) async => 'system prompt');
+      });
+
+      tearDown(() {
+        interruptionService.dispose();
+        LlmService.resetTestClient();
+      });
+
+      test(
+        'should transition to interrupted state when interruption occurs',
+        () async {
+          // Arrange
+          final ChatMessageCubit cubit = ChatMessageCubit(
+            chatRepository: mockChatRepository,
+            settingsRepository: mockSettingsRepository,
+            llmService: mockLlmService,
+            streamProcessor: mockStreamProcessor,
+            promptDatasource: mockPromptDatasource,
+            interruptionService: interruptionService,
+          );
+
+          // Start streaming
+          final StreamController<SentenceChunk> controller =
+              StreamController<SentenceChunk>();
+          when(
+            () => mockStreamProcessor.processStream(any()),
+          ).thenAnswer((_) => controller.stream);
+
+          // Start streaming (don't await)
+          unawaited(
+            cubit.askYofardev(
+              'test',
+              onlyText: true,
+              avatar: const Avatar(),
+              currentChat: const Chat(),
+              language: 'fr',
+            ),
+          );
+
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          // Act
+          await interruptionService.interrupt();
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          // Assert
+          expect(cubit.state.status, ChatMessageStatus.interrupted);
+
+          await cubit.close();
+          await controller.close();
+        },
+      );
     });
   });
 }
