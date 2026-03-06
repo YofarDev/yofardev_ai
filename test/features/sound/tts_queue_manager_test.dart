@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
+import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
@@ -18,10 +19,20 @@ void main() {
   group('TtsQueueManager', () {
     late TtsQueueManager manager;
     late MockTtsDatasource mockDatasource;
+    late InterruptionService interruptionService;
 
     setUp(() {
       mockDatasource = MockTtsDatasource();
-      manager = TtsQueueManager(ttsDatasource: mockDatasource);
+      interruptionService = InterruptionService();
+      manager = TtsQueueManager(
+        ttsDatasource: mockDatasource,
+        interruptionService: interruptionService,
+      );
+    });
+
+    tearDown(() {
+      manager.dispose();
+      interruptionService.dispose();
     });
 
     tearDown(() {
@@ -177,6 +188,65 @@ void main() {
       expect(manager.queue.length, 0);
 
       await subscription.cancel();
+    });
+  });
+
+  group('Interruption', () {
+    late MockTtsDatasource mockTtsDatasource;
+    late InterruptionService interruptionService;
+    late TtsQueueManager queueManager;
+
+    setUp(() {
+      mockTtsDatasource = MockTtsDatasource();
+      interruptionService = InterruptionService();
+
+      when(
+        () => mockTtsDatasource.textToFrenchMaleVoice(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      ).thenAnswer((_) async => '/path/to/audio.mp3');
+    });
+
+    tearDown(() {
+      queueManager.dispose();
+      interruptionService.dispose();
+    });
+
+    test('should clear queue when interrupted', () async {
+      // Arrange
+      queueManager = TtsQueueManager(
+        ttsDatasource: mockTtsDatasource,
+        interruptionService: interruptionService,
+      );
+
+      // Pause processing to keep items in queue
+      queueManager.setPaused(true);
+
+      // Enqueue multiple items
+      await queueManager.enqueue(
+        text: 'First',
+        language: 'fr',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      await queueManager.enqueue(
+        text: 'Second',
+        language: 'fr',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+
+      // Wait for enqueue to complete
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(queueManager.queue.length, greaterThan(0));
+
+      // Act
+      await interruptionService.interrupt();
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // Assert
+      expect(queueManager.queue.length, 0);
+      expect(queueManager.isProcessing, false);
     });
   });
 }

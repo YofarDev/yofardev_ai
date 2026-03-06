@@ -3,11 +3,13 @@ import 'package:uuid/uuid.dart';
 import 'tts_queue_item.dart';
 import '../data/datasources/tts_datasource.dart';
 import '../../../../core/models/voice_effect.dart';
+import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/utils/logger.dart';
 
 /// Manages queue of TTS generation and playback
 class TtsQueueManager {
   final TtsDatasource _ttsDatasource;
+  final InterruptionService _interruptionService;
   final List<TtsQueueItem> _queue = <TtsQueueItem>[];
   final StreamController<String> _audioController =
       StreamController<String>.broadcast();
@@ -16,9 +18,18 @@ class TtsQueueManager {
   bool _isProcessing = false;
   bool _isPaused = false;
   Timer? _processingTimer;
+  StreamSubscription? _interruptionSubscription;
 
-  TtsQueueManager({required TtsDatasource ttsDatasource})
-    : _ttsDatasource = ttsDatasource;
+  TtsQueueManager({
+    required TtsDatasource ttsDatasource,
+    required InterruptionService interruptionService,
+  }) : _ttsDatasource = ttsDatasource,
+       _interruptionService = interruptionService {
+    // Listen to interruptions
+    _interruptionSubscription = _interruptionService.interruptionStream.listen(
+      (_) => _handleInterruption(),
+    );
+  }
 
   /// Stream of generated audio paths ready for playback
   Stream<String> get audioStream => _audioController.stream;
@@ -70,6 +81,16 @@ class TtsQueueManager {
     _isProcessing = false;
     _processingTimer?.cancel();
     AppLogger.debug('TTS queue cleared', tag: 'TtsQueueManager');
+  }
+
+  /// Handle interruption by clearing queue and stopping processing
+  void _handleInterruption() {
+    AppLogger.debug(
+      'TTS queue interrupted, clearing queue',
+      tag: 'TtsQueueManager',
+    );
+    clear();
+    _isProcessing = false;
   }
 
   /// Pause processing (doesn't clear queue)
@@ -176,6 +197,7 @@ class TtsQueueManager {
   /// Dispose resources
   void dispose() {
     _processingTimer?.cancel();
+    _interruptionSubscription?.cancel();
     _audioController.close();
   }
 }
