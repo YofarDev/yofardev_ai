@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../../l10n/localization_manager.dart';
 import '../../utils/logger.dart';
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
@@ -436,6 +437,7 @@ class LlmService implements LlmServiceInterface {
   Future<String?> generateTitle(
     String firstUserMessage, {
     LlmConfig? config,
+    String language = 'en',
   }) async {
     try {
       final LlmConfig? activeConfig =
@@ -448,18 +450,23 @@ class LlmService implements LlmServiceInterface {
         return null;
       }
 
+      final String promptText = language == 'fr'
+          ? localized.titleGenerationPrompt
+          : 'Generate a concise title (max 5 words) for this chat: ';
+      final String systemPromptText = language == 'fr'
+          ? localized.titleGenerationSystemPrompt
+          : 'You are a helpful assistant that generates short, descriptive chat titles. Return only the title, no quotes or extra text.';
+
       final List<LlmMessage> messages = <LlmMessage>[
         LlmMessage(
           role: LlmMessageRole.user,
-          body:
-              'Generate a concise title (max 5 words) for this chat: $firstUserMessage',
+          body: '$promptText$firstUserMessage',
         ),
       ];
 
       final String? result = await promptModel(
         messages: messages,
-        systemPrompt:
-            'You are a helpful assistant that generates short, descriptive chat titles. Return only the title, no quotes or extra text.',
+        systemPrompt: systemPromptText,
         config: activeConfig,
         returnJson: false,
       );

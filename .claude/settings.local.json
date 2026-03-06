@@ -60,7 +60,16 @@
       "Bash(/tmp/export.sh:*)",
       "Bash(./context-export/__HOW_TO_USE__.txt:*)",
       "Bash(context-export/DIRECTORY_STRUCTURE.txt:*)",
-      "Bash(context-export/README.md:*)"
+      "Bash(context-export/README.md:*)",
+      "mcp__jcodemunch__list_repos",
+      "mcp__jcodemunch__index_folder",
+      "mcp__jcodemunch__get_repo_outline",
+      "mcp__jcodemunch__search_symbols",
+      "Bash(context-export/README.txt:*)",
+      "Bash(context-export/__problem_description.txt:*)",
+      "mcp__jcodemunch__get_file_outline",
+      "mcp__jcodemunch__get_file_tree",
+      "mcp__jcodemunch__get_symbol"
     ]
   }
 }

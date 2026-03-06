@@ -4,11 +4,15 @@ import '../../../../core/utils/logger.dart';
 /// Extracts JSON from streaming chunks
 class JsonStreamExtractor {
   final StringBuffer _buffer = StringBuffer();
+  final StringBuffer _rawBuffer = StringBuffer();
+  String? _lastFullJson;
 
   /// Process a chunk and attempt to extract JSON content
   ///
   /// Returns the text content if valid JSON is found, null otherwise
   String? extractText(String chunk, {bool expectJson = true}) {
+    _rawBuffer.write(chunk);
+
     if (!expectJson) {
       return chunk;
     }
@@ -27,6 +31,9 @@ class JsonStreamExtractor {
         try {
           final Map<String, dynamic> decodedJson =
               json.decode(jsonStr) as Map<String, dynamic>;
+
+          // Store the full JSON for later retrieval
+          _lastFullJson = jsonStr;
 
           // Clear buffer up to the end of this JSON
           _buffer.clear();
@@ -60,6 +67,21 @@ class JsonStreamExtractor {
     return null;
   }
 
+  /// Get the last complete full JSON that was extracted
+  String? getLastFullJson() {
+    return _lastFullJson;
+  }
+
+  /// Get the full raw content received so far
+  String getRawContent() {
+    return _rawBuffer.toString();
+  }
+
+  /// Clear the stored JSON
+  void clearJson() {
+    _lastFullJson = null;
+  }
+
   /// Get any remaining buffered content (for cleanup)
   String getBufferedContent() {
     return _buffer.toString();
@@ -68,6 +90,7 @@ class JsonStreamExtractor {
   /// Clear the buffer
   void clear() {
     _buffer.clear();
+    _rawBuffer.clear();
   }
 
   /// Check if buffer contains content that might be partial JSON

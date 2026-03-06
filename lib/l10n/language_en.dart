@@ -67,4 +67,12 @@ class LanguageEn extends Languages {
   @override
   String get functionCallingLlmDescription =>
       "LLM used for tool/function detection";
+
+  @override
+  String get titleGenerationPrompt =>
+      "Generate a concise title (max 5 words) for this chat: ";
+
+  @override
+  String get titleGenerationSystemPrompt =>
+      "You are a helpful assistant that generates short, descriptive chat titles. Return only the title, no quotes or extra text.";
 }

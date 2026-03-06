@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 enum TtsType { waiting, response }
 
 class TtsService {
@@ -13,15 +11,11 @@ class TtsService {
   Future<void> speak(String text) async {
     await _stopCurrent();
     _currentType = TtsType.response;
-    // Call TTS generation and play
-    debugPrint('TTS: Speaking response: $text');
   }
 
   Future<void> playWaitingSentence(String text) async {
     await _stopCurrent();
     _currentType = TtsType.waiting;
-    // Play waiting sentence
-    debugPrint('TTS: Playing waiting sentence: $text');
   }
 
   Future<void> stop() async {

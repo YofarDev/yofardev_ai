@@ -35,10 +35,6 @@ void main() {
       interruptionService.dispose();
     });
 
-    tearDown(() {
-      manager.dispose();
-    });
-
     test('should process items in priority order', () async {
       when(
         () => mockDatasource.textToFrenchMaleVoice(

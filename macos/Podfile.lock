@@ -14,8 +14,6 @@ PODS:
   - flutter_onnxruntime (0.0.1):
     - FlutterMacOS
     - onnxruntime-objc (= 1.22.0)
-  - flutter_tts (0.0.1):
-    - FlutterMacOS
   - flutter_volume_controller (0.0.1):
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
@@ -53,7 +51,6 @@ DEPENDENCIES:
   - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_inappwebview_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos`)
   - flutter_onnxruntime (from `Flutter/ephemeral/.symlinks/plugins/flutter_onnxruntime/macos`)
-  - flutter_tts (from `Flutter/ephemeral/.symlinks/plugins/flutter_tts/macos`)
   - flutter_volume_controller (from `Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin`)
@@ -84,8 +81,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos
   flutter_onnxruntime:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_onnxruntime/macos
-  flutter_tts:
-    :path: Flutter/ephemeral/.symlinks/plugins/flutter_tts/macos
   flutter_volume_controller:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos
   FlutterMacOS:
@@ -115,7 +110,6 @@ SPEC CHECKSUMS:
   file_selector_macos: 3e56eaea051180007b900eacb006686fd54da150
   flutter_inappwebview_macos: bdf207b8f4ebd58e86ae06cd96b147de99a67c9b
   flutter_onnxruntime: f95d4d22cbeebd530948a4c9541be1e3a62073f0
-  flutter_tts: 64651204e5d276ffea5a910f942d5e9785a96085
   flutter_volume_controller: 25d09126b0d695560f11c80b1311d5063fed882f
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   geolocator_apple: 66b711889fd333205763b83c9dcf0a57a28c7afd

@@ -69,5 +69,13 @@ class LanguageFr extends Languages {
       "LLM utilisé pour générer les titres des conversations";
   @override
   String get functionCallingLlmDescription =>
-      "LLM utilisé pour la détection d’outils/fonctions";
+      "LLM utilisé pour la détection d'outils/fonctions";
+
+  @override
+  String get titleGenerationPrompt =>
+      "Générez un titre concis (max 5 mots) pour cette conversation: ";
+
+  @override
+  String get titleGenerationSystemPrompt =>
+      "Vous êtes un assistant utile qui génère des titres de conversation courts et descriptifs. Returnz uniquement le titre, sans guillemets ni texte supplémentaire.";
 }

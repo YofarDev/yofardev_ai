@@ -122,8 +122,15 @@ class FakeLlmService implements LlmServiceInterface {
       _realService.getConfigForTask(task);
 
   @override
-  Future<String?> generateTitle(String firstUserMessage, {LlmConfig? config}) =>
-      _realService.generateTitle(firstUserMessage, config: config);
+  Future<String?> generateTitle(
+    String firstUserMessage, {
+    LlmConfig? config,
+    String language = 'en',
+  }) => _realService.generateTitle(
+    firstUserMessage,
+    config: config,
+    language: language,
+  );
 
   @override
   Future<String?> promptModel({

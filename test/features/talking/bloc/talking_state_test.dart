@@ -3,20 +3,24 @@ import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dar
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 import 'package:yofardev_ai/features/talking/data/repositories/talking_repository_impl.dart';
 import 'package:yofardev_ai/core/services/audio/tts_service.dart';
+import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 
 void main() {
   late TalkingCubit cubit;
   late TtsService ttsService;
+  late InterruptionService interruptionService;
 
   setUp(() {
     ttsService = TtsService();
+    interruptionService = InterruptionService();
     final TalkingRepositoryImpl repository = TalkingRepositoryImpl(ttsService);
-    cubit = TalkingCubit(repository);
+    cubit = TalkingCubit(repository, interruptionService);
   });
 
   tearDown(() {
     cubit.close();
     ttsService.dispose();
+    interruptionService.dispose();
   });
 
   test('can distinguish waiting from generating', () async {
@@ -55,15 +59,6 @@ void main() {
     await cubit.playWaitingSentence('Test');
     await cubit.stop();
 
-    expect(cubit.state, isA<IdleState>());
-  });
-
-  test('setLoadingStatus legacy method works', () {
-    cubit.setLoadingStatus(true);
-    expect(cubit.state, isA<GeneratingState>());
-    expect(cubit.state.shouldShowTalking, isTrue);
-
-    cubit.setLoadingStatus(false);
     expect(cubit.state, isA<IdleState>());
   });
 

@@ -57,7 +57,7 @@ extension ChatEntryExtension on ChatEntry {
   String getMessage({bool isFromUser = false}) {
     if (isFromUser) return body.getVisiblePrompt();
 
-    // Try to parse as JSON and extract the "message" field
+    // Try to parse as JSON and extract the text/message field
     try {
       String cleanedBody = body.trim();
       final int jsonStart = cleanedBody.indexOf('{');
@@ -69,9 +69,15 @@ extension ChatEntryExtension on ChatEntry {
 
         final Map<String, dynamic> map =
             json.decode(cleanedBody) as Map<String, dynamic>;
-        final String? message = map['message'] as String?;
 
-        // If we found a "message" field in JSON, return it
+        // Support multiple field names for consistency with JsonStreamExtractor
+        final String? message =
+            map['text'] as String? ??
+            map['content'] as String? ??
+            map['message'] as String? ??
+            map['response'] as String?;
+
+        // If we found a message field in JSON, return it
         if (message != null && message.isNotEmpty) {
           return message;
         }

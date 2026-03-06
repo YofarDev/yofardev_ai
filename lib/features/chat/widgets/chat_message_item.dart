@@ -3,17 +3,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
+import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/utils/app_utils.dart';
 import '../domain/models/chat_entry.dart';
-import 'modern_chat_bubble.dart';
 import '../widgets/chat_avatar.dart';
+import 'modern_chat_bubble.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final List<ChatEntry> entries;
@@ -56,39 +56,40 @@ class ChatMessageItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          ModernChatBubble(
-            isUser: isFromUser,
-            showAvatar: !isFromUser,
-            avatar: const ChatAvatar(),
-            timestamp: _formatTime(entries[index].timestamp),
-            isStreaming: isStreaming && !isFromUser,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                ParsedText(
-                  selectable: true,
-                  text: showEverything
-                      ? limitParameterSize(entries[index].body, isFromUser)
-                      : entries[index].getMessage(isFromUser: isFromUser),
-                  style: TextStyle(
-                    color: isFromUser
-                        ? AppColors.onPrimary
-                        : AppColors.onSurface,
-                    fontSize: 15,
-                  ),
-                ),
-                if (soundEffect.isNotEmpty) const SizedBox(height: 8),
-                if (soundEffect.isNotEmpty)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: _SoundEffectButton(
-                      soundEffect: soundEffect,
-                      isFromUser: isFromUser,
+          if (entries[index].getMessage().isNotEmpty)
+            ModernChatBubble(
+              isUser: isFromUser,
+              showAvatar: !isFromUser,
+              avatar: const ChatAvatar(),
+              timestamp: _formatTime(entries[index].timestamp),
+              isStreaming: isStreaming && !isFromUser,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  ParsedText(
+                    selectable: true,
+                    text: showEverything
+                        ? limitParameterSize(entries[index].body, isFromUser)
+                        : entries[index].getMessage(isFromUser: isFromUser),
+                    style: TextStyle(
+                      color: isFromUser
+                          ? AppColors.onPrimary
+                          : AppColors.onSurface,
+                      fontSize: 15,
                     ),
                   ),
-              ],
+                  if (soundEffect.isNotEmpty) const SizedBox(height: 8),
+                  if (soundEffect.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: _SoundEffectButton(
+                        soundEffect: soundEffect,
+                        isFromUser: isFromUser,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
           if (entries[index].attachedImage != null)
             _AttachedImage(
               imagePath: entries[index].attachedImage!,

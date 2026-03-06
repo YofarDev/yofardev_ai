@@ -71,5 +71,9 @@ abstract class LlmServiceInterface {
 
   /// Generate a title for a chat based on the first user message
   /// Returns null if generation fails or no config is available
-  Future<String?> generateTitle(String firstUserMessage, {LlmConfig? config});
+  Future<String?> generateTitle(
+    String firstUserMessage, {
+    LlmConfig? config,
+    String language = 'en',
+  });
 }

@@ -64,29 +64,15 @@ class StreamProcessorService {
               }
             }
 
-            // Try to extract any remaining JSON metadata
-            if (expectJson && _jsonExtractor.hasBufferedContent) {
-              final String buffered = _jsonExtractor.getBufferedContent();
-              if (buffered.trim().isNotEmpty) {
-                try {
-                  // Last attempt to parse complete JSON
-                  final String? finalText = _jsonExtractor.extractText(
-                    buffered,
-                    expectJson: true,
-                  );
-                  if (finalText != null && finalText.trim().isNotEmpty) {
-                    chunks.add(
-                      SentenceChunk.metadata(
-                        json: <String, dynamic>{'response': finalText},
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  AppLogger.warning(
-                    'Could not extract final JSON metadata',
-                    tag: 'StreamProcessor',
-                  );
-                }
+            // Include the full raw JSON if available
+            if (expectJson) {
+              final String fullJson = _jsonExtractor.getRawContent();
+              if (fullJson.trim().isNotEmpty) {
+                chunks.add(
+                  SentenceChunk.metadata(
+                    json: <String, dynamic>{'fullJson': fullJson},
+                  ),
+                );
               }
             }
 
@@ -104,10 +90,25 @@ class StreamProcessorService {
           // Flush any remaining sentences
           final List<String> remaining = _sentenceSplitter.flush();
           for (final String sentence in remaining) {
-            chunks.add(
-              SentenceChunk.sentence(text: sentence, index: sentenceIndex++),
-            );
+            if (sentence.trim().isNotEmpty) {
+              chunks.add(
+                SentenceChunk.sentence(text: sentence, index: sentenceIndex++),
+              );
+            }
           }
+
+          // Include the full raw JSON if available
+          if (expectJson) {
+            final String fullJson = _jsonExtractor.getRawContent();
+            if (fullJson.trim().isNotEmpty) {
+              chunks.add(
+                SentenceChunk.metadata(
+                  json: <String, dynamic>{'fullJson': fullJson},
+                ),
+              );
+            }
+          }
+
           chunks.add(const SentenceChunk.complete());
           return chunks;
         },

@@ -52,7 +52,10 @@ class ChatTitleCubit extends Cubit<ChatTitleState> {
       // Initialize LLM service if needed
       await _llmService.init();
 
-      final String? title = await _llmService.generateTitle(firstUserMessage);
+      final String? title = await _llmService.generateTitle(
+        firstUserMessage,
+        language: chat.language,
+      );
 
       if (title != null && title.isNotEmpty && title.length <= 100) {
         final String sanitizedTitle = _sanitizeTitle(title);

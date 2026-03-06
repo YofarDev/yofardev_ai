@@ -26,10 +26,8 @@ class MockTtsQueueManager extends Mock implements TtsQueueManager {
   @override
   List<TtsQueueItem> get queue => <TtsQueueItem>[];
 
-  @override
   bool get hasItems => false;
 
-  @override
   bool get isPlaying => false;
 
   @override
@@ -83,6 +81,10 @@ class MockTalkingCubit extends Mock implements TalkingCubit {
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue('/test/path.wav');
+  });
+
   group('ChatTtsCubit', () {
     late ChatTtsCubit cubit;
     late MockTtsQueueManager mockTtsManager;
@@ -103,6 +105,9 @@ void main() {
       when(
         () => mockPlayerService.play(any()),
       ).thenAnswer((_) async => const Duration(milliseconds: 2000));
+      when(
+        () => mockPlayerService.stop(),
+      ).thenAnswer((_) async {}); // Add stub for stop()
 
       cubit = ChatTtsCubit(
         ttsQueueManager: mockTtsManager,
@@ -256,11 +261,10 @@ void main() {
     group('TTS audio stream handling', () {
       test('should add audio path with amplitudes when stream emits', () async {
         const String testAudioPath = '/path/to/audio.wav';
-        final List<int> testAmplitudes = <int>[15, 25, 35, 45, 55];
 
-        when(
-          () => mockAmplitudeService.extractAmplitudes(testAudioPath),
-        ).thenAnswer((_) async => testAmplitudes);
+        // The default stubs from setUp() are already configured
+        // when(() => mockAmplitudeService.extractAmplitudes(any())).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
+        // when(() => mockPlayerService.play(any())).thenAnswer((_) async => const Duration(milliseconds: 2000));
 
         // Emit audio path from mock manager
         mockTtsManager.emitAudioPath(testAudioPath);
@@ -276,7 +280,7 @@ void main() {
         );
         expect(
           cubit.state.audioPathsWaitingSentences.first['amplitudes'],
-          testAmplitudes,
+          <int>[10, 20, 30, 40, 50], // Use the default stub values
         );
       });
 

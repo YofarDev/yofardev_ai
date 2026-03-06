@@ -85,7 +85,7 @@ class _AiTextInputState extends State<AiTextInput> {
               backgroundColor: Colors.red,
             ),
           );
-          context.read<TalkingCubit>().setLoadingStatus(false);
+          // TalkingCubit manages its own error state
         }
       },
       child: BlocBuilder<AvatarCubit, AvatarState>(
@@ -273,7 +273,7 @@ class _AiTextInputState extends State<AiTextInput> {
     if (!widget.onlyText) {
       FocusScope.of(context).requestFocus(_inputFocus);
       if (_controller.text.isEmpty) return;
-      context.read<TalkingCubit>().setLoadingStatus(true);
+      // TalkingCubit now manages its own loading state
     }
     if (_controller.text.isEmpty) return;
     final String prompt = _controller.text;

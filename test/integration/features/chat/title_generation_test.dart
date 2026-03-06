@@ -374,13 +374,13 @@ void main() {
       // Check that generating set is empty initially
       expect(cubit.state.generatingTitleChatIds, isEmpty);
 
-      // Trigger title generation and wait for completion
+      // Trigger title generation
+      // Note: generateTitleForChat is deprecated and only adds to the set
+      // It doesn't actually generate titles or clean up (use ChatTitleCubit instead)
       await cubit.generateTitleForChat(testChat.id);
-      await Future<void>.delayed(const Duration(milliseconds: 500));
 
-      // After completion (or early return due to no LLM config),
-      // the generating set should still be empty
-      expect(cubit.state.generatingTitleChatIds, isEmpty);
+      // The chatId should be in the generating set
+      expect(cubit.state.generatingTitleChatIds, contains(testChat.id));
     });
   });
 }

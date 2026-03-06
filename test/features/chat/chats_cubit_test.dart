@@ -209,9 +209,10 @@ void main() {
 
     group('setCurrentLanguage', () {
       test('should update current language', () async {
-        const String newLanguage = 'en';
+        const String newLanguage = 'de';
 
         await chatsCubit.setCurrentLanguage(newLanguage);
+        await Future<void>.delayed(const Duration(milliseconds: 10));
 
         expect(chatsCubit.state.currentLanguage, newLanguage);
       });
@@ -222,6 +223,7 @@ void main() {
         const bool newSoundEffectsEnabled = false;
 
         await chatsCubit.setSoundEffects(newSoundEffectsEnabled);
+        await Future<void>.delayed(const Duration(milliseconds: 10));
 
         expect(chatsCubit.state.soundEffectsEnabled, newSoundEffectsEnabled);
       });
@@ -495,13 +497,14 @@ void main() {
 
     group('ChatsStatus enum', () {
       test('should have all required values', () {
-        expect(ChatsStatus.values.length, 7);
+        expect(ChatsStatus.values.length, 8);
         expect(ChatsStatus.values, contains(ChatsStatus.initial));
         expect(ChatsStatus.values, contains(ChatsStatus.loading));
         expect(ChatsStatus.values, contains(ChatsStatus.updating));
         expect(ChatsStatus.values, contains(ChatsStatus.loaded));
         expect(ChatsStatus.values, contains(ChatsStatus.typing));
         expect(ChatsStatus.values, contains(ChatsStatus.success));
+        expect(ChatsStatus.values, contains(ChatsStatus.streaming));
         expect(ChatsStatus.values, contains(ChatsStatus.error));
       });
     });

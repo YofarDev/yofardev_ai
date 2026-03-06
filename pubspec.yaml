@@ -59,6 +59,7 @@ dev_dependencies:
 
 
   mocktail: any
+  bloc_test: ^10.0.0
 flutter_native_splash:
   color: "#438EFF"
   image: "assets/splash.png"

@@ -36,8 +36,8 @@ class HomeBlocListeners extends StatelessWidget {
               current.status == ChatMessageStatus.success ||
               current.status == ChatMessageStatus.error,
           listener: (BuildContext context, ChatMessageState state) {
-            // Reset loading status when streaming completes or errors
-            context.read<TalkingCubit>().setLoadingStatus(false);
+            // TalkingCubit now manages its own state transitions
+            // No need to manually reset loading status
           },
         ),
         BlocListener<ChatsCubit, ChatsState>(

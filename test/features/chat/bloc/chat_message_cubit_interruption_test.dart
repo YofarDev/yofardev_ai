@@ -63,7 +63,7 @@ void main() {
 
         // Act
         await interruptionService.interrupt();
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future<dynamic>.delayed(const Duration(milliseconds: 100));
 
         // Assert
         expect(cubit.state.status, ChatMessageStatus.interrupted);
@@ -77,7 +77,7 @@ void main() {
 
       // Act
       await interruptionService.interrupt();
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future<dynamic>.delayed(const Duration(milliseconds: 100));
 
       // Assert - should still be in initial state
       expect(cubit.state.status, ChatMessageStatus.initial);

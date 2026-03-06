@@ -37,4 +37,8 @@ abstract class Languages {
   String get taskLlmDescription;
   String get titleLlmDescription;
   String get functionCallingLlmDescription;
+
+  /// Title Generation
+  String get titleGenerationPrompt;
+  String get titleGenerationSystemPrompt;
 }
