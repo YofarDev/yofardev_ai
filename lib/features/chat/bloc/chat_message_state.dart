@@ -18,4 +18,7 @@ sealed class ChatMessageState with _$ChatMessageState {
   }) = _ChatMessageState;
 
   factory ChatMessageState.initial() => const ChatMessageState();
+
+  /// Streaming was interrupted by user
+  const factory ChatMessageState.interrupted() = _Interrupted;
 }
