@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nested/nested.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../avatar/bloc/avatar_cubit.dart';
@@ -19,6 +20,9 @@ import '../widgets/ai_text_input/ai_text_input.dart';
 import '../widgets/chat_conversation_list.dart';
 import '../widgets/chat_details_actions.dart';
 import '../widgets/chat_details_background.dart';
+import '../widgets/floating_stop_button.dart';
+import '../bloc/chat_message_cubit.dart';
+import '../bloc/chat_message_state.dart';
 
 class ChatDetailsPage extends StatefulWidget {
   const ChatDetailsPage({super.key});
@@ -32,15 +36,33 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AvatarCubit, AvatarState>(
-      listenWhen: (AvatarState previous, AvatarState current) =>
-          previous.avatarConfig != current.avatarConfig,
-      listener: (BuildContext context, AvatarState state) {
-        context.read<AvatarCubit>().onNewAvatarConfig(
-          context.read<ChatsCubit>().state.openedChat.id,
-          state.avatarConfig,
-        );
-      },
+    return MultiBlocListener(
+      listeners: <SingleChildWidget>[
+        BlocListener<AvatarCubit, AvatarState>(
+          listenWhen: (AvatarState previous, AvatarState current) =>
+              previous.avatarConfig != current.avatarConfig,
+          listener: (BuildContext context, AvatarState state) {
+            context.read<AvatarCubit>().onNewAvatarConfig(
+              context.read<ChatsCubit>().state.openedChat.id,
+              state.avatarConfig,
+            );
+          },
+        ),
+        BlocListener<ChatMessageCubit, ChatMessageState>(
+          listenWhen: (ChatMessageState previous, ChatMessageState current) =>
+              previous.status != current.status,
+          listener: (BuildContext context, ChatMessageState state) {
+            if (state.status == ChatMessageStatus.interrupted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Response interrupted'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<AvatarCubit, AvatarState>(
         builder: (BuildContext context, AvatarState avatarState) {
           return BlocBuilder<ChatsCubit, ChatsState>(
@@ -86,6 +108,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                       onFunctionCallingToggle: () =>
                           context.read<ChatsCubit>().toggleFunctionCalling(),
                     ),
+                    const FloatingStopButton(),
                   ],
                 ),
               );
