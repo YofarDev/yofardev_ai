@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../domain/repositories/talking_repository.dart';
 import 'talking_state.dart';
@@ -11,10 +12,20 @@ import 'talking_state.dart';
 /// This cubit abstracts the TTS service through a repository,
 /// allowing for proper separation of concerns and testability.
 class TalkingCubit extends Cubit<TalkingState> {
-  TalkingCubit(this._repository) : super(const TalkingState.idle());
+  TalkingCubit(this._repository, this._interruptionService)
+    : super(const TalkingState.idle()) {
+    // Listen to interruptions
+    _interruptionSubscription = _interruptionService.interruptionStream.listen((
+      _,
+    ) async {
+      await stop();
+    });
+  }
 
   final TalkingRepository _repository;
+  final InterruptionService _interruptionService;
   Timer? _animationTimer;
+  StreamSubscription<void>? _interruptionSubscription;
 
   /// Initialize the cubit
   Future<void> init() async {
@@ -75,10 +86,6 @@ class TalkingCubit extends Cubit<TalkingState> {
     // Only emit if state actually changed and we're in a speaking state
     final TalkingState currentState = state;
     if (currentState.mouthState != newMouthState) {
-      AppLogger.debug(
-        'TalkingCubit: Updating mouth state: ${currentState.mouthState.name} -> $newMouthState (amplitude: $amplitude)',
-        tag: 'TalkingCubit',
-      );
       currentState.when(
         idle: (MouthState mouthState) => emit(TalkingState.idle(newMouthState)),
         waiting: (MouthState mouthState) =>
@@ -195,6 +202,7 @@ class TalkingCubit extends Cubit<TalkingState> {
   @override
   Future<void> close() async {
     _animationTimer?.cancel();
+    await _interruptionSubscription?.cancel();
     await super.close();
   }
 }

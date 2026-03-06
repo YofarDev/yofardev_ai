@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
@@ -10,13 +11,18 @@ void main() {
   group('TalkingCubit', () {
     late TalkingCubit cubit;
     late MockTalkingRepository mockRepository;
+    late InterruptionService interruptionService;
 
     setUp(() {
       mockRepository = MockTalkingRepository();
-      cubit = TalkingCubit(mockRepository);
+      interruptionService = InterruptionService();
+      cubit = TalkingCubit(mockRepository, interruptionService);
     });
 
-    tearDown(() => cubit.close());
+    tearDown(() {
+      cubit.close();
+      interruptionService.dispose();
+    });
 
     test('initial state should be idle', () {
       expect(cubit.state, isA<IdleState>());
@@ -159,58 +165,6 @@ void main() {
       });
     });
 
-    group('setLoadingStatus (deprecated)', () {
-      test('should emit generating when true', () {
-        cubit.setLoadingStatus(true);
-
-        expect(cubit.state, isA<GeneratingState>());
-        expect(cubit.state.shouldShowTalking, isTrue);
-        expect(cubit.state.status, TalkingStatus.loading);
-      });
-
-      test('should emit idle when false', () {
-        cubit.setSpeakingState();
-        expect(cubit.state, isA<SpeakingState>());
-
-        cubit.setLoadingStatus(false);
-
-        expect(cubit.state, isA<IdleState>());
-      });
-    });
-
-    group('stopTalking (deprecated) - FIXED', () {
-      test('FIXED: now properly awaits stop()', () async {
-        when(() => mockRepository.stop()).thenAnswer((_) async {});
-
-        cubit.setSpeakingState();
-        expect(cubit.state, isA<SpeakingState>());
-
-        // Now properly awaits the stop operation
-        await cubit.stopTalking();
-
-        // Stop was called and completed
-        verify(() => mockRepository.stop()).called(1);
-
-        // State is now idle (no more race condition!)
-        expect(cubit.state, isA<IdleState>());
-      });
-
-      test('FIXED: awaits stop but parameters still ignored', () async {
-        when(() => mockRepository.stop()).thenAnswer((_) async {});
-
-        // Note: Parameters are still deprecated and ignored
-        // But at least the stop operation is now properly awaited
-        await cubit.stopTalking(
-          removeFile: true,
-          soundEffectsEnabled: true,
-          updateStatus: false,
-        );
-
-        verify(() => mockRepository.stop()).called(1);
-        // TODO: Parameters are ignored - could be removed in future refactor
-      });
-    });
-
     group('State extensions', () {
       test('shouldShowTalking returns true for generating', () async {
         when(
@@ -270,9 +224,6 @@ void main() {
 
       test('answer returns empty amplitudes for all states', () {
         cubit.setSpeakingState();
-        expect(cubit.state.answer.amplitudes, isEmpty);
-
-        cubit.setLoadingStatus(true);
         expect(cubit.state.answer.amplitudes, isEmpty);
 
         cubit.init();
@@ -384,8 +335,6 @@ void main() {
         await cubit.stop();
         cubit.setSpeakingState();
         await cubit.stop();
-        cubit.setLoadingStatus(true);
-        cubit.setLoadingStatus(false);
 
         expect(cubit.state, isA<IdleState>());
       });
@@ -413,6 +362,41 @@ void main() {
         await speechFuture;
 
         expect(cubit.state.isPlaying, isTrue);
+      });
+    });
+
+    group('Interruption', () {
+      late MockTalkingRepository mockRepository;
+      late InterruptionService interruptionService;
+      late TalkingCubit cubit;
+
+      setUp(() {
+        mockRepository = MockTalkingRepository();
+        interruptionService = InterruptionService();
+
+        when(() => mockRepository.stop()).thenAnswer((_) async {});
+      });
+
+      tearDown(() {
+        cubit.close();
+        interruptionService.dispose();
+      });
+
+      test('should stop animation and TTS when interrupted', () async {
+        // Arrange
+        cubit = TalkingCubit(mockRepository, interruptionService);
+
+        // Start speaking
+        cubit.setSpeakingState();
+        expect(cubit.state, isA<SpeakingState>());
+
+        // Act
+        await interruptionService.interrupt();
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        // Assert
+        expect(cubit.state, isA<IdleState>());
+        verify(() => mockRepository.stop()).called(1);
       });
     });
   });
