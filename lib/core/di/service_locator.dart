@@ -32,6 +32,7 @@ import '../../features/talking/presentation/bloc/talking_cubit.dart';
 import '../../l10n/localization_manager.dart';
 import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
+import '../services/audio/interruption_service.dart';
 import '../services/audio/tts_service.dart';
 import '../services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
@@ -84,8 +85,12 @@ Future<void> setupServiceLocator() async {
     () => SettingsLocalDatasource(),
   );
   getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
+  getIt.registerLazySingleton<InterruptionService>(() => InterruptionService());
   getIt.registerLazySingleton<TtsQueueManager>(
-    () => TtsQueueManager(ttsDatasource: getIt<TtsDatasource>()),
+    () => TtsQueueManager(
+      ttsDatasource: getIt<TtsDatasource>(),
+      interruptionService: getIt<InterruptionService>(),
+    ),
   );
 
   // Repositories (register implementations as interfaces)
@@ -129,7 +134,8 @@ Future<void> setupServiceLocator() async {
   );
   // TalkingCubit must be a singleton so both ChatTtsCubit and UI use the same instance
   getIt.registerLazySingleton<TalkingCubit>(
-    () => TalkingCubit(getIt<TalkingRepository>()),
+    () =>
+        TalkingCubit(getIt<TalkingRepository>(), getIt<InterruptionService>()),
   );
   getIt.registerLazySingleton<ChatTitleCubit>(
     () => ChatTitleCubit(
@@ -167,6 +173,7 @@ Future<void> setupServiceLocator() async {
       llmService: getIt<LlmService>(),
       streamProcessor: getIt<StreamProcessorService>(),
       promptDatasource: getIt<PromptDatasource>(),
+      interruptionService: getIt<InterruptionService>(),
       ttsQueueManager: getIt<TtsQueueManager>(),
       chatTitleCubit: getIt<ChatTitleCubit>(),
     ),
