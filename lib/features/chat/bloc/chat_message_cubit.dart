@@ -130,6 +130,9 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     required String language,
     void Function(Chat updatedChat)? onChatUpdated,
   }) async {
+    // Reset interruption state at start of new conversation
+    _interruptionService.reset();
+
     emit(
       state.copyWith(
         audioPathsWaitingSentences: <Map<String, dynamic>>[],
