@@ -5,29 +5,26 @@ import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
 import '../../../core/res/app_constants.dart';
 import '../../../core/utils/app_utils.dart';
+import '../../../core/utils/logger.dart';
 import 'scaled_avatar_item.dart';
 
-class TalkingMouth extends StatefulWidget {
+class TalkingMouth extends StatelessWidget {
   const TalkingMouth({super.key});
 
-  @override
-  State<TalkingMouth> createState() => _TalkingMouthState();
-}
-
-class _TalkingMouthState extends State<TalkingMouth> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TalkingCubit, TalkingState>(
       builder: (BuildContext context, TalkingState state) {
-        // Show thinking only when generating, NOT waiting
-        if (state.shouldShowTalking) {
-          return const ThinkingAnimation();
-        }
+        final String mouthPath = _getMouthPath(state.mouthState);
 
-        // For now, show idle mouth for all states
-        // In future, will integrate with actual TTS playback to animate mouth
+        // Debug logging to verify rebuilds
+        AppLogger.debug(
+          'TalkingMouth: Rebuilding with state: ${state.runtimeType}, mouthState: ${state.mouthState.name}, path: ${mouthPath.split('/').last}',
+          tag: 'TalkingMouth',
+        );
+
         return ScaledAvatarItem(
-          path: _getMouthPath(MouthState.closed),
+          path: mouthPath,
           itemX: AppConstants.mouthX,
           itemY: AppConstants.mouthY,
         );
@@ -41,22 +38,3 @@ class _TalkingMouthState extends State<TalkingMouth> {
     );
   }
 }
-
-// Placeholder for thinking animation widget
-class ThinkingAnimation extends StatelessWidget {
-  const ThinkingAnimation({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaledAvatarItem(
-      path: AppUtils.fixAssetsPath('assets/avatar/mouth/mouth_closed.png'),
-      itemX: AppConstants.mouthX,
-      itemY: AppConstants.mouthY,
-    );
-  }
-}
-
-enum MouthState { closed, semi, open }
-
-// TODO: Remove these after full migration - keeping for compilation compatibility
-// These will be replaced with proper imports from the new architecture

@@ -8,11 +8,23 @@ class AudioPlayerService {
   final AudioPlayer _player = AudioPlayer();
 
   /// Play an audio file from path
-  Future<void> play(String audioPath) async {
+  Future<Duration> play(String audioPath) async {
     try {
       AppLogger.debug('Playing audio: $audioPath', tag: 'AudioPlayerService');
+
+      // Stop any previous playback
+      await _player.stop();
+
       await _player.setFilePath(audioPath);
       _player.play();
+
+      // Return the audio duration for syncing animation
+      final Duration duration = _player.duration ?? Duration.zero;
+      AppLogger.debug(
+        'Audio duration: ${duration.inMilliseconds}ms',
+        tag: 'AudioPlayerService',
+      );
+      return duration;
     } catch (e) {
       AppLogger.error(
         'Failed to play audio',

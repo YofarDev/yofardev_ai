@@ -5,21 +5,35 @@ part 'talking_state.freezed.dart';
 /// Status enum for backward compatibility
 enum TalkingStatus { initial, idle, loading, success, error }
 
+/// Mouth animation states for lip-sync
+enum MouthState { closed, slightly, semi, open, wide }
+
 @freezed
 sealed class TalkingState with _$TalkingState {
-  const factory TalkingState.idle() = IdleState;
+  const factory TalkingState.idle([
+    @Default(MouthState.closed) MouthState mouthState,
+  ]) = IdleState;
 
   /// Playing waiting sentences - NO thinking animation
-  const factory TalkingState.waiting() = WaitingState;
+  const factory TalkingState.waiting([
+    @Default(MouthState.closed) MouthState mouthState,
+  ]) = WaitingState;
 
   /// Generating TTS - SHOWS thinking animation
-  const factory TalkingState.generating() = GeneratingState;
+  const factory TalkingState.generating([
+    @Default(MouthState.closed) MouthState mouthState,
+  ]) = GeneratingState;
 
   /// Playing TTS response
-  const factory TalkingState.speaking() = SpeakingState;
+  const factory TalkingState.speaking([
+    @Default(MouthState.closed) MouthState mouthState,
+  ]) = SpeakingState;
 
   /// Error occurred
-  const factory TalkingState.error(String message) = ErrorState;
+  const factory TalkingState.error(
+    String message, [
+    @Default(MouthState.closed) MouthState mouthState,
+  ]) = ErrorState;
 }
 
 extension TalkingStateX on TalkingState {
@@ -39,11 +53,11 @@ extension TalkingStateX on TalkingState {
   /// Backward compatibility: map to old TalkingStatus enum
   TalkingStatus get status {
     return when(
-      idle: () => TalkingStatus.idle,
-      waiting: () => TalkingStatus.success,
-      generating: () => TalkingStatus.loading,
-      speaking: () => TalkingStatus.success,
-      error: (_) => TalkingStatus.error,
+      idle: (MouthState mouthState) => TalkingStatus.idle,
+      waiting: (MouthState mouthState) => TalkingStatus.success,
+      generating: (MouthState mouthState) => TalkingStatus.loading,
+      speaking: (MouthState mouthState) => TalkingStatus.success,
+      error: (String message, MouthState mouthState) => TalkingStatus.error,
     );
   }
 

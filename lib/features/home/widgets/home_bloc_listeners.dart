@@ -68,25 +68,25 @@ class HomeBlocListeners extends StatelessWidget {
   void _onTalkingStateChanged(BuildContext context, TalkingState talkingState) {
     // Handle talking state changes with new freezed union type
     talkingState.when(
-      idle: () {
+      idle: (MouthState mouthState) {
         context.read<HomeCubit>().stopWaitingTtsLoop();
       },
-      waiting: () {
+      waiting: (MouthState mouthState) {
         // Waiting sentences - no thinking animation
         // TtsService handles playback, HomeCubit manages volume
         if (context.mounted) {
           context.read<HomeCubit>().startWaitingTtsLoop();
         }
       },
-      generating: () {
+      generating: (MouthState mouthState) {
         // TTS generation - thinking animation shows
         // No action needed here, UI updates via state.shouldShowTalking
       },
-      speaking: () {
+      speaking: (MouthState mouthState) {
         // TTS is playing
         context.read<HomeCubit>().stopWaitingTtsLoop();
       },
-      error: (String message) {
+      error: (String message, MouthState mouthState) {
         context.read<HomeCubit>().stopWaitingTtsLoop();
         ScaffoldMessenger.of(
           context,

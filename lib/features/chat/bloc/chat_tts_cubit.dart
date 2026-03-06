@@ -62,16 +62,15 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   /// Play audio and extract amplitudes
   Future<void> _playAndExtractAmplitudes(String audioPath) async {
     try {
-      // Update TalkingCubit to show speaking state
-      _talkingCubit.setLoadingStatus(false); // First, stop loading state
+      AppLogger.debug(
+        'Starting TTS playback for $audioPath',
+        tag: 'ChatTtsCubit',
+      );
 
-      // Play the audio
-      await _audioPlayerService.play(audioPath);
+      // 1. Stop any previous audio playback
+      await _audioPlayerService.stop();
 
-      // Update TalkingCubit to speaking state
-      _talkingCubit.setSpeakingState(); // Trigger speaking state
-
-      // Extract amplitudes for animation
+      // 2. Extract amplitudes FIRST (before playing!)
       final List<int> amplitudes = await _audioAmplitudeService
           .extractAmplitudes(audioPath);
       AppLogger.debug(
@@ -79,6 +78,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         tag: 'ChatTtsCubit',
       );
 
+      // 3. Add to state for history
       final List<Map<String, dynamic>> currentList =
           List<Map<String, dynamic>>.from(state.audioPathsWaitingSentences);
       currentList.add(<String, dynamic>{
@@ -87,13 +87,35 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       });
       emit(state.copyWith(audioPathsWaitingSentences: currentList));
 
-      // Wait for playback to complete, then return to idle
+      // 4. Play the audio and get its duration
+      final Duration audioDuration = await _audioPlayerService.play(audioPath);
+      AppLogger.debug(
+        'Audio duration: ${audioDuration.inMilliseconds}ms, amplitudes: ${amplitudes.length}',
+        tag: 'ChatTtsCubit',
+      );
+
+      // 5. Set speaking state
+      _talkingCubit.setSpeakingState();
+
+      // 6. Trigger the animation DIRECTLY on TalkingCubit with actual duration
+      _talkingCubit.startAmplitudeAnimation(
+        audioPath,
+        amplitudes,
+        audioDuration,
+        () {
+          // Animation completion callback
+          // Note: We don't stop here because audio might still be playing
+          // The real stop happens when onPlaybackComplete fires
+        },
+      );
+
+      // 7. Wait for playback to complete, then return to idle
       _playbackSubscription?.cancel();
       _playbackSubscription = _audioPlayerService.onPlaybackComplete.listen((
         _,
       ) {
         AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
-        _talkingCubit.stop(); // Return to idle state
+        _talkingCubit.stop(); // Return to idle state (also cancels animation)
       });
     } catch (e) {
       AppLogger.error(

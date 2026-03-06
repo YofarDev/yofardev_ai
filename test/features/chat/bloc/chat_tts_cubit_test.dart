@@ -100,7 +100,9 @@ void main() {
       when(
         () => mockAmplitudeService.extractAmplitudes(any()),
       ).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
-      when(() => mockPlayerService.play(any())).thenAnswer((_) async {});
+      when(
+        () => mockPlayerService.play(any()),
+      ).thenAnswer((_) async => const Duration(milliseconds: 2000));
 
       cubit = ChatTtsCubit(
         ttsQueueManager: mockTtsManager,

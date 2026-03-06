@@ -56,14 +56,20 @@ void main() {
         ).called(1);
       });
 
-      test('should propagate repository errors', () async {
+      test('should emit error state on repository failure', () async {
         when(
           () => mockRepository.playWaitingSentence(any()),
         ).thenThrow(Exception('TTS failed'));
 
+        await cubit.playWaitingSentence('Test');
+
+        expect(cubit.state, isA<ErrorState>());
         expect(
-          () => cubit.playWaitingSentence('Test'),
-          throwsA(isA<Exception>()),
+          cubit.state.maybeWhen(
+            error: (String msg, MouthState mouthState) => msg,
+            orElse: () => '',
+          ),
+          contains('TTS failed'),
         );
       });
     });
@@ -97,7 +103,10 @@ void main() {
 
         expect(cubit.state, isA<ErrorState>());
         expect(
-          cubit.state.maybeWhen(error: (String msg) => msg, orElse: () => ''),
+          cubit.state.maybeWhen(
+            error: (String msg, MouthState mouthState) => msg,
+            orElse: () => '',
+          ),
           contains('TTS generation failed'),
         );
         expect(cubit.state.status, TalkingStatus.error);
@@ -145,6 +154,7 @@ void main() {
       test('should propagate repository errors', () async {
         when(() => mockRepository.stop()).thenThrow(Exception('Stop failed'));
 
+        // stop() doesn't have try/catch, so errors propagate
         expect(() => cubit.stop(), throwsA(isA<Exception>()));
       });
     });
@@ -168,36 +178,36 @@ void main() {
       });
     });
 
-    group('stopTalking (deprecated) - BUG DETECTED', () {
-      test('BUG: calls stop() but does not await it', () async {
+    group('stopTalking (deprecated) - FIXED', () {
+      test('FIXED: now properly awaits stop()', () async {
         when(() => mockRepository.stop()).thenAnswer((_) async {});
 
         cubit.setSpeakingState();
+        expect(cubit.state, isA<SpeakingState>());
 
-        // BUG: This method calls stop() but doesn't await it!
-        // It also doesn't return Future<void>
-        cubit.stopTalking();
+        // Now properly awaits the stop operation
+        await cubit.stopTalking();
 
-        // The stop was called but we can't guarantee it completed
+        // Stop was called and completed
         verify(() => mockRepository.stop()).called(1);
 
-        // This is a race condition - the state might not be idle yet!
-        expect(cubit.state, isA<SpeakingState>());
+        // State is now idle (no more race condition!)
+        expect(cubit.state, isA<IdleState>());
       });
 
-      test('BUG: ignores all parameters', () async {
+      test('FIXED: awaits stop but parameters still ignored', () async {
         when(() => mockRepository.stop()).thenAnswer((_) async {});
 
-        // These parameters are completely ignored
-        cubit.stopTalking(
+        // Note: Parameters are still deprecated and ignored
+        // But at least the stop operation is now properly awaited
+        await cubit.stopTalking(
           removeFile: true,
           soundEffectsEnabled: true,
           updateStatus: false,
         );
 
-        // Still just calls stop()
         verify(() => mockRepository.stop()).called(1);
-        // If someone expects these parameters to do something, they'll be disappointed
+        // TODO: Parameters are ignored - could be removed in future refactor
       });
     });
 

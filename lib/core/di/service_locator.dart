@@ -127,7 +127,8 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<AvatarCubit>(
     () => AvatarCubit(getIt<AvatarRepository>()),
   );
-  getIt.registerFactory<TalkingCubit>(
+  // TalkingCubit must be a singleton so both ChatTtsCubit and UI use the same instance
+  getIt.registerLazySingleton<TalkingCubit>(
     () => TalkingCubit(getIt<TalkingRepository>()),
   );
   getIt.registerLazySingleton<ChatTitleCubit>(
