@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../../../l10n/localization_manager.dart';
 import '../../utils/logger.dart';
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
@@ -51,17 +50,16 @@ class LlmService implements LlmServiceInterface {
 
   http.Client get _httpClient => _testClient ?? _client;
   LlmStreamingServiceInterface get _streaming =>
-      _testStreamingService ?? _streamingService ?? _createDefaultStreamingService();
+      _testStreamingService ??
+      _streamingService ??
+      _createDefaultStreamingService();
 
   final http.Client _client;
   final LlmConfigManager _configManager = LlmConfigManager();
   final LlmStreamingServiceInterface? _streamingService;
 
   LlmStreamingServiceInterface _createDefaultStreamingService() {
-    return LlmStreamingService(
-      client: _client,
-      configManager: _configManager,
-    );
+    return LlmStreamingService(client: _client, configManager: _configManager);
   }
 
   @override
@@ -175,7 +173,7 @@ class LlmService implements LlmServiceInterface {
     LlmConfig? config,
     bool returnJson = false,
     bool debugLogs = false,
- }) {
+  }) {
     // Delegate to the streaming service
     return _streaming.promptModelStream(
       messages: messages,
@@ -185,7 +183,6 @@ class LlmService implements LlmServiceInterface {
       debugLogs: debugLogs,
     );
   }
-
 
   @override
   Future<(String, List<FunctionInfo>)> checkFunctionsCalling({
@@ -376,10 +373,10 @@ class LlmService implements LlmServiceInterface {
       }
 
       final String promptText = language == 'fr'
-          ? localized.titleGenerationPrompt
+          ? "Générez un titre concis (max 5 mots) pour cette conversation: "
           : 'Generate a concise title (max 5 words) for this chat: ';
       final String systemPromptText = language == 'fr'
-          ? localized.titleGenerationSystemPrompt
+          ? "Vous êtes un assistant utile qui génère des titres de conversation courts et descriptifs. Returnz uniquement le titre, sans guillemets ni texte supplémentaire."
           : 'You are a helpful assistant that generates short, descriptive chat titles. Return only the title, no quotes or extra text.';
 
       final List<LlmMessage> messages = <LlmMessage>[
