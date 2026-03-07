@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
-import 'package:yofardev_ai/features/chat/bloc/chats_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';

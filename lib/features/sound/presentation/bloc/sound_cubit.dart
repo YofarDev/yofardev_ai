@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../domain/repositories/sound_repository.dart';
+import '../../domain/repositories/sound_repository.dart';
 import 'sound_state.dart';
 
 class SoundCubit extends Cubit<SoundState> {

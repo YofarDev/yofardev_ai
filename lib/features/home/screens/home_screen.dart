@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/res/app_colors.dart';
-import '../../avatar/bloc/avatar_cubit.dart';
-import '../../chat/bloc/chats_cubit.dart';
-import '../../chat/bloc/chats_state.dart';
-import '../../chat/bloc/chat_message_cubit.dart';
-import '../../demo/bloc/demo_cubit.dart';
+import '../../avatar/presentation/bloc/avatar_cubit.dart';
+import '../../chat/presentation/bloc/chats_cubit.dart';
+import '../../chat/presentation/bloc/chats_state.dart';
+import '../../chat/presentation/bloc/chat_message_cubit.dart';
+import '../../demo/presentation/bloc/demo_cubit.dart';
 import '../../demo/domain/models/demo_script.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';

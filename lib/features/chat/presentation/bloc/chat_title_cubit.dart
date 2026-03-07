@@ -1,12 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/services/llm/llm_service.dart';
-import '../../../core/utils/extensions.dart';
-import '../../../core/utils/logger.dart';
+import '../../../../core/services/llm/llm_service.dart';
+import '../../../../core/utils/extensions.dart';
+import '../../../../core/utils/logger.dart';
 
-import '../domain/models/chat.dart';
-import '../domain/models/chat_entry.dart';
-import '../domain/repositories/chat_repository.dart';
+import '../../domain/models/chat.dart';
+import '../../domain/models/chat_entry.dart';
+import '../../domain/repositories/chat_repository.dart';
 import 'chat_title_state.dart';
 
 /// Cubit responsible for generating chat titles asynchronously

@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/services/audio/audio_amplitude_service.dart';
-import '../../../core/services/audio/audio_player_service.dart';
-import '../../../core/utils/logger.dart';
-import '../../sound/domain/tts_queue_manager.dart';
-import '../../talking/presentation/bloc/talking_cubit.dart';
+import '../../../../core/services/audio/audio_amplitude_service.dart';
+import '../../../../core/services/audio/audio_player_service.dart';
+import '../../../../core/utils/logger.dart';
+import '../../../sound/domain/tts_queue_manager.dart';
+import '../../../talking/presentation/bloc/talking_cubit.dart';
 import 'chat_tts_state.dart';
 
 /// Cubit responsible for managing TTS audio state

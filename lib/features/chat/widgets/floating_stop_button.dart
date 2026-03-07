@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/services/audio/interruption_service.dart';
-import '../bloc/chat_message_cubit.dart';
-import '../bloc/chat_message_state.dart';
+import '../presentation/bloc/chat_message_cubit.dart';
+import '../presentation/bloc/chat_message_state.dart';
 
 /// Floating stop button that appears when assistant is streaming
 ///

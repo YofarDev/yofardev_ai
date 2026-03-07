@@ -1,27 +1,31 @@
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 
-import '../../features/avatar/bloc/avatar_cubit.dart';
+import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
-import '../../features/chat/bloc/chat_list_cubit.dart';
-import '../../features/chat/bloc/chat_message_cubit.dart';
-import '../../features/chat/bloc/chat_title_cubit.dart';
-import '../../features/chat/bloc/chat_tts_cubit.dart';
-import '../../features/chat/bloc/chats_cubit.dart';
+import '../../features/chat/presentation/bloc/chat_audio_cubit.dart';
+import '../../features/chat/presentation/bloc/chat_list_cubit.dart';
+import '../../features/chat/presentation/bloc/chat_message_cubit.dart';
+import '../../features/chat/presentation/bloc/chat_streaming_cubit.dart';
+import '../../features/chat/presentation/bloc/chat_title_cubit.dart';
+import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
+import '../../features/chat/presentation/bloc/chats_cubit.dart';
+import '../../features/chat/domain/services/chat_entry_service.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
-import '../../features/demo/bloc/demo_cubit.dart';
+import '../../features/demo/presentation/bloc/demo_cubit.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
 import '../../features/home/presentation/bloc/home_cubit.dart';
-import '../../features/settings/bloc/settings_cubit.dart';
+import '../../features/settings/presentation/bloc/settings_cubit.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
-import '../../features/sound/bloc/sound_cubit.dart';
+import '../../features/sound/presentation/bloc/sound_cubit.dart';
 import '../../features/sound/data/datasources/tts_datasource.dart';
 import '../../features/sound/data/repositories/sound_repository_impl.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
@@ -38,8 +42,11 @@ import '../services/audio/interruption_service.dart';
 import '../services/audio/tts_service.dart';
 import '../services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
+import '../services/llm/llm_config_manager.dart';
 import '../services/llm/llm_service.dart';
 import '../services/llm/llm_service_interface.dart';
+import '../services/llm/llm_streaming_service.dart';
+import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
 import '../services/settings_local_datasource.dart';
 import '../services/stream_processor/stream_processor_service.dart';
@@ -67,6 +74,12 @@ Future<void> setupServiceLocator() async {
   }
 
   // Register both service instances for demo mode switching
+  getIt.registerLazySingleton<LlmStreamingServiceInterface>(
+    () => LlmStreamingService(
+      client: http.Client(),
+      configManager: LlmConfigManager(),
+    ),
+  );
   getIt.registerLazySingleton<LlmService>(() => LlmService());
   getIt.registerLazySingleton<FakeLlmService>(() => FakeLlmService());
 
@@ -169,16 +182,29 @@ Future<void> setupServiceLocator() async {
       localizationManager: getIt<LocalizationManager>(),
     ),
   );
-  getIt.registerFactory<ChatMessageCubit>(
-    () => ChatMessageCubit(
+
+  // Chat message cubits - refactored for single responsibility
+  getIt.registerLazySingleton<ChatEntryService>(
+    () => ChatEntryService(getIt<SettingsRepository>()),
+  );
+  getIt.registerFactory<ChatAudioCubit>(() => ChatAudioCubit());
+  getIt.registerFactory<ChatStreamingCubit>(
+    () => ChatStreamingCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
       llmService: getIt<LlmService>(),
       streamProcessor: getIt<StreamProcessorService>(),
       promptDatasource: getIt<PromptDatasource>(),
       interruptionService: getIt<InterruptionService>(),
+      chatEntryService: getIt<ChatEntryService>(),
       ttsQueueManager: getIt<TtsQueueManager>(),
       chatTitleCubit: getIt<ChatTitleCubit>(),
+    ),
+  );
+  getIt.registerFactory<ChatMessageCubit>(
+    () => ChatMessageCubit(
+      chatAudioCubit: getIt<ChatAudioCubit>(),
+      chatStreamingCubit: getIt<ChatStreamingCubit>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../features/chat/bloc/chats_cubit.dart';
+import '../presentation/bloc/chats_cubit.dart';
 import '../../../core/models/chat.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/utils/extensions.dart';

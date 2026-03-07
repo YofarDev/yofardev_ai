@@ -4,60 +4,60 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/services/stream_processor/sentence_chunk.dart';
-import '../../../core/utils/extensions.dart';
-import '../../../core/utils/logger.dart';
-import '../../../core/utils/platform_utils.dart';
-import '../../../l10n/localization_manager.dart';
-import '../../../core/models/avatar_config.dart';
-import '../../../core/models/llm_config.dart';
-import '../../../core/models/voice_effect.dart';
-import '../../../core/services/audio/interruption_service.dart';
-import '../../../core/services/llm/llm_service.dart';
-import '../../../core/services/prompt_datasource.dart';
-import '../../../core/services/stream_processor/stream_processor_service.dart';
-import '../../avatar/data/datasources/avatar_cache_datasource.dart';
-import '../../settings/domain/repositories/settings_repository.dart';
-import '../../sound/domain/tts_queue_manager.dart';
-import '../domain/models/chat.dart';
-import '../domain/models/chat_entry.dart';
-import '../domain/repositories/chat_repository.dart';
-import 'chat_message_state.dart';
+import '../../../../core/services/audio/interruption_service.dart';
+import '../../../../core/services/llm/llm_service.dart';
+import '../../../../core/services/prompt_datasource.dart';
+import '../../../../core/services/stream_processor/sentence_chunk.dart';
+import '../../../../core/services/stream_processor/stream_processor_service.dart';
+import '../../../../core/utils/logger.dart';
+import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/llm_config.dart';
+import '../../../../core/models/voice_effect.dart';
+import '../../../../l10n/localization_manager.dart';
+import '../../../settings/domain/repositories/settings_repository.dart';
+import '../../../sound/domain/tts_queue_manager.dart';
+import '../../domain/models/chat.dart';
+import '../../domain/models/chat_entry.dart';
+import '../../domain/repositories/chat_repository.dart';
+import '../../domain/services/chat_entry_service.dart';
+import 'chat_streaming_state.dart';
 import 'chat_title_cubit.dart';
 
-/// Cubit responsible for chat message operations
+/// Cubit responsible for coordinating LLM message streaming
 ///
 /// Handles:
-/// - Sending messages (non-streaming)
-/// - Streaming messages with real-time TTS
-/// - Message state management
-class ChatMessageCubit extends Cubit<ChatMessageState> {
-  ChatMessageCubit({
+/// - Streaming responses from LLM
+/// - Managing streaming state
+/// - Function calling integration
+/// - TTS enqueueing
+class ChatStreamingCubit extends Cubit<ChatStreamingState> {
+  ChatStreamingCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
     required LlmService llmService,
     required StreamProcessorService streamProcessor,
     required PromptDatasource promptDatasource,
     required InterruptionService interruptionService,
+    required ChatEntryService chatEntryService,
     TtsQueueManager? ttsQueueManager,
     ChatTitleCubit? chatTitleCubit,
   }) : _chatRepository = chatRepository,
-       _settingsRepository = settingsRepository,
        _llmService = llmService,
        _streamProcessor = streamProcessor,
        _promptDatasource = promptDatasource,
        _interruptionService = interruptionService,
+       _chatEntryService = chatEntryService,
        _ttsQueueManager = ttsQueueManager,
        _chatTitleCubit = chatTitleCubit,
-       super(ChatMessageState.initial()) {
+       super(ChatStreamingState.initial()) {
     // Listen to interruption stream
     _interruptionSubscription = _interruptionService.interruptionStream.listen((
       _,
     ) {
-      if (state.status == ChatMessageStatus.streaming) {
+      if (state.status == ChatStreamingStatus.streaming) {
         emit(
           state.copyWith(
-            status: ChatMessageStatus.interrupted,
+            status: ChatStreamingStatus.interrupted,
             streamingContent: '',
           ),
         );
@@ -66,68 +66,26 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
   }
 
   final ChatRepository _chatRepository;
-  final SettingsRepository _settingsRepository;
   final LlmService _llmService;
   final StreamProcessorService _streamProcessor;
   final PromptDatasource _promptDatasource;
   final InterruptionService _interruptionService;
+  final ChatEntryService _chatEntryService;
   final TtsQueueManager? _ttsQueueManager;
   final ChatTitleCubit? _chatTitleCubit;
 
   StreamSubscription<void>? _interruptionSubscription;
 
-  Future<void> prepareWaitingSentences(String language) async {
-    if (PlatformUtils.checkPlatform() == 'Web') {
-      emit(state.copyWith(initializing: false));
-      return;
-    }
-    try {
-      final List<Map<String, dynamic>>? cachedSentences =
-          await AvatarCacheDatasource.getWaitingSentencesMap(language);
-      if (cachedSentences != null) {
-        emit(
-          state.copyWith(
-            audioPathsWaitingSentences: cachedSentences,
-            initializing: false,
-          ),
-        );
-      } else {
-        emit(state.copyWith(initializing: false));
-      }
-    } catch (e) {
-      AppLogger.error(
-        'Failed to load waiting sentences',
-        tag: 'ChatMessageCubit',
-        error: e,
-      );
-      emit(
-        state.copyWith(
-          initializing: false,
-          status: ChatMessageStatus.error,
-          errorMessage: 'Failed to load waiting sentences: ${e.toString()}',
-        ),
-      );
-    }
-  }
-
-  void shuffleWaitingSentences() {
-    final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
-      state.audioPathsWaitingSentences,
-    );
-    list.shuffle();
-    emit(state.copyWith(audioPathsWaitingSentences: list));
-  }
-
-  void removeWaitingSentence(String audioPath) {
-    final List<Map<String, dynamic>> currentList =
-        List<Map<String, dynamic>>.from(state.audioPathsWaitingSentences);
-    currentList.removeWhere(
-      (Map<String, dynamic> element) => element['audioPath'] == audioPath,
-    );
-    emit(state.copyWith(audioPathsWaitingSentences: currentList));
-  }
-
-  Future<void> askYofardev(
+  /// Streams a response from the LLM for the given prompt
+  ///
+  /// This method:
+  /// 1. Resets interruption state
+  /// 2. Creates a user entry
+  /// 3. Checks for function calls
+  /// 4. Streams the response (or uses function call result)
+  /// 5. Updates the chat via callbacks
+  /// 6. Enqueues TTS if not text-only
+  Future<void> streamResponse(
     String prompt, {
     required bool onlyText,
     String? attachedImage,
@@ -141,8 +99,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
 
     emit(
       state.copyWith(
-        audioPathsWaitingSentences: <Map<String, dynamic>>[],
-        status: ChatMessageStatus.streaming,
+        status: ChatStreamingStatus.streaming,
         streamingContent: '',
         streamingSentenceCount: 0,
       ),
@@ -163,7 +120,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     );
     onChatUpdated?.call(chat);
 
-    final ChatEntry userEntry = await _createUserEntry(
+    final ChatEntry userEntry = await _chatEntryService.createUserEntry(
       prompt: prompt,
       avatar: avatar,
       attachedImage: attachedImage,
@@ -193,13 +150,14 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
       if (config == null) {
         emit(
           state.copyWith(
-            status: ChatMessageStatus.error,
+            status: ChatStreamingStatus.error,
             errorMessage: 'No LLM configuration selected',
           ),
         );
         return;
       }
-      // 1. Check for function calls first (same as non-streaming flow)
+
+      // 1. Check for function calls first
       final Either<Exception, List<ChatEntry>> functionCheckResult =
           await _chatRepository.askYofardevAi(
             chat,
@@ -213,7 +171,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
         (Exception error) {
           AppLogger.error(
             'Function calling check failed',
-            tag: 'ChatMessageCubit',
+            tag: 'ChatStreamingCubit',
             error: error,
           );
           // Continue with streaming even if function calling fails
@@ -247,7 +205,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
 
         emit(
           state.copyWith(
-            status: ChatMessageStatus.success,
+            status: ChatStreamingStatus.success,
             streamingContent: '',
           ),
         );
@@ -321,11 +279,11 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
           complete: () {
             AppLogger.debug(
               'Stream complete with $sentenceCount sentences',
-              tag: 'ChatMessageCubit',
+              tag: 'ChatStreamingCubit',
             );
           },
           error: (String msg) {
-            AppLogger.error('Stream error: $msg', tag: 'ChatMessageCubit');
+            AppLogger.error('Stream error: $msg', tag: 'ChatStreamingCubit');
           },
         );
       }
@@ -341,7 +299,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
       onChatUpdated?.call(chat);
 
       emit(
-        state.copyWith(status: ChatMessageStatus.success, streamingContent: ''),
+        state.copyWith(status: ChatStreamingStatus.success, streamingContent: ''),
       );
 
       await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
@@ -355,39 +313,18 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     } catch (e) {
       AppLogger.error(
         'Error in streaming message',
-        tag: 'ChatMessageCubit',
+        tag: 'ChatStreamingCubit',
         error: e,
       );
       emit(
         state.copyWith(
-          status: ChatMessageStatus.error,
+          status: ChatStreamingStatus.error,
           errorMessage: e.toString(),
           streamingContent: '',
         ),
       );
       return;
     }
-  }
-
-  Future<ChatEntry> _createUserEntry({
-    required String prompt,
-    required Avatar avatar,
-    String? attachedImage,
-  }) async {
-    final String languageCode = (await _settingsRepository.getLanguage()).fold(
-      (Exception error) => 'fr',
-      (String? language) => language ?? 'fr',
-    );
-    final String wrappedUserMessage =
-        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${localized.userMessage} : \n'''$prompt'''";
-
-    return ChatEntry(
-      id: const Uuid().v4(),
-      entryType: EntryType.user,
-      body: wrappedUserMessage,
-      timestamp: DateTime.now(),
-      attachedImage: attachedImage,
-    );
   }
 
   @override

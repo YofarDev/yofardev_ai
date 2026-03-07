@@ -1,17 +1,16 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'chat_streaming_state.dart';
+
 part 'chat_message_state.freezed.dart';
 
-enum ChatMessageStatus {
-  initial,
-  loading,
-  typing,
-  streaming,
-  success,
-  error,
-  interrupted,
-}
+// Re-export the status enum for backward compatibility
+typedef ChatMessageStatus = ChatStreamingStatus;
 
+/// Coordinator state for chat message operations
+///
+/// This state combines the state from ChatAudioCubit and ChatStreamingCubit
+/// to maintain backward compatibility with existing consumers.
 @freezed
 sealed class ChatMessageState with _$ChatMessageState {
   const factory ChatMessageState({
@@ -19,7 +18,6 @@ sealed class ChatMessageState with _$ChatMessageState {
     @Default('') String errorMessage,
     @Default('') String streamingContent,
     @Default(0) int streamingSentenceCount,
-    @Default(<String>{}) Set<String> generatingTitleChatIds,
     @Default(<Map<String, dynamic>>[])
     List<Map<String, dynamic>> audioPathsWaitingSentences,
     @Default(true) bool initializing,

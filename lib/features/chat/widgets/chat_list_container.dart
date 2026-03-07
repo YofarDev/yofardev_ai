@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../avatar/bloc/avatar_cubit.dart';
-import '../../avatar/bloc/avatar_state.dart';
-import '../bloc/chats_cubit.dart';
+import '../../avatar/presentation/bloc/avatar_cubit.dart';
+import '../../avatar/presentation/bloc/avatar_state.dart';
+import '../presentation/bloc/chats_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/utils/extensions.dart';

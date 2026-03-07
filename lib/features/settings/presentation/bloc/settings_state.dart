@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../core/models/task_llm_config.dart';
-import '../../../core/models/llm_config.dart';
+import '../../../../core/models/task_llm_config.dart';
+import '../../../../core/models/llm_config.dart';
 
 part 'settings_state.freezed.dart';
 

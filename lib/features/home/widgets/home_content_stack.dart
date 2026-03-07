@@ -4,7 +4,7 @@ import '../../avatar/widgets/avatar_widgets.dart';
 import '../../avatar/widgets/background_avatar.dart';
 import '../../avatar/widgets/loading_avatar_widget.dart';
 import '../../avatar/widgets/thinking_animation.dart';
-import '../../chat/bloc/chats_state.dart';
+import '../../chat/presentation/bloc/chats_state.dart';
 import '../../chat/widgets/ai_text_input/ai_text_input.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
 import 'home_buttons.dart';

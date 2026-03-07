@@ -13,19 +13,19 @@ import 'package:window_manager/window_manager.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
-import 'features/avatar/bloc/avatar_cubit.dart';
-import 'features/chat/bloc/chats_cubit.dart';
-import 'features/chat/bloc/chat_list_cubit.dart';
-import 'features/chat/bloc/chat_message_cubit.dart';
-import 'features/chat/bloc/chat_title_cubit.dart';
-import 'features/chat/bloc/chat_tts_cubit.dart';
-import 'features/demo/bloc/demo_cubit.dart';
+import 'features/avatar/presentation/bloc/avatar_cubit.dart';
+import 'features/chat/presentation/bloc/chats_cubit.dart';
+import 'features/chat/presentation/bloc/chat_list_cubit.dart';
+import 'features/chat/presentation/bloc/chat_message_cubit.dart';
+import 'features/chat/presentation/bloc/chat_title_cubit.dart';
+import 'features/chat/presentation/bloc/chat_tts_cubit.dart';
+import 'features/demo/presentation/bloc/demo_cubit.dart';
 import 'features/sound/data/datasources/tts_datasource.dart';
 import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
 import 'features/talking/presentation/bloc/talking_cubit.dart';
 import 'features/home/presentation/bloc/home_cubit.dart';
-import 'features/settings/bloc/settings_cubit.dart';
+import 'features/settings/presentation/bloc/settings_cubit.dart';
 import 'core/res/app_theme.dart';
 import 'core/utils/platform_utils.dart';
 

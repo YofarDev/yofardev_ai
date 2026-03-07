@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../l10n/localization_manager.dart';
-import '../../settings/domain/repositories/settings_repository.dart';
-import '../domain/models/chat.dart';
-import '../domain/repositories/chat_repository.dart';
+import '../../../../l10n/localization_manager.dart';
+import '../../../settings/domain/repositories/settings_repository.dart';
+import '../../domain/models/chat.dart';
+import '../../domain/repositories/chat_repository.dart';
 import 'chat_list_state.dart';
 
 class ChatListCubit extends Cubit<ChatListState> {

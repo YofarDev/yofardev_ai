@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/llm_config.dart';
@@ -16,11 +16,14 @@ import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
-import 'package:yofardev_ai/features/chat/bloc/chat_message_cubit.dart';
-import 'package:yofardev_ai/features/chat/bloc/chat_message_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_audio_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_state.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
@@ -230,6 +233,27 @@ class MockTtsQueueManager implements TtsQueueManager {
 class MockStreamProcessorService extends Mock
     implements StreamProcessorService {}
 
+class MockChatEntryService implements ChatEntryService {
+  const MockChatEntryService(this._settingsRepository);
+
+  final SettingsRepository _settingsRepository;
+
+  @override
+  Future<ChatEntry> createUserEntry({
+    required String prompt,
+    required Avatar avatar,
+    String? attachedImage,
+  }) async {
+    return ChatEntry(
+      id: 'test-id',
+      entryType: EntryType.user,
+      body: prompt,
+      timestamp: DateTime.now(),
+      attachedImage: attachedImage,
+    );
+  }
+}
+
 void main() {
   // Initialize Flutter test bindings
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -278,14 +302,20 @@ void main() {
         ),
       );
 
-      cubit = ChatMessageCubit(
+      final ChatAudioCubit chatAudioCubit = ChatAudioCubit();
+      final ChatStreamingCubit chatStreamingCubit = ChatStreamingCubit(
         chatRepository: mockChatRepo,
         settingsRepository: mockSettingsRepo,
         llmService: llmService,
         streamProcessor: StreamProcessorService(),
         promptDatasource: mockPromptDatasource,
         interruptionService: interruptionService,
+        chatEntryService: MockChatEntryService(mockSettingsRepo),
         ttsQueueManager: mockTtsManager,
+      );
+      cubit = ChatMessageCubit(
+        chatAudioCubit: chatAudioCubit,
+        chatStreamingCubit: chatStreamingCubit,
       );
     });
 
@@ -307,24 +337,30 @@ void main() {
     group('prepareWaitingSentences', () {
       test('should set initializing to false', () async {
         await cubit.prepareWaitingSentences('fr');
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
         expect(cubit.state.initializing, isFalse);
       });
     });
 
     group('shuffleWaitingSentences', () {
-      test('should shuffle audio paths waiting sentences', () {
+      test('should shuffle audio paths waiting sentences', () async {
         final List<Map<String, dynamic>> originalList = <Map<String, dynamic>>[
           <String, dynamic>{'sentence': 'A', 'audioPath': 'a'},
           <String, dynamic>{'sentence': 'B', 'audioPath': 'b'},
           <String, dynamic>{'sentence': 'C', 'audioPath': 'c'},
         ];
 
-        cubit.emit(
-          cubit.state.copyWith(audioPathsWaitingSentences: originalList),
+        // Set up state using the child cubit
+        cubit.chatAudioCubit.emit(
+          cubit.chatAudioCubit.state.copyWith(
+            audioPathsWaitingSentences: originalList,
+          ),
         );
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
         cubit.shuffleWaitingSentences();
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
         // Same elements, just shuffled
         expect(cubit.state.audioPathsWaitingSentences.length, 3);
@@ -340,16 +376,21 @@ void main() {
     });
 
     group('removeWaitingSentence', () {
-      test('should remove sentence by audioPath', () {
+      test('should remove sentence by audioPath', () async {
         final List<Map<String, dynamic>> list = <Map<String, dynamic>>[
           <String, dynamic>{'sentence': 'A', 'audioPath': 'path1'},
           <String, dynamic>{'sentence': 'B', 'audioPath': 'path2'},
           <String, dynamic>{'sentence': 'C', 'audioPath': 'path3'},
         ];
 
-        cubit.emit(cubit.state.copyWith(audioPathsWaitingSentences: list));
+        // Set up state using the child cubit
+        cubit.chatAudioCubit.emit(
+          cubit.chatAudioCubit.state.copyWith(audioPathsWaitingSentences: list),
+        );
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
         cubit.removeWaitingSentence('path2');
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
         expect(cubit.state.audioPathsWaitingSentences.length, 2);
         expect(
@@ -360,15 +401,21 @@ void main() {
         );
       });
 
-      test('should do nothing when audioPath not found', () {
+      test('should do nothing when audioPath not found', () async {
         final List<Map<String, dynamic>> list = <Map<String, dynamic>>[
           <String, dynamic>{'sentence': 'A', 'audioPath': 'path1'},
         ];
 
-        cubit.emit(cubit.state.copyWith(audioPathsWaitingSentences: list));
+        // Set up state using the child cubit
+        cubit.chatAudioCubit.emit(
+          cubit.chatAudioCubit.state.copyWith(audioPathsWaitingSentences: list),
+        );
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+
         final int beforeLength = cubit.state.audioPathsWaitingSentences.length;
 
         cubit.removeWaitingSentence('nonexistent');
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
         expect(cubit.state.audioPathsWaitingSentences.length, beforeLength);
       });
@@ -578,13 +625,19 @@ void main() {
         'should transition to interrupted state when interruption occurs',
         () async {
           // Arrange
-          final ChatMessageCubit cubit = ChatMessageCubit(
+          final ChatAudioCubit chatAudioCubit = ChatAudioCubit();
+          final ChatStreamingCubit chatStreamingCubit = ChatStreamingCubit(
             chatRepository: mockChatRepository,
             settingsRepository: mockSettingsRepository,
             llmService: mockLlmService,
             streamProcessor: mockStreamProcessor,
             promptDatasource: mockPromptDatasource,
             interruptionService: interruptionService,
+            chatEntryService: MockChatEntryService(mockSettingsRepository),
+          );
+          final ChatMessageCubit cubit = ChatMessageCubit(
+            chatAudioCubit: chatAudioCubit,
+            chatStreamingCubit: chatStreamingCubit,
           );
 
           // Start streaming

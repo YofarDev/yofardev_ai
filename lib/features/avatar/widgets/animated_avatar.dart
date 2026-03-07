@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../../core/models/avatar_config.dart';
-import '../../../features/avatar/bloc/avatar_state.dart';
+import '../presentation/bloc/avatar_state.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';
 import 'clothes.dart';

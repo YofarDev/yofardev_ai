@@ -3,8 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/res/app_constants.dart';
-import '../../../features/avatar/bloc/avatar_state.dart';
-import '../bloc/avatar_cubit.dart';
+import '../presentation/bloc/avatar_state.dart';
+import '../presentation/bloc/avatar_cubit.dart';
 import 'animated_avatar.dart';
 
 class AvatarWidgets extends StatefulWidget {

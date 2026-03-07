@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../features/avatar/bloc/avatar_cubit.dart';
-import '../../../../features/avatar/bloc/avatar_state.dart';
+import '../../presentation/bloc/avatar_cubit.dart';
+import '../../presentation/bloc/avatar_state.dart';
 import '../../../../core/res/app_constants.dart';
 import '../glowing_laser.dart';
 

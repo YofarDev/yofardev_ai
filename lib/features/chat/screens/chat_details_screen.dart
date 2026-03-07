@@ -7,10 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:nested/nested.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../avatar/bloc/avatar_cubit.dart';
-import '../../avatar/bloc/avatar_state.dart';
-import '../bloc/chats_cubit.dart';
-import '../bloc/chats_state.dart';
+import '../../avatar/presentation/bloc/avatar_cubit.dart';
+import '../../avatar/presentation/bloc/avatar_state.dart';
+import '../presentation/bloc/chats_cubit.dart';
+import '../presentation/bloc/chats_state.dart';
 import '../../../core/utils/logger.dart';
 
 import '../../../core/widgets/app_icon_button.dart';
@@ -21,8 +21,8 @@ import '../widgets/chat_conversation_list.dart';
 import '../widgets/chat_details_actions.dart';
 import '../widgets/chat_details_background.dart';
 import '../widgets/floating_stop_button.dart';
-import '../bloc/chat_message_cubit.dart';
-import '../bloc/chat_message_state.dart';
+import '../presentation/bloc/chat_message_cubit.dart';
+import '../presentation/bloc/chat_message_state.dart';
 
 class ChatDetailsPage extends StatefulWidget {
   const ChatDetailsPage({super.key});

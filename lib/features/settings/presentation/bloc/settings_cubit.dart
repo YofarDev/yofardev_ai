@@ -1,12 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/models/llm_config.dart';
-import '../../../core/models/task_llm_config.dart';
-import '../../../core/services/llm/llm_service_interface.dart';
-import '../../../core/utils/logger.dart';
+import '../../../../core/models/llm_config.dart';
+import '../../../../core/models/task_llm_config.dart';
+import '../../../../core/services/llm/llm_service_interface.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
-import '../../settings/domain/repositories/settings_repository.dart';
+import '../../domain/repositories/settings_repository.dart';
 import 'settings_state.dart';
 
 /// Cubit for managing application settings

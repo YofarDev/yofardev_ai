@@ -9,13 +9,16 @@ import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
-import 'package:yofardev_ai/features/chat/bloc/chat_message_cubit.dart';
-import 'package:yofardev_ai/features/chat/bloc/chat_message_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
-import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_audio_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_state.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
 import 'package:yofardev_ai/features/chat/widgets/floating_stop_button.dart';
+import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 
 class MockChatRepository implements ChatRepository {
   @override
@@ -146,6 +149,27 @@ class MockLlmService extends Mock implements LlmService {}
 class MockStreamProcessorService extends Mock
     implements StreamProcessorService {}
 
+class MockChatEntryService implements ChatEntryService {
+  const MockChatEntryService(this._settingsRepository);
+
+  final SettingsRepository _settingsRepository;
+
+  @override
+  Future<ChatEntry> createUserEntry({
+    required String prompt,
+    required Avatar avatar,
+    String? attachedImage,
+  }) async {
+    return ChatEntry(
+      id: 'test-id',
+      entryType: EntryType.user,
+      body: prompt,
+      timestamp: DateTime.now(),
+      attachedImage: attachedImage,
+    );
+  }
+}
+
 void main() {
   group('FloatingStopButton', () {
     late InterruptionService interruptionService;
@@ -153,18 +177,26 @@ void main() {
 
     setUp(() {
       interruptionService = InterruptionService();
-      chatCubit = ChatMessageCubit(
+      final ChatAudioCubit chatAudioCubit = ChatAudioCubit();
+      final ChatStreamingCubit chatStreamingCubit = ChatStreamingCubit(
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
         llmService: MockLlmService(),
         streamProcessor: MockStreamProcessorService(),
         promptDatasource: MockPromptDatasource(),
         interruptionService: interruptionService,
+        chatEntryService: MockChatEntryService(MockSettingsRepository()),
+      );
+      chatCubit = ChatMessageCubit(
+        chatAudioCubit: chatAudioCubit,
+        chatStreamingCubit: chatStreamingCubit,
       );
     });
 
     tearDown(() {
       chatCubit.close();
+      // Note: chatAudioCubit and chatStreamingCubit are owned by chatCubit
+      // and will be closed when chatCubit is closed
       interruptionService.dispose();
     });
 
@@ -174,7 +206,7 @@ void main() {
       // Arrange
       await tester.pumpWidget(
         MaterialApp(
-          home: BlocProvider.value(
+          home: BlocProvider<ChatMessageCubit>.value(
             value: chatCubit,
             child: const Scaffold(body: FloatingStopButton()),
           ),
@@ -193,7 +225,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: BlocProvider.value(
+          home: BlocProvider<ChatMessageCubit>.value(
             value: chatCubit,
             child: const Scaffold(body: FloatingStopButton()),
           ),
@@ -220,10 +252,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: BlocProvider.value(
+          home: BlocProvider<ChatMessageCubit>.value(
             value: chatCubit,
             child: Scaffold(
-              body: RepositoryProvider.value(
+              body: RepositoryProvider<InterruptionService>.value(
                 value: interruptionService,
                 child: const FloatingStopButton(),
               ),

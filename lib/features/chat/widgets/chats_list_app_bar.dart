@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/res/app_colors.dart';
-import '../bloc/chats_cubit.dart';
+import '../presentation/bloc/chats_cubit.dart';
 import '../../../l10n/localization_manager.dart';
 
 /// App bar for the chats list screen

@@ -1,13 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/utils/logger.dart';
-import '../../../l10n/localization_manager.dart';
-import '../../../core/models/avatar_config.dart';
-import '../../settings/domain/repositories/settings_repository.dart';
-import '../domain/models/chat.dart';
-import '../domain/models/chat_entry.dart';
-import '../domain/repositories/chat_repository.dart';
+import '../../../../core/utils/logger.dart';
+import '../../../../l10n/localization_manager.dart';
+import '../../../../core/models/avatar_config.dart';
+import '../../../settings/domain/repositories/settings_repository.dart';
+import '../../domain/models/chat.dart';
+import '../../domain/models/chat_entry.dart';
+import '../../domain/repositories/chat_repository.dart';
 import 'chats_state.dart';
 
 /// Main coordinator cubit for chat operations

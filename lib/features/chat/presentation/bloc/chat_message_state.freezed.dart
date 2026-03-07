@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChatMessageState {
 
- ChatMessageStatus get status; String get errorMessage; String get streamingContent; int get streamingSentenceCount; Set<String> get generatingTitleChatIds; List<Map<String, dynamic>> get audioPathsWaitingSentences; bool get initializing;
+ ChatMessageStatus get status; String get errorMessage; String get streamingContent; int get streamingSentenceCount; List<Map<String, dynamic>> get audioPathsWaitingSentences; bool get initializing;
 /// Create a copy of ChatMessageState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ChatMessageStateCopyWith<ChatMessageState> get copyWith => _$ChatMessageStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessageState&&(identical(other.status, status) || other.status == status)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.streamingContent, streamingContent) || other.streamingContent == streamingContent)&&(identical(other.streamingSentenceCount, streamingSentenceCount) || other.streamingSentenceCount == streamingSentenceCount)&&const DeepCollectionEquality().equals(other.generatingTitleChatIds, generatingTitleChatIds)&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessageState&&(identical(other.status, status) || other.status == status)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.streamingContent, streamingContent) || other.streamingContent == streamingContent)&&(identical(other.streamingSentenceCount, streamingSentenceCount) || other.streamingSentenceCount == streamingSentenceCount)&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,errorMessage,streamingContent,streamingSentenceCount,const DeepCollectionEquality().hash(generatingTitleChatIds),const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing);
+int get hashCode => Object.hash(runtimeType,status,errorMessage,streamingContent,streamingSentenceCount,const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing);
 
 @override
 String toString() {
-  return 'ChatMessageState(status: $status, errorMessage: $errorMessage, streamingContent: $streamingContent, streamingSentenceCount: $streamingSentenceCount, generatingTitleChatIds: $generatingTitleChatIds, audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing)';
+  return 'ChatMessageState(status: $status, errorMessage: $errorMessage, streamingContent: $streamingContent, streamingSentenceCount: $streamingSentenceCount, audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ChatMessageStateCopyWith<$Res>  {
   factory $ChatMessageStateCopyWith(ChatMessageState value, $Res Function(ChatMessageState) _then) = _$ChatMessageStateCopyWithImpl;
 @useResult
 $Res call({
- ChatMessageStatus status, String errorMessage, String streamingContent, int streamingSentenceCount, Set<String> generatingTitleChatIds, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing
+ ChatMessageStatus status, String errorMessage, String streamingContent, int streamingSentenceCount, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing
 });
 
 
@@ -62,14 +62,13 @@ class _$ChatMessageStateCopyWithImpl<$Res>
 
 /// Create a copy of ChatMessageState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? errorMessage = null,Object? streamingContent = null,Object? streamingSentenceCount = null,Object? generatingTitleChatIds = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? errorMessage = null,Object? streamingContent = null,Object? streamingSentenceCount = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ChatMessageStatus,errorMessage: null == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String,streamingContent: null == streamingContent ? _self.streamingContent : streamingContent // ignore: cast_nullable_to_non_nullable
 as String,streamingSentenceCount: null == streamingSentenceCount ? _self.streamingSentenceCount : streamingSentenceCount // ignore: cast_nullable_to_non_nullable
-as int,generatingTitleChatIds: null == generatingTitleChatIds ? _self.generatingTitleChatIds : generatingTitleChatIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,audioPathsWaitingSentences: null == audioPathsWaitingSentences ? _self.audioPathsWaitingSentences : audioPathsWaitingSentences // ignore: cast_nullable_to_non_nullable
+as int,audioPathsWaitingSentences: null == audioPathsWaitingSentences ? _self.audioPathsWaitingSentences : audioPathsWaitingSentences // ignore: cast_nullable_to_non_nullable
 as List<Map<String, dynamic>>,initializing: null == initializing ? _self.initializing : initializing // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -153,10 +152,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ChatMessageStatus status,  String errorMessage,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ChatMessageStatus status,  String errorMessage,  String streamingContent,  int streamingSentenceCount,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatMessageState() when $default != null:
-return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds,_that.audioPathsWaitingSentences,_that.initializing);case _:
+return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.streamingSentenceCount,_that.audioPathsWaitingSentences,_that.initializing);case _:
   return orElse();
 
 }
@@ -174,10 +173,10 @@ return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.str
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ChatMessageStatus status,  String errorMessage,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ChatMessageStatus status,  String errorMessage,  String streamingContent,  int streamingSentenceCount,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing)  $default,) {final _that = this;
 switch (_that) {
 case _ChatMessageState():
-return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds,_that.audioPathsWaitingSentences,_that.initializing);}
+return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.streamingSentenceCount,_that.audioPathsWaitingSentences,_that.initializing);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -191,10 +190,10 @@ return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.str
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ChatMessageStatus status,  String errorMessage,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ChatMessageStatus status,  String errorMessage,  String streamingContent,  int streamingSentenceCount,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatMessageState() when $default != null:
-return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds,_that.audioPathsWaitingSentences,_that.initializing);case _:
+return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.streamingSentenceCount,_that.audioPathsWaitingSentences,_that.initializing);case _:
   return null;
 
 }
@@ -206,20 +205,13 @@ return $default(_that.status,_that.errorMessage,_that.streamingContent,_that.str
 
 
 class _ChatMessageState implements ChatMessageState {
-  const _ChatMessageState({this.status = ChatMessageStatus.initial, this.errorMessage = '', this.streamingContent = '', this.streamingSentenceCount = 0, final  Set<String> generatingTitleChatIds = const <String>{}, final  List<Map<String, dynamic>> audioPathsWaitingSentences = const <Map<String, dynamic>>[], this.initializing = true}): _generatingTitleChatIds = generatingTitleChatIds,_audioPathsWaitingSentences = audioPathsWaitingSentences;
+  const _ChatMessageState({this.status = ChatMessageStatus.initial, this.errorMessage = '', this.streamingContent = '', this.streamingSentenceCount = 0, final  List<Map<String, dynamic>> audioPathsWaitingSentences = const <Map<String, dynamic>>[], this.initializing = true}): _audioPathsWaitingSentences = audioPathsWaitingSentences;
   
 
 @override@JsonKey() final  ChatMessageStatus status;
 @override@JsonKey() final  String errorMessage;
 @override@JsonKey() final  String streamingContent;
 @override@JsonKey() final  int streamingSentenceCount;
- final  Set<String> _generatingTitleChatIds;
-@override@JsonKey() Set<String> get generatingTitleChatIds {
-  if (_generatingTitleChatIds is EqualUnmodifiableSetView) return _generatingTitleChatIds;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_generatingTitleChatIds);
-}
-
  final  List<Map<String, dynamic>> _audioPathsWaitingSentences;
 @override@JsonKey() List<Map<String, dynamic>> get audioPathsWaitingSentences {
   if (_audioPathsWaitingSentences is EqualUnmodifiableListView) return _audioPathsWaitingSentences;
@@ -239,16 +231,16 @@ _$ChatMessageStateCopyWith<_ChatMessageState> get copyWith => __$ChatMessageStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessageState&&(identical(other.status, status) || other.status == status)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.streamingContent, streamingContent) || other.streamingContent == streamingContent)&&(identical(other.streamingSentenceCount, streamingSentenceCount) || other.streamingSentenceCount == streamingSentenceCount)&&const DeepCollectionEquality().equals(other._generatingTitleChatIds, _generatingTitleChatIds)&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessageState&&(identical(other.status, status) || other.status == status)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.streamingContent, streamingContent) || other.streamingContent == streamingContent)&&(identical(other.streamingSentenceCount, streamingSentenceCount) || other.streamingSentenceCount == streamingSentenceCount)&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,errorMessage,streamingContent,streamingSentenceCount,const DeepCollectionEquality().hash(_generatingTitleChatIds),const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing);
+int get hashCode => Object.hash(runtimeType,status,errorMessage,streamingContent,streamingSentenceCount,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing);
 
 @override
 String toString() {
-  return 'ChatMessageState(status: $status, errorMessage: $errorMessage, streamingContent: $streamingContent, streamingSentenceCount: $streamingSentenceCount, generatingTitleChatIds: $generatingTitleChatIds, audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing)';
+  return 'ChatMessageState(status: $status, errorMessage: $errorMessage, streamingContent: $streamingContent, streamingSentenceCount: $streamingSentenceCount, audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing)';
 }
 
 
@@ -259,7 +251,7 @@ abstract mixin class _$ChatMessageStateCopyWith<$Res> implements $ChatMessageSta
   factory _$ChatMessageStateCopyWith(_ChatMessageState value, $Res Function(_ChatMessageState) _then) = __$ChatMessageStateCopyWithImpl;
 @override @useResult
 $Res call({
- ChatMessageStatus status, String errorMessage, String streamingContent, int streamingSentenceCount, Set<String> generatingTitleChatIds, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing
+ ChatMessageStatus status, String errorMessage, String streamingContent, int streamingSentenceCount, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing
 });
 
 
@@ -276,14 +268,13 @@ class __$ChatMessageStateCopyWithImpl<$Res>
 
 /// Create a copy of ChatMessageState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? errorMessage = null,Object? streamingContent = null,Object? streamingSentenceCount = null,Object? generatingTitleChatIds = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? errorMessage = null,Object? streamingContent = null,Object? streamingSentenceCount = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,}) {
   return _then(_ChatMessageState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ChatMessageStatus,errorMessage: null == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String,streamingContent: null == streamingContent ? _self.streamingContent : streamingContent // ignore: cast_nullable_to_non_nullable
 as String,streamingSentenceCount: null == streamingSentenceCount ? _self.streamingSentenceCount : streamingSentenceCount // ignore: cast_nullable_to_non_nullable
-as int,generatingTitleChatIds: null == generatingTitleChatIds ? _self._generatingTitleChatIds : generatingTitleChatIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,audioPathsWaitingSentences: null == audioPathsWaitingSentences ? _self._audioPathsWaitingSentences : audioPathsWaitingSentences // ignore: cast_nullable_to_non_nullable
+as int,audioPathsWaitingSentences: null == audioPathsWaitingSentences ? _self._audioPathsWaitingSentences : audioPathsWaitingSentences // ignore: cast_nullable_to_non_nullable
 as List<Map<String, dynamic>>,initializing: null == initializing ? _self.initializing : initializing // ignore: cast_nullable_to_non_nullable
 as bool,
   ));

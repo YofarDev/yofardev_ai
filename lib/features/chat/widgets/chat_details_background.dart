@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/res/app_colors.dart';
-import '../bloc/chats_cubit.dart';
-import '../bloc/chats_state.dart';
+import '../presentation/bloc/chats_cubit.dart';
+import '../presentation/bloc/chats_state.dart';
 
 class ChatDetailsBackground extends StatelessWidget {
   const ChatDetailsBackground({super.key});

@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:yofardev_ai/features/sound/domain/repositories/sound_repository.dart';
-import 'package:yofardev_ai/features/sound/bloc/sound_cubit.dart';
-import 'package:yofardev_ai/features/sound/bloc/sound_state.dart';
+import 'package:yofardev_ai/features/sound/presentation/bloc/sound_cubit.dart';
+import 'package:yofardev_ai/features/sound/presentation/bloc/sound_state.dart';
 
 // Mock SoundService implementation for testing
 class MockSoundRepository implements SoundRepository {

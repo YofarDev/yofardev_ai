@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/models/llm_config.dart';
-import '../../bloc/settings_cubit.dart';
-import '../../bloc/settings_state.dart';
+import '../../presentation/bloc/settings_cubit.dart';
+import '../../presentation/bloc/settings_state.dart';
 import 'widgets/task_llm_background_layers.dart';
 import 'widgets/task_llm_app_bar.dart';
 import 'widgets/task_section_title.dart';

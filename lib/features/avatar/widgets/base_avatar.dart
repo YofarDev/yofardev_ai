@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../core/res/app_constants.dart';
 import '../../../core/utils/app_utils.dart';
-import '../../../features/avatar/bloc/avatar_state.dart';
-import '../bloc/avatar_cubit.dart';
+import '../presentation/bloc/avatar_state.dart';
+import '../presentation/bloc/avatar_cubit.dart';
 
 class BaseAvatar extends StatelessWidget {
   const BaseAvatar({super.key});

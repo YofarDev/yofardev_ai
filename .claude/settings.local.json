@@ -69,7 +69,9 @@
       "Bash(context-export/__problem_description.txt:*)",
       "mcp__jcodemunch__get_file_outline",
       "mcp__jcodemunch__get_file_tree",
-      "mcp__jcodemunch__get_symbol"
+      "mcp__jcodemunch__get_symbol",
+      "Bash(flutter analyze:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
