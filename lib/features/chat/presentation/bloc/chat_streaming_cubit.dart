@@ -13,7 +13,6 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/models/voice_effect.dart';
-import '../../../../l10n/localization_manager.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 import '../../../sound/domain/tts_queue_manager.dart';
 import '../../domain/models/chat.dart';
@@ -110,7 +109,7 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
     final ChatEntry temporaryEntry = ChatEntry(
       id: temporaryId,
       entryType: EntryType.user,
-      body: "${localized.userMessage} : \n'''$prompt'''",
+      body: "User : \n'''$prompt'''",
       timestamp: DateTime.now(),
       attachedImage: attachedImage,
     );
@@ -299,7 +298,10 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
       onChatUpdated?.call(chat);
 
       emit(
-        state.copyWith(status: ChatStreamingStatus.success, streamingContent: ''),
+        state.copyWith(
+          status: ChatStreamingStatus.success,
+          streamingContent: '',
+        ),
       );
 
       await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
