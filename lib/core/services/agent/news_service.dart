@@ -1,15 +1,18 @@
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class NewsService {
   static const String _baseUrl =
       'https://api.nytimes.com/svc/mostpopular/v2/shared/1.json';
 
-  static Future<String> getMostPopularNewsOfTheDay() async {
+  static Future<String> getMostPopularNewsOfTheDay(
+    String apiKey,
+  ) async {
     try {
-      final String apiKey = dotenv.env['NEWYORKTIMES_KEY'] ?? '';
+      if (apiKey.isEmpty) {
+        return "Error: API Key not provided";
+      }
       final Uri url = Uri.parse("$_baseUrl?api-key=$apiKey");
       final http.Response response = await http.get(url);
       if (response.statusCode == 200) {

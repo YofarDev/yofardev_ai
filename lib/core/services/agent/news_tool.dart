@@ -16,7 +16,9 @@ class NewsTool extends AgentTool {
 
   @override
   Future<String> execute(Map<String, dynamic> args) async {
-    final String result = await NewsService.getMostPopularNewsOfTheDay();
-    return result;
+    // TODO: Pass API key from settings in Task 13
+    return await NewsService.getMostPopularNewsOfTheDay(
+      '', // apiKey - will be passed from settings in Task 13
+    );
   }
 }
