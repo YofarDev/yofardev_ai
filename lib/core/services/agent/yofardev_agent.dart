@@ -77,9 +77,10 @@ class YofardevAgent {
           final AgentTool? tool = ToolRegistry.getTool(info.name);
           if (tool != null) {
             try {
-              final dynamic result = await tool.execute(
+              final dynamic result = await ToolRegistry.executeTool(
+                tool,
                 info.parametersCalled ?? <String, dynamic>{},
-                settingsRepository: settingsRepository,
+                settingsRepository,
               );
               toolResults.add(<String, dynamic>{
                 'name': tool.name,

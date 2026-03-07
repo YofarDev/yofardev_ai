@@ -1,5 +1,4 @@
 import '../../models/function_info.dart';
-import '../../../features/settings/domain/repositories/settings_repository.dart';
 
 import 'agent_tool.dart';
 
@@ -26,10 +25,13 @@ class CharacterCounterTool extends AgentTool {
   ];
 
   @override
+  Map<String, String> get requiredConfigKeys => <String, String>{};
+
+  @override
   Future<String> execute(
-    Map<String, dynamic> args, {
-    required SettingsRepository settingsRepository,
-  }) async {
+    Map<String, dynamic> args,
+    Map<String, dynamic> configValues,
+  ) async {
     final String text = args['text'] as String? ?? '';
     final String character = args['character'] as String? ?? '';
 

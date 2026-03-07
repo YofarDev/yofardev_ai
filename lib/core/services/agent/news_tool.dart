@@ -1,7 +1,4 @@
-import 'package:fpdart/src/either.dart';
-
 import '../../models/function_info.dart';
-import '../../../features/settings/domain/repositories/settings_repository.dart';
 
 import 'news_service.dart';
 import 'agent_tool.dart';
@@ -18,28 +15,27 @@ class NewsTool extends AgentTool {
   List<Parameter> get parameters => <Parameter>[];
 
   @override
+  Map<String, String> get requiredConfigKeys => <String, String>{
+    'newYorkTimesKey': 'apiKey',
+  };
+
+  @override
   Future<String> execute(
-    Map<String, dynamic> args, {
-    required SettingsRepository settingsRepository,
-  }) async {
-    // Get API key from settings
-    final Either<Exception, String?> apiKeyResult = await settingsRepository.getNewYorkTimesKey();
+    Map<String, dynamic> args,
+    Map<String, dynamic> configValues,
+  ) async {
+    final String? apiKey = configValues['apiKey'] as String?;
 
-    return apiKeyResult.fold(
-      (Exception error) => 'Error: New York Times API key not configured',
-      (String? apiKey) async {
-        if (apiKey == null || apiKey.isEmpty) {
-          return 'Error: New York Times API key not configured';
-        }
+    if (apiKey == null || apiKey.isEmpty) {
+      return 'Error: New York Times API key not configured';
+    }
 
-        try {
-          return await NewsService.getMostPopularNewsOfTheDay(
-            apiKey,
-          );
-        } catch (e) {
-          return 'Error getting news: $e';
-        }
-      },
-    );
+    try {
+      return await NewsService.getMostPopularNewsOfTheDay(
+        apiKey,
+      );
+    } catch (e) {
+      return 'Error getting news: $e';
+    }
   }
 }

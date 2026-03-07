@@ -119,4 +119,56 @@ class ToolRegistry {
 
     return filteredFunctions;
   }
+
+  /// Executes a tool with the provided arguments and settings repository.
+  /// Fetches the required configuration values and passes them to the tool.
+  static Future<dynamic> executeTool(
+    AgentTool tool,
+    Map<String, dynamic> args,
+    SettingsRepository settingsRepository,
+  ) async {
+    // Fetch required configuration values based on the tool's requirements
+    final Map<String, dynamic> configValues = <String, dynamic>{};
+
+    for (final MapEntry<String, String> entry in tool.requiredConfigKeys.entries) {
+      final String settingKey = entry.key;
+      final String paramName = entry.value;
+
+      final dynamic value = await _getSettingValue(settingsRepository, settingKey);
+      configValues[paramName] = value;
+    }
+
+    // Execute the tool with the fetched configuration values
+    return tool.execute(args, configValues);
+  }
+
+  /// Helper method to fetch a setting value from the repository.
+  static Future<dynamic> _getSettingValue(
+    SettingsRepository settingsRepository,
+    String settingKey,
+  ) async {
+    final Either<Exception, dynamic> result;
+
+    switch (settingKey) {
+      case 'googleSearchKey':
+        result = await settingsRepository.getGoogleSearchKey();
+        break;
+      case 'googleSearchEngineId':
+        result = await settingsRepository.getGoogleSearchEngineId();
+        break;
+      case 'openWeatherKey':
+        result = await settingsRepository.getOpenWeatherKey();
+        break;
+      case 'newYorkTimesKey':
+        result = await settingsRepository.getNewYorkTimesKey();
+        break;
+      default:
+        throw UnsupportedError('Unknown setting key: $settingKey');
+    }
+
+    return result.fold(
+      (Exception error) => null,
+      (dynamic value) => value,
+    );
+  }
 }

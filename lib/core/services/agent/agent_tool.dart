@@ -1,5 +1,4 @@
 import '../../models/function_info.dart';
-import '../../../features/settings/domain/repositories/settings_repository.dart';
 
 /// Abstract base class for all tools (functions) the agent can use.
 abstract class AgentTool {
@@ -12,17 +11,27 @@ abstract class AgentTool {
   /// The parameters required by this tool.
   List<Parameter> get parameters;
 
-  /// Executes the tool with the provided arguments.
+  /// The configuration keys required by this tool from settings.
+  /// Returns a map where keys are the setting keys (e.g., 'googleSearchKey')
+  /// and values are the parameter names that will be used in execute().
+  /// Tools that don't need any API keys should return an empty map.
+  Map<String, String> get requiredConfigKeys;
+
+  /// Executes the tool with the provided arguments and configuration values.
+  ///
+  /// [args] The arguments passed from the LLM function call.
+  /// [configValues] A map of configuration values fetched from settings.
+  /// The keys in this map match the values returned by [requiredConfigKeys].
   Future<dynamic> execute(
-    Map<String, dynamic> args, {
-    required SettingsRepository settingsRepository,
-  });
+    Map<String, dynamic> args,
+    Map<String, dynamic> configValues,
+  );
 
   /// Converts this tool to the [FunctionInfo] format required by `LlmService`.
   ///
   /// Note: This creates a placeholder function that will be replaced during
   /// actual execution by the agent. The actual execution happens via the
-  /// execute() method with the proper settingsRepository parameter.
+  /// execute() method with the proper configValues parameter.
   FunctionInfo toFunctionInfo() {
     return FunctionInfo(
       name: name,
