@@ -28,7 +28,7 @@ class NewsService {
         }
         return jsonEncode(news);
       } else {
-        return "Error fetching weather data: ${response.statusCode}";
+        return "Error fetching news data: ${response.statusCode}";
       }
     } catch (e) {
       return "Error: $e";
