@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/res/app_colors.dart';
-import '../../../l10n/localization_manager.dart';
+import '../../../l10n/languages.dart';
 
 class SettingsAppBar extends StatelessWidget {
   final VoidCallback onSave;
@@ -36,7 +36,8 @@ class SettingsAppBar extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                localized.settings,
+                Localizations.of<Languages>(context, Languages)?.settings ??
+                    'Settings',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
