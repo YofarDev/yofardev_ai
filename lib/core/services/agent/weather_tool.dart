@@ -22,6 +22,10 @@ class WeatherTool extends AgentTool {
   @override
   Future<String> execute(Map<String, dynamic> args) async {
     final String location = args['location'] as String? ?? 'current';
-    return await WeatherService.getCurrentWeather(location);
+    // TODO: Pass API key from settings in Task 13
+    return await WeatherService.getCurrentWeather(
+      location,
+      '', // apiKey - will be passed from settings in Task 13
+    );
   }
 }

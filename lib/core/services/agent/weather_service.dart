@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -11,8 +10,15 @@ class WeatherService {
   static const String _baseUrl =
       "https://api.openweathermap.org/data/2.5/weather";
 
-  static Future<String> getCurrentWeather(String location) async {
+  static Future<String> getCurrentWeather(
+    String location,
+    String apiKey,
+  ) async {
     try {
+      if (apiKey.isEmpty) {
+        return "Error: API Key not provided";
+      }
+
       late double latitude;
       late double longitude;
       if (location.toLowerCase() == 'current') {
@@ -30,7 +36,6 @@ class WeatherService {
           return "Location not found.";
         }
       }
-      final String apiKey = dotenv.env['OPEN_WEATHER_KEY'] ?? '';
       final Uri url = Uri.parse(
         "$_baseUrl?lat=$latitude&lon=$longitude&appid=$apiKey&units=metric",
       );
