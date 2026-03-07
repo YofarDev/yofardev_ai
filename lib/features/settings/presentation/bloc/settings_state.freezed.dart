@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 mixin _$SettingsState {
 
 // NEW FIELDS:
- TaskLlmConfig? get taskLlmConfig; List<LlmConfig> get availableLlmConfigs;
+ TaskLlmConfig? get taskLlmConfig; List<LlmConfig> get availableLlmConfigs;// Function Calling Configuration Fields:
+ String? get googleSearchKey; String? get googleSearchEngineId; bool get googleSearchEnabled; String? get openWeatherKey; bool get openWeatherEnabled; String? get newYorkTimesKey; bool get newYorkTimesEnabled;
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,16 @@ $SettingsStateCopyWith<SettingsState> get copyWith => _$SettingsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other.availableLlmConfigs, availableLlmConfigs));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other.availableLlmConfigs, availableLlmConfigs)&&(identical(other.googleSearchKey, googleSearchKey) || other.googleSearchKey == googleSearchKey)&&(identical(other.googleSearchEngineId, googleSearchEngineId) || other.googleSearchEngineId == googleSearchEngineId)&&(identical(other.googleSearchEnabled, googleSearchEnabled) || other.googleSearchEnabled == googleSearchEnabled)&&(identical(other.openWeatherKey, openWeatherKey) || other.openWeatherKey == openWeatherKey)&&(identical(other.openWeatherEnabled, openWeatherEnabled) || other.openWeatherEnabled == openWeatherEnabled)&&(identical(other.newYorkTimesKey, newYorkTimesKey) || other.newYorkTimesKey == newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, newYorkTimesEnabled) || other.newYorkTimesEnabled == newYorkTimesEnabled));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(availableLlmConfigs));
+int get hashCode => Object.hash(runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(availableLlmConfigs),googleSearchKey,googleSearchEngineId,googleSearchEnabled,openWeatherKey,openWeatherEnabled,newYorkTimesKey,newYorkTimesEnabled);
 
 @override
 String toString() {
-  return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs)';
+  return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs, googleSearchKey: $googleSearchKey, googleSearchEngineId: $googleSearchEngineId, googleSearchEnabled: $googleSearchEnabled, openWeatherKey: $openWeatherKey, openWeatherEnabled: $openWeatherEnabled, newYorkTimesKey: $newYorkTimesKey, newYorkTimesEnabled: $newYorkTimesEnabled)';
 }
 
 
@@ -46,7 +47,7 @@ abstract mixin class $SettingsStateCopyWith<$Res>  {
   factory $SettingsStateCopyWith(SettingsState value, $Res Function(SettingsState) _then) = _$SettingsStateCopyWithImpl;
 @useResult
 $Res call({
- TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs
+ TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled
 });
 
 
@@ -63,11 +64,18 @@ class _$SettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,}) {
   return _then(_self.copyWith(
 taskLlmConfig: freezed == taskLlmConfig ? _self.taskLlmConfig : taskLlmConfig // ignore: cast_nullable_to_non_nullable
 as TaskLlmConfig?,availableLlmConfigs: null == availableLlmConfigs ? _self.availableLlmConfigs : availableLlmConfigs // ignore: cast_nullable_to_non_nullable
-as List<LlmConfig>,
+as List<LlmConfig>,googleSearchKey: freezed == googleSearchKey ? _self.googleSearchKey : googleSearchKey // ignore: cast_nullable_to_non_nullable
+as String?,googleSearchEngineId: freezed == googleSearchEngineId ? _self.googleSearchEngineId : googleSearchEngineId // ignore: cast_nullable_to_non_nullable
+as String?,googleSearchEnabled: null == googleSearchEnabled ? _self.googleSearchEnabled : googleSearchEnabled // ignore: cast_nullable_to_non_nullable
+as bool,openWeatherKey: freezed == openWeatherKey ? _self.openWeatherKey : openWeatherKey // ignore: cast_nullable_to_non_nullable
+as String?,openWeatherEnabled: null == openWeatherEnabled ? _self.openWeatherEnabled : openWeatherEnabled // ignore: cast_nullable_to_non_nullable
+as bool,newYorkTimesKey: freezed == newYorkTimesKey ? _self.newYorkTimesKey : newYorkTimesKey // ignore: cast_nullable_to_non_nullable
+as String?,newYorkTimesEnabled: null == newYorkTimesEnabled ? _self.newYorkTimesEnabled : newYorkTimesEnabled // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of SettingsState
@@ -161,10 +169,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingsState() when $default != null:
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs);case _:
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled);case _:
   return orElse();
 
 }
@@ -182,10 +190,10 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled)  $default,) {final _that = this;
 switch (_that) {
 case _SettingsState():
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs);}
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -199,10 +207,10 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled)?  $default,) {final _that = this;
 switch (_that) {
 case _SettingsState() when $default != null:
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs);case _:
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled);case _:
   return null;
 
 }
@@ -214,7 +222,7 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs);case _:
 
 
 class _SettingsState implements SettingsState {
-  const _SettingsState({this.taskLlmConfig = null, final  List<LlmConfig> availableLlmConfigs = const <LlmConfig>[]}): _availableLlmConfigs = availableLlmConfigs;
+  const _SettingsState({this.taskLlmConfig = null, final  List<LlmConfig> availableLlmConfigs = const <LlmConfig>[], this.googleSearchKey = null, this.googleSearchEngineId = null, this.googleSearchEnabled = true, this.openWeatherKey = null, this.openWeatherEnabled = true, this.newYorkTimesKey = null, this.newYorkTimesEnabled = true}): _availableLlmConfigs = availableLlmConfigs;
   
 
 // NEW FIELDS:
@@ -226,6 +234,14 @@ class _SettingsState implements SettingsState {
   return EqualUnmodifiableListView(_availableLlmConfigs);
 }
 
+// Function Calling Configuration Fields:
+@override@JsonKey() final  String? googleSearchKey;
+@override@JsonKey() final  String? googleSearchEngineId;
+@override@JsonKey() final  bool googleSearchEnabled;
+@override@JsonKey() final  String? openWeatherKey;
+@override@JsonKey() final  bool openWeatherEnabled;
+@override@JsonKey() final  String? newYorkTimesKey;
+@override@JsonKey() final  bool newYorkTimesEnabled;
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +253,16 @@ _$SettingsStateCopyWith<_SettingsState> get copyWith => __$SettingsStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other._availableLlmConfigs, _availableLlmConfigs));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other._availableLlmConfigs, _availableLlmConfigs)&&(identical(other.googleSearchKey, googleSearchKey) || other.googleSearchKey == googleSearchKey)&&(identical(other.googleSearchEngineId, googleSearchEngineId) || other.googleSearchEngineId == googleSearchEngineId)&&(identical(other.googleSearchEnabled, googleSearchEnabled) || other.googleSearchEnabled == googleSearchEnabled)&&(identical(other.openWeatherKey, openWeatherKey) || other.openWeatherKey == openWeatherKey)&&(identical(other.openWeatherEnabled, openWeatherEnabled) || other.openWeatherEnabled == openWeatherEnabled)&&(identical(other.newYorkTimesKey, newYorkTimesKey) || other.newYorkTimesKey == newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, newYorkTimesEnabled) || other.newYorkTimesEnabled == newYorkTimesEnabled));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(_availableLlmConfigs));
+int get hashCode => Object.hash(runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(_availableLlmConfigs),googleSearchKey,googleSearchEngineId,googleSearchEnabled,openWeatherKey,openWeatherEnabled,newYorkTimesKey,newYorkTimesEnabled);
 
 @override
 String toString() {
-  return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs)';
+  return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs, googleSearchKey: $googleSearchKey, googleSearchEngineId: $googleSearchEngineId, googleSearchEnabled: $googleSearchEnabled, openWeatherKey: $openWeatherKey, openWeatherEnabled: $openWeatherEnabled, newYorkTimesKey: $newYorkTimesKey, newYorkTimesEnabled: $newYorkTimesEnabled)';
 }
 
 
@@ -257,7 +273,7 @@ abstract mixin class _$SettingsStateCopyWith<$Res> implements $SettingsStateCopy
   factory _$SettingsStateCopyWith(_SettingsState value, $Res Function(_SettingsState) _then) = __$SettingsStateCopyWithImpl;
 @override @useResult
 $Res call({
- TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs
+ TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled
 });
 
 
@@ -274,11 +290,18 @@ class __$SettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,}) {
   return _then(_SettingsState(
 taskLlmConfig: freezed == taskLlmConfig ? _self.taskLlmConfig : taskLlmConfig // ignore: cast_nullable_to_non_nullable
 as TaskLlmConfig?,availableLlmConfigs: null == availableLlmConfigs ? _self._availableLlmConfigs : availableLlmConfigs // ignore: cast_nullable_to_non_nullable
-as List<LlmConfig>,
+as List<LlmConfig>,googleSearchKey: freezed == googleSearchKey ? _self.googleSearchKey : googleSearchKey // ignore: cast_nullable_to_non_nullable
+as String?,googleSearchEngineId: freezed == googleSearchEngineId ? _self.googleSearchEngineId : googleSearchEngineId // ignore: cast_nullable_to_non_nullable
+as String?,googleSearchEnabled: null == googleSearchEnabled ? _self.googleSearchEnabled : googleSearchEnabled // ignore: cast_nullable_to_non_nullable
+as bool,openWeatherKey: freezed == openWeatherKey ? _self.openWeatherKey : openWeatherKey // ignore: cast_nullable_to_non_nullable
+as String?,openWeatherEnabled: null == openWeatherEnabled ? _self.openWeatherEnabled : openWeatherEnabled // ignore: cast_nullable_to_non_nullable
+as bool,newYorkTimesKey: freezed == newYorkTimesKey ? _self.newYorkTimesKey : newYorkTimesKey // ignore: cast_nullable_to_non_nullable
+as String?,newYorkTimesEnabled: null == newYorkTimesEnabled ? _self.newYorkTimesEnabled : newYorkTimesEnabled // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

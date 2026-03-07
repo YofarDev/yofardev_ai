@@ -10,6 +10,7 @@ import '../../../../core/services/prompt_datasource.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';
+import '../../../settings/domain/repositories/settings_repository.dart';
 import '../datasources/chat_local_datasource.dart';
 
 class YofardevRepositoryImpl implements ChatRepository {
@@ -17,6 +18,11 @@ class YofardevRepositoryImpl implements ChatRepository {
   final PromptDatasource _promptService = PromptDatasource();
   final FakeLlmService _fakeLlmService = FakeLlmService();
   final ChatLocalDatasource _chatDatasource = ChatLocalDatasource();
+  final SettingsRepository _settingsRepository;
+
+  YofardevRepositoryImpl({
+    required SettingsRepository settingsRepository,
+  }) : _settingsRepository = settingsRepository;
 
   @override
   Future<Either<Exception, Chat>> createNewChat() async {
@@ -135,6 +141,7 @@ class YofardevRepositoryImpl implements ChatRepository {
         userMessage: userMessage,
         systemPrompt: await _promptService.getSystemPrompt(),
         functionCallingEnabled: functionCallingEnabled,
+        settingsRepository: _settingsRepository,
       );
       return Right<Exception, List<ChatEntry>>(entries);
     } catch (e) {

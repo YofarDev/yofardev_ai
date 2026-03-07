@@ -1,4 +1,7 @@
+import 'package:fpdart/src/either.dart';
+
 import '../../models/function_info.dart';
+import '../../../features/settings/domain/repositories/settings_repository.dart';
 
 import 'agent_tool.dart';
 import 'alarm_tool.dart';
@@ -35,5 +38,85 @@ class ToolRegistry {
   /// Returns the list of FunctionInfo for LlmService
   static List<FunctionInfo> get functionInfos {
     return _tools.map((AgentTool t) => t.toFunctionInfo()).toList();
+  }
+
+  /// Returns a filtered list of FunctionInfo based on settings configuration.
+  /// Only includes tools that:
+  /// - Have API keys configured (if required)
+  /// - Are enabled in settings
+  static Future<List<FunctionInfo>> getFunctionInfos(
+    SettingsRepository settingsRepository,
+  ) async {
+    final List<FunctionInfo> filteredFunctions = <FunctionInfo>[];
+
+    // Always include tools that don't require API keys
+    filteredFunctions
+        .add(AlarmTool().toFunctionInfo());
+    filteredFunctions
+        .add(CharacterCounterTool().toFunctionInfo());
+    filteredFunctions.add(CalculatorTool().toFunctionInfo());
+    filteredFunctions.add(WebReaderTool().toFunctionInfo());
+
+    // Google Search - requires API key, engine ID, and enabled flag
+    final Either<Exception, String?> googleKeyResult = await settingsRepository.getGoogleSearchKey();
+    final Either<Exception, String?> googleEngineResult =
+        await settingsRepository.getGoogleSearchEngineId();
+    final Either<Exception, bool> googleEnabledResult =
+        await settingsRepository.getGoogleSearchEnabled();
+
+    final bool googleConfigured = googleKeyResult.fold(
+      (Exception error) => false,
+      (String? key) => key != null && key.isNotEmpty,
+    );
+    final bool googleEngineConfigured = googleEngineResult.fold(
+      (Exception error) => false,
+      (String? id) => id != null && id.isNotEmpty,
+    );
+    final bool googleEnabled = googleEnabledResult.fold(
+      (Exception error) => false,
+      (bool enabled) => enabled,
+    );
+
+    if (googleConfigured && googleEngineConfigured && googleEnabled) {
+      filteredFunctions.add(GoogleSearchTool().toFunctionInfo());
+    }
+
+    // Weather - requires API key and enabled flag
+    final Either<Exception, String?> weatherKeyResult = await settingsRepository.getOpenWeatherKey();
+    final Either<Exception, bool> weatherEnabledResult =
+        await settingsRepository.getOpenWeatherEnabled();
+
+    final bool weatherConfigured = weatherKeyResult.fold(
+      (Exception error) => false,
+      (String? key) => key != null && key.isNotEmpty,
+    );
+    final bool weatherEnabled = weatherEnabledResult.fold(
+      (Exception error) => false,
+      (bool enabled) => enabled,
+    );
+
+    if (weatherConfigured && weatherEnabled) {
+      filteredFunctions.add(WeatherTool().toFunctionInfo());
+    }
+
+    // News - requires API key and enabled flag
+    final Either<Exception, String?> newsKeyResult = await settingsRepository.getNewYorkTimesKey();
+    final Either<Exception, bool> newsEnabledResult =
+        await settingsRepository.getNewYorkTimesEnabled();
+
+    final bool newsConfigured = newsKeyResult.fold(
+      (Exception error) => false,
+      (String? key) => key != null && key.isNotEmpty,
+    );
+    final bool newsEnabled = newsEnabledResult.fold(
+      (Exception error) => false,
+      (bool enabled) => enabled,
+    );
+
+    if (newsConfigured && newsEnabled) {
+      filteredFunctions.add(NewsTool().toFunctionInfo());
+    }
+
+    return filteredFunctions;
   }
 }

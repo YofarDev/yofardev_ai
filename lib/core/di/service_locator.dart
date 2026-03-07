@@ -109,7 +109,11 @@ Future<void> setupServiceLocator() async {
   );
 
   // Repositories (register implementations as interfaces)
-  getIt.registerLazySingleton<ChatRepository>(() => YofardevRepositoryImpl());
+  getIt.registerLazySingleton<ChatRepository>(
+    () => YofardevRepositoryImpl(
+      settingsRepository: getIt<SettingsRepository>(),
+    ),
+  );
   getIt.registerLazySingleton<AvatarRepository>(() => AvatarRepositoryImpl());
   getIt.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(),

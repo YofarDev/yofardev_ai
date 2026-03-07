@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../../models/function_info.dart';
+import '../../../features/settings/domain/repositories/settings_repository.dart';
 
 import 'agent_tool.dart';
 
@@ -22,7 +23,10 @@ class WebReaderTool extends AgentTool {
   ];
 
   @override
-  Future<String> execute(Map<String, dynamic> args) async {
+  Future<String> execute(
+    Map<String, dynamic> args, {
+    required SettingsRepository settingsRepository,
+  }) async {
     final String url = args['url'] as String? ?? '';
     final Uri uri = Uri.parse(url);
     final Completer<String> completer = Completer<String>();

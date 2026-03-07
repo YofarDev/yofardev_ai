@@ -1,4 +1,5 @@
 import '../../models/function_info.dart';
+import '../../../features/settings/domain/repositories/settings_repository.dart';
 
 import 'alarm_service.dart';
 import 'agent_tool.dart';
@@ -25,7 +26,10 @@ class AlarmTool extends AgentTool {
   ];
 
   @override
-  Future<String> execute(Map<String, dynamic> args) async {
+  Future<String> execute(
+    Map<String, dynamic> args, {
+    required SettingsRepository settingsRepository,
+  }) async {
     final int minutesFromNow = args['minutesFromNow'] as int? ?? 0;
     final String message = args['message'] as String? ?? 'Hello world!';
 

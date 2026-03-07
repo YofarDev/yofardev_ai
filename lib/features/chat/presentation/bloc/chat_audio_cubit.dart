@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
-import '../../../avatar/data/datasources/avatar_cache_datasource.dart';
+import '../../domain/services/waiting_sentences_cache_datasource.dart';
 import 'chat_audio_state.dart';
 
 /// Cubit responsible for managing waiting sentences for audio playback
@@ -27,7 +27,9 @@ class ChatAudioCubit extends Cubit<ChatAudioState> {
 
     try {
       final List<Map<String, dynamic>>? cachedSentences =
-          await AvatarCacheDatasource.getWaitingSentencesMap(language);
+          await WaitingSentencesCacheDatasource.getWaitingSentencesMap(
+            language,
+          );
 
       if (cachedSentences != null) {
         emit(
@@ -45,11 +47,7 @@ class ChatAudioCubit extends Cubit<ChatAudioState> {
         tag: 'ChatAudioCubit',
         error: e,
       );
-      emit(
-        state.copyWith(
-          initializing: false,
-        ),
-      );
+      emit(state.copyWith(initializing: false));
     }
   }
 

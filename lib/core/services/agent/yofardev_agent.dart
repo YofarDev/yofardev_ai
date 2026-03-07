@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../features/chat/domain/models/chat.dart';
 import '../../../features/chat/domain/models/chat_entry.dart';
+import '../../../features/settings/domain/repositories/settings_repository.dart';
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
@@ -21,6 +22,7 @@ class YofardevAgent {
   /// [userMessage] is the new message from the user.
   /// [systemPrompt] is the personality/context instructions.
   /// [functionCallingEnabled] whether to use function calling (default: true).
+  /// [settingsRepository] repository to access function calling configuration.
   ///
   /// Returns a list of [ChatEntry] including:
   /// - One entry per tool called (if any) with EntryType.functionCalling
@@ -30,6 +32,7 @@ class YofardevAgent {
     required String userMessage,
     required String systemPrompt,
     bool functionCallingEnabled = true,
+    required SettingsRepository settingsRepository,
   }) async {
     // Ensure service is initialized (safe to call multiple times or check internally)
     await _llmService.init();
@@ -49,10 +52,15 @@ class YofardevAgent {
         'Function calling enabled, checking if tools are needed...',
         tag: 'YofardevAgent',
       );
+
+      // Get available tools based on settings
+      final List<FunctionInfo> availableFunctions =
+          await ToolRegistry.getFunctionInfos(settingsRepository);
+
       final (String, List<FunctionInfo>) functionCheck = await _llmService
           .checkFunctionsCalling(
             api: config,
-            functions: ToolRegistry.functionInfos,
+            functions: availableFunctions,
             messages: chat.llmMessages,
             lastUserMessage: userMessage,
           );
@@ -71,6 +79,7 @@ class YofardevAgent {
             try {
               final dynamic result = await tool.execute(
                 info.parametersCalled ?? <String, dynamic>{},
+                settingsRepository: settingsRepository,
               );
               toolResults.add(<String, dynamic>{
                 'name': tool.name,

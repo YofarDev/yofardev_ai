@@ -2,6 +2,7 @@ import 'package:math_expressions/math_expressions.dart';
 
 import '../../models/function_info.dart';
 import '../../utils/logger.dart';
+import '../../../features/settings/domain/repositories/settings_repository.dart';
 import 'agent_tool.dart';
 
 class CalculatorTool extends AgentTool {
@@ -22,7 +23,10 @@ class CalculatorTool extends AgentTool {
   ];
 
   @override
-  Future<String> execute(Map<String, dynamic> args) async {
+  Future<String> execute(
+    Map<String, dynamic> args, {
+    required SettingsRepository settingsRepository,
+  }) async {
     final String expression = args['expression'] as String? ?? '';
 
     try {
