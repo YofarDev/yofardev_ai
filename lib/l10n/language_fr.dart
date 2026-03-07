@@ -78,4 +78,32 @@ class LanguageFr extends Languages {
   @override
   String get titleGenerationSystemPrompt =>
       "Vous êtes un assistant utile qui génère des titres de conversation courts et descriptifs. Returnz uniquement le titre, sans guillemets ni texte supplémentaire.";
+
+  ///   Function Calling Config   ///
+  @override
+  String get settings_functionCalling => "Appel de Fonctions";
+  @override
+  String get settings_functionCalling_description => "Configurez les clés API pour les fonctionnalités d'appel de fonctions";
+  @override
+  String get settings_functionCalling_saved => "Configuration enregistrée";
+  @override
+  String get settings_googleSearch => "Recherche Google";
+  @override
+  String get settings_googleSearch_description => "Rechercher sur le web pour des informations actuelles";
+  @override
+  String get settings_apiKey => "Clé API";
+  @override
+  String get settings_engineId => "ID de Moteur de Recherche";
+  @override
+  String get settings_weather => "Météo";
+  @override
+  String get settings_weather_description => "Obtenir la météo actuelle pour n'importe quel lieu";
+  @override
+  String get settings_news => "Actualités";
+  @override
+  String get settings_news_description => "Obtenir les actualités les plus populaires du jour";
+  @override
+  String get settings_enable => "Activer";
+  @override
+  String get settings_save => "Enregistrer";
 }

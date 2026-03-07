@@ -75,4 +75,36 @@ class LanguageEn extends Languages {
   @override
   String get titleGenerationSystemPrompt =>
       "You are a helpful assistant that generates short, descriptive chat titles. Return only the title, no quotes or extra text.";
+
+  ///   Function Calling Config   ///
+  @override
+  String get settings_functionCalling => "Function Calling";
+  @override
+  String get settings_functionCalling_description =>
+      "Configure API keys for function calling features";
+  @override
+  String get settings_functionCalling_saved => "Configuration saved";
+  @override
+  String get settings_googleSearch => "Google Search";
+  @override
+  String get settings_googleSearch_description =>
+      "Search the web for current information";
+  @override
+  String get settings_apiKey => "API Key";
+  @override
+  String get settings_engineId => "Search Engine ID";
+  @override
+  String get settings_weather => "Weather";
+  @override
+  String get settings_weather_description =>
+      "Get current weather for any location";
+  @override
+  String get settings_news => "News";
+  @override
+  String get settings_news_description =>
+      "Get today's most popular news";
+  @override
+  String get settings_enable => "Enable";
+  @override
+  String get settings_save => "Save";
 }

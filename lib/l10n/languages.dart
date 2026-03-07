@@ -41,4 +41,19 @@ abstract class Languages {
   /// Title Generation
   String get titleGenerationPrompt;
   String get titleGenerationSystemPrompt;
+
+  ///   Function Calling Config   ///
+  String get settings_functionCalling;
+  String get settings_functionCalling_description;
+  String get settings_functionCalling_saved;
+  String get settings_googleSearch;
+  String get settings_googleSearch_description;
+  String get settings_apiKey;
+  String get settings_engineId;
+  String get settings_weather;
+  String get settings_weather_description;
+  String get settings_news;
+  String get settings_news_description;
+  String get settings_enable;
+  String get settings_save;
 }
