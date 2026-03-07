@@ -14,7 +14,7 @@ import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/models/voice_effect.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
-import '../../../sound/domain/tts_queue_manager.dart';
+import '../../../sound/data/tts_queue_manager.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';

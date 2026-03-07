@@ -25,8 +25,8 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_cubit.d
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/sound/data/tts_queue_manager.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
-import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
 
 class MockHttpClient extends Mock implements Client {}
 

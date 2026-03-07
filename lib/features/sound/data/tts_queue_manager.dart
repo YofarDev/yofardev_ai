@@ -5,8 +5,8 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/models/voice_effect.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/utils/logger.dart';
-import '../data/datasources/tts_datasource.dart';
-import 'tts_queue_item.dart';
+import '../domain/tts_queue_item.dart';
+import 'datasources/tts_datasource.dart';
 
 /// Manages queue of TTS generation and playback
 class TtsQueueManager {
