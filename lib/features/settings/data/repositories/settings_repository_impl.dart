@@ -1,4 +1,3 @@
-import 'package:dartz/dartz.dart' as dartz;
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/models/chat.dart';
@@ -114,28 +113,18 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
-    final dartz.Either<Exception, TaskLlmConfig> dartzResult = await _datasource
-        .getTaskLlmConfig();
-    return dartzResult.fold(
-      (Exception left) => Left<Exception, TaskLlmConfig>(left),
-      (TaskLlmConfig right) => Right<Exception, TaskLlmConfig>(right),
-    );
+    return _datasource.getTaskLlmConfig();
   }
 
   @override
   Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
-    final dartz.Either<Exception, void> dartzResult = await _datasource
-        .setTaskLlmConfig(config);
-    return dartzResult.fold(
-      (Exception left) => Left<Exception, void>(left),
-      (void right) => Right<Exception, void>(right),
-    );
+    return _datasource.setTaskLlmConfig(config);
   }
 
   // Function Calling Configuration - Google Search
   @override
   Future<Either<Exception, String?>> getGoogleSearchKey() async {
-    final dartz.Either<Exception, String> result = await _datasource
+    final Either<Exception, String> result = await _datasource
         .getGoogleSearchKey();
     return result.fold(
       (Exception left) => Left<Exception, String?>(left),
@@ -145,8 +134,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
-    final dartz.Either<Exception, void> result = await _datasource
-        .setGoogleSearchKey(key);
+    final Either<Exception, void> result = await _datasource.setGoogleSearchKey(
+      key,
+    );
     return result.fold(
       (Exception left) => Left<Exception, void>(left),
       (void right) => const Right<Exception, void>(null),
@@ -155,7 +145,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, String?>> getGoogleSearchEngineId() async {
-    final dartz.Either<Exception, String> result = await _datasource
+    final Either<Exception, String> result = await _datasource
         .getGoogleSearchEngineId();
     return result.fold(
       (Exception left) => Left<Exception, String?>(left),
@@ -165,7 +155,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, void>> setGoogleSearchEngineId(String id) async {
-    final dartz.Either<Exception, void> result = await _datasource
+    final Either<Exception, void> result = await _datasource
         .setGoogleSearchEngineId(id);
     return result.fold(
       (Exception left) => Left<Exception, void>(left),
@@ -175,7 +165,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
-    final dartz.Either<Exception, bool> result = await _datasource
+    final Either<Exception, bool> result = await _datasource
         .getGoogleSearchEnabled();
     return result.fold(
       (Exception left) => Left<Exception, bool>(left),
@@ -185,7 +175,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
-    final dartz.Either<Exception, void> result = await _datasource
+    final Either<Exception, void> result = await _datasource
         .setGoogleSearchEnabled(enabled);
     return result.fold(
       (Exception left) => Left<Exception, void>(left),
@@ -196,7 +186,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   // Function Calling Configuration - OpenWeather
   @override
   Future<Either<Exception, String?>> getOpenWeatherKey() async {
-    final dartz.Either<Exception, String> result = await _datasource
+    final Either<Exception, String> result = await _datasource
         .getOpenWeatherKey();
     return result.fold(
       (Exception left) => Left<Exception, String?>(left),
@@ -206,8 +196,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
-    final dartz.Either<Exception, void> result = await _datasource
-        .setOpenWeatherKey(key);
+    final Either<Exception, void> result = await _datasource.setOpenWeatherKey(
+      key,
+    );
     return result.fold(
       (Exception left) => Left<Exception, void>(left),
       (void right) => const Right<Exception, void>(null),
@@ -216,7 +207,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
-    final dartz.Either<Exception, bool> result = await _datasource
+    final Either<Exception, bool> result = await _datasource
         .getOpenWeatherEnabled();
     return result.fold(
       (Exception left) => Left<Exception, bool>(left),
@@ -226,7 +217,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
-    final dartz.Either<Exception, void> result = await _datasource
+    final Either<Exception, void> result = await _datasource
         .setOpenWeatherEnabled(enabled);
     return result.fold(
       (Exception left) => Left<Exception, void>(left),
@@ -237,7 +228,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   // Function Calling Configuration - New York Times
   @override
   Future<Either<Exception, String?>> getNewYorkTimesKey() async {
-    final dartz.Either<Exception, String> result = await _datasource
+    final Either<Exception, String> result = await _datasource
         .getNewYorkTimesKey();
     return result.fold(
       (Exception left) => Left<Exception, String?>(left),
@@ -247,8 +238,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
-    final dartz.Either<Exception, void> result = await _datasource
-        .setNewYorkTimesKey(key);
+    final Either<Exception, void> result = await _datasource.setNewYorkTimesKey(
+      key,
+    );
     return result.fold(
       (Exception left) => Left<Exception, void>(left),
       (void right) => const Right<Exception, void>(null),
@@ -257,7 +249,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
-    final dartz.Either<Exception, bool> result = await _datasource
+    final Either<Exception, bool> result = await _datasource
         .getNewYorkTimesEnabled();
     return result.fold(
       (Exception left) => Left<Exception, bool>(left),
@@ -267,7 +259,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
-    final dartz.Either<Exception, void> result = await _datasource
+    final Either<Exception, void> result = await _datasource
         .setNewYorkTimesEnabled(enabled);
     return result.fold(
       (Exception left) => Left<Exception, void>(left),

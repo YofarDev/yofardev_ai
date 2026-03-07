@@ -46,7 +46,6 @@ dependencies:
   fpdart: ^1.2.0
   go_router: ^17.1.0
 
-  dartz: any
   audioplayers: ^6.6.0
 dev_dependencies:
   flutter_test:
@@ -57,7 +56,7 @@ dev_dependencies:
   flutter_native_splash: ^2.4.1
 
 
-  mocktail: any
+  mocktail: ^1.0.4
   bloc_test: ^10.0.0
 flutter_native_splash:
   color: "#438EFF"
@@ -88,4 +87,3 @@ flutter:
     - assets/txt/
     - assets/onnx/
     - assets/voice_styles/
-

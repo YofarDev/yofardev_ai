@@ -322,37 +322,6 @@ void main() {
       });
     });
 
-    group('shuffleWaitingSentences', () {
-      test('should shuffle audio paths waiting sentences', () {
-        final List<Map<String, dynamic>> originalList = <Map<String, dynamic>>[
-          <String, dynamic>{'sentence': 'Hello', 'audioPath': 'path1'},
-          <String, dynamic>{'sentence': 'World', 'audioPath': 'path2'},
-          <String, dynamic>{'sentence': 'Test', 'audioPath': 'path3'},
-        ];
-
-        // Emit state with test data
-        chatsCubit.emit(
-          chatsCubit.state.copyWith(audioPathsWaitingSentences: originalList),
-        );
-
-        final List<Map<String, dynamic>> beforeShuffle =
-            chatsCubit.state.audioPathsWaitingSentences;
-
-        chatsCubit.shuffleWaitingSentences();
-
-        final List<Map<String, dynamic>> afterShuffle =
-            chatsCubit.state.audioPathsWaitingSentences;
-
-        // Same length
-        expect(afterShuffle.length, beforeShuffle.length);
-
-        // Same elements (just shuffled)
-        for (final Map<String, dynamic> item in beforeShuffle) {
-          expect(afterShuffle.contains(item), isTrue);
-        }
-      });
-    });
-
     group('updateBackgroundOpenedChat', () {
       test('should update background of opened chat', () {
         const Chat testChat = Chat(id: 'test-chat');

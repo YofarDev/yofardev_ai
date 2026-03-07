@@ -42,6 +42,7 @@ import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
 import '../services/audio/tts_service.dart';
+import '../services/agent/yofardev_agent.dart';
 import '../services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_config_manager.dart';
@@ -86,6 +87,9 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<LlmService>(() => LlmService());
   getIt.registerLazySingleton<FakeLlmService>(() => FakeLlmService());
+  getIt.registerLazySingleton<YofardevAgent>(
+    () => YofardevAgent(llmService: getIt<LlmService>()),
+  );
 
   // Demo services
   getIt.registerLazySingleton<DemoController>(() => DemoController());
@@ -111,11 +115,17 @@ Future<void> setupServiceLocator() async {
       interruptionService: getIt<InterruptionService>(),
     ),
   );
+  getIt.registerLazySingleton<PromptDatasource>(() => PromptDatasource());
 
   // Repositories (register implementations as interfaces)
   getIt.registerLazySingleton<ChatRepository>(
-    () =>
-        YofardevRepositoryImpl(settingsRepository: getIt<SettingsRepository>()),
+    () => YofardevRepositoryImpl(
+      settingsRepository: getIt<SettingsRepository>(),
+      agent: getIt<YofardevAgent>(),
+      promptService: getIt<PromptDatasource>(),
+      fakeLlmService: getIt<FakeLlmService>(),
+      chatDatasource: getIt<ChatLocalDatasource>(),
+    ),
   );
   getIt.registerLazySingleton<AvatarRepository>(() => AvatarRepositoryImpl());
   getIt.registerLazySingleton<SettingsRepository>(
@@ -151,9 +161,6 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<StreamProcessorService>(
     () => StreamProcessorService(),
   );
-
-  // Prompt datasource
-  getIt.registerLazySingleton<PromptDatasource>(() => PromptDatasource());
 
   // BLoCs / Cubits
   getIt.registerFactory<AvatarCubit>(

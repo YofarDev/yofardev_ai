@@ -71,7 +71,8 @@
       "mcp__jcodemunch__get_file_tree",
       "mcp__jcodemunch__get_symbol",
       "Bash(flutter analyze:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Skill(tokensight:statusline)"
     ]
   }
 }

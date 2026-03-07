@@ -5,7 +5,6 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 import '../../domain/models/chat.dart';
-import '../../domain/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';
 import 'chats_state.dart';
 
@@ -260,51 +259,4 @@ class ChatsCubit extends Cubit<ChatsState> {
   String get currentLanguage => state.currentLanguage;
   bool get soundEffectsEnabled => state.soundEffectsEnabled;
   bool get functionCallingEnabled => state.functionCallingEnabled;
-
-  /// Stream a message to Yofardev (now handled by ChatMessageCubit)
-  /// Kept for backward compatibility
-  Future<ChatEntry?> askYofardev(
-    String prompt, {
-    bool? onlyText,
-    String? attachedImage,
-    Avatar? avatar,
-  }) async {
-    AppLogger.warning(
-      'askYofardev called on ChatsCubit - use ChatMessageCubit instead',
-      tag: 'ChatsCubit',
-    );
-    return null;
-  }
-
-  /// Prepare waiting sentences (now handled by ChatTtsCubit)
-  /// Kept for backward compatibility
-  Future<void> prepareWaitingSentences(dynamic language) async {
-    AppLogger.warning(
-      'prepareWaitingSentences called on ChatsCubit - use ChatTtsCubit instead',
-      tag: 'ChatsCubit',
-    );
-  }
-
-  /// Shuffle waiting sentences (now handled by ChatTtsCubit)
-  /// Kept for backward compatibility
-  void shuffleWaitingSentences() {
-    AppLogger.warning(
-      'shuffleWaitingSentences called on ChatsCubit - use ChatTtsCubit instead',
-      tag: 'ChatsCubit',
-    );
-  }
-
-  /// Generate title for a chat (now handled by ChatTitleCubit)
-  /// Kept for backward compatibility
-  Future<void> generateTitleForChat(String chatId) async {
-    AppLogger.warning(
-      'generateTitleForChat called on ChatsCubit - use ChatTitleCubit instead',
-      tag: 'ChatsCubit',
-    );
-    final Set<String> newIds = <String>{
-      ...state.generatingTitleChatIds,
-      chatId,
-    };
-    emit(state.copyWith(generatingTitleChatIds: newIds));
-  }
 }

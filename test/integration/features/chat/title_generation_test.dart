@@ -1,14 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
-import 'package:yofardev_ai/core/models/task_llm_config.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
-import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_title_cubit.dart';
 
-/// Mock repository that tracks updates
 class TrackingMockChatRepository implements ChatRepository {
   Chat? currentChat;
   Chat? updatedChat;
@@ -87,153 +86,21 @@ class TrackingMockChatRepository implements ChatRepository {
   }
 }
 
-class MockSettingsRepository implements SettingsRepository {
-  String _language = 'en';
-
-  @override
-  Future<Either<Exception, String?>> getLanguage() async {
-    return Right<Exception, String?>(_language);
-  }
-
-  @override
-  Future<Either<Exception, void>> setLanguage(String language) async {
-    _language = language;
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, bool>> getSoundEffects() async {
-    return const Right<Exception, bool>(true);
-  }
-
-  @override
-  Future<Either<Exception, void>> setSoundEffects(bool soundEffects) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, String?>> getUsername() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setUsername(String username) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, String>> getSystemPrompt() async {
-    return const Right<Exception, String>('');
-  }
-
-  @override
-  Future<Either<Exception, void>> setSystemPrompt(String prompt) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, ChatPersona>> getPersona() async {
-    return const Right<Exception, ChatPersona>(ChatPersona.assistant);
-  }
-
-  @override
-  Future<Either<Exception, void>> setPersona(ChatPersona persona) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
-    return const Right<Exception, TaskLlmConfig>(TaskLlmConfig());
-  }
-
-  @override
-  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
-    return const Right<Exception, void>(null);
-  }
-
-  // Function Calling Configuration - Google Search
-  @override
-  Future<Either<Exception, String?>> getGoogleSearchKey() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, String?>> getGoogleSearchEngineId() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setGoogleSearchEngineId(String id) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
-    return const Right<Exception, bool>(false);
-  }
-
-  @override
-  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
-  }
-
-  // Function Calling Configuration - OpenWeather
-  @override
-  Future<Either<Exception, String?>> getOpenWeatherKey() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
-    return const Right<Exception, bool>(false);
-  }
-
-  @override
-  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
-  }
-
-  // Function Calling Configuration - New York Times
-  @override
-  Future<Either<Exception, String?>> getNewYorkTimesKey() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
-    return const Right<Exception, bool>(false);
-  }
-
-  @override
-  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
-  }
-}
+class MockLlmService extends Mock implements LlmService {}
 
 void main() {
   group('Title Generation Integration Tests', () {
     late TrackingMockChatRepository mockChatRepository;
-    late MockSettingsRepository mockSettingsRepository;
-    late ChatsCubit cubit;
+    late MockLlmService mockLlmService;
+    late ChatTitleCubit cubit;
 
     setUp(() {
       mockChatRepository = TrackingMockChatRepository();
-      mockSettingsRepository = MockSettingsRepository();
+      mockLlmService = MockLlmService();
+      cubit = ChatTitleCubit(
+        chatRepository: mockChatRepository,
+        llmService: mockLlmService,
+      );
     });
 
     tearDown(() {
@@ -241,7 +108,6 @@ void main() {
     });
 
     test('should not generate title if already generated', () async {
-      // Arrange
       final Chat testChat = Chat(
         id: 'test-chat-id',
         entries: <ChatEntry>[
@@ -256,23 +122,13 @@ void main() {
         titleGenerated: true,
       );
 
-      mockChatRepository.currentChat = testChat;
+      await cubit.generateTitle(testChat.id, testChat);
 
-      // Act
-      cubit = ChatsCubit(
-        chatRepository: mockChatRepository,
-        settingsRepository: mockSettingsRepository,
-      );
-
-      cubit.getCurrentChat();
-      await cubit.generateTitleForChat(testChat.id);
-
-      // Assert - verify repository was not called
       expect(mockChatRepository.updateCallCount, 0);
+      verifyNever(() => mockLlmService.init());
     });
 
     test('should not generate title for empty chat', () async {
-      // Arrange
       const Chat testChat = Chat(
         id: 'test-chat-id',
         entries: <ChatEntry>[],
@@ -280,23 +136,13 @@ void main() {
         titleGenerated: false,
       );
 
-      mockChatRepository.currentChat = testChat;
+      await cubit.generateTitle(testChat.id, testChat);
 
-      // Act
-      cubit = ChatsCubit(
-        chatRepository: mockChatRepository,
-        settingsRepository: mockSettingsRepository,
-      );
-
-      cubit.getCurrentChat();
-      await cubit.generateTitleForChat(testChat.id);
-
-      // Assert - verify repository was not called for empty chat
       expect(mockChatRepository.updateCallCount, 0);
+      verifyNever(() => mockLlmService.init());
     });
 
-    test('should update chat in state after title generation', () async {
-      // Arrange
+    test('should update chat after successful title generation', () async {
       final Chat testChat = Chat(
         id: 'test-chat-id',
         entries: <ChatEntry>[
@@ -307,35 +153,28 @@ void main() {
             timestamp: DateTime.now(),
           ),
         ],
-        title: '',
-        titleGenerated: false,
       );
 
-      mockChatRepository.currentChat = testChat;
+      when(() => mockLlmService.init()).thenAnswer((_) async {});
+      when(
+        () => mockLlmService.generateTitle(
+          any(),
+          language: any(named: 'language'),
+        ),
+      ).thenAnswer((_) async => '"Learn Flutter"');
 
-      // Act
-      cubit = ChatsCubit(
-        chatRepository: mockChatRepository,
-        settingsRepository: mockSettingsRepository,
-      );
+      await cubit.generateTitle(testChat.id, testChat);
 
-      cubit.getCurrentChat();
-
-      // Manually trigger title generation
-      // Note: This will use the real LlmService which requires actual config
-      // In a real integration test, you'd set up test config
-      await cubit.generateTitleForChat(testChat.id);
-
-      // Assert - wait for async title generation to complete
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-
-      // Verify state was updated (title may or may not be generated depending on LLM config)
-      // The key is that the method executed without errors
-      expect(cubit.state.currentChat.id, testChat.id);
+      expect(mockChatRepository.updateCallCount, 1);
+      expect(mockChatRepository.updatedChatId, testChat.id);
+      expect(mockChatRepository.updatedChat?.title, 'Learn Flutter');
+      expect(mockChatRepository.updatedChat?.titleGenerated, true);
+      expect(cubit.state.lastGeneratedTitle?.chatId, testChat.id);
+      expect(cubit.state.lastGeneratedTitle?.title, 'Learn Flutter');
+      expect(cubit.state.generatingChatIds, isEmpty);
     });
 
     test('should prevent duplicate title generation for same chat', () async {
-      // Arrange
       final Chat testChat = Chat(
         id: 'test-chat-id',
         entries: <ChatEntry>[
@@ -346,105 +185,56 @@ void main() {
             timestamp: DateTime.now(),
           ),
         ],
-        title: '',
-        titleGenerated: false,
       );
 
-      mockChatRepository.currentChat = testChat;
+      int generateTitleCallCount = 0;
+      when(() => mockLlmService.init()).thenAnswer((_) async {});
+      when(
+        () => mockLlmService.generateTitle(
+          any(),
+          language: any(named: 'language'),
+        ),
+      ).thenAnswer((_) async {
+        generateTitleCallCount++;
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        return 'Generated Title';
+      });
 
-      // Act
-      cubit = ChatsCubit(
-        chatRepository: mockChatRepository,
-        settingsRepository: mockSettingsRepository,
-      );
-
-      cubit.getCurrentChat();
-
-      // Call generateTitleForChat twice rapidly
-      final Future<void> call1 = cubit.generateTitleForChat(testChat.id);
-      final Future<void> call2 = cubit.generateTitleForChat(testChat.id);
+      final Future<void> call1 = cubit.generateTitle(testChat.id, testChat);
+      final Future<void> call2 = cubit.generateTitle(testChat.id, testChat);
 
       await Future.wait(<Future<void>>[call1, call2]);
 
-      // Assert - wait for async operations to complete
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-
-      // The second call should be prevented due to duplicate check
-      // In a properly configured test with LLM, only one update would occur
-      // Without LLM config, no updates occur, but the duplicate prevention works
-      expect(cubit.state.currentChat.id, testChat.id);
+      expect(generateTitleCallCount, 1);
+      expect(mockChatRepository.updateCallCount, 1);
     });
 
-    test('should handle chat with only system entries', () async {
-      // Arrange
+    test('should handle chat with only function entries', () async {
       final Chat testChat = Chat(
         id: 'test-chat-id',
         entries: <ChatEntry>[
           ChatEntry(
             id: 'system-entry',
             entryType: EntryType.functionCalling,
-            body: 'System function call',
+            body: 'Function call',
             timestamp: DateTime.now(),
           ),
         ],
-        title: '',
-        titleGenerated: false,
       );
 
-      mockChatRepository.currentChat = testChat;
+      await cubit.generateTitle(testChat.id, testChat);
 
-      // Act
-      cubit = ChatsCubit(
-        chatRepository: mockChatRepository,
-        settingsRepository: mockSettingsRepository,
-      );
-
-      cubit.getCurrentChat();
-      await cubit.generateTitleForChat(testChat.id);
-
-      // Assert - wait for async title generation to complete
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-
-      // Should not generate title for chat without user messages
       expect(mockChatRepository.updateCallCount, 0);
+      verifyNever(
+        () => mockLlmService.generateTitle(
+          any(),
+          language: any(named: 'language'),
+        ),
+      );
     });
 
-    test('should initialize with empty generating set', () async {
-      // Arrange
-      final Chat testChat = Chat(
-        id: 'test-chat-id',
-        entries: <ChatEntry>[
-          ChatEntry(
-            id: 'user-entry',
-            entryType: EntryType.user,
-            body: 'Test message',
-            timestamp: DateTime.now(),
-          ),
-        ],
-        title: '',
-        titleGenerated: false,
-      );
-
-      mockChatRepository.currentChat = testChat;
-
-      // Act
-      cubit = ChatsCubit(
-        chatRepository: mockChatRepository,
-        settingsRepository: mockSettingsRepository,
-      );
-
-      cubit.getCurrentChat();
-
-      // Check that generating set is empty initially
-      expect(cubit.state.generatingTitleChatIds, isEmpty);
-
-      // Trigger title generation
-      // Note: generateTitleForChat is deprecated and only adds to the set
-      // It doesn't actually generate titles or clean up (use ChatTitleCubit instead)
-      await cubit.generateTitleForChat(testChat.id);
-
-      // The chatId should be in the generating set
-      expect(cubit.state.generatingTitleChatIds, contains(testChat.id));
+    test('should initialize with empty generating set', () {
+      expect(cubit.state.generatingChatIds, isEmpty);
     });
   });
 }

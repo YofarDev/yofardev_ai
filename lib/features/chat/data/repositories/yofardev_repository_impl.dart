@@ -14,14 +14,23 @@ import '../../../settings/domain/repositories/settings_repository.dart';
 import '../datasources/chat_local_datasource.dart';
 
 class YofardevRepositoryImpl implements ChatRepository {
-  final YofardevAgent _agent = YofardevAgent();
-  final PromptDatasource _promptService = PromptDatasource();
-  final FakeLlmService _fakeLlmService = FakeLlmService();
-  final ChatLocalDatasource _chatDatasource = ChatLocalDatasource();
+  final YofardevAgent _agent;
+  final PromptDatasource _promptService;
+  final FakeLlmService _fakeLlmService;
+  final ChatLocalDatasource _chatDatasource;
   final SettingsRepository _settingsRepository;
 
-  YofardevRepositoryImpl({required SettingsRepository settingsRepository})
-    : _settingsRepository = settingsRepository;
+  YofardevRepositoryImpl({
+    required SettingsRepository settingsRepository,
+    YofardevAgent? agent,
+    PromptDatasource? promptService,
+    FakeLlmService? fakeLlmService,
+    ChatLocalDatasource? chatDatasource,
+  }) : _settingsRepository = settingsRepository,
+       _agent = agent ?? YofardevAgent(),
+       _promptService = promptService ?? PromptDatasource(),
+       _fakeLlmService = fakeLlmService ?? FakeLlmService(),
+       _chatDatasource = chatDatasource ?? ChatLocalDatasource();
 
   @override
   Future<Either<Exception, Chat>> createNewChat() async {

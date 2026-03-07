@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:dartz/dartz.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,9 +36,7 @@ class SettingsLocalDatasource {
       final Map<String, dynamic> data =
           jsonDecode(json) as Map<String, dynamic>;
       final TaskLlmConfig parsedConfig = TaskLlmConfig.fromJson(data);
-      final Either<Exception, TaskLlmConfig> result =
-          Right<Exception, TaskLlmConfig>(parsedConfig);
-      return result;
+      return Right<Exception, TaskLlmConfig>(parsedConfig);
     } catch (e) {
       return Left<Exception, TaskLlmConfig>(
         Exception('Failed to load task LLM config: $e'),
@@ -51,8 +49,7 @@ class SettingsLocalDatasource {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String json = jsonEncode(config.toJson());
       await prefs.setString(_keyTaskLlmConfig, json);
-      const Either<Exception, void> result = Right<Exception, void>(null);
-      return result;
+      return const Right<Exception, void>(null);
     } catch (e) {
       return Left<Exception, void>(
         Exception('Failed to save task LLM config: $e'),

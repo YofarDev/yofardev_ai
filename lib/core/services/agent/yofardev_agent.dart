@@ -14,7 +14,10 @@ import '../../utils/logger.dart';
 import 'tool_registry.dart';
 
 class YofardevAgent {
-  final LlmService _llmService = LlmService();
+  YofardevAgent({LlmService? llmService})
+    : _llmService = llmService ?? LlmService();
+
+  final LlmService _llmService;
 
   /// The primary method to interact with the agent.
   ///

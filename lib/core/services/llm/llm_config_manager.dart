@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:dartz/dartz.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/llm_config.dart';
@@ -101,7 +101,7 @@ class LlmConfigManager {
     try {
       final Either<Exception, TaskLlmConfig> result = await _settingsDatasource
           .getTaskLlmConfig();
-      return result.getOrElse(() => const TaskLlmConfig());
+      return result.getOrElse((_) => const TaskLlmConfig());
     } catch (e) {
       AppLogger.error(
         'Failed to load task config',
