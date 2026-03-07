@@ -29,6 +29,9 @@ class SettingsCubit extends Cubit<SettingsState> {
     // Load task LLM config
     await loadTaskLlmConfig();
 
+    // Load function calling configurations
+    await loadFunctionCallingConfigs();
+
     // Load available LLM configs
     try {
       final List<LlmConfig> configs = _llmService.getAllConfigs();
@@ -111,5 +114,162 @@ class SettingsCubit extends Cubit<SettingsState> {
       ),
       (_) => null, // Don't need to emit, value is stored in repository
     );
+  }
+
+  /// Load Google Search configuration
+  Future<void> loadGoogleSearchConfig() async {
+    final Either<Exception, String?> keyResult =
+        await _settingsRepository.getGoogleSearchKey();
+    final Either<Exception, String?> idResult =
+        await _settingsRepository.getGoogleSearchEngineId();
+    final Either<Exception, bool> enabledResult =
+        await _settingsRepository.getGoogleSearchEnabled();
+
+    final String? key = keyResult.getOrElse((Exception _) => null);
+    final String? id = idResult.getOrElse((Exception _) => null);
+    final bool enabled = enabledResult.getOrElse((Exception _) => true);
+
+    emit(state.copyWith(
+      googleSearchKey: key,
+      googleSearchEngineId: id,
+      googleSearchEnabled: enabled,
+    ));
+  }
+
+  /// Update Google Search API key
+  Future<void> updateGoogleSearchKey(String key) async {
+    final Either<Exception, void> result =
+        await _settingsRepository.setGoogleSearchKey(key);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to save Google Search key: $error',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => emit(state.copyWith(googleSearchKey: key)),
+    );
+  }
+
+  /// Update Google Search Engine ID
+  Future<void> updateGoogleSearchEngineId(String id) async {
+    final Either<Exception, void> result =
+        await _settingsRepository.setGoogleSearchEngineId(id);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to save Google Search Engine ID: $error',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => emit(state.copyWith(googleSearchEngineId: id)),
+    );
+  }
+
+  /// Toggle Google Search enabled state
+  Future<void> toggleGoogleSearch(bool enabled) async {
+    final Either<Exception, void> result =
+        await _settingsRepository.setGoogleSearchEnabled(enabled);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to toggle Google Search: $error',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => emit(state.copyWith(googleSearchEnabled: enabled)),
+    );
+  }
+
+  /// Load OpenWeather configuration
+  Future<void> loadOpenWeatherConfig() async {
+    final Either<Exception, String?> keyResult =
+        await _settingsRepository.getOpenWeatherKey();
+    final Either<Exception, bool> enabledResult =
+        await _settingsRepository.getOpenWeatherEnabled();
+
+    final String? key = keyResult.getOrElse((Exception _) => null);
+    final bool enabled = enabledResult.getOrElse((Exception _) => true);
+
+    emit(state.copyWith(
+      openWeatherKey: key,
+      openWeatherEnabled: enabled,
+    ));
+  }
+
+  /// Update OpenWeather API key
+  Future<void> updateOpenWeatherKey(String key) async {
+    final Either<Exception, void> result =
+        await _settingsRepository.setOpenWeatherKey(key);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to save OpenWeather key: $error',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => emit(state.copyWith(openWeatherKey: key)),
+    );
+  }
+
+  /// Toggle OpenWeather enabled state
+  Future<void> toggleOpenWeather(bool enabled) async {
+    final Either<Exception, void> result =
+        await _settingsRepository.setOpenWeatherEnabled(enabled);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to toggle OpenWeather: $error',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => emit(state.copyWith(openWeatherEnabled: enabled)),
+    );
+  }
+
+  /// Load New York Times configuration
+  Future<void> loadNewYorkTimesConfig() async {
+    final Either<Exception, String?> keyResult =
+        await _settingsRepository.getNewYorkTimesKey();
+    final Either<Exception, bool> enabledResult =
+        await _settingsRepository.getNewYorkTimesEnabled();
+
+    final String? key = keyResult.getOrElse((Exception _) => null);
+    final bool enabled = enabledResult.getOrElse((Exception _) => true);
+
+    emit(state.copyWith(
+      newYorkTimesKey: key,
+      newYorkTimesEnabled: enabled,
+    ));
+  }
+
+  /// Update New York Times API key
+  Future<void> updateNewYorkTimesKey(String key) async {
+    final Either<Exception, void> result =
+        await _settingsRepository.setNewYorkTimesKey(key);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to save New York Times key: $error',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => emit(state.copyWith(newYorkTimesKey: key)),
+    );
+  }
+
+  /// Toggle New York Times enabled state
+  Future<void> toggleNewYorkTimes(bool enabled) async {
+    final Either<Exception, void> result =
+        await _settingsRepository.setNewYorkTimesEnabled(enabled);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to toggle New York Times: $error',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => emit(state.copyWith(newYorkTimesEnabled: enabled)),
+    );
+  }
+
+  /// Load all function calling configurations at once
+  Future<void> loadFunctionCallingConfigs() async {
+    await loadGoogleSearchConfig();
+    await loadOpenWeatherConfig();
+    await loadNewYorkTimesConfig();
   }
 }
