@@ -83,13 +83,13 @@ class LanguageFr extends Languages {
   @override
   String get settings_functionCalling => "Appel de Fonctions";
   @override
-  String get settings_functionCalling_description => "Configurez les clés API pour les fonctionnalités d'appel de fonctions";
+  String get settings_functionCalling_description => "Configurez les clés API pour les fonctionnalités d'appel de fonctions.";
   @override
   String get settings_functionCalling_saved => "Configuration enregistrée";
   @override
   String get settings_googleSearch => "Recherche Google";
   @override
-  String get settings_googleSearch_description => "Rechercher sur le web pour des informations actuelles";
+  String get settings_googleSearch_description => "Rechercher sur le web pour des informations actuelles.";
   @override
   String get settings_apiKey => "Clé API";
   @override
@@ -97,11 +97,11 @@ class LanguageFr extends Languages {
   @override
   String get settings_weather => "Météo";
   @override
-  String get settings_weather_description => "Obtenir la météo actuelle pour n'importe quel lieu";
+  String get settings_weather_description => "Obtenir la météo actuelle pour n'importe quel lieu.";
   @override
   String get settings_news => "Actualités";
   @override
-  String get settings_news_description => "Obtenir les actualités les plus populaires du jour";
+  String get settings_news_description => "Obtenir les actualités les plus populaires du jour.";
   @override
   String get settings_enable => "Activer";
   @override
