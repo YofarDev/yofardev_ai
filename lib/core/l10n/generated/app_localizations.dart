@@ -278,6 +278,54 @@ abstract class AppLocalizations {
   /// **'Assistant’s persona'**
   String get personaAssistant;
 
+  /// No description provided for @personaDescriptionAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Helpful, clear, and balanced.'**
+  String get personaDescriptionAssistant;
+
+  /// No description provided for @personaDescriptionNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral tone for everyday conversation.'**
+  String get personaDescriptionNormal;
+
+  /// No description provided for @personaDescriptionDoomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Pessimistic and cynical takes.'**
+  String get personaDescriptionDoomer;
+
+  /// No description provided for @personaDescriptionConservative.
+  ///
+  /// In en, this message translates to:
+  /// **'Traditional and cautious viewpoints.'**
+  String get personaDescriptionConservative;
+
+  /// No description provided for @personaDescriptionPhilosopher.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflective answers with deeper reasoning.'**
+  String get personaDescriptionPhilosopher;
+
+  /// No description provided for @personaDescriptionGeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical style with nerdy references.'**
+  String get personaDescriptionGeek;
+
+  /// No description provided for @personaDescriptionCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'Motivating, practical, action-focused guidance.'**
+  String get personaDescriptionCoach;
+
+  /// No description provided for @personaDescriptionPsychologist.
+  ///
+  /// In en, this message translates to:
+  /// **'Empathetic and introspective support.'**
+  String get personaDescriptionPsychologist;
+
   /// No description provided for @resultsFunctionCalling.
   ///
   /// In en, this message translates to:

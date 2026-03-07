@@ -103,6 +103,36 @@ class AppLocalizationsFr extends AppLocalizations {
   String get personaAssistant => 'Personnalité de l’assistant';
 
   @override
+  String get personaDescriptionAssistant => 'Utile, clair et équilibré.';
+
+  @override
+  String get personaDescriptionNormal =>
+      'Ton neutre pour les échanges du quotidien.';
+
+  @override
+  String get personaDescriptionDoomer => 'Vision pessimiste et cynique.';
+
+  @override
+  String get personaDescriptionConservative =>
+      'Points de vue traditionnels et prudents.';
+
+  @override
+  String get personaDescriptionPhilosopher =>
+      'Réponses réfléchies avec un raisonnement plus profond.';
+
+  @override
+  String get personaDescriptionGeek =>
+      'Style technique avec des références nerd.';
+
+  @override
+  String get personaDescriptionCoach =>
+      'Conseils motivants, pratiques et orientés action.';
+
+  @override
+  String get personaDescriptionPsychologist =>
+      'Approche empathique et introspective.';
+
+  @override
   String get resultsFunctionCalling => 'Résultats de functions calling';
 
   @override

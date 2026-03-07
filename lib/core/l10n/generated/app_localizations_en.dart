@@ -103,6 +103,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personaAssistant => 'Assistant’s persona';
 
   @override
+  String get personaDescriptionAssistant => 'Helpful, clear, and balanced.';
+
+  @override
+  String get personaDescriptionNormal =>
+      'Neutral tone for everyday conversation.';
+
+  @override
+  String get personaDescriptionDoomer => 'Pessimistic and cynical takes.';
+
+  @override
+  String get personaDescriptionConservative =>
+      'Traditional and cautious viewpoints.';
+
+  @override
+  String get personaDescriptionPhilosopher =>
+      'Reflective answers with deeper reasoning.';
+
+  @override
+  String get personaDescriptionGeek => 'Technical style with nerdy references.';
+
+  @override
+  String get personaDescriptionCoach =>
+      'Motivating, practical, action-focused guidance.';
+
+  @override
+  String get personaDescriptionPsychologist =>
+      'Empathetic and introspective support.';
+
+  @override
   String get resultsFunctionCalling => 'Function calling results';
 
   @override

@@ -18,6 +18,8 @@ class PersonaDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -42,7 +44,7 @@ class PersonaDropdown extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  AppLocalizations.of(context).personaAssistant,
+                  l10n.personaAssistant,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.onSurface.withValues(alpha: 0.7),
                   ),
@@ -80,11 +82,39 @@ class PersonaDropdown extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  _personaDescription(l10n, value),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurface.withValues(alpha: 0.65),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  String _personaDescription(AppLocalizations l10n, ChatPersona persona) {
+    switch (persona) {
+      case ChatPersona.assistant:
+        return l10n.personaDescriptionAssistant;
+      case ChatPersona.normal:
+        return l10n.personaDescriptionNormal;
+      case ChatPersona.doomer:
+        return l10n.personaDescriptionDoomer;
+      case ChatPersona.conservative:
+        return l10n.personaDescriptionConservative;
+      case ChatPersona.philosopher:
+        return l10n.personaDescriptionPhilosopher;
+      case ChatPersona.geek:
+        return l10n.personaDescriptionGeek;
+      case ChatPersona.coach:
+        return l10n.personaDescriptionCoach;
+      case ChatPersona.psychologist:
+        return l10n.personaDescriptionPsychologist;
+    }
   }
 }

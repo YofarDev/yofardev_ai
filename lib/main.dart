@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:alarm/alarm.dart';
@@ -50,15 +51,18 @@ void main() async {
   final String? savedLanguage = prefs.getString('language');
   final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
   final String initialLanguage = savedLanguage ?? deviceLocale.languageCode;
-  if (PlatformUtils.checkPlatform() != 'Web' &&
-      PlatformUtils.checkPlatform() != 'MacOS') {
+  if (PlatformUtils.isMobile()) {
     await Alarm.init();
     SystemChrome.setPreferredOrientations(<DeviceOrientation>[
       DeviceOrientation.portraitUp,
     ]);
   }
   if (PlatformUtils.checkPlatform() != 'Web') {
-    await TtsDatasource.initSupertonic();
+    unawaited(
+      TtsDatasource.initSupertonic().catchError((Object error, StackTrace st) {
+        // Startup should never be blocked by optional TTS warmup.
+      }),
+    );
   }
   runApp(MyApp(initialLanguage: initialLanguage));
 }
