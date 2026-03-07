@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/res/app_colors.dart';
-import '../../../../l10n/localization_manager.dart';
+import '../../../../l10n/languages.dart';
 
 /// Empty state widget for the chats list
 class ChatListEmptyState extends StatelessWidget {
@@ -37,7 +37,8 @@ class ChatListEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                localized.empty,
+                Localizations.of<Languages>(context, Languages)?.empty ??
+                    'Empty',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppColors.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w600,

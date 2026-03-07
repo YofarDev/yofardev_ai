@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/res/app_colors.dart';
-import '../../../l10n/localization_manager.dart';
+import '../../../l10n/languages.dart';
 import '../../../../core/models/chat.dart';
 
 class PersonaDropdown extends StatelessWidget {
@@ -42,7 +42,11 @@ class PersonaDropdown extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  localized.personaAssistant,
+                  Localizations.of<Languages>(
+                        context,
+                        Languages,
+                      )?.personaAssistant ??
+                      'Assistant Persona',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.onSurface.withValues(alpha: 0.7),
                   ),

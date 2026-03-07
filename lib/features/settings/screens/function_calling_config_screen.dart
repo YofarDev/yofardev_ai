@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/res/app_colors.dart';
-import '../../../l10n/localization_manager.dart';
+import '../../../l10n/languages.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
 import '../widgets/function_calling_section.dart';
@@ -26,7 +26,8 @@ class _FunctionCallingConfigScreenState
       TextEditingController();
 
   // Weather controller
-  final TextEditingController _openWeatherKeyController = TextEditingController();
+  final TextEditingController _openWeatherKeyController =
+      TextEditingController();
 
   // News controller
   final TextEditingController _newYorkTimesKeyController =
@@ -54,11 +55,14 @@ class _FunctionCallingConfigScreenState
 
     // Save Google Search
     if (_googleSearchKeyController.text.isNotEmpty) {
-      await settingsCubit.updateGoogleSearchKey(_googleSearchKeyController.text);
+      await settingsCubit.updateGoogleSearchKey(
+        _googleSearchKeyController.text,
+      );
     }
     if (_googleSearchEngineIdController.text.isNotEmpty) {
       await settingsCubit.updateGoogleSearchEngineId(
-          _googleSearchEngineIdController.text);
+        _googleSearchEngineIdController.text,
+      );
     }
 
     // Save Weather
@@ -68,14 +72,22 @@ class _FunctionCallingConfigScreenState
 
     // Save News
     if (_newYorkTimesKeyController.text.isNotEmpty) {
-      await settingsCubit.updateNewYorkTimesKey(_newYorkTimesKeyController.text);
+      await settingsCubit.updateNewYorkTimesKey(
+        _newYorkTimesKeyController.text,
+      );
     }
 
     // Show success message
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(localized.settings_functionCalling_saved),
+          content: Text(
+            Localizations.of<Languages>(
+                  context,
+                  Languages,
+                )?.settings_functionCalling_saved ??
+                'Settings saved',
+          ),
           backgroundColor: AppColors.success,
         ),
       );
@@ -105,10 +117,7 @@ class _FunctionCallingConfigScreenState
         ),
         child: Column(
           children: <Widget>[
-            SafeArea(
-              bottom: false,
-              child: SettingsAppBar(onSave: _onSave),
-            ),
+            SafeArea(bottom: false, child: SettingsAppBar(onSave: _onSave)),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -118,12 +127,14 @@ class _FunctionCallingConfigScreenState
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        localized.settings_functionCalling_description,
-                        style:
-                            Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color:
-                                      AppColors.onSurface.withValues(alpha: 0.7),
-                                ),
+                        Localizations.of<Languages>(
+                              context,
+                              Languages,
+                            )?.settings_functionCalling_description ??
+                            'Configure external APIs',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.onSurface.withValues(alpha: 0.7),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -133,19 +144,39 @@ class _FunctionCallingConfigScreenState
                           children: <Widget>[
                             // Google Search Section
                             FunctionCallingSection(
-                              title: localized.settings_googleSearch,
-                              description: localized.settings_googleSearch_description,
+                              title:
+                                  Localizations.of<Languages>(
+                                    context,
+                                    Languages,
+                                  )?.settings_googleSearch ??
+                                  'Google Search',
+                              description:
+                                  Localizations.of<Languages>(
+                                    context,
+                                    Languages,
+                                  )?.settings_googleSearch_description ??
+                                  'Search the web',
                               icon: '🔍',
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _googleSearchKeyController,
-                                  labelText: localized.settings_apiKey,
+                                  labelText:
+                                      Localizations.of<Languages>(
+                                        context,
+                                        Languages,
+                                      )?.settings_apiKey ??
+                                      'API Key',
                                   hintText: 'Enter your Google Search API key',
                                 ),
                                 const SizedBox(height: 12),
                                 _buildTextField(
                                   controller: _googleSearchEngineIdController,
-                                  labelText: localized.settings_engineId,
+                                  labelText:
+                                      Localizations.of<Languages>(
+                                        context,
+                                        Languages,
+                                      )?.settings_engineId ??
+                                      'Engine ID',
                                   hintText: 'Enter your Search Engine ID',
                                 ),
                                 const SizedBox(height: 12),
@@ -161,15 +192,29 @@ class _FunctionCallingConfigScreenState
                             ),
                             // Weather Section
                             FunctionCallingSection(
-                              title: localized.settings_weather,
-                              description: localized.settings_weather_description,
+                              title:
+                                  Localizations.of<Languages>(
+                                    context,
+                                    Languages,
+                                  )?.settings_weather ??
+                                  'Weather',
+                              description:
+                                  Localizations.of<Languages>(
+                                    context,
+                                    Languages,
+                                  )?.settings_weather_description ??
+                                  'Get weather data',
                               icon: '🌤️',
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _openWeatherKeyController,
-                                  labelText: localized.settings_apiKey,
-                                  hintText:
-                                      'Enter your OpenWeather API key',
+                                  labelText:
+                                      Localizations.of<Languages>(
+                                        context,
+                                        Languages,
+                                      )?.settings_apiKey ??
+                                      'API Key',
+                                  hintText: 'Enter your OpenWeather API key',
                                 ),
                                 const SizedBox(height: 12),
                                 _buildEnableSwitch(
@@ -184,15 +229,29 @@ class _FunctionCallingConfigScreenState
                             ),
                             // News Section
                             FunctionCallingSection(
-                              title: localized.settings_news,
-                              description: localized.settings_news_description,
+                              title:
+                                  Localizations.of<Languages>(
+                                    context,
+                                    Languages,
+                                  )?.settings_news ??
+                                  'News',
+                              description:
+                                  Localizations.of<Languages>(
+                                    context,
+                                    Languages,
+                                  )?.settings_news_description ??
+                                  'Get news articles',
                               icon: '📰',
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _newYorkTimesKeyController,
-                                  labelText: localized.settings_apiKey,
-                                  hintText:
-                                      'Enter your New York Times API key',
+                                  labelText:
+                                      Localizations.of<Languages>(
+                                        context,
+                                        Languages,
+                                      )?.settings_apiKey ??
+                                      'API Key',
+                                  hintText: 'Enter your New York Times API key',
                                 ),
                                 const SizedBox(height: 12),
                                 _buildEnableSwitch(
@@ -246,7 +305,8 @@ class _FunctionCallingConfigScreenState
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Text(
-          localized.settings_enable,
+          Localizations.of<Languages>(context, Languages)?.settings_enable ??
+              'Enable',
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         Switch(

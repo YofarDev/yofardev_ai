@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/res/app_colors.dart';
-import '../../../l10n/localization_manager.dart';
+import '../../../l10n/languages.dart';
 
 class SoundEffectsToggle extends StatelessWidget {
   final bool value;
@@ -53,7 +53,11 @@ class SoundEffectsToggle extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                localized.enableSoundEffects,
+                Localizations.of<Languages>(
+                      context,
+                      Languages,
+                    )?.enableSoundEffects ??
+                    'Enable Sound Effects',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(color: AppColors.onSurface),

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/res/app_colors.dart';
 import '../presentation/bloc/chats_cubit.dart';
-import '../../../l10n/localization_manager.dart';
+import '../../../l10n/languages.dart';
 
 /// App bar for the chats list screen
 class ChatsListAppBar extends StatelessWidget {
@@ -36,7 +36,8 @@ class ChatsListAppBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            localized.listChats,
+            Localizations.of<Languages>(context, Languages)?.listChats ??
+                'Chats',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const Spacer(),

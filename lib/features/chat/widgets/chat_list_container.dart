@@ -8,7 +8,7 @@ import '../presentation/bloc/chats_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/utils/extensions.dart';
-import '../../../l10n/localization_manager.dart';
+import '../../../l10n/languages.dart';
 import '../domain/models/chat.dart';
 import 'chat_list_item.dart';
 
@@ -38,7 +38,7 @@ class ChatListContainer extends StatelessWidget {
               final Chat chat = chats[index];
               final bool isSelected = chat.id == currentChat.id;
 
-              final String previewText = _resolvePreview(chat);
+              final String previewText = _resolvePreview(context, chat);
               final String timeLabel = _relativeTime(
                 chat.entries.isNotEmpty ? chat.entries.last.timestamp : null,
               );
@@ -91,8 +91,9 @@ class ChatListContainer extends StatelessWidget {
     return result ?? false;
   }
 
-  String _resolvePreview(Chat chat) {
-    if (chat.entries.isEmpty) return localized.empty;
+  String _resolvePreview(BuildContext context, Chat chat) {
+    if (chat.entries.isEmpty)
+      return Localizations.of<Languages>(context, Languages)?.empty ?? 'Empty';
 
     // NEW: Use title if available and generated
     if (chat.titleGenerated && chat.title.isNotEmpty) {
@@ -116,7 +117,7 @@ class ChatListContainer extends StatelessWidget {
         if (raw.isNotEmpty) return raw;
       }
     }
-    return localized.empty;
+    return Localizations.of<Languages>(context, Languages)?.empty ?? 'Empty';
   }
 
   String _relativeTime(DateTime? date) {

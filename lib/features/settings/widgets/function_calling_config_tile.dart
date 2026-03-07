@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
-import '../../../l10n/localization_manager.dart';
+import '../../../l10n/languages.dart';
 
 /// Tile widget for navigating to function calling configuration
 class FunctionCallingConfigTile extends StatelessWidget {
@@ -44,7 +44,11 @@ class FunctionCallingConfigTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    localized.settings_functionCalling,
+                    Localizations.of<Languages>(
+                          context,
+                          Languages,
+                        )?.settings_functionCalling ??
+                        'Function Calling',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppColors.onSurface,
                       fontWeight: FontWeight.w600,
@@ -52,7 +56,11 @@ class FunctionCallingConfigTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    localized.settings_functionCalling_description,
+                    Localizations.of<Languages>(
+                          context,
+                          Languages,
+                        )?.settings_functionCalling_description ??
+                        'Configure external APIs',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurface.withValues(alpha: 0.6),
                     ),
