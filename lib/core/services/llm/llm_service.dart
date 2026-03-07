@@ -59,7 +59,10 @@ class LlmService implements LlmServiceInterface {
   final LlmStreamingServiceInterface? _streamingService;
 
   LlmStreamingServiceInterface _createDefaultStreamingService() {
-    return LlmStreamingService(client: _client, configManager: _configManager);
+    return LlmStreamingService(
+      client: _httpClient,
+      configManager: _configManager,
+    );
   }
 
   @override

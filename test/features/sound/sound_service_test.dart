@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// Baseline tests for SoundService
 ///
 /// These tests document the current behavior of SoundService before refactoring.
-/// The service is a singleton that plays sound effects using just_audio.
+/// The service is a singleton that plays sound effects using audioplayers.
 ///
 /// Current implementation:
 /// - Singleton pattern with factory constructor
-/// - Uses AudioPlayer from just_audio package
+/// - Uses AudioPlayer from audioplayers package
 /// - playSoundEffect() method with optional volume parameter
 /// - stop() method to stop playback
 /// - Silently catches errors (doesn't throw or log)
@@ -41,11 +41,11 @@ void main() {
       expect('stop method calls _player.stop()', isNotNull);
     });
 
-    test('should use just_audio AudioPlayer', () {
+    test('should use audioplayers AudioPlayer', () {
       // Current implementation:
       // final AudioPlayer _player = AudioPlayer();
       expect(
-        'SoundService uses AudioPlayer from just_audio package',
+        'SoundService uses AudioPlayer from audioplayers package',
         isNotNull,
       );
     });
@@ -75,11 +75,11 @@ void main() {
   group('SoundService Integration Notes', () {
     test('dependencies', () {
       // Current dependencies:
-      // - just_audio package
+      // - audioplayers package
       // - SoundEffects enum with getPath() extension
       // - AppUtils.fixAssetsPath() for path resolution
       expect(
-        'Depends on just_audio, SoundEffects model, and AppUtils',
+        'Depends on audioplayers, SoundEffects model, and AppUtils',
         isNotNull,
       );
     });

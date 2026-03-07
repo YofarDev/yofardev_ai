@@ -53,8 +53,7 @@ class SoundEffectsToggle extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                AppLocalizations.of(context).enableSoundEffects ??
-                    'Enable Sound Effects',
+                AppLocalizations.of(context).enableSoundEffects,
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(color: AppColors.onSurface),

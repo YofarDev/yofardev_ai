@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
@@ -15,7 +16,6 @@ import 'package:yofardev_ai/features/chat/widgets/chat_list_container.dart';
 import 'package:yofardev_ai/features/chat/widgets/chat_list_empty_state.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
-import 'package:yofardev_ai/l10n/localization_manager.dart';
 
 // Mock cubits for screen testing
 class MockChatsCubit extends Mock implements ChatsCubit {}
@@ -26,9 +26,7 @@ class MockTalkingCubit extends Mock implements TalkingCubit {}
 
 void main() {
   setUpAll(() async {
-    // Initialize localization manager
     TestWidgetsFlutterBinding.ensureInitialized();
-    await LocalizationManager().initialize('en');
 
     registerFallbackValue(
       ChatsState(
@@ -95,7 +93,12 @@ void main() {
           BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
           BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
         ],
-        child: const MaterialApp(home: ChatsListPage()),
+        child: const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ChatsListPage(),
+        ),
       );
     }
 

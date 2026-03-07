@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../../utils/logger.dart';
 
 /// Service for playing audio files
@@ -15,11 +15,11 @@ class AudioPlayerService {
       // Stop any previous playback
       await _player.stop();
 
-      await _player.setFilePath(audioPath);
-      _player.play();
+      await _player.setSource(DeviceFileSource(audioPath));
+      _player.resume();
 
       // Return the audio duration for syncing animation
-      final Duration duration = _player.duration ?? Duration.zero;
+      final Duration duration = await _player.getDuration() ?? Duration.zero;
       AppLogger.debug(
         'Audio duration: ${duration.inMilliseconds}ms',
         tag: 'AudioPlayerService',
@@ -54,10 +54,5 @@ class AudioPlayerService {
   }
 
   /// Stream that emits when playback completes
-  Stream<void> get onPlaybackComplete => _player.playerStateStream
-      .where(
-        (PlayerState state) =>
-            state.processingState == ProcessingState.completed,
-      )
-      .map((_) => const Duration(seconds: 0));
+  Stream<void> get onPlaybackComplete => _player.onPlayerComplete;
 }

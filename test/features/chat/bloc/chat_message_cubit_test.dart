@@ -27,7 +27,6 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_manager.dart';
-import 'package:yofardev_ai/l10n/localization_manager.dart';
 
 class MockHttpClient extends Mock implements Client {}
 
@@ -307,9 +306,7 @@ class MockStreamProcessorService extends Mock
     implements StreamProcessorService {}
 
 class MockChatEntryService implements ChatEntryService {
-  const MockChatEntryService(this._settingsRepository);
-
-  final SettingsRepository _settingsRepository;
+  const MockChatEntryService();
 
   @override
   Future<ChatEntry> createUserEntry({
@@ -351,7 +348,6 @@ void main() {
     });
 
     setUp(() async {
-      await LocalizationManager().initialize('en');
       await initializeDateFormatting('en_US', null);
 
       mockChatRepo = MockChatRepository();
@@ -383,7 +379,7 @@ void main() {
         streamProcessor: StreamProcessorService(),
         promptDatasource: mockPromptDatasource,
         interruptionService: interruptionService,
-        chatEntryService: MockChatEntryService(mockSettingsRepo),
+        chatEntryService: MockChatEntryService(),
         ttsQueueManager: mockTtsManager,
       );
       cubit = ChatMessageCubit(
@@ -706,7 +702,7 @@ void main() {
             streamProcessor: mockStreamProcessor,
             promptDatasource: mockPromptDatasource,
             interruptionService: interruptionService,
-            chatEntryService: MockChatEntryService(mockSettingsRepository),
+            chatEntryService: MockChatEntryService(),
           );
           final ChatMessageCubit cubit = ChatMessageCubit(
             chatAudioCubit: chatAudioCubit,

@@ -223,9 +223,7 @@ class MockStreamProcessorService extends Mock
     implements StreamProcessorService {}
 
 class MockChatEntryService implements ChatEntryService {
-  const MockChatEntryService(this._settingsRepository);
-
-  final SettingsRepository _settingsRepository;
+  const MockChatEntryService();
 
   @override
   Future<ChatEntry> createUserEntry({
@@ -258,7 +256,7 @@ void main() {
         streamProcessor: MockStreamProcessorService(),
         promptDatasource: MockPromptDatasource(),
         interruptionService: interruptionService,
-        chatEntryService: MockChatEntryService(MockSettingsRepository()),
+        chatEntryService: MockChatEntryService(),
       );
       chatCubit = ChatMessageCubit(
         chatAudioCubit: chatAudioCubit,

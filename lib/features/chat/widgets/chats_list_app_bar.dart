@@ -36,8 +36,7 @@ class ChatsListAppBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            AppLocalizations.of(context).listChats ??
-                'Chats',
+            AppLocalizations.of(context).listChats,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const Spacer(),

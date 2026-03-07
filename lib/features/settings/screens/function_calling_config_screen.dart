@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/res/app_colors.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
+import '../../../core/res/app_colors.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
 import '../widgets/function_calling_section.dart';
@@ -82,8 +82,7 @@ class _FunctionCallingConfigScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).settings_functionCalling_saved ??
-                'Settings saved',
+            AppLocalizations.of(context).settings_functionCalling_saved,
           ),
           backgroundColor: AppColors.success,
         ),
@@ -125,9 +124,8 @@ class _FunctionCallingConfigScreenState
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         AppLocalizations.of(
-                              context,
-                            ).settings_functionCalling_description ??
-                            'Configure external APIs',
+                          context,
+                        ).settings_functionCalling_description,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppColors.onSurface.withValues(alpha: 0.7),
                         ),
@@ -140,35 +138,27 @@ class _FunctionCallingConfigScreenState
                           children: <Widget>[
                             // Google Search Section
                             FunctionCallingSection(
-                              title:
-                                  AppLocalizations.of(
-                                    context,
-                                  ).settings_googleSearch ??
-                                  'Google Search',
-                              description:
-                                  AppLocalizations.of(
-                                    context,
-                                  ).settings_googleSearch_description ??
-                                  'Search the web',
+                              title: AppLocalizations.of(
+                                context,
+                              ).settings_googleSearch,
+                              description: AppLocalizations.of(
+                                context,
+                              ).settings_googleSearch_description,
                               icon: '🔍',
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _googleSearchKeyController,
-                                  labelText:
-                                      AppLocalizations.of(
-                                        context,
-                                      ).settings_apiKey ??
-                                      'API Key',
+                                  labelText: AppLocalizations.of(
+                                    context,
+                                  ).settings_apiKey,
                                   hintText: 'Enter your Google Search API key',
                                 ),
                                 const SizedBox(height: 12),
                                 _buildTextField(
                                   controller: _googleSearchEngineIdController,
-                                  labelText:
-                                      AppLocalizations.of(
-                                        context,
-                                      ).settings_engineId ??
-                                      'Engine ID',
+                                  labelText: AppLocalizations.of(
+                                    context,
+                                  ).settings_engineId,
                                   hintText: 'Enter your Search Engine ID',
                                 ),
                                 const SizedBox(height: 12),
@@ -184,25 +174,19 @@ class _FunctionCallingConfigScreenState
                             ),
                             // Weather Section
                             FunctionCallingSection(
-                              title:
-                                  AppLocalizations.of(
-                                    context,
-                                  ).settings_weather ??
-                                  'Weather',
-                              description:
-                                  AppLocalizations.of(
-                                    context,
-                                  ).settings_weather_description ??
-                                  'Get weather data',
+                              title: AppLocalizations.of(
+                                context,
+                              ).settings_weather,
+                              description: AppLocalizations.of(
+                                context,
+                              ).settings_weather_description,
                               icon: '🌤️',
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _openWeatherKeyController,
-                                  labelText:
-                                      AppLocalizations.of(
-                                        context,
-                                      ).settings_apiKey ??
-                                      'API Key',
+                                  labelText: AppLocalizations.of(
+                                    context,
+                                  ).settings_apiKey,
                                   hintText: 'Enter your OpenWeather API key',
                                 ),
                                 const SizedBox(height: 12),
@@ -218,23 +202,17 @@ class _FunctionCallingConfigScreenState
                             ),
                             // News Section
                             FunctionCallingSection(
-                              title:
-                                  AppLocalizations.of(context).settings_news ??
-                                  'News',
-                              description:
-                                  AppLocalizations.of(
-                                    context,
-                                  ).settings_news_description ??
-                                  'Get news articles',
+                              title: AppLocalizations.of(context).settings_news,
+                              description: AppLocalizations.of(
+                                context,
+                              ).settings_news_description,
                               icon: '📰',
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _newYorkTimesKeyController,
-                                  labelText:
-                                      AppLocalizations.of(
-                                        context,
-                                      ).settings_apiKey ??
-                                      'API Key',
+                                  labelText: AppLocalizations.of(
+                                    context,
+                                  ).settings_apiKey,
                                   hintText: 'Enter your New York Times API key',
                                 ),
                                 const SizedBox(height: 12),
@@ -289,7 +267,7 @@ class _FunctionCallingConfigScreenState
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Text(
-          AppLocalizations.of(context).settings_enable ?? 'Enable',
+          AppLocalizations.of(context).settings_enable,
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         Switch(

@@ -42,8 +42,7 @@ class PersonaDropdown extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  AppLocalizations.of(context).personaAssistant ??
-                      'Assistant Persona',
+                  AppLocalizations.of(context).personaAssistant,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.onSurface.withValues(alpha: 0.7),
                   ),

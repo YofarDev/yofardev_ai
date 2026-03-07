@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:go_router/go_router.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../core/models/sound_effects.dart';
@@ -124,9 +124,10 @@ class _SoundEffectButton extends StatelessWidget {
         final SoundEffects? sound = soundEffect.getSoundEffectFromString();
         if (sound == null) return;
         final AudioPlayer player = AudioPlayer();
-        await player.setAsset(sound.getPath());
-        await player.play();
-        player.dispose();
+        await player.setSource(AssetSource(sound.getPath().replaceFirst('assets/', '')));
+        await player.resume();
+        // Note: we can't easily dispose here because it might stop playback
+        // In a real app we might want to manage this better or use a singleton
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(

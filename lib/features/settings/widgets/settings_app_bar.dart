@@ -36,8 +36,7 @@ class SettingsAppBar extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                AppLocalizations.of(context).settings ??
-                    'Settings',
+                AppLocalizations.of(context).settings ,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),

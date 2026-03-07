@@ -93,7 +93,7 @@ class ChatListContainer extends StatelessWidget {
 
   String _resolvePreview(BuildContext context, Chat chat) {
     if (chat.entries.isEmpty) {
-      return AppLocalizations.of(context).empty ?? 'Empty';
+      return AppLocalizations.of(context).empty;
     }
 
     // NEW: Use title if available and generated
@@ -118,7 +118,7 @@ class ChatListContainer extends StatelessWidget {
         if (raw.isNotEmpty) return raw;
       }
     }
-    return AppLocalizations.of(context).empty ?? 'Empty';
+    return AppLocalizations.of(context).empty ;
   }
 
   String _relativeTime(DateTime? date) {

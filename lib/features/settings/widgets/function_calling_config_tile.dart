@@ -44,8 +44,7 @@ class FunctionCallingConfigTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    AppLocalizations.of(context).settings_functionCalling ??
-                        'Function Calling',
+                    AppLocalizations.of(context).settings_functionCalling ,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppColors.onSurface,
                       fontWeight: FontWeight.w600,
@@ -53,8 +52,7 @@ class FunctionCallingConfigTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    AppLocalizations.of(context).settings_functionCalling_description ??
-                        'Configure external APIs',
+                    AppLocalizations.of(context).settings_functionCalling_description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurface.withValues(alpha: 0.6),
                     ),

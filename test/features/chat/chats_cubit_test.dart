@@ -10,7 +10,6 @@ import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
-import 'package:yofardev_ai/l10n/localization_manager.dart';
 
 class MockChatRepository implements ChatRepository {
   @override
@@ -234,7 +233,6 @@ void main() {
       chatsCubit = ChatsCubit(
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
-        localizationManager: LocalizationManager(),
       );
     });
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_state.dart';
 import 'package:yofardev_ai/features/settings/screens/function_calling_config_screen.dart';
@@ -59,6 +60,9 @@ void main() {
 
     Widget createTestWidget() {
       return MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: BlocProvider<SettingsCubit>.value(
           value: mockSettingsCubit,
           child: const FunctionCallingConfigScreen(),
@@ -68,6 +72,9 @@ void main() {
 
     Widget createNavigableTestWidget() {
       return MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Navigator(
           onGenerateInitialRoutes: (_, _) => <Route<dynamic>>[
             MaterialPageRoute<void>(
@@ -81,6 +88,33 @@ void main() {
             ),
           ],
         ),
+      );
+    }
+
+    AppLocalizations localizationsFor(WidgetTester tester) {
+      return AppLocalizations.of(
+        tester.element(find.byType(FunctionCallingConfigScreen)),
+      );
+    }
+
+    Finder sectionByTitle(String title) {
+      return find.ancestor(
+        of: find.text(title),
+        matching: find.byType(FunctionCallingSection),
+      );
+    }
+
+    Finder textFieldsInSection(String title) {
+      return find.descendant(
+        of: sectionByTitle(title),
+        matching: find.byType(TextField),
+      );
+    }
+
+    Finder switchInSection(String title) {
+      return find.descendant(
+        of: sectionByTitle(title),
+        matching: find.byType(Switch),
       );
     }
 
@@ -100,13 +134,17 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('Configure API keys'), findsOneWidget);
-        expect(find.textContaining('Search the web'), findsOneWidget);
-        expect(find.textContaining('Get current weather'), findsOneWidget);
+        final AppLocalizations l10n = localizationsFor(tester);
         expect(
-          find.textContaining('Get today\'s most popular'),
+          find.text(l10n.settings_functionCalling_description),
           findsOneWidget,
         );
+        expect(
+          find.text(l10n.settings_googleSearch_description),
+          findsOneWidget,
+        );
+        expect(find.text(l10n.settings_weather_description), findsOneWidget);
+        expect(find.text(l10n.settings_news_description), findsOneWidget);
       });
 
       testWidgets('should render app bar with back button and save button', (
@@ -129,10 +167,11 @@ void main() {
         // Should find 4 TextField widgets (Google Search has 2: API Key + Engine ID)
         expect(find.byType(TextField), findsNWidgets(4));
 
+        final AppLocalizations l10n = localizationsFor(tester);
         // Check for label text
-        expect(find.text('API Key'), findsNWidgets(3));
+        expect(find.text(l10n.settings_apiKey), findsNWidgets(3));
         // Search Engine ID appears in both label and hint text
-        expect(find.textContaining('Search Engine ID'), findsWidgets);
+        expect(find.text(l10n.settings_engineId), findsOneWidget);
       });
 
       testWidgets('should render all toggle switches', (
@@ -143,7 +182,10 @@ void main() {
 
         // Should find 3 Switch widgets (one for each service)
         expect(find.byType(Switch), findsNWidgets(3));
-        expect(find.text('Enable'), findsNWidgets(3));
+        expect(
+          find.text(localizationsFor(tester).settings_enable),
+          findsNWidgets(3),
+        );
       });
 
       testWidgets('should display service icons', (WidgetTester tester) async {
@@ -171,9 +213,10 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        expect(find.text('Google Search'), findsOneWidget);
-        expect(find.text('API Key'), findsWidgets);
-        expect(find.textContaining('Search Engine ID'), findsWidgets);
+        final AppLocalizations l10n = localizationsFor(tester);
+        expect(find.text(l10n.settings_googleSearch), findsOneWidget);
+        expect(find.text(l10n.settings_apiKey), findsWidgets);
+        expect(find.text(l10n.settings_engineId), findsOneWidget);
       });
 
       testWidgets('should show Google Search toggle state correctly', (
@@ -190,8 +233,9 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
+        final AppLocalizations l10n = localizationsFor(tester);
         final Switch googleSwitch = tester.widget<Switch>(
-          find.byType(Switch).first,
+          switchInSection(l10n.settings_googleSearch),
         );
         expect(googleSwitch.value, true);
       });
@@ -210,7 +254,8 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byType(Switch).first);
+        final AppLocalizations l10n = localizationsFor(tester);
+        await tester.tap(switchInSection(l10n.settings_googleSearch));
         await tester.pumpAndSettle();
 
         verify(() => mockSettingsCubit.toggleGoogleSearch(false)).called(1);
@@ -230,17 +275,11 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        // Find the first "API Key" labeled TextField (Google Search)
-        final TextField apiKeyField = tester.widget<TextField>(
-          find
-              .ancestor(
-                of: find.text('API Key'),
-                matching: find.byType(TextField),
-              )
-              .first,
+        final AppLocalizations l10n = localizationsFor(tester);
+        await tester.enterText(
+          textFieldsInSection(l10n.settings_googleSearch).first,
+          'test-google-key',
         );
-
-        await tester.enterText(find.byWidget(apiKeyField), 'test-google-key');
         await tester.pump();
 
         expect(find.text('test-google-key'), findsOneWidget);
@@ -260,17 +299,11 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        // Find the Engine ID TextField by its label
-        final TextField engineIdField = tester.widget<TextField>(
-          find
-              .descendant(
-                of: find.byType(FunctionCallingConfigScreen),
-                matching: find.byType(TextField),
-              )
-              .at(1), // Second TextField is the Engine ID
+        final AppLocalizations l10n = localizationsFor(tester);
+        await tester.enterText(
+          textFieldsInSection(l10n.settings_googleSearch).at(1),
+          'test-engine-id',
         );
-
-        await tester.enterText(find.byWidget(engineIdField), 'test-engine-id');
         await tester.pump();
 
         expect(find.text('test-engine-id'), findsOneWidget);
@@ -292,7 +325,10 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        expect(find.text('Weather'), findsOneWidget);
+        expect(
+          find.text(localizationsFor(tester).settings_weather),
+          findsOneWidget,
+        );
       });
 
       testWidgets('should show Weather toggle state correctly', (
@@ -309,12 +345,11 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        final List<Switch> switches = tester
-            .widgetList<Switch>(find.byType(Switch))
-            .toList();
-
-        // Second switch is Weather
-        expect(switches[1].value, false);
+        final AppLocalizations l10n = localizationsFor(tester);
+        final Switch weatherSwitch = tester.widget<Switch>(
+          switchInSection(l10n.settings_weather),
+        );
+        expect(weatherSwitch.value, false);
       });
 
       testWidgets('should toggle Weather when switch is tapped', (
@@ -331,17 +366,19 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
+        final AppLocalizations l10n = localizationsFor(tester);
         // Scroll to the Weather switch
         await tester.dragUntilVisible(
-          find.text('Weather'),
+          find.text(l10n.settings_weather),
           find.byType(SingleChildScrollView),
           const Offset(0, -50),
         );
         await tester.pumpAndSettle();
 
-        // Find and tap the Weather switch (second one)
-        final Finder weatherSwitch = find.byType(Switch).at(1);
-        await tester.tap(weatherSwitch, warnIfMissed: false);
+        await tester.tap(
+          switchInSection(l10n.settings_weather),
+          warnIfMissed: false,
+        );
         await tester.pumpAndSettle();
 
         verify(() => mockSettingsCubit.toggleOpenWeather(false)).called(1);
@@ -361,19 +398,9 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        // Find all API Key labeled TextFields and get the Weather one (second one)
-        final List<TextField> apiKeyFields = tester
-            .widgetList<TextField>(
-              find.ancestor(
-                of: find.text('API Key'),
-                matching: find.byType(TextField),
-              ),
-            )
-            .toList();
-
-        // Second API Key field is Weather
+        final AppLocalizations l10n = localizationsFor(tester);
         await tester.enterText(
-          find.byWidget(apiKeyFields[1]),
+          textFieldsInSection(l10n.settings_weather).first,
           'test-weather-key',
         );
         await tester.pump();
@@ -397,7 +424,10 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        expect(find.text('News'), findsOneWidget);
+        expect(
+          find.text(localizationsFor(tester).settings_news),
+          findsOneWidget,
+        );
       });
 
       testWidgets('should show News toggle state correctly', (
@@ -414,12 +444,11 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        final List<Switch> switches = tester
-            .widgetList<Switch>(find.byType(Switch))
-            .toList();
-
-        // Third switch is News
-        expect(switches[2].value, false);
+        final AppLocalizations l10n = localizationsFor(tester);
+        final Switch newsSwitch = tester.widget<Switch>(
+          switchInSection(l10n.settings_news),
+        );
+        expect(newsSwitch.value, false);
       });
 
       testWidgets('should toggle News when switch is tapped', (
@@ -436,17 +465,19 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
+        final AppLocalizations l10n = localizationsFor(tester);
         // Scroll to the News section
         await tester.dragUntilVisible(
-          find.text('News'),
+          find.text(l10n.settings_news),
           find.byType(SingleChildScrollView),
           const Offset(0, -50),
         );
         await tester.pumpAndSettle();
 
-        // Find and tap the News switch (third one)
-        final Finder newsSwitch = find.byType(Switch).at(2);
-        await tester.tap(newsSwitch, warnIfMissed: false);
+        await tester.tap(
+          switchInSection(l10n.settings_news),
+          warnIfMissed: false,
+        );
         await tester.pumpAndSettle();
 
         verify(() => mockSettingsCubit.toggleNewYorkTimes(false)).called(1);
@@ -468,14 +499,15 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        // Find all TextFields
-        final List<TextField> textFields = tester
-            .widgetList<TextField>(find.byType(TextField))
-            .toList();
-
-        // Enter values - first is Google Search API Key, second is Engine ID
-        await tester.enterText(find.byWidget(textFields[0]), 'google-api-key');
-        await tester.enterText(find.byWidget(textFields[1]), 'engine-id-123');
+        final AppLocalizations l10n = localizationsFor(tester);
+        await tester.enterText(
+          textFieldsInSection(l10n.settings_googleSearch).first,
+          'google-api-key',
+        );
+        await tester.enterText(
+          textFieldsInSection(l10n.settings_googleSearch).at(1),
+          'engine-id-123',
+        );
         await tester.pump();
 
         // Tap save button
@@ -504,13 +536,11 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        // Find all TextFields - third is Weather API Key
-        final List<TextField> textFields = tester
-            .widgetList<TextField>(find.byType(TextField))
-            .toList();
-
-        // Enter Weather key (third TextField)
-        await tester.enterText(find.byWidget(textFields[2]), 'weather-api-key');
+        final AppLocalizations l10n = localizationsFor(tester);
+        await tester.enterText(
+          textFieldsInSection(l10n.settings_weather).first,
+          'weather-api-key',
+        );
         await tester.pump();
 
         // Tap save button
@@ -606,10 +636,13 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        final Switch firstSwitch = tester.widget<Switch>(
-          find.byType(Switch).first,
+        final Iterable<Switch> switches = tester.widgetList<Switch>(
+          find.byType(Switch),
         );
-        expect(firstSwitch.value, false);
+        expect(
+          switches.every((Switch toggle) => toggle.value == false),
+          isTrue,
+        );
       });
     });
 

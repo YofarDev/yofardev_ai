@@ -7,7 +7,6 @@ import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
-import 'package:yofardev_ai/l10n/localization_manager.dart';
 
 /// Mock repository that tracks updates
 class TrackingMockChatRepository implements ChatRepository {
@@ -230,13 +229,11 @@ void main() {
   group('Title Generation Integration Tests', () {
     late TrackingMockChatRepository mockChatRepository;
     late MockSettingsRepository mockSettingsRepository;
-    late LocalizationManager localizationManager;
     late ChatsCubit cubit;
 
     setUp(() {
       mockChatRepository = TrackingMockChatRepository();
       mockSettingsRepository = MockSettingsRepository();
-      localizationManager = LocalizationManager();
     });
 
     tearDown(() {
@@ -265,7 +262,6 @@ void main() {
       cubit = ChatsCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
-        localizationManager: localizationManager,
       );
 
       cubit.getCurrentChat();
@@ -290,7 +286,6 @@ void main() {
       cubit = ChatsCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
-        localizationManager: localizationManager,
       );
 
       cubit.getCurrentChat();
@@ -322,7 +317,6 @@ void main() {
       cubit = ChatsCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
-        localizationManager: localizationManager,
       );
 
       cubit.getCurrentChat();
@@ -362,7 +356,6 @@ void main() {
       cubit = ChatsCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
-        localizationManager: localizationManager,
       );
 
       cubit.getCurrentChat();
@@ -404,7 +397,6 @@ void main() {
       cubit = ChatsCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
-        localizationManager: localizationManager,
       );
 
       cubit.getCurrentChat();
@@ -439,7 +431,6 @@ void main() {
       cubit = ChatsCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
-        localizationManager: localizationManager,
       );
 
       cubit.getCurrentChat();

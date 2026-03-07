@@ -1,5 +1,5 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/models/sound_effects.dart';
 import '../../domain/repositories/sound_repository.dart';
@@ -15,9 +15,10 @@ class SoundRepositoryImpl implements SoundRepository {
         return const Right<Exception, void>(null);
       }
 
-      await _player.setAsset(soundEffect.getPath());
+      await _player.stop();
+      await _player.setSource(AssetSource(soundEffect.getPath().replaceFirst('assets/', '')));
       await _player.setVolume(1.0);
-      await _player.play();
+      await _player.resume();
       return const Right<Exception, void>(null);
     } catch (e) {
       return Left<Exception, void>(Exception(e.toString()));
@@ -37,7 +38,7 @@ class SoundRepositoryImpl implements SoundRepository {
   @override
   Future<Either<Exception, bool>> get isPlaying async {
     try {
-      return Right<Exception, bool>(_player.playing);
+      return Right<Exception, bool>(_player.state == PlayerState.playing);
     } catch (e) {
       return Left<Exception, bool>(Exception(e.toString()));
     }

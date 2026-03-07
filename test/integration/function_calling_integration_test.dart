@@ -4,9 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yofardev_ai/features/settings/screens/function_calling_config_screen.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/settings/widgets/function_calling_section.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
@@ -14,7 +16,6 @@ import 'package:yofardev_ai/core/models/llm_config.dart';
 import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/core/models/function_info.dart';
 import 'package:yofardev_ai/core/models/llm_task_type.dart';
-import 'package:yofardev_ai/l10n/localization_manager.dart';
 
 /// Mock SettingsRepository that tracks updates in memory
 class InMemorySettingsRepository implements SettingsRepository {
@@ -189,9 +190,8 @@ class InMemorySettingsRepository implements SettingsRepository {
 class MockLlmService extends Mock implements LlmServiceInterface {}
 
 void main() {
-  setUpAll(() async {
+  setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    await LocalizationManager().initialize('en');
 
     // Register fallback values for mocktail
     registerFallbackValue(
@@ -233,13 +233,40 @@ void main() {
       settingsCubit.close();
     });
 
+    AppLocalizations l10n(WidgetTester tester) {
+      return AppLocalizations.of(
+        tester.element(find.byType(FunctionCallingConfigScreen)),
+      );
+    }
+
+    Finder sectionByTitle(String title) {
+      return find.ancestor(
+        of: find.text(title),
+        matching: find.byType(FunctionCallingSection),
+      );
+    }
+
+    Finder textFieldsInSection(String title) {
+      return find.descendant(
+        of: sectionByTitle(title),
+        matching: find.byType(TextField),
+      );
+    }
+
+    Finder switchInSection(String title) {
+      return find.descendant(
+        of: sectionByTitle(title),
+        matching: find.byType(Switch),
+      );
+    }
+
     testWidgets(
       'Full flow: configure Google Search API key → enable → persist',
       (WidgetTester tester) async {
         // Arrange: Create the widget tree
         await tester.pumpWidget(
-          MaterialApp(
-            home: BlocProvider<SettingsCubit>(
+          buildTestApp(
+            child: BlocProvider<SettingsCubit>(
               create: (BuildContext context) {
                 settingsCubit = SettingsCubit(
                   settingsRepository: settingsRepository,
@@ -255,28 +282,22 @@ void main() {
         // Wait for the widget to settle
         await tester.pumpAndSettle();
 
-        // Act: Enter Google Search API key
-        final Finder apiKeyTextField = find.widgetWithText(
-          TextField,
-          'API Key',
+        final AppLocalizations strings = l10n(tester);
+        await tester.enterText(
+          textFieldsInSection(strings.settings_googleSearch).first,
+          'test-google-key',
         );
-        await tester.enterText(apiKeyTextField.first, 'test-google-key');
         await tester.pumpAndSettle();
 
-        // Act: Enter Engine ID
-        final Finder engineIdTextField = find.widgetWithText(
-          TextField,
-          'Search Engine ID',
+        await tester.enterText(
+          textFieldsInSection(strings.settings_googleSearch).at(1),
+          'test-engine-id',
         );
-        await tester.enterText(engineIdTextField, 'test-engine-id');
         await tester.pumpAndSettle();
 
-        // Act: Verify toggle is enabled by default
-        final Finder switchWidget = find.byType(Switch);
-        expect(switchWidget, findsWidgets);
-
-        // Get the first switch (Google Search enable switch)
-        Switch firstSwitch = tester.widget<Switch>(switchWidget.first);
+        final Switch firstSwitch = tester.widget<Switch>(
+          switchInSection(strings.settings_googleSearch),
+        );
         expect(firstSwitch.value, true);
 
         // Act: Tap the save button to trigger save
@@ -300,8 +321,8 @@ void main() {
     ) async {
       // Arrange: Create the widget tree
       await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider<SettingsCubit>(
+        buildTestApp(
+          child: BlocProvider<SettingsCubit>(
             create: (BuildContext context) {
               settingsCubit = SettingsCubit(
                 settingsRepository: settingsRepository,
@@ -317,9 +338,8 @@ void main() {
       // Wait for the widget to settle
       await tester.pumpAndSettle();
 
-      // Act: Find and tap the first switch (Google Search enable switch)
-      final Finder switchWidget = find.byType(Switch);
-      await tester.tap(switchWidget.first);
+      final AppLocalizations strings = l10n(tester);
+      await tester.tap(switchInSection(strings.settings_googleSearch));
       await tester.pumpAndSettle();
 
       // Act: Tap the save button
@@ -339,8 +359,8 @@ void main() {
     ) async {
       // Arrange: Create the widget tree
       await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider<SettingsCubit>(
+        buildTestApp(
+          child: BlocProvider<SettingsCubit>(
             create: (BuildContext context) {
               settingsCubit = SettingsCubit(
                 settingsRepository: settingsRepository,
@@ -356,13 +376,11 @@ void main() {
       // Wait for the widget to settle
       await tester.pumpAndSettle();
 
-      // Act: Find OpenWeather API key text field
-      // There are multiple "API Key" text fields, so we need to find the second one
-      final Finder apiKeyTextFields = find.widgetWithText(TextField, 'API Key');
-      expect(apiKeyTextFields, findsAtLeastNWidgets(2));
-
-      // Enter OpenWeather API key in the second field
-      await tester.enterText(apiKeyTextFields.at(1), 'test-openweather-key');
+      final AppLocalizations strings = l10n(tester);
+      await tester.enterText(
+        textFieldsInSection(strings.settings_weather).first,
+        'test-openweather-key',
+      );
       await tester.pumpAndSettle();
 
       // Act: Tap the save button
@@ -383,8 +401,8 @@ void main() {
       (WidgetTester tester) async {
         // Arrange: Create the widget tree
         await tester.pumpWidget(
-          MaterialApp(
-            home: BlocProvider<SettingsCubit>(
+          buildTestApp(
+            child: BlocProvider<SettingsCubit>(
               create: (BuildContext context) {
                 settingsCubit = SettingsCubit(
                   settingsRepository: settingsRepository,
@@ -400,15 +418,11 @@ void main() {
         // Wait for the widget to settle
         await tester.pumpAndSettle();
 
-        // Act: Find New York Times API key text field (third "API Key" field)
-        final Finder apiKeyTextFields = find.widgetWithText(
-          TextField,
-          'API Key',
+        final AppLocalizations strings = l10n(tester);
+        await tester.enterText(
+          textFieldsInSection(strings.settings_news).first,
+          'test-nyt-key',
         );
-        expect(apiKeyTextFields, findsAtLeastNWidgets(3));
-
-        // Enter NYT API key in the third field
-        await tester.enterText(apiKeyTextFields.at(2), 'test-nyt-key');
         await tester.pumpAndSettle();
 
         // Act: Tap the save button
@@ -430,8 +444,8 @@ void main() {
     ) async {
       // Arrange: Create the widget tree
       await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider<SettingsCubit>(
+        buildTestApp(
+          child: BlocProvider<SettingsCubit>(
             create: (BuildContext context) {
               settingsCubit = SettingsCubit(
                 settingsRepository: settingsRepository,
@@ -447,33 +461,32 @@ void main() {
       // Wait for the widget to settle
       await tester.pumpAndSettle();
 
-      // Act: Find all API key text fields
-      final Finder apiKeyTextFields = find.widgetWithText(TextField, 'API Key');
-      expect(apiKeyTextFields, findsAtLeastNWidgets(3));
-
-      // Enter Google Search API key
-      await tester.enterText(apiKeyTextFields.at(0), 'google-key');
-      await tester.pumpAndSettle();
-
-      // Enter Engine ID
-      final Finder engineIdTextField = find.widgetWithText(
-        TextField,
-        'Search Engine ID',
+      final AppLocalizations strings = l10n(tester);
+      await tester.enterText(
+        textFieldsInSection(strings.settings_googleSearch).first,
+        'google-key',
       );
-      await tester.enterText(engineIdTextField, 'engine-id');
       await tester.pumpAndSettle();
 
-      // Enter OpenWeather API key
-      await tester.enterText(apiKeyTextFields.at(1), 'weather-key');
+      await tester.enterText(
+        textFieldsInSection(strings.settings_googleSearch).at(1),
+        'engine-id',
+      );
       await tester.pumpAndSettle();
 
-      // Enter NYT API key
-      await tester.enterText(apiKeyTextFields.at(2), 'nyt-key');
+      await tester.enterText(
+        textFieldsInSection(strings.settings_weather).first,
+        'weather-key',
+      );
       await tester.pumpAndSettle();
 
-      // Disable Google Search
-      final Finder switchWidgets = find.byType(Switch);
-      await tester.tap(switchWidgets.at(0));
+      await tester.enterText(
+        textFieldsInSection(strings.settings_news).first,
+        'nyt-key',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(switchInSection(strings.settings_googleSearch));
       await tester.pumpAndSettle();
 
       // Act: Tap the save button
@@ -498,4 +511,13 @@ void main() {
       expect(settingsRepository.newYorkTimesKeyUpdateCount, 1);
     });
   });
+}
+
+Widget buildTestApp({required Widget child}) {
+  return MaterialApp(
+    locale: const Locale('en'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: child,
+  );
 }

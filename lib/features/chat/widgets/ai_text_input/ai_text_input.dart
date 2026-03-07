@@ -6,22 +6,22 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/widgets/current_prompt_text.dart';
 import '../../../../core/widgets/glassmorphic/glassmorphic_text_field.dart';
 import '../../../../core/widgets/picker_buttons.dart';
-import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../../avatar/presentation/bloc/avatar_state.dart';
 import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../talking/presentation/bloc/talking_state.dart';
+import '../../domain/models/chat.dart';
+import '../../domain/models/chat_entry.dart';
 import '../../presentation/bloc/chat_message_cubit.dart';
 import '../../presentation/bloc/chats_cubit.dart';
 import '../../presentation/bloc/chats_state.dart';
-import '../../domain/models/chat_entry.dart';
-import '../../domain/models/chat.dart';
 import '../function_calling_widget.dart';
 import 'picked_image_preview.dart';
 
@@ -232,8 +232,7 @@ class _AiTextInputState extends State<AiTextInput> {
     _inputFocus.unfocus();
     if (file != null) {
       _controller.text =
-          AppLocalizations.of(context).describeThisImage ??
-          'Describe this image';
+          AppLocalizations.of(context).describeThisImage;
       setState(() {
         _pickedImage = file;
       });
