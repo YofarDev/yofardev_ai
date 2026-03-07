@@ -21,4 +21,24 @@ abstract class SettingsRepository {
 
   /// Save the task-specific LLM configuration
   Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config);
+
+  // Function Calling Configuration - Google Search
+  Future<Either<Exception, String?>> getGoogleSearchKey();
+  Future<Either<Exception, void>> setGoogleSearchKey(String key);
+  Future<Either<Exception, String?>> getGoogleSearchEngineId();
+  Future<Either<Exception, void>> setGoogleSearchEngineId(String id);
+  Future<Either<Exception, bool>> getGoogleSearchEnabled();
+  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled);
+
+  // Function Calling Configuration - OpenWeather
+  Future<Either<Exception, String?>> getOpenWeatherKey();
+  Future<Either<Exception, void>> setOpenWeatherKey(String key);
+  Future<Either<Exception, bool>> getOpenWeatherEnabled();
+  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled);
+
+  // Function Calling Configuration - New York Times
+  Future<Either<Exception, String?>> getNewYorkTimesKey();
+  Future<Either<Exception, void>> setNewYorkTimesKey(String key);
+  Future<Either<Exception, bool>> getNewYorkTimesEnabled();
+  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled);
 }
