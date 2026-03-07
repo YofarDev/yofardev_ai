@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../l10n/localization_manager.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -11,15 +10,12 @@ class ChatListCubit extends Cubit<ChatListState> {
   ChatListCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
-    required LocalizationManager localizationManager,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
-       _localizationManager = localizationManager,
        super(ChatListState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
-  final LocalizationManager _localizationManager;
 
   List<Chat> _cachedChats = <Chat>[];
 
@@ -34,7 +30,6 @@ class ChatListCubit extends Cubit<ChatListState> {
     languageResult.fold((Exception error) {}, (String? language) {
       if (language != null) {
         emit(state.copyWith(currentLanguage: language));
-        _localizationManager.initialize(language).ignore();
       }
     });
 
@@ -106,7 +101,6 @@ class ChatListCubit extends Cubit<ChatListState> {
     final Either<Exception, void> result = await _settingsRepository
         .setLanguage(language);
     result.fold((Exception error) {}, (_) {
-      _localizationManager.initialize(language).ignore();
       emit(state.copyWith(currentLanguage: language));
     });
   }

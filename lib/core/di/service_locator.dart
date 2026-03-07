@@ -2,6 +2,7 @@ import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
@@ -35,7 +36,8 @@ import '../../features/talking/domain/repositories/talking_repository.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
-import '../../l10n/localization_manager.dart';
+import '../repositories/locale_repository.dart';
+import '../repositories/locale_repository_impl.dart';
 import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
@@ -55,6 +57,8 @@ import '../utils/logger.dart';
 final GetIt getIt = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+
   // Services - LLM (conditional registration)
   if (kDebugMode) {
     // In debug mode, use FakeLlmService by default for easier testing
@@ -110,9 +114,8 @@ Future<void> setupServiceLocator() async {
 
   // Repositories (register implementations as interfaces)
   getIt.registerLazySingleton<ChatRepository>(
-    () => YofardevRepositoryImpl(
-      settingsRepository: getIt<SettingsRepository>(),
-    ),
+    () =>
+        YofardevRepositoryImpl(settingsRepository: getIt<SettingsRepository>()),
   );
   getIt.registerLazySingleton<AvatarRepository>(() => AvatarRepositoryImpl());
   getIt.registerLazySingleton<SettingsRepository>(
@@ -138,7 +141,11 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<AudioAmplitudeService>(
     () => AudioAmplitudeService(),
   );
-  getIt.registerLazySingleton<LocalizationManager>(() => LocalizationManager());
+
+  // Locale
+  getIt.registerLazySingleton<LocaleRepository>(
+    () => LocaleRepositoryImpl(prefs: prefs),
+  );
 
   // Stream processor service
   getIt.registerLazySingleton<StreamProcessorService>(
@@ -176,14 +183,12 @@ Future<void> setupServiceLocator() async {
     () => ChatsCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
-      localizationManager: getIt<LocalizationManager>(),
     ),
   );
   getIt.registerFactory<ChatListCubit>(
     () => ChatListCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
-      localizationManager: getIt<LocalizationManager>(),
     ),
   );
 

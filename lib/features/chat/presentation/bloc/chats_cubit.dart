@@ -2,7 +2,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/utils/logger.dart';
-import '../../../../l10n/localization_manager.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 import '../../domain/models/chat.dart';
@@ -18,15 +17,12 @@ class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
-    required LocalizationManager localizationManager,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
-       _localizationManager = localizationManager,
        super(ChatsState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
-  final LocalizationManager _localizationManager;
 
   /// Initialize the chat system
   Future<void> init() async {
@@ -190,8 +186,7 @@ class ChatsCubit extends Cubit<ChatsState> {
           error: error,
         );
       },
-      (_) async {
-        await _localizationManager.initialize(language);
+      (_) {
         emit(state.copyWith(currentLanguage: language));
       },
     );
