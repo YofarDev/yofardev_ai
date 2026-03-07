@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
-import '../../../l10n/languages.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
 import '../../chat/presentation/bloc/chats_cubit.dart';
 import '../../../../core/models/chat.dart';
 import '../presentation/bloc/settings_cubit.dart';
@@ -94,10 +94,7 @@ class SettingsPageState extends State<SettingsPage> {
                     children: <Widget>[
                       const SizedBox(height: 16),
                       Text(
-                        Localizations.of<Languages>(
-                              context,
-                              Languages,
-                            )?.settingsSubstring ??
+                        AppLocalizations.of(context).settingsSubstring ??
                             'Settings',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppColors.onSurface.withValues(alpha: 0.7),

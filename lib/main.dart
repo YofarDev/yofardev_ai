@@ -12,6 +12,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
+import 'core/l10n/generated/app_localizations.dart';
 import 'features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'features/chat/presentation/bloc/chats_cubit.dart';
 import 'features/chat/presentation/bloc/chat_list_cubit.dart';
@@ -20,7 +21,6 @@ import 'features/chat/presentation/bloc/chat_title_cubit.dart';
 import 'features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'features/demo/presentation/bloc/demo_cubit.dart';
 import 'features/sound/data/datasources/tts_datasource.dart';
-import 'l10n/app_localization_delegate.dart';
 import 'features/talking/presentation/bloc/talking_cubit.dart';
 import 'features/home/presentation/bloc/home_cubit.dart';
 import 'features/settings/presentation/bloc/settings_cubit.dart';
@@ -110,7 +110,7 @@ class MyApp extends StatelessWidget {
         locale: Locale(initialLanguage),
         supportedLocales: const <Locale>[Locale('fr'), Locale('en')],
         localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
-          AppLocalizationsDelegate(),
+          AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,

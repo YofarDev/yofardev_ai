@@ -20,9 +20,8 @@ class YofardevRepositoryImpl implements ChatRepository {
   final ChatLocalDatasource _chatDatasource = ChatLocalDatasource();
   final SettingsRepository _settingsRepository;
 
-  YofardevRepositoryImpl({
-    required SettingsRepository settingsRepository,
-  }) : _settingsRepository = settingsRepository;
+  YofardevRepositoryImpl({required SettingsRepository settingsRepository})
+    : _settingsRepository = settingsRepository;
 
   @override
   Future<Either<Exception, Chat>> createNewChat() async {

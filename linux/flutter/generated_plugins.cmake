@@ -3,10 +3,12 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  audioplayers_linux
   file_selector_linux
   flutter_onnxruntime
   flutter_volume_controller
   screen_retriever_linux
+  supertonic_flutter
   window_manager
 )
 

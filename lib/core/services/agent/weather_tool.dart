@@ -38,10 +38,7 @@ class WeatherTool extends AgentTool {
     }
 
     try {
-      return await WeatherService.getCurrentWeather(
-        location,
-        apiKey,
-      );
+      return await WeatherService.getCurrentWeather(location, apiKey);
     } catch (e) {
       return 'Error getting weather: $e';
     }

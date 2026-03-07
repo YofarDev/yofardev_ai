@@ -1,0 +1,195 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for French (`fr`).
+class AppLocalizationsFr extends AppLocalizations {
+  AppLocalizationsFr([String locale = 'fr']) : super(locale);
+
+  @override
+  String get commonError => 'Une erreur s\'est produite';
+
+  @override
+  String get commonRetry => 'Réessayer';
+
+  @override
+  String get commonCancel => 'Annuler';
+
+  @override
+  String get commonConfirm => 'Confirmer';
+
+  @override
+  String get commonSave => 'Enregistrer';
+
+  @override
+  String get commonDelete => 'Supprimer';
+
+  @override
+  String get commonEdit => 'Modifier';
+
+  @override
+  String get commonClose => 'Fermer';
+
+  @override
+  String get commonBack => 'Retour';
+
+  @override
+  String get commonNext => 'Suivant';
+
+  @override
+  String get commonDone => 'Terminé';
+
+  @override
+  String get reset => 'Réinitialiser';
+
+  @override
+  String get test => 'test';
+
+  @override
+  String get appName => 'Yofardev AI';
+
+  @override
+  String get assistantTask => 'Assistant';
+
+  @override
+  String get currentAvatarConfig => 'Configuration de l’avatar actuelle';
+
+  @override
+  String get currentDate => 'Date actuelle';
+
+  @override
+  String get currentUsername => 'Nom de l’utilisateur';
+
+  @override
+  String get describeThisImage => 'Décris cette image';
+
+  @override
+  String get empty => '(vide)';
+
+  @override
+  String get enableSoundEffects => 'Activer les effets sonores';
+
+  @override
+  String get functionCallingLlmDescription =>
+      'LLM utilisé pour la détection d\'outils/fonctions';
+
+  @override
+  String get functionCallingTask => 'Appel de fonctions';
+
+  @override
+  String get hiddenPart =>
+      'Cette partie n\'est pas visible par l\'utilisateur, n\'en tenez pas compte dans votre réponse.';
+
+  @override
+  String get listChats => 'Liste des chats';
+
+  @override
+  String get loadDefaultSystemPrompt => 'Charger le prompt système par défaut';
+
+  @override
+  String get moreVoicesAndroid =>
+      'Pour plus de voix : ‘Synthèse vocale Google’ sur le Play Store.';
+
+  @override
+  String get moreVoicesIOS =>
+      'Pour plus de voix, allez dans Réglages > Accessibilité > Contenu énoncé > Voix';
+
+  @override
+  String get newChat => 'Nouvelle conversation';
+
+  @override
+  String get personaAssistant => 'Personnalité de l’assistant';
+
+  @override
+  String get resultsFunctionCalling => 'Résultats de functions calling';
+
+  @override
+  String get settings => 'Paramètres';
+
+  @override
+  String get settingsSubstring =>
+      'Démarrez un nouveau chat après avoir modifié les paramètres';
+
+  @override
+  String get settings_apiKey => 'Clé API';
+
+  @override
+  String get settings_enable => 'Activer';
+
+  @override
+  String get settings_engineId => 'ID de Moteur de Recherche';
+
+  @override
+  String get settings_functionCalling => 'Appel de Fonctions';
+
+  @override
+  String get settings_functionCalling_description =>
+      'Configurez les clés API pour les fonctionnalités d\'appel de fonctions.';
+
+  @override
+  String get settings_functionCalling_saved => 'Configuration enregistrée';
+
+  @override
+  String get settings_googleSearch => 'Recherche Google';
+
+  @override
+  String get settings_googleSearch_description =>
+      'Rechercher sur le web pour des informations actuelles.';
+
+  @override
+  String get settings_news => 'Actualités';
+
+  @override
+  String get settings_news_description =>
+      'Obtenir les actualités les plus populaires du jour.';
+
+  @override
+  String get settings_save => 'Enregistrer';
+
+  @override
+  String get settings_weather => 'Météo';
+
+  @override
+  String get settings_weather_description =>
+      'Obtenir la météo actuelle pour n\'importe quel lieu.';
+
+  @override
+  String get taskLlmConfig => 'Configuration LLM par tâche';
+
+  @override
+  String get taskLlmDescription =>
+      'LLM utilisé pour les réponses principales du chat';
+
+  @override
+  String get taskLlmNote =>
+      'Note: Si aucun LLM n’est sélectionné pour une tâche, le LLM assistant par défaut sera utilisé.';
+
+  @override
+  String get titleGenerationPrompt =>
+      'Générez un titre concis (max 5 mots) pour cette conversation: ';
+
+  @override
+  String get titleGenerationSystemPrompt =>
+      'Vous êtes un assistant utile qui génère des titres de conversation courts et descriptifs. Returnz uniquement le titre, sans guillemets ni texte supplémentaire.';
+
+  @override
+  String get titleLlmDescription =>
+      'LLM utilisé pour générer les titres des conversations';
+
+  @override
+  String get titleTask => 'Génération de titre';
+
+  @override
+  String get ttsVoices => 'Voix TTS';
+
+  @override
+  String get useDefaultLlm => 'Utiliser le LLM par défaut';
+
+  @override
+  String get userMessage => 'Message de l’utilisateur';
+
+  @override
+  String get username => 'Votre nom';
+}

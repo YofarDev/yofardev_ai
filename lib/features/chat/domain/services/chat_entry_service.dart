@@ -29,7 +29,6 @@ class ChatEntryService {
       (Exception error) => 'fr',
       (String? language) => language ?? 'fr',
     );
-
     final String wrappedUserMessage =
         "Date : ${DateTime.now().toLongLocalDateString(language: languageCode)}\nAvatar Config :\n{\n$avatar\n}\nUser : \n'''$prompt'''";
 

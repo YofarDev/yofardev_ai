@@ -31,9 +31,7 @@ class NewsTool extends AgentTool {
     }
 
     try {
-      return await NewsService.getMostPopularNewsOfTheDay(
-        apiKey,
-      );
+      return await NewsService.getMostPopularNewsOfTheDay(apiKey);
     } catch (e) {
       return 'Error getting news: $e';
     }

@@ -5,15 +5,14 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_state.dart';
 import 'package:yofardev_ai/features/settings/screens/function_calling_config_screen.dart';
-import 'package:yofardev_ai/l10n/localization_manager.dart';
+import 'package:yofardev_ai/features/settings/widgets/function_calling_section.dart';
 
 /// Mock class for SettingsCubit
 class MockSettingsCubit extends Mock implements SettingsCubit {}
 
 void main() {
-  setUpAll(() async {
+  setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    await LocalizationManager().initialize('en');
   });
 
   group('FunctionCallingConfigScreen Widget Tests', () {
@@ -23,9 +22,9 @@ void main() {
       mockSettingsCubit = MockSettingsCubit();
 
       // Setup default mock behaviors
-      when(() => mockSettingsCubit.stream).thenAnswer(
-        (_) => const Stream<SettingsState>.empty(),
-      );
+      when(
+        () => mockSettingsCubit.stream,
+      ).thenAnswer((_) => const Stream<SettingsState>.empty());
       when(() => mockSettingsCubit.state).thenReturn(
         const SettingsState(
           googleSearchEnabled: true,
@@ -35,27 +34,27 @@ void main() {
       );
 
       // Stub async methods
-      when(() => mockSettingsCubit.updateGoogleSearchKey(any())).thenAnswer(
-        (_) async {},
-      );
-      when(() => mockSettingsCubit.updateGoogleSearchEngineId(any())).thenAnswer(
-        (_) async {},
-      );
-      when(() => mockSettingsCubit.updateOpenWeatherKey(any())).thenAnswer(
-        (_) async {},
-      );
-      when(() => mockSettingsCubit.updateNewYorkTimesKey(any())).thenAnswer(
-        (_) async {},
-      );
-      when(() => mockSettingsCubit.toggleGoogleSearch(any())).thenAnswer(
-        (_) async {},
-      );
-      when(() => mockSettingsCubit.toggleOpenWeather(any())).thenAnswer(
-        (_) async {},
-      );
-      when(() => mockSettingsCubit.toggleNewYorkTimes(any())).thenAnswer(
-        (_) async {},
-      );
+      when(
+        () => mockSettingsCubit.updateGoogleSearchKey(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockSettingsCubit.updateGoogleSearchEngineId(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockSettingsCubit.updateOpenWeatherKey(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockSettingsCubit.updateNewYorkTimesKey(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockSettingsCubit.toggleGoogleSearch(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockSettingsCubit.toggleOpenWeather(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockSettingsCubit.toggleNewYorkTimes(any()),
+      ).thenAnswer((_) async {});
     });
 
     Widget createTestWidget() {
@@ -67,6 +66,24 @@ void main() {
       );
     }
 
+    Widget createNavigableTestWidget() {
+      return MaterialApp(
+        home: Navigator(
+          onGenerateInitialRoutes: (_, _) => <Route<dynamic>>[
+            MaterialPageRoute<void>(
+              builder: (_) => const Scaffold(body: Text('HostScreen')),
+            ),
+            MaterialPageRoute<void>(
+              builder: (_) => BlocProvider<SettingsCubit>.value(
+                value: mockSettingsCubit,
+                child: const FunctionCallingConfigScreen(),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     group('Screen Rendering', () {
       testWidgets('should render all three service sections', (
         WidgetTester tester,
@@ -74,10 +91,7 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        // Check for section titles
-        expect(find.text('Google Search'), findsOneWidget);
-        expect(find.text('Weather'), findsOneWidget);
-        expect(find.text('News'), findsOneWidget);
+        expect(find.byType(FunctionCallingSection), findsNWidgets(3));
       });
 
       testWidgets('should render service descriptions', (
@@ -86,18 +100,9 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        expect(
-          find.textContaining('Configure API keys'),
-          findsOneWidget,
-        );
-        expect(
-          find.textContaining('Search the web'),
-          findsOneWidget,
-        );
-        expect(
-          find.textContaining('Get current weather'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('Configure API keys'), findsOneWidget);
+        expect(find.textContaining('Search the web'), findsOneWidget);
+        expect(find.textContaining('Get current weather'), findsOneWidget);
         expect(
           find.textContaining('Get today\'s most popular'),
           findsOneWidget,
@@ -141,9 +146,7 @@ void main() {
         expect(find.text('Enable'), findsNWidgets(3));
       });
 
-      testWidgets('should display service icons', (
-        WidgetTester tester,
-      ) async {
+      testWidgets('should display service icons', (WidgetTester tester) async {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
@@ -229,16 +232,15 @@ void main() {
 
         // Find the first "API Key" labeled TextField (Google Search)
         final TextField apiKeyField = tester.widget<TextField>(
-          find.ancestor(
-            of: find.text('API Key'),
-            matching: find.byType(TextField),
-          ).first,
+          find
+              .ancestor(
+                of: find.text('API Key'),
+                matching: find.byType(TextField),
+              )
+              .first,
         );
 
-        await tester.enterText(
-          find.byWidget(apiKeyField),
-          'test-google-key',
-        );
+        await tester.enterText(find.byWidget(apiKeyField), 'test-google-key');
         await tester.pump();
 
         expect(find.text('test-google-key'), findsOneWidget);
@@ -260,16 +262,15 @@ void main() {
 
         // Find the Engine ID TextField by its label
         final TextField engineIdField = tester.widget<TextField>(
-          find.descendant(
-            of: find.byType(FunctionCallingConfigScreen),
-            matching: find.byType(TextField),
-          ).at(1), // Second TextField is the Engine ID
+          find
+              .descendant(
+                of: find.byType(FunctionCallingConfigScreen),
+                matching: find.byType(TextField),
+              )
+              .at(1), // Second TextField is the Engine ID
         );
 
-        await tester.enterText(
-          find.byWidget(engineIdField),
-          'test-engine-id',
-        );
+        await tester.enterText(find.byWidget(engineIdField), 'test-engine-id');
         await tester.pump();
 
         expect(find.text('test-engine-id'), findsOneWidget);
@@ -308,9 +309,9 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        final List<Switch> switches = tester.widgetList<Switch>(
-          find.byType(Switch),
-        ).toList();
+        final List<Switch> switches = tester
+            .widgetList<Switch>(find.byType(Switch))
+            .toList();
 
         // Second switch is Weather
         expect(switches[1].value, false);
@@ -361,12 +362,14 @@ void main() {
         await tester.pumpAndSettle();
 
         // Find all API Key labeled TextFields and get the Weather one (second one)
-        final List<TextField> apiKeyFields = tester.widgetList<TextField>(
-          find.ancestor(
-            of: find.text('API Key'),
-            matching: find.byType(TextField),
-          ),
-        ).toList();
+        final List<TextField> apiKeyFields = tester
+            .widgetList<TextField>(
+              find.ancestor(
+                of: find.text('API Key'),
+                matching: find.byType(TextField),
+              ),
+            )
+            .toList();
 
         // Second API Key field is Weather
         await tester.enterText(
@@ -411,9 +414,9 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        final List<Switch> switches = tester.widgetList<Switch>(
-          find.byType(Switch),
-        ).toList();
+        final List<Switch> switches = tester
+            .widgetList<Switch>(find.byType(Switch))
+            .toList();
 
         // Third switch is News
         expect(switches[2].value, false);
@@ -466,29 +469,25 @@ void main() {
         await tester.pumpAndSettle();
 
         // Find all TextFields
-        final List<TextField> textFields = tester.widgetList<TextField>(
-          find.byType(TextField),
-        ).toList();
+        final List<TextField> textFields = tester
+            .widgetList<TextField>(find.byType(TextField))
+            .toList();
 
         // Enter values - first is Google Search API Key, second is Engine ID
-        await tester.enterText(
-          find.byWidget(textFields[0]),
-          'google-api-key',
-        );
-        await tester.enterText(
-          find.byWidget(textFields[1]),
-          'engine-id-123',
-        );
+        await tester.enterText(find.byWidget(textFields[0]), 'google-api-key');
+        await tester.enterText(find.byWidget(textFields[1]), 'engine-id-123');
         await tester.pump();
 
         // Tap save button
         await tester.tap(find.byIcon(Icons.save));
         await tester.pumpAndSettle();
 
-        verify(() => mockSettingsCubit.updateGoogleSearchKey('google-api-key'))
-            .called(1);
-        verify(() => mockSettingsCubit.updateGoogleSearchEngineId('engine-id-123'))
-            .called(1);
+        verify(
+          () => mockSettingsCubit.updateGoogleSearchKey('google-api-key'),
+        ).called(1);
+        verify(
+          () => mockSettingsCubit.updateGoogleSearchEngineId('engine-id-123'),
+        ).called(1);
       });
 
       testWidgets('should save Weather field when save is pressed', (
@@ -506,23 +505,21 @@ void main() {
         await tester.pumpAndSettle();
 
         // Find all TextFields - third is Weather API Key
-        final List<TextField> textFields = tester.widgetList<TextField>(
-          find.byType(TextField),
-        ).toList();
+        final List<TextField> textFields = tester
+            .widgetList<TextField>(find.byType(TextField))
+            .toList();
 
         // Enter Weather key (third TextField)
-        await tester.enterText(
-          find.byWidget(textFields[2]),
-          'weather-api-key',
-        );
+        await tester.enterText(find.byWidget(textFields[2]), 'weather-api-key');
         await tester.pump();
 
         // Tap save button
         await tester.tap(find.byIcon(Icons.save));
         await tester.pumpAndSettle();
 
-        verify(() => mockSettingsCubit.updateOpenWeatherKey('weather-api-key'))
-            .called(1);
+        verify(
+          () => mockSettingsCubit.updateOpenWeatherKey('weather-api-key'),
+        ).called(1);
       });
 
       testWidgets('should show success message when save completes', (
@@ -560,20 +557,17 @@ void main() {
           ),
         );
 
-        await tester.pumpWidget(createTestWidget());
+        await tester.pumpWidget(createNavigableTestWidget());
         await tester.pumpAndSettle();
 
         // Tap save button
         await tester.tap(find.byIcon(Icons.save));
         await tester.pumpAndSettle();
 
-        // Navigator should have been called to pop
-        expect(find.byType(FunctionCallingConfigScreen), findsNothing);
+        expect(find.text('HostScreen'), findsOneWidget);
       });
 
-      testWidgets('should not save empty fields', (
-        WidgetTester tester,
-      ) async {
+      testWidgets('should not save empty fields', (WidgetTester tester) async {
         when(() => mockSettingsCubit.state).thenReturn(
           const SettingsState(
             googleSearchEnabled: true,
@@ -648,13 +642,13 @@ void main() {
           ),
         );
 
-        await tester.pumpWidget(createTestWidget());
+        await tester.pumpWidget(createNavigableTestWidget());
         await tester.pumpAndSettle();
 
         await tester.tap(find.byIcon(Icons.arrow_back));
         await tester.pumpAndSettle();
 
-        expect(find.byType(FunctionCallingConfigScreen), findsNothing);
+        expect(find.text('HostScreen'), findsOneWidget);
       });
     });
 
@@ -673,18 +667,16 @@ void main() {
         await tester.pumpWidget(createTestWidget());
         await tester.pumpAndSettle();
 
-        final List<TextField> textFields = tester.widgetList<TextField>(
-          find.byType(TextField),
-        ).toList();
+        final List<TextField> textFields = tester
+            .widgetList<TextField>(find.byType(TextField))
+            .toList();
 
         for (final TextField field in textFields) {
           expect(field.obscureText, true);
         }
       });
 
-      testWidgets('should have proper hint texts', (
-        WidgetTester tester,
-      ) async {
+      testWidgets('should have proper hint texts', (WidgetTester tester) async {
         when(() => mockSettingsCubit.state).thenReturn(
           const SettingsState(
             googleSearchEnabled: true,
@@ -697,16 +689,10 @@ void main() {
         await tester.pumpAndSettle();
 
         // Check for hint texts (use findsWidgets where text appears in multiple places)
-        expect(
-          find.textContaining('Google Search API key'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('Google Search API key'), findsOneWidget);
         expect(find.textContaining('Search Engine ID'), findsWidgets);
         expect(find.textContaining('OpenWeather API key'), findsOneWidget);
-        expect(
-          find.textContaining('New York Times API key'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('New York Times API key'), findsOneWidget);
       });
     });
 

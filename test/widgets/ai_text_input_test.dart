@@ -71,7 +71,9 @@ void main() {
         const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()),
       );
 
-      when(() => mockChatsCubit.stream).thenAnswer((_) => const Stream<ChatsState>.empty());
+      when(
+        () => mockChatsCubit.stream,
+      ).thenAnswer((_) => const Stream<ChatsState>.empty());
       when(() => mockChatsCubit.state).thenReturn(
         ChatsState(
           currentChat: const Chat(),

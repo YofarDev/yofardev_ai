@@ -1,0 +1,31 @@
+# Configuration file for Flutter internationalization (l10n)
+# See: https://docs.flutter.dev/ui/accessibility-and-internationalization/internationalization
+
+# Directory containing ARB files (relative to project root)
+arb-dir: lib/core/l10n
+
+# Template ARB file that contains all keys (usually English)
+template-arb-file: app_localizations_en.arb
+
+# Output file for generated localization classes
+output-localization-file: app_localizations.dart
+
+# Output directory for generated files (relative to project root)
+# Using lib/core/l10n/generated allows importing with a package URI
+output-dir: lib/core/l10n/generated
+
+# Nullable getter - determines if AppLocalizations.of(context) can return null
+# Set to false for null safety (recommended)
+nullable-getter: false
+
+# Generate localization code for allARB files found in arb-dir
+# If false, only generate for locales explicitly listed
+generate-all: true
+
+# Header to add to generated files
+# header: |
+#   // Generated code - do not modify manually
+#   // See: https://docs.flutter.dev/ui/accessibility-and-internationalization/internationalization
+
+# Uncomment to enable detailed logging during generation
+# use-escaping: true

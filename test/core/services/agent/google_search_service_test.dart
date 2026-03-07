@@ -9,11 +9,8 @@ void main() {
 
     test('should throw exception when API key is empty', () async {
       // Act - The service catches the exception and returns empty list
-      final List<Map<String, dynamic>> result = await GoogleSearchService.searchGoogle(
-        query,
-        '',
-        validEngineId,
-      );
+      final List<Map<String, dynamic>> result =
+          await GoogleSearchService.searchGoogle(query, '', validEngineId);
 
       // Assert - Service logs error and returns empty list
       expect(result, isEmpty);
@@ -21,27 +18,24 @@ void main() {
 
     test('should throw exception when engine ID is empty', () async {
       // Act - The service catches the exception and returns empty list
-      final List<Map<String, dynamic>> result = await GoogleSearchService.searchGoogle(
-        query,
-        validApiKey,
-        '',
-      );
+      final List<Map<String, dynamic>> result =
+          await GoogleSearchService.searchGoogle(query, validApiKey, '');
 
       // Assert - Service logs error and returns empty list
       expect(result, isEmpty);
     });
 
-    test('should throw exception when both API key and engine ID are empty', () async {
-      // Act - The service catches the exception and returns empty list
-      final List<Map<String, dynamic>> result = await GoogleSearchService.searchGoogle(
-        query,
-        '',
-        '',
-      );
+    test(
+      'should throw exception when both API key and engine ID are empty',
+      () async {
+        // Act - The service catches the exception and returns empty list
+        final List<Map<String, dynamic>> result =
+            await GoogleSearchService.searchGoogle(query, '', '');
 
-      // Assert - Service logs error and returns empty list
-      expect(result, isEmpty);
-    });
+        // Assert - Service logs error and returns empty list
+        expect(result, isEmpty);
+      },
+    );
 
     test('should handle empty query string', () async {
       // Act & Assert - Should not throw for empty query, only for empty API key or engine ID
@@ -53,11 +47,12 @@ void main() {
 
     test('should return empty list on API error', () async {
       // Act - This will fail with invalid credentials but should return empty list
-      final List<Map<String, dynamic>> result = await GoogleSearchService.searchGoogle(
-        query,
-        'invalid-key',
-        validEngineId,
-      );
+      final List<Map<String, dynamic>> result =
+          await GoogleSearchService.searchGoogle(
+            query,
+            'invalid-key',
+            validEngineId,
+          );
 
       // Assert - Service catches errors and returns empty list
       expect(result, isEmpty);
@@ -66,7 +61,8 @@ void main() {
     test('should accept valid parameters without throwing', () async {
       // Act & Assert - Should not throw for valid parameters format
       expect(
-        () => GoogleSearchService.searchGoogle(query, validApiKey, validEngineId),
+        () =>
+            GoogleSearchService.searchGoogle(query, validApiKey, validEngineId),
         returnsNormally,
       );
     });
@@ -75,7 +71,8 @@ void main() {
   group('GoogleSearchService.getHtmlReduced', () {
     test('should remove script tags from HTML', () async {
       // Arrange
-      const String html = '<html><body><script>alert("test")</script><p>Hello</p></body></html>';
+      const String html =
+          '<html><body><script>alert("test")</script><p>Hello</p></body></html>';
 
       // Act
       final String result = await GoogleSearchService.getHtmlReduced(html);
@@ -88,7 +85,8 @@ void main() {
 
     test('should remove style tags from HTML', () async {
       // Arrange
-      const String html = '<html><body><style>body { color: red; }</style><p>Hello</p></body></html>';
+      const String html =
+          '<html><body><style>body { color: red; }</style><p>Hello</p></body></html>';
 
       // Act
       final String result = await GoogleSearchService.getHtmlReduced(html);
@@ -101,7 +99,8 @@ void main() {
 
     test('should remove HTML comments', () async {
       // Arrange
-      const String html = '<html><body><!-- This is a comment --><p>Hello</p></body></html>';
+      const String html =
+          '<html><body><!-- This is a comment --><p>Hello</p></body></html>';
 
       // Act
       final String result = await GoogleSearchService.getHtmlReduced(html);
@@ -114,7 +113,8 @@ void main() {
 
     test('should extract text content', () async {
       // Arrange
-      const String html = '<html><body><h1>Title</h1><p>Paragraph</p></body></html>';
+      const String html =
+          '<html><body><h1>Title</h1><p>Paragraph</p></body></html>';
 
       // Act
       final String result = await GoogleSearchService.getHtmlReduced(html);

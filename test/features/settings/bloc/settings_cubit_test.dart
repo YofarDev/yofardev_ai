@@ -63,6 +63,27 @@ void main() {
       when(() => mockSettingsRepo.getPersona()).thenAnswer(
         (_) async => const Right<Exception, ChatPersona>(ChatPersona.normal),
       );
+      when(
+        () => mockSettingsRepo.getGoogleSearchKey(),
+      ).thenAnswer((_) async => const Right<Exception, String?>(null));
+      when(
+        () => mockSettingsRepo.getGoogleSearchEngineId(),
+      ).thenAnswer((_) async => const Right<Exception, String?>(null));
+      when(
+        () => mockSettingsRepo.getGoogleSearchEnabled(),
+      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      when(
+        () => mockSettingsRepo.getOpenWeatherKey(),
+      ).thenAnswer((_) async => const Right<Exception, String?>(null));
+      when(
+        () => mockSettingsRepo.getOpenWeatherEnabled(),
+      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      when(
+        () => mockSettingsRepo.getNewYorkTimesKey(),
+      ).thenAnswer((_) async => const Right<Exception, String?>(null));
+      when(
+        () => mockSettingsRepo.getNewYorkTimesEnabled(),
+      ).thenAnswer((_) async => const Right<Exception, bool>(true));
 
       cubit = SettingsCubit(
         settingsRepository: mockSettingsRepo,

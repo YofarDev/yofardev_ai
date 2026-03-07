@@ -91,7 +91,8 @@ class AppRouter {
               return MaterialPage<void>(
                 key: state.pageKey,
                 child: const ConstrainedWidth(
-                    child: FunctionCallingConfigScreen()),
+                  child: FunctionCallingConfigScreen(),
+                ),
               );
             },
           ),

@@ -8,7 +8,7 @@ import '../presentation/bloc/chats_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/utils/extensions.dart';
-import '../../../l10n/languages.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
 import '../domain/models/chat.dart';
 import 'chat_list_item.dart';
 
@@ -92,8 +92,9 @@ class ChatListContainer extends StatelessWidget {
   }
 
   String _resolvePreview(BuildContext context, Chat chat) {
-    if (chat.entries.isEmpty)
-      return Localizations.of<Languages>(context, Languages)?.empty ?? 'Empty';
+    if (chat.entries.isEmpty) {
+      return AppLocalizations.of(context).empty ?? 'Empty';
+    }
 
     // NEW: Use title if available and generated
     if (chat.titleGenerated && chat.title.isNotEmpty) {
@@ -117,7 +118,7 @@ class ChatListContainer extends StatelessWidget {
         if (raw.isNotEmpty) return raw;
       }
     }
-    return Localizations.of<Languages>(context, Languages)?.empty ?? 'Empty';
+    return AppLocalizations.of(context).empty ?? 'Empty';
   }
 
   String _relativeTime(DateTime? date) {

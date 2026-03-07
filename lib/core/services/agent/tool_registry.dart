@@ -1,8 +1,7 @@
 import 'package:fpdart/src/either.dart';
 
-import '../../models/function_info.dart';
 import '../../../features/settings/domain/repositories/settings_repository.dart';
-
+import '../../models/function_info.dart';
 import 'agent_tool.dart';
 import 'alarm_tool.dart';
 import 'calculator_tool.dart';
@@ -50,19 +49,18 @@ class ToolRegistry {
     final List<FunctionInfo> filteredFunctions = <FunctionInfo>[];
 
     // Always include tools that don't require API keys
-    filteredFunctions
-        .add(AlarmTool().toFunctionInfo());
-    filteredFunctions
-        .add(CharacterCounterTool().toFunctionInfo());
+    filteredFunctions.add(AlarmTool().toFunctionInfo());
+    filteredFunctions.add(CharacterCounterTool().toFunctionInfo());
     filteredFunctions.add(CalculatorTool().toFunctionInfo());
     filteredFunctions.add(WebReaderTool().toFunctionInfo());
 
     // Google Search - requires API key, engine ID, and enabled flag
-    final Either<Exception, String?> googleKeyResult = await settingsRepository.getGoogleSearchKey();
+    final Either<Exception, String?> googleKeyResult = await settingsRepository
+        .getGoogleSearchKey();
     final Either<Exception, String?> googleEngineResult =
         await settingsRepository.getGoogleSearchEngineId();
-    final Either<Exception, bool> googleEnabledResult =
-        await settingsRepository.getGoogleSearchEnabled();
+    final Either<Exception, bool> googleEnabledResult = await settingsRepository
+        .getGoogleSearchEnabled();
 
     final bool googleConfigured = googleKeyResult.fold(
       (Exception error) => false,
@@ -82,7 +80,8 @@ class ToolRegistry {
     }
 
     // Weather - requires API key and enabled flag
-    final Either<Exception, String?> weatherKeyResult = await settingsRepository.getOpenWeatherKey();
+    final Either<Exception, String?> weatherKeyResult = await settingsRepository
+        .getOpenWeatherKey();
     final Either<Exception, bool> weatherEnabledResult =
         await settingsRepository.getOpenWeatherEnabled();
 
@@ -100,9 +99,10 @@ class ToolRegistry {
     }
 
     // News - requires API key and enabled flag
-    final Either<Exception, String?> newsKeyResult = await settingsRepository.getNewYorkTimesKey();
-    final Either<Exception, bool> newsEnabledResult =
-        await settingsRepository.getNewYorkTimesEnabled();
+    final Either<Exception, String?> newsKeyResult = await settingsRepository
+        .getNewYorkTimesKey();
+    final Either<Exception, bool> newsEnabledResult = await settingsRepository
+        .getNewYorkTimesEnabled();
 
     final bool newsConfigured = newsKeyResult.fold(
       (Exception error) => false,
@@ -130,11 +130,15 @@ class ToolRegistry {
     // Fetch required configuration values based on the tool's requirements
     final Map<String, dynamic> configValues = <String, dynamic>{};
 
-    for (final MapEntry<String, String> entry in tool.requiredConfigKeys.entries) {
+    for (final MapEntry<String, String> entry
+        in tool.requiredConfigKeys.entries) {
       final String settingKey = entry.key;
       final String paramName = entry.value;
 
-      final dynamic value = await _getSettingValue(settingsRepository, settingKey);
+      final dynamic value = await _getSettingValue(
+        settingsRepository,
+        settingKey,
+      );
       configValues[paramName] = value;
     }
 
@@ -166,9 +170,6 @@ class ToolRegistry {
         throw UnsupportedError('Unknown setting key: $settingKey');
     }
 
-    return result.fold(
-      (Exception error) => null,
-      (dynamic value) => value,
-    );
+    return result.fold((Exception error) => null, (dynamic value) => value);
   }
 }

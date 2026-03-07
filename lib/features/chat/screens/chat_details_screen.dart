@@ -100,7 +100,8 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                         });
                       },
                       onDownload: () => _downloadConversation(context),
-                      isFunctionCallingEnabled: actionsState.functionCallingEnabled,
+                      isFunctionCallingEnabled:
+                          actionsState.functionCallingEnabled,
                       onFunctionCallingToggle: () =>
                           context.read<ChatsCubit>().toggleFunctionCalling(),
                     );

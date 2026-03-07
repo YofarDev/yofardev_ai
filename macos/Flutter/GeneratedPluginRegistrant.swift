@@ -7,6 +7,7 @@ import Foundation
 
 import audio_analyzer
 import audio_session
+import audioplayers_darwin
 import file_selector_macos
 import flutter_inappwebview_macos
 import flutter_onnxruntime
@@ -23,6 +24,7 @@ import window_manager
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AudioAnalyzerPlugin.register(with: registry.registrar(forPlugin: "AudioAnalyzerPlugin"))
   AudioSessionPlugin.register(with: registry.registrar(forPlugin: "AudioSessionPlugin"))
+  AudioplayersDarwinPlugin.register(with: registry.registrar(forPlugin: "AudioplayersDarwinPlugin"))
   FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   InAppWebViewFlutterPlugin.register(with: registry.registrar(forPlugin: "InAppWebViewFlutterPlugin"))
   FlutterOnnxruntimePlugin.register(with: registry.registrar(forPlugin: "FlutterOnnxruntimePlugin"))

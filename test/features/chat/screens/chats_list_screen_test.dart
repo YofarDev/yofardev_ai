@@ -57,7 +57,9 @@ void main() {
       mockTalkingCubit = MockTalkingCubit();
 
       // Setup default mock behaviors
-      when(() => mockChatsCubit.stream).thenAnswer((_) => const Stream<ChatsState>.empty());
+      when(
+        () => mockChatsCubit.stream,
+      ).thenAnswer((_) => const Stream<ChatsState>.empty());
       when(() => mockChatsCubit.state).thenReturn(
         ChatsState(
           currentChat: const Chat(),

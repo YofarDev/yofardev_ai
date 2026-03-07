@@ -114,16 +114,15 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     required Chat currentChat,
     required String language,
     void Function(Chat updatedChat)? onChatUpdated,
-  }) =>
-      _chatStreamingCubit.streamResponse(
-        prompt,
-        onlyText: onlyText,
-        attachedImage: attachedImage,
-        avatar: avatar,
-        currentChat: currentChat,
-        language: language,
-        onChatUpdated: onChatUpdated,
-      );
+  }) => _chatStreamingCubit.streamResponse(
+    prompt,
+    onlyText: onlyText,
+    attachedImage: attachedImage,
+    avatar: avatar,
+    currentChat: currentChat,
+    language: language,
+    onChatUpdated: onChatUpdated,
+  );
 
   @override
   Future<void> close() async {

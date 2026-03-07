@@ -8,7 +8,10 @@ void main() {
 
     test('should return error when API key is empty', () async {
       // Act
-      final String result = await WeatherService.getCurrentWeather(location, '');
+      final String result = await WeatherService.getCurrentWeather(
+        location,
+        '',
+      );
 
       // Assert
       expect(result, contains('Error'));

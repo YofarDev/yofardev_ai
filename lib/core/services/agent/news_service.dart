@@ -6,9 +6,7 @@ class NewsService {
   static const String _baseUrl =
       'https://api.nytimes.com/svc/mostpopular/v2/shared/1.json';
 
-  static Future<String> getMostPopularNewsOfTheDay(
-    String apiKey,
-  ) async {
+  static Future<String> getMostPopularNewsOfTheDay(String apiKey) async {
     try {
       if (apiKey.isEmpty) {
         return "Error: API Key not provided";

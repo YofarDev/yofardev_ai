@@ -112,9 +112,6 @@ class AvatarWidgetsState extends State<AvatarWidgets>
         ? _verticalAnimation
         : _horizontalAnimation;
 
-    return AnimatedAvatar(
-      state: state,
-      animation: animation,
-    );
+    return AnimatedAvatar(state: state, animation: animation);
   }
 }

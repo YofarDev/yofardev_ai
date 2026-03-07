@@ -52,19 +52,13 @@ void main() {
     test('should handle missing title field', () {
       // This test documents behavior when title is missing
       // The service uses ?? '' to provide empty string as fallback
-      expect(
-        'Missing title defaults to empty string',
-        isNotNull,
-      );
+      expect('Missing title defaults to empty string', isNotNull);
     });
 
     test('should handle missing abstract field', () {
       // This test documents behavior when abstract is missing
       // The service uses ?? '' to provide empty string as fallback
-      expect(
-        'Missing abstract defaults to empty string',
-        isNotNull,
-      );
+      expect('Missing abstract defaults to empty string', isNotNull);
     });
 
     test('should return JSON encoded string', () async {

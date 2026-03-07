@@ -46,11 +46,7 @@ class GoogleSearchTool extends AgentTool {
 
     try {
       final List<Map<String, dynamic>> results =
-          await GoogleSearchService.searchGoogle(
-        query,
-        apiKey,
-        engineId,
-      );
+          await GoogleSearchService.searchGoogle(query, apiKey, engineId);
       return results.toString();
     } catch (e) {
       return 'Error executing Google Search: $e';

@@ -29,10 +29,7 @@ class FunctionCallingSection extends StatelessWidget {
           children: <Widget>[
             Row(
               children: <Widget>[
-                Text(
-                  icon,
-                  style: const TextStyle(fontSize: 24),
-                ),
+                Text(icon, style: const TextStyle(fontSize: 24)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

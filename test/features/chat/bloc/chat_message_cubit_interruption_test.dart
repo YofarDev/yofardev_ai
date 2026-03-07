@@ -35,12 +35,15 @@ void main() {
 
       // Setup default state mocks
       when(() => mockChatAudioCubit.state).thenReturn(ChatAudioState.initial());
-      when(() => mockChatStreamingCubit.state)
-          .thenReturn(ChatStreamingState.initial());
-      when(() => mockChatAudioCubit.stream)
-          .thenAnswer((_) => audioController.stream);
-      when(() => mockChatStreamingCubit.stream)
-          .thenAnswer((_) => streamingController.stream);
+      when(
+        () => mockChatStreamingCubit.state,
+      ).thenReturn(ChatStreamingState.initial());
+      when(
+        () => mockChatAudioCubit.stream,
+      ).thenAnswer((_) => audioController.stream);
+      when(
+        () => mockChatStreamingCubit.stream,
+      ).thenAnswer((_) => streamingController.stream);
 
       cubit = ChatMessageCubit(
         chatAudioCubit: mockChatAudioCubit,

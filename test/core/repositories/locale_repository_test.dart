@@ -8,30 +8,30 @@ void main() {
     late LocaleRepositoryImpl repository;
 
     setUp(() async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues(<String, Object>{});
       SharedPreferences prefs = await SharedPreferences.getInstance();
       repository = LocaleRepositoryImpl(prefs: prefs);
     });
 
     test('getLanguage returns default language when none saved', () async {
-      final result = await repository.getLanguage();
+      final Either<Exception, String> result = await repository.getLanguage();
       expect(result.isRight(), true);
-      expect(result.getOrElse((e) => ''), 'fr');
+      expect(result.getOrElse((Exception e) => ''), 'fr');
     });
 
     test('setLanguage saves and retrieves language', () async {
       await repository.setLanguage('en');
-      final result = await repository.getLanguage();
-      expect(result.getOrElse((e) => ''), 'en');
+      final Either<Exception, String> result = await repository.getLanguage();
+      expect(result.getOrElse((Exception e) => ''), 'en');
     });
 
     test('getLanguage returns saved language', () async {
-      SharedPreferences.setMockInitialValues({'language': 'en'});
+      SharedPreferences.setMockInitialValues(<String, Object>{'language': 'en'});
       SharedPreferences prefs = await SharedPreferences.getInstance();
       repository = LocaleRepositoryImpl(prefs: prefs);
 
-      final result = await repository.getLanguage();
-      expect(result.getOrElse((e) => ''), 'en');
+      final Either<Exception, String> result = await repository.getLanguage();
+      expect(result.getOrElse((Exception e) => ''), 'en');
     });
   });
 }

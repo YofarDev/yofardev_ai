@@ -70,9 +70,9 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
     try {
       final http.StreamedResponse response = await _client.send(
         http.Request(
-          'POST',
-          Uri.parse('${activeConfig.baseUrl}/chat/completions'),
-        )
+            'POST',
+            Uri.parse('${activeConfig.baseUrl}/chat/completions'),
+          )
           ..headers.addAll(<String, String>{
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ${activeConfig.apiKey}',

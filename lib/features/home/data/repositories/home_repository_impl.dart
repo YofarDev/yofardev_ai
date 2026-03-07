@@ -34,23 +34,23 @@ class HomeRepositoryImpl implements HomeRepository {
           )
           .take(1)
           .listen((_) {
-        // Remove file if requested
-        if (removeFile) {
-          try {
-            File(audioPath).deleteSync();
-          } catch (e) {
-            AppLogger.warning(
-              'Failed to delete TTS file: $audioPath',
-              tag: 'HomeRepository',
-            );
-          }
-        }
+            // Remove file if requested
+            if (removeFile) {
+              try {
+                File(audioPath).deleteSync();
+              } catch (e) {
+                AppLogger.warning(
+                  'Failed to delete TTS file: $audioPath',
+                  tag: 'HomeRepository',
+                );
+              }
+            }
 
-        // Call completion callback
-        if (onComplete != null) {
-          onComplete();
-        }
-      });
+            // Call completion callback
+            if (onComplete != null) {
+              onComplete();
+            }
+          });
 
       // Start playback
       await _ttsPlayer.play();

@@ -16,9 +16,7 @@ class GoogleSearchService {
   ) async {
     try {
       if (apiKey.isEmpty || engineId.isEmpty) {
-        throw Exception(
-          'API Key or Engine ID is not provided',
-        );
+        throw Exception('API Key or Engine ID is not provided');
       }
       const String baseUrl = 'https://www.googleapis.com/customsearch/v1';
       final Uri uri = Uri.parse('$baseUrl?q=$query&key=$apiKey&cx=$engineId');

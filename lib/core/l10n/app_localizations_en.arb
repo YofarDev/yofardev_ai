@@ -1,0 +1,96 @@
+{
+  "@@locale": "en",
+  "commonError": "An error occurred",
+  "@commonError": {
+    "description": "Generic error message"
+  },
+  "commonRetry": "Retry",
+  "@commonRetry": {
+    "description": "Button label to retry an action"
+  },
+  "commonCancel": "Cancel",
+  "@commonCancel": {
+    "description": "Button label to cancel an action"
+  },
+  "commonConfirm": "Confirm",
+  "@commonConfirm": {
+    "description": "Button label to confirm an action"
+  },
+  "commonSave": "Save",
+  "@commonSave": {
+    "description": "Button label to save data"
+  },
+  "commonDelete": "Delete",
+  "@commonDelete": {
+    "description": "Button label to delete an item"
+  },
+  "commonEdit": "Edit",
+  "@commonEdit": {
+    "description": "Button label to edit an item"
+  },
+  "commonClose": "Close",
+  "@commonClose": {
+    "description": "Button label to close a dialog or screen"
+  },
+  "commonBack": "Back",
+  "@commonBack": {
+    "description": "Button label to go back"
+  },
+  "commonNext": "Next",
+  "@commonNext": {
+    "description": "Button label to go to the next step"
+  },
+  "commonDone": "Done",
+  "@commonDone": {
+    "description": "Button label to complete an action"
+  },
+  "reset": "Reset",
+  "@reset": {
+    "description": "Button label to reset the counter"
+  },
+  "test": "test",
+  "appName": "Yofardev AI",
+  "assistantTask": "Assistant",
+  "currentAvatarConfig": "Current avatar configuration",
+  "currentDate": "Current date",
+  "currentUsername": "User’s name",
+  "describeThisImage": "Describe this image",
+  "empty": "(empty)",
+  "enableSoundEffects": "Enable sound effects",
+  "functionCallingLlmDescription": "LLM used for tool/function detection",
+  "functionCallingTask": "Function Calling",
+  "hiddenPart": "This part is not visible to the user, do not take it into account in your response.",
+  "listChats": "List of chats",
+  "loadDefaultSystemPrompt": "Load the default system prompt",
+  "moreVoicesAndroid": "For more voices : ‘Google Text-to-Speech’ on the Play Store",
+  "moreVoicesIOS": "For more voices, go to Settings > Accessibility > Spoken Content > Voices",
+  "newChat": "New chat",
+  "personaAssistant": "Assistant’s persona",
+  "resultsFunctionCalling": "Function calling results",
+  "settings": "Settings",
+  "settingsSubstring": "Start a new chat after any settings change",
+  "settings_apiKey": "API Key",
+  "settings_enable": "Enable",
+  "settings_engineId": "Search Engine ID",
+  "settings_functionCalling": "Function Calling",
+  "settings_functionCalling_description": "Configure API keys for function calling features",
+  "settings_functionCalling_saved": "Configuration saved",
+  "settings_googleSearch": "Google Search",
+  "settings_googleSearch_description": "Search the web for current information",
+  "settings_news": "News",
+  "settings_news_description": "Get today's most popular news",
+  "settings_save": "Save",
+  "settings_weather": "Weather",
+  "settings_weather_description": "Get current weather for any location",
+  "taskLlmConfig": "Task LLM Configuration",
+  "taskLlmDescription": "LLM used for main chat responses",
+  "taskLlmNote": "Note: If no LLM is selected for a task, the default assistant LLM will be used.",
+  "titleGenerationPrompt": "Generate a concise title (max 5 words) for this chat: ",
+  "titleGenerationSystemPrompt": "You are a helpful assistant that generates short, descriptive chat titles. Return only the title, no quotes or extra text.",
+  "titleLlmDescription": "LLM used to generate chat titles",
+  "titleTask": "Title Generation",
+  "ttsVoices": "TTS Voices",
+  "useDefaultLlm": "Use default LLM",
+  "userMessage": "User’s message",
+  "username": "Your name"
+}

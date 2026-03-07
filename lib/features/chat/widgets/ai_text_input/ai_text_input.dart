@@ -12,7 +12,7 @@ import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/widgets/current_prompt_text.dart';
 import '../../../../core/widgets/glassmorphic/glassmorphic_text_field.dart';
 import '../../../../core/widgets/picker_buttons.dart';
-import '../../../../l10n/languages.dart';
+import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../../avatar/presentation/bloc/avatar_state.dart';
 import '../../../talking/presentation/bloc/talking_cubit.dart';
@@ -232,7 +232,7 @@ class _AiTextInputState extends State<AiTextInput> {
     _inputFocus.unfocus();
     if (file != null) {
       _controller.text =
-          Localizations.of<Languages>(context, Languages)?.describeThisImage ??
+          AppLocalizations.of(context).describeThisImage ??
           'Describe this image';
       setState(() {
         _pickedImage = file;

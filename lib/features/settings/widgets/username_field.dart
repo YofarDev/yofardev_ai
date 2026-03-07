@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/res/app_colors.dart';
-import '../../../l10n/languages.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
 
 class UsernameField extends StatelessWidget {
   final TextEditingController controller;
@@ -35,7 +35,7 @@ class UsernameField extends StatelessWidget {
             ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurface),
             decoration: InputDecoration(
               hintText:
-                  Localizations.of<Languages>(context, Languages)?.username ??
+                  AppLocalizations.of(context).username ??
                   'Username',
               hintStyle: TextStyle(
                 color: AppColors.onSurface.withValues(alpha: 0.5),

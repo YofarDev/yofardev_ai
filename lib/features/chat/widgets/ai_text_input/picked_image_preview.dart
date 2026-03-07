@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 
 /// Widget displaying a preview of a selected image
 class PickedImagePreview extends StatelessWidget {
-  const PickedImagePreview({
-    super.key,
-    required this.imagePath,
-  });
+  const PickedImagePreview({super.key, required this.imagePath});
 
   final String imagePath;
 
