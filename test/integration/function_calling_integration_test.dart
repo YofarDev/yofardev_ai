@@ -5,7 +5,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
-import 'package:yofardev_ai/features/settings/presentation/bloc/settings_state.dart';
 import 'package:yofardev_ai/features/settings/screens/function_calling_config_screen.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
@@ -15,7 +14,6 @@ import 'package:yofardev_ai/core/models/llm_config.dart';
 import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/core/models/function_info.dart';
 import 'package:yofardev_ai/core/models/llm_task_type.dart';
-import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/l10n/localization_manager.dart';
 
 /// Mock SettingsRepository that tracks updates in memory
@@ -207,12 +205,14 @@ void main() {
     );
     registerFallbackValue(LlmTaskType.titleGeneration);
     registerFallbackValue(<LlmMessage>[]);
-    registerFallbackValue(FunctionInfo(
-      name: 'test',
-      description: 'test',
-      parameters: <Parameter>[],
-      function: (Map<String, dynamic> args) async => null,
-    ));
+    registerFallbackValue(
+      FunctionInfo(
+        name: 'test',
+        description: 'test',
+        parameters: <Parameter>[],
+        function: (Map<String, dynamic> args) async => null,
+      ),
+    );
     registerFallbackValue(<FunctionInfo>[]);
   });
 
@@ -295,96 +295,88 @@ void main() {
       },
     );
 
-    testWidgets(
-      'Full flow: toggle Google Search disabled → persist',
-      (WidgetTester tester) async {
-        // Arrange: Create the widget tree
-        await tester.pumpWidget(
-          MaterialApp(
-            home: BlocProvider<SettingsCubit>(
-              create: (BuildContext context) {
-                settingsCubit = SettingsCubit(
-                  settingsRepository: settingsRepository,
-                  llmService: mockLlmService,
-                );
-                return settingsCubit;
-              },
-              child: const FunctionCallingConfigScreen(),
-            ),
+    testWidgets('Full flow: toggle Google Search disabled → persist', (
+      WidgetTester tester,
+    ) async {
+      // Arrange: Create the widget tree
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<SettingsCubit>(
+            create: (BuildContext context) {
+              settingsCubit = SettingsCubit(
+                settingsRepository: settingsRepository,
+                llmService: mockLlmService,
+              );
+              return settingsCubit;
+            },
+            child: const FunctionCallingConfigScreen(),
           ),
-        );
+        ),
+      );
 
-        // Wait for the widget to settle
-        await tester.pumpAndSettle();
+      // Wait for the widget to settle
+      await tester.pumpAndSettle();
 
-        // Act: Find and tap the first switch (Google Search enable switch)
-        final Finder switchWidget = find.byType(Switch);
-        await tester.tap(switchWidget.first);
-        await tester.pumpAndSettle();
+      // Act: Find and tap the first switch (Google Search enable switch)
+      final Finder switchWidget = find.byType(Switch);
+      await tester.tap(switchWidget.first);
+      await tester.pumpAndSettle();
 
-        // Act: Tap the save button
-        final Finder saveButton = find.byIcon(Icons.save);
-        await tester.tap(saveButton);
-        await tester.pumpAndSettle();
+      // Act: Tap the save button
+      final Finder saveButton = find.byIcon(Icons.save);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
 
-        // Assert: Verify disabled state
-        expect(settingsCubit.state.googleSearchEnabled, false);
+      // Assert: Verify disabled state
+      expect(settingsCubit.state.googleSearchEnabled, false);
 
-        // Assert: Verify data was persisted in repository
-        expect(settingsRepository.googleSearchEnabledUpdateCount, 1);
-      },
-    );
+      // Assert: Verify data was persisted in repository
+      expect(settingsRepository.googleSearchEnabledUpdateCount, 1);
+    });
 
-    testWidgets(
-      'Full flow: configure OpenWeather API key → enable → persist',
-      (WidgetTester tester) async {
-        // Arrange: Create the widget tree
-        await tester.pumpWidget(
-          MaterialApp(
-            home: BlocProvider<SettingsCubit>(
-              create: (BuildContext context) {
-                settingsCubit = SettingsCubit(
-                  settingsRepository: settingsRepository,
-                  llmService: mockLlmService,
-                );
-                return settingsCubit;
-              },
-              child: const FunctionCallingConfigScreen(),
-            ),
+    testWidgets('Full flow: configure OpenWeather API key → enable → persist', (
+      WidgetTester tester,
+    ) async {
+      // Arrange: Create the widget tree
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<SettingsCubit>(
+            create: (BuildContext context) {
+              settingsCubit = SettingsCubit(
+                settingsRepository: settingsRepository,
+                llmService: mockLlmService,
+              );
+              return settingsCubit;
+            },
+            child: const FunctionCallingConfigScreen(),
           ),
-        );
+        ),
+      );
 
-        // Wait for the widget to settle
-        await tester.pumpAndSettle();
+      // Wait for the widget to settle
+      await tester.pumpAndSettle();
 
-        // Act: Find OpenWeather API key text field
-        // There are multiple "API Key" text fields, so we need to find the second one
-        final Finder apiKeyTextFields = find.widgetWithText(
-          TextField,
-          'API Key',
-        );
-        expect(apiKeyTextFields, findsAtLeastNWidgets(2));
+      // Act: Find OpenWeather API key text field
+      // There are multiple "API Key" text fields, so we need to find the second one
+      final Finder apiKeyTextFields = find.widgetWithText(TextField, 'API Key');
+      expect(apiKeyTextFields, findsAtLeastNWidgets(2));
 
-        // Enter OpenWeather API key in the second field
-        await tester.enterText(
-          apiKeyTextFields.at(1),
-          'test-openweather-key',
-        );
-        await tester.pumpAndSettle();
+      // Enter OpenWeather API key in the second field
+      await tester.enterText(apiKeyTextFields.at(1), 'test-openweather-key');
+      await tester.pumpAndSettle();
 
-        // Act: Tap the save button
-        final Finder saveButton = find.byIcon(Icons.save);
-        await tester.tap(saveButton);
-        await tester.pumpAndSettle();
+      // Act: Tap the save button
+      final Finder saveButton = find.byIcon(Icons.save);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
 
-        // Assert: Verify state was updated
-        expect(settingsCubit.state.openWeatherKey, 'test-openweather-key');
-        expect(settingsCubit.state.openWeatherEnabled, true);
+      // Assert: Verify state was updated
+      expect(settingsCubit.state.openWeatherKey, 'test-openweather-key');
+      expect(settingsCubit.state.openWeatherEnabled, true);
 
-        // Assert: Verify data was persisted in repository
-        expect(settingsRepository.openWeatherKeyUpdateCount, 1);
-      },
-    );
+      // Assert: Verify data was persisted in repository
+      expect(settingsRepository.openWeatherKeyUpdateCount, 1);
+    });
 
     testWidgets(
       'Full flow: configure New York Times API key → enable → persist',
@@ -416,10 +408,7 @@ void main() {
         expect(apiKeyTextFields, findsAtLeastNWidgets(3));
 
         // Enter NYT API key in the third field
-        await tester.enterText(
-          apiKeyTextFields.at(2),
-          'test-nyt-key',
-        );
+        await tester.enterText(apiKeyTextFields.at(2), 'test-nyt-key');
         await tester.pumpAndSettle();
 
         // Act: Tap the save button
@@ -436,81 +425,77 @@ void main() {
       },
     );
 
-    testWidgets(
-      'Full flow: configure all three services → persist all',
-      (WidgetTester tester) async {
-        // Arrange: Create the widget tree
-        await tester.pumpWidget(
-          MaterialApp(
-            home: BlocProvider<SettingsCubit>(
-              create: (BuildContext context) {
-                settingsCubit = SettingsCubit(
-                  settingsRepository: settingsRepository,
-                  llmService: mockLlmService,
-                );
-                return settingsCubit;
-              },
-              child: const FunctionCallingConfigScreen(),
-            ),
+    testWidgets('Full flow: configure all three services → persist all', (
+      WidgetTester tester,
+    ) async {
+      // Arrange: Create the widget tree
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<SettingsCubit>(
+            create: (BuildContext context) {
+              settingsCubit = SettingsCubit(
+                settingsRepository: settingsRepository,
+                llmService: mockLlmService,
+              );
+              return settingsCubit;
+            },
+            child: const FunctionCallingConfigScreen(),
           ),
-        );
+        ),
+      );
 
-        // Wait for the widget to settle
-        await tester.pumpAndSettle();
+      // Wait for the widget to settle
+      await tester.pumpAndSettle();
 
-        // Act: Find all API key text fields
-        final Finder apiKeyTextFields = find.widgetWithText(
-          TextField,
-          'API Key',
-        );
-        expect(apiKeyTextFields, findsAtLeastNWidgets(3));
+      // Act: Find all API key text fields
+      final Finder apiKeyTextFields = find.widgetWithText(TextField, 'API Key');
+      expect(apiKeyTextFields, findsAtLeastNWidgets(3));
 
-        // Enter Google Search API key
-        await tester.enterText(apiKeyTextFields.at(0), 'google-key');
-        await tester.pumpAndSettle();
+      // Enter Google Search API key
+      await tester.enterText(apiKeyTextFields.at(0), 'google-key');
+      await tester.pumpAndSettle();
 
-        // Enter Engine ID
-        final Finder engineIdTextField = find.widgetWithText(
-          TextField,
-          'Search Engine ID',
-        );
-        await tester.enterText(engineIdTextField, 'engine-id');
-        await tester.pumpAndSettle();
+      // Enter Engine ID
+      final Finder engineIdTextField = find.widgetWithText(
+        TextField,
+        'Search Engine ID',
+      );
+      await tester.enterText(engineIdTextField, 'engine-id');
+      await tester.pumpAndSettle();
 
-        // Enter OpenWeather API key
-        await tester.enterText(apiKeyTextFields.at(1), 'weather-key');
-        await tester.pumpAndSettle();
+      // Enter OpenWeather API key
+      await tester.enterText(apiKeyTextFields.at(1), 'weather-key');
+      await tester.pumpAndSettle();
 
-        // Enter NYT API key
-        await tester.enterText(apiKeyTextFields.at(2), 'nyt-key');
-        await tester.pumpAndSettle();
+      // Enter NYT API key
+      await tester.enterText(apiKeyTextFields.at(2), 'nyt-key');
+      await tester.pumpAndSettle();
 
-        // Disable Google Search
-        final Finder switchWidgets = find.byType(Switch);
-        await tester.tap(switchWidgets.at(0));
-        await tester.pumpAndSettle();
+      // Disable Google Search
+      final Finder switchWidgets = find.byType(Switch);
+      await tester.tap(switchWidgets.at(0));
+      await tester.pumpAndSettle();
 
-        // Act: Tap the save button
-        final Finder saveButton = find.byIcon(Icons.save);
-        await tester.tap(saveButton);
-        await tester.pumpAndSettle();
+      // Act: Tap the save button
+      final Finder saveButton = find.byIcon(Icons.save);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
 
-        // Assert: Verify all states were updated
-        expect(settingsCubit.state.googleSearchKey, 'google-key');
-        expect(settingsCubit.state.googleSearchEngineId, 'engine-id');
-        expect(settingsCubit.state.googleSearchEnabled, false);
-        expect(settingsCubit.state.openWeatherKey, 'weather-key');
-        expect(settingsCubit.state.openWeatherEnabled, true);
-        expect(settingsCubit.state.newYorkTimesKey, 'nyt-key');
-        expect(settingsCubit.state.newYorkTimesEnabled, true);
+      // Assert: Verify all states were updated
+      expect(settingsCubit.state.googleSearchKey, 'google-key');
+      expect(settingsCubit.state.googleSearchEngineId, 'engine-id');
+      expect(settingsCubit.state.googleSearchEnabled, false);
+      expect(settingsCubit.state.openWeatherKey, 'weather-key');
+      expect(settingsCubit.state.openWeatherEnabled, true);
+      expect(settingsCubit.state.newYorkTimesKey, 'nyt-key');
+      expect(settingsCubit.state.newYorkTimesEnabled, true);
 
-        // Assert: Verify all data was persisted in repository
-        expect(settingsRepository.googleSearchKeyUpdateCount, 1);
-        expect(settingsRepository.googleSearchEngineIdUpdateCount, 1);
-        expect(settingsRepository.googleSearchEnabledUpdateCount, 1);
-        expect(settingsRepository.openWeatherKeyUpdateCount, 1);
-        expect(settingsRepository.newYorkTimesKeyUpdateCount, 1);
-      },
-    );
+      // Assert: Verify all data was persisted in repository
+      expect(settingsRepository.googleSearchKeyUpdateCount, 1);
+      expect(settingsRepository.googleSearchEngineIdUpdateCount, 1);
+      expect(settingsRepository.googleSearchEnabledUpdateCount, 1);
+      expect(settingsRepository.openWeatherKeyUpdateCount, 1);
+      expect(settingsRepository.newYorkTimesKeyUpdateCount, 1);
+    });
   });
 }
