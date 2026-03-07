@@ -53,3 +53,6 @@ GEMINI.md
 
 # Large ONNX model files
 assets/onnx/*.onnx
+
+# Worktrees
+.worktrees
