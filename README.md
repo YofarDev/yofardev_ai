@@ -74,14 +74,23 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 
 - `flutter pub get`
 
-4. (optional) Make a .env at the root of project and add your environment variables (for some function calling):
+4. Configure function calling services (optional):
 
-- `OPEN_WEATHER_KEY=` 
-- `NEWYORKTIMES_KEY=` 
-- `GOOGLE_SEARCH_KEY=` 
-- `GOOGLE_SEARCH_ENGINE_ID=`
+   The app supports function calling capabilities such as weather information, news retrieval, and web search. To enable these features:
 
-4. Run the app:
+   - Open the app and navigate to **Settings**
+   - Tap on **Function Calling Configuration**
+   - For each service you want to use:
+     * Enter your API key
+     * Enable the service toggle
+   - Configured and enabled services will be available during conversations
+
+   Supported services:
+   - **OpenWeather**: For weather information (get API key at https://openweathermap.org/api)
+   - **New York Times**: For news retrieval (get API key at https://developer.nytimes.com/)
+   - **Google Search**: For web search (get API key and Engine ID at https://developers.google.com/custom-search/v1/overview)
+
+5. Run the app:
 
 - `flutter run`
 
