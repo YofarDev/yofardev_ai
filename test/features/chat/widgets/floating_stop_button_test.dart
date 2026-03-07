@@ -137,6 +137,79 @@ class MockSettingsRepository implements SettingsRepository {
   Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
     return const Right<Exception, void>(null);
   }
+
+  // Function Calling Configuration - Google Search
+  @override
+  Future<Either<Exception, String?>> getGoogleSearchKey() async {
+    return const Right<Exception, String?>(null);
+  }
+
+  @override
+  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, String?>> getGoogleSearchEngineId() async {
+    return const Right<Exception, String?>(null);
+  }
+
+  @override
+  Future<Either<Exception, void>> setGoogleSearchEngineId(String id) async {
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
+    return const Right<Exception, bool>(false);
+  }
+
+  @override
+  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
+    return const Right<Exception, void>(null);
+  }
+
+  // Function Calling Configuration - OpenWeather
+  @override
+  Future<Either<Exception, String?>> getOpenWeatherKey() async {
+    return const Right<Exception, String?>(null);
+  }
+
+  @override
+  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
+    return const Right<Exception, bool>(false);
+  }
+
+  @override
+  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
+    return const Right<Exception, void>(null);
+  }
+
+  // Function Calling Configuration - New York Times
+  @override
+  Future<Either<Exception, String?>> getNewYorkTimesKey() async {
+    return const Right<Exception, String?>(null);
+  }
+
+  @override
+  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
+    return const Right<Exception, bool>(false);
+  }
+
+  @override
+  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
+    return const Right<Exception, void>(null);
+  }
 }
 
 class MockPromptDatasource implements PromptDatasource {

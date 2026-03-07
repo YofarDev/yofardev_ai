@@ -128,4 +128,133 @@ class SettingsRepositoryImpl implements SettingsRepository {
       (void right) => Right<Exception, void>(right),
     );
   }
+
+  // Function Calling Configuration - Google Search
+  @override
+  Future<Either<Exception, String?>> getGoogleSearchKey() async {
+    final dartz.Either<Exception, String> result = await _datasource.getGoogleSearchKey();
+    return result.fold(
+      (Exception left) => Left<Exception, String?>(left),
+      (String right) => Right<Exception, String?>(right.isEmpty ? null : right),
+    );
+  }
+
+  @override
+  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
+    final dartz.Either<Exception, void> result = await _datasource.setGoogleSearchKey(key);
+    return result.fold(
+      (Exception left) => Left<Exception, void>(left),
+      (void right) => const Right<Exception, void>(null),
+    );
+  }
+
+  @override
+  Future<Either<Exception, String?>> getGoogleSearchEngineId() async {
+    final dartz.Either<Exception, String> result = await _datasource.getGoogleSearchEngineId();
+    return result.fold(
+      (Exception left) => Left<Exception, String?>(left),
+      (String right) => Right<Exception, String?>(right.isEmpty ? null : right),
+    );
+  }
+
+  @override
+  Future<Either<Exception, void>> setGoogleSearchEngineId(String id) async {
+    final dartz.Either<Exception, void> result = await _datasource.setGoogleSearchEngineId(id);
+    return result.fold(
+      (Exception left) => Left<Exception, void>(left),
+      (void right) => const Right<Exception, void>(null),
+    );
+  }
+
+  @override
+  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
+    final dartz.Either<Exception, bool> result = await _datasource.getGoogleSearchEnabled();
+    return result.fold(
+      (Exception left) => Left<Exception, bool>(left),
+      (bool right) => Right<Exception, bool>(right),
+    );
+  }
+
+  @override
+  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
+    final dartz.Either<Exception, void> result = await _datasource.setGoogleSearchEnabled(enabled);
+    return result.fold(
+      (Exception left) => Left<Exception, void>(left),
+      (void right) => const Right<Exception, void>(null),
+    );
+  }
+
+  // Function Calling Configuration - OpenWeather
+  @override
+  Future<Either<Exception, String?>> getOpenWeatherKey() async {
+    final dartz.Either<Exception, String> result = await _datasource.getOpenWeatherKey();
+    return result.fold(
+      (Exception left) => Left<Exception, String?>(left),
+      (String right) => Right<Exception, String?>(right.isEmpty ? null : right),
+    );
+  }
+
+  @override
+  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
+    final dartz.Either<Exception, void> result = await _datasource.setOpenWeatherKey(key);
+    return result.fold(
+      (Exception left) => Left<Exception, void>(left),
+      (void right) => const Right<Exception, void>(null),
+    );
+  }
+
+  @override
+  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
+    final dartz.Either<Exception, bool> result = await _datasource.getOpenWeatherEnabled();
+    return result.fold(
+      (Exception left) => Left<Exception, bool>(left),
+      (bool right) => Right<Exception, bool>(right),
+    );
+  }
+
+  @override
+  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
+    final dartz.Either<Exception, void> result = await _datasource.setOpenWeatherEnabled(enabled);
+    return result.fold(
+      (Exception left) => Left<Exception, void>(left),
+      (void right) => const Right<Exception, void>(null),
+    );
+  }
+
+  // Function Calling Configuration - New York Times
+  @override
+  Future<Either<Exception, String?>> getNewYorkTimesKey() async {
+    final dartz.Either<Exception, String> result = await _datasource.getNewYorkTimesKey();
+    return result.fold(
+      (Exception left) => Left<Exception, String?>(left),
+      (String right) => Right<Exception, String?>(right.isEmpty ? null : right),
+    );
+  }
+
+  @override
+  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
+    final dartz.Either<Exception, void> result = await _datasource.setNewYorkTimesKey(key);
+    return result.fold(
+      (Exception left) => Left<Exception, void>(left),
+      (void right) => const Right<Exception, void>(null),
+    );
+  }
+
+  @override
+  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
+    final dartz.Either<Exception, bool> result = await _datasource.getNewYorkTimesEnabled();
+    return result.fold(
+      (Exception left) => Left<Exception, bool>(left),
+      (bool right) => Right<Exception, bool>(right),
+    );
+  }
+
+  @override
+  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
+    final dartz.Either<Exception, void> result = await _datasource.setNewYorkTimesEnabled(enabled);
+    return result.fold(
+      (Exception left) => Left<Exception, void>(left),
+      (void right) => const Right<Exception, void>(null),
+    );
+  }
 }
