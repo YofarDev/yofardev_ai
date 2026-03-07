@@ -4,7 +4,6 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../l10n/localization_manager.dart';
 import '../models/chat.dart';
 import '../models/task_llm_config.dart';
 import '../res/app_constants.dart';
@@ -99,7 +98,7 @@ class SettingsLocalDatasource {
     await prefs.setString('baseSystemPrompt', baseSystemPrompt);
   }
 
-  Future<String> getBaseSystemPrompt() async {
+  Future<String> getBaseSystemPrompt(String languageCode) async {
     final String baseSystemPrompt = await rootBundle.loadString(
       AppUtils.fixAssetsPath('assets/txt/system_prompt_$languageCode.txt'),
     );

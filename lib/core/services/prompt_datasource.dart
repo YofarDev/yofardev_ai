@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart';
 
-import '../../l10n/localization_manager.dart';
 import '../models/avatar_config.dart';
 import '../models/chat.dart';
 import '../models/sound_effects.dart';
@@ -9,7 +8,11 @@ import 'settings_local_datasource.dart';
 
 class PromptDatasource {
   Future<String> getSystemPrompt() async {
-    String systemPrompt = await SettingsLocalDatasource().getBaseSystemPrompt();
+    final String? language = await SettingsLocalDatasource().getLanguage();
+    final String languageCode = language ?? 'fr';
+    String systemPrompt = await SettingsLocalDatasource().getBaseSystemPrompt(
+      languageCode,
+    );
 
     // Replace lists
     systemPrompt = _replacePlaceholder(
@@ -52,7 +55,7 @@ class PromptDatasource {
     final String? username = await SettingsLocalDatasource().getUsername();
     systemPrompt = systemPrompt.replaceAll(
       r'$USERNAME',
-      username != null ? "${localized.currentUsername} : $username\n" : '',
+      username != null ? "Username : $username\n" : '',
     );
 
     // Replace Persona
