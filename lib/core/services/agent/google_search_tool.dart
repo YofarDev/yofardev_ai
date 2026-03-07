@@ -23,8 +23,13 @@ class GoogleSearchTool extends AgentTool {
   @override
   Future<String> execute(Map<String, dynamic> args) async {
     final String query = args['query'] as String? ?? '';
+    // TODO: Pass API keys from settings in Task 13
     final List<Map<String, dynamic>> results =
-        await GoogleSearchService.searchGoogle(query);
+        await GoogleSearchService.searchGoogle(
+      query,
+      '', // apiKey - will be passed from settings in Task 13
+      '', // engineId - will be passed from settings in Task 13
+    );
     return results.toString();
   }
 }

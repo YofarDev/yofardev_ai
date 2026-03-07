@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
@@ -10,13 +9,15 @@ import 'package:http/http.dart' as http;
 import '../../utils/logger.dart';
 
 class GoogleSearchService {
-  static Future<List<Map<String, dynamic>>> searchGoogle(String query) async {
+  static Future<List<Map<String, dynamic>>> searchGoogle(
+    String query,
+    String apiKey,
+    String engineId,
+  ) async {
     try {
-      final String apiKey = dotenv.env['GOOGLE_SEARCH_KEY'] ?? '';
-      final String engineId = dotenv.env['GOOGLE_SEARCH_ENGINE_ID'] ?? '';
       if (apiKey.isEmpty || engineId.isEmpty) {
         throw Exception(
-          'API Key or Engine ID is not set in environment variables',
+          'API Key or Engine ID is not provided',
         );
       }
       const String baseUrl = 'https://www.googleapis.com/customsearch/v1';
