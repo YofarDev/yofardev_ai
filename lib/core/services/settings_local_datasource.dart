@@ -15,6 +15,15 @@ class SettingsLocalDatasource {
   // NEW
   static const String _keyTaskLlmConfig = 'task_llm_config';
 
+  // Function Calling Configuration Keys
+  static const String _googleSearchKeyKey = 'google_search_key';
+  static const String _googleSearchEngineIdKey = 'google_search_engine_id';
+  static const String _googleSearchEnabledKey = 'google_search_enabled';
+  static const String _openWeatherKeyKey = 'open_weather_key';
+  static const String _openWeatherEnabledKey = 'open_weather_enabled';
+  static const String _newYorkTimesKeyKey = 'new_york_times_key';
+  static const String _newYorkTimesEnabledKey = 'new_york_times_enabled';
+
   Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -143,6 +152,151 @@ class SettingsLocalDatasource {
         }
       default:
         throw Exception('Unsupported platform');
+    }
+  }
+
+  // Function Calling Configuration - Google Search
+  Future<Either<Exception, String>> getGoogleSearchKey() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String key = prefs.getString(_googleSearchKeyKey) ?? '';
+      return Right<Exception, String>(key);
+    } catch (e) {
+      return Left<Exception, String>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_googleSearchKeyKey, key);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, String>> getGoogleSearchEngineId() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String engineId = prefs.getString(_googleSearchEngineIdKey) ?? '';
+      return Right<Exception, String>(engineId);
+    } catch (e) {
+      return Left<Exception, String>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> setGoogleSearchEngineId(
+    String engineId,
+  ) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_googleSearchEngineIdKey, engineId);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final bool enabled = prefs.getBool(_googleSearchEnabledKey) ?? true;
+      return Right<Exception, bool>(enabled);
+    } catch (e) {
+      return Left<Exception, bool>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_googleSearchEnabledKey, enabled);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
+    }
+  }
+
+  // Function Calling Configuration - OpenWeather
+  Future<Either<Exception, String>> getOpenWeatherKey() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String key = prefs.getString(_openWeatherKeyKey) ?? '';
+      return Right<Exception, String>(key);
+    } catch (e) {
+      return Left<Exception, String>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_openWeatherKeyKey, key);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final bool enabled = prefs.getBool(_openWeatherEnabledKey) ?? true;
+      return Right<Exception, bool>(enabled);
+    } catch (e) {
+      return Left<Exception, bool>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_openWeatherEnabledKey, enabled);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
+    }
+  }
+
+  // Function Calling Configuration - New York Times
+  Future<Either<Exception, String>> getNewYorkTimesKey() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String key = prefs.getString(_newYorkTimesKeyKey) ?? '';
+      return Right<Exception, String>(key);
+    } catch (e) {
+      return Left<Exception, String>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_newYorkTimesKeyKey, key);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final bool enabled = prefs.getBool(_newYorkTimesEnabledKey) ?? true;
+      return Right<Exception, bool>(enabled);
+    } catch (e) {
+      return Left<Exception, bool>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_newYorkTimesEnabledKey, enabled);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
     }
   }
 }
