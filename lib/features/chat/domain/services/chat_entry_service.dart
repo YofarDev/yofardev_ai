@@ -2,7 +2,6 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../../../l10n/localization_manager.dart';
 import '../../domain/models/chat_entry.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 
@@ -32,7 +31,7 @@ class ChatEntryService {
     );
 
     final String wrappedUserMessage =
-        "${localized.currentDate} : ${DateTime.now().toLongLocalDateString(language: languageCode)}\n${localized.currentAvatarConfig} :\n{\n$avatar\n}\n${localized.userMessage} : \n'''$prompt'''";
+        "Date : ${DateTime.now().toLongLocalDateString(language: languageCode)}\nAvatar Config :\n{\n$avatar\n}\nUser : \n'''$prompt'''";
 
     return ChatEntry(
       id: const Uuid().v4(),
