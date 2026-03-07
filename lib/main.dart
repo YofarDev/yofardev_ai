@@ -21,7 +21,6 @@ import 'features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'features/demo/presentation/bloc/demo_cubit.dart';
 import 'features/sound/data/datasources/tts_datasource.dart';
 import 'l10n/app_localization_delegate.dart';
-import 'l10n/localization_manager.dart';
 import 'features/talking/presentation/bloc/talking_cubit.dart';
 import 'features/home/presentation/bloc/home_cubit.dart';
 import 'features/settings/presentation/bloc/settings_cubit.dart';
@@ -51,7 +50,6 @@ void main() async {
   final String? savedLanguage = prefs.getString('language');
   final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
   final String initialLanguage = savedLanguage ?? deviceLocale.languageCode;
-  await LocalizationManager().initialize(initialLanguage);
   if (PlatformUtils.checkPlatform() != 'Web' &&
       PlatformUtils.checkPlatform() != 'MacOS') {
     await Alarm.init();
@@ -62,11 +60,13 @@ void main() async {
   if (PlatformUtils.checkPlatform() != 'Web') {
     await TtsDatasource.initSupertonic();
   }
-  runApp(const MyApp());
+  runApp(MyApp(initialLanguage: initialLanguage));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.initialLanguage});
+
+  final String initialLanguage;
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +107,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'Yofardev AI',
         debugShowCheckedModeBanner: false,
+        locale: Locale(initialLanguage),
         supportedLocales: const <Locale>[Locale('fr'), Locale('en')],
         localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
           AppLocalizationsDelegate(),
