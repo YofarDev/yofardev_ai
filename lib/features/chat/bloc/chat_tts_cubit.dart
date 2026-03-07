@@ -123,6 +123,12 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         tag: 'ChatTtsCubit',
         error: e,
       );
+      emit(
+        state.copyWith(
+          hasError: true,
+          errorMessage: 'Failed to play audio: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -161,7 +167,13 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         tag: 'ChatTtsCubit',
         error: e,
       );
-      emit(state.copyWith(isInitialized: true));
+      emit(
+        state.copyWith(
+          isInitialized: true,
+          hasError: true,
+          errorMessage: 'Failed to initialize: ${e.toString()}',
+        ),
+      );
     }
   }
 

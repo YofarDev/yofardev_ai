@@ -23,6 +23,7 @@ import '../../bloc/chats_state.dart';
 import '../../domain/models/chat_entry.dart';
 import '../../domain/models/chat.dart';
 import '../function_calling_widget.dart';
+import 'picked_image_preview.dart';
 
 class AiTextInput extends StatefulWidget {
   final bool onlyText;
@@ -74,6 +75,7 @@ class _AiTextInputState extends State<AiTextInput> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
     return BlocListener<ChatsCubit, ChatsState>(
       listenWhen: (ChatsState previous, ChatsState current) =>
           previous.status != current.status,
@@ -82,7 +84,7 @@ class _AiTextInputState extends State<AiTextInput> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage),
-              backgroundColor: Colors.red,
+              backgroundColor: colorScheme.error,
             ),
           );
           // TalkingCubit manages its own error state
@@ -119,7 +121,7 @@ class _AiTextInputState extends State<AiTextInput> {
                   return Column(
                     children: <Widget>[
                       if (_pickedImage != null)
-                        _buildPickedImage(_pickedImage!.path),
+                        PickedImagePreview(imagePath: _pickedImage!.path),
                       Stack(
                         children: <Widget>[
                           Opacity(
@@ -156,8 +158,8 @@ class _AiTextInputState extends State<AiTextInput> {
                                   ),
                                 ),
                                 if (lastUserEntry.attachedImage != null)
-                                  _buildPickedImage(
-                                    lastUserEntry.attachedImage!,
+                                  PickedImagePreview(
+                                    imagePath: lastUserEntry.attachedImage!,
                                   ),
                               ],
                             ),
@@ -239,14 +241,6 @@ class _AiTextInputState extends State<AiTextInput> {
       FocusScope.of(context).requestFocus(_inputFocus);
     });
   }
-
-  Widget _buildPickedImage(String path) => Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(8.0),
-      child: Image.file(File(path), fit: BoxFit.cover, width: 100, height: 100),
-    ),
-  );
 
   void _onSpeechResult(
     SpeechRecognitionResult result, {

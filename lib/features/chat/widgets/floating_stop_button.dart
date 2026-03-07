@@ -13,6 +13,7 @@ class FloatingStopButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
     return BlocBuilder<ChatMessageCubit, ChatMessageState>(
       builder: (BuildContext context, ChatMessageState state) {
         // Only show when streaming
@@ -27,9 +28,10 @@ class FloatingStopButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(right: 20, bottom: 100),
             child: FloatingActionButton(
-              backgroundColor: Colors.red,
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
               onPressed: () => context.read<InterruptionService>().interrupt(),
-              child: const Icon(Icons.stop, color: Colors.white),
+              child: const Icon(Icons.stop),
             ),
           ),
         );

@@ -8,12 +8,13 @@ class ImageFullScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
       ),
-      backgroundColor: Colors.black,
+      backgroundColor: colorScheme.surface,
       body: Center(
         child: Hero(tag: imagePath, child: Image.file(File(imagePath))),
       ),

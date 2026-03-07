@@ -14,6 +14,7 @@ import '../widgets/api_key_field.dart';
 import '../widgets/persona_dropdown.dart';
 import '../widgets/settings_app_bar.dart';
 import '../widgets/sound_effects_toggle.dart';
+import '../widgets/task_llm_config_tile.dart';
 import '../widgets/username_field.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -60,67 +61,6 @@ class SettingsPageState extends State<SettingsPage> {
     await settingsCubit.setPersona(_persona);
     context.read<ChatsCubit>().setSoundEffects(_isSoundEffectsEnabled);
     context.pop();
-  }
-
-  Widget _buildTaskLlmConfigTile(BuildContext context) {
-    return InkWell(
-      onTap: () => context.push("/settings/llm/task-llm"),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[
-              AppColors.glassSurface.withValues(alpha: 0.12),
-              AppColors.glassSurface.withValues(alpha: 0.06),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.glassBorder.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: <Widget>[
-            Icon(
-              Icons.psychology_outlined,
-              color: AppColors.onSurface.withValues(alpha: 0.7),
-              size: 24,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    localized.taskLlmConfig,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Configure different LLMs for assistant, title generation, and function calling',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.onSurface.withValues(alpha: 0.3),
-              size: 24,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -180,7 +120,7 @@ class SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      _buildTaskLlmConfigTile(context),
+                      const TaskLlmConfigTile(),
                       const SizedBox(height: 32),
                     ],
                   ),

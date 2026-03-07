@@ -24,7 +24,7 @@ import 'features/sound/data/datasources/tts_datasource.dart';
 import 'l10n/app_localization_delegate.dart';
 import 'l10n/localization_manager.dart';
 import 'features/talking/presentation/bloc/talking_cubit.dart';
-import 'features/home/bloc/home_cubit.dart';
+import 'features/home/presentation/bloc/home_cubit.dart';
 import 'features/settings/bloc/settings_cubit.dart';
 import 'core/res/app_theme.dart';
 import 'core/utils/platform_utils.dart';

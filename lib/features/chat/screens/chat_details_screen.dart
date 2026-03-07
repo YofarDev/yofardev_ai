@@ -63,37 +63,36 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
           },
         ),
       ],
-      child: BlocBuilder<AvatarCubit, AvatarState>(
-        builder: (BuildContext context, AvatarState avatarState) {
-          return BlocBuilder<ChatsCubit, ChatsState>(
-            builder: (BuildContext context, ChatsState state) {
-              final Chat chat = state.openedChat;
-              return Scaffold(
-                body: Stack(
-                  children: <Widget>[
-                    const ChatDetailsBackground(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: <Widget>[
-                          Expanded(
-                            child: ChatConversationList(
-                              persona: chat.persona,
-                              entries: chat.entries.reversed.toList(),
-                              isTyping: state.status == ChatsStatus.typing,
-                              isStreaming:
-                                  state.status == ChatsStatus.streaming,
-                              showEverything: _showEverything,
-                              limitParameterSize: _limitParamaterSize,
-                            ),
-                          ),
-                          const AiTextInput(onlyText: true),
-                          const SizedBox(height: 8),
-                        ],
+      child: BlocBuilder<ChatsCubit, ChatsState>(
+        builder: (BuildContext context, ChatsState state) {
+          final Chat chat = state.openedChat;
+          return Scaffold(
+            body: Stack(
+              children: <Widget>[
+                const ChatDetailsBackground(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: <Widget>[
+                      Expanded(
+                        child: ChatConversationList(
+                          persona: chat.persona,
+                          entries: chat.entries.reversed.toList(),
+                          isTyping: state.status == ChatsStatus.typing,
+                          isStreaming: state.status == ChatsStatus.streaming,
+                          showEverything: _showEverything,
+                          limitParameterSize: _limitParamaterSize,
+                        ),
                       ),
-                    ),
-                    const _TopLeftBackButton(),
-                    ChatDetailsActions(
+                      const AiTextInput(onlyText: true),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+                const _TopLeftBackButton(),
+                BlocBuilder<ChatsCubit, ChatsState>(
+                  builder: (BuildContext context, ChatsState actionsState) {
+                    return ChatDetailsActions(
                       showEverything: _showEverything,
                       onToggleVisibility: () {
                         setState(() {
@@ -101,18 +100,15 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                         });
                       },
                       onDownload: () => _downloadConversation(context),
-                      isFunctionCallingEnabled: context
-                          .read<ChatsCubit>()
-                          .state
-                          .functionCallingEnabled,
+                      isFunctionCallingEnabled: actionsState.functionCallingEnabled,
                       onFunctionCallingToggle: () =>
                           context.read<ChatsCubit>().toggleFunctionCalling(),
-                    ),
-                    const FloatingStopButton(),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
+                const FloatingStopButton(),
+              ],
+            ),
           );
         },
       ),

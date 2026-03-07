@@ -17,7 +17,7 @@ import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/demo/bloc/demo_cubit.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
-import '../../features/home/bloc/home_cubit.dart';
+import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/settings/bloc/settings_cubit.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
@@ -29,6 +29,8 @@ import '../../features/sound/domain/tts_queue_manager.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
+import '../../features/home/data/repositories/home_repository_impl.dart';
+import '../../features/home/domain/repositories/home_repository.dart';
 import '../../l10n/localization_manager.dart';
 import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
@@ -109,6 +111,7 @@ Future<void> setupServiceLocator() async {
       avatarRepository: getIt<AvatarRepository>(),
     ),
   );
+  getIt.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
 
   // Other services
   getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());
@@ -188,7 +191,7 @@ Future<void> setupServiceLocator() async {
       llmService: getIt<LlmServiceInterface>(),
     ),
   );
-  getIt.registerFactory<HomeCubit>(() => HomeCubit());
+  getIt.registerFactory<HomeCubit>(() => HomeCubit(getIt<HomeRepository>()));
 }
 
 /// Switch between real and fake LLM service

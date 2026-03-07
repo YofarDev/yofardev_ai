@@ -100,7 +100,13 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
         tag: 'ChatMessageCubit',
         error: e,
       );
-      emit(state.copyWith(initializing: false));
+      emit(
+        state.copyWith(
+          initializing: false,
+          status: ChatMessageStatus.error,
+          errorMessage: 'Failed to load waiting sentences: ${e.toString()}',
+        ),
+      );
     }
   }
 

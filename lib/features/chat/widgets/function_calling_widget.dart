@@ -10,6 +10,7 @@ class FunctionCallingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final StringBuffer bf = StringBuffer();
     final List<dynamic> map = jsonDecode(functionCallingText) as List<dynamic>;
     for (int i = 0; i < map.length; i++) {
@@ -29,7 +30,7 @@ class FunctionCallingWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          color: Colors.black.withValues(alpha: 0.3),
+          color: colorScheme.onSurface.withValues(alpha: 0.3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -38,8 +39,8 @@ class FunctionCallingWidget extends StatelessWidget {
             Flexible(
               child: Text(
                 bf.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colorScheme.surface,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),

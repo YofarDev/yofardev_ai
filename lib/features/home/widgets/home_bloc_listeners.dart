@@ -9,7 +9,7 @@ import '../../chat/bloc/chat_message_cubit.dart';
 import '../../chat/bloc/chat_message_state.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
-import '../bloc/home_cubit.dart';
+import '../presentation/bloc/home_cubit.dart';
 
 /// Combines all BlocListeners for HomeScreen using MultiBlocListener
 /// Flat structure for better readability and maintainability

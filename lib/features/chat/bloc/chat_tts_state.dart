@@ -8,6 +8,8 @@ sealed class ChatTtsState with _$ChatTtsState {
     @Default(<Map<String, dynamic>>[])
     List<Map<String, dynamic>> audioPathsWaitingSentences,
     @Default(false) bool isInitialized,
+    @Default(false) bool hasError,
+    @Default('') String errorMessage,
   }) = _ChatTtsState;
 
   factory ChatTtsState.initial() => const ChatTtsState();
