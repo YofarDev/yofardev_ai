@@ -4,7 +4,6 @@ import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -61,7 +60,6 @@ void main() async {
     ]);
   }
   if (PlatformUtils.checkPlatform() != 'Web') {
-    await dotenv.load();
     await TtsDatasource.initSupertonic();
   }
   runApp(const MyApp());
