@@ -5,6 +5,7 @@ import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
 import '../../features/chat/screens/image_full_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/settings/screens/function_calling_config_screen.dart';
 import '../../features/settings/screens/llm/llm_config_page.dart';
 import '../../features/settings/screens/llm/llm_selection_page.dart';
 import '../../features/settings/screens/llm/task_llm_config_page.dart';
@@ -83,6 +84,16 @@ class AppRouter {
                 },
               ),
             ],
+          ),
+          GoRoute(
+            path: 'function-calling',
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return MaterialPage<void>(
+                key: state.pageKey,
+                child: const ConstrainedWidth(
+                    child: FunctionCallingConfigScreen()),
+              );
+            },
           ),
         ],
       ),

@@ -15,6 +15,7 @@ import '../widgets/persona_dropdown.dart';
 import '../widgets/settings_app_bar.dart';
 import '../widgets/sound_effects_toggle.dart';
 import '../widgets/task_llm_config_tile.dart';
+import '../widgets/function_calling_config_tile.dart';
 import '../widgets/username_field.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -121,6 +122,8 @@ class SettingsPageState extends State<SettingsPage> {
                       ),
                       const SizedBox(height: 16),
                       const TaskLlmConfigTile(),
+                      const SizedBox(height: 16),
+                      const FunctionCallingConfigTile(),
                       const SizedBox(height: 32),
                     ],
                   ),
