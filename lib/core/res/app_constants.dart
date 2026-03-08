@@ -20,9 +20,6 @@ class AppConstants {
   static double soubretteFeatherDusterY = 683;
   static double soubretteFeatherDusterX = -200;
 
-  // Platforms dimensions
-  static double maxWidth = 640;
-
   // Voices
   static String frenchAndroidVoice = "fr-fr-x-frd-local";
   static String englishAndroidVoice = "en-us-x-iom-local";

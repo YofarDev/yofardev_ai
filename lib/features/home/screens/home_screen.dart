@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/res/app_colors.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
+import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../chat/presentation/bloc/chats_cubit.dart';
 import '../../chat/presentation/bloc/chats_state.dart';
 import '../../chat/presentation/bloc/chat_message_cubit.dart';
@@ -20,9 +21,27 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _tapCount = 0;
   DateTime? _lastTapTime;
+  double? _lastAppliedAvatarWidth;
+
+  double _getTargetAvatarWidth(double width) => width > 800 ? 800 : width;
+
+  void _updateAvatarScaleForCurrentWidth() {
+    final double width = MediaQuery.of(context).size.width;
+    if (width <= 0) return;
+    final double targetWidth = _getTargetAvatarWidth(width);
+    if (_lastAppliedAvatarWidth == targetWidth) return;
+    _lastAppliedAvatarWidth = targetWidth;
+
+    final AvatarCubit avatarCubit = context.read<AvatarCubit>();
+    if (avatarCubit.state.status == AvatarStatus.initial) {
+      avatarCubit.setValuesBasedOnScreenWidth(screenWidth: targetWidth);
+    } else {
+      avatarCubit.onScreenSizeChanged(targetWidth);
+    }
+  }
 
   void _handleTripleTap() {
     final DateTime now = DateTime.now();
@@ -43,17 +62,37 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final double screenWidth = MediaQuery.of(context).size.width > 800
-          ? 800
-          : MediaQuery.of(context).size.width;
-      final AvatarCubit avatarCubit = context.read<AvatarCubit>();
-      avatarCubit.setValuesBasedOnScreenWidth(screenWidth: screenWidth);
-      // Prepare waiting sentences loaded from cache
-      context.read<ChatMessageCubit>().prepareWaitingSentences(
-        context.read<ChatsCubit>().state.currentLanguage,
-      );
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateAvatarScaleForCurrentWidth();
     });
+    // Prepare waiting sentences loaded from cache
+    context.read<ChatMessageCubit>().prepareWaitingSentences(
+      context.read<ChatsCubit>().state.currentLanguage,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _updateAvatarScaleForCurrentWidth();
+    });
+  }
+
+  @override
+  void didChangeMetrics() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _updateAvatarScaleForCurrentWidth();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override

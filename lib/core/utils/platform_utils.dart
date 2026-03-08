@@ -24,4 +24,9 @@ class PlatformUtils {
     final String platform = checkPlatform();
     return platform == 'Android' || platform == 'iOS';
   }
+
+  static bool isDesktop() {
+    final String platform = checkPlatform();
+    return platform == 'Windows' || platform == 'MacOS' || platform == 'Linux';
+  }
 }

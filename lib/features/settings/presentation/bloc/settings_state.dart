@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/models/llm_config.dart';
+import '../../../../core/models/chat.dart';
 
 part 'settings_state.freezed.dart';
 
@@ -19,6 +20,13 @@ sealed class SettingsState with _$SettingsState {
     @Default(true) bool openWeatherEnabled,
     @Default(null) String? newYorkTimesKey,
     @Default(true) bool newYorkTimesEnabled,
+    // User Settings Fields:
+    @Default(null) String? username,
+    @Default(null) String? systemPrompt,
+    @Default(ChatPersona.assistant) ChatPersona persona,
+    // Error fields:
+    @Default(false) bool hasError,
+    @Default(null) String? errorMessage,
   }) = _SettingsState;
 
   factory SettingsState.initial() => const SettingsState();

@@ -37,12 +37,12 @@ class _ChatsListPageState extends State<ChatsListPage> {
           context.read<ChatsCubit>().fetchChatsList();
         }
       },
-      child: BlocBuilder<ChatsCubit, ChatsState>(
-        builder: (BuildContext context, ChatsState state) {
-          final bool isLoading = state.status == ChatsStatus.loading;
-          return SafeArea(
-            child: Scaffold(
-              body: Container(
+      child: SafeArea(
+        child: Scaffold(
+          body: BlocBuilder<ChatsCubit, ChatsState>(
+            builder: (BuildContext context, ChatsState state) {
+              final bool isLoading = state.status == ChatsStatus.loading;
+              return Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -66,10 +66,10 @@ class _ChatsListPageState extends State<ChatsListPage> {
                       ),
                   ],
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
     );
   }

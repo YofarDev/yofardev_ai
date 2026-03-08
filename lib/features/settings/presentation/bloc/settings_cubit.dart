@@ -26,6 +26,11 @@ class SettingsCubit extends Cubit<SettingsState> {
     // Initialize LLM service if not already done
     await _llmService.init();
 
+    // Load user settings
+    await loadUsername();
+    await loadSystemPrompt();
+    await loadPersona();
+
     // Load task LLM config
     await loadTaskLlmConfig();
 
@@ -42,6 +47,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: e,
       );
+      emit(state.copyWith(
+        hasError: true,
+        errorMessage: 'Failed to load available LLM configs',
+      ));
     }
   }
 
@@ -83,7 +92,7 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: error,
       ),
-      (_) => null, // Don't need to emit, value is stored in repository
+      (_) => emit(state.copyWith(systemPrompt: prompt)),
     );
   }
 
@@ -97,7 +106,7 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: error,
       ),
-      (_) => null, // Don't need to emit, value is stored in repository
+      (_) => emit(state.copyWith(username: username)),
     );
   }
 
@@ -112,8 +121,50 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: error,
       ),
-      (_) => null, // Don't need to emit, value is stored in repository
+      (_) => emit(state.copyWith(persona: persona)),
     );
+  }
+
+  /// Load the username
+  Future<void> loadUsername() async {
+    final Either<Exception, String?> result = await _settingsRepository
+        .getUsername();
+    result.fold((Exception error) {
+      AppLogger.error(
+        'Failed to load username',
+        tag: 'SettingsCubit',
+        error: error,
+      );
+      emit(state.copyWith(username: null));
+    }, (String? username) => emit(state.copyWith(username: username)));
+  }
+
+  /// Load the system prompt
+  Future<void> loadSystemPrompt() async {
+    final Either<Exception, String> result = await _settingsRepository
+        .getSystemPrompt();
+    result.fold((Exception error) {
+      AppLogger.error(
+        'Failed to load system prompt',
+        tag: 'SettingsCubit',
+        error: error,
+      );
+      emit(state.copyWith(systemPrompt: null));
+    }, (String prompt) => emit(state.copyWith(systemPrompt: prompt)));
+  }
+
+  /// Load the persona
+  Future<void> loadPersona() async {
+    final Either<Exception, ChatPersona> result = await _settingsRepository
+        .getPersona();
+    result.fold((Exception error) {
+      AppLogger.error(
+        'Failed to load persona',
+        tag: 'SettingsCubit',
+        error: error,
+      );
+      emit(state.copyWith(persona: ChatPersona.assistant));
+    }, (ChatPersona persona) => emit(state.copyWith(persona: persona)));
   }
 
   /// Load Google Search configuration

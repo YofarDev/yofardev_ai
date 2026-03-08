@@ -1,14 +1,13 @@
 import 'dart:async';
-import '../../../talking/presentation/bloc/talking_state.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../talking/presentation/bloc/talking_cubit.dart';
-import '../../../../core/utils/app_utils.dart';
-import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/res/app_colors.dart';
+import '../../../../core/utils/app_utils.dart';
+import '../../../talking/presentation/bloc/talking_cubit.dart';
+import '../../../talking/presentation/bloc/talking_state.dart';
 
 class SingularityCostume extends StatefulWidget {
   final Duration switchDuration;
@@ -45,15 +44,6 @@ class _SingularityCostumeState extends State<SingularityCostume> {
     });
   }
 
-  void _fakeTalking() async {
-    if (!context.read<TalkingCubit>().state.isTalking) return;
-    setState(() {
-      _amplitude = math.Random().nextInt(25) * 1;
-    });
-    await Future<dynamic>.delayed(const Duration(milliseconds: 100));
-    _fakeTalking();
-  }
-
   void _startTalking(List<int> ampltiudes) async {
     for (int i = 0; i < ampltiudes.length; i++) {
       setState(() {
@@ -76,11 +66,7 @@ class _SingularityCostumeState extends State<SingularityCostume> {
           previous.status != current.status,
       listener: (BuildContext context, TalkingState state) {
         if (state.status == TalkingStatus.success) {
-          if (PlatformUtils.checkPlatform() == 'Web') {
-            _fakeTalking();
-          } else {
-            _startTalking(state.answer.amplitudes);
-          }
+          _startTalking(state.answer.amplitudes);
         }
       },
       child: Stack(

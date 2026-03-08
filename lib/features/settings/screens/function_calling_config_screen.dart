@@ -141,10 +141,14 @@ class _FunctionCallingConfigScreenState
                               title: AppLocalizations.of(
                                 context,
                               ).settings_googleSearch,
-                              description: AppLocalizations.of(
-                                context,
-                              ).settings_googleSearch_description,
+                              apiName: 'Google Search API',
                               icon: '🔍',
+                              isEnabled: state.googleSearchEnabled,
+                              onToggle: (bool value) {
+                                context
+                                    .read<SettingsCubit>()
+                                    .toggleGoogleSearch(value);
+                              },
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _googleSearchKeyController,
@@ -161,15 +165,6 @@ class _FunctionCallingConfigScreenState
                                   ).settings_engineId,
                                   hintText: 'Enter your Search Engine ID',
                                 ),
-                                const SizedBox(height: 12),
-                                _buildEnableSwitch(
-                                  value: state.googleSearchEnabled,
-                                  onChanged: (bool value) {
-                                    context
-                                        .read<SettingsCubit>()
-                                        .toggleGoogleSearch(value);
-                                  },
-                                ),
                               ],
                             ),
                             // Weather Section
@@ -177,10 +172,14 @@ class _FunctionCallingConfigScreenState
                               title: AppLocalizations.of(
                                 context,
                               ).settings_weather,
-                              description: AppLocalizations.of(
-                                context,
-                              ).settings_weather_description,
+                              apiName: 'OpenWeather API',
                               icon: '🌤️',
+                              isEnabled: state.openWeatherEnabled,
+                              onToggle: (bool value) {
+                                context
+                                    .read<SettingsCubit>()
+                                    .toggleOpenWeather(value);
+                              },
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _openWeatherKeyController,
@@ -189,24 +188,19 @@ class _FunctionCallingConfigScreenState
                                   ).settings_apiKey,
                                   hintText: 'Enter your OpenWeather API key',
                                 ),
-                                const SizedBox(height: 12),
-                                _buildEnableSwitch(
-                                  value: state.openWeatherEnabled,
-                                  onChanged: (bool value) {
-                                    context
-                                        .read<SettingsCubit>()
-                                        .toggleOpenWeather(value);
-                                  },
-                                ),
                               ],
                             ),
                             // News Section
                             FunctionCallingSection(
                               title: AppLocalizations.of(context).settings_news,
-                              description: AppLocalizations.of(
-                                context,
-                              ).settings_news_description,
+                              apiName: 'New York Times API',
                               icon: '📰',
+                              isEnabled: state.newYorkTimesEnabled,
+                              onToggle: (bool value) {
+                                context
+                                    .read<SettingsCubit>()
+                                    .toggleNewYorkTimes(value);
+                              },
                               fields: <Widget>[
                                 _buildTextField(
                                   controller: _newYorkTimesKeyController,
@@ -214,15 +208,6 @@ class _FunctionCallingConfigScreenState
                                     context,
                                   ).settings_apiKey,
                                   hintText: 'Enter your New York Times API key',
-                                ),
-                                const SizedBox(height: 12),
-                                _buildEnableSwitch(
-                                  value: state.newYorkTimesEnabled,
-                                  onChanged: (bool value) {
-                                    context
-                                        .read<SettingsCubit>()
-                                        .toggleNewYorkTimes(value);
-                                  },
                                 ),
                               ],
                             ),
@@ -256,26 +241,6 @@ class _FunctionCallingConfigScreenState
         fillColor: AppColors.surface.withValues(alpha: 0.5),
       ),
       obscureText: true,
-    );
-  }
-
-  Widget _buildEnableSwitch({
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        Text(
-          AppLocalizations.of(context).settings_enable,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeThumbColor: AppColors.primary,
-        ),
-      ],
     );
   }
 }

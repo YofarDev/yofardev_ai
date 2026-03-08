@@ -63,11 +63,11 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
           },
         ),
       ],
-      child: BlocBuilder<ChatsCubit, ChatsState>(
-        builder: (BuildContext context, ChatsState state) {
-          final Chat chat = state.openedChat;
-          return Scaffold(
-            body: Stack(
+      child: Scaffold(
+        body: BlocBuilder<ChatsCubit, ChatsState>(
+          builder: (BuildContext context, ChatsState state) {
+            final Chat chat = state.openedChat;
+            return Stack(
               children: <Widget>[
                 const ChatDetailsBackground(),
                 Padding(
@@ -109,9 +109,9 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                 ),
                 const FloatingStopButton(),
               ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

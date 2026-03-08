@@ -35,14 +35,14 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
     });
   }
 
-  void _onAdd() {
-    context.push(RouteConstants.llmConfig);
-    // Note: refresh will be called when returning via router
+  Future<void> _onAdd() async {
+    await context.push(RouteConstants.llmConfig);
+    _refresh();
   }
 
-  void _onEdit(LlmConfig config) {
-    context.push(RouteConstants.llmConfig);
-    // Note: refresh will be called when returning via router
+  Future<void> _onEdit(LlmConfig config) async {
+    await context.push(RouteConstants.llmConfig, extra: config);
+    _refresh();
   }
 
   void _onDelete(LlmConfig config) async {

@@ -10,6 +10,7 @@ import '../../../core/l10n/generated/app_localizations.dart';
 import '../../chat/presentation/bloc/chats_cubit.dart';
 import '../../../../core/models/chat.dart';
 import '../presentation/bloc/settings_cubit.dart';
+import '../presentation/bloc/settings_state.dart';
 import '../widgets/api_key_field.dart';
 import '../widgets/persona_dropdown.dart';
 import '../widgets/settings_app_bar.dart';
@@ -36,6 +37,16 @@ class SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _loadSettings();
+    // Listen to state changes to update controllers and persona
+    context.read<SettingsCubit>().stream.listen((SettingsState state) {
+      if (mounted) {
+        _usernameController.text = state.username ?? '';
+        _baseSystemPromptController.text = state.systemPrompt ?? '';
+        setState(() {
+          _persona = state.persona;
+        });
+      }
+    });
   }
 
   void _loadSettings() async {

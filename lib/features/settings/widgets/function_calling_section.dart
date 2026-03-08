@@ -5,15 +5,19 @@ class FunctionCallingSection extends StatelessWidget {
   const FunctionCallingSection({
     super.key,
     required this.title,
-    required this.description,
+    required this.apiName,
     required this.icon,
     required this.fields,
+    this.isEnabled,
+    this.onToggle,
   });
 
   final String title;
-  final String description;
+  final String apiName;
   final String icon;
   final List<Widget> fields;
+  final bool? isEnabled;
+  final ValueChanged<bool>? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +38,7 @@ class FunctionCallingSection extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Text(
                         title,
@@ -41,19 +46,29 @@ class FunctionCallingSection extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
-                        description,
+                        apiName,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                     ],
                   ),
                 ),
+                if (isEnabled != null && onToggle != null)
+                  Transform.scale(
+                    scale: 0.85,
+                    child: Switch(
+                      value: isEnabled!,
+                      onChanged: onToggle,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
               ],
             ),
-            const SizedBox(height: 16),
+            if (fields.isNotEmpty) const SizedBox(height: 12),
             ...fields,
           ],
         ),

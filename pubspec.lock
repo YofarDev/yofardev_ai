@@ -61,10 +61,10 @@ packages:
     dependency: "direct main"
     description:
       name: audio_analyzer
-      sha256: "1cf0eef18cce3b659b5fc1a5f7a669d614f2324c1b3b6cad06525244b8b81eb7"
+      sha256: "3a0ba9cc9796595e000ee4d399d16fae55e9e2ccca9f46b301a2594285db253a"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.0"
+    version: "0.1.2"
   audioplayers:
     dependency: "direct main"
     description:
@@ -1438,10 +1438,10 @@ packages:
     dependency: "direct main"
     description:
       name: supertonic_flutter
-      sha256: "7ef045322ed67be60cf97024390c6689b4a0677b39b5022353bfbccc0f28702a"
+      sha256: e78849a6d33def9d6757aed84b56d2d430a13ecd9b3276be7cf99fd74ea5c87e
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.4"
+    version: "0.1.5"
   synchronized:
     dependency: transitive
     description:

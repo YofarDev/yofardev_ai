@@ -31,7 +31,7 @@ import 'core/utils/platform_utils.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupServiceLocator();
-  if (!PlatformUtils.isMobile()) {
+  if (PlatformUtils.isDesktop()) {
     await windowManager.ensureInitialized();
     final Display primaryDisplay = await screenRetriever.getPrimaryDisplay();
     final double displayHeight = primaryDisplay.size.height * 0.8;
@@ -108,7 +108,7 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => getIt<HomeCubit>()..initialize(),
         ),
       ],
-      child: MaterialApp.router(
+        child: MaterialApp.router(
         title: 'Yofardev AI',
         debugShowCheckedModeBanner: false,
         locale: Locale(initialLanguage),

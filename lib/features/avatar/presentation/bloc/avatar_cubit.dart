@@ -16,6 +16,7 @@ class AvatarCubit extends Cubit<AvatarState> {
   final AvatarRepository _avatarRepository;
 
   void setValuesBasedOnScreenWidth({required double screenWidth}) {
+    if (!screenWidth.isFinite || screenWidth <= 0) return;
     final double scaleFactor = screenWidth / AppConstants.avatarWidth;
     emit(
       state.copyWith(
@@ -28,7 +29,16 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void onScreenSizeChanged(double screenWidth) {
+    if (!screenWidth.isFinite || screenWidth <= 0) return;
+    if (!state.baseOriginalWidth.isFinite || state.baseOriginalWidth <= 0) {
+      setValuesBasedOnScreenWidth(screenWidth: screenWidth);
+      return;
+    }
     final double scaleFactor = screenWidth / state.baseOriginalWidth;
+    if (!scaleFactor.isFinite || scaleFactor <= 0) {
+      setValuesBasedOnScreenWidth(screenWidth: screenWidth);
+      return;
+    }
     emit(state.copyWith(scaleFactor: scaleFactor));
   }
 
@@ -40,12 +50,18 @@ class AvatarCubit extends Cubit<AvatarState> {
     result.fold(
       (Exception error) {
         // This is expected for new chats - no custom avatar saved yet
-        // Keep status as 'ready' to show default avatar on error
-        // 'initial' would hide the avatar completely
-        emit(state.copyWith(status: AvatarStatus.ready));
+        // Only set status to ready if dimensions are initialized
+        if (state.baseOriginalHeight > 0) {
+          emit(state.copyWith(status: AvatarStatus.ready));
+        }
       },
       (Chat chat) {
-        emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));
+        // Only set status to ready if dimensions are initialized
+        if (state.baseOriginalHeight > 0) {
+          emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));
+        } else {
+          emit(state.copyWith(avatar: chat.avatar));
+        }
       },
     );
   }

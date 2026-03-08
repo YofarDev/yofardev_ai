@@ -72,7 +72,12 @@
       "mcp__jcodemunch__get_symbol",
       "Bash(flutter analyze:*)",
       "Bash(git commit:*)",
-      "Skill(tokensight:statusline)"
+      "Skill(tokensight:statusline)",
+      "Bash(dart test:*)",
+      "WebSearch",
+      "Bash(./gradlew tasks:*)",
+      "Bash(aapt dump:*)",
+      "Bash(unzip:*)"
     ]
   }
 }

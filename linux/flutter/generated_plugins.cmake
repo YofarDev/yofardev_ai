@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  audio_analyzer
   audioplayers_linux
   file_selector_linux
   flutter_onnxruntime

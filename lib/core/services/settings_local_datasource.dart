@@ -1,17 +1,14 @@
 import 'dart:convert';
 
-import 'package:fpdart/fpdart.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:fpdart/fpdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/chat.dart';
 import '../models/task_llm_config.dart';
-import '../res/app_constants.dart';
 import '../utils/app_utils.dart';
-import '../utils/platform_utils.dart';
 
 class SettingsLocalDatasource {
-  // NEW
   static const String _keyTaskLlmConfig = 'task_llm_config';
 
   // Function Calling Configuration Keys
@@ -115,40 +112,6 @@ class SettingsLocalDatasource {
   Future<void> setTtsVoice(String name, String language) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('ttsVoice_$language', name);
-  }
-
-  Future<String> getTtsVoice(String language) async {
-    // final SharedPreferences prefs = await SharedPreferences.getInstance();
-    // final String? voiceName = prefs.getString('ttsVoice_$language');
-    final String platform = PlatformUtils.checkPlatform();
-    switch (platform) {
-      case 'Android':
-        if (language == 'fr') {
-          return AppConstants.frenchAndroidVoice;
-        } else {
-          return AppConstants.englishAndroidVoice;
-        }
-      case 'iOS':
-        if (language == 'fr') {
-          return AppConstants.frenchIOSVoice;
-        } else {
-          return AppConstants.englishIOSVoice;
-        }
-      case 'Web':
-        if (language == 'fr') {
-          return 'Thomas (French (France))';
-        } else {
-          return 'Google UK English Male';
-        }
-      case 'MacOS':
-        if (language == 'fr') {
-          return 'Nicolas (Enhanced)';
-        } else {
-          return 'Lee (Premium)';
-        }
-      default:
-        throw Exception('Unsupported platform');
-    }
   }
 
   // Function Calling Configuration - Google Search

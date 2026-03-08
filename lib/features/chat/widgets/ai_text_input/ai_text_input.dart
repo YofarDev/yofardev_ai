@@ -9,6 +9,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/widgets/current_prompt_text.dart';
 import '../../../../core/widgets/glassmorphic/glassmorphic_text_field.dart';
@@ -55,14 +56,31 @@ class _AiTextInputState extends State<AiTextInput> {
 
   void _initSpeechToText() async {
     if (PlatformUtils.checkPlatform() == 'Web') return;
+    final String platform = PlatformUtils.checkPlatform();
+
+    // speech_to_text plugin doesn't support Linux
+    if (platform == 'Linux') {
+      AppLogger.info('Speech-to-text is not supported on Linux');
+      return;
+    }
+
     bool enable = false;
-    if (PlatformUtils.checkPlatform() != 'MacOS') {
+    if (PlatformUtils.isMobile()) {
       final PermissionStatus status = await Permission.microphone.request();
       enable = status.isGranted;
+    } else {
+      // Desktop platforms (Windows, macOS) don't need permission checks
+      enable = true;
     }
     if (enable) {
-      _speechToText = SpeechToText();
-      _speechEnabled = await _speechToText!.initialize();
+      try {
+        _speechToText = SpeechToText();
+        _speechEnabled = await _speechToText!.initialize();
+      } catch (e) {
+        // Handle initialization errors gracefully
+        AppLogger.error('Failed to initialize speech-to-text', error: e);
+        _speechEnabled = false;
+      }
       setState(() {});
     }
   }
