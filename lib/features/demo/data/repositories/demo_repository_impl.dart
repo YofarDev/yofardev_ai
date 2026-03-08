@@ -8,6 +8,7 @@ import '../../../../core/models/avatar_config.dart';
 import '../../domain/models/demo_script.dart';
 import '../../domain/repositories/demo_repository.dart';
 import '../../../../core/services/demo_controller.dart';
+import '../../../../core/di/service_locator.dart';
 
 /// Service for managing demo mode
 ///
@@ -19,7 +20,6 @@ class DemoService {
   DemoService._internal();
 
   final DemoController _demoController = DemoController();
-  final FakeLlmService _fakeLlmService = FakeLlmService();
 
   DemoRepository? _repository;
 
@@ -30,7 +30,9 @@ class DemoService {
   }
 
   DemoController get controller => _demoController;
-  FakeLlmService get fakeLlmService => _fakeLlmService;
+
+  /// Get the shared FakeLlmService instance (same as used by repository)
+  FakeLlmService get _fakeLlmService => getIt<FakeLlmService>();
 
   /// Whether demo mode is currently active
   bool get isActive => _fakeLlmService.isActive;

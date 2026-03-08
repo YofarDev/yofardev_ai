@@ -208,7 +208,7 @@ Future<void> setupServiceLocator() async {
     () => ChatStreamingCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
-      llmService: getIt<LlmService>(),
+      llmService: getIt<LlmServiceInterface>(),
       streamProcessor: getIt<StreamProcessorService>(),
       promptDatasource: getIt<PromptDatasource>(),
       interruptionService: getIt<InterruptionService>(),

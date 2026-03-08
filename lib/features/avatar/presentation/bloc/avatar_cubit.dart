@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/res/app_constants.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../chat/domain/models/chat.dart';
 import '../../domain/repositories/avatar_repository.dart';
 import 'avatar_state.dart';
@@ -72,7 +73,6 @@ class AvatarCubit extends Cubit<AvatarState> {
       Duration(seconds: AppConstants.movingAvatarDuration),
     );
     _updateAvatar(chatId, avatarConfig);
-    emit(state.copyWith(statusAnimation: AvatarStatusAnimation.initial));
     onAnimationStatusChanged(false);
     _updateAvatar(
       chatId,
@@ -91,15 +91,57 @@ class AvatarCubit extends Cubit<AvatarState> {
               ? AvatarSpecials.outOfScreen
               : AvatarSpecials.onScreen,
         ),
+        previousSpecialsState: leaving
+            ? AvatarSpecials.outOfScreen
+            : AvatarSpecials.onScreen,
       ),
     );
   }
 
+  void onClothesAnimationChanged(bool goingDown) {
+    emit(
+      state.copyWith(
+        statusAnimation: goingDown
+            ? AvatarStatusAnimation.dropping
+            : AvatarStatusAnimation.rising,
+        avatar: state.avatar.copyWith(
+          specials: goingDown
+              ? AvatarSpecials.outOfScreen
+              : AvatarSpecials.onScreen,
+        ),
+        previousSpecialsState: goingDown
+            ? AvatarSpecials.outOfScreen
+            : AvatarSpecials.onScreen,
+      ),
+    );
+  }
+
+  void _goDownAndUp(String chatId, AvatarConfig avatarConfig) async {
+    onClothesAnimationChanged(true);  // dropping
+    await Future<dynamic>.delayed(
+      Duration(seconds: AppConstants.movingAvatarDuration),
+    );
+    _updateAvatar(chatId, avatarConfig);
+    onClothesAnimationChanged(false);  // rising
+  }
+
   void onNewAvatarConfig(String chatId, AvatarConfig avatarConfig) async {
+    AppLogger.debug(
+      'onNewAvatarConfig called with specials: ${avatarConfig.specials}',
+      tag: 'AvatarCubit',
+    );
+
     emit(state.copyWith(statusAnimation: AvatarStatusAnimation.initial));
+
     if (avatarConfig.specials == AvatarSpecials.leaveAndComeBack) {
+      AppLogger.debug('Using leaveAndComeBack animation', tag: 'AvatarCubit');
       _goAndComeBack(chatId, avatarConfig);
+    } else if (avatarConfig.specials == AvatarSpecials.outOfScreen) {
+      AppLogger.debug('Using goDownAndUp animation', tag: 'AvatarCubit');
+      // Clothes change: use dropping/rising animation
+      _goDownAndUp(chatId, avatarConfig);
     } else {
+      AppLogger.debug('No special animation, updating directly', tag: 'AvatarCubit');
       if (avatarConfig.specials != null &&
           avatarConfig.specials != state.previousSpecialsState) {
         onAnimationStatusChanged(

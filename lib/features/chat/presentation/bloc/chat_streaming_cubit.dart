@@ -5,7 +5,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/services/audio/interruption_service.dart';
-import '../../../../core/services/llm/llm_service.dart';
+import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/services/prompt_datasource.dart';
 import '../../../../core/services/stream_processor/sentence_chunk.dart';
 import '../../../../core/services/stream_processor/stream_processor_service.dart';
@@ -33,7 +33,7 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
   ChatStreamingCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
-    required LlmService llmService,
+    required LlmServiceInterface llmService,
     required StreamProcessorService streamProcessor,
     required PromptDatasource promptDatasource,
     required InterruptionService interruptionService,
@@ -65,7 +65,7 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
   }
 
   final ChatRepository _chatRepository;
-  final LlmService _llmService;
+  final LlmServiceInterface _llmService;
   final StreamProcessorService _streamProcessor;
   final PromptDatasource _promptDatasource;
   final InterruptionService _interruptionService;

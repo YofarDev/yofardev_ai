@@ -142,10 +142,17 @@ class FakeLlmService implements LlmServiceInterface {
   }) async {
     if (!_isActive || !hasMore) {
       AppLogger.debug(
-        'FakeLlmService: not active or no more responses',
+        'FakeLlmService: not active, delegating to real LLM service',
         tag: 'FakeLlmService',
       );
-      return null;
+      // Delegate to real service when not in demo mode
+      return _realService.promptModel(
+        messages: messages,
+        systemPrompt: systemPrompt,
+        config: config,
+        returnJson: returnJson,
+        debugLogs: debugLogs,
+      );
     }
 
     final FakeLlmResponse response = getNextResponse()!;
@@ -168,11 +175,16 @@ class FakeLlmService implements LlmServiceInterface {
   }) async* {
     if (!_isActive || !hasMore) {
       AppLogger.debug(
-        'FakeLlmService: not active or no more responses for streaming',
+        'FakeLlmService: not active, delegating to real LLM service',
         tag: 'FakeLlmService',
       );
-      yield const LlmStreamChunk.error(
-        'Fake LLM service is not active or no more responses',
+      // Delegate to real service when not in demo mode
+      yield* _realService.promptModelStream(
+        messages: messages,
+        systemPrompt: systemPrompt,
+        config: config,
+        returnJson: returnJson,
+        debugLogs: debugLogs,
       );
       return;
     }
@@ -201,10 +213,16 @@ class FakeLlmService implements LlmServiceInterface {
   }) async {
     if (!_isActive || !hasMore) {
       AppLogger.debug(
-        'FakeLlmService: not active or no more responses for function calling',
+        'FakeLlmService: not active, delegating to real LLM service',
         tag: 'FakeLlmService',
       );
-      return ('', <FunctionInfo>[]);
+      // Delegate to real service when not in demo mode
+      return _realService.checkFunctionsCalling(
+        api: api,
+        functions: functions,
+        messages: messages,
+        lastUserMessage: lastUserMessage,
+      );
     }
 
     // For demo purposes, we'll just return the next response
