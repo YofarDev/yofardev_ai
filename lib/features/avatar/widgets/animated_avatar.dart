@@ -33,12 +33,6 @@ class AnimatedAvatar extends StatelessWidget {
     final double scaledHeight = computedHeight.isFinite && computedHeight > 0
         ? computedHeight
         : AppConstants.avatarHeight;
-    assert(() {
-      debugPrint(
-        '[AvatarDebug] Avatar on-screen width: ${scaledWidth.toStringAsFixed(2)}',
-      );
-      return true;
-    }());
 
     return SlideTransition(
       position: animation,
@@ -51,9 +45,11 @@ class AnimatedAvatar extends StatelessWidget {
             children: <Widget>[
               if (!state.avatar.hideBaseAvatar) const BaseAvatar(),
               if (!state.avatar.hideBlinkingEyes) const BlinkingEyes(),
-              if (state.avatar.displaySunglasses) const Clothes(name: 'sunglasses'),
+              if (state.avatar.displaySunglasses)
+                const Clothes(name: 'sunglasses'),
               if (!state.avatar.hideTalkingMouth) const TalkingMouth(),
-              if (state.avatar.costume != AvatarCostume.none) const CostumeWidget(),
+              if (state.avatar.costume != AvatarCostume.none)
+                const CostumeWidget(),
             ],
           ),
         ),
