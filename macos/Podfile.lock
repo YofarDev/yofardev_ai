@@ -1,7 +1,8 @@
 PODS:
   - audio_analyzer (0.0.1):
     - FlutterMacOS
-  - audio_session (0.0.1):
+  - audioplayers_darwin (0.0.1):
+    - Flutter
     - FlutterMacOS
   - CwlCatchException (2.2.1):
     - CwlCatchExceptionSupport (~> 2.2.1)
@@ -18,9 +19,6 @@ PODS:
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
   - geolocator_apple (1.2.0):
-    - Flutter
-    - FlutterMacOS
-  - just_audio (0.0.1):
     - Flutter
     - FlutterMacOS
   - onnxruntime-c (1.22.0)
@@ -47,14 +45,13 @@ PODS:
 
 DEPENDENCIES:
   - audio_analyzer (from `Flutter/ephemeral/.symlinks/plugins/audio_analyzer/macos`)
-  - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
+  - audioplayers_darwin (from `Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin`)
   - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_inappwebview_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos`)
   - flutter_onnxruntime (from `Flutter/ephemeral/.symlinks/plugins/flutter_onnxruntime/macos`)
   - flutter_volume_controller (from `Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin`)
-  - just_audio (from `Flutter/ephemeral/.symlinks/plugins/just_audio/darwin`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -73,8 +70,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   audio_analyzer:
     :path: Flutter/ephemeral/.symlinks/plugins/audio_analyzer/macos
-  audio_session:
-    :path: Flutter/ephemeral/.symlinks/plugins/audio_session/macos
+  audioplayers_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin
   file_selector_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   flutter_inappwebview_macos:
@@ -87,8 +84,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral
   geolocator_apple:
     :path: Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin
-  just_audio:
-    :path: Flutter/ephemeral/.symlinks/plugins/just_audio/darwin
   package_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
   screen_retriever_macos:
@@ -104,7 +99,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   audio_analyzer: 697088dd01ac29ee92b7c54b54797ed40fd92f74
-  audio_session: 728ae3823d914f809c485d390274861a24b0904e
+  audioplayers_darwin: f15e209a3e856d1a7edcf98dc029f484fead2242
   CwlCatchException: 7acc161b299a6de7f0a46a6ed741eae2c8b4d75a
   CwlCatchExceptionSupport: 54ccab8d8c78907b57f99717fb19d4cc3bce02dc
   file_selector_macos: 3e56eaea051180007b900eacb006686fd54da150
@@ -113,7 +108,6 @@ SPEC CHECKSUMS:
   flutter_volume_controller: 25d09126b0d695560f11c80b1311d5063fed882f
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   geolocator_apple: 66b711889fd333205763b83c9dcf0a57a28c7afd
-  just_audio: a42c63806f16995daf5b219ae1d679deb76e6a79
   onnxruntime-c: 7f778680e96145956c0a31945f260321eed2611a
   onnxruntime-objc: 83d28b87525bd971259a66e153ea32b5d023de19
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94

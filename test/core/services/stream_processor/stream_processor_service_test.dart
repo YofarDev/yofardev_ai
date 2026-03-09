@@ -96,5 +96,58 @@ void main() {
         isTrue,
       );
     });
+
+    test('should emit sentences before full JSON completion', () async {
+      final StreamController<LlmStreamChunk> chunksController =
+          StreamController<LlmStreamChunk>();
+      final List<SentenceChunk> emittedChunks = <SentenceChunk>[];
+
+      final Future<void> done = processor
+          .processStream(chunksController.stream)
+          .forEach(emittedChunks.add);
+
+      chunksController.add(
+        const LlmStreamChunk.text(
+          content: '{"text":"Hello there. ',
+          isComplete: false,
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      int sentenceCount = emittedChunks.where((SentenceChunk chunk) {
+        return chunk.maybeWhen(
+          sentence: (String _, int _) => true,
+          orElse: () => false,
+        );
+      }).length;
+      expect(sentenceCount, 1);
+
+      chunksController.add(
+        const LlmStreamChunk.text(content: 'How are you', isComplete: false),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      sentenceCount = emittedChunks.where((SentenceChunk chunk) {
+        return chunk.maybeWhen(
+          sentence: (String _, int _) => true,
+          orElse: () => false,
+        );
+      }).length;
+      expect(sentenceCount, 1);
+
+      chunksController.add(
+        const LlmStreamChunk.text(content: '?"}', isComplete: true),
+      );
+      await chunksController.close();
+      await done;
+
+      sentenceCount = emittedChunks.where((SentenceChunk chunk) {
+        return chunk.maybeWhen(
+          sentence: (String _, int _) => true,
+          orElse: () => false,
+        );
+      }).length;
+      expect(sentenceCount, 2);
+    });
   });
 }

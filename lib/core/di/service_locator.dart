@@ -183,6 +183,7 @@ Future<void> setupServiceLocator() async {
       ttsQueueManager: getIt<TtsQueueManager>(),
       audioAmplitudeService: getIt<AudioAmplitudeService>(),
       audioPlayerService: getIt<AudioPlayerService>(),
+      interruptionService: getIt<InterruptionService>(),
       talkingCubit: getIt<TalkingCubit>(),
     ),
   );
@@ -221,6 +222,7 @@ Future<void> setupServiceLocator() async {
     () => ChatMessageCubit(
       chatAudioCubit: getIt<ChatAudioCubit>(),
       chatStreamingCubit: getIt<ChatStreamingCubit>(),
+      closeChatAudioOnDispose: true,
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));

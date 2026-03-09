@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../presentation/bloc/avatar_cubit.dart';
 import '../presentation/bloc/avatar_state.dart';
 import '../../../core/utils/app_utils.dart';
+import '../../../core/utils/logger.dart';
 
 class ScaledAvatarItem extends StatefulWidget {
   final String path;
@@ -39,14 +40,23 @@ class ScaledAvatarItemState extends State<ScaledAvatarItem> {
   }
 
   void _initValues() async {
-    final ByteData baseImg = await rootBundle.load(widget.path);
-    final ui.Image decodedBaseImage = await decodeImageFromList(
-      baseImg.buffer.asUint8List(),
-    );
-    setState(() {
-      _itemOriginalHeight = decodedBaseImage.height.toDouble();
-      _itemOriginalWidth = decodedBaseImage.width.toDouble();
-    });
+    try {
+      final ByteData baseImg = await rootBundle.load(widget.path);
+      final ui.Image decodedBaseImage = await decodeImageFromList(
+        baseImg.buffer.asUint8List(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _itemOriginalHeight = decodedBaseImage.height.toDouble();
+        _itemOriginalWidth = decodedBaseImage.width.toDouble();
+      });
+    } catch (error) {
+      AppLogger.error(
+        'Failed to decode avatar asset: ${widget.path}',
+        tag: 'ScaledAvatarItem',
+        error: error,
+      );
+    }
   }
 
   @override

@@ -5,10 +5,9 @@ import '../../utils/logger.dart';
 /// Service for extracting audio amplitudes for avatar mouth animation
 /// Extracted from ChatsCubit to follow single responsibility principle
 class AudioAmplitudeService {
-  AudioAmplitudeService({AudioAnalyzer? analyzer})
-    : _analyzer = analyzer ?? AudioAnalyzer();
+  AudioAmplitudeService({AudioAnalyzer? analyzer}) : _analyzer = analyzer;
 
-  final AudioAnalyzer _analyzer;
+  AudioAnalyzer? _analyzer;
 
   /// Extract amplitudes from audio file for smooth mouth animation
   ///
@@ -16,7 +15,8 @@ class AudioAmplitudeService {
   /// over time. Falls back to default amplitudes on error.
   Future<List<int>> extractAmplitudes(String audioPath) async {
     try {
-      final List<int> amplitudes = await _analyzer.getAmplitudes(audioPath);
+      _analyzer ??= AudioAnalyzer();
+      final List<int> amplitudes = await _analyzer!.getAmplitudes(audioPath);
       AppLogger.debug(
         'Extracted ${amplitudes.length} amplitudes for $audioPath',
         tag: 'AudioAmplitude',

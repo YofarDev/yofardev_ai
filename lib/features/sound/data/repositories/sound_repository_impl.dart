@@ -16,7 +16,9 @@ class SoundRepositoryImpl implements SoundRepository {
       }
 
       await _player.stop();
-      await _player.setSource(AssetSource(soundEffect.getPath().replaceFirst('assets/', '')));
+      await _player.setSource(
+        AssetSource(soundEffect.getPath().replaceFirst('assets/', '')),
+      );
       await _player.setVolume(1.0);
       await _player.resume();
       return const Right<Exception, void>(null);

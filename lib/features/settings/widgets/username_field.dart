@@ -34,8 +34,7 @@ class UsernameField extends StatelessWidget {
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurface),
             decoration: InputDecoration(
-              hintText:
-                  AppLocalizations.of(context).username ,
+              hintText: AppLocalizations.of(context).username,
               hintStyle: TextStyle(
                 color: AppColors.onSurface.withValues(alpha: 0.5),
               ),

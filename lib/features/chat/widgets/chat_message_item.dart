@@ -124,7 +124,9 @@ class _SoundEffectButton extends StatelessWidget {
         final SoundEffects? sound = soundEffect.getSoundEffectFromString();
         if (sound == null) return;
         final AudioPlayer player = AudioPlayer();
-        await player.setSource(AssetSource(sound.getPath().replaceFirst('assets/', '')));
+        await player.setSource(
+          AssetSource(sound.getPath().replaceFirst('assets/', '')),
+        );
         await player.resume();
         // Note: we can't easily dispose here because it might stop playback
         // In a real app we might want to manage this better or use a singleton

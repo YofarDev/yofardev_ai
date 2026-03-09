@@ -37,7 +37,7 @@ class ChatListEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                AppLocalizations.of(context).empty ,
+                AppLocalizations.of(context).empty,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppColors.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w600,

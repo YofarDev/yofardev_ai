@@ -22,8 +22,10 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
   ChatMessageCubit({
     required ChatAudioCubit chatAudioCubit,
     required ChatStreamingCubit chatStreamingCubit,
+    bool closeChatAudioOnDispose = false,
   }) : _chatAudioCubit = chatAudioCubit,
        _chatStreamingCubit = chatStreamingCubit,
+       _closeChatAudioOnDispose = closeChatAudioOnDispose,
        super(ChatMessageState.initial()) {
     // Listen to audio cubit state changes and emit combined state
     _audioSubscription = _chatAudioCubit.stream.listen((_) {
@@ -38,6 +40,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
 
   final ChatAudioCubit _chatAudioCubit;
   final ChatStreamingCubit _chatStreamingCubit;
+  final bool _closeChatAudioOnDispose;
 
   /// Expose child cubits for testing purposes
   ChatAudioCubit get chatAudioCubit => _chatAudioCubit;
@@ -113,6 +116,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     required Avatar avatar,
     required Chat currentChat,
     required String language,
+    bool functionCallingEnabled = true,
     void Function(Chat updatedChat)? onChatUpdated,
   }) => _chatStreamingCubit.streamResponse(
     prompt,
@@ -121,6 +125,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     avatar: avatar,
     currentChat: currentChat,
     language: language,
+    functionCallingEnabled: functionCallingEnabled,
     onChatUpdated: onChatUpdated,
   );
 
@@ -128,6 +133,9 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
   Future<void> close() async {
     await _audioSubscription.cancel();
     await _streamingSubscription.cancel();
+    if (_closeChatAudioOnDispose) {
+      await _chatAudioCubit.close();
+    }
     return super.close();
   }
 }

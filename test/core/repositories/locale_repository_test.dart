@@ -26,7 +26,9 @@ void main() {
     });
 
     test('getLanguage returns saved language', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{'language': 'en'});
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'language': 'en',
+      });
       SharedPreferences prefs = await SharedPreferences.getInstance();
       repository = LocaleRepositoryImpl(prefs: prefs);
 

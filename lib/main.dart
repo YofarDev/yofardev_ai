@@ -16,6 +16,7 @@ import 'core/router/app_router.dart';
 import 'core/l10n/generated/app_localizations.dart';
 import 'features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'features/chat/presentation/bloc/chats_cubit.dart';
+import 'features/chat/presentation/bloc/chat_audio_cubit.dart';
 import 'features/chat/presentation/bloc/chat_list_cubit.dart';
 import 'features/chat/presentation/bloc/chat_message_cubit.dart';
 import 'features/chat/presentation/bloc/chat_streaming_cubit.dart';
@@ -58,7 +59,8 @@ void main() async {
       DeviceOrientation.portraitUp,
     ]);
   }
-  if (PlatformUtils.checkPlatform() != 'Web') {
+  if (PlatformUtils.checkPlatform() != 'Web' &&
+      PlatformUtils.checkPlatform() != 'MacOS') {
     unawaited(
       TtsDatasource.initSupertonic().catchError((Object error, StackTrace st) {
         // Startup should never be blocked by optional TTS warmup.
@@ -86,11 +88,15 @@ class MyApp extends StatelessWidget {
         BlocProvider<ChatListCubit>(
           create: (BuildContext context) => getIt<ChatListCubit>()..init(),
         ),
-        BlocProvider<ChatMessageCubit>(
-          create: (BuildContext context) => getIt<ChatMessageCubit>(),
-        ),
         BlocProvider<ChatStreamingCubit>(
           create: (BuildContext context) => getIt<ChatStreamingCubit>(),
+        ),
+        BlocProvider<ChatMessageCubit>(
+          create: (BuildContext context) => ChatMessageCubit(
+            chatAudioCubit: getIt<ChatAudioCubit>(),
+            chatStreamingCubit: context.read<ChatStreamingCubit>(),
+            closeChatAudioOnDispose: true,
+          ),
         ),
         BlocProvider<ChatTitleCubit>(
           create: (BuildContext context) => getIt<ChatTitleCubit>(),
@@ -112,7 +118,7 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => getIt<HomeCubit>()..initialize(),
         ),
       ],
-        child: MaterialApp.router(
+      child: MaterialApp.router(
         title: 'Yofardev AI',
         debugShowCheckedModeBanner: false,
         locale: Locale(initialLanguage),

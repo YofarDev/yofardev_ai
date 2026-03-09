@@ -47,10 +47,12 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: e,
       );
-      emit(state.copyWith(
-        hasError: true,
-        errorMessage: 'Failed to load available LLM configs',
-      ));
+      emit(
+        state.copyWith(
+          hasError: true,
+          errorMessage: 'Failed to load available LLM configs',
+        ),
+      );
     }
   }
 

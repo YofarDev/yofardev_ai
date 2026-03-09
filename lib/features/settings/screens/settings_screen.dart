@@ -105,7 +105,7 @@ class SettingsPageState extends State<SettingsPage> {
                     children: <Widget>[
                       const SizedBox(height: 16),
                       Text(
-                        AppLocalizations.of(context).settingsSubstring ,
+                        AppLocalizations.of(context).settingsSubstring,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppColors.onSurface.withValues(alpha: 0.7),
                         ),

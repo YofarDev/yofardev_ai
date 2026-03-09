@@ -118,7 +118,7 @@ class ChatListContainer extends StatelessWidget {
         if (raw.isNotEmpty) return raw;
       }
     }
-    return AppLocalizations.of(context).empty ;
+    return AppLocalizations.of(context).empty;
   }
 
   String _relativeTime(DateTime? date) {

@@ -12,7 +12,7 @@ class CurrentPromptText extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
-          color: AppColors.onSurface.withValues(alpha: 0.4),
+          color: AppColors.surface.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(

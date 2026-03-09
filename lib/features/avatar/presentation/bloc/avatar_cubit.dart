@@ -16,10 +16,15 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   final AvatarRepository _avatarRepository;
 
+  void _emitIfOpen(AvatarState newState) {
+    if (isClosed) return;
+    emit(newState);
+  }
+
   void setValuesBasedOnScreenWidth({required double screenWidth}) {
     if (!screenWidth.isFinite || screenWidth <= 0) return;
     final double scaleFactor = screenWidth / AppConstants.avatarWidth;
-    emit(
+    _emitIfOpen(
       state.copyWith(
         status: AvatarStatus.ready,
         baseOriginalWidth: AppConstants.avatarWidth,
@@ -40,28 +45,31 @@ class AvatarCubit extends Cubit<AvatarState> {
       setValuesBasedOnScreenWidth(screenWidth: screenWidth);
       return;
     }
-    emit(state.copyWith(scaleFactor: scaleFactor));
+    _emitIfOpen(state.copyWith(scaleFactor: scaleFactor));
   }
 
   void loadAvatar(String chatId) async {
-    emit(state.copyWith(status: AvatarStatus.loading));
+    _emitIfOpen(state.copyWith(status: AvatarStatus.loading));
     final Either<Exception, Chat> result = await _avatarRepository.getChat(
       chatId,
     );
+    if (isClosed) return;
     result.fold(
       (Exception error) {
         // This is expected for new chats - no custom avatar saved yet
         // Only set status to ready if dimensions are initialized
         if (state.baseOriginalHeight > 0) {
-          emit(state.copyWith(status: AvatarStatus.ready));
+          _emitIfOpen(state.copyWith(status: AvatarStatus.ready));
         }
       },
       (Chat chat) {
         // Only set status to ready if dimensions are initialized
         if (state.baseOriginalHeight > 0) {
-          emit(state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready));
+          _emitIfOpen(
+            state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready),
+          );
         } else {
-          emit(state.copyWith(avatar: chat.avatar));
+          _emitIfOpen(state.copyWith(avatar: chat.avatar));
         }
       },
     );
@@ -72,6 +80,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     await Future<dynamic>.delayed(
       Duration(seconds: AppConstants.movingAvatarDuration),
     );
+    if (isClosed) return;
     _updateAvatar(chatId, avatarConfig);
     onAnimationStatusChanged(false);
     _updateAvatar(
@@ -81,7 +90,7 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void onAnimationStatusChanged(bool leaving) {
-    emit(
+    _emitIfOpen(
       state.copyWith(
         statusAnimation: leaving
             ? AvatarStatusAnimation.leaving
@@ -99,7 +108,7 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void onClothesAnimationChanged(bool goingDown) {
-    emit(
+    _emitIfOpen(
       state.copyWith(
         statusAnimation: goingDown
             ? AvatarStatusAnimation.dropping
@@ -117,12 +126,13 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void _goDownAndUp(String chatId, AvatarConfig avatarConfig) async {
-    onClothesAnimationChanged(true);  // dropping
+    onClothesAnimationChanged(true); // dropping
     await Future<dynamic>.delayed(
       Duration(seconds: AppConstants.movingAvatarDuration),
     );
+    if (isClosed) return;
     _updateAvatar(chatId, avatarConfig);
-    onClothesAnimationChanged(false);  // rising
+    onClothesAnimationChanged(false); // rising
   }
 
   void onNewAvatarConfig(String chatId, AvatarConfig avatarConfig) async {
@@ -131,7 +141,7 @@ class AvatarCubit extends Cubit<AvatarState> {
       tag: 'AvatarCubit',
     );
 
-    emit(state.copyWith(statusAnimation: AvatarStatusAnimation.initial));
+    _emitIfOpen(state.copyWith(statusAnimation: AvatarStatusAnimation.initial));
 
     if (avatarConfig.specials == AvatarSpecials.leaveAndComeBack) {
       AppLogger.debug('Using leaveAndComeBack animation', tag: 'AvatarCubit');
@@ -141,7 +151,10 @@ class AvatarCubit extends Cubit<AvatarState> {
       // Clothes change: use dropping/rising animation
       _goDownAndUp(chatId, avatarConfig);
     } else {
-      AppLogger.debug('No special animation, updating directly', tag: 'AvatarCubit');
+      AppLogger.debug(
+        'No special animation, updating directly',
+        tag: 'AvatarCubit',
+      );
       if (avatarConfig.specials != null &&
           avatarConfig.specials != state.previousSpecialsState) {
         onAnimationStatusChanged(
@@ -152,6 +165,7 @@ class AvatarCubit extends Cubit<AvatarState> {
           await Future<dynamic>.delayed(
             Duration(seconds: AppConstants.movingAvatarDuration),
           );
+          if (isClosed) return;
         }
       }
       _updateAvatar(chatId, avatarConfig);
@@ -167,7 +181,7 @@ class AvatarCubit extends Cubit<AvatarState> {
       background: avatarConfig.background ?? state.avatar.background,
       costume: avatarConfig.costume ?? state.avatar.costume,
     );
-    emit(
+    _emitIfOpen(
       state.copyWith(
         avatar: avatar,
         previousSpecialsState:

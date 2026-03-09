@@ -1,4 +1,3 @@
-
 import 'package:fpdart/fpdart.dart';
 
 import '../../../features/settings/domain/repositories/settings_repository.dart';

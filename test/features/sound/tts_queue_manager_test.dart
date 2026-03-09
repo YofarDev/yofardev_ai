@@ -185,6 +185,43 @@ void main() {
 
       await subscription.cancel();
     });
+
+    test('should continue processing after first generated item', () async {
+      int generatedCount = 0;
+      when(
+        () => mockDatasource.textToFrenchMaleVoice(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      ).thenAnswer((_) async {
+        generatedCount++;
+        return '/path/to/audio_$generatedCount.wav';
+      });
+
+      final List<String> audioPaths = <String>[];
+      final StreamSubscription<String> subscription = manager.audioStream
+          .listen(audioPaths.add);
+
+      await manager.enqueue(
+        text: 'First',
+        language: 'fr',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      await manager.enqueue(
+        text: 'Second',
+        language: 'fr',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+
+      expect(audioPaths.length, 2);
+      expect(audioPaths.first, '/path/to/audio_1.wav');
+      expect(audioPaths.last, '/path/to/audio_2.wav');
+
+      await subscription.cancel();
+    });
   });
 
   group('Interruption', () {

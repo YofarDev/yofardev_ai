@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
+import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_state.dart';
@@ -91,12 +92,14 @@ void main() {
     late MockAudioAmplitudeService mockAmplitudeService;
     late MockAudioPlayerService mockPlayerService;
     late MockTalkingCubit mockTalkingCubit;
+    late InterruptionService interruptionService;
 
     setUp(() {
       mockTtsManager = MockTtsQueueManager();
       mockAmplitudeService = MockAudioAmplitudeService();
       mockPlayerService = MockAudioPlayerService();
       mockTalkingCubit = MockTalkingCubit();
+      interruptionService = InterruptionService();
 
       // Setup default mock behaviors
       when(
@@ -108,16 +111,21 @@ void main() {
       when(
         () => mockPlayerService.stop(),
       ).thenAnswer((_) async {}); // Add stub for stop()
+      when(() => mockTalkingCubit.stop()).thenAnswer((_) async {});
 
       cubit = ChatTtsCubit(
         ttsQueueManager: mockTtsManager,
         audioAmplitudeService: mockAmplitudeService,
         audioPlayerService: mockPlayerService,
+        interruptionService: interruptionService,
         talkingCubit: mockTalkingCubit,
       );
     });
 
-    tearDown(() => cubit.close());
+    tearDown(() {
+      cubit.close();
+      interruptionService.dispose();
+    });
 
     test('initial state should have default values', () {
       expect(cubit.state.isInitialized, isFalse);
@@ -300,6 +308,54 @@ void main() {
         // Should not crash, state should remain consistent
         expect(cubit.state.audioPathsWaitingSentences, isEmpty);
       });
+
+      test('should play ready audio paths sequentially', () async {
+        const String firstAudioPath = '/path/to/audio-1.wav';
+        const String secondAudioPath = '/path/to/audio-2.wav';
+
+        mockTtsManager.emitAudioPath(firstAudioPath);
+        mockTtsManager.emitAudioPath(secondAudioPath);
+
+        await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+
+        // Second item should wait while first audio is still playing.
+        expect(cubit.state.audioPathsWaitingSentences.length, 1);
+        expect(
+          cubit.state.audioPathsWaitingSentences.first['audioPath'],
+          firstAudioPath,
+        );
+
+        mockPlayerService.emitPlaybackComplete();
+        await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+
+        expect(cubit.state.audioPathsWaitingSentences.length, 2);
+        expect(
+          cubit.state.audioPathsWaitingSentences.last['audioPath'],
+          secondAudioPath,
+        );
+      });
+
+      test(
+        'should restart playback when a new audio path arrives after the queue goes idle',
+        () async {
+          const String firstAudioPath = '/path/to/audio-1.wav';
+          const String secondAudioPath = '/path/to/audio-2.wav';
+
+          mockTtsManager.emitAudioPath(firstAudioPath);
+          await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+
+          mockPlayerService.emitPlaybackComplete();
+          await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+
+          mockTtsManager.emitAudioPath(secondAudioPath);
+          await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+
+          verifyInOrder(<dynamic Function()>[
+            () => mockPlayerService.play(firstAudioPath),
+            () => mockPlayerService.play(secondAudioPath),
+          ]);
+        },
+      );
     });
 
     group('ChatTtsState', () {

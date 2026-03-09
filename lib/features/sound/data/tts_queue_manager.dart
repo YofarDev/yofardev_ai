@@ -165,14 +165,15 @@ class TtsQueueManager {
       // Remove from queue
       _queue.removeAt(0);
 
+      // Mark processing complete before scheduling next item.
+      _isProcessing = false;
+
       // Process next item
       if (_queue.isNotEmpty && !_isPaused) {
         _processingTimer = Timer(
           const Duration(milliseconds: 100),
           _processNext,
         );
-      } else {
-        _isProcessing = false;
       }
     } catch (e) {
       AppLogger.error(
@@ -184,14 +185,15 @@ class TtsQueueManager {
       // Remove failed item
       _queue.removeAt(0);
 
+      // Mark processing complete before scheduling next item.
+      _isProcessing = false;
+
       // Continue with next
       if (_queue.isNotEmpty && !_isPaused) {
         _processingTimer = Timer(
           const Duration(milliseconds: 100),
           _processNext,
         );
-      } else {
-        _isProcessing = false;
       }
     }
   }

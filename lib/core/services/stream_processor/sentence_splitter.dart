@@ -1,8 +1,6 @@
 /// Splits text into sentences, handling incomplete final sentence
 class SentenceSplitter {
-  static final RegExp _sentenceEnd = RegExp(
-    r'[.!?]+\s+(?=[A-ZÀÂÆÇÉÈÊËÏÎÔÙÛÜŸÑ])|[:]\s+(?=[\n])',
-  );
+  static final RegExp _sentenceEnd = RegExp(r'[.!?]+(?:\s+|$)|[:]\s*(?=\n)');
 
   String _incompleteBuffer = '';
   int _sentenceCount = 0;

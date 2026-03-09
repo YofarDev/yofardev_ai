@@ -30,9 +30,11 @@
 	<string>NSApplication</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to select and upload photos.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>This app needs access to your camera to take photos and videos.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>This app needs access to your microphone to record audio in videos.</string>
-</dict>
+		<key>NSCameraUsageDescription</key>
+		<string>This app needs access to your camera to take photos and videos.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>This app needs access to your microphone to record audio in videos.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>This app uses speech recognition to convert your voice into text for chat input.</string>
+	</dict>
 </plist>

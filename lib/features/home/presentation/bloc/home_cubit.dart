@@ -17,9 +17,10 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(isInitialized: true));
   }
 
-  /// Start volume fade in or out
-  void startVolumeFade(bool fadeIn) {
+  /// Start volume fade in or out for avatar animations
+  Future<void> startVolumeFade(bool fadeIn) async {
     emit(state.copyWith(isFading: fadeIn));
+    await _repository.startVolumeFade(fadeIn);
   }
 
   /// Start the waiting TTS loop

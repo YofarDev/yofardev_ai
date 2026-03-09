@@ -53,7 +53,10 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
     _interruptionSubscription = _interruptionService.interruptionStream.listen((
       _,
     ) {
-      if (state.status == ChatStreamingStatus.streaming) {
+      _streamInterrupted = true;
+      if (state.status == ChatStreamingStatus.streaming ||
+          state.status == ChatStreamingStatus.loading ||
+          state.status == ChatStreamingStatus.typing) {
         emit(
           state.copyWith(
             status: ChatStreamingStatus.interrupted,
@@ -72,6 +75,7 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
   final ChatEntryService _chatEntryService;
   final TtsQueueManager? _ttsQueueManager;
   final ChatTitleCubit? _chatTitleCubit;
+  bool _streamInterrupted = false;
 
   StreamSubscription<void>? _interruptionSubscription;
 
@@ -91,10 +95,12 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
     required Avatar avatar,
     required Chat currentChat,
     required String language,
+    bool functionCallingEnabled = true,
     void Function(Chat updatedChat)? onChatUpdated,
   }) async {
     // Reset interruption state at start of new conversation
     _interruptionService.reset();
+    _streamInterrupted = false;
 
     emit(
       state.copyWith(
@@ -156,67 +162,71 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
         return;
       }
 
-      // 1. Check for function calls first
-      final Either<Exception, List<ChatEntry>> functionCheckResult =
-          await _chatRepository.askYofardevAi(
-            chat,
-            userEntry.body,
-            functionCallingEnabled: true,
-          );
+      if (functionCallingEnabled) {
+        // 1. Check for function calls first
+        final Either<Exception, List<ChatEntry>> functionCheckResult =
+            await _chatRepository.askYofardevAi(
+              chat,
+              userEntry.body,
+              functionCallingEnabled: true,
+            );
 
-      List<ChatEntry> functionEntries = <ChatEntry>[];
+        List<ChatEntry> functionEntries = <ChatEntry>[];
 
-      functionCheckResult.fold(
-        (Exception error) {
-          AppLogger.error(
-            'Function calling check failed',
-            tag: 'ChatStreamingCubit',
-            error: error,
-          );
-          // Continue with streaming even if function calling fails
-        },
-        (List<ChatEntry> entries) {
-          functionEntries = entries;
-          // Add function call entries to chat if any
-          if (entries.isNotEmpty) {
-            final List<ChatEntry> updatedEntries = <ChatEntry>[
-              ...chat.entries,
-              ...entries,
-            ];
-            chat = chat.copyWith(entries: updatedEntries);
-            onChatUpdated?.call(chat);
-          }
-        },
-      );
-
-      // 2. Check if we had function calls - if so, the final response is already included
-      final bool hadFunctionCalls = functionEntries.any(
-        (ChatEntry e) => e.entryType == EntryType.functionCalling,
-      );
-
-      if (hadFunctionCalls) {
-        // Function calls were made, use the final response from the agent
-        final ChatEntry finalResponse = functionEntries.last;
-        final List<ChatEntry> finalEntries = List<ChatEntry>.from(chat.entries);
-        finalEntries[finalEntries.length - 1] = finalResponse;
-        chat = chat.copyWith(entries: finalEntries);
-        onChatUpdated?.call(chat);
-
-        emit(
-          state.copyWith(
-            status: ChatStreamingStatus.success,
-            streamingContent: '',
-          ),
+        functionCheckResult.fold(
+          (Exception error) {
+            AppLogger.error(
+              'Function calling check failed',
+              tag: 'ChatStreamingCubit',
+              error: error,
+            );
+            // Continue with streaming even if function calling fails
+          },
+          (List<ChatEntry> entries) {
+            functionEntries = entries;
+            // Add function call entries to chat if any
+            if (entries.isNotEmpty) {
+              final List<ChatEntry> updatedEntries = <ChatEntry>[
+                ...chat.entries,
+                ...entries,
+              ];
+              chat = chat.copyWith(entries: updatedEntries);
+              onChatUpdated?.call(chat);
+            }
+          },
         );
-        await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 
-        // Generate title if needed
-        final ChatTitleCubit? titleCubit = _chatTitleCubit;
-        if (titleCubit != null && titleCubit.shouldGenerateTitle(chat)) {
-          titleCubit.generateTitle(chat.id, chat);
+        // 2. Check if we had function calls - if so, the final response is already included
+        final bool hadFunctionCalls = functionEntries.any(
+          (ChatEntry e) => e.entryType == EntryType.functionCalling,
+        );
+
+        if (hadFunctionCalls) {
+          // Function calls were made, use the final response from the agent
+          final ChatEntry finalResponse = functionEntries.last;
+          final List<ChatEntry> finalEntries = List<ChatEntry>.from(
+            chat.entries,
+          );
+          finalEntries[finalEntries.length - 1] = finalResponse;
+          chat = chat.copyWith(entries: finalEntries);
+          onChatUpdated?.call(chat);
+
+          emit(
+            state.copyWith(
+              status: ChatStreamingStatus.success,
+              streamingContent: '',
+            ),
+          );
+          await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
+
+          // Generate title if needed
+          final ChatTitleCubit? titleCubit = _chatTitleCubit;
+          if (titleCubit != null && titleCubit.shouldGenerateTitle(chat)) {
+            titleCubit.generateTitle(chat.id, chat);
+          }
+
+          return;
         }
-
-        return;
       }
 
       // 3. No function calls - proceed with streaming
@@ -236,9 +246,25 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
               returnJson: true,
             ),
           )) {
+        if (_streamInterrupted || _interruptionService.isInterrupted) {
+          break;
+        }
+
         sentenceChunk.when(
-          sentence: (String text, int index) {
-            contentBuffer.write(' $text');
+          sentence: (String text, int _) {
+            if (_streamInterrupted || _interruptionService.isInterrupted) {
+              return;
+            }
+
+            final String normalizedText = text.trim();
+            if (normalizedText.isEmpty) {
+              return;
+            }
+
+            if (contentBuffer.isNotEmpty) {
+              contentBuffer.write(' ');
+            }
+            contentBuffer.write(normalizedText);
             sentenceCount++;
 
             final ChatEntry updatedEntry = streamingEntry.copyWith(
@@ -263,7 +289,7 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
             // Enqueue for TTS if manager is available and not in text-only mode
             if (!onlyText) {
               _ttsQueueManager?.enqueue(
-                text: text,
+                text: normalizedText,
                 language: language,
                 voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
               );
@@ -285,6 +311,17 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
             AppLogger.error('Stream error: $msg', tag: 'ChatStreamingCubit');
           },
         );
+      }
+
+      if (_streamInterrupted || _interruptionService.isInterrupted) {
+        emit(
+          state.copyWith(
+            status: ChatStreamingStatus.interrupted,
+            streamingContent: '',
+          ),
+        );
+        await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
+        return;
       }
 
       // Use the full JSON if available, otherwise fall back to the content buffer

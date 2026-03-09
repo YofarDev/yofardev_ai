@@ -14,6 +14,12 @@ abstract class HomeRepository {
   /// Stop any currently playing TTS audio
   Future<void> stopTts();
 
+  /// Start volume fade in or out for avatar animations.
+  ///
+  /// [fadeIn] - true to fade volume up (avatar returning),
+  ///            false to fade volume down (avatar leaving)
+  Future<void> startVolumeFade(bool fadeIn);
+
   /// Dispose resources
   void dispose();
 }

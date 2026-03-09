@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nested/nested.dart';
@@ -44,8 +42,9 @@ class HomeBlocListeners extends StatelessWidget {
           listener: _onTalkingStateChanged,
         ),
         BlocListener<ChatStreamingCubit, ChatStreamingState>(
-          listenWhen: (ChatStreamingState previous, ChatStreamingState current) =>
-              previous.status != current.status,
+          listenWhen:
+              (ChatStreamingState previous, ChatStreamingState current) =>
+                  previous.status != current.status,
           listener: _onChatStreamingStateChanged,
         ),
         BlocListener<ChatMessageCubit, ChatMessageState>(
@@ -81,9 +80,9 @@ class HomeBlocListeners extends StatelessWidget {
     );
   }
 
-  void _onAvatarStateChanged(BuildContext context, AvatarState state) {
+  void _onAvatarStateChanged(BuildContext context, AvatarState state) async {
     if (state.statusAnimation == AvatarStatusAnimation.initial) return;
-    context.read<HomeCubit>().startVolumeFade(
+    await context.read<HomeCubit>().startVolumeFade(
       state.statusAnimation != AvatarStatusAnimation.leaving,
     );
   }
@@ -201,100 +200,94 @@ class HomeBlocListeners extends StatelessWidget {
     // Only process yofardev (AI) entries
     if (lastEntry.entryType != EntryType.yofardev) return;
 
-    try {
-      final dynamic json = jsonDecode(lastEntry.body);
-      if (json is! Map<String, dynamic>) return;
+    // Extract avatar config from JSON safely (handles empty/malformed JSON)
+    AvatarConfig avatarConfig = lastEntry.getAvatarConfig();
 
-      // Extract avatar config from JSON
-      AvatarConfig avatarConfig = AvatarConfig.fromJson(json);
+    // Get current avatar state
+    final AvatarState avatarState = context.read<AvatarCubit>().state;
+    final Avatar currentAvatar = avatarState.avatar;
 
-      // Get current avatar state
-      final AvatarState avatarState = context.read<AvatarCubit>().state;
-      final Avatar currentAvatar = avatarState.avatar;
+    AppLogger.debug(
+      'Current avatar: bg=${currentAvatar.background}, top=${currentAvatar.top}',
+      tag: 'HomeBlocListeners',
+    );
+    AppLogger.debug(
+      'New avatar config: bg=${avatarConfig.background}, top=${avatarConfig.top}',
+      tag: 'HomeBlocListeners',
+    );
 
-      AppLogger.debug(
-        'Current avatar: bg=${currentAvatar.background}, top=${currentAvatar.top}',
-        tag: 'HomeBlocListeners',
+    // Determine what changed and set appropriate animation
+    final bool backgroundChanged =
+        avatarConfig.background != null &&
+        avatarConfig.background != currentAvatar.background;
+
+    final bool clothesChanged =
+        (avatarConfig.top != null && avatarConfig.top != currentAvatar.top) ||
+        (avatarConfig.glasses != null &&
+            avatarConfig.glasses != currentAvatar.glasses) ||
+        (avatarConfig.hat != null && avatarConfig.hat != currentAvatar.hat) ||
+        (avatarConfig.costume != null &&
+            avatarConfig.costume != currentAvatar.costume);
+
+    AppLogger.debug(
+      'backgroundChanged=$backgroundChanged, clothesChanged=$clothesChanged',
+      tag: 'HomeBlocListeners',
+    );
+
+    // Set animation type based on what changed
+    // Ignore LLM's specials value if it's just the default "onScreen"
+    final bool hasDefaultSpecials =
+        avatarConfig.specials == null ||
+        avatarConfig.specials == AvatarSpecials.onScreen;
+
+    if (backgroundChanged && hasDefaultSpecials) {
+      // Background change requires leave and comeback animation
+      avatarConfig = avatarConfig.copyWith(
+        specials: AvatarSpecials.leaveAndComeBack,
       );
       AppLogger.debug(
-        'New avatar config: bg=${avatarConfig.background}, top=${avatarConfig.top}',
+        'Background changed, setting leaveAndComeBack animation',
         tag: 'HomeBlocListeners',
       );
-
-      // Determine what changed and set appropriate animation
-      final bool backgroundChanged = avatarConfig.background != null &&
-          avatarConfig.background != currentAvatar.background;
-
-      final bool clothesChanged = (avatarConfig.top != null &&
-          avatarConfig.top != currentAvatar.top) ||
-          (avatarConfig.glasses != null &&
-              avatarConfig.glasses != currentAvatar.glasses) ||
-          (avatarConfig.hat != null &&
-              avatarConfig.hat != currentAvatar.hat) ||
-          (avatarConfig.costume != null &&
-              avatarConfig.costume != currentAvatar.costume);
-
+    } else if (clothesChanged && hasDefaultSpecials && !backgroundChanged) {
+      // Clothes change requires outOfScreen animation (go down and up)
+      avatarConfig = avatarConfig.copyWith(
+        specials: AvatarSpecials.outOfScreen,
+      );
       AppLogger.debug(
-        'backgroundChanged=$backgroundChanged, clothesChanged=$clothesChanged',
+        'Clothes changed, setting outOfScreen for animation',
+        tag: 'HomeBlocListeners',
+      );
+    }
+
+    // Check if there's anything to update
+    if (avatarConfig.background != null ||
+        avatarConfig.top != null ||
+        avatarConfig.glasses != null ||
+        avatarConfig.hat != null ||
+        avatarConfig.costume != null ||
+        avatarConfig.specials != null) {
+      AppLogger.debug(
+        'Updating avatar with config: '
+        'bg=${avatarConfig.background}, '
+        'top=${avatarConfig.top}, '
+        'glasses=${avatarConfig.glasses}, '
+        'hat=${avatarConfig.hat}, '
+        'costume=${avatarConfig.costume}, '
+        'specials=${avatarConfig.specials}',
         tag: 'HomeBlocListeners',
       );
 
-      // Set animation type based on what changed
-      // Ignore LLM's specials value if it's just the default "onScreen"
-      final bool hasDefaultSpecials =
-          avatarConfig.specials == null ||
-          avatarConfig.specials == AvatarSpecials.onScreen;
+      if (context.mounted) {
+        // Update AvatarCubit for animation and display
+        context.read<AvatarCubit>().onNewAvatarConfig(
+          state.currentChat.id,
+          avatarConfig,
+        );
 
-      if (backgroundChanged && hasDefaultSpecials) {
-        // Background change requires leave and comeback animation
-        avatarConfig = avatarConfig.copyWith(
-          specials: AvatarSpecials.leaveAndComeBack,
-        );
-        AppLogger.debug(
-          'Background changed, setting leaveAndComeBack animation',
-          tag: 'HomeBlocListeners',
-        );
-      } else if (clothesChanged && hasDefaultSpecials && !backgroundChanged) {
-        // Clothes change requires outOfScreen animation (go down and up)
-        avatarConfig = avatarConfig.copyWith(
-          specials: AvatarSpecials.outOfScreen,
-        );
-        AppLogger.debug(
-          'Clothes changed, setting outOfScreen for animation',
-          tag: 'HomeBlocListeners',
-        );
+        // Update ChatsCubit to persist avatar to chat
+        context.read<ChatsCubit>().updateAvatarOpenedChat(avatarConfig);
       }
-
-      // Check if there's anything to update
-      if (avatarConfig.background != null ||
-          avatarConfig.top != null ||
-          avatarConfig.glasses != null ||
-          avatarConfig.hat != null ||
-          avatarConfig.costume != null ||
-          avatarConfig.specials != null) {
-        AppLogger.debug(
-          'Updating avatar from JSON: ${json.keys.join(", ")}',
-          tag: 'HomeBlocListeners',
-        );
-
-        if (context.mounted) {
-          // Update AvatarCubit for animation and display
-          context.read<AvatarCubit>().onNewAvatarConfig(
-            state.currentChat.id,
-            avatarConfig,
-          );
-
-          // Update ChatsCubit to persist avatar to chat
-          context.read<ChatsCubit>().updateAvatarOpenedChat(
-            avatarConfig,
-          );
-        }
-      }
-    } catch (e) {
-      AppLogger.debug(
-        'Failed to parse avatar config from JSON: $e',
-        tag: 'HomeBlocListeners',
-      );
     }
   }
 }

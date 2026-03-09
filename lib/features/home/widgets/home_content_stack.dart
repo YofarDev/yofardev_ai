@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../avatar/presentation/bloc/avatar_cubit.dart';
+import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../avatar/widgets/avatar_widgets.dart';
 import '../../avatar/widgets/background_avatar.dart';
 import '../../avatar/widgets/loading_avatar_widget.dart';
 import '../../avatar/widgets/thinking_animation.dart';
 import '../../chat/presentation/bloc/chats_state.dart';
 import '../../chat/widgets/ai_text_input/ai_text_input.dart';
+import '../../chat/widgets/floating_stop_button.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
 import 'home_buttons.dart';
 
@@ -31,7 +35,7 @@ class HomeContentStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isLoading = talkingState.status == TalkingStatus.loading;
+    final bool showThinking = talkingState is GeneratingState;
     return GestureDetector(
       onTap: onTripleTap,
       behavior: HitTestBehavior.translucent,
@@ -40,11 +44,18 @@ class HomeContentStack extends StatelessWidget {
         alignment: Alignment.topCenter,
         children: <Widget>[
           const BackgroundAvatar(),
-          if (!chatsState.initializing)
-            const AvatarWidgets()
-          else
-            const LoadingAvatarWidget(),
-          if (isLoading) const ThinkingAnimation(),
+          BlocBuilder<AvatarCubit, AvatarState>(
+            builder: (BuildContext context, AvatarState avatarState) {
+              final bool showAvatarLoading =
+                  chatsState.initializing ||
+                  avatarState.status == AvatarStatus.loading ||
+                  avatarState.status == AvatarStatus.initial;
+              return showAvatarLoading
+                  ? const LoadingAvatarWidget()
+                  : const AvatarWidgets();
+            },
+          ),
+          if (showThinking) const ThinkingAnimation(),
           if (!chatsState.initializing)
             const Positioned(
               left: 8,
@@ -52,6 +63,7 @@ class HomeContentStack extends StatelessWidget {
               bottom: 16,
               child: AiTextInput(),
             ),
+          const FloatingStopButton(bottomPadding: 88),
           const HomeButtons(),
         ],
       ),

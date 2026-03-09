@@ -19,6 +19,8 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_state.d
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
 import 'package:yofardev_ai/features/chat/widgets/floating_stop_button.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
+import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 
 class MockChatRepository implements ChatRepository {
   @override
@@ -222,6 +224,8 @@ class MockLlmService extends Mock implements LlmService {}
 class MockStreamProcessorService extends Mock
     implements StreamProcessorService {}
 
+class MockTalkingRepository extends Mock implements TalkingRepository {}
+
 class MockChatEntryService implements ChatEntryService {
   const MockChatEntryService();
 
@@ -245,9 +249,21 @@ void main() {
   group('FloatingStopButton', () {
     late InterruptionService interruptionService;
     late ChatMessageCubit chatCubit;
+    late TalkingCubit talkingCubit;
+    late MockTalkingRepository talkingRepository;
 
     setUp(() {
       interruptionService = InterruptionService();
+      talkingRepository = MockTalkingRepository();
+      when(() => talkingRepository.stop()).thenAnswer((_) async {});
+      when(
+        () => talkingRepository.generateSpeech(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => talkingRepository.playWaitingSentence(any()),
+      ).thenAnswer((_) async {});
+      talkingCubit = TalkingCubit(talkingRepository, interruptionService);
+
       final ChatAudioCubit chatAudioCubit = ChatAudioCubit();
       final ChatStreamingCubit chatStreamingCubit = ChatStreamingCubit(
         chatRepository: MockChatRepository(),
@@ -266,6 +282,7 @@ void main() {
 
     tearDown(() {
       chatCubit.close();
+      talkingCubit.close();
       // Note: chatAudioCubit and chatStreamingCubit are owned by chatCubit
       // and will be closed when chatCubit is closed
       interruptionService.dispose();
@@ -277,8 +294,11 @@ void main() {
       // Arrange
       await tester.pumpWidget(
         MaterialApp(
-          home: BlocProvider<ChatMessageCubit>.value(
-            value: chatCubit,
+          home: MultiBlocProvider(
+            providers: <BlocProvider<dynamic>>[
+              BlocProvider<ChatMessageCubit>.value(value: chatCubit),
+              BlocProvider<TalkingCubit>.value(value: talkingCubit),
+            ],
             child: const Scaffold(body: FloatingStopButton()),
           ),
         ),
@@ -296,8 +316,11 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: BlocProvider<ChatMessageCubit>.value(
-            value: chatCubit,
+          home: MultiBlocProvider(
+            providers: <BlocProvider<dynamic>>[
+              BlocProvider<ChatMessageCubit>.value(value: chatCubit),
+              BlocProvider<TalkingCubit>.value(value: talkingCubit),
+            ],
             child: const Scaffold(body: FloatingStopButton()),
           ),
         ),
@@ -306,6 +329,25 @@ void main() {
       // Assert
       expect(find.byType(FloatingActionButton), findsOneWidget);
       expect(find.byIcon(Icons.stop), findsOneWidget);
+    });
+
+    testWidgets('should show while speaking', (WidgetTester tester) async {
+      talkingCubit.setSpeakingState();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiBlocProvider(
+            providers: <BlocProvider<dynamic>>[
+              BlocProvider<ChatMessageCubit>.value(value: chatCubit),
+              BlocProvider<TalkingCubit>.value(value: talkingCubit),
+            ],
+            child: const Scaffold(body: FloatingStopButton()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
     testWidgets('should call interrupt when tapped', (
@@ -323,8 +365,11 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: BlocProvider<ChatMessageCubit>.value(
-            value: chatCubit,
+          home: MultiBlocProvider(
+            providers: <BlocProvider<dynamic>>[
+              BlocProvider<ChatMessageCubit>.value(value: chatCubit),
+              BlocProvider<TalkingCubit>.value(value: talkingCubit),
+            ],
             child: Scaffold(
               body: RepositoryProvider<InterruptionService>.value(
                 value: interruptionService,

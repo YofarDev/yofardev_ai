@@ -58,9 +58,10 @@ class _AiTextInputState extends State<AiTextInput> {
     if (PlatformUtils.checkPlatform() == 'Web') return;
     final String platform = PlatformUtils.checkPlatform();
 
-    // speech_to_text plugin doesn't support Linux
-    if (platform == 'Linux') {
-      AppLogger.info('Speech-to-text is not supported on Linux');
+    // speech_to_text currently crashes on startup on macOS in this app setup.
+    // Disable STT on desktop platforms that are not stable yet.
+    if (platform == 'Linux' || platform == 'MacOS') {
+      AppLogger.info('Speech-to-text is disabled on $platform');
       return;
     }
 
@@ -117,11 +118,12 @@ class _AiTextInputState extends State<AiTextInput> {
                   ChatEntry? lastUserEntry;
                   final List<ChatEntry> lastFunctionCallEntries = <ChatEntry>[];
                   if (state.currentChat.entries.isNotEmpty) {
-                    if (state.currentChat.entries.last.entryType ==
-                        EntryType.user) {
-                      lastUserEntry = state.currentChat.entries.lastWhere(
-                        (ChatEntry c) => c.entryType == EntryType.user,
-                      );
+                    for (final ChatEntry entry
+                        in state.currentChat.entries.reversed) {
+                      if (entry.entryType == EntryType.user) {
+                        lastUserEntry = entry;
+                        break;
+                      }
                     }
                     if (state.currentChat.entries.last.entryType ==
                         EntryType.functionCalling) {
@@ -152,6 +154,8 @@ class _AiTextInputState extends State<AiTextInput> {
                               currentAvatar: avatarState.avatar,
                               currentLanguage: state.currentLanguage,
                               currentChat: state.currentChat,
+                              functionCallingEnabled:
+                                  state.functionCallingEnabled,
                             ),
                           ),
                           Column(
@@ -164,6 +168,8 @@ class _AiTextInputState extends State<AiTextInput> {
                             ],
                           ),
                           if (talkingState.status != TalkingStatus.initial &&
+                              (talkingState is SpeakingState ||
+                                  talkingState is GeneratingState) &&
                               !widget.onlyText &&
                               lastUserEntry != null)
                             Row(
@@ -198,6 +204,7 @@ class _AiTextInputState extends State<AiTextInput> {
     required Avatar currentAvatar,
     required String currentLanguage,
     required Chat currentChat,
+    required bool functionCallingEnabled,
   }) => Row(
     children: <Widget>[
       if (PlatformUtils.checkPlatform() != 'Web')
@@ -215,6 +222,7 @@ class _AiTextInputState extends State<AiTextInput> {
             currentAvatar: currentAvatar,
             currentLanguage: currentLanguage,
             currentChat: currentChat,
+            functionCallingEnabled: functionCallingEnabled,
           ),
           textCapitalization: TextCapitalization.sentences,
           maxLines: 3,
@@ -231,6 +239,7 @@ class _AiTextInputState extends State<AiTextInput> {
                   currentAvatar: currentAvatar,
                   currentLanguage: currentLanguage,
                   currentChat: currentChat,
+                  functionCallingEnabled: functionCallingEnabled,
                 ),
                 localeId:
                     context.read<ChatsCubit>().state.currentLanguage == 'fr'
@@ -249,8 +258,7 @@ class _AiTextInputState extends State<AiTextInput> {
   void _onImageSelected(File? file) async {
     _inputFocus.unfocus();
     if (file != null) {
-      _controller.text =
-          AppLocalizations.of(context).describeThisImage;
+      _controller.text = AppLocalizations.of(context).describeThisImage;
       setState(() {
         _pickedImage = file;
       });
@@ -266,6 +274,7 @@ class _AiTextInputState extends State<AiTextInput> {
     required Avatar currentAvatar,
     required String currentLanguage,
     required Chat currentChat,
+    required bool functionCallingEnabled,
   }) {
     setState(() {
       _controller.text = result.recognizedWords;
@@ -275,6 +284,7 @@ class _AiTextInputState extends State<AiTextInput> {
       currentAvatar: currentAvatar,
       currentLanguage: currentLanguage,
       currentChat: currentChat,
+      functionCallingEnabled: functionCallingEnabled,
     );
   }
 
@@ -282,6 +292,7 @@ class _AiTextInputState extends State<AiTextInput> {
     required Avatar currentAvatar,
     required String currentLanguage,
     required Chat currentChat,
+    required bool functionCallingEnabled,
   }) async {
     if (!widget.onlyText) {
       FocusScope.of(context).requestFocus(_inputFocus);
@@ -309,6 +320,7 @@ class _AiTextInputState extends State<AiTextInput> {
           context.read<ChatsCubit>().updateChatStreaming(updatedChat);
         }
       },
+      functionCallingEnabled: functionCallingEnabled,
     );
 
     if (!mounted) return;

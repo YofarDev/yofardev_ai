@@ -176,9 +176,9 @@ class _FunctionCallingConfigScreenState
                               icon: '🌤️',
                               isEnabled: state.openWeatherEnabled,
                               onToggle: (bool value) {
-                                context
-                                    .read<SettingsCubit>()
-                                    .toggleOpenWeather(value);
+                                context.read<SettingsCubit>().toggleOpenWeather(
+                                  value,
+                                );
                               },
                               fields: <Widget>[
                                 _buildTextField(
