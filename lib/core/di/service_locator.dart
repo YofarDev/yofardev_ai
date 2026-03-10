@@ -16,6 +16,7 @@ import '../../features/chat/presentation/bloc/chat_title_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chats_cubit.dart';
 import '../../features/chat/domain/services/chat_entry_service.dart';
+import '../../features/chat/domain/services/chat_title_service.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
@@ -197,6 +198,7 @@ Future<void> setupServiceLocator() async {
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
       avatarAnimationService: getIt<AvatarAnimationService>(),
+      chatTitleService: getIt<ChatTitleService>(),
     ),
   );
   getIt.registerFactory<ChatListCubit>(
@@ -210,6 +212,12 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<ChatEntryService>(
     () => ChatEntryService(getIt<SettingsRepository>()),
   );
+  getIt.registerLazySingleton<ChatTitleService>(
+    () => ChatTitleService(
+      chatRepository: getIt<ChatRepository>(),
+      llmService: getIt<LlmService>(),
+    ),
+  );
   getIt.registerFactory<ChatAudioCubit>(() => ChatAudioCubit());
   getIt.registerFactory<ChatStreamingCubit>(
     () => ChatStreamingCubit(
@@ -221,7 +229,7 @@ Future<void> setupServiceLocator() async {
       interruptionService: getIt<InterruptionService>(),
       chatEntryService: getIt<ChatEntryService>(),
       ttsQueueManager: getIt<TtsQueueManager>(),
-      chatTitleCubit: getIt<ChatTitleCubit>(),
+      chatsCubit: getIt<ChatsCubit>(),
     ),
   );
   getIt.registerFactory<ChatMessageCubit>(
