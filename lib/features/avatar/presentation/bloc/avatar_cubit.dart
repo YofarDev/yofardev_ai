@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -81,12 +82,11 @@ class AvatarCubit extends Cubit<AvatarState> {
       Duration(seconds: AppConstants.movingAvatarDuration),
     );
     if (isClosed) return;
-    _updateAvatar(chatId, avatarConfig);
+
+    // Set animation to "coming" FIRST, then update avatar
+    // This ensures background changes while avatar is coming back
     onAnimationStatusChanged(false);
-    _updateAvatar(
-      chatId,
-      avatarConfig.copyWith(specials: AvatarSpecials.onScreen),
-    );
+    _updateAvatar(chatId, avatarConfig);
   }
 
   void onAnimationStatusChanged(bool leaving) {
@@ -127,8 +127,10 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void _goDownAndUp(String chatId, AvatarConfig avatarConfig) async {
     onClothesAnimationChanged(true); // dropping
+    AudioPlayer player = AudioPlayer();
+    player.play(AssetSource("assets/sound_effects/whoosh.wav"));
     await Future<dynamic>.delayed(
-      Duration(seconds: AppConstants.movingAvatarDuration),
+      Duration(seconds: AppConstants.changingAvatarDuration),
     );
     if (isClosed) return;
     _updateAvatar(chatId, avatarConfig);

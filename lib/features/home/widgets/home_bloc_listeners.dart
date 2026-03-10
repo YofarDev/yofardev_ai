@@ -5,6 +5,7 @@ import 'package:nested/nested.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../chat/domain/models/chat_entry.dart';
@@ -110,9 +111,13 @@ class HomeBlocListeners extends StatelessWidget {
       },
       error: (String message, MouthState mouthState) {
         context.read<HomeCubit>().stopWaitingTtsLoop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $message')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).errorWithMessage(message),
+            ),
+          ),
+        );
       },
     );
   }
@@ -178,7 +183,11 @@ class HomeBlocListeners extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Demo mode: ${state.currentScript!.name}'),
+            content: Text(
+              AppLocalizations.of(
+                context,
+              ).demoModeActivated(state.currentScript!.name),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -234,13 +243,9 @@ class HomeBlocListeners extends StatelessWidget {
       tag: 'HomeBlocListeners',
     );
 
-    // Set animation type based on what changed
-    // Ignore LLM's specials value if it's just the default "onScreen"
-    final bool hasDefaultSpecials =
-        avatarConfig.specials == null ||
-        avatarConfig.specials == AvatarSpecials.onScreen;
-
-    if (backgroundChanged && hasDefaultSpecials) {
+    // Set animation type based on what changed (ignoring LLM's specials value)
+    // Animations are now fully controlled client-side, not by the LLM
+    if (backgroundChanged) {
       // Background change requires leave and comeback animation
       avatarConfig = avatarConfig.copyWith(
         specials: AvatarSpecials.leaveAndComeBack,
@@ -249,7 +254,7 @@ class HomeBlocListeners extends StatelessWidget {
         'Background changed, setting leaveAndComeBack animation',
         tag: 'HomeBlocListeners',
       );
-    } else if (clothesChanged && hasDefaultSpecials && !backgroundChanged) {
+    } else if (clothesChanged) {
       // Clothes change requires outOfScreen animation (go down and up)
       avatarConfig = avatarConfig.copyWith(
         specials: AvatarSpecials.outOfScreen,
@@ -260,13 +265,12 @@ class HomeBlocListeners extends StatelessWidget {
       );
     }
 
-    // Check if there's anything to update
+    // Check if there's anything to update (ignore specials from LLM)
     if (avatarConfig.background != null ||
         avatarConfig.top != null ||
         avatarConfig.glasses != null ||
         avatarConfig.hat != null ||
-        avatarConfig.costume != null ||
-        avatarConfig.specials != null) {
+        avatarConfig.costume != null) {
       AppLogger.debug(
         'Updating avatar with config: '
         'bg=${avatarConfig.background}, '

@@ -222,4 +222,81 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get username => 'Votre nom';
+
+  @override
+  String get apiPicker => 'Sélection API';
+
+  @override
+  String get deleteChatTitle => 'Supprimer la conversation ?';
+
+  @override
+  String get deleteChatConfirmation =>
+      'Cette conversation sera définitivement supprimée.';
+
+  @override
+  String get timeJustNow => 'à l\'instant';
+
+  @override
+  String timeMinutesAgo(int count) {
+    return 'il y a $count min';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    return 'il y a $count h';
+  }
+
+  @override
+  String get timeYesterday => 'hier';
+
+  @override
+  String timeDaysAgo(int count) {
+    return 'il y a $count j';
+  }
+
+  @override
+  String demoModeActivated(String scriptName) {
+    return 'Mode démo : $scriptName';
+  }
+
+  @override
+  String get deleteConfig => 'Supprimer la configuration';
+
+  @override
+  String deleteConfigConfirmation(String configLabel) {
+    return 'Êtes-vous sûr de vouloir supprimer \"$configLabel\" ?';
+  }
+
+  @override
+  String get llmProviderSelection => 'Sélection du fournisseur LLM';
+
+  @override
+  String get noLlmConfigurations => 'Aucune configuration LLM trouvée.';
+
+  @override
+  String get addProvider => 'Ajouter un fournisseur';
+
+  @override
+  String get responseInterrupted => 'Réponse interrompue';
+
+  @override
+  String conversationDownloaded(String fileName) {
+    return 'Conversation téléchargée : $fileName';
+  }
+
+  @override
+  String failedToDownload(String error) {
+    return 'Échec du téléchargement : $error';
+  }
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get pageNotFound => 'Page non trouvée';
+
+  @override
+  String errorWithMessage(String message) {
+    return 'Erreur : $message';
+  }
 }

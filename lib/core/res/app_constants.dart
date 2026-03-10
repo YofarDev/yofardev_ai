@@ -10,6 +10,7 @@ class AppConstants {
   static double sunglassesX = 209;
   static double sunglassesY = 425;
   static int movingAvatarDuration = 3;
+  static int changingAvatarDuration = 1;
   static double loadingX = 326;
   static double loadingInvertedY = 900;
   static double robocopLaserY = 444;

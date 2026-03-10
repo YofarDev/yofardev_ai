@@ -12,6 +12,7 @@ import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../presentation/bloc/chats_cubit.dart';
 import '../presentation/bloc/chats_state.dart';
 import '../../../core/utils/logger.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
 
 import '../../../core/widgets/app_icon_button.dart';
 import '../domain/models/chat.dart';
@@ -54,9 +55,11 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
           listener: (BuildContext context, ChatMessageState state) {
             if (state.status == ChatMessageStatus.interrupted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Response interrupted'),
-                  duration: Duration(seconds: 2),
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context).responseInterrupted,
+                  ),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             }
@@ -198,9 +201,14 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Conversation downloaded: $fileName'),
+            content: Text(
+              AppLocalizations.of(context).conversationDownloaded(fileName),
+            ),
             duration: const Duration(seconds: 3),
-            action: SnackBarAction(label: 'OK', onPressed: () {}),
+            action: SnackBarAction(
+              label: AppLocalizations.of(context).ok,
+              onPressed: () {},
+            ),
           ),
         );
       }
@@ -213,7 +221,9 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to download: $e'),
+            content: Text(
+              AppLocalizations.of(context).failedToDownload(e.toString()),
+            ),
             duration: const Duration(seconds: 3),
           ),
         );

@@ -12,6 +12,7 @@ import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/models/llm_config.dart';
 import '../../core/widgets/constrained_width.dart';
+import '../../core/l10n/generated/app_localizations.dart';
 import 'route_constants.dart';
 
 /// Application router configuration using go_router.
@@ -112,7 +113,8 @@ class AppRouter {
         },
       ),
     ],
-    errorBuilder: (BuildContext context, GoRouterState state) =>
-        const Scaffold(body: Center(child: Text('Page not found'))),
+    errorBuilder: (BuildContext context, GoRouterState state) => Scaffold(
+      body: Center(child: Text(AppLocalizations.of(context).pageNotFound)),
+    ),
   );
 }

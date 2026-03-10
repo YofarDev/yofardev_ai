@@ -40,6 +40,7 @@ class ChatListContainer extends StatelessWidget {
 
               final String previewText = _resolvePreview(context, chat);
               final String timeLabel = _relativeTime(
+                context,
                 chat.entries.isNotEmpty ? chat.entries.last.timestamp : null,
               );
 
@@ -73,17 +74,17 @@ class ChatListContainer extends StatelessWidget {
       builder: (BuildContext ctx) => AlertDialog(
         backgroundColor: AppColors.glassSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete chat?'),
-        content: const Text('This conversation will be permanently removed.'),
+        title: Text(AppLocalizations.of(context).deleteChatTitle),
+        content: Text(AppLocalizations.of(context).deleteChatConfirmation),
         actions: <Widget>[
           TextButton(
             onPressed: () => context.pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => context.pop(true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),
@@ -121,14 +122,20 @@ class ChatListContainer extends StatelessWidget {
     return AppLocalizations.of(context).empty;
   }
 
-  String _relativeTime(DateTime? date) {
+  String _relativeTime(BuildContext context, DateTime? date) {
     if (date == null) return '';
     final Duration diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays == 1) return 'yesterday';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return AppLocalizations.of(context).timeJustNow;
+    if (diff.inMinutes < 60) {
+      return AppLocalizations.of(context).timeMinutesAgo(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      return AppLocalizations.of(context).timeHoursAgo(diff.inHours);
+    }
+    if (diff.inDays == 1) return AppLocalizations.of(context).timeYesterday;
+    if (diff.inDays < 7) {
+      return AppLocalizations.of(context).timeDaysAgo(diff.inDays);
+    }
     return '${date.day}/${date.month}/${date.year}';
   }
 }

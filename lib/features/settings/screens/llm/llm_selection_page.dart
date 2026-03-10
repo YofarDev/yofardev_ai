@@ -6,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/res/app_colors.dart';
 import '../../../../core/router/route_constants.dart';
 import '../../../../core/services/llm/llm_service_interface.dart';
+import '../../../../core/l10n/generated/app_localizations.dart';
 
 class LlmSelectionPage extends StatefulWidget {
   const LlmSelectionPage({super.key});
@@ -49,16 +50,18 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        title: const Text('Delete Config'),
-        content: Text('Are you sure you want to delete "${config.label}"?'),
+        title: Text(AppLocalizations.of(context).deleteConfig),
+        content: Text(
+          AppLocalizations.of(context).deleteConfigConfirmation(config.label),
+        ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),
@@ -80,14 +83,16 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('LLM Provider Selection')),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context).llmProviderSelection),
+      ),
       body: _configs.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Text(
-                    'No LLM configurations found.',
+                    AppLocalizations.of(context).noLlmConfigurations,
                     style: TextStyle(
                       color: AppColors.onSurface.withValues(alpha: 0.7),
                     ),
@@ -95,7 +100,7 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _onAdd,
-                    child: const Text('Add Provider'),
+                    child: Text(AppLocalizations.of(context).addProvider),
                   ),
                 ],
               ),

@@ -37,11 +37,6 @@ class PromptDatasource {
     );
     systemPrompt = _replacePlaceholder(
       systemPrompt,
-      r'$specialsList',
-      AvatarSpecials.values,
-    );
-    systemPrompt = _replacePlaceholder(
-      systemPrompt,
       r'$costumeList',
       AvatarCostume.values,
     );

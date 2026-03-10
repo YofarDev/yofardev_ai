@@ -487,6 +487,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your name'**
   String get username;
+
+  /// Button label to open API configuration picker
+  ///
+  /// In en, this message translates to:
+  /// **'API Picker'**
+  String get apiPicker;
+
+  /// Title for delete chat confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat?'**
+  String get deleteChatTitle;
+
+  /// Confirmation message for deleting a chat
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation will be permanently removed.'**
+  String get deleteChatConfirmation;
+
+  /// Time label for very recent messages
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get timeJustNow;
+
+  /// Time label for minutes ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String timeMinutesAgo(int count);
+
+  /// Time label for hours ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String timeHoursAgo(int count);
+
+  /// Time label for yesterday
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get timeYesterday;
+
+  /// Time label for days ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String timeDaysAgo(int count);
+
+  /// Message shown when demo mode is activated
+  ///
+  /// In en, this message translates to:
+  /// **'Demo mode: {scriptName}'**
+  String demoModeActivated(String scriptName);
+
+  /// Title for delete LLM config dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Config'**
+  String get deleteConfig;
+
+  /// Confirmation message for deleting LLM config
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{configLabel}\"?'**
+  String deleteConfigConfirmation(String configLabel);
+
+  /// Page title for LLM provider selection
+  ///
+  /// In en, this message translates to:
+  /// **'LLM Provider Selection'**
+  String get llmProviderSelection;
+
+  /// Message shown when no LLM configs exist
+  ///
+  /// In en, this message translates to:
+  /// **'No LLM configurations found.'**
+  String get noLlmConfigurations;
+
+  /// Button label to add a new LLM provider
+  ///
+  /// In en, this message translates to:
+  /// **'Add Provider'**
+  String get addProvider;
+
+  /// Message shown when user interrupts AI response
+  ///
+  /// In en, this message translates to:
+  /// **'Response interrupted'**
+  String get responseInterrupted;
+
+  /// Success message after downloading conversation
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation downloaded: {fileName}'**
+  String conversationDownloaded(String fileName);
+
+  /// Error message when download fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download: {error}'**
+  String failedToDownload(String error);
+
+  /// Button label for OK
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// Error message for 404 page
+  ///
+  /// In en, this message translates to:
+  /// **'Page not found'**
+  String get pageNotFound;
+
+  /// Error message with details
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String errorWithMessage(String message);
 }
 
 class _AppLocalizationsDelegate

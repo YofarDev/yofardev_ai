@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
 
 /// API key field button widget.
 ///
@@ -37,7 +38,7 @@ class ApiKeyField extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
         ),
-        child: const Text('API Picker'),
+        child: Text(AppLocalizations.of(context).apiPicker),
         onPressed: () {
           context.push(RouteConstants.llmSelection);
         },

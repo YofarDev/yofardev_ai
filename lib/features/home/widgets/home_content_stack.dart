@@ -63,7 +63,7 @@ class HomeContentStack extends StatelessWidget {
               bottom: 16,
               child: AiTextInput(),
             ),
-          const FloatingStopButton(bottomPadding: 88),
+          const FloatingStopButton(bottomPadding: 16),
           const HomeButtons(),
         ],
       ),

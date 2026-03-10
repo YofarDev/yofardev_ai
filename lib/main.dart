@@ -16,6 +16,7 @@ import 'core/router/app_router.dart';
 import 'core/l10n/generated/app_localizations.dart';
 import 'features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'features/chat/presentation/bloc/chats_cubit.dart';
+import 'features/chat/presentation/bloc/chats_state.dart';
 import 'features/chat/presentation/bloc/chat_audio_cubit.dart';
 import 'features/chat/presentation/bloc/chat_list_cubit.dart';
 import 'features/chat/presentation/bloc/chat_message_cubit.dart';
@@ -118,19 +119,23 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => getIt<HomeCubit>()..initialize(),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'Yofardev AI',
-        debugShowCheckedModeBanner: false,
-        locale: Locale(initialLanguage),
-        supportedLocales: const <Locale>[Locale('fr'), Locale('en')],
-        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        theme: AppTheme.lightTheme,
-        routerConfig: AppRouter.router,
+      child: BlocBuilder<ChatsCubit, ChatsState>(
+        builder: (BuildContext context, ChatsState state) {
+          return MaterialApp.router(
+            title: 'Yofardev AI',
+            debugShowCheckedModeBanner: false,
+            locale: Locale(state.currentLanguage),
+            supportedLocales: const <Locale>[Locale('fr'), Locale('en')],
+            localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            theme: AppTheme.lightTheme,
+            routerConfig: AppRouter.router,
+          );
+        },
       ),
     );
   }

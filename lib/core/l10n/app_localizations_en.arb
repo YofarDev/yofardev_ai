@@ -100,5 +100,133 @@
   "ttsVoices": "TTS Voices",
   "useDefaultLlm": "Use default LLM",
   "userMessage": "User’s message",
-  "username": "Your name"
+  "username": "Your name",
+  "apiPicker": "API Picker",
+  "@apiPicker": {
+    "description": "Button label to open API configuration picker"
+  },
+  "deleteChatTitle": "Delete chat?",
+  "@deleteChatTitle": {
+    "description": "Title for delete chat confirmation dialog"
+  },
+  "deleteChatConfirmation": "This conversation will be permanently removed.",
+  "@deleteChatConfirmation": {
+    "description": "Confirmation message for deleting a chat"
+  },
+  "timeJustNow": "just now",
+  "@timeJustNow": {
+    "description": "Time label for very recent messages"
+  },
+  "timeMinutesAgo": "{count}m ago",
+  "@timeMinutesAgo": {
+    "description": "Time label for minutes ago",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "timeHoursAgo": "{count}h ago",
+  "@timeHoursAgo": {
+    "description": "Time label for hours ago",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "timeYesterday": "yesterday",
+  "@timeYesterday": {
+    "description": "Time label for yesterday"
+  },
+  "timeDaysAgo": "{count}d ago",
+  "@timeDaysAgo": {
+    "description": "Time label for days ago",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "demoModeActivated": "Demo mode: {scriptName}",
+  "@demoModeActivated": {
+    "description": "Message shown when demo mode is activated",
+    "placeholders": {
+      "scriptName": {
+        "type": "String",
+        "example": "Test Script"
+      }
+    }
+  },
+  "deleteConfig": "Delete Config",
+  "@deleteConfig": {
+    "description": "Title for delete LLM config dialog"
+  },
+  "deleteConfigConfirmation": "Are you sure you want to delete \"{configLabel}\"?",
+  "@deleteConfigConfirmation": {
+    "description": "Confirmation message for deleting LLM config",
+    "placeholders": {
+      "configLabel": {
+        "type": "String",
+        "example": "My Config"
+      }
+    }
+  },
+  "llmProviderSelection": "LLM Provider Selection",
+  "@llmProviderSelection": {
+    "description": "Page title for LLM provider selection"
+  },
+  "noLlmConfigurations": "No LLM configurations found.",
+  "@noLlmConfigurations": {
+    "description": "Message shown when no LLM configs exist"
+  },
+  "addProvider": "Add Provider",
+  "@addProvider": {
+    "description": "Button label to add a new LLM provider"
+  },
+  "responseInterrupted": "Response interrupted",
+  "@responseInterrupted": {
+    "description": "Message shown when user interrupts AI response"
+  },
+  "conversationDownloaded": "Conversation downloaded: {fileName}",
+  "@conversationDownloaded": {
+    "description": "Success message after downloading conversation",
+    "placeholders": {
+      "fileName": {
+        "type": "String",
+        "example": "chat_20250101_120000.json"
+      }
+    }
+  },
+  "failedToDownload": "Failed to download: {error}",
+  "@failedToDownload": {
+    "description": "Error message when download fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Permission denied"
+      }
+    }
+  },
+  "ok": "OK",
+  "@ok": {
+    "description": "Button label for OK"
+  },
+  "pageNotFound": "Page not found",
+  "@pageNotFound": {
+    "description": "Error message for 404 page"
+  },
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "description": "Error message with details",
+    "placeholders": {
+      "message": {
+        "type": "String",
+        "example": "Something went wrong"
+      }
+    }
+  }
 }

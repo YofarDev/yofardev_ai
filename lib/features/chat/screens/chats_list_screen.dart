@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nested/nested.dart';
 
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../presentation/bloc/chats_cubit.dart';
 import '../presentation/bloc/chats_state.dart';
+import '../presentation/bloc/chat_title_cubit.dart';
+import '../presentation/bloc/chat_title_state.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../widgets/chat_list_container.dart';
@@ -27,16 +30,30 @@ class _ChatsListPageState extends State<ChatsListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ChatsCubit, ChatsState>(
-      listener: (BuildContext context, ChatsState state) {
-        if (state.chatCreated) {
-          // Handle cross-feature coordination when chat is created
-          context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
-          context.read<TalkingCubit>().init();
-          // Refresh the chat list after creation
-          context.read<ChatsCubit>().fetchChatsList();
-        }
-      },
+    return MultiBlocListener(
+      listeners: <SingleChildWidget>[
+        // Listen for chat creation events
+        BlocListener<ChatsCubit, ChatsState>(
+          listener: (BuildContext context, ChatsState state) {
+            if (state.chatCreated) {
+              // Handle cross-feature coordination when chat is created
+              context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
+              context.read<TalkingCubit>().init();
+              // Refresh the chat list after creation
+              context.read<ChatsCubit>().fetchChatsList();
+            }
+          },
+        ),
+        // Listen for title generation completion to refresh the list
+        BlocListener<ChatTitleCubit, ChatTitleState>(
+          listenWhen: (_, ChatTitleState state) =>
+              state.lastGeneratedTitle != null,
+          listener: (_, ChatTitleState state) {
+            // Refresh chat list to show the newly generated title
+            context.read<ChatsCubit>().fetchChatsList();
+          },
+        ),
+      ],
       child: SafeArea(
         child: Scaffold(
           body: BlocBuilder<ChatsCubit, ChatsState>(
