@@ -25,8 +25,6 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
-  // TODO: Use in createNewChat() to trigger avatar animation
-  // ignore: unused_field
   final AvatarAnimationService _avatarAnimationService;
 
   /// Initialize the chat system
@@ -125,7 +123,7 @@ class ChatsCubit extends Cubit<ChatsState> {
           ),
         );
       },
-      (Chat newChat) {
+      (Chat newChat) async {
         // If creating chat during initialization, set the flag
         // This prevents getCurrentChat from overwriting this new chat
         final bool wasInitializing = state.initializing;
@@ -142,6 +140,12 @@ class ChatsCubit extends Cubit<ChatsState> {
           ),
         );
         emit(state.copyWith(chatCreated: false));
+
+        // Trigger animation sequence
+        await _avatarAnimationService.playNewChatSequence(
+          newChat.id,
+          AvatarConfig(background: newChat.avatar.background),
+        );
       },
     );
   }

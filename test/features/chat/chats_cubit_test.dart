@@ -78,6 +78,87 @@ class MockChatRepository implements ChatRepository {
   }
 }
 
+/// Mock repository that allows setting a custom chat for testing
+class MockChatRepositoryWithCustomChat implements ChatRepository {
+  Chat testChat = const Chat(id: 'test-id');
+
+  @override
+  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
+    return Right<Exception, Chat>(testChat);
+  }
+
+  @override
+  Future<Either<Exception, Chat>> getCurrentChat() async {
+    return Right<Exception, Chat>(testChat);
+  }
+
+  @override
+  Future<Either<Exception, Chat?>> getChat(String id) async {
+    return Right<Exception, Chat?>(testChat);
+  }
+
+  @override
+  Future<Either<Exception, void>> updateChat({
+    required String id,
+    required Chat updatedChat,
+  }) async {
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, void>> deleteChat(String id) async {
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, List<Chat>>> getChatsList() async {
+    return const Right<Exception, List<Chat>>(<Chat>[]);
+  }
+
+  @override
+  Future<Either<Exception, void>> setCurrentChatId(String chatId) async {
+    return const Right<Exception, void>(null);
+  }
+
+  @override
+  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
+    Chat chat,
+    String userMessage, {
+    bool functionCallingEnabled = true,
+  }) async {
+    return Right<Exception, List<ChatEntry>>(<ChatEntry>[
+      ChatEntry(
+        id: 'test',
+        entryType: EntryType.yofardev,
+        body: 'response',
+        timestamp: DateTime.now(),
+      ),
+    ]);
+  }
+
+  @override
+  Future<Either<Exception, void>> updateAvatar(
+    String chatId,
+    Avatar avatar,
+  ) async {
+    return const Right<Exception, void>(null);
+  }
+}
+
+/// Mock AvatarAnimationService to track method calls
+class MockAvatarAnimationService implements AvatarAnimationService {
+  bool playNewChatCalled = false;
+  String? chatIdPassed;
+  AvatarConfig? configPassed;
+
+  @override
+  Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {
+    playNewChatCalled = true;
+    chatIdPassed = chatId;
+    configPassed = config;
+  }
+}
+
 class MockSettingsRepository implements SettingsRepository {
   String _language = 'en';
 
@@ -553,7 +634,7 @@ void main() {
 
     group('ChatsStatus enum', () {
       test('should have all required values', () {
-        expect(ChatsStatus.values.length, 8);
+        expect(ChatsStatus.values.length, 9);
         expect(ChatsStatus.values, contains(ChatsStatus.initial));
         expect(ChatsStatus.values, contains(ChatsStatus.loading));
         expect(ChatsStatus.values, contains(ChatsStatus.updating));
@@ -562,6 +643,7 @@ void main() {
         expect(ChatsStatus.values, contains(ChatsStatus.success));
         expect(ChatsStatus.values, contains(ChatsStatus.streaming));
         expect(ChatsStatus.values, contains(ChatsStatus.error));
+        expect(ChatsStatus.values, contains(ChatsStatus.creatingChat));
       });
     });
   });
@@ -793,5 +875,60 @@ void main() {
       expect(EntryType.values, contains(EntryType.yofardev));
       expect(EntryType.values, contains(EntryType.functionCalling));
     });
+  });
+
+  group('createNewChat with animation', () {
+    late MockChatRepositoryWithCustomChat mockChatRepository;
+    late MockAvatarAnimationService mockAvatarAnimationService;
+    late ChatsCubit cubit;
+
+    setUp(() {
+      mockAvatarAnimationService = MockAvatarAnimationService();
+      mockChatRepository = MockChatRepositoryWithCustomChat();
+      cubit = ChatsCubit(
+        chatRepository: mockChatRepository,
+        settingsRepository: MockSettingsRepository(),
+        avatarAnimationService: mockAvatarAnimationService,
+      );
+    });
+
+    tearDown(() {
+      cubit.close();
+    });
+
+    test('should trigger animation sequence after chat creation', () async {
+      // Arrange
+      const Chat testChat = Chat(id: 'test-chat-123');
+      mockChatRepository.testChat = testChat;
+
+      // Act
+      await cubit.createNewChat();
+
+      // Assert
+      expect(mockAvatarAnimationService.playNewChatCalled, isTrue);
+      expect(mockAvatarAnimationService.chatIdPassed, testChat.id);
+    });
+
+    test(
+      'should pass correct background config to animation service',
+      () async {
+        // Arrange
+        const Chat testChat = Chat(
+          id: 'test-chat-456',
+          avatar: Avatar(background: AvatarBackgrounds.beach),
+        );
+        mockChatRepository.testChat = testChat;
+
+        // Act
+        await cubit.createNewChat();
+
+        // Assert
+        expect(mockAvatarAnimationService.playNewChatCalled, isTrue);
+        expect(
+          mockAvatarAnimationService.configPassed?.background,
+          AvatarBackgrounds.beach,
+        );
+      },
+    );
   });
 }
