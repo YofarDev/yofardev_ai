@@ -18,7 +18,7 @@ import 'features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'features/chat/presentation/bloc/chats_cubit.dart';
 import 'features/chat/presentation/bloc/chats_state.dart';
 import 'features/chat/presentation/bloc/chat_audio_cubit.dart';
-import 'features/chat/presentation/bloc/chat_list_cubit.dart';
+// import 'features/chat/presentation/bloc/chat_list_cubit.dart';
 import 'features/chat/presentation/bloc/chat_message_cubit.dart';
 import 'features/chat/presentation/bloc/chat_streaming_cubit.dart';
 import 'features/chat/presentation/bloc/chat_title_cubit.dart';
@@ -86,9 +86,9 @@ class MyApp extends StatelessWidget {
         BlocProvider<ChatsCubit>(
           create: (BuildContext context) => getIt<ChatsCubit>()..init(),
         ),
-        BlocProvider<ChatListCubit>(
-          create: (BuildContext context) => getIt<ChatListCubit>()..init(),
-        ),
+        // BlocProvider<ChatListCubit>(
+        //   create: (BuildContext context) => getIt<ChatListCubit>()..init(),
+        // ),
         BlocProvider<ChatStreamingCubit>(
           create: (BuildContext context) => getIt<ChatStreamingCubit>(),
         ),
