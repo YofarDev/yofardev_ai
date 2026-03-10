@@ -184,9 +184,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final AvatarBackgrounds initialBackground =
-          avatarCubit.state.avatar.background;
-
       // Act - Create new chat
       await tester.tap(find.text('New Chat'));
       await tester.pump();

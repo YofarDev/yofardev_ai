@@ -30,7 +30,7 @@ class SettingsAppBar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
-            tooltip: 'Back',
+            tooltip: AppLocalizations.of(context).commonBack,
             color: AppColors.onSurface.withValues(alpha: 0.7),
           ),
           Expanded(
@@ -58,7 +58,7 @@ class SettingsAppBar extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.save),
               onPressed: onSave,
-              tooltip: 'Save',
+              tooltip: AppLocalizations.of(context).commonSave,
             ),
           ),
         ],

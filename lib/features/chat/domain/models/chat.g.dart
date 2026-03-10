@@ -18,7 +18,7 @@ _Chat _$ChatFromJson(Map<String, dynamic> json) => _Chat(
       : const AvatarJsonConverter().fromJson(
           json['avatar'] as Map<String, dynamic>,
         ),
-  language: json['language'] as String? ?? 'en',
+  language: json['language'] as String? ?? 'fr',
   systemPrompt: json['systemPrompt'] as String? ?? '',
   persona:
       $enumDecodeNullable(_$ChatPersonaEnumMap, json['persona']) ??

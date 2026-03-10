@@ -84,5 +84,8 @@
   "failedToDownload": "Échec du téléchargement : {error}",
   "ok": "OK",
   "pageNotFound": "Page non trouvée",
-  "errorWithMessage": "Erreur : {message}"
+  "errorWithMessage": "Erreur : {message}",
+  "aiAssistantAvatar": "Avatar de l'assistant IA",
+  "failedToLoadLlmConfigs": "Échec du chargement des configurations LLM",
+  "noLlmConfigurationSelected": "Aucune configuration LLM sélectionnée"
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../presentation/bloc/settings_cubit.dart';
@@ -71,7 +72,7 @@ class _TaskLlmConfigPageState extends State<TaskLlmConfigPage>
                         children: <Widget>[
                           const SizedBox(height: 8),
                           TaskSectionTitle(
-                            title: 'Task Configuration',
+                            title: AppLocalizations.of(context).taskLlmConfig,
                             animation: _fadeAnimation,
                           ),
                           const SizedBox(height: 20),
@@ -88,9 +89,12 @@ class _TaskLlmConfigPageState extends State<TaskLlmConfigPage>
                                   child: Column(
                                     children: <Widget>[
                                       TaskDropdown(
-                                        label: 'Assistant',
-                                        description:
-                                            'LLM used for main chat responses',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        ).assistantTask,
+                                        description: AppLocalizations.of(
+                                          context,
+                                        ).taskLlmDescription,
                                         icon: Icons.chat_bubble_outline,
                                         currentId: taskConfig.assistantLlmId,
                                         availableConfigs: availableConfigs,
@@ -105,9 +109,12 @@ class _TaskLlmConfigPageState extends State<TaskLlmConfigPage>
                                       ),
                                       const SizedBox(height: 16),
                                       TaskDropdown(
-                                        label: 'Title Generation',
-                                        description:
-                                            'LLM used to generate chat titles',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        ).titleTask,
+                                        description: AppLocalizations.of(
+                                          context,
+                                        ).titleLlmDescription,
                                         icon: Icons.title_outlined,
                                         currentId:
                                             taskConfig.titleGenerationLlmId,
@@ -123,9 +130,12 @@ class _TaskLlmConfigPageState extends State<TaskLlmConfigPage>
                                       ),
                                       const SizedBox(height: 16),
                                       TaskDropdown(
-                                        label: 'Function Calling',
-                                        description:
-                                            'LLM used for tool/function detection',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        ).functionCallingTask,
+                                        description: AppLocalizations.of(
+                                          context,
+                                        ).functionCallingLlmDescription,
                                         icon: Icons.extension_outlined,
                                         currentId:
                                             taskConfig.functionCallingLlmId,

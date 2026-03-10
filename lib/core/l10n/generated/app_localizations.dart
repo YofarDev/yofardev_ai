@@ -607,6 +607,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error: {message}'**
   String errorWithMessage(String message);
+
+  /// Accessibility label for AI avatar
+  ///
+  /// In en, this message translates to:
+  /// **'AI assistant avatar'**
+  String get aiAssistantAvatar;
+
+  /// Error message when LLM configs fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load available LLM configs'**
+  String get failedToLoadLlmConfigs;
+
+  /// Error message when no LLM config is selected
+  ///
+  /// In en, this message translates to:
+  /// **'No LLM configuration selected'**
+  String get noLlmConfigurationSelected;
 }
 
 class _AppLocalizationsDelegate

@@ -59,7 +59,7 @@ class ChatsListAppBar extends StatelessWidget {
               onPressed: () {
                 context.read<ChatsCubit>().createNewChat();
               },
-              tooltip: 'Create new chat',
+              tooltip: AppLocalizations.of(context).newChat,
             ),
           ),
         ],

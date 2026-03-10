@@ -228,5 +228,17 @@
         "example": "Something went wrong"
       }
     }
+  },
+  "aiAssistantAvatar": "AI assistant avatar",
+  "@aiAssistantAvatar": {
+    "description": "Accessibility label for AI avatar"
+  },
+  "failedToLoadLlmConfigs": "Failed to load available LLM configs",
+  "@failedToLoadLlmConfigs": {
+    "description": "Error message when LLM configs fail to load"
+  },
+  "noLlmConfigurationSelected": "No LLM configuration selected",
+  "@noLlmConfigurationSelected": {
+    "description": "Error message when no LLM config is selected"
   }
 }

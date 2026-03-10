@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/res/app_colors.dart';
 
 /// Modern glassmorphic chat message bubble with gradient accents
@@ -49,7 +50,7 @@ class ModernChatBubble extends StatelessWidget {
             if (!isUser && showAvatar && avatar != null) ...<Widget>[
               // Fix #10: Add semanticsLabel for accessibility
               Semantics(
-                label: 'AI assistant avatar',
+                label: AppLocalizations.of(context).aiAssistantAvatar,
                 button: onAvatarTap != null,
                 child: GestureDetector(
                   onTap: onAvatarTap,

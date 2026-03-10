@@ -15,8 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Chat {
 
- String get id; List<ChatEntry> get entries;@AvatarJsonConverter() Avatar get avatar; String get language; String get systemPrompt; ChatPersona get persona;// NEW FIELDS:
- String get title; bool get titleGenerated;
+ String get id; List<ChatEntry> get entries;@AvatarJsonConverter() Avatar get avatar; String get language; String get systemPrompt; ChatPersona get persona; String get title; bool get titleGenerated;
 /// Create a copy of Chat
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -220,7 +219,7 @@ return $default(_that.id,_that.entries,_that.avatar,_that.language,_that.systemP
 @JsonSerializable()
 
 class _Chat extends Chat {
-  const _Chat({this.id = '', final  List<ChatEntry> entries = const <ChatEntry>[], @AvatarJsonConverter() this.avatar = const Avatar(), this.language = 'en', this.systemPrompt = '', this.persona = ChatPersona.normal, this.title = '', this.titleGenerated = false}): _entries = entries,super._();
+  const _Chat({this.id = '', final  List<ChatEntry> entries = const <ChatEntry>[], @AvatarJsonConverter() this.avatar = const Avatar(), this.language = 'fr', this.systemPrompt = '', this.persona = ChatPersona.normal, this.title = '', this.titleGenerated = false}): _entries = entries,super._();
   factory _Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);
 
 @override@JsonKey() final  String id;
@@ -235,7 +234,6 @@ class _Chat extends Chat {
 @override@JsonKey() final  String language;
 @override@JsonKey() final  String systemPrompt;
 @override@JsonKey() final  ChatPersona persona;
-// NEW FIELDS:
 @override@JsonKey() final  String title;
 @override@JsonKey() final  bool titleGenerated;
 

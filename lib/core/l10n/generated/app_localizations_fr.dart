@@ -299,4 +299,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String errorWithMessage(String message) {
     return 'Erreur : $message';
   }
+
+  @override
+  String get aiAssistantAvatar => 'Avatar de l\'assistant IA';
+
+  @override
+  String get failedToLoadLlmConfigs =>
+      'Échec du chargement des configurations LLM';
+
+  @override
+  String get noLlmConfigurationSelected =>
+      'Aucune configuration LLM sélectionnée';
 }

@@ -11,6 +11,7 @@ import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../widgets/chat_list_container.dart';
 import '../widgets/chat_list_empty_state.dart';
+import '../widgets/chat_list_shimmer_loading.dart';
 import '../widgets/chats_list_app_bar.dart';
 
 class ChatsListPage extends StatefulWidget {
@@ -71,9 +72,7 @@ class _ChatsListPageState extends State<ChatsListPage> {
                   children: <Widget>[
                     const ChatsListAppBar(),
                     if (isLoading)
-                      const Expanded(
-                        child: Center(child: CircularProgressIndicator()),
-                      )
+                      const ChatListShimmerLoading()
                     else if (state.chatsList.isEmpty)
                       const ChatListEmptyState()
                     else

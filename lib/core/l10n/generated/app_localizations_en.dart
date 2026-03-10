@@ -294,4 +294,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorWithMessage(String message) {
     return 'Error: $message';
   }
+
+  @override
+  String get aiAssistantAvatar => 'AI assistant avatar';
+
+  @override
+  String get failedToLoadLlmConfigs => 'Failed to load available LLM configs';
+
+  @override
+  String get noLlmConfigurationSelected => 'No LLM configuration selected';
 }
