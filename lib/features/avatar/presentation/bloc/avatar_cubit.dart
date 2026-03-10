@@ -205,4 +205,8 @@ class AvatarCubit extends Cubit<AvatarState> {
   void onBackgroundTransitionChanged(BackgroundTransition transition) {
     _emitIfOpen(state.copyWith(backgroundTransition: transition));
   }
+
+  void updateAvatarConfig(String chatId, AvatarConfig avatarConfig) {
+    _updateAvatar(chatId, avatarConfig);
+  }
 }
