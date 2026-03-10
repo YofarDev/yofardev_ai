@@ -258,5 +258,37 @@ void main() {
         expect(config1, isNot(equals(config3)));
       });
     });
+
+    group('onBackgroundTransitionChanged', () {
+      test('should update backgroundTransition state', () {
+        // Arrange
+        const BackgroundTransition expectedTransition =
+            BackgroundTransition.sliding;
+
+        // Act
+        avatarCubit.onBackgroundTransitionChanged(expectedTransition);
+
+        // Assert
+        expect(avatarCubit.state.backgroundTransition, expectedTransition);
+      });
+
+      test('should emit state with new backgroundTransition', () {
+        // Arrange
+        const BackgroundTransition expectedTransition =
+            BackgroundTransition.sliding;
+
+        // Act & Assert
+        expectLater(
+          avatarCubit.stream,
+          emits(
+            predicate<AvatarState>(
+              (AvatarState state) =>
+                  state.backgroundTransition == expectedTransition,
+            ),
+          ),
+        );
+        avatarCubit.onBackgroundTransitionChanged(expectedTransition);
+      });
+    });
   });
 }

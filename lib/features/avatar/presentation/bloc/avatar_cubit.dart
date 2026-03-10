@@ -201,4 +201,8 @@ class AvatarCubit extends Cubit<AvatarState> {
         : AvatarGlasses.glasses;
     emit(state.copyWith(avatar: state.avatar.copyWith(glasses: glasses)));
   }
+
+  void onBackgroundTransitionChanged(BackgroundTransition transition) {
+    _emitIfOpen(state.copyWith(backgroundTransition: transition));
+  }
 }
