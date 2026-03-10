@@ -16,7 +16,6 @@ import '../../features/chat/presentation/bloc/chat_title_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chats_cubit.dart';
 import '../../features/chat/domain/services/chat_entry_service.dart';
-import '../../features/chat/domain/services/chat_title_service.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
@@ -42,7 +41,6 @@ import '../repositories/locale_repository_impl.dart';
 import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
-import '../services/audio/tts_playback_service.dart';
 import '../services/audio/tts_service.dart';
 import '../services/agent/yofardev_agent.dart';
 import '../services/avatar_animation_service.dart';
@@ -178,43 +176,20 @@ Future<void> setupServiceLocator() async {
     () =>
         TalkingCubit(getIt<TalkingRepository>(), getIt<InterruptionService>()),
   );
-  // TtsPlaybackService coordinates TTS playback with talking state
-  // Removes direct cubit-to-cubit dependency between ChatTtsCubit and TalkingCubit
-  getIt.registerLazySingleton<TtsPlaybackService>(
-    () => TtsPlaybackService(talkingCubit: getIt<TalkingCubit>()),
-  );
-  // ChatTitleService handles title generation logic, removing cubit-to-cubit deps
-  getIt.registerLazySingleton<ChatTitleService>(
-    () => ChatTitleService(
-      chatRepository: getIt<ChatRepository>(),
-      llmService: getIt<LlmService>(),
-    ),
-  );
   getIt.registerLazySingleton<ChatTitleCubit>(
     () => ChatTitleCubit(
-      chatTitleService: getIt<ChatTitleService>(),
+      chatRepository: getIt<ChatRepository>(),
+      llmService: getIt<LlmService>(),
     ),
   );
   // Chat cubits - split by responsibility
-  // ChatTitleService handles title generation logic, removing cubit-to-cubit deps
-  getIt.registerLazySingleton<ChatTitleService>(
-    () => ChatTitleService(
-      chatRepository: getIt<ChatRepository>(),
-      llmService: getIt<LlmService>(),
-    ),
-  );
-  getIt.registerLazySingleton<ChatTitleCubit>(
-    () => ChatTitleCubit(
-      chatTitleService: getIt<ChatTitleService>(),
-    ),
-  );
   getIt.registerFactory<ChatTtsCubit>(
     () => ChatTtsCubit(
       ttsQueueManager: getIt<TtsQueueManager>(),
       audioAmplitudeService: getIt<AudioAmplitudeService>(),
       audioPlayerService: getIt<AudioPlayerService>(),
       interruptionService: getIt<InterruptionService>(),
-      ttsPlaybackService: getIt<TtsPlaybackService>(),
+      talkingCubit: getIt<TalkingCubit>(),
     ),
   );
   getIt.registerFactory<ChatsCubit>(
@@ -222,7 +197,6 @@ Future<void> setupServiceLocator() async {
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
       avatarAnimationService: getIt<AvatarAnimationService>(),
-      chatTitleService: getIt<ChatTitleService>(),
     ),
   );
   getIt.registerFactory<ChatListCubit>(
@@ -246,8 +220,8 @@ Future<void> setupServiceLocator() async {
       promptDatasource: getIt<PromptDatasource>(),
       interruptionService: getIt<InterruptionService>(),
       chatEntryService: getIt<ChatEntryService>(),
-      chatTitleService: getIt<ChatTitleService>(),
       ttsQueueManager: getIt<TtsQueueManager>(),
+      chatTitleCubit: getIt<ChatTitleCubit>(),
     ),
   );
   getIt.registerFactory<ChatMessageCubit>(

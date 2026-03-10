@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
@@ -12,7 +11,6 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
-import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 
@@ -160,8 +158,6 @@ class MockAvatarAnimationService implements AvatarAnimationService {
     configPassed = config;
   }
 }
-
-class MockChatTitleService extends Mock implements ChatTitleService {}
 
 class MockSettingsRepository implements SettingsRepository {
   String _language = 'en';
@@ -334,7 +330,6 @@ void main() {
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
         avatarAnimationService: mockAnimationService,
-        chatTitleService: MockChatTitleService(),
       );
     });
 
@@ -894,7 +889,6 @@ void main() {
         chatRepository: mockChatRepository,
         settingsRepository: MockSettingsRepository(),
         avatarAnimationService: mockAvatarAnimationService,
-        chatTitleService: MockChatTitleService(),
       );
     });
 
