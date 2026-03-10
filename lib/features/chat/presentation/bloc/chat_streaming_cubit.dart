@@ -20,7 +20,7 @@ import '../../domain/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/services/chat_entry_service.dart';
 import 'chat_streaming_state.dart';
-import 'chat_title_cubit.dart';
+import 'chats_cubit.dart';
 
 /// Cubit responsible for coordinating LLM message streaming
 ///
@@ -38,8 +38,8 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
     required PromptDatasource promptDatasource,
     required InterruptionService interruptionService,
     required ChatEntryService chatEntryService,
+    required ChatsCubit chatsCubit,
     TtsQueueManager? ttsQueueManager,
-    ChatTitleCubit? chatTitleCubit,
   }) : _chatRepository = chatRepository,
        _llmService = llmService,
        _streamProcessor = streamProcessor,
@@ -47,7 +47,7 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
        _interruptionService = interruptionService,
        _chatEntryService = chatEntryService,
        _ttsQueueManager = ttsQueueManager,
-       _chatTitleCubit = chatTitleCubit,
+       _chatsCubit = chatsCubit,
        super(ChatStreamingState.initial()) {
     // Listen to interruption stream
     _interruptionSubscription = _interruptionService.interruptionStream.listen((
@@ -74,7 +74,7 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
   final InterruptionService _interruptionService;
   final ChatEntryService _chatEntryService;
   final TtsQueueManager? _ttsQueueManager;
-  final ChatTitleCubit? _chatTitleCubit;
+  final ChatsCubit _chatsCubit;
   bool _streamInterrupted = false;
 
   StreamSubscription<void>? _interruptionSubscription;
@@ -220,9 +220,9 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
           await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 
           // Generate title if needed
-          final ChatTitleCubit? titleCubit = _chatTitleCubit;
-          if (titleCubit != null && titleCubit.shouldGenerateTitle(chat)) {
-            titleCubit.generateTitle(chat.id, chat);
+          if (_chatsCubit.shouldGenerateTitle(chat)) {
+            // Fire and forget - don't await
+            _chatsCubit.generateTitle(chat.id, chat);
           }
 
           return;
@@ -343,9 +343,9 @@ class ChatStreamingCubit extends Cubit<ChatStreamingState> {
 
       await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 
-      final ChatTitleCubit? titleCubit = _chatTitleCubit;
-      if (titleCubit != null && titleCubit.shouldGenerateTitle(chat)) {
-        titleCubit.generateTitle(chat.id, chat);
+      if (_chatsCubit.shouldGenerateTitle(chat)) {
+        // Fire and forget - don't await
+        _chatsCubit.generateTitle(chat.id, chat);
       }
 
       return;
