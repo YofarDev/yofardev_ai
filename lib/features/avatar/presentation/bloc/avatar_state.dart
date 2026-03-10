@@ -15,6 +15,8 @@ enum AvatarStatusAnimation {
   rising, // Vertical slide up (return after clothes change)
 }
 
+enum BackgroundTransition { none, sliding }
+
 @freezed
 sealed class AvatarState with _$AvatarState {
   const AvatarState._();
@@ -29,5 +31,7 @@ sealed class AvatarState with _$AvatarState {
     required Avatar avatar,
     required AvatarConfig avatarConfig,
     @Default(AvatarSpecials.onScreen) AvatarSpecials previousSpecialsState,
+    @Default(BackgroundTransition.none)
+    BackgroundTransition backgroundTransition,
   }) = _AvatarState;
 }
