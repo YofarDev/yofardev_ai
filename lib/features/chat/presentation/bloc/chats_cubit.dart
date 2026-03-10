@@ -36,6 +36,7 @@ class ChatsCubit extends Cubit<ChatsState> {
   Future<void> init() async {
     await getCurrentChat();
     await _loadSettings();
+    await fetchChatsList();
     emit(state.copyWith(initializing: false));
   }
 
@@ -340,4 +341,13 @@ class ChatsCubit extends Cubit<ChatsState> {
   String get currentLanguage => state.currentLanguage;
   bool get soundEffectsEnabled => state.soundEffectsEnabled;
   bool get functionCallingEnabled => state.functionCallingEnabled;
+
+  /// Get a chat by its ID from the chats list
+  Chat? getChatById(String id) {
+    try {
+      return state.chatsList.firstWhere((Chat c) => c.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 }
