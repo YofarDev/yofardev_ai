@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,16 +7,17 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
 
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
+import 'package:yofardev_ai/core/res/app_constants.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
-import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
-import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 
 // Mock repositories
 class MockChatRepository extends Mock implements ChatRepository {}
@@ -103,32 +106,35 @@ void main() {
       avatarCubit.close();
     });
 
-    testWidgets('complete animation sequence on new chat', (
-      WidgetTester tester,
-    ) async {
-      // Arrange - Build app with cubits
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiBlocProvider(
-            providers: <SingleChildWidget>[
-              BlocProvider<ChatsCubit>.value(value: chatsCubit),
-              BlocProvider<AvatarCubit>.value(value: avatarCubit),
-            ],
-            child: Builder(
-              builder: (BuildContext context) => Scaffold(
-                body: Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.read<ChatsCubit>().createNewChat();
-                    },
-                    child: const Text('New Chat'),
-                  ),
+    /// Helper method to build the test widget
+    Widget buildTestWidget() {
+      return MaterialApp(
+        home: MultiBlocProvider(
+          providers: <SingleChildWidget>[
+            BlocProvider<ChatsCubit>.value(value: chatsCubit),
+            BlocProvider<AvatarCubit>.value(value: avatarCubit),
+          ],
+          child: Builder(
+            builder: (BuildContext context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<ChatsCubit>().createNewChat();
+                  },
+                  child: const Text('New Chat'),
                 ),
               ),
             ),
           ),
         ),
       );
+    }
+
+    testWidgets('complete animation sequence on new chat', (
+      WidgetTester tester,
+    ) async {
+      // Arrange - Build app with cubits
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       // Verify initial state
@@ -141,12 +147,18 @@ void main() {
       // Assert - Initial state: avatar dropping
       expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.dropping);
 
-      // Wait for drop to complete (based on AppConstants.changingAvatarDuration)
-      await tester.pump(const Duration(seconds: 1));
+      // Wait for drop to complete (using AppConstants)
+      await tester.pump(Duration(seconds: AppConstants.changingAvatarDuration));
 
       // Avatar should now be rising (after background slide)
       await tester.pump(const Duration(milliseconds: 600));
       expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.rising);
+
+      // Assert - Background transition should be sliding during animation
+      expect(
+        avatarCubit.state.backgroundTransition,
+        BackgroundTransition.sliding,
+      );
 
       // Wait for rise to complete
       await tester.pumpAndSettle();
@@ -160,28 +172,7 @@ void main() {
       WidgetTester tester,
     ) async {
       // Arrange - Build app with cubits
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiBlocProvider(
-            providers: <SingleChildWidget>[
-              BlocProvider<ChatsCubit>.value(value: chatsCubit),
-              BlocProvider<AvatarCubit>.value(value: avatarCubit),
-            ],
-            child: Builder(
-              builder: (BuildContext context) => Scaffold(
-                body: Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.read<ChatsCubit>().createNewChat();
-                    },
-                    child: const Text('New Chat'),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       // Act - Create new chat
@@ -191,8 +182,8 @@ void main() {
       // Wait for drop animation to start
       expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.dropping);
 
-      // Wait for drop to complete and background slide to start
-      await tester.pump(const Duration(seconds: 1));
+      // Wait for drop to complete and background slide to start (using AppConstants)
+      await tester.pump(Duration(seconds: AppConstants.changingAvatarDuration));
 
       // Assert - Background transition should be sliding
       expect(
@@ -217,17 +208,20 @@ void main() {
       final List<BackgroundTransition> backgroundTransitions =
           <BackgroundTransition>[];
 
-      // Subscribe to state changes
-      avatarCubit.stream.listen((AvatarState state) {
-        animationStates.add(state.statusAnimation);
-        backgroundTransitions.add(state.backgroundTransition);
-      });
+      // Subscribe to state changes and store subscription for cleanup
+      final StreamSubscription<AvatarState> subscription = avatarCubit.stream
+          .listen((AvatarState state) {
+            animationStates.add(state.statusAnimation);
+            backgroundTransitions.add(state.backgroundTransition);
+          });
 
       // Act - Create new chat
       await chatsCubit.createNewChat();
 
-      // Wait for animations to complete
-      await Future<void>.delayed(const Duration(seconds: 3));
+      // Wait for animations to complete (using AppConstants + buffer)
+      await Future<void>.delayed(
+        Duration(seconds: AppConstants.changingAvatarDuration + 2),
+      );
 
       // Assert - Verify animation sequence
       expect(animationStates, contains(AvatarStatusAnimation.dropping));
@@ -239,6 +233,9 @@ void main() {
 
       // Final state should be success
       expect(chatsCubit.state.status, ChatsStatus.success);
+
+      // Clean up subscription
+      await subscription.cancel();
     });
 
     test('avatar cubit receives correct animation states', () async {
@@ -248,14 +245,27 @@ void main() {
       // Immediately after creation, avatar should be dropping
       expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.dropping);
 
-      // Wait for drop duration + background slide
-      await Future<void>.delayed(const Duration(milliseconds: 1600));
+      // Wait for drop duration + background slide (using AppConstants)
+      await Future<void>.delayed(
+        Duration(
+          milliseconds: AppConstants.changingAvatarDuration * 1000 + 600,
+        ),
+      );
 
       // Avatar should now be rising
       expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.rising);
 
-      // Wait for rise to complete
-      await Future<void>.delayed(const Duration(seconds: 1));
+      // Wait for rise to complete (using AppConstants)
+      await Future<void>.delayed(
+        Duration(seconds: AppConstants.changingAvatarDuration),
+      );
+
+      // Assert - Complete state sequence verified
+      // Final state should be initial again after animation completes
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.initial);
+
+      // Background should return to none after animation
+      expect(avatarCubit.state.backgroundTransition, BackgroundTransition.none);
 
       // Verify chat was created successfully
       expect(chatsCubit.state.status, ChatsStatus.success);
