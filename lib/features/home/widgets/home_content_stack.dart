@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../avatar/widgets/avatar_widgets.dart';
-import '../../avatar/widgets/background_avatar.dart';
+import '../../avatar/widgets/animated_background_avatar.dart';
 import '../../avatar/widgets/loading_avatar_widget.dart';
 import '../../avatar/widgets/thinking_animation.dart';
 import '../../chat/presentation/bloc/chats_state.dart';
@@ -43,7 +43,7 @@ class HomeContentStack extends StatelessWidget {
         fit: StackFit.expand,
         alignment: Alignment.topCenter,
         children: <Widget>[
-          const BackgroundAvatar(),
+          const AnimatedBackgroundAvatar(),
           BlocBuilder<AvatarCubit, AvatarState>(
             builder: (BuildContext context, AvatarState avatarState) {
               final bool showAvatarLoading =
