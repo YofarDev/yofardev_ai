@@ -14,7 +14,7 @@ import 'chats_state.dart';
 /// Main coordinator cubit for chat operations
 ///
 /// This cubit provides a simplified API that coordinates between
-/// the specialized cubits (ChatListCubit, ChatMessageCubit, ChatTitleCubit).
+/// the specialized cubits (ChatMessageCubit, ChatTitleCubit).
 class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit({
     required ChatRepository chatRepository,
