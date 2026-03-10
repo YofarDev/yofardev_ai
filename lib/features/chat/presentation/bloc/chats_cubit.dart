@@ -7,6 +7,8 @@ import '../../../../core/models/avatar_config.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/repositories/chat_repository.dart';
+import '../../domain/services/chat_title_service.dart';
+import 'chat_title_state.dart';
 import 'chats_state.dart';
 
 /// Main coordinator cubit for chat operations
@@ -18,14 +20,17 @@ class ChatsCubit extends Cubit<ChatsState> {
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
     required AvatarAnimationService avatarAnimationService,
+    required ChatTitleService chatTitleService,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _avatarAnimationService = avatarAnimationService,
+       _chatTitleService = chatTitleService,
        super(ChatsState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
   final AvatarAnimationService _avatarAnimationService;
+  final ChatTitleService _chatTitleService;
 
   /// Initialize the chat system
   Future<void> init() async {
@@ -282,6 +287,50 @@ class ChatsCubit extends Cubit<ChatsState> {
         status: ChatsStatus.streaming,
       ),
     );
+  }
+
+  /// Generate a title for a chat based on its first user message
+  Future<void> generateTitle(String chatId, Chat chat) async {
+    // Prevent duplicate generation attempts
+    if (state.generatingTitleChatIds.contains(chatId)) {
+      AppLogger.debug(
+        'Already generating title for chat $chatId, skipping',
+        tag: 'ChatsCubit',
+      );
+      return;
+    }
+
+    // Add to generating set
+    emit(
+      state.copyWith(
+        generatingTitleChatIds: <String>{...state.generatingTitleChatIds, chatId},
+      ),
+    );
+
+    try {
+      final String? title = await _chatTitleService.generateTitle(chatId, chat);
+
+      if (title != null) {
+        emit(
+          state.copyWith(
+            lastGeneratedTitle: TitleResult(
+              chatId: chatId,
+              title: title,
+            ),
+          ),
+        );
+      }
+    } finally {
+      // Remove from generating set
+      final Set<String> updatedIds = state.generatingTitleChatIds.toSet()
+        ..remove(chatId);
+      emit(state.copyWith(generatingTitleChatIds: updatedIds));
+    }
+  }
+
+  /// Check if title generation should be triggered for a chat
+  bool shouldGenerateTitle(Chat chat) {
+    return _chatTitleService.shouldGenerateTitle(chat);
   }
 
   // Getters for convenience
