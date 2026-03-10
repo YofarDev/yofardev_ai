@@ -10,11 +10,13 @@ import 'package:nested/nested.dart';
 import 'package:yofardev_ai/core/res/app_constants.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
@@ -95,6 +97,10 @@ void main() {
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         avatarAnimationService: avatarAnimationService,
+        chatTitleService: ChatTitleService(
+          chatRepository: mockChatRepository,
+          llmService: LlmService(),
+        ),
       );
 
       // Initialize the cubit

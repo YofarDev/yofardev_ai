@@ -11,24 +11,31 @@ import 'package:yofardev_ai/core/models/llm_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_audio_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/data/tts_queue_manager.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 
 class MockHttpClient extends Mock implements Client {}
+
+class MockAvatarRepository extends Mock implements AvatarRepository {}
 
 class MockChatRepository implements ChatRepository {
   List<ChatEntry> _askResponse = <ChatEntry>[
@@ -337,6 +344,7 @@ void main() {
     late MockPromptDatasource mockPromptDatasource;
     late MockTtsQueueManager mockTtsManager;
     late InterruptionService interruptionService;
+    late ChatsCubit mockChatsCubit;
 
     setUpAll(() async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -356,6 +364,15 @@ void main() {
       mockPromptDatasource = MockPromptDatasource();
       mockTtsManager = MockTtsQueueManager();
       interruptionService = InterruptionService();
+      mockChatsCubit = ChatsCubit(
+        chatRepository: mockChatRepo,
+        settingsRepository: mockSettingsRepo,
+        avatarAnimationService: AvatarAnimationService(AvatarCubit(MockAvatarRepository())),
+        chatTitleService: ChatTitleService(
+          chatRepository: mockChatRepo,
+          llmService: llmService,
+        ),
+      );
 
       LlmService.setTestClient(mockHttpClient);
       llmService = LlmService();
@@ -379,7 +396,8 @@ void main() {
         streamProcessor: StreamProcessorService(),
         promptDatasource: mockPromptDatasource,
         interruptionService: interruptionService,
-        chatEntryService: MockChatEntryService(),
+        chatEntryService: ChatEntryService(mockSettingsRepo),
+        chatsCubit: mockChatsCubit,
         ttsQueueManager: mockTtsManager,
       );
       cubit = ChatMessageCubit(
@@ -661,6 +679,8 @@ void main() {
       late MockStreamProcessorService mockStreamProcessor;
       late MockPromptDatasource mockPromptDatasource;
       late InterruptionService interruptionService;
+      late MockChatEntryService mockChatEntryService;
+      late ChatsCubit mockChatsCubit;
 
       setUp(() async {
         mockChatRepository = MockChatRepository();
@@ -669,6 +689,16 @@ void main() {
         mockStreamProcessor = MockStreamProcessorService();
         mockPromptDatasource = MockPromptDatasource();
         interruptionService = InterruptionService();
+        mockChatEntryService = const MockChatEntryService();
+        mockChatsCubit = ChatsCubit(
+          chatRepository: mockChatRepository,
+          settingsRepository: mockSettingsRepository,
+          avatarAnimationService: AvatarAnimationService(AvatarCubit(MockAvatarRepository())),
+          chatTitleService: ChatTitleService(
+            chatRepository: mockChatRepository,
+            llmService: mockLlmService,
+          ),
+        );
 
         LlmService.setTestClient(mockHttpClient);
         mockLlmService = LlmService();
@@ -702,7 +732,8 @@ void main() {
             streamProcessor: mockStreamProcessor,
             promptDatasource: mockPromptDatasource,
             interruptionService: interruptionService,
-            chatEntryService: MockChatEntryService(),
+            chatEntryService: mockChatEntryService,
+            chatsCubit: mockChatsCubit,
           );
           final ChatMessageCubit cubit = ChatMessageCubit(
             chatAudioCubit: chatAudioCubit,

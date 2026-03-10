@@ -6,21 +6,28 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_audio_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/features/chat/widgets/floating_stop_button.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
+
+class MockAvatarRepository extends Mock implements AvatarRepository {}
 
 class MockChatRepository implements ChatRepository {
   @override
@@ -273,6 +280,15 @@ void main() {
         promptDatasource: MockPromptDatasource(),
         interruptionService: interruptionService,
         chatEntryService: MockChatEntryService(),
+        chatsCubit: ChatsCubit(
+          chatRepository: MockChatRepository(),
+          settingsRepository: MockSettingsRepository(),
+          avatarAnimationService: AvatarAnimationService(AvatarCubit(MockAvatarRepository())),
+          chatTitleService: ChatTitleService(
+            chatRepository: MockChatRepository(),
+            llmService: MockLlmService(),
+          ),
+        ),
       );
       chatCubit = ChatMessageCubit(
         chatAudioCubit: chatAudioCubit,

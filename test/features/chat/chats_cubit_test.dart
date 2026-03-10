@@ -4,6 +4,7 @@ import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
@@ -11,6 +12,7 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 
@@ -157,6 +159,16 @@ class MockAvatarAnimationService implements AvatarAnimationService {
     chatIdPassed = chatId;
     configPassed = config;
   }
+}
+
+/// Factory to create ChatTitleService with real LlmService for testing
+ChatTitleService createMockChatTitleService() {
+  // Create a real LlmService instance (it's a singleton, but we can use it in tests)
+  final LlmService llmService = LlmService();
+  return ChatTitleService(
+    chatRepository: MockChatRepository(),
+    llmService: llmService,
+  );
 }
 
 class MockSettingsRepository implements SettingsRepository {
@@ -330,6 +342,7 @@ void main() {
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
         avatarAnimationService: mockAnimationService,
+        chatTitleService: createMockChatTitleService(),
       );
     });
 
@@ -889,6 +902,7 @@ void main() {
         chatRepository: mockChatRepository,
         settingsRepository: MockSettingsRepository(),
         avatarAnimationService: mockAvatarAnimationService,
+        chatTitleService: createMockChatTitleService(),
       );
     });
 
