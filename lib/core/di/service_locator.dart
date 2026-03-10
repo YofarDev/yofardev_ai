@@ -43,6 +43,7 @@ import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
 import '../services/audio/tts_service.dart';
 import '../services/agent/yofardev_agent.dart';
+import '../services/avatar_animation_service.dart';
 import '../services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_config_manager.dart';
@@ -166,6 +167,10 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<AvatarCubit>(
     () => AvatarCubit(getIt<AvatarRepository>()),
   );
+  // AvatarAnimationService must be registered after AvatarCubit (depends on it)
+  getIt.registerLazySingleton<AvatarAnimationService>(
+    () => AvatarAnimationService(getIt<AvatarCubit>()),
+  );
   // TalkingCubit must be a singleton so both ChatTtsCubit and UI use the same instance
   getIt.registerLazySingleton<TalkingCubit>(
     () =>
@@ -191,6 +196,7 @@ Future<void> setupServiceLocator() async {
     () => ChatsCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
+      avatarAnimationService: getIt<AvatarAnimationService>(),
     ),
   );
   getIt.registerFactory<ChatListCubit>(

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/services/avatar_animation_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
@@ -16,12 +17,17 @@ class ChatsCubit extends Cubit<ChatsState> {
   ChatsCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
+    required AvatarAnimationService avatarAnimationService,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
+       _avatarAnimationService = avatarAnimationService,
        super(ChatsState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
+  // TODO: Use in createNewChat() to trigger avatar animation
+  // ignore: unused_field
+  final AvatarAnimationService _avatarAnimationService;
 
   /// Initialize the chat system
   Future<void> init() async {
@@ -64,13 +70,21 @@ class ChatsCubit extends Cubit<ChatsState> {
         );
       },
       (Chat currentChat) {
-        emit(
-          state.copyWith(
-            status: ChatsStatus.success,
-            currentChat: currentChat,
-            openedChat: currentChat,
-          ),
-        );
+        // Only update if user hasn't created a chat during initialization
+        // This prevents race condition where getCurrentChat overwrites user's new chat
+        if (state.userCreatedChatDuringInit) {
+          // User already created a chat, keep their chat and just update status
+          emit(state.copyWith(status: ChatsStatus.success));
+        } else {
+          // Normal initialization, set the current chat from storage
+          emit(
+            state.copyWith(
+              status: ChatsStatus.success,
+              currentChat: currentChat,
+              openedChat: currentChat,
+            ),
+          );
+        }
       },
     );
   }
@@ -112,13 +126,19 @@ class ChatsCubit extends Cubit<ChatsState> {
         );
       },
       (Chat newChat) {
+        // If creating chat during initialization, set the flag
+        // This prevents getCurrentChat from overwriting this new chat
+        final bool wasInitializing = state.initializing;
+
         emit(
           state.copyWith(
             status: ChatsStatus.success,
             chatsList: <Chat>[newChat, ...state.chatsList],
             currentChat: newChat,
+            openedChat: newChat,
             chatCreated: true,
             functionCallingEnabled: false,
+            userCreatedChatDuringInit: wasInitializing,
           ),
         );
         emit(state.copyWith(chatCreated: false));
