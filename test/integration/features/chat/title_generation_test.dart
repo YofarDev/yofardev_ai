@@ -2,11 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_title_cubit.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
+import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 
 class TrackingMockChatRepository implements ChatRepository {
   Chat? currentChat;
@@ -88,19 +91,43 @@ class TrackingMockChatRepository implements ChatRepository {
 
 class MockLlmService extends Mock implements LlmService {}
 
+class MockSettingsRepository extends Mock implements SettingsRepository {}
+
+class MockAvatarAnimationService extends Mock implements AvatarAnimationService {}
+
 void main() {
   group('Title Generation Integration Tests', () {
     late TrackingMockChatRepository mockChatRepository;
     late MockLlmService mockLlmService;
-    late ChatTitleCubit cubit;
+    late ChatsCubit cubit;
 
     setUp(() {
       mockChatRepository = TrackingMockChatRepository();
       mockLlmService = MockLlmService();
-      cubit = ChatTitleCubit(
+      final ChatTitleService chatTitleService = ChatTitleService(
         chatRepository: mockChatRepository,
         llmService: mockLlmService,
       );
+      final MockAvatarAnimationService mockAvatarAnimationService =
+          MockAvatarAnimationService();
+      final MockSettingsRepository mockSettingsRepository =
+          MockSettingsRepository();
+
+      // Set up mock to return language
+      when(() => mockSettingsRepository.getLanguage())
+          .thenAnswer((_) async => const Right<Exception, String?>('en'));
+      // Set up mock to return sound effects enabled
+      when(() => mockSettingsRepository.getSoundEffects())
+          .thenAnswer((_) async => const Right<Exception, bool>(true));
+
+      cubit = ChatsCubit(
+        chatRepository: mockChatRepository,
+        settingsRepository: mockSettingsRepository,
+        avatarAnimationService: mockAvatarAnimationService,
+        chatTitleService: chatTitleService,
+      );
+      // Initialize the cubit
+      cubit.init();
     });
 
     tearDown(() {
@@ -171,7 +198,7 @@ void main() {
       expect(mockChatRepository.updatedChat?.titleGenerated, true);
       expect(cubit.state.lastGeneratedTitle?.chatId, testChat.id);
       expect(cubit.state.lastGeneratedTitle?.title, 'Learn Flutter');
-      expect(cubit.state.generatingChatIds, isEmpty);
+      expect(cubit.state.generatingTitleChatIds, isEmpty);
     });
 
     test('should prevent duplicate title generation for same chat', () async {
@@ -234,7 +261,7 @@ void main() {
     });
 
     test('should initialize with empty generating set', () {
-      expect(cubit.state.generatingChatIds, isEmpty);
+      expect(cubit.state.generatingTitleChatIds, isEmpty);
     });
   });
 }
