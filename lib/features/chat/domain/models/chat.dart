@@ -31,10 +31,9 @@ sealed class Chat with _$Chat {
     @Default('') String id,
     @Default(<ChatEntry>[]) List<ChatEntry> entries,
     @AvatarJsonConverter() @Default(Avatar()) Avatar avatar,
-    @Default('en') String language,
+    @Default('fr') String language,
     @Default('') String systemPrompt,
     @Default(ChatPersona.normal) ChatPersona persona,
-    // NEW FIELDS:
     @Default('') String title,
     @Default(false) bool titleGenerated,
   }) = _Chat;
@@ -50,7 +49,6 @@ sealed class Chat with _$Chat {
       'language': language,
       'systemPrompt': systemPrompt,
       'persona': persona.name,
-      // NEW FIELDS:
       'title': title,
       'titleGenerated': titleGenerated,
     };

@@ -15,7 +15,7 @@ class TrackingMockChatRepository implements ChatRepository {
   int updateCallCount = 0;
 
   @override
-  Future<Either<Exception, Chat>> createNewChat() async {
+  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
     return const Right<Exception, Chat>(Chat(id: 'test-id'));
   }
 

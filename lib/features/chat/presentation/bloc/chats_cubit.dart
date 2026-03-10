@@ -99,8 +99,9 @@ class ChatsCubit extends Cubit<ChatsState> {
   /// Create a new chat
   Future<void> createNewChat() async {
     emit(state.copyWith(status: ChatsStatus.updating));
-    final Either<Exception, Chat> result = await _chatRepository
-        .createNewChat();
+    final Either<Exception, Chat> result = await _chatRepository.createNewChat(
+      language: state.currentLanguage,
+    );
     result.fold(
       (Exception error) {
         emit(
@@ -117,6 +118,7 @@ class ChatsCubit extends Cubit<ChatsState> {
             chatsList: <Chat>[newChat, ...state.chatsList],
             currentChat: newChat,
             chatCreated: true,
+            functionCallingEnabled: false,
           ),
         );
         emit(state.copyWith(chatCreated: false));
@@ -243,10 +245,16 @@ class ChatsCubit extends Cubit<ChatsState> {
   /// Update the chat state (both current and opened) without saving to the repo
   /// Ideal for rapid real-time streaming updates
   void updateChatStreaming(Chat chat) {
+    // Also update the corresponding chat in chatsList to keep it in sync
+    final List<Chat> updatedChatsList = state.chatsList
+        .map((Chat c) => c.id == chat.id ? chat : c)
+        .toList();
+
     emit(
       state.copyWith(
         currentChat: chat,
         openedChat: chat,
+        chatsList: updatedChatsList,
         status: ChatsStatus.streaming,
       ),
     );

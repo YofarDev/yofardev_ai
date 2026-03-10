@@ -41,7 +41,7 @@ class MockChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Either<Exception, Chat>> createNewChat() async {
+  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
     return const Right<Exception, Chat>(Chat(id: 'test-id'));
   }
 

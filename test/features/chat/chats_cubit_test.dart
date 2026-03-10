@@ -13,7 +13,7 @@ import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart'
 
 class MockChatRepository implements ChatRepository {
   @override
-  Future<Either<Exception, Chat>> createNewChat() async {
+  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
     return const Right<Exception, Chat>(Chat(id: 'test-id'));
   }
 

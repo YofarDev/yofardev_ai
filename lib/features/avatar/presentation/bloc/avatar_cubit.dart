@@ -126,9 +126,11 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void _goDownAndUp(String chatId, AvatarConfig avatarConfig) async {
-    onClothesAnimationChanged(true); // dropping
     AudioPlayer player = AudioPlayer();
-    player.play(AssetSource("assets/sound_effects/whoosh.wav"));
+    await player.setSourceAsset("sound_effects/whoosh.wav");
+    await player.setVolume(0.3);
+    player.resume();
+    onClothesAnimationChanged(true); // dropping
     await Future<dynamic>.delayed(
       Duration(seconds: AppConstants.changingAvatarDuration),
     );

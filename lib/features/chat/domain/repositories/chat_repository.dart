@@ -5,7 +5,7 @@ import '../models/chat.dart';
 import '../models/chat_entry.dart';
 
 abstract class ChatRepository {
-  Future<Either<Exception, Chat>> createNewChat();
+  Future<Either<Exception, Chat>> createNewChat({String? language});
   Future<Either<Exception, Chat?>> getChat(String id);
   Future<Either<Exception, List<Chat>>> getChatsList();
   Future<Either<Exception, void>> updateChat({

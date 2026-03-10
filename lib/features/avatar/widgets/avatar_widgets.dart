@@ -85,20 +85,25 @@ class AvatarWidgetsState extends State<AvatarWidgets>
       case AvatarStatusAnimation.leaving:
         // Horizontal slide out (location change)
         _horizontalController.forward();
+        break;
       case AvatarStatusAnimation.coming:
         // Horizontal slide in
         _horizontalController.reverse();
+        break;
       case AvatarStatusAnimation.dropping:
         // Vertical slide down (clothes change)
         _verticalController.forward();
+        break;
       case AvatarStatusAnimation.rising:
         // Vertical slide up
         _verticalController.reverse();
+        break;
       case AvatarStatusAnimation.initial:
       case AvatarStatusAnimation.transition:
         // Reset both animations
         _horizontalController.reset();
         _verticalController.reset();
+        break;
     }
   }
 

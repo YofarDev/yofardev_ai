@@ -28,12 +28,10 @@ sealed class ChatsState with _$ChatsState {
     @Default(<Map<String, dynamic>>[])
     List<Map<String, dynamic>> audioPathsWaitingSentences,
     @Default(true) bool initializing,
-    @Default(true) bool functionCallingEnabled,
+    @Default(false) bool functionCallingEnabled,
     @Default(false) bool chatCreated,
-    // NEW:
     @Default('') String streamingContent,
     @Default(0) int streamingSentenceCount,
-    // NEW FIELD:
     @Default(<String>{}) Set<String> generatingTitleChatIds,
   }) = _ChatsState;
 
@@ -41,10 +39,8 @@ sealed class ChatsState with _$ChatsState {
     currentChat: Chat(),
     openedChat: Chat(),
     status: ChatsStatus.loading,
-    // NEW:
     streamingContent: '',
     streamingSentenceCount: 0,
-    // NEW FIELD:
     generatingTitleChatIds: <String>{},
   );
 }

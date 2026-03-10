@@ -18,10 +18,12 @@ class ChatLocalDatasource {
     _migrateChatDataIfNeeded();
   }
 
-  Future<Chat> createNewChat() async {
+  Future<Chat> createNewChat({String? language}) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String newChatId = DateTime.now().toIso8601String();
-    final Locale deviceLocale = PlatformDispatcher.instance.locales.first;
+    // Use provided language or fall back to device locale
+    final String chatLanguage =
+        language ?? PlatformDispatcher.instance.locales.first.languageCode;
     final ChatPersona persona = await SettingsLocalDatasource().getPersona();
     final Avatar defaultAvatar = persona.getDefaultAvatar();
     final AvatarBackgrounds randomBackground = AvatarBackgrounds
@@ -29,7 +31,7 @@ class ChatLocalDatasource {
     final Chat newChat = Chat(
       id: newChatId,
       avatar: defaultAvatar.copyWith(background: randomBackground),
-      language: deviceLocale.languageCode,
+      language: chatLanguage,
       systemPrompt: await PromptDatasource().getSystemPrompt(),
       persona: persona,
     );

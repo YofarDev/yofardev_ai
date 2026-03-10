@@ -207,7 +207,13 @@ class HomeBlocListeners extends StatelessWidget {
     );
 
     // Only process yofardev (AI) entries
-    if (lastEntry.entryType != EntryType.yofardev) return;
+    if (lastEntry.entryType != EntryType.yofardev) {
+      AppLogger.debug(
+        'Skipping non-yofardev entry: ${lastEntry.entryType}',
+        tag: 'HomeBlocListeners',
+      );
+      return;
+    }
 
     // Extract avatar config from JSON safely (handles empty/malformed JSON)
     AvatarConfig avatarConfig = lastEntry.getAvatarConfig();

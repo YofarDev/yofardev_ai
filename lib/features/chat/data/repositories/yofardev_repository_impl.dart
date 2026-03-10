@@ -33,9 +33,9 @@ class YofardevRepositoryImpl implements ChatRepository {
        _chatDatasource = chatDatasource ?? ChatLocalDatasource();
 
   @override
-  Future<Either<Exception, Chat>> createNewChat() async {
+  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
     try {
-      final Chat chat = await _chatDatasource.createNewChat();
+      final Chat chat = await _chatDatasource.createNewChat(language: language);
       return Right<Exception, Chat>(chat);
     } catch (e) {
       return Left<Exception, Chat>(Exception(e.toString()));
