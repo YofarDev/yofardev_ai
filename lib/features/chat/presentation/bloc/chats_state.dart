@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/models/chat.dart';
+import 'chat_title_state.dart';
 
 part 'chats_state.freezed.dart';
 
@@ -33,7 +34,13 @@ sealed class ChatsState with _$ChatsState {
     @Default(false) bool chatCreated,
     @Default('') String streamingContent,
     @Default(0) int streamingSentenceCount,
+    // Note: Named generatingTitleChatIds to match existing usage across the codebase
+    // rather than renaming to generatingChatIds (as per original spec)
+    // This field tracks which chats are currently generating titles
     @Default(<String>{}) Set<String> generatingTitleChatIds,
+
+    /// Result of the most recent title generation
+    TitleResult? lastGeneratedTitle,
 
     /// Flag to track if user has manually created a chat during initialization
     /// This prevents getCurrentChat from overwriting user's new chat
@@ -47,5 +54,6 @@ sealed class ChatsState with _$ChatsState {
     streamingContent: '',
     streamingSentenceCount: 0,
     generatingTitleChatIds: <String>{},
+    lastGeneratedTitle: null,
   );
 }
