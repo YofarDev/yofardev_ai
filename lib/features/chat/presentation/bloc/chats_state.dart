@@ -17,11 +17,20 @@ enum ChatsStatus {
   creatingChat,
 }
 
+enum ChatsListStatus {
+  initial,
+  loading,
+  success,
+  error,
+}
+
 @freezed
 sealed class ChatsState with _$ChatsState {
   const factory ChatsState({
     @Default(ChatsStatus.initial) ChatsStatus status,
     @Default(<Chat>[]) List<Chat> chatsList,
+    @Default(ChatsListStatus.initial) ChatsListStatus chatsListStatus,
+    String? chatsListError,
     required Chat currentChat,
     required Chat openedChat,
     @Default('') String errorMessage,
@@ -51,6 +60,8 @@ sealed class ChatsState with _$ChatsState {
     currentChat: Chat(),
     openedChat: Chat(),
     status: ChatsStatus.loading,
+    chatsListStatus: ChatsListStatus.initial,
+    chatsListError: null,
     streamingContent: '',
     streamingSentenceCount: 0,
     generatingTitleChatIds: <String>{},
