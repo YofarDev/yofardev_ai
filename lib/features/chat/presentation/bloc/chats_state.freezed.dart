@@ -14,9 +14,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChatsState {
 
- ChatsStatus get status; List<Chat> get chatsList; Chat get currentChat; Chat get openedChat; String get errorMessage; bool get soundEffectsEnabled; String get currentLanguage; List<Map<String, dynamic>> get audioPathsWaitingSentences; bool get initializing; bool get functionCallingEnabled; bool get chatCreated;// NEW:
- String get streamingContent; int get streamingSentenceCount;// NEW FIELD:
- Set<String> get generatingTitleChatIds;
+ ChatsStatus get status; List<Chat> get chatsList; Chat get currentChat; Chat get openedChat; String get errorMessage; bool get soundEffectsEnabled; String get currentLanguage; List<Map<String, dynamic>> get audioPathsWaitingSentences; bool get initializing; bool get functionCallingEnabled; bool get chatCreated; String get streamingContent; int get streamingSentenceCount; Set<String> get generatingTitleChatIds;/// Flag to track if user has manually created a chat during initialization
+/// This prevents getCurrentChat from overwriting user's new chat
+ bool get userCreatedChatDuringInit;
 /// Create a copy of ChatsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,16 +27,16 @@ $ChatsStateCopyWith<ChatsState> get copyWith => _$ChatsStateCopyWithImpl<ChatsSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.chatsList, chatsList)&&(identical(other.currentChat, currentChat) || other.currentChat == currentChat)&&(identical(other.openedChat, openedChat) || other.openedChat == openedChat)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.functionCallingEnabled, functionCallingEnabled) || other.functionCallingEnabled == functionCallingEnabled)&&(identical(other.chatCreated, chatCreated) || other.chatCreated == chatCreated)&&(identical(other.streamingContent, streamingContent) || other.streamingContent == streamingContent)&&(identical(other.streamingSentenceCount, streamingSentenceCount) || other.streamingSentenceCount == streamingSentenceCount)&&const DeepCollectionEquality().equals(other.generatingTitleChatIds, generatingTitleChatIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.chatsList, chatsList)&&(identical(other.currentChat, currentChat) || other.currentChat == currentChat)&&(identical(other.openedChat, openedChat) || other.openedChat == openedChat)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.functionCallingEnabled, functionCallingEnabled) || other.functionCallingEnabled == functionCallingEnabled)&&(identical(other.chatCreated, chatCreated) || other.chatCreated == chatCreated)&&(identical(other.streamingContent, streamingContent) || other.streamingContent == streamingContent)&&(identical(other.streamingSentenceCount, streamingSentenceCount) || other.streamingSentenceCount == streamingSentenceCount)&&const DeepCollectionEquality().equals(other.generatingTitleChatIds, generatingTitleChatIds)&&(identical(other.userCreatedChatDuringInit, userCreatedChatDuringInit) || other.userCreatedChatDuringInit == userCreatedChatDuringInit));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(chatsList),currentChat,openedChat,errorMessage,soundEffectsEnabled,currentLanguage,const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing,functionCallingEnabled,chatCreated,streamingContent,streamingSentenceCount,const DeepCollectionEquality().hash(generatingTitleChatIds));
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(chatsList),currentChat,openedChat,errorMessage,soundEffectsEnabled,currentLanguage,const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing,functionCallingEnabled,chatCreated,streamingContent,streamingSentenceCount,const DeepCollectionEquality().hash(generatingTitleChatIds),userCreatedChatDuringInit);
 
 @override
 String toString() {
-  return 'ChatsState(status: $status, chatsList: $chatsList, currentChat: $currentChat, openedChat: $openedChat, errorMessage: $errorMessage, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, functionCallingEnabled: $functionCallingEnabled, chatCreated: $chatCreated, streamingContent: $streamingContent, streamingSentenceCount: $streamingSentenceCount, generatingTitleChatIds: $generatingTitleChatIds)';
+  return 'ChatsState(status: $status, chatsList: $chatsList, currentChat: $currentChat, openedChat: $openedChat, errorMessage: $errorMessage, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, functionCallingEnabled: $functionCallingEnabled, chatCreated: $chatCreated, streamingContent: $streamingContent, streamingSentenceCount: $streamingSentenceCount, generatingTitleChatIds: $generatingTitleChatIds, userCreatedChatDuringInit: $userCreatedChatDuringInit)';
 }
 
 
@@ -47,7 +47,7 @@ abstract mixin class $ChatsStateCopyWith<$Res>  {
   factory $ChatsStateCopyWith(ChatsState value, $Res Function(ChatsState) _then) = _$ChatsStateCopyWithImpl;
 @useResult
 $Res call({
- ChatsStatus status, List<Chat> chatsList, Chat currentChat, Chat openedChat, String errorMessage, bool soundEffectsEnabled, String currentLanguage, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool functionCallingEnabled, bool chatCreated, String streamingContent, int streamingSentenceCount, Set<String> generatingTitleChatIds
+ ChatsStatus status, List<Chat> chatsList, Chat currentChat, Chat openedChat, String errorMessage, bool soundEffectsEnabled, String currentLanguage, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool functionCallingEnabled, bool chatCreated, String streamingContent, int streamingSentenceCount, Set<String> generatingTitleChatIds, bool userCreatedChatDuringInit
 });
 
 
@@ -64,7 +64,7 @@ class _$ChatsStateCopyWithImpl<$Res>
 
 /// Create a copy of ChatsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? chatsList = null,Object? currentChat = null,Object? openedChat = null,Object? errorMessage = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? functionCallingEnabled = null,Object? chatCreated = null,Object? streamingContent = null,Object? streamingSentenceCount = null,Object? generatingTitleChatIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? chatsList = null,Object? currentChat = null,Object? openedChat = null,Object? errorMessage = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? functionCallingEnabled = null,Object? chatCreated = null,Object? streamingContent = null,Object? streamingSentenceCount = null,Object? generatingTitleChatIds = null,Object? userCreatedChatDuringInit = null,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ChatsStatus,chatsList: null == chatsList ? _self.chatsList : chatsList // ignore: cast_nullable_to_non_nullable
@@ -80,7 +80,8 @@ as bool,chatCreated: null == chatCreated ? _self.chatCreated : chatCreated // ig
 as bool,streamingContent: null == streamingContent ? _self.streamingContent : streamingContent // ignore: cast_nullable_to_non_nullable
 as String,streamingSentenceCount: null == streamingSentenceCount ? _self.streamingSentenceCount : streamingSentenceCount // ignore: cast_nullable_to_non_nullable
 as int,generatingTitleChatIds: null == generatingTitleChatIds ? _self.generatingTitleChatIds : generatingTitleChatIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,
+as Set<String>,userCreatedChatDuringInit: null == userCreatedChatDuringInit ? _self.userCreatedChatDuringInit : userCreatedChatDuringInit // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of ChatsState
@@ -180,10 +181,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ChatsStatus status,  List<Chat> chatsList,  Chat currentChat,  Chat openedChat,  String errorMessage,  bool soundEffectsEnabled,  String currentLanguage,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool functionCallingEnabled,  bool chatCreated,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ChatsStatus status,  List<Chat> chatsList,  Chat currentChat,  Chat openedChat,  String errorMessage,  bool soundEffectsEnabled,  String currentLanguage,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool functionCallingEnabled,  bool chatCreated,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds,  bool userCreatedChatDuringInit)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatsState() when $default != null:
-return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,_that.errorMessage,_that.soundEffectsEnabled,_that.currentLanguage,_that.audioPathsWaitingSentences,_that.initializing,_that.functionCallingEnabled,_that.chatCreated,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds);case _:
+return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,_that.errorMessage,_that.soundEffectsEnabled,_that.currentLanguage,_that.audioPathsWaitingSentences,_that.initializing,_that.functionCallingEnabled,_that.chatCreated,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds,_that.userCreatedChatDuringInit);case _:
   return orElse();
 
 }
@@ -201,10 +202,10 @@ return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ChatsStatus status,  List<Chat> chatsList,  Chat currentChat,  Chat openedChat,  String errorMessage,  bool soundEffectsEnabled,  String currentLanguage,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool functionCallingEnabled,  bool chatCreated,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ChatsStatus status,  List<Chat> chatsList,  Chat currentChat,  Chat openedChat,  String errorMessage,  bool soundEffectsEnabled,  String currentLanguage,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool functionCallingEnabled,  bool chatCreated,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds,  bool userCreatedChatDuringInit)  $default,) {final _that = this;
 switch (_that) {
 case _ChatsState():
-return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,_that.errorMessage,_that.soundEffectsEnabled,_that.currentLanguage,_that.audioPathsWaitingSentences,_that.initializing,_that.functionCallingEnabled,_that.chatCreated,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds);}
+return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,_that.errorMessage,_that.soundEffectsEnabled,_that.currentLanguage,_that.audioPathsWaitingSentences,_that.initializing,_that.functionCallingEnabled,_that.chatCreated,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds,_that.userCreatedChatDuringInit);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -218,10 +219,10 @@ return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ChatsStatus status,  List<Chat> chatsList,  Chat currentChat,  Chat openedChat,  String errorMessage,  bool soundEffectsEnabled,  String currentLanguage,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool functionCallingEnabled,  bool chatCreated,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ChatsStatus status,  List<Chat> chatsList,  Chat currentChat,  Chat openedChat,  String errorMessage,  bool soundEffectsEnabled,  String currentLanguage,  List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool functionCallingEnabled,  bool chatCreated,  String streamingContent,  int streamingSentenceCount,  Set<String> generatingTitleChatIds,  bool userCreatedChatDuringInit)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatsState() when $default != null:
-return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,_that.errorMessage,_that.soundEffectsEnabled,_that.currentLanguage,_that.audioPathsWaitingSentences,_that.initializing,_that.functionCallingEnabled,_that.chatCreated,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds);case _:
+return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,_that.errorMessage,_that.soundEffectsEnabled,_that.currentLanguage,_that.audioPathsWaitingSentences,_that.initializing,_that.functionCallingEnabled,_that.chatCreated,_that.streamingContent,_that.streamingSentenceCount,_that.generatingTitleChatIds,_that.userCreatedChatDuringInit);case _:
   return null;
 
 }
@@ -233,7 +234,7 @@ return $default(_that.status,_that.chatsList,_that.currentChat,_that.openedChat,
 
 
 class _ChatsState implements ChatsState {
-  const _ChatsState({this.status = ChatsStatus.initial, final  List<Chat> chatsList = const <Chat>[], required this.currentChat, required this.openedChat, this.errorMessage = '', this.soundEffectsEnabled = true, this.currentLanguage = 'fr', final  List<Map<String, dynamic>> audioPathsWaitingSentences = const <Map<String, dynamic>>[], this.initializing = true, this.functionCallingEnabled = true, this.chatCreated = false, this.streamingContent = '', this.streamingSentenceCount = 0, final  Set<String> generatingTitleChatIds = const <String>{}}): _chatsList = chatsList,_audioPathsWaitingSentences = audioPathsWaitingSentences,_generatingTitleChatIds = generatingTitleChatIds;
+  const _ChatsState({this.status = ChatsStatus.initial, final  List<Chat> chatsList = const <Chat>[], required this.currentChat, required this.openedChat, this.errorMessage = '', this.soundEffectsEnabled = true, this.currentLanguage = 'fr', final  List<Map<String, dynamic>> audioPathsWaitingSentences = const <Map<String, dynamic>>[], this.initializing = true, this.functionCallingEnabled = false, this.chatCreated = false, this.streamingContent = '', this.streamingSentenceCount = 0, final  Set<String> generatingTitleChatIds = const <String>{}, this.userCreatedChatDuringInit = false}): _chatsList = chatsList,_audioPathsWaitingSentences = audioPathsWaitingSentences,_generatingTitleChatIds = generatingTitleChatIds;
   
 
 @override@JsonKey() final  ChatsStatus status;
@@ -259,18 +260,18 @@ class _ChatsState implements ChatsState {
 @override@JsonKey() final  bool initializing;
 @override@JsonKey() final  bool functionCallingEnabled;
 @override@JsonKey() final  bool chatCreated;
-// NEW:
 @override@JsonKey() final  String streamingContent;
 @override@JsonKey() final  int streamingSentenceCount;
-// NEW FIELD:
  final  Set<String> _generatingTitleChatIds;
-// NEW FIELD:
 @override@JsonKey() Set<String> get generatingTitleChatIds {
   if (_generatingTitleChatIds is EqualUnmodifiableSetView) return _generatingTitleChatIds;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableSetView(_generatingTitleChatIds);
 }
 
+/// Flag to track if user has manually created a chat during initialization
+/// This prevents getCurrentChat from overwriting user's new chat
+@override@JsonKey() final  bool userCreatedChatDuringInit;
 
 /// Create a copy of ChatsState
 /// with the given fields replaced by the non-null parameter values.
@@ -282,16 +283,16 @@ _$ChatsStateCopyWith<_ChatsState> get copyWith => __$ChatsStateCopyWithImpl<_Cha
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._chatsList, _chatsList)&&(identical(other.currentChat, currentChat) || other.currentChat == currentChat)&&(identical(other.openedChat, openedChat) || other.openedChat == openedChat)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.functionCallingEnabled, functionCallingEnabled) || other.functionCallingEnabled == functionCallingEnabled)&&(identical(other.chatCreated, chatCreated) || other.chatCreated == chatCreated)&&(identical(other.streamingContent, streamingContent) || other.streamingContent == streamingContent)&&(identical(other.streamingSentenceCount, streamingSentenceCount) || other.streamingSentenceCount == streamingSentenceCount)&&const DeepCollectionEquality().equals(other._generatingTitleChatIds, _generatingTitleChatIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._chatsList, _chatsList)&&(identical(other.currentChat, currentChat) || other.currentChat == currentChat)&&(identical(other.openedChat, openedChat) || other.openedChat == openedChat)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.functionCallingEnabled, functionCallingEnabled) || other.functionCallingEnabled == functionCallingEnabled)&&(identical(other.chatCreated, chatCreated) || other.chatCreated == chatCreated)&&(identical(other.streamingContent, streamingContent) || other.streamingContent == streamingContent)&&(identical(other.streamingSentenceCount, streamingSentenceCount) || other.streamingSentenceCount == streamingSentenceCount)&&const DeepCollectionEquality().equals(other._generatingTitleChatIds, _generatingTitleChatIds)&&(identical(other.userCreatedChatDuringInit, userCreatedChatDuringInit) || other.userCreatedChatDuringInit == userCreatedChatDuringInit));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_chatsList),currentChat,openedChat,errorMessage,soundEffectsEnabled,currentLanguage,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing,functionCallingEnabled,chatCreated,streamingContent,streamingSentenceCount,const DeepCollectionEquality().hash(_generatingTitleChatIds));
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_chatsList),currentChat,openedChat,errorMessage,soundEffectsEnabled,currentLanguage,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing,functionCallingEnabled,chatCreated,streamingContent,streamingSentenceCount,const DeepCollectionEquality().hash(_generatingTitleChatIds),userCreatedChatDuringInit);
 
 @override
 String toString() {
-  return 'ChatsState(status: $status, chatsList: $chatsList, currentChat: $currentChat, openedChat: $openedChat, errorMessage: $errorMessage, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, functionCallingEnabled: $functionCallingEnabled, chatCreated: $chatCreated, streamingContent: $streamingContent, streamingSentenceCount: $streamingSentenceCount, generatingTitleChatIds: $generatingTitleChatIds)';
+  return 'ChatsState(status: $status, chatsList: $chatsList, currentChat: $currentChat, openedChat: $openedChat, errorMessage: $errorMessage, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, functionCallingEnabled: $functionCallingEnabled, chatCreated: $chatCreated, streamingContent: $streamingContent, streamingSentenceCount: $streamingSentenceCount, generatingTitleChatIds: $generatingTitleChatIds, userCreatedChatDuringInit: $userCreatedChatDuringInit)';
 }
 
 
@@ -302,7 +303,7 @@ abstract mixin class _$ChatsStateCopyWith<$Res> implements $ChatsStateCopyWith<$
   factory _$ChatsStateCopyWith(_ChatsState value, $Res Function(_ChatsState) _then) = __$ChatsStateCopyWithImpl;
 @override @useResult
 $Res call({
- ChatsStatus status, List<Chat> chatsList, Chat currentChat, Chat openedChat, String errorMessage, bool soundEffectsEnabled, String currentLanguage, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool functionCallingEnabled, bool chatCreated, String streamingContent, int streamingSentenceCount, Set<String> generatingTitleChatIds
+ ChatsStatus status, List<Chat> chatsList, Chat currentChat, Chat openedChat, String errorMessage, bool soundEffectsEnabled, String currentLanguage, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool functionCallingEnabled, bool chatCreated, String streamingContent, int streamingSentenceCount, Set<String> generatingTitleChatIds, bool userCreatedChatDuringInit
 });
 
 
@@ -319,7 +320,7 @@ class __$ChatsStateCopyWithImpl<$Res>
 
 /// Create a copy of ChatsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? chatsList = null,Object? currentChat = null,Object? openedChat = null,Object? errorMessage = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? functionCallingEnabled = null,Object? chatCreated = null,Object? streamingContent = null,Object? streamingSentenceCount = null,Object? generatingTitleChatIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? chatsList = null,Object? currentChat = null,Object? openedChat = null,Object? errorMessage = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? functionCallingEnabled = null,Object? chatCreated = null,Object? streamingContent = null,Object? streamingSentenceCount = null,Object? generatingTitleChatIds = null,Object? userCreatedChatDuringInit = null,}) {
   return _then(_ChatsState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ChatsStatus,chatsList: null == chatsList ? _self._chatsList : chatsList // ignore: cast_nullable_to_non_nullable
@@ -335,7 +336,8 @@ as bool,chatCreated: null == chatCreated ? _self.chatCreated : chatCreated // ig
 as bool,streamingContent: null == streamingContent ? _self.streamingContent : streamingContent // ignore: cast_nullable_to_non_nullable
 as String,streamingSentenceCount: null == streamingSentenceCount ? _self.streamingSentenceCount : streamingSentenceCount // ignore: cast_nullable_to_non_nullable
 as int,generatingTitleChatIds: null == generatingTitleChatIds ? _self._generatingTitleChatIds : generatingTitleChatIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,
+as Set<String>,userCreatedChatDuringInit: null == userCreatedChatDuringInit ? _self.userCreatedChatDuringInit : userCreatedChatDuringInit // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

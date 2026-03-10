@@ -13,6 +13,7 @@ enum ChatsStatus {
   success,
   streaming,
   error,
+  creatingChat,
 }
 
 @freezed
@@ -33,6 +34,10 @@ sealed class ChatsState with _$ChatsState {
     @Default('') String streamingContent,
     @Default(0) int streamingSentenceCount,
     @Default(<String>{}) Set<String> generatingTitleChatIds,
+
+    /// Flag to track if user has manually created a chat during initialization
+    /// This prevents getCurrentChat from overwriting user's new chat
+    @Default(false) bool userCreatedChatDuringInit,
   }) = _ChatsState;
 
   factory ChatsState.initial() => const ChatsState(
