@@ -9,8 +9,6 @@ import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../chat/domain/models/chat_entry.dart';
-import '../../chat/presentation/bloc/chat_streaming_cubit.dart';
-import '../../chat/presentation/bloc/chat_streaming_state.dart';
 import '../../chat/presentation/bloc/chats_cubit.dart';
 import '../../chat/presentation/bloc/chats_state.dart';
 import '../../demo/data/repositories/demo_repository_impl.dart';
@@ -40,9 +38,9 @@ class HomeBlocListeners extends StatelessWidget {
         BlocListener<TalkingCubit, TalkingState>(
           listener: _onTalkingStateChanged,
         ),
-        BlocListener<ChatStreamingCubit, ChatStreamingState>(
+        BlocListener<ChatsCubit, ChatsState>(
           listenWhen:
-              (ChatStreamingState previous, ChatStreamingState current) =>
+              (ChatsState previous, ChatsState current) =>
                   previous.status != current.status,
           listener: _onChatStreamingStateChanged,
         ),
@@ -113,25 +111,28 @@ class HomeBlocListeners extends StatelessWidget {
 
   void _onChatStreamingStateChanged(
     BuildContext context,
-    ChatStreamingState streamingState,
+    ChatsState streamingState,
   ) {
     final TalkingCubit talkingCubit = context.read<TalkingCubit>();
 
     switch (streamingState.status) {
-      case ChatStreamingStatus.initial:
+      case ChatsStatus.initial:
+      case ChatsStatus.creatingChat:
         // Do nothing
         break;
-      case ChatStreamingStatus.loading:
-      case ChatStreamingStatus.typing:
-      case ChatStreamingStatus.streaming:
+      case ChatsStatus.loading:
+      case ChatsStatus.typing:
+      case ChatsStatus.streaming:
         // Show thinking animation while waiting for LLM response
         talkingCubit.setLoadingStatus(true);
-      case ChatStreamingStatus.success:
+      case ChatsStatus.success:
+      case ChatsStatus.loaded:
+      case ChatsStatus.updating:
         // Streaming completed successfully
         // Don't stop here - let TTS play and handle state transition
         break;
-      case ChatStreamingStatus.error:
-      case ChatStreamingStatus.interrupted:
+      case ChatsStatus.error:
+      case ChatsStatus.interrupted:
         // Error or interruption - stop thinking animation
         talkingCubit.stop();
         break;
