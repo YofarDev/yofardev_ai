@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
-import '../presentation/bloc/chats_cubit.dart';
+import '../presentation/bloc/chat_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/utils/extensions.dart';
@@ -52,7 +52,7 @@ class ChatListContainer extends StatelessWidget {
                 messageCount: chat.entries.length,
                 onTap: () => _openChat(context, chat),
                 onDismissed: () =>
-                    context.read<ChatsCubit>().deleteChat(chat.id),
+                    context.read<ChatCubit>().deleteChat(chat.id),
                 onDismissConfirm: () => _confirmDelete(context),
               );
             },
@@ -63,8 +63,8 @@ class ChatListContainer extends StatelessWidget {
   }
 
   void _openChat(BuildContext context, Chat chat) {
-    context.read<ChatsCubit>().setCurrentChat(chat);
-    context.read<ChatsCubit>().setOpenedChat(chat);
+    context.read<ChatCubit>().setCurrentChat(chat);
+    context.read<ChatCubit>().setOpenedChat(chat);
     context.push('${RouteConstants.chats}/${chat.id}');
   }
 

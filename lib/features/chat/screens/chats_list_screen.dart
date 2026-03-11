@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nested/nested.dart';
 
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
-import '../presentation/bloc/chats_cubit.dart';
-import '../presentation/bloc/chats_state.dart';
+import '../presentation/bloc/chat_cubit.dart';
+import '../presentation/bloc/chat_state.dart';
 import '../presentation/bloc/chat_title_cubit.dart';
 import '../presentation/bloc/chat_title_state.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
@@ -26,7 +26,7 @@ class _ChatsListPageState extends State<ChatsListPage> {
   void initState() {
     super.initState();
     // Fetch once on init, not on every build
-    context.read<ChatsCubit>().fetchChatsList();
+    context.read<ChatCubit>().fetchChatsList();
   }
 
   @override
@@ -34,14 +34,14 @@ class _ChatsListPageState extends State<ChatsListPage> {
     return MultiBlocListener(
       listeners: <SingleChildWidget>[
         // Listen for chat creation events
-        BlocListener<ChatsCubit, ChatsState>(
-          listener: (BuildContext context, ChatsState state) {
+        BlocListener<ChatCubit, ChatState>(
+          listener: (BuildContext context, ChatState state) {
             if (state.chatCreated) {
               // Handle cross-feature coordination when chat is created
               context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
               context.read<TalkingCubit>().init();
               // Refresh the chat list after creation
-              context.read<ChatsCubit>().fetchChatsList();
+              context.read<ChatCubit>().fetchChatsList();
             }
           },
         ),
@@ -51,15 +51,15 @@ class _ChatsListPageState extends State<ChatsListPage> {
               state.lastGeneratedTitle != null,
           listener: (_, ChatTitleState state) {
             // Refresh chat list to show the newly generated title
-            context.read<ChatsCubit>().fetchChatsList();
+            context.read<ChatCubit>().fetchChatsList();
           },
         ),
       ],
       child: SafeArea(
         child: Scaffold(
-          body: BlocBuilder<ChatsCubit, ChatsState>(
-            builder: (BuildContext context, ChatsState state) {
-              final bool isLoading = state.status == ChatsStatus.loading;
+          body: BlocBuilder<ChatCubit, ChatState>(
+            builder: (BuildContext context, ChatState state) {
+              final bool isLoading = state.status == ChatStatus.loading;
               return Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(

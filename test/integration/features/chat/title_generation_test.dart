@@ -16,7 +16,7 @@ import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 
 class TrackingMockChatRepository implements ChatRepository {
@@ -158,7 +158,7 @@ void main() {
   group('Title Generation Integration Tests', () {
     late TrackingMockChatRepository mockChatRepository;
     late MockLlmService mockLlmService;
-    late ChatsCubit cubit;
+    late ChatCubit cubit;
 
     setUp(() {
       mockChatRepository = TrackingMockChatRepository();
@@ -187,7 +187,7 @@ void main() {
           MockStreamProcessorService();
       final MockChatEntryService mockChatEntryService = MockChatEntryService();
 
-      cubit = ChatsCubit(
+      cubit = ChatCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         avatarAnimationService: mockAvatarAnimationService,

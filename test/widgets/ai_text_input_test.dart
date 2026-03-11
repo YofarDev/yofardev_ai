@@ -6,8 +6,8 @@ import 'package:nested/nested.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/widgets/ai_text_input/ai_text_input.dart';
@@ -17,13 +17,13 @@ import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dar
 // Mock cubits for testing
 class MockAvatarCubit extends Mock implements AvatarCubit {}
 
-class MockChatsCubit extends Mock implements ChatsCubit {}
+class MockChatCubit extends Mock implements ChatCubit {}
 
 class MockTalkingCubit extends Mock implements TalkingCubit {}
 
 // Simple fake cubit that can emit states for testing
-class FakeChatsCubit extends Cubit<ChatsState> implements ChatsCubit {
-  FakeChatsCubit() : super(ChatsState.initial());
+class FakeChatCubit extends Cubit<ChatState> implements ChatCubit {
+  FakeChatCubit() : super(ChatState.initial());
 
   @override
   void noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -37,23 +37,23 @@ void main() {
     registerFallbackValue(const Chat());
     registerFallbackValue(const TalkingState.idle());
     registerFallbackValue(
-      ChatsState(
+      ChatState(
         currentChat: const Chat(),
         openedChat: const Chat(),
         currentLanguage: 'en',
-        status: ChatsStatus.initial,
+        status: ChatStatus.initial,
       ),
     );
   });
 
   group('AiTextInput Widget', () {
     late MockAvatarCubit mockAvatarCubit;
-    late MockChatsCubit mockChatsCubit;
+    late MockChatCubit mockChatsCubit;
     late MockTalkingCubit mockTalkingCubit;
 
     setUp(() {
       mockAvatarCubit = MockAvatarCubit();
-      mockChatsCubit = MockChatsCubit();
+      mockChatsCubit = MockChatCubit();
       mockTalkingCubit = MockTalkingCubit();
 
       // Setup default mock behaviors
@@ -66,13 +66,13 @@ void main() {
 
       when(
         () => mockChatsCubit.stream,
-      ).thenAnswer((_) => const Stream<ChatsState>.empty());
+      ).thenAnswer((_) => const Stream<ChatState>.empty());
       when(() => mockChatsCubit.state).thenReturn(
-        ChatsState(
+        ChatState(
           currentChat: const Chat(),
           openedChat: const Chat(),
           currentLanguage: 'en',
-          status: ChatsStatus.initial,
+          status: ChatStatus.initial,
         ),
       );
 
@@ -86,7 +86,7 @@ void main() {
       return MultiBlocProvider(
         providers: <SingleChildWidget>[
           BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
-          BlocProvider<ChatsCubit>.value(value: mockChatsCubit),
+          BlocProvider<ChatCubit>.value(value: mockChatsCubit),
           BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
         ],
         child: const MaterialApp(home: Scaffold(body: AiTextInput())),
@@ -106,7 +106,7 @@ void main() {
         MultiBlocProvider(
           providers: <SingleChildWidget>[
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
-            BlocProvider<ChatsCubit>.value(value: mockChatsCubit),
+            BlocProvider<ChatCubit>.value(value: mockChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
             ],
           child: const MaterialApp(
@@ -145,17 +145,17 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('shows error snackbar when ChatsCubit has error', (
+    testWidgets('shows error snackbar when ChatCubit has error', (
       WidgetTester tester,
     ) async {
       // Use a real cubit for this test to properly emit states
-      final FakeChatsCubit fakeChatsCubit = FakeChatsCubit();
+      final FakeChatCubit fakeChatsCubit = FakeChatCubit();
 
       await tester.pumpWidget(
         MultiBlocProvider(
           providers: <SingleChildWidget>[
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
-            BlocProvider<ChatsCubit>.value(value: fakeChatsCubit),
+            BlocProvider<ChatCubit>.value(value: fakeChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
             ],
           child: const MaterialApp(home: Scaffold(body: AiTextInput())),
@@ -165,7 +165,7 @@ void main() {
       // Emit error state
       fakeChatsCubit.emit(
         fakeChatsCubit.state.copyWith(
-          status: ChatsStatus.error,
+          status: ChatStatus.error,
           errorMessage: 'Test error',
         ),
       );
@@ -193,11 +193,11 @@ void main() {
       );
 
       when(() => mockChatsCubit.state).thenReturn(
-        ChatsState(
+        ChatState(
           currentChat: chat,
           openedChat: chat,
           currentLanguage: 'en',
-          status: ChatsStatus.initial,
+          status: ChatStatus.initial,
         ),
       );
 

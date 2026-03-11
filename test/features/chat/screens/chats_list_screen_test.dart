@@ -7,8 +7,8 @@ import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/screens/chats_list_screen.dart';
@@ -18,7 +18,7 @@ import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dar
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
 // Mock cubits for screen testing
-class MockChatsCubit extends Mock implements ChatsCubit {}
+class MockChatCubit extends Mock implements ChatCubit {}
 
 class MockAvatarCubit extends Mock implements AvatarCubit {}
 
@@ -29,11 +29,11 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
 
     registerFallbackValue(
-      ChatsState(
+      ChatState(
         currentChat: const Chat(),
         openedChat: const Chat(),
         currentLanguage: 'en',
-        status: ChatsStatus.initial,
+        status: ChatStatus.initial,
       ),
     );
     registerFallbackValue(
@@ -45,25 +45,25 @@ void main() {
   });
 
   group('ChatsListScreen Integration Tests', () {
-    late MockChatsCubit mockChatsCubit;
+    late MockChatCubit mockChatsCubit;
     late MockAvatarCubit mockAvatarCubit;
     late MockTalkingCubit mockTalkingCubit;
 
     setUp(() {
-      mockChatsCubit = MockChatsCubit();
+      mockChatsCubit = MockChatCubit();
       mockAvatarCubit = MockAvatarCubit();
       mockTalkingCubit = MockTalkingCubit();
 
       // Setup default mock behaviors
       when(
         () => mockChatsCubit.stream,
-      ).thenAnswer((_) => const Stream<ChatsState>.empty());
+      ).thenAnswer((_) => const Stream<ChatState>.empty());
       when(() => mockChatsCubit.state).thenReturn(
-        ChatsState(
+        ChatState(
           currentChat: const Chat(),
           openedChat: const Chat(),
           currentLanguage: 'en',
-          status: ChatsStatus.initial,
+          status: ChatStatus.initial,
           chatsList: <Chat>[],
         ),
       );
@@ -89,7 +89,7 @@ void main() {
     Widget buildTestWidget() {
       return MultiBlocProvider(
         providers: <SingleChildWidget>[
-          BlocProvider<ChatsCubit>.value(value: mockChatsCubit),
+          BlocProvider<ChatCubit>.value(value: mockChatsCubit),
           BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
           BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
         ],
@@ -116,11 +116,11 @@ void main() {
       WidgetTester tester,
     ) async {
       when(() => mockChatsCubit.state).thenReturn(
-        ChatsState(
+        ChatState(
           currentChat: const Chat(),
           openedChat: const Chat(),
           currentLanguage: 'en',
-          status: ChatsStatus.loading,
+          status: ChatStatus.loading,
           chatsList: <Chat>[],
         ),
       );
@@ -134,11 +134,11 @@ void main() {
       WidgetTester tester,
     ) async {
       when(() => mockChatsCubit.state).thenReturn(
-        ChatsState(
+        ChatState(
           currentChat: const Chat(),
           openedChat: const Chat(),
           currentLanguage: 'en',
-          status: ChatsStatus.loaded,
+          status: ChatStatus.loaded,
           chatsList: <Chat>[],
         ),
       );
@@ -157,11 +157,11 @@ void main() {
       ];
 
       when(() => mockChatsCubit.state).thenReturn(
-        ChatsState(
+        ChatState(
           currentChat: chatList.first,
           openedChat: chatList.first,
           currentLanguage: 'en',
-          status: ChatsStatus.loaded,
+          status: ChatStatus.loaded,
           chatsList: chatList,
         ),
       );

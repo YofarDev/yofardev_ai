@@ -11,7 +11,7 @@ import 'chat_title_state.dart';
 
 /// Cubit responsible for generating chat titles asynchronously
 ///
-/// Separated from ChatsCubit to follow single responsibility principle.
+/// Separated from ChatCubit to follow single responsibility principle.
 /// Title generation is a fire-and-forget operation that doesn't block
 /// the main chat UI.
 class ChatTitleCubit extends Cubit<ChatTitleState> {

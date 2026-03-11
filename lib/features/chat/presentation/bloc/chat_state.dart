@@ -3,9 +3,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../domain/models/chat.dart';
 import 'chat_title_state.dart';
 
-part 'chats_state.freezed.dart';
+part 'chat_state.freezed.dart';
 
-enum ChatsStatus {
+enum ChatStatus {
   initial,
   loading,
   updating,
@@ -26,9 +26,9 @@ enum ChatsListStatus {
 }
 
 @freezed
-sealed class ChatsState with _$ChatsState {
-  const factory ChatsState({
-    @Default(ChatsStatus.initial) ChatsStatus status,
+sealed class ChatState with _$ChatState {
+  const factory ChatState({
+    @Default(ChatStatus.initial) ChatStatus status,
     @Default(<Chat>[]) List<Chat> chatsList,
     @Default(ChatsListStatus.initial) ChatsListStatus chatsListStatus,
     String? chatsListError,
@@ -57,10 +57,10 @@ sealed class ChatsState with _$ChatsState {
     @Default(false) bool userCreatedChatDuringInit,
   }) = _ChatsState;
 
-  factory ChatsState.initial() => const ChatsState(
+  factory ChatState.initial() => const ChatState(
     currentChat: Chat(),
     openedChat: Chat(),
-    status: ChatsStatus.loading,
+    status: ChatStatus.loading,
     chatsListStatus: ChatsListStatus.initial,
     chatsListError: null,
     streamingContent: '',

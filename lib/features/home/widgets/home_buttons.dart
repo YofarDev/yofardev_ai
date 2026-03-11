@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
-import '../../chat/presentation/bloc/chats_cubit.dart';
-import '../../chat/presentation/bloc/chats_state.dart';
+import '../../chat/presentation/bloc/chat_cubit.dart';
+import '../../chat/presentation/bloc/chat_state.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../core/widgets/app_icon_button.dart';
 import '../../../core/widgets/function_calling_button.dart';
@@ -15,16 +15,16 @@ class HomeButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ChatsCubit, ChatsState>(
-      listener: (BuildContext context, ChatsState state) {
+    return BlocListener<ChatCubit, ChatState>(
+      listener: (BuildContext context, ChatState state) {
         if (state.chatCreated) {
           // Handle cross-feature coordination when chat is created
           context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
           context.read<TalkingCubit>().init();
         }
       },
-      child: BlocBuilder<ChatsCubit, ChatsState>(
-        builder: (BuildContext context, ChatsState state) {
+      child: BlocBuilder<ChatCubit, ChatState>(
+        builder: (BuildContext context, ChatState state) {
           return Positioned(
             right: 8,
             top: 8,
@@ -33,7 +33,7 @@ class HomeButtons extends StatelessWidget {
                 children: <Widget>[
                   GestureDetector(
                     onTap: () {
-                      context.read<ChatsCubit>().setCurrentLanguage(
+                      context.read<ChatCubit>().setCurrentLanguage(
                         state.currentLanguage == 'fr' ? 'en' : 'fr',
                       );
                     },
@@ -53,7 +53,7 @@ class HomeButtons extends StatelessWidget {
                   AppIconButton(
                     icon: Icons.add_outlined,
                     onPressed: () {
-                      context.read<ChatsCubit>().createNewChat();
+                      context.read<ChatCubit>().createNewChat();
                     },
                   ),
                   Padding(
@@ -69,7 +69,7 @@ class HomeButtons extends StatelessWidget {
                   FunctionCallingButton(
                     isEnabled: state.functionCallingEnabled,
                     onToggle: () =>
-                        context.read<ChatsCubit>().toggleFunctionCalling(),
+                        context.read<ChatCubit>().toggleFunctionCalling(),
                   ),
                 ],
               ),

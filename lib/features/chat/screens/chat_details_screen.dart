@@ -9,8 +9,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
-import '../presentation/bloc/chats_cubit.dart';
-import '../presentation/bloc/chats_state.dart';
+import '../presentation/bloc/chat_cubit.dart';
+import '../presentation/bloc/chat_state.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
@@ -42,16 +42,16 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
               previous.avatarConfig != current.avatarConfig,
           listener: (BuildContext context, AvatarState state) {
             context.read<AvatarCubit>().onNewAvatarConfig(
-              context.read<ChatsCubit>().state.openedChat.id,
+              context.read<ChatCubit>().state.openedChat.id,
               state.avatarConfig,
             );
           },
         ),
-        BlocListener<ChatsCubit, ChatsState>(
-          listenWhen: (ChatsState previous, ChatsState current) =>
+        BlocListener<ChatCubit, ChatState>(
+          listenWhen: (ChatState previous, ChatState current) =>
               previous.status != current.status,
-          listener: (BuildContext context, ChatsState state) {
-            if (state.status == ChatsStatus.interrupted) {
+          listener: (BuildContext context, ChatState state) {
+            if (state.status == ChatStatus.interrupted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -65,8 +65,8 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         ),
       ],
       child: Scaffold(
-        body: BlocBuilder<ChatsCubit, ChatsState>(
-          builder: (BuildContext context, ChatsState state) {
+        body: BlocBuilder<ChatCubit, ChatState>(
+          builder: (BuildContext context, ChatState state) {
             final Chat chat = state.openedChat;
             return Stack(
               children: <Widget>[
@@ -79,8 +79,8 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                         child: ChatConversationList(
                           persona: chat.persona,
                           entries: chat.entries.reversed.toList(),
-                          isTyping: state.status == ChatsStatus.typing,
-                          isStreaming: state.status == ChatsStatus.streaming,
+                          isTyping: state.status == ChatStatus.typing,
+                          isStreaming: state.status == ChatStatus.streaming,
                           showEverything: _showEverything,
                           limitParameterSize: _limitParamaterSize,
                         ),
@@ -91,8 +91,8 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                   ),
                 ),
                 const _TopLeftBackButton(),
-                BlocBuilder<ChatsCubit, ChatsState>(
-                  builder: (BuildContext context, ChatsState actionsState) {
+                BlocBuilder<ChatCubit, ChatState>(
+                  builder: (BuildContext context, ChatState actionsState) {
                     return ChatDetailsActions(
                       showEverything: _showEverything,
                       onToggleVisibility: () {
@@ -104,7 +104,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                       isFunctionCallingEnabled:
                           actionsState.functionCallingEnabled,
                       onFunctionCallingToggle: () =>
-                          context.read<ChatsCubit>().toggleFunctionCalling(),
+                          context.read<ChatCubit>().toggleFunctionCalling(),
                     );
                   },
                 ),
@@ -146,7 +146,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
 
   Future<void> _downloadConversation(BuildContext context) async {
     try {
-      final Chat chat = context.read<ChatsCubit>().state.openedChat;
+      final Chat chat = context.read<ChatCubit>().state.openedChat;
 
       final Map<String, dynamic> conversationData = <String, dynamic>{
         'metadata': <String, dynamic>{

@@ -7,7 +7,7 @@ import '../../avatar/widgets/avatar_widgets.dart';
 import '../../avatar/widgets/animated_background_avatar.dart';
 import '../../avatar/widgets/loading_avatar_widget.dart';
 import '../../avatar/widgets/thinking_animation.dart';
-import '../../chat/presentation/bloc/chats_state.dart';
+import '../../chat/presentation/bloc/chat_state.dart';
 import '../../chat/widgets/ai_text_input/ai_text_input.dart';
 import '../../chat/widgets/floating_stop_button.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
@@ -29,7 +29,7 @@ class HomeContentStack extends StatelessWidget {
     required this.onTripleTap,
   });
 
-  final ChatsState chatsState;
+  final ChatState chatsState;
   final TalkingState talkingState;
   final VoidCallback onTripleTap;
 

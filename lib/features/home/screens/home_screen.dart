@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/res/app_colors.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
-import '../../chat/presentation/bloc/chats_cubit.dart';
-import '../../chat/presentation/bloc/chats_state.dart';
+import '../../chat/presentation/bloc/chat_cubit.dart';
+import '../../chat/presentation/bloc/chat_state.dart';
 import '../../chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../demo/presentation/bloc/demo_cubit.dart';
 import '../../demo/domain/models/demo_script.dart';
@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
     // Prepare waiting sentences loaded from cache
     context.read<ChatTtsCubit>().prepareWaitingSentences(
-      context.read<ChatsCubit>().state.currentLanguage,
+      context.read<ChatCubit>().state.currentLanguage,
     );
   }
 
@@ -100,8 +100,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return HomeBlocListeners(
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: BlocBuilder<ChatsCubit, ChatsState>(
-          builder: (BuildContext context, ChatsState chatsState) {
+        body: BlocBuilder<ChatCubit, ChatState>(
+          builder: (BuildContext context, ChatState chatsState) {
             return BlocBuilder<TalkingCubit, TalkingState>(
               builder: (BuildContext context, TalkingState talkingState) {
                 return HomeContentStack(

@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
-import '../../chat/presentation/bloc/chats_cubit.dart';
+import '../../chat/presentation/bloc/chat_cubit.dart';
 import '../../../../core/models/chat.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
@@ -53,9 +53,9 @@ class SettingsPageState extends State<SettingsPage> {
     final SettingsCubit settingsCubit = context.read<SettingsCubit>();
     await settingsCubit.loadSettings();
 
-    // Load additional settings from ChatsCubit for sound effects
+    // Load additional settings from ChatCubit for sound effects
     _isSoundEffectsEnabled = context
-        .read<ChatsCubit>()
+        .read<ChatCubit>()
         .state
         .soundEffectsEnabled;
     setState(() {});
@@ -71,7 +71,7 @@ class SettingsPageState extends State<SettingsPage> {
       await settingsCubit.setUsername(_usernameController.text);
     }
     await settingsCubit.setPersona(_persona);
-    context.read<ChatsCubit>().setSoundEffects(_isSoundEffectsEnabled);
+    context.read<ChatCubit>().setSoundEffects(_isSoundEffectsEnabled);
     context.pop();
   }
 

@@ -3,16 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/res/app_colors.dart';
-import '../presentation/bloc/chats_cubit.dart';
-import '../presentation/bloc/chats_state.dart';
+import '../presentation/bloc/chat_cubit.dart';
+import '../presentation/bloc/chat_state.dart';
 
 class ChatDetailsBackground extends StatelessWidget {
   const ChatDetailsBackground({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ChatsCubit, ChatsState>(
-      builder: (BuildContext context, ChatsState state) {
+    return BlocBuilder<ChatCubit, ChatState>(
+      builder: (BuildContext context, ChatState state) {
         return Stack(
           children: <Widget>[
             Positioned.fill(

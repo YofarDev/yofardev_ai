@@ -11,7 +11,7 @@ import '../../features/avatar/domain/repositories/avatar_repository.dart';
 // import '../../features/chat/presentation/bloc/chat_list_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_title_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
-import '../../features/chat/presentation/bloc/chats_cubit.dart';
+import '../../features/chat/presentation/bloc/chat_cubit.dart';
 import '../../features/chat/domain/services/chat_entry_service.dart';
 import '../../features/chat/domain/services/chat_title_service.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
@@ -190,8 +190,8 @@ Future<void> setupServiceLocator() async {
       talkingCubit: getIt<TalkingCubit>(),
     ),
   );
-  getIt.registerFactory<ChatsCubit>(
-    () => ChatsCubit(
+  getIt.registerFactory<ChatCubit>(
+    () => ChatCubit(
       chatRepository: getIt<ChatRepository>(),
       settingsRepository: getIt<SettingsRepository>(),
       avatarAnimationService: getIt<AvatarAnimationService>(),

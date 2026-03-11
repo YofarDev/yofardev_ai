@@ -22,14 +22,14 @@ import '../../domain/repositories/chat_repository.dart';
 import '../../domain/services/chat_entry_service.dart';
 import '../../domain/services/chat_title_service.dart';
 import 'chat_title_state.dart';
-import 'chats_state.dart';
+import 'chat_state.dart';
 
 /// Main coordinator cubit for chat operations
 ///
 /// This cubit provides a simplified API that coordinates between
 /// the specialized cubits (ChatMessageCubit, ChatTitleCubit).
-class ChatsCubit extends Cubit<ChatsState> {
-  ChatsCubit({
+class ChatCubit extends Cubit<ChatState> {
+  ChatCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
     required AvatarAnimationService avatarAnimationService,
@@ -50,13 +50,13 @@ class ChatsCubit extends Cubit<ChatsState> {
        _interruptionService = interruptionService,
        _chatEntryService = chatEntryService,
        _ttsQueueManager = ttsQueueManager,
-       super(ChatsState.initial()) {
+       super(ChatState.initial()) {
     // Listen to interruption stream
     _interruptionSubscription = _interruptionService.interruptionStream.listen((
       _,
     ) {
       _streamInterrupted = true;
-      if (state.status == ChatsStatus.streaming) {
+      if (state.status == ChatStatus.streaming) {
         emit(
           state.copyWith(
             streamingContent: '',
@@ -108,7 +108,7 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   /// Get the current active chat
   Future<void> getCurrentChat() async {
-    emit(state.copyWith(status: ChatsStatus.loading));
+    emit(state.copyWith(status: ChatStatus.loading));
     final Either<Exception, Chat> currentChatResult = await _chatRepository
         .getCurrentChat();
 
@@ -116,7 +116,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       (Exception error) {
         emit(
           state.copyWith(
-            status: ChatsStatus.error,
+            status: ChatStatus.error,
             errorMessage: error.toString(),
           ),
         );
@@ -126,12 +126,12 @@ class ChatsCubit extends Cubit<ChatsState> {
         // This prevents race condition where getCurrentChat overwrites user's new chat
         if (state.userCreatedChatDuringInit) {
           // User already created a chat, keep their chat and just update status
-          emit(state.copyWith(status: ChatsStatus.success));
+          emit(state.copyWith(status: ChatStatus.success));
         } else {
           // Normal initialization, set the current chat from storage
           emit(
             state.copyWith(
-              status: ChatsStatus.success,
+              status: ChatStatus.success,
               currentChat: currentChat,
               openedChat: currentChat,
             ),
@@ -143,28 +143,28 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   /// Fetch the list of all chats
   Future<void> fetchChatsList() async {
-    emit(state.copyWith(status: ChatsStatus.loading));
+    emit(state.copyWith(status: ChatStatus.loading));
     final Either<Exception, List<Chat>> result = await _chatRepository
         .getChatsList();
     result.fold(
       (Exception error) {
         emit(
           state.copyWith(
-            status: ChatsStatus.error,
+            status: ChatStatus.error,
             errorMessage: error.toString(),
           ),
         );
       },
       (List<Chat> chatsList) {
         final List<Chat> reversed = chatsList.reversed.toList();
-        emit(state.copyWith(status: ChatsStatus.success, chatsList: reversed));
+        emit(state.copyWith(status: ChatStatus.success, chatsList: reversed));
       },
     );
   }
 
   /// Create a new chat
   Future<void> createNewChat() async {
-    emit(state.copyWith(status: ChatsStatus.updating));
+    emit(state.copyWith(status: ChatStatus.updating));
     final Either<Exception, Chat> result = await _chatRepository.createNewChat(
       language: state.currentLanguage,
     );
@@ -172,7 +172,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       (Exception error) {
         emit(
           state.copyWith(
-            status: ChatsStatus.error,
+            status: ChatStatus.error,
             errorMessage: error.toString(),
           ),
         );
@@ -184,7 +184,7 @@ class ChatsCubit extends Cubit<ChatsState> {
 
         emit(
           state.copyWith(
-            status: ChatsStatus.success,
+            status: ChatStatus.success,
             chatsList: <Chat>[newChat, ...state.chatsList],
             currentChat: newChat,
             openedChat: newChat,
@@ -206,13 +206,13 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   /// Delete a chat by ID
   Future<void> deleteChat(String id) async {
-    emit(state.copyWith(status: ChatsStatus.updating));
+    emit(state.copyWith(status: ChatStatus.updating));
     final Either<Exception, void> result = await _chatRepository.deleteChat(id);
     result.fold(
       (Exception error) {
         emit(
           state.copyWith(
-            status: ChatsStatus.error,
+            status: ChatStatus.error,
             errorMessage: error.toString(),
           ),
         );
@@ -220,14 +220,14 @@ class ChatsCubit extends Cubit<ChatsState> {
       (_) {
         final List<Chat> chatsList = List<Chat>.from(state.chatsList);
         chatsList.removeWhere((Chat element) => element.id == id);
-        emit(state.copyWith(chatsList: chatsList, status: ChatsStatus.success));
+        emit(state.copyWith(chatsList: chatsList, status: ChatStatus.success));
       },
     );
   }
 
   /// Update avatar for the opened chat
   Future<void> updateAvatarOpenedChat(AvatarConfig avatarConfig) async {
-    emit(state.copyWith(status: ChatsStatus.updating));
+    emit(state.copyWith(status: ChatStatus.updating));
     final Chat chat = state.openedChat;
     final Avatar avatar = chat.avatar.copyWith(
       hat: avatarConfig.hat ?? chat.avatar.hat,
@@ -238,18 +238,18 @@ class ChatsCubit extends Cubit<ChatsState> {
       costume: avatarConfig.costume ?? chat.avatar.costume,
     );
     final Chat updatedChat = chat.copyWith(avatar: avatar);
-    emit(state.copyWith(openedChat: updatedChat, status: ChatsStatus.success));
+    emit(state.copyWith(openedChat: updatedChat, status: ChatStatus.success));
     await _chatRepository.updateAvatar(chat.id, avatar);
   }
 
   /// Update background for the opened chat
   Future<void> updateBackgroundOpenedChat(AvatarBackgrounds bg) async {
-    emit(state.copyWith(status: ChatsStatus.updating));
+    emit(state.copyWith(status: ChatStatus.updating));
     final Chat chat = state.openedChat;
     final Chat updatedChat = chat.copyWith(
       avatar: chat.avatar.copyWith(background: bg),
     );
-    emit(state.copyWith(openedChat: updatedChat, status: ChatsStatus.success));
+    emit(state.copyWith(openedChat: updatedChat, status: ChatStatus.success));
     await _chatRepository.updateAvatar(chat.id, updatedChat.avatar);
   }
 
@@ -261,7 +261,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       (Exception error) {
         AppLogger.error(
           'Failed to set language',
-          tag: 'ChatsCubit',
+          tag: 'ChatCubit',
           error: error,
         );
       },
@@ -279,7 +279,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       (Exception error) {
         AppLogger.error(
           'Failed to set sound effects',
-          tag: 'ChatsCubit',
+          tag: 'ChatCubit',
           error: error,
         );
       },
@@ -312,12 +312,12 @@ class ChatsCubit extends Cubit<ChatsState> {
 
   /// Update error message
   void setError(String message) {
-    emit(state.copyWith(status: ChatsStatus.error, errorMessage: message));
+    emit(state.copyWith(status: ChatStatus.error, errorMessage: message));
   }
 
   /// Reset status to success
   void resetStatus() {
-    emit(state.copyWith(status: ChatsStatus.success));
+    emit(state.copyWith(status: ChatStatus.success));
   }
 
   /// Update the chat state (both current and opened) without saving to the repo
@@ -333,7 +333,7 @@ class ChatsCubit extends Cubit<ChatsState> {
         currentChat: chat,
         openedChat: chat,
         chatsList: updatedChatsList,
-        status: ChatsStatus.streaming,
+        status: ChatStatus.streaming,
       ),
     );
   }
@@ -344,7 +344,7 @@ class ChatsCubit extends Cubit<ChatsState> {
     if (state.generatingTitleChatIds.contains(chatId)) {
       AppLogger.debug(
         'Already generating title for chat $chatId, skipping',
-        tag: 'ChatsCubit',
+        tag: 'ChatCubit',
       );
       return;
     }
@@ -457,7 +457,7 @@ class ChatsCubit extends Cubit<ChatsState> {
       if (config == null) {
         emit(
           state.copyWith(
-            status: ChatsStatus.error,
+            status: ChatStatus.error,
             errorMessage: 'No LLM configuration selected',
           ),
         );
@@ -479,7 +479,7 @@ class ChatsCubit extends Cubit<ChatsState> {
           (Exception error) {
             AppLogger.error(
               'Function calling check failed',
-              tag: 'ChatsCubit',
+              tag: 'ChatCubit',
               error: error,
             );
             // Continue with streaming even if function calling fails
@@ -605,11 +605,11 @@ class ChatsCubit extends Cubit<ChatsState> {
           complete: () {
             AppLogger.debug(
               'Stream complete with $sentenceCount sentences',
-              tag: 'ChatsCubit',
+              tag: 'ChatCubit',
             );
           },
           error: (String msg) {
-            AppLogger.error('Stream error: $msg', tag: 'ChatsCubit');
+            AppLogger.error('Stream error: $msg', tag: 'ChatCubit');
           },
         );
       }
@@ -651,12 +651,12 @@ class ChatsCubit extends Cubit<ChatsState> {
     } catch (e) {
       AppLogger.error(
         'Error in streaming message',
-        tag: 'ChatsCubit',
+        tag: 'ChatCubit',
         error: e,
       );
       emit(
         state.copyWith(
-          status: ChatsStatus.error,
+          status: ChatStatus.error,
           errorMessage: e.toString(),
           streamingContent: '',
         ),
@@ -668,7 +668,7 @@ class ChatsCubit extends Cubit<ChatsState> {
   // Getters for convenience
   Chat get currentChat => state.currentChat;
   Chat get openedChat => state.openedChat;
-  ChatsStatus get status => state.status;
+  ChatStatus get status => state.status;
   String get currentLanguage => state.currentLanguage;
   bool get soundEffectsEnabled => state.soundEffectsEnabled;
   bool get functionCallingEnabled => state.functionCallingEnabled;

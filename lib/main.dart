@@ -15,8 +15,8 @@ import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
 import 'core/l10n/generated/app_localizations.dart';
 import 'features/avatar/presentation/bloc/avatar_cubit.dart';
-import 'features/chat/presentation/bloc/chats_cubit.dart';
-import 'features/chat/presentation/bloc/chats_state.dart';
+import 'features/chat/presentation/bloc/chat_cubit.dart';
+import 'features/chat/presentation/bloc/chat_state.dart';
 // import 'features/chat/presentation/bloc/chat_list_cubit.dart';
 import 'features/chat/presentation/bloc/chat_title_cubit.dart';
 import 'features/chat/presentation/bloc/chat_tts_cubit.dart';
@@ -80,8 +80,8 @@ class MyApp extends StatelessWidget {
         BlocProvider<TalkingCubit>(
           create: (BuildContext context) => getIt<TalkingCubit>(),
         ),
-        BlocProvider<ChatsCubit>(
-          create: (BuildContext context) => getIt<ChatsCubit>()..init(),
+        BlocProvider<ChatCubit>(
+          create: (BuildContext context) => getIt<ChatCubit>()..init(),
         ),
         // BlocProvider<ChatListCubit>(
         //   create: (BuildContext context) => getIt<ChatListCubit>()..init(),
@@ -106,8 +106,8 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => getIt<HomeCubit>()..initialize(),
         ),
       ],
-      child: BlocBuilder<ChatsCubit, ChatsState>(
-        builder: (BuildContext context, ChatsState state) {
+      child: BlocBuilder<ChatCubit, ChatState>(
+        builder: (BuildContext context, ChatState state) {
           return MaterialApp.router(
             title: 'Yofardev AI',
             debugShowCheckedModeBanner: false,

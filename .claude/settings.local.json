@@ -77,7 +77,8 @@
       "WebSearch",
       "Bash(./gradlew tasks:*)",
       "Bash(aapt dump:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(rtk grep:*)"
     ]
   }
 }

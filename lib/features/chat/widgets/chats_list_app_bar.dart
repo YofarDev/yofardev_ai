@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/res/app_colors.dart';
-import '../presentation/bloc/chats_cubit.dart';
+import '../presentation/bloc/chat_cubit.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
 /// App bar for the chats list screen
@@ -57,7 +57,7 @@ class ChatsListAppBar extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.add_circle_outlined),
               onPressed: () {
-                context.read<ChatsCubit>().createNewChat();
+                context.read<ChatCubit>().createNewChat();
               },
               tooltip: AppLocalizations.of(context).newChat,
             ),

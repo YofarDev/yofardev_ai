@@ -3,7 +3,7 @@ import 'package:audio_analyzer/audio_analyzer.dart';
 import '../../utils/logger.dart';
 
 /// Service for extracting audio amplitudes for avatar mouth animation
-/// Extracted from ChatsCubit to follow single responsibility principle
+/// Extracted from ChatCubit to follow single responsibility principle
 class AudioAmplitudeService {
   AudioAmplitudeService({AudioAnalyzer? analyzer}) : _analyzer = analyzer;
 

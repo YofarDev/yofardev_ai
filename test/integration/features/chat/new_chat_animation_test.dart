@@ -24,8 +24,8 @@ import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 
 // Mock repositories
@@ -98,7 +98,7 @@ void main() {
   group('New Chat Animation Integration', () {
     late MockChatRepository mockChatRepository;
     late MockSettingsRepository mockSettingsRepository;
-    late ChatsCubit chatsCubit;
+    late ChatCubit chatsCubit;
     late AvatarCubit avatarCubit;
     late AvatarAnimationService avatarAnimationService;
 
@@ -158,8 +158,8 @@ void main() {
           MockStreamProcessorService();
       final MockChatEntryService mockChatEntryService = MockChatEntryService();
 
-      // Create ChatsCubit with mocked dependencies
-      chatsCubit = ChatsCubit(
+      // Create ChatCubit with mocked dependencies
+      chatsCubit = ChatCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         avatarAnimationService: avatarAnimationService,
@@ -188,7 +188,7 @@ void main() {
       return MaterialApp(
         home: MultiBlocProvider(
           providers: <SingleChildWidget>[
-            BlocProvider<ChatsCubit>.value(value: chatsCubit),
+            BlocProvider<ChatCubit>.value(value: chatsCubit),
             BlocProvider<AvatarCubit>.value(value: avatarCubit),
           ],
           child: Builder(
@@ -196,7 +196,7 @@ void main() {
               body: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    context.read<ChatsCubit>().createNewChat();
+                    context.read<ChatCubit>().createNewChat();
                   },
                   child: const Text('New Chat'),
                 ),
@@ -241,7 +241,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Final state - animation complete, chat created successfully
-      expect(chatsCubit.state.status, ChatsStatus.success);
+      expect(chatsCubit.state.status, ChatStatus.success);
       expect(chatsCubit.state.currentChat.id, 'test-chat-id');
     });
 
@@ -309,7 +309,7 @@ void main() {
       expect(backgroundTransitions, contains(BackgroundTransition.none));
 
       // Final state should be success
-      expect(chatsCubit.state.status, ChatsStatus.success);
+      expect(chatsCubit.state.status, ChatStatus.success);
 
       // Clean up subscription
       await subscription.cancel();
@@ -345,7 +345,7 @@ void main() {
       expect(avatarCubit.state.backgroundTransition, BackgroundTransition.none);
 
       // Verify chat was created successfully
-      expect(chatsCubit.state.status, ChatsStatus.success);
+      expect(chatsCubit.state.status, ChatStatus.success);
       expect(chatsCubit.state.currentChat.id, isNotEmpty);
     });
   });

@@ -9,8 +9,8 @@ import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../chat/domain/models/chat_entry.dart';
-import '../../chat/presentation/bloc/chats_cubit.dart';
-import '../../chat/presentation/bloc/chats_state.dart';
+import '../../chat/presentation/bloc/chat_cubit.dart';
+import '../../chat/presentation/bloc/chat_state.dart';
 import '../../demo/data/repositories/demo_repository_impl.dart';
 import '../../demo/presentation/bloc/demo_cubit.dart';
 import '../../demo/presentation/bloc/demo_state.dart';
@@ -38,22 +38,22 @@ class HomeBlocListeners extends StatelessWidget {
         BlocListener<TalkingCubit, TalkingState>(
           listener: _onTalkingStateChanged,
         ),
-        BlocListener<ChatsCubit, ChatsState>(
+        BlocListener<ChatCubit, ChatState>(
           listenWhen:
-              (ChatsState previous, ChatsState current) =>
+              (ChatState previous, ChatState current) =>
                   previous.status != current.status,
           listener: _onChatStreamingStateChanged,
         ),
-        BlocListener<ChatsCubit, ChatsState>(
-          listenWhen: (ChatsState previous, ChatsState current) =>
+        BlocListener<ChatCubit, ChatState>(
+          listenWhen: (ChatState previous, ChatState current) =>
               previous.currentChat.id != current.currentChat.id ||
-              (previous.status == ChatsStatus.loading &&
-                  (current.status == ChatsStatus.success ||
-                      current.status == ChatsStatus.loaded)),
+              (previous.status == ChatStatus.loading &&
+                  (current.status == ChatStatus.success ||
+                      current.status == ChatStatus.loaded)),
           listener: _onCurrentChatChanged,
         ),
-        BlocListener<ChatsCubit, ChatsState>(
-          listenWhen: (ChatsState previous, ChatsState current) =>
+        BlocListener<ChatCubit, ChatState>(
+          listenWhen: (ChatState previous, ChatState current) =>
               current.currentChat.entries.length >
               previous.currentChat.entries.length,
           listener: _onNewChatEntry,
@@ -111,35 +111,35 @@ class HomeBlocListeners extends StatelessWidget {
 
   void _onChatStreamingStateChanged(
     BuildContext context,
-    ChatsState streamingState,
+    ChatState streamingState,
   ) {
     final TalkingCubit talkingCubit = context.read<TalkingCubit>();
 
     switch (streamingState.status) {
-      case ChatsStatus.initial:
-      case ChatsStatus.creatingChat:
+      case ChatStatus.initial:
+      case ChatStatus.creatingChat:
         // Do nothing
         break;
-      case ChatsStatus.loading:
-      case ChatsStatus.typing:
-      case ChatsStatus.streaming:
+      case ChatStatus.loading:
+      case ChatStatus.typing:
+      case ChatStatus.streaming:
         // Show thinking animation while waiting for LLM response
         talkingCubit.setLoadingStatus(true);
-      case ChatsStatus.success:
-      case ChatsStatus.loaded:
-      case ChatsStatus.updating:
+      case ChatStatus.success:
+      case ChatStatus.loaded:
+      case ChatStatus.updating:
         // Streaming completed successfully
         // Don't stop here - let TTS play and handle state transition
         break;
-      case ChatsStatus.error:
-      case ChatsStatus.interrupted:
+      case ChatStatus.error:
+      case ChatStatus.interrupted:
         // Error or interruption - stop thinking animation
         talkingCubit.stop();
         break;
     }
   }
 
-  void _onCurrentChatChanged(BuildContext context, ChatsState state) {
+  void _onCurrentChatChanged(BuildContext context, ChatState state) {
     context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
   }
 
@@ -152,7 +152,7 @@ class HomeBlocListeners extends StatelessWidget {
 
       // Activate demo mode when a script is set
       final DemoService demoService = getIt<DemoService>();
-      final ChatsState chatsState = context.read<ChatsCubit>().state;
+      final ChatState chatsState = context.read<ChatCubit>().state;
 
       AppLogger.info(
         'Calling activateDemo for chat: ${chatsState.currentChat.id}',
@@ -185,7 +185,7 @@ class HomeBlocListeners extends StatelessWidget {
     }
   }
 
-  void _onNewChatEntry(BuildContext context, ChatsState state) {
+  void _onNewChatEntry(BuildContext context, ChatState state) {
     final List<ChatEntry> entries = state.currentChat.entries;
     if (entries.isEmpty) return;
 
@@ -285,8 +285,8 @@ class HomeBlocListeners extends StatelessWidget {
           avatarConfig,
         );
 
-        // Update ChatsCubit to persist avatar to chat
-        context.read<ChatsCubit>().updateAvatarOpenedChat(avatarConfig);
+        // Update ChatCubit to persist avatar to chat
+        context.read<ChatCubit>().updateAvatarOpenedChat(avatarConfig);
       }
     }
   }

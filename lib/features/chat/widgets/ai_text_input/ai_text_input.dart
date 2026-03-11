@@ -20,8 +20,8 @@ import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../talking/presentation/bloc/talking_state.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/models/chat_entry.dart';
-import '../../presentation/bloc/chats_cubit.dart';
-import '../../presentation/bloc/chats_state.dart';
+import '../../presentation/bloc/chat_cubit.dart';
+import '../../presentation/bloc/chat_state.dart';
 import '../function_calling_widget.dart';
 import 'picked_image_preview.dart';
 
@@ -94,11 +94,11 @@ class _AiTextInputState extends State<AiTextInput> {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return BlocListener<ChatsCubit, ChatsState>(
-      listenWhen: (ChatsState previous, ChatsState current) =>
+    return BlocListener<ChatCubit, ChatState>(
+      listenWhen: (ChatState previous, ChatState current) =>
           previous.status != current.status,
-      listener: (BuildContext context, ChatsState state) {
-        if (state.status == ChatsStatus.error) {
+      listener: (BuildContext context, ChatState state) {
+        if (state.status == ChatStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage),
@@ -110,8 +110,8 @@ class _AiTextInputState extends State<AiTextInput> {
       },
       child: BlocBuilder<AvatarCubit, AvatarState>(
         builder: (BuildContext context, AvatarState avatarState) {
-          return BlocBuilder<ChatsCubit, ChatsState>(
-            builder: (BuildContext context, ChatsState state) {
+          return BlocBuilder<ChatCubit, ChatState>(
+            builder: (BuildContext context, ChatState state) {
               return BlocBuilder<TalkingCubit, TalkingState>(
                 builder: (BuildContext context, TalkingState talkingState) {
                   ChatEntry? lastUserEntry;
@@ -241,7 +241,7 @@ class _AiTextInputState extends State<AiTextInput> {
                   functionCallingEnabled: functionCallingEnabled,
                 ),
                 localeId:
-                    context.read<ChatsCubit>().state.currentLanguage == 'fr'
+                    context.read<ChatCubit>().state.currentLanguage == 'fr'
                     ? 'fr_FR'
                     : 'en_US',
                 listenOptions: SpeechListenOptions(partialResults: false),
@@ -306,8 +306,8 @@ class _AiTextInputState extends State<AiTextInput> {
       _pickedImage = null;
     });
 
-    // Use ChatsCubit for streaming
-    await context.read<ChatsCubit>().streamResponse(
+    // Use ChatCubit for streaming
+    await context.read<ChatCubit>().streamResponse(
       prompt,
       onlyText: widget.onlyText,
       attachedImage: attachedImage,
@@ -316,7 +316,7 @@ class _AiTextInputState extends State<AiTextInput> {
       language: currentLanguage,
       onChatUpdated: (Chat updatedChat) {
         if (mounted) {
-          context.read<ChatsCubit>().updateChatStreaming(updatedChat);
+          context.read<ChatCubit>().updateChatStreaming(updatedChat);
         }
       },
       functionCallingEnabled: functionCallingEnabled,
@@ -325,7 +325,7 @@ class _AiTextInputState extends State<AiTextInput> {
     if (!mounted) return;
 
     // Reset UI state to success once the streaming request safely returns
-    context.read<ChatsCubit>().resetStatus();
+    context.read<ChatCubit>().resetStatus();
 
     // TTS is handled automatically during streaming via TtsQueueManager
     // TalkingMouth will play audio from queue regardless of loading state

@@ -14,8 +14,8 @@ import 'package:yofardev_ai/core/services/stream_processor/stream_processor_serv
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
@@ -386,8 +386,8 @@ class MockChatEntryService implements ChatEntryService {
 }
 
 void main() {
-  group('ChatsCubit', () {
-    late ChatsCubit chatsCubit;
+  group('ChatCubit', () {
+    late ChatCubit chatsCubit;
 
     setUp(() {
       // Create a mock AvatarAnimationService
@@ -405,7 +405,7 @@ void main() {
           MockStreamProcessorService();
       final MockChatEntryService mockChatEntryService = MockChatEntryService();
 
-      chatsCubit = ChatsCubit(
+      chatsCubit = ChatCubit(
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
         avatarAnimationService: mockAnimationService,
@@ -423,7 +423,7 @@ void main() {
     });
 
     test('initial state should have default values', () {
-      expect(chatsCubit.state.status, ChatsStatus.loading);
+      expect(chatsCubit.state.status, ChatStatus.loading);
       expect(chatsCubit.state.chatsList, isEmpty);
       expect(chatsCubit.state.currentChat, const Chat());
       expect(chatsCubit.state.openedChat, const Chat());
@@ -569,14 +569,14 @@ void main() {
       });
     });
 
-    group('ChatsState', () {
+    group('ChatState', () {
       test('should create state with default values', () {
-        const ChatsState state = ChatsState(
+        const ChatState state = ChatState(
           currentChat: Chat(),
           openedChat: Chat(),
         );
 
-        expect(state.status, ChatsStatus.initial);
+        expect(state.status, ChatStatus.initial);
         expect(state.chatsList, isEmpty);
         expect(state.currentChat, const Chat());
         expect(state.openedChat, const Chat());
@@ -589,20 +589,20 @@ void main() {
       });
 
       test('should copy with new values correctly', () {
-        const ChatsState state = ChatsState(
+        const ChatState state = ChatState(
           currentChat: Chat(),
           openedChat: Chat(),
         );
 
-        final ChatsState newState = state.copyWith(
-          status: ChatsStatus.success,
+        final ChatState newState = state.copyWith(
+          status: ChatStatus.success,
           errorMessage: 'Test error',
           soundEffectsEnabled: false,
           currentLanguage: 'en',
           functionCallingEnabled: false,
         );
 
-        expect(newState.status, ChatsStatus.success);
+        expect(newState.status, ChatStatus.success);
         expect(newState.errorMessage, 'Test error');
         expect(newState.soundEffectsEnabled, isFalse);
         expect(newState.currentLanguage, 'en');
@@ -620,7 +620,7 @@ void main() {
       });
 
       test('should copy with list values', () {
-        const ChatsState state = ChatsState(
+        const ChatState state = ChatState(
           currentChat: Chat(),
           openedChat: Chat(),
         );
@@ -634,7 +634,7 @@ void main() {
           <String, dynamic>{'sentence': 'test', 'audioPath': 'path'},
         ];
 
-        final ChatsState newState = state.copyWith(
+        final ChatState newState = state.copyWith(
           chatsList: newChatsList,
           audioPathsWaitingSentences: newAudioPaths,
         );
@@ -649,7 +649,7 @@ void main() {
       });
 
       test('should copy with chat values', () {
-        const ChatsState state = ChatsState(
+        const ChatState state = ChatState(
           currentChat: Chat(),
           openedChat: Chat(),
         );
@@ -657,7 +657,7 @@ void main() {
         const Chat newCurrentChat = Chat(id: 'current-chat');
         const Chat newOpenedChat = Chat(id: 'opened-chat', language: 'fr');
 
-        final ChatsState newState = state.copyWith(
+        final ChatState newState = state.copyWith(
           currentChat: newCurrentChat,
           openedChat: newOpenedChat,
         );
@@ -671,14 +671,14 @@ void main() {
       });
 
       test('should include all fields', () {
-        const ChatsState state = ChatsState(
+        const ChatState state = ChatState(
           currentChat: Chat(),
           openedChat: Chat(),
         );
 
         // Verify all fields are present via toString
         final String str = state.toString();
-        expect(str, contains('ChatsState'));
+        expect(str, contains('ChatState'));
         expect(str, contains('status'));
         expect(str, contains('chatsList'));
         expect(str, contains('currentChat'));
@@ -686,12 +686,12 @@ void main() {
       });
 
       test('props should be unique for different states', () {
-        const ChatsState state1 = ChatsState(
+        const ChatState state1 = ChatState(
           currentChat: Chat(),
           openedChat: Chat(),
         );
-        const ChatsState state2 = ChatsState(
-          status: ChatsStatus.success,
+        const ChatState state2 = ChatState(
+          status: ChatStatus.success,
           currentChat: Chat(),
           openedChat: Chat(),
         );
@@ -700,14 +700,14 @@ void main() {
       });
 
       test('props should be same for equal states', () {
-        const ChatsState state1 = ChatsState(
-          status: ChatsStatus.success,
+        const ChatState state1 = ChatState(
+          status: ChatStatus.success,
           currentLanguage: 'en',
           currentChat: Chat(),
           openedChat: Chat(),
         );
-        const ChatsState state2 = ChatsState(
-          status: ChatsStatus.success,
+        const ChatState state2 = ChatState(
+          status: ChatStatus.success,
           currentLanguage: 'en',
           currentChat: Chat(),
           openedChat: Chat(),
@@ -717,18 +717,18 @@ void main() {
       });
     });
 
-    group('ChatsStatus enum', () {
+    group('ChatStatus enum', () {
       test('should have all required values', () {
-        expect(ChatsStatus.values.length, 9);
-        expect(ChatsStatus.values, contains(ChatsStatus.initial));
-        expect(ChatsStatus.values, contains(ChatsStatus.loading));
-        expect(ChatsStatus.values, contains(ChatsStatus.updating));
-        expect(ChatsStatus.values, contains(ChatsStatus.loaded));
-        expect(ChatsStatus.values, contains(ChatsStatus.typing));
-        expect(ChatsStatus.values, contains(ChatsStatus.success));
-        expect(ChatsStatus.values, contains(ChatsStatus.streaming));
-        expect(ChatsStatus.values, contains(ChatsStatus.error));
-        expect(ChatsStatus.values, contains(ChatsStatus.creatingChat));
+        expect(ChatStatus.values.length, 9);
+        expect(ChatStatus.values, contains(ChatStatus.initial));
+        expect(ChatStatus.values, contains(ChatStatus.loading));
+        expect(ChatStatus.values, contains(ChatStatus.updating));
+        expect(ChatStatus.values, contains(ChatStatus.loaded));
+        expect(ChatStatus.values, contains(ChatStatus.typing));
+        expect(ChatStatus.values, contains(ChatStatus.success));
+        expect(ChatStatus.values, contains(ChatStatus.streaming));
+        expect(ChatStatus.values, contains(ChatStatus.error));
+        expect(ChatStatus.values, contains(ChatStatus.creatingChat));
       });
     });
   });
@@ -965,7 +965,7 @@ void main() {
   group('createNewChat with animation', () {
     late MockChatRepositoryWithCustomChat mockChatRepository;
     late MockAvatarAnimationService mockAvatarAnimationService;
-    late ChatsCubit cubit;
+    late ChatCubit cubit;
 
     setUp(() {
       mockAvatarAnimationService = MockAvatarAnimationService();
@@ -979,7 +979,7 @@ void main() {
           MockStreamProcessorService();
       final MockChatEntryService mockChatEntryService = MockChatEntryService();
 
-      cubit = ChatsCubit(
+      cubit = ChatCubit(
         chatRepository: mockChatRepository,
         settingsRepository: MockSettingsRepository(),
         avatarAnimationService: mockAvatarAnimationService,
