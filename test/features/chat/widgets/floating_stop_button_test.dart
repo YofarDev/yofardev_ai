@@ -17,7 +17,6 @@ import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_audio_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
@@ -271,7 +270,6 @@ void main() {
       ).thenAnswer((_) async {});
       talkingCubit = TalkingCubit(talkingRepository, interruptionService);
 
-      final ChatAudioCubit chatAudioCubit = ChatAudioCubit();
       final ChatStreamingCubit chatStreamingCubit = ChatStreamingCubit(
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
@@ -291,7 +289,6 @@ void main() {
         ),
       );
       chatCubit = ChatMessageCubit(
-        chatAudioCubit: chatAudioCubit,
         chatStreamingCubit: chatStreamingCubit,
       );
     });
@@ -299,7 +296,7 @@ void main() {
     tearDown(() {
       chatCubit.close();
       talkingCubit.close();
-      // Note: chatAudioCubit and chatStreamingCubit are owned by chatCubit
+      // Note: chatStreamingCubit is owned by chatCubit
       // and will be closed when chatCubit is closed
       interruptionService.dispose();
     });

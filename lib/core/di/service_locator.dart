@@ -8,7 +8,6 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
-import '../../features/chat/presentation/bloc/chat_audio_cubit.dart';
 // import '../../features/chat/presentation/bloc/chat_list_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_message_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_streaming_cubit.dart';
@@ -218,7 +217,6 @@ Future<void> setupServiceLocator() async {
       llmService: getIt<LlmService>(),
     ),
   );
-  getIt.registerFactory<ChatAudioCubit>(() => ChatAudioCubit());
   getIt.registerFactory<ChatStreamingCubit>(
     () => ChatStreamingCubit(
       chatRepository: getIt<ChatRepository>(),
@@ -234,9 +232,7 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerFactory<ChatMessageCubit>(
     () => ChatMessageCubit(
-      chatAudioCubit: getIt<ChatAudioCubit>(),
       chatStreamingCubit: getIt<ChatStreamingCubit>(),
-      closeChatAudioOnDispose: true,
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));

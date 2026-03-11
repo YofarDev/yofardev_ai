@@ -4,8 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../domain/models/chat.dart';
-import 'chat_audio_cubit.dart';
-import 'chat_audio_state.dart';
 import 'chat_message_state.dart';
 import 'chat_streaming_cubit.dart';
 import 'chat_streaming_state.dart';
@@ -13,45 +11,30 @@ import 'chat_streaming_state.dart';
 /// Coordinator cubit for chat message operations
 ///
 /// This cubit delegates to specialized cubits:
-/// - ChatAudioCubit: manages waiting sentences
 /// - ChatStreamingCubit: manages LLM streaming
 ///
 /// The coordinator maintains backward compatibility for existing consumers
 /// while providing a cleaner separation of concerns.
 class ChatMessageCubit extends Cubit<ChatMessageState> {
   ChatMessageCubit({
-    required ChatAudioCubit chatAudioCubit,
     required ChatStreamingCubit chatStreamingCubit,
-    bool closeChatAudioOnDispose = false,
-  }) : _chatAudioCubit = chatAudioCubit,
-       _chatStreamingCubit = chatStreamingCubit,
-       _closeChatAudioOnDispose = closeChatAudioOnDispose,
+  }) : _chatStreamingCubit = chatStreamingCubit,
        super(ChatMessageState.initial()) {
-    // Listen to audio cubit state changes and emit combined state
-    _audioSubscription = _chatAudioCubit.stream.listen((_) {
-      emit(_buildCombinedState());
-    });
-
     // Listen to streaming cubit state changes and emit combined state
     _streamingSubscription = _chatStreamingCubit.stream.listen((_) {
       emit(_buildCombinedState());
     });
   }
 
-  final ChatAudioCubit _chatAudioCubit;
   final ChatStreamingCubit _chatStreamingCubit;
-  final bool _closeChatAudioOnDispose;
 
   /// Expose child cubits for testing purposes
-  ChatAudioCubit get chatAudioCubit => _chatAudioCubit;
   ChatStreamingCubit get chatStreamingCubit => _chatStreamingCubit;
 
-  late final StreamSubscription<ChatAudioState> _audioSubscription;
   late final StreamSubscription<ChatStreamingState> _streamingSubscription;
 
-  /// Builds the combined state from both cubits
+  /// Builds the combined state from streaming cubit
   ChatMessageState _buildCombinedState() {
-    final ChatAudioState audioState = _chatAudioCubit.state;
     final ChatStreamingState streamingState = _chatStreamingCubit.state;
 
     return ChatMessageState(
@@ -59,8 +42,8 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
       errorMessage: streamingState.errorMessage,
       streamingContent: streamingState.streamingContent,
       streamingSentenceCount: streamingState.streamingSentenceCount,
-      audioPathsWaitingSentences: audioState.audioPathsWaitingSentences,
-      initializing: audioState.initializing,
+      audioPathsWaitingSentences: const <Map<String, dynamic>>[],
+      initializing: false,
     );
   }
 
@@ -77,14 +60,6 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
     };
   }
 
-  // ===== Audio State Delegation =====
-
-  /// Get the current audio state from ChatAudioCubit
-  ChatAudioState get audioState => _chatAudioCubit.state;
-
-  /// Stream of audio state changes
-  Stream<ChatAudioState> get audioStream => _chatAudioCubit.stream;
-
   // ===== Streaming State Delegation =====
 
   /// Get the current streaming state from ChatStreamingCubit
@@ -92,19 +67,6 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
 
   /// Stream of streaming state changes
   Stream<ChatStreamingState> get streamingStream => _chatStreamingCubit.stream;
-
-  // ===== Audio Methods Delegation =====
-
-  /// Loads waiting sentences from cache
-  Future<void> prepareWaitingSentences(String language) =>
-      _chatAudioCubit.prepareWaitingSentences(language);
-
-  /// Shuffles the waiting sentences list
-  void shuffleWaitingSentences() => _chatAudioCubit.shuffleWaitingSentences();
-
-  /// Removes a waiting sentence by its audio path
-  void removeWaitingSentence(String audioPath) =>
-      _chatAudioCubit.removeWaitingSentence(audioPath);
 
   // ===== Streaming Methods Delegation =====
 
@@ -131,11 +93,7 @@ class ChatMessageCubit extends Cubit<ChatMessageState> {
 
   @override
   Future<void> close() async {
-    await _audioSubscription.cancel();
     await _streamingSubscription.cancel();
-    if (_closeChatAudioOnDispose) {
-      await _chatAudioCubit.close();
-    }
     return super.close();
   }
 }

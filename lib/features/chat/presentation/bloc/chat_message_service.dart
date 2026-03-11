@@ -1,5 +1,3 @@
-import 'chat_audio_cubit.dart';
-import 'chat_audio_state.dart';
 import 'chat_message_state.dart';
 import 'chat_streaming_cubit.dart';
 import 'chat_streaming_state.dart';
@@ -13,17 +11,15 @@ import 'chat_streaming_state.dart';
 /// The ChatMessageCubit continues to exist as a thin wrapper that maintains
 /// backward compatibility while delegating coordination logic to this service.
 class ChatMessageService {
-  /// Builds the combined state from both audio and streaming cubits.
+  /// Builds the combined state from streaming cubit.
   ///
-  /// This method combines the state from [ChatAudioCubit] and [ChatStreamingCubit]
+  /// This method combines the state from [ChatStreamingCubit]
   /// into a single [ChatMessageState] for backward compatibility with consumers.
   ///
-  /// [audioState] - The current state from ChatAudioCubit
   /// [streamingState] - The current state from ChatStreamingCubit
   ///
-  /// Returns a combined [ChatMessageState] with fields from both inputs.
+  /// Returns a combined [ChatMessageState] with fields from streaming input.
   static ChatMessageState buildCombinedState({
-    required ChatAudioState audioState,
     required ChatStreamingState streamingState,
   }) {
     return ChatMessageState(
@@ -31,8 +27,8 @@ class ChatMessageService {
       errorMessage: streamingState.errorMessage,
       streamingContent: streamingState.streamingContent,
       streamingSentenceCount: streamingState.streamingSentenceCount,
-      audioPathsWaitingSentences: audioState.audioPathsWaitingSentences,
-      initializing: audioState.initializing,
+      audioPathsWaitingSentences: const <Map<String, dynamic>>[],
+      initializing: false,
     );
   }
 

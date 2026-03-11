@@ -6,7 +6,7 @@ import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../chat/presentation/bloc/chats_cubit.dart';
 import '../../chat/presentation/bloc/chats_state.dart';
-import '../../chat/presentation/bloc/chat_message_cubit.dart';
+import '../../chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../demo/presentation/bloc/demo_cubit.dart';
 import '../../demo/domain/models/demo_script.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
@@ -67,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _updateAvatarScaleForCurrentWidth();
     });
     // Prepare waiting sentences loaded from cache
-    context.read<ChatMessageCubit>().prepareWaitingSentences(
+    context.read<ChatTtsCubit>().prepareWaitingSentences(
       context.read<ChatsCubit>().state.currentLanguage,
     );
   }
