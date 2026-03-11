@@ -6,8 +6,8 @@ import 'package:nested/nested.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_message_state.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
@@ -23,7 +23,7 @@ class MockChatsCubit extends Mock implements ChatsCubit {}
 
 class MockTalkingCubit extends Mock implements TalkingCubit {}
 
-class MockChatMessageCubit extends Mock implements ChatMessageCubit {}
+class MockChatStreamingCubit extends Mock implements ChatStreamingCubit {}
 
 // Simple fake cubit that can emit states for testing
 class FakeChatsCubit extends Cubit<ChatsState> implements ChatsCubit {
@@ -40,7 +40,7 @@ void main() {
     registerFallbackValue(const AvatarConfig());
     registerFallbackValue(const Chat());
     registerFallbackValue(const TalkingState.idle());
-    registerFallbackValue(const ChatMessageState());
+    registerFallbackValue(const ChatStreamingState());
     registerFallbackValue(
       ChatsState(
         currentChat: const Chat(),
@@ -55,13 +55,13 @@ void main() {
     late MockAvatarCubit mockAvatarCubit;
     late MockChatsCubit mockChatsCubit;
     late MockTalkingCubit mockTalkingCubit;
-    late MockChatMessageCubit mockChatMessageCubit;
+    late MockChatStreamingCubit mockChatStreamingCubit;
 
     setUp(() {
       mockAvatarCubit = MockAvatarCubit();
       mockChatsCubit = MockChatsCubit();
       mockTalkingCubit = MockTalkingCubit();
-      mockChatMessageCubit = MockChatMessageCubit();
+      mockChatStreamingCubit = MockChatStreamingCubit();
 
       // Setup default mock behaviors
       when(
@@ -89,11 +89,11 @@ void main() {
       when(() => mockTalkingCubit.state).thenReturn(const TalkingState.idle());
 
       when(
-        () => mockChatMessageCubit.stream,
-      ).thenAnswer((_) => const Stream<ChatMessageState>.empty());
+        () => mockChatStreamingCubit.stream,
+      ).thenAnswer((_) => const Stream<ChatStreamingState>.empty());
       when(
-        () => mockChatMessageCubit.state,
-      ).thenReturn(const ChatMessageState());
+        () => mockChatStreamingCubit.state,
+      ).thenReturn(const ChatStreamingState());
     });
 
     Widget buildTestWidget() {
@@ -102,7 +102,7 @@ void main() {
           BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
           BlocProvider<ChatsCubit>.value(value: mockChatsCubit),
           BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
-          BlocProvider<ChatMessageCubit>.value(value: mockChatMessageCubit),
+          BlocProvider<ChatStreamingCubit>.value(value: mockChatStreamingCubit),
         ],
         child: const MaterialApp(home: Scaffold(body: AiTextInput())),
       );
@@ -123,7 +123,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatsCubit>.value(value: mockChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
-            BlocProvider<ChatMessageCubit>.value(value: mockChatMessageCubit),
+            BlocProvider<ChatStreamingCubit>.value(value: mockChatStreamingCubit),
           ],
           child: const MaterialApp(
             home: Scaffold(body: AiTextInput(onlyText: true)),
@@ -173,7 +173,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatsCubit>.value(value: fakeChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
-            BlocProvider<ChatMessageCubit>.value(value: mockChatMessageCubit),
+            BlocProvider<ChatStreamingCubit>.value(value: mockChatStreamingCubit),
           ],
           child: const MaterialApp(home: Scaffold(body: AiTextInput())),
         ),

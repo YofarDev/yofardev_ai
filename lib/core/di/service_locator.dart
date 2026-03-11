@@ -9,7 +9,6 @@ import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
 // import '../../features/chat/presentation/bloc/chat_list_cubit.dart';
-import '../../features/chat/presentation/bloc/chat_message_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_streaming_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_title_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
@@ -228,11 +227,6 @@ Future<void> setupServiceLocator() async {
       chatEntryService: getIt<ChatEntryService>(),
       ttsQueueManager: getIt<TtsQueueManager>(),
       chatsCubit: getIt<ChatsCubit>(),
-    ),
-  );
-  getIt.registerFactory<ChatMessageCubit>(
-    () => ChatMessageCubit(
-      chatStreamingCubit: getIt<ChatStreamingCubit>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
