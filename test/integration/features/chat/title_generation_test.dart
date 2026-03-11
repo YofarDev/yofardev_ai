@@ -101,7 +101,8 @@ class MockLlmService extends Mock implements LlmService {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 
-class MockAvatarAnimationService extends Mock implements AvatarAnimationService {}
+class MockAvatarAnimationService extends Mock
+    implements AvatarAnimationService {}
 
 class MockInterruptionService implements InterruptionService {
   final StreamController<void> _controller = StreamController<void>.broadcast();
@@ -173,11 +174,13 @@ void main() {
           MockSettingsRepository();
 
       // Set up mock to return language
-      when(() => mockSettingsRepository.getLanguage())
-          .thenAnswer((_) async => const Right<Exception, String?>('en'));
+      when(
+        () => mockSettingsRepository.getLanguage(),
+      ).thenAnswer((_) async => const Right<Exception, String?>('en'));
       // Set up mock to return sound effects enabled
-      when(() => mockSettingsRepository.getSoundEffects())
-          .thenAnswer((_) async => const Right<Exception, bool>(true));
+      when(
+        () => mockSettingsRepository.getSoundEffects(),
+      ).thenAnswer((_) async => const Right<Exception, bool>(true));
 
       // Create mock services
       final MockInterruptionService mockInterruptionService =

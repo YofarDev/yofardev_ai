@@ -8,7 +8,7 @@ import '../../../../core/services/audio/audio_player_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/services/audio/tts_queue_service.dart';
-import '../../../talking/presentation/bloc/talking_cubit.dart';
+import '../../../talking/domain/services/tts_playback_service.dart';
 import '../../domain/services/waiting_sentences_cache_datasource.dart';
 import 'chat_tts_state.dart';
 
@@ -25,12 +25,12 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     required AudioAmplitudeService audioAmplitudeService,
     required AudioPlayerService audioPlayerService,
     required InterruptionService interruptionService,
-    required TalkingCubit talkingCubit,
+    required TtsPlaybackService ttsPlaybackService,
   }) : _ttsQueueManager = ttsQueueManager,
        _audioAmplitudeService = audioAmplitudeService,
        _audioPlayerService = audioPlayerService,
        _interruptionService = interruptionService,
-       _talkingCubit = talkingCubit,
+       _ttsPlaybackService = ttsPlaybackService,
        super(ChatTtsState.initial()) {
     _subscribeToTtsStream();
     _subscribeToInterruptions();
@@ -40,7 +40,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   final AudioAmplitudeService _audioAmplitudeService;
   final AudioPlayerService _audioPlayerService;
   final InterruptionService _interruptionService;
-  final TalkingCubit _talkingCubit;
+  final TtsPlaybackService _ttsPlaybackService;
   StreamSubscription<String>? _ttsAudioSubscription;
   StreamSubscription<void>? _interruptionSubscription;
   final List<String> _pendingPlaybackQueue = <String>[];
@@ -80,7 +80,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         _currentPlaybackStopSignal!.complete();
       }
       await _audioPlayerService.stop();
-      await _talkingCubit.stop();
+      await _ttsPlaybackService.stop();
     });
   }
 
@@ -145,22 +145,24 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         tag: 'ChatTtsCubit',
       );
 
-      // 4. Set speaking state
-      _talkingCubit.setSpeakingState();
-
-      // 5. Trigger the animation DIRECTLY on TalkingCubit with actual duration
-      _talkingCubit.startAmplitudeAnimation(
+      // 4. Trigger the animation using the playback service
+      _ttsPlaybackService.startAmplitudeAnimation(
         audioPath,
         amplitudes,
         audioDuration,
-        () {
+        onMouthStateUpdate: (_) {
+          // Mouth state updates are handled by TalkingCubit
+          // which also uses the TtsPlaybackService
+        },
+        onComplete: () {
           // Animation completion callback
           // Note: We don't stop here because audio might still be playing
           // The real stop happens when onPlaybackComplete fires
+          AppLogger.debug('Animation completed', tag: 'ChatTtsCubit');
         },
       );
 
-      // 6. Wait for playback completion OR interruption before processing next.
+      // 5. Wait for playback completion OR interruption before processing next.
       final Completer<void> stopSignal = Completer<void>();
       _currentPlaybackStopSignal = stopSignal;
       await Future.any(<Future<void>>[
@@ -169,7 +171,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       ]);
 
       AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
-      await _talkingCubit
+      await _ttsPlaybackService
           .stop(); // Return to idle state (also cancels animation)
       if (identical(_currentPlaybackStopSignal, stopSignal)) {
         _currentPlaybackStopSignal = null;

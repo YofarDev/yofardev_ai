@@ -108,7 +108,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatCubit>.value(value: mockChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
-            ],
+          ],
           child: const MaterialApp(
             home: Scaffold(body: AiTextInput(onlyText: true)),
           ),
@@ -157,7 +157,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatCubit>.value(value: fakeChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
-            ],
+          ],
           child: const MaterialApp(home: Scaffold(body: AiTextInput())),
         ),
       );

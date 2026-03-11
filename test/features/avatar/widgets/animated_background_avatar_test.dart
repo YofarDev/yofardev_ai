@@ -3,18 +3,34 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
+import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
+import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/widgets/animated_background_avatar.dart';
-import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
-import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
+
+class MockAvatarAnimationService implements AvatarAnimationService {
+  @override
+  Stream<AvatarAnimation> get animations =>
+      const Stream<AvatarAnimation>.empty();
+
+  @override
+  void dispose() {}
+
+  @override
+  Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {}
+}
 
 void main() {
   group('AnimatedBackgroundAvatar', () {
     late AvatarCubit avatarCubit;
+    late MockAvatarAnimationService mockAnimationService;
 
     setUp(() {
-      avatarCubit = AvatarCubit(MockAvatarRepository());
+      mockAnimationService = MockAvatarAnimationService();
+      avatarCubit = AvatarCubit(MockAvatarRepository(), mockAnimationService);
       avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
     });
 

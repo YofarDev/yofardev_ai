@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../domain/repositories/talking_repository.dart';
+import '../../domain/services/tts_playback_service.dart';
 import 'talking_state.dart';
 
 /// Cubit responsible for managing TTS playback state
@@ -12,8 +13,13 @@ import 'talking_state.dart';
 /// This cubit abstracts the TTS service through a repository,
 /// allowing for proper separation of concerns and testability.
 class TalkingCubit extends Cubit<TalkingState> {
-  TalkingCubit(this._repository, this._interruptionService)
-    : super(const TalkingState.idle()) {
+  TalkingCubit(
+    this._repository,
+    this._interruptionService,
+    this._playbackService,
+  ) : super(const TalkingState.idle()) {
+    // Register callback for playback state changes
+    _playbackService.setPlaybackStateCallback(_onPlaybackStateChanged);
     // Listen to interruptions
     _interruptionSubscription = _interruptionService.interruptionStream.listen((
       _,
@@ -22,9 +28,20 @@ class TalkingCubit extends Cubit<TalkingState> {
     });
   }
 
+  /// Handle playback state changes from the service.
+  ///
+  /// When TTS playback starts or stops, we need to update our state accordingly.
+  void _onPlaybackStateChanged(bool isSpeaking) {
+    if (isSpeaking) {
+      emit(const TalkingState.speaking());
+    } else {
+      emit(const TalkingState.idle());
+    }
+  }
+
   final TalkingRepository _repository;
   final InterruptionService _interruptionService;
-  Timer? _animationTimer;
+  final TtsPlaybackService _playbackService;
   StreamSubscription<void>? _interruptionSubscription;
 
   /// Initialize the cubit
@@ -73,9 +90,7 @@ class TalkingCubit extends Cubit<TalkingState> {
 
   /// Stop all TTS playback
   Future<void> stop() async {
-    _animationTimer?.cancel();
-    _animationTimer = null;
-    await _repository.stop();
+    await _playbackService.stop();
     emit(const TalkingState.idle());
   }
 
@@ -117,56 +132,49 @@ class TalkingCubit extends Cubit<TalkingState> {
       tag: 'TalkingCubit',
     );
 
-    // Cancel any existing animation
-    _animationTimer?.cancel();
-
-    if (amplitudes.isEmpty) {
-      AppLogger.debug(
-        'TalkingCubit: No amplitudes, calling onComplete immediately',
-        tag: 'TalkingCubit',
-      );
-      onComplete();
-      return;
-    }
-
-    final int totalFrames = amplitudes.length;
-    // Calculate update interval based on ACTUAL audio duration
-    final int updateInterval = (audioDuration.inMilliseconds / totalFrames)
-        .round()
-        .clamp(5, 100); // Clamp to reasonable range
-
-    AppLogger.debug(
-      'TalkingCubit: Starting animation timer: interval=${updateInterval}ms, frames=$totalFrames, totalDuration=${audioDuration.inMilliseconds}ms',
-      tag: 'TalkingCubit',
+    _playbackService.startAmplitudeAnimation(
+      audioPath,
+      amplitudes,
+      audioDuration,
+      onMouthStateUpdate: (int mouthState) {
+        if (!isClosed) {
+          _updateMouthStateFromService(mouthState);
+        }
+      },
+      onComplete: () {
+        AppLogger.debug(
+          'TalkingCubit: Animation completed',
+          tag: 'TalkingCubit',
+        );
+        if (!isClosed) {
+          onComplete();
+        }
+      },
     );
+  }
 
-    int currentIndex = 0;
-    _animationTimer = Timer.periodic(Duration(milliseconds: updateInterval), (
-      Timer timer,
-    ) {
-      if (currentIndex >= totalFrames) {
-        AppLogger.debug(
-          'TalkingCubit: Animation completed after $currentIndex frames',
-          tag: 'TalkingCubit',
-        );
-        timer.cancel();
-        _animationTimer = null;
-        onComplete();
-        return;
-      }
+  /// Update mouth state based on service callback (0-4 scale)
+  void _updateMouthStateFromService(int mouthState) {
+    final MouthState newMouthState = _mapMouthStateFromInt(mouthState);
 
-      if (!isClosed) {
-        updateMouthState(amplitudes[currentIndex]);
-        currentIndex++;
-      } else {
-        AppLogger.debug(
-          'TalkingCubit: Cubit closed, cancelling animation',
-          tag: 'TalkingCubit',
-        );
-        timer.cancel();
-        _animationTimer = null;
-      }
-    });
+    // Only emit if state actually changed and we're in a speaking state
+    final TalkingState currentState = state;
+    if (currentState.mouthState != newMouthState) {
+      currentState.when(
+        idle: (MouthState m) => emit(TalkingState.idle(newMouthState)),
+        waiting: (MouthState m) => emit(TalkingState.waiting(newMouthState)),
+        generating: (MouthState m) =>
+            emit(TalkingState.generating(newMouthState)),
+        speaking: (MouthState m) => emit(TalkingState.speaking(newMouthState)),
+        error: (String message, MouthState m) =>
+            emit(TalkingState.error(message, newMouthState)),
+      );
+    }
+  }
+
+  /// Map integer mouth state (0-4) to MouthState enum
+  MouthState _mapMouthStateFromInt(int value) {
+    return MouthState.values[value];
   }
 
   /// Map amplitude value to mouth state
@@ -201,7 +209,6 @@ class TalkingCubit extends Cubit<TalkingState> {
 
   @override
   Future<void> close() async {
-    _animationTimer?.cancel();
     await _interruptionSubscription?.cancel();
     await super.close();
   }

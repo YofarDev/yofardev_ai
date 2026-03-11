@@ -30,6 +30,7 @@ import '../services/audio/tts_queue_service.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
+import '../../features/talking/domain/services/tts_playback_service.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
@@ -160,18 +161,28 @@ Future<void> setupServiceLocator() async {
     () => StreamProcessorService(),
   );
 
+  // TTS playback service - coordinates TTS playback across features
+  getIt.registerLazySingleton<TtsPlaybackService>(
+    () => TtsPlaybackService(getIt<TalkingRepository>()),
+  );
+
+  // Avatar animation service - emits events that cubits subscribe to
+  getIt.registerLazySingleton<AvatarAnimationService>(
+    () => AvatarAnimationService(),
+  );
+
   // BLoCs / Cubits
   getIt.registerFactory<AvatarCubit>(
-    () => AvatarCubit(getIt<AvatarRepository>()),
-  );
-  // AvatarAnimationService must be registered after AvatarCubit (depends on it)
-  getIt.registerLazySingleton<AvatarAnimationService>(
-    () => AvatarAnimationService(getIt<AvatarCubit>()),
-  );
-  // TalkingCubit must be a singleton so both ChatTtsCubit and UI use the same instance
-  getIt.registerLazySingleton<TalkingCubit>(
     () =>
-        TalkingCubit(getIt<TalkingRepository>(), getIt<InterruptionService>()),
+        AvatarCubit(getIt<AvatarRepository>(), getIt<AvatarAnimationService>()),
+  );
+  // TalkingCubit manages TTS playback state
+  getIt.registerLazySingleton<TalkingCubit>(
+    () => TalkingCubit(
+      getIt<TalkingRepository>(),
+      getIt<InterruptionService>(),
+      getIt<TtsPlaybackService>(),
+    ),
   );
   // Chat cubits - split by responsibility
   getIt.registerFactory<ChatTtsCubit>(
@@ -180,7 +191,7 @@ Future<void> setupServiceLocator() async {
       audioAmplitudeService: getIt<AudioAmplitudeService>(),
       audioPlayerService: getIt<AudioPlayerService>(),
       interruptionService: getIt<InterruptionService>(),
-      talkingCubit: getIt<TalkingCubit>(),
+      ttsPlaybackService: getIt<TtsPlaybackService>(),
     ),
   );
   getIt.registerFactory<ChatCubit>(

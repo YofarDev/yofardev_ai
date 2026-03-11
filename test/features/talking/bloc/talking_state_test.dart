@@ -2,23 +2,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 import 'package:yofardev_ai/features/talking/data/repositories/talking_repository_impl.dart';
+import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/core/services/audio/tts_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 
 void main() {
   late TalkingCubit cubit;
   late TtsService ttsService;
+  late TtsPlaybackService playbackService;
   late InterruptionService interruptionService;
 
   setUp(() {
     ttsService = TtsService();
-    interruptionService = InterruptionService();
     final TalkingRepositoryImpl repository = TalkingRepositoryImpl(ttsService);
-    cubit = TalkingCubit(repository, interruptionService);
+    interruptionService = InterruptionService();
+    playbackService = TtsPlaybackService(repository);
+    cubit = TalkingCubit(repository, interruptionService, playbackService);
   });
 
   tearDown(() {
     cubit.close();
+    playbackService.dispose();
     ttsService.dispose();
     interruptionService.dispose();
   });

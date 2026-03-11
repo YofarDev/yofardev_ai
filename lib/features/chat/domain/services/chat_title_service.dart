@@ -69,10 +69,7 @@ class ChatTitleService {
           titleGenerated: true,
         );
 
-        await _chatRepository.updateChat(
-          id: chatId,
-          updatedChat: updatedChat,
-        );
+        await _chatRepository.updateChat(id: chatId, updatedChat: updatedChat);
 
         AppLogger.info(
           'Title generated for chat $chatId: $sanitizedTitle',

@@ -7,15 +7,42 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/res/app_constants.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/avatar_animation_service.dart';
 import '../../../chat/domain/models/chat.dart';
+import '../../domain/models/avatar_animation.dart';
 import '../../domain/repositories/avatar_repository.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
-  AvatarCubit(this._avatarRepository)
-    : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()));
+  AvatarCubit(this._avatarRepository, this._animationService)
+    : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig())) {
+    // Subscribe to animation events from the service
+    _animationSubscription = _animationService.animations.listen(
+      _handleAnimationEvent,
+      onError: (Object error) {
+        AppLogger.error(
+          'Animation stream error',
+          tag: 'AvatarCubit',
+          error: error,
+        );
+      },
+    );
+  }
 
   final AvatarRepository _avatarRepository;
+  final AvatarAnimationService _animationService;
+  StreamSubscription<AvatarAnimation>? _animationSubscription;
+
+  /// Handle animation events from the service.
+  void _handleAnimationEvent(AvatarAnimation event) {
+    event.when(
+      clothes: (bool goingDown) => onClothesAnimationChanged(goingDown),
+      background: (BackgroundTransition transition) =>
+          onBackgroundTransitionChanged(transition),
+      updateConfig: (String chatId, AvatarConfig avatarConfig) =>
+          updateAvatarConfig(chatId, avatarConfig),
+    );
+  }
 
   void _emitIfOpen(AvatarState newState) {
     if (isClosed) return;
@@ -208,5 +235,11 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void updateAvatarConfig(String chatId, AvatarConfig avatarConfig) {
     _updateAvatar(chatId, avatarConfig);
+  }
+
+  @override
+  Future<void> close() async {
+    await _animationSubscription?.cancel();
+    return super.close();
   }
 }

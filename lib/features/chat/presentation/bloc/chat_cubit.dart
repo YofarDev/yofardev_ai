@@ -56,11 +56,7 @@ class ChatCubit extends Cubit<ChatState> {
     ) {
       _streamInterrupted = true;
       if (state.status == ChatStatus.streaming) {
-        emit(
-          state.copyWith(
-            streamingContent: '',
-          ),
-        );
+        emit(state.copyWith(streamingContent: ''));
       }
     });
   }
@@ -351,7 +347,10 @@ class ChatCubit extends Cubit<ChatState> {
     // Add to generating set
     emit(
       state.copyWith(
-        generatingTitleChatIds: <String>{...state.generatingTitleChatIds, chatId},
+        generatingTitleChatIds: <String>{
+          ...state.generatingTitleChatIds,
+          chatId,
+        },
       ),
     );
 
@@ -361,10 +360,7 @@ class ChatCubit extends Cubit<ChatState> {
       if (title != null) {
         emit(
           state.copyWith(
-            lastGeneratedTitle: TitleResult(
-              chatId: chatId,
-              title: title,
-            ),
+            lastGeneratedTitle: TitleResult(chatId: chatId, title: title),
           ),
         );
       }
@@ -404,12 +400,7 @@ class ChatCubit extends Cubit<ChatState> {
     _interruptionService.reset();
     _streamInterrupted = false;
 
-    emit(
-      state.copyWith(
-        streamingContent: '',
-        streamingSentenceCount: 0,
-      ),
-    );
+    emit(state.copyWith(streamingContent: '', streamingSentenceCount: 0));
 
     final String temporaryId = const Uuid().v4();
 
@@ -512,11 +503,7 @@ class ChatCubit extends Cubit<ChatState> {
           chat = chat.copyWith(entries: finalEntries);
           onChatUpdated?.call(chat);
 
-          emit(
-            state.copyWith(
-              streamingContent: '',
-            ),
-          );
+          emit(state.copyWith(streamingContent: ''));
           await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 
           // Generate title if needed
@@ -614,11 +601,7 @@ class ChatCubit extends Cubit<ChatState> {
       }
 
       if (_streamInterrupted || _interruptionService.isInterrupted) {
-        emit(
-          state.copyWith(
-            streamingContent: '',
-          ),
-        );
+        emit(state.copyWith(streamingContent: ''));
         await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
         return;
       }
@@ -633,11 +616,7 @@ class ChatCubit extends Cubit<ChatState> {
       chat = chat.copyWith(entries: finalEntries);
       onChatUpdated?.call(chat);
 
-      emit(
-        state.copyWith(
-          streamingContent: '',
-        ),
-      );
+      emit(state.copyWith(streamingContent: ''));
 
       await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 
@@ -648,11 +627,7 @@ class ChatCubit extends Cubit<ChatState> {
 
       return;
     } catch (e) {
-      AppLogger.error(
-        'Error in streaming message',
-        tag: 'ChatCubit',
-        error: e,
-      );
+      AppLogger.error('Error in streaming message', tag: 'ChatCubit', error: e);
       emit(
         state.copyWith(
           status: ChatStatus.error,

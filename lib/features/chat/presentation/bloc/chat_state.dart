@@ -25,12 +25,7 @@ enum ChatStatus {
   creatingChat,
 }
 
-enum ChatsListStatus {
-  initial,
-  loading,
-  success,
-  error,
-}
+enum ChatsListStatus { initial, loading, success, error }
 
 @freezed
 sealed class ChatState with _$ChatState {

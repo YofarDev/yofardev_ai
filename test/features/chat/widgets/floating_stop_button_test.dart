@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,12 +8,15 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
+import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
+import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
@@ -22,6 +27,7 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/widgets/floating_stop_button.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
+import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 
 class MockAvatarRepository extends Mock implements AvatarRepository {}
@@ -230,6 +236,90 @@ class MockStreamProcessorService extends Mock
 
 class MockTalkingRepository extends Mock implements TalkingRepository {}
 
+class MockTtsPlaybackService implements TtsPlaybackService {
+  final TalkingRepository repository;
+
+  MockTtsPlaybackService(this.repository);
+
+  @override
+  void setPlaybackStateCallback(void Function(bool p1)? callback) {}
+
+  @override
+  void startAmplitudeAnimation(
+    String audioPath,
+    List<int> amplitudes,
+    Duration audioDuration, {
+    required void Function(int mouthState) onMouthStateUpdate,
+    required void Function() onComplete,
+  }) {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  void cancelAnimation() {}
+
+  @override
+  void notifySpeakingStarted() {}
+
+  @override
+  void notifySpeakingStopped() {}
+
+  @override
+  void dispose() {}
+}
+
+class MockTtsQueueService implements TtsQueueService {
+  @override
+  bool get isProcessing => false;
+
+  @override
+  List<TtsQueueItem> get queue => <TtsQueueItem>[];
+
+  @override
+  bool get hasItems => false;
+
+  @override
+  bool get isPlaying => false;
+
+  @override
+  Future<void> enqueue({
+    required String text,
+    required String language,
+    required VoiceEffect voiceEffect,
+    TtsPriority priority = TtsPriority.normal,
+  }) async {}
+
+  @override
+  void clear() {}
+
+  @override
+  void dispose() {}
+
+  @override
+  void setPaused(bool paused) {}
+
+  @override
+  Stream<String> get audioStream => const Stream<String>.empty();
+}
+
+class MockAvatarAnimationService implements AvatarAnimationService {
+  @override
+  final StreamController<AvatarAnimation> _controller =
+      StreamController<AvatarAnimation>.broadcast();
+
+  @override
+  Stream<AvatarAnimation> get animations => _controller.stream;
+
+  @override
+  void dispose() {
+    _controller.close();
+  }
+
+  @override
+  Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {}
+}
+
 class MockChatEntryService implements ChatEntryService {
   const MockChatEntryService();
 
@@ -255,10 +345,12 @@ void main() {
     late ChatCubit chatsCubit;
     late TalkingCubit talkingCubit;
     late MockTalkingRepository talkingRepository;
+    late MockTtsPlaybackService playbackService;
 
     setUp(() {
       interruptionService = InterruptionService();
       talkingRepository = MockTalkingRepository();
+      playbackService = MockTtsPlaybackService(talkingRepository);
       when(() => talkingRepository.stop()).thenAnswer((_) async {});
       when(
         () => talkingRepository.generateSpeech(any()),
@@ -266,12 +358,16 @@ void main() {
       when(
         () => talkingRepository.playWaitingSentence(any()),
       ).thenAnswer((_) async {});
-      talkingCubit = TalkingCubit(talkingRepository, interruptionService);
+      talkingCubit = TalkingCubit(
+        talkingRepository,
+        interruptionService,
+        playbackService,
+      );
 
       chatsCubit = ChatCubit(
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
-        avatarAnimationService: AvatarAnimationService(AvatarCubit(MockAvatarRepository())),
+        avatarAnimationService: MockAvatarAnimationService(),
         chatTitleService: ChatTitleService(
           chatRepository: MockChatRepository(),
           llmService: MockLlmService(),
@@ -281,6 +377,7 @@ void main() {
         promptDatasource: MockPromptDatasource(),
         interruptionService: interruptionService,
         chatEntryService: MockChatEntryService(),
+        ttsQueueManager: MockTtsQueueService(),
       );
     });
 
@@ -312,9 +409,7 @@ void main() {
 
     testWidgets('should show when streaming', (WidgetTester tester) async {
       // Arrange
-      chatsCubit.emit(
-        chatsCubit.state.copyWith(status: ChatStatus.streaming),
-      );
+      chatsCubit.emit(chatsCubit.state.copyWith(status: ChatStatus.streaming));
 
       await tester.pumpWidget(
         MaterialApp(
@@ -356,9 +451,7 @@ void main() {
       WidgetTester tester,
     ) async {
       // Arrange
-      chatsCubit.emit(
-        chatsCubit.state.copyWith(status: ChatStatus.streaming),
-      );
+      chatsCubit.emit(chatsCubit.state.copyWith(status: ChatStatus.streaming));
       final List<bool> interrupted = <bool>[false];
 
       interruptionService.interruptionStream.listen((_) {

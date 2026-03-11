@@ -1,21 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
-
-import 'package:yofardev_ai/core/res/app_constants.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/voice_effect.dart';
+import 'package:yofardev_ai/core/res/app_constants.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
-import 'package:yofardev_ai/core/services/prompt_datasource.dart';
-import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
+import 'package:yofardev_ai/core/services/prompt_datasource.dart';
+import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
+import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
@@ -27,6 +28,7 @@ import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dar
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 
 // Mock repositories
 class MockChatRepository extends Mock implements ChatRepository {}
@@ -94,6 +96,40 @@ class MockChatEntryService implements ChatEntryService {
   }
 }
 
+class MockTtsQueueService implements TtsQueueService {
+  @override
+  bool get isProcessing => false;
+
+  @override
+  List<TtsQueueItem> get queue => <TtsQueueItem>[];
+
+  @override
+  bool get hasItems => false;
+
+  @override
+  bool get isPlaying => false;
+
+  @override
+  Future<void> enqueue({
+    required String text,
+    required String language,
+    required VoiceEffect voiceEffect,
+    TtsPriority priority = TtsPriority.normal,
+  }) async {}
+
+  @override
+  void clear() {}
+
+  @override
+  void dispose() {}
+
+  @override
+  void setPaused(bool paused) {}
+
+  @override
+  Stream<String> get audioStream => const Stream<String>.empty();
+}
+
 void main() {
   group('New Chat Animation Integration', () {
     late MockChatRepository mockChatRepository;
@@ -143,12 +179,12 @@ void main() {
         () => mockChatRepository.getCurrentChat(),
       ).thenAnswer((_) async => Right<Exception, Chat>(Chat()));
 
-      // Create AvatarCubit first (AvatarAnimationService depends on it)
-      avatarCubit = AvatarCubit(mockAvatarRepository);
-      avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+      // Create AvatarAnimationService (no longer depends on AvatarCubit)
+      avatarAnimationService = AvatarAnimationService();
 
-      // Create AvatarAnimationService
-      avatarAnimationService = AvatarAnimationService(avatarCubit);
+      // Create AvatarCubit with animation service
+      avatarCubit = AvatarCubit(mockAvatarRepository, avatarAnimationService);
+      avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
 
       // Create mock services
       final MockInterruptionService mockInterruptionService =
@@ -172,6 +208,7 @@ void main() {
         promptDatasource: mockPromptDatasource,
         interruptionService: mockInterruptionService,
         chatEntryService: mockChatEntryService,
+        ttsQueueManager: MockTtsQueueService(),
       );
 
       // Initialize the cubit

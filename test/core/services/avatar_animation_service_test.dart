@@ -1,23 +1,30 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import 'dart:async';
 
-import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:flutter_test/flutter_test.dart';
+
 import 'package:yofardev_ai/core/models/avatar_config.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
+import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 
 void main() {
   group('AvatarAnimationService', () {
     late AvatarAnimationService service;
-    late MockAvatarCubit mockAvatarCubit;
 
     setUp(() {
-      mockAvatarCubit = MockAvatarCubit();
-      service = AvatarAnimationService(mockAvatarCubit);
+      service = AvatarAnimationService();
+    });
+
+    tearDown(() {
+      service.dispose();
+    });
+
+    test('animations stream is a broadcast stream', () {
+      // Assert
+      expect(service.animations, isA<Stream<AvatarAnimation>>());
     });
 
     test(
-      'playNewChatSequence calls onClothesAnimationChanged with true',
+      'playNewChatSequence emits clothes animation events in correct order',
       () async {
         // Arrange
         const String chatId = 'test-chat-id';
@@ -25,73 +32,67 @@ void main() {
           background: AvatarBackgrounds.beach,
         );
 
+        final List<AvatarAnimation> received = <AvatarAnimation>[];
+        final StreamSubscription<AvatarAnimation> sub = service.animations
+            .listen(received.add);
+
         // Act
-        final Future<void> future = service.playNewChatSequence(chatId, config);
+        await service.playNewChatSequence(chatId, config);
 
-        // Assert - immediate call
-        verify(() => mockAvatarCubit.onClothesAnimationChanged(true)).called(1);
+        // Assert - should emit clothes(true) first, then clothes(false) last
+        expect(received.first, const AvatarAnimation.clothes(true));
+        expect(received.last, const AvatarAnimation.clothes(false));
 
-        // Wait for completion
-        await future;
+        await sub.cancel();
       },
     );
 
-    test('playNewChatSequence calls onBackgroundTransitionChanged', () async {
+    test('playNewChatSequence emits background transition event', () async {
       // Arrange
       const String chatId = 'test-chat-id';
       const AvatarConfig config = AvatarConfig(
         background: AvatarBackgrounds.beach,
       );
 
+      final List<AvatarAnimation> received = <AvatarAnimation>[];
+      final StreamSubscription<AvatarAnimation> sub = service.animations.listen(
+        received.add,
+      );
+
       // Act
       await service.playNewChatSequence(chatId, config);
 
       // Assert
-      verify(
-        () => mockAvatarCubit.onBackgroundTransitionChanged(
-          BackgroundTransition.sliding,
-        ),
-      ).called(1);
+      expect(
+        received.any((AvatarAnimation e) => e is AvatarAnimationBackground),
+        isTrue,
+      );
+
+      await sub.cancel();
     });
 
-    test(
-      'playNewChatSequence calls onClothesAnimationChanged with false at end',
-      () async {
-        // Arrange
-        const String chatId = 'test-chat-id';
-        const AvatarConfig config = AvatarConfig(
-          background: AvatarBackgrounds.beach,
-        );
+    test('playNewChatSequence emits updateConfig event', () async {
+      // Arrange
+      const String chatId = 'test-chat-id';
+      const AvatarConfig config = AvatarConfig(
+        background: AvatarBackgrounds.beach,
+      );
 
-        // Act
-        await service.playNewChatSequence(chatId, config);
+      final List<AvatarAnimation> received = <AvatarAnimation>[];
+      final StreamSubscription<AvatarAnimation> sub = service.animations.listen(
+        received.add,
+      );
 
-        // Assert - final call with false (rising)
-        verify(
-          () => mockAvatarCubit.onClothesAnimationChanged(false),
-        ).called(1);
-      },
-    );
+      // Act
+      await service.playNewChatSequence(chatId, config);
 
-    test(
-      'playNewChatSequence updates avatar config during animation',
-      () async {
-        // Arrange
-        const String chatId = 'test-chat-id';
-        const AvatarConfig config = AvatarConfig(
-          background: AvatarBackgrounds.beach,
-        );
+      // Assert
+      expect(
+        received.any((AvatarAnimation e) => e is AvatarAnimationUpdateConfig),
+        isTrue,
+      );
 
-        // Act
-        await service.playNewChatSequence(chatId, config);
-
-        // Assert
-        verify(
-          () => mockAvatarCubit.updateAvatarConfig(chatId, config),
-        ).called(1);
-      },
-    );
+      await sub.cancel();
+    });
   });
 }
-
-class MockAvatarCubit extends Mock implements AvatarCubit {}

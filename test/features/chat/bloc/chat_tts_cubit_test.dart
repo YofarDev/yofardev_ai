@@ -1,16 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
-import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
+import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_state.dart';
-import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
+import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
+import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
-import 'package:yofardev_ai/core/models/voice_effect.dart';
-import 'dart:async';
 
 class MockTtsQueueService extends Mock implements TtsQueueService {
   final StreamController<String> _audioController =
@@ -68,6 +71,43 @@ class MockAudioPlayerService extends Mock implements AudioPlayerService {
   }
 }
 
+class MockTalkingRepository extends Mock implements TalkingRepository {}
+
+class MockTtsPlaybackService implements TtsPlaybackService {
+  final TalkingRepository repository;
+
+  MockTtsPlaybackService(this.repository);
+
+  @override
+  void setPlaybackStateCallback(void Function(bool p1)? callback) {}
+
+  @override
+  void startAmplitudeAnimation(
+    String audioPath,
+    List<int> amplitudes,
+    Duration audioDuration, {
+    required void Function(int mouthState) onMouthStateUpdate,
+    required void Function() onComplete,
+  }) {
+    onComplete();
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  void cancelAnimation() {}
+
+  @override
+  void notifySpeakingStarted() {}
+
+  @override
+  void notifySpeakingStopped() {}
+
+  @override
+  void dispose() {}
+}
+
 class MockTalkingCubit extends Mock implements TalkingCubit {
   final List<TalkingState> states = <TalkingState>[];
 
@@ -91,14 +131,16 @@ void main() {
     late MockTtsQueueService mockTtsManager;
     late MockAudioAmplitudeService mockAmplitudeService;
     late MockAudioPlayerService mockPlayerService;
-    late MockTalkingCubit mockTalkingCubit;
+    late MockTtsPlaybackService mockPlaybackService;
+    late MockTalkingRepository mockTalkingRepository;
     late InterruptionService interruptionService;
 
     setUp(() {
       mockTtsManager = MockTtsQueueService();
       mockAmplitudeService = MockAudioAmplitudeService();
       mockPlayerService = MockAudioPlayerService();
-      mockTalkingCubit = MockTalkingCubit();
+      mockTalkingRepository = MockTalkingRepository();
+      mockPlaybackService = MockTtsPlaybackService(mockTalkingRepository);
       interruptionService = InterruptionService();
 
       // Setup default mock behaviors
@@ -111,14 +153,13 @@ void main() {
       when(
         () => mockPlayerService.stop(),
       ).thenAnswer((_) async {}); // Add stub for stop()
-      when(() => mockTalkingCubit.stop()).thenAnswer((_) async {});
 
       cubit = ChatTtsCubit(
         ttsQueueManager: mockTtsManager,
         audioAmplitudeService: mockAmplitudeService,
         audioPlayerService: mockPlayerService,
         interruptionService: interruptionService,
-        talkingCubit: mockTalkingCubit,
+        ttsPlaybackService: mockPlaybackService,
       );
     });
 

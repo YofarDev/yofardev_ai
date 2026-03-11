@@ -13,7 +13,8 @@ class TtsPlaybackService {
   ///
   /// [talkingCubit] is optional to support testing and scenarios
   /// where talking state management is not needed.
-  TtsPlaybackService({TalkingCubit? talkingCubit}) : _talkingCubit = talkingCubit;
+  TtsPlaybackService({TalkingCubit? talkingCubit})
+    : _talkingCubit = talkingCubit;
 
   final TalkingCubit? _talkingCubit;
 

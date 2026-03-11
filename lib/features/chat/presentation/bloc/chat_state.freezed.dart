@@ -25,7 +25,7 @@ mixin _$ChatState {
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$ChatsStateCopyWith<ChatState> get copyWith => _$ChatsStateCopyWithImpl<ChatState>(this as ChatState, _$identity);
+$ChatStateCopyWith<ChatState> get copyWith => _$ChatStateCopyWithImpl<ChatState>(this as ChatState, _$identity);
 
 
 
@@ -47,8 +47,8 @@ String toString() {
 }
 
 /// @nodoc
-abstract mixin class $ChatsStateCopyWith<$Res>  {
-  factory $ChatsStateCopyWith(ChatState value, $Res Function(ChatState) _then) = _$ChatsStateCopyWithImpl;
+abstract mixin class $ChatStateCopyWith<$Res>  {
+  factory $ChatStateCopyWith(ChatState value, $Res Function(ChatState) _then) = _$ChatStateCopyWithImpl;
 @useResult
 $Res call({
  ChatStatus status, List<Chat> chatsList, ChatsListStatus chatsListStatus, String? chatsListError, Chat currentChat, Chat openedChat, String errorMessage, bool soundEffectsEnabled, String currentLanguage, List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool functionCallingEnabled, bool chatCreated, String streamingContent, int streamingSentenceCount, Set<String> generatingTitleChatIds, TitleResult? lastGeneratedTitle, bool userCreatedChatDuringInit
@@ -59,9 +59,9 @@ $ChatCopyWith<$Res> get currentChat;$ChatCopyWith<$Res> get openedChat;
 
 }
 /// @nodoc
-class _$ChatsStateCopyWithImpl<$Res>
-    implements $ChatsStateCopyWith<$Res> {
-  _$ChatsStateCopyWithImpl(this._self, this._then);
+class _$ChatStateCopyWithImpl<$Res>
+    implements $ChatStateCopyWith<$Res> {
+  _$ChatStateCopyWithImpl(this._self, this._then);
 
   final ChatState _self;
   final $Res Function(ChatState) _then;
@@ -114,7 +114,7 @@ $ChatCopyWith<$Res> get openedChat {
 
 
 /// Adds pattern-matching-related methods to [ChatState].
-extension ChatsStatePatterns on ChatState {
+extension ChatStatePatterns on ChatState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -316,7 +316,7 @@ String toString() {
 }
 
 /// @nodoc
-abstract mixin class _$ChatsStateCopyWith<$Res> implements $ChatsStateCopyWith<$Res> {
+abstract mixin class _$ChatsStateCopyWith<$Res> implements $ChatStateCopyWith<$Res> {
   factory _$ChatsStateCopyWith(_ChatsState value, $Res Function(_ChatsState) _then) = __$ChatsStateCopyWithImpl;
 @override @useResult
 $Res call({

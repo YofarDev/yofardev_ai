@@ -39,9 +39,8 @@ class HomeBlocListeners extends StatelessWidget {
           listener: _onTalkingStateChanged,
         ),
         BlocListener<ChatCubit, ChatState>(
-          listenWhen:
-              (ChatState previous, ChatState current) =>
-                  previous.status != current.status,
+          listenWhen: (ChatState previous, ChatState current) =>
+              previous.status != current.status,
           listener: _onChatStreamingStateChanged,
         ),
         BlocListener<ChatCubit, ChatState>(

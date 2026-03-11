@@ -7,13 +7,13 @@ import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
@@ -23,6 +23,8 @@ import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dar
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
+import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
+import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 
 class MockChatRepository implements ChatRepository {
   @override
@@ -160,6 +162,16 @@ class MockAvatarAnimationService implements AvatarAnimationService {
   bool playNewChatCalled = false;
   String? chatIdPassed;
   AvatarConfig? configPassed;
+  final StreamController<AvatarAnimation> _controller =
+      StreamController<AvatarAnimation>.broadcast();
+
+  @override
+  Stream<AvatarAnimation> get animations => _controller.stream;
+
+  @override
+  void dispose() {
+    _controller.close();
+  }
 
   @override
   Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {
@@ -385,17 +397,48 @@ class MockChatEntryService implements ChatEntryService {
   }
 }
 
+class MockTtsQueueService implements TtsQueueService {
+  @override
+  bool get isProcessing => false;
+
+  @override
+  List<TtsQueueItem> get queue => <TtsQueueItem>[];
+
+  @override
+  bool get hasItems => false;
+
+  @override
+  bool get isPlaying => false;
+
+  @override
+  Future<void> enqueue({
+    required String text,
+    required String language,
+    required VoiceEffect voiceEffect,
+    TtsPriority priority = TtsPriority.normal,
+  }) async {}
+
+  @override
+  void clear() {}
+
+  @override
+  void dispose() {}
+
+  @override
+  void setPaused(bool paused) {}
+
+  @override
+  Stream<String> get audioStream => const Stream<String>.empty();
+}
+
 void main() {
   group('ChatCubit', () {
     late ChatCubit chatsCubit;
 
     setUp(() {
-      // Create a mock AvatarAnimationService
-      // Since we can't easily mock the const constructor service,
-      // we'll create a minimal AvatarCubit for the service
-      final AvatarCubit mockAvatarCubit = AvatarCubit(MockAvatarRepository());
-      final AvatarAnimationService mockAnimationService =
-          AvatarAnimationService(mockAvatarCubit);
+      // Create mock services
+      final MockAvatarAnimationService mockAnimationService =
+          MockAvatarAnimationService();
 
       // Create mock services
       final MockInterruptionService mockInterruptionService =
@@ -415,6 +458,7 @@ void main() {
         promptDatasource: mockPromptDatasource,
         interruptionService: mockInterruptionService,
         chatEntryService: mockChatEntryService,
+        ttsQueueManager: MockTtsQueueService(),
       );
     });
 
