@@ -9,7 +9,6 @@ import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
 // import '../../features/chat/presentation/bloc/chat_list_cubit.dart';
-import '../../features/chat/presentation/bloc/chat_streaming_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_title_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chats_cubit.dart';
@@ -197,6 +196,12 @@ Future<void> setupServiceLocator() async {
       settingsRepository: getIt<SettingsRepository>(),
       avatarAnimationService: getIt<AvatarAnimationService>(),
       chatTitleService: getIt<ChatTitleService>(),
+      llmService: getIt<LlmServiceInterface>(),
+      streamProcessor: getIt<StreamProcessorService>(),
+      promptDatasource: getIt<PromptDatasource>(),
+      interruptionService: getIt<InterruptionService>(),
+      chatEntryService: getIt<ChatEntryService>(),
+      ttsQueueManager: getIt<TtsQueueManager>(),
     ),
   );
   // getIt.registerFactory<ChatListCubit>(
@@ -206,7 +211,7 @@ Future<void> setupServiceLocator() async {
   //   ),
   // );
 
-  // Chat message cubits - refactored for single responsibility
+  // Chat message services
   getIt.registerLazySingleton<ChatEntryService>(
     () => ChatEntryService(getIt<SettingsRepository>()),
   );
@@ -214,19 +219,6 @@ Future<void> setupServiceLocator() async {
     () => ChatTitleService(
       chatRepository: getIt<ChatRepository>(),
       llmService: getIt<LlmService>(),
-    ),
-  );
-  getIt.registerFactory<ChatStreamingCubit>(
-    () => ChatStreamingCubit(
-      chatRepository: getIt<ChatRepository>(),
-      settingsRepository: getIt<SettingsRepository>(),
-      llmService: getIt<LlmServiceInterface>(),
-      streamProcessor: getIt<StreamProcessorService>(),
-      promptDatasource: getIt<PromptDatasource>(),
-      interruptionService: getIt<InterruptionService>(),
-      chatEntryService: getIt<ChatEntryService>(),
-      ttsQueueManager: getIt<TtsQueueManager>(),
-      chatsCubit: getIt<ChatsCubit>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
