@@ -20,7 +20,7 @@ import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../talking/presentation/bloc/talking_state.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/models/chat_entry.dart';
-import '../../presentation/bloc/chat_message_cubit.dart';
+import '../../presentation/bloc/chat_streaming_cubit.dart';
 import '../../presentation/bloc/chats_cubit.dart';
 import '../../presentation/bloc/chats_state.dart';
 import '../function_calling_widget.dart';
@@ -307,8 +307,8 @@ class _AiTextInputState extends State<AiTextInput> {
       _pickedImage = null;
     });
 
-    // Use ChatMessageCubit for streaming (replaces deprecated ChatMessageCubit.askYofardev)
-    await context.read<ChatMessageCubit>().askYofardev(
+    // Use ChatStreamingCubit for streaming (replaces deprecated ChatMessageCubit.askYofardev)
+    await context.read<ChatStreamingCubit>().streamResponse(
       prompt,
       onlyText: widget.onlyText,
       attachedImage: attachedImage,
