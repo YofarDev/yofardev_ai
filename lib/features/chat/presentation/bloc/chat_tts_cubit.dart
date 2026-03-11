@@ -6,8 +6,10 @@ import '../../../../core/services/audio/audio_amplitude_service.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/utils/platform_utils.dart';
 import '../../../sound/data/tts_queue_manager.dart';
 import '../../../talking/presentation/bloc/talking_cubit.dart';
+import '../../domain/services/waiting_sentences_cache_datasource.dart';
 import 'chat_tts_state.dart';
 
 /// Cubit responsible for managing TTS audio state
@@ -230,6 +232,41 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
           errorMessage: 'Failed to initialize: ${e.toString()}',
         ),
       );
+    }
+  }
+
+  /// Loads waiting sentences from cache for the given language
+  ///
+  /// On web platforms, this is a no-op since audio caching is not supported.
+  Future<void> prepareWaitingSentences(String language) async {
+    if (PlatformUtils.checkPlatform() == 'Web') {
+      emit(state.copyWith(initializing: false));
+      return;
+    }
+
+    try {
+      final List<Map<String, dynamic>>? cachedSentences =
+          await WaitingSentencesCacheDatasource.getWaitingSentencesMap(
+            language,
+          );
+
+      if (cachedSentences != null) {
+        emit(
+          state.copyWith(
+            audioPathsWaitingSentences: cachedSentences,
+            initializing: false,
+          ),
+        );
+      } else {
+        emit(state.copyWith(initializing: false));
+      }
+    } catch (e) {
+      AppLogger.error(
+        'Failed to load waiting sentences',
+        tag: 'ChatTtsCubit',
+        error: e,
+      );
+      emit(state.copyWith(initializing: false));
     }
   }
 
