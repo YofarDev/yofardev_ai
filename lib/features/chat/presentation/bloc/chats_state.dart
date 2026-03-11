@@ -14,6 +14,7 @@ enum ChatsStatus {
   success,
   streaming,
   error,
+  interrupted,
   creatingChat,
 }
 
