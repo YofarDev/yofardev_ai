@@ -9,8 +9,6 @@ import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../chat/domain/models/chat_entry.dart';
-import '../../chat/presentation/bloc/chat_message_cubit.dart';
-import '../../chat/presentation/bloc/chat_message_state.dart';
 import '../../chat/presentation/bloc/chat_streaming_cubit.dart';
 import '../../chat/presentation/bloc/chat_streaming_state.dart';
 import '../../chat/presentation/bloc/chats_cubit.dart';
@@ -47,15 +45,6 @@ class HomeBlocListeners extends StatelessWidget {
               (ChatStreamingState previous, ChatStreamingState current) =>
                   previous.status != current.status,
           listener: _onChatStreamingStateChanged,
-        ),
-        BlocListener<ChatMessageCubit, ChatMessageState>(
-          listenWhen: (ChatMessageState previous, ChatMessageState current) =>
-              current.status == ChatMessageStatus.success ||
-              current.status == ChatMessageStatus.error,
-          listener: (BuildContext context, ChatMessageState state) {
-            // TalkingCubit now manages its own state transitions
-            // No need to manually reset loading status
-          },
         ),
         BlocListener<ChatsCubit, ChatsState>(
           listenWhen: (ChatsState previous, ChatsState current) =>
