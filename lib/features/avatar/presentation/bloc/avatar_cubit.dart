@@ -6,8 +6,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/res/app_constants.dart';
-import '../../../../core/utils/logger.dart';
 import '../../../../core/services/avatar_animation_service.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../chat/domain/models/chat.dart';
 import '../../domain/models/avatar_animation.dart';
 import '../../domain/repositories/avatar_repository.dart';

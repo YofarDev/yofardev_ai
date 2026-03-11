@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import '../../../core/res/app_constants.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../features/avatar/domain/models/avatar_animation.dart';
 import '../../features/avatar/presentation/bloc/avatar_state.dart';
@@ -35,9 +34,7 @@ class AvatarAnimationService {
   Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {
     // 1. Avatar drops
     _animationController.add(const AvatarAnimation.clothes(true));
-    await Future<void>.delayed(
-      Duration(seconds: AppConstants.changingAvatarDuration),
-    );
+    await Future<void>.delayed(Duration(seconds: 0));
 
     // 2. Background slides (while avatar is off-screen)
     _animationController.add(
