@@ -5,8 +5,8 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/services/audio/interruption_service.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
-import '../presentation/bloc/chat_streaming_cubit.dart';
-import '../presentation/bloc/chat_streaming_state.dart';
+import '../presentation/bloc/chats_cubit.dart';
+import '../presentation/bloc/chats_state.dart';
 
 /// Floating stop button that appears when assistant is streaming
 ///
@@ -20,12 +20,12 @@ class FloatingStopButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return BlocBuilder<ChatStreamingCubit, ChatStreamingState>(
-      builder: (BuildContext context, ChatStreamingState state) {
+    return BlocBuilder<ChatsCubit, ChatsState>(
+      builder: (BuildContext context, ChatsState state) {
         return BlocBuilder<TalkingCubit, TalkingState>(
           builder: (BuildContext context, TalkingState talkingState) {
             final bool shouldShow =
-                state.status == ChatStreamingStatus.streaming ||
+                state.status == ChatsStatus.streaming ||
                 talkingState is SpeakingState ||
                 talkingState is GeneratingState ||
                 talkingState is WaitingState;
