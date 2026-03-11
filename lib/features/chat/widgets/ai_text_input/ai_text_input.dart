@@ -307,7 +307,7 @@ class _AiTextInputState extends State<AiTextInput> {
       _pickedImage = null;
     });
 
-    // Use ChatStreamingCubit for streaming (replaces deprecated ChatMessageCubit.askYofardev)
+    // Use ChatStreamingCubit for streaming
     await context.read<ChatStreamingCubit>().streamResponse(
       prompt,
       onlyText: widget.onlyText,
