@@ -22,8 +22,6 @@ import '../widgets/chat_conversation_list.dart';
 import '../widgets/chat_details_actions.dart';
 import '../widgets/chat_details_background.dart';
 import '../widgets/floating_stop_button.dart';
-import '../presentation/bloc/chat_streaming_cubit.dart';
-import '../presentation/bloc/chat_streaming_state.dart';
 
 class ChatDetailsPage extends StatefulWidget {
   const ChatDetailsPage({super.key});
@@ -49,11 +47,11 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
             );
           },
         ),
-        BlocListener<ChatStreamingCubit, ChatStreamingState>(
-          listenWhen: (ChatStreamingState previous, ChatStreamingState current) =>
+        BlocListener<ChatsCubit, ChatsState>(
+          listenWhen: (ChatsState previous, ChatsState current) =>
               previous.status != current.status,
-          listener: (BuildContext context, ChatStreamingState state) {
-            if (state.status == ChatStreamingStatus.interrupted) {
+          listener: (BuildContext context, ChatsState state) {
+            if (state.status == ChatsStatus.interrupted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
