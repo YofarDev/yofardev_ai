@@ -1,12 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
+import 'package:yofardev_ai/core/services/prompt_datasource.dart';
+import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
+import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
@@ -95,6 +103,57 @@ class MockSettingsRepository extends Mock implements SettingsRepository {}
 
 class MockAvatarAnimationService extends Mock implements AvatarAnimationService {}
 
+class MockInterruptionService implements InterruptionService {
+  final StreamController<void> _controller = StreamController<void>.broadcast();
+
+  @override
+  Stream<void> get interruptionStream => _controller.stream;
+
+  @override
+  Future<void> interrupt() async => _controller.add(null);
+
+  @override
+  void reset() {}
+
+  @override
+  bool get isInterrupted => false;
+
+  @override
+  void dispose() => _controller.close();
+}
+
+class MockPromptDatasource implements PromptDatasource {
+  @override
+  Future<String> getSystemPrompt() async => 'Test system prompt';
+}
+
+class MockStreamProcessorService implements StreamProcessorService {
+  @override
+  Stream<SentenceChunk> processStream(
+    Stream<LlmStreamChunk> llmChunks, {
+    bool expectJson = true,
+  }) async* {
+    // Empty implementation for testing
+  }
+}
+
+class MockChatEntryService implements ChatEntryService {
+  @override
+  Future<ChatEntry> createUserEntry({
+    required String prompt,
+    required Avatar avatar,
+    String? attachedImage,
+  }) async {
+    return ChatEntry(
+      id: 'test-id',
+      entryType: EntryType.user,
+      body: prompt,
+      timestamp: DateTime.now(),
+      attachedImage: attachedImage,
+    );
+  }
+}
+
 void main() {
   group('Title Generation Integration Tests', () {
     late TrackingMockChatRepository mockChatRepository;
@@ -120,11 +179,24 @@ void main() {
       when(() => mockSettingsRepository.getSoundEffects())
           .thenAnswer((_) async => const Right<Exception, bool>(true));
 
+      // Create mock services
+      final MockInterruptionService mockInterruptionService =
+          MockInterruptionService();
+      final MockPromptDatasource mockPromptDatasource = MockPromptDatasource();
+      final MockStreamProcessorService mockStreamProcessorService =
+          MockStreamProcessorService();
+      final MockChatEntryService mockChatEntryService = MockChatEntryService();
+
       cubit = ChatsCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         avatarAnimationService: mockAvatarAnimationService,
         chatTitleService: chatTitleService,
+        llmService: mockLlmService,
+        streamProcessor: mockStreamProcessorService,
+        promptDatasource: mockPromptDatasource,
+        interruptionService: mockInterruptionService,
+        chatEntryService: mockChatEntryService,
       );
       // Initialize the cubit
       cubit.init();

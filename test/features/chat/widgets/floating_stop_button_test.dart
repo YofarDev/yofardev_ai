@@ -17,9 +17,8 @@ import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_streaming_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chats_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chats_state.dart';
 import 'package:yofardev_ai/features/chat/widgets/floating_stop_button.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
@@ -253,7 +252,7 @@ class MockChatEntryService implements ChatEntryService {
 void main() {
   group('FloatingStopButton', () {
     late InterruptionService interruptionService;
-    late ChatStreamingCubit chatStreamingCubit;
+    late ChatsCubit chatsCubit;
     late TalkingCubit talkingCubit;
     late MockTalkingRepository talkingRepository;
 
@@ -269,28 +268,24 @@ void main() {
       ).thenAnswer((_) async {});
       talkingCubit = TalkingCubit(talkingRepository, interruptionService);
 
-      chatStreamingCubit = ChatStreamingCubit(
+      chatsCubit = ChatsCubit(
         chatRepository: MockChatRepository(),
         settingsRepository: MockSettingsRepository(),
+        avatarAnimationService: AvatarAnimationService(AvatarCubit(MockAvatarRepository())),
+        chatTitleService: ChatTitleService(
+          chatRepository: MockChatRepository(),
+          llmService: MockLlmService(),
+        ),
         llmService: MockLlmService(),
         streamProcessor: MockStreamProcessorService(),
         promptDatasource: MockPromptDatasource(),
         interruptionService: interruptionService,
         chatEntryService: MockChatEntryService(),
-        chatsCubit: ChatsCubit(
-          chatRepository: MockChatRepository(),
-          settingsRepository: MockSettingsRepository(),
-          avatarAnimationService: AvatarAnimationService(AvatarCubit(MockAvatarRepository())),
-          chatTitleService: ChatTitleService(
-            chatRepository: MockChatRepository(),
-            llmService: MockLlmService(),
-          ),
-        ),
       );
     });
 
     tearDown(() {
-      chatStreamingCubit.close();
+      chatsCubit.close();
       talkingCubit.close();
       interruptionService.dispose();
     });
@@ -303,7 +298,7 @@ void main() {
         MaterialApp(
           home: MultiBlocProvider(
             providers: <BlocProvider<dynamic>>[
-              BlocProvider<ChatStreamingCubit>.value(value: chatStreamingCubit),
+              BlocProvider<ChatsCubit>.value(value: chatsCubit),
               BlocProvider<TalkingCubit>.value(value: talkingCubit),
             ],
             child: const Scaffold(body: FloatingStopButton()),
@@ -317,15 +312,15 @@ void main() {
 
     testWidgets('should show when streaming', (WidgetTester tester) async {
       // Arrange
-      chatStreamingCubit.emit(
-        chatStreamingCubit.state.copyWith(status: ChatStreamingStatus.streaming),
+      chatsCubit.emit(
+        chatsCubit.state.copyWith(status: ChatsStatus.streaming),
       );
 
       await tester.pumpWidget(
         MaterialApp(
           home: MultiBlocProvider(
             providers: <BlocProvider<dynamic>>[
-              BlocProvider<ChatStreamingCubit>.value(value: chatStreamingCubit),
+              BlocProvider<ChatsCubit>.value(value: chatsCubit),
               BlocProvider<TalkingCubit>.value(value: talkingCubit),
             ],
             child: const Scaffold(body: FloatingStopButton()),
@@ -345,7 +340,7 @@ void main() {
         MaterialApp(
           home: MultiBlocProvider(
             providers: <BlocProvider<dynamic>>[
-              BlocProvider<ChatStreamingCubit>.value(value: chatStreamingCubit),
+              BlocProvider<ChatsCubit>.value(value: chatsCubit),
               BlocProvider<TalkingCubit>.value(value: talkingCubit),
             ],
             child: const Scaffold(body: FloatingStopButton()),
@@ -361,8 +356,8 @@ void main() {
       WidgetTester tester,
     ) async {
       // Arrange
-      chatStreamingCubit.emit(
-        chatStreamingCubit.state.copyWith(status: ChatStreamingStatus.streaming),
+      chatsCubit.emit(
+        chatsCubit.state.copyWith(status: ChatsStatus.streaming),
       );
       final List<bool> interrupted = <bool>[false];
 
@@ -374,7 +369,7 @@ void main() {
         MaterialApp(
           home: MultiBlocProvider(
             providers: <BlocProvider<dynamic>>[
-              BlocProvider<ChatStreamingCubit>.value(value: chatStreamingCubit),
+              BlocProvider<ChatsCubit>.value(value: chatsCubit),
               BlocProvider<TalkingCubit>.value(value: talkingCubit),
             ],
             child: Scaffold(
