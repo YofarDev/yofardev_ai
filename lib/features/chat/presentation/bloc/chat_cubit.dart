@@ -15,7 +15,7 @@ import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/models/voice_effect.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
-import '../../../sound/data/tts_queue_manager.dart';
+import '../../../../core/services/audio/tts_queue_service.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -39,7 +39,7 @@ class ChatCubit extends Cubit<ChatState> {
     required PromptDatasource promptDatasource,
     required InterruptionService interruptionService,
     required ChatEntryService chatEntryService,
-    TtsQueueManager? ttsQueueManager,
+    TtsQueueService? ttsQueueManager,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _avatarAnimationService = avatarAnimationService,
@@ -75,7 +75,7 @@ class ChatCubit extends Cubit<ChatState> {
   final PromptDatasource _promptDatasource;
   final InterruptionService _interruptionService;
   final ChatEntryService _chatEntryService;
-  final TtsQueueManager? _ttsQueueManager;
+  final TtsQueueService? _ttsQueueManager;
 
   bool _streamInterrupted = false;
   StreamSubscription<void>? _interruptionSubscription;

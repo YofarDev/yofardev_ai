@@ -27,7 +27,7 @@ import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/sound/presentation/bloc/sound_cubit.dart';
 import '../../features/sound/data/datasources/tts_datasource.dart';
 import '../../features/sound/data/repositories/sound_repository_impl.dart';
-import '../../features/sound/data/tts_queue_manager.dart';
+import '../services/audio/tts_queue_service.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
@@ -108,8 +108,8 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
   getIt.registerLazySingleton<InterruptionService>(() => InterruptionService());
-  getIt.registerLazySingleton<TtsQueueManager>(
-    () => TtsQueueManager(
+  getIt.registerLazySingleton<TtsQueueService>(
+    () => TtsQueueService(
       ttsDatasource: getIt<TtsDatasource>(),
       interruptionService: getIt<InterruptionService>(),
     ),
@@ -183,7 +183,7 @@ Future<void> setupServiceLocator() async {
   // Chat cubits - split by responsibility
   getIt.registerFactory<ChatTtsCubit>(
     () => ChatTtsCubit(
-      ttsQueueManager: getIt<TtsQueueManager>(),
+      ttsQueueManager: getIt<TtsQueueService>(),
       audioAmplitudeService: getIt<AudioAmplitudeService>(),
       audioPlayerService: getIt<AudioPlayerService>(),
       interruptionService: getIt<InterruptionService>(),
@@ -201,7 +201,7 @@ Future<void> setupServiceLocator() async {
       promptDatasource: getIt<PromptDatasource>(),
       interruptionService: getIt<InterruptionService>(),
       chatEntryService: getIt<ChatEntryService>(),
-      ttsQueueManager: getIt<TtsQueueManager>(),
+      ttsQueueManager: getIt<TtsQueueService>(),
     ),
   );
   // getIt.registerFactory<ChatListCubit>(

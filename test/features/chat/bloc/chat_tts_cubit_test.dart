@@ -5,14 +5,14 @@ import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_state.dart';
-import 'package:yofardev_ai/features/sound/data/tts_queue_manager.dart';
+import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'dart:async';
 
-class MockTtsQueueManager extends Mock implements TtsQueueManager {
+class MockTtsQueueService extends Mock implements TtsQueueService {
   final StreamController<String> _audioController =
       StreamController<String>.broadcast();
 
@@ -88,14 +88,14 @@ void main() {
 
   group('ChatTtsCubit', () {
     late ChatTtsCubit cubit;
-    late MockTtsQueueManager mockTtsManager;
+    late MockTtsQueueService mockTtsManager;
     late MockAudioAmplitudeService mockAmplitudeService;
     late MockAudioPlayerService mockPlayerService;
     late MockTalkingCubit mockTalkingCubit;
     late InterruptionService interruptionService;
 
     setUp(() {
-      mockTtsManager = MockTtsQueueManager();
+      mockTtsManager = MockTtsQueueService();
       mockAmplitudeService = MockAudioAmplitudeService();
       mockPlayerService = MockAudioPlayerService();
       mockTalkingCubit = MockTalkingCubit();

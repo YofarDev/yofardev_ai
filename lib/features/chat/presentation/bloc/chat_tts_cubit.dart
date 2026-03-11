@@ -7,7 +7,7 @@ import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
-import '../../../sound/data/tts_queue_manager.dart';
+import '../../../../core/services/audio/tts_queue_service.dart';
 import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../domain/services/waiting_sentences_cache_datasource.dart';
 import 'chat_tts_state.dart';
@@ -21,7 +21,7 @@ import 'chat_tts_state.dart';
 /// - TTS stream subscriptions
 class ChatTtsCubit extends Cubit<ChatTtsState> {
   ChatTtsCubit({
-    required TtsQueueManager ttsQueueManager,
+    required TtsQueueService ttsQueueManager,
     required AudioAmplitudeService audioAmplitudeService,
     required AudioPlayerService audioPlayerService,
     required InterruptionService interruptionService,
@@ -36,7 +36,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     _subscribeToInterruptions();
   }
 
-  final TtsQueueManager _ttsQueueManager;
+  final TtsQueueService _ttsQueueManager;
   final AudioAmplitudeService _audioAmplitudeService;
   final AudioPlayerService _audioPlayerService;
   final InterruptionService _interruptionService;

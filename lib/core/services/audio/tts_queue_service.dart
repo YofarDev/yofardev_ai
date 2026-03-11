@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:uuid/uuid.dart';
 
-import '../../../../core/models/voice_effect.dart';
-import '../../../../core/services/audio/interruption_service.dart';
-import '../../../../core/utils/logger.dart';
-import '../domain/tts_queue_item.dart';
-import 'datasources/tts_datasource.dart';
+import '../../../features/sound/data/datasources/tts_datasource.dart';
+import '../../../features/sound/domain/tts_queue_item.dart';
+import '../../models/voice_effect.dart';
+import 'interruption_service.dart';
+import '../../utils/logger.dart';
 
 /// Manages queue of TTS generation and playback
-class TtsQueueManager {
+class TtsQueueService {
   final TtsDatasource _ttsDatasource;
   final InterruptionService _interruptionService;
   final List<TtsQueueItem> _queue = <TtsQueueItem>[];
@@ -22,7 +22,7 @@ class TtsQueueManager {
   Timer? _processingTimer;
   StreamSubscription<dynamic>? _interruptionSubscription;
 
-  TtsQueueManager({
+  TtsQueueService({
     required TtsDatasource ttsDatasource,
     required InterruptionService interruptionService,
   }) : _ttsDatasource = ttsDatasource,
@@ -68,7 +68,7 @@ class TtsQueueManager {
 
     AppLogger.debug(
       'Enqueued TTS item: ${text.substring(0, text.length > 30 ? 30 : text.length)}... (queue size: ${_queue.length})',
-      tag: 'TtsQueueManager',
+      tag: 'TtsQueueService',
     );
 
     // Start processing if not already running
@@ -82,14 +82,14 @@ class TtsQueueManager {
     _queue.clear();
     _isProcessing = false;
     _processingTimer?.cancel();
-    AppLogger.debug('TTS queue cleared', tag: 'TtsQueueManager');
+    AppLogger.debug('TTS queue cleared', tag: 'TtsQueueService');
   }
 
   /// Handle interruption by clearing queue and stopping processing
   void _handleInterruption() {
     AppLogger.debug(
       'TTS queue interrupted, clearing queue',
-      tag: 'TtsQueueManager',
+      tag: 'TtsQueueService',
     );
     clear();
     _isProcessing = false;
@@ -137,7 +137,7 @@ class TtsQueueManager {
     try {
       AppLogger.debug(
         'Generating TTS for: ${item.text.substring(0, item.text.length > 30 ? 30 : item.text.length)}...',
-        tag: 'TtsQueueManager',
+        tag: 'TtsQueueService',
       );
 
       // Generate audio
@@ -159,7 +159,7 @@ class TtsQueueManager {
 
       AppLogger.debug(
         'TTS generated successfully: $audioPath',
-        tag: 'TtsQueueManager',
+        tag: 'TtsQueueService',
       );
 
       // Remove from queue
@@ -178,7 +178,7 @@ class TtsQueueManager {
     } catch (e) {
       AppLogger.error(
         'Failed to generate TTS for: ${item.text}',
-        tag: 'TtsQueueManager',
+        tag: 'TtsQueueService',
         error: e,
       );
 

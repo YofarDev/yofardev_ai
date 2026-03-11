@@ -5,7 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
-import 'package:yofardev_ai/features/sound/data/tts_queue_manager.dart';
+import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 
 class MockTtsDatasource extends Mock implements TtsDatasource {}
@@ -16,15 +16,15 @@ void main() {
     registerFallbackValue(VoiceEffect(pitch: 1.0, speedRate: 1.0));
   });
 
-  group('TtsQueueManager', () {
-    late TtsQueueManager manager;
+  group('TtsQueueService', () {
+    late TtsQueueService manager;
     late MockTtsDatasource mockDatasource;
     late InterruptionService interruptionService;
 
     setUp(() {
       mockDatasource = MockTtsDatasource();
       interruptionService = InterruptionService();
-      manager = TtsQueueManager(
+      manager = TtsQueueService(
         ttsDatasource: mockDatasource,
         interruptionService: interruptionService,
       );
@@ -227,7 +227,7 @@ void main() {
   group('Interruption', () {
     late MockTtsDatasource mockTtsDatasource;
     late InterruptionService interruptionService;
-    late TtsQueueManager queueManager;
+    late TtsQueueService queueManager;
 
     setUp(() {
       mockTtsDatasource = MockTtsDatasource();
@@ -249,7 +249,7 @@ void main() {
 
     test('should clear queue when interrupted', () async {
       // Arrange
-      queueManager = TtsQueueManager(
+      queueManager = TtsQueueService(
         ttsDatasource: mockTtsDatasource,
         interruptionService: interruptionService,
       );
