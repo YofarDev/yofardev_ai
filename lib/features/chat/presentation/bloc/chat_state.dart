@@ -1,9 +1,16 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/models/chat.dart';
-import 'chat_title_state.dart';
 
 part 'chat_state.freezed.dart';
+
+/// Result of a title generation operation
+class TitleResult {
+  const TitleResult({required this.chatId, required this.title});
+
+  final String chatId;
+  final String title;
+}
 
 enum ChatStatus {
   initial,

@@ -21,7 +21,6 @@ import '../../domain/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/services/chat_entry_service.dart';
 import '../../domain/services/chat_title_service.dart';
-import 'chat_title_state.dart';
 import 'chat_state.dart';
 
 /// Main coordinator cubit for chat operations

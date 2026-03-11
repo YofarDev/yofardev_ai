@@ -5,8 +5,6 @@ import 'package:nested/nested.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
-import '../presentation/bloc/chat_title_cubit.dart';
-import '../presentation/bloc/chat_title_state.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../widgets/chat_list_container.dart';
@@ -46,10 +44,11 @@ class _ChatsListPageState extends State<ChatsListPage> {
           },
         ),
         // Listen for title generation completion to refresh the list
-        BlocListener<ChatTitleCubit, ChatTitleState>(
-          listenWhen: (_, ChatTitleState state) =>
-              state.lastGeneratedTitle != null,
-          listener: (_, ChatTitleState state) {
+        BlocListener<ChatCubit, ChatState>(
+          listenWhen: (ChatState previous, ChatState current) =>
+              previous.lastGeneratedTitle != current.lastGeneratedTitle &&
+              current.lastGeneratedTitle != null,
+          listener: (BuildContext context, ChatState state) {
             // Refresh chat list to show the newly generated title
             context.read<ChatCubit>().fetchChatsList();
           },

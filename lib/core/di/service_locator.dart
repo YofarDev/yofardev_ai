@@ -9,7 +9,6 @@ import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
 // import '../../features/chat/presentation/bloc/chat_list_cubit.dart';
-import '../../features/chat/presentation/bloc/chat_title_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_cubit.dart';
 import '../../features/chat/domain/services/chat_entry_service.dart';
@@ -173,12 +172,6 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<TalkingCubit>(
     () =>
         TalkingCubit(getIt<TalkingRepository>(), getIt<InterruptionService>()),
-  );
-  getIt.registerLazySingleton<ChatTitleCubit>(
-    () => ChatTitleCubit(
-      chatRepository: getIt<ChatRepository>(),
-      llmService: getIt<LlmService>(),
-    ),
   );
   // Chat cubits - split by responsibility
   getIt.registerFactory<ChatTtsCubit>(
