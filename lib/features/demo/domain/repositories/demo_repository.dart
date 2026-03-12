@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/models/avatar_config.dart';
-import '../../../chat/domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/repositories/avatar_repository.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
-import '../../../avatar/domain/repositories/avatar_repository.dart';
 
 /// Repository for demo-related operations.
 ///

@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/models/avatar_config.dart';
-import '../models/chat.dart';
-import '../models/chat_entry.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/chat_entry.dart';
 
 abstract class ChatRepository {
   Future<Either<Exception, Chat>> createNewChat({String? language});

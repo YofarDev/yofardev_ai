@@ -29,7 +29,10 @@ class CostumeWidget extends StatelessWidget {
                 ),
               )
             else
-              const Positioned.fill(top: null, child: SingularityCostume()),
+              const Positioned.fill(
+                top: null,
+                child: SingularityCostume(amplitudes: null, isTalking: false),
+              ),
             if (state.avatar.costume == AvatarCostume.robocop)
               const RobocopAnimatedEyes(),
             if (state.avatar.costume == AvatarCostume.soubrette)

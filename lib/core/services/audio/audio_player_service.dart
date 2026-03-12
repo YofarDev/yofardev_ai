@@ -53,6 +53,32 @@ class AudioPlayerService {
     }
   }
 
+  /// Play an audio asset from the assets folder
+  Future<void> playAsset(String assetPath, {double volume = 1.0}) async {
+    try {
+      AppLogger.debug('Playing asset: $assetPath', tag: 'AudioPlayerService');
+
+      await _disposeCurrentPlayer();
+
+      final AudioPlayer player = AudioPlayer();
+      _player = player;
+      await player.setSource(AssetSource(assetPath));
+      await player.setVolume(volume);
+      await player.resume();
+
+      // Fire and forget - no completion callback needed for sound effects
+      unawaited(
+        _disposeCompletedPlayer(++_playbackGeneration, stopPlayback: false),
+      );
+    } catch (e) {
+      AppLogger.error(
+        'Failed to play asset',
+        tag: 'AudioPlayerService',
+        error: e,
+      );
+    }
+  }
+
   /// Stop current playback
   Future<void> stop() async {
     try {

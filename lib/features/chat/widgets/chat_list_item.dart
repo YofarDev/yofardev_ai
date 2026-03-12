@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../domain/models/chat.dart';
+import '../../../core/models/chat.dart';
 import 'chat_card.dart';
 import 'chat_dismissible_background.dart';
 

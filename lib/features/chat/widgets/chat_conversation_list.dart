@@ -5,7 +5,7 @@ import '../presentation/bloc/chat_cubit.dart';
 import '../../../core/models/chat.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/utils/extensions.dart';
-import '../domain/models/chat_entry.dart';
+import '../../../core/models/chat_entry.dart';
 import '../widgets/chat_message_item.dart';
 import 'function_calling_widget.dart';
 

@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/services/settings_local_datasource.dart';
-import '../../domain/repositories/settings_repository.dart';
+import '../../../../core/repositories/settings_repository.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsLocalDatasource _datasource = SettingsLocalDatasource();

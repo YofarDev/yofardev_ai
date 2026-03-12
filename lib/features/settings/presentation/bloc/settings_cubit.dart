@@ -6,7 +6,7 @@ import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
-import '../../domain/repositories/settings_repository.dart';
+import '../../../../core/repositories/settings_repository.dart';
 import 'settings_state.dart';
 
 /// Cubit for managing application settings
@@ -320,5 +320,29 @@ class SettingsCubit extends Cubit<SettingsState> {
     await loadGoogleSearchConfig();
     await loadOpenWeatherConfig();
     await loadNewYorkTimesConfig();
+  }
+
+  /// Load sound effects enabled setting
+  Future<void> loadSoundEffects() async {
+    final Either<Exception, bool> result = await _settingsRepository
+        .getSoundEffects();
+    result.fold(
+      (Exception error) => emit(state.copyWith(soundEffectsEnabled: false)),
+      (bool enabled) => emit(state.copyWith(soundEffectsEnabled: enabled)),
+    );
+  }
+
+  /// Set sound effects enabled setting
+  Future<void> setSoundEffects(bool soundEffectsEnabled) async {
+    final Either<Exception, void> result = await _settingsRepository
+        .setSoundEffects(soundEffectsEnabled);
+    result.fold(
+      (Exception error) => AppLogger.error(
+        'Failed to set sound effects',
+        tag: 'SettingsCubit',
+        error: error,
+      ),
+      (_) => emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled)),
+    );
   }
 }

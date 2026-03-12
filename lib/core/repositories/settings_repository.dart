@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/models/chat.dart';
-import '../../../../core/models/task_llm_config.dart';
+import '../models/chat.dart';
+import '../models/task_llm_config.dart';
 
 abstract class SettingsRepository {
   Future<Either<Exception, String?>> getLanguage();

@@ -129,7 +129,9 @@ void main() {
       when(
         () => mockPlayerService.play(any()),
       ).thenAnswer((_) async => const Duration(milliseconds: 2000));
-      when(() => mockPlayerService.stop()).thenAnswer((_) async {});
+      when(() => mockPlayerService.stop()).thenAnswer((_) async {
+        return;
+      });
       when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {});
 
       cubit = ChatTtsCubit(

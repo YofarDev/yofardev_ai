@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nested/nested.dart';
 
-import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
@@ -36,7 +35,6 @@ class _ChatsListPageState extends State<ChatsListPage> {
           listener: (BuildContext context, ChatState state) {
             if (state.chatCreated) {
               // Handle cross-feature coordination when chat is created
-              context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
               context.read<TalkingCubit>().init();
               // Refresh the chat list after creation
               context.read<ChatCubit>().fetchChatsList();

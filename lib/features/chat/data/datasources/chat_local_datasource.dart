@@ -4,7 +4,7 @@ import 'dart:ui';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/prompt_datasource.dart';

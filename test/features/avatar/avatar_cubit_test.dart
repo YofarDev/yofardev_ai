@@ -1,9 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
-import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 
@@ -21,16 +22,27 @@ class MockAvatarAnimationService implements AvatarAnimationService {
   Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {}
 }
 
+class MockAudioPlayerService extends Mock implements AudioPlayerService {
+  @override
+  Future<void> playAsset(String assetPath, {double volume = 1.0}) async {}
+}
+
 void main() {
   group('AvatarCubit', () {
     late AvatarCubit avatarCubit;
     late MockAvatarRepository mockAvatarRepository;
     late MockAvatarAnimationService mockAnimationService;
+    late MockAudioPlayerService mockAudioPlayerService;
 
     setUp(() {
       mockAvatarRepository = MockAvatarRepository();
       mockAnimationService = MockAvatarAnimationService();
-      avatarCubit = AvatarCubit(mockAvatarRepository, mockAnimationService);
+      mockAudioPlayerService = MockAudioPlayerService();
+      avatarCubit = AvatarCubit(
+        mockAvatarRepository,
+        mockAnimationService,
+        mockAudioPlayerService,
+      );
     });
 
     tearDown(() {

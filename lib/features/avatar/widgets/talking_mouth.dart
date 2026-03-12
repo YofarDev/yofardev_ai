@@ -1,33 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/res/app_constants.dart';
 import '../../../core/utils/app_utils.dart';
-import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
 import 'scaled_avatar_item.dart';
 
 class TalkingMouth extends StatelessWidget {
-  const TalkingMouth({super.key});
+  const TalkingMouth({super.key, this.mouthState});
+
+  final MouthState? mouthState;
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TalkingCubit, TalkingState>(
-      builder: (BuildContext context, TalkingState state) {
-        final String mouthPath = _getMouthPath(state.mouthState);
+    if (mouthState == null) return const SizedBox.shrink();
 
-        return ScaledAvatarItem(
-          path: mouthPath,
-          itemX: AppConstants.mouthX,
-          itemY: AppConstants.mouthY,
-        );
-      },
+    final String mouthPath = _getMouthPath(mouthState!);
+
+    return ScaledAvatarItem(
+      path: mouthPath,
+      itemX: AppConstants.mouthX,
+      itemY: AppConstants.mouthY,
     );
   }
 
-  String _getMouthPath(MouthState mouthState) {
+  String _getMouthPath(MouthState state) {
     return AppUtils.fixAssetsPath(
-      'assets/avatar/mouth/mouth_${mouthState.name}.png',
+      'assets/avatar/mouth/mouth_${state.name}.png',
     );
   }
 }

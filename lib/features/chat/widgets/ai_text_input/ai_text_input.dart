@@ -14,12 +14,10 @@ import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/widgets/current_prompt_text.dart';
 import '../../../../core/widgets/glassmorphic/glassmorphic_text_field.dart';
 import '../../../../core/widgets/picker_buttons.dart';
-import '../../../avatar/presentation/bloc/avatar_cubit.dart';
-import '../../../avatar/presentation/bloc/avatar_state.dart';
 import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../talking/presentation/bloc/talking_state.dart';
-import '../../domain/models/chat.dart';
-import '../../domain/models/chat_entry.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/chat_entry.dart';
 import '../../presentation/bloc/chat_cubit.dart';
 import '../../presentation/bloc/chat_state.dart';
 import '../function_calling_widget.dart';
@@ -27,7 +25,8 @@ import 'picked_image_preview.dart';
 
 class AiTextInput extends StatefulWidget {
   final bool onlyText;
-  const AiTextInput({super.key, this.onlyText = false});
+  final Avatar? avatar;
+  const AiTextInput({super.key, this.onlyText = false, this.avatar});
 
   @override
   State<AiTextInput> createState() => _AiTextInputState();
@@ -108,89 +107,83 @@ class _AiTextInputState extends State<AiTextInput> {
           // TalkingCubit manages its own error state
         }
       },
-      child: BlocBuilder<AvatarCubit, AvatarState>(
-        builder: (BuildContext context, AvatarState avatarState) {
-          return BlocBuilder<ChatCubit, ChatState>(
-            builder: (BuildContext context, ChatState state) {
-              return BlocBuilder<TalkingCubit, TalkingState>(
-                builder: (BuildContext context, TalkingState talkingState) {
-                  ChatEntry? lastUserEntry;
-                  final List<ChatEntry> lastFunctionCallEntries = <ChatEntry>[];
-                  if (state.currentChat.entries.isNotEmpty) {
-                    for (final ChatEntry entry
-                        in state.currentChat.entries.reversed) {
-                      if (entry.entryType == EntryType.user) {
-                        lastUserEntry = entry;
-                        break;
-                      }
-                    }
-                    if (state.currentChat.entries.last.entryType ==
-                        EntryType.functionCalling) {
-                      for (final ChatEntry entry
-                          in state.currentChat.entries.reversed) {
-                        if (entry.entryType == EntryType.functionCalling) {
-                          lastFunctionCallEntries.add(entry);
-                        } else {
-                          break;
-                        }
-                      }
+      child: BlocBuilder<ChatCubit, ChatState>(
+        builder: (BuildContext context, ChatState state) {
+          return BlocBuilder<TalkingCubit, TalkingState>(
+            builder: (BuildContext context, TalkingState talkingState) {
+              ChatEntry? lastUserEntry;
+              final List<ChatEntry> lastFunctionCallEntries = <ChatEntry>[];
+              if (state.currentChat.entries.isNotEmpty) {
+                for (final ChatEntry entry
+                    in state.currentChat.entries.reversed) {
+                  if (entry.entryType == EntryType.user) {
+                    lastUserEntry = entry;
+                    break;
+                  }
+                }
+                if (state.currentChat.entries.last.entryType ==
+                    EntryType.functionCalling) {
+                  for (final ChatEntry entry
+                      in state.currentChat.entries.reversed) {
+                    if (entry.entryType == EntryType.functionCalling) {
+                      lastFunctionCallEntries.add(entry);
+                    } else {
+                      break;
                     }
                   }
+                }
+              }
 
-                  return Column(
+              return Column(
+                children: <Widget>[
+                  if (_pickedImage != null)
+                    PickedImagePreview(imagePath: _pickedImage!.path),
+                  Stack(
                     children: <Widget>[
-                      if (_pickedImage != null)
-                        PickedImagePreview(imagePath: _pickedImage!.path),
-                      Stack(
+                      Opacity(
+                        opacity: talkingState.status == TalkingStatus.idle
+                            ? 1
+                            : widget.onlyText
+                            ? 1
+                            : 0,
+                        child: _buildTextField(
+                          currentAvatar: widget.avatar ?? const Avatar(),
+                          currentLanguage: state.currentLanguage,
+                          currentChat: state.currentChat,
+                          functionCallingEnabled: state.functionCallingEnabled,
+                        ),
+                      ),
+                      Column(
                         children: <Widget>[
-                          Opacity(
-                            opacity: talkingState.status == TalkingStatus.idle
-                                ? 1
-                                : widget.onlyText
-                                ? 1
-                                : 0,
-                            child: _buildTextField(
-                              currentAvatar: avatarState.avatar,
-                              currentLanguage: state.currentLanguage,
-                              currentChat: state.currentChat,
-                              functionCallingEnabled:
-                                  state.functionCallingEnabled,
+                          ...lastFunctionCallEntries.map(
+                            (ChatEntry entry) => FunctionCallingWidget(
+                              functionCallingText: entry.body,
                             ),
                           ),
-                          Column(
-                            children: <Widget>[
-                              ...lastFunctionCallEntries.map(
-                                (ChatEntry entry) => FunctionCallingWidget(
-                                  functionCallingText: entry.body,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (talkingState.status != TalkingStatus.initial &&
-                              (talkingState is SpeakingState ||
-                                  talkingState is GeneratingState) &&
-                              !widget.onlyText &&
-                              lastUserEntry != null)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Flexible(
-                                  child: CurrentPromptText(
-                                    prompt: lastUserEntry.body
-                                        .getVisiblePrompt(),
-                                  ),
-                                ),
-                                if (lastUserEntry.attachedImage != null)
-                                  PickedImagePreview(
-                                    imagePath: lastUserEntry.attachedImage!,
-                                  ),
-                              ],
-                            ),
                         ],
                       ),
+                      if (talkingState.status != TalkingStatus.initial &&
+                          (talkingState is SpeakingState ||
+                              talkingState is GeneratingState) &&
+                          !widget.onlyText &&
+                          lastUserEntry != null)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Flexible(
+                              child: CurrentPromptText(
+                                prompt: lastUserEntry.body.getVisiblePrompt(),
+                              ),
+                            ),
+                            if (lastUserEntry.attachedImage != null)
+                              PickedImagePreview(
+                                imagePath: lastUserEntry.attachedImage!,
+                              ),
+                          ],
+                        ),
                     ],
-                  );
-                },
+                  ),
+                ],
               );
             },
           );

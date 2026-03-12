@@ -2,20 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../avatar/presentation/bloc/avatar_cubit.dart';
-import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
-import '../domain/models/chat.dart';
+import '../../../core/models/chat.dart';
 import 'chat_list_item.dart';
 
-/// Widget that displays a list of chats with avatar state integration.
-///
-/// This widget encapsulates the chat list rendering logic,
-/// including avatar state monitoring and item interactions.
+/// Widget that displays a list of chats.
 class ChatListContainer extends StatelessWidget {
   const ChatListContainer({
     super.key,
@@ -28,37 +23,32 @@ class ChatListContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AvatarCubit, AvatarState>(
-      builder: (BuildContext context, AvatarState avatarState) {
-        return Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: chats.length,
-            itemBuilder: (BuildContext context, int index) {
-              final Chat chat = chats[index];
-              final bool isSelected = chat.id == currentChat.id;
+    return Expanded(
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: chats.length,
+        itemBuilder: (BuildContext context, int index) {
+          final Chat chat = chats[index];
+          final bool isSelected = chat.id == currentChat.id;
 
-              final String previewText = _resolvePreview(context, chat);
-              final String timeLabel = _relativeTime(
-                context,
-                chat.entries.isNotEmpty ? chat.entries.last.timestamp : null,
-              );
+          final String previewText = _resolvePreview(context, chat);
+          final String timeLabel = _relativeTime(
+            context,
+            chat.entries.isNotEmpty ? chat.entries.last.timestamp : null,
+          );
 
-              return ChatListItem(
-                chat: chat,
-                isSelected: isSelected,
-                previewText: previewText,
-                timeLabel: timeLabel,
-                messageCount: chat.entries.length,
-                onTap: () => _openChat(context, chat),
-                onDismissed: () =>
-                    context.read<ChatCubit>().deleteChat(chat.id),
-                onDismissConfirm: () => _confirmDelete(context),
-              );
-            },
-          ),
-        );
-      },
+          return ChatListItem(
+            chat: chat,
+            isSelected: isSelected,
+            previewText: previewText,
+            timeLabel: timeLabel,
+            messageCount: chat.entries.length,
+            onTap: () => _openChat(context, chat),
+            onDismissed: () => context.read<ChatCubit>().deleteChat(chat.id),
+            onDismissConfirm: () => _confirmDelete(context),
+          );
+        },
+      ),
     );
   }
 

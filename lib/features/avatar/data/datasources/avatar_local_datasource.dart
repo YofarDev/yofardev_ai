@@ -2,7 +2,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-import '../../../chat/domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/logger.dart';
 

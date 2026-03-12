@@ -7,7 +7,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yofardev_ai/features/settings/screens/function_calling_config_screen.dart';
-import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/settings/widgets/function_calling_section.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/models/chat.dart';

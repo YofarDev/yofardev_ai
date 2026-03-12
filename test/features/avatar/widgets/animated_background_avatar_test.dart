@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
+import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
-import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/widgets/animated_background_avatar.dart';
-import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 
 class MockAvatarAnimationService implements AvatarAnimationService {
   @override
@@ -23,6 +23,23 @@ class MockAvatarAnimationService implements AvatarAnimationService {
   Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {}
 }
 
+class MockAudioPlayerService implements AudioPlayerService {
+  @override
+  Future<void> playAsset(String assetPath, {double volume = 1.0}) async {}
+
+  @override
+  Future<Duration> play(String audioPath) async => Duration.zero;
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  void dispose() {}
+
+  @override
+  Stream<void> get onPlaybackComplete => const Stream<void>.empty();
+}
+
 void main() {
   group('AnimatedBackgroundAvatar', () {
     late AvatarCubit avatarCubit;
@@ -30,7 +47,11 @@ void main() {
 
     setUp(() {
       mockAnimationService = MockAvatarAnimationService();
-      avatarCubit = AvatarCubit(MockAvatarRepository(), mockAnimationService);
+      avatarCubit = AvatarCubit(
+        MockAvatarRepository(),
+        mockAnimationService,
+        MockAudioPlayerService(),
+      );
       avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
     });
 

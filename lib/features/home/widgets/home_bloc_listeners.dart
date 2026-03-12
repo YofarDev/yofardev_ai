@@ -8,7 +8,7 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
-import '../../chat/domain/models/chat_entry.dart';
+import '../../../core/models/chat_entry.dart';
 import '../../chat/presentation/bloc/chat_cubit.dart';
 import '../../chat/presentation/bloc/chat_state.dart';
 import '../../demo/data/repositories/demo_repository_impl.dart';

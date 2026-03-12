@@ -7,9 +7,12 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
+import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/res/app_constants.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
@@ -17,17 +20,15 @@ import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
-import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
-import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 
 // Mock repositories
@@ -181,7 +182,11 @@ void main() {
       avatarAnimationService = AvatarAnimationService();
 
       // Create AvatarCubit with animation service
-      avatarCubit = AvatarCubit(mockAvatarRepository, avatarAnimationService);
+      avatarCubit = AvatarCubit(
+        mockAvatarRepository,
+        avatarAnimationService,
+        AudioPlayerService(),
+      );
       avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
 
       // Create mock services

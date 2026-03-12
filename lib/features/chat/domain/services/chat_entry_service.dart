@@ -2,8 +2,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../domain/models/chat_entry.dart';
-import '../../../settings/domain/repositories/settings_repository.dart';
+import '../../../../core/models/chat_entry.dart';
+import '../../../../core/repositories/settings_repository.dart';
 
 /// Service responsible for creating chat entries
 ///

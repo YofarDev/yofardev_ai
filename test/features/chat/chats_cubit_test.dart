@@ -4,21 +4,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
+import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
-import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
-import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
-import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
+import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 
 // Mocktail mock classes

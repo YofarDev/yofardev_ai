@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/utils/logger.dart';
-import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../../../core/models/avatar_config.dart';
-import '../../domain/models/demo_script.dart';
+import '../../../../core/models/demo_script.dart';
+import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../domain/repositories/demo_repository.dart';
 import '../../../../core/services/demo_controller.dart';
 

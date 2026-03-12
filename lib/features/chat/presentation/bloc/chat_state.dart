@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 
 part 'chat_state.freezed.dart';
 

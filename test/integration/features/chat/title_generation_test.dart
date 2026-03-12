@@ -11,13 +11,13 @@ import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
-import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
-import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
+import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
-import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 
 class TrackingMockChatRepository implements ChatRepository {
   Chat? currentChat;

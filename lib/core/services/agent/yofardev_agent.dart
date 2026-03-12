@@ -3,9 +3,9 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 
-import '../../../features/chat/domain/models/chat.dart';
-import '../../../features/chat/domain/models/chat_entry.dart';
-import '../../../features/settings/domain/repositories/settings_repository.dart';
+import '../../models/chat.dart';
+import '../../models/chat_entry.dart';
+import '../../repositories/settings_repository.dart';
 import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';

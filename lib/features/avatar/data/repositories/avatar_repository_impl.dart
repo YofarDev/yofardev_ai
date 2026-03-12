@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../chat/domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/repositories/avatar_repository.dart';
 import '../datasources/avatar_local_datasource.dart';
-import '../../domain/repositories/avatar_repository.dart';
 
 class AvatarRepositoryImpl implements AvatarRepository {
   final AvatarLocalDatasource _datasource;

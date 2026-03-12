@@ -2,21 +2,22 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/res/app_colors.dart';
 import '../../../../core/utils/app_utils.dart';
-import '../../../talking/presentation/bloc/talking_cubit.dart';
-import '../../../talking/presentation/bloc/talking_state.dart';
 
 class SingularityCostume extends StatefulWidget {
   final Duration switchDuration;
   final Duration fadeDuration;
+  final List<int>? amplitudes;
+  final bool isTalking;
 
   const SingularityCostume({
     super.key,
     this.switchDuration = const Duration(milliseconds: 200),
     this.fadeDuration = const Duration(milliseconds: 200),
+    this.amplitudes,
+    this.isTalking = false,
   });
 
   @override
@@ -44,10 +45,21 @@ class _SingularityCostumeState extends State<SingularityCostume> {
     });
   }
 
-  void _startTalking(List<int> ampltiudes) async {
-    for (int i = 0; i < ampltiudes.length; i++) {
+  @override
+  void didUpdateWidget(SingularityCostume oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isTalking &&
+        (oldWidget.isTalking != widget.isTalking ||
+            oldWidget.amplitudes != widget.amplitudes)) {
+      _startTalking(widget.amplitudes ?? <int>[]);
+    }
+  }
+
+  void _startTalking(List<int> amplitudes) async {
+    for (int i = 0; i < amplitudes.length; i++) {
+      if (!mounted) return;
       setState(() {
-        _amplitude = ampltiudes[i] * 1;
+        _amplitude = amplitudes[i] * 1;
       });
       await Future<dynamic>.delayed(const Duration(milliseconds: 50));
     }
@@ -61,55 +73,46 @@ class _SingularityCostumeState extends State<SingularityCostume> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<TalkingCubit, TalkingState>(
-      listenWhen: (TalkingState previous, TalkingState current) =>
-          previous.status != current.status,
-      listener: (BuildContext context, TalkingState state) {
-        if (state.status == TalkingStatus.success) {
-          _startTalking(state.answer.amplitudes);
-        }
-      },
-      child: Stack(
-        children: <Widget>[
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 150),
-              child: Container(
-                width: 1,
-                height: 1,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(50),
-                  color: AppColors.warning,
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: AppColors.warning.withValues(alpha: 0.7),
-                      blurRadius: 80,
-                      spreadRadius: 80 + _amplitude,
-                    ),
-                  ],
-                ),
+    return Stack(
+      children: <Widget>[
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 150),
+            child: Container(
+              width: 1,
+              height: 1,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                color: AppColors.warning,
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    color: AppColors.warning.withValues(alpha: 0.7),
+                    blurRadius: 80,
+                    spreadRadius: 80 + _amplitude,
+                  ),
+                ],
               ),
             ),
           ),
-          Image.asset(
+        ),
+        Image.asset(
+          AppUtils.fixAssetsPath(
+            'assets/avatar/costumes/singularity/singularity_$_currentImageIndex.png',
+          ),
+          key: ValueKey<int>(_currentImageIndex),
+          fit: BoxFit.cover,
+        ),
+        AnimatedSwitcher(
+          duration: widget.fadeDuration,
+          child: Image.asset(
             AppUtils.fixAssetsPath(
               'assets/avatar/costumes/singularity/singularity_$_currentImageIndex.png',
             ),
             key: ValueKey<int>(_currentImageIndex),
             fit: BoxFit.cover,
           ),
-          AnimatedSwitcher(
-            duration: widget.fadeDuration,
-            child: Image.asset(
-              AppUtils.fixAssetsPath(
-                'assets/avatar/costumes/singularity/singularity_$_currentImageIndex.png',
-              ),
-              key: ValueKey<int>(_currentImageIndex),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

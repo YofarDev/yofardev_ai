@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../features/settings/domain/repositories/settings_repository.dart';
+import '../../repositories/settings_repository.dart';
 import '../../models/function_info.dart';
 import 'agent_tool.dart';
 import 'alarm_tool.dart';

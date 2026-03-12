@@ -100,25 +100,6 @@ class TalkingCubit extends Cubit<TalkingState> {
     emit(const TalkingState.idle());
   }
 
-  void updateMouthState(int amplitude) {
-    final MouthState newMouthState = _getMouthState(amplitude);
-
-    final TalkingState currentState = state;
-    if (currentState.mouthState != newMouthState) {
-      currentState.when(
-        idle: (MouthState mouthState) => emit(TalkingState.idle(newMouthState)),
-        waiting: (MouthState mouthState) =>
-            emit(TalkingState.waiting(newMouthState)),
-        generating: (MouthState mouthState) =>
-            emit(TalkingState.generating(newMouthState)),
-        speaking: (MouthState mouthState) =>
-            emit(TalkingState.speaking(newMouthState)),
-        error: (String message, MouthState mouthState) =>
-            emit(TalkingState.error(message, newMouthState)),
-      );
-    }
-  }
-
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,
@@ -166,14 +147,6 @@ class TalkingCubit extends Cubit<TalkingState> {
 
   MouthState _mapMouthStateFromInt(int value) {
     return MouthState.values[value];
-  }
-
-  MouthState _getMouthState(int amplitude) {
-    if (amplitude == 0) return MouthState.closed;
-    if (amplitude <= 5) return MouthState.slightly;
-    if (amplitude <= 12) return MouthState.semi;
-    if (amplitude <= 18) return MouthState.open;
-    return MouthState.wide;
   }
 
   @Deprecated('Use generateSpeech() instead')

@@ -1,48 +1,26 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/material.dart';
 
-import '../res/app_constants.dart';
-import '../res/app_colors.dart';
-import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
-import '../../features/avatar/presentation/bloc/avatar_state.dart';
-
+/// A widget that constrains its child's width based on avatar dimensions.
+///
+/// This widget is designed to work with avatar-based layouts where the content
+/// width should match or be constrained by the avatar's visual width.
 class ConstrainedWidth extends StatelessWidget {
+  const ConstrainedWidth({super.key, required this.child, this.avatarWidth});
+
   final Widget child;
-  const ConstrainedWidth({super.key, required this.child});
+  final double? avatarWidth;
 
   @override
   Widget build(BuildContext context) {
     if (!kIsWeb) return child;
 
-    return ColoredBox(
-      color: AppColors.primary.withValues(alpha: 0.1),
-      child: BlocBuilder<AvatarCubit, AvatarState>(
-        builder: (BuildContext context, AvatarState state) {
-          return LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              final double computedAvatarWidth =
-                  state.status == AvatarStatus.initial
-                  ? AppConstants.avatarWidth
-                  : state.baseOriginalWidth * state.scaleFactor;
-              final double avatarWidth =
-                  computedAvatarWidth.isFinite && computedAvatarWidth > 0
-                  ? computedAvatarWidth
-                  : AppConstants.avatarWidth;
-              final double maxWidth = avatarWidth.clamp(
-                0,
-                constraints.maxWidth,
-              );
+    final double width = avatarWidth ?? 400.0; // Default width
 
-              return Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: child,
-                ),
-              );
-            },
-          );
-        },
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: width),
+        child: child,
       ),
     );
   }

@@ -24,6 +24,7 @@ sealed class SettingsState with _$SettingsState {
     @Default(null) String? username,
     @Default(null) String? systemPrompt,
     @Default(ChatPersona.assistant) ChatPersona persona,
+    @Default(true) bool soundEffectsEnabled,
     // Error fields:
     @Default(false) bool hasError,
     @Default(null) String? errorMessage,

@@ -1,33 +1,32 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'function_info.freezed.dart';
+
 typedef FunctionCallback = Future<dynamic> Function(Map<String, dynamic> args);
 
-class FunctionInfo {
-  final String name;
-  final String description;
-  final List<Parameter> parameters;
-  final FunctionCallback function;
-  final Map<String, dynamic>? parametersCalled;
+@freezed
+sealed class FunctionInfo with _$FunctionInfo {
+  const FunctionInfo._();
 
-  FunctionInfo({
-    required this.name,
-    required this.description,
-    required this.parameters,
-    required this.function,
-    this.parametersCalled,
-  });
+  const factory FunctionInfo({
+    required String name,
+    required String description,
+    required List<Parameter> parameters,
+    required FunctionCallback function,
+    Map<String, dynamic>? parametersCalled,
+  }) = _FunctionInfo;
 }
 
-class Parameter {
-  final String name;
-  final String description;
-  final String type; // 'string', 'number', 'boolean'
-  final bool isRequired;
+@freezed
+sealed class Parameter with _$Parameter {
+  const Parameter._();
 
-  Parameter({
-    required this.name,
-    required this.description,
-    required this.type,
-    this.isRequired = true,
-  });
+  const factory Parameter({
+    required String name,
+    required String description,
+    required String type,
+    @Default(true) bool isRequired,
+  }) = _Parameter;
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{'type': type, 'description': description};

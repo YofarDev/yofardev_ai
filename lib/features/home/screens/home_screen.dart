@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/models/demo_script.dart';
 import '../../../core/res/app_colors.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
@@ -8,7 +9,6 @@ import '../../chat/presentation/bloc/chat_cubit.dart';
 import '../../chat/presentation/bloc/chat_state.dart';
 import '../../chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../demo/presentation/bloc/demo_cubit.dart';
-import '../../demo/domain/models/demo_script.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
 import '../widgets/home_bloc_listeners.dart';

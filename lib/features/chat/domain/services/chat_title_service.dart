@@ -1,8 +1,8 @@
 import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/logger.dart';
-import '../models/chat.dart';
-import '../models/chat_entry.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/chat_entry.dart';
 import '../repositories/chat_repository.dart';
 
 /// Service that handles chat title generation logic.

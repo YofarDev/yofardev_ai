@@ -5,12 +5,12 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/services/agent/yofardev_agent.dart';
 import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../../../core/models/avatar_config.dart';
-import '../../../demo/domain/models/demo_script.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/chat_entry.dart';
+import '../../../../core/models/demo_script.dart';
 import '../../../../core/services/prompt_datasource.dart';
-import '../../domain/models/chat.dart';
-import '../../domain/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';
-import '../../../settings/domain/repositories/settings_repository.dart';
+import '../../../../core/repositories/settings_repository.dart';
 import '../datasources/chat_local_datasource.dart';
 
 class YofardevRepositoryImpl implements ChatRepository {

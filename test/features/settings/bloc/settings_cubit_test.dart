@@ -4,10 +4,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/llm_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
-import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_state.dart';
-import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 

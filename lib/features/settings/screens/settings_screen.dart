@@ -5,10 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/models/sound_effects.dart';
+import '../../../core/models/chat.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
-import '../../chat/presentation/bloc/chat_cubit.dart';
-import '../../../../core/models/chat.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
 import '../widgets/api_key_field.dart';
@@ -53,11 +52,9 @@ class SettingsPageState extends State<SettingsPage> {
     final SettingsCubit settingsCubit = context.read<SettingsCubit>();
     await settingsCubit.loadSettings();
 
-    // Load additional settings from ChatCubit for sound effects
-    _isSoundEffectsEnabled = context
-        .read<ChatCubit>()
-        .state
-        .soundEffectsEnabled;
+    // Load sound effects setting
+    await settingsCubit.loadSoundEffects();
+
     setState(() {});
   }
 
@@ -71,7 +68,7 @@ class SettingsPageState extends State<SettingsPage> {
       await settingsCubit.setUsername(_usernameController.text);
     }
     await settingsCubit.setPersona(_persona);
-    context.read<ChatCubit>().setSoundEffects(_isSoundEffectsEnabled);
+    await settingsCubit.setSoundEffects(_isSoundEffectsEnabled);
     context.pop();
   }
 

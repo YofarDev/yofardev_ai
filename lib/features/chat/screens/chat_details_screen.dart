@@ -4,19 +4,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nested/nested.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../avatar/presentation/bloc/avatar_cubit.dart';
-import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
 import '../../../core/widgets/app_icon_button.dart';
-import '../domain/models/chat.dart';
-import '../domain/models/chat_entry.dart';
+import '../../../core/models/chat.dart';
+import '../../../core/models/chat_entry.dart';
 import '../widgets/ai_text_input/ai_text_input.dart';
 import '../widgets/chat_conversation_list.dart';
 import '../widgets/chat_details_actions.dart';
@@ -35,35 +32,19 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: <SingleChildWidget>[
-        BlocListener<AvatarCubit, AvatarState>(
-          listenWhen: (AvatarState previous, AvatarState current) =>
-              previous.avatarConfig != current.avatarConfig,
-          listener: (BuildContext context, AvatarState state) {
-            context.read<AvatarCubit>().onNewAvatarConfig(
-              context.read<ChatCubit>().state.openedChat.id,
-              state.avatarConfig,
-            );
-          },
-        ),
-        BlocListener<ChatCubit, ChatState>(
-          listenWhen: (ChatState previous, ChatState current) =>
-              previous.status != current.status,
-          listener: (BuildContext context, ChatState state) {
-            if (state.status == ChatStatus.interrupted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppLocalizations.of(context).responseInterrupted,
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          },
-        ),
-      ],
+    return BlocListener<ChatCubit, ChatState>(
+      listenWhen: (ChatState previous, ChatState current) =>
+          previous.status != current.status,
+      listener: (BuildContext context, ChatState state) {
+        if (state.status == ChatStatus.interrupted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context).responseInterrupted),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      },
       child: Scaffold(
         body: BlocBuilder<ChatCubit, ChatState>(
           builder: (BuildContext context, ChatState state) {
@@ -85,7 +66,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                           limitParameterSize: _limitParamaterSize,
                         ),
                       ),
-                      const AiTextInput(onlyText: true),
+                      AiTextInput(onlyText: true, avatar: chat.avatar),
                       const SizedBox(height: 8),
                     ],
                   ),

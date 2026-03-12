@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/res/app_colors.dart';
-import '../domain/models/chat.dart';
+import '../../../core/models/chat.dart';
 
 /// Card widget displaying chat information
 class ChatCard extends StatelessWidget {

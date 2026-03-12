@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
+import '../../features/avatar/presentation/bloc/avatar_state.dart';
 import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
 import '../../features/chat/screens/image_full_screen.dart';
@@ -11,6 +14,7 @@ import '../../features/settings/screens/llm/llm_selection_page.dart';
 import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/models/llm_config.dart';
+import '../../core/res/app_constants.dart';
 import '../../core/widgets/constrained_width.dart';
 import '../../core/l10n/generated/app_localizations.dart';
 import 'route_constants.dart';
@@ -30,7 +34,22 @@ class AppRouter {
         pageBuilder: (BuildContext context, GoRouterState state) =>
             MaterialPage<void>(
               key: state.pageKey,
-              child: const ConstrainedWidth(child: HomeScreen()),
+              child: BlocBuilder<AvatarCubit, AvatarState>(
+                builder: (BuildContext context, AvatarState avatarState) {
+                  final double computedWidth =
+                      avatarState.status == AvatarStatus.initial
+                      ? AppConstants.avatarWidth
+                      : avatarState.baseOriginalWidth * avatarState.scaleFactor;
+                  final double avatarWidth =
+                      computedWidth.isFinite && computedWidth > 0
+                      ? computedWidth
+                      : AppConstants.avatarWidth;
+                  return ConstrainedWidth(
+                    avatarWidth: avatarWidth,
+                    child: const HomeScreen(),
+                  );
+                },
+              ),
             ),
       ),
       GoRoute(

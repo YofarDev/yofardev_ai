@@ -11,7 +11,7 @@ import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/utils/app_utils.dart';
-import '../domain/models/chat_entry.dart';
+import '../../../core/models/chat_entry.dart';
 import '../widgets/chat_avatar.dart';
 import 'modern_chat_bubble.dart';
 

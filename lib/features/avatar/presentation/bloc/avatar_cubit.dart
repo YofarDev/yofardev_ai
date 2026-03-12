@@ -1,21 +1,24 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/repositories/avatar_repository.dart';
 import '../../../../core/res/app_constants.dart';
+import '../../../../core/services/audio/audio_player_service.dart';
 import '../../../../core/services/avatar_animation_service.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../chat/domain/models/chat.dart';
+import '../../../../core/models/chat.dart';
 import '../../domain/models/avatar_animation.dart';
-import '../../domain/repositories/avatar_repository.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
-  AvatarCubit(this._avatarRepository, this._animationService)
-    : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig())) {
+  AvatarCubit(
+    this._avatarRepository,
+    this._animationService,
+    this._audioPlayerService,
+  ) : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig())) {
     // Subscribe to animation events from the service
     _animationSubscription = _animationService.animations.listen(
       _handleAnimationEvent,
@@ -31,6 +34,7 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   final AvatarRepository _avatarRepository;
   final AvatarAnimationService _animationService;
+  final AudioPlayerService _audioPlayerService;
   StreamSubscription<AvatarAnimation>? _animationSubscription;
 
   /// Handle animation events from the service.
@@ -153,10 +157,11 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void _goDownAndUp(String chatId, AvatarConfig avatarConfig) async {
-    AudioPlayer player = AudioPlayer();
-    await player.setSourceAsset("sound_effects/whoosh.wav");
-    await player.setVolume(0.3);
-    player.resume();
+    // Play whoosh sound effect via service
+    unawaited(
+      _audioPlayerService.playAsset('sound_effects/whoosh.wav', volume: 0.3),
+    );
+
     onClothesAnimationChanged(true); // dropping
     await Future<dynamic>.delayed(
       Duration(seconds: AppConstants.changingAvatarDuration),
