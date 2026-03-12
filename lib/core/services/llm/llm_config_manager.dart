@@ -13,9 +13,13 @@ class LlmConfigManager {
   static const String _configsKey = 'llm_configs';
   static const String _currentConfigIdKey = 'current_llm_config_id';
 
+  final SettingsLocalDatasource _settingsDatasource;
+
+  LlmConfigManager({required SettingsLocalDatasource settingsDatasource})
+    : _settingsDatasource = settingsDatasource;
+
   List<LlmConfig> _configs = <LlmConfig>[];
   String? _currentConfigId;
-  final SettingsLocalDatasource _settingsDatasource = SettingsLocalDatasource();
 
   Future<void> init() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

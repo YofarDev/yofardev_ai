@@ -1,4 +1,4 @@
-import '../../../../core/services/llm/llm_service.dart';
+import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/logger.dart';
 import '../models/chat.dart';
@@ -8,19 +8,17 @@ import '../repositories/chat_repository.dart';
 /// Service that handles chat title generation logic.
 ///
 /// This service extracts the business logic for generating chat titles,
-/// separating it from state management. The [ChatTitleCubit] manages
-/// the state of which chats are currently generating, while this
-/// service handles the actual generation work.
+/// separating it from state management.
 class ChatTitleService {
   /// Creates a new ChatTitleService.
   ChatTitleService({
     required ChatRepository chatRepository,
-    required LlmService llmService,
+    required LlmServiceInterface llmService,
   }) : _chatRepository = chatRepository,
        _llmService = llmService;
 
   final ChatRepository _chatRepository;
-  final LlmService _llmService;
+  final LlmServiceInterface _llmService;
 
   /// Generate a title for a chat based on its first user message.
   ///

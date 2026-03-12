@@ -8,31 +8,25 @@ import '../../../../core/models/avatar_config.dart';
 import '../../domain/models/demo_script.dart';
 import '../../domain/repositories/demo_repository.dart';
 import '../../../../core/services/demo_controller.dart';
-import '../../../../core/di/service_locator.dart';
 
 /// Service for managing demo mode
 ///
 /// Coordinates the demo controller, fake LLM service, and repository
 /// to provide a scripted demo experience without direct UI dependencies
 class DemoService {
-  static final DemoService _instance = DemoService._internal();
-  factory DemoService() => _instance;
-  DemoService._internal();
+  final DemoRepository _repository;
+  final DemoController _demoController;
+  final FakeLlmService _fakeLlmService;
 
-  final DemoController _demoController = DemoController();
-
-  DemoRepository? _repository;
-
-  /// Set the repository for demo operations
-  /// Call this during app initialization
-  void setRepository(DemoRepository repository) {
-    _repository = repository;
-  }
+  DemoService({
+    required DemoRepository repository,
+    required DemoController demoController,
+    required FakeLlmService fakeLlmService,
+  }) : _repository = repository,
+       _demoController = demoController,
+       _fakeLlmService = fakeLlmService;
 
   DemoController get controller => _demoController;
-
-  /// Get the shared FakeLlmService instance (same as used by repository)
-  FakeLlmService get _fakeLlmService => getIt<FakeLlmService>();
 
   /// Whether demo mode is currently active
   bool get isActive => _fakeLlmService.isActive;
@@ -51,20 +45,18 @@ class DemoService {
     AppLogger.info('Activating demo: ${script.name}', tag: 'DemoService');
 
     // Set initial background using repository
-    if (_repository != null) {
-      final AvatarBackgrounds initialBg = AvatarBackgrounds.values.firstWhere(
-        (AvatarBackgrounds bg) => bg.name == script.initialBackground,
-        orElse: () => AvatarBackgrounds.office,
-      );
+    final AvatarBackgrounds initialBg = AvatarBackgrounds.values.firstWhere(
+      (AvatarBackgrounds bg) => bg.name == script.initialBackground,
+      orElse: () => AvatarBackgrounds.office,
+    );
 
-      final Either<Exception, void> result = await _repository!
-          .setAvatarBackground(chatId, initialBg);
-      if (result.isRight()) {
-        AppLogger.debug(
-          'Set initial background to: ${initialBg.name}',
-          tag: 'DemoService',
-        );
-      }
+    final Either<Exception, void> result = await _repository
+        .setAvatarBackground(chatId, initialBg);
+    if (result.isRight()) {
+      AppLogger.debug(
+        'Set initial background to: ${initialBg.name}',
+        tag: 'DemoService',
+      );
     }
 
     // Start countdown

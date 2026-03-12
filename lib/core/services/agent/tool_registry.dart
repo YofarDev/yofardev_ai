@@ -14,19 +14,24 @@ import 'web_reader_tool.dart';
 export 'agent_tool.dart';
 
 class ToolRegistry {
-  static final List<AgentTool> _tools = <AgentTool>[
-    AlarmTool(),
-    WeatherTool(),
-    NewsTool(),
-    CharacterCounterTool(),
-    CalculatorTool(),
-    GoogleSearchTool(),
-    WebReaderTool(),
-  ];
+  final List<AgentTool> _tools;
 
-  static List<AgentTool> get tools => List<AgentTool>.unmodifiable(_tools);
+  ToolRegistry({List<AgentTool>? tools})
+    : _tools =
+          tools ??
+          <AgentTool>[
+            AlarmTool(),
+            WeatherTool(),
+            NewsTool(),
+            CharacterCounterTool(),
+            CalculatorTool(),
+            GoogleSearchTool(),
+            WebReaderTool(),
+          ];
 
-  static AgentTool? getTool(String name) {
+  List<AgentTool> get tools => List<AgentTool>.unmodifiable(_tools);
+
+  AgentTool? getTool(String name) {
     try {
       return _tools.firstWhere((AgentTool tool) => tool.name == name);
     } catch (_) {
@@ -35,7 +40,7 @@ class ToolRegistry {
   }
 
   /// Returns the list of FunctionInfo for LlmService
-  static List<FunctionInfo> get functionInfos {
+  List<FunctionInfo> get functionInfos {
     return _tools.map((AgentTool t) => t.toFunctionInfo()).toList();
   }
 
@@ -43,7 +48,7 @@ class ToolRegistry {
   /// Only includes tools that:
   /// - Have API keys configured (if required)
   /// - Are enabled in settings
-  static Future<List<FunctionInfo>> getFunctionInfos(
+  Future<List<FunctionInfo>> getFunctionInfos(
     SettingsRepository settingsRepository,
   ) async {
     final List<FunctionInfo> filteredFunctions = <FunctionInfo>[];
@@ -122,7 +127,7 @@ class ToolRegistry {
 
   /// Executes a tool with the provided arguments and settings repository.
   /// Fetches the required configuration values and passes them to the tool.
-  static Future<dynamic> executeTool(
+  Future<dynamic> executeTool(
     AgentTool tool,
     Map<String, dynamic> args,
     SettingsRepository settingsRepository,
@@ -147,7 +152,7 @@ class ToolRegistry {
   }
 
   /// Helper method to fetch a setting value from the repository.
-  static Future<dynamic> _getSettingValue(
+  Future<dynamic> _getSettingValue(
     SettingsRepository settingsRepository,
     String settingKey,
   ) async {

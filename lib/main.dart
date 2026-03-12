@@ -15,9 +15,9 @@ import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
 import 'core/l10n/generated/app_localizations.dart';
 import 'features/avatar/presentation/bloc/avatar_cubit.dart';
+import 'features/chat/data/datasources/chat_local_datasource.dart';
 import 'features/chat/presentation/bloc/chat_cubit.dart';
 import 'features/chat/presentation/bloc/chat_state.dart';
-// import 'features/chat/presentation/bloc/chat_list_cubit.dart';
 import 'features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'features/demo/presentation/bloc/demo_cubit.dart';
 import 'features/sound/data/datasources/tts_datasource.dart';
@@ -30,6 +30,8 @@ import 'core/utils/platform_utils.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupServiceLocator();
+  // Run chat data migration (previously in datasource constructor)
+  await getIt<ChatLocalDatasource>().init();
   if (PlatformUtils.isDesktop()) {
     await windowManager.ensureInitialized();
     final Display primaryDisplay = await screenRetriever.getPrimaryDisplay();
@@ -82,9 +84,6 @@ class MyApp extends StatelessWidget {
         BlocProvider<ChatCubit>(
           create: (BuildContext context) => getIt<ChatCubit>()..init(),
         ),
-        // BlocProvider<ChatListCubit>(
-        //   create: (BuildContext context) => getIt<ChatListCubit>()..init(),
-        // ),
         BlocProvider<ChatTtsCubit>(
           lazy: false,
           create: (BuildContext context) => getIt<ChatTtsCubit>(),

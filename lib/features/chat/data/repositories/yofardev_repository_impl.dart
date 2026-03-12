@@ -22,15 +22,15 @@ class YofardevRepositoryImpl implements ChatRepository {
 
   YofardevRepositoryImpl({
     required SettingsRepository settingsRepository,
-    YofardevAgent? agent,
-    PromptDatasource? promptService,
-    FakeLlmService? fakeLlmService,
-    ChatLocalDatasource? chatDatasource,
+    required YofardevAgent agent,
+    required PromptDatasource promptService,
+    required FakeLlmService fakeLlmService,
+    required ChatLocalDatasource chatDatasource,
   }) : _settingsRepository = settingsRepository,
-       _agent = agent ?? YofardevAgent(),
-       _promptService = promptService ?? PromptDatasource(),
-       _fakeLlmService = fakeLlmService ?? FakeLlmService(),
-       _chatDatasource = chatDatasource ?? ChatLocalDatasource();
+       _agent = agent,
+       _promptService = promptService,
+       _fakeLlmService = fakeLlmService,
+       _chatDatasource = chatDatasource;
 
   @override
   Future<Either<Exception, Chat>> createNewChat({String? language}) async {

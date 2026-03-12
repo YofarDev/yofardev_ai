@@ -8,7 +8,6 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
-// import '../../features/chat/presentation/bloc/chat_list_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_cubit.dart';
 import '../../features/chat/domain/services/chat_entry_service.dart';
@@ -41,6 +40,7 @@ import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
 import '../services/audio/tts_service.dart';
 import '../services/agent/yofardev_agent.dart';
+import '../services/agent/tool_registry.dart';
 import '../services/avatar_animation_service.dart';
 import '../services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
@@ -59,64 +59,79 @@ final GetIt getIt = GetIt.instance;
 Future<void> setupServiceLocator() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  // Services - LLM (conditional registration)
+  // ── Data sources (register early — no dependencies) ──
+  getIt.registerLazySingleton<SettingsLocalDatasource>(
+    () => SettingsLocalDatasource(),
+  );
+  getIt.registerLazySingleton<AvatarLocalDatasource>(
+    () => AvatarLocalDatasource(),
+  );
+  getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
+  getIt.registerLazySingleton<InterruptionService>(() => InterruptionService());
+
+  // ── Core services (depend on datasources) ──
+  getIt.registerLazySingleton<LlmConfigManager>(
+    () =>
+        LlmConfigManager(settingsDatasource: getIt<SettingsLocalDatasource>()),
+  );
+  getIt.registerLazySingleton<PromptDatasource>(
+    () =>
+        PromptDatasource(settingsDatasource: getIt<SettingsLocalDatasource>()),
+  );
+  getIt.registerLazySingleton<ChatLocalDatasource>(
+    () => ChatLocalDatasource(
+      settingsDatasource: getIt<SettingsLocalDatasource>(),
+      promptDatasource: getIt<PromptDatasource>(),
+    ),
+  );
+
+  // LLM services
+  getIt.registerLazySingleton<LlmService>(() {
+    final LlmService service = LlmService();
+    service.setConfigManager(getIt<LlmConfigManager>());
+    return service;
+  });
+  getIt.registerLazySingleton<FakeLlmService>(() => FakeLlmService());
+
   if (kDebugMode) {
-    // In debug mode, use FakeLlmService by default for easier testing
-    // This can be changed via settings
-    getIt.registerLazySingleton<LlmServiceInterface>(() => FakeLlmService());
+    getIt.registerLazySingleton<LlmServiceInterface>(
+      () => getIt<FakeLlmService>(),
+    );
     AppLogger.info(
       'Registered FakeLlmService (debug mode)',
       tag: 'ServiceLocator',
     );
   } else {
-    // In release mode, always use real LlmService
-    getIt.registerLazySingleton<LlmServiceInterface>(() => LlmService());
+    getIt.registerLazySingleton<LlmServiceInterface>(() => getIt<LlmService>());
     AppLogger.info(
       'Registered LlmService (release mode)',
       tag: 'ServiceLocator',
     );
   }
 
-  // Register both service instances for demo mode switching
   getIt.registerLazySingleton<LlmStreamingServiceInterface>(
     () => LlmStreamingService(
       client: http.Client(),
-      configManager: LlmConfigManager(),
+      configManager: getIt<LlmConfigManager>(),
     ),
   );
-  getIt.registerLazySingleton<LlmService>(() => LlmService());
-  getIt.registerLazySingleton<FakeLlmService>(() => FakeLlmService());
+
+  // Agent & tool registry
+  getIt.registerLazySingleton<ToolRegistry>(() => ToolRegistry());
   getIt.registerLazySingleton<YofardevAgent>(
-    () => YofardevAgent(llmService: getIt<LlmService>()),
-  );
-
-  // Demo services
-  getIt.registerLazySingleton<DemoController>(() => DemoController());
-  getIt.registerLazySingleton<DemoService>(() {
-    final DemoService service = DemoService();
-    service.setRepository(getIt<DemoRepository>());
-    return service;
-  });
-
-  // Data sources
-  getIt.registerLazySingleton<ChatLocalDatasource>(() => ChatLocalDatasource());
-  getIt.registerLazySingleton<AvatarLocalDatasource>(
-    () => AvatarLocalDatasource(),
-  );
-  getIt.registerLazySingleton<SettingsLocalDatasource>(
-    () => SettingsLocalDatasource(),
-  );
-  getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
-  getIt.registerLazySingleton<InterruptionService>(() => InterruptionService());
-  getIt.registerLazySingleton<TtsQueueService>(
-    () => TtsQueueService(
-      ttsDatasource: getIt<TtsDatasource>(),
-      interruptionService: getIt<InterruptionService>(),
+    () => YofardevAgent(
+      llmService: getIt<LlmService>(),
+      toolRegistry: getIt<ToolRegistry>(),
     ),
   );
-  getIt.registerLazySingleton<PromptDatasource>(() => PromptDatasource());
 
-  // Repositories (register implementations as interfaces)
+  // ── Repositories (depend on datasources + services) ──
+  getIt.registerLazySingleton<AvatarRepository>(
+    () => AvatarRepositoryImpl(datasource: getIt<AvatarLocalDatasource>()),
+  );
+  getIt.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(),
+  );
   getIt.registerLazySingleton<ChatRepository>(
     () => YofardevRepositoryImpl(
       settingsRepository: getIt<SettingsRepository>(),
@@ -125,10 +140,6 @@ Future<void> setupServiceLocator() async {
       fakeLlmService: getIt<FakeLlmService>(),
       chatDatasource: getIt<ChatLocalDatasource>(),
     ),
-  );
-  getIt.registerLazySingleton<AvatarRepository>(() => AvatarRepositoryImpl());
-  getIt.registerLazySingleton<SettingsRepository>(
-    () => SettingsRepositoryImpl(),
   );
   getIt.registerLazySingleton<SoundRepository>(() => SoundRepositoryImpl());
   getIt.registerLazySingleton<TalkingRepository>(
@@ -142,41 +153,58 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
 
-  // Other services
+  // ── Audio services ──
   getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());
-  // Audio service - single source of truth for TTS
   getIt.registerLazySingleton<TtsService>(() => TtsService());
   getIt.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
   getIt.registerLazySingleton<AudioAmplitudeService>(
     () => AudioAmplitudeService(),
   );
+  getIt.registerLazySingleton<TtsQueueService>(
+    () => TtsQueueService(
+      ttsDatasource: getIt<TtsDatasource>(),
+      interruptionService: getIt<InterruptionService>(),
+    ),
+  );
 
-  // Locale
+  // ── Other services ──
   getIt.registerLazySingleton<LocaleRepository>(
     () => LocaleRepositoryImpl(prefs: prefs),
   );
-
-  // Stream processor service
   getIt.registerLazySingleton<StreamProcessorService>(
     () => StreamProcessorService(),
   );
-
-  // TTS playback service - coordinates TTS playback across features
   getIt.registerLazySingleton<TtsPlaybackService>(
     () => TtsPlaybackService(getIt<TalkingRepository>()),
   );
-
-  // Avatar animation service - emits events that cubits subscribe to
   getIt.registerLazySingleton<AvatarAnimationService>(
     () => AvatarAnimationService(),
   );
+  getIt.registerLazySingleton<ChatEntryService>(
+    () => ChatEntryService(getIt<SettingsRepository>()),
+  );
+  getIt.registerLazySingleton<ChatTitleService>(
+    () => ChatTitleService(
+      chatRepository: getIt<ChatRepository>(),
+      llmService: getIt<LlmServiceInterface>(),
+    ),
+  );
 
-  // BLoCs / Cubits
+  // ── Demo services (depend on repositories) ──
+  getIt.registerLazySingleton<DemoController>(() => DemoController());
+  getIt.registerLazySingleton<DemoService>(
+    () => DemoService(
+      repository: getIt<DemoRepository>(),
+      demoController: getIt<DemoController>(),
+      fakeLlmService: getIt<FakeLlmService>(),
+    ),
+  );
+
+  // ── Cubits ──
   getIt.registerFactory<AvatarCubit>(
     () =>
         AvatarCubit(getIt<AvatarRepository>(), getIt<AvatarAnimationService>()),
   );
-  // TalkingCubit - singleton so all UI consumers share the same TTS state
   getIt.registerLazySingleton<TalkingCubit>(
     () => TalkingCubit(
       getIt<TalkingRepository>(),
@@ -184,7 +212,6 @@ Future<void> setupServiceLocator() async {
       getIt<TtsPlaybackService>(),
     ),
   );
-  // Chat cubits - split by responsibility
   getIt.registerFactory<ChatTtsCubit>(
     () => ChatTtsCubit(
       ttsQueueManager: getIt<TtsQueueService>(),
@@ -206,23 +233,6 @@ Future<void> setupServiceLocator() async {
       interruptionService: getIt<InterruptionService>(),
       chatEntryService: getIt<ChatEntryService>(),
       ttsQueueManager: getIt<TtsQueueService>(),
-    ),
-  );
-  // getIt.registerFactory<ChatListCubit>(
-  //   () => ChatListCubit(
-  //     chatRepository: getIt<ChatRepository>(),
-  //     settingsRepository: getIt<SettingsRepository>(),
-  //   ),
-  // );
-
-  // Chat message services
-  getIt.registerLazySingleton<ChatEntryService>(
-    () => ChatEntryService(getIt<SettingsRepository>()),
-  );
-  getIt.registerLazySingleton<ChatTitleService>(
-    () => ChatTitleService(
-      chatRepository: getIt<ChatRepository>(),
-      llmService: getIt<LlmService>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));

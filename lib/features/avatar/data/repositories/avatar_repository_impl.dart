@@ -6,7 +6,10 @@ import '../datasources/avatar_local_datasource.dart';
 import '../../domain/repositories/avatar_repository.dart';
 
 class AvatarRepositoryImpl implements AvatarRepository {
-  final AvatarLocalDatasource _datasource = AvatarLocalDatasource();
+  final AvatarLocalDatasource _datasource;
+
+  AvatarRepositoryImpl({required AvatarLocalDatasource datasource})
+    : _datasource = datasource;
 
   @override
   Future<Either<Exception, Chat>> getChat(String id) async {

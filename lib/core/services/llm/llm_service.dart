@@ -8,6 +8,7 @@ import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
 import '../../models/llm_task_type.dart';
+import '../settings_local_datasource.dart';
 import 'llm_config_manager.dart';
 import 'llm_service_interface.dart';
 import 'llm_stream_chunk.dart';
@@ -55,8 +56,15 @@ class LlmService implements LlmServiceInterface {
       _createDefaultStreamingService();
 
   final http.Client _client;
-  final LlmConfigManager _configManager = LlmConfigManager();
+  LlmConfigManager _configManager = LlmConfigManager(
+    settingsDatasource: SettingsLocalDatasource(),
+  );
   final LlmStreamingServiceInterface? _streamingService;
+
+  /// Set the config manager from DI. Call during service initialization.
+  void setConfigManager(LlmConfigManager manager) {
+    _configManager = manager;
+  }
 
   LlmStreamingServiceInterface _createDefaultStreamingService() {
     return LlmStreamingService(

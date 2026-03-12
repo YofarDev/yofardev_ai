@@ -14,10 +14,12 @@ import '../../utils/logger.dart';
 import 'tool_registry.dart';
 
 class YofardevAgent {
-  YofardevAgent({LlmService? llmService})
-    : _llmService = llmService ?? LlmService();
+  YofardevAgent({LlmService? llmService, required ToolRegistry toolRegistry})
+    : _llmService = llmService ?? LlmService(),
+      _toolRegistry = toolRegistry;
 
   final LlmService _llmService;
+  final ToolRegistry _toolRegistry;
 
   /// The primary method to interact with the agent.
   ///
@@ -57,8 +59,8 @@ class YofardevAgent {
       );
 
       // Get available tools based on settings
-      final List<FunctionInfo> availableFunctions =
-          await ToolRegistry.getFunctionInfos(settingsRepository);
+      final List<FunctionInfo> availableFunctions = await _toolRegistry
+          .getFunctionInfos(settingsRepository);
 
       final (String, List<FunctionInfo>) functionCheck = await _llmService
           .checkFunctionsCalling(
@@ -77,10 +79,10 @@ class YofardevAgent {
       // 2. Execute tools if any were selected
       if (functionsToCall.isNotEmpty) {
         for (final FunctionInfo info in functionsToCall) {
-          final AgentTool? tool = ToolRegistry.getTool(info.name);
+          final AgentTool? tool = _toolRegistry.getTool(info.name);
           if (tool != null) {
             try {
-              final dynamic result = await ToolRegistry.executeTool(
+              final dynamic result = await _toolRegistry.executeTool(
                 tool,
                 info.parametersCalled ?? <String, dynamic>{},
                 settingsRepository,

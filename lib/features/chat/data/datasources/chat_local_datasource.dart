@@ -14,8 +14,17 @@ class ChatLocalDatasource {
   static const String _chatPrefix = 'chat_';
   static const String _chatMigrationKey = 'chat_title_migration_v1';
 
-  ChatLocalDatasource() {
-    _migrateChatDataIfNeeded();
+  final SettingsLocalDatasource _settingsDatasource;
+  final PromptDatasource _promptDatasource;
+
+  ChatLocalDatasource({
+    required SettingsLocalDatasource settingsDatasource,
+    required PromptDatasource promptDatasource,
+  }) : _settingsDatasource = settingsDatasource,
+       _promptDatasource = promptDatasource;
+
+  Future<void> init() async {
+    await _migrateChatDataIfNeeded();
   }
 
   Future<Chat> createNewChat({String? language}) async {
@@ -24,7 +33,7 @@ class ChatLocalDatasource {
     // Use provided language or fall back to device locale
     final String chatLanguage =
         language ?? PlatformDispatcher.instance.locales.first.languageCode;
-    final ChatPersona persona = await SettingsLocalDatasource().getPersona();
+    final ChatPersona persona = await _settingsDatasource.getPersona();
     final Avatar defaultAvatar = persona.getDefaultAvatar();
     final AvatarBackgrounds randomBackground = AvatarBackgrounds
         .values[Random().nextInt(AvatarBackgrounds.values.length)];
@@ -32,7 +41,7 @@ class ChatLocalDatasource {
       id: newChatId,
       avatar: defaultAvatar.copyWith(background: randomBackground),
       language: chatLanguage,
-      systemPrompt: await PromptDatasource().getSystemPrompt(),
+      systemPrompt: await _promptDatasource.getSystemPrompt(),
       persona: persona,
     );
     await _removeEmptyChats();
