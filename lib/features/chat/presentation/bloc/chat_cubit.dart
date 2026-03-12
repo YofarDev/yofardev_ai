@@ -2,78 +2,40 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:uuid/uuid.dart';
 
-import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/avatar_animation_service.dart';
-import '../../../../core/services/llm/llm_service_interface.dart';
-import '../../../../core/services/prompt_datasource.dart';
-import '../../../../core/services/stream_processor/sentence_chunk.dart';
-import '../../../../core/services/stream_processor/stream_processor_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/avatar_config.dart';
-import '../../../../core/models/llm_config.dart';
-import '../../../../core/models/voice_effect.dart';
 import '../../../../core/repositories/settings_repository.dart';
-import '../../../../core/services/audio/tts_queue_service.dart';
+import '../../../../core/services/chat/chat_streaming_service.dart';
 import '../../../../core/models/chat.dart';
-import '../../../../core/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';
-import '../../domain/services/chat_entry_service.dart';
 import '../../domain/services/chat_title_service.dart';
 import 'chat_state.dart';
 
-/// Main coordinator cubit for chat operations
+/// Main coordinator cubit for chat operations.
 ///
-/// This cubit provides a simplified API that coordinates between
-/// the specialized cubits (ChatMessageCubit, ChatTitleCubit).
+/// This cubit manages chat state and CRUD operations.
+/// Streaming logic has been extracted to ChatStreamingService.
 class ChatCubit extends Cubit<ChatState> {
   ChatCubit({
     required ChatRepository chatRepository,
     required SettingsRepository settingsRepository,
     required AvatarAnimationService avatarAnimationService,
     required ChatTitleService chatTitleService,
-    required LlmServiceInterface llmService,
-    required StreamProcessorService streamProcessor,
-    required PromptDatasource promptDatasource,
-    required InterruptionService interruptionService,
-    required ChatEntryService chatEntryService,
-    TtsQueueService? ttsQueueManager,
+    required ChatStreamingService chatStreamingService,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _avatarAnimationService = avatarAnimationService,
        _chatTitleService = chatTitleService,
-       _llmService = llmService,
-       _streamProcessor = streamProcessor,
-       _promptDatasource = promptDatasource,
-       _interruptionService = interruptionService,
-       _chatEntryService = chatEntryService,
-       _ttsQueueManager = ttsQueueManager,
-       super(ChatState.initial()) {
-    // Listen to interruption stream
-    _interruptionSubscription = _interruptionService.interruptionStream.listen((
-      _,
-    ) {
-      _streamInterrupted = true;
-      if (state.status == ChatStatus.streaming) {
-        emit(state.copyWith(streamingContent: ''));
-      }
-    });
-  }
+       _chatStreamingService = chatStreamingService,
+       super(ChatState.initial());
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
   final AvatarAnimationService _avatarAnimationService;
   final ChatTitleService _chatTitleService;
-  final LlmServiceInterface _llmService;
-  final StreamProcessorService _streamProcessor;
-  final PromptDatasource _promptDatasource;
-  final InterruptionService _interruptionService;
-  final ChatEntryService _chatEntryService;
-  final TtsQueueService? _ttsQueueManager;
-
-  bool _streamInterrupted = false;
-  StreamSubscription<void>? _interruptionSubscription;
+  final ChatStreamingService _chatStreamingService;
 
   /// Initialize the chat system
   Future<void> init() async {
@@ -193,7 +155,13 @@ class ChatCubit extends Cubit<ChatState> {
         // Trigger animation sequence
         await _avatarAnimationService.playNewChatSequence(
           newChat.id,
-          AvatarConfig(background: newChat.avatar.background),
+          AvatarConfig(
+            background: newChat.avatar.background,
+            hat: newChat.avatar.hat,
+            top: newChat.avatar.top,
+            glasses: newChat.avatar.glasses,
+            costume: newChat.avatar.costume,
+          ),
         );
       },
     );
@@ -333,7 +301,10 @@ class ChatCubit extends Cubit<ChatState> {
     );
   }
 
-  /// Generate a title for a chat based on its first user message
+  /// Generate a title for a chat based on its first user message.
+  ///
+  /// This is a convenience wrapper around ChatTitleService.
+  /// Use ChatTitleService.generateTitle() directly for more control.
   Future<void> generateTitle(String chatId, Chat chat) async {
     // Prevent duplicate generation attempts
     if (state.generatingTitleChatIds.contains(chatId)) {
@@ -372,20 +343,21 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  /// Check if title generation should be triggered for a chat
+  /// Check if title generation should be triggered for a chat.
+  ///
+  /// This is a convenience wrapper around ChatTitleService.
+  /// Use ChatTitleService.shouldGenerateTitle() directly for more control.
   bool shouldGenerateTitle(Chat chat) {
     return _chatTitleService.shouldGenerateTitle(chat);
   }
 
-  /// Streams a response from the LLM for the given prompt
+  /// Streams a response from the LLM for the given prompt.
   ///
-  /// This method:
-  /// 1. Resets interruption state
-  /// 2. Creates a user entry
-  /// 3. Checks for function calls
-  /// 4. Streams the response (or uses function call result)
-  /// 5. Updates the chat via callbacks
-  /// 6. Enqueues TTS if not text-only
+  /// Delegates to ChatStreamingService which handles:
+  /// - User entry creation
+  /// - Function calling
+  /// - Response streaming
+  /// - TTS enqueuing
   Future<void> streamResponse(
     String prompt, {
     required bool onlyText,
@@ -394,308 +366,63 @@ class ChatCubit extends Cubit<ChatState> {
     required Chat currentChat,
     required String language,
     bool functionCallingEnabled = true,
-    void Function(Chat updatedChat)? onChatUpdated,
   }) async {
-    // Reset interruption state at start of new conversation
-    _interruptionService.reset();
-    _streamInterrupted = false;
-
     emit(state.copyWith(streamingContent: '', streamingSentenceCount: 0));
 
-    final String temporaryId = const Uuid().v4();
-
-    final ChatEntry temporaryEntry = ChatEntry(
-      id: temporaryId,
-      entryType: EntryType.user,
-      body: "User : \n'''$prompt'''",
-      timestamp: DateTime.now(),
-      attachedImage: attachedImage,
-    );
-
-    Chat chat = currentChat.copyWith(
-      entries: <ChatEntry>[...currentChat.entries, temporaryEntry],
-    );
-    onChatUpdated?.call(chat);
-
-    final ChatEntry userEntry = await _chatEntryService.createUserEntry(
+    await _chatStreamingService.streamResponse(
       prompt: prompt,
-      avatar: avatar,
+      onlyText: onlyText,
       attachedImage: attachedImage,
-    );
-
-    final List<ChatEntry> mutableEntries = List<ChatEntry>.from(chat.entries);
-    final int index = mutableEntries.indexWhere(
-      (ChatEntry element) => element.id == temporaryId,
-    );
-    mutableEntries[index] = userEntry;
-    chat = chat.copyWith(entries: mutableEntries);
-    onChatUpdated?.call(chat);
-
-    final ChatEntry streamingEntry = ChatEntry(
-      id: const Uuid().v4(),
-      entryType: EntryType.yofardev,
-      body: '',
-      timestamp: DateTime.now(),
-    );
-
-    chat = chat.copyWith(entries: <ChatEntry>[...chat.entries, streamingEntry]);
-    // Don't call onChatUpdated here - the streaming entry has an empty body
-    // It will be updated with actual content and then onChatUpdated will be called
-
-    try {
-      await _llmService.init();
-      final LlmConfig? config = _llmService.getCurrentConfig();
-      if (config == null) {
+      avatar: avatar,
+      currentChat: currentChat,
+      language: language,
+      functionCallingEnabled: functionCallingEnabled,
+      onChatUpdated: (Chat updatedChat) {
+        // Update chat state during streaming
+        updateChatStreaming(updatedChat);
+      },
+      onStreamingUpdate: (String content, int sentenceCount) {
+        // Update streaming content state
         emit(
           state.copyWith(
-            status: ChatStatus.error,
-            errorMessage: 'No LLM configuration selected',
+            streamingContent: content,
+            streamingSentenceCount: sentenceCount,
           ),
         );
-        return;
-      }
-
-      if (functionCallingEnabled) {
-        // 1. Check for function calls first
-        final Either<Exception, List<ChatEntry>> functionCheckResult =
-            await _chatRepository.askYofardevAi(
-              chat,
-              userEntry.body,
-              functionCallingEnabled: true,
-            );
-
-        List<ChatEntry> functionEntries = <ChatEntry>[];
-
-        functionCheckResult.fold(
-          (Exception error) {
-            AppLogger.error(
-              'Function calling check failed',
-              tag: 'ChatCubit',
-              error: error,
-            );
-            // Continue with streaming even if function calling fails
-          },
-          (List<ChatEntry> entries) {
-            functionEntries = entries;
-            // Add function call entries to chat if any
-            if (entries.isNotEmpty) {
-              final List<ChatEntry> updatedEntries = <ChatEntry>[
-                ...chat.entries,
-                ...entries,
-              ];
-              chat = chat.copyWith(entries: updatedEntries);
-              onChatUpdated?.call(chat);
-            }
-          },
-        );
-
-        // 2. Check if we had function calls - if so, the final response is already included
-        final bool hadFunctionCalls = functionEntries.any(
-          (ChatEntry e) => e.entryType == EntryType.functionCalling,
-        );
-
-        if (hadFunctionCalls) {
-          // Function calls were made, use the final response from the agent
-          final ChatEntry finalResponse = functionEntries.last;
-          final List<ChatEntry> finalEntries = List<ChatEntry>.from(
-            chat.entries,
-          );
-          finalEntries[finalEntries.length - 1] = finalResponse;
-          chat = chat.copyWith(entries: finalEntries);
-          onChatUpdated?.call(chat);
-
-          // Also update the corresponding chat in chatsList to keep it in sync
-          final List<Chat> updatedChatsList = state.chatsList
-              .map((Chat c) => c.id == chat.id ? chat : c)
-              .toList();
-
-          final ChatEntry lastEntry = chat.entries.last;
-          AppLogger.debug(
-            'Emitting state after function calls: entries.length=${chat.entries.length}, lastEntry.type=${lastEntry.entryType}, lastEntry.body="${lastEntry.body.length > 100 ? lastEntry.body.substring(0, 100) : lastEntry.body}"',
-            tag: 'ChatCubit',
-          );
-
-          // Enqueue the final response for TTS if not in text-only mode
-          if (!onlyText) {
-            final String messageText = lastEntry.getMessage();
-            if (messageText.isNotEmpty) {
-              _ttsQueueManager?.enqueue(
-                text: messageText,
-                language: language,
-                voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
-              );
-              AppLogger.debug(
-                'Enqueued TTS for function calling response: "${messageText.length > 50 ? messageText.substring(0, 50) : messageText}..."',
-                tag: 'ChatCubit',
-              );
-            }
-          }
-
-          emit(
-            state.copyWith(
-              streamingContent: '',
-              currentChat: chat,
-              openedChat: chat,
-              chatsList: updatedChatsList,
-            ),
-          );
-          await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
-
-          // Generate title if needed
-          if (shouldGenerateTitle(chat)) {
-            // Fire and forget - don't await
-            generateTitle(chat.id, chat);
-          }
-
-          return;
-        }
-      }
-
-      // 3. No function calls - proceed with streaming
-
-      final String systemPrompt = await _promptDatasource.getSystemPrompt();
-
-      final StringBuffer contentBuffer = StringBuffer();
-      String? fullJsonResponse;
-      int sentenceCount = 0;
-
-      await for (final SentenceChunk sentenceChunk
-          in _streamProcessor.processStream(
-            _llmService.promptModelStream(
-              messages: chat.llmMessages,
-              systemPrompt: systemPrompt,
-              config: config,
-              returnJson: true,
-            ),
-          )) {
-        if (_streamInterrupted || _interruptionService.isInterrupted) {
-          break;
-        }
-
-        sentenceChunk.when(
-          sentence: (String text, int _) {
-            if (_streamInterrupted || _interruptionService.isInterrupted) {
-              return;
-            }
-
-            final String normalizedText = text.trim();
-            if (normalizedText.isEmpty) {
-              return;
-            }
-
-            if (contentBuffer.isNotEmpty) {
-              contentBuffer.write(' ');
-            }
-            contentBuffer.write(normalizedText);
-            sentenceCount++;
-
-            final ChatEntry updatedEntry = streamingEntry.copyWith(
-              body: contentBuffer.toString(),
-            );
-
-            final List<ChatEntry> updatedEntries = List<ChatEntry>.from(
-              chat.entries,
-            );
-            updatedEntries[updatedEntries.length - 1] = updatedEntry;
-
-            chat = chat.copyWith(entries: updatedEntries);
-            onChatUpdated?.call(chat);
-
-            emit(
-              state.copyWith(
-                streamingContent: contentBuffer.toString(),
-                streamingSentenceCount: sentenceCount,
-              ),
-            );
-
-            // Enqueue for TTS if manager is available and not in text-only mode
-            if (!onlyText) {
-              _ttsQueueManager?.enqueue(
-                text: normalizedText,
-                language: language,
-                voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
-              );
-            }
-          },
-          metadata: (Map<String, dynamic> json) {
-            // Capture the full JSON response
-            if (json.containsKey('fullJson')) {
-              fullJsonResponse = json['fullJson'] as String?;
-            }
-          },
-          complete: () {
-            AppLogger.debug(
-              'Stream complete with $sentenceCount sentences',
-              tag: 'ChatCubit',
-            );
-          },
-          error: (String msg) {
-            AppLogger.error('Stream error: $msg', tag: 'ChatCubit');
-          },
-        );
-      }
-
-      if (_streamInterrupted || _interruptionService.isInterrupted) {
+      },
+      onStreamComplete: (Chat finalChat) {
+        // Stream completed successfully
         // Also update the corresponding chat in chatsList to keep it in sync
         final List<Chat> updatedChatsList = state.chatsList
-            .map((Chat c) => c.id == chat.id ? chat : c)
+            .map((Chat c) => c.id == finalChat.id ? finalChat : c)
             .toList();
 
         emit(
           state.copyWith(
             streamingContent: '',
-            currentChat: chat,
-            openedChat: chat,
+            currentChat: finalChat,
+            openedChat: finalChat,
             chatsList: updatedChatsList,
           ),
         );
-        await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
-        return;
-      }
 
-      // Use the full JSON if available, otherwise fall back to the content buffer
-      final ChatEntry finalEntry = streamingEntry.copyWith(
-        body: fullJsonResponse ?? contentBuffer.toString(),
-      );
-
-      final List<ChatEntry> finalEntries = List<ChatEntry>.from(chat.entries);
-      finalEntries[finalEntries.length - 1] = finalEntry;
-      chat = chat.copyWith(entries: finalEntries);
-      onChatUpdated?.call(chat);
-
-      // Also update the corresponding chat in chatsList to keep it in sync
-      final List<Chat> updatedChatsList = state.chatsList
-          .map((Chat c) => c.id == chat.id ? chat : c)
-          .toList();
-
-      emit(
-        state.copyWith(
-          streamingContent: '',
-          currentChat: chat,
-          openedChat: chat,
-          chatsList: updatedChatsList,
-        ),
-      );
-
-      await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
-
-      if (shouldGenerateTitle(chat)) {
-        // Fire and forget - don't await
-        generateTitle(chat.id, chat);
-      }
-
-      return;
-    } catch (e) {
-      AppLogger.error('Error in streaming message', tag: 'ChatCubit', error: e);
-      emit(
-        state.copyWith(
-          status: ChatStatus.error,
-          errorMessage: e.toString(),
-          streamingContent: '',
-        ),
-      );
-      return;
-    }
+        // Generate title if needed
+        if (shouldGenerateTitle(finalChat)) {
+          // Fire and forget - don't await
+          generateTitle(finalChat.id, finalChat);
+        }
+      },
+      onError: (String error) {
+        // Stream failed
+        emit(
+          state.copyWith(
+            status: ChatStatus.error,
+            errorMessage: error,
+            streamingContent: '',
+          ),
+        );
+      },
+    );
   }
 
   // Getters for convenience
@@ -713,11 +440,5 @@ class ChatCubit extends Cubit<ChatState> {
     } catch (_) {
       return null;
     }
-  }
-
-  @override
-  Future<void> close() async {
-    await _interruptionSubscription?.cancel();
-    return super.close();
   }
 }

@@ -222,6 +222,16 @@ class HomeBlocListeners extends StatelessWidget {
       return;
     }
 
+    // Skip empty entries (e.g., initial streaming entry)
+    // They don't contain valid avatar config yet
+    if (lastEntry.body.isEmpty) {
+      AppLogger.debug(
+        'Skipping empty entry (waiting for content)',
+        tag: 'HomeBlocListeners',
+      );
+      return;
+    }
+
     // Extract avatar config from JSON safely (handles empty/malformed JSON)
     AvatarConfig avatarConfig = lastEntry.getAvatarConfig();
 

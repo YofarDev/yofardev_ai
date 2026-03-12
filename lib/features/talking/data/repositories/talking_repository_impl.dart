@@ -1,24 +1,24 @@
-import '../../../../core/services/audio/tts_service.dart';
 import '../../domain/repositories/talking_repository.dart';
 
-/// Implementation of TalkingRepository that wraps TtsService
+/// Implementation of TalkingRepository
+///
+/// Note: Actual TTS functionality is handled by ChatTtsCubit with TtsQueueService.
+/// This repository is kept for API compatibility but performs no operations.
 class TalkingRepositoryImpl implements TalkingRepository {
-  TalkingRepositoryImpl(this._ttsService);
-
-  final TtsService _ttsService;
+  TalkingRepositoryImpl();
 
   @override
   Future<void> playWaitingSentence(String sentence) async {
-    await _ttsService.playWaitingSentence(sentence);
+    // No-op: handled by ChatTtsCubit with TtsQueueService
   }
 
   @override
   Future<void> generateSpeech(String text) async {
-    await _ttsService.speak(text);
+    // No-op: handled by ChatTtsCubit with TtsQueueService
   }
 
   @override
   Future<void> stop() async {
-    await _ttsService.stop();
+    // No-op: handled by TtsPlaybackService and AudioPlayerService
   }
 }

@@ -7,6 +7,9 @@ import '../presentation/bloc/avatar_state.dart';
 import '../presentation/bloc/avatar_cubit.dart';
 import 'animated_avatar.dart';
 
+import '../../talking/presentation/bloc/talking_cubit.dart';
+import '../../talking/presentation/bloc/talking_state.dart';
+
 class AvatarWidgets extends StatefulWidget {
   const AvatarWidgets({super.key});
 
@@ -66,15 +69,19 @@ class AvatarWidgetsState extends State<AvatarWidgets>
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AvatarCubit, AvatarState>(
-      builder: (BuildContext context, AvatarState state) {
-        return BlocListener<AvatarCubit, AvatarState>(
-          listenWhen: (AvatarState previous, AvatarState current) =>
-              previous.statusAnimation != current.statusAnimation,
-          listener: (BuildContext context, AvatarState state) {
-            _handleAnimationChange(state.statusAnimation);
+    return BlocBuilder<TalkingCubit, TalkingState>(
+      builder: (BuildContext context, TalkingState talkingState) {
+        return BlocBuilder<AvatarCubit, AvatarState>(
+          builder: (BuildContext context, AvatarState state) {
+            return BlocListener<AvatarCubit, AvatarState>(
+              listenWhen: (AvatarState previous, AvatarState current) =>
+                  previous.statusAnimation != current.statusAnimation,
+              listener: (BuildContext context, AvatarState state) {
+                _handleAnimationChange(state.statusAnimation);
+              },
+              child: _buildAnimatedAvatar(state, talkingState),
+            );
           },
-          child: _buildAnimatedAvatar(state),
         );
       },
     );
@@ -107,7 +114,7 @@ class AvatarWidgetsState extends State<AvatarWidgets>
     }
   }
 
-  Widget _buildAnimatedAvatar(AvatarState state) {
+  Widget _buildAnimatedAvatar(AvatarState state, TalkingState talkingState) {
     // Use vertical animation for dropping/rising, horizontal for others
     final bool useVertical =
         state.statusAnimation == AvatarStatusAnimation.dropping ||
@@ -117,6 +124,20 @@ class AvatarWidgetsState extends State<AvatarWidgets>
         ? _verticalAnimation
         : _horizontalAnimation;
 
-    return AnimatedAvatar(state: state, animation: animation);
+    // Extract mouthState from TalkingState
+    final MouthState? mouthState = talkingState.maybeWhen(
+      idle: (MouthState m) => m,
+      waiting: (MouthState m) => m,
+      generating: (MouthState m) => m,
+      speaking: (MouthState m) => m,
+      error: (String message, MouthState m) => m,
+      orElse: () => null,
+    );
+
+    return AnimatedAvatar(
+      state: state,
+      animation: animation,
+      mouthState: mouthState,
+    );
   }
 }

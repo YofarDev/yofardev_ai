@@ -2,7 +2,6 @@ import 'dart:async';
 
 import '../../../core/models/avatar_config.dart';
 import '../../features/avatar/domain/models/avatar_animation.dart';
-import '../../features/avatar/presentation/bloc/avatar_state.dart';
 
 /// Service for orchestrating avatar animations across features.
 ///
@@ -29,19 +28,21 @@ class AvatarAnimationService {
   ///
   /// Sequence:
   /// 1. Avatar drops down (off-screen)
-  /// 2. Background slides horizontally
+  /// 2. Config is updated (background changes are handled by _onNewChatEntry)
   /// 3. Avatar rises back up
+  ///
+  /// Note: Background animations are NOT triggered here because they are
+  /// already handled by HomeBlocListeners._onNewChatEntry which checks
+  /// if the background actually changed before animating.
   Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {
     // 1. Avatar drops
     _animationController.add(const AvatarAnimation.clothes(true));
     await Future<void>.delayed(Duration(seconds: 0));
 
-    // 2. Background slides (while avatar is off-screen)
-    _animationController.add(
-      AvatarAnimation.background(BackgroundTransition.sliding),
-    );
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    // 2. Update config while avatar is off-screen
+    // Background changes are handled separately by _onNewChatEntry
     _animationController.add(AvatarAnimation.updateConfig(chatId, config));
+    await Future<void>.delayed(const Duration(milliseconds: 500));
 
     // 3. Avatar rises
     _animationController.add(const AvatarAnimation.clothes(false));

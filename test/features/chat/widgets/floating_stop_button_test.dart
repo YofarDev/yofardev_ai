@@ -14,7 +14,9 @@ import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
@@ -231,6 +233,27 @@ class MockPromptDatasource implements PromptDatasource {
 
 class MockLlmService extends Mock implements LlmService {}
 
+/// Factory to create a real ChatStreamingService with mocked dependencies for testing
+ChatStreamingService createMockChatStreamingService({
+  required ChatRepository chatRepository,
+  required LlmServiceInterface llmService,
+  required StreamProcessorService streamProcessor,
+  required PromptDatasource promptDatasource,
+  required InterruptionService interruptionService,
+  required ChatEntryService chatEntryService,
+  TtsQueueService? ttsQueueManager,
+}) {
+  return ChatStreamingService(
+    chatRepository: chatRepository,
+    llmService: llmService,
+    streamProcessor: streamProcessor,
+    promptDatasource: promptDatasource,
+    interruptionService: interruptionService,
+    chatEntryService: chatEntryService,
+    ttsQueueManager: ttsQueueManager,
+  );
+}
+
 class MockStreamProcessorService extends Mock
     implements StreamProcessorService {}
 
@@ -360,12 +383,14 @@ void main() {
           chatRepository: MockChatRepository(),
           llmService: MockLlmService(),
         ),
-        llmService: MockLlmService(),
-        streamProcessor: MockStreamProcessorService(),
-        promptDatasource: MockPromptDatasource(),
-        interruptionService: interruptionService,
-        chatEntryService: MockChatEntryService(),
-        ttsQueueManager: MockTtsQueueService(),
+        chatStreamingService: createMockChatStreamingService(
+          chatRepository: MockChatRepository(),
+          llmService: MockLlmService(),
+          streamProcessor: MockStreamProcessorService(),
+          promptDatasource: MockPromptDatasource(),
+          interruptionService: interruptionService,
+          chatEntryService: MockChatEntryService(),
+        ),
       );
     });
 

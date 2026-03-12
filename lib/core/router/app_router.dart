@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nested/nested.dart';
 
+import '../../../core/di/service_locator.dart';
 import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/presentation/bloc/avatar_state.dart';
 import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
 import '../../features/chat/screens/image_full_screen.dart';
+import '../../features/demo/presentation/bloc/demo_cubit.dart';
+import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/settings/screens/function_calling_config_screen.dart';
 import '../../features/settings/screens/llm/llm_config_page.dart';
 import '../../features/settings/screens/llm/llm_selection_page.dart';
 import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
-import '../../core/models/llm_config.dart';
 import '../../core/res/app_constants.dart';
 import '../../core/widgets/constrained_width.dart';
 import '../../core/l10n/generated/app_localizations.dart';
@@ -46,7 +49,18 @@ class AppRouter {
                       : AppConstants.avatarWidth;
                   return ConstrainedWidth(
                     avatarWidth: avatarWidth,
-                    child: const HomeScreen(),
+                    child: MultiBlocProvider(
+                      providers: <SingleChildWidget>[
+                        BlocProvider<DemoCubit>(
+                          create: (BuildContext context) => getIt<DemoCubit>(),
+                        ),
+                        BlocProvider<HomeCubit>(
+                          create: (BuildContext context) =>
+                              getIt<HomeCubit>()..initialize(),
+                        ),
+                      ],
+                      child: const HomeScreen(),
+                    ),
                   );
                 },
               ),
@@ -88,14 +102,16 @@ class AppRouter {
                 ),
             routes: <RouteBase>[
               GoRoute(
-                path: 'config',
-                pageBuilder: (BuildContext context, GoRouterState state) =>
-                    MaterialPage<void>(
-                      key: state.pageKey,
-                      child: ConstrainedWidth(
-                        child: LlmConfigPage(config: state.extra as LlmConfig?),
-                      ),
+                path: 'config/:id',
+                pageBuilder: (BuildContext context, GoRouterState state) {
+                  final String? configId = state.pathParameters['id'];
+                  return MaterialPage<void>(
+                    key: state.pageKey,
+                    child: ConstrainedWidth(
+                      child: LlmConfigPage(configId: configId),
                     ),
+                  );
+                },
               ),
               GoRoute(
                 path: 'task-llm',

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/res/app_colors.dart';
-import '../../../../core/router/route_constants.dart';
 import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 
@@ -37,12 +36,12 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
   }
 
   Future<void> _onAdd() async {
-    await context.push(RouteConstants.llmConfig);
+    await context.push('/settings/llm/config/new');
     _refresh();
   }
 
   Future<void> _onEdit(LlmConfig config) async {
-    await context.push(RouteConstants.llmConfig, extra: config);
+    await context.push('/settings/llm/config/${config.id}');
     _refresh();
   }
 

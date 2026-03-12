@@ -8,7 +8,10 @@ import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
+import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
@@ -58,6 +61,27 @@ class MockStreamProcessorService extends Mock
 class MockChatEntryService extends Mock implements ChatEntryService {}
 
 class MockTtsDatasource extends Mock implements TtsDatasource {}
+
+/// Factory to create a real ChatStreamingService with mocked dependencies for testing
+ChatStreamingService createMockChatStreamingService({
+  required ChatRepository chatRepository,
+  required LlmServiceInterface llmService,
+  required StreamProcessorService streamProcessor,
+  required PromptDatasource promptDatasource,
+  required InterruptionService interruptionService,
+  required ChatEntryService chatEntryService,
+  TtsQueueService? ttsQueueManager,
+}) {
+  return ChatStreamingService(
+    chatRepository: chatRepository,
+    llmService: llmService,
+    streamProcessor: streamProcessor,
+    promptDatasource: promptDatasource,
+    interruptionService: interruptionService,
+    chatEntryService: chatEntryService,
+    ttsQueueManager: ttsQueueManager,
+  );
+}
 
 /// Factory to create ChatTitleService with real LlmService for testing
 ChatTitleService createMockChatTitleService() {
@@ -117,12 +141,16 @@ void main() {
       mockChatRepository = MockChatRepository();
       final MockSettingsRepository mockSettingsRepository =
           MockSettingsRepository();
-      final MockInterruptionService mockInterruptionService =
-          MockInterruptionService();
+      // ignore: unused_local_variable
       final MockPromptDatasource mockPromptDatasource = MockPromptDatasource();
+      // ignore: unused_local_variable
       final MockStreamProcessorService mockStreamProcessorService =
           MockStreamProcessorService();
+      // ignore: unused_local_variable
       final MockChatEntryService mockChatEntryService = MockChatEntryService();
+      // ignore: unused_local_variable
+      final MockInterruptionService mockInterruptionService =
+          MockInterruptionService();
 
       // Create a minimal AvatarAnimationService
       final AvatarAnimationService mockAnimationService =
@@ -224,11 +252,14 @@ void main() {
         settingsRepository: mockSettingsRepository,
         avatarAnimationService: mockAnimationService,
         chatTitleService: createMockChatTitleService(),
-        llmService: LlmService(),
-        streamProcessor: mockStreamProcessorService,
-        promptDatasource: mockPromptDatasource,
-        interruptionService: mockInterruptionService,
-        chatEntryService: mockChatEntryService,
+        chatStreamingService: createMockChatStreamingService(
+          chatRepository: mockChatRepository,
+          llmService: LlmService(),
+          streamProcessor: MockStreamProcessorService(),
+          promptDatasource: MockPromptDatasource(),
+          interruptionService: MockInterruptionService(),
+          chatEntryService: MockChatEntryService(),
+        ),
       );
     });
 
@@ -787,12 +818,16 @@ void main() {
       mockChatRepository = MockChatRepository();
 
       // Create mock services
-      final MockInterruptionService mockInterruptionService =
-          MockInterruptionService();
+      // ignore: unused_local_variable
       final MockPromptDatasource mockPromptDatasource = MockPromptDatasource();
+      // ignore: unused_local_variable
       final MockStreamProcessorService mockStreamProcessorService =
           MockStreamProcessorService();
+      // ignore: unused_local_variable
       final MockChatEntryService mockChatEntryService = MockChatEntryService();
+      // ignore: unused_local_variable
+      final MockInterruptionService mockInterruptionService =
+          MockInterruptionService();
 
       // Stub mockChatRepository methods
       when(
@@ -852,11 +887,14 @@ void main() {
         settingsRepository: MockSettingsRepository(),
         avatarAnimationService: mockAvatarAnimationService,
         chatTitleService: createMockChatTitleService(),
-        llmService: LlmService(),
-        streamProcessor: mockStreamProcessorService,
-        promptDatasource: mockPromptDatasource,
-        interruptionService: mockInterruptionService,
-        chatEntryService: mockChatEntryService,
+        chatStreamingService: createMockChatStreamingService(
+          chatRepository: mockChatRepository,
+          llmService: LlmService(),
+          streamProcessor: MockStreamProcessorService(),
+          promptDatasource: MockPromptDatasource(),
+          interruptionService: MockInterruptionService(),
+          chatEntryService: MockChatEntryService(),
+        ),
       );
     });
 

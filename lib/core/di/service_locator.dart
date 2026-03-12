@@ -38,7 +38,6 @@ import '../repositories/locale_repository_impl.dart';
 import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
-import '../services/audio/tts_service.dart';
 import '../services/agent/yofardev_agent.dart';
 import '../services/agent/tool_registry.dart';
 import '../services/avatar_animation_service.dart';
@@ -52,6 +51,7 @@ import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
 import '../services/settings_local_datasource.dart';
 import '../services/stream_processor/stream_processor_service.dart';
+import '../services/chat/chat_streaming_service.dart';
 import '../utils/logger.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -142,9 +142,7 @@ Future<void> setupServiceLocator() async {
     ),
   );
   getIt.registerLazySingleton<SoundRepository>(() => SoundRepositoryImpl());
-  getIt.registerLazySingleton<TalkingRepository>(
-    () => TalkingRepositoryImpl(getIt<TtsService>()),
-  );
+  getIt.registerLazySingleton<TalkingRepository>(() => TalkingRepositoryImpl());
   getIt.registerLazySingleton<DemoRepository>(
     () => DemoRepositoryImpl(
       chatRepository: getIt<ChatRepository>(),
@@ -155,7 +153,6 @@ Future<void> setupServiceLocator() async {
 
   // ── Audio services ──
   getIt.registerLazySingleton<AudioAnalyzer>(() => AudioAnalyzer());
-  getIt.registerLazySingleton<TtsService>(() => TtsService());
   getIt.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
   getIt.registerLazySingleton<AudioAmplitudeService>(
     () => AudioAmplitudeService(),
@@ -224,18 +221,24 @@ Future<void> setupServiceLocator() async {
       ttsPlaybackService: getIt<TtsPlaybackService>(),
     ),
   );
-  getIt.registerFactory<ChatCubit>(
-    () => ChatCubit(
+  getIt.registerLazySingleton<ChatStreamingService>(
+    () => ChatStreamingService(
       chatRepository: getIt<ChatRepository>(),
-      settingsRepository: getIt<SettingsRepository>(),
-      avatarAnimationService: getIt<AvatarAnimationService>(),
-      chatTitleService: getIt<ChatTitleService>(),
       llmService: getIt<LlmServiceInterface>(),
       streamProcessor: getIt<StreamProcessorService>(),
       promptDatasource: getIt<PromptDatasource>(),
       interruptionService: getIt<InterruptionService>(),
       chatEntryService: getIt<ChatEntryService>(),
       ttsQueueManager: getIt<TtsQueueService>(),
+    ),
+  );
+  getIt.registerFactory<ChatCubit>(
+    () => ChatCubit(
+      chatRepository: getIt<ChatRepository>(),
+      settingsRepository: getIt<SettingsRepository>(),
+      avatarAnimationService: getIt<AvatarAnimationService>(),
+      chatTitleService: getIt<ChatTitleService>(),
+      chatStreamingService: getIt<ChatStreamingService>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));

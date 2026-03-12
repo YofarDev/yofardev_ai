@@ -6,7 +6,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
+import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
@@ -99,6 +102,27 @@ class TrackingMockChatRepository implements ChatRepository {
 
 class MockLlmService extends Mock implements LlmService {}
 
+/// Factory to create a real ChatStreamingService with mocked dependencies for testing
+ChatStreamingService createMockChatStreamingService({
+  required ChatRepository chatRepository,
+  required LlmServiceInterface llmService,
+  required StreamProcessorService streamProcessor,
+  required PromptDatasource promptDatasource,
+  required InterruptionService interruptionService,
+  required ChatEntryService chatEntryService,
+  TtsQueueService? ttsQueueManager,
+}) {
+  return ChatStreamingService(
+    chatRepository: chatRepository,
+    llmService: llmService,
+    streamProcessor: streamProcessor,
+    promptDatasource: promptDatasource,
+    interruptionService: interruptionService,
+    chatEntryService: chatEntryService,
+    ttsQueueManager: ttsQueueManager,
+  );
+}
+
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 
 class MockAvatarAnimationService extends Mock
@@ -183,23 +207,22 @@ void main() {
       ).thenAnswer((_) async => const Right<Exception, bool>(true));
 
       // Create mock services
-      final MockInterruptionService mockInterruptionService =
-          MockInterruptionService();
-      final MockPromptDatasource mockPromptDatasource = MockPromptDatasource();
-      final MockStreamProcessorService mockStreamProcessorService =
-          MockStreamProcessorService();
-      final MockChatEntryService mockChatEntryService = MockChatEntryService();
+      final ChatStreamingService mockChatStreamingService =
+          createMockChatStreamingService(
+            chatRepository: mockChatRepository,
+            llmService: mockLlmService,
+            streamProcessor: MockStreamProcessorService(),
+            promptDatasource: MockPromptDatasource(),
+            interruptionService: MockInterruptionService(),
+            chatEntryService: MockChatEntryService(),
+          );
 
       cubit = ChatCubit(
         chatRepository: mockChatRepository,
         settingsRepository: mockSettingsRepository,
         avatarAnimationService: mockAvatarAnimationService,
         chatTitleService: chatTitleService,
-        llmService: mockLlmService,
-        streamProcessor: mockStreamProcessorService,
-        promptDatasource: mockPromptDatasource,
-        interruptionService: mockInterruptionService,
-        chatEntryService: mockChatEntryService,
+        chatStreamingService: mockChatStreamingService,
       );
       // Initialize the cubit
       cubit.init();

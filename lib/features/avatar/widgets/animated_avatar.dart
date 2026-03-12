@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../../core/models/avatar_config.dart';
 import '../../../core/res/app_constants.dart';
+import '../../talking/presentation/bloc/talking_state.dart';
 import '../presentation/bloc/avatar_state.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';
@@ -16,10 +17,12 @@ class AnimatedAvatar extends StatelessWidget {
     super.key,
     required this.state,
     required this.animation,
+    this.mouthState,
   });
 
   final AvatarState state;
   final Animation<Offset> animation;
+  final MouthState? mouthState;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +50,8 @@ class AnimatedAvatar extends StatelessWidget {
               if (!state.avatar.hideBlinkingEyes) const BlinkingEyes(),
               if (state.avatar.displaySunglasses)
                 const Clothes(name: 'sunglasses'),
-              if (!state.avatar.hideTalkingMouth) const TalkingMouth(),
+              if (!state.avatar.hideTalkingMouth)
+                TalkingMouth(mouthState: mouthState),
               if (state.avatar.costume != AvatarCostume.none)
                 const CostumeWidget(),
             ],

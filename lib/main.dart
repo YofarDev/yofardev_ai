@@ -19,10 +19,8 @@ import 'features/chat/data/datasources/chat_local_datasource.dart';
 import 'features/chat/presentation/bloc/chat_cubit.dart';
 import 'features/chat/presentation/bloc/chat_state.dart';
 import 'features/chat/presentation/bloc/chat_tts_cubit.dart';
-import 'features/demo/presentation/bloc/demo_cubit.dart';
 import 'features/sound/data/datasources/tts_datasource.dart';
 import 'features/talking/presentation/bloc/talking_cubit.dart';
-import 'features/home/presentation/bloc/home_cubit.dart';
 import 'features/settings/presentation/bloc/settings_cubit.dart';
 import 'core/res/app_theme.dart';
 import 'core/utils/platform_utils.dart';
@@ -78,6 +76,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: <SingleChildWidget>[
+        // Truly global cubits - used throughout the app
+        BlocProvider<SettingsCubit>(
+          create: (BuildContext context) => getIt<SettingsCubit>(),
+        ),
+        // Feature cubits - shared across multiple screens
         BlocProvider<TalkingCubit>(
           create: (BuildContext context) => getIt<TalkingCubit>(),
         ),
@@ -91,17 +94,13 @@ class MyApp extends StatelessWidget {
         BlocProvider<AvatarCubit>(
           create: (BuildContext context) => getIt<AvatarCubit>(),
         ),
-        BlocProvider<DemoCubit>(
-          create: (BuildContext context) => getIt<DemoCubit>(),
-        ),
-        BlocProvider<SettingsCubit>(
-          create: (BuildContext context) => getIt<SettingsCubit>(),
-        ),
-        BlocProvider<HomeCubit>(
-          create: (BuildContext context) => getIt<HomeCubit>()..initialize(),
-        ),
+        // DemoCubit and HomeCubit moved to HomeScreen scope
       ],
       child: BlocBuilder<ChatCubit, ChatState>(
+        buildWhen: (ChatState previous, ChatState current) {
+          // Only rebuild when language changes, not on every chat state change
+          return previous.currentLanguage != current.currentLanguage;
+        },
         builder: (BuildContext context, ChatState state) {
           return MaterialApp.router(
             title: 'Yofardev AI',

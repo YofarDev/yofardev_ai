@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/res/app_colors.dart';
+import '../../../core/router/route_constants.dart';
 
 /// Tile widget for navigating to task-specific LLM configuration
 class TaskLlmConfigTile extends StatelessWidget {
@@ -10,7 +11,7 @@ class TaskLlmConfigTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.push("/settings/llm/task-llm"),
+      onTap: () => context.push(RouteConstants.taskLlmConfig),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(

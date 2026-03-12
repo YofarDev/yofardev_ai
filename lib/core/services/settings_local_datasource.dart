@@ -20,6 +20,56 @@ class SettingsLocalDatasource {
   static const String _newYorkTimesKeyKey = 'new_york_times_key';
   static const String _newYorkTimesEnabledKey = 'new_york_times_enabled';
 
+  // Generic helper methods to reduce boilerplate
+  Future<Either<Exception, String>> _getStringKey(String keyName) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String value = prefs.getString(keyName) ?? '';
+      return Right<Exception, String>(value);
+    } catch (e) {
+      return Left<Exception, String>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> _setStringKey(
+    String keyName,
+    String value,
+  ) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(keyName, value);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, bool>> _getBoolKey(
+    String keyName,
+    bool defaultValue,
+  ) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final bool value = prefs.getBool(keyName) ?? defaultValue;
+      return Right<Exception, bool>(value);
+    } catch (e) {
+      return Left<Exception, bool>(Exception(e.toString()));
+    }
+  }
+
+  Future<Either<Exception, void>> _setBoolKey(
+    String keyName,
+    bool value,
+  ) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(keyName, value);
+      return const Right<Exception, void>(null);
+    } catch (e) {
+      return Left<Exception, void>(Exception(e.toString()));
+    }
+  }
+
   Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -115,147 +165,47 @@ class SettingsLocalDatasource {
   }
 
   // Function Calling Configuration - Google Search
-  Future<Either<Exception, String>> getGoogleSearchKey() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String key = prefs.getString(_googleSearchKeyKey) ?? '';
-      return Right<Exception, String>(key);
-    } catch (e) {
-      return Left<Exception, String>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, String>> getGoogleSearchKey() =>
+      _getStringKey(_googleSearchKeyKey);
 
-  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_googleSearchKeyKey, key);
-      return const Right<Exception, void>(null);
-    } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, void>> setGoogleSearchKey(String key) =>
+      _setStringKey(_googleSearchKeyKey, key);
 
-  Future<Either<Exception, String>> getGoogleSearchEngineId() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String engineId = prefs.getString(_googleSearchEngineIdKey) ?? '';
-      return Right<Exception, String>(engineId);
-    } catch (e) {
-      return Left<Exception, String>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, String>> getGoogleSearchEngineId() =>
+      _getStringKey(_googleSearchEngineIdKey);
 
-  Future<Either<Exception, void>> setGoogleSearchEngineId(
-    String engineId,
-  ) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_googleSearchEngineIdKey, engineId);
-      return const Right<Exception, void>(null);
-    } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, void>> setGoogleSearchEngineId(String engineId) =>
+      _setStringKey(_googleSearchEngineIdKey, engineId);
 
-  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final bool enabled = prefs.getBool(_googleSearchEnabledKey) ?? true;
-      return Right<Exception, bool>(enabled);
-    } catch (e) {
-      return Left<Exception, bool>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, bool>> getGoogleSearchEnabled() =>
+      _getBoolKey(_googleSearchEnabledKey, true);
 
-  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_googleSearchEnabledKey, enabled);
-      return const Right<Exception, void>(null);
-    } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) =>
+      _setBoolKey(_googleSearchEnabledKey, enabled);
 
   // Function Calling Configuration - OpenWeather
-  Future<Either<Exception, String>> getOpenWeatherKey() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String key = prefs.getString(_openWeatherKeyKey) ?? '';
-      return Right<Exception, String>(key);
-    } catch (e) {
-      return Left<Exception, String>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, String>> getOpenWeatherKey() =>
+      _getStringKey(_openWeatherKeyKey);
 
-  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_openWeatherKeyKey, key);
-      return const Right<Exception, void>(null);
-    } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, void>> setOpenWeatherKey(String key) =>
+      _setStringKey(_openWeatherKeyKey, key);
 
-  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final bool enabled = prefs.getBool(_openWeatherEnabledKey) ?? true;
-      return Right<Exception, bool>(enabled);
-    } catch (e) {
-      return Left<Exception, bool>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, bool>> getOpenWeatherEnabled() =>
+      _getBoolKey(_openWeatherEnabledKey, true);
 
-  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_openWeatherEnabledKey, enabled);
-      return const Right<Exception, void>(null);
-    } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) =>
+      _setBoolKey(_openWeatherEnabledKey, enabled);
 
   // Function Calling Configuration - New York Times
-  Future<Either<Exception, String>> getNewYorkTimesKey() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String key = prefs.getString(_newYorkTimesKeyKey) ?? '';
-      return Right<Exception, String>(key);
-    } catch (e) {
-      return Left<Exception, String>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, String>> getNewYorkTimesKey() =>
+      _getStringKey(_newYorkTimesKeyKey);
 
-  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_newYorkTimesKeyKey, key);
-      return const Right<Exception, void>(null);
-    } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, void>> setNewYorkTimesKey(String key) =>
+      _setStringKey(_newYorkTimesKeyKey, key);
 
-  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final bool enabled = prefs.getBool(_newYorkTimesEnabledKey) ?? true;
-      return Right<Exception, bool>(enabled);
-    } catch (e) {
-      return Left<Exception, bool>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, bool>> getNewYorkTimesEnabled() =>
+      _getBoolKey(_newYorkTimesEnabledKey, true);
 
-  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_newYorkTimesEnabledKey, enabled);
-      return const Right<Exception, void>(null);
-    } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
-    }
-  }
+  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) =>
+      _setBoolKey(_newYorkTimesEnabledKey, enabled);
 }

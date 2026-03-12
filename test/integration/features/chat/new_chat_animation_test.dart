@@ -15,7 +15,9 @@ import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
@@ -68,6 +70,27 @@ class MockInterruptionService implements InterruptionService {
 class MockPromptDatasource implements PromptDatasource {
   @override
   Future<String> getSystemPrompt() async => 'Test system prompt';
+}
+
+/// Factory to create a real ChatStreamingService with mocked dependencies for testing
+ChatStreamingService createMockChatStreamingService({
+  required ChatRepository chatRepository,
+  required LlmServiceInterface llmService,
+  required StreamProcessorService streamProcessor,
+  required PromptDatasource promptDatasource,
+  required InterruptionService interruptionService,
+  required ChatEntryService chatEntryService,
+  TtsQueueService? ttsQueueManager,
+}) {
+  return ChatStreamingService(
+    chatRepository: chatRepository,
+    llmService: llmService,
+    streamProcessor: streamProcessor,
+    promptDatasource: promptDatasource,
+    interruptionService: interruptionService,
+    chatEntryService: chatEntryService,
+    ttsQueueManager: ttsQueueManager,
+  );
 }
 
 class MockStreamProcessorService implements StreamProcessorService {
@@ -193,6 +216,7 @@ void main() {
       final MockInterruptionService mockInterruptionService =
           MockInterruptionService();
       final MockPromptDatasource mockPromptDatasource = MockPromptDatasource();
+      // ignore: unused_local_variable
       final MockStreamProcessorService mockStreamProcessorService =
           MockStreamProcessorService();
       final MockChatEntryService mockChatEntryService = MockChatEntryService();
@@ -206,12 +230,14 @@ void main() {
           chatRepository: mockChatRepository,
           llmService: LlmService(),
         ),
-        llmService: LlmService(),
-        streamProcessor: mockStreamProcessorService,
-        promptDatasource: mockPromptDatasource,
-        interruptionService: mockInterruptionService,
-        chatEntryService: mockChatEntryService,
-        ttsQueueManager: MockTtsQueueService(),
+        chatStreamingService: createMockChatStreamingService(
+          chatRepository: mockChatRepository,
+          llmService: LlmService(),
+          streamProcessor: MockStreamProcessorService(),
+          promptDatasource: mockPromptDatasource,
+          interruptionService: mockInterruptionService,
+          chatEntryService: mockChatEntryService,
+        ),
       );
 
       // Initialize the cubit

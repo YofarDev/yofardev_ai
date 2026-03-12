@@ -12,8 +12,8 @@ class RouteConstants {
   // Settings routes
   static const String settings = '/settings';
   static const String llmSelection = '/settings/llm';
-  static const String llmConfig = '/settings/llm/config';
-  static const String taskLlmConfig = '/settings/task-llm';
+  static const String llmConfig = '/settings/llm/config/:id';
+  static const String taskLlmConfig = '/settings/llm/task-llm';
   static const String functionCallingConfig = '/settings/function-calling';
 
   // Image routes

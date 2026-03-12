@@ -134,9 +134,12 @@ class ModernChatBubble extends StatelessWidget {
                     ),
                     // Fix #8: Only apply BackdropFilter for AI bubbles — wasteful on solid user bubble
                     child: isUser
-                        ? ClipRRect(borderRadius: _bubbleRadius, child: child)
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.zero,
+                            child: child,
+                          )
                         : ClipRRect(
-                            borderRadius: _bubbleRadius,
+                            borderRadius: BorderRadius.zero,
                             child: BackdropFilter(
                               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                               child: child,
@@ -152,20 +155,6 @@ class ModernChatBubble extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.onSurface.withValues(alpha: 0.5),
                           fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  if (isStreaming)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.primary.withValues(alpha: 0.8),
-                          ),
                         ),
                       ),
                     ),

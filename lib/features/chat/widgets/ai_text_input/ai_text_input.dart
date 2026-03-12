@@ -307,11 +307,6 @@ class _AiTextInputState extends State<AiTextInput> {
       avatar: currentAvatar,
       currentChat: currentChat,
       language: currentLanguage,
-      onChatUpdated: (Chat updatedChat) {
-        if (mounted) {
-          context.read<ChatCubit>().updateChatStreaming(updatedChat);
-        }
-      },
       functionCallingEnabled: functionCallingEnabled,
     );
 
