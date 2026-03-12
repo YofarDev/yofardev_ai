@@ -1,62 +1,23 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
-import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
 class MockTalkingRepository extends Mock implements TalkingRepository {}
 
-class MockTtsPlaybackService implements TtsPlaybackService {
-  final TalkingRepository repository;
-
-  MockTtsPlaybackService(this.repository);
-
-  @override
-  void setPlaybackStateCallback(void Function(bool p1)? callback) {}
-
-  @override
-  void startAmplitudeAnimation(
-    String audioPath,
-    List<int> amplitudes,
-    Duration audioDuration, {
-    required void Function(int mouthState) onMouthStateUpdate,
-    required void Function() onComplete,
-  }) {}
-
-  @override
-  Future<void> stop() async {}
-
-  @override
-  void cancelAnimation() {}
-
-  @override
-  void notifySpeakingStarted() {}
-
-  @override
-  void notifySpeakingStopped() {}
-
-  @override
-  void dispose() {}
-}
-
 void main() {
   group('TalkingCubit', () {
     late TalkingCubit cubit;
     late MockTalkingRepository mockRepository;
-    late MockTtsPlaybackService mockPlaybackService;
     late InterruptionService interruptionService;
 
     setUp(() {
       mockRepository = MockTalkingRepository();
-      mockPlaybackService = MockTtsPlaybackService(mockRepository);
       interruptionService = InterruptionService();
-      cubit = TalkingCubit(
-        mockRepository,
-        interruptionService,
-        mockPlaybackService,
-      );
+      cubit = TalkingCubit(mockRepository, interruptionService);
     });
 
     tearDown(() {
@@ -84,95 +45,100 @@ void main() {
     });
 
     group('playWaitingSentence', () {
-      test('should emit waiting state then call repository', () async {
-        when(
-          () => mockRepository.playWaitingSentence('Test sentence'),
-        ).thenAnswer((_) async {
-          return;
-        });
+      blocTest<TalkingCubit, TalkingState>(
+        'emits waiting then idle on success',
+        build: () {
+          when(
+            () => mockRepository.playWaitingSentence(any()),
+          ).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) => c.playWaitingSentence('Test sentence'),
+        expect: () => [const TalkingState.waiting()],
+        verify: (_) {
+          verify(
+            () => mockRepository.playWaitingSentence('Test sentence'),
+          ).called(1);
+        },
+      );
 
-        await cubit.playWaitingSentence('Test sentence');
-
-        expect(cubit.state, isA<WaitingState>());
-        expect(cubit.state.shouldShowTalking, isFalse);
-        expect(cubit.state.isPlaying, isTrue);
-        expect(cubit.state.isTalking, isTrue);
-        expect(cubit.state.status, TalkingStatus.success);
-
-        verify(
-          () => mockRepository.playWaitingSentence('Test sentence'),
-        ).called(1);
-      });
-
-      test('should emit error state on repository failure', () async {
-        when(
-          () => mockRepository.playWaitingSentence(any()),
-        ).thenThrow(Exception('TTS failed'));
-
-        await cubit.playWaitingSentence('Test');
-
-        expect(cubit.state, isA<ErrorState>());
-        expect(
-          cubit.state.maybeWhen(
-            error: (String msg, MouthState mouthState) => msg,
-            orElse: () => '',
+      blocTest<TalkingCubit, TalkingState>(
+        'should emit error state on repository failure',
+        build: () {
+          when(
+            () => mockRepository.playWaitingSentence(any()),
+          ).thenThrow(Exception('TTS failed'));
+          return cubit;
+        },
+        act: (c) => c.playWaitingSentence('Test'),
+        expect: () => [
+          const TalkingState.waiting(),
+          predicate<TalkingState>(
+            (state) => state.maybeWhen(
+              error: (String msg, _) => msg.contains('TTS failed'),
+              orElse: () => false,
+            ),
           ),
-          contains('TTS failed'),
-        );
-      });
+        ],
+      );
     });
 
     group('generateSpeech', () {
-      test('should emit generating, then speaking on success', () async {
-        when(() => mockRepository.generateSpeech('Hello')).thenAnswer((
-          _,
-        ) async {
-          return;
-        });
+      blocTest<TalkingCubit, TalkingState>(
+        'emits [generating, speaking] on success',
+        build: () {
+          when(
+            () => mockRepository.generateSpeech(any()),
+          ).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) => c.generateSpeech('Hello'),
+        expect: () => [
+          const TalkingState.generating(),
+          const TalkingState.speaking(),
+        ],
+        verify: (_) {
+          verify(() => mockRepository.generateSpeech('Hello')).called(1);
+        },
+      );
 
-        final Future<void> speechFuture = cubit.generateSpeech('Hello');
-
-        expect(cubit.state, isA<GeneratingState>());
-        expect(cubit.state.shouldShowTalking, isTrue);
-
-        await speechFuture;
-
-        expect(cubit.state, isA<SpeakingState>());
-        expect(cubit.state.shouldShowTalking, isTrue);
-        expect(cubit.state.isPlaying, isTrue);
-
-        verify(() => mockRepository.generateSpeech('Hello')).called(1);
-      });
-
-      test('should emit error state on repository failure', () async {
-        when(
-          () => mockRepository.generateSpeech('Error test'),
-        ).thenThrow(Exception('TTS generation failed'));
-
-        await cubit.generateSpeech('Error test');
-
-        expect(cubit.state, isA<ErrorState>());
-        expect(
-          cubit.state.maybeWhen(
-            error: (String msg, MouthState mouthState) => msg,
-            orElse: () => '',
+      blocTest<TalkingCubit, TalkingState>(
+        'emits generating then error on generateSpeech failure',
+        build: () {
+          when(
+            () => mockRepository.generateSpeech(any()),
+          ).thenThrow(Exception('TTS generation failed'));
+          return cubit;
+        },
+        act: (c) => c.generateSpeech('Error test'),
+        expect: () => [
+          const TalkingState.generating(),
+          predicate<TalkingState>(
+            (state) => state.maybeWhen(
+              error: (String msg, _) => msg.contains('TTS generation failed'),
+              orElse: () => false,
+            ),
           ),
-          contains('TTS generation failed'),
-        );
-        expect(cubit.state.status, TalkingStatus.error);
-      });
+        ],
+      );
 
-      test('should map generating to loading status', () async {
-        when(() => mockRepository.generateSpeech('Test')).thenAnswer((_) async {
-          return;
-        });
-
-        final Future<void> speechFuture = cubit.generateSpeech('Test');
-
-        expect(cubit.state.status, TalkingStatus.loading);
-
-        await speechFuture;
-      });
+      blocTest<TalkingCubit, TalkingState>(
+        'should map generating to loading status',
+        build: () {
+          when(
+            () => mockRepository.generateSpeech(any()),
+          ).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) => c.generateSpeech('Test'),
+        expect: () => [
+          const TalkingState.generating(),
+          const TalkingState.speaking(),
+        ],
+        verify: (_) {
+          expect(cubit.state.status, TalkingStatus.success);
+        },
+      );
     });
 
     group('setSpeakingState', () {
@@ -187,21 +153,19 @@ void main() {
     });
 
     group('stop', () {
-      test('should call repository.stop() and emit idle', () async {
-        when(() => mockRepository.stop()).thenAnswer((_) async {
-          return;
-        });
-
-        cubit.setSpeakingState();
-        expect(cubit.state, isA<SpeakingState>());
-
-        await cubit.stop();
-
-        verify(() => mockRepository.stop()).called(1);
-        expect(cubit.state, isA<IdleState>());
-        expect(cubit.state.isPlaying, isFalse);
-        expect(cubit.state.shouldShowTalking, isFalse);
-      });
+      blocTest<TalkingCubit, TalkingState>(
+        'emits idle when stop is called',
+        build: () {
+          when(() => mockRepository.stop()).thenAnswer((_) async {});
+          return cubit;
+        },
+        seed: () => const TalkingState.speaking(),
+        act: (c) => c.stop(),
+        expect: () => [const TalkingState.idle()],
+        verify: (_) {
+          verify(() => mockRepository.stop()).called(1);
+        },
+      );
 
       test('should propagate repository errors', () async {
         when(() => mockRepository.stop()).thenThrow(Exception('Stop failed'));
@@ -212,15 +176,19 @@ void main() {
     });
 
     group('State extensions', () {
-      test('shouldShowTalking returns true for generating', () async {
-        when(() => mockRepository.generateSpeech('Test')).thenAnswer((_) async {
-          return;
-        });
-
-        final Future<void> speechFuture = cubit.generateSpeech('Test');
-        expect(cubit.state.shouldShowTalking, isTrue);
-        await speechFuture;
-      });
+      blocTest<TalkingCubit, TalkingState>(
+        'shouldShowTalking returns true for generating',
+        build: () {
+          when(
+            () => mockRepository.generateSpeech(any()),
+          ).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) => c.generateSpeech('Test'),
+        verify: (_) {
+          expect(cubit.state.shouldShowTalking, isTrue);
+        },
+      );
 
       test('shouldShowTalking returns true for speaking', () {
         cubit.setSpeakingState();
@@ -231,46 +199,58 @@ void main() {
         expect(cubit.state.shouldShowTalking, isFalse);
       });
 
-      test('shouldShowTalking returns false for waiting', () async {
-        when(() => mockRepository.playWaitingSentence('Test')).thenAnswer((
-          _,
-        ) async {
-          return;
-        });
+      blocTest<TalkingCubit, TalkingState>(
+        'shouldShowTalking returns false for waiting',
+        build: () {
+          when(
+            () => mockRepository.playWaitingSentence(any()),
+          ).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) => c.playWaitingSentence('Test'),
+        expect: () => [const TalkingState.waiting()],
+        verify: (_) {
+          expect(cubit.state.shouldShowTalking, isFalse);
+        },
+      );
 
-        await cubit.playWaitingSentence('Test');
-        expect(cubit.state.shouldShowTalking, isFalse);
-      });
-
-      test('isPlaying returns true for waiting', () async {
-        when(() => mockRepository.playWaitingSentence('Test')).thenAnswer((
-          _,
-        ) async {
-          return;
-        });
-
-        await cubit.playWaitingSentence('Test');
-        expect(cubit.state.isPlaying, isTrue);
-      });
+      blocTest<TalkingCubit, TalkingState>(
+        'isPlaying returns true for waiting',
+        build: () {
+          when(
+            () => mockRepository.playWaitingSentence(any()),
+          ).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) => c.playWaitingSentence('Test'),
+        expect: () => [const TalkingState.waiting()],
+        verify: (_) {
+          expect(cubit.state.isPlaying, isTrue);
+        },
+      );
 
       test('isPlaying returns true for speaking', () {
         cubit.setSpeakingState();
         expect(cubit.state.isPlaying, isTrue);
       });
 
-      test('isPlaying returns false for idle and generating', () async {
-        expect(cubit.state.isPlaying, isFalse);
-
-        when(() => mockRepository.generateSpeech('Test')).thenAnswer((_) async {
-          return;
-        });
-
-        final Future<void> speechFuture = cubit.generateSpeech('Test');
-        expect(cubit.state.isPlaying, isFalse);
-        await speechFuture;
-
-        expect(cubit.state.isPlaying, isTrue);
-      });
+      blocTest<TalkingCubit, TalkingState>(
+        'isPlaying returns false for generating and true for speaking',
+        build: () {
+          when(
+            () => mockRepository.generateSpeech(any()),
+          ).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) => c.generateSpeech('Test'),
+        expect: () => [
+          const TalkingState.generating(),
+          const TalkingState.speaking(),
+        ],
+        verify: (_) {
+          expect(cubit.state.isPlaying, isTrue);
+        },
+      );
 
       test('answer returns empty amplitudes for all states', () {
         cubit.setSpeakingState();
@@ -282,59 +262,64 @@ void main() {
     });
 
     group('State transitions', () {
-      test('idle -> waiting -> idle', () async {
-        expect(cubit.state, isA<IdleState>());
+      blocTest<TalkingCubit, TalkingState>(
+        'idle -> waiting -> idle',
+        build: () {
+          when(
+            () => mockRepository.playWaitingSentence(any()),
+          ).thenAnswer((_) async {});
+          when(() => mockRepository.stop()).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) async {
+          await c.playWaitingSentence('Test');
+          await c.stop();
+        },
+        expect: () => [const TalkingState.waiting(), const TalkingState.idle()],
+      );
 
-        when(() => mockRepository.playWaitingSentence('Test')).thenAnswer((
-          _,
-        ) async {
-          return;
-        });
+      blocTest<TalkingCubit, TalkingState>(
+        'idle -> generating -> speaking -> idle',
+        build: () {
+          when(
+            () => mockRepository.generateSpeech(any()),
+          ).thenAnswer((_) async {});
+          when(() => mockRepository.stop()).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) async {
+          await c.generateSpeech('Test');
+          await c.stop();
+        },
+        expect: () => [
+          const TalkingState.generating(),
+          const TalkingState.speaking(),
+          const TalkingState.idle(),
+        ],
+      );
 
-        await cubit.playWaitingSentence('Test');
-        expect(cubit.state, isA<WaitingState>());
-
-        when(() => mockRepository.stop()).thenAnswer((_) async {
-          return;
-        });
-        await cubit.stop();
-        expect(cubit.state, isA<IdleState>());
-      });
-
-      test('idle -> generating -> speaking -> idle', () async {
-        expect(cubit.state, isA<IdleState>());
-
-        when(() => mockRepository.generateSpeech('Test')).thenAnswer((_) async {
-          return;
-        });
-
-        final Future<void> speechFuture = cubit.generateSpeech('Test');
-        expect(cubit.state, isA<GeneratingState>());
-
-        await speechFuture;
-        expect(cubit.state, isA<SpeakingState>());
-
-        when(() => mockRepository.stop()).thenAnswer((_) async {
-          return;
-        });
-        await cubit.stop();
-        expect(cubit.state, isA<IdleState>());
-      });
-
-      test('error -> idle after stop', () async {
-        when(
-          () => mockRepository.generateSpeech('Test'),
-        ).thenThrow(Exception('Error'));
-
-        await cubit.generateSpeech('Test');
-        expect(cubit.state, isA<ErrorState>());
-
-        when(() => mockRepository.stop()).thenAnswer((_) async {
-          return;
-        });
-        await cubit.stop();
-        expect(cubit.state, isA<IdleState>());
-      });
+      blocTest<TalkingCubit, TalkingState>(
+        'error -> idle after stop',
+        build: () {
+          when(
+            () => mockRepository.generateSpeech(any()),
+          ).thenThrow(Exception('Error'));
+          when(() => mockRepository.stop()).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) async {
+          await c.generateSpeech('Test');
+          await c.stop();
+        },
+        expect: () => [
+          const TalkingState.generating(),
+          predicate<TalkingState>(
+            (state) =>
+                state.maybeWhen(error: (_, __) => true, orElse: () => false),
+          ),
+          const TalkingState.idle(),
+        ],
+      );
     });
 
     group('TalkingState value equality', () {
@@ -383,66 +368,73 @@ void main() {
     });
 
     group('Edge cases', () {
-      test('multiple rapid state changes', () async {
-        when(() => mockRepository.playWaitingSentence('Test')).thenAnswer((
-          _,
-        ) async {
-          return;
-        });
-        when(() => mockRepository.stop()).thenAnswer((_) async {
-          return;
-        });
+      blocTest<TalkingCubit, TalkingState>(
+        'multiple rapid state changes',
+        build: () {
+          when(
+            () => mockRepository.playWaitingSentence(any()),
+          ).thenAnswer((_) async {});
+          when(() => mockRepository.stop()).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) async {
+          await c.playWaitingSentence('Test');
+          await c.stop();
+          c.setSpeakingState();
+          await c.stop();
+        },
+        expect: () => [
+          const TalkingState.waiting(),
+          const TalkingState.idle(),
+          const TalkingState.speaking(),
+          const TalkingState.idle(),
+        ],
+      );
 
-        await cubit.playWaitingSentence('Test');
-        await cubit.stop();
-        cubit.setSpeakingState();
-        await cubit.stop();
+      blocTest<TalkingCubit, TalkingState>(
+        'calling stop when already idle',
+        build: () {
+          when(() => mockRepository.stop()).thenAnswer((_) async {});
+          return cubit;
+        },
+        seed: () => const TalkingState.idle(),
+        act: (c) => c.stop(),
+        expect: () =>
+            <TalkingState>[], // No state emitted (same state suppressed)
+        verify: (_) {
+          verify(() => mockRepository.stop()).called(1);
+        },
+      );
 
-        expect(cubit.state, isA<IdleState>());
-      });
-
-      test('calling stop when already idle', () async {
-        when(() => mockRepository.stop()).thenAnswer((_) async {
-          return;
-        });
-
-        expect(cubit.state, isA<IdleState>());
-
-        await cubit.stop();
-
-        expect(cubit.state, isA<IdleState>());
-        verify(() => mockRepository.stop()).called(1);
-      });
-
-      test('generating state does not play audio', () async {
-        when(() => mockRepository.generateSpeech('Test')).thenAnswer((_) async {
-          return;
-        });
-
-        final Future<void> speechFuture = cubit.generateSpeech('Test');
-
-        expect(cubit.state.isPlaying, isFalse);
-
-        await speechFuture;
-
-        expect(cubit.state.isPlaying, isTrue);
-      });
+      blocTest<TalkingCubit, TalkingState>(
+        'generating state does not play audio',
+        build: () {
+          when(
+            () => mockRepository.generateSpeech(any()),
+          ).thenAnswer((_) async {});
+          return cubit;
+        },
+        act: (c) => c.generateSpeech('Test'),
+        expect: () => [
+          const TalkingState.generating(),
+          const TalkingState.speaking(),
+        ],
+        verify: (_) {
+          expect(cubit.state.isPlaying, isTrue);
+        },
+      );
     });
 
     group('Interruption', () {
       late MockTalkingRepository mockRepository;
-      late MockTtsPlaybackService mockPlaybackService;
       late InterruptionService interruptionService;
       late TalkingCubit cubit;
 
       setUp(() {
         mockRepository = MockTalkingRepository();
-        mockPlaybackService = MockTtsPlaybackService(mockRepository);
         interruptionService = InterruptionService();
 
-        when(() => mockRepository.stop()).thenAnswer((_) async {
-          return;
-        });
+        when(() => mockRepository.stop()).thenAnswer((_) async {});
       });
 
       tearDown(() {
@@ -450,26 +442,25 @@ void main() {
         interruptionService.dispose();
       });
 
-      test('should stop animation and TTS when interrupted', () async {
-        // Arrange
-        cubit = TalkingCubit(
-          mockRepository,
-          interruptionService,
-          mockPlaybackService,
-        );
-
-        // Start speaking
-        cubit.setSpeakingState();
-        expect(cubit.state, isA<SpeakingState>());
-
-        // Act
-        await interruptionService.interrupt();
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-
-        // Assert
-        expect(cubit.state, isA<IdleState>());
-        verify(() => mockRepository.stop()).called(1);
-      });
+      blocTest<TalkingCubit, TalkingState>(
+        'emits idle when interrupted while speaking',
+        build: () {
+          cubit = TalkingCubit(mockRepository, interruptionService);
+          return cubit;
+        },
+        act: (c) async {
+          c.setSpeakingState();
+          await interruptionService.interrupt();
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        },
+        expect: () => [
+          const TalkingState.speaking(),
+          const TalkingState.idle(),
+        ],
+        verify: (_) {
+          verify(() => mockRepository.stop()).called(1);
+        },
+      );
     });
   });
 }

@@ -2,18 +2,16 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
-import 'package:yofardev_ai/core/models/task_llm_config.dart';
-import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
-import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
-import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
@@ -22,331 +20,20 @@ import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.da
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
+import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
-import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
-import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 
-class MockChatRepository implements ChatRepository {
-  @override
-  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
-    return const Right<Exception, Chat>(Chat(id: 'test-id'));
-  }
+// Mocktail mock classes
+class MockChatRepository extends Mock implements ChatRepository {}
 
-  @override
-  Future<Either<Exception, Chat>> getCurrentChat() async {
-    return const Right<Exception, Chat>(Chat(id: 'test-id'));
-  }
+class MockSettingsRepository extends Mock implements SettingsRepository {}
 
-  @override
-  Future<Either<Exception, Chat?>> getChat(String id) async {
-    return const Right<Exception, Chat?>(Chat(id: 'test-id'));
-  }
+class MockAvatarAnimationService extends Mock
+    implements AvatarAnimationService {}
 
-  @override
-  Future<Either<Exception, void>> updateChat({
-    required String id,
-    required Chat updatedChat,
-  }) async {
-    return const Right<Exception, void>(null);
-  }
+class MockAvatarRepository extends Mock implements AvatarRepository {}
 
-  @override
-  Future<Either<Exception, void>> deleteChat(String id) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, List<Chat>>> getChatsList() async {
-    return const Right<Exception, List<Chat>>(<Chat>[]);
-  }
-
-  @override
-  Future<Either<Exception, void>> setCurrentChatId(String chatId) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
-    Chat chat,
-    String userMessage, {
-    bool functionCallingEnabled = true,
-  }) async {
-    return Right<Exception, List<ChatEntry>>(<ChatEntry>[
-      ChatEntry(
-        id: 'test',
-        entryType: EntryType.yofardev,
-        body: 'response',
-        timestamp: DateTime.now(),
-      ),
-    ]);
-  }
-
-  @override
-  Future<Either<Exception, void>> updateAvatar(
-    String chatId,
-    Avatar avatar,
-  ) async {
-    return const Right<Exception, void>(null);
-  }
-}
-
-/// Mock repository that allows setting a custom chat for testing
-class MockChatRepositoryWithCustomChat implements ChatRepository {
-  Chat testChat = const Chat(id: 'test-id');
-
-  @override
-  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
-    return Right<Exception, Chat>(testChat);
-  }
-
-  @override
-  Future<Either<Exception, Chat>> getCurrentChat() async {
-    return Right<Exception, Chat>(testChat);
-  }
-
-  @override
-  Future<Either<Exception, Chat?>> getChat(String id) async {
-    return Right<Exception, Chat?>(testChat);
-  }
-
-  @override
-  Future<Either<Exception, void>> updateChat({
-    required String id,
-    required Chat updatedChat,
-  }) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> deleteChat(String id) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, List<Chat>>> getChatsList() async {
-    return const Right<Exception, List<Chat>>(<Chat>[]);
-  }
-
-  @override
-  Future<Either<Exception, void>> setCurrentChatId(String chatId) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
-    Chat chat,
-    String userMessage, {
-    bool functionCallingEnabled = true,
-  }) async {
-    return Right<Exception, List<ChatEntry>>(<ChatEntry>[
-      ChatEntry(
-        id: 'test',
-        entryType: EntryType.yofardev,
-        body: 'response',
-        timestamp: DateTime.now(),
-      ),
-    ]);
-  }
-
-  @override
-  Future<Either<Exception, void>> updateAvatar(
-    String chatId,
-    Avatar avatar,
-  ) async {
-    return const Right<Exception, void>(null);
-  }
-}
-
-/// Mock AvatarAnimationService to track method calls
-class MockAvatarAnimationService implements AvatarAnimationService {
-  bool playNewChatCalled = false;
-  String? chatIdPassed;
-  AvatarConfig? configPassed;
-  final StreamController<AvatarAnimation> _controller =
-      StreamController<AvatarAnimation>.broadcast();
-
-  @override
-  Stream<AvatarAnimation> get animations => _controller.stream;
-
-  @override
-  void dispose() {
-    _controller.close();
-  }
-
-  @override
-  Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {
-    playNewChatCalled = true;
-    chatIdPassed = chatId;
-    configPassed = config;
-  }
-}
-
-/// Factory to create ChatTitleService with real LlmService for testing
-ChatTitleService createMockChatTitleService() {
-  // Create a real LlmService instance (it's a singleton, but we can use it in tests)
-  final LlmService llmService = LlmService();
-  return ChatTitleService(
-    chatRepository: MockChatRepository(),
-    llmService: llmService,
-  );
-}
-
-class MockSettingsRepository implements SettingsRepository {
-  String _language = 'en';
-
-  @override
-  Future<Either<Exception, String?>> getLanguage() async {
-    return Right<Exception, String?>(_language);
-  }
-
-  @override
-  Future<Either<Exception, void>> setLanguage(String language) async {
-    _language = language;
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, bool>> getSoundEffects() async {
-    return const Right<Exception, bool>(true);
-  }
-
-  @override
-  Future<Either<Exception, void>> setSoundEffects(bool soundEffects) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, String?>> getUsername() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setUsername(String username) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, String>> getSystemPrompt() async {
-    return const Right<Exception, String>('');
-  }
-
-  @override
-  Future<Either<Exception, void>> setSystemPrompt(String prompt) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, ChatPersona>> getPersona() async {
-    return const Right<Exception, ChatPersona>(ChatPersona.assistant);
-  }
-
-  @override
-  Future<Either<Exception, void>> setPersona(ChatPersona persona) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
-    return const Right<Exception, TaskLlmConfig>(TaskLlmConfig());
-  }
-
-  @override
-  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
-    return const Right<Exception, void>(null);
-  }
-
-  // Function Calling Configuration - Google Search
-  @override
-  Future<Either<Exception, String?>> getGoogleSearchKey() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, String?>> getGoogleSearchEngineId() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setGoogleSearchEngineId(String id) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
-    return const Right<Exception, bool>(false);
-  }
-
-  @override
-  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
-  }
-
-  // Function Calling Configuration - OpenWeather
-  @override
-  Future<Either<Exception, String?>> getOpenWeatherKey() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
-    return const Right<Exception, bool>(false);
-  }
-
-  @override
-  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
-  }
-
-  // Function Calling Configuration - New York Times
-  @override
-  Future<Either<Exception, String?>> getNewYorkTimesKey() async {
-    return const Right<Exception, String?>(null);
-  }
-
-  @override
-  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
-    return const Right<Exception, void>(null);
-  }
-
-  @override
-  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
-    return const Right<Exception, bool>(false);
-  }
-
-  @override
-  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
-  }
-}
-
-class MockTtsDatasource extends TtsDatasource {
-  @override
-  Future<String> textToFrenchMaleVoice({
-    required String text,
-    required String language,
-    required VoiceEffect voiceEffect,
-  }) async {
-    // Return a dummy path for testing
-    return '/tmp/test.wav';
-  }
-}
-
-class MockAvatarRepository implements AvatarRepository {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class MockInterruptionService implements InterruptionService {
+class MockInterruptionService extends Mock implements InterruptionService {
   final StreamController<void> _controller = StreamController<void>.broadcast();
 
   @override
@@ -365,92 +52,176 @@ class MockInterruptionService implements InterruptionService {
   void dispose() => _controller.close();
 }
 
-class MockPromptDatasource implements PromptDatasource {
-  @override
-  Future<String> getSystemPrompt() async => 'Test system prompt';
-}
+class MockPromptDatasource extends Mock implements PromptDatasource {}
 
-class MockStreamProcessorService implements StreamProcessorService {
-  @override
-  Stream<SentenceChunk> processStream(
-    Stream<LlmStreamChunk> llmChunks, {
-    bool expectJson = true,
-  }) async* {
-    // Empty implementation for testing
-  }
-}
+class MockStreamProcessorService extends Mock
+    implements StreamProcessorService {}
 
-class MockChatEntryService implements ChatEntryService {
-  @override
-  Future<ChatEntry> createUserEntry({
-    required String prompt,
-    required Avatar avatar,
-    String? attachedImage,
-  }) async {
-    return ChatEntry(
-      id: 'test-id',
-      entryType: EntryType.user,
-      body: prompt,
-      timestamp: DateTime.now(),
-      attachedImage: attachedImage,
-    );
-  }
-}
+class MockChatEntryService extends Mock implements ChatEntryService {}
 
-class MockTtsQueueService implements TtsQueueService {
-  @override
-  bool get isProcessing => false;
+class MockTtsDatasource extends Mock implements TtsDatasource {}
 
-  @override
-  List<TtsQueueItem> get queue => <TtsQueueItem>[];
+/// Factory to create ChatTitleService with real LlmService for testing
+ChatTitleService createMockChatTitleService() {
+  final LlmService llmService = LlmService();
+  final mockChatRepository = MockChatRepository();
 
-  @override
-  bool get hasItems => false;
+  // Stub default methods
+  when(
+    () => mockChatRepository.getCurrentChat(),
+  ).thenAnswer((_) async => const Right<Exception, Chat>(Chat(id: 'test-id')));
+  when(
+    () => mockChatRepository.getChat(any()),
+  ).thenAnswer((_) async => const Right<Exception, Chat?>(Chat(id: 'test-id')));
+  when(
+    () => mockChatRepository.updateChat(
+      id: any(named: 'id'),
+      updatedChat: any(named: 'updatedChat'),
+    ),
+  ).thenAnswer((_) async => const Right<Exception, void>(null));
+  when(
+    () => mockChatRepository.getChatsList(),
+  ).thenAnswer((_) async => const Right<Exception, List<Chat>>(<Chat>[]));
+  when(
+    () => mockChatRepository.setCurrentChatId(any()),
+  ).thenAnswer((_) async => const Right<Exception, void>(null));
+  when(
+    () => mockChatRepository.updateAvatar(any(), any()),
+  ).thenAnswer((_) async => const Right<Exception, void>(null));
+  when(
+    () => mockChatRepository.deleteChat(any()),
+  ).thenAnswer((_) async => const Right<Exception, void>(null));
 
-  @override
-  bool get isPlaying => false;
-
-  @override
-  Future<void> enqueue({
-    required String text,
-    required String language,
-    required VoiceEffect voiceEffect,
-    TtsPriority priority = TtsPriority.normal,
-  }) async {}
-
-  @override
-  void clear() {}
-
-  @override
-  void dispose() {}
-
-  @override
-  void setPaused(bool paused) {}
-
-  @override
-  Stream<String> get audioStream => const Stream<String>.empty();
+  return ChatTitleService(
+    chatRepository: mockChatRepository,
+    llmService: llmService,
+  );
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(const Chat());
+    registerFallbackValue(<Chat>[]);
+    registerFallbackValue(<ChatEntry>[]);
+    registerFallbackValue(const AvatarConfig());
+    registerFallbackValue(const Avatar());
+    registerFallbackValue(true);
+    registerFallbackValue(0);
+    registerFallbackValue(const Stream<LlmStreamChunk>.empty());
+  });
+
   group('ChatCubit', () {
     late ChatCubit chatsCubit;
+    late MockChatRepository mockChatRepository;
 
     setUp(() {
       // Create mock services
-      final MockAvatarAnimationService mockAnimationService =
-          MockAvatarAnimationService();
+      mockChatRepository = MockChatRepository();
+      final mockSettingsRepository = MockSettingsRepository();
+      final mockInterruptionService = MockInterruptionService();
+      final mockPromptDatasource = MockPromptDatasource();
+      final mockStreamProcessorService = MockStreamProcessorService();
+      final mockChatEntryService = MockChatEntryService();
 
-      // Create mock services
-      final MockInterruptionService mockInterruptionService =
-          MockInterruptionService();
-      final MockPromptDatasource mockPromptDatasource = MockPromptDatasource();
-      final MockStreamProcessorService mockStreamProcessorService =
-          MockStreamProcessorService();
-      final MockChatEntryService mockChatEntryService = MockChatEntryService();
+      // Create a minimal AvatarCubit for the animation service
+      final AvatarCubit mockAvatarCubit = AvatarCubit(MockAvatarRepository());
+      final AvatarAnimationService mockAnimationService =
+          AvatarAnimationService(mockAvatarCubit);
+
+      // Stub mockChatRepository default methods
+      when(
+        () =>
+            mockChatRepository.createNewChat(language: any(named: 'language')),
+      ).thenAnswer(
+        (_) async => const Right<Exception, Chat>(Chat(id: 'test-id')),
+      );
+      when(() => mockChatRepository.getCurrentChat()).thenAnswer(
+        (_) async => const Right<Exception, Chat>(Chat(id: 'test-id')),
+      );
+      when(() => mockChatRepository.getChat(any())).thenAnswer(
+        (_) async => const Right<Exception, Chat?>(Chat(id: 'test-id')),
+      );
+      when(
+        () => mockChatRepository.updateChat(
+          id: any(named: 'id'),
+          updatedChat: any(named: 'updatedChat'),
+        ),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockChatRepository.getChatsList(),
+      ).thenAnswer((_) async => const Right<Exception, List<Chat>>(<Chat>[]));
+      when(
+        () => mockChatRepository.setCurrentChatId(any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockChatRepository.updateAvatar(any(), any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockChatRepository.deleteChat(any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockChatRepository.askYofardevAi(
+          any(),
+          any(),
+          functionCallingEnabled: any(named: 'functionCallingEnabled'),
+        ),
+      ).thenAnswer(
+        (_) async => Right<Exception, List<ChatEntry>>(<ChatEntry>[
+          ChatEntry(
+            id: 'test',
+            entryType: EntryType.yofardev,
+            body: 'response',
+            timestamp: DateTime.now(),
+          ),
+        ]),
+      );
+
+      // Stub mockSettingsRepository default methods
+      when(
+        () => mockSettingsRepository.getLanguage(),
+      ).thenAnswer((_) async => const Right<Exception, String?>('fr'));
+      when(
+        () => mockSettingsRepository.getSoundEffects(),
+      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      when(
+        () => mockSettingsRepository.setLanguage(any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockSettingsRepository.setSoundEffects(any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+
+      // Stub PromptDatasource
+      when(
+        () => mockPromptDatasource.getSystemPrompt(),
+      ).thenAnswer((_) async => 'Test system prompt');
+
+      // Stub StreamProcessorService
+      when(
+        () => mockStreamProcessorService.processStream(
+          any(),
+          expectJson: any(named: 'expectJson'),
+        ),
+      ).thenAnswer((_) async* {});
+
+      // Stub ChatEntryService
+      when(
+        () => mockChatEntryService.createUserEntry(
+          prompt: any(named: 'prompt'),
+          avatar: any(named: 'avatar'),
+          attachedImage: any(named: 'attachedImage'),
+        ),
+      ).thenAnswer(
+        (_) async => ChatEntry(
+          id: 'test-id',
+          entryType: EntryType.user,
+          body: 'prompt',
+          timestamp: DateTime.now(),
+        ),
+      );
 
       chatsCubit = ChatCubit(
-        chatRepository: MockChatRepository(),
-        settingsRepository: MockSettingsRepository(),
+        chatRepository: mockChatRepository,
+        settingsRepository: mockSettingsRepository,
         avatarAnimationService: mockAnimationService,
         chatTitleService: createMockChatTitleService(),
         llmService: LlmService(),
@@ -458,7 +229,6 @@ void main() {
         promptDatasource: mockPromptDatasource,
         interruptionService: mockInterruptionService,
         chatEntryService: mockChatEntryService,
-        ttsQueueManager: MockTtsQueueService(),
       );
     });
 
@@ -476,7 +246,7 @@ void main() {
       expect(chatsCubit.state.currentLanguage, 'fr');
       expect(chatsCubit.state.audioPathsWaitingSentences, isEmpty);
       expect(chatsCubit.state.initializing, isTrue);
-      expect(chatsCubit.state.functionCallingEnabled, isTrue);
+      expect(chatsCubit.state.functionCallingEnabled, isFalse);
     });
 
     test('init should set initializing to false', () async {
@@ -629,7 +399,7 @@ void main() {
         expect(state.currentLanguage, 'fr');
         expect(state.audioPathsWaitingSentences, isEmpty);
         expect(state.initializing, isTrue);
-        expect(state.functionCallingEnabled, isTrue);
+        expect(state.functionCallingEnabled, isFalse);
       });
 
       test('should copy with new values correctly', () {
@@ -763,7 +533,7 @@ void main() {
 
     group('ChatStatus enum', () {
       test('should have all required values', () {
-        expect(ChatStatus.values.length, 9);
+        expect(ChatStatus.values.length, 10);
         expect(ChatStatus.values, contains(ChatStatus.initial));
         expect(ChatStatus.values, contains(ChatStatus.loading));
         expect(ChatStatus.values, contains(ChatStatus.updating));
@@ -772,6 +542,7 @@ void main() {
         expect(ChatStatus.values, contains(ChatStatus.success));
         expect(ChatStatus.values, contains(ChatStatus.streaming));
         expect(ChatStatus.values, contains(ChatStatus.error));
+        expect(ChatStatus.values, contains(ChatStatus.interrupted));
         expect(ChatStatus.values, contains(ChatStatus.creatingChat));
       });
     });
@@ -892,7 +663,7 @@ void main() {
       expect(chat.id, '');
       expect(chat.entries, isEmpty);
       expect(chat.avatar, const Avatar());
-      expect(chat.language, 'en');
+      expect(chat.language, 'fr');
       expect(chat.systemPrompt, '');
       expect(chat.persona, ChatPersona.normal);
     });
@@ -1007,13 +778,13 @@ void main() {
   });
 
   group('createNewChat with animation', () {
-    late MockChatRepositoryWithCustomChat mockChatRepository;
+    late MockChatRepository mockChatRepository;
     late MockAvatarAnimationService mockAvatarAnimationService;
     late ChatCubit cubit;
 
     setUp(() {
       mockAvatarAnimationService = MockAvatarAnimationService();
-      mockChatRepository = MockChatRepositoryWithCustomChat();
+      mockChatRepository = MockChatRepository();
 
       // Create mock services
       final MockInterruptionService mockInterruptionService =
@@ -1022,6 +793,59 @@ void main() {
       final MockStreamProcessorService mockStreamProcessorService =
           MockStreamProcessorService();
       final MockChatEntryService mockChatEntryService = MockChatEntryService();
+
+      // Stub mockChatRepository methods
+      when(
+        () =>
+            mockChatRepository.createNewChat(language: any(named: 'language')),
+      ).thenAnswer(
+        (_) async => const Right<Exception, Chat>(Chat(id: 'test-id')),
+      );
+      when(() => mockChatRepository.getCurrentChat()).thenAnswer(
+        (_) async => const Right<Exception, Chat>(Chat(id: 'test-id')),
+      );
+      when(() => mockChatRepository.getChat(any())).thenAnswer(
+        (_) async => const Right<Exception, Chat?>(Chat(id: 'test-id')),
+      );
+      when(
+        () => mockChatRepository.updateChat(
+          id: any(named: 'id'),
+          updatedChat: any(named: 'updatedChat'),
+        ),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockChatRepository.deleteChat(any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockChatRepository.getChatsList(),
+      ).thenAnswer((_) async => const Right<Exception, List<Chat>>(<Chat>[]));
+      when(
+        () => mockChatRepository.setCurrentChatId(any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockChatRepository.updateAvatar(any(), any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      when(
+        () => mockChatRepository.askYofardevAi(
+          any(),
+          any(),
+          functionCallingEnabled: any(named: 'functionCallingEnabled'),
+        ),
+      ).thenAnswer(
+        (_) async => Right<Exception, List<ChatEntry>>(<ChatEntry>[
+          ChatEntry(
+            id: 'test',
+            entryType: EntryType.yofardev,
+            body: 'response',
+            timestamp: DateTime.now(),
+          ),
+        ]),
+      );
+
+      // Stub mockAvatarAnimationService
+      when(
+        () => mockAvatarAnimationService.playNewChatSequence(any(), any()),
+      ).thenAnswer((_) async {});
 
       cubit = ChatCubit(
         chatRepository: mockChatRepository,
@@ -1043,14 +867,19 @@ void main() {
     test('should trigger animation sequence after chat creation', () async {
       // Arrange
       const Chat testChat = Chat(id: 'test-chat-123');
-      mockChatRepository.testChat = testChat;
+      when(
+        () =>
+            mockChatRepository.createNewChat(language: any(named: 'language')),
+      ).thenAnswer((_) async => const Right<Exception, Chat>(testChat));
 
       // Act
       await cubit.createNewChat();
 
       // Assert
-      expect(mockAvatarAnimationService.playNewChatCalled, isTrue);
-      expect(mockAvatarAnimationService.chatIdPassed, testChat.id);
+      verify(
+        () =>
+            mockAvatarAnimationService.playNewChatSequence(testChat.id, any()),
+      ).called(1);
     });
 
     test(
@@ -1061,17 +890,28 @@ void main() {
           id: 'test-chat-456',
           avatar: Avatar(background: AvatarBackgrounds.beach),
         );
-        mockChatRepository.testChat = testChat;
+        when(
+          () => mockChatRepository.createNewChat(
+            language: any(named: 'language'),
+          ),
+        ).thenAnswer((_) async => const Right<Exception, Chat>(testChat));
 
         // Act
         await cubit.createNewChat();
 
         // Assert
-        expect(mockAvatarAnimationService.playNewChatCalled, isTrue);
-        expect(
-          mockAvatarAnimationService.configPassed?.background,
-          AvatarBackgrounds.beach,
-        );
+        verify(
+          () => mockAvatarAnimationService.playNewChatSequence(
+            testChat.id,
+            any(
+              that: isA<AvatarConfig>().having(
+                (c) => c.background,
+                'background',
+                AvatarBackgrounds.beach,
+              ),
+            ),
+          ),
+        ).called(1);
       },
     );
   });

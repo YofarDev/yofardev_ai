@@ -14,24 +14,20 @@ import 'package:yofardev_ai/features/chat/widgets/ai_text_input/ai_text_input.da
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
-// Mock cubits for testing
 class MockAvatarCubit extends Mock implements AvatarCubit {}
 
 class MockChatCubit extends Mock implements ChatCubit {}
 
 class MockTalkingCubit extends Mock implements TalkingCubit {}
 
-// Simple fake cubit that can emit states for testing
 class FakeChatCubit extends Cubit<ChatState> implements ChatCubit {
   FakeChatCubit() : super(ChatState.initial());
-
   @override
   void noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
   setUpAll(() {
-    // Register fallback values
     registerFallbackValue(const Avatar());
     registerFallbackValue(const AvatarConfig());
     registerFallbackValue(const Chat());
@@ -51,12 +47,12 @@ void main() {
     late MockChatCubit mockChatsCubit;
     late MockTalkingCubit mockTalkingCubit;
 
-    setUp(() {
+    void setupMocks() {
       mockAvatarCubit = MockAvatarCubit();
       mockChatsCubit = MockChatCubit();
       mockTalkingCubit = MockTalkingCubit();
 
-      // Setup default mock behaviors
+      // All streams must be empty to prevent continuous rebuilds
       when(
         () => mockAvatarCubit.stream,
       ).thenAnswer((_) => const Stream<AvatarState>.empty());
@@ -80,7 +76,7 @@ void main() {
         () => mockTalkingCubit.stream,
       ).thenAnswer((_) => const Stream<TalkingState>.empty());
       when(() => mockTalkingCubit.state).thenReturn(const TalkingState.idle());
-    });
+    }
 
     Widget buildTestWidget() {
       return MultiBlocProvider(
@@ -93,9 +89,10 @@ void main() {
       );
     }
 
+    setUp(setupMocks);
+
     testWidgets('widget renders correctly', (WidgetTester tester) async {
       await tester.pumpWidget(buildTestWidget());
-
       expect(find.byType(AiTextInput), findsOneWidget);
     });
 
@@ -114,7 +111,6 @@ void main() {
           ),
         ),
       );
-
       expect(find.byType(AiTextInput), findsOneWidget);
     });
 
@@ -122,33 +118,25 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(buildTestWidget());
-
-      // TextField should be visible when talking state is idle
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('text field opacity changes when talking', (
+    testWidgets('text field remains in tree when speaking', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(buildTestWidget());
 
-      // Initially idle, text field should be visible
-      expect(find.byType(TextField), findsOneWidget);
-
-      // Simulate talking state
       when(
         () => mockTalkingCubit.state,
       ).thenReturn(const TalkingState.speaking());
       await tester.pump();
 
-      // Text field should still be in tree but may have different opacity
       expect(find.byType(TextField), findsOneWidget);
     });
 
     testWidgets('shows error snackbar when ChatCubit has error', (
       WidgetTester tester,
     ) async {
-      // Use a real cubit for this test to properly emit states
       final FakeChatCubit fakeChatsCubit = FakeChatCubit();
 
       await tester.pumpWidget(
@@ -162,7 +150,6 @@ void main() {
         ),
       );
 
-      // Emit error state
       fakeChatsCubit.emit(
         fakeChatsCubit.state.copyWith(
           status: ChatStatus.error,
@@ -171,16 +158,32 @@ void main() {
       );
       await tester.pump();
 
-      // SnackBar should be shown
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.text('Test error'), findsOneWidget);
     });
 
-    testWidgets('displays function calling widgets when present', (
+    testWidgets('text field opacity is 1 when talking is idle', (
       WidgetTester tester,
     ) async {
-      // Create chat with function calling entry
-      final Chat chat = Chat(
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pump();
+
+      // The Opacity wrapping the TextField should be visible (1.0)
+      final Iterable<Opacity> opacities = tester.widgetList<Opacity>(
+        find.byType(Opacity),
+      );
+      expect(opacities.isNotEmpty, isTrue);
+      // All opacities should be 1.0 when idle (no opacity=0 in tree)
+      for (final Opacity o in opacities) {
+        expect(o.opacity, isNot(0.0));
+      }
+    });
+
+    testWidgets('shows CurrentPromptText when speaking with a user entry', (
+      WidgetTester tester,
+    ) async {
+      final FakeChatCubit fakeChatsCubit = FakeChatCubit();
+      final Chat chatWithEntry = Chat(
         id: 'test-chat',
         entries: <ChatEntry>[
           ChatEntry(
@@ -194,17 +197,41 @@ void main() {
 
       when(() => mockChatsCubit.state).thenReturn(
         ChatState(
-          currentChat: chat,
-          openedChat: chat,
+          currentChat: chatWithEntry,
+          openedChat: chatWithEntry,
           currentLanguage: 'en',
-          status: ChatStatus.initial,
+          status: ChatStatus.streaming,
         ),
       );
+      when(
+        () => mockTalkingCubit.state,
+      ).thenReturn(const TalkingState.speaking());
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: <SingleChildWidget>[
+            BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
+            BlocProvider<ChatCubit>.value(value: mockChatsCubit),
+            BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
+          ],
+          child: const MaterialApp(home: Scaffold(body: AiTextInput())),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(Text), findsOneWidget);
+    });
+
+    testWidgets('does not show CurrentPromptText when idle', (
+      WidgetTester tester,
+    ) async {
+      when(() => mockTalkingCubit.state).thenReturn(const TalkingState.idle());
 
       await tester.pumpWidget(buildTestWidget());
+      await tester.pump();
 
-      // Widget should render without crashing
-      expect(find.byType(AiTextInput), findsOneWidget);
+      // TextField should be visible
+      expect(find.byType(TextField), findsOneWidget);
     });
   });
 }

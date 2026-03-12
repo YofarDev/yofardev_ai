@@ -139,6 +139,7 @@ class HomeBlocListeners extends StatelessWidget {
   }
 
   void _onCurrentChatChanged(BuildContext context, ChatState state) {
+    context.read<TalkingCubit>().stop();
     context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
   }
 

@@ -9,6 +9,14 @@ import 'package:http/http.dart' as http;
 import '../../utils/logger.dart';
 
 class GoogleSearchService {
+  static http.Client _client = http.Client();
+
+  /// Set a test HTTP client (for use in tests).
+  static void setTestClient(http.Client client) => _client = client;
+
+  /// Reset to default HTTP client.
+  static void resetTestClient() => _client = http.Client();
+
   static Future<List<Map<String, dynamic>>> searchGoogle(
     String query,
     String apiKey,
@@ -20,7 +28,7 @@ class GoogleSearchService {
       }
       const String baseUrl = 'https://www.googleapis.com/customsearch/v1';
       final Uri uri = Uri.parse('$baseUrl?q=$query&key=$apiKey&cx=$engineId');
-      final http.Response response = await http.get(uri);
+      final http.Response response = await _client.get(uri);
       if (response.statusCode == 200) {
         final dynamic json = jsonDecode(response.body);
         final List<Map<String, dynamic>> results = <Map<String, dynamic>>[];

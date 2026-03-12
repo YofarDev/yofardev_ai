@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
@@ -10,10 +11,12 @@ import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_state.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
-import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
-import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
+
+// ──────────────────────────────────────────────────────────────
+// Mocks
+// ──────────────────────────────────────────────────────────────
 
 class MockTtsQueueService extends Mock implements TtsQueueService {
   final StreamController<String> _audioController =
@@ -71,43 +74,6 @@ class MockAudioPlayerService extends Mock implements AudioPlayerService {
   }
 }
 
-class MockTalkingRepository extends Mock implements TalkingRepository {}
-
-class MockTtsPlaybackService implements TtsPlaybackService {
-  final TalkingRepository repository;
-
-  MockTtsPlaybackService(this.repository);
-
-  @override
-  void setPlaybackStateCallback(void Function(bool p1)? callback) {}
-
-  @override
-  void startAmplitudeAnimation(
-    String audioPath,
-    List<int> amplitudes,
-    Duration audioDuration, {
-    required void Function(int mouthState) onMouthStateUpdate,
-    required void Function() onComplete,
-  }) {
-    onComplete();
-  }
-
-  @override
-  Future<void> stop() async {}
-
-  @override
-  void cancelAnimation() {}
-
-  @override
-  void notifySpeakingStarted() {}
-
-  @override
-  void notifySpeakingStopped() {}
-
-  @override
-  void dispose() {}
-}
-
 class MockTalkingCubit extends Mock implements TalkingCubit {
   final List<TalkingState> states = <TalkingState>[];
 
@@ -121,6 +87,10 @@ class MockTalkingCubit extends Mock implements TalkingCubit {
   void clearStates() => states.clear();
 }
 
+// ──────────────────────────────────────────────────────────────
+// Tests
+// ──────────────────────────────────────────────────────────────
+
 void main() {
   setUpAll(() {
     registerFallbackValue('/test/path.wav');
@@ -131,35 +101,31 @@ void main() {
     late MockTtsQueueService mockTtsManager;
     late MockAudioAmplitudeService mockAmplitudeService;
     late MockAudioPlayerService mockPlayerService;
-    late MockTtsPlaybackService mockPlaybackService;
-    late MockTalkingRepository mockTalkingRepository;
+    late MockTalkingCubit mockTalkingCubit;
     late InterruptionService interruptionService;
 
     setUp(() {
       mockTtsManager = MockTtsQueueService();
       mockAmplitudeService = MockAudioAmplitudeService();
       mockPlayerService = MockAudioPlayerService();
-      mockTalkingRepository = MockTalkingRepository();
-      mockPlaybackService = MockTtsPlaybackService(mockTalkingRepository);
+      mockTalkingCubit = MockTalkingCubit();
       interruptionService = InterruptionService();
 
-      // Setup default mock behaviors
       when(
         () => mockAmplitudeService.extractAmplitudes(any()),
       ).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
       when(
         () => mockPlayerService.play(any()),
       ).thenAnswer((_) async => const Duration(milliseconds: 2000));
-      when(
-        () => mockPlayerService.stop(),
-      ).thenAnswer((_) async {}); // Add stub for stop()
+      when(() => mockPlayerService.stop()).thenAnswer((_) async {});
+      when(() => mockTalkingCubit.stop()).thenAnswer((_) async {});
 
       cubit = ChatTtsCubit(
         ttsQueueManager: mockTtsManager,
         audioAmplitudeService: mockAmplitudeService,
         audioPlayerService: mockPlayerService,
         interruptionService: interruptionService,
-        ttsPlaybackService: mockPlaybackService,
+        talkingCubit: mockTalkingCubit,
       );
     });
 
@@ -168,102 +134,97 @@ void main() {
       interruptionService.dispose();
     });
 
+    // ── State tests ──────────────────────────────────────────
+
     test('initial state should have default values', () {
       expect(cubit.state.isInitialized, isFalse);
       expect(cubit.state.audioPathsWaitingSentences, isEmpty);
     });
 
+    // ── initialize ───────────────────────────────────────────
+
     group('initialize', () {
-      test('should set isInitialized to true', () async {
-        expect(cubit.state.isInitialized, isFalse);
+      blocTest<ChatTtsCubit, ChatTtsState>(
+        'sets isInitialized to true',
+        build: () => cubit,
+        act: (c) => c.initialize('en'),
+        expect: () => [predicate<ChatTtsState>((s) => s.isInitialized == true)],
+      );
 
-        await cubit.initialize('en');
-
-        expect(cubit.state.isInitialized, isTrue);
-      });
-
-      test('should set isInitialized to true even on error', () async {
-        expect(cubit.state.isInitialized, isFalse);
-
-        await cubit.initialize('fr');
-
-        expect(cubit.state.isInitialized, isTrue);
-      });
+      blocTest<ChatTtsCubit, ChatTtsState>(
+        'sets isInitialized to true even on error',
+        build: () => cubit,
+        act: (c) => c.initialize('fr'),
+        expect: () => [predicate<ChatTtsState>((s) => s.isInitialized == true)],
+      );
     });
+
+    // ── clearAudioPaths ──────────────────────────────────────
 
     group('clearAudioPaths', () {
-      test('should clear audioPathsWaitingSentences', () {
-        cubit.emit(
-          cubit.state.copyWith(
-            audioPathsWaitingSentences: <Map<String, dynamic>>[
-              <String, dynamic>{'audioPath': 'path1', 'amplitudes': <int>[]},
-              <String, dynamic>{'audioPath': 'path2', 'amplitudes': <int>[]},
-            ],
-          ),
-        );
-
-        expect(cubit.state.audioPathsWaitingSentences.length, 2);
-
-        cubit.clearAudioPaths();
-
-        expect(cubit.state.audioPathsWaitingSentences, isEmpty);
-      });
+      blocTest<ChatTtsCubit, ChatTtsState>(
+        'clears audioPathsWaitingSentences',
+        build: () => cubit,
+        seed: () => const ChatTtsState(
+          audioPathsWaitingSentences: [
+            {'audioPath': 'path1', 'amplitudes': <int>[]},
+          ],
+        ),
+        act: (c) => c.clearAudioPaths(),
+        expect: () => [const ChatTtsState(audioPathsWaitingSentences: [])],
+      );
     });
+
+    // ── removeWaitingSentence ─────────────────────────────────
 
     group('removeWaitingSentence', () {
-      test('should remove sentence by audioPath', () {
-        cubit.emit(
-          cubit.state.copyWith(
-            audioPathsWaitingSentences: <Map<String, dynamic>>[
-              <String, dynamic>{
-                'audioPath': 'path1',
-                'amplitudes': <int>[1, 2, 3],
-              },
-              <String, dynamic>{
-                'audioPath': 'path2',
-                'amplitudes': <int>[4, 5, 6],
-              },
-              <String, dynamic>{
-                'audioPath': 'path3',
-                'amplitudes': <int>[7, 8, 9],
-              },
-            ],
-          ),
-        );
+      blocTest<ChatTtsCubit, ChatTtsState>(
+        'removes sentence by audioPath',
+        build: () => cubit,
+        seed: () => const ChatTtsState(
+          audioPathsWaitingSentences: [
+            {
+              'audioPath': 'path1',
+              'amplitudes': <int>[1, 2, 3],
+            },
+            {
+              'audioPath': 'path2',
+              'amplitudes': <int>[4, 5, 6],
+            },
+            {
+              'audioPath': 'path3',
+              'amplitudes': <int>[7, 8, 9],
+            },
+          ],
+        ),
+        act: (c) => c.removeWaitingSentence('path2'),
+        expect: () => [
+          predicate<ChatTtsState>((s) {
+            return s.audioPathsWaitingSentences.length == 2 &&
+                !s.audioPathsWaitingSentences.any(
+                  (item) => item['audioPath'] == 'path2',
+                ) &&
+                s.audioPathsWaitingSentences.any(
+                  (item) => item['audioPath'] == 'path1',
+                );
+          }),
+        ],
+      );
 
-        cubit.removeWaitingSentence('path2');
-
-        expect(cubit.state.audioPathsWaitingSentences.length, 2);
-        expect(
-          cubit.state.audioPathsWaitingSentences.any(
-            (Map<String, dynamic> item) => item['audioPath'] == 'path2',
-          ),
-          isFalse,
-        );
-        expect(
-          cubit.state.audioPathsWaitingSentences.any(
-            (Map<String, dynamic> item) => item['audioPath'] == 'path1',
-          ),
-          isTrue,
-        );
-      });
-
-      test('should do nothing when audioPath not found', () {
-        cubit.emit(
-          cubit.state.copyWith(
-            audioPathsWaitingSentences: <Map<String, dynamic>>[
-              <String, dynamic>{'audioPath': 'path1', 'amplitudes': <int>[]},
-            ],
-          ),
-        );
-
-        final int beforeLength = cubit.state.audioPathsWaitingSentences.length;
-
-        cubit.removeWaitingSentence('nonexistent');
-
-        expect(cubit.state.audioPathsWaitingSentences.length, beforeLength);
-      });
+      blocTest<ChatTtsCubit, ChatTtsState>(
+        'does nothing when audioPath not found',
+        build: () => cubit,
+        seed: () => const ChatTtsState(
+          audioPathsWaitingSentences: [
+            {'audioPath': 'path1', 'amplitudes': <int>[]},
+          ],
+        ),
+        act: (c) => c.removeWaitingSentence('nonexistent'),
+        expect: () => [],
+      );
     });
+
+    // ── shuffleWaitingSentences ───────────────────────────────
 
     group('shuffleWaitingSentences', () {
       test('should shuffle audio paths waiting sentences', () {
@@ -301,27 +262,23 @@ void main() {
       });
 
       test('should handle empty list', () {
+        expect(cubit.state.audioPathsWaitingSentences, isEmpty);
+
         cubit.shuffleWaitingSentences();
 
         expect(cubit.state.audioPathsWaitingSentences, isEmpty);
       });
     });
 
+    // ── TTS audio stream handling ────────────────────────────
+
     group('TTS audio stream handling', () {
       test('should add audio path with amplitudes when stream emits', () async {
         const String testAudioPath = '/path/to/audio.wav';
 
-        // The default stubs from setUp() are already configured
-        // when(() => mockAmplitudeService.extractAmplitudes(any())).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
-        // when(() => mockPlayerService.play(any())).thenAnswer((_) async => const Duration(milliseconds: 2000));
-
-        // Emit audio path from mock manager
         mockTtsManager.emitAudioPath(testAudioPath);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-        // Wait for async operations
-        await Future<dynamic>.delayed(const Duration(milliseconds: 100));
-
-        // Verify state was updated
         expect(cubit.state.audioPathsWaitingSentences.length, 1);
         expect(
           cubit.state.audioPathsWaitingSentences.first['audioPath'],
@@ -329,7 +286,7 @@ void main() {
         );
         expect(
           cubit.state.audioPathsWaitingSentences.first['amplitudes'],
-          <int>[10, 20, 30, 40, 50], // Use the default stub values
+          <int>[10, 20, 30, 40, 50],
         );
       });
 
@@ -340,13 +297,9 @@ void main() {
           () => mockAmplitudeService.extractAmplitudes(testAudioPath),
         ).thenThrow(Exception('Audio file not found'));
 
-        // Emit audio path
         mockTtsManager.emitAudioPath(testAudioPath);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-        // Wait for async operations
-        await Future<dynamic>.delayed(const Duration(milliseconds: 100));
-
-        // Should not crash, state should remain consistent
         expect(cubit.state.audioPathsWaitingSentences, isEmpty);
       });
 
@@ -356,10 +309,9 @@ void main() {
 
         mockTtsManager.emitAudioPath(firstAudioPath);
         mockTtsManager.emitAudioPath(secondAudioPath);
+        await Future<void>.delayed(const Duration(milliseconds: 80));
 
-        await Future<dynamic>.delayed(const Duration(milliseconds: 80));
-
-        // Second item should wait while first audio is still playing.
+        // Second item waits while first is playing.
         expect(cubit.state.audioPathsWaitingSentences.length, 1);
         expect(
           cubit.state.audioPathsWaitingSentences.first['audioPath'],
@@ -367,7 +319,7 @@ void main() {
         );
 
         mockPlayerService.emitPlaybackComplete();
-        await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+        await Future<void>.delayed(const Duration(milliseconds: 80));
 
         expect(cubit.state.audioPathsWaitingSentences.length, 2);
         expect(
@@ -383,13 +335,13 @@ void main() {
           const String secondAudioPath = '/path/to/audio-2.wav';
 
           mockTtsManager.emitAudioPath(firstAudioPath);
-          await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+          await Future<void>.delayed(const Duration(milliseconds: 80));
 
           mockPlayerService.emitPlaybackComplete();
-          await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+          await Future<void>.delayed(const Duration(milliseconds: 80));
 
           mockTtsManager.emitAudioPath(secondAudioPath);
-          await Future<dynamic>.delayed(const Duration(milliseconds: 80));
+          await Future<void>.delayed(const Duration(milliseconds: 80));
 
           verifyInOrder(<dynamic Function()>[
             () => mockPlayerService.play(firstAudioPath),
@@ -398,6 +350,8 @@ void main() {
         },
       );
     });
+
+    // ── ChatTtsState ─────────────────────────────────────────
 
     group('ChatTtsState', () {
       test('should create with default values', () {
@@ -453,7 +407,7 @@ void main() {
         );
 
         expect(newState.audioPathsWaitingSentences.length, 2);
-        expect(state.audioPathsWaitingSentences, isEmpty); // Original unchanged
+        expect(state.audioPathsWaitingSentences, isEmpty);
       });
     });
   });
