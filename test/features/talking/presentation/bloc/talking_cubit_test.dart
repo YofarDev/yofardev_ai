@@ -1,28 +1,64 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
+import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
 class MockTalkingRepository extends Mock implements TalkingRepository {}
+
+class MockTtsPlaybackService implements TtsPlaybackService {
+  final StreamController<PlaybackEvent> _controller =
+      StreamController<PlaybackEvent>.broadcast();
+
+  @override
+  Stream<PlaybackEvent> get events => _controller.stream;
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  void startAmplitudeAnimation(
+    String audioPath,
+    List<int> amplitudes,
+    Duration audioDuration,
+  ) {}
+
+  @override
+  void cancelAnimation() {}
+
+  @override
+  void dispose() {
+    _controller.close();
+  }
+}
 
 void main() {
   group('TalkingCubit', () {
     late TalkingCubit cubit;
     late MockTalkingRepository mockRepository;
     late InterruptionService interruptionService;
+    late MockTtsPlaybackService mockPlaybackService;
 
     setUp(() {
       mockRepository = MockTalkingRepository();
       interruptionService = InterruptionService();
-      cubit = TalkingCubit(mockRepository, interruptionService);
+      mockPlaybackService = MockTtsPlaybackService();
+      cubit = TalkingCubit(
+        mockRepository,
+        interruptionService,
+        mockPlaybackService,
+      );
     });
 
     tearDown(() {
       cubit.close();
       interruptionService.dispose();
+      mockPlaybackService.dispose();
     });
 
     test('initial state should be idle', () {
@@ -428,11 +464,13 @@ void main() {
     group('Interruption', () {
       late MockTalkingRepository mockRepository;
       late InterruptionService interruptionService;
+      late MockTtsPlaybackService mockPlaybackService;
       late TalkingCubit cubit;
 
       setUp(() {
         mockRepository = MockTalkingRepository();
         interruptionService = InterruptionService();
+        mockPlaybackService = MockTtsPlaybackService();
 
         when(() => mockRepository.stop()).thenAnswer((_) async {});
       });
@@ -440,12 +478,17 @@ void main() {
       tearDown(() {
         cubit.close();
         interruptionService.dispose();
+        mockPlaybackService.dispose();
       });
 
       blocTest<TalkingCubit, TalkingState>(
         'emits idle when interrupted while speaking',
         build: () {
-          cubit = TalkingCubit(mockRepository, interruptionService);
+          cubit = TalkingCubit(
+            mockRepository,
+            interruptionService,
+            mockPlaybackService,
+          );
           return cubit;
         },
         act: (c) async {

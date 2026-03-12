@@ -145,21 +145,12 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         tag: 'ChatTtsCubit',
       );
 
-      // 4. Trigger the animation using the playback service
+      // 4. Trigger the animation via the playback service
+      // TalkingCubit handles mouth state updates via the service's event stream
       _ttsPlaybackService.startAmplitudeAnimation(
         audioPath,
         amplitudes,
         audioDuration,
-        onMouthStateUpdate: (_) {
-          // Mouth state updates are handled by TalkingCubit
-          // which also uses the TtsPlaybackService
-        },
-        onComplete: () {
-          // Animation completion callback
-          // Note: We don't stop here because audio might still be playing
-          // The real stop happens when onPlaybackComplete fires
-          AppLogger.debug('Animation completed', tag: 'ChatTtsCubit');
-        },
       );
 
       // 5. Wait for playback completion OR interruption before processing next.

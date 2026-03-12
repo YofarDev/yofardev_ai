@@ -8,19 +8,13 @@ import '../../domain/repositories/talking_repository.dart';
 import '../../domain/services/tts_playback_service.dart';
 import 'talking_state.dart';
 
-/// Cubit responsible for managing TTS playback state
-///
-/// This cubit abstracts the TTS service through a repository,
-/// allowing for proper separation of concerns and testability.
 class TalkingCubit extends Cubit<TalkingState> {
   TalkingCubit(
     this._repository,
     this._interruptionService,
     this._playbackService,
   ) : super(const TalkingState.idle()) {
-    // Register callback for playback state changes
-    _playbackService.setPlaybackStateCallback(_onPlaybackStateChanged);
-    // Listen to interruptions
+    _eventSubscription = _playbackService.events.listen(_onPlaybackEvent);
     _interruptionSubscription = _interruptionService.interruptionStream.listen((
       _,
     ) async {
@@ -28,31 +22,32 @@ class TalkingCubit extends Cubit<TalkingState> {
     });
   }
 
-  /// Handle playback state changes from the service.
-  ///
-  /// When TTS playback starts or stops, we need to update our state accordingly.
-  void _onPlaybackStateChanged(bool isSpeaking) {
-    if (isSpeaking) {
-      emit(const TalkingState.speaking());
-    } else {
-      emit(const TalkingState.idle());
-    }
-  }
-
   final TalkingRepository _repository;
   final InterruptionService _interruptionService;
   final TtsPlaybackService _playbackService;
   StreamSubscription<void>? _interruptionSubscription;
+  StreamSubscription<PlaybackEvent>? _eventSubscription;
 
-  /// Initialize the cubit
+  void _onPlaybackEvent(PlaybackEvent event) {
+    if (isClosed) return;
+    switch (event) {
+      case SpeakingStartedEvent():
+        emit(const TalkingState.speaking());
+      case SpeakingStoppedEvent():
+        emit(const TalkingState.idle());
+      case MouthStateUpdatedEvent(:final int mouthState):
+        _updateMouthStateFromService(mouthState);
+      case AnimationCompletedEvent():
+        break;
+    }
+  }
+
   Future<void> init() async {
-    // Initialization logic if needed
     emit(const TalkingState.idle());
   }
 
-  /// Play a waiting sentence - does NOT show thinking animation
   Future<void> playWaitingSentence(String sentence) async {
-    emit(const TalkingState.waiting()); // NOT loading!
+    emit(const TalkingState.waiting());
 
     try {
       await _repository.playWaitingSentence(sentence);
@@ -61,12 +56,10 @@ class TalkingCubit extends Cubit<TalkingState> {
     }
   }
 
-  /// Generate TTS for speech - SHOWS thinking animation
   Future<void> generateSpeech(String text) async {
-    emit(const TalkingState.generating()); // Separate state!
+    emit(const TalkingState.generating());
 
     try {
-      // Generate TTS...
       await _repository.generateSpeech(text);
       emit(const TalkingState.speaking());
     } catch (e) {
@@ -74,8 +67,6 @@ class TalkingCubit extends Cubit<TalkingState> {
     }
   }
 
-  /// Set speaking state directly without generating TTS
-  /// Used when TTS is already generated externally
   void setSpeakingState() {
     AppLogger.debug(
       'TalkingCubit: setSpeakingState called, current state: ${state.runtimeType}, about to emit SpeakingState',
@@ -88,17 +79,15 @@ class TalkingCubit extends Cubit<TalkingState> {
     );
   }
 
-  /// Stop all TTS playback
   Future<void> stop() async {
-    await _playbackService.stop();
+    _playbackService.cancelAnimation();
+    await _repository.stop();
     emit(const TalkingState.idle());
   }
 
-  /// Update mouth state based on amplitude for lip-sync animation
   void updateMouthState(int amplitude) {
     final MouthState newMouthState = _getMouthState(amplitude);
 
-    // Only emit if state actually changed and we're in a speaking state
     final TalkingState currentState = state;
     if (currentState.mouthState != newMouthState) {
       currentState.when(
@@ -115,12 +104,6 @@ class TalkingCubit extends Cubit<TalkingState> {
     }
   }
 
-  /// Start amplitude-based animation for lip-sync
-  ///
-  /// [audioPath] - Path to the audio file being played
-  /// [amplitudes] - List of amplitude values extracted from audio
-  /// [audioDuration] - Actual duration of the audio file
-  /// [onComplete] - Callback when animation completes
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,
@@ -132,32 +115,26 @@ class TalkingCubit extends Cubit<TalkingState> {
       tag: 'TalkingCubit',
     );
 
+    _animationCompleter = Completer<void>();
+    _animationCompleter!.future.then((_) {
+      AppLogger.debug('TalkingCubit: Animation completed', tag: 'TalkingCubit');
+      if (!isClosed) {
+        onComplete();
+      }
+    });
+
     _playbackService.startAmplitudeAnimation(
       audioPath,
       amplitudes,
       audioDuration,
-      onMouthStateUpdate: (int mouthState) {
-        if (!isClosed) {
-          _updateMouthStateFromService(mouthState);
-        }
-      },
-      onComplete: () {
-        AppLogger.debug(
-          'TalkingCubit: Animation completed',
-          tag: 'TalkingCubit',
-        );
-        if (!isClosed) {
-          onComplete();
-        }
-      },
     );
   }
 
-  /// Update mouth state based on service callback (0-4 scale)
+  Completer<void>? _animationCompleter;
+
   void _updateMouthStateFromService(int mouthState) {
     final MouthState newMouthState = _mapMouthStateFromInt(mouthState);
 
-    // Only emit if state actually changed and we're in a speaking state
     final TalkingState currentState = state;
     if (currentState.mouthState != newMouthState) {
       currentState.when(
@@ -172,12 +149,10 @@ class TalkingCubit extends Cubit<TalkingState> {
     }
   }
 
-  /// Map integer mouth state (0-4) to MouthState enum
   MouthState _mapMouthStateFromInt(int value) {
     return MouthState.values[value];
   }
 
-  /// Map amplitude value to mouth state
   MouthState _getMouthState(int amplitude) {
     if (amplitude == 0) return MouthState.closed;
     if (amplitude <= 5) return MouthState.slightly;
@@ -186,7 +161,6 @@ class TalkingCubit extends Cubit<TalkingState> {
     return MouthState.wide;
   }
 
-  /// Legacy methods for backward compatibility (will be removed in future refactor)
   @Deprecated('Use generateSpeech() instead')
   void setLoadingStatus(bool isLoading) {
     if (isLoading) {
@@ -202,13 +176,12 @@ class TalkingCubit extends Cubit<TalkingState> {
     bool soundEffectsEnabled = false,
     bool updateStatus = true,
   }) async {
-    // Note: Parameters are deprecated and ignored
-    // This method now properly awaits the stop operation
     await stop();
   }
 
   @override
   Future<void> close() async {
+    await _eventSubscription?.cancel();
     await _interruptionSubscription?.cancel();
     await super.close();
   }

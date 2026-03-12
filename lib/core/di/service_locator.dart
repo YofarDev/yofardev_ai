@@ -176,7 +176,7 @@ Future<void> setupServiceLocator() async {
     () =>
         AvatarCubit(getIt<AvatarRepository>(), getIt<AvatarAnimationService>()),
   );
-  // TalkingCubit manages TTS playback state
+  // TalkingCubit - singleton so all UI consumers share the same TTS state
   getIt.registerLazySingleton<TalkingCubit>(
     () => TalkingCubit(
       getIt<TalkingRepository>(),

@@ -11,8 +11,7 @@ import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_state.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
+import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 
 // ──────────────────────────────────────────────────────────────
 // Mocks
@@ -74,17 +73,30 @@ class MockAudioPlayerService extends Mock implements AudioPlayerService {
   }
 }
 
-class MockTalkingCubit extends Mock implements TalkingCubit {
-  final List<TalkingState> states = <TalkingState>[];
+class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
+  final StreamController<PlaybackEvent> _controller =
+      StreamController<PlaybackEvent>.broadcast();
 
   @override
-  TalkingState get state =>
-      states.isEmpty ? const TalkingState.idle() : states.last;
+  Stream<PlaybackEvent> get events => _controller.stream;
 
   @override
-  void emit(TalkingState state) => states.add(state);
+  Future<void> stop() async {}
 
-  void clearStates() => states.clear();
+  @override
+  void startAmplitudeAnimation(
+    String audioPath,
+    List<int> amplitudes,
+    Duration audioDuration,
+  ) {}
+
+  @override
+  void cancelAnimation() {}
+
+  @override
+  void dispose() {
+    _controller.close();
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -101,14 +113,14 @@ void main() {
     late MockTtsQueueService mockTtsManager;
     late MockAudioAmplitudeService mockAmplitudeService;
     late MockAudioPlayerService mockPlayerService;
-    late MockTalkingCubit mockTalkingCubit;
+    late MockTtsPlaybackService mockTtsPlaybackService;
     late InterruptionService interruptionService;
 
     setUp(() {
       mockTtsManager = MockTtsQueueService();
       mockAmplitudeService = MockAudioAmplitudeService();
       mockPlayerService = MockAudioPlayerService();
-      mockTalkingCubit = MockTalkingCubit();
+      mockTtsPlaybackService = MockTtsPlaybackService();
       interruptionService = InterruptionService();
 
       when(
@@ -118,20 +130,21 @@ void main() {
         () => mockPlayerService.play(any()),
       ).thenAnswer((_) async => const Duration(milliseconds: 2000));
       when(() => mockPlayerService.stop()).thenAnswer((_) async {});
-      when(() => mockTalkingCubit.stop()).thenAnswer((_) async {});
+      when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {});
 
       cubit = ChatTtsCubit(
         ttsQueueManager: mockTtsManager,
         audioAmplitudeService: mockAmplitudeService,
         audioPlayerService: mockPlayerService,
         interruptionService: interruptionService,
-        talkingCubit: mockTalkingCubit,
+        ttsPlaybackService: mockTtsPlaybackService,
       );
     });
 
     tearDown(() {
       cubit.close();
       interruptionService.dispose();
+      mockTtsPlaybackService.dispose();
     });
 
     // ── State tests ──────────────────────────────────────────

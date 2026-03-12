@@ -237,33 +237,25 @@ class MockStreamProcessorService extends Mock
 class MockTalkingRepository extends Mock implements TalkingRepository {}
 
 class MockTtsPlaybackService implements TtsPlaybackService {
-  final TalkingRepository repository;
-
-  MockTtsPlaybackService(this.repository);
+  @override
+  final StreamController<PlaybackEvent> _controller =
+      StreamController<PlaybackEvent>.broadcast();
 
   @override
-  void setPlaybackStateCallback(void Function(bool p1)? callback) {}
+  Stream<PlaybackEvent> get events => _controller.stream;
 
   @override
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,
-    Duration audioDuration, {
-    required void Function(int mouthState) onMouthStateUpdate,
-    required void Function() onComplete,
-  }) {}
+    Duration audioDuration,
+  ) {}
 
   @override
   Future<void> stop() async {}
 
   @override
   void cancelAnimation() {}
-
-  @override
-  void notifySpeakingStarted() {}
-
-  @override
-  void notifySpeakingStopped() {}
 
   @override
   void dispose() {}
@@ -350,7 +342,7 @@ void main() {
     setUp(() {
       interruptionService = InterruptionService();
       talkingRepository = MockTalkingRepository();
-      playbackService = MockTtsPlaybackService(talkingRepository);
+      playbackService = MockTtsPlaybackService();
       when(() => talkingRepository.stop()).thenAnswer((_) async {});
       when(
         () => talkingRepository.generateSpeech(any()),
