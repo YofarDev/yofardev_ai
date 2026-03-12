@@ -439,7 +439,8 @@ class ChatCubit extends Cubit<ChatState> {
     );
 
     chat = chat.copyWith(entries: <ChatEntry>[...chat.entries, streamingEntry]);
-    onChatUpdated?.call(chat);
+    // Don't call onChatUpdated here - the streaming entry has an empty body
+    // It will be updated with actual content and then onChatUpdated will be called
 
     try {
       await _llmService.init();
@@ -503,7 +504,41 @@ class ChatCubit extends Cubit<ChatState> {
           chat = chat.copyWith(entries: finalEntries);
           onChatUpdated?.call(chat);
 
-          emit(state.copyWith(streamingContent: ''));
+          // Also update the corresponding chat in chatsList to keep it in sync
+          final List<Chat> updatedChatsList = state.chatsList
+              .map((Chat c) => c.id == chat.id ? chat : c)
+              .toList();
+
+          final ChatEntry lastEntry = chat.entries.last;
+          AppLogger.debug(
+            'Emitting state after function calls: entries.length=${chat.entries.length}, lastEntry.type=${lastEntry.entryType}, lastEntry.body="${lastEntry.body.length > 100 ? lastEntry.body.substring(0, 100) : lastEntry.body}"',
+            tag: 'ChatCubit',
+          );
+
+          // Enqueue the final response for TTS if not in text-only mode
+          if (!onlyText) {
+            final String messageText = lastEntry.getMessage();
+            if (messageText.isNotEmpty) {
+              _ttsQueueManager?.enqueue(
+                text: messageText,
+                language: language,
+                voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+              );
+              AppLogger.debug(
+                'Enqueued TTS for function calling response: "${messageText.length > 50 ? messageText.substring(0, 50) : messageText}..."',
+                tag: 'ChatCubit',
+              );
+            }
+          }
+
+          emit(
+            state.copyWith(
+              streamingContent: '',
+              currentChat: chat,
+              openedChat: chat,
+              chatsList: updatedChatsList,
+            ),
+          );
           await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 
           // Generate title if needed
@@ -601,7 +636,19 @@ class ChatCubit extends Cubit<ChatState> {
       }
 
       if (_streamInterrupted || _interruptionService.isInterrupted) {
-        emit(state.copyWith(streamingContent: ''));
+        // Also update the corresponding chat in chatsList to keep it in sync
+        final List<Chat> updatedChatsList = state.chatsList
+            .map((Chat c) => c.id == chat.id ? chat : c)
+            .toList();
+
+        emit(
+          state.copyWith(
+            streamingContent: '',
+            currentChat: chat,
+            openedChat: chat,
+            chatsList: updatedChatsList,
+          ),
+        );
         await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
         return;
       }
@@ -616,7 +663,19 @@ class ChatCubit extends Cubit<ChatState> {
       chat = chat.copyWith(entries: finalEntries);
       onChatUpdated?.call(chat);
 
-      emit(state.copyWith(streamingContent: ''));
+      // Also update the corresponding chat in chatsList to keep it in sync
+      final List<Chat> updatedChatsList = state.chatsList
+          .map((Chat c) => c.id == chat.id ? chat : c)
+          .toList();
+
+      emit(
+        state.copyWith(
+          streamingContent: '',
+          currentChat: chat,
+          openedChat: chat,
+          chatsList: updatedChatsList,
+        ),
+      );
 
       await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 

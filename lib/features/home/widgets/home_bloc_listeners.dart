@@ -52,9 +52,26 @@ class HomeBlocListeners extends StatelessWidget {
           listener: _onCurrentChatChanged,
         ),
         BlocListener<ChatCubit, ChatState>(
-          listenWhen: (ChatState previous, ChatState current) =>
-              current.currentChat.entries.length >
-              previous.currentChat.entries.length,
+          listenWhen: (ChatState previous, ChatState current) {
+            // Trigger when the entry count increases
+            if (current.currentChat.entries.length >
+                previous.currentChat.entries.length) {
+              return true;
+            }
+
+            // Also trigger when the last entry's body has changed
+            if (current.currentChat.entries.isNotEmpty &&
+                previous.currentChat.entries.isNotEmpty) {
+              final ChatEntry currentLast = current.currentChat.entries.last;
+              final ChatEntry previousLast = previous.currentChat.entries.last;
+
+              // Check if it's the same entry (by id) but with different body
+              return currentLast.id == previousLast.id &&
+                  currentLast.body != previousLast.body;
+            }
+
+            return false;
+          },
           listener: _onNewChatEntry,
         ),
         BlocListener<DemoCubit, DemoState>(
@@ -192,7 +209,7 @@ class HomeBlocListeners extends StatelessWidget {
     final ChatEntry lastEntry = entries.last;
 
     AppLogger.debug(
-      '_onNewChatEntry called: entryType=${lastEntry.entryType}, entries.length=${entries.length}',
+      '_onNewChatEntry called: entryType=${lastEntry.entryType}, entries.length=${entries.length}, body="${lastEntry.body.length > 100 ? lastEntry.body.substring(0, 100) : lastEntry.body}"',
       tag: 'HomeBlocListeners',
     );
 

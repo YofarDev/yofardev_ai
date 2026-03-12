@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/widgets/ai_text_input/ai_text_input.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
@@ -182,7 +182,6 @@ void main() {
     testWidgets('shows CurrentPromptText when speaking with a user entry', (
       WidgetTester tester,
     ) async {
-      final FakeChatCubit fakeChatsCubit = FakeChatCubit();
       final Chat chatWithEntry = Chat(
         id: 'test-chat',
         entries: <ChatEntry>[

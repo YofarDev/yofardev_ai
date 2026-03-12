@@ -28,13 +28,26 @@ class TalkingCubit extends Cubit<TalkingState> {
   StreamSubscription<void>? _interruptionSubscription;
   StreamSubscription<PlaybackEvent>? _eventSubscription;
 
+  /// Cooldown timer to prevent flickering between sentences during streaming
+  Timer? _idleCooldownTimer;
+
   void _onPlaybackEvent(PlaybackEvent event) {
     if (isClosed) return;
     switch (event) {
       case SpeakingStartedEvent():
+        // Cancel any pending idle transition when new audio starts
+        _idleCooldownTimer?.cancel();
+        _idleCooldownTimer = null;
         emit(const TalkingState.speaking());
       case SpeakingStoppedEvent():
-        emit(const TalkingState.idle());
+        // Don't immediately go to idle - start cooldown instead
+        // This prevents UI flickering between sentences during streaming
+        _idleCooldownTimer?.cancel();
+        _idleCooldownTimer = Timer(const Duration(milliseconds: 100), () {
+          if (!isClosed) {
+            emit(const TalkingState.idle());
+          }
+        });
       case MouthStateUpdatedEvent(:final int mouthState):
         _updateMouthStateFromService(mouthState);
       case AnimationCompletedEvent():
@@ -80,6 +93,8 @@ class TalkingCubit extends Cubit<TalkingState> {
   }
 
   Future<void> stop() async {
+    _idleCooldownTimer?.cancel();
+    _idleCooldownTimer = null;
     _playbackService.cancelAnimation();
     await _repository.stop();
     emit(const TalkingState.idle());
@@ -181,6 +196,7 @@ class TalkingCubit extends Cubit<TalkingState> {
 
   @override
   Future<void> close() async {
+    _idleCooldownTimer?.cancel();
     await _eventSubscription?.cancel();
     await _interruptionSubscription?.cancel();
     await super.close();

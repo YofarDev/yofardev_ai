@@ -160,15 +160,19 @@ void main() {
       blocTest<ChatTtsCubit, ChatTtsState>(
         'sets isInitialized to true',
         build: () => cubit,
-        act: (c) => c.initialize('en'),
-        expect: () => [predicate<ChatTtsState>((s) => s.isInitialized == true)],
+        act: (ChatTtsCubit c) => c.initialize('en'),
+        expect: () => <Matcher>[
+          predicate<ChatTtsState>((ChatTtsState s) => s.isInitialized == true),
+        ],
       );
 
       blocTest<ChatTtsCubit, ChatTtsState>(
         'sets isInitialized to true even on error',
         build: () => cubit,
-        act: (c) => c.initialize('fr'),
-        expect: () => [predicate<ChatTtsState>((s) => s.isInitialized == true)],
+        act: (ChatTtsCubit c) => c.initialize('fr'),
+        expect: () => <Matcher>[
+          predicate<ChatTtsState>((ChatTtsState s) => s.isInitialized == true),
+        ],
       );
     });
 
@@ -179,12 +183,16 @@ void main() {
         'clears audioPathsWaitingSentences',
         build: () => cubit,
         seed: () => const ChatTtsState(
-          audioPathsWaitingSentences: [
-            {'audioPath': 'path1', 'amplitudes': <int>[]},
+          audioPathsWaitingSentences: <Map<String, dynamic>>[
+            <String, dynamic>{'audioPath': 'path1', 'amplitudes': <int>[]},
           ],
         ),
-        act: (c) => c.clearAudioPaths(),
-        expect: () => [const ChatTtsState(audioPathsWaitingSentences: [])],
+        act: (ChatTtsCubit c) => c.clearAudioPaths(),
+        expect: () => <ChatTtsState>[
+          const ChatTtsState(
+            audioPathsWaitingSentences: <Map<String, dynamic>>[],
+          ),
+        ],
       );
     });
 
@@ -195,30 +203,30 @@ void main() {
         'removes sentence by audioPath',
         build: () => cubit,
         seed: () => const ChatTtsState(
-          audioPathsWaitingSentences: [
-            {
+          audioPathsWaitingSentences: <Map<String, dynamic>>[
+            <String, dynamic>{
               'audioPath': 'path1',
               'amplitudes': <int>[1, 2, 3],
             },
-            {
+            <String, dynamic>{
               'audioPath': 'path2',
               'amplitudes': <int>[4, 5, 6],
             },
-            {
+            <String, dynamic>{
               'audioPath': 'path3',
               'amplitudes': <int>[7, 8, 9],
             },
           ],
         ),
-        act: (c) => c.removeWaitingSentence('path2'),
-        expect: () => [
-          predicate<ChatTtsState>((s) {
+        act: (ChatTtsCubit c) => c.removeWaitingSentence('path2'),
+        expect: () => <Matcher>[
+          predicate<ChatTtsState>((ChatTtsState s) {
             return s.audioPathsWaitingSentences.length == 2 &&
                 !s.audioPathsWaitingSentences.any(
-                  (item) => item['audioPath'] == 'path2',
+                  (Map<String, dynamic> item) => item['audioPath'] == 'path2',
                 ) &&
                 s.audioPathsWaitingSentences.any(
-                  (item) => item['audioPath'] == 'path1',
+                  (Map<String, dynamic> item) => item['audioPath'] == 'path1',
                 );
           }),
         ],
@@ -228,12 +236,12 @@ void main() {
         'does nothing when audioPath not found',
         build: () => cubit,
         seed: () => const ChatTtsState(
-          audioPathsWaitingSentences: [
-            {'audioPath': 'path1', 'amplitudes': <int>[]},
+          audioPathsWaitingSentences: <Map<String, dynamic>>[
+            <String, dynamic>{'audioPath': 'path1', 'amplitudes': <int>[]},
           ],
         ),
-        act: (c) => c.removeWaitingSentence('nonexistent'),
-        expect: () => [],
+        act: (ChatTtsCubit c) => c.removeWaitingSentence('nonexistent'),
+        expect: () => <dynamic>[],
       );
     });
 

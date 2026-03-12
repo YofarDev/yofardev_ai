@@ -237,7 +237,6 @@ class MockStreamProcessorService extends Mock
 class MockTalkingRepository extends Mock implements TalkingRepository {}
 
 class MockTtsPlaybackService implements TtsPlaybackService {
-  @override
   final StreamController<PlaybackEvent> _controller =
       StreamController<PlaybackEvent>.broadcast();
 
@@ -268,10 +267,8 @@ class MockTtsQueueService implements TtsQueueService {
   @override
   List<TtsQueueItem> get queue => <TtsQueueItem>[];
 
-  @override
   bool get hasItems => false;
 
-  @override
   bool get isPlaying => false;
 
   @override
@@ -296,7 +293,6 @@ class MockTtsQueueService implements TtsQueueService {
 }
 
 class MockAvatarAnimationService implements AvatarAnimationService {
-  @override
   final StreamController<AvatarAnimation> _controller =
       StreamController<AvatarAnimation>.broadcast();
 

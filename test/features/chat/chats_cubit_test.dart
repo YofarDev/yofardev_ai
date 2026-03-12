@@ -11,16 +11,14 @@ import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/repositories/avatar_repository.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/settings/domain/repositories/settings_repository.dart';
-import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 
 // Mocktail mock classes
@@ -64,7 +62,7 @@ class MockTtsDatasource extends Mock implements TtsDatasource {}
 /// Factory to create ChatTitleService with real LlmService for testing
 ChatTitleService createMockChatTitleService() {
   final LlmService llmService = LlmService();
-  final mockChatRepository = MockChatRepository();
+  final MockChatRepository mockChatRepository = MockChatRepository();
 
   // Stub default methods
   when(
@@ -117,16 +115,18 @@ void main() {
     setUp(() {
       // Create mock services
       mockChatRepository = MockChatRepository();
-      final mockSettingsRepository = MockSettingsRepository();
-      final mockInterruptionService = MockInterruptionService();
-      final mockPromptDatasource = MockPromptDatasource();
-      final mockStreamProcessorService = MockStreamProcessorService();
-      final mockChatEntryService = MockChatEntryService();
+      final MockSettingsRepository mockSettingsRepository =
+          MockSettingsRepository();
+      final MockInterruptionService mockInterruptionService =
+          MockInterruptionService();
+      final MockPromptDatasource mockPromptDatasource = MockPromptDatasource();
+      final MockStreamProcessorService mockStreamProcessorService =
+          MockStreamProcessorService();
+      final MockChatEntryService mockChatEntryService = MockChatEntryService();
 
-      // Create a minimal AvatarCubit for the animation service
-      final AvatarCubit mockAvatarCubit = AvatarCubit(MockAvatarRepository());
+      // Create a minimal AvatarAnimationService
       final AvatarAnimationService mockAnimationService =
-          AvatarAnimationService(mockAvatarCubit);
+          MockAvatarAnimationService();
 
       // Stub mockChatRepository default methods
       when(
@@ -905,7 +905,7 @@ void main() {
             testChat.id,
             any(
               that: isA<AvatarConfig>().having(
-                (c) => c.background,
+                (AvatarConfig c) => c.background,
                 'background',
                 AvatarBackgrounds.beach,
               ),

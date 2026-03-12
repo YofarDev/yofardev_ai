@@ -103,10 +103,8 @@ class MockTtsQueueService implements TtsQueueService {
   @override
   List<TtsQueueItem> get queue => <TtsQueueItem>[];
 
-  @override
   bool get hasItems => false;
 
-  @override
   bool get isPlaying => false;
 
   @override

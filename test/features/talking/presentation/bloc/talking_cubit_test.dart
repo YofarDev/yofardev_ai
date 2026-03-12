@@ -89,8 +89,8 @@ void main() {
           ).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) => c.playWaitingSentence('Test sentence'),
-        expect: () => [const TalkingState.waiting()],
+        act: (TalkingCubit c) => c.playWaitingSentence('Test sentence'),
+        expect: () => <TalkingState>[const TalkingState.waiting()],
         verify: (_) {
           verify(
             () => mockRepository.playWaitingSentence('Test sentence'),
@@ -106,11 +106,11 @@ void main() {
           ).thenThrow(Exception('TTS failed'));
           return cubit;
         },
-        act: (c) => c.playWaitingSentence('Test'),
-        expect: () => [
+        act: (TalkingCubit c) => c.playWaitingSentence('Test'),
+        expect: () => <Object>[
           const TalkingState.waiting(),
           predicate<TalkingState>(
-            (state) => state.maybeWhen(
+            (TalkingState state) => state.maybeWhen(
               error: (String msg, _) => msg.contains('TTS failed'),
               orElse: () => false,
             ),
@@ -128,8 +128,8 @@ void main() {
           ).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) => c.generateSpeech('Hello'),
-        expect: () => [
+        act: (TalkingCubit c) => c.generateSpeech('Hello'),
+        expect: () => <TalkingState>[
           const TalkingState.generating(),
           const TalkingState.speaking(),
         ],
@@ -146,11 +146,11 @@ void main() {
           ).thenThrow(Exception('TTS generation failed'));
           return cubit;
         },
-        act: (c) => c.generateSpeech('Error test'),
-        expect: () => [
+        act: (TalkingCubit c) => c.generateSpeech('Error test'),
+        expect: () => <Object>[
           const TalkingState.generating(),
           predicate<TalkingState>(
-            (state) => state.maybeWhen(
+            (TalkingState state) => state.maybeWhen(
               error: (String msg, _) => msg.contains('TTS generation failed'),
               orElse: () => false,
             ),
@@ -166,8 +166,8 @@ void main() {
           ).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) => c.generateSpeech('Test'),
-        expect: () => [
+        act: (TalkingCubit c) => c.generateSpeech('Test'),
+        expect: () => <TalkingState>[
           const TalkingState.generating(),
           const TalkingState.speaking(),
         ],
@@ -196,8 +196,8 @@ void main() {
           return cubit;
         },
         seed: () => const TalkingState.speaking(),
-        act: (c) => c.stop(),
-        expect: () => [const TalkingState.idle()],
+        act: (TalkingCubit c) => c.stop(),
+        expect: () => <TalkingState>[const TalkingState.idle()],
         verify: (_) {
           verify(() => mockRepository.stop()).called(1);
         },
@@ -220,7 +220,7 @@ void main() {
           ).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) => c.generateSpeech('Test'),
+        act: (TalkingCubit c) => c.generateSpeech('Test'),
         verify: (_) {
           expect(cubit.state.shouldShowTalking, isTrue);
         },
@@ -243,8 +243,8 @@ void main() {
           ).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) => c.playWaitingSentence('Test'),
-        expect: () => [const TalkingState.waiting()],
+        act: (TalkingCubit c) => c.playWaitingSentence('Test'),
+        expect: () => <TalkingState>[const TalkingState.waiting()],
         verify: (_) {
           expect(cubit.state.shouldShowTalking, isFalse);
         },
@@ -258,8 +258,8 @@ void main() {
           ).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) => c.playWaitingSentence('Test'),
-        expect: () => [const TalkingState.waiting()],
+        act: (TalkingCubit c) => c.playWaitingSentence('Test'),
+        expect: () => <TalkingState>[const TalkingState.waiting()],
         verify: (_) {
           expect(cubit.state.isPlaying, isTrue);
         },
@@ -278,8 +278,8 @@ void main() {
           ).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) => c.generateSpeech('Test'),
-        expect: () => [
+        act: (TalkingCubit c) => c.generateSpeech('Test'),
+        expect: () => <TalkingState>[
           const TalkingState.generating(),
           const TalkingState.speaking(),
         ],
@@ -307,11 +307,14 @@ void main() {
           when(() => mockRepository.stop()).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) async {
+        act: (TalkingCubit c) async {
           await c.playWaitingSentence('Test');
           await c.stop();
         },
-        expect: () => [const TalkingState.waiting(), const TalkingState.idle()],
+        expect: () => <TalkingState>[
+          const TalkingState.waiting(),
+          const TalkingState.idle(),
+        ],
       );
 
       blocTest<TalkingCubit, TalkingState>(
@@ -323,11 +326,11 @@ void main() {
           when(() => mockRepository.stop()).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) async {
+        act: (TalkingCubit c) async {
           await c.generateSpeech('Test');
           await c.stop();
         },
-        expect: () => [
+        expect: () => <TalkingState>[
           const TalkingState.generating(),
           const TalkingState.speaking(),
           const TalkingState.idle(),
@@ -343,15 +346,15 @@ void main() {
           when(() => mockRepository.stop()).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) async {
+        act: (TalkingCubit c) async {
           await c.generateSpeech('Test');
           await c.stop();
         },
-        expect: () => [
+        expect: () => <Object>[
           const TalkingState.generating(),
           predicate<TalkingState>(
-            (state) =>
-                state.maybeWhen(error: (_, __) => true, orElse: () => false),
+            (TalkingState state) =>
+                state.maybeWhen(error: (_, _) => true, orElse: () => false),
           ),
           const TalkingState.idle(),
         ],
@@ -413,13 +416,13 @@ void main() {
           when(() => mockRepository.stop()).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) async {
+        act: (TalkingCubit c) async {
           await c.playWaitingSentence('Test');
           await c.stop();
           c.setSpeakingState();
           await c.stop();
         },
-        expect: () => [
+        expect: () => <TalkingState>[
           const TalkingState.waiting(),
           const TalkingState.idle(),
           const TalkingState.speaking(),
@@ -434,7 +437,7 @@ void main() {
           return cubit;
         },
         seed: () => const TalkingState.idle(),
-        act: (c) => c.stop(),
+        act: (TalkingCubit c) => c.stop(),
         expect: () =>
             <TalkingState>[], // No state emitted (same state suppressed)
         verify: (_) {
@@ -450,8 +453,8 @@ void main() {
           ).thenAnswer((_) async {});
           return cubit;
         },
-        act: (c) => c.generateSpeech('Test'),
-        expect: () => [
+        act: (TalkingCubit c) => c.generateSpeech('Test'),
+        expect: () => <TalkingState>[
           const TalkingState.generating(),
           const TalkingState.speaking(),
         ],
@@ -491,12 +494,12 @@ void main() {
           );
           return cubit;
         },
-        act: (c) async {
+        act: (TalkingCubit c) async {
           c.setSpeakingState();
           await interruptionService.interrupt();
           await Future<void>.delayed(const Duration(milliseconds: 100));
         },
-        expect: () => [
+        expect: () => <TalkingState>[
           const TalkingState.speaking(),
           const TalkingState.idle(),
         ],

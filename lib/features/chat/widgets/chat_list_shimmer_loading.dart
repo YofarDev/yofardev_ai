@@ -117,13 +117,8 @@ class _ShimmerTextLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: height,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
-      ),
       child: Align(
         alignment: Alignment.centerLeft,
         child: SizedBox(
