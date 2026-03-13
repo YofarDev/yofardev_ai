@@ -1,8 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-// ignore: unused_import
 import '../../../../core/models/avatar_config.dart';
-// ignore: unused_import
 import '../../presentation/bloc/avatar_state.dart';
 
 part 'avatar_animation.freezed.dart';

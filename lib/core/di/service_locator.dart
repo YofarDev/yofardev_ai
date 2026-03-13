@@ -32,6 +32,7 @@ import '../../features/talking/domain/repositories/talking_repository.dart';
 import '../../features/talking/domain/services/tts_playback_service.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
+import '../services/app_lifecycle_service.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../repositories/locale_repository.dart';
 import '../repositories/locale_repository_impl.dart';
@@ -252,6 +253,16 @@ Future<void> setupServiceLocator() async {
     ),
   );
   getIt.registerFactory<HomeCubit>(() => HomeCubit(getIt<HomeRepository>()));
+
+  // ── App lifecycle service (depends on cubits) ──
+  getIt.registerLazySingleton<AppLifecycleService>(
+    () => AppLifecycleService(
+      homeCubit: getIt<HomeCubit>(),
+      avatarCubit: getIt<AvatarCubit>(),
+      talkingCubit: getIt<TalkingCubit>(),
+      chatCubit: getIt<ChatCubit>(),
+    ),
+  );
 }
 
 /// Switch between real and fake LLM service
