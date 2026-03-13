@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/res/app_colors.dart';
+import '../../../../../core/l10n/generated/app_localizations.dart';
 
 class TaskLlmAppBar extends StatelessWidget {
   final Animation<double> fadeAnimation;
@@ -9,6 +10,7 @@ class TaskLlmAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return AnimatedBuilder(
       animation: fadeAnimation,
       builder: (BuildContext context, Widget? child) {
@@ -39,7 +41,7 @@ class TaskLlmAppBar extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      'Task LLM Configuration',
+                      l10n.taskLlmConfig,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: AppColors.onSurface,
                         fontWeight: FontWeight.w600,

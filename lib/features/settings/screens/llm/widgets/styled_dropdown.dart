@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/models/llm_config.dart';
 import '../../../../../core/res/app_colors.dart';
+import '../../../../../core/l10n/generated/app_localizations.dart';
 
 /// Custom styled dropdown for LLM configuration selection
 class StyledDropdown extends StatelessWidget {
@@ -17,6 +18,7 @@ class StyledDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: AppColors.glassSurface.withValues(alpha: 0.5),
@@ -50,7 +52,7 @@ class StyledDropdown extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Use default LLM',
+                    l10n.useDefaultLlm,
                     style: TextStyle(
                       color: AppColors.onSurface.withValues(alpha: 0.7),
                       fontSize: 14,
@@ -126,7 +128,7 @@ class StyledDropdown extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Use default LLM',
+                      l10n.useDefaultLlm,
                       style: TextStyle(
                         color: AppColors.onSurface.withValues(alpha: 0.7),
                         fontSize: 14,

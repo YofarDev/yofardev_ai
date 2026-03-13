@@ -66,6 +66,14 @@
   "moreVoicesIOS": "For more voices, go to Settings > Accessibility > Spoken Content > Voices",
   "newChat": "New chat",
   "personaAssistant": "Assistant’s persona",
+  "personaNameAssistant": "Assistant",
+  "personaNameNormal": "Normal",
+  "personaNameDoomer": "Doomer",
+  "personaNameConservative": "Conservative",
+  "personaNamePhilosopher": "Philosopher",
+  "personaNameGeek": "Geek",
+  "personaNameCoach": "Coach",
+  "personaNamePsychologist": "Psychologist",
   "personaDescriptionAssistant": "Helpful, clear, and balanced.",
   "personaDescriptionNormal": "Neutral tone for everyday conversation.",
   "personaDescriptionDoomer": "Pessimistic and cynical takes.",
@@ -91,6 +99,7 @@
   "settings_weather": "Weather",
   "settings_weather_description": "Get current weather for any location",
   "taskLlmConfig": "Task LLM Configuration",
+  "taskLlmConfigDescription": "Configure different LLMs for assistant, title generation, and function calling",
   "taskLlmDescription": "LLM used for main chat responses",
   "taskLlmNote": "Note: If no LLM is selected for a task, the default assistant LLM will be used.",
   "titleGenerationPrompt": "Generate a concise title (max 5 words) for this chat: ",
@@ -240,5 +249,65 @@
   "noLlmConfigurationSelected": "No LLM configuration selected",
   "@noLlmConfigurationSelected": {
     "description": "Error message when no LLM config is selected"
+  },
+  "llmConfigAdd": "Add LLM Config",
+  "@llmConfigAdd": {
+    "description": "Title for adding a new LLM configuration"
+  },
+  "llmConfigEdit": "Edit LLM Config",
+  "@llmConfigEdit": {
+    "description": "Title for editing an existing LLM configuration"
+  },
+  "llmConfigLabel": "Label (e.g. My OpenAI)",
+  "@llmConfigLabel": {
+    "description": "Label for LLM configuration name field"
+  },
+  "llmConfigBaseUrl": "Base URL",
+  "@llmConfigBaseUrl": {
+    "description": "Label for base URL field"
+  },
+  "llmConfigBaseUrlHint": "https://api.openai.com/v1",
+  "@llmConfigBaseUrlHint": {
+    "description": "Hint text for base URL field"
+  },
+  "llmConfigApiKey": "API Key",
+  "@llmConfigApiKey": {
+    "description": "Label for API key field"
+  },
+  "llmConfigModelName": "Model Name (e.g. gpt-4o)",
+  "@llmConfigModelName": {
+    "description": "Label for model name field"
+  },
+  "llmConfigTemperature": "Temperature:",
+  "@llmConfigTemperature": {
+    "description": "Label for temperature slider"
+  },
+  "llmConfigResponseFormat": "JSON Response Format",
+  "@llmConfigResponseFormat": {
+    "description": "Label for JSON response format dropdown"
+  },
+  "llmConfigResponseFormatHelper": "Format for JSON mode responses",
+  "@llmConfigResponseFormatHelper": {
+    "description": "Helper text for JSON response format"
+  },
+  "llmConfigResponseFormatJsonObject": "json_object (OpenAI)",
+  "@llmConfigResponseFormatJsonObject": {
+    "description": "JSON object format option for OpenAI"
+  },
+  "llmConfigResponseFormatJsonSchema": "json_schema (Some local APIs)",
+  "@llmConfigResponseFormatJsonSchema": {
+    "description": "JSON schema format option for some local APIs"
+  },
+  "llmConfigResponseFormatText": "text (Generic)",
+  "@llmConfigResponseFormatText": {
+    "description": "Text format option"
+  },
+  "llmConfigResponseFormatNone": "none (No format, use prompt only)",
+  "@llmConfigResponseFormatNone": {
+    "description": "No format option"
+  },
+  "commonRequired": "Required",
+  "@commonRequired": {
+    "description": "Validation error message for required fields"
   }
 }

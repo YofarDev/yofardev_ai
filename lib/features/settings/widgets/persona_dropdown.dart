@@ -65,7 +65,7 @@ class PersonaDropdown extends StatelessWidget {
                           return DropdownMenuItem<ChatPersona>(
                             value: personaValue,
                             child: Text(
-                              personaValue.name.toUpperCase(),
+                              _personaName(l10n, personaValue),
                               style: const TextStyle(
                                 color: AppColors.onSurface,
                                 fontWeight: FontWeight.w500,
@@ -95,6 +95,27 @@ class PersonaDropdown extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _personaName(AppLocalizations l10n, ChatPersona persona) {
+    switch (persona) {
+      case ChatPersona.assistant:
+        return l10n.personaNameAssistant;
+      case ChatPersona.normal:
+        return l10n.personaNameNormal;
+      case ChatPersona.doomer:
+        return l10n.personaNameDoomer;
+      case ChatPersona.conservative:
+        return l10n.personaNameConservative;
+      case ChatPersona.philosopher:
+        return l10n.personaNamePhilosopher;
+      case ChatPersona.geek:
+        return l10n.personaNameGeek;
+      case ChatPersona.coach:
+        return l10n.personaNameCoach;
+      case ChatPersona.psychologist:
+        return l10n.personaNamePsychologist;
+    }
   }
 
   String _personaDescription(AppLocalizations l10n, ChatPersona persona) {

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
 
 /// Tile widget for navigating to task-specific LLM configuration
 class TaskLlmConfigTile extends StatelessWidget {
@@ -10,6 +11,7 @@ class TaskLlmConfigTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return InkWell(
       onTap: () => context.push(RouteConstants.taskLlmConfig),
       borderRadius: BorderRadius.circular(12),
@@ -43,7 +45,7 @@ class TaskLlmConfigTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Task LLM Config',
+                    l10n.taskLlmConfig,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppColors.onSurface,
                       fontWeight: FontWeight.w600,
@@ -51,7 +53,7 @@ class TaskLlmConfigTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Configure different LLMs for assistant, title generation, and function calling',
+                    l10n.taskLlmConfigDescription,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurface.withValues(alpha: 0.6),
                     ),

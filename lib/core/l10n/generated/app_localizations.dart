@@ -278,6 +278,54 @@ abstract class AppLocalizations {
   /// **'Assistant’s persona'**
   String get personaAssistant;
 
+  /// No description provided for @personaNameAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant'**
+  String get personaNameAssistant;
+
+  /// No description provided for @personaNameNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get personaNameNormal;
+
+  /// No description provided for @personaNameDoomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Doomer'**
+  String get personaNameDoomer;
+
+  /// No description provided for @personaNameConservative.
+  ///
+  /// In en, this message translates to:
+  /// **'Conservative'**
+  String get personaNameConservative;
+
+  /// No description provided for @personaNamePhilosopher.
+  ///
+  /// In en, this message translates to:
+  /// **'Philosopher'**
+  String get personaNamePhilosopher;
+
+  /// No description provided for @personaNameGeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Geek'**
+  String get personaNameGeek;
+
+  /// No description provided for @personaNameCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'Coach'**
+  String get personaNameCoach;
+
+  /// No description provided for @personaNamePsychologist.
+  ///
+  /// In en, this message translates to:
+  /// **'Psychologist'**
+  String get personaNamePsychologist;
+
   /// No description provided for @personaDescriptionAssistant.
   ///
   /// In en, this message translates to:
@@ -427,6 +475,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Task LLM Configuration'**
   String get taskLlmConfig;
+
+  /// No description provided for @taskLlmConfigDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure different LLMs for assistant, title generation, and function calling'**
+  String get taskLlmConfigDescription;
 
   /// No description provided for @taskLlmDescription.
   ///
@@ -625,6 +679,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No LLM configuration selected'**
   String get noLlmConfigurationSelected;
+
+  /// Title for adding a new LLM configuration
+  ///
+  /// In en, this message translates to:
+  /// **'Add LLM Config'**
+  String get llmConfigAdd;
+
+  /// Title for editing an existing LLM configuration
+  ///
+  /// In en, this message translates to:
+  /// **'Edit LLM Config'**
+  String get llmConfigEdit;
+
+  /// Label for LLM configuration name field
+  ///
+  /// In en, this message translates to:
+  /// **'Label (e.g. My OpenAI)'**
+  String get llmConfigLabel;
+
+  /// Label for base URL field
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL'**
+  String get llmConfigBaseUrl;
+
+  /// Hint text for base URL field
+  ///
+  /// In en, this message translates to:
+  /// **'https://api.openai.com/v1'**
+  String get llmConfigBaseUrlHint;
+
+  /// Label for API key field
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get llmConfigApiKey;
+
+  /// Label for model name field
+  ///
+  /// In en, this message translates to:
+  /// **'Model Name (e.g. gpt-4o)'**
+  String get llmConfigModelName;
+
+  /// Label for temperature slider
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature:'**
+  String get llmConfigTemperature;
+
+  /// Label for JSON response format dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'JSON Response Format'**
+  String get llmConfigResponseFormat;
+
+  /// Helper text for JSON response format
+  ///
+  /// In en, this message translates to:
+  /// **'Format for JSON mode responses'**
+  String get llmConfigResponseFormatHelper;
+
+  /// JSON object format option for OpenAI
+  ///
+  /// In en, this message translates to:
+  /// **'json_object (OpenAI)'**
+  String get llmConfigResponseFormatJsonObject;
+
+  /// JSON schema format option for some local APIs
+  ///
+  /// In en, this message translates to:
+  /// **'json_schema (Some local APIs)'**
+  String get llmConfigResponseFormatJsonSchema;
+
+  /// Text format option
+  ///
+  /// In en, this message translates to:
+  /// **'text (Generic)'**
+  String get llmConfigResponseFormatText;
+
+  /// No format option
+  ///
+  /// In en, this message translates to:
+  /// **'none (No format, use prompt only)'**
+  String get llmConfigResponseFormatNone;
+
+  /// Validation error message for required fields
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get commonRequired;
 }
 
 class _AppLocalizationsDelegate

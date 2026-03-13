@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/res/app_colors.dart';
+import '../../../../../core/l10n/generated/app_localizations.dart';
 
 /// Info card widget explaining task LLM configuration behavior
 class TaskInfoCard extends StatelessWidget {
@@ -9,6 +10,7 @@ class TaskInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return AnimatedBuilder(
       animation: animation,
       builder: (BuildContext context, Widget? child) {
@@ -55,7 +57,7 @@ class TaskInfoCard extends StatelessWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    'If no LLM is selected for a task, the default assistant LLM will be used.',
+                    l10n.taskLlmNote,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurface.withValues(alpha: 0.8),
                       height: 1.5,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/services/llm/llm_service_interface.dart';
+import '../../../../core/l10n/generated/app_localizations.dart';
 
 class LlmConfigPage extends StatefulWidget {
   /// Config ID to edit, or 'new' to create a new config
@@ -105,13 +106,15 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_config == null ? 'Add LLM Config' : 'Edit LLM Config'),
+        title: Text(_config == null ? l10n.llmConfigAdd : l10n.llmConfigEdit),
         actions: <Widget>[
           IconButton(icon: const Icon(Icons.save), onPressed: _save),
         ],
@@ -124,43 +127,39 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
             children: <Widget>[
               TextFormField(
                 controller: _labelController,
-                decoration: const InputDecoration(
-                  labelText: 'Label (e.g. My OpenAI)',
-                ),
+                decoration: InputDecoration(labelText: l10n.llmConfigLabel),
                 validator: (String? v) =>
-                    v == null || v.isEmpty ? 'Required' : null,
+                    v == null || v.isEmpty ? l10n.commonRequired : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _baseUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'Base URL',
-                  hintText: 'https://api.openai.com/v1',
+                decoration: InputDecoration(
+                  labelText: l10n.llmConfigBaseUrl,
+                  hintText: l10n.llmConfigBaseUrlHint,
                 ),
                 validator: (String? v) =>
-                    v == null || v.isEmpty ? 'Required' : null,
+                    v == null || v.isEmpty ? l10n.commonRequired : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _apiKeyController,
-                decoration: const InputDecoration(labelText: 'API Key'),
+                decoration: InputDecoration(labelText: l10n.llmConfigApiKey),
                 obscureText: true,
                 validator: (String? v) =>
-                    v == null || v.isEmpty ? 'Required' : null,
+                    v == null || v.isEmpty ? l10n.commonRequired : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _modelController,
-                decoration: const InputDecoration(
-                  labelText: 'Model Name (e.g. gpt-4o)',
-                ),
+                decoration: InputDecoration(labelText: l10n.llmConfigModelName),
                 validator: (String? v) =>
-                    v == null || v.isEmpty ? 'Required' : null,
+                    v == null || v.isEmpty ? l10n.commonRequired : null,
               ),
               const SizedBox(height: 24),
               Row(
                 children: <Widget>[
-                  const Text('Temperature: '),
+                  Text(l10n.llmConfigTemperature),
                   Expanded(
                     child: Slider(
                       value: _temperature,
@@ -175,26 +174,26 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
               const SizedBox(height: 16),
               DropdownButtonFormField<ResponseFormatType>(
                 initialValue: _responseFormatType,
-                decoration: const InputDecoration(
-                  labelText: 'JSON Response Format',
-                  helperText: 'Format for JSON mode responses',
+                decoration: InputDecoration(
+                  labelText: l10n.llmConfigResponseFormat,
+                  helperText: l10n.llmConfigResponseFormatHelper,
                 ),
-                items: const <DropdownMenuItem<ResponseFormatType>>[
+                items: <DropdownMenuItem<ResponseFormatType>>[
                   DropdownMenuItem<ResponseFormatType>(
                     value: ResponseFormatType.jsonObject,
-                    child: Text('json_object (OpenAI)'),
+                    child: Text(l10n.llmConfigResponseFormatJsonObject),
                   ),
                   DropdownMenuItem<ResponseFormatType>(
                     value: ResponseFormatType.jsonSchema,
-                    child: Text('json_schema (Some local APIs)'),
+                    child: Text(l10n.llmConfigResponseFormatJsonSchema),
                   ),
                   DropdownMenuItem<ResponseFormatType>(
                     value: ResponseFormatType.text,
-                    child: Text('text (Generic)'),
+                    child: Text(l10n.llmConfigResponseFormatText),
                   ),
                   DropdownMenuItem<ResponseFormatType>(
                     value: ResponseFormatType.none,
-                    child: Text('none (No format, use prompt only)'),
+                    child: Text(l10n.llmConfigResponseFormatNone),
                   ),
                 ],
                 onChanged: (ResponseFormatType? value) {

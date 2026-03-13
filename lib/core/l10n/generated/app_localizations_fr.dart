@@ -103,6 +103,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get personaAssistant => 'Personnalité de l’assistant';
 
   @override
+  String get personaNameAssistant => 'Assistant';
+
+  @override
+  String get personaNameNormal => 'Normal';
+
+  @override
+  String get personaNameDoomer => 'Doomer';
+
+  @override
+  String get personaNameConservative => 'Conservateur';
+
+  @override
+  String get personaNamePhilosopher => 'Philosophe';
+
+  @override
+  String get personaNameGeek => 'Geek';
+
+  @override
+  String get personaNameCoach => 'Coach';
+
+  @override
+  String get personaNamePsychologist => 'Psychologue';
+
+  @override
   String get personaDescriptionAssistant => 'Utile, clair et équilibré.';
 
   @override
@@ -187,6 +211,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get taskLlmConfig => 'Configuration LLM par tâche';
+
+  @override
+  String get taskLlmConfigDescription =>
+      'Configurez différents LLM pour l\'assistant, la génération de titres et l\'appel de fonctions';
 
   @override
   String get taskLlmDescription =>
@@ -310,4 +338,52 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get noLlmConfigurationSelected =>
       'Aucune configuration LLM sélectionnée';
+
+  @override
+  String get llmConfigAdd => 'Ajouter une configuration LLM';
+
+  @override
+  String get llmConfigEdit => 'Modifier la configuration LLM';
+
+  @override
+  String get llmConfigLabel => 'Nom (ex. Mon OpenAI)';
+
+  @override
+  String get llmConfigBaseUrl => 'URL de base';
+
+  @override
+  String get llmConfigBaseUrlHint => 'https://api.openai.com/v1';
+
+  @override
+  String get llmConfigApiKey => 'Clé API';
+
+  @override
+  String get llmConfigModelName => 'Nom du modèle (ex. gpt-4o)';
+
+  @override
+  String get llmConfigTemperature => 'Température :';
+
+  @override
+  String get llmConfigResponseFormat => 'Format de réponse JSON';
+
+  @override
+  String get llmConfigResponseFormatHelper =>
+      'Format pour les réponses en mode JSON';
+
+  @override
+  String get llmConfigResponseFormatJsonObject => 'json_object (OpenAI)';
+
+  @override
+  String get llmConfigResponseFormatJsonSchema =>
+      'json_schema (Certaines API locales)';
+
+  @override
+  String get llmConfigResponseFormatText => 'text (Générique)';
+
+  @override
+  String get llmConfigResponseFormatNone =>
+      'none (Aucun format, utiliser uniquement le prompt)';
+
+  @override
+  String get commonRequired => 'Obligatoire';
 }
