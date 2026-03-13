@@ -3,14 +3,19 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/services/avatar_animation_service.dart';
-import '../../../../core/utils/logger.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/demo_script.dart';
 import '../../../../core/repositories/settings_repository.dart';
+import '../../../../core/services/app_lifecycle_service.dart';
+import '../../../../core/services/avatar_animation_service.dart';
 import '../../../../core/services/chat/chat_streaming_service.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/services/chat_title_service.dart';
+import '../../../demo/data/repositories/demo_repository_impl.dart';
 import 'chat_state.dart';
 
 /// Main coordinator cubit for chat operations.
@@ -24,18 +29,82 @@ class ChatCubit extends Cubit<ChatState> {
     required AvatarAnimationService avatarAnimationService,
     required ChatTitleService chatTitleService,
     required ChatStreamingService chatStreamingService,
+    required AppLifecycleService appLifecycleService,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _avatarAnimationService = avatarAnimationService,
        _chatTitleService = chatTitleService,
        _chatStreamingService = chatStreamingService,
-       super(ChatState.initial());
+       _appLifecycleService = appLifecycleService,
+       super(ChatState.initial()) {
+    // Subscribe to new chat entry events to persist avatar changes
+    _newChatEntrySubscription = _appLifecycleService.newChatEntryEvents.listen(
+      _handleNewChatEntryEvent,
+      onError: (Object error) {
+        AppLogger.error(
+          'New chat entry stream error',
+          tag: 'ChatCubit',
+          error: error,
+        );
+      },
+    );
+
+    // Subscribe to demo script changed events
+    _demoScriptSubscription = _appLifecycleService.demoScriptChangedEvents
+        .listen(
+          _handleDemoScriptChangedEvent,
+          onError: (Object error) {
+            AppLogger.error(
+              'Demo script stream error',
+              tag: 'ChatCubit',
+              error: error,
+            );
+          },
+        );
+  }
 
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
   final AvatarAnimationService _avatarAnimationService;
   final ChatTitleService _chatTitleService;
   final ChatStreamingService _chatStreamingService;
+  final AppLifecycleService _appLifecycleService;
+  // ignore: unused_field
+  StreamSubscription<NewChatEntryPayload>? _newChatEntrySubscription;
+  // ignore: unused_field
+  StreamSubscription<DemoScript>? _demoScriptSubscription;
+
+  /// Handle new chat entry events from app lifecycle service.
+  ///
+  /// Persists the avatar configuration from new AI entries.
+  void _handleNewChatEntryEvent(NewChatEntryPayload payload) {
+    updateAvatarOpenedChat(payload.newAvatarConfig);
+  }
+
+  /// Handle demo script changed events from app lifecycle service.
+  ///
+  /// Activates demo mode for the current chat.
+  Future<void> _handleDemoScriptChangedEvent(DemoScript script) async {
+    AppLogger.info('Demo script changed to: ${script.name}', tag: 'ChatCubit');
+
+    final DemoService demoService = getIt<DemoService>();
+    final Chat currentChat = state.currentChat;
+
+    AppLogger.info(
+      'Activating demo for chat: ${currentChat.id}',
+      tag: 'ChatCubit',
+    );
+
+    await demoService.activateDemo(chatId: currentChat.id, script: script);
+
+    AppLogger.info(
+      'Demo activated, FakeLlmService isActive: ${demoService.isActive}',
+      tag: 'ChatCubit',
+    );
+
+    // Note: Snackbar showing is now handled by the widget layer
+    // The widget should listen for state changes or use a separate notification mechanism
+  }
 
   /// Initialize the chat system
   Future<void> init() async {

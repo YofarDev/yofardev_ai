@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/repositories/avatar_repository.dart';
 import '../../../../core/res/app_constants.dart';
+import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
 import '../../../../core/services/avatar_animation_service.dart';
 import '../../../../core/utils/logger.dart';
@@ -18,6 +20,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     this._avatarRepository,
     this._animationService,
     this._audioPlayerService,
+    this._appLifecycleService,
   ) : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig())) {
     // Subscribe to animation events from the service
     _animationSubscription = _animationService.animations.listen(
@@ -30,12 +33,38 @@ class AvatarCubit extends Cubit<AvatarState> {
         );
       },
     );
+
+    // Subscribe to app lifecycle events
+    _lifecycleSubscription = _appLifecycleService.newChatEntryEvents.listen(
+      _handleNewChatEntryEvent,
+      onError: (Object error) {
+        AppLogger.error(
+          'Lifecycle stream error',
+          tag: 'AvatarCubit',
+          error: error,
+        );
+      },
+    );
+
+    _chatChangedSubscription = _appLifecycleService.chatChangedEvents.listen(
+      _handleChatChangedEvent,
+      onError: (Object error) {
+        AppLogger.error(
+          'Chat changed stream error',
+          tag: 'AvatarCubit',
+          error: error,
+        );
+      },
+    );
   }
 
   final AvatarRepository _avatarRepository;
   final AvatarAnimationService _animationService;
   final AudioPlayerService _audioPlayerService;
+  final AppLifecycleService _appLifecycleService;
   StreamSubscription<AvatarAnimation>? _animationSubscription;
+  StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
+  StreamSubscription<String>? _chatChangedSubscription;
 
   /// Handle animation events from the service.
   void _handleAnimationEvent(AvatarAnimation event) {
@@ -46,6 +75,16 @@ class AvatarCubit extends Cubit<AvatarState> {
       updateConfig: (String chatId, AvatarConfig avatarConfig) =>
           updateAvatarConfig(chatId, avatarConfig),
     );
+  }
+
+  /// Handle new chat entry events from app lifecycle service.
+  void _handleNewChatEntryEvent(NewChatEntryPayload payload) {
+    onNewAvatarConfig(payload.chatId, payload.newAvatarConfig);
+  }
+
+  /// Handle chat changed events from app lifecycle service.
+  void _handleChatChangedEvent(String chatId) {
+    loadAvatar(chatId);
   }
 
   void _emitIfOpen(AvatarState newState) {
@@ -245,6 +284,8 @@ class AvatarCubit extends Cubit<AvatarState> {
   @override
   Future<void> close() async {
     await _animationSubscription?.cancel();
+    await _lifecycleSubscription?.cancel();
+    await _chatChangedSubscription?.cancel();
     return super.close();
   }
 }

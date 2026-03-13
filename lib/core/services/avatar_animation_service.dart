@@ -28,12 +28,12 @@ class AvatarAnimationService {
   ///
   /// Sequence:
   /// 1. Avatar drops down (off-screen)
-  /// 2. Config is updated (background changes are handled by _onNewChatEntry)
+  /// 2. Config is updated (background changes are handled by AppLifecycleService)
   /// 3. Avatar rises back up
   ///
   /// Note: Background animations are NOT triggered here because they are
-  /// already handled by HomeBlocListeners._onNewChatEntry which checks
-  /// if the background actually changed before animating.
+  /// handled by AppLifecycleService which determines the appropriate animation
+  /// based on what changed in the avatar config.
   Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {
     // 1. Avatar drops
     _animationController.add(const AvatarAnimation.clothes(true));

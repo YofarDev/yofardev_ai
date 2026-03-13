@@ -198,12 +198,16 @@ Future<void> setupServiceLocator() async {
     ),
   );
 
+  // ── App lifecycle service (no cubit dependencies - cubits subscribe to service streams) ──
+  getIt.registerLazySingleton<AppLifecycleService>(() => AppLifecycleService());
+
   // ── Cubits ──
   getIt.registerFactory<AvatarCubit>(
     () => AvatarCubit(
       getIt<AvatarRepository>(),
       getIt<AvatarAnimationService>(),
       getIt<AudioPlayerService>(),
+      getIt<AppLifecycleService>(),
     ),
   );
   getIt.registerLazySingleton<TalkingCubit>(
@@ -211,6 +215,7 @@ Future<void> setupServiceLocator() async {
       getIt<TalkingRepository>(),
       getIt<InterruptionService>(),
       getIt<TtsPlaybackService>(),
+      getIt<AppLifecycleService>(),
     ),
   );
   getIt.registerFactory<ChatTtsCubit>(
@@ -240,6 +245,7 @@ Future<void> setupServiceLocator() async {
       avatarAnimationService: getIt<AvatarAnimationService>(),
       chatTitleService: getIt<ChatTitleService>(),
       chatStreamingService: getIt<ChatStreamingService>(),
+      appLifecycleService: getIt<AppLifecycleService>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
@@ -252,16 +258,8 @@ Future<void> setupServiceLocator() async {
       llmService: getIt<LlmServiceInterface>(),
     ),
   );
-  getIt.registerFactory<HomeCubit>(() => HomeCubit(getIt<HomeRepository>()));
-
-  // ── App lifecycle service (depends on cubits) ──
-  getIt.registerLazySingleton<AppLifecycleService>(
-    () => AppLifecycleService(
-      homeCubit: getIt<HomeCubit>(),
-      avatarCubit: getIt<AvatarCubit>(),
-      talkingCubit: getIt<TalkingCubit>(),
-      chatCubit: getIt<ChatCubit>(),
-    ),
+  getIt.registerFactory<HomeCubit>(
+    () => HomeCubit(getIt<HomeRepository>(), getIt<AppLifecycleService>()),
   );
 }
 

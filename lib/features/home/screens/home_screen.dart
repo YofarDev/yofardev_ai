@@ -11,7 +11,6 @@ import '../../chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../demo/presentation/bloc/demo_cubit.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
-import '../widgets/home_bloc_listeners.dart';
 import '../widgets/home_content_stack.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -97,22 +96,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return HomeBlocListeners(
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: BlocBuilder<ChatCubit, ChatState>(
-          builder: (BuildContext context, ChatState chatsState) {
-            return BlocBuilder<TalkingCubit, TalkingState>(
-              builder: (BuildContext context, TalkingState talkingState) {
-                return HomeContentStack(
-                  chatsState: chatsState,
-                  talkingState: talkingState,
-                  onTripleTap: _handleTripleTap,
-                );
-              },
-            );
-          },
-        ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: BlocBuilder<ChatCubit, ChatState>(
+        builder: (BuildContext context, ChatState chatsState) {
+          return BlocBuilder<TalkingCubit, TalkingState>(
+            builder: (BuildContext context, TalkingState talkingState) {
+              return HomeContentStack(
+                chatsState: chatsState,
+                talkingState: talkingState,
+                onTripleTap: _handleTripleTap,
+              );
+            },
+          );
+        },
       ),
     );
   }

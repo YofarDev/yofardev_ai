@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../domain/repositories/talking_repository.dart';
 import '../../domain/services/tts_playback_service.dart';
+import '../../../chat/presentation/bloc/chat_state.dart';
 import 'talking_state.dart';
 
 class TalkingCubit extends Cubit<TalkingState> {
@@ -13,6 +15,7 @@ class TalkingCubit extends Cubit<TalkingState> {
     this._repository,
     this._interruptionService,
     this._playbackService,
+    this._appLifecycleService,
   ) : super(const TalkingState.idle()) {
     _eventSubscription = _playbackService.events.listen(_onPlaybackEvent);
     _interruptionSubscription = _interruptionService.interruptionStream.listen((
@@ -20,13 +23,74 @@ class TalkingCubit extends Cubit<TalkingState> {
     ) async {
       await stop();
     });
+
+    // Subscribe to streaming state changes for thinking animation
+    _streamingStateSubscription = _appLifecycleService
+        .streamingStateChangedEvents
+        .listen(
+          _handleStreamingStateChanged,
+          onError: (Object error) {
+            AppLogger.error(
+              'Streaming state stream error',
+              tag: 'TalkingCubit',
+              error: error,
+            );
+          },
+        );
+
+    // Subscribe to chat changes to stop talking
+    _chatChangedSubscription = _appLifecycleService.chatChangedEvents.listen(
+      _handleChatChanged,
+      onError: (Object error) {
+        AppLogger.error(
+          'Chat changed stream error',
+          tag: 'TalkingCubit',
+          error: error,
+        );
+      },
+    );
   }
 
   final TalkingRepository _repository;
   final InterruptionService _interruptionService;
   final TtsPlaybackService _playbackService;
+  final AppLifecycleService _appLifecycleService;
   StreamSubscription<void>? _interruptionSubscription;
   StreamSubscription<PlaybackEvent>? _eventSubscription;
+  StreamSubscription<ChatStatus>? _streamingStateSubscription;
+  StreamSubscription<String>? _chatChangedSubscription;
+
+  /// Handle streaming state changes from app lifecycle service.
+  ///
+  /// Controls thinking animation based on streaming status.
+  void _handleStreamingStateChanged(ChatStatus status) {
+    switch (status) {
+      case ChatStatus.initial:
+      case ChatStatus.creatingChat:
+      case ChatStatus.success:
+      case ChatStatus.loaded:
+      case ChatStatus.updating:
+        // Do nothing
+        break;
+      case ChatStatus.loading:
+      case ChatStatus.typing:
+      case ChatStatus.streaming:
+        // Show thinking animation while waiting for LLM response
+        setLoadingStatus(true);
+      case ChatStatus.error:
+      case ChatStatus.interrupted:
+        // Error or interruption - stop thinking animation
+        stop();
+        break;
+    }
+  }
+
+  /// Handle chat changed events from app lifecycle service.
+  ///
+  /// Stops talking when user switches to a different chat.
+  void _handleChatChanged(String chatId) {
+    stop();
+  }
 
   /// Cooldown timer to prevent flickering between sentences during streaming
   Timer? _idleCooldownTimer;
@@ -172,6 +236,8 @@ class TalkingCubit extends Cubit<TalkingState> {
     _idleCooldownTimer?.cancel();
     await _eventSubscription?.cancel();
     await _interruptionSubscription?.cancel();
+    await _streamingStateSubscription?.cancel();
+    await _chatChangedSubscription?.cancel();
     await super.close();
   }
 }

@@ -3,6 +3,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
+import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
+import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
@@ -27,6 +29,15 @@ class MockAudioPlayerService extends Mock implements AudioPlayerService {
   Future<void> playAsset(String assetPath, {double volume = 1.0}) async {}
 }
 
+class MockAppLifecycleService extends Mock implements AppLifecycleService {
+  @override
+  Stream<NewChatEntryPayload> get newChatEntryEvents =>
+      const Stream<NewChatEntryPayload>.empty();
+
+  @override
+  Stream<String> get chatChangedEvents => const Stream<String>.empty();
+}
+
 void main() {
   group('AvatarCubit', () {
     late AvatarCubit avatarCubit;
@@ -42,6 +53,7 @@ void main() {
         mockAvatarRepository,
         mockAnimationService,
         mockAudioPlayerService,
+        MockAppLifecycleService(),
       );
     });
 

@@ -1,70 +1,30 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import 'dart:async';
 
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
+import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
-import 'package:yofardev_ai/features/home/presentation/bloc/home_cubit.dart';
-
-// Mock classes
-class MockHomeCubit extends Mock implements HomeCubit {}
-
-class MockAvatarCubit extends Mock implements AvatarCubit {}
-
-class MockTalkingCubit extends Mock implements TalkingCubit {}
-
-class MockChatCubit extends Mock implements ChatCubit {}
 
 void main() {
-  setUpAll(() {
-    // Register fallback values for mocktail
-    registerFallbackValue(const AvatarConfig());
-  });
-
   late AppLifecycleService service;
-  late MockHomeCubit mockHomeCubit;
-  late MockAvatarCubit mockAvatarCubit;
-  late MockTalkingCubit mockTalkingCubit;
-  late MockChatCubit mockChatCubit;
 
   setUp(() {
-    mockHomeCubit = MockHomeCubit();
-    mockAvatarCubit = MockAvatarCubit();
-    mockTalkingCubit = MockTalkingCubit();
-    mockChatCubit = MockChatCubit();
+    service = AppLifecycleService();
+  });
 
-    // Setup default behavior
-    when(() => mockHomeCubit.startVolumeFade(any())).thenAnswer((_) async {});
-    when(() => mockHomeCubit.startWaitingTtsLoop()).thenReturn(null);
-    when(() => mockHomeCubit.stopWaitingTtsLoop()).thenReturn(null);
-    when(() => mockAvatarCubit.loadAvatar(any())).thenReturn(null);
-    when(
-      () => mockAvatarCubit.onNewAvatarConfig(any(), any()),
-    ).thenReturn(null);
-    when(() => mockTalkingCubit.setLoadingStatus(any())).thenReturn(null);
-    when(() => mockTalkingCubit.stop()).thenAnswer((_) async {});
-    when(
-      () => mockChatCubit.updateAvatarOpenedChat(any()),
-    ).thenAnswer((_) async {});
-
-    service = AppLifecycleService(
-      homeCubit: mockHomeCubit,
-      avatarCubit: mockAvatarCubit,
-      talkingCubit: mockTalkingCubit,
-      chatCubit: mockChatCubit,
-    );
+  tearDown(() {
+    service.dispose();
   });
 
   group('AppLifecycleService', () {
-    group('onNewChatEntry', () {
-      test('skips non-yofardev entries', () {
+    group('emitNewChatEntry', () {
+      test('skips non-yofardev entries', () async {
         final ChatEntry userEntry = ChatEntry(
           id: '1',
           entryType: EntryType.user,
@@ -72,13 +32,20 @@ void main() {
           timestamp: DateTime.now(),
         );
 
-        service.onNewChatEntry(userEntry, 'chat1');
+        final List<NewChatEntryPayload> events = <NewChatEntryPayload>[];
+        final StreamSubscription<NewChatEntryPayload> subscription = service
+            .newChatEntryEvents
+            .listen(events.add);
 
-        verifyNever(() => mockAvatarCubit.onNewAvatarConfig(any(), any()));
-        verifyNever(() => mockChatCubit.updateAvatarOpenedChat(any()));
+        service.emitNewChatEntry(userEntry, 'chat1', const AvatarConfig());
+
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+
+        expect(events, isEmpty);
+        await subscription.cancel();
       });
 
-      test('skips empty yofardev entries', () {
+      test('skips empty yofardev entries', () async {
         final ChatEntry emptyEntry = ChatEntry(
           id: '1',
           entryType: EntryType.yofardev,
@@ -86,13 +53,20 @@ void main() {
           timestamp: DateTime.now(),
         );
 
-        service.onNewChatEntry(emptyEntry, 'chat1');
+        final List<NewChatEntryPayload> events = <NewChatEntryPayload>[];
+        final StreamSubscription<NewChatEntryPayload> subscription = service
+            .newChatEntryEvents
+            .listen(events.add);
 
-        verifyNever(() => mockAvatarCubit.onNewAvatarConfig(any(), any()));
-        verifyNever(() => mockChatCubit.updateAvatarOpenedChat(any()));
+        service.emitNewChatEntry(emptyEntry, 'chat1', const AvatarConfig());
+
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+
+        expect(events, isEmpty);
+        await subscription.cancel();
       });
 
-      test('updates avatar when background changes', () {
+      test('emits event when background changes', () async {
         final ChatEntry entry = ChatEntry(
           id: '1',
           entryType: EntryType.yofardev,
@@ -100,77 +74,62 @@ void main() {
           timestamp: DateTime.now(),
         );
 
-        when(() => mockAvatarCubit.state).thenReturn(
-          AvatarState(
-            avatar: const Avatar(
-              background: AvatarBackgrounds.lake,
-              hat: AvatarHat.noHat,
-              top: AvatarTop.pinkHoodie,
-              glasses: AvatarGlasses.glasses,
-              specials: AvatarSpecials.onScreen,
-              costume: AvatarCostume.none,
-            ),
-            avatarConfig: const AvatarConfig(),
-          ),
+        final List<NewChatEntryPayload> events = <NewChatEntryPayload>[];
+        final StreamSubscription<NewChatEntryPayload> subscription = service
+            .newChatEntryEvents
+            .listen(events.add);
+
+        service.emitNewChatEntry(
+          entry,
+          'chat1',
+          const AvatarConfig(background: AvatarBackgrounds.forest),
         );
 
-        service.onNewChatEntry(entry, 'chat1');
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
-        verify(
-          () => mockAvatarCubit.onNewAvatarConfig(
-            'chat1',
-            any(
-              that: isA<AvatarConfig>().having(
-                (AvatarConfig c) => c.specials,
-                'specials',
-                AvatarSpecials.leaveAndComeBack,
-              ),
-            ),
-          ),
+        expect(events, hasLength(1));
+        expect(
+          events.first.newAvatarConfig.background,
+          AvatarBackgrounds.beach,
         );
-        verify(() => mockChatCubit.updateAvatarOpenedChat(any()));
+        expect(
+          events.first.newAvatarConfig.specials,
+          AvatarSpecials.leaveAndComeBack,
+        );
+        await subscription.cancel();
       });
 
-      test('updates avatar when clothes change', () {
+      test('emits event when clothes change', () async {
         final ChatEntry entry = ChatEntry(
           id: '1',
           entryType: EntryType.yofardev,
-          body: '{"top": "swimsuit"}',
+          body: '{"top": "tshirt"}',
           timestamp: DateTime.now(),
         );
 
-        when(() => mockAvatarCubit.state).thenReturn(
-          AvatarState(
-            avatar: const Avatar(
-              background: AvatarBackgrounds.lake,
-              hat: AvatarHat.noHat,
-              top: AvatarTop.pinkHoodie,
-              glasses: AvatarGlasses.glasses,
-              specials: AvatarSpecials.onScreen,
-              costume: AvatarCostume.none,
-            ),
-            avatarConfig: const AvatarConfig(),
-          ),
+        final List<NewChatEntryPayload> events = <NewChatEntryPayload>[];
+        final StreamSubscription<NewChatEntryPayload> subscription = service
+            .newChatEntryEvents
+            .listen(events.add);
+
+        service.emitNewChatEntry(
+          entry,
+          'chat1',
+          const AvatarConfig(top: AvatarTop.pinkHoodie),
         );
 
-        service.onNewChatEntry(entry, 'chat1');
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
-        verify(
-          () => mockAvatarCubit.onNewAvatarConfig(
-            'chat1',
-            any(
-              that: isA<AvatarConfig>().having(
-                (AvatarConfig c) => c.specials,
-                'specials',
-                AvatarSpecials.outOfScreen,
-              ),
-            ),
-          ),
+        expect(events, hasLength(1));
+        expect(events.first.newAvatarConfig.top, AvatarTop.tshirt);
+        expect(
+          events.first.newAvatarConfig.specials,
+          AvatarSpecials.outOfScreen,
         );
-        verify(() => mockChatCubit.updateAvatarOpenedChat(any()));
+        await subscription.cancel();
       });
 
-      test('does not update avatar when config is null', () {
+      test('does not emit event when nothing changes', () async {
         final ChatEntry entry = ChatEntry(
           id: '1',
           entryType: EntryType.yofardev,
@@ -178,156 +137,130 @@ void main() {
           timestamp: DateTime.now(),
         );
 
-        when(() => mockAvatarCubit.state).thenReturn(
-          AvatarState(
-            avatar: const Avatar(
-              background: AvatarBackgrounds.lake,
-              hat: AvatarHat.noHat,
-              top: AvatarTop.pinkHoodie,
-              glasses: AvatarGlasses.glasses,
-              specials: AvatarSpecials.onScreen,
-              costume: AvatarCostume.none,
-            ),
-            avatarConfig: const AvatarConfig(),
-          ),
-        );
+        final List<NewChatEntryPayload> events = <NewChatEntryPayload>[];
+        final StreamSubscription<NewChatEntryPayload> subscription = service
+            .newChatEntryEvents
+            .listen(events.add);
 
-        service.onNewChatEntry(entry, 'chat1');
+        service.emitNewChatEntry(entry, 'chat1', const AvatarConfig());
 
-        verifyNever(() => mockAvatarCubit.onNewAvatarConfig(any(), any()));
-        verifyNever(() => mockChatCubit.updateAvatarOpenedChat(any()));
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+
+        expect(events, isEmpty);
+        await subscription.cancel();
       });
     });
 
-    group('onStreamingStateChanged', () {
-      test('sets loading status when streaming starts', () {
-        service.onStreamingStateChanged(ChatStatus.streaming);
+    group('emitStreamingStateChanged', () {
+      test('emits status events', () async {
+        final List<ChatStatus> events = <ChatStatus>[];
+        final StreamSubscription<ChatStatus> subscription = service
+            .streamingStateChangedEvents
+            .listen(events.add);
 
-        verify(() => mockTalkingCubit.setLoadingStatus(true)).called(1);
-      });
+        service.emitStreamingStateChanged(ChatStatus.streaming);
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(events, equals(<ChatStatus>[ChatStatus.streaming]));
 
-      test('sets loading status when typing', () {
-        service.onStreamingStateChanged(ChatStatus.typing);
-
-        verify(() => mockTalkingCubit.setLoadingStatus(true)).called(1);
-      });
-
-      test('stops on error', () {
-        service.onStreamingStateChanged(ChatStatus.error);
-
-        verify(() => mockTalkingCubit.stop()).called(1);
-      });
-
-      test('stops on interruption', () {
-        service.onStreamingStateChanged(ChatStatus.interrupted);
-
-        verify(() => mockTalkingCubit.stop()).called(1);
-      });
-
-      test('does nothing on initial status', () {
-        service.onStreamingStateChanged(ChatStatus.initial);
-
-        verifyNever(() => mockTalkingCubit.setLoadingStatus(any()));
-        verifyNever(() => mockTalkingCubit.stop());
-      });
-
-      test('does nothing on success', () {
-        service.onStreamingStateChanged(ChatStatus.success);
-
-        verifyNever(() => mockTalkingCubit.setLoadingStatus(any()));
-        verifyNever(() => mockTalkingCubit.stop());
-      });
-    });
-
-    group('onAvatarAnimationChanged', () {
-      test('does nothing on initial animation', () async {
-        await service.onAvatarAnimationChanged(AvatarStatusAnimation.initial);
-
-        verifyNever(() => mockHomeCubit.startVolumeFade(any()));
-      });
-
-      test('starts volume fade on leaving animation', () async {
-        await service.onAvatarAnimationChanged(AvatarStatusAnimation.leaving);
-
-        verify(() => mockHomeCubit.startVolumeFade(false)).called(1);
-      });
-
-      test('starts volume fade on non-leaving animation', () async {
-        await service.onAvatarAnimationChanged(AvatarStatusAnimation.coming);
-
-        verify(() => mockHomeCubit.startVolumeFade(true)).called(1);
-      });
-    });
-
-    group('onTalkingStateChanged', () {
-      late BuildContext context;
-
-      setUp(() {
-        // Create a mock context
-        context = MockBuildContext();
-      });
-
-      test('stops waiting TTS loop on idle', () {
-        const TalkingState state = TalkingState.idle();
-
-        service.onTalkingStateChanged(state, context);
-
-        verify(() => mockHomeCubit.stopWaitingTtsLoop()).called(1);
-      });
-
-      test('starts waiting TTS loop on waiting', () {
-        const TalkingState state = TalkingState.waiting();
-
-        service.onTalkingStateChanged(state, context);
-
-        verify(() => mockHomeCubit.startWaitingTtsLoop()).called(1);
-      });
-
-      test('stops waiting TTS loop on speaking', () {
-        const TalkingState state = TalkingState.speaking();
-
-        service.onTalkingStateChanged(state, context);
-
-        verify(() => mockHomeCubit.stopWaitingTtsLoop()).called(1);
-      });
-
-      test('stops waiting TTS loop on error', () {
-        const TalkingState state = TalkingState.error('Test error');
-
-        // Note: The error state also shows a snackbar, but that requires
-        // a properly set up widget tree. We verify the core logic here.
+        service.emitStreamingStateChanged(ChatStatus.error);
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
         expect(
-          () => service.onTalkingStateChanged(state, context),
-          throwsA(isA<TypeError>()),
+          events,
+          equals(<ChatStatus>[ChatStatus.streaming, ChatStatus.error]),
         );
 
-        // Verify the loop was stopped before the snackbar attempt
-        verify(() => mockHomeCubit.stopWaitingTtsLoop()).called(1);
-      });
-
-      test('does nothing on generating', () {
-        const TalkingState state = TalkingState.generating();
-
-        service.onTalkingStateChanged(state, context);
-
-        verifyNever(() => mockHomeCubit.startWaitingTtsLoop());
-        verifyNever(() => mockHomeCubit.stopWaitingTtsLoop());
+        await subscription.cancel();
       });
     });
 
-    group('onChatChanged', () {
-      test('stops talking and loads avatar', () {
-        service.onChatChanged('chat1');
+    group('emitAvatarAnimationChanged', () {
+      test('emits animation events', () async {
+        final List<AvatarStatusAnimation> events = <AvatarStatusAnimation>[];
+        final StreamSubscription<AvatarStatusAnimation> subscription = service
+            .avatarAnimationChangedEvents
+            .listen(events.add);
 
-        verify(() => mockTalkingCubit.stop()).called(1);
-        verify(() => mockAvatarCubit.loadAvatar('chat1')).called(1);
+        service.emitAvatarAnimationChanged(AvatarStatusAnimation.leaving);
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(
+          events,
+          equals(<AvatarStatusAnimation>[AvatarStatusAnimation.leaving]),
+        );
+
+        service.emitAvatarAnimationChanged(AvatarStatusAnimation.coming);
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(
+          events,
+          equals(<AvatarStatusAnimation>[
+            AvatarStatusAnimation.leaving,
+            AvatarStatusAnimation.coming,
+          ]),
+        );
+
+        await subscription.cancel();
+      });
+    });
+
+    group('emitTalkingStateChanged', () {
+      test('emits talking state events', () async {
+        final List<TalkingState> events = <TalkingState>[];
+        final StreamSubscription<TalkingState> subscription = service
+            .talkingStateChangedEvents
+            .listen(events.add);
+
+        final TalkingState state1 = const TalkingState.idle();
+        final TalkingState state2 = const TalkingState.speaking();
+
+        service.emitTalkingStateChanged(state1);
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(events, equals(<TalkingState>[state1]));
+
+        service.emitTalkingStateChanged(state2);
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(events, equals(<TalkingState>[state1, state2]));
+
+        await subscription.cancel();
+      });
+    });
+
+    group('emitChatChanged', () {
+      test('emits chat ID events', () async {
+        final List<String> events = <String>[];
+        final StreamSubscription<String> subscription = service
+            .chatChangedEvents
+            .listen(events.add);
+
+        service.emitChatChanged('chat1');
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(events, equals(<String>['chat1']));
+
+        service.emitChatChanged('chat2');
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(events, equals(<String>['chat1', 'chat2']));
+
+        await subscription.cancel();
+      });
+    });
+
+    group('emitDemoScriptChanged', () {
+      test('emits demo script events', () async {
+        final List<DemoScript> events = <DemoScript>[];
+        final StreamSubscription<DemoScript> subscription = service
+            .demoScriptChangedEvents
+            .listen(events.add);
+
+        final DemoScript script = const DemoScript(
+          name: 'Test Demo',
+          description: 'Test',
+          responses: <FakeLlmResponse>[],
+        );
+
+        service.emitDemoScriptChanged(script);
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(events, equals(<DemoScript>[script]));
+
+        await subscription.cancel();
       });
     });
   });
-}
-
-// Mock BuildContext for testing
-class MockBuildContext extends Mock implements BuildContext {
-  @override
-  bool get mounted => true;
 }

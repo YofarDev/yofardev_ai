@@ -10,12 +10,18 @@ import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
+import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
+import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
+import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
+import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
+import 'package:yofardev_ai/core/models/demo_script.dart';
+import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
-import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
@@ -223,6 +229,7 @@ void main() {
         avatarAnimationService: mockAvatarAnimationService,
         chatTitleService: chatTitleService,
         chatStreamingService: mockChatStreamingService,
+        appLifecycleService: MockAppLifecycleService(),
       );
       // Initialize the cubit
       cubit.init();
@@ -362,4 +369,54 @@ void main() {
       expect(cubit.state.generatingTitleChatIds, isEmpty);
     });
   });
+}
+
+class MockAppLifecycleService extends Mock implements AppLifecycleService {
+  @override
+  Stream<NewChatEntryPayload> get newChatEntryEvents =>
+      const Stream<NewChatEntryPayload>.empty();
+
+  @override
+  Stream<String> get chatChangedEvents => const Stream<String>.empty();
+
+  @override
+  Stream<ChatStatus> get streamingStateChangedEvents =>
+      const Stream<ChatStatus>.empty();
+
+  @override
+  Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>
+      const Stream<AvatarStatusAnimation>.empty();
+
+  @override
+  Stream<TalkingState> get talkingStateChangedEvents =>
+      const Stream<TalkingState>.empty();
+
+  @override
+  Stream<DemoScript> get demoScriptChangedEvents =>
+      const Stream<DemoScript>.empty();
+
+  @override
+  void dispose() {}
+
+  @override
+  void emitAvatarAnimationChanged(AvatarStatusAnimation statusAnimation) {}
+
+  @override
+  void emitChatChanged(String chatId) {}
+
+  @override
+  void emitDemoScriptChanged(DemoScript script) {}
+
+  @override
+  void emitNewChatEntry(
+    ChatEntry entry,
+    String chatId,
+    AvatarConfig currentAvatarConfig,
+  ) {}
+
+  @override
+  void emitStreamingStateChanged(ChatStatus status) {}
+
+  @override
+  void emitTalkingStateChanged(TalkingState state) {}
 }

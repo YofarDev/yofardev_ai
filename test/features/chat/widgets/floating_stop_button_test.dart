@@ -14,6 +14,11 @@ import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
+import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
+import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
+import 'package:yofardev_ai/core/models/demo_script.dart';
+import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
@@ -373,6 +378,7 @@ void main() {
         talkingRepository,
         interruptionService,
         playbackService,
+        MockAppLifecycleService(),
       );
 
       chatsCubit = ChatCubit(
@@ -391,6 +397,7 @@ void main() {
           interruptionService: interruptionService,
           chatEntryService: MockChatEntryService(),
         ),
+        appLifecycleService: MockAppLifecycleService(),
       );
     });
 
@@ -496,4 +503,54 @@ void main() {
       expect(interrupted[0], true);
     });
   });
+}
+
+class MockAppLifecycleService extends Mock implements AppLifecycleService {
+  @override
+  Stream<NewChatEntryPayload> get newChatEntryEvents =>
+      const Stream<NewChatEntryPayload>.empty();
+
+  @override
+  Stream<String> get chatChangedEvents => const Stream<String>.empty();
+
+  @override
+  Stream<ChatStatus> get streamingStateChangedEvents =>
+      const Stream<ChatStatus>.empty();
+
+  @override
+  Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>
+      const Stream<AvatarStatusAnimation>.empty();
+
+  @override
+  Stream<TalkingState> get talkingStateChangedEvents =>
+      const Stream<TalkingState>.empty();
+
+  @override
+  Stream<DemoScript> get demoScriptChangedEvents =>
+      const Stream<DemoScript>.empty();
+
+  @override
+  void dispose() {}
+
+  @override
+  void emitAvatarAnimationChanged(AvatarStatusAnimation statusAnimation) {}
+
+  @override
+  void emitChatChanged(String chatId) {}
+
+  @override
+  void emitDemoScriptChanged(DemoScript script) {}
+
+  @override
+  void emitNewChatEntry(
+    ChatEntry entry,
+    String chatId,
+    AvatarConfig currentAvatarConfig,
+  ) {}
+
+  @override
+  void emitStreamingStateChanged(ChatStatus status) {}
+
+  @override
+  void emitTalkingStateChanged(TalkingState state) {}
 }

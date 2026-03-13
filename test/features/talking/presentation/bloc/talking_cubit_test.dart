@@ -4,6 +4,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
+import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
@@ -52,6 +54,7 @@ void main() {
         mockRepository,
         interruptionService,
         mockPlaybackService,
+        MockAppLifecycleService(),
       );
     });
 
@@ -491,6 +494,7 @@ void main() {
             mockRepository,
             interruptionService,
             mockPlaybackService,
+            MockAppLifecycleService(),
           );
           return cubit;
         },
@@ -509,4 +513,13 @@ void main() {
       );
     });
   });
+}
+
+class MockAppLifecycleService extends Mock implements AppLifecycleService {
+  @override
+  Stream<NewChatEntryPayload> get newChatEntryEvents =>
+      const Stream<NewChatEntryPayload>.empty();
+
+  @override
+  Stream<String> get chatChangedEvents => const Stream<String>.empty();
 }
