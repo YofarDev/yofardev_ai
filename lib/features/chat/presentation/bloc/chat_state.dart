@@ -42,7 +42,7 @@ sealed class ChatState with _$ChatState {
     @Default(<Map<String, dynamic>>[])
     List<Map<String, dynamic>> audioPathsWaitingSentences,
     @Default(true) bool initializing,
-    @Default(false) bool functionCallingEnabled,
+    @Default(true) bool functionCallingEnabled,
     @Default(false) bool chatCreated,
     @Default('') String streamingContent,
     @Default(0) int streamingSentenceCount,

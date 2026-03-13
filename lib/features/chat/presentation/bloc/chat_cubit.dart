@@ -6,6 +6,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/chat_entry.dart';
 import '../../../../core/models/demo_script.dart';
 import '../../../../core/repositories/settings_repository.dart';
 import '../../../../core/services/app_lifecycle_service.dart';
@@ -78,7 +79,44 @@ class ChatCubit extends Cubit<ChatState> {
   ///
   /// Persists the avatar configuration from new AI entries.
   void _handleNewChatEntryEvent(NewChatEntryPayload payload) {
-    updateAvatarOpenedChat(payload.newAvatarConfig);
+    AppLogger.debug(
+      'ChatCubit: received newChatEntry event for chat ${payload.chatId}',
+      tag: 'ChatCubit',
+    );
+
+    // Extract the actual avatar config from the entry (without animation specials)
+    // The payload.newAvatarConfig includes animation triggers like leaveAndComeBack
+    // but we want to save only the actual avatar appearance
+    final AvatarConfig actualAvatarConfig = payload.entry.getAvatarConfig();
+
+    AppLogger.debug(
+      'ChatCubit: actualAvatarConfig from entry: bg=${actualAvatarConfig.background}, top=${actualAvatarConfig.top}, hat=${actualAvatarConfig.hat}, glasses=${actualAvatarConfig.glasses}, costume=${actualAvatarConfig.costume}, specials=${actualAvatarConfig.specials}',
+      tag: 'ChatCubit',
+    );
+
+    AppLogger.debug(
+      'ChatCubit: current openedChat avatar: bg=${state.openedChat.avatar.background}',
+      tag: 'ChatCubit',
+    );
+
+    // Update the chat with the actual avatar config
+    // Use updateAvatarOpenedChat if we have changes, otherwise skip
+    if (actualAvatarConfig.background != null ||
+        actualAvatarConfig.hat != null ||
+        actualAvatarConfig.top != null ||
+        actualAvatarConfig.glasses != null ||
+        actualAvatarConfig.costume != null) {
+      AppLogger.debug(
+        'ChatCubit: calling updateAvatarOpenedChat with new avatar config',
+        tag: 'ChatCubit',
+      );
+      updateAvatarOpenedChat(actualAvatarConfig);
+    } else {
+      AppLogger.debug(
+        'ChatCubit: no avatar changes detected, skipping update',
+        tag: 'ChatCubit',
+      );
+    }
   }
 
   /// Handle demo script changed events from app lifecycle service.
@@ -162,6 +200,8 @@ class ChatCubit extends Cubit<ChatState> {
               openedChat: currentChat,
             ),
           );
+          // Notify AvatarCubit to load the avatar for this chat
+          _appLifecycleService.emitChatChanged(currentChat.id);
         }
       },
     );
@@ -259,6 +299,10 @@ class ChatCubit extends Cubit<ChatState> {
 
   /// Update avatar for the opened chat
   Future<void> updateAvatarOpenedChat(AvatarConfig avatarConfig) async {
+    AppLogger.debug(
+      'ChatCubit.updateAvatarOpenedChat: called with bg=${avatarConfig.background}, top=${avatarConfig.top}, hat=${avatarConfig.hat}',
+      tag: 'ChatCubit',
+    );
     emit(state.copyWith(status: ChatStatus.updating));
     final Chat chat = state.openedChat;
     final Avatar avatar = chat.avatar.copyWith(
@@ -270,8 +314,32 @@ class ChatCubit extends Cubit<ChatState> {
       costume: avatarConfig.costume ?? chat.avatar.costume,
     );
     final Chat updatedChat = chat.copyWith(avatar: avatar);
-    emit(state.copyWith(openedChat: updatedChat, status: ChatStatus.success));
+
+    // Update both openedChat and currentChat since both are used throughout the app
+    // Also update chatsList to keep it in sync
+    final List<Chat> updatedChatsList = state.chatsList
+        .map((Chat c) => c.id == updatedChat.id ? updatedChat : c)
+        .toList();
+
+    emit(
+      state.copyWith(
+        openedChat: updatedChat,
+        currentChat: updatedChat,
+        chatsList: updatedChatsList,
+        status: ChatStatus.success,
+      ),
+    );
+
+    AppLogger.debug(
+      'ChatCubit.updateAvatarOpenedChat: saving to repository, chat.id=${chat.id}, new avatar bg=${avatar.background}',
+      tag: 'ChatCubit',
+    );
     await _chatRepository.updateAvatar(chat.id, avatar);
+
+    AppLogger.debug(
+      'ChatCubit.updateAvatarOpenedChat: completed, state.currentChat.avatar.bg=${state.currentChat.avatar.background}',
+      tag: 'ChatCubit',
+    );
   }
 
   /// Update background for the opened chat
@@ -281,7 +349,21 @@ class ChatCubit extends Cubit<ChatState> {
     final Chat updatedChat = chat.copyWith(
       avatar: chat.avatar.copyWith(background: bg),
     );
-    emit(state.copyWith(openedChat: updatedChat, status: ChatStatus.success));
+
+    // Update both openedChat and currentChat since both are used throughout the app
+    // Also update chatsList to keep it in sync
+    final List<Chat> updatedChatsList = state.chatsList
+        .map((Chat c) => c.id == updatedChat.id ? updatedChat : c)
+        .toList();
+
+    emit(
+      state.copyWith(
+        openedChat: updatedChat,
+        currentChat: updatedChat,
+        chatsList: updatedChatsList,
+        status: ChatStatus.success,
+      ),
+    );
     await _chatRepository.updateAvatar(chat.id, updatedChat.avatar);
   }
 
@@ -398,10 +480,49 @@ class ChatCubit extends Cubit<ChatState> {
       final String? title = await _chatTitleService.generateTitle(chatId, chat);
 
       if (title != null) {
-        emit(
-          state.copyWith(
-            lastGeneratedTitle: TitleResult(chatId: chatId, title: title),
-          ),
+        // Reload the chat from storage to get the updated title
+        final Either<Exception, Chat?> chatResult = await _chatRepository
+            .getChat(chatId);
+
+        chatResult.fold(
+          (Exception error) {
+            AppLogger.error(
+              'Failed to reload chat after title generation',
+              tag: 'ChatCubit',
+              error: error,
+            );
+          },
+          (Chat? updatedChat) {
+            if (updatedChat != null) {
+              // Update currentChat and openedChat if this is the current chat
+              final Chat? currentChat = state.currentChat.id == chatId
+                  ? updatedChat
+                  : null;
+              final Chat? openedChat = state.openedChat.id == chatId
+                  ? updatedChat
+                  : null;
+
+              // Update the chat in chatsList
+              final List<Chat> updatedChatsList = state.chatsList
+                  .map((Chat c) => c.id == chatId ? updatedChat : c)
+                  .toList();
+
+              emit(
+                state.copyWith(
+                  lastGeneratedTitle: TitleResult(chatId: chatId, title: title),
+                  currentChat: currentChat ?? state.currentChat,
+                  openedChat: openedChat ?? state.openedChat,
+                  chatsList: updatedChatsList,
+                ),
+              );
+            } else {
+              emit(
+                state.copyWith(
+                  lastGeneratedTitle: TitleResult(chatId: chatId, title: title),
+                ),
+              );
+            }
+          },
         );
       }
     } finally {
@@ -474,6 +595,29 @@ class ChatCubit extends Cubit<ChatState> {
             chatsList: updatedChatsList,
           ),
         );
+
+        // Trigger avatar animation if the last entry contains avatar changes
+        if (finalChat.entries.isNotEmpty) {
+          final ChatEntry lastEntry = finalChat.entries.last;
+          if (lastEntry.entryType == EntryType.yofardev) {
+            // Get the current avatar config before the change
+            final AvatarConfig currentAvatarConfig = AvatarConfig(
+              background: finalChat.avatar.background,
+              hat: finalChat.avatar.hat,
+              top: finalChat.avatar.top,
+              glasses: finalChat.avatar.glasses,
+              costume: finalChat.avatar.costume,
+              specials: finalChat.avatar.specials,
+            );
+
+            // Emit event to trigger avatar animation
+            _appLifecycleService.emitNewChatEntry(
+              lastEntry,
+              finalChat.id,
+              currentAvatarConfig,
+            );
+          }
+        }
 
         // Generate title if needed
         if (shouldGenerateTitle(finalChat)) {

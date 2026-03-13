@@ -59,6 +59,8 @@ dev_dependencies:
   mocktail: ^1.0.4
   bloc_test: ^10.0.0
   golden_toolkit: ^0.15.0
+  yofdev_ai: any
+  collection: any
 flutter_native_splash:
   color: "#438EFF"
   image: "assets/splash.png"

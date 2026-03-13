@@ -4,6 +4,7 @@ import '../../repositories/settings_repository.dart';
 import '../../models/function_info.dart';
 import 'agent_tool.dart';
 import 'alarm_tool.dart';
+import 'avatar_tool.dart';
 import 'calculator_tool.dart';
 import 'character_counter_tool.dart';
 import 'google_search_tool.dart';
@@ -21,6 +22,7 @@ class ToolRegistry {
           tools ??
           <AgentTool>[
             AlarmTool(),
+            AvatarTool(),
             WeatherTool(),
             NewsTool(),
             CharacterCounterTool(),
@@ -55,6 +57,7 @@ class ToolRegistry {
 
     // Always include tools that don't require API keys
     filteredFunctions.add(AlarmTool().toFunctionInfo());
+    filteredFunctions.add(AvatarTool().toFunctionInfo());
     filteredFunctions.add(CharacterCounterTool().toFunctionInfo());
     filteredFunctions.add(CalculatorTool().toFunctionInfo());
     filteredFunctions.add(WebReaderTool().toFunctionInfo());

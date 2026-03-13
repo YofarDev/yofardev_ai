@@ -283,7 +283,7 @@ void main() {
       expect(chatsCubit.state.currentLanguage, 'fr');
       expect(chatsCubit.state.audioPathsWaitingSentences, isEmpty);
       expect(chatsCubit.state.initializing, isTrue);
-      expect(chatsCubit.state.functionCallingEnabled, isFalse);
+      expect(chatsCubit.state.functionCallingEnabled, isTrue);
     });
 
     test('init should set initializing to false', () async {
@@ -436,7 +436,7 @@ void main() {
         expect(state.currentLanguage, 'fr');
         expect(state.audioPathsWaitingSentences, isEmpty);
         expect(state.initializing, isTrue);
-        expect(state.functionCallingEnabled, isFalse);
+        expect(state.functionCallingEnabled, isTrue);
       });
 
       test('should copy with new values correctly', () {
@@ -886,7 +886,9 @@ void main() {
       // Stub mockAvatarAnimationService
       when(
         () => mockAvatarAnimationService.playNewChatSequence(any(), any()),
-      ).thenAnswer((_) async {});
+      ).thenAnswer((_) async {
+        return;
+      });
 
       cubit = ChatCubit(
         chatRepository: mockChatRepository,
@@ -959,13 +961,309 @@ void main() {
         ).called(1);
       },
     );
+
+    group('Avatar Update from LLM Response', () {
+      late ChatCubit chatCubit;
+      late MockChatRepository mockChatRepository;
+      late MockAppLifecycleService mockAppLifecycleService;
+      late ChatStreamingService mockChatStreamingService;
+      late MockSettingsRepository mockSettingsRepository;
+      late MockAvatarAnimationService mockAvatarAnimationService;
+      late ChatTitleService mockChatTitleService;
+
+      setUp(() {
+        mockChatRepository = MockChatRepository();
+        mockAppLifecycleService = MockAppLifecycleService();
+        mockSettingsRepository = MockSettingsRepository();
+        mockAvatarAnimationService = MockAvatarAnimationService();
+        mockChatTitleService = createMockChatTitleService();
+
+        // Stub mockAvatarAnimationService
+        when(
+          () => mockAvatarAnimationService.playNewChatSequence(any(), any()),
+        ).thenAnswer((_) async {});
+
+        // Stub mockSettingsRepository default methods
+        when(
+          () => mockSettingsRepository.getLanguage(),
+        ).thenAnswer((_) async => const Right<Exception, String?>('fr'));
+        when(
+          () => mockSettingsRepository.getSoundEffects(),
+        ).thenAnswer((_) async => const Right<Exception, bool>(true));
+
+        // Stub mockChatRepository default methods
+        when(
+          () => mockChatRepository.updateAvatar(any(), any()),
+        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        when(
+          () => mockChatRepository.updateChat(
+            id: any(named: 'id'),
+            updatedChat: any(named: 'updatedChat'),
+          ),
+        ).thenAnswer((_) async => const Right<Exception, void>(null));
+
+        // Create a real ChatStreamingService with mocked dependencies
+        mockChatStreamingService = createMockChatStreamingService(
+          chatRepository: mockChatRepository,
+          llmService: LlmService(),
+          streamProcessor: MockStreamProcessorService(),
+          promptDatasource: MockPromptDatasource(),
+          interruptionService: MockInterruptionService(),
+          chatEntryService: MockChatEntryService(),
+        );
+
+        chatCubit = ChatCubit(
+          chatRepository: mockChatRepository,
+          settingsRepository: mockSettingsRepository,
+          avatarAnimationService: mockAvatarAnimationService,
+          chatTitleService: mockChatTitleService,
+          chatStreamingService: mockChatStreamingService,
+          appLifecycleService: mockAppLifecycleService,
+        );
+
+        // Initialize with a test chat
+        chatCubit.emit(
+          chatCubit.state.copyWith(
+            initializing: false,
+            currentChat: const Chat(
+              id: 'test-chat',
+              avatar: Avatar(
+                background: AvatarBackgrounds.lake,
+                hat: AvatarHat.noHat,
+                top: AvatarTop.pinkHoodie,
+              ),
+            ),
+            openedChat: const Chat(
+              id: 'test-chat',
+              avatar: Avatar(
+                background: AvatarBackgrounds.lake,
+                hat: AvatarHat.noHat,
+                top: AvatarTop.pinkHoodie,
+              ),
+            ),
+          ),
+        );
+      });
+
+      tearDown(() {
+        chatCubit.close();
+      });
+
+      // Test: updateAvatarOpenedChat updates BOTH currentChat and openedChat
+      test(
+        'updateAvatarOpenedChat updates both currentChat and openedChat',
+        () async {
+          // Arrange
+          when(
+            () => mockChatRepository.updateAvatar(any(), any()),
+          ).thenAnswer((_) async => const Right<Exception, void>(null));
+
+          final AvatarConfig newConfig = const AvatarConfig(
+            background: AvatarBackgrounds.beach,
+            top: AvatarTop.longCoat,
+          );
+
+          // Act
+          await chatCubit.updateAvatarOpenedChat(newConfig);
+
+          // Assert - Both currentChat and openedChat should be updated
+          expect(
+            chatCubit.state.currentChat.avatar.background,
+            equals(AvatarBackgrounds.beach),
+          );
+          expect(
+            chatCubit.state.openedChat.avatar.background,
+            equals(AvatarBackgrounds.beach),
+          );
+          expect(
+            chatCubit.state.currentChat.avatar.top,
+            equals(AvatarTop.longCoat),
+          );
+          expect(
+            chatCubit.state.openedChat.avatar.top,
+            equals(AvatarTop.longCoat),
+          );
+        },
+      );
+
+      // Test: updateBackgroundOpenedChat updates both currentChat and openedChat
+      test(
+        'updateBackgroundOpenedChat updates both currentChat and openedChat',
+        () async {
+          // Arrange
+          when(
+            () => mockChatRepository.updateAvatar(any(), any()),
+          ).thenAnswer((_) async => const Right<Exception, void>(null));
+
+          // Act
+          await chatCubit.updateBackgroundOpenedChat(AvatarBackgrounds.beach);
+
+          // Assert
+          expect(
+            chatCubit.state.currentChat.avatar.background,
+            equals(AvatarBackgrounds.beach),
+          );
+          expect(
+            chatCubit.state.openedChat.avatar.background,
+            equals(AvatarBackgrounds.beach),
+          );
+        },
+      );
+
+      // Test: chatsList is also updated when avatar changes
+      test('updateAvatarOpenedChat updates chatsList', () async {
+        // Arrange
+        when(
+          () => mockChatRepository.updateAvatar(any(), any()),
+        ).thenAnswer((_) async => const Right<Exception, void>(null));
+
+        // Add the test chat to chatsList first
+        chatCubit.emit(
+          chatCubit.state.copyWith(
+            chatsList: <Chat>[chatCubit.state.currentChat],
+          ),
+        );
+
+        final AvatarConfig newConfig = const AvatarConfig(
+          background: AvatarBackgrounds.beach,
+        );
+
+        // Act
+        await chatCubit.updateAvatarOpenedChat(newConfig);
+
+        // Assert - chatsList should contain the updated chat
+        final Chat updatedChat = chatCubit.state.chatsList.firstWhere(
+          (Chat c) => c.id == 'test-chat',
+        );
+        expect(updatedChat.avatar.background, equals(AvatarBackgrounds.beach));
+      });
+
+      // Test: newChatEntryEvent extracts actual config from entry JSON
+      test(
+        'newChatEntryEvent extracts actual avatar config from entry JSON',
+        () async {
+          // Arrange
+          when(
+            () => mockChatRepository.updateAvatar(any(), any()),
+          ).thenAnswer((_) async => const Right<Exception, void>(null));
+
+          // Create a chat entry with JSON containing avatar config
+          // Note: Enum names are camelCase (longCoat, not long_coat)
+          final ChatEntry entry = ChatEntry(
+            id: 'entry1',
+            entryType: EntryType.yofardev,
+            body:
+                '{"message":"Hello","background":"beach","top":"longCoat","specials":"onScreen"}',
+            timestamp: DateTime.now(),
+          );
+
+          final NewChatEntryPayload payload = NewChatEntryPayload(
+            entry: entry,
+            chatId: 'test-chat',
+            // This would have animation specials like leaveAndComeBack
+            newAvatarConfig: const AvatarConfig(
+              background: AvatarBackgrounds.beach,
+              top: AvatarTop.longCoat,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+
+          // Act - Emit the event through the AppLifecycleService stream
+          mockAppLifecycleService.emitTestEvent(payload);
+
+          // Wait for async processing
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+
+          // Assert - The avatar should be updated with values from entry JSON
+          expect(
+            chatCubit.state.currentChat.avatar.background,
+            equals(AvatarBackgrounds.beach),
+          );
+          expect(
+            chatCubit.state.currentChat.avatar.top,
+            equals(AvatarTop.longCoat),
+          );
+        },
+      );
+
+      // Test: newChatEntryEvent with no avatar changes does nothing
+      test('newChatEntryEvent skips update when no avatar changes', () async {
+        // Arrange
+        when(
+          () => mockChatRepository.updateAvatar(any(), any()),
+        ).thenAnswer((_) async => const Right<Exception, void>(null));
+
+        final ChatEntry entry = ChatEntry(
+          id: 'entry1',
+          entryType: EntryType.yofardev,
+          body: '{"message":"Hello"}',
+          timestamp: DateTime.now(),
+        );
+
+        final NewChatEntryPayload payload = NewChatEntryPayload(
+          entry: entry,
+          chatId: 'test-chat',
+          newAvatarConfig: const AvatarConfig(), // No changes
+        );
+
+        // Act - Emit the event
+        mockAppLifecycleService.emitTestEvent(payload);
+
+        // Wait for async processing
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        // Assert - updateAvatar should NOT be called
+        verifyNever(() => mockChatRepository.updateAvatar(any(), any()));
+      });
+    });
+
+    group('emitNewChatEntry Integration', () {
+      test('emitNewChatEntry is callable with correct parameters', () async {
+        // This test verifies that emitNewChatEntry can be called
+        // with the correct parameters from the onStreamComplete callback
+
+        // Arrange
+        final MockAppLifecycleService mockAppLifecycleService =
+            MockAppLifecycleService();
+        final ChatEntry aiEntry = ChatEntry(
+          id: 'entry1',
+          entryType: EntryType.yofardev,
+          body: '{"message":"Response","background":"beach"}',
+          timestamp: DateTime.now(),
+        );
+
+        final AvatarConfig currentAvatarConfig = AvatarConfig(
+          background: AvatarBackgrounds.lake,
+          hat: AvatarHat.noHat,
+          top: AvatarTop.pinkHoodie,
+        );
+
+        // Act & Assert - Should not throw
+        expect(
+          () => mockAppLifecycleService.emitNewChatEntry(
+            aiEntry,
+            'test-chat-id',
+            currentAvatarConfig,
+          ),
+          returnsNormally,
+        );
+      });
+    });
   });
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
+  final StreamController<NewChatEntryPayload> _newChatEntryController =
+      StreamController<NewChatEntryPayload>.broadcast();
+
   @override
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
-      const Stream<NewChatEntryPayload>.empty();
+      _newChatEntryController.stream;
+
+  /// Emit a new chat entry event for testing
+  void emitTestEvent(NewChatEntryPayload payload) {
+    _newChatEntryController.add(payload);
+  }
 
   @override
   Stream<String> get chatChangedEvents => const Stream<String>.empty();
@@ -985,9 +1283,6 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
   @override
   Stream<DemoScript> get demoScriptChangedEvents =>
       const Stream<DemoScript>.empty();
-
-  @override
-  void dispose() {}
 
   @override
   void emitAvatarAnimationChanged(AvatarStatusAnimation statusAnimation) {}

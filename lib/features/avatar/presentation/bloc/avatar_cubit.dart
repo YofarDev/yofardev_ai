@@ -68,12 +68,21 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   /// Handle animation events from the service.
   void _handleAnimationEvent(AvatarAnimation event) {
+    AppLogger.debug(
+      'AvatarCubit: received animation event: $event',
+      tag: 'AvatarCubit',
+    );
     event.when(
       clothes: (bool goingDown) => onClothesAnimationChanged(goingDown),
       background: (BackgroundTransition transition) =>
           onBackgroundTransitionChanged(transition),
-      updateConfig: (String chatId, AvatarConfig avatarConfig) =>
-          updateAvatarConfig(chatId, avatarConfig),
+      updateConfig: (String chatId, AvatarConfig avatarConfig) {
+        AppLogger.debug(
+          'AvatarCubit: updateConfig event - chatId=$chatId, config=$avatarConfig',
+          tag: 'AvatarCubit',
+        );
+        updateAvatarConfig(chatId, avatarConfig);
+      },
     );
   }
 
@@ -147,6 +156,9 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void _goAndComeBack(String chatId, AvatarConfig avatarConfig) async {
+    // Preserve the original specials before animation changes the state
+    final AvatarSpecials originalSpecials = state.avatar.specials;
+
     onAnimationStatusChanged(true);
     await Future<dynamic>.delayed(
       Duration(seconds: AppConstants.movingAvatarDuration),
@@ -156,7 +168,11 @@ class AvatarCubit extends Cubit<AvatarState> {
     // Set animation to "coming" FIRST, then update avatar
     // This ensures background changes while avatar is coming back
     onAnimationStatusChanged(false);
-    _updateAvatar(chatId, avatarConfig);
+    // Use original specials, not the animation trigger value
+    final AvatarConfig updateConfig = avatarConfig.copyWith(
+      specials: originalSpecials,
+    );
+    _updateAvatar(chatId, updateConfig);
   }
 
   void onAnimationStatusChanged(bool leaving) {
@@ -201,12 +217,19 @@ class AvatarCubit extends Cubit<AvatarState> {
       _audioPlayerService.playAsset('sound_effects/whoosh.wav', volume: 0.3),
     );
 
+    // Preserve the original specials before animation changes the state
+    final AvatarSpecials originalSpecials = state.avatar.specials;
+
     onClothesAnimationChanged(true); // dropping
     await Future<dynamic>.delayed(
       Duration(seconds: AppConstants.changingAvatarDuration),
     );
     if (isClosed) return;
-    _updateAvatar(chatId, avatarConfig);
+    // Use original specials, not the animation trigger value
+    final AvatarConfig updateConfig = avatarConfig.copyWith(
+      specials: originalSpecials,
+    );
+    _updateAvatar(chatId, updateConfig);
     onClothesAnimationChanged(false); // rising
   }
 
@@ -278,7 +301,8 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void updateAvatarConfig(String chatId, AvatarConfig avatarConfig) {
-    _updateAvatar(chatId, avatarConfig);
+    // Use onNewAvatarConfig to trigger animations based on specials
+    onNewAvatarConfig(chatId, avatarConfig);
   }
 
   @override

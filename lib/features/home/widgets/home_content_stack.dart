@@ -57,11 +57,11 @@ class HomeContentStack extends StatelessWidget {
           ),
           if (showThinking) const ThinkingAnimation(),
           if (!chatsState.initializing)
-            const Positioned(
+            Positioned(
               left: 8,
               right: 8,
               bottom: 16,
-              child: AiTextInput(),
+              child: AiTextInput(avatar: chatsState.currentChat.avatar),
             ),
           const FloatingStopButton(bottomPadding: 16),
           const HomeButtons(),

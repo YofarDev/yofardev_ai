@@ -48,6 +48,16 @@ class AvatarAnimationService {
     _animationController.add(const AvatarAnimation.clothes(false));
   }
 
+  /// Emit an update config animation event.
+  ///
+  /// This method is used by agent tools to trigger avatar updates.
+  /// The AvatarCubit subscribes to these events and handles the animation
+  /// based on the specials field in the config (e.g., leaveAndComeBack for
+  /// background changes, outOfScreen for clothes changes).
+  void emitUpdateConfig(String chatId, AvatarConfig config) {
+    _animationController.add(AvatarAnimation.updateConfig(chatId, config));
+  }
+
   /// Dispose of the service and close the stream.
   void dispose() {
     _animationController.close();

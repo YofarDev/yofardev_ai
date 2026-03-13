@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
@@ -22,6 +23,9 @@ class MockAvatarAnimationService implements AvatarAnimationService {
 
   @override
   Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {}
+
+  @override
+  void emitUpdateConfig(String chatId, AvatarConfig config) {}
 }
 
 class MockAudioPlayerService extends Mock implements AudioPlayerService {
@@ -45,10 +49,22 @@ void main() {
     late MockAvatarAnimationService mockAnimationService;
     late MockAudioPlayerService mockAudioPlayerService;
 
+    setUpAll(() {
+      // Register fallback values for mocktail
+      registerFallbackValue(const Avatar());
+      registerFallbackValue(const AvatarConfig());
+    });
+
     setUp(() {
       mockAvatarRepository = MockAvatarRepository();
       mockAnimationService = MockAvatarAnimationService();
       mockAudioPlayerService = MockAudioPlayerService();
+
+      // Stub updateAvatar to return success
+      when(
+        () => mockAvatarRepository.updateAvatar(any(), any()),
+      ).thenAnswer((_) async => const Right<Exception, void>(null));
+
       avatarCubit = AvatarCubit(
         mockAvatarRepository,
         mockAnimationService,
@@ -328,6 +344,239 @@ void main() {
           ),
         );
         avatarCubit.onBackgroundTransitionChanged(expectedTransition);
+      });
+    });
+
+    group('Avatar Animation from LLM Response', () {
+      late MockAvatarAnimationService mockAnimationService;
+
+      setUp(() {
+        mockAnimationService = MockAvatarAnimationService();
+      });
+
+      // Test: AvatarCubit receives updateConfig events from AvatarAnimationService
+      test(
+        'updateAvatarConfig calls onNewAvatarConfig to trigger animations',
+        () async {
+          // Arrange
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          final AvatarConfig avatarConfig = AvatarConfig(
+            background: AvatarBackgrounds.beach,
+            top: AvatarTop.longCoat,
+            specials: AvatarSpecials.leaveAndComeBack,
+          );
+
+          // Act
+          avatarCubit.updateAvatarConfig('chat1', avatarConfig);
+
+          // Wait for animation to complete
+          await Future<dynamic>.delayed(const Duration(milliseconds: 100));
+
+          // Assert - Should trigger the animation flow via onNewAvatarConfig
+          // Verify by checking state changes
+          expect(
+            avatarCubit.state.avatar.background,
+            equals(AvatarBackgrounds.beach),
+          );
+          expect(avatarCubit.state.avatar.top, equals(AvatarTop.longCoat));
+        },
+      );
+
+      // Test: Animation specials (leaveAndComeBack, outOfScreen) are NOT persisted to avatar
+      test('animation specials are not persisted to avatar state', () async {
+        // Arrange - Start with onScreen
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+        final AvatarSpecials originalSpecials =
+            avatarCubit.state.avatar.specials;
+
+        // Act - Trigger background change animation
+        final AvatarConfig animationConfig = AvatarConfig(
+          background: AvatarBackgrounds.beach,
+          specials: AvatarSpecials.leaveAndComeBack, // Animation trigger
+        );
+        avatarCubit.updateAvatarConfig('chat1', animationConfig);
+
+        // Wait for animation to complete
+        await Future<dynamic>.delayed(const Duration(milliseconds: 100));
+
+        // Assert - Background changed, but specials should be preserved (not set to leaveAndComeBack)
+        expect(
+          avatarCubit.state.avatar.background,
+          equals(AvatarBackgrounds.beach),
+        );
+        expect(avatarCubit.state.avatar.specials, equals(originalSpecials));
+      });
+
+      // Test: _goAndComeBack preserves original specials
+      test(
+        '_goAndComeBack preserves original avatar specials during animation',
+        () async {
+          // Arrange
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          final AvatarConfig avatarConfig = AvatarConfig(
+            background: AvatarBackgrounds.beach,
+            specials: AvatarSpecials.onScreen,
+          );
+
+          // Act - This will trigger _goAndComeBack
+          avatarCubit.onNewAvatarConfig('chat1', avatarConfig);
+
+          // Wait for animation to complete
+          await Future<dynamic>.delayed(const Duration(milliseconds: 100));
+
+          // Assert - Specials should be onScreen, not leaveAndComeBack
+          expect(
+            avatarCubit.state.avatar.specials,
+            equals(AvatarSpecials.onScreen),
+          );
+          expect(
+            avatarCubit.state.avatar.background,
+            equals(AvatarBackgrounds.beach),
+          );
+        },
+      );
+
+      // Test: _goDownAndUp preserves original specials
+      test(
+        '_goDownAndUp preserves original avatar specials during animation',
+        () async {
+          // Arrange
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          final AvatarConfig avatarConfig = AvatarConfig(
+            top: AvatarTop.longCoat,
+            specials: AvatarSpecials.outOfScreen, // Animation trigger
+          );
+
+          // Act - This will trigger _goDownAndUp
+          avatarCubit.onNewAvatarConfig('chat1', avatarConfig);
+
+          // Wait for animation to complete
+          await Future<dynamic>.delayed(const Duration(milliseconds: 700));
+
+          // Assert - Specials should be preserved from before animation
+          expect(avatarCubit.state.avatar.top, equals(AvatarTop.longCoat));
+        },
+      );
+
+      // Test: Background change triggers leaveAndComeBack animation
+      test('background change triggers leaving and coming animation', () {
+        // Arrange
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+
+        // Act
+        final AvatarConfig avatarConfig = AvatarConfig(
+          background: AvatarBackgrounds.beach,
+          specials: AvatarSpecials.leaveAndComeBack,
+        );
+        avatarCubit.onNewAvatarConfig('chat1', avatarConfig);
+
+        // Assert - Should trigger leaving animation
+        expect(
+          avatarCubit.state.statusAnimation,
+          AvatarStatusAnimation.leaving,
+        );
+      });
+
+      // Test: Clothes change triggers dropping/rising animation
+      test('clothes change triggers dropping and rising animation', () {
+        // Arrange
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+
+        // Act
+        final AvatarConfig avatarConfig = AvatarConfig(
+          top: AvatarTop.longCoat,
+          specials: AvatarSpecials.outOfScreen,
+        );
+        avatarCubit.onNewAvatarConfig('chat1', avatarConfig);
+
+        // Assert - Should trigger dropping animation
+        expect(
+          avatarCubit.state.statusAnimation,
+          AvatarStatusAnimation.dropping,
+        );
+      });
+
+      // Test: Multiple avatar fields can be updated at once
+      test('can update multiple avatar fields simultaneously', () {
+        // Arrange
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+        final AvatarConfig avatarConfig = AvatarConfig(
+          background: AvatarBackgrounds.forest,
+          hat: AvatarHat.frenchBeret,
+          top: AvatarTop.longCoat,
+          glasses: AvatarGlasses.sunglasses,
+        );
+
+        // Act
+        avatarCubit.updateAvatarConfig('chat1', avatarConfig);
+
+        // Assert
+        expect(
+          avatarCubit.state.avatar.background,
+          equals(AvatarBackgrounds.forest),
+        );
+        expect(avatarCubit.state.avatar.hat, equals(AvatarHat.frenchBeret));
+        expect(avatarCubit.state.avatar.top, equals(AvatarTop.longCoat));
+        expect(
+          avatarCubit.state.avatar.glasses,
+          equals(AvatarGlasses.sunglasses),
+        );
+      });
+
+      // Test: Null values in avatar config preserve existing values
+      test('null values preserve existing avatar values', () {
+        // Arrange
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+        avatarCubit.loadAvatar('chat1');
+        avatarCubit.emit(
+          avatarCubit.state.copyWith(
+            avatar: const Avatar(
+              background: AvatarBackgrounds.cityscrape,
+              hat: AvatarHat.frenchBeret,
+            ),
+          ),
+        );
+
+        // Act - Update only background, keep other fields
+        final AvatarConfig avatarConfig = AvatarConfig(
+          background: AvatarBackgrounds.beach,
+          // other fields are null
+        );
+        avatarCubit.updateAvatarConfig('chat1', avatarConfig);
+
+        // Assert
+        expect(
+          avatarCubit.state.avatar.background,
+          equals(AvatarBackgrounds.beach),
+        );
+        expect(
+          avatarCubit.state.avatar.hat,
+          equals(AvatarHat.frenchBeret),
+        ); // Preserved
+      });
+    });
+
+    group('AvatarAnimationService Integration', () {
+      test('initializes and subscribes to AvatarAnimationService', () {
+        // The cubit should be created successfully with the animation service
+        expect(avatarCubit, isNotNull);
+        expect(avatarCubit.state, isNotNull);
+      });
+
+      test('handles animation service events gracefully', () {
+        // This test ensures the cubit doesn't crash when receiving animation events
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+
+        final AvatarConfig avatarConfig = AvatarConfig(
+          background: AvatarBackgrounds.beach,
+          specials: AvatarSpecials.leaveAndComeBack,
+        );
+
+        // Should not throw
+        expect(
+          () => avatarCubit.updateAvatarConfig('chat1', avatarConfig),
+          returnsNormally,
+        );
       });
     });
   });

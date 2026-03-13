@@ -334,6 +334,9 @@ class MockAvatarAnimationService implements AvatarAnimationService {
 
   @override
   Future<void> playNewChatSequence(String chatId, AvatarConfig config) async {}
+
+  @override
+  void emitUpdateConfig(String chatId, AvatarConfig config) {}
 }
 
 class MockChatEntryService implements ChatEntryService {
