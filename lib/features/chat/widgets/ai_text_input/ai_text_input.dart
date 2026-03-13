@@ -8,6 +8,8 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/chat_entry.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
@@ -16,8 +18,6 @@ import '../../../../core/widgets/glassmorphic/glassmorphic_text_field.dart';
 import '../../../../core/widgets/picker_buttons.dart';
 import '../../../talking/presentation/bloc/talking_cubit.dart';
 import '../../../talking/presentation/bloc/talking_state.dart';
-import '../../../../core/models/chat.dart';
-import '../../../../core/models/chat_entry.dart';
 import '../../presentation/bloc/chat_cubit.dart';
 import '../../presentation/bloc/chat_state.dart';
 import '../function_calling_widget.dart';
@@ -38,12 +38,14 @@ class _AiTextInputState extends State<AiTextInput> {
   File? _pickedImage;
   SpeechToText? _speechToText;
   bool _speechEnabled = false;
+  bool _isSubmitting = false;
 
   bool get _isSpeechListening => _speechToText?.isListening ?? false;
 
   @override
   void initState() {
     super.initState();
+    _isSubmitting = false;
     _initSpeechToText();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!widget.onlyText) {
@@ -109,83 +111,102 @@ class _AiTextInputState extends State<AiTextInput> {
       },
       child: BlocBuilder<ChatCubit, ChatState>(
         builder: (BuildContext context, ChatState state) {
-          return BlocBuilder<TalkingCubit, TalkingState>(
-            builder: (BuildContext context, TalkingState talkingState) {
-              ChatEntry? lastUserEntry;
-              final List<ChatEntry> lastFunctionCallEntries = <ChatEntry>[];
-              if (state.currentChat.entries.isNotEmpty) {
-                for (final ChatEntry entry
-                    in state.currentChat.entries.reversed) {
-                  if (entry.entryType == EntryType.user) {
-                    lastUserEntry = entry;
-                    break;
-                  }
-                }
-                if (state.currentChat.entries.last.entryType ==
-                    EntryType.functionCalling) {
+          return BlocListener<TalkingCubit, TalkingState>(
+            listenWhen: (TalkingState previous, TalkingState current) =>
+                previous.runtimeType != current.runtimeType,
+            listener: (BuildContext context, TalkingState talkingState) {
+              if (talkingState is IdleState && _isSubmitting) {
+                setState(() {
+                  _isSubmitting = false;
+                });
+              }
+            },
+            child: BlocBuilder<TalkingCubit, TalkingState>(
+              builder: (BuildContext context, TalkingState talkingState) {
+                ChatEntry? lastUserEntry;
+                final List<ChatEntry> lastFunctionCallEntries = <ChatEntry>[];
+                if (state.currentChat.entries.isNotEmpty) {
                   for (final ChatEntry entry
                       in state.currentChat.entries.reversed) {
-                    if (entry.entryType == EntryType.functionCalling) {
-                      lastFunctionCallEntries.add(entry);
-                    } else {
+                    if (entry.entryType == EntryType.user) {
+                      lastUserEntry = entry;
                       break;
                     }
                   }
+                  if (state.currentChat.entries.last.entryType ==
+                      EntryType.functionCalling) {
+                    for (final ChatEntry entry
+                        in state.currentChat.entries.reversed) {
+                      if (entry.entryType == EntryType.functionCalling) {
+                        lastFunctionCallEntries.add(entry);
+                      } else {
+                        break;
+                      }
+                    }
+                  }
                 }
-              }
 
-              return Column(
-                children: <Widget>[
-                  if (_pickedImage != null)
-                    PickedImagePreview(imagePath: _pickedImage!.path),
-                  Stack(
-                    children: <Widget>[
-                      Opacity(
-                        opacity: talkingState.status == TalkingStatus.idle
-                            ? 1
-                            : widget.onlyText
-                            ? 1
-                            : 0,
-                        child: _buildTextField(
-                          currentAvatar: widget.avatar ?? const Avatar(),
-                          currentLanguage: state.currentLanguage,
-                          currentChat: state.currentChat,
-                          functionCallingEnabled: state.functionCallingEnabled,
-                        ),
-                      ),
-                      Column(
-                        children: <Widget>[
-                          ...lastFunctionCallEntries.map(
-                            (ChatEntry entry) => FunctionCallingWidget(
-                              functionCallingText: entry.body,
-                            ),
+                return Column(
+                  children: <Widget>[
+                    if (_pickedImage != null)
+                      PickedImagePreview(imagePath: _pickedImage!.path),
+                    Stack(
+                      children: <Widget>[
+                        Opacity(
+                          opacity:
+                              widget.onlyText ||
+                                  (talkingState is! GeneratingState &&
+                                      talkingState is! SpeakingState &&
+                                      !_isSubmitting)
+                              ? 1
+                              : 0,
+                          child: _buildTextField(
+                            currentAvatar: widget.avatar ?? const Avatar(),
+                            currentLanguage: state.currentLanguage,
+                            currentChat: state.currentChat,
+                            functionCallingEnabled:
+                                state.functionCallingEnabled,
                           ),
-                        ],
-                      ),
-                      if (talkingState.status != TalkingStatus.initial &&
-                          (talkingState is SpeakingState ||
-                              talkingState is GeneratingState) &&
-                          !widget.onlyText &&
-                          lastUserEntry != null)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        ),
+                        Column(
                           children: <Widget>[
-                            Flexible(
-                              child: CurrentPromptText(
-                                prompt: lastUserEntry.body.getVisiblePrompt(),
+                            ...lastFunctionCallEntries.map(
+                              (ChatEntry entry) => FunctionCallingWidget(
+                                functionCallingText: entry.body,
                               ),
                             ),
-                            if (lastUserEntry.attachedImage != null)
-                              PickedImagePreview(
-                                imagePath: lastUserEntry.attachedImage!,
-                              ),
                           ],
                         ),
-                    ],
-                  ),
-                ],
-              );
-            },
+                        if (lastUserEntry != null &&
+                            !widget.onlyText &&
+                            (talkingState.status != TalkingStatus.initial &&
+                                    (talkingState is SpeakingState ||
+                                        talkingState is GeneratingState) ||
+                                _isSubmitting))
+                          Padding(
+                            padding: const EdgeInsets.only(right: 82),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Flexible(
+                                  child: CurrentPromptText(
+                                    prompt: lastUserEntry.body
+                                        .getVisiblePrompt(),
+                                  ),
+                                ),
+                                if (lastUserEntry.attachedImage != null)
+                                  PickedImagePreview(
+                                    imagePath: lastUserEntry.attachedImage!,
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
           );
         },
       ),
@@ -297,9 +318,14 @@ class _AiTextInputState extends State<AiTextInput> {
     _controller.clear();
     setState(() {
       _pickedImage = null;
+      _isSubmitting = true;
     });
 
     // Use ChatCubit for streaming
+    AppLogger.debug(
+      'AiTextInput: Calling streamResponse, onlyText=${widget.onlyText}',
+      tag: 'AiTextInput',
+    );
     await context.read<ChatCubit>().streamResponse(
       prompt,
       onlyText: widget.onlyText,
@@ -313,6 +339,11 @@ class _AiTextInputState extends State<AiTextInput> {
     if (!mounted) return;
 
     // Reset UI state to success once the streaming request safely returns
+    AppLogger.debug(
+      'AiTextInput: streamResponse completed, calling resetStatus. '
+      'Current status: ${context.read<ChatCubit>().state.status}',
+      tag: 'AiTextInput',
+    );
     context.read<ChatCubit>().resetStatus();
 
     // TTS is handled automatically during streaming via TtsQueueManager

@@ -559,6 +559,15 @@ class ChatCubit extends Cubit<ChatState> {
   }) async {
     emit(state.copyWith(streamingContent: '', streamingSentenceCount: 0));
 
+    // Set status to typing to show typing animation
+    AppLogger.debug(
+      'Setting status to typing, current status: ${state.status}',
+      tag: 'ChatCubit',
+    );
+    emit(state.copyWith(status: ChatStatus.typing));
+    AppLogger.debug('Status after emit: ${state.status}', tag: 'ChatCubit');
+    _appLifecycleService.emitStreamingStateChanged(ChatStatus.typing);
+
     await _chatStreamingService.streamResponse(
       prompt: prompt,
       onlyText: onlyText,
@@ -573,12 +582,28 @@ class ChatCubit extends Cubit<ChatState> {
       },
       onStreamingUpdate: (String content, int sentenceCount) {
         // Update streaming content state
+        // Change status to streaming on first content
+        final ChatStatus newStatus = state.status == ChatStatus.typing
+            ? ChatStatus.streaming
+            : state.status;
+
+        AppLogger.debug(
+          'Streaming update: content length=${content.length}, '
+          'current status=${state.status}, new status=$newStatus',
+          tag: 'ChatCubit',
+        );
+
         emit(
           state.copyWith(
             streamingContent: content,
             streamingSentenceCount: sentenceCount,
+            status: newStatus,
           ),
         );
+
+        if (newStatus == ChatStatus.streaming) {
+          _appLifecycleService.emitStreamingStateChanged(ChatStatus.streaming);
+        }
       },
       onStreamComplete: (Chat finalChat) {
         // Stream completed successfully
@@ -593,8 +618,10 @@ class ChatCubit extends Cubit<ChatState> {
             currentChat: finalChat,
             openedChat: finalChat,
             chatsList: updatedChatsList,
+            status: ChatStatus.success,
           ),
         );
+        _appLifecycleService.emitStreamingStateChanged(ChatStatus.success);
 
         // Trigger avatar animation if the last entry contains avatar changes
         if (finalChat.entries.isNotEmpty) {

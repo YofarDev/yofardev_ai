@@ -13,9 +13,14 @@ import '../presentation/bloc/chat_state.dart';
 /// Should be placed in a Stack at the bottom-right of the screen.
 /// Tapping interrupts the assistant's TTS and animation.
 class FloatingStopButton extends StatelessWidget {
-  const FloatingStopButton({super.key, this.bottomPadding = 100});
+  const FloatingStopButton({
+    super.key,
+    this.bottomPadding = 100,
+    this.onlyText = false,
+  });
 
   final double bottomPadding;
+  final bool onlyText;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +30,7 @@ class FloatingStopButton extends StatelessWidget {
         return BlocBuilder<TalkingCubit, TalkingState>(
           builder: (BuildContext context, TalkingState talkingState) {
             final bool shouldShow =
-                state.status == ChatStatus.streaming ||
+                (!onlyText && state.status == ChatStatus.streaming) ||
                 talkingState is SpeakingState ||
                 talkingState is GeneratingState ||
                 talkingState is WaitingState;

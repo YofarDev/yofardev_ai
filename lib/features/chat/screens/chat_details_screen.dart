@@ -57,13 +57,26 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                   child: Column(
                     children: <Widget>[
                       Expanded(
-                        child: ChatConversationList(
-                          persona: chat.persona,
-                          entries: chat.entries.reversed.toList(),
-                          isTyping: state.status == ChatStatus.typing,
-                          isStreaming: state.status == ChatStatus.streaming,
-                          showEverything: _showEverything,
-                          limitParameterSize: _limitParamaterSize,
+                        child: Builder(
+                          builder: (BuildContext context) {
+                            final bool isTyping =
+                                state.status == ChatStatus.typing;
+                            final bool isStreaming =
+                                state.status == ChatStatus.streaming;
+                            AppLogger.debug(
+                              'ChatDetailsScreen: Building conversation list, '
+                              'status=${state.status}, isTyping=$isTyping, isStreaming=$isStreaming',
+                              tag: 'ChatDetails',
+                            );
+                            return ChatConversationList(
+                              persona: chat.persona,
+                              entries: chat.entries.reversed.toList(),
+                              isTyping: isTyping,
+                              isStreaming: isStreaming,
+                              showEverything: _showEverything,
+                              limitParameterSize: _limitParamaterSize,
+                            );
+                          },
                         ),
                       ),
                       AiTextInput(onlyText: true, avatar: chat.avatar),
@@ -89,7 +102,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                     );
                   },
                 ),
-                const FloatingStopButton(),
+                const FloatingStopButton(onlyText: true),
               ],
             );
           },
