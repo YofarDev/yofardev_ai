@@ -56,6 +56,7 @@ class ChatConversationList extends StatelessWidget {
             if (entries[adjustedIndex].entryType == EntryType.functionCalling)
               FunctionCallingWidget(
                 functionCallingText: entries[adjustedIndex].body,
+                showEverything: showEverything,
               )
             else
               ChatMessageItem(

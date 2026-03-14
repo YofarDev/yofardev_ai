@@ -227,6 +227,7 @@ class YofardevAgent {
               <String, dynamic>{
                 'name': result['name'] as String,
                 'parameters': result['parameters'] as Map<String, dynamic>,
+                'result': result['result'],
               },
             ];
         entries.add(
