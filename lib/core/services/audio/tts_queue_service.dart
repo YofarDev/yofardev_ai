@@ -6,12 +6,14 @@ import '../../../features/sound/data/datasources/tts_datasource.dart';
 import '../../../features/sound/domain/tts_queue_item.dart';
 import '../../models/voice_effect.dart';
 import 'interruption_service.dart';
+import 'voice_effects_service.dart';
 import '../../utils/logger.dart';
 
 /// Manages queue of TTS generation and playback
 class TtsQueueService {
   final TtsDatasource _ttsDatasource;
   final InterruptionService _interruptionService;
+  final VoiceEffectsService _voiceEffectsService;
   final List<TtsQueueItem> _queue = <TtsQueueItem>[];
   final StreamController<String> _audioController =
       StreamController<String>.broadcast();
@@ -25,8 +27,10 @@ class TtsQueueService {
   TtsQueueService({
     required TtsDatasource ttsDatasource,
     required InterruptionService interruptionService,
+    required VoiceEffectsService voiceEffectsService,
   }) : _ttsDatasource = ttsDatasource,
-       _interruptionService = interruptionService {
+       _interruptionService = interruptionService,
+       _voiceEffectsService = voiceEffectsService {
     // Listen to interruptions
     _interruptionSubscription = _interruptionService.interruptionStream.listen(
       (_) => _handleInterruption(),
@@ -140,25 +144,29 @@ class TtsQueueService {
         tag: 'TtsQueueService',
       );
 
-      // Generate audio
-      final String audioPath = await _ttsDatasource.textToFrenchMaleVoice(
+      // Generate audio (with neutral voice effects for post-processing)
+      final String rawAudioPath = await _ttsDatasource.textToFrenchMaleVoice(
         text: item.text,
         language: item.language,
         voiceEffect: item.voiceEffect,
       );
 
+      // Apply post-processing voice effects using FFmpeg
+      final String processedAudioPath = await _voiceEffectsService
+          .applyVoiceEffects(rawAudioPath, item.voiceEffect);
+
       // Update item as completed
       _queue[0] = item.copyWith(
-        audioPath: audioPath,
+        audioPath: processedAudioPath,
         isCompleted: true,
         isProcessing: false,
       );
 
       // Emit to stream for playback
-      _audioController.add(audioPath);
+      _audioController.add(processedAudioPath);
 
       AppLogger.debug(
-        'TTS generated successfully: $audioPath',
+        'TTS generated successfully: $processedAudioPath',
         tag: 'TtsQueueService',
       );
 

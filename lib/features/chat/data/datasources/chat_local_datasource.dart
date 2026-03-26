@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,8 +34,9 @@ class ChatLocalDatasource {
         language ?? PlatformDispatcher.instance.locales.first.languageCode;
     final ChatPersona persona = await _settingsDatasource.getPersona();
     final Avatar defaultAvatar = persona.getDefaultAvatar();
-    final AvatarBackgrounds randomBackground = AvatarBackgrounds
-        .values[Random().nextInt(AvatarBackgrounds.values.length)];
+    // Use the new chat pool instead of all backgrounds
+    final AvatarBackgrounds randomBackground =
+        AvatarBackgroundsNewChatPool.getRandom();
     final Chat newChat = Chat(
       id: newChatId,
       avatar: defaultAvatar.copyWith(background: randomBackground),

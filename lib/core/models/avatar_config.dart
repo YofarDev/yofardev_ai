@@ -213,6 +213,38 @@ extension BgImagesExtension on AvatarBackgrounds? {
   }
 }
 
+/// Extension providing the pool of backgrounds available when creating a new chat
+///
+/// EDIT THIS LIST to control which backgrounds can be randomly assigned
+/// when the user creates a new chat
+extension AvatarBackgroundsNewChatPool on AvatarBackgrounds {
+  /// The pool of backgrounds to choose from when creating a new chat
+  static List<AvatarBackgrounds> get newChatPool => <AvatarBackgrounds>[
+    // ▼▼▼ EDIT THIS LIST - Add/remove backgrounds as desired ▼▼▼
+    AvatarBackgrounds.lake,
+    AvatarBackgrounds.beach,
+    AvatarBackgrounds.forest,
+    AvatarBackgrounds.library,
+    AvatarBackgrounds.bedroom,
+    AvatarBackgrounds.livingRoom,
+    AvatarBackgrounds.park,
+    AvatarBackgrounds.parisianCafe,
+    AvatarBackgrounds.artGallery,
+    AvatarBackgrounds.office,
+    // ▲▲▲ EDIT THIS LIST - Add/remove backgrounds as desired ▲▲▲
+  ];
+
+  /// Get a random background from the new chat pool
+  static AvatarBackgrounds getRandom() {
+    final List<AvatarBackgrounds> pool = newChatPool;
+    if (pool.isEmpty) {
+      // Fallback to lake if pool is empty
+      return AvatarBackgrounds.lake;
+    }
+    return pool[DateTime.now().millisecondsSinceEpoch % pool.length];
+  }
+}
+
 extension CostumeExtension on AvatarCostume {
   VoiceEffect getVoiceEffect() {
     switch (this) {

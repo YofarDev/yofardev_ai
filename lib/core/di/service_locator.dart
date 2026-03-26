@@ -39,6 +39,7 @@ import '../repositories/locale_repository_impl.dart';
 import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
+import '../services/audio/voice_effects_service.dart';
 import '../services/agent/yofardev_agent.dart';
 import '../services/agent/tool_registry.dart';
 import '../services/avatar_animation_service.dart';
@@ -158,10 +159,12 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<AudioAmplitudeService>(
     () => AudioAmplitudeService(),
   );
+  getIt.registerLazySingleton<VoiceEffectsService>(() => VoiceEffectsService());
   getIt.registerLazySingleton<TtsQueueService>(
     () => TtsQueueService(
       ttsDatasource: getIt<TtsDatasource>(),
       interruptionService: getIt<InterruptionService>(),
+      voiceEffectsService: getIt<VoiceEffectsService>(),
     ),
   );
 

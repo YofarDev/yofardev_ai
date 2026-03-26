@@ -4,11 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/audio/voice_effects_service.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 
 class MockTtsDatasource extends Mock implements TtsDatasource {}
+
+class MockVoiceEffectsService extends Mock implements VoiceEffectsService {}
 
 void main() {
   // Register fallback value for VoiceEffect
@@ -20,14 +23,22 @@ void main() {
     late TtsQueueService manager;
     late MockTtsDatasource mockDatasource;
     late InterruptionService interruptionService;
+    late MockVoiceEffectsService mockVoiceEffectsService;
 
     setUp(() {
       mockDatasource = MockTtsDatasource();
       interruptionService = InterruptionService();
+      mockVoiceEffectsService = MockVoiceEffectsService();
       manager = TtsQueueService(
         ttsDatasource: mockDatasource,
         interruptionService: interruptionService,
+        voiceEffectsService: mockVoiceEffectsService,
       );
+
+      // Setup default behavior for voice effects service
+      when(
+        () => mockVoiceEffectsService.applyVoiceEffects(any(), any()),
+      ).thenAnswer((_) async => '/path/to/audio.wav');
     });
 
     tearDown(() {
@@ -228,10 +239,12 @@ void main() {
     late MockTtsDatasource mockTtsDatasource;
     late InterruptionService interruptionService;
     late TtsQueueService queueManager;
+    late MockVoiceEffectsService mockVoiceEffectsService;
 
     setUp(() {
       mockTtsDatasource = MockTtsDatasource();
       interruptionService = InterruptionService();
+      mockVoiceEffectsService = MockVoiceEffectsService();
 
       when(
         () => mockTtsDatasource.textToFrenchMaleVoice(
@@ -239,6 +252,11 @@ void main() {
           language: any(named: 'language'),
           voiceEffect: any(named: 'voiceEffect'),
         ),
+      ).thenAnswer((_) async => '/path/to/audio.mp3');
+
+      // Setup default behavior for voice effects service
+      when(
+        () => mockVoiceEffectsService.applyVoiceEffects(any(), any()),
       ).thenAnswer((_) async => '/path/to/audio.mp3');
     });
 
@@ -252,6 +270,7 @@ void main() {
       queueManager = TtsQueueService(
         ttsDatasource: mockTtsDatasource,
         interruptionService: interruptionService,
+        voiceEffectsService: mockVoiceEffectsService,
       );
 
       // Pause processing to keep items in queue

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/di/service_locator.dart';
 import '../../../core/models/demo_script.dart';
 import '../../../core/res/app_colors.dart';
+import '../../../core/utils/logger.dart';
 import '../../avatar/presentation/bloc/avatar_cubit.dart';
 import '../../avatar/presentation/bloc/avatar_state.dart';
 import '../../chat/presentation/bloc/chat_cubit.dart';
 import '../../chat/presentation/bloc/chat_state.dart';
 import '../../chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../demo/presentation/bloc/demo_cubit.dart';
+import '../../demo/presentation/bloc/demo_state.dart';
+import '../../demo/data/repositories/demo_repository_impl.dart';
 import '../../talking/presentation/bloc/talking_cubit.dart';
 import '../../talking/presentation/bloc/talking_state.dart';
 import '../widgets/home_content_stack.dart';
@@ -43,6 +47,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _handleTripleTap() {
+    AppLogger.debug(
+      'Triple tap detected - count: $_tapCount',
+      tag: 'HomeScreen',
+    );
     final DateTime now = DateTime.now();
     if (_lastTapTime != null &&
         now.difference(_lastTapTime!).inMilliseconds < 500) {
@@ -52,10 +60,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     _lastTapTime = now;
 
+    AppLogger.debug('Tap count after increment: $_tapCount', tag: 'HomeScreen');
+
     if (_tapCount >= 3) {
+      AppLogger.info(
+        'Triple tap threshold reached, starting demo',
+        tag: 'HomeScreen',
+      );
       _tapCount = 0;
-      context.read<DemoCubit>().startDemo(DemoScripts.beachDemo);
+      _startDemoMode();
     }
+  }
+
+  Future<void> _startDemoMode() async {
+    final String chatId = context.read<ChatCubit>().state.currentChat.id;
+    final DemoService demoService = getIt<DemoService>();
+    await demoService.activateDemo(
+      chatId: chatId,
+      script: DemoScripts.beachDemo,
+    );
+    context.read<DemoCubit>().startDemo(DemoScripts.beachDemo);
   }
 
   @override
@@ -96,20 +120,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: BlocBuilder<ChatCubit, ChatState>(
-        builder: (BuildContext context, ChatState chatsState) {
-          return BlocBuilder<TalkingCubit, TalkingState>(
-            builder: (BuildContext context, TalkingState talkingState) {
-              return HomeContentStack(
-                chatsState: chatsState,
-                talkingState: talkingState,
-                onTripleTap: _handleTripleTap,
-              );
-            },
+    return BlocListener<DemoCubit, DemoState>(
+      listener: (BuildContext context, DemoState state) {
+        if (state.isActive) {
+          AppLogger.info(
+            'Demo activated - showing snackbar',
+            tag: 'HomeScreen',
           );
-        },
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Demo mode activated'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: BlocBuilder<ChatCubit, ChatState>(
+          builder: (BuildContext context, ChatState chatsState) {
+            return BlocBuilder<TalkingCubit, TalkingState>(
+              builder: (BuildContext context, TalkingState talkingState) {
+                return HomeContentStack(
+                  chatsState: chatsState,
+                  talkingState: talkingState,
+                  onTripleTap: _handleTripleTap,
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

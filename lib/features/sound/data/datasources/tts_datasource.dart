@@ -101,7 +101,7 @@ class TtsDatasource {
     required VoiceEffect voiceEffect,
   }) async {
     // Create config based on VoiceEffect
-    const TTSConfig config = TTSConfig(speechSpeed: 1);
+    const TTSConfig config = TTSConfig(speechSpeed: 1, denoisingSteps: 4);
 
     // Synthesize speech
     final TTSResult result = await _supertonicTTS!.synthesize(

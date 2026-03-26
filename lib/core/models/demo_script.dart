@@ -101,7 +101,7 @@ class DemoScripts {
       ),
       FakeLlmResponse(
         jsonBody:
-            '{"message": "Excellente idée ! Allons à la plage. Je vois déjà les vagues qui s\'écrasent sur le sable... C\'est tellement relaxant.", "background": "beach"}',
+            '{"message": "Excellente idée ! Allons à la plage. Je vois déjà les vagues qui s\'écrasent sur le sable. C\'est tellement relaxant.", "background": "beach"}',
       ),
       FakeLlmResponse(
         jsonBody:
