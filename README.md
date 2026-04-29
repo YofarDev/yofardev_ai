@@ -24,15 +24,37 @@ Also, the app is probably only working on Android (needs to test more on iOS).
   <img src="screenshots/8.png" width="20%" />
 </p>
 
+## What's New in v3.0
+
+### Streaming & Real-time
+- **Streaming LLM + TTS queue** — Real-time streaming responses with priority-based audio queue
+- **Task-specific LLM configuration** — Configure different LLMs for different tasks (coding, creative, general)
+- **LLM-generated chat titles** — Auto-generated titles after first message
+- **Interrupt handling** — Stop button to cancel playback mid-response
+- **Lip-sync animation** — Amplitude-based mouth movement
+
+### Function Calling
+- **In-app configuration** — Set API keys and enable/disable services directly in the app
+- **Function calling display** — Expandable tiles show function results
+
+### UI/UX Improvements
+- **New chat animations** — Animated background transitions when creating chats
+- **Demo mode** — Test conversations with JSON responses
+- **Glassmorphic text field** — Modern input design
+- **Voice effects** — FFmpeg post-processing for voice customization
+
+### Localization
+- **Full French/English support** — Complete translations via ARB system
+- **Locale persistence** — Saves language preference
+
 ## New features in v2.0
 
 - Function calling (work in progress, not always perfect) :
 	* **`getCurrentWeather(location: string)`**
   * **`getMostPopularNewsOfTheDay()`**
-	* **`searchGoogle(query: string)`**
-	* And more...
-	 <p>
-<img src="screenshots/9.png" width="20%" /></p>
+  * **`searchGoogle(query: string)`**
+  * And more...
+ </p>
 - You can pick a persona for your assistant (normal, coach, philosopher, conservative...)
 - Not limited to only Gemini. Set your OpenAI format LLM (cloud or local)
 - It doesn't send a sound effect every message anymore!!
@@ -56,7 +78,7 @@ Also, the app is probably only working on Android (needs to test more on iOS).
 
 To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_ai/releases/) directly for Android, or build it yourself (I didn't provide any api keys, so most of function calling won't work). To build it, you need:
 
-- Flutter (>=3.4.3 <4.0.0)
+- Flutter (>=3.8.0 <4.0.0)
 - Android SDK (for Android builds)
 - Api Key for a LLM service if you use a cloud service, or you can use a local one if it has the OpenAI format
 
@@ -109,5 +131,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Tools used
 
-- For LLM integration I use my own package : [llm\_api_picker](https://github.com/YofarDev/llm_api_picker/)
-- Stable Diffusion 1.5 for the avatar, customizations and backgrounds (AnyLora Anime Mix), with a custom LORA for the character
+- **State Management**: flutter_bloc (Cubit pattern)
+- **Models**: Freezed (immutable data classes with union types)
+- **Error Handling**: fpdart (Either for functional error handling)
+- **DI**: get_it (service locator)
+- **Routing**: go_router
+- **LLM Integration**: [llm_api_picker](https://github.com/YofarDev/llm_api_picker/)
+- **Avatar Generation**: Stable Diffusion 1.5 with custom LORA
