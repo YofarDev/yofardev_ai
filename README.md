@@ -6,7 +6,7 @@ It can now call functions (like searching on internet, getting weather, etc.).
 
 [Free web demo](https://yofardev-ai.web.app) (not all features available because of platform limitations). You need to set either a Google Api Key, or you can set up a LLM with the OpenAI format. Some functions calling won't work on this version.
 
-Most of time, I use the Gemini flash model (1.5 or 2.0), because it's free, fast and reliable. 
+Most of time, I use the Gemini flash model (1.5 or 2.0), because it's free, fast and reliable.
 
 Also, the app is probably only working on Android (needs to test more on iOS).
 
@@ -27,6 +27,7 @@ Also, the app is probably only working on Android (needs to test more on iOS).
 ## What's New in v3.0
 
 ### Streaming & Real-time
+
 - **Streaming LLM + TTS queue** — Real-time streaming responses with priority-based audio queue
 - **Task-specific LLM configuration** — Configure different LLMs for different tasks (coding, creative, general)
 - **LLM-generated chat titles** — Auto-generated titles after first message
@@ -34,31 +35,34 @@ Also, the app is probably only working on Android (needs to test more on iOS).
 - **Lip-sync animation** — Amplitude-based mouth movement
 
 ### Function Calling
+
 - **In-app configuration** — Set API keys and enable/disable services directly in the app
 - **Function calling display** — Expandable tiles show function results
 
 ### UI/UX Improvements
+
 - **New chat animations** — Animated background transitions when creating chats
 - **Demo mode** — Test conversations with JSON responses
 - **Glassmorphic text field** — Modern input design
 - **Voice effects** — FFmpeg post-processing for voice customization
 
 ### Localization
+
 - **Full French/English support** — Complete translations via ARB system
 - **Locale persistence** — Saves language preference
 
 ## New features in v2.0
 
 - Function calling (work in progress, not always perfect) :
-	* **`getCurrentWeather(location: string)`**
+  * **`getCurrentWeather(location: string)`**
   * **`getMostPopularNewsOfTheDay()`**
   * **`searchGoogle(query: string)`**
   * And more...
- </p>
+
+</p>
 - You can pick a persona for your assistant (normal, coach, philosopher, conservative...)
 - Not limited to only Gemini. Set your OpenAI format LLM (cloud or local)
 - It doesn't send a sound effect every message anymore!!
-
 
 ## Features
 
@@ -108,10 +112,10 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
    - Configured and enabled services will be available during conversations
 
    Supported services:
+
    - **OpenWeather**: For weather information (get API key at https://openweathermap.org/api)
    - **New York Times**: For news retrieval (get API key at https://developer.nytimes.com/)
    - **Google Search**: For web search (get API key and Engine ID at https://developers.google.com/custom-search/v1/overview)
-
 5. Run the app:
 
 - `flutter run`
@@ -119,6 +123,7 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 ## Platforms
 
 - Android & iOS: Fully supported
+- MacOs & Linux
 - Web : some features are missing because of platform limitations.
 
 ## Known Issues
@@ -136,5 +141,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Error Handling**: fpdart (Either for functional error handling)
 - **DI**: get_it (service locator)
 - **Routing**: go_router
-- **LLM Integration**: [llm_api_picker](https://github.com/YofarDev/llm_api_picker/)
 - **Avatar Generation**: Stable Diffusion 1.5 with custom LORA
