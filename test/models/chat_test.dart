@@ -13,7 +13,7 @@ void main() {
       expect(chat.id, '');
       expect(chat.entries, <ChatEntry>[]);
       expect(chat.avatar, const Avatar());
-      expect(chat.language, 'en');
+      expect(chat.language, 'fr');
       expect(chat.systemPrompt, '');
       expect(chat.persona, ChatPersona.normal);
     });
@@ -189,6 +189,45 @@ void main() {
         LlmMessageRole.assistant,
       ); // yofardev is assistant
     });
+
+    test('ChatExtension.llmMessages caps history to the last 40 messages', () {
+      final List<ChatEntry> entries = <ChatEntry>[
+        for (int i = 0; i < 100; i++)
+          ChatEntry(
+            id: 'entry$i',
+            entryType: i.isEven ? EntryType.user : EntryType.yofardev,
+            body: 'message $i',
+            timestamp: DateTime.now(),
+          ),
+      ];
+      final Chat chat = Chat(entries: entries);
+
+      final List<LlmMessage> llmMessages = chat.llmMessages;
+
+      // Capped so prompt size (and time-to-first-token) stays bounded.
+      expect(llmMessages.length, 40);
+      // The most recent messages are kept, in order.
+      expect(llmMessages.last.body, 'message 99');
+      expect(llmMessages.first.body, 'message 60');
+    });
+
+    test(
+      'ChatExtension.llmMessages returns all messages under the cap',
+      () {
+        final List<ChatEntry> entries = <ChatEntry>[
+          for (int i = 0; i < 10; i++)
+            ChatEntry(
+              id: 'entry$i',
+              entryType: EntryType.user,
+              body: 'message $i',
+              timestamp: DateTime.now(),
+            ),
+        ];
+        final Chat chat = Chat(entries: entries);
+
+        expect(chat.llmMessages.length, 10);
+      },
+    );
 
     test('ChatExtension.llmMessages should handle attached images', () {
       final List<ChatEntry> entries = <ChatEntry>[

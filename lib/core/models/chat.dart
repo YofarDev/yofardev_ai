@@ -84,6 +84,11 @@ sealed class Chat with _$Chat {
 }
 
 extension ChatExtension on Chat {
+  /// Maximum number of messages sent to the LLM. Capping the history keeps
+  /// the prompt (and therefore time-to-first-token) bounded instead of
+  /// growing every turn; only the count is capped, entry bodies are untouched.
+  static const int maxLlmMessages = 40;
+
   List<LlmMessage> get llmMessages {
     final List<LlmMessage> messages = <LlmMessage>[];
     for (final ChatEntry entry in entries) {
@@ -97,6 +102,9 @@ extension ChatExtension on Chat {
           attachedFile: entry.attachedImage,
         ),
       );
+    }
+    if (messages.length > maxLlmMessages) {
+      return messages.sublist(messages.length - maxLlmMessages);
     }
     return messages;
   }

@@ -205,10 +205,20 @@ class LlmService implements LlmServiceInterface {
     final List<Map<String, dynamic>> apiMessages = messages
         .map((LlmMessage m) => m.toMap())
         .toList();
-    apiMessages.add(<String, dynamic>{
-      'role': 'user',
-      'content': lastUserMessage,
-    });
+    // The chat history already ends with the current user's message; only
+    // append if it's missing, otherwise the same message would be sent twice.
+    if (apiMessages.isEmpty ||
+        apiMessages.last['role'] != LlmMessageRole.user.name) {
+      apiMessages.add(<String, dynamic>{
+        'role': 'user',
+        'content': lastUserMessage,
+      });
+    } else {
+      AppLogger.warning(
+        'User message already present at end of history, skipping duplicate',
+        tag: 'LlmService',
+      );
+    }
 
     final List<Map<String, dynamic>> tools = functions.map((FunctionInfo f) {
       return <String, dynamic>{
