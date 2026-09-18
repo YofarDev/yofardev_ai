@@ -7,15 +7,12 @@ import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/chat_entry.dart';
-import '../../../../core/models/demo_script.dart';
-import '../../../../core/services/prompt_datasource.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../../../core/repositories/settings_repository.dart';
 import '../datasources/chat_local_datasource.dart';
 
 class YofardevRepositoryImpl implements ChatRepository {
   final YofardevAgent _agent;
-  final PromptDatasource _promptService;
   final FakeLlmService _fakeLlmService;
   final ChatLocalDatasource _chatDatasource;
   final SettingsRepository _settingsRepository;
@@ -23,12 +20,10 @@ class YofardevRepositoryImpl implements ChatRepository {
   YofardevRepositoryImpl({
     required SettingsRepository settingsRepository,
     required YofardevAgent agent,
-    required PromptDatasource promptService,
     required FakeLlmService fakeLlmService,
     required ChatLocalDatasource chatDatasource,
   }) : _settingsRepository = settingsRepository,
        _agent = agent,
-       _promptService = promptService,
        _fakeLlmService = fakeLlmService,
        _chatDatasource = chatDatasource;
 
@@ -119,41 +114,31 @@ class YofardevRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Result<List<ChatEntry>>> askYofardevAi(
-    Chat chat,
-    String userMessage, {
-    bool functionCallingEnabled = true,
+  Future<Result<(List<ChatEntry> functionEntries, String augmentedUserMessage)>>
+      prepareToolTurn({
+    required Chat chat,
+    required String userMessage,
   }) async {
     try {
-      // Check if fake LLM service has a scripted response
+      // In demo mode the scripted response is consumed by the streaming path
+      // (FakeLlmService.promptModelStream), so the tool turn is a no-op.
       if (_fakeLlmService.isActive) {
-        final FakeLlmResponse? fakeResponse = _fakeLlmService.getNextResponse();
-        if (fakeResponse != null) {
-          // Wait 600ms to simulate LLM processing
-          await Future<void>.delayed(const Duration(milliseconds: 600));
-
-          return Result<List<ChatEntry>>.ok(<ChatEntry>[
-            ChatEntry(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              entryType: EntryType.yofardev,
-              body: fakeResponse.jsonBody,
-              timestamp: DateTime.now(),
-            ),
-          ]);
-        }
+        return Result<(List<ChatEntry>, String)>.ok(
+          (<ChatEntry>[], userMessage),
+        );
       }
 
-      // Fall back to real LLM
-      final List<ChatEntry> entries = await _agent.ask(
+      final (List<ChatEntry>, String) result = await _agent
+          .checkAndExecuteTools(
         chat: chat,
         userMessage: userMessage,
-        systemPrompt: await _promptService.getSystemPrompt(),
-        functionCallingEnabled: functionCallingEnabled,
         settingsRepository: _settingsRepository,
       );
-      return Result<List<ChatEntry>>.ok(entries);
+      return Result<(List<ChatEntry>, String)>.ok(result);
     } catch (e) {
-      return Result<List<ChatEntry>>.err(NetworkFailure(e.toString(), e));
+      return Result<(List<ChatEntry>, String)>.err(
+        NetworkFailure(e.toString(), e),
+      );
     }
   }
 }

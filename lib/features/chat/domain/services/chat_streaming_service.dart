@@ -8,6 +8,7 @@ import '../../../../core/models/result.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/chat_entry.dart';
 import '../../../../core/models/llm_config.dart';
+import '../../../../core/models/llm_message.dart';
 import '../../../../core/models/voice_effect.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../sound/sound.dart';
@@ -128,16 +129,21 @@ class ChatStreamingService {
         return;
       }
 
+      // Messages sent to the LLM stream. When tools were executed, the last
+      // user message is replaced with the augmented version containing the
+      // tool results.
+      List<LlmMessage> messagesForStream = chat.llmMessages;
+
       if (functionCallingEnabled) {
-        // 1. Check for function calls first
-        final Result<List<ChatEntry>> functionCheckResult =
-            await _chatRepository.askYofardevAi(
-              chat,
-              userEntry.body,
-              functionCallingEnabled: true,
-            );
+        // 1. Detect and execute tools (no final answer generated here)
+        final Result<(List<ChatEntry> functionEntries, String augmentedUserMessage)>
+        functionCheckResult = await _chatRepository.prepareToolTurn(
+          chat: chat,
+          userMessage: userEntry.body,
+        );
 
         List<ChatEntry> functionEntries = <ChatEntry>[];
+        String augmentedUserMessage = userEntry.body;
 
         functionCheckResult.when(
           err: (Failure failure) {
@@ -148,65 +154,56 @@ class ChatStreamingService {
             );
             // Continue with streaming even if function calling fails
           },
-          ok: (List<ChatEntry> entries) {
-            functionEntries = entries;
-            // Add function call entries to chat if any
-            if (entries.isNotEmpty) {
-              final List<ChatEntry> updatedEntries = <ChatEntry>[
-                ...chat.entries,
-                ...entries,
-              ];
-              chat = chat.copyWith(entries: updatedEntries);
-              onChatUpdated(chat);
-            }
-          },
+          ok:
+              (
+                (List<ChatEntry> entries, String augmented) toolTurn,
+              ) {
+                functionEntries = toolTurn.$1;
+                augmentedUserMessage = toolTurn.$2;
+                // Add function call entries to chat if any
+                if (toolTurn.$1.isNotEmpty) {
+                  final List<ChatEntry> updatedEntries = <ChatEntry>[
+                    ...chat.entries,
+                    ...toolTurn.$1,
+                  ];
+                  chat = chat.copyWith(entries: updatedEntries);
+                  onChatUpdated(chat);
+                }
+              },
         );
 
-        // 2. Check if we had function calls - if so, the final response is already included
+        // 2. If tools fired, replace the last user message with the augmented
+        // one so the streamed answer uses the tool results.
         final bool hadFunctionCalls = functionEntries.any(
           (ChatEntry e) => e.entryType == EntryType.functionCalling,
         );
 
         if (hadFunctionCalls) {
-          // Function calls were made, use the final response from the agent
-          final ChatEntry finalResponse = functionEntries.last;
-          final List<ChatEntry> finalEntries = List<ChatEntry>.from(
-            chat.entries,
+          final List<LlmMessage> messages = List<LlmMessage>.from(
+            chat.llmMessages,
           );
-          finalEntries[finalEntries.length - 1] = finalResponse;
-          chat = chat.copyWith(entries: finalEntries);
-          onChatUpdated(chat);
-
-          final ChatEntry lastEntry = chat.entries.last;
-          AppLogger.debug(
-            'Emitting state after function calls: entries.length=${chat.entries.length}, lastEntry.type=${lastEntry.entryType}, lastEntry.body="${lastEntry.body.length > 100 ? lastEntry.body.substring(0, 100) : lastEntry.body}"',
-            tag: 'ChatStreamingService',
-          );
-
-          // Enqueue the final response for TTS if not in text-only mode
-          if (!onlyText) {
-            final String messageText = lastEntry.getMessage();
-            if (messageText.isNotEmpty) {
-              _ttsQueueManager?.enqueue(
-                text: messageText,
-                language: language,
-                voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
-              );
-              AppLogger.debug(
-                'Enqueued TTS for function calling response: "${messageText.length > 50 ? messageText.substring(0, 50) : messageText}..."',
-                tag: 'ChatStreamingService',
-              );
-            }
+          if (messages.isNotEmpty &&
+              messages.last.role == LlmMessageRole.user) {
+            final LlmMessage lastMsg = messages.last;
+            messages[messages.length - 1] = LlmMessage(
+              role: LlmMessageRole.user,
+              body: augmentedUserMessage,
+              attachedFile: lastMsg.attachedFile,
+            );
+          } else {
+            messages.add(
+              LlmMessage(
+                role: LlmMessageRole.user,
+                body: augmentedUserMessage,
+              ),
+            );
           }
-
-          onStreamComplete(chat);
-          await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
-          return;
+          messagesForStream = messages;
         }
       }
 
-      // 3. No function calls - proceed with streaming
-
+      // 3. Stream the answer (covers both the plain path and the
+      // tools-called path)
       final String systemPrompt = await _promptDatasource.getSystemPrompt();
 
       final StringBuffer contentBuffer = StringBuffer();
@@ -217,7 +214,7 @@ class ChatStreamingService {
       await for (final SentenceChunk sentenceChunk
           in _streamProcessor.processStream(
             _llmService.promptModelStream(
-              messages: chat.llmMessages,
+              messages: messagesForStream,
               systemPrompt: systemPrompt,
               config: config,
               returnJson: true,

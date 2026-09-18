@@ -193,20 +193,14 @@ void main() {
         () => mockChatRepository.deleteChat(any()),
       ).thenAnswer((_) async => Result<void>.ok(null));
       when(
-        () => mockChatRepository.askYofardevAi(
-          any(),
-          any(),
-          functionCallingEnabled: any(named: 'functionCallingEnabled'),
+        () => mockChatRepository.prepareToolTurn(
+          chat: any(named: 'chat'),
+          userMessage: any(named: 'userMessage'),
         ),
       ).thenAnswer(
-        (_) async => Result<List<ChatEntry>>.ok(<ChatEntry>[
-          ChatEntry(
-            id: 'test',
-            entryType: EntryType.yofardev,
-            body: 'response',
-            timestamp: DateTime.now(),
-          ),
-        ]),
+        (_) async => Result<(List<ChatEntry>, String)>.ok(
+          (<ChatEntry>[], 'user message'),
+        ),
       );
 
       // Stub mockSettingsRepository default methods
@@ -836,20 +830,14 @@ void main() {
         () => mockChatRepository.updateAvatar(any(), any()),
       ).thenAnswer((_) async => Result<void>.ok(null));
       when(
-        () => mockChatRepository.askYofardevAi(
-          any(),
-          any(),
-          functionCallingEnabled: any(named: 'functionCallingEnabled'),
+        () => mockChatRepository.prepareToolTurn(
+          chat: any(named: 'chat'),
+          userMessage: any(named: 'userMessage'),
         ),
       ).thenAnswer(
-        (_) async => Result<List<ChatEntry>>.ok(<ChatEntry>[
-          ChatEntry(
-            id: 'test',
-            entryType: EntryType.yofardev,
-            body: 'response',
-            timestamp: DateTime.now(),
-          ),
-        ]),
+        (_) async => Result<(List<ChatEntry>, String)>.ok(
+          (<ChatEntry>[], 'user message'),
+        ),
       );
 
       // Stub mockAvatarAnimationService

@@ -82,19 +82,13 @@ class TrackingMockChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Result<List<ChatEntry>>> askYofardevAi(
-    Chat chat,
-    String userMessage, {
-    bool functionCallingEnabled = true,
+  @override
+  Future<Result<(List<ChatEntry> functionEntries, String augmentedUserMessage)>>
+  prepareToolTurn({
+    required Chat chat,
+    required String userMessage,
   }) async {
-    return Result<List<ChatEntry>>.ok(<ChatEntry>[
-      ChatEntry(
-        id: 'test',
-        entryType: EntryType.yofardev,
-        body: 'response',
-        timestamp: DateTime.now(),
-      ),
-    ]);
+    return Result<(List<ChatEntry>, String)>.ok((<ChatEntry>[], userMessage));
   }
 
   @override

@@ -139,7 +139,6 @@ Future<void> setupServiceLocator() async {
     () => YofardevRepositoryImpl(
       settingsRepository: getIt<SettingsRepository>(),
       agent: getIt<YofardevAgent>(),
-      promptService: getIt<PromptDatasource>(),
       fakeLlmService: getIt<FakeLlmService>(),
       chatDatasource: getIt<ChatLocalDatasource>(),
     ),

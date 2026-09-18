@@ -41,12 +41,13 @@ class MockAvatarRepository extends Mock implements AvatarRepository {}
 
 class MockChatRepository implements ChatRepository {
   @override
-  Future<Result<List<ChatEntry>>> askYofardevAi(
-    Chat chat,
-    String userMessage, {
-    bool functionCallingEnabled = true,
+  @override
+  Future<Result<(List<ChatEntry> functionEntries, String augmentedUserMessage)>>
+  prepareToolTurn({
+    required Chat chat,
+    required String userMessage,
   }) async {
-    return Result<List<ChatEntry>>.ok(<ChatEntry>[]);
+    return Result<(List<ChatEntry>, String)>.ok((<ChatEntry>[], userMessage));
   }
 
   @override
