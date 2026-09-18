@@ -2,11 +2,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/models/failure.dart';
+import '../../../../core/models/global_memory.dart';
 import '../../../../core/models/result.dart';
 import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
+import '../../../../core/repositories/global_memory_repository.dart';
 import '../../../../core/repositories/settings_repository.dart';
 import 'settings_state.dart';
 
@@ -15,12 +17,15 @@ class SettingsCubit extends Cubit<SettingsState> {
   SettingsCubit({
     required SettingsRepository settingsRepository,
     required LlmServiceInterface llmService,
+    GlobalMemoryRepository? globalMemoryRepository,
   }) : _settingsRepository = settingsRepository,
        _llmService = llmService,
+       _globalMemoryRepository = globalMemoryRepository,
        super(SettingsState.initial());
 
   final SettingsRepository _settingsRepository;
   final LlmServiceInterface _llmService;
+  final GlobalMemoryRepository? _globalMemoryRepository;
 
   /// Load all settings
   Future<void> loadSettings() async {
@@ -38,6 +43,10 @@ class SettingsCubit extends Cubit<SettingsState> {
 
     // Load function calling configurations
     await loadFunctionCallingConfigs();
+
+    // Load global memory state
+    await loadMemoryEnabled();
+    await loadGlobalMemory();
 
     // Load available LLM configs
     try {
@@ -380,6 +389,83 @@ class SettingsCubit extends Cubit<SettingsState> {
         error: failure,
       ),
       ok: (_) => emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled)),
+    );
+  }
+
+  /// Load the global memory enabled setting
+  Future<void> loadMemoryEnabled() async {
+    final Result<bool> result = await _settingsRepository.getMemoryEnabled();
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to load memory enabled setting',
+        tag: 'SettingsCubit',
+        error: failure,
+      ),
+      ok: (bool enabled) => emit(state.copyWith(memoryEnabled: enabled)),
+    );
+  }
+
+  /// Toggle the global memory feature
+  Future<void> setMemoryEnabled(bool enabled) async {
+    final Result<void> result = await _settingsRepository.setMemoryEnabled(
+      enabled,
+    );
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to toggle global memory',
+        tag: 'SettingsCubit',
+        error: failure,
+      ),
+      ok: (_) => emit(state.copyWith(memoryEnabled: enabled)),
+    );
+  }
+
+  /// Reload the global memory items from storage
+  ///
+  /// Memory is also updated in the background by the chat feature, so pages
+  /// should call this when shown to refresh potentially stale items.
+  Future<void> loadGlobalMemory() async {
+    if (_globalMemoryRepository == null) return;
+    final Result<GlobalMemory> result = await _globalMemoryRepository
+        .getMemory();
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to load global memory',
+        tag: 'SettingsCubit',
+        error: failure,
+      ),
+      ok: (GlobalMemory memory) =>
+          emit(state.copyWith(memoryItems: memory.items)),
+    );
+  }
+
+  /// Delete a single global memory item
+  Future<void> deleteMemoryItem(String id) async {
+    if (_globalMemoryRepository == null) return;
+    final Result<GlobalMemory> result = await _globalMemoryRepository
+        .deleteItem(id);
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to delete memory item',
+        tag: 'SettingsCubit',
+        error: failure,
+      ),
+      ok: (GlobalMemory memory) =>
+          emit(state.copyWith(memoryItems: memory.items)),
+    );
+  }
+
+  /// Clear all global memory items
+  Future<void> clearMemory() async {
+    if (_globalMemoryRepository == null) return;
+    final Result<void> result = await _globalMemoryRepository.clearAll();
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to clear global memory',
+        tag: 'SettingsCubit',
+        error: failure,
+      ),
+      ok: (_) => emit(state.copyWith(memoryItems: <GlobalMemoryItem>[])),
     );
   }
 }

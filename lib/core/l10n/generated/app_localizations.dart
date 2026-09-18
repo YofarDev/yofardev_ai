@@ -254,6 +254,66 @@ abstract class AppLocalizations {
   /// **'Load the default system prompt'**
   String get loadDefaultSystemPrompt;
 
+  /// Title of the global memory settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get memory;
+
+  /// Subtitle of the memory settings tile
+  ///
+  /// In en, this message translates to:
+  /// **'Facts your avatar remembers about you across all chats'**
+  String get memoryDescription;
+
+  /// Explanation shown at the top of the memory page
+  ///
+  /// In en, this message translates to:
+  /// **'Your avatar remembers facts about you across all chats. Review, delete, or clear them here.'**
+  String get memoryPageSubtitle;
+
+  /// Toggle label for the global memory feature
+  ///
+  /// In en, this message translates to:
+  /// **'Enable global memory'**
+  String get enableMemory;
+
+  /// Placeholder shown when the memory list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing memorized yet. Chat with your avatar and it will remember facts about you.'**
+  String get memoryEmpty;
+
+  /// Button label to delete every memory item
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all memory'**
+  String get clearMemory;
+
+  /// Confirmation dialog body for clearing memory
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all memorized facts? This cannot be undone.'**
+  String get clearMemoryConfirmation;
+
+  /// Snackbar shown after deleting a memory item
+  ///
+  /// In en, this message translates to:
+  /// **'Memory item deleted'**
+  String get memoryDeleted;
+
+  /// Task label for the LLM used by global memory extraction
+  ///
+  /// In en, this message translates to:
+  /// **'Memory Extraction'**
+  String get memoryTask;
+
+  /// Description of the memory extraction task in the task LLM page
+  ///
+  /// In en, this message translates to:
+  /// **'LLM used to extract facts for the global memory'**
+  String get memoryLlmDescription;
+
   /// No description provided for @moreVoicesAndroid.
   ///
   /// In en, this message translates to:

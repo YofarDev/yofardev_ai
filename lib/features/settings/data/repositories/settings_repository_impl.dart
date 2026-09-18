@@ -253,4 +253,23 @@ class SettingsRepositoryImpl implements SettingsRepository {
       ok: (void right) => Result<void>.ok(null),
     );
   }
+
+  // Global Memory Configuration
+  @override
+  Future<Result<bool>> getMemoryEnabled() async {
+    final Result<bool> result = await _datasource.getMemoryEnabled();
+    return result.when(
+      err: (Failure failure) => Result<bool>.err(failure),
+      ok: (bool right) => Result<bool>.ok(right),
+    );
+  }
+
+  @override
+  Future<Result<void>> setMemoryEnabled(bool enabled) async {
+    final Result<void> result = await _datasource.setMemoryEnabled(enabled);
+    return result.when(
+      err: (Failure failure) => Result<void>.err(failure),
+      ok: (void right) => Result<void>.ok(null),
+    );
+  }
 }

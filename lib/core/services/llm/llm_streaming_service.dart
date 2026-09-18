@@ -9,6 +9,7 @@ import '../../models/llm_message.dart';
 import 'llm_config_manager.dart';
 import 'llm_stream_chunk.dart';
 import 'llm_streaming_service_interface.dart';
+import 'llm_usage_logger.dart';
 
 /// Implementation of LLM streaming service
 ///
@@ -50,6 +51,10 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
       'messages': apiMessages,
       'temperature': activeConfig.temperature,
       'stream': true, // Enable streaming
+      // Ask OpenAI-compatible providers to send a final usage event so
+      // prompt-cache hits are observable. Providers without support are
+      // expected to ignore the field.
+      'stream_options': <String, bool>{'include_usage': true},
     };
 
     if (returnJson) {
@@ -114,6 +119,15 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
         try {
           final Map<String, dynamic> jsonData =
               json.decode(data) as Map<String, dynamic>;
+
+          // The final usage event carries token counts (OpenAI) or cache-hit
+          // stats (DeepSeek) and may have an empty choices list.
+          final Map<String, dynamic>? usage =
+              jsonData['usage'] as Map<String, dynamic>?;
+          if (usage != null) {
+            logTokenUsage(usage);
+          }
+
           final List<dynamic> choices = jsonData['choices'] as List<dynamic>;
           if (choices.isEmpty) continue;
 

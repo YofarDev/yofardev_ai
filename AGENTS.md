@@ -61,8 +61,8 @@ This will give you:
 |------|---------|-------|
 | `lib/core/di/service_locator.dart` | All DI wiring | 228 |
 | `lib/features/chat/presentation/bloc/chat_cubit.dart` | Main chat coordinator | 21.5K |
-| `lib/core/services/agent/yofardev_agent.dart` | AI agent | 8.6K |
-| `lib/core/services/audio/tts_queue_service.dart` | TTS queue | 5.5K |
+| `lib/features/chat/domain/services/chat_streaming_service.dart` | Streaming + inline tool calling | 15.6K |
+| `lib/features/sound/domain/services/tts_queue_service.dart` | TTS queue | 5.5K |
 
 ### Common Operations
 

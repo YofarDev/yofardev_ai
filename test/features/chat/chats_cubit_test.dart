@@ -24,6 +24,7 @@ import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
@@ -66,6 +67,20 @@ class MockStreamProcessorService extends Mock
 class MockChatEntryService extends Mock implements ChatEntryService {}
 
 class MockTtsDatasource extends Mock implements TtsDatasource {}
+
+class MockGlobalMemoryService extends Mock implements GlobalMemoryService {}
+
+/// Factory to create a stubbed GlobalMemoryService for testing
+MockGlobalMemoryService createMockGlobalMemoryService() {
+  final MockGlobalMemoryService service = MockGlobalMemoryService();
+  when(
+    () => service.updateMemory(any()),
+  ).thenAnswer((_) async {});
+  when(
+    () => service.buildMemoryMessage(),
+  ).thenAnswer((_) async => null);
+  return service;
+}
 
 /// Factory to create a real ChatStreamingService with mocked dependencies for testing
 ChatStreamingService createMockChatStreamingService({
@@ -192,16 +207,6 @@ void main() {
       when(
         () => mockChatRepository.deleteChat(any()),
       ).thenAnswer((_) async => Result<void>.ok(null));
-      when(
-        () => mockChatRepository.prepareToolTurn(
-          chat: any(named: 'chat'),
-          userMessage: any(named: 'userMessage'),
-        ),
-      ).thenAnswer(
-        (_) async => Result<(List<ChatEntry>, String)>.ok(
-          (<ChatEntry>[], 'user message'),
-        ),
-      );
 
       // Stub mockSettingsRepository default methods
       when(
@@ -260,6 +265,7 @@ void main() {
           chatEntryService: MockChatEntryService(),
         ),
         appLifecycleService: MockAppLifecycleService(),
+        globalMemoryService: createMockGlobalMemoryService(),
       );
     });
 
@@ -829,16 +835,6 @@ void main() {
       when(
         () => mockChatRepository.updateAvatar(any(), any()),
       ).thenAnswer((_) async => Result<void>.ok(null));
-      when(
-        () => mockChatRepository.prepareToolTurn(
-          chat: any(named: 'chat'),
-          userMessage: any(named: 'userMessage'),
-        ),
-      ).thenAnswer(
-        (_) async => Result<(List<ChatEntry>, String)>.ok(
-          (<ChatEntry>[], 'user message'),
-        ),
-      );
 
       // Stub mockAvatarAnimationService
       when(
@@ -867,6 +863,7 @@ void main() {
           chatEntryService: MockChatEntryService(),
         ),
         appLifecycleService: MockAppLifecycleService(),
+        globalMemoryService: createMockGlobalMemoryService(),
       );
     });
 
@@ -982,6 +979,7 @@ void main() {
           chatTitleService: mockChatTitleService,
           chatStreamingService: mockChatStreamingService,
           appLifecycleService: mockAppLifecycleService,
+          globalMemoryService: createMockGlobalMemoryService(),
         );
 
         // Initialize with a test chat

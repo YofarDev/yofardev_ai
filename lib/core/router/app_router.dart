@@ -16,6 +16,7 @@ import '../../features/settings/screens/function_calling_config_screen.dart';
 import '../../features/settings/screens/llm/llm_config_page.dart';
 import '../../features/settings/screens/llm/llm_selection_page.dart';
 import '../../features/settings/screens/llm/task_llm_config_page.dart';
+import '../../features/settings/screens/memory_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/res/app_constants.dart';
 import '../../core/widgets/constrained_width.dart';
@@ -132,6 +133,15 @@ class AppRouter {
                 child: const ConstrainedWidth(
                   child: FunctionCallingConfigScreen(),
                 ),
+              );
+            },
+          ),
+          GoRoute(
+            path: 'memory',
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return MaterialPage<void>(
+                key: state.pageKey,
+                child: const ConstrainedWidth(child: MemoryPage()),
               );
             },
           ),

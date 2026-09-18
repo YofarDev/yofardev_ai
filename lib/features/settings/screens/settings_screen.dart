@@ -17,6 +17,7 @@ import '../widgets/sound_effects_toggle.dart';
 import '../widgets/task_llm_config_tile.dart';
 import '../widgets/function_calling_config_tile.dart';
 import '../widgets/username_field.dart';
+import 'memory_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -132,6 +133,8 @@ class SettingsPageState extends State<SettingsPage> {
                       const TaskLlmConfigTile(),
                       const SizedBox(height: 16),
                       const FunctionCallingConfigTile(),
+                      const SizedBox(height: 16),
+                      const MemoryConfigTile(),
                       const SizedBox(height: 32),
                     ],
                   ),

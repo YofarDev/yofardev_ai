@@ -18,7 +18,8 @@ mixin _$TaskLlmConfig {
 /// LLM config ID to use for assistant responses
  String? get assistantLlmId;/// LLM config ID to use for title generation
  String? get titleGenerationLlmId;/// LLM config ID to use for function calling
- String? get functionCallingLlmId;
+ String? get functionCallingLlmId;/// LLM config ID to use for global memory extraction
+ String? get memoryExtractionLlmId;
 /// Create a copy of TaskLlmConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,16 +32,16 @@ $TaskLlmConfigCopyWith<TaskLlmConfig> get copyWith => _$TaskLlmConfigCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskLlmConfig&&(identical(other.assistantLlmId, assistantLlmId) || other.assistantLlmId == assistantLlmId)&&(identical(other.titleGenerationLlmId, titleGenerationLlmId) || other.titleGenerationLlmId == titleGenerationLlmId)&&(identical(other.functionCallingLlmId, functionCallingLlmId) || other.functionCallingLlmId == functionCallingLlmId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskLlmConfig&&(identical(other.assistantLlmId, assistantLlmId) || other.assistantLlmId == assistantLlmId)&&(identical(other.titleGenerationLlmId, titleGenerationLlmId) || other.titleGenerationLlmId == titleGenerationLlmId)&&(identical(other.functionCallingLlmId, functionCallingLlmId) || other.functionCallingLlmId == functionCallingLlmId)&&(identical(other.memoryExtractionLlmId, memoryExtractionLlmId) || other.memoryExtractionLlmId == memoryExtractionLlmId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,assistantLlmId,titleGenerationLlmId,functionCallingLlmId);
+int get hashCode => Object.hash(runtimeType,assistantLlmId,titleGenerationLlmId,functionCallingLlmId,memoryExtractionLlmId);
 
 @override
 String toString() {
-  return 'TaskLlmConfig(assistantLlmId: $assistantLlmId, titleGenerationLlmId: $titleGenerationLlmId, functionCallingLlmId: $functionCallingLlmId)';
+  return 'TaskLlmConfig(assistantLlmId: $assistantLlmId, titleGenerationLlmId: $titleGenerationLlmId, functionCallingLlmId: $functionCallingLlmId, memoryExtractionLlmId: $memoryExtractionLlmId)';
 }
 
 
@@ -51,7 +52,7 @@ abstract mixin class $TaskLlmConfigCopyWith<$Res>  {
   factory $TaskLlmConfigCopyWith(TaskLlmConfig value, $Res Function(TaskLlmConfig) _then) = _$TaskLlmConfigCopyWithImpl;
 @useResult
 $Res call({
- String? assistantLlmId, String? titleGenerationLlmId, String? functionCallingLlmId
+ String? assistantLlmId, String? titleGenerationLlmId, String? functionCallingLlmId, String? memoryExtractionLlmId
 });
 
 
@@ -68,11 +69,12 @@ class _$TaskLlmConfigCopyWithImpl<$Res>
 
 /// Create a copy of TaskLlmConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? assistantLlmId = freezed,Object? titleGenerationLlmId = freezed,Object? functionCallingLlmId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? assistantLlmId = freezed,Object? titleGenerationLlmId = freezed,Object? functionCallingLlmId = freezed,Object? memoryExtractionLlmId = freezed,}) {
   return _then(_self.copyWith(
 assistantLlmId: freezed == assistantLlmId ? _self.assistantLlmId : assistantLlmId // ignore: cast_nullable_to_non_nullable
 as String?,titleGenerationLlmId: freezed == titleGenerationLlmId ? _self.titleGenerationLlmId : titleGenerationLlmId // ignore: cast_nullable_to_non_nullable
 as String?,functionCallingLlmId: freezed == functionCallingLlmId ? _self.functionCallingLlmId : functionCallingLlmId // ignore: cast_nullable_to_non_nullable
+as String?,memoryExtractionLlmId: freezed == memoryExtractionLlmId ? _self.memoryExtractionLlmId : memoryExtractionLlmId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -155,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? assistantLlmId,  String? titleGenerationLlmId,  String? functionCallingLlmId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? assistantLlmId,  String? titleGenerationLlmId,  String? functionCallingLlmId,  String? memoryExtractionLlmId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TaskLlmConfig() when $default != null:
-return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCallingLlmId);case _:
+return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCallingLlmId,_that.memoryExtractionLlmId);case _:
   return orElse();
 
 }
@@ -176,10 +178,10 @@ return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCa
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? assistantLlmId,  String? titleGenerationLlmId,  String? functionCallingLlmId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? assistantLlmId,  String? titleGenerationLlmId,  String? functionCallingLlmId,  String? memoryExtractionLlmId)  $default,) {final _that = this;
 switch (_that) {
 case _TaskLlmConfig():
-return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCallingLlmId);}
+return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCallingLlmId,_that.memoryExtractionLlmId);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -193,10 +195,10 @@ return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCa
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? assistantLlmId,  String? titleGenerationLlmId,  String? functionCallingLlmId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? assistantLlmId,  String? titleGenerationLlmId,  String? functionCallingLlmId,  String? memoryExtractionLlmId)?  $default,) {final _that = this;
 switch (_that) {
 case _TaskLlmConfig() when $default != null:
-return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCallingLlmId);case _:
+return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCallingLlmId,_that.memoryExtractionLlmId);case _:
   return null;
 
 }
@@ -208,7 +210,7 @@ return $default(_that.assistantLlmId,_that.titleGenerationLlmId,_that.functionCa
 @JsonSerializable()
 
 class _TaskLlmConfig implements TaskLlmConfig {
-  const _TaskLlmConfig({this.assistantLlmId = null, this.titleGenerationLlmId = null, this.functionCallingLlmId = null});
+  const _TaskLlmConfig({this.assistantLlmId = null, this.titleGenerationLlmId = null, this.functionCallingLlmId = null, this.memoryExtractionLlmId = null});
   factory _TaskLlmConfig.fromJson(Map<String, dynamic> json) => _$TaskLlmConfigFromJson(json);
 
 /// LLM config ID to use for assistant responses
@@ -217,6 +219,8 @@ class _TaskLlmConfig implements TaskLlmConfig {
 @override@JsonKey() final  String? titleGenerationLlmId;
 /// LLM config ID to use for function calling
 @override@JsonKey() final  String? functionCallingLlmId;
+/// LLM config ID to use for global memory extraction
+@override@JsonKey() final  String? memoryExtractionLlmId;
 
 /// Create a copy of TaskLlmConfig
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskLlmConfig&&(identical(other.assistantLlmId, assistantLlmId) || other.assistantLlmId == assistantLlmId)&&(identical(other.titleGenerationLlmId, titleGenerationLlmId) || other.titleGenerationLlmId == titleGenerationLlmId)&&(identical(other.functionCallingLlmId, functionCallingLlmId) || other.functionCallingLlmId == functionCallingLlmId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskLlmConfig&&(identical(other.assistantLlmId, assistantLlmId) || other.assistantLlmId == assistantLlmId)&&(identical(other.titleGenerationLlmId, titleGenerationLlmId) || other.titleGenerationLlmId == titleGenerationLlmId)&&(identical(other.functionCallingLlmId, functionCallingLlmId) || other.functionCallingLlmId == functionCallingLlmId)&&(identical(other.memoryExtractionLlmId, memoryExtractionLlmId) || other.memoryExtractionLlmId == memoryExtractionLlmId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,assistantLlmId,titleGenerationLlmId,functionCallingLlmId);
+int get hashCode => Object.hash(runtimeType,assistantLlmId,titleGenerationLlmId,functionCallingLlmId,memoryExtractionLlmId);
 
 @override
 String toString() {
-  return 'TaskLlmConfig(assistantLlmId: $assistantLlmId, titleGenerationLlmId: $titleGenerationLlmId, functionCallingLlmId: $functionCallingLlmId)';
+  return 'TaskLlmConfig(assistantLlmId: $assistantLlmId, titleGenerationLlmId: $titleGenerationLlmId, functionCallingLlmId: $functionCallingLlmId, memoryExtractionLlmId: $memoryExtractionLlmId)';
 }
 
 
@@ -251,7 +255,7 @@ abstract mixin class _$TaskLlmConfigCopyWith<$Res> implements $TaskLlmConfigCopy
   factory _$TaskLlmConfigCopyWith(_TaskLlmConfig value, $Res Function(_TaskLlmConfig) _then) = __$TaskLlmConfigCopyWithImpl;
 @override @useResult
 $Res call({
- String? assistantLlmId, String? titleGenerationLlmId, String? functionCallingLlmId
+ String? assistantLlmId, String? titleGenerationLlmId, String? functionCallingLlmId, String? memoryExtractionLlmId
 });
 
 
@@ -268,11 +272,12 @@ class __$TaskLlmConfigCopyWithImpl<$Res>
 
 /// Create a copy of TaskLlmConfig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? assistantLlmId = freezed,Object? titleGenerationLlmId = freezed,Object? functionCallingLlmId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? assistantLlmId = freezed,Object? titleGenerationLlmId = freezed,Object? functionCallingLlmId = freezed,Object? memoryExtractionLlmId = freezed,}) {
   return _then(_TaskLlmConfig(
 assistantLlmId: freezed == assistantLlmId ? _self.assistantLlmId : assistantLlmId // ignore: cast_nullable_to_non_nullable
 as String?,titleGenerationLlmId: freezed == titleGenerationLlmId ? _self.titleGenerationLlmId : titleGenerationLlmId // ignore: cast_nullable_to_non_nullable
 as String?,functionCallingLlmId: freezed == functionCallingLlmId ? _self.functionCallingLlmId : functionCallingLlmId // ignore: cast_nullable_to_non_nullable
+as String?,memoryExtractionLlmId: freezed == memoryExtractionLlmId ? _self.memoryExtractionLlmId : memoryExtractionLlmId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

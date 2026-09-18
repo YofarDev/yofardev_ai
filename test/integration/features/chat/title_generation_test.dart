@@ -25,8 +25,18 @@ import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
+import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
+
+class NoopGlobalMemoryService implements GlobalMemoryService {
+  @override
+  Future<LlmMessage?> buildMemoryMessage() async => null;
+
+  @override
+  Future<void> updateMemory(Chat chat) async {}
+}
 
 class TrackingMockChatRepository implements ChatRepository {
   Chat? currentChat;
@@ -79,16 +89,6 @@ class TrackingMockChatRepository implements ChatRepository {
   @override
   Future<Result<void>> setCurrentChatId(String chatId) async {
     return Result<void>.ok(null);
-  }
-
-  @override
-  @override
-  Future<Result<(List<ChatEntry> functionEntries, String augmentedUserMessage)>>
-  prepareToolTurn({
-    required Chat chat,
-    required String userMessage,
-  }) async {
-    return Result<(List<ChatEntry>, String)>.ok((<ChatEntry>[], userMessage));
   }
 
   @override
@@ -224,6 +224,7 @@ void main() {
         chatTitleService: chatTitleService,
         chatStreamingService: mockChatStreamingService,
         appLifecycleService: MockAppLifecycleService(),
+        globalMemoryService: NoopGlobalMemoryService(),
       );
       // Initialize the cubit
       cubit.init();

@@ -8,4 +8,7 @@ enum LlmTaskType {
 
   /// Function/tool calling detection
   functionCalling,
+
+  /// Global memory extraction after conversations
+  memoryExtraction,
 }

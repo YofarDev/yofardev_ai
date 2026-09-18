@@ -62,6 +62,46 @@
   "hiddenPart": "This part is not visible to the user, do not take it into account in your response.",
   "listChats": "List of chats",
   "loadDefaultSystemPrompt": "Load the default system prompt",
+  "memory": "Memory",
+  "@memory": {
+    "description": "Title of the global memory settings section"
+  },
+  "memoryDescription": "Facts your avatar remembers about you across all chats",
+  "@memoryDescription": {
+    "description": "Subtitle of the memory settings tile"
+  },
+  "memoryPageSubtitle": "Your avatar remembers facts about you across all chats. Review, delete, or clear them here.",
+  "@memoryPageSubtitle": {
+    "description": "Explanation shown at the top of the memory page"
+  },
+  "enableMemory": "Enable global memory",
+  "@enableMemory": {
+    "description": "Toggle label for the global memory feature"
+  },
+  "memoryEmpty": "Nothing memorized yet. Chat with your avatar and it will remember facts about you.",
+  "@memoryEmpty": {
+    "description": "Placeholder shown when the memory list is empty"
+  },
+  "clearMemory": "Clear all memory",
+  "@clearMemory": {
+    "description": "Button label to delete every memory item"
+  },
+  "clearMemoryConfirmation": "Delete all memorized facts? This cannot be undone.",
+  "@clearMemoryConfirmation": {
+    "description": "Confirmation dialog body for clearing memory"
+  },
+  "memoryDeleted": "Memory item deleted",
+  "@memoryDeleted": {
+    "description": "Snackbar shown after deleting a memory item"
+  },
+  "memoryTask": "Memory Extraction",
+  "@memoryTask": {
+    "description": "Task label for the LLM used by global memory extraction"
+  },
+  "memoryLlmDescription": "LLM used to extract facts for the global memory",
+  "@memoryLlmDescription": {
+    "description": "Description of the memory extraction task in the task LLM page"
+  },
   "moreVoicesAndroid": "For more voices : ‘Google Text-to-Speech’ on the Play Store",
   "moreVoicesIOS": "For more voices, go to Settings > Accessibility > Spoken Content > Voices",
   "newChat": "New chat",

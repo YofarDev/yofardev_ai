@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/task_llm_config.dart';
+import '../../../../core/models/global_memory.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/models/chat.dart';
 
@@ -20,6 +21,9 @@ sealed class SettingsState with _$SettingsState {
     @Default(true) bool openWeatherEnabled,
     @Default(null) String? newYorkTimesKey,
     @Default(true) bool newYorkTimesEnabled,
+    // Global Memory Fields:
+    @Default(true) bool memoryEnabled,
+    @Default(<GlobalMemoryItem>[]) List<GlobalMemoryItem> memoryItems,
     // User Settings Fields:
     @Default(null) String? username,
     @Default(null) String? systemPrompt,

@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../utils/logger.dart';
-import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
 import '../../models/llm_task_type.dart';
@@ -14,6 +13,7 @@ import 'llm_service_interface.dart';
 import 'llm_stream_chunk.dart';
 import 'llm_streaming_service.dart';
 import 'llm_streaming_service_interface.dart';
+import 'llm_usage_logger.dart';
 
 /// Real LLM service implementation using OpenAI-compatible APIs
 class LlmService implements LlmServiceInterface {
@@ -160,7 +160,7 @@ class LlmService implements LlmServiceInterface {
         final Map<String, dynamic> data =
             json.decode(utf8.decode(response.bodyBytes))
                 as Map<String, dynamic>;
-        final List<dynamic> choices = data['choices'] as List<dynamic>;
+        logTokenUsage(data['usage']);        final List<dynamic> choices = data['choices'] as List<dynamic>;
         final Map<String, dynamic> firstChoice =
             choices[0] as Map<String, dynamic>;
         final Map<String, dynamic> message =
@@ -195,162 +195,6 @@ class LlmService implements LlmServiceInterface {
       debugLogs: debugLogs,
       tools: tools,
     );
-  }
-
-  @override
-  Future<(String, List<FunctionInfo>)> checkFunctionsCalling({
-    required LlmConfig api,
-    required List<FunctionInfo> functions,
-    required List<LlmMessage> messages,
-    required String lastUserMessage,
-  }) async {
-    final List<Map<String, dynamic>> apiMessages = messages
-        .map((LlmMessage m) => m.toMap())
-        .toList();
-    // The chat history already ends with the current user's message; only
-    // append if it's missing, otherwise the same message would be sent twice.
-    if (apiMessages.isEmpty ||
-        apiMessages.last['role'] != LlmMessageRole.user.name) {
-      apiMessages.add(<String, dynamic>{
-        'role': 'user',
-        'content': lastUserMessage,
-      });
-    } else {
-      AppLogger.warning(
-        'User message already present at end of history, skipping duplicate',
-        tag: 'LlmService',
-      );
-    }
-
-    final List<Map<String, dynamic>> tools = functions.toOpenAiTools();
-
-    final Map<String, dynamic> body = <String, dynamic>{
-      'model': api.model.trim(),
-      'messages': apiMessages,
-      'tools': tools,
-      'tool_choice': 'auto',
-    };
-
-    // DIAGNOSTIC: Log function calling request details
-    AppLogger.debug(
-      'Sending function calling request to ${api.baseUrl}/chat/completions\n'
-      'Model: ${api.model.trim()}\n'
-      'Tools: ${tools.map((Map<String, dynamic> t) => t['function']['name']).join(", ")}\n'
-      'Messages count: ${apiMessages.length}',
-      tag: 'LlmService',
-    );
-
-    AppLogger.info(
-      'Function calling request: model=${api.model.trim()}, tools=${tools.length}, messages=${apiMessages.length}',
-      tag: 'LlmService',
-    );
-
-    try {
-      final http.Response response = await _httpClient.post(
-        Uri.parse('${api.baseUrl}/chat/completions'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${api.apiKey}',
-        },
-        body: json.encode(body),
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data =
-            json.decode(utf8.decode(response.bodyBytes))
-                as Map<String, dynamic>;
-        final List<dynamic> choices = data['choices'] as List<dynamic>;
-        final Map<String, dynamic> firstChoice =
-            choices[0] as Map<String, dynamic>;
-        final Map<String, dynamic> message =
-            firstChoice['message'] as Map<String, dynamic>;
-
-        // DIAGNOSTIC: Log function calling response
-        AppLogger.debug(
-          'Function calling response received\n'
-          'Tool calls: ${message['tool_calls'] != null ? (message['tool_calls'] as List<dynamic>).length : 0}\n'
-          'Has content: ${message['content'] != null}',
-          tag: 'LlmService',
-        );
-
-        final List<FunctionInfo> calledFunctions = <FunctionInfo>[];
-
-        final int toolCallsCount = message['tool_calls'] != null
-            ? (message['tool_calls'] as List<dynamic>).length
-            : 0;
-        AppLogger.info(
-          'Function calling response: status=200, tool_calls=$toolCallsCount, has_content=${message['content'] != null}',
-          tag: 'LlmService',
-        );
-
-        if (message['tool_calls'] != null) {
-          final List<dynamic> toolCalls =
-              message['tool_calls'] as List<dynamic>;
-
-          // DIAGNOSTIC: Log detected tool calls
-          AppLogger.debug(
-            'LLM detected ${toolCalls.length} tool calls',
-            tag: 'LlmService',
-          );
-
-          for (final dynamic toolCall in toolCalls) {
-            final Map<String, dynamic> toolCallMap =
-                toolCall as Map<String, dynamic>;
-            final Map<String, dynamic> functionMap =
-                toolCallMap['function'] as Map<String, dynamic>;
-            final String funcName = functionMap['name'] as String;
-            final String argsJson = functionMap['arguments'] as String;
-
-            // Find the original function info
-            final FunctionInfo originalFunc = functions.firstWhere(
-              (FunctionInfo f) => f.name == funcName,
-            );
-
-            // Decode args
-            final Map<String, dynamic> args =
-                json.decode(argsJson) as Map<String, dynamic>;
-
-            // Return a new FunctionInfo with called parameters
-            calledFunctions.add(
-              FunctionInfo(
-                name: originalFunc.name,
-                description: originalFunc.description,
-                parameters: originalFunc.parameters,
-                function: originalFunc.function,
-                parametersCalled: args,
-              ),
-            );
-
-            // DIAGNOSTIC: Log each detected function
-            AppLogger.debug(
-              'Detected function: $funcName with args: $args',
-              tag: 'LlmService',
-            );
-          }
-        }
-
-        // DIAGNOSTIC: Log final result
-        AppLogger.debug(
-          'Function calling check complete: ${calledFunctions.length} functions detected',
-          tag: 'LlmService',
-        );
-
-        return (message['content'] as String? ?? '', calledFunctions);
-      } else {
-        AppLogger.error(
-          'LLM API Error (checkFunctions): ${response.body}',
-          tag: 'LlmService',
-        );
-        return ('', <FunctionInfo>[]);
-      }
-    } catch (e) {
-      AppLogger.error(
-        'Exception calling LLM API (checkFunctions)',
-        tag: 'LlmService',
-        error: e,
-      );
-      return ('', <FunctionInfo>[]);
-    }
   }
 
   @override
@@ -399,6 +243,70 @@ class LlmService implements LlmServiceInterface {
       return result?.trim();
     } catch (e) {
       AppLogger.error('Title generation failed', tag: 'LlmService', error: e);
+      return null;
+    }
+  }
+
+  @override
+  Future<String?> extractMemory({
+    required String conversationExcerpt,
+    required List<String> currentMemory,
+    LlmConfig? config,
+  }) async {
+    try {
+      final LlmConfig? activeConfig =
+          config ?? await getConfigForTask(LlmTaskType.memoryExtraction);
+      if (activeConfig == null) {
+        AppLogger.error(
+          'No LLM config available for memory extraction',
+          tag: 'LlmService',
+        );
+        return null;
+      }
+
+      const String systemPromptText =
+          'You maintain the long-term memory of an AI companion app about its '
+          'user. You receive the current memory items and a conversation '
+          'excerpt. Return the COMPLETE updated memory list as JSON: '
+          '{"memory": ["fact 1", "fact 2"]}. Rules: keep only facts about the '
+          'user (preferences, life events, ongoing projects, personality); '
+          'merge duplicates; drop items contradicted by newer information; '
+          'never store facts about the assistant; maximum 30 items; each item '
+          'is a plain sentence of at most 200 characters; if the excerpt adds '
+          'nothing worth remembering, return the current list unchanged; if '
+          'there is nothing memorable at all, return {"memory": []}.';
+
+      final StringBuffer userPrompt = StringBuffer();
+      if (currentMemory.isEmpty) {
+        userPrompt.writeln('Current memory: (empty)');
+      } else {
+        userPrompt.writeln('Current memory:');
+        for (final String item in currentMemory) {
+          userPrompt.writeln('- $item');
+        }
+      }
+      userPrompt.writeln();
+      userPrompt.writeln('Conversation excerpt:');
+      userPrompt.write(conversationExcerpt);
+
+      final List<LlmMessage> messages = <LlmMessage>[
+        LlmMessage(role: LlmMessageRole.user, body: userPrompt.toString()),
+      ];
+
+      final String? result = await promptModel(
+        messages: messages,
+        systemPrompt: systemPromptText,
+        config: activeConfig,
+        returnJson: true,
+      );
+
+      return result?.trim();
+    } catch (e) {
+      AppLogger.error(
+        'Memory extraction failed',
+        tag: 'LlmService',
+        error: e,
+      );
       return null;
     }
   }

@@ -38,7 +38,7 @@ abstract class AgentTool {
       description: description,
       parameters: parameters,
       function: (Map<String, dynamic> args) async {
-        // This is a placeholder - actual execution is handled by YofardevAgent
+        // This is a placeholder - actual execution is handled by ToolRegistry
         throw UnimplementedError(
           'FunctionInfo.function should not be called directly. '
           'Use AgentTool.execute() instead.',

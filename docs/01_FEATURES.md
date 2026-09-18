@@ -95,6 +95,23 @@ ChatTtsCubit(
 
 **ChatEntryService** - Creates formatted user entries with date/avatar config
 **ChatTitleService** - Auto-generates chat titles via LLM
+**GlobalMemoryService** - Maintains cross-chat facts about the user:
+- `buildMemoryMessage()` - System message injected right before the current
+  user message (never into the system prompt, so the `[system | history]`
+  prefix stays byte-identical and provider prompt caches keep hitting)
+- `updateMemory(chat)` - Fire-and-forget extraction after each completed
+  stream (mirrors ChatTitleService); failures keep the stored memory
+
+### Global Memory
+
+Facts about the user shared across all chats:
+- Model: `GlobalMemory` / `GlobalMemoryItem` in `lib/core/models/global_memory.dart`
+  (max 30 items, 200 chars each)
+- Storage: SharedPreferences JSON blob via `GlobalMemoryLocalDatasource`
+- Extraction LLM is task-routable (`LlmTaskType.memoryExtraction` in the
+  task LLM config page) so a cheap model can be used
+- Managed from Settings → Memory (toggle, per-item delete, clear all);
+  disabled entirely in demo mode
 
 ---
 
@@ -179,7 +196,7 @@ Future<void> playNewChatSequence(String chatId, AvatarConfig config)
 ### Chat → Avatar → Talking Chain
 ```
 ChatCubit.sendMessage()
-  → YofardevAgent.ask()
+  → ChatStreamingService.streamResponse() (streamed, inline tool calling)
   → ChatTtsCubit.enqueueTts()
   → TtsQueueService
   → AudioPlayerService

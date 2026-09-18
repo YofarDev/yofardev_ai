@@ -8,34 +8,32 @@
 User → ChatCubit.sendMessage()
      ├─→ Emit streaming state
      ├─→ ChatEntryService.createUserEntry()
-     └─→ YofardevAgent.ask()
-          ├─→ Check function calling (ToolRegistry)
-          ├─→ Execute tools if needed
-          ├─→ LlmService.promptModel()
-          └─→ Return entries[]
-               └─→ StreamProcessorService (chunks)
-                    └─→ ChatTtsCubit.enqueueTts() (per sentence)
-                         └─→ TtsQueueService (generate)
-                              └─→ AudioPlayerService (play)
-                                   └─→ TalkingCubit.startTalking()
-                                        └─→ AvatarCubit (animations)
+     └─→ ChatStreamingService.streamResponse()
+          ├─→ LlmService.promptModelStream() (tools passed inline)
+          │    ├─→ StreamProcessorService (sentence chunks)
+          │    └─→ tool_call deltas? → ToolRegistry.executeTool()
+          │         → append tool results → re-stream (max 3 rounds)
+          └─→ per sentence:
+               └─→ ChatTtsCubit.enqueueTts()
+                    └─→ TtsQueueService (generate)
+                         └─→ AudioPlayerService (play)
+                              └─→ TalkingCubit.startTalking()
+                                   └─→ AvatarCubit (animations)
 ```
 
 ### Function Calling Flow
 ```
 User: "What's the weather in Paris?"
   ↓
-YofardevAgent.ask()
+ChatStreamingService.streamResponse() (streamed, tools inline)
   ↓
-LlmService.checkFunctionsCalling() → Returns: weather_tool
+Stream carries tool_call deltas → weather_tool
   ↓
 ToolRegistry.executeTool() → WeatherService.getWeather("Paris")
   ↓
-Augment prompt: "What's the weather... [System: weather tool executed. Result: 15°C]"
+Append assistant tool_calls + tool result messages → re-stream
   ↓
-LlmService.promptModel() → "The weather in Paris is 15°C..."
-  ↓
-Return [function_call_entry, response_entry]
+Answer streams sentence-by-sentence ("The weather in Paris is 15°C...")
 ```
 
 ---

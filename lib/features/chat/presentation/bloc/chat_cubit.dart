@@ -16,6 +16,7 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/services/chat_title_service.dart';
+import '../../domain/services/global_memory_service.dart';
 import '../../../demo/demo.dart';
 import 'chat_state.dart';
 
@@ -31,12 +32,14 @@ class ChatCubit extends Cubit<ChatState> {
     required ChatTitleService chatTitleService,
     required ChatStreamingService chatStreamingService,
     required AppLifecycleService appLifecycleService,
+    required GlobalMemoryService globalMemoryService,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _avatarAnimationService = avatarAnimationService,
        _chatTitleService = chatTitleService,
        _chatStreamingService = chatStreamingService,
        _appLifecycleService = appLifecycleService,
+       _globalMemoryService = globalMemoryService,
        super(ChatState.initial()) {
     // Subscribe to new chat entry events to persist avatar changes
     _newChatEntrySubscription = _appLifecycleService.newChatEntryEvents.listen(
@@ -84,6 +87,7 @@ class ChatCubit extends Cubit<ChatState> {
   final ChatTitleService _chatTitleService;
   final ChatStreamingService _chatStreamingService;
   final AppLifecycleService _appLifecycleService;
+  final GlobalMemoryService _globalMemoryService;
   StreamSubscription<NewChatEntryPayload>? _newChatEntrySubscription;
   StreamSubscription<DemoScript>? _demoScriptSubscription;
   StreamSubscription<AvatarChangeRequested>? _avatarChangeRequestedSubscription;
@@ -642,6 +646,10 @@ class ChatCubit extends Cubit<ChatState> {
           // Fire and forget - don't await
           generateTitle(finalChat.id, finalChat);
         }
+
+        // Update the global memory from this exchange
+        // Fire and forget - don't await
+        unawaited(_globalMemoryService.updateMemory(finalChat));
       },
       onError: (String error) {
         // Stream failed

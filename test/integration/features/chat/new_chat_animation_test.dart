@@ -34,6 +34,8 @@ import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart'
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
+import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
@@ -42,6 +44,14 @@ import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 class MockChatRepository extends Mock implements ChatRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
+
+class NoopGlobalMemoryService implements GlobalMemoryService {
+  @override
+  Future<LlmMessage?> buildMemoryMessage() async => null;
+
+  @override
+  Future<void> updateMemory(Chat chat) async {}
+}
 
 class MockAvatarRepository extends Mock implements AvatarRepository {
   @override
@@ -245,6 +255,7 @@ void main() {
           chatEntryService: mockChatEntryService,
         ),
         appLifecycleService: MockAppLifecycleService(),
+        globalMemoryService: NoopGlobalMemoryService(),
       );
 
       // Initialize the cubit

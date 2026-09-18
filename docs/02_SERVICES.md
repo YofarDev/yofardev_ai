@@ -16,23 +16,8 @@ core/services/
 
 ## Agent Services
 
-### YofardevAgent
-**File**: `lib/core/services/agent/yofardev_agent.dart` (8.6K)
-
-**Purpose**: Main AI agent, coordinates LLM + function calling
-
-**Key Method**:
-```dart
-Future<List<ChatEntry>> ask({
-  required Chat chat,
-  required String userMessage,
-  required String systemPrompt,
-  bool functionCallingEnabled = true,
-  required SettingsRepository settingsRepository,
-})
-```
-
-**Workflow**: Check tools → Execute tools → Augment prompt → Get LLM response → Return entries
+Tool detection and execution now happen inline in the streamed LLM call (see
+`ChatStreamingService` in the chat feature); there is no separate agent class.
 
 ### ToolRegistry
 **Available Tools**: weather, news, google_search, calculator, character_counter, alarm, web_reader
@@ -87,7 +72,6 @@ void setPaused(bool paused)
 ```dart
 Future<void> init()
 Future<String?> promptModel({...})
-Future<(String, List<FunctionInfo>)> checkFunctionsCalling({...})
 LlmConfig? getCurrentConfig()
 ```
 
@@ -99,6 +83,21 @@ LlmConfig? getCurrentConfig()
 | FakeLlmService | Fake LLM for testing/demo | 6.8K |
 | LlmConfigManager | Config management | 4.9K |
 | LlmStreamingService | Streaming responses | 4.7K |
+| llm_usage_logger | Logs prompt/cached token counts (OpenAI + DeepSeek formats) | 0.6K |
+
+### Prompt Caching
+
+All requests use the OpenAI-compatible protocol where caching is automatic
+(no `cache_control`). Two things make it effective:
+
+1. **Stable prefix**: the system prompt is deterministic and global memory
+   is injected at the END of the request (see GlobalMemoryService), never
+   into the system prompt.
+2. **Observability**: streaming requests send
+   `stream_options: {include_usage: true}` and both request paths log
+   `LLM usage: prompt=X cached=Y (Z%)` from the response usage object
+   (OpenAI `prompt_tokens_details.cached_tokens` / DeepSeek
+   `prompt_cache_hit_tokens`).
 
 ---
 
@@ -172,9 +171,6 @@ if (kDebugMode) {
 getIt.registerLazySingleton<TtsQueueService>(...);
 getIt.registerLazySingleton<AudioPlayerService>(...);
 
-// Agent
-getIt.registerLazySingleton<YofardevAgent>(...);
-
 // Domain
 getIt.registerLazySingleton<ChatEntryService>(...);
 getIt.registerLazySingleton<AvatarAnimationService>(...);
@@ -185,8 +181,8 @@ getIt.registerLazySingleton<AvatarAnimationService>(...);
 ## Dependency Graph
 
 ```
-YofardevAgent
-  ├── LlmService
+ChatStreamingService
+  ├── LlmServiceInterface (streamed tool detection)
   └── ToolRegistry
       ├── WeatherService
       ├── GoogleSearchService

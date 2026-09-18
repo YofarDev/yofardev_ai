@@ -8,11 +8,15 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../repositories/avatar_repository.dart';
+import '../repositories/global_memory_repository.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_cubit.dart';
 import '../../features/chat/domain/services/chat_entry_service.dart';
 import '../../features/chat/domain/services/chat_title_service.dart';
+import '../../features/chat/domain/services/global_memory_service.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
+import '../../features/chat/data/datasources/global_memory_datasource.dart';
+import '../../features/chat/data/repositories/global_memory_repository_impl.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/demo/presentation/bloc/demo_cubit.dart';
@@ -41,7 +45,6 @@ import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
 import '../services/audio/voice_effects_service.dart';
-import '../services/agent/yofardev_agent.dart';
 import '../services/agent/tool_registry.dart';
 import '../../features/avatar/domain/services/avatar_animation_service.dart';
 import '../services/demo_controller.dart';
@@ -87,6 +90,9 @@ Future<void> setupServiceLocator() async {
       promptDatasource: getIt<PromptDatasource>(),
     ),
   );
+  getIt.registerLazySingleton<GlobalMemoryLocalDatasource>(
+    () => GlobalMemoryLocalDatasource(),
+  );
 
   // LLM services
   getIt.registerLazySingleton<LlmService>(() {
@@ -121,12 +127,6 @@ Future<void> setupServiceLocator() async {
 
   // Agent & tool registry
   getIt.registerLazySingleton<ToolRegistry>(() => ToolRegistry());
-  getIt.registerLazySingleton<YofardevAgent>(
-    () => YofardevAgent(
-      llmService: getIt<LlmService>(),
-      toolRegistry: getIt<ToolRegistry>(),
-    ),
-  );
 
   // ── Repositories (depend on datasources + services) ──
   getIt.registerLazySingleton<AvatarRepository>(
@@ -137,10 +137,12 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<ChatRepository>(
     () => YofardevRepositoryImpl(
-      settingsRepository: getIt<SettingsRepository>(),
-      agent: getIt<YofardevAgent>(),
-      fakeLlmService: getIt<FakeLlmService>(),
       chatDatasource: getIt<ChatLocalDatasource>(),
+    ),
+  );
+  getIt.registerLazySingleton<GlobalMemoryRepository>(
+    () => GlobalMemoryRepositoryImpl(
+      datasource: getIt<GlobalMemoryLocalDatasource>(),
     ),
   );
   getIt.registerLazySingleton<SoundRepository>(() => SoundRepositoryImpl());
@@ -187,6 +189,13 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<ChatTitleService>(
     () => ChatTitleService(
       chatRepository: getIt<ChatRepository>(),
+      llmService: getIt<LlmServiceInterface>(),
+    ),
+  );
+  getIt.registerLazySingleton<GlobalMemoryService>(
+    () => GlobalMemoryService(
+      memoryRepository: getIt<GlobalMemoryRepository>(),
+      settingsRepository: getIt<SettingsRepository>(),
       llmService: getIt<LlmServiceInterface>(),
     ),
   );
@@ -241,6 +250,7 @@ Future<void> setupServiceLocator() async {
       ttsQueueManager: getIt<TtsQueueService>(),
       toolRegistry: getIt<ToolRegistry>(),
       settingsRepository: getIt<SettingsRepository>(),
+      globalMemoryService: getIt<GlobalMemoryService>(),
     ),
   );
   getIt.registerFactory<ChatCubit>(
@@ -251,6 +261,7 @@ Future<void> setupServiceLocator() async {
       chatTitleService: getIt<ChatTitleService>(),
       chatStreamingService: getIt<ChatStreamingService>(),
       appLifecycleService: getIt<AppLifecycleService>(),
+      globalMemoryService: getIt<GlobalMemoryService>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
@@ -261,6 +272,7 @@ Future<void> setupServiceLocator() async {
     () => SettingsCubit(
       settingsRepository: getIt<SettingsRepository>(),
       llmService: getIt<LlmServiceInterface>(),
+      globalMemoryRepository: getIt<GlobalMemoryRepository>(),
     ),
   );
   getIt.registerFactory<HomeCubit>(

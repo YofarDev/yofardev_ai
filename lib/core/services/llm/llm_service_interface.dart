@@ -1,4 +1,3 @@
-import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
 import '../../models/llm_task_type.dart';
@@ -53,18 +52,6 @@ abstract class LlmServiceInterface {
     List<Map<String, dynamic>>? tools,
   });
 
-  /// Check if the LLM wants to call any functions
-  ///
-  /// Returns a tuple of:
-  /// - The text response (may be empty)
-  /// - List of called functions with their parameters
-  Future<(String, List<FunctionInfo>)> checkFunctionsCalling({
-    required LlmConfig api,
-    required List<FunctionInfo> functions,
-    required List<LlmMessage> messages,
-    required String lastUserMessage,
-  });
-
   /// Whether this service is active (for fake/demo service)
   bool get isActive;
 
@@ -79,5 +66,15 @@ abstract class LlmServiceInterface {
     String firstUserMessage, {
     LlmConfig? config,
     String language = 'en',
+  });
+
+  /// Update the global memory items from a conversation excerpt
+  ///
+  /// Returns the raw JSON response containing the complete updated memory
+  /// list, or null if generation fails or no config is available
+  Future<String?> extractMemory({
+    required String conversationExcerpt,
+    required List<String> currentMemory,
+    LlmConfig? config,
   });
 }

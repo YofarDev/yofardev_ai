@@ -15,6 +15,9 @@ sealed class TaskLlmConfig with _$TaskLlmConfig {
 
     /// LLM config ID to use for function calling
     @Default(null) String? functionCallingLlmId,
+
+    /// LLM config ID to use for global memory extraction
+    @Default(null) String? memoryExtractionLlmId,
   }) = _TaskLlmConfig;
 
   factory TaskLlmConfig.fromJson(Map<String, dynamic> json) =>

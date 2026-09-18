@@ -11,6 +11,7 @@ _TaskLlmConfig _$TaskLlmConfigFromJson(Map<String, dynamic> json) =>
       assistantLlmId: json['assistantLlmId'] as String? ?? null,
       titleGenerationLlmId: json['titleGenerationLlmId'] as String? ?? null,
       functionCallingLlmId: json['functionCallingLlmId'] as String? ?? null,
+      memoryExtractionLlmId: json['memoryExtractionLlmId'] as String? ?? null,
     );
 
 Map<String, dynamic> _$TaskLlmConfigToJson(_TaskLlmConfig instance) =>
@@ -18,4 +19,5 @@ Map<String, dynamic> _$TaskLlmConfigToJson(_TaskLlmConfig instance) =>
       'assistantLlmId': instance.assistantLlmId,
       'titleGenerationLlmId': instance.titleGenerationLlmId,
       'functionCallingLlmId': instance.functionCallingLlmId,
+      'memoryExtractionLlmId': instance.memoryExtractionLlmId,
     };

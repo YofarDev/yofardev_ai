@@ -21,6 +21,9 @@ class SettingsLocalDatasource {
   static const String _newYorkTimesKeyKey = 'new_york_times_key';
   static const String _newYorkTimesEnabledKey = 'new_york_times_enabled';
 
+  // Global Memory Configuration
+  static const String _memoryEnabledKey = 'memory_enabled';
+
   // Generic helper methods to reduce boilerplate
   Future<Result<String>> _getStringKey(String keyName) async {
     try {
@@ -208,4 +211,11 @@ class SettingsLocalDatasource {
 
   Future<Result<void>> setNewYorkTimesEnabled(bool enabled) =>
       _setBoolKey(_newYorkTimesEnabledKey, enabled);
+
+  // Global Memory Configuration
+  Future<Result<bool>> getMemoryEnabled() =>
+      _getBoolKey(_memoryEnabledKey, true);
+
+  Future<Result<void>> setMemoryEnabled(bool enabled) =>
+      _setBoolKey(_memoryEnabledKey, enabled);
 }

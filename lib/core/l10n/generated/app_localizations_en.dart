@@ -89,6 +89,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadDefaultSystemPrompt => 'Load the default system prompt';
 
   @override
+  String get memory => 'Memory';
+
+  @override
+  String get memoryDescription =>
+      'Facts your avatar remembers about you across all chats';
+
+  @override
+  String get memoryPageSubtitle =>
+      'Your avatar remembers facts about you across all chats. Review, delete, or clear them here.';
+
+  @override
+  String get enableMemory => 'Enable global memory';
+
+  @override
+  String get memoryEmpty =>
+      'Nothing memorized yet. Chat with your avatar and it will remember facts about you.';
+
+  @override
+  String get clearMemory => 'Clear all memory';
+
+  @override
+  String get clearMemoryConfirmation =>
+      'Delete all memorized facts? This cannot be undone.';
+
+  @override
+  String get memoryDeleted => 'Memory item deleted';
+
+  @override
+  String get memoryTask => 'Memory Extraction';
+
+  @override
+  String get memoryLlmDescription =>
+      'LLM used to extract facts for the global memory';
+
+  @override
   String get moreVoicesAndroid =>
       'For more voices : ‘Google Text-to-Speech’ on the Play Store';
 

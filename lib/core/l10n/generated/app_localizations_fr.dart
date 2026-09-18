@@ -89,6 +89,41 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loadDefaultSystemPrompt => 'Charger le prompt système par défaut';
 
   @override
+  String get memory => 'Mémoire';
+
+  @override
+  String get memoryDescription =>
+      'Les faits que votre avatar retient sur vous dans toutes les conversations';
+
+  @override
+  String get memoryPageSubtitle =>
+      'Votre avatar retient des faits sur vous à travers toutes les conversations. Consultez-les, supprimez-les ou effacez-les ici.';
+
+  @override
+  String get enableMemory => 'Activer la mémoire globale';
+
+  @override
+  String get memoryEmpty =>
+      'Rien de mémorisé pour l\'instant. Discutez avec votre avatar et il retiendra des faits sur vous.';
+
+  @override
+  String get clearMemory => 'Effacer toute la mémoire';
+
+  @override
+  String get clearMemoryConfirmation =>
+      'Supprimer tous les faits mémorisés ? Cette action est irréversible.';
+
+  @override
+  String get memoryDeleted => 'Élément de mémoire supprimé';
+
+  @override
+  String get memoryTask => 'Extraction de mémoire';
+
+  @override
+  String get memoryLlmDescription =>
+      'LLM utilisé pour extraire les faits de la mémoire globale';
+
+  @override
   String get moreVoicesAndroid =>
       'Pour plus de voix : ‘Synthèse vocale Google’ sur le Play Store.';
 

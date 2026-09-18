@@ -22,6 +22,7 @@ import '../../../../core/services/stream_processor/stream_processor_service.dart
 import '../../../../core/utils/logger.dart';
 import '../repositories/chat_repository.dart';
 import 'chat_entry_service.dart';
+import 'global_memory_service.dart';
 
 /// Service for handling LLM response streaming with function calling support.
 ///
@@ -42,6 +43,7 @@ class ChatStreamingService {
     TtsQueueService? ttsQueueManager,
     ToolRegistry? toolRegistry,
     SettingsRepository? settingsRepository,
+    GlobalMemoryService? globalMemoryService,
   }) : _chatRepository = chatRepository,
        _llmService = llmService,
        _streamProcessor = streamProcessor,
@@ -50,7 +52,8 @@ class ChatStreamingService {
        _chatEntryService = chatEntryService,
        _ttsQueueManager = ttsQueueManager,
        _toolRegistry = toolRegistry,
-       _settingsRepository = settingsRepository;
+       _settingsRepository = settingsRepository,
+       _globalMemoryService = globalMemoryService;
 
   final ChatRepository _chatRepository;
   final LlmServiceInterface _llmService;
@@ -61,6 +64,7 @@ class ChatStreamingService {
   final TtsQueueService? _ttsQueueManager;
   final ToolRegistry? _toolRegistry;
   final SettingsRepository? _settingsRepository;
+  final GlobalMemoryService? _globalMemoryService;
 
   bool _streamInterrupted = false;
 
@@ -143,6 +147,30 @@ class ChatStreamingService {
       // fire, their results are appended and the answer is streamed in a
       // further round.
       List<LlmMessage> messagesForStream = chat.llmMessages;
+
+      // Global memory must be injected AFTER the history (right before the
+      // current user message), never into the system prompt: the prefix
+      // [system prompt | history] then stays byte-identical across turns so
+      // provider-side prompt caches keep hitting when memory changes.
+      // Note: the trailing empty assistant message is the streaming entry.
+      if (_globalMemoryService != null && messagesForStream.isNotEmpty) {
+        final LlmMessage? memoryMessage =
+            await _globalMemoryService.buildMemoryMessage();
+        if (memoryMessage != null) {
+          int insertIndex = messagesForStream.length - 1;
+          for (int i = messagesForStream.length - 1; i >= 0; i--) {
+            if (messagesForStream[i].role == LlmMessageRole.user) {
+              insertIndex = i;
+              break;
+            }
+          }
+          messagesForStream = <LlmMessage>[
+            ...messagesForStream.sublist(0, insertIndex),
+            memoryMessage,
+            ...messagesForStream.sublist(insertIndex),
+          ];
+        }
+      }
 
       List<Map<String, dynamic>>? tools;
       if (functionCallingEnabled &&
@@ -381,7 +409,13 @@ class ChatStreamingService {
           ...toolMessages,
         ];
 
-        chat = chat.copyWith(entries: <ChatEntry>[...chat.entries, ...functionEntries]);
+        // Insert tool entries BEFORE the streaming entry: the per-sentence
+        // updates replace the LAST entry with the answer, so appending after
+        // it would clobber the last function-calling tile.
+        final List<ChatEntry> entriesWithTools = List<ChatEntry>.from(
+          chat.entries,
+        )..insertAll(chat.entries.length - 1, functionEntries);
+        chat = chat.copyWith(entries: entriesWithTools);
         onChatUpdated(chat);
         AppLogger.debug(
           'Executed ${functionEntries.length} streamed tool call(s), streaming answer round ${round + 2}',

@@ -128,6 +128,8 @@ class LlmConfigManager {
         return config.titleGenerationLlmId;
       case LlmTaskType.functionCalling:
         return config.functionCallingLlmId;
+      case LlmTaskType.memoryExtraction:
+        return config.memoryExtractionLlmId;
     }
   }
 

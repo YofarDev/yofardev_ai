@@ -85,6 +85,12 @@ void main() {
       when(
         () => mockSettingsRepo.getNewYorkTimesEnabled(),
       ).thenAnswer((_) async => Result<bool>.ok(true));
+      when(
+        () => mockSettingsRepo.getMemoryEnabled(),
+      ).thenAnswer((_) async => Result<bool>.ok(true));
+      when(
+        () => mockSettingsRepo.setMemoryEnabled(any()),
+      ).thenAnswer((_) async => Result<void>.ok(null));
 
       cubit = SettingsCubit(
         settingsRepository: mockSettingsRepo,
@@ -97,6 +103,27 @@ void main() {
     test('initial state should have default values', () {
       expect(cubit.state.taskLlmConfig, isNull);
       expect(cubit.state.availableLlmConfigs, isEmpty);
+      expect(cubit.state.memoryEnabled, isTrue);
+      expect(cubit.state.memoryItems, isEmpty);
+    });
+
+    group('global memory', () {
+      test('loadSettings loads the memory enabled flag', () async {
+        when(
+          () => mockSettingsRepo.getMemoryEnabled(),
+        ).thenAnswer((_) async => Result<bool>.ok(false));
+
+        await cubit.loadSettings();
+
+        expect(cubit.state.memoryEnabled, isFalse);
+      });
+
+      test('setMemoryEnabled persists and updates state', () async {
+        await cubit.setMemoryEnabled(false);
+
+        verify(() => mockSettingsRepo.setMemoryEnabled(false)).called(1);
+        expect(cubit.state.memoryEnabled, isFalse);
+      });
     });
 
     group('loadSettings', () {

@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
 import '../../../../core/models/demo_script.dart';
-import '../../models/function_info.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
 import '../../models/llm_task_type.dart';
@@ -133,6 +133,30 @@ class FakeLlmService implements LlmServiceInterface {
   );
 
   @override
+  Future<String?> extractMemory({
+    required String conversationExcerpt,
+    required List<String> currentMemory,
+    LlmConfig? config,
+  }) async {
+    if (_isActive) {
+      // Demo mode: keep the current memory untouched instead of consuming a
+      // scripted response.
+      AppLogger.debug(
+        'FakeLlmService: demo active, skipping memory extraction',
+        tag: 'FakeLlmService',
+      );
+      return jsonEncode(<String, dynamic>{
+        'memory': currentMemory,
+      });
+    }
+    return _realService.extractMemory(
+      conversationExcerpt: conversationExcerpt,
+      currentMemory: currentMemory,
+      config: config,
+    );
+  }
+
+  @override
   Future<String?> promptModel({
     required List<LlmMessage> messages,
     required String systemPrompt,
@@ -204,32 +228,5 @@ class FakeLlmService implements LlmServiceInterface {
 
     yield LlmStreamChunk.text(content: response.jsonBody, isComplete: true);
     yield const LlmStreamChunk.complete();
-  }
-
-  @override
-  Future<(String, List<FunctionInfo>)> checkFunctionsCalling({
-    required LlmConfig api,
-    required List<FunctionInfo> functions,
-    required List<LlmMessage> messages,
-    required String lastUserMessage,
-  }) async {
-    if (!_isActive || !hasMore) {
-      AppLogger.debug(
-        'FakeLlmService: not active, delegating to real LLM service',
-        tag: 'FakeLlmService',
-      );
-      // Delegate to real service when not in demo mode
-      return _realService.checkFunctionsCalling(
-        api: api,
-        functions: functions,
-        messages: messages,
-        lastUserMessage: lastUserMessage,
-      );
-    }
-
-    // For demo purposes, we'll just return the next response
-    // In a real demo script, you might want to simulate function calls
-    final FakeLlmResponse response = getNextResponse()!;
-    return (response.jsonBody, <FunctionInfo>[]);
   }
 }

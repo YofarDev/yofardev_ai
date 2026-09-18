@@ -2,30 +2,17 @@
 
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
-import '../../../../core/services/agent/yofardev_agent.dart';
-import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
-import '../../../../core/models/chat_entry.dart';
 import '../../domain/repositories/chat_repository.dart';
-import '../../../../core/repositories/settings_repository.dart';
 import '../datasources/chat_local_datasource.dart';
 
 class YofardevRepositoryImpl implements ChatRepository {
-  final YofardevAgent _agent;
-  final FakeLlmService _fakeLlmService;
   final ChatLocalDatasource _chatDatasource;
-  final SettingsRepository _settingsRepository;
 
   YofardevRepositoryImpl({
-    required SettingsRepository settingsRepository,
-    required YofardevAgent agent,
-    required FakeLlmService fakeLlmService,
     required ChatLocalDatasource chatDatasource,
-  }) : _settingsRepository = settingsRepository,
-       _agent = agent,
-       _fakeLlmService = fakeLlmService,
-       _chatDatasource = chatDatasource;
+  }) : _chatDatasource = chatDatasource;
 
   @override
   Future<Result<Chat>> createNewChat({String? language}) async {
@@ -110,35 +97,6 @@ class YofardevRepositoryImpl implements ChatRepository {
       return Result<void>.ok(null);
     } catch (e) {
       return Result<void>.err(NetworkFailure(e.toString(), e));
-    }
-  }
-
-  @override
-  Future<Result<(List<ChatEntry> functionEntries, String augmentedUserMessage)>>
-      prepareToolTurn({
-    required Chat chat,
-    required String userMessage,
-  }) async {
-    try {
-      // In demo mode the scripted response is consumed by the streaming path
-      // (FakeLlmService.promptModelStream), so the tool turn is a no-op.
-      if (_fakeLlmService.isActive) {
-        return Result<(List<ChatEntry>, String)>.ok(
-          (<ChatEntry>[], userMessage),
-        );
-      }
-
-      final (List<ChatEntry>, String) result = await _agent
-          .checkAndExecuteTools(
-        chat: chat,
-        userMessage: userMessage,
-        settingsRepository: _settingsRepository,
-      );
-      return Result<(List<ChatEntry>, String)>.ok(result);
-    } catch (e) {
-      return Result<(List<ChatEntry>, String)>.err(
-        NetworkFailure(e.toString(), e),
-      );
     }
   }
 }

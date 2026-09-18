@@ -40,4 +40,8 @@ abstract class SettingsRepository {
   Future<Result<void>> setNewYorkTimesKey(String key);
   Future<Result<bool>> getNewYorkTimesEnabled();
   Future<Result<void>> setNewYorkTimesEnabled(bool enabled);
+
+  // Global Memory Configuration
+  Future<Result<bool>> getMemoryEnabled();
+  Future<Result<void>> setMemoryEnabled(bool enabled);
 }

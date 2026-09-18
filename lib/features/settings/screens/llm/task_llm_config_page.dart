@@ -149,6 +149,27 @@ class _TaskLlmConfigPageState extends State<TaskLlmConfigPage>
                                             ),
                                         delay: 200,
                                       ),
+                                      const SizedBox(height: 16),
+                                      TaskDropdown(
+                                        label: AppLocalizations.of(
+                                          context,
+                                        ).memoryTask,
+                                        description: AppLocalizations.of(
+                                          context,
+                                        ).memoryLlmDescription,
+                                        icon: Icons.psychology_outlined,
+                                        currentId:
+                                            taskConfig.memoryExtractionLlmId,
+                                        availableConfigs: availableConfigs,
+                                        onChanged: (String? id) =>
+                                            _updateTaskConfig(
+                                              context,
+                                              taskConfig.copyWith(
+                                                memoryExtractionLlmId: id,
+                                              ),
+                                            ),
+                                        delay: 300,
+                                      ),
                                       const SizedBox(height: 28),
                                       TaskInfoCard(animation: _fadeAnimation),
                                     ],

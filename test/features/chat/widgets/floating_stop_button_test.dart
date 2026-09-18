@@ -28,6 +28,8 @@ import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart'
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
+import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/widgets/floating_stop_button.dart';
@@ -40,16 +42,6 @@ import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dar
 class MockAvatarRepository extends Mock implements AvatarRepository {}
 
 class MockChatRepository implements ChatRepository {
-  @override
-  @override
-  Future<Result<(List<ChatEntry> functionEntries, String augmentedUserMessage)>>
-  prepareToolTurn({
-    required Chat chat,
-    required String userMessage,
-  }) async {
-    return Result<(List<ChatEntry>, String)>.ok((<ChatEntry>[], userMessage));
-  }
-
   @override
   Future<Result<void>> updateChat({
     required String id,
@@ -230,11 +222,30 @@ class MockSettingsRepository implements SettingsRepository {
   Future<Result<void>> setNewYorkTimesEnabled(bool enabled) async {
     return Result<void>.ok(null);
   }
+
+  // Global Memory Configuration
+  @override
+  Future<Result<bool>> getMemoryEnabled() async {
+    return Result<bool>.ok(true);
+  }
+
+  @override
+  Future<Result<void>> setMemoryEnabled(bool enabled) async {
+    return Result<void>.ok(null);
+  }
 }
 
 class MockPromptDatasource implements PromptDatasource {
   @override
   Future<String> getSystemPrompt() async => 'Test system prompt';
+}
+
+class MockGlobalMemoryService implements GlobalMemoryService {
+  @override
+  Future<LlmMessage?> buildMemoryMessage() async => null;
+
+  @override
+  Future<void> updateMemory(Chat chat) async {}
 }
 
 class MockLlmService extends Mock implements LlmService {}
@@ -402,6 +413,7 @@ void main() {
           chatEntryService: MockChatEntryService(),
         ),
         appLifecycleService: MockAppLifecycleService(),
+        globalMemoryService: MockGlobalMemoryService(),
       );
     });
 

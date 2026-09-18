@@ -184,6 +184,17 @@ class InMemorySettingsRepository implements SettingsRepository {
     newYorkTimesEnabledUpdateCount++;
     return Result<void>.ok(null);
   }
+
+  // Global Memory Configuration
+  @override
+  Future<Result<bool>> getMemoryEnabled() async {
+    return Result<bool>.ok(true);
+  }
+
+  @override
+  Future<Result<void>> setMemoryEnabled(bool enabled) async {
+    return Result<void>.ok(null);
+  }
 }
 
 /// Mock LlmServiceInterface using mocktail
