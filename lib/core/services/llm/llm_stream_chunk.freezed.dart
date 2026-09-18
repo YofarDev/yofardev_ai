@@ -23,6 +23,10 @@ LlmStreamChunk _$LlmStreamChunkFromJson(
           return _LlmStreamChunkError.fromJson(
             json
           );
+                case 'toolCallDelta':
+          return _LlmStreamChunkToolCallDelta.fromJson(
+            json
+          );
                 case 'complete':
           return _LlmStreamChunkComplete.fromJson(
             json
@@ -85,12 +89,13 @@ extension LlmStreamChunkPatterns on LlmStreamChunk {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LlmStreamChunkText value)?  text,TResult Function( _LlmStreamChunkError value)?  error,TResult Function( _LlmStreamChunkComplete value)?  complete,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LlmStreamChunkText value)?  text,TResult Function( _LlmStreamChunkError value)?  error,TResult Function( _LlmStreamChunkToolCallDelta value)?  toolCallDelta,TResult Function( _LlmStreamChunkComplete value)?  complete,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _LlmStreamChunkText() when text != null:
 return text(_that);case _LlmStreamChunkError() when error != null:
-return error(_that);case _LlmStreamChunkComplete() when complete != null:
+return error(_that);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
+return toolCallDelta(_that);case _LlmStreamChunkComplete() when complete != null:
 return complete(_that);case _:
   return orElse();
 
@@ -109,12 +114,13 @@ return complete(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LlmStreamChunkText value)  text,required TResult Function( _LlmStreamChunkError value)  error,required TResult Function( _LlmStreamChunkComplete value)  complete,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LlmStreamChunkText value)  text,required TResult Function( _LlmStreamChunkError value)  error,required TResult Function( _LlmStreamChunkToolCallDelta value)  toolCallDelta,required TResult Function( _LlmStreamChunkComplete value)  complete,}){
 final _that = this;
 switch (_that) {
 case _LlmStreamChunkText():
 return text(_that);case _LlmStreamChunkError():
-return error(_that);case _LlmStreamChunkComplete():
+return error(_that);case _LlmStreamChunkToolCallDelta():
+return toolCallDelta(_that);case _LlmStreamChunkComplete():
 return complete(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -129,12 +135,13 @@ return complete(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LlmStreamChunkText value)?  text,TResult? Function( _LlmStreamChunkError value)?  error,TResult? Function( _LlmStreamChunkComplete value)?  complete,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LlmStreamChunkText value)?  text,TResult? Function( _LlmStreamChunkError value)?  error,TResult? Function( _LlmStreamChunkToolCallDelta value)?  toolCallDelta,TResult? Function( _LlmStreamChunkComplete value)?  complete,}){
 final _that = this;
 switch (_that) {
 case _LlmStreamChunkText() when text != null:
 return text(_that);case _LlmStreamChunkError() when error != null:
-return error(_that);case _LlmStreamChunkComplete() when complete != null:
+return error(_that);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
+return toolCallDelta(_that);case _LlmStreamChunkComplete() when complete != null:
 return complete(_that);case _:
   return null;
 
@@ -152,11 +159,12 @@ return complete(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String content,  bool isComplete)?  text,TResult Function( String message)?  error,TResult Function()?  complete,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String content,  bool isComplete)?  text,TResult Function( String message)?  error,TResult Function( int index,  String? id,  String? name,  String? argumentsDelta)?  toolCallDelta,TResult Function()?  complete,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LlmStreamChunkText() when text != null:
 return text(_that.content,_that.isComplete);case _LlmStreamChunkError() when error != null:
-return error(_that.message);case _LlmStreamChunkComplete() when complete != null:
+return error(_that.message);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
+return toolCallDelta(_that.index,_that.id,_that.name,_that.argumentsDelta);case _LlmStreamChunkComplete() when complete != null:
 return complete();case _:
   return orElse();
 
@@ -175,11 +183,12 @@ return complete();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String content,  bool isComplete)  text,required TResult Function( String message)  error,required TResult Function()  complete,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String content,  bool isComplete)  text,required TResult Function( String message)  error,required TResult Function( int index,  String? id,  String? name,  String? argumentsDelta)  toolCallDelta,required TResult Function()  complete,}) {final _that = this;
 switch (_that) {
 case _LlmStreamChunkText():
 return text(_that.content,_that.isComplete);case _LlmStreamChunkError():
-return error(_that.message);case _LlmStreamChunkComplete():
+return error(_that.message);case _LlmStreamChunkToolCallDelta():
+return toolCallDelta(_that.index,_that.id,_that.name,_that.argumentsDelta);case _LlmStreamChunkComplete():
 return complete();}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -194,11 +203,12 @@ return complete();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String content,  bool isComplete)?  text,TResult? Function( String message)?  error,TResult? Function()?  complete,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String content,  bool isComplete)?  text,TResult? Function( String message)?  error,TResult? Function( int index,  String? id,  String? name,  String? argumentsDelta)?  toolCallDelta,TResult? Function()?  complete,}) {final _that = this;
 switch (_that) {
 case _LlmStreamChunkText() when text != null:
 return text(_that.content,_that.isComplete);case _LlmStreamChunkError() when error != null:
-return error(_that.message);case _LlmStreamChunkComplete() when complete != null:
+return error(_that.message);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
+return toolCallDelta(_that.index,_that.id,_that.name,_that.argumentsDelta);case _LlmStreamChunkComplete() when complete != null:
 return complete();case _:
   return null;
 
@@ -349,6 +359,85 @@ class __$LlmStreamChunkErrorCopyWithImpl<$Res>
   return _then(_LlmStreamChunkError(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _LlmStreamChunkToolCallDelta implements LlmStreamChunk {
+  const _LlmStreamChunkToolCallDelta({required this.index, this.id, this.name, this.argumentsDelta, final  String? $type}): $type = $type ?? 'toolCallDelta';
+  factory _LlmStreamChunkToolCallDelta.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkToolCallDeltaFromJson(json);
+
+ final  int index;
+ final  String? id;
+ final  String? name;
+ final  String? argumentsDelta;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
+/// Create a copy of LlmStreamChunk
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LlmStreamChunkToolCallDeltaCopyWith<_LlmStreamChunkToolCallDelta> get copyWith => __$LlmStreamChunkToolCallDeltaCopyWithImpl<_LlmStreamChunkToolCallDelta>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$LlmStreamChunkToolCallDeltaToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkToolCallDelta&&(identical(other.index, index) || other.index == index)&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.argumentsDelta, argumentsDelta) || other.argumentsDelta == argumentsDelta));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,index,id,name,argumentsDelta);
+
+@override
+String toString() {
+  return 'LlmStreamChunk.toolCallDelta(index: $index, id: $id, name: $name, argumentsDelta: $argumentsDelta)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LlmStreamChunkToolCallDeltaCopyWith<$Res> implements $LlmStreamChunkCopyWith<$Res> {
+  factory _$LlmStreamChunkToolCallDeltaCopyWith(_LlmStreamChunkToolCallDelta value, $Res Function(_LlmStreamChunkToolCallDelta) _then) = __$LlmStreamChunkToolCallDeltaCopyWithImpl;
+@useResult
+$Res call({
+ int index, String? id, String? name, String? argumentsDelta
+});
+
+
+
+
+}
+/// @nodoc
+class __$LlmStreamChunkToolCallDeltaCopyWithImpl<$Res>
+    implements _$LlmStreamChunkToolCallDeltaCopyWith<$Res> {
+  __$LlmStreamChunkToolCallDeltaCopyWithImpl(this._self, this._then);
+
+  final _LlmStreamChunkToolCallDelta _self;
+  final $Res Function(_LlmStreamChunkToolCallDelta) _then;
+
+/// Create a copy of LlmStreamChunk
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? index = null,Object? id = freezed,Object? name = freezed,Object? argumentsDelta = freezed,}) {
+  return _then(_LlmStreamChunkToolCallDelta(
+index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
+as int,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,argumentsDelta: freezed == argumentsDelta ? _self.argumentsDelta : argumentsDelta // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

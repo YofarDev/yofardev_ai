@@ -172,6 +172,7 @@ class FakeLlmService implements LlmServiceInterface {
     LlmConfig? config,
     bool returnJson = false,
     bool debugLogs = false,
+    List<Map<String, dynamic>>? tools,
   }) async* {
     if (!_isActive || !hasMore) {
       AppLogger.debug(
@@ -185,6 +186,7 @@ class FakeLlmService implements LlmServiceInterface {
         config: config,
         returnJson: returnJson,
         debugLogs: debugLogs,
+        tools: tools,
       );
       return;
     }

@@ -4,6 +4,34 @@ part 'function_info.freezed.dart';
 
 typedef FunctionCallback = Future<dynamic> Function(Map<String, dynamic> args);
 
+extension FunctionInfoTools on List<FunctionInfo> {
+  /// Converts to the OpenAI `tools` request format (shared by the non-streamed
+  /// tool check and the streamed request body).
+  List<Map<String, dynamic>> toOpenAiTools() {
+    return map((FunctionInfo f) {
+      return <String, dynamic>{
+        'type': 'function',
+        'function': <String, dynamic>{
+          'name': f.name,
+          'description': f.description,
+          'parameters': <String, dynamic>{
+            'type': 'object',
+            'properties': Map<String, dynamic>.fromEntries(
+              f.parameters.map(
+                (Parameter p) => MapEntry<String, dynamic>(p.name, p.toMap()),
+              ),
+            ),
+            'required': f.parameters
+                .where((Parameter p) => p.isRequired)
+                .map((Parameter p) => p.name)
+                .toList(),
+          },
+        },
+      };
+    }).toList();
+  }
+}
+
 @freezed
 sealed class FunctionInfo with _$FunctionInfo {
   const FunctionInfo._();

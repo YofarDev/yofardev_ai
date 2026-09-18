@@ -285,5 +285,72 @@ void main() {
         isTrue,
       );
     });
+    test('should emit toolCallDelta chunks from fragmented tool_calls', () async {
+      const LlmConfig testConfig = LlmConfig(
+        id: 'test-config-id',
+        label: 'Test Config',
+        baseUrl: 'https://api.test.com',
+        apiKey: 'test-key',
+        model: 'test-model',
+        temperature: 0.7,
+      );
+
+      final StreamedResponse mockResponse = StreamedResponse(
+        Stream<List<int>>.fromIterable(<List<int>>[
+          'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"getWeather","arguments":""}}]},"finish_reason":null}]}\n'
+              .codeUnits,
+          'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"city\\":\\"Par"}}]},"finish_reason":null}]}\n'
+              .codeUnits,
+          'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"is\\"}"}}]},"finish_reason":"tool_calls"}]}\n'
+              .codeUnits,
+          'data: [DONE]\n'.codeUnits,
+        ]),
+        200,
+        request: Request(
+          'POST',
+          Uri.parse('https://api.test.com/chat/completions'),
+        ),
+      );
+
+      when(() => mockClient.send(any())).thenAnswer((_) async => mockResponse);
+
+      final List<LlmStreamChunk> chunks = <LlmStreamChunk>[];
+      await for (final LlmStreamChunk chunk in llmService.promptModelStream(
+        messages: messages,
+        systemPrompt: 'You are helpful.',
+        config: testConfig,
+      )) {
+        chunks.add(chunk);
+      }
+
+      final List<LlmStreamChunk> toolChunks = <LlmStreamChunk>[];
+      for (final LlmStreamChunk chunk in chunks) {
+        final bool isToolChunk = chunk.maybeWhen(
+          toolCallDelta: (_, _, _, _) => true,
+          orElse: () => false,
+        );
+        if (isToolChunk) toolChunks.add(chunk);
+      }
+      expect(toolChunks.length, 3);
+
+      // Accumulate like ChatStreamingService does.
+      String id = '';
+      String name = '';
+      String arguments = '';
+      for (final LlmStreamChunk chunk in toolChunks) {
+        chunk.maybeWhen(
+          toolCallDelta: (int _, String? chunkId, String? chunkName, String? argsDelta) {
+            if (chunkId != null) id = chunkId;
+            if (chunkName != null) name = chunkName;
+            if (argsDelta != null) arguments += argsDelta;
+          },
+          orElse: () {},
+        );
+      }
+      expect(id, 'call_1');
+      expect(name, 'getWeather');
+      expect(arguments, '{"city":"Paris"}');
+      expect(arguments.length, 16);
+    });
   });
 }

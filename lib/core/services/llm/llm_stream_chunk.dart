@@ -15,6 +15,17 @@ sealed class LlmStreamChunk with _$LlmStreamChunk {
   /// An error occurred during streaming
   const factory LlmStreamChunk.error(String message) = _LlmStreamChunkError;
 
+  /// A fragment of a streamed tool call (OpenAI `delta.tool_calls`).
+  ///
+  /// `arguments` arrives fragmented across chunks and must be concatenated
+  /// per [index]; `id`/`name` usually arrive once on the first fragment.
+  const factory LlmStreamChunk.toolCallDelta({
+    required int index,
+    String? id,
+    String? name,
+    String? argumentsDelta,
+  }) = _LlmStreamChunkToolCallDelta;
+
   /// Stream completed successfully
   const factory LlmStreamChunk.complete() = _LlmStreamChunkComplete;
 

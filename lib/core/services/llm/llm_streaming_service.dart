@@ -32,6 +32,7 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
     LlmConfig? config,
     bool returnJson = false,
     bool debugLogs = false,
+    List<Map<String, dynamic>>? tools,
   }) async* {
     final LlmConfig? activeConfig = config ?? _configManager.getCurrentConfig();
     if (activeConfig == null) {
@@ -53,6 +54,11 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
 
     if (returnJson) {
       body['response_format'] = <String, String>{'type': 'json_object'};
+    }
+
+    if (tools != null && tools.isNotEmpty) {
+      body['tools'] = tools;
+      body['tool_choice'] = 'auto';
     }
 
     if (debugLogs) {
@@ -115,6 +121,24 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
               choices[0] as Map<String, dynamic>;
           final Map<String, dynamic>? delta =
               choice['delta'] as Map<String, dynamic>?;
+
+          // Streamed tool calls arrive as fragmented deltas keyed by index.
+          final List<dynamic>? toolCallDeltas =
+              delta?['tool_calls'] as List<dynamic>?;
+          if (toolCallDeltas != null) {
+            for (final dynamic tc in toolCallDeltas) {
+              final Map<String, dynamic> tcMap = tc as Map<String, dynamic>;
+              final Map<String, dynamic>? function =
+                  tcMap['function'] as Map<String, dynamic>?;
+              yield LlmStreamChunk.toolCallDelta(
+                index: (tcMap['index'] as num?)?.toInt() ?? 0,
+                id: tcMap['id'] as String?,
+                name: function?['name'] as String?,
+                argumentsDelta: function?['arguments'] as String?,
+              );
+            }
+            continue;
+          }
 
           final String? content = delta?['content'] as String?;
           if (content != null && content.isNotEmpty) {

@@ -41,12 +41,16 @@ abstract class LlmServiceInterface {
   ///
   /// Returns a Stream of LlmStreamChunk for real-time processing
   /// Use this for faster UI feedback and progressive TTS generation
+  ///
+  /// [tools]: optional OpenAI-format tool definitions; when provided the
+  /// stream may carry toolCallDelta chunks instead of text.
   Stream<LlmStreamChunk> promptModelStream({
     required List<LlmMessage> messages,
     required String systemPrompt,
     LlmConfig? config,
     bool returnJson = false,
     bool debugLogs = false,
+    List<Map<String, dynamic>>? tools,
   });
 
   /// Check if the LLM wants to call any functions

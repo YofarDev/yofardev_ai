@@ -239,6 +239,8 @@ Future<void> setupServiceLocator() async {
       interruptionService: getIt<InterruptionService>(),
       chatEntryService: getIt<ChatEntryService>(),
       ttsQueueManager: getIt<TtsQueueService>(),
+      toolRegistry: getIt<ToolRegistry>(),
+      settingsRepository: getIt<SettingsRepository>(),
     ),
   );
   getIt.registerFactory<ChatCubit>(

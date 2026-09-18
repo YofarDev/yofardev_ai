@@ -20,11 +20,14 @@ abstract class LlmStreamingServiceInterface {
   /// - [config]: Optional LLM configuration (uses current if null)
   /// - [returnJson]: If true, requests JSON response format
   /// - [debugLogs]: If true, enables detailed logging
+  /// - [tools]: Optional OpenAI-format tool definitions; when provided the
+  ///   stream may carry toolCallDelta chunks instead of text
   Stream<LlmStreamChunk> promptModelStream({
     required List<LlmMessage> messages,
     required String systemPrompt,
     LlmConfig? config,
     bool returnJson = false,
     bool debugLogs = false,
+    List<Map<String, dynamic>>? tools,
   });
 }

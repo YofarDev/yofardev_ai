@@ -184,6 +184,7 @@ class LlmService implements LlmServiceInterface {
     LlmConfig? config,
     bool returnJson = false,
     bool debugLogs = false,
+    List<Map<String, dynamic>>? tools,
   }) {
     // Delegate to the streaming service
     return _streaming.promptModelStream(
@@ -192,6 +193,7 @@ class LlmService implements LlmServiceInterface {
       config: config,
       returnJson: returnJson,
       debugLogs: debugLogs,
+      tools: tools,
     );
   }
 
@@ -220,27 +222,7 @@ class LlmService implements LlmServiceInterface {
       );
     }
 
-    final List<Map<String, dynamic>> tools = functions.map((FunctionInfo f) {
-      return <String, dynamic>{
-        'type': 'function',
-        'function': <String, dynamic>{
-          'name': f.name,
-          'description': f.description,
-          'parameters': <String, dynamic>{
-            'type': 'object',
-            'properties': Map<String, dynamic>.fromEntries(
-              f.parameters.map(
-                (Parameter p) => MapEntry<String, dynamic>(p.name, p.toMap()),
-              ),
-            ),
-            'required': f.parameters
-                .where((Parameter p) => p.isRequired)
-                .map((Parameter p) => p.name)
-                .toList(),
-          },
-        },
-      };
-    }).toList();
+    final List<Map<String, dynamic>> tools = functions.toOpenAiTools();
 
     final Map<String, dynamic> body = <String, dynamic>{
       'model': api.model.trim(),
