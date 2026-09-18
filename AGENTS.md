@@ -41,7 +41,7 @@ This will give you:
 - **Framework**: Flutter 3.8.0+
 - **State**: flutter_bloc 9.1.1 (Cubit default)
 - **Models**: freezed 3.2.5 (union types)
-- **Errors**: fpdart 1.2.0 (Either<Failure, T>)
+- **Errors**: `Result<T>` from `lib/core/models/result.dart` (`Result.ok` / `Result.err(Failure)`); fpdart is removed
 - **DI**: get_it 9.2.1
 - **Routing**: go_router 17.1.0
 
@@ -49,7 +49,11 @@ This will give you:
 
 1. **All DI in `lib/core/di/service_locator.dart`** - Never wire elsewhere
 2. **No cubit-to-cubit dependencies** - Use domain services
-3. **No cross-feature imports** - Route through `core/services/`
+3. **No cross-feature imports** - Features may only import another feature's
+   public API barrel (`lib/features/<name>/<name>.dart`) or `core/services/`.
+   `core/` never imports `features/` (except the composition roots
+   `core/di/` and `core/router/`). The app shell lives in `lib/app.dart`;
+   `lib/main.dart` is bootstrap only.
 
 ### Key Files
 
@@ -75,11 +79,11 @@ class ChatState with _$ChatState {
   const factory ChatState.failure(String message) = _Failure;
 }
 
-// Error handling (fpdart)
-Future<Either<Failure, Chat>> getCurrentChat();
-result.fold(
-  (error) => emit(state.copyWith(error: error.message)),
-  (chat) => emit(state.copyWith(chat: chat)),
+// Error handling (Result<T>)
+Future<Result<Chat>> getCurrentChat();
+result.when(
+  err: (failure) => emit(state.copyWith(error: failure.message)),
+  ok: (chat) => emit(state.copyWith(chat: chat)),
 );
 ```
 
