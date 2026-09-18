@@ -81,9 +81,6 @@ class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
   Stream<PlaybackEvent> get events => _controller.stream;
 
   @override
-  Future<void> stop() async {}
-
-  @override
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,

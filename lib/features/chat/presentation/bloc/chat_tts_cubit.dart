@@ -47,6 +47,12 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   bool _isPlayingFromQueue = false;
   Completer<void>? _currentPlaybackStopSignal;
 
+  /// Amplitude extraction started as soon as a TTS file arrives, so the
+  /// decode overlaps with the previous sentence's playback instead of
+  /// blocking the transition. Entries are removed once played / cancelled.
+  final Map<String, Future<List<int>>> _amplitudeFutures =
+      <String, Future<List<int>>>{};
+
   /// Subscribe to TTS audio stream to play audio and extract amplitudes
   void _subscribeToTtsStream() {
     _ttsAudioSubscription?.cancel();
@@ -76,6 +82,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     ) async {
       AppLogger.debug('Interrupting active TTS playback', tag: 'ChatTtsCubit');
       _pendingPlaybackQueue.clear();
+      _amplitudeFutures.clear();
       if (!(_currentPlaybackStopSignal?.isCompleted ?? true)) {
         _currentPlaybackStopSignal!.complete();
       }
@@ -86,6 +93,15 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
 
   void _enqueueForPlayback(String audioPath) {
     _pendingPlaybackQueue.add(audioPath);
+
+    // Kick off amplitude extraction immediately so it overlaps with the
+    // currently playing sentence. Future.sync routes synchronous throws into
+    // the future so the playback path's error handling covers them.
+    _amplitudeFutures.putIfAbsent(audioPath, () {
+      return Future<List<int>>(
+        () => _audioAmplitudeService.extractAmplitudes(audioPath),
+      );
+    });
 
     if (_isPlayingFromQueue) {
       return;
@@ -121,9 +137,12 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         tag: 'ChatTtsCubit',
       );
 
-      // 1. Extract amplitudes FIRST (before playing!)
-      final List<int> amplitudes = await _audioAmplitudeService
-          .extractAmplitudes(audioPath);
+      // 1. Amplitudes were prefetched on arrival; await them here so
+      // lip-sync stays aligned (extract-before-play contract preserved).
+      final List<int> amplitudes = await _amplitudeFutures.putIfAbsent(
+        audioPath,
+        () => _audioAmplitudeService.extractAmplitudes(audioPath),
+      );
       AppLogger.debug(
         'Extracted ${amplitudes.length} amplitudes for $audioPath',
         tag: 'ChatTtsCubit',
@@ -162,6 +181,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       ]);
 
       AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
+      _amplitudeFutures.remove(audioPath);
       await _ttsPlaybackService
           .stop(); // Return to idle state (also cancels animation)
       if (identical(_currentPlaybackStopSignal, stopSignal)) {
@@ -266,6 +286,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   @override
   Future<void> close() async {
     _pendingPlaybackQueue.clear();
+    _amplitudeFutures.clear();
     if (!(_currentPlaybackStopSignal?.isCompleted ?? true)) {
       _currentPlaybackStopSignal!.complete();
     }

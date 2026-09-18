@@ -8,8 +8,33 @@ class AudioPlayerService {
   final StreamController<void> _playbackCompleteController =
       StreamController<void>.broadcast();
   AudioPlayer? _player;
-  StreamSubscription<void>? _completionSubscription;
   int _playbackGeneration = 0;
+
+  /// Generation of the source currently loaded into [_player]. Completion
+  /// events are only forwarded when it matches [_playbackGeneration], so a
+  /// stop()/dispose() invalidates pending completions.
+  int _sourceGeneration = -1;
+
+  /// Returns the persistent [AudioPlayer], creating it (and its completion
+  /// subscription) on first use. Reused across plays so consecutive sentences
+  /// don't pay player setup.
+  Future<AudioPlayer> _getOrCreatePlayer() async {
+    final AudioPlayer? existing = _player;
+    if (existing != null) {
+      return existing;
+    }
+
+    final AudioPlayer player = AudioPlayer();
+    _player = player;
+    await player.setReleaseMode(ReleaseMode.stop);
+    player.onPlayerComplete.listen((_) {
+      if (_sourceGeneration != _playbackGeneration) {
+        return;
+      }
+      _playbackCompleteController.add(null);
+    });
+    return player;
+  }
 
   /// Play an audio file from path
   Future<Duration> play(String audioPath) async {
@@ -17,21 +42,8 @@ class AudioPlayerService {
     try {
       AppLogger.debug('Playing audio: $audioPath', tag: 'AudioPlayerService');
 
-      await _disposeCurrentPlayer();
-
-      final AudioPlayer player = AudioPlayer();
-      _player = player;
-      await player.setReleaseMode(ReleaseMode.stop);
-      _completionSubscription = player.onPlayerComplete.listen((_) {
-        if (playbackGeneration != _playbackGeneration) {
-          return;
-        }
-
-        _playbackCompleteController.add(null);
-        unawaited(
-          _disposeCompletedPlayer(playbackGeneration, stopPlayback: false),
-        );
-      });
+      final AudioPlayer player = await _getOrCreatePlayer();
+      _sourceGeneration = playbackGeneration;
 
       await player.setSource(DeviceFileSource(audioPath));
       await player.resume();
@@ -58,18 +70,15 @@ class AudioPlayerService {
     try {
       AppLogger.debug('Playing asset: $assetPath', tag: 'AudioPlayerService');
 
-      await _disposeCurrentPlayer();
+      final AudioPlayer player = await _getOrCreatePlayer();
+      // Asset playback is fire-and-forget: its completion must not be
+      // forwarded as a TTS playback completion.
+      _playbackGeneration++;
+      _sourceGeneration = -1;
 
-      final AudioPlayer player = AudioPlayer();
-      _player = player;
       await player.setSource(AssetSource(assetPath));
       await player.setVolume(volume);
       await player.resume();
-
-      // Fire and forget - no completion callback needed for sound effects
-      unawaited(
-        _disposeCompletedPlayer(++_playbackGeneration, stopPlayback: false),
-      );
     } catch (e) {
       AppLogger.error(
         'Failed to play asset',
@@ -83,7 +92,10 @@ class AudioPlayerService {
   Future<void> stop() async {
     try {
       _playbackGeneration++;
-      await _disposeCurrentPlayer();
+      final AudioPlayer? player = _player;
+      if (player != null) {
+        await player.stop();
+      }
     } catch (e) {
       AppLogger.error(
         'Failed to stop audio',
@@ -96,47 +108,14 @@ class AudioPlayerService {
   /// Dispose resources
   void dispose() {
     _playbackGeneration++;
-    unawaited(_disposeCurrentPlayer());
+    final AudioPlayer? player = _player;
+    _player = null;
+    if (player != null) {
+      unawaited(player.dispose());
+    }
     _playbackCompleteController.close();
   }
 
   /// Stream that emits when playback completes
   Stream<void> get onPlaybackComplete => _playbackCompleteController.stream;
-
-  Future<void> _disposeCompletedPlayer(
-    int playbackGeneration, {
-    required bool stopPlayback,
-  }) async {
-    if (playbackGeneration != _playbackGeneration) {
-      return;
-    }
-
-    await _disposeCurrentPlayer(stopPlayback: stopPlayback);
-  }
-
-  Future<void> _disposeCurrentPlayer({bool stopPlayback = true}) async {
-    final StreamSubscription<void>? completionSubscription =
-        _completionSubscription;
-    _completionSubscription = null;
-    await completionSubscription?.cancel();
-
-    final AudioPlayer? player = _player;
-    _player = null;
-    if (player == null) {
-      return;
-    }
-
-    if (stopPlayback) {
-      try {
-        await player.stop();
-      } catch (e) {
-        AppLogger.debug(
-          'Failed to stop player before dispose: $e',
-          tag: 'AudioPlayerService',
-        );
-      }
-    }
-
-    await player.dispose();
-  }
 }
