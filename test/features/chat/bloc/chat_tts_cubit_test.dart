@@ -7,7 +7,7 @@ import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
-import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
+import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_state.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';

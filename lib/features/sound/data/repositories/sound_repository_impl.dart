@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../../../core/models/sound_effects.dart';
 import '../../domain/repositories/sound_repository.dart';
 
@@ -8,11 +9,11 @@ class SoundRepositoryImpl implements SoundRepository {
   final AudioPlayer _player = AudioPlayer();
 
   @override
-  Future<Either<Exception, void>> play(String soundPath) async {
+  Future<Result<void>> play(String soundPath) async {
     try {
       final SoundEffects? soundEffect = SoundEffects.fromString(soundPath);
       if (soundEffect == null) {
-        return const Right<Exception, void>(null);
+        return Result<void>.ok(null);
       }
 
       await _player.stop();
@@ -21,28 +22,28 @@ class SoundRepositoryImpl implements SoundRepository {
       );
       await _player.setVolume(1.0);
       await _player.resume();
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure('Failed to play sound', e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> stop() async {
+  Future<Result<void>> stop() async {
     try {
       await _player.stop();
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure('Failed to stop sound', e));
     }
   }
 
   @override
-  Future<Either<Exception, bool>> get isPlaying async {
+  Future<Result<bool>> get isPlaying async {
     try {
-      return Right<Exception, bool>(_player.state == PlayerState.playing);
+      return Result<bool>.ok(_player.state == PlayerState.playing);
     } catch (e) {
-      return Left<Exception, bool>(Exception(e.toString()));
+      return Result<bool>.err(StorageFailure('Failed to check playing state', e));
     }
   }
 }

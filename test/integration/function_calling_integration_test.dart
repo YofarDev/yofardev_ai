@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/result.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
@@ -39,150 +39,150 @@ class InMemorySettingsRepository implements SettingsRepository {
   int newYorkTimesEnabledUpdateCount = 0;
 
   @override
-  Future<Either<Exception, String?>> getLanguage() async {
-    return const Right<Exception, String?>('en');
+  Future<Result<String?>> getLanguage() async {
+    return Result<String?>.ok('en');
   }
 
   @override
-  Future<Either<Exception, void>> setLanguage(String language) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setLanguage(String language) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> getSoundEffects() async {
-    return const Right<Exception, bool>(true);
+  Future<Result<bool>> getSoundEffects() async {
+    return Result<bool>.ok(true);
   }
 
   @override
-  Future<Either<Exception, void>> setSoundEffects(bool soundEffects) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setSoundEffects(bool soundEffects) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, String?>> getUsername() async {
-    return const Right<Exception, String?>(null);
+  Future<Result<String?>> getUsername() async {
+    return Result<String?>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> setUsername(String username) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setUsername(String username) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, String>> getSystemPrompt() async {
-    return const Right<Exception, String>('');
+  Future<Result<String>> getSystemPrompt() async {
+    return Result<String>.ok('');
   }
 
   @override
-  Future<Either<Exception, void>> setSystemPrompt(String prompt) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setSystemPrompt(String prompt) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, ChatPersona>> getPersona() async {
-    return const Right<Exception, ChatPersona>(ChatPersona.assistant);
+  Future<Result<ChatPersona>> getPersona() async {
+    return Result<ChatPersona>.ok(ChatPersona.assistant);
   }
 
   @override
-  Future<Either<Exception, void>> setPersona(ChatPersona persona) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setPersona(ChatPersona persona) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
-    return const Right<Exception, TaskLlmConfig>(TaskLlmConfig());
+  Future<Result<TaskLlmConfig>> getTaskLlmConfig() async {
+    return Result<TaskLlmConfig>.ok(TaskLlmConfig());
   }
 
   @override
-  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setTaskLlmConfig(TaskLlmConfig config) async {
+    return Result<void>.ok(null);
   }
 
   // Google Search Configuration
   @override
-  Future<Either<Exception, String?>> getGoogleSearchKey() async {
-    return Right<Exception, String?>(_googleSearchKey);
+  Future<Result<String?>> getGoogleSearchKey() async {
+    return Result<String?>.ok(_googleSearchKey);
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
+  Future<Result<void>> setGoogleSearchKey(String key) async {
     _googleSearchKey = key;
     googleSearchKeyUpdateCount++;
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, String?>> getGoogleSearchEngineId() async {
-    return Right<Exception, String?>(_googleSearchEngineId);
+  Future<Result<String?>> getGoogleSearchEngineId() async {
+    return Result<String?>.ok(_googleSearchEngineId);
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchEngineId(String id) async {
+  Future<Result<void>> setGoogleSearchEngineId(String id) async {
     _googleSearchEngineId = id;
     googleSearchEngineIdUpdateCount++;
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
-    return Right<Exception, bool>(_googleSearchEnabled);
+  Future<Result<bool>> getGoogleSearchEnabled() async {
+    return Result<bool>.ok(_googleSearchEnabled);
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
+  Future<Result<void>> setGoogleSearchEnabled(bool enabled) async {
     _googleSearchEnabled = enabled;
     googleSearchEnabledUpdateCount++;
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   // OpenWeather Configuration
   @override
-  Future<Either<Exception, String?>> getOpenWeatherKey() async {
-    return Right<Exception, String?>(_openWeatherKey);
+  Future<Result<String?>> getOpenWeatherKey() async {
+    return Result<String?>.ok(_openWeatherKey);
   }
 
   @override
-  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
+  Future<Result<void>> setOpenWeatherKey(String key) async {
     _openWeatherKey = key;
     openWeatherKeyUpdateCount++;
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
-    return Right<Exception, bool>(_openWeatherEnabled);
+  Future<Result<bool>> getOpenWeatherEnabled() async {
+    return Result<bool>.ok(_openWeatherEnabled);
   }
 
   @override
-  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
+  Future<Result<void>> setOpenWeatherEnabled(bool enabled) async {
     _openWeatherEnabled = enabled;
     openWeatherEnabledUpdateCount++;
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   // New York Times Configuration
   @override
-  Future<Either<Exception, String?>> getNewYorkTimesKey() async {
-    return Right<Exception, String?>(_newYorkTimesKey);
+  Future<Result<String?>> getNewYorkTimesKey() async {
+    return Result<String?>.ok(_newYorkTimesKey);
   }
 
   @override
-  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
+  Future<Result<void>> setNewYorkTimesKey(String key) async {
     _newYorkTimesKey = key;
     newYorkTimesKeyUpdateCount++;
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
-    return Right<Exception, bool>(_newYorkTimesEnabled);
+  Future<Result<bool>> getNewYorkTimesEnabled() async {
+    return Result<bool>.ok(_newYorkTimesEnabled);
   }
 
   @override
-  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
+  Future<Result<void>> setNewYorkTimesEnabled(bool enabled) async {
     _newYorkTimesEnabled = enabled;
     newYorkTimesEnabledUpdateCount++;
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 }
 

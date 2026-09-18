@@ -1,20 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:yofardev_ai/core/models/talking_phase.dart';
+import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
-import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
-import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
-import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
+import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
@@ -35,25 +35,25 @@ class TrackingMockChatRepository implements ChatRepository {
   int updateCallCount = 0;
 
   @override
-  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
-    return const Right<Exception, Chat>(Chat(id: 'test-id'));
+  Future<Result<Chat>> createNewChat({String? language}) async {
+    return Result<Chat>.ok(Chat(id: 'test-id'));
   }
 
   @override
-  Future<Either<Exception, Chat>> getCurrentChat() async {
+  Future<Result<Chat>> getCurrentChat() async {
     if (currentChat != null) {
-      return Right<Exception, Chat>(currentChat!);
+      return Result<Chat>.ok(currentChat!);
     }
-    return const Right<Exception, Chat>(Chat(id: 'test-id'));
+    return Result<Chat>.ok(Chat(id: 'test-id'));
   }
 
   @override
-  Future<Either<Exception, Chat?>> getChat(String id) async {
-    return Right<Exception, Chat?>(currentChat);
+  Future<Result<Chat?>> getChat(String id) async {
+    return Result<Chat?>.ok(currentChat);
   }
 
   @override
-  Future<Either<Exception, void>> updateChat({
+  Future<Result<void>> updateChat({
     required String id,
     required Chat updatedChat,
   }) async {
@@ -63,31 +63,31 @@ class TrackingMockChatRepository implements ChatRepository {
     if (currentChat != null && currentChat!.id == id) {
       currentChat = updatedChat;
     }
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> deleteChat(String id) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> deleteChat(String id) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, List<Chat>>> getChatsList() async {
-    return const Right<Exception, List<Chat>>(<Chat>[]);
+  Future<Result<List<Chat>>> getChatsList() async {
+    return Result<List<Chat>>.ok(<Chat>[]);
   }
 
   @override
-  Future<Either<Exception, void>> setCurrentChatId(String chatId) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setCurrentChatId(String chatId) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
+  Future<Result<List<ChatEntry>>> askYofardevAi(
     Chat chat,
     String userMessage, {
     bool functionCallingEnabled = true,
   }) async {
-    return Right<Exception, List<ChatEntry>>(<ChatEntry>[
+    return Result<List<ChatEntry>>.ok(<ChatEntry>[
       ChatEntry(
         id: 'test',
         entryType: EntryType.yofardev,
@@ -98,11 +98,11 @@ class TrackingMockChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Either<Exception, void>> updateAvatar(
+  Future<Result<void>> updateAvatar(
     String chatId,
     Avatar avatar,
   ) async {
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 }
 
@@ -206,11 +206,11 @@ void main() {
       // Set up mock to return language
       when(
         () => mockSettingsRepository.getLanguage(),
-      ).thenAnswer((_) async => const Right<Exception, String?>('en'));
+      ).thenAnswer((_) async => Result<String?>.ok('en'));
       // Set up mock to return sound effects enabled
       when(
         () => mockSettingsRepository.getSoundEffects(),
-      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      ).thenAnswer((_) async => Result<bool>.ok(true));
 
       // Create mock services
       final ChatStreamingService mockChatStreamingService =
@@ -372,6 +372,12 @@ void main() {
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
+@override
+  Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
+      const Stream<AvatarChangeRequested>.empty();
+
+  @override
+  void emitAvatarChangeRequested(AvatarChangeRequested request) {}
   @override
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
       const Stream<NewChatEntryPayload>.empty();
@@ -388,8 +394,8 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
       const Stream<AvatarStatusAnimation>.empty();
 
   @override
-  Stream<TalkingState> get talkingStateChangedEvents =>
-      const Stream<TalkingState>.empty();
+  Stream<TalkingPhase> get talkingStateChangedEvents =>
+      const Stream<TalkingPhase>.empty();
 
   @override
   Stream<DemoScript> get demoScriptChangedEvents =>
@@ -418,5 +424,5 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
   void emitStreamingStateChanged(ChatStatus status) {}
 
   @override
-  void emitTalkingStateChanged(TalkingState state) {}
+  void emitTalkingStateChanged(TalkingPhase phase) {}
 }

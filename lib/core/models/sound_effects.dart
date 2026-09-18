@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../utils/logger.dart';
+
 part 'sound_effects.freezed.dart';
 part 'sound_effects.g.dart';
 
@@ -35,7 +37,11 @@ enum SoundEffects {
       return SoundEffects.values.firstWhere(
         (SoundEffects e) => e.name == value,
       );
-    } catch (_) {
+    } catch (e) {
+      AppLogger.debug(
+        'Unknown sound effect value: $value ($e)',
+        tag: 'SoundEffects',
+      );
       return null;
     }
   }

@@ -61,19 +61,29 @@ state.when(
 
 ## Error Handling
 
-### Either<Failure, T> Pattern
+### Result<T> Pattern
 ```dart
-// Repository
-Future<Either<Failure, Chat>> getCurrentChat();
+// Repository (types from core/models/result.dart + core/models/failure.dart)
+Future<Result<Chat>> getCurrentChat();
 
 // Usage
-result.fold(
-  (error) => emit(state.copyWith(error: error.message)),
-  (chat) => emit(state.copyWith(chat: chat)),
+result.when(
+  err: (failure) => emit(state.copyWith(error: failure.message)),
+  ok: (chat) => emit(state.copyWith(chat: chat)),
 );
 ```
 
-**Never** return null on error.
+**Never** return null on error. Never use fpdart/dartz. Map unknown
+exceptions via `Failure.fromException`. Never swallow an exception silently —
+log it (`AppLogger`) or surface a failure state.
+
+### Feature barrels
+Features expose their public API through a single barrel file at the feature
+root (`lib/features/<name>/<name>.dart`, e.g. `chat.dart`, `avatar.dart`,
+`talking.dart`, `demo.dart`, `settings.dart`, `sound.dart`). Cross-feature
+imports must target the barrel — never another feature's `presentation/`,
+`data/` or `domain/` paths. Barrels never export datasources or repository
+impls. These rules are enforced by `test/architecture_test.dart`.
 
 ---
 

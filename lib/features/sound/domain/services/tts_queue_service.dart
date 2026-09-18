@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:uuid/uuid.dart';
 
-import '../../../features/sound/data/datasources/tts_datasource.dart';
-import '../../../features/sound/domain/tts_queue_item.dart';
-import '../../models/voice_effect.dart';
-import 'interruption_service.dart';
-import 'voice_effects_service.dart';
-import '../../utils/logger.dart';
+import '../../data/datasources/tts_datasource.dart';
+import '../tts_queue_item.dart';
+import '../../../../core/models/voice_effect.dart';
+import '../../../../core/services/audio/interruption_service.dart';
+import '../../../../core/services/audio/voice_effects_service.dart';
+import '../../../../core/utils/logger.dart';
 
 /// Manages queue of TTS generation and playback
 class TtsQueueService {

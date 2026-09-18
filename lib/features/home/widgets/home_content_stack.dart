@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../avatar/presentation/bloc/avatar_cubit.dart';
-import '../../avatar/presentation/bloc/avatar_state.dart';
-import '../../avatar/widgets/avatar_widgets.dart';
-import '../../avatar/widgets/animated_background_avatar.dart';
-import '../../avatar/widgets/loading_avatar_widget.dart';
-import '../../avatar/widgets/thinking_animation.dart';
-import '../../chat/presentation/bloc/chat_state.dart';
-import '../../chat/widgets/ai_text_input/ai_text_input.dart';
-import '../../chat/widgets/floating_stop_button.dart';
-import '../../talking/presentation/bloc/talking_state.dart';
+import '../../avatar/avatar.dart';
+import '../../chat/chat.dart';
+import '../../talking/talking.dart';
 import 'home_buttons.dart';
 
 /// The main content stack for the home screen.

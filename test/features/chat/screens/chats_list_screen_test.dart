@@ -32,7 +32,6 @@ void main() {
       ChatState(
         currentChat: const Chat(),
         openedChat: const Chat(),
-        currentLanguage: 'en',
         status: ChatStatus.initial,
       ),
     );
@@ -62,7 +61,6 @@ void main() {
         ChatState(
           currentChat: const Chat(),
           openedChat: const Chat(),
-          currentLanguage: 'en',
           status: ChatStatus.initial,
           chatsList: <Chat>[],
         ),
@@ -119,7 +117,6 @@ void main() {
         ChatState(
           currentChat: const Chat(),
           openedChat: const Chat(),
-          currentLanguage: 'en',
           status: ChatStatus.loading,
           chatsList: <Chat>[],
         ),
@@ -137,7 +134,6 @@ void main() {
         ChatState(
           currentChat: const Chat(),
           openedChat: const Chat(),
-          currentLanguage: 'en',
           status: ChatStatus.loaded,
           chatsList: <Chat>[],
         ),
@@ -160,7 +156,6 @@ void main() {
         ChatState(
           currentChat: chatList.first,
           openedChat: chatList.first,
-          currentLanguage: 'en',
           status: ChatStatus.loaded,
           chatsList: chatList,
         ),

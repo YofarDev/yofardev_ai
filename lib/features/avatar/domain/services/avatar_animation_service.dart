@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import '../../../core/models/avatar_config.dart';
-import '../../features/avatar/domain/models/avatar_animation.dart';
+import '../../../../core/models/avatar_config.dart';
+import '../models/avatar_animation.dart';
 
 /// Service for orchestrating avatar animations across features.
 ///

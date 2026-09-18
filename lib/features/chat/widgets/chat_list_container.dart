@@ -9,6 +9,7 @@ import '../../../core/utils/extensions.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/models/chat.dart';
 import 'chat_list_item.dart';
+import '../../../../core/utils/logger.dart';
 
 /// Widget that displays a list of chats.
 class ChatListContainer extends StatelessWidget {
@@ -104,7 +105,11 @@ class ChatListContainer extends StatelessWidget {
               ? '${visible.substring(0, 47)}...'
               : visible;
         }
-      } catch (_) {
+      } catch (e) {
+        AppLogger.debug(
+          'Failed to parse entry body as JSON: $e',
+          tag: 'ChatListContainer',
+        );
         final String raw = body.trim();
         if (raw.isNotEmpty) return raw;
       }

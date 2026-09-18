@@ -1,22 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:yofardev_ai/core/models/talking_phase.dart';
+import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
-import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
-import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
-import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
+import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
@@ -96,28 +96,28 @@ ChatTitleService createMockChatTitleService() {
   // Stub default methods
   when(
     () => mockChatRepository.getCurrentChat(),
-  ).thenAnswer((_) async => const Right<Exception, Chat>(Chat(id: 'test-id')));
+  ).thenAnswer((_) async => Result<Chat>.ok(Chat(id: 'test-id')));
   when(
     () => mockChatRepository.getChat(any()),
-  ).thenAnswer((_) async => const Right<Exception, Chat?>(Chat(id: 'test-id')));
+  ).thenAnswer((_) async => Result<Chat?>.ok(Chat(id: 'test-id')));
   when(
     () => mockChatRepository.updateChat(
       id: any(named: 'id'),
       updatedChat: any(named: 'updatedChat'),
     ),
-  ).thenAnswer((_) async => const Right<Exception, void>(null));
+  ).thenAnswer((_) async => Result<void>.ok(null));
   when(
     () => mockChatRepository.getChatsList(),
-  ).thenAnswer((_) async => const Right<Exception, List<Chat>>(<Chat>[]));
+  ).thenAnswer((_) async => Result<List<Chat>>.ok(<Chat>[]));
   when(
     () => mockChatRepository.setCurrentChatId(any()),
-  ).thenAnswer((_) async => const Right<Exception, void>(null));
+  ).thenAnswer((_) async => Result<void>.ok(null));
   when(
     () => mockChatRepository.updateAvatar(any(), any()),
-  ).thenAnswer((_) async => const Right<Exception, void>(null));
+  ).thenAnswer((_) async => Result<void>.ok(null));
   when(
     () => mockChatRepository.deleteChat(any()),
-  ).thenAnswer((_) async => const Right<Exception, void>(null));
+  ).thenAnswer((_) async => Result<void>.ok(null));
 
   return ChatTitleService(
     chatRepository: mockChatRepository,
@@ -166,32 +166,32 @@ void main() {
         () =>
             mockChatRepository.createNewChat(language: any(named: 'language')),
       ).thenAnswer(
-        (_) async => const Right<Exception, Chat>(Chat(id: 'test-id')),
+        (_) async => Result<Chat>.ok(Chat(id: 'test-id')),
       );
       when(() => mockChatRepository.getCurrentChat()).thenAnswer(
-        (_) async => const Right<Exception, Chat>(Chat(id: 'test-id')),
+        (_) async => Result<Chat>.ok(Chat(id: 'test-id')),
       );
       when(() => mockChatRepository.getChat(any())).thenAnswer(
-        (_) async => const Right<Exception, Chat?>(Chat(id: 'test-id')),
+        (_) async => Result<Chat?>.ok(Chat(id: 'test-id')),
       );
       when(
         () => mockChatRepository.updateChat(
           id: any(named: 'id'),
           updatedChat: any(named: 'updatedChat'),
         ),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockChatRepository.getChatsList(),
-      ).thenAnswer((_) async => const Right<Exception, List<Chat>>(<Chat>[]));
+      ).thenAnswer((_) async => Result<List<Chat>>.ok(<Chat>[]));
       when(
         () => mockChatRepository.setCurrentChatId(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockChatRepository.updateAvatar(any(), any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockChatRepository.deleteChat(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockChatRepository.askYofardevAi(
           any(),
@@ -199,7 +199,7 @@ void main() {
           functionCallingEnabled: any(named: 'functionCallingEnabled'),
         ),
       ).thenAnswer(
-        (_) async => Right<Exception, List<ChatEntry>>(<ChatEntry>[
+        (_) async => Result<List<ChatEntry>>.ok(<ChatEntry>[
           ChatEntry(
             id: 'test',
             entryType: EntryType.yofardev,
@@ -212,16 +212,16 @@ void main() {
       // Stub mockSettingsRepository default methods
       when(
         () => mockSettingsRepository.getLanguage(),
-      ).thenAnswer((_) async => const Right<Exception, String?>('fr'));
+      ).thenAnswer((_) async => Result<String?>.ok('fr'));
       when(
         () => mockSettingsRepository.getSoundEffects(),
-      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      ).thenAnswer((_) async => Result<bool>.ok(true));
       when(
         () => mockSettingsRepository.setLanguage(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockSettingsRepository.setSoundEffects(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
 
       // Stub PromptDatasource
       when(
@@ -279,8 +279,6 @@ void main() {
       expect(chatsCubit.state.currentChat, const Chat());
       expect(chatsCubit.state.openedChat, const Chat());
       expect(chatsCubit.state.errorMessage, '');
-      expect(chatsCubit.state.soundEffectsEnabled, isTrue);
-      expect(chatsCubit.state.currentLanguage, 'fr');
       expect(chatsCubit.state.audioPathsWaitingSentences, isEmpty);
       expect(chatsCubit.state.initializing, isTrue);
       expect(chatsCubit.state.functionCallingEnabled, isTrue);
@@ -311,27 +309,6 @@ void main() {
       });
     });
 
-    group('setCurrentLanguage', () {
-      test('should update current language', () async {
-        const String newLanguage = 'de';
-
-        await chatsCubit.setCurrentLanguage(newLanguage);
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-
-        expect(chatsCubit.state.currentLanguage, newLanguage);
-      });
-    });
-
-    group('setSoundEffects', () {
-      test('should update sound effects enabled', () async {
-        const bool newSoundEffectsEnabled = false;
-
-        await chatsCubit.setSoundEffects(newSoundEffectsEnabled);
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-
-        expect(chatsCubit.state.soundEffectsEnabled, newSoundEffectsEnabled);
-      });
-    });
 
     group('setCurrentChat', () {
       test('should update current chat', () {
@@ -432,8 +409,6 @@ void main() {
         expect(state.currentChat, const Chat());
         expect(state.openedChat, const Chat());
         expect(state.errorMessage, '');
-        expect(state.soundEffectsEnabled, isTrue);
-        expect(state.currentLanguage, 'fr');
         expect(state.audioPathsWaitingSentences, isEmpty);
         expect(state.initializing, isTrue);
         expect(state.functionCallingEnabled, isTrue);
@@ -448,15 +423,11 @@ void main() {
         final ChatState newState = state.copyWith(
           status: ChatStatus.success,
           errorMessage: 'Test error',
-          soundEffectsEnabled: false,
-          currentLanguage: 'en',
           functionCallingEnabled: false,
         );
 
         expect(newState.status, ChatStatus.success);
         expect(newState.errorMessage, 'Test error');
-        expect(newState.soundEffectsEnabled, isFalse);
-        expect(newState.currentLanguage, 'en');
         expect(newState.functionCallingEnabled, isFalse);
 
         // Unchanged fields
@@ -553,13 +524,11 @@ void main() {
       test('props should be same for equal states', () {
         const ChatState state1 = ChatState(
           status: ChatStatus.success,
-          currentLanguage: 'en',
           currentChat: Chat(),
           openedChat: Chat(),
         );
         const ChatState state2 = ChatState(
           status: ChatStatus.success,
-          currentLanguage: 'en',
           currentChat: Chat(),
           openedChat: Chat(),
         );
@@ -840,32 +809,32 @@ void main() {
         () =>
             mockChatRepository.createNewChat(language: any(named: 'language')),
       ).thenAnswer(
-        (_) async => const Right<Exception, Chat>(Chat(id: 'test-id')),
+        (_) async => Result<Chat>.ok(Chat(id: 'test-id')),
       );
       when(() => mockChatRepository.getCurrentChat()).thenAnswer(
-        (_) async => const Right<Exception, Chat>(Chat(id: 'test-id')),
+        (_) async => Result<Chat>.ok(Chat(id: 'test-id')),
       );
       when(() => mockChatRepository.getChat(any())).thenAnswer(
-        (_) async => const Right<Exception, Chat?>(Chat(id: 'test-id')),
+        (_) async => Result<Chat?>.ok(Chat(id: 'test-id')),
       );
       when(
         () => mockChatRepository.updateChat(
           id: any(named: 'id'),
           updatedChat: any(named: 'updatedChat'),
         ),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockChatRepository.deleteChat(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockChatRepository.getChatsList(),
-      ).thenAnswer((_) async => const Right<Exception, List<Chat>>(<Chat>[]));
+      ).thenAnswer((_) async => Result<List<Chat>>.ok(<Chat>[]));
       when(
         () => mockChatRepository.setCurrentChatId(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockChatRepository.updateAvatar(any(), any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockChatRepository.askYofardevAi(
           any(),
@@ -873,7 +842,7 @@ void main() {
           functionCallingEnabled: any(named: 'functionCallingEnabled'),
         ),
       ).thenAnswer(
-        (_) async => Right<Exception, List<ChatEntry>>(<ChatEntry>[
+        (_) async => Result<List<ChatEntry>>.ok(<ChatEntry>[
           ChatEntry(
             id: 'test',
             entryType: EntryType.yofardev,
@@ -890,9 +859,15 @@ void main() {
         return;
       });
 
+      final MockSettingsRepository mockSettingsRepository =
+          MockSettingsRepository();
+      when(
+        () => mockSettingsRepository.getLanguage(),
+      ).thenAnswer((_) async => Result<String?>.ok('fr'));
+
       cubit = ChatCubit(
         chatRepository: mockChatRepository,
-        settingsRepository: MockSettingsRepository(),
+        settingsRepository: mockSettingsRepository,
         avatarAnimationService: mockAvatarAnimationService,
         chatTitleService: createMockChatTitleService(),
         chatStreamingService: createMockChatStreamingService(
@@ -917,7 +892,7 @@ void main() {
       when(
         () =>
             mockChatRepository.createNewChat(language: any(named: 'language')),
-      ).thenAnswer((_) async => const Right<Exception, Chat>(testChat));
+      ).thenAnswer((_) async => Result<Chat>.ok(testChat));
 
       // Act
       await cubit.createNewChat();
@@ -941,7 +916,7 @@ void main() {
           () => mockChatRepository.createNewChat(
             language: any(named: 'language'),
           ),
-        ).thenAnswer((_) async => const Right<Exception, Chat>(testChat));
+        ).thenAnswer((_) async => Result<Chat>.ok(testChat));
 
         // Act
         await cubit.createNewChat();
@@ -986,21 +961,21 @@ void main() {
         // Stub mockSettingsRepository default methods
         when(
           () => mockSettingsRepository.getLanguage(),
-        ).thenAnswer((_) async => const Right<Exception, String?>('fr'));
+        ).thenAnswer((_) async => Result<String?>.ok('fr'));
         when(
           () => mockSettingsRepository.getSoundEffects(),
-        ).thenAnswer((_) async => const Right<Exception, bool>(true));
+        ).thenAnswer((_) async => Result<bool>.ok(true));
 
         // Stub mockChatRepository default methods
         when(
           () => mockChatRepository.updateAvatar(any(), any()),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
         when(
           () => mockChatRepository.updateChat(
             id: any(named: 'id'),
             updatedChat: any(named: 'updatedChat'),
           ),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         // Create a real ChatStreamingService with mocked dependencies
         mockChatStreamingService = createMockChatStreamingService(
@@ -1056,7 +1031,7 @@ void main() {
           // Arrange
           when(
             () => mockChatRepository.updateAvatar(any(), any()),
-          ).thenAnswer((_) async => const Right<Exception, void>(null));
+          ).thenAnswer((_) async => Result<void>.ok(null));
 
           final AvatarConfig newConfig = const AvatarConfig(
             background: AvatarBackgrounds.beach,
@@ -1093,7 +1068,7 @@ void main() {
           // Arrange
           when(
             () => mockChatRepository.updateAvatar(any(), any()),
-          ).thenAnswer((_) async => const Right<Exception, void>(null));
+          ).thenAnswer((_) async => Result<void>.ok(null));
 
           // Act
           await chatCubit.updateBackgroundOpenedChat(AvatarBackgrounds.beach);
@@ -1115,7 +1090,7 @@ void main() {
         // Arrange
         when(
           () => mockChatRepository.updateAvatar(any(), any()),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         // Add the test chat to chatsList first
         chatCubit.emit(
@@ -1145,7 +1120,7 @@ void main() {
           // Arrange
           when(
             () => mockChatRepository.updateAvatar(any(), any()),
-          ).thenAnswer((_) async => const Right<Exception, void>(null));
+          ).thenAnswer((_) async => Result<void>.ok(null));
 
           // Create a chat entry with JSON containing avatar config
           // Note: Enum names are camelCase (longCoat, not long_coat)
@@ -1191,7 +1166,7 @@ void main() {
         // Arrange
         when(
           () => mockChatRepository.updateAvatar(any(), any()),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         final ChatEntry entry = ChatEntry(
           id: 'entry1',
@@ -1253,6 +1228,13 @@ void main() {
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
+  @override
+  Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
+      const Stream<AvatarChangeRequested>.empty();
+
+  @override
+  void emitAvatarChangeRequested(AvatarChangeRequested request) {}
+
   final StreamController<NewChatEntryPayload> _newChatEntryController =
       StreamController<NewChatEntryPayload>.broadcast();
 
@@ -1277,8 +1259,8 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
       const Stream<AvatarStatusAnimation>.empty();
 
   @override
-  Stream<TalkingState> get talkingStateChangedEvents =>
-      const Stream<TalkingState>.empty();
+  Stream<TalkingPhase> get talkingStateChangedEvents =>
+      const Stream<TalkingPhase>.empty();
 
   @override
   Stream<DemoScript> get demoScriptChangedEvents =>
@@ -1304,5 +1286,5 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
   void emitStreamingStateChanged(ChatStatus status) {}
 
   @override
-  void emitTalkingStateChanged(TalkingState state) {}
+  void emitTalkingStateChanged(TalkingPhase phase) {}
 }

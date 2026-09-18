@@ -6,7 +6,7 @@ import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/voice_effects_service.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
-import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
+import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
 
 class MockTtsDatasource extends Mock implements TtsDatasource {}

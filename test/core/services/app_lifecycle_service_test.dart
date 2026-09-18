@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
+import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
 void main() {
   late AppLifecycleService service;
@@ -203,21 +203,21 @@ void main() {
 
     group('emitTalkingStateChanged', () {
       test('emits talking state events', () async {
-        final List<TalkingState> events = <TalkingState>[];
-        final StreamSubscription<TalkingState> subscription = service
+        final List<TalkingPhase> events = <TalkingPhase>[];
+        final StreamSubscription<TalkingPhase> subscription = service
             .talkingStateChangedEvents
             .listen(events.add);
 
-        final TalkingState state1 = const TalkingState.idle();
-        final TalkingState state2 = const TalkingState.speaking();
+        const TalkingPhase state1 = TalkingPhase.idle;
+        const TalkingPhase state2 = TalkingPhase.speaking;
 
         service.emitTalkingStateChanged(state1);
         await Future<dynamic>.delayed(const Duration(milliseconds: 10));
-        expect(events, equals(<TalkingState>[state1]));
+        expect(events, equals(<TalkingPhase>[state1]));
 
         service.emitTalkingStateChanged(state2);
         await Future<dynamic>.delayed(const Duration(milliseconds: 10));
-        expect(events, equals(<TalkingState>[state1, state2]));
+        expect(events, equals(<TalkingPhase>[state1, state2]));
 
         await subscription.cancel();
       });

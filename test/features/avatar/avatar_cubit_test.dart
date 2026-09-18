@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
-import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
@@ -34,6 +34,13 @@ class MockAudioPlayerService extends Mock implements AudioPlayerService {
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
+  @override
+  Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
+      const Stream<AvatarChangeRequested>.empty();
+
+  @override
+  void emitAvatarChangeRequested(AvatarChangeRequested request) {}
+
   @override
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
       const Stream<NewChatEntryPayload>.empty();
@@ -63,7 +70,7 @@ void main() {
       // Stub updateAvatar to return success
       when(
         () => mockAvatarRepository.updateAvatar(any(), any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
 
       avatarCubit = AvatarCubit(
         mockAvatarRepository,

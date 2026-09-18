@@ -1,6 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/chat.dart';
+import '../../../../core/models/chat_status.dart';
+
+export '../../../../core/models/chat_status.dart';
 
 part 'chat_state.freezed.dart';
 
@@ -10,19 +13,6 @@ class TitleResult {
 
   final String chatId;
   final String title;
-}
-
-enum ChatStatus {
-  initial,
-  loading,
-  updating,
-  loaded,
-  typing,
-  success,
-  streaming,
-  error,
-  interrupted,
-  creatingChat,
 }
 
 enum ChatsListStatus { initial, loading, success, error }
@@ -37,8 +27,6 @@ sealed class ChatState with _$ChatState {
     required Chat currentChat,
     required Chat openedChat,
     @Default('') String errorMessage,
-    @Default(true) bool soundEffectsEnabled,
-    @Default('fr') String currentLanguage,
     @Default(<Map<String, dynamic>>[])
     List<Map<String, dynamic>> audioPathsWaitingSentences,
     @Default(true) bool initializing,

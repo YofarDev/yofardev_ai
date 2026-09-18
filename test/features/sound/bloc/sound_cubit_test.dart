@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:yofardev_ai/core/models/failure.dart';
+import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/features/sound/domain/repositories/sound_repository.dart';
 import 'package:yofardev_ai/features/sound/presentation/bloc/sound_cubit.dart';
 import 'package:yofardev_ai/features/sound/presentation/bloc/sound_state.dart';
@@ -13,24 +14,24 @@ class MockSoundRepository implements SoundRepository {
   String? lastPlayedSound;
 
   @override
-  Future<Either<Exception, void>> play(String soundName) async {
+  Future<Result<void>> play(String soundName) async {
     lastPlayedSound = soundName;
     if (shouldFail) {
-      return Left<Exception, void>(
-        Exception(failureMessage ?? 'Sound not found'),
+      return Result<void>.err(
+        UnknownFailure(failureMessage ?? 'Sound not found'),
       );
     }
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> stop() async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> stop() async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> get isPlaying async {
-    return const Right<Exception, bool>(false);
+  Future<Result<bool>> get isPlaying async {
+    return Result<bool>.ok(false);
   }
 }
 
@@ -101,7 +102,7 @@ void main() {
       // Assert
       expect(states, const <SoundState>[
         SoundPlaying('test'),
-        SoundError('Exception: Sound not found'),
+        SoundError('Sound not found'),
         SoundInitial(),
       ]);
       expect(mockSoundRepository.lastPlayedSound, 'test');
@@ -196,7 +197,7 @@ void main() {
       // Assert
       expect(firstStates, const <SoundState>[
         SoundPlaying('sound1'),
-        SoundError('Exception: First error'),
+        SoundError('First error'),
       ]);
       expect(secondStates, const <SoundState>[
         SoundPlaying('sound2'),

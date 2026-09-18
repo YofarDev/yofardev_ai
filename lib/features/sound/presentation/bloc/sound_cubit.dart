@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../domain/repositories/sound_repository.dart';
 import 'sound_state.dart';
 
@@ -14,15 +15,15 @@ class SoundCubit extends Cubit<SoundState> {
   Future<void> playSound(String soundName) async {
     try {
       emit(SoundPlaying(soundName));
-      final Either<Exception, void> result = await _soundRepository.play(
+      final Result<void> result = await _soundRepository.play(
         soundName,
       );
-      result.fold(
-        (Exception error) {
-          emit(SoundError(error.toString()));
+      result.when(
+        err: (Failure failure) {
+          emit(SoundError(failure.message));
           emit(const SoundInitial());
         },
-        (_) {
+        ok: (_) {
           emit(const SoundInitial());
         },
       );

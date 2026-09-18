@@ -14,6 +14,7 @@ import '../../../core/utils/app_utils.dart';
 import '../../../core/models/chat_entry.dart';
 import '../widgets/chat_avatar.dart';
 import 'modern_chat_bubble.dart';
+import '../../../../core/utils/logger.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final List<ChatEntry> entries;
@@ -42,7 +43,11 @@ class ChatMessageItem extends StatelessWidget {
         final dynamic json = jsonDecode(entries[index].body);
         soundEffect =
             (json as Map<String, dynamic>)['soundEffect'] as String? ?? '';
-      } catch (_) {
+      } catch (e) {
+        AppLogger.debug(
+          'Failed to parse soundEffect from entry body: $e',
+          tag: 'ChatMessageItem',
+        );
         soundEffect = '';
       }
     }

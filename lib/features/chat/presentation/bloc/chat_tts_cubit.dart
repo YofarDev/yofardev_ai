@@ -7,8 +7,8 @@ import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
-import '../../../../core/services/audio/tts_queue_service.dart';
-import '../../../talking/domain/services/tts_playback_service.dart';
+import '../../../sound/sound.dart';
+import '../../../talking/talking.dart';
 import '../../domain/services/waiting_sentences_cache_datasource.dart';
 import 'chat_tts_state.dart';
 

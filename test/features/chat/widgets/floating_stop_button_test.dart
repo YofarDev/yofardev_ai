@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:yofardev_ai/core/models/talking_phase.dart';
+import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
@@ -12,14 +13,13 @@ import 'package:yofardev_ai/core/models/task_llm_config.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
-import 'package:yofardev_ai/core/services/audio/tts_queue_service.dart';
-import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
-import 'package:yofardev_ai/core/services/chat/chat_streaming_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/services/prompt_datasource.dart';
@@ -41,193 +41,193 @@ class MockAvatarRepository extends Mock implements AvatarRepository {}
 
 class MockChatRepository implements ChatRepository {
   @override
-  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
+  Future<Result<List<ChatEntry>>> askYofardevAi(
     Chat chat,
     String userMessage, {
     bool functionCallingEnabled = true,
   }) async {
-    return const Right<Exception, List<ChatEntry>>(<ChatEntry>[]);
+    return Result<List<ChatEntry>>.ok(<ChatEntry>[]);
   }
 
   @override
-  Future<Either<Exception, void>> updateChat({
+  Future<Result<void>> updateChat({
     required String id,
     required Chat updatedChat,
   }) async {
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
-    return const Right<Exception, Chat>(Chat(id: 'test-id'));
+  Future<Result<Chat>> createNewChat({String? language}) async {
+    return Result<Chat>.ok(Chat(id: 'test-id'));
   }
 
   @override
-  Future<Either<Exception, Chat>> getCurrentChat() async {
-    return const Right<Exception, Chat>(Chat(id: 'test-id'));
+  Future<Result<Chat>> getCurrentChat() async {
+    return Result<Chat>.ok(Chat(id: 'test-id'));
   }
 
   @override
-  Future<Either<Exception, Chat?>> getChat(String id) async {
-    return const Right<Exception, Chat?>(Chat(id: 'test-id'));
+  Future<Result<Chat?>> getChat(String id) async {
+    return Result<Chat?>.ok(Chat(id: 'test-id'));
   }
 
   @override
-  Future<Either<Exception, void>> deleteChat(String id) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> deleteChat(String id) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, List<Chat>>> getChatsList() async {
-    return const Right<Exception, List<Chat>>(<Chat>[]);
+  Future<Result<List<Chat>>> getChatsList() async {
+    return Result<List<Chat>>.ok(<Chat>[]);
   }
 
   @override
-  Future<Either<Exception, void>> setCurrentChatId(String chatId) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setCurrentChatId(String chatId) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> updateAvatar(
+  Future<Result<void>> updateAvatar(
     String chatId,
     Avatar avatar,
   ) async {
-    return const Right<Exception, void>(null);
+    return Result<void>.ok(null);
   }
 }
 
 class MockSettingsRepository implements SettingsRepository {
   @override
-  Future<Either<Exception, String?>> getLanguage() async {
-    return const Right<Exception, String?>('en');
+  Future<Result<String?>> getLanguage() async {
+    return Result<String?>.ok('en');
   }
 
   @override
-  Future<Either<Exception, void>> setLanguage(String language) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setLanguage(String language) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> getSoundEffects() async {
-    return const Right<Exception, bool>(true);
+  Future<Result<bool>> getSoundEffects() async {
+    return Result<bool>.ok(true);
   }
 
   @override
-  Future<Either<Exception, void>> setSoundEffects(bool soundEffects) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setSoundEffects(bool soundEffects) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, String?>> getUsername() async {
-    return const Right<Exception, String?>(null);
+  Future<Result<String?>> getUsername() async {
+    return Result<String?>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> setUsername(String username) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setUsername(String username) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, String>> getSystemPrompt() async {
-    return const Right<Exception, String>('System prompt');
+  Future<Result<String>> getSystemPrompt() async {
+    return Result<String>.ok('System prompt');
   }
 
   @override
-  Future<Either<Exception, void>> setSystemPrompt(String prompt) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setSystemPrompt(String prompt) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, ChatPersona>> getPersona() async {
-    return const Right<Exception, ChatPersona>(ChatPersona.normal);
+  Future<Result<ChatPersona>> getPersona() async {
+    return Result<ChatPersona>.ok(ChatPersona.normal);
   }
 
   @override
-  Future<Either<Exception, void>> setPersona(ChatPersona persona) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setPersona(ChatPersona persona) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
-    return Right<Exception, TaskLlmConfig>(TaskLlmConfig());
+  Future<Result<TaskLlmConfig>> getTaskLlmConfig() async {
+    return Result<TaskLlmConfig>.ok(TaskLlmConfig());
   }
 
   @override
-  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setTaskLlmConfig(TaskLlmConfig config) async {
+    return Result<void>.ok(null);
   }
 
   // Function Calling Configuration - Google Search
   @override
-  Future<Either<Exception, String?>> getGoogleSearchKey() async {
-    return const Right<Exception, String?>(null);
+  Future<Result<String?>> getGoogleSearchKey() async {
+    return Result<String?>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setGoogleSearchKey(String key) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, String?>> getGoogleSearchEngineId() async {
-    return const Right<Exception, String?>(null);
+  Future<Result<String?>> getGoogleSearchEngineId() async {
+    return Result<String?>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchEngineId(String id) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setGoogleSearchEngineId(String id) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
-    return const Right<Exception, bool>(false);
+  Future<Result<bool>> getGoogleSearchEnabled() async {
+    return Result<bool>.ok(false);
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setGoogleSearchEnabled(bool enabled) async {
+    return Result<void>.ok(null);
   }
 
   // Function Calling Configuration - OpenWeather
   @override
-  Future<Either<Exception, String?>> getOpenWeatherKey() async {
-    return const Right<Exception, String?>(null);
+  Future<Result<String?>> getOpenWeatherKey() async {
+    return Result<String?>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setOpenWeatherKey(String key) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
-    return const Right<Exception, bool>(false);
+  Future<Result<bool>> getOpenWeatherEnabled() async {
+    return Result<bool>.ok(false);
   }
 
   @override
-  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setOpenWeatherEnabled(bool enabled) async {
+    return Result<void>.ok(null);
   }
 
   // Function Calling Configuration - New York Times
   @override
-  Future<Either<Exception, String?>> getNewYorkTimesKey() async {
-    return const Right<Exception, String?>(null);
+  Future<Result<String?>> getNewYorkTimesKey() async {
+    return Result<String?>.ok(null);
   }
 
   @override
-  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setNewYorkTimesKey(String key) async {
+    return Result<void>.ok(null);
   }
 
   @override
-  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
-    return const Right<Exception, bool>(false);
+  Future<Result<bool>> getNewYorkTimesEnabled() async {
+    return Result<bool>.ok(false);
   }
 
   @override
-  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
-    return const Right<Exception, void>(null);
+  Future<Result<void>> setNewYorkTimesEnabled(bool enabled) async {
+    return Result<void>.ok(null);
   }
 }
 
@@ -509,6 +509,12 @@ void main() {
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
+@override
+  Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
+      const Stream<AvatarChangeRequested>.empty();
+
+  @override
+  void emitAvatarChangeRequested(AvatarChangeRequested request) {}
   @override
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
       const Stream<NewChatEntryPayload>.empty();
@@ -525,8 +531,8 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
       const Stream<AvatarStatusAnimation>.empty();
 
   @override
-  Stream<TalkingState> get talkingStateChangedEvents =>
-      const Stream<TalkingState>.empty();
+  Stream<TalkingPhase> get talkingStateChangedEvents =>
+      const Stream<TalkingPhase>.empty();
 
   @override
   Stream<DemoScript> get demoScriptChangedEvents =>
@@ -555,5 +561,5 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
   void emitStreamingStateChanged(ChatStatus status) {}
 
   @override
-  void emitTalkingStateChanged(TalkingState state) {}
+  void emitTalkingStateChanged(TalkingPhase phase) {}
 }

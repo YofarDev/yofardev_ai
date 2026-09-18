@@ -1,8 +1,9 @@
-import 'package:fpdart/fpdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 import '../../../../core/models/chat.dart';
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/logger.dart';
 
@@ -34,7 +35,7 @@ class AvatarLocalDatasource {
   }
 
   /// Updates the avatar configuration for a specific chat.
-  Future<Either<Exception, void>> updateAvatar(
+  Future<Result<void>> updateAvatar(
     String chatId,
     Avatar avatar,
   ) async {
@@ -43,7 +44,7 @@ class AvatarLocalDatasource {
       final Chat? currentChat = await getChat(chatId);
 
       if (currentChat == null) {
-        return Left<Exception, void>(Exception('Chat not found: $chatId'));
+        return Result<void>.err(StorageFailure('Chat not found: $chatId'));
       }
 
       final Chat updatedChat = currentChat.copyWith(avatar: avatar);
@@ -52,14 +53,14 @@ class AvatarLocalDatasource {
         json.encode(updatedChat.toMap()),
       );
 
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
       AppLogger.error(
         'Failed to update avatar',
         tag: 'AvatarLocalDatasource',
         error: e,
       );
-      return Left<Exception, void>(Exception('Failed to update avatar: $e'));
+      return Result<void>.err(StorageFailure('Failed to update avatar', e));
     }
   }
 }

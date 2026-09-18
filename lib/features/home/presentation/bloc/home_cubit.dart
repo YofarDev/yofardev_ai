@@ -6,8 +6,8 @@ import 'dart:async';
 
 import '../../../../core/services/app_lifecycle_service.dart';
 import '../../domain/repositories/home_repository.dart';
-import '../../../avatar/presentation/bloc/avatar_state.dart';
-import '../../../talking/presentation/bloc/talking_state.dart';
+import '../../../../core/models/avatar_status_animation.dart';
+import '../../../../core/models/talking_phase.dart';
 import 'home_state.dart';
 
 /// HomeCubit manages home page specific state and actions
@@ -37,7 +37,7 @@ class HomeCubit extends Cubit<HomeState> {
   final HomeRepository _repository;
   final AppLifecycleService _appLifecycleService;
   StreamSubscription<AvatarStatusAnimation>? _avatarAnimationSubscription;
-  StreamSubscription<TalkingState>? _talkingStateSubscription;
+  StreamSubscription<TalkingPhase>? _talkingStateSubscription;
 
   /// Handle avatar animation changes from app lifecycle service.
   ///
@@ -53,17 +53,21 @@ class HomeCubit extends Cubit<HomeState> {
   /// Handle talking state changes from app lifecycle service.
   ///
   /// Controls waiting TTS loop based on talking state.
-  void _handleTalkingStateChanged(TalkingState talkingState) {
-    talkingState.when(
-      idle: (_) => stopWaitingTtsLoop(),
-      waiting: (_) => startWaitingTtsLoop(),
-      generating: (_) {
+  void _handleTalkingStateChanged(TalkingPhase phase) {
+    switch (phase) {
+      case TalkingPhase.idle:
+        stopWaitingTtsLoop();
+      case TalkingPhase.waiting:
+        startWaitingTtsLoop();
+      case TalkingPhase.generating:
         // TTS generation - thinking animation shows
         // No action needed here, UI updates via state.shouldShowTalking
-      },
-      speaking: (_) => stopWaitingTtsLoop(),
-      error: (String message, _) => stopWaitingTtsLoop(),
-    );
+        break;
+      case TalkingPhase.speaking:
+        stopWaitingTtsLoop();
+      case TalkingPhase.error:
+        stopWaitingTtsLoop();
+    }
   }
 
   /// Initialize the home cubit

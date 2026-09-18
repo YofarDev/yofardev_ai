@@ -1,17 +1,16 @@
+import '../../models/app_lifecycle_event.dart';
 import '../../models/avatar_config.dart';
 import '../../models/function_info.dart';
 import 'agent_tool.dart';
-import '../../../features/chat/presentation/bloc/chat_cubit.dart';
 import '../../di/service_locator.dart';
-import '../avatar_animation_service.dart';
+import '../app_lifecycle_service.dart';
 import '../../utils/logger.dart';
 
 /// Agent tool that allows the LLM to change the avatar's appearance
 /// including background, clothes (hat, top), glasses, and accessories.
 class AvatarTool extends AgentTool {
-  ChatCubit get _chatCubit => getIt<ChatCubit>();
-  AvatarAnimationService get _avatarAnimationService =>
-      getIt<AvatarAnimationService>();
+  AppLifecycleService get _appLifecycleService =>
+      getIt<AppLifecycleService>();
 
   @override
   String get name => 'change_avatar';
@@ -192,38 +191,25 @@ class AvatarTool extends AgentTool {
         tag: 'AvatarTool',
       );
 
-      // Determine which method to call
-      // If only background changed, use updateBackgroundOpenedChat
-      // Otherwise use updateAvatarOpenedChat for multiple changes
-      if (backgroundStr != null &&
-          hatStr == null &&
-          topStr == null &&
-          glassesStr == null &&
-          costumeStr == null &&
-          specialsStr == null) {
-        AppLogger.debug(
-          'AvatarTool: calling updateBackgroundOpenedChat',
-          tag: 'AvatarTool',
-        );
-        await _chatCubit.updateBackgroundOpenedChat(newConfig.background!);
-      } else {
-        AppLogger.debug(
-          'AvatarTool: calling updateAvatarOpenedChat',
-          tag: 'AvatarTool',
-        );
-        await _chatCubit.updateAvatarOpenedChat(newConfig);
-      }
-
-      // Notify AvatarCubit via animation service to update UI
-      // This triggers the animation and updates the avatar display
-      final String chatId = _chatCubit.openedChat.id;
       AppLogger.debug(
-        'AvatarTool: emitting updateConfig for chatId=$chatId',
+        'AvatarTool: emitting avatarChangeRequested (configWithAnimation=$configWithAnimation)',
         tag: 'AvatarTool',
       );
-      _avatarAnimationService.emitUpdateConfig(chatId, configWithAnimation);
+      _appLifecycleService.emitAvatarChangeRequested(
+        AvatarChangeRequested(
+          newConfig: newConfig,
+          configWithAnimation: configWithAnimation,
+          backgroundOnly:
+              backgroundStr != null &&
+              hatStr == null &&
+              topStr == null &&
+              glassesStr == null &&
+              costumeStr == null &&
+              specialsStr == null,
+        ),
+      );
       AppLogger.debug(
-        'AvatarTool: emitUpdateConfig called successfully',
+        'AvatarTool: emitAvatarChangeRequested called successfully',
         tag: 'AvatarTool',
       );
 

@@ -1,22 +1,23 @@
 import 'dart:async';
 
-import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../models/avatar_config.dart';
-import '../../models/chat.dart';
-import '../../models/chat_entry.dart';
-import '../../models/llm_config.dart';
-import '../../models/voice_effect.dart';
-import '../audio/interruption_service.dart';
-import '../audio/tts_queue_service.dart';
-import '../llm/llm_service_interface.dart';
-import '../prompt_datasource.dart';
-import '../stream_processor/sentence_chunk.dart';
-import '../stream_processor/stream_processor_service.dart';
-import '../../utils/logger.dart';
-import '../../../features/chat/domain/repositories/chat_repository.dart';
-import '../../../features/chat/domain/services/chat_entry_service.dart';
+import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/chat_entry.dart';
+import '../../../../core/models/llm_config.dart';
+import '../../../../core/models/voice_effect.dart';
+import '../../../../core/services/audio/interruption_service.dart';
+import '../../../sound/sound.dart';
+import '../../../../core/services/llm/llm_service_interface.dart';
+import '../../../../core/services/prompt_datasource.dart';
+import '../../../../core/services/stream_processor/sentence_chunk.dart';
+import '../../../../core/services/stream_processor/stream_processor_service.dart';
+import '../../../../core/utils/logger.dart';
+import '../repositories/chat_repository.dart';
+import 'chat_entry_service.dart';
 
 /// Service for handling LLM response streaming with function calling support.
 ///
@@ -129,7 +130,7 @@ class ChatStreamingService {
 
       if (functionCallingEnabled) {
         // 1. Check for function calls first
-        final Either<Exception, List<ChatEntry>> functionCheckResult =
+        final Result<List<ChatEntry>> functionCheckResult =
             await _chatRepository.askYofardevAi(
               chat,
               userEntry.body,
@@ -138,16 +139,16 @@ class ChatStreamingService {
 
         List<ChatEntry> functionEntries = <ChatEntry>[];
 
-        functionCheckResult.fold(
-          (Exception error) {
+        functionCheckResult.when(
+          err: (Failure failure) {
             AppLogger.error(
               'Function calling check failed',
               tag: 'ChatStreamingService',
-              error: error,
+              error: failure,
             );
             // Continue with streaming even if function calling fails
           },
-          (List<ChatEntry> entries) {
+          ok: (List<ChatEntry> entries) {
             functionEntries = entries;
             // Add function call entries to chat if any
             if (entries.isNotEmpty) {

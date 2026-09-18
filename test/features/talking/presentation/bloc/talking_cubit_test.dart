@@ -517,6 +517,13 @@ void main() {
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
   @override
+  Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
+      const Stream<AvatarChangeRequested>.empty();
+
+  @override
+  void emitAvatarChangeRequested(AvatarChangeRequested request) {}
+
+  @override
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
       const Stream<NewChatEntryPayload>.empty();
 

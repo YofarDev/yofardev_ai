@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/models/chat_entry.dart';
+import '../../../../core/models/failure.dart';
 import '../../../../core/repositories/settings_repository.dart';
 
 /// Service responsible for creating chat entries
@@ -25,9 +26,9 @@ class ChatEntryService {
     required Avatar avatar,
     String? attachedImage,
   }) async {
-    final String languageCode = (await _settingsRepository.getLanguage()).fold(
-      (Exception error) => 'fr',
-      (String? language) => language ?? 'fr',
+    final String languageCode = (await _settingsRepository.getLanguage()).when(
+      err: (Failure failure) => 'fr',
+      ok: (String? language) => language ?? 'fr',
     );
     final String wrappedUserMessage =
         "Date : ${DateTime.now().toLongLocalDateString(language: languageCode)}\nAvatar Config :\n{\n$avatar\n}\nUser : \n'''$prompt'''";

@@ -4,7 +4,7 @@ import 'package:nested/nested.dart';
 
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
-import '../../talking/presentation/bloc/talking_cubit.dart';
+import '../../talking/talking.dart';
 import '../../../core/res/app_colors.dart';
 import '../widgets/chat_list_container.dart';
 import '../widgets/chat_list_empty_state.dart';

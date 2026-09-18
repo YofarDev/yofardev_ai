@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/result.dart';
+import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
@@ -10,13 +11,12 @@ import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
-import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/features/avatar/widgets/animated_background_avatar.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
 class MockAvatarAnimationService implements AvatarAnimationService {
   @override
@@ -52,6 +52,13 @@ class MockAudioPlayerService implements AudioPlayerService {
 
 class MockAppLifecycleService implements AppLifecycleService {
   @override
+  Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
+      const Stream<AvatarChangeRequested>.empty();
+
+  @override
+  void emitAvatarChangeRequested(AvatarChangeRequested request) {}
+
+  @override
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
       const Stream<NewChatEntryPayload>.empty();
 
@@ -67,8 +74,8 @@ class MockAppLifecycleService implements AppLifecycleService {
       const Stream<AvatarStatusAnimation>.empty();
 
   @override
-  Stream<TalkingState> get talkingStateChangedEvents =>
-      const Stream<TalkingState>.empty();
+  Stream<TalkingPhase> get talkingStateChangedEvents =>
+      const Stream<TalkingPhase>.empty();
 
   @override
   Stream<DemoScript> get demoScriptChangedEvents =>
@@ -97,7 +104,7 @@ class MockAppLifecycleService implements AppLifecycleService {
   void emitStreamingStateChanged(ChatStatus status) {}
 
   @override
-  void emitTalkingStateChanged(TalkingState state) {}
+  void emitTalkingStateChanged(TalkingPhase phase) {}
 }
 
 void main() {
@@ -178,23 +185,23 @@ void main() {
 // Mock repository for testing
 class MockAvatarRepository implements AvatarRepository {
   @override
-  Future<Either<Exception, Chat>> getChat(String chatId) async {
+  Future<Result<Chat>> getChat(String chatId) async {
     final Chat chat = Chat(
       id: chatId,
       title: 'Test Chat',
       persona: ChatPersona.assistant,
       avatar: const Avatar(background: AvatarBackgrounds.beach),
     );
-    final Either<Exception, Chat> result = Right<Exception, Chat>(chat);
+    final Result<Chat> result = Result<Chat>.ok(chat);
     return result;
   }
 
   @override
-  Future<Either<Exception, void>> updateAvatar(
+  Future<Result<void>> updateAvatar(
     String chatId,
     Avatar avatar,
   ) async {
-    final Either<Exception, void> result = Right<Exception, void>(null);
+    final Result<void> result = Result<void>.ok(null);
     return result;
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:yofardev_ai/core/models/failure.dart';
+import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/llm_config.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
@@ -34,56 +35,56 @@ void main() {
 
       // Stub repository methods with default values
       when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-        (_) async => const Right<Exception, TaskLlmConfig>(TaskLlmConfig()),
+        (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
       );
       when(
         () => mockSettingsRepo.setTaskLlmConfig(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockSettingsRepo.setSystemPrompt(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockSettingsRepo.setUsername(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockSettingsRepo.setPersona(any()),
-      ).thenAnswer((_) async => const Right<Exception, void>(null));
+      ).thenAnswer((_) async => Result<void>.ok(null));
       when(
         () => mockSettingsRepo.getLanguage(),
-      ).thenAnswer((_) async => const Right<Exception, String?>('en'));
+      ).thenAnswer((_) async => Result<String?>.ok('en'));
       when(
         () => mockSettingsRepo.getSoundEffects(),
-      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      ).thenAnswer((_) async => Result<bool>.ok(true));
       when(
         () => mockSettingsRepo.getUsername(),
-      ).thenAnswer((_) async => const Right<Exception, String?>('user'));
+      ).thenAnswer((_) async => Result<String?>.ok('user'));
       when(
         () => mockSettingsRepo.getSystemPrompt(),
-      ).thenAnswer((_) async => const Right<Exception, String>('prompt'));
+      ).thenAnswer((_) async => Result<String>.ok('prompt'));
       when(() => mockSettingsRepo.getPersona()).thenAnswer(
-        (_) async => const Right<Exception, ChatPersona>(ChatPersona.normal),
+        (_) async => Result<ChatPersona>.ok(ChatPersona.normal),
       );
       when(
         () => mockSettingsRepo.getGoogleSearchKey(),
-      ).thenAnswer((_) async => const Right<Exception, String?>(null));
+      ).thenAnswer((_) async => Result<String?>.ok(null));
       when(
         () => mockSettingsRepo.getGoogleSearchEngineId(),
-      ).thenAnswer((_) async => const Right<Exception, String?>(null));
+      ).thenAnswer((_) async => Result<String?>.ok(null));
       when(
         () => mockSettingsRepo.getGoogleSearchEnabled(),
-      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      ).thenAnswer((_) async => Result<bool>.ok(true));
       when(
         () => mockSettingsRepo.getOpenWeatherKey(),
-      ).thenAnswer((_) async => const Right<Exception, String?>(null));
+      ).thenAnswer((_) async => Result<String?>.ok(null));
       when(
         () => mockSettingsRepo.getOpenWeatherEnabled(),
-      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      ).thenAnswer((_) async => Result<bool>.ok(true));
       when(
         () => mockSettingsRepo.getNewYorkTimesKey(),
-      ).thenAnswer((_) async => const Right<Exception, String?>(null));
+      ).thenAnswer((_) async => Result<String?>.ok(null));
       when(
         () => mockSettingsRepo.getNewYorkTimesEnabled(),
-      ).thenAnswer((_) async => const Right<Exception, bool>(true));
+      ).thenAnswer((_) async => Result<bool>.ok(true));
 
       cubit = SettingsCubit(
         settingsRepository: mockSettingsRepo,
@@ -120,7 +121,7 @@ void main() {
 
       test('should call loadTaskLlmConfig', () async {
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => const Right<Exception, TaskLlmConfig>(TaskLlmConfig()),
+          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
         );
 
         await cubit.loadSettings();
@@ -134,7 +135,7 @@ void main() {
           () => mockLlmService.getAllConfigs(),
         ).thenThrow(Exception('Config load failed'));
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => const Right<Exception, TaskLlmConfig>(TaskLlmConfig()),
+          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
         );
 
         await cubit.loadSettings();
@@ -152,7 +153,7 @@ void main() {
 
         when(
           () => mockSettingsRepo.getTaskLlmConfig(),
-        ).thenAnswer((_) async => Right<Exception, TaskLlmConfig>(testConfig));
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(testConfig));
 
         expect(cubit.state.taskLlmConfig, isNull);
 
@@ -163,7 +164,7 @@ void main() {
 
       test('should emit default config on error', () async {
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Left<Exception, TaskLlmConfig>(Exception('Load failed')),
+          (_) async => Result<TaskLlmConfig>.err(UnknownFailure('Load failed')),
         );
 
         expect(cubit.state.taskLlmConfig, isNull);
@@ -183,7 +184,7 @@ void main() {
 
         when(
           () => mockSettingsRepo.setTaskLlmConfig(testConfig),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         await cubit.setTaskLlmConfig(testConfig);
 
@@ -195,7 +196,7 @@ void main() {
         const TaskLlmConfig testConfig = TaskLlmConfig();
 
         when(() => mockSettingsRepo.setTaskLlmConfig(testConfig)).thenAnswer(
-          (_) async => Left<Exception, void>(Exception('Save failed')),
+          (_) async => Result<void>.err(UnknownFailure('Save failed')),
         );
 
         await cubit.setTaskLlmConfig(testConfig);
@@ -210,7 +211,7 @@ void main() {
 
         when(
           () => mockSettingsRepo.setSystemPrompt(testPrompt),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         await cubit.setSystemPrompt(testPrompt);
 
@@ -219,7 +220,7 @@ void main() {
 
       test('should log error on failure', () async {
         when(() => mockSettingsRepo.setSystemPrompt(any())).thenAnswer(
-          (_) async => Left<Exception, void>(Exception('Save failed')),
+          (_) async => Result<void>.err(UnknownFailure('Save failed')),
         );
 
         await cubit.setSystemPrompt('test');
@@ -234,7 +235,7 @@ void main() {
 
         when(
           () => mockSettingsRepo.setUsername(testUsername),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         await cubit.setUsername(testUsername);
 
@@ -243,7 +244,7 @@ void main() {
 
       test('should log error on failure', () async {
         when(() => mockSettingsRepo.setUsername(any())).thenAnswer(
-          (_) async => Left<Exception, void>(Exception('Save failed')),
+          (_) async => Result<void>.err(UnknownFailure('Save failed')),
         );
 
         await cubit.setUsername('test');
@@ -258,7 +259,7 @@ void main() {
 
         when(
           () => mockSettingsRepo.setPersona(testPersona),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         await cubit.setPersona(testPersona);
 
@@ -267,7 +268,7 @@ void main() {
 
       test('should log error on failure', () async {
         when(() => mockSettingsRepo.setPersona(any())).thenAnswer(
-          (_) async => Left<Exception, void>(Exception('Save failed')),
+          (_) async => Result<void>.err(UnknownFailure('Save failed')),
         );
 
         await cubit.setPersona(ChatPersona.assistant);
@@ -372,11 +373,11 @@ void main() {
 
         when(() => mockLlmService.getAllConfigs()).thenReturn(configs);
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Right<Exception, TaskLlmConfig>(initialConfig),
+          (_) async => Result<TaskLlmConfig>.ok(initialConfig),
         );
         when(
           () => mockSettingsRepo.setTaskLlmConfig(any()),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         await cubit.loadSettings();
 
@@ -396,13 +397,13 @@ void main() {
       test('multiple setting operations in sequence', () async {
         when(
           () => mockSettingsRepo.setSystemPrompt(any()),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
         when(
           () => mockSettingsRepo.setUsername(any()),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
         when(
           () => mockSettingsRepo.setPersona(any()),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         await cubit.setSystemPrompt('Test prompt');
         await cubit.setUsername('User');
@@ -420,7 +421,7 @@ void main() {
         // The init() call is not wrapped in try/catch, so exceptions propagate
         when(() => mockLlmService.init()).thenThrow(Exception('Init failed'));
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => const Right<Exception, TaskLlmConfig>(TaskLlmConfig()),
+          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
         );
 
         // The exception will propagate to the caller (test expects this)
@@ -436,7 +437,7 @@ void main() {
           () => mockLlmService.getAllConfigs(),
         ).thenThrow(Exception('Config list failed'));
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => const Right<Exception, TaskLlmConfig>(TaskLlmConfig()),
+          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
         );
 
         await cubit.loadSettings();
@@ -447,13 +448,13 @@ void main() {
 
       test('all setters should handle errors gracefully', () async {
         when(() => mockSettingsRepo.setSystemPrompt(any())).thenAnswer(
-          (_) async => Left<Exception, void>(Exception('Prompt failed')),
+          (_) async => Result<void>.err(UnknownFailure('Prompt failed')),
         );
         when(() => mockSettingsRepo.setUsername(any())).thenAnswer(
-          (_) async => Left<Exception, void>(Exception('Username failed')),
+          (_) async => Result<void>.err(UnknownFailure('Username failed')),
         );
         when(() => mockSettingsRepo.setPersona(any())).thenAnswer(
-          (_) async => Left<Exception, void>(Exception('Persona failed')),
+          (_) async => Result<void>.err(UnknownFailure('Persona failed')),
         );
 
         await cubit.setSystemPrompt('test');
@@ -506,7 +507,7 @@ void main() {
       test('should handle empty config list', () async {
         when(() => mockLlmService.getAllConfigs()).thenReturn(<LlmConfig>[]);
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => const Right<Exception, TaskLlmConfig>(TaskLlmConfig()),
+          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
         );
 
         await cubit.loadSettings();
@@ -542,7 +543,7 @@ void main() {
 
         when(() => mockLlmService.getAllConfigs()).thenReturn(configs);
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => const Right<Exception, TaskLlmConfig>(TaskLlmConfig()),
+          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
         );
 
         await cubit.loadSettings();
@@ -556,7 +557,7 @@ void main() {
       test('calling loadSettings multiple times', () async {
         when(() => mockLlmService.getAllConfigs()).thenReturn(<LlmConfig>[]);
         when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => const Right<Exception, TaskLlmConfig>(TaskLlmConfig()),
+          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
         );
 
         await cubit.loadSettings();
@@ -571,7 +572,7 @@ void main() {
 
         when(
           () => mockSettingsRepo.setTaskLlmConfig(config),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         await cubit.setTaskLlmConfig(config);
         await cubit.setTaskLlmConfig(config);
@@ -583,13 +584,13 @@ void main() {
       test('empty values handling', () async {
         when(
           () => mockSettingsRepo.setSystemPrompt(''),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
         when(
           () => mockSettingsRepo.setUsername(''),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
         when(
           () => mockSettingsRepo.setPersona(ChatPersona.assistant),
-        ).thenAnswer((_) async => const Right<Exception, void>(null));
+        ).thenAnswer((_) async => Result<void>.ok(null));
 
         await cubit.setSystemPrompt('');
         await cubit.setUsername('');

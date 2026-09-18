@@ -1,54 +1,29 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:get_it/get_it.dart';
+import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
-import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/function_info.dart';
 import 'package:yofardev_ai/core/services/agent/avatar_tool.dart';
-import 'package:yofardev_ai/core/services/avatar_animation_service.dart';
-import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
-
-class MockChatCubit extends Mock implements ChatCubit {
-  @override
-  Stream<ChatState> get stream => const Stream<ChatState>.empty();
-}
-
-class MockAvatarAnimationService extends Mock
-    implements AvatarAnimationService {
-  @override
-  Stream<AvatarAnimation> get animations =>
-      const Stream<AvatarAnimation>.empty();
-}
+import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 
 void main() {
   late final GetIt getIt;
-  late MockChatCubit mockCubit;
-  late MockAvatarAnimationService mockAnimationService;
+  late AppLifecycleService lifecycleService;
 
   setUpAll(() {
-    // Initialize a test GetIt instance
     getIt = GetIt.instance;
-
-    // Register fallback values for mocktail
-    registerFallbackValue(AvatarBackgrounds.lake);
-    registerFallbackValue(const AvatarConfig());
   });
 
   setUp(() {
-    mockCubit = MockChatCubit();
-    mockAnimationService = MockAvatarAnimationService();
-    // Register the mocks in getIt
-    getIt.registerSingleton<ChatCubit>(mockCubit);
-    getIt.registerSingleton<AvatarAnimationService>(mockAnimationService);
+    lifecycleService = AppLifecycleService();
+    getIt.registerSingleton<AppLifecycleService>(lifecycleService);
   });
 
   tearDown(() {
-    // Reset getIt after each test
     getIt.reset();
+    lifecycleService.dispose();
   });
 
   group('AvatarTool - LLM Function Calling for Background/Clothes', () {
@@ -92,12 +67,9 @@ void main() {
     // Test 3: Happy path - LLM changes background
     test('execute changes background when called by LLM', () async {
       // Arrange
-      when(
-        () => mockCubit.updateBackgroundOpenedChat(any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockCubit.openedChat,
-      ).thenReturn(const Chat(id: 'chat1', avatar: Avatar()));
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub =
+          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
 
       // Act - This simulates LLM calling: change_avatar(background="beach")
       final String result = await tool.execute(
@@ -108,20 +80,18 @@ void main() {
       // Assert
       expect(result, isA<String>());
       expect(result, contains('Successfully changed'));
-      verify(
-        () => mockCubit.updateBackgroundOpenedChat(AvatarBackgrounds.beach),
-      ).called(1);
+      expect(events, hasLength(1));
+      expect(events.single.newConfig.background, equals(AvatarBackgrounds.beach));
+      expect(events.single.backgroundOnly, isTrue);
+      await sub.cancel();
     });
 
     // Test 4: Happy path - LLM changes clothes (hat)
     test('execute changes hat when called by LLM', () async {
       // Arrange
-      when(
-        () => mockCubit.updateAvatarOpenedChat(any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockCubit.openedChat,
-      ).thenReturn(const Chat(id: 'chat1', avatar: Avatar()));
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub =
+          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
 
       // Act - This simulates LLM calling: change_avatar(hat="frenchBeret")
       final String result = await tool.execute(<String, String>{
@@ -131,18 +101,18 @@ void main() {
       // Assert
       expect(result, isA<String>());
       expect(result, contains('Successfully changed'));
-      verify(() => mockCubit.updateAvatarOpenedChat(any())).called(1);
+      expect(events, hasLength(1));
+      expect(events.single.newConfig.hat, equals(AvatarHat.frenchBeret));
+      expect(events.single.backgroundOnly, isFalse);
+      await sub.cancel();
     });
 
     // Test 5: LLM changes multiple fields at once
     test('execute changes background and clothes together', () async {
       // Arrange
-      when(
-        () => mockCubit.updateAvatarOpenedChat(any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockCubit.openedChat,
-      ).thenReturn(const Chat(id: 'chat1', avatar: Avatar()));
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub =
+          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
 
       // Act - LLM calls: change_avatar(background="beach", hat="beanie")
       final String result = await tool.execute(<String, String>{
@@ -153,7 +123,11 @@ void main() {
       // Assert
       expect(result, isA<String>());
       expect(result, contains('Successfully changed'));
-      verify(() => mockCubit.updateAvatarOpenedChat(any())).called(1);
+      expect(events, hasLength(1));
+      expect(events.single.newConfig.background, equals(AvatarBackgrounds.beach));
+      expect(events.single.newConfig.hat, equals(AvatarHat.beanie));
+      expect(events.single.backgroundOnly, isFalse);
+      await sub.cancel();
     });
 
     // Test 6: Invalid background value returns error (not crash)
@@ -167,15 +141,12 @@ void main() {
       expect(result, isA<String>());
       expect(result, contains('Error'));
       expect(result, contains('Invalid background'));
-      verifyNever(() => mockCubit.updateBackgroundOpenedChat(any()));
     });
 
     // Test 7: Tool never throws, always returns result
-    test('execute returns error message when cubit throws', () async {
-      // Arrange - Cubit throws exception
-      when(
-        () => mockCubit.updateBackgroundOpenedChat(any()),
-      ).thenThrow(Exception('Database error'));
+    test('execute returns error message when emit fails', () async {
+      // Arrange - Service disposed so emit throws
+      lifecycleService.dispose();
 
       // Act
       final String result = await tool.execute(<String, String>{
@@ -201,17 +172,14 @@ void main() {
       expect(functionInfo.parameters.length, greaterThan(0));
     });
 
-    // Test 10: Triggers animation via AvatarAnimationService when background changes
+    // Test 10: Request includes leaveAndComeBack animation for background change
     test(
-      'emitUpdateConfig triggers animation with leaveAndComeBack for background',
+      'configWithAnimation has leaveAndComeBack for background',
       () async {
         // Arrange
-        when(
-          () => mockCubit.updateBackgroundOpenedChat(any()),
-        ).thenAnswer((_) async {});
-        when(
-          () => mockCubit.openedChat,
-        ).thenReturn(const Chat(id: 'chat1', avatar: Avatar()));
+        final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+        final StreamSubscription<AvatarChangeRequested> sub =
+            lifecycleService.avatarChangeRequestedEvents.listen(events.add);
 
         // Act
         await tool.execute(<String, String>{
@@ -219,31 +187,23 @@ void main() {
         }, <String, dynamic>{});
 
         // Assert
-        final AvatarConfig captured =
-            verify(
-                  () => mockAnimationService.emitUpdateConfig(
-                    'chat1',
-                    captureAny(),
-                  ),
-                ).captured.single
-                as AvatarConfig;
-
-        expect(captured.specials, equals(AvatarSpecials.leaveAndComeBack));
-        expect(captured.background, equals(AvatarBackgrounds.beach));
+        expect(events.single.configWithAnimation.specials,
+            equals(AvatarSpecials.leaveAndComeBack));
+        expect(
+            events.single.configWithAnimation.background,
+            equals(AvatarBackgrounds.beach));
+        await sub.cancel();
       },
     );
 
-    // Test 11: Triggers animation with outOfScreen for clothes changes
+    // Test 11: Request includes outOfScreen animation for clothes changes
     test(
-      'emitUpdateConfig triggers animation with outOfScreen for clothes',
+      'configWithAnimation has outOfScreen for clothes',
       () async {
         // Arrange
-        when(
-          () => mockCubit.updateAvatarOpenedChat(any()),
-        ).thenAnswer((_) async {});
-        when(
-          () => mockCubit.openedChat,
-        ).thenReturn(const Chat(id: 'chat1', avatar: Avatar()));
+        final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+        final StreamSubscription<AvatarChangeRequested> sub =
+            lifecycleService.avatarChangeRequestedEvents.listen(events.add);
 
         // Act
         await tool.execute(<String, String>{
@@ -251,31 +211,21 @@ void main() {
         }, <String, dynamic>{});
 
         // Assert
-        final AvatarConfig captured =
-            verify(
-                  () => mockAnimationService.emitUpdateConfig(
-                    'chat1',
-                    captureAny(),
-                  ),
-                ).captured.single
-                as AvatarConfig;
-
-        expect(captured.specials, equals(AvatarSpecials.outOfScreen));
-        expect(captured.top, equals(AvatarTop.longCoat));
+        expect(events.single.configWithAnimation.specials,
+            equals(AvatarSpecials.outOfScreen));
+        expect(events.single.configWithAnimation.top, equals(AvatarTop.longCoat));
+        await sub.cancel();
       },
     );
 
-    // Test 12: Passes actual avatar config (without animation specials) to ChatCubit
+    // Test 12: Emits actual avatar config (without animation specials) for persistence
     test(
-      'passes actual avatar config to ChatCubit, not animation config',
+      'newConfig is the actual avatar config, not the animation config',
       () async {
         // Arrange
-        when(
-          () => mockCubit.updateAvatarOpenedChat(any()),
-        ).thenAnswer((_) async {});
-        when(
-          () => mockCubit.openedChat,
-        ).thenReturn(const Chat(id: 'chat1', avatar: Avatar()));
+        final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+        final StreamSubscription<AvatarChangeRequested> sub =
+            lifecycleService.avatarChangeRequestedEvents.listen(events.add);
 
         // Act
         await tool.execute(<String, String>{
@@ -284,25 +234,20 @@ void main() {
         }, <String, dynamic>{});
 
         // Assert
-        // The config passed to ChatCubit should NOT have animation specials
-        final AvatarConfig capturedConfig =
-            verify(
-                  () => mockCubit.updateAvatarOpenedChat(captureAny()),
-                ).captured.single
-                as AvatarConfig;
-
-        expect(capturedConfig.background, equals(AvatarBackgrounds.beach));
-        expect(capturedConfig.top, equals(AvatarTop.longCoat));
-        expect(capturedConfig.specials, isNull); // No animation special
+        // The config persisted should NOT have animation specials
+        expect(events.single.newConfig.background, equals(AvatarBackgrounds.beach));
+        expect(events.single.newConfig.top, equals(AvatarTop.longCoat));
+        expect(events.single.newConfig.specials, isNull); // No animation special
+        await sub.cancel();
       },
     );
 
-    // Test 13: Background-only change uses updateBackgroundOpenedChat
-    test('background-only change calls updateBackgroundOpenedChat', () async {
+    // Test 13: Background-only change sets backgroundOnly
+    test('background-only change sets backgroundOnly', () async {
       // Arrange
-      when(
-        () => mockCubit.openedChat,
-      ).thenReturn(const Chat(id: 'chat1', avatar: Avatar()));
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub =
+          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
 
       // Act
       await tool.execute(<String, String>{
@@ -310,18 +255,16 @@ void main() {
       }, <String, dynamic>{});
 
       // Assert
-      verify(
-        () => mockCubit.updateBackgroundOpenedChat(AvatarBackgrounds.beach),
-      ).called(1);
-      verifyNever(() => mockCubit.updateAvatarOpenedChat(any()));
+      expect(events.single.backgroundOnly, isTrue);
+      await sub.cancel();
     });
 
-    // Test 14: Multiple changes use updateAvatarOpenedChat
-    test('multiple changes use updateAvatarOpenedChat', () async {
+    // Test 14: Multiple changes do not set backgroundOnly
+    test('multiple changes do not set backgroundOnly', () async {
       // Arrange
-      when(
-        () => mockCubit.openedChat,
-      ).thenReturn(const Chat(id: 'chat1', avatar: Avatar()));
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub =
+          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
 
       // Act
       await tool.execute(<String, String>{
@@ -330,8 +273,8 @@ void main() {
       }, <String, dynamic>{});
 
       // Assert
-      verify(() => mockCubit.updateAvatarOpenedChat(any())).called(1);
-      verifyNever(() => mockCubit.updateBackgroundOpenedChat(any()));
+      expect(events.single.backgroundOnly, isFalse);
+      await sub.cancel();
     });
   });
 }

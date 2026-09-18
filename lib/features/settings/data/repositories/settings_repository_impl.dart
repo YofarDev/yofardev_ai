@@ -1,269 +1,256 @@
-import 'package:fpdart/fpdart.dart';
-
 import '../../../../core/models/chat.dart';
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../../../core/models/task_llm_config.dart';
-import '../../../../core/services/settings_local_datasource.dart';
 import '../../../../core/repositories/settings_repository.dart';
+import '../../../../core/services/settings_local_datasource.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsLocalDatasource _datasource = SettingsLocalDatasource();
 
   @override
-  Future<Either<Exception, String?>> getLanguage() async {
+  Future<Result<String?>> getLanguage() async {
     try {
       final String? language = await _datasource.getLanguage();
-      return Right<Exception, String?>(language);
+      return Result<String?>.ok(language);
     } catch (e) {
-      return Left<Exception, String?>(Exception(e.toString()));
+      return Result<String?>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> setLanguage(String language) async {
+  Future<Result<void>> setLanguage(String language) async {
     try {
       await _datasource.setLanguage(language);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, bool>> getSoundEffects() async {
+  Future<Result<bool>> getSoundEffects() async {
     try {
       final bool enabled = await _datasource.getSoundEffects();
-      return Right<Exception, bool>(enabled);
+      return Result<bool>.ok(enabled);
     } catch (e) {
-      return Left<Exception, bool>(Exception(e.toString()));
+      return Result<bool>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> setSoundEffects(bool enabled) async {
+  Future<Result<void>> setSoundEffects(bool enabled) async {
     try {
       await _datasource.setSoundEffects(enabled);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, String?>> getUsername() async {
+  Future<Result<String?>> getUsername() async {
     try {
       final String? username = await _datasource.getUsername();
-      return Right<Exception, String?>(username);
+      return Result<String?>.ok(username);
     } catch (e) {
-      return Left<Exception, String?>(Exception(e.toString()));
+      return Result<String?>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> setUsername(String username) async {
+  Future<Result<void>> setUsername(String username) async {
     try {
       await _datasource.setUsername(username);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, String>> getSystemPrompt() async {
+  Future<Result<String>> getSystemPrompt() async {
     try {
       final String? language = await _datasource.getLanguage();
       final String prompt = await _datasource.getBaseSystemPrompt(
         language ?? 'fr',
       );
-      return Right<Exception, String>(prompt);
+      return Result<String>.ok(prompt);
     } catch (e) {
-      return Left<Exception, String>(Exception(e.toString()));
+      return Result<String>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> setSystemPrompt(String prompt) async {
+  Future<Result<void>> setSystemPrompt(String prompt) async {
     try {
       await _datasource.setBaseSystemPrompt(prompt);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, ChatPersona>> getPersona() async {
+  Future<Result<ChatPersona>> getPersona() async {
     try {
       final ChatPersona persona = await _datasource.getPersona();
-      return Right<Exception, ChatPersona>(persona);
+      return Result<ChatPersona>.ok(persona);
     } catch (e) {
-      return Left<Exception, ChatPersona>(Exception(e.toString()));
+      return Result<ChatPersona>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> setPersona(ChatPersona persona) async {
+  Future<Result<void>> setPersona(ChatPersona persona) async {
     try {
       await _datasource.setPersona(persona);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
+  Future<Result<TaskLlmConfig>> getTaskLlmConfig() async {
     return _datasource.getTaskLlmConfig();
   }
 
   @override
-  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
+  Future<Result<void>> setTaskLlmConfig(TaskLlmConfig config) async {
     return _datasource.setTaskLlmConfig(config);
   }
 
   // Function Calling Configuration - Google Search
   @override
-  Future<Either<Exception, String?>> getGoogleSearchKey() async {
-    final Either<Exception, String> result = await _datasource
-        .getGoogleSearchKey();
-    return result.fold(
-      (Exception left) => Left<Exception, String?>(left),
-      (String right) => Right<Exception, String?>(right.isEmpty ? null : right),
+  Future<Result<String?>> getGoogleSearchKey() async {
+    final Result<String> result = await _datasource.getGoogleSearchKey();
+    return result.when(
+      err: (Failure failure) => Result<String?>.err(failure),
+      ok: (String right) => Result<String?>.ok(right.isEmpty ? null : right),
     );
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchKey(String key) async {
-    final Either<Exception, void> result = await _datasource.setGoogleSearchKey(
-      key,
-    );
-    return result.fold(
-      (Exception left) => Left<Exception, void>(left),
-      (void right) => const Right<Exception, void>(null),
+  Future<Result<void>> setGoogleSearchKey(String key) async {
+    final Result<void> result = await _datasource.setGoogleSearchKey(key);
+    return result.when(
+      err: (Failure failure) => Result<void>.err(failure),
+      ok: (void right) => Result<void>.ok(null),
     );
   }
 
   @override
-  Future<Either<Exception, String?>> getGoogleSearchEngineId() async {
-    final Either<Exception, String> result = await _datasource
-        .getGoogleSearchEngineId();
-    return result.fold(
-      (Exception left) => Left<Exception, String?>(left),
-      (String right) => Right<Exception, String?>(right.isEmpty ? null : right),
+  Future<Result<String?>> getGoogleSearchEngineId() async {
+    final Result<String> result = await _datasource.getGoogleSearchEngineId();
+    return result.when(
+      err: (Failure failure) => Result<String?>.err(failure),
+      ok: (String right) => Result<String?>.ok(right.isEmpty ? null : right),
     );
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchEngineId(String id) async {
-    final Either<Exception, void> result = await _datasource
-        .setGoogleSearchEngineId(id);
-    return result.fold(
-      (Exception left) => Left<Exception, void>(left),
-      (void right) => const Right<Exception, void>(null),
+  Future<Result<void>> setGoogleSearchEngineId(String id) async {
+    final Result<void> result = await _datasource.setGoogleSearchEngineId(id);
+    return result.when(
+      err: (Failure failure) => Result<void>.err(failure),
+      ok: (void right) => Result<void>.ok(null),
     );
   }
 
   @override
-  Future<Either<Exception, bool>> getGoogleSearchEnabled() async {
-    final Either<Exception, bool> result = await _datasource
-        .getGoogleSearchEnabled();
-    return result.fold(
-      (Exception left) => Left<Exception, bool>(left),
-      (bool right) => Right<Exception, bool>(right),
+  Future<Result<bool>> getGoogleSearchEnabled() async {
+    final Result<bool> result = await _datasource.getGoogleSearchEnabled();
+    return result.when(
+      err: (Failure failure) => Result<bool>.err(failure),
+      ok: (bool right) => Result<bool>.ok(right),
     );
   }
 
   @override
-  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) async {
-    final Either<Exception, void> result = await _datasource
-        .setGoogleSearchEnabled(enabled);
-    return result.fold(
-      (Exception left) => Left<Exception, void>(left),
-      (void right) => const Right<Exception, void>(null),
+  Future<Result<void>> setGoogleSearchEnabled(bool enabled) async {
+    final Result<void> result = await _datasource.setGoogleSearchEnabled(
+      enabled,
+    );
+    return result.when(
+      err: (Failure failure) => Result<void>.err(failure),
+      ok: (void right) => Result<void>.ok(null),
     );
   }
 
   // Function Calling Configuration - OpenWeather
   @override
-  Future<Either<Exception, String?>> getOpenWeatherKey() async {
-    final Either<Exception, String> result = await _datasource
-        .getOpenWeatherKey();
-    return result.fold(
-      (Exception left) => Left<Exception, String?>(left),
-      (String right) => Right<Exception, String?>(right.isEmpty ? null : right),
+  Future<Result<String?>> getOpenWeatherKey() async {
+    final Result<String> result = await _datasource.getOpenWeatherKey();
+    return result.when(
+      err: (Failure failure) => Result<String?>.err(failure),
+      ok: (String right) => Result<String?>.ok(right.isEmpty ? null : right),
     );
   }
 
   @override
-  Future<Either<Exception, void>> setOpenWeatherKey(String key) async {
-    final Either<Exception, void> result = await _datasource.setOpenWeatherKey(
-      key,
-    );
-    return result.fold(
-      (Exception left) => Left<Exception, void>(left),
-      (void right) => const Right<Exception, void>(null),
+  Future<Result<void>> setOpenWeatherKey(String key) async {
+    final Result<void> result = await _datasource.setOpenWeatherKey(key);
+    return result.when(
+      err: (Failure failure) => Result<void>.err(failure),
+      ok: (void right) => Result<void>.ok(null),
     );
   }
 
   @override
-  Future<Either<Exception, bool>> getOpenWeatherEnabled() async {
-    final Either<Exception, bool> result = await _datasource
-        .getOpenWeatherEnabled();
-    return result.fold(
-      (Exception left) => Left<Exception, bool>(left),
-      (bool right) => Right<Exception, bool>(right),
+  Future<Result<bool>> getOpenWeatherEnabled() async {
+    final Result<bool> result = await _datasource.getOpenWeatherEnabled();
+    return result.when(
+      err: (Failure failure) => Result<bool>.err(failure),
+      ok: (bool right) => Result<bool>.ok(right),
     );
   }
 
   @override
-  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) async {
-    final Either<Exception, void> result = await _datasource
-        .setOpenWeatherEnabled(enabled);
-    return result.fold(
-      (Exception left) => Left<Exception, void>(left),
-      (void right) => const Right<Exception, void>(null),
+  Future<Result<void>> setOpenWeatherEnabled(bool enabled) async {
+    final Result<void> result = await _datasource.setOpenWeatherEnabled(enabled);
+    return result.when(
+      err: (Failure failure) => Result<void>.err(failure),
+      ok: (void right) => Result<void>.ok(null),
     );
   }
 
   // Function Calling Configuration - New York Times
   @override
-  Future<Either<Exception, String?>> getNewYorkTimesKey() async {
-    final Either<Exception, String> result = await _datasource
-        .getNewYorkTimesKey();
-    return result.fold(
-      (Exception left) => Left<Exception, String?>(left),
-      (String right) => Right<Exception, String?>(right.isEmpty ? null : right),
+  Future<Result<String?>> getNewYorkTimesKey() async {
+    final Result<String> result = await _datasource.getNewYorkTimesKey();
+    return result.when(
+      err: (Failure failure) => Result<String?>.err(failure),
+      ok: (String right) => Result<String?>.ok(right.isEmpty ? null : right),
     );
   }
 
   @override
-  Future<Either<Exception, void>> setNewYorkTimesKey(String key) async {
-    final Either<Exception, void> result = await _datasource.setNewYorkTimesKey(
-      key,
-    );
-    return result.fold(
-      (Exception left) => Left<Exception, void>(left),
-      (void right) => const Right<Exception, void>(null),
+  Future<Result<void>> setNewYorkTimesKey(String key) async {
+    final Result<void> result = await _datasource.setNewYorkTimesKey(key);
+    return result.when(
+      err: (Failure failure) => Result<void>.err(failure),
+      ok: (void right) => Result<void>.ok(null),
     );
   }
 
   @override
-  Future<Either<Exception, bool>> getNewYorkTimesEnabled() async {
-    final Either<Exception, bool> result = await _datasource
-        .getNewYorkTimesEnabled();
-    return result.fold(
-      (Exception left) => Left<Exception, bool>(left),
-      (bool right) => Right<Exception, bool>(right),
+  Future<Result<bool>> getNewYorkTimesEnabled() async {
+    final Result<bool> result = await _datasource.getNewYorkTimesEnabled();
+    return result.when(
+      err: (Failure failure) => Result<bool>.err(failure),
+      ok: (bool right) => Result<bool>.ok(right),
     );
   }
 
   @override
-  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) async {
-    final Either<Exception, void> result = await _datasource
-        .setNewYorkTimesEnabled(enabled);
-    return result.fold(
-      (Exception left) => Left<Exception, void>(left),
-      (void right) => const Right<Exception, void>(null),
+  Future<Result<void>> setNewYorkTimesEnabled(bool enabled) async {
+    final Result<void> result = await _datasource.setNewYorkTimesEnabled(
+      enabled,
+    );
+    return result.when(
+      err: (Failure failure) => Result<void>.err(failure),
+      ok: (void right) => Result<void>.ok(null),
     );
   }
 }

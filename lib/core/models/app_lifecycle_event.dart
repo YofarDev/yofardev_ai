@@ -1,9 +1,9 @@
 import '../models/avatar_config.dart';
+import '../models/avatar_status_animation.dart';
 import '../models/chat_entry.dart';
+import '../models/chat_status.dart';
 import '../models/demo_script.dart';
-import '../../features/avatar/presentation/bloc/avatar_state.dart';
-import '../../features/chat/presentation/bloc/chat_state.dart';
-import '../../features/talking/presentation/bloc/talking_state.dart';
+import '../models/talking_phase.dart';
 
 /// Events emitted by [AppLifecycleService] for cross-feature coordination.
 ///
@@ -51,8 +51,8 @@ class AvatarAnimationChangedEvent extends AppLifecycleEvent {
 ///
 /// [HomeCubit] subscribes to control waiting TTS loop.
 class TalkingStateChangedEvent extends AppLifecycleEvent {
-  const TalkingStateChangedEvent(this.state);
-  final TalkingState state;
+  const TalkingStateChangedEvent(this.phase);
+  final TalkingPhase phase;
 }
 
 /// Emitted when demo script changes.
@@ -89,4 +89,23 @@ class NewChatEntryPayload {
 
   @override
   int get hashCode => Object.hash(entry, chatId, newAvatarConfig);
+}
+
+/// Request to change the avatar of the currently open chat.
+/// Emitted by AvatarTool; handled by ChatCubit, which owns the chat id.
+class AvatarChangeRequested {
+  const AvatarChangeRequested({
+    required this.newConfig,
+    required this.configWithAnimation,
+    required this.backgroundOnly,
+  });
+
+  /// Config to persist (raw values only, no animation specials).
+  final AvatarConfig newConfig;
+
+  /// Config including animation specials (leaveAndComeBack / outOfScreen).
+  final AvatarConfig configWithAnimation;
+
+  /// True when only the background changed (selects the cheaper update path).
+  final bool backgroundOnly;
 }

@@ -1,7 +1,7 @@
-import 'package:fpdart/fpdart.dart';
-
-import '../../../../core/models/chat.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../../../core/repositories/avatar_repository.dart';
 import '../datasources/avatar_local_datasource.dart';
 
@@ -12,20 +12,20 @@ class AvatarRepositoryImpl implements AvatarRepository {
     : _datasource = datasource;
 
   @override
-  Future<Either<Exception, Chat>> getChat(String id) async {
+  Future<Result<Chat>> getChat(String id) async {
     try {
       final Chat? chat = await _datasource.getChat(id);
       if (chat == null) {
-        return Left<Exception, Chat>(Exception('Chat not found'));
+        return Result<Chat>.err(StorageFailure('Chat not found'));
       }
-      return Right<Exception, Chat>(chat);
+      return Result<Chat>.ok(chat);
     } catch (e) {
-      return Left<Exception, Chat>(Exception(e.toString()));
+      return Result<Chat>.err(Failure.fromException(e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> updateAvatar(
+  Future<Result<void>> updateAvatar(
     String chatId,
     Avatar avatar,
   ) async {

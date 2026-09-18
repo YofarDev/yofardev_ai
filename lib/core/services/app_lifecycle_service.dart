@@ -2,12 +2,12 @@ import 'dart:async';
 
 import '../models/app_lifecycle_event.dart';
 import '../models/avatar_config.dart';
+import '../models/avatar_status_animation.dart';
 import '../models/chat_entry.dart';
+import '../models/chat_status.dart';
 import '../models/demo_script.dart';
+import '../models/talking_phase.dart';
 import '../utils/logger.dart';
-import '../../features/avatar/presentation/bloc/avatar_state.dart';
-import '../../features/chat/presentation/bloc/chat_state.dart';
-import '../../features/talking/presentation/bloc/talking_state.dart';
 
 /// Service for coordinating cross-feature app lifecycle events using streams.
 ///
@@ -35,10 +35,13 @@ class AppLifecycleService {
   final StreamController<AvatarStatusAnimation>
   _avatarAnimationChangedController =
       StreamController<AvatarStatusAnimation>.broadcast();
-  final StreamController<TalkingState> _talkingStateChangedController =
-      StreamController<TalkingState>.broadcast();
+  final StreamController<TalkingPhase> _talkingStateChangedController =
+      StreamController<TalkingPhase>.broadcast();
   final StreamController<DemoScript> _demoScriptChangedController =
       StreamController<DemoScript>.broadcast();
+  final StreamController<AvatarChangeRequested>
+  _avatarChangeRequestedController =
+      StreamController<AvatarChangeRequested>.broadcast();
 
   // Public streams for cubits to subscribe to
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
@@ -48,10 +51,12 @@ class AppLifecycleService {
       _streamingStateChangedController.stream;
   Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>
       _avatarAnimationChangedController.stream;
-  Stream<TalkingState> get talkingStateChangedEvents =>
+  Stream<TalkingPhase> get talkingStateChangedEvents =>
       _talkingStateChangedController.stream;
   Stream<DemoScript> get demoScriptChangedEvents =>
       _demoScriptChangedController.stream;
+  Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
+      _avatarChangeRequestedController.stream;
 
   /// Emit event when a new chat entry is created.
   ///
@@ -180,8 +185,8 @@ class AppLifecycleService {
   /// Emit event when talking state changes.
   ///
   /// [HomeCubit] subscribes to control waiting TTS loop.
-  void emitTalkingStateChanged(TalkingState state) {
-    _talkingStateChangedController.add(state);
+  void emitTalkingStateChanged(TalkingPhase phase) {
+    _talkingStateChangedController.add(phase);
   }
 
   /// Emit event when current chat changes.
@@ -198,6 +203,13 @@ class AppLifecycleService {
     _demoScriptChangedController.add(script);
   }
 
+  /// Emit a request to change the avatar of the currently open chat.
+  ///
+  /// [ChatCubit] subscribes to persist the change and trigger the animation.
+  void emitAvatarChangeRequested(AvatarChangeRequested request) {
+    _avatarChangeRequestedController.add(request);
+  }
+
   /// Dispose all stream controllers.
   ///
   /// Call this when the app is shutting down.
@@ -208,5 +220,6 @@ class AppLifecycleService {
     _avatarAnimationChangedController.close();
     _talkingStateChangedController.close();
     _demoScriptChangedController.close();
+    _avatarChangeRequestedController.close();
   }
 }

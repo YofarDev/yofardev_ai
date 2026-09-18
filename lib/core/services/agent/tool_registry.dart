@@ -1,5 +1,5 @@
-import 'package:fpdart/fpdart.dart';
-
+import '../../models/failure.dart';
+import '../../models/result.dart';
 import '../../repositories/settings_repository.dart';
 import '../../models/function_info.dart';
 import 'agent_tool.dart';
@@ -63,24 +63,24 @@ class ToolRegistry {
     filteredFunctions.add(WebReaderTool().toFunctionInfo());
 
     // Google Search - requires API key, engine ID, and enabled flag
-    final Either<Exception, String?> googleKeyResult = await settingsRepository
+    final Result<String?> googleKeyResult = await settingsRepository
         .getGoogleSearchKey();
-    final Either<Exception, String?> googleEngineResult =
+    final Result<String?> googleEngineResult =
         await settingsRepository.getGoogleSearchEngineId();
-    final Either<Exception, bool> googleEnabledResult = await settingsRepository
+    final Result<bool> googleEnabledResult = await settingsRepository
         .getGoogleSearchEnabled();
 
-    final bool googleConfigured = googleKeyResult.fold(
-      (Exception error) => false,
-      (String? key) => key != null && key.isNotEmpty,
+    final bool googleConfigured = googleKeyResult.when(
+      err: (Failure failure) => false,
+      ok: (String? key) => key != null && key.isNotEmpty,
     );
-    final bool googleEngineConfigured = googleEngineResult.fold(
-      (Exception error) => false,
-      (String? id) => id != null && id.isNotEmpty,
+    final bool googleEngineConfigured = googleEngineResult.when(
+      err: (Failure failure) => false,
+      ok: (String? id) => id != null && id.isNotEmpty,
     );
-    final bool googleEnabled = googleEnabledResult.fold(
-      (Exception error) => false,
-      (bool enabled) => enabled,
+    final bool googleEnabled = googleEnabledResult.when(
+      err: (Failure failure) => false,
+      ok: (bool enabled) => enabled,
     );
 
     if (googleConfigured && googleEngineConfigured && googleEnabled) {
@@ -88,18 +88,18 @@ class ToolRegistry {
     }
 
     // Weather - requires API key and enabled flag
-    final Either<Exception, String?> weatherKeyResult = await settingsRepository
+    final Result<String?> weatherKeyResult = await settingsRepository
         .getOpenWeatherKey();
-    final Either<Exception, bool> weatherEnabledResult =
+    final Result<bool> weatherEnabledResult =
         await settingsRepository.getOpenWeatherEnabled();
 
-    final bool weatherConfigured = weatherKeyResult.fold(
-      (Exception error) => false,
-      (String? key) => key != null && key.isNotEmpty,
+    final bool weatherConfigured = weatherKeyResult.when(
+      err: (Failure failure) => false,
+      ok: (String? key) => key != null && key.isNotEmpty,
     );
-    final bool weatherEnabled = weatherEnabledResult.fold(
-      (Exception error) => false,
-      (bool enabled) => enabled,
+    final bool weatherEnabled = weatherEnabledResult.when(
+      err: (Failure failure) => false,
+      ok: (bool enabled) => enabled,
     );
 
     if (weatherConfigured && weatherEnabled) {
@@ -107,18 +107,18 @@ class ToolRegistry {
     }
 
     // News - requires API key and enabled flag
-    final Either<Exception, String?> newsKeyResult = await settingsRepository
+    final Result<String?> newsKeyResult = await settingsRepository
         .getNewYorkTimesKey();
-    final Either<Exception, bool> newsEnabledResult = await settingsRepository
+    final Result<bool> newsEnabledResult = await settingsRepository
         .getNewYorkTimesEnabled();
 
-    final bool newsConfigured = newsKeyResult.fold(
-      (Exception error) => false,
-      (String? key) => key != null && key.isNotEmpty,
+    final bool newsConfigured = newsKeyResult.when(
+      err: (Failure failure) => false,
+      ok: (String? key) => key != null && key.isNotEmpty,
     );
-    final bool newsEnabled = newsEnabledResult.fold(
-      (Exception error) => false,
-      (bool enabled) => enabled,
+    final bool newsEnabled = newsEnabledResult.when(
+      err: (Failure failure) => false,
+      ok: (bool enabled) => enabled,
     );
 
     if (newsConfigured && newsEnabled) {
@@ -159,7 +159,7 @@ class ToolRegistry {
     SettingsRepository settingsRepository,
     String settingKey,
   ) async {
-    final Either<Exception, dynamic> result;
+    final Result<dynamic> result;
 
     switch (settingKey) {
       case 'googleSearchKey':
@@ -178,6 +178,6 @@ class ToolRegistry {
         throw UnsupportedError('Unknown setting key: $settingKey');
     }
 
-    return result.fold((Exception error) => null, (dynamic value) => value);
+    return result.when(err: (Failure failure) => null, ok: (dynamic value) => value);
   }
 }

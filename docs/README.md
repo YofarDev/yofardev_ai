@@ -35,7 +35,7 @@ Presentation → Domain → Data → Core Services
 
 ## Tech Stack
 
-Flutter 3.8+, flutter_bloc 9.1.1, freezed 3.2.5, fpdart 1.2.0, get_it 9.2.1
+Flutter 3.8+, flutter_bloc 9.1.1, freezed 3.2.5, Result<T> (core/models/result.dart), get_it 9.2.1
 
 ---
 

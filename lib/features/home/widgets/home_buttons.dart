@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../avatar/presentation/bloc/avatar_cubit.dart';
-import '../../chat/presentation/bloc/chat_cubit.dart';
-import '../../chat/presentation/bloc/chat_state.dart';
-import '../../talking/presentation/bloc/talking_cubit.dart';
+import '../../avatar/avatar.dart';
+import '../../chat/chat.dart';
+import '../../talking/talking.dart';
 import '../../../core/widgets/app_icon_button.dart';
 import '../../../core/widgets/function_calling_button.dart';
 import '../../../core/router/route_constants.dart';
+import '../../settings/settings.dart';
 
 class HomeButtons extends StatelessWidget {
   const HomeButtons({super.key});
@@ -23,8 +23,8 @@ class HomeButtons extends StatelessWidget {
           context.read<TalkingCubit>().init();
         }
       },
-      child: BlocBuilder<ChatCubit, ChatState>(
-        builder: (BuildContext context, ChatState state) {
+      child: BlocBuilder<SettingsCubit, SettingsState>(
+        builder: (BuildContext context, SettingsState state) {
           return Positioned(
             right: 8,
             top: 8,
@@ -33,7 +33,7 @@ class HomeButtons extends StatelessWidget {
                 children: <Widget>[
                   GestureDetector(
                     onTap: () {
-                      context.read<ChatCubit>().setCurrentLanguage(
+                      context.read<SettingsCubit>().setCurrentLanguage(
                         state.currentLanguage == 'fr' ? 'en' : 'fr',
                       );
                     },
@@ -66,10 +66,14 @@ class HomeButtons extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  FunctionCallingButton(
-                    isEnabled: state.functionCallingEnabled,
-                    onToggle: () =>
-                        context.read<ChatCubit>().toggleFunctionCalling(),
+                  BlocBuilder<ChatCubit, ChatState>(
+                    builder: (BuildContext context, ChatState chatState) {
+                      return FunctionCallingButton(
+                        isEnabled: chatState.functionCallingEnabled,
+                        onToggle: () =>
+                            context.read<ChatCubit>().toggleFunctionCalling(),
+                      );
+                    },
                   ),
                 ],
               ),

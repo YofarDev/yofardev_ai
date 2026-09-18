@@ -7,7 +7,7 @@ import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../domain/repositories/talking_repository.dart';
 import '../../domain/services/tts_playback_service.dart';
-import '../../../chat/presentation/bloc/chat_state.dart';
+import '../../../../core/models/chat_status.dart';
 import 'talking_state.dart';
 
 class TalkingCubit extends Cubit<TalkingState> {

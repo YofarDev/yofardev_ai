@@ -1,3 +1,5 @@
+import '../utils/logger.dart';
+
 /// Fake LLM response for demo mode
 ///
 /// Contains the JSON response that would normally come from an LLM,
@@ -117,7 +119,11 @@ class DemoScripts {
   static DemoScript? findByName(String name) {
     try {
       return all.firstWhere((DemoScript script) => script.name == name);
-    } catch (_) {
+    } catch (e) {
+      AppLogger.debug(
+        'Demo script not found by name: $name ($e)',
+        tag: 'DemoScript',
+      );
       return null;
     }
   }

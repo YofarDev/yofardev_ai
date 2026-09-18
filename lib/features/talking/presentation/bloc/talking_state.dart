@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/models/talking_phase.dart';
+
 part 'talking_state.freezed.dart';
 
 /// Status enum for backward compatibility
@@ -34,6 +36,16 @@ sealed class TalkingState with _$TalkingState {
     String message, [
     @Default(MouthState.closed) MouthState mouthState,
   ]) = ErrorState;
+}
+
+extension TalkingPhaseX on TalkingState {
+  TalkingPhase get phase => map(
+        idle: (_) => TalkingPhase.idle,
+        waiting: (_) => TalkingPhase.waiting,
+        generating: (_) => TalkingPhase.generating,
+        speaking: (_) => TalkingPhase.speaking,
+        error: (_) => TalkingPhase.error,
+      );
 }
 
 extension TalkingStateX on TalkingState {

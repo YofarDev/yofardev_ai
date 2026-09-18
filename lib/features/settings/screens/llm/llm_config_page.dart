@@ -173,6 +173,7 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ResponseFormatType>(
+                isExpanded: true,
                 initialValue: _responseFormatType,
                 decoration: InputDecoration(
                   labelText: l10n.llmConfigResponseFormat,

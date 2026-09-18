@@ -11,6 +11,11 @@ import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/widgets/ai_text_input/ai_text_input.dart';
+import 'package:yofardev_ai/core/models/result.dart';
+import 'package:yofardev_ai/core/models/task_llm_config.dart';
+import 'package:yofardev_ai/core/repositories/settings_repository.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service.dart';
+import 'package:yofardev_ai/features/settings/settings.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
@@ -36,7 +41,6 @@ void main() {
       ChatState(
         currentChat: const Chat(),
         openedChat: const Chat(),
-        currentLanguage: 'en',
         status: ChatStatus.initial,
       ),
     );
@@ -67,7 +71,6 @@ void main() {
         ChatState(
           currentChat: const Chat(),
           openedChat: const Chat(),
-          currentLanguage: 'en',
           status: ChatStatus.initial,
         ),
       );
@@ -84,6 +87,7 @@ void main() {
           BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
           BlocProvider<ChatCubit>.value(value: mockChatsCubit),
           BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
+          BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
         ],
         child: const MaterialApp(home: Scaffold(body: AiTextInput())),
       );
@@ -105,6 +109,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatCubit>.value(value: mockChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
+          BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
           child: const MaterialApp(
             home: Scaffold(body: AiTextInput(onlyText: true)),
@@ -145,6 +150,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatCubit>.value(value: fakeChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
+          BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
           child: const MaterialApp(home: Scaffold(body: AiTextInput())),
         ),
@@ -198,7 +204,6 @@ void main() {
         ChatState(
           currentChat: chatWithEntry,
           openedChat: chatWithEntry,
-          currentLanguage: 'en',
           status: ChatStatus.streaming,
         ),
       );
@@ -212,6 +217,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatCubit>.value(value: mockChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
+          BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
           child: const MaterialApp(home: Scaffold(body: AiTextInput())),
         ),
@@ -233,4 +239,83 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
   });
+}
+
+SettingsCubit createSettingsCubit() {
+  return SettingsCubit(
+    settingsRepository: _FakeSettingsRepository(),
+    llmService: LlmService(),
+  );
+}
+
+class _FakeSettingsRepository implements SettingsRepository {
+  @override
+  Future<Result<String?>> getLanguage() async => Result<String?>.ok('fr');
+  @override
+  Future<Result<void>> setLanguage(String language) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<bool>> getSoundEffects() async => Result<bool>.ok(true);
+  @override
+  Future<Result<void>> setSoundEffects(bool enabled) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<String?>> getUsername() async => Result<String?>.ok(null);
+  @override
+  Future<Result<void>> setUsername(String username) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<String>> getSystemPrompt() async => Result<String>.ok('');
+  @override
+  Future<Result<void>> setSystemPrompt(String prompt) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<ChatPersona>> getPersona() async =>
+      Result<ChatPersona>.ok(ChatPersona.normal);
+  @override
+  Future<Result<void>> setPersona(ChatPersona persona) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<TaskLlmConfig>> getTaskLlmConfig() async =>
+      Result<TaskLlmConfig>.ok(const TaskLlmConfig());
+  @override
+  Future<Result<void>> setTaskLlmConfig(TaskLlmConfig config) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<String?>> getGoogleSearchKey() async => Result<String?>.ok(null);
+  @override
+  Future<Result<void>> setGoogleSearchKey(String key) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<String?>> getGoogleSearchEngineId() async =>
+      Result<String?>.ok(null);
+  @override
+  Future<Result<void>> setGoogleSearchEngineId(String id) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<bool>> getGoogleSearchEnabled() async => Result<bool>.ok(true);
+  @override
+  Future<Result<void>> setGoogleSearchEnabled(bool enabled) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<String?>> getOpenWeatherKey() async => Result<String?>.ok(null);
+  @override
+  Future<Result<void>> setOpenWeatherKey(String key) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<bool>> getOpenWeatherEnabled() async => Result<bool>.ok(true);
+  @override
+  Future<Result<void>> setOpenWeatherEnabled(bool enabled) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<String?>> getNewYorkTimesKey() async =>
+      Result<String?>.ok(null);
+  @override
+  Future<Result<void>> setNewYorkTimesKey(String key) async =>
+      Result<void>.ok(null);
+  @override
+  Future<Result<bool>> getNewYorkTimesEnabled() async => Result<bool>.ok(true);
+  @override
+  Future<Result<void>> setNewYorkTimesEnabled(bool enabled) async =>
+      Result<void>.ok(null);
 }

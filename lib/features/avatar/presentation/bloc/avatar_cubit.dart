@@ -1,15 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../../../core/repositories/avatar_repository.dart';
 import '../../../../core/res/app_constants.dart';
 import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
-import '../../../../core/services/avatar_animation_service.dart';
+import '../../../../features/avatar/domain/services/avatar_animation_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../domain/models/avatar_animation.dart';
@@ -130,19 +131,19 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void loadAvatar(String chatId) async {
     _emitIfOpen(state.copyWith(status: AvatarStatus.loading));
-    final Either<Exception, Chat> result = await _avatarRepository.getChat(
+    final Result<Chat> result = await _avatarRepository.getChat(
       chatId,
     );
     if (isClosed) return;
-    result.fold(
-      (Exception error) {
+    result.when(
+      err: (Failure failure) {
         // This is expected for new chats - no custom avatar saved yet
         // Only set status to ready if dimensions are initialized
         if (state.baseOriginalHeight > 0) {
           _emitIfOpen(state.copyWith(status: AvatarStatus.ready));
         }
       },
-      (Chat chat) {
+      ok: (Chat chat) {
         // Only set status to ready if dimensions are initialized
         if (state.baseOriginalHeight > 0) {
           _emitIfOpen(

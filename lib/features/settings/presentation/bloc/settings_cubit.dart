@@ -1,7 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/models/llm_config.dart';
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/utils/logger.dart';
@@ -27,6 +28,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     await _llmService.init();
 
     // Load user settings
+    await loadCurrentLanguage();
     await loadUsername();
     await loadSystemPrompt();
     await loadPersona();
@@ -58,129 +60,141 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Load the task-specific LLM configuration
   Future<void> loadTaskLlmConfig() async {
-    final Either<Exception, TaskLlmConfig> result = await _settingsRepository
+    final Result<TaskLlmConfig> result = await _settingsRepository
         .getTaskLlmConfig();
-    result.fold((Exception error) {
-      AppLogger.error(
-        'Failed to load task LLM config',
-        tag: 'SettingsCubit',
-        error: error,
-      );
-      emit(state.copyWith(taskLlmConfig: const TaskLlmConfig()));
-    }, (TaskLlmConfig config) => emit(state.copyWith(taskLlmConfig: config)));
+    result.when(
+      err: (Failure failure) {
+        AppLogger.error(
+          'Failed to load task LLM config',
+          tag: 'SettingsCubit',
+          error: failure,
+        );
+        emit(state.copyWith(taskLlmConfig: const TaskLlmConfig()));
+      },
+      ok: (TaskLlmConfig config) => emit(state.copyWith(taskLlmConfig: config)),
+    );
   }
 
   /// Save the task-specific LLM configuration
   Future<void> setTaskLlmConfig(TaskLlmConfig config) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setTaskLlmConfig(config);
-    result.fold(
-      (Exception error) => AppLogger.error(
+    result.when(
+      err: (Failure failure) => AppLogger.error(
         'Failed to save task LLM config',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(taskLlmConfig: config)),
+      ok: (_) => emit(state.copyWith(taskLlmConfig: config)),
     );
   }
 
   /// Set the system prompt
   Future<void> setSystemPrompt(String prompt) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setSystemPrompt(prompt);
-    result.fold(
-      (Exception error) => AppLogger.error(
+    result.when(
+      err: (Failure failure) => AppLogger.error(
         'Failed to set system prompt',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(systemPrompt: prompt)),
+      ok: (_) => emit(state.copyWith(systemPrompt: prompt)),
     );
   }
 
   /// Set the username
   Future<void> setUsername(String username) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setUsername(username);
-    result.fold(
-      (Exception error) => AppLogger.error(
+    result.when(
+      err: (Failure failure) => AppLogger.error(
         'Failed to set username',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(username: username)),
+      ok: (_) => emit(state.copyWith(username: username)),
     );
   }
 
   /// Set the persona
   Future<void> setPersona(ChatPersona persona) async {
-    final Either<Exception, void> result = await _settingsRepository.setPersona(
+    final Result<void> result = await _settingsRepository.setPersona(
       persona,
     );
-    result.fold(
-      (Exception error) => AppLogger.error(
+    result.when(
+      err: (Failure failure) => AppLogger.error(
         'Failed to set persona',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(persona: persona)),
+      ok: (_) => emit(state.copyWith(persona: persona)),
     );
   }
 
   /// Load the username
   Future<void> loadUsername() async {
-    final Either<Exception, String?> result = await _settingsRepository
+    final Result<String?> result = await _settingsRepository
         .getUsername();
-    result.fold((Exception error) {
-      AppLogger.error(
-        'Failed to load username',
-        tag: 'SettingsCubit',
-        error: error,
-      );
-      emit(state.copyWith(username: null));
-    }, (String? username) => emit(state.copyWith(username: username)));
+    result.when(
+      err: (Failure failure) {
+        AppLogger.error(
+          'Failed to load username',
+          tag: 'SettingsCubit',
+          error: failure,
+        );
+        emit(state.copyWith(username: null));
+      },
+      ok: (String? username) => emit(state.copyWith(username: username)),
+    );
   }
 
   /// Load the system prompt
   Future<void> loadSystemPrompt() async {
-    final Either<Exception, String> result = await _settingsRepository
+    final Result<String> result = await _settingsRepository
         .getSystemPrompt();
-    result.fold((Exception error) {
-      AppLogger.error(
-        'Failed to load system prompt',
-        tag: 'SettingsCubit',
-        error: error,
-      );
-      emit(state.copyWith(systemPrompt: null));
-    }, (String prompt) => emit(state.copyWith(systemPrompt: prompt)));
+    result.when(
+      err: (Failure failure) {
+        AppLogger.error(
+          'Failed to load system prompt',
+          tag: 'SettingsCubit',
+          error: failure,
+        );
+        emit(state.copyWith(systemPrompt: null));
+      },
+      ok: (String prompt) => emit(state.copyWith(systemPrompt: prompt)),
+    );
   }
 
   /// Load the persona
   Future<void> loadPersona() async {
-    final Either<Exception, ChatPersona> result = await _settingsRepository
+    final Result<ChatPersona> result = await _settingsRepository
         .getPersona();
-    result.fold((Exception error) {
-      AppLogger.error(
-        'Failed to load persona',
-        tag: 'SettingsCubit',
-        error: error,
-      );
-      emit(state.copyWith(persona: ChatPersona.assistant));
-    }, (ChatPersona persona) => emit(state.copyWith(persona: persona)));
+    result.when(
+      err: (Failure failure) {
+        AppLogger.error(
+          'Failed to load persona',
+          tag: 'SettingsCubit',
+          error: failure,
+        );
+        emit(state.copyWith(persona: ChatPersona.assistant));
+      },
+      ok: (ChatPersona persona) => emit(state.copyWith(persona: persona)),
+    );
   }
 
   /// Load Google Search configuration
   Future<void> loadGoogleSearchConfig() async {
-    final Either<Exception, String?> keyResult = await _settingsRepository
+    final Result<String?> keyResult = await _settingsRepository
         .getGoogleSearchKey();
-    final Either<Exception, String?> idResult = await _settingsRepository
+    final Result<String?> idResult = await _settingsRepository
         .getGoogleSearchEngineId();
-    final Either<Exception, bool> enabledResult = await _settingsRepository
+    final Result<bool> enabledResult = await _settingsRepository
         .getGoogleSearchEnabled();
 
-    final String? key = keyResult.getOrElse((Exception _) => null);
-    final String? id = idResult.getOrElse((Exception _) => null);
-    final bool enabled = enabledResult.getOrElse((Exception _) => true);
+    final String? key = keyResult.getOrNull;
+    final String? id = idResult.getOrNull;
+    final bool enabled = enabledResult.getOrNull ?? true;
 
     emit(
       state.copyWith(
@@ -193,125 +207,125 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Update Google Search API key
   Future<void> updateGoogleSearchKey(String key) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setGoogleSearchKey(key);
-    result.fold(
-      (Exception error) => AppLogger.error(
-        'Failed to save Google Search key: $error',
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to save Google Search key',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(googleSearchKey: key)),
+      ok: (_) => emit(state.copyWith(googleSearchKey: key)),
     );
   }
 
   /// Update Google Search Engine ID
   Future<void> updateGoogleSearchEngineId(String id) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setGoogleSearchEngineId(id);
-    result.fold(
-      (Exception error) => AppLogger.error(
-        'Failed to save Google Search Engine ID: $error',
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to save Google Search Engine ID',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(googleSearchEngineId: id)),
+      ok: (_) => emit(state.copyWith(googleSearchEngineId: id)),
     );
   }
 
   /// Toggle Google Search enabled state
   Future<void> toggleGoogleSearch(bool enabled) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setGoogleSearchEnabled(enabled);
-    result.fold(
-      (Exception error) => AppLogger.error(
-        'Failed to toggle Google Search: $error',
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to toggle Google Search',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(googleSearchEnabled: enabled)),
+      ok: (_) => emit(state.copyWith(googleSearchEnabled: enabled)),
     );
   }
 
   /// Load OpenWeather configuration
   Future<void> loadOpenWeatherConfig() async {
-    final Either<Exception, String?> keyResult = await _settingsRepository
+    final Result<String?> keyResult = await _settingsRepository
         .getOpenWeatherKey();
-    final Either<Exception, bool> enabledResult = await _settingsRepository
+    final Result<bool> enabledResult = await _settingsRepository
         .getOpenWeatherEnabled();
 
-    final String? key = keyResult.getOrElse((Exception _) => null);
-    final bool enabled = enabledResult.getOrElse((Exception _) => true);
+    final String? key = keyResult.getOrNull;
+    final bool enabled = enabledResult.getOrNull ?? true;
 
     emit(state.copyWith(openWeatherKey: key, openWeatherEnabled: enabled));
   }
 
   /// Update OpenWeather API key
   Future<void> updateOpenWeatherKey(String key) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setOpenWeatherKey(key);
-    result.fold(
-      (Exception error) => AppLogger.error(
-        'Failed to save OpenWeather key: $error',
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to save OpenWeather key',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(openWeatherKey: key)),
+      ok: (_) => emit(state.copyWith(openWeatherKey: key)),
     );
   }
 
   /// Toggle OpenWeather enabled state
   Future<void> toggleOpenWeather(bool enabled) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setOpenWeatherEnabled(enabled);
-    result.fold(
-      (Exception error) => AppLogger.error(
-        'Failed to toggle OpenWeather: $error',
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to toggle OpenWeather',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(openWeatherEnabled: enabled)),
+      ok: (_) => emit(state.copyWith(openWeatherEnabled: enabled)),
     );
   }
 
   /// Load New York Times configuration
   Future<void> loadNewYorkTimesConfig() async {
-    final Either<Exception, String?> keyResult = await _settingsRepository
+    final Result<String?> keyResult = await _settingsRepository
         .getNewYorkTimesKey();
-    final Either<Exception, bool> enabledResult = await _settingsRepository
+    final Result<bool> enabledResult = await _settingsRepository
         .getNewYorkTimesEnabled();
 
-    final String? key = keyResult.getOrElse((Exception _) => null);
-    final bool enabled = enabledResult.getOrElse((Exception _) => true);
+    final String? key = keyResult.getOrNull;
+    final bool enabled = enabledResult.getOrNull ?? true;
 
     emit(state.copyWith(newYorkTimesKey: key, newYorkTimesEnabled: enabled));
   }
 
   /// Update New York Times API key
   Future<void> updateNewYorkTimesKey(String key) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setNewYorkTimesKey(key);
-    result.fold(
-      (Exception error) => AppLogger.error(
-        'Failed to save New York Times key: $error',
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to save New York Times key',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(newYorkTimesKey: key)),
+      ok: (_) => emit(state.copyWith(newYorkTimesKey: key)),
     );
   }
 
   /// Toggle New York Times enabled state
   Future<void> toggleNewYorkTimes(bool enabled) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setNewYorkTimesEnabled(enabled);
-    result.fold(
-      (Exception error) => AppLogger.error(
-        'Failed to toggle New York Times: $error',
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to toggle New York Times',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(newYorkTimesEnabled: enabled)),
+      ok: (_) => emit(state.copyWith(newYorkTimesEnabled: enabled)),
     );
   }
 
@@ -322,27 +336,50 @@ class SettingsCubit extends Cubit<SettingsState> {
     await loadNewYorkTimesConfig();
   }
 
+  /// Load the current language
+  Future<void> loadCurrentLanguage() async {
+    final Result<String?> result = await _settingsRepository.getLanguage();
+    result.when(
+      err: (Failure failure) => emit(state.copyWith(currentLanguage: 'fr')),
+      ok: (String? language) =>
+          emit(state.copyWith(currentLanguage: language ?? 'fr')),
+    );
+  }
+
+  /// Set the current language
+  Future<void> setCurrentLanguage(String language) async {
+    final Result<void> result = await _settingsRepository.setLanguage(language);
+    result.when(
+      err: (Failure failure) => AppLogger.error(
+        'Failed to set language',
+        tag: 'SettingsCubit',
+        error: failure,
+      ),
+      ok: (_) => emit(state.copyWith(currentLanguage: language)),
+    );
+  }
+
   /// Load sound effects enabled setting
   Future<void> loadSoundEffects() async {
-    final Either<Exception, bool> result = await _settingsRepository
+    final Result<bool> result = await _settingsRepository
         .getSoundEffects();
-    result.fold(
-      (Exception error) => emit(state.copyWith(soundEffectsEnabled: false)),
-      (bool enabled) => emit(state.copyWith(soundEffectsEnabled: enabled)),
+    result.when(
+      err: (Failure failure) => emit(state.copyWith(soundEffectsEnabled: false)),
+      ok: (bool enabled) => emit(state.copyWith(soundEffectsEnabled: enabled)),
     );
   }
 
   /// Set sound effects enabled setting
   Future<void> setSoundEffects(bool soundEffectsEnabled) async {
-    final Either<Exception, void> result = await _settingsRepository
+    final Result<void> result = await _settingsRepository
         .setSoundEffects(soundEffectsEnabled);
-    result.fold(
-      (Exception error) => AppLogger.error(
+    result.when(
+      err: (Failure failure) => AppLogger.error(
         'Failed to set sound effects',
         tag: 'SettingsCubit',
-        error: error,
+        error: failure,
       ),
-      (_) => emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled)),
+      ok: (_) => emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled)),
     );
   }
 }

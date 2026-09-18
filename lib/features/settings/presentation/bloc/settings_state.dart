@@ -25,6 +25,8 @@ sealed class SettingsState with _$SettingsState {
     @Default(null) String? systemPrompt,
     @Default(ChatPersona.assistant) ChatPersona persona,
     @Default(true) bool soundEffectsEnabled,
+    // App-level settings (moved from ChatCubit):
+    @Default('fr') String currentLanguage,
     // Error fields:
     @Default(false) bool hasError,
     @Default(null) String? errorMessage,

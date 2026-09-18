@@ -7,8 +7,7 @@ import '../presentation/bloc/avatar_state.dart';
 import '../presentation/bloc/avatar_cubit.dart';
 import 'animated_avatar.dart';
 
-import '../../talking/presentation/bloc/talking_cubit.dart';
-import '../../talking/presentation/bloc/talking_state.dart';
+import '../../talking/talking.dart';
 
 class AvatarWidgets extends StatefulWidget {
   const AvatarWidgets({super.key});

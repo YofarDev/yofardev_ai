@@ -128,7 +128,12 @@ class TtsDatasource {
             if (fileTimestamp != null && (now - fileTimestamp) > 600000) {
               try {
                 await file.delete();
-              } catch (_) {}
+              } catch (e) {
+                AppLogger.debug(
+                  'Failed to delete stale TTS file: $e',
+                  tag: 'TtsDatasource',
+                );
+              }
             }
           }
         }

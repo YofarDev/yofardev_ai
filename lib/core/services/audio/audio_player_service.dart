@@ -129,7 +129,12 @@ class AudioPlayerService {
     if (stopPlayback) {
       try {
         await player.stop();
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.debug(
+          'Failed to stop player before dispose: $e',
+          tag: 'AudioPlayerService',
+        );
+      }
     }
 
     await player.dispose();

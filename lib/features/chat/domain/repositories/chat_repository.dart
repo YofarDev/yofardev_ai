@@ -1,22 +1,21 @@
-import 'package:fpdart/fpdart.dart';
-
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/chat_entry.dart';
+import '../../../../core/models/result.dart';
 
 abstract class ChatRepository {
-  Future<Either<Exception, Chat>> createNewChat({String? language});
-  Future<Either<Exception, Chat?>> getChat(String id);
-  Future<Either<Exception, List<Chat>>> getChatsList();
-  Future<Either<Exception, void>> updateChat({
+  Future<Result<Chat>> createNewChat({String? language});
+  Future<Result<Chat?>> getChat(String id);
+  Future<Result<List<Chat>>> getChatsList();
+  Future<Result<void>> updateChat({
     required String id,
     required Chat updatedChat,
   });
-  Future<Either<Exception, void>> deleteChat(String id);
-  Future<Either<Exception, void>> setCurrentChatId(String id);
-  Future<Either<Exception, Chat>> getCurrentChat();
-  Future<Either<Exception, void>> updateAvatar(String chatId, Avatar avatar);
-  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
+  Future<Result<void>> deleteChat(String id);
+  Future<Result<void>> setCurrentChatId(String id);
+  Future<Result<Chat>> getCurrentChat();
+  Future<Result<void>> updateAvatar(String chatId, Avatar avatar);
+  Future<Result<List<ChatEntry>>> askYofardevAi(
     Chat chat,
     String userMessage, {
     bool functionCallingEnabled = true,

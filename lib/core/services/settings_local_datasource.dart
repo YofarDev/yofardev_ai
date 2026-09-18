@@ -1,10 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:fpdart/fpdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/chat.dart';
+import '../models/failure.dart';
+import '../models/result.dart';
 import '../models/task_llm_config.dart';
 import '../utils/app_utils.dart';
 
@@ -21,85 +22,84 @@ class SettingsLocalDatasource {
   static const String _newYorkTimesEnabledKey = 'new_york_times_enabled';
 
   // Generic helper methods to reduce boilerplate
-  Future<Either<Exception, String>> _getStringKey(String keyName) async {
+  Future<Result<String>> _getStringKey(String keyName) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String value = prefs.getString(keyName) ?? '';
-      return Right<Exception, String>(value);
+      return Result<String>.ok(value);
     } catch (e) {
-      return Left<Exception, String>(Exception(e.toString()));
+      return Result<String>.err(StorageFailure(e.toString(), e));
     }
   }
 
-  Future<Either<Exception, void>> _setStringKey(
+  Future<Result<void>> _setStringKey(
     String keyName,
     String value,
   ) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString(keyName, value);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure(e.toString(), e));
     }
   }
 
-  Future<Either<Exception, bool>> _getBoolKey(
+  Future<Result<bool>> _getBoolKey(
     String keyName,
     bool defaultValue,
   ) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final bool value = prefs.getBool(keyName) ?? defaultValue;
-      return Right<Exception, bool>(value);
+      return Result<bool>.ok(value);
     } catch (e) {
-      return Left<Exception, bool>(Exception(e.toString()));
+      return Result<bool>.err(StorageFailure(e.toString(), e));
     }
   }
 
-  Future<Either<Exception, void>> _setBoolKey(
+  Future<Result<void>> _setBoolKey(
     String keyName,
     bool value,
   ) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool(keyName, value);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(StorageFailure(e.toString(), e));
     }
   }
 
-  Future<Either<Exception, TaskLlmConfig>> getTaskLlmConfig() async {
+  Future<Result<TaskLlmConfig>> getTaskLlmConfig() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? json = prefs.getString(_keyTaskLlmConfig);
 
       if (json == null) {
-        const TaskLlmConfig defaultConfig = TaskLlmConfig();
-        return const Right<Exception, TaskLlmConfig>(defaultConfig);
+        return Result<TaskLlmConfig>.ok(const TaskLlmConfig());
       }
 
       final Map<String, dynamic> data =
           jsonDecode(json) as Map<String, dynamic>;
       final TaskLlmConfig parsedConfig = TaskLlmConfig.fromJson(data);
-      return Right<Exception, TaskLlmConfig>(parsedConfig);
+      return Result<TaskLlmConfig>.ok(parsedConfig);
     } catch (e) {
-      return Left<Exception, TaskLlmConfig>(
-        Exception('Failed to load task LLM config: $e'),
+      return Result<TaskLlmConfig>.err(
+        StorageFailure('Failed to load task LLM config', e),
       );
     }
   }
 
-  Future<Either<Exception, void>> setTaskLlmConfig(TaskLlmConfig config) async {
+  Future<Result<void>> setTaskLlmConfig(TaskLlmConfig config) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String json = jsonEncode(config.toJson());
       await prefs.setString(_keyTaskLlmConfig, json);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(
-        Exception('Failed to save task LLM config: $e'),
+      return Result<void>.err(
+        StorageFailure('Failed to save task LLM config', e),
       );
     }
   }
@@ -165,47 +165,47 @@ class SettingsLocalDatasource {
   }
 
   // Function Calling Configuration - Google Search
-  Future<Either<Exception, String>> getGoogleSearchKey() =>
+  Future<Result<String>> getGoogleSearchKey() =>
       _getStringKey(_googleSearchKeyKey);
 
-  Future<Either<Exception, void>> setGoogleSearchKey(String key) =>
+  Future<Result<void>> setGoogleSearchKey(String key) =>
       _setStringKey(_googleSearchKeyKey, key);
 
-  Future<Either<Exception, String>> getGoogleSearchEngineId() =>
+  Future<Result<String>> getGoogleSearchEngineId() =>
       _getStringKey(_googleSearchEngineIdKey);
 
-  Future<Either<Exception, void>> setGoogleSearchEngineId(String engineId) =>
+  Future<Result<void>> setGoogleSearchEngineId(String engineId) =>
       _setStringKey(_googleSearchEngineIdKey, engineId);
 
-  Future<Either<Exception, bool>> getGoogleSearchEnabled() =>
+  Future<Result<bool>> getGoogleSearchEnabled() =>
       _getBoolKey(_googleSearchEnabledKey, true);
 
-  Future<Either<Exception, void>> setGoogleSearchEnabled(bool enabled) =>
+  Future<Result<void>> setGoogleSearchEnabled(bool enabled) =>
       _setBoolKey(_googleSearchEnabledKey, enabled);
 
   // Function Calling Configuration - OpenWeather
-  Future<Either<Exception, String>> getOpenWeatherKey() =>
+  Future<Result<String>> getOpenWeatherKey() =>
       _getStringKey(_openWeatherKeyKey);
 
-  Future<Either<Exception, void>> setOpenWeatherKey(String key) =>
+  Future<Result<void>> setOpenWeatherKey(String key) =>
       _setStringKey(_openWeatherKeyKey, key);
 
-  Future<Either<Exception, bool>> getOpenWeatherEnabled() =>
+  Future<Result<bool>> getOpenWeatherEnabled() =>
       _getBoolKey(_openWeatherEnabledKey, true);
 
-  Future<Either<Exception, void>> setOpenWeatherEnabled(bool enabled) =>
+  Future<Result<void>> setOpenWeatherEnabled(bool enabled) =>
       _setBoolKey(_openWeatherEnabledKey, enabled);
 
   // Function Calling Configuration - New York Times
-  Future<Either<Exception, String>> getNewYorkTimesKey() =>
+  Future<Result<String>> getNewYorkTimesKey() =>
       _getStringKey(_newYorkTimesKeyKey);
 
-  Future<Either<Exception, void>> setNewYorkTimesKey(String key) =>
+  Future<Result<void>> setNewYorkTimesKey(String key) =>
       _setStringKey(_newYorkTimesKeyKey, key);
 
-  Future<Either<Exception, bool>> getNewYorkTimesEnabled() =>
+  Future<Result<bool>> getNewYorkTimesEnabled() =>
       _getBoolKey(_newYorkTimesEnabledKey, true);
 
-  Future<Either<Exception, void>> setNewYorkTimesEnabled(bool enabled) =>
+  Future<Result<void>> setNewYorkTimesEnabled(bool enabled) =>
       _setBoolKey(_newYorkTimesEnabledKey, enabled);
 }

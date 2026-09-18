@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:fpdart/fpdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/llm_config.dart';
+import '../../models/result.dart';
 import '../../models/llm_task_type.dart';
 import '../../models/task_llm_config.dart';
 import '../../utils/logger.dart';
@@ -51,7 +51,11 @@ class LlmConfigManager {
     }
     try {
       return _configs.firstWhere((LlmConfig c) => c.id == _currentConfigId);
-    } catch (_) {
+    } catch (e) {
+      AppLogger.debug(
+        'Current config id not found, falling back to first config: $e',
+        tag: 'LlmConfigManager',
+      );
       if (_configs.isNotEmpty) return _configs.first;
       return null;
     }
@@ -103,9 +107,9 @@ class LlmConfigManager {
 
   Future<TaskLlmConfig> _getTaskConfigFromSettings() async {
     try {
-      final Either<Exception, TaskLlmConfig> result = await _settingsDatasource
+      final Result<TaskLlmConfig> result = await _settingsDatasource
           .getTaskLlmConfig();
-      return result.getOrElse((_) => const TaskLlmConfig());
+      return result.getOrNull ?? const TaskLlmConfig();
     } catch (e) {
       AppLogger.error(
         'Failed to load task config',

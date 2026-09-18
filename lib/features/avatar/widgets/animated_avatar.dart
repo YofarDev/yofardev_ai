@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../../core/models/avatar_config.dart';
 import '../../../core/res/app_constants.dart';
-import '../../talking/presentation/bloc/talking_state.dart';
+import '../../talking/talking.dart';
 import '../presentation/bloc/avatar_state.dart';
 import 'base_avatar.dart';
 import 'blinking_eyes.dart';

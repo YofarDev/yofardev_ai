@@ -1,22 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart';
-
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat_entry.dart';
 import '../../../../core/models/demo_script.dart';
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../../../core/repositories/settings_repository.dart';
 import '../../../../core/services/app_lifecycle_service.dart';
-import '../../../../core/services/avatar_animation_service.dart';
-import '../../../../core/services/chat/chat_streaming_service.dart';
+import '../../../avatar/avatar.dart';
+import '../../../../features/chat/domain/services/chat_streaming_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/services/chat_title_service.dart';
-import '../../../demo/data/repositories/demo_repository_impl.dart';
+import '../../../demo/demo.dart';
 import 'chat_state.dart';
 
 /// Main coordinator cubit for chat operations.
@@ -62,6 +62,20 @@ class ChatCubit extends Cubit<ChatState> {
             );
           },
         );
+
+    // Subscribe to avatar change requests from AvatarTool
+    _avatarChangeRequestedSubscription = _appLifecycleService
+        .avatarChangeRequestedEvents
+        .listen(
+          _handleAvatarChangeRequested,
+          onError: (Object error) {
+            AppLogger.error(
+              'Avatar change requested stream error',
+              tag: 'ChatCubit',
+              error: error,
+            );
+          },
+        );
   }
 
   final ChatRepository _chatRepository;
@@ -70,10 +84,30 @@ class ChatCubit extends Cubit<ChatState> {
   final ChatTitleService _chatTitleService;
   final ChatStreamingService _chatStreamingService;
   final AppLifecycleService _appLifecycleService;
-  // ignore: unused_field
   StreamSubscription<NewChatEntryPayload>? _newChatEntrySubscription;
-  // ignore: unused_field
   StreamSubscription<DemoScript>? _demoScriptSubscription;
+  StreamSubscription<AvatarChangeRequested>? _avatarChangeRequestedSubscription;
+
+  /// Handle avatar change requests emitted by AvatarTool.
+  ///
+  /// Persists the new avatar and triggers the animation.
+  Future<void> _handleAvatarChangeRequested(
+    AvatarChangeRequested request,
+  ) async {
+    AppLogger.debug(
+      'ChatCubit: avatar change requested (backgroundOnly=${request.backgroundOnly})',
+      tag: 'ChatCubit',
+    );
+    if (request.backgroundOnly) {
+      await updateBackgroundOpenedChat(request.newConfig.background!);
+    } else {
+      await updateAvatarOpenedChat(request.newConfig);
+    }
+    _avatarAnimationService.emitUpdateConfig(
+      state.openedChat.id,
+      request.configWithAnimation,
+    );
+  }
 
   /// Handle new chat entry events from app lifecycle service.
   ///
@@ -144,48 +178,37 @@ class ChatCubit extends Cubit<ChatState> {
     // The widget should listen for state changes or use a separate notification mechanism
   }
 
+  @override
+  Future<void> close() {
+    _newChatEntrySubscription?.cancel();
+    _demoScriptSubscription?.cancel();
+    _avatarChangeRequestedSubscription?.cancel();
+    return super.close();
+  }
+
   /// Initialize the chat system
   Future<void> init() async {
     await getCurrentChat();
-    await _loadSettings();
     await fetchChatsList();
     emit(state.copyWith(initializing: false));
-  }
-
-  /// Load user settings (language, sound effects)
-  Future<void> _loadSettings() async {
-    final Either<Exception, String?> languageResult = await _settingsRepository
-        .getLanguage();
-    languageResult.fold(
-      (Exception error) => emit(state.copyWith(currentLanguage: 'fr')),
-      (String? language) =>
-          emit(state.copyWith(currentLanguage: language ?? 'fr')),
-    );
-
-    final Either<Exception, bool> soundEffectsResult = await _settingsRepository
-        .getSoundEffects();
-    soundEffectsResult.fold(
-      (Exception error) => emit(state.copyWith(soundEffectsEnabled: false)),
-      (bool enabled) => emit(state.copyWith(soundEffectsEnabled: enabled)),
-    );
   }
 
   /// Get the current active chat
   Future<void> getCurrentChat() async {
     emit(state.copyWith(status: ChatStatus.loading));
-    final Either<Exception, Chat> currentChatResult = await _chatRepository
+    final Result<Chat> currentChatResult = await _chatRepository
         .getCurrentChat();
 
-    currentChatResult.fold(
-      (Exception error) {
+    currentChatResult.when(
+      err: (Failure failure) {
         emit(
           state.copyWith(
             status: ChatStatus.error,
-            errorMessage: error.toString(),
+            errorMessage: failure.message,
           ),
         );
       },
-      (Chat currentChat) {
+      ok: (Chat currentChat) {
         // Only update if user hasn't created a chat during initialization
         // This prevents race condition where getCurrentChat overwrites user's new chat
         if (state.userCreatedChatDuringInit) {
@@ -210,18 +233,18 @@ class ChatCubit extends Cubit<ChatState> {
   /// Fetch the list of all chats
   Future<void> fetchChatsList() async {
     emit(state.copyWith(status: ChatStatus.loading));
-    final Either<Exception, List<Chat>> result = await _chatRepository
+    final Result<List<Chat>> result = await _chatRepository
         .getChatsList();
-    result.fold(
-      (Exception error) {
+    result.when(
+      err: (Failure failure) {
         emit(
           state.copyWith(
             status: ChatStatus.error,
-            errorMessage: error.toString(),
+            errorMessage: failure.message,
           ),
         );
       },
-      (List<Chat> chatsList) {
+      ok: (List<Chat> chatsList) {
         final List<Chat> reversed = chatsList.reversed.toList();
         emit(state.copyWith(status: ChatStatus.success, chatsList: reversed));
       },
@@ -231,19 +254,23 @@ class ChatCubit extends Cubit<ChatState> {
   /// Create a new chat
   Future<void> createNewChat() async {
     emit(state.copyWith(status: ChatStatus.updating));
-    final Either<Exception, Chat> result = await _chatRepository.createNewChat(
-      language: state.currentLanguage,
+    final String language =
+        await _settingsRepository.getLanguage().then(
+              (Result<String?> result) => result.getOrNull ?? 'fr',
+            );
+    final Result<Chat> result = await _chatRepository.createNewChat(
+      language: language,
     );
-    result.fold(
-      (Exception error) {
+    result.when(
+      err: (Failure failure) {
         emit(
           state.copyWith(
             status: ChatStatus.error,
-            errorMessage: error.toString(),
+            errorMessage: failure.message,
           ),
         );
       },
-      (Chat newChat) async {
+      ok: (Chat newChat) async {
         // If creating chat during initialization, set the flag
         // This prevents getCurrentChat from overwriting this new chat
         final bool wasInitializing = state.initializing;
@@ -279,17 +306,17 @@ class ChatCubit extends Cubit<ChatState> {
   /// Delete a chat by ID
   Future<void> deleteChat(String id) async {
     emit(state.copyWith(status: ChatStatus.updating));
-    final Either<Exception, void> result = await _chatRepository.deleteChat(id);
-    result.fold(
-      (Exception error) {
+    final Result<void> result = await _chatRepository.deleteChat(id);
+    result.when(
+      err: (Failure failure) {
         emit(
           state.copyWith(
             status: ChatStatus.error,
-            errorMessage: error.toString(),
+            errorMessage: failure.message,
           ),
         );
       },
-      (_) {
+      ok: (_) {
         final List<Chat> chatsList = List<Chat>.from(state.chatsList);
         chatsList.removeWhere((Chat element) => element.id == id);
         emit(state.copyWith(chatsList: chatsList, status: ChatStatus.success));
@@ -365,42 +392,6 @@ class ChatCubit extends Cubit<ChatState> {
       ),
     );
     await _chatRepository.updateAvatar(chat.id, updatedChat.avatar);
-  }
-
-  /// Set the current language
-  Future<void> setCurrentLanguage(String language) async {
-    final Either<Exception, void> result = await _settingsRepository
-        .setLanguage(language);
-    result.fold(
-      (Exception error) {
-        AppLogger.error(
-          'Failed to set language',
-          tag: 'ChatCubit',
-          error: error,
-        );
-      },
-      (_) {
-        emit(state.copyWith(currentLanguage: language));
-      },
-    );
-  }
-
-  /// Set sound effects enabled/disabled
-  Future<void> setSoundEffects(bool soundEffectsEnabled) async {
-    final Either<Exception, void> result = await _settingsRepository
-        .setSoundEffects(soundEffectsEnabled);
-    result.fold(
-      (Exception error) {
-        AppLogger.error(
-          'Failed to set sound effects',
-          tag: 'ChatCubit',
-          error: error,
-        );
-      },
-      (_) {
-        emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled));
-      },
-    );
   }
 
   /// Toggle function calling feature
@@ -481,18 +472,18 @@ class ChatCubit extends Cubit<ChatState> {
 
       if (title != null) {
         // Reload the chat from storage to get the updated title
-        final Either<Exception, Chat?> chatResult = await _chatRepository
+        final Result<Chat?> chatResult = await _chatRepository
             .getChat(chatId);
 
-        chatResult.fold(
-          (Exception error) {
+        chatResult.when(
+          err: (Failure failure) {
             AppLogger.error(
               'Failed to reload chat after title generation',
               tag: 'ChatCubit',
-              error: error,
+              error: failure,
             );
           },
-          (Chat? updatedChat) {
+          ok: (Chat? updatedChat) {
             if (updatedChat != null) {
               // Update currentChat and openedChat if this is the current chat
               final Chat? currentChat = state.currentChat.id == chatId
@@ -669,15 +660,17 @@ class ChatCubit extends Cubit<ChatState> {
   Chat get currentChat => state.currentChat;
   Chat get openedChat => state.openedChat;
   ChatStatus get status => state.status;
-  String get currentLanguage => state.currentLanguage;
-  bool get soundEffectsEnabled => state.soundEffectsEnabled;
   bool get functionCallingEnabled => state.functionCallingEnabled;
 
   /// Get a chat by its ID from the chats list
   Chat? getChatById(String id) {
     try {
       return state.chatsList.firstWhere((Chat c) => c.id == id);
-    } catch (_) {
+    } catch (e) {
+      AppLogger.debug(
+        'Chat with id $id not found in chats list: $e',
+        tag: 'ChatCubit',
+      );
       return null;
     }
   }

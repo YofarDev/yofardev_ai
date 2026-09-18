@@ -16,12 +16,12 @@ import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/widgets/current_prompt_text.dart';
 import '../../../../core/widgets/glassmorphic/glassmorphic_text_field.dart';
 import '../../../../core/widgets/picker_buttons.dart';
-import '../../../talking/presentation/bloc/talking_cubit.dart';
-import '../../../talking/presentation/bloc/talking_state.dart';
+import '../../../talking/talking.dart';
 import '../../presentation/bloc/chat_cubit.dart';
 import '../../presentation/bloc/chat_state.dart';
 import '../function_calling_widget.dart';
 import 'picked_image_preview.dart';
+import '../../../settings/settings.dart';
 
 class AiTextInput extends StatefulWidget {
   final bool onlyText;
@@ -162,7 +162,7 @@ class _AiTextInputState extends State<AiTextInput> {
                               : 0,
                           child: _buildTextField(
                             currentAvatar: widget.avatar ?? const Avatar(),
-                            currentLanguage: state.currentLanguage,
+                            currentLanguage: context.read<SettingsCubit>().state.currentLanguage,
                             currentChat: state.currentChat,
                             functionCallingEnabled:
                                 state.functionCallingEnabled,
@@ -255,7 +255,7 @@ class _AiTextInputState extends State<AiTextInput> {
                   functionCallingEnabled: functionCallingEnabled,
                 ),
                 localeId:
-                    context.read<ChatCubit>().state.currentLanguage == 'fr'
+                    context.read<SettingsCubit>().state.currentLanguage == 'fr'
                     ? 'fr_FR'
                     : 'en_US',
                 listenOptions: SpeechListenOptions(partialResults: false),

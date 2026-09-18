@@ -1,19 +1,13 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_status_animation.dart';
+
+export '../../../../core/models/avatar_status_animation.dart';
 
 part 'avatar_state.freezed.dart';
 
 enum AvatarStatus { initial, ready, loading }
-
-enum AvatarStatusAnimation {
-  initial,
-  leaving, // Horizontal slide out (left)
-  coming, // Horizontal slide in (from left)
-  transition, // General transition
-  dropping, // Vertical slide down (for clothes change)
-  rising, // Vertical slide up (return after clothes change)
-}
 
 enum BackgroundTransition { none, sliding }
 

@@ -1,7 +1,7 @@
 // ignore_for_file: join_return_with_assignment
 
-import 'package:fpdart/fpdart.dart';
-
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
 import '../../../../core/services/agent/yofardev_agent.dart';
 import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../../../core/models/avatar_config.dart';
@@ -33,93 +33,93 @@ class YofardevRepositoryImpl implements ChatRepository {
        _chatDatasource = chatDatasource;
 
   @override
-  Future<Either<Exception, Chat>> createNewChat({String? language}) async {
+  Future<Result<Chat>> createNewChat({String? language}) async {
     try {
       final Chat chat = await _chatDatasource.createNewChat(language: language);
-      return Right<Exception, Chat>(chat);
+      return Result<Chat>.ok(chat);
     } catch (e) {
-      return Left<Exception, Chat>(Exception(e.toString()));
+      return Result<Chat>.err(NetworkFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, Chat?>> getChat(String id) async {
+  Future<Result<Chat?>> getChat(String id) async {
     try {
       final Chat? chat = await _chatDatasource.getChat(id);
-      return Right<Exception, Chat?>(chat);
+      return Result<Chat?>.ok(chat);
     } catch (e) {
-      return Left<Exception, Chat?>(Exception(e.toString()));
+      return Result<Chat?>.err(NetworkFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, List<Chat>>> getChatsList() async {
+  Future<Result<List<Chat>>> getChatsList() async {
     try {
       final List<Chat> chats = await _chatDatasource.getChatsList();
-      return Right<Exception, List<Chat>>(chats);
+      return Result<List<Chat>>.ok(chats);
     } catch (e) {
-      return Left<Exception, List<Chat>>(Exception(e.toString()));
+      return Result<List<Chat>>.err(NetworkFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> updateChat({
+  Future<Result<void>> updateChat({
     required String id,
     required Chat updatedChat,
   }) async {
     try {
       await _chatDatasource.updateChat(chatId: id, updatedChat: updatedChat);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(NetworkFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> deleteChat(String id) async {
+  Future<Result<void>> deleteChat(String id) async {
     try {
       await _chatDatasource.deleteChat(id);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(NetworkFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> setCurrentChatId(String id) async {
+  Future<Result<void>> setCurrentChatId(String id) async {
     try {
       await _chatDatasource.setCurrentChatId(id);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(NetworkFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, Chat>> getCurrentChat() async {
+  Future<Result<Chat>> getCurrentChat() async {
     try {
       final Chat chat = await _chatDatasource.getCurrentChat();
-      return Right<Exception, Chat>(chat);
+      return Result<Chat>.ok(chat);
     } catch (e) {
-      return Left<Exception, Chat>(Exception(e.toString()));
+      return Result<Chat>.err(NetworkFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, void>> updateAvatar(
+  Future<Result<void>> updateAvatar(
     String chatId,
     Avatar avatar,
   ) async {
     try {
       await _chatDatasource.updateAvatar(chatId, avatar);
-      return const Right<Exception, void>(null);
+      return Result<void>.ok(null);
     } catch (e) {
-      return Left<Exception, void>(Exception(e.toString()));
+      return Result<void>.err(NetworkFailure(e.toString(), e));
     }
   }
 
   @override
-  Future<Either<Exception, List<ChatEntry>>> askYofardevAi(
+  Future<Result<List<ChatEntry>>> askYofardevAi(
     Chat chat,
     String userMessage, {
     bool functionCallingEnabled = true,
@@ -132,7 +132,7 @@ class YofardevRepositoryImpl implements ChatRepository {
           // Wait 600ms to simulate LLM processing
           await Future<void>.delayed(const Duration(milliseconds: 600));
 
-          return Right<Exception, List<ChatEntry>>(<ChatEntry>[
+          return Result<List<ChatEntry>>.ok(<ChatEntry>[
             ChatEntry(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               entryType: EntryType.yofardev,
@@ -151,9 +151,9 @@ class YofardevRepositoryImpl implements ChatRepository {
         functionCallingEnabled: functionCallingEnabled,
         settingsRepository: _settingsRepository,
       );
-      return Right<Exception, List<ChatEntry>>(entries);
+      return Result<List<ChatEntry>>.ok(entries);
     } catch (e) {
-      return Left<Exception, List<ChatEntry>>(Exception(e.toString()));
+      return Result<List<ChatEntry>>.err(NetworkFailure(e.toString(), e));
     }
   }
 }

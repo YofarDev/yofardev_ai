@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 
-import '../presentation/bloc/chat_cubit.dart';
 import '../../../core/models/chat.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/utils/extensions.dart';
@@ -11,6 +10,7 @@ import '../../../core/models/chat_entry.dart';
 import '../widgets/chat_avatar.dart';
 import '../widgets/chat_message_item.dart';
 import 'function_calling_widget.dart';
+import '../../settings/settings.dart';
 
 class ChatConversationList extends StatelessWidget {
   final ChatPersona persona;
@@ -101,7 +101,7 @@ class _DateHeader extends StatelessWidget {
           ),
           child: Text(
             timestamp.toLongLocalDateString(
-              language: context.read<ChatCubit>().state.currentLanguage,
+              language: context.read<SettingsCubit>().state.currentLanguage,
             ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.onSurface.withValues(alpha: 0.7),

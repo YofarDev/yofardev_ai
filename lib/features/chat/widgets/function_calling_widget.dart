@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../../../core/utils/logger.dart';
 
 class FunctionCallingWidget extends StatelessWidget {
   final String functionCallingText;
@@ -142,7 +143,11 @@ class FunctionCallingWidget extends StatelessWidget {
     if (result is Map || result is List) {
       try {
         return const JsonEncoder.withIndent('  ').convert(result);
-      } catch (_) {
+      } catch (e) {
+        AppLogger.debug(
+          'Failed to pretty-print function result: $e',
+          tag: 'FunctionCallingWidget',
+        );
         return result.toString();
       }
     }

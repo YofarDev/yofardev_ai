@@ -16,6 +16,7 @@ import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/repositories/yofardev_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/demo/presentation/bloc/demo_cubit.dart';
+import '../../features/demo/domain/services/demo_service.dart';
 import '../../features/demo/data/repositories/demo_repository_impl.dart';
 import '../../features/demo/domain/repositories/demo_repository.dart';
 import '../../features/home/presentation/bloc/home_cubit.dart';
@@ -25,7 +26,7 @@ import '../repositories/settings_repository.dart';
 import '../../features/sound/presentation/bloc/sound_cubit.dart';
 import '../../features/sound/data/datasources/tts_datasource.dart';
 import '../../features/sound/data/repositories/sound_repository_impl.dart';
-import '../services/audio/tts_queue_service.dart';
+import '../../features/sound/domain/services/tts_queue_service.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
@@ -42,7 +43,7 @@ import '../services/audio/interruption_service.dart';
 import '../services/audio/voice_effects_service.dart';
 import '../services/agent/yofardev_agent.dart';
 import '../services/agent/tool_registry.dart';
-import '../services/avatar_animation_service.dart';
+import '../../features/avatar/domain/services/avatar_animation_service.dart';
 import '../services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_config_manager.dart';
@@ -53,7 +54,7 @@ import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
 import '../services/settings_local_datasource.dart';
 import '../services/stream_processor/stream_processor_service.dart';
-import '../services/chat/chat_streaming_service.dart';
+import '../../features/chat/domain/services/chat_streaming_service.dart';
 import '../utils/logger.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -213,7 +214,7 @@ Future<void> setupServiceLocator() async {
       getIt<AppLifecycleService>(),
     ),
   );
-  getIt.registerLazySingleton<TalkingCubit>(
+  getIt.registerFactory<TalkingCubit>(
     () => TalkingCubit(
       getIt<TalkingRepository>(),
       getIt<InterruptionService>(),

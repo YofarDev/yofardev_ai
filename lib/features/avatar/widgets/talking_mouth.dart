@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/res/app_constants.dart';
 import '../../../core/utils/app_utils.dart';
-import '../../talking/presentation/bloc/talking_state.dart';
+import '../../talking/talking.dart';
 import 'scaled_avatar_item.dart';
 
 class TalkingMouth extends StatelessWidget {
