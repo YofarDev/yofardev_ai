@@ -2,8 +2,18 @@
 class SentenceSplitter {
   static final RegExp _sentenceEnd = RegExp(r'[.!?]+(?:\s+|$)|[:]\s*(?=\n)');
 
+  /// Buffer length beyond which an unpunctuated run is force-flushed at the
+  /// last soft boundary. Bounds first-audio latency when the model produces a
+  /// long clause without sentence-ending punctuation.
+  final int maxBufferLength;
+
+  /// Minimum prefix length when force-flushing at a soft boundary.
+  static const int _minSoftFlushLength = 60;
+
   String _incompleteBuffer = '';
   int _sentenceCount = 0;
+
+  SentenceSplitter({this.maxBufferLength = 180});
 
   /// Extract complete sentences from text
   ///
@@ -35,7 +45,49 @@ class SentenceSplitter {
     // Keep remainder in buffer
     _incompleteBuffer = current.toString();
 
+    // A long unpunctuated run would delay first audio; flush it at the last
+    // soft boundary (or entirely if none exists).
+    if (_incompleteBuffer.length >= maxBufferLength) {
+      sentences.addAll(_flushLongBuffer());
+    }
+
     return sentences;
+  }
+
+  /// Flushes the oversized buffer at its last soft boundary (", " preferred,
+  /// else any space) at least [_minSoftFlushLength] characters in; hard-flushes
+  /// the whole buffer when no such boundary exists.
+  List<String> _flushLongBuffer() {
+    final String buffer = _incompleteBuffer;
+    _incompleteBuffer = '';
+
+    int cutIndex = -1;
+    final int lastUsableIndex = buffer.length - 1;
+    for (int i = buffer.length - 1; i >= _minSoftFlushLength; i--) {
+      if (buffer[i] == ' ' && i <= lastUsableIndex) {
+        // Prefer a ", " boundary (comma directly before the space).
+        if (i > 0 && buffer[i - 1] == ',') {
+          cutIndex = i;
+          break;
+        }
+        cutIndex = i;
+      }
+    }
+
+    final String flushedText;
+    if (cutIndex != -1) {
+      flushedText = buffer.substring(0, cutIndex);
+      _incompleteBuffer = buffer.substring(cutIndex + 1);
+    } else {
+      flushedText = buffer;
+    }
+
+    final String sentence = flushedText.trim();
+    if (sentence.isNotEmpty) {
+      _sentenceCount++;
+      return <String>[sentence];
+    }
+    return const <String>[];
   }
 
   /// Get the current incomplete buffer
