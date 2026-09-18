@@ -21,7 +21,11 @@ class TtsQueueService {
 
   bool _isProcessing = false;
   bool _isPaused = false;
-  Timer? _processingTimer;
+
+  /// Incremented by [clear]; in-flight [_processNext] runs capture it and
+  /// abort after each await if it changed, so a stale sentence synthesized
+  /// during an interruption is never emitted.
+  int _epoch = 0;
   StreamSubscription<dynamic>? _interruptionSubscription;
 
   TtsQueueService({
@@ -83,9 +87,9 @@ class TtsQueueService {
 
   /// Clear all pending items
   void clear() {
+    _epoch++;
     _queue.clear();
     _isProcessing = false;
-    _processingTimer?.cancel();
     AppLogger.debug('TTS queue cleared', tag: 'TtsQueueService');
   }
 
@@ -103,7 +107,6 @@ class TtsQueueService {
   void setPaused(bool paused) {
     _isPaused = paused;
     if (paused) {
-      _processingTimer?.cancel();
       _isProcessing = false;
     } else if (_queue.isNotEmpty) {
       _processNext();
@@ -133,6 +136,13 @@ class TtsQueueService {
     if (_isProcessing || _isPaused || _queue.isEmpty) return;
 
     _isProcessing = true;
+    final int epoch = _epoch;
+    void abortIfCleared() {
+      if (epoch != _epoch) {
+        throw _ClearedException();
+      }
+    }
+
     final TtsQueueItem item = _queue.first;
 
     // Mark as processing
@@ -150,10 +160,12 @@ class TtsQueueService {
         language: item.language,
         voiceEffect: item.voiceEffect,
       );
+      abortIfCleared();
 
       // Apply post-processing voice effects using FFmpeg
       final String processedAudioPath = await _voiceEffectsService
           .applyVoiceEffects(rawAudioPath, item.voiceEffect);
+      abortIfCleared();
 
       // Update item as completed
       _queue[0] = item.copyWith(
@@ -173,16 +185,18 @@ class TtsQueueService {
       // Remove from queue
       _queue.removeAt(0);
 
-      // Mark processing complete before scheduling next item.
+      // Mark processing complete before starting next item.
       _isProcessing = false;
 
       // Process next item
       if (_queue.isNotEmpty && !_isPaused) {
-        _processingTimer = Timer(
-          const Duration(milliseconds: 100),
-          _processNext,
-        );
+        await _processNext();
       }
+    } on _ClearedException {
+      // Queue was cleared mid-synthesis (interruption/new message): drop the
+      // stale item without emitting.
+      _queue.remove(item);
+      _isProcessing = false;
     } catch (e) {
       AppLogger.error(
         'Failed to generate TTS for: ${item.text}',
@@ -193,23 +207,22 @@ class TtsQueueService {
       // Remove failed item
       _queue.removeAt(0);
 
-      // Mark processing complete before scheduling next item.
+      // Mark processing complete before starting next item.
       _isProcessing = false;
 
       // Continue with next
       if (_queue.isNotEmpty && !_isPaused) {
-        _processingTimer = Timer(
-          const Duration(milliseconds: 100),
-          _processNext,
-        );
+        await _processNext();
       }
     }
   }
 
   /// Dispose resources
   void dispose() {
-    _processingTimer?.cancel();
     _interruptionSubscription?.cancel();
     _audioController.close();
   }
 }
+
+/// Internal signal that the queue was cleared while synthesis was in flight.
+class _ClearedException implements Exception {}
