@@ -10,6 +10,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_volume_controller
   geolocator_windows
   permission_handler_windows
+  rive_native
   screen_retriever_windows
   speech_to_text_windows
   window_manager

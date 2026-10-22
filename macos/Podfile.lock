@@ -1,14 +1,6 @@
 PODS:
   - audio_analyzer (0.0.1):
     - FlutterMacOS
-  - audioplayers_darwin (0.0.1):
-    - Flutter
-    - FlutterMacOS
-  - CwlCatchException (2.2.1):
-    - CwlCatchExceptionSupport (~> 2.2.1)
-  - CwlCatchExceptionSupport (2.2.1)
-  - file_selector_macos (0.0.1):
-    - FlutterMacOS
   - flutter_inappwebview_macos (0.0.1):
     - FlutterMacOS
     - OrderedSet (~> 6.0.3)
@@ -18,51 +10,28 @@ PODS:
   - flutter_volume_controller (0.0.1):
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
-  - geolocator_apple (1.2.0):
-    - Flutter
-    - FlutterMacOS
   - onnxruntime-c (1.22.0)
   - onnxruntime-objc (1.22.0):
     - onnxruntime-objc/Core (= 1.22.0)
   - onnxruntime-objc/Core (1.22.0):
     - onnxruntime-c (= 1.22.0)
   - OrderedSet (6.0.3)
-  - package_info_plus (0.0.1):
-    - FlutterMacOS
   - screen_retriever_macos (0.0.1):
     - FlutterMacOS
-  - shared_preferences_foundation (0.0.1):
-    - Flutter
-    - FlutterMacOS
-  - speech_to_text (7.2.0):
-    - CwlCatchException
-    - Flutter
-    - FlutterMacOS
   - supertonic_flutter (0.0.1):
-    - FlutterMacOS
-  - window_manager (0.5.0):
     - FlutterMacOS
 
 DEPENDENCIES:
   - audio_analyzer (from `Flutter/ephemeral/.symlinks/plugins/audio_analyzer/macos`)
-  - audioplayers_darwin (from `Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin`)
-  - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_inappwebview_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos`)
   - flutter_onnxruntime (from `Flutter/ephemeral/.symlinks/plugins/flutter_onnxruntime/macos`)
   - flutter_volume_controller (from `Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin`)
-  - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
-  - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
-  - speech_to_text (from `Flutter/ephemeral/.symlinks/plugins/speech_to_text/darwin`)
   - supertonic_flutter (from `Flutter/ephemeral/.symlinks/plugins/supertonic_flutter/macos`)
-  - window_manager (from `Flutter/ephemeral/.symlinks/plugins/window_manager/macos`)
 
 SPEC REPOS:
   trunk:
-    - CwlCatchException
-    - CwlCatchExceptionSupport
     - onnxruntime-c
     - onnxruntime-objc
     - OrderedSet
@@ -70,10 +39,6 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   audio_analyzer:
     :path: Flutter/ephemeral/.symlinks/plugins/audio_analyzer/macos
-  audioplayers_darwin:
-    :path: Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin
-  file_selector_macos:
-    :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   flutter_inappwebview_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos
   flutter_onnxruntime:
@@ -82,41 +47,22 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
-  geolocator_apple:
-    :path: Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin
-  package_info_plus:
-    :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
   screen_retriever_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos
-  shared_preferences_foundation:
-    :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
-  speech_to_text:
-    :path: Flutter/ephemeral/.symlinks/plugins/speech_to_text/darwin
   supertonic_flutter:
     :path: Flutter/ephemeral/.symlinks/plugins/supertonic_flutter/macos
-  window_manager:
-    :path: Flutter/ephemeral/.symlinks/plugins/window_manager/macos
 
 SPEC CHECKSUMS:
   audio_analyzer: 697088dd01ac29ee92b7c54b54797ed40fd92f74
-  audioplayers_darwin: f15e209a3e856d1a7edcf98dc029f484fead2242
-  CwlCatchException: 7acc161b299a6de7f0a46a6ed741eae2c8b4d75a
-  CwlCatchExceptionSupport: 54ccab8d8c78907b57f99717fb19d4cc3bce02dc
-  file_selector_macos: 3e56eaea051180007b900eacb006686fd54da150
   flutter_inappwebview_macos: bdf207b8f4ebd58e86ae06cd96b147de99a67c9b
   flutter_onnxruntime: f95d4d22cbeebd530948a4c9541be1e3a62073f0
   flutter_volume_controller: 25d09126b0d695560f11c80b1311d5063fed882f
-  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
-  geolocator_apple: 66b711889fd333205763b83c9dcf0a57a28c7afd
+  FlutterMacOS: c232990155153907050900a2e175c7773903ba4e
   onnxruntime-c: 7f778680e96145956c0a31945f260321eed2611a
   onnxruntime-objc: 83d28b87525bd971259a66e153ea32b5d023de19
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
-  package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b
   screen_retriever_macos: 776e0fa5d42c6163d2bf772d22478df4b302b161
-  shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
-  speech_to_text: 87bf9298952e8d9073be1b6aade6d5758db5170c
   supertonic_flutter: f54a197dc675f78077d568204974ba2ec0e862e1
-  window_manager: e25faf20d88283a0d46e7b1a759d07261ca27575
 
 PODFILE CHECKSUM: 52317a890328a0f75248e2c1b8a43a37f8da563c
 

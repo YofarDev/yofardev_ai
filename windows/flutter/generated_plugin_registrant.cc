@@ -13,6 +13,7 @@
 #include <flutter_volume_controller/flutter_volume_controller_plugin_c_api.h>
 #include <geolocator_windows/geolocator_windows.h>
 #include <permission_handler_windows/permission_handler_windows_plugin.h>
+#include <rive_native/rive_native_plugin.h>
 #include <screen_retriever_windows/screen_retriever_windows_plugin_c_api.h>
 #include <speech_to_text_windows/speech_to_text_windows.h>
 #include <window_manager/window_manager_plugin.h>
@@ -32,6 +33,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("GeolocatorWindows"));
   PermissionHandlerWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("PermissionHandlerWindowsPlugin"));
+  RiveNativePluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("RiveNativePlugin"));
   ScreenRetrieverWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("ScreenRetrieverWindowsPluginCApi"));
   SpeechToTextWindowsRegisterWithRegistrar(

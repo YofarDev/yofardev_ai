@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:nested/nested.dart';
 import '../../../core/di/service_locator.dart';
 import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/presentation/bloc/avatar_state.dart';
+import '../../features/avatar/presentation/rive/rive_lab_screen.dart';
 import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
 import '../../features/chat/screens/image_full_screen.dart';
@@ -157,6 +159,15 @@ class AppRouter {
           );
         },
       ),
+      if (kDebugMode)
+        GoRoute(
+          path: RouteConstants.riveLab,
+          pageBuilder: (BuildContext context, GoRouterState state) =>
+              MaterialPage<void>(
+                key: state.pageKey,
+                child: const RiveLabScreen(),
+              ),
+        ),
     ],
     errorBuilder: (BuildContext context, GoRouterState state) => Scaffold(
       body: Center(child: Text(AppLocalizations.of(context).pageNotFound)),

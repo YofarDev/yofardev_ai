@@ -11,6 +11,7 @@
 #include <file_selector_linux/file_selector_plugin.h>
 #include <flutter_onnxruntime/flutter_onnxruntime_plugin.h>
 #include <flutter_volume_controller/flutter_volume_controller_plugin.h>
+#include <rive_native/rive_native_plugin.h>
 #include <screen_retriever_linux/screen_retriever_linux_plugin.h>
 #include <supertonic_flutter/supertonic_flutter_plugin.h>
 #include <window_manager/window_manager_plugin.h>
@@ -31,6 +32,9 @@ void fl_register_plugins(FlPluginRegistry* registry) {
   g_autoptr(FlPluginRegistrar) flutter_volume_controller_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "FlutterVolumeControllerPlugin");
   flutter_volume_controller_plugin_register_with_registrar(flutter_volume_controller_registrar);
+  g_autoptr(FlPluginRegistrar) rive_native_registrar =
+      fl_plugin_registry_get_registrar_for_plugin(registry, "RiveNativePlugin");
+  rive_native_plugin_register_with_registrar(rive_native_registrar);
   g_autoptr(FlPluginRegistrar) screen_retriever_linux_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "ScreenRetrieverLinuxPlugin");
   screen_retriever_linux_plugin_register_with_registrar(screen_retriever_linux_registrar);

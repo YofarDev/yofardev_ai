@@ -19,4 +19,7 @@ class RouteConstants {
 
   // Image routes
   static const String imageFullScreen = '/image/:path';
+
+  // Debug routes (registered only in debug builds)
+  static const String riveLab = '/rive-lab';
 }
