@@ -2,14 +2,15 @@ import '../../models/app_lifecycle_event.dart';
 import '../../models/avatar_config.dart';
 import '../../models/function_info.dart';
 import 'agent_tool.dart';
-import '../../di/service_locator.dart';
 import '../app_lifecycle_service.dart';
 import '../../utils/logger.dart';
 
 /// Agent tool that allows the LLM to change the avatar's appearance
 /// including background, clothes (hat, top), glasses, and accessories.
 class AvatarTool extends AgentTool {
-  AppLifecycleService get _appLifecycleService => getIt<AppLifecycleService>();
+  AvatarTool(this._appLifecycleService);
+
+  final AppLifecycleService _appLifecycleService;
 
   @override
   String get name => 'change_avatar';

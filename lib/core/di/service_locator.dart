@@ -126,7 +126,9 @@ Future<void> setupServiceLocator() async {
   );
 
   // Agent & tool registry
-  getIt.registerLazySingleton<ToolRegistry>(() => ToolRegistry());
+  getIt.registerLazySingleton<ToolRegistry>(
+    () => ToolRegistry(appLifecycleService: getIt<AppLifecycleService>()),
+  );
 
   // ── Repositories (depend on datasources + services) ──
   getIt.registerLazySingleton<AvatarRepository>(

@@ -2,6 +2,7 @@ import '../../models/failure.dart';
 import '../../models/result.dart';
 import '../../repositories/settings_repository.dart';
 import '../../models/function_info.dart';
+import '../app_lifecycle_service.dart';
 import 'agent_tool.dart';
 import 'alarm_tool.dart';
 import 'avatar_tool.dart';
@@ -15,21 +16,27 @@ import 'web_reader_tool.dart';
 export 'agent_tool.dart';
 
 class ToolRegistry {
-  final List<AgentTool> _tools;
+  late final List<AgentTool> _tools;
 
-  ToolRegistry({List<AgentTool>? tools})
-    : _tools =
-          tools ??
-          <AgentTool>[
-            AlarmTool(),
-            AvatarTool(),
-            WeatherTool(),
-            NewsTool(),
-            CharacterCounterTool(),
-            CalculatorTool(),
-            GoogleSearchTool(),
-            WebReaderTool(),
-          ];
+  final AppLifecycleService _appLifecycleService;
+
+  ToolRegistry({
+    required AppLifecycleService appLifecycleService,
+    List<AgentTool>? tools,
+  }) : _appLifecycleService = appLifecycleService {
+    _tools =
+        tools ??
+        <AgentTool>[
+          AlarmTool(),
+          AvatarTool(_appLifecycleService),
+          WeatherTool(),
+          NewsTool(),
+          CharacterCounterTool(),
+          CalculatorTool(),
+          GoogleSearchTool(),
+          WebReaderTool(),
+        ];
+  }
 
   List<AgentTool> get tools => List<AgentTool>.unmodifiable(_tools);
 
@@ -57,7 +64,7 @@ class ToolRegistry {
 
     // Always include tools that don't require API keys
     filteredFunctions.add(AlarmTool().toFunctionInfo());
-    filteredFunctions.add(AvatarTool().toFunctionInfo());
+    filteredFunctions.add(AvatarTool(_appLifecycleService).toFunctionInfo());
     filteredFunctions.add(CharacterCounterTool().toFunctionInfo());
     filteredFunctions.add(CalculatorTool().toFunctionInfo());
     filteredFunctions.add(WebReaderTool().toFunctionInfo());

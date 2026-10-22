@@ -30,7 +30,7 @@ void main() {
     late AvatarTool tool;
 
     setUp(() {
-      tool = AvatarTool();
+      tool = AvatarTool(lifecycleService);
     });
 
     // Test 1: Tool exists and has correct schema
