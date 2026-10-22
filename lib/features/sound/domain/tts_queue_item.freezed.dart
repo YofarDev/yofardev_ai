@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TtsQueueItem {
 
- String get id; String get text; String get language; VoiceEffect get voiceEffect; TtsPriority get priority; DateTime get timestamp; String? get audioPath; bool get isProcessing; bool get isCompleted;
+ String get id; String get text; String get language; VoiceEffect get voiceEffect; TtsPriority get priority; DateTime get timestamp; String? get audioPath; bool get isProcessing; bool get isCompleted; List<AvatarCue> get cues;
 /// Create a copy of TtsQueueItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $TtsQueueItemCopyWith<TtsQueueItem> get copyWith => _$TtsQueueItemCopyWithImpl<T
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TtsQueueItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.language, language) || other.language == language)&&(identical(other.voiceEffect, voiceEffect) || other.voiceEffect == voiceEffect)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&(identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TtsQueueItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.language, language) || other.language == language)&&(identical(other.voiceEffect, voiceEffect) || other.voiceEffect == voiceEffect)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&(identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&const DeepCollectionEquality().equals(other.cues, cues));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,text,language,voiceEffect,priority,timestamp,audioPath,isProcessing,isCompleted);
+int get hashCode => Object.hash(runtimeType,id,text,language,voiceEffect,priority,timestamp,audioPath,isProcessing,isCompleted,const DeepCollectionEquality().hash(cues));
 
 @override
 String toString() {
-  return 'TtsQueueItem(id: $id, text: $text, language: $language, voiceEffect: $voiceEffect, priority: $priority, timestamp: $timestamp, audioPath: $audioPath, isProcessing: $isProcessing, isCompleted: $isCompleted)';
+  return 'TtsQueueItem(id: $id, text: $text, language: $language, voiceEffect: $voiceEffect, priority: $priority, timestamp: $timestamp, audioPath: $audioPath, isProcessing: $isProcessing, isCompleted: $isCompleted, cues: $cues)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $TtsQueueItemCopyWith<$Res>  {
   factory $TtsQueueItemCopyWith(TtsQueueItem value, $Res Function(TtsQueueItem) _then) = _$TtsQueueItemCopyWithImpl;
 @useResult
 $Res call({
- String id, String text, String language, VoiceEffect voiceEffect, TtsPriority priority, DateTime timestamp, String? audioPath, bool isProcessing, bool isCompleted
+ String id, String text, String language, VoiceEffect voiceEffect, TtsPriority priority, DateTime timestamp, String? audioPath, bool isProcessing, bool isCompleted, List<AvatarCue> cues
 });
 
 
@@ -62,7 +62,7 @@ class _$TtsQueueItemCopyWithImpl<$Res>
 
 /// Create a copy of TtsQueueItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? language = null,Object? voiceEffect = null,Object? priority = null,Object? timestamp = null,Object? audioPath = freezed,Object? isProcessing = null,Object? isCompleted = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? language = null,Object? voiceEffect = null,Object? priority = null,Object? timestamp = null,Object? audioPath = freezed,Object? isProcessing = null,Object? isCompleted = null,Object? cues = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as TtsPriority,timestamp: null == timestamp ? _self.timestamp : timestamp // ign
 as DateTime,audioPath: freezed == audioPath ? _self.audioPath : audioPath // ignore: cast_nullable_to_non_nullable
 as String?,isProcessing: null == isProcessing ? _self.isProcessing : isProcessing // ignore: cast_nullable_to_non_nullable
 as bool,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,cues: null == cues ? _self.cues : cues // ignore: cast_nullable_to_non_nullable
+as List<AvatarCue>,
   ));
 }
 
@@ -155,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String text,  String language,  VoiceEffect voiceEffect,  TtsPriority priority,  DateTime timestamp,  String? audioPath,  bool isProcessing,  bool isCompleted)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String text,  String language,  VoiceEffect voiceEffect,  TtsPriority priority,  DateTime timestamp,  String? audioPath,  bool isProcessing,  bool isCompleted,  List<AvatarCue> cues)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TtsQueueItem() when $default != null:
-return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.priority,_that.timestamp,_that.audioPath,_that.isProcessing,_that.isCompleted);case _:
+return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.priority,_that.timestamp,_that.audioPath,_that.isProcessing,_that.isCompleted,_that.cues);case _:
   return orElse();
 
 }
@@ -176,10 +177,10 @@ return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.prior
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String text,  String language,  VoiceEffect voiceEffect,  TtsPriority priority,  DateTime timestamp,  String? audioPath,  bool isProcessing,  bool isCompleted)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String text,  String language,  VoiceEffect voiceEffect,  TtsPriority priority,  DateTime timestamp,  String? audioPath,  bool isProcessing,  bool isCompleted,  List<AvatarCue> cues)  $default,) {final _that = this;
 switch (_that) {
 case _TtsQueueItem():
-return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.priority,_that.timestamp,_that.audioPath,_that.isProcessing,_that.isCompleted);}
+return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.priority,_that.timestamp,_that.audioPath,_that.isProcessing,_that.isCompleted,_that.cues);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -193,10 +194,10 @@ return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.prior
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String text,  String language,  VoiceEffect voiceEffect,  TtsPriority priority,  DateTime timestamp,  String? audioPath,  bool isProcessing,  bool isCompleted)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String text,  String language,  VoiceEffect voiceEffect,  TtsPriority priority,  DateTime timestamp,  String? audioPath,  bool isProcessing,  bool isCompleted,  List<AvatarCue> cues)?  $default,) {final _that = this;
 switch (_that) {
 case _TtsQueueItem() when $default != null:
-return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.priority,_that.timestamp,_that.audioPath,_that.isProcessing,_that.isCompleted);case _:
+return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.priority,_that.timestamp,_that.audioPath,_that.isProcessing,_that.isCompleted,_that.cues);case _:
   return null;
 
 }
@@ -208,7 +209,7 @@ return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.prior
 
 
 class _TtsQueueItem implements TtsQueueItem {
-  const _TtsQueueItem({required this.id, required this.text, required this.language, required this.voiceEffect, required this.priority, required this.timestamp, this.audioPath, this.isProcessing = false, this.isCompleted = false});
+  const _TtsQueueItem({required this.id, required this.text, required this.language, required this.voiceEffect, required this.priority, required this.timestamp, this.audioPath, this.isProcessing = false, this.isCompleted = false, final  List<AvatarCue> cues = const <AvatarCue>[]}): _cues = cues;
   
 
 @override final  String id;
@@ -220,6 +221,13 @@ class _TtsQueueItem implements TtsQueueItem {
 @override final  String? audioPath;
 @override@JsonKey() final  bool isProcessing;
 @override@JsonKey() final  bool isCompleted;
+ final  List<AvatarCue> _cues;
+@override@JsonKey() List<AvatarCue> get cues {
+  if (_cues is EqualUnmodifiableListView) return _cues;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_cues);
+}
+
 
 /// Create a copy of TtsQueueItem
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +239,16 @@ _$TtsQueueItemCopyWith<_TtsQueueItem> get copyWith => __$TtsQueueItemCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TtsQueueItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.language, language) || other.language == language)&&(identical(other.voiceEffect, voiceEffect) || other.voiceEffect == voiceEffect)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&(identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TtsQueueItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.language, language) || other.language == language)&&(identical(other.voiceEffect, voiceEffect) || other.voiceEffect == voiceEffect)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&(identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&const DeepCollectionEquality().equals(other._cues, _cues));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,text,language,voiceEffect,priority,timestamp,audioPath,isProcessing,isCompleted);
+int get hashCode => Object.hash(runtimeType,id,text,language,voiceEffect,priority,timestamp,audioPath,isProcessing,isCompleted,const DeepCollectionEquality().hash(_cues));
 
 @override
 String toString() {
-  return 'TtsQueueItem(id: $id, text: $text, language: $language, voiceEffect: $voiceEffect, priority: $priority, timestamp: $timestamp, audioPath: $audioPath, isProcessing: $isProcessing, isCompleted: $isCompleted)';
+  return 'TtsQueueItem(id: $id, text: $text, language: $language, voiceEffect: $voiceEffect, priority: $priority, timestamp: $timestamp, audioPath: $audioPath, isProcessing: $isProcessing, isCompleted: $isCompleted, cues: $cues)';
 }
 
 
@@ -251,7 +259,7 @@ abstract mixin class _$TtsQueueItemCopyWith<$Res> implements $TtsQueueItemCopyWi
   factory _$TtsQueueItemCopyWith(_TtsQueueItem value, $Res Function(_TtsQueueItem) _then) = __$TtsQueueItemCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String text, String language, VoiceEffect voiceEffect, TtsPriority priority, DateTime timestamp, String? audioPath, bool isProcessing, bool isCompleted
+ String id, String text, String language, VoiceEffect voiceEffect, TtsPriority priority, DateTime timestamp, String? audioPath, bool isProcessing, bool isCompleted, List<AvatarCue> cues
 });
 
 
@@ -268,7 +276,7 @@ class __$TtsQueueItemCopyWithImpl<$Res>
 
 /// Create a copy of TtsQueueItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? text = null,Object? language = null,Object? voiceEffect = null,Object? priority = null,Object? timestamp = null,Object? audioPath = freezed,Object? isProcessing = null,Object? isCompleted = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? text = null,Object? language = null,Object? voiceEffect = null,Object? priority = null,Object? timestamp = null,Object? audioPath = freezed,Object? isProcessing = null,Object? isCompleted = null,Object? cues = null,}) {
   return _then(_TtsQueueItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
@@ -279,7 +287,8 @@ as TtsPriority,timestamp: null == timestamp ? _self.timestamp : timestamp // ign
 as DateTime,audioPath: freezed == audioPath ? _self.audioPath : audioPath // ignore: cast_nullable_to_non_nullable
 as String?,isProcessing: null == isProcessing ? _self.isProcessing : isProcessing // ignore: cast_nullable_to_non_nullable
 as bool,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,cues: null == cues ? _self._cues : cues // ignore: cast_nullable_to_non_nullable
+as List<AvatarCue>,
   ));
 }
 

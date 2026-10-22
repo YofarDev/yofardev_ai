@@ -10,6 +10,7 @@ import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/task_llm_config.dart';
+import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
@@ -315,6 +316,7 @@ class MockTtsQueueService implements TtsQueueService {
     required String language,
     required VoiceEffect voiceEffect,
     TtsPriority priority = TtsPriority.normal,
+    List<AvatarCue> cues = const <AvatarCue>[],
   }) async {}
 
   @override

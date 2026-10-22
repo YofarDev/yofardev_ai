@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/voice_effect.dart';
 
 part 'tts_queue_item.freezed.dart';
@@ -19,5 +20,6 @@ sealed class TtsQueueItem with _$TtsQueueItem {
     String? audioPath,
     @Default(false) bool isProcessing,
     @Default(false) bool isCompleted,
+    @Default(<AvatarCue>[]) List<AvatarCue> cues,
   }) = _TtsQueueItem;
 }

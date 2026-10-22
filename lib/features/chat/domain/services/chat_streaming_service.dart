@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/chat_entry.dart';
 import '../../../../core/models/function_info.dart';
@@ -22,6 +23,7 @@ import '../../../../core/services/stream_processor/stream_processor_service.dart
 import '../../../../core/utils/logger.dart';
 import '../repositories/chat_repository.dart';
 import 'chat_entry_service.dart';
+import 'cue_parser.dart';
 import 'global_memory_service.dart';
 
 /// Service for handling LLM response streaming with function calling support.
@@ -192,6 +194,49 @@ class ChatStreamingService {
       int sentenceCount = 0;
       bool streamError = false;
 
+      // Inline avatar cues ([g:...]/[s:...]) are stripped from the stream
+      // here; each sentence's cues ride its TTS queue item so they can fire
+      // in time with speech. A fresh parser per reply: cue state never
+      // leaks between replies.
+      final CueParser cueParser = CueParser();
+      final List<AvatarCue> carriedCues = <AvatarCue>[];
+
+      /// Appends one clean sentence to the reply, updates the chat, and
+      /// enqueues it for TTS together with every cue carried so far (cues
+      /// from cue-only chunks attach to the next speakable sentence).
+      void deliverSentence(String cleanText) {
+        if (contentBuffer.isNotEmpty) {
+          contentBuffer.write(' ');
+        }
+        contentBuffer.write(cleanText);
+        sentenceCount++;
+
+        final ChatEntry updatedEntry = streamingEntry.copyWith(
+          body: contentBuffer.toString(),
+        );
+
+        final List<ChatEntry> updatedEntries = List<ChatEntry>.from(
+          chat.entries,
+        );
+        updatedEntries[updatedEntries.length - 1] = updatedEntry;
+
+        chat = chat.copyWith(entries: updatedEntries);
+        onChatUpdated(chat);
+
+        onStreamingUpdate(contentBuffer.toString(), sentenceCount);
+
+        // Enqueue for TTS if manager is available and not in text-only mode
+        if (!onlyText) {
+          _ttsQueueManager?.enqueue(
+            text: cleanText,
+            language: language,
+            voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+            cues: List<AvatarCue>.of(carriedCues),
+          );
+        }
+        carriedCues.clear();
+      }
+
       // Hard cap on tool rounds to avoid infinite tool-call loops.
       const int maxToolRounds = 3;
       for (int round = 0; round < maxToolRounds; round++) {
@@ -254,44 +299,22 @@ class ChatStreamingService {
                 return;
               }
 
-              final String normalizedText = text.trim();
-              if (normalizedText.isEmpty) {
-                return;
+              final ParsedChunk parsed = cueParser.parse(text);
+              final String cleanText = parsed.text.trim();
+              carriedCues.addAll(parsed.cues);
+              if (cleanText.isEmpty) {
+                return; // cue-only chunk: cues ride the next speakable sentence
               }
 
-              if (contentBuffer.isNotEmpty) {
-                contentBuffer.write(' ');
-              }
-              contentBuffer.write(normalizedText);
-              sentenceCount++;
-
-              final ChatEntry updatedEntry = streamingEntry.copyWith(
-                body: contentBuffer.toString(),
-              );
-
-              final List<ChatEntry> updatedEntries = List<ChatEntry>.from(
-                chat.entries,
-              );
-              updatedEntries[updatedEntries.length - 1] = updatedEntry;
-
-              chat = chat.copyWith(entries: updatedEntries);
-              onChatUpdated(chat);
-
-              onStreamingUpdate(contentBuffer.toString(), sentenceCount);
-
-              // Enqueue for TTS if manager is available and not in text-only mode
-              if (!onlyText) {
-                _ttsQueueManager?.enqueue(
-                  text: normalizedText,
-                  language: language,
-                  voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
-                );
-              }
+              deliverSentence(cleanText);
             },
             metadata: (Map<String, dynamic> json) {
-              // Capture the full JSON response
+              // Capture the full JSON response, with cues stripped from the
+              // stored text so saved entries keep only the clean text.
               if (json.containsKey('fullJson')) {
-                fullJsonResponse = json['fullJson'] as String?;
+                fullJsonResponse = _stripCuesFromStoredJson(
+                  json['fullJson'] as String?,
+                );
               }
             },
             complete: () {
@@ -309,6 +332,13 @@ class ChatStreamingService {
               streamError = true;
             },
           );
+        }
+
+        // A cue still waiting for its closing bracket at end of stream is
+        // not a cue: speak it as literal closing text.
+        final String leftover = cueParser.flush().trim();
+        if (!streamError && leftover.isNotEmpty) {
+          deliverSentence(leftover);
         }
 
         // If an error occurred during streaming, don't proceed with finalization
@@ -475,5 +505,33 @@ class ChatStreamingService {
   /// Mark the stream as interrupted (called from external interruption listener)
   void markInterrupted() {
     _streamInterrupted = true;
+  }
+
+  /// Removes avatar cues from the `text` field of a stored JSON reply so
+  /// saved entries keep only the clean text. Falls back to the raw string
+  /// when it is not a JSON object with a text field.
+  String? _stripCuesFromStoredJson(String? raw) {
+    if (raw == null) {
+      return null;
+    }
+    try {
+      final int start = raw.indexOf('{');
+      final int end = raw.lastIndexOf('}');
+      if (start != -1 && end > start) {
+        final Map<String, dynamic> map =
+            jsonDecode(raw.substring(start, end + 1)) as Map<String, dynamic>;
+        final Object? text = map['text'];
+        if (text is String) {
+          map['text'] = CueParser.stripCues(text);
+          return jsonEncode(map);
+        }
+      }
+    } on FormatException catch (e) {
+      AppLogger.debug(
+        'Reply JSON could not be parsed for cue stripping: ${e.message}',
+        tag: 'ChatStreamingService',
+      );
+    }
+    return raw;
   }
 }

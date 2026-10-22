@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
@@ -42,6 +43,7 @@ class MockTtsQueueService extends Mock implements TtsQueueService {
     required String language,
     required VoiceEffect voiceEffect,
     TtsPriority priority = TtsPriority.normal,
+    List<AvatarCue> cues = const <AvatarCue>[],
   }) async {}
 
   @override

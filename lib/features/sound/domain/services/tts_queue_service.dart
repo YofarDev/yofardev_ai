@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../tts_queue_item.dart';
 import 'tts_synthesizer.dart';
+import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/voice_effect.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/audio/voice_effects_service.dart';
@@ -56,9 +57,10 @@ class TtsQueueService {
     required String language,
     required VoiceEffect voiceEffect,
     TtsPriority priority = TtsPriority.normal,
+    List<AvatarCue> cues = const <AvatarCue>[],
   }) async {
     // Skip empty text
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty && cues.isEmpty) return;
 
     final TtsQueueItem item = TtsQueueItem(
       id: _uuid.v4(),
@@ -69,6 +71,7 @@ class TtsQueueService {
       timestamp: DateTime.now(),
       isProcessing: false,
       isCompleted: false,
+      cues: cues,
     );
 
     // Insert in priority order
@@ -144,6 +147,18 @@ class TtsQueueService {
     }
 
     final TtsQueueItem item = _queue.first;
+
+    // Cue-only item (no speakable text): nothing to synthesize or play; mark
+    // it completed and carry on. Its cues are consumed downstream.
+    if (item.text.isEmpty) {
+      _queue[0] = item.copyWith(isCompleted: true);
+      _queue.removeAt(0);
+      _isProcessing = false;
+      if (_queue.isNotEmpty && !_isPaused) {
+        await _processNext();
+      }
+      return;
+    }
 
     // Mark as processing
     _queue[0] = item.copyWith(isProcessing: true);
