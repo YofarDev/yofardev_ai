@@ -1,5 +1,5 @@
-import '../models/global_memory.dart';
-import '../models/result.dart';
+import '../../../../core/models/global_memory.dart';
+import '../../../../core/models/result.dart';
 
 /// Global memory store: facts about the user shared across all chats
 abstract class GlobalMemoryRepository {

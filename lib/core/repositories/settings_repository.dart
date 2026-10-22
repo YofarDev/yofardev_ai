@@ -1,3 +1,4 @@
+// Stays in core: consumed by core/services/agent (ToolRegistry); core may not import features.
 import '../models/chat.dart';
 import '../models/result.dart';
 import '../models/task_llm_config.dart';

@@ -5,7 +5,7 @@ import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/global_memory.dart';
 import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/core/models/result.dart';
-import 'package:yofardev_ai/core/repositories/global_memory_repository.dart';
+import 'package:yofardev_ai/features/chat/chat.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';

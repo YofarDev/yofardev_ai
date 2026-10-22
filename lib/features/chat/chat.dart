@@ -1,6 +1,7 @@
 /// Public API of the chat feature.
 library;
 
+export 'domain/repositories/global_memory_repository.dart';
 export 'presentation/bloc/chat_cubit.dart';
 export 'presentation/bloc/chat_state.dart';
 export 'presentation/bloc/chat_tts_cubit.dart';

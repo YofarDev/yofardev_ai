@@ -8,7 +8,7 @@ import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
-import '../../../../core/repositories/global_memory_repository.dart';
+import '../../../chat/chat.dart';
 import '../../../../core/repositories/settings_repository.dart';
 import 'settings_state.dart';
 

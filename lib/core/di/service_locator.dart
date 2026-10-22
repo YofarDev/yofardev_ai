@@ -10,7 +10,7 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
-import '../repositories/global_memory_repository.dart';
+import '../../features/chat/domain/repositories/global_memory_repository.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_cubit.dart';
 import '../../features/chat/domain/services/chat_entry_service.dart';

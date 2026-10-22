@@ -8,7 +8,7 @@ import '../../../../core/models/failure.dart';
 import '../../../../core/models/global_memory.dart';
 import '../../../../core/models/llm_message.dart';
 import '../../../../core/models/result.dart';
-import '../../../../core/repositories/global_memory_repository.dart';
+import '../../domain/repositories/global_memory_repository.dart';
 import '../../../../core/repositories/settings_repository.dart';
 import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/utils/extensions.dart';
