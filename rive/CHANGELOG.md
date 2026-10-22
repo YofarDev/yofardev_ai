@@ -6,6 +6,7 @@ Plan B reads this file to find out when it can start the steps that need real as
 Format: `YYYY-MM-DD · A<n> · <contract parts now real> · <notes>`
 
 <!-- entries below, newest first -->
+2026-10-22 · A6 · all 4 scenes (livingRoom, campfire, beach, deepSpace): artboard `Scene`, SM `Main`, `SceneVM` with every eventId value wired, every propId → `prop_tapped` · lightsOff/lightsOn are sticky (Lights layer); every other event is a one-shot on its own layer, so events can overlap. Sizes 19–52 KB; CLI bench render < 0.4 ms mean per scene.
 2026-10-22 · A5 · presence onScreen/outOfScreen/leaveAndComeBack (walk off right, back, ends on screen) + `presence_done` (prop `presence`) · Presence layer has no AnyState so leaveAndComeBack can't retrigger; after it the avatar waits on screen until `presence` changes.
 2026-10-22 · A4 · costume batman (cape sway), robocop (scanning visor), soubrette (feather duster swing), singularity (starfield body, aura pulse, eye lasers); any costume overrides hat/top (and glasses for batman/robocop/singularity) · costume `none` hands control back to hat/top/glasses.
 2026-10-22 · A3 · every `hat`, `top`, `glasses` value (Solo switches incl. arm sleeves), layered correctly through all gestures · hats hide hair where needed (swimCap).
