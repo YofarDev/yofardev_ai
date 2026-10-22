@@ -6,7 +6,7 @@ import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
-import '../../../../core/repositories/avatar_repository.dart';
+import '../../domain/repositories/avatar_repository.dart';
 import '../../../../core/res/app_constants.dart';
 import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';

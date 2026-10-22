@@ -1,6 +1,6 @@
-import '../models/avatar_config.dart';
-import '../models/chat.dart';
-import '../models/result.dart';
+import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/result.dart';
 
 abstract interface class AvatarRepository {
   Future<Result<Chat>> getChat(String id);

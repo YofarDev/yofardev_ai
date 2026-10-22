@@ -9,14 +9,10 @@ import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
-import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
-import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/features/avatar/widgets/animated_background_avatar.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import '../../../helpers/golden_test_helper.dart';
 

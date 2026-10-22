@@ -2,14 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/result.dart';
-import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
-import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 
 class MockAvatarRepository extends Mock implements AvatarRepository {}
 

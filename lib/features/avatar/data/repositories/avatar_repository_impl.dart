@@ -2,7 +2,7 @@ import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
-import '../../../../core/repositories/avatar_repository.dart';
+import '../../domain/repositories/avatar_repository.dart';
 import '../datasources/avatar_local_datasource.dart';
 
 class AvatarRepositoryImpl implements AvatarRepository {
