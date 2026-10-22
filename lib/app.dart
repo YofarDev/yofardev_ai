@@ -5,6 +5,7 @@ import 'package:nested/nested.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/l10n/generated/app_localizations.dart';
+import 'core/services/audio/interruption_service.dart';
 import 'core/res/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'features/avatar/presentation/bloc/avatar_cubit.dart';
@@ -40,6 +41,9 @@ class App extends StatelessWidget {
         ),
         BlocProvider<AvatarCubit>(
           create: (BuildContext context) => getIt<AvatarCubit>(),
+        ),
+        RepositoryProvider<InterruptionService>(
+          create: (BuildContext context) => getIt<InterruptionService>(),
         ),
         // DemoCubit and HomeCubit moved to HomeScreen scope
       ],

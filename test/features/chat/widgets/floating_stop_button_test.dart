@@ -435,7 +435,12 @@ void main() {
               BlocProvider<ChatCubit>.value(value: chatsCubit),
               BlocProvider<TalkingCubit>.value(value: talkingCubit),
             ],
-            child: const Scaffold(body: FloatingStopButton()),
+            child: Scaffold(
+              body: RepositoryProvider<InterruptionService>.value(
+                value: interruptionService,
+                child: const FloatingStopButton(),
+              ),
+            ),
           ),
         ),
       );
@@ -455,7 +460,12 @@ void main() {
               BlocProvider<ChatCubit>.value(value: chatsCubit),
               BlocProvider<TalkingCubit>.value(value: talkingCubit),
             ],
-            child: const Scaffold(body: FloatingStopButton()),
+            child: Scaffold(
+              body: RepositoryProvider<InterruptionService>.value(
+                value: interruptionService,
+                child: const FloatingStopButton(),
+              ),
+            ),
           ),
         ),
       );
@@ -475,7 +485,12 @@ void main() {
               BlocProvider<ChatCubit>.value(value: chatsCubit),
               BlocProvider<TalkingCubit>.value(value: talkingCubit),
             ],
-            child: const Scaffold(body: FloatingStopButton()),
+            child: Scaffold(
+              body: RepositoryProvider<InterruptionService>.value(
+                value: interruptionService,
+                child: const FloatingStopButton(),
+              ),
+            ),
           ),
         ),
       );

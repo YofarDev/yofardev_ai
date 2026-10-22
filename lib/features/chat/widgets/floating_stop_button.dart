@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/di/service_locator.dart';
 import '../../../core/services/audio/interruption_service.dart';
 import '../../talking/talking.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
-import '../../../../core/utils/logger.dart';
 
 /// Floating stop button that appears when assistant is streaming
 ///
@@ -47,7 +45,7 @@ class FloatingStopButton extends StatelessWidget {
                   backgroundColor: colorScheme.error,
                   foregroundColor: colorScheme.onError,
                   onPressed: () =>
-                      _resolveInterruptionService(context).interrupt(),
+                      context.read<InterruptionService>().interrupt(),
                   child: const Icon(Icons.stop),
                 ),
               ),
@@ -56,17 +54,5 @@ class FloatingStopButton extends StatelessWidget {
         );
       },
     );
-  }
-
-  InterruptionService _resolveInterruptionService(BuildContext context) {
-    try {
-      return context.read<InterruptionService>();
-    } catch (e) {
-      AppLogger.debug(
-        'InterruptionService not found via context, falling back to getIt: $e',
-        tag: 'FloatingStopButton',
-      );
-      return getIt<InterruptionService>();
-    }
   }
 }
