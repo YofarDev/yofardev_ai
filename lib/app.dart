@@ -15,9 +15,7 @@ import 'features/talking/talking.dart';
 
 /// App shell: owns app-scoped providers and the [MaterialApp.router].
 class App extends StatelessWidget {
-  const App({super.key, required this.initialLanguage});
-
-  final String initialLanguage;
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {

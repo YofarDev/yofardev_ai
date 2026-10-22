@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
@@ -38,6 +40,7 @@ import '../../features/talking/domain/services/tts_playback_service.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../services/app_lifecycle_service.dart';
+import '../utils/platform_utils.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../repositories/locale_repository.dart';
 import '../repositories/locale_repository_impl.dart';
@@ -284,4 +287,21 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<HomeCubit>(
     () => HomeCubit(getIt<HomeRepository>(), getIt<AppLifecycleService>()),
   );
+}
+
+/// Post-registration bootstrap: data migrations and optional warmup.
+/// Lives here (not in main.dart) so main.dart never imports feature internals.
+Future<void> bootstrapApp() async {
+  // Run chat data migration (previously called from main.dart).
+  await getIt<ChatLocalDatasource>().init();
+
+  // Optional TTS warmup: startup must never be blocked by it.
+  if (PlatformUtils.checkPlatform() != 'Web' &&
+      PlatformUtils.checkPlatform() != 'MacOS') {
+    unawaited(
+      TtsDatasource.initSupertonic().catchError((Object error, StackTrace st) {
+        // Startup should never be blocked by optional TTS warmup.
+      }),
+    );
+  }
 }
