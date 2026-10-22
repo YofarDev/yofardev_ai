@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:uuid/uuid.dart';
 
-import '../../data/datasources/tts_datasource.dart';
 import '../tts_queue_item.dart';
+import 'tts_synthesizer.dart';
 import '../../../../core/models/voice_effect.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/audio/voice_effects_service.dart';
@@ -11,7 +11,7 @@ import '../../../../core/utils/logger.dart';
 
 /// Manages queue of TTS generation and playback
 class TtsQueueService {
-  final TtsDatasource _ttsDatasource;
+  final TtsSynthesizer _ttsSynthesizer;
   final InterruptionService _interruptionService;
   final VoiceEffectsService _voiceEffectsService;
   final List<TtsQueueItem> _queue = <TtsQueueItem>[];
@@ -29,10 +29,10 @@ class TtsQueueService {
   StreamSubscription<dynamic>? _interruptionSubscription;
 
   TtsQueueService({
-    required TtsDatasource ttsDatasource,
+    required TtsSynthesizer ttsSynthesizer,
     required InterruptionService interruptionService,
     required VoiceEffectsService voiceEffectsService,
-  }) : _ttsDatasource = ttsDatasource,
+  }) : _ttsSynthesizer = ttsSynthesizer,
        _interruptionService = interruptionService,
        _voiceEffectsService = voiceEffectsService {
     // Listen to interruptions
@@ -155,7 +155,7 @@ class TtsQueueService {
       );
 
       // Generate audio (with neutral voice effects for post-processing)
-      final String rawAudioPath = await _ttsDatasource.textToFrenchMaleVoice(
+      final String rawAudioPath = await _ttsSynthesizer.synthesize(
         text: item.text,
         language: item.language,
         voiceEffect: item.voiceEffect,

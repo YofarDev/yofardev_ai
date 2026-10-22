@@ -167,7 +167,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<VoiceEffectsService>(() => VoiceEffectsService());
   getIt.registerLazySingleton<TtsQueueService>(
     () => TtsQueueService(
-      ttsDatasource: getIt<TtsDatasource>(),
+      ttsSynthesizer: getIt<TtsDatasource>(),
       interruptionService: getIt<InterruptionService>(),
       voiceEffectsService: getIt<VoiceEffectsService>(),
     ),

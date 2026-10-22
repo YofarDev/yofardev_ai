@@ -30,7 +30,7 @@ void main() {
       interruptionService = InterruptionService();
       mockVoiceEffectsService = MockVoiceEffectsService();
       manager = TtsQueueService(
-        ttsDatasource: mockDatasource,
+        ttsSynthesizer: mockDatasource,
         interruptionService: interruptionService,
         voiceEffectsService: mockVoiceEffectsService,
       );
@@ -48,7 +48,7 @@ void main() {
 
     test('should process items in priority order', () async {
       when(
-        () => mockDatasource.textToFrenchMaleVoice(
+        () => mockDatasource.synthesize(
           text: any(named: 'text'),
           language: any(named: 'language'),
           voiceEffect: any(named: 'voiceEffect'),
@@ -89,7 +89,7 @@ void main() {
 
     test('should clear queue', () async {
       when(
-        () => mockDatasource.textToFrenchMaleVoice(
+        () => mockDatasource.synthesize(
           text: any(named: 'text'),
           language: any(named: 'language'),
           voiceEffect: any(named: 'voiceEffect'),
@@ -123,7 +123,7 @@ void main() {
         // Hold synthesis in flight.
         final Completer<String> synthesisGate = Completer<String>();
         when(
-          () => mockDatasource.textToFrenchMaleVoice(
+          () => mockDatasource.synthesize(
             text: any(named: 'text'),
             language: any(named: 'language'),
             voiceEffect: any(named: 'voiceEffect'),
@@ -174,7 +174,7 @@ void main() {
 
     test('should pause and resume processing', () async {
       when(
-        () => mockDatasource.textToFrenchMaleVoice(
+        () => mockDatasource.synthesize(
           text: any(named: 'text'),
           language: any(named: 'language'),
           voiceEffect: any(named: 'voiceEffect'),
@@ -209,7 +209,7 @@ void main() {
 
     test('should handle processing errors gracefully', () async {
       when(
-        () => mockDatasource.textToFrenchMaleVoice(
+        () => mockDatasource.synthesize(
           text: any(named: 'text'),
           language: any(named: 'language'),
           voiceEffect: any(named: 'voiceEffect'),
@@ -240,7 +240,7 @@ void main() {
     test('should continue processing after first generated item', () async {
       int generatedCount = 0;
       when(
-        () => mockDatasource.textToFrenchMaleVoice(
+        () => mockDatasource.synthesize(
           text: any(named: 'text'),
           language: any(named: 'language'),
           voiceEffect: any(named: 'voiceEffect'),
@@ -293,7 +293,7 @@ void main() {
       mockVoiceEffectsService = MockVoiceEffectsService();
 
       when(
-        () => mockTtsDatasource.textToFrenchMaleVoice(
+        () => mockTtsDatasource.synthesize(
           text: any(named: 'text'),
           language: any(named: 'language'),
           voiceEffect: any(named: 'voiceEffect'),
@@ -314,7 +314,7 @@ void main() {
     test('should clear queue when interrupted', () async {
       // Arrange
       queueManager = TtsQueueService(
-        ttsDatasource: mockTtsDatasource,
+        ttsSynthesizer: mockTtsDatasource,
         interruptionService: interruptionService,
         voiceEffectsService: mockVoiceEffectsService,
       );

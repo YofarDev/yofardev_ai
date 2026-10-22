@@ -7,8 +7,9 @@ import 'package:supertonic_flutter/supertonic_flutter.dart';
 import '../../../../core/models/voice_effect.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
+import '../../domain/services/tts_synthesizer.dart';
 
-class TtsDatasource {
+class TtsDatasource implements TtsSynthesizer {
   static SupertonicTTS? _supertonicTTS;
   static Timer? _cleanupTimer;
 
@@ -105,6 +106,17 @@ class TtsDatasource {
         return documentsDir.path;
     }
   }
+
+  @override
+  Future<String> synthesize({
+    required String text,
+    required String language,
+    required VoiceEffect voiceEffect,
+  }) => textToFrenchMaleVoice(
+    text: text,
+    language: language,
+    voiceEffect: voiceEffect,
+  );
 
   Future<String> textToFrenchMaleVoice({
     required String text,
