@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
@@ -114,7 +115,8 @@ void main() {
           const TalkingState.waiting(),
           predicate<TalkingState>(
             (TalkingState state) => state.maybeWhen(
-              error: (String msg, _) => msg.contains('TTS failed'),
+              error: (Failure failure, _) =>
+                  failure.cause.toString().contains('TTS failed'),
               orElse: () => false,
             ),
           ),
@@ -154,7 +156,8 @@ void main() {
           const TalkingState.generating(),
           predicate<TalkingState>(
             (TalkingState state) => state.maybeWhen(
-              error: (String msg, _) => msg.contains('TTS generation failed'),
+              error: (Failure failure, _) =>
+                  failure.cause.toString().contains('TTS generation failed'),
               orElse: () => false,
             ),
           ),
@@ -388,15 +391,23 @@ void main() {
       });
 
       test('error states with same message are equal', () {
-        const TalkingState state1 = TalkingState.error('Test error');
-        const TalkingState state2 = TalkingState.error('Test error');
+        const TalkingState state1 = TalkingState.error(
+          UnknownFailure('Test error'),
+        );
+        const TalkingState state2 = TalkingState.error(
+          UnknownFailure('Test error'),
+        );
 
         expect(state1, equals(state2));
       });
 
       test('error states with different messages are not equal', () {
-        const TalkingState state1 = TalkingState.error('Error 1');
-        const TalkingState state2 = TalkingState.error('Error 2');
+        const TalkingState state1 = TalkingState.error(
+          UnknownFailure('Error 1'),
+        );
+        const TalkingState state2 = TalkingState.error(
+          UnknownFailure('Error 2'),
+        );
 
         expect(state1, isNot(equals(state2)));
       });

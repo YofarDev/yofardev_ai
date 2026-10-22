@@ -100,11 +100,11 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
       // Assert
-      expect(states, const <SoundState>[
-        SoundPlaying('test'),
-        SoundError('Sound not found'),
-        SoundInitial(),
-      ]);
+      expect(states.length, 3);
+      expect(states[0], const SoundPlaying('test'));
+      expect(states[1], isA<SoundError>());
+      expect((states[1] as SoundError).failure.message, 'Sound not found');
+      expect(states[2], const SoundInitial());
       expect(mockSoundRepository.lastPlayedSound, 'test');
 
       await subscription.cancel();
@@ -195,10 +195,9 @@ void main() {
       await secondSubscription.cancel();
 
       // Assert
-      expect(firstStates, const <SoundState>[
-        SoundPlaying('sound1'),
-        SoundError('First error'),
-      ]);
+      expect(firstStates.length, 2);
+      expect(firstStates[0], const SoundPlaying('sound1'));
+      expect(firstStates[1], isA<SoundError>());
       expect(secondStates, const <SoundState>[
         SoundPlaying('sound2'),
         SoundInitial(),

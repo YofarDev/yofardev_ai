@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/models/failure.dart';
 import '../../../../core/models/talking_phase.dart';
 
 part 'talking_state.freezed.dart';
@@ -33,7 +34,7 @@ sealed class TalkingState with _$TalkingState {
 
   /// Error occurred
   const factory TalkingState.error(
-    String message, [
+    Failure failure, [
     @Default(MouthState.closed) MouthState mouthState,
   ]) = ErrorState;
 }
@@ -69,7 +70,7 @@ extension TalkingStateX on TalkingState {
       waiting: (MouthState mouthState) => TalkingStatus.success,
       generating: (MouthState mouthState) => TalkingStatus.loading,
       speaking: (MouthState mouthState) => TalkingStatus.success,
-      error: (String message, MouthState mouthState) => TalkingStatus.error,
+      error: (Failure failure, MouthState mouthState) => TalkingStatus.error,
     );
   }
 

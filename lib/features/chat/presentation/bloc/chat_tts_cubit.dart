@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/models/failure.dart';
 import '../../../../core/services/audio/audio_amplitude_service.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
@@ -197,7 +198,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       emit(
         state.copyWith(
           hasError: true,
-          errorMessage: 'Failed to play audio: ${e.toString()}',
+          error: TtsFailure('Failed to play audio: $e', e),
         ),
       );
     }
@@ -242,7 +243,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         state.copyWith(
           isInitialized: true,
           hasError: true,
-          errorMessage: 'Failed to initialize: ${e.toString()}',
+          error: TtsFailure('Failed to initialize: $e', e),
         ),
       );
     }

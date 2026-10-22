@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/models/failure.dart';
+
 part 'chat_tts_state.freezed.dart';
 
 @freezed
@@ -10,7 +12,7 @@ sealed class ChatTtsState with _$ChatTtsState {
     @Default(true) bool initializing,
     @Default(false) bool isInitialized,
     @Default(false) bool hasError,
-    @Default('') String errorMessage,
+    Failure? error,
   }) = _ChatTtsState;
 
   factory ChatTtsState.initial() => const ChatTtsState();

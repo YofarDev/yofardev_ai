@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
 import '../../../core/utils/logger.dart';
+import '../../../core/errors/exception_mapper.dart';
+import '../../../core/l10n/failure_localization.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
 import '../../../core/widgets/app_icon_button.dart';
@@ -204,7 +206,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.error(
         'Error downloading conversation',
         tag: 'ChatDetails',
@@ -214,7 +216,16 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context).failedToDownload(e.toString()),
+              AppLocalizations.of(context).failedToDownload(
+                localizeFailure(
+                  AppLocalizations.of(context),
+                  mapExceptionToFailure(
+                    e,
+                    stackTrace: st,
+                    tag: 'ChatDetailsScreen',
+                  ),
+                ),
+              ),
             ),
             duration: const Duration(seconds: 3),
           ),

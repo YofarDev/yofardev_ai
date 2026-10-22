@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
 import '../../domain/repositories/sound_repository.dart';
@@ -18,15 +19,17 @@ class SoundCubit extends Cubit<SoundState> {
       final Result<void> result = await _soundRepository.play(soundName);
       result.when(
         err: (Failure failure) {
-          emit(SoundError(failure.message));
+          emit(SoundError(failure));
           emit(const SoundInitial());
         },
         ok: (_) {
           emit(const SoundInitial());
         },
       );
-    } catch (e) {
-      emit(SoundError(e.toString()));
+    } catch (e, st) {
+      emit(
+        SoundError(mapExceptionToFailure(e, stackTrace: st, tag: 'SoundCubit')),
+      );
     }
   }
 }

@@ -7,7 +7,9 @@ import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../domain/repositories/talking_repository.dart';
 import '../../domain/services/tts_playback_service.dart';
+import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/chat_status.dart';
+import '../../../../core/models/failure.dart';
 import 'talking_state.dart';
 
 class TalkingCubit extends Cubit<TalkingState> {
@@ -128,8 +130,12 @@ class TalkingCubit extends Cubit<TalkingState> {
 
     try {
       await _repository.playWaitingSentence(sentence);
-    } catch (e) {
-      emit(TalkingState.error(e.toString()));
+    } catch (e, st) {
+      emit(
+        TalkingState.error(
+          mapExceptionToFailure(e, stackTrace: st, tag: 'TalkingCubit'),
+        ),
+      );
     }
   }
 
@@ -139,8 +145,12 @@ class TalkingCubit extends Cubit<TalkingState> {
     try {
       await _repository.generateSpeech(text);
       emit(const TalkingState.speaking());
-    } catch (e) {
-      emit(TalkingState.error(e.toString()));
+    } catch (e, st) {
+      emit(
+        TalkingState.error(
+          mapExceptionToFailure(e, stackTrace: st, tag: 'TalkingCubit'),
+        ),
+      );
     }
   }
 
@@ -203,8 +213,8 @@ class TalkingCubit extends Cubit<TalkingState> {
         generating: (MouthState m) =>
             emit(TalkingState.generating(newMouthState)),
         speaking: (MouthState m) => emit(TalkingState.speaking(newMouthState)),
-        error: (String message, MouthState m) =>
-            emit(TalkingState.error(message, newMouthState)),
+        error: (Failure failure, MouthState m) =>
+            emit(TalkingState.error(failure, newMouthState)),
       );
     }
   }

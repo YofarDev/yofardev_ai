@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/models/failure.dart';
 import '../../../core/res/app_constants.dart';
 import '../presentation/bloc/avatar_state.dart';
 import '../presentation/bloc/avatar_cubit.dart';
@@ -129,7 +130,7 @@ class AvatarWidgetsState extends State<AvatarWidgets>
       waiting: (MouthState m) => m,
       generating: (MouthState m) => m,
       speaking: (MouthState m) => m,
-      error: (String message, MouthState m) => m,
+      error: (Failure failure, MouthState m) => m,
       orElse: () => null,
     );
 

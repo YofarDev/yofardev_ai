@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChatTtsState {
 
- List<Map<String, dynamic>> get audioPathsWaitingSentences; bool get initializing; bool get isInitialized; bool get hasError; String get errorMessage;
+ List<Map<String, dynamic>> get audioPathsWaitingSentences; bool get initializing; bool get isInitialized; bool get hasError; Failure? get error;
 /// Create a copy of ChatTtsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ChatTtsStateCopyWith<ChatTtsState> get copyWith => _$ChatTtsStateCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatTtsState&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatTtsState&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing,isInitialized,hasError,errorMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing,isInitialized,hasError,error);
 
 @override
 String toString() {
-  return 'ChatTtsState(audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, isInitialized: $isInitialized, hasError: $hasError, errorMessage: $errorMessage)';
+  return 'ChatTtsState(audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, isInitialized: $isInitialized, hasError: $hasError, error: $error)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ChatTtsStateCopyWith<$Res>  {
   factory $ChatTtsStateCopyWith(ChatTtsState value, $Res Function(ChatTtsState) _then) = _$ChatTtsStateCopyWithImpl;
 @useResult
 $Res call({
- List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool isInitialized, bool hasError, String errorMessage
+ List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool isInitialized, bool hasError, Failure? error
 });
 
 
@@ -62,14 +62,14 @@ class _$ChatTtsStateCopyWithImpl<$Res>
 
 /// Create a copy of ChatTtsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? isInitialized = null,Object? hasError = null,Object? errorMessage = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? isInitialized = null,Object? hasError = null,Object? error = freezed,}) {
   return _then(_self.copyWith(
 audioPathsWaitingSentences: null == audioPathsWaitingSentences ? _self.audioPathsWaitingSentences : audioPathsWaitingSentences // ignore: cast_nullable_to_non_nullable
 as List<Map<String, dynamic>>,initializing: null == initializing ? _self.initializing : initializing // ignore: cast_nullable_to_non_nullable
 as bool,isInitialized: null == isInitialized ? _self.isInitialized : isInitialized // ignore: cast_nullable_to_non_nullable
 as bool,hasError: null == hasError ? _self.hasError : hasError // ignore: cast_nullable_to_non_nullable
-as bool,errorMessage: null == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
-as String,
+as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as Failure?,
   ));
 }
 
@@ -151,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool isInitialized,  bool hasError,  String errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool isInitialized,  bool hasError,  Failure? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatTtsState() when $default != null:
-return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInitialized,_that.hasError,_that.errorMessage);case _:
+return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInitialized,_that.hasError,_that.error);case _:
   return orElse();
 
 }
@@ -172,10 +172,10 @@ return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInit
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool isInitialized,  bool hasError,  String errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool isInitialized,  bool hasError,  Failure? error)  $default,) {final _that = this;
 switch (_that) {
 case _ChatTtsState():
-return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInitialized,_that.hasError,_that.errorMessage);}
+return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInitialized,_that.hasError,_that.error);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -189,10 +189,10 @@ return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInit
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool isInitialized,  bool hasError,  String errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Map<String, dynamic>> audioPathsWaitingSentences,  bool initializing,  bool isInitialized,  bool hasError,  Failure? error)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatTtsState() when $default != null:
-return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInitialized,_that.hasError,_that.errorMessage);case _:
+return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInitialized,_that.hasError,_that.error);case _:
   return null;
 
 }
@@ -204,7 +204,7 @@ return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInit
 
 
 class _ChatTtsState implements ChatTtsState {
-  const _ChatTtsState({final  List<Map<String, dynamic>> audioPathsWaitingSentences = const <Map<String, dynamic>>[], this.initializing = true, this.isInitialized = false, this.hasError = false, this.errorMessage = ''}): _audioPathsWaitingSentences = audioPathsWaitingSentences;
+  const _ChatTtsState({final  List<Map<String, dynamic>> audioPathsWaitingSentences = const <Map<String, dynamic>>[], this.initializing = true, this.isInitialized = false, this.hasError = false, this.error}): _audioPathsWaitingSentences = audioPathsWaitingSentences;
   
 
  final  List<Map<String, dynamic>> _audioPathsWaitingSentences;
@@ -217,7 +217,7 @@ class _ChatTtsState implements ChatTtsState {
 @override@JsonKey() final  bool initializing;
 @override@JsonKey() final  bool isInitialized;
 @override@JsonKey() final  bool hasError;
-@override@JsonKey() final  String errorMessage;
+@override final  Failure? error;
 
 /// Create a copy of ChatTtsState
 /// with the given fields replaced by the non-null parameter values.
@@ -229,16 +229,16 @@ _$ChatTtsStateCopyWith<_ChatTtsState> get copyWith => __$ChatTtsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatTtsState&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatTtsState&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing,isInitialized,hasError,errorMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing,isInitialized,hasError,error);
 
 @override
 String toString() {
-  return 'ChatTtsState(audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, isInitialized: $isInitialized, hasError: $hasError, errorMessage: $errorMessage)';
+  return 'ChatTtsState(audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, isInitialized: $isInitialized, hasError: $hasError, error: $error)';
 }
 
 
@@ -249,7 +249,7 @@ abstract mixin class _$ChatTtsStateCopyWith<$Res> implements $ChatTtsStateCopyWi
   factory _$ChatTtsStateCopyWith(_ChatTtsState value, $Res Function(_ChatTtsState) _then) = __$ChatTtsStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool isInitialized, bool hasError, String errorMessage
+ List<Map<String, dynamic>> audioPathsWaitingSentences, bool initializing, bool isInitialized, bool hasError, Failure? error
 });
 
 
@@ -266,14 +266,14 @@ class __$ChatTtsStateCopyWithImpl<$Res>
 
 /// Create a copy of ChatTtsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? isInitialized = null,Object? hasError = null,Object? errorMessage = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? isInitialized = null,Object? hasError = null,Object? error = freezed,}) {
   return _then(_ChatTtsState(
 audioPathsWaitingSentences: null == audioPathsWaitingSentences ? _self._audioPathsWaitingSentences : audioPathsWaitingSentences // ignore: cast_nullable_to_non_nullable
 as List<Map<String, dynamic>>,initializing: null == initializing ? _self.initializing : initializing // ignore: cast_nullable_to_non_nullable
 as bool,isInitialized: null == isInitialized ? _self.isInitialized : isInitialized // ignore: cast_nullable_to_non_nullable
 as bool,hasError: null == hasError ? _self.hasError : hasError // ignore: cast_nullable_to_non_nullable
-as bool,errorMessage: null == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
-as String,
+as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as Failure?,
   ));
 }
 

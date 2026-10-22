@@ -159,14 +159,14 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( MouthState mouthState)?  idle,TResult Function( MouthState mouthState)?  waiting,TResult Function( MouthState mouthState)?  generating,TResult Function( MouthState mouthState)?  speaking,TResult Function( String message,  MouthState mouthState)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( MouthState mouthState)?  idle,TResult Function( MouthState mouthState)?  waiting,TResult Function( MouthState mouthState)?  generating,TResult Function( MouthState mouthState)?  speaking,TResult Function( Failure failure,  MouthState mouthState)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case IdleState() when idle != null:
 return idle(_that.mouthState);case WaitingState() when waiting != null:
 return waiting(_that.mouthState);case GeneratingState() when generating != null:
 return generating(_that.mouthState);case SpeakingState() when speaking != null:
 return speaking(_that.mouthState);case ErrorState() when error != null:
-return error(_that.message,_that.mouthState);case _:
+return error(_that.failure,_that.mouthState);case _:
   return orElse();
 
 }
@@ -184,14 +184,14 @@ return error(_that.message,_that.mouthState);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( MouthState mouthState)  idle,required TResult Function( MouthState mouthState)  waiting,required TResult Function( MouthState mouthState)  generating,required TResult Function( MouthState mouthState)  speaking,required TResult Function( String message,  MouthState mouthState)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( MouthState mouthState)  idle,required TResult Function( MouthState mouthState)  waiting,required TResult Function( MouthState mouthState)  generating,required TResult Function( MouthState mouthState)  speaking,required TResult Function( Failure failure,  MouthState mouthState)  error,}) {final _that = this;
 switch (_that) {
 case IdleState():
 return idle(_that.mouthState);case WaitingState():
 return waiting(_that.mouthState);case GeneratingState():
 return generating(_that.mouthState);case SpeakingState():
 return speaking(_that.mouthState);case ErrorState():
-return error(_that.message,_that.mouthState);}
+return error(_that.failure,_that.mouthState);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -205,14 +205,14 @@ return error(_that.message,_that.mouthState);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( MouthState mouthState)?  idle,TResult? Function( MouthState mouthState)?  waiting,TResult? Function( MouthState mouthState)?  generating,TResult? Function( MouthState mouthState)?  speaking,TResult? Function( String message,  MouthState mouthState)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( MouthState mouthState)?  idle,TResult? Function( MouthState mouthState)?  waiting,TResult? Function( MouthState mouthState)?  generating,TResult? Function( MouthState mouthState)?  speaking,TResult? Function( Failure failure,  MouthState mouthState)?  error,}) {final _that = this;
 switch (_that) {
 case IdleState() when idle != null:
 return idle(_that.mouthState);case WaitingState() when waiting != null:
 return waiting(_that.mouthState);case GeneratingState() when generating != null:
 return generating(_that.mouthState);case SpeakingState() when speaking != null:
 return speaking(_that.mouthState);case ErrorState() when error != null:
-return error(_that.message,_that.mouthState);case _:
+return error(_that.failure,_that.mouthState);case _:
   return null;
 
 }
@@ -488,10 +488,10 @@ as MouthState,
 
 
 class ErrorState implements TalkingState {
-  const ErrorState(this.message, [this.mouthState = MouthState.closed]);
+  const ErrorState(this.failure, [this.mouthState = MouthState.closed]);
   
 
- final  String message;
+ final  Failure failure;
 @override@JsonKey() final  MouthState mouthState;
 
 /// Create a copy of TalkingState
@@ -504,16 +504,16 @@ $ErrorStateCopyWith<ErrorState> get copyWith => _$ErrorStateCopyWithImpl<ErrorSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ErrorState&&(identical(other.message, message) || other.message == message)&&(identical(other.mouthState, mouthState) || other.mouthState == mouthState));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ErrorState&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.mouthState, mouthState) || other.mouthState == mouthState));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,message,mouthState);
+int get hashCode => Object.hash(runtimeType,failure,mouthState);
 
 @override
 String toString() {
-  return 'TalkingState.error(message: $message, mouthState: $mouthState)';
+  return 'TalkingState.error(failure: $failure, mouthState: $mouthState)';
 }
 
 
@@ -524,7 +524,7 @@ abstract mixin class $ErrorStateCopyWith<$Res> implements $TalkingStateCopyWith<
   factory $ErrorStateCopyWith(ErrorState value, $Res Function(ErrorState) _then) = _$ErrorStateCopyWithImpl;
 @override @useResult
 $Res call({
- String message, MouthState mouthState
+ Failure failure, MouthState mouthState
 });
 
 
@@ -541,10 +541,10 @@ class _$ErrorStateCopyWithImpl<$Res>
 
 /// Create a copy of TalkingState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? mouthState = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? failure = null,Object? mouthState = null,}) {
   return _then(ErrorState(
-null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,null == mouthState ? _self.mouthState : mouthState // ignore: cast_nullable_to_non_nullable
+null == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
+as Failure,null == mouthState ? _self.mouthState : mouthState // ignore: cast_nullable_to_non_nullable
 as MouthState,
   ));
 }
