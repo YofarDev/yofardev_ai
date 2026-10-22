@@ -38,6 +38,17 @@ void main() {
     }
   });
 
+  /// Resolves every relative import in [f] to a repo-relative path.
+  List<String> relativeImportTargets(File f) => f
+      .readAsLinesSync()
+      .map((String l) => l.trim())
+      .where((String l) => l.startsWith('import \''))
+      .map((String l) => RegExp(r"import '([^']+)'").firstMatch(l)?.group(1))
+      .whereType<String>()
+      .where((String t) => t.startsWith('.'))
+      .map((String t) => File.fromUri(Uri.file(f.path).resolve(t)).path)
+      .toList();
+
   test('features import other features only via their public barrel', () {
     const List<String> barrels = <String>[
       'talking.dart',
@@ -51,14 +62,7 @@ void main() {
       final List<String> parts = f.path.split('/');
       if (parts.length < 3 || parts[1] != 'features') continue;
       final String ownFeature = parts[2];
-      for (final String line in f.readAsLinesSync()) {
-        final RegExpMatch? m = RegExp(r"import '([^']+)'").firstMatch(line);
-        if (m == null) continue;
-        final String target = m.group(1)!;
-        if (!target.startsWith('.')) continue;
-        final String resolved = File.fromUri(
-          Uri.file(f.path).resolve(target),
-        ).path;
+      for (final String resolved in relativeImportTargets(f)) {
         final List<String> t = resolved.split('/');
         if (t.length > 3 && t[1] == 'features' && t[2] != ownFeature) {
           expect(
@@ -94,5 +98,37 @@ void main() {
         }
       }
     }
+  });
+
+  test('feature domain imports neither data nor presentation', () {
+    for (final File f in files) {
+      final List<String> parts = f.path.split('/');
+      if (parts.length < 4 || parts[1] != 'features' || parts[2] != 'domain') {
+        continue;
+      }
+      for (final String target in relativeImportTargets(f)) {
+        expect(
+          RegExp(r'/features/[^/]+/(data|presentation)/').hasMatch(target),
+          isFalse,
+          reason: '${f.path}: domain imports layer internals: $target',
+        );
+      }
+    }
+  });
+
+  test('layer rule detects a deliberate domain->data violation (fixture)', () {
+    final File fixture = File(
+      'test/fixtures/architecture/domain_leak_fixture.dart',
+    );
+    expect(fixture.existsSync(), isTrue);
+    final List<String> targets = relativeImportTargets(fixture);
+    expect(
+      targets.any(
+        (String t) =>
+            RegExp(r'/features/[^/]+/(data|presentation)/').hasMatch(t),
+      ),
+      isTrue,
+      reason: 'fixture must violate the rule the previous test enforces',
+    );
   });
 }
