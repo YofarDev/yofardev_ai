@@ -131,4 +131,57 @@ void main() {
       reason: 'fixture must violate the rule the previous test enforces',
     );
   });
+
+  test('getIt is resolved only in composition roots', () {
+    const List<String> allowlist = <String>[
+      'lib/core/di/service_locator.dart',
+      'lib/app.dart',
+      'lib/core/router/app_router.dart',
+    ];
+    for (final File f in files) {
+      if (allowlist.contains(f.path)) continue;
+      for (final String line in f.readAsLinesSync()) {
+        expect(
+          RegExp(r'\bgetIt[<(]').hasMatch(line),
+          isFalse,
+          reason:
+              '${f.path}: resolves from getIt outside composition roots: $line',
+        );
+      }
+    }
+  });
+
+  test('registrations appear only in service_locator.dart', () {
+    for (final File f in files) {
+      if (f.path == 'lib/core/di/service_locator.dart') continue;
+      for (final String line in f.readAsLinesSync()) {
+        expect(
+          RegExp(
+            r'getIt\.register(LazySingleton|Singleton|Factory)',
+          ).hasMatch(line),
+          isFalse,
+          reason: '${f.path}: DI registration outside service_locator: $line',
+        );
+      }
+    }
+  });
+
+  test('getIt rule detects a deliberate violation (fixture)', () {
+    final String content = File(
+      'test/fixtures/architecture/getit_violation_fixture.dart',
+    ).readAsStringSync();
+    expect(RegExp(r'\bgetIt[<(]').hasMatch(content), isTrue);
+  });
+
+  test('registrations rule detects a deliberate violation (fixture)', () {
+    final String content = File(
+      'test/fixtures/architecture/registration_violation_fixture.dart',
+    ).readAsStringSync();
+    expect(
+      RegExp(
+        r'getIt\.register(LazySingleton|Singleton|Factory)',
+      ).hasMatch(content),
+      isTrue,
+    );
+  });
 }
