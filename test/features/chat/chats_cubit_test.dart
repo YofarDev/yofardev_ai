@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
@@ -274,7 +275,7 @@ void main() {
       expect(chatsCubit.state.chatsList, isEmpty);
       expect(chatsCubit.state.currentChat, const Chat());
       expect(chatsCubit.state.openedChat, const Chat());
-      expect(chatsCubit.state.errorMessage, '');
+      expect(chatsCubit.state.error, isNull);
       expect(chatsCubit.state.audioPathsWaitingSentences, isEmpty);
       expect(chatsCubit.state.initializing, isTrue);
       expect(chatsCubit.state.functionCallingEnabled, isTrue);
@@ -403,7 +404,7 @@ void main() {
         expect(state.chatsList, isEmpty);
         expect(state.currentChat, const Chat());
         expect(state.openedChat, const Chat());
-        expect(state.errorMessage, '');
+        expect(state.error, isNull);
         expect(state.audioPathsWaitingSentences, isEmpty);
         expect(state.initializing, isTrue);
         expect(state.functionCallingEnabled, isTrue);
@@ -417,12 +418,12 @@ void main() {
 
         final ChatState newState = state.copyWith(
           status: ChatStatus.success,
-          errorMessage: 'Test error',
+          error: UnknownFailure('Test error'),
           functionCallingEnabled: false,
         );
 
         expect(newState.status, ChatStatus.success);
-        expect(newState.errorMessage, 'Test error');
+        expect(newState.error, isA<UnknownFailure>());
         expect(newState.functionCallingEnabled, isFalse);
 
         // Unchanged fields

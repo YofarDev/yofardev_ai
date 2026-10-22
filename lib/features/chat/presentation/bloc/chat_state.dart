@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/chat_status.dart';
+import '../../../../core/models/failure.dart';
 
 export '../../../../core/models/chat_status.dart';
 
@@ -17,16 +18,18 @@ class TitleResult {
 
 enum ChatsListStatus { initial, loading, success, error }
 
+/// Single flat state on purpose: the conversation, its list, streaming and
+/// titles are one coherent state machine (see flutter-architecture
+/// "File Cohesion"). Do NOT split into micro-cubits.
 @freezed
 sealed class ChatState with _$ChatState {
   const factory ChatState({
     @Default(ChatStatus.initial) ChatStatus status,
     @Default(<Chat>[]) List<Chat> chatsList,
     @Default(ChatsListStatus.initial) ChatsListStatus chatsListStatus,
-    String? chatsListError,
     required Chat currentChat,
     required Chat openedChat,
-    @Default('') String errorMessage,
+    Failure? error,
     @Default(<Map<String, dynamic>>[])
     List<Map<String, dynamic>> audioPathsWaitingSentences,
     @Default(true) bool initializing,
@@ -52,7 +55,6 @@ sealed class ChatState with _$ChatState {
     openedChat: Chat(),
     status: ChatStatus.loading,
     chatsListStatus: ChatsListStatus.initial,
-    chatsListError: null,
     streamingContent: '',
     streamingSentenceCount: 0,
     generatingTitleChatIds: <String>{},

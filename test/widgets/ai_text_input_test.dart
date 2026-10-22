@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
+import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
@@ -89,7 +92,16 @@ void main() {
           BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
           BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
         ],
-        child: const MaterialApp(home: Scaffold(body: AiTextInput())),
+        child: MaterialApp(
+          localizationsDelegates: const <LocalizationsDelegate<Object>>[
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: AiTextInput()),
+        ),
       );
     }
 
@@ -152,20 +164,29 @@ void main() {
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
             BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
-          child: const MaterialApp(home: Scaffold(body: AiTextInput())),
+          child: MaterialApp(
+            localizationsDelegates: const <LocalizationsDelegate<Object>>[
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: AiTextInput()),
+          ),
         ),
       );
 
       fakeChatsCubit.emit(
         fakeChatsCubit.state.copyWith(
           status: ChatStatus.error,
-          errorMessage: 'Test error',
+          error: UnknownFailure('Test error'),
         ),
       );
       await tester.pump();
 
       expect(find.byType(SnackBar), findsOneWidget);
-      expect(find.text('Test error'), findsOneWidget);
+      expect(find.text('An unexpected error occurred'), findsOneWidget);
     });
 
     testWidgets('text field opacity is 1 when talking is idle', (
@@ -219,7 +240,16 @@ void main() {
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
             BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
-          child: const MaterialApp(home: Scaffold(body: AiTextInput())),
+          child: MaterialApp(
+            localizationsDelegates: const <LocalizationsDelegate<Object>>[
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: AiTextInput()),
+          ),
         ),
       );
       await tester.pump();

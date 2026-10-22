@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../../../../core/l10n/failure_localization.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
@@ -99,10 +100,11 @@ class _AiTextInputState extends State<AiTextInput> {
       listenWhen: (ChatState previous, ChatState current) =>
           previous.status != current.status,
       listener: (BuildContext context, ChatState state) {
-        if (state.status == ChatStatus.error) {
+        if (state.status == ChatStatus.error && state.error != null) {
+          final AppLocalizations l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage),
+              content: Text(localizeFailure(l10n, state.error!)),
               backgroundColor: colorScheme.error,
             ),
           );

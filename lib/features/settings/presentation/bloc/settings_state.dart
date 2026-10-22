@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/models/failure.dart';
 import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/models/global_memory.dart';
 import '../../../../core/models/llm_config.dart';
@@ -34,7 +35,7 @@ sealed class SettingsState with _$SettingsState {
     @Default('fr') String currentLanguage,
     // Error fields:
     @Default(false) bool hasError,
-    @Default(null) String? errorMessage,
+    Failure? error,
   }) = _SettingsState;
 
   factory SettingsState.initial() => const SettingsState();

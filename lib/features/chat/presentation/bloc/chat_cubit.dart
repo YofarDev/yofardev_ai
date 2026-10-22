@@ -206,12 +206,7 @@ class ChatCubit extends Cubit<ChatState> {
 
     currentChatResult.when(
       err: (Failure failure) {
-        emit(
-          state.copyWith(
-            status: ChatStatus.error,
-            errorMessage: failure.message,
-          ),
-        );
+        emit(state.copyWith(status: ChatStatus.error, error: failure));
       },
       ok: (Chat currentChat) {
         // Only update if user hasn't created a chat during initialization
@@ -241,12 +236,7 @@ class ChatCubit extends Cubit<ChatState> {
     final Result<List<Chat>> result = await _chatRepository.getChatsList();
     result.when(
       err: (Failure failure) {
-        emit(
-          state.copyWith(
-            status: ChatStatus.error,
-            errorMessage: failure.message,
-          ),
-        );
+        emit(state.copyWith(status: ChatStatus.error, error: failure));
       },
       ok: (List<Chat> chatsList) {
         final List<Chat> reversed = chatsList.reversed.toList();
@@ -266,12 +256,7 @@ class ChatCubit extends Cubit<ChatState> {
     );
     result.when(
       err: (Failure failure) {
-        emit(
-          state.copyWith(
-            status: ChatStatus.error,
-            errorMessage: failure.message,
-          ),
-        );
+        emit(state.copyWith(status: ChatStatus.error, error: failure));
       },
       ok: (Chat newChat) async {
         // If creating chat during initialization, set the flag
@@ -312,12 +297,7 @@ class ChatCubit extends Cubit<ChatState> {
     final Result<void> result = await _chatRepository.deleteChat(id);
     result.when(
       err: (Failure failure) {
-        emit(
-          state.copyWith(
-            status: ChatStatus.error,
-            errorMessage: failure.message,
-          ),
-        );
+        emit(state.copyWith(status: ChatStatus.error, error: failure));
       },
       ok: (_) {
         final List<Chat> chatsList = List<Chat>.from(state.chatsList);
@@ -416,11 +396,6 @@ class ChatCubit extends Cubit<ChatState> {
   /// Clear streaming content (called when stream completes)
   void clearStreamingContent() {
     emit(state.copyWith(streamingContent: '', streamingSentenceCount: 0));
-  }
-
-  /// Update error message
-  void setError(String message) {
-    emit(state.copyWith(status: ChatStatus.error, errorMessage: message));
   }
 
   /// Reset status to success
@@ -654,7 +629,7 @@ class ChatCubit extends Cubit<ChatState> {
         emit(
           state.copyWith(
             status: ChatStatus.error,
-            errorMessage: error,
+            error: UnknownFailure(error, error),
             streamingContent: '',
           ),
         );

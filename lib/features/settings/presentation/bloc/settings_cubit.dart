@@ -57,7 +57,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       emit(
         state.copyWith(
           hasError: true,
-          errorMessage: 'Failed to load available LLM configs',
+          error: ConfigFailure('Failed to load available LLM configs'),
         ),
       );
     }
