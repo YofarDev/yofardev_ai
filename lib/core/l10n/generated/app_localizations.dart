@@ -829,6 +829,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Required'**
   String get commonRequired;
+
+  /// No description provided for @failureStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save or load data'**
+  String get failureStorage;
+
+  /// No description provided for @failureNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error'**
+  String get failureNetwork;
+
+  /// No description provided for @failureTts.
+  ///
+  /// In en, this message translates to:
+  /// **'Text-to-speech error'**
+  String get failureTts;
+
+  /// No description provided for @failureConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration error'**
+  String get failureConfig;
+
+  /// No description provided for @failureUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred'**
+  String get failureUnknown;
 }
 
 class _AppLocalizationsDelegate

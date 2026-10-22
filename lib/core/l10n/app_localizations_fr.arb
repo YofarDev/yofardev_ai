@@ -121,5 +121,10 @@
   "llmConfigResponseFormatJsonSchema": "json_schema (Certaines API locales)",
   "llmConfigResponseFormatText": "text (Générique)",
   "llmConfigResponseFormatNone": "none (Aucun format, utiliser uniquement le prompt)",
-  "commonRequired": "Obligatoire"
+  "commonRequired": "Obligatoire",
+  "failureStorage": "Échec de l'enregistrement ou de la lecture des données",
+  "failureNetwork": "Erreur réseau",
+  "failureTts": "Erreur de synthèse vocale",
+  "failureConfig": "Erreur de configuration",
+  "failureUnknown": "Une erreur inattendue est survenue"
 }

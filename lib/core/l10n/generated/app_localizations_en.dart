@@ -412,4 +412,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonRequired => 'Required';
+
+  @override
+  String get failureStorage => 'Failed to save or load data';
+
+  @override
+  String get failureNetwork => 'Network error';
+
+  @override
+  String get failureTts => 'Text-to-speech error';
+
+  @override
+  String get failureConfig => 'Configuration error';
+
+  @override
+  String get failureUnknown => 'An unexpected error occurred';
 }

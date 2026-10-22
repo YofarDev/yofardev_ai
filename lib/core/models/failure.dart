@@ -1,5 +1,5 @@
 /// Typed failure. UI shows [message]; [cause] carries the original error for logs.
-abstract class Failure {
+sealed class Failure {
   const Failure(this.message, [this.cause]);
 
   final String message;

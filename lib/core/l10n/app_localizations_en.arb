@@ -349,5 +349,10 @@
   "commonRequired": "Required",
   "@commonRequired": {
     "description": "Validation error message for required fields"
-  }
+  },
+  "failureStorage": "Failed to save or load data",
+  "failureNetwork": "Network error",
+  "failureTts": "Text-to-speech error",
+  "failureConfig": "Configuration error",
+  "failureUnknown": "An unexpected error occurred"
 }

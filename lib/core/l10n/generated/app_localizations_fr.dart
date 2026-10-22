@@ -421,4 +421,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get commonRequired => 'Obligatoire';
+
+  @override
+  String get failureStorage =>
+      'Échec de l\'enregistrement ou de la lecture des données';
+
+  @override
+  String get failureNetwork => 'Erreur réseau';
+
+  @override
+  String get failureTts => 'Erreur de synthèse vocale';
+
+  @override
+  String get failureConfig => 'Erreur de configuration';
+
+  @override
+  String get failureUnknown => 'Une erreur inattendue est survenue';
 }
