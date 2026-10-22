@@ -1,6 +1,6 @@
 // ignore_for_file: join_return_with_assignment
 
-import '../../../../core/models/failure.dart';
+import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/result.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
@@ -18,8 +18,10 @@ class YofardevRepositoryImpl implements ChatRepository {
     try {
       final Chat chat = await _chatDatasource.createNewChat(language: language);
       return Result<Chat>.ok(chat);
-    } catch (e) {
-      return Result<Chat>.err(NetworkFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<Chat>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'YofardevRepository'),
+      );
     }
   }
 
@@ -28,8 +30,10 @@ class YofardevRepositoryImpl implements ChatRepository {
     try {
       final Chat? chat = await _chatDatasource.getChat(id);
       return Result<Chat?>.ok(chat);
-    } catch (e) {
-      return Result<Chat?>.err(NetworkFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<Chat?>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'YofardevRepository'),
+      );
     }
   }
 
@@ -38,8 +42,10 @@ class YofardevRepositoryImpl implements ChatRepository {
     try {
       final List<Chat> chats = await _chatDatasource.getChatsList();
       return Result<List<Chat>>.ok(chats);
-    } catch (e) {
-      return Result<List<Chat>>.err(NetworkFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<List<Chat>>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'YofardevRepository'),
+      );
     }
   }
 
@@ -51,8 +57,10 @@ class YofardevRepositoryImpl implements ChatRepository {
     try {
       await _chatDatasource.updateChat(chatId: id, updatedChat: updatedChat);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(NetworkFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'YofardevRepository'),
+      );
     }
   }
 
@@ -61,8 +69,10 @@ class YofardevRepositoryImpl implements ChatRepository {
     try {
       await _chatDatasource.deleteChat(id);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(NetworkFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'YofardevRepository'),
+      );
     }
   }
 
@@ -71,8 +81,10 @@ class YofardevRepositoryImpl implements ChatRepository {
     try {
       await _chatDatasource.setCurrentChatId(id);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(NetworkFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'YofardevRepository'),
+      );
     }
   }
 
@@ -81,8 +93,10 @@ class YofardevRepositoryImpl implements ChatRepository {
     try {
       final Chat chat = await _chatDatasource.getCurrentChat();
       return Result<Chat>.ok(chat);
-    } catch (e) {
-      return Result<Chat>.err(NetworkFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<Chat>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'YofardevRepository'),
+      );
     }
   }
 
@@ -91,8 +105,10 @@ class YofardevRepositoryImpl implements ChatRepository {
     try {
       await _chatDatasource.updateAvatar(chatId, avatar);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(NetworkFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'YofardevRepository'),
+      );
     }
   }
 }

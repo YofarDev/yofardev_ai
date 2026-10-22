@@ -1,3 +1,4 @@
+import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
@@ -13,8 +14,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       final String? language = await _datasource.getLanguage();
       return Result<String?>.ok(language);
-    } catch (e) {
-      return Result<String?>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<String?>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -23,8 +26,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       await _datasource.setLanguage(language);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -33,8 +38,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       final bool enabled = await _datasource.getSoundEffects();
       return Result<bool>.ok(enabled);
-    } catch (e) {
-      return Result<bool>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<bool>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -43,8 +50,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       await _datasource.setSoundEffects(enabled);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -53,8 +62,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       final String? username = await _datasource.getUsername();
       return Result<String?>.ok(username);
-    } catch (e) {
-      return Result<String?>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<String?>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -63,8 +74,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       await _datasource.setUsername(username);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -76,8 +89,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
         language ?? 'fr',
       );
       return Result<String>.ok(prompt);
-    } catch (e) {
-      return Result<String>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<String>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -86,8 +101,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       await _datasource.setBaseSystemPrompt(prompt);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -96,8 +113,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       final ChatPersona persona = await _datasource.getPersona();
       return Result<ChatPersona>.ok(persona);
-    } catch (e) {
-      return Result<ChatPersona>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<ChatPersona>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 
@@ -106,8 +125,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
     try {
       await _datasource.setPersona(persona);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SettingsRepository'),
+      );
     }
   }
 

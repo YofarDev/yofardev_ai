@@ -1,4 +1,4 @@
-import '../../../../core/models/failure.dart';
+import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/global_memory.dart';
 import '../../../../core/models/result.dart';
 import '../../domain/repositories/global_memory_repository.dart';
@@ -14,8 +14,10 @@ class GlobalMemoryRepositoryImpl implements GlobalMemoryRepository {
   Future<Result<GlobalMemory>> getMemory() async {
     try {
       return Result<GlobalMemory>.ok(await _datasource.getMemory());
-    } catch (e) {
-      return Result<GlobalMemory>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<GlobalMemory>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'GlobalMemoryRepository'),
+      );
     }
   }
 
@@ -24,8 +26,10 @@ class GlobalMemoryRepositoryImpl implements GlobalMemoryRepository {
     try {
       await _datasource.saveMemory(memory);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'GlobalMemoryRepository'),
+      );
     }
   }
 
@@ -40,8 +44,10 @@ class GlobalMemoryRepositoryImpl implements GlobalMemoryRepository {
       );
       await _datasource.saveMemory(updated);
       return Result<GlobalMemory>.ok(updated);
-    } catch (e) {
-      return Result<GlobalMemory>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<GlobalMemory>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'GlobalMemoryRepository'),
+      );
     }
   }
 
@@ -50,8 +56,10 @@ class GlobalMemoryRepositoryImpl implements GlobalMemoryRepository {
     try {
       await _datasource.clear();
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'GlobalMemoryRepository'),
+      );
     }
   }
 }

@@ -1,6 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 
-import '../../../../core/models/failure.dart';
+import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/result.dart';
 import '../../../../core/models/sound_effects.dart';
 import '../../domain/repositories/sound_repository.dart';
@@ -23,8 +23,10 @@ class SoundRepositoryImpl implements SoundRepository {
       await _player.setVolume(1.0);
       await _player.resume();
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure('Failed to play sound', e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SoundRepository'),
+      );
     }
   }
 
@@ -33,8 +35,10 @@ class SoundRepositoryImpl implements SoundRepository {
     try {
       await _player.stop();
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure('Failed to stop sound', e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SoundRepository'),
+      );
     }
   }
 
@@ -42,9 +46,9 @@ class SoundRepositoryImpl implements SoundRepository {
   Future<Result<bool>> get isPlaying async {
     try {
       return Result<bool>.ok(_player.state == PlayerState.playing);
-    } catch (e) {
+    } catch (e, st) {
       return Result<bool>.err(
-        StorageFailure('Failed to check playing state', e),
+        mapExceptionToFailure(e, stackTrace: st, tag: 'SoundRepository'),
       );
     }
   }

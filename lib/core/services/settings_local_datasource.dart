@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../errors/exception_mapper.dart';
 import '../models/chat.dart';
-import '../models/failure.dart';
 import '../models/result.dart';
 import '../models/task_llm_config.dart';
 import '../utils/app_utils.dart';
@@ -30,8 +30,14 @@ class SettingsLocalDatasource {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String value = prefs.getString(keyName) ?? '';
       return Result<String>.ok(value);
-    } catch (e) {
-      return Result<String>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<String>.err(
+        mapExceptionToFailure(
+          e,
+          stackTrace: st,
+          tag: 'SettingsLocalDatasource',
+        ),
+      );
     }
   }
 
@@ -40,8 +46,14 @@ class SettingsLocalDatasource {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString(keyName, value);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(
+          e,
+          stackTrace: st,
+          tag: 'SettingsLocalDatasource',
+        ),
+      );
     }
   }
 
@@ -50,8 +62,14 @@ class SettingsLocalDatasource {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final bool value = prefs.getBool(keyName) ?? defaultValue;
       return Result<bool>.ok(value);
-    } catch (e) {
-      return Result<bool>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<bool>.err(
+        mapExceptionToFailure(
+          e,
+          stackTrace: st,
+          tag: 'SettingsLocalDatasource',
+        ),
+      );
     }
   }
 
@@ -60,8 +78,14 @@ class SettingsLocalDatasource {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool(keyName, value);
       return Result<void>.ok(null);
-    } catch (e) {
-      return Result<void>.err(StorageFailure(e.toString(), e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(
+          e,
+          stackTrace: st,
+          tag: 'SettingsLocalDatasource',
+        ),
+      );
     }
   }
 
@@ -78,9 +102,13 @@ class SettingsLocalDatasource {
           jsonDecode(json) as Map<String, dynamic>;
       final TaskLlmConfig parsedConfig = TaskLlmConfig.fromJson(data);
       return Result<TaskLlmConfig>.ok(parsedConfig);
-    } catch (e) {
+    } catch (e, st) {
       return Result<TaskLlmConfig>.err(
-        StorageFailure('Failed to load task LLM config', e),
+        mapExceptionToFailure(
+          e,
+          stackTrace: st,
+          tag: 'SettingsLocalDatasource',
+        ),
       );
     }
   }
@@ -91,9 +119,13 @@ class SettingsLocalDatasource {
       final String json = jsonEncode(config.toJson());
       await prefs.setString(_keyTaskLlmConfig, json);
       return Result<void>.ok(null);
-    } catch (e) {
+    } catch (e, st) {
       return Result<void>.err(
-        StorageFailure('Failed to save task LLM config', e),
+        mapExceptionToFailure(
+          e,
+          stackTrace: st,
+          tag: 'SettingsLocalDatasource',
+        ),
       );
     }
   }

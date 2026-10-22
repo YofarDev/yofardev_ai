@@ -1,3 +1,4 @@
+import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/failure.dart';
@@ -19,8 +20,10 @@ class AvatarRepositoryImpl implements AvatarRepository {
         return Result<Chat>.err(StorageFailure('Chat not found'));
       }
       return Result<Chat>.ok(chat);
-    } catch (e) {
-      return Result<Chat>.err(Failure.fromException(e));
+    } catch (e, st) {
+      return Result<Chat>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'AvatarRepository'),
+      );
     }
   }
 

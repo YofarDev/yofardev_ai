@@ -1,3 +1,4 @@
+import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/failure.dart';
@@ -38,8 +39,10 @@ class DemoRepositoryImpl implements DemoRepository {
 
       // Update avatar
       return await avatarRepository.updateAvatar(chatId, newAvatar);
-    } catch (e) {
-      return Result<void>.err(Failure.fromException(e));
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(e, stackTrace: st, tag: 'DemoRepository'),
+      );
     }
   }
 
@@ -52,9 +55,9 @@ class DemoRepositoryImpl implements DemoRepository {
       }
       final Chat chat = chatResult.getOrNull!;
       return Result<String>.ok(chat.id);
-    } catch (e) {
+    } catch (e, st) {
       return Result<String>.err(
-        StorageFailure('Failed to get current chat', e),
+        mapExceptionToFailure(e, stackTrace: st, tag: 'DemoRepository'),
       );
     }
   }
