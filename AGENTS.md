@@ -72,6 +72,19 @@ Scripts `fgen`, `fstr`, `fl10n`, `fimp` require [uv](https://docs.astral.sh/uv/)
    `core/` never imports `features/` (except the composition roots
    `core/di/` and `core/router/`). The app shell lives in `lib/app.dart`;
    `lib/main.dart` is bootstrap only.
+4. **`getIt` resolved ONLY in** `lib/core/di/service_locator.dart`,
+   `lib/app.dart`, and `lib/core/router/app_router.dart` — everything else
+   receives dependencies via constructor injection (enforced by
+   `test/architecture_test.dart`)
+5. **DI registrations (`getIt.register*`) appear only in `service_locator.dart`**
+   (enforced)
+6. **Feature `domain/` must not import that feature's `data/` or
+   `presentation/`** (enforced)
+
+Note: `lib/core/repositories/settings_repository.dart` deliberately stays in
+core (consumed by `core/services/agent`; core may not import features).
+`AvatarRepository`/`GlobalMemoryRepository`/`LocaleRepository` live in their
+owning features' `domain/repositories/` — import via feature barrels.
 
 These layering rules are **enforced by `test/architecture_test.dart`** (it also
 bans `package:fpdart` and checks barrel-only imports), so `flutter test` fails
@@ -104,7 +117,8 @@ on violation.
 ### Common Operations
 
 ```dart
-// Get any service
+// Resolve a service (composition roots ONLY: service_locator.dart, app.dart,
+// app_router.dart — elsewhere use constructor injection)
 getIt<ServiceType>()
 
 // State pattern (freezed)
@@ -116,10 +130,17 @@ class ChatState with _$ChatState {
   const factory ChatState.failure(String message) = _Failure;
 }
 
-// Error handling (Result<T>)
+// Error handling (Result<T>): classify unknown exceptions in
+// repositories/datasources via mapExceptionToFailure(e, stackTrace: st,
+// tag: '<ClassName>') from lib/core/errors/exception_mapper.dart; show UI text
+// via localizeFailure(AppLocalizations.of(context), failure) from
+// lib/core/l10n/failure_localization.dart — never display failure.message or
+// e.toString().
 Future<Result<Chat>> getCurrentChat();
 result.when(
-  err: (failure) => emit(state.copyWith(error: failure.message)),
+  err: (failure) => emit(state.copyWith(
+    error: localizeFailure(AppLocalizations.of(context), failure),
+  )),
   ok: (chat) => emit(state.copyWith(chat: chat)),
 );
 ```

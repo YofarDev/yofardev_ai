@@ -5,12 +5,6 @@ sealed class Failure {
   final String message;
   final Object? cause;
 
-  static Failure fromException(Object error, {StackTrace? stackTrace}) {
-    // Log the details; callers may also route specific exceptions to
-    // narrower variants before falling back here.
-    return UnknownFailure(error.toString(), error);
-  }
-
   @override
   String toString() => '$runtimeType($message)';
 }
