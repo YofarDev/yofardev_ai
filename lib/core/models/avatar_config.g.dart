@@ -117,6 +117,7 @@ _AvatarConfig _$AvatarConfigFromJson(Map<String, dynamic> json) =>
       soundEffect: const SoundEffectConverter().fromJson(
         json['soundEffect'] as String?,
       ),
+      mood: const MoodConverter().fromJson(json['mood'] as String?),
     );
 
 Map<String, dynamic> _$AvatarConfigToJson(_AvatarConfig instance) =>
@@ -128,4 +129,5 @@ Map<String, dynamic> _$AvatarConfigToJson(_AvatarConfig instance) =>
       'specials': _$AvatarSpecialsEnumMap[instance.specials],
       'costume': _$AvatarCostumeEnumMap[instance.costume],
       'soundEffect': const SoundEffectConverter().toJson(instance.soundEffect),
+      'mood': const MoodConverter().toJson(instance.mood),
     };

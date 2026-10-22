@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
@@ -55,6 +56,9 @@ class MockAppLifecycleService implements AppLifecycleService {
   @override
   Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
       const Stream<AvatarChangeRequested>.empty();
+
+  @override
+  Stream<AvatarMood> get moodEvents => const Stream<AvatarMood>.empty();
 
   @override
   void emitAvatarChangeRequested(AvatarChangeRequested request) {}

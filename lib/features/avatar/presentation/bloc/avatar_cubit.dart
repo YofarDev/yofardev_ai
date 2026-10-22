@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_gesture.dart';
+import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
@@ -59,6 +60,14 @@ class AvatarCubit extends Cubit<AvatarState> {
         );
       },
     );
+
+    // Reply moods ride the same animation handler as the other cues.
+    _moodSubscription = _appLifecycleService.moodEvents.listen(
+      (AvatarMood mood) => _handleAnimationEvent(AvatarAnimation.mood(mood)),
+      onError: (Object error) {
+        AppLogger.error('Mood stream error', tag: 'AvatarCubit', error: error);
+      },
+    );
   }
 
   final AvatarRepository _avatarRepository;
@@ -68,6 +77,7 @@ class AvatarCubit extends Cubit<AvatarState> {
   StreamSubscription<AvatarAnimation>? _animationSubscription;
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
   StreamSubscription<String>? _chatChangedSubscription;
+  StreamSubscription<AvatarMood>? _moodSubscription;
 
   /// Handle animation events from the service.
   void _handleAnimationEvent(AvatarAnimation event) {
@@ -97,6 +107,19 @@ class AvatarCubit extends Cubit<AvatarState> {
       sceneEvent: (SceneEvent sceneEvent) {
         AppLogger.debug(
           'AvatarCubit: scene event ${sceneEvent.name} (no Rive view yet)',
+          tag: 'AvatarCubit',
+        );
+      },
+      // Mood/presence state lands with the B7 AvatarCubit state work.
+      mood: (AvatarMood mood) {
+        AppLogger.debug(
+          'AvatarCubit: mood ${mood.name} (state wiring pending)',
+          tag: 'AvatarCubit',
+        );
+      },
+      presence: (AvatarSpecials presence) {
+        AppLogger.debug(
+          'AvatarCubit: presence ${presence.name} (state wiring pending)',
           tag: 'AvatarCubit',
         );
       },
@@ -325,6 +348,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     await _animationSubscription?.cancel();
     await _lifecycleSubscription?.cancel();
     await _chatChangedSubscription?.cancel();
+    await _moodSubscription?.cancel();
     return super.close();
   }
 }

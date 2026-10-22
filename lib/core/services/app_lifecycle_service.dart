@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../models/app_lifecycle_event.dart';
 import '../models/avatar_config.dart';
+import '../models/avatar_mood.dart';
 import '../models/avatar_status_animation.dart';
 import '../models/chat_entry.dart';
 import '../models/chat_status.dart';
@@ -42,6 +43,8 @@ class AppLifecycleService {
   final StreamController<AvatarChangeRequested>
   _avatarChangeRequestedController =
       StreamController<AvatarChangeRequested>.broadcast();
+  final StreamController<AvatarMood> _moodController =
+      StreamController<AvatarMood>.broadcast();
 
   // Public streams for cubits to subscribe to
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
@@ -57,6 +60,11 @@ class AppLifecycleService {
       _demoScriptChangedController.stream;
   Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
       _avatarChangeRequestedController.stream;
+
+  /// The mood declared by each reply that sets one (already validated;
+  /// invalid values arrive as neutral). A reply without a mood keeps the
+  /// previous one, so nothing is emitted for it.
+  Stream<AvatarMood> get moodEvents => _moodController.stream;
 
   /// Emit event when a new chat entry is created.
   ///
@@ -87,6 +95,12 @@ class AppLifecycleService {
 
     // Extract avatar config from JSON safely
     final AvatarConfig avatarConfig = entry.getAvatarConfig();
+
+    // The reply's mood applies when the reply starts and persists until a
+    // later reply sets a new one; no mood field means no change.
+    if (avatarConfig.mood != null) {
+      _moodController.add(avatarConfig.mood!);
+    }
 
     AppLogger.debug(
       'Current avatar: bg=${currentAvatarConfig.background}, top=${currentAvatarConfig.top}',

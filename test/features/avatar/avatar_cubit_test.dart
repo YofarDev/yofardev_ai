@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
@@ -47,6 +48,9 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
 
   @override
   Stream<String> get chatChangedEvents => const Stream<String>.empty();
+
+  @override
+  Stream<AvatarMood> get moodEvents => const Stream<AvatarMood>.empty();
 }
 
 void main() {

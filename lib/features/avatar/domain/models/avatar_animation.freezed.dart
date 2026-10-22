@@ -55,7 +55,7 @@ extension AvatarAnimationPatterns on AvatarAnimation {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AvatarAnimationClothes value)?  clothes,TResult Function( AvatarAnimationBackground value)?  background,TResult Function( AvatarAnimationUpdateConfig value)?  updateConfig,TResult Function( AvatarAnimationGesture value)?  gesture,TResult Function( AvatarAnimationSceneEvent value)?  sceneEvent,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AvatarAnimationClothes value)?  clothes,TResult Function( AvatarAnimationBackground value)?  background,TResult Function( AvatarAnimationUpdateConfig value)?  updateConfig,TResult Function( AvatarAnimationGesture value)?  gesture,TResult Function( AvatarAnimationSceneEvent value)?  sceneEvent,TResult Function( AvatarAnimationMood value)?  mood,TResult Function( AvatarAnimationPresence value)?  presence,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case AvatarAnimationClothes() when clothes != null:
@@ -63,7 +63,9 @@ return clothes(_that);case AvatarAnimationBackground() when background != null:
 return background(_that);case AvatarAnimationUpdateConfig() when updateConfig != null:
 return updateConfig(_that);case AvatarAnimationGesture() when gesture != null:
 return gesture(_that);case AvatarAnimationSceneEvent() when sceneEvent != null:
-return sceneEvent(_that);case _:
+return sceneEvent(_that);case AvatarAnimationMood() when mood != null:
+return mood(_that);case AvatarAnimationPresence() when presence != null:
+return presence(_that);case _:
   return orElse();
 
 }
@@ -81,7 +83,7 @@ return sceneEvent(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AvatarAnimationClothes value)  clothes,required TResult Function( AvatarAnimationBackground value)  background,required TResult Function( AvatarAnimationUpdateConfig value)  updateConfig,required TResult Function( AvatarAnimationGesture value)  gesture,required TResult Function( AvatarAnimationSceneEvent value)  sceneEvent,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AvatarAnimationClothes value)  clothes,required TResult Function( AvatarAnimationBackground value)  background,required TResult Function( AvatarAnimationUpdateConfig value)  updateConfig,required TResult Function( AvatarAnimationGesture value)  gesture,required TResult Function( AvatarAnimationSceneEvent value)  sceneEvent,required TResult Function( AvatarAnimationMood value)  mood,required TResult Function( AvatarAnimationPresence value)  presence,}){
 final _that = this;
 switch (_that) {
 case AvatarAnimationClothes():
@@ -89,7 +91,9 @@ return clothes(_that);case AvatarAnimationBackground():
 return background(_that);case AvatarAnimationUpdateConfig():
 return updateConfig(_that);case AvatarAnimationGesture():
 return gesture(_that);case AvatarAnimationSceneEvent():
-return sceneEvent(_that);}
+return sceneEvent(_that);case AvatarAnimationMood():
+return mood(_that);case AvatarAnimationPresence():
+return presence(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -103,7 +107,7 @@ return sceneEvent(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AvatarAnimationClothes value)?  clothes,TResult? Function( AvatarAnimationBackground value)?  background,TResult? Function( AvatarAnimationUpdateConfig value)?  updateConfig,TResult? Function( AvatarAnimationGesture value)?  gesture,TResult? Function( AvatarAnimationSceneEvent value)?  sceneEvent,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AvatarAnimationClothes value)?  clothes,TResult? Function( AvatarAnimationBackground value)?  background,TResult? Function( AvatarAnimationUpdateConfig value)?  updateConfig,TResult? Function( AvatarAnimationGesture value)?  gesture,TResult? Function( AvatarAnimationSceneEvent value)?  sceneEvent,TResult? Function( AvatarAnimationMood value)?  mood,TResult? Function( AvatarAnimationPresence value)?  presence,}){
 final _that = this;
 switch (_that) {
 case AvatarAnimationClothes() when clothes != null:
@@ -111,7 +115,9 @@ return clothes(_that);case AvatarAnimationBackground() when background != null:
 return background(_that);case AvatarAnimationUpdateConfig() when updateConfig != null:
 return updateConfig(_that);case AvatarAnimationGesture() when gesture != null:
 return gesture(_that);case AvatarAnimationSceneEvent() when sceneEvent != null:
-return sceneEvent(_that);case _:
+return sceneEvent(_that);case AvatarAnimationMood() when mood != null:
+return mood(_that);case AvatarAnimationPresence() when presence != null:
+return presence(_that);case _:
   return null;
 
 }
@@ -128,14 +134,16 @@ return sceneEvent(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( bool goingDown)?  clothes,TResult Function( BackgroundTransition transition)?  background,TResult Function( String chatId,  AvatarConfig avatarConfig)?  updateConfig,TResult Function( AvatarGesture gesture)?  gesture,TResult Function( SceneEvent sceneEvent)?  sceneEvent,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( bool goingDown)?  clothes,TResult Function( BackgroundTransition transition)?  background,TResult Function( String chatId,  AvatarConfig avatarConfig)?  updateConfig,TResult Function( AvatarGesture gesture)?  gesture,TResult Function( SceneEvent sceneEvent)?  sceneEvent,TResult Function( AvatarMood mood)?  mood,TResult Function( AvatarSpecials presence)?  presence,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AvatarAnimationClothes() when clothes != null:
 return clothes(_that.goingDown);case AvatarAnimationBackground() when background != null:
 return background(_that.transition);case AvatarAnimationUpdateConfig() when updateConfig != null:
 return updateConfig(_that.chatId,_that.avatarConfig);case AvatarAnimationGesture() when gesture != null:
 return gesture(_that.gesture);case AvatarAnimationSceneEvent() when sceneEvent != null:
-return sceneEvent(_that.sceneEvent);case _:
+return sceneEvent(_that.sceneEvent);case AvatarAnimationMood() when mood != null:
+return mood(_that.mood);case AvatarAnimationPresence() when presence != null:
+return presence(_that.presence);case _:
   return orElse();
 
 }
@@ -153,14 +161,16 @@ return sceneEvent(_that.sceneEvent);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( bool goingDown)  clothes,required TResult Function( BackgroundTransition transition)  background,required TResult Function( String chatId,  AvatarConfig avatarConfig)  updateConfig,required TResult Function( AvatarGesture gesture)  gesture,required TResult Function( SceneEvent sceneEvent)  sceneEvent,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( bool goingDown)  clothes,required TResult Function( BackgroundTransition transition)  background,required TResult Function( String chatId,  AvatarConfig avatarConfig)  updateConfig,required TResult Function( AvatarGesture gesture)  gesture,required TResult Function( SceneEvent sceneEvent)  sceneEvent,required TResult Function( AvatarMood mood)  mood,required TResult Function( AvatarSpecials presence)  presence,}) {final _that = this;
 switch (_that) {
 case AvatarAnimationClothes():
 return clothes(_that.goingDown);case AvatarAnimationBackground():
 return background(_that.transition);case AvatarAnimationUpdateConfig():
 return updateConfig(_that.chatId,_that.avatarConfig);case AvatarAnimationGesture():
 return gesture(_that.gesture);case AvatarAnimationSceneEvent():
-return sceneEvent(_that.sceneEvent);}
+return sceneEvent(_that.sceneEvent);case AvatarAnimationMood():
+return mood(_that.mood);case AvatarAnimationPresence():
+return presence(_that.presence);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -174,14 +184,16 @@ return sceneEvent(_that.sceneEvent);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( bool goingDown)?  clothes,TResult? Function( BackgroundTransition transition)?  background,TResult? Function( String chatId,  AvatarConfig avatarConfig)?  updateConfig,TResult? Function( AvatarGesture gesture)?  gesture,TResult? Function( SceneEvent sceneEvent)?  sceneEvent,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( bool goingDown)?  clothes,TResult? Function( BackgroundTransition transition)?  background,TResult? Function( String chatId,  AvatarConfig avatarConfig)?  updateConfig,TResult? Function( AvatarGesture gesture)?  gesture,TResult? Function( SceneEvent sceneEvent)?  sceneEvent,TResult? Function( AvatarMood mood)?  mood,TResult? Function( AvatarSpecials presence)?  presence,}) {final _that = this;
 switch (_that) {
 case AvatarAnimationClothes() when clothes != null:
 return clothes(_that.goingDown);case AvatarAnimationBackground() when background != null:
 return background(_that.transition);case AvatarAnimationUpdateConfig() when updateConfig != null:
 return updateConfig(_that.chatId,_that.avatarConfig);case AvatarAnimationGesture() when gesture != null:
 return gesture(_that.gesture);case AvatarAnimationSceneEvent() when sceneEvent != null:
-return sceneEvent(_that.sceneEvent);case _:
+return sceneEvent(_that.sceneEvent);case AvatarAnimationMood() when mood != null:
+return mood(_that.mood);case AvatarAnimationPresence() when presence != null:
+return presence(_that.presence);case _:
   return null;
 
 }
@@ -524,6 +536,138 @@ class _$AvatarAnimationSceneEventCopyWithImpl<$Res>
   return _then(AvatarAnimationSceneEvent(
 null == sceneEvent ? _self.sceneEvent : sceneEvent // ignore: cast_nullable_to_non_nullable
 as SceneEvent,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AvatarAnimationMood implements AvatarAnimation {
+  const AvatarAnimationMood(this.mood);
+  
+
+ final  AvatarMood mood;
+
+/// Create a copy of AvatarAnimation
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AvatarAnimationMoodCopyWith<AvatarAnimationMood> get copyWith => _$AvatarAnimationMoodCopyWithImpl<AvatarAnimationMood>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarAnimationMood&&(identical(other.mood, mood) || other.mood == mood));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,mood);
+
+@override
+String toString() {
+  return 'AvatarAnimation.mood(mood: $mood)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AvatarAnimationMoodCopyWith<$Res> implements $AvatarAnimationCopyWith<$Res> {
+  factory $AvatarAnimationMoodCopyWith(AvatarAnimationMood value, $Res Function(AvatarAnimationMood) _then) = _$AvatarAnimationMoodCopyWithImpl;
+@useResult
+$Res call({
+ AvatarMood mood
+});
+
+
+
+
+}
+/// @nodoc
+class _$AvatarAnimationMoodCopyWithImpl<$Res>
+    implements $AvatarAnimationMoodCopyWith<$Res> {
+  _$AvatarAnimationMoodCopyWithImpl(this._self, this._then);
+
+  final AvatarAnimationMood _self;
+  final $Res Function(AvatarAnimationMood) _then;
+
+/// Create a copy of AvatarAnimation
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? mood = null,}) {
+  return _then(AvatarAnimationMood(
+null == mood ? _self.mood : mood // ignore: cast_nullable_to_non_nullable
+as AvatarMood,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AvatarAnimationPresence implements AvatarAnimation {
+  const AvatarAnimationPresence(this.presence);
+  
+
+ final  AvatarSpecials presence;
+
+/// Create a copy of AvatarAnimation
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AvatarAnimationPresenceCopyWith<AvatarAnimationPresence> get copyWith => _$AvatarAnimationPresenceCopyWithImpl<AvatarAnimationPresence>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarAnimationPresence&&(identical(other.presence, presence) || other.presence == presence));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,presence);
+
+@override
+String toString() {
+  return 'AvatarAnimation.presence(presence: $presence)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AvatarAnimationPresenceCopyWith<$Res> implements $AvatarAnimationCopyWith<$Res> {
+  factory $AvatarAnimationPresenceCopyWith(AvatarAnimationPresence value, $Res Function(AvatarAnimationPresence) _then) = _$AvatarAnimationPresenceCopyWithImpl;
+@useResult
+$Res call({
+ AvatarSpecials presence
+});
+
+
+
+
+}
+/// @nodoc
+class _$AvatarAnimationPresenceCopyWithImpl<$Res>
+    implements $AvatarAnimationPresenceCopyWith<$Res> {
+  _$AvatarAnimationPresenceCopyWithImpl(this._self, this._then);
+
+  final AvatarAnimationPresence _self;
+  final $Res Function(AvatarAnimationPresence) _then;
+
+/// Create a copy of AvatarAnimation
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? presence = null,}) {
+  return _then(AvatarAnimationPresence(
+null == presence ? _self.presence : presence // ignore: cast_nullable_to_non_nullable
+as AvatarSpecials,
   ));
 }
 

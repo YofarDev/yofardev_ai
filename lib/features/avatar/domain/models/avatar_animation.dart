@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_gesture.dart';
+import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
 import 'background_transition.dart';
 part 'avatar_animation.freezed.dart';
@@ -41,4 +42,11 @@ sealed class AvatarAnimation with _$AvatarAnimation {
   /// Play a scene event in the active Rive scene.
   const factory AvatarAnimation.sceneEvent(SceneEvent sceneEvent) =
       AvatarAnimationSceneEvent;
+
+  /// Set the avatar's base mood (persists until the next reply sets one).
+  const factory AvatarAnimation.mood(AvatarMood mood) = AvatarAnimationMood;
+
+  /// Drive avatar presence (on screen, out of screen, leave and come back).
+  const factory AvatarAnimation.presence(AvatarSpecials presence) =
+      AvatarAnimationPresence;
 }

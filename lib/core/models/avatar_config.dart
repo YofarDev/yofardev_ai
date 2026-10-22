@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'avatar_mood.dart';
 import 'sound_effects.dart';
 import '../utils/app_utils.dart';
 import '../utils/extensions.dart';
@@ -140,6 +141,7 @@ sealed class AvatarConfig with _$AvatarConfig {
     AvatarSpecials? specials,
     AvatarCostume? costume,
     @SoundEffectConverter() SoundEffects? soundEffect,
+    @MoodConverter() AvatarMood? mood,
   }) = _AvatarConfig;
   const AvatarConfig._();
 
@@ -185,6 +187,7 @@ sealed class AvatarConfig with _$AvatarConfig {
               map['soundEffect'] as String,
             )
           : null,
+      mood: parseMood(map['mood']),
     );
   }
 }
@@ -200,6 +203,30 @@ class SoundEffectConverter implements JsonConverter<SoundEffects?, String?> {
 
   @override
   String? toJson(SoundEffects? object) {
+    return object?.name;
+  }
+}
+
+/// Validates a raw reply-JSON mood against [AvatarMood]; any non-null value
+/// that is not a valid mood name falls back to [AvatarMood.neutral].
+AvatarMood? parseMood(Object? raw) {
+  if (raw == null) {
+    return null;
+  }
+  if (raw is String) {
+    return EnumUtils.firstOrNull(AvatarMood.values, raw) ?? AvatarMood.neutral;
+  }
+  return AvatarMood.neutral;
+}
+
+class MoodConverter implements JsonConverter<AvatarMood?, String?> {
+  const MoodConverter();
+
+  @override
+  AvatarMood? fromJson(String? json) => parseMood(json);
+
+  @override
+  String? toJson(AvatarMood? object) {
     return object?.name;
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/services.dart';
 
 import '../models/avatar_config.dart';
+import '../models/avatar_gesture.dart';
+import '../models/avatar_mood.dart';
+import '../models/avatar_scene.dart';
 import '../models/chat.dart';
 import '../models/sound_effects.dart';
 import '../utils/app_utils.dart';
@@ -50,6 +53,20 @@ class PromptDatasource {
       r'$soundEffectsList',
       SoundEffects.values,
     );
+    systemPrompt = _replacePlaceholder(
+      systemPrompt,
+      r'$moodList',
+      AvatarMood.values,
+    );
+    systemPrompt = _replacePlaceholder(
+      systemPrompt,
+      r'$gestureList',
+      AvatarGesture.values,
+    );
+    systemPrompt = systemPrompt.replaceAll(
+      r'$sceneEventList',
+      _sceneEventList(),
+    );
 
     // Replace user info
     final String? username = await _settingsDatasource.getUsername();
@@ -79,5 +96,19 @@ class PromptDatasource {
       buffer.write("${value.name}, ");
     }
     return text.replaceAll(placeholder, buffer.toString());
+  }
+
+  /// Scene events grouped by scene, since an event is only valid for the
+  /// scene currently on screen.
+  String _sceneEventList() {
+    final StringBuffer buffer = StringBuffer();
+    for (final AvatarScene scene in AvatarScene.values) {
+      buffer.write('${scene.name}: ');
+      for (final SceneEvent event in scene.allowedEvents) {
+        buffer.write('${event.name}, ');
+      }
+      buffer.write('; ');
+    }
+    return buffer.toString();
   }
 }
