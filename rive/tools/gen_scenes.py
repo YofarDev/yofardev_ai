@@ -11,6 +11,7 @@ import math
 import os
 import random
 import sys
+import zlib
 
 sys.path.insert(0, os.path.dirname(__file__))
 from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, solid, stroke, track, write  # noqa: E402,F401
@@ -196,7 +197,7 @@ def rain_fx(sc: Scene, name: str, col: str, frames: int = 480, extra: list[El] |
             darken: str = "FF0A1022") -> tuple[El, El]:
     """Returns (content node, one-shot anim): fade in, falling sheet loop, fade out."""
     d = sc.d
-    r = random.Random(hash(name) & 0xFFFF)
+    r = random.Random(zlib.crc32(name.encode()))
     streaks = []
     tile = 480                      # pattern repeats every `tile` px, so a `tile` shift loops seamlessly
     for i in range(16):

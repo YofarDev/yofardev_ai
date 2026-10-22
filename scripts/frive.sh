@@ -3,6 +3,8 @@
 #   ./scripts/frive.sh            # all
 #   ./scripts/frive.sh campfire   # avatar + the named scenes only
 # Requires: rive CLI (>= 1.7.0) and uv on PATH. Deterministic: generators use fixed seeds and ids.
+# Fails on any build warning, a size over budget (avatar 600 KB, scene 400 KB), or any name that
+# differs from rive/CONTRACT.md (rive/tools/check_contract.py).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -41,4 +43,6 @@ build "$ROOT/rive/avatar" "$OUT/avatar.riv" "$AVATAR_MAX"
 for s in "${SCENES[@]}"; do
   build "$ROOT/rive/scenes/$s" "$OUT/scenes/$s.riv" "$SCENE_MAX"
 done
+echo "▸ contract self-check"
+uv run "$TOOLS/check_contract.py"
 echo "✓ done"
