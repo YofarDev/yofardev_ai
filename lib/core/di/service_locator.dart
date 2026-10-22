@@ -51,6 +51,7 @@ import '../services/audio/voice_effects_service.dart';
 import '../services/agent/tool_registry.dart';
 import '../../features/avatar/domain/services/avatar_animation_service.dart';
 import '../../features/avatar/domain/services/avatar_cue_service.dart';
+import '../../features/avatar/domain/services/prop_reaction_service.dart';
 import '../../features/demo/domain/services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_config_manager.dart';
@@ -187,6 +188,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<AvatarAnimationService>(
     () => AvatarAnimationService(),
   );
+  getIt.registerLazySingleton<PropReactionService>(() => PropReactionService());
   getIt.registerLazySingleton<ChatEntryService>(
     () => ChatEntryService(getIt<SettingsRepository>()),
   );
@@ -224,6 +226,8 @@ Future<void> setupServiceLocator() async {
       getIt<AvatarAnimationService>(),
       getIt<AudioPlayerService>(),
       getIt<AppLifecycleService>(),
+      getIt<PropReactionService>(),
+      getIt<SoundRepository>(),
     ),
   );
   getIt.registerFactory<TalkingCubit>(

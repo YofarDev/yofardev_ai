@@ -9,4 +9,5 @@ export 'widgets/loading_avatar_widget.dart';
 export 'widgets/thinking_animation.dart';
 export 'domain/services/avatar_animation_service.dart';
 export 'domain/services/avatar_cue_service.dart';
+export 'domain/services/prop_reaction_service.dart';
 export 'domain/repositories/avatar_repository.dart';

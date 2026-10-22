@@ -59,6 +59,7 @@ void main() {
     expect(getIt<GlobalMemoryService>(), isNotNull);
     expect(getIt<AvatarAnimationService>(), isNotNull);
     expect(getIt<AvatarCueService>(), isNotNull);
+    expect(getIt<PropReactionService>(), isNotNull);
     expect(getIt<TtsQueueService>(), isNotNull);
     expect(getIt<AppLifecycleService>(), isNotNull);
     expect(getIt<InterruptionService>(), isNotNull);

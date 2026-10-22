@@ -5,6 +5,7 @@ import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/result.dart';
+import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
@@ -123,6 +124,8 @@ void main() {
         mockAnimationService,
         MockAudioPlayerService(),
         MockAppLifecycleService(),
+        PropReactionService(),
+        _FakeSoundRepository(),
       );
       avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
     });
@@ -205,4 +208,15 @@ class MockAvatarRepository implements AvatarRepository {
     final Result<void> result = Result<void>.ok(null);
     return result;
   }
+}
+
+class _FakeSoundRepository implements SoundRepository {
+  @override
+  Future<Result<void>> play(String soundPath) async => Result<void>.ok(null);
+
+  @override
+  Future<Result<void>> stop() async => Result<void>.ok(null);
+
+  @override
+  Future<Result<bool>> get isPlaying async => Result<bool>.ok(false);
 }

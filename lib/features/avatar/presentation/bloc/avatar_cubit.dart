@@ -7,6 +7,7 @@ import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_gesture.dart';
 import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/models/sound_effects.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
 import '../../domain/repositories/avatar_repository.dart';
@@ -14,6 +15,8 @@ import '../../../../core/res/app_constants.dart';
 import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
 import '../../../../features/avatar/domain/services/avatar_animation_service.dart';
+import '../../../../features/avatar/domain/services/prop_reaction_service.dart';
+import '../../../sound/sound.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../domain/models/avatar_animation.dart';
@@ -25,6 +28,8 @@ class AvatarCubit extends Cubit<AvatarState> {
     this._animationService,
     this._audioPlayerService,
     this._appLifecycleService,
+    this._propReactions,
+    this._soundRepository,
   ) : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig())) {
     // Subscribe to animation events from the service
     _animationSubscription = _animationService.animations.listen(
@@ -74,6 +79,8 @@ class AvatarCubit extends Cubit<AvatarState> {
   final AvatarAnimationService _animationService;
   final AudioPlayerService _audioPlayerService;
   final AppLifecycleService _appLifecycleService;
+  final PropReactionService _propReactions;
+  final SoundRepository _soundRepository;
   StreamSubscription<AvatarAnimation>? _animationSubscription;
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
   StreamSubscription<String>? _chatChangedSubscription;
@@ -96,32 +103,27 @@ class AvatarCubit extends Cubit<AvatarState> {
         );
         updateAvatarConfig(chatId, avatarConfig);
       },
-      // Inline cues are consumed by the Rive view via dedicated state
-      // (B7/B8); until then they are acknowledged and ignored.
       gesture: (AvatarGesture gesture) {
-        AppLogger.debug(
-          'AvatarCubit: gesture cue ${gesture.name} (no Rive view yet)',
-          tag: 'AvatarCubit',
+        // The Rive view fires the trigger from a BlocListener keyed on seq,
+        // so repeating the same gesture still plays.
+        _emitIfOpen(
+          state.copyWith(
+            gestureEvent: (gesture: gesture, seq: state.gestureEvent.seq + 1),
+          ),
         );
       },
       sceneEvent: (SceneEvent sceneEvent) {
-        AppLogger.debug(
-          'AvatarCubit: scene event ${sceneEvent.name} (no Rive view yet)',
-          tag: 'AvatarCubit',
+        _emitIfOpen(
+          state.copyWith(
+            sceneEvent: (sceneEvent: sceneEvent, seq: state.sceneEvent.seq + 1),
+          ),
         );
       },
-      // Mood/presence state lands with the B7 AvatarCubit state work.
       mood: (AvatarMood mood) {
-        AppLogger.debug(
-          'AvatarCubit: mood ${mood.name} (state wiring pending)',
-          tag: 'AvatarCubit',
-        );
+        _emitIfOpen(state.copyWith(mood: mood));
       },
       presence: (AvatarSpecials presence) {
-        AppLogger.debug(
-          'AvatarCubit: presence ${presence.name} (state wiring pending)',
-          tag: 'AvatarCubit',
-        );
+        _emitIfOpen(state.copyWith(presence: presence));
       },
     );
   }
@@ -184,10 +186,16 @@ class AvatarCubit extends Cubit<AvatarState> {
         // Only set status to ready if dimensions are initialized
         if (state.baseOriginalHeight > 0) {
           _emitIfOpen(
-            state.copyWith(avatar: chat.avatar, status: AvatarStatus.ready),
+            state.copyWith(
+              avatar: chat.avatar,
+              status: AvatarStatus.ready,
+              scene: chat.avatar.background,
+            ),
           );
         } else {
-          _emitIfOpen(state.copyWith(avatar: chat.avatar));
+          _emitIfOpen(
+            state.copyWith(avatar: chat.avatar, scene: chat.avatar.background),
+          );
         }
       },
     );
@@ -320,11 +328,63 @@ class AvatarCubit extends Cubit<AvatarState> {
     _emitIfOpen(
       state.copyWith(
         avatar: avatar,
+        scene: avatar.background,
         previousSpecialsState:
             avatarConfig.specials ?? state.previousSpecialsState,
       ),
     );
     _avatarRepository.updateAvatar(chatId, avatar);
+  }
+
+  /// A tap on a scene prop triggers its local reaction only: no LLM call
+  /// and nothing written to chat history.
+  void onPropTapped(AvatarScene scene, String propId) {
+    final PropReaction? reaction = _propReactions.reactionForProp(
+      scene,
+      propId,
+    );
+    if (reaction == null) {
+      AppLogger.debug(
+        'AvatarCubit: no reaction for prop $propId in ${scene.name}',
+        tag: 'AvatarCubit',
+      );
+      return;
+    }
+    _applyReaction(reaction);
+  }
+
+  /// A tap on the avatar itself (zone: head or body per contract).
+  void onAvatarTapped(String zone) {
+    final PropReaction? reaction = _propReactions.reactionForZone(zone);
+    if (reaction == null) {
+      AppLogger.debug(
+        'AvatarCubit: no reaction for zone $zone',
+        tag: 'AvatarCubit',
+      );
+      return;
+    }
+    _applyReaction(reaction);
+  }
+
+  void _applyReaction(PropReaction reaction) {
+    AvatarState next = state;
+    final AvatarMood? reactionMood = reaction.mood;
+    if (reactionMood != null) {
+      next = next.copyWith(mood: reactionMood);
+    }
+    if (reaction.gesture != null) {
+      final AvatarGesture gesture = reaction.gesture!;
+      next = next.copyWith(
+        gestureEvent: (gesture: gesture, seq: next.gestureEvent.seq + 1),
+      );
+    }
+    if (next != state) {
+      _emitIfOpen(next);
+    }
+    final SoundEffects? sound = reaction.soundEffect;
+    if (sound != null) {
+      unawaited(_soundRepository.play(sound.getPath()));
+    }
   }
 
   void toggleGlasses() {

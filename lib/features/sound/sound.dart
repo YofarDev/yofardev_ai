@@ -2,3 +2,4 @@
 library;
 
 export 'domain/services/tts_queue_service.dart';
+export 'domain/repositories/sound_repository.dart';

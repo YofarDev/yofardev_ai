@@ -1,6 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_gesture.dart';
+import '../../../../core/models/avatar_mood.dart';
+import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/avatar_status_animation.dart';
 import '../../domain/models/background_transition.dart';
 
@@ -27,5 +30,12 @@ sealed class AvatarState with _$AvatarState {
     @Default(AvatarSpecials.onScreen) AvatarSpecials previousSpecialsState,
     @Default(BackgroundTransition.none)
     BackgroundTransition backgroundTransition,
+    @Default(AvatarMood.neutral) AvatarMood mood,
+    @Default(AvatarScene.defaultScene) AvatarScene scene,
+    @Default((gesture: AvatarGesture.wave, seq: 0))
+    ({AvatarGesture gesture, int seq}) gestureEvent,
+    @Default((sceneEvent: SceneEvent.lightsOff, seq: 0))
+    ({SceneEvent sceneEvent, int seq}) sceneEvent,
+    @Default(AvatarSpecials.onScreen) AvatarSpecials presence,
   }) = _AvatarState;
 }

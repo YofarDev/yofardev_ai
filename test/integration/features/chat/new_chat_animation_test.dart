@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/result.dart';
+import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
@@ -17,7 +18,6 @@ import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/res/app_constants.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
-import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
@@ -232,6 +232,8 @@ void main() {
         avatarAnimationService,
         AudioPlayerService(),
         MockAppLifecycleService(),
+        PropReactionService(),
+        _FakeSoundRepository(),
       );
       avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
 
@@ -497,4 +499,15 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
 
   @override
   void emitTalkingStateChanged(TalkingPhase phase) {}
+}
+
+class _FakeSoundRepository implements SoundRepository {
+  @override
+  Future<Result<void>> play(String soundPath) async => Result<void>.ok(null);
+
+  @override
+  Future<Result<void>> stop() async => Result<void>.ok(null);
+
+  @override
+  Future<Result<bool>> get isPlaying async => Result<bool>.ok(false);
 }

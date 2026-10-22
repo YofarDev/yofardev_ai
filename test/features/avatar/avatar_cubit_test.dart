@@ -1,9 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/result.dart';
+import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
@@ -82,6 +84,8 @@ void main() {
         mockAnimationService,
         mockAudioPlayerService,
         MockAppLifecycleService(),
+        PropReactionService(),
+        _FakeSoundRepository(),
       );
     });
 
@@ -578,4 +582,111 @@ void main() {
       });
     });
   });
+  group('AvatarCubit cue & mood state (v4)', () {
+    late AvatarCubit cubit;
+    late AvatarAnimationService animationService;
+
+    Future<void> drain() async {
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    setUp(() {
+      animationService = AvatarAnimationService();
+      cubit = AvatarCubit(
+        MockAvatarRepository(),
+        animationService,
+        MockAudioPlayerService(),
+        MockAppLifecycleService(),
+        PropReactionService(),
+        _FakeSoundRepository(),
+      );
+    });
+
+    tearDown(() {
+      cubit.close();
+      animationService.dispose();
+    });
+
+    test('a gesture cue sets gestureEvent with an incremented seq', () async {
+      animationService.trigger(
+        const AvatarAnimation.gesture(AvatarGesture.wave),
+      );
+      await drain();
+
+      expect(cubit.state.gestureEvent.gesture, AvatarGesture.wave);
+      expect(cubit.state.gestureEvent.seq, 1);
+    });
+
+    test('the same gesture twice gives two distinct seq values', () async {
+      animationService.trigger(
+        const AvatarAnimation.gesture(AvatarGesture.nod),
+      );
+      await drain();
+      animationService.trigger(
+        const AvatarAnimation.gesture(AvatarGesture.nod),
+      );
+      await drain();
+
+      expect(cubit.state.gestureEvent.gesture, AvatarGesture.nod);
+      expect(cubit.state.gestureEvent.seq, 2);
+    });
+
+    test('a scene event sets sceneEvent with an incremented seq', () async {
+      animationService.trigger(
+        const AvatarAnimation.sceneEvent(SceneEvent.tvOn),
+      );
+      await drain();
+
+      expect(cubit.state.sceneEvent.sceneEvent, SceneEvent.tvOn);
+      expect(cubit.state.sceneEvent.seq, 1);
+    });
+
+    test('a mood event updates mood', () async {
+      animationService.trigger(const AvatarAnimation.mood(AvatarMood.happy));
+      await drain();
+
+      expect(cubit.state.mood, AvatarMood.happy);
+    });
+
+    test('a presence event updates presence', () async {
+      animationService.trigger(
+        const AvatarAnimation.presence(AvatarSpecials.outOfScreen),
+      );
+      await drain();
+
+      expect(cubit.state.presence, AvatarSpecials.outOfScreen);
+    });
+
+    test('a prop tap applies its reaction', () {
+      cubit.onPropTapped(AvatarScene.livingRoom, 'tv');
+
+      expect(cubit.state.gestureEvent.gesture, AvatarGesture.laugh);
+      expect(cubit.state.gestureEvent.seq, 1);
+    });
+
+    test('a prop tap without a reaction changes nothing', () {
+      cubit.onPropTapped(AvatarScene.beach, 'volcano');
+
+      expect(cubit.state.gestureEvent.seq, 0);
+      expect(cubit.state.mood, AvatarMood.neutral);
+    });
+
+    test('an avatar zone tap applies its reaction', () {
+      cubit.onAvatarTapped('head');
+
+      expect(cubit.state.mood, AvatarMood.happy);
+    });
+  });
+}
+
+class _FakeSoundRepository implements SoundRepository {
+  @override
+  Future<Result<void>> play(String soundPath) async => Result<void>.ok(null);
+
+  @override
+  Future<Result<void>> stop() async => Result<void>.ok(null);
+
+  @override
+  Future<Result<bool>> get isPlaying async => Result<bool>.ok(false);
 }
