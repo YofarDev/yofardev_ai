@@ -1,6 +1,3 @@
-import 'dart:ui';
-import 'package:flutter/foundation.dart';
-
 /// Repository interface for home feature operations
 abstract class HomeRepository {
   /// Play TTS audio with the given path
@@ -8,7 +5,7 @@ abstract class HomeRepository {
     String audioPath, {
     bool removeFile = true,
     bool soundEffectsEnabled = true,
-    VoidCallback? onComplete,
+    void Function()? onComplete,
   });
 
   /// Stop any currently playing TTS audio
