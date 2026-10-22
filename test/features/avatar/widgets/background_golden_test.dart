@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
@@ -119,7 +120,7 @@ class MockAvatarRepository implements AvatarRepository {
       id: chatId,
       title: 'Test Chat',
       persona: ChatPersona.assistant,
-      avatar: const Avatar(background: AvatarBackgrounds.beach),
+      avatar: const Avatar(background: AvatarScene.beach),
     );
     return Result<Chat>.ok(chat);
   }
@@ -195,7 +196,7 @@ void main() {
 
       avatarCubit.updateAvatarConfig(
         'test-chat',
-        const AvatarConfig(background: AvatarBackgrounds.beach),
+        const AvatarConfig(background: AvatarScene.beach),
       );
       await tester.pumpAndSettle();
 
@@ -211,11 +212,11 @@ void main() {
 
       avatarCubit.updateAvatarConfig(
         'test-chat',
-        const AvatarConfig(background: AvatarBackgrounds.forest),
+        const AvatarConfig(background: AvatarScene.campfire),
       );
       await tester.pumpAndSettle();
 
-      await screenMatchesGolden(tester, 'background_changed_to_forest');
+      await screenMatchesGolden(tester, 'background_changed_to_campfire');
     });
   });
 }

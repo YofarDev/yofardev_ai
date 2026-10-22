@@ -1,4 +1,4 @@
-import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/result.dart';
 
 /// Repository for demo-related operations.
@@ -9,7 +9,7 @@ abstract class DemoRepository {
   /// Sets the avatar background for a specific chat.
   Future<Result<void>> setAvatarBackground(
     String chatId,
-    AvatarBackgrounds background,
+    AvatarScene background,
   );
 
   /// Gets the current chat ID.

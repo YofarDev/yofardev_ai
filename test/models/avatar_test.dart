@@ -1,12 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/sound_effects.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 
 void main() {
   group('Avatar (Freezed)', () {
     test('should create instance with default values', () {
       const Avatar avatar = Avatar();
-      expect(avatar.background, AvatarBackgrounds.lake);
+      expect(avatar.background, AvatarScene.livingRoom);
       expect(avatar.hat, AvatarHat.noHat);
       expect(avatar.top, AvatarTop.pinkHoodie);
       expect(avatar.glasses, AvatarGlasses.glasses);
@@ -16,14 +17,14 @@ void main() {
 
     test('should create instance with provided values', () {
       const Avatar avatar = Avatar(
-        background: AvatarBackgrounds.beach,
+        background: AvatarScene.beach,
         hat: AvatarHat.beanie,
         top: AvatarTop.longCoat,
         glasses: AvatarGlasses.sunglasses,
         specials: AvatarSpecials.outOfScreen,
         costume: AvatarCostume.batman,
       );
-      expect(avatar.background, AvatarBackgrounds.beach);
+      expect(avatar.background, AvatarScene.beach);
       expect(avatar.hat, AvatarHat.beanie);
       expect(avatar.top, AvatarTop.longCoat);
       expect(avatar.glasses, AvatarGlasses.sunglasses);
@@ -32,9 +33,9 @@ void main() {
     });
 
     test('should support equality', () {
-      const Avatar avatar1 = Avatar(background: AvatarBackgrounds.beach);
-      const Avatar avatar2 = Avatar(background: AvatarBackgrounds.beach);
-      const Avatar avatar3 = Avatar(background: AvatarBackgrounds.forest);
+      const Avatar avatar1 = Avatar(background: AvatarScene.beach);
+      const Avatar avatar2 = Avatar(background: AvatarScene.beach);
+      const Avatar avatar3 = Avatar(background: AvatarScene.campfire);
 
       expect(avatar1, equals(avatar2));
       expect(avatar1, isNot(equals(avatar3)));
@@ -42,16 +43,16 @@ void main() {
 
     test('should copy with new values', () {
       const Avatar original = Avatar(
-        background: AvatarBackgrounds.lake,
+        background: AvatarScene.campfire,
         hat: AvatarHat.noHat,
       );
 
       final Avatar copied = original.copyWith(
-        background: AvatarBackgrounds.beach,
+        background: AvatarScene.beach,
         hat: AvatarHat.beanie,
       );
 
-      expect(copied.background, AvatarBackgrounds.beach);
+      expect(copied.background, AvatarScene.beach);
       expect(copied.hat, AvatarHat.beanie);
       expect(copied.top, original.top);
       expect(copied.glasses, original.glasses);
@@ -59,15 +60,13 @@ void main() {
 
     test('should copy with partial values', () {
       const Avatar original = Avatar(
-        background: AvatarBackgrounds.lake,
+        background: AvatarScene.campfire,
         hat: AvatarHat.noHat,
       );
 
-      final Avatar copied = original.copyWith(
-        background: AvatarBackgrounds.beach,
-      );
+      final Avatar copied = original.copyWith(background: AvatarScene.beach);
 
-      expect(copied.background, AvatarBackgrounds.beach);
+      expect(copied.background, AvatarScene.beach);
       expect(copied.hat, original.hat);
       expect(copied.top, original.top);
     });
@@ -133,7 +132,7 @@ void main() {
 
     test('should create instance with provided values', () {
       const AvatarConfig config = AvatarConfig(
-        background: AvatarBackgrounds.beach,
+        background: AvatarScene.beach,
         hat: AvatarHat.beanie,
         top: AvatarTop.longCoat,
         glasses: AvatarGlasses.sunglasses,
@@ -141,7 +140,7 @@ void main() {
         costume: AvatarCostume.batman,
         soundEffect: SoundEffects.spookyTheme,
       );
-      expect(config.background, AvatarBackgrounds.beach);
+      expect(config.background, AvatarScene.beach);
       expect(config.hat, AvatarHat.beanie);
       expect(config.top, AvatarTop.longCoat);
       expect(config.glasses, AvatarGlasses.sunglasses);
@@ -151,14 +150,10 @@ void main() {
     });
 
     test('should support equality', () {
-      const AvatarConfig config1 = AvatarConfig(
-        background: AvatarBackgrounds.beach,
-      );
-      const AvatarConfig config2 = AvatarConfig(
-        background: AvatarBackgrounds.beach,
-      );
+      const AvatarConfig config1 = AvatarConfig(background: AvatarScene.beach);
+      const AvatarConfig config2 = AvatarConfig(background: AvatarScene.beach);
       const AvatarConfig config3 = AvatarConfig(
-        background: AvatarBackgrounds.forest,
+        background: AvatarScene.campfire,
       );
 
       expect(config1, equals(config2));
@@ -166,16 +161,14 @@ void main() {
     });
 
     test('should copy with new values', () {
-      const AvatarConfig original = AvatarConfig(
-        background: AvatarBackgrounds.beach,
-      );
+      const AvatarConfig original = AvatarConfig(background: AvatarScene.beach);
 
       final AvatarConfig copied = original.copyWith(
-        background: AvatarBackgrounds.forest,
+        background: AvatarScene.campfire,
         hat: AvatarHat.beanie,
       );
 
-      expect(copied.background, AvatarBackgrounds.forest);
+      expect(copied.background, AvatarScene.campfire);
       expect(copied.hat, AvatarHat.beanie);
       expect(copied.top, original.top);
     });
@@ -184,7 +177,7 @@ void main() {
   group('Avatar Backward Compatibility', () {
     test('toMap should maintain weird field mappings for compatibility', () {
       const Avatar avatar = Avatar(
-        background: AvatarBackgrounds.beach,
+        background: AvatarScene.beach,
         hat: AvatarHat.beanie,
         top: AvatarTop.longCoat,
         glasses: AvatarGlasses.sunglasses,
@@ -215,7 +208,7 @@ void main() {
 
       final Avatar avatar = Avatar.fromMap(map);
 
-      expect(avatar.background, AvatarBackgrounds.beach);
+      expect(avatar.background, AvatarScene.beach);
       expect(avatar.hat, AvatarHat.beanie);
       expect(avatar.top, AvatarTop.longCoat);
       expect(avatar.glasses, AvatarGlasses.sunglasses);
@@ -225,7 +218,7 @@ void main() {
 
     test('toMap/fromMap should be symmetric', () {
       const Avatar original = Avatar(
-        background: AvatarBackgrounds.beach,
+        background: AvatarScene.beach,
         hat: AvatarHat.beanie,
         top: AvatarTop.longCoat,
       );

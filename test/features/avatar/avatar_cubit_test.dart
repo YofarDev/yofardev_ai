@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
@@ -210,7 +211,7 @@ void main() {
       test('should create default avatar', () {
         const Avatar avatar = Avatar();
 
-        expect(avatar.background, AvatarBackgrounds.lake);
+        expect(avatar.background, AvatarScene.livingRoom);
         expect(avatar.hat, AvatarHat.noHat);
         expect(avatar.top, AvatarTop.pinkHoodie);
         expect(avatar.glasses, AvatarGlasses.glasses);
@@ -221,18 +222,18 @@ void main() {
       test('should copy with new values', () {
         const Avatar avatar = Avatar();
         final Avatar newAvatar = avatar.copyWith(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
           glasses: AvatarGlasses.sunglasses,
         );
 
-        expect(newAvatar.background, AvatarBackgrounds.beach);
+        expect(newAvatar.background, AvatarScene.beach);
         expect(newAvatar.glasses, AvatarGlasses.sunglasses);
         expect(newAvatar.hat, avatar.hat); // unchanged
       });
 
       test('should serialize and deserialize correctly', () {
         const Avatar avatar = Avatar(
-          background: AvatarBackgrounds.forest,
+          background: AvatarScene.campfire,
           hat: AvatarHat.frenchBeret,
           top: AvatarTop.longCoat,
           glasses: AvatarGlasses.sunglasses,
@@ -253,7 +254,7 @@ void main() {
       test('should support value equality', () {
         const Avatar avatar1 = Avatar();
         const Avatar avatar2 = Avatar();
-        const Avatar avatar3 = Avatar(background: AvatarBackgrounds.beach);
+        const Avatar avatar3 = Avatar(background: AvatarScene.beach);
 
         expect(avatar1, equals(avatar2));
         expect(avatar1, isNot(equals(avatar3)));
@@ -291,20 +292,18 @@ void main() {
     group('AvatarConfig', () {
       test('should create config with optional values', () {
         const AvatarConfig config = AvatarConfig(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
           hat: AvatarHat.beanie,
         );
 
-        expect(config.background, AvatarBackgrounds.beach);
+        expect(config.background, AvatarScene.beach);
         expect(config.hat, AvatarHat.beanie);
         expect(config.top, isNull);
         expect(config.glasses, isNull);
       });
 
       test('should copy with new values', () {
-        const AvatarConfig config = AvatarConfig(
-          background: AvatarBackgrounds.beach,
-        );
+        const AvatarConfig config = AvatarConfig(background: AvatarScene.beach);
         final AvatarConfig newConfig = config.copyWith(
           glasses: AvatarGlasses.sunglasses,
         );
@@ -318,7 +317,7 @@ void main() {
         const AvatarConfig config1 = AvatarConfig();
         const AvatarConfig config2 = AvatarConfig();
         const AvatarConfig config3 = AvatarConfig(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
         );
 
         expect(config1, equals(config2));
@@ -366,7 +365,7 @@ void main() {
           // Arrange
           avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
           final AvatarConfig avatarConfig = AvatarConfig(
-            background: AvatarBackgrounds.beach,
+            background: AvatarScene.beach,
             top: AvatarTop.longCoat,
             specials: AvatarSpecials.leaveAndComeBack,
           );
@@ -381,7 +380,7 @@ void main() {
           // Verify by checking state changes
           expect(
             avatarCubit.state.avatar.background,
-            equals(AvatarBackgrounds.beach),
+            equals(AvatarScene.beach),
           );
           expect(avatarCubit.state.avatar.top, equals(AvatarTop.longCoat));
         },
@@ -396,7 +395,7 @@ void main() {
 
         // Act - Trigger background change animation
         final AvatarConfig animationConfig = AvatarConfig(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
           specials: AvatarSpecials.leaveAndComeBack, // Animation trigger
         );
         avatarCubit.updateAvatarConfig('chat1', animationConfig);
@@ -405,10 +404,7 @@ void main() {
         await Future<dynamic>.delayed(const Duration(milliseconds: 100));
 
         // Assert - Background changed, but specials should be preserved (not set to leaveAndComeBack)
-        expect(
-          avatarCubit.state.avatar.background,
-          equals(AvatarBackgrounds.beach),
-        );
+        expect(avatarCubit.state.avatar.background, equals(AvatarScene.beach));
         expect(avatarCubit.state.avatar.specials, equals(originalSpecials));
       });
 
@@ -419,7 +415,7 @@ void main() {
           // Arrange
           avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
           final AvatarConfig avatarConfig = AvatarConfig(
-            background: AvatarBackgrounds.beach,
+            background: AvatarScene.beach,
             specials: AvatarSpecials.onScreen,
           );
 
@@ -436,7 +432,7 @@ void main() {
           );
           expect(
             avatarCubit.state.avatar.background,
-            equals(AvatarBackgrounds.beach),
+            equals(AvatarScene.beach),
           );
         },
       );
@@ -470,7 +466,7 @@ void main() {
 
         // Act
         final AvatarConfig avatarConfig = AvatarConfig(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
           specials: AvatarSpecials.leaveAndComeBack,
         );
         avatarCubit.onNewAvatarConfig('chat1', avatarConfig);
@@ -506,7 +502,7 @@ void main() {
         // Arrange
         avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
         final AvatarConfig avatarConfig = AvatarConfig(
-          background: AvatarBackgrounds.forest,
+          background: AvatarScene.campfire,
           hat: AvatarHat.frenchBeret,
           top: AvatarTop.longCoat,
           glasses: AvatarGlasses.sunglasses,
@@ -518,7 +514,7 @@ void main() {
         // Assert
         expect(
           avatarCubit.state.avatar.background,
-          equals(AvatarBackgrounds.forest),
+          equals(AvatarScene.campfire),
         );
         expect(avatarCubit.state.avatar.hat, equals(AvatarHat.frenchBeret));
         expect(avatarCubit.state.avatar.top, equals(AvatarTop.longCoat));
@@ -536,7 +532,7 @@ void main() {
         avatarCubit.emit(
           avatarCubit.state.copyWith(
             avatar: const Avatar(
-              background: AvatarBackgrounds.cityscrape,
+              background: AvatarScene.deepSpace,
               hat: AvatarHat.frenchBeret,
             ),
           ),
@@ -544,16 +540,13 @@ void main() {
 
         // Act - Update only background, keep other fields
         final AvatarConfig avatarConfig = AvatarConfig(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
           // other fields are null
         );
         avatarCubit.updateAvatarConfig('chat1', avatarConfig);
 
         // Assert
-        expect(
-          avatarCubit.state.avatar.background,
-          equals(AvatarBackgrounds.beach),
-        );
+        expect(avatarCubit.state.avatar.background, equals(AvatarScene.beach));
         expect(
           avatarCubit.state.avatar.hat,
           equals(AvatarHat.frenchBeret),
@@ -573,7 +566,7 @@ void main() {
         avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
 
         final AvatarConfig avatarConfig = AvatarConfig(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
           specials: AvatarSpecials.leaveAndComeBack,
         );
 

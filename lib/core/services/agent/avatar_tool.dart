@@ -1,12 +1,17 @@
 import '../../models/app_lifecycle_event.dart';
 import '../../models/avatar_config.dart';
+import '../../models/avatar_scene.dart';
 import '../../models/function_info.dart';
 import 'agent_tool.dart';
 import '../app_lifecycle_service.dart';
 import '../../utils/logger.dart';
 
 /// Agent tool that allows the LLM to change the avatar's appearance
-/// including background, clothes (hat, top), glasses, and accessories.
+/// including scene, clothes (hat, top), glasses, and accessories.
+///
+/// Every parameter's option list is generated from the Dart enums, so the
+/// schema can never drift from what the app actually supports (the v3 lists
+/// were hand-written and offered values that don't exist).
 class AvatarTool extends AgentTool {
   AvatarTool(this._appLifecycleService);
 
@@ -18,60 +23,53 @@ class AvatarTool extends AgentTool {
   @override
   String get description =>
       'Changes the avatar appearance. '
-      'Can change background, hat, top (shirt), glasses, or costume. '
+      'Can change scene (background), hat, top (shirt), glasses, or costume. '
       'All parameters are optional - only include the ones you want to change.';
 
   @override
   List<Parameter> get parameters => <Parameter>[
     Parameter(
       name: 'background',
-      description:
-          'Background scene. '
-          'Options: lake, beach, mountain, space, city, forest, desert, sunset, snow, underwater',
+      description: 'Scene. Options: ${_options(AvatarScene.values)}',
       type: 'string',
       isRequired: false,
     ),
     Parameter(
       name: 'hat',
-      description:
-          'Hat/headwear. '
-          'Options: none, french_beret, beanie, cap, top_hat, wizard_hat, crown, santa_hat',
+      description: 'Hat/headwear. Options: ${_options(AvatarHat.values)}',
       type: 'string',
       isRequired: false,
     ),
     Parameter(
       name: 'top',
-      description:
-          'Top/shirt. '
-          'Options: pink_hoodie, long_coat, t_shirt, suit, dress, superhero, space_suit',
+      description: 'Top/shirt. Options: ${_options(AvatarTop.values)}',
       type: 'string',
       isRequired: false,
     ),
     Parameter(
       name: 'glasses',
-      description:
-          'Eyewear. '
-          'Options: none, glasses, sunglasses, monocle, safety_goggles',
+      description: 'Eyewear. Options: ${_options(AvatarGlasses.values)}',
       type: 'string',
       isRequired: false,
     ),
     Parameter(
       name: 'costume',
       description:
-          'Special costume. '
-          'Options: none, astronaut, doctor, police, chef, pirate, ninja',
+          'Special costume. Options: ${_options(AvatarCostume.values)}',
       type: 'string',
       isRequired: false,
     ),
     Parameter(
       name: 'specials',
       description:
-          'Special effects. '
-          'Options: none, sparkles, smoke, fire, ice, hearts, stars',
+          'Presence effect. Options: ${_options(AvatarSpecials.values)}',
       type: 'string',
       isRequired: false,
     ),
   ];
+
+  static String _options(List<Enum> values) =>
+      values.map((Enum value) => value.name).join(', ');
 
   @override
   Map<String, String> get requiredConfigKeys => <String, String>{};
@@ -88,10 +86,13 @@ class AvatarTool extends AgentTool {
       // Parse background if provided
       final String? backgroundStr = args['background'] as String?;
       if (backgroundStr != null) {
-        final AvatarBackgrounds? background = _parseBackground(backgroundStr);
+        final AvatarScene? background = parseEnumName(
+          AvatarScene.values,
+          backgroundStr,
+        );
         if (background == null) {
           return 'Error: Invalid background "$backgroundStr". '
-              'Valid options: lake, beach, mountain, space, city, forest, desert, sunset, snow, underwater';
+              'Valid options: ${_options(AvatarScene.values)}';
         }
         configBuilder.background = background;
       }
@@ -99,10 +100,10 @@ class AvatarTool extends AgentTool {
       // Parse hat if provided
       final String? hatStr = args['hat'] as String?;
       if (hatStr != null) {
-        final AvatarHat? hat = _parseHat(hatStr);
+        final AvatarHat? hat = parseEnumName(AvatarHat.values, hatStr);
         if (hat == null) {
           return 'Error: Invalid hat "$hatStr". '
-              'Valid options: none, french_beret, beanie, cap, top_hat, wizard_hat, crown, santa_hat';
+              'Valid options: ${_options(AvatarHat.values)}';
         }
         configBuilder.hat = hat;
       }
@@ -110,10 +111,10 @@ class AvatarTool extends AgentTool {
       // Parse top if provided
       final String? topStr = args['top'] as String?;
       if (topStr != null) {
-        final AvatarTop? top = _parseTop(topStr);
+        final AvatarTop? top = parseEnumName(AvatarTop.values, topStr);
         if (top == null) {
           return 'Error: Invalid top "$topStr". '
-              'Valid options: pink_hoodie, long_coat, t_shirt, suit, dress, superhero, space_suit';
+              'Valid options: ${_options(AvatarTop.values)}';
         }
         configBuilder.top = top;
       }
@@ -121,10 +122,13 @@ class AvatarTool extends AgentTool {
       // Parse glasses if provided
       final String? glassesStr = args['glasses'] as String?;
       if (glassesStr != null) {
-        final AvatarGlasses? glasses = _parseGlasses(glassesStr);
+        final AvatarGlasses? glasses = parseEnumName(
+          AvatarGlasses.values,
+          glassesStr,
+        );
         if (glasses == null) {
           return 'Error: Invalid glasses "$glassesStr". '
-              'Valid options: none, glasses, sunglasses, monocle, safety_goggles';
+              'Valid options: ${_options(AvatarGlasses.values)}';
         }
         configBuilder.glasses = glasses;
       }
@@ -132,10 +136,13 @@ class AvatarTool extends AgentTool {
       // Parse costume if provided
       final String? costumeStr = args['costume'] as String?;
       if (costumeStr != null) {
-        final AvatarCostume? costume = _parseCostume(costumeStr);
+        final AvatarCostume? costume = parseEnumName(
+          AvatarCostume.values,
+          costumeStr,
+        );
         if (costume == null) {
           return 'Error: Invalid costume "$costumeStr". '
-              'Valid options: none, astronaut, doctor, police, chef, pirate, ninja';
+              'Valid options: ${_options(AvatarCostume.values)}';
         }
         configBuilder.costume = costume;
       }
@@ -143,10 +150,13 @@ class AvatarTool extends AgentTool {
       // Parse specials if provided
       final String? specialsStr = args['specials'] as String?;
       if (specialsStr != null) {
-        final AvatarSpecials? specials = _parseSpecials(specialsStr);
+        final AvatarSpecials? specials = parseEnumName(
+          AvatarSpecials.values,
+          specialsStr,
+        );
         if (specials == null) {
           return 'Error: Invalid special effect "$specialsStr". '
-              'Valid options: none, sparkles, smoke, fire, ice, hearts, stars';
+              'Valid options: ${_options(AvatarSpecials.values)}';
         }
         configBuilder.specials = specials;
       }
@@ -171,7 +181,7 @@ class AvatarTool extends AgentTool {
       );
 
       // Determine which animation to use based on what changed
-      // Background changes use leaveAndComeBack animation
+      // Scene changes use leaveAndComeBack animation
       // Clothes changes use outOfScreen animation (go down and up)
       final bool backgroundChanged = backgroundStr != null;
       final bool clothesChanged =
@@ -227,59 +237,23 @@ class AvatarTool extends AgentTool {
       return 'Error changing avatar: $e';
     }
   }
+}
 
-  AvatarBackgrounds? _parseBackground(String value) {
-    final String normalized = value.toLowerCase().replaceAll(' ', '_');
-    return AvatarBackgrounds.values.cast<AvatarBackgrounds?>().firstWhere(
-      (AvatarBackgrounds? e) => e?.name.toLowerCase() == normalized,
-      orElse: () => null,
-    );
+/// Case/underscore-tolerant enum lookup by name (e.g. "pink hoodie" finds
+/// `pinkHoodie`).
+T? parseEnumName<T extends Enum>(List<T> values, String value) {
+  final String normalized = value.toLowerCase().replaceAll(' ', '_');
+  for (final T candidate in values) {
+    if (candidate.name.toLowerCase() == normalized) {
+      return candidate;
+    }
   }
-
-  AvatarHat? _parseHat(String value) {
-    final String normalized = value.toLowerCase().replaceAll(' ', '_');
-    return AvatarHat.values.cast<AvatarHat?>().firstWhere(
-      (AvatarHat? e) => e?.name.toLowerCase() == normalized,
-      orElse: () => null,
-    );
-  }
-
-  AvatarTop? _parseTop(String value) {
-    final String normalized = value.toLowerCase().replaceAll(' ', '_');
-    return AvatarTop.values.cast<AvatarTop?>().firstWhere(
-      (AvatarTop? e) => e?.name.toLowerCase() == normalized,
-      orElse: () => null,
-    );
-  }
-
-  AvatarGlasses? _parseGlasses(String value) {
-    final String normalized = value.toLowerCase().replaceAll(' ', '_');
-    return AvatarGlasses.values.cast<AvatarGlasses?>().firstWhere(
-      (AvatarGlasses? e) => e?.name.toLowerCase() == normalized,
-      orElse: () => null,
-    );
-  }
-
-  AvatarCostume? _parseCostume(String value) {
-    final String normalized = value.toLowerCase().replaceAll(' ', '_');
-    return AvatarCostume.values.cast<AvatarCostume?>().firstWhere(
-      (AvatarCostume? e) => e?.name.toLowerCase() == normalized,
-      orElse: () => null,
-    );
-  }
-
-  AvatarSpecials? _parseSpecials(String value) {
-    final String normalized = value.toLowerCase().replaceAll(' ', '_');
-    return AvatarSpecials.values.cast<AvatarSpecials?>().firstWhere(
-      (AvatarSpecials? e) => e?.name.toLowerCase() == normalized,
-      orElse: () => null,
-    );
-  }
+  return null;
 }
 
 /// Helper class to build AvatarConfig with optional fields
 class AvatarConfigBuilder {
-  AvatarBackgrounds? background;
+  AvatarScene? background;
   AvatarHat? hat;
   AvatarTop? top;
   AvatarGlasses? glasses;

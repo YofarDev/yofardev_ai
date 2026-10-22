@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
@@ -82,16 +83,13 @@ void main() {
         service.emitNewChatEntry(
           entry,
           'chat1',
-          const AvatarConfig(background: AvatarBackgrounds.forest),
+          const AvatarConfig(background: AvatarScene.campfire),
         );
 
         await Future<dynamic>.delayed(const Duration(milliseconds: 10));
 
         expect(events, hasLength(1));
-        expect(
-          events.first.newAvatarConfig.background,
-          AvatarBackgrounds.beach,
-        );
+        expect(events.first.newAvatarConfig.background, AvatarScene.beach);
         expect(
           events.first.newAvatarConfig.specials,
           AvatarSpecials.leaveAndComeBack,

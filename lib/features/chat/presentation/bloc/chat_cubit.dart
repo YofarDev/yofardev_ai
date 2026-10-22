@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/chat_entry.dart';
 import '../../../../core/models/demo_script.dart';
 import '../../../../core/models/failure.dart';
@@ -353,7 +354,7 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// Update background for the opened chat
-  Future<void> updateBackgroundOpenedChat(AvatarBackgrounds bg) async {
+  Future<void> updateBackgroundOpenedChat(AvatarScene bg) async {
     emit(state.copyWith(status: ChatStatus.updating));
     final Chat chat = state.openedChat;
     final Chat updatedChat = chat.copyWith(

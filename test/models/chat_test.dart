@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
@@ -30,14 +31,14 @@ void main() {
       final Chat chat = Chat(
         id: 'chat123',
         entries: entries,
-        avatar: const Avatar(background: AvatarBackgrounds.beach),
+        avatar: const Avatar(background: AvatarScene.beach),
         language: 'fr',
         systemPrompt: 'You are helpful',
         persona: ChatPersona.assistant,
       );
       expect(chat.id, 'chat123');
       expect(chat.entries.length, 1);
-      expect(chat.avatar.background, AvatarBackgrounds.beach);
+      expect(chat.avatar.background, AvatarScene.beach);
       expect(chat.language, 'fr');
       expect(chat.systemPrompt, 'You are helpful');
       expect(chat.persona, ChatPersona.assistant);
@@ -86,7 +87,7 @@ void main() {
       final Chat chat = Chat(
         id: 'chat123',
         entries: entries,
-        avatar: const Avatar(background: AvatarBackgrounds.beach),
+        avatar: const Avatar(background: AvatarScene.beach),
         language: 'fr',
         systemPrompt: 'You are helpful',
         persona: ChatPersona.assistant,

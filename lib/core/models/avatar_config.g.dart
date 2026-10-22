@@ -8,8 +8,8 @@ part of 'avatar_config.dart';
 
 _Avatar _$AvatarFromJson(Map<String, dynamic> json) => _Avatar(
   background:
-      $enumDecodeNullable(_$AvatarBackgroundsEnumMap, json['background']) ??
-      AvatarBackgrounds.lake,
+      $enumDecodeNullable(_$AvatarSceneEnumMap, json['background']) ??
+      AvatarScene.defaultScene,
   hat: $enumDecodeNullable(_$AvatarHatEnumMap, json['hat']) ?? AvatarHat.noHat,
   top:
       $enumDecodeNullable(_$AvatarTopEnumMap, json['top']) ??
@@ -26,7 +26,7 @@ _Avatar _$AvatarFromJson(Map<String, dynamic> json) => _Avatar(
 );
 
 Map<String, dynamic> _$AvatarToJson(_Avatar instance) => <String, dynamic>{
-  'background': _$AvatarBackgroundsEnumMap[instance.background]!,
+  'background': _$AvatarSceneEnumMap[instance.background]!,
   'hat': _$AvatarHatEnumMap[instance.hat]!,
   'top': _$AvatarTopEnumMap[instance.top]!,
   'glasses': _$AvatarGlassesEnumMap[instance.glasses]!,
@@ -34,34 +34,11 @@ Map<String, dynamic> _$AvatarToJson(_Avatar instance) => <String, dynamic>{
   'costume': _$AvatarCostumeEnumMap[instance.costume]!,
 };
 
-const _$AvatarBackgroundsEnumMap = {
-  AvatarBackgrounds.lake: 'lake',
-  AvatarBackgrounds.beach: 'beach',
-  AvatarBackgrounds.forest: 'forest',
-  AvatarBackgrounds.street: 'street',
-  AvatarBackgrounds.sakuraTrees: 'sakuraTrees',
-  AvatarBackgrounds.library: 'library',
-  AvatarBackgrounds.classroom: 'classroom',
-  AvatarBackgrounds.mall: 'mall',
-  AvatarBackgrounds.park: 'park',
-  AvatarBackgrounds.restaurant: 'restaurant',
-  AvatarBackgrounds.bedroom: 'bedroom',
-  AvatarBackgrounds.livingRoom: 'livingRoom',
-  AvatarBackgrounds.campfire: 'campfire',
-  AvatarBackgrounds.parisianCafe: 'parisianCafe',
-  AvatarBackgrounds.office: 'office',
-  AvatarBackgrounds.japaneseGarden: 'japaneseGarden',
-  AvatarBackgrounds.snowyMountain: 'snowyMountain',
-  AvatarBackgrounds.balconyViewOfCityByNight: 'balconyViewOfCityByNight',
-  AvatarBackgrounds.cityscrape: 'cityscrape',
-  AvatarBackgrounds.tropicalIsland: 'tropicalIsland',
-  AvatarBackgrounds.swimmingPool: 'swimmingPool',
-  AvatarBackgrounds.hallMansion: 'hallMansion',
-  AvatarBackgrounds.facadeMansion: 'facadeMansion',
-  AvatarBackgrounds.artGallery: 'artGallery',
-  AvatarBackgrounds.cinema: 'cinema',
-  AvatarBackgrounds.deepSpace: 'deepSpace',
-  AvatarBackgrounds.christmasLivingRoom: 'christmasLivingRoom',
+const _$AvatarSceneEnumMap = {
+  AvatarScene.livingRoom: 'livingRoom',
+  AvatarScene.campfire: 'campfire',
+  AvatarScene.beach: 'beach',
+  AvatarScene.deepSpace: 'deepSpace',
 };
 
 const _$AvatarHatEnumMap = {
@@ -105,9 +82,8 @@ const _$AvatarCostumeEnumMap = {
 
 _AvatarConfig _$AvatarConfigFromJson(Map<String, dynamic> json) =>
     _AvatarConfig(
-      background: $enumDecodeNullable(
-        _$AvatarBackgroundsEnumMap,
-        json['background'],
+      background: const SceneNameConverter().fromJson(
+        json['background'] as String?,
       ),
       hat: $enumDecodeNullable(_$AvatarHatEnumMap, json['hat']),
       top: $enumDecodeNullable(_$AvatarTopEnumMap, json['top']),
@@ -122,7 +98,7 @@ _AvatarConfig _$AvatarConfigFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$AvatarConfigToJson(_AvatarConfig instance) =>
     <String, dynamic>{
-      'background': _$AvatarBackgroundsEnumMap[instance.background],
+      'background': const SceneNameConverter().toJson(instance.background),
       'hat': _$AvatarHatEnumMap[instance.hat],
       'top': _$AvatarTopEnumMap[instance.top],
       'glasses': _$AvatarGlassesEnumMap[instance.glasses],

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Avatar {
 
- AvatarBackgrounds get background; AvatarHat get hat; AvatarTop get top; AvatarGlasses get glasses; AvatarSpecials get specials; AvatarCostume get costume;
+ AvatarScene get background; AvatarHat get hat; AvatarTop get top; AvatarGlasses get glasses; AvatarSpecials get specials; AvatarCostume get costume;
 /// Create a copy of Avatar
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -44,7 +44,7 @@ abstract mixin class $AvatarCopyWith<$Res>  {
   factory $AvatarCopyWith(Avatar value, $Res Function(Avatar) _then) = _$AvatarCopyWithImpl;
 @useResult
 $Res call({
- AvatarBackgrounds background, AvatarHat hat, AvatarTop top, AvatarGlasses glasses, AvatarSpecials specials, AvatarCostume costume
+ AvatarScene background, AvatarHat hat, AvatarTop top, AvatarGlasses glasses, AvatarSpecials specials, AvatarCostume costume
 });
 
 
@@ -64,7 +64,7 @@ class _$AvatarCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? background = null,Object? hat = null,Object? top = null,Object? glasses = null,Object? specials = null,Object? costume = null,}) {
   return _then(_self.copyWith(
 background: null == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
-as AvatarBackgrounds,hat: null == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
+as AvatarScene,hat: null == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
 as AvatarHat,top: null == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
 as AvatarTop,glasses: null == glasses ? _self.glasses : glasses // ignore: cast_nullable_to_non_nullable
 as AvatarGlasses,specials: null == specials ? _self.specials : specials // ignore: cast_nullable_to_non_nullable
@@ -151,7 +151,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AvatarBackgrounds background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AvatarScene background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Avatar() when $default != null:
 return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume);case _:
@@ -172,7 +172,7 @@ return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.special
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AvatarBackgrounds background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AvatarScene background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)  $default,) {final _that = this;
 switch (_that) {
 case _Avatar():
 return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume);}
@@ -189,7 +189,7 @@ return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.special
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AvatarBackgrounds background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AvatarScene background,  AvatarHat hat,  AvatarTop top,  AvatarGlasses glasses,  AvatarSpecials specials,  AvatarCostume costume)?  $default,) {final _that = this;
 switch (_that) {
 case _Avatar() when $default != null:
 return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume);case _:
@@ -204,10 +204,10 @@ return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.special
 @JsonSerializable()
 
 class _Avatar extends Avatar {
-  const _Avatar({this.background = AvatarBackgrounds.lake, this.hat = AvatarHat.noHat, this.top = AvatarTop.pinkHoodie, this.glasses = AvatarGlasses.glasses, this.specials = AvatarSpecials.onScreen, this.costume = AvatarCostume.none}): super._();
+  const _Avatar({this.background = AvatarScene.defaultScene, this.hat = AvatarHat.noHat, this.top = AvatarTop.pinkHoodie, this.glasses = AvatarGlasses.glasses, this.specials = AvatarSpecials.onScreen, this.costume = AvatarCostume.none}): super._();
   factory _Avatar.fromJson(Map<String, dynamic> json) => _$AvatarFromJson(json);
 
-@override@JsonKey() final  AvatarBackgrounds background;
+@override@JsonKey() final  AvatarScene background;
 @override@JsonKey() final  AvatarHat hat;
 @override@JsonKey() final  AvatarTop top;
 @override@JsonKey() final  AvatarGlasses glasses;
@@ -243,7 +243,7 @@ abstract mixin class _$AvatarCopyWith<$Res> implements $AvatarCopyWith<$Res> {
   factory _$AvatarCopyWith(_Avatar value, $Res Function(_Avatar) _then) = __$AvatarCopyWithImpl;
 @override @useResult
 $Res call({
- AvatarBackgrounds background, AvatarHat hat, AvatarTop top, AvatarGlasses glasses, AvatarSpecials specials, AvatarCostume costume
+ AvatarScene background, AvatarHat hat, AvatarTop top, AvatarGlasses glasses, AvatarSpecials specials, AvatarCostume costume
 });
 
 
@@ -263,7 +263,7 @@ class __$AvatarCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? background = null,Object? hat = null,Object? top = null,Object? glasses = null,Object? specials = null,Object? costume = null,}) {
   return _then(_Avatar(
 background: null == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
-as AvatarBackgrounds,hat: null == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
+as AvatarScene,hat: null == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
 as AvatarHat,top: null == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
 as AvatarTop,glasses: null == glasses ? _self.glasses : glasses // ignore: cast_nullable_to_non_nullable
 as AvatarGlasses,specials: null == specials ? _self.specials : specials // ignore: cast_nullable_to_non_nullable
@@ -279,7 +279,7 @@ as AvatarCostume,
 /// @nodoc
 mixin _$AvatarConfig {
 
- AvatarBackgrounds? get background; AvatarHat? get hat; AvatarTop? get top; AvatarGlasses? get glasses; AvatarSpecials? get specials; AvatarCostume? get costume;@SoundEffectConverter() SoundEffects? get soundEffect;@MoodConverter() AvatarMood? get mood;
+@SceneNameConverter() AvatarScene? get background; AvatarHat? get hat; AvatarTop? get top; AvatarGlasses? get glasses; AvatarSpecials? get specials; AvatarCostume? get costume;@SoundEffectConverter() SoundEffects? get soundEffect;@MoodConverter() AvatarMood? get mood;
 /// Create a copy of AvatarConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -312,7 +312,7 @@ abstract mixin class $AvatarConfigCopyWith<$Res>  {
   factory $AvatarConfigCopyWith(AvatarConfig value, $Res Function(AvatarConfig) _then) = _$AvatarConfigCopyWithImpl;
 @useResult
 $Res call({
- AvatarBackgrounds? background, AvatarHat? hat, AvatarTop? top, AvatarGlasses? glasses, AvatarSpecials? specials, AvatarCostume? costume,@SoundEffectConverter() SoundEffects? soundEffect,@MoodConverter() AvatarMood? mood
+@SceneNameConverter() AvatarScene? background, AvatarHat? hat, AvatarTop? top, AvatarGlasses? glasses, AvatarSpecials? specials, AvatarCostume? costume,@SoundEffectConverter() SoundEffects? soundEffect,@MoodConverter() AvatarMood? mood
 });
 
 
@@ -332,7 +332,7 @@ class _$AvatarConfigCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? background = freezed,Object? hat = freezed,Object? top = freezed,Object? glasses = freezed,Object? specials = freezed,Object? costume = freezed,Object? soundEffect = freezed,Object? mood = freezed,}) {
   return _then(_self.copyWith(
 background: freezed == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
-as AvatarBackgrounds?,hat: freezed == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
+as AvatarScene?,hat: freezed == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
 as AvatarHat?,top: freezed == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
 as AvatarTop?,glasses: freezed == glasses ? _self.glasses : glasses // ignore: cast_nullable_to_non_nullable
 as AvatarGlasses?,specials: freezed == specials ? _self.specials : specials // ignore: cast_nullable_to_non_nullable
@@ -421,7 +421,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AvatarBackgrounds? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect, @MoodConverter()  AvatarMood? mood)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@SceneNameConverter()  AvatarScene? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect, @MoodConverter()  AvatarMood? mood)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AvatarConfig() when $default != null:
 return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume,_that.soundEffect,_that.mood);case _:
@@ -442,7 +442,7 @@ return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.special
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AvatarBackgrounds? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect, @MoodConverter()  AvatarMood? mood)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@SceneNameConverter()  AvatarScene? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect, @MoodConverter()  AvatarMood? mood)  $default,) {final _that = this;
 switch (_that) {
 case _AvatarConfig():
 return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume,_that.soundEffect,_that.mood);}
@@ -459,7 +459,7 @@ return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.special
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AvatarBackgrounds? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect, @MoodConverter()  AvatarMood? mood)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@SceneNameConverter()  AvatarScene? background,  AvatarHat? hat,  AvatarTop? top,  AvatarGlasses? glasses,  AvatarSpecials? specials,  AvatarCostume? costume, @SoundEffectConverter()  SoundEffects? soundEffect, @MoodConverter()  AvatarMood? mood)?  $default,) {final _that = this;
 switch (_that) {
 case _AvatarConfig() when $default != null:
 return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.specials,_that.costume,_that.soundEffect,_that.mood);case _:
@@ -474,10 +474,10 @@ return $default(_that.background,_that.hat,_that.top,_that.glasses,_that.special
 @JsonSerializable()
 
 class _AvatarConfig extends AvatarConfig {
-  const _AvatarConfig({this.background, this.hat, this.top, this.glasses, this.specials, this.costume, @SoundEffectConverter() this.soundEffect, @MoodConverter() this.mood}): super._();
+  const _AvatarConfig({@SceneNameConverter() this.background, this.hat, this.top, this.glasses, this.specials, this.costume, @SoundEffectConverter() this.soundEffect, @MoodConverter() this.mood}): super._();
   factory _AvatarConfig.fromJson(Map<String, dynamic> json) => _$AvatarConfigFromJson(json);
 
-@override final  AvatarBackgrounds? background;
+@override@SceneNameConverter() final  AvatarScene? background;
 @override final  AvatarHat? hat;
 @override final  AvatarTop? top;
 @override final  AvatarGlasses? glasses;
@@ -519,7 +519,7 @@ abstract mixin class _$AvatarConfigCopyWith<$Res> implements $AvatarConfigCopyWi
   factory _$AvatarConfigCopyWith(_AvatarConfig value, $Res Function(_AvatarConfig) _then) = __$AvatarConfigCopyWithImpl;
 @override @useResult
 $Res call({
- AvatarBackgrounds? background, AvatarHat? hat, AvatarTop? top, AvatarGlasses? glasses, AvatarSpecials? specials, AvatarCostume? costume,@SoundEffectConverter() SoundEffects? soundEffect,@MoodConverter() AvatarMood? mood
+@SceneNameConverter() AvatarScene? background, AvatarHat? hat, AvatarTop? top, AvatarGlasses? glasses, AvatarSpecials? specials, AvatarCostume? costume,@SoundEffectConverter() SoundEffects? soundEffect,@MoodConverter() AvatarMood? mood
 });
 
 
@@ -539,7 +539,7 @@ class __$AvatarConfigCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? background = freezed,Object? hat = freezed,Object? top = freezed,Object? glasses = freezed,Object? specials = freezed,Object? costume = freezed,Object? soundEffect = freezed,Object? mood = freezed,}) {
   return _then(_AvatarConfig(
 background: freezed == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
-as AvatarBackgrounds?,hat: freezed == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
+as AvatarScene?,hat: freezed == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
 as AvatarHat?,top: freezed == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
 as AvatarTop?,glasses: freezed == glasses ? _self.glasses : glasses // ignore: cast_nullable_to_non_nullable
 as AvatarGlasses?,specials: freezed == specials ? _self.specials : specials // ignore: cast_nullable_to_non_nullable

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/prompt_datasource.dart';
 import '../../../../core/services/settings_local_datasource.dart';
@@ -35,8 +36,7 @@ class ChatLocalDatasource {
     final ChatPersona persona = await _settingsDatasource.getPersona();
     final Avatar defaultAvatar = persona.getDefaultAvatar();
     // Use the new chat pool instead of all backgrounds
-    final AvatarBackgrounds randomBackground =
-        AvatarBackgroundsNewChatPool.getRandom();
+    final AvatarScene randomBackground = AvatarSceneNewChatPool.getRandom();
     final Chat newChat = Chat(
       id: newChatId,
       avatar: defaultAvatar.copyWith(background: randomBackground),

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/answer.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 
 void main() {
@@ -17,7 +18,7 @@ void main() {
 
     test('should create instance with provided values', () {
       const AvatarConfig avatarConfig = AvatarConfig(
-        background: AvatarBackgrounds.beach,
+        background: AvatarScene.beach,
         hat: AvatarHat.beanie,
       );
       const Answer answer = Answer(
@@ -71,14 +72,14 @@ void main() {
     test('should replace avatarConfig with new value in copyWith', () {
       const Answer original = Answer(
         chatId: 'chat1',
-        avatarConfig: AvatarConfig(background: AvatarBackgrounds.forest),
+        avatarConfig: AvatarConfig(background: AvatarScene.campfire),
       );
 
       final Answer withNewConfig = original.copyWith(
-        avatarConfig: const AvatarConfig(background: AvatarBackgrounds.beach),
+        avatarConfig: const AvatarConfig(background: AvatarScene.beach),
       );
 
-      expect(withNewConfig.avatarConfig.background, AvatarBackgrounds.beach);
+      expect(withNewConfig.avatarConfig.background, AvatarScene.beach);
       // Other fields should remain the same
       expect(withNewConfig.chatId, original.chatId);
     });

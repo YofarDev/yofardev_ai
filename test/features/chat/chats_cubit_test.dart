@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
@@ -335,12 +336,12 @@ void main() {
         chatsCubit.setOpenedChat(testChat);
         // Note: This method is async but we don't await in test
         // as it makes external service calls
-        chatsCubit.updateBackgroundOpenedChat(AvatarBackgrounds.beach);
+        chatsCubit.updateBackgroundOpenedChat(AvatarScene.beach);
 
         // Verify state was updated
         expect(
           chatsCubit.state.openedChat.avatar.background,
-          AvatarBackgrounds.beach,
+          AvatarScene.beach,
         );
       });
     });
@@ -350,7 +351,7 @@ void main() {
         const Chat testChat = Chat(id: 'test-chat');
 
         const AvatarConfig newConfig = AvatarConfig(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
           hat: AvatarHat.frenchBeret,
           top: AvatarTop.longCoat,
         );
@@ -362,7 +363,7 @@ void main() {
 
         expect(
           chatsCubit.state.openedChat.avatar.background,
-          AvatarBackgrounds.beach,
+          AvatarScene.beach,
         );
         expect(chatsCubit.state.openedChat.avatar.hat, AvatarHat.frenchBeret);
         expect(chatsCubit.state.openedChat.avatar.top, AvatarTop.longCoat);
@@ -383,7 +384,7 @@ void main() {
         // Unchanged fields
         expect(
           chatsCubit.state.openedChat.avatar.background,
-          AvatarBackgrounds.lake,
+          AvatarScene.livingRoom,
         );
         expect(chatsCubit.state.openedChat.avatar.top, AvatarTop.pinkHoodie);
         expect(
@@ -890,7 +891,7 @@ void main() {
         // Arrange
         const Chat testChat = Chat(
           id: 'test-chat-456',
-          avatar: Avatar(background: AvatarBackgrounds.beach),
+          avatar: Avatar(background: AvatarScene.beach),
         );
         when(
           () => mockChatRepository.createNewChat(
@@ -909,7 +910,7 @@ void main() {
               that: isA<AvatarConfig>().having(
                 (AvatarConfig c) => c.background,
                 'background',
-                AvatarBackgrounds.beach,
+                AvatarScene.beach,
               ),
             ),
           ),
@@ -985,7 +986,7 @@ void main() {
             currentChat: const Chat(
               id: 'test-chat',
               avatar: Avatar(
-                background: AvatarBackgrounds.lake,
+                background: AvatarScene.campfire,
                 hat: AvatarHat.noHat,
                 top: AvatarTop.pinkHoodie,
               ),
@@ -993,7 +994,7 @@ void main() {
             openedChat: const Chat(
               id: 'test-chat',
               avatar: Avatar(
-                background: AvatarBackgrounds.lake,
+                background: AvatarScene.campfire,
                 hat: AvatarHat.noHat,
                 top: AvatarTop.pinkHoodie,
               ),
@@ -1016,7 +1017,7 @@ void main() {
           ).thenAnswer((_) async => Result<void>.ok(null));
 
           final AvatarConfig newConfig = const AvatarConfig(
-            background: AvatarBackgrounds.beach,
+            background: AvatarScene.beach,
             top: AvatarTop.longCoat,
           );
 
@@ -1026,11 +1027,11 @@ void main() {
           // Assert - Both currentChat and openedChat should be updated
           expect(
             chatCubit.state.currentChat.avatar.background,
-            equals(AvatarBackgrounds.beach),
+            equals(AvatarScene.beach),
           );
           expect(
             chatCubit.state.openedChat.avatar.background,
-            equals(AvatarBackgrounds.beach),
+            equals(AvatarScene.beach),
           );
           expect(
             chatCubit.state.currentChat.avatar.top,
@@ -1053,16 +1054,16 @@ void main() {
           ).thenAnswer((_) async => Result<void>.ok(null));
 
           // Act
-          await chatCubit.updateBackgroundOpenedChat(AvatarBackgrounds.beach);
+          await chatCubit.updateBackgroundOpenedChat(AvatarScene.beach);
 
           // Assert
           expect(
             chatCubit.state.currentChat.avatar.background,
-            equals(AvatarBackgrounds.beach),
+            equals(AvatarScene.beach),
           );
           expect(
             chatCubit.state.openedChat.avatar.background,
-            equals(AvatarBackgrounds.beach),
+            equals(AvatarScene.beach),
           );
         },
       );
@@ -1082,7 +1083,7 @@ void main() {
         );
 
         final AvatarConfig newConfig = const AvatarConfig(
-          background: AvatarBackgrounds.beach,
+          background: AvatarScene.beach,
         );
 
         // Act
@@ -1092,7 +1093,7 @@ void main() {
         final Chat updatedChat = chatCubit.state.chatsList.firstWhere(
           (Chat c) => c.id == 'test-chat',
         );
-        expect(updatedChat.avatar.background, equals(AvatarBackgrounds.beach));
+        expect(updatedChat.avatar.background, equals(AvatarScene.beach));
       });
 
       // Test: newChatEntryEvent extracts actual config from entry JSON
@@ -1119,7 +1120,7 @@ void main() {
             chatId: 'test-chat',
             // This would have animation specials like leaveAndComeBack
             newAvatarConfig: const AvatarConfig(
-              background: AvatarBackgrounds.beach,
+              background: AvatarScene.beach,
               top: AvatarTop.longCoat,
               specials: AvatarSpecials.leaveAndComeBack,
             ),
@@ -1134,7 +1135,7 @@ void main() {
           // Assert - The avatar should be updated with values from entry JSON
           expect(
             chatCubit.state.currentChat.avatar.background,
-            equals(AvatarBackgrounds.beach),
+            equals(AvatarScene.beach),
           );
           expect(
             chatCubit.state.currentChat.avatar.top,
@@ -1190,7 +1191,7 @@ void main() {
         );
 
         final AvatarConfig currentAvatarConfig = AvatarConfig(
-          background: AvatarBackgrounds.lake,
+          background: AvatarScene.campfire,
           hat: AvatarHat.noHat,
           top: AvatarTop.pinkHoodie,
         );

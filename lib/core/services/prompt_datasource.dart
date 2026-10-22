@@ -26,7 +26,7 @@ class PromptDatasource {
     systemPrompt = _replacePlaceholder(
       systemPrompt,
       r'$backgroundList',
-      AvatarBackgrounds.values,
+      AvatarScene.values,
     );
     systemPrompt = _replacePlaceholder(
       systemPrompt,

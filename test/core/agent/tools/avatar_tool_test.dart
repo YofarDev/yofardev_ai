@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/function_info.dart';
 import 'package:yofardev_ai/core/services/agent/avatar_tool.dart';
@@ -82,10 +83,7 @@ void main() {
       expect(result, isA<String>());
       expect(result, contains('Successfully changed'));
       expect(events, hasLength(1));
-      expect(
-        events.single.newConfig.background,
-        equals(AvatarBackgrounds.beach),
-      );
+      expect(events.single.newConfig.background, equals(AvatarScene.beach));
       expect(events.single.backgroundOnly, isTrue);
       await sub.cancel();
     });
@@ -130,10 +128,7 @@ void main() {
       expect(result, isA<String>());
       expect(result, contains('Successfully changed'));
       expect(events, hasLength(1));
-      expect(
-        events.single.newConfig.background,
-        equals(AvatarBackgrounds.beach),
-      );
+      expect(events.single.newConfig.background, equals(AvatarScene.beach));
       expect(events.single.newConfig.hat, equals(AvatarHat.beanie));
       expect(events.single.backgroundOnly, isFalse);
       await sub.cancel();
@@ -201,7 +196,7 @@ void main() {
       );
       expect(
         events.single.configWithAnimation.background,
-        equals(AvatarBackgrounds.beach),
+        equals(AvatarScene.beach),
       );
       await sub.cancel();
     });
@@ -246,10 +241,7 @@ void main() {
 
         // Assert
         // The config persisted should NOT have animation specials
-        expect(
-          events.single.newConfig.background,
-          equals(AvatarBackgrounds.beach),
-        );
+        expect(events.single.newConfig.background, equals(AvatarScene.beach));
         expect(events.single.newConfig.top, equals(AvatarTop.longCoat));
         expect(
           events.single.newConfig.specials,
@@ -294,6 +286,100 @@ void main() {
       // Assert
       expect(events.single.backgroundOnly, isFalse);
       await sub.cancel();
+    });
+  });
+
+  group('AvatarTool schema matches the Dart enums', () {
+    late AvatarTool tool;
+
+    setUp(() {
+      tool = AvatarTool(lifecycleService);
+    });
+
+    test('background options are exactly the AvatarScene values', () {
+      final Parameter parameter = tool.parameters.firstWhere(
+        (Parameter p) => p.name == 'background',
+      );
+      for (final AvatarScene scene in AvatarScene.values) {
+        expect(parameter.description, contains(scene.name));
+      }
+      expect(parameter.description, isNot(contains('mountain')));
+      expect(parameter.description, isNot(contains('pirate')));
+    });
+
+    test('hat options are exactly the AvatarHat values', () {
+      final Parameter parameter = tool.parameters.firstWhere(
+        (Parameter p) => p.name == 'hat',
+      );
+      for (final AvatarHat hat in AvatarHat.values) {
+        expect(parameter.description, contains(hat.name));
+      }
+      expect(parameter.description, isNot(contains('crown')));
+    });
+
+    test('top options are exactly the AvatarTop values', () {
+      final Parameter parameter = tool.parameters.firstWhere(
+        (Parameter p) => p.name == 'top',
+      );
+      for (final AvatarTop top in AvatarTop.values) {
+        expect(parameter.description, contains(top.name));
+      }
+      expect(parameter.description, isNot(contains('space_suit')));
+    });
+
+    test('glasses options are exactly the AvatarGlasses values', () {
+      final Parameter parameter = tool.parameters.firstWhere(
+        (Parameter p) => p.name == 'glasses',
+      );
+      for (final AvatarGlasses glasses in AvatarGlasses.values) {
+        expect(parameter.description, contains(glasses.name));
+      }
+      expect(parameter.description, isNot(contains('monocle')));
+    });
+
+    test('costume options are exactly the AvatarCostume values', () {
+      final Parameter parameter = tool.parameters.firstWhere(
+        (Parameter p) => p.name == 'costume',
+      );
+      for (final AvatarCostume costume in AvatarCostume.values) {
+        expect(parameter.description, contains(costume.name));
+      }
+      expect(parameter.description, isNot(contains('pirate')));
+    });
+
+    test('execute accepts every enum value name for each parameter', () async {
+      final List<(String, List<String>)> cases = <(String, List<String>)>[
+        (
+          'background',
+          AvatarScene.values.map((AvatarScene v) => v.name).toList(),
+        ),
+        ('hat', AvatarHat.values.map((AvatarHat v) => v.name).toList()),
+        ('top', AvatarTop.values.map((AvatarTop v) => v.name).toList()),
+        (
+          'glasses',
+          AvatarGlasses.values.map((AvatarGlasses v) => v.name).toList(),
+        ),
+        (
+          'costume',
+          AvatarCostume.values.map((AvatarCostume v) => v.name).toList(),
+        ),
+        (
+          'specials',
+          AvatarSpecials.values.map((AvatarSpecials v) => v.name).toList(),
+        ),
+      ];
+      for (final (String, List<String>) entry in cases) {
+        for (final String value in entry.$2) {
+          final String result = await tool.execute(<String, dynamic>{
+            entry.$1: value,
+          }, <String, dynamic>{});
+          expect(
+            result,
+            startsWith('Successfully changed'),
+            reason: '${entry.$1}=$value should be accepted, got: $result',
+          );
+        }
+      }
     });
   });
 }

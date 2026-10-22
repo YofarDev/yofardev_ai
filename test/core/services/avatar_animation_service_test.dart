@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 
@@ -28,9 +29,7 @@ void main() {
       () async {
         // Arrange
         const String chatId = 'test-chat-id';
-        const AvatarConfig config = AvatarConfig(
-          background: AvatarBackgrounds.beach,
-        );
+        const AvatarConfig config = AvatarConfig(background: AvatarScene.beach);
 
         final List<AvatarAnimation> received = <AvatarAnimation>[];
         final StreamSubscription<AvatarAnimation> sub = service.animations
@@ -50,9 +49,7 @@ void main() {
     test('playNewChatSequence emits background transition event', () async {
       // Arrange
       const String chatId = 'test-chat-id';
-      const AvatarConfig config = AvatarConfig(
-        background: AvatarBackgrounds.beach,
-      );
+      const AvatarConfig config = AvatarConfig(background: AvatarScene.beach);
 
       final List<AvatarAnimation> received = <AvatarAnimation>[];
       final StreamSubscription<AvatarAnimation> sub = service.animations.listen(
@@ -74,9 +71,7 @@ void main() {
     test('playNewChatSequence emits updateConfig event', () async {
       // Arrange
       const String chatId = 'test-chat-id';
-      const AvatarConfig config = AvatarConfig(
-        background: AvatarBackgrounds.beach,
-      );
+      const AvatarConfig config = AvatarConfig(background: AvatarScene.beach);
 
       final List<AvatarAnimation> received = <AvatarAnimation>[];
       final StreamSubscription<AvatarAnimation> sub = service.animations.listen(

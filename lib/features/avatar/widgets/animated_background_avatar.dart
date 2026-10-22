@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_scene.dart';
 import '../presentation/bloc/avatar_cubit.dart';
 import '../presentation/bloc/avatar_state.dart';
 
@@ -35,7 +36,7 @@ class AnimatedBackgroundAvatar extends StatelessWidget {
             },
             child: Image.asset(
               state.avatar.background.getPath(),
-              key: ValueKey<AvatarBackgrounds>(state.avatar.background),
+              key: ValueKey<AvatarScene>(state.avatar.background),
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,

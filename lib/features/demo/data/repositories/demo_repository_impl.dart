@@ -1,5 +1,6 @@
 import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
@@ -20,7 +21,7 @@ class DemoRepositoryImpl implements DemoRepository {
   @override
   Future<Result<void>> setAvatarBackground(
     String chatId,
-    AvatarBackgrounds background,
+    AvatarScene background,
   ) async {
     try {
       // Get current chat

@@ -205,8 +205,9 @@ class ChatStreamingService {
       // Inline avatar cues ([g:...]/[s:...]) are stripped from the stream
       // here; each sentence's cues ride its TTS queue item so they can fire
       // in time with speech. A fresh parser per reply: cue state never
-      // leaks between replies.
-      final CueParser cueParser = CueParser();
+      // leaks between replies. The current scene decides which scene-event
+      // cues are valid.
+      final CueParser cueParser = CueParser(currentScene: avatar.background);
       final List<AvatarCue> carriedCues = <AvatarCue>[];
 
       /// Appends one clean sentence to the reply, updates the chat, and

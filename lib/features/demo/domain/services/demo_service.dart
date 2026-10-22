@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../../../core/models/result.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/demo_script.dart';
 import '../../../../core/services/llm/fake_llm_service.dart';
 import '../../domain/repositories/demo_repository.dart';
@@ -44,9 +44,8 @@ class DemoService {
     AppLogger.info('Activating demo: ${script.name}', tag: 'DemoService');
 
     // Set initial background using repository
-    final AvatarBackgrounds initialBg = AvatarBackgrounds.values.firstWhere(
-      (AvatarBackgrounds bg) => bg.name == script.initialBackground,
-      orElse: () => AvatarBackgrounds.office,
+    final AvatarScene initialBg = sceneFromStoredBackground(
+      script.initialBackground,
     );
 
     final Result<void> result = await _repository.setAvatarBackground(

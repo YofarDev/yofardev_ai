@@ -58,3 +58,51 @@ enum SceneEvent {
   alienShip,
   nebulaPulse,
 }
+
+/// v3 photo-background names mapped to the nearest scene. Used when stored
+/// data or replies mention a legacy background; stored data is never
+/// rewritten (design decision §2).
+const Map<String, AvatarScene> _legacyBackgroundToScene = <String, AvatarScene>{
+  // Indoors → livingRoom
+  'bedroom': AvatarScene.livingRoom,
+  'library': AvatarScene.livingRoom,
+  'classroom': AvatarScene.livingRoom,
+  'office': AvatarScene.livingRoom,
+  'mall': AvatarScene.livingRoom,
+  'restaurant': AvatarScene.livingRoom,
+  'parisianCafe': AvatarScene.livingRoom,
+  'hallMansion': AvatarScene.livingRoom,
+  'artGallery': AvatarScene.livingRoom,
+  'cinema': AvatarScene.livingRoom,
+  'livingRoom': AvatarScene.livingRoom,
+  'christmasLivingRoom': AvatarScene.livingRoom,
+  // Nature → campfire
+  'lake': AvatarScene.campfire,
+  'forest': AvatarScene.campfire,
+  'park': AvatarScene.campfire,
+  'sakuraTrees': AvatarScene.campfire,
+  'japaneseGarden': AvatarScene.campfire,
+  'snowyMountain': AvatarScene.campfire,
+  'campfire': AvatarScene.campfire,
+  // Water → beach
+  'beach': AvatarScene.beach,
+  'tropicalIsland': AvatarScene.beach,
+  'swimmingPool': AvatarScene.beach,
+  // Urban/night → deepSpace
+  'deepSpace': AvatarScene.deepSpace,
+  'cityscrape': AvatarScene.deepSpace,
+  'balconyViewOfCityByNight': AvatarScene.deepSpace,
+  'street': AvatarScene.deepSpace,
+  'facadeMansion': AvatarScene.deepSpace,
+};
+
+/// Maps any stored background name to a scene; anything unknown (or absent)
+/// falls back to the default scene. Use for `Chat.avatar`, where a
+/// background value always exists.
+AvatarScene sceneFromStoredBackground(String? name) =>
+    _legacyBackgroundToScene[name] ?? AvatarScene.defaultScene;
+
+/// Maps a stored background name to a scene, or null when the value is not
+/// recognized. Use for optional config fields, where null means "no change".
+AvatarScene? maybeSceneFromStoredBackground(String? name) =>
+    _legacyBackgroundToScene[name];

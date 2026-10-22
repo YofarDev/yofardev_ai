@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'avatar_mood.dart';
+import 'avatar_scene.dart';
 import 'sound_effects.dart';
 import '../utils/app_utils.dart';
 import '../utils/extensions.dart';
@@ -10,36 +11,6 @@ import 'voice_effect.dart';
 
 part 'avatar_config.freezed.dart';
 part 'avatar_config.g.dart';
-
-enum AvatarBackgrounds {
-  lake,
-  beach,
-  forest,
-  street,
-  sakuraTrees,
-  library,
-  classroom,
-  mall,
-  park,
-  restaurant,
-  bedroom,
-  livingRoom,
-  campfire,
-  parisianCafe,
-  office,
-  japaneseGarden,
-  snowyMountain,
-  balconyViewOfCityByNight,
-  cityscrape,
-  tropicalIsland,
-  swimmingPool,
-  hallMansion,
-  facadeMansion,
-  artGallery,
-  cinema,
-  deepSpace,
-  christmasLivingRoom,
-}
 
 enum AvatarHat {
   noHat,
@@ -70,7 +41,7 @@ enum AvatarCostume { none, batman, robocop, soubrette, singularity }
 @freezed
 sealed class Avatar with _$Avatar {
   const factory Avatar({
-    @Default(AvatarBackgrounds.lake) AvatarBackgrounds background,
+    @Default(AvatarScene.defaultScene) AvatarScene background,
     @Default(AvatarHat.noHat) AvatarHat hat,
     @Default(AvatarTop.pinkHoodie) AvatarTop top,
     @Default(AvatarGlasses.glasses) AvatarGlasses glasses,
@@ -95,10 +66,7 @@ sealed class Avatar with _$Avatar {
 
   factory Avatar.fromMap(Map<String, dynamic> map) {
     return Avatar(
-      background: EnumUtils.deserialize(
-        AvatarBackgrounds.values,
-        map['background'] as String,
-      ),
+      background: sceneFromStoredBackground(map['background'] as String?),
       hat: EnumUtils.deserialize(AvatarHat.values, map['top'] as String),
       top: EnumUtils.deserialize(AvatarTop.values, map['bottom'] as String),
       glasses: EnumUtils.deserialize(
@@ -134,7 +102,7 @@ sealed class Avatar with _$Avatar {
 @freezed
 sealed class AvatarConfig with _$AvatarConfig {
   const factory AvatarConfig({
-    AvatarBackgrounds? background,
+    @SceneNameConverter() AvatarScene? background,
     AvatarHat? hat,
     AvatarTop? top,
     AvatarGlasses? glasses,
@@ -151,12 +119,7 @@ sealed class AvatarConfig with _$AvatarConfig {
   // Backward compatibility: fromMap for existing code
   factory AvatarConfig.fromMap(Map<String, dynamic> map) {
     return AvatarConfig(
-      background: map['background'] != null
-          ? EnumUtils.firstOrNull(
-              AvatarBackgrounds.values,
-              map['background'] as String,
-            )
-          : null,
+      background: maybeSceneFromStoredBackground(map['background'] as String?),
       hat: map['hat'] != null
           ? EnumUtils.firstOrNull(AvatarHat.values, map['hat'] as String)
           : null,
@@ -219,6 +182,20 @@ AvatarMood? parseMood(Object? raw) {
   return AvatarMood.neutral;
 }
 
+/// Stores/reads a scene as its name; legacy background names map when read
+/// and unknown values mean "no change".
+class SceneNameConverter implements JsonConverter<AvatarScene?, String?> {
+  const SceneNameConverter();
+
+  @override
+  AvatarScene? fromJson(String? json) => maybeSceneFromStoredBackground(json);
+
+  @override
+  String? toJson(AvatarScene? object) {
+    return object?.name;
+  }
+}
+
 class MoodConverter implements JsonConverter<AvatarMood?, String?> {
   const MoodConverter();
 
@@ -231,8 +208,10 @@ class MoodConverter implements JsonConverter<AvatarMood?, String?> {
   }
 }
 
-// Extension methods for backward compatibility
-extension BgImagesExtension on AvatarBackgrounds? {
+/// Legacy photo-background image path for a scene. Used only by the
+/// PNG-era widgets that are still active before the B9 cut-over; each scene
+/// id has a same-named v3 background jpeg.
+extension SceneLegacyImageExtension on AvatarScene? {
   String getPath() {
     return AppUtils.fixAssetsPath(
       'assets/avatar/backgrounds/${this!.name}.jpeg',
@@ -240,33 +219,16 @@ extension BgImagesExtension on AvatarBackgrounds? {
   }
 }
 
-/// Extension providing the pool of backgrounds available when creating a new chat
-///
-/// EDIT THIS LIST to control which backgrounds can be randomly assigned
-/// when the user creates a new chat
-extension AvatarBackgroundsNewChatPool on AvatarBackgrounds {
-  /// The pool of backgrounds to choose from when creating a new chat
-  static List<AvatarBackgrounds> get newChatPool => <AvatarBackgrounds>[
-    // ▼▼▼ EDIT THIS LIST - Add/remove backgrounds as desired ▼▼▼
-    AvatarBackgrounds.lake,
-    AvatarBackgrounds.beach,
-    AvatarBackgrounds.forest,
-    AvatarBackgrounds.library,
-    AvatarBackgrounds.bedroom,
-    AvatarBackgrounds.livingRoom,
-    AvatarBackgrounds.park,
-    AvatarBackgrounds.parisianCafe,
-    AvatarBackgrounds.artGallery,
-    AvatarBackgrounds.office,
-    // ▲▲▲ EDIT THIS LIST - Add/remove backgrounds as desired ▲▲▲
-  ];
+/// The pool of scenes a new chat can be assigned at creation.
+extension AvatarSceneNewChatPool on AvatarScene {
+  static List<AvatarScene> get newChatPool =>
+      List<AvatarScene>.unmodifiable(AvatarScene.values);
 
-  /// Get a random background from the new chat pool
-  static AvatarBackgrounds getRandom() {
-    final List<AvatarBackgrounds> pool = newChatPool;
+  /// Get a random scene from the new chat pool
+  static AvatarScene getRandom() {
+    final List<AvatarScene> pool = newChatPool;
     if (pool.isEmpty) {
-      // Fallback to lake if pool is empty
-      return AvatarBackgrounds.lake;
+      return AvatarScene.defaultScene;
     }
     return pool[DateTime.now().millisecondsSinceEpoch % pool.length];
   }
@@ -298,47 +260,47 @@ extension ChatPersonaAvatar on ChatPersona {
     switch (this) {
       case ChatPersona.philosopher:
         return const Avatar(
-          background: AvatarBackgrounds.artGallery,
+          background: AvatarScene.livingRoom,
           hat: AvatarHat.frenchBeret,
           top: AvatarTop.longCoat,
         );
       case ChatPersona.psychologist:
         return const Avatar(
-          background: AvatarBackgrounds.library,
+          background: AvatarScene.livingRoom,
           top: AvatarTop.blackSuitAndTie,
         );
       case ChatPersona.conservative:
         return const Avatar(
-          background: AvatarBackgrounds.mall,
+          background: AvatarScene.deepSpace,
           hat: AvatarHat.redMagaCap,
           top: AvatarTop.tshirt,
           glasses: AvatarGlasses.sunglasses,
         );
       case ChatPersona.coach:
         return const Avatar(
-          background: AvatarBackgrounds.swimmingPool,
+          background: AvatarScene.beach,
           hat: AvatarHat.backwardsCap,
           glasses: AvatarGlasses.sunglasses,
           top: AvatarTop.swimsuit,
         );
       case ChatPersona.doomer:
         return const Avatar(
-          background: AvatarBackgrounds.bedroom,
+          background: AvatarScene.livingRoom,
           top: AvatarTop.underwear,
         );
       case ChatPersona.geek:
         return const Avatar(
-          background: AvatarBackgrounds.bedroom,
+          background: AvatarScene.livingRoom,
           top: AvatarTop.pinkHoodie,
         );
       case ChatPersona.assistant:
         return const Avatar(
-          background: AvatarBackgrounds.lake,
+          background: AvatarScene.campfire,
           top: AvatarTop.pinkHoodie,
         );
       case ChatPersona.normal:
         return const Avatar(
-          background: AvatarBackgrounds.lake,
+          background: AvatarScene.campfire,
           top: AvatarTop.pinkHoodie,
         );
     }

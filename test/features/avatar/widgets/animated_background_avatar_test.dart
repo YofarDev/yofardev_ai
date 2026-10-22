@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
@@ -193,7 +194,7 @@ class MockAvatarRepository implements AvatarRepository {
       id: chatId,
       title: 'Test Chat',
       persona: ChatPersona.assistant,
-      avatar: const Avatar(background: AvatarBackgrounds.beach),
+      avatar: const Avatar(background: AvatarScene.beach),
     );
     final Result<Chat> result = Result<Chat>.ok(chat);
     return result;

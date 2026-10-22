@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:mocktail/mocktail.dart';
@@ -206,7 +207,7 @@ void main() {
         (_) async => Result<Chat>.ok(
           Chat(
             id: 'test-chat-id',
-            avatar: const Avatar(background: AvatarBackgrounds.forest),
+            avatar: const Avatar(background: AvatarScene.campfire),
           ),
         ),
       );
