@@ -179,6 +179,9 @@ def track(d: Doc, target: El, props: dict[str, list[tuple[int, float] | tuple[in
         for k in keys:
             f, v = k[0], k[1]
             mode = k[2] if len(k) > 2 else ("cubic" if ease is not None else "linear")
+            if isinstance(v, El):        # reference (e.g. Solo.activeComponentId) -> hold only
+                kfs.append(d("KeyFrameId", frame=f, value=v.ref(), interpolationType="hold"))
+                continue
             kf_tag = "KeyFrameColor" if isinstance(v, str) else "KeyFrameDouble"
             kfs.append(d(kf_tag, frame=f, value=v if isinstance(v, str) else float(v),
                          interpolationType=mode,
