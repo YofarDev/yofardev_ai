@@ -1,0 +1,353 @@
+{
+  "@@locale": "en",
+  "commonError": "An error occurred",
+  "@commonError": {
+    "description": "Generic error message"
+  },
+  "commonRetry": "Retry",
+  "@commonRetry": {
+    "description": "Button label to retry an action"
+  },
+  "commonCancel": "Cancel",
+  "@commonCancel": {
+    "description": "Button label to cancel an action"
+  },
+  "commonConfirm": "Confirm",
+  "@commonConfirm": {
+    "description": "Button label to confirm an action"
+  },
+  "commonSave": "Save",
+  "@commonSave": {
+    "description": "Button label to save data"
+  },
+  "commonDelete": "Delete",
+  "@commonDelete": {
+    "description": "Button label to delete an item"
+  },
+  "commonEdit": "Edit",
+  "@commonEdit": {
+    "description": "Button label to edit an item"
+  },
+  "commonClose": "Close",
+  "@commonClose": {
+    "description": "Button label to close a dialog or screen"
+  },
+  "commonBack": "Back",
+  "@commonBack": {
+    "description": "Button label to go back"
+  },
+  "commonNext": "Next",
+  "@commonNext": {
+    "description": "Button label to go to the next step"
+  },
+  "commonDone": "Done",
+  "@commonDone": {
+    "description": "Button label to complete an action"
+  },
+  "reset": "Reset",
+  "@reset": {
+    "description": "Button label to reset the counter"
+  },
+  "test": "test",
+  "appName": "Yofardev AI",
+  "assistantTask": "Assistant",
+  "currentAvatarConfig": "Current avatar configuration",
+  "currentDate": "Current date",
+  "currentUsername": "User’s name",
+  "describeThisImage": "Describe this image",
+  "empty": "(empty)",
+  "enableSoundEffects": "Enable sound effects",
+  "functionCallingLlmDescription": "LLM used for tool/function detection",
+  "functionCallingTask": "Function Calling",
+  "hiddenPart": "This part is not visible to the user, do not take it into account in your response.",
+  "listChats": "List of chats",
+  "loadDefaultSystemPrompt": "Load the default system prompt",
+  "memory": "Memory",
+  "@memory": {
+    "description": "Title of the global memory settings section"
+  },
+  "memoryDescription": "Facts your avatar remembers about you across all chats",
+  "@memoryDescription": {
+    "description": "Subtitle of the memory settings tile"
+  },
+  "memoryPageSubtitle": "Your avatar remembers facts about you across all chats. Review, delete, or clear them here.",
+  "@memoryPageSubtitle": {
+    "description": "Explanation shown at the top of the memory page"
+  },
+  "enableMemory": "Enable global memory",
+  "@enableMemory": {
+    "description": "Toggle label for the global memory feature"
+  },
+  "memoryEmpty": "Nothing memorized yet. Chat with your avatar and it will remember facts about you.",
+  "@memoryEmpty": {
+    "description": "Placeholder shown when the memory list is empty"
+  },
+  "clearMemory": "Clear all memory",
+  "@clearMemory": {
+    "description": "Button label to delete every memory item"
+  },
+  "clearMemoryConfirmation": "Delete all memorized facts? This cannot be undone.",
+  "@clearMemoryConfirmation": {
+    "description": "Confirmation dialog body for clearing memory"
+  },
+  "memoryDeleted": "Memory item deleted",
+  "@memoryDeleted": {
+    "description": "Snackbar shown after deleting a memory item"
+  },
+  "memoryTask": "Memory Extraction",
+  "@memoryTask": {
+    "description": "Task label for the LLM used by global memory extraction"
+  },
+  "memoryLlmDescription": "LLM used to extract facts for the global memory",
+  "@memoryLlmDescription": {
+    "description": "Description of the memory extraction task in the task LLM page"
+  },
+  "moreVoicesAndroid": "For more voices : ‘Google Text-to-Speech’ on the Play Store",
+  "moreVoicesIOS": "For more voices, go to Settings > Accessibility > Spoken Content > Voices",
+  "newChat": "New chat",
+  "personaAssistant": "Assistant’s persona",
+  "personaNameAssistant": "Assistant",
+  "personaNameNormal": "Normal",
+  "personaNameDoomer": "Doomer",
+  "personaNameConservative": "Conservative",
+  "personaNamePhilosopher": "Philosopher",
+  "personaNameGeek": "Geek",
+  "personaNameCoach": "Coach",
+  "personaNamePsychologist": "Psychologist",
+  "personaDescriptionAssistant": "Helpful, clear, and balanced.",
+  "personaDescriptionNormal": "Neutral tone for everyday conversation.",
+  "personaDescriptionDoomer": "Pessimistic and cynical takes.",
+  "personaDescriptionConservative": "Traditional and cautious viewpoints.",
+  "personaDescriptionPhilosopher": "Reflective answers with deeper reasoning.",
+  "personaDescriptionGeek": "Technical style with nerdy references.",
+  "personaDescriptionCoach": "Motivating, practical, action-focused guidance.",
+  "personaDescriptionPsychologist": "Empathetic and introspective support.",
+  "resultsFunctionCalling": "Function calling results",
+  "settings": "Settings",
+  "settingsSubstring": "Start a new chat after any settings change",
+  "settings_apiKey": "API Key",
+  "settings_enable": "Enable",
+  "settings_engineId": "Search Engine ID",
+  "settings_functionCalling": "Function Calling",
+  "settings_functionCalling_description": "Configure API keys for function calling features",
+  "settings_functionCalling_saved": "Configuration saved",
+  "settings_googleSearch": "Google Search",
+  "settings_googleSearch_description": "Search the web for current information",
+  "settings_news": "News",
+  "settings_news_description": "Get today's most popular news",
+  "settings_save": "Save",
+  "settings_weather": "Weather",
+  "settings_weather_description": "Get current weather for any location",
+  "taskLlmConfig": "Task LLM Configuration",
+  "taskLlmConfigDescription": "Configure different LLMs for assistant, title generation, and function calling",
+  "taskLlmDescription": "LLM used for main chat responses",
+  "taskLlmNote": "Note: If no LLM is selected for a task, the default assistant LLM will be used.",
+  "titleGenerationPrompt": "Generate a concise title (max 5 words) for this chat: ",
+  "titleGenerationSystemPrompt": "You are a helpful assistant that generates short, descriptive chat titles. Return only the title, no quotes or extra text.",
+  "titleLlmDescription": "LLM used to generate chat titles",
+  "titleTask": "Title Generation",
+  "ttsVoices": "TTS Voices",
+  "useDefaultLlm": "Use default LLM",
+  "userMessage": "User’s message",
+  "username": "Your name",
+  "apiPicker": "API Picker",
+  "@apiPicker": {
+    "description": "Button label to open API configuration picker"
+  },
+  "deleteChatTitle": "Delete chat?",
+  "@deleteChatTitle": {
+    "description": "Title for delete chat confirmation dialog"
+  },
+  "deleteChatConfirmation": "This conversation will be permanently removed.",
+  "@deleteChatConfirmation": {
+    "description": "Confirmation message for deleting a chat"
+  },
+  "timeJustNow": "just now",
+  "@timeJustNow": {
+    "description": "Time label for very recent messages"
+  },
+  "timeMinutesAgo": "{count}m ago",
+  "@timeMinutesAgo": {
+    "description": "Time label for minutes ago",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "timeHoursAgo": "{count}h ago",
+  "@timeHoursAgo": {
+    "description": "Time label for hours ago",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "timeYesterday": "yesterday",
+  "@timeYesterday": {
+    "description": "Time label for yesterday"
+  },
+  "timeDaysAgo": "{count}d ago",
+  "@timeDaysAgo": {
+    "description": "Time label for days ago",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "demoModeActivated": "Demo mode: {scriptName}",
+  "@demoModeActivated": {
+    "description": "Message shown when demo mode is activated",
+    "placeholders": {
+      "scriptName": {
+        "type": "String",
+        "example": "Test Script"
+      }
+    }
+  },
+  "deleteConfig": "Delete Config",
+  "@deleteConfig": {
+    "description": "Title for delete LLM config dialog"
+  },
+  "deleteConfigConfirmation": "Are you sure you want to delete \"{configLabel}\"?",
+  "@deleteConfigConfirmation": {
+    "description": "Confirmation message for deleting LLM config",
+    "placeholders": {
+      "configLabel": {
+        "type": "String",
+        "example": "My Config"
+      }
+    }
+  },
+  "llmProviderSelection": "LLM Provider Selection",
+  "@llmProviderSelection": {
+    "description": "Page title for LLM provider selection"
+  },
+  "noLlmConfigurations": "No LLM configurations found.",
+  "@noLlmConfigurations": {
+    "description": "Message shown when no LLM configs exist"
+  },
+  "addProvider": "Add Provider",
+  "@addProvider": {
+    "description": "Button label to add a new LLM provider"
+  },
+  "responseInterrupted": "Response interrupted",
+  "@responseInterrupted": {
+    "description": "Message shown when user interrupts AI response"
+  },
+  "conversationDownloaded": "Conversation downloaded: {fileName}",
+  "@conversationDownloaded": {
+    "description": "Success message after downloading conversation",
+    "placeholders": {
+      "fileName": {
+        "type": "String",
+        "example": "chat_20250101_120000.json"
+      }
+    }
+  },
+  "failedToDownload": "Failed to download: {error}",
+  "@failedToDownload": {
+    "description": "Error message when download fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Permission denied"
+      }
+    }
+  },
+  "ok": "OK",
+  "@ok": {
+    "description": "Button label for OK"
+  },
+  "pageNotFound": "Page not found",
+  "@pageNotFound": {
+    "description": "Error message for 404 page"
+  },
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "description": "Error message with details",
+    "placeholders": {
+      "message": {
+        "type": "String",
+        "example": "Something went wrong"
+      }
+    }
+  },
+  "aiAssistantAvatar": "AI assistant avatar",
+  "@aiAssistantAvatar": {
+    "description": "Accessibility label for AI avatar"
+  },
+  "failedToLoadLlmConfigs": "Failed to load available LLM configs",
+  "@failedToLoadLlmConfigs": {
+    "description": "Error message when LLM configs fail to load"
+  },
+  "noLlmConfigurationSelected": "No LLM configuration selected",
+  "@noLlmConfigurationSelected": {
+    "description": "Error message when no LLM config is selected"
+  },
+  "llmConfigAdd": "Add LLM Config",
+  "@llmConfigAdd": {
+    "description": "Title for adding a new LLM configuration"
+  },
+  "llmConfigEdit": "Edit LLM Config",
+  "@llmConfigEdit": {
+    "description": "Title for editing an existing LLM configuration"
+  },
+  "llmConfigLabel": "Label (e.g. My OpenAI)",
+  "@llmConfigLabel": {
+    "description": "Label for LLM configuration name field"
+  },
+  "llmConfigBaseUrl": "Base URL",
+  "@llmConfigBaseUrl": {
+    "description": "Label for base URL field"
+  },
+  "llmConfigBaseUrlHint": "https://api.openai.com/v1",
+  "@llmConfigBaseUrlHint": {
+    "description": "Hint text for base URL field"
+  },
+  "llmConfigApiKey": "API Key",
+  "@llmConfigApiKey": {
+    "description": "Label for API key field"
+  },
+  "llmConfigModelName": "Model Name (e.g. gpt-4o)",
+  "@llmConfigModelName": {
+    "description": "Label for model name field"
+  },
+  "llmConfigTemperature": "Temperature:",
+  "@llmConfigTemperature": {
+    "description": "Label for temperature slider"
+  },
+  "llmConfigResponseFormat": "JSON Response Format",
+  "@llmConfigResponseFormat": {
+    "description": "Label for JSON response format dropdown"
+  },
+  "llmConfigResponseFormatHelper": "Format for JSON mode responses",
+  "@llmConfigResponseFormatHelper": {
+    "description": "Helper text for JSON response format"
+  },
+  "llmConfigResponseFormatJsonObject": "json_object (OpenAI)",
+  "@llmConfigResponseFormatJsonObject": {
+    "description": "JSON object format option for OpenAI"
+  },
+  "llmConfigResponseFormatJsonSchema": "json_schema (Some local APIs)",
+  "@llmConfigResponseFormatJsonSchema": {
+    "description": "JSON schema format option for some local APIs"
+  },
+  "llmConfigResponseFormatText": "text (Generic)",
+  "@llmConfigResponseFormatText": {
+    "description": "Text format option"
+  },
+  "llmConfigResponseFormatNone": "none (No format, use prompt only)",
+  "@llmConfigResponseFormatNone": {
+    "description": "No format option"
+  },
+  "commonRequired": "Required",
+  "@commonRequired": {
+    "description": "Validation error message for required fields"
+  }
+}

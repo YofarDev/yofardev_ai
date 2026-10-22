@@ -1,0 +1,22 @@
+/// Centralized route path constants for the application.
+class RouteConstants {
+  RouteConstants._();
+
+  // Home
+  static const String home = '/';
+
+  // Chat routes
+  static const String chats = '/chats';
+  static const String chatDetails = '/chats/:id';
+
+  // Settings routes
+  static const String settings = '/settings';
+  static const String llmSelection = '/settings/llm';
+  static const String llmConfig = '/settings/llm/config/:id';
+  static const String taskLlmConfig = '/settings/llm/task-llm';
+  static const String functionCallingConfig = '/settings/function-calling';
+  static const String memory = '/settings/memory';
+
+  // Image routes
+  static const String imageFullScreen = '/image/:path';
+}

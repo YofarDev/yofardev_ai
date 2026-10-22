@@ -1,0 +1,492 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/talking_phase.dart';
+import 'package:yofardev_ai/core/models/result.dart';
+import 'package:yofardev_ai/core/models/failure.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:nested/nested.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
+import 'package:yofardev_ai/core/models/chat_entry.dart';
+import 'package:yofardev_ai/core/models/voice_effect.dart';
+import 'package:yofardev_ai/core/res/app_constants.dart';
+import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
+import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
+import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
+import 'package:yofardev_ai/core/models/demo_script.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service.dart';
+import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
+import 'package:yofardev_ai/core/services/llm/llm_stream_chunk.dart';
+import 'package:yofardev_ai/core/services/prompt_datasource.dart';
+import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
+import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
+import 'package:yofardev_ai/core/repositories/avatar_repository.dart';
+import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
+import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
+import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
+import 'package:yofardev_ai/core/models/llm_message.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
+import 'package:yofardev_ai/core/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
+
+// Mock repositories
+class MockChatRepository extends Mock implements ChatRepository {}
+
+class MockSettingsRepository extends Mock implements SettingsRepository {}
+
+class NoopGlobalMemoryService implements GlobalMemoryService {
+  @override
+  Future<LlmMessage?> buildMemoryMessage() async => null;
+
+  @override
+  Future<void> updateMemory(Chat chat) async {}
+}
+
+class MockAvatarRepository extends Mock implements AvatarRepository {
+  @override
+  Future<Result<void>> updateAvatar(
+    String chatId,
+    Avatar avatar,
+  ) async {
+    return Result<void>.ok(null);
+  }
+}
+
+class MockInterruptionService implements InterruptionService {
+  final StreamController<void> _controller = StreamController<void>.broadcast();
+
+  @override
+  Stream<void> get interruptionStream => _controller.stream;
+
+  @override
+  Future<void> interrupt() async => _controller.add(null);
+
+  @override
+  void reset() {}
+
+  @override
+  bool get isInterrupted => false;
+
+  @override
+  void dispose() => _controller.close();
+}
+
+class MockPromptDatasource implements PromptDatasource {
+  @override
+  Future<String> getSystemPrompt() async => 'Test system prompt';
+}
+
+/// Factory to create a real ChatStreamingService with mocked dependencies for testing
+ChatStreamingService createMockChatStreamingService({
+  required ChatRepository chatRepository,
+  required LlmServiceInterface llmService,
+  required StreamProcessorService streamProcessor,
+  required PromptDatasource promptDatasource,
+  required InterruptionService interruptionService,
+  required ChatEntryService chatEntryService,
+  TtsQueueService? ttsQueueManager,
+}) {
+  return ChatStreamingService(
+    chatRepository: chatRepository,
+    llmService: llmService,
+    streamProcessor: streamProcessor,
+    promptDatasource: promptDatasource,
+    interruptionService: interruptionService,
+    chatEntryService: chatEntryService,
+    ttsQueueManager: ttsQueueManager,
+  );
+}
+
+class MockStreamProcessorService implements StreamProcessorService {
+  @override
+  Stream<SentenceChunk> processStream(
+    Stream<LlmStreamChunk> llmChunks, {
+    bool expectJson = true,
+  }) async* {
+    // Empty implementation for testing
+  }
+}
+
+class MockChatEntryService implements ChatEntryService {
+  @override
+  Future<ChatEntry> createUserEntry({
+    required String prompt,
+    required Avatar avatar,
+    String? attachedImage,
+  }) async {
+    return ChatEntry(
+      id: 'test-id',
+      entryType: EntryType.user,
+      body: prompt,
+      timestamp: DateTime.now(),
+      attachedImage: attachedImage,
+    );
+  }
+}
+
+class MockTtsQueueService implements TtsQueueService {
+  @override
+  bool get isProcessing => false;
+
+  @override
+  List<TtsQueueItem> get queue => <TtsQueueItem>[];
+
+  bool get hasItems => false;
+
+  bool get isPlaying => false;
+
+  @override
+  Future<void> enqueue({
+    required String text,
+    required String language,
+    required VoiceEffect voiceEffect,
+    TtsPriority priority = TtsPriority.normal,
+  }) async {}
+
+  @override
+  void clear() {}
+
+  @override
+  void dispose() {}
+
+  @override
+  void setPaused(bool paused) {}
+
+  @override
+  Stream<String> get audioStream => const Stream<String>.empty();
+}
+
+void main() {
+  group('New Chat Animation Integration', () {
+    late MockChatRepository mockChatRepository;
+    late MockSettingsRepository mockSettingsRepository;
+    late ChatCubit chatsCubit;
+    late AvatarCubit avatarCubit;
+    late AvatarAnimationService avatarAnimationService;
+
+    setUpAll(() async {
+      // Register fallback values for mocktail
+      registerFallbackValue(const Chat());
+      registerFallbackValue(const AvatarConfig());
+    });
+
+    setUp(() async {
+      // Initialize mocks
+      mockChatRepository = MockChatRepository();
+      mockSettingsRepository = MockSettingsRepository();
+      final MockAvatarRepository mockAvatarRepository = MockAvatarRepository();
+
+      // Setup mock behaviors for avatar repository
+      when(
+        () => mockAvatarRepository.getChat(any()),
+      ).thenAnswer((_) async => Result<Chat>.err(UnknownFailure('Not found')));
+
+      // Setup mock behaviors
+      when(
+        () =>
+            mockChatRepository.createNewChat(language: any(named: 'language')),
+      ).thenAnswer(
+        (_) async => Result<Chat>.ok(
+          Chat(
+            id: 'test-chat-id',
+            avatar: const Avatar(background: AvatarBackgrounds.forest),
+          ),
+        ),
+      );
+
+      when(
+        () => mockSettingsRepository.getLanguage(),
+      ).thenAnswer((_) async => Result<String?>.ok('en'));
+      when(
+        () => mockSettingsRepository.getSoundEffects(),
+      ).thenAnswer((_) async => Result<bool>.ok(true));
+
+      when(
+        () => mockChatRepository.getCurrentChat(),
+      ).thenAnswer((_) async => Result<Chat>.ok(Chat()));
+
+      // Create AvatarAnimationService (no longer depends on AvatarCubit)
+      avatarAnimationService = AvatarAnimationService();
+
+      // Create AvatarCubit with animation service
+      avatarCubit = AvatarCubit(
+        mockAvatarRepository,
+        avatarAnimationService,
+        AudioPlayerService(),
+        MockAppLifecycleService(),
+      );
+      avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+
+      // Create mock services
+      final MockInterruptionService mockInterruptionService =
+          MockInterruptionService();
+      final MockPromptDatasource mockPromptDatasource = MockPromptDatasource();
+      // ignore: unused_local_variable
+      final MockStreamProcessorService mockStreamProcessorService =
+          MockStreamProcessorService();
+      final MockChatEntryService mockChatEntryService = MockChatEntryService();
+
+      // Create ChatCubit with mocked dependencies
+      chatsCubit = ChatCubit(
+        chatRepository: mockChatRepository,
+        settingsRepository: mockSettingsRepository,
+        avatarAnimationService: avatarAnimationService,
+        chatTitleService: ChatTitleService(
+          chatRepository: mockChatRepository,
+          llmService: LlmService(),
+        ),
+        chatStreamingService: createMockChatStreamingService(
+          chatRepository: mockChatRepository,
+          llmService: LlmService(),
+          streamProcessor: MockStreamProcessorService(),
+          promptDatasource: mockPromptDatasource,
+          interruptionService: mockInterruptionService,
+          chatEntryService: mockChatEntryService,
+        ),
+        appLifecycleService: MockAppLifecycleService(),
+        globalMemoryService: NoopGlobalMemoryService(),
+      );
+
+      // Initialize the cubit
+      await chatsCubit.init();
+    });
+
+    tearDown(() {
+      chatsCubit.close();
+      avatarCubit.close();
+    });
+
+    /// Helper method to build the test widget
+    Widget buildTestWidget() {
+      return MaterialApp(
+        home: MultiBlocProvider(
+          providers: <SingleChildWidget>[
+            BlocProvider<ChatCubit>.value(value: chatsCubit),
+            BlocProvider<AvatarCubit>.value(value: avatarCubit),
+          ],
+          child: Builder(
+            builder: (BuildContext context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<ChatCubit>().createNewChat();
+                  },
+                  child: const Text('New Chat'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('complete animation sequence on new chat', (
+      WidgetTester tester,
+    ) async {
+      // Arrange - Build app with cubits
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      // Verify initial state
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.initial);
+
+      // Act - Create new chat
+      await tester.tap(find.text('New Chat'));
+      await tester.pump();
+
+      // Assert - Initial state: avatar dropping
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.dropping);
+
+      // Wait for drop to complete (using AppConstants)
+      await tester.pump(Duration(seconds: AppConstants.changingAvatarDuration));
+
+      // Avatar should now be rising (after background slide)
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.rising);
+
+      // Assert - Background transition should be sliding during animation
+      expect(
+        avatarCubit.state.backgroundTransition,
+        BackgroundTransition.sliding,
+      );
+
+      // Wait for rise to complete
+      await tester.pumpAndSettle();
+
+      // Final state - animation complete, chat created successfully
+      expect(chatsCubit.state.status, ChatStatus.success);
+      expect(chatsCubit.state.currentChat.id, 'test-chat-id');
+    });
+
+    testWidgets('background slides during animation', (
+      WidgetTester tester,
+    ) async {
+      // Arrange - Build app with cubits
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act - Create new chat
+      await tester.tap(find.text('New Chat'));
+      await tester.pump();
+
+      // Wait for drop animation to start
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.dropping);
+
+      // Wait for drop to complete and background slide to start (using AppConstants)
+      await tester.pump(Duration(seconds: AppConstants.changingAvatarDuration));
+
+      // Assert - Background transition should be sliding
+      expect(
+        avatarCubit.state.backgroundTransition,
+        BackgroundTransition.sliding,
+      );
+
+      // Wait for slide to complete
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // Background transition should be sliding at this point
+      expect(
+        avatarCubit.state.backgroundTransition,
+        BackgroundTransition.sliding,
+      );
+    });
+
+    test('animation sequence transitions through correct states', () async {
+      // Track state transitions
+      final List<AvatarStatusAnimation> animationStates =
+          <AvatarStatusAnimation>[];
+      final List<BackgroundTransition> backgroundTransitions =
+          <BackgroundTransition>[];
+
+      // Subscribe to state changes and store subscription for cleanup
+      final StreamSubscription<AvatarState> subscription = avatarCubit.stream
+          .listen((AvatarState state) {
+            animationStates.add(state.statusAnimation);
+            backgroundTransitions.add(state.backgroundTransition);
+          });
+
+      // Act - Create new chat
+      await chatsCubit.createNewChat();
+
+      // Wait for animations to complete (using AppConstants + buffer)
+      await Future<void>.delayed(
+        Duration(seconds: AppConstants.changingAvatarDuration + 2),
+      );
+
+      // Assert - Verify animation sequence
+      expect(animationStates, contains(AvatarStatusAnimation.dropping));
+      expect(animationStates, contains(AvatarStatusAnimation.rising));
+
+      // Background should have transitioned
+      expect(backgroundTransitions, contains(BackgroundTransition.sliding));
+      expect(backgroundTransitions, contains(BackgroundTransition.none));
+
+      // Final state should be success
+      expect(chatsCubit.state.status, ChatStatus.success);
+
+      // Clean up subscription
+      await subscription.cancel();
+    });
+
+    test('avatar cubit receives correct animation states', () async {
+      // Act - Create new chat
+      await chatsCubit.createNewChat();
+
+      // Immediately after creation, avatar should be dropping
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.dropping);
+
+      // Wait for drop duration + background slide (using AppConstants)
+      await Future<void>.delayed(
+        Duration(
+          milliseconds: AppConstants.changingAvatarDuration * 1000 + 600,
+        ),
+      );
+
+      // Avatar should now be rising
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.rising);
+
+      // Wait for rise to complete (using AppConstants)
+      await Future<void>.delayed(
+        Duration(seconds: AppConstants.changingAvatarDuration),
+      );
+
+      // Assert - Complete state sequence verified
+      // Final state should be initial again after animation completes
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.initial);
+
+      // Background should return to none after animation
+      expect(avatarCubit.state.backgroundTransition, BackgroundTransition.none);
+
+      // Verify chat was created successfully
+      expect(chatsCubit.state.status, ChatStatus.success);
+      expect(chatsCubit.state.currentChat.id, isNotEmpty);
+    });
+  });
+}
+
+class MockAppLifecycleService extends Mock implements AppLifecycleService {
+@override
+  Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
+      const Stream<AvatarChangeRequested>.empty();
+
+  @override
+  void emitAvatarChangeRequested(AvatarChangeRequested request) {}
+  @override
+  Stream<NewChatEntryPayload> get newChatEntryEvents =>
+      const Stream<NewChatEntryPayload>.empty();
+
+  @override
+  Stream<String> get chatChangedEvents => const Stream<String>.empty();
+
+  @override
+  Stream<ChatStatus> get streamingStateChangedEvents =>
+      const Stream<ChatStatus>.empty();
+
+  @override
+  Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>
+      const Stream<AvatarStatusAnimation>.empty();
+
+  @override
+  Stream<TalkingPhase> get talkingStateChangedEvents =>
+      const Stream<TalkingPhase>.empty();
+
+  @override
+  Stream<DemoScript> get demoScriptChangedEvents =>
+      const Stream<DemoScript>.empty();
+
+  @override
+  void dispose() {}
+
+  @override
+  void emitAvatarAnimationChanged(AvatarStatusAnimation statusAnimation) {}
+
+  @override
+  void emitChatChanged(String chatId) {}
+
+  @override
+  void emitDemoScriptChanged(DemoScript script) {}
+
+  @override
+  void emitNewChatEntry(
+    ChatEntry entry,
+    String chatId,
+    AvatarConfig currentAvatarConfig,
+  ) {}
+
+  @override
+  void emitStreamingStateChanged(ChatStatus status) {}
+
+  @override
+  void emitTalkingStateChanged(TalkingPhase phase) {}
+}

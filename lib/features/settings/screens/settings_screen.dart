@@ -1,0 +1,149 @@
+// ignore_for_file: avoid_dynamic_calls, use_build_context_synchronously
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/models/sound_effects.dart';
+import '../../../core/models/chat.dart';
+import '../../../core/res/app_colors.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
+import '../presentation/bloc/settings_cubit.dart';
+import '../presentation/bloc/settings_state.dart';
+import '../widgets/api_key_field.dart';
+import '../widgets/persona_dropdown.dart';
+import '../widgets/settings_app_bar.dart';
+import '../widgets/sound_effects_toggle.dart';
+import '../widgets/task_llm_config_tile.dart';
+import '../widgets/function_calling_config_tile.dart';
+import '../widgets/username_field.dart';
+import 'memory_page.dart';
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  SettingsPageState createState() => SettingsPageState();
+}
+
+class SettingsPageState extends State<SettingsPage> {
+  final TextEditingController _baseSystemPromptController =
+      TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  bool _isSoundEffectsEnabled = true;
+  ChatPersona _persona = ChatPersona.assistant;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+    // Listen to state changes to update controllers and persona
+    context.read<SettingsCubit>().stream.listen((SettingsState state) {
+      if (mounted) {
+        _usernameController.text = state.username ?? '';
+        _baseSystemPromptController.text = state.systemPrompt ?? '';
+        setState(() {
+          _persona = state.persona;
+        });
+      }
+    });
+  }
+
+  void _loadSettings() async {
+    final SettingsCubit settingsCubit = context.read<SettingsCubit>();
+    await settingsCubit.loadSettings();
+
+    // Load sound effects setting
+    await settingsCubit.loadSoundEffects();
+
+    setState(() {});
+  }
+
+  void _onSaveButtonPressed() async {
+    final SettingsCubit settingsCubit = context.read<SettingsCubit>();
+
+    if (_baseSystemPromptController.text.isNotEmpty) {
+      await settingsCubit.setSystemPrompt(_baseSystemPromptController.text);
+    }
+    if (_usernameController.text.isNotEmpty) {
+      await settingsCubit.setUsername(_usernameController.text);
+    }
+    await settingsCubit.setPersona(_persona);
+    await settingsCubit.setSoundEffects(_isSoundEffectsEnabled);
+    context.pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final StringBuffer soundEffectsList = StringBuffer();
+    for (final SoundEffects soundEffect in SoundEffects.values) {
+      soundEffectsList.write("[$soundEffect], ");
+    }
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[AppColors.background, AppColors.surface],
+          ),
+        ),
+        child: Column(
+          children: <Widget>[
+            SafeArea(
+              bottom: false,
+              child: SettingsAppBar(onSave: _onSaveButtonPressed),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const SizedBox(height: 16),
+                      Text(
+                        AppLocalizations.of(context).settingsSubstring,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const ApiKeyField(),
+                      const SizedBox(height: 16),
+                      UsernameField(controller: _usernameController),
+                      const SizedBox(height: 16),
+                      PersonaDropdown(
+                        value: _persona,
+                        onChanged: (ChatPersona newValue) {
+                          _persona = newValue;
+                          setState(() {});
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      SoundEffectsToggle(
+                        value: _isSoundEffectsEnabled,
+                        onChanged: (bool value) {
+                          setState(() {
+                            _isSoundEffectsEnabled = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      const TaskLlmConfigTile(),
+                      const SizedBox(height: 16),
+                      const FunctionCallingConfigTile(),
+                      const SizedBox(height: 16),
+                      const MemoryConfigTile(),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
