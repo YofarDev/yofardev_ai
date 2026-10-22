@@ -29,9 +29,6 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Load all settings
   Future<void> loadSettings() async {
-    // Initialize LLM service if not already done
-    await _llmService.init();
-
     // Load user settings
     await loadCurrentLanguage();
     await loadUsername();
@@ -50,8 +47,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
     // Load available LLM configs
     try {
-      final List<LlmConfig> configs = _llmService.getAllConfigs();
-      emit(state.copyWith(availableLlmConfigs: configs));
+      await refreshLlmConfigs();
     } catch (e) {
       AppLogger.error(
         'Failed to load available LLM configs',
@@ -65,6 +61,37 @@ class SettingsCubit extends Cubit<SettingsState> {
         ),
       );
     }
+  }
+
+  /// Initialize the LLM config manager and refresh config-derived state.
+  Future<void> refreshLlmConfigs() async {
+    await _llmService.init();
+    final List<LlmConfig> configs = _llmService.getAllConfigs();
+    final String? selectedId = _llmService.getCurrentConfig()?.id;
+    emit(
+      state.copyWith(
+        availableLlmConfigs: configs,
+        selectedLlmConfigId: selectedId,
+      ),
+    );
+  }
+
+  /// Delete an LLM config by [id] and refresh the cached config list.
+  Future<void> deleteLlmConfig(String id) async {
+    await _llmService.deleteConfig(id);
+    await refreshLlmConfigs();
+  }
+
+  /// Set the currently active LLM config to [id] and refresh state.
+  Future<void> setCurrentLlmConfig(String id) async {
+    await _llmService.setCurrentConfig(id);
+    await refreshLlmConfigs();
+  }
+
+  /// Persist [config] and refresh the cached config list.
+  Future<void> saveLlmConfig(LlmConfig config) async {
+    await _llmService.saveConfig(config);
+    await refreshLlmConfigs();
   }
 
   /// Load the task-specific LLM configuration

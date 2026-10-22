@@ -444,18 +444,19 @@ void main() {
 
     group('Error handling', () {
       test('should continue on LLM service init failure', () async {
-        // BUG DETECTED: The cubit does NOT handle init() failures gracefully
-        // The init() call is not wrapped in try/catch, so exceptions propagate
+        // LLM service init happens inside refreshLlmConfigs(), which is
+        // wrapped in try/catch by loadSettings, so failures are handled
+        // gracefully and loading continues.
         when(() => mockLlmService.init()).thenThrow(Exception('Init failed'));
         when(
           () => mockSettingsRepo.getTaskLlmConfig(),
         ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
 
-        // The exception will propagate to the caller (test expects this)
-        expect(() => cubit.loadSettings(), throwsA(isA<Exception>()));
+        await cubit.loadSettings();
 
-        // Because init() failed, loadTaskLlmConfig was never called
-        verifyNever(() => mockSettingsRepo.getTaskLlmConfig());
+        // Loading continued despite the init failure.
+        verify(() => mockSettingsRepo.getTaskLlmConfig()).called(1);
+        expect(cubit.state.hasError, isTrue);
       });
 
       test('should continue on getAllConfigs failure', () async {

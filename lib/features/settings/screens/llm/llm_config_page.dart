@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/llm_config.dart';
-import '../../../../core/di/service_locator.dart';
-import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
+import '../../presentation/bloc/settings_cubit.dart';
 
 class LlmConfigPage extends StatefulWidget {
   /// Config ID to edit, or 'new' to create a new config
@@ -17,7 +17,6 @@ class LlmConfigPage extends StatefulWidget {
 
 class _LlmConfigPageState extends State<LlmConfigPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final LlmServiceInterface _llmService = getIt<LlmServiceInterface>();
   late TextEditingController _labelController;
   late TextEditingController _baseUrlController;
   late TextEditingController _apiKeyController;
@@ -34,7 +33,7 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
   }
 
   Future<void> _loadConfig() async {
-    await _llmService.init();
+    await context.read<SettingsCubit>().refreshLlmConfigs();
 
     // Check if we're creating a new config or editing an existing one
     if (widget.configId == null || widget.configId == 'new') {
@@ -44,7 +43,10 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
       });
     } else {
       // Editing existing config - look it up by ID
-      final List<LlmConfig> allConfigs = _llmService.getAllConfigs();
+      final List<LlmConfig> allConfigs = context
+          .read<SettingsCubit>()
+          .state
+          .availableLlmConfigs;
       final LlmConfig? foundConfig = allConfigs.cast<LlmConfig?>().firstWhere(
         (LlmConfig? c) => c?.id == widget.configId,
         orElse: () => null,
@@ -99,7 +101,7 @@ class _LlmConfigPageState extends State<LlmConfigPage> {
               responseFormatType: _responseFormatType,
             );
 
-      await _llmService.saveConfig(newConfig);
+      await context.read<SettingsCubit>().saveLlmConfig(newConfig);
       if (mounted) Navigator.pop(context);
     }
   }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 mixin _$SettingsState {
 
 // NEW FIELDS:
- TaskLlmConfig? get taskLlmConfig; List<LlmConfig> get availableLlmConfigs;// Function Calling Configuration Fields:
+ TaskLlmConfig? get taskLlmConfig; List<LlmConfig> get availableLlmConfigs; String? get selectedLlmConfigId;// Function Calling Configuration Fields:
  String? get googleSearchKey; String? get googleSearchEngineId; bool get googleSearchEnabled; String? get openWeatherKey; bool get openWeatherEnabled; String? get newYorkTimesKey; bool get newYorkTimesEnabled;// Global Memory Fields:
  bool get memoryEnabled; List<GlobalMemoryItem> get memoryItems;// User Settings Fields:
  String? get username; String? get systemPrompt; ChatPersona get persona; bool get soundEffectsEnabled;// App-level settings (moved from ChatCubit):
@@ -31,16 +31,16 @@ $SettingsStateCopyWith<SettingsState> get copyWith => _$SettingsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other.availableLlmConfigs, availableLlmConfigs)&&(identical(other.googleSearchKey, googleSearchKey) || other.googleSearchKey == googleSearchKey)&&(identical(other.googleSearchEngineId, googleSearchEngineId) || other.googleSearchEngineId == googleSearchEngineId)&&(identical(other.googleSearchEnabled, googleSearchEnabled) || other.googleSearchEnabled == googleSearchEnabled)&&(identical(other.openWeatherKey, openWeatherKey) || other.openWeatherKey == openWeatherKey)&&(identical(other.openWeatherEnabled, openWeatherEnabled) || other.openWeatherEnabled == openWeatherEnabled)&&(identical(other.newYorkTimesKey, newYorkTimesKey) || other.newYorkTimesKey == newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, newYorkTimesEnabled) || other.newYorkTimesEnabled == newYorkTimesEnabled)&&(identical(other.memoryEnabled, memoryEnabled) || other.memoryEnabled == memoryEnabled)&&const DeepCollectionEquality().equals(other.memoryItems, memoryItems)&&(identical(other.username, username) || other.username == username)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other.availableLlmConfigs, availableLlmConfigs)&&(identical(other.selectedLlmConfigId, selectedLlmConfigId) || other.selectedLlmConfigId == selectedLlmConfigId)&&(identical(other.googleSearchKey, googleSearchKey) || other.googleSearchKey == googleSearchKey)&&(identical(other.googleSearchEngineId, googleSearchEngineId) || other.googleSearchEngineId == googleSearchEngineId)&&(identical(other.googleSearchEnabled, googleSearchEnabled) || other.googleSearchEnabled == googleSearchEnabled)&&(identical(other.openWeatherKey, openWeatherKey) || other.openWeatherKey == openWeatherKey)&&(identical(other.openWeatherEnabled, openWeatherEnabled) || other.openWeatherEnabled == openWeatherEnabled)&&(identical(other.newYorkTimesKey, newYorkTimesKey) || other.newYorkTimesKey == newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, newYorkTimesEnabled) || other.newYorkTimesEnabled == newYorkTimesEnabled)&&(identical(other.memoryEnabled, memoryEnabled) || other.memoryEnabled == memoryEnabled)&&const DeepCollectionEquality().equals(other.memoryItems, memoryItems)&&(identical(other.username, username) || other.username == username)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(availableLlmConfigs),googleSearchKey,googleSearchEngineId,googleSearchEnabled,openWeatherKey,openWeatherEnabled,newYorkTimesKey,newYorkTimesEnabled,memoryEnabled,const DeepCollectionEquality().hash(memoryItems),username,systemPrompt,persona,soundEffectsEnabled,currentLanguage,hasError,errorMessage);
+int get hashCode => Object.hashAll([runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(availableLlmConfigs),selectedLlmConfigId,googleSearchKey,googleSearchEngineId,googleSearchEnabled,openWeatherKey,openWeatherEnabled,newYorkTimesKey,newYorkTimesEnabled,memoryEnabled,const DeepCollectionEquality().hash(memoryItems),username,systemPrompt,persona,soundEffectsEnabled,currentLanguage,hasError,errorMessage]);
 
 @override
 String toString() {
-  return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs, googleSearchKey: $googleSearchKey, googleSearchEngineId: $googleSearchEngineId, googleSearchEnabled: $googleSearchEnabled, openWeatherKey: $openWeatherKey, openWeatherEnabled: $openWeatherEnabled, newYorkTimesKey: $newYorkTimesKey, newYorkTimesEnabled: $newYorkTimesEnabled, memoryEnabled: $memoryEnabled, memoryItems: $memoryItems, username: $username, systemPrompt: $systemPrompt, persona: $persona, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, hasError: $hasError, errorMessage: $errorMessage)';
+  return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs, selectedLlmConfigId: $selectedLlmConfigId, googleSearchKey: $googleSearchKey, googleSearchEngineId: $googleSearchEngineId, googleSearchEnabled: $googleSearchEnabled, openWeatherKey: $openWeatherKey, openWeatherEnabled: $openWeatherEnabled, newYorkTimesKey: $newYorkTimesKey, newYorkTimesEnabled: $newYorkTimesEnabled, memoryEnabled: $memoryEnabled, memoryItems: $memoryItems, username: $username, systemPrompt: $systemPrompt, persona: $persona, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, hasError: $hasError, errorMessage: $errorMessage)';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $SettingsStateCopyWith<$Res>  {
   factory $SettingsStateCopyWith(SettingsState value, $Res Function(SettingsState) _then) = _$SettingsStateCopyWithImpl;
 @useResult
 $Res call({
- TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled, bool memoryEnabled, List<GlobalMemoryItem> memoryItems, String? username, String? systemPrompt, ChatPersona persona, bool soundEffectsEnabled, String currentLanguage, bool hasError, String? errorMessage
+ TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? selectedLlmConfigId, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled, bool memoryEnabled, List<GlobalMemoryItem> memoryItems, String? username, String? systemPrompt, ChatPersona persona, bool soundEffectsEnabled, String currentLanguage, bool hasError, String? errorMessage
 });
 
 
@@ -68,11 +68,12 @@ class _$SettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,Object? memoryEnabled = null,Object? memoryItems = null,Object? username = freezed,Object? systemPrompt = freezed,Object? persona = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? hasError = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? selectedLlmConfigId = freezed,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,Object? memoryEnabled = null,Object? memoryItems = null,Object? username = freezed,Object? systemPrompt = freezed,Object? persona = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? hasError = null,Object? errorMessage = freezed,}) {
   return _then(_self.copyWith(
 taskLlmConfig: freezed == taskLlmConfig ? _self.taskLlmConfig : taskLlmConfig // ignore: cast_nullable_to_non_nullable
 as TaskLlmConfig?,availableLlmConfigs: null == availableLlmConfigs ? _self.availableLlmConfigs : availableLlmConfigs // ignore: cast_nullable_to_non_nullable
-as List<LlmConfig>,googleSearchKey: freezed == googleSearchKey ? _self.googleSearchKey : googleSearchKey // ignore: cast_nullable_to_non_nullable
+as List<LlmConfig>,selectedLlmConfigId: freezed == selectedLlmConfigId ? _self.selectedLlmConfigId : selectedLlmConfigId // ignore: cast_nullable_to_non_nullable
+as String?,googleSearchKey: freezed == googleSearchKey ? _self.googleSearchKey : googleSearchKey // ignore: cast_nullable_to_non_nullable
 as String?,googleSearchEngineId: freezed == googleSearchEngineId ? _self.googleSearchEngineId : googleSearchEngineId // ignore: cast_nullable_to_non_nullable
 as String?,googleSearchEnabled: null == googleSearchEnabled ? _self.googleSearchEnabled : googleSearchEnabled // ignore: cast_nullable_to_non_nullable
 as bool,openWeatherKey: freezed == openWeatherKey ? _self.openWeatherKey : openWeatherKey // ignore: cast_nullable_to_non_nullable
@@ -182,10 +183,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingsState() when $default != null:
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.errorMessage);case _:
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.errorMessage);case _:
   return orElse();
 
 }
@@ -203,10 +204,10 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearch
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  String? errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  String? errorMessage)  $default,) {final _that = this;
 switch (_that) {
 case _SettingsState():
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.errorMessage);}
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.errorMessage);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -220,10 +221,10 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearch
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  String? errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  String? errorMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _SettingsState() when $default != null:
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.errorMessage);case _:
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.errorMessage);case _:
   return null;
 
 }
@@ -235,7 +236,7 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.googleSearch
 
 
 class _SettingsState implements SettingsState {
-  const _SettingsState({this.taskLlmConfig = null, final  List<LlmConfig> availableLlmConfigs = const <LlmConfig>[], this.googleSearchKey = null, this.googleSearchEngineId = null, this.googleSearchEnabled = true, this.openWeatherKey = null, this.openWeatherEnabled = true, this.newYorkTimesKey = null, this.newYorkTimesEnabled = true, this.memoryEnabled = true, final  List<GlobalMemoryItem> memoryItems = const <GlobalMemoryItem>[], this.username = null, this.systemPrompt = null, this.persona = ChatPersona.assistant, this.soundEffectsEnabled = true, this.currentLanguage = 'fr', this.hasError = false, this.errorMessage = null}): _availableLlmConfigs = availableLlmConfigs,_memoryItems = memoryItems;
+  const _SettingsState({this.taskLlmConfig = null, final  List<LlmConfig> availableLlmConfigs = const <LlmConfig>[], this.selectedLlmConfigId = null, this.googleSearchKey = null, this.googleSearchEngineId = null, this.googleSearchEnabled = true, this.openWeatherKey = null, this.openWeatherEnabled = true, this.newYorkTimesKey = null, this.newYorkTimesEnabled = true, this.memoryEnabled = true, final  List<GlobalMemoryItem> memoryItems = const <GlobalMemoryItem>[], this.username = null, this.systemPrompt = null, this.persona = ChatPersona.assistant, this.soundEffectsEnabled = true, this.currentLanguage = 'fr', this.hasError = false, this.errorMessage = null}): _availableLlmConfigs = availableLlmConfigs,_memoryItems = memoryItems;
   
 
 // NEW FIELDS:
@@ -247,6 +248,7 @@ class _SettingsState implements SettingsState {
   return EqualUnmodifiableListView(_availableLlmConfigs);
 }
 
+@override@JsonKey() final  String? selectedLlmConfigId;
 // Function Calling Configuration Fields:
 @override@JsonKey() final  String? googleSearchKey;
 @override@JsonKey() final  String? googleSearchEngineId;
@@ -285,16 +287,16 @@ _$SettingsStateCopyWith<_SettingsState> get copyWith => __$SettingsStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other._availableLlmConfigs, _availableLlmConfigs)&&(identical(other.googleSearchKey, googleSearchKey) || other.googleSearchKey == googleSearchKey)&&(identical(other.googleSearchEngineId, googleSearchEngineId) || other.googleSearchEngineId == googleSearchEngineId)&&(identical(other.googleSearchEnabled, googleSearchEnabled) || other.googleSearchEnabled == googleSearchEnabled)&&(identical(other.openWeatherKey, openWeatherKey) || other.openWeatherKey == openWeatherKey)&&(identical(other.openWeatherEnabled, openWeatherEnabled) || other.openWeatherEnabled == openWeatherEnabled)&&(identical(other.newYorkTimesKey, newYorkTimesKey) || other.newYorkTimesKey == newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, newYorkTimesEnabled) || other.newYorkTimesEnabled == newYorkTimesEnabled)&&(identical(other.memoryEnabled, memoryEnabled) || other.memoryEnabled == memoryEnabled)&&const DeepCollectionEquality().equals(other._memoryItems, _memoryItems)&&(identical(other.username, username) || other.username == username)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other._availableLlmConfigs, _availableLlmConfigs)&&(identical(other.selectedLlmConfigId, selectedLlmConfigId) || other.selectedLlmConfigId == selectedLlmConfigId)&&(identical(other.googleSearchKey, googleSearchKey) || other.googleSearchKey == googleSearchKey)&&(identical(other.googleSearchEngineId, googleSearchEngineId) || other.googleSearchEngineId == googleSearchEngineId)&&(identical(other.googleSearchEnabled, googleSearchEnabled) || other.googleSearchEnabled == googleSearchEnabled)&&(identical(other.openWeatherKey, openWeatherKey) || other.openWeatherKey == openWeatherKey)&&(identical(other.openWeatherEnabled, openWeatherEnabled) || other.openWeatherEnabled == openWeatherEnabled)&&(identical(other.newYorkTimesKey, newYorkTimesKey) || other.newYorkTimesKey == newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, newYorkTimesEnabled) || other.newYorkTimesEnabled == newYorkTimesEnabled)&&(identical(other.memoryEnabled, memoryEnabled) || other.memoryEnabled == memoryEnabled)&&const DeepCollectionEquality().equals(other._memoryItems, _memoryItems)&&(identical(other.username, username) || other.username == username)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(_availableLlmConfigs),googleSearchKey,googleSearchEngineId,googleSearchEnabled,openWeatherKey,openWeatherEnabled,newYorkTimesKey,newYorkTimesEnabled,memoryEnabled,const DeepCollectionEquality().hash(_memoryItems),username,systemPrompt,persona,soundEffectsEnabled,currentLanguage,hasError,errorMessage);
+int get hashCode => Object.hashAll([runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(_availableLlmConfigs),selectedLlmConfigId,googleSearchKey,googleSearchEngineId,googleSearchEnabled,openWeatherKey,openWeatherEnabled,newYorkTimesKey,newYorkTimesEnabled,memoryEnabled,const DeepCollectionEquality().hash(_memoryItems),username,systemPrompt,persona,soundEffectsEnabled,currentLanguage,hasError,errorMessage]);
 
 @override
 String toString() {
-  return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs, googleSearchKey: $googleSearchKey, googleSearchEngineId: $googleSearchEngineId, googleSearchEnabled: $googleSearchEnabled, openWeatherKey: $openWeatherKey, openWeatherEnabled: $openWeatherEnabled, newYorkTimesKey: $newYorkTimesKey, newYorkTimesEnabled: $newYorkTimesEnabled, memoryEnabled: $memoryEnabled, memoryItems: $memoryItems, username: $username, systemPrompt: $systemPrompt, persona: $persona, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, hasError: $hasError, errorMessage: $errorMessage)';
+  return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs, selectedLlmConfigId: $selectedLlmConfigId, googleSearchKey: $googleSearchKey, googleSearchEngineId: $googleSearchEngineId, googleSearchEnabled: $googleSearchEnabled, openWeatherKey: $openWeatherKey, openWeatherEnabled: $openWeatherEnabled, newYorkTimesKey: $newYorkTimesKey, newYorkTimesEnabled: $newYorkTimesEnabled, memoryEnabled: $memoryEnabled, memoryItems: $memoryItems, username: $username, systemPrompt: $systemPrompt, persona: $persona, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, hasError: $hasError, errorMessage: $errorMessage)';
 }
 
 
@@ -305,7 +307,7 @@ abstract mixin class _$SettingsStateCopyWith<$Res> implements $SettingsStateCopy
   factory _$SettingsStateCopyWith(_SettingsState value, $Res Function(_SettingsState) _then) = __$SettingsStateCopyWithImpl;
 @override @useResult
 $Res call({
- TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled, bool memoryEnabled, List<GlobalMemoryItem> memoryItems, String? username, String? systemPrompt, ChatPersona persona, bool soundEffectsEnabled, String currentLanguage, bool hasError, String? errorMessage
+ TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? selectedLlmConfigId, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled, bool memoryEnabled, List<GlobalMemoryItem> memoryItems, String? username, String? systemPrompt, ChatPersona persona, bool soundEffectsEnabled, String currentLanguage, bool hasError, String? errorMessage
 });
 
 
@@ -322,11 +324,12 @@ class __$SettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,Object? memoryEnabled = null,Object? memoryItems = null,Object? username = freezed,Object? systemPrompt = freezed,Object? persona = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? hasError = null,Object? errorMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? selectedLlmConfigId = freezed,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,Object? memoryEnabled = null,Object? memoryItems = null,Object? username = freezed,Object? systemPrompt = freezed,Object? persona = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? hasError = null,Object? errorMessage = freezed,}) {
   return _then(_SettingsState(
 taskLlmConfig: freezed == taskLlmConfig ? _self.taskLlmConfig : taskLlmConfig // ignore: cast_nullable_to_non_nullable
 as TaskLlmConfig?,availableLlmConfigs: null == availableLlmConfigs ? _self._availableLlmConfigs : availableLlmConfigs // ignore: cast_nullable_to_non_nullable
-as List<LlmConfig>,googleSearchKey: freezed == googleSearchKey ? _self.googleSearchKey : googleSearchKey // ignore: cast_nullable_to_non_nullable
+as List<LlmConfig>,selectedLlmConfigId: freezed == selectedLlmConfigId ? _self.selectedLlmConfigId : selectedLlmConfigId // ignore: cast_nullable_to_non_nullable
+as String?,googleSearchKey: freezed == googleSearchKey ? _self.googleSearchKey : googleSearchKey // ignore: cast_nullable_to_non_nullable
 as String?,googleSearchEngineId: freezed == googleSearchEngineId ? _self.googleSearchEngineId : googleSearchEngineId // ignore: cast_nullable_to_non_nullable
 as String?,googleSearchEnabled: null == googleSearchEnabled ? _self.googleSearchEnabled : googleSearchEnabled // ignore: cast_nullable_to_non_nullable
 as bool,openWeatherKey: freezed == openWeatherKey ? _self.openWeatherKey : openWeatherKey // ignore: cast_nullable_to_non_nullable

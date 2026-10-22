@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/models/llm_config.dart';
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/res/app_colors.dart';
-import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
+import '../../presentation/bloc/settings_cubit.dart';
+import '../../presentation/bloc/settings_state.dart';
 
 class LlmSelectionPage extends StatefulWidget {
   const LlmSelectionPage({super.key});
@@ -15,37 +16,21 @@ class LlmSelectionPage extends StatefulWidget {
 }
 
 class _LlmSelectionPageState extends State<LlmSelectionPage> {
-  final LlmServiceInterface _llmService = getIt<LlmServiceInterface>();
-  List<LlmConfig> _configs = <LlmConfig>[];
-  String? _selectedId;
-
   @override
   void initState() {
     super.initState();
-    _refresh();
-  }
-
-  Future<void> _refresh() async {
-    // Ensure service is ready (though ideally it's init at app start)
-    await _llmService.init();
-
-    setState(() {
-      _configs = _llmService.getAllConfigs();
-      _selectedId = _llmService.getCurrentConfig()?.id;
-    });
+    context.read<SettingsCubit>().refreshLlmConfigs();
   }
 
   Future<void> _onAdd() async {
     await context.push('/settings/llm/config/new');
-    _refresh();
   }
 
   Future<void> _onEdit(LlmConfig config) async {
     await context.push('/settings/llm/config/${config.id}');
-    _refresh();
   }
 
-  void _onDelete(LlmConfig config) async {
+  Future<void> _onDelete(LlmConfig config) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -67,25 +52,27 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
     );
 
     if (confirm == true) {
-      await _llmService.deleteConfig(config.id);
-      _refresh();
+      await context.read<SettingsCubit>().deleteLlmConfig(config.id);
     }
   }
 
-  void _onSelect(String? id) async {
+  Future<void> _onSelect(String? id) async {
     if (id != null) {
-      await _llmService.setCurrentConfig(id);
-      _refresh();
+      await context.read<SettingsCubit>().setCurrentLlmConfig(id);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final SettingsState state = context.watch<SettingsCubit>().state;
+    final List<LlmConfig> configs = state.availableLlmConfigs;
+    final String? selectedId = state.selectedLlmConfigId;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).llmProviderSelection),
       ),
-      body: _configs.isEmpty
+      body: configs.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -105,9 +92,9 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
               ),
             )
           : ListView.builder(
-              itemCount: _configs.length,
+              itemCount: configs.length,
               itemBuilder: (BuildContext context, int index) {
-                final LlmConfig config = _configs[index];
+                final LlmConfig config = configs[index];
 
                 return Card(
                   margin: const EdgeInsets.symmetric(
@@ -119,7 +106,7 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                     leading: Radio<String>(
                       value: config.id,
                       // ignore: deprecated_member_use
-                      groupValue: _selectedId,
+                      groupValue: selectedId,
                       // ignore: deprecated_member_use
                       onChanged: _onSelect,
                     ),
@@ -157,7 +144,7 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                 );
               },
             ),
-      floatingActionButton: _configs.isNotEmpty
+      floatingActionButton: configs.isNotEmpty
           ? FloatingActionButton(
               onPressed: _onAdd,
               child: const Icon(Icons.add),

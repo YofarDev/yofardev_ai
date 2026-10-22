@@ -13,6 +13,7 @@ sealed class SettingsState with _$SettingsState {
     // NEW FIELDS:
     @Default(null) TaskLlmConfig? taskLlmConfig,
     @Default(<LlmConfig>[]) List<LlmConfig> availableLlmConfigs,
+    @Default(null) String? selectedLlmConfigId,
     // Function Calling Configuration Fields:
     @Default(null) String? googleSearchKey,
     @Default(null) String? googleSearchEngineId,
