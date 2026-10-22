@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
+import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
@@ -28,8 +29,12 @@ class MockTtsPlaybackService implements TtsPlaybackService {
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,
-    Duration audioDuration,
-  ) {}
+    Duration audioDuration, {
+    List<AvatarCue> cues = const <AvatarCue>[],
+  }) {}
+
+  @override
+  void fireCues(List<AvatarCue> cues) {}
 
   @override
   void cancelAnimation() {}

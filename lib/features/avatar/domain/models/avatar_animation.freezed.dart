@@ -55,13 +55,15 @@ extension AvatarAnimationPatterns on AvatarAnimation {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AvatarAnimationClothes value)?  clothes,TResult Function( AvatarAnimationBackground value)?  background,TResult Function( AvatarAnimationUpdateConfig value)?  updateConfig,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AvatarAnimationClothes value)?  clothes,TResult Function( AvatarAnimationBackground value)?  background,TResult Function( AvatarAnimationUpdateConfig value)?  updateConfig,TResult Function( AvatarAnimationGesture value)?  gesture,TResult Function( AvatarAnimationSceneEvent value)?  sceneEvent,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case AvatarAnimationClothes() when clothes != null:
 return clothes(_that);case AvatarAnimationBackground() when background != null:
 return background(_that);case AvatarAnimationUpdateConfig() when updateConfig != null:
-return updateConfig(_that);case _:
+return updateConfig(_that);case AvatarAnimationGesture() when gesture != null:
+return gesture(_that);case AvatarAnimationSceneEvent() when sceneEvent != null:
+return sceneEvent(_that);case _:
   return orElse();
 
 }
@@ -79,13 +81,15 @@ return updateConfig(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AvatarAnimationClothes value)  clothes,required TResult Function( AvatarAnimationBackground value)  background,required TResult Function( AvatarAnimationUpdateConfig value)  updateConfig,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AvatarAnimationClothes value)  clothes,required TResult Function( AvatarAnimationBackground value)  background,required TResult Function( AvatarAnimationUpdateConfig value)  updateConfig,required TResult Function( AvatarAnimationGesture value)  gesture,required TResult Function( AvatarAnimationSceneEvent value)  sceneEvent,}){
 final _that = this;
 switch (_that) {
 case AvatarAnimationClothes():
 return clothes(_that);case AvatarAnimationBackground():
 return background(_that);case AvatarAnimationUpdateConfig():
-return updateConfig(_that);}
+return updateConfig(_that);case AvatarAnimationGesture():
+return gesture(_that);case AvatarAnimationSceneEvent():
+return sceneEvent(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -99,13 +103,15 @@ return updateConfig(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AvatarAnimationClothes value)?  clothes,TResult? Function( AvatarAnimationBackground value)?  background,TResult? Function( AvatarAnimationUpdateConfig value)?  updateConfig,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AvatarAnimationClothes value)?  clothes,TResult? Function( AvatarAnimationBackground value)?  background,TResult? Function( AvatarAnimationUpdateConfig value)?  updateConfig,TResult? Function( AvatarAnimationGesture value)?  gesture,TResult? Function( AvatarAnimationSceneEvent value)?  sceneEvent,}){
 final _that = this;
 switch (_that) {
 case AvatarAnimationClothes() when clothes != null:
 return clothes(_that);case AvatarAnimationBackground() when background != null:
 return background(_that);case AvatarAnimationUpdateConfig() when updateConfig != null:
-return updateConfig(_that);case _:
+return updateConfig(_that);case AvatarAnimationGesture() when gesture != null:
+return gesture(_that);case AvatarAnimationSceneEvent() when sceneEvent != null:
+return sceneEvent(_that);case _:
   return null;
 
 }
@@ -122,12 +128,14 @@ return updateConfig(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( bool goingDown)?  clothes,TResult Function( BackgroundTransition transition)?  background,TResult Function( String chatId,  AvatarConfig avatarConfig)?  updateConfig,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( bool goingDown)?  clothes,TResult Function( BackgroundTransition transition)?  background,TResult Function( String chatId,  AvatarConfig avatarConfig)?  updateConfig,TResult Function( AvatarGesture gesture)?  gesture,TResult Function( SceneEvent sceneEvent)?  sceneEvent,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AvatarAnimationClothes() when clothes != null:
 return clothes(_that.goingDown);case AvatarAnimationBackground() when background != null:
 return background(_that.transition);case AvatarAnimationUpdateConfig() when updateConfig != null:
-return updateConfig(_that.chatId,_that.avatarConfig);case _:
+return updateConfig(_that.chatId,_that.avatarConfig);case AvatarAnimationGesture() when gesture != null:
+return gesture(_that.gesture);case AvatarAnimationSceneEvent() when sceneEvent != null:
+return sceneEvent(_that.sceneEvent);case _:
   return orElse();
 
 }
@@ -145,12 +153,14 @@ return updateConfig(_that.chatId,_that.avatarConfig);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( bool goingDown)  clothes,required TResult Function( BackgroundTransition transition)  background,required TResult Function( String chatId,  AvatarConfig avatarConfig)  updateConfig,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( bool goingDown)  clothes,required TResult Function( BackgroundTransition transition)  background,required TResult Function( String chatId,  AvatarConfig avatarConfig)  updateConfig,required TResult Function( AvatarGesture gesture)  gesture,required TResult Function( SceneEvent sceneEvent)  sceneEvent,}) {final _that = this;
 switch (_that) {
 case AvatarAnimationClothes():
 return clothes(_that.goingDown);case AvatarAnimationBackground():
 return background(_that.transition);case AvatarAnimationUpdateConfig():
-return updateConfig(_that.chatId,_that.avatarConfig);}
+return updateConfig(_that.chatId,_that.avatarConfig);case AvatarAnimationGesture():
+return gesture(_that.gesture);case AvatarAnimationSceneEvent():
+return sceneEvent(_that.sceneEvent);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -164,12 +174,14 @@ return updateConfig(_that.chatId,_that.avatarConfig);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( bool goingDown)?  clothes,TResult? Function( BackgroundTransition transition)?  background,TResult? Function( String chatId,  AvatarConfig avatarConfig)?  updateConfig,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( bool goingDown)?  clothes,TResult? Function( BackgroundTransition transition)?  background,TResult? Function( String chatId,  AvatarConfig avatarConfig)?  updateConfig,TResult? Function( AvatarGesture gesture)?  gesture,TResult? Function( SceneEvent sceneEvent)?  sceneEvent,}) {final _that = this;
 switch (_that) {
 case AvatarAnimationClothes() when clothes != null:
 return clothes(_that.goingDown);case AvatarAnimationBackground() when background != null:
 return background(_that.transition);case AvatarAnimationUpdateConfig() when updateConfig != null:
-return updateConfig(_that.chatId,_that.avatarConfig);case _:
+return updateConfig(_that.chatId,_that.avatarConfig);case AvatarAnimationGesture() when gesture != null:
+return gesture(_that.gesture);case AvatarAnimationSceneEvent() when sceneEvent != null:
+return sceneEvent(_that.sceneEvent);case _:
   return null;
 
 }
@@ -384,6 +396,138 @@ $AvatarConfigCopyWith<$Res> get avatarConfig {
     return _then(_self.copyWith(avatarConfig: value));
   });
 }
+}
+
+/// @nodoc
+
+
+class AvatarAnimationGesture implements AvatarAnimation {
+  const AvatarAnimationGesture(this.gesture);
+  
+
+ final  AvatarGesture gesture;
+
+/// Create a copy of AvatarAnimation
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AvatarAnimationGestureCopyWith<AvatarAnimationGesture> get copyWith => _$AvatarAnimationGestureCopyWithImpl<AvatarAnimationGesture>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarAnimationGesture&&(identical(other.gesture, gesture) || other.gesture == gesture));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,gesture);
+
+@override
+String toString() {
+  return 'AvatarAnimation.gesture(gesture: $gesture)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AvatarAnimationGestureCopyWith<$Res> implements $AvatarAnimationCopyWith<$Res> {
+  factory $AvatarAnimationGestureCopyWith(AvatarAnimationGesture value, $Res Function(AvatarAnimationGesture) _then) = _$AvatarAnimationGestureCopyWithImpl;
+@useResult
+$Res call({
+ AvatarGesture gesture
+});
+
+
+
+
+}
+/// @nodoc
+class _$AvatarAnimationGestureCopyWithImpl<$Res>
+    implements $AvatarAnimationGestureCopyWith<$Res> {
+  _$AvatarAnimationGestureCopyWithImpl(this._self, this._then);
+
+  final AvatarAnimationGesture _self;
+  final $Res Function(AvatarAnimationGesture) _then;
+
+/// Create a copy of AvatarAnimation
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? gesture = null,}) {
+  return _then(AvatarAnimationGesture(
+null == gesture ? _self.gesture : gesture // ignore: cast_nullable_to_non_nullable
+as AvatarGesture,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AvatarAnimationSceneEvent implements AvatarAnimation {
+  const AvatarAnimationSceneEvent(this.sceneEvent);
+  
+
+ final  SceneEvent sceneEvent;
+
+/// Create a copy of AvatarAnimation
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AvatarAnimationSceneEventCopyWith<AvatarAnimationSceneEvent> get copyWith => _$AvatarAnimationSceneEventCopyWithImpl<AvatarAnimationSceneEvent>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarAnimationSceneEvent&&(identical(other.sceneEvent, sceneEvent) || other.sceneEvent == sceneEvent));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,sceneEvent);
+
+@override
+String toString() {
+  return 'AvatarAnimation.sceneEvent(sceneEvent: $sceneEvent)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AvatarAnimationSceneEventCopyWith<$Res> implements $AvatarAnimationCopyWith<$Res> {
+  factory $AvatarAnimationSceneEventCopyWith(AvatarAnimationSceneEvent value, $Res Function(AvatarAnimationSceneEvent) _then) = _$AvatarAnimationSceneEventCopyWithImpl;
+@useResult
+$Res call({
+ SceneEvent sceneEvent
+});
+
+
+
+
+}
+/// @nodoc
+class _$AvatarAnimationSceneEventCopyWithImpl<$Res>
+    implements $AvatarAnimationSceneEventCopyWith<$Res> {
+  _$AvatarAnimationSceneEventCopyWithImpl(this._self, this._then);
+
+  final AvatarAnimationSceneEvent _self;
+  final $Res Function(AvatarAnimationSceneEvent) _then;
+
+/// Create a copy of AvatarAnimation
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? sceneEvent = null,}) {
+  return _then(AvatarAnimationSceneEvent(
+null == sceneEvent ? _self.sceneEvent : sceneEvent // ignore: cast_nullable_to_non_nullable
+as SceneEvent,
+  ));
+}
+
+
 }
 
 // dart format on

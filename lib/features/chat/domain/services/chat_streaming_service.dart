@@ -70,6 +70,14 @@ class ChatStreamingService {
 
   bool _streamInterrupted = false;
 
+  final StreamController<List<AvatarCue>> _streamingCuesController =
+      StreamController<List<AvatarCue>>.broadcast();
+
+  /// Cues of each streamed sentence when TTS is disabled (onlyText mode):
+  /// with no playback to time them against, they fire as soon as their
+  /// sentence chunk finishes streaming.
+  Stream<List<AvatarCue>> get streamingCues => _streamingCuesController.stream;
+
   /// Streams a response from the LLM for the given prompt.
   ///
   /// This method:
@@ -233,6 +241,8 @@ class ChatStreamingService {
             voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
             cues: List<AvatarCue>.of(carriedCues),
           );
+        } else if (carriedCues.isNotEmpty) {
+          _streamingCuesController.add(List<AvatarCue>.of(carriedCues));
         }
         carriedCues.clear();
       }

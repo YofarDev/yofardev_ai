@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/services/audio/audio_amplitude_service.dart';
 import '../../../../core/services/audio/interruption_service.dart';
@@ -34,6 +35,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
        _ttsPlaybackService = ttsPlaybackService,
        super(ChatTtsState.initial()) {
     _subscribeToTtsStream();
+    _subscribeToCueOnlyItems();
     _subscribeToInterruptions();
   }
 
@@ -43,6 +45,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   final InterruptionService _interruptionService;
   final TtsPlaybackService _ttsPlaybackService;
   StreamSubscription<String>? _ttsAudioSubscription;
+  StreamSubscription<List<AvatarCue>>? _cueOnlySubscription;
   StreamSubscription<void>? _interruptionSubscription;
   final List<String> _pendingPlaybackQueue = <String>[];
   bool _isPlayingFromQueue = false;
@@ -73,6 +76,15 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
           error: e,
         );
       },
+    );
+  }
+
+  /// Cue-only items (no speakable text) never emit audio: hand their cues
+  /// straight to the playback service the moment they are reached.
+  void _subscribeToCueOnlyItems() {
+    _cueOnlySubscription?.cancel();
+    _cueOnlySubscription = _ttsQueueManager.cueOnlyStream.listen(
+      (List<AvatarCue> cues) => _ttsPlaybackService.fireCues(cues),
     );
   }
 
@@ -171,6 +183,8 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         audioPath,
         amplitudes,
         audioDuration,
+        // Consumed exactly once, here, when this audio starts playing.
+        cues: _ttsQueueManager.consumeCues(audioPath),
       );
 
       // 5. Wait for playback completion OR interruption before processing next.
@@ -292,6 +306,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       _currentPlaybackStopSignal!.complete();
     }
     await _ttsAudioSubscription?.cancel();
+    await _cueOnlySubscription?.cancel();
     await _interruptionSubscription?.cancel();
     await super.close();
   }

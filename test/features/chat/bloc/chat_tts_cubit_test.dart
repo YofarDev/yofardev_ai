@@ -86,8 +86,9 @@ class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,
-    Duration audioDuration,
-  ) {}
+    Duration audioDuration, {
+    List<AvatarCue> cues = const <AvatarCue>[],
+  }) {}
 
   @override
   void cancelAnimation() {}
@@ -132,6 +133,12 @@ void main() {
         return;
       });
       when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {});
+      when(
+        () => mockTtsManager.cueOnlyStream,
+      ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
+      when(
+        () => mockTtsManager.consumeCues(any()),
+      ).thenReturn(const <AvatarCue>[]);
 
       cubit = ChatTtsCubit(
         ttsQueueManager: mockTtsManager,

@@ -118,6 +118,10 @@ class TalkingCubit extends Cubit<TalkingState> {
         _updateMouthStateFromService(mouthState);
       case AnimationCompletedEvent():
         break;
+      // Cues are consumed by the avatar feature's AvatarCueService, not by
+      // talking state.
+      case CuesReachedEvent():
+        break;
     }
   }
 

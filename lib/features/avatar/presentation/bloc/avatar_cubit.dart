@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_gesture.dart';
+import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
 import '../../domain/repositories/avatar_repository.dart';
@@ -83,6 +85,20 @@ class AvatarCubit extends Cubit<AvatarState> {
           tag: 'AvatarCubit',
         );
         updateAvatarConfig(chatId, avatarConfig);
+      },
+      // Inline cues are consumed by the Rive view via dedicated state
+      // (B7/B8); until then they are acknowledged and ignored.
+      gesture: (AvatarGesture gesture) {
+        AppLogger.debug(
+          'AvatarCubit: gesture cue ${gesture.name} (no Rive view yet)',
+          tag: 'AvatarCubit',
+        );
+      },
+      sceneEvent: (SceneEvent sceneEvent) {
+        AppLogger.debug(
+          'AvatarCubit: scene event ${sceneEvent.name} (no Rive view yet)',
+          tag: 'AvatarCubit',
+        );
       },
     );
   }

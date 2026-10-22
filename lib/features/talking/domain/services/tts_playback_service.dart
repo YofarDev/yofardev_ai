@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/utils/logger.dart';
 import '../repositories/talking_repository.dart';
 
@@ -24,6 +25,13 @@ class AnimationCompletedEvent extends PlaybackEvent {
   const AnimationCompletedEvent();
 }
 
+/// Emitted the moment a TTS queue item's audio starts playing (or
+/// immediately, for items that carry only cues and no speakable text).
+class CuesReachedEvent extends PlaybackEvent {
+  const CuesReachedEvent(this.cues);
+  final List<AvatarCue> cues;
+}
+
 class TtsPlaybackService {
   TtsPlaybackService(this._repository);
 
@@ -35,6 +43,15 @@ class TtsPlaybackService {
 
   Stream<PlaybackEvent> get events => _controller.stream;
 
+  /// Fires cues for a queue item that has no speakable text: there is no
+  /// audio to start, so they are delivered as soon as the item is reached.
+  void fireCues(List<AvatarCue> cues) {
+    if (cues.isEmpty) {
+      return;
+    }
+    _controller.add(CuesReachedEvent(cues));
+  }
+
   Future<void> stop() async {
     _animationTimer?.cancel();
     _animationTimer = null;
@@ -45,8 +62,9 @@ class TtsPlaybackService {
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,
-    Duration audioDuration,
-  ) {
+    Duration audioDuration, {
+    List<AvatarCue> cues = const <AvatarCue>[],
+  }) {
     AppLogger.debug(
       'TtsPlaybackService: Starting amplitude animation with ${amplitudes.length} frames, duration: ${audioDuration.inMilliseconds}ms',
       tag: 'TtsPlaybackService',
@@ -64,6 +82,11 @@ class TtsPlaybackService {
     }
 
     _controller.add(const SpeakingStartedEvent());
+    // The audio starts now: cues embedded in this sentence fire in time
+    // with speech.
+    if (cues.isNotEmpty) {
+      _controller.add(CuesReachedEvent(cues));
+    }
 
     final int totalFrames = amplitudes.length;
     final int updateInterval = (audioDuration.inMilliseconds / totalFrames)

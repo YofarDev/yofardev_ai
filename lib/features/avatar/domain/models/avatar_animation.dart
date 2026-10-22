@@ -1,6 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_gesture.dart';
+import '../../../../core/models/avatar_scene.dart';
 import 'background_transition.dart';
 part 'avatar_animation.freezed.dart';
 
@@ -30,4 +32,13 @@ sealed class AvatarAnimation with _$AvatarAnimation {
     String chatId,
     AvatarConfig avatarConfig,
   ) = AvatarAnimationUpdateConfig;
+
+  /// Play an inline gesture cue (upper-body layer; mood and mouth keep
+  /// running).
+  const factory AvatarAnimation.gesture(AvatarGesture gesture) =
+      AvatarAnimationGesture;
+
+  /// Play a scene event in the active Rive scene.
+  const factory AvatarAnimation.sceneEvent(SceneEvent sceneEvent) =
+      AvatarAnimationSceneEvent;
 }

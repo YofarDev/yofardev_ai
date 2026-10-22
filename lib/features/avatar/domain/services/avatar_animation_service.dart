@@ -58,6 +58,11 @@ class AvatarAnimationService {
     _animationController.add(AvatarAnimation.updateConfig(chatId, config));
   }
 
+  /// Emit an arbitrary animation event (inline cues, moods, presence).
+  void trigger(AvatarAnimation animation) {
+    _animationController.add(animation);
+  }
+
   /// Dispose of the service and close the stream.
   void dispose() {
     _animationController.close();

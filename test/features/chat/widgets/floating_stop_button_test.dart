@@ -286,8 +286,12 @@ class MockTtsPlaybackService implements TtsPlaybackService {
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,
-    Duration audioDuration,
-  ) {}
+    Duration audioDuration, {
+    List<AvatarCue> cues = const <AvatarCue>[],
+  }) {}
+
+  @override
+  void fireCues(List<AvatarCue> cues) {}
 
   @override
   Future<void> stop() async {}
@@ -330,6 +334,13 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   Stream<String> get audioStream => const Stream<String>.empty();
+
+  @override
+  Stream<List<AvatarCue>> get cueOnlyStream =>
+      const Stream<List<AvatarCue>>.empty();
+
+  @override
+  List<AvatarCue> consumeCues(String audioPath) => const <AvatarCue>[];
 }
 
 class MockAvatarAnimationService implements AvatarAnimationService {
@@ -349,6 +360,9 @@ class MockAvatarAnimationService implements AvatarAnimationService {
 
   @override
   void emitUpdateConfig(String chatId, AvatarConfig config) {}
+
+  @override
+  void trigger(AvatarAnimation animation) {}
 }
 
 class MockChatEntryService implements ChatEntryService {

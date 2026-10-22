@@ -30,6 +30,9 @@ class MockAvatarAnimationService implements AvatarAnimationService {
 
   @override
   void emitUpdateConfig(String chatId, AvatarConfig config) {}
+
+  @override
+  void trigger(AvatarAnimation animation) {}
 }
 
 class MockAudioPlayerService implements AudioPlayerService {

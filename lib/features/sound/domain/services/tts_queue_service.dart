@@ -18,6 +18,12 @@ class TtsQueueService {
   final List<TtsQueueItem> _queue = <TtsQueueItem>[];
   final StreamController<String> _audioController =
       StreamController<String>.broadcast();
+  final StreamController<List<AvatarCue>> _cueOnlyController =
+      StreamController<List<AvatarCue>>.broadcast();
+
+  /// Cues of completed items, keyed by audio path, until consumed by the
+  /// playback side (they must fire exactly when that audio starts).
+  final Map<String, List<AvatarCue>> _cuesByPath = <String, List<AvatarCue>>{};
   final Uuid _uuid = const Uuid();
 
   bool _isProcessing = false;
@@ -44,6 +50,16 @@ class TtsQueueService {
 
   /// Stream of generated audio paths ready for playback
   Stream<String> get audioStream => _audioController.stream;
+
+  /// Cues of items that carry no speakable text, emitted the moment the
+  /// item is reached in the queue (there is no audio to wait for).
+  Stream<List<AvatarCue>> get cueOnlyStream => _cueOnlyController.stream;
+
+  /// Consumes the cues embedded in the item whose audio path is
+  /// [audioPath]; empty when the item carried none. Consumed cues are
+  /// removed so they fire exactly once.
+  List<AvatarCue> consumeCues(String audioPath) =>
+      _cuesByPath.remove(audioPath) ?? const <AvatarCue>[];
 
   /// Current queue state (for debugging/monitoring)
   List<TtsQueueItem> get queue => List<TtsQueueItem>.unmodifiable(_queue);
@@ -92,6 +108,7 @@ class TtsQueueService {
   void clear() {
     _epoch++;
     _queue.clear();
+    _cuesByPath.clear();
     _isProcessing = false;
     AppLogger.debug('TTS queue cleared', tag: 'TtsQueueService');
   }
@@ -148,12 +165,14 @@ class TtsQueueService {
 
     final TtsQueueItem item = _queue.first;
 
-    // Cue-only item (no speakable text): nothing to synthesize or play; mark
-    // it completed and carry on. Its cues are consumed downstream.
+    // Cue-only item (no speakable text): nothing to synthesize or play;
+    // hand its cues to the playback side immediately and carry on.
     if (item.text.isEmpty) {
-      _queue[0] = item.copyWith(isCompleted: true);
       _queue.removeAt(0);
       _isProcessing = false;
+      if (item.cues.isNotEmpty) {
+        _cueOnlyController.add(item.cues);
+      }
       if (_queue.isNotEmpty && !_isPaused) {
         await _processNext();
       }
@@ -181,6 +200,12 @@ class TtsQueueService {
       final String processedAudioPath = await _voiceEffectsService
           .applyVoiceEffects(rawAudioPath, item.voiceEffect);
       abortIfCleared();
+
+      // The cues fire when this audio starts playing; park them for the
+      // playback side to consume.
+      if (item.cues.isNotEmpty) {
+        _cuesByPath[processedAudioPath] = item.cues;
+      }
 
       // Update item as completed
       _queue[0] = item.copyWith(

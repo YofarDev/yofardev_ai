@@ -50,6 +50,7 @@ import '../services/audio/interruption_service.dart';
 import '../services/audio/voice_effects_service.dart';
 import '../services/agent/tool_registry.dart';
 import '../../features/avatar/domain/services/avatar_animation_service.dart';
+import '../../features/avatar/domain/services/avatar_cue_service.dart';
 import '../../features/demo/domain/services/demo_controller.dart';
 import '../services/llm/fake_llm_service.dart';
 import '../services/llm/llm_config_manager.dart';
@@ -268,6 +269,19 @@ Future<void> setupServiceLocator() async {
       demoService: getIt<DemoService>(),
     ),
   );
+
+  // Eagerly created: it must be subscribed to TTS playback events and the
+  // streaming cue channel from startup, or cues fired before the first
+  // subscription would be lost.
+  getIt.registerLazySingleton<AvatarCueService>(
+    () => AvatarCueService(
+      playbackService: getIt<TtsPlaybackService>(),
+      animationService: getIt<AvatarAnimationService>(),
+      streamingCues: getIt<ChatStreamingService>().streamingCues,
+    ),
+  );
+  getIt<AvatarCueService>();
+
   getIt.registerFactory<DemoCubit>(
     () => DemoCubit(
       demoController: getIt<DemoController>(),

@@ -164,6 +164,13 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   Stream<String> get audioStream => const Stream<String>.empty();
+
+  @override
+  Stream<List<AvatarCue>> get cueOnlyStream =>
+      const Stream<List<AvatarCue>>.empty();
+
+  @override
+  List<AvatarCue> consumeCues(String audioPath) => const <AvatarCue>[];
 }
 
 void main() {
