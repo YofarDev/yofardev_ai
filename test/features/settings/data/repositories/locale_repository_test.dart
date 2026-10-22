@@ -1,7 +1,7 @@
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yofardev_ai/core/repositories/locale_repository_impl.dart';
+import 'package:yofardev_ai/features/settings/data/repositories/locale_repository_impl.dart';
 
 void main() {
   group('LocaleRepositoryImpl', () {

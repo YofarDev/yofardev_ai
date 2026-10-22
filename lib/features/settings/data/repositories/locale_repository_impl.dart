@@ -1,8 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/failure.dart';
-import '../models/result.dart';
-import '../repositories/locale_repository.dart';
+import '../../../../core/models/failure.dart';
+import '../../../../core/models/result.dart';
+import '../../domain/repositories/locale_repository.dart';
 
 class LocaleRepositoryImpl implements LocaleRepository {
   const LocaleRepositoryImpl({required this.prefs});

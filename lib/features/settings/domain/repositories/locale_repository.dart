@@ -1,4 +1,4 @@
-import '../models/result.dart';
+import '../../../../core/models/result.dart';
 
 /// Repository for managing language preference persistence
 abstract class LocaleRepository {
