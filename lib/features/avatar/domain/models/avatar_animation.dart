@@ -1,14 +1,13 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/avatar_config.dart';
-import '../../presentation/bloc/avatar_state.dart';
-
+import 'background_transition.dart';
 part 'avatar_animation.freezed.dart';
 
 /// Events that trigger avatar animations.
 ///
-/// These events are emitted by [AvatarAnimationService] and consumed
-/// by [AvatarCubit] to coordinate avatar animations across features.
+/// These events are emitted by [AvatarAnimationService] and consumed by the
+/// avatar cubit to coordinate avatar animations across features.
 @freezed
 sealed class AvatarAnimation with _$AvatarAnimation {
   /// Trigger clothes dropping/rising animation.

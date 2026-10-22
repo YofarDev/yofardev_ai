@@ -2,14 +2,14 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_status_animation.dart';
+import '../../domain/models/background_transition.dart';
 
 export '../../../../core/models/avatar_status_animation.dart';
+export '../../domain/models/background_transition.dart';
 
 part 'avatar_state.freezed.dart';
 
 enum AvatarStatus { initial, ready, loading }
-
-enum BackgroundTransition { none, sliding }
 
 @freezed
 sealed class AvatarState with _$AvatarState {
