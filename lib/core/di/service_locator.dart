@@ -136,9 +136,7 @@ Future<void> setupServiceLocator() async {
     () => SettingsRepositoryImpl(),
   );
   getIt.registerLazySingleton<ChatRepository>(
-    () => YofardevRepositoryImpl(
-      chatDatasource: getIt<ChatLocalDatasource>(),
-    ),
+    () => YofardevRepositoryImpl(chatDatasource: getIt<ChatLocalDatasource>()),
   );
   getIt.registerLazySingleton<GlobalMemoryRepository>(
     () => GlobalMemoryRepositoryImpl(
@@ -262,6 +260,7 @@ Future<void> setupServiceLocator() async {
       chatStreamingService: getIt<ChatStreamingService>(),
       appLifecycleService: getIt<AppLifecycleService>(),
       globalMemoryService: getIt<GlobalMemoryService>(),
+      demoService: getIt<DemoService>(),
     ),
   );
   getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
@@ -278,21 +277,4 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<HomeCubit>(
     () => HomeCubit(getIt<HomeRepository>(), getIt<AppLifecycleService>()),
   );
-}
-
-/// Switch between real and fake LLM service
-///
-/// This allows runtime switching for demo mode
-void switchLlmService(bool useFakeService) {
-  if (useFakeService) {
-    getIt.unregister<LlmServiceInterface>();
-    getIt.registerLazySingleton<LlmServiceInterface>(
-      () => getIt<FakeLlmService>(),
-    );
-    AppLogger.info('Switched to FakeLlmService', tag: 'ServiceLocator');
-  } else {
-    getIt.unregister<LlmServiceInterface>();
-    getIt.registerLazySingleton<LlmServiceInterface>(() => getIt<LlmService>());
-    AppLogger.info('Switched to LlmService', tag: 'ServiceLocator');
-  }
 }

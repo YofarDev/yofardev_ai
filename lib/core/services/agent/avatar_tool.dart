@@ -9,8 +9,7 @@ import '../../utils/logger.dart';
 /// Agent tool that allows the LLM to change the avatar's appearance
 /// including background, clothes (hat, top), glasses, and accessories.
 class AvatarTool extends AgentTool {
-  AppLifecycleService get _appLifecycleService =>
-      getIt<AppLifecycleService>();
+  AppLifecycleService get _appLifecycleService => getIt<AppLifecycleService>();
 
   @override
   String get name => 'change_avatar';

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/models/app_lifecycle_event.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat_entry.dart';
@@ -33,6 +32,7 @@ class ChatCubit extends Cubit<ChatState> {
     required ChatStreamingService chatStreamingService,
     required AppLifecycleService appLifecycleService,
     required GlobalMemoryService globalMemoryService,
+    required DemoService demoService,
   }) : _chatRepository = chatRepository,
        _settingsRepository = settingsRepository,
        _avatarAnimationService = avatarAnimationService,
@@ -40,6 +40,7 @@ class ChatCubit extends Cubit<ChatState> {
        _chatStreamingService = chatStreamingService,
        _appLifecycleService = appLifecycleService,
        _globalMemoryService = globalMemoryService,
+       _demoService = demoService,
        super(ChatState.initial()) {
     // Subscribe to new chat entry events to persist avatar changes
     _newChatEntrySubscription = _appLifecycleService.newChatEntryEvents.listen(
@@ -88,6 +89,7 @@ class ChatCubit extends Cubit<ChatState> {
   final ChatStreamingService _chatStreamingService;
   final AppLifecycleService _appLifecycleService;
   final GlobalMemoryService _globalMemoryService;
+  final DemoService _demoService;
   StreamSubscription<NewChatEntryPayload>? _newChatEntrySubscription;
   StreamSubscription<DemoScript>? _demoScriptSubscription;
   StreamSubscription<AvatarChangeRequested>? _avatarChangeRequestedSubscription;
@@ -163,7 +165,6 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> _handleDemoScriptChangedEvent(DemoScript script) async {
     AppLogger.info('Demo script changed to: ${script.name}', tag: 'ChatCubit');
 
-    final DemoService demoService = getIt<DemoService>();
     final Chat currentChat = state.currentChat;
 
     AppLogger.info(
@@ -171,10 +172,10 @@ class ChatCubit extends Cubit<ChatState> {
       tag: 'ChatCubit',
     );
 
-    await demoService.activateDemo(chatId: currentChat.id, script: script);
+    await _demoService.activateDemo(chatId: currentChat.id, script: script);
 
     AppLogger.info(
-      'Demo activated, FakeLlmService isActive: ${demoService.isActive}',
+      'Demo activated, FakeLlmService isActive: ${_demoService.isActive}',
       tag: 'ChatCubit',
     );
 
@@ -183,10 +184,10 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   @override
-  Future<void> close() {
-    _newChatEntrySubscription?.cancel();
-    _demoScriptSubscription?.cancel();
-    _avatarChangeRequestedSubscription?.cancel();
+  Future<void> close() async {
+    await _newChatEntrySubscription?.cancel();
+    await _demoScriptSubscription?.cancel();
+    await _avatarChangeRequestedSubscription?.cancel();
     return super.close();
   }
 
@@ -237,8 +238,7 @@ class ChatCubit extends Cubit<ChatState> {
   /// Fetch the list of all chats
   Future<void> fetchChatsList() async {
     emit(state.copyWith(status: ChatStatus.loading));
-    final Result<List<Chat>> result = await _chatRepository
-        .getChatsList();
+    final Result<List<Chat>> result = await _chatRepository.getChatsList();
     result.when(
       err: (Failure failure) {
         emit(
@@ -258,10 +258,9 @@ class ChatCubit extends Cubit<ChatState> {
   /// Create a new chat
   Future<void> createNewChat() async {
     emit(state.copyWith(status: ChatStatus.updating));
-    final String language =
-        await _settingsRepository.getLanguage().then(
-              (Result<String?> result) => result.getOrNull ?? 'fr',
-            );
+    final String language = await _settingsRepository.getLanguage().then(
+      (Result<String?> result) => result.getOrNull ?? 'fr',
+    );
     final Result<Chat> result = await _chatRepository.createNewChat(
       language: language,
     );
@@ -476,8 +475,7 @@ class ChatCubit extends Cubit<ChatState> {
 
       if (title != null) {
         // Reload the chat from storage to get the updated title
-        final Result<Chat?> chatResult = await _chatRepository
-            .getChat(chatId);
+        final Result<Chat?> chatResult = await _chatRepository.getChat(chatId);
 
         chatResult.when(
           err: (Failure failure) {

@@ -28,12 +28,15 @@ import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/features/sound/data/datasources/tts_datasource.dart';
 
 // Mocktail mock classes
 class MockChatRepository extends Mock implements ChatRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
+
+class MockDemoService extends Mock implements DemoService {}
 
 class MockAvatarAnimationService extends Mock
     implements AvatarAnimationService {}
@@ -73,12 +76,8 @@ class MockGlobalMemoryService extends Mock implements GlobalMemoryService {}
 /// Factory to create a stubbed GlobalMemoryService for testing
 MockGlobalMemoryService createMockGlobalMemoryService() {
   final MockGlobalMemoryService service = MockGlobalMemoryService();
-  when(
-    () => service.updateMemory(any()),
-  ).thenAnswer((_) async {});
-  when(
-    () => service.buildMemoryMessage(),
-  ).thenAnswer((_) async => null);
+  when(() => service.updateMemory(any())).thenAnswer((_) async {});
+  when(() => service.buildMemoryMessage()).thenAnswer((_) async => null);
   return service;
 }
 
@@ -180,15 +179,13 @@ void main() {
       when(
         () =>
             mockChatRepository.createNewChat(language: any(named: 'language')),
-      ).thenAnswer(
-        (_) async => Result<Chat>.ok(Chat(id: 'test-id')),
-      );
-      when(() => mockChatRepository.getCurrentChat()).thenAnswer(
-        (_) async => Result<Chat>.ok(Chat(id: 'test-id')),
-      );
-      when(() => mockChatRepository.getChat(any())).thenAnswer(
-        (_) async => Result<Chat?>.ok(Chat(id: 'test-id')),
-      );
+      ).thenAnswer((_) async => Result<Chat>.ok(Chat(id: 'test-id')));
+      when(
+        () => mockChatRepository.getCurrentChat(),
+      ).thenAnswer((_) async => Result<Chat>.ok(Chat(id: 'test-id')));
+      when(
+        () => mockChatRepository.getChat(any()),
+      ).thenAnswer((_) async => Result<Chat?>.ok(Chat(id: 'test-id')));
       when(
         () => mockChatRepository.updateChat(
           id: any(named: 'id'),
@@ -266,6 +263,7 @@ void main() {
         ),
         appLifecycleService: MockAppLifecycleService(),
         globalMemoryService: createMockGlobalMemoryService(),
+        demoService: MockDemoService(),
       );
     });
 
@@ -308,7 +306,6 @@ void main() {
         expect(chatsCubit.state.functionCallingEnabled, initialValue);
       });
     });
-
 
     group('setCurrentChat', () {
       test('should update current chat', () {
@@ -808,15 +805,13 @@ void main() {
       when(
         () =>
             mockChatRepository.createNewChat(language: any(named: 'language')),
-      ).thenAnswer(
-        (_) async => Result<Chat>.ok(Chat(id: 'test-id')),
-      );
-      when(() => mockChatRepository.getCurrentChat()).thenAnswer(
-        (_) async => Result<Chat>.ok(Chat(id: 'test-id')),
-      );
-      when(() => mockChatRepository.getChat(any())).thenAnswer(
-        (_) async => Result<Chat?>.ok(Chat(id: 'test-id')),
-      );
+      ).thenAnswer((_) async => Result<Chat>.ok(Chat(id: 'test-id')));
+      when(
+        () => mockChatRepository.getCurrentChat(),
+      ).thenAnswer((_) async => Result<Chat>.ok(Chat(id: 'test-id')));
+      when(
+        () => mockChatRepository.getChat(any()),
+      ).thenAnswer((_) async => Result<Chat?>.ok(Chat(id: 'test-id')));
       when(
         () => mockChatRepository.updateChat(
           id: any(named: 'id'),
@@ -864,6 +859,7 @@ void main() {
         ),
         appLifecycleService: MockAppLifecycleService(),
         globalMemoryService: createMockGlobalMemoryService(),
+        demoService: MockDemoService(),
       );
     });
 
@@ -980,6 +976,7 @@ void main() {
           chatStreamingService: mockChatStreamingService,
           appLifecycleService: mockAppLifecycleService,
           globalMemoryService: createMockGlobalMemoryService(),
+          demoService: MockDemoService(),
         );
 
         // Initialize with a test chat

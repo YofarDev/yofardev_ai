@@ -43,8 +43,9 @@ void main() {
   });
 
   GlobalMemory storedMemory(GlobalMemory memory) {
-    when(() => memoryRepository.getMemory())
-        .thenAnswer((_) async => Result<GlobalMemory>.ok(memory));
+    when(
+      () => memoryRepository.getMemory(),
+    ).thenAnswer((_) async => Result<GlobalMemory>.ok(memory));
     when(
       () => memoryRepository.saveMemory(any()),
     ).thenAnswer((_) async => Result<void>.ok(null));
@@ -158,15 +159,15 @@ void main() {
         () => settingsRepository.getMemoryEnabled(),
       ).thenAnswer((_) async => Result<bool>.ok(true));
 
-      await service.updateMemory(
-        chatWithExchange(assistantBody: 'hi there'),
-      );
+      await service.updateMemory(chatWithExchange(assistantBody: 'hi there'));
 
-      verifyNever(() => llmService.extractMemory(
-        conversationExcerpt: any(named: 'conversationExcerpt'),
-        currentMemory: any(named: 'currentMemory'),
-        config: any(named: 'config'),
-      ));
+      verifyNever(
+        () => llmService.extractMemory(
+          conversationExcerpt: any(named: 'conversationExcerpt'),
+          currentMemory: any(named: 'currentMemory'),
+          config: any(named: 'config'),
+        ),
+      );
     });
 
     test('saves merged list when the LLM returns new facts', () async {
@@ -180,9 +181,11 @@ void main() {
         chatWithExchange(userBody: 'I love hiking with my dog'),
       );
 
-      final dynamic saved = verify(
-        () => memoryRepository.saveMemory(captureAny()),
-      ).captured.single as GlobalMemory;
+      final dynamic saved =
+          verify(
+                () => memoryRepository.saveMemory(captureAny()),
+              ).captured.single
+              as GlobalMemory;
 
       expect(saved.texts, <String>['Likes hiking', 'Has a dog']);
     });
@@ -202,15 +205,15 @@ void main() {
           ],
         ),
       );
-      stubExtraction(
-        '{"memory": ["Lives in Paris", "works as a DEVELOPER"]}',
-      );
+      stubExtraction('{"memory": ["Lives in Paris", "works as a DEVELOPER"]}');
 
       await service.updateMemory(chatWithExchange(userBody: 'hi'));
 
-      final dynamic saved = verify(
-        () => memoryRepository.saveMemory(captureAny()),
-      ).captured.single as GlobalMemory;
+      final dynamic saved =
+          verify(
+                () => memoryRepository.saveMemory(captureAny()),
+              ).captured.single
+              as GlobalMemory;
 
       expect(saved.items.first.id, 'stable-id');
       expect(saved.items.first.text, 'Lives in Paris');
@@ -272,9 +275,11 @@ void main() {
 
       await service.updateMemory(chatWithExchange(userBody: 'pizza'));
 
-      final dynamic saved = verify(
-        () => memoryRepository.saveMemory(captureAny()),
-      ).captured.single as GlobalMemory;
+      final dynamic saved =
+          verify(
+                () => memoryRepository.saveMemory(captureAny()),
+              ).captured.single
+              as GlobalMemory;
 
       expect(saved.texts, <String>['Likes pizza']);
     });
@@ -284,15 +289,15 @@ void main() {
         () => settingsRepository.getMemoryEnabled(),
       ).thenAnswer((_) async => Result<bool>.ok(true));
       storedMemory(GlobalMemory.empty());
-      stubExtraction(
-        '{"memory": ["Same fact", "same  FACT", "${'x' * 300}"]}',
-      );
+      stubExtraction('{"memory": ["Same fact", "same  FACT", "${'x' * 300}"]}');
 
       await service.updateMemory(chatWithExchange(userBody: 'hello'));
 
-      final dynamic saved = verify(
-        () => memoryRepository.saveMemory(captureAny()),
-      ).captured.single as GlobalMemory;
+      final dynamic saved =
+          verify(
+                () => memoryRepository.saveMemory(captureAny()),
+              ).captured.single
+              as GlobalMemory;
 
       expect(saved.items.length, 2);
       expect(

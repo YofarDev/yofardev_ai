@@ -49,8 +49,10 @@ class DemoService {
       orElse: () => AvatarBackgrounds.office,
     );
 
-    final Result<void> result = await _repository
-        .setAvatarBackground(chatId, initialBg);
+    final Result<void> result = await _repository.setAvatarBackground(
+      chatId,
+      initialBg,
+    );
     if (result.isOk) {
       AppLogger.debug(
         'Set initial background to: ${initialBg.name}',

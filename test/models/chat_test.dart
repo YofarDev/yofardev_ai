@@ -211,23 +211,20 @@ void main() {
       expect(llmMessages.first.body, 'message 60');
     });
 
-    test(
-      'ChatExtension.llmMessages returns all messages under the cap',
-      () {
-        final List<ChatEntry> entries = <ChatEntry>[
-          for (int i = 0; i < 10; i++)
-            ChatEntry(
-              id: 'entry$i',
-              entryType: EntryType.user,
-              body: 'message $i',
-              timestamp: DateTime.now(),
-            ),
-        ];
-        final Chat chat = Chat(entries: entries);
+    test('ChatExtension.llmMessages returns all messages under the cap', () {
+      final List<ChatEntry> entries = <ChatEntry>[
+        for (int i = 0; i < 10; i++)
+          ChatEntry(
+            id: 'entry$i',
+            entryType: EntryType.user,
+            body: 'message $i',
+            timestamp: DateTime.now(),
+          ),
+      ];
+      final Chat chat = Chat(entries: entries);
 
-        expect(chat.llmMessages.length, 10);
-      },
-    );
+      expect(chat.llmMessages.length, 10);
+    });
 
     test('ChatExtension.llmMessages should handle attached images', () {
       final List<ChatEntry> entries = <ChatEntry>[

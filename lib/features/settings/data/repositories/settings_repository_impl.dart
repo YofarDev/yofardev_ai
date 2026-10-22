@@ -208,7 +208,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Result<void>> setOpenWeatherEnabled(bool enabled) async {
-    final Result<void> result = await _datasource.setOpenWeatherEnabled(enabled);
+    final Result<void> result = await _datasource.setOpenWeatherEnabled(
+      enabled,
+    );
     return result.when(
       err: (Failure failure) => Result<void>.err(failure),
       ok: (void right) => Result<void>.ok(null),

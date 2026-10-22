@@ -117,42 +117,45 @@ void main() {
       expect(manager.queue.length, 0);
     });
 
-    test('does not emit audio after clear() during in-flight synthesis', () async {
-      // Hold synthesis in flight.
-      final Completer<String> synthesisGate = Completer<String>();
-      when(
-        () => mockDatasource.textToFrenchMaleVoice(
-          text: any(named: 'text'),
-          language: any(named: 'language'),
-          voiceEffect: any(named: 'voiceEffect'),
-        ),
-      ).thenAnswer((_) => synthesisGate.future);
+    test(
+      'does not emit audio after clear() during in-flight synthesis',
+      () async {
+        // Hold synthesis in flight.
+        final Completer<String> synthesisGate = Completer<String>();
+        when(
+          () => mockDatasource.textToFrenchMaleVoice(
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+            voiceEffect: any(named: 'voiceEffect'),
+          ),
+        ).thenAnswer((_) => synthesisGate.future);
 
-      final List<String> audioPaths = <String>[];
-      final StreamSubscription<String> subscription = manager.audioStream
-          .listen(audioPaths.add);
+        final List<String> audioPaths = <String>[];
+        final StreamSubscription<String> subscription = manager.audioStream
+            .listen(audioPaths.add);
 
-      unawaited(
-        manager.enqueue(
-          text: 'Slow sentence',
-          language: 'fr',
-          voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
-        ),
-      );
+        unawaited(
+          manager.enqueue(
+            text: 'Slow sentence',
+            language: 'fr',
+            voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          ),
+        );
 
-      // Wait until synthesis is in flight, then interrupt.
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      manager.clear();
+        // Wait until synthesis is in flight, then interrupt.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        manager.clear();
 
-      // Synthesis completes after the clear — its result must be dropped.
-      synthesisGate.complete('/path/to/late.wav');
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+        // Synthesis completes after the clear — its result must be dropped.
+        synthesisGate.complete('/path/to/late.wav');
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-      expect(audioPaths, isEmpty);
-      expect(manager.isProcessing, isFalse);
+        expect(audioPaths, isEmpty);
+        expect(manager.isProcessing, isFalse);
 
-      await subscription.cancel();
-    });
+        await subscription.cancel();
+      },
+    );
 
     test('should skip empty text', () async {
       unawaited(

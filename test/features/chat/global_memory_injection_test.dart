@@ -146,10 +146,11 @@ void main() {
         tools: any(named: 'tools'),
       ),
     ).thenAnswer((Invocation invocation) {
-      capturedMessages = invocation.namedArguments[#messages] as List<LlmMessage>;
-      return Stream<LlmStreamChunk>.fromIterable(
-        const <LlmStreamChunk>[LlmStreamChunk.complete()],
-      );
+      capturedMessages =
+          invocation.namedArguments[#messages] as List<LlmMessage>;
+      return Stream<LlmStreamChunk>.fromIterable(const <LlmStreamChunk>[
+        LlmStreamChunk.complete(),
+      ]);
     });
     when(
       () => chatRepository.updateChat(
@@ -187,38 +188,45 @@ void main() {
     );
   }
 
-  test('injects memory system message right before the current user message',
-      () async {
-    final LlmMessage memoryMessage = LlmMessage(
-      role: LlmMessageRole.system,
-      body: 'Global memory about the user...\n- Likes hiking',
-    );
-    final ChatStreamingService service =
-        buildService(FakeGlobalMemoryService(memoryMessage));
+  test(
+    'injects memory system message right before the current user message',
+    () async {
+      final LlmMessage memoryMessage = LlmMessage(
+        role: LlmMessageRole.system,
+        body: 'Global memory about the user...\n- Likes hiking',
+      );
+      final ChatStreamingService service = buildService(
+        FakeGlobalMemoryService(memoryMessage),
+      );
 
-    await runStream(service);
+      await runStream(service);
 
-    expect(capturedMessages, isNotEmpty);
-    final int memoryIndex = capturedMessages.indexWhere(
-      (LlmMessage m) => m.role == LlmMessageRole.system,
-    );
-    expect(memoryIndex, greaterThan(0), reason: 'memory must follow history');
+      expect(capturedMessages, isNotEmpty);
+      final int memoryIndex = capturedMessages.indexWhere(
+        (LlmMessage m) => m.role == LlmMessageRole.system,
+      );
+      expect(memoryIndex, greaterThan(0), reason: 'memory must follow history');
 
-    // Find the last user message: it must be immediately after the memory
-    final int lastUserIndex = capturedMessages.lastIndexWhere(
-      (LlmMessage m) => m.role == LlmMessageRole.user,
-    );
-    expect(lastUserIndex, memoryIndex + 1,
-        reason: 'memory must sit immediately before the current user message');
+      // Find the last user message: it must be immediately after the memory
+      final int lastUserIndex = capturedMessages.lastIndexWhere(
+        (LlmMessage m) => m.role == LlmMessageRole.user,
+      );
+      expect(
+        lastUserIndex,
+        memoryIndex + 1,
+        reason: 'memory must sit immediately before the current user message',
+      );
 
-    // History before the memory message is untouched
-    expect(capturedMessages.first.role, LlmMessageRole.user);
-    expect(capturedMessages.first.body, contains('previous message'));
-  });
+      // History before the memory message is untouched
+      expect(capturedMessages.first.role, LlmMessageRole.user);
+      expect(capturedMessages.first.body, contains('previous message'));
+    },
+  );
 
   test('does not inject anything when memory is empty', () async {
-    final ChatStreamingService service =
-        buildService(FakeGlobalMemoryService(null));
+    final ChatStreamingService service = buildService(
+      FakeGlobalMemoryService(null),
+    );
 
     await runStream(service);
 
@@ -233,8 +241,9 @@ void main() {
       role: LlmMessageRole.system,
       body: 'Global memory about the user...',
     );
-    final ChatStreamingService service =
-        buildService(FakeGlobalMemoryService(memoryMessage));
+    final ChatStreamingService service = buildService(
+      FakeGlobalMemoryService(memoryMessage),
+    );
 
     await runStream(service);
 

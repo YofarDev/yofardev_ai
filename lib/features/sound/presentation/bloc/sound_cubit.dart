@@ -15,9 +15,7 @@ class SoundCubit extends Cubit<SoundState> {
   Future<void> playSound(String soundName) async {
     try {
       emit(SoundPlaying(soundName));
-      final Result<void> result = await _soundRepository.play(
-        soundName,
-      );
+      final Result<void> result = await _soundRepository.play(soundName);
       result.when(
         err: (Failure failure) {
           emit(SoundError(failure.message));

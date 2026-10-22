@@ -85,12 +85,12 @@ class StreamProcessorService {
           AppLogger.error('Stream error: $message', tag: 'StreamProcessor');
           return <SentenceChunk>[SentenceChunk.error(message)];
         },
-        toolCallDelta: (int index, String? id, String? name,
-            String? argumentsDelta) {
-          // Tool-call fragments carry no speakable content; the caller taps
-          // the raw stream to accumulate them.
-          return const <SentenceChunk>[];
-        },
+        toolCallDelta:
+            (int index, String? id, String? name, String? argumentsDelta) {
+              // Tool-call fragments carry no speakable content; the caller taps
+              // the raw stream to accumulate them.
+              return const <SentenceChunk>[];
+            },
         complete: () {
           final List<SentenceChunk> chunks = <SentenceChunk>[];
           // Flush any remaining sentences

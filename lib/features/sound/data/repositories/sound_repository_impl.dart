@@ -43,7 +43,9 @@ class SoundRepositoryImpl implements SoundRepository {
     try {
       return Result<bool>.ok(_player.state == PlayerState.playing);
     } catch (e) {
-      return Result<bool>.err(StorageFailure('Failed to check playing state', e));
+      return Result<bool>.err(
+        StorageFailure('Failed to check playing state', e),
+      );
     }
   }
 }

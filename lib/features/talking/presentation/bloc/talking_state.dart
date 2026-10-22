@@ -40,12 +40,12 @@ sealed class TalkingState with _$TalkingState {
 
 extension TalkingPhaseX on TalkingState {
   TalkingPhase get phase => map(
-        idle: (_) => TalkingPhase.idle,
-        waiting: (_) => TalkingPhase.waiting,
-        generating: (_) => TalkingPhase.generating,
-        speaking: (_) => TalkingPhase.speaking,
-        error: (_) => TalkingPhase.error,
-      );
+    idle: (_) => TalkingPhase.idle,
+    waiting: (_) => TalkingPhase.waiting,
+    generating: (_) => TalkingPhase.generating,
+    speaking: (_) => TalkingPhase.speaking,
+    error: (_) => TalkingPhase.error,
+  );
 }
 
 extension TalkingStateX on TalkingState {

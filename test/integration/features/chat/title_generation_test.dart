@@ -29,6 +29,7 @@ import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.
 import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
+import 'package:yofardev_ai/features/demo/demo.dart';
 
 class NoopGlobalMemoryService implements GlobalMemoryService {
   @override
@@ -92,10 +93,7 @@ class TrackingMockChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Result<void>> updateAvatar(
-    String chatId,
-    Avatar avatar,
-  ) async {
+  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async {
     return Result<void>.ok(null);
   }
 }
@@ -124,6 +122,8 @@ ChatStreamingService createMockChatStreamingService({
 }
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
+
+class MockDemoService extends Mock implements DemoService {}
 
 class MockAvatarAnimationService extends Mock
     implements AvatarAnimationService {}
@@ -225,6 +225,7 @@ void main() {
         chatStreamingService: mockChatStreamingService,
         appLifecycleService: MockAppLifecycleService(),
         globalMemoryService: NoopGlobalMemoryService(),
+        demoService: MockDemoService(),
       );
       // Initialize the cubit
       cubit.init();
@@ -367,7 +368,7 @@ void main() {
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
-@override
+  @override
   Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
       const Stream<AvatarChangeRequested>.empty();
 

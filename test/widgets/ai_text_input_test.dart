@@ -109,7 +109,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatCubit>.value(value: mockChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
-          BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
+            BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
           child: const MaterialApp(
             home: Scaffold(body: AiTextInput(onlyText: true)),
@@ -150,7 +150,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatCubit>.value(value: fakeChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
-          BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
+            BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
           child: const MaterialApp(home: Scaffold(body: AiTextInput())),
         ),
@@ -217,7 +217,7 @@ void main() {
             BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
             BlocProvider<ChatCubit>.value(value: mockChatsCubit),
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
-          BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
+            BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
           child: const MaterialApp(home: Scaffold(body: AiTextInput())),
         ),
@@ -282,7 +282,8 @@ class _FakeSettingsRepository implements SettingsRepository {
   Future<Result<void>> setTaskLlmConfig(TaskLlmConfig config) async =>
       Result<void>.ok(null);
   @override
-  Future<Result<String?>> getGoogleSearchKey() async => Result<String?>.ok(null);
+  Future<Result<String?>> getGoogleSearchKey() async =>
+      Result<String?>.ok(null);
   @override
   Future<Result<void>> setGoogleSearchKey(String key) async =>
       Result<void>.ok(null);

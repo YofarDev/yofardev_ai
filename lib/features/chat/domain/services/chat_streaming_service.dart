@@ -154,8 +154,8 @@ class ChatStreamingService {
       // provider-side prompt caches keep hitting when memory changes.
       // Note: the trailing empty assistant message is the streaming entry.
       if (_globalMemoryService != null && messagesForStream.isNotEmpty) {
-        final LlmMessage? memoryMessage =
-            await _globalMemoryService.buildMemoryMessage();
+        final LlmMessage? memoryMessage = await _globalMemoryService
+            .buildMemoryMessage();
         if (memoryMessage != null) {
           int insertIndex = messagesForStream.length - 1;
           for (int i = messagesForStream.length - 1; i >= 0; i--) {
@@ -176,7 +176,8 @@ class ChatStreamingService {
       if (functionCallingEnabled &&
           _toolRegistry != null &&
           _settingsRepository != null) {
-        final List<FunctionInfo> availableFunctions = await _toolRegistry.getFunctionInfos(_settingsRepository);
+        final List<FunctionInfo> availableFunctions = await _toolRegistry
+            .getFunctionInfos(_settingsRepository);
         if (availableFunctions.isNotEmpty) {
           tools = availableFunctions.toOpenAiTools();
         }
@@ -215,23 +216,28 @@ class ChatStreamingService {
                 text: (String content, bool isComplete) {},
                 error: (String message) {},
                 complete: () {},
-                toolCallDelta: (int index, String? id, String? name,
-                    String? argumentsDelta) {
-                  final Map<String, String> call = pendingToolCalls
-                      .putIfAbsent(
-                        index,
-                        () => <String, String>{
-                          'id': '',
-                          'name': '',
-                          'arguments': '',
-                        },
-                      );
-                  if (id != null) call['id'] = id;
-                  if (name != null) call['name'] = name;
-                  if (argumentsDelta != null) {
-                    call['arguments'] = call['arguments']! + argumentsDelta;
-                  }
-                },
+                toolCallDelta:
+                    (
+                      int index,
+                      String? id,
+                      String? name,
+                      String? argumentsDelta,
+                    ) {
+                      final Map<String, String> call = pendingToolCalls
+                          .putIfAbsent(
+                            index,
+                            () => <String, String>{
+                              'id': '',
+                              'name': '',
+                              'arguments': '',
+                            },
+                          );
+                      if (id != null) call['id'] = id;
+                      if (name != null) call['name'] = name;
+                      if (argumentsDelta != null) {
+                        call['arguments'] = call['arguments']! + argumentsDelta;
+                      }
+                    },
               );
               return chunk;
             });
@@ -295,7 +301,10 @@ class ChatStreamingService {
               );
             },
             error: (String msg) {
-              AppLogger.error('Stream error: $msg', tag: 'ChatStreamingService');
+              AppLogger.error(
+                'Stream error: $msg',
+                tag: 'ChatStreamingService',
+              );
               onError(msg);
               streamError = true;
             },
@@ -336,8 +345,9 @@ class ChatStreamingService {
         final List<int> indexes = pendingToolCalls.keys.toList()..sort();
         for (final int index in indexes) {
           final Map<String, String> call = pendingToolCalls[index]!;
-          final String toolCallId =
-              call['id']!.isEmpty ? 'call_$index' : call['id']!;
+          final String toolCallId = call['id']!.isEmpty
+              ? 'call_$index'
+              : call['id']!;
           final String name = call['name']!;
           final String argumentsJson = call['arguments']!;
 
@@ -353,8 +363,7 @@ class ChatStreamingService {
           Map<String, dynamic> parameters = <String, dynamic>{};
           if (argumentsJson.isNotEmpty) {
             try {
-              parameters =
-                  json.decode(argumentsJson) as Map<String, dynamic>;
+              parameters = json.decode(argumentsJson) as Map<String, dynamic>;
             } catch (e) {
               AppLogger.warning(
                 'Failed to parse tool arguments for $name: $e',
@@ -405,7 +414,11 @@ class ChatStreamingService {
 
         messagesForStream = <LlmMessage>[
           ...messagesForStream,
-          LlmMessage(role: LlmMessageRole.assistant, body: '', toolCalls: assistantToolCalls),
+          LlmMessage(
+            role: LlmMessageRole.assistant,
+            body: '',
+            toolCalls: assistantToolCalls,
+          ),
           ...toolMessages,
         ];
 

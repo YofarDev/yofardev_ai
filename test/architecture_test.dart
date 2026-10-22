@@ -3,12 +3,11 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final List<File> files =
-      Directory('lib')
-          .listSync(recursive: true)
-          .whereType<File>()
-          .where((File f) => f.path.endsWith('.dart'))
-          .toList();
+  final List<File> files = Directory('lib')
+      .listSync(recursive: true)
+      .whereType<File>()
+      .where((File f) => f.path.endsWith('.dart'))
+      .toList();
 
   List<String> importsOf(File f) => f
       .readAsLinesSync()
@@ -22,11 +21,7 @@ void main() {
       if (!f.path.startsWith('lib/core/')) continue;
       if (allowed.any(f.path.startsWith)) continue;
       for (final String line in importsOf(f)) {
-        expect(
-          line.contains('features/'),
-          isFalse,
-          reason: '${f.path}: $line',
-        );
+        expect(line.contains('features/'), isFalse, reason: '${f.path}: $line');
       }
     }
   });
@@ -57,14 +52,13 @@ void main() {
       if (parts.length < 3 || parts[1] != 'features') continue;
       final String ownFeature = parts[2];
       for (final String line in f.readAsLinesSync()) {
-        final RegExpMatch? m = RegExp(
-          r"import '([^']+)'",
-        ).firstMatch(line);
+        final RegExpMatch? m = RegExp(r"import '([^']+)'").firstMatch(line);
         if (m == null) continue;
         final String target = m.group(1)!;
         if (!target.startsWith('.')) continue;
-        final String resolved =
-            File.fromUri(Uri.file(f.path).resolve(target)).path;
+        final String resolved = File.fromUri(
+          Uri.file(f.path).resolve(target),
+        ).path;
         final List<String> t = resolved.split('/');
         if (t.length > 3 && t[1] == 'features' && t[2] != ownFeature) {
           expect(
@@ -81,15 +75,15 @@ void main() {
     // Services live both in core and in each feature's domain/services/.
     final List<String> serviceDirs = <String>[
       'lib/core/services/',
-      ...Directory('lib/features')
-          .listSync()
-          .whereType<Directory>()
-          .map((Directory d) => '${d.path}/domain/services/'),
+      ...Directory('lib/features').listSync().whereType<Directory>().map(
+        (Directory d) => '${d.path}/domain/services/',
+      ),
     ];
     for (final String dir in serviceDirs) {
       if (!Directory(dir).existsSync()) continue;
-      for (final FileSystemEntity entity
-          in Directory(dir).listSync(recursive: true)) {
+      for (final FileSystemEntity entity in Directory(
+        dir,
+      ).listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
         for (final String line in entity.readAsLinesSync()) {
           expect(

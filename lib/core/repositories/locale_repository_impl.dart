@@ -17,9 +17,7 @@ class LocaleRepositoryImpl implements LocaleRepository {
       final String? language = prefs.getString(_languageKey);
       return Result<String>.ok(language ?? 'fr');
     } catch (e) {
-      return Result<String>.err(
-        StorageFailure('Failed to get language', e),
-      );
+      return Result<String>.err(StorageFailure('Failed to get language', e));
     }
   }
 
@@ -29,9 +27,7 @@ class LocaleRepositoryImpl implements LocaleRepository {
       await prefs.setString(_languageKey, languageCode);
       return Result<void>.ok(null);
     } catch (e) {
-      return Result<void>.err(
-        StorageFailure('Failed to set language', e),
-      );
+      return Result<void>.err(StorageFailure('Failed to set language', e));
     }
   }
 }

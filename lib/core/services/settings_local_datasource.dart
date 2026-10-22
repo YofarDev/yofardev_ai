@@ -35,10 +35,7 @@ class SettingsLocalDatasource {
     }
   }
 
-  Future<Result<void>> _setStringKey(
-    String keyName,
-    String value,
-  ) async {
+  Future<Result<void>> _setStringKey(String keyName, String value) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString(keyName, value);
@@ -48,10 +45,7 @@ class SettingsLocalDatasource {
     }
   }
 
-  Future<Result<bool>> _getBoolKey(
-    String keyName,
-    bool defaultValue,
-  ) async {
+  Future<Result<bool>> _getBoolKey(String keyName, bool defaultValue) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final bool value = prefs.getBool(keyName) ?? defaultValue;
@@ -61,10 +55,7 @@ class SettingsLocalDatasource {
     }
   }
 
-  Future<Result<void>> _setBoolKey(
-    String keyName,
-    bool value,
-  ) async {
+  Future<Result<void>> _setBoolKey(String keyName, bool value) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool(keyName, value);

@@ -162,11 +162,12 @@ class _MemoryPageState extends State<MemoryPage> {
                         const SizedBox(height: 16),
                         Text(
                           l10n.memoryPageSubtitle,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.onSurface.withValues(alpha: 0.7),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppColors.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
+                              ),
                         ),
                         const SizedBox(height: 20),
                         _MemoryToggle(value: state.memoryEnabled),

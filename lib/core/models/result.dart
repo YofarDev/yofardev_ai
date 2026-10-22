@@ -11,17 +11,17 @@ sealed class Result<T> {
   bool get isOk => this is Ok<T>;
 
   T? get getOrNull => switch (this) {
-        Ok<T>(:final T value) => value,
-        Err<T>() => null,
-      };
+    Ok<T>(:final T value) => value,
+    Err<T>() => null,
+  };
 
   R when<R>({
     required R Function(Failure failure) err,
     required R Function(T value) ok,
   }) => switch (this) {
-        Ok<T>(:final T value) => ok(value),
-        Err<T>(:final Failure failure) => err(failure),
-      };
+    Ok<T>(:final T value) => ok(value),
+    Err<T>(:final Failure failure) => err(failure),
+  };
 }
 
 final class Ok<T> extends Result<T> {

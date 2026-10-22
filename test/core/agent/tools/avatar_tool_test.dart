@@ -68,8 +68,9 @@ void main() {
     test('execute changes background when called by LLM', () async {
       // Arrange
       final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
-      final StreamSubscription<AvatarChangeRequested> sub =
-          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
 
       // Act - This simulates LLM calling: change_avatar(background="beach")
       final String result = await tool.execute(
@@ -81,7 +82,10 @@ void main() {
       expect(result, isA<String>());
       expect(result, contains('Successfully changed'));
       expect(events, hasLength(1));
-      expect(events.single.newConfig.background, equals(AvatarBackgrounds.beach));
+      expect(
+        events.single.newConfig.background,
+        equals(AvatarBackgrounds.beach),
+      );
       expect(events.single.backgroundOnly, isTrue);
       await sub.cancel();
     });
@@ -90,8 +94,9 @@ void main() {
     test('execute changes hat when called by LLM', () async {
       // Arrange
       final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
-      final StreamSubscription<AvatarChangeRequested> sub =
-          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
 
       // Act - This simulates LLM calling: change_avatar(hat="frenchBeret")
       final String result = await tool.execute(<String, String>{
@@ -111,8 +116,9 @@ void main() {
     test('execute changes background and clothes together', () async {
       // Arrange
       final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
-      final StreamSubscription<AvatarChangeRequested> sub =
-          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
 
       // Act - LLM calls: change_avatar(background="beach", hat="beanie")
       final String result = await tool.execute(<String, String>{
@@ -124,7 +130,10 @@ void main() {
       expect(result, isA<String>());
       expect(result, contains('Successfully changed'));
       expect(events, hasLength(1));
-      expect(events.single.newConfig.background, equals(AvatarBackgrounds.beach));
+      expect(
+        events.single.newConfig.background,
+        equals(AvatarBackgrounds.beach),
+      );
       expect(events.single.newConfig.hat, equals(AvatarHat.beanie));
       expect(events.single.backgroundOnly, isFalse);
       await sub.cancel();
@@ -173,50 +182,51 @@ void main() {
     });
 
     // Test 10: Request includes leaveAndComeBack animation for background change
-    test(
-      'configWithAnimation has leaveAndComeBack for background',
-      () async {
-        // Arrange
-        final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
-        final StreamSubscription<AvatarChangeRequested> sub =
-            lifecycleService.avatarChangeRequestedEvents.listen(events.add);
+    test('configWithAnimation has leaveAndComeBack for background', () async {
+      // Arrange
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
 
-        // Act
-        await tool.execute(<String, String>{
-          'background': 'beach',
-        }, <String, dynamic>{});
+      // Act
+      await tool.execute(<String, String>{
+        'background': 'beach',
+      }, <String, dynamic>{});
 
-        // Assert
-        expect(events.single.configWithAnimation.specials,
-            equals(AvatarSpecials.leaveAndComeBack));
-        expect(
-            events.single.configWithAnimation.background,
-            equals(AvatarBackgrounds.beach));
-        await sub.cancel();
-      },
-    );
+      // Assert
+      expect(
+        events.single.configWithAnimation.specials,
+        equals(AvatarSpecials.leaveAndComeBack),
+      );
+      expect(
+        events.single.configWithAnimation.background,
+        equals(AvatarBackgrounds.beach),
+      );
+      await sub.cancel();
+    });
 
     // Test 11: Request includes outOfScreen animation for clothes changes
-    test(
-      'configWithAnimation has outOfScreen for clothes',
-      () async {
-        // Arrange
-        final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
-        final StreamSubscription<AvatarChangeRequested> sub =
-            lifecycleService.avatarChangeRequestedEvents.listen(events.add);
+    test('configWithAnimation has outOfScreen for clothes', () async {
+      // Arrange
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
 
-        // Act
-        await tool.execute(<String, String>{
-          'top': 'longCoat',
-        }, <String, dynamic>{});
+      // Act
+      await tool.execute(<String, String>{
+        'top': 'longCoat',
+      }, <String, dynamic>{});
 
-        // Assert
-        expect(events.single.configWithAnimation.specials,
-            equals(AvatarSpecials.outOfScreen));
-        expect(events.single.configWithAnimation.top, equals(AvatarTop.longCoat));
-        await sub.cancel();
-      },
-    );
+      // Assert
+      expect(
+        events.single.configWithAnimation.specials,
+        equals(AvatarSpecials.outOfScreen),
+      );
+      expect(events.single.configWithAnimation.top, equals(AvatarTop.longCoat));
+      await sub.cancel();
+    });
 
     // Test 12: Emits actual avatar config (without animation specials) for persistence
     test(
@@ -224,8 +234,9 @@ void main() {
       () async {
         // Arrange
         final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
-        final StreamSubscription<AvatarChangeRequested> sub =
-            lifecycleService.avatarChangeRequestedEvents.listen(events.add);
+        final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+            .avatarChangeRequestedEvents
+            .listen(events.add);
 
         // Act
         await tool.execute(<String, String>{
@@ -235,9 +246,15 @@ void main() {
 
         // Assert
         // The config persisted should NOT have animation specials
-        expect(events.single.newConfig.background, equals(AvatarBackgrounds.beach));
+        expect(
+          events.single.newConfig.background,
+          equals(AvatarBackgrounds.beach),
+        );
         expect(events.single.newConfig.top, equals(AvatarTop.longCoat));
-        expect(events.single.newConfig.specials, isNull); // No animation special
+        expect(
+          events.single.newConfig.specials,
+          isNull,
+        ); // No animation special
         await sub.cancel();
       },
     );
@@ -246,8 +263,9 @@ void main() {
     test('background-only change sets backgroundOnly', () async {
       // Arrange
       final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
-      final StreamSubscription<AvatarChangeRequested> sub =
-          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
 
       // Act
       await tool.execute(<String, String>{
@@ -263,8 +281,9 @@ void main() {
     test('multiple changes do not set backgroundOnly', () async {
       // Arrange
       final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
-      final StreamSubscription<AvatarChangeRequested> sub =
-          lifecycleService.avatarChangeRequestedEvents.listen(events.add);
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
 
       // Act
       await tool.execute(<String, String>{

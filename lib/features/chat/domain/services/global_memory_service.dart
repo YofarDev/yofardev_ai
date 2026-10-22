@@ -142,19 +142,25 @@ class GlobalMemoryService {
     final List<ChatEntry> entries = chat.entries
         .where(
           (ChatEntry e) =>
-              e.entryType == EntryType.user || e.entryType == EntryType.yofardev,
+              e.entryType == EntryType.user ||
+              e.entryType == EntryType.yofardev,
         )
         .toList();
 
     String? userText;
     String? assistantText;
-    for (int i = entries.length - 1; i >= 0 && (userText == null || assistantText == null); i--) {
+    for (
+      int i = entries.length - 1;
+      i >= 0 && (userText == null || assistantText == null);
+      i--
+    ) {
       final ChatEntry entry = entries[i];
       final String visible = entry.body.getVisiblePrompt().trim();
       if (visible.isEmpty) continue;
       if (entry.entryType == EntryType.user && userText == null) {
         userText = visible;
-      } else if (entry.entryType == EntryType.yofardev && assistantText == null) {
+      } else if (entry.entryType == EntryType.yofardev &&
+          assistantText == null) {
         assistantText = visible;
       }
     }
@@ -177,7 +183,10 @@ class GlobalMemoryService {
     String cleaned = response.trim();
     // Strip markdown code fences some models wrap around JSON.
     if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replaceAll(RegExp(r'^```[a-zA-Z]*\n?'), '').replaceAll(RegExp(r'\n?```$'), '').trim();
+      cleaned = cleaned
+          .replaceAll(RegExp(r'^```[a-zA-Z]*\n?'), '')
+          .replaceAll(RegExp(r'\n?```$'), '')
+          .trim();
     }
 
     try {
@@ -226,7 +235,12 @@ class GlobalMemoryService {
       seen.add(normalized);
       final GlobalMemoryItem? existing = existingByNormalizedText[normalized];
       items.add(
-        existing ?? GlobalMemoryItem(id: uuid.v4(), text: bounded, updatedAt: DateTime.now()),
+        existing ??
+            GlobalMemoryItem(
+              id: uuid.v4(),
+              text: bounded,
+              updatedAt: DateTime.now(),
+            ),
       );
       if (items.length >= GlobalMemory.maxItems) break;
     }

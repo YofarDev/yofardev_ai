@@ -10,9 +10,8 @@ import '../datasources/chat_local_datasource.dart';
 class YofardevRepositoryImpl implements ChatRepository {
   final ChatLocalDatasource _chatDatasource;
 
-  YofardevRepositoryImpl({
-    required ChatLocalDatasource chatDatasource,
-  }) : _chatDatasource = chatDatasource;
+  YofardevRepositoryImpl({required ChatLocalDatasource chatDatasource})
+    : _chatDatasource = chatDatasource;
 
   @override
   Future<Result<Chat>> createNewChat({String? language}) async {
@@ -88,10 +87,7 @@ class YofardevRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Result<void>> updateAvatar(
-    String chatId,
-    Avatar avatar,
-  ) async {
+  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async {
     try {
       await _chatDatasource.updateAvatar(chatId, avatar);
       return Result<void>.ok(null);

@@ -65,8 +65,8 @@ class ToolRegistry {
     // Google Search - requires API key, engine ID, and enabled flag
     final Result<String?> googleKeyResult = await settingsRepository
         .getGoogleSearchKey();
-    final Result<String?> googleEngineResult =
-        await settingsRepository.getGoogleSearchEngineId();
+    final Result<String?> googleEngineResult = await settingsRepository
+        .getGoogleSearchEngineId();
     final Result<bool> googleEnabledResult = await settingsRepository
         .getGoogleSearchEnabled();
 
@@ -90,8 +90,8 @@ class ToolRegistry {
     // Weather - requires API key and enabled flag
     final Result<String?> weatherKeyResult = await settingsRepository
         .getOpenWeatherKey();
-    final Result<bool> weatherEnabledResult =
-        await settingsRepository.getOpenWeatherEnabled();
+    final Result<bool> weatherEnabledResult = await settingsRepository
+        .getOpenWeatherEnabled();
 
     final bool weatherConfigured = weatherKeyResult.when(
       err: (Failure failure) => false,
@@ -178,6 +178,9 @@ class ToolRegistry {
         throw UnsupportedError('Unknown setting key: $settingKey');
     }
 
-    return result.when(err: (Failure failure) => null, ok: (dynamic value) => value);
+    return result.when(
+      err: (Failure failure) => null,
+      ok: (dynamic value) => value,
+    );
   }
 }

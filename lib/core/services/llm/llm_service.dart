@@ -160,7 +160,8 @@ class LlmService implements LlmServiceInterface {
         final Map<String, dynamic> data =
             json.decode(utf8.decode(response.bodyBytes))
                 as Map<String, dynamic>;
-        logTokenUsage(data['usage']);        final List<dynamic> choices = data['choices'] as List<dynamic>;
+        logTokenUsage(data['usage']);
+        final List<dynamic> choices = data['choices'] as List<dynamic>;
         final Map<String, dynamic> firstChoice =
             choices[0] as Map<String, dynamic>;
         final Map<String, dynamic> message =
@@ -302,11 +303,7 @@ class LlmService implements LlmServiceInterface {
 
       return result?.trim();
     } catch (e) {
-      AppLogger.error(
-        'Memory extraction failed',
-        tag: 'LlmService',
-        error: e,
-      );
+      AppLogger.error('Memory extraction failed', tag: 'LlmService', error: e);
       return null;
     }
   }

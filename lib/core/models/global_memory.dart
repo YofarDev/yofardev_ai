@@ -17,11 +17,10 @@ sealed class GlobalMemoryItem with _$GlobalMemoryItem {
     return GlobalMemoryItem(
       id: map['id'] as String? ?? '',
       text: map['text'] as String? ?? '',
-      updatedAt:
-          map['updatedAt'] is int
-              ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int)
-              : DateTime.tryParse(map['updatedAt'] as String? ?? '') ??
-                  DateTime.now(),
+      updatedAt: map['updatedAt'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int)
+          : DateTime.tryParse(map['updatedAt'] as String? ?? '') ??
+                DateTime.now(),
     );
   }
 

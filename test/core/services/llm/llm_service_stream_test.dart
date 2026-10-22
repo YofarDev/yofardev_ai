@@ -339,11 +339,12 @@ void main() {
       String arguments = '';
       for (final LlmStreamChunk chunk in toolChunks) {
         chunk.maybeWhen(
-          toolCallDelta: (int _, String? chunkId, String? chunkName, String? argsDelta) {
-            if (chunkId != null) id = chunkId;
-            if (chunkName != null) name = chunkName;
-            if (argsDelta != null) arguments += argsDelta;
-          },
+          toolCallDelta:
+              (int _, String? chunkId, String? chunkName, String? argsDelta) {
+                if (chunkId != null) id = chunkId;
+                if (chunkName != null) name = chunkName;
+                if (argsDelta != null) arguments += argsDelta;
+              },
           orElse: () {},
         );
       }

@@ -162,7 +162,10 @@ class _AiTextInputState extends State<AiTextInput> {
                               : 0,
                           child: _buildTextField(
                             currentAvatar: widget.avatar ?? const Avatar(),
-                            currentLanguage: context.read<SettingsCubit>().state.currentLanguage,
+                            currentLanguage: context
+                                .read<SettingsCubit>()
+                                .state
+                                .currentLanguage,
                             currentChat: state.currentChat,
                             functionCallingEnabled:
                                 state.functionCallingEnabled,

@@ -86,8 +86,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Save the task-specific LLM configuration
   Future<void> setTaskLlmConfig(TaskLlmConfig config) async {
-    final Result<void> result = await _settingsRepository
-        .setTaskLlmConfig(config);
+    final Result<void> result = await _settingsRepository.setTaskLlmConfig(
+      config,
+    );
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to save task LLM config',
@@ -100,8 +101,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Set the system prompt
   Future<void> setSystemPrompt(String prompt) async {
-    final Result<void> result = await _settingsRepository
-        .setSystemPrompt(prompt);
+    final Result<void> result = await _settingsRepository.setSystemPrompt(
+      prompt,
+    );
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to set system prompt',
@@ -114,8 +116,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Set the username
   Future<void> setUsername(String username) async {
-    final Result<void> result = await _settingsRepository
-        .setUsername(username);
+    final Result<void> result = await _settingsRepository.setUsername(username);
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to set username',
@@ -128,9 +129,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Set the persona
   Future<void> setPersona(ChatPersona persona) async {
-    final Result<void> result = await _settingsRepository.setPersona(
-      persona,
-    );
+    final Result<void> result = await _settingsRepository.setPersona(persona);
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to set persona',
@@ -143,8 +142,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Load the username
   Future<void> loadUsername() async {
-    final Result<String?> result = await _settingsRepository
-        .getUsername();
+    final Result<String?> result = await _settingsRepository.getUsername();
     result.when(
       err: (Failure failure) {
         AppLogger.error(
@@ -160,8 +158,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Load the system prompt
   Future<void> loadSystemPrompt() async {
-    final Result<String> result = await _settingsRepository
-        .getSystemPrompt();
+    final Result<String> result = await _settingsRepository.getSystemPrompt();
     result.when(
       err: (Failure failure) {
         AppLogger.error(
@@ -177,8 +174,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Load the persona
   Future<void> loadPersona() async {
-    final Result<ChatPersona> result = await _settingsRepository
-        .getPersona();
+    final Result<ChatPersona> result = await _settingsRepository.getPersona();
     result.when(
       err: (Failure failure) {
         AppLogger.error(
@@ -216,8 +212,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Update Google Search API key
   Future<void> updateGoogleSearchKey(String key) async {
-    final Result<void> result = await _settingsRepository
-        .setGoogleSearchKey(key);
+    final Result<void> result = await _settingsRepository.setGoogleSearchKey(
+      key,
+    );
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to save Google Search key',
@@ -271,8 +268,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Update OpenWeather API key
   Future<void> updateOpenWeatherKey(String key) async {
-    final Result<void> result = await _settingsRepository
-        .setOpenWeatherKey(key);
+    final Result<void> result = await _settingsRepository.setOpenWeatherKey(
+      key,
+    );
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to save OpenWeather key',
@@ -285,8 +283,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Toggle OpenWeather enabled state
   Future<void> toggleOpenWeather(bool enabled) async {
-    final Result<void> result = await _settingsRepository
-        .setOpenWeatherEnabled(enabled);
+    final Result<void> result = await _settingsRepository.setOpenWeatherEnabled(
+      enabled,
+    );
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to toggle OpenWeather',
@@ -312,8 +311,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Update New York Times API key
   Future<void> updateNewYorkTimesKey(String key) async {
-    final Result<void> result = await _settingsRepository
-        .setNewYorkTimesKey(key);
+    final Result<void> result = await _settingsRepository.setNewYorkTimesKey(
+      key,
+    );
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to save New York Times key',
@@ -370,18 +370,19 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Load sound effects enabled setting
   Future<void> loadSoundEffects() async {
-    final Result<bool> result = await _settingsRepository
-        .getSoundEffects();
+    final Result<bool> result = await _settingsRepository.getSoundEffects();
     result.when(
-      err: (Failure failure) => emit(state.copyWith(soundEffectsEnabled: false)),
+      err: (Failure failure) =>
+          emit(state.copyWith(soundEffectsEnabled: false)),
       ok: (bool enabled) => emit(state.copyWith(soundEffectsEnabled: enabled)),
     );
   }
 
   /// Set sound effects enabled setting
   Future<void> setSoundEffects(bool soundEffectsEnabled) async {
-    final Result<void> result = await _settingsRepository
-        .setSoundEffects(soundEffectsEnabled);
+    final Result<void> result = await _settingsRepository.setSoundEffects(
+      soundEffectsEnabled,
+    );
     result.when(
       err: (Failure failure) => AppLogger.error(
         'Failed to set sound effects',

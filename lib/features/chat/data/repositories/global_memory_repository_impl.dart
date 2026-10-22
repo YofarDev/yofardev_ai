@@ -7,9 +7,8 @@ import '../datasources/global_memory_datasource.dart';
 class GlobalMemoryRepositoryImpl implements GlobalMemoryRepository {
   final GlobalMemoryLocalDatasource _datasource;
 
-  GlobalMemoryRepositoryImpl({
-    required GlobalMemoryLocalDatasource datasource,
-  }) : _datasource = datasource;
+  GlobalMemoryRepositoryImpl({required GlobalMemoryLocalDatasource datasource})
+    : _datasource = datasource;
 
   @override
   Future<Result<GlobalMemory>> getMemory() async {

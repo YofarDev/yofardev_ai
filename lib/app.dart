@@ -24,7 +24,8 @@ class App extends StatelessWidget {
       providers: <SingleChildWidget>[
         // Truly global cubits - used throughout the app
         BlocProvider<SettingsCubit>(
-          create: (BuildContext context) => getIt<SettingsCubit>()..loadSettings(),
+          create: (BuildContext context) =>
+              getIt<SettingsCubit>()..loadSettings(),
         ),
         // Feature cubits - shared across multiple screens
         BlocProvider<TalkingCubit>(

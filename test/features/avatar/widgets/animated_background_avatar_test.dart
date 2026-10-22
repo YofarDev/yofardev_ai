@@ -197,10 +197,7 @@ class MockAvatarRepository implements AvatarRepository {
   }
 
   @override
-  Future<Result<void>> updateAvatar(
-    String chatId,
-    Avatar avatar,
-  ) async {
+  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async {
     final Result<void> result = Result<void>.ok(null);
     return result;
   }

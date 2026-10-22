@@ -35,10 +35,7 @@ class AvatarLocalDatasource {
   }
 
   /// Updates the avatar configuration for a specific chat.
-  Future<Result<void>> updateAvatar(
-    String chatId,
-    Avatar avatar,
-  ) async {
+  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final Chat? currentChat = await getChat(chatId);

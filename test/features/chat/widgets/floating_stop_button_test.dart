@@ -32,6 +32,7 @@ import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.
 import 'package:yofardev_ai/core/models/llm_message.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
+import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/features/chat/widgets/floating_stop_button.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_queue_item.dart';
@@ -40,6 +41,8 @@ import 'package:yofardev_ai/features/talking/domain/services/tts_playback_servic
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 
 class MockAvatarRepository extends Mock implements AvatarRepository {}
+
+class MockDemoService extends Mock implements DemoService {}
 
 class MockChatRepository implements ChatRepository {
   @override
@@ -81,10 +84,7 @@ class MockChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Result<void>> updateAvatar(
-    String chatId,
-    Avatar avatar,
-  ) async {
+  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async {
     return Result<void>.ok(null);
   }
 }
@@ -414,6 +414,7 @@ void main() {
         ),
         appLifecycleService: MockAppLifecycleService(),
         globalMemoryService: MockGlobalMemoryService(),
+        demoService: MockDemoService(),
       );
     });
 
@@ -522,7 +523,7 @@ void main() {
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
-@override
+  @override
   Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
       const Stream<AvatarChangeRequested>.empty();
 

@@ -20,10 +20,10 @@ void main() {
     test('should save and retrieve Google Search key', () async {
       const String testKey = 'test-google-key-12345';
 
-      final Result<void> saveResult = await repository
-          .setGoogleSearchKey(testKey);
-      final Result<String?> getResult = await repository
-          .getGoogleSearchKey();
+      final Result<void> saveResult = await repository.setGoogleSearchKey(
+        testKey,
+      );
+      final Result<String?> getResult = await repository.getGoogleSearchKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, testKey);
@@ -32,8 +32,9 @@ void main() {
     test('should save and retrieve Google Search Engine ID', () async {
       const String testId = 'test-engine-id-67890';
 
-      final Result<void> saveResult = await repository
-          .setGoogleSearchEngineId(testId);
+      final Result<void> saveResult = await repository.setGoogleSearchEngineId(
+        testId,
+      );
       final Result<String?> getResult = await repository
           .getGoogleSearchEngineId();
 
@@ -44,8 +45,9 @@ void main() {
     test(
       'should save and retrieve Google Search enabled state - false',
       () async {
-        final Result<void> saveResult = await repository
-            .setGoogleSearchEnabled(false);
+        final Result<void> saveResult = await repository.setGoogleSearchEnabled(
+          false,
+        );
         final Result<bool> getResult = await repository
             .getGoogleSearchEnabled();
 
@@ -57,8 +59,9 @@ void main() {
     test(
       'should save and retrieve Google Search enabled state - true',
       () async {
-        final Result<void> saveResult = await repository
-            .setGoogleSearchEnabled(true);
+        final Result<void> saveResult = await repository.setGoogleSearchEnabled(
+          true,
+        );
         final Result<bool> getResult = await repository
             .getGoogleSearchEnabled();
 
@@ -70,10 +73,10 @@ void main() {
     test('should handle empty Google Search key', () async {
       const String emptyKey = '';
 
-      final Result<void> saveResult = await repository
-          .setGoogleSearchKey(emptyKey);
-      final Result<String?> getResult = await repository
-          .getGoogleSearchKey();
+      final Result<void> saveResult = await repository.setGoogleSearchKey(
+        emptyKey,
+      );
+      final Result<String?> getResult = await repository.getGoogleSearchKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, isNull);
@@ -82,8 +85,9 @@ void main() {
     test('should handle empty Google Search Engine ID', () async {
       const String emptyId = '';
 
-      final Result<void> saveResult = await repository
-          .setGoogleSearchEngineId(emptyId);
+      final Result<void> saveResult = await repository.setGoogleSearchEngineId(
+        emptyId,
+      );
       final Result<String?> getResult = await repository
           .getGoogleSearchEngineId();
 
@@ -96,10 +100,10 @@ void main() {
     test('should save and retrieve OpenWeather key', () async {
       const String testKey = 'test-openweather-key-abcde';
 
-      final Result<void> saveResult = await repository
-          .setOpenWeatherKey(testKey);
-      final Result<String?> getResult = await repository
-          .getOpenWeatherKey();
+      final Result<void> saveResult = await repository.setOpenWeatherKey(
+        testKey,
+      );
+      final Result<String?> getResult = await repository.getOpenWeatherKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, testKey);
@@ -108,10 +112,10 @@ void main() {
     test(
       'should save and retrieve OpenWeather enabled state - false',
       () async {
-        final Result<void> saveResult = await repository
-            .setOpenWeatherEnabled(false);
-        final Result<bool> getResult = await repository
-            .getOpenWeatherEnabled();
+        final Result<void> saveResult = await repository.setOpenWeatherEnabled(
+          false,
+        );
+        final Result<bool> getResult = await repository.getOpenWeatherEnabled();
 
         expect(saveResult.isOk, true);
         expect(getResult.getOrNull ?? true, false);
@@ -119,10 +123,10 @@ void main() {
     );
 
     test('should save and retrieve OpenWeather enabled state - true', () async {
-      final Result<void> saveResult = await repository
-          .setOpenWeatherEnabled(true);
-      final Result<bool> getResult = await repository
-          .getOpenWeatherEnabled();
+      final Result<void> saveResult = await repository.setOpenWeatherEnabled(
+        true,
+      );
+      final Result<bool> getResult = await repository.getOpenWeatherEnabled();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull ?? false, true);
@@ -131,10 +135,10 @@ void main() {
     test('should handle empty OpenWeather key', () async {
       const String emptyKey = '';
 
-      final Result<void> saveResult = await repository
-          .setOpenWeatherKey(emptyKey);
-      final Result<String?> getResult = await repository
-          .getOpenWeatherKey();
+      final Result<void> saveResult = await repository.setOpenWeatherKey(
+        emptyKey,
+      );
+      final Result<String?> getResult = await repository.getOpenWeatherKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, isNull);
@@ -145,10 +149,10 @@ void main() {
     test('should save and retrieve New York Times key', () async {
       const String testKey = 'test-nyt-key-xyz123';
 
-      final Result<void> saveResult = await repository
-          .setNewYorkTimesKey(testKey);
-      final Result<String?> getResult = await repository
-          .getNewYorkTimesKey();
+      final Result<void> saveResult = await repository.setNewYorkTimesKey(
+        testKey,
+      );
+      final Result<String?> getResult = await repository.getNewYorkTimesKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, testKey);
@@ -157,8 +161,9 @@ void main() {
     test(
       'should save and retrieve New York Times enabled state - false',
       () async {
-        final Result<void> saveResult = await repository
-            .setNewYorkTimesEnabled(false);
+        final Result<void> saveResult = await repository.setNewYorkTimesEnabled(
+          false,
+        );
         final Result<bool> getResult = await repository
             .getNewYorkTimesEnabled();
 
@@ -170,8 +175,9 @@ void main() {
     test(
       'should save and retrieve New York Times enabled state - true',
       () async {
-        final Result<void> saveResult = await repository
-            .setNewYorkTimesEnabled(true);
+        final Result<void> saveResult = await repository.setNewYorkTimesEnabled(
+          true,
+        );
         final Result<bool> getResult = await repository
             .getNewYorkTimesEnabled();
 
@@ -183,10 +189,10 @@ void main() {
     test('should handle empty New York Times key', () async {
       const String emptyKey = '';
 
-      final Result<void> saveResult = await repository
-          .setNewYorkTimesKey(emptyKey);
-      final Result<String?> getResult = await repository
-          .getNewYorkTimesKey();
+      final Result<void> saveResult = await repository.setNewYorkTimesKey(
+        emptyKey,
+      );
+      final Result<String?> getResult = await repository.getNewYorkTimesKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, isNull);
@@ -205,8 +211,7 @@ void main() {
         await repository.setGoogleSearchEngineId(googleEngineId);
         await repository.setGoogleSearchEnabled(googleEnabled);
 
-        final Result<String?> keyResult = await repository
-            .getGoogleSearchKey();
+        final Result<String?> keyResult = await repository.getGoogleSearchKey();
         final Result<String?> idResult = await repository
             .getGoogleSearchEngineId();
         final Result<bool> enabledResult = await repository
@@ -227,8 +232,7 @@ void main() {
         await repository.setOpenWeatherKey(openWeatherKey);
         await repository.setOpenWeatherEnabled(openWeatherEnabled);
 
-        final Result<String?> keyResult = await repository
-            .getOpenWeatherKey();
+        final Result<String?> keyResult = await repository.getOpenWeatherKey();
         final Result<bool> enabledResult = await repository
             .getOpenWeatherEnabled();
 
@@ -246,8 +250,7 @@ void main() {
         await repository.setNewYorkTimesKey(nytKey);
         await repository.setNewYorkTimesEnabled(nytEnabled);
 
-        final Result<String?> keyResult = await repository
-            .getNewYorkTimesKey();
+        final Result<String?> keyResult = await repository.getNewYorkTimesKey();
         final Result<bool> enabledResult = await repository
             .getNewYorkTimesEnabled();
 
@@ -267,10 +270,7 @@ void main() {
       await repository.setNewYorkTimesEnabled(false);
 
       // Verify all settings
-      expect(
-        (await repository.getGoogleSearchKey()).getOrNull,
-        'google-key',
-      );
+      expect((await repository.getGoogleSearchKey()).getOrNull, 'google-key');
       expect(
         (await repository.getGoogleSearchEngineId()).getOrNull,
         'google-engine',
@@ -287,10 +287,7 @@ void main() {
         (await repository.getOpenWeatherEnabled()).getOrNull ?? false,
         true,
       );
-      expect(
-        (await repository.getNewYorkTimesKey()).getOrNull,
-        'nyt-key',
-      );
+      expect((await repository.getNewYorkTimesKey()).getOrNull, 'nyt-key');
       expect(
         (await repository.getNewYorkTimesEnabled()).getOrNull ?? true,
         false,
@@ -305,8 +302,7 @@ void main() {
       await repository.setGoogleSearchEngineId('');
 
       // Get the values (should be null for empty strings)
-      final Result<String?> keyResult = await repository
-          .getGoogleSearchKey();
+      final Result<String?> keyResult = await repository.getGoogleSearchKey();
       final Result<String?> idResult = await repository
           .getGoogleSearchEngineId();
 
@@ -319,8 +315,7 @@ void main() {
       await repository.setOpenWeatherKey('');
 
       // Get the value (should be null for empty string)
-      final Result<String?> keyResult = await repository
-          .getOpenWeatherKey();
+      final Result<String?> keyResult = await repository.getOpenWeatherKey();
 
       expect(keyResult.getOrNull, isNull);
     });
@@ -330,8 +325,7 @@ void main() {
       await repository.setNewYorkTimesKey('');
 
       // Get the value (should be null for empty string)
-      final Result<String?> keyResult = await repository
-          .getNewYorkTimesKey();
+      final Result<String?> keyResult = await repository.getNewYorkTimesKey();
 
       expect(keyResult.getOrNull, isNull);
     });
@@ -341,10 +335,10 @@ void main() {
     test('should handle special characters in Google Search key', () async {
       const String specialKey = 'key-with-special-chars-!@#\$%^&*()';
 
-      final Result<void> saveResult = await repository
-          .setGoogleSearchKey(specialKey);
-      final Result<String?> getResult = await repository
-          .getGoogleSearchKey();
+      final Result<void> saveResult = await repository.setGoogleSearchKey(
+        specialKey,
+      );
+      final Result<String?> getResult = await repository.getGoogleSearchKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, specialKey);
@@ -353,10 +347,10 @@ void main() {
     test('should handle long keys for OpenWeather', () async {
       final String longKey = 'a' * 500; // Very long key
 
-      final Result<void> saveResult = await repository
-          .setOpenWeatherKey(longKey);
-      final Result<String?> getResult = await repository
-          .getOpenWeatherKey();
+      final Result<void> saveResult = await repository.setOpenWeatherKey(
+        longKey,
+      );
+      final Result<String?> getResult = await repository.getOpenWeatherKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, longKey);
@@ -365,10 +359,10 @@ void main() {
     test('should handle unicode characters in NYT key', () async {
       const String unicodeKey = 'key-with-unicode-🔑-🗽';
 
-      final Result<void> saveResult = await repository
-          .setNewYorkTimesKey(unicodeKey);
-      final Result<String?> getResult = await repository
-          .getNewYorkTimesKey();
+      final Result<void> saveResult = await repository.setNewYorkTimesKey(
+        unicodeKey,
+      );
+      final Result<String?> getResult = await repository.getNewYorkTimesKey();
 
       expect(saveResult.isOk, true);
       expect(getResult.getOrNull, unicodeKey);
@@ -377,14 +371,14 @@ void main() {
     test('should handle rapid updates to same setting', () async {
       // Rapidly update the same setting multiple times
       for (int i = 0; i < 10; i++) {
-        final Result<void> result = await repository
-            .setGoogleSearchEnabled(i % 2 == 0);
+        final Result<void> result = await repository.setGoogleSearchEnabled(
+          i % 2 == 0,
+        );
         expect(result.isOk, true);
       }
 
       // Final value should be false (10th iteration, i=9, 9%2=1, so false)
-      final Result<bool> result = await repository
-          .getGoogleSearchEnabled();
+      final Result<bool> result = await repository.getGoogleSearchEnabled();
       expect(result.getOrNull ?? true, false);
     });
   });

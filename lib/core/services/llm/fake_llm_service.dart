@@ -145,9 +145,7 @@ class FakeLlmService implements LlmServiceInterface {
         'FakeLlmService: demo active, skipping memory extraction',
         tag: 'FakeLlmService',
       );
-      return jsonEncode(<String, dynamic>{
-        'memory': currentMemory,
-      });
+      return jsonEncode(<String, dynamic>{'memory': currentMemory});
     }
     return _realService.extractMemory(
       conversationExcerpt: conversationExcerpt,

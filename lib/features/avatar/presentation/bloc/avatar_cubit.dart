@@ -131,9 +131,7 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   void loadAvatar(String chatId) async {
     _emitIfOpen(state.copyWith(status: AvatarStatus.loading));
-    final Result<Chat> result = await _avatarRepository.getChat(
-      chatId,
-    );
+    final Result<Chat> result = await _avatarRepository.getChat(chatId);
     if (isClosed) return;
     result.when(
       err: (Failure failure) {

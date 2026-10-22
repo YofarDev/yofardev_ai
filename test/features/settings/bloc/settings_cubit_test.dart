@@ -34,9 +34,9 @@ void main() {
       when(() => mockLlmService.init()).thenAnswer((_) async {});
 
       // Stub repository methods with default values
-      when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-        (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
-      );
+      when(
+        () => mockSettingsRepo.getTaskLlmConfig(),
+      ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
       when(
         () => mockSettingsRepo.setTaskLlmConfig(any()),
       ).thenAnswer((_) async => Result<void>.ok(null));
@@ -61,9 +61,9 @@ void main() {
       when(
         () => mockSettingsRepo.getSystemPrompt(),
       ).thenAnswer((_) async => Result<String>.ok('prompt'));
-      when(() => mockSettingsRepo.getPersona()).thenAnswer(
-        (_) async => Result<ChatPersona>.ok(ChatPersona.normal),
-      );
+      when(
+        () => mockSettingsRepo.getPersona(),
+      ).thenAnswer((_) async => Result<ChatPersona>.ok(ChatPersona.normal));
       when(
         () => mockSettingsRepo.getGoogleSearchKey(),
       ).thenAnswer((_) async => Result<String?>.ok(null));
@@ -147,9 +147,9 @@ void main() {
       });
 
       test('should call loadTaskLlmConfig', () async {
-        when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
-        );
+        when(
+          () => mockSettingsRepo.getTaskLlmConfig(),
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
 
         await cubit.loadSettings();
 
@@ -161,9 +161,9 @@ void main() {
         when(
           () => mockLlmService.getAllConfigs(),
         ).thenThrow(Exception('Config load failed'));
-        when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
-        );
+        when(
+          () => mockSettingsRepo.getTaskLlmConfig(),
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
 
         await cubit.loadSettings();
 
@@ -399,9 +399,9 @@ void main() {
         );
 
         when(() => mockLlmService.getAllConfigs()).thenReturn(configs);
-        when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Result<TaskLlmConfig>.ok(initialConfig),
-        );
+        when(
+          () => mockSettingsRepo.getTaskLlmConfig(),
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(initialConfig));
         when(
           () => mockSettingsRepo.setTaskLlmConfig(any()),
         ).thenAnswer((_) async => Result<void>.ok(null));
@@ -447,9 +447,9 @@ void main() {
         // BUG DETECTED: The cubit does NOT handle init() failures gracefully
         // The init() call is not wrapped in try/catch, so exceptions propagate
         when(() => mockLlmService.init()).thenThrow(Exception('Init failed'));
-        when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
-        );
+        when(
+          () => mockSettingsRepo.getTaskLlmConfig(),
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
 
         // The exception will propagate to the caller (test expects this)
         expect(() => cubit.loadSettings(), throwsA(isA<Exception>()));
@@ -463,9 +463,9 @@ void main() {
         when(
           () => mockLlmService.getAllConfigs(),
         ).thenThrow(Exception('Config list failed'));
-        when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
-        );
+        when(
+          () => mockSettingsRepo.getTaskLlmConfig(),
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
 
         await cubit.loadSettings();
 
@@ -533,9 +533,9 @@ void main() {
     group('LlmConfig list handling', () {
       test('should handle empty config list', () async {
         when(() => mockLlmService.getAllConfigs()).thenReturn(<LlmConfig>[]);
-        when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
-        );
+        when(
+          () => mockSettingsRepo.getTaskLlmConfig(),
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
 
         await cubit.loadSettings();
 
@@ -569,9 +569,9 @@ void main() {
         ];
 
         when(() => mockLlmService.getAllConfigs()).thenReturn(configs);
-        when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
-        );
+        when(
+          () => mockSettingsRepo.getTaskLlmConfig(),
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
 
         await cubit.loadSettings();
 
@@ -583,9 +583,9 @@ void main() {
     group('Edge cases', () {
       test('calling loadSettings multiple times', () async {
         when(() => mockLlmService.getAllConfigs()).thenReturn(<LlmConfig>[]);
-        when(() => mockSettingsRepo.getTaskLlmConfig()).thenAnswer(
-          (_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()),
-        );
+        when(
+          () => mockSettingsRepo.getTaskLlmConfig(),
+        ).thenAnswer((_) async => Result<TaskLlmConfig>.ok(TaskLlmConfig()));
 
         await cubit.loadSettings();
         await cubit.loadSettings();

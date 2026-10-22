@@ -23,9 +23,7 @@ class DemoRepositoryImpl implements DemoRepository {
   ) async {
     try {
       // Get current chat
-      final Result<Chat?> chatResult = await chatRepository.getChat(
-        chatId,
-      );
+      final Result<Chat?> chatResult = await chatRepository.getChat(chatId);
       if (!chatResult.isOk) {
         return Result<void>.err(StorageFailure('Chat not found: $chatId'));
       }
@@ -39,19 +37,16 @@ class DemoRepositoryImpl implements DemoRepository {
       final Avatar newAvatar = chat.avatar.copyWith(background: background);
 
       // Update avatar
-      return avatarRepository.updateAvatar(chatId, newAvatar);
+      return await avatarRepository.updateAvatar(chatId, newAvatar);
     } catch (e) {
-      return Result<void>.err(
-        Failure.fromException(e),
-      );
+      return Result<void>.err(Failure.fromException(e));
     }
   }
 
   @override
   Future<Result<String>> getCurrentChatId() async {
     try {
-      final Result<Chat> chatResult = await chatRepository
-          .getCurrentChat();
+      final Result<Chat> chatResult = await chatRepository.getCurrentChat();
       if (!chatResult.isOk) {
         return Result<String>.err(StorageFailure('No current chat'));
       }

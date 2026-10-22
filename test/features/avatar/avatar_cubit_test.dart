@@ -355,12 +355,6 @@ void main() {
     });
 
     group('Avatar Animation from LLM Response', () {
-      late MockAvatarAnimationService mockAnimationService;
-
-      setUp(() {
-        mockAnimationService = MockAvatarAnimationService();
-      });
-
       // Test: AvatarCubit receives updateConfig events from AvatarAnimationService
       test(
         'updateAvatarConfig calls onNewAvatarConfig to trigger animations',
