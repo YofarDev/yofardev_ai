@@ -263,7 +263,12 @@ Future<void> setupServiceLocator() async {
       demoService: getIt<DemoService>(),
     ),
   );
-  getIt.registerFactory<DemoCubit>(() => DemoCubit(getIt<DemoController>()));
+  getIt.registerFactory<DemoCubit>(
+    () => DemoCubit(
+      demoController: getIt<DemoController>(),
+      demoService: getIt<DemoService>(),
+    ),
+  );
   getIt.registerFactory<SoundCubit>(
     () => SoundCubit(soundRepository: getIt<SoundRepository>()),
   );
