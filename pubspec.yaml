@@ -60,6 +60,8 @@ dev_dependencies:
   bloc_test: ^10.0.0
   golden_toolkit: ^0.15.0
   collection: any
+  integration_test:
+    sdk: flutter
 flutter_native_splash:
   color: "#438EFF"
   image: "assets/splash.png"
@@ -86,6 +88,8 @@ flutter:
     - assets/avatar/costumes/singularity/
     - assets/avatar/top/
     - assets/avatar/bottom/
+    - assets/rive/
+    - assets/rive/scenes/
     - assets/txt/
     - assets/onnx/
     - assets/voice_styles/
