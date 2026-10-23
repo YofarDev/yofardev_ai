@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/avatar_gesture.dart';
 import '../../../../core/models/avatar_scene.dart';
@@ -57,7 +59,13 @@ class CueParser {
       }
       out.write(buffer.substring(i, start));
 
-      final RegExpMatch? match = _cuePrefix.firstMatch(buffer.substring(start));
+      final String rest = buffer.substring(start);
+      if (rest == '[' || rest == '[g' || rest == '[s') {
+        // The buffer ends on the opening of a possible cue: hold it.
+        _pending = rest;
+        break;
+      }
+      final RegExpMatch? match = _cuePrefix.firstMatch(rest);
       if (match == null) {
         // Cannot be a cue: emit the bracket literally and rescan after it.
         out.write('[');
@@ -65,19 +73,22 @@ class CueParser {
         continue;
       }
 
+      final int nameEnd = start + match.end;
+      final bool atBufferEnd = nameEnd == buffer.length;
       final bool closed =
-          buffer.length > start + match.end &&
-          buffer.codeUnitAt(start + match.end) == 0x5D; // ']'
+          !atBufferEnd && buffer.codeUnitAt(nameEnd) == 0x5D; // ']'
       if (!closed) {
-        if (match.group(2)!.length > _maxCueNameLength) {
-          // Too long to ever become a valid cue: emit literally.
-          out.write('[');
-          i = start + 1;
-          continue;
+        if (atBufferEnd && match.group(2)!.length <= _maxCueNameLength) {
+          // The buffer ends inside a possible cue: hold until more input
+          // arrives.
+          _pending = buffer.substring(start);
+          break;
         }
-        // Could still become a cue: hold until more input arrives.
-        _pending = buffer.substring(start);
-        break;
+        // Followed by something other than ']' (or too long): never a cue,
+        // emit literally.
+        out.write('[');
+        i = start + 1;
+        continue;
       }
 
       final AvatarCue? cue = _resolveCue(match.group(1)!, match.group(2)!);
@@ -140,6 +151,105 @@ class CueParser {
     final CueParser parser = CueParser();
     final ParsedChunk result = parser.parse(text);
     return '${result.text}${parser.flush()}';
+  }
+
+  /// Reply-JSON keys that may hold the spoken text; the same keys, in the
+  /// same order, as `JsonStreamExtractor` and `ChatEntry.getMessage`.
+  static const List<String> _replyTextKeys = <String>[
+    'text',
+    'content',
+    'message',
+    'response',
+  ];
+
+  /// Removes avatar cues from the text field of a stored JSON reply so saved
+  /// entries keep only the clean text. Returns [raw] unchanged when it is not
+  /// a JSON object.
+  static String? stripCuesFromReplyJson(String? raw) {
+    if (raw == null) {
+      return null;
+    }
+    final int start = raw.indexOf('{');
+    final int end = raw.lastIndexOf('}');
+    if (start == -1 || end <= start) {
+      return raw;
+    }
+    try {
+      final Object? decoded = jsonDecode(raw.substring(start, end + 1));
+      if (decoded is! Map<String, dynamic>) {
+        return raw;
+      }
+      bool changed = false;
+      for (final String key in _replyTextKeys) {
+        final Object? value = decoded[key];
+        if (value is String) {
+          decoded[key] = stripCues(value);
+          changed = true;
+        }
+      }
+      return changed ? jsonEncode(decoded) : raw;
+    } on FormatException catch (e) {
+      AppLogger.debug(
+        'Reply JSON could not be parsed for cue stripping: ${e.message}',
+        tag: 'CueParser',
+      );
+      return raw;
+    }
+  }
+}
+
+/// What one stream chunk (or the end of the stream) has ready to deliver.
+class CueDelivery {
+  const CueDelivery(this.text, this.cues);
+
+  /// Clean, trimmed text to show and speak; empty for a cue-only delivery.
+  final String text;
+
+  /// Every cue carried since the previous delivery, in order.
+  final List<AvatarCue> cues;
+}
+
+/// Groups parsed cues with the sentence they should fire with.
+///
+/// Cues from a chunk that has no speakable text ride the next sentence. At
+/// the end of the stream, [finish] returns any leftover text and the cues
+/// still carried, so a trailing cue (`See you! [g:wave]`) is not lost.
+class CueSentenceCollector {
+  CueSentenceCollector(this._parser);
+
+  final CueParser _parser;
+  final List<AvatarCue> _carried = <AvatarCue>[];
+
+  /// Parses one sentence chunk. Returns a delivery when the chunk has
+  /// speakable text; null for a cue-only chunk (its cues are carried).
+  CueDelivery? add(String chunk) {
+    final ParsedChunk parsed = _parser.parse(chunk);
+    _carried.addAll(parsed.cues);
+    final String cleanText = parsed.text.trim();
+    if (cleanText.isEmpty) {
+      return null;
+    }
+    return _take(cleanText);
+  }
+
+  /// Ends the stream: a cue still waiting for its closing bracket is spoken
+  /// as literal text, and cues still carried are delivered on their own.
+  /// Returns null when nothing is left.
+  CueDelivery? finish() {
+    final String leftover = _parser.flush().trim();
+    if (leftover.isEmpty && _carried.isEmpty) {
+      return null;
+    }
+    return _take(leftover);
+  }
+
+  CueDelivery _take(String text) {
+    final CueDelivery delivery = CueDelivery(
+      text,
+      List<AvatarCue>.unmodifiable(_carried),
+    );
+    _carried.clear();
+    return delivery;
   }
 }
 

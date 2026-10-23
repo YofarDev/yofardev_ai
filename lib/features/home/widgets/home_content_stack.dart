@@ -54,6 +54,9 @@ class HomeContentStack extends StatelessWidget {
                     onAvatarTapped: (String zone) {
                       context.read<AvatarCubit>().onAvatarTapped(zone);
                     },
+                    onPresenceDone: (String presence) {
+                      context.read<AvatarCubit>().onPresenceDone(presence);
+                    },
                   ),
                 ],
               );

@@ -1,5 +1,7 @@
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import 'package:rive/rive.dart';
 
 /// Property access layer for one bound Rive artboard.
@@ -33,8 +35,27 @@ class AvatarRiveBinding {
 
   ViewModelInstance? _viewModelInstance;
 
-  final List<ViewModelInstanceValue> _resolvedProperties =
-      <ViewModelInstanceValue>[];
+  /// Property handles resolved once per name, misses included (stored as
+  /// null) so a missing property is not looked up again on every rebuild.
+  /// Views push their state on every rebuild — the mouth alone changes many
+  /// times a second while talking — so lookups must not repeat.
+  final Map<String, ViewModelInstanceEnum?> _enums =
+      <String, ViewModelInstanceEnum?>{};
+  final Map<String, ViewModelInstanceNumber?> _numbers =
+      <String, ViewModelInstanceNumber?>{};
+  final Map<String, ViewModelInstanceTrigger?> _triggers =
+      <String, ViewModelInstanceTrigger?>{};
+  // ignore: deprecated_member_use
+  final Map<String, NumberInput?> _numberInputs = <String, NumberInput?>{};
+  // ignore: deprecated_member_use
+  final Map<String, TriggerInput?> _triggerInputs = <String, TriggerInput?>{};
+
+  /// Last value written per property name; an unchanged value is not
+  /// written again.
+  final Map<String, Object> _lastValues = <String, Object>{};
+
+  /// Names already reported as missing, so each is logged once.
+  final Set<String> _reportedMissing = <String>{};
 
   /// Sets an enum property by value name; falls back to the property index.
   void setEnum(String name, List<String> values, String value) {
@@ -43,45 +64,64 @@ class AvatarRiveBinding {
       developer.log('Unknown enum value "$value" for property "$name"');
       return;
     }
-    final ViewModelInstanceEnum? enumProperty = _resolve(
+    if (_lastValues[name] == value) {
+      return;
+    }
+    final ViewModelInstanceEnum? enumProperty = _enums.putIfAbsent(
+      name,
       () => _viewModelInstance?.enumerator(name),
     );
     if (enumProperty != null) {
       enumProperty.value = value;
+      _lastValues[name] = value;
       return;
     }
-    _setNumber(name, index.toDouble());
+    if (_writeNumberInput(name, index.toDouble())) {
+      _lastValues[name] = value;
+    }
   }
 
   /// Sets a number property.
-  void setNumber(String name, double value) => _setNumber(name, value);
-
-  void _setNumber(String name, double value) {
-    final ViewModelInstanceNumber? property = _resolve(
+  void setNumber(String name, double value) {
+    if (_lastValues[name] == value) {
+      return;
+    }
+    final ViewModelInstanceNumber? property = _numbers.putIfAbsent(
+      name,
       () => _viewModelInstance?.number(name),
     );
     if (property != null) {
       property.value = value;
+      _lastValues[name] = value;
       return;
     }
-    // Contract fallback: the same names as state-machine inputs when the file
-    // ships no view model (CONTRACT.md). The inputs API is deprecated but is
-    // the documented fallback path.
+    if (_writeNumberInput(name, value)) {
+      _lastValues[name] = value;
+    }
+  }
+
+  /// Contract fallback: the same names as state-machine inputs when the file
+  /// ships no view model (CONTRACT.md). The inputs API is deprecated but is
+  /// the documented fallback path.
+  bool _writeNumberInput(String name, double value) {
     // ignore: deprecated_member_use
-    final NumberInput? input = _resolve(
+    final NumberInput? input = _numberInputs.putIfAbsent(
+      name,
       // ignore: deprecated_member_use
       () => controller.stateMachine.number(name),
     );
     if (input != null) {
       input.value = value;
-      return;
+      return true;
     }
-    developer.log('Rive property "$name" not found (number).');
+    _reportMissing(name, 'number');
+    return false;
   }
 
   /// Fires a trigger property.
   void fireTrigger(String name) {
-    final ViewModelInstanceTrigger? property = _resolve(
+    final ViewModelInstanceTrigger? property = _triggers.putIfAbsent(
+      name,
       () => _viewModelInstance?.trigger(name),
     );
     if (property != null) {
@@ -89,7 +129,8 @@ class AvatarRiveBinding {
       return;
     }
     // ignore: deprecated_member_use
-    final TriggerInput? input = _resolve(
+    final TriggerInput? input = _triggerInputs.putIfAbsent(
+      name,
       // ignore: deprecated_member_use
       () => controller.stateMachine.trigger(name),
     );
@@ -97,27 +138,38 @@ class AvatarRiveBinding {
       input.fire();
       return;
     }
-    developer.log('Rive property "$name" not found (trigger).');
+    _reportMissing(name, 'trigger');
   }
 
   /// Whether the view model could be bound at all.
   bool get hasViewModel => _viewModelInstance != null;
 
-  T? _resolve<T>(T? Function() resolve) {
-    final T? property = resolve();
-    if (property != null && property is ViewModelInstanceValue) {
-      _resolvedProperties.add(property);
+  /// The bound view model instance, for reading values back in tests.
+  @visibleForTesting
+  ViewModelInstance? get viewModelInstance => _viewModelInstance;
+
+  void _reportMissing(String name, String kind) {
+    if (_reportedMissing.add(name)) {
+      developer.log('Rive property "$name" not found ($kind).');
     }
-    return property;
   }
 
   /// Disposes the resolved property handles and the bound view model
   /// instance. The controller and file stay owned by the caller.
   void dispose() {
-    for (final ViewModelInstanceValue property in _resolvedProperties) {
-      property.dispose();
+    for (final ViewModelInstanceValue? property in <ViewModelInstanceValue?>[
+      ..._enums.values,
+      ..._numbers.values,
+      ..._triggers.values,
+    ]) {
+      property?.dispose();
     }
-    _resolvedProperties.clear();
+    _enums.clear();
+    _numbers.clear();
+    _triggers.clear();
+    _numberInputs.clear();
+    _triggerInputs.clear();
+    _lastValues.clear();
     _viewModelInstance = null;
   }
 }

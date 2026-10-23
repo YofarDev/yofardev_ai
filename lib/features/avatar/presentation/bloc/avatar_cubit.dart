@@ -201,26 +201,6 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
   }
 
-  void _goAndComeBack(String chatId, AvatarConfig avatarConfig) async {
-    // Preserve the original specials before animation changes the state
-    final AvatarSpecials originalSpecials = state.avatar.specials;
-
-    onAnimationStatusChanged(true);
-    await Future<dynamic>.delayed(
-      Duration(seconds: AppConstants.movingAvatarDuration),
-    );
-    if (isClosed) return;
-
-    // Set animation to "coming" FIRST, then update avatar
-    // This ensures background changes while avatar is coming back
-    onAnimationStatusChanged(false);
-    // Use original specials, not the animation trigger value
-    final AvatarConfig updateConfig = avatarConfig.copyWith(
-      specials: originalSpecials,
-    );
-    _updateAvatar(chatId, updateConfig);
-  }
-
   void onAnimationStatusChanged(bool leaving) {
     _emitIfOpen(
       state.copyWith(
@@ -232,6 +212,9 @@ class AvatarCubit extends Cubit<AvatarState> {
               ? AvatarSpecials.outOfScreen
               : AvatarSpecials.onScreen,
         ),
+        presence: leaving
+            ? AvatarSpecials.outOfScreen
+            : AvatarSpecials.onScreen,
         previousSpecialsState: leaving
             ? AvatarSpecials.outOfScreen
             : AvatarSpecials.onScreen,
@@ -250,6 +233,9 @@ class AvatarCubit extends Cubit<AvatarState> {
               ? AvatarSpecials.outOfScreen
               : AvatarSpecials.onScreen,
         ),
+        presence: goingDown
+            ? AvatarSpecials.outOfScreen
+            : AvatarSpecials.onScreen,
         previousSpecialsState: goingDown
             ? AvatarSpecials.outOfScreen
             : AvatarSpecials.onScreen,
@@ -257,62 +243,127 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
   }
 
-  void _goDownAndUp(String chatId, AvatarConfig avatarConfig) async {
-    // Play whoosh sound effect via service
-    unawaited(
-      _audioPlayerService.playAsset('sound_effects/whoosh.wav', volume: 0.3),
-    );
+  /// Upper bound for one walk leg (Rive: 80 frames at 60 fps, ~1.3 s) when
+  /// the Rive file never reports `presence_done` — not loaded yet, app in
+  /// the background. The change is applied anyway once it elapses.
+  static const Duration presenceLegTimeout = Duration(seconds: 3);
 
-    // Preserve the original specials before animation changes the state
-    final AvatarSpecials originalSpecials = state.avatar.specials;
+  Completer<void>? _presenceDone;
+  AvatarSpecials? _awaitedPresence;
 
-    onClothesAnimationChanged(true); // dropping
-    await Future<dynamic>.delayed(
-      Duration(seconds: AppConstants.changingAvatarDuration),
-    );
-    if (isClosed) return;
-    // Use original specials, not the animation trigger value
-    final AvatarConfig updateConfig = avatarConfig.copyWith(
-      specials: originalSpecials,
-    );
-    _updateAvatar(chatId, updateConfig);
-    onClothesAnimationChanged(false); // rising
+  /// Presence transitions run one after another, so two quick config
+  /// changes never interleave their walks (or lose either change).
+  Future<void> _presenceChain = Future<void>.value();
+  int _pendingTransitions = 0;
+
+  void _enqueueTransition(Future<void> Function() transition) {
+    // Idle: start now, so the walk-off state is emitted synchronously.
+    final Future<void> next = _pendingTransitions == 0
+        ? transition()
+        : _presenceChain.then((_) => transition());
+    _pendingTransitions++;
+    _presenceChain = next.whenComplete(() => _pendingTransitions--);
   }
 
-  void onNewAvatarConfig(String chatId, AvatarConfig avatarConfig) async {
+  void onNewAvatarConfig(String chatId, AvatarConfig avatarConfig) {
     AppLogger.debug(
       'onNewAvatarConfig called with specials: ${avatarConfig.specials}',
       tag: 'AvatarCubit',
     );
 
-    _emitIfOpen(state.copyWith(statusAnimation: AvatarStatusAnimation.initial));
-
-    if (avatarConfig.specials == AvatarSpecials.leaveAndComeBack) {
-      AppLogger.debug('Using leaveAndComeBack animation', tag: 'AvatarCubit');
-      _goAndComeBack(chatId, avatarConfig);
-    } else if (avatarConfig.specials == AvatarSpecials.outOfScreen) {
-      AppLogger.debug('Using goDownAndUp animation', tag: 'AvatarCubit');
-      // Clothes change: use dropping/rising animation
-      _goDownAndUp(chatId, avatarConfig);
-    } else {
-      AppLogger.debug(
-        'No special animation, updating directly',
-        tag: 'AvatarCubit',
+    final AvatarSpecials? specials = avatarConfig.specials;
+    if (specials == AvatarSpecials.leaveAndComeBack ||
+        specials == AvatarSpecials.outOfScreen) {
+      // leaveAndComeBack: scene change. outOfScreen: clothes change. Either
+      // way the avatar walks off, the change lands while it is hidden, and
+      // it walks back.
+      _enqueueTransition(
+        () => _walkOffAndBack(
+          chatId,
+          avatarConfig,
+          clothesChange: specials == AvatarSpecials.outOfScreen,
+        ),
       );
-      if (avatarConfig.specials != null &&
-          avatarConfig.specials != state.previousSpecialsState) {
-        onAnimationStatusChanged(
-          state.avatar.specials == AvatarSpecials.onScreen,
-        );
-        // we wait it's out of screen before to update appearance
-        if (avatarConfig.specials == AvatarSpecials.outOfScreen) {
-          await Future<dynamic>.delayed(
-            Duration(seconds: AppConstants.movingAvatarDuration),
-          );
-          if (isClosed) return;
-        }
-      }
+      return;
+    }
+    if (_pendingTransitions == 0) {
+      // Nothing walking: apply right away.
       _updateAvatar(chatId, avatarConfig);
+      return;
+    }
+    // Land after the walk in progress so it is not undone by it.
+    _enqueueTransition(() async => _updateAvatar(chatId, avatarConfig));
+  }
+
+  /// Drives the Rive `presence` property: walks out (`outOfScreen`), waits
+  /// for `presence_done`, applies [avatarConfig], then walks back in
+  /// (`onScreen`) and waits again so the next transition starts clean.
+  Future<void> _walkOffAndBack(
+    String chatId,
+    AvatarConfig avatarConfig, {
+    required bool clothesChange,
+  }) async {
+    if (isClosed) return;
+    if (clothesChange) {
+      unawaited(
+        _audioPlayerService.playAsset('sound_effects/whoosh.wav', volume: 0.3),
+      );
+    }
+    _emitIfOpen(
+      state.copyWith(
+        statusAnimation: clothesChange
+            ? AvatarStatusAnimation.dropping
+            : AvatarStatusAnimation.leaving,
+        presence: AvatarSpecials.outOfScreen,
+        previousSpecialsState: AvatarSpecials.outOfScreen,
+      ),
+    );
+    await _waitForPresence(AvatarSpecials.outOfScreen);
+    if (isClosed) return;
+
+    _emitIfOpen(
+      state.copyWith(
+        statusAnimation: clothesChange
+            ? AvatarStatusAnimation.rising
+            : AvatarStatusAnimation.coming,
+      ),
+    );
+    // Transition values are never persisted: the avatar ends on screen.
+    _updateAvatar(
+      chatId,
+      avatarConfig.copyWith(specials: AvatarSpecials.onScreen),
+    );
+    await _waitForPresence(AvatarSpecials.onScreen);
+  }
+
+  Future<void> _waitForPresence(AvatarSpecials presence) {
+    final Completer<void> completer = Completer<void>();
+    _presenceDone = completer;
+    _awaitedPresence = presence;
+    return completer.future
+        .timeout(
+          presenceLegTimeout,
+          onTimeout: () {
+            AppLogger.debug(
+              'presence_done(${presence.name}) not received; continuing',
+              tag: 'AvatarCubit',
+            );
+          },
+        )
+        .whenComplete(() {
+          if (identical(_presenceDone, completer)) {
+            _presenceDone = null;
+            _awaitedPresence = null;
+          }
+        });
+  }
+
+  /// Called by the Rive view when the avatar file emits `presence_done`.
+  void onPresenceDone(String presence) {
+    if (_awaitedPresence?.name != presence) return;
+    final Completer<void>? completer = _presenceDone;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
     }
   }
 
@@ -329,8 +380,9 @@ class AvatarCubit extends Cubit<AvatarState> {
       state.copyWith(
         avatar: avatar,
         scene: avatar.background,
-        // v4: the reply's specials now drive the Rive presence property.
-        presence: avatar.specials,
+        // The avatar is on screen once a config lands; walk-off
+        // transitions are driven by _walkOffAndBack.
+        presence: AvatarSpecials.onScreen,
         previousSpecialsState:
             avatarConfig.specials ?? state.previousSpecialsState,
       ),

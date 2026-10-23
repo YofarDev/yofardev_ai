@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/models/avatar_cue.dart';
+import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/voice_effects_service.dart';
@@ -44,6 +46,33 @@ void main() {
     tearDown(() {
       manager.dispose();
       interruptionService.dispose();
+    });
+
+    test('a cue-only item emits its cues without synthesizing audio', () async {
+      final List<List<AvatarCue>> emitted = <List<AvatarCue>>[];
+      final StreamSubscription<List<AvatarCue>> subscription = manager
+          .cueOnlyStream
+          .listen(emitted.add);
+
+      await manager.enqueue(
+        text: '',
+        language: 'en',
+        voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(emitted, <List<AvatarCue>>[
+        const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+      ]);
+      verifyNever(
+        () => mockDatasource.synthesize(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      );
+      await subscription.cancel();
     });
 
     test('should process items in priority order', () async {

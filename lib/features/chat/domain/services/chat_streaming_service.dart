@@ -207,17 +207,37 @@ class ChatStreamingService {
       // in time with speech. A fresh parser per reply: cue state never
       // leaks between replies. The current scene decides which scene-event
       // cues are valid.
-      final CueParser cueParser = CueParser(currentScene: avatar.background);
-      final List<AvatarCue> carriedCues = <AvatarCue>[];
+      final CueSentenceCollector cueCollector = CueSentenceCollector(
+        CueParser(currentScene: avatar.background),
+      );
+
+      /// Hands one delivery's cues to the avatar: on its TTS queue item (so
+      /// they fire when that audio starts), or straight away in text-only
+      /// mode. A cue-only delivery (empty text) becomes a cue-only item.
+      void deliverCues(String cleanText, List<AvatarCue> cues) {
+        if (!onlyText) {
+          _ttsQueueManager?.enqueue(
+            text: cleanText,
+            language: language,
+            voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
+            cues: cues,
+          );
+        } else if (cues.isNotEmpty) {
+          _streamingCuesController.add(cues);
+        }
+      }
 
       /// Appends one clean sentence to the reply, updates the chat, and
-      /// enqueues it for TTS together with every cue carried so far (cues
-      /// from cue-only chunks attach to the next speakable sentence).
-      void deliverSentence(String cleanText) {
+      /// enqueues it for TTS together with its cues.
+      void deliverSentence(CueDelivery delivery) {
+        if (delivery.text.isEmpty) {
+          deliverCues('', delivery.cues);
+          return;
+        }
         if (contentBuffer.isNotEmpty) {
           contentBuffer.write(' ');
         }
-        contentBuffer.write(cleanText);
+        contentBuffer.write(delivery.text);
         sentenceCount++;
 
         final ChatEntry updatedEntry = streamingEntry.copyWith(
@@ -234,18 +254,7 @@ class ChatStreamingService {
 
         onStreamingUpdate(contentBuffer.toString(), sentenceCount);
 
-        // Enqueue for TTS if manager is available and not in text-only mode
-        if (!onlyText) {
-          _ttsQueueManager?.enqueue(
-            text: cleanText,
-            language: language,
-            voiceEffect: VoiceEffect(pitch: 1.0, speedRate: 1.0),
-            cues: List<AvatarCue>.of(carriedCues),
-          );
-        } else if (carriedCues.isNotEmpty) {
-          _streamingCuesController.add(List<AvatarCue>.of(carriedCues));
-        }
-        carriedCues.clear();
+        deliverCues(delivery.text, delivery.cues);
       }
 
       // Hard cap on tool rounds to avoid infinite tool-call loops.
@@ -310,20 +319,17 @@ class ChatStreamingService {
                 return;
               }
 
-              final ParsedChunk parsed = cueParser.parse(text);
-              final String cleanText = parsed.text.trim();
-              carriedCues.addAll(parsed.cues);
-              if (cleanText.isEmpty) {
-                return; // cue-only chunk: cues ride the next speakable sentence
+              // Null for a cue-only chunk: its cues ride the next sentence.
+              final CueDelivery? delivery = cueCollector.add(text);
+              if (delivery != null) {
+                deliverSentence(delivery);
               }
-
-              deliverSentence(cleanText);
             },
             metadata: (Map<String, dynamic> json) {
               // Capture the full JSON response, with cues stripped from the
               // stored text so saved entries keep only the clean text.
               if (json.containsKey('fullJson')) {
-                fullJsonResponse = _stripCuesFromStoredJson(
+                fullJsonResponse = CueParser.stripCuesFromReplyJson(
                   json['fullJson'] as String?,
                 );
               }
@@ -345,10 +351,10 @@ class ChatStreamingService {
           );
         }
 
-        // A cue still waiting for its closing bracket at end of stream is
-        // not a cue: speak it as literal closing text.
-        final String leftover = cueParser.flush().trim();
-        if (!streamError && leftover.isNotEmpty) {
+        // End of stream: literal leftover text and any trailing cues
+        // (`See you! [g:wave]`) are delivered now instead of being lost.
+        final CueDelivery? leftover = cueCollector.finish();
+        if (!streamError && leftover != null) {
           deliverSentence(leftover);
         }
 
@@ -516,33 +522,5 @@ class ChatStreamingService {
   /// Mark the stream as interrupted (called from external interruption listener)
   void markInterrupted() {
     _streamInterrupted = true;
-  }
-
-  /// Removes avatar cues from the `text` field of a stored JSON reply so
-  /// saved entries keep only the clean text. Falls back to the raw string
-  /// when it is not a JSON object with a text field.
-  String? _stripCuesFromStoredJson(String? raw) {
-    if (raw == null) {
-      return null;
-    }
-    try {
-      final int start = raw.indexOf('{');
-      final int end = raw.lastIndexOf('}');
-      if (start != -1 && end > start) {
-        final Map<String, dynamic> map =
-            jsonDecode(raw.substring(start, end + 1)) as Map<String, dynamic>;
-        final Object? text = map['text'];
-        if (text is String) {
-          map['text'] = CueParser.stripCues(text);
-          return jsonEncode(map);
-        }
-      }
-    } on FormatException catch (e) {
-      AppLogger.debug(
-        'Reply JSON could not be parsed for cue stripping: ${e.message}',
-        tag: 'ChatStreamingService',
-      );
-    }
-    return raw;
   }
 }

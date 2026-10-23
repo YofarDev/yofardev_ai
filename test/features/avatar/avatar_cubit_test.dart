@@ -1,9 +1,12 @@
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
+import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
@@ -78,6 +81,10 @@ void main() {
       when(
         () => mockAvatarRepository.updateAvatar(any(), any()),
       ).thenAnswer((_) async => Result<void>.ok(null));
+      // No saved avatar for the chat (the normal case for a new chat).
+      when(() => mockAvatarRepository.getChat(any())).thenAnswer(
+        (_) async => Result<Chat>.err(const StorageFailure('no chat')),
+      );
 
       avatarCubit = AvatarCubit(
         mockAvatarRepository,
@@ -362,106 +369,122 @@ void main() {
     });
 
     group('Avatar Animation from LLM Response', () {
-      // Test: AvatarCubit receives updateConfig events from AvatarAnimationService
-      test(
-        'updateAvatarConfig calls onNewAvatarConfig to trigger animations',
-        () async {
-          // Arrange
-          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-          final AvatarConfig avatarConfig = AvatarConfig(
+      // The v4 presence flow: walk off (Rive presence = outOfScreen), wait
+      // for presence_done, apply the change while hidden, walk back.
+      test('leaveAndComeBack walks off, applies the scene while hidden, '
+          'then walks back', () async {
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+        avatarCubit.updateAvatarConfig(
+          'chat1',
+          AvatarConfig(
             background: AvatarScene.beach,
             top: AvatarTop.longCoat,
             specials: AvatarSpecials.leaveAndComeBack,
-          );
-
-          // Act
-          avatarCubit.updateAvatarConfig('chat1', avatarConfig);
-
-          // Wait for animation to complete
-          await Future<dynamic>.delayed(const Duration(milliseconds: 100));
-
-          // Assert - Should trigger the animation flow via onNewAvatarConfig
-          // Verify by checking state changes
-          expect(
-            avatarCubit.state.avatar.background,
-            equals(AvatarScene.beach),
-          );
-          expect(avatarCubit.state.avatar.top, equals(AvatarTop.longCoat));
-        },
-      );
-
-      // Test: Animation specials (leaveAndComeBack, outOfScreen) are NOT persisted to avatar
-      test('animation specials are not persisted to avatar state', () async {
-        // Arrange - Start with onScreen
-        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-        final AvatarSpecials originalSpecials =
-            avatarCubit.state.avatar.specials;
-
-        // Act - Trigger background change animation
-        final AvatarConfig animationConfig = AvatarConfig(
-          background: AvatarScene.beach,
-          specials: AvatarSpecials.leaveAndComeBack, // Animation trigger
+          ),
         );
-        avatarCubit.updateAvatarConfig('chat1', animationConfig);
 
-        // Wait for animation to complete
-        await Future<dynamic>.delayed(const Duration(milliseconds: 100));
+        // Walking off: Rive gets outOfScreen, nothing is applied yet.
+        expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
+        expect(
+          avatarCubit.state.statusAnimation,
+          AvatarStatusAnimation.leaving,
+        );
+        expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
 
-        // Assert - Background changed, but specials should be preserved (not set to leaveAndComeBack)
-        expect(avatarCubit.state.avatar.background, equals(AvatarScene.beach));
-        expect(avatarCubit.state.avatar.specials, equals(originalSpecials));
+        avatarCubit.onPresenceDone('outOfScreen');
+        await Future<void>.delayed(Duration.zero);
+
+        // Hidden: the change lands and the avatar walks back.
+        expect(avatarCubit.state.scene, AvatarScene.beach);
+        expect(avatarCubit.state.avatar.top, AvatarTop.longCoat);
+        expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
+        expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.coming);
+        verify(
+          () => mockAvatarRepository.updateAvatar('chat1', any()),
+        ).called(1);
       });
 
-      // Test: _goAndComeBack preserves original specials
-      test(
-        '_goAndComeBack preserves original avatar specials during animation',
-        () async {
-          // Arrange
-          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-          final AvatarConfig avatarConfig = AvatarConfig(
+      test('animation specials are never persisted to the avatar', () async {
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+        avatarCubit.updateAvatarConfig(
+          'chat1',
+          AvatarConfig(
             background: AvatarScene.beach,
-            specials: AvatarSpecials.onScreen,
-          );
+            specials: AvatarSpecials.leaveAndComeBack,
+          ),
+        );
+        avatarCubit.onPresenceDone('outOfScreen');
+        await Future<void>.delayed(Duration.zero);
 
-          // Act - This will trigger _goAndComeBack
-          avatarCubit.onNewAvatarConfig('chat1', avatarConfig);
+        expect(avatarCubit.state.avatar.background, AvatarScene.beach);
+        expect(avatarCubit.state.avatar.specials, AvatarSpecials.onScreen);
+        final Avatar saved =
+            verify(
+                  () =>
+                      mockAvatarRepository.updateAvatar('chat1', captureAny()),
+                ).captured.single
+                as Avatar;
+        expect(saved.specials, AvatarSpecials.onScreen);
+      });
 
-          // Wait for animation to complete
-          await Future<dynamic>.delayed(const Duration(milliseconds: 100));
+      test('a presence_done for another value does not advance the walk', () {
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+        avatarCubit.onNewAvatarConfig(
+          'chat1',
+          AvatarConfig(
+            background: AvatarScene.beach,
+            specials: AvatarSpecials.leaveAndComeBack,
+          ),
+        );
+        avatarCubit.onPresenceDone('onScreen');
 
-          // Assert - Specials should be onScreen, not leaveAndComeBack
-          expect(
-            avatarCubit.state.avatar.specials,
-            equals(AvatarSpecials.onScreen),
-          );
-          expect(
-            avatarCubit.state.avatar.background,
-            equals(AvatarScene.beach),
-          );
-        },
-      );
+        expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
+        expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
+      });
 
-      // Test: _goDownAndUp preserves original specials
-      test(
-        '_goDownAndUp preserves original avatar specials during animation',
-        () async {
-          // Arrange
+      test('the change still lands when Rive never reports presence_done', () {
+        fakeAsync((FakeAsync async) {
           avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-          final AvatarConfig avatarConfig = AvatarConfig(
-            top: AvatarTop.longCoat,
-            specials: AvatarSpecials.outOfScreen, // Animation trigger
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              top: AvatarTop.longCoat,
+              specials: AvatarSpecials.outOfScreen,
+            ),
           );
+          async.elapse(AvatarCubit.presenceLegTimeout);
+          async.flushMicrotasks();
 
-          // Act - This will trigger _goDownAndUp
-          avatarCubit.onNewAvatarConfig('chat1', avatarConfig);
+          expect(avatarCubit.state.avatar.top, AvatarTop.longCoat);
+          expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
+        });
+      });
 
-          // Wait for animation to complete
-          await Future<dynamic>.delayed(const Duration(milliseconds: 700));
+      test('a second change waits for the walk in progress', () async {
+        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+        avatarCubit.onNewAvatarConfig(
+          'chat1',
+          AvatarConfig(
+            background: AvatarScene.beach,
+            specials: AvatarSpecials.leaveAndComeBack,
+          ),
+        );
+        avatarCubit.onNewAvatarConfig(
+          'chat1',
+          AvatarConfig(hat: AvatarHat.beanie),
+        );
+        // The hat is not applied mid-walk.
+        expect(avatarCubit.state.avatar.hat, isNot(AvatarHat.beanie));
 
-          // Assert - Specials should be preserved from before animation
-          expect(avatarCubit.state.avatar.top, equals(AvatarTop.longCoat));
-        },
-      );
+        avatarCubit.onPresenceDone('outOfScreen');
+        await Future<void>.delayed(Duration.zero);
+        avatarCubit.onPresenceDone('onScreen');
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(avatarCubit.state.scene, AvatarScene.beach);
+        expect(avatarCubit.state.avatar.hat, AvatarHat.beanie);
+      });
 
       // Test: Background change triggers leaveAndComeBack animation
       test('background change triggers leaving and coming animation', () {

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/models/avatar_gesture.dart';
@@ -164,6 +166,132 @@ void main() {
 
     test('stripCues keeps non-cue brackets', () {
       expect(CueParser.stripCues('a [note] b'), 'a [note] b');
+    });
+  });
+
+  group('CueParser look-alikes and split openings', () {
+    test('cue-like text followed by a non-bracket does not stall the '
+        'rest of the reply', () {
+      final CueParser parser = CueParser();
+      final ParsedChunk first = parser.parse('[g:wave hello] and more.');
+      expect(first.text, '[g:wave hello] and more.');
+      expect(first.cues, isEmpty);
+      expect(parser.flush(), '');
+    });
+
+    test('a cue split right after the opening bracket still parses', () {
+      final CueParser parser = CueParser();
+      final ParsedChunk first = parser.parse('Ha! [');
+      final ParsedChunk second = parser.parse('g:laugh] Funny.');
+      expect(first.text, 'Ha! ');
+      expect(second.text, ' Funny.');
+      expect(second.cues, <AvatarCue>[
+        const AvatarCue.gesture(AvatarGesture.laugh),
+      ]);
+    });
+
+    test('a cue split before the colon still parses', () {
+      final CueParser parser = CueParser();
+      final ParsedChunk first = parser.parse('Ha! [g');
+      final ParsedChunk second = parser.parse(':nod] Yes.');
+      expect(first.text, 'Ha! ');
+      expect(second.cues, <AvatarCue>[
+        const AvatarCue.gesture(AvatarGesture.nod),
+      ]);
+    });
+
+    test('a held "[" that never becomes a cue is flushed literally', () {
+      final CueParser parser = CueParser();
+      expect(parser.parse('Look [').text, 'Look ');
+      expect(parser.flush(), '[');
+    });
+  });
+
+  group('CueParser.stripCuesFromReplyJson', () {
+    test('strips cues from the "message" field used by the system prompt', () {
+      final String raw = jsonEncode(<String, dynamic>{
+        'message': 'Ha! [g:laugh] That is wild.',
+        'mood': 'happy',
+      });
+      final Map<String, dynamic> stripped =
+          jsonDecode(CueParser.stripCuesFromReplyJson(raw)!)
+              as Map<String, dynamic>;
+      expect(stripped['message'], 'Ha!  That is wild.');
+      expect(stripped['mood'], 'happy');
+    });
+
+    test('strips cues from every supported text key', () {
+      for (final String key in <String>[
+        'text',
+        'content',
+        'message',
+        'response',
+      ]) {
+        final String raw = jsonEncode(<String, dynamic>{key: 'a [s:rain] b'});
+        final Map<String, dynamic> stripped =
+            jsonDecode(CueParser.stripCuesFromReplyJson(raw)!)
+                as Map<String, dynamic>;
+        expect(stripped[key], 'a  b', reason: key);
+      }
+    });
+
+    test('returns the input unchanged when it is not JSON', () {
+      expect(CueParser.stripCuesFromReplyJson('not json'), 'not json');
+      expect(CueParser.stripCuesFromReplyJson('{broken'), '{broken');
+      expect(CueParser.stripCuesFromReplyJson(null), isNull);
+    });
+  });
+
+  group('CueSentenceCollector', () {
+    test('a sentence delivers its own cues', () {
+      final CueSentenceCollector collector = CueSentenceCollector(CueParser());
+      final CueDelivery? delivery = collector.add('Hi [g:wave] there.');
+      expect(delivery!.text, 'Hi  there.');
+      expect(delivery.cues, <AvatarCue>[
+        const AvatarCue.gesture(AvatarGesture.wave),
+      ]);
+    });
+
+    test('cues from a cue-only chunk ride the next sentence', () {
+      final CueSentenceCollector collector = CueSentenceCollector(CueParser());
+      expect(collector.add('[g:nod]'), isNull);
+      final CueDelivery? delivery = collector.add('Sure.');
+      expect(delivery!.text, 'Sure.');
+      expect(delivery.cues, <AvatarCue>[
+        const AvatarCue.gesture(AvatarGesture.nod),
+      ]);
+    });
+
+    test('a trailing cue-only chunk is delivered by finish', () {
+      final CueSentenceCollector collector = CueSentenceCollector(CueParser());
+      expect(collector.add('See you!')!.cues, isEmpty);
+      expect(collector.add('[g:wave]'), isNull);
+      final CueDelivery? leftover = collector.finish();
+      expect(leftover!.text, '');
+      expect(leftover.cues, <AvatarCue>[
+        const AvatarCue.gesture(AvatarGesture.wave),
+      ]);
+      expect(collector.finish(), isNull);
+    });
+
+    test(
+      'finish delivers an unclosed cue as literal text; earlier cues rode the sentence',
+      () {
+        final CueSentenceCollector collector = CueSentenceCollector(
+          CueParser(currentScene: AvatarScene.campfire),
+        );
+        expect(collector.add('[s:rain]'), isNull);
+        expect(collector.add('Bye [g:wa'), isNotNull);
+        final CueDelivery? leftover = collector.finish();
+        expect(leftover!.text, '[g:wa');
+        expect(leftover.cues, isEmpty);
+      },
+    );
+
+    test('finish returns null when nothing is left', () {
+      final CueSentenceCollector collector = CueSentenceCollector(CueParser());
+      collector.add('Done.');
+      expect(collector.finish(), isNull);
     });
   });
 }
