@@ -329,6 +329,8 @@ class AvatarCubit extends Cubit<AvatarState> {
       state.copyWith(
         avatar: avatar,
         scene: avatar.background,
+        // v4: the reply's specials now drive the Rive presence property.
+        presence: avatar.specials,
         previousSpecialsState:
             avatarConfig.specials ?? state.previousSpecialsState,
       ),

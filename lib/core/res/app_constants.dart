@@ -1,9 +1,5 @@
 class AppConstants {
   // Avatar
-  /// Dev-only switch: render the Rive avatar+scene instead of the PNG
-  /// widgets. Removed together with the PNG widgets in the v4 cut-over.
-  static const bool useRiveAvatar = true;
-
   static double avatarHeight = 1280;
   static double avatarWidth = 1024;
   static double topAvatarInvertedY = 662;

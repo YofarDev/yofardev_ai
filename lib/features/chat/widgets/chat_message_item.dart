@@ -1,16 +1,15 @@
 import 'dart:convert';
+import '../../../core/widgets/typing_indicator.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:go_router/go_router.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:lottie/lottie.dart';
 
 import '../../../core/models/sound_effects.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/router/route_constants.dart';
-import '../../../core/utils/app_utils.dart';
 import '../../../core/models/chat_entry.dart';
 import '../widgets/chat_avatar.dart';
 import 'modern_chat_bubble.dart';
@@ -219,10 +218,7 @@ class _TypingIndicator extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            child: Lottie.asset(
-              AppUtils.fixAssetsPath('assets/lotties/typing.json'),
-              height: 40,
-            ),
+            child: const TypingIndicator(),
           ),
         ],
       ),

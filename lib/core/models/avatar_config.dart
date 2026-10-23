@@ -3,7 +3,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'avatar_mood.dart';
 import 'avatar_scene.dart';
 import 'sound_effects.dart';
-import '../utils/app_utils.dart';
 import '../utils/extensions.dart';
 import '../utils/platform_utils.dart';
 import 'chat.dart';
@@ -205,17 +204,6 @@ class MoodConverter implements JsonConverter<AvatarMood?, String?> {
   @override
   String? toJson(AvatarMood? object) {
     return object?.name;
-  }
-}
-
-/// Legacy photo-background image path for a scene. Used only by the
-/// PNG-era widgets that are still active before the B9 cut-over; each scene
-/// id has a same-named v3 background jpeg.
-extension SceneLegacyImageExtension on AvatarScene? {
-  String getPath() {
-    return AppUtils.fixAssetsPath(
-      'assets/avatar/backgrounds/${this!.name}.jpeg',
-    );
   }
 }
 

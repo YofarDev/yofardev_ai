@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/models/avatar_config.dart';
 import '../../../../core/res/app_colors.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
@@ -23,15 +22,6 @@ class ChatDetailsBackground extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: <Color>[AppColors.background, AppColors.surface],
                   ),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.15,
-                child: Image.asset(
-                  state.openedChat.avatar.background.getPath(),
-                  fit: BoxFit.cover,
                 ),
               ),
             ),

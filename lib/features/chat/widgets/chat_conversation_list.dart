@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/typing_indicator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lottie/lottie.dart';
 
 import '../../../core/models/chat.dart';
 import '../../../core/res/app_colors.dart';
 import '../../../core/utils/extensions.dart';
-import '../../../core/utils/app_utils.dart';
 import '../../../core/models/chat_entry.dart';
 import '../widgets/chat_avatar.dart';
 import '../widgets/chat_message_item.dart';
@@ -140,10 +139,7 @@ class _TypingIndicator extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            child: Lottie.asset(
-              AppUtils.fixAssetsPath('assets/lotties/typing.json'),
-              height: 40,
-            ),
+            child: const TypingIndicator(),
           ),
         ],
       ),

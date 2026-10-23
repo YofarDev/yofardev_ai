@@ -21,7 +21,6 @@ dependencies:
   nested: ^1.0.0
   flutter_parsed_text: ^2.2.1
   intl: ^0.20.2
-  lottie: ^3.3.2
   image_picker: ^1.2.1
   path: ^1.9.1
   speech_to_text: ^7.3.0
@@ -79,15 +78,6 @@ flutter:
   assets:
     - assets/
     - assets/sound_effects/
-    - assets/lotties/
-    - assets/avatar/
-    - assets/avatar/mouth/
-    - assets/avatar/accessories/
-    - assets/avatar/backgrounds/
-    - assets/avatar/costumes/
-    - assets/avatar/costumes/singularity/
-    - assets/avatar/top/
-    - assets/avatar/bottom/
     - assets/rive/
     - assets/rive/scenes/
     - assets/txt/

@@ -102,6 +102,14 @@ on violation.
 
 - Changing a freezed model or ARB file **requires regeneration** (`build_runner` / `gen-l10n`) or analysis and tests fail
 - Golden tests store reference images under `test/**/goldens/` — only regenerate (`--update-goldens`) when a visual change is intentional
+- v4 avatar: the character and the 4 scenes are Rive files in `assets/rive/`
+  (`avatar.riv` + `scenes/<sceneId>.riv`), rebuilt from RML sources via
+  `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
+  every artboard/state-machine/view-model/event name; the Dart mirror lives
+  in `lib/features/avatar/presentation/rive/avatar_rive_contract.dart`.
+  Rive types must stay in `lib/features/avatar/presentation/`. macOS: Impeller
+  is disabled in `macos/Runner/Info.plist` (Rive crashes the Impeller Metal
+  backend)
 - No CI workflows in this repo — the quality gate is local (`./scripts/fverify.sh`)
 - New features: use `./scripts/fgen.sh`, then wire DI (`service_locator.dart`) and route (`core/router/app_router.dart`) manually — a generated scaffold is not routed/registered until then
 
@@ -151,7 +159,7 @@ result.when(
 
 ```
 lib/features/
-├── avatar/          # Avatar customization
+├── avatar/          # Rive avatar + scenes (see rive/CONTRACT.md)
 ├── chat/            # ❗ CORE: Chat, streaming, TTS
 ├── demo/            # Demo mode
 ├── home/            # Home screen (no barrel — never imported cross-feature)
@@ -165,4 +173,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-22
+**Last Updated**: 2026-10-23
