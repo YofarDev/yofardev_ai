@@ -96,7 +96,6 @@ class ChatStreamingService {
     required String language,
     bool functionCallingEnabled = true,
     required void Function(Chat updatedChat) onChatUpdated,
-    required void Function(String content, int sentenceCount) onStreamingUpdate,
     required void Function(Chat finalChat) onStreamComplete,
     required void Function(String error) onError,
   }) async {
@@ -199,7 +198,6 @@ class ChatStreamingService {
 
       final StringBuffer contentBuffer = StringBuffer();
       String? fullJsonResponse;
-      int sentenceCount = 0;
       bool streamError = false;
 
       // Inline avatar cues ([g:...]/[s:...]) are stripped from the stream
@@ -238,7 +236,6 @@ class ChatStreamingService {
           contentBuffer.write(' ');
         }
         contentBuffer.write(delivery.text);
-        sentenceCount++;
 
         final ChatEntry updatedEntry = streamingEntry.copyWith(
           body: contentBuffer.toString(),
@@ -251,8 +248,6 @@ class ChatStreamingService {
 
         chat = chat.copyWith(entries: updatedEntries);
         onChatUpdated(chat);
-
-        onStreamingUpdate(contentBuffer.toString(), sentenceCount);
 
         deliverCues(delivery.text, delivery.cues);
       }
@@ -335,10 +330,7 @@ class ChatStreamingService {
               }
             },
             complete: () {
-              AppLogger.debug(
-                'Stream complete with $sentenceCount sentences',
-                tag: 'ChatStreamingService',
-              );
+              AppLogger.debug('Stream complete', tag: 'ChatStreamingService');
             },
             error: (String msg) {
               AppLogger.error(

@@ -35,8 +35,6 @@ sealed class ChatState with _$ChatState {
     @Default(true) bool initializing,
     @Default(true) bool functionCallingEnabled,
     @Default(false) bool chatCreated,
-    @Default('') String streamingContent,
-    @Default(0) int streamingSentenceCount,
     // Note: Named generatingTitleChatIds to match existing usage across the codebase
     // rather than renaming to generatingChatIds (as per original spec)
     // This field tracks which chats are currently generating titles
@@ -55,8 +53,6 @@ sealed class ChatState with _$ChatState {
     openedChat: Chat(),
     status: ChatStatus.loading,
     chatsListStatus: ChatsListStatus.initial,
-    streamingContent: '',
-    streamingSentenceCount: 0,
     generatingTitleChatIds: <String>{},
     lastGeneratedTitle: null,
   );

@@ -182,7 +182,6 @@ void main() {
       language: 'en',
       functionCallingEnabled: false,
       onChatUpdated: (_) {},
-      onStreamingUpdate: (_, _) {},
       onStreamComplete: (_) {},
       onError: (_) {},
     );

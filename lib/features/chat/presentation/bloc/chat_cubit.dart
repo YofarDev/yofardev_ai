@@ -394,11 +394,6 @@ class ChatCubit extends Cubit<ChatState> {
     emit(state.copyWith(openedChat: chat));
   }
 
-  /// Clear streaming content (called when stream completes)
-  void clearStreamingContent() {
-    emit(state.copyWith(streamingContent: '', streamingSentenceCount: 0));
-  }
-
   /// Reset status to success
   void resetStatus() {
     emit(state.copyWith(status: ChatStatus.success));
@@ -526,8 +521,6 @@ class ChatCubit extends Cubit<ChatState> {
     required String language,
     bool functionCallingEnabled = true,
   }) async {
-    emit(state.copyWith(streamingContent: '', streamingSentenceCount: 0));
-
     // Set status to typing to show typing animation
     AppLogger.debug(
       'Setting status to typing, current status: ${state.status}',
@@ -549,31 +542,6 @@ class ChatCubit extends Cubit<ChatState> {
         // Update chat state during streaming
         updateChatStreaming(updatedChat);
       },
-      onStreamingUpdate: (String content, int sentenceCount) {
-        // Update streaming content state
-        // Change status to streaming on first content
-        final ChatStatus newStatus = state.status == ChatStatus.typing
-            ? ChatStatus.streaming
-            : state.status;
-
-        AppLogger.debug(
-          'Streaming update: content length=${content.length}, '
-          'current status=${state.status}, new status=$newStatus',
-          tag: 'ChatCubit',
-        );
-
-        emit(
-          state.copyWith(
-            streamingContent: content,
-            streamingSentenceCount: sentenceCount,
-            status: newStatus,
-          ),
-        );
-
-        if (newStatus == ChatStatus.streaming) {
-          _appLifecycleService.emitStreamingStateChanged(ChatStatus.streaming);
-        }
-      },
       onStreamComplete: (Chat finalChat) {
         // Stream completed successfully
         // Also update the corresponding chat in chatsList to keep it in sync
@@ -583,7 +551,6 @@ class ChatCubit extends Cubit<ChatState> {
 
         emit(
           state.copyWith(
-            streamingContent: '',
             currentChat: finalChat,
             openedChat: finalChat,
             chatsList: updatedChatsList,
@@ -631,7 +598,6 @@ class ChatCubit extends Cubit<ChatState> {
           state.copyWith(
             status: ChatStatus.error,
             error: UnknownFailure(error, error),
-            streamingContent: '',
           ),
         );
       },
