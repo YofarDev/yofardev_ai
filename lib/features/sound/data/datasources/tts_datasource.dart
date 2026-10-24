@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:supertonic_flutter/supertonic_flutter.dart';
 
 import '../../../../core/models/voice_effect.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../../core/utils/platform_utils.dart';
 import '../../domain/services/tts_synthesizer.dart';
 
 class TtsDatasource implements TtsSynthesizer {
@@ -51,7 +51,9 @@ class TtsDatasource implements TtsSynthesizer {
   static Future<void> _cleanOldWavFiles() async {
     try {
       final TtsDatasource datasource = TtsDatasource();
-      final Directory dir = Directory(await datasource.getMusicDirectoryPath());
+      final Directory dir = Directory(
+        await datasource.getTtsCacheDirectoryPath(),
+      );
       if (await dir.exists()) {
         final List<FileSystemEntity> files = await dir.list().toList();
         final int now = DateTime.now().millisecondsSinceEpoch;
@@ -82,28 +84,26 @@ class TtsDatasource implements TtsSynthesizer {
     }
   }
 
-  Future<String> getMusicDirectoryPath() async {
-    final String platform = PlatformUtils.checkPlatform();
-    switch (platform) {
-      case 'Android':
-        try {
-          final List<Directory>? externalStorageDirectories =
-              await getExternalStorageDirectories();
-          if (externalStorageDirectories != null &&
-              externalStorageDirectories.isNotEmpty) {
-            final String path = externalStorageDirectories[0].path;
-            final String musicPath =
-                '${path.replaceAll(RegExp('/Android/data/.*'), '')}/Music';
-            return musicPath;
-          } else {
-            throw Exception("External storage not found");
-          }
-        } catch (e) {
-          throw Exception("Error getting music directory: $e");
-        }
-      default:
-        final Directory documentsDir = await getApplicationDocumentsDirectory();
-        return documentsDir.path;
+  /// Scratch space for one-shot TTS audio: the OS-managed temp dir, not a
+  /// user-visible folder. Files are deleted after playback (and swept after
+  /// 10 minutes as a safety net).
+  Future<String> getTtsCacheDirectoryPath() async {
+    final Directory tempDir = await getTemporaryDirectory();
+    return tempDir.path;
+  }
+
+  @override
+  Future<void> delete(String path) async {
+    if (kIsWeb) {
+      return;
+    }
+    try {
+      final File file = File(path);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (e) {
+      AppLogger.debug('Failed to delete TTS file: $e', tag: 'TtsService');
     }
   }
 
@@ -169,11 +169,11 @@ class TtsDatasource implements TtsSynthesizer {
     );
 
     // Save to file
-    final String musicDirectoryPath = await getMusicDirectoryPath();
+    final String cacheDirectoryPath = await getTtsCacheDirectoryPath();
 
     final int timestamp = DateTime.now().millisecondsSinceEpoch;
     final String filename = '$timestamp.wav';
-    final String filePath = '$musicDirectoryPath/$filename';
+    final String filePath = '$cacheDirectoryPath/$filename';
 
     final File file = File(filePath);
     await file.writeAsBytes(result.toWavBytes(), flush: true);

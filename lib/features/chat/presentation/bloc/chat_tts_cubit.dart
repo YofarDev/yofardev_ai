@@ -207,6 +207,9 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       // whole app session (audioPathsWaitingSentences is otherwise never
       // freed).
       removeWaitingSentence(audioPath);
+      // Played TTS files are scratch: delete now instead of waiting for the
+      // 10-minute sweep.
+      unawaited(_ttsQueueManager.deleteAudio(audioPath));
     } catch (e) {
       AppLogger.error(
         'Failed to play/extract amplitudes for $audioPath',

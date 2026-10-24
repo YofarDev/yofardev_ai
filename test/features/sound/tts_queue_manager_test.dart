@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -46,6 +47,31 @@ void main() {
     tearDown(() {
       manager.dispose();
       interruptionService.dispose();
+    });
+
+    test('deleteAudio removes the file via the synthesizer', () async {
+      final Directory tmp = await Directory.systemTemp.createTemp('tts-del');
+      final File wav = File('${tmp.path}/1.wav');
+      await wav.writeAsBytes(<int>[1]);
+
+      final TtsQueueService service = TtsQueueService(
+        ttsSynthesizer: mockDatasource,
+        interruptionService: interruptionService,
+        voiceEffectsService: mockVoiceEffectsService,
+      );
+      when(() => mockDatasource.delete(any())).thenAnswer((
+        Invocation inv,
+      ) async {
+        final File f = File(inv.positionalArguments[0] as String);
+        if (await f.exists()) {
+          await f.delete();
+        }
+      });
+
+      await service.deleteAudio(wav.path);
+      expect(await wav.exists(), isFalse);
+      service.dispose();
+      await tmp.delete(recursive: true);
     });
 
     test('a cue-only item emits its cues without synthesizing audio', () async {

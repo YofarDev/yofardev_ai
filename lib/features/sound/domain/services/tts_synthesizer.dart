@@ -11,4 +11,8 @@ abstract class TtsSynthesizer {
     required String language,
     required VoiceEffect voiceEffect,
   });
+
+  /// Deletes a synthesized audio file. Best-effort: failures are swallowed
+  /// by implementations (scratch cleanup, never a user-facing error).
+  Future<void> delete(String path);
 }

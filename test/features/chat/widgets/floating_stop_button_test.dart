@@ -324,6 +324,9 @@ class MockTtsQueueService implements TtsQueueService {
   }) async {}
 
   @override
+  Future<void> deleteAudio(String audioPath) async {}
+
+  @override
   void clear() {}
 
   @override

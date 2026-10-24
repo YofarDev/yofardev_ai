@@ -61,6 +61,10 @@ class TtsQueueService {
   List<AvatarCue> consumeCues(String audioPath) =>
       _cuesByPath.remove(audioPath) ?? const <AvatarCue>[];
 
+  /// Deletes a played audio file (scratch cleanup; the synthesizer owns the
+  /// IO). Safe to call for a path that no longer exists.
+  Future<void> deleteAudio(String path) => _ttsSynthesizer.delete(path);
+
   /// Current queue state (for debugging/monitoring)
   List<TtsQueueItem> get queue => List<TtsQueueItem>.unmodifiable(_queue);
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +37,11 @@ class MockTtsQueueService extends Mock implements TtsQueueService {
   bool get hasItems => false;
 
   bool get isPlaying => false;
+
+  @override
+  Future<void> deleteAudio(String audioPath) =>
+      super.noSuchMethod(Invocation.method(#deleteAudio, <String>[audioPath]))
+          as Future<void>;
 
   @override
   Future<void> enqueue({
@@ -436,6 +442,58 @@ void main() {
         playback.dispose();
       },
     );
+
+    test('deletes the played WAV via the TTS queue service', () async {
+      final Directory tmp = await Directory.systemTemp.createTemp('tts');
+      final File wav = File('${tmp.path}/1000.wav');
+      await wav.writeAsBytes(<int>[1, 2, 3]);
+
+      final MockTtsQueueService queue = MockTtsQueueService();
+      final MockAudioAmplitudeService amplitudeService =
+          MockAudioAmplitudeService();
+      final MockAudioPlayerService player = MockAudioPlayerService();
+      final MockTtsPlaybackService playback = MockTtsPlaybackService();
+      final MockInterruptionService interruption = MockInterruptionService();
+      when(
+        () => interruption.interruptionStream,
+      ).thenAnswer((_) => const Stream<void>.empty());
+      when(
+        () => queue.cueOnlyStream,
+      ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
+
+      when(
+        () => amplitudeService.extractAmplitudes(any()),
+      ).thenAnswer((Invocation _) async => <int>[10]);
+      when(
+        () => player.play(any()),
+      ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
+      when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
+      when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
+
+      final ChatTtsCubit cubit = ChatTtsCubit(
+        ttsQueueManager: queue,
+        audioAmplitudeService: amplitudeService,
+        audioPlayerService: player,
+        interruptionService: interruption,
+        ttsPlaybackService: playback,
+      );
+
+      queue.emitAudioPath(wav.path);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      player.emitPlaybackComplete();
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => queue.deleteAudio(wav.path)).called(1);
+      await cubit.close();
+      queue.dispose();
+      player.dispose();
+      playback.dispose();
+      await tmp.delete(recursive: true);
+    });
 
     test('clears waiting sentences on interruption', () async {
       final MockTtsQueueService queue = MockTtsQueueService();
