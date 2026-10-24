@@ -9,6 +9,11 @@ import '../../../../core/utils/logger.dart';
 /// character-by-character, and a single `json.decode` is attempted per
 /// top-level object close — instead of re-copying the buffer and re-parsing
 /// the whole text field on every chunk (which was quadratic in reply length).
+///
+/// One extractor instance tracks exactly one reply: call [clear] between
+/// replies (production does this via per-stream instances). Feeding a second
+/// top-level object into a non-cleared extractor drops its text, since
+/// capture state (`_captureDone`) is already spent on the first object.
 class JsonStreamExtractor {
   static const List<String> _textKeys = <String>[
     'text',
@@ -62,13 +67,22 @@ class JsonStreamExtractor {
         // Looking for the value opening of the first text key.
         final int valueQuote = _findValueQuote(window, i);
         if (valueQuote < 0) {
-          break; // carry handled below
+          // Nothing complete yet: keep the ENTIRE window. A partial tail
+          // (e.g. from the last quote only) would evict the `": ` connector
+          // when a later `"` arrives before the key reassembles, and the
+          // value would never be found. The pre-capture prologue is tiny
+          // (key + punctuation), so this stays bounded.
+          _carry = window;
+          return delta;
         }
         _capturing = true;
         _unflushedWindowStart = valueQuote + 1;
         // Braces before the value were never fed to _advanceStructure (the
         // key-matching phase skips them), so seed the depth by scanning the
         // prefix once — this is the only non-incremental scan per stream.
+        // Because the pre-capture carry is always the full window, the
+        // prefix includes the outer `{` even when it arrived in an earlier
+        // chunk.
         _seedDepth(window, valueQuote);
         i = valueQuote + 1;
         continue;
@@ -139,13 +153,11 @@ class JsonStreamExtractor {
       _flushedLength = _captured.length;
     }
 
-    // Hold back a tail that may still grow into a key or the field opening.
-    // While capturing, everything scanned is already consumed (escapes are
-    // carried explicitly above) — carrying from the last quote here would
-    // re-inject value text.
-    if (!_capturing && !_captureDone) {
-      _carry = _carryTail(window);
-    }
+    // No carry is kept here: while capturing, scanned characters are
+    // consumed (split escapes are carried explicitly by the early returns
+    // above), and once the value is done, structure state (_inString /
+    // _escaped) already persists across chunks — re-feeding a quote tail
+    // would toggle it twice.
 
     return delta;
   }
@@ -184,7 +196,7 @@ class JsonStreamExtractor {
 
   /// Finds the opening quote of the value for the first of [_textKeys]
   /// appearing at or after [from] in [window]. Returns -1 when none is
-  /// complete yet (the caller then keeps a tail in [_carry]).
+  /// complete yet (the caller then keeps the whole window in [_carry]).
   int _findValueQuote(String window, int from) {
     int best = -1;
     for (final String key in _textKeys) {
@@ -215,17 +227,6 @@ class JsonStreamExtractor {
       }
     }
     return best;
-  }
-
-  /// Carries the smallest tail that could still grow into a key + value
-  /// opening: from the last quote, else nothing. Only used while not
-  /// capturing — inside the value, escapes are carried explicitly.
-  String _carryTail(String window) {
-    final int lastQuote = window.lastIndexOf('"');
-    if (lastQuote >= 0) {
-      return window.substring(lastQuote);
-    }
-    return '';
   }
 
   String? _advanceStructure(String char) {

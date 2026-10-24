@@ -76,5 +76,54 @@ void main() {
       }
       expect(extractor.extractText('"}'), isNot(contains('chunk')));
     });
+
+    test(
+      'regression: 3-char chunking of a full reply emits the whole text',
+      () {
+        final JsonStreamExtractor extractor = JsonStreamExtractor();
+        const String json = '{"text": "Hello world. How are you?"}';
+        final StringBuffer emitted = StringBuffer();
+        for (int i = 0; i < json.length; i += 3) {
+          final String? delta = extractor.extractText(
+            json.substring(i, i + 3 > json.length ? json.length : i + 3),
+          );
+          if (delta != null) {
+            emitted.write(delta);
+          }
+        }
+        expect(emitted.toString(), 'Hello world. How are you?');
+        expect(extractor.getLastFullJson(), json);
+      },
+    );
+
+    test('regression: chunk boundary exactly at the colon', () {
+      final JsonStreamExtractor extractor = JsonStreamExtractor();
+      expect(extractor.extractText('{"text":'), isNull);
+      expect(extractor.extractText(' "Hel'), 'Hel');
+      expect(extractor.extractText('lo!"}'), 'lo!');
+      expect(extractor.getLastFullJson(), '{"text": "Hello!"}');
+    });
+
+    test('regression: split key with close exposes full JSON', () {
+      final JsonStreamExtractor extractor = JsonStreamExtractor();
+      expect(extractor.extractText('{"te'), isNull);
+      expect(extractor.extractText('xt": "Done"}'), 'Done');
+      expect(extractor.getLastFullJson(), '{"text": "Done"}');
+    });
+
+    test('regression: nested text in small chunks emits inner then outer', () {
+      final JsonStreamExtractor extractor = JsonStreamExtractor();
+      const String json = '{"meta": {"text": "inner"}, "text": "outer value"}';
+      final List<String> deltas = <String>[];
+      for (int i = 0; i < json.length; i += 6) {
+        final int end = i + 6 > json.length ? json.length : i + 6;
+        final String? delta = extractor.extractText(json.substring(i, end));
+        if (delta != null) {
+          deltas.add(delta);
+        }
+      }
+      expect(deltas.join(), 'innerouter value');
+      expect(extractor.getLastFullJson(), json);
+    });
   });
 }
