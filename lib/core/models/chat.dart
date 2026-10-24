@@ -104,7 +104,15 @@ extension ChatExtension on Chat {
       );
     }
     if (messages.length > maxLlmMessages) {
-      return messages.sublist(messages.length - maxLlmMessages);
+      // Trim in blocks so the kept-prefix start stays constant across
+      // consecutive turns (a shifting start would invalidate provider
+      // prompt caches every turn). Even block size keeps the
+      // user/assistant role alternation stable too.
+      const int trimBlockSize = 8;
+      final int neededStart = messages.length - maxLlmMessages;
+      final int alignedStart =
+          ((neededStart + trimBlockSize - 1) ~/ trimBlockSize) * trimBlockSize;
+      return messages.sublist(alignedStart);
     }
     return messages;
   }
