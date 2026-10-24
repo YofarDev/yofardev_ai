@@ -7,7 +7,6 @@ import '../../../core/utils/logger.dart';
 import '../../avatar/avatar.dart';
 import '../../chat/chat.dart';
 import '../../demo/demo.dart';
-import '../../talking/talking.dart';
 import '../widgets/home_content_stack.dart';
 import '../../settings/settings.dart';
 
@@ -131,14 +130,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         backgroundColor: AppColors.background,
         body: BlocBuilder<ChatCubit, ChatState>(
           builder: (BuildContext context, ChatState chatsState) {
-            return BlocBuilder<TalkingCubit, TalkingState>(
-              builder: (BuildContext context, TalkingState talkingState) {
-                return HomeContentStack(
-                  chatsState: chatsState,
-                  talkingState: talkingState,
-                  onTripleTap: _handleTripleTap,
-                );
-              },
+            return HomeContentStack(
+              chatsState: chatsState,
+              onTripleTap: _handleTripleTap,
             );
           },
         ),

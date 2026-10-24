@@ -8,6 +8,11 @@ import 'avatar_config.dart';
 
 part 'chat_entry.freezed.dart';
 
+/// Memoizes [ChatEntryExtension.getMessage] per entry instance: bubbles call
+/// it on every rebuild, and the JSON decode of the same immutable body is
+/// pure waste. New instances (copyWith during streaming) simply miss.
+final Expando<String> _messageCache = Expando<String>();
+
 enum EntryType { user, yofardev, functionCalling }
 
 @freezed
@@ -57,6 +62,17 @@ extension ChatEntryExtension on ChatEntry {
   String getMessage({bool isFromUser = false}) {
     if (isFromUser) return body.getVisiblePrompt();
 
+    final String? cached = _messageCache[this];
+    if (cached != null) {
+      return cached;
+    }
+
+    final String result = _computeMessage();
+    _messageCache[this] = result;
+    return result;
+  }
+
+  String _computeMessage() {
     // Try to parse as JSON and extract the text/message field
     try {
       String cleanedBody = body.trim();

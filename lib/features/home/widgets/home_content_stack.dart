@@ -16,12 +16,10 @@ class HomeContentStack extends StatelessWidget {
   const HomeContentStack({
     super.key,
     required this.chatsState,
-    required this.talkingState,
     required this.onTripleTap,
   });
 
   final ChatState chatsState;
-  final TalkingState talkingState;
   final VoidCallback onTripleTap;
 
   @override
@@ -48,14 +46,21 @@ class HomeContentStack extends StatelessWidget {
                       );
                     },
                   ),
-                  RiveAvatarView(
-                    avatarState: avatarState,
-                    talkingState: talkingState,
-                    onAvatarTapped: (String zone) {
-                      context.read<AvatarCubit>().onAvatarTapped(zone);
-                    },
-                    onPresenceDone: (String presence) {
-                      context.read<AvatarCubit>().onPresenceDone(presence);
+                  // Narrow scope: only the avatar view depends on
+                  // TalkingState (mouth + phase); a mouth change must not
+                  // rebuild the input, buttons, or scene view.
+                  BlocBuilder<TalkingCubit, TalkingState>(
+                    builder: (BuildContext context, TalkingState talkingState) {
+                      return RiveAvatarView(
+                        avatarState: avatarState,
+                        talkingState: talkingState,
+                        onAvatarTapped: (String zone) {
+                          context.read<AvatarCubit>().onAvatarTapped(zone);
+                        },
+                        onPresenceDone: (String presence) {
+                          context.read<AvatarCubit>().onPresenceDone(presence);
+                        },
+                      );
                     },
                   ),
                 ],
