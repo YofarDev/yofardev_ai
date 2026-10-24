@@ -140,6 +140,9 @@ void main() {
       when(() => mockPlayerService.stop()).thenAnswer((_) async {
         return;
       });
+      when(
+        () => mockPlayerService.preload(any()),
+      ).thenAnswer((Invocation _) async {});
       when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {});
       when(
         () => mockTtsManager.cueOnlyStream,
@@ -365,6 +368,22 @@ void main() {
           cubit.state.audioPathsWaitingSentences.last['audioPath'],
           secondAudioPath,
         );
+      });
+
+      test('preloads the next file while the current one plays', () async {
+        const String firstAudioPath = '/tmp/tts/a.wav';
+        const String secondAudioPath = '/tmp/tts/b.wav';
+
+        when(
+          () => mockPlayerService.preload(any()),
+        ).thenAnswer((Invocation _) async {});
+
+        mockTtsManager.emitAudioPath(firstAudioPath);
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+        mockTtsManager.emitAudioPath(secondAudioPath);
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+
+        verify(() => mockPlayerService.preload(secondAudioPath)).called(1);
       });
 
       test(

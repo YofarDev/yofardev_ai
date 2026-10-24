@@ -108,6 +108,11 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   void _enqueueForPlayback(String audioPath) {
     _pendingPlaybackQueue.add(audioPath);
 
+    if (_isPlayingFromQueue) {
+      // Next sentence: start decoding it while the current one plays.
+      unawaited(_audioPlayerService.preload(audioPath));
+    }
+
     // Kick off amplitude extraction immediately so it overlaps with the
     // currently playing sentence. Future.sync routes synchronous throws into
     // the future so the playback path's error handling covers them.
