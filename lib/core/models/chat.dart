@@ -120,6 +120,8 @@ extension ChatExtension on Chat {
       }
     }
     if (messages.length > maxLlmMessages) {
+      // The latest image is clamped above before this aligned trim, so an
+      // image older than the kept window is dropped from the request by design.
       // Trim in blocks so the kept-prefix start stays constant across
       // consecutive turns (a shifting start would invalidate provider
       // prompt caches every turn). Even block size keeps the

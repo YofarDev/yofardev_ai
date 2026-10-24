@@ -181,7 +181,7 @@ class ChatStreamingService {
               '{\n$avatar\n}\n',
         ),
       );
-      if (tailContext.isNotEmpty) {
+      if (tailContext.isNotEmpty && messagesForStream.isNotEmpty) {
         int insertIndex = messagesForStream.length - 1;
         for (int i = messagesForStream.length - 1; i >= 0; i--) {
           if (messagesForStream[i].role == LlmMessageRole.user) {

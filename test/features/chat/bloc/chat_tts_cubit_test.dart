@@ -135,6 +135,9 @@ void main() {
         () => mockAmplitudeService.extractAmplitudes(any()),
       ).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
       when(
+        () => mockTtsManager.deleteAudio(any()),
+      ).thenAnswer((Invocation _) async {});
+      when(
         () => mockPlayerService.play(any()),
       ).thenAnswer((_) async => const Duration(milliseconds: 2000));
       when(() => mockPlayerService.stop()).thenAnswer((_) async {
@@ -433,6 +436,9 @@ void main() {
         when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
         when(() => playback.stop()).thenAnswer((Invocation _) async {});
         when(
+          () => queue.deleteAudio(any()),
+        ).thenAnswer((Invocation _) async {});
+        when(
           () => queue.cueOnlyStream,
         ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
 
@@ -528,6 +534,7 @@ void main() {
       ).thenAnswer((Invocation _) => interruptions.stream);
       when(() => player.stop()).thenAnswer((Invocation _) async {});
       when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
       when(
         () => queue.cueOnlyStream,
       ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
