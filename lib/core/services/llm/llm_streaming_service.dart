@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 import '../../utils/logger.dart';
@@ -41,10 +44,10 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
       return;
     }
 
-    final List<Map<String, dynamic>> apiMessages = <Map<String, dynamic>>[
-      <String, dynamic>{'role': 'system', 'content': systemPrompt},
-      ...messages.map((LlmMessage m) => m.toMap()),
-    ];
+    final List<Map<String, dynamic>> apiMessages = await _buildApiMessages(
+      messages,
+      systemPrompt,
+    );
 
     final Map<String, dynamic> body = <String, dynamic>{
       'model': activeConfig.model.trim(),
@@ -179,5 +182,68 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
       );
       yield LlmStreamChunk.error('Stream error: ${e.toString()}');
     }
+  }
+}
+
+/// Builds the OpenAI message array. A user message carrying an image path
+/// becomes a two-part content array (text + data-URL image); everything
+/// else maps via [LlmMessage.toMap].
+Future<List<Map<String, dynamic>>> _buildApiMessages(
+  List<LlmMessage> messages,
+  String systemPrompt,
+) async {
+  final List<Map<String, dynamic>> apiMessages = <Map<String, dynamic>>[
+    <String, dynamic>{'role': 'system', 'content': systemPrompt},
+  ];
+  for (final LlmMessage m in messages) {
+    final String? dataUrl = m.role == LlmMessageRole.user
+        ? await _imageDataUrl(m.attachedFile)
+        : null;
+    if (dataUrl != null) {
+      apiMessages.add(<String, dynamic>{
+        'role': 'user',
+        'content': <Map<String, dynamic>>[
+          <String, dynamic>{'type': 'text', 'text': m.body},
+          <String, dynamic>{
+            'type': 'image_url',
+            'image_url': <String, dynamic>{'url': dataUrl},
+          },
+        ],
+      });
+      continue;
+    }
+    apiMessages.add(m.toMap());
+  }
+  return apiMessages;
+}
+
+/// Reads the image at [path] into a base64 data URL, or null when absent,
+/// unreadable, or on web (file IO unsupported there).
+Future<String?> _imageDataUrl(String? path) async {
+  if (path == null || kIsWeb) {
+    return null;
+  }
+  try {
+    final File file = File(path);
+    if (!await file.exists()) {
+      AppLogger.debug('Attached image not found: $path', tag: 'LlmStreaming');
+      return null;
+    }
+    final Uint8List bytes = await file.readAsBytes();
+    final String ext = path.split('.').last.toLowerCase();
+    final String mime = switch (ext) {
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'gif' => 'image/gif',
+      _ => 'image/jpeg',
+    };
+    return 'data:$mime;base64,${base64Encode(bytes)}';
+  } catch (e) {
+    AppLogger.error(
+      'Failed to read attached image',
+      tag: 'LlmStreaming',
+      error: e,
+    );
+    return null;
   }
 }

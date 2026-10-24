@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart';
@@ -353,5 +355,67 @@ void main() {
       expect(arguments, '{"city":"Paris"}');
       expect(arguments.length, 16);
     });
+
+    test(
+      'user message with attached image sends a data-URL image part',
+      () async {
+        const LlmConfig testConfig = LlmConfig(
+          id: 'image-config',
+          label: 'Image Config',
+          baseUrl: 'https://api.test.com',
+          apiKey: 'test-key',
+          model: 'test-model',
+          temperature: 0.7,
+        );
+
+        final Directory tmp = await Directory.systemTemp.createTemp('img');
+        final File image = File('${tmp.path}/photo.png');
+        await image.writeAsBytes(<int>[1, 2, 3, 4]);
+
+        late Request capturedRequest;
+        when(() => mockClient.send(any())).thenAnswer((Invocation inv) async {
+          capturedRequest = inv.positionalArguments[0] as Request;
+          return StreamedResponse(
+            Stream<List<int>>.fromIterable(<List<int>>[
+              'data: {"choices":[{"delta":{"content":"ok"},"finish_reason":"stop"}]}\n\n'
+                  .codeUnits,
+              'data: [DONE]\n\n'.codeUnits,
+            ]),
+            200,
+          );
+        });
+
+        await llmService
+            .promptModelStream(
+              messages: <LlmMessage>[
+                LlmMessage(
+                  role: LlmMessageRole.user,
+                  body: 'what is this?',
+                  attachedFile: image.path,
+                ),
+              ],
+              systemPrompt: 'You are helpful.',
+              config: testConfig,
+            )
+            .drain<void>();
+
+        final Map<String, dynamic> body =
+            jsonDecode(capturedRequest.body) as Map<String, dynamic>;
+        final List<dynamic> apiMessages = body['messages'] as List<dynamic>;
+        final Map<String, dynamic> userMessage =
+            apiMessages.last as Map<String, dynamic>;
+        final List<dynamic> content = userMessage['content'] as List<dynamic>;
+        expect(content, hasLength(2));
+        expect((content[0] as Map<String, dynamic>)['type'], 'text');
+        expect((content[1] as Map<String, dynamic>)['type'], 'image_url');
+        final Map<String, dynamic> imageUrl =
+            (content[1] as Map<String, dynamic>)['image_url']
+                as Map<String, dynamic>;
+        expect(imageUrl['url'], startsWith('data:image/png;base64,'));
+        expect(imageUrl['url'], endsWith(base64Encode(<int>[1, 2, 3, 4])));
+
+        await tmp.delete(recursive: true);
+      },
+    );
   });
 }
