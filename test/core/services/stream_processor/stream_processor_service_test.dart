@@ -149,5 +149,62 @@ void main() {
       }).length;
       expect(sentenceCount, 2);
     });
+
+    test('concurrent streams do not share sentence buffers', () async {
+      final StreamController<LlmStreamChunk> controllerA =
+          StreamController<LlmStreamChunk>();
+      final StreamController<LlmStreamChunk> controllerB =
+          StreamController<LlmStreamChunk>();
+
+      final Stream<SentenceChunk> streamA = processor.processStream(
+        controllerA.stream,
+        expectJson: false,
+      );
+      final Stream<SentenceChunk> streamB = processor.processStream(
+        controllerB.stream,
+        expectJson: false,
+      );
+
+      final List<String> sentencesA = <String>[];
+      final List<String> sentencesB = <String>[];
+      final StreamSubscription<SentenceChunk> subA = streamA.listen(
+        (SentenceChunk c) => c.when(
+          sentence: (String t, int _) => sentencesA.add(t),
+          metadata: (_) => null,
+          complete: () => null,
+          error: (_) => null,
+        ),
+      );
+      final StreamSubscription<SentenceChunk> subB = streamB.listen(
+        (SentenceChunk c) => c.when(
+          sentence: (String t, int _) => sentencesB.add(t),
+          metadata: (_) => null,
+          complete: () => null,
+          error: (_) => null,
+        ),
+      );
+
+      // A ends with an incomplete fragment (no isComplete: true and no
+      // complete chunk), so pre-fix it stays buffered in the SHARED splitter
+      // and B's completion flush drains it into B's stream.
+      controllerA.add(
+        const LlmStreamChunk.text(
+          content: 'From A. unfinished tail',
+          isComplete: false,
+        ),
+      );
+      controllerB.add(
+        const LlmStreamChunk.text(content: 'From B. ', isComplete: true),
+      );
+      await Future<void>.delayed(Duration.zero);
+      await controllerA.close();
+      await controllerB.close();
+      await Future<void>.delayed(Duration.zero);
+      await subA.cancel();
+      await subB.cancel();
+
+      // Load-bearing: pre-fix, B's flush drains A's leftover into B's list.
+      expect(sentencesB, <String>['From B.']);
+    });
   });
 }

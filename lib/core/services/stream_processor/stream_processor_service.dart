@@ -7,9 +7,6 @@ import '../../../../core/utils/logger.dart';
 
 /// Processes streaming LLM chunks and emits sentence chunks for TTS
 class StreamProcessorService {
-  final JsonStreamExtractor _jsonExtractor = JsonStreamExtractor();
-  final SentenceSplitter _sentenceSplitter = SentenceSplitter();
-
   /// Process streaming LLM chunks and emit sentence chunks
   ///
   /// Returns a Stream of SentenceChunk ready for TTS generation
@@ -19,6 +16,11 @@ class StreamProcessorService {
   }) async* {
     int sentenceIndex = 0;
 
+    // Fresh per call: the service is a singleton but its extractors are
+    // stateful, so two overlapping streams must never share buffers.
+    final JsonStreamExtractor jsonExtractor = JsonStreamExtractor();
+    final SentenceSplitter sentenceSplitter = SentenceSplitter();
+
     await for (final LlmStreamChunk chunk in llmChunks) {
       // Process chunk using when() and collect all resulting SentenceChunks
       final List<SentenceChunk> results = chunk.when(
@@ -26,7 +28,7 @@ class StreamProcessorService {
           final List<SentenceChunk> chunks = <SentenceChunk>[];
 
           // Extract text from JSON if needed
-          final String? extractedText = _jsonExtractor.extractText(
+          final String? extractedText = jsonExtractor.extractText(
             content,
             expectJson: expectJson,
           );
@@ -34,7 +36,7 @@ class StreamProcessorService {
           final String textToProcess = extractedText ?? content;
 
           // Extract complete sentences
-          final List<String> sentences = _sentenceSplitter
+          final List<String> sentences = sentenceSplitter
               .extractCompleteSentences(textToProcess);
 
           // Add each sentence
@@ -52,7 +54,7 @@ class StreamProcessorService {
 
           // If stream is complete, flush any remaining content
           if (isComplete) {
-            final List<String> remaining = _sentenceSplitter.flush();
+            final List<String> remaining = sentenceSplitter.flush();
             for (final String sentence in remaining) {
               if (sentence.trim().isNotEmpty) {
                 chunks.add(
@@ -66,7 +68,7 @@ class StreamProcessorService {
 
             // Include the full raw JSON if available
             if (expectJson) {
-              final String fullJson = _jsonExtractor.getRawContent();
+              final String fullJson = jsonExtractor.getRawContent();
               if (fullJson.trim().isNotEmpty) {
                 chunks.add(
                   SentenceChunk.metadata(
@@ -94,7 +96,7 @@ class StreamProcessorService {
         complete: () {
           final List<SentenceChunk> chunks = <SentenceChunk>[];
           // Flush any remaining sentences
-          final List<String> remaining = _sentenceSplitter.flush();
+          final List<String> remaining = sentenceSplitter.flush();
           for (final String sentence in remaining) {
             if (sentence.trim().isNotEmpty) {
               chunks.add(
@@ -105,7 +107,7 @@ class StreamProcessorService {
 
           // Include the full raw JSON if available
           if (expectJson) {
-            final String fullJson = _jsonExtractor.getRawContent();
+            final String fullJson = jsonExtractor.getRawContent();
             if (fullJson.trim().isNotEmpty) {
               chunks.add(
                 SentenceChunk.metadata(
@@ -125,9 +127,5 @@ class StreamProcessorService {
         yield resultChunk;
       }
     }
-
-    // Reset state for next stream
-    _jsonExtractor.clear();
-    _sentenceSplitter.clear();
   }
 }
