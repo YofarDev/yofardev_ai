@@ -20,6 +20,7 @@ import '../../../../core/services/llm/llm_stream_chunk.dart';
 import '../../../../core/services/prompt_datasource.dart';
 import '../../../../core/services/stream_processor/sentence_chunk.dart';
 import '../../../../core/services/stream_processor/stream_processor_service.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/logger.dart';
 import '../repositories/chat_repository.dart';
 import 'chat_entry_service.dart';
@@ -157,28 +158,42 @@ class ChatStreamingService {
       // further round.
       List<LlmMessage> messagesForStream = chat.llmMessages;
 
-      // Global memory must be injected AFTER the history (right before the
+      // Transient tail context, injected AFTER the history (right before the
       // current user message), never into the system prompt: the prefix
       // [system prompt | history] then stays byte-identical across turns so
-      // provider-side prompt caches keep hitting when memory changes.
-      // Note: the trailing empty assistant message is the streaming entry.
+      // provider-side prompt caches keep hitting. Global memory and the
+      // per-turn avatar/date context (previously baked into every stored
+      // user body) both ride here.
+      final List<LlmMessage> tailContext = <LlmMessage>[];
       if (_globalMemoryService != null && messagesForStream.isNotEmpty) {
         final LlmMessage? memoryMessage = await _globalMemoryService
             .buildMemoryMessage();
         if (memoryMessage != null) {
-          int insertIndex = messagesForStream.length - 1;
-          for (int i = messagesForStream.length - 1; i >= 0; i--) {
-            if (messagesForStream[i].role == LlmMessageRole.user) {
-              insertIndex = i;
-              break;
-            }
-          }
-          messagesForStream = <LlmMessage>[
-            ...messagesForStream.sublist(0, insertIndex),
-            memoryMessage,
-            ...messagesForStream.sublist(insertIndex),
-          ];
+          tailContext.add(memoryMessage);
         }
+      }
+      tailContext.add(
+        LlmMessage(
+          role: LlmMessageRole.system,
+          body:
+              'Date : ${DateTime.now().toLongLocalDateString(language: language)}\n'
+              'Avatar Config :\n'
+              '{\n$avatar\n}\n',
+        ),
+      );
+      if (tailContext.isNotEmpty) {
+        int insertIndex = messagesForStream.length - 1;
+        for (int i = messagesForStream.length - 1; i >= 0; i--) {
+          if (messagesForStream[i].role == LlmMessageRole.user) {
+            insertIndex = i;
+            break;
+          }
+        }
+        messagesForStream = <LlmMessage>[
+          ...messagesForStream.sublist(0, insertIndex),
+          ...tailContext,
+          ...messagesForStream.sublist(insertIndex),
+        ];
       }
 
       List<Map<String, dynamic>>? tools;

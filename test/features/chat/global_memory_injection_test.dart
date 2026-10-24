@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
@@ -88,7 +90,9 @@ class FakeGlobalMemoryService implements GlobalMemoryService {
 }
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
+    await initializeDateFormatting('en', null);
+    Intl.defaultLocale = 'en';
     registerFallbackValue(<LlmMessage>[]);
     registerFallbackValue(<Map<String, dynamic>>[]);
     registerFallbackValue(const Chat());
@@ -210,10 +214,21 @@ void main() {
       final int lastUserIndex = capturedMessages.lastIndexWhere(
         (LlmMessage m) => m.role == LlmMessageRole.user,
       );
+      // Memory and the transient context message both sit before the
+      // current user message; everything between them is system-role.
       expect(
         lastUserIndex,
-        memoryIndex + 1,
-        reason: 'memory must sit immediately before the current user message',
+        greaterThan(memoryIndex),
+        reason: 'memory must precede the current user message',
+      );
+      expect(
+        capturedMessages
+            .sublist(memoryIndex, lastUserIndex)
+            .every((LlmMessage m) => m.role == LlmMessageRole.system),
+        isTrue,
+        reason:
+            'only transient system context may sit between memory and '
+            'the current user message',
       );
 
       // History before the memory message is untouched
@@ -222,16 +237,129 @@ void main() {
     },
   );
 
-  test('does not inject anything when memory is empty', () async {
+  Chat slimPayloadChat() => Chat(
+    id: 'chat-id',
+    entries: <ChatEntry>[
+      ChatEntry(
+        id: 'u1',
+        entryType: EntryType.user,
+        body:
+            "Date : vendredi 23 octobre 2026 - 14:30\nAvatar Config :\n{\n\"background\": \"beach\",\n}\nUser : \n'''hello'''",
+        timestamp: DateTime(2026),
+        attachedImage: '/tmp/old.png',
+      ),
+      ChatEntry(
+        id: 'a1',
+        entryType: EntryType.yofardev,
+        body: '{"text": "hi there", "mood": "happy"}',
+        timestamp: DateTime(2026),
+      ),
+      ChatEntry(
+        id: 'u2',
+        entryType: EntryType.user,
+        body:
+            "Date : vendredi 23 octobre 2026 - 14:31\nAvatar Config :\n{\n}\nUser : \n'''second question'''",
+        timestamp: DateTime(2026),
+        attachedImage: '/tmp/new.png',
+      ),
+      ChatEntry(
+        id: 'a2',
+        entryType: EntryType.yofardev,
+        body: '',
+        timestamp: DateTime(2026),
+      ),
+    ],
+  );
+
+  Future<void> runSlim(ChatStreamingService service) {
+    return service.streamResponse(
+      prompt: 'second question',
+      onlyText: true,
+      avatar: const Avatar(),
+      currentChat: slimPayloadChat(),
+      language: 'en',
+      functionCallingEnabled: false,
+      onChatUpdated: (_) {},
+      onStreamComplete: (_) {},
+      onError: (_) {},
+    );
+  }
+
+  test(
+    'request payloads are slimmed: wrapper stripped, JSON extracted, single image',
+    () async {
+      final ChatStreamingService service = buildService(
+        FakeGlobalMemoryService(null),
+      );
+      await runSlim(service);
+
+      final List<LlmMessage> sent = capturedMessages;
+      final List<LlmMessage> conversation = sent
+          .where((LlmMessage m) => m.role != LlmMessageRole.system)
+          .toList();
+      // User wrappers stripped:
+      expect(
+        conversation.any((LlmMessage m) => m.body.contains("'''")),
+        isFalse,
+      );
+      expect(
+        conversation.any((LlmMessage m) => m.body.contains('Avatar Config')),
+        isFalse,
+      );
+      // Visible prompts only:
+      expect(sent.any((LlmMessage m) => m.body == 'hello'), isTrue);
+      expect(sent.any((LlmMessage m) => m.body == 'second question'), isTrue);
+      // Assistant JSON extracted to clean text:
+      expect(sent.any((LlmMessage m) => m.body == 'hi there'), isTrue);
+      expect(sent.any((LlmMessage m) => m.body.contains('"mood"')), isFalse);
+      // Only the LATEST entry keeps its image:
+      expect(sent.where((LlmMessage m) => m.attachedFile != null).length, 1);
+      expect(
+        sent.firstWhere((LlmMessage m) => m.attachedFile != null).attachedFile,
+        '/tmp/new.png',
+      );
+    },
+  );
+
+  test(
+    'current avatar config and date ride a transient system message',
+    () async {
+      final ChatStreamingService service = buildService(
+        FakeGlobalMemoryService(null),
+      );
+      await runSlim(service);
+
+      final LlmMessage contextMessage = capturedMessages.firstWhere(
+        (LlmMessage m) =>
+            m.role == LlmMessageRole.system && m.body.contains('Avatar Config'),
+      );
+      // Avatar() defaults to livingRoom, not beach
+      expect(contextMessage.body, contains('livingRoom'));
+      expect(contextMessage.body, contains('Date :'));
+    },
+  );
+
+  test('injects no memory content when memory is empty', () async {
     final ChatStreamingService service = buildService(
       FakeGlobalMemoryService(null),
     );
 
     await runStream(service);
 
+    // The transient avatar/date context still rides a system message, but
+    // no global-memory content may appear.
     expect(
-      capturedMessages.where((LlmMessage m) => m.role == LlmMessageRole.system),
-      isEmpty,
+      capturedMessages.any(
+        (LlmMessage m) => m.body.contains('Global memory about the user'),
+      ),
+      isFalse,
+    );
+    expect(
+      capturedMessages.any(
+        (LlmMessage m) =>
+            m.role == LlmMessageRole.system && m.body.contains('Avatar Config'),
+      ),
+      isTrue,
     );
   });
 

@@ -91,17 +91,33 @@ extension ChatExtension on Chat {
 
   List<LlmMessage> get llmMessages {
     final List<LlmMessage> messages = <LlmMessage>[];
+    int lastImageIndex = -1;
     for (final ChatEntry entry in entries) {
       if (entry.entryType == EntryType.functionCalling) continue;
+      final bool isUser = entry.entryType == EntryType.user;
       messages.add(
         LlmMessage(
-          role: entry.entryType == EntryType.user
-              ? LlmMessageRole.user
-              : LlmMessageRole.assistant,
-          body: entry.body,
+          role: isUser ? LlmMessageRole.user : LlmMessageRole.assistant,
+          // Requests carry the visible text only: user wrappers and
+          // assistant JSON envelopes are re-sent-token waste. The current
+          // avatar config + date ride a transient context message instead
+          // (see ChatStreamingService).
+          body: entry.getMessage(isFromUser: isUser),
           attachedFile: entry.attachedImage,
         ),
       );
+      if (entry.attachedImage != null) {
+        lastImageIndex = messages.length - 1;
+      }
+    }
+    // Only the latest attached image is sent: re-sending every history
+    // image each turn would dominate request cost once images actually
+    // travel to the provider.
+    for (int i = 0; i < messages.length; i++) {
+      if (i != lastImageIndex && messages[i].attachedFile != null) {
+        final LlmMessage m = messages[i];
+        messages[i] = LlmMessage(role: m.role, body: m.body);
+      }
     }
     if (messages.length > maxLlmMessages) {
       // Trim in blocks so the kept-prefix start stays constant across
