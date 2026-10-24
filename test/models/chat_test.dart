@@ -206,10 +206,13 @@ void main() {
       final List<LlmMessage> llmMessages = chat.llmMessages;
 
       // Capped so prompt size (and time-to-first-token) stays bounded.
-      expect(llmMessages.length, 40);
+      // The trim is block-aligned (block of 8) so the kept-prefix start
+      // stays constant across turns (prompt-cache friendly): for 100
+      // messages the start snaps to 64, keeping 36 instead of a naive 40.
+      expect(llmMessages.length, 36);
       // The most recent messages are kept, in order.
       expect(llmMessages.last.body, 'message 99');
-      expect(llmMessages.first.body, 'message 60');
+      expect(llmMessages.first.body, 'message 64');
     });
 
     test('ChatExtension.llmMessages returns all messages under the cap', () {
