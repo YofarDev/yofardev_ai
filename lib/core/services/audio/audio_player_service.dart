@@ -55,10 +55,16 @@ class AudioPlayerService {
     if (_preloadedPath == audioPath) {
       return;
     }
+    // Snapshot the generation: if stop()/playAsset() invalidates the preload
+    // while setSource is in flight, the resolved source must not be recorded.
+    final int generation = _playbackGeneration;
     try {
       final AudioPlayer player = (_nextPlayer ??= AudioPlayer());
       await player.setReleaseMode(ReleaseMode.stop);
       await player.setSource(DeviceFileSource(audioPath));
+      if (generation != _playbackGeneration) {
+        return;
+      }
       _preloadedPath = audioPath;
     } catch (e) {
       AppLogger.error(
@@ -80,7 +86,8 @@ class AudioPlayerService {
       // swap it in: the setSource round trip already happened during preload.
       if (_preloadedPath == audioPath && _nextPlayer != null) {
         final AudioPlayer ready = _nextPlayer!;
-        await _player?.stop();
+        final AudioPlayer? demoted = _player;
+        await demoted?.stop();
         _player = ready;
         _nextPlayer = null;
         _preloadedPath = null;
@@ -89,6 +96,12 @@ class AudioPlayerService {
         // forwarded, and the completion subscription must listen on it.
         _sourceGeneration = playbackGeneration;
         _listenForCompletion(ready);
+        // The demoted player has no subscription left (cancelled inside
+        // _listenForCompletion before this point) and no field referencing
+        // it; dispose it or its native resources leak per sentence swap.
+        if (demoted != null) {
+          unawaited(demoted.dispose());
+        }
         await ready.resume();
         final Duration duration = await ready.getDuration() ?? Duration.zero;
         AppLogger.debug(
