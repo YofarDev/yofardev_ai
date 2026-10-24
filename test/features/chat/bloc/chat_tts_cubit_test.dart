@@ -75,6 +75,8 @@ class MockAudioPlayerService extends Mock implements AudioPlayerService {
   }
 }
 
+class MockInterruptionService extends Mock implements InterruptionService {}
+
 class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
   final StreamController<PlaybackEvent> _controller =
       StreamController<PlaybackEvent>.broadcast();
@@ -350,7 +352,9 @@ void main() {
         mockPlayerService.emitPlaybackComplete();
         await Future<void>.delayed(const Duration(milliseconds: 80));
 
-        expect(cubit.state.audioPathsWaitingSentences.length, 2);
+        // The first sentence's entry is freed once played; the second is
+        // now the one being played.
+        expect(cubit.state.audioPathsWaitingSentences.length, 1);
         expect(
           cubit.state.audioPathsWaitingSentences.last['audioPath'],
           secondAudioPath,
@@ -378,6 +382,110 @@ void main() {
           ]);
         },
       );
+    });
+
+    // ── Played sentence freeing (memory leak) ────────────────
+
+    test(
+      'removes the played sentence from audioPathsWaitingSentences',
+      () async {
+        final MockTtsQueueService queue = MockTtsQueueService();
+        final MockAudioAmplitudeService amplitudeService =
+            MockAudioAmplitudeService();
+        final MockAudioPlayerService player = MockAudioPlayerService();
+        final MockTtsPlaybackService playback = MockTtsPlaybackService();
+        final MockInterruptionService interruption = MockInterruptionService();
+        when(
+          () => interruption.interruptionStream,
+        ).thenAnswer((_) => const Stream<void>.empty());
+
+        when(
+          () => amplitudeService.extractAmplitudes(any()),
+        ).thenAnswer((Invocation _) async => <int>[10, 20, 30]);
+        when(
+          () => player.play(any()),
+        ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
+        when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
+        when(() => playback.stop()).thenAnswer((Invocation _) async {});
+        when(
+          () => queue.cueOnlyStream,
+        ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
+
+        final ChatTtsCubit cubit = ChatTtsCubit(
+          ttsQueueManager: queue,
+          audioAmplitudeService: amplitudeService,
+          audioPlayerService: player,
+          interruptionService: interruption,
+          ttsPlaybackService: playback,
+        );
+
+        queue.emitAudioPath('/tmp/tts/1.wav');
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.audioPathsWaitingSentences.length, 1);
+
+        player.emitPlaybackComplete();
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.audioPathsWaitingSentences, isEmpty);
+
+        await cubit.close();
+        queue.dispose();
+        player.dispose();
+        playback.dispose();
+      },
+    );
+
+    test('clears waiting sentences on interruption', () async {
+      final MockTtsQueueService queue = MockTtsQueueService();
+      final MockAudioAmplitudeService amplitudeService =
+          MockAudioAmplitudeService();
+      final MockAudioPlayerService player = MockAudioPlayerService();
+      final MockTtsPlaybackService playback = MockTtsPlaybackService();
+      final StreamController<void> interruptions =
+          StreamController<void>.broadcast();
+      final MockInterruptionService interruption = MockInterruptionService();
+      when(
+        () => interruption.interruptionStream,
+      ).thenAnswer((Invocation _) => interruptions.stream);
+      when(() => player.stop()).thenAnswer((Invocation _) async {});
+      when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(
+        () => queue.cueOnlyStream,
+      ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
+
+      final ChatTtsCubit cubit = ChatTtsCubit(
+        ttsQueueManager: queue,
+        audioAmplitudeService: amplitudeService,
+        audioPlayerService: player,
+        interruptionService: interruption,
+        ttsPlaybackService: playback,
+      );
+
+      // Seed one state entry directly through the playback path.
+      when(
+        () => amplitudeService.extractAmplitudes(any()),
+      ).thenAnswer((Invocation _) async => <int>[5]);
+      when(
+        () => player.play(any()),
+      ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
+      when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
+      queue.emitAudioPath('/tmp/tts/2.wav');
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.audioPathsWaitingSentences.length, 1);
+
+      interruptions.add(null);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.audioPathsWaitingSentences, isEmpty);
+
+      await cubit.close();
+      queue.dispose();
+      player.dispose();
+      playback.dispose();
+      await interruptions.close();
     });
 
     // ── ChatTtsState ─────────────────────────────────────────

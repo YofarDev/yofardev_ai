@@ -96,6 +96,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       AppLogger.debug('Interrupting active TTS playback', tag: 'ChatTtsCubit');
       _pendingPlaybackQueue.clear();
       _amplitudeFutures.clear();
+      clearAudioPaths();
       if (!(_currentPlaybackStopSignal?.isCompleted ?? true)) {
         _currentPlaybackStopSignal!.complete();
       }
@@ -202,6 +203,10 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       if (identical(_currentPlaybackStopSignal, stopSignal)) {
         _currentPlaybackStopSignal = null;
       }
+      // The sentence is done: drop its entry so state does not grow for the
+      // whole app session (audioPathsWaitingSentences is otherwise never
+      // freed).
+      removeWaitingSentence(audioPath);
     } catch (e) {
       AppLogger.error(
         'Failed to play/extract amplitudes for $audioPath',
