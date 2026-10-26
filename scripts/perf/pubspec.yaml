@@ -1,0 +1,6 @@
+name: yofardev_perf
+publish_to: none
+environment:
+  sdk: ^3.8.0
+dependencies:
+  vm_service: ^15.4.0
