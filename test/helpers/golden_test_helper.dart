@@ -41,6 +41,7 @@ class GoldenTestHelper {
     Locale? locale,
   }) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: theme ?? AppTheme.dark,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
