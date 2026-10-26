@@ -4,21 +4,15 @@ PODS:
   - flutter_inappwebview_macos (0.0.1):
     - FlutterMacOS
     - OrderedSet (~> 6.0.3)
-  - flutter_volume_controller (0.0.1):
-    - FlutterMacOS
   - FlutterMacOS (1.0.0)
   - OrderedSet (6.0.3)
-  - screen_retriever_macos (0.0.1):
-    - FlutterMacOS
   - supertonic_flutter (0.0.1):
     - FlutterMacOS
 
 DEPENDENCIES:
   - audio_analyzer (from `Flutter/ephemeral/.symlinks/plugins/audio_analyzer/macos`)
   - flutter_inappwebview_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos`)
-  - flutter_volume_controller (from `Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
   - supertonic_flutter (from `Flutter/ephemeral/.symlinks/plugins/supertonic_flutter/macos`)
 
 SPEC REPOS:
@@ -30,22 +24,16 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/audio_analyzer/macos
   flutter_inappwebview_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos
-  flutter_volume_controller:
-    :path: Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
-  screen_retriever_macos:
-    :path: Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos
   supertonic_flutter:
     :path: Flutter/ephemeral/.symlinks/plugins/supertonic_flutter/macos
 
 SPEC CHECKSUMS:
   audio_analyzer: 697088dd01ac29ee92b7c54b54797ed40fd92f74
   flutter_inappwebview_macos: bdf207b8f4ebd58e86ae06cd96b147de99a67c9b
-  flutter_volume_controller: 25d09126b0d695560f11c80b1311d5063fed882f
   FlutterMacOS: c232990155153907050900a2e175c7773903ba4e
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
-  screen_retriever_macos: 776e0fa5d42c6163d2bf772d22478df4b302b161
   supertonic_flutter: f54a197dc675f78077d568204974ba2ec0e862e1
 
 PODFILE CHECKSUM: 52317a890328a0f75248e2c1b8a43a37f8da563c

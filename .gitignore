@@ -63,3 +63,8 @@ test/**/failures/
 android/build/
 .superpowers/
 flutter_analysis.md
+
+# graphify skill output (generated reports)
+graphify-out/
+# rive_native pub-cache symlink
+/native

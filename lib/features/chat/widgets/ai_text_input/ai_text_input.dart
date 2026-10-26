@@ -259,11 +259,14 @@ class _AiTextInputState extends State<AiTextInput> {
                   currentChat: currentChat,
                   functionCallingEnabled: functionCallingEnabled,
                 ),
-                localeId:
-                    context.read<SettingsCubit>().state.currentLanguage == 'fr'
-                    ? 'fr_FR'
-                    : 'en_US',
-                listenOptions: SpeechListenOptions(partialResults: false),
+                listenOptions: SpeechListenOptions(
+                  partialResults: false,
+                  localeId:
+                      context.read<SettingsCubit>().state.currentLanguage ==
+                          'fr'
+                      ? 'fr_FR'
+                      : 'en_US',
+                ),
               );
             }
             setState(() {});

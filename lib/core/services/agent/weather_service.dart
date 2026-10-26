@@ -28,7 +28,10 @@ class WeatherService {
         longitude = position.longitude;
       } else {
         // Get coordinates from location name
-        final List<Location> locations = await locationFromAddress(location);
+        final Geocoding geocoding = Geocoding();
+        final List<Location> locations = await geocoding.locationFromAddress(
+          location,
+        );
         if (locations.isNotEmpty) {
           latitude = locations.first.latitude;
           longitude = locations.first.longitude;
