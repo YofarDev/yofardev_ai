@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_glass.dart';
+import 'app_palette.dart';
 
 /// Design tokens that [ColorScheme] and [TextTheme] cannot express, exposed as
 /// a [ThemeExtension]. Read them with `context.tokens`.
@@ -32,11 +33,11 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   /// The app's only palette today (cosmic dark).
   static const AppTokens dark = AppTokens(
-    background: Color(0xFF0A0E1A),
-    glassSurface: Color(0xFF1A1F35),
-    glassBorder: Color(0xFF2A3148),
-    success: Color(0xFF00D68F),
-    warning: Color(0xFFFFB020),
+    background: AppPalette.background,
+    glassSurface: AppPalette.glassSurface,
+    glassBorder: AppPalette.glassBorder,
+    success: AppPalette.success,
+    warning: AppPalette.warning,
     shadow: Color(0xFF000000),
     highlight: Color(0xFFFFFFFF),
     glassThin: AppGlassStyle(blurSigma: 6, fillAlpha: 0.06, borderAlpha: 0.3),
