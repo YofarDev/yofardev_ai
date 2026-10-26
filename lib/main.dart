@@ -1,6 +1,7 @@
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -33,5 +34,6 @@ Future<void> main() async {
       DeviceOrientation.portraitUp,
     ]);
   }
+  GoogleFonts.config.allowRuntimeFetching = false;
   runApp(const App());
 }
