@@ -110,9 +110,10 @@ on violation.
   `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
   every artboard/state-machine/view-model/event name; the Dart mirror lives
   in `lib/features/avatar/presentation/rive/avatar_rive_contract.dart`.
-  Rive types must stay in `lib/features/avatar/presentation/`. macOS: Impeller
-  is disabled in `macos/Runner/Info.plist` (Rive crashes the Impeller Metal
-  backend)
+  Rive types must stay in `lib/features/avatar/presentation/` and
+  `lib/core/design/rive/` (UI-kit Rive widgets; enforced by
+  `test/architecture_test.dart`). macOS: Impeller is disabled in
+  `macos/Runner/Info.plist` (Rive crashes the Impeller Metal backend)
 - No CI workflows in this repo — the quality gate is local (`./scripts/fverify.sh`)
 - New features: use `./scripts/fgen.sh`, then wire DI (`service_locator.dart`) and route (`core/router/app_router.dart`) manually — a generated scaffold is not routed/registered until then
 

@@ -2,6 +2,14 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+/// Whether the file at [path] may import `package:rive/`: only the avatar
+/// presentation layer and the UI-kit Rive widgets (`core/design/rive/`).
+bool riveImportAllowed(String path) {
+  final String normalised = path.replaceAll('\\', '/');
+  return normalised.startsWith('lib/features/avatar/presentation/') ||
+      normalised.startsWith('lib/core/design/rive/');
+}
+
 void main() {
   final List<File> files = Directory('lib')
       .listSync(recursive: true)
@@ -245,5 +253,36 @@ void main() {
       ).hasMatch('color: Colors.transparent'),
       isFalse,
     );
+  });
+
+  test(
+    'riveImportAllowed accepts only avatar presentation and design/rive',
+    () {
+      expect(
+        riveImportAllowed('lib/features/avatar/presentation/x.dart'),
+        isTrue,
+      );
+      expect(riveImportAllowed('lib/core/design/rive/x.dart'), isTrue);
+      expect(riveImportAllowed('lib/features/chat/x.dart'), isFalse);
+      expect(riveImportAllowed('lib/core/design/x.dart'), isFalse);
+      // Windows-style separators are normalised.
+      expect(riveImportAllowed(r'lib\core\design\rive\x.dart'), isTrue);
+      expect(riveImportAllowed(r'lib\core\design\x.dart'), isFalse);
+    },
+  );
+
+  test('package:rive is imported only where riveImportAllowed permits', () {
+    for (final File f in files) {
+      for (final String line in importsOf(f)) {
+        if (!line.contains('package:rive/')) continue;
+        expect(
+          riveImportAllowed(f.path),
+          isTrue,
+          reason:
+              '${f.path}: Rive types belong in lib/features/avatar/'
+              'presentation/ or lib/core/design/rive/: $line',
+        );
+      }
+    }
   });
 }
