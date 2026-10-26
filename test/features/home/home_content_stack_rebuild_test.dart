@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
 import 'package:provider/provider.dart';
+import 'package:yofardev_ai/core/design/theme/app_theme.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
@@ -178,6 +179,7 @@ Future<void> pumpHomeContentStack(
       child: Provider<InterruptionService>.value(
         value: InterruptionService(),
         child: MaterialApp(
+          theme: AppTheme.dark,
           localizationsDelegates: const <LocalizationsDelegate<Object>>[
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

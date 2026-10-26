@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../res/app_colors.dart';
+import '../design/design.dart';
 
 class CurrentPromptText extends StatelessWidget {
   final String prompt;
@@ -12,15 +12,15 @@ class CurrentPromptText extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.4),
+          color: context.colors.surface.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
           prompt,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
-            color: AppColors.onSurface,
+            color: context.colors.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
-import '../../res/app_colors.dart';
+import '../../design/design.dart';
 import 'animated_icon_button.dart';
 
 class GlassmorphicTextField extends StatefulWidget {
@@ -114,6 +112,9 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = context.colors;
+    final AppTokens tokens = context.tokens;
+    final TextTheme text = context.text;
     return AnimatedBuilder(
       animation: _animationController,
       builder: (BuildContext context, Widget? child) {
@@ -123,14 +124,14 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
             boxShadow: _isFocused
                 ? <BoxShadow>[
                     BoxShadow(
-                      color: AppColors.primary.withValues(
+                      color: colors.primary.withValues(
                         alpha: 0.2 * _glowAnimation.value,
                       ),
                       blurRadius: 20,
                       spreadRadius: 2,
                     ),
                     BoxShadow(
-                      color: AppColors.accent.withValues(
+                      color: colors.tertiary.withValues(
                         alpha: 0.1 * _glowAnimation.value,
                       ),
                       blurRadius: 40,
@@ -139,7 +140,7 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
                   ]
                 : <BoxShadow>[
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: tokens.shadow.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -154,10 +155,10 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: <Color>[
-                    AppColors.glassSurface.withValues(
+                    tokens.glassSurface.withValues(
                       alpha: _isFocused ? 0.15 : 0.08,
                     ),
-                    AppColors.glassSurface.withValues(
+                    tokens.glassSurface.withValues(
                       alpha: _isFocused ? 0.1 : 0.05,
                     ),
                   ],
@@ -165,17 +166,17 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
                 border: Border.all(
                   color: _isFocused
                       ? Color.lerp(
-                          AppColors.glassBorder,
-                          AppColors.primary,
+                          tokens.glassBorder,
+                          colors.primary,
                           _borderAnimation.value * 0.5,
                         )!.withValues(alpha: 0.8)
-                      : AppColors.glassBorder.withValues(alpha: 0.3),
+                      : tokens.glassBorder.withValues(alpha: 0.3),
                   width: _isFocused ? 1.5 : 1,
                 ),
               ),
               child: BackdropFilter(
                 filter: ColorFilter.mode(
-                  Colors.white.withValues(alpha: 0.1),
+                  tokens.highlight.withValues(alpha: 0.1),
                   BlendMode.srcOver,
                 ),
                 child: TextField(
@@ -186,30 +187,30 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
                   minLines: widget.minLines,
                   keyboardType: widget.keyboardType,
                   textCapitalization: widget.textCapitalization,
-                  cursorColor: AppColors.primary,
+                  cursorColor: colors.primary,
                   cursorWidth: 2,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: text.bodyLarge!.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.onSurface,
+                    color: colors.onSurface,
                     height: 1.5,
                   ),
                   onChanged: widget.onChanged,
                   onSubmitted: widget.onSubmitted,
                   decoration: InputDecoration(
                     hintText: widget.hintText,
-                    hintStyle: GoogleFonts.plusJakartaSans(
+                    hintStyle: text.bodyMedium!.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.onSurface.withValues(alpha: 0.4),
+                      color: colors.onSurface.withValues(alpha: 0.4),
                     ),
                     labelText: widget.labelText,
-                    labelStyle: GoogleFonts.plusJakartaSans(
+                    labelStyle: text.labelLarge!.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: _isFocused
-                          ? AppColors.primary
-                          : AppColors.onSurface.withValues(alpha: 0.6),
+                          ? colors.primary
+                          : colors.onSurface.withValues(alpha: 0.6),
                     ),
                     filled: true,
                     fillColor: Colors.transparent,
@@ -218,7 +219,7 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
                       vertical: 16,
                     ),
                     prefixIcon: widget.prefixIcon,
-                    suffixIcon: _buildSuffixIcons(),
+                    suffixIcon: _buildSuffixIcons(colors.error),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
@@ -232,7 +233,7 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
     );
   }
 
-  Widget? _buildSuffixIcons() {
+  Widget? _buildSuffixIcons(Color errorColor) {
     final List<Widget> icons = <Widget>[];
 
     if (widget.enableSpeechToText) {
@@ -240,7 +241,7 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
         AnimatedIconButton(
           icon: Icons.mic,
           isActive: widget.isSpeechListening,
-          activeColor: AppColors.error,
+          activeColor: errorColor,
           onPressed: widget.onSpeechPressed,
         ),
       );
