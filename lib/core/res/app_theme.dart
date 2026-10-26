@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../design/theme/app_color_scheme.dart';
 import 'app_colors.dart';
 
 /// Modern glassmorphic theme with cosmic gradient aesthetic
@@ -7,7 +8,7 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: _lightColorScheme,
+      colorScheme: buildDarkColorScheme(),
       scaffoldBackgroundColor: AppColors.background,
 
       // Typography
@@ -152,18 +153,6 @@ class AppTheme {
         thickness: 1,
         space: 1,
       ),
-    );
-  }
-
-  static ColorScheme get _lightColorScheme {
-    return const ColorScheme.light(
-      primary: AppColors.primary,
-      onPrimary: AppColors.onPrimary,
-      secondary: AppColors.secondary,
-      onSecondary: AppColors.onSecondary,
-      surface: AppColors.surface,
-      onSurface: AppColors.onSurface,
-      error: AppColors.error,
     );
   }
 
