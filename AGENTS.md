@@ -83,6 +83,9 @@ Scripts `fgen`, `fstr`, `fl10n`, `fimp` require [uv](https://docs.astral.sh/uv/)
    (enforced)
 6. **Feature `domain/` must not import that feature's `data/` or
    `presentation/`** (enforced)
+7. **No raw colors or fonts outside `lib/core/design/`** — no
+   `AppColors`/`AppPalette`/`Colors.*` (except `Colors.transparent`), and
+   `google_fonts` only in `lib/core/design/` and `lib/main.dart` (enforced)
 
 Note: `lib/core/repositories/settings_repository.dart` deliberately stays in
 core (consumed by `core/services/agent`; core may not import features).
@@ -100,11 +103,15 @@ on violation.
 - **State idiom**: union states (freezed) for load-lifecycle screens, flat `copyWith` states for persistent interactive state
 - **All user-facing strings** go through `AppLocalizations` — add keys with `./scripts/fstr.sh`, never edit `lib/core/l10n/generated/`
 - **Never hand-edit** `*.g.dart` / `*.freezed.dart` — rerun `build_runner` after changing annotated models
+- **Design layer** lives in `lib/core/design/` (import `design.dart`): read colors via `context.colors` / `context.tokens`, text via the theme (`Theme.of(context).textTheme`)
+- **UI kit** lives in `lib/core/design/components/` with its own barrel `components.dart` (not re-exported by `design.dart`). The legacy `lib/core/widgets/app_icon_button.dart` must not be used in new code (M3 replaces it)
 
 ### Gotchas
 
 - Changing a freezed model or ARB file **requires regeneration** (`build_runner` / `gen-l10n`) or analysis and tests fail
 - Golden tests store reference images under `test/**/goldens/` — only regenerate (`--update-goldens`) when a visual change is intentional
+- Every widget test and golden uses `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
+- Fonts are bundled in `assets/fonts/google_fonts/` and runtime fetching is off — a new font weight needs a new TTF there
 - v4 avatar: the character and the 4 scenes are Rive files in `assets/rive/`
   (`avatar.riv` + `scenes/<sceneId>.riv`), rebuilt from RML sources via
   `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
