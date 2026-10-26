@@ -7,6 +7,7 @@ import '../../../core/utils/logger.dart';
 import '../../avatar/avatar.dart';
 import '../../chat/chat.dart';
 import '../../demo/demo.dart';
+import '../widgets/demo_activated_listener.dart';
 import '../widgets/home_content_stack.dart';
 import '../../settings/settings.dart';
 
@@ -111,21 +112,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<DemoCubit, DemoState>(
-      listener: (BuildContext context, DemoState state) {
-        if (state.isActive) {
-          AppLogger.info(
-            'Demo activated - showing snackbar',
-            tag: 'HomeScreen',
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Demo mode activated'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      },
+    return DemoActivatedListener(
       child: Scaffold(
         backgroundColor: context.tokens.background,
         body: BlocBuilder<ChatCubit, ChatState>(

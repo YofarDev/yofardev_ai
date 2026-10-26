@@ -650,11 +650,11 @@ abstract class AppLocalizations {
   /// **'{count}d ago'**
   String timeDaysAgo(int count);
 
-  /// Message shown when demo mode is activated
+  /// Snackbar shown when demo mode is activated
   ///
   /// In en, this message translates to:
-  /// **'Demo mode: {scriptName}'**
-  String demoModeActivated(String scriptName);
+  /// **'Demo mode activated'**
+  String get demoModeActivated;
 
   /// Title for delete LLM config dialog
   ///
@@ -859,6 +859,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An unexpected error occurred'**
   String get failureUnknown;
+
+  /// No description provided for @googleSearchApiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Search API'**
+  String get googleSearchApiTitle;
+
+  /// No description provided for @googleSearchApiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Google Search API key'**
+  String get googleSearchApiKeyHint;
+
+  /// No description provided for @searchEngineIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Search Engine ID'**
+  String get searchEngineIdHint;
+
+  /// No description provided for @openWeatherApiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenWeather API'**
+  String get openWeatherApiTitle;
+
+  /// No description provided for @openWeatherApiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your OpenWeather API key'**
+  String get openWeatherApiKeyHint;
+
+  /// No description provided for @nytApiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New York Times API'**
+  String get nytApiTitle;
+
+  /// No description provided for @nytApiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your New York Times API key'**
+  String get nytApiKeyHint;
+
+  /// Number of messages shown on a chat card
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message} other{{count} messages}}'**
+  String chatMessageCount(int count);
+
+  /// Title of the expandable function-call result tile
+  ///
+  /// In en, this message translates to:
+  /// **'Result: {name}'**
+  String functionResultTitle(String name);
 }
 
 class _AppLocalizationsDelegate

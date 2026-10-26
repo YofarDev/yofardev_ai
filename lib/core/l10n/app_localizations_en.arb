@@ -200,15 +200,9 @@
       }
     }
   },
-  "demoModeActivated": "Demo mode: {scriptName}",
+  "demoModeActivated": "Demo mode activated",
   "@demoModeActivated": {
-    "description": "Message shown when demo mode is activated",
-    "placeholders": {
-      "scriptName": {
-        "type": "String",
-        "example": "Test Script"
-      }
-    }
+    "description": "Snackbar shown when demo mode is activated"
   },
   "deleteConfig": "Delete Config",
   "@deleteConfig": {
@@ -354,5 +348,32 @@
   "failureNetwork": "Network error",
   "failureTts": "Text-to-speech error",
   "failureConfig": "Configuration error",
-  "failureUnknown": "An unexpected error occurred"
+  "failureUnknown": "An unexpected error occurred",
+  "googleSearchApiTitle": "Google Search API",
+  "googleSearchApiKeyHint": "Enter your Google Search API key",
+  "searchEngineIdHint": "Enter your Search Engine ID",
+  "openWeatherApiTitle": "OpenWeather API",
+  "openWeatherApiKeyHint": "Enter your OpenWeather API key",
+  "nytApiTitle": "New York Times API",
+  "nytApiKeyHint": "Enter your New York Times API key",
+  "chatMessageCount": "{count, plural, =1{1 message} other{{count} messages}}",
+  "@chatMessageCount": {
+    "description": "Number of messages shown on a chat card",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "functionResultTitle": "Result: {name}",
+  "@functionResultTitle": {
+    "description": "Title of the expandable function-call result tile",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "GetWeather"
+      }
+    }
+  }
 }

@@ -143,7 +143,9 @@ class _FunctionCallingConfigScreenState
                               title: AppLocalizations.of(
                                 context,
                               ).settings_googleSearch,
-                              apiName: 'Google Search API',
+                              apiName: AppLocalizations.of(
+                                context,
+                              ).googleSearchApiTitle,
                               icon: '🔍',
                               isEnabled: state.googleSearchEnabled,
                               onToggle: (bool value) {
@@ -157,7 +159,9 @@ class _FunctionCallingConfigScreenState
                                   labelText: AppLocalizations.of(
                                     context,
                                   ).settings_apiKey,
-                                  hintText: 'Enter your Google Search API key',
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  ).googleSearchApiKeyHint,
                                 ),
                                 const SizedBox(height: 12),
                                 _buildTextField(
@@ -165,7 +169,9 @@ class _FunctionCallingConfigScreenState
                                   labelText: AppLocalizations.of(
                                     context,
                                   ).settings_engineId,
-                                  hintText: 'Enter your Search Engine ID',
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  ).searchEngineIdHint,
                                 ),
                               ],
                             ),
@@ -174,7 +180,9 @@ class _FunctionCallingConfigScreenState
                               title: AppLocalizations.of(
                                 context,
                               ).settings_weather,
-                              apiName: 'OpenWeather API',
+                              apiName: AppLocalizations.of(
+                                context,
+                              ).openWeatherApiTitle,
                               icon: '🌤️',
                               isEnabled: state.openWeatherEnabled,
                               onToggle: (bool value) {
@@ -188,14 +196,16 @@ class _FunctionCallingConfigScreenState
                                   labelText: AppLocalizations.of(
                                     context,
                                   ).settings_apiKey,
-                                  hintText: 'Enter your OpenWeather API key',
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  ).openWeatherApiKeyHint,
                                 ),
                               ],
                             ),
                             // News Section
                             FunctionCallingSection(
                               title: AppLocalizations.of(context).settings_news,
-                              apiName: 'New York Times API',
+                              apiName: AppLocalizations.of(context).nytApiTitle,
                               icon: '📰',
                               isEnabled: state.newYorkTimesEnabled,
                               onToggle: (bool value) {
@@ -209,7 +219,9 @@ class _FunctionCallingConfigScreenState
                                   labelText: AppLocalizations.of(
                                     context,
                                   ).settings_apiKey,
-                                  hintText: 'Enter your New York Times API key',
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  ).nytApiKeyHint,
                                 ),
                               ],
                             ),

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/design/design.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/models/chat.dart';
 
 /// Card widget displaying chat information
@@ -150,7 +151,7 @@ class _ChatPreview extends StatelessWidget {
         Row(
           children: <Widget>[
             Text(
-              '$messageCount messages',
+              AppLocalizations.of(context).chatMessageCount(messageCount),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: context.colors.onSurface.withValues(alpha: 0.45),
               ),

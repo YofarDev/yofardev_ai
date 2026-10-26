@@ -318,9 +318,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String demoModeActivated(String scriptName) {
-    return 'Mode démo : $scriptName';
-  }
+  String get demoModeActivated => 'Mode démo activé';
 
   @override
   String get deleteConfig => 'Supprimer la configuration';
@@ -437,4 +435,42 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get failureUnknown => 'Une erreur inattendue est survenue';
+
+  @override
+  String get googleSearchApiTitle => 'Google Search API';
+
+  @override
+  String get googleSearchApiKeyHint => 'Saisissez votre clé API Google Search';
+
+  @override
+  String get searchEngineIdHint => 'Saisissez votre ID de moteur de recherche';
+
+  @override
+  String get openWeatherApiTitle => 'OpenWeather API';
+
+  @override
+  String get openWeatherApiKeyHint => 'Saisissez votre clé API OpenWeather';
+
+  @override
+  String get nytApiTitle => 'New York Times API';
+
+  @override
+  String get nytApiKeyHint => 'Saisissez votre clé API New York Times';
+
+  @override
+  String chatMessageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages',
+      one: '1 message',
+      zero: '0 message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String functionResultTitle(String name) {
+    return 'Résultat : $name';
+  }
 }

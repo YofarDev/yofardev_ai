@@ -3,7 +3,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import '../../../../core/utils/logger.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
+import '../../../core/utils/logger.dart';
 
 class FunctionCallingWidget extends StatelessWidget {
   final String functionCallingText;
@@ -66,13 +67,17 @@ class FunctionCallingWidget extends StatelessWidget {
             ),
           ),
           if (showEverything && hasResults)
-            ...buildResultSections(map, colorScheme),
+            ...buildResultSections(context, map, colorScheme),
         ],
       ),
     );
   }
 
-  List<Widget> buildResultSections(List<dynamic> map, ColorScheme colorScheme) {
+  List<Widget> buildResultSections(
+    BuildContext context,
+    List<dynamic> map,
+    ColorScheme colorScheme,
+  ) {
     final List<Widget> widgets = <Widget>[];
 
     for (final dynamic item in map) {
@@ -103,7 +108,9 @@ class FunctionCallingWidget extends StatelessWidget {
                 alpha: 0.1,
               ),
               title: Text(
-                'Result: ${_capitalize(functionName)}',
+                AppLocalizations.of(
+                  context,
+                ).functionResultTitle(_capitalize(functionName)),
                 style: TextStyle(
                   color: colorScheme.onSurface,
                   fontSize: 11,
