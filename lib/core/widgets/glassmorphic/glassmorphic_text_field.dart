@@ -199,13 +199,14 @@ class _GlassmorphicTextFieldState extends State<GlassmorphicTextField>
                   onSubmitted: widget.onSubmitted,
                   decoration: InputDecoration(
                     hintText: widget.hintText,
-                    hintStyle: text.bodyMedium!.copyWith(
+                    hintStyle: text.bodyLarge!.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: colors.onSurface.withValues(alpha: 0.4),
                     ),
                     labelText: widget.labelText,
                     labelStyle: text.labelLarge!.copyWith(
+                      letterSpacing: text.bodyLarge!.letterSpacing,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: _isFocused

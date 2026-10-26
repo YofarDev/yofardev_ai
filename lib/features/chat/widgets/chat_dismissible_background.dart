@@ -30,7 +30,7 @@ class ChatDismissibleBackground extends StatelessWidget {
               fontSize: 13,
             ),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Icon(
             Icons.delete_outline_rounded,
             color: context.colors.error,
