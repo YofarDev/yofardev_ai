@@ -8,7 +8,9 @@ import 'app_text_theme.dart';
 /// The app's theme: a cosmic glassmorphic dark palette. Use [dark] for the
 /// app and for every widget/golden test harness.
 abstract final class AppTheme {
-  static ThemeData get dark {
+  static final ThemeData dark = _build();
+
+  static ThemeData _build() {
     final ColorScheme scheme = buildDarkColorScheme();
     const AppTokens tokens = AppTokens.dark;
 

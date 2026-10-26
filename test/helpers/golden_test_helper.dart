@@ -35,32 +35,14 @@ class GoldenTestHelper {
   }
 
   /// Create test wrapper widget with necessary providers
-  static Widget makeTestableWidget({
-    required Widget child,
-    ThemeData? theme,
-    Locale? locale,
-  }) {
+  static Widget makeTestableWidget({required Widget child, Locale? locale}) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: theme ?? AppTheme.dark,
+      theme: AppTheme.dark,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Material(child: child),
-    );
-  }
-
-  /// Wrapper for widgets that need to be tested in a container
-  static Widget makeSurfaceTestable({
-    required Widget child,
-    required Size surfaceSize,
-    Color backgroundColor = Colors.white,
-  }) {
-    return Container(
-      width: surfaceSize.width,
-      height: surfaceSize.height,
-      color: backgroundColor,
-      child: child,
     );
   }
 }

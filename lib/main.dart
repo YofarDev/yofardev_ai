@@ -11,6 +11,7 @@ import 'core/utils/platform_utils.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
   await setupServiceLocator();
   await bootstrapApp();
   if (PlatformUtils.isDesktop()) {
@@ -34,6 +35,5 @@ Future<void> main() async {
       DeviceOrientation.portraitUp,
     ]);
   }
-  GoogleFonts.config.allowRuntimeFetching = false;
   runApp(const App());
 }
