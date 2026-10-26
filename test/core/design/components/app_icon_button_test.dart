@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
 import 'package:yofardev_ai/core/design/components/components.dart';
 
 import '../../../helpers/golden_test_helper.dart';
+import 'component_test_harness.dart';
 
 void main() {
   setUpAll(() async {
     await GoldenTestHelper.init();
   });
 
-  Widget harness(Widget child, {TextDirection? direction}) {
-    Widget result = GoldenTestHelper.makeTestableWidget(
-      child: Center(child: child),
-    );
-    if (direction != null) {
-      result = Directionality(textDirection: direction, child: result);
-    }
-    return result;
+  Widget harness(Widget child, {bool rtl = false, double textScale = 1}) {
+    return componentHarness(child, rtl: rtl, textScale: textScale);
   }
 
   group('AppIconButton', () {
@@ -84,7 +80,7 @@ void main() {
         ),
       );
       expect(
-        tester.getSemantics(find.byType(AppIconButton)),
+        tester.getSemantics(find.bySemanticsLabel('Close')),
         isSemantics(
           isButton: true,
           hasEnabledState: true,
@@ -112,7 +108,7 @@ void main() {
         ),
       );
       expect(
-        tester.getSemantics(find.byType(AppIconButton)),
+        tester.getSemantics(find.bySemanticsLabel('Close')),
         isSemantics(
           isButton: true,
           hasEnabledState: true,
@@ -127,22 +123,135 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
-          child: harness(
-            AppIconButton(
-              onPressed: () {},
-              icon: Icons.close,
-              semanticLabel: 'Close',
-              tooltip: 'Close',
-              active: true,
-            ),
-            direction: TextDirection.rtl,
+        harness(
+          AppIconButton(
+            onPressed: () {},
+            icon: Icons.close,
+            semanticLabel: 'Close',
+            tooltip: 'Close',
+            active: true,
+          ),
+          rtl: true,
+          textScale: 1.5,
+        ),
+      );
+      final BuildContext context = tester.element(find.byType(AppIconButton));
+      expect(Directionality.of(context), TextDirection.rtl);
+      expect(MediaQuery.textScalerOf(context), const TextScaler.linear(1.5));
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byType(AppIconButton)), const Size(48, 48));
+    });
+
+    testWidgets('disabled is dimmed to 0.4, enabled is opaque', (
+      WidgetTester tester,
+    ) async {
+      Finder opacity() => find.descendant(
+        of: find.byType(AppIconButton),
+        matching: find.byType(Opacity),
+      );
+      await tester.pumpWidget(
+        harness(
+          AppIconButton(
+            onPressed: () {},
+            icon: Icons.close,
+            semanticLabel: 'Close',
           ),
         ),
       );
+      expect(tester.widget<Opacity>(opacity()).opacity, 1);
+
+      await tester.pumpWidget(
+        harness(
+          const AppIconButton(
+            onPressed: null,
+            icon: Icons.close,
+            semanticLabel: 'Close',
+          ),
+        ),
+      );
+      expect(tester.widget<Opacity>(opacity()).opacity, 0.4);
+    });
+
+    testWidgets('a callback swapped to null stops firing', (
+      WidgetTester tester,
+    ) async {
+      int taps = 0;
+      await tester.pumpWidget(
+        harness(
+          AppIconButton(
+            onPressed: () => taps++,
+            icon: Icons.close,
+            semanticLabel: 'Close',
+          ),
+        ),
+      );
+      await tester.tap(find.byType(AppIconButton));
+      await tester.pumpAndSettle();
+      expect(taps, 1);
+
+      await tester.pumpWidget(
+        harness(
+          const AppIconButton(
+            onPressed: null,
+            icon: Icons.close,
+            semanticLabel: 'Close',
+          ),
+        ),
+      );
+      await tester.tap(find.byType(AppIconButton));
+      await tester.pumpAndSettle();
+      expect(taps, 1);
+    });
+
+    testWidgets('mid-press rebuild with onPressed null returns to idle', (
+      WidgetTester tester,
+    ) async {
+      int taps = 0;
+      await tester.pumpWidget(
+        harness(
+          AppIconButton(
+            onPressed: () => taps++,
+            icon: Icons.close,
+            semanticLabel: 'Close',
+          ),
+        ),
+      );
+      final TestGesture gesture = await tester.startGesture(
+        tester.getCenter(find.byType(AppIconButton)),
+      );
+      await tester.pump();
+      await tester.pumpWidget(
+        harness(
+          const AppIconButton(
+            onPressed: null,
+            icon: Icons.close,
+            semanticLabel: 'Close',
+          ),
+        ),
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(taps, 0);
       expect(tester.takeException(), isNull);
-      expect(tester.getSize(find.byType(AppIconButton)), const Size(48, 48));
+    });
+
+    testWidgets('Enter on a focused button fires once', (
+      WidgetTester tester,
+    ) async {
+      int taps = 0;
+      await tester.pumpWidget(
+        harness(
+          AppIconButton(
+            onPressed: () => taps++,
+            icon: Icons.close,
+            semanticLabel: 'Close',
+          ),
+        ),
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(taps, 1);
     });
   });
 

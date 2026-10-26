@@ -106,6 +106,11 @@ void main() {
       await tester.pumpWidget(app(router));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      // RTL: the back button is on the right, the title to its left.
+      expect(
+        tester.getCenter(find.byType(AppIconButton)).dx,
+        greaterThan(tester.getCenter(find.byType(Text)).dx),
+      );
     });
   });
 }

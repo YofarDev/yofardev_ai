@@ -30,7 +30,7 @@ class GlassPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppGlassStyle style = context.tokens.glass(level);
-    final Color fill = context.tokens.highlight;
+    final Color fill = context.tokens.glassSurface;
     final Color border = context.tokens.glassBorder;
     final BorderRadius radius =
         borderRadius ?? BorderRadius.circular(AppRadius.lg);
