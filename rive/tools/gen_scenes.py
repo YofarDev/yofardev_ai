@@ -15,6 +15,7 @@ import zlib
 
 sys.path.insert(0, os.path.dirname(__file__))
 from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, solid, stroke, track, write  # noqa: E402,F401
+from scene_art import place_point, refine_scene  # noqa: E402
 
 W, H = 1080, 1920
 SCENE_EVENTS = {
@@ -36,6 +37,7 @@ class Scene:
         self.events: list[El] = []
         self.ease = d("CubicEaseInterpolator", x1=0.42, y1=0.0, x2=0.58, y2=1.0)
         self.ease_out = d("CubicEaseInterpolator", x1=0.15, y1=0.0, x2=0.25, y2=1.0)
+        self.ease_in = d("CubicEaseInterpolator", x1=0.6, y1=0.0, x2=0.9, y2=0.6)
         vals = {v: d("DataEnumValue", key=v, value=v) for v in SCENE_EVENTS[scene_id]}
         self.enum_vals = vals
         self.enum = d("DataEnumCustom", *vals.values(), name="EventId")
@@ -84,7 +86,18 @@ class Scene:
         return self.d("Node", *kids, x=float(x), y=float(y), name=name, **kw)
 
     # ---------------------------------------------------------------- animation
-    def A(self, name: str, frames: int, tracks: list[El], loop: bool = False) -> El:
+    def A(self, name: str, frames: int, tracks: list[El], loop: bool = False, seam_hold: bool = False) -> El:
+        if seam_hold:
+            # A one-frame rest at both ends prevents fractional advancement
+            # from shifting a few antialiased edge pixels at the loop seam.
+            for obj in tracks:
+                for prop in obj.children:
+                    first, last = prop.children[0], prop.children[-1]
+                    if (len(prop.children) > 1 and first.attrs["frame"] == 0 and last.attrs["frame"] == frames
+                            and math.isclose(float(first.attrs["value"]), float(last.attrs["value"]), abs_tol=1e-8)):
+                        last.attrs["value"] = first.attrs["value"]
+                        prop.children.insert(1, self.d(first.tag, **{**first.attrs, "frame": 1}))
+                        prop.children.insert(-1, self.d(last.tag, **{**last.attrs, "frame": frames - 1}))
         a = self.d("LinearAnimation", *tracks, duration=frames, fps=60,
                    loopValue="loop" if loop else None, name=name)
         self.anims.append(a)
@@ -170,10 +183,11 @@ class Scene:
                  x=float(cx), y=float(cy), name="Hit_" + name)
 
     def write(self, content: list[El], hits: list[El]) -> str:
+        refine_scene(self, content)
         d = self.d
         sm = d("StateMachine", *self.listeners, *self.layers, name="Main")
         style = d("LayoutComponentStyle", name="Artboard Style")
-        ab = d("Artboard", style, sm, self.ease, self.ease_out, *self.events, *hits, *content, *self.anims,
+        ab = d("Artboard", style, sm, self.ease, self.ease_out, self.ease_in, *self.events, *hits, *content, *self.anims,
                width=float(W), height=float(H), name="Scene", defaultStateMachineId=sm.ref(),
                viewModelId=self.vm.ref(), viewModelInstanceId=self.inst.ref(), styleId=style.ref(), clip=True)
         out = os.path.join(os.path.dirname(__file__), "..", "scenes", self.id, self.id + ".rml")
@@ -194,29 +208,50 @@ def uniq(keys: list) -> list:
 
 
 def rain_fx(sc: Scene, name: str, col: str, frames: int = 480, extra: list[El] | None = None,
-            darken: str = "FF0A1022") -> tuple[El, El]:
-    """Returns (content node, one-shot anim): fade in, falling sheet loop, fade out."""
+            darken: str = "FF0A1022", ground: tuple[float, float] = (1200.0, 1900.0)) -> tuple[El, El]:
+    """Returns (content node, one-shot anim): fade in, two depth layers of falling rain (near:
+    long, fast, bright; far: short, slow, faint), splashes popping on the ground, fade out."""
     d = sc.d
     r = random.Random(zlib.crc32(name.encode()))
-    streaks = []
     tile = 480                      # pattern repeats every `tile` px, so a `tile` shift loops seamlessly
+    sheets, tracks = [], []
+    for layer, (n, ln0, ln1, wd, alpha, period) in enumerate([(22, 70, 120, 3.2, "FF", 18), (34, 26, 50, 1.8, "70", 34)]):
+        streaks = []
+        for i in range(n):
+            x, y = r.uniform(-60, W + 60), r.uniform(0, tile)
+            ln = r.uniform(ln0, ln1)
+            for k in range(-1, H // tile + 1):
+                streaks.append(sc.S((0, 0), f"Drop{layer}_{i}_{k + 1}", [(x, y + k * tile),
+                                                                         (x - ln * 0.22, y + k * tile + ln)],
+                                    sc.L(alpha + col[2:], wd), closed=False))
+        sheet = d("Node", *streaks, x=0.0, y=0.0, name=f"RainSheet{layer}")
+        sheets.append(sheet)
+        saw = []
+        for c in range(0, frames, period):
+            saw += [(c, 0.0, "linear"), (min(c + period - 1, frames), tile * (period - 1) / period, "linear")]
+        tracks.append(sc.T(sheet, ease=None, y=uniq(saw)))
+    splashes = []
     for i in range(16):
-        x, y = r.uniform(-60, W + 60), r.uniform(0, tile)
-        ln = r.uniform(40, 80)
-        for k in range(-1, H // tile + 1):
-            streaks.append(sc.S((0, 0), f"Drop{i}_{k + 1}", [(x, y + k * tile), (x - ln * 0.25, y + k * tile + ln)],
-                                sc.L(col, 3), closed=False))
-    sheet = d("Node", *streaks, x=0.0, y=0.0, name="RainSheet")
+        x, y = r.uniform(40, W - 40), r.uniform(*ground)
+        sp = d("Node", sc.E((x, y), "Ring", x, y, 30, 8, sc.L("C0" + col[2:], 2)),
+               sc.S((x, y), "Kick", [(x - 8, y - 2), (x - 12, y - 14)], sc.L("A0" + col[2:], 2), closed=False),
+               sc.S((x, y), "Kick2", [(x + 8, y - 2), (x + 12, y - 14)], sc.L("A0" + col[2:], 2), closed=False),
+               x=x, y=y, opacity=0.0, name=f"Splash{i}")
+        splashes.append(sp)
+        ph = r.randint(0, 40)
+        op, sxk = [(0, 0.0)], [(0, 0.3)]
+        for c in range(40 + ph, frames - 50, 44):
+            op += [(c, 0.0, "hold"), (c + 1, 1.0), (c + 12, 0.0, "hold")]
+            sxk += [(c, 0.3, "hold"), (c + 1, 0.4), (c + 12, 1.3, "hold")]
+        tracks.append(sc.T(sp, ease=None, opacity=uniq(op + [(frames, 0.0)]),
+                           scaleX=uniq(sxk + [(frames, 0.3)]), scaleY=uniq(sxk + [(frames, 0.3)])))
     dark = d("Shape", d("Rectangle", width=float(W), height=float(H), originX=0.0, originY=0.0, name="Path"),
-             sc.F(darken), opacity=0.0, name="RainDark")
-    group_ = d("Node", sheet, x=0.0, y=0.0, opacity=0.0, name=name)
-    saw = []
-    for c in range(0, frames, 24):
-        saw += [(c, 0.0, "linear"), (min(c + 23, frames), tile * 23 / 24, "linear")]
+             sc.vgrad(0, H, [(darken, 0.0), ("80" + darken[2:], 1.0)]), opacity=0.0, name="RainDark")
+    group_ = d("Node", *splashes, *sheets, x=0.0, y=0.0, opacity=0.0, name=name)
     anim = sc.A("ev_" + name, frames, [
         sc.T(group_, ease=None, opacity=[(0, 0.0), (40, 1.0, "linear"), (frames - 60, 1.0, "linear"), (frames, 0.0)]),
-        sc.T(dark, ease=None, opacity=[(0, 0.0), (40, 0.4, "linear"), (frames - 60, 0.4, "linear"), (frames, 0.0)]),
-        sc.T(sheet, ease=None, y=uniq(saw)),
+        sc.T(dark, ease=None, opacity=[(0, 0.0), (40, 0.5, "linear"), (frames - 60, 0.5, "linear"), (frames, 0.0)]),
+        *tracks,
         *(extra or []),
     ])
     return d("Node", group_, dark, x=0.0, y=0.0, name=name + "Fx"), anim
@@ -242,14 +277,33 @@ def streak_fx(sc: Scene, name: str, p0: tuple[float, float], p1: tuple[float, fl
     return n, anim
 
 
-def bird(sc: Scene, name: str, x: float, y: float, sz: float, col: str) -> tuple[El, list[El]]:
-    """Flapping gull 'M' silhouette; returns node + its flap tracks (loop 24f)."""
-    wl = sc.S((x, y), "WingL", [(x, y), (x - sz * 0.5, y - sz * 0.35), (x - sz, y - sz * 0.05)], sc.L(col, 4),
+def bird(sc: Scene, name: str, x: float, y: float, sz: float, col: str, body: bool = False,
+         phase: int = 0) -> tuple[El, list[El]]:
+    """Flapping gull; returns node + its flap tracks. `body` draws a white gull (wings + body)."""
+    lw = 4 if not body else max(4.0, sz * 0.09)
+    wcol = col if not body else "FFDDE3EA"
+    wl = sc.S((x, y), "WingL", [(x, y), (x - sz * 0.5, y - sz * 0.35), (x - sz, y - sz * 0.05)], sc.L(wcol, lw),
               closed=False, origin=(x, y))
-    wr = sc.S((x, y), "WingR", [(x, y), (x + sz * 0.5, y - sz * 0.35), (x + sz, y - sz * 0.05)], sc.L(col, 4),
+    wr = sc.S((x, y), "WingR", [(x, y), (x + sz * 0.5, y - sz * 0.35), (x + sz, y - sz * 0.05)], sc.L(wcol, lw),
               closed=False, origin=(x, y))
-    n = sc.d("Node", wl, wr, x=float(x), y=float(y), name=name)
-    flap = [sc.T(wl, rotation=[(0, 0.0), (12, -0.5), (24, 0.0)]), sc.T(wr, rotation=[(0, 0.0), (12, 0.5), (24, 0.0)])]
+    kids = [wl, wr]
+    if body:
+        tips = [sc.S((x, y), "TipL", [(x - sz * 0.72, y - sz * 0.2), (x - sz, y - sz * 0.05)], sc.L("FF2A3040", lw),
+                     closed=False), sc.S((x, y), "TipR", [(x + sz * 0.72, y - sz * 0.2), (x + sz, y - sz * 0.05)],
+                                         sc.L("FF2A3040", lw), closed=False)]
+        kids = [sc.E((x, y), "GBodyF", x + sz * 0.1, y + 2, sz * 0.62, sz * 0.2, sc.F("FFFFFFFF"), sc.L("FF8A94A2", 1.5)),
+                sc.S((x, y), "GBeakF", [(x + sz * 0.4, y), (x + sz * 0.52, y + 2), (x + sz * 0.4, y + 5)],
+                     sc.F("FFF0B030")), wl, wr]
+        for t, w in zip(tips, (wl, wr)):          # dark wing tips ride the wing's flap
+            t.attrs["x"] = float(t.attrs["x"]) - float(w.attrs["x"])
+            t.attrs["y"] = float(t.attrs["y"]) - float(w.attrs["y"])
+            w.add(t)
+    n = sc.d("Node", *kids, x=float(x), y=float(y), name=name)
+    P = 24 if not body else 28
+    p0 = phase % P
+    keys_l = uniq([(0, -0.25), ((P // 2 + p0) % P, -0.6), (p0, 0.15), (P, -0.25)]) if body else \
+        [(0, 0.0), (12, -0.5), (24, 0.0)]
+    flap = [sc.T(wl, rotation=keys_l), sc.T(wr, rotation=[(f, -v) for f, v in keys_l])]
     return n, flap
 
 
@@ -337,7 +391,7 @@ def campfire() -> str:
                                               (870, 340)])]
 
     # ---- ground + fire light
-    fire_c = (290.0, 1140.0)
+    fire_c = (196.0, 1124.0)       # left of the avatar's head, so flares read in the app
     ground = S(O, "Ground", [(-60, 1060), (300, 1040), (700, 1050), (1140, 1070), (1140, 1960, "c"),
                              (-60, 1960, "c")],
                sc.vgrad(-400, 400, [("FF2A2338", 0.0), ("FF1C1726", 1.0)]))
@@ -408,10 +462,21 @@ def campfire() -> str:
     FP = (fx, fy + 10)
 
     def tongue(name: str, dx: float, h: float, w: float, cols: list[tuple[str, float]], lean: float) -> El:
-        pts = [(fx + dx - w / 2, fy + 10), (fx + dx - w * 0.55, fy - h * 0.25), (fx + dx - w * 0.2 + lean * 0.5,
-                                                                                 fy - h * 0.62),
-               (fx + dx + lean, fy - h, "c"), (fx + dx + w * 0.28 + lean * 0.4, fy - h * 0.55),
-               (fx + dx + w * 0.55, fy - h * 0.2), (fx + dx + w / 2, fy + 10)]
+        # Convex belly, narrow neck and a concave, wind-curled tip. The right
+        # edge folds back into the tongue rather than forming a straight wedge.
+        pts = [(fx + dx - w / 2, fy + 10),
+               (fx + dx - w * 0.55, fy - h * 0.25),
+               (fx + dx - w * 0.22, fy - h * 0.52),
+               (fx + dx - w * 0.32, fy - h * 0.72),
+               (fx + dx + lean - w * 0.02, fy - h),
+               (fx + dx + lean + w * 0.16, fy - h * 0.90),
+               (fx + dx + lean + w * 0.08, fy - h * 0.78),
+               (fx + dx + w * 0.04, fy - h * 0.62),
+               (fx + dx + w * 0.22, fy - h * 0.73),
+               (fx + dx + w * 0.38, fy - h * 0.82),
+               (fx + dx + w * 0.32, fy - h * 0.60),
+               (fx + dx + w * 0.50, fy - h * 0.32),
+               (fx + dx + w / 2, fy + 10)]
         shp = S((fx + dx, fy + 10), name, pts, d("Fill", lin(d, 0, 0, 0, -h, cols), name="Fill"),
                 origin=(fx + dx, fy + 10))
         return d("Node", shp, x=float(dx), y=0.0, name=name + "Pivot")
@@ -422,8 +487,8 @@ def campfire() -> str:
     tongues = [
         tongue("Core", 0, 110, 56, INNER, 4),
         tongue("MidL", -22, 160, 70, MIDC, -10), tongue("MidR", 24, 150, 64, MIDC, 12),
-        tongue("Main", 0, 250, 120, OUTER, 8), tongue("OuterL", -48, 170, 80, OUTER, -22),
-        tongue("OuterR", 52, 190, 78, OUTER, 26),
+        tongue("Main", -8, 235, 98, OUTER, 26), tongue("OuterL", -48, 144, 66, OUTER, -35),
+        tongue("OuterR", 52, 184, 70, OUTER, 30),
     ]
     glow = E(FP, "Glow", fx, fy - 60, 520, 520, sc.rgrad(260, [("70FFB040", 0.0), ("30FF7A2A", 0.4), ("00FF6A20", 1.0)]))
     sparks = []
@@ -444,18 +509,40 @@ def campfire() -> str:
                                  x=[(f, sx0 + drift * math.sin(min(t, 1.0) * 2.4), "linear") for f, t in rise],
                                  opacity=[(f, 0.0 if t > 1 else (1.0 - t) * 1.0, "linear") for f, t in rise]))
     # flame loop: tongues sway, stretch, and the glow breathes
-    fl_tracks = []
+    # every tongue flickers on its own prime-ish period, so the fire never pulses as one
+    periods = [37, 53, 43, 71, 47, 61]
     for i, tg in enumerate(tongues):
-        ph = i * 7
-        amp = 0.06 + 0.02 * (i % 3)
-        keys_r = [(0, 0.0), ((10 + ph) % 40, amp), ((25 + ph) % 40, -amp), (40, 0.0)]
-        keys_s = [(0, 1.0), ((8 + ph) % 40, 1.12), ((20 + ph) % 40, 0.9), ((32 + ph) % 40, 1.06), (40, 1.0)]
-        fl_tracks.append(sc.T(tg, rotation=uniq(keys_r), scaleY=uniq(keys_s),
-                              scaleX=[(0, 1.0), (20, 0.94), (40, 1.0)]))
-    fl_tracks.append(sc.T(glow, opacity=[(0, 1.0), (9, 0.82), (17, 1.0), (27, 0.88), (40, 1.0)],
-                          scaleX=[(0, 1.0), (20, 1.05), (40, 1.0)], scaleY=[(0, 1.0), (20, 1.05), (40, 1.0)]))
-    fl_tracks.append(sc.T(light_pool, opacity=[(0, 1.0), (13, 0.86), (26, 1.0), (33, 0.9), (40, 1.0)]))
-    sc.ambient("Flames", sc.A("amb_flames", 40, fl_tracks, loop=True))
+        P = periods[i]
+        r_ = random.Random(100 + i)
+        amp = 0.05 + 0.02 * (i % 3)
+        n = 4 if P < 50 else 5
+        fs = [0] + sorted(r_.sample(range(4, P - 3), n - 1)) + [P]
+        rot = [(f, 0.0 if f in (0, P) else r_.uniform(-amp, amp)) for f in fs]
+        sy = [(f, 1.0 if f in (0, P) else r_.uniform(0.86, 1.16)) for f in fs]
+        sx = [(f, 1.0 if f in (0, P) else r_.uniform(0.9, 1.06)) for f in fs]
+        # Heat travels up the contour: anchored roots, delayed bends through
+        # the belly, and a faster curling tip. Scaling one rigid tongue alone
+        # reads as a row of paper cut-outs rather than a turbulent flame.
+        contour = next(c for c in tg.children[0].children if c.tag == "PointsPath")
+        deform = []
+        samples = sorted(set(range(0, P, 3)) | {P})
+        for j, vertex in enumerate(contour.children[1:-1], 1):
+            vx, vy = float(vertex.attrs["x"]), float(vertex.attrs["y"])
+            height = -vy / 260
+            phase = i * 0.73 - height * 2.4
+            def bend(f: int, phase: float = phase) -> float:
+                t = 2 * math.pi * f / P
+                return math.sin(t + phase) - math.sin(phase) + 0.28 * (math.sin(2 * t + phase) - math.sin(phase))
+            deform.append(sc.T(vertex, ease=None,
+                x=[(f, vx + (13 + i % 3 * 4) * height * bend(f), "linear") for f in samples],
+                y=[(f, vy + 12 * height * (math.cos(2 * math.pi * f / P + phase) - math.cos(phase)), "linear")
+                   for f in samples]))
+        sc.ambient(f"Flame{i}", sc.A(f"amb_flame{i}", P,
+                   [sc.T(tg, rotation=rot, scaleY=sy, scaleX=sx), *deform], loop=True))
+    fl_tracks = [sc.T(glow, opacity=[(0, 1.0), (9, 0.8), (17, 0.97), (31, 0.84), (44, 1.0), (58, 0.86), (70, 0.95),
+                                     (89, 1.0)],
+                      scaleX=[(0, 1.0), (40, 1.05), (89, 1.0)], scaleY=[(0, 1.0), (40, 1.05), (89, 1.0)])]
+    sc.ambient("FireLight", sc.A("amb_firelight", 89, fl_tracks, loop=True))
     sc.ambient("Sparks", sc.A("amb_sparks", 120, spark_tracks, loop=True))
 
     # smoke wisps drifting up
@@ -474,16 +561,62 @@ def campfire() -> str:
                               scaleY=[(f, 1 + 1.4 * (((f + off) % 240) / 240), "linear") for f in range(0, 241, 40)]))
     sc.ambient("Smoke", sc.A("amb_smoke", 240, sm_tracks, loop=True))
 
-    fire.add(*sparks, *[tg for tg in tongues], glow)
-    fire_flare = d("Node", fire, x=0.0, y=0.0, name="FireFlare")
+    # Small pieces of hot gas shear off and dissolve above the main contour.
+    # Every reset happens at zero opacity, with staggered cycles.
+    fragments, fragment_tracks = [], []
+    for i in range(3):
+        fragment = S((0.0, 0.0), f"DetachedFlame{i}", [(-8, 0), (-13, -17), (-3, -30), (10, -50),
+                                                                    (8, -28), (11, -12), (5, 0)],
+                     sc.vgrad(-25, 25, [("80FFA947", 0), ("E0FFCC61", 0.6), ("60F47C33", 1)]),
+                     origin=(0.0, 0.0), opacity=0.0)
+        fragments.append(fragment)
+        phases = [(f, ((f + i * 60) % 180) / 180) for f in range(0, 181, 3)]
+        fragment_tracks.append(sc.T(fragment, ease=None,
+            x=[(f, -18 + i * 20 + 26 * math.sin(t * 3.5 + i), "linear") for f, t in phases],
+            y=[(f, -150 - t * 220, "linear") for f, t in phases],
+            scaleX=[(f, 0.45 + 0.5 * math.sin(math.pi * t), "linear") for f, t in phases],
+            scaleY=[(f, 0.5 + 0.5 * math.sin(math.pi * t), "linear") for f, t in phases],
+            rotation=[(f, 0.2 + 0.5 * math.sin(t * 4 + i), "linear") for f, t in phases],
+            opacity=[(f, math.sin(math.pi * t) ** 2 * 0.9, "linear") for f, t in phases]))
+    sc.ambient("DetachedFlames", sc.A("amb_detached_flames", 180, fragment_tracks, loop=True))
+    fire.add(*sparks, *fragments, *tongues, glow)
+    # flare scales its own wrapper (the rain layer owns `fire`'s scale; two layers on one
+    # property means the later layer's rest pose silently wins)
+    fire.attrs.update(x=0.0, y=0.0)
+    fire_flare = d("Node", fire, x=fx, y=fy + 10, name="FireFlare")
+    flare_wash = d("Shape", d("Rectangle", width=float(W + 40), height=float(H + 40), originX=0.0, originY=0.0,
+                              name="Path"), sc.rgrad(1300, [("FFFFB060", 0.0), ("00FF8030", 1.0)], cx=fx - W / 2,
+                                                     cy=fy - H / 2),
+                   x=-20.0, y=-20.0, opacity=0.0, name="FlareWash")
 
     # ---- events
-    flare = sc.A("ev_flare", 110, [
-        sc.T(fire, scaleX=[(0, 1.0), (10, 1.5), (60, 1.35), (110, 1.0)],
-             scaleY=[(0, 1.0), (8, 1.9), (60, 1.6), (110, 1.0)]),
-        sc.T(light_pool, scaleX=[(0, 1.0), (10, 1.35), (110, 1.0)], scaleY=[(0, 1.0), (10, 1.35), (110, 1.0)]),
-        sc.T(tree_glow, opacity=[(0, 1.0), (10, 2.0), (110, 1.0)]),
+    flare = sc.A("ev_flare", 130, [
+        sc.T(fire_flare, scaleX=[(0, 1.0), (5, 0.9), (14, 1.55), (24, 1.42), (70, 1.3), (130, 1.0)],
+             scaleY=[(0, 1.0), (5, 0.85), (12, 2.1), (22, 1.75), (40, 1.85), (70, 1.5), (130, 1.0)]),
+        sc.T(flare_wash, opacity=[(0, 0.0), (12, 0.34), (30, 0.2), (130, 0.0)]),
+        sc.T(light_pool, scaleX=[(0, 1.0), (12, 1.45), (130, 1.0)], scaleY=[(0, 0.42), (12, 0.6), (130, 0.42)]),
     ])
+    # The pressure burst splits into short-lived jets and ballistic embers;
+    # they detach from the scaling flame so the apex does not remain a stamp.
+    flare_bits = []
+    for i in range(10):
+        launch = 10 + i * 2
+        life = 44 + i * 3
+        direction = -1 if i % 2 else 1
+        bit = S(O, f"FlareEmber{i}", [(-2, 0), (-4, -9), (0, -19), (4, -7), (2, 0)],
+                sc.vgrad(-10, 10, [("FFFFF1B0", 0), ("FFFFA246", 1)]), origin=O, opacity=0.0)
+        flare_bits.append(bit)
+        frames = sorted({0, launch, launch + 3, launch + life, 130, *range(launch, launch + life, 3)})
+        def age(f: int) -> float:
+            return max(0.0, min(1.0, (f - launch) / life))
+        flare.add(sc.T(bit,
+            x=[(f, direction * (8 + i * 2 + (55 + 6 * i) * (1 - math.exp(-2 * age(f)))), "linear") for f in frames],
+            y=[(f, -130 - (390 + i * 15) * age(f) + 110 * age(f)**2, "linear") for f in frames],
+            rotation=[(f, direction * (0.2 + age(f) * 0.9), "linear") for f in frames],
+            scaleY=[(f, 1.2 - 0.85 * age(f), "linear") for f in frames],
+            opacity=[(f, (min(1.0, age(f) * 12) * (1 - age(f))**0.7) if launch <= f <= launch + life else 0.0,
+                      "linear") for f in frames]))
+    fire.children[0:0] = flare_bits
     sc.one_shot("flare", flare)
 
     rain_node, rain_anim = rain_fx(sc, "Rain", "88B8C8F0", extra=[
@@ -495,8 +628,10 @@ def campfire() -> str:
     sc.one_shot("shootingStar", star_anim)
 
     # owl on a branch of the left pine
-    ox_, oy_ = 196.0, 826.0
-    branch = S(O, "Branch", [(40, 880), (150, 868), (250, 872), (250, 884), (150, 882), (40, 896)], F("FF140F1E"))
+    # the owl perches on a bough growing out of the right-hand pine, silhouetted beside the moon
+    ox_, oy_ = 884.0, 704.0
+    branch = S(O, "Branch", [(958, 740), (900, 752), (842, 748), (816, 738), (840, 760), (902, 766), (962, 758)],
+               F("FF140F1E"))
     owl = d("Node", x=ox_, y=oy_, name="Owl")
     OW = (ox_, oy_)
     eyes_ = []
@@ -505,10 +640,11 @@ def campfire() -> str:
         eyes_ += [lid, E(OW, f"OwlPupil{k}", ox_ + ex, oy_ - 18, 10, 12, F("FF140C08")),
                   E(OW, f"OwlEye{k}", ox_ + ex, oy_ - 18, 24, 24, F("FFF2C230"), L("FF3A2414", 2))]
     owl.add(*eyes_,
-            S(OW, "Beak", [(ox_ - 5, oy_ - 6), (ox_ + 5, oy_ - 6), (ox_, oy_ + 6, "c")], F("FFD8A040")),
+            beak := S(OW, "Beak", [(ox_ - 6, oy_ - 7), (ox_ + 6, oy_ - 7), (ox_, oy_ + 7, "c")], F("FFD8A040"),
+                      origin=(ox_, oy_ - 7)),
             S(OW, "Face", [(ox_ - 34, oy_ - 18), (ox_, oy_ - 40), (ox_ + 34, oy_ - 18), (ox_, oy_ + 6)], F("FFB08860")),
-            S(OW, "Chest", [(ox_ - 18, oy_ + 4), (ox_ + 18, oy_ + 4), (ox_ + 14, oy_ + 42), (ox_ - 14, oy_ + 42)],
-              F("FFC8A478")),
+            chest := S(OW, "Chest", [(ox_ - 18, oy_ + 4), (ox_ + 18, oy_ + 4), (ox_ + 14, oy_ + 42),
+                                     (ox_ - 14, oy_ + 42)], F("FFC8A478"), origin=(ox_, oy_ + 42)),
             S(OW, "OwlBody", [(ox_ - 34, oy_ - 40, "c"), (ox_ - 18, oy_ - 30), (ox_ + 18, oy_ - 30), (ox_ + 34, oy_ - 40, "c"),
                               (ox_ + 40, oy_), (ox_ + 30, oy_ + 46), (ox_, oy_ + 54), (ox_ - 30, oy_ + 46), (ox_ - 40, oy_)],
               sc.vgrad(-50, 50, [("FF8A6444", 0.0), ("FF4A3220", 1.0)]), L("FF20140C", 2.5)))
@@ -516,20 +652,30 @@ def campfire() -> str:
     sc.ambient("OwlBlink", sc.A("amb_owl", 300, [sc.T(l_, ease=None, scaleY=[(0, 0.0), (200, 0.0), (205, 1.0),
                                                                               (212, 0.0), (300, 0.0)]) for l_ in lids],
                                 loop=True))
-    hoots = [E(O, f"Hoo{k}", ox_ + 50, oy_ - 40, 22 - k * 4, 22 - k * 4, L("CCFFF2D0", 3), opacity=0.0)
+    # a dead snag gives the owl's bough a trunk
+    snag = S(O, "OwlSnag", [(906, 1100, "c"), (916, 860), (924, 700), (930, 620), (942, 626), (944, 720), (952, 900),
+                            (964, 1100, "c")], F("FF0C1D22"))
+    twig = S(O, "OwlTwig", [(930, 680), (962, 646), (976, 640)], L("FF0C1D22", 5), closed=False)
+    hoots = [E(O, f"Hoo{k}", ox_ - 50, oy_ - 40, 40 - k * 6, 40 - k * 6, L("DDFFF2D0", 4 - k * 0.8), opacity=0.0)
              for k in range(3)]
-    hoot = sc.A("ev_owlHoot", 120, [
-        sc.T(owl, scaleY=[(0, 1.0), (10, 0.9), (20, 1.06), (30, 1.0), (50, 0.9), (60, 1.06), (70, 1.0), (120, 1.0)],
-             rotation=[(0, 0.0), (20, 0.12), (70, 0.12), (100, 0.0), (120, 0.0)]),
-        *[sc.T(h, x=[(0, ox_ + 50.0), (60 + 15 * k, ox_ + 90.0 + 20 * k)], y=[(0, oy_ - 40.0), (60 + 15 * k, oy_ - 120.0 - 30 * k)],
-               opacity=[(0, 0.0), (10 + 15 * k, 1.0), (60 + 15 * k, 0.0), (120, 0.0)]) for k, h in enumerate(hoots)],
+    hoot = sc.A("ev_owlHoot", 150, [
+        sc.T(owl, scaleY=[(0, 1.0), (8, 0.92), (16, 1.08), (28, 1.0), (52, 0.92), (60, 1.08), (72, 1.0), (150, 1.0)],
+             rotation=[(0, 0.0), (14, -0.14), (40, -0.1), (60, -0.16), (100, -0.12), (130, 0.0), (150, 0.0)],
+             y=[(0, oy_), (14, oy_ - 6), (28, oy_), (60, oy_ - 6), (72, oy_), (150, oy_)]),
+        sc.T(beak, scaleY=[(0, 1.0), (10, 1.0), (14, 1.9), (26, 1.0), (56, 1.0), (60, 1.9), (72, 1.0), (150, 1.0)]),
+        sc.T(chest, scaleY=[(0, 1.0), (8, 1.0), (16, 1.14), (30, 1.0), (54, 1.0), (62, 1.14), (76, 1.0), (150, 1.0)]),
+        *[sc.T(h, x=[(0, ox_ - 50.0), (14 + 10 * k, ox_ - 50.0), (80 + 15 * k, ox_ - 120.0 - 30 * k)],
+               y=[(0, oy_ - 40.0), (14 + 10 * k, oy_ - 40.0), (80 + 15 * k, oy_ - 130.0 - 30 * k)],
+               scaleX=[(0, 0.5), (14 + 10 * k, 0.5), (80 + 15 * k, 1.8)], scaleY=[(0, 0.5), (14 + 10 * k, 0.5), (80 + 15 * k, 1.8)],
+               opacity=[(0, 0.0), (14 + 10 * k, 0.0), (18 + 10 * k, 1.0), (80 + 15 * k, 0.0), (150, 0.0)])
+          for k, h in enumerate(hoots)],
     ])
     sc.one_shot("owlHoot", hoot)
 
     # ---- props
     hit_fire = sc.hit("fire", fx, fy - 80, 300, 320)
     sc.prop("fire", hit_fire)
-    hit_tent = sc.hit("tent", 840, 990, 420, 300)
+    hit_tent = sc.hit("tent", *place_point("campfire", "TentPlace", 840, 990), 300, 220)
     sc.prop("tent", hit_tent)
     hit_owl = sc.hit("owl", ox_, oy_, 110, 130)
     sc.prop("owl", hit_owl)
@@ -537,8 +683,8 @@ def campfire() -> str:
     sc.prop("sky", hit_sky)
 
     # moon_cut must paint over the moon to carve the crescent; craters on the lit part
-    content = [rain_node, fg[0], fg[1], *stones_front, *logs, fire_flare, *smoke, *stones_back, tent, *grass, tree_glow,
-               light_pool, fg[2], ground, *hoots, owl, branch,
+    content = [rain_node, flare_wash, fg[0], fg[1], *stones_front, *logs, fire_flare, *smoke, *stones_back, tent, *grass, tree_glow,
+               light_pool, fg[2], ground, *hoots, owl, branch, twig, snag,
                *near_trees, mid, *far_trees, far, star_node, *craters, moon, moon_glow, *stars, sky]
     return sc.write(content, [hit_fire, hit_tent, hit_owl, hit_sky])
 
@@ -570,30 +716,41 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
     rug_in = E(O, "RugInner", 540, 1520, 780, 220, L("CCE8C890", 4))
 
     # window with night sky + skyline, curtains
-    wx0, wy0, wx1, wy1 = 360, 380, 720, 900
+    # the window sits high: in the app the avatar's head covers the wall below ~y 760
+    wx0, wy0, wx1, wy1 = 360, 230, 720, 700
     sky = rect("WinSky", wx0, wy0, wx1, wy1, sc.vgrad(-260, 260, [("FF1C2450", 0.0), ("FF6A4A80", 1.0)]))
-    city = S(O, "Skyline", [(wx0, wy1, "c"), (wx0, 760, "c"), (400, 760, "c"), (400, 700, "c"), (440, 700, "c"),
-                            (440, 780, "c"), (480, 780, "c"), (480, 660, "c"), (530, 660, "c"), (530, 740, "c"),
-                            (580, 740, "c"), (580, 690, "c"), (630, 690, "c"), (630, 770, "c"), (680, 770, "c"),
-                            (680, 720, "c"), (wx1, 720, "c"), (wx1, wy1, "c")], F("FF231C38"))
+    city = S(O, "Skyline", [(wx0, wy1, "c"), (wx0, 560, "c"), (400, 560, "c"), (400, 500, "c"), (440, 500, "c"),
+                            (440, 580, "c"), (480, 580, "c"), (480, 460, "c"), (530, 460, "c"), (530, 540, "c"),
+                            (580, 540, "c"), (580, 490, "c"), (630, 490, "c"), (630, 570, "c"), (680, 570, "c"),
+                            (680, 520, "c"), (wx1, 520, "c"), (wx1, wy1, "c")], F("FF231C38"))
     rnd = random.Random(3)
     windows_lit = [rect(f"Lit{i}", x, y, x + 8, y + 10, F("FFFFD27A"), opacity=rnd.uniform(0.5, 1))
-                   for i, (x, y) in enumerate([(rnd.uniform(400, 700), rnd.uniform(720, 880)) for _ in range(18)])]
-    moon = E(O, "Moon", 640, 470, 60, 60, F("FFFFF2D0"))
+                   for i, (x, y) in enumerate([(rnd.uniform(400, 700), rnd.uniform(560, 680)) for _ in range(18)])]
+    moon = E(O, "Moon", 640, 320, 60, 60, F("FFFFF2D0"))
     frame = rect("WinFrame", wx0 - 14, wy0 - 14, wx1 + 14, wy1 + 14, F("FFE8DCCC"), 6)
-    mullion = [rect("MullV", 532, wy0, 548, wy1, F("FFE8DCCC")), rect("MullH", wx0, 632, wx1, 646, F("FFE8DCCC"))]
-    sill = rect("Sill", wx0 - 34, wy1 + 8, wx1 + 34, wy1 + 30, F("FFF2E8DA"), 4)
-    curtain = [(300, 340), (380, 340), (390, 600), (370, 960), (300, 980, "c")]
-    curt_l = S(O, "CurtainL", curtain + [(280, 640)], sc.vgrad(-320, 320, [("FFA83A4A", 0.0), ("FF6E1E2E", 1.0)]),
+    mullion = [rect("MullV", 532, wy0, 548, wy1, F("FFE8DCCC")), rect("MullH", wx0, 458, wx1, 472, F("FFE8DCCC"))]
+    # a long ledge under the window runs the width of the wall (the walking cat's stage)
+    sill = rect("Sill", -10, wy1 + 8, W + 10, wy1 + 30, F("FFF2E8DA"), 4)
+    ledge_sh = rect("LedgeShadow", -10, wy1 + 30, W + 10, wy1 + 44, F("40101C1E"))
+    curtain = [(300, 190), (380, 190), (390, 430), (370, 780), (300, 800, "c")]
+    curt_l = S(O, "CurtainL", curtain + [(280, 470)], sc.vgrad(-320, 320, [("FFA83A4A", 0.0), ("FF6E1E2E", 1.0)]),
                L(INKC, 3))
-    curt_r = S(O, "CurtainR", [(W - p[0], p[1]) + tuple(p[2:]) for p in reversed(curtain + [(280, 640)])],
+    curt_r = S(O, "CurtainR", [(W - p[0], p[1]) + tuple(p[2:]) for p in reversed(curtain + [(280, 470)])],
                sc.vgrad(-320, 320, [("FFA83A4A", 0.0), ("FF6E1E2E", 1.0)]), L(INKC, 3))
-    folds = [S(O, f"Fold{i}", [(x, 360), (x + 6, 700), (x - 4, 960)], L("40000000", 3), closed=False)
+    folds = [S(O, f"Fold{i}", [(x, 210), (x + 6, 520), (x - 4, 780)], L("40000000", 3), closed=False)
              for i, x in enumerate([330, 350, W - 330, W - 350])]
-    rod = rect("Rod", 270, 330, W - 270, 342, F("FF3A2A20"), 6)
+    rod = rect("Rod", 270, 180, W - 270, 192, F("FF3A2A20"), 6)
+    # curtains hang from the rod and sway a little (pivot at the rod)
+    def sway_node(name: str, px: float, *kids: El) -> El:
+        for k in kids:
+            k.attrs["x"] = float(k.attrs["x"]) - px
+            k.attrs["y"] = float(k.attrs["y"]) - 186.0
+        return d("Node", *kids, x=px, y=186.0, name=name)
+    curt_l_n = sway_node("CurtainLSway", 340.0, folds[0], folds[1], curt_l)
+    curt_r_n = sway_node("CurtainRSway", W - 340.0, folds[2], folds[3], curt_r)
 
     # floor lamp (left)
-    lx = 170.0
+    lx = 286.0
     lamp_glow = E(O, "LampGlow", lx, 700, 700, 700, sc.rgrad(350, [("70FFD890", 0.0), ("20FFC070", 0.5), ("00FFC070", 1.0)]))
     lamp_cone = S(O, "LampCone", [(lx - 60, 760), (lx + 60, 760), (lx + 170, floor_y + 80), (lx - 170, floor_y + 80)],
                   sc.vgrad(-260, 260, [("40FFE0A0", 0.0), ("00FFE0A0", 1.0)]))
@@ -604,7 +761,7 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
     lamp = d("Node", shade, pole, lamp_base, x=0.0, y=0.0, name="Lamp")
 
     # plant (left of the avatar, on the floor)
-    px_, py_ = 330.0, 1250.0
+    px_, py_ = 140.0, 1290.0
     leaves = []
     for k, (ang, ln) in enumerate([(-2.2, 190), (-1.8, 230), (-1.4, 250), (-1.0, 220), (-0.7, 170), (-2.6, 150)]):
         tx, ty = px_ + math.cos(ang) * ln, py_ - 60 + math.sin(ang) * ln
@@ -635,7 +792,7 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
     tv_glare = S(O, "TvGlare", [(tx0 + 50, 900), (tx0 + 110, 900), (tx0 + 60, 1040), (tx0 + 40, 1040)], F("18FFFFFF"))
 
     # sleeping cat on the cabinet (prop)
-    cx_, cy_ = 960.0, ty0 - 4
+    cx_, cy_ = 904.0, ty0 - 4
     cat = d("Node", x=cx_, y=cy_, name="Cat")
     CP = (cx_, cy_)
     cat_body = S(CP, "CatBody", [(cx_ - 60, cy_), (cx_ - 54, cy_ - 34), (cx_ - 10, cy_ - 50), (cx_ + 40, cy_ - 40),
@@ -664,12 +821,18 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
     night = rect("Night", -10, -10, W + 10, H + 10, F("FF060A1C"), opacity=0.0)
     moonbeam = S(O, "MoonBeam", [(wx0, wy0), (wx1, wy0), (wx1 + 260, H), (wx0 - 160, H)],
                  sc.vgrad(-800, 800, [("30B8C8FF", 0.0), ("00B8C8FF", 1.0)]), opacity=0.0)
+    moon_pool = S(O, "MoonPool", [(380, 1240), (720, 1240), (900, 1560), (240, 1560)],
+                  sc.vgrad(-160, 160, [("50B8D0FF", 0.0), ("28B8D0FF", 1.0)]), opacity=0.0)
+    tv_spill = E(O, "TvFloorSpill", 870, 1330, 520, 150, sc.rgrad(260, [("606AD8FF", 0.0), ("006AD8FF", 1.0)]),
+                 opacity=0.0)
     lights_on = sc.A("lights_on", 1, [sc.T(night, ease=None, opacity=[(0, 0.0)]), sc.T(lamp_glow, ease=None, opacity=[(0, 1.0)]),
                                       sc.T(lamp_cone, ease=None, opacity=[(0, 1.0)]), sc.T(moonbeam, ease=None, opacity=[(0, 0.0)]),
+                                      sc.T(moon_pool, ease=None, opacity=[(0, 0.0)]),
                                       sc.T(shade, ease=None, opacity=[(0, 1.0)])])
     lights_off = sc.A("lights_off", 1, [sc.T(night, ease=None, opacity=[(0, 0.62)]), sc.T(lamp_glow, ease=None, opacity=[(0, 0.0)]),
                                         sc.T(lamp_cone, ease=None, opacity=[(0, 0.0)]),
                                         sc.T(moonbeam, ease=None, opacity=[(0, 1.0)]),
+                                        sc.T(moon_pool, ease=None, opacity=[(0, 1.0)]),
                                         sc.T(shade, ease=None, opacity=[(0, 0.75)])])
     sc.toggle("Lights", lights_on, {"lightsOn": lights_on, "lightsOff": lights_off})
     flick = []
@@ -681,39 +844,160 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
         sc.T(tv_on, ease=None, opacity=[(0, 0.0), (8, 1.0, "linear"), (540, 1.0), (556, 0.0)]),
         sc.T(tv_glow, ease=None, opacity=[(0, 0.0), (8, 1.0, "linear")] + [(f, 0.7 if (f // 10) % 2 else 1.0, "linear")
                                                                          for f in range(20, 540, 10)] + [(556, 0.0)]),
+        sc.T(tv_spill, ease=None, opacity=[(0, 0.0), (8, 1.0, "linear")] + [(f, 0.65 if (f // 10) % 2 else 1.0, "linear")
+                                                                           for f in range(20, 540, 10)] + [(556, 0.0)]),
         *flick])
     sc.one_shot("tvOn", tv)
-    # a second cat trots across the floor
-    wk = d("Node", x=-200.0, y=1560.0, name="WalkingCat")
-    WP = (-200.0, 1560.0)
-    legs = []
-    for i, lx_ in enumerate((-50, -30, 30, 50)):
-        leg = S(WP, f"Leg{i}", [(WP[0] + lx_, WP[1] - 20), (WP[0] + lx_, WP[1] + 34)], L("FF3A3440", 9), closed=False,
-                origin=(WP[0] + lx_, WP[1] - 20))
-        legs.append(leg)
-    wk.add(S(WP, "WHead", [(WP[0] + 70, WP[1] - 40), (WP[0] + 76, WP[1] - 76, "c"), (WP[0] + 90, WP[1] - 58),
-                           (WP[0] + 106, WP[1] - 76, "c"), (WP[0] + 112, WP[1] - 40), (WP[0] + 96, WP[1] - 20),
-                           (WP[0] + 78, WP[1] - 22)], F("FF3A3440")),
-           E(WP, "WEye", WP[0] + 100, WP[1] - 46, 8, 6, F("FFE0F060")),
-           S(WP, "WBody", [(WP[0] - 70, WP[1] - 40), (WP[0] + 80, WP[1] - 46), (WP[0] + 74, WP[1] - 4),
-                           (WP[0] - 64, WP[1] + 2)], F("FF3A3440")),
-           S(WP, "WTail", [(WP[0] - 66, WP[1] - 34), (WP[0] - 110, WP[1] - 60), (WP[0] - 100, WP[1] - 110)],
-             L("FF3A3440", 9), closed=False),
-           *legs)
-    stride = [sc.T(lg, ease=None, rotation=[(f, (0.35 if ((f // 10) + i) % 2 else -0.35), "linear")
-                                            for f in range(0, 241, 10)]) for i, lg in enumerate(legs)]
-    cat_walk = sc.A("ev_catWalksBy", 240, [sc.T(wk, ease=None, x=[(0, -200.0), (240, W + 220.0)],
-                                                y=[(f, 1560.0 - (4 if (f // 10) % 2 else 0), "linear") for f in range(0, 241, 10)]),
-                                           *stride])
+    # catWalksBy: a grey tabby (same drawing language as the sleeping cat) walks the ledge
+    # right to left, stops mid-way to look at the camera, flicks its tail and moves on
+    ledge_y = float(wy1 + 8)
+    TAB, TAB_SH, TAB_DK = "FFB9BDC6", "FF7D838F", "FF4E5460"
+    wk = d("Node", x=1180.0, y=ledge_y, name="WalkingCat")
+    Z = (0.0, 0.0)
+
+    cat_joints: dict[str, tuple[El, El, El]] = {}
+
+    def leg(name: str, hx: float, col: str) -> El:
+        # Two links let the paw stay flat during stance and lift during swing.
+        paw = d("Node", E(O, "Paw", -3, -1, 17, 8, F(col), L(INKC, 1.4)),
+                x=0.0, y=19.0, name=name + "Foot")
+        shin = d("Node", paw,
+                 S(O, "Shin", [(-4, -2), (4, -2), (3, 18), (-3, 18)], F(col), L(INKC, 1.4)),
+                 x=0.0, y=20.0, name=name + "Shin")
+        n = d("Node", shin,
+              S(O, "Thigh", [(-6, -3), (6, -3), (4, 21), (-4, 21)], F(col), L(INKC, 1.4)),
+              x=hx, y=-32.0, name=name)
+        cat_joints[name] = (n, shin, paw)
+        return n
+    legs_far = [leg("LegFarF", -22, TAB_SH), leg("LegFarB", 46, TAB_SH)]
+    legs_near = [leg("LegNearF", -34, TAB), leg("LegNearB", 34, TAB)]
+    tail = d("Node", x=56.0, y=-42.0, name="WTailPivot")
+    tail.add(S((56.0, -42.0), "WTail", [(56, -42), (84, -50), (96, -78), (88, -100)], L(INKC, 13), closed=False),
+             S((56.0, -42.0), "WTailFill", [(56, -42), (84, -50), (96, -78), (88, -100)], L(TAB_SH, 9), closed=False))
+    stripes_w = [S(Z, f"WStripe{i}", [(x - 6, -60 + i), (x, -46), (x - 4, -30)], L(TAB_DK, 4), closed=False)
+                 for i, x in enumerate((-8, 12, 32))]
+    body_w = S(Z, "WBody", [(-50, -50), (-20, -62), (30, -60), (58, -48), (62, -30), (40, -22), (-30, -22), (-52, -32)],
+               sc.vgrad(-20, 20, [(TAB, 0.0), (TAB_SH, 1.0)]), L(INKC, 2.5))
+    ears = [(-88, -64), (-86, -86), (-80, -100, "c"), (-68, -88), (-56, -90), (-46, -102, "c"), (-40, -80),
+            (-38, -62), (-48, -46), (-64, -42), (-80, -48)]
+    head_side = d("Node", x=0.0, y=0.0, name="WHeadSide")
+    head_side.add(E(Z, "WPupil", -75, -70.5, 3, 6, F("FF1A1414")),
+                  S(Z, "WEye", [(-80, -70), (-74, -74), (-68, -70), (-74, -67)], F("FFE6D45A"), L(INKC, 1.6)),
+                  S(Z, "WNose", [(-90, -61), (-86, -61), (-88, -58, "c")], F("FFD98A8A")),
+                  S(Z, "WMuzzle", [(-90, -56), (-82, -52), (-74, -54)], L(INKC, 1.6), closed=False),
+                  S(Z, "WHeadStripe", [(-66, -88), (-62, -78)], L(TAB_DK, 3), closed=False),
+                  S(Z, "WHead", ears, sc.vgrad(-30, 30, [(TAB, 0.0), (TAB_SH, 1.0)]), L(INKC, 2.5)))
+    head_front = d("Node", x=0.0, y=0.0, name="WHeadFront", opacity=0.0)
+    fx_ = -62.0
+    head_front.add(*[E(Z, f"WFPupil{k}", fx_ + dx, -70.5, 3, 7, F("FF1A1414")) for k, dx in enumerate((-11, 11))],
+                   *[S(Z, f"WFEye{k}", [(fx_ + dx - 6, -70), (fx_ + dx, -75), (fx_ + dx + 6, -70), (fx_ + dx, -66)],
+                       F("FFE6D45A"), L(INKC, 1.6)) for k, dx in enumerate((-11, 11))],
+                   S(Z, "WFNose", [(fx_ - 3, -60), (fx_ + 3, -60), (fx_, -57, "c")], F("FFD98A8A")),
+                   S(Z, "WFMouth", [(fx_ - 6, -53), (fx_, -55), (fx_ + 6, -53)], L(INKC, 1.6), closed=False),
+                   S(Z, "WFHead", [(fx_ - 28, -64), (fx_ - 26, -88), (fx_ - 20, -102, "c"), (fx_ - 8, -88), (fx_ + 8, -88),
+                                   (fx_ + 20, -102, "c"), (fx_ + 26, -88), (fx_ + 28, -64), (fx_ + 18, -46), (fx_, -42),
+                                   (fx_ - 18, -46)], sc.vgrad(-30, 30, [(TAB, 0.0), (TAB_SH, 1.0)]), L(INKC, 2.5)))
+    w_shadow = E(Z, "WShadow", 4, 2, 150, 12, F("38101818"))
+    w_body = d("Node", head_front, head_side, *legs_near, *stripes_w, body_w, tail, *legs_far, x=0.0, y=0.0,
+               name="WBodyBob")
+    wk.add(w_body, w_shadow)
+    stop0, stop1, end = 246, 330, 642
+
+    def cat_x(frame: float) -> float:
+        if stop0 <= frame <= stop1:
+            return 560.0
+        start, finish, x0, x1 = (0, stop0, 1180.0, 560.0) if frame < stop0 else (stop1, end, 560.0, -220.0)
+        t = max(0.0, min(finish - start, frame - start))
+        length, ramp = finish - start, 30.0
+        # Integrate a cosine velocity ramp, cruise, then decelerate. Paw phase
+        # follows distance travelled, so it cannot treadmill during the stop.
+        if t < ramp:
+            dist = 0.5 * (t - ramp / math.pi * math.sin(math.pi * t / ramp))
+        elif t > length - ramp:
+            rem = length - t
+            dist = length - ramp - 0.5 * (rem - ramp / math.pi * math.sin(math.pi * rem / ramp))
+        else:
+            dist = t - ramp * 0.5
+        return x0 + (x1 - x0) * dist / (length - ramp)
+
+    def cat_step(frame: int) -> tuple[float, float]:
+        if stop0 <= frame <= stop1:
+            return 0.0, 0.0
+        start, finish, dist, cycles = (0, stop0, 620.0, 10) if frame < stop0 else (stop1, end, 780.0, 12.580645)
+        base = 1180.0 if start == 0 else 560.0
+        phase = (base - cat_x(frame)) / dist * cycles * 2 * math.pi
+        speed = abs(cat_x(frame + 1) - cat_x(frame - 1)) * 0.5
+        return phase, min(1.0, speed / 2.3)
+
+    samples = sorted(set(range(0, end + 1, 2)) | {stop0, stop1, end})
+    stride = []
+    for index, (lg, ph) in enumerate(zip([*legs_near, *legs_far], (0.0, math.pi, math.pi * 0.5, math.pi * 1.5))):
+        upper, lower, paw = cat_joints[str(lg.attrs["name"])]
+        hip_keys, knee_keys, paw_keys = [], [], []
+        for f in samples:
+            phase, speed = cat_step(f)
+            p = ((phase + ph) / (2 * math.pi)) % 1.0
+            # During 60% stance the local foot travels right at exactly the
+            # body's leftward speed. During recovery it lifts in a curved arc.
+            if p < 0.6:
+                dx, lift = 62 * (p - 0.3), 0.0
+            else:
+                t = (p - 0.6) / 0.4
+                dx = 18.6 * math.cos(math.pi * t)
+                lift = 12 * math.sin(math.pi * t) ** 1.5
+            dx *= speed
+            dy = 32 - lift * speed + 2.2 * speed * math.sin(phase) ** 2
+            distance = min(38.95, math.hypot(dx, dy))
+            bend = (1 if index % 2 else -1) * math.acos((distance**2 - 20**2 - 19**2) / (2 * 20 * 19))
+            hip = math.atan2(-dx, dy) - math.atan2(19 * math.sin(bend), 20 + 19 * math.cos(bend))
+            hip_keys.append((f, hip, "linear"))
+            knee_keys.append((f, bend, "linear"))
+            paw_keys.append((f, -hip - bend, "linear"))
+        stride.extend([sc.T(upper, ease=None, rotation=hip_keys), sc.T(lower, ease=None, rotation=knee_keys),
+                       sc.T(paw, ease=None, rotation=paw_keys)])
+    cat_walk = sc.A("ev_catWalksBy", end, [
+        sc.T(wk, ease=None, x=[(f, cat_x(f), "linear") for f in samples]),
+        sc.T(w_body, ease=None, y=[(f, -2.2 * cat_step(f)[1] * math.sin(cat_step(f)[0]) ** 2, "linear") for f in samples]),
+        *stride,
+        sc.T(tail, rotation=[(0, 0.0), (80, 0.12), (160, -0.08), (stop0, 0.0), (stop0 + 18, -0.4),
+                             (stop0 + 32, 0.16), (stop0 + 50, -0.2), (stop1, 0.0), (440, 0.12), (end, 0.0)]),
+        sc.T(head_front, opacity=[(0, 0.0), (stop0 + 2, 0.0), (stop0 + 14, 1.0),
+                                  (stop1 - 20, 1.0), (stop1 - 6, 0.0), (end, 0.0)],
+             x=[(0, -5.0), (stop0 + 2, -5.0), (stop0 + 16, 0.0), (stop1 - 20, 0.0), (stop1 - 6, -5.0), (end, -5.0)]),
+        sc.T(head_side, opacity=[(0, 1.0), (stop0 + 2, 1.0), (stop0 + 14, 0.0),
+                                 (stop1 - 20, 0.0), (stop1 - 6, 1.0), (end, 1.0)],
+             x=[(0, 0.0), (stop0 + 2, 0.0), (stop0 + 14, 5.0), (stop1 - 20, 5.0), (stop1 - 6, 0.0), (end, 0.0)]),
+    ])
     sc.one_shot("catWalksBy", cat_walk)
 
-    hits = [sc.hit("lamp", lx, 900, 180, 660), sc.hit("tv", tx0 + 160, 970, 300, 200),
-            sc.hit("cat", cx_ - 10, cy_ - 30, 190, 80), sc.hit("plant", px_, py_ - 140, 300, 380)]
+    tvp = place_point("livingRoom", "TvCorner", tx0 + 160, 970)
+    catp = place_point("livingRoom", "TvCorner", cx_ - 10, cy_ - 30)
+    hits = [sc.hit("lamp", lx, 900, 180, 660), sc.hit("tv", *tvp, 216, 150),
+            sc.hit("cat", *catp, 140, 60), sc.hit("plant", px_, py_ - 140, 300, 380)]
     for h, pid in zip(hits, ["lamp", "tv", "cat", "plant"]):
         sc.prop(pid, h)
+    # ambience: lit windows across the city wink on and off, curtains breathe, the lamp glow swells softly
+    tw = []
+    for i, lit in enumerate(windows_lit):
+        if i % 3 == 0:
+            continue
+        r_ = random.Random(40 + i)
+        base = float(lit.attrs["opacity"])
+        P = r_.choice([300, 420, 540])
+        f0 = r_.randint(20, P - 120)
+        tw.append(sc.T(lit, opacity=[(0, base, "hold"), (f0, 0.08, "hold"), (f0 + r_.randint(50, 100), base, "hold"),
+                                     (P, base, "hold")]))
+        sc.ambient(f"City{i}", sc.A(f"amb_city{i}", P, [tw.pop()], loop=True))
+    sc.ambient("Curtains", sc.A("amb_curtains", 600, [
+        sc.T(curt_l_n, rotation=[(0, 0.0), (210, 0.03), (420, -0.016), (600, 0.0)]),
+        sc.T(curt_r_n, rotation=[(0, 0.0), (250, -0.026), (440, 0.018), (600, 0.0)]),
+        sc.T(lamp_glow, scaleX=[(0, 1.0), (300, 1.04), (600, 1.0)], scaleY=[(0, 1.0), (300, 1.04), (600, 1.0)])],
+        loop=True, seam_hold=True))
     content = [night, wk, rug_in, rug, plant, cat, *zzz, tv_glare, *tv_shapes, tv_on, tv_screen, tv_frame, tv_stand,
-               *knobs, cabinet, lamp, lamp_cone, moonbeam, tv_glow, lamp_glow, *planks, floor, baseboard, rod, *folds,
-               curt_l, curt_r, sill, *mullion, *windows_lit, city, moon, sky, frame, rail, wainscot, *stripes, wall]
+               *knobs, cabinet, lamp, lamp_cone, moonbeam, tv_glow, lamp_glow, moon_pool, tv_spill, *planks, floor,
+               baseboard,
+               curt_l_n, curt_r_n, rod, sill, ledge_sh, *mullion, *windows_lit, city, moon, sky, frame, rail, wainscot,
+               *stripes, wall]
     return sc.write(content, hits)
 
 
@@ -797,21 +1081,34 @@ def beach() -> str:
     crab = d("Node", x=crx, y=cry, name="Crab")
     CR = (crx, cry)
     crab_legs = [S(CR, f"CLeg{i}", [(crx + sx * 26, cry + 6), (crx + sx * 50, cry + 4 + k * 6), (crx + sx * 58, cry + 30 + k * 6)],
-                   L("FFC23A2A", 5), closed=False) for i, (sx, k) in enumerate([(-1, 0), (-1, 1), (-1, 2), (1, 0), (1, 1), (1, 2)])]
+                   L("FFC23A2A", 5), closed=False, origin=(crx + sx * 26, cry + 6))
+                 for i, (sx, k) in enumerate([(-1, 0), (-1, 1), (-1, 2), (1, 0), (1, 1), (1, 2)])]
     claws = [S(CR, f"Claw{i}", [(crx + sx * 40, cry - 30), (crx + sx * 62, cry - 56), (crx + sx * 46, cry - 66, "c"),
                                 (crx + sx * 52, cry - 50), (crx + sx * 30, cry - 44)], F("FFE04A36"), L("FF7A1A12", 2.5),
                  origin=(crx + sx * 30, cry - 20)) for i, sx in enumerate((-1, 1))]
-    crab.add(*[E(CR, f"CEye{i}", crx + sx * 12, cry - 40, 12, 12, F("FFFFFFFF"), L("FF20100C", 2)) for i, sx in enumerate((-1, 1))],
-             *[E(CR, f"CPupil{i}", crx + sx * 12, cry - 40, 5, 6, F("FF20100C")) for i, sx in enumerate((-1, 1))],
+    crab.add(*[E(CR, f"CPupil{i}", crx + sx * 12, cry - 40, 5, 6, F("FF20100C")) for i, sx in enumerate((-1, 1))],
+             *[E(CR, f"CEye{i}", crx + sx * 12, cry - 40, 12, 12, F("FFFFFFFF"), L("FF20100C", 2)) for i, sx in enumerate((-1, 1))],
              *claws,
              E(CR, "Shell", crx, cry, 92, 60, sc.rgrad(46, [("FFF06A50", 0.0), ("FFC23A2A", 1.0)], cx=-10, cy=-10),
                L("FF7A1A12", 2.5)),
              *crab_legs)
+    # Plant the feet during both pauses. Alternate tripods while side-stepping,
+    # with a soft lift and a short body compression on each change of support.
+    gait = []
+    for i, leg_ in enumerate(crab_legs):
+        keys = [(0, 0.0)]
+        for f in range(3, 241, 3):
+            walking = f < 60 or 120 < f < 180
+            local = f if f < 60 else f - 120
+            weight = math.sin(math.pi * min(local, 60) / 60) ** 0.5 if walking else 0.0
+            keys.append((f, 0.22 * weight * math.sin(2 * math.pi * local / 20 + (i % 2) * math.pi), "linear"))
+        gait.append(sc.T(leg_, ease=None, rotation=keys))
     sc.ambient("Crab", sc.A("amb_crab", 240, [
-        sc.T(crab, x=[(0, crx), (60, crx - 40), (120, crx - 40), (180, crx), (240, crx)]),
+        sc.T(crab, x=[(0, crx), (60, crx - 40), (120, crx - 40), (180, crx), (240, crx)],
+             y=[(f, cry - (1.4 * math.sin(math.pi * f / 10) ** 2 if f < 60 or 120 < f < 180 else 0), "linear")
+                for f in range(0, 241, 3)]),
         *[sc.T(c, rotation=[(0, 0.0), (20, 0.25 * (1 if i else -1)), (40, 0.0), (240, 0.0)]) for i, c in enumerate(claws)],
-        *[sc.T(lg, ease=None, rotation=[(f, 0.15 if ((f // 8) + i) % 2 else -0.15, "linear") for f in range(0, 241, 8)])
-          for i, lg in enumerate(crab_legs)]], loop=True))
+        *gait], loop=True))
 
     # gull on a post (prop) + flying gulls
     gx, gy = 980.0, 1060.0
@@ -825,9 +1122,21 @@ def beach() -> str:
              S(GP, "GWing", [(gx - 10, gy - 14), (gx + 40, gy - 8), (gx + 52, gy + 6, "c"), (gx + 4, gy + 4)],
                sc.vgrad(-10, 10, [("FFB8C0CC", 0.0), ("FF7A8494", 1.0)]), L(INKC, 2)),
              E(GP, "GBody", gx, gy - 4, 72, 40, F("FFFFFFFF"), L(INKC, 2)),
-             S(GP, "GLegs", [(gx - 6, gy + 12), (gx - 6, gy + 12 + 0.01)], L("FFF0B030", 3), closed=False))
-    sc.ambient("Gull", sc.A("amb_gull", 300, [sc.T(gull, rotation=[(0, 0.0), (200, 0.0), (215, -0.12), (230, 0.0), (300, 0.0)])],
+             *[S(GP, f"GFoot{i}", [(gx + dx, gy + 12), (gx + dx, gy + 17), (gx + dx - 5, gy + 18),
+                                   (gx + dx + 4, gy + 18)], L("FFC7933F", 2), closed=False)
+               for i, dx in enumerate((-7, 7))])
+    gull_eye = next(c for c in gull.children if c.attrs.get("name") == "GEye")
+    gull.children[0:0] = [S(GP, "GFeatherEdge", [(gx + 15, gy - 7), (gx + 35, gy - 1), (gx + 44, gy + 4)],
+                            L("90E2E7E5", 1.5), closed=False),
+                          S(GP, "GBreastShade", [(gx - 29, gy - 5), (gx - 20, gy + 8), (gx + 4, gy + 12)],
+                            L("60A6B9BC", 2.4), closed=False)]
+    sc.ambient("Gull", sc.A("amb_gull", 300, [sc.T(gull, rotation=[(0, 0.0), (200, 0.0), (215, -0.12), (230, 0.0), (300, 0.0)]),
+        sc.T(gull_eye, scaleY=[(0, 1.0), (143, 1.0), (146, 0.05), (151, 1.0), (300, 1.0)])],
                             loop=True))
+    for part in gull.children:
+        part.attrs["y"] = float(part.attrs.get("y", 0)) - 18
+    gull_reaction = d("Node", *gull.children, x=0.0, y=18.0, name="GullReaction")
+    gull.children = [gull_reaction]
     flyers = []
     fly_tracks = []
     for i, (fx_, fy_) in enumerate([(300, 560), (420, 500)]):
@@ -839,35 +1148,123 @@ def beach() -> str:
     sc.ambient("Flyers", sc.A("amb_flyers", 720, fly_tracks, loop=True))
 
     # ---- events
-    big = S(O, "BigWave", [(-60, shore + 10, "c"), (-60, horizon + 60), (200, horizon - 40), (420, horizon - 160),
-                           (560, horizon - 210), (660, horizon - 170), (640, horizon - 120), (590, horizon - 140),
-                           (640, horizon - 60), (W + 60, horizon + 40), (W + 60, shore + 10, "c")],
-            sc.vgrad(-200, 200, [("FF3AA0D0", 0.0), ("FF2A6A9A", 1.0)]), L("EEFFFFFF", 6), opacity=0.0)
-    big_foam = S(O, "BigFoam", [(-40, shore), (W + 40, shore), (W + 40, shore + 140), (W / 2, shore + 170), (-40, shore + 140)],
-                 F("DDFFFFFF"), opacity=0.0)
-    by0 = float(big.attrs["y"])
-    wave_anim = sc.A("ev_bigWave", 200, [
-        sc.T(big, y=[(0, by0 + 160), (60, by0), (90, by0 + 40), (120, by0 + 220), (200, by0 + 220)],
-             opacity=[(0, 0.0), (20, 1.0), (110, 1.0), (130, 0.0), (200, 0.0)],
-             scaleX=[(0, 1.0), (90, 1.05), (200, 1.0)]),
-        sc.T(big_foam, opacity=[(0, 0.0), (100, 0.0), (120, 1.0), (170, 0.6), (200, 0.0)],
-             y=[(0, float(big_foam.attrs["y"])), (120, float(big_foam.attrs["y"]) + 60), (200, float(big_foam.attrs["y"]))]),
+    # bigWave: a swell rises out of the sea (clipped at the shoreline, so it never fades as a
+    # ghost), its foamy lip curls and collapses, then a lace-edged wash runs up the sand and
+    # drains back, leaving darker wet sand that slowly dries.
+    BW = (540.0, shore)
+    wave_clip = d("Shape", d("Rectangle", width=float(W + 200), height=600.0, name="Path"), x=540.0, y=shore - 300,
+                  name="BigWaveClip")
+    body_pts = [(-700, 60, "c"), (-700, -50), (-420, -110), (-170, -190), (40, -248), (170, -246), (238, -214),
+                (214, -186), (176, -196), (250, -150), (420, -112), (700, -70), (700, 60, "c")]
+    wbody = S(Z := (0.0, 0.0), "BigWaveBody", body_pts,
+              sc.vgrad(-250, 60, [("FF7FD6CF", 0.0), ("FF3FA7B4", 0.35), ("FF1D6E86", 1.0)]))
+    face_light = S(Z, "BigWaveFace", [(-320, -120), (-80, -205), (120, -232), (60, -190), (-160, -140), (-380, -96)],
+                   F("40E9FFF6"))
+    # A connected, asymmetrical foam lip curls around the hollow face. Tiny
+    # broken flecks erode its edge; equal separated discs look like beads.
+    foam_lip = [(-478, -98), (-370, -129), (-278, -160), (-186, -193), (-101, -225),
+                (-26, -248), (40, -264), (107, -267), (163, -259), (208, -242),
+                (235, -221), (234, -203), (215, -190), (193, -192), (180, -205),
+                (198, -214), (214, -211), (211, -223), (181, -239), (133, -249),
+                (74, -249), (7, -238), (-71, -217), (-166, -183), (-270, -150),
+                (-378, -120), (-477, -92)]
+    scallops = [S(Z, "CrestRibbon", foam_lip,
+                  sc.vgrad(-40, 40, [("FFFFFDF1", 0), ("FFE1F3E8", 0.7), ("A0ACDACE", 1)]),
+                  tension=0.65),
+                S(Z, "CurlHollow", [(159, -242), (188, -235), (211, -222), (201, -216),
+                                    (181, -220), (170, -232)], F("FF2D8792"))]
+    for i in range(22):
+        x = -360 + i * 25 + rnd.uniform(-9, 9)
+        y = -130 - 128 * math.sin((x + 400) / 650 * math.pi * 0.65)
+        width = rnd.uniform(3, 12)
+        scallops.append(E(Z, f"FoamFleck{i}", x, y + rnd.uniform(-6, 9), width, rnd.uniform(2, 5), F("C0FFFFF5")))
+    spray = [E(Z, f"Spray{i}", 120 + i * 21, -273 - (i % 3) * 13,
+               rnd.uniform(3, 7), rnd.uniform(5, 12), F("C8FFFFF5"), rotation=-0.4 + i * 0.13)
+             for i in range(9)]
+    for el in [wbody, face_light, *scallops, *spray]:
+        el.children.insert(0, d("ClippingShape", sourceId=wave_clip.ref(), name="Clip"))
+    crest = d("Node", *spray, *scallops, x=0.0, y=0.0, name="BigWaveCrest")
+    # the crest breaks on the right, beside the avatar's head, and towers above the horizon
+    big = d("Node", crest, face_light, wbody, x=760.0, y=shore + 420, scaleY=1.5, name="BigWave")
+    wash_pts = [(-600, 0, "c"), (600, 0, "c"), (600, 70)] + \
+               [(x, 96 + 14 * math.sin(x / 41.0) + (10 if (x // 90) % 2 else 0)) for x in range(560, -601, -80)] + \
+               [(-600, 70)]
+    wash = d("Node", S(Z, "WashLace", [(p[0], p[1] - 4) for p in wash_pts[3:-1]], L("D0FFFFFF", 5), closed=False),
+             S(Z, "WashSheet", wash_pts, sc.vgrad(0, 100, [("E8F2FBF6", 0.0), ("B8CDEFE8", 0.7), ("60FFFFFF", 1.0)])),
+             x=540.0, y=shore - 4, scaleY=0.0, name="Wash")
+    wet_wash = S(O, "WetWash", [(p[0] + 540, p[1] * 1.08 + shore) + tuple(p[2:]) for p in wash_pts], F("FFB79A72"),
+                 opacity=0.0)
+    wave_anim = sc.A("ev_bigWave", 360, [
+        sc.T(big, y=[(0, shore + 420), (16, shore + 300), (58, shore - 10, sc.ease_out), (76, shore + 8),
+                     (106, shore + 440), (360, shore + 440)],
+             x=[(0, 720.0), (76, 780.0), (360, 780.0)]),
+        sc.T(gull_reaction, scaleY=[(0, 1.0), (48, 1.0), (61, 0.82), (78, 0.87),
+                                    (94, 1.05), (113, 0.98), (133, 1.0), (360, 1.0)],
+             rotation=[(0, 0.0), (49, 0.0), (62, 0.08), (86, 0.06), (110, -0.025), (133, 0.0), (360, 0.0)]),
+        sc.T(wash, scaleY=[(0, 0.0), (86, 0.0), (128, 1.0, sc.ease_out), (150, 1.04), (220, 0.15), (250, 0.0),
+                           (360, 0.0)],
+             opacity=[(0, 1.0), (180, 1.0), (250, 0.0), (360, 0.0)]),
+        sc.T(wet_wash, opacity=[(0, 0.0), (120, 0.0), (150, 0.75), (230, 0.65), (360, 0.0)]),
     ])
+    # Roll the water through its contour, carrying the foam on the same
+    # surface. The leading lip overtakes the body and folds down on impact.
+    curl_poses = [(0, 0, 0), (32, -35, -5), (48, -18, -25), (62, 15, -5),
+                  (76, 70, 45), (92, 120, 125), (110, 135, 165), (360, 0, 0)]
+
+    def curl_point(x: float, y: float, dx: float, dy: float) -> tuple[float, float]:
+        weight = math.exp(-((x - 150) / 250) ** 2) * max(0.0, min(1.0, (30 - y) / 280))
+        return x + dx * weight, y + dy * weight
+
+    for shape in (wbody, face_light, *scallops[:2]):
+        path = next(c for c in shape.children if c.tag == "PointsPath")
+        ox, oy = float(shape.attrs["x"]), float(shape.attrs["y"])
+        poses = []
+        for frame, dx, dy in curl_poses:
+            pts = []
+            for vertex in path.children:
+                x, y = curl_point(float(vertex.attrs["x"]) + ox, float(vertex.attrs["y"]) + oy, dx, dy)
+                pts.append((x - ox, y - oy, "c") if vertex.tag == "StraightVertex" else (x - ox, y - oy))
+            poses.append((frame, smooth_path(d, pts, tension=0.65 if shape is scallops[0] else 1.0)))
+        for i, vertex in enumerate(path.children):
+            attrs = ("x", "y", "inRotation", "outRotation", "inDistance", "outDistance") if vertex.tag == "CubicDetachedVertex" else ("x", "y")
+            wave_anim.add(sc.T(vertex, **{attr: [(f, float(p.children[i].attrs[attr])) for f, p in poses] for attr in attrs}))
+    for fleck in scallops[2:]:
+        x, y = float(fleck.attrs["x"]), float(fleck.attrs["y"])
+        wave_anim.add(sc.T(fleck,
+            x=[(f, curl_point(x, y, dx, dy)[0]) for f, dx, dy in curl_poses],
+            y=[(f, curl_point(x, y, dx, dy)[1]) for f, dx, dy in curl_poses]))
+    for i, particle in enumerate(spray):
+        px_, py_ = float(particle.attrs["x"]), float(particle.attrs["y"])
+        takeoff = 50 + i * 2
+        wave_anim.add(sc.T(particle,
+            x=[(0, px_), (takeoff, px_), (takeoff + 24, px_ + 28 + i * 3), (114, px_ + 58 + i * 3), (360, px_)],
+            y=[(0, py_), (takeoff, py_), (takeoff + 13, py_ - 24 - i * 2), (114, py_ + 60), (360, py_)],
+            opacity=[(0, 0.0), (takeoff - 2, 0.0), (takeoff + 2, 0.9), (105, 0.0), (360, 0.0)]))
     sc.one_shot("bigWave", wave_anim)
     flock = []
     flock_tracks = []
-    for i in range(6):
-        x0, y0 = -120 - i * 70, 380 + (i % 3) * 50 + i * 6
-        b, flap = bird(sc, f"Flock{i}", x0, y0, 30, "FF2A3040")
+    for i, (x0, y0, sz) in enumerate([(-140, 520, 70), (-300, 430, 58), (-420, 600, 50), (-560, 470, 44)]):
+        b, flap = bird(sc, f"Flock{i}", x0, y0, sz, "FF2A3040", body=True, phase=i * 5)
         flock.append(b)
-        flock_tracks += flap * 1
-        flock_tracks.append(sc.T(b, ease=None, x=[(0, float(x0)), (300, float(x0) + W + 700)],
-                                 y=[(0, float(y0)), (150, float(y0) - 40), (300, float(y0))]))
-    sc.one_shot("seagulls", sc.A("ev_seagulls", 300, flock_tracks))
+        flock_tracks += flap
+        flock_tracks.append(sc.T(b, x=[(0, float(x0)), (330, float(x0) + W + 760)],
+                                 y=[(0, float(y0)), (110, float(y0) - 90), (220, float(y0) - 40),
+                                    (330, float(y0) - 120)],
+                                 rotation=[(0, -0.08), (110, 0.05), (220, -0.06), (330, 0.0)]))
+    sc.one_shot("seagulls", sc.A("ev_seagulls", 330, flock_tracks))
+    sunset_tint = d("Shape", d("Rectangle", width=float(W + 40), height=float(H + 40), name="Path"),
+                    sc.vgrad(-980, 980, [("FFFFC2CF", 0.0), ("FFFFB27C", 0.48), ("FFE58A62", 0.62), ("FFB46A6A", 1.0)]),
+                    x=W / 2, y=H / 2, opacity=0.0, blendModeValue=24, name="SunsetTint")
+    sun_path = d("Node", *[S(O, f"SunsetPath{i}", [(700 - (14 + i * 9), horizon + 8 + i * 13), (700, horizon + 6 + i * 13),
+                                                   (700 + (14 + i * 9), horizon + 8 + i * 13)],
+                             L("FFFFB45A" if i % 2 else "C0FFD890", 3), closed=False) for i in range(14)],
+                 x=0.0, y=0.0, opacity=0.0, name="SunsetPath")
     sunset = sc.A("ev_sunset", 720, [
         sc.T(sunset_sky, opacity=[(0, 0.0), (180, 1.0), (560, 1.0), (720, 0.0)]),
-        sc.T(sun, y=[(0, 640.0), (200, 930.0), (560, 930.0), (720, 640.0)], x=[(0, 780.0), (200, 700.0), (560, 700.0), (720, 780.0)]),
-        sc.T(sea, opacity=[(0, 1.0), (180, 0.7), (560, 0.7), (720, 1.0)]),
+        sc.T(sunset_tint, opacity=[(0, 0.0), (200, 0.85), (540, 0.85), (720, 0.0)]),
+        sc.T(sun_path, opacity=[(0, 0.0), (160, 1.0), (300, 0.7), (420, 0.0), (720, 0.0)]),
+        sc.T(sun, y=[(0, 640.0), (220, 940.0), (400, 1060.0), (560, 1060.0), (720, 640.0)],
+             x=[(0, 780.0), (220, 700.0), (560, 700.0), (720, 780.0)]),
     ])
     sc.one_shot("sunset", sunset)
     rain_node, rain_anim = rain_fx(sc, "Rain", "99E0F0FF", darken="FF1A2A40",
@@ -875,29 +1272,31 @@ def beach() -> str:
     sc.one_shot("rain", rain_anim)
 
     deco = []
-    for i, (sx_, sy_, r_) in enumerate([(180, 1560, 34), (620, 1700, 26), (930, 1610, 30)]):
+    for i, (sx_, sy_, r_) in enumerate([(232, 1470, 30), (880, 1752, 26), (930, 1610, 30)]):
         pts = []
         for k in range(10):
             a = -math.pi / 2 + k * math.pi / 5
             rr = r_ if k % 2 == 0 else r_ * 0.45
             pts.append((sx_ + rr * math.cos(a), sy_ + rr * math.sin(a), "c4"))
         deco.append(S(O, f"Starfish{i}", pts, sc.rgrad(r_, [("FFFFA070", 0.0), ("FFE0604A", 1.0)]), L("FFA03A2A", 2)))
-    for i, (sx_, sy_) in enumerate([(420, 1480), (760, 1520), (300, 1800), (850, 1830)]):
+    for i, (sx_, sy_) in enumerate([(160, 1760), (980, 1490), (250, 1840), (820, 1860)]):
         fan = [(sx_ - 18, sy_), (sx_ - 14, sy_ - 16), (sx_, sy_ - 22), (sx_ + 14, sy_ - 16), (sx_ + 18, sy_), (sx_, sy_ + 8, "c")]
         deco.append(S(O, f"Shell{i}", fan, F("FFFFF0E4"), L("FFC8A88A", 2)))
         deco += [S(O, f"ShellRib{i}_{k}", [(sx_, sy_ + 6), (sx_ + (k - 1) * 10, sy_ - 16)], L("FFC8A88A", 1.5), closed=False)
                  for k in range(3)]
-    castle = [S(O, "Castle", [(560, 1640, "c"), (560, 1560, "c"), (580, 1560, "c"), (580, 1540, "c"), (600, 1540, "c"),
-                              (600, 1560, "c"), (640, 1560, "c"), (640, 1520, "c"), (664, 1520, "c"), (664, 1560, "c"),
-                              (700, 1560, "c"), (700, 1640, "c")], sc.vgrad(-60, 60, [("FFF0D08A", 0.0), ("FFC8A060", 1.0)]),
+    # the sandcastle sits at the left edge, clear of the avatar
+    castle = [S(O, "Castle", [(110, 1700, "c"), (110, 1620, "c"), (130, 1620, "c"), (130, 1600, "c"), (150, 1600, "c"),
+                              (150, 1620, "c"), (190, 1620, "c"), (190, 1580, "c"), (214, 1580, "c"), (214, 1620, "c"),
+                              (250, 1620, "c"), (250, 1700, "c")], sc.vgrad(-60, 60, [("FFF0D08A", 0.0), ("FFC8A060", 1.0)]),
                 L("FFA07A40", 2.5)),
-              S(O, "Flag", [(652, 1520), (652, 1480), (680, 1490), (652, 1500)], F("FFE04848"))]
+              S(O, "Flag", [(202, 1580), (202, 1540), (230, 1550), (202, 1560)], F("FFE04848"))]
     hits = [sc.hit("crab", crx, cry - 20, 180, 130), sc.hit("umbrella", ux, uy + 40, 400, 300),
-            sc.hit("seagull", gx - 10, gy - 10, 120, 100)]
+            sc.hit("seagull", *place_point("beach", "GullPlace", gx - 10, gy - 10), 120, 100)]
     for h, pid in zip(hits, ["crab", "umbrella", "seagull"]):
         sc.prop(pid, h)
-    content = [rain_node, *flock, *castle, *deco, crab, gull, post, umb, towel, umb_shadow, *specks, big_foam, foam, wet, sand, big,
-               *waves, *glints, sea, *flyers, *clouds, sun, sunset_sky, sky]
+    content = [rain_node, sunset_tint, *flock, *castle, *deco, crab, gull, post, umb, towel, umb_shadow, wash, *specks,
+               wet_wash, foam, wet, sand, big, wave_clip,
+               *waves, sun_path, *glints, sea, *flyers, *clouds, sun, sunset_sky, sky]
     return sc.write(content, hits)
 
 
@@ -951,6 +1350,7 @@ def deepSpace() -> str:  # noqa: N802
     # UFO (right) bobbing with blinking lights
     ux, uy = 860.0, 900.0
     ufo = d("Node", x=ux, y=uy, name="Ufo")
+    ufo_flee = d("Node", ufo, x=0.0, y=0.0, name="UfoFlee")   # alienShip chases the saucer away
     UP = (ux, uy)
     lights = [E(UP, f"ULight{i}", ux + (i - 2) * 40, uy + 12, 12, 12, F("FFFFE060")) for i in range(5)]
     beam = S(UP, "Beam", [(ux - 40, uy + 20), (ux + 40, uy + 20), (ux + 110, uy + 300), (ux - 110, uy + 300)],
@@ -961,15 +1361,20 @@ def deepSpace() -> str:  # noqa: N802
             E(UP, "Alien", ux, uy - 30, 30, 34, F("FF7AE070")),
             E(UP, "Saucer", ux, uy + 4, 220, 54, sc.rgrad(110, [("FFE0E6F0", 0.0), ("FF7A8498", 1.0)], cy=-14), L("FF2A3450", 2.5)),
             beam)
-    sc.ambient("Ufo", sc.A("amb_ufo", 240, [
-        sc.T(ufo, y=[(0, uy), (120, uy - 22), (240, uy)], rotation=[(0, 0.04), (120, -0.04), (240, 0.04)]),
-        *[sc.T(l_, ease=None, opacity=[(0, 1.0), ((i * 12) % 60 + 1, 0.2, "hold"), ((i * 12) % 60 + 30, 1.0, "hold"), (240, 1.0)])
-          for i, l_ in enumerate(lights)],
-        sc.T(beam, opacity=[(0, 0.6), (120, 1.0), (240, 0.6)])], loop=True))
+    sc.ambient("Ufo", sc.A("amb_ufo", 720, [
+        sc.T(ufo, x=[(0, ux), (240, ux + 22), (510, ux - 13), (720, ux)],
+             y=[(0, uy), (165, uy - 26), (395, uy + 9), (590, uy - 12), (720, uy)],
+             rotation=[(0, 0.04), (215, -0.035), (480, 0.01), (640, 0.055), (720, 0.04)]),
+        *[sc.T(l_, ease=None, opacity=[(0, 1.0)] +
+              [(c + (i * 12) % 60 + delta, value, "linear")
+               for c in (0, 240, 480) for delta, value in ((1, 0.3), (22, 1.0))] + [(720, 1.0)]) for i, l_ in enumerate(lights)],
+        sc.T(beam, opacity=[(0, 0.6), (190, 0.9), (360, 0.7), (570, 1.0), (720, 0.6)])], loop=True))
 
     # rubber duck drifting (front right)
     dx_, dy_ = 760.0, 1260.0
     duck = d("Node", x=dx_, y=dy_, name="Duck")
+    # the alien ship's beam lifts and spins this (pivot at the duck, children keep absolute coords)
+    duck_lift = d("Node", d("Node", duck, x=-dx_, y=-dy_, name="DuckLiftPivot"), x=dx_, y=dy_, name="DuckLift")
     DP = (dx_, dy_)
     duck.add(E(DP, "DEye", dx_ + 30, dy_ - 56, 10, 12, F("FF101010")),
              S(DP, "DBeak", [(dx_ + 50, dy_ - 44), (dx_ + 82, dy_ - 40, "c"), (dx_ + 50, dy_ - 30)], F("FFF07A20"), L("FF8A3A10", 2)),
@@ -977,43 +1382,109 @@ def deepSpace() -> str:  # noqa: N802
              S(DP, "DWing", [(dx_ - 30, dy_ - 6), (dx_ + 10, dy_ - 14), (dx_ + 4, dy_ + 10)], F("FFF0C020"), L("FFB08010", 2)),
              S(DP, "DBody", [(dx_ - 60, dy_ - 30, "c"), (dx_ - 30, dy_ - 12), (dx_ + 20, dy_ - 16), (dx_ + 54, dy_ - 4),
                              (dx_ + 40, dy_ + 28), (dx_ - 20, dy_ + 34), (dx_ - 56, dy_ + 10)], F("FFFFD830"), L("FFB08010", 2.5)))
-    sc.ambient("Duck", sc.A("amb_duck", 480, [sc.T(duck, rotation=[(0, -0.15), (240, 0.15), (480, -0.15)],
-                                                   x=[(0, dx_), (240, dx_ - 50), (480, dx_)], y=[(0, dy_), (240, dy_ + 30), (480, dy_)])],
-                            loop=True))
+    # A slow closed orbit retains momentum through top/bottom turning points;
+    # the roll trails the drift. Its period differs from the saucer's hover.
+    orbit = [(f, 2 * math.pi * f / 1020) for f in range(0, 1021, 30)]
+    sc.ambient("Duck", sc.A("amb_duck", 1020, [sc.T(duck, ease=None,
+        rotation=[(f, -0.15 + 0.1 * (math.sin(t - 0.6) - math.sin(-0.6)), "linear") for f, t in orbit],
+        x=[(f, dx_ - 24 * math.sin(t) + 9 * math.sin(2 * t), "linear") for f, t in orbit],
+        y=[(f, dy_ + 17 * (math.cos(t) - 1) + 5 * math.sin(2 * t), "linear") for f, t in orbit])],
+        loop=True, seam_hold=True))
 
     # ---- events
     met, met_anim = streak_fx(sc, "Meteor", (1000, 300), (120, 1100), 70, 380, "FFFFA040", "CCFF6A20", 16)
     sc.one_shot("meteor", met_anim)
-    warp_lines = []
-    for i in range(36):
-        a = 2 * math.pi * i / 36 + rnd.uniform(-0.05, 0.05)
-        r0 = rnd.uniform(60, 200)
-        warp_lines.append(S((W / 2, H / 2), f"Warp{i}", [(W / 2 + math.cos(a) * r0, H / 2 + math.sin(a) * r0),
-                                                         (W / 2 + math.cos(a) * (r0 + 160), H / 2 + math.sin(a) * (r0 + 160))],
-                            L("CCDDEEFF", 4), closed=False))
-    warp = d("Node", *warp_lines, x=W / 2, y=H / 2, opacity=0.0, name="Warp")
-    flash = d("Shape", d("Rectangle", width=float(W), height=float(H), originX=0.0, originY=0.0, name="Path"), F("FFEEF4FF"),
-              opacity=0.0, name="Flash")
-    warp_anim = sc.A("ev_warp", 120, [
-        sc.T(warp, scaleX=[(0, 0.4), (90, 4.0)], scaleY=[(0, 0.4), (90, 4.0)], opacity=[(0, 0.0), (10, 1.0), (80, 1.0), (96, 0.0), (120, 0.0)]),
-        sc.T(flash, ease=None, opacity=[(0, 0.0), (84, 0.0), (90, 0.85, "linear"), (120, 0.0)]),
+    # warp: from a point above the avatar's head, tapered coloured streaks accelerate outward,
+    # a blue-white core swells, then a screen-blended flash and a fading after-glow
+    WC = (540.0, 620.0)
+    streaks = []
+    for i in range(44):
+        a = 2 * math.pi * i / 44 + rnd.uniform(-0.06, 0.06)
+        r0 = rnd.uniform(70, 260)
+        ln = rnd.uniform(140, 300)
+        wd = rnd.uniform(3, 7)
+        ca, sa = math.cos(a), math.sin(a)
+        col = rnd.choice(["FFBFE6FF", "FF9FD0FF", "FFE9C8FF", "FFFFFFFF"])
+        p0 = (WC[0] + ca * r0, WC[1] + sa * r0)
+        p1 = (WC[0] + ca * (r0 + ln), WC[1] + sa * (r0 + ln))
+        streak = S(WC, f"Warp{i}", [(p0[0] - sa * 0.6, p0[1] + ca * 0.6), (p1[0] - sa * wd, p1[1] + ca * wd),
+                                    (p1[0] + ca * 6, p1[1] + sa * 6, "c"), (p1[0] + sa * wd, p1[1] - ca * wd),
+                                    (p0[0] + sa * 0.6, p0[1] - ca * 0.6)], F(col), tension=0.3)
+        streaks.append(streak)
+    for st_ in streaks:
+        st_.attrs["blendModeValue"] = 14            # screen light; native 0.1.11 rejects additive (12)
+    warp = d("Node", *streaks, x=WC[0], y=WC[1], opacity=0.0, name="Warp")
+    warp_core = E(WC, "WarpCore", WC[0], WC[1], 600, 600,
+                  sc.rgrad(300, [("FFFFFFFF", 0.0), ("C0A8D8FF", 0.25), ("40707CFF", 0.6), ("00707CFF", 1.0)]))
+    warp_core_n = d("Node", warp_core, x=WC[0], y=WC[1], opacity=0.0, scaleX=0.2, scaleY=0.2, name="WarpCoreN")
+    flash = d("Shape", d("Rectangle", width=float(W), height=float(H), originX=0.0, originY=0.0, name="Path"),
+              d("Fill", rad(d, WC[0], WC[1], 1400, [("FFFFFFFF", 0.0), ("FFC6DCFF", 0.4), ("FF6E86C8", 1.0)]),
+                name="Fill"), opacity=0.0, blendModeValue=14, name="Flash")
+    warp_anim = sc.A("ev_warp", 150, [
+        sc.T(warp, scaleX=[(0, 0.3, sc.ease_in), (84, 3.6), (96, 4.6), (150, 4.6)],
+             scaleY=[(0, 0.3, sc.ease_in), (84, 3.6), (96, 4.6), (150, 4.6)],
+             opacity=[(0, 0.0), (12, 0.9), (84, 1.0), (98, 0.0), (150, 0.0)]),
+        sc.T(warp_core_n, scaleX=[(0, 0.2), (80, 1.2, sc.ease_in), (90, 2.4), (150, 2.4)],
+             scaleY=[(0, 0.2), (80, 1.2, sc.ease_in), (90, 2.4), (150, 2.4)],
+             opacity=[(0, 0.0), (30, 0.5), (84, 1.0), (96, 0.55), (150, 0.0)]),
+        sc.T(flash, opacity=[(0, 0.0, "hold"), (84, 0.0), (86, 0.5, "linear"), (90, 0.12), (130, 0.0), (150, 0.0)]),
     ])
     sc.one_shot("warp", warp_anim)
     ship = d("Node", x=-500.0, y=700.0, name="Mothership")
     SP = (0.0, 0.0)
-    ship.add(*[E(SP, f"SLight{i}", -240 + i * 60, 30, 14, 14, F("FFFF5AA0")) for i in range(9)],
+    beam = S(SP, "ShipBeam", [(-46, 50), (46, 50), (150, 520), (-150, 520)],
+             sc.vgrad(-235, 235, [("C0B8FFD8", 0.0), ("40B8FFD8", 0.8), ("00B8FFD8", 1.0)]), opacity=0.0,
+             blendModeValue=14)
+    ship.add(beam, *[E(SP, f"SLight{i}", -240 + i * 60, 30, 14, 14, F("FFFF5AA0")) for i in range(9)],
+             S(SP, "HullSheen", [(-300, 4), (-160, -30), (0, -48), (160, -30), (300, 4), (160, -18), (0, -34),
+                                 (-160, -18)], F("40E8F0FF")),
+             E(SP, "Belly", 0, 50, 300, 30, sc.rgrad(150, [("C08CFFE0", 0.0), ("008CFFE0", 1.0)])),
              S(SP, "Hull", [(-360, 20), (-200, -40), (0, -70), (200, -40), (360, 20), (200, 60), (-200, 60)],
                sc.vgrad(-70, 60, [("FF6A7290", 0.0), ("FF262A3A", 1.0)]), L("FF0E1018", 3)),
              S(SP, "Bridge", [(-80, -50), (-40, -100), (40, -100), (80, -50)], sc.vgrad(-50, 20, [("FF9AA8C8", 0.0), ("FF4A5270", 1.0)]),
                L("FF0E1018", 2.5)))
-    ship_anim = sc.A("ev_alienShip", 420, [
-        sc.T(ship, ease=None, x=[(0, -500.0), (420, W + 500.0)], y=[(0, 700.0), (210, 660.0), (420, 700.0)]),
-        *[sc.T(c, ease=None, opacity=[(f, 1.0 if ((f // 15) + i) % 2 else 0.3, "hold") for f in range(0, 421, 15)])
-          for i, c in enumerate(ship.children[:9])]])
+    hover_x = 850.0
+    ship_anim = sc.A("ev_alienShip", 480, [
+        sc.T(ship, x=[(0, -500.0, sc.ease_out), (150, hover_x), (190, hover_x + 14), (250, hover_x - 10),
+                      (300, hover_x, sc.ease_in), (480, W + 520.0)],
+             y=[(0, 640.0), (150, 730.0), (200, 722.0), (250, 734.0), (300, 728.0), (480, 600.0)],
+             rotation=[(0, 0.08), (150, -0.04), (180, 0.0), (300, 0.0), (340, 0.06), (480, 0.08)]),
+        # the little saucer bolts off-screen when the mothership arrives, and sneaks back after
+        sc.T(ufo_flee, x=[(0, 0.0), (70, 0.0, sc.ease_in), (110, 520.0), (400, 520.0, sc.ease_out), (470, 0.0),
+                          (480, 0.0)]),
+        sc.T(beam, opacity=[(0, 0.0), (160, 0.0), (176, 1.0), (280, 1.0), (296, 0.0), (480, 0.0)],
+             scaleX=[(0, 0.4), (160, 0.4), (176, 1.0), (280, 1.0), (296, 0.6), (480, 0.6)]),
+        sc.T(duck_lift, y=[(0, dy_), (176, dy_), (240, dy_ - 110.0), (262, dy_ - 96.0), (290, dy_, sc.ease_in),
+                           (300, dy_ + 6.0), (312, dy_), (480, dy_)],
+             rotation=[(0, 0.0), (176, 0.0), (270, 6.2832), (300, 6.2832), (480, 6.2832)]),
+        *[sc.T(c, ease=None, opacity=[(f, 1.0 if ((f // 12) + i) % 3 else 0.25, "hold") for f in range(0, 481, 12)])
+          for i, c in enumerate(ship.children[1:10])]])
     sc.one_shot("alienShip", ship_anim)
-    pulse = sc.A("ev_nebulaPulse", 150, [sc.T(n, scaleX=[(0, 1.0), (40, 1.25), (150, 1.0)],
-                                               scaleY=[(0, float(n.attrs.get("scaleY", 1.0))), (40, float(n.attrs.get("scaleY", 1.0)) * 1.25),
-                                                       (150, float(n.attrs.get("scaleY", 1.0)))]) for n in nebulae])
+    # nebulaPulse: the nebula's heart brightens (screen-blended swell), shock rings of coloured light
+    # roll outward through the clouds, and the nebulae breathe out with them
+    NC = (380.0, 640.0)
+    swell = d("Node", E(NC, "PulseSwell", NC[0], NC[1], 1100, 1100,
+                         sc.rgrad(550, [("FFF6B8FF", 0.0), ("A0C060F0", 0.3), ("3050A0E0", 0.65), ("00305080", 1.0)])),
+              x=NC[0], y=NC[1], opacity=0.0, scaleY=0.75, name="PulseSwellN")
+    swell.children[0].attrs["blendModeValue"] = 14
+    rings = []
+    for k, col in enumerate(["FFF0B0FF", "FF90E8FF", "FFFFC8E0"]):
+        rg = d("Node", E(NC, f"PulseRing{k}", NC[0], NC[1], 400, 400, L(col, 14 - k * 3)),
+               E(NC, f"PulseRingSoft{k}", NC[0], NC[1], 400, 400, L("60" + col[2:], 40)),
+               x=NC[0], y=NC[1], opacity=0.0, scaleX=0.1, scaleY=0.08, name=f"PulseRingN{k}")
+        for c in rg.children:
+            c.attrs["blendModeValue"] = 14
+        rings.append(rg)
+    pulse = sc.A("ev_nebulaPulse", 200, [
+        sc.T(swell, opacity=[(0, 0.0), (18, 0.95, sc.ease_out), (60, 0.6), (200, 0.0)],
+             scaleX=[(0, 0.6), (30, 1.1), (200, 1.25)], scaleY=[(0, 0.45), (30, 0.82), (200, 0.92)]),
+        *[sc.T(rg, scaleX=[(0, 0.1), (10 + 22 * k, 0.1), (110 + 22 * k, 3.6 - 0.4 * k, sc.ease_out), (200, 3.6 - 0.4 * k)],
+               scaleY=[(0, 0.08), (10 + 22 * k, 0.08), (110 + 22 * k, 2.7 - 0.3 * k, sc.ease_out), (200, 2.7 - 0.3 * k)],
+               opacity=[(0, 0.0), (10 + 22 * k, 0.0), (16 + 22 * k, 1.0), (110 + 22 * k, 0.0), (200, 0.0)])
+          for k, rg in enumerate(rings)],
+        *[sc.T(n, scaleX=[(0, 1.0), (40, 1.25), (200, 1.0)],
+               scaleY=[(0, float(n.attrs.get("scaleY", 1.0))), (40, float(n.attrs.get("scaleY", 1.0)) * 1.25),
+                       (200, float(n.attrs.get("scaleY", 1.0)))]) for n in nebulae]])
     sc.one_shot("nebulaPulse", pulse)
 
     rocks = []
@@ -1031,10 +1502,13 @@ def deepSpace() -> str:  # noqa: N802
     sc.ambient("Asteroids", sc.A("amb_rocks", 600, rock_tracks, loop=True))
     galaxy = E(O, "Galaxy", 820, 1420, 220, 70, sc.rgrad(110, [("AAFFF0E0", 0.0), ("40C8A0FF", 0.4), ("00C8A0FF", 1.0)]),
                rotation=-0.4)
-    hits = [sc.hit("planet", px, py, 340, 340), sc.hit("ufo", ux, uy - 20, 240, 130), sc.hit("rubberDuck", dx_, dy_ - 20, 160, 120)]
+    hits = [sc.hit("planet", *place_point("deepSpace", "PlanetPlace", px, py), 340, 340),
+            sc.hit("ufo", ux, uy - 20, 240, 130),
+            sc.hit("rubberDuck", *place_point("deepSpace", "DuckPlace", dx_, dy_ - 20), 160, 120)]
     for h, pid in zip(hits, ["planet", "ufo", "rubberDuck"]):
         sc.prop(pid, h)
-    content = [flash, warp, met, *rocks, ship, duck, ufo, planet_g, moonlet, galaxy, *stars, *nebulae, bg]
+    content = [flash, warp, warp_core_n, met, *rocks, ship, duck_lift, ufo_flee, planet_g, moonlet, galaxy, *rings, swell, *stars,
+               *nebulae, bg]
     return sc.write(content, hits)
 
 

@@ -19,25 +19,31 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 from avatar_kit import (BEANIE, BEANIE_HI, BEANIE_SH, FRAME, HAIR, HAIR_HI, HAIR_SH, HOOD, HOOD_INK, HOOD_SH,  # noqa: E402
                         HOOD_SH2, INK, IRIS_A, IRIS_B, MOUTH_IN, PI, SCLERA, SKIN, SKIN_SH, SKIN_SH2, STRING,
-                        TEETH, TONGUE, WHITE, E, F, L, R, Rig, S, clip_only, d, grad, group, hgrad, ik, mirror,
+                        TEETH, TONGUE, WHITE, E, F, L, L1, L2, R, Rig, S, clip_only, d, grad, group, hgrad, ik, mirror,
                         rgrad, vgrad)
 from rml import El, lin, rad, smooth_path, track, write  # noqa: E402
+from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
 
 W, H = 800, 1000
 rnd = random.Random(42)
 
 EASE = d("CubicEaseInterpolator", x1=0.42, y1=0.0, x2=0.58, y2=1.0)
+EASE_OUT = d("CubicEaseInterpolator", x1=0.18, y1=0.7, x2=0.35, y2=1.0)
+EASE_IN = d("CubicEaseInterpolator", x1=0.6, y1=0.0, x2=0.85, y2=0.45)
 
 # ================================================================ RIG
 root = Rig("Root", 400, 1000)              # presence walks this
 body = root.node("Body", 400, 1000)        # breathing
 body_g = body.node("BodyGesture")          # gesture bounce/shrug
-arm_r = body_g.node("ArmR", 240, 720)      # character's right = viewer's left
-arm_l = body_g.node("ArmL", 560, 720)
+swing_r = body_g.node("SwingR", 240, 720)  # walk arm swing (presence layer)
+swing_l = body_g.node("SwingL", 560, 720)
+arm_r = swing_r.node("ArmR", 240, 720)     # character's right = viewer's left
+arm_l = swing_l.node("ArmL", 560, 720)
 head_base = body_g.node("HeadBase", 400, 560, scaleX=1.18, scaleY=1.18)
 head_mood = head_base.node("HeadMood")
 head_phase = head_mood.node("HeadPhase")
-head_look = head_phase.node("HeadLook")
+head_travel = head_phase.node("HeadTravel")
+head_look = head_travel.node("HeadLook")
 head_g = head_look.node("HeadGesture")
 head = head_g.node("Head", 400, 560)
 head.el.attrs["y"] = 22.0   # sit the head lower: art stays authored around y=560
@@ -92,16 +98,105 @@ def starfield(parent: Rig, poly: list, n: int, seed: int, prefix: str) -> list[E
     return out
 
 
-ARM_UP = [(226, 682), (264, 700), (290, 760), (294, 880), (298, 1070, "c"), (192, 1070, "c"), (192, 900), (198, 760)]
-ARM_FORE = [(198, 1010), (282, 1010), (278, 1200), (276, 1330, "c"), (204, 1330, "c"), (202, 1200)]
-BARE_UP = [(230, 690), (262, 704), (278, 760), (280, 900), (282, 1070, "c"), (206, 1070, "c"), (206, 900), (210, 760)]
-BARE_FORE = [(210, 1010), (272, 1010), (268, 1200), (264, 1342, "c"), (216, 1342, "c"), (214, 1200)]
+# Limbs are capsules: each segment ends in a round cap centred on its joint, so
+# rotations never expose a square end. The forearm outline is open at the elbow
+# (fill-only top) so the joint reads as one continuous sleeve.
+def capsule(cx: float, y0: float, r0: float, y1: float, r1: float, open_top: bool = False) -> list:
+    top = [(cx + r0 * math.cos(math.radians(a)), y0 + r0 * math.sin(math.radians(a))) for a in (180, 225, 270, 315)]
+    bot = [(cx + r1 * math.cos(math.radians(a)), y1 + r1 * math.sin(math.radians(a))) for a in (0, 45, 90, 135, 180)]
+    if open_top:
+        return [(cx + r0, y0)] + bot + [(cx - r0, y0)]
+    return top + [(cx + r0, y0)] + bot
+
+
+def limb(rig: Rig, name: str, side: int, y0: float, r0: float, y1: float, r1: float, fill_: El, ink: str,
+         w: float = 3.0, open_top: bool = False, dx: float = 0.0) -> list[El]:
+    """A capsule segment (fill + outline). `dx` nudges the axis outward for tapering silhouettes."""
+    m = (lambda p: mirror(p)) if side == 1 else (lambda p: p)
+    cx = 240 - dx
+    body_ = S(rig, name, m(capsule(cx, y0, r0, y1, r1)), fill_)
+    if not open_top:
+        body_.add(L(ink, w))
+        return [body_]
+    outline = S(rig, name + "Line", m(capsule(cx, y0, r0, y1, r1, open_top=True)), L(ink, w), closed=False,
+                origin=None)
+    return [outline, body_]
+
+
+# hand poses, authored at the wrist with the fingers pointing DOWN (rest); `t` = thumb side (+1 = +x)
+WX, WY = 240.0, 1070.0
+
+
+# hand colours (bare skin, or a costume glove); swapped while building each skin variant
+HAND_SKINS = {"skin": (SKIN, SKIN_SH, SKIN_SH2, INK), "black": ("FF2E323A", "FF17191E", "FF4A505C", "FF0A0B0E"),
+              "metal": ("FFC2CDE2", "FF6E7EA0", "FF8C9AB6", "FF2A3450"),
+              "stars": ("FF1A1D58", "FF0B0C2A", "FF4A52C0", "FF3A40A0"),
+              "white": ("FFFFFFFF", "FFDDDDE8", "FFB8B8C4", "FF7E7E8C")}
+HC: dict[str, str] = dict(zip(("fill", "shade", "line", "ink"), HAND_SKINS["skin"]))
+COSTUME_HANDS = {"batman": "black", "robocop": "metal", "singularity": "stars", "soubrette": "white"}
+
+
+def _finger(rig: Rig, name: str, x: float, y: float, ln: float, wd: float = 15.0, lean: float = 0.0) -> El:
+    h = wd / 2
+    return S(rig, name, [(x - h, y), (x + h, y), (x + h + lean * 0.8, y + ln - h), (x + lean, y + ln, "c"),
+                         (x - h + lean * 0.8, y + ln - h)], F(HC["fill"]), L(HC["ink"], 2.3))
+
+
+def hand_open(rig: Rig, t: int, side: int, palm_side: bool, short: float = 1.0) -> list[El]:
+    def X(x: float) -> float:
+        v = WX + (x - WX) * t
+        return 800 - v if side == 1 else v
+    k = short
+    fingers = [_finger(rig, f"Finger{i}", X(fx), WY + 46 * k, ln * k, lean=lean * t * -side)
+               for i, (fx, ln, lean) in enumerate([(217, 36, -5), (232, 46, -2), (248, 50, 1), (263, 44, 4)])]
+    palm = S(rig, "Palm", [(X(213), WY - 4), (X(267), WY - 4), (X(274), WY + 24 * k), (X(268), WY + 54 * k),
+                           (X(WX), WY + 60 * k), (X(212), WY + 54 * k), (X(207), WY + 24 * k)], F(HC["fill"]), L(HC["ink"], 2.4))
+    thumb = S(rig, "Thumb", [(X(262), WY + 6), (X(284), WY + 18 * k), (X(296), WY + 40 * k), (X(290), WY + 52 * k),
+                             (X(276), WY + 42 * k), (X(262), WY + 30 * k)], F(HC["fill"]), L(HC["ink"], 2.3))
+    detail = ([S(rig, "Crease", [(X(216), WY + 36 * k), (X(240), WY + 28 * k), (X(262), WY + 38 * k)],
+                 L(HC["line"], 2), closed=False),
+               S(rig, "Heel", [(X(214), WY + 2), (X(266), WY + 2), (X(262), WY + 18 * k), (X(WX), WY + 22 * k),
+                               (X(216), WY + 18 * k)], F(HC["shade"]))] if palm_side else
+              [S(rig, f"Knuckle{i}", [(X(x) - 5, WY + 48 * k), (X(x) + 5, WY + 48 * k)], L(HC["line"], 2), closed=False)
+               for i, x in enumerate((232, 248, 263))])
+    return [thumb, *detail, palm, *fingers]
+
+
+def hand_edge(rig: Rig, t: int, side: int) -> list[El]:
+    def X(x: float) -> float:
+        v = WX + (x - WX) * t
+        return 800 - v if side == 1 else v
+    blade = S(rig, "Blade", [(X(224), WY - 4), (X(258), WY - 4), (X(264), WY + 40), (X(260), WY + 92),
+                             (X(246), WY + 108, "c"), (X(232), WY + 98), (X(226), WY + 50)],
+              hgrad(-20, 20, HC["shade"], HC["fill"]), L(HC["ink"], 2.4))
+    thumb = S(rig, "Thumb", [(X(252), WY + 8), (X(270), WY + 22), (X(276), WY + 48), (X(266), WY + 52),
+                             (X(254), WY + 34)], F(HC["fill"]), L(HC["ink"], 2.3))
+    lines = [S(rig, f"Seam{i}", [(X(238 + i * 5), WY + 62 + i * 10), (X(250 + i * 4), WY + 64 + i * 10)],
+               L(HC["line"], 1.8), closed=False) for i in range(2)]
+    return [thumb, *lines, blade]
+
+
+def hand_point(rig: Rig, t: int, side: int) -> list[El]:
+    def X(x: float) -> float:
+        v = WX + (x - WX) * t
+        return 800 - v if side == 1 else v
+    fist = S(rig, "Fist", [(X(214), WY - 4), (X(266), WY - 4), (X(272), WY + 28), (X(266), WY + 58),
+                           (X(WX), WY + 64), (X(214), WY + 58), (X(208), WY + 28)], F(HC["fill"]), L(HC["ink"], 2.4))
+    curls = [S(rig, f"Curl{i}", [(X(214), WY + 34 + i * 10), (X(232), WY + 38 + i * 10), (X(248), WY + 36 + i * 10)],
+               L(HC["line"], 2), closed=False) for i in range(2)]
+    index = _finger(rig, "Index", X(258), WY + 40, 58, 15, lean=2 * t * -side)
+    thumb = S(rig, "Thumb", [(X(262), WY + 4), (X(276), WY + 22), (X(270), WY + 44), (X(254), WY + 40),
+                             (X(250), WY + 20)], F(HC["fill"]), L(HC["ink"], 2.3))
+    return [thumb, index, *curls, fist]
+
+
+HAND_POSES = ("rest", "palm", "back", "edge", "point", "up")
 STAR_FX: list[El] = []        # singularity specks that twinkle
 
 
 def build_sleeves(rig: Rig, elbow: Rig, side: int) -> tuple[Rig, Rig, dict[str, El], dict[str, El]]:
-    m = (lambda p: mirror(p)) if side == 1 else (lambda p: p)
     mx = (lambda x: 800 - x) if side == 1 else (lambda x: x)
+    m = (lambda p: mirror(p)) if side == 1 else (lambda p: p)
     up_solo = rig.solo("UpperSleeve")
     fore_solo = elbow.solo("ForeSleeve")
     ups: dict[str, El] = {}
@@ -110,57 +205,69 @@ def build_sleeves(rig: Rig, elbow: Rig, side: int) -> tuple[Rig, Rig, dict[str, 
         base, shade, ink, cuff, kind = SLEEVES[oid]
         gu = group("Up_" + oid)
         gf = group("Fore_" + oid)
-        sleeve_fill = d("Fill", lin(d, -50, 0, 50, 0, [(shade, 0.0), (base, 0.55)]), name="Fill")
-        fore_fill = d("Fill", lin(d, -42, 0, 42, 0, [(shade, 0.0), (base, 0.6)]), name="Fill")
-        skin_up = S(rig, "SkinUp", m(BARE_UP), hgrad(-40, 40, SKIN_SH, SKIN), L(INK, 2.6))
-        skin_fore = S(elbow, "SkinFore", m(BARE_FORE), hgrad(-30, 30, SKIN_SH, SKIN), L(INK, 2.6))
+        sl_up = hgrad(-50, 50, shade, base) if side == -1 else hgrad(-50, 50, base, shade)
+        sl_fore = hgrad(-42, 42, shade, base) if side == -1 else hgrad(-42, 42, base, shade)
+        sk_up = hgrad(-40, 40, SKIN_SH, SKIN) if side == -1 else hgrad(-40, 40, SKIN, SKIN_SH)
+        sk_fore = hgrad(-34, 34, SKIN_SH, SKIN) if side == -1 else hgrad(-34, 34, SKIN, SKIN_SH)
+        skin_up = limb(rig, "SkinUp", side, 720, 40, 900, 35, sk_up, INK, 2.6)
+        skin_fore = limb(elbow, "SkinFore", side, 900, 35, 1066, 30, sk_fore, INK, 2.6, open_top=True)
         if kind == "bare":
-            gu.add(S(rig, "Deltoid", m([(232, 700), (250, 720), (244, 780)]), L(SKIN_SH2, 2), closed=False), skin_up)
-            gf.add(skin_fore)
+            gu.add(S(rig, "Deltoid", m([(212, 712), (226, 744), (222, 790)]), L(SKIN_SH2, 2), closed=False), *skin_up)
+            gf.add(S(elbow, "ElbowDimple", m([(232, 902), (240, 908), (248, 902)]), L(SKIN_SH2, 1.8), closed=False),
+                   *skin_fore)
         elif kind == "short":
-            trim = S(rig, "Trim", m([(196, 846), (300, 846), (302, 866, "c"), (194, 866, "c")]), F(cuff or base),
-                     L(ink, 2.5))
-            gu.add(trim, S(rig, "TeeSleeve", m([(226, 682), (266, 700), (296, 760), (302, 856, "c"), (194, 856, "c"),
-                                                (198, 760)]), sleeve_fill, L(ink, 3)), skin_up)
-            gf.add(skin_fore)
+            sleeve = [(195, 716), (204, 685), (237, 673), (271, 684), (289, 715),
+                      (284, 799, "c4"), (198, 799, "c4")]
+            gu.add(S(rig, "TeeHemStitch", m([(202, 792), (280, 792)]), L("70DA827C", 1.1), closed=False),
+                   S(rig, "Trim", m([(198, 786, "c2"), (284, 786, "c2"), (284, 799, "c2"), (198, 799, "c2")]),
+                     F(cuff or base), L(ink, 1)),
+                   S(rig, "TeeUnderarm", m([(264, 720), (280, 716), (281, 784), (267, 784)]), F(shade)),
+                   S(rig, "TeeSleeve", m(sleeve), sl_up, L(ink, 2.3)), *skin_up)
+            gf.add(*skin_fore)
         elif kind == "stars":
-            gu.add(*starfield(rig, m(ARM_UP), 8, 11 + side, "Up"),
-                   S(rig, "Sleeve", m(ARM_UP), grad([("FF181A48", 0.0), (base, 1.0)], -200, 200), L(ink, 3)))
-            fs = starfield(elbow, m(ARM_FORE), 6, 21 + side, "Fore")
-            STAR_FX.extend(fs[:2])
-            gf.add(*fs, S(elbow, "Sleeve", m(ARM_FORE), grad([("FF181A48", 0.0), (base, 1.0)], -160, 160), L(ink, 3)))
+            gu.add(*starfield(rig, m(capsule(240, 720, 44, 900, 38)), 8, 11 + side, "Up"),
+                   *limb(rig, "Sleeve", side, 720, 50, 900, 43, grad([("FF181A48", 0.0), (base, 1.0)], -130, 130),
+                         ink, 3))
+            fs_ = starfield(elbow, m(capsule(240, 900, 36, 1070, 30)), 6, 21 + side, "Fore")
+            STAR_FX.extend(fs_[:2])
+            gf.add(*fs_, *limb(elbow, "Sleeve", side, 900, 42, 1070, 35,
+                               grad([("FF181A48", 0.0), (base, 1.0)], -110, 110), ink, 3, open_top=True))
         else:
-            folds = [S(rig, "Fold", m([(214, 820), (236, 860), (226, 940), (220, 900)]), F(shade)),
-                     S(rig, "Fold2", m([(262, 900), (276, 950), (270, 1020), (264, 960)]), F(shade))]
+            folds = [S(rig, "Fold", m([(214, 800), (230, 830), (224, 872), (218, 846)]), F(shade)),
+                     S(rig, "Fold2", m([(262, 840), (272, 868), (266, 900), (262, 874)]), F(shade))]
             extra_up: list[El] = []
             if kind == "puff":
-                extra_up.append(S(rig, "Puff", m([(212, 676), (262, 680), (304, 730), (300, 800), (250, 812),
-                                                   (190, 790), (186, 724)]), rgrad(70, [("FF3A3440", 0.0), (base, 1.0)]),
+                extra_up.append(S(rig, "Puff", m([(206, 682), (262, 678), (300, 716), (298, 780), (250, 794),
+                                                   (186, 776), (182, 716)]), rgrad(70, [("FF3A3440", 0.0), (base, 1.0)]),
                                   L(ink, 3)))
             if kind == "armor":
-                extra_up += [S(rig, "Pauldron", m([(204, 676), (262, 676), (306, 720), (304, 790), (190, 790),
-                                                    (186, 720)]), rgrad(80, [("FFE6EEFF", 0.0), (base, 0.5), (shade, 1.0)],
+                extra_up += [S(rig, "Pauldron", m([(200, 676), (262, 672), (304, 712), (300, 776), (186, 776),
+                                                    (182, 712)]), rgrad(80, [("FFE6EEFF", 0.0), (base, 0.5), (shade, 1.0)],
                                                                          cx=-20, cy=-30), L(ink, 3)),
-                             S(rig, "Seam", m([(196, 900), (292, 900)]), L(ink, 3), closed=False)]
+                             S(rig, "Seam", m([(196, 850), (286, 850)]), L(ink, 3), closed=False)]
             if oid == "christmasSweater":
-                extra_up += [S(rig, "Band", m([(194, 930), (296, 930), (297, 980), (193, 980)]), F("FFC8303A"),
-                               L(ink, 2)),
-                             *[S(rig, f"Zig{i}", m([(198 + i * 20, 955), (208 + i * 20, 943), (218 + i * 20, 955)]),
-                                 L(WHITE, 3), closed=False) for i in range(5)]]
-            gu.add(*extra_up, *folds, S(rig, "Sleeve", m(ARM_UP), sleeve_fill, L(ink, 3)))
+                extra_up += [S(rig, "Band", m([(196, 810, "c2"), (284, 810, "c2"), (282, 848, "c2"),
+                                               (198, 848, "c2")]), F("FFAD4650"),
+                               L(ink, 1.5)),
+                             *[S(rig, f"Zig{i}", m([(200 + i * 18, 832), (209 + i * 18, 812), (218 + i * 18, 832)]),
+                                 L("FFE8DFCD", 2), closed=False) for i in range(4)]]
+            if oid == "pinkHoodie":
+                for fold in folds:
+                    fold.attrs["opacity"] = 0.55
+            gu.add(*extra_up, *folds, *limb(rig, "Sleeve", side, 720, 50, 900, 43, sl_up, ink, 3))
             fore_extra: list[El] = []
             if cuff is not None:
                 if kind == "glove":
-                    fore_extra += [S(elbow, f"Fin{i}", m([(198, 1180 + i * 40), (176, 1196 + i * 40, "c"),
-                                                           (200, 1210 + i * 40)]), F(cuff), L(ink, 2)) for i in range(3)]
-                    fore_extra.append(S(elbow, "Glove", m([(200, 1150), (280, 1150), (277, 1340, "c"), (203, 1340, "c")]),
-                                        F(cuff), L(ink, 2.5)))
+                    fore_extra += [S(elbow, f"Fin{i}", m([(200, 966 + i * 28), (180, 978 + i * 28, "c"),
+                                                           (202, 990 + i * 28)]), F(cuff), L(ink, 2)) for i in range(3)]
+                    fore_extra += limb(elbow, "Glove", side, 960, 38, 1066, 35, F(cuff), ink, 2.5)
                 else:
-                    ribs = [S(elbow, f"Rib{i}", [(mx(214 + i * 13), 1306), (mx(214 + i * 13), 1350)], L(shade, 2),
+                    ribs = [S(elbow, f"Rib{i}", [(mx(216 + i * 12), 1040), (mx(216 + i * 12), 1068)], L(shade, 2),
                               closed=False) for i in range(5)] if oid == "pinkHoodie" else []
-                    fore_extra += ribs + [S(elbow, "Cuff", m([(204, 1300), (276, 1300), (274, 1356, "c6"),
-                                                              (206, 1356, "c6")]), F(cuff), L(ink, 2.5))]
-            gf.add(*fore_extra, S(elbow, "Sleeve", m(ARM_FORE), fore_fill, L(ink, 3)))
+                    fore_extra += ribs + [S(elbow, "Cuff", m([(203, 1036), (277, 1036), (276, 1076, "c6"),
+                                                              (204, 1076, "c6")]), F(cuff), L(ink, 2.5))]
+            fore_extra.append(S(elbow, "ElbowFold", m([(222, 912), (240, 920), (258, 912)]), L(shade, 2.5), closed=False))
+            gf.add(*fore_extra, *limb(elbow, "Sleeve", side, 900, 42, 1066, 35, sl_fore, ink, 3, open_top=True))
         up_solo.add(gu)
         fore_solo.add(gf)
         ups[oid] = gu
@@ -171,28 +278,58 @@ def build_sleeves(rig: Rig, elbow: Rig, side: int) -> tuple[Rig, Rig, dict[str, 
 
 
 def build_arm(rig: Rig, side: int) -> dict:
-    m = (lambda p: mirror(p)) if side == 1 else (lambda p: p)
     mx = (lambda x: 800 - x) if side == 1 else (lambda x: x)
-    elbow = rig.node("Elbow", mx(240), 1030)
-    hand = elbow.node("Hand", mx(240), 1350)
-    hand_wave = hand.node("HandWave")
-    hp = [(208, 1350), (272, 1350), (282, 1390), (278, 1430), (240, 1442), (204, 1430), (198, 1390)]
-    fingers = []
-    for i, (fx, ln) in enumerate([(210, 62), (229, 72), (249, 70), (268, 58)]):
-        fx2 = mx(fx)
-        fingers.append(S(hand_wave, f"Finger{i}", [(fx2 - 9.5, 1416), (fx2 + 9.5, 1416), (fx2 + 9, 1416 + ln - 9),
-                                                     (fx2, 1416 + ln), (fx2 - 9, 1416 + ln - 9)], F(SKIN), L(INK, 2.5)))
-    thumb = S(hand_wave, "Thumb", m([(270, 1372), (296, 1390), (310, 1420), (302, 1432), (282, 1418), (268, 1400)]),
-              F(SKIN), L(INK, 2.5))
-    palm = S(hand_wave, "Palm", m(hp), F(SKIN), L(INK, 2.5))
-    palm_sh = S(hand_wave, "PalmShade", m([(206, 1352), (274, 1352), (276, 1374), (240, 1382), (204, 1374)]), F(SKIN_SH))
-    crease = S(hand_wave, "PalmCrease", m([(214, 1404), (240, 1396), (262, 1408)]), L(SKIN_SH2, 2), closed=False)
-    hand_wave.add(palm_sh, crease, *fingers, thumb, palm)
+    up_art = rig.node("UpperArt")               # scaleY = foreshortening of the upper arm
+    elbow = rig.node("Elbow", mx(240), 900)     # y keyed with the foreshortening
+    fore_art = elbow.node("ForeArt")            # scaleY = foreshortening of the forearm
+    hand = elbow.node("Hand", mx(240), 1070)    # y keyed with the forearm foreshortening
+    hand_wave = hand.node("HandWave", scaleX=1.15, scaleY=1.15)
+    skin_solo = hand_wave.solo("HandSkin")      # bare hand or costume glove (Top/Costume layers)
+    skins: dict[str, El] = {}
+    pose_sets: list[tuple[Rig, dict[str, El]]] = []
+    for skin, cols in HAND_SKINS.items():
+        HC.update(zip(("fill", "shade", "line", "ink"), cols))
+        pose_solo = Rig("HandPose", hand_wave.ax, hand_wave.ay, tag="Solo")
+        pose_solo.el.attrs.update(x=0.0, y=0.0)
+        poses: dict[str, El] = {}
+        for name, parts in (("rest", hand_open(hand_wave, 1, side, False)), ("palm", hand_open(hand_wave, -1, side, True)),
+                            ("back", hand_open(hand_wave, 1, side, False)), ("edge", hand_edge(hand_wave, -1, side)),
+                            ("point", hand_point(hand_wave, 1, side)),
+                            ("up", hand_open(hand_wave, -1, side, True, short=0.82))):
+            g = group("Hand_" + name, *parts)
+            if skin in ("black", "metal", "white") and name in ("rest", "back", "palm", "up"):
+                def glove_x(x: float) -> float:
+                    thumb = -1 if name in ("palm", "up") else 1
+                    value = WX + (x - WX) * thumb
+                    return 800 - value if side == 1 else value
+                glove_light = {"black": "FF77879F", "metal": "FFDFEDF5", "white": "FFB5C1CC"}[skin]
+                for i, x in enumerate((217, 232, 248, 263)):
+                    g.children.insert(0, S(hand_wave, f"GloveFingerSeam{i}",
+                        [(glove_x(x - 2), WY + 68), (glove_x(x - 2), WY + 83 + i % 2 * 6)],
+                        L(glove_light, 1.3 if skin == "white" else 1.8), closed=False))
+                if name in ("rest", "back"):
+                    for i, x in enumerate((219, 235, 251)):
+                        g.children.insert(0, S(hand_wave, f"GloveKnuckle{i}",
+                            [(glove_x(x - 4), WY + 36), (glove_x(x), WY + 31), (glove_x(x + 4), WY + 36)],
+                            L(glove_light, 1.5), closed=False))
+            pose_solo.add(g)
+            poses[name] = g
+        pose_solo.el.attrs["activeComponentId"] = poses["rest"].ref()
+        sk = group("Skin_" + skin, pose_solo.el)
+        skin_solo.add(sk)
+        skins[skin] = sk
+        pose_sets.append((pose_solo, poses))
+    HC.update(zip(("fill", "shade", "line", "ink"), HAND_SKINS["skin"]))
+    skin_solo.el.attrs["activeComponentId"] = skins["skin"].ref()
     up_solo, fore_solo, ups, fores = build_sleeves(rig, elbow, side)
+    up_art.el.children = [up_solo.el]
+    rig.el.children.remove(up_solo.el)
+    fore_art.el.children = [fore_solo.el]
     # front-most first: hand > forearm sleeve > upper sleeve
-    elbow.el.children = [hand.el, fore_solo.el]
-    rig.el.children = [elbow.el, up_solo.el]
-    return {"arm": rig, "elbow": elbow, "hand": hand, "wave": hand_wave, "up_solo": up_solo,
+    elbow.el.children = [hand.el, fore_art.el]
+    rig.el.children = [elbow.el, up_art.el]
+    return {"arm": rig, "elbow": elbow, "hand": hand, "wave": hand_wave, "up_solo": up_solo, "up_art": up_art,
+            "fore_art": fore_art, "pose_sets": pose_sets, "skin_solo": skin_solo, "skins": skins,
             "fore_solo": fore_solo, "ups": ups, "fores": fores}
 
 
@@ -201,8 +338,10 @@ ARM_L = build_arm(arm_l, 1)
 ARMS = [ARM_R, ARM_L]
 
 # ================================================================ TORSO / TOPS
-TORSO = [(365, 596), (400, 606), (435, 596), (520, 640), (576, 684), (600, 760), (610, 1010, "c"), (190, 1010, "c"),
-         (200, 760), (224, 684), (280, 640)]
+# The torso stops under the resting arms, so a raised arm never leaves a
+# sleeve-shaped side behind it.
+TORSO = [(365, 596), (400, 606), (435, 596), (520, 640), (568, 676), (588, 736), (578, 860), (566, 1010, "c"),
+         (234, 1010, "c"), (222, 860), (212, 736), (232, 676), (280, 640)]
 top_front = body_g.solo("TopFront")       # in front of the neck
 top_back = body_g.solo("TopBack")         # behind the neck
 back_fx = body_g.solo("BackFx")           # capes / auras behind everything
@@ -241,7 +380,11 @@ def hood_string(x0: float, x1: float, name: str) -> El:
     tip = R(body_g, name + "Tip", x1, 905, 12, 26, 4, F("FFBFB6C4"), L(HOOD_INK, 2))
     cord = S(body_g, name, [(x0, 660), (x0 + (x1 - x0) * 0.4, 760), (x1, 890)], L(HOOD_INK, 9), closed=False)
     cord_in = S(body_g, name + "In", [(x0, 660), (x0 + (x1 - x0) * 0.4, 760), (x1, 890)], L(STRING, 5.5), closed=False)
-    return group(name + "Group", tip, cord_in, cord)
+    pivot = (x0 - body_g.ax, 660 - body_g.ay)
+    for part in (tip, cord_in, cord):
+        part.attrs["x"] = float(part.attrs["x"]) - pivot[0]
+        part.attrs["y"] = float(part.attrs["y"]) - pivot[1]
+    return d("Node", tip, cord_in, cord, x=pivot[0], y=pivot[1], name=name + "Group")
 
 
 band = [(278, 616), (318, 598), (356, 610), (390, 650), (408, 706, "c"), (388, 708), (360, 668), (324, 636), (290, 634)]
@@ -249,6 +392,12 @@ TF["pinkHoodie"] = group("F_pinkHoodie", hood_string(360, 352, "StringL"), hood_
                          S(body_g, "CollarL", band, vgrad(596, 708, HOOD, HOOD_SH), L(HOOD_INK, 3)),
                          S(body_g, "CollarR", mirror(band), vgrad(596, 708, HOOD, HOOD_SH), L(HOOD_INK, 3)))
 TB["pinkHoodie"] = group("B_pinkHoodie",
+                         S(body_g, "EmbroideredOrbit", [(481, 766), (469, 776), (481, 786), (493, 776), (481, 766)],
+                           L("FFEAD3B0", 2.4), closed=False),
+                         E(body_g, "EmbroideredStar", 481, 776, 6, 6, F("FFFFEBD0")),
+                         S(body_g, "ShoulderLight", [(231, 687), (270, 665), (306, 670)], L("80FFF3EC", 3), closed=False),
+                         S(body_g, "PocketStitch", [(310, 972), (490, 972)], L("45FFF3EC", 1.4), closed=False),
+                         S(body_g, "ChestLight", [(260, 710), (286, 700), (274, 862), (260, 938), (250, 874)], F("16FFF7ED")),
                          S(body_g, "ChestShade", [(300, 700), (340, 760), (330, 860), (300, 1000, "c"), (286, 1000, "c"),
                                                   (296, 860)], F(HOOD_SH)),
                          S(body_g, "Fold1", [(352, 880), (366, 930), (360, 1000), (352, 1000), (356, 930)], F(HOOD_SH2)),
@@ -258,21 +407,26 @@ TB["pinkHoodie"] = group("B_pinkHoodie",
                                                 (518, 610), (470, 604), (400, 598), (330, 604)],
                            grad([(HOOD_SH, 0.0), (HOOD_SH2, 1.0)], -40, 40), L(HOOD_INK, 3)),
                          torso(vgrad(600, 1000, HOOD, HOOD_SH), HOOD_INK))
+for detail in TB["pinkHoodie"].children:
+    if detail.attrs.get("name") in ("Fold1", "Fold2", "ChestShade"):
+        detail.attrs["opacity"] = 0.6
 
 # -- longCoat: trench over a white shirt
 COAT, COAT_SH, COAT_INK = "FFD9C7A3", "FFB49E78", "FF6A5838"
 TF["longCoat"] = group("F_longCoat", *collar_points())
+coat_torso = torso(vgrad(600, 1000, COAT, COAT_SH), COAT_INK)
 TB["longCoat"] = group("B_longCoat", *lapels(COAT, COAT_SH, COAT_INK),
                        *[E(body_g, f"Button{i}", 400, 800 + i * 70, 10, 10, F("FFEDEEF2"), L("FF8A8C98", 1.5))
                          for i in range(3)],
                        shirt_v(depth=1010),
                        S(body_g, "CoatCollar", [(300, 600), (330, 560), (400, 550), (470, 560), (500, 600), (470, 612),
                                                 (400, 604), (330, 612)], F(COAT_SH), L(COAT_INK, 3)),
-                       S(body_g, "Belt", [(196, 940), (380, 950), (380, 976), (196, 966)], F(COAT_SH), L(COAT_INK, 2)),
+                       S(body_g, "Belt", [(196, 940), (380, 950), (380, 976), (196, 966)], F(COAT_SH), L(COAT_INK, 2),
+                         clip=coat_torso),
                        S(body_g, "Belt2", mirror([(196, 940), (380, 950), (380, 976), (196, 966)]), F(COAT_SH),
-                         L(COAT_INK, 2)),
+                         L(COAT_INK, 2), clip=coat_torso),
                        S(body_g, "CoatFold", [(270, 760), (290, 860), (280, 1000), (272, 1000), (280, 860)], F(COAT_SH)),
-                       torso(vgrad(600, 1000, COAT, COAT_SH), COAT_INK))
+                       coat_torso)
 
 # -- tshirt: dark ringer tee
 TEE, TEE_SH, TEE_INK = "FF2A2A30", "FF1A1A1E", "FF0E0E12"
@@ -285,31 +439,35 @@ TB["tshirt"] = group("B_tshirt",
                      torso(vgrad(600, 1000, "FF3A3A44", TEE), TEE_INK))
 
 # -- underwear: white tank top
-TANK = [(300, 650), (330, 720), (400, 740), (470, 720), (500, 650), (540, 700), (560, 1010, "c"), (240, 1010, "c"),
-        (260, 700)]
+TANK = [(278, 649), (307, 641), (331, 711), (400, 735), (469, 711), (493, 641),
+        (522, 649), (523, 701), (542, 762), (552, 1010, "c"), (248, 1010, "c"),
+        (258, 762), (277, 701)]
 TF["underwear"] = group("F_underwear")
 TB["underwear"] = group("B_underwear",
-                        S(body_g, "Strap", [(286, 640), (306, 640), (296, 720), (276, 716)], F("FFF6F6F8"), L("FF9A9AA8", 2)),
-                        S(body_g, "Strap2", mirror([(286, 640), (306, 640), (296, 720), (276, 716)]), F("FFF6F6F8"),
-                          L("FF9A9AA8", 2)),
                         S(body_g, "Tank", TANK, vgrad(650, 1000, "FFFFFFFF", "FFDCDCE6"), L("FF9A9AA8", 2.5)),
                         *collarbones(),
                         torso(vgrad(600, 1000, SKIN, SKIN_SH), INK, "SkinTorso"))
 
 # -- swimsuit: bare chest + a striped towel round the neck
 towel = [(330, 596), (360, 640), (372, 760), (360, 900), (318, 900, "c"), (316, 760), (300, 660)]
-stripe = [(318, 820), (368, 820), (366, 846), (318, 846)]
+stripe = [(318, 839, "c2"), (369, 839, "c2"), (366, 850, "c2"), (318, 850, "c2")]
 TF["swimsuit"] = group("F_swimsuit",
                        S(body_g, "TowelStripeL", stripe, F("FF2A9FB0")),
                        S(body_g, "TowelStripeR", mirror(stripe), F("FF2A9FB0")),
                        S(body_g, "TowelL", towel, vgrad(600, 900, "FFFFFFFF", "FFD8E6EA"), L("FF6A8A92", 2.5)),
-                       S(body_g, "TowelR", mirror(towel), vgrad(600, 900, "FFFFFFFF", "FFD8E6EA"), L("FF6A8A92", 2.5)),
-                       S(body_g, "TowelBack", [(320, 600), (400, 580), (480, 600), (470, 620), (400, 604), (330, 620)],
-                         F("FFE4EEF0"), L("FF6A8A92", 2)))
+                       S(body_g, "TowelR", mirror(towel), vgrad(600, 900, "FFFFFFFF", "FFD8E6EA"), L("FF6A8A92", 2.5)))
+# swimsuit: a sleeveless swim top (teal, white piping) so it reads as swimwear waist-up
+SWIM = [(278, 649), (308, 641), (331, 706), (400, 729), (469, 706), (492, 641), (522, 649),
+        (523, 701), (542, 762), (552, 1010, "c"), (248, 1010, "c"), (258, 762), (277, 701)]
+swim_top = S(body_g, "SwimTop", SWIM, vgrad(640, 1000, "FF2FB3BF", "FF14707E"), L("FF0B4650", 2.5))
 TB["swimsuit"] = group("B_swimsuit",
-                       S(body_g, "Pec", [(320, 780), (380, 800)], L(SKIN_SH2, 2.5), closed=False),
-                       S(body_g, "Pec2", mirror([(320, 780), (380, 800)]), L(SKIN_SH2, 2.5), closed=False),
-                       S(body_g, "Abs", [(400, 820), (400, 960)], L(SKIN_SH, 2.5), closed=False),
+                       S(body_g, "SwimPipingL", [(262, 760), (272, 860), (262, 1000)], L("E6FFFFFF", 5), closed=False,
+                         clip=swim_top),
+                       S(body_g, "SwimPipingR", mirror([(262, 760), (272, 860), (262, 1000)]), L("E6FFFFFF", 5),
+                         closed=False, clip=swim_top),
+                       S(body_g, "SwimSheen", [(300, 760), (330, 740), (318, 900), (300, 940)], F("2EFFFFFF"),
+                         clip=swim_top),
+                       swim_top,
                        *collarbones(),
                        torso(vgrad(600, 1000, SKIN, SKIN_SH), INK, "SkinTorso"))
 
@@ -328,14 +486,16 @@ TF["christmasSweater"] = group("F_christmasSweater",
                                    closed=False) for i in range(9)],
                                S(body_g, "KnitCollar", [(348, 596), (400, 612), (452, 596), (456, 616), (400, 636),
                                                         (344, 616)], F(SW_RED), L(SW_INK, 2.5)))
+sw_torso = torso(vgrad(600, 1000, SW, SW_SH), SW_INK)
 TB["christmasSweater"] = group("B_christmasSweater",
                                *flakes,
                                *[S(body_g, f"Zig{i}", [(200 + i * 30, 832), (215 + i * 30, 812), (230 + i * 30, 832)],
-                                   L("FFF4F4F4", 4), closed=False) for i in range(14)],
-                               *[E(body_g, f"Dot{i}", 214 + i * 30, 858, 8, 8, F("FFF4F4F4")) for i in range(14)],
+                                   L("FFF4F4F4", 4), closed=False, clip=sw_torso) for i in range(14)],
+                               *[E(body_g, f"Dot{i}", 214 + i * 30, 858, 8, 8, F("FFF4F4F4"), clip=sw_torso)
+                                 for i in range(14)],
                                S(body_g, "RedBand", [(196, 796), (604, 796), (606, 874), (194, 874)], F(SW_RED),
-                                 L(SW_INK, 2.5)),
-                               torso(vgrad(600, 1000, SW, SW_SH), SW_INK))
+                                 L(SW_INK, 2.5), clip=sw_torso),
+                               sw_torso)
 
 # -- blackSuitAndTie
 SUIT, SUIT_SH, SUIT_INK = "FF34363E", "FF22242A", "FF101116"
@@ -362,13 +522,15 @@ bat_emblem = [(340, 770), (356, 754), (372, 762), (384, 744), (392, 756), (400, 
 TF["batman"] = group("F_batman", S(body_g, "CowlNeck", [(356, 476), (444, 476), (452, 600), (470, 622), (400, 640),
                                                         (330, 622), (348, 600)], vgrad(470, 640, BAT, BAT_SH),
                                    L(BAT_INK, 3)))
+bat_torso = torso(vgrad(600, 1000, BAT, BAT_SH), BAT_INK)
 TB["batman"] = group("B_batman",
                      S(body_g, "Bat", [(p[0], p[1]) for p in bat_emblem], F("FF0E0F12")),
                      E(body_g, "EmblemOval", 400, 768, 140, 62, vgrad(-30, 30, "FFFFE066", "FFE0A820"), L(BAT_INK, 3)),
                      S(body_g, "PecL", [(300, 720), (360, 740), (392, 720)], L(BAT_SH, 3), closed=False),
                      S(body_g, "PecR", mirror([(300, 720), (360, 740), (392, 720)]), L(BAT_SH, 3), closed=False),
-                     S(body_g, "BeltGold", [(196, 990), (604, 990), (606, 1012), (194, 1012)], F("FFE0A820")),
-                     torso(vgrad(600, 1000, BAT, BAT_SH), BAT_INK))
+                     S(body_g, "BeltGold", [(196, 990), (604, 990), (606, 1012), (194, 1012)], F("FFE0A820"),
+                       clip=bat_torso),
+                     bat_torso)
 RC, RC_SH, RC_INK = "FFB8C4DC", "FF6A7A9C", "FF2A3450"
 TF["robocop"] = group("F_robocop", *[S(body_g, f"NeckRing{i}", [(364, 540 + i * 18), (436, 540 + i * 18),
                                                                 (440, 556 + i * 18), (360, 556 + i * 18)],
@@ -400,8 +562,7 @@ TB["soubrette"] = group("B_soubrette",
                         S(body_g, "Bib", [(330, 760), (470, 760), (480, 1010, "c"), (320, 1010, "c")],
                           vgrad(760, 1010, "FFFFFFFF", "FFE6E6EE"), L("FFB8B8C4", 2.5)),
                         torso(vgrad(600, 1000, "FF2E2934", MAID), MAID_INK))
-SING = [(196, 1010), (200, 760), (224, 684), (300, 630), (360, 596), (440, 596), (500, 630), (576, 684), (600, 760),
-        (604, 1010)]
+SING = TORSO
 sing_torso_stars = starfield(body_g, SING, 26, 5, "Torso")
 STAR_FX.extend(sing_torso_stars[:8])
 TF["singularity"] = group("F_singularity",
@@ -437,7 +598,7 @@ neck_sh = S(body_g, "NeckShade", [(368, 480), (432, 480), (432, 540), (400, 566)
 # ================================================================ HEAD
 face_pts = [(294, 330), (298, 402), (316, 452), (350, 488), (386, 508), (400, 511), (414, 508), (450, 488),
             (484, 452), (502, 402), (506, 330), (490, 262), (400, 222), (310, 262)]
-face = S(head, "Face", face_pts, vgrad(260, 520, SKIN, "FFF3C9AF"), L(INK, 3.2))
+face = S(head, "Face", face_pts, rgrad(235, [("FFFFE6CF", 0.0), (SKIN, 0.6), ("FFE8B299", 1.0)], cx=-48, cy=-62), L(INK, 2.6))
 face_cast = S(head, "FaceCast", [(298, 300), (330, 330), (370, 336), (400, 330), (440, 340), (480, 332), (502, 300),
                                  (504, 352), (490, 360), (470, 352), (440, 362), (400, 356), (360, 362), (320, 356),
                                  (300, 366)], F(SKIN_SH))
@@ -447,9 +608,16 @@ EAR = [(300, 372), (282, 360), (272, 380), (278, 412), (292, 436), (304, 430)]
 ears = [S(head, "EarL", EAR, F(SKIN), L(INK, 3)), S(head, "EarR", mirror(EAR), F(SKIN), L(INK, 3)),
         S(head, "EarInL", [(296, 384), (286, 378), (284, 396), (292, 414)], L(SKIN_SH2, 3), closed=False),
         S(head, "EarInR", mirror([(296, 384), (286, 378), (284, 396), (292, 414)]), L(SKIN_SH2, 3), closed=False)]
-nose = S(head, "Nose", [(406, 446), (400, 454), (392, 452)], L(SKIN_SH2, 3), closed=False)
-nose_sh = S(head, "NoseShade", [(404, 408), (410, 440), (406, 450), (402, 430)], F(SKIN_SH))
+nose_g = head.node("NoseTurn")            # gestures shift it with the eyes/mouth to fake yaw/pitch
+nose = S(nose_g, "Nose", [(406, 446), (400, 454), (392, 452)], L(SKIN_SH2, 3), closed=False)
+nose_sh = S(nose_g, "NoseShade", [(404, 408), (410, 440), (406, 450), (402, 430)], F(SKIN_SH))
+nose_light = S(nose_g, "NoseLight", [(397, 415), (395, 433)], L("66FFF4DF", 2.8), closed=False)
+nose_g.add(nose, nose_light, nose_sh)
 mole = E(head, "Mole", 456, 432, 5, 5, F("FF5A3A32"))
+skin_details = [E(head, "CheekBloom" + tag, x, 437, 65, 44,
+                  rgrad(33, [("25E99D91", 0.0), ("00E99D91", 1.0)]), clip=face)
+                for tag, x in (("L", 335), ("R", 465))]
+skin_details += [S(head, "ChinLight", [(386, 497), (399, 501), (412, 497)], L("40FFF5E1", 2.5), closed=False)]
 
 # ---- eyes: Eye > [Droop, Squint, EyeMood > Blink > GazeM > GazeP > GazeG > Look(joystick)]
 eyes = head.node("Eyes", 400, 385)
@@ -472,34 +640,58 @@ def build_eye(cx: float, side: int) -> dict:
     clip_src = clip_only(S(blink, "EyeClip", white_pts))
     look.add(E(look, "Shine", cx - 7 * s - 1, 379, 10, 8, F(WHITE), clip=clip_src),
              E(look, "Shine2", cx + 7 * s, 397, 5, 5, F("D0FFFFFF"), clip=clip_src),
-             E(look, "Pupil", cx, 389, 14, 17, F("FF1E120C"), clip=clip_src),
+             pupil := E(look, "Pupil", cx, 389, 14, 17, F("FF1E120C"), clip=clip_src),
              E(look, "IrisRing", cx, 388, 32, 36, L("FF2B1A12", 2.2), clip=clip_src),
              E(look, "Iris", cx, 388, 32, 36, d("Fill", rad(d, 0, 8, 22, [(IRIS_A, 0.0), (IRIS_B, 1.0)]), name="Fill"),
                clip=clip_src))
     white = S(blink, "White", white_pts, F(SCLERA))
-    upper = S(blink, "Lash", [(i - 3 * s, 393), (cx - 15 * s, 368), (cx + 6 * s, 363), (o - 2 * s, 369),
-                              (o + 9 * s, 384, "c"), (o + 1 * s, 381), (cx + 6 * s, 373), (cx - 14 * s, 377),
-                              (i + 2 * s, 394, "c")], F("FF2A1B18"))
+    # blink = a skin lid sliding down inside the eye + the lash travelling with it and
+    # flipping into the closed-eye curve (no squashed eyeballs)
+    lash_n = blink.node("LashMove", cx, 366)
+    upper = S(lash_n, "Lash", [(i - 3 * s, 393), (cx - 15 * s, 368), (cx + 6 * s, 363), (o - 2 * s, 369),
+                               (o + 9 * s, 384, "c"), (o + 1 * s, 381), (cx + 6 * s, 373), (cx - 14 * s, 377),
+                               (i + 2 * s, 394, "c")], F("FF2A1B18"))
+    lash_n.add(upper)
+    lid = blink.node("Lid", cx, 360, scaleY=0.0)
     crease = S(blink, "Crease", [(cx - 12 * s, 360), (cx + 8 * s, 356), (o + 2 * s, 364)], L(SKIN_SH2, 2), closed=False)
     lower = S(blink, "LowerLid", [(i + 6 * s, 403), (cx - 8 * s, 406), (cx + 14 * s, 402)], L("B03A2622", 2),
               closed=False)
-    blink.el.children = [upper, lower, crease, gaze_m.el, white, clip_src]
+    lid.add(S(lid, "LidSkin", [(i - 10 * s, 358, "c"), (o + 12 * s, 358, "c"), (o + 12 * s, 412, "c"),
+                               (i - 10 * s, 412, "c")], vgrad(358, 412, "FFF3C9B2", SKIN), clip=clip_src),
+            S(lid, "LidCrease", [(i - 2 * s, 404), (cx, 409), (o + 4 * s, 403)], L(SKIN_SH2, 2), closed=False,
+              clip=clip_src))
+    shut = S(blink, "ClosedLash", [(i - 4 * s, 393), (cx - 6 * s, 400), (cx + 12 * s, 400), (o + 9 * s, 391)],
+             L("FF2A1B18", 4.2), closed=False, opacity=0.0)
+    blink.el.children = [shut, lash_n.el, lower, crease, lid.el, gaze_m.el, white, clip_src]
     # mood lids: Droop comes down from the top (sad/angry), Squint rises from below (happy)
     droop = eye.node("Droop", cx, 360, scaleY=0.0)
     droop.add(S(droop, "DroopLash", [(i - 6 * s, 392), (cx, 394), (o + 8 * s, 390)], L("FF2A1B18", 4.5), closed=False),
               S(droop, "DroopLid", [(i - 8 * s, 352, "c"), (o + 10 * s, 352, "c"), (o + 10 * s, 392), (cx, 396),
                                     (i - 8 * s, 393)], F(SKIN)))
-    squint = S(eye, "Squint", [(i - 6 * s, 404), (cx, 386), (o + 6 * s, 400), (o + 8 * s, 420, "c"),
-                               (i - 8 * s, 420, "c")], F(SKIN), origin=(cx, 412), scaleY=0.0)
-    squint_line = S(eye, "SquintLine", [(i - 2 * s, 402), (cx, 389), (o + 2 * s, 399)], L(INK, 2.2), closed=False,
-                    origin=(cx, 412), scaleY=0.0)
+    # happy: the lower lid rises into a crescent that hides most of the iris
+    squint = S(eye, "Squint", [(i - 8 * s, 402), (cx - 4 * s, 381), (cx + 8 * s, 380), (o + 8 * s, 396),
+                               (o + 10 * s, 420, "c"), (i - 10 * s, 420, "c")], F(SKIN), origin=(cx, 412), scaleY=0.0)
+    squint_line = S(eye, "SquintLine", [(i - 3 * s, 400), (cx - 4 * s, 383.5), (cx + 8 * s, 383), (o + 4 * s, 395)],
+                    L("FF2A1B18", 3.2), closed=False, origin=(cx, 412), scaleY=0.0)
     eye.el.children = [squint_line, squint, droop.el, eye_mood.el]
+    # Gesture lids have their own channels so a facepalm can shut the eyes
+    # without stealing the independent mood, blink or pointer-follow tracks.
+    gesture_lid = eye.node("GestureLid", cx, 360, scaleY=0.0)
+    gesture_lid.add(S(gesture_lid, "GestureLidSkin",
+                      [(cx - 42, 354, "c"), (cx + 42, 354, "c"), (cx + 42, 412, "c"), (cx - 42, 412, "c")],
+                      F(SKIN), clip=clip_src))
+    gesture_shut = S(eye, "GestureClosedLash", [(i, 395), (cx, 401), (o, 394)],
+                     L("FF2A1B18", 3.5), closed=False, opacity=0.0)
+    eye.el.children.remove(gesture_lid.el)
+    eye.el.children[0:0] = [gesture_shut, gesture_lid.el]
     brow = eyes.node("Brow" + tag, cx, 346)
-    brow_g = brow.node("BrowG")
+    brow_p = brow.node("BrowP")                # phase accents (speaking brow raises)
+    brow_g = brow_p.node("BrowG")
     brow_g.add(S(brow_g, "BrowShape", [(cx - 30 * s, 342, "c"), (cx - 8 * s, 335), (cx + 16 * s, 335),
                                        (cx + 36 * s, 344, "c"), (cx + 16 * s, 341), (cx - 8 * s, 341)], F(HAIR)))
-    return {"eye": eye, "mood": eye_mood, "blink": blink, "gm": gaze_m, "gp": gaze_p, "gg": gaze_g, "look": look,
-            "squint": squint, "squint_line": squint_line, "droop": droop, "brow": brow, "brow_g": brow_g}
+    return {"eye": eye, "mood": eye_mood, "blink": blink, "lid": lid, "lash": lash_n, "shut": shut, "pupil": pupil, "brow_p": brow_p, "gm": gaze_m, "gp": gaze_p, "gg": gaze_g, "look": look,
+            "squint": squint, "squint_line": squint_line, "droop": droop, "brow": brow, "brow_g": brow_g,
+            "gesture_lid": gesture_lid, "gesture_shut": gesture_shut}
 
 
 EYE_L = build_eye(355, -1)
@@ -517,7 +709,7 @@ blush.add(*[E(blush, "Blush" + t, x, 438, 54, 20, rgrad(27, [("B0F08F86", 0.0), 
 mouth = head.node("Mouth", 400, 478)
 lines = mouth.node("Lines")
 LINES = {
-    "neutral": S(mouth, "LineNeutral", [(382, 479), (400, 477), (418, 479)], L(INK, 3), closed=False),
+    "neutral": S(mouth, "LineNeutral", [(383, 477), (400, 480), (417, 477)], L(INK, 2.7), closed=False),
     "smile": S(mouth, "LineSmile", [(378, 472), (390, 482), (400, 484), (410, 482), (422, 472)], L(INK, 3), closed=False),
     "frown": S(mouth, "LineFrown", [(380, 486), (390, 479), (400, 477), (410, 479), (420, 486)], L(INK, 3), closed=False),
     "tight": S(mouth, "LineTight", [(386, 482), (400, 479), (414, 482)], L(INK, 4), closed=False),
@@ -526,16 +718,52 @@ LINES = {
     "wavy": S(mouth, "LineWavy", [(380, 481), (388, 476), (396, 482), (404, 476), (412, 482), (420, 477)], L(INK, 2.8),
               closed=False),
 }
-lines.add(*LINES.values())
-for k, v in LINES.items():
-    v.attrs["opacity"] = 1.0 if k == "neutral" else 0.0
+line_solo = lines.solo("LineShape")
+LINE_G = {k: group("Line_" + k, v) for k, v in LINES.items()}
+line_solo.add(*LINE_G.values())
+line_solo.el.attrs["activeComponentId"] = LINE_G["neutral"].ref()
+line_acting = d("Node", line_solo.el, x=0.0, y=0.0, name="MouthActing")
+lines.el.children = [line_acting]
 open_ = mouth.node("Open", 400, 474, scaleY=0.0, opacity=0.0)
 open_mood = open_.node("OpenMood")
-mo_pts = [(374, 472), (400, 470), (426, 472), (420, 492), (400, 504), (380, 492)]
-teeth_src = clip_only(S(open_mood, "InsideClip", mo_pts))
-open_mood.add(S(open_mood, "Teeth", [(372, 466), (428, 466), (426, 478), (400, 480), (374, 478)], F(TEETH), clip=teeth_src),
-              E(open_mood, "Tongue", 400, 502, 34, 18, F(TONGUE), clip=teeth_src),
-              S(open_mood, "Inside", mo_pts, F(MOUTH_IN), L(INK, 2.6)), teeth_src)
+viseme = open_mood.node("Viseme", 400, 474)        # speaking varies the width (wide / round / narrow)
+open_solo = viseme.solo("OpenShape")               # mood picks the open-mouth drawing
+
+
+def open_shape(name: str, pts: list, top_teeth: bool = True, low_teeth: bool = False, tongue: bool = True) -> El:
+    src = clip_only(S(viseme, name + "Clip", pts))
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    parts: list[El] = []
+    if top_teeth:
+        parts.append(S(viseme, name + "Teeth", [(min(xs) - 4, min(ys) - 6), (max(xs) + 4, min(ys) - 6),
+                                                (max(xs) + 2, min(ys) + 7), (400, min(ys) + 9), (min(xs) - 2, min(ys) + 7)],
+                       F(TEETH), clip=src))
+    if low_teeth:
+        parts.append(S(viseme, name + "LowTeeth", [(min(xs) - 2, max(ys) - 7), (400, max(ys) - 9),
+                                                   (max(xs) + 2, max(ys) - 7), (max(xs) + 4, max(ys) + 6),
+                                                   (min(xs) - 4, max(ys) + 6)], F("FFF1E6E0"), clip=src))
+    if tongue:
+        parts.append(E(viseme, name + "Tongue", 400, max(ys) - 2, (max(xs) - min(xs)) * 0.62, 16, F(TONGUE), clip=src))
+    parts.append(S(viseme, name + "Inside", pts, vgrad(min(ys), max(ys), "FF4E1C20", MOUTH_IN), L(INK, 2.6)))
+    return group("Open_" + name, *parts, src)
+
+
+OPEN = {
+    "smile": open_shape("Smile", [(372, 471), (400, 469), (428, 471), (422, 490), (400, 503), (378, 490)]),
+    # sad talks through a downturned arch (corners low), never a neutral O
+    "frown": open_shape("Frown", [(370, 494), (380, 480), (392, 472), (408, 472), (420, 480), (430, 494), (416, 492),
+                                  (400, 488), (384, 492)], top_teeth=False),
+    "angry": open_shape("Angry", [(366, 471), (400, 474), (434, 471), (431, 494), (400, 492), (369, 494)],
+                        low_teeth=True, tongue=False),
+    "o": open_shape("O", [(400, 466), (413, 472), (417, 487), (410, 501), (400, 504), (390, 501), (383, 487),
+                          (387, 472)], top_teeth=False),
+    "side": open_shape("Side", [(378, 476), (402, 472), (430, 466), (426, 486), (406, 499), (384, 491)]),
+    "small": open_shape("Small", [(384, 474), (400, 472), (416, 474), (412, 488), (400, 494), (388, 488)],
+                        top_teeth=False),
+}
+open_solo.add(*OPEN.values())
+open_solo.el.attrs["activeComponentId"] = OPEN["smile"].ref()
 
 # ---- mood / phase / gesture overlays on the face
 sweat_m = head.node("SweatMood", 300, 330, opacity=0.0)
@@ -557,6 +785,14 @@ laugh.add(*[S(laugh, f"LaughEye{t}", [(x - 22, 396), (x, 376), (x + 22, 396)], L
           E(laugh, "LaughTongue", 400, 498, 30, 14, F(TONGUE)),
           S(laugh, "LaughMouth", [(368, 468), (400, 466), (432, 468), (426, 490), (400, 508), (374, 490)], F(MOUTH_IN),
             L(INK, 3)))
+# Anchor the jaw at the upper lip so chuckles close upward instead of
+# scaling the eyes or sliding the whole expression over the face.
+laugh_jaw_parts = [part for part in laugh.el.children
+                   if part.attrs.get("name") in ("LaughTeeth", "LaughTongue", "LaughMouth")]
+for part in laugh_jaw_parts:
+    part.attrs["y"] = float(part.attrs.get("y", 0)) - 48
+laugh_jaw = d("Node", *laugh_jaw_parts, x=0.0, y=48.0, name="LaughJaw")
+laugh.el.children = [part for part in laugh.el.children if part not in laugh_jaw_parts] + [laugh_jaw]
 sweat_p = head.node("SweatPhase", 508, 300, opacity=0.0)
 sweat_p.add(S(sweat_p, "Drop", [(508 + x, 300 + y) for x, y in SWEAT], vgrad(-20, 14, "FFE6F6FF", "FF8CC8F0"),
               L("FF3A7AB0", 2.5)))
@@ -601,7 +837,15 @@ def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: flo
         return (rx + dx * t + nx * (off + bow), ry + dy * t + ny * (off + bow))
     pts = [at(0, -w / 2), at(0.45, -w * 0.42), at(0.8, -w * 0.2), (tx + nx * bend * 0.1, ty, "c"),
            at(0.78, w * 0.16), at(0.42, w * 0.44), at(0, w / 2)]
-    return S(head, name, pts, grad([(HAIR_HI, 0.0), (HAIR, 0.5), (HAIR_SH, 1.0)], -ln / 2, ln / 2), L(HAIR_SH, 2.4))
+    base = S(head, name, pts, grad([(HAIR_HI, 0.0), (HAIR, 0.55), (HAIR_SH, 1.0)], -ln / 2, ln / 2), L(HAIR_SH, 1.5))
+    # Separate tapered ribbons, clipped to each lock, give the hair a satin
+    # surface. They travel with the hair rig, including under hats.
+    light = S(head, name + "Ribbon", [at(0.12, -w * 0.18), at(0.35, -w * 0.22), at(0.65, -w * 0.1),
+                                     at(0.48, -w * 0.04), at(0.26, -w * 0.05)],
+              rgrad(ln * 0.3, [("35DBA27C", 0), ("00DBA27C", 1)]), clip=base)
+    strand = S(head, name + "Strand", [at(0.18, w * 0.15), at(0.43, w * 0.2), at(0.72, w * 0.07)],
+               L("24E6B28A", 1.1), closed=False, clip=base)
+    return group(name + "Material", light, strand, base)
 
 
 LOCKS = [((300, 272), (292, 404), 44, -8), ((330, 246), (318, 366), 50, 12), ((360, 236), (350, 338), 50, 10),
@@ -627,6 +871,14 @@ tufts.add(S(head, "Cowlick", [(380, 232), (372, 206), (384, 186), (404, 180, "c"
 # ================================================================ HATS (+ costume heads)
 hat_solo = head.solo("HatSolo")
 HATS: dict[str, El] = {"noHat": group("H_noHat")}
+
+def hat_shadow(y_mid: float, y_side: float, depth: float = 16, x0: float = 286, x1: float = 514) -> El:
+    """Soft occlusion where a hat sits on hair/forehead (so hats don't read as stickers)."""
+    xm = (x0 + x1) / 2
+    return S(head, "HatShadow", [(x0, y_side - 4), (xm - 70, y_mid + 2), (xm, y_mid), (xm + 70, y_mid + 2), (x1, y_side - 4),
+                                 (x1 - 4, y_side + depth), (xm + 70, y_mid + depth + 2), (xm, y_mid + depth),
+                                 (xm - 70, y_mid + depth + 2), (x0 + 4, y_side + depth)], F("4A2A1712"))
+
 
 # beanie
 bn = [(280, 322, "c8"), (284, 276), (330, 258), (400, 252), (470, 258), (516, 276), (520, 322, "c8"), (470, 308),
@@ -655,8 +907,8 @@ HATS["backwardsCap"] = group("H_backwardsCap",
                              S(head, "Crown", [(284, 300), (290, 232), (326, 186), (400, 166), (474, 186), (510, 232),
                                                (516, 300), (470, 290), (400, 284), (330, 290)],
                                rgrad(190, [(CAP_HI, 0.0), (CAP, 0.5), (CAP_SH, 1.0)], cx=-40, cy=-50), L(INK, 3)),
-                             S(head, "Bill", [(452, 206), (520, 188), (568, 184), (574, 200), (522, 216)],
-                               vgrad(150, 210, CAP, CAP_SH), L(INK, 3)))
+                             S(head, "BillBack", [(356, 176), (392, 150), (440, 146), (470, 160), (452, 176)],
+                               vgrad(140, 180, CAP_SH, "FF6A1612"), L(INK, 3)))
 # french beret
 BER = "FF1E1E26"
 HATS["frenchBeret"] = group("H_frenchBeret",
@@ -730,8 +982,8 @@ HATS["redMagaCap"] = group("H_redMagaCap",
                              L(INK, 3)))
 
 # -- costume heads
-cowl_outer = [(284, 476), (276, 360), (282, 252), (300, 210), (312, 112, "c"), (342, 196), (400, 186), (458, 196),
-              (488, 112, "c"), (500, 210), (518, 252), (524, 360), (516, 476), (480, 446), (452, 432), (420, 432),
+cowl_outer = [(284, 476), (276, 360), (282, 252), (300, 210), (312, 145, "c"), (342, 196), (400, 186), (458, 196),
+              (488, 145, "c"), (500, 210), (518, 252), (524, 360), (516, 476), (480, 446), (452, 432), (420, 432),
               (400, 452, "c"), (380, 432), (348, 432), (320, 446)]
 
 
@@ -788,14 +1040,24 @@ STAR_FX.extend(sing_stars[:10])
 laser = head.node("Laser", 400, 388, opacity=0.0)
 for t, x in (("L", 355), ("R", 445)):
     s = -1 if x < 400 else 1
-    laser.add(S(laser, "Beam" + t, [(x, 384), (x + s * 520, 300), (x + s * 520, 330), (x, 394)],
-                d("Fill", lin(d, -s * 260, 0, s * 260, 0, [("FFFF4AD8", 0.0), ("00FF4AD8", 1.0)]), name="Fill")))
+    # Fine spectral rays decay before the silhouette edge. Layered lateral
+    # falloff avoids the opaque trapezoids of the former artboard-wide beam.
+    for i in range(6):
+        length, width = 185 - i * 13, 13 - i * 1.9
+        laser.add(S(laser, f"Beam{t}{i}",
+                    [(x, 388 - width * 0.22), (x + s * length, 360 - width * 0.5),
+                     (x + s * length, 360 + width * 0.5), (x, 388 + width * 0.22)],
+                    d("Fill", lin(d, -s * length / 2, 0, s * length / 2, 0,
+                                  [("306EE9FF", 0.0), ("186F93EC", 0.35), ("006F93EC", 1.0)]), name="Fill")))
 eyeglow = [E(head, "EyeGlow" + t, x, 388, 46, 18, rgrad(23, [("FFFFFFFF", 0.0), ("FF7CF0FF", 0.5), ("007CF0FF", 1.0)]))
            for t, x in (("L", 355), ("R", 445))]
 HATS["singularity"] = group("H_singularity", laser.el, *eyeglow, *sing_stars,
                             S(head, "Void", SING_HEAD, grad([("FF1A1E5A", 0.0), ("FF0A0B24", 0.6), ("FF05060F", 1.0)],
                                                             -160, 160), L("FF3A40A0", 3)))
 
+for hid, (ym, ys) in {"beanie": (304, 322), "backwardsCap": (288, 302), "frenchBeret": (268, 274),
+                     "santaHat": (312, 316), "redMagaCap": (300, 306)}.items():
+    HATS[hid].add(hat_shadow(ym, ys))
 for hid in HAT_IDS + COSTUMES:
     hat_solo.add(HATS[hid])
 hat_solo.el.attrs["activeComponentId"] = HATS["noHat"].ref()
@@ -805,9 +1067,25 @@ hit_head = E(head, "HitHead", 400, 360, 300, 360, F("00000000"))
 hit_body = R(body_g, "HitBody", 400, 820, 460, 380, 0, F("00000000"))
 
 # head paint order (front first)
-head.el.children = [hat_solo.el, sweat_m.el, sweat_p.el, anger.el, glasses_solo.el, hair_front.el, laugh.el,
-                    eyes.el, blush.el, mouth.el, mole, nose, nose_sh, cheek_sh, face_cast, face, *ears, tufts.el,
-                    hair_back.el, hit_head]
+# Separate spring pivots preserve the idle breathing channels while gestures
+# add a delayed response around the crown, rather than rotating the whole wig.
+def hair_spring(name: str, rig: Rig) -> El:
+    rig.el.attrs["y"] = 310.0
+    return d("Node", rig.el, x=0.0, y=-310.0, name=name)
+
+
+hair_follow = hair_spring("FringeFollowThrough", hair_front)
+back_follow = hair_spring("BackHairFollowThrough", hair_back)
+tuft_follow = hair_spring("TuftFollowThrough", tufts)
+head.el.children = [hat_solo.el, sweat_m.el, sweat_p.el, anger.el, glasses_solo.el, hair_follow, laugh.el,
+                    eyes.el, blush.el, mouth.el, mole, nose_g.el, *skin_details, cheek_sh, face_cast, face, *ears, tufts.el,
+                    back_follow, hit_head]
+head.el.children[head.el.children.index(tufts.el)] = tuft_follow
+travel_parts = []
+for part in (eyes.el, glasses_solo.el, mouth.el, nose_g.el, blush.el, mole):
+    travel_part = d("Node", part, x=0.0, y=0.0, name="Travel" + str(part.attrs["name"]))
+    head.el.children[head.el.children.index(part)] = travel_part
+    travel_parts.append(travel_part)
 
 # ---- phase props: thought bubble (generating), "?" (error)
 bubble = body_g.node("Bubble", 650, 200, opacity=0.0, scaleX=0.6, scaleY=0.6)
@@ -827,8 +1105,21 @@ for k in range(5):
     clap_fx.add(S(clap_fx, f"Burst{k}", [(400 + 62 * math.cos(a), 760 + 62 * math.sin(a)),
                                          (400 + 92 * math.cos(a), 760 + 92 * math.sin(a))], L("FFFFC24A", 5), closed=False))
 
-body_g.el.children = [bubble.el, question.el, clap_fx.el, ARM_R["arm"].el, ARM_L["arm"].el, head_base.el,
+body_g.el.children = [bubble.el, question.el, clap_fx.el, swing_r.el, swing_l.el, head_base.el,
                       top_front.el, chin_sh, neck_sh, neck, top_back.el, back_fx.el, hit_body]
+
+cloth_parts = refine_wardrobe(body_g, head, TF, TB, HATS, ARMS, GLASSES, cape_rig)
+# The cape's attachment remains on the collar; a separate response pivots it
+# while the lower contour ripples. The costume layer only selects visibility.
+cape_anchor = (float(cape_rig.el.attrs["x"]), float(cape_rig.el.attrs["y"]))
+cape_rig.el.attrs.update(x=0.0, y=0.0)
+cape_life = group("CapeLife", cape_rig.el)
+cape_response = group("CapeResponse", cape_life)
+cape_selection = d(
+    "Node", cape_response, x=cape_anchor[0], y=cape_anchor[1], name="CapeAttachment")
+back_fx.el.children[back_fx.el.children.index(cape_rig.el)] = cape_selection
+# A Solo selects the new attachment rather than the formerly direct cape node.
+cloth_parts.append(Cloth(cape_life, cape_response, 1.35, 0.8, 0.009))
 
 # ================================================================ VIEW MODEL
 CONTRACT_ENUMS = {
@@ -901,6 +1192,20 @@ anims: list[El] = []
 
 
 def A(name: str, frames: int, tracks: list[El], loop: bool = False) -> El:
+    if loop and frames > 4:
+        # A one-frame constant segment at either side of a closed loop makes
+        # its seam exact even when the runtime accumulates fractional frames.
+        for obj in tracks:
+            if obj is None:
+                continue
+            for prop in obj.children:
+                first, last = prop.children[0], prop.children[-1]
+                if (len(prop.children) > 1 and first.attrs["frame"] == 0 and last.attrs["frame"] == frames
+                        and first.attrs["value"] == last.attrs["value"]):
+                    if prop.children[1].attrs["frame"] > 1:
+                        prop.children.insert(1, d(first.tag, **{**first.attrs, "frame": 1}))
+                    if prop.children[-2].attrs["frame"] < frames - 1:
+                        prop.children.insert(-1, d(last.tag, **{**last.attrs, "frame": frames - 1}))
     a = d("LinearAnimation", *[t for t in tracks if t is not None], duration=frames, fps=60,
           loopValue="loop" if loop else None, name=name)
     anims.append(a)
@@ -918,12 +1223,58 @@ def K(target: El | Rig, **vals: object) -> El:
 
 
 # ---- idle
-breath = A("idle_breath", 240, [
-    T(body, scaleY=[(0, 1.0), (120, 1.012), (240, 1.0)], y=[(0, 0.0), (120, -2.0), (240, 0.0)]),
-    T(head_base, y=[(0, -440.0), (120, -446.0), (240, -440.0)], rotation=[(0, 0.0), (120, 0.012), (240, 0.0)]),
+breath = A("idle_breath", 360, [
+    T(body, scaleY=[(0, 1.0), (142, 1.008), (360, 1.0)], y=[(0, 0.0), (142, -1.4), (360, 0.0)]),
+    T(head_base, y=[(0, -440.0), (162, -443.5), (360, -440.0)],
+      rotation=[(0, 0.0), (148, 0.008), (270, -0.004), (360, 0.0)]),
+    T(hair_front, rotation=[(0, 0.0), (180, -0.006), (300, 0.003), (360, 0.0)]),
+    T(tufts, rotation=[(0, 0.0), (192, 0.012), (304, -0.005), (360, 0.0)]),
+    *[T(cord, rotation=[(0, 0.0), (164 + i * 16, (-1 if i else 1) * 0.008), (360, 0.0)])
+      for i, cord in enumerate(TF["pinkHoodie"].children[:2])],
 ], loop=True)
-blink_keys = [(0, 1.0), (150, 1.0), (154, 0.08), (159, 1.0), (196, 1.0), (200, 0.08), (205, 1.0), (222, 1.0)]
-blink = A("idle_blink", 222, [T(e["blink"], ease=None, scaleY=blink_keys) for e in EYES], loop=True)
+wardrobe_life = A("wardrobe_life", 720, [
+    T(part.life, rotation=[(f, part.amplitude * (math.sin(2 * math.pi * f / 720 + part.phase)
+                                               - math.sin(part.phase))) for f in range(0, 721, 30)])
+    for part in cloth_parts], loop=True)
+cape_path = next(c for c in cape.children if c.tag == "PointsPath")
+cape_ripple_tracks = []
+for vertex in cape_path.children:
+    vx, vy = float(vertex.attrs["x"]), float(vertex.attrs["y"])
+    # Vertices are shape-local; only the lower two-thirds carry a travelling
+    # ripple. End values stay exact and all upper attachment points stay fixed.
+    influence = max(0.0, min(1.0, (vy + float(cape.attrs["y"]) - 105) / 260))
+    if influence == 0:
+        continue
+    phase = vx * 0.012
+    cape_ripple_tracks.append(T(vertex,
+        x=[(f, vx + 7 * influence * (math.sin(2 * math.pi * f / 720 + phase) - math.sin(phase)))
+           for f in range(0, 721, 30)],
+        y=[(f, vy + 5 * influence * (math.sin(2 * math.pi * f / 720 + phase + 0.8) - math.sin(phase + 0.8)))
+           for f in range(0, 721, 30)]))
+cape_ripple = A("cape_ripple", 720, cape_ripple_tracks, loop=True)
+# (frame, closure 0..1): fast close, a beat shut, slower ease-out open; one double blink, one half blink
+blink_keys = [(0, 0.0), (168, 0.0), (171, 1.0), (173, 1.0), (181, 0.0),
+              (395, 0.0), (398, 1.0), (400, 1.0), (407, 0.0), (418, 0.0), (421, 1.0), (423, 1.0), (431, 0.0),
+              (560, 0.0), (563, 0.55), (566, 0.55), (572, 0.0), (660, 0.0)]
+
+
+def blink_track(e: dict) -> list[El]:
+    ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in blink_keys]
+    # the closed-lash swap lasts exactly while the eye is shut: switch back one frame after
+    shut = []
+    for (f, v, _), nxt in zip(ks, ks[1:] + [None]):
+        closed = v > 0.99
+        shut.append((f, 1.0 if closed else 0.0))
+        if closed and nxt is not None and nxt[1] <= 0.99:
+            shut.append((f + 1, 0.0))
+    return [T(e["lid"], scaleY=[(f, v, it) for f, v, it in ks]),
+            T(e["lash"], y=[(f, float(e["lash"].el.attrs["y"]) + 24.0 * v, it) for f, v, it in ks],
+              scaleY=[(f, 1.0 - 0.55 * v, it) for f, v, it in ks],
+              opacity=[(f, 1.0 - o, "hold") for f, o in shut]),
+            T(e["shut"], opacity=[(f, o, "hold") for f, o in shut])]
+
+
+blink = A("idle_blink", 660, [t for e in EYES for t in blink_track(e)], loop=True)
 LOOK_X, LOOK_Y = 7.0, 4.5
 look_x = A("look_x", 100, [*[T(e["look"], ease=None, x=[(0, -LOOK_X), (100, LOOK_X)]) for e in EYES],
                            T(head_look, ease=None, rotation=[(0, -0.035), (100, 0.035)])])
@@ -931,16 +1282,19 @@ look_y = A("look_y", 100, [T(e["look"], ease=None, y=[(0, -LOOK_Y), (100, LOOK_Y
 
 # ---- moods: every pose keys every channel so crossfades blend cleanly
 MOOD_DEF = dict(brow=((0, 0.0), (0, 0.0)), droop=(0.0, 0.0), squint=0.0, eye_scale=1.0, gaze=(0, 0), line="neutral",
-                blush=0.0, tilt=0.0, head_y=0.0, open_w=1.0, open_rot=0.0, sweat=0.0, anger=0.0)
+                blush=0.0, tilt=0.0, head_y=0.0, open_w=1.0, open_rot=0.0, sweat=0.0, anger=0.0, pupil=1.0)
 MOOD_SPEC = {
     "neutral": {},
-    "happy": dict(brow=((-6, 0.0), (-6, 0.0)), squint=1.0, line="smile", blush=0.8, tilt=-0.05, open_w=1.15),
+    "happy": dict(brow=((-6, 0.0), (-6, 0.0)), squint=0.46, line="smile", blush=0.65, tilt=-0.04, open_w=1.15),
     "sad": dict(brow=((-3, -0.24), (-3, -0.24)), droop=(0.38, -0.18), line="frown", tilt=0.05, head_y=6.0,
                 gaze=(0, 3), open_w=0.9),
     "angry": dict(brow=((5, 0.28), (5, 0.28)), droop=(0.3, 0.22), line="tight", tilt=-0.02, anger=1.0, open_w=1.1,
+                  pupil=0.85,
                   head_y=2.0),
-    "surprised": dict(brow=((-12, -0.04), (-12, -0.04)), eye_scale=1.12, line="o", head_y=-5.0, open_w=0.8),
-    "thinking": dict(brow=((-9, -0.08), (2, 0.14)), gaze=(-4, -4), line="side", tilt=0.06, open_rot=-0.12),
+    "surprised": dict(brow=((-17, -0.04), (-17, -0.04)), eye_scale=1.14, line="o", head_y=-6.0, open_w=0.8,
+                      pupil=0.68),
+    "thinking": dict(brow=((-14, -0.1), (3, 0.17)), gaze=(-7, -8), line="side", tilt=0.085, open_rot=-0.12,
+                     head_y=-2.0),
     "embarrassed": dict(brow=((-2, -0.18), (-2, -0.18)), droop=(0.14, -0.05), gaze=(4, 3), line="wavy", blush=1.0,
                         sweat=1.0, tilt=0.04, open_w=0.95),
 }
@@ -955,32 +1309,43 @@ def mood_pose(name: str, spec: dict) -> El:
         tr.append(K(e["brow"], y=-39.0 + by, rotation=-br * s))
         dr, drot = p["droop"]
         tr.append(K(e["droop"], scaleY=dr, rotation=-drot * s))
-        tr.append(K(e["squint"], scaleY=p["squint"]))
-        tr.append(K(e["squint_line"], scaleY=p["squint"]))
+        # A warm smile maintains eye contact. The eye-smile is a brief accent,
+        # not a permanent closed-eye mask throughout happy speech.
+        smile_keys = [(0, 0.46), (100, 0.53), (180, 0.46), (203, 0.97), (212, 0.97),
+                      (234, 0.49), (300, 0.53), (360, 0.46)]
+        tr.append(T(e["squint"], scaleY=smile_keys) if name == "happy" else K(e["squint"], scaleY=p["squint"]))
+        tr.append(T(e["squint_line"], scaleY=smile_keys) if name == "happy" else K(e["squint_line"], scaleY=p["squint"]))
         tr.append(K(e["mood"], scaleX=p["eye_scale"], scaleY=p["eye_scale"]))
+        tr.append(K(e["pupil"], scaleX=p["pupil"], scaleY=p["pupil"]))
         tr.append(K(e["gm"], x=float(p["gaze"][0]), y=float(p["gaze"][1])))
-    for k, v in LINES.items():
-        tr.append(K(v, opacity=1.0 if k == p["line"] else 0.0))
+    tr.append(K(line_solo, activeComponentId=LINE_G[p["line"]]))
+    tr.append(K(open_solo, activeComponentId=OPEN[{"neutral": "smile", "smile": "smile", "frown": "frown",
+                                                  "tight": "angry", "o": "o", "side": "side",
+                                                  "wavy": "small"}[p["line"]]]))
     tr += [K(blush, opacity=p["blush"]), K(head_mood, rotation=p["tilt"], y=p["head_y"]),
            K(open_mood, scaleX=p["open_w"], rotation=p["open_rot"]), K(sweat_m, opacity=p["sweat"]),
            K(anger, opacity=p["anger"])]
-    return A("mood_" + name, 1, tr)
+    return A("mood_" + name, 360 if name == "happy" else 1, tr, loop=name == "happy")
 
 
 MOODS = {m: mood_pose(m, spec) for m, spec in MOOD_SPEC.items()}
 
 # ---- mouth 0..4 (closed, slightly, semi, open, wide)
 MOUTH = [(0.0, 0.0, 1.0, 1.0), (0.28, 1.0, 0.0, 0.92), (0.55, 1.0, 0.0, 0.96), (0.85, 1.0, 0.0, 1.0), (1.1, 1.0, 0.0, 1.18)]
-mouth_anims = [A(f"mouth_{i}", 1, [K(open_, scaleY=sy, opacity=op, scaleX=sx), K(lines, opacity=lo)])
+OPEN_Y = float(open_.el.attrs["y"])
+JAW = [0.0, 0.0, 1.0, 3.0, 5.0]     # wide-open levels drop the mouth a touch (jaw)
+mouth_anims = [A(f"mouth_{i}", 1, [K(open_, scaleY=sy, opacity=op, scaleX=sx, y=OPEN_Y + JAW[i]), K(lines, opacity=lo)])
                for i, (sy, op, lo, sx) in enumerate(MOUTH)]
 
 
 # ---- phases (looping poses; all channels keyed in each)
 def phase_anim(name: str, frames: int, head_y: list | None = None, head_rot: list | None = None,
                gaze: list | None = None, bubble_on: float = 0.0, dot_bounce: bool = False, q_on: float = 0.0,
-               sweat_on: float = 0.0) -> El:
+               sweat_on: float = 0.0, brow: list | None = None, vis: list | None = None) -> El:
     z = [(0, 0.0), (frames, 0.0)]
     tr = [T(head_phase, y=head_y or z, rotation=head_rot or z, x=z)]
+    tr += [T(e["brow_p"], y=brow or z) for e in EYES]
+    tr.append(T(viseme, scaleX=vis or [(0, 1.0), (frames, 1.0)]))
     for e in EYES:
         tr.append(T(e["gp"], x=[(f, gx) for f, gx, gy in gaze] if gaze else z,
                     y=[(f, gy) for f, gx, gy in gaze] if gaze else z))
@@ -1004,96 +1369,342 @@ def phase_anim(name: str, frames: int, head_y: list | None = None, head_rot: lis
 
 PHASES = {
     "idle": phase_anim("idle", 60),
-    "waiting": phase_anim("waiting", 240, head_rot=[(0, 0.0), (60, 0.025), (150, 0.025), (210, 0.0), (240, 0.0)],
-                          gaze=[(0, 0, 0), (40, 5, 1), (140, 5, 1), (180, 0, 0), (240, 0, 0)]),
+    # waiting: glances off to one side, a small weight shift and a patient breath back
+    "waiting": phase_anim("waiting", 360, head_rot=[(0, 0.0), (50, 0.05), (150, 0.045), (200, -0.03), (290, -0.025),
+                                                    (340, 0.0), (360, 0.0)],
+                          head_y=[(0, 0.0), (50, 3.0), (150, 2.0), (200, -2.0), (290, -1.0), (360, 0.0)],
+                          gaze=[(0, 0, 0), (28, 0, 0), (33, 7, 1), (145, 7, 1), (150, 6, 2),
+                                (179, 6, 2), (184, -6, -1), (284, -6, -1), (290, -5, 0),
+                                (325, -5, 0), (330, 0, 0),
+                                (360, 0, 0)],
+                          brow=[(0, 0.0), (40, -4.0), (150, -2.0), (200, -5.0), (290, -2.0), (360, 0.0)]),
     "generating": phase_anim("generating", 60, head_rot=[(0, -0.04), (60, -0.04)],
                              gaze=[(0, 5, -5), (60, 5, -5)], bubble_on=1.0, dot_bounce=True),
-    "speaking": phase_anim("speaking", 50, head_y=[(0, 0.0), (12, -3.0), (25, 0.0), (37, -2.0), (50, 0.0)],
-                           head_rot=[(0, 0.0), (20, 0.012), (40, -0.01), (50, 0.0)]),
+    # speaking: irregular beats — head accents land with brow lifts, the width cycles wide/round/narrow
+    "speaking": phase_anim("speaking", 420,
+                           head_y=[(0, 0.0), (30, -5.0), (52, 1.0), (96, -1.0), (128, -6.0), (150, 0.5), (210, 0.0),
+                                   (246, -4.0), (270, 1.0), (330, -2.0), (352, -5.5), (380, 0.5), (420, 0.0)],
+                           head_rot=[(0, 0.0), (40, 0.022), (100, -0.012), (140, 0.018), (200, -0.02), (262, 0.016),
+                                     (330, -0.014), (372, 0.01), (420, 0.0)],
+                           gaze=[(0, 0, 0), (60, 3, 0), (110, 3, -1), (190, -2, 0), (300, -3, 1), (360, 1, 0),
+                                 (420, 0, 0)],
+                           brow=[(0, 0.0), (24, -6.0), (44, 0.0), (122, -7.0), (146, 0.0), (240, -4.0), (262, 0.0),
+                                 (346, -6.0), (372, 0.0), (420, 0.0)],
+                           vis=[(0, 1.0)] + [(f, v) for f, v in zip(range(10, 412, 9), [0.84, 1.14, 0.92, 1.06, 0.8, 1.12, 0.95, 0.86, 1.1, 0.9, 1.0, 0.82, 1.15, 0.94, 1.04, 0.85, 1.1, 0.92] * 3)]
+                               + [(420, 1.0)]),
     "error": phase_anim("error", 120, head_rot=[(0, 0.06), (120, 0.06)], gaze=[(0, -4, 2), (120, -4, 2)],
                         q_on=1.0, sweat_on=1.0),
 }
 
 # ---- gestures (IK-posed arms + head channels; gesture_none keys every gesture channel at rest)
-ARM_Y0 = 720.0 - 1000.0
+ARM_Y0 = 0.0
+REST = (240.0, 1070.0)
+MOUTH_XY = (float(mouth.el.attrs["x"]), float(mouth.el.attrs["y"]))
+Pose = tuple  # (frame, wrist | None, finger_deg, fs=1.0)
 
 
-def arm_keys(side: int, poses: list[tuple[int, tuple[float, float] | None, float]], out: bool = False) -> list[El]:
+def _smooth(t: float) -> float:
+    return t * t * (3 - 2 * t)
+
+
+def _unwrap(prev: float, v: float) -> float:
+    while v - prev > math.pi:
+        v -= 2 * math.pi
+    while v - prev < -math.pi:
+        v += 2 * math.pi
+    return v
+
+
+def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
+             hand: list[tuple[int, str]] | None = None, step: int = 2) -> list[El]:
+    """IK baked along the WRIST path (not joint angles), so the hand travels on a smooth eased
+    arc between key poses and never swings wide. Pose = (frame, wrist|None, finger_deg, fs, fs2)
+    with fs/fs2 the upper/forearm foreshortening. The hand trails the forearm by `lag` frames;
+    `hand` switches the hand drawing [(frame, pose name)]."""
     a = ARMS[0 if side == -1 else 1]
-    k1, k2, k3 = [], [], []
-    for f, wrist, deg in poses:
-        r = (0.0, 0.0, 0.0) if wrist is None else ik(side, wrist, deg, out)
-        k1.append((f, r[0]))
-        k2.append((f, r[1]))
-        k3.append((f, r[2]))
-    return [T(a["arm"], rotation=k1), T(a["elbow"], rotation=k2), T(a["hand"], rotation=k3)]
+    rest = (800 - REST[0] if side == 1 else REST[0], REST[1])
+    P = [(p[0], rest if p[1] is None else p[1], p[2], p[3] if len(p) > 3 else 1.0, p[4] if len(p) > 4 else 1.0)
+         for p in poses]
+
+    def sample(f: float) -> tuple[tuple[float, float], float, float, float]:
+        f = max(P[0][0], min(P[-1][0], f))
+        i = max(k for k in range(len(P) - 1) if P[k][0] <= f) if f < P[-1][0] else len(P) - 2
+        p0, p1 = P[i], P[i + 1]
+        t = _smooth((f - p0[0]) / max(1e-6, p1[0] - p0[0]))
+        pm = P[max(0, i - 1)][1]
+        pn = P[min(len(P) - 1, i + 2)][1]
+        # centripetal-ish Catmull-Rom through the wrist targets (tension 0.5)
+        x0, y0 = p0[1]
+        x1, y1 = p1[1]
+        m0 = ((x1 - pm[0]) * 0.25, (y1 - pm[1]) * 0.25)
+        m1 = ((pn[0] - x0) * 0.25, (pn[1] - y0) * 0.25)
+        h00, h10, h01, h11 = 2 * t ** 3 - 3 * t ** 2 + 1, t ** 3 - 2 * t ** 2 + t, -2 * t ** 3 + 3 * t ** 2, t ** 3 - t ** 2
+        wx = h00 * x0 + h10 * m0[0] + h01 * x1 + h11 * m1[0]
+        wy = h00 * y0 + h10 * m0[1] + h01 * y1 + h11 * m1[1]
+        dd = p1[2] - p0[2]
+        while dd > 180:
+            dd -= 360
+        while dd < -180:
+            dd += 360
+        return (wx, wy), p0[2] + dd * t, p0[3] + (p1[3] - p0[3]) * t, p0[4] + (p1[4] - p0[4]) * t
+
+    frames = sorted(set(list(range(P[0][0], P[-1][0], step)) + [p[0] for p in P]))
+    k1, k2, k3, ey, us, hy, fsy = [], [], [], [], [], [], []
+    prev = (0.0, 0.0, 0.0)
+    for f in frames:
+        rest_pose = any(p[0] == f and p[1] is None for p in poses)
+        w, _, fs, fs2 = sample(f)
+        _, deg_lag, _, _ = sample(f - lag)
+        r = (0.0, 0.0, 0.0) if rest_pose else ik(side, w, deg_lag, out, fs, fs2)
+        r = tuple(_unwrap(pv, v) for pv, v in zip(prev, r))
+        prev = r
+        k1.append((f, r[0], "linear"))
+        k2.append((f, r[1], "linear"))
+        k3.append((f, r[2], "linear"))
+        ey.append((f, L1 * fs, "linear"))
+        us.append((f, fs, "linear"))
+        hy.append((f, L2 * fs2, "linear"))
+        fsy.append((f, fs2, "linear"))
+    tr = [T(a["arm"], rotation=k1), T(a["elbow"], rotation=k2, y=ey), T(a["hand"], rotation=k3, y=hy),
+          T(a["up_art"], scaleY=us), T(a["fore_art"], scaleY=fsy)]
+    if hand:
+        for solo, ps in a["pose_sets"]:
+            tr.append(T(solo, activeComponentId=[(f, ps[n]) for f, n in hand]))
+    return tr
+
+
+def mirror_poses(poses: list[Pose]) -> list[Pose]:
+    return [(p[0], None if p[1] is None else (800 - p[1][0], p[1][1]), 180 - p[2], *p[3:]) for p in poses]
+
+
+def feat(x: list | None = None, y: list | None = None, gaze: bool = True) -> list[El]:
+    """Fake yaw/pitch: shift eyes, nose and mouth together inside the head outline."""
+    z = [(0, 0.0)]
+    mx_, my_ = MOUTH_XY
+    tr = [T(e["gg"], x=x or z, y=y or z) for e in EYES] if gaze else []
+    tr.append(T(nose_g, x=x or z, y=y or z))
+    tr.append(T(mouth, x=[(f, mx_ + v) for f, v in (x or z)], y=[(f, my_ + v) for f, v in (y or z)]))
+    return tr
 
 
 gesture_rest = [T(a[k], ease=None, rotation=[(0, 0.0)]) for a in ARMS for k in ("arm", "elbow", "hand", "wave")]
 gesture_rest += [K(a["arm"], y=ARM_Y0) for a in ARMS]
-gesture_rest += [K(body_g, y=0.0), K(head_g, x=0.0, y=0.0, rotation=0.0), K(laugh, opacity=0.0), K(clap_fx, opacity=0.0)]
+gesture_rest += [K(a["elbow"], y=L1) for a in ARMS] + [K(a["up_art"], scaleY=1.0) for a in ARMS]
+gesture_rest = [t for t in gesture_rest if not (t.attrs.get("objectId") in {a["hand"].ref() for a in ARMS}
+                                                and t.children[0].attrs.get("property") == "rotation")]
+gesture_rest += [T(a["hand"], ease=None, rotation=[(0, 0.0)]) for a in ARMS]
+gesture_rest += [K(solo, activeComponentId=ps["rest"]) for a in ARMS for solo, ps in a["pose_sets"]]
+gesture_rest += [K(a["hand"], y=L2) for a in ARMS] + [K(a["fore_art"], scaleY=1.0) for a in ARMS]
+gesture_rest += [K(body_g, y=0.0, rotation=0.0), K(head_g, x=0.0, y=0.0, rotation=0.0), K(laugh, opacity=0.0),
+                 K(clap_fx, opacity=0.0, scaleX=1.0, scaleY=1.0), K(nose_g, x=0.0, y=0.0),
+                 K(mouth, x=MOUTH_XY[0], y=MOUTH_XY[1])]
 gesture_rest += [K(e["brow_g"], y=0.0) for e in EYES] + [K(e["gg"], x=0.0, y=0.0) for e in EYES]
+gesture_rest += [K(spring, rotation=0.0, y=-310.0) for spring in (hair_follow, back_follow, tuft_follow)]
+gesture_rest += [K(part.response, rotation=0.0) for part in cloth_parts]
+gesture_rest += [K(e["gesture_lid"], scaleY=0.0) for e in EYES]
+gesture_rest += [K(e["gesture_shut"], opacity=0.0) for e in EYES] + [K(line_acting, scaleY=1.0, rotation=0.0)]
 g_none = A("gesture_none", 1, gesture_rest)
 
 G: dict[str, El] = {}
-wave_fore = [(0, 0.0), (16, 2.7), (22, 3.05), (32, 2.86), (42, 3.1), (52, 2.86), (62, 3.1), (72, 2.86), (82, 3.0),
-             (100, 0.0)]
-G["wave"] = A("gesture_wave", 104, [
-    T(ARM_R["arm"], rotation=[(0, 0.0), (16, 0.22), (84, 0.22), (102, 0.0)]),
-    T(ARM_R["elbow"], rotation=wave_fore),
-    T(ARM_R["wave"], rotation=[(0, 0.0), (22, 0.0), (32, -0.2), (42, 0.16), (52, -0.2), (62, 0.16), (72, -0.18),
-                               (84, 0.0)]),
-    T(head_g, y=[(0, 0.0), (20, -4.0), (84, -4.0), (100, 0.0)], rotation=[(0, 0.0), (20, -0.04), (84, -0.04), (100, 0.0)]),
+
+# wave: anticipation dip, overshooting raise, a lively wave with forearm sway, eased drop with settle
+wave_sway = [(26, (198, 604), -94, 0.75), (36, (186, 610), -104, 0.75), (46, (208, 602), -86, 0.75),
+             (56, (188, 610), -102, 0.75), (66, (206, 602), -88, 0.75), (76, (190, 608), -100, 0.75),
+             (86, (198, 604), -94, 0.75)]
+G["wave"] = A("gesture_wave", 120, [
+    *arm_keys(-1, [(0, None, 90), (6, (238, 1084), 94), (12, (205, 930), 40, 0.95, 0.55),
+                   (18, (205, 790), -60, 0.8, 0.5), (24, (194, 620), -102, 0.75, 0.9), *wave_sway,
+                   (96, (205, 790), -40, 0.8, 0.5), (103, (205, 930), 60, 0.95, 0.55),
+                   (110, (238, 1082), 94), (120, None, 90)],
+              lag=3, hand=[(0, "rest"), (13, "palm"), (99, "rest")]),
+    T(ARM_R["wave"], rotation=[(0, 0.0), (28, 0.0), (35, -0.3), (45, 0.24), (55, -0.3), (65, 0.24), (75, -0.26),
+                               (86, 0.06), (96, 0.0), (120, 0.0)]),
+    *arm_keys(1, mirror_poses([(0, None, 90), (14, (246, 1078), 96), (94, (246, 1078), 96), (120, None, 90)])),
+    T(head_g, y=[(0, 0.0), (8, 2.0), (22, -6.0), (90, -4.0), (110, 0.0), (120, 0.0)],
+      rotation=[(0, 0.0), (22, -0.07), (60, -0.05), (90, -0.06), (112, 0.0), (120, 0.0)]),
+    T(body_g, rotation=[(0, 0.0), (20, -0.012), (90, -0.01), (112, 0.0), (120, 0.0)]),
 ])
-bounce = [(0, 0.0)] + [(f, -6.0 if (f // 8) % 2 else 0.0) for f in range(8, 72, 8)] + [(96, 0.0)]
+
+# Laugh starts with an inhale, breaks into unequal pulses and runs out of
+# breath. The ribcage rolls against the head; shoulders catch up separately.
+bounce = [(0, 0.0), (7, 3.0), (15, -8.0), (22, 1.0), (34, -6.0), (43, 1.5),
+          (59, -4.0), (70, 0.5), (84, 1.0), (96, 0.0)]
 G["laugh"] = A("gesture_laugh", 96, [
-    T(body_g, y=bounce),
-    T(head_g, rotation=[(0, 0.0), (10, -0.08), (80, -0.06), (96, 0.0)], y=[(0, 0.0), (10, -8.0), (80, -6.0), (96, 0.0)]),
-    T(laugh, ease=None, opacity=[(0, 0.0), (6, 1.0, "linear"), (84, 1.0), (94, 0.0)]),
+    T(body_g, y=bounce,
+      rotation=[(0, 0.0), (8, -0.012), (17, 0.024), (27, -0.017), (38, 0.018),
+                (49, -0.011), (64, 0.009), (76, -0.004), (90, 0.002), (96, 0.0)]),
+    *[T(a["arm"], y=[(f if f in (0, 96) else f + i * 3, v * (0.72 - i * 0.27))
+                       for f, v in bounce],
+        rotation=[(0, 0.0), (8 + i * 2, -0.012 * (1 if i == 0 else -1)),
+                  (19 + i * 3, 0.027 * (1 if i == 0 else -1)),
+                  (31 + i * 3, -0.013 * (1 if i == 0 else -1)),
+                  (44 + i * 3, 0.018 * (1 if i == 0 else -1)),
+                  (66 + i * 3, 0.009 * (1 if i == 0 else -1)), (88, -0.003), (96, 0.0)])
+      for i, a in enumerate(ARMS)],
+    T(head_g, rotation=[(0, 0.0), (6, 0.03), (18, -0.10), (30, -0.055),
+                        (41, -0.085), (54, -0.045), (67, -0.065), (83, -0.02), (96, 0.0)],
+      x=[(0, 0.0), (9, -1.0), (20, -3.0), (32, 1.5), (43, -2.0),
+         (56, 1.0), (70, -0.8), (88, 0.3), (96, 0.0)],
+      y=[(0, 0.0), (7, 3.0), (18, -10.0), (26, -5.0), (37, -8.0), (47, -4.0),
+         (62, -6.0), (74, -3.0), (88, 1.0), (96, 0.0)]),
+    T(laugh, opacity=[(0, 0.0, "hold"), (5, 1.0, "hold"), (86, 0.0, "hold"), (96, 0.0, "hold")]),
+    T(laugh_jaw, scaleY=[(0, 0.62), (5, 0.62), (15, 1.0), (24, 0.46),
+                         (36, 0.90), (47, 0.50), (62, 0.77), (74, 0.52), (85, 0.60), (96, 0.62)],
+      scaleX=[(0, 0.98), (15, 1.03), (24, 0.96), (36, 1.02), (47, 0.97),
+              (62, 1.01), (74, 0.98), (96, 0.98)]),
+    *feat(y=[(0, 0.0), (16, -3.0), (80, -2.0), (96, 0.0)]),
 ])
-G["facepalm"] = A("gesture_facepalm", 124, [
-    *arm_keys(-1, [(0, None, 90), (24, (322, 486), -66), (96, (322, 486), -66), (120, None, 90)]),
-    T(ARM_R["wave"], rotation=[(0, 0.0), (36, 0.0), (52, 0.06), (68, -0.04), (84, 0.05), (100, 0.0)]),
-    T(head_g, rotation=[(0, 0.0), (24, 0.08), (96, 0.08), (120, 0.0)], y=[(0, 0.0), (24, 8.0), (96, 8.0), (120, 0.0)]),
+
+# facepalm: hand comes to the eye (back of hand to camera), the head sinks INTO it, a slow disbelieving shake
+G["facepalm"] = A("gesture_facepalm", 132, [
+    *arm_keys(-1, [(0, None, 90), (8, (238, 1082), 94), (14, (286, 870), 10, 0.8), (19, (330, 650), -60, 0.65),
+                   (24, (348, 466), -76, 0.55), (30, (342, 476), -80, 0.55),
+                   (96, (344, 474), -80, 0.55), (104, (330, 650), -60, 0.65), (111, (286, 870), 30, 0.8),
+                   (120, (242, 1080), 92), (132, None, 90)],
+              lag=3, hand=[(0, "rest"), (12, "back"), (106, "rest")]),
+    T(ARM_R["wave"], rotation=[(0, 0.0), (40, 0.0), (52, 0.05), (66, -0.04), (80, 0.05), (96, 0.0), (132, 0.0)]),
+    T(head_g, rotation=[(0, 0.0), (26, 0.0), (36, 0.12), (52, 0.09), (66, 0.13), (80, 0.09), (98, 0.11), (118, 0.0),
+                        (132, 0.0)],
+      y=[(0, 0.0), (26, 0.0), (36, 12.0), (98, 10.0), (118, 0.0), (132, 0.0)]),
+    *feat(x=[(0, 0.0), (36, -4.0), (52, 3.0), (66, -4.0), (80, 3.0), (98, 0.0), (132, 0.0)],
+          y=[(0, 0.0), (36, 5.0), (98, 5.0), (118, 0.0), (132, 0.0)]),
+    T(body_g, y=[(0, 0.0), (36, 4.0), (98, 4.0), (118, 0.0), (132, 0.0)]),
+    *[T(e["brow_g"], y=[(0, 0.0), (30, 4.0), (100, 4.0), (118, 0.0), (132, 0.0)]) for e in EYES],
+    *[T(e["gesture_lid"], scaleY=[(0, 0.0), (21, 0.0), (27, 1.0), (96, 1.0), (108, 0.0), (132, 0.0)]) for e in EYES],
+    *[T(e["gesture_shut"], opacity=[(0, 0.0), (25, 0.0), (28, 1.0), (96, 1.0), (102, 0.0), (132, 0.0)]) for e in EYES],
+    T(line_acting, scaleY=[(0, 1.0), (24, 0.65), (100, 0.65), (120, 1.0), (132, 1.0)],
+      rotation=[(0, 0.0), (24, 0.12), (100, 0.12), (120, 0.0), (132, 0.0)]),
 ])
+
+# shrug: shoulders rise, elbows stay at the sides, forearms open outward with palms up; head sinks between shoulders
+# shrug: elbows stay near the ribs, forearms come forward toward the camera (foreshortened), palms up
+shrug_poses = [(0, None, 90), (6, (238, 1078), 92), (18, (156, 836), 212, 0.92, 0.5), (26, (164, 846), 202, 0.92, 0.52),
+               (60, (160, 842), 200, 0.92, 0.52), (74, (214, 990), 110, 0.97, 0.85), (84, (242, 1078), 92),
+               (92, None, 90)]
+shoulder = [(0, ARM_Y0), (6, ARM_Y0 + 4), (18, ARM_Y0 - 20), (26, ARM_Y0 - 15), (60, ARM_Y0 - 16), (78, ARM_Y0 + 3),
+            (86, ARM_Y0), (92, ARM_Y0)]
+shrug_other = [(f if f in (0, 92) else f + 3,
+                None if wrist is None else (wrist[0] + 9, wrist[1] + 7), deg, *scales)
+               for f, wrist, deg, *scales in mirror_poses(shrug_poses)]
 G["shrug"] = A("gesture_shrug", 92, [
-    *arm_keys(-1, [(0, None, 90), (18, (150, 880), -150), (64, (150, 880), -150), (88, None, 90)], out=True),
-    *arm_keys(1, [(0, None, 90), (18, (650, 880), -30), (64, (650, 880), -30), (88, None, 90)], out=True),
-    *[T(a["arm"], y=[(0, ARM_Y0), (18, ARM_Y0 - 14), (64, ARM_Y0 - 14), (88, ARM_Y0)]) for a in ARMS],
-    T(head_g, rotation=[(0, 0.0), (18, 0.1), (64, 0.1), (88, 0.0)], y=[(0, 0.0), (18, 6.0), (64, 6.0), (88, 0.0)]),
-    *[T(e["brow_g"], y=[(0, 0.0), (18, -8.0), (64, -8.0), (88, 0.0)]) for e in EYES],
+    *arm_keys(-1, shrug_poses, lag=2, hand=[(0, "rest"), (9, "up"), (72, "rest")]),
+    *arm_keys(1, shrug_other, lag=3, hand=[(0, "rest"), (12, "up"), (75, "rest")]),
+    T(ARM_R["arm"], y=shoulder),
+    T(ARM_L["arm"], y=[(f if f in (0, 92) else f + 3, v * 0.8) for f, v in shoulder]),
+    T(head_g, rotation=[(0, 0.0), (20, 0.09), (60, 0.07), (82, 0.0), (92, 0.0)],
+      y=[(0, 0.0), (6, -2.0), (20, 10.0), (60, 9.0), (82, 0.0), (92, 0.0)]),
+    *[T(e["brow_g"], y=[(0, 0.0), (16, -10.0), (60, -9.0), (80, 0.0), (92, 0.0)]) for e in EYES],
+    T(body_g, y=[(0, 0.0), (6, 3.0), (20, -3.0), (60, -2.0), (82, 0.0), (92, 0.0)]),
 ])
-G["nod"] = A("gesture_nod", 80, [
-    T(head_g, y=[(0, 0.0), (12, 9.0), (24, -2.0), (36, 8.0), (48, -1.0), (60, 5.0), (76, 0.0)],
-      rotation=[(0, 0.0), (80, 0.0)]),
-    *[T(e["gg"], y=[(0, 0.0), (12, 2.0), (24, 0.0), (36, 2.0), (48, 0.0), (80, 0.0)]) for e in EYES],
+
+# nod: two decaying nods with fake pitch (features drop) and a breath of overshoot
+G["nod"] = A("gesture_nod", 72, [
+    T(head_g, y=[(0, 0.0), (10, 16.0), (20, -3.0), (30, 12.0), (40, -2.0), (50, 4.0), (62, 0.0), (72, 0.0)],
+      rotation=[(0, 0.0), (10, 0.02), (20, -0.01), (30, 0.015), (40, 0.0), (72, 0.0)]),
+    *feat(y=[(0, 0.0), (11, 7.0), (21, -2.0), (31, 5.0), (41, -1.0), (51, 2.0), (62, 0.0), (72, 0.0)]),
+    T(body_g, y=[(0, 0.0), (12, 2.5), (22, 0.0), (32, 2.0), (42, 0.0), (72, 0.0)]),
 ])
+
+# headshake: the outline turns a little, the features turn a lot (yaw), hair trails
+shake_x = [(0, 0.0), (9, -13.0), (22, 13.0), (35, -11.0), (48, 8.0), (60, -4.0), (72, 0.0), (84, 0.0)]
 G["headshake"] = A("gesture_headshake", 84, [
-    T(head_g, x=[(0, 0.0), (10, -10.0), (22, 10.0), (34, -10.0), (46, 9.0), (58, -6.0), (72, 0.0)],
-      rotation=[(0, 0.0), (10, 0.03), (22, -0.03), (34, 0.03), (46, -0.025), (58, 0.015), (72, 0.0)]),
-    *[T(e["gg"], x=[(0, 0.0), (10, 3.0), (22, -3.0), (34, 3.0), (46, -3.0), (58, 2.0), (72, 0.0)]) for e in EYES],
+    T(head_g, x=shake_x, rotation=[(f, -v * 0.008) for f, v in shake_x]),
+    *feat(x=[(f, v * 1.8) for f, v in shake_x]),
+    T(body_g, rotation=[(f, v * 0.0012) for f, v in shake_x]),
 ])
-claps = [(0, None, 90), (18, (330, 800), -76)]
-fx_keys = [(0, 0.0)]
-f = 18
-for k in range(4):
-    claps += [(f + 8, (384, 792), -86), (f + 18, (330, 800), -76)]
-    fx_keys += [(f + 7, 0.0), (f + 9, 1.0, "linear"), (f + 15, 0.0)]
-    f += 18
-claps += [(f + 18, None, 90)]
-G["clap"] = A("gesture_clap", f + 20, [
-    *arm_keys(-1, claps),
-    *arm_keys(1, [(fr, None if w is None else (800 - w[0], w[1]), 180 - dg) for fr, w, dg in claps]),
-    T(clap_fx, ease=None, opacity=fx_keys + [(f + 20, 0.0)]),
-    T(head_g, y=[(0, 0.0), (18, -3.0), (f, -3.0), (f + 18, 0.0)]),
+
+# Three applause beats: a readable open silhouette, quick palm contact,
+# two-frame compression and a slower, progressively smaller rebound.
+# Fingers lean OUT at contact; leaning them in makes a prayer triangle.
+clap_l = [(0, None, 90), (7, (238, 1080), 92), (15, (294, 878), -55, 0.78),
+          (23, (286, 814), -105, 0.76)]
+clap_hits = (30, 53, 78)
+for k, hit in enumerate(clap_hits):
+    clap_l += [(hit, (387, 812), -100, 0.76),
+               (hit + 2, (389, 814), -99, 0.75),
+               (hit + 16, (302 + 10 * k, 819), -108, 0.77)]
+clap_l += [(105, (298, 904), -25, 0.88), (116, (242, 1078), 92), (124, None, 90)]
+clap_fx_on = [(0, 0.0, "hold")]
+clap_fx_scale = [(0, 0.6)]
+for hit in clap_hits:
+    clap_fx_on += [(hit - 1, 0.0, "hold"), (hit, 0.9, "linear"), (hit + 8, 0.0, "hold")]
+    clap_fx_scale += [(hit - 1, 0.55), (hit + 8, 1.18)]
+clap_r = [(p[0], None if p[1] is None else (800 - p[1][0], p[1][1] + 5), 180 - p[2], *p[3:])
+          for p in clap_l]
+G["clap"] = A("gesture_clap", 124, [
+    *arm_keys(-1, clap_l, lag=0, hand=[(0, "rest"), (17, "edge"), (108, "rest")], step=1),
+    *arm_keys(1, clap_r, lag=1, hand=[(0, "rest"), (17, "edge"), (108, "rest")], step=1),
+    T(clap_fx, opacity=clap_fx_on + [(124, 0.0, "hold")],
+      scaleX=clap_fx_scale + [(124, 1.0)], scaleY=clap_fx_scale + [(124, 1.0)]),
+    T(head_g, y=[(0, 0.0), (18, -5.0)] +
+      [(f, v) for hit in clap_hits for f, v in ((hit + 2, 3.0), (hit + 11, -4.0))] + [(112, 0.0), (124, 0.0)],
+      rotation=[(0, 0.0), (22, -0.025), (78, -0.018), (112, 0.0), (124, 0.0)]),
+    T(body_g, y=[(0, 0.0), (22, -1.0)] +
+      [(f, v) for hit in clap_hits for f, v in ((hit, 5.0), (hit + 9, -2.5))] + [(112, 0.0), (124, 0.0)],
+      rotation=[(0, 0.0), (20, -0.008), (32, 0.012), (48, -0.007), (55, 0.009),
+                (72, -0.005), (80, 0.007), (112, 0.0), (124, 0.0)]),
 ])
-G["think"] = A("gesture_think", 124, [
-    *arm_keys(-1, [(0, None, 90), (26, (366, 640), -78), (96, (366, 640), -78), (120, None, 90)]),
-    T(head_g, rotation=[(0, 0.0), (26, -0.07), (96, -0.07), (120, 0.0)]),
-    *[T(e["gg"], x=[(0, 0.0), (26, -5.0), (96, -5.0), (120, 0.0)], y=[(0, 0.0), (26, -5.0), (96, -5.0), (120, 0.0)])
-      for e in EYES],
-    T(EYE_L["brow_g"], y=[(0, 0.0), (26, -7.0), (96, -7.0), (120, 0.0)]),
+
+# think: index finger to the chin, head tilts, eyes drift up and away; the finger taps while thinking
+G["think"] = A("gesture_think", 132, [
+    *arm_keys(-1, [(0, None, 90), (8, (238, 1080), 92), (16, (296, 850), 10, 0.8), (21, (346, 700), -50, 0.72),
+                   (26, (370, 598), -62, 0.7), (32, (364, 606), -68, 0.7),
+                   (96, (366, 604), -66, 0.7), (104, (346, 700), -40, 0.72), (111, (296, 850), 30, 0.8),
+                   (120, (242, 1078), 92), (132, None, 90)],
+              lag=3, hand=[(0, "rest"), (22, "point"), (99, "rest")]),
+    T(ARM_R["wave"], rotation=[(0, 0.0), (44, 0.0), (48, 0.07), (52, 0.0), (70, 0.0), (74, 0.07), (78, 0.0),
+                               (132, 0.0)]),
+    T(head_g, rotation=[(0, 0.0), (28, -0.08), (96, -0.06), (118, 0.0), (132, 0.0)],
+      y=[(0, 0.0), (28, -3.0), (96, -2.0), (118, 0.0), (132, 0.0)]),
+    *feat(x=[(0, 0.0), (30, 4.0), (96, 3.0), (118, 0.0), (132, 0.0)], gaze=False),
+    *[T(e["gg"], x=[(0, 0.0), (5, 0.0), (11, -7.0), (56, -7.0), (61, -5.0),
+                   (90, -5.0), (97, 0.0), (132, 0.0)],
+        y=[(0, 0.0), (5, 0.0), (11, -7.0), (90, -6.0), (97, 0.0), (132, 0.0)]) for e in EYES],
+    T(EYE_L["brow_g"], y=[(0, 0.0), (17, -8.0), (96, -7.0), (118, 0.0), (132, 0.0)]),
+    T(EYE_R["brow_g"], y=[(0, 0.0), (21, 2.0), (96, 1.0), (118, 0.0), (132, 0.0)]),
 ])
+
+
+def head_channel(animation: El, prop: str) -> list[tuple[float, float]]:
+    for obj in animation.children:
+        if obj.attrs.get("objectId") == head_g.ref():
+            for channel in obj.children:
+                if channel.attrs["property"] == prop:
+                    return [(float(k.attrs["frame"]), float(k.attrs["value"])) for k in channel.children]
+    return [(0.0, 0.0)]
+
+
+def channel_at(keys: list[tuple[float, float]], frame: float) -> float:
+    if frame <= keys[0][0]:
+        return keys[0][1]
+    for (f0, v0), (f1, v1) in zip(keys, keys[1:]):
+        if frame <= f1:
+            return v0 + (v1 - v0) * _smooth((frame - f0) / (f1 - f0))
+    return keys[-1][1]
+
+
+for animation in G.values():
+    duration = int(animation.attrs["duration"])
+    turns, rises = head_channel(animation, "rotation"), head_channel(animation, "y")
+    for spring, delay, strength in ((hair_follow, 4, 0.65), (back_follow, 6, 0.48), (tuft_follow, 5, 1.15)):
+        samples = sorted(set(range(0, duration, 3)) | {duration})
+        animation.add(T(spring, ease=None,
+            rotation=[(f, strength * (channel_at(turns, f - delay) - channel_at(turns, f))
+                       * min(1.0, (duration - f) / 8), "linear") for f in samples],
+            y=[(f, -310 + 0.35 * (channel_at(rises, f - delay) - channel_at(rises, f))
+                * min(1.0, (duration - f) / 8), "linear") for f in samples]))
+    # Suspended cloth trails torso motion; head-only gestures have a much
+    # smaller shoulder response. Ambient movement owns a different node.
+    for part in cloth_parts:
+        samples = sorted(set(range(0, duration, 3)) | {duration})
+        keys = []
+        for f in samples:
+            impulse = (channel_at(turns, f - 7) - channel_at(turns, f)) * 0.55
+            impulse += (channel_at(rises, f - 5) - channel_at(rises, f)) * 0.003
+            if animation.attrs["name"] in ("gesture_wave", "gesture_clap", "gesture_shrug", "gesture_laugh"):
+                impulse += 0.025 * math.sin(f * 0.23 + part.phase) * math.sin(math.pi * f / duration)
+            keys.append((f, impulse * part.strength * min(1.0, (duration - f) / 10), "linear"))
+        animation.add(T(part.response, ease=None, rotation=keys))
 
 # ---- wardrobe switches
 hat_hair = {"noHat": (1, 1, 1), "beanie": (1, 1, 0), "backwardsCap": (1, 1, 0), "frenchBeret": (1, 1, 0),
@@ -1107,81 +1718,129 @@ def hat_tracks(hid: str) -> list[El]:
             K(tufts, opacity=float(tu))]
 
 
-santa_swing = [T(santa_flop, rotation=[(0, 0.0), (60, 0.08), (120, 0.0)])]
-HAT_ANIMS = {h: A("hat_" + h, 120 if h == "santaHat" else 1, hat_tracks(h) + (santa_swing if h == "santaHat" else []),
+santa_swing = [T(santa_flop, rotation=[(0, 0.0), (130, 0.025), (310, -0.018), (470, 0.01), (600, 0.0)])]
+HAT_ANIMS = {h: A("hat_" + h, 600 if h == "santaHat" else 1, hat_tracks(h) + (santa_swing if h == "santaHat" else []),
                   loop=h == "santaHat") for h in HAT_IDS}
 
 
 def top_tracks(oid: str) -> list[El]:
     tr = [K(top_front, activeComponentId=TF[oid]), K(top_back, activeComponentId=TB[oid])]
     for a in ARMS:
-        tr += [K(a["up_solo"], activeComponentId=a["ups"][oid]), K(a["fore_solo"], activeComponentId=a["fores"][oid])]
+        tr += [K(a["up_solo"], activeComponentId=a["ups"][oid]), K(a["fore_solo"], activeComponentId=a["fores"][oid]),
+               K(a["skin_solo"], activeComponentId=a["skins"][COSTUME_HANDS.get(oid, "skin")])]
     return tr
 
 
 TOP_ANIMS = {t: A("top_" + t, 1, top_tracks(t)) for t in TOP_IDS}
 GLASS_ANIMS = {g: A("glasses_" + g, 1, [K(glasses_solo, activeComponentId=GLASSES[g])]) for g in ("glasses", "sunglasses")}
 
-# costume extras: soubrette feather duster, held at the viewer-right shoulder
-duster = body_g.node("Duster", 640, 780, opacity=0.0)
-duster.add(*[E(duster, f"Feather{k}", 640 + 34 * math.cos(-PI / 2 + (k - 3) * 0.32), 570 + 34 * math.sin(-PI / 2 + (k - 3) * 0.32),
-               46, 70, rgrad(36, [("FFFFF0F6", 0.0), ("FFF2A8C8", 0.6), ("FFD87AA8", 1.0)]), L("FFB0607E", 2),
-               rotation=(k - 3) * 0.32) for k in range(7)],
-           R(duster, "Handle", 640, 690, 14, 180, 6, vgrad(-95, 95, "FFB07840", "FF6A4420"), L("FF3A2410", 2)))
-body_g.el.children.remove(duster.el)
-body_g.el.children.insert(0, duster.el)
-
-none_anim = A("costume_none", 1, [K(back_fx, activeComponentId=fx_none), K(duster, opacity=0.0)])
-star_twinkle = [T(s_, ease=None, opacity=[(0, 1.0), (20 + (i * 13) % 80, 0.2), (40 + (i * 13) % 80, 1.0), (120, 1.0)])
+none_anim = A("costume_none", 1, [K(back_fx, activeComponentId=fx_none),
+                                *[K(part, opacity=1.0) for part in (neck, chin_sh, neck_sh)]])
+star_twinkle = [T(s_, opacity=[(0, 1.0), (110 + (i * 37) % 370, 0.4), (340 + (i * 37) % 370, 1.0), (960, 1.0)])
                 for i, s_ in enumerate(STAR_FX)]
 COSTUME_EXTRA = {
-    "batman": [K(back_fx, activeComponentId=cape_rig.el),
-               T(cape_rig, rotation=[(0, 0.0), (60, 0.02), (120, 0.0)], scaleX=[(0, 1.0), (60, 1.04), (120, 1.0)])],
+    "batman": [K(back_fx, activeComponentId=cape_selection)],
     "robocop": [K(back_fx, activeComponentId=fx_none),
-                T(scan, x=[(0, -86.0), (60, 86.0), (120, -86.0)])],
-    "soubrette": [K(back_fx, activeComponentId=fx_none), K(duster, opacity=1.0),
-                  T(duster, rotation=[(0, -0.3), (30, 0.4), (60, -0.3), (90, 0.4), (120, -0.3)])],
+                T(scan, x=[(0, -86.0), (40, -86.0), (180, 86.0), (240, 86.0), (410, -86.0), (480, -86.0)])],
+    "soubrette": [K(back_fx, activeComponentId=fx_none)],
     "singularity": [K(back_fx, activeComponentId=aura_rig.el),
-                    T(aura_rig, scaleX=[(0, 0.92), (60, 1.06), (120, 0.92)], scaleY=[(0, 0.92), (60, 1.06), (120, 0.92)],
-                      opacity=[(0, 0.7), (60, 1.0), (120, 0.7)]),
-                    T(laser, ease=None, opacity=[(0, 0.0), (70, 0.0), (74, 1.0, "linear"), (100, 1.0), (106, 0.0),
-                                                 (120, 0.0)]),
+                    T(aura_rig, scaleX=[(0, 0.96), (380, 1.04), (710, 0.99), (960, 0.96)],
+                      scaleY=[(0, 0.96), (420, 1.03), (770, 0.98), (960, 0.96)],
+                      opacity=[(0, 0.75), (390, 0.95), (760, 0.82), (960, 0.75)]),
+                    T(laser, opacity=[(0, 0.0), (612, 0.0), (630, 0.65), (674, 0.55), (700, 0.0), (960, 0.0)]),
                     *star_twinkle],
 }
 
 
 def costume_tracks(cid: str) -> list[El]:
     tr = hat_tracks(cid) + top_tracks(cid) + COSTUME_EXTRA[cid]
+    tr += [K(part, opacity=0.0 if cid in ("batman", "robocop", "singularity") else 1.0)
+           for part in (neck, chin_sh, neck_sh)]
     if cid in ("batman", "robocop", "singularity"):
         tr.append(K(glasses_solo, activeComponentId=GLASSES["none"]))
-    if cid != "soubrette":
-        tr.append(K(duster, opacity=0.0))
     return tr
 
 
-COSTUME_ANIMS = {"none": none_anim, **{c: A("costume_" + c, 120, costume_tracks(c), loop=True) for c in COSTUMES}}
+COSTUME_FRAMES = {"batman": 720, "robocop": 480, "soubrette": 720, "singularity": 960}
+COSTUME_ANIMS = {"none": none_anim, **{c: A("costume_" + c, COSTUME_FRAMES[c], costume_tracks(c), loop=True)
+                                      for c in COSTUMES}}
 
 # ---- presence: walk off/on to the right (Root x is absolute)
 ON_X, OFF_X = 400.0, 1250.0
 
 
-def walk(frames: int, x0: float, x1: float) -> list[El]:
-    bob = [(f, 1000.0 - (10.0 if (f // 10) % 2 else 0.0), "linear") for f in range(0, frames, 10)] + [(frames, 1000.0)]
-    sway = [(f, 0.03 if (f // 20) % 2 else -0.03) for f in range(0, frames, 20)] + [(frames, 0.0)]
-    return [T(root, x=[(0, x0), (frames, x1)]), T(root, ease=None, y=bob), T(body, ease=None, rotation=sway)]
+STRIDE = 170.0                # artboard pixels travelled per footfall
 
 
-P_ON = A("presence_onScreen", 1, [K(root, x=ON_X, y=1000.0), K(body, rotation=0.0)])
-P_OFF = A("presence_outOfScreen", 1, [K(root, x=OFF_X, y=1000.0), K(body, rotation=0.0)])
-P_WALK_OUT = A("presence_walkOut", 80, walk(80, ON_X, OFF_X))
-P_WALK_IN = A("presence_walkIn", 80, walk(80, OFF_X, ON_X))
-P_LEAVE = A("presence_leaveAndComeBack", 200, [
-    T(root, x=[(0, ON_X), (80, OFF_X), (120, OFF_X), (200, ON_X)]),
-    T(root, ease=None, y=[(f, 1000.0 - (10.0 if (f // 10) % 2 and not 80 <= f < 120 else 0.0), "linear")
-                          for f in range(0, 200, 10)] + [(200, 1000.0)]),
-    T(body, ease=None, rotation=[(f, (0.03 if (f // 20) % 2 else -0.03) if not 80 <= f < 120 else 0.0)
-                                 for f in range(0, 200, 20)] + [(200, 0.0)]),
-])
+def walk_tracks(frames: int, moves: list[tuple[int, int, float, float]]) -> list[El]:
+    """Weight shift, distance-driven steps, head lead and a delayed settling beat."""
+    def pose(f: float) -> tuple[float, float, float, float, float, float, float]:
+        x, bob, roll, swing, turn, width, shoulder = moves[0][2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0
+        for f0, f1, x0, x1 in moves:
+            if f < f0:
+                break
+            direction = 1.0 if x1 > x0 else -1.0
+            x = x1
+            if f <= f1:
+                elapsed = f - f0
+                if elapsed < 10:
+                    weight = math.sin(math.pi * elapsed / 10)
+                    x = x0 - direction * 7 * weight
+                    bob, roll = 2 * weight, -direction * 0.014 * weight
+                    turn = direction * 17 * _smooth(min(1.0, elapsed / 7))
+                    width = 1 - 0.085 * _smooth(elapsed / 10)
+                else:
+                    t = (elapsed - 10) / (f1 - f0 - 10)
+                    travel = _smooth(t)
+                    speed = 4 * t * (1 - t)
+                    distance = abs(x1 - x0) * travel
+                    phase = math.pi * distance / STRIDE
+                    # Subtle unequal footfalls keep the implied gait alive.
+                    beat = phase + 0.13 * math.sin(phase * 0.63)
+                    x = x0 + (x1 - x0) * travel
+                    bob = 5.5 * speed * math.cos(beat * 2)
+                    roll = direction * speed * 0.024 + 0.025 * speed * math.sin(beat)
+                    swing = direction * 0.20 * speed * math.sin(beat)
+                    shoulder = 3.2 * speed * math.sin(beat)
+                    turn = direction * 17 * min(1.0, (1 - t) / 0.22)
+                    width = 1 - 0.085 * min(1.0, (1 - t) / 0.25)
+                break
+            if f < f1 + 16:
+                settle = (f - f1) / 16
+                roll = direction * 0.017 * math.sin(math.pi * settle) * (1 - settle)
+                bob = 2.0 * math.sin(math.pi * settle) * (1 - settle)
+        return x, bob, roll, swing, turn, width, shoulder
+
+    channels: list[list] = [[] for _ in range(10)]
+    samples = sorted(set(range(0, frames, 2)) | {frames} |
+                     {f for f0, f1, _, _ in moves for f in (f0, f0 + 10, f1)})
+    for f in samples:
+        x, bob, roll, swing, turn, width, shoulder = pose(f)
+        _, prior_bob, prior_roll, _, _, _, _ = pose(max(0, f - 3))
+        settle_weight = min(1.0, (frames - f) / 4)
+        values = (x, 1000 + bob, roll, swing, turn, width, shoulder,
+                  (-0.45 * prior_bob) * settle_weight,
+                  (-0.42 * prior_roll) * settle_weight, -swing)
+        for keys, value in zip(channels, values):
+            keys.append((f, value, "linear"))
+    xs, ys, lean, sw_r, turns, widths, shoulders, head_y, head_roll, sw_l = channels
+    return [T(root, x=xs, y=ys, scaleX=widths), T(body, rotation=lean),
+            T(swing_r, rotation=sw_r, y=[(f, -280 + v, mode) for f, v, mode in shoulders]),
+            T(swing_l, rotation=sw_l, y=[(f, -280 - v, mode) for f, v, mode in shoulders]),
+            T(head_travel, y=head_y, rotation=head_roll), *[T(part, x=turns) for part in travel_parts]]
+
+
+def still() -> list[El]:
+    return [K(swing_r, rotation=0.0, y=-280.0), K(swing_l, rotation=0.0, y=-280.0),
+            K(head_travel, y=0.0, rotation=0.0), K(body, rotation=0.0),
+            K(root, scaleX=1.0), *[K(part, x=0.0) for part in travel_parts]]
+
+
+P_ON = A("presence_onScreen", 1, [K(root, x=ON_X, y=1000.0), *still()])
+P_OFF = A("presence_outOfScreen", 1, [K(root, x=OFF_X, y=1000.0), *still()])
+P_WALK_OUT = A("presence_walkOut", 96, walk_tracks(96, [(0, 80, ON_X, OFF_X)]))
+P_WALK_IN = A("presence_walkIn", 96, walk_tracks(96, [(0, 80, OFF_X, ON_X)]))
+P_LEAVE = A("presence_leaveAndComeBack", 216, walk_tracks(216, [(0, 80, ON_X, OFF_X), (120, 200, OFF_X, ON_X)]))
 
 # ================================================================ EVENTS + STATE MACHINE
 
@@ -1218,6 +1877,10 @@ def enum_layer(name: str, pn: str, anims_: dict[str, El], default: str, blend_ms
 layers: list[El] = []
 s0 = st(breath, 0)
 layers.append(layer("Breath", s0, [s0]))
+s0 = st(wardrobe_life, 0)
+layers.append(layer("WardrobeLife", s0, [s0]))
+s0 = st(cape_ripple, 0)
+layers.append(layer("CapeRipple", s0, [s0]))
 s0 = st(blink, 0)
 layers.append(layer("Blink", s0, [s0]))
 layers.append(enum_layer("Mood", "mood", MOODS, "neutral", 240))
@@ -1236,9 +1899,9 @@ g_states = []
 for i, (gn, ga) in enumerate(G.items()):
     gst = st(ga, i + 1,
              d("StateMachineFireEvent", eventId=EV_GESTURE[gn].ref(), occursValue="atEnd"),
-             d("StateTransition", stateToId=gs_idle.ref(), enableExitTime=True, exitTimeIsPercetange=True, exitTime=100,
-               duration=150), row=1)
-    gs_idle.add(d("StateTransition", trig("gesture"), enum_is("gestureId", gn), stateToId=gst.ref(), duration=120))
+             d("StateTransition", stateToId=gs_idle.ref(), enableExitTime=True, exitTimeIsPercetange=True, exitTime=100),
+             row=1)
+    gs_idle.add(d("StateTransition", trig("gesture"), enum_is("gestureId", gn), stateToId=gst.ref()))
     g_states.append(gst)
 layers.append(layer("Gesture", gs_idle, [gs_idle, *g_states]))
 
@@ -1290,7 +1953,7 @@ joy = d("Joystick", posX=400.0, posY=420.0, width=900.0, height=700.0, xId=look_
         handleSourceId=look_handle.ref(), name="Look")
 
 style = d("LayoutComponentStyle", name="Artboard Style")
-artboard = d("Artboard", style, sm, EASE, *EV_GESTURE.values(), *EV_TAP.values(), *EV_PRESENCE.values(), joy,
+artboard = d("Artboard", style, sm, EASE, EASE_OUT, EASE_IN, *EV_GESTURE.values(), *EV_TAP.values(), *EV_PRESENCE.values(), joy,
              look_handle, root.el, hit_all, *anims,
              width=float(W), height=float(H), name="Avatar", defaultStateMachineId=sm.ref(), viewModelId=vm.ref(),
              viewModelInstanceId=inst.ref(), styleId=style.ref(), clip=True)

@@ -82,7 +82,7 @@ Also, the app is probably only working on Android (needs to test more on iOS).
 
 To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_ai/releases/) directly for Android, or build it yourself (I didn't provide any api keys, so most of function calling won't work). To build it, you need:
 
-- Flutter (>=3.8.0 <4.0.0)
+- Flutter with Dart SDK (>=3.8.0 <4.0.0)
 - Android SDK (for Android builds)
 - Api Key for a LLM service if you use a cloud service, or you can use a local one if it has the OpenAI format
 
@@ -122,9 +122,10 @@ To run the app, you can install the [apk](https://github.com/YofarDev/yofardev_a
 
 ## Platforms
 
-- Android & iOS: Fully supported
-- MacOs & Linux
-- Web : some features are missing because of platform limitations.
+- Android: fully supported
+- iOS: project files present, but untested — expect issues
+- macOS & Linux: build targets present (untested)
+- Web: some features are missing because of platform limitations.
 
 ## Known Issues
 
@@ -138,7 +139,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **State Management**: flutter_bloc (Cubit pattern)
 - **Models**: Freezed (immutable data classes with union types)
-- **Error Handling**: fpdart (Either for functional error handling)
+- **Error Handling**: custom `Result<T>` sealed type (`Result.ok` / `Result.err(Failure)`) — see `lib/core/models/result.dart`
 - **DI**: get_it (service locator)
 - **Routing**: go_router
-- **Avatar Generation**: Stable Diffusion 1.5 with custom LORA
+- **Avatar**: Rive — rigged avatar and interactive scenes rebuilt from RML sources via `./scripts/frive.sh` (earlier versions used Stable Diffusion 1.5 with a custom LORA)

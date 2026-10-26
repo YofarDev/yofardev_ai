@@ -95,6 +95,10 @@ def nodes(o: object, typ: str | None = None) -> list[dict]:
 
 
 TYPE_OF = {"enum": "ViewModelPropertyEnumCustom", "number": "ViewModelPropertyNumber", "trigger": "ViewModelPropertyTrigger"}
+# rive_native 0.1.11's Drawable::onAddedDirty rejects additive (12), although
+# CLI 1.7.0 accepts and renders it. One such shape makes the entire file null
+# on import. Keep this aligned with the runtime before using newer blend modes.
+NATIVE_BLEND_MODES = {3, *range(14, 29)}
 
 
 def check_common(label: str, j: dict, artboard: str, sm: str, vm_name: str) -> tuple[dict, dict]:
@@ -102,6 +106,15 @@ def check_common(label: str, j: dict, artboard: str, sm: str, vm_name: str) -> t
         err(f"{label}: inspect problems: {j['problems']}")
     if any(n.get("type", "").endswith("ImageAsset") or n.get("type") == "Image" for n in nodes(j)):
         err(f"{label}: embedded raster image (budget: vector only)")
+    checked_shapes: set[str] = set()
+    for n in nodes(j, "Shape"):
+        shape_id = n.get("id")
+        if shape_id is None or shape_id in checked_shapes:
+            continue
+        checked_shapes.add(shape_id)
+        mode = n.get("blendModeValue")
+        if isinstance(mode, int) and mode not in NATIVE_BLEND_MODES:
+            err(f"{label}: `{n.get('name', n.get('id'))}` uses blend mode {mode}, unsupported by rive_native 0.1.11")
     abs_ = [a for a in j["artboards"] if a.get("name") == artboard]
     if len(abs_) != 1:
         err(f"{label}: expected one artboard `{artboard}`, got {[a.get('name') for a in j['artboards']]}")

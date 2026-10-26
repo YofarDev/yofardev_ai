@@ -12,8 +12,11 @@
 - **App shell**: `lib/app.dart`; `lib/main.dart` is bootstrap only
 - **Platforms**: all Flutter targets present, but Android is the primary one (iOS untested, web demo has reduced features)
 
-> ⚠️ The `docs/` directory is **empty** — ignore doc references in older guides.
-> Real references: `README.md` (app overview) and `scripts/README.md` (tooling).
+> `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
+> architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
+> optimizations) and `specs/` (rive-v4 design). Other references: `README.md`
+> (app overview), `scripts/README.md` (tooling), `rive/README.md` +
+> `rive/CONTRACT.md` (avatar assets).
 
 ---
 
@@ -173,4 +176,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-23
+**Last Updated**: 2026-10-26

@@ -2,6 +2,9 @@
 
 Everything in `assets/rive/` is generated from here with the Rive CLI only. Don't edit the `.riv` files by hand.
 
+Art direction, independent playback critiques and current acceptance status are
+recorded in [CRITIC_ITERATIONS.md](CRITIC_ITERATIONS.md).
+
 ```bash
 ./scripts/frive.sh              # regenerate RML, build every .riv, check budgets + contract
 ./scripts/frive.sh beach        # avatar + only the named scenes
@@ -13,6 +16,8 @@ Everything in `assets/rive/` is generated from here with the Rive CLI only. Don'
 | `CHANGELOG.md` | One line per milestone (A0–A7). |
 | `tools/gen_avatar.py` + `tools/avatar_kit.py` | Avatar generator → `avatar/avatar.rml` |
 | `tools/gen_scenes.py` | Scene generator → `scenes/<sceneId>/<sceneId>.rml` |
+| `tools/scene_art.py` + `tools/wardrobe_art.py` | Vector material details and secondary motion |
+| `tools/review.py`, `motion_review.py`, `wardrobe_review.py` | Rendered visual evidence and loop checks |
 | `tools/rml.py` | Tiny RML builder (deterministic ids) |
 | `tools/check_contract.py` | Self-check: `rive inspect` + built bytes vs `CONTRACT.md` |
 | `tools/sheet.py` | Dev helper: labelled contact sheet of headless captures |

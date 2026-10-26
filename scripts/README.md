@@ -1,8 +1,8 @@
 ## CLI Tools
 
 The following utility scripts are included in this app. Run them from the app
-root. Bash and Flutter/Dart must be on `PATH`; `fgen`, `fstr`, `fl10n`, `fimp`,
-and `remove_counter.sh` also require [uv](https://docs.astral.sh/uv/).
+root. Bash and Flutter/Dart must be on `PATH`; `fgen`, `fstr`, `fl10n`,
+`fimp`, and `frive` also require [uv](https://docs.astral.sh/uv/).
 
 | Script | Purpose |
 |--------|---------|
@@ -14,17 +14,17 @@ and `remove_counter.sh` also require [uv](https://docs.astral.sh/uv/).
 | `./scripts/fdead.sh` | **Potentially Unreferenced Files** (advisory only): reports files whose basename appears in no import/export/part statement. Never deletes anything — the textual scan cannot prove deletion is safe (conditional directives, custom entry points, and filename collisions can affect findings), so review every finding manually. |
 | `./scripts/fimp.sh` / `./scripts/fimp.sh --apply` | **Fix Imports** (preview-first): with no flags, displays proposed repairs and writes nothing; `--apply` repairs unambiguous broken imports, then re-runs analysis and reports failure without rollback. Never repairs a `lib/` import into `test/`, and never gives a test helper a `package:` URI. |
 | `./scripts/fcheck.sh [package_name]` | **Dependency Inventory** (review aid): compares dependencies with direct imports, or lists imports of one package. Results do not establish that a dependency is removable; inspect exports, indirect usage, code generation, assets and platform channels. |
+| `./scripts/frive.sh [scene...]` | **Rebuild Rive Assets**: regenerates the RML sources and rebuilds every `.riv` in `assets/rive/` deterministically (fixed seeds/ids). Fails on build warnings, size budgets (avatar 600 KB, scene 400 KB) or any name drifting from `rive/CONTRACT.md`. A scene argument (e.g. `campfire`) builds the avatar plus only that scene. Requires the `rive` CLI (>= 1.7.0) and `uv`. |
 | `./scripts/sync_skills.sh [--check] [--user]` | **Sync Skills**: Copies canonical top-level Markdown files from `.agents/skills` into matching skill directories in existing `.codex/skills/` targets. Missing target/skill directories are skipped and extras are retained. `--check` writes nothing and exits nonzero on drift. `--user` also targets existing `~/.agents/skills/` and `~/.claude/skills/` copies; use when user-level synchronization is requested. |
-| `./remove_counter.sh` | **Remove Counter Demo**: Deletes the Counter feature and rewrites its demo wiring/tests. For freshly generated apps with the untouched example; see [Removing Example Code](#removing-example-code). |
 
 The read-only scans (`fl10n`, `fdead`, `fcheck`, import preview, and skill drift
 check) require judgment before acting on their output. `fanal` writes a report;
-`fgen`, `fstr`, import apply, skill sync, and Counter removal modify files.
+`fgen`, `fstr`, import apply, skill sync, and `frive` modify files.
 
 `scripts/fimp.py`, `scripts/render_feature.py`, and `scripts/feature_templates/`
-are supporting assets used by the shell entry points. FlutterForge's
-`scripts/verify_template.sh`, `tools/test_template.py`, and `personal_tools/`
-are template-maintenance tools and are not shipped into this app.
+are supporting assets used by the shell entry points.
+`scripts/verify_template.sh` is a template-maintenance tool and is not part of
+the app itself.
 
 ## Development Commands
 
@@ -69,17 +69,9 @@ evaluation. Keep these assets alongside the scripts when sharing the tooling.
 
 ## Continuous Integration
 
-`.github/workflows/flutter-ci.yml` runs on pull requests and pushes to `main`.
-It installs the documented Flutter baseline, resolves packages, regenerates
-localizations and Freezed/JSON code, then runs `scripts/fverify.sh`. CI checks
-formatting and does not fix or reformat committed source. No secrets or signing
-credentials are needed.
-
-If your default branch has another name, update the push branch filter. To make
-the quality gate mandatory for merges, configure branch protection or a ruleset
-to require the `format check + analyze + test` check. The workflow file alone
-does not enforce merge protection. The template workflow has been exercised
-locally; confirm its first GitHub Actions run in your own repository.
+There is no CI in this repository — there is no `.github/workflows/` directory.
+The quality gate is local: run `./scripts/fverify.sh` (format check + analyze +
+test) before finishing any change.
 
 ## Adding a New Feature
 
@@ -108,8 +100,8 @@ Layout is proportional to complexity:
 - **`--with-service`** — additionally inserts a placeholder domain service
   between the cubit and the repository, with tests. The placeholder must gain
   actual rules/coordination or be removed — a forwarding service is NOT
-  mandatory architecture (compare `CounterService`, which owns real step and
-  bounds behavior).
+  mandatory architecture (compare `TtsQueueService`, which owns real queueing
+  and playback behavior).
 
 Generation contract:
 
@@ -146,23 +138,6 @@ migration is required.
   imports into internals, presentation never imports `data/`, no cubit-to-cubit fields,
   `core/` stays infrastructure-only outside the composition roots).
 - `test/core/di/service_locator_test.dart` smoke-tests every DI registration.
-- State idioms: union states for load-lifecycle screens (`features/home`), flat `copyWith`
-  states for persistent interactive state (`features/counter`). See the `flutter-architecture`
-  skill for the full rules.
-
-## Removing Example Code
-
-When starting a freshly generated app, remove the untouched Counter example
-if you do not need it:
-
-```bash
-./remove_counter.sh
-dart fix --apply
-dart format .
-./scripts/fverify.sh
-```
-
-The removal script deletes Counter source/tests and updates DI, routes, Home
-navigation, and related tests. Review the diff; if you have customized the demo
-or its wiring, remove those references manually instead of relying on its
-template-specific text edits.
+- State idioms: union states for load-lifecycle screens (`features/home`), flat
+  `copyWith` states for persistent interactive state (`features/chat`,
+  `features/avatar`). See the `flutter-architecture` skill for the full rules.
