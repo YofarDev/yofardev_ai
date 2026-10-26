@@ -140,6 +140,10 @@ class ChatStreamingService {
       timestamp: DateTime.now(),
     );
 
+    // Capture the request payload BEFORE the placeholder is appended: a
+    // trailing assistant message with empty content is rejected by
+    // thinking-mode backends (DeepSeek) and is dead weight for the others.
+    final List<LlmMessage> messagesForStreamBase = chat.llmMessages;
     chat = chat.copyWith(entries: <ChatEntry>[...chat.entries, streamingEntry]);
     // Don't call onChatUpdated here - the streaming entry has an empty body
     // It will be updated with actual content and then onChatUpdated will be called
@@ -152,12 +156,6 @@ class ChatStreamingService {
         return;
       }
 
-      // Messages sent to the LLM stream. Tool definitions are passed inline
-      // so tool detection happens inside the streamed call itself; when tools
-      // fire, their results are appended and the answer is streamed in a
-      // further round.
-      List<LlmMessage> messagesForStream = chat.llmMessages;
-
       // Transient tail context, injected AFTER the history (right before the
       // current user message), never into the system prompt: the prefix
       // [system prompt | history] then stays byte-identical across turns so
@@ -165,7 +163,7 @@ class ChatStreamingService {
       // per-turn avatar/date context (previously baked into every stored
       // user body) both ride here.
       final List<LlmMessage> tailContext = <LlmMessage>[];
-      if (_globalMemoryService != null && messagesForStream.isNotEmpty) {
+      if (_globalMemoryService != null && messagesForStreamBase.isNotEmpty) {
         final LlmMessage? memoryMessage = await _globalMemoryService
             .buildMemoryMessage();
         if (memoryMessage != null) {
@@ -181,6 +179,7 @@ class ChatStreamingService {
               '{\n$avatar\n}\n',
         ),
       );
+      List<LlmMessage> messagesForStream = messagesForStreamBase;
       if (tailContext.isNotEmpty && messagesForStream.isNotEmpty) {
         int insertIndex = messagesForStream.length - 1;
         for (int i = messagesForStream.length - 1; i >= 0; i--) {

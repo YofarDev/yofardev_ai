@@ -385,4 +385,29 @@ void main() {
       );
     }
   });
+
+  test('request payload never ends with an empty assistant message', () async {
+    // The empty streaming placeholder entry must not leak into the LLM
+    // request: thinking-mode backends (DeepSeek) reject an assistant
+    // message without reasoning_content.
+    final ChatStreamingService service = buildService(
+      FakeGlobalMemoryService(null),
+    );
+
+    await runStream(service);
+
+    expect(capturedMessages, isNotEmpty);
+    expect(
+      capturedMessages.last.role,
+      LlmMessageRole.user,
+      reason: 'request must end on the current user message',
+    );
+    expect(
+      capturedMessages.where(
+        (LlmMessage m) => m.role == LlmMessageRole.assistant && m.body.isEmpty,
+      ),
+      isEmpty,
+      reason: 'no empty assistant message may be sent',
+    );
+  });
 }
