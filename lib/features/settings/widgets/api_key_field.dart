@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
@@ -19,13 +19,13 @@ class ApiKeyField extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            AppColors.primary.withValues(alpha: 0.15),
-            AppColors.primary.withValues(alpha: 0.08),
+            context.colors.primary.withValues(alpha: 0.15),
+            context.colors.primary.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.4),
+          color: context.colors.primary.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -33,7 +33,7 @@ class ApiKeyField extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          foregroundColor: AppColors.primary,
+          foregroundColor: context.colors.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),

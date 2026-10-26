@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/models/llm_config.dart';
-import '../../../../core/res/app_colors.dart';
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../presentation/bloc/settings_cubit.dart';
 import '../../presentation/bloc/settings_state.dart';
@@ -80,7 +80,7 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                   Text(
                     AppLocalizations.of(context).noLlmConfigurations,
                     style: TextStyle(
-                      color: AppColors.onSurface.withValues(alpha: 0.7),
+                      color: context.colors.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -112,15 +112,15 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                     ),
                     title: Text(
                       config.label,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.onSurface,
+                        color: context.colors.onSurface,
                       ),
                     ),
                     subtitle: Text(
                       '${config.model} @ ${config.baseUrl}',
                       style: TextStyle(
-                        color: AppColors.onSurface.withValues(alpha: 0.7),
+                        color: context.colors.onSurface.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -129,12 +129,14 @@ class _LlmSelectionPageState extends State<LlmSelectionPage> {
                       children: <Widget>[
                         IconButton(
                           icon: const Icon(Icons.edit),
-                          color: AppColors.onSurface.withValues(alpha: 0.7),
+                          color: context.colors.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                           onPressed: () => _onEdit(config),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete),
-                          color: AppColors.error.withValues(alpha: 0.8),
+                          color: context.colors.error.withValues(alpha: 0.8),
                           onPressed: () => _onDelete(config),
                         ),
                       ],

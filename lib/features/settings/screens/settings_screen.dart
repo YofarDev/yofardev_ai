@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/models/sound_effects.dart';
 import '../../../core/models/chat.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
@@ -81,11 +81,11 @@ class SettingsPageState extends State<SettingsPage> {
     }
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: <Color>[AppColors.background, AppColors.surface],
+            colors: <Color>[context.tokens.background, context.colors.surface],
           ),
         ),
         child: Column(
@@ -105,7 +105,9 @@ class SettingsPageState extends State<SettingsPage> {
                       Text(
                         AppLocalizations.of(context).settingsSubstring,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.onSurface.withValues(alpha: 0.7),
+                          color: context.colors.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),

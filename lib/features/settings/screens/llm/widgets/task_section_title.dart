@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/res/app_colors.dart';
+import '../../../../../core/design/design.dart';
 
 /// Animated section title widget for task configuration sections
 class TaskSectionTitle extends StatelessWidget {
@@ -24,7 +24,7 @@ class TaskSectionTitle extends StatelessWidget {
             child: Text(
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.onSurface.withValues(alpha: 0.9),
+                color: context.colors.onSurface.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.5,
               ),

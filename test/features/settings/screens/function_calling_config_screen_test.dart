@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/design/theme/app_theme.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_state.dart';
@@ -60,6 +61,7 @@ void main() {
 
     Widget createTestWidget() {
       return MaterialApp(
+        theme: AppTheme.dark,
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -72,6 +74,7 @@ void main() {
 
     Widget createNavigableTestWidget() {
       return MaterialApp(
+        theme: AppTheme.dark,
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

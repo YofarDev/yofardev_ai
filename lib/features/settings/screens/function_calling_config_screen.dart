@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
 import '../widgets/function_calling_section.dart';
@@ -84,7 +84,7 @@ class _FunctionCallingConfigScreenState
           content: Text(
             AppLocalizations.of(context).settings_functionCalling_saved,
           ),
-          backgroundColor: AppColors.success,
+          backgroundColor: context.tokens.success,
         ),
       );
       Navigator.of(context).pop();
@@ -104,11 +104,11 @@ class _FunctionCallingConfigScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: <Color>[AppColors.background, AppColors.surface],
+            colors: <Color>[context.tokens.background, context.colors.surface],
           ),
         ),
         child: Column(
@@ -127,7 +127,9 @@ class _FunctionCallingConfigScreenState
                           context,
                         ).settings_functionCalling_description,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.onSurface.withValues(alpha: 0.7),
+                          color: context.colors.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                       ),
                     ),
@@ -238,7 +240,7 @@ class _FunctionCallingConfigScreenState
         hintText: hintText,
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: AppColors.surface.withValues(alpha: 0.5),
+        fillColor: context.colors.surface.withValues(alpha: 0.5),
       ),
       obscureText: true,
     );

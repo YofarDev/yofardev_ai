@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/res/app_colors.dart';
+import '../../../../../core/design/design.dart';
 import '../../../../../core/l10n/generated/app_localizations.dart';
 
 class TaskLlmAppBar extends StatelessWidget {
@@ -24,16 +24,18 @@ class TaskLlmAppBar extends StatelessWidget {
                 children: <Widget>[
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.glassSurface.withValues(alpha: 0.6),
+                      color: context.tokens.glassSurface.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.glassBorder.withValues(alpha: 0.5),
+                        color: context.tokens.glassBorder.withValues(
+                          alpha: 0.5,
+                        ),
                         width: 1,
                       ),
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                      color: AppColors.onSurface,
+                      color: context.colors.onSurface,
                       onPressed: () => Navigator.of(context).pop(),
                       iconSize: 20,
                     ),
@@ -43,7 +45,7 @@ class TaskLlmAppBar extends StatelessWidget {
                     child: Text(
                       l10n.taskLlmConfig,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.onSurface,
+                        color: context.colors.onSurface,
                         fontWeight: FontWeight.w600,
                         letterSpacing: -0.5,
                       ),
