@@ -6,7 +6,7 @@ import 'package:nested/nested.dart';
 import 'core/di/service_locator.dart';
 import 'core/l10n/generated/app_localizations.dart';
 import 'core/services/audio/interruption_service.dart';
-import 'core/design/theme/app_theme.dart';
+import 'core/design/design.dart';
 import 'core/router/app_router.dart';
 import 'features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'features/chat/chat.dart';

@@ -184,4 +184,66 @@ void main() {
       isTrue,
     );
   });
+
+  /// `lib/` files outside `lib/core/design/` (the only home of raw colors).
+  List<File> filesOutsideDesign() =>
+      files.where((File f) => !f.path.startsWith('lib/core/design/')).toList();
+
+  test('AppColors and AppPalette are used only inside core/design', () {
+    for (final File f in filesOutsideDesign()) {
+      final String content = f.readAsStringSync();
+      expect(
+        content.contains('AppColors') || content.contains('AppPalette'),
+        isFalse,
+        reason:
+            '${f.path}: read colors from the theme (context.colors / '
+            'context.tokens), not from the raw palette',
+      );
+    }
+  });
+
+  test('no hard-coded Colors.* outside core/design (except transparent)', () {
+    final RegExp hardCoded = RegExp(r'(^|[^A-Za-z])Colors\.(?!transparent\b)');
+    for (final File f in filesOutsideDesign()) {
+      for (final String line in f.readAsLinesSync()) {
+        expect(
+          hardCoded.hasMatch(line),
+          isFalse,
+          reason: '${f.path}: hard-coded Material color: $line',
+        );
+      }
+    }
+  });
+
+  test('google_fonts is imported only by core/design and main.dart', () {
+    for (final File f in filesOutsideDesign()) {
+      if (f.path == 'lib/main.dart') continue;
+      for (final String line in importsOf(f)) {
+        expect(
+          line.contains('package:google_fonts'),
+          isFalse,
+          reason: '${f.path}: fonts belong to the theme: $line',
+        );
+      }
+    }
+  });
+
+  test('color rules detect deliberate violations (fixture)', () {
+    final String content = File(
+      'test/fixtures/architecture/hardcoded_color_fixture.dart',
+    ).readAsStringSync();
+    expect(content.contains('AppColors'), isTrue);
+    expect(
+      RegExp(r'(^|[^A-Za-z])Colors\.(?!transparent\b)').hasMatch(content),
+      isTrue,
+    );
+    expect(content.contains('package:google_fonts'), isTrue);
+    // `Colors.transparent` alone must stay allowed.
+    expect(
+      RegExp(
+        r'(^|[^A-Za-z])Colors\.(?!transparent\b)',
+      ).hasMatch('color: Colors.transparent'),
+      isFalse,
+    );
+  });
 }

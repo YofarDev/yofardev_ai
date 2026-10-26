@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/models/demo_script.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/utils/logger.dart';
 import '../../avatar/avatar.dart';
 import '../../chat/chat.dart';
@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.tokens.background,
         body: BlocBuilder<ChatCubit, ChatState>(
           builder: (BuildContext context, ChatState chatsState) {
             return HomeContentStack(

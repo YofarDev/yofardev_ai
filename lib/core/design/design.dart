@@ -1,5 +1,6 @@
 export 'context_ext.dart';
 export 'theme/app_color_scheme.dart';
+export 'theme/app_theme.dart';
 export 'tokens/app_glass.dart';
 export 'tokens/app_motion.dart';
 export 'tokens/app_radius.dart';
