@@ -395,6 +395,8 @@ void main() {
       expect(animationStates, contains(AvatarStatusAnimation.rising));
 
       // v4 scenes replace photo backgrounds: the transition never slides
+      // (guard against a vacuous pass: states were actually emitted)
+      expect(backgroundTransitions, isNotEmpty);
       expect(
         backgroundTransitions,
         everyElement(equals(BackgroundTransition.none)),
