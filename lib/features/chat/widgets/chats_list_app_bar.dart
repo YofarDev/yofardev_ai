@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
@@ -17,13 +17,13 @@ class ChatsListAppBar extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            AppColors.surface.withValues(alpha: 0.9),
-            AppColors.surface.withValues(alpha: 0.7),
+            context.colors.surface.withValues(alpha: 0.9),
+            context.colors.surface.withValues(alpha: 0.7),
           ],
         ),
         border: Border(
           bottom: BorderSide(
-            color: AppColors.glassBorder.withValues(alpha: 0.3),
+            color: context.tokens.glassBorder.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -44,13 +44,13 @@ class ChatsListAppBar extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: <Color>[
-                  AppColors.primary.withValues(alpha: 0.2),
-                  AppColors.secondary.withValues(alpha: 0.2),
+                  context.colors.primary.withValues(alpha: 0.2),
+                  context.colors.secondary.withValues(alpha: 0.2),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.glassBorder.withValues(alpha: 0.5),
+                color: context.tokens.glassBorder.withValues(alpha: 0.5),
                 width: 1.5,
               ),
             ),

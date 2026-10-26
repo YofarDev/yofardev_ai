@@ -5,7 +5,7 @@ import 'package:nested/nested.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
 import '../../talking/talking.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../widgets/chat_list_container.dart';
 import '../widgets/chat_list_empty_state.dart';
 import '../widgets/chat_list_shimmer_loading.dart';
@@ -58,11 +58,14 @@ class _ChatsListPageState extends State<ChatsListPage> {
             builder: (BuildContext context, ChatState state) {
               final bool isLoading = state.status == ChatStatus.loading;
               return Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: <Color>[AppColors.background, AppColors.surface],
+                    colors: <Color>[
+                      context.tokens.background,
+                      context.colors.surface,
+                    ],
                   ),
                 ),
                 child: Column(

@@ -3,7 +3,7 @@ import '../../../core/widgets/typing_indicator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/models/chat.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../core/models/chat_entry.dart';
 import '../widgets/chat_avatar.dart';
@@ -88,13 +88,13 @@ class _DateHeader extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: <Color>[
-                AppColors.glassSurface.withValues(alpha: 0.15),
-                AppColors.glassSurface.withValues(alpha: 0.08),
+                context.tokens.glassSurface.withValues(alpha: 0.15),
+                context.tokens.glassSurface.withValues(alpha: 0.08),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppColors.glassBorder.withValues(alpha: 0.4),
+              color: context.tokens.glassBorder.withValues(alpha: 0.4),
               width: 1,
             ),
           ),
@@ -103,7 +103,7 @@ class _DateHeader extends StatelessWidget {
               language: context.read<SettingsCubit>().state.currentLanguage,
             ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.onSurface.withValues(alpha: 0.7),
+              color: context.colors.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -129,13 +129,13 @@ class _TypingIndicator extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: <Color>[
-                  AppColors.glassSurface.withValues(alpha: 0.15),
-                  AppColors.glassSurface.withValues(alpha: 0.08),
+                  context.tokens.glassSurface.withValues(alpha: 0.15),
+                  context.tokens.glassSurface.withValues(alpha: 0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.glassBorder.withValues(alpha: 0.4),
+                color: context.tokens.glassBorder.withValues(alpha: 0.4),
                 width: 1.5,
               ),
             ),

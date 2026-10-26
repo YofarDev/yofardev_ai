@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/utils/app_utils.dart';
 
 class ChatAvatar extends StatelessWidget {
@@ -16,16 +16,16 @@ class ChatAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: <Color>[AppColors.primary, AppColors.secondary],
+        gradient: LinearGradient(
+          colors: <Color>[context.colors.primary, context.colors.secondary],
         ),
         border: Border.all(
-          color: AppColors.glassBorder.withValues(alpha: 0.5),
+          color: context.tokens.glassBorder.withValues(alpha: 0.5),
           width: borderWidth,
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: context.colors.primary.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
