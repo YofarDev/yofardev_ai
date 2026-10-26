@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'chat.dart';
@@ -9,6 +9,7 @@ part of 'chat.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $ChatCopyWith<Chat> get copyWith => _$ChatCopyWithImpl<Chat>(this as Chat, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Chat&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other.entries, entries)&&(identical(other.avatar, avatar) || other.avatar == avatar)&&(identical(other.language, language) || other.language == language)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.title, title) || other.title == title)&&(identical(other.titleGenerated, titleGenerated) || other.titleGenerated == titleGenerated));
+  final _this = this as Chat;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Chat&&(identical(other.id, _this.id) || other.id == _this.id)&&const DeepCollectionEquality().equals(other.entries, _this.entries)&&(identical(other.avatar, _this.avatar) || other.avatar == _this.avatar)&&(identical(other.language, _this.language) || other.language == _this.language)&&(identical(other.systemPrompt, _this.systemPrompt) || other.systemPrompt == _this.systemPrompt)&&(identical(other.persona, _this.persona) || other.persona == _this.persona)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.titleGenerated, _this.titleGenerated) || other.titleGenerated == _this.titleGenerated));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,const DeepCollectionEquality().hash(entries),avatar,language,systemPrompt,persona,title,titleGenerated);
+int get hashCode {
+  final _this = this as Chat;
+  return Object.hash(runtimeType,_this.id,const DeepCollectionEquality().hash(_this.entries),_this.avatar,_this.language,_this.systemPrompt,_this.persona,_this.title,_this.titleGenerated);
+}
 
 @override
 String toString() {
-  return 'Chat(id: $id, entries: $entries, avatar: $avatar, language: $language, systemPrompt: $systemPrompt, persona: $persona, title: $title, titleGenerated: $titleGenerated)';
+  final _this = this as Chat;
+  return 'Chat(id: ${_this.id}, entries: ${_this.entries}, avatar: ${_this.avatar}, language: ${_this.language}, systemPrompt: ${_this.systemPrompt}, persona: ${_this.persona}, title: ${_this.title}, titleGenerated: ${_this.titleGenerated})';
 }
 
 
@@ -66,7 +72,7 @@ class _$ChatCopyWithImpl<$Res>
 /// Create a copy of Chat
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? entries = null,Object? avatar = null,Object? language = null,Object? systemPrompt = null,Object? persona = null,Object? title = null,Object? titleGenerated = null,}) {
-  return _then(_self.copyWith(
+  return _then(Chat(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,entries: null == entries ? _self.entries : entries // ignore: cast_nullable_to_non_nullable
 as List<ChatEntry>,avatar: null == avatar ? _self.avatar : avatar // ignore: cast_nullable_to_non_nullable
@@ -219,7 +225,7 @@ return $default(_that.id,_that.entries,_that.avatar,_that.language,_that.systemP
 @JsonSerializable()
 
 class _Chat extends Chat {
-  const _Chat({this.id = '', final  List<ChatEntry> entries = const <ChatEntry>[], @AvatarJsonConverter() this.avatar = const Avatar(), this.language = 'fr', this.systemPrompt = '', this.persona = ChatPersona.normal, this.title = '', this.titleGenerated = false}): _entries = entries,super._();
+  const _Chat({this.id = '',  List<ChatEntry> entries = const <ChatEntry>[], @AvatarJsonConverter() this.avatar = const Avatar(), this.language = 'fr', this.systemPrompt = '', this.persona = ChatPersona.normal, this.title = '', this.titleGenerated = false}): _entries = entries,super._();
   factory _Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);
 
 @override@JsonKey() final  String id;
@@ -250,16 +256,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Chat&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other._entries, _entries)&&(identical(other.avatar, avatar) || other.avatar == avatar)&&(identical(other.language, language) || other.language == language)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.title, title) || other.title == title)&&(identical(other.titleGenerated, titleGenerated) || other.titleGenerated == titleGenerated));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Chat&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other.entries, _entries)&&(identical(other.avatar, avatar) || other.avatar == avatar)&&(identical(other.language, language) || other.language == language)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.title, title) || other.title == title)&&(identical(other.titleGenerated, titleGenerated) || other.titleGenerated == titleGenerated));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,const DeepCollectionEquality().hash(_entries),avatar,language,systemPrompt,persona,title,titleGenerated);
+int get hashCode {
+    return Object.hash(runtimeType,id,const DeepCollectionEquality().hash(_entries),avatar,language,systemPrompt,persona,title,titleGenerated);
+}
 
 @override
 String toString() {
-  return 'Chat(id: $id, entries: $entries, avatar: $avatar, language: $language, systemPrompt: $systemPrompt, persona: $persona, title: $title, titleGenerated: $titleGenerated)';
+    return 'Chat(id: $id, entries: $entries, avatar: $avatar, language: $language, systemPrompt: $systemPrompt, persona: $persona, title: $title, titleGenerated: $titleGenerated)';
 }
 
 

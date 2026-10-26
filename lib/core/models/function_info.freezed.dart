@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'function_info.dart';
@@ -9,6 +9,7 @@ part of 'function_info.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $FunctionInfoCopyWith<FunctionInfo> get copyWith => _$FunctionInfoCopyWithImpl<F
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FunctionInfo&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.parameters, parameters)&&(identical(other.function, function) || other.function == function)&&const DeepCollectionEquality().equals(other.parametersCalled, parametersCalled));
+  final _this = this as FunctionInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FunctionInfo&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&const DeepCollectionEquality().equals(other.parameters, _this.parameters)&&(identical(other.function, _this.function) || other.function == _this.function)&&const DeepCollectionEquality().equals(other.parametersCalled, _this.parametersCalled));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,description,const DeepCollectionEquality().hash(parameters),function,const DeepCollectionEquality().hash(parametersCalled));
+int get hashCode {
+  final _this = this as FunctionInfo;
+  return Object.hash(runtimeType,_this.name,_this.description,const DeepCollectionEquality().hash(_this.parameters),_this.function,const DeepCollectionEquality().hash(_this.parametersCalled));
+}
 
 @override
 String toString() {
-  return 'FunctionInfo(name: $name, description: $description, parameters: $parameters, function: $function, parametersCalled: $parametersCalled)';
+  final _this = this as FunctionInfo;
+  return 'FunctionInfo(name: ${_this.name}, description: ${_this.description}, parameters: ${_this.parameters}, function: ${_this.function}, parametersCalled: ${_this.parametersCalled})';
 }
 
 
@@ -63,7 +69,7 @@ class _$FunctionInfoCopyWithImpl<$Res>
 /// Create a copy of FunctionInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? description = null,Object? parameters = null,Object? function = null,Object? parametersCalled = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(FunctionInfo(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,parameters: null == parameters ? _self.parameters : parameters // ignore: cast_nullable_to_non_nullable
@@ -204,7 +210,7 @@ return $default(_that.name,_that.description,_that.parameters,_that.function,_th
 
 
 class _FunctionInfo extends FunctionInfo {
-  const _FunctionInfo({required this.name, required this.description, required final  List<Parameter> parameters, required this.function, final  Map<String, dynamic>? parametersCalled}): _parameters = parameters,_parametersCalled = parametersCalled,super._();
+  const _FunctionInfo({required this.name, required this.description, required  List<Parameter> parameters, required this.function,  Map<String, dynamic>? parametersCalled}): _parameters = parameters,_parametersCalled = parametersCalled,super._();
   
 
 @override final  String name;
@@ -237,16 +243,18 @@ _$FunctionInfoCopyWith<_FunctionInfo> get copyWith => __$FunctionInfoCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FunctionInfo&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._parameters, _parameters)&&(identical(other.function, function) || other.function == function)&&const DeepCollectionEquality().equals(other._parametersCalled, _parametersCalled));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FunctionInfo&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.parameters, _parameters)&&(identical(other.function, function) || other.function == function)&&const DeepCollectionEquality().equals(other.parametersCalled, _parametersCalled));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,description,const DeepCollectionEquality().hash(_parameters),function,const DeepCollectionEquality().hash(_parametersCalled));
+int get hashCode {
+    return Object.hash(runtimeType,name,description,const DeepCollectionEquality().hash(_parameters),function,const DeepCollectionEquality().hash(_parametersCalled));
+}
 
 @override
 String toString() {
-  return 'FunctionInfo(name: $name, description: $description, parameters: $parameters, function: $function, parametersCalled: $parametersCalled)';
+    return 'FunctionInfo(name: $name, description: $description, parameters: $parameters, function: $function, parametersCalled: $parametersCalled)';
 }
 
 
@@ -302,16 +310,21 @@ $ParameterCopyWith<Parameter> get copyWith => _$ParameterCopyWithImpl<Parameter>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Parameter&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.type, type) || other.type == type)&&(identical(other.isRequired, isRequired) || other.isRequired == isRequired));
+  final _this = this as Parameter;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Parameter&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.isRequired, _this.isRequired) || other.isRequired == _this.isRequired));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,description,type,isRequired);
+int get hashCode {
+  final _this = this as Parameter;
+  return Object.hash(runtimeType,_this.name,_this.description,_this.type,_this.isRequired);
+}
 
 @override
 String toString() {
-  return 'Parameter(name: $name, description: $description, type: $type, isRequired: $isRequired)';
+  final _this = this as Parameter;
+  return 'Parameter(name: ${_this.name}, description: ${_this.description}, type: ${_this.type}, isRequired: ${_this.isRequired})';
 }
 
 
@@ -340,7 +353,7 @@ class _$ParameterCopyWithImpl<$Res>
 /// Create a copy of Parameter
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? description = null,Object? type = null,Object? isRequired = null,}) {
-  return _then(_self.copyWith(
+  return _then(Parameter(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -498,16 +511,18 @@ _$ParameterCopyWith<_Parameter> get copyWith => __$ParameterCopyWithImpl<_Parame
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Parameter&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.type, type) || other.type == type)&&(identical(other.isRequired, isRequired) || other.isRequired == isRequired));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Parameter&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.type, type) || other.type == type)&&(identical(other.isRequired, isRequired) || other.isRequired == isRequired));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,description,type,isRequired);
+int get hashCode {
+    return Object.hash(runtimeType,name,description,type,isRequired);
+}
 
 @override
 String toString() {
-  return 'Parameter(name: $name, description: $description, type: $type, isRequired: $isRequired)';
+    return 'Parameter(name: $name, description: $description, type: $type, isRequired: $isRequired)';
 }
 
 

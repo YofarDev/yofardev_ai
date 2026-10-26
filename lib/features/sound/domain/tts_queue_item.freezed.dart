@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'tts_queue_item.dart';
@@ -9,6 +9,7 @@ part of 'tts_queue_item.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $TtsQueueItemCopyWith<TtsQueueItem> get copyWith => _$TtsQueueItemCopyWithImpl<T
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TtsQueueItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.language, language) || other.language == language)&&(identical(other.voiceEffect, voiceEffect) || other.voiceEffect == voiceEffect)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&(identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&const DeepCollectionEquality().equals(other.cues, cues));
+  final _this = this as TtsQueueItem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TtsQueueItem&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.language, _this.language) || other.language == _this.language)&&(identical(other.voiceEffect, _this.voiceEffect) || other.voiceEffect == _this.voiceEffect)&&(identical(other.priority, _this.priority) || other.priority == _this.priority)&&(identical(other.timestamp, _this.timestamp) || other.timestamp == _this.timestamp)&&(identical(other.audioPath, _this.audioPath) || other.audioPath == _this.audioPath)&&(identical(other.isProcessing, _this.isProcessing) || other.isProcessing == _this.isProcessing)&&(identical(other.isCompleted, _this.isCompleted) || other.isCompleted == _this.isCompleted)&&const DeepCollectionEquality().equals(other.cues, _this.cues));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,text,language,voiceEffect,priority,timestamp,audioPath,isProcessing,isCompleted,const DeepCollectionEquality().hash(cues));
+int get hashCode {
+  final _this = this as TtsQueueItem;
+  return Object.hash(runtimeType,_this.id,_this.text,_this.language,_this.voiceEffect,_this.priority,_this.timestamp,_this.audioPath,_this.isProcessing,_this.isCompleted,const DeepCollectionEquality().hash(_this.cues));
+}
 
 @override
 String toString() {
-  return 'TtsQueueItem(id: $id, text: $text, language: $language, voiceEffect: $voiceEffect, priority: $priority, timestamp: $timestamp, audioPath: $audioPath, isProcessing: $isProcessing, isCompleted: $isCompleted, cues: $cues)';
+  final _this = this as TtsQueueItem;
+  return 'TtsQueueItem(id: ${_this.id}, text: ${_this.text}, language: ${_this.language}, voiceEffect: ${_this.voiceEffect}, priority: ${_this.priority}, timestamp: ${_this.timestamp}, audioPath: ${_this.audioPath}, isProcessing: ${_this.isProcessing}, isCompleted: ${_this.isCompleted}, cues: ${_this.cues})';
 }
 
 
@@ -63,7 +69,7 @@ class _$TtsQueueItemCopyWithImpl<$Res>
 /// Create a copy of TtsQueueItem
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? language = null,Object? voiceEffect = null,Object? priority = null,Object? timestamp = null,Object? audioPath = freezed,Object? isProcessing = null,Object? isCompleted = null,Object? cues = null,}) {
-  return _then(_self.copyWith(
+  return _then(TtsQueueItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
@@ -209,7 +215,7 @@ return $default(_that.id,_that.text,_that.language,_that.voiceEffect,_that.prior
 
 
 class _TtsQueueItem implements TtsQueueItem {
-  const _TtsQueueItem({required this.id, required this.text, required this.language, required this.voiceEffect, required this.priority, required this.timestamp, this.audioPath, this.isProcessing = false, this.isCompleted = false, final  List<AvatarCue> cues = const <AvatarCue>[]}): _cues = cues;
+  const _TtsQueueItem({required this.id, required this.text, required this.language, required this.voiceEffect, required this.priority, required this.timestamp, this.audioPath, this.isProcessing = false, this.isCompleted = false,  List<AvatarCue> cues = const <AvatarCue>[]}): _cues = cues;
   
 
 @override final  String id;
@@ -239,16 +245,18 @@ _$TtsQueueItemCopyWith<_TtsQueueItem> get copyWith => __$TtsQueueItemCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TtsQueueItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.language, language) || other.language == language)&&(identical(other.voiceEffect, voiceEffect) || other.voiceEffect == voiceEffect)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&(identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&const DeepCollectionEquality().equals(other._cues, _cues));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TtsQueueItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.language, language) || other.language == language)&&(identical(other.voiceEffect, voiceEffect) || other.voiceEffect == voiceEffect)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.audioPath, audioPath) || other.audioPath == audioPath)&&(identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&const DeepCollectionEquality().equals(other.cues, _cues));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,text,language,voiceEffect,priority,timestamp,audioPath,isProcessing,isCompleted,const DeepCollectionEquality().hash(_cues));
+int get hashCode {
+    return Object.hash(runtimeType,id,text,language,voiceEffect,priority,timestamp,audioPath,isProcessing,isCompleted,const DeepCollectionEquality().hash(_cues));
+}
 
 @override
 String toString() {
-  return 'TtsQueueItem(id: $id, text: $text, language: $language, voiceEffect: $voiceEffect, priority: $priority, timestamp: $timestamp, audioPath: $audioPath, isProcessing: $isProcessing, isCompleted: $isCompleted, cues: $cues)';
+    return 'TtsQueueItem(id: $id, text: $text, language: $language, voiceEffect: $voiceEffect, priority: $priority, timestamp: $timestamp, audioPath: $audioPath, isProcessing: $isProcessing, isCompleted: $isCompleted, cues: $cues)';
 }
 
 

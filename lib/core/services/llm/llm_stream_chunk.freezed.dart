@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'llm_stream_chunk.dart';
@@ -9,6 +9,7 @@ part of 'llm_stream_chunk.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 LlmStreamChunk _$LlmStreamChunkFromJson(
@@ -54,7 +55,7 @@ mixin _$LlmStreamChunk {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmStreamChunk);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmStreamChunk);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -63,7 +64,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'LlmStreamChunk()';
+    return 'LlmStreamChunk()';
 }
 
 
@@ -221,7 +222,7 @@ return complete();case _:
 @JsonSerializable()
 
 class _LlmStreamChunkText implements LlmStreamChunk {
-  const _LlmStreamChunkText({required this.content, required this.isComplete, final  String? $type}): $type = $type ?? 'text';
+  const _LlmStreamChunkText({required this.content, required this.isComplete,  String? $type}): $type = $type ?? 'text';
   factory _LlmStreamChunkText.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkTextFromJson(json);
 
  final  String content;
@@ -244,16 +245,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkText&&(identical(other.content, content) || other.content == content)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkText&&(identical(other.content, content) || other.content == content)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,content,isComplete);
+int get hashCode {
+    return Object.hash(runtimeType,content,isComplete);
+}
 
 @override
 String toString() {
-  return 'LlmStreamChunk.text(content: $content, isComplete: $isComplete)';
+    return 'LlmStreamChunk.text(content: $content, isComplete: $isComplete)';
 }
 
 
@@ -296,7 +299,7 @@ as bool,
 @JsonSerializable()
 
 class _LlmStreamChunkError implements LlmStreamChunk {
-  const _LlmStreamChunkError(this.message, {final  String? $type}): $type = $type ?? 'error';
+  const _LlmStreamChunkError(this.message, { String? $type}): $type = $type ?? 'error';
   factory _LlmStreamChunkError.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkErrorFromJson(json);
 
  final  String message;
@@ -318,16 +321,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkError&&(identical(other.message, message) || other.message == message));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkError&&(identical(other.message, message) || other.message == message));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,message);
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
 
 @override
 String toString() {
-  return 'LlmStreamChunk.error(message: $message)';
+    return 'LlmStreamChunk.error(message: $message)';
 }
 
 
@@ -369,7 +374,7 @@ as String,
 @JsonSerializable()
 
 class _LlmStreamChunkToolCallDelta implements LlmStreamChunk {
-  const _LlmStreamChunkToolCallDelta({required this.index, this.id, this.name, this.argumentsDelta, final  String? $type}): $type = $type ?? 'toolCallDelta';
+  const _LlmStreamChunkToolCallDelta({required this.index, this.id, this.name, this.argumentsDelta,  String? $type}): $type = $type ?? 'toolCallDelta';
   factory _LlmStreamChunkToolCallDelta.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkToolCallDeltaFromJson(json);
 
  final  int index;
@@ -394,16 +399,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkToolCallDelta&&(identical(other.index, index) || other.index == index)&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.argumentsDelta, argumentsDelta) || other.argumentsDelta == argumentsDelta));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkToolCallDelta&&(identical(other.index, index) || other.index == index)&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.argumentsDelta, argumentsDelta) || other.argumentsDelta == argumentsDelta));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,index,id,name,argumentsDelta);
+int get hashCode {
+    return Object.hash(runtimeType,index,id,name,argumentsDelta);
+}
 
 @override
 String toString() {
-  return 'LlmStreamChunk.toolCallDelta(index: $index, id: $id, name: $name, argumentsDelta: $argumentsDelta)';
+    return 'LlmStreamChunk.toolCallDelta(index: $index, id: $id, name: $name, argumentsDelta: $argumentsDelta)';
 }
 
 
@@ -448,7 +455,7 @@ as String?,
 @JsonSerializable()
 
 class _LlmStreamChunkComplete implements LlmStreamChunk {
-  const _LlmStreamChunkComplete({final  String? $type}): $type = $type ?? 'complete';
+  const _LlmStreamChunkComplete({ String? $type}): $type = $type ?? 'complete';
   factory _LlmStreamChunkComplete.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkCompleteFromJson(json);
 
 
@@ -465,7 +472,7 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkComplete);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkComplete);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -474,7 +481,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'LlmStreamChunk.complete()';
+    return 'LlmStreamChunk.complete()';
 }
 
 

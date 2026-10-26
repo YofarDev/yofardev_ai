@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'global_memory.dart';
@@ -9,6 +9,7 @@ part of 'global_memory.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $GlobalMemoryItemCopyWith<GlobalMemoryItem> get copyWith => _$GlobalMemoryItemCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GlobalMemoryItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  final _this = this as GlobalMemoryItem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GlobalMemoryItem&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,text,updatedAt);
+int get hashCode {
+  final _this = this as GlobalMemoryItem;
+  return Object.hash(runtimeType,_this.id,_this.text,_this.updatedAt);
+}
 
 @override
 String toString() {
-  return 'GlobalMemoryItem(id: $id, text: $text, updatedAt: $updatedAt)';
+  final _this = this as GlobalMemoryItem;
+  return 'GlobalMemoryItem(id: ${_this.id}, text: ${_this.text}, updatedAt: ${_this.updatedAt})';
 }
 
 
@@ -63,7 +69,7 @@ class _$GlobalMemoryItemCopyWithImpl<$Res>
 /// Create a copy of GlobalMemoryItem
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? updatedAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(GlobalMemoryItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -219,16 +225,18 @@ _$GlobalMemoryItemCopyWith<_GlobalMemoryItem> get copyWith => __$GlobalMemoryIte
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GlobalMemoryItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GlobalMemoryItem&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,text,updatedAt);
+int get hashCode {
+    return Object.hash(runtimeType,id,text,updatedAt);
+}
 
 @override
 String toString() {
-  return 'GlobalMemoryItem(id: $id, text: $text, updatedAt: $updatedAt)';
+    return 'GlobalMemoryItem(id: $id, text: $text, updatedAt: $updatedAt)';
 }
 
 
@@ -282,16 +290,21 @@ $GlobalMemoryCopyWith<GlobalMemory> get copyWith => _$GlobalMemoryCopyWithImpl<G
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GlobalMemory&&const DeepCollectionEquality().equals(other.items, items));
+  final _this = this as GlobalMemory;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GlobalMemory&&const DeepCollectionEquality().equals(other.items, _this.items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items));
+int get hashCode {
+  final _this = this as GlobalMemory;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items));
+}
 
 @override
 String toString() {
-  return 'GlobalMemory(items: $items)';
+  final _this = this as GlobalMemory;
+  return 'GlobalMemory(items: ${_this.items})';
 }
 
 
@@ -320,7 +333,7 @@ class _$GlobalMemoryCopyWithImpl<$Res>
 /// Create a copy of GlobalMemory
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? items = null,}) {
-  return _then(_self.copyWith(
+  return _then(GlobalMemory(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<GlobalMemoryItem>,
   ));
@@ -457,7 +470,7 @@ return $default(_that.items);case _:
 
 
 class _GlobalMemory extends GlobalMemory {
-  const _GlobalMemory({final  List<GlobalMemoryItem> items = const <GlobalMemoryItem>[]}): _items = items,super._();
+  const _GlobalMemory({ List<GlobalMemoryItem> items = const <GlobalMemoryItem>[]}): _items = items,super._();
   
 
  final  List<GlobalMemoryItem> _items;
@@ -478,16 +491,18 @@ _$GlobalMemoryCopyWith<_GlobalMemory> get copyWith => __$GlobalMemoryCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GlobalMemory&&const DeepCollectionEquality().equals(other._items, _items));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GlobalMemory&&const DeepCollectionEquality().equals(other.items, _items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_items));
+}
 
 @override
 String toString() {
-  return 'GlobalMemory(items: $items)';
+    return 'GlobalMemory(items: $items)';
 }
 
 

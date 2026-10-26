@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'avatar_cue.dart';
@@ -9,6 +9,7 @@ part of 'avatar_cue.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$AvatarCue {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarCue);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarCue);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AvatarCue()';
+    return 'AvatarCue()';
 }
 
 
@@ -190,16 +191,18 @@ $AvatarCueGestureCopyWith<AvatarCueGesture> get copyWith => _$AvatarCueGestureCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarCueGesture&&(identical(other.gesture, gesture) || other.gesture == gesture));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarCueGesture&&(identical(other.gesture, gesture) || other.gesture == gesture));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gesture);
+int get hashCode {
+    return Object.hash(runtimeType,gesture);
+}
 
 @override
 String toString() {
-  return 'AvatarCue.gesture(gesture: $gesture)';
+    return 'AvatarCue.gesture(gesture: $gesture)';
 }
 
 
@@ -256,16 +259,18 @@ $AvatarCueSceneEventCopyWith<AvatarCueSceneEvent> get copyWith => _$AvatarCueSce
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarCueSceneEvent&&(identical(other.sceneEvent, sceneEvent) || other.sceneEvent == sceneEvent));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarCueSceneEvent&&(identical(other.sceneEvent, sceneEvent) || other.sceneEvent == sceneEvent));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sceneEvent);
+int get hashCode {
+    return Object.hash(runtimeType,sceneEvent);
+}
 
 @override
 String toString() {
-  return 'AvatarCue.sceneEvent(sceneEvent: $sceneEvent)';
+    return 'AvatarCue.sceneEvent(sceneEvent: $sceneEvent)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'llm_config.dart';
@@ -9,6 +9,7 @@ part of 'llm_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -36,16 +37,21 @@ $LlmConfigCopyWith<LlmConfig> get copyWith => _$LlmConfigCopyWithImpl<LlmConfig>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmConfig&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.apiKey, apiKey) || other.apiKey == apiKey)&&(identical(other.model, model) || other.model == model)&&(identical(other.temperature, temperature) || other.temperature == temperature)&&(identical(other.responseFormatType, responseFormatType) || other.responseFormatType == responseFormatType));
+  final _this = this as LlmConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmConfig&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.baseUrl, _this.baseUrl) || other.baseUrl == _this.baseUrl)&&(identical(other.apiKey, _this.apiKey) || other.apiKey == _this.apiKey)&&(identical(other.model, _this.model) || other.model == _this.model)&&(identical(other.temperature, _this.temperature) || other.temperature == _this.temperature)&&(identical(other.responseFormatType, _this.responseFormatType) || other.responseFormatType == _this.responseFormatType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,label,baseUrl,apiKey,model,temperature,responseFormatType);
+int get hashCode {
+  final _this = this as LlmConfig;
+  return Object.hash(runtimeType,_this.id,_this.label,_this.baseUrl,_this.apiKey,_this.model,_this.temperature,_this.responseFormatType);
+}
 
 @override
 String toString() {
-  return 'LlmConfig(id: $id, label: $label, baseUrl: $baseUrl, apiKey: $apiKey, model: $model, temperature: $temperature, responseFormatType: $responseFormatType)';
+  final _this = this as LlmConfig;
+  return 'LlmConfig(id: ${_this.id}, label: ${_this.label}, baseUrl: ${_this.baseUrl}, apiKey: ${_this.apiKey}, model: ${_this.model}, temperature: ${_this.temperature}, responseFormatType: ${_this.responseFormatType})';
 }
 
 
@@ -74,7 +80,7 @@ class _$LlmConfigCopyWithImpl<$Res>
 /// Create a copy of LlmConfig
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? baseUrl = null,Object? apiKey = null,Object? model = null,Object? temperature = null,Object? responseFormatType = null,}) {
-  return _then(_self.copyWith(
+  return _then(LlmConfig(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nullable_to_non_nullable
@@ -249,16 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmConfig&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.apiKey, apiKey) || other.apiKey == apiKey)&&(identical(other.model, model) || other.model == model)&&(identical(other.temperature, temperature) || other.temperature == temperature)&&(identical(other.responseFormatType, responseFormatType) || other.responseFormatType == responseFormatType));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmConfig&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.apiKey, apiKey) || other.apiKey == apiKey)&&(identical(other.model, model) || other.model == model)&&(identical(other.temperature, temperature) || other.temperature == temperature)&&(identical(other.responseFormatType, responseFormatType) || other.responseFormatType == responseFormatType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,label,baseUrl,apiKey,model,temperature,responseFormatType);
+int get hashCode {
+    return Object.hash(runtimeType,id,label,baseUrl,apiKey,model,temperature,responseFormatType);
+}
 
 @override
 String toString() {
-  return 'LlmConfig(id: $id, label: $label, baseUrl: $baseUrl, apiKey: $apiKey, model: $model, temperature: $temperature, responseFormatType: $responseFormatType)';
+    return 'LlmConfig(id: $id, label: $label, baseUrl: $baseUrl, apiKey: $apiKey, model: $model, temperature: $temperature, responseFormatType: $responseFormatType)';
 }
 
 

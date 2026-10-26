@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'avatar_config.dart';
@@ -9,6 +9,7 @@ part of 'avatar_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,12 +29,16 @@ $AvatarCopyWith<Avatar> get copyWith => _$AvatarCopyWithImpl<Avatar>(this as Ava
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Avatar&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume));
+  final _this = this as Avatar;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Avatar&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.hat, _this.hat) || other.hat == _this.hat)&&(identical(other.top, _this.top) || other.top == _this.top)&&(identical(other.glasses, _this.glasses) || other.glasses == _this.glasses)&&(identical(other.specials, _this.specials) || other.specials == _this.specials)&&(identical(other.costume, _this.costume) || other.costume == _this.costume));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume);
+int get hashCode {
+  final _this = this as Avatar;
+  return Object.hash(runtimeType,_this.background,_this.hat,_this.top,_this.glasses,_this.specials,_this.costume);
+}
 
 
 
@@ -62,7 +67,7 @@ class _$AvatarCopyWithImpl<$Res>
 /// Create a copy of Avatar
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? background = null,Object? hat = null,Object? top = null,Object? glasses = null,Object? specials = null,Object? costume = null,}) {
-  return _then(_self.copyWith(
+  return _then(Avatar(
 background: null == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
 as AvatarScene,hat: null == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
 as AvatarHat,top: null == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
@@ -227,12 +232,14 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Avatar&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Avatar&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume);
+int get hashCode {
+    return Object.hash(runtimeType,background,hat,top,glasses,specials,costume);
+}
 
 
 
@@ -292,16 +299,21 @@ $AvatarConfigCopyWith<AvatarConfig> get copyWith => _$AvatarConfigCopyWithImpl<A
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarConfig&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume)&&(identical(other.soundEffect, soundEffect) || other.soundEffect == soundEffect)&&(identical(other.mood, mood) || other.mood == mood));
+  final _this = this as AvatarConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarConfig&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.hat, _this.hat) || other.hat == _this.hat)&&(identical(other.top, _this.top) || other.top == _this.top)&&(identical(other.glasses, _this.glasses) || other.glasses == _this.glasses)&&(identical(other.specials, _this.specials) || other.specials == _this.specials)&&(identical(other.costume, _this.costume) || other.costume == _this.costume)&&(identical(other.soundEffect, _this.soundEffect) || other.soundEffect == _this.soundEffect)&&(identical(other.mood, _this.mood) || other.mood == _this.mood));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume,soundEffect,mood);
+int get hashCode {
+  final _this = this as AvatarConfig;
+  return Object.hash(runtimeType,_this.background,_this.hat,_this.top,_this.glasses,_this.specials,_this.costume,_this.soundEffect,_this.mood);
+}
 
 @override
 String toString() {
-  return 'AvatarConfig(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume, soundEffect: $soundEffect, mood: $mood)';
+  final _this = this as AvatarConfig;
+  return 'AvatarConfig(background: ${_this.background}, hat: ${_this.hat}, top: ${_this.top}, glasses: ${_this.glasses}, specials: ${_this.specials}, costume: ${_this.costume}, soundEffect: ${_this.soundEffect}, mood: ${_this.mood})';
 }
 
 
@@ -330,7 +342,7 @@ class _$AvatarConfigCopyWithImpl<$Res>
 /// Create a copy of AvatarConfig
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? background = freezed,Object? hat = freezed,Object? top = freezed,Object? glasses = freezed,Object? specials = freezed,Object? costume = freezed,Object? soundEffect = freezed,Object? mood = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AvatarConfig(
 background: freezed == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
 as AvatarScene?,hat: freezed == hat ? _self.hat : hat // ignore: cast_nullable_to_non_nullable
 as AvatarHat?,top: freezed == top ? _self.top : top // ignore: cast_nullable_to_non_nullable
@@ -499,16 +511,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AvatarConfig&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume)&&(identical(other.soundEffect, soundEffect) || other.soundEffect == soundEffect)&&(identical(other.mood, mood) || other.mood == mood));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AvatarConfig&&(identical(other.background, background) || other.background == background)&&(identical(other.hat, hat) || other.hat == hat)&&(identical(other.top, top) || other.top == top)&&(identical(other.glasses, glasses) || other.glasses == glasses)&&(identical(other.specials, specials) || other.specials == specials)&&(identical(other.costume, costume) || other.costume == costume)&&(identical(other.soundEffect, soundEffect) || other.soundEffect == soundEffect)&&(identical(other.mood, mood) || other.mood == mood));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,background,hat,top,glasses,specials,costume,soundEffect,mood);
+int get hashCode {
+    return Object.hash(runtimeType,background,hat,top,glasses,specials,costume,soundEffect,mood);
+}
 
 @override
 String toString() {
-  return 'AvatarConfig(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume, soundEffect: $soundEffect, mood: $mood)';
+    return 'AvatarConfig(background: $background, hat: $hat, top: $top, glasses: $glasses, specials: $specials, costume: $costume, soundEffect: $soundEffect, mood: $mood)';
 }
 
 

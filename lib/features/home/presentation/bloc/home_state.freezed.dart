@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'home_state.dart';
@@ -9,6 +9,7 @@ part of 'home_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $HomeStateCopyWith<HomeState> get copyWith => _$HomeStateCopyWithImpl<HomeState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeState&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.isFading, isFading) || other.isFading == isFading)&&(identical(other.isPlayingWaitingLoop, isPlayingWaitingLoop) || other.isPlayingWaitingLoop == isPlayingWaitingLoop));
+  final _this = this as HomeState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeState&&(identical(other.isInitialized, _this.isInitialized) || other.isInitialized == _this.isInitialized)&&(identical(other.isFading, _this.isFading) || other.isFading == _this.isFading)&&(identical(other.isPlayingWaitingLoop, _this.isPlayingWaitingLoop) || other.isPlayingWaitingLoop == _this.isPlayingWaitingLoop));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isInitialized,isFading,isPlayingWaitingLoop);
+int get hashCode {
+  final _this = this as HomeState;
+  return Object.hash(runtimeType,_this.isInitialized,_this.isFading,_this.isPlayingWaitingLoop);
+}
 
 @override
 String toString() {
-  return 'HomeState(isInitialized: $isInitialized, isFading: $isFading, isPlayingWaitingLoop: $isPlayingWaitingLoop)';
+  final _this = this as HomeState;
+  return 'HomeState(isInitialized: ${_this.isInitialized}, isFading: ${_this.isFading}, isPlayingWaitingLoop: ${_this.isPlayingWaitingLoop})';
 }
 
 
@@ -63,7 +69,7 @@ class _$HomeStateCopyWithImpl<$Res>
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? isInitialized = null,Object? isFading = null,Object? isPlayingWaitingLoop = null,}) {
-  return _then(_self.copyWith(
+  return _then(HomeState(
 isInitialized: null == isInitialized ? _self.isInitialized : isInitialized // ignore: cast_nullable_to_non_nullable
 as bool,isFading: null == isFading ? _self.isFading : isFading // ignore: cast_nullable_to_non_nullable
 as bool,isPlayingWaitingLoop: null == isPlayingWaitingLoop ? _self.isPlayingWaitingLoop : isPlayingWaitingLoop // ignore: cast_nullable_to_non_nullable
@@ -219,16 +225,18 @@ _$HomeStateCopyWith<_HomeState> get copyWith => __$HomeStateCopyWithImpl<_HomeSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeState&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.isFading, isFading) || other.isFading == isFading)&&(identical(other.isPlayingWaitingLoop, isPlayingWaitingLoop) || other.isPlayingWaitingLoop == isPlayingWaitingLoop));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeState&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.isFading, isFading) || other.isFading == isFading)&&(identical(other.isPlayingWaitingLoop, isPlayingWaitingLoop) || other.isPlayingWaitingLoop == isPlayingWaitingLoop));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isInitialized,isFading,isPlayingWaitingLoop);
+int get hashCode {
+    return Object.hash(runtimeType,isInitialized,isFading,isPlayingWaitingLoop);
+}
 
 @override
 String toString() {
-  return 'HomeState(isInitialized: $isInitialized, isFading: $isFading, isPlayingWaitingLoop: $isPlayingWaitingLoop)';
+    return 'HomeState(isInitialized: $isInitialized, isFading: $isFading, isPlayingWaitingLoop: $isPlayingWaitingLoop)';
 }
 
 

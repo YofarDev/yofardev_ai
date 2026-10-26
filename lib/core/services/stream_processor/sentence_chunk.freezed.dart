@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'sentence_chunk.dart';
@@ -9,6 +9,7 @@ part of 'sentence_chunk.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 SentenceChunk _$SentenceChunkFromJson(
@@ -54,7 +55,7 @@ mixin _$SentenceChunk {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SentenceChunk);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SentenceChunk);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -63,7 +64,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'SentenceChunk()';
+    return 'SentenceChunk()';
 }
 
 
@@ -221,7 +222,7 @@ return error(_that.message);case _:
 @JsonSerializable()
 
 class _SentenceChunkSentence implements SentenceChunk {
-  const _SentenceChunkSentence({required this.text, required this.index, final  String? $type}): $type = $type ?? 'sentence';
+  const _SentenceChunkSentence({required this.text, required this.index,  String? $type}): $type = $type ?? 'sentence';
   factory _SentenceChunkSentence.fromJson(Map<String, dynamic> json) => _$SentenceChunkSentenceFromJson(json);
 
  final  String text;
@@ -244,16 +245,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SentenceChunkSentence&&(identical(other.text, text) || other.text == text)&&(identical(other.index, index) || other.index == index));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SentenceChunkSentence&&(identical(other.text, text) || other.text == text)&&(identical(other.index, index) || other.index == index));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,text,index);
+int get hashCode {
+    return Object.hash(runtimeType,text,index);
+}
 
 @override
 String toString() {
-  return 'SentenceChunk.sentence(text: $text, index: $index)';
+    return 'SentenceChunk.sentence(text: $text, index: $index)';
 }
 
 
@@ -296,7 +299,7 @@ as int,
 @JsonSerializable()
 
 class _SentenceChunkMetadata implements SentenceChunk {
-  const _SentenceChunkMetadata({required final  Map<String, dynamic> json, final  String? $type}): _json = json,$type = $type ?? 'metadata';
+  const _SentenceChunkMetadata({required  Map<String, dynamic> json,  String? $type}): _json = json,$type = $type ?? 'metadata';
   factory _SentenceChunkMetadata.fromJson(Map<String, dynamic> json) => _$SentenceChunkMetadataFromJson(json);
 
  final  Map<String, dynamic> _json;
@@ -324,16 +327,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SentenceChunkMetadata&&const DeepCollectionEquality().equals(other._json, _json));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SentenceChunkMetadata&&const DeepCollectionEquality().equals(other.json, _json));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_json));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_json));
+}
 
 @override
 String toString() {
-  return 'SentenceChunk.metadata(json: $json)';
+    return 'SentenceChunk.metadata(json: $json)';
 }
 
 
@@ -375,7 +380,7 @@ as Map<String, dynamic>,
 @JsonSerializable()
 
 class _SentenceChunkComplete implements SentenceChunk {
-  const _SentenceChunkComplete({final  String? $type}): $type = $type ?? 'complete';
+  const _SentenceChunkComplete({ String? $type}): $type = $type ?? 'complete';
   factory _SentenceChunkComplete.fromJson(Map<String, dynamic> json) => _$SentenceChunkCompleteFromJson(json);
 
 
@@ -392,7 +397,7 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SentenceChunkComplete);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SentenceChunkComplete);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -401,7 +406,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'SentenceChunk.complete()';
+    return 'SentenceChunk.complete()';
 }
 
 
@@ -414,7 +419,7 @@ String toString() {
 @JsonSerializable()
 
 class _SentenceChunkError implements SentenceChunk {
-  const _SentenceChunkError(this.message, {final  String? $type}): $type = $type ?? 'error';
+  const _SentenceChunkError(this.message, { String? $type}): $type = $type ?? 'error';
   factory _SentenceChunkError.fromJson(Map<String, dynamic> json) => _$SentenceChunkErrorFromJson(json);
 
  final  String message;
@@ -436,16 +441,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SentenceChunkError&&(identical(other.message, message) || other.message == message));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SentenceChunkError&&(identical(other.message, message) || other.message == message));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,message);
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
 
 @override
 String toString() {
-  return 'SentenceChunk.error(message: $message)';
+    return 'SentenceChunk.error(message: $message)';
 }
 
 
