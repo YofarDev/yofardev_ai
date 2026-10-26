@@ -14,6 +14,7 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/screens/chats_list_screen.dart';
 import 'package:yofardev_ai/features/chat/widgets/chat_list_container.dart';
 import 'package:yofardev_ai/features/chat/widgets/chat_list_empty_state.dart';
+import 'package:yofardev_ai/features/chat/widgets/chat_list_shimmer_loading.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
@@ -124,7 +125,7 @@ void main() {
 
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(ChatListShimmerLoading), findsOneWidget);
     });
 
     testWidgets('shows empty state when chat list is empty', (

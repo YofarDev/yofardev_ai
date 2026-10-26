@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
+import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/features/sound/sound.dart';
@@ -225,6 +226,9 @@ void main() {
       when(
         () => mockChatRepository.getCurrentChat(),
       ).thenAnswer((_) async => Result<Chat>.ok(Chat()));
+      when(
+        () => mockChatRepository.getChatsList(),
+      ).thenAnswer((_) async => Result<List<Chat>>.ok(<Chat>[]));
 
       // Create AvatarAnimationService (no longer depends on AvatarCubit)
       avatarAnimationService = AvatarAnimationService();
@@ -328,11 +332,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.rising);
 
-      // Assert - Background transition should be sliding during animation
-      expect(
-        avatarCubit.state.backgroundTransition,
-        BackgroundTransition.sliding,
-      );
+      // Assert - v4 scenes replace photo backgrounds: nothing slides
+      expect(avatarCubit.state.backgroundTransition, BackgroundTransition.none);
 
       // Wait for rise to complete
       await tester.pumpAndSettle();
@@ -342,7 +343,7 @@ void main() {
       expect(chatsCubit.state.currentChat.id, 'test-chat-id');
     });
 
-    testWidgets('background slides during animation', (
+    testWidgets('background does not slide during animation', (
       WidgetTester tester,
     ) async {
       // Arrange - Build app with cubits
@@ -356,23 +357,15 @@ void main() {
       // Wait for drop animation to start
       expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.dropping);
 
-      // Wait for drop to complete and background slide to start (using AppConstants)
+      // Wait for drop to complete (using AppConstants)
       await tester.pump(Duration(seconds: AppConstants.changingAvatarDuration));
 
-      // Assert - Background transition should be sliding
-      expect(
-        avatarCubit.state.backgroundTransition,
-        BackgroundTransition.sliding,
-      );
+      // Assert - v4 scenes replace photo backgrounds: nothing slides
+      expect(avatarCubit.state.backgroundTransition, BackgroundTransition.none);
 
-      // Wait for slide to complete
       await tester.pump(const Duration(milliseconds: 600));
 
-      // Background transition should be sliding at this point
-      expect(
-        avatarCubit.state.backgroundTransition,
-        BackgroundTransition.sliding,
-      );
+      expect(avatarCubit.state.backgroundTransition, BackgroundTransition.none);
     });
 
     test('animation sequence transitions through correct states', () async {
@@ -401,9 +394,11 @@ void main() {
       expect(animationStates, contains(AvatarStatusAnimation.dropping));
       expect(animationStates, contains(AvatarStatusAnimation.rising));
 
-      // Background should have transitioned
-      expect(backgroundTransitions, contains(BackgroundTransition.sliding));
-      expect(backgroundTransitions, contains(BackgroundTransition.none));
+      // v4 scenes replace photo backgrounds: the transition never slides
+      expect(
+        backgroundTransitions,
+        everyElement(equals(BackgroundTransition.none)),
+      );
 
       // Final state should be success
       expect(chatsCubit.state.status, ChatStatus.success);
@@ -415,6 +410,8 @@ void main() {
     test('avatar cubit receives correct animation states', () async {
       // Act - Create new chat
       await chatsCubit.createNewChat();
+      // Animation events are delivered on a microtask; let the first one land.
+      await Future<void>.delayed(Duration.zero);
 
       // Immediately after creation, avatar should be dropping
       expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.dropping);
@@ -435,8 +432,9 @@ void main() {
       );
 
       // Assert - Complete state sequence verified
-      // Final state should be initial again after animation completes
-      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.initial);
+      // The cubit no longer resets the status to initial after the rise: the
+      // last status (rising) stays until the next animation starts.
+      expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.rising);
 
       // Background should return to none after animation
       expect(avatarCubit.state.backgroundTransition, BackgroundTransition.none);
@@ -465,6 +463,9 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
   @override
   Stream<ChatStatus> get streamingStateChangedEvents =>
       const Stream<ChatStatus>.empty();
+
+  @override
+  Stream<AvatarMood> get moodEvents => const Stream<AvatarMood>.empty();
 
   @override
   Stream<AvatarStatusAnimation> get avatarAnimationChangedEvents =>

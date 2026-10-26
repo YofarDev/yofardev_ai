@@ -19,12 +19,18 @@ void main() {
           child: const SizedBox(
             width: 400,
             height: 800,
-            child: ChatListShimmerLoading(),
+            // ChatListShimmerLoading is an Expanded: it needs a Flex parent.
+            child: Column(children: <Widget>[ChatListShimmerLoading()]),
           ),
         ),
       );
 
-      await screenMatchesGolden(tester, 'shimmer_loading');
+      // The shimmer animates forever, so pumpAndSettle would time out.
+      await screenMatchesGolden(
+        tester,
+        'shimmer_loading',
+        customPump: (WidgetTester t) => t.pump(),
+      );
     });
 
     testGoldens('renders shimmer loading in dark mode', (
@@ -36,12 +42,18 @@ void main() {
           child: const SizedBox(
             width: 400,
             height: 800,
-            child: ChatListShimmerLoading(),
+            // ChatListShimmerLoading is an Expanded: it needs a Flex parent.
+            child: Column(children: <Widget>[ChatListShimmerLoading()]),
           ),
         ),
       );
 
-      await screenMatchesGolden(tester, 'shimmer_loading_dark');
+      // The shimmer animates forever, so pumpAndSettle would time out.
+      await screenMatchesGolden(
+        tester,
+        'shimmer_loading_dark',
+        customPump: (WidgetTester t) => t.pump(),
+      );
     });
   });
 }

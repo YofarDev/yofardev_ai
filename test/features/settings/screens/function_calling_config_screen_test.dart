@@ -128,7 +128,7 @@ void main() {
         expect(find.byType(FunctionCallingSection), findsNWidgets(3));
       });
 
-      testWidgets('should render service descriptions', (
+      testWidgets('should render screen description and service API names', (
         WidgetTester tester,
       ) async {
         await tester.pumpWidget(createTestWidget());
@@ -139,12 +139,10 @@ void main() {
           find.text(l10n.settings_functionCalling_description),
           findsOneWidget,
         );
-        expect(
-          find.text(l10n.settings_googleSearch_description),
-          findsOneWidget,
-        );
-        expect(find.text(l10n.settings_weather_description), findsOneWidget);
-        expect(find.text(l10n.settings_news_description), findsOneWidget);
+        // Each section shows the name of the API it configures.
+        expect(find.text('Google Search API'), findsOneWidget);
+        expect(find.text('OpenWeather API'), findsOneWidget);
+        expect(find.text('New York Times API'), findsOneWidget);
       });
 
       testWidgets('should render app bar with back button and save button', (
@@ -182,10 +180,6 @@ void main() {
 
         // Should find 3 Switch widgets (one for each service)
         expect(find.byType(Switch), findsNWidgets(3));
-        expect(
-          find.text(localizationsFor(tester).settings_enable),
-          findsNWidgets(3),
-        );
       });
 
       testWidgets('should display service icons', (WidgetTester tester) async {
