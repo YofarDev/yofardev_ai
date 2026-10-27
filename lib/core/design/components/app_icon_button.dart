@@ -72,21 +72,16 @@ class AppIconButton extends StatelessWidget {
         final Color iconColor;
         if (tokens.isCel) {
           final Color base = active ? accent : glassSurface;
-          final Color fill = states.pressed
-              ? Color.alphaBlend(tokens.shadow.withValues(alpha: 0.15), base)
-              : lifted
-              ? Color.alphaBlend(tokens.highlight.withValues(alpha: 0.08), base)
-              : base;
           iconColor = active
               ? tokens.scene.onAccent
               : lifted
               ? accent
               : colors.onSurface;
           decoration = BoxDecoration(
-            color: fill,
+            color: tokens.celFill(base, states),
             borderRadius: radius,
             border: Border.all(
-              color: states.focused && !active ? accent : glassBorder,
+              color: tokens.celBorder(states, filled: active),
               width: tokens.outlineWidth,
             ),
             boxShadow: tokens.celShadow(pressed: states.pressed),

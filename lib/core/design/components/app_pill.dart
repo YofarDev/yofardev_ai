@@ -47,12 +47,8 @@ class AppPill extends StatelessWidget {
         final Color foreground;
         if (tokens.isCel) {
           final Color base = selected ? accent : glassSurface;
-          fill = states.pressed
-              ? Color.alphaBlend(tokens.shadow.withValues(alpha: 0.15), base)
-              : lifted
-              ? Color.alphaBlend(tokens.highlight.withValues(alpha: 0.08), base)
-              : base;
-          border = states.focused && !selected ? accent : glassBorder;
+          fill = tokens.celFill(base, states);
+          border = tokens.celBorder(states, filled: selected);
           foreground = selected ? tokens.scene.onAccent : colors.onSurface;
         } else {
           fill = selected
