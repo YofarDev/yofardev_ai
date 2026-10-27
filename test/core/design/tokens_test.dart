@@ -100,6 +100,79 @@ void main() {
     });
   });
 
+  group('AppTokens look tokens', () {
+    test('dark defaults equal today', () {
+      expect(AppTokens.dark.scene.accent, const Color(0xFF00D4FF));
+      expect(AppTokens.dark.scene.onAccent, const Color(0xFF001F29));
+      expect(AppTokens.dark.scene.glow, const Color(0x5900D4FF));
+      expect(AppTokens.dark.surfaceStyle, AppSurfaceStyle.glass);
+      expect(AppTokens.dark.outlineWidth, 1.5);
+      expect(AppTokens.dark.radiusScale, 1.0);
+    });
+
+    test('radius scales the base value', () {
+      expect(AppTokens.dark.radius(14), 14);
+      expect(AppTokens.dark.copyWith(radiusScale: 1.5).radius(14), 21);
+    });
+
+    test('lerp switches surfaceStyle at t >= 0.5', () {
+      final AppTokens other = AppTokens.dark.copyWith(
+        surfaceStyle: AppSurfaceStyle.cel,
+      );
+      expect(
+        AppTokens.dark.lerp(other, 0.49).surfaceStyle,
+        AppSurfaceStyle.glass,
+      );
+      expect(AppTokens.dark.lerp(other, 0.5).surfaceStyle, AppSurfaceStyle.cel);
+      expect(AppTokens.dark.lerp(other, 1).surfaceStyle, AppSurfaceStyle.cel);
+    });
+
+    test('lerp interpolates scene, outlineWidth and radiusScale', () {
+      const ScenePalette scene = ScenePalette(
+        accent: Color(0xFFF4B860),
+        onAccent: Color(0xFF16121D),
+        glow: Color(0x59F4B860),
+      );
+      final AppTokens other = AppTokens.dark.copyWith(
+        scene: scene,
+        outlineWidth: 2.5,
+        radiusScale: 2.0,
+      );
+      final AppTokens result = AppTokens.dark.lerp(other, 0.5);
+      expect(result.scene, ScenePalette.lerp(AppTokens.dark.scene, scene, 0.5));
+      expect(result.outlineWidth, 2.0);
+      expect(result.radiusScale, 1.5);
+    });
+
+    test('copyWith round-trips the new fields', () {
+      const ScenePalette scene = ScenePalette(
+        accent: Color(0xFFF4B860),
+        onAccent: Color(0xFF16121D),
+        glow: Color(0x59F4B860),
+      );
+      final AppTokens changed = AppTokens.dark.copyWith(
+        scene: scene,
+        surfaceStyle: AppSurfaceStyle.cel,
+        outlineWidth: 2,
+        radiusScale: 1.35,
+      );
+      expect(changed.scene, scene);
+      expect(changed.surfaceStyle, AppSurfaceStyle.cel);
+      expect(changed.outlineWidth, 2);
+      expect(changed.radiusScale, 1.35);
+      expect(changed, isNot(AppTokens.dark));
+      expect(
+        changed.copyWith(
+          scene: AppTokens.dark.scene,
+          surfaceStyle: AppSurfaceStyle.glass,
+          outlineWidth: 1.5,
+          radiusScale: 1.0,
+        ),
+        AppTokens.dark,
+      );
+    });
+  });
+
   group('AppThemeContext', () {
     testWidgets('context.tokens fails clearly without AppTokens', (
       WidgetTester tester,
