@@ -543,6 +543,36 @@ void main() {
     await drain(tester);
   });
 
+  testWidgets('an error while a page covers Home is left to that page', (
+    WidgetTester tester,
+  ) async {
+    await pumpComposer(tester);
+    // Chat details pushed over Home (which stays mounted underneath).
+    unawaited(
+      tester
+          .state<NavigatorState>(find.byType(Navigator))
+          .push(
+            MaterialPageRoute<void>(
+              builder: (_) => const Scaffold(body: Text('Chat details')),
+            ),
+          ),
+    );
+    await tester.pumpAndSettle();
+
+    chat.emit(
+      chat.state.copyWith(
+        status: ChatStatus.error,
+        error: const NetworkFailure('timeout'),
+      ),
+    );
+    await tester.idle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.text('Network error'), findsNothing);
+    await drain(tester);
+  });
+
   testWidgets('the + menu toggles tools', (WidgetTester tester) async {
     final SemanticsHandle handle = tester.ensureSemantics();
     await pumpComposer(tester);

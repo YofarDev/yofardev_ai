@@ -308,6 +308,11 @@ class _StageComposerState extends State<StageComposer>
     if (state.status != ChatStatus.error || failure == null) {
       return;
     }
+    // Home stays mounted under the routes pushed over it (chat details,
+    // history): their errors are theirs to report, not a second toast here.
+    if (!(ModalRoute.isCurrentOf(context) ?? true)) {
+      return;
+    }
     _errorTimer?.cancel();
     _errorTimer = Timer(StageComposer.errorFlash, () {
       if (mounted) {
