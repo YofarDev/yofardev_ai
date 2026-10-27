@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,6 +18,7 @@ import '../../features/chat/screens/image_full_screen.dart';
 import '../../features/demo/presentation/bloc/demo_cubit.dart';
 import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/home/screens/ui_lab_screen.dart';
 import '../../features/settings/screens/function_calling_config_screen.dart';
 import '../../features/settings/screens/llm/llm_config_page.dart';
 import '../../features/settings/screens/llm/llm_selection_page.dart';
@@ -23,6 +28,7 @@ import '../../features/settings/screens/settings_screen.dart';
 import '../../core/res/app_constants.dart';
 import '../../core/widgets/constrained_width.dart';
 import '../../core/l10n/generated/app_localizations.dart';
+import '../../core/utils/logger.dart';
 import 'route_constants.dart';
 
 /// Application router configuration using go_router.
@@ -32,7 +38,19 @@ import 'route_constants.dart';
 class AppRouter {
   AppRouter._();
 
-  static final GoRouter router = GoRouter(
+  /// Debug service extension that opens the UI lab (`/ui-lab`).
+  static const String openUiLabExtension = 'ext.yofardev.uiLab.open';
+
+  static bool _openExtensionRegistered = false;
+
+  /// The app's router. In debug builds, the first access also registers the
+  /// `ext.yofardev.*` navigation service extensions.
+  static GoRouter get router {
+    _registerDebugExtensions();
+    return _router;
+  }
+
+  static final GoRouter _router = GoRouter(
     debugLogDiagnostics: true,
     routes: <RouteBase>[
       GoRoute(
@@ -168,9 +186,55 @@ class AppRouter {
                 child: const RiveLabScreen(),
               ),
         ),
+      if (kDebugMode)
+        GoRoute(
+          path: RouteConstants.uiLab,
+          pageBuilder: (BuildContext context, GoRouterState state) =>
+              MaterialPage<void>(
+                key: state.pageKey,
+                child: const UiLabScreen(),
+              ),
+        ),
     ],
     errorBuilder: (BuildContext context, GoRouterState state) => Scaffold(
       body: Center(child: Text(AppLocalizations.of(context).pageNotFound)),
     ),
   );
+
+  /// Registers the debug-only extension that opens the UI lab. Registered
+  /// once per isolate (registering a name twice throws) and acting on the
+  /// live [_router].
+  static void _registerDebugExtensions() {
+    if (!kDebugMode || _openExtensionRegistered) {
+      return;
+    }
+    _openExtensionRegistered = true;
+    try {
+      developer.registerExtension(openUiLabExtension, (
+        String method,
+        Map<String, String> params,
+      ) async {
+        try {
+          final String current =
+              _router.routeInformationProvider.value.uri.path;
+          if (current != RouteConstants.uiLab) {
+            unawaited(_router.push<void>(RouteConstants.uiLab));
+          }
+          return developer.ServiceExtensionResponse.result(
+            jsonEncode(<String, Object?>{'location': RouteConstants.uiLab}),
+          );
+        } on Object catch (e) {
+          return developer.ServiceExtensionResponse.error(
+            developer.ServiceExtensionResponse.extensionError,
+            jsonEncode(<String, String>{'message': '$e'}),
+          );
+        }
+      });
+    } on ArgumentError catch (e) {
+      AppLogger.warning(
+        'Could not register $openUiLabExtension: $e',
+        tag: 'AppRouter',
+      );
+    }
+  }
 }
