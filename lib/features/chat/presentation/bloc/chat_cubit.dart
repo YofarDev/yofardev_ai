@@ -530,6 +530,53 @@ class ChatCubit extends Cubit<ChatState> {
     AppLogger.debug('Status after emit: ${state.status}', tag: 'ChatCubit');
     _appLifecycleService.emitStreamingStateChanged(ChatStatus.typing);
 
+    try {
+      await _streamWith(
+        prompt,
+        onlyText: onlyText,
+        attachedImage: attachedImage,
+        avatar: avatar,
+        currentChat: currentChat,
+        language: language,
+        functionCallingEnabled: functionCallingEnabled,
+      );
+    } catch (e, stackTrace) {
+      // A failure outside the service's own error path (before its stream
+      // starts): end the reply like any other failure.
+      AppLogger.error(
+        'streamResponse failed',
+        tag: 'ChatCubit',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _failReply(UnknownFailure(e.toString(), e));
+    }
+  }
+
+  /// Ends a failed reply: the error state for the UI, and the error
+  /// streaming state so the talking state leaves "generating" (the avatar's
+  /// thought bubble and the Stage orb's thinking).
+  void _failReply(Failure failure) {
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        status: ChatStatus.error,
+        error: failure,
+        activeTool: null,
+      ),
+    );
+    _appLifecycleService.emitStreamingStateChanged(ChatStatus.error);
+  }
+
+  Future<void> _streamWith(
+    String prompt, {
+    required bool onlyText,
+    String? attachedImage,
+    required Avatar avatar,
+    required Chat currentChat,
+    required String language,
+    required bool functionCallingEnabled,
+  }) async {
     await _chatStreamingService.streamResponse(
       prompt: prompt,
       onlyText: onlyText,
@@ -593,16 +640,7 @@ class ChatCubit extends Cubit<ChatState> {
         // Fire and forget - don't await
         unawaited(_globalMemoryService.updateMemory(finalChat));
       },
-      onError: (String error) {
-        // Stream failed
-        emit(
-          state.copyWith(
-            status: ChatStatus.error,
-            error: UnknownFailure(error, error),
-            activeTool: null,
-          ),
-        );
-      },
+      onError: (String error) => _failReply(UnknownFailure(error, error)),
       onToolActivity: (String? toolName) {
         if (isClosed) return;
         emit(state.copyWith(activeTool: toolName));
