@@ -389,5 +389,12 @@
   "composerSend": "Send",
   "composerStop": "Stop",
   "composerListen": "Talk",
-  "composerMore": "More options"
+  "composerMore": "More options",
+  "stageHistory": "History",
+  "stageShowCaptions": "Show captions",
+  "stageHideCaptions": "Hide captions",
+  "stageDemo": "Play the demo",
+  "languageNameEnglish": "English",
+  "languageNameFrench": "Français",
+  "stageMenu": "Menu"
 }

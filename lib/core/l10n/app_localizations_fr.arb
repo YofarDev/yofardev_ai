@@ -149,5 +149,12 @@
   "composerSend": "Envoyer",
   "composerStop": "Arrêter",
   "composerListen": "Parler",
-  "composerMore": "Plus d'options"
+  "composerMore": "Plus d'options",
+  "stageHistory": "Historique",
+  "stageShowCaptions": "Afficher les sous-titres",
+  "stageHideCaptions": "Masquer les sous-titres",
+  "stageDemo": "Lancer la démo",
+  "languageNameEnglish": "English",
+  "languageNameFrench": "Français",
+  "stageMenu": "Menu"
 }

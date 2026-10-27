@@ -7,7 +7,8 @@ import '../tokens/app_spacing.dart';
 import '../tokens/app_tokens.dart';
 import 'interactive_surface.dart';
 
-/// A compact rounded label (filter chip / tag), optionally with an icon.
+/// A compact rounded label (filter chip / tag), optionally with an icon
+/// (or any 16-20 dp [leading] widget, which wins over [icon]).
 ///
 /// The pill itself is 36 dp tall; the tappable area is at least 48 dp tall.
 class AppPill extends StatelessWidget {
@@ -15,12 +16,14 @@ class AppPill extends StatelessWidget {
     super.key,
     required this.label,
     this.icon,
+    this.leading,
     this.onTap,
     this.selected = false,
   });
 
   final String label;
   final IconData? icon;
+  final Widget? leading;
   final VoidCallback? onTap;
   final bool selected;
 
@@ -77,8 +80,8 @@ class AppPill extends StatelessWidget {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                if (icon != null) ...<Widget>[
-                  Icon(icon, size: 16, color: foreground),
+                if (leading != null || icon != null) ...<Widget>[
+                  leading ?? Icon(icon, size: 16, color: foreground),
                   const SizedBox(width: AppSpace.xs),
                 ],
                 if (constraints.hasBoundedWidth)

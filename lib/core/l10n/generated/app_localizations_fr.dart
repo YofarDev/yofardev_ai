@@ -516,4 +516,25 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get composerMore => 'Plus d\'options';
+
+  @override
+  String get stageHistory => 'Historique';
+
+  @override
+  String get stageShowCaptions => 'Afficher les sous-titres';
+
+  @override
+  String get stageHideCaptions => 'Masquer les sous-titres';
+
+  @override
+  String get stageDemo => 'Lancer la démo';
+
+  @override
+  String get languageNameEnglish => 'English';
+
+  @override
+  String get languageNameFrench => 'Français';
+
+  @override
+  String get stageMenu => 'Menu';
 }

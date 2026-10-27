@@ -170,6 +170,7 @@ void main() {
     WidgetTester tester, {
     Future<File?> Function()? pickImage,
     bool reduceMotion = false,
+    ValueChanged<ComposerOrbState>? onModeChanged,
   }) async {
     final Widget app = MultiBlocProvider(
       providers: <SingleChildWidget>[
@@ -186,8 +187,12 @@ void main() {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: pickImage == null
-                  ? StageComposer(speech: speech)
-                  : StageComposer(speech: speech, pickImage: pickImage),
+                  ? StageComposer(speech: speech, onModeChanged: onModeChanged)
+                  : StageComposer(
+                      speech: speech,
+                      pickImage: pickImage,
+                      onModeChanged: onModeChanged,
+                    ),
             ),
           ),
         ),
@@ -225,6 +230,43 @@ void main() {
     expect(find.text('Ask anything…'), findsOneWidget);
     expect(tester.getSize(orbButton('Talk')), const Size(48, 48));
     handle.dispose();
+  });
+
+  testWidgets('reports each mode change once, after its frame', (
+    WidgetTester tester,
+  ) async {
+    final List<ComposerOrbState> modes = <ComposerOrbState>[];
+    await pumpComposer(tester, onModeChanged: modes.add);
+    expect(modes, <ComposerOrbState>[ComposerOrbState.idle]);
+
+    await tester.enterText(find.byType(TextField), 'Hello');
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'Hello there');
+    await tester.pump();
+    expect(modes.last, ComposerOrbState.typing);
+    await tester.enterText(find.byType(TextField), '');
+    await tester.pump();
+
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    expect(modes.last, ComposerOrbState.listening);
+
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.idle();
+    await tester.pump();
+    expect(modes.last, ComposerOrbState.idle);
+
+    talking.emit(const TalkingState.generating());
+    await tester.idle();
+    await tester.pump();
+    expect(modes, <ComposerOrbState>[
+      ComposerOrbState.idle,
+      ComposerOrbState.typing,
+      ComposerOrbState.idle,
+      ComposerOrbState.listening,
+      ComposerOrbState.idle,
+      ComposerOrbState.thinking,
+    ]);
   });
 
   testWidgets('typing shows send semantics and submits like AiTextInput', (

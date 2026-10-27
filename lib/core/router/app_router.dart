@@ -26,6 +26,7 @@ import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/memory_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/res/app_constants.dart';
+import '../../core/services/speech/speech_input_service.dart';
 import '../../core/widgets/constrained_width.dart';
 import '../../core/l10n/generated/app_localizations.dart';
 import '../../core/utils/logger.dart';
@@ -55,37 +56,43 @@ class AppRouter {
     routes: <RouteBase>[
       GoRoute(
         path: RouteConstants.home,
-        pageBuilder: (BuildContext context, GoRouterState state) =>
-            MaterialPage<void>(
-              key: state.pageKey,
-              child: BlocBuilder<AvatarCubit, AvatarState>(
-                builder: (BuildContext context, AvatarState avatarState) {
-                  final double computedWidth =
-                      avatarState.status == AvatarStatus.initial
-                      ? AppConstants.avatarWidth
-                      : avatarState.baseOriginalWidth * avatarState.scaleFactor;
-                  final double avatarWidth =
-                      computedWidth.isFinite && computedWidth > 0
-                      ? computedWidth
-                      : AppConstants.avatarWidth;
-                  return ConstrainedWidth(
-                    avatarWidth: avatarWidth,
-                    child: MultiBlocProvider(
-                      providers: <SingleChildWidget>[
-                        BlocProvider<DemoCubit>(
-                          create: (BuildContext context) => getIt<DemoCubit>(),
-                        ),
-                        BlocProvider<HomeCubit>(
-                          create: (BuildContext context) =>
-                              getIt<HomeCubit>()..initialize(),
-                        ),
-                      ],
-                      child: const HomeScreen(),
-                    ),
-                  );
-                },
-              ),
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          // Built once per page, outside the BlocBuilder below: an avatar
+          // change resizes the frame without rebuilding Home.
+          final HomeScreen home = HomeScreen(
+            speech: getIt<SpeechInputService>(),
+          );
+          return MaterialPage<void>(
+            key: state.pageKey,
+            child: BlocBuilder<AvatarCubit, AvatarState>(
+              builder: (BuildContext context, AvatarState avatarState) {
+                final double computedWidth =
+                    avatarState.status == AvatarStatus.initial
+                    ? AppConstants.avatarWidth
+                    : avatarState.baseOriginalWidth * avatarState.scaleFactor;
+                final double avatarWidth =
+                    computedWidth.isFinite && computedWidth > 0
+                    ? computedWidth
+                    : AppConstants.avatarWidth;
+                return ConstrainedWidth(
+                  avatarWidth: avatarWidth,
+                  child: MultiBlocProvider(
+                    providers: <SingleChildWidget>[
+                      BlocProvider<DemoCubit>(
+                        create: (BuildContext context) => getIt<DemoCubit>(),
+                      ),
+                      BlocProvider<HomeCubit>(
+                        create: (BuildContext context) =>
+                            getIt<HomeCubit>()..initialize(),
+                      ),
+                    ],
+                    child: home,
+                  ),
+                );
+              },
             ),
+          );
+        },
       ),
       GoRoute(
         path: RouteConstants.chats,

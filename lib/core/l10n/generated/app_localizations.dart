@@ -997,6 +997,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More options'**
   String get composerMore;
+
+  /// No description provided for @stageHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get stageHistory;
+
+  /// No description provided for @stageShowCaptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show captions'**
+  String get stageShowCaptions;
+
+  /// No description provided for @stageHideCaptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide captions'**
+  String get stageHideCaptions;
+
+  /// No description provided for @stageDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Play the demo'**
+  String get stageDemo;
+
+  /// No description provided for @languageNameEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageNameEnglish;
+
+  /// No description provided for @languageNameFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'Français'**
+  String get languageNameFrench;
+
+  /// No description provided for @stageMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get stageMenu;
 }
 
 class _AppLocalizationsDelegate

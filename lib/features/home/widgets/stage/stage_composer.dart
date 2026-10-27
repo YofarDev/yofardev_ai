@@ -36,16 +36,20 @@ import 'stage_composer_menu.dart';
 /// place.
 ///
 /// [speech] is injected (Home widgets never read the service locator);
-/// [pickImage] defaults to the shared gallery picker.
+/// [pickImage] defaults to the shared gallery picker. [onModeChanged] hears
+/// every mode change (after the frame that shows it), so the Stage can hide
+/// its caption while the composer listens or thinks.
 class StageComposer extends StatefulWidget {
   const StageComposer({
     super.key,
     required this.speech,
     this.pickImage = pickImageFile,
+    this.onModeChanged,
   });
 
   final SpeechInputService speech;
   final Future<File?> Function() pickImage;
+  final ValueChanged<ComposerOrbState>? onModeChanged;
 
   static const double height = 56;
   static const double orbSize = 48;
@@ -89,6 +93,9 @@ class _StageComposerState extends State<StageComposer>
   /// [StageComposer.errorFlash].
   bool _flashingError = false;
   Timer? _errorTimer;
+
+  /// The last mode handed to [StageComposer.onModeChanged].
+  ComposerOrbState? _reportedMode;
 
   StreamSubscription<double>? _levelSub;
   StreamSubscription<String>? _wordsSub;
@@ -304,6 +311,20 @@ class _StageComposerState extends State<StageComposer>
     );
   }
 
+  /// Tells [StageComposer.onModeChanged] about [mode] once this frame is
+  /// done (the parent may rebuild on it, which it can't during this build).
+  void _reportMode(ComposerOrbState mode) {
+    if (widget.onModeChanged == null || mode == _reportedMode) {
+      return;
+    }
+    _reportedMode = mode;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _reportedMode == mode) {
+        widget.onModeChanged?.call(mode);
+      }
+    });
+  }
+
   String _orbLabel(AppLocalizations l10n, ComposerOrbState mode) =>
       switch (mode) {
         ComposerOrbState.idle =>
@@ -334,6 +355,7 @@ class _StageComposerState extends State<StageComposer>
       submitting: _submitting,
       error: _flashingError,
     );
+    _reportMode(mode);
     final Duration morph = MediaQuery.disableAnimationsOf(context)
         ? AppMotion.fast
         : AppMotion.base;
