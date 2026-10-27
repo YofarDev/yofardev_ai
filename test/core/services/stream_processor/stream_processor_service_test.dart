@@ -13,6 +13,33 @@ void main() {
       processor = StreamProcessorService();
     });
 
+    test('reasoning chunks carry no speakable content', () async {
+      final Stream<LlmStreamChunk> chunks =
+          Stream<LlmStreamChunk>.fromIterable(<LlmStreamChunk>[
+            const LlmStreamChunk.reasoning(content: 'let me think about it'),
+            const LlmStreamChunk.text(content: 'Hello!', isComplete: true),
+          ]);
+
+      final List<SentenceChunk> results = await processor
+          .processStream(chunks, expectJson: false)
+          .toList();
+
+      final List<SentenceChunk> sentences = results
+          .where(
+            (SentenceChunk r) =>
+                r.maybeWhen(sentence: (_, _) => true, orElse: () => false),
+          )
+          .toList();
+      expect(sentences.length, 1);
+      expect(
+        sentences.first.maybeWhen(
+          sentence: (String text, _) => text,
+          orElse: () => '',
+        ),
+        'Hello!',
+      );
+    });
+
     test('should extract complete sentences from text chunks', () async {
       final Stream<LlmStreamChunk> chunks =
           Stream<LlmStreamChunk>.fromIterable(<LlmStreamChunk>[

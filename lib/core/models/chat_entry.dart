@@ -23,6 +23,11 @@ sealed class ChatEntry with _$ChatEntry {
     required String body,
     required DateTime timestamp,
     String? attachedImage,
+
+    /// Assistant chain of thought (`reasoning_content`) captured while
+    /// streaming. Thinking-mode backends require replaying it verbatim on
+    /// later requests; never shown in the UI.
+    String? reasoning,
   }) = _ChatEntry;
   const ChatEntry._();
 
@@ -44,6 +49,7 @@ sealed class ChatEntry with _$ChatEntry {
       body: processedJson['body'] as String,
       timestamp: DateTime.parse(processedJson['timestamp'] as String),
       attachedImage: processedJson['attachedImage'] as String?,
+      reasoning: processedJson['reasoning'] as String?,
     );
   }
 
@@ -54,6 +60,7 @@ sealed class ChatEntry with _$ChatEntry {
       'body': body,
       'timestamp': timestamp.toIso8601String(),
       'attachedImage': attachedImage,
+      'reasoning': reasoning,
     };
   }
 }

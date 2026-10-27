@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'llm_stream_chunk.dart';
@@ -9,6 +9,7 @@ part of 'llm_stream_chunk.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 LlmStreamChunk _$LlmStreamChunkFromJson(
@@ -21,6 +22,10 @@ LlmStreamChunk _$LlmStreamChunkFromJson(
           );
                 case 'error':
           return _LlmStreamChunkError.fromJson(
+            json
+          );
+                case 'reasoning':
+          return _LlmStreamChunkReasoning.fromJson(
             json
           );
                 case 'toolCallDelta':
@@ -54,7 +59,7 @@ mixin _$LlmStreamChunk {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmStreamChunk);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmStreamChunk);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -63,7 +68,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'LlmStreamChunk()';
+    return 'LlmStreamChunk()';
 }
 
 
@@ -89,12 +94,13 @@ extension LlmStreamChunkPatterns on LlmStreamChunk {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LlmStreamChunkText value)?  text,TResult Function( _LlmStreamChunkError value)?  error,TResult Function( _LlmStreamChunkToolCallDelta value)?  toolCallDelta,TResult Function( _LlmStreamChunkComplete value)?  complete,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LlmStreamChunkText value)?  text,TResult Function( _LlmStreamChunkError value)?  error,TResult Function( _LlmStreamChunkReasoning value)?  reasoning,TResult Function( _LlmStreamChunkToolCallDelta value)?  toolCallDelta,TResult Function( _LlmStreamChunkComplete value)?  complete,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _LlmStreamChunkText() when text != null:
 return text(_that);case _LlmStreamChunkError() when error != null:
-return error(_that);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
+return error(_that);case _LlmStreamChunkReasoning() when reasoning != null:
+return reasoning(_that);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
 return toolCallDelta(_that);case _LlmStreamChunkComplete() when complete != null:
 return complete(_that);case _:
   return orElse();
@@ -114,12 +120,13 @@ return complete(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LlmStreamChunkText value)  text,required TResult Function( _LlmStreamChunkError value)  error,required TResult Function( _LlmStreamChunkToolCallDelta value)  toolCallDelta,required TResult Function( _LlmStreamChunkComplete value)  complete,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LlmStreamChunkText value)  text,required TResult Function( _LlmStreamChunkError value)  error,required TResult Function( _LlmStreamChunkReasoning value)  reasoning,required TResult Function( _LlmStreamChunkToolCallDelta value)  toolCallDelta,required TResult Function( _LlmStreamChunkComplete value)  complete,}){
 final _that = this;
 switch (_that) {
 case _LlmStreamChunkText():
 return text(_that);case _LlmStreamChunkError():
-return error(_that);case _LlmStreamChunkToolCallDelta():
+return error(_that);case _LlmStreamChunkReasoning():
+return reasoning(_that);case _LlmStreamChunkToolCallDelta():
 return toolCallDelta(_that);case _LlmStreamChunkComplete():
 return complete(_that);}
 }
@@ -135,12 +142,13 @@ return complete(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LlmStreamChunkText value)?  text,TResult? Function( _LlmStreamChunkError value)?  error,TResult? Function( _LlmStreamChunkToolCallDelta value)?  toolCallDelta,TResult? Function( _LlmStreamChunkComplete value)?  complete,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LlmStreamChunkText value)?  text,TResult? Function( _LlmStreamChunkError value)?  error,TResult? Function( _LlmStreamChunkReasoning value)?  reasoning,TResult? Function( _LlmStreamChunkToolCallDelta value)?  toolCallDelta,TResult? Function( _LlmStreamChunkComplete value)?  complete,}){
 final _that = this;
 switch (_that) {
 case _LlmStreamChunkText() when text != null:
 return text(_that);case _LlmStreamChunkError() when error != null:
-return error(_that);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
+return error(_that);case _LlmStreamChunkReasoning() when reasoning != null:
+return reasoning(_that);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
 return toolCallDelta(_that);case _LlmStreamChunkComplete() when complete != null:
 return complete(_that);case _:
   return null;
@@ -159,11 +167,12 @@ return complete(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String content,  bool isComplete)?  text,TResult Function( String message)?  error,TResult Function( int index,  String? id,  String? name,  String? argumentsDelta)?  toolCallDelta,TResult Function()?  complete,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String content,  bool isComplete)?  text,TResult Function( String message)?  error,TResult Function( String content)?  reasoning,TResult Function( int index,  String? id,  String? name,  String? argumentsDelta)?  toolCallDelta,TResult Function()?  complete,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LlmStreamChunkText() when text != null:
 return text(_that.content,_that.isComplete);case _LlmStreamChunkError() when error != null:
-return error(_that.message);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
+return error(_that.message);case _LlmStreamChunkReasoning() when reasoning != null:
+return reasoning(_that.content);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
 return toolCallDelta(_that.index,_that.id,_that.name,_that.argumentsDelta);case _LlmStreamChunkComplete() when complete != null:
 return complete();case _:
   return orElse();
@@ -183,11 +192,12 @@ return complete();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String content,  bool isComplete)  text,required TResult Function( String message)  error,required TResult Function( int index,  String? id,  String? name,  String? argumentsDelta)  toolCallDelta,required TResult Function()  complete,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String content,  bool isComplete)  text,required TResult Function( String message)  error,required TResult Function( String content)  reasoning,required TResult Function( int index,  String? id,  String? name,  String? argumentsDelta)  toolCallDelta,required TResult Function()  complete,}) {final _that = this;
 switch (_that) {
 case _LlmStreamChunkText():
 return text(_that.content,_that.isComplete);case _LlmStreamChunkError():
-return error(_that.message);case _LlmStreamChunkToolCallDelta():
+return error(_that.message);case _LlmStreamChunkReasoning():
+return reasoning(_that.content);case _LlmStreamChunkToolCallDelta():
 return toolCallDelta(_that.index,_that.id,_that.name,_that.argumentsDelta);case _LlmStreamChunkComplete():
 return complete();}
 }
@@ -203,11 +213,12 @@ return complete();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String content,  bool isComplete)?  text,TResult? Function( String message)?  error,TResult? Function( int index,  String? id,  String? name,  String? argumentsDelta)?  toolCallDelta,TResult? Function()?  complete,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String content,  bool isComplete)?  text,TResult? Function( String message)?  error,TResult? Function( String content)?  reasoning,TResult? Function( int index,  String? id,  String? name,  String? argumentsDelta)?  toolCallDelta,TResult? Function()?  complete,}) {final _that = this;
 switch (_that) {
 case _LlmStreamChunkText() when text != null:
 return text(_that.content,_that.isComplete);case _LlmStreamChunkError() when error != null:
-return error(_that.message);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
+return error(_that.message);case _LlmStreamChunkReasoning() when reasoning != null:
+return reasoning(_that.content);case _LlmStreamChunkToolCallDelta() when toolCallDelta != null:
 return toolCallDelta(_that.index,_that.id,_that.name,_that.argumentsDelta);case _LlmStreamChunkComplete() when complete != null:
 return complete();case _:
   return null;
@@ -221,7 +232,7 @@ return complete();case _:
 @JsonSerializable()
 
 class _LlmStreamChunkText implements LlmStreamChunk {
-  const _LlmStreamChunkText({required this.content, required this.isComplete, final  String? $type}): $type = $type ?? 'text';
+  const _LlmStreamChunkText({required this.content, required this.isComplete,  String? $type}): $type = $type ?? 'text';
   factory _LlmStreamChunkText.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkTextFromJson(json);
 
  final  String content;
@@ -244,16 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkText&&(identical(other.content, content) || other.content == content)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkText&&(identical(other.content, content) || other.content == content)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,content,isComplete);
+int get hashCode {
+    return Object.hash(runtimeType,content,isComplete);
+}
 
 @override
 String toString() {
-  return 'LlmStreamChunk.text(content: $content, isComplete: $isComplete)';
+    return 'LlmStreamChunk.text(content: $content, isComplete: $isComplete)';
 }
 
 
@@ -296,7 +309,7 @@ as bool,
 @JsonSerializable()
 
 class _LlmStreamChunkError implements LlmStreamChunk {
-  const _LlmStreamChunkError(this.message, {final  String? $type}): $type = $type ?? 'error';
+  const _LlmStreamChunkError(this.message, { String? $type}): $type = $type ?? 'error';
   factory _LlmStreamChunkError.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkErrorFromJson(json);
 
  final  String message;
@@ -318,16 +331,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkError&&(identical(other.message, message) || other.message == message));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkError&&(identical(other.message, message) || other.message == message));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,message);
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
 
 @override
 String toString() {
-  return 'LlmStreamChunk.error(message: $message)';
+    return 'LlmStreamChunk.error(message: $message)';
 }
 
 
@@ -368,8 +383,83 @@ as String,
 /// @nodoc
 @JsonSerializable()
 
+class _LlmStreamChunkReasoning implements LlmStreamChunk {
+  const _LlmStreamChunkReasoning({required this.content,  String? $type}): $type = $type ?? 'reasoning';
+  factory _LlmStreamChunkReasoning.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkReasoningFromJson(json);
+
+ final  String content;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
+/// Create a copy of LlmStreamChunk
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LlmStreamChunkReasoningCopyWith<_LlmStreamChunkReasoning> get copyWith => __$LlmStreamChunkReasoningCopyWithImpl<_LlmStreamChunkReasoning>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$LlmStreamChunkReasoningToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkReasoning&&(identical(other.content, content) || other.content == content));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,content);
+}
+
+@override
+String toString() {
+    return 'LlmStreamChunk.reasoning(content: $content)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LlmStreamChunkReasoningCopyWith<$Res> implements $LlmStreamChunkCopyWith<$Res> {
+  factory _$LlmStreamChunkReasoningCopyWith(_LlmStreamChunkReasoning value, $Res Function(_LlmStreamChunkReasoning) _then) = __$LlmStreamChunkReasoningCopyWithImpl;
+@useResult
+$Res call({
+ String content
+});
+
+
+
+
+}
+/// @nodoc
+class __$LlmStreamChunkReasoningCopyWithImpl<$Res>
+    implements _$LlmStreamChunkReasoningCopyWith<$Res> {
+  __$LlmStreamChunkReasoningCopyWithImpl(this._self, this._then);
+
+  final _LlmStreamChunkReasoning _self;
+  final $Res Function(_LlmStreamChunkReasoning) _then;
+
+/// Create a copy of LlmStreamChunk
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? content = null,}) {
+  return _then(_LlmStreamChunkReasoning(
+content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
 class _LlmStreamChunkToolCallDelta implements LlmStreamChunk {
-  const _LlmStreamChunkToolCallDelta({required this.index, this.id, this.name, this.argumentsDelta, final  String? $type}): $type = $type ?? 'toolCallDelta';
+  const _LlmStreamChunkToolCallDelta({required this.index, this.id, this.name, this.argumentsDelta,  String? $type}): $type = $type ?? 'toolCallDelta';
   factory _LlmStreamChunkToolCallDelta.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkToolCallDeltaFromJson(json);
 
  final  int index;
@@ -394,16 +484,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkToolCallDelta&&(identical(other.index, index) || other.index == index)&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.argumentsDelta, argumentsDelta) || other.argumentsDelta == argumentsDelta));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkToolCallDelta&&(identical(other.index, index) || other.index == index)&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.argumentsDelta, argumentsDelta) || other.argumentsDelta == argumentsDelta));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,index,id,name,argumentsDelta);
+int get hashCode {
+    return Object.hash(runtimeType,index,id,name,argumentsDelta);
+}
 
 @override
 String toString() {
-  return 'LlmStreamChunk.toolCallDelta(index: $index, id: $id, name: $name, argumentsDelta: $argumentsDelta)';
+    return 'LlmStreamChunk.toolCallDelta(index: $index, id: $id, name: $name, argumentsDelta: $argumentsDelta)';
 }
 
 
@@ -448,7 +540,7 @@ as String?,
 @JsonSerializable()
 
 class _LlmStreamChunkComplete implements LlmStreamChunk {
-  const _LlmStreamChunkComplete({final  String? $type}): $type = $type ?? 'complete';
+  const _LlmStreamChunkComplete({ String? $type}): $type = $type ?? 'complete';
   factory _LlmStreamChunkComplete.fromJson(Map<String, dynamic> json) => _$LlmStreamChunkCompleteFromJson(json);
 
 
@@ -465,7 +557,7 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkComplete);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmStreamChunkComplete);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -474,7 +566,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'LlmStreamChunk.complete()';
+    return 'LlmStreamChunk.complete()';
 }
 
 

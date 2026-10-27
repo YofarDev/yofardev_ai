@@ -12,12 +12,19 @@ class LlmMessage {
   /// For tool result messages: the id of the tool call this message answers.
   final String? toolCallId;
 
+  /// Chain of thought of a thinking model's assistant reply
+  /// (`reasoning_content`, DeepSeek-style). Thinking-mode backends require it
+  /// to be replayed verbatim on later requests; providers without the field
+  /// never set it, so it never leaks into their payloads.
+  final String? reasoningContent;
+
   const LlmMessage({
     required this.role,
     required this.body,
     this.attachedFile,
     this.toolCalls,
     this.toolCallId,
+    this.reasoningContent,
   });
 
   Map<String, dynamic> toMap() {
@@ -35,6 +42,9 @@ class LlmMessage {
     }
     if (toolCallId != null) {
       map['tool_call_id'] = toolCallId;
+    }
+    if (reasoningContent != null && reasoningContent!.isNotEmpty) {
+      map['reasoning_content'] = reasoningContent;
     }
     return map;
   }

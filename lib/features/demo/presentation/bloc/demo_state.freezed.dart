@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'demo_state.dart';
@@ -9,6 +9,7 @@ part of 'demo_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $DemoStateCopyWith<DemoState> get copyWith => _$DemoStateCopyWithImpl<DemoState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoState&&(identical(other.status, status) || other.status == status)&&(identical(other.countdownValue, countdownValue) || other.countdownValue == countdownValue)&&(identical(other.currentScript, currentScript) || other.currentScript == currentScript)&&(identical(other.remainingResponses, remainingResponses) || other.remainingResponses == remainingResponses));
+  final _this = this as DemoState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoState&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.countdownValue, _this.countdownValue) || other.countdownValue == _this.countdownValue)&&(identical(other.currentScript, _this.currentScript) || other.currentScript == _this.currentScript)&&(identical(other.remainingResponses, _this.remainingResponses) || other.remainingResponses == _this.remainingResponses));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,countdownValue,currentScript,remainingResponses);
+int get hashCode {
+  final _this = this as DemoState;
+  return Object.hash(runtimeType,_this.status,_this.countdownValue,_this.currentScript,_this.remainingResponses);
+}
 
 @override
 String toString() {
-  return 'DemoState(status: $status, countdownValue: $countdownValue, currentScript: $currentScript, remainingResponses: $remainingResponses)';
+  final _this = this as DemoState;
+  return 'DemoState(status: ${_this.status}, countdownValue: ${_this.countdownValue}, currentScript: ${_this.currentScript}, remainingResponses: ${_this.remainingResponses})';
 }
 
 
@@ -63,7 +69,7 @@ class _$DemoStateCopyWithImpl<$Res>
 /// Create a copy of DemoState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? countdownValue = null,Object? currentScript = freezed,Object? remainingResponses = null,}) {
-  return _then(_self.copyWith(
+  return _then(DemoState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as DemoStatus,countdownValue: null == countdownValue ? _self.countdownValue : countdownValue // ignore: cast_nullable_to_non_nullable
 as int,currentScript: freezed == currentScript ? _self.currentScript : currentScript // ignore: cast_nullable_to_non_nullable
@@ -221,16 +227,18 @@ _$DemoStateCopyWith<_DemoState> get copyWith => __$DemoStateCopyWithImpl<_DemoSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DemoState&&(identical(other.status, status) || other.status == status)&&(identical(other.countdownValue, countdownValue) || other.countdownValue == countdownValue)&&(identical(other.currentScript, currentScript) || other.currentScript == currentScript)&&(identical(other.remainingResponses, remainingResponses) || other.remainingResponses == remainingResponses));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DemoState&&(identical(other.status, status) || other.status == status)&&(identical(other.countdownValue, countdownValue) || other.countdownValue == countdownValue)&&(identical(other.currentScript, currentScript) || other.currentScript == currentScript)&&(identical(other.remainingResponses, remainingResponses) || other.remainingResponses == remainingResponses));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,countdownValue,currentScript,remainingResponses);
+int get hashCode {
+    return Object.hash(runtimeType,status,countdownValue,currentScript,remainingResponses);
+}
 
 @override
 String toString() {
-  return 'DemoState(status: $status, countdownValue: $countdownValue, currentScript: $currentScript, remainingResponses: $remainingResponses)';
+    return 'DemoState(status: $status, countdownValue: $countdownValue, currentScript: $currentScript, remainingResponses: $remainingResponses)';
 }
 
 

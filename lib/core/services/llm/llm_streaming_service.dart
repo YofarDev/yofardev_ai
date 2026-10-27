@@ -157,6 +157,11 @@ class LlmStreamingService implements LlmStreamingServiceInterface {
             continue;
           }
 
+          final String? reasoning = delta?['reasoning_content'] as String?;
+          if (reasoning != null && reasoning.isNotEmpty) {
+            yield LlmStreamChunk.reasoning(content: reasoning);
+          }
+
           final String? content = delta?['content'] as String?;
           if (content != null && content.isNotEmpty) {
             final String finishReason =

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'task_llm_config.dart';
@@ -9,6 +9,7 @@ part of 'task_llm_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -32,16 +33,21 @@ $TaskLlmConfigCopyWith<TaskLlmConfig> get copyWith => _$TaskLlmConfigCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskLlmConfig&&(identical(other.assistantLlmId, assistantLlmId) || other.assistantLlmId == assistantLlmId)&&(identical(other.titleGenerationLlmId, titleGenerationLlmId) || other.titleGenerationLlmId == titleGenerationLlmId)&&(identical(other.functionCallingLlmId, functionCallingLlmId) || other.functionCallingLlmId == functionCallingLlmId)&&(identical(other.memoryExtractionLlmId, memoryExtractionLlmId) || other.memoryExtractionLlmId == memoryExtractionLlmId));
+  final _this = this as TaskLlmConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskLlmConfig&&(identical(other.assistantLlmId, _this.assistantLlmId) || other.assistantLlmId == _this.assistantLlmId)&&(identical(other.titleGenerationLlmId, _this.titleGenerationLlmId) || other.titleGenerationLlmId == _this.titleGenerationLlmId)&&(identical(other.functionCallingLlmId, _this.functionCallingLlmId) || other.functionCallingLlmId == _this.functionCallingLlmId)&&(identical(other.memoryExtractionLlmId, _this.memoryExtractionLlmId) || other.memoryExtractionLlmId == _this.memoryExtractionLlmId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,assistantLlmId,titleGenerationLlmId,functionCallingLlmId,memoryExtractionLlmId);
+int get hashCode {
+  final _this = this as TaskLlmConfig;
+  return Object.hash(runtimeType,_this.assistantLlmId,_this.titleGenerationLlmId,_this.functionCallingLlmId,_this.memoryExtractionLlmId);
+}
 
 @override
 String toString() {
-  return 'TaskLlmConfig(assistantLlmId: $assistantLlmId, titleGenerationLlmId: $titleGenerationLlmId, functionCallingLlmId: $functionCallingLlmId, memoryExtractionLlmId: $memoryExtractionLlmId)';
+  final _this = this as TaskLlmConfig;
+  return 'TaskLlmConfig(assistantLlmId: ${_this.assistantLlmId}, titleGenerationLlmId: ${_this.titleGenerationLlmId}, functionCallingLlmId: ${_this.functionCallingLlmId}, memoryExtractionLlmId: ${_this.memoryExtractionLlmId})';
 }
 
 
@@ -70,7 +76,7 @@ class _$TaskLlmConfigCopyWithImpl<$Res>
 /// Create a copy of TaskLlmConfig
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? assistantLlmId = freezed,Object? titleGenerationLlmId = freezed,Object? functionCallingLlmId = freezed,Object? memoryExtractionLlmId = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(TaskLlmConfig(
 assistantLlmId: freezed == assistantLlmId ? _self.assistantLlmId : assistantLlmId // ignore: cast_nullable_to_non_nullable
 as String?,titleGenerationLlmId: freezed == titleGenerationLlmId ? _self.titleGenerationLlmId : titleGenerationLlmId // ignore: cast_nullable_to_non_nullable
 as String?,functionCallingLlmId: freezed == functionCallingLlmId ? _self.functionCallingLlmId : functionCallingLlmId // ignore: cast_nullable_to_non_nullable
@@ -235,16 +241,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskLlmConfig&&(identical(other.assistantLlmId, assistantLlmId) || other.assistantLlmId == assistantLlmId)&&(identical(other.titleGenerationLlmId, titleGenerationLlmId) || other.titleGenerationLlmId == titleGenerationLlmId)&&(identical(other.functionCallingLlmId, functionCallingLlmId) || other.functionCallingLlmId == functionCallingLlmId)&&(identical(other.memoryExtractionLlmId, memoryExtractionLlmId) || other.memoryExtractionLlmId == memoryExtractionLlmId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskLlmConfig&&(identical(other.assistantLlmId, assistantLlmId) || other.assistantLlmId == assistantLlmId)&&(identical(other.titleGenerationLlmId, titleGenerationLlmId) || other.titleGenerationLlmId == titleGenerationLlmId)&&(identical(other.functionCallingLlmId, functionCallingLlmId) || other.functionCallingLlmId == functionCallingLlmId)&&(identical(other.memoryExtractionLlmId, memoryExtractionLlmId) || other.memoryExtractionLlmId == memoryExtractionLlmId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,assistantLlmId,titleGenerationLlmId,functionCallingLlmId,memoryExtractionLlmId);
+int get hashCode {
+    return Object.hash(runtimeType,assistantLlmId,titleGenerationLlmId,functionCallingLlmId,memoryExtractionLlmId);
+}
 
 @override
 String toString() {
-  return 'TaskLlmConfig(assistantLlmId: $assistantLlmId, titleGenerationLlmId: $titleGenerationLlmId, functionCallingLlmId: $functionCallingLlmId, memoryExtractionLlmId: $memoryExtractionLlmId)';
+    return 'TaskLlmConfig(assistantLlmId: $assistantLlmId, titleGenerationLlmId: $titleGenerationLlmId, functionCallingLlmId: $functionCallingLlmId, memoryExtractionLlmId: $memoryExtractionLlmId)';
 }
 
 

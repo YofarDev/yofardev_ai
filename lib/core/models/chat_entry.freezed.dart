@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'chat_entry.dart';
@@ -9,12 +9,16 @@ part of 'chat_entry.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChatEntry {
 
- String get id; EntryType get entryType; String get body; DateTime get timestamp; String? get attachedImage;
+ String get id; EntryType get entryType; String get body; DateTime get timestamp; String? get attachedImage;/// Assistant chain of thought (`reasoning_content`) captured while
+/// streaming. Thinking-mode backends require replaying it verbatim on
+/// later requests; never shown in the UI.
+ String? get reasoning;
 /// Create a copy of ChatEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +29,21 @@ $ChatEntryCopyWith<ChatEntry> get copyWith => _$ChatEntryCopyWithImpl<ChatEntry>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.entryType, entryType) || other.entryType == entryType)&&(identical(other.body, body) || other.body == body)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.attachedImage, attachedImage) || other.attachedImage == attachedImage));
+  final _this = this as ChatEntry;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatEntry&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.entryType, _this.entryType) || other.entryType == _this.entryType)&&(identical(other.body, _this.body) || other.body == _this.body)&&(identical(other.timestamp, _this.timestamp) || other.timestamp == _this.timestamp)&&(identical(other.attachedImage, _this.attachedImage) || other.attachedImage == _this.attachedImage)&&(identical(other.reasoning, _this.reasoning) || other.reasoning == _this.reasoning));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,entryType,body,timestamp,attachedImage);
+int get hashCode {
+  final _this = this as ChatEntry;
+  return Object.hash(runtimeType,_this.id,_this.entryType,_this.body,_this.timestamp,_this.attachedImage,_this.reasoning);
+}
 
 @override
 String toString() {
-  return 'ChatEntry(id: $id, entryType: $entryType, body: $body, timestamp: $timestamp, attachedImage: $attachedImage)';
+  final _this = this as ChatEntry;
+  return 'ChatEntry(id: ${_this.id}, entryType: ${_this.entryType}, body: ${_this.body}, timestamp: ${_this.timestamp}, attachedImage: ${_this.attachedImage}, reasoning: ${_this.reasoning})';
 }
 
 
@@ -45,7 +54,7 @@ abstract mixin class $ChatEntryCopyWith<$Res>  {
   factory $ChatEntryCopyWith(ChatEntry value, $Res Function(ChatEntry) _then) = _$ChatEntryCopyWithImpl;
 @useResult
 $Res call({
- String id, EntryType entryType, String body, DateTime timestamp, String? attachedImage
+ String id, EntryType entryType, String body, DateTime timestamp, String? attachedImage, String? reasoning
 });
 
 
@@ -62,13 +71,14 @@ class _$ChatEntryCopyWithImpl<$Res>
 
 /// Create a copy of ChatEntry
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? entryType = null,Object? body = null,Object? timestamp = null,Object? attachedImage = freezed,}) {
-  return _then(_self.copyWith(
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? entryType = null,Object? body = null,Object? timestamp = null,Object? attachedImage = freezed,Object? reasoning = freezed,}) {
+  return _then(ChatEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,entryType: null == entryType ? _self.entryType : entryType // ignore: cast_nullable_to_non_nullable
 as EntryType,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as DateTime,attachedImage: freezed == attachedImage ? _self.attachedImage : attachedImage // ignore: cast_nullable_to_non_nullable
+as String?,reasoning: freezed == reasoning ? _self.reasoning : reasoning // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -151,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  EntryType entryType,  String body,  DateTime timestamp,  String? attachedImage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  EntryType entryType,  String body,  DateTime timestamp,  String? attachedImage,  String? reasoning)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatEntry() when $default != null:
-return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attachedImage);case _:
+return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attachedImage,_that.reasoning);case _:
   return orElse();
 
 }
@@ -172,10 +182,10 @@ return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attach
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  EntryType entryType,  String body,  DateTime timestamp,  String? attachedImage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  EntryType entryType,  String body,  DateTime timestamp,  String? attachedImage,  String? reasoning)  $default,) {final _that = this;
 switch (_that) {
 case _ChatEntry():
-return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attachedImage);}
+return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attachedImage,_that.reasoning);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -189,10 +199,10 @@ return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attach
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  EntryType entryType,  String body,  DateTime timestamp,  String? attachedImage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  EntryType entryType,  String body,  DateTime timestamp,  String? attachedImage,  String? reasoning)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatEntry() when $default != null:
-return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attachedImage);case _:
+return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attachedImage,_that.reasoning);case _:
   return null;
 
 }
@@ -204,7 +214,7 @@ return $default(_that.id,_that.entryType,_that.body,_that.timestamp,_that.attach
 
 
 class _ChatEntry extends ChatEntry {
-  const _ChatEntry({required this.id, required this.entryType, required this.body, required this.timestamp, this.attachedImage}): super._();
+  const _ChatEntry({required this.id, required this.entryType, required this.body, required this.timestamp, this.attachedImage, this.reasoning}): super._();
   
 
 @override final  String id;
@@ -212,6 +222,10 @@ class _ChatEntry extends ChatEntry {
 @override final  String body;
 @override final  DateTime timestamp;
 @override final  String? attachedImage;
+/// Assistant chain of thought (`reasoning_content`) captured while
+/// streaming. Thinking-mode backends require replaying it verbatim on
+/// later requests; never shown in the UI.
+@override final  String? reasoning;
 
 /// Create a copy of ChatEntry
 /// with the given fields replaced by the non-null parameter values.
@@ -223,16 +237,18 @@ _$ChatEntryCopyWith<_ChatEntry> get copyWith => __$ChatEntryCopyWithImpl<_ChatEn
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.entryType, entryType) || other.entryType == entryType)&&(identical(other.body, body) || other.body == body)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.attachedImage, attachedImage) || other.attachedImage == attachedImage));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.entryType, entryType) || other.entryType == entryType)&&(identical(other.body, body) || other.body == body)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.attachedImage, attachedImage) || other.attachedImage == attachedImage)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,entryType,body,timestamp,attachedImage);
+int get hashCode {
+    return Object.hash(runtimeType,id,entryType,body,timestamp,attachedImage,reasoning);
+}
 
 @override
 String toString() {
-  return 'ChatEntry(id: $id, entryType: $entryType, body: $body, timestamp: $timestamp, attachedImage: $attachedImage)';
+    return 'ChatEntry(id: $id, entryType: $entryType, body: $body, timestamp: $timestamp, attachedImage: $attachedImage, reasoning: $reasoning)';
 }
 
 
@@ -243,7 +259,7 @@ abstract mixin class _$ChatEntryCopyWith<$Res> implements $ChatEntryCopyWith<$Re
   factory _$ChatEntryCopyWith(_ChatEntry value, $Res Function(_ChatEntry) _then) = __$ChatEntryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, EntryType entryType, String body, DateTime timestamp, String? attachedImage
+ String id, EntryType entryType, String body, DateTime timestamp, String? attachedImage, String? reasoning
 });
 
 
@@ -260,13 +276,14 @@ class __$ChatEntryCopyWithImpl<$Res>
 
 /// Create a copy of ChatEntry
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? entryType = null,Object? body = null,Object? timestamp = null,Object? attachedImage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? entryType = null,Object? body = null,Object? timestamp = null,Object? attachedImage = freezed,Object? reasoning = freezed,}) {
   return _then(_ChatEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,entryType: null == entryType ? _self.entryType : entryType // ignore: cast_nullable_to_non_nullable
 as EntryType,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as DateTime,attachedImage: freezed == attachedImage ? _self.attachedImage : attachedImage // ignore: cast_nullable_to_non_nullable
+as String?,reasoning: freezed == reasoning ? _self.reasoning : reasoning // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

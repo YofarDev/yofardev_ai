@@ -211,6 +211,13 @@ class ChatStreamingService {
       final String systemPrompt = await _promptDatasource.getSystemPrompt();
 
       final StringBuffer contentBuffer = StringBuffer();
+
+      /// Chain of thought of the current round, accumulated from reasoning
+      /// deltas. Thinking-mode backends require it verbatim on the assistant
+      /// messages of the next request, so it is stored with the entry.
+      final StringBuffer reasoningBuffer = StringBuffer();
+      String? roundReasoning() =>
+          reasoningBuffer.isEmpty ? null : reasoningBuffer.toString();
       String? fullJsonResponse;
       bool streamError = false;
 
@@ -253,6 +260,7 @@ class ChatStreamingService {
 
         final ChatEntry updatedEntry = streamingEntry.copyWith(
           body: contentBuffer.toString(),
+          reasoning: roundReasoning(),
         );
 
         final List<ChatEntry> updatedEntries = List<ChatEntry>.from(
@@ -275,6 +283,7 @@ class ChatStreamingService {
             <int, Map<String, String>>{};
 
         contentBuffer.clear();
+        reasoningBuffer.clear();
         fullJsonResponse = null;
 
         final Stream<LlmStreamChunk> instrumentedStream = _llmService
@@ -290,6 +299,9 @@ class ChatStreamingService {
                 text: (String content, bool isComplete) {},
                 error: (String message) {},
                 complete: () {},
+                reasoning: (String content) {
+                  reasoningBuffer.write(content);
+                },
                 toolCallDelta:
                     (
                       int index,
@@ -471,6 +483,10 @@ class ChatStreamingService {
             role: LlmMessageRole.assistant,
             body: '',
             toolCalls: assistantToolCalls,
+
+            // Thinking-mode backends reject the tool-result request unless
+            // the tool-calling assistant message replays its reasoning.
+            reasoningContent: roundReasoning(),
           ),
           ...toolMessages,
         ];
@@ -503,6 +519,7 @@ class ChatStreamingService {
       // Use the full JSON if available, otherwise fall back to the content buffer
       final ChatEntry finalEntry = streamingEntry.copyWith(
         body: fullJsonResponse ?? contentBuffer.toString(),
+        reasoning: roundReasoning(),
       );
 
       final List<ChatEntry> finalEntries = List<ChatEntry>.from(chat.entries);

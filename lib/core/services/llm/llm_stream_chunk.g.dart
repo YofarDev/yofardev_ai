@@ -33,6 +33,20 @@ Map<String, dynamic> _$LlmStreamChunkErrorToJson(
   'runtimeType': instance.$type,
 };
 
+_LlmStreamChunkReasoning _$LlmStreamChunkReasoningFromJson(
+  Map<String, dynamic> json,
+) => _LlmStreamChunkReasoning(
+  content: json['content'] as String,
+  $type: json['runtimeType'] as String?,
+);
+
+Map<String, dynamic> _$LlmStreamChunkReasoningToJson(
+  _LlmStreamChunkReasoning instance,
+) => <String, dynamic>{
+  'content': instance.content,
+  'runtimeType': instance.$type,
+};
+
 _LlmStreamChunkToolCallDelta _$LlmStreamChunkToolCallDeltaFromJson(
   Map<String, dynamic> json,
 ) => _LlmStreamChunkToolCallDelta(

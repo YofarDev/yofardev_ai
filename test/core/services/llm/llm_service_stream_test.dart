@@ -356,6 +356,60 @@ void main() {
       expect(arguments.length, 16);
     });
 
+    test('thinking-mode reasoning deltas are emitted as reasoning chunks', () async {
+      const LlmConfig testConfig = LlmConfig(
+        id: 'test-config-id',
+        label: 'Test Config',
+        baseUrl: 'https://api.test.com',
+        apiKey: 'test-key',
+        model: 'test-model',
+        temperature: 0.7,
+      );
+
+      final StreamedResponse mockResponse = StreamedResponse(
+        Stream<List<int>>.fromIterable(<List<int>>[
+          'data: {"choices":[{"delta":{"reasoning_content":"let me think "},"finish_reason":null}]}\n'
+              .codeUnits,
+          'data: {"choices":[{"delta":{"reasoning_content":"about it"},"finish_reason":null}]}\n'
+              .codeUnits,
+          'data: {"choices":[{"delta":{"content":"Hi!"},"finish_reason":"stop"}]}\n'
+              .codeUnits,
+          'data: [DONE]\n'.codeUnits,
+        ]),
+        200,
+        request: Request(
+          'POST',
+          Uri.parse('https://api.test.com/chat/completions'),
+        ),
+      );
+
+      when(() => mockClient.send(any())).thenAnswer((_) async => mockResponse);
+
+      final List<LlmStreamChunk> chunks = <LlmStreamChunk>[];
+      await for (final LlmStreamChunk chunk in llmService.promptModelStream(
+        messages: messages,
+        systemPrompt: 'You are helpful.',
+        config: testConfig,
+      )) {
+        chunks.add(chunk);
+      }
+
+      final List<String> reasoning = <String>[];
+      for (final LlmStreamChunk chunk in chunks) {
+        chunk.maybeWhen(reasoning: reasoning.add, orElse: () {});
+      }
+      expect(reasoning, <String>['let me think ', 'about it']);
+
+      final List<String> text = <String>[];
+      for (final LlmStreamChunk chunk in chunks) {
+        chunk.maybeWhen(
+          text: (String content, bool _) => text.add(content),
+          orElse: () {},
+        );
+      }
+      expect(text, <String>['Hi!']);
+    });
+
     test(
       'user message with attached image sends a data-URL image part',
       () async {

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'chat_tts_state.dart';
@@ -9,6 +9,7 @@ part of 'chat_tts_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $ChatTtsStateCopyWith<ChatTtsState> get copyWith => _$ChatTtsStateCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatTtsState&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.error, error) || other.error == error));
+  final _this = this as ChatTtsState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatTtsState&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, _this.audioPathsWaitingSentences)&&(identical(other.initializing, _this.initializing) || other.initializing == _this.initializing)&&(identical(other.isInitialized, _this.isInitialized) || other.isInitialized == _this.isInitialized)&&(identical(other.hasError, _this.hasError) || other.hasError == _this.hasError)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(audioPathsWaitingSentences),initializing,isInitialized,hasError,error);
+int get hashCode {
+  final _this = this as ChatTtsState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.audioPathsWaitingSentences),_this.initializing,_this.isInitialized,_this.hasError,_this.error);
+}
 
 @override
 String toString() {
-  return 'ChatTtsState(audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, isInitialized: $isInitialized, hasError: $hasError, error: $error)';
+  final _this = this as ChatTtsState;
+  return 'ChatTtsState(audioPathsWaitingSentences: ${_this.audioPathsWaitingSentences}, initializing: ${_this.initializing}, isInitialized: ${_this.isInitialized}, hasError: ${_this.hasError}, error: ${_this.error})';
 }
 
 
@@ -63,7 +69,7 @@ class _$ChatTtsStateCopyWithImpl<$Res>
 /// Create a copy of ChatTtsState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? audioPathsWaitingSentences = null,Object? initializing = null,Object? isInitialized = null,Object? hasError = null,Object? error = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(ChatTtsState(
 audioPathsWaitingSentences: null == audioPathsWaitingSentences ? _self.audioPathsWaitingSentences : audioPathsWaitingSentences // ignore: cast_nullable_to_non_nullable
 as List<Map<String, dynamic>>,initializing: null == initializing ? _self.initializing : initializing // ignore: cast_nullable_to_non_nullable
 as bool,isInitialized: null == isInitialized ? _self.isInitialized : isInitialized // ignore: cast_nullable_to_non_nullable
@@ -204,7 +210,7 @@ return $default(_that.audioPathsWaitingSentences,_that.initializing,_that.isInit
 
 
 class _ChatTtsState implements ChatTtsState {
-  const _ChatTtsState({final  List<Map<String, dynamic>> audioPathsWaitingSentences = const <Map<String, dynamic>>[], this.initializing = true, this.isInitialized = false, this.hasError = false, this.error}): _audioPathsWaitingSentences = audioPathsWaitingSentences;
+  const _ChatTtsState({ List<Map<String, dynamic>> audioPathsWaitingSentences = const <Map<String, dynamic>>[], this.initializing = true, this.isInitialized = false, this.hasError = false, this.error}): _audioPathsWaitingSentences = audioPathsWaitingSentences;
   
 
  final  List<Map<String, dynamic>> _audioPathsWaitingSentences;
@@ -229,16 +235,18 @@ _$ChatTtsStateCopyWith<_ChatTtsState> get copyWith => __$ChatTtsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatTtsState&&const DeepCollectionEquality().equals(other._audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatTtsState&&const DeepCollectionEquality().equals(other.audioPathsWaitingSentences, _audioPathsWaitingSentences)&&(identical(other.initializing, initializing) || other.initializing == initializing)&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing,isInitialized,hasError,error);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_audioPathsWaitingSentences),initializing,isInitialized,hasError,error);
+}
 
 @override
 String toString() {
-  return 'ChatTtsState(audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, isInitialized: $isInitialized, hasError: $hasError, error: $error)';
+    return 'ChatTtsState(audioPathsWaitingSentences: $audioPathsWaitingSentences, initializing: $initializing, isInitialized: $isInitialized, hasError: $hasError, error: $error)';
 }
 
 

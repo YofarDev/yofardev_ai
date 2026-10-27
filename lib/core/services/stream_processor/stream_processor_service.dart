@@ -87,6 +87,11 @@ class StreamProcessorService {
           AppLogger.error('Stream error: $message', tag: 'StreamProcessor');
           return <SentenceChunk>[SentenceChunk.error(message)];
         },
+        reasoning: (String content) {
+          // Chain-of-thought is never spoken; the caller taps the raw stream
+          // to accumulate it for the thinking-mode round-trip.
+          return const <SentenceChunk>[];
+        },
         toolCallDelta:
             (int index, String? id, String? name, String? argumentsDelta) {
               // Tool-call fragments carry no speakable content; the caller taps

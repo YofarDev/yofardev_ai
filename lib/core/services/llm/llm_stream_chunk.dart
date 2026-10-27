@@ -15,6 +15,13 @@ sealed class LlmStreamChunk with _$LlmStreamChunk {
   /// An error occurred during streaming
   const factory LlmStreamChunk.error(String message) = _LlmStreamChunkError;
 
+  /// A fragment of a thinking model's chain of thought
+  /// (`delta.reasoning_content`, DeepSeek-style). Carries no speakable
+  /// content: callers accumulate it so it can be replayed verbatim on the
+  /// next request, which thinking-mode backends require.
+  const factory LlmStreamChunk.reasoning({required String content}) =
+      _LlmStreamChunkReasoning;
+
   /// A fragment of a streamed tool call (OpenAI `delta.tool_calls`).
   ///
   /// `arguments` arrives fragmented across chunks and must be concatenated

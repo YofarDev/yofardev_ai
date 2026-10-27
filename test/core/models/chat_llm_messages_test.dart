@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
+import 'package:yofardev_ai/core/models/llm_message.dart';
 
 ChatEntry _entry(int i, {EntryType type = EntryType.user}) => ChatEntry(
   id: 'e$i',
@@ -48,5 +49,50 @@ void main() {
       46,
     ).llmMessages.map((dynamic m) => m.body as String).toList();
     expect(at46.sublist(0, at41.length), at41);
+  });
+
+  test(
+    'assistant reasoning rides llmMessages for thinking-mode round-trip',
+    () {
+      final Chat chat = Chat(
+        id: 'c',
+        entries: <ChatEntry>[
+          ChatEntry(
+            id: 'u',
+            entryType: EntryType.user,
+            body: 'question',
+            timestamp: DateTime(2026, 1, 1),
+          ),
+          ChatEntry(
+            id: 'a',
+            entryType: EntryType.yofardev,
+            body: 'answer',
+            timestamp: DateTime(2026, 1, 1),
+            reasoning: 'chain of thought',
+          ),
+        ],
+      );
+
+      final List<LlmMessage> messages = chat.llmMessages;
+      expect(messages[0].reasoningContent, isNull);
+      expect(messages[1].reasoningContent, 'chain of thought');
+    },
+  );
+
+  test('reasoning survives persistence via toJson/fromJson', () {
+    final ChatEntry entry = ChatEntry(
+      id: 'a',
+      entryType: EntryType.yofardev,
+      body: 'answer',
+      timestamp: DateTime(2026, 1, 1),
+      reasoning: 'chain of thought',
+    );
+
+    final ChatEntry restored = ChatEntry.fromJson(entry.toJson());
+    expect(restored.reasoning, 'chain of thought');
+
+    // Legacy entries persisted before the field existed stay readable.
+    final Map<String, dynamic> legacyJson = entry.toJson()..remove('reasoning');
+    expect(ChatEntry.fromJson(legacyJson).reasoning, isNull);
   });
 }

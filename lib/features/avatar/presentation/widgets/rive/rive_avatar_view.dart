@@ -221,7 +221,15 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   Widget build(BuildContext context) {
     final RiveWidgetController? controller = _controller;
     if (controller != null) {
-      return RiveWidget(controller: controller, fit: Fit.contain);
+      // The artboard's rig root sits on its bottom edge: contain scales the
+      // whole artboard to fit, and bottom-center anchors the feet to the
+      // screen bottom on viewports taller than the 800x1000 artboard aspect
+      // (default center alignment would float the character mid-screen).
+      return RiveWidget(
+        controller: controller,
+        fit: Fit.contain,
+        alignment: Alignment.bottomCenter,
+      );
     }
     if (_error != null && !kReleaseMode) {
       return ColoredBox(

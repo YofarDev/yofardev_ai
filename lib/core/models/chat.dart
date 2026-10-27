@@ -104,6 +104,10 @@ extension ChatExtension on Chat {
           // (see ChatStreamingService).
           body: entry.getMessage(isFromUser: isUser),
           attachedFile: entry.attachedImage,
+
+          // Thinking-mode backends (DeepSeek) reject the next request unless
+          // each assistant message replays its reasoning verbatim.
+          reasoningContent: isUser ? null : entry.reasoning,
         ),
       );
       if (entry.attachedImage != null) {
@@ -116,7 +120,11 @@ extension ChatExtension on Chat {
     for (int i = 0; i < messages.length; i++) {
       if (i != lastImageIndex && messages[i].attachedFile != null) {
         final LlmMessage m = messages[i];
-        messages[i] = LlmMessage(role: m.role, body: m.body);
+        messages[i] = LlmMessage(
+          role: m.role,
+          body: m.body,
+          reasoningContent: m.reasoningContent,
+        );
       }
     }
     if (messages.length > maxLlmMessages) {
