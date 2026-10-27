@@ -332,6 +332,7 @@ different features and can run in separate worktrees.
 **Decided 2026-10-27 (M1 look gate; comparison page https://claude.ai/artifact/ECQhzY7qbhxisDxZkjYU4U):**
 
 - **D1 look** → B "Storybook night" (plum ink, warm paper text, Fraunces + Manrope, scene-lit accents; final values in §3.1). Applied in M1b via `AppTheme.forScene`.
+- **D7 fonts** → Fraunces (display) + Manrope (body), bundled as assets, resolved 2026-10-27.
 - **Home layout** → L1 "Stage chips" (input for M3 Home Stage).
 
 ## 10. What I did not verify
