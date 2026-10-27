@@ -8,6 +8,10 @@ import 'ui_kit_contract.dart';
 /// The glyph of a running tool (`ToolIcon` artboard), tinted with the
 /// surface's content color; it animates while [running] (Rive only — the
 /// Flutter fallback is a static Material icon).
+///
+/// The artboard has no `reduceMotion` property, so when animations are
+/// disabled (`MediaQuery.disableAnimationsOf`) the widget writes
+/// `running = false`: the glyph holds still instead of looping.
 class ToolIcon extends StatelessWidget {
   const ToolIcon({
     super.key,
@@ -31,6 +35,7 @@ class ToolIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color tint = context.colors.onSurface;
+    final bool animate = running && !MediaQuery.disableAnimationsOf(context);
     return SizedBox.square(
       dimension: size,
       child: UiKitArtboard(
@@ -41,7 +46,7 @@ class ToolIcon extends StatelessWidget {
             UiKitContract.toolKindValues,
             kind.name,
           );
-          binding.setBool(UiKitContract.toolPropRunning, running);
+          binding.setBool(UiKitContract.toolPropRunning, animate);
           binding.setColor(UiKitContract.toolPropTint, tint);
         },
         fallback: Icon(fallbackIconFor(kind), size: size, color: tint),

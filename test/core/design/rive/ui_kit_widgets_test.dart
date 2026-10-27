@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
+import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_artboard.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_contract.dart';
@@ -100,7 +101,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byType(MarkSting),
-          matching: find.byType(Image),
+          matching: find.text(MarkSting.monogram),
         ),
         findsOneWidget,
       );
@@ -127,17 +128,52 @@ void main() {
       }
     });
 
-    testWidgets('ComposerOrb settles with animations disabled', (
+    for (final bool reduceMotion in <bool>[false, true]) {
+      final Duration expected = reduceMotion ? AppMotion.fast : AppMotion.base;
+      testWidgets('ComposerOrb transitions last $expected when '
+          'disableAnimations is $reduceMotion', (WidgetTester tester) async {
+        await pumpKit(
+          tester,
+          MediaQuery(
+            data: MediaQueryData(disableAnimations: reduceMotion),
+            child: const ComposerOrb(state: ComposerOrbState.thinking),
+          ),
+        );
+        expect(find.byIcon(Icons.more_horiz), findsOneWidget);
+        final Finder inOrb = find.descendant(
+          of: find.byType(ComposerOrb),
+          matching: find.byType(AnimatedContainer),
+        );
+        expect(tester.widget<AnimatedContainer>(inOrb).duration, expected);
+        expect(
+          tester
+              .widget<AnimatedSwitcher>(
+                find.descendant(
+                  of: find.byType(ComposerOrb),
+                  matching: find.byType(AnimatedSwitcher),
+                ),
+              )
+              .duration,
+          expected,
+        );
+      });
+    }
+
+    testWidgets('StatusGlow takes its design height when unbounded', (
       WidgetTester tester,
     ) async {
       await pumpKit(
         tester,
-        const MediaQuery(
-          data: MediaQueryData(disableAnimations: true),
-          child: ComposerOrb(state: ComposerOrbState.thinking),
+        const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[StatusGlow(phase: TalkingPhase.idle)],
         ),
       );
-      expect(find.byIcon(Icons.more_horiz), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byType(StatusGlow)).height,
+        UiKitContract.statusGlowSize.height,
+      );
     });
 
     testWidgets('ToolIcon falls back to one Material icon per kind', (
@@ -169,21 +205,32 @@ void main() {
       });
     }
 
-    testWidgets('has a 48 dp hit area and toggled semantics', (
+    testWidgets('has a 48 dp hit area and one actionable toggle node', (
       WidgetTester tester,
     ) async {
       final SemanticsHandle handle = tester.ensureSemantics();
+      final List<bool> changes = <bool>[];
       await pumpKit(
         tester,
-        RiveToggle(value: true, onChanged: (_) {}, semanticLabel: 'Tools'),
+        RiveToggle(value: true, onChanged: changes.add, semanticLabel: 'Tools'),
       );
       final Size size = tester.getSize(find.byType(RiveToggle));
       expect(size.width, greaterThanOrEqualTo(48));
       expect(size.height, greaterThanOrEqualTo(48));
       expect(
         tester.getSemantics(find.bySemanticsLabel('Tools')),
-        isSemantics(label: 'Tools', hasToggledState: true, isToggled: true),
+        isSemantics(
+          label: 'Tools',
+          hasToggledState: true,
+          isToggled: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasTapAction: true,
+        ),
       );
+      tester.semantics.tap(find.semantics.byLabel('Tools'));
+      expect(changes, <bool>[false]);
       handle.dispose();
     });
   });
@@ -225,10 +272,6 @@ void main() {
         ),
       ),
       surfaceSize: const Size(1000, 120),
-    );
-    final BuildContext context = tester.element(find.byType(MarkSting));
-    await tester.runAsync(
-      () => precacheImage(const AssetImage(MarkSting.iconAssetPath), context),
     );
     await tester.pumpAndSettle();
     await GoldenTestHelper.matchGolden(tester, 'ui_kit_fallbacks');

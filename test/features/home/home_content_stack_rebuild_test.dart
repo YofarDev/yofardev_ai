@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +26,8 @@ import 'package:yofardev_ai/features/talking/data/repositories/talking_repositor
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
+
+import '../../helpers/rive_test_assets.dart';
 
 class MockAvatarCubit extends Mock implements AvatarCubit {}
 
@@ -121,26 +121,6 @@ TalkingCubit createRealTalkingCubit() {
   );
 }
 
-/// Serves non-rive bytes for every `.riv` asset key: the flutter tester has
-/// no packaged assets, and decoding real rive bytes aborts the tester's
-/// native rive runtime. The widget's decode failure is handled by its own
-/// error path (`File.asset` resolves to null), which is all this test needs:
-/// the rebuild spy only observes widget rebuilds, not rive rendering.
-void mockRiveAssets() {
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMessageHandler('flutter/assets', (Object? message) async {
-        final String? key = const StringCodec().decodeMessage(
-          message as ByteData?,
-        );
-        if (key != null &&
-            key.startsWith('assets/rive/') &&
-            key.endsWith('.riv')) {
-          return ByteData(4);
-        }
-        return null;
-      });
-}
-
 /// Pumps [HomeContentStack] itself (not the full [HomeScreen]): the full
 /// HomeScreen harness needs six cubits plus DI-bound services, while the
 /// rebuild defect under test lives in HomeContentStack's subtree wiring.
@@ -148,7 +128,7 @@ Future<void> pumpHomeContentStack(
   WidgetTester tester, {
   required TalkingCubit talkingCubit,
 }) async {
-  mockRiveAssets();
+  serveFakeRiveAssets();
   final MockAvatarCubit avatarCubit = MockAvatarCubit();
   when(
     () => avatarCubit.stream,

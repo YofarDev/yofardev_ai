@@ -35,14 +35,21 @@ class RiveToggle extends StatelessWidget {
         ? context.tokens.scene.onAccent
         : context.colors.onSurface;
     final bool reduceMotion = MediaQuery.disableAnimationsOf(context);
-    return Semantics(
-      container: true,
-      toggled: value,
-      label: semanticLabel,
-      child: InteractiveSurface(
-        onTap: () => onChanged(!value),
-        builder: (BuildContext context, InteractiveStates states) {
-          return SizedBox(
+    void toggle() => onChanged(!value);
+    return InteractiveSurface(
+      onTap: toggle,
+      builder: (BuildContext context, InteractiveStates states) {
+        // One node carries the toggle, its label and the tap action, as in
+        // AppIconButton / AppPill; the visual below adds no semantics.
+        return Semantics(
+          toggled: value,
+          enabled: true,
+          focusable: true,
+          focused: states.focused,
+          label: semanticLabel,
+          onTap: toggle,
+          excludeSemantics: true,
+          child: SizedBox(
             width: visualSize.width,
             height: hitHeight,
             child: Center(
@@ -76,9 +83,9 @@ class RiveToggle extends StatelessWidget {
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

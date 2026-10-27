@@ -69,7 +69,8 @@ class UiKitArtboardState extends State<UiKitArtboard>
     if (file == null || !mounted) {
       return;
     }
-    final RiveWidgetController controller;
+    RiveWidgetController? controller;
+    RiveVmBinding? binding;
     try {
       controller = RiveWidgetController(
         file,
@@ -78,21 +79,26 @@ class UiKitArtboardState extends State<UiKitArtboard>
           UiKitContract.stateMachine,
         ),
       );
-    } on RiveException catch (e) {
+      binding = RiveVmBinding(controller);
+      final AppLifecycleState? lifecycle =
+          WidgetsBinding.instance.lifecycleState;
+      controller.active =
+          lifecycle == null || lifecycle == AppLifecycleState.resumed;
+      widget.apply(binding);
+    } catch (e) {
+      // Any failure (missing artboard or `Main`, a malformed view model, an
+      // apply error) keeps the fallback: release what was created, log once.
+      binding?.dispose();
+      controller?.dispose();
       if (_reported.add(widget.artboard)) {
         AppLogger.warning(
           'UI-kit artboard "${widget.artboard}" unavailable, using its '
-          'fallback: ${e.message}',
+          'fallback: $e',
           tag: _tag,
         );
       }
       return;
     }
-    final RiveVmBinding binding = RiveVmBinding(controller);
-    final AppLifecycleState? lifecycle = WidgetsBinding.instance.lifecycleState;
-    controller.active =
-        lifecycle == null || lifecycle == AppLifecycleState.resumed;
-    widget.apply(binding);
     setState(() {
       _controller = controller;
       _binding = binding;
