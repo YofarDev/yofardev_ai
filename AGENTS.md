@@ -107,6 +107,9 @@ on violation.
 - **App theme** is Storybook night (ink `#16121D`, surface `#211B2B`, Fraunces display + Manrope body): `AppTheme.forScene(scene)` (cached per scene) and `AppTheme.dark` (= living room), built by `buildLookTheme(UiLooks.storybook, …)` in `lib/core/design/theme/app_theme.dart`; look colours live only in `AppPalette` (`AppTokens` keeps only literal black/white shadow and highlight). `lib/app.dart` feeds `AvatarState.scene` (via a `BlocSelector` around the `MaterialApp` only) into `MaterialApp.theme`, so the accent cross-fades (`AppMotion.slow`) — never rebuild the router or cubits on a scene change
 - **Scene accent**: livingRoom `#F4B860`, campfire `#FF8552`, beach `#FF9478`, deepSpace `#B79CFF`; `ScenePalette.fromAccent` is the single derivation rule (onAccent, glow); check pairs with `contrastRatio` (`tokens/contrast.dart`). Roles: error `#FF6B6B`, tertiary `#B79CFF`, success `#7BD88F`, warning `#F4B860`
 - **UI kit** lives in `lib/core/design/components/` with its own barrel `components.dart` (not re-exported by `design.dart`): `AppIconButton` (48 dp hit area), `GlassPanel` (optional `shape:`), `AppPill`, `AppScaffold`, `SpeechBubbleBorder`. Glass is the only surface style. The legacy `lib/core/widgets/app_icon_button.dart` must not be used in new code (M3 replaces it)
+- **UI kit Rive widgets** (`lib/core/design/rive/ui_kit.dart`): `ComposerOrb`, `StatusGlow`, `ToolIcon`, `RiveToggle`, `MarkSting`, all drawn from the shared `assets/rive/ui/ui_kit.riv` and each with a Flutter fallback (shown while loading, and when the file or artboard is missing). Properties go through `RiveVmBinding` (`rive_vm_binding.dart`: typed, skips unchanged values; colours are VM writes, so a scene change never recreates a controller). Widget tests that mount them call `serveFakeRiveAssets()` (`test/helpers/rive_test_assets.dart`) and `UiKitFile.resetForTest()` in `setUp`; the real file is covered by `integration_test/ui_kit_rive_test.dart` (`-d macos`)
+- **Home = the Stage** (`lib/features/home/widgets/stage/`, assembled by `widgets/home_content_stack.dart`): top chips (History, More menu), live caption (`CaptionCubit`, talking barrel: the playing TTS sentence; `enabled` is persisted), running-tool chip (`ChatState.activeTool`), `StatusGlow`, and `StageComposer` (orb = mic/send/stop). Keep the Rive scene/avatar layer free of MediaQuery and theme reads
+- **Speech input**: `SpeechInputService` (`lib/core/services/speech/`) asks for the microphone on the first mic tap, never at launch; a denied or unavailable mic shows a toast, and where STT is unsupported (`isSupported` false) the idle orb focuses the text field instead. Home gets it by constructor from `app_router.dart`
 
 ### Gotchas
 
@@ -122,7 +125,9 @@ on violation.
   in `lib/features/avatar/presentation/rive/avatar_rive_contract.dart`.
   Rive types must stay in `lib/features/avatar/presentation/` and
   `lib/core/design/rive/` (UI-kit Rive widgets; enforced by
-  `test/architecture_test.dart`). macOS: Impeller is disabled in
+  `test/architecture_test.dart`). The UI kit is `assets/rive/ui/ui_kit.riv`
+  and each scene has a poster `assets/rive/posters/<sceneId>.webp` (both
+  rebuilt by `frive.sh`). macOS: Impeller is disabled in
   `macos/Runner/Info.plist` (Rive crashes the Impeller Metal backend)
 - No CI workflows in this repo — the quality gate is local (`./scripts/fverify.sh`)
 - New features: use `./scripts/fgen.sh`, then wire DI (`service_locator.dart`) and route (`core/router/app_router.dart`) manually — a generated scaffold is not routed/registered until then
