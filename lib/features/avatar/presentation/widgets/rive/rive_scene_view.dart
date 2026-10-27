@@ -4,7 +4,7 @@ import 'package:rive/rive.dart';
 
 import '../../../../../core/models/avatar_scene.dart';
 import '../../../../../core/utils/logger.dart';
-import '../../rive/avatar_rive_binding.dart';
+import '../../../../../core/design/rive/rive_vm_binding.dart';
 import '../../rive/avatar_rive_contract.dart';
 import 'latest_load_gate.dart';
 
@@ -37,7 +37,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     with WidgetsBindingObserver {
   File? _file;
   RiveWidgetController? _controller;
-  AvatarRiveBinding? _binding;
+  RiveVmBinding? _binding;
   AvatarScene? _loadedScene;
   String? _error;
 
@@ -68,7 +68,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
       _loadScene(widget.scene);
       return;
     }
-    final AvatarRiveBinding? binding = _binding;
+    final RiveVmBinding? binding = _binding;
     if (binding == null) {
       return;
     }
@@ -119,7 +119,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
           AvatarRiveContract.sceneStateMachine,
         ),
       );
-      final AvatarRiveBinding binding = AvatarRiveBinding(controller);
+      final RiveVmBinding binding = RiveVmBinding(controller);
       controller.stateMachine.addEventListener(_onRiveEvent);
       if (!mounted) {
         binding.dispose();

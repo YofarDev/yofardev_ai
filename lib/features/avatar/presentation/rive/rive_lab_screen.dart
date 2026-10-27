@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
 
-import 'avatar_rive_binding.dart';
+import '../../../../core/design/rive/rive_vm_binding.dart';
 import 'avatar_rive_contract.dart';
 
 /// Debug-only playground for the Rive avatar and scene files.
@@ -22,11 +22,11 @@ class RiveLabScreen extends StatefulWidget {
 class _RiveLabScreenState extends State<RiveLabScreen> {
   File? _avatarFile;
   RiveWidgetController? _avatarController;
-  AvatarRiveBinding? _avatarBinding;
+  RiveVmBinding? _avatarBinding;
 
   File? _sceneFile;
   RiveWidgetController? _sceneController;
-  AvatarRiveBinding? _sceneBinding;
+  RiveVmBinding? _sceneBinding;
   String _sceneId = AvatarRiveContract.defaultSceneId;
 
   final List<String> _eventLog = <String>[];
@@ -81,7 +81,7 @@ class _RiveLabScreenState extends State<RiveLabScreen> {
       setState(() {
         _avatarFile = file;
         _avatarController = controller;
-        _avatarBinding = AvatarRiveBinding(controller);
+        _avatarBinding = RiveVmBinding(controller);
       });
     } on Exception catch (e) {
       if (mounted) {
@@ -121,7 +121,7 @@ class _RiveLabScreenState extends State<RiveLabScreen> {
         _disposeScene();
         _sceneFile = file;
         _sceneController = controller;
-        _sceneBinding = AvatarRiveBinding(controller);
+        _sceneBinding = RiveVmBinding(controller);
         _sceneId = sceneId;
       });
     } on Exception catch (e) {
@@ -271,7 +271,7 @@ class _RiveLabScreenState extends State<RiveLabScreen> {
   }
 
   Widget _buildControls() {
-    final AvatarRiveBinding? avatarBinding = _avatarBinding;
+    final RiveVmBinding? avatarBinding = _avatarBinding;
     if (avatarBinding == null) {
       return const Center(child: Text('avatar.riv not loaded'));
     }

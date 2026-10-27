@@ -1,35 +1,42 @@
-import 'dart:developer' as developer;
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:rive/rive.dart';
+
+import '../../utils/logger.dart';
 
 /// Property access layer for one bound Rive artboard.
 ///
 /// The contract prefers data binding (`<Artboard>VM` view models); if a file
 /// has no exported view model, or a property is missing from it, the same
 /// property names are used against state-machine inputs instead (enum →
-/// number = index, trigger → trigger). This mirrors the fallback rule in
-/// `rive/CONTRACT.md` and keeps view code free of runtime-version concerns.
+/// number = index, number → number, boolean → boolean, trigger → trigger).
+/// Colors have no input equivalent: a missing color property is only logged.
+/// This mirrors the fallback rule in `rive/CONTRACT.md` and keeps view code
+/// free of runtime-version concerns.
 ///
 /// Owns nothing but the resolved property handles: the caller owns the
 /// [RiveWidgetController] and the [File]. Call [dispose] before disposing
 /// those.
-class AvatarRiveBinding {
+class RiveVmBinding {
   /// Creates a binding for [controller], attempting auto data binding once.
-  AvatarRiveBinding(this.controller) {
+  RiveVmBinding(this.controller) {
     try {
       _viewModelInstance = controller.dataBind(DataBind.auto());
     } on RiveDataBindException catch (e, st) {
-      developer.log(
+      AppLogger.debug(
         'Rive data binding unavailable, falling back to state machine '
         'inputs: ${e.message}',
+        tag: _tag,
         error: e,
         stackTrace: st,
       );
       _viewModelInstance = null;
     }
   }
+
+  static const String _tag = 'RiveVmBinding';
 
   final RiveWidgetController controller;
 
@@ -43,28 +50,36 @@ class AvatarRiveBinding {
       <String, ViewModelInstanceEnum?>{};
   final Map<String, ViewModelInstanceNumber?> _numbers =
       <String, ViewModelInstanceNumber?>{};
+  final Map<String, ViewModelInstanceBoolean?> _booleans =
+      <String, ViewModelInstanceBoolean?>{};
+  final Map<String, ViewModelInstanceColor?> _colors =
+      <String, ViewModelInstanceColor?>{};
   final Map<String, ViewModelInstanceTrigger?> _triggers =
       <String, ViewModelInstanceTrigger?>{};
   // ignore: deprecated_member_use
   final Map<String, NumberInput?> _numberInputs = <String, NumberInput?>{};
   // ignore: deprecated_member_use
+  final Map<String, BooleanInput?> _booleanInputs = <String, BooleanInput?>{};
+  // ignore: deprecated_member_use
   final Map<String, TriggerInput?> _triggerInputs = <String, TriggerInput?>{};
 
-  /// Last value written per property name; an unchanged value is not
-  /// written again.
-  final Map<String, Object> _lastValues = <String, Object>{};
-
-  /// Names already reported as missing, so each is logged once.
-  final Set<String> _reportedMissing = <String>{};
+  /// Last written values (an unchanged value is not written again) and the
+  /// names already reported as missing (each is logged once).
+  final RiveWriteMemo _memo = RiveWriteMemo();
 
   /// Sets an enum property by value name; falls back to the property index.
   void setEnum(String name, List<String> values, String value) {
     final int index = values.indexOf(value);
     if (index < 0) {
-      developer.log('Unknown enum value "$value" for property "$name"');
+      if (_memo.firstReport('$name=$value')) {
+        AppLogger.warning(
+          'Unknown enum value "$value" for property "$name"',
+          tag: _tag,
+        );
+      }
       return;
     }
-    if (_lastValues[name] == value) {
+    if (_memo.isUnchanged(name, value)) {
       return;
     }
     final ViewModelInstanceEnum? enumProperty = _enums.putIfAbsent(
@@ -73,17 +88,17 @@ class AvatarRiveBinding {
     );
     if (enumProperty != null) {
       enumProperty.value = value;
-      _lastValues[name] = value;
+      _memo.record(name, value);
       return;
     }
     if (_writeNumberInput(name, index.toDouble())) {
-      _lastValues[name] = value;
+      _memo.record(name, value);
     }
   }
 
   /// Sets a number property.
   void setNumber(String name, double value) {
-    if (_lastValues[name] == value) {
+    if (_memo.isUnchanged(name, value)) {
       return;
     }
     final ViewModelInstanceNumber? property = _numbers.putIfAbsent(
@@ -92,12 +107,58 @@ class AvatarRiveBinding {
     );
     if (property != null) {
       property.value = value;
-      _lastValues[name] = value;
+      _memo.record(name, value);
       return;
     }
     if (_writeNumberInput(name, value)) {
-      _lastValues[name] = value;
+      _memo.record(name, value);
     }
+  }
+
+  /// Sets a boolean property; falls back to a boolean state-machine input.
+  void setBool(String name, bool value) {
+    if (_memo.isUnchanged(name, value)) {
+      return;
+    }
+    final ViewModelInstanceBoolean? property = _booleans.putIfAbsent(
+      name,
+      () => _viewModelInstance?.boolean(name),
+    );
+    if (property != null) {
+      property.value = value;
+      _memo.record(name, value);
+      return;
+    }
+    // ignore: deprecated_member_use
+    final BooleanInput? input = _booleanInputs.putIfAbsent(
+      name,
+      // ignore: deprecated_member_use
+      () => controller.stateMachine.boolean(name),
+    );
+    if (input != null) {
+      input.value = value;
+      _memo.record(name, value);
+      return;
+    }
+    _reportMissing(name, 'boolean');
+  }
+
+  /// Sets a color property. State machines have no color input, so a file
+  /// without the view-model property only gets a one-time log.
+  void setColor(String name, Color value) {
+    if (_memo.isUnchanged(name, value)) {
+      return;
+    }
+    final ViewModelInstanceColor? property = _colors.putIfAbsent(
+      name,
+      () => _viewModelInstance?.color(name),
+    );
+    if (property != null) {
+      property.value = value;
+      _memo.record(name, value);
+      return;
+    }
+    _reportMissing(name, 'color');
   }
 
   /// Contract fallback: the same names as state-machine inputs when the file
@@ -149,8 +210,8 @@ class AvatarRiveBinding {
   ViewModelInstance? get viewModelInstance => _viewModelInstance;
 
   void _reportMissing(String name, String kind) {
-    if (_reportedMissing.add(name)) {
-      developer.log('Rive property "$name" not found ($kind).');
+    if (_memo.firstReport(name)) {
+      AppLogger.warning('Rive property "$name" not found ($kind).', tag: _tag);
     }
   }
 
@@ -160,16 +221,41 @@ class AvatarRiveBinding {
     for (final ViewModelInstanceValue? property in <ViewModelInstanceValue?>[
       ..._enums.values,
       ..._numbers.values,
+      ..._booleans.values,
+      ..._colors.values,
       ..._triggers.values,
     ]) {
       property?.dispose();
     }
     _enums.clear();
     _numbers.clear();
+    _booleans.clear();
+    _colors.clear();
     _triggers.clear();
     _numberInputs.clear();
+    _booleanInputs.clear();
     _triggerInputs.clear();
-    _lastValues.clear();
+    _memo.clearValues();
     _viewModelInstance = null;
   }
+}
+
+/// The runtime-independent bookkeeping of [RiveVmBinding]: which value was
+/// last written per property name, and which keys were already reported.
+@visibleForTesting
+class RiveWriteMemo {
+  final Map<String, Object> _lastValues = <String, Object>{};
+  final Set<String> _reported = <String>{};
+
+  /// Whether [value] is the value last [record]ed for [name].
+  bool isUnchanged(String name, Object value) => _lastValues[name] == value;
+
+  /// Remembers [value] as written for [name].
+  void record(String name, Object value) => _lastValues[name] = value;
+
+  /// True the first time [key] is seen, false afterwards (log once).
+  bool firstReport(String key) => _reported.add(key);
+
+  /// Forgets the written values; reported keys stay reported.
+  void clearValues() => _lastValues.clear();
 }
