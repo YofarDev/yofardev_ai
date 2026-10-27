@@ -318,4 +318,50 @@ void main() {
       }
     },
   );
+
+  group('removed look-gate code stays removed', () {
+    final List<File> dartFiles = <String>['lib', 'test']
+        .expand(
+          (String d) =>
+              Directory(d).listSync(recursive: true).whereType<File>(),
+        )
+        .where(
+          (File f) =>
+              f.path.endsWith('.dart') &&
+              f.path != 'test/architecture_test.dart',
+        )
+        .toList();
+
+    const List<String> banned = <String>[
+      'AppSurfaceStyle',
+      'celFill',
+      'LabFontFetching',
+      'makeLookTestable',
+      'UiLooks.neon',
+      'UiLooks.cel',
+    ];
+
+    for (final String token in banned) {
+      test('no $token under lib/ and test/', () {
+        for (final File f in dartFiles) {
+          expect(
+            f.readAsStringSync().contains(token),
+            isFalse,
+            reason: '${f.path} still mentions $token',
+          );
+        }
+      });
+    }
+
+    test('no Outfit or PlusJakartaSans under lib/', () {
+      for (final File f in files) {
+        final String content = f.readAsStringSync();
+        expect(
+          content.contains('Outfit') || content.contains('PlusJakartaSans'),
+          isFalse,
+          reason: '${f.path} still references a removed font',
+        );
+      }
+    });
+  });
 }

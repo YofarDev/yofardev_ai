@@ -1,7 +1,10 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
 
 import 'app_glass.dart';
 import 'app_palette.dart';
+import 'scene_palette.dart';
 
 /// Design tokens that [ColorScheme] and [TextTheme] cannot express, exposed as
 /// a [ThemeExtension]. Read them with `context.tokens`.
@@ -18,6 +21,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.glassThin,
     required this.glassRegular,
     required this.glassThick,
+    required this.scene,
+    required this.outlineWidth,
+    required this.radiusScale,
   });
 
   final Color background;
@@ -31,11 +37,22 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final AppGlassStyle glassRegular;
   final AppGlassStyle glassThick;
 
-  /// The app's only palette today (cosmic dark).
+  /// Accent palette of the current scene.
+  final ScenePalette scene;
+
+  /// Stroke width of surface outlines.
+  final double outlineWidth;
+
+  /// Multiplier applied to base corner radii through [radius].
+  final double radiusScale;
+
+  /// Storybook night in the living room: the tokens of `AppTheme.dark`.
+  /// `buildLookTheme` derives every other scene from these by swapping the
+  /// look-specific values (a test pins that it reproduces them exactly).
   static const AppTokens dark = AppTokens(
-    background: AppPalette.background,
-    glassSurface: AppPalette.glassSurface,
-    glassBorder: AppPalette.glassBorder,
+    background: AppPalette.ink,
+    glassSurface: AppPalette.surface,
+    glassBorder: AppPalette.outline,
     success: AppPalette.success,
     warning: AppPalette.warning,
     shadow: Color(0xFF000000),
@@ -51,7 +68,17 @@ class AppTokens extends ThemeExtension<AppTokens> {
       fillAlpha: 0.22,
       borderAlpha: 0.55,
     ),
+    scene: ScenePalette(
+      accent: AppPalette.livingRoomAccent,
+      onAccent: AppPalette.ink,
+      glow: AppPalette.livingRoomGlow,
+    ),
+    outlineWidth: 1,
+    radiusScale: 1.15,
   );
+
+  /// Scales a base corner radius by [radiusScale].
+  double radius(double base) => base * radiusScale;
 
   AppGlassStyle glass(AppGlassLevel level) {
     return switch (level) {
@@ -73,6 +100,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
     AppGlassStyle? glassThin,
     AppGlassStyle? glassRegular,
     AppGlassStyle? glassThick,
+    ScenePalette? scene,
+    double? outlineWidth,
+    double? radiusScale,
   }) {
     return AppTokens(
       background: background ?? this.background,
@@ -85,6 +115,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
       glassThin: glassThin ?? this.glassThin,
       glassRegular: glassRegular ?? this.glassRegular,
       glassThick: glassThick ?? this.glassThick,
+      scene: scene ?? this.scene,
+      outlineWidth: outlineWidth ?? this.outlineWidth,
+      radiusScale: radiusScale ?? this.radiusScale,
     );
   }
 
@@ -104,6 +137,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
       glassThin: AppGlassStyle.lerp(glassThin, other.glassThin, t),
       glassRegular: AppGlassStyle.lerp(glassRegular, other.glassRegular, t),
       glassThick: AppGlassStyle.lerp(glassThick, other.glassThick, t),
+      scene: ScenePalette.lerp(scene, other.scene, t),
+      outlineWidth: lerpDouble(outlineWidth, other.outlineWidth, t)!,
+      radiusScale: lerpDouble(radiusScale, other.radiusScale, t)!,
     );
   }
 
@@ -119,7 +155,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
         other.highlight == highlight &&
         other.glassThin == glassThin &&
         other.glassRegular == glassRegular &&
-        other.glassThick == glassThick;
+        other.glassThick == glassThick &&
+        other.scene == scene &&
+        other.outlineWidth == outlineWidth &&
+        other.radiusScale == radiusScale;
   }
 
   @override
@@ -134,5 +173,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
     glassThin,
     glassRegular,
     glassThick,
+    scene,
+    outlineWidth,
+    radiusScale,
   );
 }

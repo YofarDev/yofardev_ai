@@ -38,6 +38,18 @@ class ModernChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The bubble owns its foreground: on the accent fill (user) only
+    // onPrimary is legible, so callers' unstyled text and icons follow it.
+    final Color foreground = isUser
+        ? context.colors.onPrimary
+        : context.colors.onSurface;
+    final Widget content = IconTheme.merge(
+      data: IconThemeData(color: foreground),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(color: foreground),
+        child: child,
+      ),
+    );
     return LayoutBuilder(
       // Fix #9: Use LayoutBuilder instead of MediaQuery for max-width constraint
       builder: (BuildContext context, BoxConstraints constraints) {
@@ -102,7 +114,7 @@ class ModernChatBubble extends StatelessWidget {
                             : Alignment.bottomRight,
                         colors: isUser
                             ? <Color>[
-                                // Fix #1: Slightly desaturated blue — less harsh than pure cyan
+                                // Fix #1: the scene accent, fading slightly toward the tail
                                 context.colors.primary,
                                 context.colors.primary.withValues(alpha: 0.88),
                               ]
@@ -143,13 +155,13 @@ class ModernChatBubble extends StatelessWidget {
                     child: isUser
                         ? ClipRRect(
                             borderRadius: BorderRadius.zero,
-                            child: child,
+                            child: content,
                           )
                         : ClipRRect(
                             borderRadius: BorderRadius.zero,
                             child: BackdropFilter(
                               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: child,
+                              child: content,
                             ),
                           ),
                   ),

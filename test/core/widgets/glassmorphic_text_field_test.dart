@@ -7,7 +7,8 @@ import 'package:yofardev_ai/core/widgets/glassmorphic/glassmorphic_text_field.da
 /// Pins the drawn hint/label geometry of [GlassmorphicTextField] to what the
 /// pre-migration widget (direct `GoogleFonts.plusJakartaSans` styles, commit
 /// 9344dff) drew under `AppTheme.dark`. The expected values were measured by
-/// pumping that old widget next to the migrated one.
+/// pumping that old widget next to the migrated one; since M1b the family is
+/// the theme's text font, Manrope.
 void main() {
   setUpAll(() {
     GoogleFonts.config.allowRuntimeFetching = false;
@@ -27,7 +28,7 @@ void main() {
     await tester.pump();
 
     final TextStyle hint = tester.widget<Text>(find.text('Hint')).style!;
-    expect(hint.fontFamily, contains('PlusJakartaSans'));
+    expect(hint.fontFamily, contains('Manrope'));
     expect(hint.fontSize, 14);
     expect(hint.fontWeight, FontWeight.w400);
     expect(hint.letterSpacing, 0.5);
@@ -37,7 +38,7 @@ void main() {
     final TextStyle label = DefaultTextStyle.of(
       tester.element(find.text('Label').first),
     ).style;
-    expect(label.fontFamily, contains('PlusJakartaSans'));
+    expect(label.fontFamily, contains('Manrope'));
     expect(label.fontFamily, contains('500'));
     expect(label.fontSize, 14);
     expect(label.fontWeight, FontWeight.w500);

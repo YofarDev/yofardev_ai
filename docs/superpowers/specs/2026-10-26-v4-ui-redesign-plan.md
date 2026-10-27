@@ -100,15 +100,17 @@ Three directions were considered.
 
 ### 3.1 Design language (my proposal; every value is a starting point to react to)
 
-- **Ink + scene, not neon.** Neutral warm-ink base (`#0E0F14`-ish), text near-white at three
-  fixed opacities. **One** signature accent used only for the primary action and active state.
-- **Scene-adaptive accent.** Each scene ships a 2-colour palette (livingRoom warm lamp-amber,
-  campfire ember, beach sunset coral, deepSpace violet). The accent and glow tint cross-fade when
-  the scene changes (the LLM can change it mid-chat), so the UI feels *lit by* the world.
+- **Ink + scene, not neon.** Final (look "Storybook night", see §9): plum ink `#16121D`, surface
+  `#211B2B`, warm-paper text `#F3EBDD`, outline `#3A3046`. **One** accent used only for the primary
+  action and active state.
+- **Scene-adaptive accent.** Final accents: livingRoom `#F4B860` (lamp amber), campfire `#FF8552`
+  (ember), beach `#FF9478` (sunset coral), deepSpace `#B79CFF` (violet). The accent and glow tint
+  cross-fade when the scene changes (the LLM can change it mid-chat), so the UI feels *lit by* the
+  world.
 - **Real glass, rationed.** At most **two** live blurs on screen (dock + sheet header). Message
   bubbles and list rows use opaque tinted fills + a 1 px top highlight, which look like glass
   and cost nothing.
-- **Type.** One display face for titles/captions, one text face for body; **bundled** as assets,
+- **Type.** Final: Fraunces (display/headline/title) + Manrope (body/label); **bundled** as assets,
   never fetched. Captions get the biggest, most deliberate type in the app.
 - **Shape.** Radii scale 8 / 14 / 22 / 32 and a pill; the composer is a pill, sheets have 32 top
   radius, tool chips are pills.
@@ -326,6 +328,12 @@ different features and can run in separate worktrees.
 | D5 | Customize sheet + Live voice mode | **Customize in 4.0 (cheap), Live mode after 4.0** · both in · neither |
 | D6 | Markdown package | **`flutter_markdown_plus`** (check maintenance when adding) · custom minimal renderer |
 | D7 | Fonts | **Bundle two families (I'll shortlist in M1)** · keep Outfit + Plus Jakarta Sans, bundled |
+
+**Decided 2026-10-27 (M1 look gate; comparison page https://claude.ai/artifact/ECQhzY7qbhxisDxZkjYU4U):**
+
+- **D1 look** → B "Storybook night" (plum ink, warm paper text, Fraunces + Manrope, scene-lit accents; final values in §3.1). Applied in M1b via `AppTheme.forScene`.
+- **D7 fonts** → Fraunces (display) + Manrope (body), bundled as assets, resolved 2026-10-27.
+- **Home layout** → L1 "Stage chips" (input for M3 Home Stage).
 
 ## 10. What I did not verify
 

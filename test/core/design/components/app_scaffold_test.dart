@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:yofardev_ai/core/design/components/components.dart';
-import 'package:yofardev_ai/core/design/theme/app_theme.dart';
+import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 
 void main() {

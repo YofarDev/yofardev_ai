@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_dynamic_calls, use_build_context_synchronously
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import '../../../core/models/sound_effects.dart';
 import '../../../core/models/chat.dart';
 import '../../../core/design/design.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
+import '../../../core/router/route_constants.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
 import '../widgets/api_key_field.dart';
@@ -137,6 +139,20 @@ class SettingsPageState extends State<SettingsPage> {
                       const FunctionCallingConfigTile(),
                       const SizedBox(height: 16),
                       const MemoryConfigTile(),
+                      if (kDebugMode) ...<Widget>[
+                        const SizedBox(height: 16),
+                        // ignore-l10n: debug-only entry points
+                        ListTile(
+                          leading: const Icon(Icons.palette_outlined),
+                          title: const Text('UI lab'),
+                          onTap: () => context.push(RouteConstants.uiLab),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.pets_outlined),
+                          title: const Text('Rive lab'),
+                          onTap: () => context.push(RouteConstants.riveLab),
+                        ),
+                      ],
                       const SizedBox(height: 32),
                     ],
                   ),

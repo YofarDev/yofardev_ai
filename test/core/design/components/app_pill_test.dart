@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
 import 'package:yofardev_ai/core/design/components/components.dart';
+import 'package:yofardev_ai/core/design/design.dart';
 
 import '../../../helpers/golden_test_helper.dart';
 import 'component_test_harness.dart';
@@ -162,6 +163,48 @@ void main() {
         ),
       );
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('AppPill glass accent', () {
+    testWidgets('selected fill uses scene.accent, not colorScheme.primary', (
+      WidgetTester tester,
+    ) async {
+      const Color amber = Color(0xFFFFC24B);
+      final ThemeData base = AppTheme.dark;
+      final ThemeData theme = base.copyWith(
+        extensions: <ThemeExtension<dynamic>>[
+          AppTokens.dark.copyWith(
+            scene: const ScenePalette(
+              accent: amber,
+              onAccent: Color(0xFF1B1830),
+              glow: Color(0x59FFC24B),
+            ),
+          ),
+        ],
+      );
+      expect(theme.colorScheme.primary, isNot(amber));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: Material(
+            child: Center(
+              child: AppPill(label: 'Pill', onTap: () {}, selected: true),
+            ),
+          ),
+        ),
+      );
+      final Container container = tester.widget<Container>(
+        find.descendant(
+          of: find.byType(AppPill),
+          matching: find.byType(Container),
+        ),
+      );
+      final BoxDecoration decoration = container.decoration! as BoxDecoration;
+      expect(decoration.gradient, isNull);
+      expect(decoration.color, amber.withValues(alpha: 0.2));
+      final Text text = tester.widget<Text>(find.text('Pill'));
+      expect(text.style!.color, amber);
     });
   });
 

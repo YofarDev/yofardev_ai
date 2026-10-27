@@ -51,12 +51,12 @@ void main() {
       expect(AppTokens.dark.glassThick.borderAlpha, 0.55);
     });
 
-    test('dark colors match the current palette', () {
-      expect(AppTokens.dark.background, const Color(0xFF0A0E1A));
-      expect(AppTokens.dark.glassSurface, const Color(0xFF1A1F35));
-      expect(AppTokens.dark.glassBorder, const Color(0xFF2A3148));
-      expect(AppTokens.dark.success, const Color(0xFF00D68F));
-      expect(AppTokens.dark.warning, const Color(0xFFFFB020));
+    test('dark colors are the Storybook night palette', () {
+      expect(AppTokens.dark.background, const Color(0xFF16121D));
+      expect(AppTokens.dark.glassSurface, const Color(0xFF211B2B));
+      expect(AppTokens.dark.glassBorder, const Color(0xFF3A3046));
+      expect(AppTokens.dark.success, const Color(0xFF7BD88F));
+      expect(AppTokens.dark.warning, const Color(0xFFF4B860));
       expect(AppTokens.dark.shadow, const Color(0xFF000000));
       expect(AppTokens.dark.highlight, const Color(0xFFFFFFFF));
     });
@@ -96,6 +96,63 @@ void main() {
       expect(
         AppTokens.dark.copyWith(success: const Color(0xFF000001)),
         isNot(AppTokens.dark),
+      );
+    });
+  });
+
+  group('AppTokens look tokens', () {
+    test('dark is Storybook night in the living room', () {
+      expect(AppTokens.dark.scene.accent, const Color(0xFFF4B860));
+      expect(AppTokens.dark.scene.onAccent, const Color(0xFF16121D));
+      expect(AppTokens.dark.scene.glow, const Color(0x59F4B860));
+      expect(AppTokens.dark.outlineWidth, 1);
+      expect(AppTokens.dark.radiusScale, 1.15);
+    });
+
+    test('radius scales the base value', () {
+      expect(AppTokens.dark.radius(14), closeTo(16.1, 1e-9));
+      expect(AppTokens.dark.copyWith(radiusScale: 1.5).radius(14), 21);
+    });
+
+    test('lerp interpolates scene, outlineWidth and radiusScale', () {
+      const ScenePalette scene = ScenePalette(
+        accent: Color(0xFFFF9478),
+        onAccent: Color(0xFF16121D),
+        glow: Color(0x59FF9478),
+      );
+      final AppTokens other = AppTokens.dark.copyWith(
+        scene: scene,
+        outlineWidth: 2.5,
+        radiusScale: 2.0,
+      );
+      final AppTokens result = AppTokens.dark.lerp(other, 0.5);
+      expect(result.scene, ScenePalette.lerp(AppTokens.dark.scene, scene, 0.5));
+      expect(result.outlineWidth, 1.75);
+      expect(result.radiusScale, closeTo(1.575, 1e-9));
+    });
+
+    test('copyWith round-trips the new fields', () {
+      const ScenePalette scene = ScenePalette(
+        accent: Color(0xFFFF9478),
+        onAccent: Color(0xFF16121D),
+        glow: Color(0x59FF9478),
+      );
+      final AppTokens changed = AppTokens.dark.copyWith(
+        scene: scene,
+        outlineWidth: 2,
+        radiusScale: 1.35,
+      );
+      expect(changed.scene, scene);
+      expect(changed.outlineWidth, 2);
+      expect(changed.radiusScale, 1.35);
+      expect(changed, isNot(AppTokens.dark));
+      expect(
+        changed.copyWith(
+          scene: AppTokens.dark.scene,
+          outlineWidth: 1,
+          radiusScale: 1.15,
+        ),
+        AppTokens.dark,
       );
     });
   });

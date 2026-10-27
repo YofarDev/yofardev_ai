@@ -5,9 +5,16 @@ import 'package:flutter/material.dart';
 import '../context_ext.dart';
 import '../tokens/app_glass.dart';
 import '../tokens/app_radius.dart';
+import '../tokens/app_tokens.dart';
 
-/// A glass surface: diagonal gradient fill and a 1.5 px border, both driven
-/// by the [level]'s tokens.
+/// A raised glass surface: a diagonal gradient fill and an outline, both
+/// driven by the [level]'s tokens.
+///
+/// By default the panel is a rounded rectangle ([borderRadius]). Pass [shape]
+/// for any other outline (a stadium, a speech bubble with a tail...): the
+/// fill, the border and the blur then follow it. An [OutlinedBorder] shape
+/// gets the glass border as its side; any other [ShapeBorder] keeps its own
+/// border. [shape] takes precedence over [borderRadius].
 ///
 /// The backdrop blur is expensive, so it is applied only when [blur] is true
 /// (use it for a few large surfaces, never for list items).
@@ -19,6 +26,7 @@ class GlassPanel extends StatelessWidget {
     this.borderRadius,
     this.blur = false,
     this.padding,
+    this.shape,
   });
 
   final Widget child;
@@ -27,45 +35,69 @@ class GlassPanel extends StatelessWidget {
   final bool blur;
   final EdgeInsetsGeometry? padding;
 
+  /// Custom outline; null keeps the rounded rectangle of [borderRadius].
+  final ShapeBorder? shape;
+
   @override
   Widget build(BuildContext context) {
-    final AppGlassStyle style = context.tokens.glass(level);
-    final Color fill = context.tokens.glassSurface;
-    final Color border = context.tokens.glassBorder;
+    final AppTokens tokens = context.tokens;
+    final AppGlassStyle style = tokens.glass(level);
+    final Color fill = tokens.glassSurface;
+    final Color border = tokens.glassBorder;
     final BorderRadius radius =
-        borderRadius ?? BorderRadius.circular(AppRadius.lg);
-
-    final Widget panel = DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            fill.withValues(alpha: style.fillAlpha),
-            fill.withValues(alpha: style.fillAlpha * 0.4),
-          ],
-        ),
-        borderRadius: radius,
-        border: Border.all(
-          color: border.withValues(alpha: style.borderAlpha),
-          width: 1.5,
-        ),
-      ),
-      child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
+        borderRadius ?? BorderRadius.circular(tokens.radius(AppRadius.lg));
+    final ShapeBorder? customShape = shape;
+    final Widget content = Padding(
+      padding: padding ?? EdgeInsets.zero,
+      child: child,
     );
+
+    final LinearGradient gradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: <Color>[
+        fill.withValues(alpha: style.fillAlpha),
+        fill.withValues(alpha: style.fillAlpha * 0.4),
+      ],
+    );
+    final BorderSide side = BorderSide(
+      color: border.withValues(alpha: style.borderAlpha),
+      width: tokens.outlineWidth,
+    );
+
+    final Decoration decoration;
+    if (customShape == null) {
+      decoration = BoxDecoration(
+        gradient: gradient,
+        borderRadius: radius,
+        border: Border.fromBorderSide(side),
+      );
+    } else {
+      decoration = ShapeDecoration(
+        gradient: gradient,
+        shape: customShape is OutlinedBorder
+            ? customShape.copyWith(side: side)
+            : customShape,
+      );
+    }
+    final Widget panel = DecoratedBox(decoration: decoration, child: content);
 
     if (!blur) {
       return panel;
     }
-    return ClipRRect(
-      borderRadius: radius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: style.blurSigma,
-          sigmaY: style.blurSigma,
-        ),
-        child: panel,
+    final Widget blurred = BackdropFilter(
+      filter: ImageFilter.blur(
+        sigmaX: style.blurSigma,
+        sigmaY: style.blurSigma,
       ),
+      child: panel,
+    );
+    if (customShape == null) {
+      return ClipRRect(borderRadius: radius, child: blurred);
+    }
+    return ClipPath(
+      clipper: ShapeBorderClipper(shape: customShape),
+      child: blurred,
     );
   }
 }
