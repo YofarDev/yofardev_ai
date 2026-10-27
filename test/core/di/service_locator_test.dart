@@ -7,6 +7,7 @@ import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
+import 'package:yofardev_ai/core/services/speech/speech_input_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/avatar/data/datasources/avatar_local_datasource.dart';
 import 'package:yofardev_ai/features/chat/chat.dart';
@@ -65,6 +66,8 @@ void main() {
     expect(getIt<AppLifecycleService>(), isNotNull);
     expect(getIt<InterruptionService>(), isNotNull);
     expect(getIt<DemoService>(), isNotNull);
+    // Construction touches no plugin: SpeechToText is created on start().
+    expect(getIt<SpeechInputService>(), isNotNull);
 
     // Datasources resolve too (constructed lazily via services above)
     expect(getIt<SettingsLocalDatasource>(), isNotNull);

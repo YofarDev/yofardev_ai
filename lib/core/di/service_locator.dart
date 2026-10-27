@@ -62,6 +62,8 @@ import '../services/llm/llm_streaming_service.dart';
 import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
 import '../services/settings_local_datasource.dart';
+import '../services/speech/speech_input_service.dart';
+import '../services/speech/speech_to_text_input_service.dart';
 import '../services/stream_processor/stream_processor_service.dart';
 import '../../features/chat/domain/services/chat_streaming_service.dart';
 import '../utils/logger.dart';
@@ -80,6 +82,10 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
   getIt.registerLazySingleton<InterruptionService>(() => InterruptionService());
+  // Lazy: no mic permission or recognizer setup until the first start().
+  getIt.registerLazySingleton<SpeechInputService>(
+    () => SpeechToTextInputService(),
+  );
 
   // ── Core services (depend on datasources) ──
   getIt.registerLazySingleton<LlmConfigManager>(
