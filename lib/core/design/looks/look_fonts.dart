@@ -10,9 +10,9 @@ TextStyle _display(LookFonts fonts, TextStyle style) =>
 TextStyle _text(LookFonts fonts, TextStyle style) =>
     GoogleFonts.getFont(fonts.text, textStyle: style);
 
-/// The production `LookTextThemeBuilder`: the app text theme in a look's fonts: display font for
-/// display/headline/title, text font for body/label. Sizes and weights mirror
-/// `buildTextTheme`.
+/// The production `LookTextThemeBuilder`: the app text theme set in a look's
+/// fonts. The display font styles display/headline/title and the text font
+/// styles body/label. Sizes and weights mirror `buildTextTheme`.
 TextTheme googleFontsTextThemeBuilder(LookFonts fonts, ColorScheme scheme) {
   final Color c = scheme.onSurface;
   return TextTheme(

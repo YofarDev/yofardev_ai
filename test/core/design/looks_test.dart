@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -54,12 +53,87 @@ void main() {
       }
     });
 
-    test('onAccent is ink when it clears 4.5, black next, else white', () {
-      expect(
-        UiLooks.storybook.palette(AvatarScene.livingRoom).onAccent,
-        UiLooks.storybook.ink,
+    UiLook lookWith(Color ink, Color accent) => UiLook(
+      id: 'custom',
+      name: 'Custom',
+      ink: ink,
+      surface: const Color(0xFF202020),
+      onSurface: Colors.white,
+      outline: const Color(0xFF404040),
+      surfaceStyle: AppSurfaceStyle.glass,
+      outlineWidth: 1,
+      radiusScale: 1,
+      fonts: const LookFonts(display: 'A', text: 'B'),
+      accents: <AvatarScene, Color>{
+        for (final AvatarScene s in AvatarScene.values) s: accent,
+      },
+    );
+
+    test('onAccent prefers ink when it clears 4.5', () {
+      final UiLook look = lookWith(
+        const Color(0xFF16121D),
+        const Color(0xFFF4B860),
       );
-      expect(contrastRatio(Colors.black, Colors.white), closeTo(21, 0.01));
+      expect(
+        contrastRatio(look.ink, const Color(0xFFF4B860)),
+        greaterThan(4.5),
+      );
+      expect(look.palette(AvatarScene.beach).onAccent, look.ink);
+    });
+
+    test('onAccent falls back to black when ink fails but black clears', () {
+      // Mid-grey ink on a mid-bright accent fails; black clears.
+      const Color ink = Color(0xFF808080);
+      const Color accent = Color(0xFFFFC24B);
+      expect(contrastRatio(ink, accent), lessThan(4.5));
+      expect(contrastRatio(Colors.black, accent), greaterThanOrEqualTo(4.5));
+      expect(
+        lookWith(ink, accent).palette(AvatarScene.beach).onAccent,
+        Colors.black,
+      );
+    });
+
+    test('onAccent falls back to white when ink and black both fail', () {
+      const Color ink = Color(0xFF808080);
+      const Color accent = Color(0xFF2A2A6A);
+      expect(contrastRatio(ink, accent), lessThan(4.5));
+      expect(contrastRatio(Colors.black, accent), lessThan(4.5));
+      expect(
+        lookWith(ink, accent).palette(AvatarScene.beach).onAccent,
+        Colors.white,
+      );
+    });
+
+    test('every preset defines an accent for every scene', () {
+      for (final UiLook look in UiLooks.all) {
+        expect(look.accents.keys.toSet(), AvatarScene.values.toSet());
+      }
+    });
+
+    test('palette throws a clear error for a scene without accent', () {
+      final UiLook partial = UiLook(
+        id: 'partial',
+        name: 'Partial',
+        ink: Colors.black,
+        surface: Colors.black,
+        onSurface: Colors.white,
+        outline: Colors.grey,
+        surfaceStyle: AppSurfaceStyle.glass,
+        outlineWidth: 1,
+        radiusScale: 1,
+        fonts: const LookFonts(display: 'A', text: 'B'),
+        accents: const <AvatarScene, Color>{AvatarScene.beach: Colors.orange},
+      );
+      expect(
+        () => partial.palette(AvatarScene.campfire),
+        throwsA(
+          isA<StateError>().having(
+            (StateError e) => e.message,
+            'message',
+            contains('partial'),
+          ),
+        ),
+      );
     });
 
     test('all three looks are listed in order', () {
@@ -143,12 +217,48 @@ void main() {
   });
 
   group('LabFontFetching', () {
-    test('enable then restore returns the flag to its previous value', () {
-      final bool before = GoogleFonts.config.allowRuntimeFetching;
-      LabFontFetching.enable();
-      expect(GoogleFonts.config.allowRuntimeFetching, kDebugMode);
+    late bool ambient;
+
+    setUp(() {
+      ambient = GoogleFonts.config.allowRuntimeFetching;
       LabFontFetching.restore();
-      expect(GoogleFonts.config.allowRuntimeFetching, before);
+      GoogleFonts.config.allowRuntimeFetching = false;
+    });
+
+    tearDown(() {
+      LabFontFetching.restore();
+      GoogleFonts.config.allowRuntimeFetching = ambient;
+    });
+
+    test(
+      'enable turns fetching on (debug) and restore returns it to false',
+      () {
+        LabFontFetching.enable();
+        expect(GoogleFonts.config.allowRuntimeFetching, isTrue);
+        LabFontFetching.restore();
+        expect(GoogleFonts.config.allowRuntimeFetching, isFalse);
+      },
+    );
+
+    test('restore without enable is a no-op', () {
+      GoogleFonts.config.allowRuntimeFetching = true;
+      LabFontFetching.restore();
+      expect(GoogleFonts.config.allowRuntimeFetching, isTrue);
+    });
+
+    test('restore twice is a no-op the second time', () {
+      LabFontFetching.enable();
+      LabFontFetching.restore();
+      GoogleFonts.config.allowRuntimeFetching = true;
+      LabFontFetching.restore();
+      expect(GoogleFonts.config.allowRuntimeFetching, isTrue);
+    });
+
+    test('double enable keeps the first saved value', () {
+      LabFontFetching.enable();
+      LabFontFetching.enable();
+      LabFontFetching.restore();
+      expect(GoogleFonts.config.allowRuntimeFetching, isFalse);
     });
   });
 }

@@ -62,16 +62,23 @@ class UiLook {
   final double radiusScale;
   final LookFonts fonts;
 
-  /// Interactive accent per scene.
+  /// Interactive accent per scene. Must cover every [AvatarScene]: a const
+  /// constructor cannot assert it, so [palette] fails with a clear [StateError]
+  /// for a missing scene.
   final Map<AvatarScene, Color> accents;
 
   static const double _minOnAccentContrast = 4.5;
   static const double _glowAlpha = 0.35;
 
-  /// The accent palette of [scene]. `onAccent` is the darkest of ([ink], black)
-  /// clearing 4.5:1 on the accent, else white; `glow` is the accent at 35 %.
+  /// The accent palette of [scene]. `onAccent` is the first of [ink], black,
+  /// white that clears 4.5:1 on the accent (ink preferred as it harmonises with
+  /// the look); `glow` is the accent at 35 % alpha.
   ScenePalette palette(AvatarScene scene) {
-    final Color accent = accents[scene]!;
+    final Color? found = accents[scene];
+    if (found == null) {
+      throw StateError('UiLook "$id" has no accent for ${scene.name}');
+    }
+    final Color accent = found;
     final Color onAccent;
     if (contrastRatio(ink, accent) >= _minOnAccentContrast) {
       onAccent = ink;
