@@ -5,8 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:yofardev_ai/core/design/components/components.dart';
-import 'package:yofardev_ai/core/design/theme/app_theme.dart';
+import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
+
+import 'look_test_theme.dart';
 
 void main() {
   Widget app(GoRouter router) {
@@ -17,6 +19,35 @@ void main() {
       supportedLocales: AppLocalizations.supportedLocales,
     );
   }
+
+  group('AppScaffold cel', () {
+    testWidgets('paints a flat background instead of a gradient', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: celTestTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AppScaffold(title: 'Cel', body: SizedBox()),
+        ),
+      );
+      final DecoratedBox box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(AppScaffold),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final BoxDecoration decoration = box.decoration as BoxDecoration;
+      final AppTokens tokens = Theme.of(
+        tester.element(find.byType(AppScaffold)),
+      ).extension<AppTokens>()!;
+      expect(decoration.gradient, isNull);
+      expect(decoration.color, tokens.background);
+    });
+  });
 
   group('AppScaffold', () {
     testWidgets('shows the title and actions, back pops to the first route', (

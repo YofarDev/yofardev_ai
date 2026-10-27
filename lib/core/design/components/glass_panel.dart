@@ -5,12 +5,16 @@ import 'package:flutter/material.dart';
 import '../context_ext.dart';
 import '../tokens/app_glass.dart';
 import '../tokens/app_radius.dart';
+import '../tokens/app_tokens.dart';
+import 'cel_style.dart';
 
-/// A glass surface: diagonal gradient fill and a 1.5 px border, both driven
-/// by the [level]'s tokens.
+/// A raised surface. With glass tokens: a diagonal gradient fill and an
+/// outline, both driven by the [level]'s tokens. With cel tokens: an opaque
+/// fill, an outline and a hard offset shadow (no gradient, never blurred).
 ///
 /// The backdrop blur is expensive, so it is applied only when [blur] is true
-/// (use it for a few large surfaces, never for list items).
+/// and the style is glass (use it for a few large surfaces, never for list
+/// items).
 class GlassPanel extends StatelessWidget {
   const GlassPanel({
     super.key,
@@ -29,11 +33,28 @@ class GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppGlassStyle style = context.tokens.glass(level);
-    final Color fill = context.tokens.glassSurface;
-    final Color border = context.tokens.glassBorder;
+    final AppTokens tokens = context.tokens;
+    final AppGlassStyle style = tokens.glass(level);
+    final Color fill = tokens.glassSurface;
+    final Color border = tokens.glassBorder;
     final BorderRadius radius =
-        borderRadius ?? BorderRadius.circular(AppRadius.lg);
+        borderRadius ?? BorderRadius.circular(tokens.radius(AppRadius.lg));
+    final Widget content = Padding(
+      padding: padding ?? EdgeInsets.zero,
+      child: child,
+    );
+
+    if (tokens.isCel) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: radius,
+          border: Border.all(color: border, width: tokens.outlineWidth),
+          boxShadow: tokens.celShadow(),
+        ),
+        child: content,
+      );
+    }
 
     final Widget panel = DecoratedBox(
       decoration: BoxDecoration(
@@ -48,10 +69,10 @@ class GlassPanel extends StatelessWidget {
         borderRadius: radius,
         border: Border.all(
           color: border.withValues(alpha: style.borderAlpha),
-          width: 1.5,
+          width: tokens.outlineWidth,
         ),
       ),
-      child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
+      child: content,
     );
 
     if (!blur) {

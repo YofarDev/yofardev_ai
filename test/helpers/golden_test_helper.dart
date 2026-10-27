@@ -45,4 +45,22 @@ class GoldenTestHelper {
       home: Material(child: child),
     );
   }
+
+  /// Like [makeTestableWidget] but with an explicit [theme] instead of
+  /// `AppTheme.dark`. For the debug UI lab look goldens only: every other
+  /// golden must keep using [makeTestableWidget].
+  static Widget makeLookTestable({
+    required Widget child,
+    required ThemeData theme,
+    Locale? locale,
+  }) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: theme,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Material(child: child),
+    );
+  }
 }

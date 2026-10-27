@@ -4,9 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
 import 'package:yofardev_ai/core/design/components/components.dart';
+import 'package:yofardev_ai/core/design/design.dart';
 
 import '../../../helpers/golden_test_helper.dart';
 import 'component_test_harness.dart';
+import 'look_test_theme.dart';
 
 void main() {
   setUpAll(() async {
@@ -162,6 +164,60 @@ void main() {
         ),
       );
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('AppPill cel', () {
+    Future<BoxDecoration> pumpPill(
+      WidgetTester tester, {
+      bool selected = false,
+    }) async {
+      await tester.pumpWidget(
+        GoldenTestHelper.makeLookTestable(
+          theme: celTestTheme(),
+          child: Center(
+            child: AppPill(label: 'Pill', onTap: () {}, selected: selected),
+          ),
+        ),
+      );
+      final Container container = tester.widget<Container>(
+        find.descendant(
+          of: find.byType(AppPill),
+          matching: find.byType(Container),
+        ),
+      );
+      return container.decoration! as BoxDecoration;
+    }
+
+    AppTokens tokensOf(WidgetTester tester) {
+      return Theme.of(
+        tester.element(find.byType(AppPill)),
+      ).extension<AppTokens>()!;
+    }
+
+    testWidgets(
+      'selected fill is the scene accent, opaque, with onAccent text',
+      (WidgetTester tester) async {
+        final BoxDecoration decoration = await pumpPill(tester, selected: true);
+        final AppTokens tokens = tokensOf(tester);
+        expect(decoration.color, tokens.scene.accent);
+        expect(decoration.gradient, isNull);
+        final Text text = tester.widget<Text>(find.text('Pill'));
+        expect(text.style!.color, tokens.scene.onAccent);
+      },
+    );
+
+    testWidgets('idle is an opaque surface with a 2 px outline and shadow', (
+      WidgetTester tester,
+    ) async {
+      final BoxDecoration decoration = await pumpPill(tester);
+      final AppTokens tokens = tokensOf(tester);
+      expect(decoration.color, tokens.glassSurface);
+      final Border border = decoration.border! as Border;
+      expect(border.top.width, 2);
+      expect(border.top.color, tokens.glassBorder);
+      expect(decoration.boxShadow!.single.offset, const Offset(0, 3));
+      expect(decoration.boxShadow!.single.blurRadius, 0);
     });
   });
 
