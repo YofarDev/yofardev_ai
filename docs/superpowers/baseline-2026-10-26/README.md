@@ -26,6 +26,17 @@ only usable Android number and is already at the edge of a 60 fps budget on *idl
 raster cost on Home, not just hold it. A real low-end phone is still needed before the M3
 gate; the emulator is a relative yardstick only.
 
+### M3 Stage (2026-10-27, same host-GPU emulator, profile, Home idle, 12 s)
+
+| Build | Frames/s | build p50 / p99 | raster p50 / p99 | Notes |
+|---|---|---|---|---|
+| Stage, UI-kit artboards always running | 54 | 10.4 / 24.4 ms | 8.6 / 17.5 ms | scene + avatar + orb + glow; 572 of 650 frames over 16.7 ms |
+| Stage, artboards paused once settled (`27c98bd`) | 59.8 | 6.9 / 11.4 ms | 3.6 / 15.1 ms | same scene; 242 of 718 frames over 16.7 ms |
+
+The Stage now draws the scene too (the M0 run drew the avatar only), and still beats the M0
+numbers once static UI-kit artboards stop advancing. Not measured: thinking/speaking states
+(this emulator has no LLM configuration and no Supertonic models, so no reply plays).
+
 ## Findings that are not in the redesign plan yet
 
 1. **Android: scene not visible.** On the Android emulator the Home background is flat dark
