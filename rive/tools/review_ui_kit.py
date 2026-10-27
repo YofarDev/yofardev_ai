@@ -73,7 +73,8 @@ def font(sz: int) -> ImageFont.ImageFont:
     return ImageFont.load_default(size=sz)
 
 
-def strip_sheet(rows: list[tuple[str, list[tuple[str, Image.Image]]]], out: Path, title: str) -> None:
+def strip_sheet(rows: list[tuple[str, list[tuple[str, Image.Image]]]], out: Path, title: str,
+                quantize: bool = True) -> None:
     """rows: (row label, [(cell label, image)])"""
     cw = max(im.width for _, cells in rows for _, im in cells)
     ch = max(im.height for _, cells in rows for _, im in cells)
@@ -90,7 +91,9 @@ def strip_sheet(rows: list[tuple[str, list[tuple[str, Image.Image]]]], out: Path
             sheet.paste(im, (x, y + 18))
             dr.text((x, y + 2), cl, fill=(150, 140, 160), font=font(11))
     out.parent.mkdir(parents=True, exist_ok=True)
-    sheet.quantize(colors=128, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(out, optimize=True)
+    if quantize:  # crisp vector sheets only; smooth gradients keep full colour
+        sheet = sheet.quantize(colors=128, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+    sheet.save(out, optimize=True)
     print("wrote", out.relative_to(ROOT))
 
 
@@ -159,23 +162,34 @@ def _pad(im: Image.Image, size: int) -> Image.Image:
     return c
 
 
-def glow_alpha(phase_args: str, frame: int, tag: str, accent: str = "FFF4B860") -> Image.Image:
-    """RGBA glow recovered from black + white backdrop captures."""
+def glow_layers(phase_args: str, frame: int, tag: str, accent: str = "FFF4B860") -> tuple[Image.Image, Image.Image]:
+    """The glow captured over black (k = colour x alpha, premultiplied) and over white (w).
+
+    Over any background the exact result is bg * (w - k) / 255 + k, per channel: no division, so
+    no hue error at low alpha (the earlier colour = k / alpha recovery amplified 8-bit noise)."""
     args = f"{phase_args} --data=accent={accent} --advance={frame}"
     k = shot(project("FF000000"), "StatusGlow", WORK / "shots" / tag / "k.png", args, (480, 200))
     w = shot(project("FFFFFFFF"), "StatusGlow", WORK / "shots" / tag / "w.png", args, (480, 200))
-    alpha = ImageChops.invert(ImageChops.subtract(w.convert("L"), k.convert("L")))
-    rgb = Image.new("RGB", k.size)
-    kp, ap = k.load(), alpha.load()
-    rp = rgb.load()
-    for y in range(k.height):
-        for x in range(k.width):
-            a = ap[x, y]
-            if a:
-                rp[x, y] = tuple(min(255, round(v * 255 / a)) for v in kp[x, y])
-    rgba = rgb.convert("RGBA")
-    rgba.putalpha(alpha)
-    return rgba
+    return k, w
+
+
+def over(bg: Image.Image, k: Image.Image, w: Image.Image) -> Image.Image:
+    inv = ImageChops.subtract(w, k)                      # 255 * (1 - alpha), per channel
+    return ImageChops.add(ImageChops.multiply(bg.convert("RGB"), inv), k)
+
+
+def alpha_of(k: Image.Image, w: Image.Image) -> Image.Image:
+    return ImageChops.invert(ImageChops.subtract(w, k).convert("L"))
+
+
+PILL = (60, 76, 420, 132)
+
+
+def draw_pill(im: Image.Image) -> Image.Image:
+    im = im.convert("RGBA")
+    layer = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    ImageDraw.Draw(layer).rounded_rectangle(PILL, radius=28, fill=(33, 27, 43, 235), outline=(58, 48, 70, 255))
+    return Image.alpha_composite(im, layer).convert("RGB")
 
 
 def glow(pool: ThreadPoolExecutor) -> None:
@@ -187,36 +201,47 @@ def glow(pool: ThreadPoolExecutor) -> None:
               ("idle>speaking", change("phase=idle", "phase=speaking"), [1, 7, 13, 19, 25, 31])]
     rows = run_rows(p, "StatusGlow", specs, (480, 200), "glow", pool)
     rows = [(lab, [(cl, im.resize((240, 100), Image.LANCZOS)) for cl, im in cells]) for lab, cells in rows]
-    strip_sheet(rows, OUT / "glow_phases.png", "StatusGlow - phases over ink #16121D, every 500 ms")
-    # over each scene: alpha-recovered glow composited on the scene rest pose, behind a composer pill
-    cells = []
-    futs = {}
-    for s in SCENES:
-        for ph in ("idle", "generating", "speaking"):
-            futs[(s, ph)] = pool.submit(glow_alpha, f"--data=phase={ph}", 91, f"glow_{s}_{ph}", SCENE_ACCENT[s])
+    # smooth light: never palette-quantise glow sheets (a shared 128-colour palette is what drew
+    # stepped rings and mapped violet to olive in the first sheets)
+    strip_sheet(rows, OUT / "glow_phases.png", "StatusGlow - phases over ink #16121D, every 500 ms", quantize=False)
+    phases = ("idle", "generating", "speaking")
+    futs = {(s, ph): pool.submit(glow_layers, f"--data=phase={ph}", 91, f"glow_{s}_{ph}", SCENE_ACCENT[s])
+            for s in SCENES for ph in phases}
     scene_imgs = {s: pool.submit(shot, ROOT / "rive" / "scenes" / s, "Scene", WORK / "shots" / f"scene_{s}.png",
                                  "--advance=1", (1080, 1920)) for s in SCENES}
-    rows = []
+    rows, zooms, report = [], [], []
+    worst_border, all_mono = 0, True
     for s in SCENES:
-        bg = scene_imgs[s].result().crop((60, 1500, 1020, 1900)).resize((480, 200), Image.LANCZOS).convert("RGBA")
+        bg = scene_imgs[s].result().crop((60, 1500, 1020, 1900)).resize((480, 200), Image.LANCZOS)
         row = []
-        for ph in ("idle", "generating", "speaking"):
-            g = futs[(s, ph)].result()
-            comp = Image.alpha_composite(bg, g)
-            dr = ImageDraw.Draw(comp)
-            dr.rounded_rectangle((60, 76, 420, 132), radius=28, fill=(33, 27, 43, 235), outline=(58, 48, 70, 255))
-            row.append((ph, comp.convert("RGB")))
+        for ph in phases:
+            k, w = futs[(s, ph)].result()
+            comp = draw_pill(over(bg, k, w))
+            row.append((ph, comp))
+            if (s in ("livingRoom", "campfire") and ph in ("generating", "speaking")) or (s == "deepSpace" and ph == "speaking"):
+                # left end + top falloff at 3x, nearest-neighbour so no smoothing hides steps
+                zooms.append((f"{s} {ph}", comp.crop((0, 30, 160, 110)).resize((480, 240), Image.NEAREST)))
+            a = alpha_of(k, w)
+            border = max(max(a.getpixel((x, y)) for x in range(480) for y in (0, 199)),
+                         max(a.getpixel((x, y)) for y in range(200) for x in (0, 479)))
+            worst_border = max(worst_border, border)
+            col = [a.getpixel((240, y)) for y in range(0, PILL[1] + 1, 4)]           # top edge -> pill
+            lin = [a.getpixel((x, 104)) for x in range(0, PILL[0] + 1, 4)]           # left edge -> pill
+            mono = all(b2 >= b1 - 1 for b1, b2 in zip(col, col[1:])) and all(b2 >= b1 - 1 for b1, b2 in zip(lin, lin[1:]))
+            all_mono &= mono
+            hues = {comp.getpixel((x, y)) for x, y in ((240, 60), (120, 70), (40, 104))}
+            report.append(f"{'PASS' if mono else 'FAIL'}  {s:10} {ph:10} alpha top->pill x=240 {col}  "
+                          f"left->pill y=104 {lin}  border {border}/255  samples {sorted(hues)}")
         rows.append((s, row))
     strip_sheet(rows, OUT / "glow_over_scenes.png",
-                "StatusGlow - scene accent, alpha-composited over each scene's lower band, behind a composer pill")
-    # edge check: alpha at the artboard border must be ~0 (no hard clip edge)
-    worst = 0
-    for (s, ph), f in futs.items():
-        a = f.result().getchannel("A")
-        border = [a.getpixel((x, y)) for x in range(480) for y in (0, 199)] + \
-                 [a.getpixel((x, y)) for y in range(200) for x in (0, 479)]
-        worst = max(worst, max(border))
-    print(f"StatusGlow max border alpha: {worst}/255")
+                "StatusGlow - scene accent, composited (premultiplied) over each scene's lower band, behind a composer pill",
+                quantize=False)
+    strip_sheet([("3x crops", zooms)], OUT / "glow_zoom.png",
+                "StatusGlow - 3x nearest-neighbour crops of the left/top falloff (no smoothing, no palette)",
+                quantize=False)
+    text = "\n".join(report) + f"\nmax border alpha {worst_border}/255; falloff monotonic: {all_mono}\n"
+    (OUT / "glow_profile.txt").write_text(text)
+    print(text)
 
 
 def tool(pool: ThreadPoolExecutor) -> None:

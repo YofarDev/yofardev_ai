@@ -4,7 +4,7 @@ PASS  ComposerOrb  orb listening level=1, reduceMotion == level 0: 0.00% of pixe
 PASS  ComposerOrb  orb listening level=1 != level 0: 53.92% of pixels differ (4969 of 9216) (want > 0 px)
 PASS  ComposerOrb  orb typing>idle ends on idle rest: 0.00% of pixels differ (0 of 9216) (want 0 px)
 PASS  StatusGlow   glow generating, reduceMotion: still: 0.00% of pixels differ (0 of 96000) (want 0 px)
-PASS  StatusGlow   glow speaking != idle: 82.81% of pixels differ (79499 of 96000) (want > 0 px)
+PASS  StatusGlow   glow speaking != idle: 91.16% of pixels differ (87511 of 96000) (want > 0 px)
 PASS  ToolIcon     tool running>stopped returns to rest: 0.00% of pixels differ (0 of 2304) (want 0 px)
 PASS  ToolIcon     tool search != news: 34.85% of pixels differ (803 of 2304) (want > 0 px)
 PASS  Toggle       toggle off>on ends on on-rest: 0.00% of pixels differ (0 of 6656) (want 0 px)

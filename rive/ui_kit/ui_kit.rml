@@ -3780,55 +3780,55 @@
       <Node x="0" y="0" name="Level" id="7:1809">
         <Node x="-150" y="0" name="ShimmerTravel" id="7:1781">
           <Shape x="0" y="0" name="Shimmer" opacity="0" id="7:1780">
-            <Ellipse width="90" height="26" name="Path" id="7:1775"/>
+            <Ellipse width="110" height="28" name="Path" id="7:1775"/>
             <Fill fillRule="clockwise" name="Fill" id="7:1779">
               <SolidColor colorValue="FFF4B860" id="7:1777">
                 <DataBindContext sourcePathIds="7:1757-7:1771" propertyKey="37" id="7:1776"/>
               </SolidColor>
-              <Feather strength="18" name="Feather" id="7:1778"/>
+              <Feather strength="26" name="Feather" id="7:1778"/>
             </Fill>
           </Shape>
         </Node>
         <Node x="0" y="0" name="Breath" id="7:1788">
-          <Shape x="0" y="0" name="Core" opacity="0.85" id="7:1787">
-            <Ellipse width="230" height="40" name="Path" id="7:1782"/>
+          <Shape x="0" y="0" name="Core" opacity="0.9" id="7:1787">
+            <Ellipse width="200" height="40" name="Path" id="7:1782"/>
             <Fill fillRule="clockwise" name="Fill" id="7:1786">
               <SolidColor colorValue="FFF4B860" id="7:1784">
                 <DataBindContext sourcePathIds="7:1757-7:1771" propertyKey="37" id="7:1783"/>
               </SolidColor>
-              <Feather strength="26" name="Feather" id="7:1785"/>
+              <Feather strength="34" name="Feather" id="7:1785"/>
             </Fill>
           </Shape>
         </Node>
-        <Node x="-104" y="0" name="DriftL" id="7:1801">
-          <Shape x="0" y="0" name="LobeL" opacity="0.55" id="7:1794">
-            <Ellipse width="150" height="56" name="Path" id="7:1789"/>
+        <Node x="-70" y="0" name="DriftL" id="7:1801">
+          <Shape x="0" y="0" name="LobeL" opacity="0.3" id="7:1794">
+            <Ellipse width="170" height="50" name="Path" id="7:1789"/>
             <Fill fillRule="clockwise" name="Fill" id="7:1793">
               <SolidColor colorValue="FFF4B860" id="7:1791">
                 <DataBindContext sourcePathIds="7:1757-7:1771" propertyKey="37" id="7:1790"/>
               </SolidColor>
-              <Feather strength="34" name="Feather" id="7:1792"/>
+              <Feather strength="40" name="Feather" id="7:1792"/>
             </Fill>
           </Shape>
         </Node>
-        <Node x="104" y="0" name="DriftR" id="7:1802">
-          <Shape x="0" y="0" name="LobeR" opacity="0.55" id="7:1800">
-            <Ellipse width="150" height="54" name="Path" id="7:1795"/>
+        <Node x="70" y="0" name="DriftR" id="7:1802">
+          <Shape x="0" y="0" name="LobeR" opacity="0.3" id="7:1800">
+            <Ellipse width="170" height="50" name="Path" id="7:1795"/>
             <Fill fillRule="clockwise" name="Fill" id="7:1799">
               <SolidColor colorValue="FFF4B860" id="7:1797">
                 <DataBindContext sourcePathIds="7:1757-7:1771" propertyKey="37" id="7:1796"/>
               </SolidColor>
-              <Feather strength="34" name="Feather" id="7:1798"/>
+              <Feather strength="40" name="Feather" id="7:1798"/>
             </Fill>
           </Shape>
         </Node>
-        <Shape x="0" y="0" name="Haze" opacity="0.45" id="7:1808">
-          <Ellipse width="350" height="70" name="Path" id="7:1803"/>
+        <Shape x="0" y="0" name="Haze" opacity="0.5" id="7:1808">
+          <Ellipse width="360" height="72" name="Path" id="7:1803"/>
           <Fill fillRule="clockwise" name="Fill" id="7:1807">
             <SolidColor colorValue="FFF4B860" id="7:1805">
               <DataBindContext sourcePathIds="7:1757-7:1771" propertyKey="37" id="7:1804"/>
             </SolidColor>
-            <Feather strength="44" name="Feather" id="7:1806"/>
+            <Feather strength="50" name="Feather" id="7:1806"/>
           </Fill>
         </Shape>
       </Node>
@@ -3901,11 +3901,11 @@
     <LinearAnimation duration="240" fps="60" loopValue="loop" name="Waiting_drift" id="7:2375">
       <KeyedObject objectId="7:1801" id="7:2339">
         <KeyedProperty property="x" id="7:2333">
-          <KeyFrameDouble frame="0" value="-104" interpolationType="cubic" interpolatorId="7:1758" id="7:2330"/>
-          <KeyFrameDouble frame="1" value="-104" interpolationType="cubic" interpolatorId="7:1758" id="7:2361"/>
-          <KeyFrameDouble frame="120" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2331"/>
-          <KeyFrameDouble frame="239" value="-104" interpolationType="cubic" interpolatorId="7:1758" id="7:2362"/>
-          <KeyFrameDouble frame="240" value="-104" interpolationType="cubic" interpolatorId="7:1758" id="7:2332"/>
+          <KeyFrameDouble frame="0" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2330"/>
+          <KeyFrameDouble frame="1" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2361"/>
+          <KeyFrameDouble frame="120" value="-92" interpolationType="cubic" interpolatorId="7:1758" id="7:2331"/>
+          <KeyFrameDouble frame="239" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2362"/>
+          <KeyFrameDouble frame="240" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2332"/>
         </KeyedProperty>
         <KeyedProperty property="y" id="7:2338">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="7:1758" id="7:2334"/>
@@ -3918,11 +3918,11 @@
       </KeyedObject>
       <KeyedObject objectId="7:1802" id="7:2349">
         <KeyedProperty property="x" id="7:2343">
-          <KeyFrameDouble frame="0" value="104" interpolationType="cubic" interpolatorId="7:1758" id="7:2340"/>
-          <KeyFrameDouble frame="1" value="104" interpolationType="cubic" interpolatorId="7:1758" id="7:2365"/>
-          <KeyFrameDouble frame="120" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2341"/>
-          <KeyFrameDouble frame="239" value="104" interpolationType="cubic" interpolatorId="7:1758" id="7:2366"/>
-          <KeyFrameDouble frame="240" value="104" interpolationType="cubic" interpolatorId="7:1758" id="7:2342"/>
+          <KeyFrameDouble frame="0" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2340"/>
+          <KeyFrameDouble frame="1" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2365"/>
+          <KeyFrameDouble frame="120" value="92" interpolationType="cubic" interpolatorId="7:1758" id="7:2341"/>
+          <KeyFrameDouble frame="239" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2366"/>
+          <KeyFrameDouble frame="240" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2342"/>
         </KeyedProperty>
         <KeyedProperty property="y" id="7:2348">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="7:1758" id="7:2344"/>
@@ -3981,11 +3981,11 @@
       </KeyedObject>
       <KeyedObject objectId="7:1801" id="7:2396">
         <KeyedProperty property="x" id="7:2392">
-          <KeyFrameDouble frame="0" value="-104" interpolationType="cubic" interpolatorId="7:1758" id="7:2389"/>
-          <KeyFrameDouble frame="1" value="-104" interpolationType="cubic" interpolatorId="7:1758" id="7:2411"/>
-          <KeyFrameDouble frame="96" value="-112" interpolationType="cubic" interpolatorId="7:1758" id="7:2390"/>
-          <KeyFrameDouble frame="191" value="-104" interpolationType="cubic" interpolatorId="7:1758" id="7:2412"/>
-          <KeyFrameDouble frame="192" value="-104" interpolationType="cubic" interpolatorId="7:1758" id="7:2391"/>
+          <KeyFrameDouble frame="0" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2389"/>
+          <KeyFrameDouble frame="1" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2411"/>
+          <KeyFrameDouble frame="96" value="-80" interpolationType="cubic" interpolatorId="7:1758" id="7:2390"/>
+          <KeyFrameDouble frame="191" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2412"/>
+          <KeyFrameDouble frame="192" value="-70" interpolationType="cubic" interpolatorId="7:1758" id="7:2391"/>
         </KeyedProperty>
         <KeyedProperty property="y" id="7:2395">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="7:1758" id="7:2393"/>
@@ -3996,11 +3996,11 @@
       </KeyedObject>
       <KeyedObject objectId="7:1802" id="7:2404">
         <KeyedProperty property="x" id="7:2400">
-          <KeyFrameDouble frame="0" value="104" interpolationType="cubic" interpolatorId="7:1758" id="7:2397"/>
-          <KeyFrameDouble frame="1" value="104" interpolationType="cubic" interpolatorId="7:1758" id="7:2415"/>
-          <KeyFrameDouble frame="96" value="112" interpolationType="cubic" interpolatorId="7:1758" id="7:2398"/>
-          <KeyFrameDouble frame="191" value="104" interpolationType="cubic" interpolatorId="7:1758" id="7:2416"/>
-          <KeyFrameDouble frame="192" value="104" interpolationType="cubic" interpolatorId="7:1758" id="7:2399"/>
+          <KeyFrameDouble frame="0" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2397"/>
+          <KeyFrameDouble frame="1" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2415"/>
+          <KeyFrameDouble frame="96" value="80" interpolationType="cubic" interpolatorId="7:1758" id="7:2398"/>
+          <KeyFrameDouble frame="191" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2416"/>
+          <KeyFrameDouble frame="192" value="70" interpolationType="cubic" interpolatorId="7:1758" id="7:2399"/>
         </KeyedProperty>
         <KeyedProperty property="y" id="7:2403">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="7:1758" id="7:2401"/>
@@ -4077,7 +4077,7 @@
     <LinearAnimation duration="1" fps="60" name="Ambient_rest" id="7:2493">
       <KeyedObject objectId="7:1801" id="7:2474">
         <KeyedProperty property="x" id="7:2471">
-          <KeyFrameDouble frame="0" value="-104" interpolationType="hold" id="7:2470"/>
+          <KeyFrameDouble frame="0" value="-70" interpolationType="hold" id="7:2470"/>
         </KeyedProperty>
         <KeyedProperty property="y" id="7:2473">
           <KeyFrameDouble frame="0" value="0" interpolationType="hold" id="7:2472"/>
@@ -4085,7 +4085,7 @@
       </KeyedObject>
       <KeyedObject objectId="7:1802" id="7:2479">
         <KeyedProperty property="x" id="7:2476">
-          <KeyFrameDouble frame="0" value="104" interpolationType="hold" id="7:2475"/>
+          <KeyFrameDouble frame="0" value="70" interpolationType="hold" id="7:2475"/>
         </KeyedProperty>
         <KeyedProperty property="y" id="7:2478">
           <KeyFrameDouble frame="0" value="0" interpolationType="hold" id="7:2477"/>

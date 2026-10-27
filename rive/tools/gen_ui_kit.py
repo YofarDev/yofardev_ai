@@ -477,15 +477,15 @@ def status_glow(bd: str | None) -> list[El]:
     accent = b.color("accent", ACCENT)
     b.rm = b.boolean("reduceMotion", False)
 
-    shimmer = shape("Shimmer", ell(90, 26), b.fill_b(accent, feather=18), opacity=0.0)
+    shimmer = shape("Shimmer", ell(110, 28), b.fill_b(accent, feather=26), opacity=0.0)
     shimmer_n = node("ShimmerTravel", shimmer, x=-150)
-    core = shape("Core", ell(230, 40), b.fill_b(accent, feather=26), opacity=0.85)
+    core = shape("Core", ell(200, 40), b.fill_b(accent, feather=34), opacity=0.9)
     breath = node("Breath", core)
-    lobe_l = shape("LobeL", ell(150, 56), b.fill_b(accent, feather=34), opacity=0.55)
-    lobe_r = shape("LobeR", ell(150, 54), b.fill_b(accent, feather=34), opacity=0.55)
-    drift_l = node("DriftL", lobe_l, x=-104)
-    drift_r = node("DriftR", lobe_r, x=104)
-    haze = shape("Haze", ell(350, 70), b.fill_b(accent, feather=44), opacity=0.45)
+    lobe_l = shape("LobeL", ell(170, 50), b.fill_b(accent, feather=40), opacity=0.3)
+    lobe_r = shape("LobeR", ell(170, 50), b.fill_b(accent, feather=40), opacity=0.3)
+    drift_l = node("DriftL", lobe_l, x=-70)
+    drift_r = node("DriftR", lobe_r, x=70)
+    haze = shape("Haze", ell(360, 72), b.fill_b(accent, feather=50), opacity=0.5)
     level = node("Level", shimmer_n, breath, drift_l, drift_r, haze)
     glow = node("Glow", level, x=240, y=104)
 
@@ -498,15 +498,15 @@ def status_glow(bd: str | None) -> list[El]:
 
     # ambient per phase (inner nodes only), gated by reduceMotion
     drift = b.anim("Waiting_drift", 240, [
-        b.T(drift_l, x=[(0, -104), (120, -70), (240, -104)], y=[(0, 0), (60, -4), (180, 4), (240, 0)]),
-        b.T(drift_r, x=[(0, 104), (120, 70), (240, 104)], y=[(0, 0), (60, 4), (180, -4), (240, 0)]),
+        b.T(drift_l, x=[(0, -70), (120, -92), (240, -70)], y=[(0, 0), (60, -4), (180, 4), (240, 0)]),
+        b.T(drift_r, x=[(0, 70), (120, 92), (240, 70)], y=[(0, 0), (60, 4), (180, -4), (240, 0)]),
         b.T(breath, scaleX=[(0, 1), (120, 0.9), (240, 1)], scaleY=[(0, 1), (240, 1)], opacity=[(0, 1), (240, 1)]),
     ], loop=True)
     breathe = b.anim("Generating_breathe", 192, [
         b.T(breath, scaleX=[(0, 1), (96, 1.16), (192, 1)], scaleY=[(0, 1), (96, 1.3), (192, 1)],
             opacity=[(0, 1), (96, 0.72), (192, 1)]),
-        b.T(drift_l, x=[(0, -104), (96, -112), (192, -104)], y=[(0, 0), (192, 0)]),
-        b.T(drift_r, x=[(0, 104), (96, 112), (192, 104)], y=[(0, 0), (192, 0)]),
+        b.T(drift_l, x=[(0, -70), (96, -80), (192, -70)], y=[(0, 0), (192, 0)]),
+        b.T(drift_r, x=[(0, 70), (96, 80), (192, 70)], y=[(0, 0), (192, 0)]),
     ], loop=True)
     shim = b.anim("Speaking_shimmer", 96, [
         b.T(shimmer_n, x=[(0, -150, "linear"), (96, 150, "linear")]),
@@ -518,7 +518,7 @@ def status_glow(bd: str | None) -> list[El]:
         b.T(breath, scaleX=[(0, 1), (10, 1.12, b.out), (28, 0.96)], scaleY=[(0, 1), (10, 1.2, b.out), (28, 0.94)],
             opacity=[(0, 1), (10, 1.0), (28, 0.55)]),
     ])
-    rest = {drift_l: {"x": -104, "y": 0}, drift_r: {"x": 104, "y": 0}, breath: {"scaleX": 1, "scaleY": 1, "opacity": 1},
+    rest = {drift_l: {"x": -70, "y": 0}, drift_r: {"x": 70, "y": 0}, breath: {"scaleX": 1, "scaleY": 1, "opacity": 1},
             shimmer_n: {"x": -150}, shimmer: {"opacity": 0}}
     b.gate_layer("Ambient", [(drift, [(phase, "waiting"), (b.rm, False)]),
                              (breathe, [(phase, "generating"), (b.rm, False)]),
