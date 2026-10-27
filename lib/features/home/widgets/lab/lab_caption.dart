@@ -34,13 +34,13 @@ class LabCaption extends StatelessWidget {
   /// Horizontal position (0..1 of the bubble width) of the bubble's tail.
   final double tailAt;
 
-  /// One line per scene, in the character's voice.
+  /// One line per scene, in the character's voice. Each fits two lines of
+  /// the widest caption style at phone width (see lab_caption_fit_test).
   static String sampleFor(AvatarScene scene) => switch (scene) {
     AvatarScene.livingRoom => 'The cat thinks the lamp is a second moon.',
-    AvatarScene.campfire =>
-      "Marshmallow number four. I'm not counting, the owl is.",
+    AvatarScene.campfire => 'Marshmallow number four. The owl is counting.',
     AvatarScene.beach => 'That crab keeps side-eyeing my sandwich.',
-    AvatarScene.deepSpace => 'Out here, even my rubber duck has its own orbit.',
+    AvatarScene.deepSpace => 'Out here, my rubber duck has its own orbit.',
   };
 
   @override

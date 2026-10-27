@@ -29,6 +29,7 @@ class LabConfig {
     this.accentHueOverride,
     this.glassAlphaScale = 1,
     this.radiusScaleOverride,
+    this.panelCollapsed = false,
   });
 
   /// The lab's starting point.
@@ -56,6 +57,10 @@ class LabConfig {
   /// Replaces the look's radius scale; null keeps it.
   final double? radiusScaleOverride;
 
+  /// Whether the lab's controls panel is folded away, leaving the preview
+  /// the whole screen (bar the tab row).
+  final bool panelCollapsed;
+
   static const double maxGlassAlphaScale = 4;
   static const double maxRadiusScale = 3;
 
@@ -78,6 +83,7 @@ class LabConfig {
     Object? accentHueOverride = _keep,
     double? glassAlphaScale,
     Object? radiusScaleOverride = _keep,
+    bool? panelCollapsed,
   }) {
     return LabConfig(
       lookId: lookId ?? this.lookId,
@@ -92,6 +98,7 @@ class LabConfig {
       radiusScaleOverride: identical(radiusScaleOverride, _keep)
           ? this.radiusScaleOverride
           : (radiusScaleOverride as num?)?.toDouble(),
+      panelCollapsed: panelCollapsed ?? this.panelCollapsed,
     );
   }
 
@@ -104,6 +111,7 @@ class LabConfig {
     'accentHueOverride': accentHueOverride,
     'glassAlphaScale': glassAlphaScale,
     'radiusScaleOverride': radiusScaleOverride,
+    'panelCollapsed': panelCollapsed,
   };
 
   static const Set<String> _keys = <String>{
@@ -115,6 +123,7 @@ class LabConfig {
     'accentHueOverride',
     'glassAlphaScale',
     'radiusScaleOverride',
+    'panelCollapsed',
   };
 
   /// Parses [json]. Missing keys take the [initial] values; unknown keys,
@@ -155,7 +164,18 @@ class LabConfig {
         0,
         maxRadiusScale,
       ),
+      panelCollapsed: json.containsKey('panelCollapsed')
+          ? _bool(json, 'panelCollapsed')
+          : initial.panelCollapsed,
     );
+  }
+
+  static bool _bool(Map<String, Object?> json, String key) {
+    final Object? value = json[key];
+    if (value is! bool) {
+      throw FormatException('"$key" must be true or false, got $value');
+    }
+    return value;
   }
 
   static String _string(Map<String, Object?> json, String key) {
@@ -224,7 +244,8 @@ class LabConfig {
       other.tab == tab &&
       other.accentHueOverride == accentHueOverride &&
       other.glassAlphaScale == glassAlphaScale &&
-      other.radiusScaleOverride == radiusScaleOverride;
+      other.radiusScaleOverride == radiusScaleOverride &&
+      other.panelCollapsed == panelCollapsed;
 
   @override
   int get hashCode => Object.hash(
@@ -236,6 +257,7 @@ class LabConfig {
     accentHueOverride,
     glassAlphaScale,
     radiusScaleOverride,
+    panelCollapsed,
   );
 
   @override

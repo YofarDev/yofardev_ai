@@ -21,6 +21,8 @@ const Set<String> _numericKeys = <String>{
   'radiusScaleOverride',
 };
 
+const Set<String> _boolKeys = <String>{'panelCollapsed'};
+
 /// Params the VM service adds to every call; never part of the config.
 const Set<String> _vmParams = <String>{'isolateId'};
 
@@ -42,12 +44,23 @@ developer.ServiceExtensionResponse _ok(LabConfig config) =>
     developer.ServiceExtensionResponse.result(jsonEncode(config.toJson()));
 
 /// Converts service-extension string params into [LabConfig] JSON values:
-/// numeric keys become numbers (`null`/empty clears an override), the rest
-/// stay strings. Throws [FormatException] on a non-numeric number.
+/// numeric keys become numbers (`null`/empty clears an override), boolean
+/// keys take `true`/`false`, the rest stay strings. Throws [FormatException]
+/// on a non-numeric number or a non-boolean flag.
 Map<String, Object?> _paramsToJson(Map<String, String> params) {
   final Map<String, Object?> json = <String, Object?>{};
   params.forEach((String key, String value) {
     if (_vmParams.contains(key)) {
+      return;
+    }
+    if (_boolKeys.contains(key)) {
+      json[key] = switch (value) {
+        'true' => true,
+        'false' => false,
+        _ => throw FormatException(
+          '"$key" must be true or false, got "$value"',
+        ),
+      };
       return;
     }
     if (!_numericKeys.contains(key)) {

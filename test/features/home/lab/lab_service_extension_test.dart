@@ -26,6 +26,7 @@ void main() {
             'accentHueOverride': '120.5',
             'glassAlphaScale': '1.5',
             'radiusScaleOverride': '0.8',
+            'panelCollapsed': 'true',
           });
       expect(r.errorCode, isNull);
       expect(notifier.value.lookId, 'cel');
@@ -36,7 +37,13 @@ void main() {
       expect(notifier.value.accentHueOverride, 120.5);
       expect(notifier.value.glassAlphaScale, 1.5);
       expect(notifier.value.radiusScaleOverride, 0.8);
+      expect(notifier.value.panelCollapsed, isTrue);
       expect(_decode(r), notifier.value.toJson());
+
+      labConfigureResponse(notifier, <String, String>{
+        'panelCollapsed': 'false',
+      });
+      expect(notifier.value.panelCollapsed, isFalse);
     });
 
     test('keeps untouched fields and clears overrides with "null"', () {
@@ -71,6 +78,7 @@ void main() {
       <String, String>{'accentHueOverride': 'abc'},
       <String, String>{'accentHueOverride': '400'},
       <String, String>{'glassAlphaScale': 'null'},
+      <String, String>{'panelCollapsed': 'maybe'},
     ]) {
       test('returns an error and leaves the config alone for $bad', () {
         final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(

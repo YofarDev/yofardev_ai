@@ -26,8 +26,23 @@ void main() {
         accentHueOverride: 200,
         glassAlphaScale: 1.25,
         radiusScaleOverride: 0.75,
+        panelCollapsed: true,
       );
       expect(LabConfig.fromJson(config.toJson()), config);
+      expect(config.toJson()['panelCollapsed'], isTrue);
+    });
+
+    test('the controls panel starts expanded', () {
+      expect(LabConfig.initial.panelCollapsed, isFalse);
+      expect(LabConfig.initial.toJson()['panelCollapsed'], isFalse);
+      expect(
+        LabConfig.initial.copyWith(panelCollapsed: true).panelCollapsed,
+        isTrue,
+      );
+      expect(
+        LabConfig.initial.copyWith(panelCollapsed: true),
+        isNot(LabConfig.initial),
+      );
     });
 
     test('round-trips the defaults, null overrides included', () {
@@ -58,6 +73,8 @@ void main() {
         <String, Object?>{'accentHueOverride': 361},
         <String, Object?>{'glassAlphaScale': null},
         <String, Object?>{'radiusScaleOverride': -1},
+        <String, Object?>{'panelCollapsed': 'yes'},
+        <String, Object?>{'panelCollapsed': null},
       ]) {
         expect(() => LabConfig.fromJson(bad), throwsFormatException);
       }

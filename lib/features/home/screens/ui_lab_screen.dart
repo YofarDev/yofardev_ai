@@ -52,7 +52,6 @@ class _UiLabScreenState extends State<UiLabScreen> {
   /// Look themes by `look/scene`, so dragging a slider does not rebuild (and
   /// re-resolve the fonts of) the base theme every frame.
   final Map<String, ThemeData> _baseThemes = <String, ThemeData>{};
-  bool _controlsExpanded = true;
 
   @override
   void initState() {
@@ -121,9 +120,10 @@ class _UiLabScreenState extends State<UiLabScreen> {
                 LabControls(
                   config: config,
                   onChanged: (LabConfig next) => _config.value = next,
-                  expanded: _controlsExpanded,
-                  onToggleExpanded: () =>
-                      setState(() => _controlsExpanded = !_controlsExpanded),
+                  expanded: !config.panelCollapsed,
+                  onToggleExpanded: () => _config.value = config.copyWith(
+                    panelCollapsed: !config.panelCollapsed,
+                  ),
                   onCopy: _copyConfig,
                 ),
               ],
@@ -160,7 +160,13 @@ class _PreviewFrame extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: switch (config.tab) {
-          LabTab.surfaces => const LabSurfacesPreview(),
+          // Phone wide, like the stage canvas, so it reads as a phone screen.
+          LabTab.surfaces => Center(
+            child: SizedBox(
+              width: LabStagePreview.canvas.width,
+              child: const LabSurfacesPreview(),
+            ),
+          ),
           LabTab.stage => LabStagePreview(
             config: config,
             stageBuilder: stageBuilder,

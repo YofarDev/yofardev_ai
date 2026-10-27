@@ -168,9 +168,13 @@ class _Transcript extends StatelessWidget {
                   color: tokens.scene.accent,
                 ),
                 const SizedBox(width: AppSpace.xs),
-                Text(
-                  'Searched the web · 3 results',
-                  style: context.text.labelMedium,
+                Flexible(
+                  child: Text(
+                    'Searched the web · 3 results',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.labelMedium,
+                  ),
                 ),
               ],
             ),

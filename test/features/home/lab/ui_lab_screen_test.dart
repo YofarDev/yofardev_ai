@@ -5,6 +5,8 @@ import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/design/looks/looks.dart';
 import 'package:yofardev_ai/features/home/screens/ui_lab_screen.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
+import 'package:yofardev_ai/features/home/widgets/lab/lab_service_extension.dart';
+import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_layouts.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_surfaces_preview.dart';
 import 'package:yofardev_ai/core/design/components/components.dart';
@@ -40,8 +42,12 @@ void main() {
     GoogleFonts.config.allowRuntimeFetching = false;
   });
 
-  Future<void> pumpLab(WidgetTester tester, {LabConfig? initial}) async {
-    tester.view.physicalSize = const Size(900, 1800);
+  Future<void> pumpLab(
+    WidgetTester tester, {
+    LabConfig? initial,
+    Size logicalSize = const Size(450, 900),
+  }) async {
+    tester.view.physicalSize = logicalSize * 2;
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -104,6 +110,56 @@ void main() {
     await tester.pump();
     expect(find.byType(LabStagePreview), findsNothing);
     expect(find.byType(LabSurfacesPreview), findsOneWidget);
+  });
+
+  testWidgets('the stage lays out at phone size, scaled down only visually', (
+    WidgetTester tester,
+  ) async {
+    // A small window with the controls open leaves about 200 px for the
+    // preview.
+    await pumpLab(
+      tester,
+      initial: LabConfig.initial,
+      logicalSize: const Size(900, 922),
+    );
+    final Finder stage = find.byType(LabStageLayout);
+    expect(tester.getSize(stage), LabStagePreview.canvas);
+    expect(tester.getRect(stage).width, lessThan(LabStagePreview.canvas.width));
+  });
+
+  testWidgets('the surfaces preview is phone wide in a wide window', (
+    WidgetTester tester,
+  ) async {
+    await pumpLab(tester, logicalSize: const Size(1400, 1000));
+    expect(
+      tester.getSize(find.byType(LabSurfacesPreview)).width,
+      LabStagePreview.canvas.width,
+    );
+  });
+
+  testWidgets('panelCollapsed hides the controls; the chevron toggles it', (
+    WidgetTester tester,
+  ) async {
+    await pumpLab(tester, initial: _surfaces.copyWith(panelCollapsed: true));
+    expect(find.text('Look'), findsNothing);
+    expect(find.widgetWithText(AppPill, 'Stage'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Show controls'));
+    await tester.pump();
+    expect(find.text('Look'), findsOneWidget);
+    expect(activeUiLabConfig!.value.panelCollapsed, isFalse);
+
+    await tester.tap(find.bySemanticsLabel('Hide controls'));
+    await tester.pump();
+    expect(find.text('Look'), findsNothing);
+    expect(activeUiLabConfig!.value.panelCollapsed, isTrue);
+
+    // The service extension drives the same flag.
+    activeUiLabConfig!.value = activeUiLabConfig!.value.copyWith(
+      panelCollapsed: false,
+    );
+    await tester.pump();
+    expect(find.text('Look'), findsOneWidget);
   });
 
   testWidgets('enables font fetching while mounted and restores it after', (
