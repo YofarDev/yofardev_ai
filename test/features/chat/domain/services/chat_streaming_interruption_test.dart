@@ -248,6 +248,32 @@ void main() {
     await reply;
   });
 
+  test('an interruption during setup sends no request', () async {
+    final Completer<void> init = Completer<void>();
+    when(() => llmService.init()).thenAnswer((_) => init.future);
+    final ChatStreamingService service = buildService();
+    final Future<void> reply = run(service, 'A');
+    await _settle();
+
+    // Stop while the LLM service is still initialising.
+    await interruption.interrupt();
+    init.complete();
+    await reply.timeout(const Duration(seconds: 1));
+
+    expect(requests, isEmpty, reason: 'no provider request was started');
+    verifyNever(
+      () => llmService.promptModelStream(
+        messages: any(named: 'messages'),
+        systemPrompt: any(named: 'systemPrompt'),
+        config: any(named: 'config'),
+        returnJson: any(named: 'returnJson'),
+        debugLogs: any(named: 'debugLogs'),
+        tools: any(named: 'tools'),
+      ),
+    );
+    expect(log, <String>['A:complete']);
+  });
+
   test('an interruption mid-reply drops the rest of the stream', () async {
     final ChatStreamingService service = buildService();
     final Future<void> reply = run(service, 'A');

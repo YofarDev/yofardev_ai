@@ -342,6 +342,10 @@ class ChatStreamingService {
       // Hard cap on tool rounds to avoid infinite tool-call loops.
       const int maxToolRounds = 3;
       for (int round = 0; round < maxToolRounds; round++) {
+        // Stopped during setup (LLM init, memory, tools, system prompt) or
+        // after a tool round: no request goes out.
+        if (interrupted()) break;
+
         // Accumulate fragmented tool_call deltas while the stream flows
         // through the sentence processor.
         final Map<int, Map<String, String>> pendingToolCalls =
