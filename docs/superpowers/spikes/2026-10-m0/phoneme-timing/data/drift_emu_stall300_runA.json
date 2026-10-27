@@ -1,0 +1,89 @@
+{
+ "tier": "emu",
+ "renderer": "impeller",
+ "platform": "android",
+ "amplitude_source": "AudioAnalyzer.getAmplitudes",
+ "frames": 235,
+ "audio_duration_ms": 20000,
+ "interval_ms": 85,
+ "implied_animation_ms": 19975,
+ "volume": 0.0,
+ "volume0_probe": {
+  "position_after_1500ms": 1421,
+  "advances": true
+ },
+ "startup_resume_to_timer_ms": 9,
+ "position_at_timer_start_ms": 0,
+ "animation_done_ms": 20234,
+ "player_complete_ms": 20111,
+ "end_gap_ms": 123,
+ "induced_stall": {
+  "stall_ms": 300,
+  "started_at_ms": 8003,
+  "drift_before_ms": {
+   "n": 94,
+   "min": -30,
+   "max": 17,
+   "mean": 14.62,
+   "p50": 16,
+   "p95": 17
+  },
+  "drift_after_ms": {
+   "n": 128,
+   "min": -164,
+   "max": 19890,
+   "mean": 2.45,
+   "p50": -154,
+   "p95": -153
+  },
+  "coalesced_before": 0,
+  "coalesced_after": 2
+ },
+ "ticks": 235,
+ "coalesced_ticks": 2,
+ "valid_ticks": 235,
+ "drift_ms": {
+  "n": 235,
+  "min": -210,
+  "max": 19890,
+  "mean": -1.57,
+  "p50": -153,
+  "p95": 17
+ },
+ "drift_final_ms": 19890,
+ "drift_abs_max_ms": 19890,
+ "timer_lateness_ms": {
+  "n": 235,
+  "min": 3,
+  "max": 229,
+  "mean": 106.31,
+  "p50": 173,
+  "p95": 176
+ },
+ "position_query_ms": {
+  "n": 235,
+  "min": 0,
+  "max": 4,
+  "mean": 0.89,
+  "p50": 1,
+  "p95": 2
+ },
+ "audio_minus_wall_ms": {
+  "first": -61,
+  "last": -20149
+ },
+ "position_granularity": {
+  "distinct_values": 235,
+  "samples": 235,
+  "step_ms": {
+   "n": 234,
+   "min": -19964,
+   "max": 311,
+   "mean": -0.12,
+   "p50": 85,
+   "p95": 87
+  },
+  "longest_repeat_run": 0
+ },
+ "note": "first emu stall run; summary computed before the post-completion pos=0 filter, so drift max/mean/final include one artefact tick (i=234, pos 0)"
+}

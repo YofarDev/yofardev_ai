@@ -1,0 +1,189 @@
+{
+ "en1": {
+  "text": "Peter picked a bunch of purple plums by the big brown barn.",
+  "lang": "en",
+  "voice": "af_heart",
+  "frame_s": 0.025,
+  "chunks": [
+   {
+    "chunk": 0,
+    "phonemes": "pˈiTəɹ pˈɪkt ɐ bˈʌnʧ ʌv pˈɜɹpᵊl plˈʌmz bI ðə bˈɪɡ bɹˈWn bˈɑɹn.",
+    "frames": 154,
+    "samples": 92400,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.85,
+    "audio_s": 3.85,
+    "residual_s": 0.0
+   }
+  ],
+  "sum_durations_s": 3.85,
+  "audio_s": 3.85,
+  "residual_s": 0.0
+ },
+ "en2": {
+  "text": "My mom made pumpkin bread, but Bob baked the best pie.",
+  "lang": "en",
+  "voice": "af_heart",
+  "frame_s": 0.025,
+  "chunks": [
+   {
+    "chunk": 0,
+    "phonemes": "mˌI mˈɑm mˌAd pˈʌmpkᵊn bɹˈɛd, bˌʌt bˈɑb bˈAkt ðə bˈɛst pˈI.",
+    "frames": 150,
+    "samples": 90000,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.75,
+    "audio_s": 3.75,
+    "residual_s": 0.0
+   }
+  ],
+  "sum_durations_s": 3.75,
+  "audio_s": 3.75,
+  "residual_s": 0.0
+ },
+ "en3": {
+  "text": "Please bring me the map before the boat leaves the harbor.",
+  "lang": "en",
+  "voice": "af_heart",
+  "frame_s": 0.025,
+  "chunks": [
+   {
+    "chunk": 0,
+    "phonemes": "plˈiz bɹˈɪŋ mˌi ðə mˈæp bəfˈɔɹ ðə bˈOt lˈivz ðə hˈɑɹbəɹ.",
+    "frames": 132,
+    "samples": 79200,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.3,
+    "audio_s": 3.3,
+    "residual_s": 0.0
+   }
+  ],
+  "sum_durations_s": 3.3,
+  "audio_s": 3.3,
+  "residual_s": 0.0
+ },
+ "fr1": {
+  "text": "Papa mange une pomme bien mûre au bord de la plage.",
+  "lang": "fr",
+  "voice": "ff_siwis",
+  "frame_s": 0.025,
+  "chunks": [
+   {
+    "chunk": 0,
+    "phonemes": "papˈa mˈɑ̃ʒ yn pˈɔm bjˈɛ̃ mˈyːʁ o bˈɔʁ də la plˈaʒ.",
+    "frames": 136,
+    "samples": 81600,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.4,
+    "audio_s": 3.4,
+    "residual_s": 0.0
+   }
+  ],
+  "sum_durations_s": 3.4,
+  "audio_s": 3.4,
+  "residual_s": 0.0
+ },
+ "fr2": {
+  "text": "Mon ami Paul porte un beau manteau bleu marine.",
+  "lang": "fr",
+  "voice": "ff_siwis",
+  "frame_s": 0.025,
+  "chunks": [
+   {
+    "chunk": 0,
+    "phonemes": "mɔ̃n amˈi pˈɔl pˈɔʁt œ̃ bˈo mɑ̃tˈo blˈø maʁˈin.",
+    "frames": 125,
+    "samples": 75000,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.125,
+    "audio_s": 3.125,
+    "residual_s": 0.0
+   }
+  ],
+  "sum_durations_s": 3.125,
+  "audio_s": 3.125,
+  "residual_s": 0.0
+ },
+ "fr3": {
+  "text": "Le bébé boit du lait puis s'endort sur mon épaule.",
+  "lang": "fr",
+  "voice": "ff_siwis",
+  "frame_s": 0.025,
+  "chunks": [
+   {
+    "chunk": 0,
+    "phonemes": "lə bebˈe bwˈa dy lˈɛ pyˈi sɑ̃dˈɔʁ syʁ mɔ̃n epˈol.",
+    "frames": 130,
+    "samples": 78000,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.25,
+    "audio_s": 3.25,
+    "residual_s": 0.0
+   }
+  ],
+  "sum_durations_s": 3.25,
+  "audio_s": 3.25,
+  "residual_s": 0.0
+ },
+ "drift20": {
+  "text": "Peter picked a bunch of purple plums by the big brown barn.\nMy mom made pumpkin bread, but Bob baked the best pie.\nPlease bring me the map before the boat leaves the harbor.\nThe weather today is mild, with a light breeze from the west.\nMaybe we can meet by the bridge at about half past nine.",
+  "lang": "en",
+  "voice": "af_heart",
+  "frame_s": 0.025,
+  "chunks": [
+   {
+    "chunk": 0,
+    "phonemes": "pˈiTəɹ pˈɪkt ɐ bˈʌnʧ ʌv pˈɜɹpᵊl plˈʌmz bI ðə bˈɪɡ bɹˈWn bˈɑɹn.",
+    "frames": 154,
+    "samples": 92400,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.85,
+    "audio_s": 3.85,
+    "residual_s": 0.0
+   },
+   {
+    "chunk": 1,
+    "phonemes": "mˌI mˈɑm mˌAd pˈʌmpkᵊn bɹˈɛd, bˌʌt bˈɑb bˈAkt ðə bˈɛst pˈI.",
+    "frames": 150,
+    "samples": 90000,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.75,
+    "audio_s": 3.75,
+    "residual_s": 0.0
+   },
+   {
+    "chunk": 2,
+    "phonemes": "plˈiz bɹˈɪŋ mˌi ðə mˈæp bəfˈɔɹ ðə bˈOt lˈivz ðə hˈɑɹbəɹ.",
+    "frames": 132,
+    "samples": 79200,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.3,
+    "audio_s": 3.3,
+    "residual_s": 0.0
+   },
+   {
+    "chunk": 3,
+    "phonemes": "ðə wˈɛðəɹ tədˈA ɪz mˈIld, wɪð ɐ lˈIt bɹˈiz fɹʌm ðə wˈɛst.",
+    "frames": 157,
+    "samples": 94200,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.925,
+    "audio_s": 3.925,
+    "residual_s": 0.0
+   },
+   {
+    "chunk": 4,
+    "phonemes": "mˈAbi wi kæn mˈit bI ðə bɹˈɪʤ æt əbˈWt hˈæf pˈæst nˈIn.",
+    "frames": 140,
+    "samples": 84000,
+    "samples_per_frame": 600.0,
+    "sum_durations_s": 3.5,
+    "audio_s": 3.5,
+    "residual_s": 0.0
+   }
+  ],
+  "sum_durations_s": 18.325,
+  "audio_s": 18.325,
+  "residual_s": 0.0
+ }
+}

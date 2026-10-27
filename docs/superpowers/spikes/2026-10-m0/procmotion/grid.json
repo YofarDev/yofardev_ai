@@ -1,0 +1,362 @@
+[
+  {
+    "config": {
+      "stiffness": 60.0,
+      "damping": 20.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 0.0,
+      "jerk": 165252.79312526208,
+      "seam": 5.455207149657565,
+      "diff_min": 0.0004928921568627451,
+      "diff_median": 0.006384509803921568,
+      "diff_max": 0.016086446078431373,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 16.167807416832595,
+      "overshoot_deg": -3.105210358539736
+    }
+  },
+  {
+    "config": {
+      "stiffness": 60.0,
+      "damping": 20.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 0.0,
+      "jerk": 168320.5022693483,
+      "seam": 5.413874039329844,
+      "diff_min": 0.000665686274509804,
+      "diff_median": 0.006432524509803922,
+      "diff_max": 0.016086446078431373,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 18.24341274650041,
+      "overshoot_deg": -3.105210358539736
+    }
+  },
+  {
+    "config": {
+      "stiffness": 60.0,
+      "damping": 14.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 0.0,
+      "jerk": 178346.6669577057,
+      "seam": 3.860892616918573,
+      "diff_min": 6.752450980392157e-05,
+      "diff_median": 0.006194607843137255,
+      "diff_max": 0.01994063725490196,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 8.830905997389308,
+      "overshoot_deg": -0.04973506540686401
+    }
+  },
+  {
+    "config": {
+      "stiffness": 60.0,
+      "damping": 14.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 0.0,
+      "jerk": 183642.25520108387,
+      "seam": 3.851933296683159,
+      "diff_min": 5.0784313725490194e-05,
+      "diff_median": 0.00628625,
+      "diff_max": 0.01994063725490196,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 13.12922494544324,
+      "overshoot_deg": -0.04973506540686401
+    }
+  },
+  {
+    "config": {
+      "stiffness": 240.0,
+      "damping": 8.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 0.0,
+      "jerk": 3016949.905427949,
+      "seam": 1.6830025060662717,
+      "diff_min": 0.0013158333333333334,
+      "diff_median": 0.01170688725490196,
+      "diff_max": 0.03515698529411764,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 117.05339664481448,
+      "overshoot_deg": 42.11411824836651
+    }
+  },
+  {
+    "config": {
+      "stiffness": 240.0,
+      "damping": 8.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 0.0,
+      "jerk": 4113426.8332355344,
+      "seam": 1.7019939092401588,
+      "diff_min": 0.0010199264705882353,
+      "diff_median": 0.009778553921568628,
+      "diff_max": 0.03515698529411764,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 70.59774598641928,
+      "overshoot_deg": 42.11411824836651
+    }
+  },
+  {
+    "config": {
+      "stiffness": 240.0,
+      "damping": 14.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 5.0,
+      "jerk": 3532220.86606646,
+      "seam": 1.8249357177498315,
+      "diff_min": 0.00012693627450980393,
+      "diff_median": 0.008035563725490196,
+      "diff_max": 0.03346968137254902,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 74.28831390575422,
+      "overshoot_deg": 17.89903196723978
+    }
+  },
+  {
+    "config": {
+      "stiffness": 120.0,
+      "damping": 8.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 8.0,
+      "jerk": 2887670.2887134273,
+      "seam": 2.4047886058468246,
+      "diff_min": 0.00015659313725490198,
+      "diff_median": 0.00736531862745098,
+      "diff_max": 0.03077544117647059,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 70.39751850977781,
+      "overshoot_deg": 27.800616102857518
+    }
+  },
+  {
+    "config": {
+      "stiffness": 240.0,
+      "damping": 20.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 12.0,
+      "jerk": 652400.5072393634,
+      "seam": 3.4081214322781523,
+      "diff_min": 0.00048303921568627455,
+      "diff_median": 0.006612254901960784,
+      "diff_max": 0.03195075980392157,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 53.43947368202039,
+      "overshoot_deg": 4.271855263424612
+    }
+  },
+  {
+    "config": {
+      "stiffness": 120.0,
+      "damping": 8.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 13.0,
+      "jerk": 3334059.070830593,
+      "seam": 2.4605430030961943,
+      "diff_min": 0.0001389705882352941,
+      "diff_median": 0.006918676470588235,
+      "diff_max": 0.030673774509803922,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 49.017641950755326,
+      "overshoot_deg": 27.800616102857518
+    }
+  },
+  {
+    "config": {
+      "stiffness": 240.0,
+      "damping": 14.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 14.0,
+      "jerk": 3376890.853851706,
+      "seam": 2.592270932715746,
+      "diff_min": 6.053921568627451e-05,
+      "diff_median": 0.005841838235294118,
+      "diff_max": 0.03346968137254902,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 44.87495132134484,
+      "overshoot_deg": 17.89903196723978
+    }
+  },
+  {
+    "config": {
+      "stiffness": 60.0,
+      "damping": 8.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 18.0,
+      "jerk": 3880511.5083188605,
+      "seam": 4.279151410624332,
+      "diff_min": 2.7941176470588236e-05,
+      "diff_median": 0.00520125,
+      "diff_max": 0.024842769607843138,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 35.890718952510234,
+      "overshoot_deg": 13.729518580978379
+    }
+  },
+  {
+    "config": {
+      "stiffness": 240.0,
+      "damping": 20.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 18.0,
+      "jerk": 4067109.672840926,
+      "seam": 5.411115950046493,
+      "diff_min": 0.0004649509803921569,
+      "diff_median": 0.0041646568627450985,
+      "diff_max": 0.03195075980392157,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 32.347842782504415,
+      "overshoot_deg": 4.271855263424612
+    }
+  },
+  {
+    "config": {
+      "stiffness": 120.0,
+      "damping": 14.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 21.0,
+      "jerk": 2585666.4672329794,
+      "seam": 4.177084937267375,
+      "diff_min": 0.0002950735294117647,
+      "diff_median": 0.004616151960784314,
+      "diff_max": 0.02852200980392157,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 40.86547795977951,
+      "overshoot_deg": 5.394927940356425
+    }
+  },
+  {
+    "config": {
+      "stiffness": 120.0,
+      "damping": 20.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 23.0,
+      "jerk": 295414.58359010465,
+      "seam": 1.200774264277639,
+      "diff_min": 0.00020223039215686272,
+      "diff_median": 0.003577083333333333,
+      "diff_max": 0.026014583333333334,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 14.343830173556391,
+      "overshoot_deg": -0.005769838003431005
+    }
+  },
+  {
+    "config": {
+      "stiffness": 120.0,
+      "damping": 20.0,
+      "amplitude": 1.0
+    },
+    "metrics": {
+      "pops": 23.0,
+      "jerk": 297298.7106939697,
+      "seam": 1.123287025184267,
+      "diff_min": 0.000345171568627451,
+      "diff_median": 0.003637892156862745,
+      "diff_max": 0.026014583333333334,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 26.313176595524737,
+      "overshoot_deg": -0.005769838003431005
+    }
+  },
+  {
+    "config": {
+      "stiffness": 60.0,
+      "damping": 8.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 25.0,
+      "jerk": 1854965.625429981,
+      "seam": 5.100002807963384,
+      "diff_min": 3.6544117647058824e-05,
+      "diff_median": 0.004364338235294117,
+      "diff_max": 0.024842769607843138,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 25.6374466601682,
+      "overshoot_deg": 13.729518580978379
+    }
+  },
+  {
+    "config": {
+      "stiffness": 120.0,
+      "damping": 14.0,
+      "amplitude": 0.6
+    },
+    "metrics": {
+      "pops": 26.0,
+      "jerk": 1998046.832461572,
+      "seam": 5.980333302783125,
+      "diff_min": 0.00017281862745098037,
+      "diff_median": 0.0032091176470588232,
+      "diff_max": 0.02852200980392157,
+      "moved": 1.0,
+      "cli_errors": 0.0,
+      "rejected": 0.0,
+      "swing_deg": 26.003165850116652,
+      "overshoot_deg": 5.394927940356425
+    }
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "ticks": 600,
+  "numbers_per_tick": 40,
+  "step_write_us_p50": 35,
+  "step_write_us_p95": 74,
+  "step_write_us_max": 4603
+}

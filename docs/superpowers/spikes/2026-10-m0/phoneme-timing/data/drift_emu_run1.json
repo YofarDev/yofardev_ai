@@ -1,0 +1,65 @@
+{
+ "tier": "emu",
+ "renderer": "impeller",
+ "platform": "android",
+ "amplitude_source": "AudioAnalyzer.getAmplitudes",
+ "frames": 235,
+ "audio_duration_ms": 20000,
+ "interval_ms": 85,
+ "implied_animation_ms": 19975,
+ "volume": 0.05,
+ "volume0_probe": {
+  "position_after_1500ms": 0,
+  "advances": false
+ },
+ "startup_resume_to_timer_ms": 19,
+ "position_at_timer_start_ms": 0,
+ "animation_done_ms": 20234,
+ "player_complete_ms": 20325,
+ "end_gap_ms": -91,
+ "ticks": 235,
+ "valid_ticks": 235,
+ "drift_ms": {
+  "n": 235,
+  "min": -178,
+  "max": 53,
+  "mean": 33.54,
+  "p50": 41,
+  "p95": 51
+ },
+ "drift_final_ms": 36,
+ "drift_abs_max_ms": 178,
+ "timer_lateness_ms": {
+  "n": 235,
+  "min": 3,
+  "max": 249,
+  "mean": 128.24,
+  "p50": 174,
+  "p95": 186
+ },
+ "position_query_ms": {
+  "n": 235,
+  "min": 0,
+  "max": 56,
+  "mean": 5.31,
+  "p50": 2,
+  "p95": 22
+ },
+ "audio_minus_wall_ms": {
+  "first": -89,
+  "last": -296
+ },
+ "position_granularity": {
+  "distinct_values": 235,
+  "samples": 235,
+  "step_ms": {
+   "n": 234,
+   "min": -76,
+   "max": 196,
+   "mean": 84.85,
+   "p50": 85,
+   "p95": 111
+  },
+  "longest_repeat_run": 0
+ }
+}

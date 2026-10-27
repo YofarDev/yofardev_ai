@@ -14,7 +14,8 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations) and `specs/` (rive-v4 design). Other references: `README.md`
+> optimizations, 2026-10-27 Rive moonshot M0 spikes) and `specs/` (rive-v4
+> design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
 

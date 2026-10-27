@@ -1,0 +1,65 @@
+{
+ "tier": "macos",
+ "renderer": "skia",
+ "platform": "macos",
+ "amplitude_source": "AudioAnalyzer.getAmplitudes",
+ "frames": 800,
+ "audio_duration_ms": 20000,
+ "interval_ms": 25,
+ "implied_animation_ms": 20000,
+ "volume": 0.0,
+ "volume0_probe": {
+  "position_after_1500ms": 1153,
+  "advances": true
+ },
+ "startup_resume_to_timer_ms": 9,
+ "position_at_timer_start_ms": 0,
+ "animation_done_ms": 20027,
+ "player_complete_ms": 20318,
+ "end_gap_ms": -291,
+ "ticks": 800,
+ "valid_ticks": 800,
+ "drift_ms": {
+  "n": 800,
+  "min": 0,
+  "max": 257,
+  "mean": 253.34,
+  "p50": 255,
+  "p95": 256
+ },
+ "drift_final_ms": 255,
+ "drift_abs_max_ms": 257,
+ "timer_lateness_ms": {
+  "n": 800,
+  "min": 1,
+  "max": 21,
+  "mean": 2.31,
+  "p50": 2,
+  "p95": 3
+ },
+ "position_query_ms": {
+  "n": 800,
+  "min": 0,
+  "max": 1,
+  "mean": 0.3,
+  "p50": 0,
+  "p95": 1
+ },
+ "audio_minus_wall_ms": {
+  "first": -27,
+  "last": -282
+ },
+ "position_granularity": {
+  "distinct_values": 790,
+  "samples": 800,
+  "step_ms": {
+   "n": 789,
+   "min": 7,
+   "max": 43,
+   "mean": 24.99,
+   "p50": 25,
+   "p95": 26
+  },
+  "longest_repeat_run": 10
+ }
+}

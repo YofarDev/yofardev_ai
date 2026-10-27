@@ -1,0 +1,28 @@
+{
+  "score": {
+    "pops": 2.0,
+    "jerk": 3444343.1723484914,
+    "seam": 4.594847501751283
+  },
+  "inputs": {
+    "frames": 132,
+    "frame_note": "wave gesture_wave is 120 frames @60fps; +12 frames of settle, as rive/tools/motion_review.py",
+    "data_args": [
+      "--data=gestureId=wave",
+      "--data=gesture=true"
+    ],
+    "project": "rive/avatar (avatar.rml, artboard Avatar, built from source by the rive CLI; assets/rive/avatar.riv is the shipped build of it)",
+    "rive_cli_version": "rive 1.8.0",
+    "viewport": "800x1000 @1x (CLI default)",
+    "rest_frame": "rive rive/avatar --advance=1, no data"
+  },
+  "diagnostics": {
+    "max_frame_diff": 0.01831633823529412,
+    "median_frame_diff": 0.003946686274509804,
+    "pop_indices": [
+      20,
+      21
+    ]
+  },
+  "seam_note": "non-loop clip; last-vs-first diff is idle-phase drift, not a loop seam — compare like-for-like only"
+}

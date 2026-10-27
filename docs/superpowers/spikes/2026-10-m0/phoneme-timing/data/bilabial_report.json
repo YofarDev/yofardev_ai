@@ -1,0 +1,398 @@
+{
+ "en1": {
+  "lang": "en",
+  "lag_ms": -50,
+  "by_shift_ms": {
+   "0": {
+    "bilabials": {
+     "total": 11,
+     "local_min": 7,
+     "deep_dip": 4,
+     "deep_dip_tol25": 7
+    },
+    "open_vowels": {
+     "total": 6,
+     "local_min": 4,
+     "deep_dip": 1,
+     "deep_dip_tol25": 4
+    }
+   },
+   "-25": {
+    "bilabials": {
+     "total": 11,
+     "local_min": 6,
+     "deep_dip": 5,
+     "deep_dip_tol25": 11
+    },
+    "open_vowels": {
+     "total": 6,
+     "local_min": 5,
+     "deep_dip": 2,
+     "deep_dip_tol25": 2
+    }
+   },
+   "-50": {
+    "bilabials": {
+     "total": 11,
+     "local_min": 10,
+     "deep_dip": 10,
+     "deep_dip_tol25": 11
+    },
+    "open_vowels": {
+     "total": 6,
+     "local_min": 3,
+     "deep_dip": 1,
+     "deep_dip_tol25": 3
+    }
+   },
+   "-75": {
+    "bilabials": {
+     "total": 11,
+     "local_min": 9,
+     "deep_dip": 9,
+     "deep_dip_tol25": 11
+    },
+    "open_vowels": {
+     "total": 6,
+     "local_min": 5,
+     "deep_dip": 2,
+     "deep_dip_tol25": 3
+    }
+   }
+  },
+  "png": [
+   "en1.png",
+   "en1_shift-50ms.png"
+  ]
+ },
+ "en2": {
+  "lang": "en",
+  "lag_ms": -45,
+  "by_shift_ms": {
+   "0": {
+    "bilabials": {
+     "total": 14,
+     "local_min": 10,
+     "deep_dip": 4,
+     "deep_dip_tol25": 6
+    },
+    "open_vowels": {
+     "total": 8,
+     "local_min": 4,
+     "deep_dip": 3,
+     "deep_dip_tol25": 5
+    }
+   },
+   "-25": {
+    "bilabials": {
+     "total": 14,
+     "local_min": 8,
+     "deep_dip": 4,
+     "deep_dip_tol25": 9
+    },
+    "open_vowels": {
+     "total": 8,
+     "local_min": 6,
+     "deep_dip": 4,
+     "deep_dip_tol25": 4
+    }
+   },
+   "-50": {
+    "bilabials": {
+     "total": 14,
+     "local_min": 11,
+     "deep_dip": 8,
+     "deep_dip_tol25": 10
+    },
+    "open_vowels": {
+     "total": 8,
+     "local_min": 4,
+     "deep_dip": 1,
+     "deep_dip_tol25": 5
+    }
+   },
+   "-75": {
+    "bilabials": {
+     "total": 14,
+     "local_min": 11,
+     "deep_dip": 8,
+     "deep_dip_tol25": 10
+    },
+    "open_vowels": {
+     "total": 8,
+     "local_min": 6,
+     "deep_dip": 2,
+     "deep_dip_tol25": 5
+    }
+   }
+  },
+  "png": [
+   "en2.png",
+   "en2_shift-50ms.png"
+  ]
+ },
+ "en3": {
+  "lang": "en",
+  "lag_ms": -50,
+  "by_shift_ms": {
+   "0": {
+    "bilabials": {
+     "total": 8,
+     "local_min": 6,
+     "deep_dip": 3,
+     "deep_dip_tol25": 4
+    },
+    "open_vowels": {
+     "total": 4,
+     "local_min": 3,
+     "deep_dip": 2,
+     "deep_dip_tol25": 4
+    }
+   },
+   "-25": {
+    "bilabials": {
+     "total": 8,
+     "local_min": 4,
+     "deep_dip": 2,
+     "deep_dip_tol25": 6
+    },
+    "open_vowels": {
+     "total": 4,
+     "local_min": 3,
+     "deep_dip": 0,
+     "deep_dip_tol25": 2
+    }
+   },
+   "-50": {
+    "bilabials": {
+     "total": 8,
+     "local_min": 7,
+     "deep_dip": 5,
+     "deep_dip_tol25": 6
+    },
+    "open_vowels": {
+     "total": 4,
+     "local_min": 3,
+     "deep_dip": 1,
+     "deep_dip_tol25": 1
+    }
+   },
+   "-75": {
+    "bilabials": {
+     "total": 8,
+     "local_min": 6,
+     "deep_dip": 4,
+     "deep_dip_tol25": 5
+    },
+    "open_vowels": {
+     "total": 4,
+     "local_min": 2,
+     "deep_dip": 1,
+     "deep_dip_tol25": 3
+    }
+   }
+  },
+  "png": [
+   "en3.png",
+   "en3_shift-50ms.png"
+  ]
+ },
+ "fr1": {
+  "lang": "fr",
+  "lag_ms": -70,
+  "by_shift_ms": {
+   "0": {
+    "bilabials": {
+     "total": 9,
+     "local_min": 5,
+     "deep_dip": 1,
+     "deep_dip_tol25": 3
+    },
+    "open_vowels": {
+     "total": 9,
+     "local_min": 9,
+     "deep_dip": 6,
+     "deep_dip_tol25": 7
+    }
+   },
+   "-25": {
+    "bilabials": {
+     "total": 9,
+     "local_min": 5,
+     "deep_dip": 3,
+     "deep_dip_tol25": 6
+    },
+    "open_vowels": {
+     "total": 9,
+     "local_min": 7,
+     "deep_dip": 5,
+     "deep_dip_tol25": 6
+    }
+   },
+   "-50": {
+    "bilabials": {
+     "total": 9,
+     "local_min": 6,
+     "deep_dip": 6,
+     "deep_dip_tol25": 7
+    },
+    "open_vowels": {
+     "total": 9,
+     "local_min": 5,
+     "deep_dip": 3,
+     "deep_dip_tol25": 5
+    }
+   },
+   "-75": {
+    "bilabials": {
+     "total": 9,
+     "local_min": 8,
+     "deep_dip": 6,
+     "deep_dip_tol25": 7
+    },
+    "open_vowels": {
+     "total": 9,
+     "local_min": 4,
+     "deep_dip": 0,
+     "deep_dip_tol25": 4
+    }
+   }
+  },
+  "png": [
+   "fr1.png",
+   "fr1_shift-50ms.png"
+  ]
+ },
+ "fr2": {
+  "lang": "fr",
+  "lag_ms": -60,
+  "by_shift_ms": {
+   "0": {
+    "bilabials": {
+     "total": 8,
+     "local_min": 4,
+     "deep_dip": 0,
+     "deep_dip_tol25": 1
+    },
+    "open_vowels": {
+     "total": 8,
+     "local_min": 6,
+     "deep_dip": 4,
+     "deep_dip_tol25": 4
+    }
+   },
+   "-25": {
+    "bilabials": {
+     "total": 8,
+     "local_min": 4,
+     "deep_dip": 1,
+     "deep_dip_tol25": 4
+    },
+    "open_vowels": {
+     "total": 8,
+     "local_min": 6,
+     "deep_dip": 4,
+     "deep_dip_tol25": 4
+    }
+   },
+   "-50": {
+    "bilabials": {
+     "total": 8,
+     "local_min": 7,
+     "deep_dip": 4,
+     "deep_dip_tol25": 6
+    },
+    "open_vowels": {
+     "total": 8,
+     "local_min": 4,
+     "deep_dip": 1,
+     "deep_dip_tol25": 4
+    }
+   },
+   "-75": {
+    "bilabials": {
+     "total": 8,
+     "local_min": 6,
+     "deep_dip": 5,
+     "deep_dip_tol25": 7
+    },
+    "open_vowels": {
+     "total": 8,
+     "local_min": 7,
+     "deep_dip": 1,
+     "deep_dip_tol25": 2
+    }
+   }
+  },
+  "png": [
+   "fr2.png",
+   "fr2_shift-50ms.png"
+  ]
+ },
+ "fr3": {
+  "lang": "fr",
+  "lag_ms": -65,
+  "by_shift_ms": {
+   "0": {
+    "bilabials": {
+     "total": 6,
+     "local_min": 4,
+     "deep_dip": 2,
+     "deep_dip_tol25": 4
+    },
+    "open_vowels": {
+     "total": 6,
+     "local_min": 4,
+     "deep_dip": 3,
+     "deep_dip_tol25": 5
+    }
+   },
+   "-25": {
+    "bilabials": {
+     "total": 6,
+     "local_min": 6,
+     "deep_dip": 4,
+     "deep_dip_tol25": 5
+    },
+    "open_vowels": {
+     "total": 6,
+     "local_min": 3,
+     "deep_dip": 1,
+     "deep_dip_tol25": 3
+    }
+   },
+   "-50": {
+    "bilabials": {
+     "total": 6,
+     "local_min": 6,
+     "deep_dip": 5,
+     "deep_dip_tol25": 5
+    },
+    "open_vowels": {
+     "total": 6,
+     "local_min": 3,
+     "deep_dip": 2,
+     "deep_dip_tol25": 2
+    }
+   },
+   "-75": {
+    "bilabials": {
+     "total": 6,
+     "local_min": 6,
+     "deep_dip": 5,
+     "deep_dip_tol25": 5
+    },
+    "open_vowels": {
+     "total": 6,
+     "local_min": 5,
+     "deep_dip": 1,
+     "deep_dip_tol25": 2
+    }
+   }
+  },
+  "png": [
+   "fr3.png",
+   "fr3_shift-50ms.png"
+  ]
+ }
+}
