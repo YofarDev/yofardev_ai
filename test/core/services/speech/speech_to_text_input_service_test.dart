@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
@@ -281,6 +282,96 @@ void main() {
       onResult!(_result('hello there', isFinal: true));
 
       expect(await stopped, 'hello there');
+    });
+
+    group('sessionEnded', () {
+      Future<int> countEnds(
+        SpeechToTextInputService service,
+        Future<void> Function() act,
+      ) async {
+        int ends = 0;
+        final StreamSubscription<void> sub = service.sessionEnded.listen(
+          (_) => ends++,
+        );
+        await act();
+        await Future<void>.delayed(Duration.zero);
+        await sub.cancel();
+        return ends;
+      }
+
+      test('fires when the recognizer reports done on its own', () async {
+        final SpeechToTextInputService service = build();
+        await service.start(localeId: 'en_US');
+        onStatus!(SpeechToText.listeningStatus);
+        onResult!(_result('hello'));
+
+        final int ends = await countEnds(service, () async {
+          onStatus!(SpeechToText.doneStatus);
+        });
+
+        expect(ends, 1);
+        expect(await service.stop(), 'hello');
+      });
+
+      test('fires on a final result and on a permanent error', () async {
+        final SpeechToTextInputService service = build();
+        await service.start(localeId: 'en_US');
+        expect(
+          await countEnds(service, () async {
+            onResult!(_result('hi', isFinal: true));
+          }),
+          1,
+        );
+        await service.stop();
+
+        await service.start(localeId: 'en_US');
+        expect(
+          await countEnds(service, () async {
+            onError!(SpeechRecognitionError('error_network', true));
+          }),
+          1,
+        );
+      });
+
+      test('fires after notListening when done never comes', () {
+        fakeAsync((FakeAsync async) {
+          final SpeechToTextInputService service = build();
+          int ends = 0;
+          service.sessionEnded.listen((_) => ends++);
+          service.start(localeId: 'en_US');
+          async.flushMicrotasks();
+          onStatus!(SpeechToText.listeningStatus);
+          onStatus!(SpeechToText.notListeningStatus);
+
+          async.elapse(
+            SpeechToTextInputService.finalResultTimeout -
+                const Duration(milliseconds: 1),
+          );
+          expect(ends, 0, reason: 'done may still bring the final words');
+          async.elapse(const Duration(milliseconds: 2));
+          expect(ends, 1);
+        });
+      });
+
+      test('never fires for stop() or cancel()', () async {
+        final SpeechToTextInputService service = build();
+        await service.start(localeId: 'en_US');
+        onStatus!(SpeechToText.listeningStatus);
+        expect(
+          await countEnds(service, () async {
+            final Future<String> stopped = service.stop();
+            // The plugin answers a stop with its final result, then done.
+            onResult!(_result('hello', isFinal: true));
+            onStatus!(SpeechToText.doneStatus);
+            await stopped;
+          }),
+          0,
+        );
+
+        await service.start(localeId: 'en_US');
+        onStatus!(SpeechToText.listeningStatus);
+        expect(await countEnds(service, service.cancel), 0);
+      });
     });
 
     group('races', () {

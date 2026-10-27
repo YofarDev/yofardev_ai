@@ -99,6 +99,7 @@ class _StageComposerState extends State<StageComposer>
 
   StreamSubscription<double>? _levelSub;
   StreamSubscription<String>? _wordsSub;
+  StreamSubscription<void>? _endedSub;
 
   @override
   void initState() {
@@ -113,6 +114,7 @@ class _StageComposerState extends State<StageComposer>
     }
     unawaited(_levelSub?.cancel());
     unawaited(_wordsSub?.cancel());
+    unawaited(_endedSub?.cancel());
     _errorTimer?.cancel();
     _controller
       ..removeListener(_onTextChanged)
@@ -179,6 +181,13 @@ class _StageComposerState extends State<StageComposer>
         setState(() => _partialWords = words);
       }
     });
+    // The recognizer stopped on its own (the user paused, an error): send
+    // what it heard, as a tap would, or go back to idle if nothing.
+    _endedSub = widget.speech.sessionEnded.listen((_) {
+      if (mounted && _listening && !_stopping && session == _session) {
+        unawaited(_stopListening());
+      }
+    });
 
     final SpeechStartResult result = await widget.speech.start(
       localeId: localeId,
@@ -206,8 +215,10 @@ class _StageComposerState extends State<StageComposer>
   void _endListening() {
     unawaited(_levelSub?.cancel());
     unawaited(_wordsSub?.cancel());
+    unawaited(_endedSub?.cancel());
     _levelSub = null;
     _wordsSub = null;
+    _endedSub = null;
     _level.value = 0;
     setState(() {
       _listening = false;

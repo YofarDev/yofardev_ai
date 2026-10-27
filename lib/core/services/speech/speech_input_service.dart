@@ -12,6 +12,11 @@ abstract class SpeechInputService {
   /// Words heard so far in the current session.
   Stream<String> get partialWords;
 
+  /// Fires when the recognizer ends the current session on its own
+  /// (silence timeout, final result, a permanent error), never for a
+  /// [stop]/[cancel]. The words heard are then still returned by [stop].
+  Stream<void> get sessionEnded;
+
   /// Starts a listening session in [localeId] (e.g. `fr_FR`). Overlapping
   /// calls share one pending start (the mic opens at most once).
   Future<SpeechStartResult> start({required String localeId});

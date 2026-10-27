@@ -54,11 +54,17 @@ class FakeSpeechInputService implements SpeechInputService {
   final StreamController<double> level = StreamController<double>.broadcast();
   final StreamController<String> partial = StreamController<String>.broadcast();
 
+  /// Fire to end the session as the recognizer does on its own.
+  final StreamController<void> ended = StreamController<void>.broadcast();
+
   @override
   Stream<double> get soundLevel => level.stream;
 
   @override
   Stream<String> get partialWords => partial.stream;
+
+  @override
+  Stream<void> get sessionEnded => ended.stream;
 
   @override
   Future<SpeechStartResult> start({required String localeId}) async {
@@ -84,6 +90,7 @@ class FakeSpeechInputService implements SpeechInputService {
   Future<void> dispose() async {
     await level.close();
     await partial.close();
+    await ended.close();
   }
 }
 
@@ -673,6 +680,87 @@ void main() {
     speech.heldStarts[1].complete(SpeechStartResult.started);
     await tester.pump();
     expect(orbState(tester), ComposerOrbState.listening);
+  });
+
+  testWidgets('the recognizer ending on its own sends what it heard', (
+    WidgetTester tester,
+  ) async {
+    speech.words = 'what is the weather';
+    await pumpComposer(tester);
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    speech.partial.add('what is the weather');
+    await tester.idle();
+    await tester.pump();
+    expect(orbState(tester), ComposerOrbState.listening);
+
+    // The user paused: the platform recognizer finalized and stopped.
+    speech.ended.add(null);
+    await tester.idle();
+    await tester.pump();
+
+    expect(speech.calls, <String>['start:en_US', 'stop']);
+    verify(
+      () => chatCubit.streamResponse(
+        'what is the weather',
+        onlyText: false,
+        attachedImage: null,
+        avatar: _avatar,
+        currentChat: _chat,
+        language: 'en',
+        functionCallingEnabled: true,
+      ),
+    ).called(1);
+    expect(orbState(tester), isNot(ComposerOrbState.listening));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+  });
+
+  testWidgets('the recognizer ending with nothing heard goes back to idle', (
+    WidgetTester tester,
+  ) async {
+    await pumpComposer(tester);
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    expect(orbState(tester), ComposerOrbState.listening);
+
+    speech.ended.add(null);
+    await tester.idle();
+    await tester.pump();
+
+    expect(orbState(tester), ComposerOrbState.idle);
+    expect(speech.calls, <String>['start:en_US', 'stop']);
+    verifyNever(
+      () => chatCubit.streamResponse(
+        any(),
+        onlyText: any(named: 'onlyText'),
+        attachedImage: any(named: 'attachedImage'),
+        avatar: any(named: 'avatar'),
+        currentChat: any(named: 'currentChat'),
+        language: any(named: 'language'),
+        functionCallingEnabled: any(named: 'functionCallingEnabled'),
+      ),
+    );
+  });
+
+  testWidgets('a session end after a stop tap is not handled twice', (
+    WidgetTester tester,
+  ) async {
+    speech.stopGate = Completer<String>();
+    await pumpComposer(tester);
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+
+    speech.ended.add(null);
+    await tester.idle();
+    await tester.pump();
+    speech.stopGate!.complete('hello');
+    await tester.pump();
+
+    expect(speech.calls, <String>['start:en_US', 'stop']);
+    expect(streamResponseCalls(), 1);
   });
 
   testWidgets('a throwing streamResponse still resets and allows the next '

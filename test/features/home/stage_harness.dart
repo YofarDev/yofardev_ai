@@ -50,6 +50,9 @@ class QuietSpeechInputService implements SpeechInputService {
   Stream<String> get partialWords => const Stream<String>.empty();
 
   @override
+  Stream<void> get sessionEnded => const Stream<void>.empty();
+
+  @override
   Future<SpeechStartResult> start({required String localeId}) async =>
       SpeechStartResult.started;
 

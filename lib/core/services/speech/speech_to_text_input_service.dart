@@ -41,6 +41,10 @@ bool isSpeechInputSupported(String platform) => switch (platform) {
 /// [SpeechStartResult.cancelled] before opening the mic. The mic is never
 /// left open without a caller able to stop it.
 ///
+/// A session the recognizer ends on its own (final result, `done`, a
+/// permanent error, or `notListening` with no `done` within
+/// [finalResultTimeout]) is reported on [sessionEnded].
+///
 /// `SpeechToText()` is a process-wide singleton shared with the chat details
 /// input (AiTextInput). Its `initialize` callbacks only register on the
 /// first call, so the status/error listeners are re-attached before every
@@ -67,6 +71,8 @@ class SpeechToTextInputService implements SpeechInputService {
       StreamController<double>.broadcast();
   final StreamController<String> _partialWords =
       StreamController<String>.broadcast();
+  final StreamController<void> _sessionEnded =
+      StreamController<void>.broadcast();
 
   SpeechToText? _speech;
   bool _initialized = false;
@@ -79,6 +85,14 @@ class SpeechToTextInputService implements SpeechInputService {
 
   /// The start in flight, shared by overlapping [start] calls.
   Future<SpeechStartResult>? _pendingStart;
+
+  /// [_generation] when the current [_session] opened: the session ended
+  /// on its own (not through stop/cancel) while it is unchanged.
+  int _sessionGeneration = 0;
+
+  /// Ends the session if the recognizer said `notListening` but its `done`
+  /// never came.
+  Timer? _notListeningTimer;
 
   /// Words of the current (or last ended) session.
   String _words = '';
@@ -105,6 +119,9 @@ class SpeechToTextInputService implements SpeechInputService {
 
   @override
   Stream<String> get partialWords => _partialWords.stream;
+
+  @override
+  Stream<void> get sessionEnded => _sessionEnded.stream;
 
   @override
   Future<SpeechStartResult> start({required String localeId}) {
@@ -156,7 +173,9 @@ class SpeechToTextInputService implements SpeechInputService {
       if (superseded()) return SpeechStartResult.cancelled;
       _words = '';
       _sawListening = false;
+      _notListeningTimer?.cancel();
       _session = Completer<String>();
+      _sessionGeneration = generation;
       speech
         ..statusListener = _onStatus
         ..errorListener = _onError;
@@ -179,7 +198,8 @@ class SpeechToTextInputService implements SpeechInputService {
         stackTrace: st,
       );
       if (!superseded()) {
-        _endSession();
+        // Reported as `unavailable`, not as a session that ended.
+        _endSession(notify: false);
         _session = null;
       }
       return SpeechStartResult.unavailable;
@@ -217,6 +237,7 @@ class SpeechToTextInputService implements SpeechInputService {
   @override
   Future<void> cancel() async {
     _generation++;
+    _notListeningTimer?.cancel();
     final Completer<String>? session = _session;
     _session = null;
     _words = '';
@@ -243,6 +264,7 @@ class SpeechToTextInputService implements SpeechInputService {
     _disposed = true;
     await _soundLevel.close();
     await _partialWords.close();
+    await _sessionEnded.close();
   }
 
   void _onResult(SpeechRecognitionResult result) {
@@ -260,6 +282,12 @@ class SpeechToTextInputService implements SpeechInputService {
         _sawListening = true;
       case SpeechToText.notListeningStatus:
         _addLevel(0);
+        // `done` normally follows with the final result; end the session
+        // anyway if it never comes.
+        if (_sawListening && _session != null && !_session!.isCompleted) {
+          _notListeningTimer?.cancel();
+          _notListeningTimer = Timer(finalResultTimeout, _endSession);
+        }
       case SpeechToText.doneStatus:
         if (_sawListening) _endSession();
     }
@@ -277,12 +305,21 @@ class SpeechToTextInputService implements SpeechInputService {
     if (!_soundLevel.isClosed) _soundLevel.add(level);
   }
 
-  /// Completes the current session with the words heard so far.
-  void _endSession() {
+  /// Completes the current session with the words heard so far, and
+  /// reports it on [sessionEnded] when the recognizer ended it on its own
+  /// (no stop/cancel since it opened) and [notify] is set.
+  void _endSession({bool notify = true}) {
+    _notListeningTimer?.cancel();
+    _notListeningTimer = null;
     final Completer<String>? session = _session;
     if (session != null && !session.isCompleted) {
       session.complete(_words);
       _addLevel(0);
+      if (notify &&
+          _sessionGeneration == _generation &&
+          !_sessionEnded.isClosed) {
+        _sessionEnded.add(null);
+      }
     }
   }
 }
