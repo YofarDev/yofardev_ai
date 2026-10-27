@@ -98,11 +98,21 @@ class TalkingCubit extends Cubit<TalkingState> {
         _idleCooldownTimer = null;
         setLoadingStatus(true);
       case ChatStatus.error:
+        // A reply that failed mid-stream may have sentences playing or on
+        // their way (the queue is not cleared): let them finish with a
+        // moving mouth. With nothing to say, stop thinking now.
+        _replyDone = true;
+        final bool speechLeft =
+            state.phase == TalkingPhase.speaking ||
+            (state.phase == TalkingPhase.generating &&
+                _ttsQueue.hasPendingSpeech);
+        if (!speechLeft) {
+          stop();
+        }
       case ChatStatus.interrupted:
-        // Error or interruption - stop thinking animation
+        // Interruption - stop thinking animation
         _replyDone = false;
         stop();
-        break;
     }
   }
 

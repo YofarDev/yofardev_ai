@@ -161,4 +161,68 @@ void main() {
 
     expect(talking.state.phase, TalkingPhase.generating);
   });
+
+  group('a reply that fails mid-stream', () {
+    Future<void> startSpeaking() async {
+      await startReply();
+      unawaited(enqueue('Hello there.'));
+      synthesizer.answer('/tmp/hello.wav');
+      await flush();
+      playback.startAmplitudeAnimation(
+        '/tmp/hello.wav',
+        List<int>.generate(50, (int i) => i.isEven ? 0 : 20),
+        const Duration(seconds: 1),
+        caption: queue.consumeText('/tmp/hello.wav'),
+      );
+      await flush();
+      expect(talking.state.phase, TalkingPhase.speaking);
+    }
+
+    test(
+      'keeps speaking (and the mouth moving) while its audio plays',
+      () async {
+        await startSpeaking();
+
+        lifecycle.emitStreamingStateChanged(ChatStatus.error);
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+
+        expect(talking.state.phase, TalkingPhase.speaking);
+        final List<MouthState> mouths = <MouthState>[];
+        final StreamSubscription<TalkingState> sub = talking.stream.listen(
+          (TalkingState s) => mouths.add(s.mouthState),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await sub.cancel();
+        expect(mouths, isNotEmpty, reason: 'the lip-sync keeps running');
+
+        // The sentence ends as ChatTtsCubit ends it: idle after the cooldown.
+        await playback.stop();
+        await Future<void>.delayed(afterCooldown);
+        expect(talking.state.phase, TalkingPhase.idle);
+      },
+    );
+
+    test('keeps generating while a sentence is still synthesizing, then '
+        'idles if it fails', () async {
+      await startReply();
+      unawaited(enqueue('Hello there.'));
+
+      lifecycle.emitStreamingStateChanged(ChatStatus.error);
+      await Future<void>.delayed(afterCooldown);
+      expect(talking.state.phase, TalkingPhase.generating);
+
+      synthesizer.fail();
+      await Future<void>.delayed(afterCooldown);
+      expect(talking.state.phase, TalkingPhase.idle);
+    });
+
+    test('with nothing to say, stops thinking at once', () async {
+      await startReply();
+
+      lifecycle.emitStreamingStateChanged(ChatStatus.error);
+      await flush();
+
+      expect(talking.state.phase, TalkingPhase.idle);
+    });
+  });
 }
