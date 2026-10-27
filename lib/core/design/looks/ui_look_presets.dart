@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/avatar_scene.dart';
+import '../tokens/app_palette.dart';
 import '../tokens/scene_palette.dart';
 import 'ui_look.dart';
 
@@ -28,23 +29,30 @@ abstract final class UiLooks {
   );
 
   /// B: a lamp-lit picture book seen from a dark theatre.
+  /// The shipping look (`AppTheme`). Its values live in [AppPalette].
   static const UiLook storybook = UiLook(
     id: 'storybook',
     name: 'Storybook night',
-    ink: Color(0xFF16121D),
-    surface: Color(0xFF211B2B),
-    onSurface: Color(0xFFF3EBDD),
-    outline: Color(0xFF3A3046),
+    ink: AppPalette.ink,
+    surface: AppPalette.surface,
+    onSurface: AppPalette.onSurface,
+    outline: AppPalette.outline,
     surfaceStyle: AppSurfaceStyle.glass,
     outlineWidth: 1,
     radiusScale: 1.15,
     fonts: LookFonts(display: 'Fraunces', text: 'Manrope'),
     accents: <AvatarScene, Color>{
-      AvatarScene.livingRoom: Color(0xFFF4B860),
-      AvatarScene.campfire: Color(0xFFFF8552),
-      AvatarScene.beach: Color(0xFFFF9478),
-      AvatarScene.deepSpace: Color(0xFFB79CFF),
+      AvatarScene.livingRoom: AppPalette.livingRoomAccent,
+      AvatarScene.campfire: AppPalette.campfireAccent,
+      AvatarScene.beach: AppPalette.beachAccent,
+      AvatarScene.deepSpace: AppPalette.deepSpaceAccent,
     },
+    error: AppPalette.error,
+    onError: AppPalette.onError,
+    tertiary: AppPalette.tertiary,
+    onTertiary: AppPalette.onTertiary,
+    success: AppPalette.success,
+    warning: AppPalette.warning,
   );
 
   /// C: flat fills, ink outlines and hard shadows, like the character's art.

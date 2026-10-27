@@ -104,6 +104,7 @@ on violation.
 - **All user-facing strings** go through `AppLocalizations` — add keys with `./scripts/fstr.sh`, never edit `lib/core/l10n/generated/`
 - **Never hand-edit** `*.g.dart` / `*.freezed.dart` — rerun `build_runner` after changing annotated models
 - **Design layer** lives in `lib/core/design/` (import `design.dart`): read colors via `context.colors` / `context.tokens`, text via the theme (`Theme.of(context).textTheme`)
+- **App theme** is Storybook night (plum ink, Fraunces + Manrope): `AppTheme.forScene(scene)` (cached per scene, accent = the scene's light; `AppTheme.dark` = living room), built by `buildLookTheme(UiLooks.storybook, …)`; raw hex lives only in `AppPalette`. `lib/app.dart` swaps it on scene change via a `BlocSelector` around the `MaterialApp` only
 - **UI kit** lives in `lib/core/design/components/` with its own barrel `components.dart` (not re-exported by `design.dart`). The legacy `lib/core/widgets/app_icon_button.dart` must not be used in new code (M3 replaces it)
 
 ### Gotchas

@@ -10,11 +10,10 @@ import 'ui_look.dart';
 typedef LookTextThemeBuilder =
     TextTheme Function(LookFonts fonts, ColorScheme scheme);
 
-/// Turns [look] and [scene] into a dark [ThemeData], with component themes
-/// structurally mirroring `AppTheme.dark` (radii scaled by `radiusScale`).
-///
-/// This deliberately duplicates the component-theme body of `AppTheme.dark`
-/// instead of sharing it, so `AppTheme.dark` stays untouched.
+/// Turns [look] and [scene] into a dark [ThemeData]: the color scheme (every
+/// role set deliberately), [AppTokens] and the component themes, radii scaled
+/// by the look's `radiusScale`. `AppTheme` is this function applied to
+/// `UiLooks.storybook`.
 ThemeData buildLookTheme(
   UiLook look,
   AvatarScene scene, {
@@ -25,6 +24,8 @@ ThemeData buildLookTheme(
     background: look.ink,
     glassSurface: look.glassSurface,
     glassBorder: look.outline,
+    success: look.success,
+    warning: look.warning,
     scene: palette,
     surfaceStyle: look.surfaceStyle,
     outlineWidth: look.outlineWidth,
@@ -161,29 +162,37 @@ ThemeData buildLookTheme(
   );
 }
 
+/// A container role: [color] at 25 % over the look's surface, so text in
+/// `onSurface` stays legible on it.
+Color _container(UiLook look, Color color) =>
+    Color.alphaBlend(color.withValues(alpha: 0.25), look.surface);
+
 ColorScheme _buildScheme(UiLook look, ScenePalette palette) {
   return ColorScheme.dark(
     primary: palette.accent,
     onPrimary: palette.onAccent,
-    primaryContainer: Color.alphaBlend(
-      palette.accent.withValues(alpha: 0.25),
-      look.surface,
-    ),
+    primaryContainer: _container(look, palette.accent),
+    onPrimaryContainer: look.onSurface,
     secondary: palette.accent,
     onSecondary: palette.onAccent,
-    secondaryContainer: Color.alphaBlend(
-      palette.accent.withValues(alpha: 0.25),
-      look.surface,
-    ),
-    tertiary: palette.accent,
+    secondaryContainer: _container(look, palette.accent),
+    onSecondaryContainer: look.onSurface,
+    tertiary: look.tertiary,
+    onTertiary: look.onTertiary,
+    tertiaryContainer: _container(look, look.tertiary),
+    onTertiaryContainer: look.onSurface,
+    error: look.error,
+    onError: look.onError,
+    errorContainer: _container(look, look.error),
+    onErrorContainer: look.onSurface,
     surface: look.surface,
     onSurface: look.onSurface,
     onSurfaceVariant: look.onSurface.withValues(alpha: 0.7),
     surfaceContainerLowest: look.ink,
-    surfaceContainerLow: look.surface,
-    surfaceContainer: look.surface,
-    surfaceContainerHigh: look.surface,
-    surfaceContainerHighest: look.surface,
+    surfaceContainerLow: look.glassSurface,
+    surfaceContainer: look.glassSurface,
+    surfaceContainerHigh: look.glassSurface,
+    surfaceContainerHighest: look.glassSurface,
     outline: look.outline,
     outlineVariant: look.outline,
   );

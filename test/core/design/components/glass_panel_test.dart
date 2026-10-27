@@ -37,7 +37,7 @@ void main() {
       expect(find.byType(BackdropFilter), findsOneWidget);
     });
 
-    testWidgets('applies padding and a 1.5 px border', (
+    testWidgets('applies padding and the look outline width (1 px)', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
@@ -59,7 +59,7 @@ void main() {
         ),
       );
       final BoxDecoration decoration = box.decoration as BoxDecoration;
-      expect((decoration.border! as Border).top.width, 1.5);
+      expect((decoration.border! as Border).top.width, 1);
     });
   });
 

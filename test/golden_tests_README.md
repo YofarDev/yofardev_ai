@@ -1,8 +1,9 @@
 # Golden Tests Guide
 
 Golden tests compare rendered widgets against saved reference PNGs to catch
-visual regressions. The app has a single (dark) theme, so every golden renders
-with `AppTheme.dark`; there are no light-theme or dark-mode variants.
+visual regressions. The app has a single dark theme (Storybook night, whose
+accent follows the scene), so every golden renders with `AppTheme.dark` (the
+living-room accent); there are no light-theme or dark-mode variants.
 
 ## Run
 

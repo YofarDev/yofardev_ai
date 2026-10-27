@@ -3,22 +3,17 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yofardev_ai/core/design/looks/looks.dart';
-import 'package:yofardev_ai/core/design/theme/app_text_theme.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_caption.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
-/// The bundled app fonts (Outfit display, Plus Jakarta Sans text): the only
-/// real metrics available offline. The candidate display fonts (Fraunces,
-/// Bricolage Grotesque) are fetched at runtime, so each caption must also fit
-/// with [_headroom] of the slot to spare, a margin for wider faces.
+/// The bundled app fonts (Storybook: Fraunces display, Manrope text), which
+/// are the shipping fonts: every look is measured with their real metrics, so
+/// the captions must fit the slot itself (no margin for a stand-in font).
 TextTheme _bundledTextTheme(LookFonts _, ColorScheme scheme) =>
-    buildTextTheme(scheme);
-
-/// Fraction of the slot width the caption must still fit in two lines.
-const double _headroom = 0.85;
+    googleFontsTextThemeBuilder(UiLooks.storybook.fonts, scheme);
 
 Widget _emptyStage(BuildContext context, AvatarScene scene, TalkingState _) =>
     const SizedBox.expand();
@@ -70,7 +65,7 @@ void main() {
             text: paragraph.text,
             textDirection: TextDirection.ltr,
             textScaler: paragraph.textScaler,
-          )..layout(maxWidth: slotWidth * _headroom);
+          )..layout(maxWidth: slotWidth);
           final int lines = painter.computeLineMetrics().length;
           painter.dispose();
           expect(

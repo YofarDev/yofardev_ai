@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/avatar_scene.dart';
+import '../tokens/app_palette.dart';
 import '../tokens/scene_palette.dart';
 import 'contrast.dart';
 
@@ -16,9 +17,10 @@ class LookFonts {
   final String text;
 }
 
-/// A candidate visual identity for the app: surface and text colors, surface
-/// style, shape, fonts and one accent per scene. Pure data; turn it into a
-/// theme with `buildLookTheme`.
+/// A visual identity for the app: surface and text colors, surface style,
+/// shape, fonts, one accent per scene and the scene-independent roles (error,
+/// tertiary, success, warning). Pure data; turn it into a theme with
+/// `buildLookTheme`.
 @immutable
 class UiLook {
   const UiLook({
@@ -33,6 +35,12 @@ class UiLook {
     required this.radiusScale,
     required this.fonts,
     required this.accents,
+    this.error = AppPalette.error,
+    this.onError = AppPalette.onError,
+    this.tertiary = AppPalette.tertiary,
+    this.onTertiary = AppPalette.onTertiary,
+    this.success = AppPalette.success,
+    this.warning = AppPalette.warning,
     Color? glassSurface,
   }) : _glassSurface = glassSurface;
 
@@ -67,8 +75,23 @@ class UiLook {
   /// for a missing scene.
   final Map<AvatarScene, Color> accents;
 
+  /// Error role and the text drawn on it.
+  final Color error;
+  final Color onError;
+
+  /// Scene-independent secondary accent and the text drawn on it.
+  final Color tertiary;
+  final Color onTertiary;
+
+  /// Status colors (icons and badges, at least 3:1 on surfaces).
+  final Color success;
+  final Color warning;
+
   static const double _minOnAccentContrast = 4.5;
-  static const double _glowAlpha = 0.35;
+
+  /// 35 % of 255, rounded: an integer alpha so a glow can also be written as
+  /// a const hex (`AppPalette.livingRoomGlow`) and compare equal.
+  static const int _glowAlpha = 0x59;
 
   /// The accent palette of [scene]. `onAccent` is the first of [ink], black,
   /// white that clears 4.5:1 on the accent (ink preferred as it harmonises with
@@ -90,7 +113,7 @@ class UiLook {
     return ScenePalette(
       accent: accent,
       onAccent: onAccent,
-      glow: accent.withValues(alpha: _glowAlpha),
+      glow: accent.withAlpha(_glowAlpha),
     );
   }
 }

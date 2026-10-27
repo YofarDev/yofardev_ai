@@ -12,7 +12,8 @@ TextStyle _text(LookFonts fonts, TextStyle style) =>
 
 /// The production `LookTextThemeBuilder`: the app text theme set in a look's
 /// fonts. The display font styles display/headline/title and the text font
-/// styles body/label. Sizes and weights mirror `buildTextTheme`.
+/// styles body/label. Weights stay within the bundled ones (display
+/// 400/500/600, text 400/500).
 TextTheme googleFontsTextThemeBuilder(LookFonts fonts, ColorScheme scheme) {
   final Color c = scheme.onSurface;
   return TextTheme(

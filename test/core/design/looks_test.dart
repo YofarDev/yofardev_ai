@@ -39,6 +39,18 @@ void main() {
     }
   });
 
+  group('storybook roles', () {
+    test('binding role values', () {
+      const UiLook look = UiLooks.storybook;
+      expect(look.error, const Color(0xFFFF6B6B));
+      expect(look.onError, const Color(0xFF16121D));
+      expect(look.tertiary, const Color(0xFFB79CFF));
+      expect(look.onTertiary, const Color(0xFF16121D));
+      expect(look.success, const Color(0xFF7BD88F));
+      expect(look.warning, const Color(0xFFF4B860));
+    });
+  });
+
   group('palette', () {
     test('glow is the accent at 35% alpha', () {
       for (final UiLook look in UiLooks.all) {
@@ -146,27 +158,16 @@ void main() {
   });
 
   group('buildLookTheme', () {
-    test('neon on livingRoom matches AppTheme.dark core colors and tokens', () {
+    test('storybook on livingRoom is AppTheme.dark (scheme and tokens)', () {
       final ThemeData theme = buildLookTheme(
-        UiLooks.neon,
+        UiLooks.storybook,
         AvatarScene.livingRoom,
         textThemeBuilder: _fakeTextTheme,
       );
       final ThemeData ref = AppTheme.dark;
-      expect(theme.colorScheme.primary, ref.colorScheme.primary);
-      expect(theme.colorScheme.surface, ref.colorScheme.surface);
-      expect(theme.colorScheme.onSurface, ref.colorScheme.onSurface);
-      expect(theme.colorScheme.outline, ref.colorScheme.outline);
+      expect(theme.colorScheme, ref.colorScheme);
       expect(theme.scaffoldBackgroundColor, ref.scaffoldBackgroundColor);
-
-      final AppTokens t = theme.extension<AppTokens>()!;
-      final AppTokens r = ref.extension<AppTokens>()!;
-      expect(t.background, r.background);
-      expect(t.glassSurface, r.glassSurface);
-      expect(t.glassBorder, r.glassBorder);
-      expect(t.success, r.success);
-      expect(t.warning, r.warning);
-      expect(t.scene.accent, r.scene.accent);
+      expect(theme.extension<AppTokens>(), AppTokens.dark);
       expect(theme.brightness, Brightness.dark);
     });
 
@@ -179,10 +180,17 @@ void main() {
       final ScenePalette p = UiLooks.storybook.palette(AvatarScene.campfire);
       expect(theme.colorScheme.primary, p.accent);
       expect(theme.colorScheme.onPrimary, p.onAccent);
-      expect(theme.colorScheme.tertiary, p.accent);
+      expect(theme.colorScheme.secondary, p.accent);
+      expect(theme.colorScheme.onSecondary, p.onAccent);
+      expect(theme.colorScheme.tertiary, UiLooks.storybook.tertiary);
+      expect(theme.colorScheme.onTertiary, UiLooks.storybook.onTertiary);
+      expect(theme.colorScheme.error, UiLooks.storybook.error);
+      expect(theme.colorScheme.onError, UiLooks.storybook.onError);
       expect(theme.colorScheme.surfaceContainer, UiLooks.storybook.surface);
       expect(theme.extension<AppTokens>()!.scene, p);
       expect(theme.extension<AppTokens>()!.background, UiLooks.storybook.ink);
+      expect(theme.extension<AppTokens>()!.success, UiLooks.storybook.success);
+      expect(theme.extension<AppTokens>()!.warning, UiLooks.storybook.warning);
     });
 
     test('cel look yields cel tokens', () {
