@@ -280,7 +280,6 @@ ThemeData applyLabOverrides(ThemeData base, LabConfig config) {
       secondary: accent,
       onSecondary: onAccent,
       secondaryContainer: container,
-      tertiary: accent,
     );
   }
 

@@ -55,6 +55,9 @@ class App extends StatelessWidget {
 /// language changes, and when the avatar's scene changes so the theme
 /// cross-fades to that scene's accent. [routerConfig] is reused across those
 /// rebuilds, so routed screens and their state are never re-created.
+///
+/// The `BlocSelector<AvatarCubit…>` reads the cubit at app start, so
+/// AvatarCubit is created eagerly (`lazy:` on its provider has no effect).
 class AppView extends StatelessWidget {
   const AppView({super.key, required this.routerConfig});
 

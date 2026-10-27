@@ -84,7 +84,10 @@ void main() {
       final StadiumBorder shape = decoration.shape as StadiumBorder;
       final AppTokens tokens = tester.element(find.byType(GlassPanel)).tokens;
       expect(shape.side.width, tokens.outlineWidth);
-      expect(shape.side.color.a, closeTo(tokens.glassThin.borderAlpha, 0.02));
+      expect(
+        shape.side.color.a,
+        closeTo(tokens.glassRegular.borderAlpha, 0.02),
+      );
       expect(decoration.gradient, isA<LinearGradient>());
     });
 

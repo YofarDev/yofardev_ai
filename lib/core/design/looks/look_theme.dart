@@ -47,9 +47,10 @@ ThemeData buildLookTheme(
       elevation: 0,
       backgroundColor: Colors.transparent,
       foregroundColor: scheme.onSurface,
-      titleTextStyle: textTheme.titleLarge?.copyWith(
+      // headlineSmall carries the bundled SemiBold family (the weight is baked
+      // into the family name), so derive from it rather than re-weighting.
+      titleTextStyle: textTheme.headlineSmall?.copyWith(
         fontSize: 20,
-        fontWeight: FontWeight.w600,
         color: scheme.onSurface,
       ),
       iconTheme: IconThemeData(color: scheme.onSurface),

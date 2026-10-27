@@ -114,7 +114,7 @@ class ModernChatBubble extends StatelessWidget {
                             : Alignment.bottomRight,
                         colors: isUser
                             ? <Color>[
-                                // Fix #1: Slightly desaturated blue — less harsh than pure cyan
+                                // Fix #1: the scene accent, fading slightly toward the tail
                                 context.colors.primary,
                                 context.colors.primary.withValues(alpha: 0.88),
                               ]

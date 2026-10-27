@@ -113,6 +113,14 @@ void main() {
       );
     });
 
+    test('app bar title uses the bundled SemiBold Fraunces', () {
+      final String? family =
+          AppTheme.dark.appBarTheme.titleTextStyle!.fontFamily;
+      expect(family, contains('Fraunces'));
+      expect(family, contains('600'));
+      expect(family, AppTheme.dark.textTheme.headlineSmall!.fontFamily);
+    });
+
     test('component themes keep their values, radii scaled by 1.15', () {
       final ThemeData theme = AppTheme.dark;
       expect(theme.cardTheme.elevation, 4);
