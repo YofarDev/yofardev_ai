@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/design/rive/ui_kit.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
+import '../../../../core/models/talking_phase.dart';
 import '../../../talking/talking.dart';
 import 'stage_line.dart';
 
@@ -13,8 +14,11 @@ import 'stage_line.dart';
 ///
 /// Shown when captions are on and the composer is not listening or
 /// thinking ([composerMode]): the caption is the character's last line,
-/// not something to read while it hears or prepares a new one. Each new
-/// sentence ([CaptionState.seq]) fades in; a tap turns captions off.
+/// not something to read while it hears or prepares a new one. "Thinking"
+/// here is the talking state's generating phase: the gaps between two
+/// sentences of a streamed reply (the composer thinking, the avatar idle)
+/// keep the lingering caption instead of fading it out and in again. Each
+/// new sentence ([CaptionState.seq]) fades in; a tap turns captions off.
 class StageCaption extends StatelessWidget {
   const StageCaption({super.key, required this.composerMode});
 
@@ -22,21 +26,27 @@ class StageCaption extends StatelessWidget {
 
   static const Key lineKey = ValueKey<String>('stage-caption-line');
 
-  /// Whether the caption steps aside while the composer is in [mode].
-  static bool hiddenDuring(ComposerOrbState mode) =>
-      mode == ComposerOrbState.listening || mode == ComposerOrbState.thinking;
+  /// Whether the caption steps aside while the composer is in [mode] and
+  /// the avatar is [generating] a reply (or not).
+  static bool hiddenDuring(ComposerOrbState mode, {required bool generating}) =>
+      mode == ComposerOrbState.listening ||
+      (mode == ComposerOrbState.thinking && generating);
 
   @override
   Widget build(BuildContext context) {
     final Duration duration = MediaQuery.disableAnimationsOf(context)
         ? AppMotion.fast
         : AppMotion.slow;
+    final bool generating = context.select<TalkingCubit, bool>(
+      (TalkingCubit cubit) => cubit.state.phase == TalkingPhase.generating,
+    );
     return ValueListenableBuilder<ComposerOrbState>(
       valueListenable: composerMode,
       builder: (BuildContext context, ComposerOrbState mode, Widget? _) =>
           BlocBuilder<CaptionCubit, CaptionState>(
             builder: (BuildContext context, CaptionState state) {
-              final String? text = state.enabled && !hiddenDuring(mode)
+              final String? text =
+                  state.enabled && !hiddenDuring(mode, generating: generating)
                   ? state.text
                   : null;
               return AnimatedSize(

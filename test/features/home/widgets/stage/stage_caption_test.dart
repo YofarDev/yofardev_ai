@@ -73,7 +73,11 @@ void main() {
       await pumpCaption(tester);
       await say(tester, const CaptionState(text: _line, seq: 1));
 
+      if (hiding == ComposerOrbState.thinking) {
+        h.talking.emit(const TalkingState.generating());
+      }
       mode.value = hiding;
+      await tester.idle();
       await tester.pumpAndSettle();
       expect(find.text(_line), findsNothing);
 
@@ -82,6 +86,31 @@ void main() {
       expect(find.text(_line), findsOneWidget);
     });
   }
+
+  testWidgets('stays between two sentences of a streamed reply', (
+    WidgetTester tester,
+  ) async {
+    await pumpCaption(tester);
+    h.talking.emit(const TalkingState.speaking());
+    mode.value = ComposerOrbState.speaking;
+    await say(tester, const CaptionState(text: _line, seq: 1));
+
+    // The sentence ended and the next one is still on its way: the avatar
+    // is idle and the composer thinks (the reply is still streaming).
+    h.talking.emit(const TalkingState.idle());
+    mode.value = ComposerOrbState.thinking;
+    await tester.idle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text(_line), findsOneWidget);
+    final FadeTransition fade = tester.widget<FadeTransition>(
+      find
+          .ancestor(of: find.text(_line), matching: find.byType(FadeTransition))
+          .first,
+    );
+    expect(fade.opacity.value, 1, reason: 'not fading out');
+  });
 
   testWidgets('a new sentence replaces the previous one', (
     WidgetTester tester,
