@@ -11,6 +11,7 @@ import '../../../core/utils/logger.dart';
 import '../widgets/lab/lab_config.dart';
 import '../widgets/lab/lab_controls.dart';
 import '../widgets/lab/lab_service_extension.dart';
+import '../widgets/lab/lab_stage_preview.dart';
 import '../widgets/lab/lab_surfaces_preview.dart';
 
 /// Debug-only screen to compare the candidate looks across the four scenes.
@@ -24,12 +25,17 @@ class UiLabScreen extends StatefulWidget {
     super.key,
     this.textThemeBuilder = googleFontsTextThemeBuilder,
     this.initialConfig = LabConfig.initial,
+    this.stageBuilder = buildLabRiveStage,
   });
 
   /// Builds each look's text theme; tests inject a fake so no font loads.
   final LookTextThemeBuilder textThemeBuilder;
 
   final LabConfig initialConfig;
+
+  /// Builds the Stage tab's scene and avatar; tests inject a placeholder as
+  /// Rive files are not decoded in widget tests.
+  final LabStageBuilder stageBuilder;
 
   @override
   State<UiLabScreen> createState() => _UiLabScreenState();
@@ -104,7 +110,10 @@ class _UiLabScreenState extends State<UiLabScreen> {
                       ),
                       child: Theme(
                         data: _previewTheme(config),
-                        child: _PreviewFrame(config: config),
+                        child: _PreviewFrame(
+                          config: config,
+                          stageBuilder: widget.stageBuilder,
+                        ),
                       ),
                     ),
                   ),
@@ -129,9 +138,10 @@ class _UiLabScreenState extends State<UiLabScreen> {
 /// The page background of the previewed look under the ambient look theme,
 /// with the tab's content on top.
 class _PreviewFrame extends StatelessWidget {
-  const _PreviewFrame({required this.config});
+  const _PreviewFrame({required this.config, required this.stageBuilder});
 
   final LabConfig config;
+  final LabStageBuilder stageBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -151,32 +161,11 @@ class _PreviewFrame extends StatelessWidget {
         type: MaterialType.transparency,
         child: switch (config.tab) {
           LabTab.surfaces => const LabSurfacesPreview(),
-          LabTab.stage => _StagePlaceholder(config: config),
-        },
-      ),
-    );
-  }
-}
-
-class _StagePlaceholder extends StatelessWidget {
-  const _StagePlaceholder({required this.config});
-
-  final LabConfig config;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text('Stage preview coming next', style: context.text.titleLarge),
-          const SizedBox(height: AppSpace.sm),
-          Text(
-            '${config.layout.name} · ${config.composer.name} · '
-            '${config.scene.name}',
-            style: context.text.bodyMedium,
+          LabTab.stage => LabStagePreview(
+            config: config,
+            stageBuilder: stageBuilder,
           ),
-        ],
+        },
       ),
     );
   }

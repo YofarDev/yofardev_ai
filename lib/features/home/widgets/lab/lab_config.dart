@@ -37,7 +37,7 @@ class LabConfig {
     scene: AvatarScene.livingRoom,
     layout: LabLayout.stageChips,
     composer: LabComposerState.idle,
-    tab: LabTab.surfaces,
+    tab: LabTab.stage,
   );
 
   /// The id of one of [UiLooks.all].

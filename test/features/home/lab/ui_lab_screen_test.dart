@@ -5,18 +5,29 @@ import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/design/looks/looks.dart';
 import 'package:yofardev_ai/features/home/screens/ui_lab_screen.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
+import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_surfaces_preview.dart';
 import 'package:yofardev_ai/core/design/components/components.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/features/talking/talking.dart';
 
 /// Fake builder: no font is ever loaded.
 TextTheme _fakeTextTheme(LookFonts fonts, ColorScheme scheme) =>
     ThemeData.dark().textTheme;
 
+/// Fake stage: no Rive file is ever decoded.
+Widget _fakeStage(BuildContext context, AvatarScene scene, TalkingState _) =>
+    SizedBox.expand(key: ValueKey<AvatarScene>(scene));
+
+/// The lab on its Surfaces tab.
+final LabConfig _surfaces = LabConfig.initial.copyWith(tab: LabTab.surfaces);
+
 Widget _harness({LabConfig? initial}) => MaterialApp(
   theme: AppTheme.dark,
   home: UiLabScreen(
     textThemeBuilder: _fakeTextTheme,
-    initialConfig: initial ?? LabConfig.initial,
+    initialConfig: initial ?? _surfaces,
+    stageBuilder: _fakeStage,
   ),
 );
 
@@ -71,14 +82,28 @@ void main() {
     expect(_previewTokens(tester).radiusScale, UiLooks.cel.radiusScale);
   });
 
-  testWidgets('the stage tab is a placeholder for now', (
+  testWidgets('opens on the stage tab, a mock Home over the stage', (
     WidgetTester tester,
   ) async {
-    await pumpLab(tester);
-    await tester.tap(find.widgetWithText(AppPill, 'Stage'));
-    await tester.pump();
+    await pumpLab(tester, initial: LabConfig.initial);
+    expect(find.byType(LabStagePreview), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<AvatarScene>(AvatarScene.livingRoom)),
+      findsOneWidget,
+    );
     expect(find.byType(LabSurfacesPreview), findsNothing);
-    expect(find.text('Stage preview coming next'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(AppPill, 'Beach'));
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey<AvatarScene>(AvatarScene.beach)),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.widgetWithText(AppPill, 'Surfaces'));
+    await tester.pump();
+    expect(find.byType(LabStagePreview), findsNothing);
+    expect(find.byType(LabSurfacesPreview), findsOneWidget);
   });
 
   testWidgets('enables font fetching while mounted and restores it after', (
@@ -95,10 +120,7 @@ void main() {
   testWidgets('applies the hue override to the preview accent', (
     WidgetTester tester,
   ) async {
-    await pumpLab(
-      tester,
-      initial: LabConfig.initial.copyWith(accentHueOverride: 300),
-    );
+    await pumpLab(tester, initial: _surfaces.copyWith(accentHueOverride: 300));
     final HSVColor accent = HSVColor.fromColor(
       _previewTokens(tester).scene.accent,
     );

@@ -22,7 +22,7 @@ void main() {
             'scene': 'beach',
             'layout': 'dock',
             'composer': 'speaking',
-            'tab': 'stage',
+            'tab': 'surfaces',
             'accentHueOverride': '120.5',
             'glassAlphaScale': '1.5',
             'radiusScaleOverride': '0.8',
@@ -32,7 +32,7 @@ void main() {
       expect(notifier.value.scene, AvatarScene.beach);
       expect(notifier.value.layout, LabLayout.dock);
       expect(notifier.value.composer, LabComposerState.speaking);
-      expect(notifier.value.tab, LabTab.stage);
+      expect(notifier.value.tab, LabTab.surfaces);
       expect(notifier.value.accentHueOverride, 120.5);
       expect(notifier.value.glassAlphaScale, 1.5);
       expect(notifier.value.radiusScaleOverride, 0.8);
