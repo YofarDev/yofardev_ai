@@ -477,4 +477,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolWorking => 'Working on it…';
+
+  @override
+  String get askAnything => 'Ask anything…';
+
+  @override
+  String get micPermissionDenied =>
+      'Allow the microphone in settings to talk to me.';
+
+  @override
+  String get micUnavailable => 'Voice input isn\'t available here.';
+
+  @override
+  String get composerAttach => 'Attach an image';
+
+  @override
+  String get composerTools => 'Tools';
+
+  @override
+  String get composerSend => 'Send';
+
+  @override
+  String get composerStop => 'Stop';
+
+  @override
+  String get composerListen => 'Talk';
+
+  @override
+  String get composerMore => 'More options';
 }

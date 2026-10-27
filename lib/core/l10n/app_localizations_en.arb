@@ -380,5 +380,14 @@
   "toolWeather": "Checking the weather…",
   "toolNews": "Reading the news…",
   "toolMemory": "Searching my memory…",
-  "toolWorking": "Working on it…"
+  "toolWorking": "Working on it…",
+  "askAnything": "Ask anything…",
+  "micPermissionDenied": "Allow the microphone in settings to talk to me.",
+  "micUnavailable": "Voice input isn't available here.",
+  "composerAttach": "Attach an image",
+  "composerTools": "Tools",
+  "composerSend": "Send",
+  "composerStop": "Stop",
+  "composerListen": "Talk",
+  "composerMore": "More options"
 }

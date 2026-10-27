@@ -488,4 +488,32 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get toolWorking => 'Je m\'en occupe…';
+
+  @override
+  String get askAnything => 'Demande-moi n\'importe quoi…';
+
+  @override
+  String get micPermissionDenied =>
+      'Autorise le micro dans les réglages pour me parler.';
+
+  @override
+  String get micUnavailable => 'La dictée n\'est pas disponible ici.';
+
+  @override
+  String get composerAttach => 'Joindre une image';
+
+  @override
+  String get composerTools => 'Outils';
+
+  @override
+  String get composerSend => 'Envoyer';
+
+  @override
+  String get composerStop => 'Arrêter';
+
+  @override
+  String get composerListen => 'Parler';
+
+  @override
+  String get composerMore => 'Plus d\'options';
 }

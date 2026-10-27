@@ -943,6 +943,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Working on it…'**
   String get toolWorking;
+
+  /// No description provided for @askAnything.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything…'**
+  String get askAnything;
+
+  /// No description provided for @micPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the microphone in settings to talk to me.'**
+  String get micPermissionDenied;
+
+  /// No description provided for @micUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input isn\'t available here.'**
+  String get micUnavailable;
+
+  /// No description provided for @composerAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach an image'**
+  String get composerAttach;
+
+  /// No description provided for @composerTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get composerTools;
+
+  /// No description provided for @composerSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get composerSend;
+
+  /// No description provided for @composerStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get composerStop;
+
+  /// No description provided for @composerListen.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk'**
+  String get composerListen;
+
+  /// No description provided for @composerMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get composerMore;
 }
 
 class _AppLocalizationsDelegate

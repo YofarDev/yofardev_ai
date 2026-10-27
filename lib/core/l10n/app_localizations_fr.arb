@@ -140,5 +140,14 @@
   "toolWeather": "Je regarde la météo…",
   "toolNews": "Je lis les nouvelles…",
   "toolMemory": "Je fouille ma mémoire…",
-  "toolWorking": "Je m'en occupe…"
+  "toolWorking": "Je m'en occupe…",
+  "askAnything": "Demande-moi n'importe quoi…",
+  "micPermissionDenied": "Autorise le micro dans les réglages pour me parler.",
+  "micUnavailable": "La dictée n'est pas disponible ici.",
+  "composerAttach": "Joindre une image",
+  "composerTools": "Outils",
+  "composerSend": "Envoyer",
+  "composerStop": "Arrêter",
+  "composerListen": "Parler",
+  "composerMore": "Plus d'options"
 }
