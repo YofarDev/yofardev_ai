@@ -11,6 +11,7 @@ import json
 import re
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -47,7 +48,9 @@ def table_after(text: str, heading_regex: str) -> list[list[str]]:
 def parse_contract() -> dict:
     text = CONTRACT.read_text()
     avatar_sec = text[text.index("## `assets/rive/avatar.riv`"):text.index("## `assets/rive/scenes/")]
-    scene_sec = text[text.index("## `assets/rive/scenes/"):]
+    ui_at = text.index("## `assets/rive/ui/ui_kit.riv`")
+    scene_sec = text[text.index("## `assets/rive/scenes/"):ui_at]
+    ui_sec = text[ui_at:]
     c: dict = {}
     c["avatar_artboard"] = ticks(re.search(r"\*\*Artboard:\*\*.*", avatar_sec).group(0))[0]
     c["avatar_sm"] = ticks(re.search(r"\*\*State machine:\*\*.*", avatar_sec).group(0))[0]
@@ -73,6 +76,15 @@ def parse_contract() -> dict:
     for sid, evs, pids in table_after(scene_sec, r"^\| sceneId"):
         scenes[sid] = ([v.strip() for v in evs.split(",")], [v.strip() for v in pids.split(",")])
     c["scenes"] = scenes
+    ui: dict[str, dict] = {}
+    for ab, size, prop, typ, vals in table_after(ui_sec, r"^\| Artboard"):
+        a = ui.setdefault(ticks(ab)[0], {"size": tuple(int(v) for v in size.split("×")), "props": {}})
+        values = [v.strip() for v in vals.split(",")] if typ == "enum" else None
+        a["props"][ticks(prop)[0]] = (typ, values)
+    c["ui"] = ui
+    c["ui_max"] = int(re.search(r"`ui_kit.riv` must stay at or under (\d+) KB", text).group(1)) * 1024
+    m = re.search(r"\*\*Scene posters:\*\* `assets/rive/posters/<sceneId>.webp`.*?(\d+)×(\d+), at most (\d+) KB", text, re.S)
+    c["poster"] = (int(m.group(1)), int(m.group(2)), int(m.group(3)) * 1024)
     return c
 
 
@@ -94,7 +106,8 @@ def nodes(o: object, typ: str | None = None) -> list[dict]:
     return found
 
 
-TYPE_OF = {"enum": "ViewModelPropertyEnumCustom", "number": "ViewModelPropertyNumber", "trigger": "ViewModelPropertyTrigger"}
+TYPE_OF = {"enum": "ViewModelPropertyEnumCustom", "number": "ViewModelPropertyNumber", "trigger": "ViewModelPropertyTrigger",
+           "color": "ViewModelPropertyColor", "boolean": "ViewModelPropertyBoolean"}
 # rive_native 0.1.11's Drawable::onAddedDirty rejects additive (12), although
 # CLI 1.7.0 accepts and renders it. One such shape makes the entire file null
 # on import. Keep this aligned with the runtime before using newer blend modes.
@@ -161,6 +174,80 @@ def check_riv_bytes(path: Path, names: list[str]) -> None:
             err(f"{path.relative_to(ROOT)}: name `{n}` not found in the built bytes (stale build?)")
 
 
+def check_ui_kit(c: dict) -> None:
+    """Every UI-kit artboard: size, SM `Main`, VM `<Artboard>VM`, properties in contract order,
+    no events/listeners, and every property actually consumed by a bind in the source RML."""
+    proj = ROOT / "rive" / "ui_kit"
+    if not proj.exists():
+        err("ui_kit: no project at rive/ui_kit")
+        return
+    j = inspect(proj)
+    got_boards = [a.get("name") for a in j["artboards"]]
+    if sorted(got_boards) != sorted(c["ui"]):
+        err(f"ui_kit: artboards {got_boards} != contract {list(c['ui'])}")
+    src = ET.parse(proj / "ui_kit.rml").getroot()
+    vm_ids = {v.get("name"): v.get("id") for v in src.findall("ViewModel")}
+    for name, spec in c["ui"].items():
+        ab, vm = check_common(f"ui_kit/{name}", j, name, "Main", f"{name}VM")
+        if not ab:
+            continue
+        if (ab.get("width"), ab.get("height")) != spec["size"]:
+            err(f"ui_kit/{name}: size {ab.get('width')}x{ab.get('height')} != contract {spec['size']}")
+        if nodes(ab, "Event") or any(n.get("type", "").startswith("StateMachineListener") for n in nodes(ab)):
+            err(f"ui_kit/{name}: has Rive events or listeners (the contract forbids both)")
+        if not vm:
+            continue
+        got = vm_props(j, vm)
+        if list(got) != list(spec["props"]):
+            err(f"ui_kit/{name}: properties {list(got)} != contract order {list(spec['props'])}")
+        for prop, (typ, vals) in spec["props"].items():
+            if prop not in got:
+                continue
+            gtyp, gvals = got[prop]
+            if gtyp != TYPE_OF[typ]:
+                err(f"ui_kit/{name}: `{prop}` is {gtyp}, contract says {typ}")
+            if vals is not None and gvals != vals:
+                err(f"ui_kit/{name}: `{prop}` enum values {gvals} != contract {vals}")
+        # binding proof in the source: each property feeds at least one DataBindContext
+        board = next(a for a in src.findall("Artboard") if a.get("name") == name)
+        vm_el = next(v for v in src.findall("ViewModel") if v.get("name") == f"{name}VM")
+        used = {dbc.get("sourcePathIds", "").split("-")[-1] for dbc in board.iter("DataBindContext")
+                if dbc.get("sourcePathIds", "").startswith(vm_ids[f"{name}VM"] + "-")}
+        for p in vm_el:
+            if p.tag.startswith("ViewModelProperty") and p.get("id") not in used:
+                err(f"ui_kit/{name}: `{p.get('name')}` is declared but nothing binds to it")
+    check_riv_bytes(ROOT / "assets" / "rive" / "ui" / "ui_kit.riv",
+                    [n for name, spec in c["ui"].items() for n in (name, f"{name}VM", *spec["props"])] + ["Main"])
+    out = ROOT / "assets" / "rive" / "ui" / "ui_kit.riv"
+    if out.exists() and out.stat().st_size > c["ui_max"]:
+        err(f"ui_kit.riv is {out.stat().st_size} bytes, budget {c['ui_max']}")
+    w, h, kb = c["poster"]
+    for sid in c["scenes"]:
+        poster = ROOT / "assets" / "rive" / "posters" / f"{sid}.webp"
+        if not poster.exists():
+            err(f"missing poster {poster.relative_to(ROOT)}")
+            continue
+        size = poster.stat().st_size
+        dims = webp_size(poster)
+        if dims != (w, h) or size > kb:
+            err(f"{poster.relative_to(ROOT)}: {dims} {size} B (contract {w}x{h}, <= {kb} B)")
+
+
+def webp_size(path: Path) -> tuple[int, int] | None:
+    b = path.read_bytes()
+    if b[:4] != b"RIFF" or b[8:12] != b"WEBP":
+        return None
+    chunk = b[12:16]
+    if chunk == b"VP8X":
+        return 1 + int.from_bytes(b[24:27], "little"), 1 + int.from_bytes(b[27:30], "little")
+    if chunk == b"VP8L":
+        v = int.from_bytes(b[21:25], "little")
+        return (v & 0x3FFF) + 1, ((v >> 14) & 0x3FFF) + 1
+    if chunk == b"VP8 ":
+        return int.from_bytes(b[26:28], "little") & 0x3FFF, int.from_bytes(b[28:30], "little") & 0x3FFF
+    return None
+
+
 def main() -> int:
     c = parse_contract()
     # ---------------- avatar
@@ -222,12 +309,14 @@ def main() -> int:
     extra = {p.stem for p in (ROOT / "assets" / "rive" / "scenes").glob("*.riv")} - set(c["scenes"])
     if extra:
         err(f"scenes not in the contract: {sorted(extra)}")
+    check_ui_kit(c)
     if errors:
         print("✗ contract self-check failed:")
         for e in errors:
             print("  -", e)
         return 1
-    print(f"✓ contract self-check: avatar + {len(c['scenes'])} scenes match rive/CONTRACT.md")
+    print(f"✓ contract self-check: avatar + {len(c['scenes'])} scenes + ui_kit ({len(c['ui'])} artboards) "
+          f"+ {len(c['scenes'])} posters match rive/CONTRACT.md")
     return 0
 
 
