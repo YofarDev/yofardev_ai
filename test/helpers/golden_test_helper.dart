@@ -36,20 +36,9 @@ class GoldenTestHelper {
 
   /// Create test wrapper widget with necessary providers
   static Widget makeTestableWidget({required Widget child, Locale? locale}) {
-    return makeLookTestable(child: child, theme: AppTheme.dark, locale: locale);
-  }
-
-  /// Like [makeTestableWidget] but with an explicit [theme] instead of
-  /// `AppTheme.dark`. For look-specific tests (non-production themes); every
-  /// production-theme golden must keep using [makeTestableWidget].
-  static Widget makeLookTestable({
-    required Widget child,
-    required ThemeData theme,
-    Locale? locale,
-  }) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: theme,
+      theme: AppTheme.dark,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

@@ -5,11 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
 import 'package:yofardev_ai/core/design/components/components.dart';
-import 'package:yofardev_ai/core/design/design.dart';
 
 import '../../../helpers/golden_test_helper.dart';
 import 'component_test_harness.dart';
-import 'look_test_theme.dart';
 
 void main() {
   setUpAll(() async {
@@ -254,66 +252,6 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
       expect(taps, 1);
-    });
-  });
-
-  group('AppIconButton cel', () {
-    Future<BoxDecoration> pumpButton(
-      WidgetTester tester, {
-      bool active = false,
-    }) async {
-      await tester.pumpWidget(
-        GoldenTestHelper.makeLookTestable(
-          theme: celTestTheme(),
-          child: Center(
-            child: AppIconButton(
-              onPressed: () {},
-              icon: Icons.settings,
-              semanticLabel: 'Settings',
-              active: active,
-            ),
-          ),
-        ),
-      );
-      final Container container = tester.widget<Container>(
-        find.descendant(
-          of: find.byType(AppIconButton),
-          matching: find.byType(Container),
-        ),
-      );
-      return container.decoration! as BoxDecoration;
-    }
-
-    AppTokens tokensOf(WidgetTester tester) {
-      return Theme.of(
-        tester.element(find.byType(AppIconButton)),
-      ).extension<AppTokens>()!;
-    }
-
-    testWidgets('idle is flat, outlined and has a hard shadow', (
-      WidgetTester tester,
-    ) async {
-      final BoxDecoration decoration = await pumpButton(tester);
-      final AppTokens tokens = tokensOf(tester);
-      expect(decoration.gradient, isNull);
-      expect(decoration.color, tokens.glassSurface);
-      expect((decoration.border! as Border).top.width, 2);
-      expect(decoration.boxShadow!.single.offset, const Offset(0, 3));
-      expect(decoration.boxShadow!.single.blurRadius, 0);
-      expect(
-        decoration.borderRadius,
-        BorderRadius.circular(AppRadius.md * 1.35),
-      );
-    });
-
-    testWidgets('active fills with the scene accent and draws onAccent', (
-      WidgetTester tester,
-    ) async {
-      final BoxDecoration decoration = await pumpButton(tester, active: true);
-      final AppTokens tokens = tokensOf(tester);
-      expect(decoration.color, tokens.scene.accent);
-      final Icon icon = tester.widget<Icon>(find.byIcon(Icons.settings));
-      expect(icon.color, tokens.scene.onAccent);
     });
   });
 

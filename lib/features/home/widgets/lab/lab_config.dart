@@ -21,7 +21,6 @@ const Object _keep = Object();
 @immutable
 class LabConfig {
   const LabConfig({
-    required this.lookId,
     required this.scene,
     required this.layout,
     required this.composer,
@@ -34,15 +33,12 @@ class LabConfig {
 
   /// The lab's starting point.
   static const LabConfig initial = LabConfig(
-    lookId: 'neon',
     scene: AvatarScene.livingRoom,
     layout: LabLayout.stageChips,
     composer: LabComposerState.idle,
     tab: LabTab.stage,
   );
 
-  /// The id of one of [UiLooks.all].
-  final String lookId;
   final AvatarScene scene;
   final LabLayout layout;
   final LabComposerState composer;
@@ -64,18 +60,9 @@ class LabConfig {
   static const double maxGlassAlphaScale = 4;
   static const double maxRadiusScale = 3;
 
-  /// The look named by [lookId].
-  UiLook get look => UiLooks.all.firstWhere(
-    (UiLook l) => l.id == lookId,
-    orElse: () {
-      throw StateError('Unknown look id "$lookId"');
-    },
-  );
-
   /// Copy with the given fields replaced. Pass `null` explicitly to clear
   /// [accentHueOverride] or [radiusScaleOverride].
   LabConfig copyWith({
-    String? lookId,
     AvatarScene? scene,
     LabLayout? layout,
     LabComposerState? composer,
@@ -86,7 +73,6 @@ class LabConfig {
     bool? panelCollapsed,
   }) {
     return LabConfig(
-      lookId: lookId ?? this.lookId,
       scene: scene ?? this.scene,
       layout: layout ?? this.layout,
       composer: composer ?? this.composer,
@@ -103,7 +89,6 @@ class LabConfig {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'lookId': lookId,
     'scene': scene.name,
     'layout': layout.name,
     'composer': composer.name,
@@ -115,7 +100,6 @@ class LabConfig {
   };
 
   static const Set<String> _keys = <String>{
-    'lookId',
     'scene',
     'layout',
     'composer',
@@ -135,16 +119,7 @@ class LabConfig {
         throw FormatException('Unknown key "$key"');
       }
     }
-    final String lookId = json.containsKey('lookId')
-        ? _string(json, 'lookId')
-        : initial.lookId;
-    if (!UiLooks.all.any((UiLook l) => l.id == lookId)) {
-      throw FormatException(
-        'Unknown lookId "$lookId" (${UiLooks.all.map((UiLook l) => l.id).join(', ')})',
-      );
-    }
     return LabConfig(
-      lookId: lookId,
       scene: _enum(json, 'scene', AvatarScene.values, initial.scene),
       layout: _enum(json, 'layout', LabLayout.values, initial.layout),
       composer: _enum(
@@ -237,7 +212,6 @@ class LabConfig {
   @override
   bool operator ==(Object other) =>
       other is LabConfig &&
-      other.lookId == lookId &&
       other.scene == scene &&
       other.layout == layout &&
       other.composer == composer &&
@@ -249,7 +223,6 @@ class LabConfig {
 
   @override
   int get hashCode => Object.hash(
-    lookId,
     scene,
     layout,
     composer,
@@ -284,7 +257,7 @@ AppGlassStyle _scaleFill(AppGlassStyle style, double scale) => AppGlassStyle(
   borderAlpha: style.borderAlpha,
 );
 
-/// Applies the lab's manual overrides on top of a look [base] theme: the
+/// Applies the lab's manual overrides on top of the [base] look theme: the
 /// accent hue (saturation and value kept; `onAccent`, glow and the color
 /// scheme's primary/secondary follow), the glass fill alpha scale and the
 /// radius scale. Returns [base] itself when nothing is overridden.

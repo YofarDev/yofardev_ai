@@ -18,7 +18,6 @@ void main() {
       );
       final developer.ServiceExtensionResponse r =
           labConfigureResponse(notifier, <String, String>{
-            'lookId': 'cel',
             'scene': 'beach',
             'layout': 'dock',
             'composer': 'speaking',
@@ -29,7 +28,6 @@ void main() {
             'panelCollapsed': 'true',
           });
       expect(r.errorCode, isNull);
-      expect(notifier.value.lookId, 'cel');
       expect(notifier.value.scene, AvatarScene.beach);
       expect(notifier.value.layout, LabLayout.dock);
       expect(notifier.value.composer, LabComposerState.speaking);
@@ -50,13 +48,13 @@ void main() {
       final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
         LabConfig.initial.copyWith(accentHueOverride: 10),
       );
-      labConfigureResponse(notifier, <String, String>{'lookId': 'storybook'});
+      labConfigureResponse(notifier, <String, String>{'scene': 'campfire'});
       expect(notifier.value.accentHueOverride, 10);
       labConfigureResponse(notifier, <String, String>{
         'accentHueOverride': 'null',
       });
       expect(notifier.value.accentHueOverride, isNull);
-      expect(notifier.value.lookId, 'storybook');
+      expect(notifier.value.scene, AvatarScene.campfire);
     });
 
     test('ignores the isolateId the VM service adds', () {
@@ -65,14 +63,14 @@ void main() {
       );
       final developer.ServiceExtensionResponse r = labConfigureResponse(
         notifier,
-        <String, String>{'isolateId': 'isolates/1', 'lookId': 'cel'},
+        <String, String>{'isolateId': 'isolates/1', 'scene': 'beach'},
       );
       expect(r.errorCode, isNull);
-      expect(notifier.value.lookId, 'cel');
+      expect(notifier.value.scene, AvatarScene.beach);
     });
 
     for (final Map<String, String> bad in <Map<String, String>>[
-      <String, String>{'lookId': 'nope'},
+      <String, String>{'lookId': 'storybook'},
       <String, String>{'bogus': '1'},
       <String, String>{'scene': 'mars'},
       <String, String>{'accentHueOverride': 'abc'},
@@ -97,7 +95,7 @@ void main() {
     test('returns an error when no lab is mounted', () {
       final developer.ServiceExtensionResponse r = labConfigureResponse(
         null,
-        <String, String>{'lookId': 'cel'},
+        <String, String>{'scene': 'beach'},
       );
       expect(r.errorCode, developer.ServiceExtensionResponse.extensionError);
     });
@@ -106,7 +104,7 @@ void main() {
   group('labStateResponse', () {
     test('returns the current config JSON', () {
       final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
-        LabConfig.initial.copyWith(lookId: 'cel'),
+        LabConfig.initial.copyWith(scene: AvatarScene.campfire),
       );
       expect(_decode(labStateResponse(notifier)), notifier.value.toJson());
     });

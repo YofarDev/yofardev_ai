@@ -6,8 +6,6 @@ Static TTFs bundled so `google_fonts` never fetches at runtime
 
 | Family | Files | Source | Licence |
 |--------|-------|--------|---------|
-| Outfit | `Outfit-Regular/Medium/SemiBold.ttf` | https://github.com/Outfitio/Outfit-Fonts (`fonts/ttf/`) | SIL OFL 1.1, `OFL-Outfit.txt` |
-| Plus Jakarta Sans | `PlusJakartaSans-Regular/Medium.ttf` | https://github.com/tokotype/PlusJakartaSans (`fonts/ttf/`) | SIL OFL 1.1, `OFL-PlusJakartaSans.txt` |
 | Fraunces | `Fraunces-Regular/Medium/SemiBold.ttf` | Static instances served by Google Fonts (fonts.gstatic.com), as fetched by `google_fonts`; project https://github.com/undercasetype/Fraunces | SIL OFL 1.1, `OFL-Fraunces.txt` (https://raw.githubusercontent.com/undercasetype/Fraunces/master/OFL.txt) |
 | Manrope | `Manrope-Regular/Medium.ttf` | Static instances served by Google Fonts (fonts.gstatic.com), as fetched by `google_fonts`; project https://github.com/googlefonts/manrope | SIL OFL 1.1, `OFL-Manrope.txt` (https://raw.githubusercontent.com/google/fonts/main/ofl/manrope/OFL.txt) |
 

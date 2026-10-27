@@ -5,7 +5,6 @@ import '../tokens/app_motion.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_tokens.dart';
-import 'cel_style.dart';
 import 'interactive_surface.dart';
 
 /// A compact rounded label (filter chip / tag), optionally with an icon.
@@ -42,37 +41,27 @@ class AppPill extends StatelessWidget {
       builder: (BuildContext context, InteractiveStates states) {
         final bool lifted = states.hovered || states.focused;
 
-        final Color fill;
-        final Color border;
-        final Color foreground;
-        if (tokens.isCel) {
-          final Color base = selected ? accent : glassSurface;
-          fill = tokens.celFill(base, states);
-          border = tokens.celBorder(states, filled: selected);
-          foreground = selected ? tokens.scene.onAccent : colors.onSurface;
-        } else {
-          fill = selected
-              ? accent.withValues(alpha: states.pressed ? 0.3 : 0.2)
-              : glassSurface.withValues(
-                  alpha: states.pressed
-                      ? 0.5
-                      : lifted
-                      ? 0.35
-                      : 0.2,
-                );
-          border = selected
-              ? accent.withValues(alpha: lifted || states.pressed ? 0.9 : 0.7)
-              : states.focused
-              ? accent.withValues(alpha: 0.9)
-              : glassBorder.withValues(
-                  alpha: states.pressed
-                      ? 0.8
-                      : lifted
-                      ? 0.6
-                      : 0.4,
-                );
-          foreground = selected ? accent : colors.onSurface;
-        }
+        final Color fill = selected
+            ? accent.withValues(alpha: states.pressed ? 0.3 : 0.2)
+            : glassSurface.withValues(
+                alpha: states.pressed
+                    ? 0.5
+                    : lifted
+                    ? 0.35
+                    : 0.2,
+              );
+        final Color border = selected
+            ? accent.withValues(alpha: lifted || states.pressed ? 0.9 : 0.7)
+            : states.focused
+            ? accent.withValues(alpha: 0.9)
+            : glassBorder.withValues(
+                alpha: states.pressed
+                    ? 0.8
+                    : lifted
+                    ? 0.6
+                    : 0.4,
+              );
+        final Color foreground = selected ? accent : colors.onSurface;
 
         final Widget text = Text(
           label,
@@ -113,9 +102,6 @@ class AppPill extends StatelessWidget {
             color: fill,
             borderRadius: BorderRadius.circular(tokens.radius(AppRadius.pill)),
             border: Border.all(color: border, width: tokens.outlineWidth),
-            boxShadow: tokens.isCel
-                ? tokens.celShadow(pressed: states.pressed)
-                : null,
           ),
           child: content,
         );

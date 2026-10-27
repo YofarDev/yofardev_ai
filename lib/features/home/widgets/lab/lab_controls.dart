@@ -81,15 +81,6 @@ class LabControls extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    _PillRow<String>(
-                      label: 'Look',
-                      values: UiLooks.all.map((UiLook l) => l.id).toList(),
-                      text: (String id) =>
-                          UiLooks.all.firstWhere((UiLook l) => l.id == id).name,
-                      selected: config.lookId,
-                      onSelected: (String v) =>
-                          onChanged(config.copyWith(lookId: v)),
-                    ),
                     _PillRow<AvatarScene>(
                       label: 'Scene',
                       values: AvatarScene.values,
@@ -118,7 +109,7 @@ class LabControls extends StatelessWidget {
                       label: 'Accent hue',
                       value: config.accentHueOverride,
                       fallback: HSVColor.fromColor(
-                        config.look.palette(config.scene).accent,
+                        UiLooks.storybook.palette(config.scene).accent,
                       ).hue,
                       min: 0,
                       max: 360,
@@ -141,7 +132,7 @@ class LabControls extends StatelessWidget {
                     _SliderRow(
                       label: 'Radius',
                       value: config.radiusScaleOverride,
-                      fallback: config.look.radiusScale,
+                      fallback: UiLooks.storybook.radiusScale,
                       min: 0,
                       max: 2,
                       format: (double v) => '×${v.toStringAsFixed(2)}',

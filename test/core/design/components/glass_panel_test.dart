@@ -6,7 +6,6 @@ import 'package:yofardev_ai/core/design/components/components.dart';
 import 'package:yofardev_ai/core/design/design.dart';
 
 import '../../../helpers/golden_test_helper.dart';
-import 'look_test_theme.dart';
 
 void main() {
   setUpAll(() async {
@@ -60,69 +59,6 @@ void main() {
       );
       final BoxDecoration decoration = box.decoration as BoxDecoration;
       expect((decoration.border! as Border).top.width, 1);
-    });
-  });
-
-  group('GlassPanel cel', () {
-    Future<BoxDecoration> pumpCelPanel(
-      WidgetTester tester, {
-      bool blur = false,
-    }) async {
-      await tester.pumpWidget(
-        GoldenTestHelper.makeLookTestable(
-          theme: celTestTheme(),
-          child: Center(
-            child: GlassPanel(
-              blur: blur,
-              child: const SizedBox(width: 40, height: 20),
-            ),
-          ),
-        ),
-      );
-      final DecoratedBox box = tester.widget<DecoratedBox>(
-        find.descendant(
-          of: find.byType(GlassPanel),
-          matching: find.byType(DecoratedBox),
-        ),
-      );
-      return box.decoration as BoxDecoration;
-    }
-
-    testWidgets('is flat and opaque with a 2 px outline and hard shadow', (
-      WidgetTester tester,
-    ) async {
-      final BoxDecoration decoration = await pumpCelPanel(tester);
-      final AppTokens tokens = Theme.of(
-        tester.element(find.byType(GlassPanel)),
-      ).extension<AppTokens>()!;
-      expect(decoration.gradient, isNull);
-      expect(decoration.color, tokens.glassSurface);
-      expect(decoration.color!.a, 1);
-      final Border border = decoration.border! as Border;
-      expect(border.top.width, 2);
-      expect(border.top.color, tokens.glassBorder);
-      expect(decoration.boxShadow, hasLength(1));
-      final BoxShadow shadow = decoration.boxShadow!.single;
-      expect(shadow.offset, const Offset(0, 3));
-      expect(shadow.blurRadius, 0);
-      expect(shadow.color, tokens.shadow.withValues(alpha: 0.6));
-    });
-
-    testWidgets('never blurs, even when blur is requested', (
-      WidgetTester tester,
-    ) async {
-      await pumpCelPanel(tester, blur: true);
-      expect(find.byType(BackdropFilter), findsNothing);
-    });
-
-    testWidgets('scales the default radius with radiusScale', (
-      WidgetTester tester,
-    ) async {
-      final BoxDecoration decoration = await pumpCelPanel(tester);
-      expect(
-        decoration.borderRadius,
-        BorderRadius.circular(AppRadius.lg * 1.35),
-      );
     });
   });
 

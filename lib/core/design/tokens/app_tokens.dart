@@ -22,7 +22,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.glassRegular,
     required this.glassThick,
     required this.scene,
-    required this.surfaceStyle,
     required this.outlineWidth,
     required this.radiusScale,
   });
@@ -40,9 +39,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   /// Accent palette of the current scene.
   final ScenePalette scene;
-
-  /// Whether raised surfaces are glass or cel (flat + outline + hard shadow).
-  final AppSurfaceStyle surfaceStyle;
 
   /// Stroke width of surface outlines.
   final double outlineWidth;
@@ -77,7 +73,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
       onAccent: AppPalette.ink,
       glow: AppPalette.livingRoomGlow,
     ),
-    surfaceStyle: AppSurfaceStyle.glass,
     outlineWidth: 1,
     radiusScale: 1.15,
   );
@@ -106,7 +101,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
     AppGlassStyle? glassRegular,
     AppGlassStyle? glassThick,
     ScenePalette? scene,
-    AppSurfaceStyle? surfaceStyle,
     double? outlineWidth,
     double? radiusScale,
   }) {
@@ -122,7 +116,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
       glassRegular: glassRegular ?? this.glassRegular,
       glassThick: glassThick ?? this.glassThick,
       scene: scene ?? this.scene,
-      surfaceStyle: surfaceStyle ?? this.surfaceStyle,
       outlineWidth: outlineWidth ?? this.outlineWidth,
       radiusScale: radiusScale ?? this.radiusScale,
     );
@@ -145,7 +138,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
       glassRegular: AppGlassStyle.lerp(glassRegular, other.glassRegular, t),
       glassThick: AppGlassStyle.lerp(glassThick, other.glassThick, t),
       scene: ScenePalette.lerp(scene, other.scene, t),
-      surfaceStyle: t < 0.5 ? surfaceStyle : other.surfaceStyle,
       outlineWidth: lerpDouble(outlineWidth, other.outlineWidth, t)!,
       radiusScale: lerpDouble(radiusScale, other.radiusScale, t)!,
     );
@@ -165,7 +157,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
         other.glassRegular == glassRegular &&
         other.glassThick == glassThick &&
         other.scene == scene &&
-        other.surfaceStyle == surfaceStyle &&
         other.outlineWidth == outlineWidth &&
         other.radiusScale == radiusScale;
   }
@@ -183,7 +174,6 @@ class AppTokens extends ThemeExtension<AppTokens> {
     glassRegular,
     glassThick,
     scene,
-    surfaceStyle,
     outlineWidth,
     radiusScale,
   );

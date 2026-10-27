@@ -27,7 +27,6 @@ ThemeData buildLookTheme(
     success: look.success,
     warning: look.warning,
     scene: palette,
-    surfaceStyle: look.surfaceStyle,
     outlineWidth: look.outlineWidth,
     radiusScale: look.radiusScale,
   );

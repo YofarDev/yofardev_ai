@@ -4,10 +4,9 @@ import '../context_ext.dart';
 import '../tokens/app_motion.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_tokens.dart';
-import 'cel_style.dart';
 import 'interactive_surface.dart';
 
-/// Icon button (glass or cel, from the tokens): a 36 dp visual inside a 48x48 hit area.
+/// Glass icon button: a 36 dp visual inside a 48x48 hit area.
 ///
 /// Pass `onPressed: null` to disable it. [semanticLabel] is always required
 /// (screen readers); [tooltip] is the optional visible hover/long-press hint.
@@ -68,51 +67,31 @@ class AppIconButton extends StatelessWidget {
           tokens.radius(AppRadius.md),
         );
 
-        final BoxDecoration decoration;
-        final Color iconColor;
-        if (tokens.isCel) {
-          final Color base = active ? accent : glassSurface;
-          iconColor = active
-              ? tokens.scene.onAccent
-              : lifted
-              ? accent
-              : colors.onSurface;
-          decoration = BoxDecoration(
-            color: tokens.celFill(base, states),
-            borderRadius: radius,
-            border: Border.all(
-              color: tokens.celBorder(states, filled: active),
-              width: tokens.outlineWidth,
-            ),
-            boxShadow: tokens.celShadow(pressed: states.pressed),
-          );
-        } else {
-          final Color tint = active ? accent : glassSurface;
-          iconColor = active || lifted ? accent : colors.onSurface;
-          final Color borderColor = active || states.focused
-              ? accent.withValues(alpha: states.focused ? 0.9 : 0.6)
-              : glassBorder.withValues(alpha: borderAlpha);
-          decoration = BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: <Color>[
-                tint.withValues(alpha: fillTop),
-                tint.withValues(alpha: fillBottom),
-              ],
-            ),
-            borderRadius: radius,
-            border: Border.all(color: borderColor, width: tokens.outlineWidth),
-            boxShadow: <BoxShadow>[
-              if (states.hovered || states.pressed)
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
+        final Color tint = active ? accent : glassSurface;
+        final Color iconColor = active || lifted ? accent : colors.onSurface;
+        final Color borderColor = active || states.focused
+            ? accent.withValues(alpha: states.focused ? 0.9 : 0.6)
+            : glassBorder.withValues(alpha: borderAlpha);
+        final BoxDecoration decoration = BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[
+              tint.withValues(alpha: fillTop),
+              tint.withValues(alpha: fillBottom),
             ],
-          );
-        }
+          ),
+          borderRadius: radius,
+          border: Border.all(color: borderColor, width: tokens.outlineWidth),
+          boxShadow: <BoxShadow>[
+            if (states.hovered || states.pressed)
+              BoxShadow(
+                color: accent.withValues(alpha: 0.2),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        );
 
         final Widget visual = AnimatedContainer(
           duration: AppMotion.base,

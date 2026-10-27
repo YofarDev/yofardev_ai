@@ -18,7 +18,6 @@ void main() {
   group('LabConfig JSON', () {
     test('round-trips every field', () {
       const LabConfig config = LabConfig(
-        lookId: 'cel',
         scene: AvatarScene.deepSpace,
         layout: LabLayout.curtain,
         composer: LabComposerState.thinking,
@@ -52,14 +51,15 @@ void main() {
 
     test('missing keys fall back to the defaults', () {
       expect(
-        LabConfig.fromJson(<String, Object?>{'lookId': 'cel'}),
-        LabConfig.initial.copyWith(lookId: 'cel'),
+        LabConfig.fromJson(<String, Object?>{'scene': 'beach'}),
+        LabConfig.initial.copyWith(scene: AvatarScene.beach),
       );
     });
 
-    test('throws FormatException on an unknown look', () {
+    test('the look is fixed: lookId is no longer a key', () {
+      expect(LabConfig.initial.toJson().containsKey('lookId'), isFalse);
       expect(
-        () => LabConfig.fromJson(<String, Object?>{'lookId': 'nope'}),
+        () => LabConfig.fromJson(<String, Object?>{'lookId': 'storybook'}),
         throwsFormatException,
       );
     });
@@ -91,7 +91,7 @@ void main() {
       );
       expect(cleared.accentHueOverride, isNull);
       expect(cleared.radiusScaleOverride, isNull);
-      expect(set.copyWith(lookId: 'cel').accentHueOverride, 90);
+      expect(set.copyWith(scene: AvatarScene.beach).accentHueOverride, 90);
     });
   });
 

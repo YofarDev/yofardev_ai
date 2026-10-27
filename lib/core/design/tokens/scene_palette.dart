@@ -1,14 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// How raised surfaces are drawn.
-enum AppSurfaceStyle {
-  /// Translucent blurred glass (today's look).
-  glass,
-
-  /// Flat opaque fill with an ink outline and a hard offset shadow.
-  cel,
-}
-
 /// The accent colors of one scene: the interactive highlight, the color of
 /// content drawn on top of it, and its glow.
 @immutable

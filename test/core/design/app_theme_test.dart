@@ -85,7 +85,6 @@ void main() {
       expect(tokens.warning, const Color(0xFFF4B860));
       expect(tokens.scene.accent, const Color(0xFFF4B860));
       expect(tokens.scene.onAccent, _ink);
-      expect(tokens.surfaceStyle, AppSurfaceStyle.glass);
       expect(tokens.outlineWidth, 1);
       expect(tokens.radiusScale, 1.15);
     });

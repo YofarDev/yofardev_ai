@@ -327,7 +327,6 @@ class _ListeningMic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
-    final bool cel = tokens.surfaceStyle == AppSurfaceStyle.cel;
     return Center(
       child: Semantics(
         label: 'Listening',
@@ -339,12 +338,6 @@ class _ListeningMic extends StatelessWidget {
           decoration: BoxDecoration(
             color: tokens.scene.accent,
             shape: BoxShape.circle,
-            border: cel
-                ? Border.all(
-                    color: tokens.glassBorder,
-                    width: tokens.outlineWidth,
-                  )
-                : null,
           ),
           child: Icon(
             Icons.mic_rounded,
@@ -436,7 +429,7 @@ class _Breath extends StatelessWidget {
             borderRadius: radius,
             boxShadow: <BoxShadow>[
               // A wide halo that swells, and a tight rim that keeps the
-              // glow readable around opaque (cel) pills.
+              // glow readable around opaque pills.
               BoxShadow(
                 color: glow.withValues(
                   alpha: (glow.a * (0.6 + 0.9 * t)).clamp(0.0, 1.0),

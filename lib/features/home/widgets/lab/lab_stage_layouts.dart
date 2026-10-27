@@ -298,15 +298,11 @@ class _DockDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppTokens tokens = context.tokens;
-    final bool cel = tokens.surfaceStyle == AppSurfaceStyle.cel;
     return Container(
-      width: cel ? tokens.outlineWidth : 1,
+      width: 1,
       height: 24,
       margin: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
-      color: cel
-          ? tokens.glassBorder
-          : context.colors.onSurface.withValues(alpha: 0.16),
+      color: context.colors.onSurface.withValues(alpha: 0.16),
     );
   }
 }

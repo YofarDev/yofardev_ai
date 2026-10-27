@@ -5,11 +5,9 @@ import '../../l10n/generated/app_localizations.dart';
 import '../context_ext.dart';
 import '../tokens/app_spacing.dart';
 import 'app_icon_button.dart';
-import 'cel_style.dart';
 
 /// Page frame for pushed screens: a header (back button, title, actions) over
-/// the app's `background → surface` diagonal gradient (a flat background under
-/// cel tokens), with [body] below.
+/// the app's `background → surface` diagonal gradient, with [body] below.
 class AppScaffold extends StatelessWidget {
   const AppScaffold({
     super.key,
@@ -34,18 +32,13 @@ class AppScaffold extends StatelessWidget {
 
     return Scaffold(
       body: DecoratedBox(
-        decoration: context.tokens.isCel
-            ? BoxDecoration(color: context.tokens.background)
-            : BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: <Color>[
-                    context.tokens.background,
-                    context.colors.surface,
-                  ],
-                ),
-              ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[context.tokens.background, context.colors.surface],
+          ),
+        ),
         child: SafeArea(
           child: Column(
             children: <Widget>[

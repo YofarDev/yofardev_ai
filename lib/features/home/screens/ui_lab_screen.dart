@@ -14,12 +14,11 @@ import '../widgets/lab/lab_service_extension.dart';
 import '../widgets/lab/lab_stage_preview.dart';
 import '../widgets/lab/lab_surfaces_preview.dart';
 
-/// Debug-only screen to compare the candidate looks across the four scenes.
-/// Reach it at `/ui-lab`; the route only exists in debug builds.
+/// Debug-only screen to iterate on the Storybook night look across the four
+/// scenes. Reach it at `/ui-lab`; the route only exists in debug builds.
 ///
 /// Owns a `ValueNotifier<LabConfig>` that the controls and the
-/// `ext.yofardev.uiLab.*` service extensions both edit. While mounted it allows
-/// runtime Google Fonts downloads (the candidate fonts are not bundled).
+/// `ext.yofardev.uiLab.*` service extensions both edit.
 class UiLabScreen extends StatefulWidget {
   const UiLabScreen({
     super.key,
@@ -28,7 +27,7 @@ class UiLabScreen extends StatefulWidget {
     this.stageBuilder = buildLabRiveStage,
   });
 
-  /// Builds each look's text theme; tests inject a fake so no font loads.
+  /// Builds the look's text theme; tests inject a fake so no font loads.
   final LookTextThemeBuilder textThemeBuilder;
 
   final LabConfig initialConfig;
@@ -49,14 +48,13 @@ class _UiLabScreenState extends State<UiLabScreen> {
     widget.initialConfig,
   );
 
-  /// Look themes by `look/scene`, so dragging a slider does not rebuild (and
+  /// Base themes by scene, so dragging a slider does not rebuild (and
   /// re-resolve the fonts of) the base theme every frame.
   final Map<String, ThemeData> _baseThemes = <String, ThemeData>{};
 
   @override
   void initState() {
     super.initState();
-    LabFontFetching.enable();
     registerUiLabExtensions(_config);
   }
 
@@ -64,15 +62,14 @@ class _UiLabScreenState extends State<UiLabScreen> {
   void dispose() {
     unregisterUiLabExtensions(_config);
     _config.dispose();
-    LabFontFetching.restore();
     super.dispose();
   }
 
   ThemeData _previewTheme(LabConfig config) {
     final ThemeData base = _baseThemes.putIfAbsent(
-      '${config.lookId}/${config.scene.name}',
+      config.scene.name,
       () => buildLookTheme(
-        config.look,
+        UiLooks.storybook,
         config.scene,
         textThemeBuilder: widget.textThemeBuilder,
       ),
@@ -135,7 +132,7 @@ class _UiLabScreenState extends State<UiLabScreen> {
   }
 }
 
-/// The page background of the previewed look under the ambient look theme,
+/// The page background under the ambient look theme,
 /// with the tab's content on top.
 class _PreviewFrame extends StatelessWidget {
   const _PreviewFrame({required this.config, required this.stageBuilder});
@@ -146,17 +143,14 @@ class _PreviewFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
-    final bool cel = tokens.surfaceStyle == AppSurfaceStyle.cel;
     return DecoratedBox(
-      decoration: cel
-          ? BoxDecoration(color: tokens.background)
-          : BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: <Color>[tokens.background, context.colors.surface],
-              ),
-            ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[tokens.background, context.colors.surface],
+        ),
+      ),
       child: Material(
         type: MaterialType.transparency,
         child: switch (config.tab) {

@@ -60,7 +60,6 @@ void main() {
   ) async {
     await pumpLab(tester);
     for (final String label in <String>[
-      'Look',
       'Scene',
       'Layout',
       'Composer',
@@ -75,17 +74,18 @@ void main() {
     expect(find.text('Searched the web · 3 results'), findsOneWidget);
   });
 
-  testWidgets('switching the look to cel changes the preview surface style', (
+  testWidgets('has no look switcher and previews Storybook night', (
     WidgetTester tester,
   ) async {
     await pumpLab(tester);
-    expect(_previewTokens(tester).surfaceStyle, AppSurfaceStyle.glass);
+    expect(find.text('Look'), findsNothing);
+    expect(find.widgetWithText(AppPill, 'Neon'), findsNothing);
+    expect(find.widgetWithText(AppPill, 'Cel'), findsNothing);
 
-    await tester.tap(find.widgetWithText(AppPill, 'Cel'));
-    await tester.pump();
-
-    expect(_previewTokens(tester).surfaceStyle, AppSurfaceStyle.cel);
-    expect(_previewTokens(tester).radiusScale, UiLooks.cel.radiusScale);
+    final AppTokens tokens = _previewTokens(tester);
+    expect(tokens.radiusScale, UiLooks.storybook.radiusScale);
+    expect(tokens.outlineWidth, UiLooks.storybook.outlineWidth);
+    expect(tokens.background, UiLooks.storybook.ink);
   });
 
   testWidgets('opens on the stage tab, a mock Home over the stage', (
@@ -141,17 +141,17 @@ void main() {
     WidgetTester tester,
   ) async {
     await pumpLab(tester, initial: _surfaces.copyWith(panelCollapsed: true));
-    expect(find.text('Look'), findsNothing);
+    expect(find.text('Scene'), findsNothing);
     expect(find.widgetWithText(AppPill, 'Stage'), findsOneWidget);
 
     await tester.tap(find.bySemanticsLabel('Show controls'));
     await tester.pump();
-    expect(find.text('Look'), findsOneWidget);
+    expect(find.text('Scene'), findsOneWidget);
     expect(activeUiLabConfig!.value.panelCollapsed, isFalse);
 
     await tester.tap(find.bySemanticsLabel('Hide controls'));
     await tester.pump();
-    expect(find.text('Look'), findsNothing);
+    expect(find.text('Scene'), findsNothing);
     expect(activeUiLabConfig!.value.panelCollapsed, isTrue);
 
     // The service extension drives the same flag.
@@ -159,15 +159,15 @@ void main() {
       panelCollapsed: false,
     );
     await tester.pump();
-    expect(find.text('Look'), findsOneWidget);
+    expect(find.text('Scene'), findsOneWidget);
   });
 
-  testWidgets('enables font fetching while mounted and restores it after', (
+  testWidgets('never turns on runtime font fetching', (
     WidgetTester tester,
   ) async {
     expect(GoogleFonts.config.allowRuntimeFetching, isFalse);
     await pumpLab(tester);
-    expect(GoogleFonts.config.allowRuntimeFetching, isTrue);
+    expect(GoogleFonts.config.allowRuntimeFetching, isFalse);
 
     await tester.pumpWidget(const SizedBox.shrink());
     expect(GoogleFonts.config.allowRuntimeFetching, isFalse);

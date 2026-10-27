@@ -6,15 +6,12 @@ import '../context_ext.dart';
 import '../tokens/app_glass.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_tokens.dart';
-import 'cel_style.dart';
 
-/// A raised surface. With glass tokens: a diagonal gradient fill and an
-/// outline, both driven by the [level]'s tokens. With cel tokens: an opaque
-/// fill, an outline and a hard offset shadow (no gradient, never blurred).
+/// A raised glass surface: a diagonal gradient fill and an outline, both
+/// driven by the [level]'s tokens.
 ///
 /// The backdrop blur is expensive, so it is applied only when [blur] is true
-/// and the style is glass (use it for a few large surfaces, never for list
-/// items).
+/// (use it for a few large surfaces, never for list items).
 class GlassPanel extends StatelessWidget {
   const GlassPanel({
     super.key,
@@ -43,18 +40,6 @@ class GlassPanel extends StatelessWidget {
       padding: padding ?? EdgeInsets.zero,
       child: child,
     );
-
-    if (tokens.isCel) {
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          color: fill,
-          borderRadius: radius,
-          border: Border.all(color: border, width: tokens.outlineWidth),
-          boxShadow: tokens.celShadow(),
-        ),
-        child: content,
-      );
-    }
 
     final Widget panel = DecoratedBox(
       decoration: BoxDecoration(

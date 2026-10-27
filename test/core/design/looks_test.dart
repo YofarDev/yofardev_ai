@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/design/looks/looks.dart';
@@ -18,24 +17,17 @@ TextTheme _fakeTextTheme(LookFonts fonts, ColorScheme scheme) {
 
 void main() {
   group('contrast floors', () {
-    for (final UiLook look in UiLooks.all) {
-      for (final AvatarScene scene in AvatarScene.values) {
-        test('${look.id} / ${scene.name}', () {
-          final ScenePalette p = look.palette(scene);
-          expect(
-            contrastRatio(look.onSurface, look.surface),
-            greaterThanOrEqualTo(7),
-          );
-          expect(
-            contrastRatio(p.accent, look.surface),
-            greaterThanOrEqualTo(3),
-          );
-          expect(
-            contrastRatio(p.onAccent, p.accent),
-            greaterThanOrEqualTo(4.5),
-          );
-        });
-      }
+    const UiLook look = UiLooks.storybook;
+    for (final AvatarScene scene in AvatarScene.values) {
+      test('${look.id} / ${scene.name}', () {
+        final ScenePalette p = look.palette(scene);
+        expect(
+          contrastRatio(look.onSurface, look.surface),
+          greaterThanOrEqualTo(7),
+        );
+        expect(contrastRatio(p.accent, look.surface), greaterThanOrEqualTo(3));
+        expect(contrastRatio(p.onAccent, p.accent), greaterThanOrEqualTo(4.5));
+      });
     }
   });
 
@@ -53,15 +45,13 @@ void main() {
 
   group('palette', () {
     test('glow is the accent at 35% alpha', () {
-      for (final UiLook look in UiLooks.all) {
-        for (final AvatarScene scene in AvatarScene.values) {
-          final ScenePalette p = look.palette(scene);
-          expect(p.glow.a, closeTo(0.35, 0.01));
-          expect(
-            p.glow.toARGB32() & 0x00FFFFFF,
-            p.accent.toARGB32() & 0x00FFFFFF,
-          );
-        }
+      for (final AvatarScene scene in AvatarScene.values) {
+        final ScenePalette p = UiLooks.storybook.palette(scene);
+        expect(p.glow.a, closeTo(0.35, 0.01));
+        expect(
+          p.glow.toARGB32() & 0x00FFFFFF,
+          p.accent.toARGB32() & 0x00FFFFFF,
+        );
       }
     });
 
@@ -72,7 +62,6 @@ void main() {
       surface: const Color(0xFF202020),
       onSurface: Colors.white,
       outline: const Color(0xFF404040),
-      surfaceStyle: AppSurfaceStyle.glass,
       outlineWidth: 1,
       radiusScale: 1,
       fonts: const LookFonts(display: 'A', text: 'B'),
@@ -116,10 +105,11 @@ void main() {
       );
     });
 
-    test('every preset defines an accent for every scene', () {
-      for (final UiLook look in UiLooks.all) {
-        expect(look.accents.keys.toSet(), AvatarScene.values.toSet());
-      }
+    test('storybook defines an accent for every scene', () {
+      expect(
+        UiLooks.storybook.accents.keys.toSet(),
+        AvatarScene.values.toSet(),
+      );
     });
 
     test('palette throws a clear error for a scene without accent', () {
@@ -130,7 +120,6 @@ void main() {
         surface: Colors.black,
         onSurface: Colors.white,
         outline: Colors.grey,
-        surfaceStyle: AppSurfaceStyle.glass,
         outlineWidth: 1,
         radiusScale: 1,
         fonts: const LookFonts(display: 'A', text: 'B'),
@@ -146,14 +135,6 @@ void main() {
           ),
         ),
       );
-    });
-
-    test('all three looks are listed in order', () {
-      expect(UiLooks.all.map((UiLook l) => l.id).toList(), <String>[
-        'neon',
-        'storybook',
-        'cel',
-      ]);
     });
   });
 
@@ -193,20 +174,19 @@ void main() {
       expect(theme.extension<AppTokens>()!.warning, UiLooks.storybook.warning);
     });
 
-    test('cel look yields cel tokens', () {
+    test('storybook tokens carry its outline width and radius scale', () {
       final AppTokens t = buildLookTheme(
-        UiLooks.cel,
+        UiLooks.storybook,
         AvatarScene.beach,
         textThemeBuilder: _fakeTextTheme,
       ).extension<AppTokens>()!;
-      expect(t.surfaceStyle, AppSurfaceStyle.cel);
-      expect(t.outlineWidth, 2);
-      expect(t.radiusScale, 1.35);
+      expect(t.outlineWidth, 1);
+      expect(t.radiusScale, 1.15);
     });
 
     test('radii are multiplied by radiusScale and fonts are applied', () {
       final ThemeData theme = buildLookTheme(
-        UiLooks.cel,
+        UiLooks.storybook,
         AvatarScene.beach,
         textThemeBuilder: _fakeTextTheme,
       );
@@ -214,59 +194,16 @@ void main() {
           theme.cardTheme.shape! as RoundedRectangleBorder;
       expect(
         (card.borderRadius as BorderRadius).topLeft.x,
-        closeTo(16 * 1.35, 0.001),
+        closeTo(16 * 1.15, 0.001),
       );
-      expect(theme.textTheme.bodyMedium?.fontFamily, UiLooks.cel.fonts.text);
+      expect(
+        theme.textTheme.bodyMedium?.fontFamily,
+        UiLooks.storybook.fonts.text,
+      );
       expect(
         theme.textTheme.displayLarge?.fontFamily,
-        UiLooks.cel.fonts.display,
+        UiLooks.storybook.fonts.display,
       );
-    });
-  });
-
-  group('LabFontFetching', () {
-    late bool ambient;
-
-    setUp(() {
-      ambient = GoogleFonts.config.allowRuntimeFetching;
-      LabFontFetching.restore();
-      GoogleFonts.config.allowRuntimeFetching = false;
-    });
-
-    tearDown(() {
-      LabFontFetching.restore();
-      GoogleFonts.config.allowRuntimeFetching = ambient;
-    });
-
-    test(
-      'enable turns fetching on (debug) and restore returns it to false',
-      () {
-        LabFontFetching.enable();
-        expect(GoogleFonts.config.allowRuntimeFetching, isTrue);
-        LabFontFetching.restore();
-        expect(GoogleFonts.config.allowRuntimeFetching, isFalse);
-      },
-    );
-
-    test('restore without enable is a no-op', () {
-      GoogleFonts.config.allowRuntimeFetching = true;
-      LabFontFetching.restore();
-      expect(GoogleFonts.config.allowRuntimeFetching, isTrue);
-    });
-
-    test('restore twice is a no-op the second time', () {
-      LabFontFetching.enable();
-      LabFontFetching.restore();
-      GoogleFonts.config.allowRuntimeFetching = true;
-      LabFontFetching.restore();
-      expect(GoogleFonts.config.allowRuntimeFetching, isTrue);
-    });
-
-    test('double enable keeps the first saved value', () {
-      LabFontFetching.enable();
-      LabFontFetching.enable();
-      LabFontFetching.restore();
-      expect(GoogleFonts.config.allowRuntimeFetching, isFalse);
     });
   });
 }

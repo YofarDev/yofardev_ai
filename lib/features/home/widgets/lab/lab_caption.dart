@@ -105,33 +105,20 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
-    final bool cel = tokens.surfaceStyle == AppSurfaceStyle.cel;
     final LabBubbleBorder shape = LabBubbleBorder(
       radius: tokens.radius(AppRadius.lg),
       tailAt: tailAt,
       side: BorderSide(
-        color: cel
-            ? tokens.glassBorder
-            : tokens.glassBorder.withValues(
-                alpha: tokens.glassThick.borderAlpha,
-              ),
+        color: tokens.glassBorder.withValues(
+          alpha: tokens.glassThick.borderAlpha,
+        ),
         width: tokens.outlineWidth,
       ),
     );
     final Widget bubble = DecoratedBox(
       decoration: ShapeDecoration(
         shape: shape,
-        color: cel
-            ? tokens.glassSurface
-            : tokens.glassSurface.withValues(alpha: 0.82),
-        shadows: cel
-            ? <BoxShadow>[
-                BoxShadow(
-                  color: tokens.shadow.withValues(alpha: 0.6),
-                  offset: const Offset(0, 3),
-                ),
-              ]
-            : null,
+        color: tokens.glassSurface.withValues(alpha: 0.82),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -151,9 +138,6 @@ class _Bubble extends StatelessWidget {
         ),
       ),
     );
-    if (cel) {
-      return bubble;
-    }
     return ClipPath(
       clipper: ShapeBorderClipper(shape: shape),
       child: BackdropFilter(

@@ -21,60 +21,54 @@ Widget _emptyStage(BuildContext context, AvatarScene scene, TalkingState _) =>
 void main() {
   setUp(() => GoogleFonts.config.allowRuntimeFetching = false);
 
-  for (final UiLook look in UiLooks.all) {
-    for (final LabLayout layout in LabLayout.values) {
-      testWidgets('${look.id} ${layout.name}: captions fit two lines', (
-        WidgetTester tester,
-      ) async {
-        for (final AvatarScene scene in AvatarScene.values) {
-          final LabConfig config = LabConfig.initial.copyWith(
-            lookId: look.id,
-            layout: layout,
-            scene: scene,
-          );
-          await tester.pumpWidget(
-            MaterialApp(
-              theme: buildLookTheme(
-                look,
-                scene,
-                textThemeBuilder: _bundledTextTheme,
-              ),
-              home: Scaffold(
-                body: LabStagePreview(
-                  config: config,
-                  stageBuilder: _emptyStage,
-                ),
-              ),
+  for (final LabLayout layout in LabLayout.values) {
+    testWidgets('${layout.name}: captions fit two lines', (
+      WidgetTester tester,
+    ) async {
+      for (final AvatarScene scene in AvatarScene.values) {
+        final LabConfig config = LabConfig.initial.copyWith(
+          layout: layout,
+          scene: scene,
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: buildLookTheme(
+              UiLooks.storybook,
+              scene,
+              textThemeBuilder: _bundledTextTheme,
             ),
-          );
-          await tester.runAsync(() => GoogleFonts.pendingFonts());
-          await tester.pump();
+            home: Scaffold(
+              body: LabStagePreview(config: config, stageBuilder: _emptyStage),
+            ),
+          ),
+        );
+        await tester.runAsync(() => GoogleFonts.pendingFonts());
+        await tester.pump();
 
-          final String caption = LabCaption.sampleFor(scene);
-          final Finder text = find.text(caption);
-          expect(text, findsOneWidget, reason: caption);
-          final RenderParagraph paragraph = tester.renderObject(text);
-          expect(paragraph.didExceedMaxLines, isFalse, reason: caption);
+        final String caption = LabCaption.sampleFor(scene);
+        final Finder text = find.text(caption);
+        expect(text, findsOneWidget, reason: caption);
+        final RenderParagraph paragraph = tester.renderObject(text);
+        expect(paragraph.didExceedMaxLines, isFalse, reason: caption);
 
-          // The slot is what the caption's balancing LayoutBuilder is given.
-          final RenderBox slot = tester.renderObject(
-            find.ancestor(of: text, matching: find.byType(LayoutBuilder)).first,
-          );
-          final double slotWidth = slot.constraints.maxWidth;
-          final TextPainter painter = TextPainter(
-            text: paragraph.text,
-            textDirection: TextDirection.ltr,
-            textScaler: paragraph.textScaler,
-          )..layout(maxWidth: slotWidth);
-          final int lines = painter.computeLineMetrics().length;
-          painter.dispose();
-          expect(
-            lines,
-            lessThanOrEqualTo(2),
-            reason: '"$caption" in ${slotWidth.round()} px',
-          );
-        }
-      });
-    }
+        // The slot is what the caption's balancing LayoutBuilder is given.
+        final RenderBox slot = tester.renderObject(
+          find.ancestor(of: text, matching: find.byType(LayoutBuilder)).first,
+        );
+        final double slotWidth = slot.constraints.maxWidth;
+        final TextPainter painter = TextPainter(
+          text: paragraph.text,
+          textDirection: TextDirection.ltr,
+          textScaler: paragraph.textScaler,
+        )..layout(maxWidth: slotWidth);
+        final int lines = painter.computeLineMetrics().length;
+        painter.dispose();
+        expect(
+          lines,
+          lessThanOrEqualTo(2),
+          reason: '"$caption" in ${slotWidth.round()} px',
+        );
+      }
+    });
   }
 }

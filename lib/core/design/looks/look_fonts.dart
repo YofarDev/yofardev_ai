@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -87,29 +86,4 @@ TextTheme googleFontsTextThemeBuilder(LookFonts fonts, ColorScheme scheme) {
       TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c),
     ),
   );
-}
-
-/// Debug-only switch for runtime font downloads, used while the UI lab is
-/// open (the candidate fonts are not bundled).
-abstract final class LabFontFetching {
-  static bool? _previous;
-
-  /// Allows runtime font fetching. No-op outside debug builds.
-  static void enable() {
-    if (!kDebugMode) {
-      return;
-    }
-    _previous ??= GoogleFonts.config.allowRuntimeFetching;
-    GoogleFonts.config.allowRuntimeFetching = true;
-  }
-
-  /// Restores the flag value saved by [enable].
-  static void restore() {
-    final bool? previous = _previous;
-    if (previous == null) {
-      return;
-    }
-    GoogleFonts.config.allowRuntimeFetching = previous;
-    _previous = null;
-  }
 }

@@ -53,13 +53,11 @@ LabConfig _config({
   LabLayout layout = LabLayout.stageChips,
   LabComposerState composer = LabComposerState.idle,
   AvatarScene scene = AvatarScene.livingRoom,
-  String lookId = 'neon',
 }) => LabConfig.initial.copyWith(
   tab: LabTab.stage,
   layout: layout,
   composer: composer,
   scene: scene,
-  lookId: lookId,
 );
 
 Widget _harness(
@@ -69,7 +67,7 @@ Widget _harness(
 }) {
   return MaterialApp(
     theme: buildLookTheme(
-      config.look,
+      UiLooks.storybook,
       config.scene,
       textThemeBuilder: _fakeTextTheme,
     ),
@@ -270,7 +268,7 @@ void main() {
     });
   });
 
-  testWidgets('the stage survives look, layout and composer changes', (
+  testWidgets('the stage survives scene, layout and composer changes', (
     WidgetTester tester,
   ) async {
     final _StageProbe probe = _StageProbe();
@@ -279,8 +277,8 @@ void main() {
 
     for (final LabConfig config in <LabConfig>[
       _config(layout: LabLayout.dock),
-      _config(layout: LabLayout.curtain, lookId: 'cel'),
-      _config(composer: LabComposerState.listening, lookId: 'storybook'),
+      _config(layout: LabLayout.curtain, scene: AvatarScene.campfire),
+      _config(composer: LabComposerState.listening),
       _config(composer: LabComposerState.speaking),
     ]) {
       await tester.pumpWidget(_harness(config, probe));

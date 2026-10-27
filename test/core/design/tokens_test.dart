@@ -105,7 +105,6 @@ void main() {
       expect(AppTokens.dark.scene.accent, const Color(0xFFF4B860));
       expect(AppTokens.dark.scene.onAccent, const Color(0xFF16121D));
       expect(AppTokens.dark.scene.glow, const Color(0x59F4B860));
-      expect(AppTokens.dark.surfaceStyle, AppSurfaceStyle.glass);
       expect(AppTokens.dark.outlineWidth, 1);
       expect(AppTokens.dark.radiusScale, 1.15);
     });
@@ -113,18 +112,6 @@ void main() {
     test('radius scales the base value', () {
       expect(AppTokens.dark.radius(14), closeTo(16.1, 1e-9));
       expect(AppTokens.dark.copyWith(radiusScale: 1.5).radius(14), 21);
-    });
-
-    test('lerp switches surfaceStyle at t >= 0.5', () {
-      final AppTokens other = AppTokens.dark.copyWith(
-        surfaceStyle: AppSurfaceStyle.cel,
-      );
-      expect(
-        AppTokens.dark.lerp(other, 0.49).surfaceStyle,
-        AppSurfaceStyle.glass,
-      );
-      expect(AppTokens.dark.lerp(other, 0.5).surfaceStyle, AppSurfaceStyle.cel);
-      expect(AppTokens.dark.lerp(other, 1).surfaceStyle, AppSurfaceStyle.cel);
     });
 
     test('lerp interpolates scene, outlineWidth and radiusScale', () {
@@ -152,19 +139,16 @@ void main() {
       );
       final AppTokens changed = AppTokens.dark.copyWith(
         scene: scene,
-        surfaceStyle: AppSurfaceStyle.cel,
         outlineWidth: 2,
         radiusScale: 1.35,
       );
       expect(changed.scene, scene);
-      expect(changed.surfaceStyle, AppSurfaceStyle.cel);
       expect(changed.outlineWidth, 2);
       expect(changed.radiusScale, 1.35);
       expect(changed, isNot(AppTokens.dark));
       expect(
         changed.copyWith(
           scene: AppTokens.dark.scene,
-          surfaceStyle: AppSurfaceStyle.glass,
           outlineWidth: 1,
           radiusScale: 1.15,
         ),

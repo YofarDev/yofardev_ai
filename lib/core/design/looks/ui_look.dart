@@ -17,8 +17,7 @@ class LookFonts {
   final String text;
 }
 
-/// A visual identity for the app: surface and text colors, surface style,
-/// shape, fonts, one accent per scene and the scene-independent roles (error,
+/// A visual identity for the app: surface and text colors, shape, fonts, one accent per scene and the scene-independent roles (error,
 /// tertiary, success, warning). Pure data; turn it into a theme with
 /// `buildLookTheme`.
 @immutable
@@ -30,7 +29,6 @@ class UiLook {
     required this.surface,
     required this.onSurface,
     required this.outline,
-    required this.surfaceStyle,
     required this.outlineWidth,
     required this.radiusScale,
     required this.fonts,
@@ -41,8 +39,7 @@ class UiLook {
     this.onTertiary = AppPalette.onTertiary,
     this.success = AppPalette.success,
     this.warning = AppPalette.warning,
-    Color? glassSurface,
-  }) : _glassSurface = glassSurface;
+  });
 
   final String id;
   final String name;
@@ -53,11 +50,8 @@ class UiLook {
   /// Raised surface fill.
   final Color surface;
 
-  final Color? _glassSurface;
-
-  /// Fill of glass/card surfaces. Defaults to [surface]; Neon overrides it to
-  /// reproduce today's palette, where the two differ.
-  Color get glassSurface => _glassSurface ?? surface;
+  /// Fill of glass/card surfaces (the same as [surface]).
+  Color get glassSurface => surface;
 
   /// Body text on [surface] and [ink].
   final Color onSurface;
@@ -65,7 +59,6 @@ class UiLook {
   /// Surface outline / border color.
   final Color outline;
 
-  final AppSurfaceStyle surfaceStyle;
   final double outlineWidth;
   final double radiusScale;
   final LookFonts fonts;

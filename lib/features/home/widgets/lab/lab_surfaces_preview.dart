@@ -105,7 +105,6 @@ class _Transcript extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
-    final bool cel = tokens.surfaceStyle == AppSurfaceStyle.cel;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -119,20 +118,6 @@ class _Transcript extends StatelessWidget {
                 borderRadius: BorderRadius.circular(
                   tokens.radius(AppRadius.lg),
                 ),
-                border: cel
-                    ? Border.all(
-                        color: tokens.glassBorder,
-                        width: tokens.outlineWidth,
-                      )
-                    : null,
-                boxShadow: cel
-                    ? <BoxShadow>[
-                        BoxShadow(
-                          color: tokens.shadow.withValues(alpha: 0.6),
-                          offset: const Offset(0, 3),
-                        ),
-                      ]
-                    : null,
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
