@@ -80,10 +80,13 @@ class _FakeChatEntryService implements ChatEntryService {
 
 /// A tool that records when it runs and returns [result].
 class _FakeTool extends AgentTool {
-  _FakeTool(this.log, {this.result = 'sunny'});
+  _FakeTool(this.log, {this.result = 'sunny', this.gate});
 
   final List<String> log;
   final Object result;
+
+  /// When set, each run waits for it after logging (a slow tool).
+  final Future<void>? gate;
 
   @override
   String get name => 'fakeTool';
@@ -103,6 +106,7 @@ class _FakeTool extends AgentTool {
     Map<String, dynamic> configValues,
   ) async {
     log.add('execute');
+    await gate;
     return result;
   }
 }
@@ -194,12 +198,15 @@ void main() {
     ).thenAnswer((_) async => Result<void>.ok(null));
   });
 
-  ChatStreamingService buildService(AgentTool tool) => ChatStreamingService(
+  ChatStreamingService buildService(
+    AgentTool tool, {
+    InterruptionService? interruptionService,
+  }) => ChatStreamingService(
     chatRepository: chatRepository,
     llmService: llmService,
     streamProcessor: _DrainingStreamProcessor(),
     promptDatasource: _FakePromptDatasource(),
-    interruptionService: _FakeInterruptionService(),
+    interruptionService: interruptionService ?? _FakeInterruptionService(),
     chatEntryService: _FakeChatEntryService(),
     toolRegistry: _FakeToolRegistry(tool),
     settingsRepository: _MockSettingsRepository(),
@@ -253,5 +260,63 @@ void main() {
     await run(buildService(_FakeTool(log)));
 
     expect(log, <String>['complete']);
+  });
+
+  test('an interruption clears the running tool at once and no later tool '
+      'is reported', () async {
+    // Round 1 calls the tool twice.
+    when(
+      () => llmService.promptModelStream(
+        messages: any(named: 'messages'),
+        systemPrompt: any(named: 'systemPrompt'),
+        config: any(named: 'config'),
+        returnJson: any(named: 'returnJson'),
+        debugLogs: any(named: 'debugLogs'),
+        tools: any(named: 'tools'),
+      ),
+    ).thenAnswer(
+      (_) => Stream<LlmStreamChunk>.fromIterable(const <LlmStreamChunk>[
+        LlmStreamChunk.toolCallDelta(
+          index: 0,
+          id: 'call_1',
+          name: 'fakeTool',
+          argumentsDelta: '{}',
+        ),
+        LlmStreamChunk.toolCallDelta(
+          index: 1,
+          id: 'call_2',
+          name: 'fakeTool',
+          argumentsDelta: '{}',
+        ),
+        LlmStreamChunk.complete(),
+      ]),
+    );
+    final InterruptionService interruption = InterruptionService();
+    addTearDown(interruption.dispose);
+    final Completer<void> toolGate = Completer<void>();
+    final _FakeTool tool = _FakeTool(log, gate: toolGate.future);
+
+    final Future<void> reply = run(
+      buildService(tool, interruptionService: interruption),
+    );
+    while (!log.contains('execute')) {
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    await interruption.interrupt();
+    await Future<void>.delayed(Duration.zero);
+    // Cleared while the (uncancellable) tool is still running.
+    expect(log, <String>['tool:fakeTool', 'execute', 'tool:null']);
+
+    toolGate.complete();
+    await reply;
+
+    expect(log, <String>[
+      'tool:fakeTool',
+      'execute',
+      'tool:null',
+      'execute', // the second call still runs, but is not reported
+      'complete',
+    ]);
   });
 }

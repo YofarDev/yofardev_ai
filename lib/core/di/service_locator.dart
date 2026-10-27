@@ -85,6 +85,7 @@ Future<void> setupServiceLocator() async {
   // Lazy: no mic permission or recognizer setup until the first start().
   getIt.registerLazySingleton<SpeechInputService>(
     () => SpeechToTextInputService(),
+    dispose: (SpeechInputService service) => service.dispose(),
   );
 
   // ── Core services (depend on datasources) ──

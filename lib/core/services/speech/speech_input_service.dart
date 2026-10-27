@@ -12,15 +12,30 @@ abstract class SpeechInputService {
   /// Words heard so far in the current session.
   Stream<String> get partialWords;
 
-  /// Starts a listening session in [localeId] (e.g. `fr_FR`).
+  /// Starts a listening session in [localeId] (e.g. `fr_FR`). Overlapping
+  /// calls share one pending start (the mic opens at most once).
   Future<SpeechStartResult> start({required String localeId});
 
   /// Ends the session and returns the final words ('' if none). Still
   /// returns the words when the recognizer already stopped on its own.
+  /// Called while a start is pending, it aborts that start
+  /// ([SpeechStartResult.cancelled]) before the mic opens.
   Future<String> stop();
 
-  /// Ends the session and drops the words.
+  /// Ends the session and drops the words; aborts a pending start too.
   Future<void> cancel();
+
+  /// Cancels any session and closes the streams. Owned by the DI container.
+  Future<void> dispose();
 }
 
-enum SpeechStartResult { started, permissionDenied, unavailable }
+enum SpeechStartResult {
+  started,
+  permissionDenied,
+  unavailable,
+
+  /// [SpeechInputService.stop]/[SpeechInputService.cancel] came in while
+  /// the start was still pending (permission dialog, initialize): nothing
+  /// is listening and there is nothing to report to the user.
+  cancelled,
+}

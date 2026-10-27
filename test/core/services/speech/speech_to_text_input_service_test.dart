@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:yofardev_ai/core/services/speech/speech_input_service.dart';
@@ -51,6 +54,10 @@ void main() {
     SpeechSoundLevelChange? onLevel;
     SpeechStatusListener? onStatus;
     SpeechListenOptions? listenOptions;
+    SpeechErrorListener? onError;
+
+    /// Holds the first-use permission dialog open until completed.
+    Completer<bool>? permissionDialog;
 
     SpeechToTextInputService build({String platform = 'Android'}) =>
         SpeechToTextInputService(
@@ -58,9 +65,18 @@ void main() {
           platform: () => platform,
           requestMicrophonePermission: () async {
             permissionRequests++;
-            return permissionGranted;
+            final Completer<bool>? dialog = permissionDialog;
+            return dialog == null ? permissionGranted : dialog.future;
           },
         );
+
+    void verifyNeverListened() => verifyNever(
+      () => stt.listen(
+        onResult: any(named: 'onResult'),
+        onSoundLevelChange: any(named: 'onSoundLevelChange'),
+        listenOptions: any(named: 'listenOptions'),
+      ),
+    );
 
     setUp(() {
       stt = _MockSpeechToText();
@@ -70,6 +86,8 @@ void main() {
       onLevel = null;
       onStatus = null;
       listenOptions = null;
+      onError = null;
+      permissionDialog = null;
       when(
         () => stt.initialize(
           onError: any(named: 'onError'),
@@ -77,6 +95,7 @@ void main() {
         ),
       ).thenAnswer((Invocation inv) async {
         onStatus = inv.namedArguments[#onStatus] as SpeechStatusListener?;
+        onError = inv.namedArguments[#onError] as SpeechErrorListener?;
         return true;
       });
       when(
@@ -237,6 +256,135 @@ void main() {
 
       expect(await service.stop(), '');
       verify(() => stt.cancel()).called(1);
+    });
+
+    test('a permanent recognizer error ends the session with the words '
+        'heard so far', () async {
+      final SpeechToTextInputService service = build();
+      await service.start(localeId: 'en_US');
+      onResult!(_result('hello wor'));
+
+      onError!(SpeechRecognitionError('error_network', true));
+
+      expect(await service.stop(), 'hello wor');
+      // Ended by the error: the next start opens a fresh session.
+      expect(await service.start(localeId: 'en_US'), SpeechStartResult.started);
+    });
+
+    test('a transient recognizer error keeps the session open', () async {
+      final SpeechToTextInputService service = build();
+      await service.start(localeId: 'en_US');
+      onResult!(_result('hello'));
+
+      onError!(SpeechRecognitionError('error_speech_timeout', false));
+      final Future<String> stopped = service.stop();
+      onResult!(_result('hello there', isFinal: true));
+
+      expect(await stopped, 'hello there');
+    });
+
+    group('races', () {
+      test('overlapping start() calls listen only once', () async {
+        permissionDialog = Completer<bool>();
+        final SpeechToTextInputService service = build();
+
+        final Future<SpeechStartResult> first = service.start(
+          localeId: 'en_US',
+        );
+        final Future<SpeechStartResult> second = service.start(
+          localeId: 'en_US',
+        );
+        permissionDialog!.complete(true);
+
+        expect(await first, SpeechStartResult.started);
+        expect(await second, SpeechStartResult.started);
+        expect(permissionRequests, 1);
+        verify(
+          () => stt.listen(
+            onResult: any(named: 'onResult'),
+            onSoundLevelChange: any(named: 'onSoundLevelChange'),
+            listenOptions: any(named: 'listenOptions'),
+          ),
+        ).called(1);
+      });
+
+      test('stop() during the first-use permission dialog keeps the mic '
+          'closed', () async {
+        permissionDialog = Completer<bool>();
+        final SpeechToTextInputService service = build();
+
+        final Future<SpeechStartResult> starting = service.start(
+          localeId: 'en_US',
+        );
+        expect(await service.stop(), '');
+        permissionDialog!.complete(true);
+
+        expect(await starting, SpeechStartResult.cancelled);
+        verifyNeverListened();
+
+        // The granted permission is kept: the next start needs no dialog.
+        permissionDialog = null;
+        expect(
+          await service.start(localeId: 'en_US'),
+          SpeechStartResult.started,
+        );
+        expect(permissionRequests, 1);
+      });
+
+      test('cancel() during initialize keeps the mic closed', () async {
+        final Completer<bool> init = Completer<bool>();
+        when(
+          () => stt.initialize(
+            onError: any(named: 'onError'),
+            onStatus: any(named: 'onStatus'),
+          ),
+        ).thenAnswer((_) => init.future);
+        final SpeechToTextInputService service = build();
+
+        final Future<SpeechStartResult> starting = service.start(
+          localeId: 'en_US',
+        );
+        await Future<void>.delayed(Duration.zero); // reach initialize
+        await service.cancel();
+        init.complete(true);
+
+        expect(await starting, SpeechStartResult.cancelled);
+        verifyNeverListened();
+        verifyNever(() => stt.cancel()); // no session to cancel
+      });
+
+      test('dispose() aborts a pending start and closes the streams', () async {
+        permissionDialog = Completer<bool>();
+        final SpeechToTextInputService service = build();
+        bool levelsDone = false;
+        bool wordsDone = false;
+        service.soundLevel.listen(null, onDone: () => levelsDone = true);
+        service.partialWords.listen(null, onDone: () => wordsDone = true);
+
+        final Future<SpeechStartResult> starting = service.start(
+          localeId: 'en_US',
+        );
+        await service.dispose();
+        permissionDialog!.complete(true);
+
+        expect(await starting, SpeechStartResult.cancelled);
+        verifyNeverListened();
+        expect(levelsDone, isTrue);
+        expect(wordsDone, isTrue);
+        expect(
+          await service.start(localeId: 'en_US'),
+          SpeechStartResult.unavailable,
+        );
+      });
+
+      test('dispose() cancels a live session', () async {
+        final SpeechToTextInputService service = build();
+        await service.start(localeId: 'en_US');
+
+        await service.dispose();
+
+        verify(() => stt.cancel()).called(1);
+      });
     });
   });
 }

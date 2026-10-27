@@ -31,7 +31,10 @@ class App extends StatelessWidget {
         BlocProvider<TalkingCubit>(
           create: (BuildContext context) => getIt<TalkingCubit>(),
         ),
+        // Eager: it must be listening before the first sentence plays,
+        // whether or not a caption reader is built yet.
         BlocProvider<CaptionCubit>(
+          lazy: false,
           create: (BuildContext context) => getIt<CaptionCubit>()..init(),
         ),
         BlocProvider<ChatCubit>(

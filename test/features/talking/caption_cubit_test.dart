@@ -136,6 +136,31 @@ void main() {
     });
   });
 
+  test('close() during the linger: no timer left, no emit after close', () {
+    fakeAsync((FakeAsync async) {
+      final CaptionCubit cubit = build();
+      final List<CaptionState> states = <CaptionState>[];
+      cubit.stream.listen(states.add);
+
+      playback.add(const CaptionEvent('One.'));
+      playback.add(const SpeakingStoppedEvent());
+      async.elapse(const Duration(milliseconds: 600));
+      // close() cancels the linger and both subscriptions synchronously
+      // (the awaited cancel futures of broadcast streams resolve in the
+      // root zone, outside fake time).
+      cubit.close();
+      async.flushMicrotasks();
+
+      expect(async.pendingTimers, isEmpty);
+      // Late events and the old linger deadline produce nothing.
+      playback.add(const CaptionEvent('Two.'));
+      interruption.interrupt();
+      async.elapse(const Duration(seconds: 2));
+
+      expect(states.map((CaptionState s) => s.text), <String?>['One.']);
+    });
+  });
+
   blocTest<CaptionCubit, CaptionState>(
     'init() loads the persisted preference',
     setUp: () {

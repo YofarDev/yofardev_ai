@@ -103,8 +103,11 @@ class CaptionCubit extends Cubit<CaptionState> {
   @override
   Future<void> close() async {
     _cancelLinger();
-    await _eventSubscription.cancel();
-    await _interruptionSubscription.cancel();
+    // Both cancels start now (no event slips in while the first resolves).
+    await Future.wait(<Future<void>>[
+      _eventSubscription.cancel(),
+      _interruptionSubscription.cancel(),
+    ]);
     await super.close();
   }
 }

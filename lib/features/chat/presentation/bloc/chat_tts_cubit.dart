@@ -223,6 +223,9 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         error: e,
       );
       _currentPlaybackStopSignal = null;
+      // The sentence never played: drop its parked caption text (no-op if
+      // it was already consumed).
+      _ttsQueueManager.consumeText(audioPath);
       removeWaitingSentence(audioPath);
       unawaited(_ttsQueueManager.deleteAudio(audioPath));
       emit(

@@ -350,6 +350,8 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 100));
 
         expect(cubit.state.audioPathsWaitingSentences, isEmpty);
+        // The caption text parked for this sentence is dropped.
+        verify(() => mockTtsManager.consumeText(testAudioPath)).called(1);
       });
 
       test('should play ready audio paths sequentially', () async {

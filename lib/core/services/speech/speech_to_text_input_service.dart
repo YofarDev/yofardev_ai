@@ -34,6 +34,13 @@ bool isSpeechInputSupported(String platform) => switch (platform) {
 /// the plugin reports `done` (silence timeout); after that, [stop] still
 /// returns the words heard.
 ///
+/// Calls are serialized: a [start] issued while another is still pending
+/// (permission dialog, initialize) shares that pending start, so `listen`
+/// runs at most once; a [stop]/[cancel]/[dispose] issued while a start is
+/// pending bumps [_generation], and the pending start then aborts with
+/// [SpeechStartResult.cancelled] before opening the mic. The mic is never
+/// left open without a caller able to stop it.
+///
 /// `SpeechToText()` is a process-wide singleton shared with the chat details
 /// input (AiTextInput). Its `initialize` callbacks only register on the
 /// first call, so the status/error listeners are re-attached before every
@@ -64,6 +71,14 @@ class SpeechToTextInputService implements SpeechInputService {
   SpeechToText? _speech;
   bool _initialized = false;
   bool _permissionGranted = false;
+  bool _disposed = false;
+
+  /// Bumped by [stop], [cancel] and [dispose]: a pending start compares it
+  /// after every await and aborts when it changed.
+  int _generation = 0;
+
+  /// The start in flight, shared by overlapping [start] calls.
+  Future<SpeechStartResult>? _pendingStart;
 
   /// Words of the current (or last ended) session.
   String _words = '';
@@ -92,14 +107,29 @@ class SpeechToTextInputService implements SpeechInputService {
   Stream<String> get partialWords => _partialWords.stream;
 
   @override
-  Future<SpeechStartResult> start({required String localeId}) async {
-    if (!isSupported) return SpeechStartResult.unavailable;
-    if (_session != null && !_session!.isCompleted) {
-      return SpeechStartResult.started;
+  Future<SpeechStartResult> start({required String localeId}) {
+    if (_disposed || !isSupported) {
+      return Future<SpeechStartResult>.value(SpeechStartResult.unavailable);
     }
+    if (_session != null && !_session!.isCompleted) {
+      return Future<SpeechStartResult>.value(SpeechStartResult.started);
+    }
+    final Future<SpeechStartResult>? pending = _pendingStart;
+    if (pending != null) return pending;
+
+    final Future<SpeechStartResult> started = _start(localeId, _generation);
+    _pendingStart = started;
+    return started.whenComplete(() {
+      if (identical(_pendingStart, started)) _pendingStart = null;
+    });
+  }
+
+  Future<SpeechStartResult> _start(String localeId, int generation) async {
+    bool superseded() => generation != _generation;
 
     if (!_permissionGranted) {
       _permissionGranted = await _requestMicrophonePermission();
+      if (superseded()) return SpeechStartResult.cancelled;
       if (!_permissionGranted) return SpeechStartResult.permissionDenied;
     }
 
@@ -110,15 +140,20 @@ class SpeechToTextInputService implements SpeechInputService {
           onError: _onError,
           onStatus: _onStatus,
         );
+        if (superseded()) return SpeechStartResult.cancelled;
         if (!_initialized) {
           // iOS also gates on the speech-recognition permission here.
           final bool hasPermission = await speech.hasPermission;
+          if (superseded()) return SpeechStartResult.cancelled;
           return hasPermission
               ? SpeechStartResult.unavailable
               : SpeechStartResult.permissionDenied;
         }
       }
 
+      // Last check before the mic opens; nothing below awaits before the
+      // session exists, so a stop()/cancel() from here on finds it.
+      if (superseded()) return SpeechStartResult.cancelled;
       _words = '';
       _sawListening = false;
       _session = Completer<String>();
@@ -127,14 +162,15 @@ class SpeechToTextInputService implements SpeechInputService {
         ..errorListener = _onError;
       await speech.listen(
         onResult: _onResult,
-        onSoundLevelChange: (double level) =>
-            _soundLevel.add(normaliseSoundLevel(level)),
+        onSoundLevelChange: _onSoundLevel,
         listenOptions: SpeechListenOptions(
           partialResults: true,
           localeId: localeId,
         ),
       );
-      return SpeechStartResult.started;
+      return superseded()
+          ? SpeechStartResult.cancelled
+          : SpeechStartResult.started;
     } catch (e, st) {
       AppLogger.error(
         'Speech input failed to start',
@@ -142,14 +178,17 @@ class SpeechToTextInputService implements SpeechInputService {
         error: e,
         stackTrace: st,
       );
-      _endSession();
-      _session = null;
+      if (!superseded()) {
+        _endSession();
+        _session = null;
+      }
       return SpeechStartResult.unavailable;
     }
   }
 
   @override
   Future<String> stop() async {
+    _generation++;
     final Completer<String>? session = _session;
     if (session == null) return '';
     if (!session.isCompleted) {
@@ -168,20 +207,24 @@ class SpeechToTextInputService implements SpeechInputService {
       finalResultTimeout,
       onTimeout: () => _words,
     );
-    _endSession();
-    _session = null;
+    if (identical(_session, session)) {
+      _endSession();
+      _session = null;
+    }
     return words;
   }
 
   @override
   Future<void> cancel() async {
+    _generation++;
     final Completer<String>? session = _session;
     _session = null;
     _words = '';
     if (session != null && !session.isCompleted) {
       session.complete('');
     }
-    _soundLevel.add(0);
+    _addLevel(0);
+    if (session == null) return;
     try {
       await _speech?.cancel();
     } catch (e) {
@@ -193,19 +236,30 @@ class SpeechToTextInputService implements SpeechInputService {
     }
   }
 
+  @override
+  Future<void> dispose() async {
+    if (_disposed) return;
+    await cancel();
+    _disposed = true;
+    await _soundLevel.close();
+    await _partialWords.close();
+  }
+
   void _onResult(SpeechRecognitionResult result) {
-    if (_session == null) return;
+    if (_session == null || _session!.isCompleted) return;
     _words = result.recognizedWords;
-    _partialWords.add(_words);
+    if (!_partialWords.isClosed) _partialWords.add(_words);
     if (result.finalResult) _endSession();
   }
+
+  void _onSoundLevel(double level) => _addLevel(normaliseSoundLevel(level));
 
   void _onStatus(String status) {
     switch (status) {
       case SpeechToText.listeningStatus:
         _sawListening = true;
       case SpeechToText.notListeningStatus:
-        _soundLevel.add(0);
+        _addLevel(0);
       case SpeechToText.doneStatus:
         if (_sawListening) _endSession();
     }
@@ -219,12 +273,16 @@ class SpeechToTextInputService implements SpeechInputService {
     if (error.permanent) _endSession();
   }
 
+  void _addLevel(double level) {
+    if (!_soundLevel.isClosed) _soundLevel.add(level);
+  }
+
   /// Completes the current session with the words heard so far.
   void _endSession() {
     final Completer<String>? session = _session;
     if (session != null && !session.isCompleted) {
       session.complete(_words);
-      _soundLevel.add(0);
+      _addLevel(0);
     }
   }
 }

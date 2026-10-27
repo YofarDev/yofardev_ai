@@ -110,7 +110,12 @@ class ChatStreamingService {
     _streamInterrupted = false;
 
     String? activeTool;
+    bool interrupted() =>
+        _streamInterrupted || _interruptionService.isInterrupted;
     void reportTool(String? name) {
+      // A running tool cannot be cancelled: after an interruption the chip
+      // is cleared at once and no further tool is reported.
+      if (name != null && interrupted()) return;
       if (name == activeTool) return;
       activeTool = name;
       onToolActivity?.call(name);
@@ -160,6 +165,8 @@ class ChatStreamingService {
     // Don't call onChatUpdated here - the streaming entry has an empty body
     // It will be updated with actual content and then onChatUpdated will be called
 
+    final StreamSubscription<void> interruptionSubscription =
+        _interruptionService.interruptionStream.listen((_) => reportTool(null));
     try {
       await _llmService.init();
       final LlmConfig? config = _llmService.getCurrentConfig();
@@ -555,6 +562,7 @@ class ChatStreamingService {
       onError(e.toString());
       return;
     } finally {
+      await interruptionSubscription.cancel();
       reportTool(null);
     }
   }
