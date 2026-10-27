@@ -396,5 +396,6 @@
   "stageDemo": "Play the demo",
   "languageNameEnglish": "English",
   "languageNameFrench": "Français",
-  "stageMenu": "Menu"
+  "stageMenu": "Menu",
+  "stageLanguageSwitch": "Language: {language}"
 }

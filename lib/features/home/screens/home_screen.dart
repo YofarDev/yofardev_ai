@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   double _getTargetAvatarWidth(double width) => width > 800 ? 800 : width;
 
   void _updateAvatarScaleForCurrentWidth() {
-    final double width = MediaQuery.of(context).size.width;
+    final double width = MediaQuery.sizeOf(context).width;
     if (width <= 0) return;
     final double targetWidth = _getTargetAvatarWidth(width);
     if (_lastAppliedAvatarWidth == targetWidth) return;
@@ -121,19 +121,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    Widget stage = HomeContentStack(
+  /// Built once (and again only for a new [HomeScreen.speech]): the same
+  /// instance on every build, so a theme cross-fade or a keyboard frame that
+  /// rebuilds Home stops here instead of rebuilding the Stage.
+  late Widget _stage = _buildStage();
+
+  Widget _buildStage() {
+    final Widget stage = HomeContentStack(
       speech: widget.speech,
       onStartDemo: _startDemoMode,
     );
-    if (kDebugMode) {
-      stage = GestureDetector(
-        onTap: _handleTripleTap,
-        behavior: HitTestBehavior.translucent,
-        child: stage,
-      );
+    if (!kDebugMode) {
+      return stage;
     }
+    return GestureDetector(
+      onTap: _handleTripleTap,
+      behavior: HitTestBehavior.translucent,
+      child: stage,
+    );
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.speech != oldWidget.speech) {
+      _stage = _buildStage();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: <SingleChildWidget>[
         const DemoActivatedListener(),
@@ -146,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: context.tokens.background,
-        body: stage,
+        body: _stage,
       ),
     );
   }

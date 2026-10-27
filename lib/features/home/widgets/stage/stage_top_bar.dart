@@ -69,6 +69,9 @@ class _MoreMenuState extends State<_MoreMenu> {
       (CaptionCubit cubit) => cubit.state.enabled,
     );
     final String otherLanguage = language == 'fr' ? 'en' : 'fr';
+    final String otherLanguageName = otherLanguage == 'fr'
+        ? l10n.languageNameFrench
+        : l10n.languageNameEnglish;
     return MenuAnchor(
       controller: _menu,
       style: stageMenuStyle,
@@ -84,9 +87,8 @@ class _MoreMenuState extends State<_MoreMenu> {
             ),
             StageMenuRow(
               icon: Icons.translate_rounded,
-              label: otherLanguage == 'fr'
-                  ? l10n.languageNameFrench
-                  : l10n.languageNameEnglish,
+              label: otherLanguageName,
+              semanticLabel: l10n.stageLanguageSwitch(otherLanguageName),
               onTap: _then(
                 () => context.read<SettingsCubit>().setCurrentLanguage(
                   otherLanguage,

@@ -1039,6 +1039,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Menu'**
   String get stageMenu;
+
+  /// No description provided for @stageLanguageSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Language: {language}'**
+  String stageLanguageSwitch(Object language);
 }
 
 class _AppLocalizationsDelegate

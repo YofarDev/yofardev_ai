@@ -156,5 +156,6 @@
   "stageDemo": "Lancer la démo",
   "languageNameEnglish": "English",
   "languageNameFrench": "Français",
-  "stageMenu": "Menu"
+  "stageMenu": "Menu",
+  "stageLanguageSwitch": "Langue : {language}"
 }

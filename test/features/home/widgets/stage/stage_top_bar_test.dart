@@ -117,6 +117,16 @@ void main() {
     verify(() => h.settingsCubit.setCurrentLanguage('en')).called(1);
   });
 
+  testWidgets('the language row says what it does to screen readers', (
+    WidgetTester tester,
+  ) async {
+    final SemanticsHandle handle = tester.ensureSemantics();
+    await pumpBar(tester);
+    await openMenu(tester);
+    expect(find.bySemanticsLabel('Language: Français'), findsOneWidget);
+    handle.dispose();
+  });
+
   testWidgets('More → captions shows the action the tap does', (
     WidgetTester tester,
   ) async {

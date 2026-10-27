@@ -40,6 +40,9 @@ class HomeContentStack extends StatefulWidget {
   /// 85% of its box).
   static const double glowWidthFactor = 1.3;
 
+  /// The glow's largest box (wide windows), at most 1.5× the artboard.
+  static const Size glowMaxSize = Size(720, 240);
+
   @override
   State<HomeContentStack> createState() => _HomeContentStackState();
 }
@@ -60,58 +63,112 @@ class _HomeContentStackState extends State<HomeContentStack> {
 
   @override
   Widget build(BuildContext context) {
-    final EdgeInsets padding = MediaQuery.paddingOf(context);
-    final double keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    final double bottom = math.max(keyboard, padding.bottom) + AppSpace.md;
+    // No MediaQuery read here: the keyboard and the safe area only move the
+    // chrome (the slots below), never the Rive views.
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        BlocBuilder<AvatarCubit, AvatarState>(
-          builder: (BuildContext context, AvatarState avatarState) {
-            return Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                RiveSceneView(
-                  scene: avatarState.scene,
-                  sceneEvent: avatarState.sceneEvent,
-                  onPropTapped: (String propId) {
-                    context.read<AvatarCubit>().onPropTapped(
-                      avatarState.scene,
-                      propId,
-                    );
-                  },
-                ),
-                // Narrow scope: only the avatar view depends on the whole
-                // TalkingState (mouth + phase); a mouth change must not
-                // rebuild the scene view, the glow or the chrome.
-                BlocBuilder<TalkingCubit, TalkingState>(
-                  builder: (BuildContext context, TalkingState talkingState) {
-                    return RiveAvatarView(
-                      avatarState: avatarState,
-                      talkingState: talkingState,
-                      onAvatarTapped: (String zone) {
-                        context.read<AvatarCubit>().onAvatarTapped(zone);
-                      },
-                      onPresenceDone: (String presence) {
-                        context.read<AvatarCubit>().onPresenceDone(presence);
-                      },
-                    );
-                  },
-                ),
-              ],
-            );
-          },
-        ),
+        const _RiveStage(),
         const StageScrim.top(),
+        _TopBarSlot(onStartDemo: widget.onStartDemo),
+        _BottomChrome(
+          composerMode: _composerMode,
+          onComposerMode: _onComposerMode,
+          speech: widget.speech,
+        ),
+      ],
+    );
+  }
+}
+
+/// The Rive scene with the avatar on it. Const and free of MediaQuery, so
+/// keyboard, inset and theme changes never rebuild it.
+class _RiveStage extends StatelessWidget {
+  const _RiveStage();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AvatarCubit, AvatarState>(
+      builder: (BuildContext context, AvatarState avatarState) {
+        return Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            RiveSceneView(
+              scene: avatarState.scene,
+              sceneEvent: avatarState.sceneEvent,
+              onPropTapped: (String propId) {
+                context.read<AvatarCubit>().onPropTapped(
+                  avatarState.scene,
+                  propId,
+                );
+              },
+            ),
+            // Narrow scope: only the avatar view depends on the whole
+            // TalkingState (mouth + phase); a mouth change must not
+            // rebuild the scene view, the glow or the chrome.
+            BlocBuilder<TalkingCubit, TalkingState>(
+              builder: (BuildContext context, TalkingState talkingState) {
+                return RiveAvatarView(
+                  avatarState: avatarState,
+                  talkingState: talkingState,
+                  onAvatarTapped: (String zone) {
+                    context.read<AvatarCubit>().onAvatarTapped(zone);
+                  },
+                  onPresenceDone: (String presence) {
+                    context.read<AvatarCubit>().onPresenceDone(presence);
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// The History / More chips, below the top safe area.
+class _TopBarSlot extends StatelessWidget {
+  const _TopBarSlot({required this.onStartDemo});
+
+  final VoidCallback onStartDemo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: MediaQuery.paddingOf(context).top + AppSpace.sm,
+      left: AppSpace.lg,
+      right: AppSpace.sm,
+      child: StageTopBar(onStartDemo: onStartDemo),
+    );
+  }
+}
+
+/// Everything that rides on the keyboard: the bottom scrim, the glow and
+/// the column (tool chip, caption, composer), lifted by
+/// `max(keyboard, bottom safe area) + md`.
+class _BottomChrome extends StatelessWidget {
+  const _BottomChrome({
+    required this.composerMode,
+    required this.onComposerMode,
+    required this.speech,
+  });
+
+  final ValueNotifier<ComposerOrbState> composerMode;
+  final ValueChanged<ComposerOrbState> onComposerMode;
+  final SpeechInputService speech;
+
+  @override
+  Widget build(BuildContext context) {
+    final double keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final double bottom =
+        math.max(keyboard, MediaQuery.paddingOf(context).bottom) + AppSpace.md;
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
         // Lifted with the keyboard, so it stays behind the caption.
         Positioned.fill(bottom: keyboard, child: const StageScrim.bottom()),
         _GlowLayer(bottom: bottom),
-        Positioned(
-          top: padding.top + AppSpace.sm,
-          left: AppSpace.lg,
-          right: AppSpace.sm,
-          child: StageTopBar(onStartDemo: widget.onStartDemo),
-        ),
         Positioned(
           left: AppSpace.lg,
           right: AppSpace.lg,
@@ -121,8 +178,8 @@ class _HomeContentStackState extends State<HomeContentStack> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               const StageToolChip(),
-              StageCaption(composerMode: _composerMode),
-              _Composer(speech: widget.speech, onModeChanged: _onComposerMode),
+              StageCaption(composerMode: composerMode),
+              _Composer(speech: speech, onModeChanged: onComposerMode),
             ],
           ),
         ),
@@ -150,8 +207,15 @@ class _GlowLayer extends StatelessWidget {
           0,
           constraints.maxWidth - AppSpace.lg * 2,
         );
-        final double width = pillWidth * HomeContentStack.glowWidthFactor;
-        final double height = width / _aspect;
+        // Capped on wide windows: the glow is a halo, not a backdrop.
+        final double width = math.min(
+          pillWidth * HomeContentStack.glowWidthFactor,
+          HomeContentStack.glowMaxSize.width,
+        );
+        final double height = math.min(
+          width / _aspect,
+          HomeContentStack.glowMaxSize.height,
+        );
         return Stack(
           clipBehavior: Clip.none,
           children: <Widget>[

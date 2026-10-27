@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/features/home/screens/home_screen.dart';
 import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
@@ -33,6 +37,32 @@ List<String> captureRebuilds() {
     rebuilds.add(element.widget.runtimeType.toString());
   };
   return rebuilds;
+}
+
+/// Runs [change], pumps one frame and returns what that frame rebuilt.
+Future<List<String>> rebuildsDuring(
+  WidgetTester tester,
+  FutureOr<void> Function() change,
+) async {
+  final List<String> rebuilds = captureRebuilds();
+  await change();
+  await tester.idle();
+  await tester.pump();
+  debugOnRebuildDirtyWidget = null;
+  return rebuilds;
+}
+
+/// Asserts that of the Stage's widgets, [rebuilds] holds exactly [expected].
+void expectStageRebuilds(List<String> rebuilds, List<String> expected) {
+  for (final String widget in <String>[..._chrome, 'RiveAvatarView']) {
+    expect(
+      rebuilds.contains(widget),
+      expected.contains(widget),
+      reason: expected.contains(widget)
+          ? '$widget should rebuild'
+          : '$widget must not rebuild',
+    );
+  }
 }
 
 /// Emits [state] and records what the next frame rebuilds.
@@ -120,6 +150,78 @@ void main() {
       expect(rebuilds, isNot(contains('StageTopBar')));
     },
   );
+
+  testWidgets('a caption update rebuilds only the caption', (
+    WidgetTester tester,
+  ) async {
+    await pumpHomeContentStack(tester, h);
+    final List<String> rebuilds = await rebuildsDuring(
+      tester,
+      () => h.caption.emit(const CaptionState(text: 'Hello there.', seq: 1)),
+    );
+    // StageCaption's own builder, and nothing else of the Stage.
+    expect(rebuilds, contains('BlocBuilder<CaptionCubit, CaptionState>'));
+    expectStageRebuilds(rebuilds, <String>[]);
+  });
+
+  testWidgets('a tool update rebuilds only the tool chip', (
+    WidgetTester tester,
+  ) async {
+    await pumpHomeContentStack(tester, h);
+    final List<String> rebuilds = await rebuildsDuring(
+      tester,
+      () => h.chat.emit(h.chat.state.copyWith(activeTool: 'searchGoogle')),
+    );
+    // StageToolChip's own selector, and nothing else of the Stage.
+    expect(rebuilds, contains('BlocSelector<ChatCubit, ChatState, String?>'));
+    expectStageRebuilds(rebuilds, <String>[]);
+  });
+
+  group('the full Home screen', () {
+    late HomeScreen home;
+
+    setUp(() => home = HomeScreen(speech: h.speech));
+
+    Future<void> pumpHome(WidgetTester tester) async {
+      await tester.pumpWidget(h.app(home));
+      await tester.pump();
+    }
+
+    testWidgets('a keyboard frame moves the chrome, not the Rive views', (
+      WidgetTester tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      await pumpHome(tester);
+      final List<String> rebuilds = await rebuildsDuring(
+        tester,
+        () => tester.view.viewInsets = const FakeViewPadding(bottom: 120),
+      );
+      expect(rebuilds, contains('_BottomChrome'));
+      expect(rebuilds, isNot(contains('HomeContentStack')));
+      expect(rebuilds, isNot(contains('_RiveStage')));
+      expect(rebuilds, isNot(contains('RiveSceneView')));
+      expect(rebuilds, isNot(contains('RiveAvatarView')));
+    });
+
+    testWidgets('a scene cross-fade does not rebuild the Stage', (
+      WidgetTester tester,
+    ) async {
+      await pumpHome(tester);
+      final List<String> rebuilds = await rebuildsDuring(tester, () async {
+        await tester.pumpWidget(h.app(home, scene: AvatarScene.deepSpace));
+        await tester.pump(const Duration(milliseconds: 100));
+      });
+      expect(rebuilds, contains('HomeScreen'));
+      expect(rebuilds, isNot(contains('HomeContentStack')));
+      // The Rive views' own error box (test fallback) reads the theme, so
+      // check that nothing above them pushes a rebuild.
+      expect(rebuilds, isNot(contains('_RiveStage')));
+      expect(
+        rebuilds,
+        isNot(contains('BlocBuilder<AvatarCubit, AvatarState>')),
+      );
+    });
+  });
 
   test('getMessage returns the identical cached instance', () {
     final ChatEntry entry = ChatEntry(

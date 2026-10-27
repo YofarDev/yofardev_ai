@@ -537,4 +537,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get stageMenu => 'Menu';
+
+  @override
+  String stageLanguageSwitch(Object language) {
+    return 'Langue : $language';
+  }
 }

@@ -43,18 +43,22 @@ class StageMenuPanel extends StatelessWidget {
   }
 }
 
-/// One tappable menu line: an icon and a label, 48 dp tall.
+/// One tappable menu line: an icon and a label, 48 dp tall. Screen readers
+/// hear [semanticLabel] when the visible label alone doesn't say what the
+/// row does.
 class StageMenuRow extends StatelessWidget {
   const StageMenuRow({
     super.key,
     required this.icon,
     required this.label,
     required this.onTap,
+    this.semanticLabel,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +72,7 @@ class StageMenuRow extends StatelessWidget {
           button: true,
           focusable: true,
           focused: states.focused,
-          label: label,
+          label: semanticLabel ?? label,
           onTap: onTap,
           excludeSemantics: true,
           child: AnimatedContainer(
