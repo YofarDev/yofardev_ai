@@ -306,17 +306,14 @@ void main() {
     await interruption.interrupt();
     await Future<void>.delayed(Duration.zero);
     // Cleared while the (uncancellable) tool is still running.
-    expect(log, <String>['tool:fakeTool', 'execute', 'tool:null']);
+    expect(log.take(3), <String>['tool:fakeTool', 'execute', 'tool:null']);
 
-    toolGate.complete();
+    // The reply ends without waiting for the tool, and the second call
+    // never runs.
     await reply;
+    toolGate.complete();
+    await Future<void>.delayed(Duration.zero);
 
-    expect(log, <String>[
-      'tool:fakeTool',
-      'execute',
-      'tool:null',
-      'execute', // the second call still runs, but is not reported
-      'complete',
-    ]);
+    expect(log, <String>['tool:fakeTool', 'execute', 'tool:null', 'complete']);
   });
 }
