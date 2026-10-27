@@ -1,18 +1,28 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nested/nested.dart';
 
-import '../../../core/models/demo_script.dart';
 import '../../../core/design/design.dart';
+import '../../../core/models/demo_script.dart';
+import '../../../core/services/speech/speech_input_service.dart';
 import '../../../core/utils/logger.dart';
 import '../../avatar/avatar.dart';
 import '../../chat/chat.dart';
 import '../../demo/demo.dart';
+import '../../settings/settings.dart';
+import '../../talking/talking.dart';
 import '../widgets/demo_activated_listener.dart';
 import '../widgets/home_content_stack.dart';
-import '../../settings/settings.dart';
 
+/// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
+/// resize it: the Stage lifts its own bottom chrome above the keyboard.
+///
+/// [speech] comes from the route (Home never reads the service locator).
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.speech});
+
+  final SpeechInputService speech;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -26,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   double _getTargetAvatarWidth(double width) => width > 800 ? 800 : width;
 
   void _updateAvatarScaleForCurrentWidth() {
-    final double width = MediaQuery.of(context).size.width;
+    final double width = MediaQuery.sizeOf(context).width;
     if (width <= 0) return;
     final double targetWidth = _getTargetAvatarWidth(width);
     if (_lastAppliedAvatarWidth == targetWidth) return;
@@ -40,11 +50,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Debug builds: three taps on the stage within 500 ms each play the demo.
   void _handleTripleTap() {
-    AppLogger.debug(
-      'Triple tap detected - count: $_tapCount',
-      tag: 'HomeScreen',
-    );
     final DateTime now = DateTime.now();
     if (_lastTapTime != null &&
         now.difference(_lastTapTime!).inMilliseconds < 500) {
@@ -53,8 +60,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _tapCount = 1;
     }
     _lastTapTime = now;
-
-    AppLogger.debug('Tap count after increment: $_tapCount', tag: 'HomeScreen');
 
     if (_tapCount >= 3) {
       AppLogger.info(
@@ -72,6 +77,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       chatId: chatId,
       script: DemoScripts.beachDemo,
     );
+  }
+
+  /// A new chat loads its avatar and resets the talking state.
+  void _onChatCreated(BuildContext context, ChatState state) {
+    context.read<AvatarCubit>().loadAvatar(state.currentChat.id);
+    context.read<TalkingCubit>().init();
   }
 
   @override
@@ -110,19 +121,49 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  /// Built once (and again only for a new [HomeScreen.speech]): the same
+  /// instance on every build, so a theme cross-fade or a keyboard frame that
+  /// rebuilds Home stops here instead of rebuilding the Stage.
+  late Widget _stage = _buildStage();
+
+  Widget _buildStage() {
+    final Widget stage = HomeContentStack(
+      speech: widget.speech,
+      onStartDemo: _startDemoMode,
+    );
+    if (!kDebugMode) {
+      return stage;
+    }
+    return GestureDetector(
+      onTap: _handleTripleTap,
+      behavior: HitTestBehavior.translucent,
+      child: stage,
+    );
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.speech != oldWidget.speech) {
+      _stage = _buildStage();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return DemoActivatedListener(
-      child: Scaffold(
-        backgroundColor: context.tokens.background,
-        body: BlocBuilder<ChatCubit, ChatState>(
-          builder: (BuildContext context, ChatState chatsState) {
-            return HomeContentStack(
-              chatsState: chatsState,
-              onTripleTap: _handleTripleTap,
-            );
-          },
+    return MultiBlocListener(
+      listeners: <SingleChildWidget>[
+        const DemoActivatedListener(),
+        BlocListener<ChatCubit, ChatState>(
+          listenWhen: (ChatState previous, ChatState current) =>
+              !previous.chatCreated && current.chatCreated,
+          listener: _onChatCreated,
         ),
+      ],
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: context.tokens.background,
+        body: _stage,
       ),
     );
   }

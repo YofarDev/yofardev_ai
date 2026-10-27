@@ -9,6 +9,7 @@ import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
+import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
@@ -32,6 +33,7 @@ class MockTtsPlaybackService implements TtsPlaybackService {
     List<int> amplitudes,
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
+    String? caption,
   }) {}
 
   @override
@@ -62,6 +64,7 @@ void main() {
         interruptionService,
         mockPlaybackService,
         MockAppLifecycleService(),
+        SilentTtsQueue(),
       );
     });
 
@@ -512,6 +515,7 @@ void main() {
             interruptionService,
             mockPlaybackService,
             MockAppLifecycleService(),
+            SilentTtsQueue(),
           );
           return cubit;
         },
@@ -530,6 +534,19 @@ void main() {
       );
     });
   });
+}
+
+/// A TTS queue with nothing pending, whose [drained] the test can fire.
+class SilentTtsQueue extends Mock implements TtsQueueService {
+  final StreamController<void> drainedController =
+      StreamController<void>.broadcast();
+  bool pending = false;
+
+  @override
+  bool get hasPendingSpeech => pending;
+
+  @override
+  Stream<void> get drained => drainedController.stream;
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {

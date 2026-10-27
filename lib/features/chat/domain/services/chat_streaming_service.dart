@@ -69,8 +69,6 @@ class ChatStreamingService {
   final SettingsRepository? _settingsRepository;
   final GlobalMemoryService? _globalMemoryService;
 
-  bool _streamInterrupted = false;
-
   final StreamController<List<AvatarCue>> _streamingCuesController =
       StreamController<List<AvatarCue>>.broadcast();
 
@@ -88,6 +86,10 @@ class ChatStreamingService {
   /// 4. Streams the response (or uses function call result)
   /// 5. Updates the chat via callbacks
   /// 6. Enqueues TTS if not text-only
+  ///
+  /// [onToolActivity] reports the tool being run: its name right before it
+  /// executes, then `null` once the round's tools finished, on error, and
+  /// when the reply ends (never twice in a row with the same value).
   Future<void> streamResponse({
     required String prompt,
     required bool onlyText,
@@ -99,11 +101,74 @@ class ChatStreamingService {
     required void Function(Chat updatedChat) onChatUpdated,
     required void Function(Chat finalChat) onStreamComplete,
     required void Function(String error) onError,
+    void Function(String? toolName)? onToolActivity,
   }) async {
     // Reset interruption state at start of new conversation
     _interruptionService.reset();
-    _streamInterrupted = false;
 
+    // This reply's own stop signal. The service-wide flag above is reset by
+    // the next reply, so a reply still awaiting (a stalled stream, a tool)
+    // when a new one starts must not read it: once stopped, a reply stays
+    // stopped.
+    final Completer<void> stopped = Completer<void>();
+    String? activeTool;
+    bool interrupted() =>
+        stopped.isCompleted || _interruptionService.isInterrupted;
+    void reportTool(String? name) {
+      // A running tool cannot be cancelled: after an interruption the chip
+      // is cleared at once and no further tool is reported.
+      if (name != null && interrupted()) return;
+      if (name == activeTool) return;
+      activeTool = name;
+      onToolActivity?.call(name);
+    }
+
+    // Listening from the very start: an interruption during any await below
+    // (user entry, LLM init, a stalled stream, a running tool) ends the reply
+    // at once instead of when the stream next yields.
+    final StreamSubscription<void> interruptionSubscription =
+        _interruptionService.interruptionStream.listen((_) {
+          if (!stopped.isCompleted) stopped.complete();
+          reportTool(null);
+        });
+    try {
+      await _streamReply(
+        prompt: prompt,
+        onlyText: onlyText,
+        attachedImage: attachedImage,
+        avatar: avatar,
+        currentChat: currentChat,
+        language: language,
+        functionCallingEnabled: functionCallingEnabled,
+        onChatUpdated: onChatUpdated,
+        onStreamComplete: onStreamComplete,
+        onError: onError,
+        stopped: stopped.future,
+        interrupted: interrupted,
+        reportTool: reportTool,
+      );
+    } finally {
+      // Not awaited: nothing depends on it, and the reply ends now.
+      unawaited(interruptionSubscription.cancel());
+      reportTool(null);
+    }
+  }
+
+  Future<void> _streamReply({
+    required String prompt,
+    required bool onlyText,
+    String? attachedImage,
+    required Avatar avatar,
+    required Chat currentChat,
+    required String language,
+    required bool functionCallingEnabled,
+    required void Function(Chat updatedChat) onChatUpdated,
+    required void Function(Chat finalChat) onStreamComplete,
+    required void Function(String error) onError,
+    required Future<void> stopped,
+    required bool Function() interrupted,
+    required void Function(String? toolName) reportTool,
+  }) async {
     final String temporaryId = const Uuid().v4();
 
     final ChatEntry temporaryEntry = ChatEntry(
@@ -277,6 +342,10 @@ class ChatStreamingService {
       // Hard cap on tool rounds to avoid infinite tool-call loops.
       const int maxToolRounds = 3;
       for (int round = 0; round < maxToolRounds; round++) {
+        // Stopped during setup (LLM init, memory, tools, system prompt) or
+        // after a tool round: no request goes out.
+        if (interrupted()) break;
+
         // Accumulate fragmented tool_call deltas while the stream flows
         // through the sentence processor.
         final Map<int, Map<String, String>> pendingToolCalls =
@@ -286,15 +355,19 @@ class ChatStreamingService {
         reasoningBuffer.clear();
         fullJsonResponse = null;
 
-        final Stream<LlmStreamChunk> instrumentedStream = _llmService
-            .promptModelStream(
-              messages: messagesForStream,
-              systemPrompt: systemPrompt,
-              config: config,
-              returnJson: true,
-              tools: tools,
-            )
-            .map((LlmStreamChunk chunk) {
+        // Cut off at the interruption: cancelling the subscription closes the
+        // provider's request instead of waiting for its next chunk.
+        final Stream<LlmStreamChunk> instrumentedStream =
+            _takeUntil(
+              _llmService.promptModelStream(
+                messages: messagesForStream,
+                systemPrompt: systemPrompt,
+                config: config,
+                returnJson: true,
+                tools: tools,
+              ),
+              stopped,
+            ).map((LlmStreamChunk chunk) {
               chunk.when(
                 text: (String content, bool isComplete) {},
                 error: (String message) {},
@@ -328,15 +401,17 @@ class ChatStreamingService {
               return chunk;
             });
 
-        await for (final SentenceChunk sentenceChunk
-            in _streamProcessor.processStream(instrumentedStream)) {
-          if (_streamInterrupted || _interruptionService.isInterrupted) {
+        await for (final SentenceChunk sentenceChunk in _takeUntil(
+          _streamProcessor.processStream(instrumentedStream),
+          stopped,
+        )) {
+          if (interrupted()) {
             break;
           }
 
           sentenceChunk.when(
             sentence: (String text, int _) {
-              if (_streamInterrupted || _interruptionService.isInterrupted) {
+              if (interrupted()) {
                 return;
               }
 
@@ -371,8 +446,9 @@ class ChatStreamingService {
 
         // End of stream: literal leftover text and any trailing cues
         // (`See you! [g:wave]`) are delivered now instead of being lost.
+        // Never after an interruption: the TTS queue was just cleared.
         final CueDelivery? leftover = cueCollector.finish();
-        if (!streamError && leftover != null) {
+        if (!streamError && !interrupted() && leftover != null) {
           deliverSentence(leftover);
         }
 
@@ -381,10 +457,8 @@ class ChatStreamingService {
           return;
         }
 
-        if (_streamInterrupted || _interruptionService.isInterrupted) {
-          onStreamComplete(chat);
-          await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
-          return;
+        if (interrupted()) {
+          break;
         }
 
         if (tools == null || pendingToolCalls.isEmpty) {
@@ -409,6 +483,8 @@ class ChatStreamingService {
 
         final List<int> indexes = pendingToolCalls.keys.toList()..sort();
         for (final int index in indexes) {
+          // The round is dropped on interruption: no further tool runs.
+          if (interrupted()) break;
           final Map<String, String> call = pendingToolCalls[index]!;
           final String toolCallId = call['id']!.isEmpty
               ? 'call_$index'
@@ -442,16 +518,23 @@ class ChatStreamingService {
           if (tool == null) {
             result = 'Unknown tool: $name';
           } else {
+            reportTool(name);
             try {
-              result = await _toolRegistry!.executeTool(
-                tool,
-                parameters,
-                _settingsRepository!,
+              // A running tool cannot be cancelled, but the reply does not
+              // wait for it once interrupted (its late result is dropped).
+              result = await _untilStopped(
+                _toolRegistry!.executeTool(
+                  tool,
+                  parameters,
+                  _settingsRepository!,
+                ),
+                stopped,
               );
             } catch (e) {
               result = 'Error executing tool: $e';
             }
           }
+          if (interrupted()) break;
 
           toolMessages.add(
             LlmMessage(
@@ -476,6 +559,8 @@ class ChatStreamingService {
             ),
           );
         }
+        reportTool(null);
+        if (interrupted()) break;
 
         messagesForStream = <LlmMessage>[
           ...messagesForStream,
@@ -510,7 +595,10 @@ class ChatStreamingService {
         return;
       }
 
-      if (_streamInterrupted || _interruptionService.isInterrupted) {
+      if (interrupted()) {
+        // Stopped before the first sentence: keep the prompt (and any tool
+        // entries), not an empty reply.
+        chat = _withoutEmptyReply(chat, streamingEntry.id);
         onStreamComplete(chat);
         await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
         return;
@@ -524,7 +612,10 @@ class ChatStreamingService {
 
       final List<ChatEntry> finalEntries = List<ChatEntry>.from(chat.entries);
       finalEntries[finalEntries.length - 1] = finalEntry;
-      chat = chat.copyWith(entries: finalEntries);
+      chat = _withoutEmptyReply(
+        chat.copyWith(entries: finalEntries),
+        streamingEntry.id,
+      );
       onChatUpdated(chat);
 
       onStreamComplete(chat);
@@ -537,13 +628,64 @@ class ChatStreamingService {
         tag: 'ChatStreamingService',
         error: e,
       );
+      reportTool(null);
       onError(e.toString());
       return;
     }
   }
 
-  /// Mark the stream as interrupted (called from external interruption listener)
-  void markInterrupted() {
-    _streamInterrupted = true;
+  /// [chat] without its reply placeholder (entry [replyId], the last one)
+  /// when that holds no text. Stored history is replayed on every request,
+  /// and an empty assistant message is rejected by some providers (Gemini:
+  /// empty text parts; DeepSeek: empty trailing assistant). The user's
+  /// prompt and any tool entries stay.
+  static Chat _withoutEmptyReply(Chat chat, String replyId) {
+    if (chat.entries.isEmpty) return chat;
+    final ChatEntry last = chat.entries.last;
+    if (last.id != replyId || last.body.trim().isNotEmpty) return chat;
+    return chat.copyWith(
+      entries: chat.entries.sublist(0, chat.entries.length - 1),
+    );
   }
+
+  /// [future]'s value, or null as soon as [stop] completes (whichever comes
+  /// first); a later error from [future] is dropped.
+  static Future<T?> _untilStopped<T>(Future<T> future, Future<void> stop) =>
+      Future.any(<Future<T?>>[future, stop.then<T?>((_) => null)]);
+}
+
+/// [source] until [stop] completes: then the subscription to [source] is
+/// cancelled (without waiting for it) and the returned stream closes at once.
+Stream<T> _takeUntil<T>(Stream<T> source, Future<void> stop) {
+  StreamSubscription<T>? subscription;
+  late final StreamController<T> controller;
+  controller = StreamController<T>(
+    onListen: () {
+      subscription = source.listen(
+        controller.add,
+        onError: controller.addError,
+        onDone: () {
+          subscription = null;
+          unawaited(controller.close());
+        },
+      );
+      unawaited(
+        stop.then((_) {
+          final StreamSubscription<T>? cut = subscription;
+          subscription = null;
+          if (cut != null) unawaited(cut.cancel());
+          if (!controller.isClosed) unawaited(controller.close());
+        }),
+      );
+    },
+    onPause: () => subscription?.pause(),
+    onResume: () => subscription?.resume(),
+    // Not awaited: a stalled source may never acknowledge the cancel.
+    onCancel: () {
+      final StreamSubscription<T>? cut = subscription;
+      subscription = null;
+      if (cut != null) unawaited(cut.cancel());
+    },
+  );
+  return controller.stream;
 }

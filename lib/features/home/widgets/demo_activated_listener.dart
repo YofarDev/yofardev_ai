@@ -1,34 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/design/components/components.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/utils/logger.dart';
 import '../../demo/demo.dart';
 
-/// Shows a localized snackbar when the demo mode becomes active.
-class DemoActivatedListener extends StatelessWidget {
-  const DemoActivatedListener({super.key, required this.child});
+/// Shows a localized toast once, when the demo mode becomes active (not on
+/// every later state of an active demo).
+///
+/// A [BlocListener], so it can sit in a `MultiBlocListener`.
+class DemoActivatedListener extends BlocListener<DemoCubit, DemoState> {
+  const DemoActivatedListener({super.key, super.child})
+    : super(listenWhen: _activated, listener: _onDemoActivated);
 
-  final Widget child;
+  static bool _activated(DemoState previous, DemoState current) =>
+      !previous.isActive && current.isActive;
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocListener<DemoCubit, DemoState>(
-      listener: (BuildContext context, DemoState state) {
-        if (state.isActive) {
-          AppLogger.info(
-            'Demo activated - showing snackbar',
-            tag: 'HomeScreen',
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context).demoModeActivated),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      },
-      child: child,
-    );
+  static void _onDemoActivated(BuildContext context, DemoState state) {
+    AppLogger.info('Demo activated - showing toast', tag: 'HomeScreen');
+    showAppToast(context, AppLocalizations.of(context).demoModeActivated);
   }
 }

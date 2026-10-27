@@ -82,6 +82,8 @@ flutter:
     - assets/sound_effects/
     - assets/rive/
     - assets/rive/scenes/
+    - assets/rive/posters/
+    - assets/rive/ui/
     - assets/txt/
     - assets/onnx/
     - assets/voice_styles/

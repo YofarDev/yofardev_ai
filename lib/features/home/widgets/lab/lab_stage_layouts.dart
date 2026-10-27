@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/components/components.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../stage/stage_scrim.dart';
 import 'lab_caption.dart';
 import 'lab_composer_mock.dart';
 import 'lab_config.dart';
@@ -61,8 +62,8 @@ class _LabStageLayoutState extends State<LabStageLayout> {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        const _Scrim.top(),
-        const _Scrim.bottom(strength: 1),
+        const StageScrim.top(),
+        const StageScrim.bottom(strength: 1),
         Positioned(
           top: insets.top + AppSpace.sm,
           left: AppSpace.lg,
@@ -111,7 +112,7 @@ class _LabStageLayoutState extends State<LabStageLayout> {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        const _Scrim.bottom(strength: 0.8),
+        const StageScrim.bottom(strength: 0.8),
         Positioned(
           left: AppSpace.md,
           right: AppSpace.md,
@@ -178,11 +179,11 @@ class _LabStageLayoutState extends State<LabStageLayout> {
               behavior: HitTestBehavior.translucent,
               onTap: () => setState(() => _curtainChips = !_curtainChips),
             ),
-            const _Scrim.bottom(strength: 0.55),
+            const StageScrim.bottom(strength: 0.55),
             AnimatedOpacity(
               opacity: _curtainChips ? 1 : 0,
               duration: fade,
-              child: const _Scrim.top(),
+              child: const StageScrim.top(),
             ),
             Positioned(
               top: insets.top + AppSpace.sm,
@@ -303,47 +304,6 @@ class _DockDivider extends StatelessWidget {
       height: 24,
       margin: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
       color: context.colors.onSurface.withValues(alpha: 0.16),
-    );
-  }
-}
-
-/// Ink fading over the stage behind the chrome, so text and controls stay
-/// legible on bright scenes.
-class _Scrim extends StatelessWidget {
-  const _Scrim.top() : top = true, strength = 1;
-
-  const _Scrim.bottom({required this.strength}) : top = false;
-
-  final bool top;
-
-  /// 0..1 multiplier of the scrim's opacity.
-  final double strength;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color ink = context.tokens.background;
-    return IgnorePointer(
-      child: Align(
-        alignment: top ? Alignment.topCenter : Alignment.bottomCenter,
-        child: FractionallySizedBox(
-          heightFactor: top ? 0.16 : 0.42,
-          widthFactor: 1,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: top ? Alignment.bottomCenter : Alignment.topCenter,
-                end: top ? Alignment.topCenter : Alignment.bottomCenter,
-                colors: <Color>[
-                  ink.withValues(alpha: 0),
-                  ink.withValues(alpha: (top ? 0.25 : 0.5) * strength),
-                  ink.withValues(alpha: (top ? 0.5 : 0.82) * strength),
-                ],
-                stops: const <double>[0, 0.55, 1],
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -140,6 +140,12 @@ class MockTtsQueueService implements TtsQueueService {
   bool get isProcessing => false;
 
   @override
+  bool get hasPendingSpeech => false;
+
+  @override
+  Stream<void> get drained => const Stream<void>.empty();
+
+  @override
   List<TtsQueueItem> get queue => <TtsQueueItem>[];
 
   bool get hasItems => false;
@@ -176,6 +182,9 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   List<AvatarCue> consumeCues(String audioPath) => const <AvatarCue>[];
+
+  @override
+  String? consumeText(String audioPath) => null;
 }
 
 void main() {

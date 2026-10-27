@@ -20,10 +20,16 @@ class TtsQueueService {
       StreamController<String>.broadcast();
   final StreamController<List<AvatarCue>> _cueOnlyController =
       StreamController<List<AvatarCue>>.broadcast();
+  final StreamController<void> _drainedController =
+      StreamController<void>.broadcast();
 
   /// Cues of completed items, keyed by audio path, until consumed by the
   /// playback side (they must fire exactly when that audio starts).
   final Map<String, List<AvatarCue>> _cuesByPath = <String, List<AvatarCue>>{};
+
+  /// Sentence text of completed items, keyed by audio path, until consumed
+  /// by the playback side (shown as a live caption while it plays).
+  final Map<String, String> _textByPath = <String, String>{};
   final Uuid _uuid = const Uuid();
 
   bool _isProcessing = false;
@@ -55,11 +61,37 @@ class TtsQueueService {
   /// item is reached in the queue (there is no audio to wait for).
   Stream<List<AvatarCue>> get cueOnlyStream => _cueOnlyController.stream;
 
+  /// Fires each time the queue runs out of speech: the last item failed to
+  /// synthesize or carried only cues, or the playback side took the last
+  /// parked sentence ([consumeText]). Then [hasPendingSpeech] is false.
+  Stream<void> get drained => _drainedController.stream;
+
+  /// Whether speech is still on its way: an item queued or synthesizing,
+  /// or synthesized audio whose playback has not started yet (its text is
+  /// parked until [consumeText]).
+  bool get hasPendingSpeech =>
+      _queue.isNotEmpty || _isProcessing || _textByPath.isNotEmpty;
+
+  void _notifyIfDrained() {
+    if (!hasPendingSpeech && !_drainedController.isClosed) {
+      _drainedController.add(null);
+    }
+  }
+
   /// Consumes the cues embedded in the item whose audio path is
   /// [audioPath]; empty when the item carried none. Consumed cues are
   /// removed so they fire exactly once.
   List<AvatarCue> consumeCues(String audioPath) =>
       _cuesByPath.remove(audioPath) ?? const <AvatarCue>[];
+
+  /// Consumes the sentence text of the item whose audio path is
+  /// [audioPath]; null when unknown or already consumed. Removed on read so
+  /// the map never outlives playback.
+  String? consumeText(String audioPath) {
+    final String? text = _textByPath.remove(audioPath);
+    if (text != null) _notifyIfDrained();
+    return text;
+  }
 
   /// Deletes a played audio file (scratch cleanup; the synthesizer owns the
   /// IO). Safe to call for a path that no longer exists.
@@ -113,6 +145,7 @@ class TtsQueueService {
     _epoch++;
     _queue.clear();
     _cuesByPath.clear();
+    _textByPath.clear();
     _isProcessing = false;
     AppLogger.debug('TTS queue cleared', tag: 'TtsQueueService');
   }
@@ -179,6 +212,8 @@ class TtsQueueService {
       }
       if (_queue.isNotEmpty && !_isPaused) {
         await _processNext();
+      } else {
+        _notifyIfDrained();
       }
       return;
     }
@@ -210,6 +245,7 @@ class TtsQueueService {
       if (item.cues.isNotEmpty) {
         _cuesByPath[processedAudioPath] = item.cues;
       }
+      _textByPath[processedAudioPath] = item.text;
 
       // Update item as completed
       _queue[0] = item.copyWith(
@@ -257,6 +293,9 @@ class TtsQueueService {
       // Continue with next
       if (_queue.isNotEmpty && !_isPaused) {
         await _processNext();
+      } else {
+        // The failed item produced no audio: nothing may be left to say.
+        _notifyIfDrained();
       }
     }
   }
@@ -265,6 +304,7 @@ class TtsQueueService {
   void dispose() {
     _interruptionSubscription?.cancel();
     _audioController.close();
+    _drainedController.close();
   }
 }
 

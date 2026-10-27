@@ -7,6 +7,7 @@ import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
+import 'package:yofardev_ai/core/services/speech/speech_input_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/avatar/data/datasources/avatar_local_datasource.dart';
 import 'package:yofardev_ai/features/chat/chat.dart';
@@ -23,6 +24,7 @@ import 'package:yofardev_ai/features/sound/domain/repositories/sound_repository.
 import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
 import 'package:yofardev_ai/features/sound/presentation/bloc/sound_cubit.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
+import 'package:yofardev_ai/features/talking/presentation/bloc/caption_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 
 /// DI smoke test: the whole pure-Dart graph registers and resolves.
@@ -64,6 +66,8 @@ void main() {
     expect(getIt<AppLifecycleService>(), isNotNull);
     expect(getIt<InterruptionService>(), isNotNull);
     expect(getIt<DemoService>(), isNotNull);
+    // Construction touches no plugin: SpeechToText is created on start().
+    expect(getIt<SpeechInputService>(), isNotNull);
 
     // Datasources resolve too (constructed lazily via services above)
     expect(getIt<SettingsLocalDatasource>(), isNotNull);
@@ -81,5 +85,6 @@ void main() {
     expect(getIt<HomeCubit>(), isNotNull);
     expect(getIt<SoundCubit>(), isNotNull);
     expect(getIt<TalkingCubit>(), isNotNull);
+    expect(getIt<CaptionCubit>(), isNotNull);
   });
 }

@@ -39,41 +39,30 @@ class PickerButtons extends StatelessWidget {
   }
 
   void _onTakePhotoButtonPressed() async {
-    await ImagePicker()
-        .pickImage(
-          source: ImageSource.camera,
-          imageQuality: 75,
-          maxWidth: AppConstants.pickedImageMaxWidth,
-          maxHeight: AppConstants.pickedImageMaxHeight,
-        )
-        .then((XFile? photo) {
-          _onImageSelected(photo);
-        });
+    onImageSelected(await pickImageFile(fromCamera: true));
   }
 
   void _onGalleryPickerButtonPressed() async {
-    final ImagePicker picker = ImagePicker();
-    await picker
-        .pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 75,
-          maxWidth: AppConstants.pickedImageMaxWidth,
-          maxHeight: AppConstants.pickedImageMaxHeight,
-        )
-        .then((XFile? photo) {
-          _onImageSelected(photo);
-        });
+    onImageSelected(await pickImageFile());
   }
+}
 
-  void _onImageSelected(XFile? file) async {
-    if (file == null) {
-      onImageSelected(null);
-      return;
-    }
-    final Directory appDir = await getApplicationDocumentsDirectory();
-    final String fileName = path.basename(file.path);
-    final File savedImage = File('${appDir.path}/$fileName');
-    await File(file.path).copy(savedImage.path);
-    onImageSelected(savedImage);
+/// Lets the user pick a photo from the gallery (or take one with the camera
+/// when [fromCamera]), downscaled to the app's max picked-image size, and
+/// copies it into the app documents directory. Null when cancelled.
+Future<File?> pickImageFile({bool fromCamera = false}) async {
+  final XFile? file = await ImagePicker().pickImage(
+    source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+    imageQuality: 75,
+    maxWidth: AppConstants.pickedImageMaxWidth,
+    maxHeight: AppConstants.pickedImageMaxHeight,
+  );
+  if (file == null) {
+    return null;
   }
+  final Directory appDir = await getApplicationDocumentsDirectory();
+  final String fileName = path.basename(file.path);
+  final File savedImage = File('${appDir.path}/$fileName');
+  await File(file.path).copy(savedImage.path);
+  return savedImage;
 }

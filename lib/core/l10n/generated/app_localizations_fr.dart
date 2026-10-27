@@ -473,4 +473,73 @@ class AppLocalizationsFr extends AppLocalizations {
   String functionResultTitle(String name) {
     return 'Résultat : $name';
   }
+
+  @override
+  String get toolSearching => 'Recherche sur le web…';
+
+  @override
+  String get toolWeather => 'Je regarde la météo…';
+
+  @override
+  String get toolNews => 'Je lis les nouvelles…';
+
+  @override
+  String get toolMemory => 'Je fouille ma mémoire…';
+
+  @override
+  String get toolWorking => 'Je m\'en occupe…';
+
+  @override
+  String get askAnything => 'Demande-moi n\'importe quoi…';
+
+  @override
+  String get micPermissionDenied =>
+      'Autorise le micro dans les réglages pour me parler.';
+
+  @override
+  String get micUnavailable => 'La dictée n\'est pas disponible ici.';
+
+  @override
+  String get composerAttach => 'Joindre une image';
+
+  @override
+  String get composerTools => 'Outils';
+
+  @override
+  String get composerSend => 'Envoyer';
+
+  @override
+  String get composerStop => 'Arrêter';
+
+  @override
+  String get composerListen => 'Parler';
+
+  @override
+  String get composerMore => 'Plus d\'options';
+
+  @override
+  String get stageHistory => 'Historique';
+
+  @override
+  String get stageShowCaptions => 'Afficher les sous-titres';
+
+  @override
+  String get stageHideCaptions => 'Masquer les sous-titres';
+
+  @override
+  String get stageDemo => 'Lancer la démo';
+
+  @override
+  String get languageNameEnglish => 'English';
+
+  @override
+  String get languageNameFrench => 'Français';
+
+  @override
+  String get stageMenu => 'Menu';
+
+  @override
+  String stageLanguageSwitch(Object language) {
+    return 'Langue : $language';
+  }
 }

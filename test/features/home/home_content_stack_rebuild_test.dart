@@ -1,199 +1,25 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:nested/nested.dart';
-import 'package:provider/provider.dart';
-import 'package:yofardev_ai/core/design/theme/app_theme.dart';
-import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
-import 'package:yofardev_ai/core/models/avatar_config.dart';
-import 'package:yofardev_ai/core/models/chat.dart';
+import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
-import 'package:yofardev_ai/core/models/task_llm_config.dart';
-import 'package:yofardev_ai/core/models/result.dart';
-import 'package:yofardev_ai/core/repositories/settings_repository.dart';
-import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
-import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
-import 'package:yofardev_ai/core/services/llm/llm_service.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
-import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
-import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/features/home/screens/home_screen.dart';
 import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
-import 'package:yofardev_ai/features/settings/settings.dart';
-import 'package:yofardev_ai/features/talking/data/repositories/talking_repository_impl.dart';
-import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
-import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
+import 'package:yofardev_ai/features/talking/talking.dart';
 
-class MockAvatarCubit extends Mock implements AvatarCubit {}
+import '../../helpers/rive_test_assets.dart';
+import 'stage_harness.dart';
 
-class MockChatCubit extends Mock implements ChatCubit {}
-
-class _FakeSettingsRepository implements SettingsRepository {
-  @override
-  Future<Result<String?>> getLanguage() async => Result<String?>.ok('en');
-  @override
-  Future<Result<void>> setLanguage(String language) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<bool>> getSoundEffects() async => Result<bool>.ok(true);
-  @override
-  Future<Result<void>> setSoundEffects(bool enabled) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<String?>> getUsername() async => Result<String?>.ok(null);
-  @override
-  Future<Result<void>> setUsername(String username) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<String>> getSystemPrompt() async => Result<String>.ok('');
-  @override
-  Future<Result<void>> setSystemPrompt(String prompt) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<ChatPersona>> getPersona() async =>
-      Result<ChatPersona>.ok(ChatPersona.normal);
-  @override
-  Future<Result<void>> setPersona(ChatPersona persona) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<TaskLlmConfig>> getTaskLlmConfig() async =>
-      Result<TaskLlmConfig>.ok(const TaskLlmConfig());
-  @override
-  Future<Result<void>> setTaskLlmConfig(TaskLlmConfig config) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<String?>> getGoogleSearchKey() async =>
-      Result<String?>.ok(null);
-  @override
-  Future<Result<void>> setGoogleSearchKey(String key) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<String?>> getGoogleSearchEngineId() async =>
-      Result<String?>.ok(null);
-  @override
-  Future<Result<void>> setGoogleSearchEngineId(String id) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<bool>> getGoogleSearchEnabled() async => Result<bool>.ok(true);
-  @override
-  Future<Result<void>> setGoogleSearchEnabled(bool enabled) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<String?>> getOpenWeatherKey() async => Result<String?>.ok(null);
-  @override
-  Future<Result<void>> setOpenWeatherKey(String key) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<bool>> getOpenWeatherEnabled() async => Result<bool>.ok(true);
-  @override
-  Future<Result<void>> setOpenWeatherEnabled(bool enabled) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<String?>> getNewYorkTimesKey() async =>
-      Result<String?>.ok(null);
-  @override
-  Future<Result<void>> setNewYorkTimesKey(String key) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<bool>> getNewYorkTimesEnabled() async => Result<bool>.ok(true);
-  @override
-  Future<Result<void>> setNewYorkTimesEnabled(bool enabled) async =>
-      Result<void>.ok(null);
-  @override
-  Future<Result<bool>> getMemoryEnabled() async => Result<bool>.ok(true);
-  @override
-  Future<Result<void>> setMemoryEnabled(bool enabled) async =>
-      Result<void>.ok(null);
-}
-
-/// Real [TalkingCubit]: its deps are all cheap, real constructibles.
-TalkingCubit createRealTalkingCubit() {
-  return TalkingCubit(
-    TalkingRepositoryImpl(),
-    InterruptionService(),
-    TtsPlaybackService(TalkingRepositoryImpl()),
-    AppLifecycleService(),
-  );
-}
-
-/// Serves non-rive bytes for every `.riv` asset key: the flutter tester has
-/// no packaged assets, and decoding real rive bytes aborts the tester's
-/// native rive runtime. The widget's decode failure is handled by its own
-/// error path (`File.asset` resolves to null), which is all this test needs:
-/// the rebuild spy only observes widget rebuilds, not rive rendering.
-void mockRiveAssets() {
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMessageHandler('flutter/assets', (Object? message) async {
-        final String? key = const StringCodec().decodeMessage(
-          message as ByteData?,
-        );
-        if (key != null &&
-            key.startsWith('assets/rive/') &&
-            key.endsWith('.riv')) {
-          return ByteData(4);
-        }
-        return null;
-      });
-}
-
-/// Pumps [HomeContentStack] itself (not the full [HomeScreen]): the full
-/// HomeScreen harness needs six cubits plus DI-bound services, while the
-/// rebuild defect under test lives in HomeContentStack's subtree wiring.
-Future<void> pumpHomeContentStack(
-  WidgetTester tester, {
-  required TalkingCubit talkingCubit,
-}) async {
-  mockRiveAssets();
-  final MockAvatarCubit avatarCubit = MockAvatarCubit();
-  when(
-    () => avatarCubit.stream,
-  ).thenAnswer((_) => const Stream<AvatarState>.empty());
-  when(() => avatarCubit.state).thenReturn(
-    const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()),
-  );
-
-  final MockChatCubit chatCubit = MockChatCubit();
-  when(
-    () => chatCubit.stream,
-  ).thenAnswer((_) => const Stream<ChatState>.empty());
-  when(() => chatCubit.state).thenReturn(ChatState.initial());
-
+/// Pumps [HomeContentStack] itself (not the full HomeScreen): the rebuild
+/// scope under test lives in the stack's subtree wiring.
+Future<void> pumpHomeContentStack(WidgetTester tester, StageHarness h) async {
   await tester.pumpWidget(
-    MultiBlocProvider(
-      providers: <SingleChildWidget>[
-        BlocProvider<ChatCubit>.value(value: chatCubit),
-        BlocProvider<TalkingCubit>.value(value: talkingCubit),
-        BlocProvider<AvatarCubit>.value(value: avatarCubit),
-        BlocProvider<SettingsCubit>.value(
-          value: SettingsCubit(
-            settingsRepository: _FakeSettingsRepository(),
-            llmService: LlmService(),
-          ),
-        ),
-      ],
-      child: Provider<InterruptionService>.value(
-        value: InterruptionService(),
-        child: MaterialApp(
-          theme: AppTheme.dark,
-          localizationsDelegates: const <LocalizationsDelegate<Object>>[
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: HomeContentStack(
-              chatsState: ChatState.initial(),
-              onTripleTap: () {},
-            ),
-          ),
-        ),
+    h.app(
+      Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: HomeContentStack(speech: h.speech, onStartDemo: () {}),
       ),
     ),
   );
@@ -213,57 +39,189 @@ List<String> captureRebuilds() {
   return rebuilds;
 }
 
+/// Runs [change], pumps one frame and returns what that frame rebuilt.
+Future<List<String>> rebuildsDuring(
+  WidgetTester tester,
+  FutureOr<void> Function() change,
+) async {
+  final List<String> rebuilds = captureRebuilds();
+  await change();
+  await tester.idle();
+  await tester.pump();
+  debugOnRebuildDirtyWidget = null;
+  return rebuilds;
+}
+
+/// Asserts that of the Stage's widgets, [rebuilds] holds exactly [expected].
+void expectStageRebuilds(List<String> rebuilds, List<String> expected) {
+  for (final String widget in <String>[..._chrome, 'RiveAvatarView']) {
+    expect(
+      rebuilds.contains(widget),
+      expected.contains(widget),
+      reason: expected.contains(widget)
+          ? '$widget should rebuild'
+          : '$widget must not rebuild',
+    );
+  }
+}
+
+/// Emits [state] and records what the next frame rebuilds.
+Future<List<String>> rebuildsAfter(
+  WidgetTester tester,
+  StageHarness h,
+  TalkingState state,
+) async {
+  final List<String> rebuilds = captureRebuilds();
+  h.talking.emit(state);
+  // idle() flushes the stream microtask so the rebuild happens inside the
+  // following pumped frame.
+  await tester.idle();
+  await tester.pump();
+  debugOnRebuildDirtyWidget = null;
+  return rebuilds;
+}
+
+/// The Stage's widgets that must not depend on the mouth.
+const List<String> _chrome = <String>[
+  'HomeContentStack',
+  'RiveSceneView',
+  'StageTopBar',
+  'StageToolChip',
+  'StageCaption',
+  'StageComposer',
+  'StatusGlow',
+];
+
 void main() {
+  late StageHarness h;
+
+  setUp(() {
+    serveFakeRiveAssets();
+    UiKitFile.resetForTest();
+    h = StageHarness();
+  });
+
   tearDown(() {
     debugOnRebuildDirtyWidget = null;
   });
 
-  testWidgets('mouth-state changes do not rebuild the text input', (
+  testWidgets('a mouth change rebuilds only the avatar view', (
     WidgetTester tester,
   ) async {
-    final TalkingCubit talkingCubit = createRealTalkingCubit();
-    addTearDown(talkingCubit.close);
-
-    await pumpHomeContentStack(tester, talkingCubit: talkingCubit);
-
-    final List<String> rebuilds = captureRebuilds();
-    talkingCubit.emit(const TalkingState.speaking());
-    // idle() flushes the bloc stream microtask so the rebuild happens
-    // inside the following pumped frame.
+    await pumpHomeContentStack(tester, h);
+    h.talking.emit(const TalkingState.speaking());
     await tester.idle();
-    await tester.pump();
-    debugOnRebuildDirtyWidget = null;
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final List<String> rebuilds = await rebuildsAfter(
+      tester,
+      h,
+      const TalkingState.speaking(MouthState.open),
+    );
 
     expect(
-      rebuilds.contains('AiTextInput'),
-      isFalse,
-      reason: 'mouth-only TalkingState changes must not rebuild the input',
+      rebuilds,
+      contains('RiveAvatarView'),
+      reason: 'the spy must be proven to fire on TalkingState changes',
     );
+    for (final String widget in _chrome) {
+      expect(
+        rebuilds,
+        isNot(contains(widget)),
+        reason: 'a mouth-only TalkingState change must not rebuild $widget',
+      );
+    }
   });
 
   testWidgets(
-    'positive control: mouth-state changes do rebuild the avatar view',
+    'positive control: a phase change reaches the glow and the composer',
     (WidgetTester tester) async {
-      final TalkingCubit talkingCubit = createRealTalkingCubit();
-      addTearDown(talkingCubit.close);
+      await pumpHomeContentStack(tester, h);
 
-      await pumpHomeContentStack(tester, talkingCubit: talkingCubit);
-
-      final List<String> events = <String>[];
-      talkingCubit.stream.listen((TalkingState _) => events.add('evt'));
-      final List<String> rebuilds = captureRebuilds();
-      talkingCubit.emit(const TalkingState.speaking());
-      await tester.idle();
-      await tester.pump();
-      debugOnRebuildDirtyWidget = null;
-
-      expect(
-        rebuilds.contains('RiveAvatarView'),
-        isTrue,
-        reason: 'the spy must be proven to fire on TalkingState changes',
+      final List<String> rebuilds = await rebuildsAfter(
+        tester,
+        h,
+        const TalkingState.speaking(),
       );
+
+      expect(rebuilds, contains('RiveAvatarView'));
+      expect(rebuilds, contains('StatusGlow'));
+      expect(rebuilds, contains('StageComposer'));
+      expect(rebuilds, isNot(contains('StageTopBar')));
     },
   );
+
+  testWidgets('a caption update rebuilds only the caption', (
+    WidgetTester tester,
+  ) async {
+    await pumpHomeContentStack(tester, h);
+    final List<String> rebuilds = await rebuildsDuring(
+      tester,
+      () => h.caption.emit(const CaptionState(text: 'Hello there.', seq: 1)),
+    );
+    // StageCaption's own builder, and nothing else of the Stage.
+    expect(rebuilds, contains('BlocBuilder<CaptionCubit, CaptionState>'));
+    expectStageRebuilds(rebuilds, <String>[]);
+  });
+
+  testWidgets('a tool update rebuilds only the tool chip', (
+    WidgetTester tester,
+  ) async {
+    await pumpHomeContentStack(tester, h);
+    final List<String> rebuilds = await rebuildsDuring(
+      tester,
+      () => h.chat.emit(h.chat.state.copyWith(activeTool: 'searchGoogle')),
+    );
+    // StageToolChip's own selector, and nothing else of the Stage.
+    expect(rebuilds, contains('BlocSelector<ChatCubit, ChatState, String?>'));
+    expectStageRebuilds(rebuilds, <String>[]);
+  });
+
+  group('the full Home screen', () {
+    late HomeScreen home;
+
+    setUp(() => home = HomeScreen(speech: h.speech));
+
+    Future<void> pumpHome(WidgetTester tester) async {
+      await tester.pumpWidget(h.app(home));
+      await tester.pump();
+    }
+
+    testWidgets('a keyboard frame moves the chrome, not the Rive views', (
+      WidgetTester tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      await pumpHome(tester);
+      final List<String> rebuilds = await rebuildsDuring(
+        tester,
+        () => tester.view.viewInsets = const FakeViewPadding(bottom: 120),
+      );
+      expect(rebuilds, contains('_BottomChrome'));
+      expect(rebuilds, isNot(contains('HomeContentStack')));
+      expect(rebuilds, isNot(contains('_RiveStage')));
+      expect(rebuilds, isNot(contains('RiveSceneView')));
+      expect(rebuilds, isNot(contains('RiveAvatarView')));
+    });
+
+    testWidgets('a scene cross-fade does not rebuild the Stage', (
+      WidgetTester tester,
+    ) async {
+      await pumpHome(tester);
+      final List<String> rebuilds = await rebuildsDuring(tester, () async {
+        await tester.pumpWidget(h.app(home, scene: AvatarScene.deepSpace));
+        await tester.pump(const Duration(milliseconds: 100));
+      });
+      expect(rebuilds, contains('HomeScreen'));
+      expect(rebuilds, isNot(contains('HomeContentStack')));
+      // The Rive views' own error box (test fallback) reads the theme, so
+      // check that nothing above them pushes a rebuild.
+      expect(rebuilds, isNot(contains('_RiveStage')));
+      expect(
+        rebuilds,
+        isNot(contains('BlocBuilder<AvatarCubit, AvatarState>')),
+      );
+    });
+  });
 
   test('getMessage returns the identical cached instance', () {
     final ChatEntry entry = ChatEntry(

@@ -913,6 +913,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Result: {name}'**
   String functionResultTitle(String name);
+
+  /// No description provided for @toolSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching the web…'**
+  String get toolSearching;
+
+  /// No description provided for @toolWeather.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the weather…'**
+  String get toolWeather;
+
+  /// No description provided for @toolNews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the news…'**
+  String get toolNews;
+
+  /// No description provided for @toolMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching my memory…'**
+  String get toolMemory;
+
+  /// No description provided for @toolWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on it…'**
+  String get toolWorking;
+
+  /// No description provided for @askAnything.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything…'**
+  String get askAnything;
+
+  /// No description provided for @micPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the microphone in settings to talk to me.'**
+  String get micPermissionDenied;
+
+  /// No description provided for @micUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input isn\'t available here.'**
+  String get micUnavailable;
+
+  /// No description provided for @composerAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach an image'**
+  String get composerAttach;
+
+  /// No description provided for @composerTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get composerTools;
+
+  /// No description provided for @composerSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get composerSend;
+
+  /// No description provided for @composerStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get composerStop;
+
+  /// No description provided for @composerListen.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk'**
+  String get composerListen;
+
+  /// No description provided for @composerMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get composerMore;
+
+  /// No description provided for @stageHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get stageHistory;
+
+  /// No description provided for @stageShowCaptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show captions'**
+  String get stageShowCaptions;
+
+  /// No description provided for @stageHideCaptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide captions'**
+  String get stageHideCaptions;
+
+  /// No description provided for @stageDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Play the demo'**
+  String get stageDemo;
+
+  /// No description provided for @languageNameEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageNameEnglish;
+
+  /// No description provided for @languageNameFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'Français'**
+  String get languageNameFrench;
+
+  /// No description provided for @stageMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get stageMenu;
+
+  /// No description provided for @stageLanguageSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Language: {language}'**
+  String stageLanguageSwitch(Object language);
 }
 
 class _AppLocalizationsDelegate

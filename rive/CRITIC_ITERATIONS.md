@@ -71,3 +71,21 @@ not establish current-branch behavior.
 Review media and capture logs are ignored build artifacts. Recreate general
 renders and loop checks with `uv run --with pillow python rive/tools/review.py`;
 dense avatar motion and wardrobe helpers live alongside that script.
+
+## ui_kit
+
+27 October 2026, M2 (`ui/m2-rive-art`). Self-critique against the brief (premium, storybook-warm,
+reads at 48 dp, no clip-art, no neon). Scores are my own reads of the contact sheets in
+`rive/ui_kit/review/`, not an independent critic; regenerate with
+`uv run --with pillow rive/tools/review_ui_kit.py`.
+
+| Iteration | Score | What I saw | What changed |
+|---|---:|---|---|
+| 1 | 6.5 | Every state built and bound. Orb: glossy "candy" highlight; listening interior a muddy brown (accent 16 % over plum); at `level` 1 the echo ring clipped on the 96 px edge; idle→typing showed the mic and arrow blurred together for ~3 frames; error dim (62 %) read as a dirty brown disabled button; raw mic levels would jitter the ring. Glow: soft everywhere, but mostly hidden behind a composer pill; waiting drift hard to see. Mark: lenses touching with a blob for a bridge; halo cut by the artboard edge; brown lens tint. Tools and toggle already clean. | — |
+| 2 | 7.8 | Echo/pulse inside the frame; level ramps over ~8 frames; listening reads as a hollow lit ring; gloss now a soft sheen; glyph swap is clean (mic gone by 100 ms, arrow pops with overshoot at ~200 ms); error is a shake then a subdued (78 %) disc; glow lobes peek past the pill ends over all four scenes. | Echo 1.15×, pulse 1.05×; `level` through RangeMapper → DataConverterInterpolator (0.14 s); tint 7–22 %; gloss alpha 0x38→0x24; hides 100 ms; error dim 0.78; glow haze 350 px, lobes at ±104 with a ±34 px drift. |
+| 3 | 8.4 | Mark: real arched bridge, lenses spaced, halo fully inside the frame (border = backdrop), sparkle sits clear of the frame; glass tint barely there so the halo glows through. Behavioural proofs all green (`review/proof.txt`): loop seams identical (two spins differ only by antialiasing, worst Δ 19/255), every change ends exactly on its rest pose, reduceMotion captures are pixel-still, every colour property reaches its paint. | Mark geometry and halo (150×76, feather 30); seam holds on every looping value; memory twinkle swings back instead of wrapping; review captures run on per-thread project copies (parallel `rive` builds of one dir raced). |
+| 4 (coordinator review, StatusGlow) | 8.7 | Reported: stepped concentric rings over livingRoom/campfire and an olive band inside the violet deepSpace glow. Diagnosis: the raw render over black had 0 off-hue pixels and a per-pixel second difference of at most 3/255, so neither defect was in the paint. Both came from the review sheet: it was palette-quantised to 128 colours shared by all four scenes, with no dither. That drew the rings, and it mapped violet (117,100,170) to the palette's grey-olive (91,89,83). The compositing also recovered colour as k/alpha, which shifts hue at low alpha (1,884 off-hue pixels). The art did have one real flaw: two lobes with a dimmer centre (idle 82 → 69 → 81), which read as two lights. | The glow is now one light: core 200×40 with feather 34, lobes 170×50 with feather 40 at ±70 and 30 % opacity, haze 360×72 with feather 50, shimmer 110×28 with feather 26. Every phase has a single peak. Glow sheets are no longer palette-quantised, and the composite is premultiplied (bg·(w−k)/255 + k, no division). New `glow_zoom.png` (3× nearest-neighbour crops) and `glow_profile.txt`: alpha from the top and left edges to the pill rises monotonically in all 12 scene × phase cases; maximum border alpha is 3/255. |
+
+Open points I would still look at on a device: feathered glow cost on a CPU-throttled emulator
+(5 feathered ellipses, CLI only proves they are soft), and whether rive_native renders
+`DataConverterInterpolator` (the CLI does; if not, the ring follows the raw level).

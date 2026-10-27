@@ -37,6 +37,7 @@ import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
 import '../../features/talking/domain/services/tts_playback_service.dart';
+import '../../features/talking/presentation/bloc/caption_cubit.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../services/app_lifecycle_service.dart';
@@ -61,6 +62,8 @@ import '../services/llm/llm_streaming_service.dart';
 import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
 import '../services/settings_local_datasource.dart';
+import '../services/speech/speech_input_service.dart';
+import '../services/speech/speech_to_text_input_service.dart';
 import '../services/stream_processor/stream_processor_service.dart';
 import '../../features/chat/domain/services/chat_streaming_service.dart';
 import '../utils/logger.dart';
@@ -79,6 +82,11 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
   getIt.registerLazySingleton<InterruptionService>(() => InterruptionService());
+  // Lazy: no mic permission or recognizer setup until the first start().
+  getIt.registerLazySingleton<SpeechInputService>(
+    () => SpeechToTextInputService(),
+    dispose: (SpeechInputService service) => service.dispose(),
+  );
 
   // ── Core services (depend on datasources) ──
   getIt.registerLazySingleton<LlmConfigManager>(
@@ -236,6 +244,14 @@ Future<void> setupServiceLocator() async {
       getIt<InterruptionService>(),
       getIt<TtsPlaybackService>(),
       getIt<AppLifecycleService>(),
+      getIt<TtsQueueService>(),
+    ),
+  );
+  getIt.registerFactory<CaptionCubit>(
+    () => CaptionCubit(
+      playbackService: getIt<TtsPlaybackService>(),
+      interruptionService: getIt<InterruptionService>(),
+      settingsRepository: getIt<SettingsRepository>(),
     ),
   );
   getIt.registerFactory<ChatTtsCubit>(

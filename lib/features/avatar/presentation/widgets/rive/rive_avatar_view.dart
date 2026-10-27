@@ -4,7 +4,7 @@ import 'package:rive/rive.dart';
 
 import '../../../../../core/utils/logger.dart';
 import '../../../../talking/talking.dart';
-import '../../rive/avatar_rive_binding.dart';
+import '../../../../../core/design/rive/rive_vm_binding.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../bloc/avatar_state.dart';
 
@@ -45,7 +45,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     with WidgetsBindingObserver {
   File? _file;
   RiveWidgetController? _controller;
-  AvatarRiveBinding? _binding;
+  RiveVmBinding? _binding;
   String? _error;
 
   @override
@@ -67,7 +67,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   @override
   void didUpdateWidget(RiveAvatarView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final AvatarRiveBinding? binding = _binding;
+    final RiveVmBinding? binding = _binding;
     if (binding == null) {
       return;
     }
@@ -112,7 +112,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
           AvatarRiveContract.avatarStateMachine,
         ),
       );
-      final AvatarRiveBinding binding = AvatarRiveBinding(controller);
+      final RiveVmBinding binding = RiveVmBinding(controller);
       controller.stateMachine.addEventListener(_onRiveEvent);
       if (!mounted) {
         binding.dispose();
@@ -151,7 +151,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
 
   /// Pushes every continuously-bound property from the current widget data.
   void _applyContinuousState() {
-    final AvatarRiveBinding? binding = _binding;
+    final RiveVmBinding? binding = _binding;
     if (binding == null) {
       return;
     }

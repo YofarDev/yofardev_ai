@@ -96,7 +96,13 @@ class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
     List<int> amplitudes,
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
-  }) {}
+    String? caption,
+  }) {
+    captions.add(caption);
+  }
+
+  /// Captions passed to [startAmplitudeAnimation], in call order.
+  final List<String?> captions = <String?>[];
 
   @override
   void cancelAnimation() {}
@@ -344,6 +350,8 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 100));
 
         expect(cubit.state.audioPathsWaitingSentences, isEmpty);
+        // The caption text parked for this sentence is dropped.
+        verify(() => mockTtsManager.consumeText(testAudioPath)).called(1);
       });
 
       test('should play ready audio paths sequentially', () async {
@@ -518,6 +526,50 @@ void main() {
       player.dispose();
       playback.dispose();
       await tmp.delete(recursive: true);
+    });
+
+    test('passes the sentence text as the caption when it plays', () async {
+      final MockTtsQueueService queue = MockTtsQueueService();
+      final MockAudioAmplitudeService amplitudeService =
+          MockAudioAmplitudeService();
+      final MockAudioPlayerService player = MockAudioPlayerService();
+      final MockTtsPlaybackService playback = MockTtsPlaybackService();
+      final MockInterruptionService interruption = MockInterruptionService();
+      when(
+        () => interruption.interruptionStream,
+      ).thenAnswer((_) => const Stream<void>.empty());
+      when(
+        () => queue.cueOnlyStream,
+      ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
+      when(
+        () => amplitudeService.extractAmplitudes(any()),
+      ).thenAnswer((Invocation _) async => <int>[10]);
+      when(
+        () => player.play(any()),
+      ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
+      when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
+      when(() => queue.consumeText('/tmp/tts/1.wav')).thenReturn('Hi there.');
+      when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
+
+      final ChatTtsCubit cubit = ChatTtsCubit(
+        ttsQueueManager: queue,
+        audioAmplitudeService: amplitudeService,
+        audioPlayerService: player,
+        interruptionService: interruption,
+        ttsPlaybackService: playback,
+      );
+
+      queue.emitAudioPath('/tmp/tts/1.wav');
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(playback.captions, <String?>['Hi there.']);
+
+      await cubit.close();
+      queue.dispose();
+      player.dispose();
+      playback.dispose();
     });
 
     test('clears waiting sentences on interruption', () async {

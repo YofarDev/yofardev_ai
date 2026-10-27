@@ -49,6 +49,83 @@ void main() {
       interruptionService.dispose();
     });
 
+    group('pending speech', () {
+      Future<void> enqueue(String text) => manager.enqueue(
+        text: text,
+        language: 'en',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+
+      test('a failed synthesis drains the queue', () async {
+        when(
+          () => mockDatasource.synthesize(
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+            voiceEffect: any(named: 'voiceEffect'),
+          ),
+        ).thenThrow(StateError('models missing'));
+        int drained = 0;
+        final StreamSubscription<void> sub = manager.drained.listen(
+          (_) => drained++,
+        );
+
+        await enqueue('Hello.');
+        await Future<void>.delayed(Duration.zero);
+
+        expect(manager.hasPendingSpeech, isFalse);
+        expect(drained, 1);
+        await sub.cancel();
+      });
+
+      test(
+        'synthesized audio stays pending until its playback starts',
+        () async {
+          when(
+            () => mockDatasource.synthesize(
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+              voiceEffect: any(named: 'voiceEffect'),
+            ),
+          ).thenAnswer((_) async => '/raw.wav');
+          int drained = 0;
+          final StreamSubscription<void> sub = manager.drained.listen(
+            (_) => drained++,
+          );
+          final Future<String> path = manager.audioStream.first;
+
+          await enqueue('Hello.');
+          final String audio = await path;
+          expect(manager.hasPendingSpeech, isTrue);
+          expect(drained, 0);
+
+          expect(manager.consumeText(audio), 'Hello.');
+          await Future<void>.delayed(Duration.zero);
+          expect(manager.hasPendingSpeech, isFalse);
+          expect(drained, 1);
+          await sub.cancel();
+        },
+      );
+
+      test('a cue-only item drains the queue', () async {
+        int drained = 0;
+        final StreamSubscription<void> sub = manager.drained.listen(
+          (_) => drained++,
+        );
+
+        await manager.enqueue(
+          text: '',
+          language: 'en',
+          voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        expect(manager.hasPendingSpeech, isFalse);
+        expect(drained, 1);
+        await sub.cancel();
+      });
+    });
+
     test('deleteAudio removes the file via the synthesizer', () async {
       final Directory tmp = await Directory.systemTemp.createTemp('tts-del');
       final File wav = File('${tmp.path}/1.wav');
@@ -334,6 +411,58 @@ void main() {
 
       await subscription.cancel();
     });
+
+    test('consumeText returns the sentence once, then null', () async {
+      when(
+        () => mockDatasource.synthesize(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      ).thenAnswer((_) async => '/path/to/raw.wav');
+
+      final Completer<String> emitted = Completer<String>();
+      final StreamSubscription<String> subscription = manager.audioStream
+          .listen(emitted.complete);
+
+      await manager.enqueue(
+        text: '  Hello there.  ',
+        language: 'en',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      final String path = await emitted.future;
+
+      expect(manager.consumeText(path), 'Hello there.');
+      expect(manager.consumeText(path), isNull);
+
+      await subscription.cancel();
+    });
+
+    test('clear() drops texts not yet consumed', () async {
+      when(
+        () => mockDatasource.synthesize(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      ).thenAnswer((_) async => '/path/to/raw.wav');
+
+      final Completer<String> emitted = Completer<String>();
+      final StreamSubscription<String> subscription = manager.audioStream
+          .listen(emitted.complete);
+
+      await manager.enqueue(
+        text: 'Hello there.',
+        language: 'en',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      final String path = await emitted.future;
+      manager.clear();
+
+      expect(manager.consumeText(path), isNull);
+
+      await subscription.cancel();
+    });
   });
 
   group('Interruption', () {
@@ -400,6 +529,31 @@ void main() {
       // Assert
       expect(queueManager.queue.length, 0);
       expect(queueManager.isProcessing, false);
+    });
+
+    test('drops texts not yet consumed when interrupted', () async {
+      queueManager = TtsQueueService(
+        ttsSynthesizer: mockTtsDatasource,
+        interruptionService: interruptionService,
+        voiceEffectsService: mockVoiceEffectsService,
+      );
+      final Completer<String> emitted = Completer<String>();
+      final StreamSubscription<String> subscription = queueManager.audioStream
+          .listen(emitted.complete);
+
+      await queueManager.enqueue(
+        text: 'First',
+        language: 'fr',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      final String path = await emitted.future;
+
+      await interruptionService.interrupt();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(queueManager.consumeText(path), isNull);
+
+      await subscription.cancel();
     });
   });
 }

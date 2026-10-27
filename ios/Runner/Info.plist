@@ -50,6 +50,8 @@
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs access to your camera to take photos and videos.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>This app needs access to your microphone to record audio in videos.</string>
+	<string>Yofardev AI listens through the microphone when you tap the mic to talk to it.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Yofardev AI turns what you say into text so it can answer you.</string>
 </dict>
 </plist>

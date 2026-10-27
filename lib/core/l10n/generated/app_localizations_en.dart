@@ -462,4 +462,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String functionResultTitle(String name) {
     return 'Result: $name';
   }
+
+  @override
+  String get toolSearching => 'Searching the web…';
+
+  @override
+  String get toolWeather => 'Checking the weather…';
+
+  @override
+  String get toolNews => 'Reading the news…';
+
+  @override
+  String get toolMemory => 'Searching my memory…';
+
+  @override
+  String get toolWorking => 'Working on it…';
+
+  @override
+  String get askAnything => 'Ask anything…';
+
+  @override
+  String get micPermissionDenied =>
+      'Allow the microphone in settings to talk to me.';
+
+  @override
+  String get micUnavailable => 'Voice input isn\'t available here.';
+
+  @override
+  String get composerAttach => 'Attach an image';
+
+  @override
+  String get composerTools => 'Tools';
+
+  @override
+  String get composerSend => 'Send';
+
+  @override
+  String get composerStop => 'Stop';
+
+  @override
+  String get composerListen => 'Talk';
+
+  @override
+  String get composerMore => 'More options';
+
+  @override
+  String get stageHistory => 'History';
+
+  @override
+  String get stageShowCaptions => 'Show captions';
+
+  @override
+  String get stageHideCaptions => 'Hide captions';
+
+  @override
+  String get stageDemo => 'Play the demo';
+
+  @override
+  String get languageNameEnglish => 'English';
+
+  @override
+  String get languageNameFrench => 'Français';
+
+  @override
+  String get stageMenu => 'Menu';
+
+  @override
+  String stageLanguageSwitch(Object language) {
+    return 'Language: $language';
+  }
 }

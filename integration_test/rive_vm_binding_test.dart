@@ -1,19 +1,21 @@
+import 'dart:ui' show Color;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rive/rive.dart';
-import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_binding.dart';
+import 'package:yofardev_ai/core/design/rive/rive_vm_binding.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
 
-/// Drives [AvatarRiveBinding] against the real `avatar.riv` the way the view
+/// Drives [RiveVmBinding] against the real `avatar.riv` the way the view
 /// does while the avatar talks: the same properties pushed on every rebuild.
 ///
-/// Runs on macOS (`flutter test integration_test/avatar_rive_binding_test.dart
+/// Runs on macOS (`flutter test integration_test/rive_vm_binding_test.dart
 /// -d macos`).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late File file;
   late RiveWidgetController controller;
-  late AvatarRiveBinding binding;
+  late RiveVmBinding binding;
 
   setUp(() async {
     file = (await File.asset(
@@ -29,7 +31,7 @@ void main() {
         AvatarRiveContract.avatarStateMachine,
       ),
     );
-    binding = AvatarRiveBinding(controller);
+    binding = RiveVmBinding(controller);
   });
 
   tearDown(() {
@@ -95,5 +97,7 @@ void main() {
     }
     binding.fireTrigger('doesNotExist');
     binding.setNumber('doesNotExist', 1.0);
+    binding.setBool('doesNotExist', true);
+    binding.setColor('doesNotExist', const Color(0xFF000000));
   });
 }

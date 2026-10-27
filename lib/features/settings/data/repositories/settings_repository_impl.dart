@@ -295,4 +295,12 @@ class SettingsRepositoryImpl implements SettingsRepository {
       ok: (void right) => Result<void>.ok(null),
     );
   }
+
+  // Live captions
+  @override
+  Future<Result<bool>> getCaptionsEnabled() => _datasource.getCaptionsEnabled();
+
+  @override
+  Future<Result<void>> setCaptionsEnabled(bool enabled) =>
+      _datasource.setCaptionsEnabled(enabled);
 }

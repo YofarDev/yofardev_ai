@@ -24,6 +24,9 @@ class SettingsLocalDatasource {
   // Global Memory Configuration
   static const String _memoryEnabledKey = 'memory_enabled';
 
+  // Live captions
+  static const String _captionsEnabledKey = 'captions_enabled';
+
   // Generic helper methods to reduce boilerplate
   Future<Result<String>> _getStringKey(String keyName) async {
     try {
@@ -241,4 +244,11 @@ class SettingsLocalDatasource {
 
   Future<Result<void>> setMemoryEnabled(bool enabled) =>
       _setBoolKey(_memoryEnabledKey, enabled);
+
+  // Live captions
+  Future<Result<bool>> getCaptionsEnabled() =>
+      _getBoolKey(_captionsEnabledKey, true);
+
+  Future<Result<void>> setCaptionsEnabled(bool enabled) =>
+      _setBoolKey(_captionsEnabledKey, enabled);
 }

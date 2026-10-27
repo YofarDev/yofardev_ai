@@ -3,14 +3,16 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
 
-import 'avatar_rive_binding.dart';
+import '../../../../core/design/rive/rive_vm_binding.dart';
 import 'avatar_rive_contract.dart';
+import 'rive_lab_ui_kit_panel.dart';
 
 /// Debug-only playground for the Rive avatar and scene files.
 ///
 /// Shows `avatar.riv` layered over a chosen scene, exposes a control for every
 /// contract property and trigger, logs the Rive events it receives, and can
-/// overlay the Flutter performance graph. Reach it at `/rive-lab`; the route
+/// overlay the Flutter performance graph. The "UI kit" tab previews the
+/// `ui_kit.riv` widgets over the stage. Reach it at `/rive-lab`; the route
 /// only exists in debug builds.
 class RiveLabScreen extends StatefulWidget {
   const RiveLabScreen({super.key});
@@ -19,14 +21,20 @@ class RiveLabScreen extends StatefulWidget {
   State<RiveLabScreen> createState() => _RiveLabScreenState();
 }
 
-class _RiveLabScreenState extends State<RiveLabScreen> {
+class _RiveLabScreenState extends State<RiveLabScreen>
+    with SingleTickerProviderStateMixin {
+  static const int _uiKitTab = 2;
+
+  late final TabController _tabs = TabController(length: 3, vsync: this)
+    ..addListener(_onTabChanged);
+  final RiveLabUiKitSettings _uiKit = RiveLabUiKitSettings();
   File? _avatarFile;
   RiveWidgetController? _avatarController;
-  AvatarRiveBinding? _avatarBinding;
+  RiveVmBinding? _avatarBinding;
 
   File? _sceneFile;
   RiveWidgetController? _sceneController;
-  AvatarRiveBinding? _sceneBinding;
+  RiveVmBinding? _sceneBinding;
   String _sceneId = AvatarRiveContract.defaultSceneId;
 
   final List<String> _eventLog = <String>[];
@@ -41,8 +49,18 @@ class _RiveLabScreenState extends State<RiveLabScreen> {
     _loadScene(AvatarRiveContract.defaultSceneId);
   }
 
+  void _onTabChanged() {
+    if (!_tabs.indexIsChanging) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    _tabs
+      ..removeListener(_onTabChanged)
+      ..dispose();
+    _uiKit.dispose();
     _disposeScene();
     _avatarBinding?.dispose();
     _avatarController?.stateMachine.removeEventListener(_onAvatarEvent);
@@ -81,7 +99,7 @@ class _RiveLabScreenState extends State<RiveLabScreen> {
       setState(() {
         _avatarFile = file;
         _avatarController = controller;
-        _avatarBinding = AvatarRiveBinding(controller);
+        _avatarBinding = RiveVmBinding(controller);
       });
     } on Exception catch (e) {
       if (mounted) {
@@ -121,7 +139,7 @@ class _RiveLabScreenState extends State<RiveLabScreen> {
         _disposeScene();
         _sceneFile = file;
         _sceneController = controller;
-        _sceneBinding = AvatarRiveBinding(controller);
+        _sceneBinding = RiveVmBinding(controller);
         _sceneId = sceneId;
       });
     } on Exception catch (e) {
@@ -220,26 +238,27 @@ class _RiveLabScreenState extends State<RiveLabScreen> {
                 Expanded(child: _buildStage()),
                 SizedBox(
                   width: 320,
-                  child: DefaultTabController(
-                    length: 2,
-                    child: Column(
-                      children: <Widget>[
-                        const TabBar(
-                          tabs: <Tab>[
-                            Tab(text: 'Controls'),
-                            Tab(text: 'Events'),
+                  child: Column(
+                    children: <Widget>[
+                      TabBar(
+                        controller: _tabs,
+                        tabs: const <Tab>[
+                          Tab(text: 'Controls'),
+                          Tab(text: 'Events'),
+                          Tab(text: 'UI kit'),
+                        ],
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabs,
+                          children: <Widget>[
+                            _buildControls(),
+                            _buildEventLog(),
+                            RiveLabUiKitControls(settings: _uiKit),
                           ],
                         ),
-                        Expanded(
-                          child: TabBarView(
-                            children: <Widget>[
-                              _buildControls(),
-                              _buildEventLog(),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -266,12 +285,13 @@ class _RiveLabScreenState extends State<RiveLabScreen> {
           RiveWidget(controller: avatarController, fit: Fit.contain)
         else
           const Center(child: CircularProgressIndicator()),
+        if (_tabs.index == _uiKitTab) RiveLabUiKitPreview(settings: _uiKit),
       ],
     );
   }
 
   Widget _buildControls() {
-    final AvatarRiveBinding? avatarBinding = _avatarBinding;
+    final RiveVmBinding? avatarBinding = _avatarBinding;
     if (avatarBinding == null) {
       return const Center(child: Text('avatar.riv not loaded'));
     }
