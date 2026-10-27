@@ -214,6 +214,16 @@ class Board:
 
     # ---- animation
     def anim(self, name: str, frames: int, tracks: list[El], loop: bool = False) -> El:
+        if loop:
+            # A one-frame rest at both ends of every value that returns to its start keeps the loop
+            # seam pixel-identical under fractional advancement (same trick as gen_scenes.py).
+            for obj in tracks:
+                for prop in obj.children:
+                    first, last = prop.children[0], prop.children[-1]
+                    if (len(prop.children) > 1 and first.attrs["frame"] == 0 and last.attrs["frame"] == frames
+                            and first.attrs["value"] == last.attrs["value"]):
+                        prop.children.insert(1, d(first.tag, **{**first.attrs, "frame": 1}))
+                        prop.children.insert(-1, d(last.tag, **{**last.attrs, "frame": frames - 1}))
         a = d("LinearAnimation", *tracks, duration=frames, fps=60, loopValue="loop" if loop else None, name=name)
         self.anims.append(a)
         return a
@@ -608,7 +618,7 @@ def tool_icon(bd: str | None) -> list[El]:
     run_memory = b.anim("Run_memory", 96, [
         b.T(m_star, scaleX=[(0, 1), (24, 1.3), (48, 0.7), (72, 1.15), (96, 1)],
             scaleY=[(0, 1), (24, 1.3), (48, 0.7), (72, 1.15), (96, 1)],
-            rotation=[(0, 0), (48, math.pi / 4), (96, math.pi / 2)]),
+            rotation=[(0, 0), (48, math.pi / 4), (96, 0)]),
         b.T(bob, y=[(0, 0), (48, -1.6), (96, 0)])], loop=True)
     run_generic = b.anim("Run_generic", 96, [
         b.T(big, scaleX=[(0, 1), (32, 1.14), (64, 0.9), (96, 1)], scaleY=[(0, 1), (32, 1.14), (64, 0.9), (96, 1)],
@@ -696,29 +706,29 @@ def mark(bd: str | None) -> list[El]:
         trims.append(t)
         return shape(name, path, d("Stroke", solid(PAPER), t, thickness=W, cap="round", join="round", name="Line"), x=x, y=y)
 
-    lens_l = drawn("LensL", lens_path(0), x=-44, y=0)
-    lens_r = drawn("LensR", lens_path(0), x=44, y=0)
-    bridge = drawn("Bridge", arc(0, 4, 9, math.pi * 1.12, math.pi * 1.88))
-    arm_l = drawn("ArmL", line((-82, -12), (-100, -15)))
-    arm_r = drawn("ArmR", line((82, -12), (100, -15)))
+    lens_l = drawn("LensL", lens_path(0), x=-50, y=0)
+    lens_r = drawn("LensR", lens_path(0), x=50, y=0)
+    bridge = drawn("Bridge", arc(0, 3, 12.5, math.pi * 1.2, math.pi * 1.8))
+    arm_l = drawn("ArmL", line((-88, -12), (-106, -16)))
+    arm_r = drawn("ArmR", line((88, -12), (106, -16)))
 
     # tinted glass + glint, clipped to the lenses
-    clip_src = node("LensClip", shape("ClipL", rect(76, 60, 24), x=-44), shape("ClipR", rect(76, 60, 24), x=44))
+    clip_src = node("LensClip", shape("ClipL", rect(76, 60, 24), x=-50), shape("ClipR", rect(76, 60, 24), x=50))
     glint = shape("Glint", P(sv(-14, -60), sv(6, -60), sv(-34, 60), sv(-54, 60), closed=True), fill("8CF3EBDD"))
     glint2 = shape("Glint2", P(sv(12, -60), sv(19, -60), sv(-21, 60), sv(-28, 60), closed=True), fill("66F3EBDD"))
     sweep = node("GlintSweep", glint, glint2, x=-150)
     glass = node("Glass",
-                 shape("TintL", rect(76, 60, 24), b.fill_b(accent), x=-44, opacity=0.13),
-                 shape("TintR", rect(76, 60, 24), b.fill_b(accent), x=44, opacity=0.13))
+                 shape("TintL", rect(76, 60, 24), b.fill_b(accent), x=-50, opacity=0.1),
+                 shape("TintR", rect(76, 60, 24), b.fill_b(accent), x=50, opacity=0.1))
     for s in (glint, glint2):
         s.add(d("ClippingShape", sourceId=clip_src.ref(), name="Clip"))
     frame = node("Frame", lens_l, lens_r, bridge, arm_l, arm_r)
 
     spark_big = shape("SparkBig", star4(0, 0, 17, 21), b.fill_b(accent))
     spark_small = shape("SparkSmall", star4(0, 0, 7, 8.5), b.fill_b(accent))
-    spark = node("Spark", spark_big, x=74, y=-50)
-    spark2 = node("Spark2", spark_small, x=97, y=-26)
-    halo = shape("Halo", ell(230, 130), b.fill_b(accent, feather=46), opacity=0.22)
+    spark = node("Spark", spark_big, x=80, y=-52)
+    spark2 = node("Spark2", spark_small, x=104, y=-28)
+    halo = shape("Halo", ell(150, 76), b.fill_b(accent, feather=30), opacity=0.24)
     glasses = node("Glasses", spark, spark2, sweep, frame, glass, clip_src)
     settle = node("Settle", glasses)
     mark_n = node("Mark", settle, halo, x=128, y=134)
@@ -739,13 +749,13 @@ def mark(bd: str | None) -> list[El]:
         b.T(spark, scaleX=[(0, 0), (46, 0, b.back), (62, 1)], scaleY=[(0, 0), (46, 0, b.back), (62, 1)],
             rotation=[(0, -1.2), (46, -1.2, o), (70, 0)]),
         b.T(spark2, scaleX=[(0, 0), (54, 0, b.back), (68, 1)], scaleY=[(0, 0), (54, 0, b.back), (68, 1)]),
-        b.T(halo, opacity=[(0, 0), (20, 0), (52, 0.4), (84, 0.22)],
+        b.T(halo, opacity=[(0, 0), (20, 0), (52, 0.42), (84, 0.24)],
             scaleX=[(0, 0.6), (20, 0.6, o), (60, 1)], scaleY=[(0, 0.6), (20, 0.6, o), (60, 1)]),
     ])
     rest = b.pose("Mark_rest", {t: {"end": 1} for t in trims} | {
         glass: {"opacity": 1}, settle: {"scaleX": 1, "scaleY": 1, "y": 0}, sweep: {"x": -150},
         spark: {"scaleX": 1, "scaleY": 1, "rotation": 0}, spark2: {"scaleX": 1, "scaleY": 1},
-        halo: {"opacity": 0.22, "scaleX": 1, "scaleY": 1}})
+        halo: {"opacity": 0.24, "scaleX": 1, "scaleY": 1}})
     s_rest = d("AnimationState", animationId=rest.ref(), x=0.0, y=200.0)
     s_play = d("AnimationState", animationId=sting.ref(), x=200.0, y=200.0)
     s_play2 = d("AnimationState", animationId=sting.ref(), x=400.0, y=200.0)
