@@ -48,5 +48,14 @@ void main() {
       expect(memo.isUnchanged('value', true), isFalse);
       expect(memo.firstReport('missing'), isFalse);
     });
+
+    test('counts only the writes that change a value', () {
+      final RiveWriteMemo memo = RiveWriteMemo();
+      expect(memo.writes, 0);
+      memo.record('state', 'idle');
+      memo.record('level', 0.5);
+      expect(memo.writes, 2);
+      expect(memo.isUnchanged('state', 'idle'), isTrue);
+    });
   });
 }

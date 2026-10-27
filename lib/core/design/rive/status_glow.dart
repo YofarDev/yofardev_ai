@@ -38,6 +38,13 @@ class StatusGlow extends StatelessWidget {
                     : UiKitContract.statusGlowSize.height,
                 child: UiKitArtboard(
                   artboard: UiKitContract.statusGlowArtboard,
+                  // The glow breathes while the avatar waits, thinks or
+                  // speaks; idle and error are static.
+                  ambient:
+                      !reduceMotion &&
+                      (phase == TalkingPhase.waiting ||
+                          phase == TalkingPhase.generating ||
+                          phase == TalkingPhase.speaking),
                   fit: Fit.fill,
                   apply: (RiveVmBinding binding) {
                     binding.setEnum(

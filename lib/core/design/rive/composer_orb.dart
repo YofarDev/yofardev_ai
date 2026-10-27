@@ -36,6 +36,12 @@ class ComposerOrb extends StatelessWidget {
       dimension: size,
       child: UiKitArtboard(
         artboard: UiKitContract.composerOrbArtboard,
+        // Listening and thinking loop; every other state is static once
+        // its transition settles.
+        ambient:
+            !reduceMotion &&
+            (state == ComposerOrbState.listening ||
+                state == ComposerOrbState.thinking),
         apply: (RiveVmBinding binding) {
           binding.setEnum(
             UiKitContract.orbPropState,

@@ -187,6 +187,7 @@ class RiveVmBinding {
     );
     if (property != null) {
       property.trigger();
+      _fired++;
       return;
     }
     // ignore: deprecated_member_use
@@ -197,10 +198,17 @@ class RiveVmBinding {
     );
     if (input != null) {
       input.fire();
+      _fired++;
       return;
     }
     _reportMissing(name, 'trigger');
   }
+
+  /// How many writes reached the artboard so far: values that changed, and
+  /// fired triggers. Compare before and after a push to know whether it
+  /// changed anything.
+  int get writes => _memo.writes + _fired;
+  int _fired = 0;
 
   /// Whether the view model could be bound at all.
   bool get hasViewModel => _viewModelInstance != null;
@@ -251,7 +259,14 @@ class RiveWriteMemo {
   bool isUnchanged(String name, Object value) => _lastValues[name] == value;
 
   /// Remembers [value] as written for [name].
-  void record(String name, Object value) => _lastValues[name] = value;
+  void record(String name, Object value) {
+    _lastValues[name] = value;
+    writes++;
+  }
+
+  /// How many values were actually written (unchanged pushes are skipped),
+  /// so a caller can tell whether a push changed anything.
+  int writes = 0;
 
   /// True the first time [key] is seen, false afterwards (log once).
   bool firstReport(String key) => _reported.add(key);

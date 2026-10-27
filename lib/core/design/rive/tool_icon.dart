@@ -40,6 +40,7 @@ class ToolIcon extends StatelessWidget {
       dimension: size,
       child: UiKitArtboard(
         artboard: UiKitContract.toolIconArtboard,
+        ambient: animate,
         apply: (RiveVmBinding binding) {
           binding.setEnum(
             UiKitContract.toolPropKind,

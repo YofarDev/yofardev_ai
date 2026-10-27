@@ -14,6 +14,9 @@ class MarkSting extends StatefulWidget {
 
   final double size;
 
+  /// Length of the logo sting (`Mark` artboard, `play`).
+  static const Duration stingDuration = Duration(milliseconds: 1400);
+
   /// The letter of the fallback monogram.
   static const String monogram = 'Y';
 
@@ -25,10 +28,20 @@ class MarkStingState extends State<MarkSting> {
   final GlobalKey<UiKitArtboardState> _artboardKey =
       GlobalKey<UiKitArtboardState>();
 
-  /// Plays the logo sting once. Does nothing while the fallback is shown.
+  /// Plays the logo sting once, running the artboard for the sting and a
+  /// short margin. Does nothing while the fallback is shown.
   void play() {
-    _artboardKey.currentState?.binding?.fireTrigger(UiKitContract.markPropPlay);
+    final UiKitArtboardState? artboard = _artboardKey.currentState;
+    final RiveVmBinding? binding = artboard?.binding;
+    if (artboard == null || binding == null) {
+      return;
+    }
+    // Run first, so the trigger is consumed by an advancing state machine.
+    artboard.wake(settle: MarkSting.stingDuration + _settleMargin);
+    binding.fireTrigger(UiKitContract.markPropPlay);
   }
+
+  static const Duration _settleMargin = Duration(milliseconds: 200);
 
   @override
   Widget build(BuildContext context) {

@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:rive/rive.dart';
 
 import '../../utils/logger.dart';
+import 'artboard_activity.dart';
 import 'rive_vm_binding.dart';
 import 'ui_kit_contract.dart';
 import 'ui_kit_file.dart';
@@ -16,8 +17,12 @@ import 'ui_kit_file.dart';
 /// the parent, so property writes (colors included) follow the theme
 /// without recreating the controller. The binding skips unchanged values.
 ///
-/// Rive is paused while the app is not resumed. The controller and binding
-/// are disposed with the widget; the shared file is not.
+/// The controller advances only while it has something to animate (see
+/// [ArtboardActivity]): an [ambient] artboard runs while it is ambient;
+/// any other one runs after a property actually changed, then pauses
+/// [settleAfter] later. Rive is paused while the app is not resumed. The
+/// controller and binding are disposed with the widget; the shared file is
+/// not.
 class UiKitArtboard extends StatefulWidget {
   const UiKitArtboard({
     super.key,
@@ -25,7 +30,13 @@ class UiKitArtboard extends StatefulWidget {
     required this.apply,
     required this.fallback,
     this.fit = Fit.contain,
+    this.ambient = false,
+    this.settleAfter = defaultSettle,
   });
+
+  /// How long a non-ambient artboard keeps running after a change: the
+  /// longest kit transition ([AppMotion.max]) plus a margin.
+  static const Duration defaultSettle = Duration(milliseconds: 700);
 
   /// Artboard name from [UiKitContract].
   final String artboard;
@@ -37,6 +48,12 @@ class UiKitArtboard extends StatefulWidget {
   final Widget fallback;
 
   final Fit fit;
+
+  /// The artboard is in a looping state and must keep running.
+  final bool ambient;
+
+  /// How long a non-ambient artboard runs after a change before it pauses.
+  final Duration settleAfter;
 
   @override
   State<UiKitArtboard> createState() => UiKitArtboardState();
@@ -53,9 +70,29 @@ class UiKitArtboardState extends State<UiKitArtboard>
 
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
+  ArtboardActivity? _activity;
 
   /// The bound view model, or null while the fallback is shown.
   RiveVmBinding? get binding => _binding;
+
+  /// Whether the Rive controller advances now (null while the fallback is
+  /// shown).
+  @visibleForTesting
+  bool? get controllerActive => _controller?.active;
+
+  /// Runs the artboard for [settle] (a one-shot cue fired through
+  /// [binding], such as the mark's sting), then lets it pause again.
+  void wake({Duration? settle}) {
+    _activity?.wake(
+      ambient: widget.ambient,
+      settle: settle ?? widget.settleAfter,
+    );
+  }
+
+  bool get _appResumed {
+    final AppLifecycleState? lifecycle = WidgetsBinding.instance.lifecycleState;
+    return lifecycle == null || lifecycle == AppLifecycleState.resumed;
+  }
 
   @override
   void initState() {
@@ -80,10 +117,6 @@ class UiKitArtboardState extends State<UiKitArtboard>
         ),
       );
       binding = RiveVmBinding(controller);
-      final AppLifecycleState? lifecycle =
-          WidgetsBinding.instance.lifecycleState;
-      controller.active =
-          lifecycle == null || lifecycle == AppLifecycleState.resumed;
       widget.apply(binding);
     } catch (e) {
       // Any failure (missing artboard or `Main`, a malformed view model, an
@@ -99,29 +132,44 @@ class UiKitArtboardState extends State<UiKitArtboard>
       }
       return;
     }
+    final RiveWidgetController loaded = controller;
+    _activity = ArtboardActivity(
+      onActiveChanged: (bool active) => loaded.active = active,
+    )..appResumed = _appResumed;
     setState(() {
       _controller = controller;
       _binding = binding;
     });
+    // The first values are in: run until they settle.
+    wake();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _controller?.active = state == AppLifecycleState.resumed;
+    _activity?.appResumed = state == AppLifecycleState.resumed;
   }
 
   @override
   void didUpdateWidget(UiKitArtboard oldWidget) {
     super.didUpdateWidget(oldWidget);
     final RiveVmBinding? binding = _binding;
-    if (binding != null) {
-      widget.apply(binding);
+    if (binding == null) {
+      return;
+    }
+    final int before = binding.writes;
+    widget.apply(binding);
+    // Parents rebuild often with the same values: only a real change (or
+    // a change of ambient) runs the artboard again.
+    if (binding.writes != before || widget.ambient != oldWidget.ambient) {
+      wake();
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _activity?.dispose();
+    _activity = null;
     _binding?.dispose();
     _controller?.dispose();
     _binding = null;
