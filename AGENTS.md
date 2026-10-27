@@ -103,16 +103,18 @@ on violation.
 - **State idiom**: union states (freezed) for load-lifecycle screens, flat `copyWith` states for persistent interactive state
 - **All user-facing strings** go through `AppLocalizations` — add keys with `./scripts/fstr.sh`, never edit `lib/core/l10n/generated/`
 - **Never hand-edit** `*.g.dart` / `*.freezed.dart` — rerun `build_runner` after changing annotated models
-- **Design layer** lives in `lib/core/design/` (import `design.dart`): read colors via `context.colors` / `context.tokens`, text via the theme (`Theme.of(context).textTheme`)
-- **App theme** is Storybook night (plum ink, Fraunces + Manrope): `AppTheme.forScene(scene)` (cached per scene, accent = the scene's light; `AppTheme.dark` = living room), built by `buildLookTheme(UiLooks.storybook, …)`; raw hex lives only in `AppPalette`. `lib/app.dart` swaps it on scene change via a `BlocSelector` around the `MaterialApp` only
-- **UI kit** lives in `lib/core/design/components/` with its own barrel `components.dart` (not re-exported by `design.dart`). The legacy `lib/core/widgets/app_icon_button.dart` must not be used in new code (M3 replaces it)
+- **Design layer** lives in `lib/core/design/` (import `design.dart`): read colors via `context.colors` / `context.tokens`, text via `context.text`; the accent of the current scene via `context.tokens.scene` (`accent`, `onAccent`, `glow`)
+- **App theme** is Storybook night (ink `#16121D`, surface `#211B2B`, Fraunces display + Manrope body): `AppTheme.forScene(scene)` (cached per scene) and `AppTheme.dark` (= living room), built by `buildLookTheme(UiLooks.storybook, …)` in `lib/core/design/theme/app_theme.dart`; raw hex lives only in `AppPalette`. `lib/app.dart` feeds `AvatarState.scene` (via a `BlocSelector` around the `MaterialApp` only) into `MaterialApp.theme`, so the accent cross-fades (`AppMotion.slow`) — never rebuild the router or cubits on a scene change
+- **Scene accent**: livingRoom `#F4B860`, campfire `#FF8552`, beach `#FF9478`, deepSpace `#B79CFF`; `ScenePalette.fromAccent` is the single derivation rule (onAccent, glow); check pairs with `contrastRatio` (`tokens/contrast.dart`). Roles: error `#FF6B6B`, tertiary `#B79CFF`, success `#7BD88F`, warning `#F4B860`
+- **UI kit** lives in `lib/core/design/components/` with its own barrel `components.dart` (not re-exported by `design.dart`): `AppIconButton` (48 dp hit area), `GlassPanel` (optional `shape:`), `AppPill`, `AppScaffold`, `SpeechBubbleBorder`. Glass is the only surface style. The legacy `lib/core/widgets/app_icon_button.dart` must not be used in new code (M3 replaces it)
 
 ### Gotchas
 
 - Changing a freezed model or ARB file **requires regeneration** (`build_runner` / `gen-l10n`) or analysis and tests fail
 - Golden tests store reference images under `test/**/goldens/` — only regenerate (`--update-goldens`) when a visual change is intentional
-- Every widget test and golden uses `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
-- Fonts are bundled in `assets/fonts/google_fonts/` and runtime fetching is off — a new font weight needs a new TTF there
+- Widget tests that need app styling use `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
+- Fonts are bundled in `assets/fonts/google_fonts/` (Fraunces 400/500/600, Manrope 400/500) and runtime fetching is off — a new font weight needs a new TTF there
+- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`) and `ext.yofardev.uiLab.state`. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
 - v4 avatar: the character and the 4 scenes are Rive files in `assets/rive/`
   (`avatar.riv` + `scenes/<sceneId>.riv`), rebuilt from RML sources via
   `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
@@ -185,4 +187,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-26
+**Last Updated**: 2026-10-27
