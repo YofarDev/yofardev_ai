@@ -462,4 +462,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String functionResultTitle(String name) {
     return 'Result: $name';
   }
+
+  @override
+  String get toolSearching => 'Searching the web…';
+
+  @override
+  String get toolWeather => 'Checking the weather…';
+
+  @override
+  String get toolNews => 'Reading the news…';
+
+  @override
+  String get toolMemory => 'Searching my memory…';
+
+  @override
+  String get toolWorking => 'Working on it…';
 }

@@ -135,5 +135,10 @@
   "nytApiTitle": "New York Times API",
   "nytApiKeyHint": "Saisissez votre clé API New York Times",
   "chatMessageCount": "{count, plural, =0{0 message} =1{1 message} other{{count} messages}}",
-  "functionResultTitle": "Résultat : {name}"
+  "functionResultTitle": "Résultat : {name}",
+  "toolSearching": "Recherche sur le web…",
+  "toolWeather": "Je regarde la météo…",
+  "toolNews": "Je lis les nouvelles…",
+  "toolMemory": "Je fouille ma mémoire…",
+  "toolWorking": "Je m'en occupe…"
 }

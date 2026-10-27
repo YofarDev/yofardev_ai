@@ -375,5 +375,10 @@
         "example": "GetWeather"
       }
     }
-  }
+  },
+  "toolSearching": "Searching the web…",
+  "toolWeather": "Checking the weather…",
+  "toolNews": "Reading the news…",
+  "toolMemory": "Searching my memory…",
+  "toolWorking": "Working on it…"
 }

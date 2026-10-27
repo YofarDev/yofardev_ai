@@ -913,6 +913,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Result: {name}'**
   String functionResultTitle(String name);
+
+  /// No description provided for @toolSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching the web…'**
+  String get toolSearching;
+
+  /// No description provided for @toolWeather.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the weather…'**
+  String get toolWeather;
+
+  /// No description provided for @toolNews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the news…'**
+  String get toolNews;
+
+  /// No description provided for @toolMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching my memory…'**
+  String get toolMemory;
+
+  /// No description provided for @toolWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on it…'**
+  String get toolWorking;
 }
 
 class _AppLocalizationsDelegate

@@ -555,6 +555,7 @@ class ChatCubit extends Cubit<ChatState> {
             openedChat: finalChat,
             chatsList: updatedChatsList,
             status: ChatStatus.success,
+            activeTool: null,
           ),
         );
         _appLifecycleService.emitStreamingStateChanged(ChatStatus.success);
@@ -598,8 +599,13 @@ class ChatCubit extends Cubit<ChatState> {
           state.copyWith(
             status: ChatStatus.error,
             error: UnknownFailure(error, error),
+            activeTool: null,
           ),
         );
+      },
+      onToolActivity: (String? toolName) {
+        if (isClosed) return;
+        emit(state.copyWith(activeTool: toolName));
       },
     );
   }

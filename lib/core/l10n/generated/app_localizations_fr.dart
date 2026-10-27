@@ -473,4 +473,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String functionResultTitle(String name) {
     return 'Résultat : $name';
   }
+
+  @override
+  String get toolSearching => 'Recherche sur le web…';
+
+  @override
+  String get toolWeather => 'Je regarde la météo…';
+
+  @override
+  String get toolNews => 'Je lis les nouvelles…';
+
+  @override
+  String get toolMemory => 'Je fouille ma mémoire…';
+
+  @override
+  String get toolWorking => 'Je m\'en occupe…';
 }

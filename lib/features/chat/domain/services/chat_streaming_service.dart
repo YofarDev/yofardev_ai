@@ -88,6 +88,10 @@ class ChatStreamingService {
   /// 4. Streams the response (or uses function call result)
   /// 5. Updates the chat via callbacks
   /// 6. Enqueues TTS if not text-only
+  ///
+  /// [onToolActivity] reports the tool being run: its name right before it
+  /// executes, then `null` once the round's tools finished, on error, and
+  /// when the reply ends (never twice in a row with the same value).
   Future<void> streamResponse({
     required String prompt,
     required bool onlyText,
@@ -99,10 +103,18 @@ class ChatStreamingService {
     required void Function(Chat updatedChat) onChatUpdated,
     required void Function(Chat finalChat) onStreamComplete,
     required void Function(String error) onError,
+    void Function(String? toolName)? onToolActivity,
   }) async {
     // Reset interruption state at start of new conversation
     _interruptionService.reset();
     _streamInterrupted = false;
+
+    String? activeTool;
+    void reportTool(String? name) {
+      if (name == activeTool) return;
+      activeTool = name;
+      onToolActivity?.call(name);
+    }
 
     final String temporaryId = const Uuid().v4();
 
@@ -442,6 +454,7 @@ class ChatStreamingService {
           if (tool == null) {
             result = 'Unknown tool: $name';
           } else {
+            reportTool(name);
             try {
               result = await _toolRegistry!.executeTool(
                 tool,
@@ -476,6 +489,7 @@ class ChatStreamingService {
             ),
           );
         }
+        reportTool(null);
 
         messagesForStream = <LlmMessage>[
           ...messagesForStream,
@@ -537,8 +551,11 @@ class ChatStreamingService {
         tag: 'ChatStreamingService',
         error: e,
       );
+      reportTool(null);
       onError(e.toString());
       return;
+    } finally {
+      reportTool(null);
     }
   }
 

@@ -46,6 +46,10 @@ sealed class ChatState with _$ChatState {
     /// Flag to track if user has manually created a chat during initialization
     /// This prevents getCurrentChat from overwriting user's new chat
     @Default(false) bool userCreatedChatDuringInit,
+
+    /// Name of the tool the reply is running right now (null otherwise),
+    /// for the Home stage tool chip.
+    String? activeTool,
   }) = _ChatsState;
 
   factory ChatState.initial() => const ChatState(
