@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../presentation/bloc/chat_cubit.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
@@ -63,7 +63,7 @@ class ChatListContainer extends StatelessWidget {
     final bool? result = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
-        backgroundColor: AppColors.glassSurface,
+        backgroundColor: context.tokens.glassSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(AppLocalizations.of(context).deleteChatTitle),
         content: Text(AppLocalizations.of(context).deleteChatConfirmation),
@@ -74,7 +74,7 @@ class ChatListContainer extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => context.pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],

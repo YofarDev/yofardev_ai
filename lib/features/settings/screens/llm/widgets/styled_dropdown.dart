@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/models/llm_config.dart';
-import '../../../../../core/res/app_colors.dart';
+import '../../../../../core/design/design.dart';
 import '../../../../../core/l10n/generated/app_localizations.dart';
 
 /// Custom styled dropdown for LLM configuration selection
@@ -21,10 +21,10 @@ class StyledDropdown extends StatelessWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.glassSurface.withValues(alpha: 0.5),
+        color: context.tokens.glassSurface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.glassBorder.withValues(alpha: 0.5),
+          color: context.tokens.glassBorder.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -33,11 +33,11 @@ class StyledDropdown extends StatelessWidget {
           value: currentValue,
           isExpanded: true,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          dropdownColor: AppColors.surface,
+          dropdownColor: context.colors.surface,
           borderRadius: BorderRadius.circular(16),
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: AppColors.primary,
+            color: context.colors.primary,
             size: 24,
           ),
           items: <DropdownMenuItem<String?>>[
@@ -48,13 +48,13 @@ class StyledDropdown extends StatelessWidget {
                   Icon(
                     Icons.autorenew_rounded,
                     size: 18,
-                    color: AppColors.onSurface.withValues(alpha: 0.5),
+                    color: context.colors.onSurface.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     l10n.useDefaultLlm,
                     style: TextStyle(
-                      color: AppColors.onSurface.withValues(alpha: 0.7),
+                      color: context.colors.onSurface.withValues(alpha: 0.7),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -71,8 +71,8 @@ class StyledDropdown extends StatelessWidget {
                       ? BoxDecoration(
                           gradient: LinearGradient(
                             colors: <Color>[
-                              AppColors.primary.withValues(alpha: 0.1),
-                              AppColors.secondary.withValues(alpha: 0.05),
+                              context.colors.primary.withValues(alpha: 0.1),
+                              context.colors.secondary.withValues(alpha: 0.05),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(8),
@@ -89,8 +89,8 @@ class StyledDropdown extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: isSelected
-                              ? AppColors.primary
-                              : AppColors.onSurface.withValues(alpha: 0.3),
+                              ? context.colors.primary
+                              : context.colors.onSurface.withValues(alpha: 0.3),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -99,8 +99,10 @@ class StyledDropdown extends StatelessWidget {
                           config.label,
                           style: TextStyle(
                             color: isSelected
-                                ? AppColors.primary
-                                : AppColors.onSurface.withValues(alpha: 0.9),
+                                ? context.colors.primary
+                                : context.colors.onSurface.withValues(
+                                    alpha: 0.9,
+                                  ),
                             fontSize: 14,
                             fontWeight: isSelected
                                 ? FontWeight.w600
@@ -124,13 +126,13 @@ class StyledDropdown extends StatelessWidget {
                     Icon(
                       Icons.autorenew_rounded,
                       size: 18,
-                      color: AppColors.onSurface.withValues(alpha: 0.5),
+                      color: context.colors.onSurface.withValues(alpha: 0.5),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       l10n.useDefaultLlm,
                       style: TextStyle(
-                        color: AppColors.onSurface.withValues(alpha: 0.7),
+                        color: context.colors.onSurface.withValues(alpha: 0.7),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -146,17 +148,17 @@ class StyledDropdown extends StatelessWidget {
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           config.label,
-                          style: const TextStyle(
-                            color: AppColors.onSurface,
+                          style: TextStyle(
+                            color: context.colors.onSurface,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),

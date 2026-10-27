@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 
 /// Modern glassmorphic chat message bubble with gradient accents
 class ModernChatBubble extends StatelessWidget {
@@ -62,13 +62,12 @@ class ModernChatBubble extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        // Fix #6: Use named constants where possible (AppColors.primarySubtle)
-                        color: AppColors.primary.withValues(alpha: 0.3),
+                        color: context.colors.primary.withValues(alpha: 0.3),
                         width: 2,
                       ),
                       boxShadow: <BoxShadow>[
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.2),
+                          color: context.colors.primary.withValues(alpha: 0.2),
                           blurRadius: 8,
                         ),
                       ],
@@ -104,28 +103,36 @@ class ModernChatBubble extends StatelessWidget {
                         colors: isUser
                             ? <Color>[
                                 // Fix #1: Slightly desaturated blue — less harsh than pure cyan
-                                AppColors.primary,
-                                AppColors.primary.withValues(alpha: 0.88),
+                                context.colors.primary,
+                                context.colors.primary.withValues(alpha: 0.88),
                               ]
                             : <Color>[
                                 // Fix #2: Slightly more opaque for better contrast against dark bg
-                                AppColors.glassSurface.withValues(alpha: 0.22),
-                                AppColors.glassSurface.withValues(alpha: 0.12),
+                                context.tokens.glassSurface.withValues(
+                                  alpha: 0.22,
+                                ),
+                                context.tokens.glassSurface.withValues(
+                                  alpha: 0.12,
+                                ),
                               ],
                       ),
                       // Fix #7: Use shared _bubbleRadius
                       borderRadius: _bubbleRadius,
                       border: Border.all(
                         color: isUser
-                            ? AppColors.primary.withValues(alpha: 0.5)
+                            ? context.colors.primary.withValues(alpha: 0.5)
                             // Fix #2: Slightly stronger border on AI bubble for definition
-                            : AppColors.glassBorder.withValues(alpha: 0.55),
+                            : context.tokens.glassBorder.withValues(
+                                alpha: 0.55,
+                              ),
                         width: 1.5,
                       ),
                       boxShadow: <BoxShadow>[
                         BoxShadow(
                           color:
-                              (isUser ? AppColors.primary : AppColors.surface)
+                              (isUser
+                                      ? context.colors.primary
+                                      : context.colors.surface)
                                   .withValues(alpha: 0.2),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
@@ -153,7 +160,9 @@ class ModernChatBubble extends StatelessWidget {
                       child: Text(
                         timestamp!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.onSurface.withValues(alpha: 0.5),
+                          color: context.colors.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                           fontSize: 10,
                         ),
                       ),

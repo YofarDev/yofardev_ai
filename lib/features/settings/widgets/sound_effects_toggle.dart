@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
 class SoundEffectsToggle extends StatelessWidget {
@@ -19,13 +19,13 @@ class SoundEffectsToggle extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            AppColors.glassSurface.withValues(alpha: 0.12),
-            AppColors.glassSurface.withValues(alpha: 0.06),
+            context.tokens.glassSurface.withValues(alpha: 0.12),
+            context.tokens.glassSurface.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.glassBorder.withValues(alpha: 0.4),
+          color: context.tokens.glassBorder.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -39,34 +39,34 @@ class SoundEffectsToggle extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: <Color>[
-                      AppColors.warning.withValues(alpha: 0.2),
-                      AppColors.warning.withValues(alpha: 0.1),
+                      context.tokens.warning.withValues(alpha: 0.2),
+                      context.tokens.warning.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.volume_up_outlined,
-                  color: AppColors.warning,
+                  color: context.tokens.warning,
                   size: 20,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
                 AppLocalizations.of(context).enableSoundEffects,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: AppColors.onSurface),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: context.colors.onSurface,
+                ),
               ),
             ],
           ),
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppColors.primary,
-            activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
-            inactiveThumbColor: AppColors.onSurface.withValues(alpha: 0.5),
-            inactiveTrackColor: AppColors.onSurface.withValues(alpha: 0.2),
+            activeThumbColor: context.colors.primary,
+            activeTrackColor: context.colors.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: context.colors.onSurface.withValues(alpha: 0.5),
+            inactiveTrackColor: context.colors.onSurface.withValues(alpha: 0.2),
           ),
         ],
       ),

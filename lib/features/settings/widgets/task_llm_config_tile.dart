@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
@@ -21,13 +21,13 @@ class TaskLlmConfigTile extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: <Color>[
-              AppColors.glassSurface.withValues(alpha: 0.12),
-              AppColors.glassSurface.withValues(alpha: 0.06),
+              context.tokens.glassSurface.withValues(alpha: 0.12),
+              context.tokens.glassSurface.withValues(alpha: 0.06),
             ],
           ),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.glassBorder.withValues(alpha: 0.3),
+            color: context.tokens.glassBorder.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),
@@ -36,7 +36,7 @@ class TaskLlmConfigTile extends StatelessWidget {
           children: <Widget>[
             Icon(
               Icons.psychology_outlined,
-              color: AppColors.onSurface.withValues(alpha: 0.7),
+              color: context.colors.onSurface.withValues(alpha: 0.7),
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -47,7 +47,7 @@ class TaskLlmConfigTile extends StatelessWidget {
                   Text(
                     l10n.taskLlmConfig,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.onSurface,
+                      color: context.colors.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -55,7 +55,7 @@ class TaskLlmConfigTile extends StatelessWidget {
                   Text(
                     l10n.taskLlmConfigDescription,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurface.withValues(alpha: 0.6),
+                      color: context.colors.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -63,7 +63,7 @@ class TaskLlmConfigTile extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.onSurface.withValues(alpha: 0.3),
+              color: context.colors.onSurface.withValues(alpha: 0.3),
               size: 24,
             ),
           ],

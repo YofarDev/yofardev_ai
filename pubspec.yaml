@@ -85,3 +85,4 @@ flutter:
     - assets/txt/
     - assets/onnx/
     - assets/voice_styles/
+    - assets/fonts/google_fonts/

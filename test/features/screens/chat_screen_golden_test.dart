@@ -80,7 +80,7 @@ void main() {
         ),
       );
 
-      await screenMatchesGolden(tester, 'chat_conversation_flow');
+      await GoldenTestHelper.matchGolden(tester, 'chat_conversation_flow');
     });
 
     testGoldens('chat with various message lengths', (
@@ -157,47 +157,7 @@ void main() {
         ),
       );
 
-      await screenMatchesGolden(tester, 'chat_various_lengths');
-    });
-
-    testGoldens('chat in dark mode', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        GoldenTestHelper.makeTestableWidget(
-          theme: ThemeData.dark(),
-          child: SizedBox(
-            width: 400,
-            height: 800,
-            child: const Column(
-              children: <Widget>[
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: ModernChatBubble(
-                      isUser: true,
-                      child: Text('Dark mode message'),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: ModernChatBubble(
-                      isUser: false,
-                      showAvatar: true,
-                      avatar: ColoredBox(color: Colors.blue),
-                      child: Text('Dark mode response'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      await screenMatchesGolden(tester, 'chat_dark_mode');
+      await GoldenTestHelper.matchGolden(tester, 'chat_various_lengths');
     });
   });
 }

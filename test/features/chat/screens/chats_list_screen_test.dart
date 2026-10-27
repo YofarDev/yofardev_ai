@@ -6,6 +6,7 @@ import 'package:nested/nested.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
+import 'package:yofardev_ai/core/design/theme/app_theme.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_cubit.dart';
 import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
@@ -14,6 +15,7 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/chat/screens/chats_list_screen.dart';
 import 'package:yofardev_ai/features/chat/widgets/chat_list_container.dart';
 import 'package:yofardev_ai/features/chat/widgets/chat_list_empty_state.dart';
+import 'package:yofardev_ai/features/chat/widgets/chat_list_shimmer_loading.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
@@ -91,11 +93,12 @@ void main() {
           BlocProvider<AvatarCubit>.value(value: mockAvatarCubit),
           BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
         ],
-        child: const MaterialApp(
-          locale: Locale('en'),
+        child: MaterialApp(
+          theme: AppTheme.dark,
+          locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: ChatsListPage(),
+          home: const ChatsListPage(),
         ),
       );
     }
@@ -124,7 +127,7 @@ void main() {
 
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(ChatListShimmerLoading), findsOneWidget);
     });
 
     testWidgets('shows empty state when chat list is empty', (

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/models/llm_config.dart';
-import '../../../../../core/res/app_colors.dart';
+import '../../../../../core/design/design.dart';
 import 'styled_dropdown.dart';
 
 /// Dropdown widget for selecting LLM configuration for a specific task
@@ -41,18 +41,18 @@ class TaskDropdown extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: <Color>[
-                    AppColors.glassSurface.withValues(alpha: 0.16),
-                    AppColors.glassSurface.withValues(alpha: 0.08),
+                    context.tokens.glassSurface.withValues(alpha: 0.16),
+                    context.tokens.glassSurface.withValues(alpha: 0.08),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: AppColors.glassBorder.withValues(alpha: 0.4),
+                  color: context.tokens.glassBorder.withValues(alpha: 0.4),
                   width: 1.5,
                 ),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: AppColors.surface.withValues(alpha: 0.3),
+                    color: context.colors.surface.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -71,13 +71,17 @@ class TaskDropdown extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: <Color>[
-                              AppColors.primary.withValues(alpha: 0.15),
-                              AppColors.secondary.withValues(alpha: 0.1),
+                              context.colors.primary.withValues(alpha: 0.15),
+                              context.colors.secondary.withValues(alpha: 0.1),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(icon, color: AppColors.primary, size: 20),
+                        child: Icon(
+                          icon,
+                          color: context.colors.primary,
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -89,7 +93,7 @@ class TaskDropdown extends StatelessWidget {
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.onSurface,
+                                    color: context.colors.onSurface,
                                     letterSpacing: -0.3,
                                   ),
                             ),
@@ -98,7 +102,7 @@ class TaskDropdown extends StatelessWidget {
                               description,
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    color: AppColors.onSurface.withValues(
+                                    color: context.colors.onSurface.withValues(
                                       alpha: 0.5,
                                     ),
                                     fontSize: 11,

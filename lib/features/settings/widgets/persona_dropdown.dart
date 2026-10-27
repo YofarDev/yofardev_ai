@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/chat.dart';
 
@@ -24,13 +24,13 @@ class PersonaDropdown extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            AppColors.glassSurface.withValues(alpha: 0.12),
-            AppColors.glassSurface.withValues(alpha: 0.06),
+            context.tokens.glassSurface.withValues(alpha: 0.12),
+            context.tokens.glassSurface.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.glassBorder.withValues(alpha: 0.4),
+          color: context.tokens.glassBorder.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -46,7 +46,7 @@ class PersonaDropdown extends StatelessWidget {
                 Text(
                   l10n.personaAssistant,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.onSurface.withValues(alpha: 0.7),
+                    color: context.colors.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -54,10 +54,10 @@ class PersonaDropdown extends StatelessWidget {
                   child: DropdownButton<ChatPersona>(
                     value: value,
                     isExpanded: true,
-                    dropdownColor: AppColors.surface,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: AppColors.onSurface),
+                    dropdownColor: context.colors.surface,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: context.colors.onSurface,
+                    ),
                     items: ChatPersona.values
                         .map<DropdownMenuItem<ChatPersona>>((
                           ChatPersona personaValue,
@@ -66,8 +66,8 @@ class PersonaDropdown extends StatelessWidget {
                             value: personaValue,
                             child: Text(
                               _personaName(l10n, personaValue),
-                              style: const TextStyle(
-                                color: AppColors.onSurface,
+                              style: TextStyle(
+                                color: context.colors.onSurface,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -77,7 +77,7 @@ class PersonaDropdown extends StatelessWidget {
                     onChanged: (ChatPersona? newValue) {
                       if (newValue != null) onChanged(newValue);
                     },
-                    iconEnabledColor: AppColors.onSurface.withValues(
+                    iconEnabledColor: context.colors.onSurface.withValues(
                       alpha: 0.7,
                     ),
                   ),
@@ -86,7 +86,7 @@ class PersonaDropdown extends StatelessWidget {
                 Text(
                   _personaDescription(l10n, value),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.onSurface.withValues(alpha: 0.65),
+                    color: context.colors.onSurface.withValues(alpha: 0.65),
                   ),
                 ),
               ],

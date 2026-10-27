@@ -2,9 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../res/app_colors.dart';
+import '../design/design.dart';
 
-/// Modern glassmorphic icon button with hover and press states
+// M3 replaces this with core/design/components/app_icon_button.dart.
+/// Modern glassmorphic icon button with hover and press states.
 class AppIconButton extends StatefulWidget {
   const AppIconButton({
     super.key,
@@ -32,6 +33,8 @@ class _AppIconButtonState extends State<AppIconButton>
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = context.colors;
+    final AppTokens tokens = context.tokens;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -52,14 +55,14 @@ class _AppIconButtonState extends State<AppIconButton>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: <Color>[
-                AppColors.glassSurface.withValues(
+                tokens.glassSurface.withValues(
                   alpha: _isPressed
                       ? 0.3
                       : _isHovered
                       ? 0.2
                       : 0.15,
                 ),
-                AppColors.glassSurface.withValues(
+                tokens.glassSurface.withValues(
                   alpha: _isPressed
                       ? 0.15
                       : _isHovered
@@ -70,7 +73,7 @@ class _AppIconButtonState extends State<AppIconButton>
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppColors.glassBorder.withValues(
+              color: tokens.glassBorder.withValues(
                 alpha: _isPressed
                     ? 0.6
                     : _isHovered
@@ -82,7 +85,7 @@ class _AppIconButtonState extends State<AppIconButton>
             boxShadow: <BoxShadow>[
               if (_isHovered || _isPressed)
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.2),
+                  color: colors.primary.withValues(alpha: 0.2),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -97,7 +100,7 @@ class _AppIconButtonState extends State<AppIconButton>
                 icon: Icon(
                   widget.icon,
                   size: widget.iconSize,
-                  color: _isHovered ? AppColors.primary : AppColors.onSurface,
+                  color: _isHovered ? colors.primary : colors.onSurface,
                 ),
                 style: IconButton.styleFrom(
                   shape: RoundedRectangleBorder(

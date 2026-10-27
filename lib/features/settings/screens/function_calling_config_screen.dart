@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
 import '../widgets/function_calling_section.dart';
@@ -84,7 +84,7 @@ class _FunctionCallingConfigScreenState
           content: Text(
             AppLocalizations.of(context).settings_functionCalling_saved,
           ),
-          backgroundColor: AppColors.success,
+          backgroundColor: context.tokens.success,
         ),
       );
       Navigator.of(context).pop();
@@ -104,11 +104,11 @@ class _FunctionCallingConfigScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: <Color>[AppColors.background, AppColors.surface],
+            colors: <Color>[context.tokens.background, context.colors.surface],
           ),
         ),
         child: Column(
@@ -127,7 +127,9 @@ class _FunctionCallingConfigScreenState
                           context,
                         ).settings_functionCalling_description,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.onSurface.withValues(alpha: 0.7),
+                          color: context.colors.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                       ),
                     ),
@@ -141,7 +143,9 @@ class _FunctionCallingConfigScreenState
                               title: AppLocalizations.of(
                                 context,
                               ).settings_googleSearch,
-                              apiName: 'Google Search API',
+                              apiName: AppLocalizations.of(
+                                context,
+                              ).googleSearchApiTitle,
                               icon: '🔍',
                               isEnabled: state.googleSearchEnabled,
                               onToggle: (bool value) {
@@ -155,7 +159,9 @@ class _FunctionCallingConfigScreenState
                                   labelText: AppLocalizations.of(
                                     context,
                                   ).settings_apiKey,
-                                  hintText: 'Enter your Google Search API key',
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  ).googleSearchApiKeyHint,
                                 ),
                                 const SizedBox(height: 12),
                                 _buildTextField(
@@ -163,7 +169,9 @@ class _FunctionCallingConfigScreenState
                                   labelText: AppLocalizations.of(
                                     context,
                                   ).settings_engineId,
-                                  hintText: 'Enter your Search Engine ID',
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  ).searchEngineIdHint,
                                 ),
                               ],
                             ),
@@ -172,7 +180,9 @@ class _FunctionCallingConfigScreenState
                               title: AppLocalizations.of(
                                 context,
                               ).settings_weather,
-                              apiName: 'OpenWeather API',
+                              apiName: AppLocalizations.of(
+                                context,
+                              ).openWeatherApiTitle,
                               icon: '🌤️',
                               isEnabled: state.openWeatherEnabled,
                               onToggle: (bool value) {
@@ -186,14 +196,16 @@ class _FunctionCallingConfigScreenState
                                   labelText: AppLocalizations.of(
                                     context,
                                   ).settings_apiKey,
-                                  hintText: 'Enter your OpenWeather API key',
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  ).openWeatherApiKeyHint,
                                 ),
                               ],
                             ),
                             // News Section
                             FunctionCallingSection(
                               title: AppLocalizations.of(context).settings_news,
-                              apiName: 'New York Times API',
+                              apiName: AppLocalizations.of(context).nytApiTitle,
                               icon: '📰',
                               isEnabled: state.newYorkTimesEnabled,
                               onToggle: (bool value) {
@@ -207,7 +219,9 @@ class _FunctionCallingConfigScreenState
                                   labelText: AppLocalizations.of(
                                     context,
                                   ).settings_apiKey,
-                                  hintText: 'Enter your New York Times API key',
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  ).nytApiKeyHint,
                                 ),
                               ],
                             ),
@@ -238,7 +252,7 @@ class _FunctionCallingConfigScreenState
         hintText: hintText,
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: AppColors.surface.withValues(alpha: 0.5),
+        fillColor: context.colors.surface.withValues(alpha: 0.5),
       ),
       obscureText: true,
     );

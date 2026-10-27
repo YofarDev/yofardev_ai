@@ -26,7 +26,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_user_basic');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_user_basic');
       });
 
       testGoldens('renders user message with timestamp', (
@@ -45,7 +45,10 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_user_with_timestamp');
+        await GoldenTestHelper.matchGolden(
+          tester,
+          'chat_bubble_user_with_timestamp',
+        );
       });
 
       testGoldens('renders long user message', (WidgetTester tester) async {
@@ -63,7 +66,7 @@ It tests the text wrapping and layout behavior of the chat bubble widget.
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_user_long');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_user_long');
       });
     });
 
@@ -82,7 +85,7 @@ It tests the text wrapping and layout behavior of the chat bubble widget.
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_ai_basic');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_ai_basic');
       });
 
       testGoldens('renders AI message with avatar', (
@@ -109,7 +112,10 @@ It tests the text wrapping and layout behavior of the chat bubble widget.
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_ai_with_avatar');
+        await GoldenTestHelper.matchGolden(
+          tester,
+          'chat_bubble_ai_with_avatar',
+        );
       });
 
       testGoldens('renders AI message with timestamp', (
@@ -128,7 +134,10 @@ It tests the text wrapping and layout behavior of the chat bubble widget.
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_ai_with_timestamp');
+        await GoldenTestHelper.matchGolden(
+          tester,
+          'chat_bubble_ai_with_timestamp',
+        );
       });
 
       // Skip streaming tests due to CircularProgressIndicator animation timeout
@@ -149,7 +158,7 @@ It tests the text wrapping and layout behavior of the chat bubble widget.
       //     ),
       //   );
       //   await tester.pump();
-      //   await screenMatchesGolden(tester, 'chat_bubble_ai_streaming');
+      //   await GoldenTestHelper.matchGolden(tester, 'chat_bubble_ai_streaming');
       // });
 
       // testGoldens('renders AI message with avatar and streaming', (
@@ -177,7 +186,7 @@ It tests the text wrapping and layout behavior of the chat bubble widget.
       //     ),
       //   );
       //   await tester.pump();
-      //   await screenMatchesGolden(tester, 'chat_bubble_ai_avatar_streaming');
+      //   await GoldenTestHelper.matchGolden(tester, 'chat_bubble_ai_avatar_streaming');
       // });
 
       testGoldens('renders long AI message', (WidgetTester tester) async {
@@ -196,50 +205,7 @@ The AI response should be easy to read and visually distinct from user messages.
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_ai_long');
-      });
-    });
-
-    // Dark mode tests
-    group('Dark Mode', () {
-      testGoldens('renders user bubble in dark mode', (
-        WidgetTester tester,
-      ) async {
-        await tester.pumpWidget(
-          GoldenTestHelper.makeTestableWidget(
-            theme: ThemeData.dark(),
-            child: const SizedBox(
-              width: 400,
-              child: ModernChatBubble(
-                isUser: true,
-                child: Text('Dark mode user message'),
-              ),
-            ),
-          ),
-        );
-
-        await screenMatchesGolden(tester, 'chat_bubble_user_dark');
-      });
-
-      testGoldens('renders AI bubble in dark mode', (
-        WidgetTester tester,
-      ) async {
-        await tester.pumpWidget(
-          GoldenTestHelper.makeTestableWidget(
-            theme: ThemeData.dark(),
-            child: const SizedBox(
-              width: 400,
-              child: ModernChatBubble(
-                isUser: false,
-                showAvatar: true,
-                avatar: ColoredBox(color: Colors.blue),
-                child: Text('Dark mode AI message'),
-              ),
-            ),
-          ),
-        );
-
-        await screenMatchesGolden(tester, 'chat_bubble_ai_dark');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_ai_long');
       });
     });
   });

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/models/global_memory.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/router/route_constants.dart';
 import '../presentation/bloc/settings_cubit.dart';
 import '../presentation/bloc/settings_state.dart';
@@ -25,13 +25,13 @@ class MemoryConfigTile extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: <Color>[
-              AppColors.glassSurface.withValues(alpha: 0.12),
-              AppColors.glassSurface.withValues(alpha: 0.06),
+              context.tokens.glassSurface.withValues(alpha: 0.12),
+              context.tokens.glassSurface.withValues(alpha: 0.06),
             ],
           ),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.glassBorder.withValues(alpha: 0.3),
+            color: context.tokens.glassBorder.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),
@@ -40,7 +40,7 @@ class MemoryConfigTile extends StatelessWidget {
           children: <Widget>[
             Icon(
               Icons.memory,
-              color: AppColors.onSurface.withValues(alpha: 0.7),
+              color: context.colors.onSurface.withValues(alpha: 0.7),
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -51,7 +51,7 @@ class MemoryConfigTile extends StatelessWidget {
                   Text(
                     l10n.memory,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.onSurface,
+                      color: context.colors.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -59,7 +59,7 @@ class MemoryConfigTile extends StatelessWidget {
                   Text(
                     l10n.memoryDescription,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurface.withValues(alpha: 0.6),
+                      color: context.colors.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -67,7 +67,7 @@ class MemoryConfigTile extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.onSurface.withValues(alpha: 0.3),
+              color: context.colors.onSurface.withValues(alpha: 0.3),
               size: 24,
             ),
           ],
@@ -104,7 +104,7 @@ class _MemoryPageState extends State<MemoryPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: <Color>[AppColors.background, AppColors.surface],
+            colors: <Color>[context.tokens.background, context.colors.surface],
           ),
         ),
         child: Column(
@@ -119,13 +119,13 @@ class _MemoryPageState extends State<MemoryPage> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: <Color>[
-                      AppColors.surface.withValues(alpha: 0.9),
-                      AppColors.surface.withValues(alpha: 0.7),
+                      context.colors.surface.withValues(alpha: 0.9),
+                      context.colors.surface.withValues(alpha: 0.7),
                     ],
                   ),
                   border: Border(
                     bottom: BorderSide(
-                      color: AppColors.glassBorder.withValues(alpha: 0.3),
+                      color: context.tokens.glassBorder.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -136,7 +136,7 @@ class _MemoryPageState extends State<MemoryPage> {
                       icon: const Icon(Icons.arrow_back),
                       onPressed: () => Navigator.of(context).pop(),
                       tooltip: AppLocalizations.of(context).commonBack,
-                      color: AppColors.onSurface.withValues(alpha: 0.7),
+                      color: context.colors.onSurface.withValues(alpha: 0.7),
                     ),
                     Expanded(
                       child: Center(
@@ -164,7 +164,7 @@ class _MemoryPageState extends State<MemoryPage> {
                           l10n.memoryPageSubtitle,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
-                                color: AppColors.onSurface.withValues(
+                                color: context.colors.onSurface.withValues(
                                   alpha: 0.7,
                                 ),
                               ),
@@ -206,13 +206,13 @@ class _MemoryToggle extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            AppColors.glassSurface.withValues(alpha: 0.12),
-            AppColors.glassSurface.withValues(alpha: 0.06),
+            context.tokens.glassSurface.withValues(alpha: 0.12),
+            context.tokens.glassSurface.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.glassBorder.withValues(alpha: 0.4),
+          color: context.tokens.glassBorder.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -226,24 +226,24 @@ class _MemoryToggle extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: <Color>[
-                      AppColors.primary.withValues(alpha: 0.2),
-                      AppColors.primary.withValues(alpha: 0.1),
+                      context.colors.primary.withValues(alpha: 0.2),
+                      context.colors.primary.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.psychology_outlined,
-                  color: AppColors.primary,
+                  color: context.colors.primary,
                   size: 20,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
                 AppLocalizations.of(context).enableMemory,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: AppColors.onSurface),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: context.colors.onSurface,
+                ),
               ),
             ],
           ),
@@ -251,10 +251,10 @@ class _MemoryToggle extends StatelessWidget {
             value: value,
             onChanged: (bool enabled) =>
                 context.read<SettingsCubit>().setMemoryEnabled(enabled),
-            activeThumbColor: AppColors.primary,
-            activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
-            inactiveThumbColor: AppColors.onSurface.withValues(alpha: 0.5),
-            inactiveTrackColor: AppColors.onSurface.withValues(alpha: 0.2),
+            activeThumbColor: context.colors.primary,
+            activeTrackColor: context.colors.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: context.colors.onSurface.withValues(alpha: 0.5),
+            inactiveTrackColor: context.colors.onSurface.withValues(alpha: 0.2),
           ),
         ],
       ),
@@ -275,13 +275,13 @@ class _EmptyMemoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            AppColors.glassSurface.withValues(alpha: 0.12),
-            AppColors.glassSurface.withValues(alpha: 0.06),
+            context.tokens.glassSurface.withValues(alpha: 0.12),
+            context.tokens.glassSurface.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.glassBorder.withValues(alpha: 0.4),
+          color: context.tokens.glassBorder.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -289,7 +289,7 @@ class _EmptyMemoryCard extends StatelessWidget {
         children: <Widget>[
           Icon(
             Icons.hourglass_empty_rounded,
-            color: AppColors.onSurface.withValues(alpha: 0.4),
+            color: context.colors.onSurface.withValues(alpha: 0.4),
             size: 32,
           ),
           const SizedBox(height: 12),
@@ -297,7 +297,7 @@ class _EmptyMemoryCard extends StatelessWidget {
             l10n.memoryEmpty,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurface.withValues(alpha: 0.6),
+              color: context.colors.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -322,10 +322,10 @@ class _MemoryItemCard extends StatelessWidget {
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.3),
+          color: context.colors.error.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(Icons.delete_outline, color: AppColors.error),
+        child: Icon(Icons.delete_outline, color: context.colors.error),
       ),
       onDismissed: (_) {
         context.read<SettingsCubit>().deleteMemoryItem(item.id);
@@ -340,13 +340,13 @@ class _MemoryItemCard extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: <Color>[
-              AppColors.glassSurface.withValues(alpha: 0.12),
-              AppColors.glassSurface.withValues(alpha: 0.06),
+              context.tokens.glassSurface.withValues(alpha: 0.12),
+              context.tokens.glassSurface.withValues(alpha: 0.06),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.glassBorder.withValues(alpha: 0.4),
+            color: context.tokens.glassBorder.withValues(alpha: 0.4),
             width: 1.5,
           ),
         ),
@@ -354,16 +354,16 @@ class _MemoryItemCard extends StatelessWidget {
           children: <Widget>[
             Icon(
               Icons.lightbulb_outline,
-              color: AppColors.warning.withValues(alpha: 0.8),
+              color: context.tokens.warning.withValues(alpha: 0.8),
               size: 20,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 item.text,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurface),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.colors.onSurface,
+                ),
               ),
             ),
           ],
@@ -387,13 +387,13 @@ class _ClearMemoryButton extends StatelessWidget {
         onPressed: () => _confirmClear(context, l10n),
         icon: Icon(
           Icons.delete_sweep_outlined,
-          color: AppColors.error.withValues(alpha: 0.8),
+          color: context.colors.error.withValues(alpha: 0.8),
         ),
         label: Text(l10n.clearMemory),
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.error,
+          foregroundColor: context.colors.error,
           side: BorderSide(
-            color: AppColors.error.withValues(alpha: 0.5),
+            color: context.colors.error.withValues(alpha: 0.5),
             width: 1.5,
           ),
           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -407,7 +407,7 @@ class _ClearMemoryButton extends StatelessWidget {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.surface,
+          backgroundColor: context.colors.surface,
           title: Text(l10n.clearMemory),
           content: Text(l10n.clearMemoryConfirmation),
           actions: <Widget>[

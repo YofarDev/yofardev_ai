@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
 class UsernameField extends StatelessWidget {
@@ -14,13 +14,13 @@ class UsernameField extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            AppColors.glassSurface.withValues(alpha: 0.12),
-            AppColors.glassSurface.withValues(alpha: 0.06),
+            context.tokens.glassSurface.withValues(alpha: 0.12),
+            context.tokens.glassSurface.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.glassBorder.withValues(alpha: 0.4),
+          color: context.tokens.glassBorder.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -32,15 +32,15 @@ class UsernameField extends StatelessWidget {
             controller: controller,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurface),
+            ).textTheme.bodyMedium?.copyWith(color: context.colors.onSurface),
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context).username,
               hintStyle: TextStyle(
-                color: AppColors.onSurface.withValues(alpha: 0.5),
+                color: context.colors.onSurface.withValues(alpha: 0.5),
               ),
               prefixIcon: Icon(
                 Icons.person_outline,
-                color: AppColors.onSurface.withValues(alpha: 0.7),
+                color: context.colors.onSurface.withValues(alpha: 0.7),
               ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(

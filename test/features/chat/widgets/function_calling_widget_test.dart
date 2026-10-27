@@ -1,10 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:yofardev_ai/core/design/theme/app_theme.dart';
+import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/chat/widgets/function_calling_widget.dart';
+
+Widget _app({required Widget home, Locale locale = const Locale('en')}) {
+  return MaterialApp(
+    theme: AppTheme.dark,
+    locale: locale,
+    localizationsDelegates: const <LocalizationsDelegate<Object>>[
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: home,
+  );
+}
 
 void main() {
   group('FunctionCallingWidget', () {
+    testWidgets('localizes the result title in French', (
+      WidgetTester tester,
+    ) async {
+      const String functionCallText = '''
+[
+  {
+    "name": "getWeather",
+    "parameters": {"location": "Paris"},
+    "result": {"temperature": 15}
+  }
+]''';
+
+      await tester.pumpWidget(
+        _app(
+          locale: const Locale('fr'),
+          home: const Scaffold(
+            body: FunctionCallingWidget(
+              functionCallingText: functionCallText,
+              showEverything: true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Résultat : GetWeather'), findsOneWidget);
+    });
+
     testWidgets(
       'renders function call without result when showEverything is false',
       (WidgetTester tester) async {
@@ -18,7 +63,7 @@ void main() {
 ]''';
 
         await tester.pumpWidget(
-          const MaterialApp(
+          _app(
             home: Scaffold(
               body: FunctionCallingWidget(
                 functionCallingText: functionCallText,
@@ -46,7 +91,7 @@ void main() {
 ]''';
 
         await tester.pumpWidget(
-          const MaterialApp(
+          _app(
             home: Scaffold(
               body: FunctionCallingWidget(
                 functionCallingText: functionCallText,
@@ -78,7 +123,7 @@ void main() {
 ]''';
 
       await tester.pumpWidget(
-        const MaterialApp(
+        _app(
           home: Scaffold(
             body: FunctionCallingWidget(
               functionCallingText: functionCallText,
@@ -108,7 +153,7 @@ void main() {
 ]''';
 
       await tester.pumpWidget(
-        const MaterialApp(
+        _app(
           home: Scaffold(
             body: FunctionCallingWidget(
               functionCallingText: functionCallText,

@@ -2,6 +2,33 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+/// Whether the file at [path] may import `package:rive/`: only the avatar
+/// presentation layer and the UI-kit Rive widgets (`core/design/rive/`).
+bool riveImportAllowed(String path) {
+  final String normalised = path.replaceAll('\\', '/');
+  return normalised.startsWith('lib/features/avatar/presentation/') ||
+      normalised.startsWith('lib/core/design/rive/');
+}
+
+/// Whether [line] is a hard-coded Material color (`Colors.red`), the
+/// `Colors.transparent` constant excepted.
+bool hasHardCodedColor(String line) =>
+    RegExp(r'(^|[^A-Za-z])Colors\.(?!transparent\b)').hasMatch(line);
+
+/// Whether [content] reads the raw palette instead of the theme.
+bool usesRawPalette(String content) =>
+    content.contains('AppColors') || content.contains('AppPalette');
+
+/// Whether [line] imports `package:google_fonts`.
+bool importsGoogleFonts(String line) => line.contains('package:google_fonts');
+
+/// Whether [line] is an import or export directive of `package:rive/`.
+bool directiveUsesRive(String line) {
+  final String trimmed = line.trim();
+  return (trimmed.startsWith('import') || trimmed.startsWith('export')) &&
+      trimmed.contains('package:rive/');
+}
+
 void main() {
   final List<File> files = Directory('lib')
       .listSync(recursive: true)
@@ -184,4 +211,111 @@ void main() {
       isTrue,
     );
   });
+
+  /// `lib/` files outside `lib/core/design/` (the only home of raw colors).
+  List<File> filesOutsideDesign() =>
+      files.where((File f) => !f.path.startsWith('lib/core/design/')).toList();
+
+  test('AppColors and AppPalette are used only inside core/design', () {
+    for (final File f in filesOutsideDesign()) {
+      final String content = f.readAsStringSync();
+      expect(
+        usesRawPalette(content),
+        isFalse,
+        reason:
+            '${f.path}: read colors from the theme (context.colors / '
+            'context.tokens), not from the raw palette',
+      );
+    }
+  });
+
+  test('no hard-coded Colors.* outside core/design (except transparent)', () {
+    for (final File f in filesOutsideDesign()) {
+      for (final String line in f.readAsLinesSync()) {
+        expect(
+          hasHardCodedColor(line),
+          isFalse,
+          reason: '${f.path}: hard-coded Material color: $line',
+        );
+      }
+    }
+  });
+
+  test('google_fonts is imported only by core/design and main.dart', () {
+    for (final File f in filesOutsideDesign()) {
+      if (f.path == 'lib/main.dart') continue;
+      for (final String line in importsOf(f)) {
+        expect(
+          importsGoogleFonts(line),
+          isFalse,
+          reason: '${f.path}: fonts belong to the theme: $line',
+        );
+      }
+    }
+  });
+
+  test('color rules detect deliberate violations (fixture)', () {
+    final String content = File(
+      'test/fixtures/architecture/hardcoded_color_fixture.dart',
+    ).readAsStringSync();
+    expect(usesRawPalette(content), isTrue);
+    expect(content.split('\n').any(hasHardCodedColor), isTrue);
+    expect(content.split('\n').any(importsGoogleFonts), isTrue);
+    // `Colors.transparent` alone must stay allowed.
+    expect(hasHardCodedColor('color: Colors.transparent'), isFalse);
+  });
+
+  test(
+    'riveImportAllowed accepts only avatar presentation and design/rive',
+    () {
+      expect(
+        riveImportAllowed('lib/features/avatar/presentation/x.dart'),
+        isTrue,
+      );
+      expect(riveImportAllowed('lib/core/design/rive/x.dart'), isTrue);
+      expect(riveImportAllowed('lib/features/chat/x.dart'), isFalse);
+      expect(riveImportAllowed('lib/core/design/x.dart'), isFalse);
+      // Windows-style separators are normalised.
+      expect(riveImportAllowed(r'lib\core\design\rive\x.dart'), isTrue);
+      expect(riveImportAllowed(r'lib\core\design\x.dart'), isFalse);
+      // Look-alike prefixes are not allowed.
+      expect(riveImportAllowed('lib/core/design/rive_extra/x.dart'), isFalse);
+      expect(
+        riveImportAllowed('lib/features/avatar/presentation_old/x.dart'),
+        isFalse,
+      );
+    },
+  );
+
+  test('directiveUsesRive catches imports and exports of package:rive', () {
+    expect(directiveUsesRive("import 'package:rive/rive.dart';"), isTrue);
+    expect(directiveUsesRive("export 'package:rive/rive.dart';"), isTrue);
+    expect(
+      directiveUsesRive("  export 'package:rive/rive.dart' show X;"),
+      isTrue,
+    );
+    expect(
+      directiveUsesRive("import 'package:flutter/material.dart';"),
+      isFalse,
+    );
+    expect(directiveUsesRive('// see package:rive/rive.dart docs'), isFalse);
+  });
+
+  test(
+    'package:rive is imported or exported only where riveImportAllowed permits',
+    () {
+      for (final File f in files) {
+        for (final String line in f.readAsLinesSync()) {
+          if (!directiveUsesRive(line)) continue;
+          expect(
+            riveImportAllowed(f.path),
+            isTrue,
+            reason:
+                '${f.path}: Rive types belong in lib/features/avatar/'
+                'presentation/ or lib/core/design/rive/: $line',
+          );
+        }
+      }
+    },
+  );
 }

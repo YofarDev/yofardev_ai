@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/models/chat_status.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
@@ -545,4 +546,8 @@ class MockAppLifecycleService extends Mock implements AppLifecycleService {
 
   @override
   Stream<String> get chatChangedEvents => const Stream<String>.empty();
+
+  @override
+  Stream<ChatStatus> get streamingStateChangedEvents =>
+      const Stream<ChatStatus>.empty();
 }

@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 import '../../../core/models/sound_effects.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/router/route_constants.dart';
 import '../../../core/models/chat_entry.dart';
 import '../widgets/chat_avatar.dart';
@@ -77,8 +77,8 @@ class ChatMessageItem extends StatelessWidget {
                         : entries[index].getMessage(isFromUser: isFromUser),
                     style: TextStyle(
                       color: isFromUser
-                          ? AppColors.onPrimary
-                          : AppColors.onSurface,
+                          ? context.colors.onPrimary
+                          : context.colors.onSurface,
                       fontSize: 15,
                     ),
                   ),
@@ -139,18 +139,18 @@ class _SoundEffectButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.glassSurface.withValues(alpha: 0.2),
+          color: context.tokens.glassSurface.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.glassBorder.withValues(alpha: 0.3),
+            color: context.tokens.glassBorder.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
         child: Icon(
           Icons.volume_up_outlined,
           color: isFromUser
-              ? AppColors.onPrimary.withValues(alpha: 0.8)
-              : AppColors.primary,
+              ? context.colors.onPrimary.withValues(alpha: 0.8)
+              : context.colors.primary,
           size: 16,
         ),
       ),
@@ -208,13 +208,13 @@ class _TypingIndicator extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: <Color>[
-                  AppColors.glassSurface.withValues(alpha: 0.15),
-                  AppColors.glassSurface.withValues(alpha: 0.08),
+                  context.tokens.glassSurface.withValues(alpha: 0.15),
+                  context.tokens.glassSurface.withValues(alpha: 0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.glassBorder.withValues(alpha: 0.4),
+                color: context.tokens.glassBorder.withValues(alpha: 0.4),
                 width: 1.5,
               ),
             ),

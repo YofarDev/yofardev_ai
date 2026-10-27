@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../res/app_colors.dart';
+import '../design/design.dart';
 
 /// Three pulsing dots used as the typing indicator, replacing the v3 Lottie
 /// asset with pure Flutter animation.
@@ -29,6 +29,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
 
   @override
   Widget build(BuildContext context) {
+    final Color dotColor = context.colors.primary;
     return AnimatedBuilder(
       animation: _controller,
       builder: (BuildContext context, Widget? _) {
@@ -38,7 +39,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
             for (int i = 0; i < 3; i++)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 3),
-                child: _pulseDot(i),
+                child: _pulseDot(i, dotColor),
               ),
           ],
         );
@@ -46,7 +47,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
     );
   }
 
-  Widget _pulseDot(int index) {
+  Widget _pulseDot(int index, Color color) {
     // Staggered phase per dot: each peaks in turn within one cycle.
     final double phase = (_controller.value * 3 - index).clamp(0.0, 1.0);
     final double scale = 0.6 + 0.4 * (1.0 - (2.0 * phase - 1.0).abs());
@@ -55,10 +56,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
       child: Container(
         width: widget.size,
         height: widget.size,
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
     );
   }

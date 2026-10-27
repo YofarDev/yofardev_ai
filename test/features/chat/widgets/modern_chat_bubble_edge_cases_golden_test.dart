@@ -26,7 +26,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_emojis');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_emojis');
       });
 
       testGoldens('renders message with special characters', (
@@ -44,7 +44,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_special_chars');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_special_chars');
       });
 
       testGoldens('renders message with code/monospace', (
@@ -65,7 +65,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_code');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_code');
       });
 
       testGoldens('renders message with links', (WidgetTester tester) async {
@@ -81,7 +81,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_links');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_links');
       });
     });
 
@@ -96,7 +96,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_very_short');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_very_short');
       });
 
       testGoldens('renders empty message', (WidgetTester tester) async {
@@ -109,7 +109,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_empty');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_empty');
       });
 
       testGoldens('renders message with only spaces', (
@@ -124,7 +124,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_spaces');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_spaces');
       });
 
       testGoldens('renders extremely long single word', (
@@ -145,7 +145,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_long_word');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_long_word');
       });
 
       testGoldens('renders message with newlines', (WidgetTester tester) async {
@@ -163,7 +163,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_newlines');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_newlines');
       });
 
       testGoldens('renders message with many consecutive spaces', (
@@ -181,7 +181,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_many_spaces');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_many_spaces');
       });
     });
 
@@ -203,7 +203,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_many_emojis');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_many_emojis');
       });
 
       testGoldens('renders extremely long paragraph', (
@@ -224,7 +224,10 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_extremely_long');
+        await GoldenTestHelper.matchGolden(
+          tester,
+          'chat_bubble_extremely_long',
+        );
       });
     });
 
@@ -242,7 +245,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_arabic');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_arabic');
       });
 
       testGoldens('renders Chinese text', (WidgetTester tester) async {
@@ -258,7 +261,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_chinese');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_chinese');
       });
 
       testGoldens('renders Japanese text', (WidgetTester tester) async {
@@ -274,7 +277,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_japanese');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_japanese');
       });
 
       testGoldens('renders mixed scripts', (WidgetTester tester) async {
@@ -290,7 +293,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_mixed_scripts');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_mixed_scripts');
       });
     });
 
@@ -300,10 +303,6 @@ void main() {
       ) async {
         await tester.pumpWidget(
           GoldenTestHelper.makeTestableWidget(
-            theme: ThemeData(
-              brightness: Brightness.light,
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-            ),
             child: const SizedBox(
               width: 400,
               child: ModernChatBubble(
@@ -314,7 +313,7 @@ void main() {
           ),
         );
 
-        await screenMatchesGolden(tester, 'chat_bubble_high_contrast');
+        await GoldenTestHelper.matchGolden(tester, 'chat_bubble_high_contrast');
       });
     });
   });

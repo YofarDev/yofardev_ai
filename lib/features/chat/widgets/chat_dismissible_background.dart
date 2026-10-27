@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 
 /// Background widget shown when swiping a chat item to delete
 class ChatDismissibleBackground extends StatelessWidget {
@@ -12,26 +12,30 @@ class ChatDismissibleBackground extends StatelessWidget {
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.15),
+        color: context.colors.error.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.error.withValues(alpha: 0.4),
+          color: context.colors.error.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Text(
             'Delete',
             style: TextStyle(
-              color: AppColors.error,
+              color: context.colors.error,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
           ),
-          SizedBox(width: 8),
-          Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
+          const SizedBox(width: 8),
+          Icon(
+            Icons.delete_outline_rounded,
+            color: context.colors.error,
+            size: 22,
+          ),
         ],
       ),
     );

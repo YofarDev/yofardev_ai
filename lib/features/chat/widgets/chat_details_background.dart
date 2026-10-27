@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/res/app_colors.dart';
+import '../../../../core/design/design.dart';
 import '../presentation/bloc/chat_cubit.dart';
 import '../presentation/bloc/chat_state.dart';
 
@@ -16,11 +16,14 @@ class ChatDetailsBackground extends StatelessWidget {
           children: <Widget>[
             Positioned.fill(
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: <Color>[AppColors.background, AppColors.surface],
+                    colors: <Color>[
+                      context.tokens.background,
+                      context.colors.surface,
+                    ],
                   ),
                 ),
               ),
@@ -32,9 +35,9 @@ class ChatDetailsBackground extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: <Color>[
-                      AppColors.surface.withValues(alpha: 0.6),
-                      AppColors.surface.withValues(alpha: 0.3),
-                      AppColors.surface.withValues(alpha: 0.6),
+                      context.colors.surface.withValues(alpha: 0.6),
+                      context.colors.surface.withValues(alpha: 0.3),
+                      context.colors.surface.withValues(alpha: 0.6),
                     ],
                     stops: const <double>[0.0, 0.5, 1.0],
                   ),

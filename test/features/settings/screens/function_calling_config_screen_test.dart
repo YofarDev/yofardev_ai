@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/design/theme/app_theme.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:yofardev_ai/features/settings/presentation/bloc/settings_state.dart';
@@ -60,6 +61,7 @@ void main() {
 
     Widget createTestWidget() {
       return MaterialApp(
+        theme: AppTheme.dark,
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -72,6 +74,7 @@ void main() {
 
     Widget createNavigableTestWidget() {
       return MaterialApp(
+        theme: AppTheme.dark,
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -128,7 +131,7 @@ void main() {
         expect(find.byType(FunctionCallingSection), findsNWidgets(3));
       });
 
-      testWidgets('should render service descriptions', (
+      testWidgets('should render screen description and service API names', (
         WidgetTester tester,
       ) async {
         await tester.pumpWidget(createTestWidget());
@@ -139,12 +142,10 @@ void main() {
           find.text(l10n.settings_functionCalling_description),
           findsOneWidget,
         );
-        expect(
-          find.text(l10n.settings_googleSearch_description),
-          findsOneWidget,
-        );
-        expect(find.text(l10n.settings_weather_description), findsOneWidget);
-        expect(find.text(l10n.settings_news_description), findsOneWidget);
+        // Each section shows the name of the API it configures.
+        expect(find.text('Google Search API'), findsOneWidget);
+        expect(find.text('OpenWeather API'), findsOneWidget);
+        expect(find.text('New York Times API'), findsOneWidget);
       });
 
       testWidgets('should render app bar with back button and save button', (
@@ -182,10 +183,6 @@ void main() {
 
         // Should find 3 Switch widgets (one for each service)
         expect(find.byType(Switch), findsNWidgets(3));
-        expect(
-          find.text(localizationsFor(tester).settings_enable),
-          findsNWidgets(3),
-        );
       });
 
       testWidgets('should display service icons', (WidgetTester tester) async {

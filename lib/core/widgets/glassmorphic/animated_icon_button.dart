@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../res/app_colors.dart';
+import '../../design/design.dart';
 
 class AnimatedIconButton extends StatefulWidget {
   final IconData icon;
@@ -61,6 +61,7 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton>
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = context.colors;
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (BuildContext context, Widget? child) {
@@ -71,7 +72,7 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: widget.isActive
-                  ? (widget.activeColor ?? AppColors.primary).withValues(
+                  ? (widget.activeColor ?? colors.primary).withValues(
                       alpha: 0.15,
                     )
                   : Colors.transparent,
@@ -80,8 +81,8 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton>
               icon: Icon(
                 widget.icon,
                 color: widget.isActive
-                    ? (widget.activeColor ?? AppColors.primary)
-                    : AppColors.onSurface.withValues(alpha: 0.6),
+                    ? (widget.activeColor ?? colors.primary)
+                    : colors.onSurface.withValues(alpha: 0.6),
                 size: 22,
               ),
               onPressed: widget.onPressed,

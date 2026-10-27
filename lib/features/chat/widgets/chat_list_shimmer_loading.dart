@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 
 /// Shimmering placeholder for chat list during loading
 ///
@@ -16,8 +16,8 @@ class ChatListShimmerLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Shimmer.fromColors(
-        baseColor: AppColors.onSurface.withValues(alpha: 0.1),
-        highlightColor: AppColors.primary.withValues(alpha: 0.2),
+        baseColor: context.colors.onSurface.withValues(alpha: 0.1),
+        highlightColor: context.colors.primary.withValues(alpha: 0.2),
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: 5, // Show 5 placeholder items
@@ -42,13 +42,13 @@ class _ShimmerChatCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            AppColors.glassSurface.withValues(alpha: 0.12),
-            AppColors.glassSurface.withValues(alpha: 0.06),
+            context.tokens.glassSurface.withValues(alpha: 0.12),
+            context.tokens.glassSurface.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.glassBorder.withValues(alpha: 0.3),
+          color: context.tokens.glassBorder.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -82,7 +82,10 @@ class _ShimmerIndicatorDot extends StatelessWidget {
     return Container(
       width: 8,
       height: 8,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: context.tokens.highlight,
+      ),
     );
   }
 }
@@ -125,7 +128,7 @@ class _ShimmerTextLine extends StatelessWidget {
           width: widthFactor * 300, // Approximate max width
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.tokens.highlight,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -140,9 +143,9 @@ class _ShimmerChevron extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Icon(
+    return Icon(
       Icons.chevron_right_rounded,
-      color: Colors.white,
+      color: context.tokens.highlight,
       size: 18,
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/res/app_colors.dart';
+import '../../../../../core/design/design.dart';
 
 class TaskLlmBackgroundLayers extends StatelessWidget {
   const TaskLlmBackgroundLayers({super.key});
@@ -12,11 +12,14 @@ class TaskLlmBackgroundLayers extends StatelessWidget {
         children: <Widget>[
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: <Color>[AppColors.background, AppColors.surface],
+                  colors: <Color>[
+                    context.tokens.background,
+                    context.colors.surface,
+                  ],
                 ),
               ),
             ),
@@ -28,9 +31,9 @@ class TaskLlmBackgroundLayers extends StatelessWidget {
                   center: Alignment.topLeft,
                   radius: 1.2,
                   colors: <Color>[
-                    AppColors.primary.withValues(alpha: 0.08),
-                    AppColors.secondary.withValues(alpha: 0.05),
-                    AppColors.surface.withValues(alpha: 0.0),
+                    context.colors.primary.withValues(alpha: 0.08),
+                    context.colors.secondary.withValues(alpha: 0.05),
+                    context.colors.surface.withValues(alpha: 0.0),
                   ],
                   stops: const <double>[0.0, 0.5, 1.0],
                 ),
@@ -44,9 +47,9 @@ class TaskLlmBackgroundLayers extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: <Color>[
-                    AppColors.surface.withValues(alpha: 0.4),
-                    AppColors.surface.withValues(alpha: 0.2),
-                    AppColors.surface.withValues(alpha: 0.4),
+                    context.colors.surface.withValues(alpha: 0.4),
+                    context.colors.surface.withValues(alpha: 0.2),
+                    context.colors.surface.withValues(alpha: 0.4),
                   ],
                   stops: const <double>[0.0, 0.5, 1.0],
                 ),

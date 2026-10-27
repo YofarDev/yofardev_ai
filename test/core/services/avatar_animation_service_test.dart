@@ -37,6 +37,8 @@ void main() {
 
         // Act
         await service.playNewChatSequence(chatId, config);
+        // Broadcast events are delivered asynchronously; let the last one land.
+        await Future<void>.delayed(Duration.zero);
 
         // Assert - should emit clothes(true) first, then clothes(false) last
         expect(received.first, const AvatarAnimation.clothes(true));
@@ -46,7 +48,7 @@ void main() {
       },
     );
 
-    test('playNewChatSequence emits background transition event', () async {
+    test('playNewChatSequence does not emit a background transition', () async {
       // Arrange
       const String chatId = 'test-chat-id';
       const AvatarConfig config = AvatarConfig(background: AvatarScene.beach);
@@ -58,11 +60,13 @@ void main() {
 
       // Act
       await service.playNewChatSequence(chatId, config);
+      await Future<void>.delayed(Duration.zero);
 
-      // Assert
+      // Assert - background changes are derived by AppLifecycleService from
+      // the reply's avatar config, never by the new-chat sequence.
       expect(
         received.any((AvatarAnimation e) => e is AvatarAnimationBackground),
-        isTrue,
+        isFalse,
       );
 
       await sub.cancel();
@@ -80,6 +84,7 @@ void main() {
 
       // Act
       await service.playNewChatSequence(chatId, config);
+      await Future<void>.delayed(Duration.zero);
 
       // Assert
       expect(

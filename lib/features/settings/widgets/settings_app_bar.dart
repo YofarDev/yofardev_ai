@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 
 class SettingsAppBar extends StatelessWidget {
@@ -14,13 +14,13 @@ class SettingsAppBar extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            AppColors.surface.withValues(alpha: 0.9),
-            AppColors.surface.withValues(alpha: 0.7),
+            context.colors.surface.withValues(alpha: 0.9),
+            context.colors.surface.withValues(alpha: 0.7),
           ],
         ),
         border: Border(
           bottom: BorderSide(
-            color: AppColors.glassBorder.withValues(alpha: 0.3),
+            color: context.tokens.glassBorder.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -31,7 +31,7 @@ class SettingsAppBar extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
             tooltip: AppLocalizations.of(context).commonBack,
-            color: AppColors.onSurface.withValues(alpha: 0.7),
+            color: context.colors.onSurface.withValues(alpha: 0.7),
           ),
           Expanded(
             child: Center(
@@ -45,13 +45,13 @@ class SettingsAppBar extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: <Color>[
-                  AppColors.success.withValues(alpha: 0.2),
-                  AppColors.success.withValues(alpha: 0.1),
+                  context.tokens.success.withValues(alpha: 0.2),
+                  context.tokens.success.withValues(alpha: 0.1),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.success.withValues(alpha: 0.5),
+                color: context.tokens.success.withValues(alpha: 0.5),
                 width: 1.5,
               ),
             ),

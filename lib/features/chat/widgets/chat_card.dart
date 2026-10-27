@@ -2,7 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/res/app_colors.dart';
+import '../../../core/design/design.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/models/chat.dart';
 
 /// Card widget displaying chat information
@@ -32,21 +33,25 @@ class ChatCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            AppColors.glassSurface.withValues(alpha: isSelected ? 0.2 : 0.12),
-            AppColors.glassSurface.withValues(alpha: isSelected ? 0.1 : 0.06),
+            context.tokens.glassSurface.withValues(
+              alpha: isSelected ? 0.2 : 0.12,
+            ),
+            context.tokens.glassSurface.withValues(
+              alpha: isSelected ? 0.1 : 0.06,
+            ),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.5)
-              : AppColors.glassBorder.withValues(alpha: 0.3),
+              ? context.colors.primary.withValues(alpha: 0.5)
+              : context.tokens.glassBorder.withValues(alpha: 0.3),
           width: isSelected ? 2 : 1.5,
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: isSelected
-                ? AppColors.primary.withValues(alpha: 0.15)
+                ? context.colors.primary.withValues(alpha: 0.15)
                 : Colors.transparent,
             blurRadius: isSelected ? 16 : 0,
             offset: const Offset(0, 4),
@@ -74,7 +79,7 @@ class ChatCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: AppColors.onSurface.withValues(alpha: 0.2),
+                  color: context.colors.onSurface.withValues(alpha: 0.2),
                   size: 18,
                 ),
               ],
@@ -100,11 +105,16 @@ class _IndicatorDot extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: isSelected
-            ? const LinearGradient(
-                colors: <Color>[AppColors.primary, AppColors.secondary],
+            ? LinearGradient(
+                colors: <Color>[
+                  context.colors.primary,
+                  context.colors.secondary,
+                ],
               )
             : null,
-        color: isSelected ? null : AppColors.onSurface.withValues(alpha: 0.15),
+        color: isSelected
+            ? null
+            : context.colors.onSurface.withValues(alpha: 0.15),
       ),
     );
   }
@@ -131,7 +141,7 @@ class _ChatPreview extends StatelessWidget {
         Text(
           previewText,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.onSurface,
+            color: context.colors.onSurface,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
           maxLines: 2,
@@ -141,22 +151,22 @@ class _ChatPreview extends StatelessWidget {
         Row(
           children: <Widget>[
             Text(
-              '$messageCount messages',
+              AppLocalizations.of(context).chatMessageCount(messageCount),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurface.withValues(alpha: 0.45),
+                color: context.colors.onSurface.withValues(alpha: 0.45),
               ),
             ),
             if (timeLabel.isNotEmpty) ...<Widget>[
               Text(
                 ' · ',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurface.withValues(alpha: 0.3),
+                  color: context.colors.onSurface.withValues(alpha: 0.3),
                 ),
               ),
               Text(
                 timeLabel,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurface.withValues(alpha: 0.45),
+                  color: context.colors.onSurface.withValues(alpha: 0.45),
                 ),
               ),
             ],

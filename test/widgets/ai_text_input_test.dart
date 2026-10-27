@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nested/nested.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:yofardev_ai/core/design/theme/app_theme.dart';
 import 'package:yofardev_ai/core/l10n/generated/app_localizations.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
@@ -93,6 +94,7 @@ void main() {
           BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
         ],
         child: MaterialApp(
+          theme: AppTheme.dark,
           localizationsDelegates: const <LocalizationsDelegate<Object>>[
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -123,8 +125,9 @@ void main() {
             BlocProvider<TalkingCubit>.value(value: mockTalkingCubit),
             BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
-          child: const MaterialApp(
-            home: Scaffold(body: AiTextInput(onlyText: true)),
+          child: MaterialApp(
+            theme: AppTheme.dark,
+            home: const Scaffold(body: AiTextInput(onlyText: true)),
           ),
         ),
       );
@@ -165,6 +168,7 @@ void main() {
             BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
           child: MaterialApp(
+            theme: AppTheme.dark,
             localizationsDelegates: const <LocalizationsDelegate<Object>>[
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -241,6 +245,7 @@ void main() {
             BlocProvider<SettingsCubit>.value(value: createSettingsCubit()),
           ],
           child: MaterialApp(
+            theme: AppTheme.dark,
             localizationsDelegates: const <LocalizationsDelegate<Object>>[
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,

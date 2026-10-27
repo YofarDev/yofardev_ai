@@ -92,7 +92,7 @@
   "timeHoursAgo": "il y a {count} h",
   "timeYesterday": "hier",
   "timeDaysAgo": "il y a {count} j",
-  "demoModeActivated": "Mode démo : {scriptName}",
+  "demoModeActivated": "Mode démo activé",
   "deleteConfig": "Supprimer la configuration",
   "deleteConfigConfirmation": "Êtes-vous sûr de vouloir supprimer \"{configLabel}\" ?",
   "llmProviderSelection": "Sélection du fournisseur LLM",
@@ -126,5 +126,14 @@
   "failureNetwork": "Erreur réseau",
   "failureTts": "Erreur de synthèse vocale",
   "failureConfig": "Erreur de configuration",
-  "failureUnknown": "Une erreur inattendue est survenue"
+  "failureUnknown": "Une erreur inattendue est survenue",
+  "googleSearchApiTitle": "Google Search API",
+  "googleSearchApiKeyHint": "Saisissez votre clé API Google Search",
+  "searchEngineIdHint": "Saisissez votre ID de moteur de recherche",
+  "openWeatherApiTitle": "OpenWeather API",
+  "openWeatherApiKeyHint": "Saisissez votre clé API OpenWeather",
+  "nytApiTitle": "New York Times API",
+  "nytApiKeyHint": "Saisissez votre clé API New York Times",
+  "chatMessageCount": "{count, plural, =0{0 message} =1{1 message} other{{count} messages}}",
+  "functionResultTitle": "Résultat : {name}"
 }
