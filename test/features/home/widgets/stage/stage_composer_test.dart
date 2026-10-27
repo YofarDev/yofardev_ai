@@ -659,6 +659,115 @@ void main() {
     ),
   ).callCount;
 
+  group('between two sentences of a reply', () {
+    /// A reply in flight whose first sentence is playing.
+    Future<Completer<void>> speakFirstSentence(WidgetTester tester) async {
+      final Completer<void> reply = Completer<void>();
+      stubStreamResponse(() => reply.future);
+      await pumpComposer(tester);
+      await tester.enterText(find.byType(TextField), 'Hello');
+      await tester.pump();
+      await tester.tap(find.byType(ComposerOrb));
+      await tester.pump();
+      chat.emit(chat.state.copyWith(status: ChatStatus.streaming));
+      talking.emit(const TalkingState.speaking());
+      await tester.idle();
+      await tester.pump();
+      expect(orbState(tester), ComposerOrbState.speaking);
+      return reply;
+    }
+
+    /// The sentence ended; the next one is on its way.
+    Future<void> gap(WidgetTester tester, TalkingState state) async {
+      talking.emit(state);
+      await tester.idle();
+      await tester.pump();
+    }
+
+    testWidgets('a short gap keeps the stop control on speaking', (
+      WidgetTester tester,
+    ) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      final Completer<void> reply = await speakFirstSentence(tester);
+      await gap(tester, const TalkingState.generating());
+      expect(orbState(tester), ComposerOrbState.speaking);
+      await tester.pump(StageComposer.speakingHold * 0.8);
+      expect(orbState(tester), ComposerOrbState.speaking);
+      expect(orbButton('Stop'), findsOneWidget);
+
+      // The next sentence starts within the hold, then its own gap holds
+      // again.
+      await gap(tester, const TalkingState.speaking());
+      await gap(tester, const TalkingState.idle());
+      await tester.pump(StageComposer.speakingHold * 0.8);
+      expect(orbState(tester), ComposerOrbState.speaking);
+      reply.complete();
+      await drain(tester);
+      handle.dispose();
+    });
+
+    testWidgets('a gap longer than the hold shows thinking', (
+      WidgetTester tester,
+    ) async {
+      final Completer<void> reply = await speakFirstSentence(tester);
+      await gap(tester, const TalkingState.idle());
+      await tester.pump(
+        StageComposer.speakingHold + const Duration(milliseconds: 50),
+      );
+      expect(orbState(tester), ComposerOrbState.thinking);
+      reply.complete();
+      await drain(tester);
+    });
+
+    testWidgets('the end of the reply leaves speaking at once', (
+      WidgetTester tester,
+    ) async {
+      final Completer<void> reply = await speakFirstSentence(tester);
+      await gap(tester, const TalkingState.idle());
+      expect(orbState(tester), ComposerOrbState.speaking);
+
+      chat.emit(chat.state.copyWith(status: ChatStatus.success));
+      reply.complete();
+      await tester.idle();
+      await tester.pump();
+      expect(orbState(tester), ComposerOrbState.idle);
+      await drain(tester);
+    });
+
+    testWidgets('a Stop tap during the gap interrupts and drops the hold', (
+      WidgetTester tester,
+    ) async {
+      final Completer<void> reply = await speakFirstSentence(tester);
+      await gap(tester, const TalkingState.idle());
+      await tester.tap(find.byType(ComposerOrb));
+      await tester.pump();
+      verify(() => interruption.interrupt()).called(1);
+      // The reply still in flight (the mocked cubit does not end it):
+      // thinking, no longer held.
+      expect(orbState(tester), ComposerOrbState.thinking);
+      reply.complete();
+      await drain(tester);
+    });
+
+    testWidgets('an error during the gap shows the error flash', (
+      WidgetTester tester,
+    ) async {
+      final Completer<void> reply = await speakFirstSentence(tester);
+      await gap(tester, const TalkingState.idle());
+      chat.emit(
+        chat.state.copyWith(
+          status: ChatStatus.error,
+          error: const NetworkFailure('timeout'),
+        ),
+      );
+      await tester.idle();
+      await tester.pump();
+      expect(orbState(tester), ComposerOrbState.error);
+      reply.complete();
+      await drain(tester);
+    });
+  });
+
   testWidgets('taps while stop() resolves are ignored: one session, no mic '
       'flicker', (WidgetTester tester) async {
     speech.stopGate = Completer<String>();

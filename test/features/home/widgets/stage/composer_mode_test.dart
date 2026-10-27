@@ -88,4 +88,59 @@ void main() {
       );
     });
   });
+
+  group('holdsSpeaking', () {
+    const ComposerOrbState speaking = ComposerOrbState.speaking;
+    const ComposerOrbState thinking = ComposerOrbState.thinking;
+
+    test('speaking turning into thinking starts the hold', () {
+      expect(
+        holdsSpeaking(previous: speaking, raw: thinking, held: false),
+        isTrue,
+      );
+    });
+
+    test('the hold lasts while the mode stays thinking', () {
+      expect(
+        holdsSpeaking(previous: thinking, raw: thinking, held: true),
+        isTrue,
+      );
+    });
+
+    test('a released hold (window over) does not come back', () {
+      expect(
+        holdsSpeaking(previous: thinking, raw: thinking, held: false),
+        isFalse,
+      );
+    });
+
+    test('thinking that never followed speaking is not held', () {
+      for (final ComposerOrbState? previous in <ComposerOrbState?>[
+        null,
+        ComposerOrbState.idle,
+        ComposerOrbState.typing,
+        ComposerOrbState.listening,
+      ]) {
+        expect(
+          holdsSpeaking(previous: previous, raw: thinking, held: false),
+          isFalse,
+        );
+      }
+    });
+
+    test('any other mode ends the hold', () {
+      for (final ComposerOrbState raw in <ComposerOrbState>[
+        ComposerOrbState.idle,
+        ComposerOrbState.typing,
+        ComposerOrbState.listening,
+        ComposerOrbState.speaking,
+        ComposerOrbState.error,
+      ]) {
+        expect(
+          holdsSpeaking(previous: thinking, raw: raw, held: true),
+          isFalse,
+        );
+      }
+    });
+  });
 }

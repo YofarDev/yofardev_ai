@@ -61,6 +61,10 @@ class StageComposer extends StatefulWidget {
   /// How long the orb shows the error state after a failed reply.
   static const Duration errorFlash = Duration(milliseconds: 600);
 
+  /// How long the orb keeps its speaking look (and Stop) in the gap between
+  /// two sentences of a reply: as long as the caption lingers.
+  static const Duration speakingHold = CaptionCubit.lingerDuration;
+
   @override
   State<StageComposer> createState() => _StageComposerState();
 }
@@ -97,6 +101,15 @@ class _StageComposerState extends State<StageComposer>
   /// The last mode handed to [StageComposer.onModeChanged].
   ComposerOrbState? _reportedMode;
 
+  /// The mode resolved without the speaking hold, at the last build.
+  ComposerOrbState? _lastRawMode;
+
+  /// The speaking look is held over a between-sentence gap
+  /// ([holdsSpeaking]); [_holdTimer] ends it after
+  /// [StageComposer.speakingHold].
+  bool _speakingHeld = false;
+  Timer? _holdTimer;
+
   StreamSubscription<double>? _levelSub;
   StreamSubscription<String>? _wordsSub;
   StreamSubscription<void>? _endedSub;
@@ -116,6 +129,7 @@ class _StageComposerState extends State<StageComposer>
     unawaited(_wordsSub?.cancel());
     unawaited(_endedSub?.cancel());
     _errorTimer?.cancel();
+    _holdTimer?.cancel();
     _controller
       ..removeListener(_onTextChanged)
       ..dispose();
@@ -157,6 +171,7 @@ class _StageComposerState extends State<StageComposer>
         unawaited(_stopListening());
       case ComposerOrbState.thinking:
       case ComposerOrbState.speaking:
+        setState(_releaseSpeakingHold);
         unawaited(context.read<InterruptionService>().interrupt());
       case ComposerOrbState.error:
         break;
@@ -330,6 +345,35 @@ class _StageComposerState extends State<StageComposer>
     );
   }
 
+  void _releaseSpeakingHold() {
+    _holdTimer?.cancel();
+    _holdTimer = null;
+    _speakingHeld = false;
+  }
+
+  /// Updates the speaking hold for this build's [raw] mode: it starts when
+  /// speaking turns into thinking (a timer then releases it), and is
+  /// released by any other mode. Plain fields, read by this same build.
+  bool _holdSpeakingOver(ComposerOrbState raw) {
+    final bool held = holdsSpeaking(
+      previous: _lastRawMode,
+      raw: raw,
+      held: _speakingHeld,
+    );
+    _lastRawMode = raw;
+    if (!held) {
+      _releaseSpeakingHold();
+    } else if (!_speakingHeld) {
+      _speakingHeld = true;
+      _holdTimer = Timer(StageComposer.speakingHold, () {
+        if (mounted) {
+          setState(_releaseSpeakingHold);
+        }
+      });
+    }
+    return held;
+  }
+
   /// Tells [StageComposer.onModeChanged] about [mode] once this frame is
   /// done (the parent may rebuild on it, which it can't during this build).
   void _reportMode(ComposerOrbState mode) {
@@ -366,7 +410,7 @@ class _StageComposerState extends State<StageComposer>
     final ChatStatus chatStatus = context.select<ChatCubit, ChatStatus>(
       (ChatCubit cubit) => cubit.state.status,
     );
-    final ComposerOrbState mode = resolveComposerMode(
+    final ComposerOrbState raw = resolveComposerMode(
       phase: phase,
       chatStatus: chatStatus,
       hasText: _hasText,
@@ -374,6 +418,9 @@ class _StageComposerState extends State<StageComposer>
       submitting: _submitting,
       error: _flashingError,
     );
+    final ComposerOrbState mode = _holdSpeakingOver(raw)
+        ? ComposerOrbState.speaking
+        : raw;
     _reportMode(mode);
     final Duration morph = MediaQuery.disableAnimationsOf(context)
         ? AppMotion.fast

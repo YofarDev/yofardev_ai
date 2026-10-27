@@ -9,7 +9,9 @@ import '../../../../core/models/talking_phase.dart';
 /// 3. audio playing ([TalkingPhase.speaking] / [TalkingPhase.waiting]) →
 ///    speaking;
 /// 4. a reply in flight ([TalkingPhase.generating], [ChatStatus.typing] /
-///    [ChatStatus.streaming], or the composer's own [submitting]) → thinking;
+///    [ChatStatus.streaming], or the composer's own [submitting]) →
+///    thinking (the composer may hold speaking over it between two
+///    sentences, see [holdsSpeaking]);
 /// 5. a draft in the field ([hasText]) → typing;
 /// 6. otherwise idle.
 ComposerOrbState resolveComposerMode({
@@ -40,3 +42,21 @@ ComposerOrbState resolveComposerMode({
   }
   return ComposerOrbState.idle;
 }
+
+/// Whether the speaking look is held over [raw], the mode resolved without
+/// any hold, given the [previous] raw mode and whether it was [held].
+///
+/// Within one reply the avatar goes quiet between two sentences while the
+/// reply is still in flight, which resolves to thinking: once the orb
+/// showed speaking, that gap keeps speaking (the Stop control stays put).
+/// The hold starts when speaking turns into thinking, lasts while the mode
+/// stays thinking, and ends on anything else (idle once the reply ended,
+/// listening, an error) or when the caller's hold window runs out (it then
+/// passes `held: false` with [previous] already thinking).
+bool holdsSpeaking({
+  required ComposerOrbState? previous,
+  required ComposerOrbState raw,
+  required bool held,
+}) =>
+    raw == ComposerOrbState.thinking &&
+    (held || previous == ComposerOrbState.speaking);
