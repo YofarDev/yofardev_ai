@@ -763,6 +763,21 @@ void main() {
     expect(streamResponseCalls(), 1);
   });
 
+  testWidgets('a start cancelled under the current session leaves '
+      'listening', (WidgetTester tester) async {
+    speech.holdStarts = true;
+    await pumpComposer(tester);
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    expect(orbState(tester), ComposerOrbState.listening);
+
+    // Nothing opened the mic for this session.
+    speech.heldStarts[0].complete(SpeechStartResult.cancelled);
+    await tester.pump();
+
+    expect(orbState(tester), ComposerOrbState.idle);
+  });
+
   testWidgets('a throwing streamResponse still resets and allows the next '
       'prompt', (WidgetTester tester) async {
     stubStreamResponse(() async => throw StateError('closed'));

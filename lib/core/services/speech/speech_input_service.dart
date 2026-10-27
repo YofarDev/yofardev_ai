@@ -18,7 +18,9 @@ abstract class SpeechInputService {
   Stream<void> get sessionEnded;
 
   /// Starts a listening session in [localeId] (e.g. `fr_FR`). Overlapping
-  /// calls share one pending start (the mic opens at most once).
+  /// calls share one pending start (the mic opens at most once); a start
+  /// issued after a [stop]/[cancel] superseded the pending one waits for it
+  /// to settle, then starts afresh.
   Future<SpeechStartResult> start({required String localeId});
 
   /// Ends the session and returns the final words ('' if none). Still

@@ -199,8 +199,11 @@ class _StageComposerState extends State<StageComposer>
     }
     switch (result) {
       case SpeechStartResult.started:
-      case SpeechStartResult.cancelled:
         return;
+      case SpeechStartResult.cancelled:
+        // Still this session's, yet nothing opened the mic: leave the
+        // listening look rather than pulse over a closed mic.
+        _endListening();
       case SpeechStartResult.permissionDenied:
         _endListening();
         showAppToast(context, l10n.micPermissionDenied);

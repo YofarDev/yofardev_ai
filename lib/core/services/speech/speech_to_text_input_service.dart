@@ -38,8 +38,10 @@ bool isSpeechInputSupported(String platform) => switch (platform) {
 /// (permission dialog, initialize) shares that pending start, so `listen`
 /// runs at most once; a [stop]/[cancel]/[dispose] issued while a start is
 /// pending bumps [_generation], and the pending start then aborts with
-/// [SpeechStartResult.cancelled] before opening the mic. The mic is never
-/// left open without a caller able to stop it.
+/// [SpeechStartResult.cancelled] before opening the mic. A [start] issued
+/// after that waits for the superseded start to settle, then starts afresh
+/// (unless stopped again meanwhile). The mic is never left open without a
+/// caller able to stop it.
 ///
 /// A session the recognizer ends on its own (final result, `done`, a
 /// permanent error, or `notListening` with no `done` within
@@ -85,6 +87,10 @@ class SpeechToTextInputService implements SpeechInputService {
 
   /// The start in flight, shared by overlapping [start] calls.
   Future<SpeechStartResult>? _pendingStart;
+
+  /// [_generation] when [_pendingStart] began: a different current value
+  /// means a stop/cancel superseded it (it will resolve `cancelled`).
+  int _pendingGeneration = 0;
 
   /// [_generation] when the current [_session] opened: the session ended
   /// on its own (not through stop/cancel) while it is unchanged.
@@ -132,10 +138,21 @@ class SpeechToTextInputService implements SpeechInputService {
       return Future<SpeechStartResult>.value(SpeechStartResult.started);
     }
     final Future<SpeechStartResult>? pending = _pendingStart;
-    if (pending != null) return pending;
+    if (pending != null) {
+      if (_pendingGeneration == _generation) return pending;
+      // Superseded: it resolves `cancelled` without opening the mic. Start
+      // afresh once it settled, unless this start is superseded too.
+      final int generation = _generation;
+      return pending.then(
+        (_) => generation == _generation
+            ? start(localeId: localeId)
+            : SpeechStartResult.cancelled,
+      );
+    }
 
     final Future<SpeechStartResult> started = _start(localeId, _generation);
     _pendingStart = started;
+    _pendingGeneration = _generation;
     return started.whenComplete(() {
       if (identical(_pendingStart, started)) _pendingStart = null;
     });

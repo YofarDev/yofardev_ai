@@ -422,6 +422,51 @@ void main() {
         expect(permissionRequests, 1);
       });
 
+      test('start() after a stop superseded a pending start opens a fresh '
+          'session', () async {
+        permissionDialog = Completer<bool>();
+        final SpeechToTextInputService service = build();
+
+        final Future<SpeechStartResult> first = service.start(
+          localeId: 'en_US',
+        );
+        expect(await service.stop(), '');
+        final Future<SpeechStartResult> second = service.start(
+          localeId: 'en_US',
+        );
+        permissionDialog!.complete(true);
+
+        expect(await first, SpeechStartResult.cancelled);
+        expect(await second, SpeechStartResult.started);
+        verify(
+          () => stt.listen(
+            onResult: any(named: 'onResult'),
+            onSoundLevelChange: any(named: 'onSoundLevelChange'),
+            listenOptions: any(named: 'listenOptions'),
+          ),
+        ).called(1);
+      });
+
+      test('a restart stopped again before the stale start settles keeps the '
+          'mic closed', () async {
+        permissionDialog = Completer<bool>();
+        final SpeechToTextInputService service = build();
+
+        final Future<SpeechStartResult> first = service.start(
+          localeId: 'en_US',
+        );
+        await service.stop();
+        final Future<SpeechStartResult> second = service.start(
+          localeId: 'en_US',
+        );
+        await service.stop();
+        permissionDialog!.complete(true);
+
+        expect(await first, SpeechStartResult.cancelled);
+        expect(await second, SpeechStartResult.cancelled);
+        verifyNeverListened();
+      });
+
       test('cancel() during initialize keeps the mic closed', () async {
         final Completer<bool> init = Completer<bool>();
         when(
