@@ -6,6 +6,7 @@ import '../../../../../core/models/avatar_scene.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../rive/avatar_rive_binding.dart';
 import '../../rive/avatar_rive_contract.dart';
+import 'latest_load_gate.dart';
 
 /// Rive rendering of the scene currently on screen.
 ///
@@ -39,6 +40,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
   AvatarRiveBinding? _binding;
   AvatarScene? _loadedScene;
   String? _error;
+
+  /// Home switches scene while the first load may still be in flight (the
+  /// default scene, then the chat's): only the newest load may publish.
+  final LatestLoadGate _loads = LatestLoadGate();
 
   @override
   void initState() {
@@ -82,16 +87,23 @@ class _RiveSceneViewState extends State<RiveSceneView>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _loads.cancelAll();
     _teardown();
     super.dispose();
   }
 
   Future<void> _loadScene(AvatarScene scene) async {
+    final int ticket = _loads.begin();
     try {
       final File? file = await File.asset(
         AvatarRiveContract.sceneAssetPath(scene.name),
         riveFactory: Factory.rive,
       );
+      if (!_loads.isLatest(ticket)) {
+        // A newer scene load started meanwhile: this result is stale.
+        file?.dispose();
+        return;
+      }
       if (file == null) {
         if (mounted) {
           setState(() => _error = '${scene.name}.riv could not be decoded');
@@ -130,7 +142,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
         tag: 'RiveSceneView',
         error: e,
       );
-      if (mounted) {
+      if (mounted && _loads.isLatest(ticket)) {
         setState(() => _error = e.toString());
       }
     }
