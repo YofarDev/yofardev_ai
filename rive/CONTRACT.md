@@ -72,3 +72,59 @@ One file per scene. The app loads them lazily.
 - `avatar.riv` must stay at or under 600 KB, and each scene at or under 400 KB.
 - The avatar plus one scene must run with no visible stutter on a CPU-throttled Android
   emulator.
+- `ui_kit.riv` must stay at or under 150 KB. At most one UI-kit artboard animates continuously
+  on screen at once (the orb or the glow), and none animates while `reduceMotion` is true.
+
+## `assets/rive/ui/ui_kit.riv`
+
+The v4 UI kit (design: `docs/superpowers/specs/2026-10-26-v4-ui-redesign-plan.md` §5). One file,
+several artboards. The app loads it lazily, once, and creates one controller per widget.
+
+- Every artboard has a state machine named `Main` and its own view model named `<Artboard>VM`
+  (for example `ComposerOrbVM`). The app binds each artboard to its own view-model instance.
+- **No Rive events and no Rive listeners.** The app owns taps and the 48 dp hit areas (the
+  Flutter runtime does not apply listener → view-model trigger writes).
+- Colors are view-model `color` properties: the app writes the current scene's theme colors, so
+  nothing in the file hard-codes the accent. The file's default values use Storybook night
+  (accent `F4B860`, ink `16121D`, paper `F3EBDD`).
+- `reduceMotion` = true stops every ambient loop (pulse, breathing, orbiting). State changes still
+  animate, in 120 ms or less.
+
+| Artboard | Size | Property | Type | Values / range |
+|---|---|---|---|---|
+| `ComposerOrb` | 96×96 | `state` | enum | idle, typing, listening, thinking, speaking, error |
+| `ComposerOrb` | 96×96 | `level` | number | 0–1, microphone input level (used while listening) |
+| `ComposerOrb` | 96×96 | `accent` | color | disc fill |
+| `ComposerOrb` | 96×96 | `onAccent` | color | glyph |
+| `ComposerOrb` | 96×96 | `reduceMotion` | boolean | |
+| `StatusGlow` | 480×200 | `phase` | enum | idle, waiting, generating, speaking, error |
+| `StatusGlow` | 480×200 | `accent` | color | glow tint |
+| `StatusGlow` | 480×200 | `reduceMotion` | boolean | |
+| `ToolIcon` | 48×48 | `kind` | enum | search, weather, news, memory, generic |
+| `ToolIcon` | 48×48 | `running` | boolean | animates while true |
+| `ToolIcon` | 48×48 | `tint` | color | glyph |
+| `Toggle` | 104×64 | `value` | boolean | the knob slides when it changes |
+| `Toggle` | 104×64 | `accent` | color | track when on |
+| `Toggle` | 104×64 | `track` | color | track when off |
+| `Toggle` | 104×64 | `knob` | color | knob |
+| `Mark` | 256×256 | `play` | trigger | plays the logo sting once |
+| `Mark` | 256×256 | `accent` | color | sting accent |
+
+**ComposerOrb states:**
+- idle: a mic glyph on the accent disc.
+- typing: the mic morphs into a send arrow.
+- listening: the disc becomes a ring that pulses with `level`.
+- thinking: slow breathing with three orbiting dots (matches the avatar's `phase=generating`).
+- speaking: a stop square.
+- error: one horizontal shake (400 ms or less), then it holds still.
+
+**StatusGlow phases** (a soft horizontal glow behind the composer):
+- idle: faint and still.
+- waiting: a gentle drift.
+- generating: slow breathing.
+- speaking: a brighter shimmer.
+- error: one dim pulse.
+
+**Scene posters:** `assets/rive/posters/<sceneId>.webp`, one per scene in the table above,
+540×960, at most 40 KB each. Rendered from the scene file's rest pose, with no avatar. Used by
+History rows and the Customize sheet.
