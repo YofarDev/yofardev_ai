@@ -232,6 +232,13 @@ class MockSettingsRepository implements SettingsRepository {
   Future<Result<void>> setMemoryEnabled(bool enabled) async {
     return Result<void>.ok(null);
   }
+
+  @override
+  Future<Result<bool>> getCaptionsEnabled() async => Result<bool>.ok(true);
+
+  @override
+  Future<Result<void>> setCaptionsEnabled(bool enabled) async =>
+      Result<void>.ok(null);
 }
 
 class MockPromptDatasource implements PromptDatasource {
@@ -288,6 +295,7 @@ class MockTtsPlaybackService implements TtsPlaybackService {
     List<int> amplitudes,
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
+    String? caption,
   }) {}
 
   @override
@@ -344,6 +352,9 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   List<AvatarCue> consumeCues(String audioPath) => const <AvatarCue>[];
+
+  @override
+  String? consumeText(String audioPath) => null;
 }
 
 class MockAvatarAnimationService implements AvatarAnimationService {

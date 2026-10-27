@@ -360,4 +360,9 @@ class _FakeSettingsRepository implements SettingsRepository {
   @override
   Future<Result<void>> setMemoryEnabled(bool enabled) async =>
       Result<void>.ok(null);
+  @override
+  Future<Result<bool>> getCaptionsEnabled() async => Result<bool>.ok(true);
+  @override
+  Future<Result<void>> setCaptionsEnabled(bool enabled) async =>
+      Result<void>.ok(null);
 }

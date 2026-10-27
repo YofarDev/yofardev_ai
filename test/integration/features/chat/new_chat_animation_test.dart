@@ -176,6 +176,9 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   List<AvatarCue> consumeCues(String audioPath) => const <AvatarCue>[];
+
+  @override
+  String? consumeText(String audioPath) => null;
 }
 
 void main() {

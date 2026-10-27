@@ -1,0 +1,62 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
+import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
+
+class _MockTalkingRepository extends Mock implements TalkingRepository {}
+
+void main() {
+  late TtsPlaybackService service;
+  late List<PlaybackEvent> events;
+
+  setUp(() {
+    service = TtsPlaybackService(_MockTalkingRepository());
+    events = <PlaybackEvent>[];
+    service.events.listen(events.add);
+  });
+
+  tearDown(() => service.dispose());
+
+  test('emits the caption right after SpeakingStartedEvent', () async {
+    service.startAmplitudeAnimation(
+      '/a.wav',
+      <int>[3],
+      const Duration(seconds: 1),
+      caption: 'Hello there.',
+    );
+    await Future<void>.delayed(Duration.zero);
+    service.cancelAnimation();
+
+    expect(events[0], isA<SpeakingStartedEvent>());
+    expect(events[1], isA<CaptionEvent>());
+    expect((events[1] as CaptionEvent).text, 'Hello there.');
+  });
+
+  test('no caption event for an empty or missing caption', () async {
+    service.startAmplitudeAnimation(
+      '/a.wav',
+      <int>[3],
+      const Duration(seconds: 1),
+      caption: '  ',
+    );
+    service.startAmplitudeAnimation('/b.wav', <int>[
+      3,
+    ], const Duration(seconds: 1));
+    await Future<void>.delayed(Duration.zero);
+    service.cancelAnimation();
+
+    expect(events.whereType<CaptionEvent>(), isEmpty);
+  });
+
+  test('no caption when the sentence never starts speaking', () async {
+    service.startAmplitudeAnimation(
+      '/a.wav',
+      <int>[],
+      const Duration(seconds: 1),
+      caption: 'Hello there.',
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(events.whereType<CaptionEvent>(), isEmpty);
+  });
+}

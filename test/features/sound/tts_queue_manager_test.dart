@@ -334,6 +334,58 @@ void main() {
 
       await subscription.cancel();
     });
+
+    test('consumeText returns the sentence once, then null', () async {
+      when(
+        () => mockDatasource.synthesize(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      ).thenAnswer((_) async => '/path/to/raw.wav');
+
+      final Completer<String> emitted = Completer<String>();
+      final StreamSubscription<String> subscription = manager.audioStream
+          .listen(emitted.complete);
+
+      await manager.enqueue(
+        text: '  Hello there.  ',
+        language: 'en',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      final String path = await emitted.future;
+
+      expect(manager.consumeText(path), 'Hello there.');
+      expect(manager.consumeText(path), isNull);
+
+      await subscription.cancel();
+    });
+
+    test('clear() drops texts not yet consumed', () async {
+      when(
+        () => mockDatasource.synthesize(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      ).thenAnswer((_) async => '/path/to/raw.wav');
+
+      final Completer<String> emitted = Completer<String>();
+      final StreamSubscription<String> subscription = manager.audioStream
+          .listen(emitted.complete);
+
+      await manager.enqueue(
+        text: 'Hello there.',
+        language: 'en',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      final String path = await emitted.future;
+      manager.clear();
+
+      expect(manager.consumeText(path), isNull);
+
+      await subscription.cancel();
+    });
   });
 
   group('Interruption', () {
@@ -400,6 +452,31 @@ void main() {
       // Assert
       expect(queueManager.queue.length, 0);
       expect(queueManager.isProcessing, false);
+    });
+
+    test('drops texts not yet consumed when interrupted', () async {
+      queueManager = TtsQueueService(
+        ttsSynthesizer: mockTtsDatasource,
+        interruptionService: interruptionService,
+        voiceEffectsService: mockVoiceEffectsService,
+      );
+      final Completer<String> emitted = Completer<String>();
+      final StreamSubscription<String> subscription = queueManager.audioStream
+          .listen(emitted.complete);
+
+      await queueManager.enqueue(
+        text: 'First',
+        language: 'fr',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      final String path = await emitted.future;
+
+      await interruptionService.interrupt();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(queueManager.consumeText(path), isNull);
+
+      await subscription.cancel();
     });
   });
 }

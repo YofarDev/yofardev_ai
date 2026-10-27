@@ -32,6 +32,13 @@ class CuesReachedEvent extends PlaybackEvent {
   final List<AvatarCue> cues;
 }
 
+/// Emitted right after [SpeakingStartedEvent] with the text of the sentence
+/// that just started playing (live captions).
+class CaptionEvent extends PlaybackEvent {
+  const CaptionEvent(this.text);
+  final String text;
+}
+
 class TtsPlaybackService {
   TtsPlaybackService(this._repository);
 
@@ -64,6 +71,7 @@ class TtsPlaybackService {
     List<int> amplitudes,
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
+    String? caption,
   }) {
     AppLogger.debug(
       'TtsPlaybackService: Starting amplitude animation with ${amplitudes.length} frames, duration: ${audioDuration.inMilliseconds}ms',
@@ -82,6 +90,10 @@ class TtsPlaybackService {
     }
 
     _controller.add(const SpeakingStartedEvent());
+    // Only a sentence that actually starts speaking gets a caption.
+    if (caption != null && caption.trim().isNotEmpty) {
+      _controller.add(CaptionEvent(caption));
+    }
     // The audio starts now: cues embedded in this sentence fire in time
     // with speech.
     if (cues.isNotEmpty) {

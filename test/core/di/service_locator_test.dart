@@ -23,6 +23,7 @@ import 'package:yofardev_ai/features/sound/domain/repositories/sound_repository.
 import 'package:yofardev_ai/features/sound/domain/services/tts_queue_service.dart';
 import 'package:yofardev_ai/features/sound/presentation/bloc/sound_cubit.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
+import 'package:yofardev_ai/features/talking/presentation/bloc/caption_cubit.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_cubit.dart';
 
 /// DI smoke test: the whole pure-Dart graph registers and resolves.
@@ -81,5 +82,6 @@ void main() {
     expect(getIt<HomeCubit>(), isNotNull);
     expect(getIt<SoundCubit>(), isNotNull);
     expect(getIt<TalkingCubit>(), isNotNull);
+    expect(getIt<CaptionCubit>(), isNotNull);
   });
 }

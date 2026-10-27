@@ -37,6 +37,7 @@ import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
 import '../../features/talking/domain/services/tts_playback_service.dart';
+import '../../features/talking/presentation/bloc/caption_cubit.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../services/app_lifecycle_service.dart';
@@ -236,6 +237,13 @@ Future<void> setupServiceLocator() async {
       getIt<InterruptionService>(),
       getIt<TtsPlaybackService>(),
       getIt<AppLifecycleService>(),
+    ),
+  );
+  getIt.registerFactory<CaptionCubit>(
+    () => CaptionCubit(
+      playbackService: getIt<TtsPlaybackService>(),
+      interruptionService: getIt<InterruptionService>(),
+      settingsRepository: getIt<SettingsRepository>(),
     ),
   );
   getIt.registerFactory<ChatTtsCubit>(

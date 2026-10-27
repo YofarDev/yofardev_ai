@@ -32,6 +32,7 @@ class MockTtsPlaybackService implements TtsPlaybackService {
     List<int> amplitudes,
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
+    String? caption,
   }) {}
 
   @override

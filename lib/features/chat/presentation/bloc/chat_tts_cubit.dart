@@ -191,6 +191,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         audioDuration,
         // Consumed exactly once, here, when this audio starts playing.
         cues: _ttsQueueManager.consumeCues(audioPath),
+        caption: _ttsQueueManager.consumeText(audioPath),
       );
 
       // 5. Wait for playback completion OR interruption before processing next.

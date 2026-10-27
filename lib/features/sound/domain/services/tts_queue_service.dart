@@ -24,6 +24,10 @@ class TtsQueueService {
   /// Cues of completed items, keyed by audio path, until consumed by the
   /// playback side (they must fire exactly when that audio starts).
   final Map<String, List<AvatarCue>> _cuesByPath = <String, List<AvatarCue>>{};
+
+  /// Sentence text of completed items, keyed by audio path, until consumed
+  /// by the playback side (shown as a live caption while it plays).
+  final Map<String, String> _textByPath = <String, String>{};
   final Uuid _uuid = const Uuid();
 
   bool _isProcessing = false;
@@ -60,6 +64,11 @@ class TtsQueueService {
   /// removed so they fire exactly once.
   List<AvatarCue> consumeCues(String audioPath) =>
       _cuesByPath.remove(audioPath) ?? const <AvatarCue>[];
+
+  /// Consumes the sentence text of the item whose audio path is
+  /// [audioPath]; null when unknown or already consumed. Removed on read so
+  /// the map never outlives playback.
+  String? consumeText(String audioPath) => _textByPath.remove(audioPath);
 
   /// Deletes a played audio file (scratch cleanup; the synthesizer owns the
   /// IO). Safe to call for a path that no longer exists.
@@ -113,6 +122,7 @@ class TtsQueueService {
     _epoch++;
     _queue.clear();
     _cuesByPath.clear();
+    _textByPath.clear();
     _isProcessing = false;
     AppLogger.debug('TTS queue cleared', tag: 'TtsQueueService');
   }
@@ -210,6 +220,7 @@ class TtsQueueService {
       if (item.cues.isNotEmpty) {
         _cuesByPath[processedAudioPath] = item.cues;
       }
+      _textByPath[processedAudioPath] = item.text;
 
       // Update item as completed
       _queue[0] = item.copyWith(

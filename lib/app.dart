@@ -31,6 +31,9 @@ class App extends StatelessWidget {
         BlocProvider<TalkingCubit>(
           create: (BuildContext context) => getIt<TalkingCubit>(),
         ),
+        BlocProvider<CaptionCubit>(
+          create: (BuildContext context) => getIt<CaptionCubit>()..init(),
+        ),
         BlocProvider<ChatCubit>(
           create: (BuildContext context) => getIt<ChatCubit>()..init(),
         ),

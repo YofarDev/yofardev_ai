@@ -45,4 +45,8 @@ abstract class SettingsRepository {
   // Global Memory Configuration
   Future<Result<bool>> getMemoryEnabled();
   Future<Result<void>> setMemoryEnabled(bool enabled);
+
+  // Live captions on the Home stage (default on)
+  Future<Result<bool>> getCaptionsEnabled();
+  Future<Result<void>> setCaptionsEnabled(bool enabled);
 }

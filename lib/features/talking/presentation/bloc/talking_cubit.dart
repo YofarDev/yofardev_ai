@@ -122,6 +122,9 @@ class TalkingCubit extends Cubit<TalkingState> {
       // talking state.
       case CuesReachedEvent():
         break;
+      // Captions are owned by CaptionCubit.
+      case CaptionEvent():
+        break;
     }
   }
 
