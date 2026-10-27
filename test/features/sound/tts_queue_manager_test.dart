@@ -49,6 +49,83 @@ void main() {
       interruptionService.dispose();
     });
 
+    group('pending speech', () {
+      Future<void> enqueue(String text) => manager.enqueue(
+        text: text,
+        language: 'en',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+
+      test('a failed synthesis drains the queue', () async {
+        when(
+          () => mockDatasource.synthesize(
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+            voiceEffect: any(named: 'voiceEffect'),
+          ),
+        ).thenThrow(StateError('models missing'));
+        int drained = 0;
+        final StreamSubscription<void> sub = manager.drained.listen(
+          (_) => drained++,
+        );
+
+        await enqueue('Hello.');
+        await Future<void>.delayed(Duration.zero);
+
+        expect(manager.hasPendingSpeech, isFalse);
+        expect(drained, 1);
+        await sub.cancel();
+      });
+
+      test(
+        'synthesized audio stays pending until its playback starts',
+        () async {
+          when(
+            () => mockDatasource.synthesize(
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+              voiceEffect: any(named: 'voiceEffect'),
+            ),
+          ).thenAnswer((_) async => '/raw.wav');
+          int drained = 0;
+          final StreamSubscription<void> sub = manager.drained.listen(
+            (_) => drained++,
+          );
+          final Future<String> path = manager.audioStream.first;
+
+          await enqueue('Hello.');
+          final String audio = await path;
+          expect(manager.hasPendingSpeech, isTrue);
+          expect(drained, 0);
+
+          expect(manager.consumeText(audio), 'Hello.');
+          await Future<void>.delayed(Duration.zero);
+          expect(manager.hasPendingSpeech, isFalse);
+          expect(drained, 1);
+          await sub.cancel();
+        },
+      );
+
+      test('a cue-only item drains the queue', () async {
+        int drained = 0;
+        final StreamSubscription<void> sub = manager.drained.listen(
+          (_) => drained++,
+        );
+
+        await manager.enqueue(
+          text: '',
+          language: 'en',
+          voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+          cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        expect(manager.hasPendingSpeech, isFalse);
+        expect(drained, 1);
+        await sub.cancel();
+      });
+    });
+
     test('deleteAudio removes the file via the synthesizer', () async {
       final Directory tmp = await Directory.systemTemp.createTemp('tts-del');
       final File wav = File('${tmp.path}/1.wav');

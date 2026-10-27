@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -128,5 +130,36 @@ void main() {
     rig.answer(1, 'Fresh sentence.');
     await settle(tester);
     expect(rig.synthesizer.texts, <String>['Fresh sentence.']);
+  });
+
+  testWidgets('a reply whose speech fails to synthesize leaves thinking', (
+    WidgetTester tester,
+  ) async {
+    await pumpComposer(tester);
+    rig.synthesizer.fails = true;
+    await send(tester, 'Hello');
+    rig.answer(0, 'Hi there.');
+    await settle(tester);
+    await tester.pump(TalkingCubit.idleCooldown * 2);
+    await settle(tester);
+
+    expect(rig.synthesizer.texts, <String>['Hi there.']);
+    expect(rig.talking.state.phase, TalkingPhase.idle);
+    expect(orbState(tester), ComposerOrbState.idle);
+  });
+
+  testWidgets('an empty reply leaves thinking', (WidgetTester tester) async {
+    await pumpComposer(tester);
+    await send(tester, 'Hello');
+    // The provider ends the reply without a word.
+    rig.requests[0].add(const LlmStreamChunk.complete());
+    unawaited(rig.requests[0].close());
+    await settle(tester);
+    await tester.pump(TalkingCubit.idleCooldown * 2);
+    await settle(tester);
+
+    expect(rig.synthesizer.texts, isEmpty);
+    expect(rig.talking.state.phase, TalkingPhase.idle);
+    expect(orbState(tester), ComposerOrbState.idle);
   });
 }

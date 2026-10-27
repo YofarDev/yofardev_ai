@@ -154,8 +154,9 @@ class RealReplyRig {
     talking = TalkingCubit(
       TalkingRepositoryImpl(),
       interruption,
-      TtsPlaybackService(TalkingRepositoryImpl()),
+      playback,
       lifecycle,
+      ttsQueue,
     );
   }
 
@@ -177,6 +178,9 @@ class RealReplyRig {
   final AppLifecycleService lifecycle = AppLifecycleService();
   final InterruptionService interruption = InterruptionService();
   final RecordingSynthesizer synthesizer = RecordingSynthesizer();
+  final TtsPlaybackService playback = TtsPlaybackService(
+    TalkingRepositoryImpl(),
+  );
   final MockRigLlmService llm = MockRigLlmService();
   final MockRigChatRepository chatRepository = MockRigChatRepository();
 
@@ -205,6 +209,7 @@ class RealReplyRig {
     await chat.close();
     await talking.close();
     ttsQueue.dispose();
+    playback.dispose();
     interruption.dispose();
   }
 }

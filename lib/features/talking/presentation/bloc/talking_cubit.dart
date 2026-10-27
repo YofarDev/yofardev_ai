@@ -5,11 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../sound/sound.dart';
 import '../../domain/repositories/talking_repository.dart';
 import '../../domain/services/tts_playback_service.dart';
 import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/chat_status.dart';
 import '../../../../core/models/failure.dart';
+import '../../../../core/models/talking_phase.dart';
 import 'talking_state.dart';
 
 class TalkingCubit extends Cubit<TalkingState> {
@@ -18,8 +20,12 @@ class TalkingCubit extends Cubit<TalkingState> {
     this._interruptionService,
     this._playbackService,
     this._appLifecycleService,
+    this._ttsQueue,
   ) : super(const TalkingState.idle()) {
     _eventSubscription = _playbackService.events.listen(_onPlaybackEvent);
+    // A finished reply whose speech ran out (a sentence failed to
+    // synthesize) leaves "generating" here: no playback event will.
+    _drainedSubscription = _ttsQueue.drained.listen((_) => _idleIfSilent());
     _interruptionSubscription = _interruptionService.interruptionStream.listen((
       _,
     ) async {
@@ -57,7 +63,14 @@ class TalkingCubit extends Cubit<TalkingState> {
   final InterruptionService _interruptionService;
   final TtsPlaybackService _playbackService;
   final AppLifecycleService _appLifecycleService;
+  final TtsQueueService _ttsQueue;
   StreamSubscription<void>? _interruptionSubscription;
+  StreamSubscription<void>? _drainedSubscription;
+
+  /// The reply in flight has finished streaming (success). From then on,
+  /// "generating" ends as soon as no speech is pending: a reply with no
+  /// audio (synthesis failed, cue-only or empty) must not think forever.
+  bool _replyDone = false;
   StreamSubscription<PlaybackEvent>? _eventSubscription;
   StreamSubscription<ChatStatus>? _streamingStateSubscription;
   StreamSubscription<String>? _chatChangedSubscription;
@@ -69,22 +82,41 @@ class TalkingCubit extends Cubit<TalkingState> {
     switch (status) {
       case ChatStatus.initial:
       case ChatStatus.creatingChat:
-      case ChatStatus.success:
       case ChatStatus.loaded:
       case ChatStatus.updating:
         // Do nothing
         break;
+      case ChatStatus.success:
+        _replyDone = true;
+        _idleIfSilent();
       case ChatStatus.loading:
       case ChatStatus.typing:
       case ChatStatus.streaming:
         // Show thinking animation while waiting for LLM response
+        _replyDone = false;
+        _idleCooldownTimer?.cancel();
+        _idleCooldownTimer = null;
         setLoadingStatus(true);
       case ChatStatus.error:
       case ChatStatus.interrupted:
         // Error or interruption - stop thinking animation
+        _replyDone = false;
         stop();
         break;
     }
+  }
+
+  /// Ends "generating" once the reply finished and no speech is pending,
+  /// through the same cooldown as the end of a sentence (audio that is
+  /// about to start cancels it, so normal replies never flicker).
+  void _idleIfSilent() {
+    if (isClosed ||
+        !_replyDone ||
+        state.phase != TalkingPhase.generating ||
+        _ttsQueue.hasPendingSpeech) {
+      return;
+    }
+    _startIdleCooldown();
   }
 
   /// Handle chat changed events from app lifecycle service.
@@ -93,6 +125,10 @@ class TalkingCubit extends Cubit<TalkingState> {
   void _handleChatChanged(String chatId) {
     stop();
   }
+
+  /// How long the talking state waits before going idle after speech ends,
+  /// so the next sentence starting can cancel it (no flicker).
+  static const Duration idleCooldown = Duration(milliseconds: 100);
 
   /// Cooldown timer to prevent flickering between sentences during streaming
   Timer? _idleCooldownTimer;
@@ -108,12 +144,7 @@ class TalkingCubit extends Cubit<TalkingState> {
       case SpeakingStoppedEvent():
         // Don't immediately go to idle - start cooldown instead
         // This prevents UI flickering between sentences during streaming
-        _idleCooldownTimer?.cancel();
-        _idleCooldownTimer = Timer(const Duration(milliseconds: 100), () {
-          if (!isClosed) {
-            emit(const TalkingState.idle());
-          }
-        });
+        _startIdleCooldown();
       case MouthStateUpdatedEvent(:final int mouthState):
         _updateMouthStateFromService(mouthState);
       case AnimationCompletedEvent():
@@ -126,6 +157,15 @@ class TalkingCubit extends Cubit<TalkingState> {
       case CaptionEvent():
         break;
     }
+  }
+
+  void _startIdleCooldown() {
+    _idleCooldownTimer?.cancel();
+    _idleCooldownTimer = Timer(idleCooldown, () {
+      if (!isClosed) {
+        emit(const TalkingState.idle());
+      }
+    });
   }
 
   Future<void> init() async {
@@ -252,6 +292,7 @@ class TalkingCubit extends Cubit<TalkingState> {
   Future<void> close() async {
     _idleCooldownTimer?.cancel();
     await _eventSubscription?.cancel();
+    await _drainedSubscription?.cancel();
     await _interruptionSubscription?.cancel();
     await _streamingStateSubscription?.cancel();
     await _chatChangedSubscription?.cancel();

@@ -316,6 +316,12 @@ class MockTtsQueueService implements TtsQueueService {
   bool get isProcessing => false;
 
   @override
+  bool get hasPendingSpeech => false;
+
+  @override
+  Stream<void> get drained => const Stream<void>.empty();
+
+  @override
   List<TtsQueueItem> get queue => <TtsQueueItem>[];
 
   bool get hasItems => false;
@@ -422,6 +428,7 @@ void main() {
         interruptionService,
         playbackService,
         MockAppLifecycleService(),
+        MockTtsQueueService(),
       );
 
       chatsCubit = ChatCubit(

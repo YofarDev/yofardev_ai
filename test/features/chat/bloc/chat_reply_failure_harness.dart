@@ -13,6 +13,10 @@ import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dar
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/demo/demo.dart';
+import 'package:yofardev_ai/core/models/voice_effect.dart';
+import 'package:yofardev_ai/core/services/audio/voice_effects_service.dart';
+import 'package:yofardev_ai/features/sound/domain/services/tts_synthesizer.dart';
+import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/talking/data/repositories/talking_repository_impl.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
@@ -28,6 +32,18 @@ class _MockChatTitleService extends Mock implements ChatTitleService {}
 class _MockGlobalMemoryService extends Mock implements GlobalMemoryService {}
 
 class _MockDemoService extends Mock implements DemoService {}
+
+class _UnusedSynthesizer implements TtsSynthesizer {
+  @override
+  Future<String> synthesize({
+    required String text,
+    required String language,
+    required VoiceEffect voiceEffect,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> delete(String path) async {}
+}
 
 /// How the scripted reply ends.
 enum ReplyEnd { success, error, thrown, interrupted }
@@ -97,6 +113,7 @@ class ReplyRig {
       interruption,
       TtsPlaybackService(TalkingRepositoryImpl()),
       lifecycle,
+      ttsQueue,
     );
   }
 
@@ -104,6 +121,14 @@ class ReplyRig {
 
   final AppLifecycleService lifecycle = AppLifecycleService();
   final InterruptionService interruption = InterruptionService();
+
+  /// A real queue over a synthesizer that is never called (no sentence is
+  /// enqueued by the scripted replies).
+  late final TtsQueueService ttsQueue = TtsQueueService(
+    ttsSynthesizer: _UnusedSynthesizer(),
+    interruptionService: interruption,
+    voiceEffectsService: VoiceEffectsService(),
+  );
   late final ScriptedStreamingService streaming;
   late final ChatCubit chat;
   late final TalkingCubit talking;
@@ -111,5 +136,6 @@ class ReplyRig {
   Future<void> close() async {
     await chat.close();
     await talking.close();
+    ttsQueue.dispose();
   }
 }

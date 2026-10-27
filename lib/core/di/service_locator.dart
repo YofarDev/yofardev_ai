@@ -244,6 +244,7 @@ Future<void> setupServiceLocator() async {
       getIt<InterruptionService>(),
       getIt<TtsPlaybackService>(),
       getIt<AppLifecycleService>(),
+      getIt<TtsQueueService>(),
     ),
   );
   getIt.registerFactory<CaptionCubit>(
