@@ -23,6 +23,7 @@ import 'package:yofardev_ai/core/services/stream_processor/stream_processor_serv
 import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
+import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 
 class _MockChatRepository extends Mock implements ChatRepository {}
 
@@ -202,25 +203,34 @@ void main() {
     settingsRepository: tool == null ? null : _MockSettingsRepository(),
   );
 
-  Future<void> run(ChatStreamingService service, String name) =>
-      service.streamResponse(
-        prompt: name,
-        onlyText: true,
-        avatar: const Avatar(),
-        currentChat: const Chat(id: 'chat-1'),
-        language: 'en',
-        onChatUpdated: (Chat chat) {
-          final String body = chat.entries.last.body;
-          final String entry = '$name:update:$body';
-          if (chat.entries.last.entryType == EntryType.yofardev &&
-              body.isNotEmpty &&
-              !log.contains(entry)) {
-            log.add(entry);
-          }
-        },
-        onStreamComplete: (_) => log.add('$name:complete'),
-        onError: (String e) => log.add('$name:error'),
-      );
+  /// The chat each reply ended with, by reply name.
+  final Map<String, Chat> finals = <String, Chat>{};
+
+  Future<void> run(
+    ChatStreamingService service,
+    String name, {
+    Chat currentChat = const Chat(id: 'chat-1'),
+  }) => service.streamResponse(
+    prompt: name,
+    onlyText: true,
+    avatar: const Avatar(),
+    currentChat: currentChat,
+    language: 'en',
+    onChatUpdated: (Chat chat) {
+      final String body = chat.entries.last.body;
+      final String entry = '$name:update:$body';
+      if (chat.entries.last.entryType == EntryType.yofardev &&
+          body.isNotEmpty &&
+          !log.contains(entry)) {
+        log.add(entry);
+      }
+    },
+    onStreamComplete: (Chat chat) {
+      finals[name] = chat;
+      log.add('$name:complete');
+    },
+    onError: (String e) => log.add('$name:error'),
+  );
 
   Future<void> waitFor(bool Function() condition) async {
     for (int i = 0; i < 100 && !condition(); i++) {
@@ -401,5 +411,138 @@ void main() {
     unawaited(requests[1].close());
     await second.timeout(const Duration(seconds: 1));
     expect(log, <String>['execute', 'A:complete', 'B:complete']);
+  });
+
+  group('no empty reply is stored', () {
+    /// The chat last persisted through the repository.
+    Chat persisted() =>
+        verify(
+              () => chatRepository.updateChat(
+                id: any(named: 'id'),
+                updatedChat: captureAny(named: 'updatedChat'),
+              ),
+            ).captured.last
+            as Chat;
+
+    List<EntryType> types(Chat chat) =>
+        chat.entries.map((ChatEntry e) => e.entryType).toList();
+
+    test('Stop before the first sentence keeps only the prompt', () async {
+      final ChatStreamingService service = buildService();
+      final Future<void> reply = run(service, 'Hello');
+      await waitFor(() => requests.isNotEmpty && requests[0].hasListener);
+      await interruption.interrupt();
+      await reply.timeout(const Duration(seconds: 1));
+
+      final Chat saved = persisted();
+      expect(types(finals['Hello']!), <EntryType>[EntryType.user]);
+      expect(types(saved), <EntryType>[EntryType.user]);
+      expect(saved.entries.single.body, 'Hello');
+      // Still a first exchange: the title gets generated as before.
+      expect(
+        ChatTitleService(
+          chatRepository: chatRepository,
+          llmService: llmService,
+        ).shouldGenerateTitle(saved),
+        isTrue,
+      );
+    });
+
+    test('the next request carries no empty assistant message', () async {
+      final ChatStreamingService service = buildService();
+      final Future<void> first = run(service, 'Hello');
+      await waitFor(() => requests.isNotEmpty && requests[0].hasListener);
+      await interruption.interrupt();
+      await first.timeout(const Duration(seconds: 1));
+
+      final Future<void> second = run(
+        service,
+        'Again',
+        currentChat: finals['Hello']!,
+      );
+      await waitFor(() => requests.length == 2);
+      final List<LlmMessage> messages =
+          verify(
+                () => llmService.promptModelStream(
+                  messages: captureAny(named: 'messages'),
+                  systemPrompt: any(named: 'systemPrompt'),
+                  config: any(named: 'config'),
+                  returnJson: any(named: 'returnJson'),
+                  debugLogs: any(named: 'debugLogs'),
+                  tools: any(named: 'tools'),
+                ),
+              ).captured.last
+              as List<LlmMessage>;
+      expect(
+        messages.where(
+          (LlmMessage m) =>
+              m.role == LlmMessageRole.assistant && m.body.trim().isEmpty,
+        ),
+        isEmpty,
+      );
+      expect(
+        messages
+            .where((LlmMessage m) => m.role == LlmMessageRole.user)
+            .map((LlmMessage m) => m.body),
+        <String>['Hello', 'Again'],
+      );
+      requests[1].add(const LlmStreamChunk.complete());
+      unawaited(requests[1].close());
+      await second.timeout(const Duration(seconds: 1));
+    });
+
+    test('Stop after a sentence keeps the reply', () async {
+      final ChatStreamingService service = buildService();
+      final Future<void> reply = run(service, 'Hello');
+      await waitFor(() => requests.isNotEmpty && requests[0].hasListener);
+      requests[0].add(
+        const LlmStreamChunk.text(content: 'Hi there.', isComplete: false),
+      );
+      await waitFor(() => log.isNotEmpty);
+      await interruption.interrupt();
+      await reply.timeout(const Duration(seconds: 1));
+
+      final Chat saved = persisted();
+      expect(types(saved), <EntryType>[EntryType.user, EntryType.yofardev]);
+      expect(saved.entries.last.body, 'Hi there.');
+    });
+
+    test('a reply that ends without a word stores only the prompt', () async {
+      final ChatStreamingService service = buildService();
+      final Future<void> reply = run(service, 'Hello');
+      await waitFor(() => requests.isNotEmpty && requests[0].hasListener);
+      requests[0].add(const LlmStreamChunk.complete());
+      unawaited(requests[0].close());
+      await reply.timeout(const Duration(seconds: 1));
+
+      expect(types(persisted()), <EntryType>[EntryType.user]);
+    });
+
+    test('Stop before the answer round keeps the prompt and the tool '
+        'entries', () async {
+      final ChatStreamingService service = buildService(
+        tool: _SlowTool(log, Future<void>.value()),
+      );
+      final Future<void> reply = run(service, 'Weather?');
+      await waitFor(() => requests.isNotEmpty && requests[0].hasListener);
+      requests[0].add(
+        const LlmStreamChunk.toolCallDelta(
+          index: 0,
+          id: 'call_1',
+          name: 'slowTool',
+          argumentsDelta: '{}',
+        ),
+      );
+      unawaited(requests[0].close());
+      // The tool ran; the answer round is waiting for its first chunk.
+      await waitFor(() => requests.length == 2 && requests[1].hasListener);
+      await interruption.interrupt();
+      await reply.timeout(const Duration(seconds: 1));
+
+      expect(types(persisted()), <EntryType>[
+        EntryType.user,
+        EntryType.functionCalling,
+      ]);
+    });
   });
 }

@@ -596,6 +596,9 @@ class ChatStreamingService {
       }
 
       if (interrupted()) {
+        // Stopped before the first sentence: keep the prompt (and any tool
+        // entries), not an empty reply.
+        chat = _withoutEmptyReply(chat, streamingEntry.id);
         onStreamComplete(chat);
         await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
         return;
@@ -609,7 +612,10 @@ class ChatStreamingService {
 
       final List<ChatEntry> finalEntries = List<ChatEntry>.from(chat.entries);
       finalEntries[finalEntries.length - 1] = finalEntry;
-      chat = chat.copyWith(entries: finalEntries);
+      chat = _withoutEmptyReply(
+        chat.copyWith(entries: finalEntries),
+        streamingEntry.id,
+      );
       onChatUpdated(chat);
 
       onStreamComplete(chat);
@@ -626,6 +632,20 @@ class ChatStreamingService {
       onError(e.toString());
       return;
     }
+  }
+
+  /// [chat] without its reply placeholder (entry [replyId], the last one)
+  /// when that holds no text. Stored history is replayed on every request,
+  /// and an empty assistant message is rejected by some providers (Gemini:
+  /// empty text parts; DeepSeek: empty trailing assistant). The user's
+  /// prompt and any tool entries stay.
+  static Chat _withoutEmptyReply(Chat chat, String replyId) {
+    if (chat.entries.isEmpty) return chat;
+    final ChatEntry last = chat.entries.last;
+    if (last.id != replyId || last.body.trim().isNotEmpty) return chat;
+    return chat.copyWith(
+      entries: chat.entries.sublist(0, chat.entries.length - 1),
+    );
   }
 
   /// [future]'s value, or null as soon as [stop] completes (whichever comes
