@@ -44,8 +44,6 @@ class _MoreMenu extends StatefulWidget {
 
   final VoidCallback onStartDemo;
 
-  static const double width = 248;
-
   @override
   State<_MoreMenu> createState() => _MoreMenuState();
 }
@@ -78,7 +76,6 @@ class _MoreMenuState extends State<_MoreMenu> {
       alignmentOffset: const Offset(0, AppSpace.xs),
       menuChildren: <Widget>[
         StageMenuPanel(
-          width: _MoreMenu.width,
           children: <Widget>[
             StageMenuRow(
               icon: Icons.add_comment_outlined,

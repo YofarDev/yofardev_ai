@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/components/components.dart';
@@ -14,29 +16,42 @@ const MenuStyle stageMenuStyle = MenuStyle(
   padding: WidgetStatePropertyAll<EdgeInsetsGeometry>(EdgeInsets.zero),
 );
 
-/// The thick glass sheet of a Stage menu: [children] stacked, [width] wide.
+/// The thick glass sheet of a Stage menu: [children] stacked, as wide as
+/// the longest row (at least [minWidth]), never wider than the screen minus
+/// its gutters; a label that still doesn't fit wraps to a second line.
 class StageMenuPanel extends StatelessWidget {
   const StageMenuPanel({
     super.key,
-    required this.width,
+    this.minWidth = defaultMinWidth,
     required this.children,
   });
 
-  final double width;
+  final double minWidth;
   final List<Widget> children;
+
+  static const double defaultMinWidth = 248;
 
   @override
   Widget build(BuildContext context) {
+    final double maxWidth = math.max(
+      0,
+      MediaQuery.sizeOf(context).width - AppSpace.lg * 2,
+    );
     return GlassPanel(
       level: AppGlassLevel.thick,
       blur: true,
       padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
-      child: SizedBox(
-        width: width,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: math.min(minWidth, maxWidth),
+          maxWidth: maxWidth,
+        ),
+        child: IntrinsicWidth(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
         ),
       ),
     );
@@ -91,7 +106,7 @@ class StageMenuRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.bodyLarge?.copyWith(color: onSurface),
                   ),

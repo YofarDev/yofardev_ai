@@ -16,8 +16,6 @@ class StageComposerMenu extends StatefulWidget {
 
   final VoidCallback? onAttach;
 
-  static const double width = 248;
-
   @override
   State<StageComposerMenu> createState() => _StageComposerMenuState();
 }
@@ -35,7 +33,6 @@ class _StageComposerMenuState extends State<StageComposerMenu> {
       alignmentOffset: const Offset(0, AppSpace.sm),
       menuChildren: <Widget>[
         StageMenuPanel(
-          width: StageComposerMenu.width,
           children: <Widget>[
             if (onAttach != null)
               StageMenuRow(

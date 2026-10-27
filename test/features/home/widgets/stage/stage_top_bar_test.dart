@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:yofardev_ai/core/design/components/components.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/router/route_constants.dart';
+import 'package:yofardev_ai/features/home/widgets/stage/stage_menu.dart';
 import 'package:yofardev_ai/features/home/widgets/stage/stage_top_bar.dart';
 import 'package:yofardev_ai/features/settings/settings.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
@@ -125,6 +128,56 @@ void main() {
     await openMenu(tester);
     expect(find.bySemanticsLabel('Language: Français'), findsOneWidget);
     handle.dispose();
+  });
+
+  for (final Locale locale in const <Locale>[Locale('fr'), Locale('en')]) {
+    testWidgets('the More menu fits every label (${locale.languageCode})', (
+      WidgetTester tester,
+    ) async {
+      tester.view
+        ..physicalSize = const Size(390, 844)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpBar(tester, locale: locale);
+      await tester.tap(find.byType(AppIconButton));
+      await tester.pumpAndSettle();
+
+      final Finder labels = find.descendant(
+        of: find.byType(StageMenuPanel),
+        matching: find.byType(Text),
+      );
+      expect(labels, findsNWidgets(5));
+      for (final Element label in labels.evaluate()) {
+        final RenderParagraph paragraph =
+            label.findRenderObject()! as RenderParagraph;
+        expect(
+          paragraph.didExceedMaxLines,
+          isFalse,
+          reason: '"${(label.widget as Text).data}" must not be cut',
+        );
+        expect(paragraph.size.height, lessThan(30), reason: 'one line');
+      }
+      if (locale.languageCode == 'fr') {
+        expect(find.text('Masquer les sous-titres'), findsOneWidget);
+      }
+    });
+  }
+
+  testWidgets('on a narrow screen the menu stays inside the gutters', (
+    WidgetTester tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(240, 600)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pumpBar(tester, locale: const Locale('fr'));
+    await tester.tap(find.byType(AppIconButton));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(find.byType(StageMenuPanel)).width,
+      lessThanOrEqualTo(240 - 32),
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('More → captions shows the action the tap does', (
