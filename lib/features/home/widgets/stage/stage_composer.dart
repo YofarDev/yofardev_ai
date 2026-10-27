@@ -17,6 +17,7 @@ import '../../../../core/models/failure.dart';
 import '../../../../core/models/talking_phase.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/speech/speech_input_service.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
 import '../../../../core/widgets/picker_buttons.dart';
 import '../../../chat/chat.dart';
@@ -50,6 +51,9 @@ class StageComposer extends StatefulWidget {
   static const double orbSize = 48;
   static const Key liveWordsKey = ValueKey<String>('stage-live-words');
 
+  /// Width used when the parent does not bound it (Home always does).
+  static const double unboundedWidth = 360;
+
   /// How long the orb shows the error state after a failed reply.
   static const Duration errorFlash = Duration(milliseconds: 600);
 
@@ -70,11 +74,20 @@ class _StageComposerState extends State<StageComposer>
   File? _pickedImage;
   bool _hasText = false;
   bool _listening = false;
+
+  /// A listening tap is waiting for [SpeechInputService.stop]: the orb keeps
+  /// its listening look and ignores taps until the words are in.
+  bool _stopping = false;
   bool _submitting = false;
   String _partialWords = '';
 
-  /// End of the error flash; null when the orb is not in error.
-  DateTime? _errorUntil;
+  /// Bumped by every listening session, so a late [SpeechInputService.start]
+  /// result can tell whether it still belongs to the current one.
+  int _session = 0;
+
+  /// The orb shows the error state; [_errorTimer] clears it after
+  /// [StageComposer.errorFlash].
+  bool _flashingError = false;
   Timer? _errorTimer;
 
   StreamSubscription<double>? _levelSub;
@@ -144,6 +157,7 @@ class _StageComposerState extends State<StageComposer>
   Future<void> _startListening() async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String localeId = _localeId();
+    final int session = ++_session;
     _haptic();
     _focusNode.unfocus();
     setState(() {
@@ -162,8 +176,9 @@ class _StageComposerState extends State<StageComposer>
     final SpeechStartResult result = await widget.speech.start(
       localeId: localeId,
     );
-    // Stopped (or gone) while the start was pending: nothing to report.
-    if (!mounted || !_listening) {
+    // Stopped, restarted or gone while the start was pending: nothing to
+    // report for this session.
+    if (!mounted || !_listening || _stopping || session != _session) {
       return;
     }
     switch (result) {
@@ -189,16 +204,24 @@ class _StageComposerState extends State<StageComposer>
     _level.value = 0;
     setState(() {
       _listening = false;
+      _stopping = false;
       _partialWords = '';
     });
   }
 
+  /// Stops the session and sends what was heard. The composer stays in its
+  /// listening look until [SpeechInputService.stop] answers, then leaves it
+  /// in the same frame as the submit, so the orb never flashes the mic.
   Future<void> _stopListening() async {
-    _endListening();
+    if (_stopping) {
+      return;
+    }
+    setState(() => _stopping = true);
     final String words = await widget.speech.stop();
     if (!mounted) {
       return;
     }
+    _endListening();
     await _submit(words);
   }
 
@@ -221,20 +244,30 @@ class _StageComposerState extends State<StageComposer>
       _submitting = true;
     });
 
-    await chatCubit.streamResponse(
-      prompt,
-      onlyText: false,
-      attachedImage: attachedImage,
-      avatar: chatState.currentChat.avatar,
-      currentChat: chatState.currentChat,
-      language: language,
-      functionCallingEnabled: chatState.functionCallingEnabled,
-    );
-    if (!mounted) {
-      return;
+    try {
+      await chatCubit.streamResponse(
+        prompt,
+        onlyText: false,
+        attachedImage: attachedImage,
+        avatar: chatState.currentChat.avatar,
+        currentChat: chatState.currentChat,
+        language: language,
+        functionCallingEnabled: chatState.functionCallingEnabled,
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'streamResponse failed',
+        tag: 'StageComposer',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    } finally {
+      // The cubit outlives the composer: reset it even if Home is gone.
+      chatCubit.resetStatus();
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
     }
-    chatCubit.resetStatus();
-    setState(() => _submitting = false);
   }
 
   Future<void> _attachImage() async {
@@ -257,12 +290,10 @@ class _StageComposerState extends State<StageComposer>
     _errorTimer?.cancel();
     _errorTimer = Timer(StageComposer.errorFlash, () {
       if (mounted) {
-        setState(() => _errorUntil = null);
+        setState(() => _flashingError = false);
       }
     });
-    setState(() {
-      _errorUntil = DateTime.now().add(StageComposer.errorFlash);
-    });
+    setState(() => _flashingError = true);
     if (!MediaQuery.disableAnimationsOf(context)) {
       unawaited(_shake.forward(from: 0));
     }
@@ -273,16 +304,18 @@ class _StageComposerState extends State<StageComposer>
     );
   }
 
-  String _orbLabel(
-    AppLocalizations l10n,
-    ComposerOrbState mode,
-  ) => switch (mode) {
-    ComposerOrbState.idle =>
-      widget.speech.isSupported ? l10n.composerListen : l10n.askAnything,
-    ComposerOrbState.typing || ComposerOrbState.listening => l10n.composerSend,
-    ComposerOrbState.thinking || ComposerOrbState.speaking => l10n.composerStop,
-    ComposerOrbState.error => l10n.composerListen,
-  };
+  String _orbLabel(AppLocalizations l10n, ComposerOrbState mode) =>
+      switch (mode) {
+        ComposerOrbState.idle =>
+          widget.speech.isSupported ? l10n.composerListen : l10n.askAnything,
+        ComposerOrbState.typing => l10n.composerSend,
+        // Nothing heard yet: a tap just ends the session.
+        ComposerOrbState.listening =>
+          _partialWords.isEmpty ? l10n.composerStop : l10n.composerSend,
+        ComposerOrbState.thinking ||
+        ComposerOrbState.speaking => l10n.composerStop,
+        ComposerOrbState.error => l10n.composerListen,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +332,7 @@ class _StageComposerState extends State<StageComposer>
       hasText: _hasText,
       listening: _listening,
       submitting: _submitting,
-      error: _errorUntil != null,
+      error: _flashingError,
     );
     final Duration morph = MediaQuery.disableAnimationsOf(context)
         ? AppMotion.fast
@@ -313,9 +346,12 @@ class _StageComposerState extends State<StageComposer>
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           // The field takes what the orb and the pill's padding leave.
+          final double width = constraints.hasBoundedWidth
+              ? constraints.maxWidth
+              : StageComposer.unboundedWidth;
           final double fieldWidth = math.max(
             0,
-            constraints.maxWidth - StageComposer.orbSize - AppSpace.xs * 2,
+            width - StageComposer.orbSize - AppSpace.xs * 2,
           );
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -400,7 +436,7 @@ class _StageComposerState extends State<StageComposer>
                           mode: mode,
                           level: _level,
                           label: _orbLabel(l10n, mode),
-                          onTap: mode == ComposerOrbState.error
+                          onTap: mode == ComposerOrbState.error || _stopping
                               ? null
                               : () => _onOrbTap(mode),
                         ),

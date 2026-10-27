@@ -111,6 +111,24 @@ void main() {
     });
   });
 
+  testWidgets('without an Overlay it returns quietly', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Builder(
+          builder: (BuildContext context) {
+            showAppToast(context, 'Nowhere');
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.text('Nowhere'), findsNothing);
+  });
+
   group('AppToast goldens', () {
     testGoldens('neutral and error pills', (WidgetTester tester) async {
       await tester.pumpWidgetBuilder(

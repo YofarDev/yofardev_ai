@@ -8,9 +8,12 @@ import '../tokens/app_motion.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_tokens.dart';
+import '../../utils/logger.dart';
 import 'glass_panel.dart';
 
-/// The toast on screen, if any: a new one replaces it.
+/// The toast on screen, if any: a new one replaces it (without its exit
+/// animation). App-wide on purpose; it is cleared when the toast leaves or
+/// lazily on the next [showAppToast] if its overlay went away first.
 OverlayEntry? _activeToast;
 
 /// How long a toast stays up before it leaves.
@@ -21,7 +24,11 @@ const Duration appToastDuration = Duration(seconds: 3);
 /// [appToastDuration]. One toast at a time: showing another replaces it.
 /// [error] tints the pill with the error color.
 void showAppToast(BuildContext context, String message, {bool error = false}) {
-  final OverlayState overlay = Overlay.of(context, rootOverlay: true);
+  final OverlayState? overlay = Overlay.maybeOf(context, rootOverlay: true);
+  if (overlay == null) {
+    AppLogger.debug('No overlay to show "$message" in', tag: 'AppToast');
+    return;
+  }
   _removeToast(_activeToast);
   late final OverlayEntry entry;
   entry = OverlayEntry(

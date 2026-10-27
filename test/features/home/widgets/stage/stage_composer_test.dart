@@ -42,6 +42,14 @@ class FakeSpeechInputService implements SpeechInputService {
 
   SpeechStartResult startResult = SpeechStartResult.started;
   String words = '';
+
+  /// When set, [start] waits for the test to complete its completer.
+  bool holdStarts = false;
+  final List<Completer<SpeechStartResult>> heldStarts =
+      <Completer<SpeechStartResult>>[];
+
+  /// When set, [stop] answers with this completer's future.
+  Completer<String>? stopGate;
   final List<String> calls = <String>[];
   final StreamController<double> level = StreamController<double>.broadcast();
   final StreamController<String> partial = StreamController<String>.broadcast();
@@ -55,13 +63,18 @@ class FakeSpeechInputService implements SpeechInputService {
   @override
   Future<SpeechStartResult> start({required String localeId}) async {
     calls.add('start:$localeId');
+    if (holdStarts) {
+      final Completer<SpeechStartResult> held = Completer<SpeechStartResult>();
+      heldStarts.add(held);
+      return held.future;
+    }
     return startResult;
   }
 
   @override
   Future<String> stop() async {
     calls.add('stop');
-    return words;
+    return stopGate?.future ?? words;
   }
 
   @override
@@ -156,30 +169,37 @@ void main() {
   Future<void> pumpComposer(
     WidgetTester tester, {
     Future<File?> Function()? pickImage,
+    bool reduceMotion = false,
   }) async {
-    await tester.pumpWidget(
-      MultiBlocProvider(
-        providers: <SingleChildWidget>[
-          BlocProvider<ChatCubit>.value(value: chatCubit),
-          BlocProvider<TalkingCubit>.value(value: talkingCubit),
-          BlocProvider<SettingsCubit>.value(value: settingsCubit),
-        ],
-        child: Provider<InterruptionService>.value(
-          value: interruption,
-          child: GoldenTestHelper.makeTestableWidget(
-            locale: const Locale('en'),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: pickImage == null
-                    ? StageComposer(speech: speech)
-                    : StageComposer(speech: speech, pickImage: pickImage),
-              ),
+    final Widget app = MultiBlocProvider(
+      providers: <SingleChildWidget>[
+        BlocProvider<ChatCubit>.value(value: chatCubit),
+        BlocProvider<TalkingCubit>.value(value: talkingCubit),
+        BlocProvider<SettingsCubit>.value(value: settingsCubit),
+      ],
+      child: Provider<InterruptionService>.value(
+        value: interruption,
+        child: GoldenTestHelper.makeTestableWidget(
+          locale: const Locale('en'),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: pickImage == null
+                  ? StageComposer(speech: speech)
+                  : StageComposer(speech: speech, pickImage: pickImage),
             ),
           ),
         ),
       ),
+    );
+    await tester.pumpWidget(
+      reduceMotion
+          ? MediaQuery(
+              data: const MediaQueryData(disableAnimations: true),
+              child: app,
+            )
+          : app,
     );
     await tester.pump();
   }
@@ -361,6 +381,8 @@ void main() {
     await tester.tap(find.byType(ComposerOrb));
     await tester.pump();
     expect(orbState(tester), ComposerOrbState.listening);
+    // Nothing heard yet: a tap only ends the session.
+    expect(orbButton('Stop'), findsOneWidget);
     // The field and "+" collapse: only the orb is left.
     await tester.pumpAndSettle();
     expect(find.byType(TextField), findsNothing);
@@ -455,7 +477,13 @@ void main() {
     expect(orbState(tester), ComposerOrbState.error);
     expect(find.text('Network error'), findsOneWidget);
 
-    // Tapping the error orb does nothing.
+    // The error orb is disabled: a tap does nothing.
+    final SemanticsHandle handle = tester.ensureSemantics();
+    expect(
+      tester.getSemantics(orbButton('Talk')),
+      isSemantics(isButton: true, hasEnabledState: true, isEnabled: false),
+    );
+    handle.dispose();
     await tester.tap(find.byType(ComposerOrb), warnIfMissed: false);
     await tester.pump();
     expect(speech.calls, isEmpty);
@@ -524,6 +552,193 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(const SizedBox());
     expect(speech.calls, <String>['start:en_US', 'cancel']);
+  });
+
+  void stubStreamResponse(Future<void> Function() answer) {
+    when(
+      () => chatCubit.streamResponse(
+        any(),
+        onlyText: any(named: 'onlyText'),
+        attachedImage: any(named: 'attachedImage'),
+        avatar: any(named: 'avatar'),
+        currentChat: any(named: 'currentChat'),
+        language: any(named: 'language'),
+        functionCallingEnabled: any(named: 'functionCallingEnabled'),
+      ),
+    ).thenAnswer((_) => answer());
+  }
+
+  int streamResponseCalls() => verify(
+    () => chatCubit.streamResponse(
+      any(),
+      onlyText: any(named: 'onlyText'),
+      attachedImage: any(named: 'attachedImage'),
+      avatar: any(named: 'avatar'),
+      currentChat: any(named: 'currentChat'),
+      language: any(named: 'language'),
+      functionCallingEnabled: any(named: 'functionCallingEnabled'),
+    ),
+  ).callCount;
+
+  testWidgets('taps while stop() resolves are ignored: one session, no mic '
+      'flicker', (WidgetTester tester) async {
+    speech.stopGate = Completer<String>();
+    await pumpComposer(tester);
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    expect(orbState(tester), ComposerOrbState.listening);
+
+    // A quick second (and third) tap while the words are on their way.
+    await tester.tap(find.byType(ComposerOrb), warnIfMissed: false);
+    await tester.pump();
+    await tester.tap(find.byType(ComposerOrb), warnIfMissed: false);
+    await tester.pump();
+    expect(orbState(tester), ComposerOrbState.listening);
+    expect(speech.calls, <String>['start:en_US', 'stop']);
+
+    speech.stopGate!.complete('hello');
+    await tester.pump();
+    expect(speech.calls, <String>['start:en_US', 'stop']);
+    expect(streamResponseCalls(), 1);
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+  });
+
+  testWidgets('a late start() result does not end a newer session', (
+    WidgetTester tester,
+  ) async {
+    speech.holdStarts = true;
+    await pumpComposer(tester);
+    await tester.tap(find.byType(ComposerOrb)); // session A, start pending
+    await tester.pump();
+    await tester.tap(find.byType(ComposerOrb)); // stop A (no words)
+    await tester.pump();
+    await tester.tap(find.byType(ComposerOrb)); // session B, start pending
+    await tester.pump();
+    expect(speech.calls, <String>['start:en_US', 'stop', 'start:en_US']);
+
+    speech.heldStarts[0].complete(SpeechStartResult.permissionDenied);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(orbState(tester), ComposerOrbState.listening);
+    expect(
+      find.text('Allow the microphone in settings to talk to me.'),
+      findsNothing,
+    );
+
+    speech.heldStarts[1].complete(SpeechStartResult.started);
+    await tester.pump();
+    expect(orbState(tester), ComposerOrbState.listening);
+  });
+
+  testWidgets('a throwing streamResponse still resets and allows the next '
+      'prompt', (WidgetTester tester) async {
+    stubStreamResponse(() async => throw StateError('closed'));
+    await pumpComposer(tester);
+    await tester.enterText(find.byType(TextField), 'First');
+    await tester.pump();
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    verify(() => chatCubit.resetStatus()).called(1);
+    expect(orbState(tester), ComposerOrbState.idle);
+
+    stubStreamResponse(() async {});
+    await tester.enterText(find.byType(TextField), 'Second');
+    await tester.pump();
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    verify(
+      () => chatCubit.streamResponse(
+        'Second',
+        onlyText: false,
+        attachedImage: null,
+        avatar: _avatar,
+        currentChat: _chat,
+        language: 'en',
+        functionCallingEnabled: true,
+      ),
+    ).called(1);
+    verify(() => chatCubit.resetStatus()).called(1);
+  });
+
+  testWidgets('the chat status is reset even if the composer is gone', (
+    WidgetTester tester,
+  ) async {
+    final Completer<void> reply = Completer<void>();
+    stubStreamResponse(() => reply.future);
+    await pumpComposer(tester);
+    await tester.enterText(find.byType(TextField), 'Hello');
+    await tester.pump();
+    await tester.tap(find.byType(ComposerOrb));
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox());
+    reply.complete();
+    await tester.pump();
+    verify(() => chatCubit.resetStatus()).called(1);
+  });
+
+  Offset orbShakeOffset(WidgetTester tester) {
+    final Transform transform = tester.widget<Transform>(
+      find
+          .ancestor(
+            of: find.byType(ComposerOrb),
+            matching: find.byType(Transform),
+          )
+          .first,
+    );
+    return Offset(
+      transform.transform.getTranslation().x,
+      transform.transform.getTranslation().y,
+    );
+  }
+
+  Future<void> failReply(WidgetTester tester) async {
+    chat.emit(
+      chat.state.copyWith(
+        status: ChatStatus.error,
+        error: const NetworkFailure('timeout'),
+      ),
+    );
+    await tester.idle();
+    await tester.pump();
+  }
+
+  testWidgets('the error orb shakes', (WidgetTester tester) async {
+    await pumpComposer(tester);
+    await failReply(tester);
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(orbShakeOffset(tester).dx.abs(), greaterThan(1));
+    await drain(tester);
+  });
+
+  testWidgets('no shake when animations are disabled', (
+    WidgetTester tester,
+  ) async {
+    await pumpComposer(tester, reduceMotion: true);
+    await failReply(tester);
+    for (int i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 40));
+      expect(orbShakeOffset(tester), Offset.zero);
+    }
+    expect(orbState(tester), ComposerOrbState.error);
+    await drain(tester);
+  });
+
+  testWidgets('a repeated error state does not toast again', (
+    WidgetTester tester,
+  ) async {
+    await pumpComposer(tester);
+    await failReply(tester);
+    await tester.pump(const Duration(seconds: 2));
+    // Same status, another field changed: no new toast.
+    chat.emit(chat.state.copyWith(activeTool: 'searchGoogle'));
+    await tester.idle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1500));
+    await tester.pumpAndSettle();
+    expect(find.text('Network error'), findsNothing);
   });
 
   testGoldens('the composer in each mode', (WidgetTester tester) async {
