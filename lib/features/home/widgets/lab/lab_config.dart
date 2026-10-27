@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
-import '../../../../core/design/looks/looks.dart';
 import '../../../../core/models/avatar_scene.dart';
 
 /// Which Home layout the lab's Stage tab shows.
@@ -237,20 +236,6 @@ class LabConfig {
   String toString() => 'LabConfig(${toJson()})';
 }
 
-const Color _black = Color(0xFF000000);
-const Color _white = Color(0xFFFFFFFF);
-const double _minOnAccentContrast = 4.5;
-const double _glowAlpha = 0.35;
-
-Color _onAccentFor(Color accent, Color ink) {
-  for (final Color candidate in <Color>[ink, _black]) {
-    if (contrastRatio(candidate, accent) >= _minOnAccentContrast) {
-      return candidate;
-    }
-  }
-  return _white;
-}
-
 AppGlassStyle _scaleFill(AppGlassStyle style, double scale) => AppGlassStyle(
   blurSigma: style.blurSigma,
   fillAlpha: (style.fillAlpha * scale).clamp(0.0, 1.0),
@@ -282,15 +267,11 @@ ThemeData applyLabOverrides(ThemeData base, LabConfig config) {
     final Color accent = HSVColor.fromColor(
       tokens.scene.accent,
     ).withHue(hue).toColor();
-    final Color onAccent = _onAccentFor(accent, tokens.background);
+    scene = ScenePalette.fromAccent(accent, ink: tokens.background);
+    final Color onAccent = scene.onAccent;
     final Color container = Color.alphaBlend(
       accent.withValues(alpha: 0.25),
       scheme.surface,
-    );
-    scene = ScenePalette(
-      accent: accent,
-      onAccent: onAccent,
-      glow: accent.withValues(alpha: _glowAlpha),
     );
     scheme = scheme.copyWith(
       primary: accent,

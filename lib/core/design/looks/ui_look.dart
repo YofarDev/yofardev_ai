@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../models/avatar_scene.dart';
 import '../tokens/app_palette.dart';
 import '../tokens/scene_palette.dart';
-import 'contrast.dart';
 
 /// Google Fonts family names (as accepted by `GoogleFonts.getFont`) of a look.
 @immutable
@@ -80,33 +79,12 @@ class UiLook {
   final Color success;
   final Color warning;
 
-  static const double _minOnAccentContrast = 4.5;
-
-  /// 35 % of 255, rounded: an integer alpha so a glow can also be written as
-  /// a const hex (`AppPalette.livingRoomGlow`) and compare equal.
-  static const int _glowAlpha = 0x59;
-
-  /// The accent palette of [scene]. `onAccent` is the first of [ink], black,
-  /// white that clears 4.5:1 on the accent (ink preferred as it harmonises with
-  /// the look); `glow` is the accent at 35 % alpha.
+  /// The accent palette of [scene] (see [ScenePalette.fromAccent]).
   ScenePalette palette(AvatarScene scene) {
-    final Color? found = accents[scene];
-    if (found == null) {
+    final Color? accent = accents[scene];
+    if (accent == null) {
       throw StateError('UiLook "$id" has no accent for ${scene.name}');
     }
-    final Color accent = found;
-    final Color onAccent;
-    if (contrastRatio(ink, accent) >= _minOnAccentContrast) {
-      onAccent = ink;
-    } else if (contrastRatio(Colors.black, accent) >= _minOnAccentContrast) {
-      onAccent = Colors.black;
-    } else {
-      onAccent = Colors.white;
-    }
-    return ScenePalette(
-      accent: accent,
-      onAccent: onAccent,
-      glow: accent.withAlpha(_glowAlpha),
-    );
+    return ScenePalette.fromAccent(accent, ink: ink);
   }
 }

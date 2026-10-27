@@ -1,8 +1,7 @@
 // ignore-l10n: debug — the UI lab is debug-only; its strings are hardcoded.
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 
+import '../../../../core/design/components/components.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/models/avatar_scene.dart';
 
@@ -100,49 +99,29 @@ class _Bubble extends StatelessWidget {
   final String text;
   final double tailAt;
 
-  static const double _blurSigma = 14;
-
   @override
   Widget build(BuildContext context) {
-    final AppTokens tokens = context.tokens;
-    final LabBubbleBorder shape = LabBubbleBorder(
-      radius: tokens.radius(AppRadius.lg),
-      tailAt: tailAt,
-      side: BorderSide(
-        color: tokens.glassBorder.withValues(
-          alpha: tokens.glassThick.borderAlpha,
-        ),
-        width: tokens.outlineWidth,
+    return GlassPanel(
+      level: AppGlassLevel.thick,
+      blur: true,
+      shape: SpeechBubbleBorder(
+        radius: context.tokens.radius(AppRadius.lg),
+        tailAt: tailAt,
       ),
-    );
-    final Widget bubble = DecoratedBox(
-      decoration: ShapeDecoration(
-        shape: shape,
-        color: tokens.glassSurface.withValues(alpha: 0.82),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.lg,
+        AppSpace.md,
+        AppSpace.lg,
+        AppSpace.md + SpeechBubbleBorder.tailHeight,
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpace.lg,
-          AppSpace.md,
-          AppSpace.lg,
-          AppSpace.md + LabBubbleBorder.tailHeight,
+      child: _BalancedText(
+        text,
+        align: TextAlign.start,
+        style: context.text.titleMedium?.copyWith(
+          fontSize: 17,
+          height: 1.3,
+          color: context.colors.onSurface,
         ),
-        child: _BalancedText(
-          text,
-          align: TextAlign.start,
-          style: context.text.titleMedium?.copyWith(
-            fontSize: 17,
-            height: 1.3,
-            color: context.colors.onSurface,
-          ),
-        ),
-      ),
-    );
-    return ClipPath(
-      clipper: ShapeBorderClipper(shape: shape),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: _blurSigma, sigmaY: _blurSigma),
-        child: bubble,
       ),
     );
   }
@@ -218,74 +197,4 @@ class _BalancedText extends StatelessWidget {
       },
     );
   }
-}
-
-/// A rounded speech bubble with a short tail on its bottom edge. The tail
-/// takes [tailHeight] of the box's height.
-class LabBubbleBorder extends ShapeBorder {
-  const LabBubbleBorder({
-    required this.radius,
-    this.tailAt = 0.5,
-    this.side = BorderSide.none,
-  });
-
-  final double radius;
-
-  /// Horizontal position of the tail, 0..1 of the width.
-  final double tailAt;
-  final BorderSide side;
-
-  static const double tailHeight = 12;
-  static const double _tailHalfWidth = 9;
-
-  @override
-  EdgeInsetsGeometry get dimensions => EdgeInsets.all(side.width);
-
-  Path _path(Rect rect) {
-    final Rect body = Rect.fromLTRB(
-      rect.left,
-      rect.top,
-      rect.right,
-      rect.bottom - tailHeight,
-    );
-    final double r = radius.clamp(0, body.shortestSide / 2);
-    final double minX = body.left + r + _tailHalfWidth;
-    final double maxX = body.right - r - _tailHalfWidth;
-    final double x = (body.left + body.width * tailAt).clamp(
-      minX,
-      maxX < minX ? minX : maxX,
-    );
-    // The tail leans towards the side it sits on, like a voice coming from
-    // below and slightly off-centre.
-    final double lean = (tailAt - 0.5) * 2 * _tailHalfWidth;
-    final Path tail = Path()
-      ..moveTo(x - _tailHalfWidth, body.bottom - 1)
-      ..lineTo(x + lean, rect.bottom)
-      ..lineTo(x + _tailHalfWidth, body.bottom - 1)
-      ..close();
-    return Path.combine(
-      PathOperation.union,
-      Path()..addRRect(RRect.fromRectAndRadius(body, Radius.circular(r))),
-      tail,
-    );
-  }
-
-  @override
-  Path getOuterPath(Rect rect, {TextDirection? textDirection}) => _path(rect);
-
-  @override
-  Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
-      _path(rect.deflate(side.width));
-
-  @override
-  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
-    if (side.style == BorderStyle.none || side.width == 0) {
-      return;
-    }
-    canvas.drawPath(_path(rect.deflate(side.width / 2)), side.toPaint());
-  }
-
-  @override
-  ShapeBorder scale(double t) =>
-      LabBubbleBorder(radius: radius * t, tailAt: tailAt, side: side.scale(t));
 }

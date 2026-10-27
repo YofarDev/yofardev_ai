@@ -62,6 +62,88 @@ void main() {
     });
   });
 
+  group('GlassPanel shape', () {
+    testWidgets('a StadiumBorder is painted with the glass outline', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        GoldenTestHelper.makeTestableWidget(
+          child: const GlassPanel(
+            shape: StadiumBorder(),
+            child: SizedBox(width: 80, height: 30),
+          ),
+        ),
+      );
+      final DecoratedBox box = tester.widget<DecoratedBox>(
+        find.descendant(
+          of: find.byType(GlassPanel),
+          matching: find.byType(DecoratedBox),
+        ),
+      );
+      final ShapeDecoration decoration = box.decoration as ShapeDecoration;
+      final StadiumBorder shape = decoration.shape as StadiumBorder;
+      final AppTokens tokens = tester.element(find.byType(GlassPanel)).tokens;
+      expect(shape.side.width, tokens.outlineWidth);
+      expect(shape.side.color.a, closeTo(tokens.glassThin.borderAlpha, 0.02));
+      expect(decoration.gradient, isA<LinearGradient>());
+    });
+
+    testWidgets('blur is clipped to the shape', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        GoldenTestHelper.makeTestableWidget(
+          child: const GlassPanel(
+            shape: StadiumBorder(),
+            blur: true,
+            child: SizedBox(width: 80, height: 30),
+          ),
+        ),
+      );
+      expect(find.byType(BackdropFilter), findsOneWidget);
+      final ClipPath clip = tester.widget<ClipPath>(
+        find.descendant(
+          of: find.byType(GlassPanel),
+          matching: find.byType(ClipPath),
+        ),
+      );
+      expect(clip.clipper, isA<ShapeBorderClipper>());
+      expect(find.byType(ClipRRect), findsNothing);
+    });
+
+    testWidgets('without a shape it is still the rounded rectangle', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        GoldenTestHelper.makeTestableWidget(
+          child: const GlassPanel(blur: true, child: Text('panel')),
+        ),
+      );
+      expect(find.byType(ClipRRect), findsOneWidget);
+      expect(find.byType(ClipPath), findsNothing);
+    });
+
+    testWidgets('a speech bubble shape paints and its tail adds no clip', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        GoldenTestHelper.makeTestableWidget(
+          child: const Center(
+            child: GlassPanel(
+              shape: SpeechBubbleBorder(),
+              blur: true,
+              padding: EdgeInsets.only(bottom: SpeechBubbleBorder.tailHeight),
+              child: SizedBox(width: 120, height: 40),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byType(GlassPanel)),
+        const Size(120, 40 + SpeechBubbleBorder.tailHeight),
+      );
+    });
+  });
+
   group('GlassPanel goldens', () {
     testGoldens('thin, regular, thick', (WidgetTester tester) async {
       await tester.pumpWidgetBuilder(

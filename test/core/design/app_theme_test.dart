@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yofardev_ai/core/design/design.dart';
-import 'package:yofardev_ai/core/design/looks/looks.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 
 const Color _ink = Color(0xFF16121D);
