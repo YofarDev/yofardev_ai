@@ -22,7 +22,7 @@ import statistics
 import subprocess
 import sys
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -110,8 +110,13 @@ def turn_frames() -> list[Path]:
 
 def turn(paths: list[Path]) -> None:
     frames = [Image.open(p).convert("RGB") for p in paths]
-    small = [f.resize((240, 288), Image.Resampling.LANCZOS) for f in frames[::2]]
-    pal = [f.quantize(colors=72, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE) for f in small]
+    small = [f.resize((220, 264), Image.Resampling.LANCZOS) for f in frames[::2]]
+    # one shared palette (from 8 spread frames): no palette flicker, and the GIF stays < 1.5 MB
+    strip = Image.new("RGB", (220 * 8, 264))
+    for k in range(8):
+        strip.paste(small[k * len(small) // 8], (k * 220, 0))
+    palette = strip.quantize(colors=64, method=Image.Quantize.MEDIANCUT)
+    pal = [f.quantize(palette=palette, dither=Image.Dither.NONE) for f in small]
     pal[0].save(OUT / "turn.gif", save_all=True, append_images=pal[1:], duration=33, loop=0, optimize=True)
     picks = [round(i * (len(frames) - 1) / 23) for i in range(24)]
     cw, ch = 200, 240
@@ -120,6 +125,85 @@ def turn(paths: list[Path]) -> None:
         im = frames[i].resize((cw, ch), Image.Resampling.LANCZOS)
         sheet.paste(label(im, f"f{i}"), ((k % 6) * cw, (k // 6) * ch))
     sheet.save(OUT / "turn_sheet.png", optimize=True)
+
+
+PROBE = PROJ / "build" / "hairprobe"
+GHOST_PX = 0  # any translucent area fails (the round-1 cross-fade gave 110-135 px at yaw +-0.40)
+
+
+def _mixed_hair_pixels(png: Path) -> int:
+    """Hair over a flat green face on magenta: count pixels that mix hair with green or magenta
+    (alpha 0.1-0.9) more than 2 px from mostly-green/magenta pixels. Antialiased edges and 1-2 px
+    gaps are excluded; a translucent hair layer over the face (a ghost) is an area and counts."""
+    im = Image.open(png).convert("RGB")
+    r, g, b = im.split()
+    magenta = ImageChops.darker(ImageChops.subtract(r, g), ImageChops.subtract(b, g))
+    green = ImageChops.subtract(g, ImageChops.lighter(r, b))
+    share = ImageChops.lighter(magenta, green)
+    seed = share.point(lambda v: 255 if v > 150 else 0).filter(ImageFilter.MaxFilter(5))
+    mixed = share.point(lambda v: 255 if 0.1 * 255 < v < 0.9 * 255 else 0)
+    # a ghost is an area: erode away 1-2 px lines (slivers along contours) before counting
+    area = ImageChops.subtract(mixed, seed).filter(ImageFilter.MinFilter(3))
+    return sum(1 for v in area.tobytes() if v)
+
+
+def translucency_sweep() -> list[str]:
+    _build_probe()
+    yaws = [round(-1 + 0.05 * k, 2) for k in range(41)]
+    with ThreadPoolExecutor(WORKERS) as ex:
+        counts = list(ex.map(lambda y: _mixed_hair_pixels(_probe(TMP / "sweep" / f"y{y:+.2f}.png", y)), yaws))
+    bad = [(y, c) for y, c in zip(yaws, counts) if c > GHOST_PX]
+    return [f"hair over a flat face, yaw -1..1 step 0.05 (41 poses), pixels with alpha 0.1-0.9 away from edges: "
+            f"max {max(counts)} (fail above {GHOST_PX}) -> {'PASS' if not bad else 'FAIL ' + str(bad)}"]
+
+
+def _probe(png: Path, yaw: float) -> Path:
+    png.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["rive", str(PROBE), f"--screenshot={png}", f"--data=yaw={yaw:g}", "--advance=1"], cwd=PROBE,
+                   check=True, capture_output=True)
+    return png
+
+
+def _lum(c: tuple[float, float, float]) -> float:
+    def ch(v: float) -> float:
+        v /= 255
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    return 0.2126 * ch(c[0]) + 0.7152 * ch(c[1]) + 0.0722 * ch(c[2])
+
+
+def _not_magenta(c: tuple[int, int, int]) -> bool:
+    return min(c[0] - c[1], c[2] - c[1]) < 128
+
+
+def _build_probe() -> None:
+    subprocess.run(["uv", "run", str(HERE / "gen_head.py"), "--variant", "hair", "--out", str(PROBE)], check=True,
+                   capture_output=True)
+
+
+def silhouette_contrast() -> list[str]:
+    """Luminance contrast of the outer hair band (4 px inside the silhouette) against the
+    background just outside it (4-10 px), per side, rows of the side masses (art y 290-450)."""
+    _build_probe()
+    out = []
+    for yaw in (0.0, 1.0, -1.0):
+        full = Image.open(cli(TMP / "contrast" / f"f{yaw:+.0f}.png", *pose_args(yaw))).convert("RGB")
+        hair = Image.open(_probe(TMP / "contrast" / f"h{yaw:+.0f}.png", yaw)).convert("RGB")
+        res = []
+        for side in (-1, 1):
+            band: list[tuple[int, int, int]] = []
+            bgs: list[tuple[int, int, int]] = []
+            for y in range(290 - 172, 450 - 172, 2):
+                xs = [x for x in range(hair.width) if _not_magenta(hair.getpixel((x, y)))]
+                if not xs:
+                    continue
+                edge = min(xs) if side < 0 else max(xs)
+                band += [full.getpixel((edge - side * k, y)) for k in range(1, 5)]
+                bgs += [full.getpixel((edge + side * k, y)) for k in range(4, 11)]
+            lb = sum(_lum(c) for c in band) / len(band)
+            lg = sum(_lum(c) for c in bgs) / len(bgs)
+            res.append((max(lb, lg) + 0.05) / (min(lb, lg) + 0.05))
+        out.append(f"yaw {yaw:+.0f}: left {res[0]:.2f}:1, right {res[1]:.2f}:1")
+    return out
 
 
 def metrics(paths: list[Path]) -> None:
@@ -169,6 +253,9 @@ def metrics(paths: list[Path]) -> None:
     lint = subprocess.run(["uv", "run", str(HERE / "art_bible.py"), "lint", str(PROJ / "head.rml"),
                            "--scene", "livingRoom"], capture_output=True, text=True).stdout.strip()
     lines += ["", "== Art-bible lint (livingRoom)", lint or "?"]
+    lines += ["", "== Hair translucency (regression for the side-lock cross-fade ghost)", *translucency_sweep()]
+    lines += ["", "== Silhouette edge contrast (outer 4 px of hair vs background just outside; bible >= 3:1)",
+              *silhouette_contrast()]
     (OUT / "metrics.txt").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
 
