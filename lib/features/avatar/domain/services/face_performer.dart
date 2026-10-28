@@ -59,7 +59,10 @@ class FacePerformer {
   /// The speech springs lag their target by about a third of their settle
   /// time; reading the timeline this far ahead puts the mouth on the audio.
   static const Duration _speechLead = Duration(milliseconds: 20);
-  static const double _nodGap = 0.6;
+  static const double _nodGap = 0.45;
+
+  /// Brow springs ring a little (about 12 % overshoot).
+  static const double _browZeta = 0.55;
   static const double _browGap = 0.9;
   static const double _blinkGap = 1.2;
   static const double _blinkMaxInterval = 5.2;
@@ -100,6 +103,14 @@ class FacePerformer {
   final _Spring _lift = _Spring();
   final _Spring _breathDecay = _Spring();
   double _breath = 0;
+  double _prerollStart = -100;
+  double _prerollLead = 0.2;
+  bool _prerolled = false;
+  bool _sawPosition = false;
+
+  /// Reduce motion: no nods, head tilt, lift or visible breath (the mouth,
+  /// brows and blinks still act).
+  bool reduceMotion = false;
   bool _inhaling = false;
   bool _breathRising = false;
   double _clock = 0;
@@ -167,9 +178,15 @@ class FacePerformer {
           );
         }
       }
-      // a held vowel keeps a little life (about 4 Hz, +/- 7 %)
+      // a held vowel keeps a little life (about 4 Hz, +/- 7 %); an excited
+      // mood speaks with a bigger jaw, a sombre one with less stretch
+      final double energy = _lerp(0.95, 1.2, (_arousal + 1) / 2);
       speech = speech.copyWith(
-        jaw: speech.jaw * (1 + 0.07 * math.sin(2 * math.pi * 4.3 * _s(pos))),
+        jaw:
+            speech.jaw *
+            energy *
+            (1 + 0.07 * math.sin(2 * math.pi * 4.3 * _s(pos))),
+        stretch: _valence < -0.3 ? speech.stretch * 0.5 : speech.stretch,
       );
     }
 
@@ -206,7 +223,7 @@ class FacePerformer {
         final double q = _speaking
             ? _smoothstep((posS - (_s(tl.duration) - 0.4)) / 0.3)
             : 1;
-        rollTarget = 0.35 * q;
+        rollTarget = 0.9 * q;
         liftTarget = 0.12 * q;
         innerTarget += 0.3 * q;
         outerTarget += 0.3 * q;
@@ -246,8 +263,8 @@ class FacePerformer {
       _tuck.step(speech.lipTuck, wSpeech, sub);
       _tongue.step(speech.tongueUp, wSpeech, sub);
       _mix.step(_speaking ? 1 : 0, _omega(_mixSettle), sub);
-      _innerUp.step(innerTarget, _omega(_overlaySettle), sub);
-      _outerUp.step(outerTarget, _omega(_overlaySettle), sub);
+      _innerUp.stepUnder(innerTarget, _omega(_overlaySettle), _browZeta, sub);
+      _outerUp.stepUnder(outerTarget, _omega(_overlaySettle), _browZeta, sub);
       _roll.step(rollTarget, _omega(_rollSettle), sub);
       _lift.step(liftTarget, _omega(_rollSettle), sub);
       if (!_speaking) {
@@ -257,6 +274,16 @@ class FacePerformer {
     if (!_speaking) {
       _breath = _breathDecay.x;
       _inhaling = false;
+      final double since = _clock - _prerollStart;
+      if (since >= 0 && since < _prerollLead + 0.05) {
+        // the breath before speaking: drawn over the pre-roll, lips parted,
+        // closing again just before the voice
+        final double inhale = math.max(0.08, _prerollLead - 0.06);
+        _breath = math.max(_breath, _smoothstep(since / inhale));
+        _inhaling = since < inhale;
+        _breathDecay.x = _breath;
+        _breathDecay.v = 0;
+      }
     }
     if (_sealed) {
       // the lip seal never waits for a spring
@@ -297,22 +324,43 @@ class FacePerformer {
         _peaks = _spaced(timeline.marks, ProsodyMarkKind.pitchPeak, _browGap);
         // a forced blink waits for a real interval into the sentence
         _lastBlink = math.max(_lastBlink, _clock - (_blinkMaxInterval - 2.5));
+        _sawPosition = false;
+        _prerolled = _clock - _prerollStart < _prerollLead + 0.3;
+      case SpeechPrerollEvent(:final Duration lead):
+        _prerollStart = _clock;
+        _prerollLead = math.max(_s(lead), 0.08);
       case AnimationCompletedEvent():
-        if (_speaking) {
-          _speaking = false;
-          _completed = true;
-          _endClock = _clock;
+        _complete();
+      // A sentence that ends calls stop() too (sometimes before the animation
+      // noticed the end): only an interruption drops the end-of-sentence
+      // acting.
+      case SpeakingStoppedEvent(:final bool interrupted):
+        if (interrupted) {
+          _cut();
+        } else {
+          _complete();
         }
-      case SpeakingStoppedEvent():
-        if (_speaking || _completed) {
-          _endClock = _clock;
-        }
-        _speaking = false;
-        _completed = false;
-        _timeline = null;
       default:
         break;
     }
+  }
+
+  void _complete() {
+    if (_speaking) {
+      _speaking = false;
+      _completed = true;
+      _endClock = _clock;
+    }
+  }
+
+  void _cut() {
+    if (_speaking || _completed) {
+      _endClock = _clock;
+    }
+    _speaking = false;
+    _completed = false;
+    _timeline = null;
+    _prerollStart = -100;
   }
 
   // — speech helpers —
@@ -323,8 +371,15 @@ class FacePerformer {
     }
     final Duration? p = _speechPosition();
     if (p == null) {
+      if (_sawPosition) {
+        // the playback was cancelled under us (an interrupt is on its way):
+        // relax now instead of holding the last mouth shape
+        _cut();
+        return null;
+      }
       return _lastPos;
     }
+    _sawPosition = true;
     // the clock never runs backwards (M1); keep that guarantee here too
     return p < _lastPos ? _lastPos : p;
   }
@@ -406,7 +461,12 @@ class FacePerformer {
     }
 
     final double lead = _s(tl.leadingSilence);
-    phase(0, math.max(lead, 0.15), lead < 0.12 ? 0.5 : 1.0);
+    if (_prerolled) {
+      // drawn during the pre-roll: held over the leading silence
+      phase(-_prerollLead, math.max(lead, 0.1), 1.0);
+    } else {
+      phase(0, math.max(lead, 0.15), lead < 0.12 ? 0.5 : 1.0);
+    }
     for (final ProsodyMark m in tl.marks) {
       if (m.kind == ProsodyMarkKind.pause) {
         final double at = _s(m.at);
@@ -471,15 +531,17 @@ class FacePerformer {
     final double round = (_pucker.x / 0.4).clamp(0.0, 1.0) * m;
     au[_pullI] *= 1 - 0.6 * round;
     au[_depressI] *= 1 - 0.6 * round;
+    // an open jaw from a downturned mouth reads as a wince: the frown eases
+    au[_depressI] *= 1 - 0.4 * ((jaw - 0.15) / 0.3).clamp(0.0, 1.0) * m;
     au[_innerI] += _innerUp.x;
     au[_outerI] += _outerUp.x;
     return FaceFrame(
       au: _fromList(au),
       lipTuck: (_tuck.x * m).clamp(0.0, 1.0),
       tongueUp: (_tongue.x * m).clamp(0.0, 1.0),
-      breath: _breath.clamp(0.0, 1.0),
-      roll: _roll.x.clamp(-1.0, 1.0),
-      nodPitch: (nod + _lift.x).clamp(-1.0, 1.0),
+      breath: reduceMotion ? 0 : _breath.clamp(0.0, 1.0),
+      roll: reduceMotion ? 0 : _roll.x.clamp(-1.0, 1.0),
+      nodPitch: reduceMotion ? 0 : (nod + _lift.x).clamp(-1.0, 1.0),
       autoBlink: !(_speaking || _clock - _endClock < _autoBlinkHold),
       blinkSerial: _blinkSerial,
     );
@@ -487,19 +549,25 @@ class FacePerformer {
 
   // — curves —
 
-  /// Brow beat around a pitch peak: rises over the 80 ms before it, holds
-  /// 160 ms (the art bible's shortest readable pose), settles over 220 ms.
+  /// Brow beat around a pitch peak: a small dip 130 ms before it
+  /// (anticipation), a rise over the last 80 ms, a 50 ms top, then a decay
+  /// (time constant 220 ms) that follows the falling pitch instead of a
+  /// held plateau; the underdamped brow spring adds the overshoot.
   static double _peakEnvelope(double tau) {
-    if (tau < -0.08 || tau > 0.38) {
+    if (tau < -0.2 || tau > 0.9) {
       return 0;
     }
-    if (tau < 0) {
-      return _smoothstep((tau + 0.08) / 0.08);
+    final double dip = -0.12 * _gauss(tau, -0.13, 0.035);
+    if (tau < -0.08) {
+      return dip;
     }
-    if (tau <= 0.16) {
+    if (tau < 0) {
+      return dip + _smoothstep((tau + 0.08) / 0.08);
+    }
+    if (tau <= 0.05) {
       return 1;
     }
-    return 1 - _smoothstep((tau - 0.16) / 0.22);
+    return math.exp(-(tau - 0.05) / 0.22);
   }
 
   /// A nod on a stressed syllable (pitch units, down is negative): an 18 %
@@ -542,6 +610,13 @@ class _Spring {
     final double e = math.exp(-omega * h);
     x = target + (c1 + c2 * h) * e;
     v = (c2 - omega * (c1 + c2 * h)) * e;
+  }
+
+  /// An underdamped step (damping ratio [zeta] < 1): it overshoots, then
+  /// settles. Semi-implicit Euler; [h] is a substep of at most 1/120 s.
+  void stepUnder(double target, double omega, double zeta, double h) {
+    v += (-2 * zeta * omega * v - omega * omega * (x - target)) * h;
+    x += v * h;
   }
 
   bool isAt(double target) => (x - target).abs() < 0.002 && v.abs() < 0.01;

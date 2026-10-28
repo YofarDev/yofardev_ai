@@ -477,6 +477,9 @@ class AvatarCubit extends Cubit<AvatarState> {
     final AvatarMood? reactionMood = reaction.mood;
     if (reactionMood != null) {
       next = next.copyWith(mood: reactionMood);
+      // the mood enum only carries accents (contract v5): the face itself
+      // follows the director's emotion
+      _director?.setMood(reactionMood);
     }
     if (reaction.gesture != null) {
       final AvatarGesture gesture = reaction.gesture!;

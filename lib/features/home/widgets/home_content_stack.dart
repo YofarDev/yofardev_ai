@@ -113,6 +113,10 @@ class _RiveStage extends StatelessWidget {
             // TalkingState (mouth + phase); a mouth change must not
             // rebuild the scene view, the glow or the chrome.
             BlocBuilder<TalkingCubit, TalkingState>(
+              // with a face performer the mouth comes from it, not from
+              // mouthState: only the phase matters here
+              buildWhen: (TalkingState previous, TalkingState current) =>
+                  facePerformer == null || previous.phase != current.phase,
               builder: (BuildContext context, TalkingState talkingState) {
                 return RiveAvatarView(
                   avatarState: avatarState,

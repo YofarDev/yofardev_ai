@@ -11,6 +11,7 @@ import '../../../domain/models/face_frame.dart';
 import '../../../domain/models/head_pose.dart';
 import '../../../domain/services/face_performer.dart';
 import '../../../domain/services/head_motion_solver.dart';
+import '../../rive/avatar_face_writer.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../bloc/avatar_state.dart';
 
@@ -88,9 +89,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   double? _writtenEyeLead;
   double? _writtenEyeLeadPitch;
   FaceFrame _face = FaceFrame.rest;
-  final Map<String, double> _writtenFace = <String, double>{};
-  bool? _writtenAutoBlink;
-  int? _writtenBlinkSerial;
+  AvatarFaceWriter? _faceWriter;
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
@@ -112,6 +111,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _solver.reduceMotion = MediaQuery.disableAnimationsOf(context);
+    widget.facePerformer?.reduceMotion = _solver.reduceMotion;
     _ensureTicking();
   }
 
@@ -205,9 +205,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       // A fresh binding has none of the head numbers yet.
       _writtenYaw = _writtenPitch = _writtenHairYaw = null;
       _writtenHairPitch = _writtenEyeLead = _writtenEyeLeadPitch = null;
-      _writtenFace.clear();
-      _writtenAutoBlink = null;
-      _writtenBlinkSerial = null;
+      _faceWriter = AvatarFaceWriter(_BindingSink(binding));
       _writeFace(widget.facePerformer?.frame ?? _staticFace(), force: true);
       _writeHeadPose(_solver.pose);
       _ensureTicking();
@@ -300,57 +298,11 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   FaceFrame _staticFace() =>
       FaceFrame(au: actionUnitsForMood(widget.avatarState.mood));
 
-  /// Writes the face numbers that moved by more than [_writeEpsilon] since
-  /// they were last written, `autoBlink` when it flips, and `blink` once per
-  /// new blink serial.
+  /// Writes [face] through the face writer (it skips unchanged numbers and
+  /// fires `blink` once per new blink serial).
   void _writeFace(FaceFrame face, {bool force = false}) {
     _face = face;
-    final RiveVmBinding? binding = _binding;
-    if (binding == null) {
-      return;
-    }
-    final ActionUnits a = face.au;
-    final List<double> aus = <double>[
-      a.browInnerUp,
-      a.browOuterUp,
-      a.browLower,
-      a.lidTighten,
-      a.upperLidRaise,
-      a.cheekRaise,
-      a.noseWrinkle,
-      a.lipCornerPull,
-      a.lipCornerDepress,
-      a.lipStretch,
-      a.lipPucker,
-      a.lipPress,
-      a.jawDrop,
-      a.dimpler,
-    ];
-    void write(String name, double value) {
-      final double? last = _writtenFace[name];
-      if (!force && last != null && (value - last).abs() <= _writeEpsilon) {
-        return;
-      }
-      binding.setNumber(name, value);
-      _writtenFace[name] = value;
-    }
-
-    for (int i = 0; i < aus.length; i++) {
-      write(AvatarRiveContract.actionUnitProps[i], aus[i]);
-    }
-    write(AvatarRiveContract.propLipTuck, face.lipTuck);
-    write(AvatarRiveContract.propTongueUp, face.tongueUp);
-    write(AvatarRiveContract.propRoll, face.roll);
-    write(AvatarRiveContract.propBreath, face.breath);
-    if (force || _writtenAutoBlink != face.autoBlink) {
-      binding.setBool(AvatarRiveContract.propAutoBlink, face.autoBlink);
-      _writtenAutoBlink = face.autoBlink;
-    }
-    final int? lastSerial = _writtenBlinkSerial;
-    if (lastSerial != null && face.blinkSerial != lastSerial) {
-      binding.fireTrigger(AvatarRiveContract.propBlinkTrigger);
-    }
-    _writtenBlinkSerial = face.blinkSerial;
+    _faceWriter?.write(face, force: force);
   }
 
   void _teardown() {
@@ -361,6 +313,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     _file?.dispose();
     _controller = null;
     _binding = null;
+    _faceWriter = null;
     _file = null;
   }
 
@@ -467,4 +420,20 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     }
     return const SizedBox.expand();
   }
+}
+
+/// [AvatarFaceWriter]'s sink over the Rive view-model binding.
+class _BindingSink implements AvatarVmSink {
+  const _BindingSink(this._binding);
+
+  final RiveVmBinding _binding;
+
+  @override
+  void setNumber(String name, double value) => _binding.setNumber(name, value);
+
+  @override
+  void setBool(String name, bool value) => _binding.setBool(name, value);
+
+  @override
+  void fireTrigger(String name) => _binding.fireTrigger(name);
 }

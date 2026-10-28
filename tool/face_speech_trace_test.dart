@@ -102,13 +102,20 @@ Future<Map<String, Object>> _speech(
   final int speech = (timeline.duration.inMicroseconds / 16667).ceil();
   final int total = lead + speech + _fps;
   for (int i = 0; i < total; i++) {
+    if (i == lead - 12) {
+      // the cubit announces each sentence 200 ms before playing it
+      h.playback.add(const SpeechPrerollEvent(Duration(milliseconds: 200)));
+    }
     if (i == lead) {
       h.position = Duration.zero;
       h.playback.add(const SpeakingStartedEvent());
       h.playback.add(SpeechTimelineEvent(timeline));
     }
     if (i == lead + speech) {
+      // as in the app: the animation completes, then the cubit stops the
+      // sentence (a natural stop, not an interruption)
       h.playback.add(const AnimationCompletedEvent());
+      h.playback.add(const SpeakingStoppedEvent());
       h.position = null;
     }
     if (i > lead && i < lead + speech) {

@@ -178,7 +178,7 @@ void main() {
         ),
       );
       rig.run(12);
-      rig.playback.add(const SpeakingStoppedEvent());
+      rig.playback.add(const SpeakingStoppedEvent(interrupted: true));
       rig.position = null;
       final int serial = rig.performer.frame.blinkSerial;
       final FaceFrame f = rig.run(18).last;
@@ -366,6 +366,77 @@ void main() {
       final FaceFrame top = frames[29]; // ~500 ms
       expect(top.au.browOuterUp, closeTo(outerBefore, 0.02));
       expect(top.au.browInnerUp, greaterThan(frames[5].au.browInnerUp + 0.1));
+    });
+  });
+
+  group('stop semantics and review fixes', () {
+    SpeechTimeline question() =>
+        _timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 1200)], question: true);
+
+    test('a natural stop after completion keeps the question tilt', () {
+      rig.speak(question());
+      rig.run(72);
+      // the app: the animation completes, then the cubit stops the sentence
+      rig.playback.add(const AnimationCompletedEvent());
+      rig.playback.add(const SpeakingStoppedEvent());
+      rig.position = null;
+      expect(rig.run(24).last.roll, greaterThan(0.5));
+    });
+
+    test('a natural stop before completion still completes', () {
+      rig.speak(question());
+      rig.run(72);
+      rig.playback.add(const SpeakingStoppedEvent());
+      rig.position = null;
+      expect(rig.run(24).last.roll, greaterThan(0.5));
+    });
+
+    test('an interruption drops the end-of-sentence acting', () {
+      rig.speak(question());
+      rig.run(72);
+      rig.playback.add(const SpeakingStoppedEvent(interrupted: true));
+      rig.position = null;
+      expect(rig.run(24).last.roll, lessThan(0.4));
+      expect(rig.run(30).last.roll, lessThan(0.02));
+    });
+
+    test('a position that vanishes mid-sentence relaxes the mouth', () {
+      rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 2000)]));
+      expect(rig.run(20).last.au.jawDrop, greaterThan(0.5));
+      // the animation was cancelled; the stop event has not arrived yet
+      rig.position = null;
+      expect(rig.run(18).last.au.jawDrop, lessThan(0.05));
+    });
+
+    test('the pre-roll breath is drawn before the voice', () {
+      rig.playback.add(const SpeechPrerollEvent(Duration(milliseconds: 200)));
+      final List<FaceFrame> frames = rig.run(12); // 200 ms
+      expect(frames[5].breath, greaterThan(0.3));
+      expect(frames[5].au.jawDrop, greaterThan(0.02)); // lips parted inhaling
+      expect(frames.last.breath, greaterThan(0.9));
+      expect(frames.last.au.jawDrop, lessThan(0.02)); // closed by the onset
+    });
+
+    test('reduce motion keeps the mouth but drops nods, tilt and breath', () {
+      rig.performer.reduceMotion = true;
+      rig.speak(
+        _timeline(
+          <(Viseme, int, int)>[(Viseme.aa, 0, 1500)],
+          marks: <ProsodyMark>[
+            const ProsodyMark(
+              kind: ProsodyMarkKind.stress,
+              at: Duration(milliseconds: 500),
+            ),
+          ],
+          question: true,
+          leading: 200,
+        ),
+      );
+      final List<FaceFrame> frames = rig.run(90);
+      expect(frames.every((FaceFrame f) => f.nodPitch == 0), isTrue);
+      expect(frames.every((FaceFrame f) => f.roll == 0), isTrue);
+      expect(frames.every((FaceFrame f) => f.breath == 0), isTrue);
+      expect(frames[40].au.jawDrop, greaterThan(0.5));
     });
   });
 
