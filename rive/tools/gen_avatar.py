@@ -24,6 +24,8 @@ from avatar_kit import (BEANIE, BEANIE_HI, BEANIE_SH, FRAME, HAIR, HAIR_HI, HAIR
 from rml import El, lin, rad, smooth_path, track, write  # noqa: E402
 from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
 from head_turn import HeadTurn, rig_head  # noqa: E402
+import face_rig  # noqa: E402
+from face_rig import NUMBERS as FACE_NUMBERS  # noqa: E402
 
 
 def named_el(root_el: El, name: str) -> El:
@@ -716,65 +718,13 @@ blush.add(*[E(blush, "Blush" + t, x, 438, 54, 20, rgrad(27, [("B0F08F86", 0.0), 
           *[S(blush, f"BlushLine{t}{k}", [(x - 12 + k * 9, 446), (x - 6 + k * 9, 432)], L("90E07070", 2), closed=False)
             for t, x in (("L", 338), ("R", 462)) for k in range(3)])
 
-# ---- mouth: closed lines (mood) / opening (mouth blend)
+# ---- mouth: one continuous skinned mouth (rive/tools/face_rig.py) inside MouthActing (gesture
+# squash) > MouthMood (the thinking skew, keyed by moods). Lines keeps its name for the head rig.
 mouth = head.node("Mouth", 400, 478)
 lines = mouth.node("Lines")
-LINES = {
-    "neutral": S(mouth, "LineNeutral", [(383, 477), (400, 480), (417, 477)], L(INK, 2.7), closed=False),
-    "smile": S(mouth, "LineSmile", [(378, 472), (390, 482), (400, 484), (410, 482), (422, 472)], L(INK, 3), closed=False),
-    "frown": S(mouth, "LineFrown", [(380, 486), (390, 479), (400, 477), (410, 479), (420, 486)], L(INK, 3), closed=False),
-    "tight": S(mouth, "LineTight", [(386, 482), (400, 479), (414, 482)], L(INK, 4), closed=False),
-    "o": E(mouth, "LineO", 400, 482, 14, 17, F(MOUTH_IN), L(INK, 3)),
-    "side": S(mouth, "LineSide", [(384, 482), (400, 481), (412, 478), (420, 472)], L(INK, 3), closed=False),
-    "wavy": S(mouth, "LineWavy", [(380, 481), (388, 476), (396, 482), (404, 476), (412, 482), (420, 477)], L(INK, 2.8),
-              closed=False),
-}
-line_solo = lines.solo("LineShape")
-LINE_G = {k: group("Line_" + k, v) for k, v in LINES.items()}
-line_solo.add(*LINE_G.values())
-line_solo.el.attrs["activeComponentId"] = LINE_G["neutral"].ref()
-line_acting = d("Node", line_solo.el, x=0.0, y=0.0, name="MouthActing")
+mouth_mood = d("Node", x=0.0, y=0.0, name="MouthMood")
+line_acting = d("Node", mouth_mood, x=0.0, y=0.0, name="MouthActing")
 lines.el.children = [line_acting]
-open_ = mouth.node("Open", 400, 474, scaleY=0.0, opacity=0.0)
-open_mood = open_.node("OpenMood")
-viseme = open_mood.node("Viseme", 400, 474)        # speaking varies the width (wide / round / narrow)
-open_solo = viseme.solo("OpenShape")               # mood picks the open-mouth drawing
-
-
-def open_shape(name: str, pts: list, top_teeth: bool = True, low_teeth: bool = False, tongue: bool = True) -> El:
-    src = clip_only(S(viseme, name + "Clip", pts))
-    xs = [p[0] for p in pts]
-    ys = [p[1] for p in pts]
-    parts: list[El] = []
-    if top_teeth:
-        parts.append(S(viseme, name + "Teeth", [(min(xs) - 4, min(ys) - 6), (max(xs) + 4, min(ys) - 6),
-                                                (max(xs) + 2, min(ys) + 7), (400, min(ys) + 9), (min(xs) - 2, min(ys) + 7)],
-                       F(TEETH), clip=src))
-    if low_teeth:
-        parts.append(S(viseme, name + "LowTeeth", [(min(xs) - 2, max(ys) - 7), (400, max(ys) - 9),
-                                                   (max(xs) + 2, max(ys) - 7), (max(xs) + 4, max(ys) + 6),
-                                                   (min(xs) - 4, max(ys) + 6)], F("FFF1E6E0"), clip=src))
-    if tongue:
-        parts.append(E(viseme, name + "Tongue", 400, max(ys) - 2, (max(xs) - min(xs)) * 0.62, 16, F(TONGUE), clip=src))
-    parts.append(S(viseme, name + "Inside", pts, vgrad(min(ys), max(ys), "FF4E1C20", MOUTH_IN), L(INK, 2.6)))
-    return group("Open_" + name, *parts, src)
-
-
-OPEN = {
-    "smile": open_shape("Smile", [(372, 471), (400, 469), (428, 471), (422, 490), (400, 503), (378, 490)]),
-    # sad talks through a downturned arch (corners low), never a neutral O
-    "frown": open_shape("Frown", [(370, 494), (380, 480), (392, 472), (408, 472), (420, 480), (430, 494), (416, 492),
-                                  (400, 488), (384, 492)], top_teeth=False),
-    "angry": open_shape("Angry", [(366, 471), (400, 474), (434, 471), (431, 494), (400, 492), (369, 494)],
-                        low_teeth=True, tongue=False),
-    "o": open_shape("O", [(400, 466), (413, 472), (417, 487), (410, 501), (400, 504), (390, 501), (383, 487),
-                          (387, 472)], top_teeth=False),
-    "side": open_shape("Side", [(378, 476), (402, 472), (430, 466), (426, 486), (406, 499), (384, 491)]),
-    "small": open_shape("Small", [(384, 474), (400, 472), (416, 474), (412, 488), (400, 494), (388, 488)],
-                        top_teeth=False),
-}
-open_solo.add(*OPEN.values())
-open_solo.el.attrs["activeComponentId"] = OPEN["smile"].ref()
 
 # ---- mood / phase / gesture overlays on the face
 sweat_m = head.node("SweatMood", 300, 330, opacity=0.0)
@@ -1153,12 +1103,18 @@ EN_OF = {"mood": "Mood", "phase": "Phase", "gestureId": "GestureId", "hat": "Hat
          "costume": "Costume", "presence": "Presence"}
 DEFAULTS = {"mood": "neutral", "phase": "idle", "gestureId": "wave", "hat": "noHat", "top": "pinkHoodie",
             "glasses": "glasses", "costume": "none", "presence": "onScreen"}
+NUMBER_PROPS = {"mouth", *FACE_NUMBERS}  # contract v5: face action units, speech mouth, roll, breath
+TRIGGER_PROPS = {"gesture", "blink"}
+BOOL_PROPS = {"autoBlink": True}
 props: dict[str, El] = {}
-for pn in ["mood", "mouth", "phase", "gestureId", "gesture", "hat", "top", "glasses", "costume", "presence"]:
-    if pn == "mouth":
+for pn in ["mood", "mouth", "phase", "gestureId", "gesture", "hat", "top", "glasses", "costume", "presence",
+           *FACE_NUMBERS, "autoBlink", "blink"]:
+    if pn in NUMBER_PROPS:
         props[pn] = d("ViewModelPropertyNumber", name=pn)
-    elif pn == "gesture":
+    elif pn in TRIGGER_PROPS:
         props[pn] = d("ViewModelPropertyTrigger", name=pn)
+    elif pn in BOOL_PROPS:
+        props[pn] = d("ViewModelPropertyBoolean", name=pn)
     else:
         props[pn] = d("ViewModelPropertyEnumCustom", enumId=enums[EN_OF[pn]].ref(), name=pn)
 ivals = []
@@ -1166,8 +1122,10 @@ for pn, p in props.items():
     if pn in DEFAULTS:
         ivals.append(d("ViewModelInstanceEnum", propertyValue=evals[EN_OF[pn]][DEFAULTS[pn]].ref(),
                        viewModelPropertyId=p.ref()))
-    elif pn == "mouth":
+    elif pn in NUMBER_PROPS:
         ivals.append(d("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=p.ref()))
+    elif pn in BOOL_PROPS:
+        ivals.append(d("ViewModelInstanceBoolean", propertyValue=BOOL_PROPS[pn], viewModelPropertyId=p.ref()))
     else:
         ivals.append(d("ViewModelInstanceTrigger", viewModelPropertyId=p.ref()))
 inst = d("ViewModelInstance", *ivals, exports=True, name="Default")
@@ -1269,8 +1227,8 @@ blink_keys = [(0, 0.0), (168, 0.0), (171, 1.0), (173, 1.0), (181, 0.0),
               (560, 0.0), (563, 0.55), (566, 0.55), (572, 0.0), (660, 0.0)]
 
 
-def blink_track(e: dict) -> list[El]:
-    ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in blink_keys]
+def blink_track(e: dict, keys: list[tuple[int, float]] | None = None) -> list[El]:
+    ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in (keys or blink_keys)]
     # the closed-lash swap lasts exactly while the eye is shut: switch back one frame after
     shut = []
     for (f, v, _), nxt in zip(ks, ks[1:] + [None]):
@@ -1286,77 +1244,54 @@ def blink_track(e: dict) -> list[El]:
 
 
 blink = A("idle_blink", 660, [t for e in EYES for t in blink_track(e)], loop=True)
+# contract v5: `autoBlink` false holds the eyes open; the `blink` trigger plays one blink (the app
+# moves blinks into speech pauses)
+blink_hold = A("blink_hold", 1, [t for e in EYES for t in blink_track(e, [(0, 0.0)])])
+blink_once = A("blink_once", 16, [t for e in EYES for t in blink_track(e, [(0, 0.0), (3, 1.0), (5, 1.0), (14, 0.0),
+                                                                            (16, 0.0)])])
 LOOK_X, LOOK_Y = 7.0, 4.5
 look_x = A("look_x", 100, [*[T(e["look"], ease=None, x=[(0, -LOOK_X), (100, LOOK_X)]) for e in EYES],
                            T(head_look, ease=None, rotation=[(0, -0.035), (100, 0.035)])])
 look_y = A("look_y", 100, [T(e["look"], ease=None, y=[(0, -LOOK_Y), (100, LOOK_Y)]) for e in EYES])
 
-# ---- moods: every pose keys every channel so crossfades blend cleanly
-MOOD_DEF = dict(brow=((0, 0.0), (0, 0.0)), droop=(0.0, 0.0), squint=0.0, eye_scale=1.0, gaze=(0, 0), line="neutral",
-                blush=0.0, tilt=0.0, head_y=0.0, open_w=1.0, open_rot=0.0, sweat=0.0, anger=0.0, pupil=1.0)
+# ---- moods (contract v5): accents only. Brows, lids, cheeks, nose and the mouth shape follow the
+# `au*` numbers (rive/tools/face_rig.py); the app writes each mood's AU preset. Every pose keys
+# every accent channel so the 240 ms crossfades blend cleanly.
+MOOD_DEF = dict(gaze=(0, 0), blush=0.0, tilt=0.0, head_y=0.0, mouth_rot=0.0, mouth_x=0.0, sweat=0.0, anger=0.0,
+                pupil=1.0)
 MOOD_SPEC = {
     "neutral": {},
-    "happy": dict(brow=((-6, 0.0), (-6, 0.0)), squint=0.46, line="smile", blush=0.65, tilt=-0.04, open_w=1.15),
-    "sad": dict(brow=((-3, -0.24), (-3, -0.24)), droop=(0.38, -0.18), line="frown", tilt=0.05, head_y=6.0,
-                gaze=(0, 3), open_w=0.9),
-    "angry": dict(brow=((5, 0.28), (5, 0.28)), droop=(0.3, 0.22), line="tight", tilt=-0.02, anger=1.0, open_w=1.1,
-                  pupil=0.85,
-                  head_y=2.0),
-    "surprised": dict(brow=((-17, -0.04), (-17, -0.04)), eye_scale=1.14, line="o", head_y=-6.0, open_w=0.8,
-                      pupil=0.68),
-    "thinking": dict(brow=((-14, -0.1), (3, 0.17)), gaze=(-7, -8), line="side", tilt=0.085, open_rot=-0.12,
-                     head_y=-2.0),
-    "embarrassed": dict(brow=((-2, -0.18), (-2, -0.18)), droop=(0.14, -0.05), gaze=(4, 3), line="wavy", blush=1.0,
-                        sweat=1.0, tilt=0.04, open_w=0.95),
+    "happy": dict(blush=0.65, tilt=-0.04),
+    "sad": dict(tilt=0.05, head_y=6.0, gaze=(0, 3)),
+    "angry": dict(tilt=-0.02, anger=1.0, pupil=0.85, head_y=2.0),
+    "surprised": dict(head_y=-6.0, pupil=0.68),
+    "thinking": dict(gaze=(-7, -8), tilt=0.085, mouth_rot=-0.12, mouth_x=3.0, head_y=-2.0),
+    "embarrassed": dict(gaze=(4, 3), blush=1.0, sweat=1.0, tilt=0.04),
 }
 
 
 def mood_pose(name: str, spec: dict) -> El:
     p = {**MOOD_DEF, **spec}
     tr: list[El] = []
-    for i, e in enumerate(EYES):
-        s = -1 if i == 0 else 1
-        by, br = p["brow"][i]
-        tr.append(K(e["brow"], y=-39.0 + by, rotation=-br * s))
-        dr, drot = p["droop"]
-        tr.append(K(e["droop"], scaleY=dr, rotation=-drot * s))
-        # A warm smile maintains eye contact. The eye-smile is a brief accent,
-        # not a permanent closed-eye mask throughout happy speech.
-        smile_keys = [(0, 0.46), (100, 0.53), (180, 0.46), (203, 0.97), (212, 0.97),
-                      (234, 0.49), (300, 0.53), (360, 0.46)]
-        tr.append(T(e["squint"], scaleY=smile_keys) if name == "happy" else K(e["squint"], scaleY=p["squint"]))
-        tr.append(T(e["squint_line"], scaleY=smile_keys) if name == "happy" else K(e["squint_line"], scaleY=p["squint"]))
-        tr.append(K(e["mood"], scaleX=p["eye_scale"], scaleY=p["eye_scale"]))
+    for e in EYES:
         tr.append(K(e["pupil"], scaleX=p["pupil"], scaleY=p["pupil"]))
         tr.append(K(e["gm"], x=float(p["gaze"][0]), y=float(p["gaze"][1])))
-    tr.append(K(line_solo, activeComponentId=LINE_G[p["line"]]))
-    tr.append(K(open_solo, activeComponentId=OPEN[{"neutral": "smile", "smile": "smile", "frown": "frown",
-                                                  "tight": "angry", "o": "o", "side": "side",
-                                                  "wavy": "small"}[p["line"]]]))
     tr += [K(blush, opacity=p["blush"]), K(head_mood, rotation=p["tilt"], y=p["head_y"]),
-           K(open_mood, scaleX=p["open_w"], rotation=p["open_rot"]), K(sweat_m, opacity=p["sweat"]),
+           K(mouth_mood, rotation=p["mouth_rot"], x=p["mouth_x"]), K(sweat_m, opacity=p["sweat"]),
            K(anger, opacity=p["anger"])]
-    return A("mood_" + name, 360 if name == "happy" else 1, tr, loop=name == "happy")
+    return A("mood_" + name, 1, tr)
 
 
 MOODS = {m: mood_pose(m, spec) for m, spec in MOOD_SPEC.items()}
-
-# ---- mouth 0..4 (closed, slightly, semi, open, wide)
-MOUTH = [(0.0, 0.0, 1.0, 1.0), (0.28, 1.0, 0.0, 0.92), (0.55, 1.0, 0.0, 0.96), (0.85, 1.0, 0.0, 1.0), (1.1, 1.0, 0.0, 1.18)]
-OPEN_Y = float(open_.el.attrs["y"])
-JAW = [0.0, 0.0, 1.0, 3.0, 5.0]     # wide-open levels drop the mouth a touch (jaw)
-mouth_anims = [A(f"mouth_{i}", 1, [K(open_, scaleY=sy, opacity=op, scaleX=sx, y=OPEN_Y + JAW[i]), K(lines, opacity=lo)])
-               for i, (sy, op, lo, sx) in enumerate(MOUTH)]
 
 
 # ---- phases (looping poses; all channels keyed in each)
 def phase_anim(name: str, frames: int, head_y: list | None = None, head_rot: list | None = None,
                gaze: list | None = None, bubble_on: float = 0.0, dot_bounce: bool = False, q_on: float = 0.0,
-               sweat_on: float = 0.0, brow: list | None = None, vis: list | None = None) -> El:
+               sweat_on: float = 0.0, brow: list | None = None) -> El:
     z = [(0, 0.0), (frames, 0.0)]
     tr = [T(head_phase, y=head_y or z, rotation=head_rot or z, x=z)]
     tr += [T(e["brow_p"], y=brow or z) for e in EYES]
-    tr.append(T(viseme, scaleX=vis or [(0, 1.0), (frames, 1.0)]))
     for e in EYES:
         tr.append(T(e["gp"], x=[(f, gx) for f, gx, gy in gaze] if gaze else z,
                     y=[(f, gy) for f, gx, gy in gaze] if gaze else z))
@@ -1391,18 +1326,9 @@ PHASES = {
                           brow=[(0, 0.0), (40, -4.0), (150, -2.0), (200, -5.0), (290, -2.0), (360, 0.0)]),
     "generating": phase_anim("generating", 60, head_rot=[(0, -0.04), (60, -0.04)],
                              gaze=[(0, 5, -5), (60, 5, -5)], bubble_on=1.0, dot_bounce=True),
-    # speaking: irregular beats — head accents land with brow lifts, the width cycles wide/round/narrow
+    # speaking (contract v5): a faint sway only; the app's prosody acting drives brows, nods and blinks
     "speaking": phase_anim("speaking", 420,
-                           head_y=[(0, 0.0), (30, -5.0), (52, 1.0), (96, -1.0), (128, -6.0), (150, 0.5), (210, 0.0),
-                                   (246, -4.0), (270, 1.0), (330, -2.0), (352, -5.5), (380, 0.5), (420, 0.0)],
-                           head_rot=[(0, 0.0), (40, 0.022), (100, -0.012), (140, 0.018), (200, -0.02), (262, 0.016),
-                                     (330, -0.014), (372, 0.01), (420, 0.0)],
-                           gaze=[(0, 0, 0), (60, 3, 0), (110, 3, -1), (190, -2, 0), (300, -3, 1), (360, 1, 0),
-                                 (420, 0, 0)],
-                           brow=[(0, 0.0), (24, -6.0), (44, 0.0), (122, -7.0), (146, 0.0), (240, -4.0), (262, 0.0),
-                                 (346, -6.0), (372, 0.0), (420, 0.0)],
-                           vis=[(0, 1.0)] + [(f, v) for f, v in zip(range(10, 412, 9), [0.84, 1.14, 0.92, 1.06, 0.8, 1.12, 0.95, 0.86, 1.1, 0.9, 1.0, 0.82, 1.15, 0.94, 1.04, 0.85, 1.1, 0.92] * 3)]
-                               + [(420, 1.0)]),
+                           head_rot=[(0, 0.0), (70, 0.008), (160, -0.006), (250, 0.007), (340, -0.005), (420, 0.0)]),
     "error": phase_anim("error", 120, head_rot=[(0, 0.06), (120, 0.06)], gaze=[(0, -4, 2), (120, -4, 2)],
                         q_on=1.0, sweat_on=1.0),
 }
@@ -1892,17 +1818,25 @@ s0 = st(wardrobe_life, 0)
 layers.append(layer("WardrobeLife", s0, [s0]))
 s0 = st(cape_ripple, 0)
 layers.append(layer("CapeRipple", s0, [s0]))
-s0 = st(blink, 0)
-layers.append(layer("Blink", s0, [s0]))
+
+
+def auto_blink(on: bool) -> El:
+    return d("TransitionViewModelCondition",
+             d("TransitionPropertyViewModelComparator",
+               d("BindablePropertyBoolean", d("DataBindContext", sourcePathIds=vpath("autoBlink"), propertyKey=634))),
+             d("TransitionValueBooleanComparator", value=on))
+
+
+b_auto, b_hold, b_once = st(blink, 0), st(blink_hold, 1), st(blink_once, 2, row=1)
+b_auto.add(d("StateTransition", auto_blink(False), stateToId=b_hold.ref()))
+b_hold.add(d("StateTransition", auto_blink(True), stateToId=b_auto.ref()))
+b_once.add(d("StateTransition", auto_blink(True), stateToId=b_auto.ref(), enableExitTime=True,
+             exitTimeIsPercetange=True, exitTime=100),
+           d("StateTransition", auto_blink(False), stateToId=b_hold.ref(), enableExitTime=True,
+             exitTimeIsPercetange=True, exitTime=100))
+layers.append(layer("Blink", b_auto, [b_auto, b_hold, b_once],
+                    [d("StateTransition", trig("blink"), stateToId=b_once.ref())]))
 layers.append(enum_layer("Mood", "mood", MOODS, "neutral", 240))
-mouth_conv = d("DataConverterRangeMapper", minInput=0.0, maxInput=4.0, minOutput=0.0, maxOutput=100.0, clampLower=True,
-               clampUpper=True, name="MouthToBlend")
-mouth_blend = d("BlendState1DViewModel",
-                d("BindablePropertyNumber", d("DataBindContext", sourcePathIds=vpath("mouth"), propertyKey=636,
-                                              converterId=mouth_conv.ref())),
-                *[d("BlendAnimation1D", animationId=a.ref(), value=float(i * 25)) for i, a in enumerate(mouth_anims)],
-                x=0.0, y=100.0)
-layers.append(layer("Mouth", mouth_blend, [mouth_blend]))
 layers.append(enum_layer("Phase", "phase", PHASES, "idle", 250))
 
 gs_idle = st(g_none, 0)
@@ -1969,6 +1903,21 @@ artboard = d("Artboard", style, sm, EASE, EASE_OUT, EASE_IN, *EV_GESTURE.values(
              width=float(W), height=float(H), name="Avatar", defaultStateMachineId=sm.ref(), viewModelId=vm.ref(),
              viewModelInstanceId=inst.ref(), styleId=style.ref(), clip=True)
 
+# ================================================================ FACE (contract v5 action units)
+# Runs before the head turn so the turn wrappers enclose the face rig. Own id range (face_rig.py).
+face_au = face_rig.FaceRig(vpath)
+for i, e in enumerate(EYES):
+    s_ = -1 if i == 0 else 1
+    face_rig.rig_brow(face_au, e["brow_g"].el, named_el(e["brow_g"].el, "BrowShape"), 355.0 if i == 0 else 445.0, s_,
+                      HAIR)
+    face_rig.rig_eye(face_au, e, s_)
+face_rig.rig_mouth(face_au, mouth_mood, {"inside": MOUTH_IN, "throat": "FF4E1C20", "teeth": TEETH,
+                                      "low_teeth": "FFF1E6E0", "tongue": TONGUE, "ink": INK, "lip": "40D0937C",
+                                      "crease": "A0D0937C"})
+face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "A0D0937C"})
+face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
+face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0))
+
 # ================================================================ HEAD TURN (yaw / pitch)
 # The head art above follows AvatarVM `yaw` / `pitch` on one surface model (rive/tools/head_turn.py):
 # features, glasses, ears and hair ride pivot wrappers, the face outline is skinned. New elements
@@ -1989,5 +1938,5 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)
-write(out, [artboard, *enums.values(), mouth_conv, vm, *turn.converters])
+write(out, [artboard, *enums.values(), vm, *face_au.converters, *turn.converters])
 print("wrote", os.path.normpath(out), "next id", d.next)
