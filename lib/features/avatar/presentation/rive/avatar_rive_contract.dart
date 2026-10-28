@@ -24,6 +24,17 @@ abstract final class AvatarRiveContract {
   static const String propCostume = 'costume';
   static const String propPresence = 'presence';
 
+  // 2.5D head rig numbers (all −1..1). `yaw`/`pitch` are the head turn
+  // (+yaw toward the viewer's right, +pitch up); `hairLag*` are the hair's
+  // offset from the head (0 = locked); `eyeLeadYaw` is extra iris shift;
+  // `eyeLeadPitch` the held vertical look (+ = up, negative drops the lids).
+  static const String propYaw = 'yaw';
+  static const String propPitch = 'pitch';
+  static const String propHairLagYaw = 'hairLagYaw';
+  static const String propHairLagPitch = 'hairLagPitch';
+  static const String propEyeLeadYaw = 'eyeLeadYaw';
+  static const String propEyeLeadPitch = 'eyeLeadPitch';
+
   // Enum values, in contract order. On the SM-input fallback an enum property
   // becomes a number: its index in these lists.
   static const List<String> moodValues = <String>[
@@ -87,6 +98,20 @@ abstract final class AvatarRiveContract {
   /// `mouth` number range (closed, slightly, semi, open, wide).
   static const double mouthMin = 0;
   static const double mouthMax = 4;
+
+  /// Range of `yaw` and `pitch`.
+  static const double yawMin = -1;
+  static const double yawMax = 1;
+  static const double pitchMin = -1;
+  static const double pitchMax = 1;
+
+  /// Range of `hairLagYaw` and `hairLagPitch`.
+  static const double hairLagMin = -1;
+  static const double hairLagMax = 1;
+
+  /// Range of `eyeLeadYaw` and `eyeLeadPitch`.
+  static const double eyeLeadMin = -1;
+  static const double eyeLeadMax = 1;
 
   // Rive events emitted by avatar.riv.
   static const String eventAvatarTapped = 'avatar_tapped';

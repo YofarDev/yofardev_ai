@@ -27,6 +27,9 @@ class SettingsLocalDatasource {
   // Live captions
   static const String _captionsEnabledKey = 'captions_enabled';
 
+  // Avatar quality tier probe
+  static const String _qualityTierKey = 'quality_tier';
+
   // Generic helper methods to reduce boilerplate
   Future<Result<String>> _getStringKey(String keyName) async {
     try {
@@ -251,4 +254,9 @@ class SettingsLocalDatasource {
 
   Future<Result<void>> setCaptionsEnabled(bool enabled) =>
       _setBoolKey(_captionsEnabledKey, enabled);
+
+  Future<Result<String>> getQualityTier() => _getStringKey(_qualityTierKey);
+
+  Future<Result<void>> setQualityTier(String tier) =>
+      _setStringKey(_qualityTierKey, tier);
 }

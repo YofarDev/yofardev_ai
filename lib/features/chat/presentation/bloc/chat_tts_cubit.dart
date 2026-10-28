@@ -100,6 +100,9 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       if (!(_currentPlaybackStopSignal?.isCompleted ?? true)) {
         _currentPlaybackStopSignal!.complete();
       }
+      // Stop the mouth animation first: while the player stop is awaited, a
+      // resync would read position 0 and restart the mouth.
+      _ttsPlaybackService.cancelAnimation();
       await _audioPlayerService.stop();
       await _ttsPlaybackService.stop();
     });

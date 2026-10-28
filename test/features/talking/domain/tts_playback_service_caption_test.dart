@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/models/avatar_cue.dart';
+import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 
@@ -30,6 +32,22 @@ void main() {
     expect(events[0], isA<SpeakingStartedEvent>());
     expect(events[1], isA<CaptionEvent>());
     expect((events[1] as CaptionEvent).text, 'Hello there.');
+  });
+
+  test('cues are emitted before the caption', () async {
+    service.startAmplitudeAnimation(
+      '/a.wav',
+      <int>[3],
+      const Duration(seconds: 1),
+      caption: 'Is it raining?',
+      cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+    );
+    await Future<void>.delayed(Duration.zero);
+    service.cancelAnimation();
+
+    expect(events[0], isA<SpeakingStartedEvent>());
+    expect(events[1], isA<CuesReachedEvent>());
+    expect(events[2], isA<CaptionEvent>());
   });
 
   test('no caption event for an empty or missing caption', () async {

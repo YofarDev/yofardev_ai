@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
 import '../../../../../core/utils/logger.dart';
 import '../../../../talking/talking.dart';
 import '../../../../../core/design/rive/rive_vm_binding.dart';
+import '../../../domain/models/head_pose.dart';
+import '../../../domain/services/head_motion_solver.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../bloc/avatar_state.dart';
 
@@ -17,6 +20,13 @@ import '../../bloc/avatar_state.dart';
 /// presence changes handled as a settable enum) fire from seq diffs, so
 /// repeating the same gesture still replays.
 ///
+/// Head turn: a [Ticker] steps a [HeadMotionSolver] toward
+/// [AvatarState.headTarget] each frame and writes `yaw`, `pitch`,
+/// `hairLagYaw`, `hairLagPitch`, `eyeLeadYaw` and `eyeLeadPitch` when one changes by more than
+/// 0.001. The ticker idles once the head has settled and drift is off (reduce
+/// motion); `MediaQuery.disableAnimationsOf` drives the solver's reduce-motion
+/// mode.
+///
 /// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped].
 ///
 /// Rive types never leave `lib/features/avatar/presentation/`.
@@ -25,24 +35,45 @@ class RiveAvatarView extends StatefulWidget {
     super.key,
     required this.avatarState,
     required this.talkingState,
+    this.headSolver,
     this.onAvatarTapped,
     this.onPresenceDone,
+    this.onGestureDone,
   });
 
   final AvatarState avatarState;
   final TalkingState talkingState;
+
+  /// Solver stepping the head turn; a default one is created when omitted
+  /// (tests inject their own).
+  final HeadMotionSolver? headSolver;
   final ValueChanged<String>? onAvatarTapped;
 
   /// Called with the presence value when the avatar finishes walking
   /// (`presence_done`).
   final ValueChanged<String>? onPresenceDone;
 
+  /// Called when the upper-body gesture finishes (`gesture_done`).
+  final VoidCallback? onGestureDone;
+
   @override
   State<RiveAvatarView> createState() => _RiveAvatarViewState();
 }
 
 class _RiveAvatarViewState extends State<RiveAvatarView>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+  /// Smallest change worth writing to the view model.
+  static const double _writeEpsilon = 0.001;
+
+  late final HeadMotionSolver _solver = widget.headSolver ?? HeadMotionSolver();
+  late final Ticker _ticker = createTicker(_onTick);
+  Duration _lastElapsed = Duration.zero;
+  double? _writtenYaw;
+  double? _writtenPitch;
+  double? _writtenHairYaw;
+  double? _writtenHairPitch;
+  double? _writtenEyeLead;
+  double? _writtenEyeLeadPitch;
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
@@ -52,21 +83,44 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _solver.setTarget(
+      widget.avatarState.headTarget.yaw,
+      widget.avatarState.headTarget.pitch,
+      reading: widget.avatarState.headTarget.reading,
+    );
     _load();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _solver.reduceMotion = MediaQuery.disableAnimationsOf(context);
+    _ensureTicking();
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Pause Rive while the app is in the background.
+    // Pause Rive (and the head ticker that feeds it) while the app is in the
+    // background.
+    final bool resumed = state == AppLifecycleState.resumed;
+    _ticker.muted = !resumed;
     final RiveWidgetController? controller = _controller;
     if (controller != null) {
-      controller.active = state == AppLifecycleState.resumed;
+      controller.active = resumed;
     }
   }
 
   @override
   void didUpdateWidget(RiveAvatarView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.avatarState.headTarget != oldWidget.avatarState.headTarget) {
+      _solver.setTarget(
+        widget.avatarState.headTarget.yaw,
+        widget.avatarState.headTarget.pitch,
+        reading: widget.avatarState.headTarget.reading,
+      );
+      _ensureTicking();
+    }
     final RiveVmBinding? binding = _binding;
     if (binding == null) {
       return;
@@ -87,6 +141,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _ticker.dispose();
     _teardown();
     super.dispose();
   }
@@ -126,6 +181,11 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
         _binding = binding;
       });
       _applyContinuousState();
+      // A fresh binding has none of the head numbers yet.
+      _writtenYaw = _writtenPitch = _writtenHairYaw = null;
+      _writtenHairPitch = _writtenEyeLead = _writtenEyeLeadPitch = null;
+      _writeHeadPose(_solver.pose);
+      _ensureTicking();
     } on Exception catch (e) {
       AppLogger.error(
         'RiveAvatarView failed to load avatar.riv',
@@ -136,6 +196,70 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
         setState(() => _error = e.toString());
       }
     }
+  }
+
+  /// Starts the frame ticker unless it runs already. Nothing ticks before
+  /// the view model is bound: there is nothing to write to yet.
+  void _ensureTicking() {
+    if (_binding != null && !_ticker.isActive) {
+      _lastElapsed = Duration.zero;
+      _ticker.start();
+    }
+  }
+
+  void _onTick(Duration elapsed) {
+    final Duration dt = elapsed - _lastElapsed;
+    _lastElapsed = elapsed;
+    final HeadPose pose = _solver.step(dt);
+    _writeHeadPose(pose);
+    if (!_solver.driftEnabled && _solver.isSettled) {
+      // At rest: make sure the final values landed, then stop ticking.
+      _writeHeadPose(pose, force: true);
+      _ticker.stop();
+    }
+  }
+
+  /// Writes the six rig numbers that moved by more than [_writeEpsilon]
+  /// since they were last written ([force]: all of them).
+  void _writeHeadPose(HeadPose pose, {bool force = false}) {
+    final RiveVmBinding? binding = _binding;
+    if (binding == null) {
+      return;
+    }
+    double? write(String name, double value, double? last) {
+      if (!force && last != null && (value - last).abs() <= _writeEpsilon) {
+        return last;
+      }
+      binding.setNumber(name, value);
+      return value;
+    }
+
+    _writtenYaw = write(AvatarRiveContract.propYaw, pose.yaw, _writtenYaw);
+    _writtenPitch = write(
+      AvatarRiveContract.propPitch,
+      pose.pitch,
+      _writtenPitch,
+    );
+    _writtenHairYaw = write(
+      AvatarRiveContract.propHairLagYaw,
+      pose.hairLagYaw,
+      _writtenHairYaw,
+    );
+    _writtenHairPitch = write(
+      AvatarRiveContract.propHairLagPitch,
+      pose.hairLagPitch,
+      _writtenHairPitch,
+    );
+    _writtenEyeLead = write(
+      AvatarRiveContract.propEyeLeadYaw,
+      pose.eyeLeadYaw,
+      _writtenEyeLead,
+    );
+    _writtenEyeLeadPitch = write(
+      AvatarRiveContract.propEyeLeadPitch,
+      pose.eyeLeadPitch,
+      _writtenEyeLeadPitch,
+    );
   }
 
   void _teardown() {
@@ -205,6 +329,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       if (zone != null) {
         widget.onAvatarTapped?.call(zone);
       }
+      return;
+    }
+    if (event.name == AvatarRiveContract.eventGestureDone) {
+      widget.onGestureDone?.call();
       return;
     }
     if (event.name == AvatarRiveContract.eventPresenceDone) {

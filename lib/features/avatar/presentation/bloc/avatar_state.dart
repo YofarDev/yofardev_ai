@@ -6,9 +6,11 @@ import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/avatar_status_animation.dart';
 import '../../domain/models/background_transition.dart';
+import '../../domain/models/head_pose.dart';
 
 export '../../../../core/models/avatar_status_animation.dart';
 export '../../domain/models/background_transition.dart';
+export '../../domain/models/head_pose.dart' show HeadTarget;
 
 part 'avatar_state.freezed.dart';
 
@@ -37,5 +39,8 @@ sealed class AvatarState with _$AvatarState {
     @Default((sceneEvent: SceneEvent.lightsOff, seq: 0))
     ({SceneEvent sceneEvent, int seq}) sceneEvent,
     @Default(AvatarSpecials.onScreen) AvatarSpecials presence,
+
+    /// Where the head should look, from the director's gaze.
+    @Default(HeadTarget.zero) HeadTarget headTarget,
   }) = _AvatarState;
 }

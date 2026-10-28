@@ -290,6 +290,9 @@ class MockTtsPlaybackService implements TtsPlaybackService {
   Stream<PlaybackEvent> get events => _controller.stream;
 
   @override
+  Duration get tick => const Duration(milliseconds: 16);
+
+  @override
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,

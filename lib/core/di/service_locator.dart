@@ -10,6 +10,7 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
+import '../../features/avatar/domain/services/performance_director.dart';
 import '../../features/chat/domain/repositories/global_memory_repository.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_cubit.dart';
@@ -36,6 +37,7 @@ import '../../features/sound/domain/services/tts_queue_service.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
+import '../../features/talking/domain/services/playback_clock.dart';
 import '../../features/talking/domain/services/tts_playback_service.dart';
 import '../../features/talking/presentation/bloc/caption_cubit.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
@@ -61,6 +63,8 @@ import '../services/llm/llm_service_interface.dart';
 import '../services/llm/llm_streaming_service.dart';
 import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
+import '../services/quality/frame_timing_source.dart';
+import '../services/quality/quality_tier_service.dart';
 import '../services/settings_local_datasource.dart';
 import '../services/speech/speech_input_service.dart';
 import '../services/speech/speech_to_text_input_service.dart';
@@ -190,8 +194,25 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<StreamProcessorService>(
     () => StreamProcessorService(),
   );
+  getIt.registerLazySingleton<FrameTimingSource>(
+    () => SchedulerFrameTimingSource(),
+  );
+  getIt.registerLazySingleton<QualityTierService>(
+    () => QualityTierService(
+      timingSource: getIt<FrameTimingSource>(),
+      settings: getIt<SettingsLocalDatasource>(),
+    ),
+  );
+  getIt.registerLazySingleton<PlaybackClock>(
+    () => PlaybackClock(
+      source: _AudioPlayerPositionSource(getIt<AudioPlayerService>()),
+    ),
+  );
   getIt.registerLazySingleton<TtsPlaybackService>(
-    () => TtsPlaybackService(getIt<TalkingRepository>()),
+    () => TtsPlaybackService(
+      getIt<TalkingRepository>(),
+      clock: getIt<PlaybackClock>(),
+    ),
   );
   getIt.registerLazySingleton<AvatarAnimationService>(
     () => AvatarAnimationService(),
@@ -236,6 +257,7 @@ Future<void> setupServiceLocator() async {
       getIt<AppLifecycleService>(),
       getIt<PropReactionService>(),
       getIt<SoundRepository>(),
+      director: getIt<PerformanceDirector>(),
     ),
   );
   getIt.registerFactory<TalkingCubit>(
@@ -293,11 +315,17 @@ Future<void> setupServiceLocator() async {
   // Eagerly created: it must be subscribed to TTS playback events and the
   // streaming cue channel from startup, or cues fired before the first
   // subscription would be lost.
+  getIt.registerLazySingleton<PerformanceDirector>(
+    () => PerformanceDirector(now: DateTime.now),
+  );
   getIt.registerLazySingleton<AvatarCueService>(
     () => AvatarCueService(
       playbackService: getIt<TtsPlaybackService>(),
       animationService: getIt<AvatarAnimationService>(),
       streamingCues: getIt<ChatStreamingService>().streamingCues,
+      director: getIt<PerformanceDirector>(),
+      moods: getIt<AppLifecycleService>().moodEvents,
+      toolActivity: getIt<ChatStreamingService>().toolActivity,
     ),
   );
   getIt<AvatarCueService>();
@@ -329,6 +357,10 @@ Future<void> bootstrapApp() async {
   // Run chat data migration (previously called from main.dart).
   await getIt<ChatLocalDatasource>().init();
 
+  // Quality-tier probe: load the stored tier and probe in the background
+  // when none is stored. Startup never waits for it.
+  unawaited(getIt<QualityTierService>().init());
+
   // Optional TTS warmup: startup must never be blocked by it.
   if (PlatformUtils.checkPlatform() != 'Web' &&
       PlatformUtils.checkPlatform() != 'MacOS') {
@@ -338,4 +370,16 @@ Future<void> bootstrapApp() async {
       }),
     );
   }
+}
+
+/// Adapts the core [AudioPlayerService] to the talking feature's
+/// [PlaybackPositionSource] (core may not import features, so the feature
+/// interface is implemented here, in the composition root).
+class _AudioPlayerPositionSource implements PlaybackPositionSource {
+  _AudioPlayerPositionSource(this._audioPlayerService);
+
+  final AudioPlayerService _audioPlayerService;
+
+  @override
+  Future<Duration?> currentPosition() => _audioPlayerService.currentPosition();
 }

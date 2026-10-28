@@ -4,9 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/models/avatar_gesture.dart';
+import 'package:yofardev_ai/core/models/avatar_mood.dart';
+import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/performance_director.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_cue_service.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
@@ -26,11 +29,13 @@ void main() {
     await Future<void>.delayed(Duration.zero);
   }
 
+  late PerformanceDirector director;
+
   AvatarCueService buildService() => AvatarCueService(
     playbackService: playbackService,
     animationService: animationService,
     streamingCues: streamingCuesController.stream,
-    now: () => currentTime,
+    director: director,
   );
 
   setUp(() {
@@ -38,6 +43,8 @@ void main() {
     playbackService = TtsPlaybackService(MockTalkingRepository());
     streamingCuesController = StreamController<List<AvatarCue>>.broadcast();
     currentTime = DateTime(2026, 10, 22, 12);
+    director = PerformanceDirector(now: () => currentTime);
+    addTearDown(director.dispose);
     forwarded = <AvatarAnimation>[];
     final StreamSubscription<AvatarAnimation> sub = animationService.animations
         .listen(forwarded.add);
@@ -97,11 +104,17 @@ void main() {
       await drain();
       expect(forwarded, hasLength(1));
 
-      // After the cooldown has elapsed the next gesture fires.
+      // A third cue replaces the queued one (queue keeps 1 slot free).
       currentTime = currentTime.add(const Duration(milliseconds: 600));
       playbackService.fireCues(<AvatarCue>[
         const AvatarCue.gesture(AvatarGesture.clap),
       ]);
+      await drain();
+      // Timing changed with the director queue: the queued gesture only
+      // plays once the playing one finishes (onGestureDone) and the
+      // cooldown since its start has elapsed.
+      currentTime = currentTime.add(const Duration(milliseconds: 1000));
+      director.onGestureDone();
       await drain();
       expect(forwarded, hasLength(2));
       expect(forwarded.last, const AvatarAnimation.gesture(AvatarGesture.clap));
@@ -157,6 +170,59 @@ void main() {
     });
   });
 
+  group('AvatarCueService LLM gesture beats auto gesture', () {
+    test('a sentence with a question and a wave cue plays the wave', () async {
+      final AvatarCueService service = buildService();
+      addTearDown(service.dispose);
+
+      playbackService.startAmplitudeAnimation(
+        '/tmp/fake.wav',
+        <int>[3],
+        const Duration(seconds: 1),
+        cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+        caption: 'Is it raining?',
+      );
+      await drain();
+      playbackService.cancelAnimation();
+
+      expect(forwarded, <AvatarAnimation>[
+        const AvatarAnimation.gesture(AvatarGesture.wave),
+      ]);
+    });
+
+    test(
+      'a later sentence without a gesture cue still gets auto rules',
+      () async {
+        final AvatarCueService service = buildService();
+        addTearDown(service.dispose);
+
+        playbackService.startAmplitudeAnimation(
+          '/tmp/a.wav',
+          <int>[3],
+          const Duration(seconds: 1),
+          cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+          caption: 'Hello.',
+        );
+        await drain();
+        currentTime = currentTime.add(const Duration(minutes: 1));
+        director.onGestureDone();
+        playbackService.startAmplitudeAnimation(
+          '/tmp/b.wav',
+          <int>[3],
+          const Duration(seconds: 1),
+          caption: 'Is it raining?',
+        );
+        await drain();
+        playbackService.cancelAnimation();
+
+        expect(forwarded, <AvatarAnimation>[
+          const AvatarAnimation.gesture(AvatarGesture.wave),
+          const AvatarAnimation.gesture(AvatarGesture.think),
+        ]);
+      },
+    );
+  });
+
   group('AvatarCueService TTS-disabled path', () {
     test(
       'forwards cues from the streaming channel through the same guard',
@@ -196,4 +262,49 @@ void main() {
       expect(forwarded, isEmpty);
     },
   );
+
+  group('AvatarCueService director inputs', () {
+    test('forwards speaking, captions, mood and tool activity', () async {
+      final StreamController<AvatarMood> moods =
+          StreamController<AvatarMood>.broadcast();
+      final StreamController<String?> tools =
+          StreamController<String?>.broadcast();
+      addTearDown(moods.close);
+      addTearDown(tools.close);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        moods: moods.stream,
+        toolActivity: tools.stream,
+      );
+      addTearDown(service.dispose);
+
+      moods.add(AvatarMood.happy);
+      tools.add('weather');
+      await drain();
+      expect(director.current.activeTool, 'weather');
+      expect(director.current.gaze, const GazeTarget.away(0.6));
+      expect(director.current.emotion, emotionForMood(AvatarMood.happy));
+
+      tools.add(null);
+      playbackService.startAmplitudeAnimation(
+        'a.wav',
+        <int>[10, 10],
+        const Duration(milliseconds: 50),
+        caption: 'Is it raining?',
+      );
+      await drain();
+      expect(director.current.speaking, isTrue);
+      expect(director.current.gaze, const GazeTarget.user());
+      // The caption ran the auto-acting rules: a question -> think.
+      expect(director.current.pendingGesture, AvatarGesture.think);
+
+      // The 2-frame, 50 ms animation completes on its own.
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      await drain();
+      expect(director.current.speaking, isFalse);
+    });
+  });
 }

@@ -20,6 +20,9 @@ import '../../../sound/sound.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../domain/models/avatar_animation.dart';
+import '../../domain/models/performance_intent.dart';
+import '../../domain/services/head_target_mapper.dart';
+import '../../domain/services/performance_director.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
@@ -29,8 +32,12 @@ class AvatarCubit extends Cubit<AvatarState> {
     this._audioPlayerService,
     this._appLifecycleService,
     this._propReactions,
-    this._soundRepository,
-  ) : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig())) {
+    this._soundRepository, {
+    PerformanceDirector? director,
+  }) : _director = director,
+       super(
+         const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()),
+       ) {
     // Subscribe to animation events from the service
     _animationSubscription = _animationService.animations.listen(
       _handleAnimationEvent,
@@ -73,6 +80,18 @@ class AvatarCubit extends Cubit<AvatarState> {
         AppLogger.error('Mood stream error', tag: 'AvatarCubit', error: error);
       },
     );
+
+    // The director's gaze becomes the head target the Rive view chases.
+    _intentSubscription = _director?.intents.listen(
+      _handleIntent,
+      onError: (Object error) {
+        AppLogger.error(
+          'Intent stream error',
+          tag: 'AvatarCubit',
+          error: error,
+        );
+      },
+    );
   }
 
   final AvatarRepository _avatarRepository;
@@ -80,11 +99,30 @@ class AvatarCubit extends Cubit<AvatarState> {
   final AudioPlayerService _audioPlayerService;
   final AppLifecycleService _appLifecycleService;
   final PropReactionService _propReactions;
+
+  /// Receives `gesture_done` so its gesture queue advances without waiting
+  /// for the safety timeout. Optional for tests that do not exercise it.
+  final PerformanceDirector? _director;
   final SoundRepository _soundRepository;
+
+  /// True when the latest gesture sent to the Rive view came from a prop or
+  /// avatar tap rather than from the director.
+  bool _propGesturePlaying = false;
   StreamSubscription<AvatarAnimation>? _animationSubscription;
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
   StreamSubscription<String>? _chatChangedSubscription;
   StreamSubscription<AvatarMood>? _moodSubscription;
+  StreamSubscription<PerformanceIntent>? _intentSubscription;
+
+  void _handleIntent(PerformanceIntent intent) {
+    final HeadTarget target = headTargetFor(
+      intent.gaze,
+      activeTool: intent.activeTool,
+    );
+    if (target != state.headTarget) {
+      _emitIfOpen(state.copyWith(headTarget: target));
+    }
+  }
 
   /// Handle animation events from the service.
   void _handleAnimationEvent(AvatarAnimation event) {
@@ -106,6 +144,7 @@ class AvatarCubit extends Cubit<AvatarState> {
       gesture: (AvatarGesture gesture) {
         // The Rive view fires the trigger from a BlocListener keyed on seq,
         // so repeating the same gesture still plays.
+        _propGesturePlaying = false;
         _emitIfOpen(
           state.copyWith(
             gestureEvent: (gesture: gesture, seq: state.gestureEvent.seq + 1),
@@ -358,6 +397,19 @@ class AvatarCubit extends Cubit<AvatarState> {
         });
   }
 
+  /// Called by the Rive view when the avatar file emits `gesture_done`.
+  ///
+  /// A `gesture_done` that belongs to a prop-reaction gesture (which never
+  /// went through the director) is not forwarded: it would release the
+  /// director's queue while one of its own gestures is still playing.
+  void onGestureDone() {
+    if (_propGesturePlaying) {
+      _propGesturePlaying = false;
+      return;
+    }
+    _director?.onGestureDone();
+  }
+
   /// Called by the Rive view when the avatar file emits `presence_done`.
   void onPresenceDone(String presence) {
     if (_awaitedPresence?.name != presence) return;
@@ -428,6 +480,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     }
     if (reaction.gesture != null) {
       final AvatarGesture gesture = reaction.gesture!;
+      _propGesturePlaying = true;
       next = next.copyWith(
         gestureEvent: (gesture: gesture, seq: next.gestureEvent.seq + 1),
       );
@@ -463,6 +516,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     await _lifecycleSubscription?.cancel();
     await _chatChangedSubscription?.cancel();
     await _moodSubscription?.cancel();
+    await _intentSubscription?.cancel();
     return super.close();
   }
 }

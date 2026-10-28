@@ -104,8 +104,13 @@ class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
   /// Captions passed to [startAmplitudeAnimation], in call order.
   final List<String?> captions = <String?>[];
 
+  /// Order of the stop-related calls received (see the interruption test).
+  final List<String> calls = <String>[];
+
   @override
-  void cancelAnimation() {}
+  void cancelAnimation() {
+    calls.add('cancelAnimation');
+  }
 
   @override
   void dispose() {
@@ -571,6 +576,28 @@ void main() {
       player.dispose();
       playback.dispose();
     });
+
+    test(
+      'an interruption stops the mouth animation before the player',
+      () async {
+        when(() => mockPlayerService.stop()).thenAnswer((_) async {
+          mockTtsPlaybackService.calls.add('player.stop');
+        });
+        when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {
+          mockTtsPlaybackService.calls.add('playback.stop');
+        });
+
+        await interruptionService.interrupt();
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(mockTtsPlaybackService.calls, <String>[
+          'cancelAnimation',
+          'player.stop',
+          'playback.stop',
+        ]);
+      },
+    );
 
     test('clears waiting sentences on interruption', () async {
       final MockTtsQueueService queue = MockTtsQueueService();

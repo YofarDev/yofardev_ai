@@ -25,6 +25,9 @@ uv run --with pillow rive/tools/review_ui_kit.py   # UI kit contact sheets + beh
 | `tools/rml.py` | Tiny RML builder (deterministic ids) |
 | `tools/check_contract.py` | Self-check: `rive inspect` + built bytes vs `CONTRACT.md` |
 | `tools/sheet.py` | Dev helper: labelled contact sheet of headless captures |
+| `tools/rig_dsl.py` | Rig DSL: formula bone drives, skin weights, skinned paths, baked springs (`perform_turn`) |
+| `tools/gen_head.py` | 2.5D head v2 generator → `head/head.rml` (artboards `Head`, `PerformedTurn`) |
+| `tools/review_head.py` | Head evidence → `head/review/` (yaw × pitch grid, zooms, turn GIF, `metrics.txt`) |
 
 The generated `.rml` files are committed so diffs show what changed; `build/` is ignored.
 

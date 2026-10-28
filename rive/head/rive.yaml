@@ -1,0 +1,5 @@
+name: head
+main: Head
+output: {dir: build}
+logs: {file: build/rive.log, problems: build/problems.log}
+exclude: ["review/**"]

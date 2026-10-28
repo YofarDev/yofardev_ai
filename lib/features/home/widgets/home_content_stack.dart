@@ -117,6 +117,9 @@ class _RiveStage extends StatelessWidget {
                   onPresenceDone: (String presence) {
                     context.read<AvatarCubit>().onPresenceDone(presence);
                   },
+                  onGestureDone: () {
+                    context.read<AvatarCubit>().onGestureDone();
+                  },
                 );
               },
             ),

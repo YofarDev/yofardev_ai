@@ -89,3 +89,34 @@ reads at 48 dp, no clip-art, no neon). Scores are my own reads of the contact sh
 Open points I would still look at on a device: feathered glow cost on a CPU-throttled emulator
 (5 feathered ellipses, CLI only proves they are soft), and whether rive_native renders
 `DataConverterInterpolator` (the CLI does; if not, the ring follows the raw level).
+
+## avatar head turn (2.5D, M1)
+
+28 October 2026 (`moonshot/m1`). Independent critics: a fresh agent per round, given renders and
+the rubric only. Gate 8.5 (art bible). From round 5 the head is the shipped avatar's own art with
+a yaw/pitch rig (`rive/tools/head_turn.py`); from round 6 it is judged as the app drives it
+(`app_turn.gif`, rendered from `tool/head_motion_trace.dart`). Evidence:
+`rive/avatar/review/head_rig/`; regenerate with `uv run rive/tools/review_avatar_turn.py`.
+
+| Round | Score | Subject | Main remaining issues |
+|---|---:|---|---|
+| M0 | 6.7 | spike head | static sweep, no 3/4 structure |
+| 1–3 | 7.6 / 7.8 / 7.9 | standalone head v2 | rim bands outside the silhouette, nose/mouth parallax, identity drift |
+| 4 | 7.6 | head v2 with avatar identity | face and eyes still not the same person |
+| 5 | 7.5 | rig on the shipped head | mouth escaping the chin, far-lens grey, temple spike, rigid hair |
+| 6 | 7.8 | app-driven (solver v1) | eye lead invisible, no vertical gaze, dead holds |
+| 7 | 8.1 | + eyeLeadPitch, tip-weighted hair | reading too small, gaze unleads, idle invisible |
+| 8 | 8.4 | solver round 3 | sleepy caret look, far side lock over the face |
+| 9 | **8.5 PASS** | final tuning | see below |
+
+Open after round 9 (for the M4–M6 presence work):
+1. The look-down lid line slopes toward the nose and reads slightly stern; keep it parallel to the
+   lower lid, thin it to the 3 px interior weight, cap the drop at about 18 %.
+2. The chin turns into a hard V at negative pitch and high yaw; move the handles with the vertex
+   and keep a minimum jaw corner radius.
+3. A hard-edged forehead highlight band shows under the fringe when looking down; feather it or
+   clip it under the fringe shadow.
+4. The eyes freeze for about 0.8 s on the caret hold and idle drift is faint at phone size; add
+   micro-saccades during holds over 400 ms and a blink on large gaze changes.
+5. The back hair domes out past the near side at the deep glance (1.3× lag); drop it to about
+   1.0× or clamp it to the head silhouette, and soften the nose-highlight streak at high yaw.

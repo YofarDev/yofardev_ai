@@ -77,6 +77,14 @@ class ChatStreamingService {
   /// sentence chunk finishes streaming.
   Stream<List<AvatarCue>> get streamingCues => _streamingCuesController.stream;
 
+  final StreamController<String?> _toolActivityController =
+      StreamController<String?>.broadcast();
+
+  /// The tool the current reply is running (null when none). Mirrors the
+  /// per-call `onToolActivity` callback for app-wide listeners (the avatar's
+  /// performance director).
+  Stream<String?> get toolActivity => _toolActivityController.stream;
+
   /// Streams a response from the LLM for the given prompt.
   ///
   /// This method:
@@ -121,6 +129,7 @@ class ChatStreamingService {
       if (name == activeTool) return;
       activeTool = name;
       onToolActivity?.call(name);
+      _toolActivityController.add(name);
     }
 
     // Listening from the very start: an interruption during any await below
