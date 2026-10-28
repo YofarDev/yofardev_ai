@@ -30,10 +30,14 @@ class HomeContentStack extends StatefulWidget {
   const HomeContentStack({
     super.key,
     required this.speech,
+    this.facePerformer,
     required this.onStartDemo,
   });
 
   final SpeechInputService speech;
+
+  /// Drives the avatar's face and speech (null: static mood faces).
+  final FacePerformer? facePerformer;
   final VoidCallback onStartDemo;
 
   /// The glow's width, relative to the composer pill (the art fills about
@@ -68,7 +72,7 @@ class _HomeContentStackState extends State<HomeContentStack> {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        const _RiveStage(),
+        _RiveStage(facePerformer: widget.facePerformer),
         const StageScrim.top(),
         _TopBarSlot(onStartDemo: widget.onStartDemo),
         _BottomChrome(
@@ -84,7 +88,9 @@ class _HomeContentStackState extends State<HomeContentStack> {
 /// The Rive scene with the avatar on it. Const and free of MediaQuery, so
 /// keyboard, inset and theme changes never rebuild it.
 class _RiveStage extends StatelessWidget {
-  const _RiveStage();
+  const _RiveStage({this.facePerformer});
+
+  final FacePerformer? facePerformer;
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +117,7 @@ class _RiveStage extends StatelessWidget {
                 return RiveAvatarView(
                   avatarState: avatarState,
                   talkingState: talkingState,
+                  facePerformer: facePerformer,
                   onAvatarTapped: (String zone) {
                     context.read<AvatarCubit>().onAvatarTapped(zone);
                   },

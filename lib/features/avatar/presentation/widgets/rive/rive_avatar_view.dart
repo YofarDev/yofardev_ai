@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
+import '../../../../../core/models/performance/performance.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../../talking/talking.dart';
 import '../../../../../core/design/rive/rive_vm_binding.dart';
+import '../../../domain/models/face_frame.dart';
 import '../../../domain/models/head_pose.dart';
+import '../../../domain/services/face_performer.dart';
 import '../../../domain/services/head_motion_solver.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../bloc/avatar_state.dart';
@@ -27,6 +30,12 @@ import '../../bloc/avatar_state.dart';
 /// motion); `MediaQuery.disableAnimationsOf` drives the solver's reduce-motion
 /// mode.
 ///
+/// Face (contract v5): a [FacePerformer], stepped by the same ticker, writes
+/// the 14 `au*` numbers, `lipTuck`, `tongueUp`, `roll`, `breath`, `autoBlink`
+/// and the `blink` trigger, and adds its nod to `pitch`; `mouth` stays 0.
+/// Without a performer (lab, tests) the view writes the current mood's AU
+/// preset and keeps driving `mouth` from [TalkingState].
+///
 /// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped].
 ///
 /// Rive types never leave `lib/features/avatar/presentation/`.
@@ -36,6 +45,7 @@ class RiveAvatarView extends StatefulWidget {
     required this.avatarState,
     required this.talkingState,
     this.headSolver,
+    this.facePerformer,
     this.onAvatarTapped,
     this.onPresenceDone,
     this.onGestureDone,
@@ -47,6 +57,9 @@ class RiveAvatarView extends StatefulWidget {
   /// Solver stepping the head turn; a default one is created when omitted
   /// (tests inject their own).
   final HeadMotionSolver? headSolver;
+
+  /// Drives the face and speech; null writes static mood presets instead.
+  final FacePerformer? facePerformer;
   final ValueChanged<String>? onAvatarTapped;
 
   /// Called with the presence value when the avatar finishes walking
@@ -74,6 +87,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   double? _writtenHairPitch;
   double? _writtenEyeLead;
   double? _writtenEyeLeadPitch;
+  FaceFrame _face = FaceFrame.rest;
+  final Map<String, double> _writtenFace = <String, double>{};
+  bool? _writtenAutoBlink;
+  int? _writtenBlinkSerial;
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
@@ -119,6 +136,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
         widget.avatarState.headTarget.pitch,
         reading: widget.avatarState.headTarget.reading,
       );
+      _ensureTicking();
+    }
+    if (widget.facePerformer != null) {
+      // speech or a mood change may have woken the performer
       _ensureTicking();
     }
     final RiveVmBinding? binding = _binding;
@@ -184,6 +205,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       // A fresh binding has none of the head numbers yet.
       _writtenYaw = _writtenPitch = _writtenHairYaw = null;
       _writtenHairPitch = _writtenEyeLead = _writtenEyeLeadPitch = null;
+      _writtenFace.clear();
+      _writtenAutoBlink = null;
+      _writtenBlinkSerial = null;
+      _writeFace(widget.facePerformer?.frame ?? _staticFace(), force: true);
       _writeHeadPose(_solver.pose);
       _ensureTicking();
     } on Exception catch (e) {
@@ -211,8 +236,14 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     final Duration dt = elapsed - _lastElapsed;
     _lastElapsed = elapsed;
     final HeadPose pose = _solver.step(dt);
+    final FacePerformer? performer = widget.facePerformer;
+    if (performer != null) {
+      _writeFace(performer.step(dt));
+    }
     _writeHeadPose(pose);
-    if (!_solver.driftEnabled && _solver.isSettled) {
+    if (!_solver.driftEnabled &&
+        _solver.isSettled &&
+        (performer == null || performer.isSettled)) {
       // At rest: make sure the final values landed, then stop ticking.
       _writeHeadPose(pose, force: true);
       _ticker.stop();
@@ -237,7 +268,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     _writtenYaw = write(AvatarRiveContract.propYaw, pose.yaw, _writtenYaw);
     _writtenPitch = write(
       AvatarRiveContract.propPitch,
-      pose.pitch,
+      (pose.pitch + _face.nodPitch).clamp(
+        AvatarRiveContract.pitchMin,
+        AvatarRiveContract.pitchMax,
+      ),
       _writtenPitch,
     );
     _writtenHairYaw = write(
@@ -260,6 +294,63 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       pose.eyeLeadPitch,
       _writtenEyeLeadPitch,
     );
+  }
+
+  /// The face of the current mood, for a view without a performer.
+  FaceFrame _staticFace() =>
+      FaceFrame(au: actionUnitsForMood(widget.avatarState.mood));
+
+  /// Writes the face numbers that moved by more than [_writeEpsilon] since
+  /// they were last written, `autoBlink` when it flips, and `blink` once per
+  /// new blink serial.
+  void _writeFace(FaceFrame face, {bool force = false}) {
+    _face = face;
+    final RiveVmBinding? binding = _binding;
+    if (binding == null) {
+      return;
+    }
+    final ActionUnits a = face.au;
+    final List<double> aus = <double>[
+      a.browInnerUp,
+      a.browOuterUp,
+      a.browLower,
+      a.lidTighten,
+      a.upperLidRaise,
+      a.cheekRaise,
+      a.noseWrinkle,
+      a.lipCornerPull,
+      a.lipCornerDepress,
+      a.lipStretch,
+      a.lipPucker,
+      a.lipPress,
+      a.jawDrop,
+      a.dimpler,
+    ];
+    void write(String name, double value) {
+      final double? last = _writtenFace[name];
+      if (!force && last != null && (value - last).abs() <= _writeEpsilon) {
+        return;
+      }
+      binding.setNumber(name, value);
+      _writtenFace[name] = value;
+    }
+
+    for (int i = 0; i < aus.length; i++) {
+      write(AvatarRiveContract.actionUnitProps[i], aus[i]);
+    }
+    write(AvatarRiveContract.propLipTuck, face.lipTuck);
+    write(AvatarRiveContract.propTongueUp, face.tongueUp);
+    write(AvatarRiveContract.propRoll, face.roll);
+    write(AvatarRiveContract.propBreath, face.breath);
+    if (force || _writtenAutoBlink != face.autoBlink) {
+      binding.setBool(AvatarRiveContract.propAutoBlink, face.autoBlink);
+      _writtenAutoBlink = face.autoBlink;
+    }
+    final int? lastSerial = _writtenBlinkSerial;
+    if (lastSerial != null && face.blinkSerial != lastSerial) {
+      binding.fireTrigger(AvatarRiveContract.propBlinkTrigger);
+    }
+    _writtenBlinkSerial = face.blinkSerial;
   }
 
   void _teardown() {
@@ -290,10 +381,17 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       AvatarRiveContract.phaseValues,
       widget.talkingState.phase.name,
     );
+    // With a performer the mouth AUs carry speech; `mouth` (the legacy jaw
+    // alias) must stay 0 so the two never add up.
     binding.setNumber(
       AvatarRiveContract.propMouth,
-      widget.talkingState.mouthState.index.toDouble(),
+      widget.facePerformer == null
+          ? widget.talkingState.mouthState.index.toDouble()
+          : 0,
     );
+    if (widget.facePerformer == null) {
+      _writeFace(_staticFace());
+    }
     binding.setEnum(
       AvatarRiveContract.propHat,
       AvatarRiveContract.hatValues,

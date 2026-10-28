@@ -11,6 +11,7 @@ import 'package:nested/nested.dart';
 import '../../../core/di/service_locator.dart';
 import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/presentation/bloc/avatar_state.dart';
+import '../../features/avatar/domain/services/face_performer.dart';
 import '../../features/avatar/presentation/rive/rive_lab_screen.dart';
 import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
@@ -61,6 +62,7 @@ class AppRouter {
           // change resizes the frame without rebuilding Home.
           final HomeScreen home = HomeScreen(
             speech: getIt<SpeechInputService>(),
+            facePerformer: getIt<FacePerformer>(),
           );
           return MaterialPage<void>(
             key: state.pageKey,

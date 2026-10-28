@@ -74,6 +74,13 @@ void main() {
         AvatarRiveContract.propHairLagPitch,
         AvatarRiveContract.propEyeLeadYaw,
         AvatarRiveContract.propEyeLeadPitch,
+        ...AvatarRiveContract.actionUnitProps,
+        AvatarRiveContract.propLipTuck,
+        AvatarRiveContract.propTongueUp,
+        AvatarRiveContract.propRoll,
+        AvatarRiveContract.propBreath,
+        AvatarRiveContract.propAutoBlink,
+        AvatarRiveContract.propBlinkTrigger,
       ];
       for (final String name in expected) {
         expect(names, contains(name), reason: 'AvatarVM.$name missing');
@@ -122,6 +129,32 @@ void main() {
         mouth!.value = v;
         expect(mouth.value, v);
       }
+    });
+
+    test('v5 face numbers default to 0 and accept their range', () {
+      for (final String name in <String>[
+        ...AvatarRiveContract.actionUnitProps,
+        AvatarRiveContract.propLipTuck,
+        AvatarRiveContract.propTongueUp,
+        AvatarRiveContract.propBreath,
+        AvatarRiveContract.propRoll,
+      ]) {
+        final ViewModelInstanceNumber? n = vmi.number(name);
+        expect(n, isNotNull, reason: name);
+        expect(n!.value, 0, reason: name);
+        n.value = 1;
+        expect(n.value, 1, reason: name);
+        n.value = 0;
+      }
+    });
+
+    test('autoBlink defaults to true; blink is a trigger', () {
+      final ViewModelInstanceBoolean? auto = vmi.boolean(
+        AvatarRiveContract.propAutoBlink,
+      );
+      expect(auto, isNotNull);
+      expect(auto!.value, isTrue);
+      expect(vmi.trigger(AvatarRiveContract.propBlinkTrigger), isNotNull);
     });
   });
 

@@ -35,6 +35,47 @@ abstract final class AvatarRiveContract {
   static const String propEyeLeadYaw = 'eyeLeadYaw';
   static const String propEyeLeadPitch = 'eyeLeadPitch';
 
+  // Contract v5 face: FACS-lite action units (all 0..1, additive,
+  // history-free), the speech mouth extras, head roll and breath.
+  static const String propAuBrowInnerUp = 'auBrowInnerUp';
+  static const String propAuBrowOuterUp = 'auBrowOuterUp';
+  static const String propAuBrowLower = 'auBrowLower';
+  static const String propAuLidTighten = 'auLidTighten';
+  static const String propAuUpperLidRaise = 'auUpperLidRaise';
+  static const String propAuCheekRaise = 'auCheekRaise';
+  static const String propAuNoseWrinkle = 'auNoseWrinkle';
+  static const String propAuLipCornerPull = 'auLipCornerPull';
+  static const String propAuLipCornerDepress = 'auLipCornerDepress';
+  static const String propAuLipStretch = 'auLipStretch';
+  static const String propAuLipPucker = 'auLipPucker';
+  static const String propAuLipPress = 'auLipPress';
+  static const String propAuJawDrop = 'auJawDrop';
+  static const String propAuDimpler = 'auDimpler';
+  static const String propLipTuck = 'lipTuck';
+  static const String propTongueUp = 'tongueUp';
+  static const String propRoll = 'roll';
+  static const String propBreath = 'breath';
+  static const String propAutoBlink = 'autoBlink';
+  static const String propBlinkTrigger = 'blink';
+
+  /// The 14 action-unit numbers, in `ActionUnits` field order.
+  static const List<String> actionUnitProps = <String>[
+    propAuBrowInnerUp,
+    propAuBrowOuterUp,
+    propAuBrowLower,
+    propAuLidTighten,
+    propAuUpperLidRaise,
+    propAuCheekRaise,
+    propAuNoseWrinkle,
+    propAuLipCornerPull,
+    propAuLipCornerDepress,
+    propAuLipStretch,
+    propAuLipPucker,
+    propAuLipPress,
+    propAuJawDrop,
+    propAuDimpler,
+  ];
+
   // Enum values, in contract order. On the SM-input fallback an enum property
   // becomes a number: its index in these lists.
   static const List<String> moodValues = <String>[
@@ -112,6 +153,14 @@ abstract final class AvatarRiveContract {
   /// Range of `eyeLeadYaw` and `eyeLeadPitch`.
   static const double eyeLeadMin = -1;
   static const double eyeLeadMax = 1;
+
+  /// Range of every `au*` number, `lipTuck`, `tongueUp` and `breath`.
+  static const double faceMin = 0;
+  static const double faceMax = 1;
+
+  /// Range of `roll`.
+  static const double rollMin = -1;
+  static const double rollMax = 1;
 
   // Rive events emitted by avatar.riv.
   static const String eventAvatarTapped = 'avatar_tapped';

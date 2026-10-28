@@ -18,11 +18,15 @@ import '../widgets/home_content_stack.dart';
 /// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
 ///
-/// [speech] comes from the route (Home never reads the service locator).
+/// [speech] and [facePerformer] come from the route (Home never reads the
+/// service locator).
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.speech});
+  const HomeScreen({super.key, required this.speech, this.facePerformer});
 
   final SpeechInputService speech;
+
+  /// Drives the avatar's face and speech (null: static mood faces).
+  final FacePerformer? facePerformer;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -129,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildStage() {
     final Widget stage = HomeContentStack(
       speech: widget.speech,
+      facePerformer: widget.facePerformer,
       onStartDemo: _startDemoMode,
     );
     if (!kDebugMode) {
@@ -144,7 +149,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.speech != oldWidget.speech) {
+    if (widget.speech != oldWidget.speech ||
+        widget.facePerformer != oldWidget.facePerformer) {
       _stage = _buildStage();
     }
   }
