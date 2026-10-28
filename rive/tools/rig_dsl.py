@@ -549,23 +549,37 @@ class TurnParams:
     settle_s: float = 0.30  # critically damped yaw spring, 95 % settled
     gaze_lead_s: float = 0.08  # the head starts this much after the eyes (causal at runtime)
     eye_settle_s: float = 0.14  # eye (saccade-like) spring toward the target
-    gaze_gain: float = 1.0  # eye-in-head rotation per unit of (eye yaw - head yaw)
+    gaze_max: float = 0.8  # eye-in-head rotation saturates softly (tanh) at this many yaw units
     blink_jump: float = 0.5  # |delta yawTarget| that triggers a blink
+    blink_delay_s: float = 0.05  # the eyes visibly lead before the lids close
     blink_close_s: float = 0.06
     blink_hold_s: float = 0.04
     blink_open_s: float = 0.10
-    roll_per_speed: float = 0.22  # roll units per (yaw units / s)
-    roll_max: float = 1.0
-    dip_per_speed: float = 0.07  # pitch dip units per (yaw units / s), mid-turn
-    hair_f: float = 1.9  # hair follower (Hz)
-    hair_zeta: float = 0.42
-    hair_gain: float = 1.0
+    roll_gain: float = 0.3  # roll = tanh(gain * yaw speed), then smoothed
+    dip_gain: float = 0.12  # pitch dip = dip_max * tanh(gain * |yaw speed|), then smoothed
+    dip_max: float = 0.45
+    accent_f: float = 2.6  # follower that smooths roll and dip (Hz, critically damped)
+    hair_f: float = 2.1  # hair follower (Hz)
+    hair_zeta: float = 0.5
+
+
+def _smoothstep(u: float) -> float:
+    u = min(1.0, max(0.0, u))
+    return u * u * (3 - 2 * u)
 
 
 def perform_turn(targets: Sequence[tuple[float, float]], seconds: float, fps: int = 60,
                  p: TurnParams | None = None, pitch: float = 0.0) -> dict[str, list[float]]:
     """Bake a performed turn: `targets` = [(time s, yawTarget)] steps. Returns per-frame channels
-    yaw, pitch, roll, gaze, blink, hairLag (each sampled at frames 0..seconds*fps)."""
+    yaw, pitch, roll, gaze, blink, hairLag (each sampled at frames 0..seconds*fps).
+
+    - yaw: critically damped spring toward the target, started `gaze_lead_s` after the eyes;
+    - gaze: eye-in-head yaw (a faster eye spring minus the head), softly saturated;
+    - blink: a smooth close-hold-open when |delta target| > blink_jump;
+    - roll and pitch dip: smoothed functions of the head's angular speed (toward the turn, and
+      down mid-turn), so both return to rest when the head settles;
+    - hairLag: second-order follower on the head yaw, minus the head yaw (trail, overshoot).
+    """
     p = p or TurnParams()
     n = int(round(seconds * fps)) + 1
     dt = 1.0 / fps
@@ -587,38 +601,43 @@ def perform_turn(targets: Sequence[tuple[float, float]], seconds: float, fps: in
             x, v = critically_damped(x, v, target_at(i * dt - delay), w, dt)
         return out
 
+    def follow(xs: list[float], f: float, zeta: float) -> list[float]:
+        fo = SecondOrder(f, zeta)
+        fo.reset(xs[0])
+        return [fo.step(x, dt) if i else fo.y for i, x in enumerate(xs)]
+
     yaw = spring_track(p.gaze_lead_s, omega)
     eye = spring_track(0.0, omega_eye)
     speed = [0.0] + [(yaw[i] - yaw[i - 1]) / dt for i in range(1, n)]
-    hair = SecondOrder(p.hair_f, p.hair_zeta)
-    hair.reset(yaw[0])
-    hair_yaw = [hair.step(y, dt) if i else hair.y for i, y in enumerate(yaw)]
+    roll = follow([math.tanh(p.roll_gain * s) for s in speed], p.accent_f, 1.0)
+    dip = follow([p.dip_max * math.tanh(p.dip_gain * abs(s)) for s in speed], p.accent_f, 1.0)
+    hair_yaw = follow(yaw, p.hair_f, p.hair_zeta)
     blink = [0.0] * n
     prev = targets[0][1]
     for t0, v in targets[1:]:
         if abs(v - prev) > p.blink_jump:
-            t_close, t_hold, t_open = t0 + p.blink_close_s, t0 + p.blink_close_s + p.blink_hold_s, \
-                t0 + p.blink_close_s + p.blink_hold_s + p.blink_open_s
+            a = t0 + p.blink_delay_s
+            b0, b1, b2 = a + p.blink_close_s, a + p.blink_close_s + p.blink_hold_s, \
+                a + p.blink_close_s + p.blink_hold_s + p.blink_open_s
             for i in range(n):
                 t = i * dt
-                if t0 <= t < t_close:
-                    b = (t - t0) / p.blink_close_s
-                elif t_close <= t < t_hold:
-                    b = 1.0
-                elif t_hold <= t < t_open:
-                    u = (t - t_hold) / p.blink_open_s
-                    b = 1 - u * u * (3 - 2 * u)
+                if a <= t < b0:
+                    val = _smoothstep((t - a) / p.blink_close_s)
+                elif b0 <= t < b1:
+                    val = 1.0
+                elif b1 <= t < b2:
+                    val = 1 - _smoothstep((t - b1) / p.blink_open_s)
                 else:
                     continue
-                blink[i] = max(blink[i], b * b * (3 - 2 * b) if t < t_close else b)
+                blink[i] = max(blink[i], val)
         prev = v
     return {
         "yaw": yaw,
-        "pitch": [pitch - p.dip_per_speed * abs(s) for s in speed],
-        "roll": [max(-p.roll_max, min(p.roll_max, p.roll_per_speed * s)) for s in speed],
-        "gaze": [p.gaze_gain * (e - y) for e, y in zip(eye, yaw)],
+        "pitch": [pitch - dd for dd in dip],
+        "roll": roll,
+        "gaze": [p.gaze_max * math.tanh((e - y) / p.gaze_max) for e, y in zip(eye, yaw)],
         "blink": blink,
-        "hairLag": [p.hair_gain * (h - y) for h, y in zip(hair_yaw, yaw)],
+        "hairLag": [h - y for h, y in zip(hair_yaw, yaw)],
     }
 
 

@@ -184,18 +184,24 @@ def test_simplify_stays_within_tolerance() -> None:
 
 
 def test_perform_turn_has_lead_blink_roll_dip_and_lag() -> None:
-    ch = r.perform_turn([(0.0, 0.0), (0.5, 1.0), (1.6, 0.7)], 2.4)
+    ch = r.perform_turn([(0.0, 0.0), (0.5, 1.0), (1.6, 0.7)], 2.6)
     n = len(ch["yaw"])
     assert all(len(v) == n for v in ch.values())
-    # gaze leads: positive while the head is still turning right
-    assert max(ch["gaze"][30:60]) > 0.2
+    # gaze leads: positive while the head is still turning right, saturates softly, returns
+    assert max(ch["gaze"][30:60]) > 0.2 and max(abs(g) for g in ch["gaze"]) < 0.8
     assert ch["gaze"][-1] == pytest.approx(0.0, abs=0.01)
-    # one blink (the 1.0 jump), none for the 0.3 step
+    # one blink (the 1.0 jump) that starts after the eyes move; none for the 0.3 step
     assert max(ch["blink"][30:50]) == pytest.approx(1.0)
+    assert ch["blink"][31] == 0.0 < ch["gaze"][31]
     assert max(ch["blink"][90:]) == 0.0
-    # roll toward the turn, dip mid-turn, both back to rest
-    assert max(ch["roll"]) > 0.5 and abs(ch["roll"][-1]) < 0.02
+    # roll toward the turn and a dip mid-turn, smooth (no per-frame jump) and back to rest
+    assert 0.4 < max(ch["roll"]) <= 1.0 and abs(ch["roll"][-1]) < 0.02
     assert min(ch["pitch"]) < -0.1 and abs(ch["pitch"][-1]) < 0.01
+    # no pops: their per-frame acceleration stays at the yaw spring's own level
+    def accel(v: list[float]) -> float:
+        return max(abs(v[i + 1] - 2 * v[i] + v[i - 1]) for i in range(1, len(v) - 1))
+    for k in ("roll", "pitch"):
+        assert accel(ch[k]) <= 1.1 * accel(ch["yaw"]), k
     # hair trails (negative lag while turning right) then overshoots
     assert min(ch["hairLag"][30:70]) < -0.1 and max(ch["hairLag"][40:96]) > 0.0
     # the head starts after the eyes and settles within ~0.4 s of its delayed target
