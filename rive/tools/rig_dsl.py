@@ -411,8 +411,8 @@ class Skinner:
         for i, p in enumerate(pts):
             f = wf if callable(wf) else wf[i]
             x, y = xy[i]
-            if len(p) == 3:
-                raw.append(("s", (x, y), [quantize(f(x, y))]))
+            if len(p) == 3:  # (x, y, "c") hard corner; (x, y, "c12") rounded with radius 12
+                raw.append(("s", (x, y, float(str(p[2])[1:] or 0)), [quantize(f(x, y))]))
                 continue
             if not closed and (i == 0 or i == n - 1):
                 prv = xy[i] if i == 0 else xy[i - 1]
@@ -438,7 +438,7 @@ class Skinner:
             if kind == "s":
                 kids = [d("Weight", values=pack(qss[0], index)[0], indices=pack(qss[0], index)[1])] \
                     if weighted else []
-                verts.append(d("StraightVertex", *kids, x=g[0] - ox, y=g[1] - oy))
+                verts.append(d("StraightVertex", *kids, x=g[0] - ox, y=g[1] - oy, radius=g[2] or None))
                 continue
             x, y, ang, in_d, out_d = g
             kids = []
@@ -586,11 +586,11 @@ class TurnParams:
     tuft_f: float = 1.4  # crown tuft: slower and looser (more trail, a second bounce)
     tuft_zeta: float = 0.35
     look_min: float = 0.15  # |delta| that counts as a "look" (brow raise, mouth shift)
-    breath_amp: float = 0.02  # idle: pitch breath, roll drift, micro-saccades (all periodic)
+    breath_amp: float = 0.06  # idle: pitch breath, roll drift, micro-saccades (all periodic)
     breath_cycles: int = 2  # over the loop: 2 cycles in 8 s = 0.25 Hz
-    drift_amp: float = 0.06
-    saccade_amp: float = 0.07
-    saccade_every_s: tuple[float, float] = (0.6, 1.2)
+    drift_amp: float = 0.12
+    saccade_amp: float = 0.14
+    saccade_every_s: tuple[float, float] = (0.45, 0.9)
     seed: int = 7
 
 

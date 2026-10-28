@@ -168,6 +168,23 @@ HOOD_SH = light("FFB98FB0", -0.3)
 HOOD_INK = grade("FF6E4E66")
 BG = ab.TOKENS["surface"]
 BG_GLOW = grade(_hex(mixc(ab.TOKENS["surface"], SCENE.key, 0.16)))
+# --- identity: the shipped avatar's own colours (rive/tools/avatar_kit.py), graded into the
+# livingRoom script (value <= 0.91, saturation <= 0.60), so lint stays clean
+IRIS_A = grade("FFB0702F")  # amber centre
+IRIS_B = grade("FF5A3317")  # brown rim
+IRIS_RING = grade("FF2B1A12")
+AV_PUPIL = grade("FF1E120C")
+AV_LASH = grade("FF2A1B18")
+FRAME = "FF1F1C20"  # glasses rim
+HINGE = grade("FFC8BDAD")
+LENS = grade(_hex(mixc("FFB8D8F0", SCENE.rim, 0.3)), 0x16)
+GLARE = "40FFFFFF"
+MOLE = grade("FF5A3A32")
+AV_HAIR_HI = grade("FF795448")
+AV_HAIR = grade("FF3B2A26")
+AV_HAIR_SH = grade("FF2A1D1A")
+KEY_EDGE = grade(_hex(mixc(SCENE.key, "FF795448", 0.15)))  # warm key on the lit hair edge
+RIM_EDGE = grade(_hex(mixc(SCENE.rim, "FFFFFFFF", 0.5)))  # cool rim, lifted to read on the teal wall
 
 
 def solid(c: str) -> El:
@@ -243,36 +260,52 @@ def sil_pose(x: float, y: float, depth_ratio: float, zc: float) -> tuple[float, 
     return CX + e - zc * math.sin(K_YAW), CX + e + zc * math.sin(K_YAW)
 
 
-# --- face contour: three-pose silhouette (yaw -1 = this side near, +1 = this side far)
-CONTOUR = {  # name: (front x, y, pitch depth, x at yaw -1, x at yaw +1) for the right side
-    "T": (506.0, 330.0, 10.0, 504.0, 507.0),
-    "S": (508.0, 366.0, 15.0, 505.0, 503.0),
-    "C": (506.0, 396.0, 30.0, 502.0, 510.0),
-    "K": (497.0, 428.0, 40.0, 491.0, 505.0),
-    "J": (481.0, 458.0, 30.0, 477.0, 491.0),
-    "W": (467.0, 476.0, 38.0, 456.0, 481.0),  # mid jaw: keeps the near jaw line convex
-    "Q": (450.0, 490.0, 45.0, 429.0, 468.0),
-    "V": (426.0, 505.0, 55.0, 403.0, 453.0),  # chin side: keeps the near jaw line convex to the chin
+# --- face contour on ONE surface model: each height is an elliptic section (half width w from
+# the avatar outline, half depth 0.82 w + 8 with a soft cheekbone swell, centre z0 moving forward
+# toward the chin). Far/near poses are its exact silhouettes, so the jaw stays smooth at |yaw| = 1.
+Z0 = [(330.0, 8.0), (366.0, 10.0), (396.0, 14.0), (428.0, 22.0), (458.0, 32.0), (476.0, 40.0), (490.0, 46.0),
+      (505.0, 54.0), (511.0, 58.0)]
+
+
+def _lerp_table(table: list[tuple[float, float]], y: float) -> float:
+    if y <= table[0][0]:
+        return table[0][1]
+    for (y0, v0), (y1, v1) in zip(table, table[1:]):
+        if y <= y1:
+            return v0 + (v1 - v0) * (y - y0) / (y1 - y0)
+    return table[-1][1]
+
+
+def contour_pose(x: float, y: float) -> tuple[float, float]:
+    """Right-side contour x at yaw -1 (near) and +1 (far) from the section model."""
+    w = x - CX
+    dd = 0.82 * w + 8 + 8 * math.exp(-(((y - 396) / 22) ** 2))
+    e = math.sqrt((w * math.cos(K_YAW)) ** 2 + (dd * math.sin(K_YAW)) ** 2)
+    z0 = _lerp_table(Z0, y)
+    return CX + e - z0 * math.sin(K_YAW), CX + e + z0 * math.sin(K_YAW)
+
+
+CONTOUR = {  # name: (front x, y, pitch depth) for the right side (the avatar outline)
+    "T": (506.0, 330.0, 10.0), "S": (508.0, 366.0, 15.0), "C": (506.0, 396.0, 30.0), "K": (497.0, 428.0, 40.0),
+    "J": (481.0, 458.0, 30.0), "W": (467.0, 476.0, 38.0), "Q": (450.0, 490.0, 45.0), "V": (426.0, 505.0, 55.0),
 }
-# looking up narrows the jaw (no wide U): x pulls in by max(0, pitch) x px
+# looking up narrows the jaw (no wide U): x pulls in by max(0, pitch) x px, faded out by
+# (1 - 4 sin^2 yaw), so looking up while turned never flattens the chin twice
 JAW_NARROW = {"K": 3.0, "J": 7.0, "W": 7.0, "Q": 5.0, "V": 3.0}
-# ...faded out by (1 - 4 sin^2 yaw), so looking up while turned never flattens the chin twice
-for _n, (_x, _y, _z, _m, _p) in CONTOUR.items():
-    pair("F" + _n, _x, _y, _z, pose=(_m, _p),
+for _n, (_x, _y, _z) in CONTOUR.items():
+    pair("F" + _n, _x, _y, _z, pose=contour_pose(_x, _y),
          sym=[(-JAW_NARROW[_n], (tokpos("pitch"),)), (4 * JAW_NARROW[_n], (tokpos("pitch"), r.SIN, r.SIN))]
          if _n in JAW_NARROW else None)
-bone("Chin", 400.0, 511.0, 60.0, pose=(400.0 - 33.0, 400.0 + 33.0))
-# under-jaw plane: same yaw path as the jaw, less depth for pitch (opens when looking up)
-for _n, _x, _y, _zp, _src in (("UJR", 478.0, 456.0, 8.0, "J"), ("UQR", 448.0, 487.0, 16.0, "Q")):
-    _c = CONTOUR[_src]
-    bone(_n, _x, _y, 0.0, zp=_zp, pose=(_c[3] - (_c[0] - _x), _c[4] - (_c[0] - _x)))
-    bone("U" + _n[1] + "L", mirror_x(_x), _y, 0.0, zp=_zp,
-         pose=(mirror_x(_c[4] - (_c[0] - _x)), mirror_x(_c[3] - (_c[0] - _x))))
-bone("UC", 400.0, 508.0, 0.0, zp=8.0, pose=(400.0 - 32.5, 400.0 + 32.5))
+_zc = _lerp_table(Z0, 511.0) * math.sin(K_YAW)
+bone("Chin", 400.0, 511.0, 60.0, pose=(CX - _zc, CX + _zc))
+# under-jaw plane: same yaw model, less depth for pitch (opens when looking up)
+for _n, _x, _y, _zp in (("UJ", 478.0, 456.0, 8.0), ("UQ", 448.0, 487.0, 16.0)):
+    pair(_n, _x, _y, 0.0, zp=_zp, pose=contour_pose(_x, _y))
+bone("UC", 400.0, 508.0, 0.0, zp=8.0, pose=(CX - _lerp_table(Z0, 508.0) * 0.5, CX + _lerp_table(Z0, 508.0) * 0.5))
 
-# --- face grid (brows, blush, chin light, forehead)
+# --- face grid (lid tops, creases, cheek bloom, mole, forehead)
 FGX = [300.0, 336.0, 370.0, 400.0, 430.0, 464.0, 500.0]
-FGY = [316.0, 408.0]
+FGY = [336.0, 428.0]
 
 
 def fg_name(c: int, rr: int) -> str:
@@ -281,28 +314,35 @@ def fg_name(c: int, rr: int) -> str:
 
 for _r, _y in enumerate(FGY):
     for _c, _x in enumerate(FGX):
-        # the brow row pitches with less depth than the lids, so looking down never frowns
-        bone(fg_name(_c, _r), _x, _y, surface_z(_x - CX, _y), zp=66.0 if _r == 0 else None)
+        bone(fg_name(_c, _r), _x, _y, surface_z(_x - CX, _y))
 FACE_GRID = Grid(FGX, FGY, fg_name)
 
-# --- eyes: 3 columns x 3 rows per eye; the top row (the lid edge) closes with `blink`
-EYE_Y = [356.0, 374.0, 392.0]
+# --- eyes (the avatar's: centres 355 / 445, drawn at 1.06 about y 388): 3 columns x 3 rows,
+# the top row (the lid edge) closes with `blink`
+EYE_Y = [376.0, 393.0, 411.0]
 EYE_Z = [82.0, 84.0, 50.0]  # inner, middle, outer (the outer canthus is recessed)
-BLINK = [31.0, 38.0, 26.0]  # lid travel per column, upper lid -> lower lid
+BLINK = [32.0, 40.0, 27.0]  # lid travel per column, upper lid -> lower lid
 CORNER_DROP = [15.0, 4.0, 8.0]  # the corner row settles into the closed line (per column)
 LOWER_RISE = -5.0  # the lower lid rises into the blink
-EYE_CX = {"R": 448.0, "L": 352.0}
+EYE_CX = {"R": 445.0, "L": 355.0}
+EYE_S = 1.06  # the avatar's eye scale (gen_avatar.build_eye)
+
+
+def es(cx: float, x: float, y: float) -> tuple[float, float]:
+    """Avatar eye coordinates -> drawn (scaled 1.06 about (cx, 388))."""
+    return cx + (x - cx) * EYE_S, 388 + (y - 388) * EYE_S
 
 
 def eye_cols(t: str) -> list[float]:
     s = 1 if t == "R" else -1
     cx = EYE_CX[t]
-    return [cx - 27 * s, cx, cx + 31 * s]
+    return [es(cx, cx - 28 * s, 0)[0], cx, es(cx, cx + 30 * s, 0)[0]]
 
 
-# Column x at yaw -1 / +1 for the RIGHT eye (left mirrors): the far eye keeps an almond whose
-# outer half foreshortens most (cos of its longitude), the near eye stays about front width.
-EYE_POSE = [(377.0, 459.0), (401.5, 481.5), (436.0, 494.0)]
+# Column x at yaw -1 / +1 for the RIGHT eye (left mirrors), from the eye surface (inner, middle
+# and recessed outer canthus): the far eye keeps an almond whose outer half foreshortens most,
+# the near eye stays about front width.
+EYE_POSE = [(372.0, 454.0), (397.0, 481.0), (434.0, 492.0)]
 
 
 def eye_pose(t: str, x: float) -> tuple[float, float]:
@@ -324,9 +364,9 @@ for _t in ("R", "L"):
             ddy = [((BLINK[_c], CORNER_DROP[_c], LOWER_RISE)[_r], (tok("blink"),))]
             bone(f"E{_t}{_c}{_r}", _x, _y, EYE_Z[_c], pose=eye_pose(_t, _x), ddy=ddy)
     for _c, _x in enumerate((EYE_CX[_t] - 17 * _s, EYE_CX[_t] + 17 * _s)):
-        bone(f"I{_t}{_c}", _x, 371.0, 88.0, pose=eye_pose(_t, _x), ddx=[(13.0, (tok("gaze"),))])
-    # brows: own bones so they can act (raise on a look)
-    for _c, (_x, _y, _dy) in enumerate(((EYE_CX[_t] - 26 * _s, 321.0, -10.0), (EYE_CX[_t] + 28 * _s, 323.0, -6.0))):
+        bone(f"I{_t}{_c}", _x, 388.0, 88.0, pose=eye_pose(_t, _x), ddx=[(13.0, (tok("gaze"),))])
+    # brows: own bones so they act (a look raises them 12-14 px; the inner end more = arch)
+    for _c, (_x, _y, _dy) in enumerate(((EYE_CX[_t] - 26 * _s, 339.0, -14.0), (EYE_CX[_t] + 30 * _s, 341.0, -12.0))):
         bone(f"Bw{_t}{_c}", _x, _y, surface_z(_x - CX, _y) - 4, zp=66.0, ddy=[(_dy, (tok("brow"),))])
 
 
@@ -343,18 +383,26 @@ def iris_chain(t: str) -> Chain:
     return Chain(sorted(a), lambda x, y: x)
 
 
-# --- nose, mouth
-# the tip drifts out to the far cheek line at |yaw| = 1 (anime 3/4), the bridge and base less
-# nose tip 8-10 px inside the far contour; the mouth centre follows it (~2/3 of its travel)
-bone("NB", 400.0, 404.0, 0.0, zp=surface_z(0, 404) + 6, pose=(336.0, 464.0))
-bone("NT", 401.0, 430.0, 0.0, zp=112.0, pose=(318.0, 482.0))
-bone("NS", 400.0, 434.0, 0.0, zp=surface_z(0, 434) - 2, pose=(331.0, 471.0))
-bone("MC", 400.0, 470.0, 0.0, zp=114.0, pose=(345.0, 455.0), ddy=[(1.5, (tok("mouth"),))])
-pair("M", 421.0, 463.0, 0.0, zp=96.0, pose=(372.0, 467.0), ddy=[(-5.0, (tok("mouth"),))],
+# --- nose and mouth: material points of the same surface model (bridge, tip, base; mouth
+# centre and corners), so all features slide together at 3/4. The anime nose protrudes ~35 px.
+bone("NB", 400.0, 410.0, 108.0)
+bone("NT", 401.0, 450.0, 134.0, zp=120.0)
+bone("NS", 400.0, 454.0, 98.0)
+bone("MC", 400.0, 480.0, 100.0, zp=112.0, ddy=[(1.5, (tok("mouth"),))])
+pair("M", 417.0, 477.0, 92.0, zp=100.0, ddy=[(-5.0, (tok("mouth"),))],
      sym=[(4.0, (tok("mouth"),))])  # a smile widens the corners by 8 px
 # --- ears: front and back edge at different depths (width follows yaw); pitch counter-moves
-pair("EaF", 503.0, 378.0, -8.0, zp=-48.0)
-pair("EaB", 527.0, 378.0, -44.0, zp=-48.0)
+pair("EaF", 503.0, 396.0, -8.0, zp=-48.0)
+pair("EaB", 527.0, 396.0, -44.0, zp=-48.0)
+# --- glasses: a rigid frame in front of the eyes (bridge, lens middle, hinge) plus the temple
+# end at the ear. The far temple folds onto its hinge (hidden by the head); the near one shows.
+pair("GI", 404.0, 387.0, 110.0)
+pair("GM", 445.0, 387.0, 104.0)
+pair("GO", 488.0, 387.0, 86.0)
+_hinge_far = CX + 88 * math.cos(K_YAW) + 86 * math.sin(K_YAW)
+pair("GT", 504.0, 369.0, 0.0, zp=-20.0, pose=(CX + 104 * math.cos(K_YAW) + 20 * math.sin(K_YAW), _hinge_far))
+GLASSES_CHAIN = Chain([(296.0, "GTL"), (312.0, "GOL"), (355.0, "GML"), (396.0, "GIL"), (404.0, "GIR"),
+                       (445.0, "GMR"), (488.0, "GOR"), (504.0, "GTR")], lambda x, y: x)
 
 # --- hair shell grid (material points), fringe-tip row trails with `hairLag`
 HGX = [276.0, 338.0, 400.0, 462.0, 524.0]
@@ -374,12 +422,11 @@ for _r, _y in enumerate(HGY):
             _z = max(surface_z(_x - CX, _y), shell_z(_x - CX, _y) - 30) + 10
             bone(hg_name(_c, _r), _x, _y, _z, ddx=[(11.0, (tok("hairLag"),))])
 HAIR_GRID = Grid(HGX, HGY, hg_name)
-bone("Aho", 412.0, 156.0, 4.0, ddx=[(34.0, (tok("tuftLag"),))])  # crown tuft: its own looser follower
+bone("Aho", 422.0, 186.0, 6.0, ddx=[(30.0, (tok("tuftLag"),))])  # cowlick tips: their own looser follower
 
-# --- hair silhouette (three-pose: the away side widens, the toward side narrows)
-SIL_R = [(400.0, 192.0), (472.0, 205.0), (515.0, 244.0), (531.0, 300.0), (532.0, 362.0), (525.0, 420.0),
-         (512.0, 470.0)]
-SIL_LAG = [0, 0, 0, 0, 3, 9, 16]
+# --- hair silhouette (the avatar's back hair; three-pose: the away side widens)
+SIL_R = [(400.0, 196.0), (466.0, 212.0), (516.0, 262.0), (528.0, 340.0), (514.0, 430.0), (534.0, 478.0)]
+SIL_LAG = [0, 0, 0, 0, 6, 16]
 for _i, (_x, _y) in enumerate(SIL_R):
     if _i == 0:  # crown top: only the cranium's offset behind the yaw axis moves it
         _zs = HAIR_C[1] * math.sin(K_YAW)
@@ -388,13 +435,13 @@ for _i, (_x, _y) in enumerate(SIL_R):
     pair(f"S{_i}", _x, _y, HAIR_C[1], pose=sil_pose(_x, _y, 1.16, HAIR_C[1]),
          ddx=[(float(SIL_LAG[_i]), (tok("sideLag"),))] if SIL_LAG[_i] else None)
 
-# --- side locks: 2 columns x 3 rows per side, lower rows trail
-SLX = [492.0, 522.0]
-SLY = [300.0, 386.0, 462.0]
+# --- side locks (the avatar's, in front of the ears down to the jaw): 2 columns x 3 rows,
+# lower rows trail. One lock per side, morphing with yaw: over the near cheek, beside the far
+# one and inside the hair silhouette, so the contour shows without any fade.
+SLX = [486.0, 512.0]
+SLY = [330.0, 400.0, 466.0]
 SL_LAG = [0.0, 9.0, 20.0]
-# One lock per side, morphing with yaw: on the near side it covers more cheek, on the far side
-# it slides out beyond the cheek contour (6+ px clear), so the contour shows without any fade.
-SL_POSE = [[(480.0, 517.0), (480.0, 517.0), (484.0, 512.0)], [(542.0, 522.0), (542.0, 522.0), (538.0, 518.0)]]
+SL_POSE = [[(474.0, 514.0), (474.0, 516.0), (478.0, 502.0)], [(528.0, 521.0), (530.0, 521.0), (526.0, 512.0)]]
 for _c, _x in enumerate(SLX):
     for _r, _y in enumerate(SLY):
         pair(f"K{_c}{_r}", _x, _y, 0.0, zp=40.0 - 30.0 * _c - 8.0 * _r, pose=SL_POSE[_c][_r],
@@ -451,13 +498,13 @@ w_neck = None  # the neck and collar never move: unskinned
 
 
 def w_nose(x: float, y: float) -> Weights:
-    t = min(1.0, max(0.0, (y - 402) / 26))
+    t = min(1.0, max(0.0, (y - 410) / 40))
     return {"NB": 1 - t, "NT": t}
 
 
 def w_mouth(x: float, _y: float) -> Weights:
     """Quadratic falloff centre -> corner, so a pitch bend stays a smooth arc (no kink)."""
-    u = min(1.0, abs(x - CX) / 21.0) ** 2
+    u = min(1.0, abs(x - CX) / 17.0) ** 2
     return {"MC": 1 - u, ("MR" if x >= CX else "ML"): u}
 
 
@@ -506,57 +553,58 @@ def face_fill() -> El:
 
 def brow_chain(t: str) -> Chain:
     s = 1 if t == "R" else -1
-    a = [(EYE_CX[t] - 26 * s, f"Bw{t}0"), (EYE_CX[t] + 28 * s, f"Bw{t}1")]
+    a = [(EYE_CX[t] - 26 * s, f"Bw{t}0"), (EYE_CX[t] + 30 * s, f"Bw{t}1")]
     return Chain(sorted(a), lambda x, y: x)
 
 
 def eye(t: str) -> dict[str, list[El]]:
+    """The avatar's eye (gen_avatar.build_eye) on the eye grid: lash, lid, crease, lower lid,
+    amber iris with ring, pupil and two shines, white with a soft lid shadow."""
     s = 1 if t == "R" else -1
     cx = EYE_CX[t]
-    i, o = cx - 27 * s, cx + 31 * s
+    i, o = cx - 28 * s, cx + 30 * s
+
+    def P(pts: list[Pt]) -> list[Pt]:
+        return [es(cx, p[0], p[1]) + tuple(p[2:]) for p in pts]  # type: ignore[misc]
+
     g = eye_grid(t)
     ic = iris_chain(t)
-    white_pts: list[Pt] = [(i + 2 * s, 375), (cx - 15 * s, 354), (cx + 6 * s, 349), (o - 8 * s, 354), (o - 2 * s, 370),
-                           (cx + 14 * s, 388), (cx - 8 * s, 391)]
-    white = part("White" + t, white_pts, g, F(SCLERA), tags=("feature",))
-    lid_shadow = part("LidShade" + t, clockwise([(i - 2 * s, 372), (cx - 15 * s, 351), (cx + 6 * s, 346),
-                                                 (o - 4 * s, 351), (o + 2 * s, 368), (o - 8 * s, 364),
-                                                 (cx + 6 * s, 357), (cx - 15 * s, 361)]),
+    white = part("White" + t, P([(i, 390), (cx - 14 * s, 372), (cx + 6 * s, 368), (o - 6 * s, 374), (o, 392, "c"),
+                                 (cx + 8 * s, 404), (cx - 12 * s, 403)]), g, F(SCLERA), tags=("feature",))
+    lid_shadow = part("LidShade" + t, clockwise(P([(i - 2 * s, 389), (cx - 14 * s, 369), (cx + 6 * s, 365),
+                                                   (o - 4 * s, 371), (o + 2 * s, 388), (o - 8 * s, 382),
+                                                   (cx + 6 * s, 376), (cx - 14 * s, 380)])),
                       g, F(SCLERA_SH, 4.0), clip=white)
-    top: list[tuple[float, float]] = [(i - 1 * s, 375), (cx - 17 * s, 349), (cx + 5 * s, 342), (o - 1 * s, 347),
-                                      (o + 9 * s, 361)]
-    bottom: list[tuple[float, float]] = [(o + 1 * s, 359), (cx + 6 * s, 352), (cx - 15 * s, 357), (i + 4 * s, 376)]
-    lash: list[Pt] = [(*top[0], "c"), *top[1:4], (*top[4], "c"), *bottom[:3], (*bottom[3], "c")]
+    top = P([(i - 3 * s, 393), (cx - 15 * s, 368), (cx + 6 * s, 363), (o - 2 * s, 369), (o + 9 * s, 384)])
+    bottom = P([(o + 1 * s, 381), (cx + 6 * s, 373), (cx - 14 * s, 377), (i + 2 * s, 394)])
+    lash: list[Pt] = [(*top[0][:2], "c"), *top[1:4], (*top[4][:2], "c"), *bottom[:3], (*bottom[3][:2], "c")]
     # eyelid: zero area at rest; its lower edge rides the lash down, its top stays on the skin
-    lid: list[Pt] = [(*top[0], "c"), *top[1:4], (*top[4], "c"), *bottom[:3], (*bottom[3], "c")]
     lid_w = [FACE_GRID] * 5 + [g] * 4
     top_layer = [
-        part("Lash" + t, lash, g, F(LASH), tags=("feature",)),
-        part("Crease" + t, taper([(cx - 13 * s, 340), (cx + 6 * s, 336), (o + 1 * s, 343)], W_DET * 1.1, 0.1),
-             FACE_GRID, F(light(SK[2], -0.4, 0x80))),
+        part("Lash" + t, lash, g, F(AV_LASH), tags=("feature",)),
+        part("Crease" + t, taper(P([(cx - 12 * s, 360), (cx + 8 * s, 356), (o + 2 * s, 364)]), 2.0, 0.15),
+             FACE_GRID, F(SKIN_SH2)),
     ]
-    lid_el = part("Lid" + t, lid, lid_w, face_fill())
+    lid_el = part("Lid" + t, lash, lid_w, face_fill())
     kids = [
-        part("LowLid" + t, taper([(cx - 1 * s, 394), (cx + 15 * s, 392), (o - 1 * s, 382)], W_DET * 1.3, 0.1), g,
-             F(light(SK[2], -0.6, 0xC0))),
-        part("Glint" + t, ell(cx - 8, 358, 11, 10, 6), ic, F(GLINT), clip=white),
-        part("Glint2" + t, ell(cx + 9, 383, 5, 5, 6), ic, F(_hex(_rgb(GLINT), 0xC8)), clip=white),
-        part("Pupil" + t, ell(cx, 372, 14, 18, 6), ic, F(PUPIL), clip=white),
-        part("IrisGlow" + t, clockwise(ell(cx + 1, 383, 26, 12, 6)), ic, F(_hex(_rgb(IRIS_BOT), 0xB0), 4.0),
-             clip=white),
-        part("Iris" + t, ell(cx, 371, 36, 42), ic,
-             vfill(350, 392, [(IRIS_TOP, 0.0), (IRIS_TOP, 0.28), (IRIS_MID, 0.62), (IRIS_BOT, 1.0)]),
-             L(grade("FF1E1626"), 1.8), clip=white),
+        part("LowLid" + t, taper(P([(i + 6 * s, 403), (cx - 8 * s, 406), (cx + 14 * s, 402)]), 2.0, 0.15), g,
+             F(grade("FF3A2622", 0xB0))),
+        part("Shine" + t, ell(*es(cx, cx - 7 * s - 1, 379), 10.6, 8.5, 6), ic, F(GLINT), clip=white),
+        part("Shine2" + t, ell(*es(cx, cx + 7 * s, 397), 5.3, 5.3, 6), ic, F(_hex(_rgb(GLINT), 0xD0)), clip=white),
+        part("Pupil" + t, ell(*es(cx, cx, 389), 14.8, 18.0, 6), ic, F(AV_PUPIL), clip=white),
+        part("Iris" + t, ell(cx, 388, 34, 38), ic, rfill(cx, 396.5, 23.3, [(IRIS_A, 0.0), (IRIS_B, 1.0)]),
+             L(IRIS_RING, 2.3), clip=white),
         lid_shadow,
         white,
     ]
-    brow = part("Brow" + t, [(cx - 30 * s, 327, "c"), (cx - 8 * s, 318.5), (cx + 16 * s, 318), (cx + 34 * s, 326, "c"),
-                             (cx + 16 * s, 322), (cx - 8 * s, 322.5)], brow_chain(t), F(HAIR_MID), tags=("feature",))
+    brow = part("Brow" + t, [(cx - 30 * s, 342, "c"), (cx - 8 * s, 335), (cx + 16 * s, 335), (cx + 36 * s, 344, "c"),
+                             (cx + 16 * s, 341), (cx - 8 * s, 341)], brow_chain(t), F(AV_HAIR), tags=("feature",))
     return {"top": top_layer, "lid": [lid_el], "eye": kids, "brow": [brow]}
 
 
 def lock(name: str, root: tuple[float, float], tip: tuple[float, float], w: float, bend: float, wf: object) -> list[El]:
-    """A hair lock from a rounded root (tucked into the crown) to a pointed tip, with a strand."""
+    """The avatar's hair lock (gen_avatar.lock): base with a root-to-tip ramp, a satin ribbon
+    and a strand, both clipped to the lock."""
     (rx, ry), (tx, ty) = root, tip
     dx, dy = tx - rx, ty - ry
     ln = math.hypot(dx, dy)
@@ -566,15 +614,24 @@ def lock(name: str, root: tuple[float, float], tip: tuple[float, float], w: floa
         bow = math.sin(math.pi * t) * bend
         return (rx + dx * t + nx * (off + bow), ry + dy * t + ny * (off + bow))
 
-    pts: list[Pt] = [at(-0.05, 0), at(0.04, -w * 0.46), at(0.42, -w * 0.48), at(0.78, -w * 0.26),
-                     (tx + nx * bend * 0.12, ty, "c"), at(0.8, w * 0.14), at(0.46, w * 0.46), at(0.04, w * 0.46)]
-    base = part(name, pts, wf, hair_fill(), hair_line(), tags=("hair",))
-    # sheen: a leaf of light on every lock where the crown turns toward the key light; together
-    # they read as the broken "angel ring"
-    lit = max(0.25, 1.0 - max(0.0, (rx - 360) / 160))
-    glint = part(name + "Gl", taper([at(0.1, -w * 0.08), at(0.24, -w * 0.12), at(0.42, -w * 0.1)], w * 0.2, 0.1),
-                 wf, F(_hex(_rgb(SHEEN), int(0xA8 * lit)), 1.5), clip=base)
-    return [glint, base]
+    pts: list[Pt] = [at(0, -w / 2), at(0.45, -w * 0.42), at(0.8, -w * 0.2), (tx + nx * bend * 0.1, ty, "c"),
+                     at(0.78, w * 0.16), at(0.42, w * 0.44), at(0, w / 2)]
+    ramp = d("Fill", lin(d, rx - OX, ry - OY, tx - OX, ty - OY, [(AV_HAIR_HI, 0.0), (AV_HAIR, 0.55),
+                                                                 (AV_HAIR_SH, 1.0)]))
+    base = part(name, pts, wf, ramp, L(AV_HAIR_SH, 1.5), tags=("hair",))
+    ribbon = part(name + "Rb", [at(0.12, -w * 0.18), at(0.35, -w * 0.22), at(0.65, -w * 0.1), at(0.48, -w * 0.04),
+                                at(0.26, -w * 0.05)], wf, F("35DBA27C"), clip=base)
+    strand = part(name + "St", taper([at(0.18, w * 0.15), at(0.43, w * 0.2), at(0.72, w * 0.07)], 1.1, 0.2), wf,
+                  F("30E6B28A"), clip=base)
+    return [strand, ribbon, base]
+
+
+# fringe: the avatar's locks (gen_avatar.LOCKS) and their front-to-back order
+FRINGE: list[tuple[tuple[float, float], tuple[float, float], float, float]] = [
+    ((300, 272), (292, 404), 44, -8), ((330, 246), (318, 366), 50, 12), ((360, 236), (350, 338), 50, 10),
+    ((396, 230), (420, 368), 70, 18), ((436, 234), (452, 334), 52, 10), ((470, 248), (490, 376), 58, 9),
+    ((498, 276), (510, 410), 40, 6), ((380, 236), (372, 318), 30, 6), ((452, 242), (474, 322), 28, 6)]
+FRINGE_ORDER = [7, 8, 3, 2, 4, 1, 5, 0, 6]
 
 
 def hair_line() -> El:
@@ -587,17 +644,6 @@ def hair_line() -> El:
 def hair_fill() -> El:
     """One world-space vertical ramp for every front hair shape, so overlaps never seam."""
     return rfill(342, 196, 300, [(HAIR_MID, 0.0), (HAIR_SIDE, 0.55), (HAIR, 1.0)])
-
-
-# fringe: (root, tip, width, bend) - near-symmetric so yaw 0 reads frontal; roots fan out
-# from the crown, so the whole crown is made of skinned locks
-FRINGE: list[tuple[tuple[float, float], tuple[float, float], float, float]] = [
-    ((394, 206), (380, 348), 46, -9), ((406, 206), (424, 340), 44, 8),
-    ((372, 210), (338, 330), 50, -12), ((428, 210), (463, 338), 52, 11),
-    ((350, 220), (309, 356), 44, -13), ((450, 220), (490, 346), 42, 10),
-    ((328, 238), (292, 374), 34, -8), ((472, 238), (508, 368), 34, 9),
-]
-FRINGE_ORDER = [0, 1, 2, 3, 4, 5, 6, 7]
 
 
 def w_hair(x: float, y: float) -> Weights:
@@ -627,9 +673,9 @@ def w_back(x: float, y: float) -> Weights:
     return SIL_CHAIN(x, y)
 
 
-FRINGE_SHADE_PTS: list[Pt] = clockwise([(296, 374), (314, 358), (340, 344), (360, 342), (382, 354), (400, 348),
-                                        (420, 354), (440, 342), (462, 344), (486, 358), (506, 374), (506, 292),
-                                        (296, 292)])
+# soft cast shadow of the fringe: just below the lock tips (avatar LOCKS), feathered
+FRINGE_SHADE_PTS: list[Pt] = clockwise([(292, 414), (318, 376), (350, 348), (372, 328), (396, 350), (420, 378),
+                                        (452, 344), (474, 332), (490, 386), (510, 420), (512, 300), (290, 300)])
 
 
 def build() -> list[El]:
@@ -645,11 +691,10 @@ def build() -> list[El]:
     RIG.add_static("Neck", neck_el, *NECK_BASE, rot=-PI / 2)
 
     # ---- face
-    face_pts: list[Pt] = [(306, 300), (334, 254), (400, 238), (466, 254), (494, 300)]
+    face_pts: list[Pt] = [(310, 262), (400, 222), (490, 262)]  # the avatar's crown (under the hair)
     for n in reversed(CONTOUR_ORDER):
         b = next(s for s in SPECS if s.name == n)
         face_pts.append((b.x, b.y))
-    face_pts = face_pts[:5] + face_pts[5:]
     face = part("Face", face_pts, w_face,
                 *((F("FF00FF00"),) if VARIANT == "hair" else (face_fill(), L(INK, W_SIL * 0.85))), tags=("face",))
     # form light: a terminator on the side away from the key (right) that deepens as that cheek
@@ -676,24 +721,23 @@ def build() -> list[El]:
     rim = part("Rim", taper([(504, 334), (507, 366), (505, 396), (496, 427), (480, 456)], 2.6, 0.12), w_face,
                F(_hex(_rgb(RIM), 0xA0)), clip=face)
     fringe_shadow = part("FringeShade", FRINGE_SHADE_PTS, w_hair, F(light(SK[2], -0.5, 0x68), 8.0), clip=face)
-    blush = [part("Blush" + t, clockwise(ell(x, 404, 54, 22)), FACE_GRID, F(CHEEK, 6.0), clip=face)
-             for t, x in (("L", 340.0), ("R", 460.0))]
-    blush += [part(f"Hatch{t}{k}", taper([(x + 8 * k - 4, 410), (x + 8 * k + 3, 398)], 1.8, 0.2), FACE_GRID,
-                   F(grade(_hex(mixc(ab.CHARACTER["cheek"][0][2:], SK[2], 0.7)), 0xD0)))
-              for t, x in (("L", 334.0), ("R", 454.0)) for k in range(2)]
-    chin_light = part("ChinLight", taper([(388, 499), (400, 502), (412, 499)], 2.0, 0.2), FACE_CHAIN,
-                      F(_hex(_rgb(SKIN_HI), 0x90)), clip=face)
+    # the avatar's cheek bloom (soft, no hatching at rest) and the mole on the cheek surface
+    blush = [part("Bloom" + t, clockwise(ell(x, 437, 65, 44)), FACE_GRID, F(grade("FFE99D91", 0x38), 10.0), clip=face)
+             for t, x in (("L", 335.0), ("R", 465.0))]
+    mole = part("Mole", ell(456, 432, 5, 5, 6), FACE_GRID, F(MOLE))
+    chin_light = part("ChinLight", taper([(386, 497), (399, 501), (412, 497)], 2.5, 0.2), FACE_CHAIN,
+                      F("40FFF5E1"), clip=face)
     under_jaw = part("UnderJaw", [(318, 456), (350, 488), (400, 510), (450, 488), (482, 456),
                                   (478, 452), (448, 484), (400, 505), (352, 484), (322, 452)],
                      [FACE_CHAIN] * 5 + [UNDER_CHAIN] * 5, F(light(SK[2], -0.55)), tags=("face",))
 
     # ---- ears (2 bones each: width follows yaw)
-    ear: list[Pt] = [(301, 356), (284, 344), (273, 362), (276, 392), (290, 414), (303, 408)]
-    ear_in: list[Pt] = [(297, 370), (287, 362), (284, 380), (292, 396)]
+    ear: list[Pt] = [(300, 372), (282, 360), (272, 380), (278, 412), (292, 436), (304, 430)]  # the avatar's
+    ear_in: list[Pt] = [(296, 384), (286, 378), (284, 396), (292, 414)]
     ears = []
     for t, pts, pin in (("L", ear, ear_in), ("R", mirror(ear), mirror(ear_in))):
         ears += [part("EarIn" + t, taper(pin, W_INT, 0.2), EAR_CHAIN[t], F(LINE_SKIN, None)),
-                 part("Ear" + t, pts, EAR_CHAIN[t], rfill(290 if t == "L" else 510, 370, 40,
+                 part("Ear" + t, pts, EAR_CHAIN[t], rfill(290 if t == "L" else 510, 392, 40,
                                                          [(SKIN, 0.0), (SKIN_SH, 1.0)]), L(INK, W_INT))]
 
     # ---- features
@@ -703,67 +747,87 @@ def build() -> list[El]:
     # (clipped to the lids) so a closing lid never shows as a light patch
     lid_overlays = [form_layer(t, "LidForm", lids) for t in ("R", "L")]
     lid_overlays.append(part("LidFringeShade", FRINGE_SHADE_PTS, w_hair, F(light(SK[2], -0.5, 0x68), 8.0), clip=lids))
+    # the avatar's nose (hook line, shade, light) on bridge / tip / base bones; the base bone
+    # opens a shadow-side plane at 3/4 and a profile line fades in along the bridge
     nose = [
-        part("NoseTip", taper([(395, 431), (401, 434), (407, 431)], 2.6, 0.25), w_nose, F(LINE_SKIN)),
-        part("NoseShade", clockwise([(401, 404), (406, 424), (402, 433), (400, 431), (399, 414)]),
-             lambda x, y: mix((0.5, w_nose(x, y)), (0.5, {"NS": 1.0})) if x < 401 and y > 420 else w_nose(x, y),
-             F(light(SK[1], -0.4, 0x40), 2.5)),
-        part("NoseLight", taper([(396, 410), (395, 421)], 2.2, 0.3), w_nose, F(_hex(_rgb(SKIN_HI), 0xB0))),
+        part("NoseLine", taper([(406, 446), (400, 454), (392, 452)], 3.0, 0.3), w_nose, F(SKIN_SH2)),
+        part("NoseShade", clockwise([(404, 408), (410, 440), (406, 450), (398, 453), (402, 430)]),
+             lambda x, y: {"NS": 1.0} if y > 451 else w_nose(x, y), F(light(SK[1], -0.3, 0xB0), 1.5)),
+        part("NoseLight", taper([(397, 415), (395, 433)], 2.8, 0.3), w_nose, F(_hex(_rgb(SKIN_HI), 0xA0))),
     ]
     # the bridge line only reads at 3/4: opacity = clamp(2.2 |yaw| - 1.1)
     bridge_op = d("DataConverterFormula", *RIG.f.fn("min", [RIG.f.val(1)], RIG.f.fn("max", [RIG.f.val(0)], [
         RIG.f.val(2.2), RIG.f.op("*"), *RIG.f.fn("max", RIG.f.inp(), [RIG.f.val(-1), RIG.f.op("*"), *RIG.f.inp()]),
         RIG.f.op("-"), RIG.f.val(1.1)])))
     RIG.converters.append(bridge_op)
-    nose.insert(0, part("NoseBridge", taper([(400, 405), (400.5, 417), (401.5, 429)], 1.8, 0.25), w_nose,
-                        F(light(SK[2], -0.55, 0xC0))).add(
+    nose.insert(0, part("NoseBridge", taper([(401, 412), (403, 428), (406, 444)], 2.0, 0.25), w_nose,
+                        F(light(SK[2], -0.5, 0xB0))).add(
         d("DataBindContext", sourcePathIds=vm_path("yaw"), propertyKey=18, converterId=bridge_op.ref())))
-    mouth = [
-        part("Mouth", taper([(379, 462), (389, 469), (400, 471), (411, 469), (421, 462)], W_INT * 1.2, 0.2),
-             MOUTH_CHAIN, F(light(SK[2], -0.85))),
-        part("Lip", taper([(394, 478), (400, 479.5), (406, 478)], 1.6, 0.2), MOUTH_CHAIN,
-             F(light(SK[2], -0.3, 0x90))),
+    mouth = [  # the avatar's small neutral mouth
+        part("Mouth", taper([(383, 477), (391, 479.4), (400, 480), (409, 479.4), (417, 477)], 2.9, 0.3), MOUTH_CHAIN,
+             F(grade("FF3A2622"))),
     ]
+    # ---- glasses (the avatar's): lenses, glare, bridge, hinges, temples, on the frame bones
+    glasses: list[El] = []
+    for t, cx in (("L", 355.0), ("R", 445.0)):
+        lens = [(cx - 43, 364, "c12"), (cx + 43, 364, "c12"), (cx + 41, 410, "c14"), (cx - 41, 410, "c14")]
+        glasses.append(part("Lens" + t, lens, GLASSES_CHAIN, F(LENS), L(FRAME, 4.2)))
+    glasses = [
+        part("Glare", [(330, 370, "c"), (346, 370, "c"), (322, 402, "c"), (310, 402, "c")], GLASSES_CHAIN, F(GLARE)),
+        part("Glare2", [(420, 370, "c"), (436, 370, "c"), (412, 402, "c"), (402, 402, "c")], GLASSES_CHAIN, F(GLARE)),
+        part("Bridge", [(398, 378), (400, 374), (402, 378)], GLASSES_CHAIN, L(FRAME, 5.0), closed=False),
+        *[part("Hinge" + t, ell(x, 372, 5, 3, 4), GLASSES_CHAIN, F(HINGE)) for t, x in (("L", 314.0), ("R", 486.0))],
+        *glasses,
+    ]
+    # temples run from the hinge back over the side hair to the ear (as on the avatar, in front of
+    # the hair); the far one folds onto its hinge
+    temples = [part("Temple" + t, pts, GLASSES_CHAIN, L(FRAME, 6.0), closed=False)
+               for t, pts in (("L", [(311, 370), (296, 368)]), ("R", [(489, 370), (504, 368)]))]
 
     # ---- hair
     locks: list[El] = []
     for k in FRINGE_ORDER:
         locks += lock(f"Fringe{k}", *FRINGE[k], w_hair)
+    # the avatar's two cowlick tufts: tips on their own looser follower (tuftLag)
+    def w_tuft(x: float, y: float) -> Weights:
+        t = min(1.0, max(0.0, (226 - y) / 40))
+        return mix((t, {"Aho": 1.0}), (1 - t, HAIR_GRID(x, y)))
+
     aho: list[El] = [
-        part("Aho" + str(k), taper(pts, wdt, 0.12), lambda x, y: mix((min(1.0, (196 - y) / 36), {"Aho": 1.0}),
-                                                                    (1 - min(1.0, (196 - y) / 36), HAIR_GRID(x, y)))
-             if y < 196 else HAIR_GRID(x, y), F(HAIR_MID), L(HAIR_LINE, W_DET))
-        for k, (pts, wdt) in enumerate([([(397, 210), (394, 186), (402, 164), (420, 152), (438, 154)], 8.0),
-                                        ([(405, 210), (410, 192), (404, 176), (390, 170)], 5.5)])
+        part("Cowlick", [(380, 232), (372, 206), (384, 186), (404, 180, "c"), (392, 196), (392, 214), (404, 230)],
+             w_tuft, F(AV_HAIR), L(AV_HAIR_SH, 2.5)),
+        part("Cowlick2", [(408, 230), (420, 204), (444, 194, "c"), (434, 210), (428, 232)], w_tuft, F(AV_HAIR),
+             L(AV_HAIR_SH, 2.5)),
     ]
     # side locks: one lock per side whose bones morph with yaw (see SL_POSE): over the near
     # cheek, beside the far one; nothing fades, so there is never a translucent ghost
     side_locks: list[El] = []
-    side: list[Pt] = [(500, 254), (516, 284), (524, 350), (526, 412), (521, 452), (513, 478, "c"), (505, 446),
-                      (499, 392), (494, 330), (493, 282)]
+    side: list[Pt] = [(500, 330), (512, 360), (510, 420), (504, 466, "c"), (492, 430), (486, 370)]  # the avatar's
     for t, pts in (("R", side), ("L", mirror(side))):
         g = side_grid(t)
         sx = (lambda x: x) if t == "R" else mirror_x
-        base = part("SideLock" + t, pts, g, hair_fill(), L(HAIR_LINE, W_DET), tags=("hair",))
-        st = part("SideLockSt" + t, taper([(sx(509), 320), (sx(514), 380), (sx(512), 432)], 1.7, 0.1), g,
-                  F(light(HR[0], 0.7, 0x68)), clip=base)
+        base = part("SideLock" + t, pts, g, F(AV_HAIR), L(AV_HAIR_SH, 2.5), tags=("hair",))
+        st = part("SideLockSt" + t, taper([(sx(500), 350), (sx(503), 400), (sx(500), 440)], 1.2, 0.2), g,
+                  F("30E6B28A"), clip=base)
         side_locks += [st, base]
-    cap_outer = [(280, 330), (285, 270), (318, 222), (400, 194), (482, 222), (515, 270), (520, 330)]
-    cap_inner = [(500, 300), (470, 262), (400, 246), (330, 262), (300, 300)]
-    cap = part("HairCap", cap_outer + cap_inner, w_cap, hair_fill(), L(HAIR_LINE, W_DET), tags=("hair",))
+    cap_pts: list[Pt] = [(290, 340), (294, 270), (330, 232), (400, 214), (470, 232), (506, 270), (510, 340), (470, 300),
+                         (400, 292), (330, 300)]  # the avatar's
+    cap = part("HairCap", cap_pts, w_cap, vfill(217, 337, [(AV_HAIR_HI, 0.0), (AV_HAIR, 0.6)]), L(AV_HAIR_SH, 2.4),
+               tags=("hair",))
     sil = [(b.x, b.y) for b in sorted((s for s in SPECS if s.name.startswith("S")), key=lambda s: _sil_ang(s.x, s.y))]
-    back = [(288, 470, "c")] + sil[1:-1] + [(512, 470, "c"), (496, 458), (484, 470, "c"), (468, 452), (400, 446),
-                                             (332, 452), (316, 470, "c"), (304, 458)]
-    back_hair = part("BackHair", back, w_back, vfill(192, 470, [(HAIR_SIDE, 0.0), (HAIR, 0.5),
-                                                                (light(HR[2], -0.3), 1.0)]),
-                     L(INK, W_DET * 1.3), tags=("hair",))
-    # silhouette edge light so the side masses separate from the night background: warm key
-    # bounce on the left, cool rim on the right (scene script). The band sits ON the silhouette
-    # (same chain bones) and is clipped by the hair mass, so only its inner half shows, crisp.
-    edge = [(519, 244), (531, 300), (532, 362), (525, 420), (513, 466)]
+    # the avatar's back hair, every vertex on the silhouette chain (no static corner to stretch)
+    back = [(*sil[0], "c")] + sil[1:-1] + [(*sil[-1], "c"), (500, 466), (488, 420), (312, 420), (300, 466)]
+    back_hair = part("BackHair", back, SIL_CHAIN, F(AV_HAIR_SH), L(INK, W_SIL), tags=("hair",))
+    # two-tone silhouette edge: a dark ink outline (separates from a lit wall) and, inside it, an
+    # edge light (scene key warm on the left, rim cool on the right; separates from a dark window).
+    # The light band sits ON the silhouette path and is clipped by the back hair, so it never
+    # leaves the hair; it is drawn over the side locks and ear edges it crosses (they are inside
+    # the silhouette), which is where a rim light lands
+    edge = [(470, 214), (500, 236), (516, 262), (526, 300), (528, 340), (522, 390), (514, 430), (522, 456),
+            (534, 478)]
     bounce = [
-        part("BounceR", taper(edge, 9.0, 0.2), SIL_CHAIN, F(HAIR_BOUNCE_R), clip=back_hair),
-        part("BounceL", taper([(mirror_x(x), y) for x, y in edge], 9.0, 0.2), SIL_CHAIN, F(HAIR_BOUNCE_L),
+        part("BounceR", taper(edge, 12.0, 0.5), SIL_CHAIN, F(RIM_EDGE), clip=back_hair),
+        part("BounceL", taper([(mirror_x(x), y) for x, y in edge], 12.0, 0.5), SIL_CHAIN, F(KEY_EDGE),
              clip=back_hair),
     ]
 
@@ -781,10 +845,9 @@ def build() -> list[El]:
                        F(_hex(_rgb(HOOD_SH), 0xA0)))
 
     front_to_back: list[El] = [
-        *eyes["L"]["brow"], *eyes["R"]["brow"], *locks, *bounce, *side_locks, *aho, cap,
+        *glasses, *temples, *eyes["L"]["brow"], *eyes["R"]["brow"], *locks, *bounce, cap, *side_locks,
         *eyes["L"]["top"], *eyes["R"]["top"], *lid_overlays, lids, *eyes["L"]["eye"], *eyes["R"]["eye"],
-        fringe_shadow, *forms, *nose, *mouth, chin_light, rim, *blush, face, under_jaw, *ears, neck_shade, neck,
-        neck_hole, collar_fold, collar, back_hair,
+        fringe_shadow, *forms, *nose, *mouth, mole, chin_light, rim, *blush, face, under_jaw, *ears, *aho, back_hair, neck_shade, neck, neck_hole, collar_fold, collar,
     ]
     glow = d("Shape", d("Ellipse", width=520.0, height=520.0),
              d("Fill", rad(d, 0.0, 0.0, 260.0, [(BG_GLOW, 0.0), (_hex(_rgb(BG_GLOW), 0), 1.0)])),
