@@ -23,6 +23,17 @@ from avatar_kit import (BEANIE, BEANIE_HI, BEANIE_SH, FRAME, HAIR, HAIR_HI, HAIR
                         rgrad, vgrad)
 from rml import El, lin, rad, smooth_path, track, write  # noqa: E402
 from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
+from head_turn import HeadTurn, rig_head  # noqa: E402
+
+
+def named_el(root_el: El, name: str) -> El:
+    return next(e for e in _walk(root_el) if e.attrs.get("name") == name)
+
+
+def _walk(e: El):  # type: ignore[no-untyped-def]
+    yield e
+    for c in e.children:
+        yield from _walk(c)
 
 W, H = 800, 1000
 rnd = random.Random(42)
@@ -599,11 +610,11 @@ neck_sh = S(body_g, "NeckShade", [(368, 480), (432, 480), (432, 540), (400, 566)
 face_pts = [(294, 330), (298, 402), (316, 452), (350, 488), (386, 508), (400, 511), (414, 508), (450, 488),
             (484, 452), (502, 402), (506, 330), (490, 262), (400, 222), (310, 262)]
 face = S(head, "Face", face_pts, rgrad(235, [("FFFFE6CF", 0.0), (SKIN, 0.6), ("FFE8B299", 1.0)], cx=-48, cy=-62), L(INK, 2.6))
-face_cast = S(head, "FaceCast", [(298, 300), (330, 330), (370, 336), (400, 330), (440, 340), (480, 332), (502, 300),
-                                 (504, 352), (490, 360), (470, 352), (440, 362), (400, 356), (360, 362), (320, 356),
-                                 (300, 366)], F(SKIN_SH))
-cheek_sh = S(head, "CheekShade", [(502, 360), (498, 410), (484, 452), (452, 490), (424, 509), (446, 484), (474, 446),
-                                  (488, 404)], F(SKIN_SH))
+FACE_CAST_PTS = [(298, 300), (330, 330), (370, 336), (400, 330), (440, 340), (480, 332), (502, 300), (504, 352),
+                 (490, 360), (470, 352), (440, 362), (400, 356), (360, 362), (320, 356), (300, 366)]
+CHEEK_SH_PTS = [(502, 360), (498, 410), (484, 452), (452, 490), (424, 509), (446, 484), (474, 446), (488, 404)]
+face_cast = S(head, "FaceCast", FACE_CAST_PTS, F(SKIN_SH))
+cheek_sh = S(head, "CheekShade", CHEEK_SH_PTS, F(SKIN_SH))
 EAR = [(300, 372), (282, 360), (272, 380), (278, 412), (292, 436), (304, 430)]
 ears = [S(head, "EarL", EAR, F(SKIN), L(INK, 3)), S(head, "EarR", mirror(EAR), F(SKIN), L(INK, 3)),
         S(head, "EarInL", [(296, 384), (286, 378), (284, 396), (292, 414)], L(SKIN_SH2, 3), closed=False),
@@ -1958,7 +1969,24 @@ artboard = d("Artboard", style, sm, EASE, EASE_OUT, EASE_IN, *EV_GESTURE.values(
              width=float(W), height=float(H), name="Avatar", defaultStateMachineId=sm.ref(), viewModelId=vm.ref(),
              viewModelInstanceId=inst.ref(), styleId=style.ref(), clip=True)
 
+# ================================================================ HEAD TURN (yaw / pitch)
+# The head art above follows AvatarVM `yaw` / `pitch` on one surface model (rive/tools/head_turn.py):
+# features, glasses, ears and hair ride pivot wrappers, the face outline is skinned. New elements
+# take their own id range, so every id above (and every keyed reference) is unchanged.
+turn = HeadTurn(vm, inst, head.el, root.el)
+rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCKS[i]) for i in range(len(LOCKS))],
+         {"Face": face, "FaceCast": face_cast, "CheekShade": cheek_sh, "EyeL": EYE_L["eye"].el, "EyeR": EYE_R["eye"].el,
+          "BrowL": EYE_L["brow"].el, "BrowR": EYE_R["brow"].el, "NoseTurn": nose_g.el, "Mouth": mouth.el, "Mole": mole,
+          "Blush": blush.el, "CheekBloomL": skin_details[0], "CheekBloomR": skin_details[1],
+          "ChinLight": skin_details[2], "EarL": ears[0], "EarR": ears[1], "EarInL": ears[2], "EarInR": ears[3],
+          "glassesByName": GLASSES, "GlassesSolo": glasses_solo.el, "HairFollow": hair_follow,
+          "LookL": EYE_L["look"].el, "LookR": EYE_R["look"].el, "HairCap": named_el(hair_front.el, "HairCap"),
+          "SideLockL": named_el(hair_front.el, "SideLockL"), "SideLockR": named_el(hair_front.el, "SideLockR"),
+          "HairBackShape": named_el(hair_back.el, "HairBackShape"), "Cowlick": named_el(tufts.el, "Cowlick"),
+          "Cowlick2": named_el(tufts.el, "Cowlick2"), "HatSolo": hat_solo.el,
+          **{f"Lock{i}Material": named_el(hair_front.el, f"Lock{i}Material") for i in range(len(LOCKS))}}, anims)
+
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)
-write(out, [artboard, *enums.values(), mouth_conv, vm])
+write(out, [artboard, *enums.values(), mouth_conv, vm, *turn.converters])
 print("wrote", os.path.normpath(out), "next id", d.next)

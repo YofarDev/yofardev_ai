@@ -57,3 +57,14 @@ def test_lint_flags_value_and_saturation_but_not_accent_alpha_or_emissives() -> 
 
 def test_lint_accepts_six_digit_colours() -> None:
     assert lint_colours('<SolidColor colorValue="2A3040"/>', "livingRoom") == []
+
+
+def test_lint_ignores_numbers_that_look_like_hex_but_reads_colour_keys() -> None:
+    rml: str = "\n".join(
+        [
+            '<Weight values="16711935" indices="66051"/>',  # packed skin weights, not colours
+            '<CubicWeight values="255" indices="1" inValues="12345678"/>',
+            '<KeyFrameColor frame="0" value="FF00FF00"/>',  # a keyed colour is still linted
+        ]
+    )
+    assert {p.split(":")[0] for p in lint_colours(rml, "livingRoom")} == {"3"}

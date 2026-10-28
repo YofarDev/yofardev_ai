@@ -147,7 +147,11 @@ HEAD_25D_GATE: float = 8.5  # M1 head prototype bar (M0 critic: 6.7)
 
 # --- Colour-script lint -------------------------------------------------------------------
 
-_HEX = re.compile(r'"([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6})"')
+# Only colour-carrying attributes: a skinned file's packed `Weight values="16711935"` would
+# otherwise read as a colour. `colorValue` is every colour in RML (SolidColor, GradientStop);
+# `value` counts on KeyFrameColor lines only.
+_HEX = re.compile(r'colorValue="([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6})"')
+_KEY_HEX = re.compile(r'<KeyFrameColor\b[^>]*?\bvalue="([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6})"')
 HIGHLIGHT_SAT_MAX = 0.12  # below this saturation a fill counts as a neutral highlight
 EMISSIVE_PREFIX = "emit"  # nodes whose name starts with this are exempt (fire, screens, stars)
 
@@ -169,7 +173,7 @@ def lint_colours(rml: str, scene: str) -> list[str]:
     for lineno, line in enumerate(rml.splitlines(), 1):
         if f'name="{EMISSIVE_PREFIX}' in line:
             continue
-        for m in _HEX.finditer(line):
+        for m in [*_HEX.finditer(line), *_KEY_HEX.finditer(line)]:
             c = m.group(1).upper()
             if len(c) == 6:
                 c = "FF" + c
