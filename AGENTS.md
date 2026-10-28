@@ -131,6 +131,15 @@ on violation.
   rebuilt by `frive.sh`). macOS: Impeller is disabled in
   `macos/Runner/Info.plist` (Rive crashes the Impeller Metal backend)
 - No CI workflows in this repo — the quality gate is local (`./scripts/fverify.sh`)
+- Face and speech (contract v5, moonshot M2): `FacePerformer` (avatar domain, app-lifetime
+  singleton) turns the director's emotion and the `SpeechTimeline` into one `FaceFrame` per frame;
+  `RiveAvatarView` steps it with the head solver and writes it through `AvatarFaceWriter`. Moods
+  are AU presets (`core/models/performance/mood_presets.dart`); the `mood` enum only drives accents
+  (blush, sweat, anger mark). Visemes and prosody come from `SpeechAnalyzer` on the TTS WAV (Kokoro
+  is deferred); `ChatTtsCubit` announces each sentence 200 ms early (`SpeechPrerollEvent`) for the
+  breath, and `TtsPlaybackService.interrupt()` (not `stop()`) marks a user interruption. Critic
+  evidence: `tool/face_speech_trace_test.dart` (run with `flutter test`, env-var args) +
+  `uv run rive/tools/review_face.py`
 - New features: use `./scripts/fgen.sh`, then wire DI (`service_locator.dart`) and route (`core/router/app_router.dart`) manually — a generated scaffold is not routed/registered until then
 
 ### Key Files
