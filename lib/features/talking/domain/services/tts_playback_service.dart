@@ -33,8 +33,9 @@ class CuesReachedEvent extends PlaybackEvent {
   final List<AvatarCue> cues;
 }
 
-/// Emitted right after [SpeakingStartedEvent] with the text of the sentence
-/// that just started playing (live captions).
+/// Emitted after [SpeakingStartedEvent] (and after the sentence's
+/// [CuesReachedEvent], if any) with the text of the sentence that just
+/// started playing (live captions).
 class CaptionEvent extends PlaybackEvent {
   const CaptionEvent(this.text);
   final String text;
@@ -111,14 +112,15 @@ class TtsPlaybackService {
     }
 
     _controller.add(const SpeakingStartedEvent());
+    // The audio starts now: cues embedded in this sentence fire in time with
+    // speech. They go out before the caption so an LLM gesture always reaches
+    // the director ahead of the auto-acting rules that read the caption.
+    if (cues.isNotEmpty) {
+      _controller.add(CuesReachedEvent(cues));
+    }
     // Only a sentence that actually starts speaking gets a caption.
     if (caption != null && caption.trim().isNotEmpty) {
       _controller.add(CaptionEvent(caption));
-    }
-    // The audio starts now: cues embedded in this sentence fire in time
-    // with speech.
-    if (cues.isNotEmpty) {
-      _controller.add(CuesReachedEvent(cues));
     }
 
     final int totalFrames = amplitudes.length;

@@ -47,17 +47,29 @@ class AvatarCueService {
 
   int _lastFiredSerial = 0;
 
+  /// True when the sentence now playing carries an LLM gesture cue: the LLM
+  /// outranks the auto-acting rules, so they skip that sentence.
+  bool _sentenceHasGestureCue = false;
+
   void _onPlaybackEvent(PlaybackEvent event) {
     switch (event) {
       case CuesReachedEvent(:final List<AvatarCue> cues):
+        _sentenceHasGestureCue = cues.any(
+          (AvatarCue cue) => cue is AvatarCueGesture,
+        );
         _onCues(cues);
       case SpeakingStartedEvent():
+        _sentenceHasGestureCue = false;
         _director.setSpeaking(true);
       case SpeakingStoppedEvent() || AnimationCompletedEvent():
         _director.setSpeaking(false);
       case CaptionEvent(:final String text):
-        // Auto-acting rules read each sentence as it starts playing.
-        _director.onSentence(text);
+        // Auto-acting rules read each sentence as it starts playing, unless
+        // the LLM already chose a gesture for it.
+        if (!_sentenceHasGestureCue) {
+          _director.onSentence(text);
+        }
+        _sentenceHasGestureCue = false;
       case MouthStateUpdatedEvent():
         break;
     }

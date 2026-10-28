@@ -170,6 +170,59 @@ void main() {
     });
   });
 
+  group('AvatarCueService LLM gesture beats auto gesture', () {
+    test('a sentence with a question and a wave cue plays the wave', () async {
+      final AvatarCueService service = buildService();
+      addTearDown(service.dispose);
+
+      playbackService.startAmplitudeAnimation(
+        '/tmp/fake.wav',
+        <int>[3],
+        const Duration(seconds: 1),
+        cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+        caption: 'Is it raining?',
+      );
+      await drain();
+      playbackService.cancelAnimation();
+
+      expect(forwarded, <AvatarAnimation>[
+        const AvatarAnimation.gesture(AvatarGesture.wave),
+      ]);
+    });
+
+    test(
+      'a later sentence without a gesture cue still gets auto rules',
+      () async {
+        final AvatarCueService service = buildService();
+        addTearDown(service.dispose);
+
+        playbackService.startAmplitudeAnimation(
+          '/tmp/a.wav',
+          <int>[3],
+          const Duration(seconds: 1),
+          cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+          caption: 'Hello.',
+        );
+        await drain();
+        currentTime = currentTime.add(const Duration(minutes: 1));
+        director.onGestureDone();
+        playbackService.startAmplitudeAnimation(
+          '/tmp/b.wav',
+          <int>[3],
+          const Duration(seconds: 1),
+          caption: 'Is it raining?',
+        );
+        await drain();
+        playbackService.cancelAnimation();
+
+        expect(forwarded, <AvatarAnimation>[
+          const AvatarAnimation.gesture(AvatarGesture.wave),
+          const AvatarAnimation.gesture(AvatarGesture.think),
+        ]);
+      },
+    );
+  });
+
   group('AvatarCueService TTS-disabled path', () {
     test(
       'forwards cues from the streaming channel through the same guard',
