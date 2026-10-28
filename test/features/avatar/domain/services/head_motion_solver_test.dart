@@ -28,8 +28,9 @@ void main() {
         expect(p.pitch, closeTo(-0.25, 0.02));
       }
       expect(poses.last.yaw, closeTo(0.6, 0.005));
-      expect(poses.last.hairLagYaw.abs(), lessThan(0.01));
-      expect(poses.last.eyeLeadYaw.abs(), lessThan(0.01));
+      expect(poses.last.hairLagYaw.abs(), lessThan(0.02));
+      // The eyes keep looking 0.2 past the head toward the target.
+      expect(poses.last.eyeLeadYaw, closeTo(0.2, 0.02));
     });
 
     test('overshoots a 0 to 0.6 turn by about 12 percent', () {
@@ -81,8 +82,8 @@ void main() {
       expect(firstEye, lessThan(firstHead));
       expect(peakAt, lessThan(tenPercent));
       expect(poses[peakAt].eyeLeadYaw, greaterThan(0.3));
-      // Relaxes to rest as the head arrives.
-      expect(poses.last.eyeLeadYaw.abs(), lessThan(0.01));
+      // Relaxes to a look 0.2 past the head as it arrives.
+      expect(poses.last.eyeLeadYaw, closeTo(0.2, 0.02));
     });
 
     test('the eyes lead toward the new direction on a negative turn', () {
@@ -134,9 +135,9 @@ void main() {
           idle.map((HeadPose p) => p.yaw).reduce(math.min);
       expect(yawSpan, greaterThan(0.005), reason: 'no dead holds');
       for (final HeadPose p in idle) {
-        // Drift is 0.03 yaw / 0.025 pitch; the pitch also takes micro-nods.
-        expect((p.yaw - 0.6).abs(), lessThanOrEqualTo(0.03 + 0.005));
-        expect((p.pitch - 0.1).abs(), lessThanOrEqualTo(0.025 + 0.045 + 0.005));
+        // Drift is 0.08 yaw / 0.05 pitch; the pitch also takes micro-nods.
+        expect((p.yaw - 0.6).abs(), lessThanOrEqualTo(0.08 + 0.005));
+        expect((p.pitch - 0.1).abs(), lessThanOrEqualTo(0.05 + 0.045 + 0.005));
       }
     });
 
@@ -337,7 +338,7 @@ void main() {
           r.map((HeadPose p) => p.eyeLeadYaw).reduce(math.min);
       expect(span, greaterThan(0.2), reason: 'steps plus a return sweep');
       for (final HeadPose p in r) {
-        expect(p.eyeLeadYaw.abs(), lessThanOrEqualTo(0.3));
+        expect(p.eyeLeadYaw, inInclusiveRange(0.0, 0.6));
       }
       final double pitchSpan =
           r.map((HeadPose p) => p.eyeLeadPitch).reduce(math.max) -
@@ -345,32 +346,7 @@ void main() {
       expect(pitchSpan, greaterThan(0.005), reason: 'vertical jitter');
 
       for (final HeadPose p in g) {
-        expect(p.eyeLeadYaw.abs(), lessThan(0.01));
-      }
-    });
-
-    test('reading saccades are small steps every 300 to 600 ms', () {
-      final HeadMotionSolver solver = _noDrift()
-        ..setTarget(0.6, -0.25, reading: true);
-      final List<HeadPose> poses = _run(solver, 8).sublist(90);
-      final List<double> steps = <double>[];
-      for (int i = 1; i < poses.length; i++) {
-        // A saccade is a frame-to-frame jump in the eye lead's velocity.
-        if ((poses[i].eyeLeadYaw - poses[i - 1].eyeLeadYaw).abs() > 0.004) {
-          steps.add(i / 60);
-        }
-      }
-      expect(steps, isNotEmpty);
-      // Group consecutive frames into events and check the gaps.
-      final List<double> starts = <double>[steps.first];
-      for (final double t in steps.skip(1)) {
-        if (t - starts.last > 0.2) {
-          starts.add(t);
-        }
-      }
-      expect(starts.length, greaterThanOrEqualTo(8));
-      for (int i = 1; i < starts.length; i++) {
-        expect(starts[i] - starts[i - 1], inInclusiveRange(0.25, 0.7));
+        expect(p.eyeLeadYaw, closeTo(0.2, 0.02), reason: 'held, not reading');
       }
     });
 
@@ -381,14 +357,15 @@ void main() {
       solver.setTarget(0.6, -0.25);
       final List<HeadPose> after = _run(solver, 2);
       expect(solver.target.reading, isFalse);
-      expect(after.last.eyeLeadYaw.abs(), lessThan(0.01));
+      expect(after.last.eyeLeadYaw, closeTo(0.2, 0.02));
     });
 
     test('the eyes carry a look down at the caret', () {
-      final HeadMotionSolver solver = _noDrift()..setTarget(0, -0.35);
+      final HeadMotionSolver solver = _noDrift()..setTarget(0, -0.55);
       final List<HeadPose> poses = _run(solver, 2);
-      expect(poses.last.eyeLeadPitch, closeTo(-0.56, 0.02));
-      expect(poses.last.pitch, closeTo(-0.35, 0.01));
+      // Looking down is capped at -0.72 so the iris drops more than the lid.
+      expect(poses.last.eyeLeadPitch, closeTo(-0.72, 0.01));
+      expect(poses.last.pitch, closeTo(-0.55, 0.01));
       final int eyes = poses.indexWhere((HeadPose p) => p.eyeLeadPitch < -0.2);
       final int head = poses.indexWhere((HeadPose p) => p.pitch < -0.05);
       expect(eyes, greaterThanOrEqualTo(0));
@@ -495,7 +472,307 @@ void main() {
         expect(p, rest);
       }
       // The held look down is a pose, not a flourish.
-      expect(rest.eyeLeadPitch, closeTo(-0.4, 0.01));
+      expect(rest.eyeLeadPitch, closeTo(-0.35, 0.01));
+    });
+  });
+
+  group('HeadMotionSolver reading lines, idle and hair', () {
+    /// Movement events of [values]: runs of frames whose per-frame change
+    /// exceeds [threshold] (gaps up to 2 frames merge). Each event is
+    /// (start frame, frame count, net change).
+    List<({int start, int frames, double change})> events(
+      List<double> values, {
+      double threshold = 0.004,
+    }) {
+      final List<({int start, int frames, double change})> out =
+          <({int start, int frames, double change})>[];
+      int? start;
+      int last = 0;
+      double sum = 0;
+      for (int i = 1; i < values.length; i++) {
+        final double d = values[i] - values[i - 1];
+        if (d.abs() > threshold) {
+          if (start == null) {
+            start = i;
+            sum = 0;
+          }
+          sum += d;
+          last = i;
+        } else if (start != null && i - last > 2) {
+          out.add((start: start, frames: last - start + 1, change: sum));
+          start = null;
+        }
+      }
+      if (start != null) {
+        out.add((start: start, frames: last - start + 1, change: sum));
+      }
+      return out;
+    }
+
+    List<HeadPose> reading({double seconds = 14, bool drift = false}) {
+      final HeadMotionSolver solver = drift ? HeadMotionSolver() : _noDrift();
+      solver.setTarget(0.84, -0.5, reading: true);
+      return _run(solver, seconds);
+    }
+
+    test('reading has line structure: fixation steps and a return sweep', () {
+      final List<HeadPose> poses = reading().sublist(240);
+      final List<double> yaw = poses.map((HeadPose p) => p.eyeLeadYaw).toList();
+      // The first and last events may be cut by the window.
+      final List<({int start, int frames, double change})> moves = events(
+        yaw,
+      ).sublist(1);
+      moves.removeLast();
+
+      final List<({int start, int frames, double change})> sweeps = moves
+          .where(
+            (({int start, int frames, double change}) e) => e.change < -0.3,
+          )
+          .toList();
+      final List<({int start, int frames, double change})> steps = moves
+          .where((({int start, int frames, double change}) e) => e.change > 0)
+          .toList();
+      expect(sweeps.length, greaterThanOrEqualTo(8), reason: 'loops all run');
+      for (final ({int start, int frames, double change}) sweep in sweeps) {
+        expect(sweep.frames / 60, lessThanOrEqualTo(0.1), reason: 'fast');
+      }
+      for (final ({int start, int frames, double change}) step in steps) {
+        expect(step.change, greaterThanOrEqualTo(0.1));
+      }
+
+      // Between two sweeps: 2-3 forward steps covering at least 0.35.
+      for (int i = 1; i < sweeps.length; i++) {
+        final Iterable<({int start, int frames, double change})> line = steps
+            .where(
+              (({int start, int frames, double change}) e) =>
+                  e.start > sweeps[i - 1].start && e.start < sweeps[i].start,
+            );
+        expect(line.length, inInclusiveRange(2, 3));
+        final double travel = line.fold(
+          0,
+          (double a, ({int start, int frames, double change}) e) =>
+              a + e.change,
+        );
+        expect(travel, greaterThanOrEqualTo(0.35));
+        // 3-4 fixations of 200-280 ms: the whole line takes under 1.2 s.
+        expect(
+          (sweeps[i].start - sweeps[i - 1].start) / 60,
+          inInclusiveRange(0.6, 1.25),
+        );
+      }
+    });
+
+    test('reading never freezes the gaze for more than 300 ms', () {
+      final List<HeadPose> poses = reading().sublist(90);
+      int still = 0;
+      int longest = 0;
+      for (int i = 1; i < poses.length; i++) {
+        final bool moving =
+            (poses[i].eyeLeadYaw - poses[i - 1].eyeLeadYaw).abs() > 0.0005 ||
+            (poses[i].eyeLeadPitch - poses[i - 1].eyeLeadPitch).abs() > 0.0005;
+        still = moving ? 0 : still + 1;
+        longest = math.max(longest, still);
+      }
+      expect(longest / 60, lessThanOrEqualTo(0.3));
+    });
+
+    test('each new line drops the eyes, never below -0.75, then wraps', () {
+      final List<HeadPose> poses = reading().sublist(240);
+      final List<double> pitch = poses
+          .map((HeadPose p) => p.eyeLeadPitch)
+          .toList();
+      expect(pitch.reduce(math.min), greaterThanOrEqualTo(-0.75 - 1e-9));
+      expect(
+        pitch.reduce(math.max) - pitch.reduce(math.min),
+        greaterThan(0.06),
+      );
+      // Wrapped: after dropping, the eyes come back up to the first line.
+      expect(
+        events(
+          pitch,
+          threshold: 0.0015,
+        ).any((({int start, int frames, double change}) e) => e.change > 0.03),
+        isTrue,
+      );
+    });
+
+    test('reading is deterministic', () {
+      expect(reading(seconds: 6), reading(seconds: 6));
+    });
+
+    test('the eye lead stays on the target side while away', () {
+      for (final double yaw in <double>[0.84, -0.84, 0.3]) {
+        for (final bool drift in <bool>[false, true]) {
+          final HeadMotionSolver solver = drift
+              ? HeadMotionSolver()
+              : _noDrift();
+          solver.setTarget(yaw, -0.5, reading: true);
+          for (final HeadPose p in _run(solver, 8)) {
+            expect(p.eyeLeadYaw * yaw.sign, greaterThanOrEqualTo(-1e-9));
+          }
+        }
+      }
+    });
+
+    test('the eyes settle 0.15-0.25 past the head toward the target', () {
+      for (final double yaw in <double>[0.84, -0.84]) {
+        final HeadMotionSolver solver = _noDrift()..setTarget(yaw, -0.5);
+        expect(
+          _run(solver, 3).last.eyeLeadYaw * yaw.sign,
+          inInclusiveRange(0.15, 0.25),
+        );
+      }
+    });
+
+    test('the eyes lock on the user when the head returns', () {
+      final HeadMotionSolver solver = _noDrift()..setTarget(0.84, -0.5);
+      _run(solver, 3);
+      solver.setTarget(0, 0);
+      final List<HeadPose> poses = _run(solver, 4).sublist(120);
+      for (final HeadPose p in poses) {
+        expect(p.eyeLeadYaw.abs(), lessThanOrEqualTo(0.085));
+      }
+    });
+
+    test('a tool glance reaches yaw 0.8-0.95 and the caret pitch 0.5-0.65', () {
+      final HeadMotionSolver glance = _noDrift()..setTarget(0.84, -0.5);
+      final double yaw = _run(
+        glance,
+        3,
+      ).map((HeadPose p) => p.yaw).reduce(math.max);
+      expect(yaw, inInclusiveRange(0.8, 0.96));
+      final HeadMotionSolver caret = _noDrift()..setTarget(0, -0.55);
+      final double pitch = _run(
+        caret,
+        3,
+      ).map((HeadPose p) => p.pitch).reduce(math.min);
+      expect(pitch, inInclusiveRange(-0.65, -0.5));
+    });
+
+    test('something moves within 0.2 s of the start', () {
+      final List<HeadPose> poses = _run(HeadMotionSolver(), 0.25);
+      final double moved = poses
+          .map(
+            (HeadPose p) => <double>[
+              p.yaw,
+              p.pitch,
+              p.eyeLeadYaw,
+              p.eyeLeadPitch,
+            ].map((double v) => v.abs()).reduce(math.max),
+          )
+          .reduce(math.max);
+      expect(moved, greaterThan(0.01));
+      expect(
+        poses.sublist(0, 12).any((HeadPose p) => p.eyeLeadYaw.abs() > 0.01),
+        isTrue,
+        reason: 'the first micro-saccade lands inside 0.2 s',
+      );
+    });
+
+    test('drift is visible and nods land every 4-6 s', () {
+      final List<HeadPose> poses = _run(HeadMotionSolver(), 30);
+      final List<HeadPose> idle = poses.sublist(60);
+      final double yawSpan =
+          idle.map((HeadPose p) => p.yaw).reduce(math.max) -
+          idle.map((HeadPose p) => p.yaw).reduce(math.min);
+      expect(yawSpan, greaterThan(0.08));
+      expect(
+        idle.map((HeadPose p) => p.yaw.abs()).reduce(math.max),
+        lessThanOrEqualTo(0.1),
+      );
+      expect(
+        idle.map((HeadPose p) => p.pitch.abs()).reduce(math.max),
+        lessThanOrEqualTo(0.05 + 0.045 + 0.01),
+      );
+    });
+
+    test('micro-saccades happen only while the gaze is on the user', () {
+      final HeadMotionSolver user = _noDrift();
+      final List<double> micro = _run(
+        user,
+        12,
+      ).map((HeadPose p) => p.eyeLeadYaw).toList();
+      expect(micro.reduce(math.max), greaterThan(0.03));
+      expect(micro.reduce(math.min), lessThan(-0.03));
+      expect(
+        micro.map((double v) => v.abs()).reduce(math.max),
+        lessThanOrEqualTo(0.085),
+      );
+      expect(events(micro, threshold: 0.01).length, greaterThanOrEqualTo(8));
+
+      final HeadMotionSolver away = _noDrift()..setTarget(0.84, -0.5);
+      final List<double> held = _run(
+        away,
+        12,
+      ).map((HeadPose p) => p.eyeLeadYaw).toList().sublist(180);
+      expect(held.reduce(math.max) - held.reduce(math.min), lessThan(0.005));
+
+      // They resume once the head is back on the user.
+      away.setTarget(0, 0);
+      _run(away, 2);
+      final List<double> back = _run(
+        away,
+        10,
+      ).map((HeadPose p) => p.eyeLeadYaw).toList();
+      expect(back.reduce(math.max) - back.reduce(math.min), greaterThan(0.05));
+    });
+
+    test('hair swings past once, rebounds under 0.03, and settles', () {
+      final HeadMotionSolver solver = _noDrift()..setTarget(0.6, 0);
+      final List<double> lag = _run(
+        solver,
+        4,
+      ).map((HeadPose p) => p.hairLagYaw).toList();
+      final int trail = lag.indexOf(lag.reduce(math.min));
+      int visible = 0;
+      for (int i = trail + 1; i < lag.length - 1; i++) {
+        final bool extremum = (lag[i] - lag[i - 1]) * (lag[i + 1] - lag[i]) < 0;
+        if (extremum && lag[i].abs() > 0.03) {
+          visible++;
+        }
+      }
+      expect(visible, inInclusiveRange(1, 2));
+      expect(lag.last.abs(), lessThan(0.005));
+    });
+
+    test('hair lag stays within 0.6 even through violent retargets', () {
+      final HeadMotionSolver solver = _noDrift();
+      double worst = 0;
+      for (int i = 0; i < 600; i++) {
+        if (i % 12 == 0) {
+          final double sign = (i ~/ 12).isEven ? 1 : -1;
+          solver.setTarget(sign, sign * 0.8);
+        }
+        final HeadPose p = solver.step(_frame);
+        worst = math.max(
+          worst,
+          math.max(p.hairLagYaw.abs(), p.hairLagPitch.abs()),
+        );
+      }
+      expect(worst, lessThanOrEqualTo(0.6));
+      expect(worst, greaterThan(0.3));
+    });
+
+    test('nods do not make the fringe bob', () {
+      final List<HeadPose> poses = _run(HeadMotionSolver(), 40);
+      expect(
+        poses.map((HeadPose p) => p.hairLagPitch.abs()).reduce(math.max),
+        lessThan(0.05),
+      );
+    });
+
+    test('reduce motion: no saccades, drift or nods anywhere', () {
+      final HeadMotionSolver user = HeadMotionSolver()..reduceMotion = true;
+      expect(_run(user, 15).every((HeadPose p) => p == HeadPose.zero), isTrue);
+      final HeadMotionSolver reading = HeadMotionSolver()
+        ..reduceMotion = true
+        ..setTarget(0.84, -0.5, reading: true);
+      final List<HeadPose> poses = _run(reading, 15);
+      final HeadPose rest = poses[240];
+      for (final HeadPose p in poses.sublist(240)) {
+        expect(p, rest);
+        expect(p.eyeLeadYaw, 0);
+      }
     });
   });
 }

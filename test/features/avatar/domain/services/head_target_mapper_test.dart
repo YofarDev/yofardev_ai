@@ -16,7 +16,7 @@ void main() {
     test('away looks down at the tablet while a tool runs', () {
       expect(
         headTargetFor(const GazeTarget.away(0.6), activeTool: 'web_search'),
-        const HeadTarget(0.6, -0.25, reading: true),
+        const HeadTarget(0.84, -0.5, reading: true),
       );
     });
 
@@ -39,6 +39,27 @@ void main() {
       );
     });
 
+    test('a tool glance turns 1.4x further, clamped to -1..1', () {
+      final HeadTarget wide = headTargetFor(
+        const GazeTarget.away(0.6),
+        activeTool: 'web_search',
+      );
+      expect(wide.yaw, closeTo(0.84, 1e-9));
+      expect(wide.pitch, -0.5);
+      expect(headTargetFor(const GazeTarget.away(0.9), activeTool: 'x').yaw, 1);
+      expect(
+        headTargetFor(const GazeTarget.away(-0.6), activeTool: 'x').yaw,
+        closeTo(-0.84, 1e-9),
+      );
+    });
+
+    test('a thinking glance keeps the angle and looks up', () {
+      expect(
+        headTargetFor(const GazeTarget.away(0.6)),
+        const HeadTarget(0.6, 0.2),
+      );
+    });
+
     test('away clamps the angle to -1..1', () {
       expect(headTargetFor(const GazeTarget.away(3)).yaw, 1);
       expect(headTargetFor(const GazeTarget.away(-3)).yaw, -1);
@@ -47,7 +68,7 @@ void main() {
     test('caret looks down at the composer', () {
       expect(
         headTargetFor(const GazeTarget.caret()),
-        const HeadTarget(0, -0.35),
+        const HeadTarget(0, -0.55),
       );
     });
 

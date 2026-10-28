@@ -22,24 +22,41 @@ class HeadMotionParams {
     this.springF = 2.6,
     this.springZeta = 0.68,
     this.hairF = 1.8,
-    this.hairZeta = 0.3,
+    this.hairZeta = 0.6,
     this.hairGain = 2.2,
+    this.hairPitchScale = 0.6,
+    this.hairLagMax = 0.6,
     this.reduceSettleS = 0.35,
     this.holdMinS = 0.16,
     this.driftAfterS = 1.0,
-    this.driftYaw = 0.03,
-    this.driftPitch = 0.025,
+    this.driftFadeInS = 0.2,
+    this.driftYaw = 0.08,
+    this.driftPitch = 0.05,
     this.nodDepth = 0.045,
     this.nodS = 0.4,
     this.nodMinGapS = 4,
-    this.nodMaxGapS = 8,
-    this.eyePitchGain = 1.6,
-    this.readingDelayS = 0.7,
-    this.saccadeMinS = 0.3,
-    this.saccadeMaxS = 0.6,
-    this.saccadeStep = 0.1,
-    this.saccadeHalfLine = 0.2,
-    this.saccadePitch = 0.03,
+    this.nodMaxGapS = 6,
+    this.eyePitchUpGain = 1.6,
+    this.eyePitchDownGain = 1.4,
+    this.eyePitchDownMax = 0.72,
+    this.eyePast = 0.2,
+    this.eyePastTravel = 0.5,
+    this.saccadeSettleS = 0.04,
+    this.microFirstS = 0.15,
+    this.microMinS = 0.6,
+    this.microMaxS = 1.2,
+    this.microAmp = 0.08,
+    this.readingDelayS = 1.0,
+    this.fixationMinS = 0.2,
+    this.fixationMaxS = 0.28,
+    this.lineWidthMin = 0.4,
+    this.lineWidthMax = 0.46,
+    this.lineStart = -0.15,
+    this.readingLines = 3,
+    this.lineFirstPitch = 0.05,
+    this.linePitchStep = 0.05,
+    this.fixationPitchJitter = 0.015,
+    this.readingPitchFloor = -0.75,
     this.returnDip = 0.04,
     this.returnDipS = 0.25,
     this.seed = 7,
@@ -79,11 +96,15 @@ class HeadMotionParams {
   final double springF;
   final double springZeta;
 
-  /// Hair follow-through spring (under-damped: ~2 visible cycles) and the
-  /// gain applied to its offset from the head.
+  /// Hair follow-through spring (damping ~0.6: one overshoot and a small
+  /// rebound), the gain applied to its offset from the head, the share kept
+  /// for pitch (nods must not make the fringe bob) and the soft limit of
+  /// |hairLag| (a Rive art limit).
   final double hairF;
   final double hairZeta;
   final double hairGain;
+  final double hairPitchScale;
+  final double hairLagMax;
 
   /// Settle time of the critically damped head used by reduce motion.
   final double reduceSettleS;
@@ -92,9 +113,11 @@ class HeadMotionParams {
   /// `hold_min_ms`), except a return to the user.
   final double holdMinS;
 
-  /// Idle micro drift starts after the target has been steady this long.
-  /// Two slow sines (2-4 s periods) per axis at these amplitudes.
+  /// Idle drift starts after the target has been steady this long and fades
+  /// in over [driftFadeInS]. Two slow sines (3-5 s periods) per axis at these
+  /// amplitudes.
   final double driftAfterS;
+  final double driftFadeInS;
   final double driftYaw;
   final double driftPitch;
 
@@ -105,19 +128,47 @@ class HeadMotionParams {
   final double nodMinGapS;
   final double nodMaxGapS;
 
-  /// Held vertical eye look = target pitch x [eyePitchGain] (clamped).
-  final double eyePitchGain;
+  /// Held vertical eye look: target pitch x a gain (up / down). Looking down
+  /// is capped at -[eyePitchDownMax]: the iris must drop further than the
+  /// lid does.
+  final double eyePitchUpGain;
+  final double eyePitchDownGain;
+  final double eyePitchDownMax;
 
-  /// While reading (tablet glance) the eyes step along a line every
-  /// [saccadeMinS]..[saccadeMaxS], [readingDelayS] after the head turned:
-  /// [saccadeStep] per step across +-[saccadeHalfLine], then sweep back,
-  /// with +-[saccadePitch] of vertical jitter.
+  /// While the head is turned the eyes keep looking [eyePast] past it
+  /// (reached at a travel of [eyePastTravel]); on the user they lock on.
+  final double eyePast;
+  final double eyePastTravel;
+
+  /// Settle time of the fast spring behind saccades and micro-saccades.
+  final double saccadeSettleS;
+
+  /// Micro-saccades while the gaze is on the user: the first one at
+  /// [microFirstS], then every [microMinS]..[microMaxS], +-[microAmp].
+  final double microFirstS;
+  final double microMinS;
+  final double microMaxS;
+  final double microAmp;
+
+  /// Reading (tablet glance): [readingDelayS] after the retarget the eyes
+  /// loop lines of 3-4 fixations ([fixationMinS]..[fixationMaxS] each),
+  /// stepping one way across [lineWidthMin]..[lineWidthMax] from [lineStart]
+  /// (relative to the held lead), then sweep back. Each new line drops the
+  /// eyes [linePitchStep] (the first line starts at [lineFirstPitch]) and
+  /// wraps after [readingLines] lines; fixations jitter
+  /// +-[fixationPitchJitter] and the eyes never go below
+  /// [readingPitchFloor].
   final double readingDelayS;
-  final double saccadeMinS;
-  final double saccadeMaxS;
-  final double saccadeStep;
-  final double saccadeHalfLine;
-  final double saccadePitch;
+  final double fixationMinS;
+  final double fixationMaxS;
+  final double lineWidthMin;
+  final double lineWidthMax;
+  final double lineStart;
+  final int readingLines;
+  final double lineFirstPitch;
+  final double linePitchStep;
+  final double fixationPitchJitter;
+  final double readingPitchFloor;
 
   /// Returning to the user (0, 0) replaces the counter-yaw wind-up with a
   /// small pitch dip of [returnDip] over [returnDipS]; the eyes carry the
@@ -142,13 +193,18 @@ class HeadMotionParams {
 /// - Each axis travels along a shaped target (wind-up against big turns, a
 ///   speed-capped smoothstep, overshoot settling over 220 ms) smoothed by an
 ///   under-damped second-order spring.
-/// - `eyeLeadPitch` holds a vertical look (target pitch x 1.6): the eyes
-///   carry most of a look down at the tablet or composer.
-/// - While the target is `reading`, the eyes make small seeded saccades.
-/// - Hair follows the head with a slower, loose spring; `hairLag*` is
-///   (hair − head) x gain so it swings past and settles in ~2 cycles.
+/// - After the turn the eyes keep looking 0.2 past the head toward the
+///   target (never swinging to the other side while away); on the user they
+///   lock on.
+/// - `eyeLeadPitch` holds a vertical look (target pitch x 1.4 down, 1.6 up;
+///   at most 0.72 down): the eyes carry the look at the tablet or composer.
+/// - While the target is `reading`, the eyes loop lines of 3-4 fixations
+///   with a fast return sweep; on the user they make micro-saccades.
+/// - Hair follows the head with a slower spring; `hairLag*` is
+///   (hair − head) x gain, softly limited to 0.6, with pitch at 0.6 of it.
 /// - Once the target has been steady for 1 s a seeded drift (slow sines plus
-///   an occasional micro-nod) keeps the head alive.
+///   an occasional micro-nod) keeps the head alive; at the start of a session
+///   it fades in within 0.2 s.
 /// - Returning to (0, 0) skips the counter-yaw wind-up for a small pitch dip.
 /// - [reduceMotion]: a critically damped head and a held vertical eye look
 ///   only: no lead, wind-up, overshoot, hair lag, saccades or drift.
@@ -165,6 +221,7 @@ class HeadMotionSolver {
     );
     _eventRng = math.Random(params.seed + 101);
     _nextNodAt = _nodGap();
+    _nextMicroAt = params.microFirstS;
   }
 
   final HeadMotionParams params;
@@ -184,6 +241,7 @@ class HeadMotionSolver {
   final _Axis _pitchAxis;
   final double _eyeOmega;
   final double _reduceOmega;
+  late final double _saccadeOmega = _omegaForSettle(params.saccadeSettleS);
   late final List<double> _driftPhase;
   late final math.Random _eventRng;
 
@@ -197,11 +255,21 @@ class HeadMotionSolver {
   double _eyePitch = 0;
   double _eyePitchVel = 0;
 
+  // Fast saccade layer (reading fixations and micro-saccades), added to the
+  // eye lead; its pitch part is a goal for the slow eye-pitch spring.
+  double _sac = 0;
+  double _sacVel = 0;
+  double _sacGoalYaw = 0;
+  double _sacGoalPitch = 0;
+
   bool _reading = false;
-  double _nextSaccadeAt = double.infinity;
-  int _saccadeIndex = -1;
-  double _saccadeYaw = 0;
-  double _saccadePitch = 0;
+  double _nextReadAt = double.infinity;
+  int _readLine = 0;
+  int _readFix = -1;
+  int _readFixCount = 0;
+  double _readWidth = 0;
+  double _readStart = 0;
+  double _nextMicroAt = double.infinity;
 
   double _nextNodAt = 0;
   double _nodStartedAt = double.negativeInfinity;
@@ -236,8 +304,10 @@ class HeadMotionSolver {
       _pitchAxis.collapse();
       _pending = null;
       _driftWeight = 0;
-      _saccadeYaw = 0;
-      _saccadePitch = 0;
+      _sac = 0;
+      _sacVel = 0;
+      _sacGoalYaw = 0;
+      _sacGoalPitch = 0;
       _nodStartedAt = double.negativeInfinity;
       _dipStartedAt = double.negativeInfinity;
       _hairYaw = _yawAxis.pos;
@@ -286,7 +356,7 @@ class HeadMotionSolver {
         (_hairPitch - _pitchAxis.pos).abs() < pos &&
         _hairYawVel.abs() < vel &&
         _hairPitchVel.abs() < vel &&
-        (_eye - _yawAxis.to).abs() < pos &&
+        (_eye - _eyeYawGoal(0)).abs() < pos &&
         _eyeVel.abs() < vel &&
         eyePitchAtRest &&
         !_reading;
@@ -360,9 +430,9 @@ class HeadMotionSolver {
 
     _updateDriftWeight(h);
     _updateSaccades();
-    final double driftYaw = _drift(0, params.driftYaw, 0.29, 0.45);
+    final double driftYaw = _drift(0, params.driftYaw, 0.22, 0.31);
     final double driftPitch =
-        _drift(2, params.driftPitch, 0.25, 0.38) + _nod() + _returnDipNow();
+        _drift(2, params.driftPitch, 0.20, 0.28) + _nod() + _returnDipNow();
 
     _yawAxis.stepSpring(
       _yawAxis.shaped(_time, params) + driftYaw,
@@ -390,20 +460,54 @@ class HeadMotionSolver {
             2 * params.hairZeta * hairOmega * _hairPitchVel);
     _hairPitch += h * _hairPitchVel;
 
-    // The eyes go straight to the target (plus the drift, so they ride with
-    // the head while it idles).
-    final double eyeTarget = _yawAxis.to + driftYaw + _saccadeYaw;
+    // The eyes go straight to the target and a little past it (plus the
+    // drift, so they ride with the head while it idles).
+    final double eyeTarget = _eyeYawGoal(driftYaw);
     final double e = _eye - eyeTarget;
     final double k = _eyeVel + _eyeOmega * e;
     final double decay = math.exp(-_eyeOmega * h);
     _eye = eyeTarget + (e + k * h) * decay;
     _eyeVel = (_eyeVel - _eyeOmega * k * h) * decay;
     _stepEyePitch(h);
+
+    // Saccades: a much faster critically damped spring.
+    final double se = _sac - _sacGoalYaw;
+    final double sk = _sacVel + _saccadeOmega * se;
+    final double sdecay = math.exp(-_saccadeOmega * h);
+    _sac = _sacGoalYaw + (se + sk * h) * sdecay;
+    _sacVel = (_sacVel - _saccadeOmega * sk * h) * sdecay;
   }
 
-  double _eyePitchGoal() => _reduceMotion
-      ? _clamp1(_pitchAxis.to * params.eyePitchGain)
-      : _clamp1(_pitchAxis.to * params.eyePitchGain + _saccadePitch);
+  /// True while the gaze rests on the user.
+  bool get _onUser => !_reading && _yawAxis.to == 0 && _pitchAxis.to == 0;
+
+  /// Where the eyes aim in yaw: the target plus a look [HeadMotionParams.eyePast]
+  /// beyond it (none on the user), plus [drift].
+  double _eyeYawGoal(double drift) {
+    final double to = _yawAxis.to;
+    final double past =
+        params.eyePast *
+        (to.abs() / params.eyePastTravel).clamp(0.0, 1.0) *
+        to.sign;
+    return to + past + drift;
+  }
+
+  /// The held vertical look: target pitch x a gain, down capped.
+  double _eyePitchBase() {
+    final double pitch = _pitchAxis.to;
+    if (pitch >= 0) {
+      return pitch * params.eyePitchUpGain;
+    }
+    return math.max(pitch * params.eyePitchDownGain, -params.eyePitchDownMax);
+  }
+
+  double _eyePitchGoal() {
+    if (_reduceMotion) {
+      return _clamp1(_eyePitchBase());
+    }
+    final double goal = _eyePitchBase() + _sacGoalPitch;
+    return _clamp1(_reading ? math.max(goal, params.readingPitchFloor) : goal);
+  }
 
   void _stepEyePitch(double h) {
     final double goal = _eyePitchGoal();
@@ -414,24 +518,49 @@ class HeadMotionSolver {
     _eyePitchVel = (_eyePitchVel - _eyeOmega * k * h) * decay;
   }
 
-  /// Reading saccades: steps along a line, then a sweep back to its start.
+  /// Reading fixations along lines (with a fast return sweep between them)
+  /// while reading, micro-saccades while the gaze is on the user.
   void _updateSaccades() {
-    if (!_reading || _time - _lastRetargetAt < params.readingDelayS) {
-      return;
+    if (_reading) {
+      if (_time - _lastRetargetAt >= params.readingDelayS &&
+          _time >= _nextReadAt) {
+        _nextFixation();
+      }
+    } else if (_onUser && _time >= _nextMicroAt) {
+      final double sign = _eventRng.nextBool() ? 1 : -1;
+      _sacGoalYaw =
+          sign * params.microAmp * (0.5 + 0.5 * _eventRng.nextDouble());
+      _nextMicroAt =
+          _time +
+          params.microMinS +
+          _eventRng.nextDouble() * (params.microMaxS - params.microMinS);
     }
-    if (_time < _nextSaccadeAt) {
-      return;
+  }
+
+  void _nextFixation() {
+    if (_readFix < 0 || _readFix >= _readFixCount - 1) {
+      // A new line: after the first, the eyes sweep back to its start.
+      if (_readFix >= 0) {
+        _readLine = (_readLine + 1) % params.readingLines;
+      }
+      _readFix = 0;
+      _readFixCount = 3 + _eventRng.nextInt(2);
+      _readWidth =
+          params.lineWidthMin +
+          _eventRng.nextDouble() * (params.lineWidthMax - params.lineWidthMin);
+      _readStart = params.lineStart + (_eventRng.nextDouble() - 0.5) * 0.02;
+    } else {
+      _readFix++;
     }
-    final int steps = (2 * params.saccadeHalfLine / params.saccadeStep).round();
-    _saccadeIndex = _saccadeIndex >= steps ? 0 : _saccadeIndex + 1;
-    final double wobble = (_eventRng.nextDouble() - 0.5) * 0.04;
-    _saccadeYaw =
-        -params.saccadeHalfLine + _saccadeIndex * params.saccadeStep + wobble;
-    _saccadePitch = (_eventRng.nextDouble() * 2 - 1) * params.saccadePitch;
-    _nextSaccadeAt =
+    _sacGoalYaw = _readStart + _readWidth * _readFix / (_readFixCount - 1);
+    _sacGoalPitch =
+        params.lineFirstPitch -
+        params.linePitchStep * _readLine +
+        (_eventRng.nextDouble() * 2 - 1) * params.fixationPitchJitter;
+    _nextReadAt =
         _time +
-        params.saccadeMinS +
-        _eventRng.nextDouble() * (params.saccadeMaxS - params.saccadeMinS);
+        params.fixationMinS +
+        _eventRng.nextDouble() * (params.fixationMaxS - params.fixationMinS);
   }
 
   double _nodGap() =>
@@ -470,16 +599,31 @@ class HeadMotionSolver {
         eyeLeadPitch: _clamp1(_eyePitch),
       );
     }
-    final double lead =
-        params.gazeMax * _tanh((_eye - _yawAxis.pos) / params.gazeMax);
+    double lead =
+        params.gazeMax * _tanh((_eye - _yawAxis.pos) / params.gazeMax) + _sac;
+    final double to = _yawAxis.to;
+    if (to.abs() > 0.05) {
+      // While looking away the eyes never swing to the other side (not even
+      // during the head's overshoot).
+      lead = to.sign * math.max(0, to.sign * lead);
+    }
     return HeadPose(
       yaw: _clamp1(_yawAxis.pos),
       pitch: _clamp1(_pitchAxis.pos),
-      hairLagYaw: _clamp1(params.hairGain * (_hairYaw - _yawAxis.pos)),
-      hairLagPitch: _clamp1(params.hairGain * (_hairPitch - _pitchAxis.pos)),
+      hairLagYaw: _hairLag(_hairYaw - _yawAxis.pos, 1),
+      hairLagPitch: _hairLag(
+        _hairPitch - _pitchAxis.pos,
+        params.hairPitchScale,
+      ),
       eyeLeadYaw: _clamp1(lead),
       eyeLeadPitch: _clamp1(_eyePitch),
     );
+  }
+
+  /// Hair offset x gain x [scale], softly limited to [HeadMotionParams.hairLagMax].
+  double _hairLag(double offset, double scale) {
+    final double max = params.hairLagMax;
+    return max * _tanh(params.hairGain * scale * offset / max);
   }
 
   void _applyTarget(HeadTarget next) {
@@ -508,22 +652,24 @@ class HeadMotionSolver {
       _dipStartedAt = _time;
     }
     _reading = next.reading;
-    _saccadeIndex = -1;
-    _saccadeYaw = 0;
-    _saccadePitch = 0;
-    _nextSaccadeAt = _time + params.readingDelayS;
+    _readLine = 0;
+    _readFix = -1;
+    _nextReadAt = _time + params.readingDelayS;
+    _sacGoalYaw = 0;
+    _sacGoalPitch = 0;
+    _nextMicroAt = _time + 0.3;
   }
 
   void _updateDriftWeight(double h) {
     final bool steady = _time - _lastRetargetAt >= params.driftAfterS;
     if (steady) {
-      _driftWeight = math.min(1, _driftWeight + h / 0.6);
+      _driftWeight = math.min(1, _driftWeight + h / params.driftFadeInS);
     } else {
       _driftWeight = math.max(0, _driftWeight - h / 0.2);
     }
   }
 
-  /// Two slow sines ([freqA] and [freqB] Hz, 2-4 s periods) at 60 / 40 % of
+  /// Two slow sines ([freqA] and [freqB] Hz, 3-5 s periods) at 60 / 40 % of
   /// [amplitude].
   double _drift(int phaseIndex, double amplitude, double freqA, double freqB) {
     if (_driftWeight <= 0) {

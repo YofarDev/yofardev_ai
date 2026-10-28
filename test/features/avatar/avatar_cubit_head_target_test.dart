@@ -77,7 +77,7 @@ void main() {
         final Future<void> away = expectLater(
           cubit.stream.map((AvatarState s) => s.headTarget),
           emitsInOrder(<Matcher>[
-            equals(const HeadTarget(0.6, -0.25, reading: true)),
+            equals(const HeadTarget(0.84, -0.5, reading: true)),
             equals(HeadTarget.zero),
           ]),
         );
@@ -102,7 +102,7 @@ void main() {
       expect(emitted, isEmpty);
       expect(
         cubit.state.headTarget,
-        const HeadTarget(0.6, -0.25, reading: true),
+        const HeadTarget(0.84, -0.5, reading: true),
       );
     });
 
