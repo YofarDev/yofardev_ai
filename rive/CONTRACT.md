@@ -1,4 +1,4 @@
-# Rive contract (v4)
+# Rive contract (v5)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -22,8 +22,8 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 
 | Property | Type | Values / range |
 |---|---|---|
-| `mood` | enum | neutral, happy, sad, angry, surprised, thinking, embarrassed |
-| `mouth` | number | 0–4: closed, slightly, semi, open, wide (same order as `MouthState`) |
+| `mood` | enum | neutral, happy, sad, angry, surprised, thinking, embarrassed. **v5: accents only**: blush, sweat drop, anger mark, head tilt/drop, gaze offset, pupil size and the thinking mouth skew. The face's muscles (brows, lids, cheeks, nose, mouth shape) come only from the `au*` numbers; the app writes each mood's AU preset. |
+| `mouth` | number | 0–4: closed, slightly, semi, open, wide (same order as `MouthState`). **v5: legacy alias**: the jaw opens by `auJawDrop` + 0.22 × `mouth`. Write `mouth` or the mouth AUs, not both. |
 | `phase` | enum | idle, waiting, generating, speaking, error (same as `TalkingPhase`) |
 | `gestureId` | enum | wave, laugh, facepalm, shrug, nod, headshake, clap, think |
 | `gesture` | trigger | Plays `gestureId` on the upper-body layer. Mood and mouth keep running. |
@@ -38,9 +38,34 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `hairLagPitch` | number | −1–1, default 0 (locked): the same for pitch (+ = the hair sits as if looking further up). |
 | `eyeLeadYaw` | number | −1–1, default 0: extra iris/pupil shift toward the viewer's right for +, on top of the pointer follow and the yaw slide, so the eyes can lead a turn. The irises stay clipped inside the eye whites. |
 | `eyeLeadPitch` | number | −1–1, default 0: extra iris/pupil shift up for + (about 25 % of the eye-white height at ±1), on top of the pointer follow; at − the upper lids also drop (about 25 % lid coverage at −1) so looking down reads. Composes with blinks and mood lids; history-free. |
+| `auBrowInnerUp` | number | 0–1, default 0: FACS AU1, the inner brow ends rise (worry, sadness). |
+| `auBrowOuterUp` | number | 0–1: AU2, the outer brow ends rise (surprise, interest). |
+| `auBrowLower` | number | 0–1: AU4, the brows lower and pull together (anger, concentration). |
+| `auLidTighten` | number | 0–1: AU7, the lower lid rises and the eye narrows. |
+| `auUpperLidRaise` | number | 0–1: AU5, the upper lid lifts and the eye opens wider. |
+| `auCheekRaise` | number | 0–1: AU6, the cheeks lift and push the lower lids into a smile crescent. |
+| `auNoseWrinkle` | number | 0–1: AU9, the nose wrinkles and lifts the upper lip. |
+| `auLipCornerPull` | number | 0–1: AU12, the mouth corners pull up and out (smile). |
+| `auLipCornerDepress` | number | 0–1: AU15, the mouth corners pull down. |
+| `auLipStretch` | number | 0–1: AU20, the lips stretch sideways. |
+| `auLipPucker` | number | 0–1: AU18, the lips round and push forward (o, u, w). |
+| `auLipPress` | number | 0–1: AU24, the lips press together (thin, sealed: p, b, m). |
+| `auJawDrop` | number | 0–1: AU26/27, the jaw opens the mouth (see `mouth`). |
+| `auDimpler` | number | 0–1: AU14, the corners tighten into dimples. |
+| `lipTuck` | number | 0–1, default 0: the lower lip tucks under the upper teeth (f, v). |
+| `tongueUp` | number | 0–1, default 0: the tongue tip rises to the upper teeth (th, l, d, n). |
+| `roll` | number | −1–1, default 0: head tilt ±6° about the neck, + = toward the viewer's right shoulder. Composes with `yaw`, `pitch`, moods and gestures. |
+| `breath` | number | 0–1, default 0: inhale; the chest and shoulders rise and the head lifts slightly. Composes with the idle breathing. |
+| `autoBlink` | boolean | default true: the built-in idle blink loop runs. False: the eyes stay open except for `blink`. |
+| `blink` | trigger | One blink now, with either `autoBlink` value. |
 
 **Idle life**, built into the file with no Dart involvement: blinking, breathing, and eyes that
 follow the pointer or touch.
+
+All `au*`, `lipTuck`, `tongueUp`, `roll` and `breath` numbers are additive and history-free: the
+pose depends only on the current values. Values outside the range are clamped by the app, not
+the file. The speaking `phase` keeps only a faint sway; the app's prosody drives brows, nods and
+blinks while speaking.
 
 **Rive events emitted:**
 

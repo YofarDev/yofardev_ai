@@ -6,6 +6,7 @@ Plan B reads this file to find out when it can start the steps that need real as
 Format: `YYYY-MM-DD · A<n> · <contract parts now real> · <notes>`
 
 <!-- entries below, newest first -->
+2026-10-28 · contract · v5: `AvatarVM` gains 14 FACS-lite numbers `au*` (0–1), `lipTuck`, `tongueUp` (0–1), `roll` (−1–1), `breath` (0–1), boolean `autoBlink` (default true) and trigger `blink`; `mood` becomes accents only (the app writes AU presets), `mouth` becomes a legacy jaw alias · moonshot M2; the rig lands next. Flat names, no nested view models yet (M2 plan ruling 1).
 2026-10-28 · contract · `AvatarVM` gains `eyeLeadPitch` (−1–1, default 0, + = looks up; − also drops the upper lids) for the Dart gaze driver · rig follows.
 2026-10-28 · contract · `AvatarVM` gains follow-through offsets `hairLagYaw`, `hairLagPitch`, `eyeLeadYaw` (−1–1, default 0 = locked, same signs as `yaw` / `pitch`) for the Dart spring driver · the rig lands next; Dart driver is a separate task.
 2026-10-28 · contract · `AvatarVM` gains numbers `yaw` (−1–1, +1 = turns to the viewer's right) and `pitch` (−1–1, +1 = looks up), default 0 · declared in CONTRACT.md; the avatar rig lands next (moonshot M1 Task 9/10). Dart binding is Task 10.
