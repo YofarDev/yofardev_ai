@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
+import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/performance/gaze_target.dart';
+import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
@@ -40,6 +43,9 @@ class _FakeLifecycleService implements AppLifecycleService {
 }
 
 class _FakeSoundRepository implements SoundRepository {
+  @override
+  Future<Result<void>> play(String soundPath) async => Result<void>.ok(null);
+
   @override
   dynamic noSuchMethod(Invocation invocation) => null;
 }
@@ -118,5 +124,25 @@ void main() {
       expect(plain.state.headTarget, HeadTarget.zero);
       await plain.close();
     });
+
+    test(
+      'the gesture_done of a prop reaction does not release the director',
+      () {
+        director.requestGesture(AvatarGesture.wave);
+        expect(director.current.pendingGesture, AvatarGesture.wave);
+
+        // A prop tap plays its own gesture, outside the director.
+        cubit.onPropTapped(AvatarScene.livingRoom, 'tv');
+        expect(cubit.state.gestureEvent.gesture, AvatarGesture.laugh);
+
+        // Its gesture_done must not clear the director's playing wave...
+        cubit.onGestureDone();
+        expect(director.current.pendingGesture, AvatarGesture.wave);
+
+        // ...while the wave's own gesture_done does.
+        cubit.onGestureDone();
+        expect(director.current.pendingGesture, isNull);
+      },
+    );
   });
 }

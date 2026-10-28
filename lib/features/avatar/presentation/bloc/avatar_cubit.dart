@@ -104,6 +104,10 @@ class AvatarCubit extends Cubit<AvatarState> {
   /// for the safety timeout. Optional for tests that do not exercise it.
   final PerformanceDirector? _director;
   final SoundRepository _soundRepository;
+
+  /// True when the latest gesture sent to the Rive view came from a prop or
+  /// avatar tap rather than from the director.
+  bool _propGesturePlaying = false;
   StreamSubscription<AvatarAnimation>? _animationSubscription;
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
   StreamSubscription<String>? _chatChangedSubscription;
@@ -140,6 +144,7 @@ class AvatarCubit extends Cubit<AvatarState> {
       gesture: (AvatarGesture gesture) {
         // The Rive view fires the trigger from a BlocListener keyed on seq,
         // so repeating the same gesture still plays.
+        _propGesturePlaying = false;
         _emitIfOpen(
           state.copyWith(
             gestureEvent: (gesture: gesture, seq: state.gestureEvent.seq + 1),
@@ -393,7 +398,17 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   /// Called by the Rive view when the avatar file emits `gesture_done`.
-  void onGestureDone() => _director?.onGestureDone();
+  ///
+  /// A `gesture_done` that belongs to a prop-reaction gesture (which never
+  /// went through the director) is not forwarded: it would release the
+  /// director's queue while one of its own gestures is still playing.
+  void onGestureDone() {
+    if (_propGesturePlaying) {
+      _propGesturePlaying = false;
+      return;
+    }
+    _director?.onGestureDone();
+  }
 
   /// Called by the Rive view when the avatar file emits `presence_done`.
   void onPresenceDone(String presence) {
@@ -465,6 +480,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     }
     if (reaction.gesture != null) {
       final AvatarGesture gesture = reaction.gesture!;
+      _propGesturePlaying = true;
       next = next.copyWith(
         gestureEvent: (gesture: gesture, seq: next.gestureEvent.seq + 1),
       );
