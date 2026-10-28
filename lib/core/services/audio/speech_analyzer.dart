@@ -123,6 +123,7 @@ class _Analysis {
     letters = this.text == null
         ? ''
         : this.text!.toLowerCase().replaceAll(_nonLetter, '');
+    wordInitial = _wordInitials(this.text ?? '');
     frames = _computeFrames();
   }
 
@@ -134,6 +135,23 @@ class _Analysis {
   late final int hop;
   late final int frameCount;
   late final String letters;
+
+  /// For each letter of [letters]: true when it starts a word.
+  late final List<bool> wordInitial;
+
+  static List<bool> _wordInitials(String text) {
+    final List<bool> out = <bool>[];
+    bool previousLetter = false;
+    for (final String ch in text.split('')) {
+      final bool letter = _nonLetter.allMatches(ch).isEmpty;
+      if (letter) {
+        out.add(!previousLetter);
+      }
+      previousLetter = letter;
+    }
+    return out;
+  }
+
   late final List<SpeechFrameFeatures> frames;
 
   /// Sentence reference RMS (95th percentile of the frame RMS).
@@ -330,10 +348,21 @@ class _Analysis {
     return smoothed;
   }
 
+  /// The first sounding frame after a silence, within 3 frames before [lo] up
+  /// to [hi]; -1 when the window has no voice onset.
+  int _onsetNear(int lo, int hi) {
+    for (int f = math.max(1, lo - 3); f <= hi && f < frameCount; f++) {
+      if (isSilent(f - 1) && !isSilent(f)) {
+        return f;
+      }
+    }
+    return -1;
+  }
+
   /// Every letter of [cls] in the text (a doubled letter counts once) gets a
   /// [target] span near where it is said: the letters are spread over the
-  /// sounding frames, and when no [target] frame lies within +/- 3 % of the
-  /// letter count (at least 1.2 letters) of the expected one, the two
+  /// sounding frames, and when no [target] frame lies within +/- 2 % of the
+  /// letter count (at least 0.9 letters) of the expected one, the two
   /// quietest sounding frames there become [target]. A nasal or a lip
   /// closure with no dip in the audio ("I'm") still closes the lips.
   void _enforceLetters(List<Viseme> classes, String cls, Viseme target) {
@@ -346,7 +375,7 @@ class _Analysis {
       for (int f = 0; f < frameCount; f++)
         if (!isSilent(f)) f,
     ];
-    final double radius = math.max(1.2, 0.03 * n);
+    final double radius = math.max(0.9, 0.02 * n);
     for (int k = 0; k < n; k++) {
       if (!cls.contains(letters[k]) ||
           (k > 0 && cls.contains(letters[k - 1]))) {
@@ -356,6 +385,17 @@ class _Analysis {
           sounding[(letter / n * total).floor().clamp(0, total - 1)];
       final int lo = frameAt(math.max(0, k + 0.5 - radius));
       final int hi = frameAt(math.min(n - 0.001, k + 0.5 + radius));
+      // A phrase that starts on this letter ("Maybe", after a pause): the
+      // lips are already shut as the voice comes in.
+      if (target == Viseme.pp && k < wordInitial.length && wordInitial[k]) {
+        final int onset = _onsetNear(lo, hi);
+        if (onset > 0) {
+          for (int f = math.max(0, onset - 2); f <= onset; f++) {
+            classes[f] = target;
+          }
+          continue;
+        }
+      }
       bool found = false;
       for (int f = lo; f <= hi && !found; f++) {
         found = classes[f] == target;
