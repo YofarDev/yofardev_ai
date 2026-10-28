@@ -300,5 +300,26 @@ void main() {
       expect(amplitudes.length, 40);
       expect(amplitudes.every((int a) => a == 100), isTrue);
     });
+
+    test('a 10 s 24 kHz clip extracts quickly (one data view, no per-sample '
+        'allocation)', () {
+      final int samples = 24000 * 10;
+      final Uint8List wav = buildWav(
+        sampleRate: 24000,
+        channelSamples: <List<double>>[
+          List<double>.generate(samples, (int i) => math.sin(i * 0.05) * 0.5),
+        ],
+      );
+      extractor.extract(wav); // warm-up
+
+      final Stopwatch watch = Stopwatch()..start();
+      final List<int> amplitudes = extractor.extract(wav);
+      watch.stop();
+
+      expect(amplitudes.length, 400);
+      // Measured ~1 ms (vs ~23 ms with a ByteData view per sample); the
+      // bound is generous so a slow CI machine does not flake.
+      expect(watch.elapsedMilliseconds, lessThan(100));
+    });
   });
 }

@@ -114,7 +114,7 @@ class WavAmplitudeExtractor {
 }
 
 class _WavFile {
-  const _WavFile({
+  _WavFile({
     required this.bytes,
     required this.channels,
     required this.sampleRate,
@@ -128,6 +128,10 @@ class _WavFile {
   final int bytesPerSample;
   final bool isFloat;
 
+  /// One view over the whole data chunk, shared by every sample read (a view
+  /// per sample made extraction of long clips janky on the UI isolate).
+  late final ByteData _view = ByteData.sublistView(bytes);
+
   int get sampleCount {
     final int frameBytes = channels * bytesPerSample;
     if (frameBytes == 0) {
@@ -139,18 +143,17 @@ class _WavFile {
   /// Normalised sample value in [-1, 1] of channel 0 at sample index [i].
   double normalizedSample(int i) {
     final int offset = (i * channels) * bytesPerSample;
-    final ByteData view = ByteData.sublistView(bytes, offset);
     switch (bytesPerSample) {
       case 1:
         // 8-bit PCM is unsigned, centred on 128.
         return (bytes[offset] - 128) / 128;
       case 2:
-        return view.getInt16(0, Endian.little) / 32768;
+        return _view.getInt16(offset, Endian.little) / 32768;
       case 4:
         if (isFloat) {
-          return view.getFloat32(0, Endian.little);
+          return _view.getFloat32(offset, Endian.little);
         }
-        return view.getInt32(0, Endian.little) / 2147483648;
+        return _view.getInt32(offset, Endian.little) / 2147483648;
       default:
         throw FormatException('Unsupported sample size: $bytesPerSample');
     }
