@@ -257,6 +257,7 @@ Future<void> setupServiceLocator() async {
       getIt<AppLifecycleService>(),
       getIt<PropReactionService>(),
       getIt<SoundRepository>(),
+      director: getIt<PerformanceDirector>(),
     ),
   );
   getIt.registerFactory<TalkingCubit>(
@@ -323,6 +324,8 @@ Future<void> setupServiceLocator() async {
       animationService: getIt<AvatarAnimationService>(),
       streamingCues: getIt<ChatStreamingService>().streamingCues,
       director: getIt<PerformanceDirector>(),
+      moods: getIt<AppLifecycleService>().moodEvents,
+      toolActivity: getIt<ChatStreamingService>().toolActivity,
     ),
   );
   getIt<AvatarCueService>();

@@ -20,6 +20,7 @@ import '../../../sound/sound.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../domain/models/avatar_animation.dart';
+import '../../domain/services/performance_director.dart';
 import 'avatar_state.dart';
 
 class AvatarCubit extends Cubit<AvatarState> {
@@ -29,8 +30,12 @@ class AvatarCubit extends Cubit<AvatarState> {
     this._audioPlayerService,
     this._appLifecycleService,
     this._propReactions,
-    this._soundRepository,
-  ) : super(const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig())) {
+    this._soundRepository, {
+    PerformanceDirector? director,
+  }) : _director = director,
+       super(
+         const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()),
+       ) {
     // Subscribe to animation events from the service
     _animationSubscription = _animationService.animations.listen(
       _handleAnimationEvent,
@@ -80,6 +85,10 @@ class AvatarCubit extends Cubit<AvatarState> {
   final AudioPlayerService _audioPlayerService;
   final AppLifecycleService _appLifecycleService;
   final PropReactionService _propReactions;
+
+  /// Receives `gesture_done` so its gesture queue advances without waiting
+  /// for the safety timeout. Optional for tests that do not exercise it.
+  final PerformanceDirector? _director;
   final SoundRepository _soundRepository;
   StreamSubscription<AvatarAnimation>? _animationSubscription;
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
@@ -357,6 +366,9 @@ class AvatarCubit extends Cubit<AvatarState> {
           }
         });
   }
+
+  /// Called by the Rive view when the avatar file emits `gesture_done`.
+  void onGestureDone() => _director?.onGestureDone();
 
   /// Called by the Rive view when the avatar file emits `presence_done`.
   void onPresenceDone(String presence) {

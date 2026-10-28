@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/models/avatar_gesture.dart';
+import 'package:yofardev_ai/core/models/avatar_mood.dart';
+import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
@@ -207,4 +209,49 @@ void main() {
       expect(forwarded, isEmpty);
     },
   );
+
+  group('AvatarCueService director inputs', () {
+    test('forwards speaking, captions, mood and tool activity', () async {
+      final StreamController<AvatarMood> moods =
+          StreamController<AvatarMood>.broadcast();
+      final StreamController<String?> tools =
+          StreamController<String?>.broadcast();
+      addTearDown(moods.close);
+      addTearDown(tools.close);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        moods: moods.stream,
+        toolActivity: tools.stream,
+      );
+      addTearDown(service.dispose);
+
+      moods.add(AvatarMood.happy);
+      tools.add('weather');
+      await drain();
+      expect(director.current.activeTool, 'weather');
+      expect(director.current.gaze, const GazeTarget.away(0.6));
+      expect(director.current.emotion, emotionForMood(AvatarMood.happy));
+
+      tools.add(null);
+      playbackService.startAmplitudeAnimation(
+        'a.wav',
+        <int>[10, 10],
+        const Duration(milliseconds: 50),
+        caption: 'Is it raining?',
+      );
+      await drain();
+      expect(director.current.speaking, isTrue);
+      expect(director.current.gaze, const GazeTarget.user());
+      // The caption ran the auto-acting rules: a question -> think.
+      expect(director.current.pendingGesture, AvatarGesture.think);
+
+      // The 2-frame, 50 ms animation completes on its own.
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      await drain();
+      expect(director.current.speaking, isFalse);
+    });
+  });
 }

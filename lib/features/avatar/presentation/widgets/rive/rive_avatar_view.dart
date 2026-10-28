@@ -27,6 +27,7 @@ class RiveAvatarView extends StatefulWidget {
     required this.talkingState,
     this.onAvatarTapped,
     this.onPresenceDone,
+    this.onGestureDone,
   });
 
   final AvatarState avatarState;
@@ -36,6 +37,9 @@ class RiveAvatarView extends StatefulWidget {
   /// Called with the presence value when the avatar finishes walking
   /// (`presence_done`).
   final ValueChanged<String>? onPresenceDone;
+
+  /// Called when the upper-body gesture finishes (`gesture_done`).
+  final VoidCallback? onGestureDone;
 
   @override
   State<RiveAvatarView> createState() => _RiveAvatarViewState();
@@ -205,6 +209,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       if (zone != null) {
         widget.onAvatarTapped?.call(zone);
       }
+      return;
+    }
+    if (event.name == AvatarRiveContract.eventGestureDone) {
+      widget.onGestureDone?.call();
       return;
     }
     if (event.name == AvatarRiveContract.eventPresenceDone) {

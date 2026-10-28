@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/avatar_gesture.dart';
+import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../talking/talking.dart';
@@ -28,11 +29,15 @@ class AvatarCueService {
     required AvatarAnimationService animationService,
     required Stream<List<AvatarCue>> streamingCues,
     required PerformanceDirector director,
+    Stream<AvatarMood> moods = const Stream<AvatarMood>.empty(),
+    Stream<String?> toolActivity = const Stream<String?>.empty(),
   }) : _animationService = animationService,
        _director = director {
     _subscriptions.add(playbackService.events.listen(_onPlaybackEvent));
     _subscriptions.add(streamingCues.listen(_onCues));
     _subscriptions.add(director.intents.listen(_onIntent));
+    _subscriptions.add(moods.listen(director.setMood));
+    _subscriptions.add(toolActivity.listen(director.setActiveTool));
   }
 
   final AvatarAnimationService _animationService;
@@ -43,8 +48,18 @@ class AvatarCueService {
   int _lastFiredSerial = 0;
 
   void _onPlaybackEvent(PlaybackEvent event) {
-    if (event is CuesReachedEvent) {
-      _onCues(event.cues);
+    switch (event) {
+      case CuesReachedEvent(:final List<AvatarCue> cues):
+        _onCues(cues);
+      case SpeakingStartedEvent():
+        _director.setSpeaking(true);
+      case SpeakingStoppedEvent() || AnimationCompletedEvent():
+        _director.setSpeaking(false);
+      case CaptionEvent(:final String text):
+        // Auto-acting rules read each sentence as it starts playing.
+        _director.onSentence(text);
+      case MouthStateUpdatedEvent():
+        break;
     }
   }
 
