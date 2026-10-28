@@ -19,6 +19,9 @@ import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dar
 class MockTalkingRepository extends Mock implements TalkingRepository {}
 
 class MockTtsPlaybackService implements TtsPlaybackService {
+  @override
+  void announceSpeech(Duration lead) {}
+
   final StreamController<PlaybackEvent> _controller =
       StreamController<PlaybackEvent>.broadcast();
 
@@ -27,6 +30,9 @@ class MockTtsPlaybackService implements TtsPlaybackService {
 
   @override
   Future<void> stop() async {}
+
+  @override
+  Future<void> interrupt() async {}
 
   @override
   Duration get tick => const Duration(milliseconds: 16);

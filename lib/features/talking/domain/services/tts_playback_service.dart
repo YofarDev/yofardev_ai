@@ -15,7 +15,11 @@ class SpeakingStartedEvent extends PlaybackEvent {
 }
 
 class SpeakingStoppedEvent extends PlaybackEvent {
-  const SpeakingStoppedEvent();
+  const SpeakingStoppedEvent({this.interrupted = false});
+
+  /// True when the user cut the speech off ([TtsPlaybackService.interrupt]);
+  /// false when a sentence simply ended.
+  final bool interrupted;
 }
 
 class MouthStateUpdatedEvent extends PlaybackEvent {
@@ -25,6 +29,13 @@ class MouthStateUpdatedEvent extends PlaybackEvent {
 
 class AnimationCompletedEvent extends PlaybackEvent {
   const AnimationCompletedEvent();
+}
+
+/// Emitted [lead] before a sentence's audio starts: the avatar draws its
+/// breath in that time.
+class SpeechPrerollEvent extends PlaybackEvent {
+  const SpeechPrerollEvent(this.lead);
+  final Duration lead;
 }
 
 /// Emitted right after [SpeakingStartedEvent] (before the sentence's cues
@@ -110,10 +121,24 @@ class TtsPlaybackService {
     _controller.add(CuesReachedEvent(cues));
   }
 
+  /// Announces that a sentence starts playing in [lead].
+  void announceSpeech(Duration lead) {
+    _controller.add(SpeechPrerollEvent(lead));
+  }
+
+  /// Ends the current sentence (it finished playing).
   Future<void> stop() async {
     _cancelAnimation();
     await _repository.stop();
     _controller.add(const SpeakingStoppedEvent());
+  }
+
+  /// Cuts the speech off: like [stop], but listeners learn it was an
+  /// interruption (the face drops its end-of-sentence acting at once).
+  Future<void> interrupt() async {
+    _cancelAnimation();
+    _controller.add(const SpeakingStoppedEvent(interrupted: true));
+    await _repository.stop();
   }
 
   void startAmplitudeAnimation(

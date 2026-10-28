@@ -284,6 +284,9 @@ class MockStreamProcessorService extends Mock
 class MockTalkingRepository extends Mock implements TalkingRepository {}
 
 class MockTtsPlaybackService implements TtsPlaybackService {
+  @override
+  void announceSpeech(Duration lead) {}
+
   final StreamController<PlaybackEvent> _controller =
       StreamController<PlaybackEvent>.broadcast();
 
@@ -311,6 +314,9 @@ class MockTtsPlaybackService implements TtsPlaybackService {
 
   @override
   Future<void> stop() async {}
+
+  @override
+  Future<void> interrupt() async {}
 
   @override
   void cancelAnimation() {}

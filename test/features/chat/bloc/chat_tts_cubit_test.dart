@@ -169,6 +169,7 @@ void main() {
         () => mockPlayerService.preload(any()),
       ).thenAnswer((Invocation _) async {});
       when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {});
+      when(() => mockTtsPlaybackService.interrupt()).thenAnswer((_) async {});
       when(
         () => mockTtsManager.cueOnlyStream,
       ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
@@ -182,6 +183,7 @@ void main() {
         audioPlayerService: mockPlayerService,
         interruptionService: interruptionService,
         ttsPlaybackService: mockTtsPlaybackService,
+        speechPreroll: Duration.zero,
       );
     });
 
@@ -459,6 +461,7 @@ void main() {
         ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
         when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
         when(() => playback.stop()).thenAnswer((Invocation _) async {});
+        when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
         when(
           () => queue.deleteAudio(any()),
         ).thenAnswer((Invocation _) async {});
@@ -472,6 +475,7 @@ void main() {
           audioPlayerService: player,
           interruptionService: interruption,
           ttsPlaybackService: playback,
+          speechPreroll: Duration.zero,
         );
 
         queue.emitAudioPath('/tmp/tts/1.wav');
@@ -518,6 +522,7 @@ void main() {
       ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
       when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
       when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
       when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
 
       final ChatTtsCubit cubit = ChatTtsCubit(
@@ -526,6 +531,7 @@ void main() {
         audioPlayerService: player,
         interruptionService: interruption,
         ttsPlaybackService: playback,
+        speechPreroll: Duration.zero,
       );
 
       queue.emitAudioPath(wav.path);
@@ -566,6 +572,7 @@ void main() {
       when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
       when(() => queue.consumeText('/tmp/tts/1.wav')).thenReturn('Hi there.');
       when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
       when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
 
       final ChatTtsCubit cubit = ChatTtsCubit(
@@ -574,6 +581,7 @@ void main() {
         audioPlayerService: player,
         interruptionService: interruption,
         ttsPlaybackService: playback,
+        speechPreroll: Duration.zero,
       );
 
       queue.emitAudioPath('/tmp/tts/1.wav');
@@ -677,8 +685,8 @@ void main() {
         when(() => mockPlayerService.stop()).thenAnswer((_) async {
           mockTtsPlaybackService.calls.add('player.stop');
         });
-        when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {
-          mockTtsPlaybackService.calls.add('playback.stop');
+        when(() => mockTtsPlaybackService.interrupt()).thenAnswer((_) async {
+          mockTtsPlaybackService.calls.add('playback.interrupt');
         });
 
         await interruptionService.interrupt();
@@ -688,7 +696,7 @@ void main() {
         expect(mockTtsPlaybackService.calls, <String>[
           'cancelAnimation',
           'player.stop',
-          'playback.stop',
+          'playback.interrupt',
         ]);
       },
     );
@@ -707,6 +715,7 @@ void main() {
       ).thenAnswer((Invocation _) => interruptions.stream);
       when(() => player.stop()).thenAnswer((Invocation _) async {});
       when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
       when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
       when(
         () => queue.cueOnlyStream,
@@ -718,6 +727,7 @@ void main() {
         audioPlayerService: player,
         interruptionService: interruption,
         ttsPlaybackService: playback,
+        speechPreroll: Duration.zero,
       );
 
       // Seed one state entry directly through the playback path.
@@ -743,6 +753,82 @@ void main() {
       player.dispose();
       playback.dispose();
       await interruptions.close();
+    });
+
+    group('speech pre-roll', () {
+      late MockTtsQueueService queue;
+      late MockAudioAmplitudeService amplitudeService;
+      late MockAudioPlayerService player;
+      late MockTtsPlaybackService playback;
+      late StreamController<void> interruptions;
+      late ChatTtsCubit cubit;
+
+      setUp(() {
+        queue = MockTtsQueueService();
+        amplitudeService = MockAudioAmplitudeService();
+        player = MockAudioPlayerService();
+        playback = MockTtsPlaybackService();
+        interruptions = StreamController<void>.broadcast();
+        final MockInterruptionService interruption = MockInterruptionService();
+        when(
+          () => interruption.interruptionStream,
+        ).thenAnswer((Invocation _) => interruptions.stream);
+        when(() => player.stop()).thenAnswer((Invocation _) async {});
+        when(() => playback.stop()).thenAnswer((Invocation _) async {});
+        when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
+        when(
+          () => queue.deleteAudio(any()),
+        ).thenAnswer((Invocation _) async {});
+        when(
+          () => queue.cueOnlyStream,
+        ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
+        when(
+          () => amplitudeService.extractAmplitudes(any()),
+        ).thenAnswer((Invocation _) async => <int>[5]);
+        when(
+          () => player.play(any()),
+        ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
+        when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
+        cubit = ChatTtsCubit(
+          ttsQueueManager: queue,
+          audioAmplitudeService: amplitudeService,
+          audioPlayerService: player,
+          interruptionService: interruption,
+          ttsPlaybackService: playback,
+          speechPreroll: const Duration(milliseconds: 60),
+        );
+      });
+
+      tearDown(() async {
+        await cubit.close();
+        queue.dispose();
+        player.dispose();
+        playback.dispose();
+        await interruptions.close();
+      });
+
+      test(
+        'announces the sentence, then plays it after the pre-roll',
+        () async {
+          queue.emitAudioPath('/tmp/tts/3.wav');
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          verify(
+            () => playback.announceSpeech(const Duration(milliseconds: 60)),
+          ).called(1);
+          verifyNever(() => player.play(any()));
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+          verify(() => player.play('/tmp/tts/3.wav')).called(1);
+        },
+      );
+
+      test('an interrupt during the pre-roll drops the sentence', () async {
+        queue.emitAudioPath('/tmp/tts/4.wav');
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        interruptions.add(null);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        verifyNever(() => player.play(any()));
+        verify(() => queue.deleteAudio('/tmp/tts/4.wav')).called(1);
+      });
     });
 
     // ── ChatTtsState ─────────────────────────────────────────

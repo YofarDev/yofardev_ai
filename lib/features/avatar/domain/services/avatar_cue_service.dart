@@ -70,7 +70,9 @@ class AvatarCueService {
           _director.onSentence(text);
         }
         _sentenceHasGestureCue = false;
-      case MouthStateUpdatedEvent() || SpeechTimelineEvent():
+      case MouthStateUpdatedEvent() ||
+          SpeechTimelineEvent() ||
+          SpeechPrerollEvent():
         break;
     }
   }

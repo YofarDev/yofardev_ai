@@ -167,7 +167,7 @@ class TalkingCubit extends Cubit<TalkingState> {
       case CaptionEvent():
         break;
       // The speech timeline drives the face performer (avatar feature).
-      case SpeechTimelineEvent():
+      case SpeechTimelineEvent() || SpeechPrerollEvent():
         break;
     }
   }

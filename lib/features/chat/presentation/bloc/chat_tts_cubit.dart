@@ -29,7 +29,9 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     required AudioPlayerService audioPlayerService,
     required InterruptionService interruptionService,
     required TtsPlaybackService ttsPlaybackService,
+    Duration speechPreroll = defaultSpeechPreroll,
   }) : _ttsQueueManager = ttsQueueManager,
+       _speechPreroll = speechPreroll,
        _audioAmplitudeService = audioAmplitudeService,
        _audioPlayerService = audioPlayerService,
        _interruptionService = interruptionService,
@@ -66,6 +68,16 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   /// Longest a sentence waits for its speech analysis before it plays; past
   /// it the sentence plays with no timeline (the amplitude fallback).
   static const Duration timelineWait = Duration(milliseconds: 150);
+
+  /// Time between announcing a sentence and playing it: the avatar draws a
+  /// breath before speaking (M2 plan, critic round 3 ruling).
+  static const Duration defaultSpeechPreroll = Duration(milliseconds: 200);
+
+  final Duration _speechPreroll;
+
+  /// Incremented by every interruption: a sentence waiting out its pre-roll
+  /// does not start after an interrupt.
+  int _generation = 0;
 
   /// Subscribe to TTS audio stream to play audio and extract amplitudes
   void _subscribeToTtsStream() {
@@ -104,6 +116,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       _,
     ) async {
       AppLogger.debug('Interrupting active TTS playback', tag: 'ChatTtsCubit');
+      _generation++;
       _pendingPlaybackQueue.clear();
       _amplitudeFutures.clear();
       _timelineFutures.clear();
@@ -115,7 +128,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       // resync would read position 0 and restart the mouth.
       _ttsPlaybackService.cancelAnimation();
       await _audioPlayerService.stop();
-      await _ttsPlaybackService.stop();
+      await _ttsPlaybackService.interrupt();
     });
   }
 
@@ -187,6 +200,10 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
 
   /// Play audio and extract amplitudes
   Future<void> _playAndExtractAmplitudes(String audioPath) async {
+    // An interrupt during any await below drops this sentence instead of
+    // playing it after the user stopped the speech.
+    final int generation = _generation;
+    bool interrupted() => isClosed || generation != _generation;
     try {
       AppLogger.debug(
         'Starting TTS playback for $audioPath',
@@ -204,9 +221,23 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         tag: 'ChatTtsCubit',
       );
 
+      if (interrupted()) {
+        _dropUnplayed(audioPath);
+        return;
+      }
       // The analysis normally finished during the previous sentence; a slow
-      // one never holds the audio back more than [timelineWait].
-      final SpeechTimeline? timeline = await _takeTimeline(audioPath);
+      // one never holds the audio back more than [timelineWait]. The wait
+      // runs alongside the breath before speaking.
+      final Future<SpeechTimeline?> pendingTimeline = _takeTimeline(audioPath);
+      if (_speechPreroll > Duration.zero) {
+        _ttsPlaybackService.announceSpeech(_speechPreroll);
+        await Future<void>.delayed(_speechPreroll);
+      }
+      final SpeechTimeline? timeline = await pendingTimeline;
+      if (interrupted()) {
+        _dropUnplayed(audioPath);
+        return;
+      }
 
       // 2. Add to state for history
       final List<Map<String, dynamic>> currentList =
@@ -282,6 +313,16 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
 
   /// The prefetched analysis of [audioPath], waiting at most [timelineWait];
   /// null when missing, failed or too slow.
+  /// A sentence dropped before it played: its parked text, history entry
+  /// and file go.
+  void _dropUnplayed(String audioPath) {
+    _amplitudeFutures.remove(audioPath);
+    _timelineFutures.remove(audioPath);
+    _ttsQueueManager.consumeText(audioPath);
+    _ttsQueueManager.consumeCues(audioPath);
+    unawaited(_ttsQueueManager.deleteAudio(audioPath));
+  }
+
   Future<SpeechTimeline?> _takeTimeline(String audioPath) async {
     final Future<SpeechTimeline?>? pending = _timelineFutures.remove(audioPath);
     if (pending == null) {
