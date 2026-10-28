@@ -72,6 +72,10 @@ class SpeechAnalyzer {
   /// Unvoiced frames this far under the p95 can be a closure's tail.
   static const double _quietDb = -20;
 
+  /// A sibilant frame at or under this level is a labiodental (f, v) when the
+  /// text allows one there: /f/ is the same high-band noise as /s/, weaker.
+  static const double _weakFricativeDb = -14.5;
+
   /// B2 / (B1 + B2) of the tilted spectrum at or above which a voiced frame
   /// is open (`aa`).
   static const double _openRatio = 0.35;
@@ -240,7 +244,7 @@ class _Analysis {
 
   /// Whether a letter of [cls] sits near the frame range [from, to) once the
   /// letters of the text are spread evenly over the sounding frames: within
-  /// +/- 15 % of the letter count (at least 1.5 letters). Null when there is
+  /// +/- 8 % of the letter count (at least 1.5 letters). Null when there is
   /// no text.
   bool? hintAllows(String cls, int from, int to) {
     if (letters.isEmpty) {
@@ -254,7 +258,7 @@ class _Analysis {
         (_soundingBefore[from] + _soundingBefore[to]) / 2 / total;
     final int n = letters.length;
     final double centre = fraction * n;
-    final double radius = math.max(1.5, 0.15 * n);
+    final double radius = math.max(1.5, 0.08 * n);
     final int lo = math.max(0, (centre - radius).floor());
     final int hi = math.min(n - 1, (centre + radius).ceil() - 1);
     for (int k = lo; k <= hi; k++) {
@@ -269,6 +273,7 @@ class _Analysis {
 
   static const String _lipLetters = 'pbm';
   static const String _labiodentalLetters = 'fv';
+  static const String _sibilantLetters = 'szcxj';
 
   List<Viseme> classify() {
     final List<Viseme> raw = List<Viseme>.filled(frameCount, Viseme.sil);
@@ -284,9 +289,15 @@ class _Analysis {
         murmur[f] = true;
         continue;
       }
-      // Sibilant noise, voiced (z) or not (s).
+      // Sibilant noise, voiced (z) or not (s). A labiodental (f) is the same
+      // high-band noise, only weaker: the text decides between them.
       if (x.zcr >= 0.25 && s[3] >= 0.45) {
-        raw[f] = Viseme.ss;
+        final bool allowsF = hintAllows(_labiodentalLetters, f, f + 1) ?? false;
+        final bool allowsS = hintAllows(_sibilantLetters, f, f + 1) ?? true;
+        raw[f] =
+            allowsF && (!allowsS || x.db <= SpeechAnalyzer._weakFricativeDb)
+            ? Viseme.ff
+            : Viseme.ss;
         continue;
       }
       if (!x.isVoiced) {
@@ -314,7 +325,59 @@ class _Analysis {
 
     final List<Viseme> smoothed = _modeFilter(raw);
     _markClosures(smoothed, murmur);
+    _enforceLetters(smoothed, _lipLetters, Viseme.pp);
+    _enforceLetters(smoothed, _labiodentalLetters, Viseme.ff);
     return smoothed;
+  }
+
+  /// Every letter of [cls] in the text (a doubled letter counts once) gets a
+  /// [target] span near where it is said: the letters are spread over the
+  /// sounding frames, and when no [target] frame lies within +/- 3 % of the
+  /// letter count (at least 1.2 letters) of the expected one, the two
+  /// quietest sounding frames there become [target]. A nasal or a lip
+  /// closure with no dip in the audio ("I'm") still closes the lips.
+  void _enforceLetters(List<Viseme> classes, String cls, Viseme target) {
+    final int total = _soundingBefore[frameCount];
+    final int n = letters.length;
+    if (n == 0 || total == 0) {
+      return;
+    }
+    final List<int> sounding = <int>[
+      for (int f = 0; f < frameCount; f++)
+        if (!isSilent(f)) f,
+    ];
+    final double radius = math.max(1.2, 0.03 * n);
+    for (int k = 0; k < n; k++) {
+      if (!cls.contains(letters[k]) ||
+          (k > 0 && cls.contains(letters[k - 1]))) {
+        continue;
+      }
+      int frameAt(double letter) =>
+          sounding[(letter / n * total).floor().clamp(0, total - 1)];
+      final int lo = frameAt(math.max(0, k + 0.5 - radius));
+      final int hi = frameAt(math.min(n - 0.001, k + 0.5 + radius));
+      bool found = false;
+      for (int f = lo; f <= hi && !found; f++) {
+        found = classes[f] == target;
+      }
+      if (found) {
+        continue;
+      }
+      int best = -1;
+      for (int f = lo; f < hi; f++) {
+        if (isSilent(f) || isSilent(f + 1)) {
+          continue;
+        }
+        final double db = math.max(frames[f].db, frames[f + 1].db);
+        if (best < 0 || db < math.max(frames[best].db, frames[best + 1].db)) {
+          best = f;
+        }
+      }
+      if (best >= 0) {
+        classes[best] = target;
+        classes[best + 1] = target;
+      }
+    }
   }
 
   /// A voice bar: energy only under 700 Hz, well under the neighbourhood

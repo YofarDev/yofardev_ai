@@ -197,6 +197,36 @@ void main() {
       expect(_share(t, <Viseme>{Viseme.ss}), greaterThan(0.8));
     });
 
+    test('weak high-band noise is ff when the text has an f there', () {
+      final List<double> signal = <double>[
+        ..._bandNoise(24000, 0.15, 4000, 8000, gain: 0.03),
+        ..._tone(24000, 0.5, _openVowel),
+      ];
+      final SpeechTimeline withF = _analyzer.analyze(_pcm(signal), text: 'fa');
+      final SpeechTimeline withS = _analyzer.analyze(_pcm(signal), text: 'sa');
+      expect(withF.spanAt(_ms(60))?.viseme, Viseme.ff);
+      expect(withS.spanAt(_ms(60))?.viseme, Viseme.ss);
+    });
+
+    test('a p/b/m letter with no dip in the audio still gets a pp span', () {
+      // "I'm a..." said without a pause: no closure in the signal
+      final SpeechTimeline t = _analyzer.analyze(
+        _pcm(_tone(24000, 1.0, _openVowel)),
+        text: 'aamaa',
+      );
+      final List<VisemeSpan> pp = <VisemeSpan>[
+        for (final VisemeSpan s in t.visemes)
+          if (s.viseme == Viseme.pp) s,
+      ];
+      expect(pp, hasLength(1));
+      // the letter sits in the middle of the text
+      expect(pp.single.start.inMilliseconds, inInclusiveRange(300, 650));
+      expect(
+        (pp.single.end - pp.single.start).inMilliseconds,
+        greaterThanOrEqualTo(50),
+      );
+    });
+
     group('closures', () {
       final List<double> signal = <double>[
         ..._tone(24000, 0.5, _openVowel),
