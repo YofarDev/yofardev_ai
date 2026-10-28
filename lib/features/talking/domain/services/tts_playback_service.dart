@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../../../core/models/avatar_cue.dart';
+import '../../../../core/models/performance/speech_timeline.dart';
 import '../../../../core/utils/logger.dart';
 import '../repositories/talking_repository.dart';
 import 'playback_clock.dart';
@@ -26,6 +27,16 @@ class AnimationCompletedEvent extends PlaybackEvent {
   const AnimationCompletedEvent();
 }
 
+/// Emitted right after [SpeakingStartedEvent] (before the sentence's cues
+/// and caption) with what the face performs for this sentence: the analysed
+/// viseme spans and prosody marks, or a timeline synthesised from the
+/// amplitudes when no analysis is available. Times are relative to the start
+/// of the audio ([TtsPlaybackService.speechPosition]).
+class SpeechTimelineEvent extends PlaybackEvent {
+  const SpeechTimelineEvent(this.timeline);
+  final SpeechTimeline timeline;
+}
+
 /// Emitted the moment a TTS queue item's audio starts playing (or
 /// immediately, for items that carry only cues and no speakable text).
 class CuesReachedEvent extends PlaybackEvent {
@@ -45,9 +56,14 @@ class CaptionEvent extends PlaybackEvent {
 /// open-loop timer index: every tick derives the frame index from the clock's
 /// position, so a stalled UI isolate jumps straight to the real frame.
 class TtsPlaybackService {
-  TtsPlaybackService(this._repository, {PlaybackClock? clock, Duration? tick})
-    : _clock = clock,
-      tick = tick ?? defaultTick;
+  TtsPlaybackService(
+    this._repository, {
+    PlaybackClock? clock,
+    Duration? tick,
+    Stopwatch Function()? stopwatchFactory,
+  }) : _clock = clock,
+       tick = tick ?? defaultTick,
+       _stopwatchFactory = stopwatchFactory ?? Stopwatch.new;
 
   final TalkingRepository _repository;
 
@@ -55,6 +71,9 @@ class TtsPlaybackService {
   /// without a position source (tests, web), where a pure stopwatch drives
   /// the frames.
   final PlaybackClock? _clock;
+
+  /// Builds the fallback stopwatch used when there is no [_clock].
+  final Stopwatch Function() _stopwatchFactory;
 
   /// Interval between animation ticks.
   final Duration tick;
@@ -71,6 +90,16 @@ class TtsPlaybackService {
       StreamController<PlaybackEvent>.broadcast();
 
   Stream<PlaybackEvent> get events => _controller.stream;
+
+  /// Position in the sentence now playing (the playback clock, or the
+  /// fallback stopwatch), the time base of its [SpeechTimelineEvent]; null
+  /// when no animation runs (before start, after stop or completion).
+  Duration? get speechPosition {
+    if (_animationTimer == null) {
+      return null;
+    }
+    return _clock?.position ?? _fallbackStopwatch?.elapsed;
+  }
 
   /// Fires cues for a queue item that has no speakable text: there is no
   /// audio to start, so they are delivered as soon as the item is reached.
@@ -93,6 +122,7 @@ class TtsPlaybackService {
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
     String? caption,
+    SpeechTimeline? timeline,
   }) {
     AppLogger.debug(
       'TtsPlaybackService: Starting amplitude animation with ${amplitudes.length} frames, duration: ${audioDuration.inMilliseconds}ms',
@@ -112,6 +142,12 @@ class TtsPlaybackService {
     }
 
     _controller.add(const SpeakingStartedEvent());
+    _controller.add(
+      SpeechTimelineEvent(
+        timeline ??
+            _amplitudeTimeline(amplitudes, audioDuration, caption: caption),
+      ),
+    );
     // The audio starts now: cues embedded in this sentence fire in time with
     // speech. They go out before the caption so an LLM gesture always reaches
     // the director ahead of the auto-acting rules that read the caption.
@@ -132,7 +168,9 @@ class TtsPlaybackService {
     if (clock != null) {
       clock.start();
     } else {
-      _fallbackStopwatch = Stopwatch()..start();
+      _fallbackStopwatch = _stopwatchFactory()
+        ..reset()
+        ..start();
     }
 
     AppLogger.debug(
@@ -188,6 +226,33 @@ class TtsPlaybackService {
     _fallbackStopwatch?.stop();
     _fallbackStopwatch = null;
     _clock?.stop();
+  }
+
+  /// Fallback timeline from the 25 ms amplitudes, stretched to the real
+  /// audio duration.
+  static SpeechTimeline _amplitudeTimeline(
+    List<int> amplitudes,
+    Duration audioDuration, {
+    String? caption,
+  }) {
+    final Duration frame = audioDuration > Duration.zero
+        ? Duration(
+            microseconds: audioDuration.inMicroseconds ~/ amplitudes.length,
+          )
+        : _defaultFrameDuration;
+    final SpeechTimeline timeline = SpeechTimeline.fromAmplitudes(
+      amplitudes,
+      frame,
+      text: caption,
+    );
+    if (audioDuration <= Duration.zero || timeline.visemes.isEmpty) {
+      return timeline;
+    }
+    // Integer frame division can leave the last span a few microseconds
+    // short of the audio: the last span ends with the audio.
+    final List<VisemeSpan> visemes = List<VisemeSpan>.of(timeline.visemes);
+    visemes[visemes.length - 1] = visemes.last.copyWith(end: audioDuration);
+    return timeline.copyWith(visemes: visemes, duration: audioDuration);
   }
 
   int _getMouthState(int amplitude) {

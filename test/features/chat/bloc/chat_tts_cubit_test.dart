@@ -5,6 +5,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
+import 'package:yofardev_ai/core/models/performance/speech_timeline.dart';
+import 'package:yofardev_ai/core/models/performance/viseme.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
@@ -97,12 +99,17 @@ class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
     String? caption,
+    SpeechTimeline? timeline,
   }) {
     captions.add(caption);
+    timelines.add(timeline);
   }
 
   /// Captions passed to [startAmplitudeAnimation], in call order.
   final List<String?> captions = <String?>[];
+
+  /// Speech timelines passed to [startAmplitudeAnimation], in call order.
+  final List<SpeechTimeline?> timelines = <SpeechTimeline?>[];
 
   /// Order of the stop-related calls received (see the interruption test).
   final List<String> calls = <String>[];
@@ -145,6 +152,10 @@ void main() {
       when(
         () => mockAmplitudeService.extractAmplitudes(any()),
       ).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
+      when(
+        () =>
+            mockAmplitudeService.analyzeSpeech(any(), text: any(named: 'text')),
+      ).thenAnswer((_) async => null);
       when(
         () => mockTtsManager.deleteAudio(any()),
       ).thenAnswer((Invocation _) async {});
@@ -575,6 +586,89 @@ void main() {
       queue.dispose();
       player.dispose();
       playback.dispose();
+    });
+
+    // ── Speech timeline prefetch ─────────────────────────────
+
+    group('speech timeline', () {
+      const String path = '/tmp/tts/speech.wav';
+      const SpeechTimeline analysed = SpeechTimeline(
+        visemes: <VisemeSpan>[
+          VisemeSpan(
+            viseme: Viseme.pp,
+            start: Duration.zero,
+            end: Duration(milliseconds: 60),
+          ),
+        ],
+        duration: Duration(milliseconds: 60),
+      );
+
+      test(
+        'analyses the parked sentence text on arrival and passes the result',
+        () async {
+          when(() => mockTtsManager.peekText(path)).thenReturn('Big boat.');
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+            ),
+          ).thenAnswer((_) async => analysed);
+
+          mockTtsManager.emitAudioPath(path);
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+
+          verify(
+            () => mockAmplitudeService.analyzeSpeech(path, text: 'Big boat.'),
+          ).called(1);
+          expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[analysed]);
+        },
+      );
+
+      test(
+        'a slow analysis delays playback at most ${ChatTtsCubit.timelineWait.inMilliseconds} ms, then plays with no timeline',
+        () async {
+          final Completer<SpeechTimeline?> never = Completer<SpeechTimeline?>();
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+            ),
+          ).thenAnswer((_) => never.future);
+
+          final Stopwatch watch = Stopwatch()..start();
+          mockTtsManager.emitAudioPath(path);
+          while (mockTtsPlaybackService.timelines.isEmpty &&
+              watch.elapsed < const Duration(seconds: 2)) {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+          watch.stop();
+
+          verify(() => mockPlayerService.play(path)).called(1);
+          expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[null]);
+          // The wait plus a generous scheduling margin.
+          expect(
+            watch.elapsed,
+            lessThan(
+              ChatTtsCubit.timelineWait + const Duration(milliseconds: 150),
+            ),
+          );
+        },
+      );
+
+      test('a failed analysis plays with no timeline', () async {
+        when(
+          () => mockAmplitudeService.analyzeSpeech(
+            path,
+            text: any(named: 'text'),
+          ),
+        ).thenThrow(StateError('boom'));
+
+        mockTtsManager.emitAudioPath(path);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        verify(() => mockPlayerService.play(path)).called(1);
+        expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[null]);
+      });
     });
 
     test(

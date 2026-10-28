@@ -166,6 +166,9 @@ class TalkingCubit extends Cubit<TalkingState> {
       // Captions are owned by CaptionCubit.
       case CaptionEvent():
         break;
+      // The speech timeline drives the face performer (avatar feature).
+      case SpeechTimelineEvent():
+        break;
     }
   }
 

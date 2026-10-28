@@ -93,6 +93,11 @@ class TtsQueueService {
     return text;
   }
 
+  /// The sentence text of the item whose audio path is [audioPath], without
+  /// consuming it (the speech analysis reads it ahead of playback); null
+  /// when unknown or already consumed.
+  String? peekText(String audioPath) => _textByPath[audioPath];
+
   /// Deletes a played audio file (scratch cleanup; the synthesizer owns the
   /// IO). Safe to call for a path that no longer exists.
   Future<void> deleteAudio(String path) => _ttsSynthesizer.delete(path);

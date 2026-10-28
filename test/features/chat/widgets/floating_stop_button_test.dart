@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/performance/speech_timeline.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
@@ -299,7 +300,11 @@ class MockTtsPlaybackService implements TtsPlaybackService {
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
     String? caption,
+    SpeechTimeline? timeline,
   }) {}
+
+  @override
+  Duration? get speechPosition => null;
 
   @override
   void fireCues(List<AvatarCue> cues) {}
@@ -364,6 +369,9 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   String? consumeText(String audioPath) => null;
+
+  @override
+  String? peekText(String audioPath) => null;
 }
 
 class MockAvatarAnimationService implements AvatarAnimationService {

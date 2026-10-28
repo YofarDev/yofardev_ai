@@ -412,6 +412,36 @@ void main() {
       await subscription.cancel();
     });
 
+    test('peekText reads the parked sentence without consuming it', () async {
+      when(
+        () => mockDatasource.synthesize(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      ).thenAnswer((_) async => '/path/to/raw.wav');
+
+      final Completer<String> emitted = Completer<String>();
+      final StreamSubscription<String> subscription = manager.audioStream
+          .listen(emitted.complete);
+
+      await manager.enqueue(
+        text: '  Hello there.  ',
+        language: 'en',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      final String path = await emitted.future;
+
+      expect(manager.peekText(path), 'Hello there.');
+      expect(manager.peekText(path), 'Hello there.');
+      expect(manager.hasPendingSpeech, isTrue);
+      expect(manager.consumeText(path), 'Hello there.');
+      expect(manager.peekText(path), isNull);
+      expect(manager.peekText('/unknown.wav'), isNull);
+
+      await subscription.cancel();
+    });
+
     test('consumeText returns the sentence once, then null', () async {
       when(
         () => mockDatasource.synthesize(

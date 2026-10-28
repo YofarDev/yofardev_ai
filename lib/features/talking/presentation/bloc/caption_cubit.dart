@@ -85,6 +85,7 @@ class CaptionCubit extends Cubit<CaptionState> {
       case MouthStateUpdatedEvent():
       case AnimationCompletedEvent():
       case CuesReachedEvent():
+      case SpeechTimelineEvent():
         break;
     }
   }

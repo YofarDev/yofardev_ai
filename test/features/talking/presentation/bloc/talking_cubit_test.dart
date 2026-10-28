@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:yofardev_ai/core/models/performance/speech_timeline.dart';
 import 'package:yofardev_ai/core/models/chat_status.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
@@ -37,7 +38,11 @@ class MockTtsPlaybackService implements TtsPlaybackService {
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
     String? caption,
+    SpeechTimeline? timeline,
   }) {}
+
+  @override
+  Duration? get speechPosition => null;
 
   @override
   void fireCues(List<AvatarCue> cues) {}
