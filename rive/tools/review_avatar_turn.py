@@ -143,12 +143,38 @@ def glasses() -> None:
 
 
 def lag() -> None:
-    """Follow-through channels at yaw 0.5: hairLagYaw / hairLagPitch +-0.5, eyeLeadYaw +-0.6."""
+    """Follow-through and eye-lead channels at yaw 0.5: eyeLeadYaw +-1, eyeLeadPitch +-1 (and a
+    blink at -1), hairLagYaw +-0.5 / +-1, hairLagPitch +-0.5. Second row: the eyes zoomed."""
     jobs = [("yaw 0.5", {"yaw": "0.5"}, 1)]
     jobs += [(f"{k} {v:+g}", {"yaw": "0.5", k: f"{v:g}"}, 1)
-             for k, vals in (("hairLagYaw", (-0.5, 0.5)), ("hairLagPitch", (-0.5, 0.5)), ("eyeLeadYaw", (-0.6, 0.6)))
+             for k, vals in (("eyeLeadYaw", (-1.0, 1.0)), ("eyeLeadPitch", (-1.0, 1.0)),
+                             ("hairLagYaw", (-0.5, 0.5, -1.0, 1.0)), ("hairLagPitch", (-0.5, 0.5)))
              for v in vals]
-    sheet(render_cells(jobs, HEAD_BOX, (240, 288), "lag"), 7, "lag.png")
+    jobs.append(("eyeLeadPitch -1 + blink", {"yaw": "0.5", "eyeLeadPitch": "-1"}, 172))
+    heads = render_cells(jobs, HEAD_BOX, (240, 288), "lag")
+    eyes = render_cells([j for j in jobs if j[0].startswith(("yaw", "eyeLead"))], (280, 330, 520, 460), (240, 130),
+                        "lag_eyes")
+    eyes_row = Image.new("RGB", (240 * 6, 288), (20, 18, 26))
+    for k, c in enumerate(eyes):
+        eyes_row.paste(c, ((k % 6) * 240, (k // 6) * 140))
+    cells = heads + [eyes_row.crop((k * 240, 0, (k + 1) * 240, 288)) for k in range(6)]
+    sheet(cells, 6, "lag.png")
+
+
+def lead_travel() -> list[str]:
+    """Measured iris / pupil travel (centroid of the dark pupil pixels in the right eye)."""
+    def centroid(data: dict[str, str]) -> tuple[float, float]:
+        tag = "_".join(f"{k}{v}" for k, v in data.items()) or "rest"
+        im = Image.open(cli(TMP / "lead" / f"{tag}.png", data, 1)).convert("RGB")
+        pts = [(x, y) for x in range(425, 500) for y in (range(360, 430))
+               if sum(im.getpixel((x, y))) < 120 and im.getpixel((x, y))[0] - im.getpixel((x, y))[2] > 10]  # pupil/ring, not frame
+        return (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+    x0, y0 = centroid({})
+    out = []
+    for k, v in (("eyeLeadYaw", "1"), ("eyeLeadYaw", "-1"), ("eyeLeadPitch", "1"), ("eyeLeadPitch", "-1")):
+        x, y = centroid({k: v})
+        out.append(f"{k} {v}: pupil moves dx {x - x0:+.1f}, dy {y - y0:+.1f} artboard px")
+    return out
 
 
 def turn() -> list[Path]:
@@ -227,7 +253,8 @@ def metrics() -> None:
     lines += ["", "== Deterministic: the same turned pose rendered twice (the rig is bind-only, no state)", *[f"pose {k}: {h}"
                                                                                      for k, h in enumerate(hist)],
               "", "== Size", f"assets/rive/avatar.riv: {riv.stat().st_size} B (budget 614400 B = 600 KB)",
-              "", "== Art-bible lint (livingRoom), avatar.rml", f"{len(lint)} hits (baseline 597)"]
+              "", "== Art-bible lint (livingRoom), avatar.rml", f"{len(lint)} hits (baseline 597)",
+              "", "== Eye lead travel at yaw 0 (eye white ~61 px wide, ~38 px tall on the artboard)", *lead_travel()]
     (OUT / "metrics.txt").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
 

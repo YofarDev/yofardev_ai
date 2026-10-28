@@ -13,7 +13,13 @@ pose 0: 0.00% of pixels differ (0 of 800000)
 pose 1: 0.00% of pixels differ (0 of 800000)
 
 == Size
-assets/rive/avatar.riv: 514428 B (budget 614400 B = 600 KB)
+assets/rive/avatar.riv: 516637 B (budget 614400 B = 600 KB)
 
 == Art-bible lint (livingRoom), avatar.rml
 597 hits (baseline 597)
+
+== Eye lead travel at yaw 0 (eye white ~61 px wide, ~38 px tall on the artboard)
+eyeLeadYaw 1: pupil moves dx +19.4, dy +0.2 artboard px
+eyeLeadYaw -1: pupil moves dx -18.1, dy +1.6 artboard px
+eyeLeadPitch 1: pupil moves dx -0.0, dy -9.3 artboard px
+eyeLeadPitch -1: pupil moves dx -0.0, dy +9.5 artboard px
