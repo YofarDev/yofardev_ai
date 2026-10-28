@@ -26,12 +26,14 @@ abstract final class AvatarRiveContract {
 
   // 2.5D head rig numbers (all −1..1). `yaw`/`pitch` are the head turn
   // (+yaw toward the viewer's right, +pitch up); `hairLag*` are the hair's
-  // offset from the head (0 = locked); `eyeLeadYaw` is extra iris shift.
+  // offset from the head (0 = locked); `eyeLeadYaw` is extra iris shift;
+  // `eyeLeadPitch` the held vertical look (+ = up, negative drops the lids).
   static const String propYaw = 'yaw';
   static const String propPitch = 'pitch';
   static const String propHairLagYaw = 'hairLagYaw';
   static const String propHairLagPitch = 'hairLagPitch';
   static const String propEyeLeadYaw = 'eyeLeadYaw';
+  static const String propEyeLeadPitch = 'eyeLeadPitch';
 
   // Enum values, in contract order. On the SM-input fallback an enum property
   // becomes a number: its index in these lists.
@@ -107,7 +109,7 @@ abstract final class AvatarRiveContract {
   static const double hairLagMin = -1;
   static const double hairLagMax = 1;
 
-  /// Range of `eyeLeadYaw`.
+  /// Range of `eyeLeadYaw` and `eyeLeadPitch`.
   static const double eyeLeadMin = -1;
   static const double eyeLeadMax = 1;
 

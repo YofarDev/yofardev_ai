@@ -73,6 +73,7 @@ void main() {
         AvatarRiveContract.propHairLagYaw,
         AvatarRiveContract.propHairLagPitch,
         AvatarRiveContract.propEyeLeadYaw,
+        AvatarRiveContract.propEyeLeadPitch,
       ];
       for (final String name in expected) {
         expect(names, contains(name), reason: 'AvatarVM.$name missing');
