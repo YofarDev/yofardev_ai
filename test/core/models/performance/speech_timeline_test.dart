@@ -162,4 +162,27 @@ void main() {
       expect(silent.leadingSilence, _ms(200));
     });
   });
+
+  group('SpeechTimeline.energyAt', () {
+    test('interpolates between frame centres and is null without energy', () {
+      const SpeechTimeline t = SpeechTimeline(
+        energy: <double>[0, 1, 0.5],
+        energyFrame: Duration(milliseconds: 20),
+      );
+      expect(t.energyAt(Duration.zero), 0);
+      expect(t.energyAt(const Duration(milliseconds: 20)), closeTo(0.5, 1e-9));
+      expect(t.energyAt(const Duration(milliseconds: 30)), closeTo(1, 1e-9));
+      expect(t.energyAt(const Duration(seconds: 9)), 0.5);
+      expect(const SpeechTimeline().energyAt(Duration.zero), isNull);
+    });
+
+    test('the amplitude fallback carries the loudness', () {
+      final SpeechTimeline t = SpeechTimeline.fromAmplitudes(<int>[
+        0,
+        30,
+        15,
+      ], const Duration(milliseconds: 25));
+      expect(t.energy, <double>[0, 1, 0.5]);
+    });
+  });
 }

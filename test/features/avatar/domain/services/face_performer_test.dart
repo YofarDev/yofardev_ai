@@ -440,6 +440,21 @@ void main() {
     });
   });
 
+  test('the jaw follows the loudness inside a long vowel', () {
+    rig.speak(
+      _timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 1600)]).copyWith(
+        energy: <double>[
+          ...List<double>.filled(32, 1),
+          ...List<double>.filled(32, 0.2),
+        ],
+      ),
+    );
+    final List<FaceFrame> frames = rig.run(90);
+    final double loud = frames[40].au.jawDrop; // ~0.68 s
+    final double soft = frames[85].au.jawDrop; // ~1.43 s
+    expect(loud - soft, greaterThan(0.2));
+  });
+
   test('settles at rest and is unsettled during a pulse', () {
     rig.run(60);
     expect(rig.performer.isSettled, isTrue);

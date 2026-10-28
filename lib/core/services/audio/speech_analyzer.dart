@@ -821,6 +821,11 @@ class _Analysis {
     final SpeechTimeline bare = SpeechTimeline(
       visemes: visemes,
       duration: duration,
+      energy: <double>[
+        for (final SpeechFrameFeatures f in frames)
+          reference > 0 ? (f.rms / reference).clamp(0.0, 1.0) : 0.0,
+      ],
+      energyFrame: SpeechAnalyzer.frameDuration,
     );
     final List<ProsodyMark> marks = <ProsodyMark>[
       ...pauses(visemes),

@@ -51,6 +51,7 @@ class FacePerformer {
   static const double _calmSettle = 0.55;
   static const double _excitedSettle = 0.28;
   static const double _speechSettle = 0.06;
+  static const double _shapeSettle = 0.12;
   static const double _mixSettle = 0.15;
   static const double _overlaySettle = 0.09;
   static const double _rollSettle = 0.25;
@@ -67,8 +68,8 @@ class FacePerformer {
   static const double _blinkGap = 1.2;
   static const double _blinkMaxInterval = 5.2;
   static const double _autoBlinkHold = 0.4;
-  static const double _tail = 0.9;
-  static const double _questionHold = 0.8;
+  static const double _tail = 1.0;
+  static const double _questionHold = 0.9;
   static const double _preClose = 0.1;
 
   // — emotion —
@@ -103,6 +104,7 @@ class FacePerformer {
   final _Spring _lift = _Spring();
   final _Spring _breathDecay = _Spring();
   double _breath = 0;
+  double _loudness = 0;
   double _prerollStart = -100;
   double _prerollLead = 0.2;
   bool _prerolled = false;
@@ -178,15 +180,26 @@ class FacePerformer {
           );
         }
       }
-      // a held vowel keeps a little life (about 4 Hz, +/- 7 %); an excited
-      // mood speaks with a bigger jaw, a sombre one with less stretch
-      final double energy = _lerp(0.95, 1.2, (_arousal + 1) / 2);
+      // the jaw follows the voice's loudness (smoothed ~100 ms), so a long
+      // vowel keeps moving; an excited mood speaks with a bigger jaw, a
+      // sombre one with less stretch; a vowel too short to round fully
+      // rounds half way
+      final double? loud = tl.energyAt(pos + _speechLead);
+      if (loud != null) {
+        _loudness += (loud - _loudness) * (1 - math.exp(-h / 0.1));
+      }
+      final double life = loud == null
+          ? 1 + 0.07 * math.sin(2 * math.pi * 4.3 * _s(pos))
+          : 0.55 + 0.55 * _loudness.clamp(0.0, 1.0);
+      final double excitement = _lerp(0.95, 1.2, (_arousal + 1) / 2);
+      final VisemeSpan? span = tl.spanAt(pos);
+      final bool brief =
+          span != null &&
+          span.end - span.start < const Duration(milliseconds: 100);
       speech = speech.copyWith(
-        jaw:
-            speech.jaw *
-            energy *
-            (1 + 0.07 * math.sin(2 * math.pi * 4.3 * _s(pos))),
+        jaw: speech.jaw * excitement * life,
         stretch: _valence < -0.3 ? speech.stretch * 0.5 : speech.stretch,
+        pucker: brief ? speech.pucker * 0.5 : speech.pucker,
       );
     }
 
@@ -201,7 +214,11 @@ class FacePerformer {
       final double gain = _lerp(0.7, 1.3, (_arousal + 1) / 2);
       double peak = 0;
       for (final ProsodyMark m in _peaks) {
-        peak = math.max(peak, m.strength * _peakEnvelope(posS - _s(m.at)));
+        // a weak peak still reads: half the beat, plus its strength
+        peak = math.max(
+          peak,
+          (0.5 + 0.5 * m.strength) * _peakEnvelope(posS - _s(m.at)),
+        );
       }
       for (final ProsodyMark m in _nods) {
         final double tau = posS - _s(m.at);
@@ -213,16 +230,18 @@ class FacePerformer {
       // a sombre mood lifts only the inner brows (an outer lift reads as
       // surprise and contradicts the sadness)
       final bool sombre = _valence < -0.3;
-      innerTarget += (sombre ? 0.4 : 0.3) * gain * peak;
+      innerTarget += (sombre ? 0.35 : 0.3) * gain * peak;
       outerTarget += (sombre ? 0 : 0.45) * gain * peak;
       final bool asking =
           tl.isQuestion &&
           (_speaking || (_completed && _clock - _endClock < _questionHold));
       if (asking) {
-        // the tilt holds into the listening pause after the question
+        // the tilt starts on the last words, holds 0.5 s into the listening
+        // pause, then eases back over 0.4 s
+        final double since = _clock - _endClock;
         final double q = _speaking
-            ? _smoothstep((posS - (_s(tl.duration) - 0.4)) / 0.3)
-            : 1;
+            ? _smoothstep((posS - (_s(tl.duration) - 0.7)) / 0.5)
+            : 1 - _smoothstep((since - 0.5) / 0.4);
         rollTarget = 0.9 * q;
         liftTarget = 0.12 * q;
         innerTarget += 0.3 * q;
@@ -257,8 +276,9 @@ class FacePerformer {
         _emotion[i].step(_emotionTarget[i], wEmotion, sub);
       }
       _jaw.step(speech.jaw, wSpeech, sub);
-      _pucker.step(speech.pucker, wSpeech, sub);
-      _stretch.step(speech.stretch, wSpeech, sub);
+      // lip shape changes take ~3 frames: width never jumps in one frame
+      _pucker.step(speech.pucker, _omega(_shapeSettle), sub);
+      _stretch.step(speech.stretch, _omega(_shapeSettle), sub);
       _press.step(speech.press, wSpeech, sub);
       _tuck.step(speech.lipTuck, wSpeech, sub);
       _tongue.step(speech.tongueUp, wSpeech, sub);
@@ -462,8 +482,8 @@ class FacePerformer {
 
     final double lead = _s(tl.leadingSilence);
     if (_prerolled) {
-      // drawn during the pre-roll: held over the leading silence
-      phase(-_prerollLead, math.max(lead, 0.1), 1.0);
+      // drawn during the pre-roll: the exhale starts with the voice
+      b = 1 - _smoothstep(posS / 0.45);
     } else {
       phase(0, math.max(lead, 0.15), lead < 0.12 ? 0.5 : 1.0);
     }
@@ -574,7 +594,7 @@ class FacePerformer {
   /// anticipation lift, the beat at the mark, a 12 % overshoot back up.
   static double _nodCurve(double tau, double strength) {
     // 3-5 degrees of pitch: a nod that reads at phone size
-    final double a = 0.2 + 0.15 * strength;
+    final double a = 0.25 + 0.2 * strength;
     return -a *
         (_gauss(tau, 0, 0.07) -
             0.18 * _gauss(tau, -0.13, 0.05) -

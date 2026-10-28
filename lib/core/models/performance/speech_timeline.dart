@@ -41,9 +41,32 @@ sealed class SpeechTimeline with _$SpeechTimeline {
     @Default(Duration.zero) Duration duration,
     @Default(Duration.zero) Duration leadingSilence,
     @Default(false) bool isQuestion,
+
+    /// Loudness per [energyFrame] (0-1, relative to the sentence's loud
+    /// frames): the jaw follows it inside long vowels. Empty when unknown.
+    @Default(<double>[]) List<double> energy,
+    @Default(Duration(milliseconds: 25)) Duration energyFrame,
   }) = _SpeechTimeline;
 
   const SpeechTimeline._();
+
+  /// Loudness at [t], linearly interpolated between frame centres; null
+  /// when the timeline has no envelope.
+  double? energyAt(Duration t) {
+    if (energy.isEmpty || energyFrame <= Duration.zero) {
+      return null;
+    }
+    final double x = t.inMicroseconds / energyFrame.inMicroseconds - 0.5;
+    if (x <= 0) {
+      return energy.first;
+    }
+    final int i = x.floor();
+    if (i >= energy.length - 1) {
+      return energy.last;
+    }
+    final double f = x - i;
+    return energy[i] + (energy[i + 1] - energy[i]) * f;
+  }
 
   /// The span covering [t] (start inclusive, end exclusive, so a boundary
   /// returns the later span), or null outside every span.
@@ -130,6 +153,10 @@ sealed class SpeechTimeline with _$SpeechTimeline {
       duration: frame * n,
       leadingSilence: first.viseme == Viseme.sil ? first.end : Duration.zero,
       isQuestion: isQuestion,
+      energy: <double>[
+        for (final int a in amplitudes) (a / 30).clamp(0.0, 1.0),
+      ],
+      energyFrame: frame,
     );
   }
 
