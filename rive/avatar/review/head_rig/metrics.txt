@@ -2,18 +2,18 @@ Avatar head yaw / pitch rig (rive/tools/head_turn.py, called by gen_avatar.py)
 rive: rive 1.8.0
 
 == Rest pose unchanged (yaw = pitch = 0, rive --compare against the pre-rig captures)
-rest  advance 1: 0.04% of pixels differ (356 of 800000)
-happy {'mood': 'happy'} advance 40: 0.04% of pixels differ (332 of 800000)
-thinking {'mood': 'thinking'} advance 40: 0.05% of pixels differ (371 of 800000)
-mouth3 {'mouth': '3'} advance 12: 0.04% of pixels differ (354 of 800000)
-nod {'gestureId': 'nod', 'gesture': '1'} advance 30: 0.05% of pixels differ (413 of 800000)
+rest  advance 1: 0.09% of pixels differ (723 of 800000)
+happy {'mood': 'happy'} advance 40: 0.09% of pixels differ (698 of 800000)
+thinking {'mood': 'thinking'} advance 40: 0.09% of pixels differ (736 of 800000)
+mouth3 {'mouth': '3'} advance 12: 0.09% of pixels differ (720 of 800000)
+nod {'gestureId': 'nod', 'gesture': '1'} advance 30: 0.10% of pixels differ (780 of 800000)
 
 == Deterministic: the same turned pose rendered twice (the rig is bind-only, no state)
 pose 0: 0.00% of pixels differ (0 of 800000)
 pose 1: 0.00% of pixels differ (0 of 800000)
 
 == Size
-assets/rive/avatar.riv: 512754 B (budget 614400 B = 600 KB)
+assets/rive/avatar.riv: 514428 B (budget 614400 B = 600 KB)
 
 == Art-bible lint (livingRoom), avatar.rml
 597 hits (baseline 597)

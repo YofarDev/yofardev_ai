@@ -111,13 +111,43 @@ def identity() -> None:
     out.save(OUT / "identity.png", optimize=True)
 
 
-# a performed turn on the real avatar: the yaw / pitch channels of rig_dsl.perform_turn, one CLI
-# run per frame (the rig is history-free; the state machine advances with the frame, so idle
-# blinks and the nod fired at frame 0 play while the head turns)
+# a performed turn on the real avatar: rig_dsl.perform_turn's yaw / pitch plus its follow-through
+# (hairLag -> hairLagYaw, gaze -> eyeLeadYaw), one CLI run per frame (the rig is history-free;
+# the state machine advances with the frame, so idle blinks and the nod fired at frame 0 play)
 # the big turn starts at 2.75 s so the avatar's own idle blink (frames 168-181) lands in it
 TURN_TARGETS = [(0.0, 0.0), (0.5, 0.8), (2.75, -0.75), (4.0, 0.0)]
 TURN_SECONDS = 5.0
 STEP = 2  # every 2nd 60 fps frame -> a 30 fps GIF
+
+
+LOWER_FACE = (290, 420, 510, 574)  # mouth, chin and jaw (artboard px)
+MOUTH_STATES: list[tuple[str, dict[str, str]]] = [
+    *[(f"mouth {m}", {"mouth": str(m)}) for m in range(5)],
+    *[(mood, {"mood": mood}) for mood in ("happy", "sad", "angry", "surprised", "thinking", "embarrassed")]]
+
+
+def mouth_matrix() -> None:
+    """Every mouth (0-4 and each mood mouth) at yaw {-1, 0, 1} x pitch {-1, -0.5, 0, 1}."""
+    poses = [(y, p) for y in (-1.0, 0.0, 1.0) for p in (-1.0, -0.5, 0.0, 1.0)]
+    jobs = [(f"{tag} y{y:+.0f} p{p:+.1f}", {**data, "yaw": f"{y:g}", "pitch": f"{p:g}"}, 40)
+            for tag, data in MOUTH_STATES for y, p in poses]
+    sheet(render_cells(jobs, LOWER_FACE, (150, 105), "mouth"), len(poses), "mouth_matrix.png")
+
+
+def glasses() -> None:
+    """Both glasses sets across the turn: lenses, glints and the near temple, eye band zoom."""
+    jobs = [(f"{g} yaw {y:+.1f}", {"glasses": g, "yaw": f"{y:g}"}, 1)
+            for g in ("glasses", "sunglasses") for y in (-1.0, -0.5, 0.0, 0.5, 1.0)]
+    sheet(render_cells(jobs, (210, 300, 590, 480), (380, 180), "glasses"), 5, "glasses.png")
+
+
+def lag() -> None:
+    """Follow-through channels at yaw 0.5: hairLagYaw / hairLagPitch +-0.5, eyeLeadYaw +-0.6."""
+    jobs = [("yaw 0.5", {"yaw": "0.5"}, 1)]
+    jobs += [(f"{k} {v:+g}", {"yaw": "0.5", k: f"{v:g}"}, 1)
+             for k, vals in (("hairLagYaw", (-0.5, 0.5)), ("hairLagPitch", (-0.5, 0.5)), ("eyeLeadYaw", (-0.6, 0.6)))
+             for v in vals]
+    sheet(render_cells(jobs, HEAD_BOX, (240, 288), "lag"), 7, "lag.png")
 
 
 def turn() -> list[Path]:
@@ -125,7 +155,9 @@ def turn() -> list[Path]:
     frames = list(range(0, len(ch["yaw"]), STEP))
 
     def one(f: int) -> Path:
-        data = {"yaw": f"{ch['yaw'][f]:.4f}", "pitch": f"{ch['pitch'][f]:.4f}", "gestureId": "nod", "gesture": "1"}
+        data = {"yaw": f"{ch['yaw'][f]:.4f}", "pitch": f"{ch['pitch'][f]:.4f}", "gestureId": "nod", "gesture": "1",
+                "hairLagYaw": f"{max(-1.0, min(1.0, ch['hairLag'][f])):.4f}",
+                "eyeLeadYaw": f"{max(-1.0, min(1.0, ch['gaze'][f])):.4f}"}
         return cli(TMP / "turn" / f"f{f:03}.png", data, f + 1)
     with ThreadPoolExecutor(WORKERS) as ex:
         paths = list(ex.map(one, frames))
@@ -133,7 +165,7 @@ def turn() -> list[Path]:
     strip = Image.new("RGB", (220 * 8, 264))
     for k in range(8):
         strip.paste(small[k * len(small) // 8], (k * 220, 0))
-    palette = strip.quantize(colors=56, method=Image.Quantize.MEDIANCUT)
+    palette = strip.quantize(colors=48, method=Image.Quantize.MEDIANCUT)
     pal = [f.quantize(palette=palette, dither=Image.Dither.NONE) for f in small]
     pal[0].save(OUT / "turn.gif", save_all=True, append_images=pal[1:], duration=33, loop=0, optimize=True)
     picks = [round(i * (len(small) - 1) / 11) for i in range(12)]
@@ -174,10 +206,11 @@ def metrics() -> None:
 
 
 def main(argv: list[str]) -> None:
-    parts = set(argv) or {"grid", "moods", "corners", "zoom", "identity", "turn", "metrics"}
+    order = ("grid", "moods", "corners", "zoom", "glasses", "mouth_matrix", "lag", "identity", "turn", "metrics")
+    parts = set(argv) or set(order)
     OUT.mkdir(parents=True, exist_ok=True)
     subprocess.run(["rive", str(PROJ), "--once"], cwd=PROJ, check=True, capture_output=True)
-    for name in ("grid", "moods", "corners", "zoom", "identity", "turn", "metrics"):
+    for name in order:
         if name in parts:
             globals()[name]()
     for f in sorted(OUT.iterdir()):
