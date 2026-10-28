@@ -1979,11 +1979,12 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
           "BrowL": EYE_L["brow"].el, "BrowR": EYE_R["brow"].el, "NoseTurn": nose_g.el, "Mouth": mouth.el, "Mole": mole,
           "Blush": blush.el, "CheekBloomL": skin_details[0], "CheekBloomR": skin_details[1],
           "ChinLight": skin_details[2], "EarL": ears[0], "EarR": ears[1], "EarInL": ears[2], "EarInR": ears[3],
-          "glassesGroups": [GLASSES["glasses"], GLASSES["sunglasses"]], "HairCap": named_el(hair_front.el, "HairCap"),
+          "glassesByName": GLASSES, "GlassesSolo": glasses_solo.el, "HairFollow": hair_follow,
+          "LookL": EYE_L["look"].el, "LookR": EYE_R["look"].el, "HairCap": named_el(hair_front.el, "HairCap"),
           "SideLockL": named_el(hair_front.el, "SideLockL"), "SideLockR": named_el(hair_front.el, "SideLockR"),
           "HairBackShape": named_el(hair_back.el, "HairBackShape"), "Cowlick": named_el(tufts.el, "Cowlick"),
           "Cowlick2": named_el(tufts.el, "Cowlick2"), "HatSolo": hat_solo.el,
-          **{f"Lock{i}Material": named_el(hair_front.el, f"Lock{i}Material") for i in range(len(LOCKS))}})
+          **{f"Lock{i}Material": named_el(hair_front.el, f"Lock{i}Material") for i in range(len(LOCKS))}}, anims)
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

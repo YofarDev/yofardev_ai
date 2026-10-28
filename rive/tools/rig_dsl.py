@@ -181,9 +181,14 @@ class Formulas:
                 out += [self.op("*"), *self.factor(f)]
         return out
 
-    def angle(self, k: float, lo: float = -1.0, hi: float = 1.0) -> list[El]:
-        """k * min(hi, max(lo, input))."""
-        return [self.val(k), self.op("*"), *self.fn("min", [self.val(hi)], self.fn("max", [self.val(lo)], self.inp()))]
+    def angle(self, k: float, lo: float = -1.0, hi: float = 1.0,
+              extra: tuple[tuple[str, float], ...] = ()) -> list[El]:
+        """k * min(hi, max(lo, input + sum(c * [prop])))  (extra: other view-model numbers added to
+        the input, e.g. a hair lag riding on top of the head yaw)."""
+        arg: list[El] = self.inp()
+        for prop, c in extra:
+            arg += [self.op("+"), self.val(c), self.op("*"), self.bound(prop)]
+        return [self.val(k), self.op("*"), *self.fn("min", [self.val(hi)], self.fn("max", [self.val(lo)], arg))]
 
 
 def poly_key(p: Poly) -> tuple[object, ...]:
@@ -200,6 +205,12 @@ class Axis:
     k: float  # radians per unit of input
     lo: float = -1.0
     hi: float = 1.0
+    extra: tuple[tuple[str, float], ...] = ()  # other numbers added to the input (prop, coefficient)
+    name: str = ""  # converter key; defaults to prop (needed when two axes share a prop)
+
+    @property
+    def key(self) -> str:
+        return self.name or self.prop
 
 
 @dataclass
@@ -239,15 +250,16 @@ class Rig:
         self.f = Formulas(self.d, self.vm_path)
 
     def angle(self, axis: Axis) -> El:
-        if axis.prop not in self._angles:
-            conv = self.d("DataConverterFormula", *self.f.angle(axis.k, axis.lo, axis.hi), name=axis.prop + "Angle")
-            self._angles[axis.prop] = conv
+        if axis.key not in self._angles:
+            conv = self.d("DataConverterFormula", *self.f.angle(axis.k, axis.lo, axis.hi, axis.extra),
+                          name=axis.key + "Angle")
+            self._angles[axis.key] = conv
             self.converters.append(conv)
-        return self._angles[axis.prop]
+        return self._angles[axis.key]
 
     def chain(self, axis: Axis, p: Poly) -> El:
         """Shared angle -> this poly (identical polys share one group)."""
-        key = (axis.prop, poly_key(p))
+        key = (axis.key, poly_key(p))
         if key not in self._polys:
             conv = self.d("DataConverterFormula", *self.f.poly(p))
             group = self.d("DataConverterGroup", self.d("DataConverterGroupItem", converterId=self.angle(axis).ref()),

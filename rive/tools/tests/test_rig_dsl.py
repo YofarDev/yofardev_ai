@@ -82,6 +82,16 @@ def test_formula_tokens_balance_parentheses() -> None:
     assert len(bound) == 1 and bound[0].children[0].attrs["propertyKey"] == 777
 
 
+def test_angle_can_add_other_numbers_to_its_input() -> None:
+    d = Doc()
+    rig = r.Rig(d, lambda p: f"0:1-{p}", origin=(0.0, 0.0), x_axis=r.Axis("yaw", K), y_axis=r.Axis("pitch", 0.26))
+    lag = r.Axis("yaw", K, -1.5, 1.5, (("hairLagYaw", 1.3),), name="yawBack")
+    a, b = rig.angle(rig.x_axis), rig.angle(lag)
+    assert a is not b and b.attrs["name"] == "yawBackAngle"
+    bound = [t for t in b.children if t.tag == "FormulaTokenValue" and t.children]
+    assert len(bound) == 1 and bound[0].children[0].attrs["sourcePathIds"] == "0:1-hairLagYaw"
+
+
 def test_angle_formula_clamps() -> None:
     d = Doc()
     tags = _tokens(r.Formulas(d, str).angle(0.5))

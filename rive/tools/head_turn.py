@@ -37,7 +37,9 @@ ZP = -20.0  # pitch axis depth
 K_YAW = round(math.radians(30), 4)
 K_PITCH = round(math.radians(15), 4)
 HEAD_FRAME = (400.0, 560.0)  # the Head rig's art-space origin (children are authored against it)
-KEYS = {"x": 13, "y": 14, "rotation": 15, "scaleX": 16, "scaleY": 17}
+KEYS = {"x": 13, "y": 14, "rotation": 15, "scaleX": 16, "scaleY": 17, "opacity": 18}
+PROPS = ("yaw", "pitch", "hairLagYaw", "hairLagPitch", "eyeLeadYaw")
+EYE_LEAD_PX = 8.0  # iris shift at eyeLeadYaw = 1 (the pointer follow adds up to 7)
 
 
 # ------------------------------------------------------------------ the surface model (head v2)
@@ -118,7 +120,7 @@ class HeadTurn:
     def __init__(self, vm: El, inst: El, head: El, root: El) -> None:
         self.d = Doc(client=0, start=ID_START)
         d = self.d
-        self.props = {pn: d("ViewModelPropertyNumber", name=pn) for pn in ("yaw", "pitch")}
+        self.props = {pn: d("ViewModelPropertyNumber", name=pn) for pn in PROPS}
         inst_vals = [d("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=p.ref())
                      for p in self.props.values()]
         at = vm.children.index(next(c for c in vm.children if c.tag == "ViewModelInstance"))
@@ -126,6 +128,15 @@ class HeadTurn:
         inst.children.extend(inst_vals)
         self.vm = vm
         self.rig = r.Rig(d, self.path, origin=(0.0, 0.0), x_axis=Axis("yaw", K_YAW), y_axis=Axis("pitch", K_PITCH))
+        # follow-through: hair at (yaw + hairLagYaw), the back hair at (yaw + 1.3 hairLagYaw); same for pitch
+        self.axes = {
+            "yaw": self.rig.x_axis, "pitch": self.rig.y_axis,
+            "yawHair": Axis("yaw", K_YAW, -1.6, 1.6, (("hairLagYaw", 1.0),), name="yawHair"),
+            "pitchHair": Axis("pitch", K_PITCH, -1.6, 1.6, (("hairLagPitch", 1.0),), name="pitchHair"),
+            "yawBack": Axis("yaw", K_YAW, -1.8, 1.8, (("hairLagYaw", 1.3),), name="yawBack"),
+            "pitchBack": Axis("pitch", K_PITCH, -1.8, 1.8, (("hairLagPitch", 1.3),), name="pitchBack"),
+            "eyeLead": Axis("eyeLeadYaw", 1.0),
+        }
         self.head, self.root = head, root
         self.frames: dict[int, tuple[float, float]] = {}
         self._index(head, HEAD_FRAME)
@@ -156,27 +167,31 @@ class HeadTurn:
         raise KeyError(target.attrs.get("name"))
 
     def bind(self, axis: str, key: str, poly: Poly) -> El:
-        ax = self.rig.x_axis if axis == "yaw" else self.rig.y_axis
-        return self.d("DataBindContext", sourcePathIds=self.path(axis), propertyKey=KEYS[key],
+        ax = self.axes[axis]
+        return self.d("DataBindContext", sourcePathIds=self.path(ax.prop), propertyKey=KEYS[key],
                       converterId=self.rig.chain(ax, poly).ref())
 
     def wrap(self, target: El, pivot: tuple[float, float], dx: Poly | None = None, dy: Poly | None = None,
-             sx: Poly | None = None, rot: Poly | None = None, sy: Poly | None = None, name: str = "") -> El:
-        """W1(at pivot, bound) -> W2(at -pivot) -> target. Identity at rest."""
+             sx: Poly | None = None, rot: Poly | None = None, sy: Poly | None = None, name: str = "",
+             xa: str = "yaw", ya: str = "pitch", opacity: Poly | None = None) -> El:
+        """W1(at pivot, bound) -> W2(at -pivot) -> target. Identity at rest. `xa` / `ya` pick the
+        yaw / pitch axes (e.g. the hair axes that add the follow-through lag)."""
         parent = self.parent_of(target)
         frame = self.frames[id(parent)]
         lx, ly = pivot[0] - frame[0], pivot[1] - frame[1]
         binds = []
         if dx is not None:
-            binds.append(self.bind("yaw", "x", r.poly_shift(dx, lx)))
+            binds.append(self.bind(xa, "x", r.poly_shift(dx, lx)))
         if dy is not None:
-            binds.append(self.bind("pitch", "y", r.poly_shift(dy, ly)))
+            binds.append(self.bind(ya, "y", r.poly_shift(dy, ly)))
         if sx is not None:
-            binds.append(self.bind("yaw", "scaleX", sx))
+            binds.append(self.bind(xa, "scaleX", sx))
         if rot is not None:
-            binds.append(self.bind("yaw", "rotation", rot))
+            binds.append(self.bind(xa, "rotation", rot))
         if sy is not None:
-            binds.append(self.bind("pitch", "scaleY", sy))
+            binds.append(self.bind(ya, "scaleY", sy))
+        if opacity is not None:
+            binds.append(self.bind(xa, "opacity", opacity))
         nm = name or str(target.attrs.get("name", "Part"))
         inner = self.d("Node", target, x=-lx, y=-ly, name=nm + "Pivot")
         outer = self.d("Node", *binds, inner, x=lx, y=ly, name=nm + "Turn")
@@ -253,7 +268,7 @@ def _face_ang(x: float, y: float) -> float:
 
 
 def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock_specs: list,
-             parts: dict[str, El | list[El]]) -> None:
+             parts: dict[str, object], anims: list[El]) -> None:
     # ---- bones: contour (section silhouettes), chin, forehead / crown, face interior grid
     for n, (x, y, zp) in CONTOUR.items():
         for s, sgn in (("R", 1.0), ("L", -1.0)):
@@ -301,7 +316,12 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         ht.wrap(parts["Eye" + t], (cx, 388.0), mat(cx, 84), pit(388, 104), sx=sx)  # type: ignore[arg-type]
         ht.wrap(parts["Brow" + t], (cx, 346.0), mat(cx, 80), pit(346, 66), sx=factor(*side((1.0, 1, 0.6), cx)[::2]))  # type: ignore[arg-type]
     ht.wrap(parts["NoseTurn"], (400.0, 440.0), mat(400, 122), pit(440, 118))  # type: ignore[arg-type]
-    ht.wrap(parts["Mouth"], (400.0, 478.0), mat(400, 98), pit(478, 100), sx=factor(0.88, 0.88))  # type: ignore[arg-type]
+    # mouth (every mood and open shape lives in this node): it slides with the lower face but
+    # less than the nose (z 70, so it never outruns the chin), its pitch travel is 60 % of the
+    # chin's, and every mouth shape is clipped by the face, so it can never hang below the jaw
+    ht.wrap(parts["Mouth"], (400.0, 478.0), mat(400, 70), pit(478, 28), sx=factor(0.88, 0.88))  # type: ignore[arg-type]
+    for el in _shapes(parts["Mouth"]):  # type: ignore[arg-type]
+        el.children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
     ht.wrap(parts["Mole"], (456.0, 432.0), mat(456, 80), pit(432, 80))  # type: ignore[arg-type]
     ht.wrap(parts["Blush"], (400.0, 440.0), mat(400, 90), pit(440, 90), sx=factor(0.82, 0.82))  # type: ignore[arg-type]
     for nm, x, y, z in (("CheekBloomL", 335.0, 437.0, 72.0), ("CheekBloomR", 465.0, 437.0, 72.0),
@@ -325,20 +345,24 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         wid = {a: abs(e[1] - e[0]) / 86 for a, e in ends.items()}
         return poses(cen[-K_YAW], cx, cen[K_YAW]), factor(wid[-K_YAW], wid[K_YAW])
 
-    for grp in parts["glassesGroups"]:  # type: ignore[union-attr]
+    # glare: the same slim glint on both lenses once turned (half width, 70 % of its 25 % alpha
+    # at |yaw| = 1), so neither lens turns into a grey sheet when it foreshortens
+    glare_op = factor(0.7, 0.7)
+    groups: dict[str, El] = parts["glassesByName"]  # type: ignore[assignment]
+    for grp in (groups["glasses"], groups["sunglasses"]):
         for t, cx, glare in (("L", 355.0, "Glare"), ("R", 445.0, "Glare2")):
             dx, sx = lens_poses(cx)
-            for nm in ("Lens" + t, glare):
-                for el in named(grp, nm):
-                    ht.wrap(el, (cx, 387.0), dx, pit(387, 104), sx=sx)
+            for el in named(grp, "Lens" + t):
+                ht.wrap(el, (cx, 387.0), dx, pit(387, 104), sx=sx)
+            m, p = r.eval_poly(sx, -K_YAW), r.eval_poly(sx, K_YAW)
+            for el in named(grp, glare):
+                ht.wrap(el, (cx, 387.0), dx, pit(387, 104), sx=factor(m * 0.5, p * 0.5), opacity=glare_op)
         for el in named(grp, "Bridge"):
             ht.wrap(el, (400.0, 376.0), mat(400, 110), pit(376, 110))
         for t, hx in (("L", 311.0), ("R", 489.0)):
-            fold = side((4.4, 1, 0.0), hx)  # near: the arm runs back to the ear; far: folded
-            for el in named(grp, "Temple" + t):
-                ht.wrap(el, (hx, 370.0), mat(hx, 86), pit(370, 86), sx=factor(fold[0], fold[2]))
             for el in named(grp, "Hinge" + t):
                 ht.wrap(el, (hx + (3 if t == "L" else -3), 372.0), mat(hx, 86), pit(372, 86))
+    temples(ht, groups, parts["GlassesSolo"], parts["HairFollow"], anims)  # type: ignore[arg-type]
 
     # ---- hair: locks turn about their roots (tips sit further forward than roots), the cap and
     # hat ride the crown, side locks slide over the near cheek and beside the far one, the back
@@ -351,18 +375,77 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         d_root, d_tip = mat(rx, zr), mat(tx, zt)
         rot = poly_scale(poly_add(d_tip, poly_scale(d_root, -1.0)), -1.0 / (ty - ry))
         sy = poly_add([(1.0, ())], poly_scale(poly_add(pit(ty, zt), poly_scale(pit(ry, zr), -1.0)), 1.0 / (ty - ry)))
-        ht.wrap(parts[name], (rx, ry), d_root, pit(ry, zr), rot=rot, sy=sy)  # type: ignore[arg-type]
+        ht.wrap(parts[name], (rx, ry), d_root, pit(ry, zr), rot=rot, sy=sy, xa="yawHair",  # type: ignore[arg-type]
+                ya="pitchHair")
     crown_dx, crown_sx = mat(400, 30), factor(0.94, 0.94)
     ht.wrap(parts["HairCap"], (400.0, 277.0), crown_dx, pit(277, 40), sx=crown_sx)  # type: ignore[arg-type]
     ht.wrap(parts["HatSolo"], (400.0, 250.0), crown_dx, pit(250, 30), sx=crown_sx)  # type: ignore[arg-type]
     for t, x in (("L", 288.0), ("R", 512.0)):
         ox = side((500.0, 512.0, 522.0), x) if x > CX else (2 * CX - 522.0, 288.0, 2 * CX - 500.0)
         sc = side((1.0, 1.0, 0.38), x)
-        ht.wrap(parts["SideLock" + t], (x, 398.0), poses(*ox), pit(398, 10), sx=factor(sc[0], sc[2]))  # type: ignore[arg-type]
+        ht.wrap(parts["SideLock" + t], (x, 398.0), poses(*ox), pit(398, 10), sx=factor(sc[0], sc[2]),  # type: ignore[arg-type]
+                xa="yawHair", ya="pitchHair")
     widen = math.sqrt(math.cos(K_YAW) ** 2 + (1.16 * math.sin(K_YAW)) ** 2)
-    ht.wrap(parts["HairBackShape"], (400.0, 337.0), mat(400, HAIR_C[1]), pit(337, HAIR_C[1]),  # type: ignore[arg-type]
-            sx=factor(widen, widen))
+    # the back hair moves with the crown for pitch (as the cap does), so looking down never lifts
+    # it above the crown outline
+    ht.wrap(parts["HairBackShape"], (400.0, 337.0), mat(400, HAIR_C[1]), pit(337, 40),  # type: ignore[arg-type]
+            sx=factor(widen, widen), xa="yawBack", ya="pitchBack")
     for nm, x, y in (("Cowlick", 392.0, 230.0), ("Cowlick2", 418.0, 230.0)):
         z = shell_z(x - CX, y)
-        ht.wrap(parts[nm], (x, y), mat(x, z), pit(y, z))  # type: ignore[arg-type]
+        ht.wrap(parts[nm], (x, y), mat(x, z), pit(y, z), xa="yawHair", ya="pitchHair")  # type: ignore[arg-type]
+    # eye lead: extra iris / pupil shift on top of the pointer follow (the Look node keeps its keys);
+    # the irises stay clipped by the eye whites
+    lead = [(0.0, ()), (EYE_LEAD_PX / math.sin(1.0), (r.SIN,))]
+    for t in ("L", "R"):
+        look: El = parts["Look" + t]  # type: ignore[assignment]
+        frame = ht.frames[id(ht.parent_of(look))]
+        ht.wrap(look, (frame[0] + float(look.attrs.get("x", 0.0)), frame[1] + float(look.attrs.get("y", 0.0))),
+                dx=lead, xa="eyeLead", name="EyeLead" + t)
     ht.finish()
+
+
+def _shapes(e: El) -> list[El]:
+    out = [e] if e.tag == "Shape" else []
+    for c in e.children:
+        out += _shapes(c)
+    return out
+
+
+def temples(ht: HeadTurn, groups: dict[str, El], glasses_solo: El, hair_follow: El, anims: list[El]) -> None:
+    """Temple arms in their own Solo, drawn under the front hair (over the face): skinned to a
+    hinge bone and an end bone, so the arm keeps its stroke width (blunt butt cap). Near side:
+    the end bone runs back to the ear root; far side: it folds onto the hinge. The Solo follows
+    every key of the glasses Solo (glasses, sunglasses, costumes hiding them)."""
+    d = ht.d
+    for t, hx, ex in (("L", 311.0, 296.0), ("R", 489.0, 504.0)):
+        sgn = 1.0 if t == "R" else -1.0
+        hinge = mat(hx, 86)
+        hinge_far = hx + r.eval_poly(hinge, sgn * K_YAW)
+        near_root = CX + sgn * 66.0  # the near ear's root (front edge of the widened ear)
+        m, p = (near_root, hinge_far) if sgn > 0 else (hinge_far, near_root)
+        ht.bone("GH" + t, hx, 370.0, hinge, pit(370, 86))
+        ht.bone("GE" + t, ex, 368.0, poses(m, ex, p), pit(368, -20))
+    tgroups: dict[str, El] = {}
+    for g, grp in groups.items():
+        tg = d("Node", x=0.0, y=0.0, name="Temples_" + g)
+        for t, pts in (("L", [(311, 370), (296, 368)]), ("R", [(489, 370), (504, 368)])):
+            for el in named(grp, "Temple" + t):
+                ht.parent_of(el).children.remove(el)
+                ht.skin(el, pts, Chain(sorted([(float(pts[0][0]), "GH" + t), (float(pts[1][0]), "GE" + t)]),
+                                       lambda x, y: x), closed=False)
+                for st in (c for c in el.children if c.tag == "Stroke"):
+                    st.attrs["cap"] = "butt"
+                tg.add(el)
+        tgroups[g] = tg
+    solo = d("Solo", *tgroups.values(), activeComponentId=tgroups["glasses"].ref(), x=0.0, y=0.0, name="TempleSolo")
+    ht.head.children.insert(ht.head.children.index(hair_follow) + 1, solo)
+    remap = {groups[g].ref(): tgroups[g].ref() for g in groups}
+    target = glasses_solo.ref()
+    for anim in anims:
+        for ko in [c for c in anim.children if c.tag == "KeyedObject" and c.attrs.get("objectId") == target]:
+            kps = []
+            for kp in ko.children:
+                kfs = [d(kf.tag, **{k: (remap.get(str(v), v) if k == "value" else v) for k, v in kf.attrs.items()})
+                       for kf in kp.children]
+                kps.append(d("KeyedProperty", *kfs, property=kp.attrs["property"]))
+            anim.add(d("KeyedObject", *kps, objectId=solo.ref()))
