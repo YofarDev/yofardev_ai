@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import math
+import random
 from typing import Callable, Iterable, Sequence, Union
 
 from rml import Doc, El
@@ -34,7 +35,7 @@ PI = math.pi
 
 # ------------------------------------------------------------------ polynomials in cos/sin
 
-Factor = tuple[object, ...]  # ("cos",) | ("sin",) | ("sil", w2, d2) | ("tok", prop)
+Factor = tuple[object, ...]  # ("cos",) | ("sin",) | ("sil", w2, d2) | ("tok", prop) | ("tokpos", prop)
 Term = tuple[float, tuple[Factor, ...]]
 Poly = list[Term]
 COS: Factor = ("cos",)
@@ -47,6 +48,11 @@ DIGITS: int = 3  # formula literal precision (sub-pixel; keeps the file small)
 def tok(prop: str) -> Factor:
     """A factor read from another view-model number (bound FormulaTokenValue)."""
     return ("tok", prop)
+
+
+def tokpos(prop: str) -> Factor:
+    """max(0, another view-model number): a term that only acts on one side (e.g. looking up)."""
+    return ("tokpos", prop)
 
 
 def const(c: float) -> Poly:
@@ -80,6 +86,8 @@ def eval_factor(f: Factor, a: float, env: dict[str, float] | None = None) -> flo
         return math.sin(a)
     if f[0] == "tok":
         return (env or {}).get(str(f[1]), 0.0)
+    if f[0] == "tokpos":
+        return max(0.0, (env or {}).get(str(f[1]), 0.0))
     return math.sqrt(float(f[1]) * math.cos(a) ** 2 + float(f[2]) * math.sin(a) ** 2)  # type: ignore[arg-type]
 
 
@@ -154,6 +162,8 @@ class Formulas:
             return self.fn(str(f[0]), self.inp())
         if f[0] == "tok":
             return [self.bound(str(f[1]))]
+        if f[0] == "tokpos":
+            return self.fn("max", [self.val(0)], [self.bound(str(f[1]))])
         w2, d2 = float(f[1]), float(f[2])  # type: ignore[arg-type]
         inner = [self.val(w2), self.op("*"), *self.fn("cos", self.inp()), self.op("*"), *self.fn("cos", self.inp()),
                  self.op("+"), self.val(d2), self.op("*"), *self.fn("sin", self.inp()), self.op("*"),
@@ -388,8 +398,12 @@ class Skinner:
     weighted: bool = True
     vertices: int = 0
 
-    def path(self, pts: Sequence[Pt], wf: WeightFn | Sequence[WeightFn], closed: bool = True,
+    def path(self, pts: Sequence[Pt], wf: WeightFn | Sequence[WeightFn] | None, closed: bool = True,
              tension: float = 1.0) -> El:
+        """`wf=None` writes an unskinned path (art that never moves costs no weights or tendons)."""
+        weighted = self.weighted and wf is not None
+        if wf is None:
+            wf = rigid("")
         d, ox, oy = self.rig.d, self.rig.offset[0], self.rig.offset[1]
         n = len(pts)
         xy = [(float(p[0]), float(p[1])) for p in pts]
@@ -423,18 +437,18 @@ class Skinner:
             self.vertices += 1
             if kind == "s":
                 kids = [d("Weight", values=pack(qss[0], index)[0], indices=pack(qss[0], index)[1])] \
-                    if self.weighted else []
+                    if weighted else []
                 verts.append(d("StraightVertex", *kids, x=g[0] - ox, y=g[1] - oy))
                 continue
             x, y, ang, in_d, out_d = g
             kids = []
-            if self.weighted:
+            if weighted:
                 (v, ix), (iv, iix), (ov, oix) = (pack(q, index) for q in qss)
                 kids = [d("CubicWeight", values=v, indices=ix, inValues=iv, inIndices=iix, outValues=ov,
                           outIndices=oix)]
             verts.append(d("CubicDetachedVertex", *kids, x=x - ox, y=y - oy, outRotation=ang, outDistance=out_d,
                            inRotation=ang + PI, inDistance=in_d))
-        skin = d("Skin", *[self.rig.tendon(b) for b in index], tx=0.0, ty=0.0) if self.weighted else None
+        skin = d("Skin", *[self.rig.tendon(b) for b in index], tx=0.0, ty=0.0) if weighted else None
         return d("PointsPath", *verts, skin, isClosed=closed, isClockwise=shoelace(xy) > 0)
 
 
@@ -544,23 +558,40 @@ def interp_keys(keys: Sequence[tuple[int, float]], frame: float) -> float:
 
 @dataclass
 class TurnParams:
-    """A performed head turn (the runtime driver ports the same maths to Dart)."""
+    """A performed head turn, built on the art bible's MotionRules (the runtime driver ports the
+    same maths to Dart). Times in seconds, angles in view-model units."""
 
-    settle_s: float = 0.30  # critically damped yaw spring, 95 % settled
-    gaze_lead_s: float = 0.08  # the head starts this much after the eyes (causal at runtime)
+    lead_s: float = 0.08  # the eyes move first; the head starts this much later
     eye_settle_s: float = 0.14  # eye (saccade-like) spring toward the target
-    gaze_max: float = 0.8  # eye-in-head rotation saturates softly (tanh) at this many yaw units
-    blink_jump: float = 0.5  # |delta yawTarget| that triggers a blink
-    blink_delay_s: float = 0.05  # the eyes visibly lead before the lids close
-    blink_close_s: float = 0.06
-    blink_hold_s: float = 0.04
-    blink_open_s: float = 0.10
-    roll_gain: float = 0.3  # roll = tanh(gain * yaw speed), then smoothed
-    dip_gain: float = 0.12  # pitch dip = dip_max * tanh(gain * |yaw speed|), then smoothed
+    gaze_max: float = 0.8  # eye-in-head rotation saturates softly (tanh)
+    antic: float = 0.2  # counter-yaw wind-up fed to the spring (output ~ MOTION.anticipation)
+    antic_s: float = 0.13
+    ramp_s: float = 0.58  # speed cap: the shaped target travels in ramp_s + ramp_per_unit * |delta|
+    ramp_per_unit: float = 0.1
+    over: float = 0.11  # overshoot share fed to the spring, settled over settle_s (MOTION.settle_ms)
+    settle_s: float = 0.22
+    spring_f: float = 2.6  # under-damped head spring (Hz) smoothing the shaped target
+    spring_zeta: float = 0.68
+    blink_jump: float = 0.5  # |delta yawTarget| that may trigger a blink
+    blink_gap_s: float = 2.6  # MOTION.blink_ms lower bound between blinks
+    blink_delay_s: float = 0.06  # the eyes visibly lead before the lids close
+    blink_kinds: tuple[str, ...] = ("full", "double", "half")
+    roll_gain: float = 0.3  # roll = tanh(gain * yaw speed), smoothed
+    dip_gain: float = 0.12  # pitch dip = dip_max * tanh(gain * |yaw speed|), smoothed
     dip_max: float = 0.45
     accent_f: float = 2.6  # follower that smooths roll and dip (Hz, critically damped)
-    hair_f: float = 2.1  # hair follower (Hz)
+    hair_f: float = 2.1  # fringe follower (Hz, zeta)
     hair_zeta: float = 0.5
+    side_delay_s: float = 0.04  # side locks and bob trail the fringe by MOTION.part_offset_ms
+    tuft_f: float = 1.4  # crown tuft: slower and looser (more trail, a second bounce)
+    tuft_zeta: float = 0.35
+    look_min: float = 0.15  # |delta| that counts as a "look" (brow raise, mouth shift)
+    breath_amp: float = 0.012  # idle: pitch breath, roll drift, micro-saccades
+    breath_cycles: int = 2
+    drift_amp: float = 0.06
+    saccade_amp: float = 0.07
+    saccade_every_s: tuple[float, float] = (0.6, 1.2)
+    seed: int = 7
 
 
 def _smoothstep(u: float) -> float:
@@ -568,76 +599,146 @@ def _smoothstep(u: float) -> float:
     return u * u * (3 - 2 * u)
 
 
+def _bump(t: float, attack: float, release: float) -> float:
+    """0 -> 1 over `attack` s, back to 0 over `release` s (smooth); 0 outside."""
+    if t <= 0 or t >= attack + release:
+        return 0.0
+    return _smoothstep(t / attack) if t < attack else 1 - _smoothstep((t - attack) / release)
+
+
+def shaped_target(targets: Sequence[tuple[float, float]], t: float, p: TurnParams) -> float:
+    """The head's target with anticipation, a speed cap and overshoot: each step winds up by
+    `antic` x delta the other way, travels past the new value by `over` x delta along a
+    smoothstep (ramp_s + ramp_per_unit x |delta|), then settles back over `settle_s`."""
+    cur = targets[0][1]
+    for t0, v in targets[1:]:
+        u = t - t0 - p.lead_s
+        if u < 0:
+            break
+        delta = v - cur
+        ramp = p.ramp_s + p.ramp_per_unit * abs(delta)
+        if u < p.antic_s:
+            return cur - p.antic * delta * _smoothstep(u / p.antic_s)
+        if u < p.antic_s + ramp:
+            return cur - p.antic * delta + (1 + p.antic + p.over) * delta * _smoothstep((u - p.antic_s) / ramp)
+        if u < p.antic_s + ramp + p.settle_s:
+            return v + p.over * delta * (1 - _smoothstep((u - p.antic_s - ramp) / p.settle_s))
+        cur = v
+    return cur
+
+
+CHANNELS: tuple[str, ...] = ("yaw", "pitch", "roll", "gaze", "blink", "hairLag", "sideLag", "tuftLag", "brow",
+                             "mouth")
+
+
 def perform_turn(targets: Sequence[tuple[float, float]], seconds: float, fps: int = 60,
                  p: TurnParams | None = None, pitch: float = 0.0) -> dict[str, list[float]]:
-    """Bake a performed turn: `targets` = [(time s, yawTarget)] steps. Returns per-frame channels
-    yaw, pitch, roll, gaze, blink, hairLag (each sampled at frames 0..seconds*fps).
+    """Bake a performed turn: `targets` = [(time s, yawTarget)] steps (the last one should
+    return to the first value for a loop). Returns per-frame CHANNELS (frames 0..seconds*fps).
 
-    - yaw: critically damped spring toward the target, started `gaze_lead_s` after the eyes;
-    - gaze: eye-in-head yaw (a faster eye spring minus the head), softly saturated;
-    - blink: a smooth close-hold-open when |delta target| > blink_jump;
-    - roll and pitch dip: smoothed functions of the head's angular speed (toward the turn, and
-      down mid-turn), so both return to rest when the head settles;
-    - hairLag: second-order follower on the head yaw, minus the head yaw (trail, overshoot).
+    - yaw: an under-damped spring (overshoot) on the shaped target (anticipation, speed cap),
+      started `lead_s` after the eyes;
+    - gaze: eye-in-head yaw (a fast eye spring minus the head) plus idle micro-saccades;
+    - blink: on big steps at least `blink_gap_s` apart, cycling full / double / half;
+    - roll and pitch dip: smoothed functions of the head's speed, plus idle breath and drift
+      whose cycles divide the loop (seamless);
+    - hairLag / sideLag / tuftLag: second-order followers on the head yaw minus the head yaw
+      (fringe; side locks 40 ms later; the crown tuft slower and looser);
+    - brow, mouth: a raise and a smile shift on every look, scaled by the step.
     """
     p = p or TurnParams()
     n = int(round(seconds * fps)) + 1
     dt = 1.0 / fps
-    omega = omega_for_settle(p.settle_s)
-    omega_eye = omega_for_settle(p.eye_settle_s)
+    times = [i * dt for i in range(n)]
 
-    def target_at(t: float) -> float:
+    def step_target(t: float) -> float:
         cur = targets[0][1]
         for t0, v in targets:
             if t >= t0 - 1e-9:
                 cur = v
         return cur
 
-    def spring_track(delay: float, w: float) -> list[float]:
-        x, v = target_at(0.0), 0.0
-        out: list[float] = []
-        for i in range(n):
-            out.append(x)
-            x, v = critically_damped(x, v, target_at(i * dt - delay), w, dt)
-        return out
-
     def follow(xs: list[float], f: float, zeta: float) -> list[float]:
         fo = SecondOrder(f, zeta)
         fo.reset(xs[0])
         return [fo.step(x, dt) if i else fo.y for i, x in enumerate(xs)]
 
-    yaw = spring_track(p.gaze_lead_s, omega)
-    eye = spring_track(0.0, omega_eye)
+    def spring(xs: list[float], settle: float) -> list[float]:
+        w = omega_for_settle(settle)
+        x, v = xs[0], 0.0
+        out: list[float] = []
+        for tgt in xs:
+            out.append(x)
+            x, v = critically_damped(x, v, tgt, w, dt)
+        return out
+
+    yaw = follow([shaped_target(targets, t, p) for t in times], p.spring_f, p.spring_zeta)
+    eye = spring([step_target(t) for t in times], p.eye_settle_s)
     speed = [0.0] + [(yaw[i] - yaw[i - 1]) / dt for i in range(1, n)]
+    # idle layer: whole cycles over the loop, so the seam stays clean
+    breath = [p.breath_amp * math.sin(2 * PI * p.breath_cycles * t / seconds) for t in times]
+    drift = [p.drift_amp * (math.sin(2 * PI * t / seconds + 0.6) - math.sin(0.6)) for t in times]
+    rng = random.Random(p.seed)
+    sacc_t = 0.0
+    sacc: list[tuple[float, float]] = []
+    while True:
+        sacc_t += rng.uniform(*p.saccade_every_s)
+        if sacc_t > seconds - 0.8:
+            break
+        sacc.append((sacc_t, rng.uniform(-1, 1) * p.saccade_amp))
+    sacc.append((seconds - 0.6, 0.0))
+    micro = spring([next((v for t0, v in reversed(sacc) if t >= t0), 0.0) for t in times], 0.05)
     roll = follow([math.tanh(p.roll_gain * s) for s in speed], p.accent_f, 1.0)
     dip = follow([p.dip_max * math.tanh(p.dip_gain * abs(s)) for s in speed], p.accent_f, 1.0)
     hair_yaw = follow(yaw, p.hair_f, p.hair_zeta)
+    delay = round(p.side_delay_s * fps)
+    side_yaw = follow([yaw[max(0, i - delay)] for i in range(n)], p.hair_f, p.hair_zeta)
+    tuft_yaw = follow(yaw, p.tuft_f, p.tuft_zeta)
+
     blink = [0.0] * n
-    prev = targets[0][1]
+    brow = [0.0] * n
+    mouth = [0.0] * n
+
+    def add_blink(start: float, amp: float, close: float = 0.06, hold: float = 0.04, open_: float = 0.1) -> None:
+        for i, t in enumerate(times):
+            u = t - start
+            if 0 <= u < close:
+                val = _smoothstep(u / close)
+            elif close <= u < close + hold:
+                val = 1.0
+            elif close + hold <= u < close + hold + open_:
+                val = 1 - _smoothstep((u - close - hold) / open_)
+            else:
+                continue
+            blink[i] = max(blink[i], amp * val)
+
+    prev, last_blink, kind = targets[0][1], -1e9, 0
     for t0, v in targets[1:]:
-        if abs(v - prev) > p.blink_jump:
-            a = t0 + p.blink_delay_s
-            b0, b1, b2 = a + p.blink_close_s, a + p.blink_close_s + p.blink_hold_s, \
-                a + p.blink_close_s + p.blink_hold_s + p.blink_open_s
-            for i in range(n):
-                t = i * dt
-                if a <= t < b0:
-                    val = _smoothstep((t - a) / p.blink_close_s)
-                elif b0 <= t < b1:
-                    val = 1.0
-                elif b1 <= t < b2:
-                    val = 1 - _smoothstep((t - b1) / p.blink_open_s)
-                else:
-                    continue
-                blink[i] = max(blink[i], val)
+        delta = abs(v - prev)
+        if delta > p.blink_jump and t0 - last_blink >= p.blink_gap_s:
+            k = p.blink_kinds[kind % len(p.blink_kinds)]
+            start = t0 + p.blink_delay_s
+            add_blink(start, 0.6 if k == "half" else 1.0)
+            if k == "double":
+                add_blink(start + 0.3, 0.75, 0.05, 0.02, 0.09)
+            last_blink, kind = t0, kind + 1
+        if delta > p.look_min:
+            amp = min(1.0, 0.35 + 0.45 * delta)
+            for i, t in enumerate(times):
+                brow[i] = max(brow[i], amp * _bump(t - t0 - 0.02, 0.2, 0.75))
+                mouth[i] = max(mouth[i], 0.8 * amp * _bump(t - t0 - 0.14, 0.25, 0.9))
         prev = v
     return {
         "yaw": yaw,
-        "pitch": [pitch - dd for dd in dip],
-        "roll": roll,
-        "gaze": [p.gaze_max * math.tanh((e - y) / p.gaze_max) for e, y in zip(eye, yaw)],
+        "pitch": [pitch - dd + b for dd, b in zip(dip, breath)],
+        "roll": [r_ + dr for r_, dr in zip(roll, drift)],
+        "gaze": [p.gaze_max * math.tanh((e - y) / p.gaze_max) + m for e, y, m in zip(eye, yaw, micro)],
         "blink": blink,
         "hairLag": [h - y for h, y in zip(hair_yaw, yaw)],
+        "sideLag": [h - y for h, y in zip(side_yaw, yaw)],
+        "tuftLag": [h - y for h, y in zip(tuft_yaw, yaw)],
+        "brow": brow,
+        "mouth": mouth,
     }
 
 

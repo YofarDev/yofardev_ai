@@ -53,6 +53,14 @@ def test_bound_tokens_add_linearly() -> None:
     assert r.eval_poly(p, 0.2, {"gaze": 0.5}) == pytest.approx(base + 7.0, abs=0.01)
 
 
+def test_tokpos_acts_on_one_side_only() -> None:
+    p = [(0.0, ()), (-6.0, (r.tokpos("pitch"),))]
+    assert r.eval_poly(p, 0.0, {"pitch": 1.0}) == pytest.approx(-6.0)
+    assert r.eval_poly(p, 0.0, {"pitch": -1.0}) == pytest.approx(0.0)
+    toks = r.Formulas(Doc(), str).poly(p)
+    assert [t.tag for t in toks].count("FormulaTokenFunction") == 1
+
+
 def test_poly_shift_merges_constants() -> None:
     p = r.poly_shift(r.material_dx(10.0, 0.0), 5.0)
     assert sum(1 for _, fs in p if not fs) == 1
@@ -183,27 +191,51 @@ def test_simplify_stays_within_tolerance() -> None:
     assert max(abs(r.interp_keys(keys, i) - v) for i, v in enumerate(vals)) <= 0.02 + 1e-9
 
 
-def test_perform_turn_has_lead_blink_roll_dip_and_lag() -> None:
-    ch = r.perform_turn([(0.0, 0.0), (0.5, 1.0), (1.6, 0.7)], 2.6)
+def _turn_shape(d: float) -> tuple[float, float, int]:
+    y = r.perform_turn([(0.0, 0.0), (0.5, d)], 3.0)["yaw"]
+    i10 = next(i for i, v in enumerate(y) if v > 0.1 * d)
+    i90 = next(i for i, v in enumerate(y) if v > 0.9 * d)
+    return -min(y) / d, max(y) / d - 1, i90 - i10
+
+
+def test_turn_follows_the_motion_rules() -> None:
+    """MOTION: ~18 % anticipation, ~12 % overshoot; big turns take 18-22 frames (speed cap)."""
+    for d in (1.25, 1.75):
+        antic, over, frames = _turn_shape(d)
+        assert 0.15 <= antic <= 0.19 and 0.09 <= over <= 0.13 and 18 <= frames <= 22, (d, antic, over, frames)
+
+
+def test_perform_turn_channels() -> None:
+    targets = [(0.0, 0.0), (0.6, 0.85), (2.0, 0.35), (3.4, -0.9), (4.7, -0.3), (5.6, 0.0)]
+    ch = r.perform_turn(targets, 7.2)
     n = len(ch["yaw"])
-    assert all(len(v) == n for v in ch.values())
-    # gaze leads: positive while the head is still turning right, saturates softly, returns
-    assert max(ch["gaze"][30:60]) > 0.2 and max(abs(g) for g in ch["gaze"]) < 0.8
-    assert ch["gaze"][-1] == pytest.approx(0.0, abs=0.01)
-    # one blink (the 1.0 jump) that starts after the eyes move; none for the 0.3 step
-    assert max(ch["blink"][30:50]) == pytest.approx(1.0)
-    assert ch["blink"][31] == 0.0 < ch["gaze"][31]
-    assert max(ch["blink"][90:]) == 0.0
-    # roll toward the turn and a dip mid-turn, smooth (no per-frame jump) and back to rest
-    assert 0.4 < max(ch["roll"]) <= 1.0 and abs(ch["roll"][-1]) < 0.02
-    assert min(ch["pitch"]) < -0.1 and abs(ch["pitch"][-1]) < 0.01
-    # no pops: their per-frame acceleration stays at the yaw spring's own level
+    assert set(ch) == set(r.CHANNELS) and all(len(v) == n for v in ch.values())
+    # gaze leads the head and saturates softly
+    assert ch["yaw"][int(0.66 * 60)] < 0.01 < ch["gaze"][int(0.66 * 60)]
+    assert max(abs(g) for g in ch["gaze"]) < 0.9
+    # blinks: only on big steps >= 2.6 s apart (0.6 and 3.4; not 4.7), the second is a double
+    starts = [i for i in range(1, n) if ch["blink"][i] > 0 and ch["blink"][i - 1] == 0]
+    assert [round(i / 60, 1) for i in starts] == [0.7, 3.5, 3.8]
+    # idle layer: no frozen holds (every frame moves something)
+    for i in range(n - 1):
+        assert any(abs(ch[k][i + 1] - ch[k][i]) > 1e-6 for k in ch), i
+    # a look raises the brows and shifts the mouth, then both relax
+    assert max(ch["brow"][36:90]) > 0.5 and ch["brow"][110] == 0.0 and max(ch["mouth"]) > 0.3
+    # roll toward the turn, dip mid-turn, smooth; the loop closes
+    assert max(ch["roll"]) > 0.5 and min(ch["pitch"]) < -0.1
     def accel(v: list[float]) -> float:
         return max(abs(v[i + 1] - 2 * v[i] + v[i - 1]) for i in range(1, len(v) - 1))
-    for k in ("roll", "pitch"):
-        assert accel(ch[k]) <= 1.1 * accel(ch["yaw"]), k
-    # hair trails (negative lag while turning right) then overshoots
-    assert min(ch["hairLag"][30:70]) < -0.1 and max(ch["hairLag"][40:96]) > 0.0
-    # the head starts after the eyes and settles within ~0.4 s of its delayed target
-    assert ch["yaw"][34] < 0.02 < ch["gaze"][34]
-    assert ch["yaw"][int((0.5 + 0.08 + 0.32) * 60)] > 0.94
+    for k in ("yaw", "roll", "pitch"):  # per-frame acceleration bound: no pops
+        assert accel(ch[k]) < 0.03, k
+    for k, v in ch.items():
+        assert abs(v[-1] - v[0]) < 0.01, k
+    # hair: the fringe trails, the side locks trail it by ~40 ms, the tuft trails most and rebounds
+    lag = ch["hairLag"]
+    assert min(lag[36:90]) < -0.1
+    peak = min(range(36, 90), key=lambda i: lag[i])
+    side_peak = min(range(36, 90), key=lambda i: ch["sideLag"][i])
+    assert 1 <= side_peak - peak <= 4
+    tuft = ch["tuftLag"]
+    assert min(tuft[36:110]) < min(lag[36:110])
+    sign_changes = sum(1 for a, b in zip(tuft[40:110], tuft[41:111]) if a * b < 0)
+    assert sign_changes >= 2
