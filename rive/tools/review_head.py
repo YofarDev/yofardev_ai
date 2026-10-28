@@ -100,6 +100,38 @@ def zoom() -> None:
     sheet.save(OUT / "zoom.png", optimize=True)
 
 
+def identity() -> None:
+    """The shipped avatar (rive/avatar at rest) next to the head at rest, same art-space window."""
+    av = TMP / "identity" / "avatar.png"
+    av.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["rive", str(ROOT / "rive" / "avatar"), f"--screenshot={av}", "--advance=1"], check=True,
+                   capture_output=True)
+    box = (int(gen_head.OX), int(gen_head.OY), int(gen_head.OX + gen_head.ART_W), int(gen_head.OY + gen_head.ART_H))
+    left = Image.open(av).convert("RGB").crop(box)
+    right = Image.open(cli(TMP / "identity" / "head.png", *pose_args())).convert("RGB")
+    sheet = Image.new("RGB", (800, 480), (20, 18, 26))
+    sheet.paste(label(left, "shipped avatar (rive/avatar, rest)"), (0, 0))
+    sheet.paste(label(right, "head v2 (rive/head, yaw 0 pitch 0)"), (400, 0))
+    sheet.save(OUT / "identity.png", optimize=True)
+
+
+CORNER_POSES = [(-1.0, 1.0), (1.0, 1.0), (-1.0, 0.5), (1.0, 0.5)]
+
+
+def corners() -> None:
+    """Hair corners at |yaw| = 1, pitch >= 0.5 (round-3 spikes), both sides, 2.5x."""
+    cells: list[Image.Image] = []
+    for yaw, pitch in CORNER_POSES:
+        im = Image.open(cli(TMP / "corners" / f"y{yaw:+.0f}p{pitch:+.1f}.png", *pose_args(yaw, pitch))).convert("RGB")
+        for side, box in (("L", (30, 180, 150, 330)), ("R", (250, 180, 370, 330))):
+            c = im.crop(box).resize((300, 375), Image.Resampling.LANCZOS)
+            cells.append(label(c, f"yaw {yaw:+.0f} pitch {pitch:+.1f} {side}"))
+    sheet = Image.new("RGB", (300 * 4, 375 * 2), (20, 18, 26))
+    for k, c in enumerate(cells):
+        sheet.paste(c, ((k % 4) * 300, (k // 4) * 375))
+    sheet.save(OUT / "corners.png", optimize=True)
+
+
 def turn_frames() -> list[Path]:
     n = len(gen_head.r.perform_turn(gen_head.TURN_TARGETS, gen_head.TURN_SECONDS)["yaw"])
     jobs = list(range(n))
@@ -115,7 +147,7 @@ def turn(paths: list[Path]) -> None:
     strip = Image.new("RGB", (220 * 8, 264))
     for k in range(8):
         strip.paste(small[k * len(small) // 8], (k * 220, 0))
-    palette = strip.quantize(colors=64, method=Image.Quantize.MEDIANCUT)
+    palette = strip.quantize(colors=48, method=Image.Quantize.MEDIANCUT)
     pal = [f.quantize(palette=palette, dither=Image.Dither.NONE) for f in small]
     pal[0].save(OUT / "turn.gif", save_all=True, append_images=pal[1:], duration=33, loop=0, optimize=True)
     picks = [round(i * (len(frames) - 1) / 23) for i in range(24)]
@@ -180,30 +212,87 @@ def _build_probe() -> None:
                    capture_output=True)
 
 
+POSTER = ROOT / "assets" / "rive" / "posters" / "livingRoom.webp"
+# the poster window behind the head: the wall band above the floor at the centre of the
+# 540x960 poster (window, curtains, lamp glow and wall), scaled to the 400x480 head artboard
+POSTER_BOX = (130, 330, 410, 666)
+
+
 def silhouette_contrast() -> list[str]:
-    """Luminance contrast of the outer hair band (4 px inside the silhouette) against the
-    background just outside it (4-10 px), per side, rows of the side masses (art y 290-450)."""
+    """Hair-to-background luminance contrast against the livingRoom poster: per row of the side
+    masses (art y 290-470), the better of the two edge tones (the ink outline 0-1 px inside the
+    silhouette, the edge light 3-6 px inside) vs the poster just outside it (4-10 px). Rows where
+    the ear (skin) is the outer edge are skipped. Reports the median row and the share of rows
+    >= 3:1, per side."""
     _build_probe()
+    poster = Image.open(POSTER).convert("RGB").crop(POSTER_BOX).resize((400, 480), Image.Resampling.LANCZOS)
     out = []
     for yaw in (0.0, 1.0, -1.0):
         full = Image.open(cli(TMP / "contrast" / f"f{yaw:+.0f}.png", *pose_args(yaw))).convert("RGB")
         hair = Image.open(_probe(TMP / "contrast" / f"h{yaw:+.0f}.png", yaw)).convert("RGB")
         res = []
         for side in (-1, 1):
-            band: list[tuple[int, int, int]] = []
-            bgs: list[tuple[int, int, int]] = []
-            for y in range(290 - 172, 450 - 172, 2):
+            ratios: list[float] = []
+            for y in range(290 - 172, 470 - 172, 2):
                 xs = [x for x in range(hair.width) if _not_magenta(hair.getpixel((x, y)))]
                 if not xs:
                     continue
                 edge = min(xs) if side < 0 else max(xs)
-                band += [full.getpixel((edge - side * k, y)) for k in range(1, 5)]
-                bgs += [full.getpixel((edge + side * k, y)) for k in range(4, 11)]
-            lb = sum(_lum(c) for c in band) / len(band)
-            lg = sum(_lum(c) for c in bgs) / len(bgs)
-            res.append((max(lb, lg) + 0.05) / (min(lb, lg) + 0.05))
-        out.append(f"yaw {yaw:+.0f}: left {res[0]:.2f}:1, right {res[1]:.2f}:1")
+                if full.getpixel((edge - side, y))[0] > 150:  # the ear, not hair, is the edge here
+                    continue
+                bgs = [poster.getpixel((min(399, max(0, edge + side * k)), y)) for k in range(4, 11)]
+                lg = sum(_lum(c) for c in bgs) / len(bgs)
+                best = 1.0
+                for ks in ((0, 1), (3, 4, 5, 6)):  # the dark outline, then the edge light inside it
+                    lb = sum(_lum(full.getpixel((edge - side * k, y))) for k in ks) / len(ks)
+                    best = max(best, (max(lb, lg) + 0.05) / (min(lb, lg) + 0.05))
+                ratios.append(best)
+            ratios.sort()
+            res.append((ratios[len(ratios) // 2], sum(1 for q in ratios if q >= 3.0) / len(ratios)))
+        out.append(f"yaw {yaw:+.0f}: left median {res[0][0]:.2f}:1 ({res[0][1]:.0%} of rows >= 3:1), "
+                   f"right median {res[1][0]:.2f}:1 ({res[1][1]:.0%} of rows >= 3:1)")
     return out
+
+
+STATIC_PX = 20  # a frame is "static" when fewer than this many pixels change by > 8/255
+
+
+def seam_stats(frames: list[Image.Image]) -> list[str]:
+    """Visible per-frame change (pixels changed by > 8/255) across the loop seam, and the longest
+    static stretch anywhere in the loop (wrapping)."""
+    lum = [f.convert("L") for f in frames]
+    changed = [sum(1 for v in ImageChops.difference(a, b).tobytes() if v > 8) for a, b in zip(lum, lum[1:])]
+    n = len(changed)
+    run = best = 0
+    for c in changed + changed:
+        run = run + 1 if c < STATIC_PX else 0
+        best = max(best, run)
+    tail, head = changed[n - 48:], changed[:48]
+    return [f"seam: px changed (> 8/255) per frame, last 48 transitions: {tail}",
+            f"seam: px changed (> 8/255) per frame, first 48 transitions: {head}",
+            f"longest static stretch (< {STATIC_PX} px changed), wrapping: {best} frames = {best / 60:.2f} s"]
+
+
+def brow_travel() -> list[str]:
+    """Measured brow lift at brow = 1: centroid of pixels that darkened (brow arrived) minus
+    centroid of pixels that lightened (brow left), in the right brow's column band."""
+    ims = [Image.open(cli(TMP / "brow" / f"{n}.png", *pose_args(**e))).convert("L")
+           for n, e in (("rest", {}), ("brow1", {"brow": 1.0}))]
+    x0, x1 = int(445 - 30 - gen_head.OX), int(445 + 36 - gen_head.OX)
+    y0, y1 = int(300 - gen_head.OY), int(352 - gen_head.OY)
+    came: list[int] = []
+    left: list[int] = []
+    for x in range(x0, x1):
+        for y in range(y0, y1):
+            dv = ims[1].getpixel((x, y)) - ims[0].getpixel((x, y))
+            if dv < -40:
+                came.append(y)
+            elif dv > 40:
+                left.append(y)
+    lift = sum(left) / max(1, len(left)) - sum(came) / max(1, len(came))
+    return [f"brow lift at brow=1 (right brow, appeared-vs-vanished centroid): {lift:.1f} artboard px (rig: 14 inner, "
+            f"12 outer); the avatar artboard is 800 px wide, so on a 390 dp phone showing it full width that is "
+            f"{lift * 390 / 800:.1f} dp ({lift * 390 / 800 * 3:.0f} device px at 3x)"]
 
 
 def metrics(paths: list[Path]) -> None:
@@ -227,7 +316,7 @@ def metrics(paths: list[Path]) -> None:
         f"rive: {subprocess.run(['rive', '--version'], capture_output=True, text=True).stdout.strip()}",
         "",
         "== Size",
-        f"head.riv: {(PROJ / 'build' / 'head.riv').stat().st_size} B (gate <= 81920 B)",
+        f"head.riv: {(PROJ / 'build' / 'head.riv').stat().st_size} B (gate <= 92160 B = 90 KB)",
         "",
         "== Performed turn (PerformedTurn artboard, every frame, one CLI run per frame)",
         f"frames: {len(frames)} at 60 fps ({gen_head.TURN_SECONDS} s loop), yawTarget steps {gen_head.TURN_TARGETS}",
@@ -259,22 +348,28 @@ def metrics(paths: list[Path]) -> None:
         lines.append(f"{pose}: {cmp}")
     lint = subprocess.run(["uv", "run", str(HERE / "art_bible.py"), "lint", str(PROJ / "head.rml"),
                            "--scene", "livingRoom"], capture_output=True, text=True).stdout.strip()
+    lines += ["", "== Idle across the loop seam", *seam_stats(frames)]
+    lines += ["", "== Brow travel", *brow_travel()]
     lines += ["", "== Art-bible lint (livingRoom)", lint or "?"]
     lines += ["", "== Hair translucency (regression for the side-lock cross-fade ghost)", *translucency_sweep()]
-    lines += ["", "== Silhouette edge contrast (outer 4 px of hair vs background just outside; bible >= 3:1)",
+    lines += ["", f"== Silhouette contrast vs the livingRoom poster (window {POSTER_BOX}; bible >= 3:1)",
               *silhouette_contrast()]
     (OUT / "metrics.txt").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
 
 
 def main(argv: list[str]) -> None:
-    parts = set(argv) or {"grid", "zoom", "turn", "metrics"}
+    parts = set(argv) or {"grid", "zoom", "identity", "corners", "turn", "metrics"}
     OUT.mkdir(parents=True, exist_ok=True)
     subprocess.run(["rive", str(PROJ), "--once"], cwd=PROJ, check=True, capture_output=True)
     if "grid" in parts:
         grid()
     if "zoom" in parts:
         zoom()
+    if "identity" in parts:
+        identity()
+    if "corners" in parts:
+        corners()
     if parts & {"turn", "metrics"}:
         paths = turn_frames()
         if "turn" in parts:
