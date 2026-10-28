@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import json
 import subprocess
 import sys
 
@@ -173,6 +174,32 @@ def turn() -> list[Path]:
     return paths
 
 
+# the integrated turn: the app's own HeadMotionSolver drives the avatar, frame by frame, from the
+# trace `dart run tool/head_motion_trace.dart > rive/avatar/review/head_rig/app_trace.json`
+# (user 0.8 s -> tool glance away(0.6) 2.4 s -> user 1.4 s -> caret 1.4 s, 60 fps)
+APP_KEYS = ("yaw", "pitch", "hairLagYaw", "hairLagPitch", "eyeLeadYaw")
+
+
+def app_turn() -> None:
+    trace = json.loads((OUT / "app_trace.json").read_text())
+    frames = list(range(0, len(trace), STEP))
+
+    def one(f: int) -> Path:
+        data = {k: f"{trace[f][k]:.4f}" for k in APP_KEYS}
+        return cli(TMP / "app" / f"f{f:03}.png", data, f + 1)
+    with ThreadPoolExecutor(WORKERS) as ex:
+        paths = list(ex.map(one, frames))
+    small = [Image.open(p).convert("RGB").crop(HEAD_BOX).resize((220, 264), Image.Resampling.LANCZOS) for p in paths]
+    strip = Image.new("RGB", (220 * 8, 264))
+    for k in range(8):
+        strip.paste(small[k * len(small) // 8], (k * 220, 0))
+    palette = strip.quantize(colors=48, method=Image.Quantize.MEDIANCUT)
+    pal = [f.quantize(palette=palette, dither=Image.Dither.NONE) for f in small]
+    pal[0].save(OUT / "app_turn.gif", save_all=True, append_images=pal[1:], duration=33, loop=0, optimize=True)
+    picks = [round(i * (len(small) - 1) / 11) for i in range(12)]
+    sheet([label(small[i].copy(), f"f{frames[i]}") for i in picks], 6, "app_turn_sheet.png")
+
+
 def metrics() -> None:
     lines = ["Avatar head yaw / pitch rig (rive/tools/head_turn.py, called by gen_avatar.py)",
              f"rive: {subprocess.run(['rive', '--version'], capture_output=True, text=True).stdout.strip()}", "",
@@ -206,7 +233,7 @@ def metrics() -> None:
 
 
 def main(argv: list[str]) -> None:
-    order = ("grid", "moods", "corners", "zoom", "glasses", "mouth_matrix", "lag", "identity", "turn", "metrics")
+    order = ("grid", "moods", "corners", "zoom", "glasses", "mouth_matrix", "lag", "identity", "turn", "app_turn", "metrics")
     parts = set(argv) or set(order)
     OUT.mkdir(parents=True, exist_ok=True)
     subprocess.run(["rive", str(PROJ), "--once"], cwd=PROJ, check=True, capture_output=True)
