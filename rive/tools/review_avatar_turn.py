@@ -203,7 +203,7 @@ def turn() -> list[Path]:
 # the integrated turn: the app's own HeadMotionSolver drives the avatar, frame by frame, from the
 # trace `dart run tool/head_motion_trace.dart > rive/avatar/review/head_rig/app_trace.json`
 # (user 0.8 s -> tool glance away(0.6) 2.4 s -> user 1.4 s -> caret 1.4 s, 60 fps)
-APP_KEYS = ("yaw", "pitch", "hairLagYaw", "hairLagPitch", "eyeLeadYaw")
+APP_KEYS = ("yaw", "pitch", "hairLagYaw", "hairLagPitch", "eyeLeadYaw", "eyeLeadPitch")
 
 
 def app_turn() -> None:
