@@ -61,6 +61,13 @@ def test_tokpos_acts_on_one_side_only() -> None:
     assert [t.tag for t in toks].count("FormulaTokenFunction") == 1
 
 
+def test_tokabs_is_symmetric() -> None:
+    p = [(0.0, ()), (2.0, (r.tokabs("lag"),))]
+    assert r.eval_poly(p, 0.0, {"lag": -0.5}) == pytest.approx(1.0) == r.eval_poly(p, 0.0, {"lag": 0.5})
+    tags = [t.tag for t in r.Formulas(Doc(), str).poly(p)]
+    assert tags.count("FormulaTokenFunction") == 1 and tags.count("FormulaTokenValue") >= 3
+
+
 def test_poly_shift_merges_constants() -> None:
     p = r.poly_shift(r.material_dx(10.0, 0.0), 5.0)
     assert sum(1 for _, fs in p if not fs) == 1
