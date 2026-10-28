@@ -10,6 +10,7 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
+import '../../features/avatar/domain/services/face_performer.dart';
 import '../../features/avatar/domain/services/performance_director.dart';
 import '../../features/chat/domain/repositories/global_memory_repository.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
@@ -329,6 +330,15 @@ Future<void> setupServiceLocator() async {
     ),
   );
   getIt<AvatarCueService>();
+  // Eager for the same reason: it must see every intent and playback event.
+  getIt.registerLazySingleton<FacePerformer>(
+    () => FacePerformer(
+      intents: getIt<PerformanceDirector>().intents,
+      playback: getIt<TtsPlaybackService>().events,
+      speechPosition: () => getIt<TtsPlaybackService>().speechPosition,
+    ),
+  );
+  getIt<FacePerformer>();
 
   getIt.registerFactory<DemoCubit>(
     () => DemoCubit(
