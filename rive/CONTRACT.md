@@ -32,6 +32,8 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `glasses` | enum | glasses, sunglasses |
 | `costume` | enum | none, batman, robocop, soubrette, singularity. Any value other than none replaces the hat and top. |
 | `presence` | enum | onScreen, outOfScreen, leaveAndComeBack. The last one walks off, walks back, and ends on onScreen. |
+| `yaw` | number | −1–1, default 0: head turn (±30°). +1 = the character turns toward the **viewer's right**. Only the head turns; neck and body stay. History-free: the pose depends only on the value. |
+| `pitch` | number | −1–1, default 0: head tilt (±15°). +1 = looks **up**. Only the head moves. Composes with yaw, moods, gestures and hair follow-through. |
 
 **Idle life**, built into the file with no Dart involvement: blinking, breathing, and eyes that
 follow the pointer or touch.
