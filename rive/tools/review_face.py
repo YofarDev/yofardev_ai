@@ -60,6 +60,13 @@ def frame_data(f: dict, mood: str | None = None) -> dict[str, str]:
     d.update(lipTuck=f"{f['lipTuck']:.4f}", tongueUp=f"{f['tongueUp']:.4f}", roll=f"{f['roll']:.4f}",
              breath=f"{f['breath']:.4f}", pitch=f"{f['nodPitch']:.4f}",
              autoBlink="true" if f["autoBlink"] else "false")
+    head = f.get("head")
+    if head:
+        # the avatar view writes the solver's pose and adds the nod to the pitch
+        d.update(yaw=f"{head['yaw']:.4f}", hairLagYaw=f"{head['hairLagYaw']:.4f}",
+                 hairLagPitch=f"{head['hairLagPitch']:.4f}", eyeLeadYaw=f"{head['eyeLeadYaw']:.4f}",
+                 eyeLeadPitch=f"{head['eyeLeadPitch']:.4f}",
+                 pitch=f"{max(-1.0, min(1.0, head['pitch'] + f['nodPitch'])):.4f}")
     if mood:
         d["mood"] = mood
     return d
@@ -112,12 +119,12 @@ def sheets() -> None:
     print("visemes:", sheet(render(jobs, "visemes"), 5, "visemes.png"))
     jobs = []
     for m in ("happy", "surprised", "sad"):
-        for yaw in ("-1", "0", "1"):
+        for yaw in ("-0.84", "0", "0.84"):  # the app's widest turn (tool glance, head_target_mapper)
             d = frame_data(presets["moods"][m], m)
             d["yaw"] = yaw
             jobs.append((f"{m} yaw {yaw}", d, SETTLE, None))
     talk = frame_data(presets["visemes"]["aa"])
-    for yaw in ("-1", "0", "1"):
+    for yaw in ("-0.84", "0", "0.84"):
         jobs.append((f"aa yaw {yaw}", {**talk, "yaw": yaw}, SETTLE, None))
     print("yaw:", sheet(render(jobs, "yaw"), 3, "face_yaw.png"))
 

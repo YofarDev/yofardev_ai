@@ -62,10 +62,10 @@ def evaluate(c0: float, t: Terms, env: Mapping[str, float]) -> float:
 # Brows: bone rest positions per side (s = -1 left, +1 right; the inner end is toward x = 400).
 # dx is given toward the face centre for + (mirrored per side); dy is screen y (+ = down).
 BROW_BONES = {  # name: (dx from eye centre * s, y, dx terms (toward centre), dy terms)
-    "Inner": (-26.0, 341.0, terms(BL=3.0, IU=0.5), terms(IU=-16.0, OU=-4.0, BL=7.0)),
+    "Inner": (-26.0, 341.0, terms(BL=4.0, IU=0.5), terms(IU=-16.0, OU=-4.0, BL=10.0)),
     "Mid": (4.0, 337.0, terms(BL=1.5), terms(IU=-7.0, OU=-10.0, BL=4.0)),
     # AU1 alone tilts the brow (outer end a touch down): the oblique sad brow
-    "Outer": (32.0, 342.0, terms(OU=-1.5), terms(IU=1.5, OU=-16.0, BL=-1.0)),
+    "Outer": (32.0, 342.0, terms(OU=-1.5), terms(IU=1.5, OU=-16.0, BL=-3.0)),
 }
 
 MOUTH_FRAME = (400.0, 478.0)
@@ -73,15 +73,15 @@ MOUTH_FRAME = (400.0, 478.0)
 # right side (mirrored for the left); dy terms are screen y.
 MOUTH_BONES = {
     "CornerR": ((417.0, 477.0), terms(P=5.0, S=7.0, J=3.0, K=-10.5, R=-3.0, DM=1.0, D=1.0),
-                terms(P=-7.0, D=9.5, CR=-1.5, J=3.0, S=1.0, DM=-1.0)),
+                terms(P=-7.0, D=10.5, CR=-1.5, J=5.0, S=1.0, DM=-1.0)),
     # closed-mouth terms (corners, smile, frown, dimpler, press) move the upper and lower lips
     # together so a closed mouth stays one line; only jaw, pucker, nose wrinkle and lip tuck open it
     "UpperR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
-               terms(P=0.3, D=1.0, J=-2.0, NW=-3.0, T=-3.0, K=-2.0)),
-    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-4.0, J=-2.5, NW=-4.0, T=-3.5, K=-2.5)),
+               terms(P=0.3, D=2.5, J=-3.5, NW=-3.0, T=-4.5, K=-2.0)),
+    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-2.5, J=-5.0, NW=-4.0, T=-5.5, K=-2.5)),
     "LowerR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
-               terms(P=0.3, D=1.0, J=19.0, K=3.5, T=0.5)),
-    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-4.0, J=23.0, K=5.0, T=1.0)),
+               terms(P=0.3, D=2.5, J=19.0, K=3.5, T=1.0)),
+    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-2.5, J=23.0, K=5.0, T=1.5)),
 }
 
 
@@ -98,7 +98,8 @@ def mouth_bones() -> dict[str, tuple[tuple[float, float], dict[str, float], dict
             out[name[:-1] + "L"] = ((2 * MOUTH_FRAME[0] - x, y), mirror_terms(dx), dict(dy))
     # the tongue tip rides the lower lip and rises to the upper teeth
     lc = out["LowerC"]
-    out["TongueTip"] = ((400.0, 472.5), {}, {**lc[2], "tongueUp": -12.0})
+    # the tongue tip rides 80 % of the lower lip (it shows in an open mouth), and rises to the teeth
+    out["TongueTip"] = ((400.0, 476.0), {}, {**{p: 0.8 * c for p, c in lc[2].items()}, "tongueUp": -12.0})
     return out
 
 
@@ -220,8 +221,10 @@ class FaceRig:
 
 # ------------------------------------------------------------------ rigging the avatar
 
-def rig_brow(fr: FaceRig, brow_g: El, shape: El, cx: float, s: int, color: str) -> None:
-    """Skin the brow shape to inner / mid / outer bones (bones live in BrowG, frame (cx, 346))."""
+def rig_brow(fr: FaceRig, brow_g: El, shape: El, cx: float, s: int, color: str, outline: str) -> None:
+    """Skin the brow shape to inner / mid / outer bones (bones live in BrowG, frame (cx, 346)). The
+    brows paint over the fringe in the hair's own colour, so a thin skin-tone outline keeps them
+    readable over it (invisible over skin)."""
     frame = (cx, 346.0)
     bones: dict[str, tuple[tuple[float, float], El]] = {}
     for nm, (dx0, y, tdx, tdy) in BROW_BONES.items():
@@ -246,8 +249,13 @@ def rig_brow(fr: FaceRig, brow_g: El, shape: El, cx: float, s: int, color: str) 
                 return {a: 1 - t, b: t}
         return {"Outer": 1.0}
 
-    new = fr.skinned("BrowShape", pts, [w(p[0]) for p in pts], bones, frame, fr.fill(color))
+    new = fr.skinned("BrowShape", pts, [w(p[0]) for p in pts], bones, frame, fr.stroke(outline, 2.4),
+                     fr.fill(color))
     brow_g.children[brow_g.children.index(shape)] = new
+
+
+DROOP_TRAVEL = 30.0  # px: from the lid edge resting on the eye's top to the full droop
+SQUINT_TRAVEL = 24.0  # px: from the crescent resting under the eye to the full squint
 
 
 def rig_eye(fr: FaceRig, eye: Mapping[str, object], s: int) -> None:
@@ -260,13 +268,24 @@ def rig_eye(fr: FaceRig, eye: Mapping[str, object], s: int) -> None:
     for el in (*eye["droop"].el.children, eye["squint"], eye["squint_line"]):  # type: ignore[attr-defined]
         if el.tag == "Shape":
             el.children.insert(0, fr.d("ClippingShape", sourceId=clip.ref(), name="EyeOpening"))
+    # The mood lids slide in (a scaled node would thin their lash strokes to scratchy hairlines):
+    # amount a = clamp(c0 + sum c_i AU_i, 0, 1) moves the droop down by DROOP_TRAVEL * a from fully
+    # above the eye, and the squint up by SQUINT_TRAVEL * a from fully below it.
     droop: El = eye["droop"].el  # type: ignore[attr-defined]
-    # a dead zone: a lid scaled to ~0.01 still draws a dashed sliver of lash
-    fr.bind_on(droop, "scaleY", -0.04, terms(IU=0.4, BL=0.3, LT=0.15, UL=-0.8), lo=0.0, hi=1.0)
-    fr.bind_on(droop, "rotation", 0.0, {"auBrowInnerUp": 0.25 * s, "auBrowLower": -0.28 * s})
+    dy0 = float(droop.attrs["y"])
+    amount = {"c0": -0.04, **terms(IU=0.42, BL=0.32, LT=0.15, UL=-0.8)}
+    fr.bind_on(droop, "y", dy0 - DROOP_TRAVEL + DROOP_TRAVEL * amount["c0"],
+               {p: DROOP_TRAVEL * c for p, c in amount.items() if p != "c0"}, lo=dy0 - DROOP_TRAVEL, hi=dy0)
+    fr.bind_on(droop, "rotation", 0.0, {"auBrowInnerUp": 0.12 * s, "auBrowLower": -0.2 * s})
     for k in ("squint", "squint_line"):
         el: El = eye[k]  # type: ignore[assignment]
-        fr.bind_on(el, "scaleY", -0.03, terms(CR=0.78, LT=0.37), lo=0.0, hi=1.0)
+        sy0 = float(el.attrs["y"])
+        sq = {"c0": -0.03, **terms(CR=0.8, LT=0.37)}
+        fr.bind_on(el, "y", sy0 + SQUINT_TRAVEL - SQUINT_TRAVEL * sq["c0"],
+                   {p: -SQUINT_TRAVEL * c for p, c in sq.items() if p != "c0"}, lo=sy0, hi=sy0 + SQUINT_TRAVEL)
+    # the plain lower-lid line gives way to the raised lid
+    lower = next(c for c in eye["blink"].el.children if c.attrs.get("name") == "LowerLid")  # type: ignore[attr-defined]
+    fr.bind_on(lower, "opacity", 1.0, terms(CR=-3.3, LT=-2.0), lo=0.0, hi=1.0)
 
 
 LIP_TENSION = 1.3
@@ -353,7 +372,7 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
     throat = fr.skinned("MouthThroat", [(389.0, 479.0), (400.0, 475.0), (411.0, 479.0), (400.0, 484.0)],
                         [{"LowerL": 0.6, "UpperL": 0.4}, {"UpperC": 0.35, "LowerC": 0.65},
                          {"LowerR": 0.6, "UpperR": 0.4}, one("LowerC")], bones, F,
-                        fr.fill(palette["throat"]), clip=inside, opacity=0.55)
+                        fr.fill(palette["throat"]), clip=inside)
     teeth = fr.skinned("MouthTeeth",
                        [(377.0, 472.0, "c"), (400.0, 473.0, "c"), (423.0, 472.0, "c"), (419.0, 485.0),
                         (400.0, 487.0), (381.0, 485.0)],
@@ -366,15 +385,18 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
                            [{"LowerL": 0.7, "CornerL": 0.3}, one("LowerC"), {"LowerR": 0.7, "CornerR": 0.3},
                             one("LowerR"), one("LowerC"), one("LowerL")],
                            bones, F, fr.fill(palette["low_teeth"]), clip=inside)
-    fr.bind_on(low_teeth, "opacity", 0.0, terms(S=1.4, J=0.25, K=-1.0), lo=0.0, hi=1.0)
+    # lower teeth only for a strong stretch (half-opaque teeth over the throat read as mauve)
+    fr.bind_on(low_teeth, "opacity", -1.25, terms(S=2.5), lo=0.0, hi=1.0)
     # rounded lips (o, u, w) push forward over the teeth
-    fr.bind_on(teeth, "opacity", 1.0, terms(K=-1.1), lo=0.0, hi=1.0)
-    tongue = fr.skinned("MouthTongue", [(386.0, 478.0), (400.0, 472.5), (414.0, 478.0), (400.0, 484.0)],
+    # (a steep cut: half-faded teeth over the throat read as mauve)
+    fr.bind_on(teeth, "opacity", 2.5, terms(K=-5.0), lo=0.0, hi=1.0)
+    tongue = fr.skinned("MouthTongue", [(386.0, 480.0), (400.0, 476.0), (414.0, 480.0), (400.0, 487.0)],
                         [{"LowerL": 0.5, "LowerC": 0.5}, one("TongueTip"), {"LowerR": 0.5, "LowerC": 0.5},
                          one("LowerC")], bones, F, fr.fill(palette["tongue"]), clip=inside)
+    lip_line = fr.stroke(palette["lip"], 2.6)
+    fr.bind_on(lip_line, "thickness", 2.6, terms(T=2.6))  # the tucked lower lip rolls fuller
     lower_lip = fr.skinned("LowerLipShade", [(390.0, 486.0), (400.0, 488.5), (410.0, 486.0)],
-                           [one("LowerL"), one("LowerC"), one("LowerR")], bones, F,
-                           fr.stroke(palette["lip"], 2.6), closed=False)
+                           [one("LowerL"), one("LowerC"), one("LowerR")], bones, F, lip_line, closed=False)
     creases = []
     for side, c in (("L", "CornerL"), ("R", "CornerR")):
         x0, y0 = at(c)
@@ -383,7 +405,7 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
                         [one(c)] * 3, bones, F, fr.stroke(palette["crease"], 1.8), closed=False)
         fr.bind_on(sh, "opacity", 0.0, terms(DM=1.0, P=0.55, CR=0.2), lo=0.0, hi=1.0)
         creases.append(sh)
-    group = fr.d("Node", *creases, lower_lip, outline, tongue, teeth, low_teeth, throat, inside,
+    group = fr.d("Node", *creases, lower_lip, outline, teeth, low_teeth, tongue, throat, inside,
                  *[b for _, b in bones.values()], x=0.0, y=0.0, name="FaceMouth")
     host.add(group)
     return group

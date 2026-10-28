@@ -676,16 +676,20 @@ def build_eye(cx: float, side: int) -> dict:
     shut = S(blink, "ClosedLash", [(i - 4 * s, 393), (cx - 6 * s, 400), (cx + 12 * s, 400), (o + 9 * s, 391)],
              L("FF2A1B18", 4.2), closed=False, opacity=0.0)
     blink.el.children = [shut, lash_n.el, lower, crease, lid.el, gaze_m.el, white, clip_src]
-    # mood lids: Droop comes down from the top (sad/angry), Squint rises from below (happy)
-    droop = eye.node("Droop", cx, 360, scaleY=0.0)
+    # mood lids: Droop slides down from the top (sad/angry), Squint slides up from below (happy);
+    # both are clipped to the eye opening (face_rig.py) and slide rather than scale, so their
+    # lash lines keep the line weight
+    droop = eye.node("Droop", cx, 360)
     droop.add(S(droop, "DroopLash", [(i - 6 * s, 392), (cx, 394), (o + 8 * s, 390)], L("FF2A1B18", 4.5), closed=False),
               S(droop, "DroopLid", [(i - 8 * s, 352, "c"), (o + 10 * s, 352, "c"), (o + 10 * s, 392), (cx, 396),
                                     (i - 8 * s, 393)], F(SKIN)))
     # happy: the lower lid rises into a crescent that hides most of the iris
-    squint = S(eye, "Squint", [(i - 8 * s, 402), (cx - 4 * s, 381), (cx + 8 * s, 380), (o + 8 * s, 396),
-                               (o + 10 * s, 420, "c"), (i - 10 * s, 420, "c")], F(SKIN), origin=(cx, 412), scaleY=0.0)
-    squint_line = S(eye, "SquintLine", [(i - 3 * s, 400), (cx - 4 * s, 383.5), (cx + 8 * s, 383), (o + 4 * s, 395)],
-                    L("FF2A1B18", 3.2), closed=False, origin=(cx, 412), scaleY=0.0)
+    squint = S(eye, "Squint", [(i - 8 * s, 404), (cx - 12 * s, 389), (cx + 2 * s, 383), (cx + 15 * s, 387),
+                               (o + 8 * s, 398), (o + 10 * s, 424, "c"), (i - 10 * s, 424, "c")], F(SKIN),
+               origin=(cx, 412))
+    squint_line = S(eye, "SquintLine", [(i - 3 * s, 402), (cx - 12 * s, 390.5), (cx + 2 * s, 385),
+                                        (cx + 15 * s, 389), (o + 4 * s, 397)],
+                    L("FF2A1B18", 3.2), closed=False, origin=(cx, 412))
     eye.el.children = [squint_line, squint, droop.el, eye_mood.el]
     # Gesture lids have their own channels so a facepalm can shut the eyes
     # without stealing the independent mood, blink or pointer-follow tracks.
@@ -778,7 +782,7 @@ def glasses_set(name: str, lens_fill: El | str, glare_a: str) -> El:
                  S(head, "TempleR", [(489, 370), (504, 368)], L(FRAME, 6), closed=False))
 
 
-GLASSES = {"glasses": glasses_set("G_glasses", "14B8D8F0", "40FFFFFF"),
+GLASSES = {"glasses": glasses_set("G_glasses", "14B8D8F0", "26FFFFFF"),
            "sunglasses": glasses_set("G_sunglasses", None, "55FFFFFF"),  # type: ignore[arg-type]
            "none": group("G_none")}
 glasses_solo.add(*GLASSES.values())
@@ -1267,7 +1271,7 @@ MOOD_DEF = dict(gaze=(0, 0), blush=0.0, tilt=0.0, head_y=0.0, mouth_rot=0.0, mou
 MOOD_SPEC = {
     "neutral": {},
     "happy": dict(blush=0.65, tilt=-0.04),
-    "sad": dict(tilt=0.05, head_y=6.0, gaze=(0, 3)),
+    "sad": dict(tilt=0.05, head_y=6.0, gaze=(0, 6)),
     "angry": dict(tilt=-0.02, anger=1.0, pupil=0.85, head_y=2.0),
     "surprised": dict(head_y=-6.0, pupil=0.68),
     "thinking": dict(gaze=(-7, -8), tilt=0.085, mouth_rot=-0.12, mouth_x=3.0, head_y=-2.0),
@@ -1914,10 +1918,10 @@ face_au = face_rig.FaceRig(vpath)
 for i, e in enumerate(EYES):
     s_ = -1 if i == 0 else 1
     face_rig.rig_brow(face_au, e["brow_g"].el, named_el(e["brow_g"].el, "BrowShape"), 355.0 if i == 0 else 445.0, s_,
-                      HAIR)
+                      HAIR, SKIN)
     face_rig.rig_eye(face_au, e, s_)
-face_rig.rig_mouth(face_au, mouth_mood, {"inside": MOUTH_IN, "throat": "FF4E1C20", "teeth": TEETH,
-                                      "low_teeth": "FFF1E6E0", "tongue": TONGUE, "ink": INK, "lip": "40D0937C",
+face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "throat": "FF4A1E28", "teeth": TEETH,
+                                      "low_teeth": "FFF1E6E0", "tongue": "FFD9737A", "ink": INK, "lip": "60D0937C",
                                       "crease": "A0D0937C"})
 face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "A0D0937C"})
 face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
