@@ -136,3 +136,31 @@ the app writes); regenerate with `tool/face_speech_trace_test.dart` + `uv run ri
 | 3 | 7.3 | 7.5 | brows read over the fringe, lids clean, f/v and seals detected; still: the centre spike tip pops under raised brows, happy eyes read pained (dark lower-lid arc, open upper lid), angry brows too level, surprised mouth a smile, f/v a white teeth pill without the lower lip, sad visemes wince, the first breath starts with the audio, brow beats a repeating plateau, small question tilt and nods, the closed-blink lash zig-zags |
 | 4 | 7.7 | 7.5 | sad and angry now read from the brows, seals and blinks reliable, breath leads the line; still: surprised eyes jam the frames, the happy lower lid a grey wavy band, angry eyes and mouth under-built, the sad lid a straight bar, mouth AUs alike at phone size, oh/ou pops for 2–3 frames, dead holds on long vowels, prosody faint outside happy, the question release snaps, the breath holds into the first words |
 | 5 | 7.6 | 7.7 | angry reads, surprised fits the frames, the jaw follows loudness, no oh/ou pops; still: happy eyes not a true crescent, sad and embarrassed weaker than v4 (flat mouths), a peaked frown apex, raised brows meet the fringe tips, a flat 3/4 turn (far lens past the head, mouth lags the nose), blink shapes break over the smile and sad lids, f/v vs s/n/th still alike, boxy rounded vowels that grin in a happy mood, sawtooth brow beats, nods too small |
+| 6 | **7.9** | **7.6** | rounded vowels round, blinks close cleanly, sad and sheepish frown; still: see the open items below |
+
+**Gate not met** (≥ 9.0 on both; M2 plan ruling 12 caps the loop at 6 rounds). Trajectory: face
+7.3 → 7.9, speech 6.5 → 7.6. The remaining critiques are structural rather than tuning, so they
+are logged here for the next slice instead of being chased further in M2:
+
+Face:
+1. Lids do not occlude: the happy squint and the lid-tighten line sit over an iris that still
+   shows below them (doubled lower lid). A real crescent needs the iris and white clipped by a
+   moving lid shape (eye rebuilt on lid bones), not a skin crescent laid on top.
+2. The 3/4 turn slides the features over a symmetric outline: the far lens overhangs the cheek,
+   the jaw and cheek contour do not change (head-turn work, M4–M6 presence; see the M1 list
+   above).
+3. There are no asymmetric AUs (left and right brows, a one-sided lip corner), so thinking and
+   embarrassed lean on gaze and accents. A per-side AU split is a contract change.
+4. Off-model details: the nose-wrinkle scribble, pucker drawn as an open "o" rather than pushed
+   lips, the lower-lash gap and faceted eye-white corners, and angry needing its mark.
+
+Speech:
+5. f/v is not distinct from s/n at phone size: it needs the lower lip as a pink band over the
+   teeth edge, not a shifted line.
+6. The audio classifier mislabels rounded vowels ("blue", "so", "view" read as ih/aa). It needs
+   text-informed phoneme alignment, or Kokoro's phoneme durations (the `SpeechTimeline` seam is
+   ready).
+7. The beats are correctly timed but uniform: varied nod depth, left/right brow offsets and
+   eased rebounds would need asymmetric AUs and a little noise.
+8. The blink is a cross-fade of lash strokes, not a lid sweep. Plosives have no compression or
+   release pop; the upper-teeth edge has a V notch; the interior colour is banded.
