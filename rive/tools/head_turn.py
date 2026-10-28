@@ -28,7 +28,7 @@ from typing import Callable, Sequence
 
 import rig_dsl as r
 from rig_dsl import Axis, Chain, Grid, Poly, Weights, fit3, material_dx, pitch_dy, poly_add, poly_scale, quantize, pack
-from rml import Doc, El, smooth_path
+from rml import Doc, El, smooth_path  # noqa: F401
 
 ID_START = 900000
 PI = math.pi
@@ -38,8 +38,19 @@ K_YAW = round(math.radians(30), 4)
 K_PITCH = round(math.radians(15), 4)
 HEAD_FRAME = (400.0, 560.0)  # the Head rig's art-space origin (children are authored against it)
 KEYS = {"x": 13, "y": 14, "rotation": 15, "scaleX": 16, "scaleY": 17, "opacity": 18}
-PROPS = ("yaw", "pitch", "hairLagYaw", "hairLagPitch", "eyeLeadYaw")
-EYE_LEAD_PX = 8.0  # iris shift at eyeLeadYaw = 1 (the pointer follow adds up to 7)
+PROPS = ("yaw", "pitch", "hairLagYaw", "hairLagPitch", "eyeLeadYaw", "eyeLeadPitch")
+# eye lead, in the Look node's units (the eye is drawn at 1.06 inside a 1.18 head): 15.5 -> ~19
+# artboard px, about 30 % of the eye-white width; 7.6 -> ~9.5 px, about 25 % of its height
+EYE_LEAD_PX = 15.5
+EYE_LEAD_PITCH_PX = 7.6
+# looking down (eyeLeadPitch -1): the lash travels like a quarter blink and a skin lid follows it
+LOOK_DOWN_LASH = (6.0, 0.14)  # lash drop (px) and lash flattening (scaleY loss) at -1
+LOOK_DOWN_LID = 0.37  # lid scaleY at -1 (edge just under the dropped lash: ~25 % coverage)
+LOOK_LID_STOPS = ("FFE8C0AA", "FFE8C7B1")  # the avatar's lid skin ramp, graded to value 0.91 (lint)
+# hair follow-through: px of tip travel per unit of lag (the roots stay with the head)
+SIDE_LAG_PX, SIDE_LAG_PITCH_PX = 45.0, 20.0
+TUFT_LAG_PX = 20.0
+BACK_LAG_PX, BACK_LAG_PITCH_PX = 40.0 * 1.3, 20.0 * 1.3
 
 
 # ------------------------------------------------------------------ the surface model (head v2)
@@ -128,14 +139,10 @@ class HeadTurn:
         inst.children.extend(inst_vals)
         self.vm = vm
         self.rig = r.Rig(d, self.path, origin=(0.0, 0.0), x_axis=Axis("yaw", K_YAW), y_axis=Axis("pitch", K_PITCH))
-        # follow-through: hair at (yaw + hairLagYaw), the back hair at (yaw + 1.3 hairLagYaw); same for pitch
         self.axes = {
             "yaw": self.rig.x_axis, "pitch": self.rig.y_axis,
-            "yawHair": Axis("yaw", K_YAW, -1.6, 1.6, (("hairLagYaw", 1.0),), name="yawHair"),
-            "pitchHair": Axis("pitch", K_PITCH, -1.6, 1.6, (("hairLagPitch", 1.0),), name="pitchHair"),
-            "yawBack": Axis("yaw", K_YAW, -1.8, 1.8, (("hairLagYaw", 1.3),), name="yawBack"),
-            "pitchBack": Axis("pitch", K_PITCH, -1.8, 1.8, (("hairLagPitch", 1.3),), name="pitchBack"),
             "eyeLead": Axis("eyeLeadYaw", 1.0),
+            "eyeLeadPitch": Axis("eyeLeadPitch", 1.0),
         }
         self.head, self.root = head, root
         self.frames: dict[int, tuple[float, float]] = {}
@@ -196,7 +203,21 @@ class HeadTurn:
         inner = self.d("Node", target, x=-lx, y=-ly, name=nm + "Pivot")
         outer = self.d("Node", *binds, inner, x=lx, y=ly, name=nm + "Turn")
         parent.children[parent.children.index(target)] = outer
+        self.frames[id(outer)] = (frame[0] + lx, frame[1] + ly)
+        self.frames[id(inner)] = frame  # so a target can be wrapped again (nested wrappers compose)
         return outer
+
+    def raw(self, prop: str, key: str, tokens: list[El]) -> El:
+        """Bind `key` through a one-off formula over `prop` (for piecewise terms like max(0, -x))."""
+        conv = self.d("DataConverterFormula", *tokens)
+        self.rig.converters.append(conv)
+        return self.d("DataBindContext", sourcePathIds=self.path(prop), propertyKey=KEYS[key], converterId=conv.ref())
+
+    def neg_part(self, c0: float, c1: float) -> list[El]:
+        """Tokens of c0 + c1 * max(0, -min(1, input))."""
+        f = self.rig.f
+        return [f.val(c0), f.op("+"), f.val(c1), f.op("*"),
+                *f.fn("max", [f.val(0)], [f.val(-1), f.op("*"), *f.fn("min", [f.val(1)], f.inp())])]
 
     # ---- bones and skin (Head frame)
     def bone(self, name: str, x: float, y: float, dx: Poly, dy: Poly) -> None:
@@ -373,35 +394,84 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         zr = shell_z(rx - CX, ry)
         zt = max(surface_z(tx - CX, ty), shell_z(tx - CX, ty) - 30) + 10
         d_root, d_tip = mat(rx, zr), mat(tx, zt)
-        rot = poly_scale(poly_add(d_tip, poly_scale(d_root, -1.0)), -1.0 / (ty - ry))
-        sy = poly_add([(1.0, ())], poly_scale(poly_add(pit(ty, zt), poly_scale(pit(ry, zr), -1.0)), 1.0 / (ty - ry)))
-        ht.wrap(parts[name], (rx, ry), d_root, pit(ry, zr), rot=rot, sy=sy, xa="yawHair",  # type: ignore[arg-type]
-                ya="pitchHair")
+        ln = ty - ry
+        # head turn: the lock rotates about its root so the tip (further forward) travels more;
+        # follow-through: hairLagYaw adds the tip's own travel for that much extra yaw (root pinned)
+        rot = poly_scale(poly_add(d_tip, poly_scale(d_root, -1.0)), -1.0 / ln)
+        rot = poly_add(rot, [(-zt * K_YAW / ln, (r.tok("hairLagYaw"),))])
+        sy = poly_add([(1.0, ())], poly_scale(poly_add(pit(ty, zt), poly_scale(pit(ry, zr), -1.0)), 1.0 / ln))
+        sy = poly_add(sy, [(-(zt - ZP) * K_PITCH / ln, (r.tok("hairLagPitch"),))])
+        ht.wrap(parts[name], (rx, ry), d_root, pit(ry, zr), rot=rot, sy=sy)  # type: ignore[arg-type]
     crown_dx, crown_sx = mat(400, 30), factor(0.94, 0.94)
     ht.wrap(parts["HairCap"], (400.0, 277.0), crown_dx, pit(277, 40), sx=crown_sx)  # type: ignore[arg-type]
     ht.wrap(parts["HatSolo"], (400.0, 250.0), crown_dx, pit(250, 30), sx=crown_sx)  # type: ignore[arg-type]
     for t, x in (("L", 288.0), ("R", 512.0)):
         ox = side((500.0, 512.0, 522.0), x) if x > CX else (2 * CX - 522.0, 288.0, 2 * CX - 500.0)
         sc = side((1.0, 1.0, 0.38), x)
-        ht.wrap(parts["SideLock" + t], (x, 398.0), poses(*ox), pit(398, 10), sx=factor(sc[0], sc[2]),  # type: ignore[arg-type]
-                xa="yawHair", ya="pitchHair")
+        ht.wrap(parts["SideLock" + t], (x, 398.0), poses(*ox), pit(398, 10), sx=factor(sc[0], sc[2]))  # type: ignore[arg-type]
+        lag_bend(ht, parts["SideLock" + t], (500.0 if t == "R" else 300.0, 330.0), 466.0 - 330.0,  # type: ignore[arg-type]
+                 SIDE_LAG_PX, SIDE_LAG_PITCH_PX)
     widen = math.sqrt(math.cos(K_YAW) ** 2 + (1.16 * math.sin(K_YAW)) ** 2)
     # the back hair moves with the crown for pitch (as the cap does), so looking down never lifts
     # it above the crown outline
     ht.wrap(parts["HairBackShape"], (400.0, 337.0), mat(400, HAIR_C[1]), pit(337, 40),  # type: ignore[arg-type]
-            sx=factor(widen, widen), xa="yawBack", ya="pitchBack")
+            sx=factor(widen, widen))
+    lag_bend(ht, parts["HairBackShape"], (400.0, 205.0), 478.0 - 205.0, BACK_LAG_PX, BACK_LAG_PITCH_PX)  # type: ignore[arg-type]
     for nm, x, y in (("Cowlick", 392.0, 230.0), ("Cowlick2", 418.0, 230.0)):
         z = shell_z(x - CX, y)
-        ht.wrap(parts[nm], (x, y), mat(x, z), pit(y, z), xa="yawHair", ya="pitchHair")  # type: ignore[arg-type]
+        ht.wrap(parts[nm], (x, y), mat(x, z), pit(y, z))  # type: ignore[arg-type]
+        lag_bend(ht, parts[nm], (x, y), -48.0, TUFT_LAG_PX, TUFT_LAG_PX / 2)  # type: ignore[arg-type]
     # eye lead: extra iris / pupil shift on top of the pointer follow (the Look node keeps its keys);
     # the irises stay clipped by the eye whites
     lead = [(0.0, ()), (EYE_LEAD_PX / math.sin(1.0), (r.SIN,))]
+    lead_up = [(0.0, ()), (-EYE_LEAD_PITCH_PX / math.sin(1.0), (r.SIN,))]
     for t in ("L", "R"):
         look: El = parts["Look" + t]  # type: ignore[assignment]
         frame = ht.frames[id(ht.parent_of(look))]
         ht.wrap(look, (frame[0] + float(look.attrs.get("x", 0.0)), frame[1] + float(look.attrs.get("y", 0.0))),
-                dx=lead, xa="eyeLead", name="EyeLead" + t)
+                dx=lead, dy=lead_up, xa="eyeLead", ya="eyeLeadPitch", name="EyeLead" + t)
+        look_down_lids(ht, t, parts)
     ht.finish()
+
+
+def lag_bend(ht: HeadTurn, target: El, root: tuple[float, float], length: float, px: float, px_pitch: float) -> None:
+    """Follow-through for a hanging hair mass: an inner wrapper pinned at `root` rotates by the
+    tip's lag travel (hairLagYaw) and stretches by its pitch travel (hairLagPitch). The root never
+    moves, so there is no gap; the tip takes the full offset. Identity at zero lag."""
+    rot = [(0.0, ()), (-px / length, (r.tok("hairLagYaw"),))]
+    sy = [(1.0, ()), (-px_pitch / abs(length), (r.tok("hairLagPitch"),))]
+    ht.wrap(target, root, rot=rot, sy=sy, name=str(target.attrs.get("name", "Hair")) + "Lag")
+
+
+def look_down_lids(ht: HeadTurn, t: str, parts: dict[str, object]) -> None:
+    """eyeLeadPitch < 0: the lash drops like a quarter blink and a skin lid (clipped to the eye
+    white, behind the blink lid) follows it, so looking down reads. Zero at rest; the blink lid
+    and the mood lids sit in front, so a blink still closes fully."""
+    d = ht.d
+    s = 1.0 if t == "R" else -1.0
+    cx = 445.0 if t == "R" else 355.0
+    lash: El = parts["Lash" + t]  # type: ignore[assignment]
+    lframe = ht.frames[id(ht.parent_of(lash))]
+    lx, ly = cx - lframe[0], 366.0 - lframe[1]
+    binds = [ht.raw("eyeLeadPitch", "y", ht.neg_part(ly, LOOK_DOWN_LASH[0])),
+             ht.raw("eyeLeadPitch", "scaleY", ht.neg_part(1.0, -LOOK_DOWN_LASH[1]))]
+    parent = ht.parent_of(lash)
+    inner = d("Node", lash, x=-lx, y=-ly, name="LashDrop" + t + "Pivot")
+    parent.children[parent.children.index(lash)] = d("Node", *binds, inner, x=lx, y=ly, name="LashDrop" + t)
+    blink: El = parts["Blink" + t]  # type: ignore[assignment]
+    bframe = ht.frames[id(blink)]
+    clip = next(c for c in blink.children if c.attrs.get("name") == "EyeClip")
+    i, o = cx - 28 * s, cx + 30 * s
+    pts = [(i - 10 * s, 358.0, "c"), (o + 12 * s, 358.0, "c"), (o + 12 * s, 412.0, "c"), (i - 10 * s, 412.0, "c")]
+    path = smooth_path(d, [((x - cx, y - 360.0) + tuple(rest)) for x, y, *rest in pts])
+    fill = d("Fill", d("LinearGradient", d("GradientStop", colorValue=LOOK_LID_STOPS[0], position=0.0),
+                       d("GradientStop", colorValue=LOOK_LID_STOPS[1], position=1.0),
+                       startX=0.0, startY=-2.0, endX=0.0, endY=52.0))
+    shape = d("Shape", d("ClippingShape", sourceId=clip.ref()), path, fill, x=0.0, y=0.0, name="LookDownLid" + t)
+    node = d("Node", ht.raw("eyeLeadPitch", "scaleY", ht.neg_part(0.0, LOOK_DOWN_LID)), shape,
+             x=cx - bframe[0], y=360.0 - bframe[1], scaleY=0.0, name="LookDownLid" + t)
+    lid: El = parts["Lid" + t]  # type: ignore[assignment]
+    blink.children.insert(blink.children.index(lid) + 1, node)
 
 
 def _shapes(e: El) -> list[El]:
