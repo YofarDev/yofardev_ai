@@ -13825,45 +13825,45 @@
                                       <DataBindContext sourcePathIds="0:14697-0:900001" propertyKey="17" converterId="0:902252" id="0:902253"/>
                                       <Node x="4" y="330" name="Lock3MaterialPivot" id="0:902254">
                                         <Node x="0" y="0" name="Lock3Material" id="0:10568">
-                                          <Shape x="-1.3274" y="-276.6075" name="Lock3Ribbon" id="0:10559">
+                                          <Shape x="-1.9224" y="-282.7581" name="Lock3Ribbon" id="0:10559">
                                             <ClippingShape sourceId="0:10547" name="Clip" id="0:10558"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10557">
-                                              <CubicDetachedVertex x="6.0928" y="-37.8561" outRotation="0.7795" outDistance="2.9287" inRotation="3.9211" inDistance="2.2312" id="0:10552"/>
-                                              <CubicDetachedVertex x="5.0987" y="-4.9832" outRotation="1.5981" outDistance="14.2842" inRotation="4.7397" inDistance="10.9626" id="0:10553"/>
-                                              <CubicDetachedVertex x="4.0229" y="37.8561" outRotation="2.072" outDistance="2.8308" inRotation="5.2136" inDistance="4.9337" id="0:10554"/>
-                                              <CubicDetachedVertex x="-6.0928" y="15.4458" outRotation="-1.7537" outDistance="10.2002" inRotation="1.3879" inDistance="8.0101" id="0:10555"/>
-                                              <CubicDetachedVertex x="-5.9117" y="-15.864" outRotation="-1.346" outDistance="8.1016" inRotation="1.7955" inDistance="10.1241" id="0:10556"/>
+                                              <CubicDetachedVertex x="6.4414" y="-33.662" outRotation="0.7145" outDistance="2.6568" inRotation="3.8561" inDistance="2.1179" id="0:10552"/>
+                                              <CubicDetachedVertex x="4.9944" y="-4.4287" outRotation="1.617" outDistance="12.709" inRotation="4.7586" inDistance="9.7563" id="0:10553"/>
+                                              <CubicDetachedVertex x="3.3278" y="33.662" outRotation="2.126" outDistance="2.6421" inRotation="5.2676" inDistance="4.59" id="0:10554"/>
+                                              <CubicDetachedVertex x="-6.4414" y="14.0093" outRotation="-1.7613" outDistance="9.011" inRotation="1.3803" inDistance="7.106" id="0:10555"/>
+                                              <CubicDetachedVertex x="-5.8263" y="-13.8144" outRotation="-1.3069" outDistance="7.5067" inRotation="1.8347" inDistance="8.9537" id="0:10556"/>
                                             </PointsPath>
                                             <Fill name="Fill" id="0:10551">
-                                              <RadialGradient startX="0" startY="0" endX="42.0214" endY="0" id="0:10550">
+                                              <RadialGradient startX="0" startY="0" endX="37.1903" endY="0" id="0:10550">
                                                 <GradientStop colorValue="35DBA27C" position="0" id="0:10548"/>
                                                 <GradientStop colorValue="00DBA27C" position="1" id="0:10549"/>
                                               </RadialGradient>
                                             </Fill>
                                           </Shape>
-                                          <Shape x="-14.9957" y="-264.5662" name="Lock3Strand" id="0:10567">
+                                          <Shape x="-16.1184" y="-271.647" name="Lock3Strand" id="0:10567">
                                             <ClippingShape sourceId="0:10547" name="Clip" id="0:10566"/>
                                             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10565">
-                                              <CubicDetachedVertex x="-4.5313" y="-37.1421" outRotation="1.7139" outDistance="12.2778" inRotation="4.8555" inDistance="0" id="0:10562"/>
-                                              <CubicDetachedVertex x="-9.784" y="-0.6852" outRotation="1.3804" outDistance="13.5222" inRotation="4.522" inDistance="11.6948" id="0:10563"/>
-                                              <CubicDetachedVertex x="9.784" y="37.1421" outRotation="1.0934" outDistance="0" inRotation="4.235" inDistance="14.1963" id="0:10564"/>
+                                              <CubicDetachedVertex x="-3.7467" y="-32.8179" outRotation="1.7455" outDistance="11.0099" inRotation="4.8871" inDistance="0" id="0:10562"/>
+                                              <CubicDetachedVertex x="-9.4871" y="-0.291" outRotation="1.3718" outDistance="11.9637" inRotation="4.5134" inDistance="10.3552" id="0:10563"/>
+                                              <CubicDetachedVertex x="9.4871" y="32.8179" outRotation="1.0504" outDistance="0" inRotation="4.192" inDistance="12.7201" id="0:10564"/>
                                             </PointsPath>
                                             <Stroke thickness="1.1" cap="round" join="round" name="Line" id="0:10561">
                                               <SolidColor colorValue="24E6B28A" id="0:10560"/>
                                             </Stroke>
                                           </Shape>
-                                          <Shape x="-5.4794" y="-263.9985" name="Lock3" id="0:10547">
+                                          <Shape x="-5.8922" y="-272.1056" name="Lock3" id="0:10547">
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10546">
-                                              <CubicDetachedVertex x="35.9618" y="-71.9985" outRotation="0.7618" outDistance="12.8028" inRotation="3.9034" inDistance="13.3307" id="0:10539"/>
-                                              <CubicDetachedVertex x="23.7291" y="-5.8928" outRotation="1.6733" outDistance="16.4962" inRotation="4.8149" inDistance="22.3112" id="0:10540"/>
-                                              <CubicDetachedVertex x="24.0487" y="43.8125" outRotation="1.5711" outDistance="9.3956" inRotation="4.7127" inDistance="16.5681" id="0:10541"/>
-                                              <StraightVertex x="23.706" y="71.9985" id="0:10542"/>
-                                              <CubicDetachedVertex x="-2.1389" y="45.5234" outRotation="-2.2643" outDistance="18.8055" inRotation="0.8773" inDistance="12.3072" id="0:10543"/>
-                                              <CubicDetachedVertex x="-35.9618" y="0.223" outRotation="-1.8553" outDistance="18.9155" inRotation="1.2863" inDistance="17.7341" id="0:10544"/>
-                                              <CubicDetachedVertex x="-33.003" y="-60.0046" outRotation="-0.7875" outDistance="18.2523" inRotation="2.3541" inDistance="15.7231" id="0:10545"/>
+                                              <CubicDetachedVertex x="36.3367" y="-64.1056" outRotation="0.6962" outDistance="11.2336" inRotation="3.8378" inDistance="13.0005" id="0:10539"/>
+                                              <CubicDetachedVertex x="23.2294" y="-5.0568" outRotation="1.7007" outDistance="14.6399" inRotation="4.8423" inDistance="20.0537" id="0:10540"/>
+                                              <CubicDetachedVertex x="22.8578" y="39.0987" outRotation="1.5868" outDistance="8.3388" inRotation="4.7284" inDistance="14.7183" id="0:10541"/>
+                                              <StraightVertex x="22.1208" y="64.1056" id="0:10542"/>
+                                              <CubicDetachedVertex x="-3.2615" y="41.2894" outRotation="-2.3252" outDistance="17.1031" inRotation="0.8164" inDistance="11.3499" id="0:10543"/>
+                                              <CubicDetachedVertex x="-36.3367" y="1.9056" outRotation="-1.876" outDistance="16.6004" inRotation="1.2656" inDistance="15.8921" id="0:10544"/>
+                                              <CubicDetachedVertex x="-32.5522" y="-51.6831" outRotation="-0.7374" outDistance="18.5158" inRotation="2.4042" inDistance="14.2101" id="0:10545"/>
                                             </PointsPath>
                                             <Fill name="Fill" id="0:10536">
-                                              <LinearGradient startX="0" startY="-70.0357" endX="0" endY="70.0357" id="0:10535">
+                                              <LinearGradient startX="0" startY="-61.9839" endX="0" endY="61.9839" id="0:10535">
                                                 <GradientStop colorValue="FF795448" position="0" id="0:10532"/>
                                                 <GradientStop colorValue="FF3B2A26" position="0.55" id="0:10533"/>
                                                 <GradientStop colorValue="FF2A1D1A" position="1" id="0:10534"/>
@@ -13883,45 +13883,45 @@
                                       <DataBindContext sourcePathIds="0:14697-0:900001" propertyKey="17" converterId="0:902157" id="0:902158"/>
                                       <Node x="40" y="324" name="Lock2MaterialPivot" id="0:902159">
                                         <Node x="0" y="0" name="Lock2Material" id="0:10605">
-                                          <Shape x="-44.3244" y="-284.6613" name="Lock2Ribbon" id="0:10596">
+                                          <Shape x="-43.726" y="-287.7503" name="Lock2Ribbon" id="0:10596">
                                             <ClippingShape sourceId="0:10584" name="Clip" id="0:10595"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10594">
-                                              <CubicDetachedVertex x="8.4178" y="-26.5798" outRotation="1.0277" outDistance="2.2073" inRotation="4.1693" inDistance="1.6283" id="0:10589"/>
-                                              <CubicDetachedVertex x="2.9044" y="-3.4348" outRotation="1.8368" outDistance="10.4381" inRotation="4.9784" inDistance="7.9277" id="0:10590"/>
-                                              <CubicDetachedVertex x="-6.067" y="26.5798" outRotation="2.3157" outDistance="2.0237" inRotation="5.4573" inDistance="3.5433" id="0:10591"/>
-                                              <CubicDetachedVertex x="-8.4178" y="8.8426" outRotation="-1.4951" outDistance="7.463" inRotation="1.6465" inDistance="5.8638" id="0:10592"/>
-                                              <CubicDetachedVertex x="-3.0424" y="-13.2861" outRotation="-1.1271" outDistance="5.6903" inRotation="2.0145" inDistance="7.3829" id="0:10593"/>
+                                              <CubicDetachedVertex x="8.0656" y="-24.5187" outRotation="0.9747" outDistance="2.0718" inRotation="4.1163" inDistance="1.5708" id="0:10589"/>
+                                              <CubicDetachedVertex x="3.0084" y="-3.1725" outRotation="1.8382" outDistance="9.6392" inRotation="4.9798" inDistance="7.309" id="0:10590"/>
+                                              <CubicDetachedVertex x="-5.37" y="24.5187" outRotation="2.3432" outDistance="1.9245" inRotation="5.4848" inDistance="3.3651" id="0:10591"/>
+                                              <CubicDetachedVertex x="-8.0656" y="8.1935" outRotation="-1.5098" outDistance="6.8612" inRotation="1.6318" inDistance="5.4064" id="0:10592"/>
+                                              <CubicDetachedVertex x="-3.1265" y="-12.2159" outRotation="-1.1127" outDistance="5.3735" inRotation="2.0289" inDistance="6.7843" id="0:10593"/>
                                             </PointsPath>
                                             <Fill name="Fill" id="0:10588">
-                                              <RadialGradient startX="0" startY="0" endX="30.7467" endY="0" id="0:10587">
+                                              <RadialGradient startX="0" startY="0" endX="28.3019" endY="0" id="0:10587">
                                                 <GradientStop colorValue="35DBA27C" position="0" id="0:10585"/>
                                                 <GradientStop colorValue="00DBA27C" position="1" id="0:10586"/>
                                               </RadialGradient>
                                             </Fill>
                                           </Shape>
-                                          <Shape x="-59.2809" y="-279.274" name="Lock2Strand" id="0:10604">
+                                          <Shape x="-58.69" y="-282.7203" name="Lock2Strand" id="0:10604">
                                             <ClippingShape sourceId="0:10584" name="Clip" id="0:10603"/>
                                             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10602">
-                                              <CubicDetachedVertex x="4.684" y="-27.6206" outRotation="1.9316" outDistance="8.8451" inRotation="5.0732" inDistance="0" id="0:10599"/>
-                                              <CubicDetachedVertex x="-4.684" y="-2.794" outRotation="1.6387" outDistance="9.9336" inRotation="4.7803" inDistance="8.5227" id="0:10600"/>
-                                              <CubicDetachedVertex x="0.9292" y="27.6206" outRotation="1.3883" outDistance="0" inRotation="4.5299" inDistance="10.3094" id="0:10601"/>
+                                              <CubicDetachedVertex x="4.438" y="-25.4501" outRotation="1.9403" outDistance="8.1913" inRotation="5.0819" inDistance="0" id="0:10599"/>
+                                              <CubicDetachedVertex x="-4.438" y="-2.5353" outRotation="1.6233" outDistance="9.1478" inRotation="4.7649" inDistance="7.8423" id="0:10600"/>
+                                              <CubicDetachedVertex x="1.7652" y="25.4501" outRotation="1.3527" outDistance="0" inRotation="4.4943" inDistance="9.5549" id="0:10601"/>
                                             </PointsPath>
                                             <Stroke thickness="1.1" cap="round" join="round" name="Line" id="0:10598">
                                               <SolidColor colorValue="24E6B28A" id="0:10597"/>
                                             </Stroke>
                                           </Shape>
-                                          <Shape x="-45.427" y="-274.2196" name="Lock2" id="0:10584">
+                                          <Shape x="-45.0109" y="-278.06" name="Lock2" id="0:10584">
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10583">
-                                              <CubicDetachedVertex x="30.3077" y="-47.3411" outRotation="1.0041" outDistance="9.581" inRotation="4.1457" inDistance="9.9466" id="0:10576"/>
-                                              <CubicDetachedVertex x="11.997" y="-2.7951" outRotation="1.9179" outDistance="12.1679" inRotation="5.0595" inDistance="16.0347" id="0:10577"/>
-                                              <CubicDetachedVertex x="1.5294" y="32.2218" outRotation="1.8798" outDistance="7.0712" inRotation="5.0214" inDistance="12.179" id="0:10578"/>
-                                              <StraightVertex x="-5.5683" y="52.2196" id="0:10579"/>
-                                              <CubicDetachedVertex x="-16.6787" y="28.3771" outRotation="-1.9491" outDistance="13.5705" inRotation="1.1925" inDistance="8.7586" id="0:10580"/>
-                                              <CubicDetachedVertex x="-30.3077" y="-10.032" outRotation="-1.6052" outDistance="13.8881" inRotation="1.5364" inDistance="12.9935" id="0:10581"/>
-                                              <CubicDetachedVertex x="-19.4537" y="-52.2196" outRotation="-0.5517" outDistance="12.6792" inRotation="2.5899" inDistance="11.0465" id="0:10582"/>
+                                              <CubicDetachedVertex x="29.9208" y="-43.82" outRotation="0.9507" outDistance="8.7665" inRotation="4.0923" inDistance="9.814" id="0:10576"/>
+                                              <CubicDetachedVertex x="12.4939" y="-2.6968" outRotation="1.9256" outDistance="11.2352" inRotation="5.0672" inDistance="14.8669" id="0:10577"/>
+                                              <CubicDetachedVertex x="2.7182" y="29.6096" outRotation="1.8847" outDistance="6.5412" inRotation="5.0263" inDistance="11.2471" id="0:10578"/>
+                                              <StraightVertex x="-3.9855" y="48.06" id="0:10579"/>
+                                              <CubicDetachedVertex x="-15.5516" y="26.1611" outRotation="-1.9964" outDistance="12.6917" inRotation="1.1452" inDistance="8.2455" id="0:10580"/>
+                                              <CubicDetachedVertex x="-29.9208" y="-9.147" outRotation="-1.6293" outDistance="12.7178" inRotation="1.5123" inDistance="12.0649" id="0:10581"/>
+                                              <CubicDetachedVertex x="-19.8991" y="-48.06" outRotation="-0.5251" outDistance="12.7816" inRotation="2.6164" inDistance="10.272" id="0:10582"/>
                                             </PointsPath>
                                             <Fill name="Fill" id="0:10573">
-                                              <LinearGradient startX="0" startY="-51.2445" endX="0" endY="51.2445" id="0:10572">
+                                              <LinearGradient startX="0" startY="-47.1699" endX="0" endY="47.1699" id="0:10572">
                                                 <GradientStop colorValue="FF795448" position="0" id="0:10569"/>
                                                 <GradientStop colorValue="FF3B2A26" position="0.55" id="0:10570"/>
                                                 <GradientStop colorValue="FF2A1D1A" position="1" id="0:10571"/>
@@ -13999,45 +13999,45 @@
                                       <DataBindContext sourcePathIds="0:14697-0:900001" propertyKey="17" converterId="0:902062" id="0:902063"/>
                                       <Node x="70" y="314" name="Lock1MaterialPivot" id="0:902064">
                                         <Node x="0" y="0" name="Lock1Material" id="0:10679">
-                                          <Shape x="-76.2835" y="-267.8552" name="Lock1Ribbon" id="0:10670">
+                                          <Shape x="-76.2821" y="-270.1681" name="Lock1Ribbon" id="0:10670">
                                             <ClippingShape sourceId="0:10658" name="Clip" id="0:10669"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10668">
-                                              <CubicDetachedVertex x="9.4033" y="-31.2888" outRotation="1.1271" outDistance="2.4649" inRotation="4.2687" inDistance="1.7617" id="0:10663"/>
-                                              <CubicDetachedVertex x="2.3899" y="-4.1142" outRotation="1.8298" outDistance="12.2244" inRotation="4.9714" inDistance="9.3549" id="0:10664"/>
-                                              <CubicDetachedVertex x="-7.1803" y="31.2888" outRotation="2.251" outDistance="2.2719" inRotation="5.3926" inDistance="3.9781" id="0:10665"/>
-                                              <CubicDetachedVertex x="-9.4033" y="10.4625" outRotation="-1.4829" outDistance="8.7998" inRotation="1.6587" inDistance="6.8791" id="0:10666"/>
-                                              <CubicDetachedVertex x="-3.0531" y="-15.5665" outRotation="-1.1476" outDistance="6.535" inRotation="1.994" inDistance="8.7288" id="0:10667"/>
+                                              <CubicDetachedVertex x="9.3994" y="-29.6722" outRotation="1.1096" outDistance="2.3622" inRotation="4.2512" inDistance="1.7123" id="0:10663"/>
+                                              <CubicDetachedVertex x="2.3883" y="-3.8997" outRotation="1.8432" outDistance="11.6359" inRotation="4.9848" inDistance="8.9029" id="0:10664"/>
+                                              <CubicDetachedVertex x="-7.1787" y="29.6722" outRotation="2.2797" outDistance="2.195" inRotation="5.4213" inDistance="3.8404" id="0:10665"/>
+                                              <CubicDetachedVertex x="-9.3994" y="9.8437" outRotation="-1.4783" outDistance="8.3599" inRotation="1.6632" inDistance="6.5431" id="0:10666"/>
+                                              <CubicDetachedVertex x="-3.0512" y="-14.846" outRotation="-1.1268" outDistance="6.2962" inRotation="2.0148" inDistance="8.2904" id="0:10667"/>
                                             </PointsPath>
                                             <Fill name="Fill" id="0:10662">
-                                              <RadialGradient startX="0" startY="0" endX="36.1796" endY="0" id="0:10661">
+                                              <RadialGradient startX="0" startY="0" endX="34.389" endY="0" id="0:10661">
                                                 <GradientStop colorValue="35DBA27C" position="0" id="0:10659"/>
                                                 <GradientStop colorValue="00DBA27C" position="1" id="0:10660"/>
                                               </RadialGradient>
                                             </Fill>
                                           </Shape>
-                                          <Shape x="-91.392" y="-261.3272" name="Lock1Strand" id="0:10678">
+                                          <Shape x="-91.3825" y="-264.0963" name="Lock1Strand" id="0:10678">
                                             <ClippingShape sourceId="0:10658" name="Clip" id="0:10677"/>
                                             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10676">
-                                              <CubicDetachedVertex x="5.3712" y="-32.4589" outRotation="1.923" outDistance="10.3792" inRotation="5.0646" inDistance="0" id="0:10673"/>
-                                              <CubicDetachedVertex x="-5.3712" y="-3.2331" outRotation="1.6523" outDistance="11.6575" inRotation="4.7939" inDistance="10.0538" id="0:10674"/>
-                                              <CubicDetachedVertex x="0.0691" y="32.4589" outRotation="1.4195" outDistance="0" inRotation="4.5611" inDistance="12.0348" id="0:10675"/>
+                                              <CubicDetachedVertex x="5.3692" y="-30.842" outRotation="1.9408" outDistance="9.8983" inRotation="5.0824" inDistance="0" id="0:10673"/>
+                                              <CubicDetachedVertex x="-5.3692" y="-3.1565" outRotation="1.6566" outDistance="11.0805" inRotation="4.7981" inDistance="9.5566" id="0:10674"/>
+                                              <CubicDetachedVertex x="0.0664" y="30.842" outRotation="1.4123" outDistance="0" inRotation="4.5539" inDistance="11.4768" id="0:10675"/>
                                             </PointsPath>
                                             <Stroke thickness="1.1" cap="round" join="round" name="Line" id="0:10672">
                                               <SolidColor colorValue="24E6B28A" id="0:10671"/>
                                             </Stroke>
                                           </Shape>
-                                          <Shape x="-76.8101" y="-255.2438" name="Lock1" id="0:10658">
+                                          <Shape x="-76.8078" y="-258.3086" name="Lock1" id="0:10658">
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10657">
-                                              <CubicDetachedVertex x="31.686" y="-56.2686" outRotation="1.1088" outDistance="11.3422" inRotation="4.2504" inDistance="10.0307" id="0:10650"/>
-                                              <CubicDetachedVertex x="10.5124" y="-3.846" outRotation="1.8952" outDistance="14.1875" inRotation="5.0368" inDistance="18.8016" id="0:10651"/>
-                                              <CubicDetachedVertex x="0.1421" y="37.537" outRotation="1.8248" outDistance="8.1957" inRotation="4.9664" inDistance="14.22" id="0:10652"/>
-                                              <StraightVertex x="-6.3839" y="61.2438" id="0:10653"/>
-                                              <CubicDetachedVertex x="-18.1213" y="33.2867" outRotation="-1.9047" outDistance="15.6426" inRotation="1.2369" inDistance="10.0938" id="0:10654"/>
-                                              <CubicDetachedVertex x="-31.686" y="-11.7018" outRotation="-1.5702" outDistance="16.4584" inRotation="1.5714" inDistance="15.0518" id="0:10655"/>
-                                              <CubicDetachedVertex x="-18.0658" y="-61.2438" outRotation="-0.6129" outDistance="12.7365" inRotation="2.5287" inDistance="13.0881" id="0:10656"/>
+                                              <CubicDetachedVertex x="31.6704" y="-53.0743" outRotation="1.0909" outDistance="10.7035" inRotation="4.2325" inDistance="9.9172" id="0:10650"/>
+                                              <CubicDetachedVertex x="10.5053" y="-3.4338" outRotation="1.9117" outDistance="13.4975" inRotation="5.0533" inDistance="17.9419" id="0:10651"/>
+                                              <CubicDetachedVertex x="0.1382" y="35.817" outRotation="1.8378" outDistance="7.8057" inRotation="4.9794" inDistance="13.5314" id="0:10652"/>
+                                              <StraightVertex x="-6.3856" y="58.3086" id="0:10653"/>
+                                              <CubicDetachedVertex x="-18.1153" y="31.5903" outRotation="-1.9191" outDistance="14.9829" inRotation="1.2225" inDistance="9.7131" id="0:10654"/>
+                                              <CubicDetachedVertex x="-31.6704" y="-11.3313" outRotation="-1.5701" outDistance="15.6052" inRotation="1.5715" inDistance="14.3611" id="0:10655"/>
+                                              <CubicDetachedVertex x="-18.0548" y="-58.3086" outRotation="-0.5827" outDistance="12.7824" inRotation="2.5589" inDistance="12.5039" id="0:10656"/>
                                             </PointsPath>
                                             <Fill name="Fill" id="0:10647">
-                                              <LinearGradient startX="0" startY="-60.2993" endX="0" endY="60.2993" id="0:10646">
+                                              <LinearGradient startX="0" startY="-57.3149" endX="0" endY="57.3149" id="0:10646">
                                                 <GradientStop colorValue="FF795448" position="0" id="0:10643"/>
                                                 <GradientStop colorValue="FF3B2A26" position="0.55" id="0:10644"/>
                                                 <GradientStop colorValue="FF2A1D1A" position="1" id="0:10645"/>
@@ -14500,8 +14500,8 @@
                                               <CubicDetachedVertex x="-15" y="-23" outRotation="2.7828" outDistance="6.8636" inRotation="5.9244" inDistance="4.5284" id="0:9960"/>
                                               <CubicDetachedVertex x="-34" y="-15" outRotation="2.7431" outDistance="0" inRotation="5.8847" inDistance="6.8718" id="0:9961"/>
                                             </PointsPath>
-                                            <Stroke thickness="3.2" cap="round" join="round" name="Line" id="0:9956">
-                                              <SolidColor colorValue="FF2A1B18" id="0:9955"/>
+                                            <Stroke thickness="2.4" cap="round" join="round" name="Line" id="0:9956">
+                                              <SolidColor colorValue="802A1B18" id="0:9955"/>
                                             </Stroke>
                                           </Shape>
                                           <Shape x="0" y="24" name="Squint" id="0:9954">
@@ -14776,8 +14776,8 @@
                                               <CubicDetachedVertex x="15" y="-23" outRotation="0.3588" outDistance="6.8636" inRotation="3.5004" inDistance="4.5284" id="0:10137"/>
                                               <CubicDetachedVertex x="34" y="-15" outRotation="0.3985" outDistance="0" inRotation="3.5401" inDistance="6.8718" id="0:10138"/>
                                             </PointsPath>
-                                            <Stroke thickness="3.2" cap="round" join="round" name="Line" id="0:10133">
-                                              <SolidColor colorValue="FF2A1B18" id="0:10132"/>
+                                            <Stroke thickness="2.4" cap="round" join="round" name="Line" id="0:10133">
+                                              <SolidColor colorValue="802A1B18" id="0:10132"/>
                                             </Stroke>
                                           </Shape>
                                           <Shape x="0" y="24" name="Squint" id="0:10131">
@@ -15236,30 +15236,30 @@
                                                     <SolidColor colorValue="FF3A2622" id="0:951145"/>
                                                   </Stroke>
                                                 </Shape>
-                                                <Shape x="0" y="1.5" name="MouthTeeth" id="0:951240">
+                                                <Shape x="0" y="0.25" name="MouthTeeth" id="0:951240">
                                                   <ClippingShape sourceId="0:9697" id="0:901149"/>
                                                   <DataBindContext sourcePathIds="0:14697-0:14656" propertyKey="18" converterId="0:951292" id="0:951293"/>
                                                   <ClippingShape sourceId="0:951144" name="Clip" id="0:951239"/>
                                                   <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:951226">
-                                                    <StraightVertex x="-23" y="-7.5" id="0:951220">
+                                                    <StraightVertex x="-23" y="-6.25" id="0:951220">
                                                       <Weight values="26265" indices="513" id="0:951227"/>
                                                     </StraightVertex>
-                                                    <StraightVertex x="0" y="-6.5" id="0:951221">
+                                                    <StraightVertex x="0" y="-5.25" id="0:951221">
                                                       <Weight values="255" indices="3" id="0:951228"/>
                                                     </StraightVertex>
-                                                    <StraightVertex x="23" y="-7.5" id="0:951222">
+                                                    <StraightVertex x="23" y="-6.25" id="0:951222">
                                                       <Weight values="26265" indices="1284" id="0:951229"/>
                                                     </StraightVertex>
-                                                    <CubicDetachedVertex x="19" y="5.5" outRotation="2.5637" outDistance="5.3466" inRotation="5.7053" inDistance="3.8064" id="0:951223">
+                                                    <CubicDetachedVertex x="19" y="4.75" outRotation="2.6438" outDistance="5.4059" inRotation="5.7854" inDistance="3.3199" id="0:951223">
                                                       <CubicWeight values="19635" indices="1029" inValues="26010" inIndices="1029" outValues="3363960" outIndices="262917" id="0:951230"/>
                                                     </CubicDetachedVertex>
-                                                    <CubicDetachedVertex x="0" y="7.5" outRotation="3.1416" outDistance="6.3333" inRotation="6.2832" inDistance="6.3333" id="0:951224">
+                                                    <CubicDetachedVertex x="0" y="6.25" outRotation="3.1416" outDistance="6.3333" inRotation="6.2832" inDistance="6.3333" id="0:951224">
                                                       <CubicWeight values="255" indices="3" inValues="1653420" inIndices="263427" outValues="1653420" outIndices="66051" id="0:951231"/>
                                                     </CubicDetachedVertex>
-                                                    <CubicDetachedVertex x="-19" y="5.5" outRotation="-2.5637" outDistance="3.8064" inRotation="0.5779" inDistance="5.3466" id="0:951225">
+                                                    <CubicDetachedVertex x="-19" y="4.75" outRotation="-2.6438" outDistance="3.3199" inRotation="0.4978" inDistance="5.4059" id="0:951225">
                                                       <CubicWeight values="19635" indices="258" inValues="3363960" inIndices="66306" outValues="26010" outIndices="258" id="0:951232"/>
                                                     </CubicDetachedVertex>
-                                                    <Skin tx="0" ty="1.5" id="0:951238">
+                                                    <Skin tx="0" ty="0.25" id="0:951238">
                                                       <Tendon boneId="0:950412" tx="-17" ty="-1" id="0:951233"/>
                                                       <Tendon boneId="0:950506" tx="-10.5" ty="1" id="0:951234"/>
                                                       <Tendon boneId="0:950547" tx="0" ty="2" id="0:951235"/>
@@ -15535,8 +15535,8 @@
                                             <CubicDetachedVertex x="-6" y="-147.5" outRotation="0" outDistance="1.3333" inRotation="3.1416" inDistance="1.3333" id="0:951401"/>
                                             <CubicDetachedVertex x="-2" y="-145" outRotation="0.5586" outDistance="0" inRotation="3.7002" inDistance="1.5723" id="0:951402"/>
                                           </PointsPath>
-                                          <Stroke thickness="1.8" cap="round" join="round" name="Line" id="0:951420">
-                                            <SolidColor colorValue="A0D0937C" id="0:951419"/>
+                                          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:951420">
+                                            <SolidColor colorValue="E0B8786A" id="0:951419"/>
                                           </Stroke>
                                         </Shape>
                                         <Shape x="0" y="0" name="NoseWrinkle1" id="0:951429">
@@ -15546,8 +15546,8 @@
                                             <CubicDetachedVertex x="5" y="-148.5" outRotation="0" outDistance="1.3333" inRotation="3.1416" inDistance="1.3333" id="0:951423"/>
                                             <CubicDetachedVertex x="9" y="-146" outRotation="0.5586" outDistance="0" inRotation="3.7002" inDistance="1.5723" id="0:951424"/>
                                           </PointsPath>
-                                          <Stroke thickness="1.8" cap="round" join="round" name="Line" id="0:951428">
-                                            <SolidColor colorValue="A0D0937C" id="0:951427"/>
+                                          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:951428">
+                                            <SolidColor colorValue="E0B8786A" id="0:951427"/>
                                           </Stroke>
                                         </Shape>
                                         <Node x="0" y="-108" name="NoseAU" id="0:951399">
@@ -40799,7 +40799,7 @@
     <FormulaTokenOperation operationType="2" id="0:950003"/>
     <FormulaTokenInput id="0:950004"/>
     <FormulaTokenOperation operationType="0" id="0:950005"/>
-    <FormulaTokenValue operationValue="4" id="0:950006"/>
+    <FormulaTokenValue operationValue="4.5" id="0:950006"/>
     <FormulaTokenOperation operationType="2" id="0:950007"/>
     <FormulaTokenValue operationValue="0" id="0:950009">
       <DataBindContext sourcePathIds="0:14697-0:14648" propertyKey="777" id="0:950008"/>
@@ -40809,11 +40809,11 @@
   <DataConverterFormula id="0:950027">
     <FormulaTokenValue operationValue="-5" id="0:950012"/>
     <FormulaTokenOperation operationType="0" id="0:950013"/>
-    <FormulaTokenValue operationValue="-16" id="0:950014"/>
+    <FormulaTokenValue operationValue="-18" id="0:950014"/>
     <FormulaTokenOperation operationType="2" id="0:950015"/>
     <FormulaTokenInput id="0:950016"/>
     <FormulaTokenOperation operationType="0" id="0:950017"/>
-    <FormulaTokenValue operationValue="10" id="0:950018"/>
+    <FormulaTokenValue operationValue="13" id="0:950018"/>
     <FormulaTokenOperation operationType="2" id="0:950019"/>
     <FormulaTokenValue operationValue="0" id="0:950021">
       <DataBindContext sourcePathIds="0:14697-0:14648" propertyKey="777" id="0:950020"/>
@@ -40841,7 +40841,7 @@
     <FormulaTokenOperation operationType="2" id="0:950040"/>
     <FormulaTokenInput id="0:950041"/>
     <FormulaTokenOperation operationType="0" id="0:950042"/>
-    <FormulaTokenValue operationValue="4" id="0:950043"/>
+    <FormulaTokenValue operationValue="5" id="0:950043"/>
     <FormulaTokenOperation operationType="2" id="0:950044"/>
     <FormulaTokenValue operationValue="0" id="0:950046">
       <DataBindContext sourcePathIds="0:14697-0:14648" propertyKey="777" id="0:950045"/>
@@ -40865,11 +40865,11 @@
   <DataConverterFormula id="0:950077">
     <FormulaTokenValue operationValue="-4" id="0:950062"/>
     <FormulaTokenOperation operationType="0" id="0:950063"/>
-    <FormulaTokenValue operationValue="1.5" id="0:950064"/>
+    <FormulaTokenValue operationValue="3" id="0:950064"/>
     <FormulaTokenOperation operationType="2" id="0:950065"/>
     <FormulaTokenInput id="0:950066"/>
     <FormulaTokenOperation operationType="0" id="0:950067"/>
-    <FormulaTokenValue operationValue="-3" id="0:950068"/>
+    <FormulaTokenValue operationValue="-4" id="0:950068"/>
     <FormulaTokenOperation operationType="2" id="0:950069"/>
     <FormulaTokenValue operationValue="0" id="0:950071">
       <DataBindContext sourcePathIds="0:14697-0:14648" propertyKey="777" id="0:950070"/>
@@ -40929,7 +40929,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14648" propertyKey="777" id="0:950138"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:950140"/>
-    <FormulaTokenValue operationValue="4.5" id="0:950141"/>
+    <FormulaTokenValue operationValue="13.5" id="0:950141"/>
     <FormulaTokenOperation operationType="2" id="0:950142"/>
     <FormulaTokenValue operationValue="0" id="0:950144">
       <DataBindContext sourcePathIds="0:14697-0:14649" propertyKey="777" id="0:950143"/>
@@ -41009,7 +41009,7 @@
     <FormulaTokenOperation operationType="2" id="0:950216"/>
     <FormulaTokenInput id="0:950217"/>
     <FormulaTokenOperation operationType="0" id="0:950218"/>
-    <FormulaTokenValue operationValue="-4" id="0:950219"/>
+    <FormulaTokenValue operationValue="-4.5" id="0:950219"/>
     <FormulaTokenOperation operationType="2" id="0:950220"/>
     <FormulaTokenValue operationValue="0" id="0:950222">
       <DataBindContext sourcePathIds="0:14697-0:14648" propertyKey="777" id="0:950221"/>
@@ -41247,7 +41247,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14656" propertyKey="777" id="0:950458"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:950460"/>
-    <FormulaTokenValue operationValue="-3" id="0:950461"/>
+    <FormulaTokenValue operationValue="-1" id="0:950461"/>
     <FormulaTokenOperation operationType="2" id="0:950462"/>
     <FormulaTokenValue operationValue="0" id="0:950464">
       <DataBindContext sourcePathIds="0:14697-0:14652" propertyKey="777" id="0:950463"/>
@@ -41327,7 +41327,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14656" propertyKey="777" id="0:950528"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:950530"/>
-    <FormulaTokenValue operationValue="-4" id="0:950531"/>
+    <FormulaTokenValue operationValue="-1.5" id="0:950531"/>
     <FormulaTokenOperation operationType="2" id="0:950532"/>
     <FormulaTokenValue operationValue="0" id="0:950534">
       <DataBindContext sourcePathIds="0:14697-0:14652" propertyKey="777" id="0:950533"/>
@@ -41371,7 +41371,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14656" propertyKey="777" id="0:950567"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:950569"/>
-    <FormulaTokenValue operationValue="1" id="0:950570"/>
+    <FormulaTokenValue operationValue="-2" id="0:950570"/>
     <FormulaTokenOperation operationType="2" id="0:950571"/>
     <FormulaTokenValue operationValue="0" id="0:950573">
       <DataBindContext sourcePathIds="0:14697-0:14660" propertyKey="777" id="0:950572"/>
@@ -41409,7 +41409,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14656" propertyKey="777" id="0:950604"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:950606"/>
-    <FormulaTokenValue operationValue="1.5" id="0:950607"/>
+    <FormulaTokenValue operationValue="-2.5" id="0:950607"/>
     <FormulaTokenOperation operationType="2" id="0:950608"/>
     <FormulaTokenValue operationValue="0" id="0:950610">
       <DataBindContext sourcePathIds="0:14697-0:14660" propertyKey="777" id="0:950609"/>
@@ -41447,7 +41447,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14656" propertyKey="777" id="0:950638"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:950640"/>
-    <FormulaTokenValue operationValue="1.2" id="0:950641"/>
+    <FormulaTokenValue operationValue="-2" id="0:950641"/>
     <FormulaTokenOperation operationType="2" id="0:950642"/>
     <FormulaTokenValue operationValue="0" id="0:950644">
       <DataBindContext sourcePathIds="0:14697-0:14660" propertyKey="777" id="0:950643"/>
@@ -41559,7 +41559,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14655" propertyKey="777" id="0:950733"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:950735"/>
-    <FormulaTokenValue operationValue="-2.321" id="0:950736"/>
+    <FormulaTokenValue operationValue="-0.745" id="0:950736"/>
     <FormulaTokenOperation operationType="2" id="0:950737"/>
     <FormulaTokenValue operationValue="0" id="0:950739">
       <DataBindContext sourcePathIds="0:14697-0:14652" propertyKey="777" id="0:950738"/>
@@ -41671,7 +41671,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14655" propertyKey="777" id="0:950828"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:950830"/>
-    <FormulaTokenValue operationValue="-4.054" id="0:950831"/>
+    <FormulaTokenValue operationValue="-1.395" id="0:950831"/>
     <FormulaTokenOperation operationType="2" id="0:950832"/>
     <FormulaTokenValue operationValue="0" id="0:950834">
       <DataBindContext sourcePathIds="0:14697-0:14652" propertyKey="777" id="0:950833"/>
@@ -41897,7 +41897,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14655" propertyKey="777" id="0:951028"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:951030"/>
-    <FormulaTokenValue operationValue="0.745" id="0:951031"/>
+    <FormulaTokenValue operationValue="-1.575" id="0:951031"/>
     <FormulaTokenOperation operationType="2" id="0:951032"/>
     <FormulaTokenValue operationValue="0" id="0:951034">
       <DataBindContext sourcePathIds="0:14697-0:14660" propertyKey="777" id="0:951033"/>
@@ -41953,7 +41953,7 @@
       <DataBindContext sourcePathIds="0:14697-0:14655" propertyKey="777" id="0:951077"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:951079"/>
-    <FormulaTokenValue operationValue="1.395" id="0:951080"/>
+    <FormulaTokenValue operationValue="-2.659" id="0:951080"/>
     <FormulaTokenOperation operationType="2" id="0:951081"/>
     <FormulaTokenValue operationValue="0" id="0:951083">
       <DataBindContext sourcePathIds="0:14697-0:14660" propertyKey="777" id="0:951082"/>
@@ -42003,9 +42003,9 @@
     <FormulaTokenFunction functionType="0" id="0:951285"/>
     <FormulaTokenValue operationValue="1" id="0:951284"/>
     <FormulaTokenArgumentSeparator id="0:951286"/>
-    <FormulaTokenValue operationValue="2.5" id="0:951279"/>
+    <FormulaTokenValue operationValue="3.4" id="0:951279"/>
     <FormulaTokenOperation operationType="0" id="0:951280"/>
-    <FormulaTokenValue operationValue="-5" id="0:951281"/>
+    <FormulaTokenValue operationValue="-8" id="0:951281"/>
     <FormulaTokenOperation operationType="2" id="0:951282"/>
     <FormulaTokenInput id="0:951283"/>
     <FormulaTokenParenthesisClose id="0:951287"/>
@@ -42071,9 +42071,9 @@
     <FormulaTokenFunction functionType="0" id="0:951410"/>
     <FormulaTokenValue operationValue="1" id="0:951409"/>
     <FormulaTokenArgumentSeparator id="0:951411"/>
-    <FormulaTokenValue operationValue="0" id="0:951404"/>
+    <FormulaTokenValue operationValue="-0.1" id="0:951404"/>
     <FormulaTokenOperation operationType="0" id="0:951405"/>
-    <FormulaTokenValue operationValue="1" id="0:951406"/>
+    <FormulaTokenValue operationValue="1.6" id="0:951406"/>
     <FormulaTokenOperation operationType="2" id="0:951407"/>
     <FormulaTokenInput id="0:951408"/>
     <FormulaTokenParenthesisClose id="0:951412"/>
@@ -44117,27 +44117,27 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:902038">
-    <FormulaTokenValue operationValue="-0.1" id="0:902005"/>
+    <FormulaTokenValue operationValue="-0.105" id="0:902005"/>
     <FormulaTokenOperation operationType="0" id="0:902006"/>
-    <FormulaTokenValue operationValue="0.1" id="0:902007"/>
+    <FormulaTokenValue operationValue="0.105" id="0:902007"/>
     <FormulaTokenOperation operationType="2" id="0:902008"/>
     <FormulaTokenFunction functionType="9" id="0:902010"/>
     <FormulaTokenInput id="0:902009"/>
     <FormulaTokenParenthesisClose id="0:902011"/>
     <FormulaTokenOperation operationType="0" id="0:902012"/>
-    <FormulaTokenValue operationValue="-0.195" id="0:902013"/>
+    <FormulaTokenValue operationValue="-0.2" id="0:902013"/>
     <FormulaTokenOperation operationType="2" id="0:902014"/>
     <FormulaTokenFunction functionType="10" id="0:902016"/>
     <FormulaTokenInput id="0:902015"/>
     <FormulaTokenParenthesisClose id="0:902017"/>
     <FormulaTokenOperation operationType="0" id="0:902018"/>
-    <FormulaTokenValue operationValue="-0.553" id="0:902019"/>
+    <FormulaTokenValue operationValue="-0.577" id="0:902019"/>
     <FormulaTokenOperation operationType="2" id="0:902020"/>
     <FormulaTokenValue operationValue="0" id="0:902022">
       <DataBindContext sourcePathIds="0:14697-0:900002" propertyKey="777" id="0:902021"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:902023"/>
-    <FormulaTokenValue operationValue="0.228" id="0:902024"/>
+    <FormulaTokenValue operationValue="0.237" id="0:902024"/>
     <FormulaTokenOperation operationType="2" id="0:902025"/>
     <FormulaTokenValue operationValue="0" id="0:902027">
       <DataBindContext sourcePathIds="0:14697-0:900002" propertyKey="777" id="0:902026"/>
@@ -44168,13 +44168,13 @@
     <FormulaTokenInput id="0:902045"/>
     <FormulaTokenParenthesisClose id="0:902047"/>
     <FormulaTokenOperation operationType="0" id="0:902048"/>
-    <FormulaTokenValue operationValue="-0.195" id="0:902049"/>
+    <FormulaTokenValue operationValue="-0.2" id="0:902049"/>
     <FormulaTokenOperation operationType="2" id="0:902050"/>
     <FormulaTokenFunction functionType="10" id="0:902052"/>
     <FormulaTokenInput id="0:902051"/>
     <FormulaTokenParenthesisClose id="0:902053"/>
     <FormulaTokenOperation operationType="0" id="0:902054"/>
-    <FormulaTokenValue operationValue="-0.206" id="0:902055"/>
+    <FormulaTokenValue operationValue="-0.216" id="0:902055"/>
     <FormulaTokenOperation operationType="2" id="0:902056"/>
     <FormulaTokenValue operationValue="0" id="0:902058">
       <DataBindContext sourcePathIds="0:14697-0:900003" propertyKey="777" id="0:902057"/>
@@ -44227,27 +44227,27 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:902133">
-    <FormulaTokenValue operationValue="-0.098" id="0:902100"/>
+    <FormulaTokenValue operationValue="-0.085" id="0:902100"/>
     <FormulaTokenOperation operationType="0" id="0:902101"/>
-    <FormulaTokenValue operationValue="0.098" id="0:902102"/>
+    <FormulaTokenValue operationValue="0.085" id="0:902102"/>
     <FormulaTokenOperation operationType="2" id="0:902103"/>
     <FormulaTokenFunction functionType="9" id="0:902105"/>
     <FormulaTokenInput id="0:902104"/>
     <FormulaTokenParenthesisClose id="0:902106"/>
     <FormulaTokenOperation operationType="0" id="0:902107"/>
-    <FormulaTokenValue operationValue="-0.305" id="0:902108"/>
+    <FormulaTokenValue operationValue="-0.324" id="0:902108"/>
     <FormulaTokenOperation operationType="2" id="0:902109"/>
     <FormulaTokenFunction functionType="10" id="0:902111"/>
     <FormulaTokenInput id="0:902110"/>
     <FormulaTokenParenthesisClose id="0:902112"/>
     <FormulaTokenOperation operationType="0" id="0:902113"/>
-    <FormulaTokenValue operationValue="-0.826" id="0:902114"/>
+    <FormulaTokenValue operationValue="-0.89" id="0:902114"/>
     <FormulaTokenOperation operationType="2" id="0:902115"/>
     <FormulaTokenValue operationValue="0" id="0:902117">
       <DataBindContext sourcePathIds="0:14697-0:900002" propertyKey="777" id="0:902116"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:902118"/>
-    <FormulaTokenValue operationValue="0.34" id="0:902119"/>
+    <FormulaTokenValue operationValue="0.366" id="0:902119"/>
     <FormulaTokenOperation operationType="2" id="0:902120"/>
     <FormulaTokenValue operationValue="0" id="0:902122">
       <DataBindContext sourcePathIds="0:14697-0:900002" propertyKey="777" id="0:902121"/>
@@ -44278,13 +44278,13 @@
     <FormulaTokenInput id="0:902140"/>
     <FormulaTokenParenthesisClose id="0:902142"/>
     <FormulaTokenOperation operationType="0" id="0:902143"/>
-    <FormulaTokenValue operationValue="-0.305" id="0:902144"/>
+    <FormulaTokenValue operationValue="-0.324" id="0:902144"/>
     <FormulaTokenOperation operationType="2" id="0:902145"/>
     <FormulaTokenFunction functionType="10" id="0:902147"/>
     <FormulaTokenInput id="0:902146"/>
     <FormulaTokenParenthesisClose id="0:902148"/>
     <FormulaTokenOperation operationType="0" id="0:902149"/>
-    <FormulaTokenValue operationValue="-0.294" id="0:902150"/>
+    <FormulaTokenValue operationValue="-0.317" id="0:902150"/>
     <FormulaTokenOperation operationType="2" id="0:902151"/>
     <FormulaTokenValue operationValue="0" id="0:902153">
       <DataBindContext sourcePathIds="0:14697-0:900003" propertyKey="777" id="0:902152"/>
@@ -44337,27 +44337,27 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:902228">
-    <FormulaTokenValue operationValue="0.174" id="0:902195"/>
+    <FormulaTokenValue operationValue="0.18" id="0:902195"/>
     <FormulaTokenOperation operationType="0" id="0:902196"/>
-    <FormulaTokenValue operationValue="-0.174" id="0:902197"/>
+    <FormulaTokenValue operationValue="-0.18" id="0:902197"/>
     <FormulaTokenOperation operationType="2" id="0:902198"/>
     <FormulaTokenFunction functionType="9" id="0:902200"/>
     <FormulaTokenInput id="0:902199"/>
     <FormulaTokenParenthesisClose id="0:902201"/>
     <FormulaTokenOperation operationType="0" id="0:902202"/>
-    <FormulaTokenValue operationValue="-0.294" id="0:902203"/>
+    <FormulaTokenValue operationValue="-0.325" id="0:902203"/>
     <FormulaTokenOperation operationType="2" id="0:902204"/>
     <FormulaTokenFunction functionType="10" id="0:902206"/>
     <FormulaTokenInput id="0:902205"/>
     <FormulaTokenParenthesisClose id="0:902207"/>
     <FormulaTokenOperation operationType="0" id="0:902208"/>
-    <FormulaTokenValue operationValue="-0.697" id="0:902209"/>
+    <FormulaTokenValue operationValue="-0.781" id="0:902209"/>
     <FormulaTokenOperation operationType="2" id="0:902210"/>
     <FormulaTokenValue operationValue="0" id="0:902212">
       <DataBindContext sourcePathIds="0:14697-0:900002" propertyKey="777" id="0:902211"/>
     </FormulaTokenValue>
     <FormulaTokenOperation operationType="0" id="0:902213"/>
-    <FormulaTokenValue operationValue="0.287" id="0:902214"/>
+    <FormulaTokenValue operationValue="0.322" id="0:902214"/>
     <FormulaTokenOperation operationType="2" id="0:902215"/>
     <FormulaTokenValue operationValue="0" id="0:902217">
       <DataBindContext sourcePathIds="0:14697-0:900002" propertyKey="777" id="0:902216"/>
@@ -44388,13 +44388,13 @@
     <FormulaTokenInput id="0:902235"/>
     <FormulaTokenParenthesisClose id="0:902237"/>
     <FormulaTokenOperation operationType="0" id="0:902238"/>
-    <FormulaTokenValue operationValue="-0.294" id="0:902239"/>
+    <FormulaTokenValue operationValue="-0.325" id="0:902239"/>
     <FormulaTokenOperation operationType="2" id="0:902240"/>
     <FormulaTokenFunction functionType="10" id="0:902242"/>
     <FormulaTokenInput id="0:902241"/>
     <FormulaTokenParenthesisClose id="0:902243"/>
     <FormulaTokenOperation operationType="0" id="0:902244"/>
-    <FormulaTokenValue operationValue="-0.243" id="0:902245"/>
+    <FormulaTokenValue operationValue="-0.273" id="0:902245"/>
     <FormulaTokenOperation operationType="2" id="0:902246"/>
     <FormulaTokenValue operationValue="0" id="0:902248">
       <DataBindContext sourcePathIds="0:14697-0:900003" propertyKey="777" id="0:902247"/>

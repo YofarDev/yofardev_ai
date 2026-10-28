@@ -689,7 +689,7 @@ def build_eye(cx: float, side: int) -> dict:
                origin=(cx, 412))
     squint_line = S(eye, "SquintLine", [(i - 3 * s, 402), (cx - 12 * s, 390.5), (cx + 2 * s, 385),
                                         (cx + 15 * s, 389), (o + 4 * s, 397)],
-                    L("FF2A1B18", 3.2), closed=False, origin=(cx, 412))
+                    L("80" + "2A1B18", 2.4), closed=False, origin=(cx, 412))  # a soft smile line, not a dark lid
     eye.el.children = [squint_line, squint, droop.el, eye_mood.el]
     # Gesture lids have their own channels so a facepalm can shut the eyes
     # without stealing the independent mood, blink or pointer-follow tracks.
@@ -814,8 +814,9 @@ def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: flo
     return group(name + "Material", light, strand, base)
 
 
-LOCKS = [((300, 272), (292, 404), 44, -8), ((330, 246), (318, 366), 50, 12), ((360, 236), (350, 338), 50, 10),
-         ((396, 230), (420, 368), 70, 18), ((436, 234), (452, 334), 52, 10), ((470, 248), (490, 376), 58, 9),
+# (the centre locks end above the raised-brow line: their tips must not poke out under a lifted brow)
+LOCKS = [((300, 272), (292, 404), 44, -8), ((330, 246), (318, 360), 50, 12), ((360, 236), (352, 330), 50, 10),
+         ((396, 230), (418, 352), 70, 18), ((436, 234), (452, 334), 52, 10), ((470, 248), (490, 376), 58, 9),
          ((498, 276), (510, 410), 40, 6), ((380, 236), (372, 318), 30, 6), ((452, 242), (474, 322), 28, 6)]
 hair_front.add(*[lock(f"Lock{i}", *LOCKS[i]) for i in [7, 8, 3, 2, 4, 1, 5, 0, 6]],
                S(head, "HairCap", [(290, 340), (294, 270), (330, 232), (400, 214), (470, 232), (506, 270), (510, 340),
@@ -1923,7 +1924,7 @@ for i, e in enumerate(EYES):
 face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "throat": "FF4A1E28", "teeth": TEETH,
                                       "low_teeth": "FFF1E6E0", "tongue": "FFD9737A", "ink": INK, "lip": "60D0937C",
                                       "crease": "A0D0937C"})
-face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "A0D0937C"})
+face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "E0B8786A"})
 face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
 face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0))
 
