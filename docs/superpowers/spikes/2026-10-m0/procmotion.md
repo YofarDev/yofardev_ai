@@ -24,7 +24,9 @@ ease-in); replacing animator keys would need shaped targets, not only a spring.
 ## Route: Dart-driven spring (ruling R9), not a Rive script
 
 Task 3 found that no script language runs on the device runtime (`rive_native` 0.1.11 only
-accepts signed script bytecode, no wasm engine; `capability-matrix.md`). So the vision's
+accepts signed script bytecode, no wasm engine; `capability-matrix.md`; the later signed
+retry, 2026-10-28, showed signed Luau does run, so a Luau spring is now a second option to
+compare). So the vision's
 documented fallback is tested instead: the spring is integrated **outside Rive** and the
 `.riv` only maps numbers to bone rotations.
 

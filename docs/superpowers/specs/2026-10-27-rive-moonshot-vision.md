@@ -52,8 +52,9 @@ every quarter on the device farm:
 | 4 scenes, swapped on a blank frame | **10 scenes** built from a shared world kit, with authored transitions between them. | Scenes are lazy-loaded and downloaded one at a time. |
 | A keyframe for every pose | **Procedural motion** in scripts (springs, noise, solvers) on top of fewer keyed poses. | Files stay small. The avatar budget is reset for each tier. |
 
-> **M0 finding:** no script runs on the device runtime. `rive_native` 0.1.11 accepts only
-> signed script bytecode and has no wasm engine. Procedural motion was proven as a **Dart-driven**
+> **M0 finding:** `rive_native` 0.1.11 accepts only signed script bytecode and has no wasm
+> engine. Signed Luau runs on device (retry 2026-10-28, cost not yet measured); AnimaScript
+> does not. Procedural motion was proven as a **Dart-driven**
 > spring writing view-model numbers instead. It costs 304 B per arm against 1,026 B for the same
 > motion as keys, at the same frame cost as keys. Its motion quality is inconclusive
 > ([procmotion.md](../spikes/2026-10-m0/procmotion.md)).
@@ -108,8 +109,13 @@ every quarter on the device farm:
 > - Bones and skinning, feather, nested artboards and 1D view-model blends work on macOS (Skia)
 >   and on the emulator (Impeller). CLI 1.8.0 has no 2D blend state type. Blend verdict: GO
 >   (endpoints proven on device; intermediates and reset layer CLI-only).
-> - Every scripted case is red on device: Luau, AnimaScript, WGSL and audio processors.
-> - Luau and WGSL-via-Luau are **blocked** by unsigned builds. Retry with a signed build.
+>
+> Scripted cases:
+>
+> - With unsigned builds, every scripted case is red on device.
+> - In the signed retry (2026-10-28), **Luau is green** on both tiers. Its cost is not yet
+>   measured.
+> - WGSL via Luau still fails: on 0.1.11, a VM loaded from a file gets no GPU render context.
 > - AnimaScript, WGSL-via-AnimaScript and audio processors are a **no-go** on 0.1.11, which has
 >   no wasm engine.
 
@@ -160,9 +166,9 @@ Moods become additive presets over these action units.
 strings and cape, driven by how fast the head and torso move. The glint on the glasses follows
 the scene light.
 
-> **M0 finding:** AnimaScript does not run on `rive_native` 0.1.11, and the Luau fallback is
-> blocked until a signed build is tried. The proven route today is Dart springs writing
-> view-model numbers ([procmotion.md](../spikes/2026-10-m0/procmotion.md)).
+> **M0 finding:** AnimaScript does not run on `rive_native` 0.1.11. The Luau fallback runs when
+> the build is signed (retry 2026-10-28), but its device cost is unmeasured. The proven route
+> today is Dart springs writing view-model numbers ([procmotion.md](../spikes/2026-10-m0/procmotion.md)).
 
 **Wardrobe 2.0.**
 - Outfits are generated skins on one shared skeleton.
@@ -260,7 +266,7 @@ The wait for the tool turns into a performance.
 
 **WGSL accents, High and Ultra only.**
 *M0 finding:* WGSL has no proven device path yet. Via AnimaScript it is a no-go on 0.1.11, and
-via Luau it is blocked by unsigned builds ([capability-matrix.md](../spikes/2026-10-m0/capability-matrix.md)).
+via Luau the signed script runs but gets no GPU render context on 0.1.11 ([capability-matrix.md](../spikes/2026-10-m0/capability-matrix.md)).
 - heat haze over the fire
 - water caustics
 - god rays through the window
@@ -419,7 +425,7 @@ enforced by `test/architecture_test.dart`.
 | M10–M12 | Scenes 8–10, wardrobe 2.0, body-language profiles per persona, performance and battery hardening, accessibility, polish | Every tier passes its performance gate; every asset ≥ 9.0, overall ≥ 9.3; a user study beats v4 on "feels alive" |
 
 > **M0 finding** (exit gate, spikes part only; [README](../spikes/2026-10-m0/README.md)):
-> - The go/no-go per technology is done: 8 GO, 5 NO-GO, 4 BLOCKED or INCONCLUSIVE.
+> - The go/no-go per technology is done: 9 GO, 6 NO-GO, 2 BLOCKED or INCONCLUSIVE (after the 2026-10-28 signed retry).
 > - The tier budgets are **not** fixed. The thresholds are provisional until the device farm
 >   exists.
 > - The art bible, the storyboards and the art-direction sign-off are outside the spike plan.
@@ -441,8 +447,8 @@ enforced by `test/architecture_test.dart`.
    Android. Spike 1 decides. The fallbacks are Luau or Dart, and shaders only ever run on High
    and Ultra.
    **M0:** confirmed for the pinned runtime. AnimaScript, WGSL via AnimaScript and audio
-   processors are a no-go on `rive_native` 0.1.11 (no wasm engine). Luau, and WGSL via Luau,
-   are blocked by unsigned builds until a signed retry. The Dart fallback works ([capability-matrix.md](../spikes/2026-10-m0/capability-matrix.md),
+   processors are a no-go on `rive_native` 0.1.11 (no wasm engine). Signed Luau runs (retry
+   2026-10-28); WGSL via Luau has no GPU render context on 0.1.11. The Dart fallback works ([capability-matrix.md](../spikes/2026-10-m0/capability-matrix.md),
    [procmotion.md](../spikes/2026-10-m0/procmotion.md)).
 2. **Generated art plateaus.** Countered by:
    - the Rig DSL, solvers and material library

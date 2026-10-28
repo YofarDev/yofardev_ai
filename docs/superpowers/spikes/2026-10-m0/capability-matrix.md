@@ -60,14 +60,75 @@ scripted rows are plain red, Stress included.
 | nested | ✅ | ✅ | ✅ | none |
 | skin | ✅ | ✅ | ✅ | none |
 | blend2d | ✅ (as two 1D view-model blend layers) | ✅ | ✅ | none; no `BlendState2D` type in CLI 1.8.0 |
-| luau | ✅ | ❌ | ❌ | **unsigned scripts are never registered by the release runtime** |
-| wgsl_luau (extra) | ✅ | ❌ | ❌ | same signing blocker (the shader never gets a chance to run) |
+| luau | ✅ | ❌ unsigned · ✅ signed | ❌ unsigned · ✅ signed | unsigned scripts are never registered by the release runtime; signed builds (`--publish`) run (see Signed retry) |
+| wgsl_luau (extra) | ✅ | ❌ | ❌ | unsigned: signing blocker; signed: the script runs but `context:gpuCanvas()` gets no render context on 0.1.11 (see Signed retry) |
 | animascript | ✅ | ❌ | ❌ | signing **and** no wasm VM in `rive_native` 0.1.11 (`Failed to import object of type 106`) |
 | wgsl (AnimaScript pass) | ✅ | ❌ | ❌ | as animascript |
 | audio (AnimaScript `Audio.start`) | ✅ (+ `--render-audio`: 440 Hz) | ❌ | ❌ | as animascript |
 
 
+## Signed retry (2026-10-28)
+
+The same two Luau projects were rebuilt with `rive . --publish` (CLI 1.8.0, logged in as the
+user's personal workspace). The output is signed and **watermarked**: no `push.fileId`, so the
+projects are not bound to a Rive file. They were copied to `cap_luau_signed.riv` /
+`cap_wgsl_luau_signed.riv` and run as new cases (`*_signed`, `*_signed_stress`) next to the
+unsigned controls. Raw data: `data/macos_signed/`, `data/emu_signed/`, `data/emu_signed_r2/`.
+To re-run selected cases, pass `--dart-define=SPIKE_ONLY=<ids>`.
+
+| case | macos (Skia) | emu (Impeller) | evidence |
+|---|---|---|---|
+| luau (unsigned control) | ❌ `FFFF0000` | ❌ `FFFF0000` | `ScriptAsset doesn't have a generator function probe` (macOS) |
+| luau_signed | ✅ `FF00FF00` | ✅ `FF00FF00` | `CAP_LUAU init`, `CAP_LUAU draw 400x400` (macOS); 160×160 green square = 25,600 px on both |
+| luau_signed_stress | ✅ 20 squares | ✅ 20 squares | 20 × `CAP_LUAU init` (macOS) |
+| wgsl_luau_signed | ❌ `FFFF0000` | ❌ `FFFF0000` | `probe:40: context:gpuCanvas() requires a RenderContext — call setRenderContext() first` (macOS) |
+| wgsl_luau_signed_stress | ❌ | ❌ | as above, once per instance |
+
+**Watermark.** The CLI logs `watermarked`, but none of the PNGs shows a watermark pixel inside
+the 400×400 stage: the signed Proof frame holds only the expected red and green. A larger
+stage was not checked. `rive push` binds the project and removes the watermark.
+
+**Runtime quirk.** `rive_native` 0.1.11 calls `resize(self, size)` with no `scale` argument;
+the CLI passes it. The first signed `wgsl_luau` run died at
+`probe:31: attempt to perform arithmetic (mul) on number and nil`. `probe.luau` now defaults
+`scale` to 1. After that it reached `gpuCanvas` and failed on the render context.
+
+**Why WGSL via Luau cannot work on 0.1.11.** A VM gets a `gpu::RenderContext` in only two ways:
+
+1. In `rive_luau_binding.cpp:478-490`, carried over only `#ifdef WITH_RIVE_TOOLS`.
+2. Through `ScriptingWorkspace.setRenderContext`. This is the editor's script-compiling
+   workspace (`lib/scripting_workspace.dart:1103`, `scripting_workspace_ffi.dart:987-990`).
+
+The shipped `librive_native.so` (x86_64) exports neither `riveInitGPUScripting` nor any
+`scriptingWorkspace*` symbol; `scriptingWorkspaceSetOreContext` appears only inside an error
+string. A file loaded with `File.asset`/`File.decode` therefore has no GPU canvas.
+
+**Cost (not decided).**
+
+- macOS, P90 build/raster, from the timeline summaries†:
+
+  | case | build P90 | raster P90 |
+  |---|---|---|
+  | `luau_signed` | 0.22 ms | 0.29 ms |
+  | `luau_signed_stress` | 0.26 ms | 0.29 ms |
+  | unsigned `luau` | 0.11 ms | 0.30 ms |
+
+- Emulator: both runs were taken while the host was loaded (load average ≈ 20 from other
+  apps; in run 2 `baseline_avatar` managed only 18 frames). The timings are **invalid**.
+  Recorded only as a signal to check, because the same gap appeared in both runs:
+
+  | case | build P90 |
+  |---|---|
+  | `luau_signed` | 61.8 / 70.2 ms |
+  | `luau_signed_stress` | 61.7 / 92.9 ms |
+  | `luau`, `feather` (same run) | 1.9–7.6 ms |
+
+  Re-measure on a quiet host and on a phone.
+
 ## Why every scripted case is ❌ on device (source evidence)
+
+This section explains the original **unsigned** runs; see Signed retry above for the signed
+builds.
 
 `rive_native` 0.1.11 ships the C++ runtime source in the pub cache
 (`~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/runtime/`):
@@ -153,7 +214,7 @@ Device numbers: the matrix row; renderer per tier as above.
   (console `probe:11`, `probe:26`). Stress: 20 × `CAP_LUAU init`.
 - Negative: generator return annotation `: Layout<Probe>` removed → `--verify` green,
   `ScriptAsset doesn't have a generator function probe` ×2, probe `FFFF0000`.
-- Device: ❌ on both (unsigned; see above).
+- Device: ❌ on both when unsigned (see below); **✅ on both when signed** (`cap_luau_signed.riv`, Signed retry).
 
 ### wgsl_luau (`cap_wgsl_luau.riv`, extra row)
 Added to tell "WGSL fails" apart from "AnimaScript fails": the same `green.wgsl` run from a
@@ -161,7 +222,7 @@ Luau GPU pass (`context:gpuCanvas`, `GPUPipeline.new`, `beginRenderPass`, `draw(
 `drawImage`).
 - CLI: `probe 200,200 FF00FF00`, markers `CAP_WGSL_LUAU init / pipeline / pass 400x400`.
 - Negative A (fragment returns blue): `FF0000FF`. Negative B (annotation removed): `FFFF0000`.
-- Device: ❌ on both (unsigned Luau never runs, so WGSL on device is still untested).
+- Device: ❌ on both. Unsigned, the Luau never runs. Signed, it runs but `context:gpuCanvas()` gets no render context on 0.1.11 (Signed retry), so the WGSL shader is never dispatched.
 
 ### animascript (`cap_animascript.riv`, `scripting: wasm`)
 - CLI: `probe 200,200 FF00FF00`, markers `console :0 CAP_AS init`, `CAP_AS draw 400.0x400.0`

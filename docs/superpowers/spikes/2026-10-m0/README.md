@@ -4,10 +4,10 @@ Done 2026-10-27 on branch `spike/rive-moonshot-m0`. Feeds the M1–M3 decisions 
 [moonshot vision](../../specs/2026-10-27-rive-moonshot-vision.md) (§6 M0 exit gate: "a go/no-go
 for each technology").
 
-**Provenance.** Source paths (`rive/spikes/…`, `integration_test/spikes/…`, `scripts/spikes/…`, `test_driver/…`, `assets/rive/spikes/…`) refer to branch `spike/rive-moonshot-m0` at commit 8f722dc; raw run outputs under `build/spikes/` are local and not preserved — see [`data/`](data/README.md) for the copied summaries.
+**Provenance.** Source paths (`rive/spikes/…`, `integration_test/spikes/…`, `scripts/spikes/…`, `test_driver/…`, `assets/rive/spikes/…`) refer to branch `spike/rive-moonshot-m0` at commit 8f722dc (signed-retry additions: `*_signed` cases, `SPIKE_ONLY`, `cap_*_signed.riv`, patched `wgsl_luau/probe.luau`, at commit 3136c08); raw run outputs under `build/spikes/` are local and not preserved — see [`data/`](data/README.md) for the copied summaries.
 
 **Setup.** Runtime pinned at `rive` 0.14.11 / `rive_native` 0.1.11. Authoring with Rive CLI 1.8.0,
-using unsigned `--once` builds (no `rive login`). Two tiers only, never extrapolated to a phone:
+using unsigned `--once` builds (no `rive login`); the 2026-10-28 signed retry of the two Luau cases used `rive . --publish` (signed, watermarked). Two tiers only, never extrapolated to a phone:
 
 - `macos`: Flutter on Skia (Impeller is off in `macos/Runner/Info.plist`).
 - `emu`: Android emulator-5554, API 37, Impeller on OpenGLES, **not throttled**.
@@ -28,10 +28,10 @@ Same-run ratios share this bias. See [Measurement caveats](#measurement-caveats)
 
 | spike | result | go/no-go | evidence | consequence for M1–M3 |
 |---|---|---|---|---|
-| **Luau** scripting | Works in the CLI: run markers, plus a negative control. Red on both tiers. `rive_native` 0.1.11 registers a script only if its bytecode is **signed** (`file.cpp:711-721`, `script_asset.cpp:199-218`). macOS prints `ScriptAsset doesn't have a generator function`. | **BLOCKED** (unsigned build). This is not a capability no-go. | [capability-matrix.md](capability-matrix.md) § luau, § Why every scripted case is ❌ | Nothing in M1 may depend on device scripts. To unblock: retry with a signed build (`rive login` + `--publish`, the user's decision), or with a tools-enabled diagnostic `rive_native` build. Record it as a separate, labelled row. |
+| **Luau** scripting | Unsigned (`--once`) builds: red on both tiers, because `rive_native` 0.1.11 registers a script only if its bytecode is **signed** (`file.cpp:711-721`, `script_asset.cpp:199-218`). **Signed retry, 2026-10-28** (`rive . --publish`): **green on both tiers**. macOS printed the run markers `CAP_LUAU init` and `draw 400x400`. On the emulator the probe pixel is green and the 160×160 square (25,600 px) is drawn. The 20-instance stress case runs on both tiers. The unsigned control in the same runs stayed red. The builds are watermarked (the project is not bound to a Rive file), but no watermark pixel appeared in the 400×400 stage. | **GO** (function), signed builds only. Cost not measured. | [capability-matrix.md](capability-matrix.md) § Signed retry, § luau | Device Luau is an option for M1 (small solvers, procedural motion), on two conditions: every scripted `.riv` is built with `--publish` on a logged-in machine, and the project is bound with `rive push` to drop the watermark. **Cost**: macOS build P90 is 0.22 ms against 0.11 ms for the unsigned control†. The emulator runs ran on a loaded host (load average 20, invalid for timing). There, the signed cases' build P90 was 62–70 ms against 2–8 ms for the controls in both runs. Measure on a quiet host and a phone before relying on it. Runtime quirk: 0.1.11 calls `resize(self, size)` without the `scale` argument. |
 | **AnimaScript** (wasm) | Works in the CLI. Red on both tiers. Two separate blockers: signing, and **no wasm engine** in `rive_native` 0.1.11 (`Failed to import object of type 106`). | **NO-GO** on 0.1.11. Revisit only with a newer-runtime row. | [capability-matrix.md](capability-matrix.md) § animascript | The vision's "physics in AnimaScript", "AnimaScript jobs/workers" for particles and "procedural motion in scripts" cannot ship on this runtime. Plan for Dart drivers (see procedural motion) or a runtime upgrade. |
 | **WGSL** via AnimaScript | Works in the CLI: the pixel is the shader's output (a blue negative control). Red on both tiers, for the AnimaScript reasons. | **NO-GO** on 0.1.11 | [capability-matrix.md](capability-matrix.md) § wgsl | WGSL accents (heat haze, caustics, god rays, paper grain) have **no proven device path**. Keep them out of the M1–M3 scope. |
-| **WGSL** via Luau GPU pass | Works in the CLI (with negative controls). Red on both tiers. The unsigned Luau never runs, so the shader on device is **untested**. The GPU API symbols are present in `librive_native.so`. | **BLOCKED** (unsigned build) | [capability-matrix.md](capability-matrix.md) § wgsl_luau | Same unblock as Luau. If the signed retry runs, the WGSL device cost still has to be measured per tier before High or Ultra can use it. |
+| **WGSL** via Luau GPU pass | Signed retry, 2026-10-28: the script now **runs** on both tiers, but `context:gpuCanvas()` fails with `requires a RenderContext — call setRenderContext() first` (macOS stderr). On 0.1.11, a VM loaded from a file never gets a GPU render context. Only the tools build (`WITH_RIVE_TOOLS`) and the editor's `ScriptingWorkspace` set one, and the shipped `librive_native.so` exports neither `riveInitGPUScripting` nor any `scriptingWorkspace*` symbol. The probe is red on both tiers. | **NO-GO** on 0.1.11 (no public path to a GPU canvas). Revisit with a newer-runtime row. | [capability-matrix.md](capability-matrix.md) § Signed retry, § wgsl_luau | WGSL accents have no device route on the pinned runtime, through AnimaScript or through Luau. Keep them out of M1–M3. |
 | **Audio processors** (AnimaScript `Audio.start`) | Works in the CLI: `--render-audio` gives a 440 Hz tone (FFT). Red on both tiers, for the AnimaScript reasons. | **NO-GO** on 0.1.11. Revisit with a newer-runtime row. | [capability-matrix.md](capability-matrix.md) § audio | Foley and ambient beds (§4.7) stay in Flutter audio, triggered by Rive events. |
 | **Skinning** (bones + `Skin`/`Weight`) | Green on both tiers. The bent shape is drawn on device, and two negative controls pass in the CLI. Also carries the head (Task 4) and the procedural arm (Task 5). | **GO** | [capability-matrix.md](capability-matrix.md) § skin | The basis for the Character 2.0 rig. Its cost per feature could not be separated on the emulator (an all-red case costs as much as a green one†). |
 | **2D blend** | CLI 1.8.0 has **no `BlendState2D`**. Two `BlendState1DViewModel` layers work. Device evidence on both tiers is the (1, 1) corner (green) plus a red rest corner. **Intermediate values settle biased**: each animation is mixed onto the *current* value, so x = 0.5 gives 0.667 instead of 0.5, and the pose lags a moving input. A reset layer under the blend makes the result exact. That fix was verified in the CLI only. | **GO** (endpoints proven on device; intermediates and reset layer CLI-only), as two 1D layers plus a reset layer | [head25d.md](head25d.md) § Blend intermediates; [capability-matrix.md](capability-matrix.md) § blend2d | Every blend in the rig DSL needs a reset layer. The vision's continuous visemes `(visemeA, visemeB, t)` would be biased without one. **Check the shipped avatar's `Mouth` blend**: it has the same structure (1D VM blend, 5 animations, no reset layer). Its integer `mouth` values sit on blend points, where the model predicts exact poses, but fractional values would be biased. For the head, formula converters were used instead (next row). |
@@ -46,7 +46,7 @@ Same-run ratios share this bias. See [Measurement caveats](#measurement-caveats)
 | **Tier probe method** | A 3 s first-launch probe on the real Rive stage uses `FrameTiming` (complete, and available in release builds), not the timeline. The metric is the **P95 of the per-frame `max(build, raster)`**, because Rive encodes on the UI thread inside build, and raster alone would put every device in Ultra. The evidence that Rive runs on the UI thread is atrace from emulator sequence c only; that sequence failed the fps gate (invalid probe), but the UI-thread conclusion is structural and still holds. It comes with an **fps-gate validity rule** (probe fps ≥ 0.9 × refresh, otherwise re-probe). The gate caught every bad run in this spike. That it always will is an assumption: a slow run that still reaches 90 % fps would pass. A valid probe predicts the next 60 s within −21 %…+11 %. | **GO** (method) | [tiers.md](tiers.md) | Build the `QualityTier` probe on `FrameTiming` with the fps gate and the re-probe policy. Run it on the **real Home**: the `BackdropFilter` composer and buttons were not in the probe. |
 | **Tier thresholds** | Provisional: **Ultra ≤ 3.3 ms**, **High ≤ 6.6 ms**, Low otherwise, and "Low at risk" above 13.3 ms. The High content factor of 1.0× is **optimistic**: a 6.6 ms device overruns 8.3 ms once High content costs more than 1.25× v4. The quiet-host emulator spread was 16.2–56.4 ms (3.5×) for the same build. The "at risk" gate (0.9 × min(refresh, 60)) is inconsistent with the validity gate on 120 Hz displays. | **BLOCKED** (device farm) | [tiers.md](tiers.md) § Proposed thresholds | The vision's "tier budgets fixed" exit gate is **not met**. These are placeholders until the farm measures each tier's content cost and a ≥ 10 min thermal soak. |
 
-**Count:** 8 GO, 5 NO-GO, 4 BLOCKED / INCONCLUSIVE.
+**Count:** 9 GO, 6 NO-GO, 2 BLOCKED / INCONCLUSIVE. (Before the 2026-10-28 signed retry: 8 / 5 / 4. Luau moved from BLOCKED to GO, and WGSL via Luau from BLOCKED to NO-GO.)
 
 The 2.5D head, procedural motion and tiers are each split into two rows, because their parts got
 different verdicts.
@@ -68,7 +68,7 @@ different verdicts.
   build) and the presented cadence were observed.
 - **Per-feature cost** of feather, skinning, nested artboards and blends on a device. Emulator
   noise swamps it.
-- **Scripts on device**, signed: Luau, WGSL via Luau, and their cost.
+- **Signed Luau cost on device.** macOS shows a small cost. The emulator figures from the signed retry were taken on a loaded host and are not valid. There is no phone figure.
 - **Talking cost** on the real stage: mouth writes, gestures and scene events while speaking.
 - **Acoustic output latency** (from the player position to the speaker). Measuring it needs a
   loopback recording.
@@ -113,9 +113,12 @@ different verdicts.
 
 ## Recommended next decisions
 
-1. **Signed-script retry** (the user's call: `rive login` + `--publish`), or a tools-enabled
-   diagnostic `rive_native` build. Rerun `luau` and `wgsl_luau` as a separate, labelled row. Also
-   track newer `rive_native` releases for a wasm engine (AnimaScript and audio).
+1. **Signed-script retry: done 2026-10-28.** Luau runs when signed. WGSL via Luau has no
+   render context on 0.1.11. Next steps:
+   - measure the cost of signed Luau on a quiet host and on a phone;
+   - decide whether build machines log in and projects get bound with `rive push`;
+   - track newer `rive_native` releases for a wasm engine (AnimaScript, audio) and for a public
+     GPU-canvas context (WGSL).
 2. **Fund generator work for the 2.5D head** before M1 commits to wow #2. Address critic blockers
    1–3 (skinned crown and back hair, 3/4 silhouette bones, a performed turn), then re-score
    against 8.5 and measure the animated cost.

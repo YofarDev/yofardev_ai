@@ -12,6 +12,9 @@ Copied:
   (`frame_build_times`, `frame_rasterizer_times`, `frame_begin_times`,
   `frame_rasterizer_begin_times`). The VM timeline is a ring buffer, so 10 s and 20 s runs
   hold only the newest ~273-314 frames (see the README measurement caveats).
+- `macos_signed/`, `emu_signed/`, `emu_signed_r2/`: the 2026-10-28 signed-Luau retry
+  (`*_signed*` cases plus unsigned controls in the same run). The emulator timings were taken
+  on a loaded host (load average ≈ 20) and are not valid for cost.
 - `<tier>/drive_procmotion_stress.json`: Dart-driven spring step cost (ticks, µs per step).
 
 Not copied (size cap ~2 MB, total added is about 1.2 MB):
