@@ -7,21 +7,24 @@ Writes rive/head/head.rml (+ rive.yaml):
 
   - artboard `Head` (400x480): the skinned head, every bone a history-free formula of the
     view model `HeadVM`: `yaw`, `pitch` (+-1 = +-30 deg / +-15 deg) and the performance
-    channels `roll` (+-1 = +-3 deg), `gaze` (eye-in-head yaw), `blink` (0..1) and `hairLag`
-    (hair trailing the head, in yaw units). Defaults are all 0 (front, eyes open).
+    channels `roll` (+-1 = +-5 deg), `gaze` (eye-in-head yaw), `blink` (0..1), `hairLag`
+    (fringe), `sideLag` (side locks, bob), `tuftLag` (crown tuft), all in yaw units, and `brow`,
+    `mouth` (0..1 raise / smile). Defaults are all 0 (front, eyes open, neutral).
   - artboard `PerformedTurn`: the same head nested (stateful) with a looping timeline that keys
-    those numbers from the spring maths in rig_dsl.perform_turn (yawTarget steps, gaze leading
-    by 80 ms, blinks on big turns, roll and a mid-turn dip, a second-order hair follower).
+    those numbers from rig_dsl.perform_turn (MotionRules: anticipation, overshoot, a speed cap,
+    eyes leading by 80 ms, spaced and varied blinks, roll and dip, phased hair followers, brow
+    and mouth acting, an idle layer).
 
 Rig (see rive/tools/rig_dsl.py): `Neck` (RootBone) -> `Head` (Bone, rotation = roll) -> face
 RootBones. Material points of a 3D head model drive features; silhouette bones are authored at
 three poses (yaw -1, 0, +1) so the 3/4 contour gets a far cheekbone, a socket notch and a near
-jaw angle; the hair shell, crown and bob are skinned too, the bob and locks with lag. Each side
-lock has a twin behind the face; the front copy fades out (opacity bound to yaw) as its side
-turns away, so the far cheek contour reads against the hair.
+jaw angle; the far eye and nose use authored poses too (almond eye, nose tip to the far cheek
+line). The hair shell, crown and bob are skinned, the locks and bob with lag. Each side lock
+morphs with yaw: over the near cheek, beside the far one, so the far contour reads with no fade.
 
-    uv run rive/tools/gen_head.py            # write rive/head/head.rml
-    uv run rive/tools/gen_head.py --build    # + rive --once (size printed)
+    uv run rive/tools/gen_head.py                 # write rive/head/head.rml
+    uv run rive/tools/gen_head.py --build         # + rive --once (size printed)
+    uv run rive/tools/gen_head.py --variant hair --out DIR   # check variant (hair over a flat face)
 """
 
 from __future__ import annotations
@@ -40,7 +43,7 @@ sys.path.insert(0, str(HERE))
 
 import art_bible as ab  # noqa: E402
 import rig_dsl as r  # noqa: E402
-from rig_dsl import Axis, BoneSpec, Chain, Grid, Pt, Weights, clockwise, fit3, mix, taper, tok  # noqa: E402
+from rig_dsl import Axis, BoneSpec, Chain, Grid, Pt, Weights, clockwise, fit3, mix, taper, tok, tokpos  # noqa: E402
 from rml import Doc, El, lin, rad, write  # noqa: E402
 
 d = Doc(client=0, start=10)
@@ -54,7 +57,7 @@ CX, CY = 400.0, 380.0  # yaw axis x, pitch pivot y
 ZP = -20.0  # pitch axis depth (behind the yaw axis: the neck)
 K_YAW = round(math.radians(30), 4)
 K_PITCH = round(math.radians(15), 4)
-K_ROLL = round(math.radians(3), 4)
+K_ROLL = round(math.radians(5), 4)
 NECK_BASE = (400.0, 600.0)
 HEAD_ORIGIN = (400.0, 470.0)  # roll pivot (top of the neck)
 SCENE = ab.SCENES["livingRoom"]
@@ -144,6 +147,8 @@ HAIR_MID = grade(_hex(mixc(HR[0], HR[1], 0.55)))
 HAIR = grade(HR[1])
 HAIR_SH = light(HR[2], -0.25)
 HAIR_LINE = grade("FF24181A", 0xD0)
+HAIR_BOUNCE_L = grade(_hex(mixc(HR[0], SCENE.key, 0.6)), 0xE0)
+HAIR_BOUNCE_R = grade(_hex(mixc(HR[0], SCENE.rim, 0.75)), 0xE8)
 SHEEN = light(_hex(mixc(HR[0], "FFE8D2C2", 0.55)), 0.4)
 IRIS_TOP = grade(ab.CHARACTER["iris"][1])
 IRIS_MID = grade(ab.CHARACTER["iris"][0])
@@ -188,7 +193,7 @@ def rfill(cx: float, cy: float, rr: float, stops: list[tuple[str, float]]) -> El
 
 # ------------------------------------------------------------------ rig
 
-PROPS = ("yaw", "pitch", "roll", "gaze", "blink", "hairLag")
+PROPS = r.CHANNELS  # yaw pitch roll gaze blink hairLag sideLag tuftLag brow mouth
 VM_PROPS = {pn: d("ViewModelPropertyNumber", name=pn) for pn in PROPS}
 VM_DEFAULT = d("ViewModelInstance",
                *[d("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=p.ref()) for p in VM_PROPS.values()],
@@ -219,13 +224,14 @@ def bone(name: str, x: float, y: float, z: float, zp: float | None = None, pose:
 
 
 def pair(name: str, x: float, y: float, z: float, zp: float | None = None,
-         pose: tuple[float, float] | None = None, ddx: r.Poly | None = None, ddy: r.Poly | None = None) -> None:
+         pose: tuple[float, float] | None = None, ddx: r.Poly | None = None, ddy: r.Poly | None = None,
+         sym: r.Poly | None = None) -> None:
     """Right-side bone `name+R` at x (>= CX) and its mirror `name+L`. `pose` is for the right
-    side; the left side mirrors it (its yaw -1 pose is the mirror of the right's yaw +1)."""
-    bone(name + "R", x, y, z, zp, pose, ddx, ddy)
+    side; the left side mirrors it (its yaw -1 pose is the mirror of the right's yaw +1). `ddx`
+    terms shift both sides the same way (lag); `sym` terms are mirrored (e.g. narrowing)."""
+    bone(name + "R", x, y, z, zp, pose, r.poly_add(ddx or [], sym or []), ddy)
     lp = (mirror_x(pose[1]), mirror_x(pose[0])) if pose else None
-    ldx = r.poly_scale(ddx, 1.0) if ddx else None
-    bone(name + "L", mirror_x(x), y, z, zp, lp, ldx, ddy)
+    bone(name + "L", mirror_x(x), y, z, zp, lp, r.poly_add(ddx or [], r.poly_scale(sym or [], -1.0)), ddy)
 
 
 def sil_pose(x: float, y: float, depth_ratio: float, zc: float) -> tuple[float, float]:
@@ -242,12 +248,16 @@ CONTOUR = {  # name: (front x, y, pitch depth, x at yaw -1, x at yaw +1) for the
     "S": (508.0, 366.0, 15.0, 505.0, 503.0),
     "C": (506.0, 396.0, 30.0, 502.0, 513.0),
     "K": (497.0, 428.0, 40.0, 491.0, 505.0),
-    "J": (481.0, 458.0, 30.0, 476.0, 491.0),
-    "Q": (450.0, 490.0, 55.0, 424.0, 471.0),
+    "J": (481.0, 458.0, 30.0, 477.0, 491.0),
+    "W": (467.0, 476.0, 38.0, 456.0, 484.0),  # mid jaw: keeps the near jaw line convex
+    "Q": (450.0, 490.0, 45.0, 424.0, 471.0),
 }
+# looking up narrows the jaw (no wide U): x pulls in by max(0, pitch) x px
+JAW_NARROW = {"K": 3.0, "J": 7.0, "W": 7.0, "Q": 5.0}
 for _n, (_x, _y, _z, _m, _p) in CONTOUR.items():
-    pair("F" + _n, _x, _y, _z, pose=(_m, _p))
-bone("Chin", 400.0, 511.0, 75.0, pose=(400.0 - 37.5, 400.0 + 37.5))
+    pair("F" + _n, _x, _y, _z, pose=(_m, _p),
+         sym=[(-JAW_NARROW[_n], (tokpos("pitch"),))] if _n in JAW_NARROW else None)
+bone("Chin", 400.0, 511.0, 60.0, pose=(400.0 - 37.5, 400.0 + 37.5))
 # under-jaw plane: same yaw path as the jaw, less depth for pitch (opens when looking up)
 for _n, _x, _y, _zp, _src in (("UJR", 478.0, 456.0, 8.0, "J"), ("UQR", 448.0, 487.0, 16.0, "Q")):
     _c = CONTOUR[_src]
@@ -273,9 +283,9 @@ FACE_GRID = Grid(FGX, FGY, fg_name)
 
 # --- eyes: 3 columns x 3 rows per eye; the top row (the lid edge) closes with `blink`
 EYE_Y = [356.0, 374.0, 392.0]
-EYE_Z = [82.0, 90.0, 40.0]  # inner, middle, outer (the outer canthus is recessed)
+EYE_Z = [82.0, 84.0, 50.0]  # inner, middle, outer (the outer canthus is recessed)
 BLINK = [31.0, 38.0, 26.0]  # lid travel per column, upper lid -> lower lid
-CORNER_DROP = [10.0, 4.0, 6.0]  # the corner row settles into the closed line (per column)
+CORNER_DROP = [15.0, 4.0, 8.0]  # the corner row settles into the closed line (per column)
 LOWER_RISE = -5.0  # the lower lid rises into the blink
 EYE_CX = {"R": 448.0, "L": 352.0}
 
@@ -286,19 +296,34 @@ def eye_cols(t: str) -> list[float]:
     return [cx - 27 * s, cx, cx + 31 * s]
 
 
+# Column x at yaw -1 / +1 for the RIGHT eye (left mirrors): the far eye keeps an almond whose
+# outer half foreshortens most (cos of its longitude), the near eye stays about front width.
+EYE_POSE = [(377.0, 459.0), (401.5, 481.5), (436.0, 494.0)]
+
+
+def eye_pose(t: str, x: float) -> tuple[float, float]:
+    """Yaw -1/+1 x of any point on eye `t` (piecewise linear between the authored columns)."""
+    s = 1 if t == "R" else -1
+    xr = x if s > 0 else mirror_x(x)
+    cols = eye_cols("R")
+    k = 0 if xr <= cols[1] else 1
+    u = (xr - cols[k]) / (cols[k + 1] - cols[k])
+    m = EYE_POSE[k][0] + u * (EYE_POSE[k + 1][0] - EYE_POSE[k][0])
+    p = EYE_POSE[k][1] + u * (EYE_POSE[k + 1][1] - EYE_POSE[k][1])
+    return (m, p) if s > 0 else (mirror_x(p), mirror_x(m))
+
+
 for _t in ("R", "L"):
     _s = 1 if _t == "R" else -1
     for _c, _x in enumerate(eye_cols(_t)):
         for _r, _y in enumerate(EYE_Y):
-            pose = None
-            if _c == 2:  # outer corner: authored so the near eye does not balloon
-                X = abs(_x - CX) * math.cos(K_YAW)
-                Zs = EYE_Z[2] * math.sin(K_YAW)
-                pose = (CX + X - Zs - 8, CX + X + Zs) if _s > 0 else (CX - X - Zs, CX - X + Zs + 8)
             ddy = [((BLINK[_c], CORNER_DROP[_c], LOWER_RISE)[_r], (tok("blink"),))]
-            bone(f"E{_t}{_c}{_r}", _x, _y, EYE_Z[_c], pose=pose, ddy=ddy)
+            bone(f"E{_t}{_c}{_r}", _x, _y, EYE_Z[_c], pose=eye_pose(_t, _x), ddy=ddy)
     for _c, _x in enumerate((EYE_CX[_t] - 17 * _s, EYE_CX[_t] + 17 * _s)):
-        bone(f"I{_t}{_c}", _x, 371.0, 94.0 if _c == 0 else 84.0, ddx=[(13.0, (tok("gaze"),))])
+        bone(f"I{_t}{_c}", _x, 371.0, 88.0, pose=eye_pose(_t, _x), ddx=[(13.0, (tok("gaze"),))])
+    # brows: own bones so they can act (raise on a look)
+    for _c, (_x, _y, _dy) in enumerate(((EYE_CX[_t] - 26 * _s, 321.0, -7.0), (EYE_CX[_t] + 28 * _s, 323.0, -4.0))):
+        bone(f"Bw{_t}{_c}", _x, _y, surface_z(_x - CX, _y) - 4, zp=66.0, ddy=[(_dy, (tok("brow"),))])
 
 
 def eye_grid(t: str) -> Grid:
@@ -315,11 +340,12 @@ def iris_chain(t: str) -> Chain:
 
 
 # --- nose, mouth
-bone("NB", 400.0, 404.0, surface_z(0, 404) + 6)
-bone("NT", 401.0, 430.0, 124.0, zp=112.0)
-bone("NS", 400.0, 434.0, surface_z(0, 434) - 2)
-bone("MC", 400.0, 470.0, 96.0, zp=114.0)
-pair("M", 421.0, 463.0, 86.0, zp=96.0)
+# the tip drifts out to the far cheek line at |yaw| = 1 (anime 3/4), the bridge and base less
+bone("NB", 400.0, 404.0, 0.0, zp=surface_z(0, 404) + 6, pose=(329.0, 471.0))
+bone("NT", 401.0, 430.0, 0.0, zp=112.0, pose=(309.0, 493.0))
+bone("NS", 400.0, 434.0, 0.0, zp=surface_z(0, 434) - 2, pose=(322.0, 480.0))
+bone("MC", 400.0, 470.0, 96.0, zp=114.0, ddy=[(1.0, (tok("mouth"),))])
+pair("M", 421.0, 463.0, 86.0, zp=96.0, ddy=[(-3.5, (tok("mouth"),))])
 # --- ears: front and back edge at different depths (width follows yaw); pitch counter-moves
 pair("EaF", 503.0, 378.0, -8.0, zp=-48.0)
 pair("EaB", 527.0, 378.0, -44.0, zp=-48.0)
@@ -342,7 +368,7 @@ for _r, _y in enumerate(HGY):
             _z = max(surface_z(_x - CX, _y), shell_z(_x - CX, _y) - 30) + 10
             bone(hg_name(_c, _r), _x, _y, _z, ddx=[(11.0, (tok("hairLag"),))])
 HAIR_GRID = Grid(HGX, HGY, hg_name)
-bone("Aho", 412.0, 156.0, 4.0, ddx=[(30.0, (tok("hairLag"),))])  # crown tuft tip: lags the most
+bone("Aho", 412.0, 156.0, 4.0, ddx=[(34.0, (tok("tuftLag"),))])  # crown tuft: its own looser follower
 
 # --- hair silhouette (three-pose: the away side widens, the toward side narrows)
 SIL_R = [(400.0, 192.0), (472.0, 205.0), (515.0, 244.0), (531.0, 300.0), (532.0, 362.0), (525.0, 420.0),
@@ -354,16 +380,19 @@ for _i, (_x, _y) in enumerate(SIL_R):
         bone("S0", _x, _y, HAIR_C[1], pose=(CX - _zs, CX + _zs))
         continue
     pair(f"S{_i}", _x, _y, HAIR_C[1], pose=sil_pose(_x, _y, 1.16, HAIR_C[1]),
-         ddx=[(float(SIL_LAG[_i]), (tok("hairLag"),))] if SIL_LAG[_i] else None)
+         ddx=[(float(SIL_LAG[_i]), (tok("sideLag"),))] if SIL_LAG[_i] else None)
 
 # --- side locks: 2 columns x 3 rows per side, lower rows trail
 SLX = [492.0, 522.0]
 SLY = [300.0, 386.0, 462.0]
 SL_LAG = [0.0, 9.0, 20.0]
+# One lock per side, morphing with yaw: on the near side it covers more cheek, on the far side
+# it slides out beyond the cheek contour (6+ px clear), so the contour shows without any fade.
+SL_POSE = [[(480.0, 520.0), (480.0, 520.0), (484.0, 514.0)], [(542.0, 521.0), (542.0, 521.0), (538.0, 516.0)]]
 for _c, _x in enumerate(SLX):
     for _r, _y in enumerate(SLY):
-        _z = 40.0 - 30.0 * _c - 8.0 * _r
-        pair(f"K{_c}{_r}", _x, _y, _z, ddx=[(SL_LAG[_r], (tok("hairLag"),))] if SL_LAG[_r] else None)
+        pair(f"K{_c}{_r}", _x, _y, 0.0, zp=40.0 - 30.0 * _c - 8.0 * _r, pose=SL_POSE[_c][_r],
+             ddx=[(SL_LAG[_r], (tok("sideLag"),))] if SL_LAG[_r] else None)
 
 
 def side_grid(side: str) -> Grid:
@@ -373,7 +402,8 @@ def side_grid(side: str) -> Grid:
 
 # ------------------------------------------------------------------ weight functions
 
-CONTOUR_ORDER = ["FTL", "FSL", "FCL", "FKL", "FJL", "FQL", "Chin", "FQR", "FJR", "FKR", "FCR", "FSR", "FTR"]
+CONTOUR_ORDER = ["FTL", "FSL", "FCL", "FKL", "FJL", "FWL", "FQL", "Chin", "FQR", "FWR", "FJR", "FKR", "FCR", "FSR",
+                 "FTR"]
 
 
 def _face_ang(x: float, y: float) -> float:
@@ -411,8 +441,7 @@ def w_head(_x: float, _y: float) -> Weights:
     return {"Head": 1.0}
 
 
-def w_neck(_x: float, _y: float) -> Weights:
-    return {"Neck": 1.0}
+w_neck = None  # the neck and collar never move: unskinned
 
 
 def w_nose(x: float, y: float) -> Weights:
@@ -469,7 +498,13 @@ def face_fill() -> El:
     return rfill(352, 326, 250, FACE_FILL_STOPS)
 
 
-def eye(t: str) -> tuple[list[El], El]:
+def brow_chain(t: str) -> Chain:
+    s = 1 if t == "R" else -1
+    a = [(EYE_CX[t] - 26 * s, f"Bw{t}0"), (EYE_CX[t] + 28 * s, f"Bw{t}1")]
+    return Chain(sorted(a), lambda x, y: x)
+
+
+def eye(t: str) -> dict[str, list[El]]:
     s = 1 if t == "R" else -1
     cx = EYE_CX[t]
     i, o = cx - 27 * s, cx + 31 * s
@@ -482,18 +517,20 @@ def eye(t: str) -> tuple[list[El], El]:
                                                  (o - 4 * s, 351), (o + 2 * s, 368), (o - 8 * s, 364),
                                                  (cx + 6 * s, 357), (cx - 15 * s, 361)]),
                       g, F(SCLERA_SH, 4.0), clip=white)
-    top: list[tuple[float, float]] = [(i - 4 * s, 376), (cx - 17 * s, 349), (cx + 5 * s, 342), (o - 1 * s, 347),
+    top: list[tuple[float, float]] = [(i - 1 * s, 375), (cx - 17 * s, 349), (cx + 5 * s, 342), (o - 1 * s, 347),
                                       (o + 9 * s, 361)]
-    bottom: list[tuple[float, float]] = [(o + 1 * s, 359), (cx + 6 * s, 352), (cx - 15 * s, 357), (i + 2 * s, 378)]
+    bottom: list[tuple[float, float]] = [(o + 1 * s, 359), (cx + 6 * s, 352), (cx - 15 * s, 357), (i + 4 * s, 376)]
     lash: list[Pt] = [(*top[0], "c"), *top[1:4], (*top[4], "c"), *bottom[:3], (*bottom[3], "c")]
     # eyelid: zero area at rest; its lower edge rides the lash down, its top stays on the skin
     lid: list[Pt] = [(*top[0], "c"), *top[1:4], (*top[4], "c"), *bottom[:3], (*bottom[3], "c")]
     lid_w = [FACE_GRID] * 5 + [g] * 4
-    kids = [
+    top_layer = [
         part("Lash" + t, lash, g, F(LASH), tags=("feature",)),
         part("Crease" + t, taper([(cx - 15 * s, 337), (cx + 6 * s, 332), (o + 2 * s, 340)], W_DET * 1.15, 0.1),
              FACE_GRID, F(light(SK[2], -0.4, 0xA8))),
-        part("Lid" + t, lid, lid_w, face_fill()),
+    ]
+    lid_el = part("Lid" + t, lid, lid_w, face_fill())
+    kids = [
         part("LowLid" + t, taper([(cx - 1 * s, 394), (cx + 15 * s, 392), (o - 1 * s, 382)], W_DET * 1.3, 0.1), g,
              F(light(SK[2], -0.6, 0xC0))),
         part("Glint" + t, ell(cx - 8, 358, 11, 10, 6), ic, F(GLINT), clip=white),
@@ -508,8 +545,8 @@ def eye(t: str) -> tuple[list[El], El]:
         white,
     ]
     brow = part("Brow" + t, [(cx - 30 * s, 327, "c"), (cx - 8 * s, 318.5), (cx + 16 * s, 318), (cx + 34 * s, 326, "c"),
-                             (cx + 16 * s, 322), (cx - 8 * s, 322.5)], FACE_GRID, F(HAIR_MID), tags=("feature",))
-    return kids, brow
+                             (cx + 16 * s, 322), (cx - 8 * s, 322.5)], brow_chain(t), F(HAIR_MID), tags=("feature",))
+    return {"top": top_layer, "lid": [lid_el], "eye": kids, "brow": [brow]}
 
 
 def lock(name: str, root: tuple[float, float], tip: tuple[float, float], w: float, bend: float, wf: object) -> list[El]:
@@ -584,6 +621,11 @@ def w_back(x: float, y: float) -> Weights:
     return SIL_CHAIN(x, y)
 
 
+FRINGE_SHADE_PTS: list[Pt] = clockwise([(296, 374), (314, 358), (340, 344), (360, 342), (382, 354), (400, 348),
+                                        (420, 354), (440, 342), (462, 344), (486, 358), (506, 374), (506, 292),
+                                        (296, 292)])
+
+
 def build() -> list[El]:
     # ---- skeleton
     face_bones = [RIG.bone(s) for s in SPECS]
@@ -603,22 +645,36 @@ def build() -> list[El]:
         face_pts.append((b.x, b.y))
     face_pts = face_pts[:5] + face_pts[5:]
     face = part("Face", face_pts, w_face,
-                face_fill(), L(INK, W_SIL * 0.85), tags=("face",))
-    # form shadow on the side away from the key light (stays with the right contour)
-    form = part("FormShade", clockwise([(482, 300), (510, 330), (520, 400), (500, 470), (452, 520), (420, 520),
-                                         (470, 462), (488, 400), (476, 336)]), w_face,
-                F(light(SK[1], -0.45, 0xB0), 14.0), clip=face)
+                *((F("FF00FF00"),) if VARIANT == "hair" else (face_fill(), L(INK, W_SIL * 0.85))), tags=("face",))
+    # form light: a terminator on the side away from the key (right) that deepens as that cheek
+    # turns away, and an ambient-tinted one on the left cheek when it becomes the far side
+    form_pts: list[Pt] = [(482, 300), (510, 330), (520, 400), (500, 470), (452, 520), (420, 520), (470, 462),
+                          (488, 400), (476, 336)]
+    terminator = {
+        "R": (clockwise(form_pts), light(SK[1], -0.45, 0xB0),
+              [0.3, "+", 0.7, "*"], (0.3, 1.0)),
+        "L": (clockwise(mirror(form_pts)), grade(_hex(mixc(SK[1], SCENE.ambient, 0.35)), 0x90),
+              [0.0, "-", 0.85, "*"], (0.0, 0.85)),
+    }
+
+    def form_layer(t: str, name: str, clip: El) -> El:
+        pts, col, (c0, op, c1, _), (lo, hi) = terminator[t]
+        conv = d("DataConverterFormula", *RIG.f.fn("min", [RIG.f.val(hi)], RIG.f.fn(
+            "max", [RIG.f.val(lo)], [RIG.f.val(c0), RIG.f.op(op), RIG.f.val(c1), RIG.f.op("*"), *RIG.f.inp()])))
+        RIG.converters.append(conv)
+        shp = part(name + t, pts, w_face, F(col, 14.0), clip=clip)
+        shp.add(d("DataBindContext", sourcePathIds=vm_path("yaw"), propertyKey=18, converterId=conv.ref()))
+        return shp
+
+    forms = [form_layer(t, "FormShade", face) for t in ("R", "L")]
     rim = part("Rim", taper([(504, 334), (507, 366), (505, 396), (496, 427), (480, 456)], 2.6, 0.12), w_face,
                F(_hex(_rgb(RIM), 0xA0)), clip=face)
-    fringe_shadow = part("FringeShade", clockwise([(296, 374), (314, 358), (340, 344), (360, 342), (382, 354),
-                                                   (400, 348), (420, 354), (440, 342), (462, 344), (486, 358),
-                                                   (506, 374), (506, 292), (296, 292)]), w_hair,
-                         F(light(SK[2], -0.5, 0x68), 8.0), clip=face)
+    fringe_shadow = part("FringeShade", FRINGE_SHADE_PTS, w_hair, F(light(SK[2], -0.5, 0x68), 8.0), clip=face)
     blush = [part("Blush" + t, clockwise(ell(x, 404, 54, 22)), FACE_GRID, F(CHEEK, 6.0), clip=face)
              for t, x in (("L", 340.0), ("R", 460.0))]
     blush += [part(f"Hatch{t}{k}", taper([(x + 8 * k - 4, 410), (x + 8 * k + 3, 398)], 1.8, 0.2), FACE_GRID,
                    F(grade(_hex(mixc(ab.CHARACTER["cheek"][0][2:], SK[2], 0.7)), 0xD0)))
-              for t, x in (("L", 332.0), ("R", 452.0)) for k in range(3)]
+              for t, x in (("L", 334.0), ("R", 454.0)) for k in range(2)]
     chin_light = part("ChinLight", taper([(388, 499), (400, 502), (412, 499)], 2.0, 0.2), FACE_CHAIN,
                       F(_hex(_rgb(SKIN_HI), 0x90)), clip=face)
     under_jaw = part("UnderJaw", [(318, 456), (350, 488), (400, 510), (450, 488), (482, 456),
@@ -635,13 +691,17 @@ def build() -> list[El]:
                                                          [(SKIN, 0.0), (SKIN_SH, 1.0)]), L(INK, W_INT))]
 
     # ---- features
-    eye_l, brow_l = eye("L")
-    eye_r, brow_r = eye("R")
+    eyes = {t: eye(t) for t in ("L", "R")}
+    lids = d("Node", *eyes["L"]["lid"], *eyes["R"]["lid"], name="Lids")
+    # the lids are skin in front of the eyes: they get the same shading overlays as the face
+    # (clipped to the lids) so a closing lid never shows as a light patch
+    lid_overlays = [form_layer(t, "LidForm", lids) for t in ("R", "L")]
+    lid_overlays.append(part("LidFringeShade", FRINGE_SHADE_PTS, w_hair, F(light(SK[2], -0.5, 0x68), 8.0), clip=lids))
     nose = [
         part("NoseTip", taper([(395, 431), (401, 434), (407, 431)], 2.6, 0.25), w_nose, F(LINE_SKIN)),
         part("NoseShade", clockwise([(401, 404), (406, 424), (402, 433), (400, 431), (399, 414)]),
              lambda x, y: mix((0.5, w_nose(x, y)), (0.5, {"NS": 1.0})) if x < 401 and y > 420 else w_nose(x, y),
-             F(light(SK[1], -0.45, 0x58), 2.5)),
+             F(light(SK[1], -0.4, 0x40), 2.5)),
         part("NoseLight", taper([(396, 410), (395, 421)], 2.2, 0.3), w_nose, F(_hex(_rgb(SKIN_HI), 0xB0))),
     ]
     mouth = [
@@ -662,11 +722,9 @@ def build() -> list[El]:
         for k, (pts, wdt) in enumerate([([(397, 210), (394, 186), (402, 164), (420, 152), (438, 154)], 8.0),
                                         ([(405, 210), (410, 192), (404, 176), (390, 170)], 5.5)])
     ]
-    # side locks: a front copy frames the cheek; as that side becomes the far side it fades
-    # out over yaw 0.35..0.47 and the copy behind the face is left, so the far cheek contour
-    # (cheekbone, socket notch) reads against the hair instead of under it
+    # side locks: one lock per side whose bones morph with yaw (see SL_POSE): over the near
+    # cheek, beside the far one; nothing fades, so there is never a translucent ghost
     side_locks: list[El] = []
-    side_back: list[El] = []
     side: list[Pt] = [(492, 288), (514, 296), (524, 350), (526, 412), (521, 452), (513, 478, "c"), (505, 446),
                       (499, 392), (494, 340)]
     for t, pts in (("R", side), ("L", mirror(side))):
@@ -675,19 +733,20 @@ def build() -> list[El]:
         base = part("SideLock" + t, pts, g, hair_fill(), L(HAIR_LINE, W_DET), tags=("hair",))
         st = part("SideLockSt" + t, taper([(sx(509), 320), (sx(514), 380), (sx(512), 432)], 1.7, 0.1), g,
                   F(light(HR[0], 0.7, 0x68)), clip=base)
-        sign = 1.0 if t == "R" else -1.0
-        fade = d("DataConverterFormula", *RIG.f.fn("min", [RIG.f.val(1)], RIG.f.fn(
-            "max", [RIG.f.val(0)], [RIG.f.val(3.9), RIG.f.op("-"), RIG.f.val(8.33 * sign), RIG.f.op("*"),
-                                    *RIG.f.inp()])))
-        RIG.converters.append(fade)
-        side_locks.append(d("Node", d("DataBindContext", sourcePathIds=vm_path("yaw"), propertyKey=18,
-                                      converterId=fade.ref()), st, base, name="SideFront" + t))
-        side_back.append(part("SideLockBack" + t, pts, g, hair_fill(), L(HAIR_LINE, W_DET), tags=("hair",)))
+        side_locks += [st, base]
     cap_outer = [(280, 330), (285, 270), (318, 222), (400, 194), (482, 222), (515, 270), (520, 330)]
     cap_inner = [(500, 300), (470, 262), (400, 246), (330, 262), (300, 300)]
     cap = part("HairCap", cap_outer + cap_inner, w_cap, hair_fill(), L(HAIR_LINE, W_DET), tags=("hair",))
     hair_rim = part("HairRim", taper([(508, 250), (523, 290), (528, 340), (526, 390)], 2.2, 0.15), w_cap,
                     F(_hex(_rgb(RIM), 0x88)))
+    # silhouette edge light so the side masses separate from the night background: warm key
+    # bounce on the left, cool rim on the right (both from the scene script)
+    edge = [(519, 244), (531, 300), (532, 362), (525, 420), (513, 462)]
+    bounce = [
+        part("BounceR", taper([(x - 1.5, y) for x, y in edge], 5.0, 0.15), SIL_CHAIN, F(HAIR_BOUNCE_R, 1.5)),
+        part("BounceL", taper([(mirror_x(x) + 1.5, y) for x, y in edge], 5.0, 0.15), SIL_CHAIN,
+             F(HAIR_BOUNCE_L, 1.5)),
+    ]
     sil = [(b.x, b.y) for b in sorted((s for s in SPECS if s.name.startswith("S")), key=lambda s: _sil_ang(s.x, s.y))]
     back = [(288, 470, "c")] + sil[1:-1] + [(512, 470, "c"), (496, 458), (484, 470, "c"), (468, 452), (400, 446),
                                              (332, 452), (316, 470, "c"), (304, 458)]
@@ -709,14 +768,21 @@ def build() -> list[El]:
                        F(_hex(_rgb(HOOD_SH), 0xA0)))
 
     front_to_back: list[El] = [
-        *locks, *side_locks, *aho, hair_rim, cap, brow_l, brow_r, fringe_shadow, form, *eye_l, *eye_r, *nose,
-        *mouth, chin_light, rim, *blush, face, under_jaw, *side_back, *ears, neck_shade, neck, neck_hole,
-        collar_fold, collar, back_hair,
+        *locks, *bounce, *side_locks, *aho, hair_rim, cap, *eyes["L"]["brow"], *eyes["R"]["brow"],
+        *eyes["L"]["top"], *eyes["R"]["top"], *lid_overlays, lids, *eyes["L"]["eye"], *eyes["R"]["eye"],
+        fringe_shadow, *forms, *nose, *mouth, chin_light, rim, *blush, face, under_jaw, *ears, neck_shade, neck,
+        neck_hole, collar_fold, collar, back_hair,
     ]
     glow = d("Shape", d("Ellipse", width=520.0, height=520.0),
              d("Fill", rad(d, 0.0, 0.0, 260.0, [(BG_GLOW, 0.0), (_hex(_rgb(BG_GLOW), 0), 1.0)])),
              x=150.0, y=150.0, name="Glow")
-    bg = d("Fill", solid(BG))
+    bg = d("Fill", solid("FFFF00FF" if VARIANT == "hair" else BG))
+    if VARIANT == "hair":  # check variant: hair over a flat green face on magenta (translucency sweep)
+        for p in PARTS:
+            nm = str(p.shape.attrs.get("name", ""))
+            if not nm.startswith(HAIR_PARTS + ("Face",)) or nm.startswith("FringeShade"):
+                p.shape.attrs["hidden"] = True
+        glow.attrs["hidden"] = True
     sm = d("StateMachine", d("StateMachineLayer", d("AnyState", x=200.0, y=-120.0), d("ExitState", x=400.0, y=-120.0),
                              d("EntryState"), name="Pose"), name="Main")
     head_ab = d("Artboard", bg, *front_to_back, glow, neck_el, sm, isComponent=True, defaultStateMachineId=sm.ref(),
@@ -726,10 +792,15 @@ def build() -> list[El]:
 
 # ------------------------------------------------------------------ performed turn
 
-TURN_TARGETS: list[tuple[float, float]] = [(0.0, 0.0), (0.45, 0.9), (1.75, -0.85), (3.05, -0.3), (3.9, 0.0)]
-TURN_SECONDS = 4.8
-# key tolerances (view-model units; 0.006 yaw ~ 0.3 px at the nose)
-TOLERANCE = {"yaw": 0.006, "pitch": 0.008, "roll": 0.02, "gaze": 0.015, "blink": 0.025, "hairLag": 0.012}
+# five looks over a 7.2 s loop: blinks land on the first and the largest (2.8 s apart, then
+# 4.4 s across the seam), the others act with brows and mouth only
+TURN_TARGETS: list[tuple[float, float]] = [(0.0, 0.0), (0.6, 0.85), (2.0, 0.35), (3.4, -0.86), (4.7, -0.3),
+                                           (5.6, 0.0)]
+TURN_SECONDS = 7.2
+# key tolerances in view-model units, each about 0.5 px at that channel's largest lever
+# (px per unit: yaw ~50 at the nose, gaze 13, hairLag 11, sideLag 20, tuftLag 34, brow 7, mouth 3.5)
+TOLERANCE = {"yaw": 0.01, "pitch": 0.015, "roll": 0.02, "gaze": 0.04, "blink": 0.02, "hairLag": 0.045,
+             "sideLag": 0.025, "tuftLag": 0.015, "brow": 0.07, "mouth": 0.12}
 
 
 def performed_turn(head_ab: El) -> El:
@@ -757,7 +828,13 @@ exclude: ["review/**"]
 """
 
 
-def emit(out: Path = OUT) -> int:
+VARIANT = "full"
+HAIR_PARTS = ("Fringe", "SideLock", "Aho", "HairCap", "HairRim", "Bounce", "BackHair")
+
+
+def emit(out: Path = OUT, variant: str = "full") -> int:
+    global VARIANT
+    VARIANT = variant
     out.mkdir(parents=True, exist_ok=True)
     write(str(out / "head.rml"), build())
     (out / "rive.yaml").write_text(RIVE_YAML)
@@ -767,8 +844,12 @@ def emit(out: Path = OUT) -> int:
 def main(argv: list[str]) -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--build", action="store_true")
+    ap.add_argument("--variant", default="full", choices=("full", "hair"))
+    ap.add_argument("--out", type=Path, default=OUT)
     args = ap.parse_args(argv)
-    n = emit()
+    n = emit(args.out, args.variant)
+    if args.out != OUT:
+        return
     print(f"wrote {OUT / 'head.rml'}: {len(RIG.bones)} bones, {len(RIG.binds)} binds, "
           f"{len(RIG.converters)} converters, {n} vertices")
     if args.build:
