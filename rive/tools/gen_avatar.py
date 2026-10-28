@@ -680,16 +680,16 @@ def build_eye(cx: float, side: int) -> dict:
     # both are clipped to the eye opening (face_rig.py) and slide rather than scale, so their
     # lash lines keep the line weight
     droop = eye.node("Droop", cx, 360)
-    droop.add(S(droop, "DroopLash", [(i - 6 * s, 392), (cx, 394), (o + 8 * s, 390)], L("FF2A1B18", 4.5), closed=False),
-              S(droop, "DroopLid", [(i - 8 * s, 352, "c"), (o + 10 * s, 352, "c"), (o + 10 * s, 392), (cx, 396),
-                                    (i - 8 * s, 393)], F(SKIN)))
+    # the lowered lid follows the eyeball: a curve, not a ruler line
+    droop.add(S(droop, "DroopLash", [(i - 6 * s, 389), (cx, 397), (o + 8 * s, 388)], L("FF2A1B18", 4.5), closed=False),
+              S(droop, "DroopLid", [(i - 8 * s, 352, "c"), (o + 10 * s, 352, "c"), (o + 10 * s, 389), (cx, 398),
+                                    (i - 8 * s, 390)], F(SKIN)))
     # happy: the lower lid rises into a crescent that hides most of the iris
-    squint = S(eye, "Squint", [(i - 8 * s, 404), (cx - 12 * s, 389), (cx + 2 * s, 383), (cx + 15 * s, 387),
-                               (o + 8 * s, 398), (o + 10 * s, 424, "c"), (i - 10 * s, 424, "c")], F(SKIN),
-               origin=(cx, 412))
-    squint_line = S(eye, "SquintLine", [(i - 3 * s, 402), (cx - 12 * s, 390.5), (cx + 2 * s, 385),
-                                        (cx + 15 * s, 389), (o + 4 * s, 397)],
-                    L("80" + "2A1B18", 2.4), closed=False, origin=(cx, 412))  # a soft smile line, not a dark lid
+    # happy: one smooth upward arc (no waves) in a thin warm ink
+    squint = S(eye, "Squint", [(i - 8 * s, 404), (cx + 1 * s, 385), (o + 8 * s, 399), (o + 10 * s, 424, "c"),
+                               (i - 10 * s, 424, "c")], F(SKIN), origin=(cx, 412))
+    squint_line = S(eye, "SquintLine", [(i - 2 * s, 401.5), (cx + 1 * s, 387), (o + 3 * s, 398.5)],
+                    L("D03A2622", 2.2), closed=False, origin=(cx, 412))
     eye.el.children = [squint_line, squint, droop.el, eye_mood.el]
     # Gesture lids have their own channels so a facepalm can shut the eyes
     # without stealing the independent mood, blink or pointer-follow tracks.
@@ -736,13 +736,15 @@ sweat_m = head.node("SweatMood", 300, 330, opacity=0.0)
 SWEAT = [(0, -26), (8, -6), (10, 6), (0, 14), (-10, 6), (-8, -6)]
 sweat_m.add(S(sweat_m, "Drop", [(300 + x, 330 + y) for x, y in SWEAT], vgrad(-20, 14, "FFE6F6FF", "FF8CC8F0"),
               L("FF3A7AB0", 2.5)))
-anger = head.node("AngerMark", 490, 270, opacity=0.0)
+# the anger vein sits at the temple, in the palette's error red (#FF6B6B)
+AX, AY = 482.0, 292.0
+anger = head.node("AngerMark", AX, AY, opacity=0.0)
 for k in range(4):
     a = k * PI / 2 + PI / 4
-    p0 = (490 + 17 * math.cos(a - 0.5), 270 + 17 * math.sin(a - 0.5))
-    p1 = (490 + 8 * math.cos(a), 270 + 8 * math.sin(a))
-    p2 = (490 + 17 * math.cos(a + 0.5), 270 + 17 * math.sin(a + 0.5))
-    anger.add(S(anger, f"Vein{k}", [p0, p1, p2], L("FFE0303A", 4.5), closed=False))
+    p0 = (AX + 15 * math.cos(a - 0.5), AY + 15 * math.sin(a - 0.5))
+    p1 = (AX + 7 * math.cos(a), AY + 7 * math.sin(a))
+    p2 = (AX + 15 * math.cos(a + 0.5), AY + 15 * math.sin(a + 0.5))
+    anger.add(S(anger, f"Vein{k}", [p0, p1, p2], L("FFFF6B6B", 4.2), closed=False))
 laugh = head.node("LaughFace", 400, 420, opacity=0.0)
 laugh.add(*[S(laugh, f"LaughEye{t}", [(x - 22, 396), (x, 376), (x + 22, 396)], L("FF2A1B18", 5), closed=False)
             for t, x in (("L", 355), ("R", 445))],

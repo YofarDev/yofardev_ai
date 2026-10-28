@@ -72,8 +72,8 @@ MOUTH_FRAME = (400.0, 478.0)
 # Mouth bones: rest (x, y) for the RIGHT side / centre; dx terms are toward the viewer's right for the
 # right side (mirrored for the left); dy terms are screen y.
 MOUTH_BONES = {
-    "CornerR": ((417.0, 477.0), terms(P=5.0, S=7.0, J=3.0, K=-10.5, R=-3.0, DM=1.0, D=1.0),
-                terms(P=-7.0, D=10.5, CR=-1.5, J=5.0, S=1.0, DM=-1.0)),
+    "CornerR": ((417.0, 477.0), terms(P=5.0, S=9.5, J=3.0, K=-10.5, R=-3.0, DM=1.0, D=1.0),
+                terms(P=-7.0, D=8.5, CR=-1.5, J=5.0, S=2.0, DM=-1.0)),
     # closed-mouth terms (corners, smile, frown, dimpler, press) move the upper and lower lips
     # together so a closed mouth stays one line; only jaw, pucker, nose wrinkle and lip tuck open it
     "UpperR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
@@ -261,8 +261,9 @@ SQUINT_TRAVEL = 24.0  # px: from the crescent resting under the eye to the full 
 def rig_eye(fr: FaceRig, eye: Mapping[str, object], s: int) -> None:
     """Eye opening, mood lids and squint crescent follow the lid / brow / cheek AUs."""
     mood_el: El = eye["mood"].el  # type: ignore[attr-defined]
-    fr.bind_on(mood_el, "scaleY", 1.0, terms(UL=0.2, LT=-0.08))
-    fr.bind_on(mood_el, "scaleX", 1.0, terms(UL=0.1, LT=-0.02))
+    # (a modest opening: wider eyes jam into the glasses frame)
+    fr.bind_on(mood_el, "scaleY", 1.0, terms(UL=0.13, LT=-0.08))
+    fr.bind_on(mood_el, "scaleX", 1.0, terms(UL=0.06, LT=-0.02))
     # mood lids stay inside the eye opening (no strokes across the glasses)
     clip = next(c for c in eye["blink"].el.children if c.attrs.get("name") == "EyeClip")  # type: ignore[attr-defined]
     for el in (*eye["droop"].el.children, eye["squint"], eye["squint_line"]):  # type: ignore[attr-defined]
@@ -419,9 +420,9 @@ def rig_nose(fr: FaceRig, nose_g: El, frame: tuple[float, float], palette: Mappi
     outer = fr.d("Node", fr.bind("y", pivot[1], terms(NW=-2.5)), fr.bind("scaleY", 1.0, terms(NW=-0.12)),
                  inner, x=pivot[0], y=pivot[1], name="NoseAU")
     lines = []
-    for k, (x, y) in enumerate(((394.0, 414.0), (405.0, 413.0))):
-        p = [(x - 4 - frame[0], y + 1 - frame[1]), (x - frame[0], y - 1.5 - frame[1]),
-             (x + 4 - frame[0], y + 1 - frame[1])]
+    for k, (x, y) in enumerate(((393.0, 420.0), (407.0, 419.0))):
+        p = [(x - 6 - frame[0], y + 1.5 - frame[1]), (x - frame[0], y - 2 - frame[1]),
+             (x + 6 - frame[0], y + 1.5 - frame[1])]
         path = smooth_path(fr.d, p, closed=False)
         sh = fr.d("Shape", fr.bind("opacity", -0.1, terms(NW=1.6), lo=0.0, hi=1.0), path,
                   fr.stroke(palette["crease"], 3.0), x=0.0, y=0.0, name=f"NoseWrinkle{k}")
