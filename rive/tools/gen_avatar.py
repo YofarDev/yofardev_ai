@@ -1248,7 +1248,11 @@ def blink_track(e: dict, keys: list[tuple[int, float]] | None = None) -> list[El
         shut.append((f, 1.0 if closed else 0.0))
         if closed and nxt is not None and nxt[1] <= 0.99:
             shut.append((f + 1, 0.0))
-    return [T(e["lid"], scaleY=[(f, v, it) for f, v, it in ks]),
+    # a closing lid hides the smile and sad lid strokes, so a closed eye is one clean lash line
+    hide = [(f, max(0.0, 1.0 - 1.6 * v), it) for f, v, it in ks]
+    mood_strokes = [T(e["squint_line"], opacity=hide), T(e["squint"], opacity=hide),
+                    T(named_el(e["droop"].el, "DroopLash"), opacity=hide)]
+    return [*mood_strokes, T(e["lid"], scaleY=[(f, v, it) for f, v, it in ks]),
             T(e["lash"], y=[(f, float(e["lash"].el.attrs["y"]) + 24.0 * v, it) for f, v, it in ks],
               scaleY=[(f, 1.0 - 0.55 * v, it) for f, v, it in ks],
               opacity=[(f, 1.0 - o, "hold") for f, o in shut]),
@@ -1274,11 +1278,11 @@ MOOD_DEF = dict(gaze=(0, 0), blush=0.0, tilt=0.0, head_y=0.0, mouth_rot=0.0, mou
 MOOD_SPEC = {
     "neutral": {},
     "happy": dict(blush=0.65, tilt=-0.04),
-    "sad": dict(tilt=0.05, head_y=6.0, gaze=(0, 6)),
+    "sad": dict(tilt=0.05, head_y=6.0, gaze=(0, 9)),
     "angry": dict(tilt=-0.02, anger=1.0, pupil=0.85, head_y=2.0),
     "surprised": dict(head_y=-6.0, pupil=0.68),
     "thinking": dict(gaze=(-7, -8), tilt=0.085, mouth_rot=-0.12, mouth_x=3.0, head_y=-2.0),
-    "embarrassed": dict(gaze=(4, 3), blush=1.0, sweat=1.0, tilt=0.04),
+    "embarrassed": dict(gaze=(6, 6), blush=1.0, sweat=1.0, tilt=0.04),
 }
 
 

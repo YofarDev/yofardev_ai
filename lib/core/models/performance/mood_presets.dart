@@ -52,8 +52,8 @@ ActionUnits actionUnitsForMood(AvatarMood mood) => switch (mood) {
   AvatarMood.sad => const ActionUnits(
     browInnerUp: 0.75,
     browLower: 0.2,
-    lidTighten: 0.15,
-    lipCornerDepress: 0.6,
+    lidTighten: 0.05,
+    lipCornerDepress: 0.9,
   ),
   AvatarMood.angry => const ActionUnits(
     browLower: 0.9,
@@ -80,11 +80,13 @@ ActionUnits actionUnitsForMood(AvatarMood mood) => switch (mood) {
     lipCornerPull: 0.15,
     dimpler: 0.4,
   ),
+  // sheepish: a worried brow, a pressed, dimpled half-smile
   AvatarMood.embarrassed => const ActionUnits(
-    browLower: 0.3,
-    cheekRaise: 0.5,
-    lipPress: 0.4,
-    lipCornerDepress: 0.3,
-    dimpler: 0.3,
+    browInnerUp: 0.35,
+    browLower: 0.1,
+    cheekRaise: 0.4,
+    lipPress: 0.5,
+    lipCornerDepress: 0.15,
+    dimpler: 0.5,
   ),
 };

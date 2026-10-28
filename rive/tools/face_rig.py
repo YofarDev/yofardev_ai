@@ -28,7 +28,8 @@ from rig_dsl import Formulas, pack, quantize
 from rml import Doc, El, fill, smooth_path, stroke
 
 ID_START = 950000
-KEYS = {"x": 13, "y": 14, "rotation": 15, "scaleX": 16, "scaleY": 17, "opacity": 18, "thickness": 47, "boneX": 90,
+KEYS = {"x": 13, "y": 14, "rotation": 15, "scaleX": 16, "scaleY": 17, "opacity": 18, "radius": 26, "thickness": 47,
+        "boneX": 90,
         "boneY": 91}
 AUS = ("auBrowInnerUp", "auBrowOuterUp", "auBrowLower", "auLidTighten", "auUpperLidRaise", "auCheekRaise",
        "auNoseWrinkle", "auLipCornerPull", "auLipCornerDepress", "auLipStretch", "auLipPucker", "auLipPress",
@@ -77,11 +78,11 @@ MOUTH_BONES = {
     # closed-mouth terms (corners, smile, frown, dimpler, press) move the upper and lower lips
     # together so a closed mouth stays one line; only jaw, pucker, nose wrinkle and lip tuck open it
     "UpperR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
-               terms(P=0.3, D=2.5, J=-3.5, NW=-1.0, T=-4.5, K=-2.0)),
-    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-2.5, J=-5.0, NW=-1.5, T=-5.5, K=-2.5)),
+               terms(P=0.3, D=2.0, J=-3.5, NW=-1.0, T=-4.5, K=-2.0)),
+    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=-5.0, NW=-1.5, T=-5.5, K=-2.5)),
     "LowerR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
-               terms(P=0.3, D=2.5, J=19.0, K=3.5, T=-2.0)),
-    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-2.5, J=23.0, K=5.0, T=-2.5)),
+               terms(P=0.3, D=2.0, J=19.0, K=3.5, T=-2.0)),
+    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=23.0, K=5.0, T=-2.5)),
 }
 
 
@@ -369,6 +370,12 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
     fr.bind_on(line, "thickness", 2.7, terms(R=1.3, K=0.3))  # pressed lips read as a firmer line
     outline = fr.skinned("MouthLine", pts, [one(n) for n in order], bones, F, line,
                          tension=LIP_TENSION, handles=hw)
+    # rounded lips round the mouth's corners (an oh is an oval, not a box)
+    for shape in (inside, outline):
+        path = next(c for c in shape.children if c.tag == "PointsPath")
+        for v in path.children:
+            if v.tag == "StraightVertex":
+                v.children.insert(0, fr.bind("radius", 2.0, terms(K=9.0)))
     # a darker throat toward the lower jaw gives the opening depth
     throat = fr.skinned("MouthThroat", [(389.0, 479.0), (400.0, 475.0), (411.0, 479.0), (400.0, 484.0)],
                         [{"LowerL": 0.6, "UpperL": 0.4}, {"UpperC": 0.35, "LowerC": 0.65},

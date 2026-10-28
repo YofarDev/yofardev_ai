@@ -240,7 +240,7 @@ class FacePerformer {
         // pause, then eases back over 0.4 s
         final double since = _clock - _endClock;
         final double q = _speaking
-            ? _smoothstep((posS - (_s(tl.duration) - 0.7)) / 0.5)
+            ? _smoothstep((posS - (_s(tl.duration) - 0.35)) / 0.3)
             : 1 - _smoothstep((since - 0.5) / 0.4);
         rollTarget = 0.9 * q;
         liftTarget = 0.12 * q;
@@ -548,9 +548,9 @@ class FacePerformer {
     );
     au[_stretchI] = _lerp(e[_stretchI], _stretch.x + 0.5 * e[_stretchI], m);
     // a rounded vowel keeps its shape whatever the mood: the corners give way
-    final double round = (_pucker.x / 0.4).clamp(0.0, 1.0) * m;
-    au[_pullI] *= 1 - 0.6 * round;
-    au[_depressI] *= 1 - 0.6 * round;
+    final double round = (_pucker.x / 0.3).clamp(0.0, 1.0) * m;
+    au[_pullI] *= 1 - 0.8 * round;
+    au[_depressI] *= 1 - 0.8 * round;
     // an open jaw from a downturned mouth reads as a wince: the frown eases
     au[_depressI] *= 1 - 0.4 * ((jaw - 0.15) / 0.3).clamp(0.0, 1.0) * m;
     au[_innerI] += _innerUp.x;
@@ -569,32 +569,32 @@ class FacePerformer {
 
   // — curves —
 
-  /// Brow beat around a pitch peak: a small dip 130 ms before it
-  /// (anticipation), a rise over the last 80 ms, a 50 ms top, then a decay
-  /// (time constant 220 ms) that follows the falling pitch instead of a
-  /// held plateau; the underdamped brow spring adds the overshoot.
+  /// Brow beat around a pitch peak: an 18 % dip just before it
+  /// (anticipation), an eased 120 ms attack, a 160 ms top, then an eased
+  /// 400 ms return to the mood's own brows (the brow spring adds the
+  /// overshoot).
   static double _peakEnvelope(double tau) {
-    if (tau < -0.2 || tau > 0.9) {
+    if (tau < -0.25 || tau > 0.56) {
       return 0;
     }
-    final double dip = -0.12 * _gauss(tau, -0.13, 0.035);
-    if (tau < -0.08) {
+    final double dip = -0.18 * _gauss(tau, -0.17, 0.04);
+    if (tau < -0.12) {
       return dip;
     }
     if (tau < 0) {
-      return dip + _smoothstep((tau + 0.08) / 0.08);
+      return dip + _smoothstep((tau + 0.12) / 0.12);
     }
-    if (tau <= 0.05) {
+    if (tau <= 0.16) {
       return 1;
     }
-    return math.exp(-(tau - 0.05) / 0.22);
+    return 1 - _smoothstep((tau - 0.16) / 0.4);
   }
 
   /// A nod on a stressed syllable (pitch units, down is negative): an 18 %
   /// anticipation lift, the beat at the mark, a 12 % overshoot back up.
   static double _nodCurve(double tau, double strength) {
     // 3-5 degrees of pitch: a nod that reads at phone size
-    final double a = 0.25 + 0.2 * strength;
+    final double a = 0.35 + 0.25 * strength;
     return -a *
         (_gauss(tau, 0, 0.07) -
             0.18 * _gauss(tau, -0.13, 0.05) -
