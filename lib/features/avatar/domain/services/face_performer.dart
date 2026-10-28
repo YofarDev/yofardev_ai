@@ -100,6 +100,8 @@ class FacePerformer {
   final _Spring _lift = _Spring();
   final _Spring _breathDecay = _Spring();
   double _breath = 0;
+  bool _inhaling = false;
+  bool _breathRising = false;
   double _clock = 0;
   double _lastBlink = -100;
   int _blinkSerial = 0;
@@ -194,8 +196,8 @@ class FacePerformer {
       // a sombre mood lifts only the inner brows (an outer lift reads as
       // surprise and contradicts the sadness)
       final bool sombre = _valence < -0.3;
-      innerTarget += (sombre ? 0.3 : 0.22) * gain * peak;
-      outerTarget += (sombre ? 0 : 0.3) * gain * peak;
+      innerTarget += (sombre ? 0.4 : 0.3) * gain * peak;
+      outerTarget += (sombre ? 0 : 0.45) * gain * peak;
       final bool asking =
           tl.isQuestion &&
           (_speaking || (_completed && _clock - _endClock < _questionHold));
@@ -218,6 +220,7 @@ class FacePerformer {
     // breath over the leading silence, released as speech starts
     if (_speaking && tl != null && pos != null) {
       _breath = _breathAt(tl, _s(pos));
+      _inhaling = _breathRising;
       _breathDecay.x = _breath;
       _breathDecay.v = 0;
     }
@@ -253,6 +256,7 @@ class FacePerformer {
     }
     if (!_speaking) {
       _breath = _breathDecay.x;
+      _inhaling = false;
     }
     if (_sealed) {
       // the lip seal never waits for a spring
@@ -358,7 +362,12 @@ class FacePerformer {
     }
     if (!blink && _clock - _lastBlink >= _blinkMaxInterval) {
       for (final VisemeSpan s in tl.visemes) {
-        if (s.start > from && s.start <= pos && s.viseme != Viseme.pp) {
+        // only where the voice dips: a blink mid-vowel reads as a glitch
+        if (s.start > from &&
+            s.start <= pos &&
+            (s.viseme == Viseme.sil ||
+                s.viseme == Viseme.nn ||
+                s.weight < 0.3)) {
           blink = true;
           break;
         }
@@ -371,25 +380,37 @@ class FacePerformer {
   }
 
   /// The breath: over the leading silence, and again across every pause
-  /// inside the sentence (a new phrase is breathed for); each releases over
-  /// 400 ms once the voice is back.
+  /// inside the sentence (a new phrase is breathed for). The inhale peaks
+  /// 150 ms before the voice returns (the lips close again by the onset) and
+  /// releases over 400 ms once it is back. Sets [_breathRising] while the
+  /// breath is still being drawn (the lips part only then).
   double _breathAt(SpeechTimeline tl, double posS) {
-    final double lead = _s(tl.leadingSilence);
-    final double amount = lead < 0.12 ? 0.5 : 1.0;
-    final double inhale = lead < 0.12 ? 0.15 : lead.clamp(0.12, 0.35);
-    double b = posS < inhale
-        ? amount * _smoothstep(posS / inhale)
-        : amount * (1 - _smoothstep((posS - inhale) / 0.4));
-    for (final ProsodyMark m in tl.marks) {
-      if (m.kind != ProsodyMarkKind.pause) {
-        continue;
+    _breathRising = false;
+    double b = 0;
+    void phase(double start, double end, double amount) {
+      final double peak = math.max(start + 0.06, end - 0.15);
+      if (posS >= start && posS < peak) {
+        final double v = amount * _smoothstep((posS - start) / (peak - start));
+        if (v > b) {
+          b = v;
+          _breathRising = true;
+        }
+      } else if (posS >= peak && posS < end) {
+        if (amount > b) {
+          b = amount;
+          _breathRising = false;
+        }
+      } else if (posS >= end && posS < end + 0.4) {
+        b = math.max(b, amount * (1 - _smoothstep((posS - end) / 0.4)));
       }
-      final double at = _s(m.at);
-      final double len = math.max(_s(m.length), 0.12);
-      if (posS >= at && posS <= at + len) {
-        b = math.max(b, 0.8 * _smoothstep((posS - at) / len));
-      } else if (posS > at + len && posS < at + len + 0.4) {
-        b = math.max(b, 0.8 * (1 - _smoothstep((posS - at - len) / 0.4)));
+    }
+
+    final double lead = _s(tl.leadingSilence);
+    phase(0, math.max(lead, 0.15), lead < 0.12 ? 0.5 : 1.0);
+    for (final ProsodyMark m in tl.marks) {
+      if (m.kind == ProsodyMarkKind.pause) {
+        final double at = _s(m.at);
+        phase(at, at + math.max(_s(m.length), 0.12), 0.8);
       }
     }
     return b;
@@ -429,7 +450,9 @@ class FacePerformer {
     final List<double> e = <double>[for (final _Spring s in _emotion) s.x];
     final double m = _mix.x.clamp(0.0, 1.0);
     double jaw = _lerp(e[_jawI], math.max(_jaw.x, 0.35 * e[_jawI]), m);
-    jaw = math.max(jaw, 0.12 * _breath);
+    if (_inhaling) {
+      jaw = math.max(jaw, 0.12 * _breath);
+    }
     double press = _lerp(e[_pressI], _press.x, m);
     if (_sealed) {
       jaw = 0;
@@ -444,6 +467,10 @@ class FacePerformer {
       m,
     );
     au[_stretchI] = _lerp(e[_stretchI], _stretch.x + 0.5 * e[_stretchI], m);
+    // a rounded vowel keeps its shape whatever the mood: the corners give way
+    final double round = (_pucker.x / 0.4).clamp(0.0, 1.0) * m;
+    au[_pullI] *= 1 - 0.6 * round;
+    au[_depressI] *= 1 - 0.6 * round;
     au[_innerI] += _innerUp.x;
     au[_outerI] += _outerUp.x;
     return FaceFrame(
@@ -461,25 +488,25 @@ class FacePerformer {
   // — curves —
 
   /// Brow beat around a pitch peak: rises over the 80 ms before it, holds
-  /// 60 ms, releases over 160 ms (about 200 ms at the top, a beat rather than
-  /// a held look of surprise).
+  /// 160 ms (the art bible's shortest readable pose), settles over 220 ms.
   static double _peakEnvelope(double tau) {
-    if (tau < -0.08 || tau > 0.22) {
+    if (tau < -0.08 || tau > 0.38) {
       return 0;
     }
     if (tau < 0) {
       return _smoothstep((tau + 0.08) / 0.08);
     }
-    if (tau <= 0.06) {
+    if (tau <= 0.16) {
       return 1;
     }
-    return 1 - _smoothstep((tau - 0.06) / 0.16);
+    return 1 - _smoothstep((tau - 0.16) / 0.22);
   }
 
   /// A nod on a stressed syllable (pitch units, down is negative): an 18 %
   /// anticipation lift, the beat at the mark, a 12 % overshoot back up.
   static double _nodCurve(double tau, double strength) {
-    final double a = 0.3 * strength;
+    // 3-5 degrees of pitch: a nod that reads at phone size
+    final double a = 0.2 + 0.15 * strength;
     return -a *
         (_gauss(tau, 0, 0.07) -
             0.18 * _gauss(tau, -0.13, 0.05) -
@@ -524,6 +551,8 @@ class _Spring {
 const int _auCount = 14;
 const int _innerI = 0;
 const int _outerI = 1;
+const int _pullI = 7;
+const int _depressI = 8;
 const int _stretchI = 9;
 const int _puckerI = 10;
 const int _pressI = 11;

@@ -45,24 +45,27 @@ ActionUnits actionUnitsForMood(AvatarMood mood) => switch (mood) {
     lipCornerPull: 0.7,
     browOuterUp: 0.3,
   ),
+  // heavy lids (the inner brow raise drops them), never a wide-eyed look
   AvatarMood.sad => const ActionUnits(
-    browInnerUp: 0.7,
-    browLower: 0.3,
-    upperLidRaise: 0.3,
+    browInnerUp: 0.8,
+    browLower: 0.2,
+    lidTighten: 0.15,
     lipCornerDepress: 0.6,
   ),
   AvatarMood.angry => const ActionUnits(
-    browLower: 0.8,
+    browLower: 0.9,
     lidTighten: 0.5,
-    noseWrinkle: 0.4,
-    lipCornerDepress: 0.5,
-    lipPress: 0.6,
+    noseWrinkle: 0.3,
+    lipCornerDepress: 0.35,
+    lipPress: 0.45,
   ),
+  // a dropped jaw with rounded lips: an "oh", not a grin
   AvatarMood.surprised => const ActionUnits(
     browInnerUp: 0.9,
     browOuterUp: 0.9,
     upperLidRaise: 1.0,
-    jawDrop: 0.6,
+    jawDrop: 0.5,
+    lipPucker: 0.25,
   ),
   // closed, pressed and pulled to one side by the mood's mouth skew: a
   // pondering purse, never an open dark mouth

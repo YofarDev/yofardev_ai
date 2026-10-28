@@ -22,6 +22,8 @@ import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/services/audio/speech_analyzer.dart';
 import 'package:yofardev_ai/core/services/audio/wav_pcm.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/face_frame.dart';
+import 'package:yofardev_ai/features/avatar/domain/models/head_pose.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/head_motion_solver.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/performance_intent.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/face_performer.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
@@ -92,6 +94,9 @@ Future<Map<String, Object>> _speech(
   );
 
   final _Harness h = _Harness()..mood(mood);
+  // the head solver as the avatar view runs it (facing the user: idle drift
+  // and micro-saccades on top of the face)
+  final HeadMotionSolver head = HeadMotionSolver()..setTarget(0, 0);
   final List<Map<String, Object>> frames = <Map<String, Object>>[];
   const int lead = _fps ~/ 2;
   final int speech = (timeline.duration.inMicroseconds / 16667).ceil();
@@ -110,7 +115,9 @@ Future<Map<String, Object>> _speech(
       h.position = _dt * (i - lead);
     }
     final FaceFrame f = h.performer.step(_dt);
+    final HeadPose pose = head.step(_dt);
     frames.add(<String, Object>{
+      'head': pose.toJson(),
       't': i / _fps,
       'speech': i >= lead && i < lead + speech ? (i - lead) / _fps : -1,
       ...f.toJson(),
