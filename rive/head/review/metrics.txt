@@ -2,20 +2,22 @@
 rive: rive 1.8.0
 
 == Size
-head.riv: 78917 B (gate <= 81920 B)
+head.riv: 79279 B (gate <= 81920 B)
 
 == Performed turn (PerformedTurn artboard, every frame, one CLI run per frame)
-frames: 433 at 60 fps (7.2 s loop), yawTarget steps [(0.0, 0.0), (0.6, 0.85), (2.0, 0.35), (3.4, -0.86), (4.7, -0.3), (5.6, 0.0)]
-pops, whole clip (motion_metrics.pops, k=4 x median, floor 0.01): 5 [226, 227, 231, 232, 233]
-  note: the loop is mostly holds, so the whole-clip median is ~0 and every frame of a turn
-  or blink clears 4 x median; the two lines below are the meaningful checks.
-pops, moving frames only (diff > 0.001, n=301): 0 at frames []
+frames: 481 at 60 fps (8.0 s loop), yawTarget steps [(0.0, 0.0), (1.0, 0.85), (2.6, 0.3), (4.2, -0.84), (6.0, 0.0)]
+pops, whole clip (motion_metrics.pops, k=4 x median, floor 0.01): 0 []
+  (a whole-clip median is dominated by holds; the windowed checks below are the robust ones)
+pops, moving frames only (diff > 0.001, n=269): 0 at frames []
 pops, 9-frame window (diff > 4 x local median and > 0.01): 0 []
 local spikes (a diff > 2 x both neighbours and > 0.004): 0 []
-frame diff min / median / max: 0.00005 / 0.00233 / 0.01202
-jerk (moving-pixel centroid vs frame 0): 1,388,724 px/s^3
+frame diff min / median / max: 0.00005 / 0.00189 / 0.00936
+jerk (moving-pixel centroid vs frame 0): 1,915,156 px/s^3
 loop seam (last vs first / median diff): 0.000
-channel ranges: yaw -0.98..+0.94, pitch -0.15..+0.01, roll -0.81..+0.61, gaze -0.75..+0.65, blink +0.00..+1.00, hairLag -0.22..+0.29, sideLag -0.30..+0.40, tuftLag -0.34..+0.46, brow +0.00..+0.89, mouth +0.00..+0.72
+frozen frames (diff exactly 0, seam included): 0
+look spacing (s): [1.6, 1.6, 1.8] + 3.0 across the seam
+blink starts (s): [1.07, 4.27]; intervals incl. the seam: [3.2, 4.8]
+channel ranges: yaw -0.98..+0.95, pitch -0.14..+0.02, roll -0.80..+0.62, gaze -0.77..+0.66, blink +0.00..+1.00, hairLag -0.22..+0.28, sideLag -0.31..+0.39, tuftLag -0.34..+0.44, brow +0.00..+0.86, mouth +0.00..+0.69
 
 == History-free (static Head: --advance=1 vs --advance=40, rive --compare)
 {'yaw': 0.37, 'pitch': -0.42}: 0.00% of pixels differ (0 of 192000)
@@ -29,6 +31,6 @@ ok
 hair over a flat face, yaw -1..1 step 0.05 (41 poses), pixels with alpha 0.1-0.9 away from edges: max 0 (fail above 0) -> PASS
 
 == Silhouette edge contrast (outer 4 px of hair vs background just outside; bible >= 3:1)
-yaw +0: left 3.68:1, right 4.07:1
-yaw +1: left 3.40:1, right 3.92:1
-yaw -1: left 3.52:1, right 3.75:1
+yaw +0: left 4.49:1, right 4.80:1
+yaw +1: left 4.03:1, right 4.18:1
+yaw -1: left 3.91:1, right 4.30:1
