@@ -28,7 +28,8 @@ from rig_dsl import Formulas, pack, quantize
 from rml import Doc, El, fill, smooth_path, stroke
 
 ID_START = 950000
-KEYS = {"x": 13, "y": 14, "rotation": 15, "scaleX": 16, "scaleY": 17, "opacity": 18, "boneX": 90, "boneY": 91}
+KEYS = {"x": 13, "y": 14, "rotation": 15, "scaleX": 16, "scaleY": 17, "opacity": 18, "thickness": 47, "boneX": 90,
+        "boneY": 91}
 AUS = ("auBrowInnerUp", "auBrowOuterUp", "auBrowLower", "auLidTighten", "auUpperLidRaise", "auCheekRaise",
        "auNoseWrinkle", "auLipCornerPull", "auLipCornerDepress", "auLipStretch", "auLipPucker", "auLipPress",
        "auJawDrop", "auDimpler")
@@ -71,15 +72,15 @@ MOUTH_FRAME = (400.0, 478.0)
 # right side (mirrored for the left); dy terms are screen y.
 MOUTH_BONES = {
     "CornerR": ((417.0, 477.0), terms(P=5.0, S=7.0, J=3.0, K=-8.0, R=-1.5, DM=1.0, D=1.0),
-                terms(P=-7.0, D=7.5, CR=-1.5, J=3.0, S=1.0, DM=-1.0)),
+                terms(P=-7.0, D=9.5, CR=-1.5, J=3.0, S=1.0, DM=-1.0)),
     # closed-mouth terms (corners, smile, frown, dimpler, press) move the upper and lower lips
     # together so a closed mouth stays one line; only jaw, pucker, nose wrinkle and lip tuck open it
     "UpperR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
                terms(P=0.3, D=1.0, J=-2.0, NW=-3.0, T=-3.0, K=-3.0)),
-    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-3.0, J=-2.5, NW=-4.0, T=-3.5, K=-4.0)),
+    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-4.0, J=-2.5, NW=-4.0, T=-3.5, K=-4.0)),
     "LowerR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
                terms(P=0.3, D=1.0, J=19.0, K=5.0, T=0.5)),
-    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-3.0, J=23.0, K=7.0, T=1.0)),
+    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-4.0, J=23.0, K=7.0, T=1.0)),
 }
 
 
@@ -254,11 +255,12 @@ def rig_eye(fr: FaceRig, eye: Mapping[str, object], s: int) -> None:
     fr.bind_on(mood_el, "scaleY", 1.0, terms(UL=0.16, LT=-0.08))
     fr.bind_on(mood_el, "scaleX", 1.0, terms(UL=0.1, LT=-0.02))
     droop: El = eye["droop"].el  # type: ignore[attr-defined]
-    fr.bind_on(droop, "scaleY", 0.0, terms(IU=0.4, BL=0.3, LT=0.15, UL=-0.5), lo=0.0, hi=1.0)
+    # a dead zone: a lid scaled to ~0.01 still draws a dashed sliver of lash
+    fr.bind_on(droop, "scaleY", -0.04, terms(IU=0.4, BL=0.3, LT=0.15, UL=-0.8), lo=0.0, hi=1.0)
     fr.bind_on(droop, "rotation", 0.0, {"auBrowInnerUp": 0.25 * s, "auBrowLower": -0.28 * s})
     for k in ("squint", "squint_line"):
         el: El = eye[k]  # type: ignore[assignment]
-        fr.bind_on(el, "scaleY", 0.0, terms(CR=0.75, LT=0.35), lo=0.0, hi=1.0)
+        fr.bind_on(el, "scaleY", -0.03, terms(CR=0.78, LT=0.37), lo=0.0, hi=1.0)
 
 
 LIP_TENSION = 1.3
@@ -337,7 +339,9 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
     hw = lip_handle_bones(fr, bones, order, F)
     inside = fr.skinned("MouthInside", pts, [one(n) for n in order], bones, F, fr.fill(palette["inside"]),
                         tension=LIP_TENSION, handles=hw)
-    outline = fr.skinned("MouthLine", pts, [one(n) for n in order], bones, F, fr.stroke(palette["ink"], 2.7),
+    line = fr.stroke(palette["ink"], 2.7)
+    fr.bind_on(line, "thickness", 2.7, terms(R=1.3, K=0.3))  # pressed lips read as a firmer line
+    outline = fr.skinned("MouthLine", pts, [one(n) for n in order], bones, F, line,
                          tension=LIP_TENSION, handles=hw)
     # a darker throat toward the lower jaw gives the opening depth
     throat = fr.skinned("MouthThroat", [(389.0, 479.0), (400.0, 475.0), (411.0, 479.0), (400.0, 484.0)],

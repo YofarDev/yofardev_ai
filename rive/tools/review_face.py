@@ -166,9 +166,78 @@ def speech(name: str) -> None:
     for c, i in zip(cells, idx):
         if frames[i]["speech"] >= 0 and (i // 2) % 2 == 0:
             w, h = c.size
-            face.append(c.crop((int(w * 0.18), int(h * 0.12), int(w * 0.82), int(h * 0.62))))
+            face.append(c.crop((int(w * 0.2), int(h * 0.1), int(w * 0.8), int(h * 0.7))))
     print("strip:", sheet(face, 10, f"speech_{name}_strip.png"))
     print("gif:", OUT / f"speech_{name}.gif")
+    print("timing:", timing(name, tr, blinks))
+
+
+def timing(name: str, tr: dict, blinks: list[int]) -> Path:
+    """One chart: waveform, viseme row, prosody marks, and the face curves the app writes."""
+    import struct
+    import wave
+    frames = tr["frames"]
+    fps = tr["fps"]
+    lead = tr["lead"]
+    total = len(frames) / fps
+    W, lane = 1800, 46
+    curves = [("jawDrop", lambda f: f["au"]["jawDrop"], (240, 200, 120)),
+              ("lipPress", lambda f: f["au"]["lipPress"], (230, 110, 110)),
+              ("lipPucker", lambda f: f["au"]["lipPucker"], (150, 190, 250)),
+              ("lipStretch", lambda f: f["au"]["lipStretch"], (160, 220, 160)),
+              ("lipTuck", lambda f: f["lipTuck"], (250, 160, 220)),
+              ("browOuterUp", lambda f: f["au"]["browOuterUp"], (250, 230, 120)),
+              ("browInnerUp", lambda f: f["au"]["browInnerUp"], (220, 200, 90)),
+              ("nodPitch (x3)", lambda f: 0.5 + 1.5 * f["nodPitch"], (200, 160, 250)),
+              ("roll", lambda f: f["roll"], (120, 220, 230)),
+              ("breath", lambda f: f["breath"], (180, 180, 180))]
+    H = 90 + 30 + lane * len(curves) + 20
+    im = Image.new("RGB", (W, H), (20, 18, 26))
+    dr = ImageDraw.Draw(im)
+    x0, x1 = 120, W - 20
+
+    def X(t: float) -> float:
+        return x0 + (x1 - x0) * t / total
+
+    wav = DATA / f"{name}.wav"
+    if wav.exists():
+        with wave.open(str(wav)) as w:
+            n = w.getnframes()
+            raw = w.readframes(n)
+            sr = w.getframerate()
+        samples = struct.unpack(f"<{n}h", raw[: 2 * n])
+        step = max(1, n // (x1 - x0))
+        for k in range(0, n, step):
+            seg = samples[k:k + step]
+            a = max(abs(v) for v in seg) / 32768
+            x = X(lead + k / sr)
+            dr.line([(x, 45 - 40 * a), (x, 45 + 40 * a)], fill=(110, 110, 130))
+    dr.text((6, 40), "audio", fill=(200, 200, 200))
+    for sp in tr["timeline"]["visemes"]:
+        a, b = X(lead + sp["start"] / 1000), X(lead + sp["end"] / 1000)
+        col = (200, 70, 70) if sp["v"] == "pp" else (70, 90, 140) if sp["v"] != "sil" else (40, 40, 50)
+        dr.rectangle([a, 92, b, 112], fill=col, outline=(20, 18, 26))
+        if b - a > 14:
+            dr.text((a + 2, 96), sp["v"], fill=(240, 240, 240))
+    dr.text((6, 96), "viseme", fill=(200, 200, 200))
+    for m in tr["timeline"]["marks"]:
+        x = X(lead + m["at"] / 1000)
+        col = {"pitchPeak": (250, 230, 120), "stress": (200, 160, 250), "pause": (120, 220, 230)}[m["kind"]]
+        dr.line([(x, 88), (x, H - 10)], fill=col)
+    for b in blinks:
+        x = X(b / fps)
+        dr.text((x - 3, 114), "B", fill=(255, 255, 255))
+    for i, (nm, fn, col) in enumerate(curves):
+        top = 130 + lane * i
+        dr.line([(x0, top + lane - 4), (x1, top + lane - 4)], fill=(50, 50, 60))
+        dr.text((6, top + 12), nm, fill=col)
+        pts = [(X(k / fps), top + lane - 4 - (lane - 8) * max(0.0, min(1.0, fn(f)))) for k, f in enumerate(frames)]
+        dr.line(pts, fill=col, width=2)
+    for k in range(int(total) + 1):
+        dr.text((X(k) - 4, H - 14), f"{k}s", fill=(150, 150, 150))
+    out = OUT / f"speech_{name}_timing.png"
+    im.save(out, optimize=True)
+    return out
 
 
 if __name__ == "__main__":
