@@ -36,6 +36,7 @@ import '../../features/sound/domain/services/tts_queue_service.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
+import '../../features/talking/domain/services/playback_clock.dart';
 import '../../features/talking/domain/services/tts_playback_service.dart';
 import '../../features/talking/presentation/bloc/caption_cubit.dart';
 import '../../features/talking/presentation/bloc/talking_cubit.dart';
@@ -190,8 +191,16 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<StreamProcessorService>(
     () => StreamProcessorService(),
   );
+  getIt.registerLazySingleton<PlaybackClock>(
+    () => PlaybackClock(
+      source: _AudioPlayerPositionSource(getIt<AudioPlayerService>()),
+    ),
+  );
   getIt.registerLazySingleton<TtsPlaybackService>(
-    () => TtsPlaybackService(getIt<TalkingRepository>()),
+    () => TtsPlaybackService(
+      getIt<TalkingRepository>(),
+      clock: getIt<PlaybackClock>(),
+    ),
   );
   getIt.registerLazySingleton<AvatarAnimationService>(
     () => AvatarAnimationService(),
@@ -338,4 +347,16 @@ Future<void> bootstrapApp() async {
       }),
     );
   }
+}
+
+/// Adapts the core [AudioPlayerService] to the talking feature's
+/// [PlaybackPositionSource] (core may not import features, so the feature
+/// interface is implemented here, in the composition root).
+class _AudioPlayerPositionSource implements PlaybackPositionSource {
+  _AudioPlayerPositionSource(this._audioPlayerService);
+
+  final AudioPlayerService _audioPlayerService;
+
+  @override
+  Future<Duration?> currentPosition() => _audioPlayerService.currentPosition();
 }

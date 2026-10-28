@@ -201,6 +201,25 @@ class AudioPlayerService {
     _playbackCompleteController.close();
   }
 
+  /// Current position of the active player, null when no player is active
+  /// (or the position cannot be read). Consumed by the playback clock.
+  Future<Duration?> currentPosition() async {
+    final AudioPlayer? player = _player;
+    if (player == null) {
+      return null;
+    }
+    try {
+      return await player.getCurrentPosition();
+    } catch (e) {
+      AppLogger.error(
+        'Failed to read playback position',
+        tag: 'AudioPlayerService',
+        error: e,
+      );
+      return null;
+    }
+  }
+
   /// Stream that emits when playback completes
   Stream<void> get onPlaybackComplete => _playbackCompleteController.stream;
 }

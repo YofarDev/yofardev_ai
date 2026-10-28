@@ -28,6 +28,9 @@ class MockTtsPlaybackService implements TtsPlaybackService {
   Future<void> stop() async {}
 
   @override
+  Duration get tick => const Duration(milliseconds: 16);
+
+  @override
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,

@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/utils/logger.dart';
 import '../repositories/talking_repository.dart';
+import 'playback_clock.dart';
 
 sealed class PlaybackEvent {
   const PlaybackEvent();
@@ -39,11 +40,31 @@ class CaptionEvent extends PlaybackEvent {
   final String text;
 }
 
+/// Drives the avatar mouth animation from a playback clock instead of an
+/// open-loop timer index: every tick derives the frame index from the clock's
+/// position, so a stalled UI isolate jumps straight to the real frame.
 class TtsPlaybackService {
-  TtsPlaybackService(this._repository);
+  TtsPlaybackService(this._repository, {PlaybackClock? clock, Duration? tick})
+    : _clock = clock,
+      tick = tick ?? defaultTick;
 
   final TalkingRepository _repository;
+
+  /// Closed-loop clock anchored to the player position; null on platforms
+  /// without a position source (tests, web), where a pure stopwatch drives
+  /// the frames.
+  final PlaybackClock? _clock;
+
+  /// Interval between animation ticks.
+  final Duration tick;
+
+  static const Duration defaultTick = Duration(milliseconds: 16);
+
+  static const Duration _defaultFrameDuration = Duration(milliseconds: 25);
+
   Timer? _animationTimer;
+  Stopwatch? _fallbackStopwatch;
+  bool _animationCompleted = false;
 
   final StreamController<PlaybackEvent> _controller =
       StreamController<PlaybackEvent>.broadcast();
@@ -60,8 +81,7 @@ class TtsPlaybackService {
   }
 
   Future<void> stop() async {
-    _animationTimer?.cancel();
-    _animationTimer = null;
+    _cancelAnimation();
     await _repository.stop();
     _controller.add(const SpeakingStoppedEvent());
   }
@@ -78,7 +98,8 @@ class TtsPlaybackService {
       tag: 'TtsPlaybackService',
     );
 
-    _animationTimer?.cancel();
+    _cancelAnimation();
+    _animationCompleted = false;
 
     if (amplitudes.isEmpty) {
       AppLogger.debug(
@@ -101,39 +122,70 @@ class TtsPlaybackService {
     }
 
     final int totalFrames = amplitudes.length;
-    final int updateInterval = (audioDuration.inMilliseconds / totalFrames)
-        .round()
-        .clamp(5, 100);
+    final Duration frameDuration = audioDuration > Duration.zero
+        ? Duration(microseconds: audioDuration.inMicroseconds ~/ totalFrames)
+        : _defaultFrameDuration;
+
+    final PlaybackClock? clock = _clock;
+    if (clock != null) {
+      clock.start();
+    } else {
+      _fallbackStopwatch = Stopwatch()..start();
+    }
 
     AppLogger.debug(
-      'TtsPlaybackService: Animation timer: interval=${updateInterval}ms, frames=$totalFrames',
+      'TtsPlaybackService: Animation clock: frame=${frameDuration.inMilliseconds}ms, frames=$totalFrames',
       tag: 'TtsPlaybackService',
     );
 
-    int currentIndex = 0;
-    _animationTimer = Timer.periodic(Duration(milliseconds: updateInterval), (
-      Timer timer,
-    ) {
-      if (currentIndex >= totalFrames) {
-        AppLogger.debug(
-          'TtsPlaybackService: Animation completed after $currentIndex frames',
-          tag: 'TtsPlaybackService',
-        );
-        timer.cancel();
-        _animationTimer = null;
-        _controller.add(const AnimationCompletedEvent());
+    int lastMouthState = -1;
+    _animationTimer = Timer.periodic(tick, (Timer timer) {
+      final Stopwatch? fallback = _fallbackStopwatch;
+      final Duration position =
+          clock?.position ?? fallback?.elapsed ?? Duration.zero;
+      final int frameIndex =
+          position.inMicroseconds ~/ frameDuration.inMicroseconds;
+
+      if (frameIndex >= totalFrames) {
+        _completeAnimation(timer);
         return;
       }
 
-      final int mouthState = _getMouthState(amplitudes[currentIndex]);
-      _controller.add(MouthStateUpdatedEvent(mouthState));
-      currentIndex++;
+      final int mouthState = _getMouthState(amplitudes[frameIndex]);
+      if (mouthState != lastMouthState) {
+        lastMouthState = mouthState;
+        _controller.add(MouthStateUpdatedEvent(mouthState));
+      }
     });
   }
 
   void cancelAnimation() {
+    _cancelAnimation();
+  }
+
+  void _completeAnimation(Timer timer) {
+    timer.cancel();
+    _animationTimer = null;
+    _fallbackStopwatch?.stop();
+    _fallbackStopwatch = null;
+    _clock?.stop();
+    if (_animationCompleted) {
+      return;
+    }
+    _animationCompleted = true;
+    AppLogger.debug(
+      'TtsPlaybackService: Animation completed',
+      tag: 'TtsPlaybackService',
+    );
+    _controller.add(const AnimationCompletedEvent());
+  }
+
+  void _cancelAnimation() {
     _animationTimer?.cancel();
     _animationTimer = null;
+    _fallbackStopwatch?.stop();
+    _fallbackStopwatch = null;
+    _clock?.stop();
   }
 
   int _getMouthState(int amplitude) {
@@ -145,8 +197,7 @@ class TtsPlaybackService {
   }
 
   void dispose() {
-    _animationTimer?.cancel();
-    _animationTimer = null;
+    _cancelAnimation();
     _controller.close();
   }
 }
