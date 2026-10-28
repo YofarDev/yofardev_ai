@@ -62,25 +62,26 @@ def evaluate(c0: float, t: Terms, env: Mapping[str, float]) -> float:
 # Brows: bone rest positions per side (s = -1 left, +1 right; the inner end is toward x = 400).
 # dx is given toward the face centre for + (mirrored per side); dy is screen y (+ = down).
 BROW_BONES = {  # name: (dx from eye centre * s, y, dx terms (toward centre), dy terms)
-    "Inner": (-26.0, 341.0, terms(BL=3.0, IU=0.5), terms(IU=-12.0, OU=-3.0, BL=7.0)),
-    "Mid": (4.0, 337.0, terms(BL=1.5), terms(IU=-6.0, OU=-7.0, BL=3.5)),
-    "Outer": (32.0, 342.0, terms(OU=-1.5), terms(IU=-1.5, OU=-12.0, BL=-1.0)),
+    "Inner": (-26.0, 341.0, terms(BL=3.0, IU=0.5), terms(IU=-16.0, OU=-4.0, BL=7.0)),
+    "Mid": (4.0, 337.0, terms(BL=1.5), terms(IU=-7.0, OU=-10.0, BL=4.0)),
+    # AU1 alone tilts the brow (outer end a touch down): the oblique sad brow
+    "Outer": (32.0, 342.0, terms(OU=-1.5), terms(IU=1.5, OU=-16.0, BL=-1.0)),
 }
 
 MOUTH_FRAME = (400.0, 478.0)
 # Mouth bones: rest (x, y) for the RIGHT side / centre; dx terms are toward the viewer's right for the
 # right side (mirrored for the left); dy terms are screen y.
 MOUTH_BONES = {
-    "CornerR": ((417.0, 477.0), terms(P=5.0, S=7.0, J=3.0, K=-8.0, R=-1.5, DM=1.0, D=1.0),
+    "CornerR": ((417.0, 477.0), terms(P=5.0, S=7.0, J=3.0, K=-10.5, R=-3.0, DM=1.0, D=1.0),
                 terms(P=-7.0, D=9.5, CR=-1.5, J=3.0, S=1.0, DM=-1.0)),
     # closed-mouth terms (corners, smile, frown, dimpler, press) move the upper and lower lips
     # together so a closed mouth stays one line; only jaw, pucker, nose wrinkle and lip tuck open it
     "UpperR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
-               terms(P=0.3, D=1.0, J=-2.0, NW=-3.0, T=-3.0, K=-3.0)),
-    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-4.0, J=-2.5, NW=-4.0, T=-3.5, K=-4.0)),
+               terms(P=0.3, D=1.0, J=-2.0, NW=-3.0, T=-3.0, K=-2.0)),
+    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-4.0, J=-2.5, NW=-4.0, T=-3.5, K=-2.5)),
     "LowerR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
-               terms(P=0.3, D=1.0, J=19.0, K=5.0, T=0.5)),
-    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-4.0, J=23.0, K=7.0, T=1.0)),
+               terms(P=0.3, D=1.0, J=19.0, K=3.5, T=0.5)),
+    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-4.0, J=23.0, K=5.0, T=1.0)),
 }
 
 
@@ -252,8 +253,13 @@ def rig_brow(fr: FaceRig, brow_g: El, shape: El, cx: float, s: int, color: str) 
 def rig_eye(fr: FaceRig, eye: Mapping[str, object], s: int) -> None:
     """Eye opening, mood lids and squint crescent follow the lid / brow / cheek AUs."""
     mood_el: El = eye["mood"].el  # type: ignore[attr-defined]
-    fr.bind_on(mood_el, "scaleY", 1.0, terms(UL=0.16, LT=-0.08))
+    fr.bind_on(mood_el, "scaleY", 1.0, terms(UL=0.2, LT=-0.08))
     fr.bind_on(mood_el, "scaleX", 1.0, terms(UL=0.1, LT=-0.02))
+    # mood lids stay inside the eye opening (no strokes across the glasses)
+    clip = next(c for c in eye["blink"].el.children if c.attrs.get("name") == "EyeClip")  # type: ignore[attr-defined]
+    for el in (*eye["droop"].el.children, eye["squint"], eye["squint_line"]):  # type: ignore[attr-defined]
+        if el.tag == "Shape":
+            el.children.insert(0, fr.d("ClippingShape", sourceId=clip.ref(), name="EyeOpening"))
     droop: El = eye["droop"].el  # type: ignore[attr-defined]
     # a dead zone: a lid scaled to ~0.01 still draws a dashed sliver of lash
     fr.bind_on(droop, "scaleY", -0.04, terms(IU=0.4, BL=0.3, LT=0.15, UL=-0.8), lo=0.0, hi=1.0)
@@ -347,7 +353,7 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
     throat = fr.skinned("MouthThroat", [(389.0, 479.0), (400.0, 475.0), (411.0, 479.0), (400.0, 484.0)],
                         [{"LowerL": 0.6, "UpperL": 0.4}, {"UpperC": 0.35, "LowerC": 0.65},
                          {"LowerR": 0.6, "UpperR": 0.4}, one("LowerC")], bones, F,
-                        fr.fill(palette["throat"]), clip=inside)
+                        fr.fill(palette["throat"]), clip=inside, opacity=0.55)
     teeth = fr.skinned("MouthTeeth",
                        [(377.0, 472.0, "c"), (400.0, 473.0, "c"), (423.0, 472.0, "c"), (419.0, 485.0),
                         (400.0, 487.0), (381.0, 485.0)],

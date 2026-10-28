@@ -713,9 +713,10 @@ EYES = [EYE_L, EYE_R]
 eyes.el.children.sort(key=lambda c: 0 if c.attrs.get("name", "").startswith("Brow") else 1)
 
 blush = head.node("Blush", 400, 440, opacity=0.0)
-blush.add(*[E(blush, "Blush" + t, x, 438, 54, 20, rgrad(27, [("B0F08F86", 0.0), ("00F08F86", 1.0)]))
+blush.add(*[E(blush, "Blush" + t, x, 438, 54, 20, rgrad(27, [("B0F08F86", 0.0), ("00F08F86", 1.0)]), clip=face)
             for t, x in (("L", 338), ("R", 462))],
-          *[S(blush, f"BlushLine{t}{k}", [(x - 12 + k * 9, 446), (x - 6 + k * 9, 432)], L("90E07070", 2), closed=False)
+          *[S(blush, f"BlushLine{t}{k}", [(x - 12 + k * 9, 446), (x - 6 + k * 9, 432)], L("90E07070", 2), closed=False,
+              clip=face)
             for t, x in (("L", 338), ("R", 462)) for k in range(3)])
 
 # ---- mouth: one continuous skinned mouth (rive/tools/face_rig.py) inside MouthActing (gesture
@@ -1038,12 +1039,16 @@ def hair_spring(name: str, rig: Rig) -> El:
 hair_follow = hair_spring("FringeFollowThrough", hair_front)
 back_follow = hair_spring("BackHairFollowThrough", hair_back)
 tuft_follow = hair_spring("TuftFollowThrough", tufts)
-head.el.children = [hat_solo.el, sweat_m.el, sweat_p.el, anger.el, glasses_solo.el, hair_follow, laugh.el,
+# Brows paint over the fringe (storybook convention: they must read through the bangs), under the
+# glasses; same frame as the eyes so the head rig and the gesture travel treat them alike.
+brows = d("Node", *[e["brow"].el for e in EYES], x=eyes.el.attrs["x"], y=eyes.el.attrs["y"], name="Brows")
+eyes.el.children = [c for c in eyes.el.children if c not in (EYE_L["brow"].el, EYE_R["brow"].el)]
+head.el.children = [hat_solo.el, sweat_m.el, sweat_p.el, anger.el, glasses_solo.el, brows, hair_follow, laugh.el,
                     eyes.el, blush.el, mouth.el, mole, nose_g.el, *skin_details, cheek_sh, face_cast, face, *ears, tufts.el,
                     back_follow, hit_head]
 head.el.children[head.el.children.index(tufts.el)] = tuft_follow
 travel_parts = []
-for part in (eyes.el, glasses_solo.el, mouth.el, nose_g.el, blush.el, mole):
+for part in (eyes.el, brows, glasses_solo.el, mouth.el, nose_g.el, blush.el, mole):
     travel_part = d("Node", part, x=0.0, y=0.0, name="Travel" + str(part.attrs["name"]))
     head.el.children[head.el.children.index(part)] = travel_part
     travel_parts.append(travel_part)

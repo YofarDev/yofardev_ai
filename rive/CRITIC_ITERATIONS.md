@@ -120,3 +120,15 @@ Open after round 9 (for the M4–M6 presence work):
    micro-saccades during holds over 400 ms and a blink on large gaze changes.
 5. The back hair domes out past the near side at the deep glance (1.3× lag); drop it to about
    1.0× or clamp it to the head silhouette, and soften the nose-highlight streak at high yaw.
+
+## avatar face and speech (M2)
+
+28 October 2026 (`claude/moonshot-m2-579044`). Independent critics: a fresh opus agent per round,
+given only the evidence, the art-bible rubric and the brief. Gate (M2 plan ruling 12): face ≥ 9.0
+and speech ≥ 9.0, at most 6 rounds. Evidence: `rive/avatar/review/face/` (AU solo, moods, visemes,
+yaw sheet, and for three macOS `say` sentences a 15 fps strip and a timing chart of every number
+the app writes); regenerate with `tool/face_speech_trace_test.dart` + `uv run rive/tools/review_face.py`.
+
+| Round | Face | Speech | Main issues |
+|---|---:|---:|---|
+| 1 | 7.3 | 6.5 | no f/v detected; missed and weak p/b/m closures; the jaw snaps shut into seals; under-articulated mouth; one breath, a short question tilt, faint nods, brow beats that read as surprise; droop/squint strokes spill past the eye over the glasses; brows buried under the fringe; thinking mouth a dark blob; far blush spills past the cheek at yaw ±1; cool frame black |
