@@ -22,7 +22,7 @@ import '../../bloc/avatar_state.dart';
 ///
 /// Head turn: a [Ticker] steps a [HeadMotionSolver] toward
 /// [AvatarState.headTarget] each frame and writes `yaw`, `pitch`,
-/// `hairLagYaw`, `hairLagPitch` and `eyeLeadYaw` when one changes by more than
+/// `hairLagYaw`, `hairLagPitch`, `eyeLeadYaw` and `eyeLeadPitch` when one changes by more than
 /// 0.001. The ticker idles once the head has settled and drift is off (reduce
 /// motion); `MediaQuery.disableAnimationsOf` drives the solver's reduce-motion
 /// mode.
@@ -73,6 +73,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   double? _writtenHairYaw;
   double? _writtenHairPitch;
   double? _writtenEyeLead;
+  double? _writtenEyeLeadPitch;
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
@@ -85,6 +86,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     _solver.setTarget(
       widget.avatarState.headTarget.yaw,
       widget.avatarState.headTarget.pitch,
+      reading: widget.avatarState.headTarget.reading,
     );
     _load();
   }
@@ -112,6 +114,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       _solver.setTarget(
         widget.avatarState.headTarget.yaw,
         widget.avatarState.headTarget.pitch,
+        reading: widget.avatarState.headTarget.reading,
       );
       _ensureTicking();
     }
@@ -177,7 +180,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       _applyContinuousState();
       // A fresh binding has none of the head numbers yet.
       _writtenYaw = _writtenPitch = _writtenHairYaw = null;
-      _writtenHairPitch = _writtenEyeLead = null;
+      _writtenHairPitch = _writtenEyeLead = _writtenEyeLeadPitch = null;
       _writeHeadPose(_solver.pose);
       _ensureTicking();
     } on Exception catch (e) {
@@ -213,7 +216,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     }
   }
 
-  /// Writes the five rig numbers that moved by more than [_writeEpsilon]
+  /// Writes the six rig numbers that moved by more than [_writeEpsilon]
   /// since they were last written ([force]: all of them).
   void _writeHeadPose(HeadPose pose, {bool force = false}) {
     final RiveVmBinding? binding = _binding;
@@ -248,6 +251,11 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       AvatarRiveContract.propEyeLeadYaw,
       pose.eyeLeadYaw,
       _writtenEyeLead,
+    );
+    _writtenEyeLeadPitch = write(
+      AvatarRiveContract.propEyeLeadPitch,
+      pose.eyeLeadPitch,
+      _writtenEyeLeadPitch,
     );
   }
 

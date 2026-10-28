@@ -77,7 +77,7 @@ void main() {
         final Future<void> away = expectLater(
           cubit.stream.map((AvatarState s) => s.headTarget),
           emitsInOrder(<Matcher>[
-            equals(const HeadTarget(0.6, -0.25)),
+            equals(const HeadTarget(0.6, -0.25, reading: true)),
             equals(HeadTarget.zero),
           ]),
         );
@@ -100,7 +100,10 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       await sub.cancel();
       expect(emitted, isEmpty);
-      expect(cubit.state.headTarget, const HeadTarget(0.6, -0.25));
+      expect(
+        cubit.state.headTarget,
+        const HeadTarget(0.6, -0.25, reading: true),
+      );
     });
 
     test('the cubit works without a director', () async {

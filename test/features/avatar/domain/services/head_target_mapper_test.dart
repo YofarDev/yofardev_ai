@@ -16,7 +16,19 @@ void main() {
     test('away looks down at the tablet while a tool runs', () {
       expect(
         headTargetFor(const GazeTarget.away(0.6), activeTool: 'web_search'),
-        const HeadTarget(0.6, -0.25),
+        const HeadTarget(0.6, -0.25, reading: true),
+      );
+    });
+
+    test('only a tool-driven glance reads', () {
+      expect(headTargetFor(const GazeTarget.away(0.6)).reading, isFalse);
+      expect(headTargetFor(const GazeTarget.caret()).reading, isFalse);
+      expect(
+        headTargetFor(
+          const GazeTarget.user(),
+          activeTool: 'web_search',
+        ).reading,
+        isFalse,
       );
     });
 

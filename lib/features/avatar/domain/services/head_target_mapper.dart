@@ -14,7 +14,7 @@ const double kCaretPitch = -0.35;
 ///
 /// - `user` → (0, 0).
 /// - `away(angle)` → yaw = angle (normalized −1..1); looks down at the tablet
-///   while a tool runs, otherwise up (thinking).
+///   (and reads: eye saccades) while a tool runs, otherwise up (thinking).
 /// - `caret` → straight on, looking down at the composer.
 /// - `point(x, y)` with normalized 0..1 screen coordinates.
 HeadTarget headTargetFor(GazeTarget gaze, {String? activeTool}) {
@@ -23,6 +23,7 @@ HeadTarget headTargetFor(GazeTarget gaze, {String? activeTool}) {
     GazeAway(:final double angle) => HeadTarget(
       angle.clamp(-1.0, 1.0),
       activeTool != null ? kToolPitch : kThinkingPitch,
+      reading: activeTool != null,
     ),
     GazeCaret() => const HeadTarget(0, kCaretPitch),
     GazePoint(:final double x, :final double y) => HeadTarget(

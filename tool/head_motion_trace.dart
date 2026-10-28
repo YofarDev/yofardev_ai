@@ -41,7 +41,7 @@ void main() {
         beats[beat].gaze,
         activeTool: beats[beat].tool,
       );
-      solver.setTarget(target.yaw, target.pitch);
+      solver.setTarget(target.yaw, target.pitch, reading: target.reading);
       beat++;
     }
     final HeadPose pose = solver.step(dt);
