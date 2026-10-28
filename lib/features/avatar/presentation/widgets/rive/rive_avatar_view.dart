@@ -100,10 +100,13 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Pause Rive while the app is in the background.
+    // Pause Rive (and the head ticker that feeds it) while the app is in the
+    // background.
+    final bool resumed = state == AppLifecycleState.resumed;
+    _ticker.muted = !resumed;
     final RiveWidgetController? controller = _controller;
     if (controller != null) {
-      controller.active = state == AppLifecycleState.resumed;
+      controller.active = resumed;
     }
   }
 
