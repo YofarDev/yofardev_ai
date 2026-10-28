@@ -70,4 +70,24 @@ sealed class ActionUnits with _$ActionUnits {
     jawDrop: (jawDrop * k).clamp(0.0, 1.0),
     dimpler: (dimpler * k).clamp(0.0, 1.0),
   );
+
+  /// Per-AU linear interpolation towards [to] at [t], clamped to [0, 1].
+  ActionUnits lerp(ActionUnits to, double t) => ActionUnits(
+    browInnerUp: _mix(browInnerUp, to.browInnerUp, t),
+    browOuterUp: _mix(browOuterUp, to.browOuterUp, t),
+    browLower: _mix(browLower, to.browLower, t),
+    lidTighten: _mix(lidTighten, to.lidTighten, t),
+    upperLidRaise: _mix(upperLidRaise, to.upperLidRaise, t),
+    cheekRaise: _mix(cheekRaise, to.cheekRaise, t),
+    noseWrinkle: _mix(noseWrinkle, to.noseWrinkle, t),
+    lipCornerPull: _mix(lipCornerPull, to.lipCornerPull, t),
+    lipCornerDepress: _mix(lipCornerDepress, to.lipCornerDepress, t),
+    lipStretch: _mix(lipStretch, to.lipStretch, t),
+    lipPucker: _mix(lipPucker, to.lipPucker, t),
+    lipPress: _mix(lipPress, to.lipPress, t),
+    jawDrop: _mix(jawDrop, to.jawDrop, t),
+    dimpler: _mix(dimpler, to.dimpler, t),
+  );
 }
+
+double _mix(double a, double b, double t) => (a + (b - a) * t).clamp(0.0, 1.0);
