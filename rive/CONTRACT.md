@@ -34,6 +34,9 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `presence` | enum | onScreen, outOfScreen, leaveAndComeBack. The last one walks off, walks back, and ends on onScreen. |
 | `yaw` | number | −1–1, default 0: head turn (±30°). +1 = the character turns toward the **viewer's right**. Only the head turns; neck and body stay. History-free: the pose depends only on the value. |
 | `pitch` | number | −1–1, default 0: head tilt (±15°). +1 = looks **up**. Only the head moves. Composes with yaw, moods, gestures and hair follow-through. |
+| `hairLagYaw` | number | −1–1, default 0 (locked): yaw offset of the fringe locks, cowlicks and side locks relative to the head, same sign as `yaw` (the hair sits as if the head were at `yaw + hairLagYaw`); the back hair takes 1.3× it. Written by the app's follow-through spring. |
+| `hairLagPitch` | number | −1–1, default 0 (locked): the same for pitch (+ = the hair sits as if looking further up). |
+| `eyeLeadYaw` | number | −1–1, default 0: extra iris/pupil shift toward the viewer's right for +, on top of the pointer follow and the yaw slide, so the eyes can lead a turn. The irises stay clipped inside the eye whites. |
 
 **Idle life**, built into the file with no Dart involvement: blinking, breathing, and eyes that
 follow the pointer or touch.
