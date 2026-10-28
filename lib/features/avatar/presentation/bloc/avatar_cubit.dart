@@ -20,6 +20,8 @@ import '../../../sound/sound.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../domain/models/avatar_animation.dart';
+import '../../domain/models/performance_intent.dart';
+import '../../domain/services/head_target_mapper.dart';
 import '../../domain/services/performance_director.dart';
 import 'avatar_state.dart';
 
@@ -78,6 +80,18 @@ class AvatarCubit extends Cubit<AvatarState> {
         AppLogger.error('Mood stream error', tag: 'AvatarCubit', error: error);
       },
     );
+
+    // The director's gaze becomes the head target the Rive view chases.
+    _intentSubscription = _director?.intents.listen(
+      _handleIntent,
+      onError: (Object error) {
+        AppLogger.error(
+          'Intent stream error',
+          tag: 'AvatarCubit',
+          error: error,
+        );
+      },
+    );
   }
 
   final AvatarRepository _avatarRepository;
@@ -94,6 +108,17 @@ class AvatarCubit extends Cubit<AvatarState> {
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
   StreamSubscription<String>? _chatChangedSubscription;
   StreamSubscription<AvatarMood>? _moodSubscription;
+  StreamSubscription<PerformanceIntent>? _intentSubscription;
+
+  void _handleIntent(PerformanceIntent intent) {
+    final HeadTarget target = headTargetFor(
+      intent.gaze,
+      activeTool: intent.activeTool,
+    );
+    if (target != state.headTarget) {
+      _emitIfOpen(state.copyWith(headTarget: target));
+    }
+  }
 
   /// Handle animation events from the service.
   void _handleAnimationEvent(AvatarAnimation event) {
@@ -475,6 +500,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     await _lifecycleSubscription?.cancel();
     await _chatChangedSubscription?.cancel();
     await _moodSubscription?.cancel();
+    await _intentSubscription?.cancel();
     return super.close();
   }
 }
