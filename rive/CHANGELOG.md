@@ -6,6 +6,7 @@ Plan B reads this file to find out when it can start the steps that need real as
 Format: `YYYY-MM-DD · A<n> · <contract parts now real> · <notes>`
 
 <!-- entries below, newest first -->
+2026-10-28 · contract · `AvatarVM` gains `eyeLeadPitch` (−1–1, default 0, + = looks up; − also drops the upper lids) for the Dart gaze driver · rig follows.
 2026-10-28 · contract · `AvatarVM` gains follow-through offsets `hairLagYaw`, `hairLagPitch`, `eyeLeadYaw` (−1–1, default 0 = locked, same signs as `yaw` / `pitch`) for the Dart spring driver · the rig lands next; Dart driver is a separate task.
 2026-10-28 · contract · `AvatarVM` gains numbers `yaw` (−1–1, +1 = turns to the viewer's right) and `pitch` (−1–1, +1 = looks up), default 0 · declared in CONTRACT.md; the avatar rig lands next (moonshot M1 Task 9/10). Dart binding is Task 10.
 2026-10-27 · M2 · ui_kit.riv + posters · `assets/rive/ui/ui_kit.riv` (≈30 KB/150): ComposerOrb, StatusGlow, ToolIcon, Toggle, Mark with SM `Main` + `<Artboard>VM` exactly as the contract table (names, types, enum order), no events/listeners, every colour bound; `reduceMotion` stops all ambient loops and caps state changes at 110 ms. `assets/rive/posters/<sceneId>.webp` 540×960, 15–32 KB. `frive.sh` builds both; `check_contract.py` checks them. Notes: `level` is smoothed in-file (RangeMapper → DataConverterInterpolator 0.14 s); StatusGlow (5 feathered ellipses) and the Mark halo use Feather; ToolIcon and Toggle have no `reduceMotion` property, so the app must set `running=false` itself under reduce motion. No contract change.
