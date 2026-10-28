@@ -27,7 +27,8 @@ import math
 from typing import Callable, Sequence
 
 import rig_dsl as r
-from rig_dsl import Axis, Chain, Grid, Poly, Weights, fit3, material_dx, pitch_dy, poly_add, poly_scale, quantize, pack
+from rig_dsl import (Axis, Chain, Grid, Poly, Weights, fit3, material_dx, pitch_dy, poly_add, poly_scale, quantize,
+                     pack, tokabs)
 from rml import Doc, El, smooth_path  # noqa: F401
 
 ID_START = 900000
@@ -42,10 +43,18 @@ PROPS = ("yaw", "pitch", "hairLagYaw", "hairLagPitch", "eyeLeadYaw", "eyeLeadPit
 # eye lead, in the Look node's units (the eye is drawn at 1.06 inside a 1.18 head): 15.5 -> ~19
 # artboard px, about 30 % of the eye-white width; 7.6 -> ~9.5 px, about 25 % of its height
 EYE_LEAD_PX = 15.5
-EYE_LEAD_PITCH_PX = 7.6
+EYE_LEAD_PITCH_PX = 7.6  # looking up
+EYE_LEAD_DOWN_PX = 12.2  # looking down: ~15 artboard px, about 40 % of the eye-white height
+# far eye (|yaw| > 0.4): the lead is cut by up to FAR_EYE_CUT, so >= ~60 % of the iris stays in
+# the foreshortened white
+FAR_EYE_CUT = 0.7
+BROW_LIFT_PX = 3.0  # brows lift ~3.5 artboard px at eyeLeadPitch -1 (attentive, on top of moods)
+# fringe follow-through: tip travel per unit of lag is boosted at small lags and saturates at
+# +-1 (gain 1.7 - 0.7 |lag|: 1.42x at 0.4, unchanged at 1)
+FRINGE_LAG_GAIN = (1.7, 0.7)
 # looking down (eyeLeadPitch -1): the lash travels like a quarter blink and a skin lid follows it
-LOOK_DOWN_LASH = (6.0, 0.14)  # lash drop (px) and lash flattening (scaleY loss) at -1
-LOOK_DOWN_LID = 0.37  # lid scaleY at -1 (edge just under the dropped lash: ~25 % coverage)
+LOOK_DOWN_LASH = (3.5, 0.08)  # lash drop (px) and lash flattening (scaleY loss) at -1
+LOOK_DOWN_LID = 0.23  # lid scaleY at -1 (edge just under the dropped lash: ~15 % coverage)
 LOOK_LID_STOPS = ("FFE8C0AA", "FFE8C7B1")  # the avatar's lid skin ramp, graded to value 0.91 (lint)
 # hair follow-through: px of tip travel per unit of lag (the roots stay with the head)
 SIDE_LAG_PX, SIDE_LAG_PITCH_PX = 45.0, 20.0
@@ -398,7 +407,9 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         # head turn: the lock rotates about its root so the tip (further forward) travels more;
         # follow-through: hairLagYaw adds the tip's own travel for that much extra yaw (root pinned)
         rot = poly_scale(poly_add(d_tip, poly_scale(d_root, -1.0)), -1.0 / ln)
-        rot = poly_add(rot, [(-zt * K_YAW / ln, (r.tok("hairLagYaw"),))])
+        g0, g1 = FRINGE_LAG_GAIN
+        c = -zt * K_YAW / ln
+        rot = poly_add(rot, [(c * g0, (r.tok("hairLagYaw"),)), (-c * g1, (r.tok("hairLagYaw"), tokabs("hairLagYaw")))])
         sy = poly_add([(1.0, ())], poly_scale(poly_add(pit(ty, zt), poly_scale(pit(ry, zr), -1.0)), 1.0 / ln))
         sy = poly_add(sy, [(-(zt - ZP) * K_PITCH / ln, (r.tok("hairLagPitch"),))])
         ht.wrap(parts[name], (rx, ry), d_root, pit(ry, zr), rot=rot, sy=sy)  # type: ignore[arg-type]
@@ -409,8 +420,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         ox = side((500.0, 512.0, 522.0), x) if x > CX else (2 * CX - 522.0, 288.0, 2 * CX - 500.0)
         sc = side((1.0, 1.0, 0.38), x)
         ht.wrap(parts["SideLock" + t], (x, 398.0), poses(*ox), pit(398, 10), sx=factor(sc[0], sc[2]))  # type: ignore[arg-type]
-        lag_bend(ht, parts["SideLock" + t], (500.0 if t == "R" else 300.0, 330.0), 466.0 - 330.0,  # type: ignore[arg-type]
-                 SIDE_LAG_PX, SIDE_LAG_PITCH_PX)
+        side_lock_lag(ht, parts["SideLock" + t], 1.0 if t == "R" else -1.0)  # type: ignore[arg-type]
     widen = math.sqrt(math.cos(K_YAW) ** 2 + (1.16 * math.sin(K_YAW)) ** 2)
     # the back hair moves with the crown for pitch (as the cap does), so looking down never lifts
     # it above the crown outline
@@ -423,15 +433,60 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         lag_bend(ht, parts[nm], (x, y), -48.0, TUFT_LAG_PX, TUFT_LAG_PX / 2)  # type: ignore[arg-type]
     # eye lead: extra iris / pupil shift on top of the pointer follow (the Look node keeps its keys);
     # the irises stay clipped by the eye whites
-    lead = [(0.0, ()), (EYE_LEAD_PX / math.sin(1.0), (r.SIN,))]
-    lead_up = [(0.0, ()), (-EYE_LEAD_PITCH_PX / math.sin(1.0), (r.SIN,))]
     for t in ("L", "R"):
+        s = 1.0 if t == "R" else -1.0
         look: El = parts["Look" + t]  # type: ignore[assignment]
         frame = ht.frames[id(ht.parent_of(look))]
-        ht.wrap(look, (frame[0] + float(look.attrs.get("x", 0.0)), frame[1] + float(look.attrs.get("y", 0.0))),
-                dx=lead, dy=lead_up, xa="eyeLead", ya="eyeLeadPitch", name="EyeLead" + t)
+        outer = ht.wrap(look, (frame[0] + float(look.attrs.get("x", 0.0)), frame[1] + float(look.attrs.get("y", 0.0))),
+                        name="EyeLead" + t)
+        lx, ly = float(outer.attrs["x"]), float(outer.attrs["y"])
+        outer.add(ht.raw("eyeLeadYaw", "x", eye_lead_x(ht, lx, s)), ht.raw("eyeLeadPitch", "y", eye_lead_y(ht, ly)))
         look_down_lids(ht, t, parts)
+        brow: El = parts["Brow" + t]  # type: ignore[assignment]
+        bframe = ht.frames[id(ht.parent_of(brow))]
+        bw = ht.wrap(brow, (bframe[0] + float(brow.attrs.get("x", 0.0)), bframe[1] + float(brow.attrs.get("y", 0.0))),
+                     name="BrowLift" + t)
+        bw.add(ht.raw("eyeLeadPitch", "y", ht.neg_part(float(bw.attrs["y"]), -BROW_LIFT_PX)))
     ht.finish()
+
+
+def _clamp(ht: HeadTurn, toks: list[El]) -> list[El]:
+    f = ht.rig.f
+    return f.fn("min", [f.val(1)], f.fn("max", [f.val(-1)], toks))
+
+
+def eye_lead_x(ht: HeadTurn, c0: float, s: float) -> list[El]:
+    """c0 + EYE_LEAD_PX * x * (1 - FAR_EYE_CUT * min(1, max(0, 2 (s*yaw - 0.4)))): the far eye's
+    lead is cut as the eye foreshortens, so the iris never clips to a crescent."""
+    f = ht.rig.f
+    far = f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [f.val(2 * s), f.op("*"), f.bound("yaw"), f.op("-"),
+                                                          f.val(0.8)]))
+    return [f.val(c0), f.op("+"), f.val(EYE_LEAD_PX), f.op("*"), *_clamp(ht, f.inp()), f.op("-"),
+            f.val(EYE_LEAD_PX * FAR_EYE_CUT), f.op("*"), *_clamp(ht, f.inp()), f.op("*"), *far]
+
+
+def eye_lead_y(ht: HeadTurn, c0: float) -> list[El]:
+    """c0 - UP * x for looking up, + DOWN * |x| for looking down (clamped to -1..1)."""
+    f = ht.rig.f
+    neg = f.fn("max", [f.val(0)], [f.val(-1), f.op("*"), *_clamp(ht, f.inp())])
+    return [f.val(c0), f.op("-"), f.val(EYE_LEAD_PITCH_PX), f.op("*"), *_clamp(ht, f.inp()), f.op("+"),
+            f.val(EYE_LEAD_DOWN_PX - EYE_LEAD_PITCH_PX), f.op("*"), *neg]
+
+
+def side_lock_lag(ht: HeadTurn, target: El, s: float) -> None:
+    """Side-lock follow-through about its root. A swing toward the face (the tip crossing the
+    cheek) is removed on the far side (s * yaw > 0) as the head turns, so the far lock never
+    sweeps over the far cheek and lens: rot = -c lag + c s min(0, s lag) min(1, 1.5 max(0, s yaw))."""
+    f = ht.rig.f
+    root = (500.0 if s > 0 else 300.0, 330.0)
+    length = 466.0 - 330.0
+    c = SIDE_LAG_PX / length
+    inward = f.fn("min", [f.val(0)], [f.val(s), f.op("*"), *_clamp(ht, f.inp())])
+    far = f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [f.val(1.5 * s), f.op("*"), f.bound("yaw")]))
+    toks = [f.val(-c), f.op("*"), *_clamp(ht, f.inp()), f.op("+"), f.val(c * s), f.op("*"), *inward, f.op("*"), *far]
+    outer = ht.wrap(target, root, sy=[(1.0, ()), (-SIDE_LAG_PITCH_PX / length, (r.tok("hairLagPitch"),))],
+                    name=str(target.attrs.get("name", "Hair")) + "Lag")
+    outer.add(ht.raw("hairLagYaw", "rotation", toks))
 
 
 def lag_bend(ht: HeadTurn, target: El, root: tuple[float, float], length: float, px: float, px_pitch: float) -> None:

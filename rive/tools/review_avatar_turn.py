@@ -161,6 +161,32 @@ def lag() -> None:
     sheet(cells, 6, "lag.png")
 
 
+FINAL_POSES: list[tuple[str, dict[str, str], int]] = [
+    ("eyeLeadPitch -1", {"eyeLeadPitch": "-1"}, 1),
+    ("eyeLeadPitch -1 blink", {"eyeLeadPitch": "-1"}, 172),
+    ("yaw .8 hairLagYaw -.46", {"yaw": "0.8", "hairLagYaw": "-0.46"}, 1),
+    ("yaw -.8 hairLagYaw +.46", {"yaw": "-0.8", "hairLagYaw": "0.46"}, 1),
+    ("yaw .7 eyeLeadYaw -.52", {"yaw": "0.7", "eyeLeadYaw": "-0.52"}, 1),
+    ("yaw -.7 eyeLeadYaw +.52", {"yaw": "-0.7", "eyeLeadYaw": "0.52"}, 1),
+    ("yaw .5 hairLagYaw -.4", {"yaw": "0.5", "hairLagYaw": "-0.4"}, 1),
+    ("yaw .5 hairLagYaw +.4", {"yaw": "0.5", "hairLagYaw": "0.4"}, 1),
+    ("yaw 1 hairLagYaw -1", {"yaw": "1", "hairLagYaw": "-1"}, 1),
+    ("yaw -1 hairLagYaw +1", {"yaw": "-1", "hairLagYaw": "1"}, 1),
+]
+
+
+def final() -> None:
+    """The final-round critic poses: whole head, then the eyes zoomed."""
+    heads = render_cells(FINAL_POSES, HEAD_BOX, (240, 288), "final")
+    eyes = render_cells(FINAL_POSES, (260, 320, 540, 460), (240, 120), "final_eyes")
+    out = Image.new("RGB", (240 * 5, 288 * 2 + 120 * 2), (20, 18, 26))
+    for k, c in enumerate(heads):
+        out.paste(c, ((k % 5) * 240, (k // 5) * 288))
+    for k, c in enumerate(eyes):
+        out.paste(c, ((k % 5) * 240, 576 + (k // 5) * 120))
+    out.save(OUT / "final.png", optimize=True)
+
+
 def lead_travel() -> list[str]:
     """Measured iris / pupil travel (centroid of the dark pupil pixels in the right eye)."""
     def centroid(data: dict[str, str]) -> tuple[float, float]:
@@ -260,7 +286,8 @@ def metrics() -> None:
 
 
 def main(argv: list[str]) -> None:
-    order = ("grid", "moods", "corners", "zoom", "glasses", "mouth_matrix", "lag", "identity", "turn", "app_turn", "metrics")
+    order = ("grid", "moods", "corners", "zoom", "glasses", "mouth_matrix", "lag", "final", "identity", "turn", "app_turn",
+             "metrics")
     parts = set(argv) or set(order)
     OUT.mkdir(parents=True, exist_ok=True)
     subprocess.run(["rive", str(PROJ), "--once"], cwd=PROJ, check=True, capture_output=True)

@@ -55,6 +55,11 @@ def tokpos(prop: str) -> Factor:
     return ("tokpos", prop)
 
 
+def tokabs(prop: str) -> Factor:
+    """|another view-model number| (e.g. to saturate a response symmetrically)."""
+    return ("tokabs", prop)
+
+
 def const(c: float) -> Poly:
     return [(c, ())]
 
@@ -88,6 +93,8 @@ def eval_factor(f: Factor, a: float, env: dict[str, float] | None = None) -> flo
         return (env or {}).get(str(f[1]), 0.0)
     if f[0] == "tokpos":
         return max(0.0, (env or {}).get(str(f[1]), 0.0))
+    if f[0] == "tokabs":
+        return abs((env or {}).get(str(f[1]), 0.0))
     return math.sqrt(float(f[1]) * math.cos(a) ** 2 + float(f[2]) * math.sin(a) ** 2)  # type: ignore[arg-type]
 
 
@@ -164,6 +171,8 @@ class Formulas:
             return [self.bound(str(f[1]))]
         if f[0] == "tokpos":
             return self.fn("max", [self.val(0)], [self.bound(str(f[1]))])
+        if f[0] == "tokabs":
+            return self.fn("max", [self.bound(str(f[1]))], [self.val(-1), self.op("*"), self.bound(str(f[1]))])
         w2, d2 = float(f[1]), float(f[2])  # type: ignore[arg-type]
         inner = [self.val(w2), self.op("*"), *self.fn("cos", self.inp()), self.op("*"), *self.fn("cos", self.inp()),
                  self.op("+"), self.val(d2), self.op("*"), *self.fn("sin", self.inp()), self.op("*"),
