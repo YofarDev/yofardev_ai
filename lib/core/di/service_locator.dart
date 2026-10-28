@@ -62,6 +62,8 @@ import '../services/llm/llm_service_interface.dart';
 import '../services/llm/llm_streaming_service.dart';
 import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
+import '../services/quality/frame_timing_source.dart';
+import '../services/quality/quality_tier_service.dart';
 import '../services/settings_local_datasource.dart';
 import '../services/speech/speech_input_service.dart';
 import '../services/speech/speech_to_text_input_service.dart';
@@ -190,6 +192,15 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<StreamProcessorService>(
     () => StreamProcessorService(),
+  );
+  getIt.registerLazySingleton<FrameTimingSource>(
+    () => SchedulerFrameTimingSource(),
+  );
+  getIt.registerLazySingleton<QualityTierService>(
+    () => QualityTierService(
+      timingSource: getIt<FrameTimingSource>(),
+      settings: getIt<SettingsLocalDatasource>(),
+    ),
   );
   getIt.registerLazySingleton<PlaybackClock>(
     () => PlaybackClock(
@@ -337,6 +348,10 @@ Future<void> setupServiceLocator() async {
 Future<void> bootstrapApp() async {
   // Run chat data migration (previously called from main.dart).
   await getIt<ChatLocalDatasource>().init();
+
+  // Quality-tier probe: load the stored tier and probe in the background
+  // when none is stored. Startup never waits for it.
+  unawaited(getIt<QualityTierService>().init());
 
   // Optional TTS warmup: startup must never be blocked by it.
   if (PlatformUtils.checkPlatform() != 'Web' &&
