@@ -7,14 +7,17 @@ import '../models/head_pose.dart';
 /// `rive/tools/art_bible.py`. Times in seconds, angles in view-model units.
 class HeadMotionParams {
   const HeadMotionParams({
-    this.leadS = 0.08,
+    this.leadS = 0.11,
+    this.pitchLeadS = 0.03,
     this.eyeSettleS = 0.14,
     this.gazeMax = 0.8,
-    this.anticipation = 0.2,
-    this.anticipationS = 0.13,
+    this.windUpB = 22,
+    this.turnS = 0.36,
     this.bigTurn = 0.25,
     this.rampS = 0.58,
     this.rampMinS = 0.3,
+    this.pitchRampS = 0.4,
+    this.pitchRampMinS = 0.25,
     this.rampFullTravel = 0.5,
     this.rampPerUnit = 0.1,
     this.overshoot = 0.12,
@@ -23,16 +26,17 @@ class HeadMotionParams {
     this.springZeta = 0.68,
     this.hairF = 1.8,
     this.hairZeta = 0.6,
-    this.hairGain = 2.2,
-    this.hairPitchScale = 0.6,
+    this.hairGain = 1.9,
+    this.hairPitchScale = 0.5,
     this.hairLagMax = 0.6,
     this.reduceSettleS = 0.35,
     this.holdMinS = 0.16,
     this.driftAfterS = 1.0,
+    this.returnDriftAfterS = 0.35,
     this.driftFadeInS = 0.2,
-    this.driftYaw = 0.08,
-    this.driftPitch = 0.05,
-    this.nodDepth = 0.045,
+    this.driftYaw = 0.1,
+    this.driftPitch = 0.09,
+    this.nodDepth = 0.06,
     this.nodS = 0.4,
     this.nodMinGapS = 4,
     this.nodMaxGapS = 6,
@@ -41,17 +45,18 @@ class HeadMotionParams {
     this.eyePitchDownMax = 0.72,
     this.eyePast = 0.2,
     this.eyePastTravel = 0.5,
-    this.saccadeSettleS = 0.04,
+    this.saccadeSettleS = 0.03,
     this.microFirstS = 0.15,
-    this.microMinS = 0.6,
-    this.microMaxS = 1.2,
-    this.microAmp = 0.08,
+    this.microMinS = 1.5,
+    this.microMaxS = 3.0,
+    this.microAmp = 0.12,
     this.readingDelayS = 1.0,
     this.fixationMinS = 0.2,
     this.fixationMaxS = 0.28,
-    this.lineWidthMin = 0.4,
-    this.lineWidthMax = 0.46,
-    this.lineStart = -0.15,
+    this.lineWidth3 = 0.7,
+    this.lineWidth4 = 0.82,
+    this.lineStart = -0.18,
+    this.lineFollow = 0.015,
     this.readingLines = 3,
     this.lineFirstPitch = 0.05,
     this.linePitchStep = 0.05,
@@ -59,11 +64,14 @@ class HeadMotionParams {
     this.readingPitchFloor = -0.75,
     this.returnDip = 0.04,
     this.returnDipS = 0.25,
+    this.farSideYaw = 0.5,
+    this.farSideLeadMax = 0.35,
     this.seed = 7,
   });
 
-  /// The eyes move this long before the head starts.
+  /// The eyes move this long before the head starts (yaw / pitch).
   final double leadS;
+  final double pitchLeadS;
 
   /// Settle time of the eye spring.
   final double eyeSettleS;
@@ -71,10 +79,13 @@ class HeadMotionParams {
   /// Soft saturation (tanh) of the eye lead.
   final double gazeMax;
 
-  /// Wind-up as a share of the travel, fed to the head target (the output
-  /// wind-up lands at ~16 % once the head spring smooths it).
-  final double anticipation;
-  final double anticipationS;
+  /// Out-turns (travel over [bigTurn]) use one continuous quintic ease with a
+  /// short counter-turn: `H(t) = A*S5(t) - (b/2) t^2 (1-t)^3` over [turnS]
+  /// (+ [rampPerUnit] per unit of travel), [windUpB] being `b`. The head
+  /// velocity dips once, crosses zero once and peaks once: no stall between
+  /// wind-up and turn.
+  final double windUpB;
+  final double turnS;
 
   /// Only travels longer than this wind up.
   final double bigTurn;
@@ -84,6 +95,10 @@ class HeadMotionParams {
   /// [rampPerUnit] per unit of travel.
   final double rampS;
   final double rampMinS;
+
+  /// The same for the pitch axis (no wind-up there).
+  final double pitchRampS;
+  final double pitchRampMinS;
   final double rampFullTravel;
   final double rampPerUnit;
 
@@ -117,6 +132,7 @@ class HeadMotionParams {
   /// in over [driftFadeInS]. Two slow sines (3-5 s periods) per axis at these
   /// amplitudes.
   final double driftAfterS;
+  final double returnDriftAfterS;
   final double driftFadeInS;
   final double driftYaw;
   final double driftPitch;
@@ -152,7 +168,7 @@ class HeadMotionParams {
 
   /// Reading (tablet glance): [readingDelayS] after the retarget the eyes
   /// loop lines of 3-4 fixations ([fixationMinS]..[fixationMaxS] each),
-  /// stepping one way across [lineWidthMin]..[lineWidthMax] from [lineStart]
+  /// stepping one way across [lineWidth3] / [lineWidth4] from [lineStart]
   /// (relative to the held lead), then sweep back. Each new line drops the
   /// eyes [linePitchStep] (the first line starts at [lineFirstPitch]) and
   /// wraps after [readingLines] lines; fixations jitter
@@ -161,14 +177,23 @@ class HeadMotionParams {
   final double readingDelayS;
   final double fixationMinS;
   final double fixationMaxS;
-  final double lineWidthMin;
-  final double lineWidthMax;
+  final double lineWidth3;
+  final double lineWidth4;
   final double lineStart;
+
+  /// Head-yaw micro-follow per line (toward the target), reset on wrap.
+  final double lineFollow;
   final int readingLines;
   final double lineFirstPitch;
   final double linePitchStep;
   final double fixationPitchJitter;
   final double readingPitchFloor;
+
+  /// While the head is turned past [farSideYaw], the eye lead toward the
+  /// opposite (camera) side is capped at [farSideLeadMax] (far-iris safety),
+  /// except on the return to the user.
+  final double farSideYaw;
+  final double farSideLeadMax;
 
   /// Returning to the user (0, 0) replaces the counter-yaw wind-up with a
   /// small pitch dip of [returnDip] over [returnDipS]; the eyes carry the
@@ -210,8 +235,18 @@ class HeadMotionParams {
 ///   only: no lead, wind-up, overshoot, hair lag, saccades or drift.
 class HeadMotionSolver {
   HeadMotionSolver({this.params = const HeadMotionParams()})
-    : _yawAxis = _Axis(),
-      _pitchAxis = _Axis(),
+    : _yawAxis = _Axis(
+        leadS: params.leadS,
+        rampS: params.rampS,
+        rampMinS: params.rampMinS,
+        windUpAllowed: true,
+      ),
+      _pitchAxis = _Axis(
+        leadS: params.pitchLeadS,
+        rampS: params.pitchRampS,
+        rampMinS: params.pitchRampMinS,
+        windUpAllowed: false,
+      ),
       _eyeOmega = _omegaForSettle(params.eyeSettleS),
       _reduceOmega = _omegaForSettle(params.reduceSettleS) {
     final math.Random rng = math.Random(params.seed);
@@ -222,6 +257,7 @@ class HeadMotionSolver {
     _eventRng = math.Random(params.seed + 101);
     _nextNodAt = _nodGap();
     _nextMicroAt = params.microFirstS;
+    _driftDelay = params.driftAfterS;
   }
 
   final HeadMotionParams params;
@@ -248,7 +284,10 @@ class HeadMotionSolver {
   double _time = 0;
   double _lastRetargetAt = double.negativeInfinity;
   HeadTarget? _pending;
-  double _driftWeight = 0;
+  double _driftWeight = 1;
+  double _driftDelay = 0;
+  double _followYaw = 0;
+  int _microSign = 1;
 
   double _eye = 0;
   double _eyeVel = 0;
@@ -435,7 +474,7 @@ class HeadMotionSolver {
         _drift(2, params.driftPitch, 0.20, 0.28) + _nod() + _returnDipNow();
 
     _yawAxis.stepSpring(
-      _yawAxis.shaped(_time, params) + driftYaw,
+      _yawAxis.shaped(_time, params) + driftYaw + _followYaw,
       params.springF,
       params.springZeta,
       h,
@@ -527,9 +566,11 @@ class HeadMotionSolver {
         _nextFixation();
       }
     } else if (_onUser && _time >= _nextMicroAt) {
-      final double sign = _eventRng.nextBool() ? 1 : -1;
+      // Alternate sides: each micro-saccade is at least [microAmp] and
+      // darts across the user.
+      _microSign = -_microSign;
       _sacGoalYaw =
-          sign * params.microAmp * (0.5 + 0.5 * _eventRng.nextDouble());
+          _microSign * params.microAmp * (1 + 0.3 * _eventRng.nextDouble());
       _nextMicroAt =
           _time +
           params.microMinS +
@@ -546,9 +587,10 @@ class HeadMotionSolver {
       _readFix = 0;
       _readFixCount = 3 + _eventRng.nextInt(2);
       _readWidth =
-          params.lineWidthMin +
-          _eventRng.nextDouble() * (params.lineWidthMax - params.lineWidthMin);
+          (_readFixCount == 3 ? params.lineWidth3 : params.lineWidth4) +
+          (_eventRng.nextDouble() - 0.5) * 0.02;
       _readStart = params.lineStart + (_eventRng.nextDouble() - 0.5) * 0.02;
+      _followYaw = _yawAxis.to.sign * params.lineFollow * _readLine;
     } else {
       _readFix++;
     }
@@ -607,6 +649,15 @@ class HeadMotionSolver {
       // during the head's overshoot).
       lead = to.sign * math.max(0, to.sign * lead);
     }
+    final double head = _yawAxis.pos;
+    if (head.abs() > params.farSideYaw && !_onUser) {
+      // Far-iris safety: toward the camera side the lead stays small, except
+      // on the return to the user.
+      final double toFar = -head.sign * lead;
+      if (toFar > params.farSideLeadMax) {
+        lead = -head.sign * params.farSideLeadMax;
+      }
+    }
     return HeadPose(
       yaw: _clamp1(_yawAxis.pos),
       pitch: _clamp1(_pitchAxis.pos),
@@ -651,7 +702,9 @@ class HeadMotionSolver {
     if (returning && turns && !_reduceMotion) {
       _dipStartedAt = _time;
     }
+    _driftDelay = returning ? params.returnDriftAfterS : params.driftAfterS;
     _reading = next.reading;
+    _followYaw = 0;
     _readLine = 0;
     _readFix = -1;
     _nextReadAt = _time + params.readingDelayS;
@@ -661,7 +714,7 @@ class HeadMotionSolver {
   }
 
   void _updateDriftWeight(double h) {
-    final bool steady = _time - _lastRetargetAt >= params.driftAfterS;
+    final bool steady = _time - _lastRetargetAt >= _driftDelay;
     if (steady) {
       _driftWeight = math.min(1, _driftWeight + h / params.driftFadeInS);
     } else {
@@ -720,15 +773,32 @@ double _smoothstep(double u) {
   return c * c * (3 - 2 * c);
 }
 
+double _smootherstep(double u) {
+  final double c = u.clamp(0.0, 1.0);
+  return c * c * c * (c * (c * 6 - 15) + 10);
+}
+
 /// One head axis: a shaped travel, and the spring state that follows it.
 class _Axis {
+  _Axis({
+    required this.leadS,
+    required this.rampS,
+    required this.rampMinS,
+    required this.windUpAllowed,
+  });
+
+  final double leadS;
+  final double rampS;
+  final double rampMinS;
+  final bool windUpAllowed;
+
   double pos = 0;
   double vel = 0;
 
   double from = 0;
   double to = 0;
   double _startedAt = double.negativeInfinity;
-  double _antic = 0;
+  bool _windUp = false;
 
   /// Starts a travel from the current shaped value to [value].
   void retarget(
@@ -745,9 +815,8 @@ class _Axis {
     from = current;
     to = value;
     _startedAt = now;
-    _antic = windUp && !reduce && (to - from).abs() > p.bigTurn
-        ? p.anticipation
-        : 0;
+    _windUp =
+        windUp && windUpAllowed && !reduce && (to - from).abs() > p.bigTurn;
     if (reduce) {
       from = to;
     }
@@ -756,56 +825,57 @@ class _Axis {
   void collapse() {
     from = to;
     _startedAt = double.negativeInfinity;
-    _antic = 0;
+    _windUp = false;
   }
 
-  /// Target with wind-up, a speed-capped smoothstep and overshoot (the
-  /// `shaped_target` of `rig_dsl.py`, for one step).
+  double _ramp(double travel, HeadMotionParams p) {
+    final double base =
+        rampMinS + (rampS - rampMinS) * math.min(1, travel / p.rampFullTravel);
+    return base + p.rampPerUnit * travel;
+  }
+
+  double _turn(double travel, HeadMotionParams p) =>
+      p.turnS + p.rampPerUnit * travel;
+
+  /// Shaped target. An out-turn is one continuous quintic ease with a short
+  /// counter-turn and a built-in overshoot; everything else (returns, small
+  /// travels, pitch) is a speed-capped smoothstep with overshoot, as in
+  /// `shaped_target` of `rig_dsl.py`. Both settle back over `settleS`.
   double shaped(double now, HeadMotionParams p) {
-    final double u = now - _startedAt - p.leadS;
+    final double u = now - _startedAt - leadS;
     if (u < 0) {
       return from;
     }
     final double delta = to - from;
     final double travel = delta.abs();
-    final double base =
-        p.rampMinS +
-        (p.rampS - p.rampMinS) * math.min(1, travel / p.rampFullTravel);
-    final double ramp = base + p.rampPerUnit * travel;
-    final double anticS = _antic > 0 ? p.anticipationS : 0;
-    if (u < anticS) {
-      return from - _antic * delta * _smoothstep(u / anticS);
+    final double top = 1 + p.overshoot;
+    final double ramp = _windUp ? _turn(travel, p) : _ramp(travel, p);
+    if (u < ramp) {
+      final double t = u / ramp;
+      if (_windUp) {
+        final double k = 1 - t;
+        return from +
+            delta *
+                (top * _smootherstep(t) - 0.5 * p.windUpB * t * t * k * k * k);
+      }
+      return from + top * delta * _smoothstep(t);
     }
-    if (u < anticS + ramp) {
-      return from -
-          _antic * delta +
-          (1 + _antic + p.overshoot) * delta * _smoothstep((u - anticS) / ramp);
-    }
-    if (u < anticS + ramp + p.settleS) {
+    if (u < ramp + p.settleS) {
       return to +
-          p.overshoot *
-              delta *
-              (1 - _smoothstep((u - anticS - ramp) / p.settleS));
+          p.overshoot * delta * (1 - _smoothstep((u - ramp) / p.settleS));
     }
     return to;
   }
 
   /// True while the shaped travel has not reached its end.
   bool moving(double now, HeadMotionParams p) {
-    final double u = now - _startedAt - p.leadS;
+    final double u = now - _startedAt - leadS;
     if (u < 0) {
       return _startedAt.isFinite;
     }
     final double travel = (to - from).abs();
-    final double base =
-        p.rampMinS +
-        (p.rampS - p.rampMinS) * math.min(1, travel / p.rampFullTravel);
-    final double end =
-        (_antic > 0 ? p.anticipationS : 0) +
-        base +
-        p.rampPerUnit * travel +
-        p.settleS;
-    return u < end;
+    final double ramp = _windUp ? _turn(travel, p) : _ramp(travel, p);
+    return u < ramp + p.settleS;
   }
 
   /// Under-damped second-order follower of [input].

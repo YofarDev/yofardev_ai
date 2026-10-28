@@ -68,7 +68,7 @@ void main() {
     test('caret looks down at the composer', () {
       expect(
         headTargetFor(const GazeTarget.caret()),
-        const HeadTarget(0, -0.55),
+        const HeadTarget(0, -0.8),
       );
     });
 

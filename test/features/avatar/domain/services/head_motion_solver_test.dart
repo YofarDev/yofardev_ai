@@ -135,9 +135,9 @@ void main() {
           idle.map((HeadPose p) => p.yaw).reduce(math.min);
       expect(yawSpan, greaterThan(0.005), reason: 'no dead holds');
       for (final HeadPose p in idle) {
-        // Drift is 0.08 yaw / 0.05 pitch; the pitch also takes micro-nods.
-        expect((p.yaw - 0.6).abs(), lessThanOrEqualTo(0.08 + 0.005));
-        expect((p.pitch - 0.1).abs(), lessThanOrEqualTo(0.05 + 0.045 + 0.005));
+        // Drift is 0.1 yaw / 0.09 pitch; the pitch also takes 0.06 nods.
+        expect((p.yaw - 0.6).abs(), lessThanOrEqualTo(0.1 + 0.005));
+        expect((p.pitch - 0.1).abs(), lessThanOrEqualTo(0.09 + 0.06 + 0.005));
       }
     });
 
@@ -338,7 +338,7 @@ void main() {
           r.map((HeadPose p) => p.eyeLeadYaw).reduce(math.min);
       expect(span, greaterThan(0.2), reason: 'steps plus a return sweep');
       for (final HeadPose p in r) {
-        expect(p.eyeLeadYaw, inInclusiveRange(0.0, 0.6));
+        expect(p.eyeLeadYaw, inInclusiveRange(0.0, 0.9));
       }
       final double pitchSpan =
           r.map((HeadPose p) => p.eyeLeadPitch).reduce(math.max) -
@@ -534,10 +534,10 @@ void main() {
           .toList();
       expect(sweeps.length, greaterThanOrEqualTo(8), reason: 'loops all run');
       for (final ({int start, int frames, double change}) sweep in sweeps) {
-        expect(sweep.frames / 60, lessThanOrEqualTo(0.1), reason: 'fast');
+        expect(sweep.frames / 60, lessThanOrEqualTo(0.07), reason: 'fast');
       }
       for (final ({int start, int frames, double change}) step in steps) {
-        expect(step.change, greaterThanOrEqualTo(0.1));
+        expect(step.change, greaterThanOrEqualTo(0.25));
       }
 
       // Between two sweeps: 2-3 forward steps covering at least 0.35.
@@ -553,7 +553,7 @@ void main() {
           (double a, ({int start, int frames, double change}) e) =>
               a + e.change,
         );
-        expect(travel, greaterThanOrEqualTo(0.35));
+        expect(travel, inInclusiveRange(0.65, 0.9));
         // 3-4 fixations of 200-280 ms: the whole line takes under 1.2 s.
         expect(
           (sweeps[i].start - sweeps[i - 1].start) / 60,
@@ -630,7 +630,7 @@ void main() {
       solver.setTarget(0, 0);
       final List<HeadPose> poses = _run(solver, 4).sublist(120);
       for (final HeadPose p in poses) {
-        expect(p.eyeLeadYaw.abs(), lessThanOrEqualTo(0.085));
+        expect(p.eyeLeadYaw.abs(), lessThanOrEqualTo(0.17));
       }
     });
 
@@ -682,7 +682,7 @@ void main() {
       );
       expect(
         idle.map((HeadPose p) => p.pitch.abs()).reduce(math.max),
-        lessThanOrEqualTo(0.05 + 0.045 + 0.01),
+        lessThanOrEqualTo(0.09 + 0.06 + 0.01),
       );
     });
 
@@ -696,9 +696,13 @@ void main() {
       expect(micro.reduce(math.min), lessThan(-0.03));
       expect(
         micro.map((double v) => v.abs()).reduce(math.max),
-        lessThanOrEqualTo(0.085),
+        lessThanOrEqualTo(0.17),
       );
-      expect(events(micro, threshold: 0.01).length, greaterThanOrEqualTo(8));
+      expect(
+        events(micro, threshold: 0.01).length,
+        inInclusiveRange(4, 9),
+        reason: 'one every 1.5-3 s',
+      );
 
       final HeadMotionSolver away = _noDrift()..setTarget(0.84, -0.5);
       final List<double> held = _run(
@@ -773,6 +777,178 @@ void main() {
         expect(p, rest);
         expect(p.eyeLeadYaw, 0);
       }
+    });
+  });
+
+  group('HeadMotionSolver final round', () {
+    double yawOf(HeadPose p) => p.yaw;
+
+    test('the head starts 150-200 ms after the eyes', () {
+      for (final double yaw in <double>[0.6, 0.84, -0.6]) {
+        final HeadMotionSolver solver = _noDrift()..setTarget(yaw, 0);
+        final List<HeadPose> poses = _run(solver, 2);
+        final int eyes = poses.indexWhere(
+          (HeadPose p) => p.eyeLeadYaw.abs() > 0.05,
+        );
+        final int head = poses.indexWhere((HeadPose p) => p.yaw.abs() > 0.01);
+        expect((head - eyes) / 60, inInclusiveRange(0.15, 0.2));
+      }
+    });
+
+    test('the wind-up is one continuous ease: ~100 ms, no second bump', () {
+      final HeadMotionSolver solver = _noDrift()..setTarget(0.6, 0);
+      final List<double> yaw = _run(solver, 3).map(yawOf).toList();
+      final List<double> v = <double>[
+        0,
+        for (int i = 1; i < yaw.length; i++) (yaw[i] - yaw[i - 1]) * 60,
+      ];
+      final int start = yaw.indexWhere((double y) => y.abs() > 0.01);
+      final int peak = yaw.indexOf(yaw.reduce(math.max));
+      int counter = start;
+      while (v[counter] <= 0) {
+        counter++;
+      }
+      expect((counter - start) / 60, inInclusiveRange(0.07, 0.15));
+      expect(-yaw.reduce(math.min) / 0.6, inInclusiveRange(0.08, 0.18));
+
+      // From the head start to the peak: one sign change, one velocity peak.
+      int signChanges = 0;
+      int maxima = 0;
+      for (int i = start + 1; i < peak; i++) {
+        if (v[i].sign != v[i - 1].sign && v[i - 1] != 0) {
+          signChanges++;
+        }
+        if (v[i] > 0 && v[i] > v[i - 1] && v[i] >= v[i + 1]) {
+          maxima++;
+        }
+      }
+      expect(signChanges, lessThanOrEqualTo(1));
+      expect(maxima, 1);
+    });
+
+    test(
+      'the caret look reaches pitch -0.8, the head close behind the eyes',
+      () {
+        final HeadMotionSolver solver = _noDrift()..setTarget(0, -0.8);
+        final List<HeadPose> poses = _run(solver, 2);
+        expect(poses.last.pitch, closeTo(-0.8, 0.02));
+        expect(poses.last.eyeLeadPitch, closeTo(-0.7, 0.03));
+        final int eyes = poses.indexWhere(
+          (HeadPose p) => p.eyeLeadPitch < -0.05,
+        );
+        final int head = poses.indexWhere((HeadPose p) => p.pitch.abs() > 0.01);
+        expect((head - eyes) / 60, inInclusiveRange(0.0, 0.12));
+      },
+    );
+
+    test('reading steps are at least 0.25 and the sweep takes 70 ms', () {
+      final HeadMotionSolver solver = _noDrift()
+        ..setTarget(0.84, -0.5, reading: true);
+      final List<double> yaw = _run(
+        solver,
+        14,
+      ).sublist(240).map((HeadPose p) => p.eyeLeadYaw).toList();
+      final double biggest = <double>[
+        for (int i = 1; i < yaw.length; i++) (yaw[i] - yaw[i - 1]).abs(),
+      ].reduce(math.max);
+      expect(biggest, greaterThan(0.2), reason: 'a sweep frame is a big jump');
+      expect(yaw.reduce(math.max) - yaw.reduce(math.min), greaterThan(0.7));
+    });
+
+    test('the head follows each reading line by a hair', () {
+      final HeadMotionSolver solver = _noDrift()
+        ..setTarget(0.84, -0.5, reading: true);
+      final List<double> yaw = _run(
+        solver,
+        14,
+      ).sublist(240).map(yawOf).toList();
+      final double span = yaw.reduce(math.max) - yaw.reduce(math.min);
+      expect(span, inInclusiveRange(0.01, 0.06));
+    });
+
+    test('idle is visible from the start: yaw moves over the first second', () {
+      final List<HeadPose> poses = _run(HeadMotionSolver(), 1);
+      final double span =
+          poses.map(yawOf).reduce(math.max) - poses.map(yawOf).reduce(math.min);
+      expect(span, greaterThanOrEqualTo(0.02));
+    });
+
+    test('idle resumes right after the return to the user', () {
+      final HeadMotionSolver solver = HeadMotionSolver()..setTarget(0.84, -0.5);
+      _run(solver, 4);
+      solver.setTarget(0, 0);
+      final List<HeadPose> after = _run(solver, 6);
+      // From 1.5 s after the return the head is idling, never frozen for 1 s.
+      final List<HeadPose> idle = after.sublist(90);
+      int best = 0;
+      for (int i = 0; i < idle.length; i++) {
+        int j = i;
+        while (j + 1 < idle.length &&
+            (idle[j + 1].yaw - idle[i].yaw).abs() < 0.002 &&
+            (idle[j + 1].pitch - idle[i].pitch).abs() < 0.002 &&
+            (idle[j + 1].eyeLeadYaw - idle[i].eyeLeadYaw).abs() < 0.002) {
+          j++;
+        }
+        best = math.max(best, j - i);
+      }
+      expect(best / 60, lessThan(1.0));
+      expect(
+        idle.map(yawOf).reduce(math.max) - idle.map(yawOf).reduce(math.min),
+        greaterThan(0.02),
+      );
+    });
+
+    test('micro-saccades are at least 0.12 and arrive every 1.5-3 s', () {
+      final HeadMotionSolver solver = _noDrift();
+      final List<double> eye = _run(
+        solver,
+        30,
+      ).map((HeadPose p) => p.eyeLeadYaw).toList();
+      expect(
+        eye.map((double v) => v.abs()).reduce(math.max),
+        greaterThanOrEqualTo(0.12),
+      );
+      // Settled values after each dart sit at +-0.12..0.16.
+      final List<int> darts = <int>[
+        for (int i = 1; i < eye.length; i++)
+          if ((eye[i] - eye[i - 1]).abs() > 0.05) i,
+      ];
+      final List<double> starts = <double>[];
+      for (final int d in darts) {
+        if (starts.isEmpty || d / 60 - starts.last > 0.3) {
+          starts.add(d / 60);
+        }
+      }
+      expect(starts.length, greaterThanOrEqualTo(8));
+      // The first lands at 0.15 s; the rest are 1.5-3 s apart.
+      expect(starts.first, lessThan(0.3));
+      for (int i = 2; i < starts.length; i++) {
+        expect(starts[i] - starts[i - 1], inInclusiveRange(1.45, 3.1));
+      }
+    });
+
+    test('the far-side eye lead is capped while the head is past 0.5', () {
+      for (final double flip in <double>[-0.84, 0.9]) {
+        final HeadMotionSolver solver = _noDrift()..setTarget(0.84, -0.5);
+        _run(solver, 3);
+        solver.setTarget(flip, -0.5);
+        for (final HeadPose p in _run(solver, 3)) {
+          if (p.yaw.abs() > 0.5) {
+            expect(-p.yaw.sign * p.eyeLeadYaw, lessThanOrEqualTo(0.35 + 1e-9));
+          }
+        }
+      }
+    });
+
+    test('the far-side cap does not hold back the return to the user', () {
+      final HeadMotionSolver solver = _noDrift()..setTarget(0.84, -0.5);
+      _run(solver, 3);
+      solver.setTarget(0, 0);
+      final double lowest = _run(
+        solver,
+        1,
+      ).map((HeadPose p) => p.eyeLeadYaw).reduce(math.min);
+      expect(lowest, lessThan(-0.4), reason: 'the eyes lock on the user');
     });
   });
 }

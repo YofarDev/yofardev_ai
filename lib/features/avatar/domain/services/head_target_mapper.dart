@@ -12,7 +12,7 @@ const double kToolGlanceGain = 1.4;
 const double kThinkingPitch = 0.2;
 
 /// Pitch used while watching the text caret.
-const double kCaretPitch = -0.55;
+const double kCaretPitch = -0.8;
 
 /// Maps a gaze target to the head target the rig should hold.
 ///
