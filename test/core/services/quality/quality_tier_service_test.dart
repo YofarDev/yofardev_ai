@@ -29,6 +29,15 @@ class _FakeTimingSource implements FrameTimingSource {
 
   int listenCount = 0;
 
+  /// Completed by [drawFirstFrame]; the production source completes it once
+  /// the app has rasterized its first frame.
+  final Completer<void> _firstFrame = Completer<void>();
+
+  void drawFirstFrame() => _firstFrame.complete();
+
+  @override
+  Future<void> get firstFrameDrawn => _firstFrame.future;
+
   @override
   double get refreshRate => _refreshRate;
 
@@ -49,9 +58,15 @@ class _FakeTimingSource implements FrameTimingSource {
 
 /// Drives [QualityTierService.probe] inside a fake clock.
 class _Harness {
-  _Harness(this.async, {Map<String, Object>? prefs})
-    : source = _FakeTimingSource(),
-      settings = SettingsLocalDatasource() {
+  _Harness(
+    this.async, {
+    Map<String, Object>? prefs,
+    bool firstFrameDrawn = true,
+  }) : source = _FakeTimingSource(),
+       settings = SettingsLocalDatasource() {
+    if (firstFrameDrawn) {
+      source.drawFirstFrame();
+    }
     SharedPreferences.setMockInitialValues(prefs ?? <String, Object>{});
     service = QualityTierService(timingSource: source, settings: settings);
     service.changes.listen(changes.add);
@@ -67,7 +82,10 @@ class _Harness {
   /// and emitting [framesPerWindow[w]] frames of [frameMs] across each
   /// collected window [w]. One [probe] call may span two windows (one
   /// re-probe attempt).
-  QualityTier? runProbe({List<int> framesPerWindow = const <int>[28]}) {
+  QualityTier? runProbe({
+    List<int> framesPerWindow = const <int>[28],
+    int frameMs = 3,
+  }) {
     QualityTier? result;
     unawaited(
       service.probe().then((QualityTier tier) {
@@ -79,7 +97,7 @@ class _Harness {
       // window timer fires at 3000 ms.
       for (int i = 0; i < 7; i++) {
         async.elapse(const Duration(milliseconds: 400));
-        source.emit(List<FrameTiming>.generate(frames, (_) => _frame(3)));
+        source.emit(List<FrameTiming>.generate(frames, (_) => _frame(frameMs)));
         // Broadcast-stream events are delivered as microtasks: run them
         // before advancing the clock again.
         async.flushMicrotasks();
@@ -158,7 +176,57 @@ void main() {
     });
   });
 
+  group('QualityTierService.isOverBudget', () {
+    test('needs enough frames and a P95 above the refresh budget', () {
+      // 60 Hz budget = 16.67 ms.
+      expect(
+        QualityTierService.isOverBudget(frames: 35, p95Ms: 17, refreshRate: 60),
+        isTrue,
+      );
+      expect(
+        QualityTierService.isOverBudget(frames: 35, p95Ms: 16, refreshRate: 60),
+        isFalse,
+      );
+      expect(
+        QualityTierService.isOverBudget(frames: 5, p95Ms: 40, refreshRate: 60),
+        isFalse,
+      );
+      expect(
+        QualityTierService.isOverBudget(frames: 35, p95Ms: 40, refreshRate: 0),
+        isFalse,
+      );
+    });
+  });
+
   group('QualityTierService.probe', () {
+    test('a device too slow to hold its refresh rate is rated low', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        // 5 x 7 = 35 frames in 3 s (about 12 fps, an invalid probe) of
+        // 40 ms each: well over the 16.7 ms budget at 60 Hz.
+        final QualityTier? result = h.runProbe(
+          framesPerWindow: const <int>[5],
+          frameMs: 40,
+        );
+
+        expect(result, QualityTier.low);
+        expect(h.service.current, QualityTier.low);
+        expect(h.changes, <QualityTier>[QualityTier.low]);
+        // The first window already decides: no re-probe.
+        expect(h.source.listenCount, 1);
+
+        String? stored;
+        unawaited(
+          SharedPreferences.getInstance().then(
+            (SharedPreferences p) => stored = p.getString('quality_tier'),
+          ),
+        );
+        h.async.elapse(const Duration(milliseconds: 1));
+        h.async.flushMicrotasks();
+        expect(stored, 'low');
+      });
+    });
+
     test('a valid probe persists the tier and emits on changes', () {
       fakeAsync((FakeAsync async) {
         final _Harness h = _Harness(async);
@@ -246,6 +314,22 @@ void main() {
         expect(h.service.current, QualityTier.low);
         expect(h.source.listenCount, 0);
         expect(h.changes, isEmpty);
+      });
+    });
+
+    test('the probe starts only after the first frame is drawn', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async, firstFrameDrawn: false);
+        unawaited(h.service.init());
+        h.async.elapse(const Duration(seconds: 5));
+        h.async.flushMicrotasks();
+
+        expect(h.source.listenCount, 0);
+
+        h.source.drawFirstFrame();
+        h.async.flushMicrotasks();
+
+        expect(h.source.listenCount, 1);
       });
     });
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:ui' show FlutterView, FrameTiming;
 
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 
 import '../../utils/logger.dart';
 
@@ -14,17 +15,25 @@ abstract interface class FrameTimingSource {
 
   /// Refresh rate of the primary display in Hz.
   double get refreshRate;
+
+  /// Completes once the app has drawn its first frame; a probe started
+  /// earlier would measure startup work instead of steady-state frames.
+  Future<void> get firstFrameDrawn;
 }
 
 /// Production [FrameTimingSource] backed by
-/// `SchedulerBinding.instance.addTimingsCallback`.
+/// `SchedulerBinding.instance.addTimingsCallback`; the callback is registered
+/// only while the [timings] stream has listeners.
 class SchedulerFrameTimingSource implements FrameTimingSource {
   SchedulerFrameTimingSource() {
-    SchedulerBinding.instance.addTimingsCallback(_onTimings);
+    _controller = StreamController<List<FrameTiming>>.broadcast(
+      onListen: () => SchedulerBinding.instance.addTimingsCallback(_onTimings),
+      onCancel: () =>
+          SchedulerBinding.instance.removeTimingsCallback(_onTimings),
+    );
   }
 
-  final StreamController<List<FrameTiming>> _controller =
-      StreamController<List<FrameTiming>>.broadcast();
+  late final StreamController<List<FrameTiming>> _controller;
 
   void _onTimings(List<FrameTiming> timings) {
     _controller.add(timings);
@@ -32,6 +41,10 @@ class SchedulerFrameTimingSource implements FrameTimingSource {
 
   @override
   Stream<List<FrameTiming>> get timings => _controller.stream;
+
+  @override
+  Future<void> get firstFrameDrawn =>
+      WidgetsBinding.instance.waitUntilFirstFrameRasterized;
 
   @override
   double get refreshRate {
@@ -43,9 +56,8 @@ class SchedulerFrameTimingSource implements FrameTimingSource {
     return views.first.display.refreshRate;
   }
 
-  /// Removes the timings callback and closes the stream.
+  /// Closes the stream (which removes the timings callback).
   void dispose() {
-    SchedulerBinding.instance.removeTimingsCallback(_onTimings);
     _controller.close();
     AppLogger.debug('SchedulerFrameTimingSource disposed', tag: 'QualityTier');
   }

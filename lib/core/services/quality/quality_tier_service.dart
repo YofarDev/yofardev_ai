@@ -10,8 +10,10 @@ import '../settings_local_datasource.dart';
 /// Quality-tier probe (M0 method): collects per-frame
 /// `max(buildDuration, rasterDuration)` from [FrameTiming] over a probe
 /// window, takes the P95, and maps it to a quality tier. A probe whose fps is
-/// below 0.9 x refresh is invalid and never changes the stored tier; at most
-/// two attempts run per [probe] call.
+/// below 0.9 x refresh is invalid and never changes the stored tier, unless it
+/// has enough frames and its P95 is over the refresh budget (a device too slow
+/// to hold its refresh rate): that device is rated low. At most two attempts
+/// run per [probe] call.
 class QualityTierService {
   QualityTierService({
     required FrameTimingSource timingSource,
@@ -28,6 +30,10 @@ class QualityTierService {
 
   static const double _ultraThresholdMs = 3.3;
   static const double _highThresholdMs = 6.6;
+
+  /// Minimum frames in an fps-invalid window for the over-budget rule to
+  /// apply (a nearly idle window says nothing about device speed).
+  static const int _minOverBudgetFrames = 20;
 
   QualityTier _current = QualityTier.high;
 
@@ -76,8 +82,22 @@ class QualityTierService {
     return fps >= 0.9 * refreshRate;
   }
 
-  /// Loads the stored tier; when none is stored, schedules a probe without
-  /// awaiting it (startup is never blocked).
+  /// Whether an fps-invalid probe still proves the device is too slow: enough
+  /// frames were drawn and the P95 frame time exceeds the refresh budget
+  /// (`1000 / refreshRate` ms).
+  static bool isOverBudget({
+    required int frames,
+    required double p95Ms,
+    required double refreshRate,
+  }) {
+    if (refreshRate <= 0 || frames < _minOverBudgetFrames) {
+      return false;
+    }
+    return p95Ms > 1000 / refreshRate;
+  }
+
+  /// Loads the stored tier; when none is stored, schedules a probe after the
+  /// first frame without awaiting it (startup is never blocked).
   Future<void> init() async {
     final Result<String> stored = await _settings.getQualityTier();
     final String? storedName = stored.getOrNull;
@@ -97,10 +117,10 @@ class QualityTierService {
       }
     }
     AppLogger.debug(
-      'QualityTier: no stored tier, scheduling probe',
+      'QualityTier: no stored tier, scheduling probe after the first frame',
       tag: 'QualityTier',
     );
-    unawaited(probe());
+    unawaited(_source.firstFrameDrawn.then((_) => probe()));
   }
 
   /// Runs up to [_maxProbeAttempts] collection windows and returns the tier
@@ -117,6 +137,22 @@ class QualityTierService {
             window: probeWindow,
             refreshRate: _source.refreshRate,
           );
+      if (!valid && frameMs != null) {
+        final double p95 = p95Ms(frameMs);
+        if (isOverBudget(
+          frames: frames,
+          p95Ms: p95,
+          refreshRate: _source.refreshRate,
+        )) {
+          AppLogger.debug(
+            'QualityTier: probe attempt $attempt too slow to hold the '
+            'refresh rate: P95=${p95.toStringAsFixed(2)} ms -> low',
+            tag: 'QualityTier',
+          );
+          await _storeTier(QualityTier.low);
+          return QualityTier.low;
+        }
+      }
       if (!valid) {
         AppLogger.debug(
           'QualityTier: probe attempt $attempt invalid ($frames frames '
@@ -172,11 +208,6 @@ class QualityTierService {
       );
       return;
     }
-    unawaited(
-      _settings
-          .setQualityTierProbedAt(DateTime.now().toIso8601String())
-          .then((_) {}),
-    );
     _current = tier;
     _changes.add(tier);
   }

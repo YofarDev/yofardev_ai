@@ -29,7 +29,6 @@ class SettingsLocalDatasource {
 
   // Avatar quality tier probe
   static const String _qualityTierKey = 'quality_tier';
-  static const String _qualityTierProbedAtKey = 'quality_tier_probed_at';
 
   // Generic helper methods to reduce boilerplate
   Future<Result<String>> _getStringKey(String keyName) async {
@@ -260,10 +259,4 @@ class SettingsLocalDatasource {
 
   Future<Result<void>> setQualityTier(String tier) =>
       _setStringKey(_qualityTierKey, tier);
-
-  Future<Result<String>> getQualityTierProbedAt() =>
-      _getStringKey(_qualityTierProbedAtKey);
-
-  Future<Result<void>> setQualityTierProbedAt(String probedAt) =>
-      _setStringKey(_qualityTierProbedAtKey, probedAt);
 }
