@@ -25,16 +25,19 @@ void main() {
   const VisemeBlender blender = VisemeBlender();
 
   group('VisemeBlender', () {
-    test('mid-span of a lone aa gives the aa shape, jaw scaled by weight', () {
-      final SpeechTimeline tl = timeline(<VisemeSpan>[
-        span(Viseme.aa, 0, 1000, weight: 0.8),
-      ]);
-      final MouthBlend b = blender.shapeAt(tl, ms(500));
-      expect(b.sealed, isFalse);
-      expect(b.shape.jaw, closeTo(0.9 * 0.8, 1e-9));
-      expect(b.shape.stretch, closeTo(0.15, 1e-9));
-      expect(b.shape.pucker, 0);
-    });
+    test(
+      'mid-span of a lone aa gives the aa shape, jaw scaled by loudness',
+      () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 1000, weight: 0.8),
+        ]);
+        final MouthBlend b = blender.shapeAt(tl, ms(500));
+        expect(b.sealed, isFalse);
+        expect(b.shape.jaw, closeTo(0.9 * VisemeBlender.jawGain(0.8), 1e-9));
+        expect(b.shape.stretch, closeTo(0.15, 1e-9));
+        expect(b.shape.pucker, 0);
+      },
+    );
 
     test('weight scales the jaw only', () {
       final SpeechTimeline full = timeline(<VisemeSpan>[
@@ -45,7 +48,13 @@ void main() {
       ]);
       final MouthShape a = blender.shapeAt(full, ms(500)).shape;
       final MouthShape b = blender.shapeAt(half, ms(500)).shape;
-      expect(b.jaw, closeTo(a.jaw * 0.5, 1e-9));
+      expect(
+        b.jaw,
+        closeTo(
+          a.jaw * VisemeBlender.jawGain(0.5) / VisemeBlender.jawGain(1),
+          1e-9,
+        ),
+      );
       expect(b.pucker, a.pucker);
       expect(b.stretch, a.stretch);
       expect(b.press, a.press);

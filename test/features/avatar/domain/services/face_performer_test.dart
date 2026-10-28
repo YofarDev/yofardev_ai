@@ -292,6 +292,83 @@ void main() {
     });
   });
 
+  group('round-1 critic fixes', () {
+    test('the jaw eases shut over the 100 ms before a seal', () {
+      rig.speak(
+        _timeline(<(Viseme, int, int)>[
+          (Viseme.aa, 0, 600),
+          (Viseme.pp, 600, 680),
+          (Viseme.aa, 680, 1000),
+        ]),
+      );
+      final List<FaceFrame> frames = rig.run(36);
+      // frame i is stepped at position (i + 1) * 16.7 ms; the seal is at 600 ms
+      final List<double> jaw = <double>[
+        for (int i = 29; i < 35; i++) frames[i].au.jawDrop,
+      ];
+      for (int i = 1; i < jaw.length; i++) {
+        expect(jaw[i], lessThanOrEqualTo(jaw[i - 1] + 1e-9));
+        // no single-frame snap from open to shut
+        expect(jaw[i - 1] - jaw[i], lessThan(0.35));
+      }
+      expect(frames[35].au.jawDrop, 0);
+    });
+
+    test('a pause inside the sentence is breathed for', () {
+      rig.speak(
+        _timeline(
+          <(Viseme, int, int)>[
+            (Viseme.aa, 0, 1500),
+            (Viseme.sil, 1500, 1800),
+            (Viseme.aa, 1800, 2500),
+          ],
+          marks: <ProsodyMark>[
+            const ProsodyMark(
+              kind: ProsodyMarkKind.pause,
+              at: Duration(milliseconds: 1500),
+              length: Duration(milliseconds: 300),
+            ),
+          ],
+        ),
+      );
+      final List<FaceFrame> frames = rig.run(120);
+      expect(frames[60].breath, lessThan(0.05)); // ~1 s, mid-phrase
+      expect(frames[107].breath, greaterThan(0.6)); // ~1.8 s, end of pause
+    });
+
+    test('the question tilt holds after the audio ends', () {
+      rig.speak(
+        _timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 1200)], question: true),
+      );
+      rig.run(72);
+      rig.playback.add(const AnimationCompletedEvent());
+      rig.position = null;
+      expect(rig.run(36).last.roll, greaterThan(0.25)); // 600 ms after the end
+      expect(rig.run(60).last.roll, lessThan(0.1)); // released by ~1.6 s
+    });
+
+    test('a sad mood lifts only the inner brows on a pitch peak', () {
+      rig.mood(AvatarMood.sad);
+      rig.run(60);
+      final double outerBefore = rig.performer.frame.au.browOuterUp;
+      rig.speak(
+        _timeline(
+          <(Viseme, int, int)>[(Viseme.aa, 0, 1000)],
+          marks: <ProsodyMark>[
+            const ProsodyMark(
+              kind: ProsodyMarkKind.pitchPeak,
+              at: Duration(milliseconds: 500),
+            ),
+          ],
+        ),
+      );
+      final List<FaceFrame> frames = rig.run(36);
+      final FaceFrame top = frames[29]; // ~500 ms
+      expect(top.au.browOuterUp, closeTo(outerBefore, 0.02));
+      expect(top.au.browInnerUp, greaterThan(frames[5].au.browInnerUp + 0.1));
+    });
+  });
+
   test('settles at rest and is unsettled during a pulse', () {
     rig.run(60);
     expect(rig.performer.isSettled, isTrue);

@@ -64,11 +64,14 @@ class FacePerformer {
   static const double _blinkGap = 1.2;
   static const double _blinkMaxInterval = 5.2;
   static const double _autoBlinkHold = 0.4;
-  static const double _tail = 0.6;
+  static const double _tail = 0.9;
+  static const double _questionHold = 0.8;
+  static const double _preClose = 0.1;
 
   // — emotion —
   List<double> _emotionTarget = List<double>.filled(_auCount, 0);
   double _arousal = 0;
+  double _valence = 0;
   final List<_Spring> _emotion = List<_Spring>.generate(
     _auCount,
     (_) => _Spring(),
@@ -150,6 +153,22 @@ class FacePerformer {
       final MouthBlend ahead = _blender.shapeAt(tl, pos + _speechLead);
       speech = ahead.shape;
       _sealed = ahead.sealed || _blender.shapeAt(tl, pos).sealed;
+      // ease the jaw shut into a coming seal instead of snapping it there
+      final Duration? seal = _nextSealStart(tl, pos);
+      if (!_sealed && seal != null) {
+        final double ahead = _s(seal - pos);
+        if (ahead < _preClose) {
+          final double k = _smoothstep(ahead / _preClose);
+          speech = speech.copyWith(
+            jaw: speech.jaw * k,
+            press: math.max(speech.press, VisemeBlender.sealPress * (1 - k)),
+          );
+        }
+      }
+      // a held vowel keeps a little life (about 4 Hz, +/- 7 %)
+      speech = speech.copyWith(
+        jaw: speech.jaw * (1 + 0.07 * math.sin(2 * math.pi * 4.3 * _s(pos))),
+      );
     }
 
     // prosody targets from the (virtual) speech position
@@ -168,12 +187,23 @@ class FacePerformer {
       for (final ProsodyMark m in _nods) {
         final double tau = posS - _s(m.at);
         nod += _nodCurve(tau, m.strength);
-        outerTarget += 0.1 * m.strength * _gauss(tau, 0, 0.09);
+        if (_valence >= -0.3) {
+          outerTarget += 0.1 * m.strength * _gauss(tau, 0, 0.09);
+        }
       }
-      innerTarget += 0.2 * gain * peak;
-      outerTarget += 0.3 * gain * peak;
-      if (tl.isQuestion && _speaking) {
-        final double q = _smoothstep((posS - (_s(tl.duration) - 0.4)) / 0.3);
+      // a sombre mood lifts only the inner brows (an outer lift reads as
+      // surprise and contradicts the sadness)
+      final bool sombre = _valence < -0.3;
+      innerTarget += (sombre ? 0.3 : 0.22) * gain * peak;
+      outerTarget += (sombre ? 0 : 0.3) * gain * peak;
+      final bool asking =
+          tl.isQuestion &&
+          (_speaking || (_completed && _clock - _endClock < _questionHold));
+      if (asking) {
+        // the tilt holds into the listening pause after the question
+        final double q = _speaking
+            ? _smoothstep((posS - (_s(tl.duration) - 0.4)) / 0.3)
+            : 1;
         rollTarget = 0.35 * q;
         liftTarget = 0.12 * q;
         innerTarget += 0.3 * q;
@@ -249,6 +279,7 @@ class FacePerformer {
   void _onIntent(PerformanceIntent intent) {
     _emotionTarget = _toList(actionUnitsForEmotion(intent.emotion));
     _arousal = intent.emotion.arousal;
+    _valence = intent.emotion.valence;
   }
 
   void _onPlayback(PlaybackEvent event) {
@@ -339,14 +370,39 @@ class FacePerformer {
     }
   }
 
+  /// The breath: over the leading silence, and again across every pause
+  /// inside the sentence (a new phrase is breathed for); each releases over
+  /// 400 ms once the voice is back.
   double _breathAt(SpeechTimeline tl, double posS) {
     final double lead = _s(tl.leadingSilence);
     final double amount = lead < 0.12 ? 0.5 : 1.0;
     final double inhale = lead < 0.12 ? 0.15 : lead.clamp(0.12, 0.35);
-    if (posS < inhale) {
-      return amount * _smoothstep(posS / inhale);
+    double b = posS < inhale
+        ? amount * _smoothstep(posS / inhale)
+        : amount * (1 - _smoothstep((posS - inhale) / 0.4));
+    for (final ProsodyMark m in tl.marks) {
+      if (m.kind != ProsodyMarkKind.pause) {
+        continue;
+      }
+      final double at = _s(m.at);
+      final double len = math.max(_s(m.length), 0.12);
+      if (posS >= at && posS <= at + len) {
+        b = math.max(b, 0.8 * _smoothstep((posS - at) / len));
+      } else if (posS > at + len && posS < at + len + 0.4) {
+        b = math.max(b, 0.8 * (1 - _smoothstep((posS - at - len) / 0.4)));
+      }
     }
-    return amount * (1 - _smoothstep((posS - inhale) / 0.4));
+    return b;
+  }
+
+  /// Start of the first p/b/m span after [pos], if any.
+  static Duration? _nextSealStart(SpeechTimeline tl, Duration pos) {
+    for (final VisemeSpan s in tl.visemes) {
+      if (s.start > pos && s.viseme == Viseme.pp) {
+        return s.start;
+      }
+    }
+    return null;
   }
 
   /// The strongest marks of [kind], at least [gap] seconds apart, in time
@@ -404,25 +460,26 @@ class FacePerformer {
 
   // — curves —
 
-  /// Brow lift around a pitch peak: rises over the 100 ms before it, holds
-  /// 150 ms, releases over 250 ms.
+  /// Brow beat around a pitch peak: rises over the 80 ms before it, holds
+  /// 60 ms, releases over 160 ms (about 200 ms at the top, a beat rather than
+  /// a held look of surprise).
   static double _peakEnvelope(double tau) {
-    if (tau < -0.1 || tau > 0.4) {
+    if (tau < -0.08 || tau > 0.22) {
       return 0;
     }
     if (tau < 0) {
-      return _smoothstep((tau + 0.1) / 0.1);
+      return _smoothstep((tau + 0.08) / 0.08);
     }
-    if (tau <= 0.15) {
+    if (tau <= 0.06) {
       return 1;
     }
-    return 1 - _smoothstep((tau - 0.15) / 0.25);
+    return 1 - _smoothstep((tau - 0.06) / 0.16);
   }
 
   /// A nod on a stressed syllable (pitch units, down is negative): an 18 %
   /// anticipation lift, the beat at the mark, a 12 % overshoot back up.
   static double _nodCurve(double tau, double strength) {
-    final double a = 0.16 * strength;
+    final double a = 0.3 * strength;
     return -a *
         (_gauss(tau, 0, 0.07) -
             0.18 * _gauss(tau, -0.13, 0.05) -

@@ -60,15 +60,18 @@ ActionUnits actionUnitsForMood(AvatarMood mood) => switch (mood) {
   ),
   AvatarMood.surprised => const ActionUnits(
     browInnerUp: 0.9,
-    browOuterUp: 0.8,
-    upperLidRaise: 0.7,
+    browOuterUp: 0.9,
+    upperLidRaise: 1.0,
     jawDrop: 0.6,
   ),
+  // closed, pressed and pulled to one side by the mood's mouth skew: a
+  // pondering purse, never an open dark mouth
   AvatarMood.thinking => const ActionUnits(
     browInnerUp: 0.4,
-    lipPress: 0.5,
-    lipPucker: 0.3,
-    dimpler: 0.3,
+    browLower: 0.15,
+    lipPress: 0.6,
+    lipCornerPull: 0.15,
+    dimpler: 0.4,
   ),
   AvatarMood.embarrassed => const ActionUnits(
     browLower: 0.3,

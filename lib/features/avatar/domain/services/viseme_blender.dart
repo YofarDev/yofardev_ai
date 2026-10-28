@@ -109,14 +109,22 @@ class VisemeBlender {
     final MouthShape raw = MouthShape.forViseme(span.viseme);
     if (span.viseme == Viseme.pp) {
       return MouthShape(
-        press: raw.press < 0.6 ? 0.6 : raw.press,
+        press: raw.press < sealPress ? sealPress : raw.press,
         pucker: raw.pucker > 0.3 ? 0.3 : raw.pucker,
       );
     }
-    return raw.copyWith(jaw: raw.jaw * span.weight.clamp(0.0, 1.0));
+    return raw.copyWith(jaw: (raw.jaw * jawGain(span.weight)).clamp(0.0, 1.0));
   }
 
   /// Index of the span covering [t] (start inclusive, end exclusive), or -1.
+  /// Lip press inside a p/b/m span: a visibly pressed seal, not a rest line.
+  static const double sealPress = 0.9;
+
+  /// Jaw scale for a span of loudness [weight] (0-1): even a soft vowel
+  /// opens about half way, a loud one a third past its table value
+  /// (articulation reads at phone size).
+  static double jawGain(double weight) => 0.45 + 0.75 * weight.clamp(0.0, 1.0);
+
   static int _indexAt(List<VisemeSpan> spans, Duration t) {
     int lo = 0;
     int hi = spans.length - 1;
