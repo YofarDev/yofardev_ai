@@ -1,6 +1,6 @@
 # Art bible (moonshot)
 
-Status: **draft for owner sign-off**, 2026-10-28. Nothing in the rig or head work (M1+) starts
+Status: **signed off by the owner, 2026-10-28.** Nothing in the rig or head work (M1+) starts
 until the owner signs this page and the [storyboards](../docs/superpowers/storyboards/2026-10-m1/README.md).
 
 The numbers live in [`tools/art_bible.py`](tools/art_bible.py), which every generator imports. A test
@@ -100,5 +100,5 @@ Targets: the year-end bar is ≥ 9.0 per asset and ≥ 9.3 overall. The M1 2.5D 
 
 ## Sign-off
 
-- [ ] Owner approves the look, the colour scripts, the value budget and the rubric
+- [x] Owner approves the look, the colour scripts, the value budget and the rubric
       (or lists changes).

@@ -47,4 +47,4 @@ today's assets are from each moment. The look itself is set in the [art bible](.
 
 ## Sign-off
 
-- [ ] Owner approves the three storyboards (or lists changes).
+- [x] Owner approves the three storyboards (2026-10-28).
