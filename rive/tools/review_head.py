@@ -31,7 +31,6 @@ OUT = PROJ / "review"
 TMP = PROJ / "build" / "review"
 sys.path.insert(0, str(HERE))
 
-import art_bible  # noqa: E402
 import gen_head  # noqa: E402
 from motion_metrics import frame_diffs, jerk, loop_seam, motion_centroids, pops  # noqa: E402
 
@@ -111,8 +110,8 @@ def turn_frames() -> list[Path]:
 
 def turn(paths: list[Path]) -> None:
     frames = [Image.open(p).convert("RGB") for p in paths]
-    small = [f.resize((250, 300), Image.Resampling.LANCZOS) for f in frames[::2]]
-    pal = [f.quantize(colors=80, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE) for f in small]
+    small = [f.resize((240, 288), Image.Resampling.LANCZOS) for f in frames[::2]]
+    pal = [f.quantize(colors=72, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE) for f in small]
     pal[0].save(OUT / "turn.gif", save_all=True, append_images=pal[1:], duration=33, loop=0, optimize=True)
     picks = [round(i * (len(frames) - 1) / 23) for i in range(24)]
     cw, ch = 200, 240
@@ -153,7 +152,7 @@ def metrics(paths: list[Path]) -> None:
         f"frame diff min / median / max: {min(diffs):.5f} / {statistics.median(diffs):.5f} / {max(diffs):.5f}",
         f"jerk (moving-pixel centroid vs frame 0): {jerk(pts):,.0f} px/s^3",
         f"loop seam (last vs first / median diff): {loop_seam(frames):.3f}",
-        f"channel ranges: " + ", ".join(f"{k} {min(v):+.2f}..{max(v):+.2f}" for k, v in ch.items()),
+        "channel ranges: " + ", ".join(f"{k} {min(v):+.2f}..{max(v):+.2f}" for k, v in ch.items()),
         "",
         "== History-free (static Head: --advance=1 vs --advance=40, rive --compare)",
     ]
