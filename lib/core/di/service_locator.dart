@@ -10,6 +10,7 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
+import '../../features/avatar/domain/services/performance_director.dart';
 import '../../features/chat/domain/repositories/global_memory_repository.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
 import '../../features/chat/presentation/bloc/chat_cubit.dart';
@@ -313,11 +314,15 @@ Future<void> setupServiceLocator() async {
   // Eagerly created: it must be subscribed to TTS playback events and the
   // streaming cue channel from startup, or cues fired before the first
   // subscription would be lost.
+  getIt.registerLazySingleton<PerformanceDirector>(
+    () => PerformanceDirector(now: DateTime.now),
+  );
   getIt.registerLazySingleton<AvatarCueService>(
     () => AvatarCueService(
       playbackService: getIt<TtsPlaybackService>(),
       animationService: getIt<AvatarAnimationService>(),
       streamingCues: getIt<ChatStreamingService>().streamingCues,
+      director: getIt<PerformanceDirector>(),
     ),
   );
   getIt<AvatarCueService>();

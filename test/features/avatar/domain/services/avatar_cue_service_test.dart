@@ -7,6 +7,7 @@ import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/performance_director.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_cue_service.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
@@ -26,11 +27,13 @@ void main() {
     await Future<void>.delayed(Duration.zero);
   }
 
+  late PerformanceDirector director;
+
   AvatarCueService buildService() => AvatarCueService(
     playbackService: playbackService,
     animationService: animationService,
     streamingCues: streamingCuesController.stream,
-    now: () => currentTime,
+    director: director,
   );
 
   setUp(() {
@@ -38,6 +41,8 @@ void main() {
     playbackService = TtsPlaybackService(MockTalkingRepository());
     streamingCuesController = StreamController<List<AvatarCue>>.broadcast();
     currentTime = DateTime(2026, 10, 22, 12);
+    director = PerformanceDirector(now: () => currentTime);
+    addTearDown(director.dispose);
     forwarded = <AvatarAnimation>[];
     final StreamSubscription<AvatarAnimation> sub = animationService.animations
         .listen(forwarded.add);
@@ -97,11 +102,17 @@ void main() {
       await drain();
       expect(forwarded, hasLength(1));
 
-      // After the cooldown has elapsed the next gesture fires.
+      // A third cue replaces the queued one (queue keeps 1 slot free).
       currentTime = currentTime.add(const Duration(milliseconds: 600));
       playbackService.fireCues(<AvatarCue>[
         const AvatarCue.gesture(AvatarGesture.clap),
       ]);
+      await drain();
+      // Timing changed with the director queue: the queued gesture only
+      // plays once the playing one finishes (onGestureDone) and the
+      // cooldown since its start has elapsed.
+      currentTime = currentTime.add(const Duration(milliseconds: 1000));
+      director.onGestureDone();
       await drain();
       expect(forwarded, hasLength(2));
       expect(forwarded.last, const AvatarAnimation.gesture(AvatarGesture.clap));
