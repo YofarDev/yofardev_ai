@@ -202,25 +202,27 @@ def test_turn_follows_the_motion_rules() -> None:
     """MOTION: ~18 % anticipation, ~12 % overshoot; big turns take 18-22 frames (speed cap)."""
     for d in (1.25, 1.75):
         antic, over, frames = _turn_shape(d)
-        assert 0.15 <= antic <= 0.19 and 0.09 <= over <= 0.13 and 18 <= frames <= 22, (d, antic, over, frames)
+        assert 0.15 <= antic <= 0.19 and 0.11 <= over <= 0.13 and 18 <= frames <= 22, (d, antic, over, frames)
 
 
 def test_perform_turn_channels() -> None:
-    targets = [(0.0, 0.0), (0.6, 0.85), (2.0, 0.35), (3.4, -0.9), (4.7, -0.3), (5.6, 0.0)]
-    ch = r.perform_turn(targets, 7.2)
+    targets = [(0.0, 0.0), (1.0, 0.85), (2.6, 0.3), (4.2, -0.86), (6.0, 0.0)]
+    ch = r.perform_turn(targets, 8.0)
     n = len(ch["yaw"])
     assert set(ch) == set(r.CHANNELS) and all(len(v) == n for v in ch.values())
     # gaze leads the head and saturates softly
-    assert ch["yaw"][int(0.66 * 60)] < 0.01 < ch["gaze"][int(0.66 * 60)]
+    assert ch["yaw"][int(1.06 * 60)] < 0.01 < ch["gaze"][int(1.06 * 60)]
     assert max(abs(g) for g in ch["gaze"]) < 0.9
-    # blinks: only on big steps >= 2.6 s apart (0.6 and 3.4; not 4.7), the second is a double
-    starts = [i for i in range(1, n) if ch["blink"][i] > 0 and ch["blink"][i - 1] == 0]
-    assert [round(i / 60, 1) for i in starts] == [0.7, 3.5, 3.8]
+    # blinks: full closures on big steps 2.6-5.2 s apart, across the loop seam too (1.0, 4.2;
+    # not the 6.0 step, 1.8 s after)
+    starts = [i / 60 for i in range(1, n) if ch["blink"][i] > 0 and ch["blink"][i - 1] == 0]
+    assert len(starts) == 2 and 2.6 <= starts[1] - starts[0] <= 5.2 and 2.6 <= 8.0 - starts[1] + starts[0] <= 5.2
+    assert all(max(ch["blink"][round(t * 60):round(t * 60) + 20]) == 1.0 for t in starts)
     # idle layer: no frozen holds (every frame moves something)
     for i in range(n - 1):
         assert any(abs(ch[k][i + 1] - ch[k][i]) > 1e-6 for k in ch), i
     # a look raises the brows and shifts the mouth, then both relax
-    assert max(ch["brow"][36:90]) > 0.5 and ch["brow"][110] == 0.0 and max(ch["mouth"]) > 0.3
+    assert max(ch["brow"][60:110]) > 0.5 and ch["brow"][130] == 0.0 and max(ch["mouth"]) > 0.3
     # roll toward the turn, dip mid-turn, smooth; the loop closes
     assert max(ch["roll"]) > 0.5 and min(ch["pitch"]) < -0.1
     def accel(v: list[float]) -> float:
@@ -231,11 +233,11 @@ def test_perform_turn_channels() -> None:
         assert abs(v[-1] - v[0]) < 0.01, k
     # hair: the fringe trails, the side locks trail it by ~40 ms, the tuft trails most and rebounds
     lag = ch["hairLag"]
-    assert min(lag[36:90]) < -0.1
-    peak = min(range(36, 90), key=lambda i: lag[i])
-    side_peak = min(range(36, 90), key=lambda i: ch["sideLag"][i])
+    assert min(lag[60:120]) < -0.1
+    peak = min(range(60, 120), key=lambda i: lag[i])
+    side_peak = min(range(60, 120), key=lambda i: ch["sideLag"][i])
     assert 1 <= side_peak - peak <= 4
     tuft = ch["tuftLag"]
-    assert min(tuft[36:110]) < min(lag[36:110])
-    sign_changes = sum(1 for a, b in zip(tuft[40:110], tuft[41:111]) if a * b < 0)
+    assert min(tuft[60:140]) < min(lag[60:140])
+    sign_changes = sum(1 for a, b in zip(tuft[64:140], tuft[65:141]) if a * b < 0)
     assert sign_changes >= 2

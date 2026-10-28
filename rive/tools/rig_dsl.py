@@ -568,14 +568,14 @@ class TurnParams:
     antic_s: float = 0.13
     ramp_s: float = 0.58  # speed cap: the shaped target travels in ramp_s + ramp_per_unit * |delta|
     ramp_per_unit: float = 0.1
-    over: float = 0.11  # overshoot share fed to the spring, settled over settle_s (MOTION.settle_ms)
+    over: float = 0.13  # overshoot share fed to the spring, settled over settle_s (MOTION.settle_ms)
     settle_s: float = 0.22
     spring_f: float = 2.6  # under-damped head spring (Hz) smoothing the shaped target
     spring_zeta: float = 0.68
     blink_jump: float = 0.5  # |delta yawTarget| that may trigger a blink
     blink_gap_s: float = 2.6  # MOTION.blink_ms lower bound between blinks
     blink_delay_s: float = 0.06  # the eyes visibly lead before the lids close
-    blink_kinds: tuple[str, ...] = ("full", "double", "half")
+    blink_kinds: tuple[str, ...] = ("quick", "slow")  # always full closures; speed varies
     roll_gain: float = 0.3  # roll = tanh(gain * yaw speed), smoothed
     dip_gain: float = 0.12  # pitch dip = dip_max * tanh(gain * |yaw speed|), smoothed
     dip_max: float = 0.45
@@ -586,8 +586,8 @@ class TurnParams:
     tuft_f: float = 1.4  # crown tuft: slower and looser (more trail, a second bounce)
     tuft_zeta: float = 0.35
     look_min: float = 0.15  # |delta| that counts as a "look" (brow raise, mouth shift)
-    breath_amp: float = 0.012  # idle: pitch breath, roll drift, micro-saccades
-    breath_cycles: int = 2
+    breath_amp: float = 0.02  # idle: pitch breath, roll drift, micro-saccades (all periodic)
+    breath_cycles: int = 2  # over the loop: 2 cycles in 8 s = 0.25 Hz
     drift_amp: float = 0.06
     saccade_amp: float = 0.07
     saccade_every_s: tuple[float, float] = (0.6, 1.2)
@@ -683,11 +683,12 @@ def perform_turn(targets: Sequence[tuple[float, float]], seconds: float, fps: in
     sacc: list[tuple[float, float]] = []
     while True:
         sacc_t += rng.uniform(*p.saccade_every_s)
-        if sacc_t > seconds - 0.8:
+        if sacc_t > seconds - 0.3:
             break
         sacc.append((sacc_t, rng.uniform(-1, 1) * p.saccade_amp))
-    sacc.append((seconds - 0.6, 0.0))
-    micro = spring([next((v for t0, v in reversed(sacc) if t >= t0), 0.0) for t in times], 0.05)
+    # periodic: before the first saccade the eyes hold the last one, so the seam keeps moving
+    micro_t = [next((v for t0, v in reversed(sacc) if t >= t0), sacc[-1][1]) for t in times]
+    micro = spring(micro_t, 0.05)
     roll = follow([math.tanh(p.roll_gain * s) for s in speed], p.accent_f, 1.0)
     dip = follow([p.dip_max * math.tanh(p.dip_gain * abs(s)) for s in speed], p.accent_f, 1.0)
     hair_yaw = follow(yaw, p.hair_f, p.hair_zeta)
@@ -718,9 +719,10 @@ def perform_turn(targets: Sequence[tuple[float, float]], seconds: float, fps: in
         if delta > p.blink_jump and t0 - last_blink >= p.blink_gap_s:
             k = p.blink_kinds[kind % len(p.blink_kinds)]
             start = t0 + p.blink_delay_s
-            add_blink(start, 0.6 if k == "half" else 1.0)
-            if k == "double":
-                add_blink(start + 0.3, 0.75, 0.05, 0.02, 0.09)
+            if k == "slow":
+                add_blink(start, 1.0, 0.08, 0.07, 0.16)
+            else:
+                add_blink(start, 1.0)
             last_blink, kind = t0, kind + 1
         if delta > p.look_min:
             amp = min(1.0, 0.35 + 0.45 * delta)
