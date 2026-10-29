@@ -43,7 +43,7 @@ sys.path.insert(0, str(HERE))
 
 import art_bible as ab  # noqa: E402
 import rig_dsl as r  # noqa: E402
-from rig_dsl import Axis, BoneSpec, Chain, Grid, Pt, Weights, clockwise, fit3, mix, taper, tok, tokpos  # noqa: E402
+from rig_dsl import Axis, DriveSpec, Chain, Grid, Pt, Weights, clockwise, fit3, mix, taper, tok, tokpos  # noqa: E402
 from rml import Doc, El, lin, rad, write  # noqa: E402
 
 d = Doc(client=0, start=10)
@@ -225,7 +225,7 @@ def vm_path(pn: str) -> str:
 
 RIG = r.Rig(d, vm_path, origin=HEAD_ORIGIN, x_axis=Axis("yaw", K_YAW), y_axis=Axis("pitch", K_PITCH),
             offset=(OX, OY))
-SPECS: list[BoneSpec] = []
+SPECS: list[DriveSpec] = []
 
 
 def mirror_x(x: float) -> float:
@@ -238,7 +238,7 @@ def bone(name: str, x: float, y: float, z: float, zp: float | None = None, pose:
     path (three-pose fit); `zp` is the depth used for pitch; ddx/ddy add token terms."""
     dx = fit3(pose[0] - x, 0.0, pose[1] - x, K_YAW) if pose else r.material_dx(x - CX, z)
     dy = r.pitch_dy(y - CY, (z if zp is None else zp) - ZP)
-    SPECS.append(BoneSpec(name, x, y, r.poly_add(dx, ddx or []), r.poly_add(dy, ddy or [])))
+    SPECS.append(DriveSpec(name, x, y, r.poly_add(dx, ddx or []), r.poly_add(dy, ddy or [])))
 
 
 def pair(name: str, x: float, y: float, z: float, zp: float | None = None,

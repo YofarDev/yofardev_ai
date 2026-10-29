@@ -10,7 +10,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rml import Doc, render  # noqa: E402
+from rml import Doc, El, render  # noqa: E402
 import rig_dsl as r  # noqa: E402
 
 K: float = math.radians(30)
@@ -108,8 +108,8 @@ def test_angle_formula_clamps() -> None:
 def test_rig_dedupes_identical_polys_and_shares_the_angle() -> None:
     d = Doc()
     rig = r.Rig(d, lambda p: f"0:1-{p}", origin=(0.0, 0.0), x_axis=r.Axis("yaw", K), y_axis=r.Axis("pitch", 0.26))
-    rig.bone(r.BoneSpec("A", 10.0, -20.0, r.material_dx(10.0, 5.0), r.pitch_dy(-20.0, 5.0)))
-    rig.bone(r.BoneSpec("B", 10.0, -20.0, r.material_dx(10.0, 5.0), r.pitch_dy(-20.0, 5.0)))
+    rig.bone(r.DriveSpec("A", 10.0, -20.0, r.material_dx(10.0, 5.0), r.pitch_dy(-20.0, 5.0)))
+    rig.bone(r.DriveSpec("B", 10.0, -20.0, r.material_dx(10.0, 5.0), r.pitch_dy(-20.0, 5.0)))
     angles = [c for c in rig.converters if c.attrs.get("name", "").endswith("Angle")]
     groups = [c for c in rig.converters if c.tag == "DataConverterGroup"]
     assert len(angles) == 2 and len(groups) == 2
@@ -119,7 +119,7 @@ def test_rig_dedupes_identical_polys_and_shares_the_angle() -> None:
 def test_rig_predicts_bone_positions() -> None:
     d = Doc()
     rig = r.Rig(d, str, origin=(400.0, 470.0), x_axis=r.Axis("yaw", K), y_axis=r.Axis("pitch", 0.26))
-    rig.bone(r.BoneSpec("N", 400.0, 400.0, r.material_dx(0.0, 100.0), r.pitch_dy(0.0, 100.0)))
+    rig.bone(r.DriveSpec("N", 400.0, 400.0, r.material_dx(0.0, 100.0), r.pitch_dy(0.0, 100.0)))
     x, y = rig.position("N", K, 0.0)
     assert x == pytest.approx(450.0, abs=0.01) and y == pytest.approx(400.0)
 
@@ -166,8 +166,8 @@ def test_taper_is_closed_and_thin_at_the_ends() -> None:
 def test_skinner_emits_weighted_vertices_and_one_tendon_per_bone() -> None:
     d = Doc()
     rig = r.Rig(d, str, origin=(0.0, 0.0), x_axis=r.Axis("yaw", K), y_axis=r.Axis("pitch", 0.26))
-    rig.bone(r.BoneSpec("A", 0.0, 0.0, r.material_dx(0.0, 1.0)))
-    rig.bone(r.BoneSpec("B", 10.0, 0.0, r.material_dx(10.0, 1.0)))
+    rig.bone(r.DriveSpec("A", 0.0, 0.0, r.material_dx(0.0, 1.0)))
+    rig.bone(r.DriveSpec("B", 10.0, 0.0, r.material_dx(10.0, 1.0)))
     sk = r.Skinner(rig)
     path = sk.path([(0.0, 0.0), (10.0, 0.0), (5.0, 8.0, "c")], r.Chain([(0.0, "A"), (10.0, "B")], lambda x, y: x))
     text = render(path)
@@ -258,3 +258,183 @@ def test_perform_turn_channels() -> None:
     assert min(tuft[60:140]) < min(lag[60:140])
     sign_changes = sum(1 for a, b in zip(tuft[64:140], tuft[65:141]) if a * b < 0)
     assert sign_changes >= 2
+
+
+# ------------------------------------------------------------------ Rig DSL v2: skeletons, weights, IK
+
+
+def test_auto_weights_sum_to_one_and_quantize_to_255() -> None:
+    bones = {"A": ((0.0, 0.0), (10.0, 0.0)), "B": ((10.0, 0.0), (20.0, 5.0)), "C": ((0.0, 10.0), (0.0, 30.0)),
+             "D": ((30.0, 30.0), (40.0, 40.0)), "E": ((-20.0, -20.0), (-25.0, -30.0))}
+    pts = [(3.0, 4.0), (12.0, 9.0), (-6.0, 2.0), (25.0, 33.0), (100.0, -40.0)]
+    ws = r.auto_weights(pts, bones)
+    assert len(ws) == len(pts)
+    for w in ws:
+        assert sum(w.values()) == pytest.approx(1.0)
+        assert 1 <= len(w) <= 4
+        assert all(v > 0 for v in w.values())
+        q = r.quantize(w)
+        assert sum(v for _, v in q) == 255
+        for b, v in q:
+            assert abs(v / 255 - w[b]) <= 1 / 255 + 1e-9 or b == q[0][0]
+
+
+def test_auto_weights_keep_the_top_influences() -> None:
+    bones = {n: ((float(i * 10), 0.0), (float(i * 10 + 5), 0.0)) for i, n in enumerate("ABCDEF")}
+    (w,) = r.auto_weights([(12.0, 3.0)], bones, top=2)
+    assert set(w) == {"A", "B"} or set(w) == {"B", "C"}
+    assert max(w, key=w.__getitem__) == "B"
+
+
+def test_a_point_on_a_bone_belongs_to_it() -> None:
+    bones = {"A": ((0.0, 0.0), (10.0, 0.0)), "B": ((20.0, 0.0), (30.0, 0.0))}
+    assert r.auto_weights([(4.0, 0.0)], bones) == [{"A": 1.0}]
+    assert r.auto_weights([(25.0, 0.0)], bones) == [{"B": 1.0}]
+
+
+def test_the_midpoint_between_two_bone_ends_is_shared_equally() -> None:
+    bones = {"A": ((0.0, 0.0), (10.0, 0.0)), "B": ((20.0, 0.0), (30.0, 0.0))}
+    (w,) = r.auto_weights([(15.0, 0.0)], bones)
+    assert w["A"] == pytest.approx(0.5) and w["B"] == pytest.approx(0.5)
+
+
+def test_auto_weights_falloff_sharpens_the_blend() -> None:
+    bones = {"A": ((0.0, 0.0), (10.0, 0.0)), "B": ((20.0, 0.0), (30.0, 0.0))}
+    (soft,) = r.auto_weights([(13.0, 0.0)], bones, falloff=1.0)
+    (hard,) = r.auto_weights([(13.0, 0.0)], bones, falloff=4.0)
+    assert 0.5 < soft["A"] < hard["A"] < 1.0
+
+
+def _arm(ns: str = "ArmR") -> tuple[Doc, r.Skeleton]:
+    d = Doc()
+    sk = r.Skeleton(d, ns)
+    sk.root("Shoulder", (240.0, 720.0))
+    sk.add(r.BoneSpec("UpperArm", (240.0, 720.0), (240.0, 900.0), "Shoulder"))
+    sk.add(r.BoneSpec("Forearm", (240.0, 900.0), (300.0, 1060.0), "UpperArm"))
+    return d, sk
+
+
+def test_skeleton_ids_are_stable_across_runs_and_unique() -> None:
+    _, a = _arm()
+    _, b = _arm()
+    ids_a = [a.bone(n).ref() for n in ("Shoulder", "UpperArm", "Forearm")]
+    ids_b = [b.bone(n).ref() for n in ("Shoulder", "UpperArm", "Forearm")]
+    assert ids_a == ids_b
+    assert len(set(ids_a)) == 3
+    _, other = _arm("ArmL")
+    assert not set(ids_a) & {other.bone(n).ref() for n in ("Shoulder", "UpperArm", "Forearm")}
+
+
+def test_skeleton_ids_do_not_depend_on_what_the_doc_built_before() -> None:
+    _, a = _arm()
+    d = Doc(start=500)
+    for _ in range(37):
+        d("Node")
+    sk = r.Skeleton(d, "ArmR")
+    sk.root("Shoulder", (240.0, 720.0))
+    assert sk.bone("Shoulder").ref() == a.bone("Shoulder").ref()
+    assert d("Node").ref() == "0:537"  # the skeleton does not consume the doc's own ids
+
+
+def test_skeleton_ids_stay_unique_across_skeletons_on_one_doc() -> None:
+    d = Doc()
+    seen: set[str] = set()
+    for i in range(40):
+        sk = r.Skeleton(d, f"Part{i}")
+        for j in range(12):
+            el = sk.root(f"B{j}", (float(j), 0.0))
+            assert el.ref() not in seen
+            seen.add(el.ref())
+    with pytest.raises(ValueError):
+        sk.root("B0", (0.0, 0.0))
+
+
+def test_skeleton_nests_bones_with_local_rotations() -> None:
+    _, sk = _arm()
+    shoulder, upper, fore = sk.bone("Shoulder"), sk.bone("UpperArm"), sk.bone("Forearm")
+    assert shoulder.tag == "RootBone" and upper.tag == "Bone" and fore.tag == "Bone"
+    assert upper in shoulder.children and fore in upper.children
+    assert upper.attrs["length"] == pytest.approx(180.0)
+    assert upper.attrs["rotation"] == pytest.approx(math.pi / 2)
+    assert fore.attrs["rotation"] == pytest.approx(math.atan2(160.0, 60.0) - math.pi / 2)
+    assert sk.world("Forearm") == pytest.approx((240.0, 900.0))
+    assert sk.tail("Forearm") == pytest.approx((300.0, 1060.0))
+    assert sk.segments()["UpperArm"] == ((240.0, 720.0), (240.0, 900.0))
+
+
+def test_skeleton_root_bones_sit_in_their_frame() -> None:
+    d = Doc()
+    sk = r.Skeleton(d, "Tail", frame=(100.0, 50.0))
+    el = sk.add(r.BoneSpec("Base", (110.0, 60.0), (110.0, 80.0), None))
+    assert el.tag == "RootBone"
+    assert (el.attrs["x"], el.attrs["y"]) == pytest.approx((10.0, 10.0))
+    t = sk.tendon("Base")
+    assert t.attrs["boneId"] == el.ref()
+    assert (t.attrs["tx"], t.attrs["ty"]) == pytest.approx((10.0, 10.0))
+    assert (t.attrs["xx"], t.attrs["xy"]) == pytest.approx((0.0, 1.0), abs=1e-6)
+
+
+def test_a_child_must_start_at_its_parents_tail() -> None:
+    _, sk = _arm()
+    with pytest.raises(ValueError):
+        sk.add(r.BoneSpec("Hand", (310.0, 1060.0), (310.0, 1100.0), "Forearm"))
+    with pytest.raises(KeyError):
+        sk.add(r.BoneSpec("Hand", (300.0, 1060.0), (300.0, 1100.0), "Nope"))
+
+
+def test_ik_emits_a_constraint_on_the_chain_tip() -> None:
+    d, sk = _arm()
+    target = d("Node", x=300.0, y=1000.0, name="HandTarget")
+    c = r.ik(d, sk.bone("Forearm"), target)
+    assert c.tag == "IKConstraint" and c in sk.bone("Forearm").children
+    assert c.attrs["targetId"] == target.ref() and c.attrs["parentBoneCount"] == 1
+    assert "invertDirection" not in c.attrs
+    text = render(sk.bone("Shoulder"))
+    assert f'targetId="{target.ref()}"' in text and 'parentBoneCount="1"' in text
+    inv = r.ik(d, sk.bone("Forearm"), target, parent_bone_count=1, invert=True)
+    assert inv.attrs["invertDirection"] is True
+
+
+def _fk(l1: float, l2: float, a: tuple[float, float]) -> tuple[float, float]:
+    ex, ey = l1 * math.cos(a[0]), l1 * math.sin(a[0])
+    return ex + l2 * math.cos(a[0] + a[1]), ey + l2 * math.sin(a[0] + a[1])
+
+
+def test_solve_two_bone_reaches_a_reachable_target() -> None:
+    for target in ((100.0, 150.0), (-60.0, 200.0), (180.0, -30.0), (40.0, 30.0)):
+        for bend in (1, -1):
+            a = r.solve_two_bone(180.0, 170.0, target, bend)
+            assert _fk(180.0, 170.0, a) == pytest.approx(target, abs=0.01)
+            assert a[1] * bend >= 0  # the bend picks the elbow side
+
+
+def test_solve_two_bone_clamps_an_unreachable_target_along_the_line() -> None:
+    target = (500.0, 500.0)
+    a = r.solve_two_bone(180.0, 170.0, target, 1)
+    x, y = _fk(180.0, 170.0, a)
+    assert math.hypot(x, y) == pytest.approx(350.0, abs=0.01)
+    assert math.atan2(y, x) == pytest.approx(math.atan2(500.0, 500.0), abs=1e-6)
+    assert a[1] == pytest.approx(0.0, abs=1e-6)
+
+
+def test_solve_two_bone_honours_the_root() -> None:
+    a = r.solve_two_bone(180.0, 170.0, (340.0, 870.0), -1, root=(240.0, 720.0))
+    x, y = _fk(180.0, 170.0, a)
+    assert (x + 240.0, y + 720.0) == pytest.approx((340.0, 870.0), abs=0.01)
+
+
+def test_skinned_path_weights_vertices_and_binds_tendons() -> None:
+    d = Doc()
+    bones = {"A": ((0.0, 0.0), d("RootBone", name="A")), "B": ((10.0, 0.0), d("RootBone", name="B"))}
+    frame = (2.0, 1.0)
+
+    def tendon(n: str) -> El:
+        return r.plain_tendon(d, bones[n][1], bones[n][0], frame)
+
+    wf = r.Chain([(0.0, "A"), (10.0, "B")], lambda x, y: x)
+    path, (ox, oy) = r.skinned_path(d, [(0.0, 0.0, "c"), (10.0, 0.0), (5.0, 8.0)], frame, r.sampled(wf), tendon)
+    assert (ox, oy) == (5.0, 4.0)
+    text = render(path)
+    assert text.count("<Weight") == 1 and text.count("<CubicWeight") == 2 and text.count("<Tendon") == 2
+    skin = path.children[-1]
+    assert skin.tag == "Skin" and (skin.attrs["tx"], skin.attrs["ty"]) == (3.0, 3.0)

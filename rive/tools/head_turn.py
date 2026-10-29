@@ -27,8 +27,8 @@ import math
 from typing import Callable, Sequence
 
 import rig_dsl as r
-from rig_dsl import (Axis, Chain, Grid, Poly, Weights, fit3, material_dx, pitch_dy, poly_add, poly_scale, quantize,
-                     pack, tokabs)
+from rig_dsl import (Axis, Chain, Grid, Poly, Weights, fit3, material_dx, pitch_dy, plain_tendon, poly_add,
+                     poly_scale, sampled, skinned_path, tokabs)
 from rml import Doc, El, smooth_path  # noqa: F401
 
 ID_START = 900000
@@ -242,34 +242,12 @@ class HeadTurn:
              tension: float = 1.0) -> None:
         """Replace `shape`'s path with the same Catmull-Rom path, skinned to the turn bones."""
         d = self.d
-        xs = [p[0] for p in pts]
-        ys = [p[1] for p in pts]
-        ox, oy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-        plain = smooth_path(d, [((p[0] - ox, p[1] - oy) + tuple(p[2:])) for p in pts], closed=closed, tension=tension)
-        index: dict[str, int] = {}
-        verts = []
-        for v, p in zip(plain.children, pts):
-            ax, ay = float(p[0]), float(p[1])
-            if v.tag == "StraightVertex":
-                q = [quantize(wf(ax, ay))]
-            else:
-                rot_o, dist_o = float(v.attrs["outRotation"]), float(v.attrs["outDistance"])
-                rot_i, dist_i = float(v.attrs["inRotation"]), float(v.attrs["inDistance"])
-                q = [quantize(wf(ax, ay)), quantize(wf(ax + math.cos(rot_i) * dist_i, ay + math.sin(rot_i) * dist_i)),
-                     quantize(wf(ax + math.cos(rot_o) * dist_o, ay + math.sin(rot_o) * dist_o))]
-            for qs in q:
-                for b, _ in qs:
-                    index.setdefault(b, len(index))
-            if v.tag == "StraightVertex":
-                val, ix = pack(q[0], index)
-                v.add(d("Weight", values=val, indices=ix))
-            else:
-                (a, b_), (c, e), (f, g) = (pack(x, index) for x in q)
-                v.add(d("CubicWeight", values=a, indices=b_, inValues=c, inIndices=e, outValues=f, outIndices=g))
-            verts.append(v)
-        tendons = [d("Tendon", boneId=self.bones[n][2].ref(), tx=self.bones[n][0] - HEAD_FRAME[0],
-                     ty=self.bones[n][1] - HEAD_FRAME[1]) for n in index]
-        plain.add(d("Skin", *tendons, tx=ox - HEAD_FRAME[0], ty=oy - HEAD_FRAME[1]))
+
+        def tendon(n: str) -> El:
+            x, y, el = self.bones[n]
+            return plain_tendon(d, el, (x, y), HEAD_FRAME)
+
+        plain, _ = skinned_path(d, pts, HEAD_FRAME, sampled(wf), tendon, closed=closed, tension=tension)
         shape.children = [plain if c.tag in ("PointsPath", "Path") else c for c in shape.children]
 
     def finish(self) -> None:

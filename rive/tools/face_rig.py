@@ -24,7 +24,7 @@ from __future__ import annotations
 import math
 from typing import Callable, Mapping, Sequence
 
-from rig_dsl import Formulas, pack, quantize
+from rig_dsl import Formulas, plain_tendon, skinned_path
 from rml import Doc, El, fill, smooth_path, stroke
 
 ID_START = 950000
@@ -174,12 +174,6 @@ class FaceRig:
         to pts[i]; a smooth vertex's handles lean a third toward its neighbours' weights, unless
         `handles[i]` gives their (in, out) weights explicitly."""
         d = self.d
-        xs = [p[0] for p in pts]
-        ys = [p[1] for p in pts]
-        ox, oy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-        path = smooth_path(d, [((p[0] - ox, p[1] - oy) + tuple(p[2:])) for p in pts], closed=closed,
-                           tension=tension)
-        index: dict[str, int] = {}
         n = len(pts)
 
         def mix(a: Mapping[str, float], b: Mapping[str, float], t: float) -> dict[str, float]:
@@ -188,28 +182,21 @@ class FaceRig:
                 out[k] = out.get(k, 0.0) + t * v
             return out
 
-        def q(w: Mapping[str, float]) -> list[tuple[str, int]]:
-            qs = quantize(dict(w))
-            for k, _ in qs:
-                index.setdefault(k, len(index))
-            return qs
-
-        for i, v in enumerate(path.children):
+        def vertex_weights(i: int, _at: tuple[float, float],
+                           hs: tuple[tuple[float, float], tuple[float, float]] | None) -> list[Mapping[str, float]]:
             w = weights[i]
-            if v.tag == "StraightVertex":
-                val, ix = pack(q(w), index)
-                v.add(d("Weight", values=val, indices=ix))
-            else:
-                prv = weights[(i - 1) % n] if (closed or i > 0) else w
-                nxt = weights[(i + 1) % n] if (closed or i < n - 1) else w
-                a, b = pack(q(w), index)
-                hw = handles[i] if handles is not None else None
-                c, e = pack(q(hw[0] if hw else mix(w, prv, 0.33)), index)
-                g, h = pack(q(hw[1] if hw else mix(w, nxt, 0.33)), index)
-                v.add(d("CubicWeight", values=a, indices=b, inValues=c, inIndices=e, outValues=g, outIndices=h))
-        tendons = [d("Tendon", boneId=bones[k][1].ref(), tx=bones[k][0][0] - frame[0], ty=bones[k][0][1] - frame[1])
-                   for k in index]
-        path.add(d("Skin", *tendons, tx=ox - frame[0], ty=oy - frame[1]))
+            if hs is None:
+                return [w]
+            hw = handles[i] if handles is not None else None
+            if hw:
+                return [w, hw[0], hw[1]]
+            prv = weights[(i - 1) % n] if (closed or i > 0) else w
+            nxt = weights[(i + 1) % n] if (closed or i < n - 1) else w
+            return [w, mix(w, prv, 0.33), mix(w, nxt, 0.33)]
+
+        path, (ox, oy) = skinned_path(d, pts, frame, vertex_weights,
+                                      lambda k: plain_tendon(d, bones[k][1], bones[k][0], frame),
+                                      closed=closed, tension=tension)
         kids = [d("ClippingShape", sourceId=clip.ref(), name="Clip")] if clip is not None else []
         return d("Shape", *kids, path, *paints, x=ox - frame[0], y=oy - frame[1], name=name, **kw)
 

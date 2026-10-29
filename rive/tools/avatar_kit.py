@@ -1,10 +1,12 @@
-"""Shared drawing kit for the avatar generator: palette, absolute-coordinate rig, IK."""
+"""Shared drawing kit for the avatar generator: palette, absolute-coordinate rig, arm IK (the
+two-bone solver itself lives in rig_dsl)."""
 
 from __future__ import annotations
 
 import math
 from typing import Callable
 
+from rig_dsl import two_bone_dirs, wrap_angle
 from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, stroke
 
 d = Doc(client=0, start=10)
@@ -153,14 +155,6 @@ L1 = ELBOW0[1] - SHOULDER[1]
 L2 = WRIST0[1] - ELBOW0[1]
 
 
-def _norm(a: float) -> float:
-    while a > PI:
-        a -= 2 * PI
-    while a <= -PI:
-        a += 2 * PI
-    return a
-
-
 def ik(side: int, wrist: tuple[float, float], finger_deg: float, elbow_out: bool = False,
        fs: float = 1.0, fs2: float = 1.0) -> tuple[float, float, float]:
     """Rotations (arm, elbow, hand) that put the wrist at `wrist` (artboard px) with the fingers
@@ -170,31 +164,22 @@ def ik(side: int, wrist: tuple[float, float], finger_deg: float, elbow_out: bool
     tx, ty = wrist
     if side == 1:
         tx, finger_deg = 800 - tx, 180 - finger_deg
-    sx, sy = SHOULDER
     l1 = L1 * fs
     l2 = L2 * fs2
-    phi = math.atan2(ty - sy, tx - sx)
-    dist = math.hypot(tx - sx, ty - sy)
-    dist = max(abs(l1 - l2) + 1e-6, min(l1 + l2, dist))
-    # Project unreachable targets onto the reach circle. The old one-pixel
-    # outer margin forced an 8.6-degree elbow bend even at straight-arm rest,
-    # then the gesture's explicit rest key snapped it back to zero.
-    tx, ty = sx + dist * math.cos(phi), sy + dist * math.sin(phi)
-    cosine = (l1 * l1 + dist * dist - l2 * l2) / (2 * l1 * dist)
-    alpha = math.acos(max(-1.0, min(1.0, cosine)))
+    # rig_dsl.two_bone_dirs projects unreachable targets onto the reach circle (no artificial
+    # bend at straight-arm rest). Both elbow sides are solved; the arm picks one.
     best = None
-    for up in (phi + alpha, phi - alpha):
-        ex, ey = sx + l1 * math.cos(up), sy + l1 * math.sin(up)
-        better = (ex < best[1]) if (best is not None and elbow_out) else (best is None or ey > best[2])
+    for bend in (-1, 1):
+        up, lo, (ex, ey) = two_bone_dirs(l1, l2, (tx, ty), bend, SHOULDER)
+        better = (ex < best[2]) if (best is not None and elbow_out) else (best is None or ey > best[3])
         if best is None or better:            # default: elbow hangs low; elbow_out flares it sideways
-            best = (up, ex, ey)
-    up, ex, ey = best
-    lo = math.atan2(ty - ey, tx - ex)
-    t1 = _norm(up - PI / 2)
-    t2 = _norm(lo - up)
+            best = (up, lo, ex, ey)
+    up, lo, _, _ = best
+    t1 = wrap_angle(up - PI / 2)
+    t2 = wrap_angle(lo - up)
     if t2 < -PI / 2:
         t2 += 2 * PI                         # fold outward, never across the chest
-    t3 = _norm(math.radians(finger_deg) - lo)
+    t3 = wrap_angle(math.radians(finger_deg) - lo)
     if side == 1:
         return (-t1, -t2, -t3)
     return (t1, t2, t3)
