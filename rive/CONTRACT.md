@@ -1,4 +1,4 @@
-# Rive contract (v7)
+# Rive contract (v8)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -111,12 +111,16 @@ One file per scene. The app loads them lazily.
   - `eventId`: enum, with the values for that scene from the table below.
   - `event`: trigger.
   - `parallaxX`, `parallaxY`: number, −1–1, default 0 (v7): device tilt or pointer offset; a
-    diorama moves its depth planes by it (campfire in v7; the other scenes ignore it).
+    diorama moves its depth planes by it (campfire in v7; every scene in v8).
   - The scene's light rig as defaults (v7), equal to `rive/tools/art_bible.py` `SCENES`:
     `lightKey` (color), `lightKeyIntensity`, `lightKeyX`, `lightKeyY` (numbers), `lightRim`
     (color), `lightRimIntensity` (number), `lightAmbient` (color), `lightFog` (color),
     `lightFlicker` (number). The app writes the same values to `AvatarVM`; it never reads them
     back from the file.
+  - `rain`: number, 0–1, default 0 (v8): steady rain intensity. campfire, beach and livingRoom
+    bind it (rain streaks, wet ground, steam off the campfire logs, streaks on the living-room
+    window); deepSpace ignores it. The app writes it from its world state. The `rain` events stay
+    one-shot showers on top.
 - **Rive event emitted:** `prop_tapped`, with `propId`: string.
 
 | sceneId | eventId values | propId values |
