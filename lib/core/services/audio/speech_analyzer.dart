@@ -122,7 +122,9 @@ class SpeechAnalyzer {
         : _alignFrames(a.speechFrames, a.text!, language);
     final bool accepted =
         aligned != null && aligned.costPerFrame <= alignCostLimit;
-    return a.timeline(aligned: accepted ? aligned : null);
+    return a
+        .timeline(aligned: accepted ? aligned : null)
+        .copyWith(roundedSh: TextPhonemizer.isFrench(language));
   }
 
   /// The raw alignment of [text] to [pcm], whatever its cost (for tests and

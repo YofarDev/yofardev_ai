@@ -560,7 +560,9 @@ as double?,
 /// @nodoc
 mixin _$SpeechTimeline {
 
- List<VisemeSpan> get visemes; List<ProsodyMark> get marks; Duration get duration; Duration get leadingSilence; bool get isQuestion;/// Loudness per [energyFrame] (0-1, relative to the sentence's loud
+ List<VisemeSpan> get visemes; List<ProsodyMark> get marks; Duration get duration; Duration get leadingSilence; bool get isQuestion;/// The sh/zh sounds (`ch` spans) are strongly rounded, as in French
+/// (/ʃ/, /ʒ/: "chat", "jour"), not spread and rounded at once.
+ bool get roundedSh;/// Loudness per [energyFrame] (0-1, relative to the sentence's loud
 /// frames): the jaw follows it inside long vowels. Empty when unknown.
  List<double> get energy; Duration get energyFrame;
 /// Create a copy of SpeechTimeline
@@ -574,20 +576,20 @@ $SpeechTimelineCopyWith<SpeechTimeline> get copyWith => _$SpeechTimelineCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as SpeechTimeline;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SpeechTimeline&&const DeepCollectionEquality().equals(other.visemes, _this.visemes)&&const DeepCollectionEquality().equals(other.marks, _this.marks)&&(identical(other.duration, _this.duration) || other.duration == _this.duration)&&(identical(other.leadingSilence, _this.leadingSilence) || other.leadingSilence == _this.leadingSilence)&&(identical(other.isQuestion, _this.isQuestion) || other.isQuestion == _this.isQuestion)&&const DeepCollectionEquality().equals(other.energy, _this.energy)&&(identical(other.energyFrame, _this.energyFrame) || other.energyFrame == _this.energyFrame));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SpeechTimeline&&const DeepCollectionEquality().equals(other.visemes, _this.visemes)&&const DeepCollectionEquality().equals(other.marks, _this.marks)&&(identical(other.duration, _this.duration) || other.duration == _this.duration)&&(identical(other.leadingSilence, _this.leadingSilence) || other.leadingSilence == _this.leadingSilence)&&(identical(other.isQuestion, _this.isQuestion) || other.isQuestion == _this.isQuestion)&&(identical(other.roundedSh, _this.roundedSh) || other.roundedSh == _this.roundedSh)&&const DeepCollectionEquality().equals(other.energy, _this.energy)&&(identical(other.energyFrame, _this.energyFrame) || other.energyFrame == _this.energyFrame));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SpeechTimeline;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.visemes),const DeepCollectionEquality().hash(_this.marks),_this.duration,_this.leadingSilence,_this.isQuestion,const DeepCollectionEquality().hash(_this.energy),_this.energyFrame);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.visemes),const DeepCollectionEquality().hash(_this.marks),_this.duration,_this.leadingSilence,_this.isQuestion,_this.roundedSh,const DeepCollectionEquality().hash(_this.energy),_this.energyFrame);
 }
 
 @override
 String toString() {
   final _this = this as SpeechTimeline;
-  return 'SpeechTimeline(visemes: ${_this.visemes}, marks: ${_this.marks}, duration: ${_this.duration}, leadingSilence: ${_this.leadingSilence}, isQuestion: ${_this.isQuestion}, energy: ${_this.energy}, energyFrame: ${_this.energyFrame})';
+  return 'SpeechTimeline(visemes: ${_this.visemes}, marks: ${_this.marks}, duration: ${_this.duration}, leadingSilence: ${_this.leadingSilence}, isQuestion: ${_this.isQuestion}, roundedSh: ${_this.roundedSh}, energy: ${_this.energy}, energyFrame: ${_this.energyFrame})';
 }
 
 
@@ -598,7 +600,7 @@ abstract mixin class $SpeechTimelineCopyWith<$Res>  {
   factory $SpeechTimelineCopyWith(SpeechTimeline value, $Res Function(SpeechTimeline) _then) = _$SpeechTimelineCopyWithImpl;
 @useResult
 $Res call({
- List<VisemeSpan> visemes, List<ProsodyMark> marks, Duration duration, Duration leadingSilence, bool isQuestion, List<double> energy, Duration energyFrame
+ List<VisemeSpan> visemes, List<ProsodyMark> marks, Duration duration, Duration leadingSilence, bool isQuestion, bool roundedSh, List<double> energy, Duration energyFrame
 });
 
 
@@ -615,13 +617,14 @@ class _$SpeechTimelineCopyWithImpl<$Res>
 
 /// Create a copy of SpeechTimeline
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? visemes = null,Object? marks = null,Object? duration = null,Object? leadingSilence = null,Object? isQuestion = null,Object? energy = null,Object? energyFrame = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? visemes = null,Object? marks = null,Object? duration = null,Object? leadingSilence = null,Object? isQuestion = null,Object? roundedSh = null,Object? energy = null,Object? energyFrame = null,}) {
   return _then(SpeechTimeline(
 visemes: null == visemes ? _self.visemes : visemes // ignore: cast_nullable_to_non_nullable
 as List<VisemeSpan>,marks: null == marks ? _self.marks : marks // ignore: cast_nullable_to_non_nullable
 as List<ProsodyMark>,duration: null == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
 as Duration,leadingSilence: null == leadingSilence ? _self.leadingSilence : leadingSilence // ignore: cast_nullable_to_non_nullable
 as Duration,isQuestion: null == isQuestion ? _self.isQuestion : isQuestion // ignore: cast_nullable_to_non_nullable
+as bool,roundedSh: null == roundedSh ? _self.roundedSh : roundedSh // ignore: cast_nullable_to_non_nullable
 as bool,energy: null == energy ? _self.energy : energy // ignore: cast_nullable_to_non_nullable
 as List<double>,energyFrame: null == energyFrame ? _self.energyFrame : energyFrame // ignore: cast_nullable_to_non_nullable
 as Duration,
@@ -706,10 +709,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<VisemeSpan> visemes,  List<ProsodyMark> marks,  Duration duration,  Duration leadingSilence,  bool isQuestion,  List<double> energy,  Duration energyFrame)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<VisemeSpan> visemes,  List<ProsodyMark> marks,  Duration duration,  Duration leadingSilence,  bool isQuestion,  bool roundedSh,  List<double> energy,  Duration energyFrame)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SpeechTimeline() when $default != null:
-return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_that.isQuestion,_that.energy,_that.energyFrame);case _:
+return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_that.isQuestion,_that.roundedSh,_that.energy,_that.energyFrame);case _:
   return orElse();
 
 }
@@ -727,10 +730,10 @@ return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<VisemeSpan> visemes,  List<ProsodyMark> marks,  Duration duration,  Duration leadingSilence,  bool isQuestion,  List<double> energy,  Duration energyFrame)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<VisemeSpan> visemes,  List<ProsodyMark> marks,  Duration duration,  Duration leadingSilence,  bool isQuestion,  bool roundedSh,  List<double> energy,  Duration energyFrame)  $default,) {final _that = this;
 switch (_that) {
 case _SpeechTimeline():
-return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_that.isQuestion,_that.energy,_that.energyFrame);}
+return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_that.isQuestion,_that.roundedSh,_that.energy,_that.energyFrame);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -744,10 +747,10 @@ return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<VisemeSpan> visemes,  List<ProsodyMark> marks,  Duration duration,  Duration leadingSilence,  bool isQuestion,  List<double> energy,  Duration energyFrame)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<VisemeSpan> visemes,  List<ProsodyMark> marks,  Duration duration,  Duration leadingSilence,  bool isQuestion,  bool roundedSh,  List<double> energy,  Duration energyFrame)?  $default,) {final _that = this;
 switch (_that) {
 case _SpeechTimeline() when $default != null:
-return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_that.isQuestion,_that.energy,_that.energyFrame);case _:
+return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_that.isQuestion,_that.roundedSh,_that.energy,_that.energyFrame);case _:
   return null;
 
 }
@@ -759,7 +762,7 @@ return $default(_that.visemes,_that.marks,_that.duration,_that.leadingSilence,_t
 
 
 class _SpeechTimeline extends SpeechTimeline {
-  const _SpeechTimeline({ List<VisemeSpan> visemes = const <VisemeSpan>[],  List<ProsodyMark> marks = const <ProsodyMark>[], this.duration = Duration.zero, this.leadingSilence = Duration.zero, this.isQuestion = false,  List<double> energy = const <double>[], this.energyFrame = const Duration(milliseconds: 25)}): _visemes = visemes,_marks = marks,_energy = energy,super._();
+  const _SpeechTimeline({ List<VisemeSpan> visemes = const <VisemeSpan>[],  List<ProsodyMark> marks = const <ProsodyMark>[], this.duration = Duration.zero, this.leadingSilence = Duration.zero, this.isQuestion = false, this.roundedSh = false,  List<double> energy = const <double>[], this.energyFrame = const Duration(milliseconds: 25)}): _visemes = visemes,_marks = marks,_energy = energy,super._();
   
 
  final  List<VisemeSpan> _visemes;
@@ -779,6 +782,9 @@ class _SpeechTimeline extends SpeechTimeline {
 @override@JsonKey() final  Duration duration;
 @override@JsonKey() final  Duration leadingSilence;
 @override@JsonKey() final  bool isQuestion;
+/// The sh/zh sounds (`ch` spans) are strongly rounded, as in French
+/// (/ʃ/, /ʒ/: "chat", "jour"), not spread and rounded at once.
+@override@JsonKey() final  bool roundedSh;
 /// Loudness per [energyFrame] (0-1, relative to the sentence's loud
 /// frames): the jaw follows it inside long vowels. Empty when unknown.
  final  List<double> _energy;
@@ -802,18 +808,18 @@ _$SpeechTimelineCopyWith<_SpeechTimeline> get copyWith => __$SpeechTimelineCopyW
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SpeechTimeline&&const DeepCollectionEquality().equals(other.visemes, _visemes)&&const DeepCollectionEquality().equals(other.marks, _marks)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.leadingSilence, leadingSilence) || other.leadingSilence == leadingSilence)&&(identical(other.isQuestion, isQuestion) || other.isQuestion == isQuestion)&&const DeepCollectionEquality().equals(other.energy, _energy)&&(identical(other.energyFrame, energyFrame) || other.energyFrame == energyFrame));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SpeechTimeline&&const DeepCollectionEquality().equals(other.visemes, _visemes)&&const DeepCollectionEquality().equals(other.marks, _marks)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.leadingSilence, leadingSilence) || other.leadingSilence == leadingSilence)&&(identical(other.isQuestion, isQuestion) || other.isQuestion == isQuestion)&&(identical(other.roundedSh, roundedSh) || other.roundedSh == roundedSh)&&const DeepCollectionEquality().equals(other.energy, _energy)&&(identical(other.energyFrame, energyFrame) || other.energyFrame == energyFrame));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_visemes),const DeepCollectionEquality().hash(_marks),duration,leadingSilence,isQuestion,const DeepCollectionEquality().hash(_energy),energyFrame);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_visemes),const DeepCollectionEquality().hash(_marks),duration,leadingSilence,isQuestion,roundedSh,const DeepCollectionEquality().hash(_energy),energyFrame);
 }
 
 @override
 String toString() {
-    return 'SpeechTimeline(visemes: $visemes, marks: $marks, duration: $duration, leadingSilence: $leadingSilence, isQuestion: $isQuestion, energy: $energy, energyFrame: $energyFrame)';
+    return 'SpeechTimeline(visemes: $visemes, marks: $marks, duration: $duration, leadingSilence: $leadingSilence, isQuestion: $isQuestion, roundedSh: $roundedSh, energy: $energy, energyFrame: $energyFrame)';
 }
 
 
@@ -824,7 +830,7 @@ abstract mixin class _$SpeechTimelineCopyWith<$Res> implements $SpeechTimelineCo
   factory _$SpeechTimelineCopyWith(_SpeechTimeline value, $Res Function(_SpeechTimeline) _then) = __$SpeechTimelineCopyWithImpl;
 @override @useResult
 $Res call({
- List<VisemeSpan> visemes, List<ProsodyMark> marks, Duration duration, Duration leadingSilence, bool isQuestion, List<double> energy, Duration energyFrame
+ List<VisemeSpan> visemes, List<ProsodyMark> marks, Duration duration, Duration leadingSilence, bool isQuestion, bool roundedSh, List<double> energy, Duration energyFrame
 });
 
 
@@ -841,13 +847,14 @@ class __$SpeechTimelineCopyWithImpl<$Res>
 
 /// Create a copy of SpeechTimeline
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? visemes = null,Object? marks = null,Object? duration = null,Object? leadingSilence = null,Object? isQuestion = null,Object? energy = null,Object? energyFrame = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? visemes = null,Object? marks = null,Object? duration = null,Object? leadingSilence = null,Object? isQuestion = null,Object? roundedSh = null,Object? energy = null,Object? energyFrame = null,}) {
   return _then(_SpeechTimeline(
 visemes: null == visemes ? _self._visemes : visemes // ignore: cast_nullable_to_non_nullable
 as List<VisemeSpan>,marks: null == marks ? _self._marks : marks // ignore: cast_nullable_to_non_nullable
 as List<ProsodyMark>,duration: null == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
 as Duration,leadingSilence: null == leadingSilence ? _self.leadingSilence : leadingSilence // ignore: cast_nullable_to_non_nullable
 as Duration,isQuestion: null == isQuestion ? _self.isQuestion : isQuestion // ignore: cast_nullable_to_non_nullable
+as bool,roundedSh: null == roundedSh ? _self.roundedSh : roundedSh // ignore: cast_nullable_to_non_nullable
 as bool,energy: null == energy ? _self._energy : energy // ignore: cast_nullable_to_non_nullable
 as List<double>,energyFrame: null == energyFrame ? _self.energyFrame : energyFrame // ignore: cast_nullable_to_non_nullable
 as Duration,

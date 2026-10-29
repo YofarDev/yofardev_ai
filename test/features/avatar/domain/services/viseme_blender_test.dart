@@ -196,14 +196,36 @@ void main() {
       test('the release pops the jaw past the next shape, then settles', () {
         final double settled = blender.shapeAt(tl, ms(470)).shape.jaw;
         expect(settled, closeTo(0.5 * VisemeBlender.jawGain(1), 1e-9));
-        final MouthBlend pop = blender.shapeAt(tl, ms(350));
+        // 45 ms in: the ramp at 94 %, the pop at its peak
+        final MouthBlend pop = blender.shapeAt(tl, ms(365));
         expect(pop.shape.jaw, greaterThan(settled));
-        expect(pop.pop, greaterThan(0));
+        expect(pop.pop, closeTo(VisemeBlender.popJaw, 1e-9));
         expect(pop.sealed, isFalse);
-        expect(blender.shapeAt(tl, ms(371)).pop, 0);
+        expect(blender.shapeAt(tl, ms(411)).pop, 0);
         // the lips are still pressed as they part, and let go within 40 ms
         expect(blender.shapeAt(tl, ms(320)).shape.press, closeTo(0.9, 1e-9));
         expect(blender.shapeAt(tl, ms(361)).shape.press, 0);
+      });
+
+      test('a release opens on an eased 60 ms ramp, never in one frame', () {
+        expect(VisemeBlender.releaseRamp(0), 0);
+        expect(VisemeBlender.releaseRamp(0.5), 0.75);
+        expect(VisemeBlender.releaseRamp(1), 1);
+        // the first 60 fps frame after the release opens under half way
+        expect(VisemeBlender.releaseRamp(16.667 / 60), lessThan(0.5));
+        final double target = 0.5 * VisemeBlender.jawGain(1);
+        for (int us = 320000; us < 380000; us += 2500) {
+          final MouthBlend b = blender.shapeAt(tl, Duration(microseconds: us));
+          final double k = VisemeBlender.releaseRamp((us - 320000) / 60000);
+          expect(b.opening, closeTo(k, 1e-9), reason: '$us us');
+          expect(b.shape.jaw - b.pop, closeTo(target * k, 1e-9));
+          expect(b.shape.stretch, closeTo(0.55 * k, 1e-9), reason: '$us us');
+        }
+        // the pop is a bump: nothing at the release, all of it at 45 ms
+        expect(blender.shapeAt(tl, ms(320)).pop, 0);
+        expect(blender.shapeAt(tl, ms(320)).shape.jaw, 0);
+        expect(blender.shapeAt(tl, ms(380)).opening, 1);
+        expect(blender.shapeAt(tl, ms(200)).opening, 1);
       });
 
       test('a closure into silence opens without a pop', () {
@@ -302,6 +324,49 @@ void main() {
           final MouthShape m = blender.shapeAt(tl, ms(t)).shape;
           expect(m.stretch, lessThanOrEqualTo(1 - m.pucker + 1e-9));
         }
+      });
+
+      test('the lips round and unspread ahead of an oh ("so")', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.ss, 0, 120),
+          span(Viseme.oh, 120, 200),
+        ]);
+        // 110 ms ahead: the s is still fully spread
+        expect(blender.shapeAt(tl, ms(10)).shape.stretch, closeTo(0.55, 1e-9));
+        expect(blender.shapeAt(tl, ms(10)).shape.pucker, 0);
+        // halfway: no spread left, half the oh's rounding
+        final MouthShape mid = blender.shapeAt(tl, ms(65)).shape;
+        expect(mid.stretch, 0);
+        expect(mid.pucker, closeTo(0.3, 1e-9));
+        // at the onset the oh is fully rounded
+        expect(blender.shapeAt(tl, ms(119)).shape.pucker, greaterThan(0.59));
+        expect(blender.shapeAt(tl, ms(119)).shape.stretch, 0);
+      });
+
+      test('an oh rounds ahead only for an ou (the oh-ou glide)', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.oh, 0, 300),
+          span(Viseme.oh, 300, 600),
+        ]);
+        expect(blender.shapeAt(tl, ms(250)).shape.pucker, closeTo(0.6, 1e-9));
+      });
+
+      test('a French sh is rounded and barely spread', () {
+        const SpeechTimeline tl = SpeechTimeline(
+          visemes: <VisemeSpan>[
+            VisemeSpan(
+              viseme: Viseme.ch,
+              start: Duration.zero,
+              end: Duration(milliseconds: 400),
+            ),
+          ],
+          duration: Duration(milliseconds: 400),
+          roundedSh: true,
+        );
+        final MouthShape m = blender.shapeAt(tl, ms(200)).shape;
+        expect(m.pucker, closeTo(0.7, 1e-9));
+        expect(m.stretch, closeTo(0.1, 1e-9));
+        expect(m, VisemeBlender.roundedShShape.copyWith(jaw: m.jaw));
       });
 
       test('sh keeps its spread with its rounding when no ou is near', () {

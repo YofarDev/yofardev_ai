@@ -3,7 +3,8 @@ import '../../../../core/models/performance/performance.dart';
 /// Everything the face rig of `rive/CONTRACT.md` v6 needs for one frame:
 /// the 14 action units (emotion and speech merged), their per-side offsets
 /// ([left] and [right], the viewer's), the speech mouth extras, head roll,
-/// breath, an additive nod on the head pitch, and blink control.
+/// breath, an additive nod on the head pitch, blink control, and the gaze
+/// cues the head solver acts on ([gazeLock], [saccadeSerial]).
 class FaceFrame {
   const FaceFrame({
     this.au = ActionUnits.neutral,
@@ -16,6 +17,8 @@ class FaceFrame {
     this.nodPitch = 0,
     this.autoBlink = true,
     this.blinkSerial = 0,
+    this.gazeLock = false,
+    this.saccadeSerial = 0,
   });
 
   static const FaceFrame rest = FaceFrame();
@@ -49,6 +52,13 @@ class FaceFrame {
   /// Increments once per blink the performer asks for.
   final int blinkSerial;
 
+  /// The eyes stay on the camera (no micro-saccade): a question's end.
+  final bool gazeLock;
+
+  /// Increments once per gaze saccade the performer asks for (after a full
+  /// stop).
+  final int saccadeSerial;
+
   Map<String, Object> toJson() => <String, Object>{
     'au': <String, double>{
       'browInnerUp': au.browInnerUp,
@@ -75,6 +85,8 @@ class FaceFrame {
     'nodPitch': nodPitch,
     'autoBlink': autoBlink,
     'blinkSerial': blinkSerial,
+    'gazeLock': gazeLock,
+    'saccadeSerial': saccadeSerial,
   };
 
   @override
@@ -89,7 +101,9 @@ class FaceFrame {
       other.roll == roll &&
       other.nodPitch == nodPitch &&
       other.autoBlink == autoBlink &&
-      other.blinkSerial == blinkSerial;
+      other.blinkSerial == blinkSerial &&
+      other.gazeLock == gazeLock &&
+      other.saccadeSerial == saccadeSerial;
 
   @override
   int get hashCode => Object.hash(
@@ -103,6 +117,8 @@ class FaceFrame {
     nodPitch,
     autoBlink,
     blinkSerial,
+    gazeLock,
+    saccadeSerial,
   );
 
   @override

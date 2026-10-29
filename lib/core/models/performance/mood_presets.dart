@@ -41,11 +41,12 @@ EmotionVector emotionForMood(AvatarMood mood) => switch (mood) {
 /// Per-mood facial action unit presets (plausible FACS-style poses).
 ActionUnits actionUnitsForMood(AvatarMood mood) => switch (mood) {
   AvatarMood.neutral => ActionUnits.neutral,
-  // a smiling eye: the cheek lifts the lower lid and the upper lid comes
-  // down a little
+  // a smiling eye: the cheek lifts the lower lid into a crescent; the upper
+  // lid stays clear of the iris (lidTighten also lowers it: at 0.5 it hid
+  // about a third of the iris, 0.1 keeps it near the open eye's)
   AvatarMood.happy => const ActionUnits(
     cheekRaise: 0.6,
-    lidTighten: 0.5,
+    lidTighten: 0.1,
     lipCornerPull: 0.7,
     browOuterUp: 0.3,
   ),
@@ -64,12 +65,13 @@ ActionUnits actionUnitsForMood(AvatarMood mood) => switch (mood) {
     lipStretch: 0.3,
     lipPress: 0.6,
   ),
-  // a dropped jaw with rounded lips: an "oh", not a grin
+  // a dropped jaw with rounded lips: a tall "oh" oval, not a grin; the
+  // brows and upper lids as high as they go
   AvatarMood.surprised => const ActionUnits(
-    browInnerUp: 0.9,
-    browOuterUp: 0.9,
+    browInnerUp: 1.0,
+    browOuterUp: 1.0,
     upperLidRaise: 1.0,
-    jawDrop: 0.5,
+    jawDrop: 0.45,
     lipPucker: 0.45,
   ),
   // closed, pressed and pulled to one side by the mood's mouth skew: a

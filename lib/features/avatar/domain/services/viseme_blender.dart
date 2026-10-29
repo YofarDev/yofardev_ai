@@ -4,27 +4,38 @@ import '../../../../core/models/performance/performance.dart';
 
 /// The blended mouth for one instant. [sealed] means the instant lies inside
 /// a `pp` span: the lips must be fully closed now. [pop] is the part of
-/// `shape.jaw` that is the plosive release pop (0 outside the 50 ms after a
+/// `shape.jaw` that is the plosive release pop (0 outside the 90 ms after a
 /// closure), so a consumer that smooths the jaw can add it back on time.
+/// [opening] is how far the release ramp after a closure has come (0 at the
+/// release, 1 once the mouth is open, and 1 anywhere else): while it is under
+/// 1 the shape is already eased and must not be smoothed again.
 class MouthBlend {
-  const MouthBlend({required this.shape, this.sealed = false, this.pop = 0});
+  const MouthBlend({
+    required this.shape,
+    this.sealed = false,
+    this.pop = 0,
+    this.opening = 1,
+  });
 
   final MouthShape shape;
   final bool sealed;
   final double pop;
+  final double opening;
 
   @override
   bool operator ==(Object other) =>
       other is MouthBlend &&
       other.shape == shape &&
       other.sealed == sealed &&
-      other.pop == pop;
+      other.pop == pop &&
+      other.opening == opening;
 
   @override
-  int get hashCode => Object.hash(shape, sealed, pop);
+  int get hashCode => Object.hash(shape, sealed, pop, opening);
 
   @override
-  String toString() => 'MouthBlend($shape, sealed: $sealed, pop: $pop)';
+  String toString() =>
+      'MouthBlend($shape, sealed: $sealed, pop: $pop, opening: $opening)';
 }
 
 /// Coarticulation: turns a [SpeechTimeline] and a playback position into one
@@ -33,22 +44,28 @@ class MouthBlend {
 /// [carryOver]), weighted by [MouthShape.dominance], so a closure wins over a
 /// vowel and an open vowel gives way. A `pp` span is a hard lip seal that
 /// compresses (press [sealPressStart] → [sealPress] across the span) and
-/// releases with a pop: the jaw bursts open within [releaseBurst] and
-/// overshoots the next shape by [popJaw], eased out over [releasePop]. There
-/// is no pop into `sil` or into a span shorter than [releasePop].
+/// releases with a pop: the jaw, the rounding and the spread open over
+/// [releaseBurst] with an ease-out (never in one frame), and a [popJaw] bump
+/// over [releasePop] carries the jaw past the next shape near the end of the
+/// ramp. There is no pop into `sil` or into a span shorter than [popMinSpan].
 ///
 /// The result is continuous in time: both lean windows are clamped to half
 /// the span, so they never overlap, and each leak starts exactly where the
 /// previous span's anticipation ended.
 ///
-/// Critic round 7: the lips round [preRound] ahead of an `ou` (/u/, /w/),
-/// across any consonant or closure in between (a seal rounds at most 0.3),
-/// and while rounding for it are never spread wider than the rounding
-/// allows (`stretch <= 1 - pucker`); after a closure the jaw, the rounding and the spread open on the
-/// same burst ramp (no unrounded frame between a b and an ou); a `th` keeps
-/// the tongue up at [thTongue] or more across its span; a vowel's jaw scales
-/// by its length ([vowelJawGain]), so a vowel squeezed between two closures
-/// opens half way instead of spiking.
+/// The lips round [preRound] ahead of a rounded vowel (`oh`, `ou`: /o/, /u/,
+/// /w/), across any consonant or closure in between (a seal rounds at most
+/// 0.3; an `oh` itself only rounds ahead of an `ou`), and the spread gives
+/// way twice as fast: none is left halfway through the window, so the
+/// consonant before "so" or the y of "you" is already unspread. While
+/// rounding the lips are never spread wider than the rounding allows
+/// (`stretch <= 1 - pucker`); after a closure the jaw, the rounding and the
+/// spread open on the same release ramp (no unrounded frame between a b and
+/// an ou); a `th` keeps the tongue up at [thTongue] or more across its span;
+/// a vowel's jaw scales by its length ([vowelJawGain]), so a vowel squeezed
+/// between two closures opens half way instead of spiking. With
+/// [SpeechTimeline.roundedSh] (French) a `ch` is [roundedShShape]: rounded,
+/// barely spread.
 class VisemeBlender {
   const VisemeBlender({
     this.anticipation = const Duration(milliseconds: 70),
@@ -76,12 +93,13 @@ class VisemeBlender {
       return MouthBlend(
         shape: _seal(
           sealPressStart + (sealPress - sealPressStart) * k,
-          round: _roundingAhead(spans, index + 1, now),
+          round: _roundAhead(spans, index + 1, now).pucker,
         ),
         sealed: true,
       );
     }
-    final MouthShape base = _shapeOf(current);
+    final bool roundSh = timeline.roundedSh;
+    final MouthShape base = _shapeOf(current, roundSh);
     final double half = (end - start) / 2;
     final double dominance = MouthShape.dominance(current.viseme);
 
@@ -96,7 +114,7 @@ class VisemeBlender {
     final bool pops =
         release &&
         current.viseme != Viseme.sil &&
-        current.end - current.start >= releasePop;
+        current.end - current.start >= popMinSpan;
 
     MouthShape shape = base;
 
@@ -109,7 +127,7 @@ class VisemeBlender {
         final double decay = 1 - _smoothstep((now - start) / window);
         final double lean = _leanBack(previous, current) * decay;
         final MouthShape before = shape;
-        shape = shape.lerp(_leakOf(previous), lean);
+        shape = shape.lerp(_leakOf(previous, roundSh), lean);
         if (release) {
           // the jaw, the rounding and the spread open on the burst (below)
           shape = shape.copyWith(
@@ -129,18 +147,24 @@ class VisemeBlender {
         final double pull =
             MouthShape.dominance(next.viseme) /
             _max(dominance, MouthShape.dominance(next.viseme));
-        shape = shape.lerp(_shapeOf(next), rise * pull);
+        shape = shape.lerp(_shapeOf(next, roundSh), rise * pull);
       }
     }
 
-    // the lips round ahead of a coming ou, narrowing as they do
+    // the lips round ahead of a coming rounded vowel; the spread goes first
     double round = 0;
     if (current.viseme != Viseme.ou) {
-      round = _roundingAhead(spans, index + 1, now);
+      final ({double pucker, double unspread}) ahead = _roundAhead(
+        spans,
+        index + 1,
+        now,
+        ouOnly: current.viseme == Viseme.oh,
+      );
+      round = ahead.pucker;
       if (round > 0) {
         shape = shape.copyWith(
           pucker: _max(shape.pucker, round),
-          stretch: shape.stretch * (1 - round),
+          stretch: shape.stretch * (1 - ahead.unspread),
         );
       }
     }
@@ -157,18 +181,20 @@ class VisemeBlender {
     if (release) {
       final double since = now - start;
       final double burst = releaseBurst.inMicroseconds.toDouble();
-      final double popWindow = releasePop.inMicroseconds.toDouble();
-      final double k = _smoothstep(since / burst);
+      final double popWindow = _min(
+        releasePop.inMicroseconds.toDouble(),
+        end - start,
+      );
+      final double k = releaseRamp(since / burst);
       final double opened = shape.jaw * k;
       // the seal's own rounding as it let go
       final double sealRound = _min(
-        _roundingAhead(spans, index, start),
+        _roundAhead(spans, index, start).pucker,
         _sealPucker,
       );
       double pop = 0;
       if (pops && since < popWindow) {
-        final double amount =
-            popJaw * 0.5 * (1 + math.cos(math.pi * since / popWindow));
+        final double amount = popJaw * math.sin(math.pi * since / popWindow);
         pop = _min(opened + amount, 1) - opened;
       }
       if (since < burst || pop > 0) {
@@ -179,28 +205,41 @@ class VisemeBlender {
             stretch: shape.stretch * k,
           ),
           pop: pop,
+          opening: since < burst ? k : 1,
         );
       }
     }
     return MouthBlend(shape: shape);
   }
 
-  /// How far the lips have rounded at [now] for the first `ou` that starts
-  /// within [preRound] after it, searching from span [from]: 0 at the
-  /// window's start, eased to the ou's full pucker at its onset.
-  double _roundingAhead(List<VisemeSpan> spans, int from, double now) {
+  /// The rounding at [now] for the first rounded vowel (`oh` or `ou`; only
+  /// `ou` when [ouOnly]) that starts within [preRound] after it, searching
+  /// from span [from]: its pucker eases from 0 at the window's start to the
+  /// vowel's full pucker at its onset, and `unspread` (the share of the
+  /// spread already given up) reaches 1 halfway through the window.
+  static ({double pucker, double unspread}) _roundAhead(
+    List<VisemeSpan> spans,
+    int from,
+    double now, {
+    bool ouOnly = false,
+  }) {
     final double window = preRound.inMicroseconds.toDouble();
     for (int i = from; i < spans.length; i++) {
       final double ahead = spans[i].start.inMicroseconds - now;
       if (ahead > window) {
-        return 0;
+        break;
       }
-      if (spans[i].viseme == Viseme.ou && ahead >= 0) {
-        return MouthShape.forViseme(Viseme.ou).pucker *
-            _smoothstep(1 - ahead / window);
+      final Viseme v = spans[i].viseme;
+      final bool rounded = v == Viseme.ou || (!ouOnly && v == Viseme.oh);
+      if (rounded && ahead >= 0) {
+        final double x = 1 - ahead / window;
+        return (
+          pucker: MouthShape.forViseme(v).pucker * _smoothstep(x),
+          unspread: _smoothstep(2 * x),
+        );
       }
     }
-    return 0;
+    return (pucker: 0, unspread: 0);
   }
 
   /// How much of [previous] is still in the mouth when [current] starts.
@@ -220,12 +259,15 @@ class VisemeBlender {
   }
 
   /// The span's target shape; the jaw (and only the jaw) scales by weight.
-  /// A closure is approached at its lightest press (where it starts).
-  static MouthShape _shapeOf(VisemeSpan span) {
+  /// A closure is approached at its lightest press (where it starts); a `ch`
+  /// is [roundedShShape] when [roundSh].
+  static MouthShape _shapeOf(VisemeSpan span, bool roundSh) {
     if (span.viseme == Viseme.pp) {
       return _seal(sealPressStart);
     }
-    final MouthShape raw = MouthShape.forViseme(span.viseme);
+    final MouthShape raw = roundSh && span.viseme == Viseme.ch
+        ? roundedShShape
+        : MouthShape.forViseme(span.viseme);
     final double length = _isVowel(span.viseme)
         ? vowelJawGain(span.end - span.start)
         : 1;
@@ -243,8 +285,18 @@ class VisemeBlender {
 
   /// What [previous] leaves in the mouth as the next span starts: a closure
   /// leaves its fully compressed lips.
-  static MouthShape _leakOf(VisemeSpan previous) =>
-      previous.viseme == Viseme.pp ? _seal(sealPress) : _shapeOf(previous);
+  static MouthShape _leakOf(VisemeSpan previous, bool roundSh) =>
+      previous.viseme == Viseme.pp
+      ? _seal(sealPress)
+      : _shapeOf(previous, roundSh);
+
+  /// A French sh/zh (/ʃ/, /ʒ/, [SpeechTimeline.roundedSh]): the lips round
+  /// and push forward, barely spread.
+  static const MouthShape roundedShShape = MouthShape(
+    jaw: 0.15,
+    pucker: 0.7,
+    stretch: 0.1,
+  );
 
   /// A closed, pressed mouth: jaw 0, the table's pucker (or the [round]ing
   /// toward a coming ou) capped at 0.3.
@@ -280,13 +332,25 @@ class VisemeBlender {
   /// not a rest line.
   static const double sealPress = 0.9;
 
-  /// After a closure the jaw reaches the next shape within this window.
-  static const Duration releaseBurst = Duration(milliseconds: 20);
+  /// After a closure the mouth reaches the next shape over this window, on
+  /// [releaseRamp]: about three frames at 60 fps, two at 30.
+  static const Duration releaseBurst = Duration(milliseconds: 60);
 
-  /// The release pop lasts this long after a closure.
-  static const Duration releasePop = Duration(milliseconds: 50);
+  /// The release ramp at [x] (0-1 of [releaseBurst]): an ease-out,
+  /// `1 - (1 - x)^2`, fastest as the lips part, settling into the shape.
+  static double releaseRamp(double x) {
+    final double r = 1 - x.clamp(0.0, 1.0);
+    return 1 - r * r;
+  }
 
-  /// Jaw overshoot of the release pop over the next shape, at its start.
+  /// The release pop lasts this long after a closure (or the next span, if
+  /// shorter): a sine bump that peaks halfway.
+  static const Duration releasePop = Duration(milliseconds: 90);
+
+  /// Spans shorter than this get no pop.
+  static const Duration popMinSpan = Duration(milliseconds: 50);
+
+  /// Peak jaw of the release pop, on top of the opening ramp.
   static const double popJaw = 0.08;
 
   /// Jaw scale for a span of loudness [weight] (0-1): even a soft vowel

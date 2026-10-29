@@ -24,30 +24,39 @@ import 'viseme_blender.dart';
 ///   [VisemeBlender] shape at the playback position drives fast springs for
 ///   the mouth. Speech wins the jaw and the lip seal; emotion keeps corners,
 ///   cheeks, brows and lids. Inside a p/b/m span the jaw is written 0 that very
-///   frame; at the release the jaw, the rounding and the spread burst open
-///   together on a fast spring and the blender's pop is added on time, after
-///   the spring. Elsewhere the jaw opens at most [jawSlew] per second, and a
-///   th holds the tongue up.
+///   frame; at the release the jaw, the rounding and the spread follow the
+///   blender's eased release ramp exactly (about 60 ms, never one frame) and
+///   its pop is added on time. Elsewhere the jaw opens at most [jawSlew] per
+///   second, a th holds the tongue up, and a tucked lower lip (f, v) keeps
+///   the jaw at [tuckJawFloor] or more (the lips never meet on an f).
 /// - **Breath**: the pre-roll ([SpeechPrerollEvent]) draws an eased breath
-///   from [breathLead] before the audio, the lips parted (jaw 0.08, no press)
-///   into the first phoneme unless it is a p/b/m; pauses inside the sentence
-///   are breathed for too.
+///   from [breathLead] before the audio, the lips parting with it (no press;
+///   the jaw peaks at 0.10 150 ms before the audio and is 0.08 at it) into
+///   the first phoneme unless it is a p/b/m; pauses inside the sentence are
+///   breathed for too.
 /// - **Prosody acting** (marks are known ahead, so motion anticipates): brow
-///   beats on the strongest pitch peaks (0.9 s apart), scaled by the pitch
-///   slope and shaped as an anticipation dip, an eased rise, a 12 %
+///   beats on the strongest pitch peaks (at most one per 1.5 s, none in the
+///   0.9 s before a question's rise), at most [browBeatMax], scaled by the
+///   pitch slope and shaped as an anticipation dip, an eased rise, a 12 %
 ///   overshoot and a decay; nods on stressed syllables (at most one per
 ///   450 ms) whose depth follows the stress (0.4–1.0 of [nodDepthFor] at
 ///   full strength) with seeded jitter, a few of them swapped for, or
-///   joined by, small roll accents of alternating side. A question lifts the
-///   brows 1.5× a statement beat on its final rising syllable, 80 ms ahead of
-///   the audio, and holds them with a head tilt through the listening pause.
-///   Blinks in pauses.
+///   joined by, small roll accents of alternating side. A question lifts
+///   both brows to [questionTop] on its final rising syllable (the only beat
+///   that high), 80 ms ahead of the audio, and holds them with a head tilt
+///   through the listening pause, the gaze locked on the camera
+///   ([FaceFrame.gazeLock]) from 400 ms before the rise. Blinks in pauses;
+///   each blink the performer fires dips the brows and lifts the cheeks a
+///   little while the lids are shut.
 /// - **Full stop**: when the voice ends the jaw, rounding and spread ease to
 ///   rest over 220 ms with a 12 % undershoot (the lips meet and press), the
-///   lip corners relax and the head settles about 2° down.
+///   lip corners relax and the head settles about 2° down; one blink follows
+///   [postStopBlink] after it and a small gaze saccade
+///   ([FaceFrame.saccadeSerial]) [postStopSaccade] after it.
 /// - **Idle life** ([idle], off under [reduceMotion]): once the face is not
-///   speaking, a slow irregular breath, a micro drift of each lip corner and
-///   a slow head roll and nod drift, all seeded sine sums.
+///   speaking, a slow irregular breath (a [idleBreathPeriod] cycle that
+///   starts on an inhale when the idle begins), a micro drift of each lip
+///   corner and a slow head roll and nod drift, all seeded sine sums.
 ///
 /// [step] allocates nothing once the face is still: it works in fixed
 /// buffers and returns the previous [FaceFrame] while nothing changed (never
@@ -100,7 +109,26 @@ class FacePerformer {
   /// The brow spring lags about this much: beats are read this far ahead.
   static const double _browLead = 0.02;
   static const double _nodGap = 0.45;
-  static const double _browGap = 0.9;
+  static const double _browGap = 1.5;
+
+  /// Statement brow beats stay this far clear of a question's rise.
+  static const double _questionClear = 0.9;
+
+  /// The highest a statement brow beat lifts a brow (its overshoot
+  /// included): only a question's rise goes past it.
+  static const double browBeatMax = 0.3;
+
+  /// Lowest jaw under a fully tucked lower lip (f, v): the rig draws the
+  /// tuck only over parted lips.
+  static const double tuckJawFloor = 0.11;
+
+  /// One blink this long after the full stop, a gaze saccade at
+  /// [postStopSaccade].
+  static const double postStopBlink = 0.33;
+  static const double postStopSaccade = 0.7;
+
+  /// The idle breath's cycle (s).
+  static const double idleBreathPeriod = 3.8;
   static const double _blinkGap = 1.2;
   static const double _blinkMaxInterval = 5.2;
   static const double _autoBlinkHold = 0.4;
@@ -121,8 +149,9 @@ class FacePerformer {
   /// The breath before speaking starts this long before the audio.
   static const double breathLead = 0.35;
 
-  /// Jaw of the parted lips while breathing in before speaking.
+  /// Jaw of the parted lips at the audio's start, and its peak 150 ms before.
   static const double _partedJaw = 0.08;
+  static const double _partedPeak = 0.10;
 
   /// Full-stop settle: the mouth eases to rest over [_settleS] with
   /// [_undershoot]; the head drop and the corner relax last [_settleTotal].
@@ -150,8 +179,10 @@ class FacePerformer {
   /// 1 ± up to this share of it).
   static const double _browSplit = 0.15;
 
-  /// A question's final rise lifts the brows this many statement beats.
-  static const double questionLift = 1.5;
+  /// Both brows' level (before its 12 % overshoot) on a question's final
+  /// rise: 0.8 for a flat rise to 0.95 for a steep one (0.875 unknown).
+  static double questionTop(double? slope) =>
+      0.8 + 0.15 * (slope ?? 0.5).clamp(0.0, 1.0);
 
   /// The question's brow peak leads the final rising syllable by this much.
   static const double _questionLead = 0.08;
@@ -239,8 +270,18 @@ class FacePerformer {
   bool _prerolled = false;
   bool _sawPosition = false;
 
-  /// 0..1: the lips parted for the breath before speaking.
+  /// 0..1: the lips parted for the breath before speaking (no press), and
+  /// the jaw they part by.
   double _parted = 0;
+  double _partedJawNow = 0;
+
+  /// How far a tucked lip holds the jaw open (the pre-close into a seal
+  /// takes it back to 0).
+  double _tuckOpen = 1;
+
+  /// The gaze stays on the camera (a question's end).
+  bool _gazeLock = false;
+  int _saccadeSerial = 0;
 
   /// 0..1: the lip corners relaxing after the full stop.
   double _relax = 0;
@@ -248,6 +289,8 @@ class FacePerformer {
   // — idle life —
   final Float64List _idlePhase;
   final _Spring _idleMix = _Spring();
+  bool _idleWas = false;
+  double _idleEpoch = 0;
   double _idleBreath = 0;
   double _idleRoll = 0;
   double _idleNod = 0;
@@ -261,6 +304,10 @@ class FacePerformer {
   bool _breathRising = false;
   double _clock = 0;
   double _lastBlink = -100;
+
+  /// Clock of the last blink actually fired (not the spacing bookkeeping of
+  /// [_lastBlink]).
+  double _blinkAt = -100;
   int _blinkSerial = 0;
   bool _sealed = false;
 
@@ -354,7 +401,9 @@ class FacePerformer {
     _sealed = false;
     _pop = 0;
     bool releasing = false;
+    bool opening = false;
     double releaseCap = 1;
+    _tuckOpen = 1;
     bool th = false;
     _thNow = false;
     if (_speaking && tl != null && pos != null) {
@@ -364,13 +413,17 @@ class FacePerformer {
       }
       final MouthBlend ahead = _blender.shapeAt(tl, pos + _speechLead);
       final MouthBlend now = _blender.shapeAt(tl, pos);
-      speech = ahead.shape;
+      // inside a release the blender's ramp is the motion: follow it at the
+      // audio's own position, unsmoothed
+      opening = now.opening < 1;
+      speech = opening ? now.shape : ahead.shape;
       _sealed = ahead.sealed || now.sealed;
-      // the pop rides on top of the spring, at the audio's own position
-      releasing = ahead.pop > 0 || now.pop > 0;
+      // the pop rides on top, at the audio's own position
+      releasing = opening || ahead.pop > 0 || now.pop > 0;
       _pop = now.pop;
-      if (ahead.pop > 0) {
-        speech = speech.copyWith(jaw: speech.jaw - ahead.pop);
+      final double aheadPop = opening ? now.pop : ahead.pop;
+      if (aheadPop > 0) {
+        speech = speech.copyWith(jaw: speech.jaw - aheadPop);
       }
       if (now.sealed && now.shape.press > speech.press) {
         // the read-ahead already sees the release: the lips stay compressed
@@ -383,6 +436,7 @@ class FacePerformer {
         final double ahead = _s(seal - pos);
         if (ahead < _preClose) {
           final double k = _smoothstep(ahead / _preClose);
+          _tuckOpen = k;
           speech = speech.copyWith(
             jaw: speech.jaw * k,
             press: math.max(
@@ -409,13 +463,17 @@ class FacePerformer {
       if (releasing && span != null) {
         releaseCap = releaseJawCap(span.end - span.start);
       }
+      // rounded sounds round fully however short (an ou, an oh, a French
+      // sh); a sombre mood narrows the spread a little, never the opening
       final bool brief =
           span != null &&
           span.viseme != Viseme.ou &&
+          span.viseme != Viseme.oh &&
+          !(tl.roundedSh && span.viseme == Viseme.ch) &&
           span.end - span.start < const Duration(milliseconds: 100);
       speech = speech.copyWith(
         jaw: speech.jaw * excitement * life,
-        stretch: _valence < -0.3 ? speech.stretch * 0.5 : speech.stretch,
+        stretch: _valence < -0.3 ? speech.stretch * 0.7 : speech.stretch,
         pucker: brief ? speech.pucker * 0.5 : speech.pucker,
       );
     }
@@ -423,9 +481,11 @@ class FacePerformer {
     final bool settling = sinceStop >= 0 && sinceStop < _settleS;
     if (settling) {
       releasing = false;
+      opening = false;
       _sealed = false;
       _pop = 0;
     }
+    _afterStop(sinceStop, h);
 
     // prosody targets from the (virtual) speech position
     final double? posS = _prosodyPosition(pos);
@@ -436,20 +496,23 @@ class FacePerformer {
     double rollTarget = 0;
     double liftTarget = 0;
     double nod = 0;
+    bool gazeLock = false;
     if (tl != null && posS != null) {
       final double gain = _lerp(0.7, 1.3, (_arousal + 1) / 2);
       final double brow = posS + _browLead;
       double peak = 0;
+      double amp = 0;
+      double env = 0;
       double split = 0;
       for (int i = 0; i < _peaks.length; i++) {
         final ProsodyMark m = _peaks[i];
         // a weak peak still reads: half the beat, plus its strength
-        final double beat =
-            (0.5 + 0.5 * m.strength) *
-            slopeGain(m.slope) *
-            _peakEnvelope(brow - _s(m.at));
-        if (beat.abs() > peak.abs()) {
-          peak = beat;
+        final double a = (0.5 + 0.5 * m.strength) * slopeGain(m.slope);
+        final double e = _peakEnvelope(brow - _s(m.at));
+        if ((a * e).abs() > peak.abs()) {
+          peak = a * e;
+          amp = a;
+          env = e;
           split = _peakSide[i];
         }
       }
@@ -463,15 +526,17 @@ class FacePerformer {
           // the roll spring lags ~80 ms: aim the accent that much early
           rollTarget += _accentRoll * _accent[i] * _gauss(tau, -0.04, 0.12);
         }
-        if (_valence >= -0.3) {
-          outerTarget += 0.1 * m.strength * _gauss(brow - _s(m.at), 0, 0.09);
-        }
       }
       // a sombre mood lifts only the inner brows (an outer lift reads as
-      // surprise and contradicts the sadness)
+      // surprise and contradicts the sadness); a beat never tops
+      // [browBeatMax], overshoot included
       final bool sombre = _valence < -0.3;
-      final double innerPulse = (sombre ? 0.35 : 0.3) * gain * peak;
-      final double outerPulse = (sombre ? 0 : 0.45) * gain * peak;
+      const double cap = browBeatMax / 1.12;
+      final double innerPulse =
+          math.min((sombre ? 0.35 : 0.3) * gain * amp, cap) * env;
+      final double outerPulse = sombre
+          ? 0.0
+          : math.min(0.45 * gain * amp, cap) * env;
       innerTarget += innerPulse;
       outerTarget += outerPulse;
       // the two brows never lift as one: one side takes a little more
@@ -488,13 +553,17 @@ class FacePerformer {
         final double hold = _speaking
             ? 1
             : 1 - _smoothstep((_clock - _endClock - 0.5) / 0.4);
-        final double amount = questionLift * slopeGain(_questionSlope) * gain;
+        final double top = questionTop(_questionSlope);
         final double q = _questionRise(tau + _browLead) * hold;
         final double tilt = _smoothstep((tau + 0.08 + 0.3) / 0.3) * hold;
-        innerTarget += (sombre ? 0.35 : 0.3) * amount * q;
-        outerTarget += (sombre ? 0 : 0.45) * amount * q;
+        innerTarget += math.max(0, top - _emotionTarget[_innerI]) * q;
+        if (!sombre) {
+          outerTarget += math.max(0, top - _emotionTarget[_outerI]) * q;
+        }
         rollTarget += 0.9 * tilt;
         liftTarget = 0.12 * tilt;
+        // the eyes stay on the listener through the last word and the tilt
+        gazeLock = tau >= _questionLead - 0.4 && hold > 0.05;
       }
     }
 
@@ -521,6 +590,8 @@ class FacePerformer {
             1 - _smoothstep((_s(pos) - _s(tl.leadingSilence)) / _speechSettle);
       }
     }
+    _partedJawNow = _partedJaw * _parted;
+    _gazeLock = gazeLock;
 
     final double settle = _lerp(
       _calmSettle,
@@ -538,6 +609,10 @@ class FacePerformer {
         !_speaking &&
         !prerolling &&
         (_settleStart < -50 || sinceStop > 0.4);
+    if (idleWanted && !_idleWas && _idleMix.x < 0.05) {
+      _idleEpoch = _clock;
+    }
+    _idleWas = idleWanted;
     final double jawBefore = _jaw.x;
     double remaining = h;
     while (remaining > 1e-9) {
@@ -568,6 +643,13 @@ class FacePerformer {
       if (!_speaking) {
         _breathDecay.step(0, _omega(_breathSettle), sub);
       }
+    }
+    if (opening) {
+      // the release ramp is already eased: no second smoothing (the springs
+      // would make the first frame after a closure a jump)
+      _jaw.land(speech.jaw);
+      _pucker.land(speech.pucker);
+      _stretch.land(speech.stretch);
     }
     if (!settling) {
       // a short vowel cannot spike the jaw open in one frame: a release
@@ -631,11 +713,66 @@ class FacePerformer {
     final double rise = (0.72 * math.min(lead, breathLead)).clamp(0.08, 0.25);
     _breath = math.max(_breath, _smoothstep((since - from) / rise));
     _parted = _smoothstep((since - from) / 0.1);
+    _partedJawNow = partedJaw(since - lead, lead);
     if (_prerollOnset == Viseme.pp) {
-      _parted *= _smoothstep((lead - since) / 0.1);
+      final double close = _smoothstep((lead - since) / 0.1);
+      _parted *= close;
+      _partedJawNow *= close;
     }
     _breathDecay.x = _breath;
     _breathDecay.v = 0;
+  }
+
+  /// The jaw of the lips parting for the pre-roll breath, [toAudio] seconds
+  /// from the audio (negative before it) with a pre-roll of [lead]: it rises
+  /// from the start of the breath to 0.10 at 150 ms before the audio (an
+  /// eased 200 ms for the full lead), then eases to 0.08 at the audio.
+  static double partedJaw(double toAudio, double lead) {
+    final double start = -math.min(lead, breathLead);
+    final double peakAt = math.max(start + 0.05, -0.15);
+    if (toAudio < peakAt) {
+      return _partedPeak * _smoothstep((toAudio - start) / (peakAt - start));
+    }
+    return _partedPeak +
+        (_partedJaw - _partedPeak) * _smoothstep((toAudio - peakAt) / -peakAt);
+  }
+
+  /// The full stop's afterlife, [sinceStop] into it ([h] the frame): one
+  /// blink at [postStopBlink] (unless one just happened), a gaze saccade at
+  /// [postStopSaccade].
+  void _afterStop(double sinceStop, double h) {
+    if (_settleStart < -50) {
+      return;
+    }
+    bool crossed(double at) => sinceStop >= at && sinceStop - h < at;
+    if (crossed(postStopBlink) && _clock - _blinkAt > 0.6) {
+      _fireBlink();
+    }
+    if (crossed(postStopSaccade)) {
+      _saccadeSerial++;
+    }
+  }
+
+  void _fireBlink() {
+    _lastBlink = _clock;
+    _blinkAt = _clock;
+    _blinkSerial++;
+  }
+
+  /// The brow dip and cheek lift of a blink (0-1), [tau] after it fired:
+  /// in over 20-50 ms, held while the lids are shut (to 100 ms), released
+  /// over 120 ms.
+  static double blinkFollow(double tau) {
+    if (tau < 0.02 || tau >= 0.22) {
+      return 0;
+    }
+    if (tau < 0.05) {
+      return _smoothstep((tau - 0.02) / 0.03);
+    }
+    if (tau < 0.1) {
+      return 1;
+    }
+    return 1 - _smoothstep((tau - 0.1) / 0.12);
   }
 
   /// Arms the full-stop settle from the mouth as it is now.
@@ -685,10 +822,17 @@ class FacePerformer {
     final Float64List p = _idlePhase;
     double wave(double period, double phase) =>
         math.sin(2 * math.pi * t / period + phase);
-    // a 4.6 s breath whose pace and depth wander a little
-    final double cycle = 2 * math.pi * t / 4.6 + 0.6 * wave(17.3, p[0]) + p[1];
+    // a 3.8 s breath whose pace and depth wander a little, starting half
+    // way into an inhale as the idle fades in: the first one peaks about
+    // 1 s later (the face breathes right after speaking)
+    final double since = t - _idleEpoch;
+    final double wander =
+        0.4 *
+        (wave(17.3, p[0]) - math.sin(2 * math.pi * _idleEpoch / 17.3 + p[0]));
+    final double cycle =
+        2 * math.pi * since / idleBreathPeriod + math.pi / 2 + wander;
     _idleBreath =
-        w * (0.15 + 0.04 * wave(23.1, p[2])) * (0.5 - 0.5 * math.cos(cycle));
+        w * (0.3 + 0.05 * wave(23.1, p[2])) * (0.5 - 0.5 * math.cos(cycle));
     _idleCornerL =
         w * (0.015 + 0.02 * (0.6 * wave(5.3, p[3]) + 0.4 * wave(8.9, p[4])));
     _idleCornerR =
@@ -753,10 +897,15 @@ class FacePerformer {
             : -1;
         _questionSlope = rise?.slope;
         _nods = _spaced(timeline.marks, ProsodyMarkKind.stress, _nodGap);
+        // statement beats: the strongest, 1.5 s apart, clear of the
+        // question's rise (it is the one that stands out)
         _peaks = _spaced(
           <ProsodyMark>[
             for (final ProsodyMark m in timeline.marks)
-              if (!timeline.isQuestion || !identical(m, rise)) m,
+              if (_questionAt < 0 ||
+                  (!identical(m, rise) &&
+                      _s(m.at) <= _questionAt - _questionClear))
+                m,
           ],
           ProsodyMarkKind.pitchPeak,
           _browGap,
@@ -909,8 +1058,7 @@ class FacePerformer {
       }
     }
     if (blink) {
-      _lastBlink = _clock;
-      _blinkSerial++;
+      _fireBlink();
     }
   }
 
@@ -1051,7 +1199,14 @@ class FacePerformer {
     if (_inhaling) {
       jaw = math.max(jaw, 0.12 * _breath);
     }
-    jaw = math.max(jaw, _partedJaw * _parted);
+    jaw = math.max(jaw, _partedJawNow);
+    // a tucked lower lip keeps the lips apart (an f never draws a closed
+    // bar)
+    final double tuck = (_tuck.x * m).clamp(0.0, 1.0);
+    jaw = math.max(
+      jaw,
+      tuckJawFloor * (tuck / 0.4).clamp(0.0, 1.0) * _tuckOpen,
+    );
     jaw += _pop * m;
     double press = _lerp(au[_pressI], _press.x, m) * (1 - _parted);
     if (_sealed) {
@@ -1074,9 +1229,10 @@ class FacePerformer {
       m,
     );
     final double pull = 1 - 0.8 * round;
-    // an open jaw from a downturned mouth reads as a wince: the frown eases
+    // an open jaw from a downturned mouth reads as a wince and the frown
+    // pulls the opening into a slit: the frown halves as speech opens it
     final double depress =
-        pull * (1 - 0.4 * ((jaw - 0.15) / 0.3).clamp(0.0, 1.0) * m);
+        pull * (1 - 0.5 * _smoothstep((jaw - 0.05) / 0.2) * m);
     au[_pullI] *= pull;
     au[_depressI] *= depress;
     // the full stop relaxes the corners: a softer mouth, a lighter frown
@@ -1087,6 +1243,10 @@ class FacePerformer {
     }
     au[_innerI] += _innerUp.x;
     au[_outerI] += _outerUp.x;
+    // a blink the performer fired: the brows dip, the cheeks lift
+    final double follow = blinkFollow(_clock - _blinkAt);
+    au[_browLowerI] += 0.1 * follow;
+    au[_cheekI] += 0.1 * follow;
 
     final Float64List out = _out;
     for (int i = 0; i < _auCount; i++) {
@@ -1110,7 +1270,7 @@ class FacePerformer {
         out[to + i] = v.clamp(-1.0, 1.0);
       }
     }
-    out[_tuckO] = (_tuck.x * m).clamp(0.0, 1.0);
+    out[_tuckO] = tuck;
     out[_tongueO] = math
         .max(_tongue.x * m, _thNow ? VisemeBlender.thTongue : 0.0)
         .clamp(0.0, 1.0);
@@ -1131,7 +1291,9 @@ class FacePerformer {
         rightSame &&
         restSame &&
         autoBlink == _frame.autoBlink &&
-        _blinkSerial == _frame.blinkSerial) {
+        _blinkSerial == _frame.blinkSerial &&
+        _gazeLock == _frame.gazeLock &&
+        _saccadeSerial == _frame.saccadeSerial) {
       return _frame;
     }
     _last.setAll(0, out);
@@ -1146,6 +1308,8 @@ class FacePerformer {
       nodPitch: out[_nodO],
       autoBlink: autoBlink,
       blinkSerial: _blinkSerial,
+      gazeLock: _gazeLock,
+      saccadeSerial: _saccadeSerial,
     );
   }
 
@@ -1275,6 +1439,8 @@ class _Spring {
 const int _auCount = 14;
 const int _innerI = 0;
 const int _outerI = 1;
+const int _browLowerI = 2;
+const int _cheekI = 5;
 const int _pullI = 7;
 const int _depressI = 8;
 const int _stretchI = 9;

@@ -655,6 +655,13 @@ void main() {
       );
       _expectWellFormed(t);
       expect(t.isQuestion, isTrue);
+      // French sh/zh are rounded (the "j" of "jour"); English ones are not
+      expect(t.roundedSh, isTrue);
+      expect(
+        _analyzer.analyze(pcm, text: text, language: 'fr-FR').roundedSh,
+        isTrue,
+      );
+      expect(_analyzer.analyze(pcm, text: text).roundedSh, isFalse);
       final List<(PhonemeToken, VisemeSpan)> tokens = tokenSpans(
         pcm,
         text,

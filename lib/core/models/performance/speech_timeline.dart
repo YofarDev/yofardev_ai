@@ -47,6 +47,10 @@ sealed class SpeechTimeline with _$SpeechTimeline {
     @Default(Duration.zero) Duration leadingSilence,
     @Default(false) bool isQuestion,
 
+    /// The sh/zh sounds (`ch` spans) are strongly rounded, as in French
+    /// (/ʃ/, /ʒ/: "chat", "jour"), not spread and rounded at once.
+    @Default(false) bool roundedSh,
+
     /// Loudness per [energyFrame] (0-1, relative to the sentence's loud
     /// frames): the jaw follows it inside long vowels. Empty when unknown.
     @Default(<double>[]) List<double> energy,

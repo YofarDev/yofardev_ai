@@ -133,7 +133,9 @@ on violation.
 - No CI workflows in this repo — the quality gate is local (`./scripts/fverify.sh`)
 - Face and speech (contract v5, moonshot M2): `FacePerformer` (avatar domain, app-lifetime
   singleton) turns the director's emotion and the `SpeechTimeline` into one `FaceFrame` per frame;
-  `RiveAvatarView` steps it with the head solver and writes it through `AvatarFaceWriter`. Moods
+  `RiveAvatarView` steps it, then hands it to `HeadMotionSolver.followFace` (its nods and roll drive
+  the hair follow-through `hairLag*`, `gazeLock`/`saccadeSerial` steer the eyes) before stepping the
+  solver, and writes it through `AvatarFaceWriter`. Moods
   are AU presets (`core/models/performance/mood_presets.dart`); the `mood` enum only drives accents
   (blush, sweat, anger mark). Visemes and prosody come from `SpeechAnalyzer` on the TTS WAV (Kokoro
   is deferred); `ChatTtsCubit` announces each sentence 350 ms early (`SpeechPrerollEvent`, with its onset

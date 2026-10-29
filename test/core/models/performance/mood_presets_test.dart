@@ -44,6 +44,23 @@ void main() {
       expect(emotionForMood(AvatarMood.happy).valence, greaterThan(0));
     });
 
+    test('happy keeps the upper lid off the iris (critic M3 round 2)', () {
+      // lidTighten also lowers the upper lid: at 0.5 it hid a third of the
+      // iris; the smile's lower-lid crescent comes from cheekRaise
+      final ActionUnits au = actionUnitsForMood(AvatarMood.happy);
+      expect(au.lidTighten, 0.1);
+      expect(au.cheekRaise, 0.6);
+    });
+
+    test('surprised is a tall oval with the brows and lids up', () {
+      final ActionUnits au = actionUnitsForMood(AvatarMood.surprised);
+      expect(au.jawDrop, 0.45);
+      expect(au.lipPucker, 0.45);
+      expect(au.browInnerUp, 1.0);
+      expect(au.browOuterUp, 1.0);
+      expect(au.upperLidRaise, 1.0);
+    });
+
     test('sad = browInnerUp + lipCornerDepress', () {
       final ActionUnits au = actionUnitsForMood(AvatarMood.sad);
       expect(au.browInnerUp, greaterThan(0));

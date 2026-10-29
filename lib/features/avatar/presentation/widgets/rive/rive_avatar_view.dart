@@ -265,7 +265,6 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   void _onTick(Duration elapsed) {
     final Duration dt = elapsed - _lastElapsed;
     _lastElapsed = elapsed;
-    final HeadPose pose = _solver.step(dt);
     final FacePerformer? performer = widget.facePerformer;
     if (performer != null) {
       // The performer keeps running under an override, so Reset resumes it
@@ -273,6 +272,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       final FaceFrame live = performer.step(dt);
       _writeFace(widget.faceOverride ?? live);
     }
+    // The face's nods and roll drive the hair's follow-through, its gaze
+    // cues the eyes: the solver steps after the face.
+    _solver.followFace(_face);
+    final HeadPose pose = _solver.step(dt);
     _writeHeadPose(pose);
     if (!_solver.driftEnabled &&
         _solver.isSettled &&
