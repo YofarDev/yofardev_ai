@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../models/avatar_scene.dart';
+import '../../models/performance/light_rig.dart';
 import '../tokens/app_palette.dart';
+import '../tokens/scene_lights.dart';
 import '../tokens/scene_palette.dart';
 
 /// Google Fonts family names (as accepted by `GoogleFonts.getFont`) of a look.
@@ -79,12 +81,18 @@ class UiLook {
   final Color success;
   final Color warning;
 
-  /// The accent palette of [scene] (see [ScenePalette.fromAccent]).
-  ScenePalette palette(AvatarScene scene) {
+  /// The palette of [scene] (see [ScenePalette.fromAccent]), lit by [light]
+  /// (the scene's `SceneLights` rig when omitted).
+  ScenePalette palette(AvatarScene scene, {LightRig? light}) {
     final Color? accent = accents[scene];
     if (accent == null) {
       throw StateError('UiLook "$id" has no accent for ${scene.name}');
     }
-    return ScenePalette.fromAccent(accent, ink: ink);
+    return ScenePalette.fromAccent(
+      accent,
+      ink: ink,
+      onSurface: onSurface,
+      light: light ?? SceneLights.of(scene),
+    );
   }
 }

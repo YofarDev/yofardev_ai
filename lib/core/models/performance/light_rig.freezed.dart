@@ -15,7 +15,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LightRig {
 
- double get keyDirection; int get keyColor; double get keyIntensity; int get rimColor; double get rimIntensity; int get ambientColor; double get fog; int get flickerSeed; double get flickerAmount;
+ int get keyColor; double get keyIntensity;/// Direction toward the key light, viewer space, −1..1 (`cos` of the angle).
+ double get keyX;/// Direction toward the key light, viewer space, −1..1 (`sin` of the angle).
+ double get keyY; int get rimColor; double get rimIntensity; int get ambientColor; double get ambientAmount; int get fogColor;/// 0 steady .. 1 full flame flicker (looped inside the Rive files).
+ double get flicker;
 /// Create a copy of LightRig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +30,20 @@ $LightRigCopyWith<LightRig> get copyWith => _$LightRigCopyWithImpl<LightRig>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as LightRig;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LightRig&&(identical(other.keyDirection, _this.keyDirection) || other.keyDirection == _this.keyDirection)&&(identical(other.keyColor, _this.keyColor) || other.keyColor == _this.keyColor)&&(identical(other.keyIntensity, _this.keyIntensity) || other.keyIntensity == _this.keyIntensity)&&(identical(other.rimColor, _this.rimColor) || other.rimColor == _this.rimColor)&&(identical(other.rimIntensity, _this.rimIntensity) || other.rimIntensity == _this.rimIntensity)&&(identical(other.ambientColor, _this.ambientColor) || other.ambientColor == _this.ambientColor)&&(identical(other.fog, _this.fog) || other.fog == _this.fog)&&(identical(other.flickerSeed, _this.flickerSeed) || other.flickerSeed == _this.flickerSeed)&&(identical(other.flickerAmount, _this.flickerAmount) || other.flickerAmount == _this.flickerAmount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LightRig&&(identical(other.keyColor, _this.keyColor) || other.keyColor == _this.keyColor)&&(identical(other.keyIntensity, _this.keyIntensity) || other.keyIntensity == _this.keyIntensity)&&(identical(other.keyX, _this.keyX) || other.keyX == _this.keyX)&&(identical(other.keyY, _this.keyY) || other.keyY == _this.keyY)&&(identical(other.rimColor, _this.rimColor) || other.rimColor == _this.rimColor)&&(identical(other.rimIntensity, _this.rimIntensity) || other.rimIntensity == _this.rimIntensity)&&(identical(other.ambientColor, _this.ambientColor) || other.ambientColor == _this.ambientColor)&&(identical(other.ambientAmount, _this.ambientAmount) || other.ambientAmount == _this.ambientAmount)&&(identical(other.fogColor, _this.fogColor) || other.fogColor == _this.fogColor)&&(identical(other.flicker, _this.flicker) || other.flicker == _this.flicker));
 }
 
 
 @override
 int get hashCode {
   final _this = this as LightRig;
-  return Object.hash(runtimeType,_this.keyDirection,_this.keyColor,_this.keyIntensity,_this.rimColor,_this.rimIntensity,_this.ambientColor,_this.fog,_this.flickerSeed,_this.flickerAmount);
+  return Object.hash(runtimeType,_this.keyColor,_this.keyIntensity,_this.keyX,_this.keyY,_this.rimColor,_this.rimIntensity,_this.ambientColor,_this.ambientAmount,_this.fogColor,_this.flicker);
 }
 
 @override
 String toString() {
   final _this = this as LightRig;
-  return 'LightRig(keyDirection: ${_this.keyDirection}, keyColor: ${_this.keyColor}, keyIntensity: ${_this.keyIntensity}, rimColor: ${_this.rimColor}, rimIntensity: ${_this.rimIntensity}, ambientColor: ${_this.ambientColor}, fog: ${_this.fog}, flickerSeed: ${_this.flickerSeed}, flickerAmount: ${_this.flickerAmount})';
+  return 'LightRig(keyColor: ${_this.keyColor}, keyIntensity: ${_this.keyIntensity}, keyX: ${_this.keyX}, keyY: ${_this.keyY}, rimColor: ${_this.rimColor}, rimIntensity: ${_this.rimIntensity}, ambientColor: ${_this.ambientColor}, ambientAmount: ${_this.ambientAmount}, fogColor: ${_this.fogColor}, flicker: ${_this.flicker})';
 }
 
 
@@ -51,7 +54,7 @@ abstract mixin class $LightRigCopyWith<$Res>  {
   factory $LightRigCopyWith(LightRig value, $Res Function(LightRig) _then) = _$LightRigCopyWithImpl;
 @useResult
 $Res call({
- double keyDirection, int keyColor, double keyIntensity, int rimColor, double rimIntensity, int ambientColor, double fog, int flickerSeed, double flickerAmount
+ int keyColor, double keyIntensity, double keyX, double keyY, int rimColor, double rimIntensity, int ambientColor, double ambientAmount, int fogColor, double flicker
 });
 
 
@@ -68,17 +71,18 @@ class _$LightRigCopyWithImpl<$Res>
 
 /// Create a copy of LightRig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? keyDirection = null,Object? keyColor = null,Object? keyIntensity = null,Object? rimColor = null,Object? rimIntensity = null,Object? ambientColor = null,Object? fog = null,Object? flickerSeed = null,Object? flickerAmount = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? keyColor = null,Object? keyIntensity = null,Object? keyX = null,Object? keyY = null,Object? rimColor = null,Object? rimIntensity = null,Object? ambientColor = null,Object? ambientAmount = null,Object? fogColor = null,Object? flicker = null,}) {
   return _then(LightRig(
-keyDirection: null == keyDirection ? _self.keyDirection : keyDirection // ignore: cast_nullable_to_non_nullable
-as double,keyColor: null == keyColor ? _self.keyColor : keyColor // ignore: cast_nullable_to_non_nullable
+keyColor: null == keyColor ? _self.keyColor : keyColor // ignore: cast_nullable_to_non_nullable
 as int,keyIntensity: null == keyIntensity ? _self.keyIntensity : keyIntensity // ignore: cast_nullable_to_non_nullable
+as double,keyX: null == keyX ? _self.keyX : keyX // ignore: cast_nullable_to_non_nullable
+as double,keyY: null == keyY ? _self.keyY : keyY // ignore: cast_nullable_to_non_nullable
 as double,rimColor: null == rimColor ? _self.rimColor : rimColor // ignore: cast_nullable_to_non_nullable
 as int,rimIntensity: null == rimIntensity ? _self.rimIntensity : rimIntensity // ignore: cast_nullable_to_non_nullable
 as double,ambientColor: null == ambientColor ? _self.ambientColor : ambientColor // ignore: cast_nullable_to_non_nullable
-as int,fog: null == fog ? _self.fog : fog // ignore: cast_nullable_to_non_nullable
-as double,flickerSeed: null == flickerSeed ? _self.flickerSeed : flickerSeed // ignore: cast_nullable_to_non_nullable
-as int,flickerAmount: null == flickerAmount ? _self.flickerAmount : flickerAmount // ignore: cast_nullable_to_non_nullable
+as int,ambientAmount: null == ambientAmount ? _self.ambientAmount : ambientAmount // ignore: cast_nullable_to_non_nullable
+as double,fogColor: null == fogColor ? _self.fogColor : fogColor // ignore: cast_nullable_to_non_nullable
+as int,flicker: null == flicker ? _self.flicker : flicker // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }
@@ -161,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double keyDirection,  int keyColor,  double keyIntensity,  int rimColor,  double rimIntensity,  int ambientColor,  double fog,  int flickerSeed,  double flickerAmount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int keyColor,  double keyIntensity,  double keyX,  double keyY,  int rimColor,  double rimIntensity,  int ambientColor,  double ambientAmount,  int fogColor,  double flicker)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LightRig() when $default != null:
-return $default(_that.keyDirection,_that.keyColor,_that.keyIntensity,_that.rimColor,_that.rimIntensity,_that.ambientColor,_that.fog,_that.flickerSeed,_that.flickerAmount);case _:
+return $default(_that.keyColor,_that.keyIntensity,_that.keyX,_that.keyY,_that.rimColor,_that.rimIntensity,_that.ambientColor,_that.ambientAmount,_that.fogColor,_that.flicker);case _:
   return orElse();
 
 }
@@ -182,10 +186,10 @@ return $default(_that.keyDirection,_that.keyColor,_that.keyIntensity,_that.rimCo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double keyDirection,  int keyColor,  double keyIntensity,  int rimColor,  double rimIntensity,  int ambientColor,  double fog,  int flickerSeed,  double flickerAmount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int keyColor,  double keyIntensity,  double keyX,  double keyY,  int rimColor,  double rimIntensity,  int ambientColor,  double ambientAmount,  int fogColor,  double flicker)  $default,) {final _that = this;
 switch (_that) {
 case _LightRig():
-return $default(_that.keyDirection,_that.keyColor,_that.keyIntensity,_that.rimColor,_that.rimIntensity,_that.ambientColor,_that.fog,_that.flickerSeed,_that.flickerAmount);}
+return $default(_that.keyColor,_that.keyIntensity,_that.keyX,_that.keyY,_that.rimColor,_that.rimIntensity,_that.ambientColor,_that.ambientAmount,_that.fogColor,_that.flicker);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -199,10 +203,10 @@ return $default(_that.keyDirection,_that.keyColor,_that.keyIntensity,_that.rimCo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double keyDirection,  int keyColor,  double keyIntensity,  int rimColor,  double rimIntensity,  int ambientColor,  double fog,  int flickerSeed,  double flickerAmount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int keyColor,  double keyIntensity,  double keyX,  double keyY,  int rimColor,  double rimIntensity,  int ambientColor,  double ambientAmount,  int fogColor,  double flicker)?  $default,) {final _that = this;
 switch (_that) {
 case _LightRig() when $default != null:
-return $default(_that.keyDirection,_that.keyColor,_that.keyIntensity,_that.rimColor,_that.rimIntensity,_that.ambientColor,_that.fog,_that.flickerSeed,_that.flickerAmount);case _:
+return $default(_that.keyColor,_that.keyIntensity,_that.keyX,_that.keyY,_that.rimColor,_that.rimIntensity,_that.ambientColor,_that.ambientAmount,_that.fogColor,_that.flicker);case _:
   return null;
 
 }
@@ -214,18 +218,22 @@ return $default(_that.keyDirection,_that.keyColor,_that.keyIntensity,_that.rimCo
 
 
 class _LightRig implements LightRig {
-  const _LightRig({this.keyDirection = 0.0, this.keyColor = 0xFFFFFFFF, this.keyIntensity = 1.0, this.rimColor = 0xFFFFFFFF, this.rimIntensity = 0.35, this.ambientColor = 0xFF202028, this.fog = 0.0, this.flickerSeed = 0, this.flickerAmount = 0.0});
+  const _LightRig({this.keyColor = 0xFFFFFFFF, this.keyIntensity = 1.0, this.keyX = 0.0, this.keyY = 0.0, this.rimColor = 0xFFFFFFFF, this.rimIntensity = 0.35, this.ambientColor = 0xFF202028, this.ambientAmount = 0.35, this.fogColor = 0x00000000, this.flicker = 0.0});
   
 
-@override@JsonKey() final  double keyDirection;
 @override@JsonKey() final  int keyColor;
 @override@JsonKey() final  double keyIntensity;
+/// Direction toward the key light, viewer space, −1..1 (`cos` of the angle).
+@override@JsonKey() final  double keyX;
+/// Direction toward the key light, viewer space, −1..1 (`sin` of the angle).
+@override@JsonKey() final  double keyY;
 @override@JsonKey() final  int rimColor;
 @override@JsonKey() final  double rimIntensity;
 @override@JsonKey() final  int ambientColor;
-@override@JsonKey() final  double fog;
-@override@JsonKey() final  int flickerSeed;
-@override@JsonKey() final  double flickerAmount;
+@override@JsonKey() final  double ambientAmount;
+@override@JsonKey() final  int fogColor;
+/// 0 steady .. 1 full flame flicker (looped inside the Rive files).
+@override@JsonKey() final  double flicker;
 
 /// Create a copy of LightRig
 /// with the given fields replaced by the non-null parameter values.
@@ -237,18 +245,18 @@ _$LightRigCopyWith<_LightRig> get copyWith => __$LightRigCopyWithImpl<_LightRig>
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LightRig&&(identical(other.keyDirection, keyDirection) || other.keyDirection == keyDirection)&&(identical(other.keyColor, keyColor) || other.keyColor == keyColor)&&(identical(other.keyIntensity, keyIntensity) || other.keyIntensity == keyIntensity)&&(identical(other.rimColor, rimColor) || other.rimColor == rimColor)&&(identical(other.rimIntensity, rimIntensity) || other.rimIntensity == rimIntensity)&&(identical(other.ambientColor, ambientColor) || other.ambientColor == ambientColor)&&(identical(other.fog, fog) || other.fog == fog)&&(identical(other.flickerSeed, flickerSeed) || other.flickerSeed == flickerSeed)&&(identical(other.flickerAmount, flickerAmount) || other.flickerAmount == flickerAmount));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LightRig&&(identical(other.keyColor, keyColor) || other.keyColor == keyColor)&&(identical(other.keyIntensity, keyIntensity) || other.keyIntensity == keyIntensity)&&(identical(other.keyX, keyX) || other.keyX == keyX)&&(identical(other.keyY, keyY) || other.keyY == keyY)&&(identical(other.rimColor, rimColor) || other.rimColor == rimColor)&&(identical(other.rimIntensity, rimIntensity) || other.rimIntensity == rimIntensity)&&(identical(other.ambientColor, ambientColor) || other.ambientColor == ambientColor)&&(identical(other.ambientAmount, ambientAmount) || other.ambientAmount == ambientAmount)&&(identical(other.fogColor, fogColor) || other.fogColor == fogColor)&&(identical(other.flicker, flicker) || other.flicker == flicker));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,keyDirection,keyColor,keyIntensity,rimColor,rimIntensity,ambientColor,fog,flickerSeed,flickerAmount);
+    return Object.hash(runtimeType,keyColor,keyIntensity,keyX,keyY,rimColor,rimIntensity,ambientColor,ambientAmount,fogColor,flicker);
 }
 
 @override
 String toString() {
-    return 'LightRig(keyDirection: $keyDirection, keyColor: $keyColor, keyIntensity: $keyIntensity, rimColor: $rimColor, rimIntensity: $rimIntensity, ambientColor: $ambientColor, fog: $fog, flickerSeed: $flickerSeed, flickerAmount: $flickerAmount)';
+    return 'LightRig(keyColor: $keyColor, keyIntensity: $keyIntensity, keyX: $keyX, keyY: $keyY, rimColor: $rimColor, rimIntensity: $rimIntensity, ambientColor: $ambientColor, ambientAmount: $ambientAmount, fogColor: $fogColor, flicker: $flicker)';
 }
 
 
@@ -259,7 +267,7 @@ abstract mixin class _$LightRigCopyWith<$Res> implements $LightRigCopyWith<$Res>
   factory _$LightRigCopyWith(_LightRig value, $Res Function(_LightRig) _then) = __$LightRigCopyWithImpl;
 @override @useResult
 $Res call({
- double keyDirection, int keyColor, double keyIntensity, int rimColor, double rimIntensity, int ambientColor, double fog, int flickerSeed, double flickerAmount
+ int keyColor, double keyIntensity, double keyX, double keyY, int rimColor, double rimIntensity, int ambientColor, double ambientAmount, int fogColor, double flicker
 });
 
 
@@ -276,17 +284,18 @@ class __$LightRigCopyWithImpl<$Res>
 
 /// Create a copy of LightRig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? keyDirection = null,Object? keyColor = null,Object? keyIntensity = null,Object? rimColor = null,Object? rimIntensity = null,Object? ambientColor = null,Object? fog = null,Object? flickerSeed = null,Object? flickerAmount = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? keyColor = null,Object? keyIntensity = null,Object? keyX = null,Object? keyY = null,Object? rimColor = null,Object? rimIntensity = null,Object? ambientColor = null,Object? ambientAmount = null,Object? fogColor = null,Object? flicker = null,}) {
   return _then(_LightRig(
-keyDirection: null == keyDirection ? _self.keyDirection : keyDirection // ignore: cast_nullable_to_non_nullable
-as double,keyColor: null == keyColor ? _self.keyColor : keyColor // ignore: cast_nullable_to_non_nullable
+keyColor: null == keyColor ? _self.keyColor : keyColor // ignore: cast_nullable_to_non_nullable
 as int,keyIntensity: null == keyIntensity ? _self.keyIntensity : keyIntensity // ignore: cast_nullable_to_non_nullable
+as double,keyX: null == keyX ? _self.keyX : keyX // ignore: cast_nullable_to_non_nullable
+as double,keyY: null == keyY ? _self.keyY : keyY // ignore: cast_nullable_to_non_nullable
 as double,rimColor: null == rimColor ? _self.rimColor : rimColor // ignore: cast_nullable_to_non_nullable
 as int,rimIntensity: null == rimIntensity ? _self.rimIntensity : rimIntensity // ignore: cast_nullable_to_non_nullable
 as double,ambientColor: null == ambientColor ? _self.ambientColor : ambientColor // ignore: cast_nullable_to_non_nullable
-as int,fog: null == fog ? _self.fog : fog // ignore: cast_nullable_to_non_nullable
-as double,flickerSeed: null == flickerSeed ? _self.flickerSeed : flickerSeed // ignore: cast_nullable_to_non_nullable
-as int,flickerAmount: null == flickerAmount ? _self.flickerAmount : flickerAmount // ignore: cast_nullable_to_non_nullable
+as int,ambientAmount: null == ambientAmount ? _self.ambientAmount : ambientAmount // ignore: cast_nullable_to_non_nullable
+as double,fogColor: null == fogColor ? _self.fogColor : fogColor // ignore: cast_nullable_to_non_nullable
+as int,flicker: null == flicker ? _self.flicker : flicker // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }
