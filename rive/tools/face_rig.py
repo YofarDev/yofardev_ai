@@ -137,10 +137,12 @@ def evaluate(c0: float, t: Terms, env: Mapping[str, float]) -> float:
 # Brows: bone rest positions per side (s = -1 left, +1 right; the inner end is toward x = 400).
 # dx is given toward the face centre for + (mirrored per side); dy is screen y (+ = down).
 BROW_BONES = {  # name: (dx from eye centre * s, y, dx terms (toward centre), dy terms)
-    "Inner": (-26.0, 341.0, terms(BL=4.5, IU=0.5), terms(IU=-18.0, OU=-4.0, BL=13.0)),
-    "Mid": (4.0, 337.0, terms(BL=1.5), terms(IU=-7.0, OU=-10.0, BL=5.0)),
+    # critic round 2: raise travel 1.5x (surprise must read); AU2 lifts the middle almost as much as
+    # the outer end, so a raised brow arches instead of tilting
+    "Inner": (-26.0, 341.0, terms(BL=4.5, IU=0.5), terms(IU=-27.0, OU=-6.0, BL=13.0)),
+    "Mid": (4.0, 337.0, terms(BL=1.5), terms(IU=-10.5, OU=-21.0, BL=5.0)),
     # AU1 alone tilts the brow (outer end a touch down): the oblique sad brow
-    "Outer": (32.0, 342.0, terms(OU=-1.5), terms(IU=3.0, OU=-16.0, BL=-4.0)),
+    "Outer": (32.0, 342.0, terms(OU=-1.5), terms(IU=3.0, OU=-24.0, BL=-4.0)),
 }
 
 MOUTH_FRAME = (400.0, 478.0)
@@ -414,14 +416,15 @@ EYE_FRAME_DY = 392.0  # the Blink node's art-space y: the bones' frame is (cx, 3
 LOOK_DOWN = "eyeLeadPitch"  # contract: at - the upper lids drop (~25 % lid coverage at -1)
 DOWN = "@down"  # pseudo-term: max(0, -eyeLeadPitch)
 
-# dy per AU (+ = down). Upper: AU5 lifts it, AU7 lowers it a little, AU1 drops the outer end (sad
-# droop; AU2 takes it back so the surprise pose stays open), AU4 drops the inner end (anger), AU6
-# lowers it a little (the cheeks push the eye shut from both sides: the iris stays centred in a
-# smiling eye, it does not look up); looking down drops it.
+# dy per AU (+ = down). Upper: AU5 lifts it clear of the iris (critic round 2: sclera shows above
+# the iris at 1), AU7 lowers it a little, AU1 drops the outer end (sad droop; AU2 takes it back so
+# the surprise pose stays open), AU4 drops the inner end (anger); AU6 leaves it at rest and lifts its
+# middle a touch (critic round 2: a smile pushes the lower lid up, it never drops the upper one into
+# bedroom eyes); looking down drops it.
 UPPER_LID: dict[str, dict[str, float]] = {
-    "Inner": {**terms(UL=-2.5, LT=2.0, BL=9.0, CR=2.5), DOWN: 8.0},
-    "Mid": {**terms(UL=-3.5, LT=2.5, IU=2.5, OU=-1.5, BL=3.5, CR=2.0), DOWN: 9.5},
-    "Outer": {**terms(UL=-3.0, LT=2.0, IU=11.0, OU=-8.0, BL=0.5, CR=2.5), DOWN: 8.5},
+    "Inner": {**terms(UL=-6.5, LT=2.0, BL=9.0, CR=0.5), DOWN: 8.0},
+    "Mid": {**terms(UL=-9.0, LT=2.5, IU=2.5, OU=-1.5, BL=3.5, CR=-1.0), DOWN: 9.5},
+    "Outer": {**terms(UL=-7.5, LT=2.0, IU=11.0, OU=-8.0, BL=0.5, CR=0.3), DOWN: 8.5},
 }
 # Lower: AU7 lifts it; AU6 lifts the middle more than the ends, so the line bows up into a smile
 # crescent over the lower iris, by at most CHEEK_RAISE_MAX of the eye's height (critic round 1: a
@@ -433,9 +436,10 @@ LOWER_LID: dict[str, dict[str, float]] = {
     "Mid": terms(UL=1.8, LT=-6.0, CR=-12.5),
     "Outer": terms(UL=1.2, LT=-5.0, CR=-10.5),
 }
-# The corners never move in a blink; AU7 pulls them in a touch, AU6 lowers them (the lower lid's
-# ends: with its capped push it then arches over the iris instead of rising flat).
-CORNER_LID: dict[str, dict[str, float]] = {"In": terms(LT=-1.0, CR=2.5), "Out": terms(LT=-1.0, CR=2.5)}
+# The corners never move in a blink; AU7 pulls them in a touch, AU6 lowers them a little (the lower
+# lid's ends: with its capped push it then arches over the iris instead of rising flat; less than
+# M3's 2.5 px, which dragged the upper lid's ends down with them).
+CORNER_LID: dict[str, dict[str, float]] = {"In": terms(LT=-1.0, CR=1.7), "Out": terms(LT=-1.0, CR=1.7)}
 LASH_T: dict[str, float] = {"In": 1.0, "Inner": 2.6, "Mid": 3.8, "Outer": 4.6}  # lash thickness (px)
 LOWER_T: dict[str, float] = {"In": 0.2, "Inner": 0.8, "Mid": 1.3, "Outer": 1.8, "Out": 2.0}
 SEAM = 0.6  # px the lid bands reach into the aperture (no anti-aliasing seam at the edge)
@@ -696,7 +700,8 @@ def rig_lids(fr: "FaceRig", eye: Mapping[str, object], cx: float, s: int, ink: s
     _reshape(lower, frame, path, c, fill(d, lower_ink))
     # lid crease: rides the upper row a third of the way (a lifted lid folds under it)
     crease: El = eye["crease"]  # type: ignore[assignment]
-    cpts = [at(-12.0, 360.0), at(8.0, 356.0), at(32.0, 364.0)]
+    # critic round 2: the crease sits clear of the taller lens rim (no kissing lines, art bible §3)
+    cpts = [at(-12.0, 354.0), at(8.0, 350.0), at(32.0, 357.5)]
     cw = [{"UpperInner": 0.3, "Anchor": 0.7}, {"UpperMid": 0.3, "Anchor": 0.7}, {"UpperOuter": 0.3, "Anchor": 0.7}]
     path, c = skinned_path(d, cpts, frame, lambda i, _a, h: [cw[i]] if h is None else [cw[i]] * 3, tendon,
                            closed=False)

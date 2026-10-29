@@ -21,8 +21,9 @@ from avatar_kit import (BEANIE, BEANIE_HI, BEANIE_SH, FRAME, HAIR, HAIR_HI, HAIR
                         HOOD_SH2, INK, IRIS_A, IRIS_B, MOUTH_IN, PI, SCLERA, SKIN, SKIN_SH, SKIN_SH2, STRING,
                         TEETH, TONGUE, WHITE, E, F, L, L1, L2, R, Rig, S, clip_only, d, grad, group, hgrad, ik, mirror,
                         rgrad, vgrad)
-from rml import Doc, El, lin, rad, smooth_path, track, write  # noqa: E402
+from rml import Doc, El, lin, rad, smooth_path, solid, track, write  # noqa: E402
 from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
+import avatar_kit as kit  # noqa: E402
 import head_turn  # noqa: E402
 from head_turn import HeadTurn, rig_head  # noqa: E402
 import face_rig  # noqa: E402
@@ -618,8 +619,9 @@ neck_sh = S(body_g, "NeckShade", [(368, 480), (432, 480), (432, 540), (400, 566)
 face_pts = [(294, 330), (298, 402), (316, 452), (350, 488), (386, 508), (400, 511), (414, 508), (450, 488),
             (484, 452), (502, 402), (506, 330), (490, 262), (400, 222), (310, 262)]
 face = S(head, "Face", face_pts, rgrad(235, [("FFFFE6CF", 0.0), (SKIN, 0.6), ("FFE8B299", 1.0)], cx=-48, cy=-62), L(INK, 2.6))
-FACE_CAST_PTS = [(298, 300), (330, 330), (370, 336), (400, 330), (440, 340), (480, 332), (502, 300), (504, 352),
-                 (490, 360), (470, 352), (440, 362), (400, 356), (360, 362), (320, 356), (300, 366)]
+# the fringe's shadow on the forehead (critic round 2: no tan stripe across the brows): it hugs the
+# hairline and fades out above the brows (a gradient minted at the end, kit.FACE_CAST_FADE)
+FACE_CAST_PTS = kit.FACE_CAST_PTS
 CHEEK_SH_PTS = [(502, 360), (498, 410), (484, 452), (452, 490), (424, 509), (446, 484), (474, 446), (488, 404)]
 face_cast = S(head, "FaceCast", FACE_CAST_PTS, F(SKIN_SH))
 cheek_sh = S(head, "CheekShade", CHEEK_SH_PTS, F(SKIN_SH))
@@ -780,23 +782,44 @@ sweat_p.add(S(sweat_p, "Drop", [(508 + x, 300 + y) for x, y in SWEAT], vgrad(-20
 glasses_solo = head.solo("GlassesSolo")
 
 
-def glasses_set(name: str, lens_fill: El | str, glare_a: str) -> El:
+def glasses_set(name: str, clear: bool, glint_a: str) -> El:
+    """Critic round 2: the frame at interior weight in the 85 % warm ink, corners >= 30 % of the
+    lens height, one paper-white glint per lens (the clear lenses lose their tint). Every lens mints
+    exactly as many ids as the M2 lens did (`pad`), so no later id moves."""
+    def pad(start: int, count: int) -> None:
+        assert d.next - start <= count, (d.next - start, count)
+        d.next = start + count
+
     def lens(cx: float, t: str) -> El:
-        pts = [(cx - 43, 364, "c12"), (cx + 43, 364, "c12"), (cx + 41, 410, "c14"), (cx - 41, 410, "c14")]
-        lf = lens_fill if isinstance(lens_fill, str) else None
-        paint = F(lf) if lf else d("Fill", lin(d, 0, -24, 0, 24, [("F0181820", 0.0), ("F0383A48", 1.0)]), name="Fill")
-        return S(head, "Lens" + t, pts, paint, L(FRAME, 4.2))
+        start = d.next
+        if clear:  # a tapered ring: outer minus inner rounded rectangle (even-odd), no lens tint
+            rects = []
+            for dy, w, h, rt, rb, _ in kit.lens_ring().values():
+                rects.append(d("Rectangle", width=w, height=h, linkCornerRadius=False, cornerRadiusTL=rt,
+                               cornerRadiusTR=rt, cornerRadiusBL=rb, cornerRadiusBR=rb, y=round(dy, 3), name="Path"))
+            ring = d("Fill", solid(d, kit.FRAME_INK), fillRule="evenOdd", name="Fill")
+            pad(start, 9)  # the Shape keeps the M2 lens's id (it is minted last)
+            el = d("Shape", *rects, ring, x=cx - head.ax, y=kit.LENS_CY - head.ay, name="Lens" + t)
+        else:  # sunglasses: a dark lens, the same soft rectangle, a slightly fuller bottom
+            hw, hh = kit.LENS_W / 2, kit.LENS_H / 2 - 3
+            y0 = kit.LENS_CY
+            pts = [(cx - hw, y0 - hh, "c16"), (cx + hw, y0 - hh, "c16"), (cx + hw, y0 + hh, "c22"),
+                   (cx - hw, y0 + hh, "c22")]
+            paint = d("Fill", lin(d, 0, -24, 0, 24, [("F0181820", 0.0), ("F0383A48", 1.0)]), name="Fill")
+            el = S(head, "Lens" + t, pts, paint, L(kit.FRAME_INK, kit.FRAME_W))
+        pad(start, 12 if not clear else 10)
+        return el
     return group(name,
-                 S(head, "Glare", [(330, 370), (346, 370), (322, 402), (310, 402)], F(glare_a)),
-                 S(head, "Glare2", [(420, 370), (436, 370), (412, 402), (402, 402)], F(glare_a)),
+                 S(head, "Glare", kit.lens_glint(355), F(glint_a + kit.PAPER)),
+                 S(head, "Glare2", kit.lens_glint(445), F(glint_a + kit.PAPER)),
                  lens(355, "L"), lens(445, "R"),
-                 S(head, "Bridge", [(398, 378), (400, 374), (402, 378)], L(FRAME, 5), closed=False),
-                 S(head, "TempleL", [(311, 370), (296, 368)], L(FRAME, 6), closed=False),
-                 S(head, "TempleR", [(489, 370), (504, 368)], L(FRAME, 6), closed=False))
+                 S(head, "Bridge", [(398, 378), (400, 375), (402, 378)], L(kit.FRAME_INK, kit.FRAME_W), closed=False),
+                 S(head, "TempleL", [(311, 370), (296, 368)], L(kit.FRAME_INK, 1.2 * kit.FRAME_W), closed=False),
+                 S(head, "TempleR", [(489, 370), (504, 368)], L(kit.FRAME_INK, 1.2 * kit.FRAME_W), closed=False))
 
 
-GLASSES = {"glasses": glasses_set("G_glasses", "14B8D8F0", "26FFFFFF"),
-           "sunglasses": glasses_set("G_sunglasses", None, "55FFFFFF"),  # type: ignore[arg-type]
+GLASSES = {"glasses": glasses_set("G_glasses", True, "B8"),
+           "sunglasses": glasses_set("G_sunglasses", False, "90"),
            "none": group("G_none")}
 glasses_solo.add(*GLASSES.values())
 glasses_solo.el.attrs["activeComponentId"] = GLASSES["glasses"].ref()
@@ -805,32 +828,12 @@ glasses_solo.el.attrs["activeComponentId"] = GLASSES["glasses"].ref()
 hair_front = head.node("HairFront")
 
 
-LOCK_TIP_R = 0.18  # tip radius / base width
-LOCK_S = 0.3  # second harmonic of the lock's bow: the clump's centre line is a slight S
-
-
-def lock_bow(t: float, bend: float) -> float:
-    """Sideways offset of a lock's centre line at t (0 root .. 1 tip): one bow plus a second
-    harmonic (an S that turns the tip back), zero at both ends so root and tip stay put."""
-    return bend * (math.sin(math.pi * t) + LOCK_S * math.sin(2 * math.pi * t))
-
-
 def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: float, bend: float) -> El:
-    (rx, ry), (tx, ty) = root_, tip
-    dx, dy = tx - rx, ty - ry
-    ln = math.hypot(dx, dy)
-    nx, ny = -dy / ln, dx / ln
-
-    def at(t: float, off: float) -> tuple[float, float]:
-        bow = lock_bow(t, bend)
-        return (rx + dx * t + nx * (off + bow), ry + dy * t + ny * (off + bow))
-    # a soft clump, not a spike (art bible §3): the tip is a round cap of radius LOCK_TIP_R x the
-    # base width (two shoulders at that half width, one smooth tip vertex); the centre line is a
-    # slight S (lock_bow). Same vertex count as the M2 spike, so no later id moves.
-    r = LOCK_TIP_R * w
-    tc = 1 - r / ln
-    pts = [at(0, -w / 2), at(0.45, -w * 0.34), at(tc, -r), at(1, 0.0), at(tc, r * 0.9), at(0.43, w * 0.36),
-           at(0, w / 2)]
+    # a tapered clump ending in a soft point (critic round 2; art bible §3: no hard corner, no ball):
+    # the tip is a StraightVertex with a radius of 24 % of the width at its shoulders
+    # (kit.lock_outline). Same vertex count as the M2 spike, so no later id moves.
+    pts, at = kit.lock_outline(root_, tip, w, bend)
+    ln = math.hypot(tip[0] - root_[0], tip[1] - root_[1])
     base = S(head, name, pts, grad([(HAIR_HI, 0.0), (HAIR, 0.55), (HAIR_SH, 1.0)], -ln / 2, ln / 2), L(HAIR_SH, 1.5))
     # Separate tapered ribbons, clipped to each lock, give the hair a satin
     # surface. They travel with the hair rig, including under hats.
@@ -842,20 +845,21 @@ def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: flo
     return group(name + "Material", light, strand, base)
 
 
-# The brows paint under the fringe, so the clumps frame them at rest: the ones over the brows end
-# above them, the centre clump hangs between them, the temple clumps end outside their outer ends
-# (a raised brow slides under the tips).
-LOCKS = [((300, 272), (292, 404), 44, -8), ((330, 246), (304, 352), 50, 12), ((360, 236), (350, 318), 50, 10),
-         ((396, 230), (400, 350), 60, 12), ((436, 234), (454, 320), 52, 10), ((470, 248), (504, 366), 56, 9),
-         ((498, 276), (510, 410), 40, 6), ((380, 236), (374, 312), 30, 6), ((452, 242), (472, 314), 28, 6)]
+# The brows paint under the fringe (a raised brow slides under the tips). Critic round 2: three
+# length tiers in four clumps, parted right of centre. Long: the temple locks (0, 6). Medium: the
+# outer brow-end locks (1, 5) and the centre lock (3), which sweeps left from the parting and hangs
+# between the brows. Short: a pair over each brow (2 + 7, 4 + 8, tips converging), ending well above
+# it so the bigger brow raise still reads (kit.LOCK_TIERS, kit.LOCK_CLUMPS).
+LOCKS = kit.FRINGE_LOCKS
+# side locks: their roots reach up under the cap (hidden at rest), so at 3/4 the shifted cap never
+# uncovers a sliver of temple skin above the near lock (critic round 2)
+SIDE_LOCK = [(296, 300), (314, 370), (308, 430), (296, 466, "c"), (290, 420), (290, 346)]
 hair_front.add(*[lock(f"Lock{i}", *LOCKS[i]) for i in [7, 8, 3, 2, 4, 1, 5, 0, 6]],
                S(head, "HairCap", [(290, 340), (294, 270), (330, 232), (400, 214), (470, 232), (506, 270), (510, 340),
                                    (470, 300), (400, 292), (330, 300)], grad([(HAIR_HI, 0.0), (HAIR, 0.6)], -60, 60),
                  L(HAIR_SH, 2.4)),
-               S(head, "SideLockL", [(300, 330), (314, 370), (308, 430), (296, 466, "c"), (290, 420), (288, 360)],
-                 F(HAIR), L(HAIR_SH, 2.5)),
-               S(head, "SideLockR", mirror([(300, 330), (314, 370), (308, 430), (296, 466, "c"), (290, 420), (288, 360)]),
-                 F(HAIR), L(HAIR_SH, 2.5)))
+               S(head, "SideLockL", SIDE_LOCK, F(HAIR), L(HAIR_SH, 2.5)),
+               S(head, "SideLockR", mirror(SIDE_LOCK), F(HAIR), L(HAIR_SH, 2.5)))
 hair_back = head.node("HairBack")
 hair_back.add(S(head, "HairBackShape", [(286, 430), (272, 340), (284, 262), (334, 212), (400, 196), (466, 212),
                                         (516, 262), (528, 340), (514, 430), (534, 478, "c"), (500, 466), (488, 420),
@@ -2049,6 +2053,12 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
           **{f"Lock{i}Material": named_el(hair_front.el, f"Lock{i}Material") for i in range(len(LOCKS))}}, anims)
 # the jaw drops the chin and the lower jaw contour (face-rig ids, after every head-turn id)
 head_turn.rig_jaw(turn, face_au.d, face_au.path)
+
+# ---- critic round 2: new elements take their own id range (no earlier id moves)
+R2 = Doc(client=0, start=kit.R2_ID_START)
+# the fringe shadow feathers out: a vertical fade instead of the flat band (its solid colour is burnt)
+cast_fill = next(c for c in face_cast.children if c.tag == "Fill")
+cast_fill.children = [lin(R2, 0, y0, 0, y1, stops) for y0, y1, stops in [kit.face_cast_fade()]]
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

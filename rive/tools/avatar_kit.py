@@ -38,6 +38,97 @@ TEETH = "FFFFFAF5"
 WHITE = "FFFFFFFF"
 
 
+# ---------------------------------------------------------------- critic round 2 art (pure geometry)
+# Line weights: art_bible LineRules are px on a 1080 px frame; the head (crown..chin ~315 art px) is
+# 1/2.6 of the figure, so a 1080 frame shows it ~1.385x larger (the same reasoning as gen_head.py).
+LINE_SCALE = 1 / 1.385
+FRAME_W = 3.0 * LINE_SCALE  # the glasses rim: the art bible's interior weight (3 px at 1080)
+FRAME_INK = "D92A1E24"  # the warm ink at 85 %: the frame stops being the darkest line on the face
+PAPER = "FFFBF6"  # paper-white (rgb) for the lens glint
+
+# Clear lenses: a rounded ring (outer rounded rectangle minus an inner one, even-odd), centre
+# y LENS_CY, the rim tapering from FRAME_W on top to RIM_BOTTOM on the lower rim.
+LENS_W, LENS_H, LENS_CY = 86.0, 58.0, 387.0
+LENS_R = 18.0  # >= 30 % of the lens's short side (art bible: no hard corners where the eye rests)
+RIM_SIDE, RIM_BOTTOM = 0.85 * FRAME_W, 0.55 * FRAME_W
+
+
+def lens_ring() -> dict[str, tuple[float, float, float, float, float, float]]:
+    """Outer and inner rounded rectangles of a clear lens, relative to the lens centre:
+    name -> (dy, width, height, top radius, bottom radius, rim) (rim: the outer one's rim top)."""
+    top, side, bot = FRAME_W, RIM_SIDE, RIM_BOTTOM
+    return {"outer": (0.0, LENS_W, LENS_H, LENS_R, LENS_R, top),
+            "inner": ((top - bot) / 2, LENS_W - 2 * side, LENS_H - top - bot, LENS_R - (top + side) / 2,
+                      LENS_R - (bot + side) / 2, 0.0)}
+
+
+def lens_glint(cx: float) -> list[tuple[float, float]]:
+    """One slim diagonal glint in a lens's upper-left (the key light's side), wide end up."""
+    return [(cx - 22, LENS_CY - 25), (cx - 16.5, LENS_CY - 25), (cx - 31, LENS_CY - 2), (cx - 34, LENS_CY - 2)]
+
+
+# Fringe clumps (critic round 2): three length tiers, tips tapered to soft points. A lock is seven
+# outline points: base, flank, shoulder, the TIP (a StraightVertex with a small radius), shoulder,
+# flank, base. TIP_AT is where the shoulders sit along the lock, TIP_HALF their half width (x the
+# base width), TIP_R the point's radius as a fraction of the width at the shoulders.
+LOCK_S = 0.3  # second harmonic of the lock's bow: the clump's centre line is a slight S
+TIP_AT, TIP_HALF, TIP_R = 0.88, 0.17, 0.24
+
+
+# (root, tip, base width, bend) per lock (names Lock0..Lock8; the generator's draw order is
+# separate). Short tips end ~10 px under the hairline, medium ~50, long past the eyes.
+FRINGE_LOCKS: list[tuple[tuple[float, float], tuple[float, float], float, float]] = [
+    ((300, 272), (290, 406), 44, -8), ((328, 248), (306, 348), 48, 11), ((356, 238), (342, 310), 46, 9),
+    ((404, 230), (396, 348), 58, 12), ((452, 236), (466, 312), 48, 10), ((474, 250), (498, 360), 54, 9),
+    ((498, 276), (512, 408), 40, 6), ((380, 236), (360, 304), 28, 6), ((440, 240), (450, 306), 28, 6)]
+LOCK_TIERS = {"short": (2, 4, 7, 8), "medium": (1, 3, 5), "long": (0, 6)}
+LOCK_CLUMPS = ((0, 1), (2, 7, 3), (8, 4, 5, 6))  # three clumps; the parting splits the front two
+PARTING_X = 422.0  # the parting: right of centre, between the centre lock's root and lock 8's
+
+
+def lock_bow(t: float, bend: float) -> float:
+    """Sideways offset of a lock's centre line at t (0 root .. 1 tip): one bow plus a second
+    harmonic (an S that turns the tip back), zero at both ends so root and tip stay put."""
+    return bend * (math.sin(math.pi * t) + LOCK_S * math.sin(2 * math.pi * t))
+
+
+def lock_outline(root_: tuple[float, float], tip: tuple[float, float], w: float,
+                 bend: float) -> tuple[list[tuple], Callable[[float, float], tuple[float, float]]]:
+    """(outline points, at(t, offset)) of one fringe lock: a tapered clump ending in a soft point."""
+    (rx, ry), (tx, ty) = root_, tip
+    dx, dy = tx - rx, ty - ry
+    ln = math.hypot(dx, dy)
+    nx, ny = -dy / ln, dx / ln
+
+    def at(t: float, off: float) -> tuple[float, float]:
+        bow = lock_bow(t, bend)
+        return (rx + dx * t + nx * (off + bow), ry + dy * t + ny * (off + bow))
+    r = round(TIP_R * 1.9 * TIP_HALF * w, 2)  # the shoulders sit at TIP_HALF and 0.9 TIP_HALF
+    pts: list[tuple] = [at(0, -w / 2), at(0.45, -w * 0.3), at(TIP_AT, -w * TIP_HALF), (*at(1, 0.0), f"c{r}"),
+                        at(TIP_AT, w * TIP_HALF * 0.9), at(0.43, w * 0.32), at(0, w / 2)]
+    return pts, at
+
+
+R2_ID_START = 990000  # elements added in critic round 2 (gen_avatar.py mints them last)
+
+# The fringe's cast shadow on the forehead: a band under the hairline (cap edge y ~292-300), skinned
+# by the head turn (same 15 points as M2), filled with a fade from FACE_CAST_FADE[0] (alpha at the
+# hairline) to clear at FACE_CAST_FADE[2] (above the brows, which start at y ~335).
+FACE_CAST_PTS = [(298, 306), (330, 298), (370, 293), (400, 291), (440, 293), (480, 298), (502, 306), (504, 342),
+                 (490, 338), (470, 332), (440, 338), (400, 334), (360, 338), (320, 332), (300, 342)]
+FACE_CAST_FADE = ("80", 296.0, 334.0)  # alpha (hex) at y0, y0, y1 (alpha 0)
+
+
+def face_cast_fade() -> tuple[float, float, list[tuple[str, float]]]:
+    """(y0, y1, stops) of the cast's linear gradient in the shape's local space (origin: the bbox
+    centre, as avatar_kit.S places it)."""
+    ys = [p[1] for p in FACE_CAST_PTS]
+    oy = (min(ys) + max(ys)) / 2
+    a, y0, y1 = FACE_CAST_FADE
+    col = SKIN_SH[2:]
+    return y0 - oy, y1 - oy, [(a + col, 0.0), ("00" + col, 1.0)]
+
+
 class Rig:
     """A pivot node (or Solo) that knows its absolute position."""
 

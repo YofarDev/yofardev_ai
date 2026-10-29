@@ -170,6 +170,7 @@ def foreshorten(x: float, y: float, a: float) -> float:
 
 
 NEAR_WIDEN = 1.12
+EAR_Z, EAR_NEAR_WIDEN = -12.0, 1.18  # ear depth (behind the yaw axis) and its near-side widening
 
 
 # Glasses: the frame plane wraps back from the bridge to the temples (inner end z 110, outer end
@@ -413,10 +414,11 @@ def fringe_parallax(z_tip: float) -> Poly:
     return [(FRINGE_PARALLAX * z_tip, (r.SIN,))]
 
 
-# far-cheek shade (critic round 1, art bible §2: shadows move toward the ambient hue): at 3/4 the
-# cheek turning away darkens toward the night's cool ambient, a soft radial wash clipped by the face
-# that rides the cheek surface and fades in with the turn (0 at rest and on the near side)
-FAR_SHADE = ("34493E78", (497.0, 452.0), 40.0, 0.8)  # colour, art-space centre (right cheek), radius, peak
+# far-cheek shade (critic round 1): at 3/4 the cheek turning away darkens, a soft radial wash clipped
+# by the face that rides the cheek surface and fades in with the turn (0 at rest and on the near
+# side). Critic round 2: the cool violet read as a bruise; it is the skin-shadow ramp's terracotta
+# now (over the lit skin at its peak it lands between SKIN_SH and SKIN_SH2)
+FAR_SHADE = ("40B0583C", (497.0, 452.0), 40.0, 0.8)  # colour, art-space centre (right cheek), radius, peak
 
 
 def far_cheek_opacity(yaw: float, side: float) -> float:
@@ -517,10 +519,13 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         z = face_z(x, y)
         sx = factor(foreshorten(x, y, -K_YAW), foreshorten(x, y, K_YAW)) if nm != "ChinLight" else None
         ht.wrap(parts[nm], (x, y), mat(x, z), pit(y, z), sx=sx)  # type: ignore[arg-type]
+    # critic round 2: the near ear (3/4) sat out past the side lock, detached; it now seats on the
+    # skull contour with its front under the side lock (EAR_Z: less depth behind the yaw axis, so
+    # it travels with the cheek; EAR_NEAR_WIDEN: it turns toward the viewer, but less)
     for t, x in (("L", 288.0), ("R", 512.0)):
-        sx = factor(*side((1.35, 1, 0.5), x)[::2])
+        sx = factor(*side((EAR_NEAR_WIDEN, 1, 0.5), x)[::2])
         for nm in ("Ear" + t, "EarIn" + t):
-            ht.wrap(parts[nm], (x, 398.0), mat(x, -25), pit(398, -48), sx=sx)  # type: ignore[arg-type]
+            ht.wrap(parts[nm], (x, 398.0), mat(x, EAR_Z), pit(398, -48), sx=sx)  # type: ignore[arg-type]
 
     # ---- glasses: lenses foreshorten on the frame plane, the near temple unfolds, the far folds
     def lens_poses(cx: float) -> tuple[Poly, Poly]:

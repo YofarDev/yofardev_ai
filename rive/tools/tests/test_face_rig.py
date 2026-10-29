@@ -638,7 +638,7 @@ def test_breath_lifts_the_shoulders_more_than_the_head_eased() -> None:
 
 # ---- critic round 1b: fringe, brows, dimple (the generated file)
 
-def test_the_fringe_paints_over_the_brows_and_its_clumps_have_round_tips() -> None:
+def test_the_fringe_paints_over_the_brows_and_its_clumps_have_soft_tips() -> None:
     root = _rml()
     order = [e.get("name") for e in root.iter() if e.get("name") in ("FringeFollowThrough", "TravelBrows")]
     assert order == ["FringeFollowThrough", "TravelBrows"]  # first declared paints in front
@@ -646,7 +646,10 @@ def test_the_fringe_paints_over_the_brows_and_its_clumps_have_round_tips() -> No
     assert len(locks) == 9
     for lock in locks:
         path = lock.find("PointsPath")
-        assert path is not None and path.find("StraightVertex") is None, lock.get("name")  # no hard tip
+        assert path is not None, lock.get("name")
+        # critic round 2: one soft point (a rounded StraightVertex), never a hard corner
+        corners = path.findall("StraightVertex")
+        assert len(corners) == 1 and float(corners[0].get("radius") or 0) > 0, lock.get("name")
     # the brows sit on skin now: no outline stroke
     for brow in (e for e in root.iter("Shape") if e.get("name") == "BrowShape"):
         assert brow.find("Stroke") is None
