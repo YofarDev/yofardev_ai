@@ -325,8 +325,17 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
     # less than the nose (z 70, so it never outruns the chin), its pitch travel is 60 % of the
     # chin's, and every mouth shape is clipped by the face, so it can never hang below the jaw
     ht.wrap(parts["Mouth"], (400.0, 478.0), mat(400, 70), pit(478, 28), sx=factor(0.88, 0.88))  # type: ignore[arg-type]
-    for el in _shapes(parts["Mouth"]):  # type: ignore[arg-type]
-        el.children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
+    # each face clip keeps its id: the shapes named in `MouthClipOrder` (the face rig's id order; a
+    # deleted shape burns its id) clip here, shapes added since clip after every other head-turn id
+    mouth_shapes = _shapes(parts["Mouth"])  # type: ignore[arg-type]
+    clip_order: list[str] = list(parts.get("MouthClipOrder") or [str(e.attrs.get("name")) for e in mouth_shapes])  # type: ignore[call-overload]
+    by_name = {str(e.attrs.get("name")): e for e in mouth_shapes}
+    for nm in clip_order:
+        if nm in by_name:
+            by_name[nm].children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
+        else:
+            ht.d.next += 1
+    late_clips = [e for e in mouth_shapes if str(e.attrs.get("name")) not in clip_order]
     ht.wrap(parts["Mole"], (456.0, 432.0), mat(456, 80), pit(432, 80))  # type: ignore[arg-type]
     ht.wrap(parts["Blush"], (400.0, 440.0), mat(400, 90), pit(440, 90), sx=factor(0.82, 0.82))  # type: ignore[arg-type]
     for nm, x, y, z in (("CheekBloomL", 335.0, 437.0, 72.0), ("CheekBloomR", 465.0, 437.0, 72.0),
@@ -422,6 +431,8 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
                      name="BrowLift" + t)
         bw.add(ht.raw("eyeLeadPitch", "y", ht.neg_part(float(bw.attrs["y"]), -BROW_LIFT_PX)))
     ht.finish()
+    for el in late_clips:  # last, so no earlier head-turn id moves
+        el.children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
 
 
 def _clamp(ht: HeadTurn, toks: list[El]) -> list[El]:

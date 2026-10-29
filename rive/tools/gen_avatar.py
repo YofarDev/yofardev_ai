@@ -1963,9 +1963,10 @@ for i, e in enumerate(EYES):
     s_ = -1 if i == 0 else 1
     face_rig.rig_brow(face_au, e["brow_g"].el, named_el(e["brow_g"].el, "BrowShape"), 355.0 if i == 0 else 445.0, s_,
                       HAIR, SKIN)
-face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "throat": "FF4A1E28", "teeth": TEETH,
-                                      "low_teeth": "FFF1E6E0", "tongue": "FFD9737A", "ink": INK, "lip": "60D0937C",
-                                      "crease": "A0D0937C"})
+face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "teeth": TEETH, "low_teeth": "FFF1E6E0",
+                                      "tongue": "FFC9666F", "ink": "FF2A1E24", "shine": "A0FFF4EC",
+                                      "lip": "60D0937C", "lip_band": "FFE58A8A", "lip_edge": "B0B85A64",
+                                      "crease": "A0D0937C", "crease_tense": "D0B8786A"})
 face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "E0B8786A"})
 face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
 face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0))
@@ -1985,7 +1986,7 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
           "HairCap": named_el(hair_front.el, "HairCap"),
           "SideLockL": named_el(hair_front.el, "SideLockL"), "SideLockR": named_el(hair_front.el, "SideLockR"),
           "HairBackShape": named_el(hair_back.el, "HairBackShape"), "Cowlick": named_el(tufts.el, "Cowlick"),
-          "Cowlick2": named_el(tufts.el, "Cowlick2"), "HatSolo": hat_solo.el,
+          "Cowlick2": named_el(tufts.el, "Cowlick2"), "HatSolo": hat_solo.el, "MouthClipOrder": face_rig.MOUTH_CLIP_ORDER,
           **{f"Lock{i}Material": named_el(hair_front.el, f"Lock{i}Material") for i in range(len(LOCKS))}}, anims)
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")

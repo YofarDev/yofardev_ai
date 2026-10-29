@@ -48,6 +48,55 @@ _SHORT = {"IU": "auBrowInnerUp", "OU": "auBrowOuterUp", "BL": "auBrowLower", "LT
           "DM": "auDimpler", "T": "lipTuck", "TU": "tongueUp"}
 
 
+SIDED = frozenset({"auBrowInnerUp", "auBrowOuterUp", "auBrowLower", "auLidTighten", "auCheekRaise",
+                   "auLipCornerPull", "auLipCornerDepress"})  # contract v6: au<Name>L / au<Name>R offsets
+SIDE_NUMBERS = tuple(f"{a}{t}" for a in AUS if a in SIDED for t in ("L", "R"))
+
+# Pseudo-terms: a term key is a view-model number, or one of these amounts (each one formula, the
+# same in Python and in the generated binds):
+#   "<au>|L" / "<au>|R"  clamp01(<au> + <au>L|R): a sided AU on the viewer's left / right (v6)
+#   PART                 clamp01(stretch - 2 press): stretched lips part off the teeth (s, e, i);
+#                        pressed lips stay sealed (angry is stretch 0.3 + press 0.6)
+#   TENSE                min(1, 2.5 min(press, stretch)): pressed AND stretched, the squared mouth
+PART = "@part"
+TENSE = "@tense"
+_SHORT.update(PT=PART, TS=TENSE)
+
+
+def sided(t: Terms, side: str) -> dict[str, float]:
+    """A side's terms: every sided AU reads its clamped side sum (`side` "L" / "R")."""
+    return {(f"{p}|{side}" if p in SIDED else p): c for p, c in t.items()}
+
+
+def centred(t: Terms) -> dict[str, float]:
+    """A centre bone's terms: half of each side's clamped sum (equal to the plain AU when the
+    offsets are 0), so a one-sided pull moves the lip centre half as far."""
+    out: dict[str, float] = {}
+    for p, c in t.items():
+        for k, v in (((f"{p}|L", c / 2), (f"{p}|R", c / 2)) if p in SIDED else ((p, c),)):
+            out[k] = out.get(k, 0.0) + v
+    return out
+
+
+def amount(env: Mapping[str, float], key: str) -> float:
+    """The value a term key stands for (see the pseudo-terms above)."""
+    if "|" in key:
+        au, side = key.split("|")
+        return min(1.0, max(0.0, env.get(au, 0.0) + env.get(au + side, 0.0)))
+    if key == PART:
+        return min(1.0, max(0.0, env.get("auLipStretch", 0.0) - 2 * env.get("auLipPress", 0.0)))
+    if key == TENSE:
+        return min(1.0, 2.5 * min(env.get("auLipPress", 0.0), env.get("auLipStretch", 0.0)))
+    return env.get(key, 0.0)
+
+
+def base_prop(key: str) -> str:
+    """The view-model number a term key's formula reads first (a bind's source path)."""
+    if "|" in key:
+        return key.split("|")[0]
+    return {PART: "auLipStretch", TENSE: "auLipPress"}.get(key, key)
+
+
 def terms(**kw: float) -> dict[str, float]:
     """Short names -> contract names; a jaw term also reads the legacy `mouth` number."""
     out = {_SHORT[k]: v for k, v in kw.items() if v}
@@ -57,7 +106,7 @@ def terms(**kw: float) -> dict[str, float]:
 
 
 def evaluate(c0: float, t: Terms, env: Mapping[str, float]) -> float:
-    return c0 + sum(c * env.get(p, 0.0) for p, c in t.items())
+    return c0 + sum(c * amount(env, p) for p, c in t.items())
 
 
 # ------------------------------------------------------------------ geometry tables (head art space)
@@ -73,19 +122,32 @@ BROW_BONES = {  # name: (dx from eye centre * s, y, dx terms (toward centre), dy
 
 MOUTH_FRAME = (400.0, 478.0)
 # Mouth bones: rest (x, y) for the RIGHT side / centre; dx terms are toward the viewer's right for the
-# right side (mirrored for the left); dy terms are screen y.
+# right side (mirrored for the left); dy terms are screen y. Sided AUs (corner pull / depress, cheek
+# raise) read the side's clamped sum; the centre reads half of each side (`mouth_bones`).
 MOUTH_BONES = {
-    "CornerR": ((417.0, 477.0), terms(P=5.0, S=9.5, J=3.0, K=-10.5, R=-3.0, DM=1.0, D=1.0),
-                terms(P=-7.0, D=8.5, CR=-1.5, J=5.0, S=2.0, DM=-1.0)),
-    # closed-mouth terms (corners, smile, frown, dimpler, press) move the upper and lower lips
-    # together so a closed mouth stays one line; only jaw, pucker, nose wrinkle and lip tuck open it
-    "UpperR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
-               terms(P=0.3, D=2.0, J=-3.5, NW=-1.0, T=-4.5, K=-2.0)),
-    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=-5.0, NW=-1.5, T=-5.5, K=-2.5)),
-    "LowerR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0),
-               terms(P=0.3, D=2.0, J=19.0, K=3.5, T=-2.0)),
-    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=23.0, K=5.0, T=-2.5)),
+    # TS (the squared angry mouth): the corners turn down and out, sharp, under a flat lip line
+    "CornerR": ((417.0, 477.0), terms(P=5.0, S=9.5, J=3.0, K=-10.5, R=-3.0, DM=1.0, D=1.0, TS=1.5),
+                terms(P=-7.0, D=8.5, CR=-1.5, J=5.0, S=2.0, DM=-1.0, TS=4.5)),
+    # closed-mouth terms (corners, smile, frown, dimpler, press, tension) move the upper and lower
+    # lips together so a closed mouth stays one line; jaw, pucker, nose wrinkle, lip tuck and the
+    # stretch's lip part (PT, sealed again by press) open it
+    "UpperR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0, TS=4.0),
+               terms(P=0.3, D=2.0, J=-3.5, NW=-1.0, T=-2.5, K=-0.8, PT=-3.0)),
+    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=-5.0, NW=-1.5, T=-3.0, K=-1.0, PT=-4.0)),
+    # lip tuck (f, v) lifts the lower lip onto the upper teeth's edge (TEETH_EDGE) at the f/v jaw
+    "LowerR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0, TS=4.0),
+               terms(P=0.3, D=2.0, J=19.0, K=1.0, T=-0.8, PT=5.5)),
+    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=23.0, K=1.5, T=-2.0, PT=7.0)),
 }
+# The upper teeth hang from the skull (they do not move): their edge is one arc, y = TEETH_EDGE[0] -
+# TEETH_EDGE[1] (x - 400)^2. The lower teeth ride the jaw only (`JawTeeth`), just behind that edge.
+TEETH_EDGE = (482.8, 0.0104)
+LOW_TEETH_TOP = (482.2, 0.0104)
+JAW_TEETH = 17.0  # px per unit jaw (the lower lip takes 23)
+
+
+def teeth_edge_y(x: float, edge: tuple[float, float] = TEETH_EDGE) -> float:
+    return edge[0] - edge[1] * (x - 400.0) ** 2
 
 
 def mirror_terms(t: Terms) -> dict[str, float]:
@@ -93,16 +155,18 @@ def mirror_terms(t: Terms) -> dict[str, float]:
 
 
 def mouth_bones() -> dict[str, tuple[tuple[float, float], dict[str, float], dict[str, float]]]:
-    """All mouth bones (left side mirrored from the right)."""
+    """All mouth bones (left side mirrored from the right), with sided terms."""
     out: dict[str, tuple[tuple[float, float], dict[str, float], dict[str, float]]] = {}
     for name, ((x, y), dx, dy) in MOUTH_BONES.items():
-        out[name] = ((x, y), dict(dx), dict(dy))
         if name.endswith("R"):
-            out[name[:-1] + "L"] = ((2 * MOUTH_FRAME[0] - x, y), mirror_terms(dx), dict(dy))
-    # the tongue tip rides the lower lip and rises to the upper teeth
-    lc = out["LowerC"]
-    # the tongue tip rides 80 % of the lower lip (it shows in an open mouth), and rises to the teeth
-    out["TongueTip"] = ((400.0, 476.0), {}, {**{p: 0.8 * c for p, c in lc[2].items()}, "tongueUp": -12.0})
+            out[name] = ((x, y), sided(dx, "R"), sided(dy, "R"))
+            out[name[:-1] + "L"] = ((2 * MOUTH_FRAME[0] - x, y), sided(mirror_terms(dx), "L"), sided(dy, "L"))
+        else:
+            out[name] = ((x, y), centred(dx), centred(dy))
+    jaw = {p: c for p, c in terms(J=1.0).items()}
+    out["JawTeeth"] = ((400.0, LOW_TEETH_TOP[0]), {}, {p: JAW_TEETH * c for p, c in jaw.items()})
+    # the tongue tip rides the jaw (60 %: it lags into an open mouth) and rises to the upper teeth
+    out["TongueTip"] = ((400.0, 483.0), {}, {**{p: 13.8 * c for p, c in jaw.items()}, "tongueUp": -12.0})
     return out
 
 
@@ -127,12 +191,12 @@ class FaceRig:
         """Formula c0 + sum c_i [p_i], optionally clamped; returns (source prop, converter)."""
         items = sorted((p, round(c, 3)) for p, c in t.items() if round(c, 3))
         key = (round(c0, 3), tuple(items), lo, hi)
-        src = items[0][0] if items else "auJawDrop"
+        src = base_prop(items[0][0]) if items else "auJawDrop"
         if key not in self._conv:
             f = self.f
             expr: list[El] = [f.val(c0)]
-            for i, (p, c) in enumerate(items):
-                expr += [f.op("+"), f.val(c), f.op("*"), *(f.inp() if i == 0 else [f.bound(p)])]
+            for p, c in items:
+                expr += [f.op("+"), f.val(c), f.op("*"), *self.amount(p, src)]
             if hi is not None:
                 expr = f.fn("min", [f.val(hi)], expr)
             if lo is not None:
@@ -141,6 +205,24 @@ class FaceRig:
             self.converters.append(conv)
             self._conv[key] = conv
         return src, self._conv[key]
+
+    def amount(self, key: str, src: str) -> list[El]:
+        """Formula tokens of a term key (`amount` in Python); `src` is read through the input."""
+        f = self.f
+
+        def ref(p: str) -> list[El]:
+            return f.inp() if p == src else [f.bound(p)]
+
+        if "|" in key:
+            au, side = key.split("|")
+            return f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [*ref(au), f.op("+"), *ref(au + side)]))
+        if key == PART:
+            return f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [*ref("auLipStretch"), f.op("-"), f.val(2),
+                                                                  f.op("*"), *ref("auLipPress")]))
+        if key == TENSE:
+            return f.fn("min", [f.val(1)], [f.val(2.5), f.op("*"),
+                                            *f.fn("min", ref("auLipPress"), ref("auLipStretch"))])
+        return ref(key)
 
     def bind(self, key: str, c0: float, t: Terms, lo: float | None = None, hi: float | None = None) -> El:
         src, conv = self.converter(c0, t, lo, hi)
@@ -211,16 +293,30 @@ class FaceRig:
 
 # ------------------------------------------------------------------ rigging the avatar
 
+def brow_bones(s: int) -> dict[str, tuple[float, float, dict[str, float], dict[str, float]]]:
+    """One brow's bones: (x from the eye centre, rest y, dx terms, dy terms); `s` -1 = the viewer's
+    left. + dx terms of the table point toward the face centre (at -s from the eye); every sided AU
+    reads the side's clamped sum (contract v6)."""
+    side = "L" if s < 0 else "R"
+    return {nm: (dx0 * s, y, sided({p: -s * c for p, c in tdx.items()}, side), sided(tdy, side))
+            for nm, (dx0, y, tdx, tdy) in BROW_BONES.items()}
+
+
+def brow_pose(env: Mapping[str, float], s: int) -> dict[str, tuple[float, float]]:
+    """Predicted (x from the eye centre, y) of a brow's bones (tests, review overlays)."""
+    return {nm: (u + evaluate(0.0, tdx, env), y + evaluate(0.0, tdy, env))
+            for nm, (u, y, tdx, tdy) in brow_bones(s).items()}
+
+
 def rig_brow(fr: FaceRig, brow_g: El, shape: El, cx: float, s: int, color: str, outline: str) -> None:
     """Skin the brow shape to inner / mid / outer bones (bones live in BrowG, frame (cx, 346)). The
     brows paint over the fringe in the hair's own colour, so a thin skin-tone outline keeps them
     readable over it (invisible over skin)."""
     frame = (cx, 346.0)
     bones: dict[str, tuple[tuple[float, float], El]] = {}
-    for nm, (dx0, y, tdx, tdy) in BROW_BONES.items():
-        art = (cx + dx0 * s, y)
-        # + dx terms point toward the face centre: the centre is at -s from the eye
-        el = fr.bone(f"Brow{nm}", (art[0] - frame[0], art[1] - frame[1]), {p: -s * c for p, c in tdx.items()}, tdy)
+    for nm, (u, y, tdx, tdy) in brow_bones(s).items():
+        art = (cx + u, y)
+        el = fr.bone(f"Brow{nm}", (art[0] - frame[0], art[1] - frame[1]), tdx, tdy)
         bones[nm] = (art, el)
         brow_g.children.insert(0, el)
     pts = [(cx - 30 * s, 342, "c"), (cx - 8 * s, 335), (cx + 16 * s, 335), (cx + 36 * s, 344, "c"),
@@ -270,9 +366,6 @@ EYE_CORNERS: dict[str, tuple[float, float]] = {"In": (-28.0, 392.0), "Out": (29.
 CORNER_RADIUS = 2.5
 LID_GAP = 1.5  # px: an AU pose alone never closes the opening further than this (a blink does)
 EYE_FRAME_DY = 392.0  # the Blink node's art-space y: the bones' frame is (cx, 392)
-SIDED = frozenset({"auBrowInnerUp", "auBrowOuterUp", "auBrowLower", "auLidTighten", "auCheekRaise",
-                   "auLipCornerPull", "auLipCornerDepress"})  # contract v6: au<Name>L / au<Name>R offsets
-SIDE_NUMBERS = tuple(f"{a}{t}" for a in AUS if a in SIDED for t in ("L", "R"))
 LOOK_DOWN = "eyeLeadPitch"  # contract: at - the upper lids drop (~25 % lid coverage at -1)
 DOWN = "@down"  # pseudo-term: max(0, -eyeLeadPitch)
 
@@ -593,6 +686,10 @@ def resolve_paths(roots: Sequence[El], paths: Mapping[str, str]) -> None:
 
 
 LIP_TENSION = 1.3
+# the face rig's mouth shapes in the order the head turn minted their face clips in M2 (ids stay put;
+# MouthThroat is deleted: its id is burnt); newer shapes clip after every other head-turn id
+MOUTH_CLIP_ORDER = ("SmileCreaseL", "SmileCreaseR", "LowerLipShade", "MouthLine", "MouthTeeth", "MouthLowTeeth",
+                    "MouthTongue", "MouthThroat", "MouthInside")
 
 
 def add_terms(*parts: tuple[float, Mapping[str, float]]) -> dict[str, float]:
@@ -649,8 +746,25 @@ def lip_handle_bones(fr: FaceRig, bones: dict[str, tuple[tuple[float, float], El
     return hw
 
 
+def tapered(c: Sequence[Pt2], w: float, ends: str = "c") -> list[tuple]:
+    """A tapered stroke as a closed lens around the centre line p0 -> pm -> p1 (pointed ends, `w`
+    wide at pm): open strokes taper (art bible §4)."""
+    (x0, y0), (xm, ym), (x1, y1) = c
+    tx, ty = x1 - x0, y1 - y0
+    n = math.hypot(tx, ty) or 1.0
+    nx, ny = -ty / n * w / 2, tx / n * w / 2
+    return [(x0, y0, ends), (xm + nx, ym + ny), (x1, y1, ends), (xm - nx, ym - ny)]
+
+
 def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
-    """Build the continuous mouth inside `host` (a Node at MOUTH_FRAME, x = y = 0)."""
+    """Build the continuous mouth inside `host` (a Node at MOUTH_FRAME, x = y = 0).
+
+    The opening (`MouthInside`, one flat dark colour, the clip source) and its outline (`MouthLine`)
+    share one skin. Inside it: the upper teeth hang from the skull (static, one smooth arc for an
+    edge), the lower teeth ride the jaw only, and a soft tongue dome rides the jaw. Over it: the
+    pucker's lip cushion (pushed lips around a smaller opening, behind it),
+    the lip tuck's lower-lip band (f, v: a pink band whose top edge meets the upper teeth's edge),
+    the smile creases and the tense creases (press + stretch: the squared angry mouth)."""
     F = MOUTH_FRAME
     bones: dict[str, tuple[tuple[float, float], El]] = {}
     for nm, ((x, y), dx, dy) in mouth_bones().items():
@@ -661,90 +775,130 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
 
     one = lambda n: {n: 1.0}  # noqa: E731
     # inside: corners slightly rounded, lips smooth with long handles (round U / D openings); at rest
-    # upper == lower, so the outline is the closed mouth line. Fill (clip source, back) and outline
-    # (front) are two shapes on the same skin so teeth and tongue sit between them.
+    # upper == lower, so the outline is the closed mouth line
     order = ["CornerL", "UpperL", "UpperC", "UpperR", "CornerR", "LowerR", "LowerC", "LowerL"]
     pts = [(*at(n), "c2") if n.startswith("Corner") else at(n) for n in order]
     hw = lip_handle_bones(fr, bones, order, F)
-    inside = fr.skinned("MouthInside", pts, [one(n) for n in order], bones, F, fr.fill(palette["inside"]),
-                        tension=LIP_TENSION, handles=hw)
+
+    def lip_shape(name: str, paint: El) -> El:
+        return fr.skinned(name, pts, [one(n) for n in order], bones, F, paint, tension=LIP_TENSION, handles=hw)
+
+    inside = lip_shape("MouthInside", fr.fill(palette["inside"]))
     line = fr.stroke(palette["ink"], 2.7)
-    fr.bind_on(line, "thickness", 2.7, terms(R=1.3, K=0.3))  # pressed lips read as a firmer line
-    outline = fr.skinned("MouthLine", pts, [one(n) for n in order], bones, F, line,
-                         tension=LIP_TENSION, handles=hw)
-    # rounded lips round the mouth's corners (an oh is an oval, not a box)
+    # pressed lips read as a firmer line; pushed lips thin it (the lips' cushion carries the shape)
+    fr.bind_on(line, "thickness", 2.7, terms(R=1.3, K=-0.9))
+    outline = lip_shape("MouthLine", line)
+    # ... and soften it toward a lip shadow, so the opening reads as one dark hole in the lips
+    fr.bind_on(outline, "opacity", 1.15, terms(K=-0.75), lo=0.0, hi=1.0)
+    # rounded lips round the mouth's corners (an oh is an oval, not a box); the tense mouth squares them
     for shape in (inside, outline):
         path = next(c for c in shape.children if c.tag == "PointsPath")
         for v in path.children:
             if v.tag == "StraightVertex":
-                v.children.insert(0, fr.bind("radius", 2.0, terms(K=9.0)))
-    # a darker throat toward the lower jaw gives the opening depth
-    throat = fr.skinned("MouthThroat", [(389.0, 479.0), (400.0, 475.0), (411.0, 479.0), (400.0, 484.0)],
-                        [{"LowerL": 0.6, "UpperL": 0.4}, {"UpperC": 0.35, "LowerC": 0.65},
-                         {"LowerR": 0.6, "UpperR": 0.4}, one("LowerC")], bones, F,
-                        fr.fill(palette["throat"]), clip=inside)
-    teeth = fr.skinned("MouthTeeth",
-                       [(377.0, 472.0, "c"), (400.0, 473.0, "c"), (423.0, 472.0, "c"), (419.0, 483.0),
-                        (400.0, 484.5), (381.0, 483.0)],
-                       [{"CornerL": 0.6, "UpperL": 0.4}, one("UpperC"), {"CornerR": 0.6, "UpperR": 0.4},
-                        {"CornerR": 0.3, "UpperR": 0.7}, one("UpperC"), {"CornerL": 0.3, "UpperL": 0.7}],
-                       bones, F, fr.fill(palette["teeth"]), clip=inside)
-    low_teeth = fr.skinned("MouthLowTeeth",
-                           [(381.0, 482.0), (400.0, 484.0), (419.0, 482.0), (421.0, 491.0, "c"),
-                            (400.0, 492.0, "c"), (379.0, 491.0, "c")],
-                           [{"LowerL": 0.7, "CornerL": 0.3}, one("LowerC"), {"LowerR": 0.7, "CornerR": 0.3},
-                            one("LowerR"), one("LowerC"), one("LowerL")],
-                           bones, F, fr.fill(palette["low_teeth"]), clip=inside)
-    # lower teeth only for a strong stretch (half-opaque teeth over the throat read as mauve)
-    fr.bind_on(low_teeth, "opacity", -1.25, terms(S=2.5), lo=0.0, hi=1.0)
-    # rounded lips (o, u, w) push forward over the teeth
-    # (a steep cut: half-faded teeth over the throat read as mauve)
+                v.children.insert(0, fr.bind("radius", 2.0, terms(K=9.0, TS=-2.0), lo=0.0))
+    # pushed lips (o, u, w, ch): a lip cushion around the opening, behind it (the hole stays dark),
+    # pinched at the corners, fuller below, with a shine on the lower lip
+    lips = fr.skinned("PuckerLips",
+                      [(380.5, 477.0, "c4"), (390.0, 474.2), (400.0, 475.4), (410.0, 474.2), (419.5, 477.0, "c4"),
+                       (410.5, 486.8), (400.0, 489.6), (389.5, 486.8)],
+                      [one("CornerL"), one("UpperL"), one("UpperC"), one("UpperR"), one("CornerR"), one("LowerR"),
+                       one("LowerC"), one("LowerL")], bones, F, fr.stroke(palette["lip_edge"], 1.4),
+                      fr.fill(palette["lip_band"]))
+    shine = fr.skinned("PuckerShine", [(396.5, 485.9), (400.0, 486.5), (403.5, 485.9)],
+                       [one("LowerC")] * 3, bones, F, fr.stroke(palette["shine"], 1.6),
+                       closed=False)
+    for sh in (lips, shine):
+        fr.bind_on(sh, "opacity", -0.3, terms(K=2.5), lo=0.0, hi=1.0)
+    # the upper teeth: static, their edge one arc (no notch, whatever the lips do)
+    ex = [366.0, 383.0, 400.0, 417.0, 434.0]
+    tpts = [(366.0, 455.0, "c"), (434.0, 455.0, "c"),
+            *[(x, teeth_edge_y(x), "c" if k in (0, 4) else "") for k, x in enumerate(reversed(ex))]]
+    tpts = [p if p[2] else p[:2] for p in tpts]
+    ox, oy = 400.0, (455.0 + TEETH_EDGE[0]) / 2
+    teeth = fr.d("Shape", fr.d("ClippingShape", sourceId=inside.ref(), name="Clip"),
+                 smooth_path(fr.d, [(p[0] - ox, p[1] - oy, *p[2:]) for p in tpts]), fr.fill(palette["teeth"]),
+                 x=ox - F[0], y=oy - F[1], name="MouthTeeth")
+    # rounded lips (o, u, w) push forward over the teeth (a steep cut: half-faded teeth read as mauve)
     fr.bind_on(teeth, "opacity", 3.4, terms(K=-8.0), lo=0.0, hi=1.0)
-    tongue = fr.skinned("MouthTongue", [(386.0, 480.0), (400.0, 476.0), (414.0, 480.0), (400.0, 487.0)],
-                        [{"LowerL": 0.5, "LowerC": 0.5}, one("TongueTip"), {"LowerR": 0.5, "LowerC": 0.5},
-                         one("LowerC")], bones, F, fr.fill(palette["tongue"]), clip=inside)
-    lip_line = fr.stroke(palette["lip"], 2.6)
-    fr.bind_on(lip_line, "thickness", 2.6, terms(T=2.6))  # the tucked lower lip rolls fuller
+    # the lower teeth ride the jaw, their top edge just behind the upper edge (teeth together)
+    lpts = [(366.0, 506.0, "c"), (434.0, 506.0, "c"),
+            *[(x, teeth_edge_y(x, LOW_TEETH_TOP), "c" if k in (0, 4) else "") for k, x in enumerate(reversed(ex))]]
+    lpts = [p if p[2] else p[:2] for p in lpts]
+    low_teeth = fr.skinned("MouthLowTeeth", lpts, [one("JawTeeth")] * len(lpts), bones, F,
+                           fr.fill(palette["low_teeth"]), clip=inside)
+    # lower teeth for a stretch (s, e, i), steeply (half-opaque teeth over the interior read as mauve)
+    fr.bind_on(low_teeth, "opacity", -1.2, terms(S=4.0), lo=0.0, hi=1.0)
+    # a soft tongue: a dome on the jaw, its tip rising to the teeth for th / l / d / n
+    tongue = fr.skinned("MouthTongue", [(400.0, 483.0), (416.0, 491.0), (400.0, 500.0), (384.0, 491.0)],
+                        [one("TongueTip"), {"LowerR": 0.5, "JawTeeth": 0.5}, {"LowerC": 0.5, "JawTeeth": 0.5},
+                         {"LowerL": 0.5, "JawTeeth": 0.5}], bones, F, fr.fill(palette["tongue"]), clip=inside)
     lower_lip = fr.skinned("LowerLipShade", [(390.0, 486.0), (400.0, 488.5), (410.0, 486.0)],
-                           [one("LowerL"), one("LowerC"), one("LowerR")], bones, F, lip_line, closed=False)
+                           [one("LowerL"), one("LowerC"), one("LowerR")], bones, F, fr.stroke(palette["lip"], 2.6),
+                           closed=False)
+    # the lip band and the pucker's cushion draw their own lower lip
+    fr.bind_on(lower_lip, "opacity", 1.0, terms(T=-1.3, K=-1.3), lo=0.0, hi=1.0)
+    # f / v: the lower lip tucks up under the upper teeth as a pink band; its top edge is the lower
+    # lip line (on TEETH_EDGE at the f/v jaw) and covers the lower outline (no dark line between the
+    # teeth and the lip), its soft bottom edge a lip shadow
+    band = fr.skinned("LowerLipBand",
+                      [(384.0, 477.4, "c3"), (400.0, 478.2), (416.0, 477.4, "c3"), (409.0, 485.4), (400.0, 487.4),
+                       (391.0, 485.4)],
+                      [{"CornerL": 0.45, "LowerL": 0.55}, one("LowerC"), {"CornerR": 0.45, "LowerR": 0.55},
+                       one("LowerR"), one("LowerC"), one("LowerL")], bones, F, fr.fill(palette["lip_band"]))
+    band_edge = fr.skinned("LowerLipBandEdge", [(389.0, 484.0), (400.0, 487.2), (411.0, 484.0)],
+                           [one("LowerL"), one("LowerC"), one("LowerR")], bones, F,
+                           fr.stroke(palette["lip_edge"], 1.6), closed=False)
+    for sh in (band, band_edge):
+        fr.bind_on(sh, "opacity", -0.25, terms(T=1.5), lo=0.0, hi=1.0)
     creases = []
     for side, c in (("L", "CornerL"), ("R", "CornerR")):
         x0, y0 = at(c)
         k = -1 if side == "L" else 1
         sh = fr.skinned("SmileCrease" + side, [(x0 + 4 * k, y0 - 5), (x0 + 6.5 * k, y0 - 1), (x0 + 5 * k, y0 + 3.5)],
                         [one(c)] * 3, bones, F, fr.stroke(palette["crease"], 1.8), closed=False)
-        fr.bind_on(sh, "opacity", 0.0, terms(DM=1.0, P=0.55, CR=0.2), lo=0.0, hi=1.0)
+        fr.bind_on(sh, "opacity", 0.0, sided(terms(DM=1.0, P=0.55, CR=0.2), side), lo=0.0, hi=1.0)
         creases.append(sh)
-    group = fr.d("Node", *creases, lower_lip, outline, teeth, low_teeth, tongue, throat, inside,
+        # the tense mouth: a short tapered crease out and down from each corner (pressed, stretched lips)
+        tk = fr.skinned("TenseCrease" + side,
+                        tapered([(x0 + 2.6 * k, y0 + 1.2), (x0 + 4.4 * k, y0 + 3.8), (x0 + 4.6 * k, y0 + 6.8)], 1.5),
+                        [one(c)] * 4, bones, F, fr.fill(palette["crease_tense"]))
+        fr.bind_on(tk, "opacity", -0.1, terms(TS=1.2), lo=0.0, hi=0.85)
+        creases.append(tk)
+    group = fr.d("Node", *creases, band_edge, band, shine, lower_lip, outline, teeth, low_teeth, tongue, inside, lips,
                  *[b for _, b in bones.values()], x=0.0, y=0.0, name="FaceMouth")
     host.add(group)
     return group
 
 
+# the nose wrinkle's two creases: centre lines (art space) from the bridge down and out
+NOSE_CREASES = (((395.2, 412.5), (391.9, 416.6), (389.8, 421.8)), ((404.8, 412.5), (408.1, 416.6), (410.2, 421.8)))
+
+
 def rig_nose(fr: FaceRig, nose_g: El, frame: tuple[float, float], palette: Mapping[str, str]) -> None:
-    """Nose wrinkle: the nose lifts and shortens; wrinkle lines appear at the bridge."""
+    """Nose wrinkle: the nose lifts and shortens; two short tapered creases appear at the bridge."""
     pivot = (400.0 - frame[0], 452.0 - frame[1])
     kids = list(nose_g.children)
     inner = fr.d("Node", *kids, x=-pivot[0], y=-pivot[1], name="NoseAUPivot")
     outer = fr.d("Node", fr.bind("y", pivot[1], terms(NW=-2.5)), fr.bind("scaleY", 1.0, terms(NW=-0.12)),
                  inner, x=pivot[0], y=pivot[1], name="NoseAU")
     lines = []
-    for k, (x, y) in enumerate(((393.0, 420.0), (407.0, 419.0))):
-        p = [(x - 6 - frame[0], y + 1.5 - frame[1]), (x - frame[0], y - 2 - frame[1]),
-             (x + 6 - frame[0], y + 1.5 - frame[1])]
-        path = smooth_path(fr.d, p, closed=False)
-        sh = fr.d("Shape", fr.bind("opacity", -0.1, terms(NW=1.6), lo=0.0, hi=1.0), path,
-                  fr.stroke(palette["crease"], 3.0), x=0.0, y=0.0, name=f"NoseWrinkle{k}")
+    for k, c in enumerate(NOSE_CREASES):
+        p = [(q[0] - frame[0], q[1] - frame[1], *q[2:]) for q in tapered(c, 2.2)]
+        sh = fr.d("Shape", fr.bind("opacity", -0.05, terms(NW=2.2), lo=0.0, hi=1.0), smooth_path(fr.d, p),
+                  fill(fr.d, palette["crease"]), x=0.0, y=0.0, name=f"NoseWrinkle{k}")
         lines.append(sh)
     nose_g.children = [*lines, outer]
 
 
 def rig_cheeks(fr: FaceRig, parent: El, blooms: Sequence[El]) -> None:
-    """Cheek raise lifts and swells the cheek bloom."""
+    """Cheek raise lifts and swells the cheek bloom (`CheekBloomL` reads the viewer's-left sum)."""
     for b in blooms:
         x, y = float(b.attrs.get("x", 0.0)), float(b.attrs.get("y", 0.0))
+        side = str(b.attrs.get("name"))[-1]
+        assert side in "LR", b.attrs.get("name")
         fr.wrap(parent, b, (x, y), str(b.attrs.get("name")) + "AU",
-                [("y", 0.0, terms(CR=-5.0)), ("scaleX", 1.0, terms(CR=0.12)), ("scaleY", 1.0, terms(CR=0.1))])
+                [(k, c0, sided(t, side)) for k, c0, t in
+                 (("y", 0.0, terms(CR=-5.0)), ("scaleX", 1.0, terms(CR=0.12)), ("scaleY", 1.0, terms(CR=0.1)))])
 
 
 def rig_body(fr: FaceRig, root: El, body: El, body_g: El, head_base: El,
