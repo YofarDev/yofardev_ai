@@ -1,4 +1,4 @@
-# Rive contract (v8)
+# Rive contract (v8b)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -81,7 +81,7 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `lightAmbient` | color | Ambient colour the shadow side leans toward. Default `FF2C3346`. |
 | `lightAmbientAmount` | number | 0–1, default 0.35: how far the shadow side leans to `lightAmbient`. |
 | `lightFlicker` | number | 0–1, default 0.15: firelight flicker of the key light on the cheek and glasses, looped inside the file (0 steady, 1 full campfire flicker). |
-| `prop` | enum | none, tablet. v7: tablet = pull the tablet out, then hold it (its screen lights the face); back to none puts it away. Plays on its own layer over the gesture layer. |
+| `prop` | enum | none, tablet, newspaper. v7: tablet = pull the tablet out, then hold it (its screen lights the face); back to none puts it away. v8b: newspaper (appended, index 2) = the same out / hold / away with a folded broadsheet (no glow; a soft page shadow on the face). Only one prop shows: a prop changed to another is put away first. Plays on its own layer over the gesture layer. |
 | `lean` | number | 0–1, default 0: listening lean; the torso and head tip toward the viewer and the head lowers a little. Composes with `breath`, gestures and the head turn. |
 
 **Idle life**, built into the file with no Dart involvement: blinking, breathing, and eyes that
