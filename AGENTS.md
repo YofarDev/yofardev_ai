@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -118,7 +118,7 @@ on violation.
 - Golden tests store reference images under `test/**/goldens/` — only regenerate (`--update-goldens`) when a visual change is intentional
 - Widget tests that need app styling use `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
 - Fonts are bundled in `assets/fonts/google_fonts/` (Fraunces 400/500/600, Manrope 400/500) and runtime fetching is off — a new font weight needs a new TTF there
-- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`) and `ext.yofardev.uiLab.state`. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
+- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`, `face`) and `ext.yofardev.uiLab.state`. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
 - v4 avatar: the character and the 4 scenes are Rive files in `assets/rive/`
   (`avatar.riv` + `scenes/<sceneId>.riv`), rebuilt from RML sources via
   `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
@@ -131,17 +131,29 @@ on violation.
   rebuilt by `frive.sh`). macOS: Impeller is disabled in
   `macos/Runner/Info.plist` (Rive crashes the Impeller Metal backend)
 - No CI workflows in this repo — the quality gate is local (`./scripts/fverify.sh`)
-- Face and speech (contract v5, moonshot M2): `FacePerformer` (avatar domain, app-lifetime
-  singleton) turns the director's emotion and the `SpeechTimeline` into one `FaceFrame` per frame;
-  `RiveAvatarView` steps it, then hands it to `HeadMotionSolver.followFace` (its nods and roll drive
-  the hair follow-through `hairLag*`, `gazeLock`/`saccadeSerial` steer the eyes) before stepping the
-  solver, and writes it through `AvatarFaceWriter`. Moods
-  are AU presets (`core/models/performance/mood_presets.dart`); the `mood` enum only drives accents
-  (blush, sweat, anger mark). Visemes and prosody come from `SpeechAnalyzer` on the TTS WAV (Kokoro
-  is deferred); `ChatTtsCubit` announces each sentence 350 ms early (`SpeechPrerollEvent`, with its onset
-  viseme) for the breath; the performer also runs an idle life (`idle`, off in most tests), and `TtsPlaybackService.interrupt()` (not `stop()`) marks a user interruption. Critic
+- Face and speech (contract v6, moonshot M2–M3): `FacePerformer` (avatar domain, app-lifetime
+  singleton) turns the director's emotion and the `SpeechTimeline` into one `FaceFrame` per frame
+  (symmetric AUs plus per-side `left`/`right` `ActionUnitSides` offsets, written as the 14
+  `au…L`/`au…R` contract numbers); `RiveAvatarView` steps it, then hands it to
+  `HeadMotionSolver.followFace` (its nods and roll drive the hair follow-through `hairLag*`,
+  `gazeLock`/`saccadeSerial` steer the eyes) before stepping the solver, and writes it through
+  `AvatarFaceWriter`. Moods are AU presets (`core/models/performance/mood_presets.dart`); the `mood`
+  enum only drives accents (blush, sweat, anger mark). Visemes come from `SpeechAnalyzer` on the TTS
+  WAV, aligned to the sentence text (`TextPhonemizer`, rule-based en/fr G2P in
+  `core/services/audio/g2p/`; `maxAlignCost` falls back to the audio classifier on a mismatch;
+  Kokoro is deferred); `ChatTtsCubit` announces each sentence 350 ms early (`SpeechPrerollEvent`,
+  with its onset viseme) for the breath, and waits that out before playing; the performer also runs
+  an idle life (`idle`, off in most tests), and `TtsPlaybackService.interrupt()` (not `stop()`)
+  marks a user interruption. In the Rive file the blink is a lid sweep on lid bones (`BlinkDrive`),
+  the jaw drops the chin through the 3/4 outline bones, and the arms are a bone chain with skinned
+  sleeves and an IK constraint (`rive/tools/arm_rig.py`; gestures key `HandTarget*`). Critic
   evidence: `tool/face_speech_trace_test.dart` (run with `flutter test`, env-var args) +
-  `uv run rive/tools/review_face.py`
+  `uv run rive/tools/review_face.py` (history gates accept ≤ 1/255 renderer noise, clamp gates are
+  exact); the UI lab's `ext.yofardev.uiLab.configure` also takes a `face` JSON (every AU 0..1, side
+  offsets −1..1, `lipTuck`/`tongueUp`/`breath`, `roll`, `blink`) to pose the face by hand
+- Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
+  `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
+  (gitignored)
 - New features: use `./scripts/fgen.sh`, then wire DI (`service_locator.dart`) and route (`core/router/app_router.dart`) manually — a generated scaffold is not routed/registered until then
 
 ### Key Files
@@ -204,4 +216,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-27
+**Last Updated**: 2026-10-29
