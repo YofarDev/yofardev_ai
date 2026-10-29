@@ -66,6 +66,36 @@ void main() {
       expect(service.current.typing, isTrue);
     });
 
+    test(
+      'touch is presence without an edit and keeps the typing state',
+      () async {
+        final ComposerActivityService service = ComposerActivityService();
+        final List<ComposerActivity> seen = <ComposerActivity>[];
+        service.activity.listen(seen.add);
+        service.touch();
+        service.report(
+          const ComposerActivity(
+            typing: true,
+            caretFraction: 0.7,
+            lastChar: 'a',
+          ),
+        );
+        service.touch();
+        await Future<void>.delayed(Duration.zero);
+        expect(seen[0], const ComposerActivity(edited: false));
+        expect(
+          seen[2],
+          const ComposerActivity(
+            typing: true,
+            caretFraction: 0.7,
+            edited: false,
+          ),
+        );
+        expect(seen[2].lastChar, isNull);
+        await service.dispose();
+      },
+    );
+
     test('value equality', () {
       expect(
         const ComposerActivity(typing: true, caretFraction: 0.2, lastChar: 'x'),

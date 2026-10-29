@@ -1047,6 +1047,9 @@ class FacePerformer {
   }
 
   void _startReaction(PresenceReaction kind) {
+    if (_speaking) {
+      return;
+    }
     _reactKind = kind;
     _reactStart = _clock;
     _reactLen = kind == PresenceReaction.question

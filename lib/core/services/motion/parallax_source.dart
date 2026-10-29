@@ -19,6 +19,10 @@ import '../power/power_saver_source.dart';
 /// Sign: tilting the device's right edge down gives +x; tilting its top away
 /// from the viewer (the screen facing more upward) gives +y.
 ///
+/// The accelerometer is only subscribed while [active] (a diorama scene is on
+/// screen and the app is resumed); inactive its tilt reads 0. [accel] must therefore
+/// be a stream that can be listened to again after a cancel.
+///
 /// Nothing here throws: a sensor error is logged once, the accelerometer is
 /// dropped and the pointer (or 0) takes over.
 class ParallaxSource {
@@ -26,16 +30,12 @@ class ParallaxSource {
     Stream<AccelerometerEvent>? accel,
     required bool Function() reduceMotion,
     required PowerSaverSource power,
+    bool active = true,
   }) : _reduceMotion = reduceMotion,
        _power = power,
-       _hasAccel = accel != null {
-    if (accel != null) {
-      _accelSub = accel.listen(
-        _onAccel,
-        onError: _onAccelError,
-        onDone: () => _dropAccel('accelerometer stream ended'),
-      );
-    }
+       _accel = accel,
+       _active = active {
+    _subscribeAccel();
     _powerSub = power.changes.listen(
       (bool on) {
         _powerSaver = on;
@@ -67,13 +67,14 @@ class ParallaxSource {
 
   final bool Function() _reduceMotion;
   final PowerSaverSource _power;
-  final bool _hasAccel;
+  final Stream<AccelerometerEvent>? _accel;
 
   final StreamController<Offset> _controller =
       StreamController<Offset>.broadcast();
   StreamSubscription<AccelerometerEvent>? _accelSub;
   StreamSubscription<bool>? _powerSub;
 
+  bool _active;
   bool _accelDropped = false;
   bool _powerSaver = false;
   bool _disposed = false;
@@ -96,7 +97,49 @@ class ParallaxSource {
   Stream<Offset> get values => _controller.stream;
 
   /// Whether the accelerometer drives the offset (false: the pointer does).
-  bool get usesAccelerometer => _hasAccel && !_accelDropped;
+  bool get usesAccelerometer => _accel != null && !_accelDropped;
+
+  /// Whether the accelerometer is live. Inactive, it is not subscribed and
+  /// the tilt reads 0 (emitted once); the pointer is unaffected.
+  bool get active => _active;
+
+  set active(bool value) {
+    if (_disposed || value == _active) {
+      return;
+    }
+    _active = value;
+    if (value) {
+      _subscribeAccel();
+    } else {
+      _unsubscribeAccel();
+      _tilt = Offset.zero;
+    }
+    _update();
+  }
+
+  /// Re-evaluates reduce motion (it is read through a callback, so a change
+  /// in the system setting is not pushed to the source).
+  void refresh() => _update();
+
+  void _subscribeAccel() {
+    final Stream<AccelerometerEvent>? accel = _accel;
+    if (accel == null || _accelDropped || !_active || _accelSub != null) {
+      return;
+    }
+    // A fresh low-pass and rest pose: the device may have moved meanwhile.
+    _gx = _gz = null;
+    _lastSample = null;
+    _accelSub = accel.listen(
+      _onAccel,
+      onError: _onAccelError,
+      onDone: () => _dropAccel('accelerometer stream ended'),
+    );
+  }
+
+  void _unsubscribeAccel() {
+    unawaited(_accelSub?.cancel());
+    _accelSub = null;
+  }
 
   /// Reports the pointer position over the stage, normalised to -1..1 per
   /// axis (0 at the centre, +x right, +y up). Ignored while the
@@ -179,8 +222,7 @@ class ParallaxSource {
       tag: _tag,
     );
     _tilt = Offset.zero;
-    unawaited(_accelSub?.cancel());
-    _accelSub = null;
+    _unsubscribeAccel();
     _update();
   }
 
@@ -188,9 +230,10 @@ class ParallaxSource {
     if (_disposed) {
       return;
     }
+    // Inactive only parks the accelerometer: the pointer costs nothing.
     final Offset next = _reduceMotion() || _powerSaver
         ? Offset.zero
-        : (usesAccelerometer ? _tilt : _pointer);
+        : (usesAccelerometer ? (_active ? _tilt : Offset.zero) : _pointer);
     if ((next.dx - _emitted.dx).abs() <= epsilon &&
         (next.dy - _emitted.dy).abs() <= epsilon &&
         !(next == Offset.zero && _emitted != Offset.zero)) {

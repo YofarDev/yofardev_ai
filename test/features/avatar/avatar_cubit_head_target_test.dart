@@ -155,6 +155,28 @@ void main() {
       expect(signals, 2);
     });
 
+    test('a tap reaction skips its gesture while the tablet is out', () async {
+      director.setActiveTool('getCurrentWeather');
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.prop, AvatarProp.tablet);
+
+      cubit.onPropTapped(AvatarScene.livingRoom, 'tv');
+      cubit.onAvatarTapped('head');
+      // no gesture (and no stuck prop-gesture flag), the mood still applies
+      expect(cubit.state.gestureEvent.seq, 0);
+      expect(cubit.state.mood, AvatarMood.happy);
+      director.setActiveTool(null);
+
+      // once the tablet is away the same tap plays its gesture again
+      await Future<void>.delayed(
+        PerformanceDirector.tabletHoldOver + const Duration(milliseconds: 50),
+      );
+      expect(cubit.state.prop, AvatarProp.none);
+      cubit.onPropTapped(AvatarScene.livingRoom, 'tv');
+      expect(cubit.state.gestureEvent.gesture, AvatarGesture.laugh);
+      expect(cubit.state.gestureEvent.seq, 1);
+    });
+
     test('does not emit again when the head target is unchanged', () async {
       director.setActiveTool('web_search');
       await Future<void>.delayed(Duration.zero);

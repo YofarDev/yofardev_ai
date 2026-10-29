@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sensors_plus/sensors_plus.dart' show AccelerometerEvent;
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/services/motion/parallax_source.dart';
 import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
 import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
 
 import '../../helpers/rive_test_assets.dart';
@@ -99,6 +102,43 @@ void main() {
     await tester.pump();
     expect(parallax.value, Offset.zero);
     await mouse.removePointer();
+  });
+
+  testWidgets('the scene view parks the sensors until a diorama is loaded', (
+    WidgetTester tester,
+  ) async {
+    final ParallaxSource tilt = ParallaxSource(
+      accel: const Stream<AccelerometerEvent>.empty(),
+      reduceMotion: () => false,
+      power: _NoPowerSaver(),
+    );
+    addTearDown(tilt.dispose);
+    expect(tilt.active, isTrue);
+    await tester.pumpWidget(
+      h.app(
+        Scaffold(
+          body: RiveSceneView(
+            scene: AvatarScene.campfire,
+            sceneEvent: (sceneEvent: SceneEvent.flare, seq: 0),
+            parallax: tilt,
+          ),
+        ),
+      ),
+    );
+    // the file has not loaded: nothing to move yet
+    expect(tilt.active, isFalse);
+    await tester.pumpWidget(const SizedBox());
+    expect(tilt.active, isFalse);
+  });
+
+  test('only the campfire is a diorama in M4', () {
+    expect(
+      <AvatarScene>[
+        for (final AvatarScene s in AvatarScene.values)
+          if (s.isDiorama) s,
+      ],
+      <AvatarScene>[AvatarScene.campfire],
+    );
   });
 
   testWidgets('without a parallax source the stack has no hover region', (

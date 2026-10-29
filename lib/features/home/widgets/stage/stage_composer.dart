@@ -219,6 +219,7 @@ class _StageComposerState extends State<StageComposer>
         typing: true,
         caretFraction: StageComposer.caretFractionOf(value),
         lastChar: lastChar,
+        edited: edited,
       ),
     );
     _typingTimer?.cancel();
@@ -249,6 +250,7 @@ class _StageComposerState extends State<StageComposer>
       : 'en_US';
 
   void _onOrbTap(ComposerOrbState mode) {
+    widget.activity?.touch();
     switch (mode) {
       case ComposerOrbState.idle:
         if (widget.speech.isSupported) {
@@ -273,6 +275,7 @@ class _StageComposerState extends State<StageComposer>
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String localeId = _localeId();
     final int session = ++_session;
+    widget.activity?.touch();
     _haptic();
     _focusNode.unfocus();
     setState(() {
@@ -349,6 +352,7 @@ class _StageComposerState extends State<StageComposer>
       return;
     }
     _endListening();
+    widget.activity?.touch();
     await _submit(words);
   }
 
@@ -400,6 +404,7 @@ class _StageComposerState extends State<StageComposer>
 
   Future<void> _attachImage() async {
     final String describe = AppLocalizations.of(context).describeThisImage;
+    widget.activity?.touch();
     final File? file = await widget.pickImage();
     if (!mounted || file == null) {
       return;

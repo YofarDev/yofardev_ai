@@ -7,6 +7,7 @@ import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_gesture.dart';
 import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/models/performance/avatar_prop.dart';
 import '../../../../core/models/sound_effects.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
@@ -484,8 +485,15 @@ class AvatarCubit extends Cubit<AvatarState> {
       // follows the director's emotion
       _director?.setMood(reactionMood);
     }
-    if (reaction.gesture != null) {
-      final AvatarGesture gesture = reaction.gesture!;
+    final AvatarGesture? reactionGesture = reaction.gesture;
+    if (reactionGesture != null && state.prop != AvatarProp.none) {
+      // The hands hold the prop: the mood and the sound still play.
+      AppLogger.debug(
+        'AvatarCubit: prop out, skipped ${reactionGesture.name}',
+        tag: 'AvatarCubit',
+      );
+    } else if (reactionGesture != null) {
+      final AvatarGesture gesture = reactionGesture;
       _propGesturePlaying = true;
       next = next.copyWith(
         gestureEvent: (gesture: gesture, seq: next.gestureEvent.seq + 1),

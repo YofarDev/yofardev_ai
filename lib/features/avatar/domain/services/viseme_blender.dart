@@ -341,7 +341,8 @@ class VisemeBlender {
       : _targetOf(spans, index, roundSh);
 
   /// The span's target shape in its context ([_shapeOf] with the jaw as a
-  /// slow articulator): inside a phrase the jaw never falls under
+  /// slow articulator): inside a phrase (a sounding span on both sides within
+  /// [phraseBreak]) the jaw never falls under
   /// [phraseJawFloor] (a short `sil` between two sounds included), except
   /// for a `pp` seal and an `ff` tuck; and a consonant keeps at least
   /// [consonantJawShare] of the jaw of its neighbouring vowels (the mean
@@ -371,7 +372,37 @@ class VisemeBlender {
         jaw = _max(jaw, consonantJawShare * vowel);
       }
     }
-    return raw.copyWith(jaw: _max(jaw, phraseJawFloor).clamp(0.0, 1.0));
+    // The floor holds only inside a phrase: a sounding span on both sides
+    // within the phrase break. A span at a phrase edge (next to a `sil` of
+    // [phraseBreak] or more, or the start or end) may close the jaw.
+    final bool inside =
+        _soundingBeside(spans, index, -1) && _soundingBeside(spans, index, 1);
+    return raw.copyWith(
+      jaw: (inside ? _max(jaw, phraseJawFloor) : jaw).clamp(0.0, 1.0),
+    );
+  }
+
+  /// Whether a sounding (not `sil`) span follows [index] in direction [step]
+  /// within the phrase: shorter silences are passed, a gap or a `sil` of
+  /// [phraseBreak] or more ends the search.
+  static bool _soundingBeside(List<VisemeSpan> spans, int index, int step) {
+    for (int i = index + step; i >= 0 && i < spans.length; i += step) {
+      final VisemeSpan s = spans[i];
+      final VisemeSpan toward = spans[i - step];
+      final Duration gap = step > 0
+          ? s.start - toward.end
+          : toward.start - s.end;
+      if (gap >= phraseBreak) {
+        return false;
+      }
+      if (s.viseme != Viseme.sil) {
+        return true;
+      }
+      if (s.end - s.start >= phraseBreak) {
+        return false;
+      }
+    }
+    return false;
   }
 
   /// The jaw of the nearest vowel from [index] in direction [step] (±1)

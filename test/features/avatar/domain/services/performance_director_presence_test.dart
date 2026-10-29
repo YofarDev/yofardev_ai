@@ -1,6 +1,7 @@
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_gesture.dart';
+import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/performance_intent.dart';
@@ -54,26 +55,71 @@ void main() {
         director.dispose();
       });
 
-      test('a cleared tool puts the tablet away and the gaze back', () {
-        final PerformanceDirector director = build();
-        director.setActiveTool('searchGoogle');
-        director.setActiveTool(null);
-        expect(director.current.prop, AvatarProp.none);
-        expect(director.current.gaze, const GazeTarget.user());
-        director.dispose();
+      test('a cleared tool brings the gaze back at once, the tablet after '
+          'the hold-over', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          director.intents.listen((_) {});
+          director.setActiveTool('searchGoogle');
+          director.setActiveTool(null);
+          expect(director.current.gaze, const GazeTarget.user());
+          expect(director.current.prop, AvatarProp.tablet);
+          advance(async, 399);
+          expect(director.current.prop, AvatarProp.tablet);
+          advance(async, 2);
+          expect(director.current.prop, AvatarProp.none);
+          director.dispose();
+        });
       });
 
-      test('back-to-back tools never show an intermediate none', () {
-        final PerformanceDirector director = build();
-        final List<AvatarProp> props = <AvatarProp>[];
-        director.intents.listen((PerformanceIntent i) => props.add(i.prop));
-        director.setActiveTool('searchGoogle');
-        director.setActiveTool('getTextContentFromWebsite');
-        director.setActiveTool('getCurrentWeather');
-        // let the broadcast stream deliver
-        return Future<void>.delayed(Duration.zero).then((_) {
+      test('back-to-back tools never emit an intermediate none', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          final List<AvatarProp> props = <AvatarProp>[];
+          director.intents.listen((PerformanceIntent i) => props.add(i.prop));
+          director.setActiveTool('searchGoogle');
+          advance(async, 100);
+          director.setActiveTool(null);
+          advance(async, 300);
+          director.setActiveTool('getTextContentFromWebsite');
+          advance(async, 1000);
           expect(props, isNotEmpty);
-          expect(props.toSet(), <AvatarProp>{AvatarProp.tablet});
+          expect(props, everyElement(AvatarProp.tablet));
+          expect(director.current.prop, AvatarProp.tablet);
+          // the first tool's hold-over timer is gone: nothing ends it early
+          director.setActiveTool(null);
+          advance(async, 500);
+          expect(director.current.prop, AvatarProp.none);
+          expect(props.last, AvatarProp.none);
+          director.dispose();
+        });
+      });
+
+      test('speech starting ends the hold-over at once', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          director.intents.listen((_) {});
+          director.setActiveTool('searchGoogle');
+          director.setActiveTool(null);
+          director.setSpeaking(true);
+          expect(director.current.prop, AvatarProp.none);
+          director.setSpeaking(false);
+          expect(director.current.prop, AvatarProp.none);
+          advance(async, 1000);
+          expect(director.current.prop, AvatarProp.none);
+          director.dispose();
+        });
+      });
+
+      test('an LLM gesture during the hold-over plays at once', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          director.intents.listen((_) {});
+          director.setActiveTool('searchGoogle');
+          director.setActiveTool(null);
+          director.requestGesture(AvatarGesture.wave);
+          expect(director.current.prop, AvatarProp.none);
+          expect(director.current.pendingGesture, AvatarGesture.wave);
           director.dispose();
         });
       });
@@ -156,6 +202,81 @@ void main() {
         director.setComposer(typed('?'));
         expect(director.current.nodSerial, 0);
         expect(director.current.reactionSerial, 0);
+        director.dispose();
+      });
+    });
+
+    group('caret moves and touches', () {
+      ComposerActivity caretMove({double caret = 0.2}) =>
+          ComposerActivity(typing: true, caretFraction: caret, edited: false);
+
+      test('a caret move after a pause earns no nod, but moves the gaze', () {
+        final PerformanceDirector director = build();
+        director.setComposer(caretMove(caret: 0.3));
+        expect(director.current.nodSerial, 0);
+        expect(director.current.gaze, const GazeTarget.caret(0.3));
+        director.dispose();
+      });
+
+      test('a moved caret on ? or ! earns no reaction', () {
+        final PerformanceDirector director = build();
+        director.setComposer(
+          const ComposerActivity(typing: true, lastChar: '?', edited: false),
+        );
+        expect(director.current.reactionSerial, 0);
+        director.dispose();
+      });
+
+      test('caret moves still count as activity', () {
+        final PerformanceDirector director = build();
+        director.setIdleStage(2);
+        director.setComposer(caretMove());
+        expect(director.current.idleStage, 0);
+        director.dispose();
+      });
+
+      test('a caret move between edits does not spend the nod gap', () {
+        final PerformanceDirector director = build();
+        director.setComposer(typed('a'));
+        currentTime = currentTime.add(const Duration(seconds: 3));
+        director.setComposer(caretMove());
+        currentTime = currentTime.add(const Duration(milliseconds: 100));
+        director.setComposer(typed('b'));
+        // 3.1 s since the first nod and typing resumed after a pause
+        expect(director.current.nodSerial, 2);
+        director.dispose();
+      });
+    });
+
+    group('keystroke snapshots', () {
+      test(
+        'a keystroke that changes nothing the intent shows emits nothing',
+        () async {
+          final PerformanceDirector director = build();
+          final List<PerformanceIntent> seen = <PerformanceIntent>[];
+          director.intents.listen(seen.add);
+          director.setComposer(typed('a', caret: 0.4));
+          await Future<void>.delayed(Duration.zero);
+          final int before = seen.length;
+          currentTime = currentTime.add(const Duration(milliseconds: 100));
+          director.setComposer(typed('b', caret: 0.4));
+          await Future<void>.delayed(Duration.zero);
+          expect(seen.length, before);
+          director.setComposer(typed('c', caret: 0.5));
+          await Future<void>.delayed(Duration.zero);
+          expect(seen.length, before + 1);
+          director.dispose();
+        },
+      );
+
+      test('the mood faces are computed once per mood, not per snapshot', () {
+        final PerformanceDirector director = build();
+        director.setMood(AvatarMood.happy);
+        expect(identical(director.current.face, director.current.face), isTrue);
+        expect(
+          identical(director.current.emotion, director.current.emotion),
+          isTrue,
+        );
         director.dispose();
       });
     });
@@ -374,11 +495,36 @@ void main() {
         });
       });
 
-      test('idle gestures wait while the idle tablet is out', () {
+      test('an LLM gesture clears the idle tablet and plays', () async {
         final PerformanceDirector director = build();
+        int signals = 0;
+        director.activity.listen((_) => signals++);
         director.setIdleStage(3);
         director.requestGesture(AvatarGesture.wave);
+        expect(director.current.idleStage, 0);
+        expect(director.current.prop, AvatarProp.none);
+        expect(director.current.pendingGesture, AvatarGesture.wave);
+        await Future<void>.delayed(Duration.zero);
+        expect(signals, 1, reason: 'the ladder hears it');
+        director.dispose();
+      });
+
+      test('an auto gesture waits while the idle tablet is out', () {
+        final PerformanceDirector director = build();
+        director.setIdleStage(3);
+        director.requestGesture(AvatarGesture.wave, source: GestureSource.auto);
         expect(director.current.pendingGesture, isNull);
+        expect(director.current.idleStage, 3);
+        director.dispose();
+      });
+
+      test('an LLM gesture is still dropped while a lookup tool holds the '
+          'tablet', () {
+        final PerformanceDirector director = build();
+        director.setActiveTool('searchGoogle');
+        director.requestGesture(AvatarGesture.wave);
+        expect(director.current.pendingGesture, isNull);
+        expect(director.current.prop, AvatarProp.tablet);
         director.dispose();
       });
 

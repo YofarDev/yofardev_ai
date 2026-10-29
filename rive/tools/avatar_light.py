@@ -5,7 +5,7 @@ range (`avatar_kit.M4_ID_START`), so no earlier id moves. Every bind is history-
 number maps straight onto a paint or a transform.
 
 - Rim (`lightRim`, `lightRimIntensity`, opposite `lightKeyX/Y`): a copy of the face outline
-  (skinned to the same turn bones), the back-hair silhouette and the torso outline, each stroked
+  (skinned to the same turn bones) and the back-hair silhouette (no torso rim, M4 ruling 22), each stroked
   `RIM_W` wide and clipped by its silhouette, so only the inner band shows (the light eats the
   inner half of the ink line). The stroke's linear gradient is clear on the key side and reaches
   the rim colour at the far side; its opacity is the rim intensity.

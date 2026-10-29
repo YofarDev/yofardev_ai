@@ -125,6 +125,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  /// Coming back to the app is presence: the idle ladder starts over (the
+  /// avatar would otherwise greet the user with the tablet out).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.composerActivity?.touch();
+    }
+  }
+
   @override
   void didChangeMetrics() {
     WidgetsBinding.instance.addPostFrameCallback((_) {

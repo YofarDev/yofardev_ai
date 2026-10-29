@@ -348,6 +348,8 @@ Future<void> setupServiceLocator() async {
       reduceMotion: () =>
           PlatformDispatcher.instance.accessibilityFeatures.disableAnimations,
       power: getIt<PowerSaverSource>(),
+      // The scene view turns it on while a diorama is on screen.
+      active: false,
     ),
     dispose: (ParallaxSource source) => source.dispose(),
   );

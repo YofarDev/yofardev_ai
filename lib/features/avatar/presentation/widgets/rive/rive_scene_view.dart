@@ -23,7 +23,9 @@ import 'latest_load_gate.dart';
 /// Parallax (contract v7): [parallax]'s offset is written to `SceneVM`
 /// `parallaxX` / `parallaxY` at most once per frame, and only when an axis
 /// moved by more than 0.001. A non-null [parallaxOverride] (the UI lab) is
-/// written instead of the source.
+/// written instead of the source. The source runs (accelerometer
+/// subscribed) only while the loaded scene is a diorama and the app is
+/// resumed.
 class RiveSceneView extends StatefulWidget {
   const RiveSceneView({
     super.key,
@@ -61,6 +63,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
   Offset _parallax = Offset.zero;
   bool _parallaxFrameScheduled = false;
   AvatarScene? _loadedScene;
+  bool _resumed =
+      WidgetsBinding.instance.lifecycleState == null ||
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
   String? _error;
 
   /// Home switches scene while the first load may still be in flight (the
@@ -72,6 +77,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _listenParallax();
+    _syncParallaxActive();
     _loadScene(widget.scene);
   }
 
@@ -97,8 +103,23 @@ class _RiveSceneViewState extends State<RiveSceneView>
     });
   }
 
+  /// The sensors run only for a loaded diorama while the app is resumed.
+  void _syncParallaxActive() {
+    widget.parallax?.active = _resumed && (_loadedScene?.isDiorama ?? false);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reduce motion is read through a callback: re-push it on a change.
+    MediaQuery.maybeDisableAnimationsOf(context);
+    widget.parallax?.refresh();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _resumed = state == AppLifecycleState.resumed;
+    _syncParallaxActive();
     // Pause Rive while the app is in the background.
     final RiveWidgetController? controller = _controller;
     if (controller != null) {
@@ -110,7 +131,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
   void didUpdateWidget(RiveSceneView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.parallax != oldWidget.parallax) {
+      oldWidget.parallax?.active = false;
       _listenParallax();
+      _syncParallaxActive();
     }
     if (widget.parallaxOverride != oldWidget.parallaxOverride ||
         widget.parallax != oldWidget.parallax) {
@@ -141,6 +164,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     WidgetsBinding.instance.removeObserver(this);
     _loads.cancelAll();
     unawaited(_parallaxSub?.cancel());
+    widget.parallax?.active = false;
     _teardown();
     super.dispose();
   }
@@ -191,6 +215,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
         // A fresh binding has no parallax yet.
         _parallaxWriter = SceneParallaxWriter(binding.setNumber)
           ..write(widget.parallaxOverride ?? _parallax, force: true);
+        _syncParallaxActive();
       });
     } on Exception catch (e) {
       AppLogger.error(

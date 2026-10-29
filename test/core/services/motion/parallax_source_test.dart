@@ -33,11 +33,12 @@ void main() {
 
   Future<void> settle() => Future<void>.delayed(Duration.zero);
 
-  ParallaxSource build({bool withAccel = true}) {
+  ParallaxSource build({bool withAccel = true, bool active = true}) {
     final ParallaxSource s = ParallaxSource(
       accel: withAccel ? accel.stream : null,
       reduceMotion: () => reduceMotion,
       power: power,
+      active: active,
     );
     s.values.listen(seen.add);
     source = s;
@@ -47,14 +48,13 @@ void main() {
   setUp(() {
     power = _FakePower();
     reduceMotion = false;
-    accel = StreamController<AccelerometerEvent>();
+    accel = StreamController<AccelerometerEvent>.broadcast();
     seen = <Offset>[];
   });
 
   tearDown(() async {
     await source?.dispose();
-    // Never listened to in some tests: close() would not complete.
-    unawaited(accel.close());
+    await accel.close();
   });
 
   group('without an accelerometer', () {
@@ -189,7 +189,92 @@ void main() {
     });
   });
 
+  group('active', () {
+    test('inactive: no accelerometer subscription, reads 0', () async {
+      final ParallaxSource s = build(active: false);
+      expect(accel.hasListener, isFalse);
+      expect(s.active, isFalse);
+      s.pointer(const Offset(0.5, 0.5));
+      await settle();
+      expect(s.value, Offset.zero);
+      expect(seen, isEmpty);
+    });
+
+    test('inactive without sensors: the pointer still works', () async {
+      final ParallaxSource s = build(withAccel: false, active: false);
+      s.pointer(const Offset(0.5, 0.25));
+      await settle();
+      expect(s.value, const Offset(0.5, 0.25));
+    });
+
+    test(
+      'activating subscribes, deactivating cancels and emits 0 once',
+      () async {
+        final ParallaxSource s = build(active: false);
+        s.active = true;
+        expect(accel.hasListener, isTrue);
+        accel.add(_event(0, 0, 0));
+        for (int i = 1; i <= 20; i++) {
+          accel.add(_event(-3, 0, i * 20));
+        }
+        await settle();
+        expect(s.value.dx, greaterThan(0.5));
+        seen.clear();
+        s.active = false;
+        s.active = false;
+        await settle();
+        expect(accel.hasListener, isFalse);
+        expect(seen, <Offset>[Offset.zero]);
+        expect(s.value, Offset.zero);
+      },
+    );
+
+    test('reactivating resubscribes with a fresh rest pose', () async {
+      final ParallaxSource s = build();
+      accel.add(_event(0, 0, 0));
+      await settle();
+      s.active = false;
+      s.active = true;
+      expect(accel.hasListener, isTrue);
+      // The device now rests tilted: that is the new rest, not an offset.
+      for (int i = 0; i < 10; i++) {
+        accel.add(_event(-3, 0, 100000 + i * 20));
+      }
+      await settle();
+      expect(s.value, Offset.zero);
+      for (int i = 1; i <= 30; i++) {
+        accel.add(_event(0, 3, 100200 + i * 20));
+      }
+      await settle();
+      expect(s.value.dy, greaterThan(0.3));
+    });
+
+    test('a dropped accelerometer is not resubscribed', () async {
+      final ParallaxSource s = build();
+      accel.addError(StateError('sensor gone'));
+      await settle();
+      s.active = false;
+      s.active = true;
+      expect(accel.hasListener, isFalse);
+    });
+  });
+
   group('reduce motion and battery saver', () {
+    test('refresh re-reads reduce motion', () async {
+      final ParallaxSource s = build(withAccel: false);
+      s.pointer(const Offset(0.4, 0.2));
+      await settle();
+      expect(s.value, const Offset(0.4, 0.2));
+      reduceMotion = true;
+      s.refresh();
+      await settle();
+      expect(s.value, Offset.zero);
+      reduceMotion = false;
+      s.refresh();
+      await settle();
+      expect(s.value, const Offset(0.4, 0.2));
+    });
+
     test('reduce motion reads 0 (pointer)', () async {
       final ParallaxSource s = build(withAccel: false);
       reduceMotion = true;

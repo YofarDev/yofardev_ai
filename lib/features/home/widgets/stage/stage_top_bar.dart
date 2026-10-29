@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -15,10 +17,13 @@ import 'stage_menu.dart';
 /// right (new chat, language, captions, settings, demo).
 ///
 /// [onStartDemo] plays the demo on the current chat (Home owns it).
+/// [onTouch] hears every tap on a chip or a menu row (presence for the
+/// avatar's idle ladder).
 class StageTopBar extends StatelessWidget {
-  const StageTopBar({super.key, required this.onStartDemo});
+  const StageTopBar({super.key, required this.onStartDemo, this.onTouch});
 
   final VoidCallback onStartDemo;
+  final VoidCallback? onTouch;
 
   @override
   Widget build(BuildContext context) {
@@ -30,19 +35,23 @@ class StageTopBar extends StatelessWidget {
           child: AppPill(
             label: l10n.stageHistory,
             icon: Icons.history_rounded,
-            onTap: () => context.push(RouteConstants.chats),
+            onTap: () {
+              onTouch?.call();
+              unawaited(context.push(RouteConstants.chats));
+            },
           ),
         ),
-        _MoreMenu(onStartDemo: onStartDemo),
+        _MoreMenu(onStartDemo: onStartDemo, onTouch: onTouch),
       ],
     );
   }
 }
 
 class _MoreMenu extends StatefulWidget {
-  const _MoreMenu({required this.onStartDemo});
+  const _MoreMenu({required this.onStartDemo, this.onTouch});
 
   final VoidCallback onStartDemo;
+  final VoidCallback? onTouch;
 
   @override
   State<_MoreMenu> createState() => _MoreMenuState();
@@ -53,6 +62,7 @@ class _MoreMenuState extends State<_MoreMenu> {
 
   /// Closes the menu, then runs [action].
   VoidCallback _then(VoidCallback action) => () {
+    widget.onTouch?.call();
     _menu.close();
     action();
   };
@@ -115,8 +125,10 @@ class _MoreMenuState extends State<_MoreMenu> {
       builder:
           (BuildContext context, MenuController controller, Widget? child) =>
               AppIconButton(
-                onPressed: () =>
-                    controller.isOpen ? controller.close() : controller.open(),
+                onPressed: () {
+                  widget.onTouch?.call();
+                  controller.isOpen ? controller.close() : controller.open();
+                },
                 icon: Icons.more_horiz_rounded,
                 semanticLabel: l10n.stageMenu,
                 active: controller.isOpen,

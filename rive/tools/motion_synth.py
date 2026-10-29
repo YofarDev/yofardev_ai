@@ -52,9 +52,10 @@ def action(beat: Beat, rules: MotionRules = MOTION, fps: int = 60) -> list[Key]:
     """
     s, n, a, b = beat.start, beat.frames, float(beat.a), float(beat.b)
     travel: float = b - a
-    if travel == 0 or n <= 0:
+    if travel == 0 or n <= 1:
         return [(s, a, "hold"), (s + max(n, 0), b, "hold")]
-    wind: int = max(1, round(n * rules.anticipation))
+    # The anticipation must land before the main key (n >= 2 leaves room for one frame).
+    wind: int = min(max(1, round(n * rules.anticipation)), n - 1)
     settle: int = max(1, round(rules.settle_ms * fps / 1000))
     over: float = rules.overshoot * travel
     keys: list[Key] = [

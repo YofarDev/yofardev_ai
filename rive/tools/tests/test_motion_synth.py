@@ -36,6 +36,15 @@ def test_zero_travel_beat_is_two_keys() -> None:
     assert [k[1] for k in keys] == [3, 3]
 
 
+def test_one_frame_beat_is_two_keys_and_short_beats_keep_frames_distinct() -> None:
+    keys = action(Beat(4, 1, 0, 10))
+    assert keys == [(4, 0.0, "hold"), (5, 10.0, "hold")]
+    for n in (2, 3, 5, 40):
+        frames = [k[0] for k in action(Beat(0, n, 0, 10))]
+        assert frames == sorted(frames)
+        assert len(frames) == len(set(frames)), n
+
+
 def test_stagger_rounds_cumulative_offsets() -> None:
     assert stagger(["head", "torso", "hair"]) == {"head": 0, "torso": 2, "hair": 5}
 

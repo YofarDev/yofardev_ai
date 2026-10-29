@@ -32,9 +32,12 @@ class _QueuedGesture {
 /// - **Gaze**: speaking → user; a running tool → away; composing → the
 ///   caret; idle stage 1 → seeded glances (away 0.25–0.45 for 1.2 s every
 ///   6–10 s); else user.
-/// - **Prop**: the tablet while a lookup tool runs, and while the idle
-///   ladder has it out (stage 2: 8 s once a minute, stage 3: held); never
-///   while speaking. Gestures requested while a prop is out are dropped.
+/// - **Prop**: the tablet while a lookup tool runs (kept [tabletHoldOver]
+///   after it ends, so back-to-back tools never put it away in between), and
+///   while the idle ladder has it out (stage 2: 8 s once a minute, stage 3:
+///   held); never while speaking. Gestures requested while a prop is out are
+///   dropped, except that an LLM gesture is activity: it clears the idle
+///   tablet and the hold-over, and plays.
 /// - **Lean** 0.6 while the user types (0 when speaking), a backchannel
 ///   nod when typing resumes after a 600 ms pause or a word ends (at most
 ///   one per 2.5 s) and a reaction on a typed `?` / `!` (at most one per
@@ -73,6 +76,10 @@ class PerformanceDirector {
   /// Fewest time between two punctuation reactions.
   static const Duration reactionGap = Duration(milliseconds: 1200);
 
+  /// The tablet stays out this long after a lookup tool ends, so a second
+  /// tool starting right away keeps it.
+  static const Duration tabletHoldOver = Duration(milliseconds: 400);
+
   /// Stage 2: the tablet is out this long, once per [tabletPeriod].
   static const Duration tabletHold = Duration(seconds: 8);
   static const Duration tabletPeriod = Duration(seconds: 60);
@@ -85,9 +92,13 @@ class PerformanceDirector {
   static const Duration _safetyTimeout = Duration(seconds: 4);
   static const int _maxQueueDepth = 2;
 
-  AvatarMood? _mood;
+  // Derived from the mood once (setMood), not on every intent snapshot.
+  EmotionVector _emotion = emotionForMood(AvatarMood.neutral);
+  ActionUnits _face = actionUnitsForMood(AvatarMood.neutral);
   bool _speaking = false;
   String? _activeTool;
+  bool _tabletHeldOver = false;
+  Timer? _holdOverTimer;
 
   // — presence —
   ComposerActivity _composer = ComposerActivity.idle;
@@ -130,22 +141,38 @@ class PerformanceDirector {
 
   /// Arms the director's mood (emotion + face presets follow it).
   void setMood(AvatarMood? mood) {
-    _mood = mood;
+    final AvatarMood resolved = mood ?? AvatarMood.neutral;
+    _emotion = emotionForMood(resolved);
+    _face = actionUnitsForMood(resolved);
     _emit();
   }
 
   void setSpeaking(bool speaking) {
     _speaking = speaking;
     if (speaking) {
+      _endHoldOver();
       _noteActivity();
     }
     _emit();
   }
 
   void setActiveTool(String? toolName) {
+    final String? previous = _activeTool;
     _activeTool = toolName;
     if (toolName != null) {
+      _endHoldOver();
       _noteActivity();
+    } else if (previous != null &&
+        lookupTools.contains(previous) &&
+        !_speaking) {
+      // The tablet outlasts the tool a moment: the next one may follow.
+      _tabletHeldOver = true;
+      _holdOverTimer?.cancel();
+      _holdOverTimer = Timer(tabletHoldOver, () {
+        _holdOverTimer = null;
+        _tabletHeldOver = false;
+        _emit();
+      });
     }
     _emit();
   }
@@ -154,10 +181,28 @@ class PerformanceDirector {
   /// types and nothing else has the floor) the backchannel nod and the
   /// punctuation reaction. Allocates nothing beyond the intent it emits.
   void setComposer(ComposerActivity activity) {
+    final bool composingBefore = _composing;
+    final double caretBefore = _composer.caretFraction;
+    final int stageBefore = _idleStage;
+    final int nodsBefore = _nodSerial;
+    final int reactionsBefore = _reactionSerial;
     _composer = activity;
     _noteActivity();
-    if (activity.typing && !_speaking && _activeTool == null) {
+    // Caret moves and touches (not edited) are presence, never a nod.
+    if (activity.typing &&
+        activity.edited &&
+        !_speaking &&
+        _activeTool == null) {
       _typed(activity.lastChar);
+    }
+    // A keystroke that changes nothing the intent shows (same caret, no nod,
+    // no reaction) builds no snapshot at all.
+    if (_composing == composingBefore &&
+        _idleStage == stageBefore &&
+        _nodSerial == nodsBefore &&
+        _reactionSerial == reactionsBefore &&
+        (!_composing || activity.caretFraction == caretBefore)) {
+      return;
     }
     _emitIfChanged();
   }
@@ -186,6 +231,17 @@ class PerformanceDirector {
     AvatarGesture gesture, {
     GestureSource source = GestureSource.llm,
   }) {
+    if (source == GestureSource.llm) {
+      // The LLM acting is presence: the idle tablet (and a tool's hold-over)
+      // go away so the gesture can play. A tool still running keeps the
+      // tablet, and the gesture is dropped below.
+      final bool tabletWasIdleOut = _prop != AvatarProp.none;
+      _endHoldOver();
+      _noteActivity();
+      if (tabletWasIdleOut && _prop == AvatarProp.none) {
+        _emit();
+      }
+    }
     if (_prop != AvatarProp.none) {
       AppLogger.debug(
         'PerformanceDirector: prop out, dropped ${gesture.name}',
@@ -251,6 +307,7 @@ class PerformanceDirector {
     _cooldownTimer?.cancel();
     _glanceTimer?.cancel();
     _tabletTimer?.cancel();
+    _holdOverTimer?.cancel();
     await _controller.close();
     await _activityController.close();
   }
@@ -340,13 +397,18 @@ class PerformanceDirector {
     if (tool != null) {
       return lookupTools.contains(tool) ? AvatarProp.tablet : AvatarProp.none;
     }
-    return _idleTablet ? AvatarProp.tablet : AvatarProp.none;
+    return _idleTablet || _tabletHeldOver ? AvatarProp.tablet : AvatarProp.none;
+  }
+
+  void _endHoldOver() {
+    _holdOverTimer?.cancel();
+    _holdOverTimer = null;
+    _tabletHeldOver = false;
   }
 
   bool get _composing => _composer.typing && !_speaking;
 
   PerformanceIntent _buildIntent() {
-    final AvatarMood mood = _mood ?? AvatarMood.neutral;
     final GazeTarget gaze;
     if (_speaking) {
       gaze = const GazeTarget.user();
@@ -360,8 +422,8 @@ class PerformanceDirector {
       gaze = const GazeTarget.user();
     }
     return PerformanceIntent(
-      emotion: emotionForMood(mood),
-      face: actionUnitsForMood(mood),
+      emotion: _emotion,
+      face: _face,
       gaze: gaze,
       speaking: _speaking,
       pendingGesture: _playing,

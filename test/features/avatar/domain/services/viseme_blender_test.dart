@@ -627,13 +627,46 @@ void main() {
           span(Viseme.ih, 440, 520),
           span(Viseme.th, 520, 600),
         ]);
-        for (int t = 0; t < 600; t++) {
+        // the first and last spans are phrase edges (no sound beyond them)
+        for (int t = 100; t < 520; t++) {
           expect(
             jawAt(tl, t),
             greaterThanOrEqualTo(VisemeBlender.phraseJawFloor - 1e-9),
             reason: 'at $t ms',
           );
         }
+      });
+
+      test('a consonant between two sounds keeps the floor', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.pp, 0, 60),
+          span(Viseme.ss, 60, 160),
+          span(Viseme.pp, 160, 220),
+        ]);
+        // ss has a raw jaw of 0.1: lifted to the floor inside a phrase
+        expect(
+          jawAt(tl, 110),
+          greaterThanOrEqualTo(VisemeBlender.phraseJawFloor - 1e-9),
+        );
+      });
+
+      test('a consonant next to a sil of 120 ms or more gets no floor', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 150),
+          span(Viseme.sil, 150, 300),
+          span(Viseme.ss, 300, 400),
+          span(Viseme.sil, 400, 540),
+        ]);
+        // ss sits between two phrase breaks: its raw jaw, no floor
+        expect(jawAt(tl, 350), lessThan(VisemeBlender.phraseJawFloor));
+      });
+
+      test('a consonant at the start or end of the speech gets no floor', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.ss, 0, 100),
+          span(Viseme.pp, 100, 160),
+        ]);
+        expect(jawAt(tl, 50), lessThan(VisemeBlender.phraseJawFloor));
       });
 
       test('a sil of 120 ms or more lets the jaw close', () {

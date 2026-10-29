@@ -10,6 +10,7 @@ class ComposerActivity {
     this.typing = false,
     this.caretFraction = 0.5,
     this.lastChar,
+    this.edited = true,
   });
 
   /// Nothing typed: the state after [ComposerActivityService.clear].
@@ -24,20 +25,26 @@ class ComposerActivity {
   /// The character just typed, or null when the report is not a keystroke.
   final String? lastChar;
 
+  /// False when the text did not change (a caret move, or a tap reported
+  /// through [ComposerActivityService.touch]): the avatar counts it as
+  /// presence and may follow the caret with its eyes, but does not nod.
+  final bool edited;
+
   @override
   bool operator ==(Object other) =>
       other is ComposerActivity &&
       other.typing == typing &&
       other.caretFraction == caretFraction &&
-      other.lastChar == lastChar;
+      other.lastChar == lastChar &&
+      other.edited == edited;
 
   @override
-  int get hashCode => Object.hash(typing, caretFraction, lastChar);
+  int get hashCode => Object.hash(typing, caretFraction, lastChar, edited);
 
   @override
   String toString() =>
       'ComposerActivity(typing: $typing, caret: $caretFraction, '
-      'lastChar: $lastChar)';
+      'lastChar: $lastChar, edited: $edited)';
 }
 
 /// Carries the composer's typing reports to the avatar (core service so the
@@ -62,6 +69,17 @@ class ComposerActivityService {
       _controller.add(activity);
     }
   }
+
+  /// The user touched the composer or a control around it (an orb tap, the
+  /// mic starting or ending, attach, a chip): presence without an edit.
+  /// Keeps the typing state and caret as they are.
+  void touch() => report(
+    ComposerActivity(
+      typing: _current.typing,
+      caretFraction: _current.caretFraction,
+      edited: false,
+    ),
+  );
 
   /// The composer submitted or lost focus: nobody is typing any more.
   void clear() => report(ComposerActivity.idle);

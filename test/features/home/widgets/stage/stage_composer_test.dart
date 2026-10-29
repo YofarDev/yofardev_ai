@@ -306,6 +306,7 @@ void main() {
       expect(reports.last.typing, isTrue);
       expect(reports.last.lastChar, 'l');
       expect(reports.last.caretFraction, 1.0);
+      expect(reports.last.edited, isTrue);
 
       // A caret move into the middle updates the fraction, no character.
       tester.testTextInput.updateEditingValue(
@@ -318,6 +319,8 @@ void main() {
       expect(reports.last.typing, isTrue);
       expect(reports.last.lastChar, isNull);
       expect(reports.last.caretFraction, closeTo(1 / 3, 1e-9));
+      // a caret move is not an edit: the avatar must not nod at it
+      expect(reports.last.edited, isFalse);
 
       await tester.pump(
         StageComposer.typingPause - const Duration(milliseconds: 100),
@@ -327,6 +330,19 @@ void main() {
       await tester.idle();
       expect(activity.current, ComposerActivity.idle);
       expect(reports.last, ComposerActivity.idle);
+    });
+
+    testWidgets('an orb tap that starts the mic is presence (a touch)', (
+      WidgetTester tester,
+    ) async {
+      await pumpComposer(tester, activity: activity);
+      await tester.tap(find.byType(ComposerOrb));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(reports, isNotEmpty);
+      expect(reports.every((ComposerActivity r) => !r.edited), isTrue);
+      expect(reports.every((ComposerActivity r) => !r.typing), isTrue);
+      await drain(tester);
     });
 
     testWidgets('every edit restarts the pause', (WidgetTester tester) async {

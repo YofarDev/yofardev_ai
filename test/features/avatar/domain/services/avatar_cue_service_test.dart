@@ -388,6 +388,39 @@ void main() {
       expect(director.current.idleStage, 0);
     });
 
+    test('a composer touch (mic, orb, chip) resets the ladder', () async {
+      final IdleLadder ladder = IdleLadder(
+        now: () => currentTime,
+        power: _NoPowerSaver(),
+        reduceMotion: () => false,
+      );
+      addTearDown(ladder.dispose);
+      final ComposerActivityService composer = ComposerActivityService();
+      addTearDown(composer.dispose);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        composer: composer.activity,
+        idleLadder: ladder,
+      );
+      addTearDown(service.dispose);
+
+      currentTime = currentTime.add(const Duration(minutes: 3));
+      ladder.tick();
+      await drain();
+      expect(ladder.stage, 2);
+
+      composer.touch();
+      await drain();
+      expect(ladder.stage, 0);
+      expect(director.current.idleStage, 0);
+      // a touch is presence, not typing: no lean, no gaze on the caret
+      expect(director.current.lean, 0);
+      expect(director.current.gaze, const GazeTarget.user());
+    });
+
     test('speech starting resets a ladder that has the tablet out', () async {
       final IdleLadder ladder = IdleLadder(
         now: () => currentTime,

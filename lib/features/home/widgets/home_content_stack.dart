@@ -101,7 +101,10 @@ class _HomeContentStackState extends State<HomeContentStack> {
           parallax: widget.parallax,
         ),
         const StageScrim.top(),
-        _TopBarSlot(onStartDemo: widget.onStartDemo),
+        _TopBarSlot(
+          onStartDemo: widget.onStartDemo,
+          onTouch: widget.composerActivity?.touch,
+        ),
         _BottomChrome(
           composerMode: _composerMode,
           onComposerMode: _onComposerMode,
@@ -183,9 +186,10 @@ class _RiveStage extends StatelessWidget {
 
 /// The History / More chips, below the top safe area.
 class _TopBarSlot extends StatelessWidget {
-  const _TopBarSlot({required this.onStartDemo});
+  const _TopBarSlot({required this.onStartDemo, this.onTouch});
 
   final VoidCallback onStartDemo;
+  final VoidCallback? onTouch;
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +197,7 @@ class _TopBarSlot extends StatelessWidget {
       top: MediaQuery.paddingOf(context).top + AppSpace.sm,
       left: AppSpace.lg,
       right: AppSpace.sm,
-      child: StageTopBar(onStartDemo: onStartDemo),
+      child: StageTopBar(onStartDemo: onStartDemo, onTouch: onTouch),
     );
   }
 }

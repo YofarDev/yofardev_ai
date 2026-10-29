@@ -45,7 +45,9 @@ import '../../bloc/avatar_state.dart';
 /// Light and prop (contract v7): the scene's static `LightRig`
 /// (`SceneLights.of(avatarState.scene)`) is written to `AvatarVM` through an
 /// [AvatarLightWriter] on load and when the scene changes, never per frame;
-/// `prop` follows [AvatarState.prop]; `lean` rides in the face frame.
+/// `prop` follows [AvatarState.prop]; `lean` rides in the face frame. The
+/// avatar relights as soon as the scene state changes, slightly before the
+/// new scene file finishes loading (accepted).
 ///
 /// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped].
 ///

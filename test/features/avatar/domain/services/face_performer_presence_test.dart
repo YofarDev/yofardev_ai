@@ -167,6 +167,29 @@ void main() {
       expect(frames[at15 - 1].roll, closeTo(0, 0.02));
     });
 
+    test('a reaction while the avatar speaks is dropped', () {
+      rig.playback.add(const SpeakingStartedEvent());
+      rig.playback.add(
+        SpeechTimelineEvent(
+          SpeechTimeline(
+            visemes: const <VisemeSpan>[
+              VisemeSpan(
+                viseme: Viseme.aa,
+                start: Duration.zero,
+                end: Duration(seconds: 2),
+              ),
+            ],
+            marks: const <ProsodyMark>[],
+            duration: const Duration(seconds: 2),
+          ),
+        ),
+      );
+      rig.send(reaction: PresenceReaction.question, reactionSerial: 1);
+      final List<FaceFrame> frames = rig.run(0.5);
+      // the question reaction would roll the head by > 0.2 within 1 s
+      expect(frames.every((FaceFrame f) => f.roll.abs() < 0.05), isTrue);
+    });
+
     test('a reaction is eased: no jump in a frame', () {
       rig.send(reaction: PresenceReaction.exclaim, reactionSerial: 1);
       final List<FaceFrame> frames = rig.run(1);
