@@ -10,8 +10,10 @@ import 'speech_frames.dart';
 class AlignedVisemes {
   const AlignedVisemes({required this.spans, required this.costPerFrame});
 
-  /// One span per token, in token order, plus a `sil` span for every silence
-  /// the aligner inserted (at word ends and at both ends of the audio).
+  /// One span per token, in token order (two for a diphthong token with a
+  /// `glide`, held 100 ms or more: its viseme, then the glide over the last
+  /// 40 %), plus a `sil` span for every silence the aligner inserted (at word
+  /// ends and at both ends of the audio).
   /// Contiguous from zero to the end of the audio, on frame boundaries, and
   /// not merged or smoothed.
   final List<VisemeSpan> spans;
@@ -185,11 +187,25 @@ class PhonemeAligner {
     while (state >= 0) {
       final int u = startOf[state][end];
       final _State st = states[state];
+      final Viseme? glide = st.token?.glide;
+      // a diphthong long enough to show it glides over its last 40 %
+      final int split = glide != null && end - u >= _minGlideFrames
+          ? u + ((end - u) * 0.6).round()
+          : end;
+      if (split < end) {
+        spans.add(
+          VisemeSpan(
+            viseme: glide!,
+            start: frames.startOf(split),
+            end: frames.startOf(end),
+          ),
+        );
+      }
       spans.add(
         VisemeSpan(
           viseme: st.isSilence ? Viseme.sil : st.token!.viseme,
           start: frames.startOf(u),
-          end: frames.startOf(end),
+          end: frames.startOf(split),
         ),
       );
       state = predOf[state][end];
@@ -209,6 +225,10 @@ class PhonemeAligner {
           math.max(0, total - emissions.floor()) / math.max(1, sounding),
     );
   }
+
+  /// A diphthong token held at least this many frames (100 ms) is split
+  /// into its two targets.
+  static const int _minGlideFrames = 4;
 
   static bool _isStop(Viseme v) =>
       v == Viseme.pp || v == Viseme.dd || v == Viseme.kk;

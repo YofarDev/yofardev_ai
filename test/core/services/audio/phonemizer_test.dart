@@ -25,6 +25,51 @@ List<List<Viseme>> _words(String text, {String language = 'en'}) {
 }
 
 void main() {
+  group('diphthong glides (critic round 7)', () {
+    test('an English long o glides to ou: "know", "so", "boat"', () {
+      for (final String w in <String>['know', 'so', 'boat']) {
+        final PhonemeToken o = _phonemizer
+            .phonemize(w)
+            .firstWhere((PhonemeToken t) => t.viseme == Viseme.oh);
+        expect(o.glide, Viseme.ou, reason: w);
+      }
+      expect(
+        _phonemizer
+            .phonemize('know')
+            .where((PhonemeToken t) => t.viseme != Viseme.oh)
+            .every((PhonemeToken t) => t.glide == null),
+        isTrue,
+      );
+    });
+
+    test('a French o is pure', () {
+      for (final PhonemeToken t in _phonemizer.phonemize(
+        'beau mot',
+        language: 'fr',
+      )) {
+        expect(t.glide, isNull, reason: '$t');
+      }
+    });
+
+    test('the glide takes part in equality', () {
+      const PhonemeToken a = PhonemeToken(
+        viseme: Viseme.oh,
+        vowel: true,
+        word: 0,
+        wordEnd: true,
+      );
+      const PhonemeToken b = PhonemeToken(
+        viseme: Viseme.oh,
+        vowel: true,
+        word: 0,
+        wordEnd: true,
+        glide: Viseme.ou,
+      );
+      expect(a, isNot(b));
+      expect(b.toString(), contains('ou'));
+    });
+  });
+
   group('TextPhonemizer (en)', () {
     test('"blue" starts with a lip closure and ends rounded', () {
       final List<Viseme> v = _visemes('blue');

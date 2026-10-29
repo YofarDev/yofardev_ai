@@ -41,8 +41,11 @@ sealed class MouthShape with _$MouthShape {
     Viseme.ff => const MouthShape(jaw: 0.1, stretch: 0.1, lipTuck: 1),
     Viseme.th => const MouthShape(jaw: 0.25, tongueUp: 1),
     Viseme.dd => const MouthShape(jaw: 0.25, stretch: 0.2, tongueUp: 0.6),
-    Viseme.kk => const MouthShape(jaw: 0.45, stretch: 0.1),
-    Viseme.ch => const MouthShape(jaw: 0.15, pucker: 0.8),
+    // about half the aa jaw once the speech gains apply
+    Viseme.kk => const MouthShape(jaw: 0.35, stretch: 0.1),
+    // sh/ch: rounded and spread at once (the rig opens a squarer,
+    // teeth-showing mouth when both are on)
+    Viseme.ch => const MouthShape(jaw: 0.15, pucker: 0.7, stretch: 0.38),
     // both teeth rows together, lips stretched, the lower lip down: the
     // same jaw as f/v, told apart by the lower lip
     Viseme.ss => const MouthShape(jaw: 0.1, stretch: 0.55),
@@ -52,7 +55,8 @@ sealed class MouthShape with _$MouthShape {
     Viseme.e => const MouthShape(jaw: 0.5, stretch: 0.55),
     Viseme.ih => const MouthShape(jaw: 0.35, stretch: 0.45),
     Viseme.oh => const MouthShape(jaw: 0.6, pucker: 0.6),
-    Viseme.ou => const MouthShape(jaw: 0.25, pucker: 0.95),
+    // a tight /u/: little jaw, the lips fully rounded
+    Viseme.ou => const MouthShape(jaw: 0.15, pucker: 1),
   };
 
   /// How strongly [v] wins when neighbouring visemes overlap (coarticulation):

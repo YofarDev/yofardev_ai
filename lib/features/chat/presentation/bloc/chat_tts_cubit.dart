@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/performance/speech_timeline.dart';
+import '../../../../core/models/performance/viseme.dart';
 import '../../../../core/services/audio/audio_amplitude_service.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
@@ -65,13 +66,20 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   final Map<String, Future<SpeechTimeline?>> _timelineFutures =
       <String, Future<SpeechTimeline?>>{};
 
+  /// The first sounding viseme of each analysis that has finished, for the
+  /// pre-roll (the lips stay parted into the voice unless it opens on a lip
+  /// closure).
+  final Map<String, Viseme> _onsets = <String, Viseme>{};
+
   /// Longest a sentence waits for its speech analysis before it plays; past
   /// it the sentence plays with no timeline (the amplitude fallback).
   static const Duration timelineWait = Duration(milliseconds: 150);
 
   /// Time between announcing a sentence and playing it: the avatar draws a
-  /// breath before speaking (M2 plan, critic round 3 ruling).
-  static const Duration defaultSpeechPreroll = Duration(milliseconds: 200);
+  /// breath before speaking (M2 plan, critic round 3 ruling; 350 ms since
+  /// critic round 7: an eased inhale, not a gasp). The audio of every
+  /// sentence starts this long after it is ready to play.
+  static const Duration defaultSpeechPreroll = Duration(milliseconds: 350);
 
   final Duration _speechPreroll;
 
@@ -120,6 +128,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       _pendingPlaybackQueue.clear();
       _amplitudeFutures.clear();
       _timelineFutures.clear();
+      _onsets.clear();
       clearAudioPaths();
       if (!(_currentPlaybackStopSignal?.isCompleted ?? true)) {
         _currentPlaybackStopSignal!.complete();
@@ -162,7 +171,13 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
               language: _ttsQueueManager.peekLanguage(audioPath) ?? 'en',
             ),
           ).then<SpeechTimeline?>(
-            (SpeechTimeline? timeline) => timeline,
+            (SpeechTimeline? timeline) {
+              final Viseme? onset = _onsetOf(timeline);
+              if (onset != null) {
+                _onsets[audioPath] = onset;
+              }
+              return timeline;
+            },
             onError: (Object e) {
               AppLogger.error(
                 'Speech analysis failed for $audioPath',
@@ -232,7 +247,10 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       // runs alongside the breath before speaking.
       final Future<SpeechTimeline?> pendingTimeline = _takeTimeline(audioPath);
       if (_speechPreroll > Duration.zero) {
-        _ttsPlaybackService.announceSpeech(_speechPreroll);
+        _ttsPlaybackService.announceSpeech(
+          _speechPreroll,
+          onset: _onsets.remove(audioPath),
+        );
         await Future<void>.delayed(_speechPreroll);
       }
       final SpeechTimeline? timeline = await pendingTimeline;
@@ -320,9 +338,20 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   void _dropUnplayed(String audioPath) {
     _amplitudeFutures.remove(audioPath);
     _timelineFutures.remove(audioPath);
+    _onsets.remove(audioPath);
     _ttsQueueManager.consumeText(audioPath);
     _ttsQueueManager.consumeCues(audioPath);
     unawaited(_ttsQueueManager.deleteAudio(audioPath));
+  }
+
+  /// The first viseme of [timeline] that is not silence, if any.
+  static Viseme? _onsetOf(SpeechTimeline? timeline) {
+    for (final VisemeSpan s in timeline?.visemes ?? const <VisemeSpan>[]) {
+      if (s.viseme != Viseme.sil) {
+        return s.viseme;
+      }
+    }
+    return null;
   }
 
   Future<SpeechTimeline?> _takeTimeline(String audioPath) async {
@@ -427,6 +456,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     _pendingPlaybackQueue.clear();
     _amplitudeFutures.clear();
     _timelineFutures.clear();
+    _onsets.clear();
     if (!(_currentPlaybackStopSignal?.isCompleted ?? true)) {
       _currentPlaybackStopSignal!.complete();
     }

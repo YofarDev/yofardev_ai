@@ -265,4 +265,43 @@ void main() {
     ];
     expect(_aligner.align(tokens, frames), isNull);
   });
+
+  test('an oh with an ou glide splits 60/40 once it is 100 ms or longer', () {
+    const PhonemeToken o = PhonemeToken(
+      viseme: Viseme.oh,
+      vowel: true,
+      word: 0,
+      wordEnd: true,
+      glide: Viseme.ou,
+    );
+    // "know": n then a long o over 12 dark-tone frames (300 ms)
+    final SpeechFrames long = _frames(<(_Kind, int)>[
+      (_Kind.murmur, 3),
+      (_Kind.tone, 12),
+    ]);
+    final List<VisemeSpan> spans = _tokenSpans(
+      _aligner.align(<PhonemeToken>[_t(Viseme.nn), o], long)!,
+    );
+    expect(spans.map((VisemeSpan s) => s.viseme), <Viseme>[
+      Viseme.nn,
+      Viseme.oh,
+      Viseme.ou,
+    ]);
+    final Duration vowel = spans[2].end - spans[1].start;
+    final int frames = vowel.inMilliseconds ~/ 25;
+    // the glide takes the last 40 % (whole frames)
+    expect(spans[2].start - spans[1].start, _frame * (frames * 0.6).round());
+    expect(spans[2].end, long.duration);
+    // a short o keeps one span
+    final SpeechFrames short = _frames(<(_Kind, int)>[
+      (_Kind.murmur, 3),
+      (_Kind.tone, 3),
+    ]);
+    expect(
+      _tokenSpans(
+        _aligner.align(<PhonemeToken>[_t(Viseme.nn), o], short)!,
+      ).map((VisemeSpan s) => s.viseme),
+      <Viseme>[Viseme.nn, Viseme.oh],
+    );
+  });
 }

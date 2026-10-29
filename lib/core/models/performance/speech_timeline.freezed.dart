@@ -284,7 +284,10 @@ as double,
 /// @nodoc
 mixin _$ProsodyMark {
 
- ProsodyMarkKind get kind; Duration get at; Duration get length; double get strength;
+ ProsodyMarkKind get kind; Duration get at; Duration get length; double get strength;/// Pitch peaks only: how steeply the voice rose into the peak, 0 (flat)
+/// to 1 (a 60 % rise over the 200 ms before it); null when unknown (a
+/// typical rise).
+ double? get slope;
 /// Create a copy of ProsodyMark
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -296,20 +299,20 @@ $ProsodyMarkCopyWith<ProsodyMark> get copyWith => _$ProsodyMarkCopyWithImpl<Pros
 @override
 bool operator ==(Object other) {
   final _this = this as ProsodyMark;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProsodyMark&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.at, _this.at) || other.at == _this.at)&&(identical(other.length, _this.length) || other.length == _this.length)&&(identical(other.strength, _this.strength) || other.strength == _this.strength));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProsodyMark&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.at, _this.at) || other.at == _this.at)&&(identical(other.length, _this.length) || other.length == _this.length)&&(identical(other.strength, _this.strength) || other.strength == _this.strength)&&(identical(other.slope, _this.slope) || other.slope == _this.slope));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ProsodyMark;
-  return Object.hash(runtimeType,_this.kind,_this.at,_this.length,_this.strength);
+  return Object.hash(runtimeType,_this.kind,_this.at,_this.length,_this.strength,_this.slope);
 }
 
 @override
 String toString() {
   final _this = this as ProsodyMark;
-  return 'ProsodyMark(kind: ${_this.kind}, at: ${_this.at}, length: ${_this.length}, strength: ${_this.strength})';
+  return 'ProsodyMark(kind: ${_this.kind}, at: ${_this.at}, length: ${_this.length}, strength: ${_this.strength}, slope: ${_this.slope})';
 }
 
 
@@ -320,7 +323,7 @@ abstract mixin class $ProsodyMarkCopyWith<$Res>  {
   factory $ProsodyMarkCopyWith(ProsodyMark value, $Res Function(ProsodyMark) _then) = _$ProsodyMarkCopyWithImpl;
 @useResult
 $Res call({
- ProsodyMarkKind kind, Duration at, Duration length, double strength
+ ProsodyMarkKind kind, Duration at, Duration length, double strength, double? slope
 });
 
 
@@ -337,13 +340,14 @@ class _$ProsodyMarkCopyWithImpl<$Res>
 
 /// Create a copy of ProsodyMark
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? at = null,Object? length = null,Object? strength = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? at = null,Object? length = null,Object? strength = null,Object? slope = freezed,}) {
   return _then(ProsodyMark(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as ProsodyMarkKind,at: null == at ? _self.at : at // ignore: cast_nullable_to_non_nullable
 as Duration,length: null == length ? _self.length : length // ignore: cast_nullable_to_non_nullable
 as Duration,strength: null == strength ? _self.strength : strength // ignore: cast_nullable_to_non_nullable
-as double,
+as double,slope: freezed == slope ? _self.slope : slope // ignore: cast_nullable_to_non_nullable
+as double?,
   ));
 }
 
@@ -425,10 +429,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ProsodyMarkKind kind,  Duration at,  Duration length,  double strength)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ProsodyMarkKind kind,  Duration at,  Duration length,  double strength,  double? slope)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProsodyMark() when $default != null:
-return $default(_that.kind,_that.at,_that.length,_that.strength);case _:
+return $default(_that.kind,_that.at,_that.length,_that.strength,_that.slope);case _:
   return orElse();
 
 }
@@ -446,10 +450,10 @@ return $default(_that.kind,_that.at,_that.length,_that.strength);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ProsodyMarkKind kind,  Duration at,  Duration length,  double strength)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ProsodyMarkKind kind,  Duration at,  Duration length,  double strength,  double? slope)  $default,) {final _that = this;
 switch (_that) {
 case _ProsodyMark():
-return $default(_that.kind,_that.at,_that.length,_that.strength);}
+return $default(_that.kind,_that.at,_that.length,_that.strength,_that.slope);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -463,10 +467,10 @@ return $default(_that.kind,_that.at,_that.length,_that.strength);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ProsodyMarkKind kind,  Duration at,  Duration length,  double strength)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ProsodyMarkKind kind,  Duration at,  Duration length,  double strength,  double? slope)?  $default,) {final _that = this;
 switch (_that) {
 case _ProsodyMark() when $default != null:
-return $default(_that.kind,_that.at,_that.length,_that.strength);case _:
+return $default(_that.kind,_that.at,_that.length,_that.strength,_that.slope);case _:
   return null;
 
 }
@@ -478,13 +482,17 @@ return $default(_that.kind,_that.at,_that.length,_that.strength);case _:
 
 
 class _ProsodyMark implements ProsodyMark {
-  const _ProsodyMark({required this.kind, required this.at, this.length = Duration.zero, this.strength = 1.0});
+  const _ProsodyMark({required this.kind, required this.at, this.length = Duration.zero, this.strength = 1.0, this.slope});
   
 
 @override final  ProsodyMarkKind kind;
 @override final  Duration at;
 @override@JsonKey() final  Duration length;
 @override@JsonKey() final  double strength;
+/// Pitch peaks only: how steeply the voice rose into the peak, 0 (flat)
+/// to 1 (a 60 % rise over the 200 ms before it); null when unknown (a
+/// typical rise).
+@override final  double? slope;
 
 /// Create a copy of ProsodyMark
 /// with the given fields replaced by the non-null parameter values.
@@ -496,18 +504,18 @@ _$ProsodyMarkCopyWith<_ProsodyMark> get copyWith => __$ProsodyMarkCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProsodyMark&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.at, at) || other.at == at)&&(identical(other.length, length) || other.length == length)&&(identical(other.strength, strength) || other.strength == strength));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProsodyMark&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.at, at) || other.at == at)&&(identical(other.length, length) || other.length == length)&&(identical(other.strength, strength) || other.strength == strength)&&(identical(other.slope, slope) || other.slope == slope));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,kind,at,length,strength);
+    return Object.hash(runtimeType,kind,at,length,strength,slope);
 }
 
 @override
 String toString() {
-    return 'ProsodyMark(kind: $kind, at: $at, length: $length, strength: $strength)';
+    return 'ProsodyMark(kind: $kind, at: $at, length: $length, strength: $strength, slope: $slope)';
 }
 
 
@@ -518,7 +526,7 @@ abstract mixin class _$ProsodyMarkCopyWith<$Res> implements $ProsodyMarkCopyWith
   factory _$ProsodyMarkCopyWith(_ProsodyMark value, $Res Function(_ProsodyMark) _then) = __$ProsodyMarkCopyWithImpl;
 @override @useResult
 $Res call({
- ProsodyMarkKind kind, Duration at, Duration length, double strength
+ ProsodyMarkKind kind, Duration at, Duration length, double strength, double? slope
 });
 
 
@@ -535,13 +543,14 @@ class __$ProsodyMarkCopyWithImpl<$Res>
 
 /// Create a copy of ProsodyMark
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? at = null,Object? length = null,Object? strength = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? at = null,Object? length = null,Object? strength = null,Object? slope = freezed,}) {
   return _then(_ProsodyMark(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as ProsodyMarkKind,at: null == at ? _self.at : at // ignore: cast_nullable_to_non_nullable
 as Duration,length: null == length ? _self.length : length // ignore: cast_nullable_to_non_nullable
 as Duration,strength: null == strength ? _self.strength : strength // ignore: cast_nullable_to_non_nullable
-as double,
+as double,slope: freezed == slope ? _self.slope : slope // ignore: cast_nullable_to_non_nullable
+as double?,
   ));
 }
 

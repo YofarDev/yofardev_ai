@@ -24,18 +24,34 @@ import 'viseme_blender.dart';
 ///   [VisemeBlender] shape at the playback position drives fast springs for
 ///   the mouth. Speech wins the jaw and the lip seal; emotion keeps corners,
 ///   cheeks, brows and lids. Inside a p/b/m span the jaw is written 0 that very
-///   frame; at the release the jaw bursts open on a fast spring and the
-///   blender's pop is added on time, after the spring.
+///   frame; at the release the jaw, the rounding and the spread burst open
+///   together on a fast spring and the blender's pop is added on time, after
+///   the spring. Elsewhere the jaw opens at most [jawSlew] per second, and a
+///   th holds the tongue up.
+/// - **Breath**: the pre-roll ([SpeechPrerollEvent]) draws an eased breath
+///   from [breathLead] before the audio, the lips parted (jaw 0.08, no press)
+///   into the first phoneme unless it is a p/b/m; pauses inside the sentence
+///   are breathed for too.
 /// - **Prosody acting** (marks are known ahead, so motion anticipates): brow
-///   lifts on the strongest pitch peaks (0.9 s apart), split unevenly between
-///   the two sides; nods on stressed syllables (at most one per 450 ms), deeper
-///   for stronger stresses with a little seeded jitter; both release with an
-///   ease-out. A head tilt and lifted brows at the end of a question, blinks
-///   in pauses, a breath over the leading silence and a small settle at the
-///   full stop.
+///   beats on the strongest pitch peaks (0.9 s apart), scaled by the pitch
+///   slope and shaped as an anticipation dip, an eased rise, a 12 %
+///   overshoot and a decay; nods on stressed syllables (at most one per
+///   450 ms) whose depth follows the stress (0.4–1.0 of [nodDepthFor] at
+///   full strength) with seeded jitter, a few of them swapped for, or
+///   joined by, small roll accents of alternating side. A question lifts the
+///   brows 1.5× a statement beat on its final rising syllable, 80 ms ahead of
+///   the audio, and holds them with a head tilt through the listening pause.
+///   Blinks in pauses.
+/// - **Full stop**: when the voice ends the jaw, rounding and spread ease to
+///   rest over 220 ms with a 12 % undershoot (the lips meet and press), the
+///   lip corners relax and the head settles about 2° down.
+/// - **Idle life** ([idle], off under [reduceMotion]): once the face is not
+///   speaking, a slow irregular breath, a micro drift of each lip corner and
+///   a slow head roll and nod drift, all seeded sine sums.
 ///
 /// [step] allocates nothing once the face is still: it works in fixed
-/// buffers and returns the previous [FaceFrame] while nothing changed.
+/// buffers and returns the previous [FaceFrame] while nothing changed (never
+/// while the idle runs).
 class FacePerformer {
   FacePerformer({
     required Stream<PerformanceIntent> intents,
@@ -43,9 +59,11 @@ class FacePerformer {
     required Duration? Function() speechPosition,
     VisemeBlender blender = const VisemeBlender(),
     int seed = 7,
+    this.idle = true,
   }) : _speechPosition = speechPosition,
        _blender = blender,
-       _rng = math.Random(seed) {
+       _rng = math.Random(seed),
+       _idlePhase = _phasesFor(seed) {
     _intentSub = intents.listen(_onIntent);
     _playbackSub = playback.listen(_onPlayback);
   }
@@ -55,6 +73,10 @@ class FacePerformer {
   final math.Random _rng;
   late final StreamSubscription<PerformanceIntent> _intentSub;
   late final StreamSubscription<PlaybackEvent> _playbackSub;
+
+  /// Living idle while not speaking (breath, lip corners, head drift). Off,
+  /// the face rests still and [isSettled] can report true.
+  bool idle;
 
   // — tuning (seconds unless noted) —
   static const double _maxDt = 0.1;
@@ -67,17 +89,17 @@ class FacePerformer {
   static const double _releaseSettle = 0.025;
   static const double _shapeSettle = 0.12;
   static const double _mixSettle = 0.15;
-  static const double _overlaySettle = 0.09;
+  static const double _browSettle = 0.06;
   static const double _rollSettle = 0.25;
   static const double _breathSettle = 0.4;
 
   /// The speech springs lag their target by about a third of their settle
   /// time; reading the timeline this far ahead puts the mouth on the audio.
   static const Duration _speechLead = Duration(milliseconds: 20);
-  static const double _nodGap = 0.45;
 
-  /// Brow springs ring a little (about 12 % overshoot).
-  static const double _browZeta = 0.55;
+  /// The brow spring lags about this much: beats are read this far ahead.
+  static const double _browLead = 0.02;
+  static const double _nodGap = 0.45;
   static const double _browGap = 0.9;
   static const double _blinkGap = 1.2;
   static const double _blinkMaxInterval = 5.2;
@@ -86,17 +108,53 @@ class FacePerformer {
   static const double _questionHold = 0.9;
   static const double _preClose = 0.1;
 
-  /// Nod depth (pitch units) at stress strength 0.5; strength scales it
-  /// 0.75–1.25×, the seed jitters it ±[_nodJitter].
-  static const double _nodBase = 0.48;
-  static const double _nodJitter = 0.1;
+  /// Fastest the jaw opens outside a release burst (units per second): a
+  /// short vowel cannot spike open for one frame.
+  static const double jawSlew = 8;
 
-  /// The nod's eased return to rest after the beat.
-  static const double _nodRelease = 0.22;
+  /// How far the jaw bursts open on the release into a span of [length]:
+  /// 0.3 for the shortest vowel (50 ms), 0.3 more per 100 ms, all of it from
+  /// about 280 ms (the release pop rides on top).
+  static double releaseJawCap(Duration length) =>
+      (0.3 + 3.0 * (length.inMicroseconds / 1e6 - 0.05)).clamp(0.3, 1.0);
+
+  /// The breath before speaking starts this long before the audio.
+  static const double breathLead = 0.35;
+
+  /// Jaw of the parted lips while breathing in before speaking.
+  static const double _partedJaw = 0.08;
+
+  /// Full-stop settle: the mouth eases to rest over [_settleS] with
+  /// [_undershoot]; the head drop and the corner relax last [_settleTotal].
+  static const double _settleS = 0.22;
+  static const double _undershoot = 0.12;
+  static const double _settleTotal = 1.7;
+
+  /// The full-stop head drop: 2° of the ±15° pitch range.
+  static const double _settleDrop = 2 / 15;
+
+  /// Largest nod depth (pitch units, at stress strength 1); the seed jitters
+  /// it ±[_nodJitter].
+  static const double _nodMax = 0.55;
+  static const double _nodJitter = 0.08;
+
+  /// The nod's eased return to rest after the beat, ±10 % seeded.
+  static const double _nodRelease = 0.2;
+
+  /// Roll accent size (roll units, before the roll spring) and the share of
+  /// stresses that get one.
+  static const double _accentRoll = 0.14;
+  static const double _accentChance = 0.35;
 
   /// Largest left/right split of a pitch-peak brow pulse (each side gets
   /// 1 ± up to this share of it).
   static const double _browSplit = 0.15;
+
+  /// A question's final rise lifts the brows this many statement beats.
+  static const double questionLift = 1.5;
+
+  /// The question's brow peak leads the final rising syllable by this much.
+  static const double _questionLead = 0.08;
 
   // — emotion —
   final Float64List _emotionTarget = Float64List(_auCount);
@@ -123,10 +181,34 @@ class FacePerformer {
   List<ProsodyMark> _nods = const <ProsodyMark>[];
   List<ProsodyMark> _peaks = const <ProsodyMark>[];
 
-  /// Per nod: its depth; per peak: its signed left/right split (+ = more on
+  /// Per nod: its depth (0 = swapped for a roll accent), release and roll
+  /// accent (-1, 0 or 1); per peak: its signed left/right split (+ = more on
   /// the viewer's left). Drawn from the seed when the timeline arrives.
   List<double> _nodDepth = const <double>[];
+  List<double> _nodReleaseOf = const <double>[];
+  List<double> _accent = const <double>[];
   List<double> _peakSide = const <double>[];
+
+  /// Sign of the next roll accent (they alternate, across sentences too).
+  double _accentSign = 1;
+
+  /// End of the last sounding span (s, speech time): where the voice stops.
+  double _voiceEnd = 0;
+
+  /// The question's final rising syllable (s, speech time; -1: not a
+  /// question) and the slope of its rise (null: unknown).
+  double _questionAt = -1;
+  double? _questionSlope;
+
+  /// Clock of the full stop (-100: none yet for this sentence) and the mouth
+  /// it eases from.
+  double _settleStart = -100;
+  bool _settleArmed = false;
+  double _settleJaw = 0;
+  double _settlePucker = 0;
+  double _settleStretch = 0;
+  double _settlePress = 0;
+
   final _Spring _jaw = _Spring();
   final _Spring _pucker = _Spring();
   final _Spring _stretch = _Spring();
@@ -152,12 +234,28 @@ class FacePerformer {
   double _breath = 0;
   double _loudness = 0;
   double _prerollStart = -100;
-  double _prerollLead = 0.2;
+  double _prerollLead = breathLead;
+  Viseme? _prerollOnset;
   bool _prerolled = false;
   bool _sawPosition = false;
 
-  /// Reduce motion: no nods, head tilt, lift or visible breath (the mouth,
-  /// brows and blinks still act).
+  /// 0..1: the lips parted for the breath before speaking.
+  double _parted = 0;
+
+  /// 0..1: the lip corners relaxing after the full stop.
+  double _relax = 0;
+
+  // — idle life —
+  final Float64List _idlePhase;
+  final _Spring _idleMix = _Spring();
+  double _idleBreath = 0;
+  double _idleRoll = 0;
+  double _idleNod = 0;
+  double _idleCornerL = 0;
+  double _idleCornerR = 0;
+
+  /// Reduce motion: no nods, head tilt, lift, visible breath or idle life
+  /// (the mouth, brows and blinks still act).
   bool reduceMotion = false;
   bool _inhaling = false;
   bool _breathRising = false;
@@ -165,6 +263,10 @@ class FacePerformer {
   double _lastBlink = -100;
   int _blinkSerial = 0;
   bool _sealed = false;
+
+  /// Inside a th span this frame: the tongue shows at least
+  /// [VisemeBlender.thTongue].
+  bool _thNow = false;
 
   FaceFrame _frame = FaceFrame.rest;
 
@@ -189,17 +291,24 @@ class FacePerformer {
     _roll,
     _lift,
     _breathDecay,
+    _idleMix,
   ];
 
   /// The latest frame produced by [step].
   FaceFrame get frame => _frame;
 
-  /// True when nothing moves: no speech or tail, every spring at its target
-  /// and blinking handed back to the file. The [step] that first reports it
-  /// lands every spring exactly on its target, so a view that stops ticking
-  /// here rests on the pose itself, not up to 0.002 short of it.
+  bool get _idleOn => idle && !reduceMotion;
+
+  /// True when nothing moves: no speech, tail or full-stop settle, no idle
+  /// life, every spring at its target and blinking handed back to the file.
+  /// The [step] that first reports it lands every spring exactly on its
+  /// target, so a view that stops ticking here rests on the pose itself, not
+  /// up to 0.002 short of it.
   bool get isSettled {
-    if (_speaking || _clock - _endClock < math.max(_tail, _autoBlinkHold)) {
+    if (_idleOn ||
+        _speaking ||
+        _clock - _endClock < math.max(_tail, _autoBlinkHold) ||
+        _clock - _settleStart < _settleTotal) {
       return false;
     }
     for (int i = 0; i < _auCount; i++) {
@@ -220,6 +329,17 @@ class FacePerformer {
     return true;
   }
 
+  /// Nod depth (pitch units, before jitter) for a stress of [strength]
+  /// (0-1): 0.4 of the deepest nod for the weakest stress, all of it for the
+  /// strongest.
+  static double nodDepthFor(double strength) =>
+      _nodMax * _lerp(0.4, 1.0, strength.clamp(0.0, 1.0));
+
+  /// Brow beat scale for a pitch peak's [slope] (0.7 flat .. 1.3 steep; 1
+  /// when unknown).
+  static double slopeGain(double? slope) =>
+      slope == null ? 1 : 0.7 + 0.6 * slope.clamp(0.0, 1.0);
+
   /// Advances the performance by [dt] and returns the new frame.
   FaceFrame step(Duration dt) {
     final double h = (dt.inMicroseconds / 1e6).clamp(0.0, _maxDt);
@@ -234,7 +354,14 @@ class FacePerformer {
     _sealed = false;
     _pop = 0;
     bool releasing = false;
+    double releaseCap = 1;
+    bool th = false;
+    _thNow = false;
     if (_speaking && tl != null && pos != null) {
+      if (_settleArmed && _s(pos) >= _voiceEnd) {
+        // the voice has stopped: settle from the mouth as it is now
+        _startSettle();
+      }
       final MouthBlend ahead = _blender.shapeAt(tl, pos + _speechLead);
       final MouthBlend now = _blender.shapeAt(tl, pos);
       speech = ahead.shape;
@@ -268,7 +395,7 @@ class FacePerformer {
       // the jaw follows the voice's loudness (smoothed ~100 ms), so a long
       // vowel keeps moving; an excited mood speaks with a bigger jaw, a
       // sombre one with less stretch; a vowel too short to round fully
-      // rounds half way
+      // rounds half way (an ou always rounds: it is the rounding)
       final double? loud = tl.energyAt(pos + _speechLead);
       if (loud != null) {
         _loudness += (loud - _loudness) * (1 - math.exp(-h / 0.1));
@@ -278,14 +405,26 @@ class FacePerformer {
           : 0.55 + 0.55 * _loudness.clamp(0.0, 1.0);
       final double excitement = _lerp(0.95, 1.2, (_arousal + 1) / 2);
       final VisemeSpan? span = tl.spanAt(pos);
+      th = span?.viseme == Viseme.th;
+      if (releasing && span != null) {
+        releaseCap = releaseJawCap(span.end - span.start);
+      }
       final bool brief =
           span != null &&
+          span.viseme != Viseme.ou &&
           span.end - span.start < const Duration(milliseconds: 100);
       speech = speech.copyWith(
         jaw: speech.jaw * excitement * life,
         stretch: _valence < -0.3 ? speech.stretch * 0.5 : speech.stretch,
         pucker: brief ? speech.pucker * 0.5 : speech.pucker,
       );
+    }
+    final double sinceStop = _clock - _settleStart;
+    final bool settling = sinceStop >= 0 && sinceStop < _settleS;
+    if (settling) {
+      releasing = false;
+      _sealed = false;
+      _pop = 0;
     }
 
     // prosody targets from the (virtual) speech position
@@ -299,14 +438,17 @@ class FacePerformer {
     double nod = 0;
     if (tl != null && posS != null) {
       final double gain = _lerp(0.7, 1.3, (_arousal + 1) / 2);
+      final double brow = posS + _browLead;
       double peak = 0;
       double split = 0;
       for (int i = 0; i < _peaks.length; i++) {
         final ProsodyMark m = _peaks[i];
         // a weak peak still reads: half the beat, plus its strength
         final double beat =
-            (0.5 + 0.5 * m.strength) * _peakEnvelope(posS - _s(m.at));
-        if (beat > peak) {
+            (0.5 + 0.5 * m.strength) *
+            slopeGain(m.slope) *
+            _peakEnvelope(brow - _s(m.at));
+        if (beat.abs() > peak.abs()) {
           peak = beat;
           split = _peakSide[i];
         }
@@ -314,9 +456,15 @@ class FacePerformer {
       for (int i = 0; i < _nods.length; i++) {
         final ProsodyMark m = _nods[i];
         final double tau = posS - _s(m.at);
-        nod += _nodCurve(tau, _nodDepth[i]);
+        if (_nodDepth[i] > 0) {
+          nod += _nodCurve(tau, _nodDepth[i], m.strength, _nodReleaseOf[i]);
+        }
+        if (_accent[i] != 0) {
+          // the roll spring lags ~80 ms: aim the accent that much early
+          rollTarget += _accentRoll * _accent[i] * _gauss(tau, -0.04, 0.12);
+        }
         if (_valence >= -0.3) {
-          outerTarget += 0.1 * m.strength * _gauss(tau, 0, 0.09);
+          outerTarget += 0.1 * m.strength * _gauss(brow - _s(m.at), 0, 0.09);
         }
       }
       // a sombre mood lifts only the inner brows (an outer lift reads as
@@ -330,32 +478,48 @@ class FacePerformer {
       innerSideTarget = innerPulse * split;
       outerSideTarget = outerPulse * split;
       final bool asking =
-          tl.isQuestion &&
+          _questionAt >= 0 &&
           (_speaking || (_completed && _clock - _endClock < _questionHold));
       if (asking) {
-        // the tilt starts on the last words, holds 0.5 s into the listening
-        // pause, then eases back over 0.4 s
-        final double since = _clock - _endClock;
-        final double q = _speaking
-            ? _smoothstep((posS - (_s(tl.duration) - 0.35)) / 0.3)
-            : 1 - _smoothstep((since - 0.5) / 0.4);
-        rollTarget = 0.9 * q;
-        liftTarget = 0.12 * q;
-        innerTarget += 0.3 * q;
-        outerTarget += 0.3 * q;
+        // the final rise: the brows peak 80 ms ahead of the rising syllable
+        // and hold with the tilt through the listening pause (0.5 s after the
+        // end), then ease back over 0.4 s
+        final double tau = posS - _questionAt + _questionLead;
+        final double hold = _speaking
+            ? 1
+            : 1 - _smoothstep((_clock - _endClock - 0.5) / 0.4);
+        final double amount = questionLift * slopeGain(_questionSlope) * gain;
+        final double q = _questionRise(tau + _browLead) * hold;
+        final double tilt = _smoothstep((tau + 0.08 + 0.3) / 0.3) * hold;
+        innerTarget += (sombre ? 0.35 : 0.3) * amount * q;
+        outerTarget += (sombre ? 0 : 0.45) * amount * q;
+        rollTarget += 0.9 * tilt;
+        liftTarget = 0.12 * tilt;
       }
     }
-    if (_completed && _clock - _endClock < _tail) {
-      // the full stop: a small settle down after the last word
-      nod += -0.06 * _gauss(_clock - _endClock, 0.15, 0.1);
+
+    // the full stop: the head settles a little down, the corners relax
+    _relax = 0;
+    if (sinceStop >= 0 && sinceStop < _settleTotal) {
+      final double out = 1 - _smoothstep((sinceStop - 0.8) / 0.9);
+      nod -= _settleDrop * _smoothstep(sinceStop / 0.35) * out;
+      _relax =
+          _smoothstep(sinceStop / 0.3) *
+          (1 - _smoothstep((sinceStop - 0.5) / 0.8));
     }
 
     // breath over the leading silence, released as speech starts
+    _parted = 0;
     if (_speaking && tl != null && pos != null) {
       _breath = _breathAt(tl, _s(pos));
       _inhaling = _breathRising;
       _breathDecay.x = _breath;
       _breathDecay.v = 0;
+      if (_prerolled && _prerollOnset != Viseme.pp) {
+        // the lips stay parted into the first phoneme, then hand over
+        _parted =
+            1 - _smoothstep((_s(pos) - _s(tl.leadingSilence)) / _speechSettle);
+      }
     }
 
     final double settle = _lerp(
@@ -365,6 +529,16 @@ class FacePerformer {
     );
     final double wEmotion = _omega(settle);
     final double wSpeech = _omega(_speechSettle);
+    final double wShape = releasing
+        ? _omega(_releaseSettle)
+        : _omega(_shapeSettle);
+    final bool prerolling = !_speaking && _prerollActive;
+    final bool idleWanted =
+        _idleOn &&
+        !_speaking &&
+        !prerolling &&
+        (_settleStart < -50 || sinceStop > 0.4);
+    final double jawBefore = _jaw.x;
     double remaining = h;
     while (remaining > 1e-9) {
       final double sub = math.min(remaining, _substep);
@@ -376,45 +550,49 @@ class FacePerformer {
         _sides[i].step(_sideTarget[i], wEmotion, sub);
       }
       _jaw.step(speech.jaw, releasing ? _omega(_releaseSettle) : wSpeech, sub);
-      // lip shape changes take ~3 frames: width never jumps in one frame
-      _pucker.step(speech.pucker, _omega(_shapeSettle), sub);
-      _stretch.step(speech.stretch, _omega(_shapeSettle), sub);
+      // lip shape changes take ~3 frames (width never jumps in one frame),
+      // except on a release, where they open with the jaw
+      _pucker.step(speech.pucker, wShape, sub);
+      _stretch.step(speech.stretch, wShape, sub);
       _press.step(speech.press, wSpeech, sub);
       _tuck.step(speech.lipTuck, wSpeech, sub);
       _tongue.step(speech.tongueUp, wSpeech, sub);
-      _mix.step(_speaking ? 1 : 0, _omega(_mixSettle), sub);
-      _innerUp.stepUnder(innerTarget, _omega(_overlaySettle), _browZeta, sub);
-      _outerUp.stepUnder(outerTarget, _omega(_overlaySettle), _browZeta, sub);
-      _innerSide.stepUnder(
-        innerSideTarget,
-        _omega(_overlaySettle),
-        _browZeta,
-        sub,
-      );
-      _outerSide.stepUnder(
-        outerSideTarget,
-        _omega(_overlaySettle),
-        _browZeta,
-        sub,
-      );
+      _mix.step(_speaking || settling ? 1 : 0, _omega(_mixSettle), sub);
+      _innerUp.step(innerTarget, _omega(_browSettle), sub);
+      _outerUp.step(outerTarget, _omega(_browSettle), sub);
+      _innerSide.step(innerSideTarget, _omega(_browSettle), sub);
+      _outerSide.step(outerSideTarget, _omega(_browSettle), sub);
       _roll.step(rollTarget, _omega(_rollSettle), sub);
       _lift.step(liftTarget, _omega(_rollSettle), sub);
+      _idleMix.step(idleWanted ? 1 : 0, _omega(idleWanted ? 0.8 : 0.2), sub);
       if (!_speaking) {
         _breathDecay.step(0, _omega(_breathSettle), sub);
       }
     }
+    if (!settling) {
+      // a short vowel cannot spike the jaw open in one frame: a release
+      // bursts open only as far as the vowel's length allows, then like any
+      // other opening at [jawSlew]
+      final double limit = releasing
+          ? math.max(releaseCap, jawBefore + jawSlew * h)
+          : jawBefore + jawSlew * h;
+      if (_jaw.x > limit) {
+        _jaw.x = limit;
+        _jaw.v = math.min(_jaw.v, jawSlew);
+      }
+    }
+    if (settling) {
+      _settleMouth(sinceStop / _settleS);
+    }
+    if (th && _tongue.x < VisemeBlender.thTongue) {
+      _tongue.land(VisemeBlender.thTongue);
+    }
+    _thNow = th;
     if (!_speaking) {
       _breath = _breathDecay.x;
       _inhaling = false;
-      final double since = _clock - _prerollStart;
-      if (since >= 0 && since < _prerollLead + 0.05) {
-        // the breath before speaking: drawn over the pre-roll, lips parted,
-        // closing again just before the voice
-        final double inhale = math.max(0.08, _prerollLead - 0.06);
-        _breath = math.max(_breath, _smoothstep(since / inhale));
-        _inhaling = since < inhale;
-        _breathDecay.x = _breath;
-        _breathDecay.v = 0;
+      if (prerolling) {
+        _preroll(_clock - _prerollStart);
       }
     }
     if (_sealed) {
@@ -426,12 +604,104 @@ class FacePerformer {
         _press.v = 0;
       }
     }
+    _stepIdle();
 
     if (isSettled) {
       _snapToTargets();
     }
     _frame = _compose(nod);
     return _frame;
+  }
+
+  bool get _prerollActive {
+    final double since = _clock - _prerollStart;
+    return since >= 0 && since < _prerollLead + 0.05;
+  }
+
+  /// The breath before speaking, [since] the pre-roll started: an eased
+  /// inhale from [breathLead] before the audio (rising over ~250 ms, less
+  /// for a shorter lead), the lips parted with it; a p/b/m onset closes them
+  /// over the last 100 ms.
+  void _preroll(double since) {
+    final double lead = _prerollLead;
+    final double from = math.max(0, lead - breathLead);
+    if (since < from) {
+      return;
+    }
+    final double rise = (0.72 * math.min(lead, breathLead)).clamp(0.08, 0.25);
+    _breath = math.max(_breath, _smoothstep((since - from) / rise));
+    _parted = _smoothstep((since - from) / 0.1);
+    if (_prerollOnset == Viseme.pp) {
+      _parted *= _smoothstep((lead - since) / 0.1);
+    }
+    _breathDecay.x = _breath;
+    _breathDecay.v = 0;
+  }
+
+  /// Arms the full-stop settle from the mouth as it is now.
+  void _startSettle() {
+    _settleArmed = false;
+    _settleStart = _clock;
+    _settleJaw = _jaw.x.clamp(0.0, 1.0);
+    _settlePucker = _pucker.x.clamp(0.0, 1.0);
+    _settleStretch = _stretch.x.clamp(0.0, 1.0);
+    _settlePress = _press.x.clamp(0.0, 1.0);
+  }
+
+  /// The mouth at [u] (0-1) through the full-stop settle: jaw, rounding and
+  /// spread ease from where the voice left them to rest, passing 12 % beyond
+  /// it (the lips meet and press; rounding gives way to a hint of spread and
+  /// back) before coming back to rest.
+  void _settleMouth(double u) {
+    final double c = _settleCurve(u);
+    final double over = math.max(0, -c);
+    final double on = math.max(0, c);
+    _jaw.land(_settleJaw * on);
+    _pucker.land(_settlePucker * on + _settleStretch * over);
+    _stretch.land(_settleStretch * on + _settlePucker * over);
+    _press.land(math.max(_settlePress * on, 2 * over));
+  }
+
+  /// 1 → -[_undershoot] over the first 65 %, eased, then back to 0.
+  static double _settleCurve(double u) {
+    if (u < 0.65) {
+      return 1 - (1 + _undershoot) * _smoothstep(u / 0.65);
+    }
+    return -_undershoot * (1 - _smoothstep((u - 0.65) / 0.35));
+  }
+
+  /// The idle layer at the current clock, faded by [_idleMix].
+  void _stepIdle() {
+    final double w = _idleMix.x;
+    if (w <= 1e-6) {
+      _idleBreath = 0;
+      _idleRoll = 0;
+      _idleNod = 0;
+      _idleCornerL = 0;
+      _idleCornerR = 0;
+      return;
+    }
+    final double t = _clock;
+    final Float64List p = _idlePhase;
+    double wave(double period, double phase) =>
+        math.sin(2 * math.pi * t / period + phase);
+    // a 4.6 s breath whose pace and depth wander a little
+    final double cycle = 2 * math.pi * t / 4.6 + 0.6 * wave(17.3, p[0]) + p[1];
+    _idleBreath =
+        w * (0.15 + 0.04 * wave(23.1, p[2])) * (0.5 - 0.5 * math.cos(cycle));
+    _idleCornerL =
+        w * (0.015 + 0.02 * (0.6 * wave(5.3, p[3]) + 0.4 * wave(8.9, p[4])));
+    _idleCornerR =
+        w * (0.015 + 0.02 * (0.6 * wave(6.1, p[5]) + 0.4 * wave(9.7, p[6])));
+    _idleRoll = w * 0.05 * (0.6 * wave(7.7, p[7]) + 0.4 * wave(12.9, p[8]));
+    _idleNod = w * 0.03 * (0.6 * wave(9.4, p[9]) + 0.4 * wave(6.3, p[10]));
+  }
+
+  static Float64List _phasesFor(int seed) {
+    final math.Random r = math.Random(seed * 7919 + 13);
+    return Float64List.fromList(<double>[
+      for (int i = 0; i < 11; i++) r.nextDouble() * 2 * math.pi,
+    ]);
   }
 
   /// Puts every spring on its target, at rest ([isSettled] holds: what is
@@ -474,22 +744,36 @@ class FacePerformer {
         _speaking = true;
         _completed = false;
         _lastPos = Duration.zero;
+        _voiceEnd = _voiceEndOf(timeline);
+        _settleArmed = true;
+        _settleStart = -100;
+        final ProsodyMark? rise = _finalRise(timeline);
+        _questionAt = timeline.isQuestion
+            ? _risingSyllable(timeline, rise)
+            : -1;
+        _questionSlope = rise?.slope;
         _nods = _spaced(timeline.marks, ProsodyMarkKind.stress, _nodGap);
-        _peaks = _spaced(timeline.marks, ProsodyMarkKind.pitchPeak, _browGap);
+        _peaks = _spaced(
+          <ProsodyMark>[
+            for (final ProsodyMark m in timeline.marks)
+              if (!timeline.isQuestion || !identical(m, rise)) m,
+          ],
+          ProsodyMarkKind.pitchPeak,
+          _browGap,
+        );
         // the seeded variety, drawn once per sentence in a fixed order
         _peakSide = <double>[
           for (int i = 0; i < _peaks.length; i++) _drawSplit(),
         ];
-        _nodDepth = <double>[
-          for (final ProsodyMark m in _nods) _drawNodDepth(m.strength),
-        ];
+        _drawNods();
         // a forced blink waits for a real interval into the sentence
         _lastBlink = math.max(_lastBlink, _clock - (_blinkMaxInterval - 2.5));
         _sawPosition = false;
         _prerolled = _clock - _prerollStart < _prerollLead + 0.3;
-      case SpeechPrerollEvent(:final Duration lead):
+      case SpeechPrerollEvent(:final Duration lead, :final Viseme? onset):
         _prerollStart = _clock;
         _prerollLead = math.max(_s(lead), 0.08);
+        _prerollOnset = onset;
       case AnimationCompletedEvent():
         _complete();
       // A sentence that ends calls stop() too (sometimes before the animation
@@ -512,12 +796,28 @@ class FacePerformer {
     return sign * _browSplit * (0.5 + 0.5 * _rng.nextDouble());
   }
 
-  /// A nod's depth: 0.75–1.25 × [_nodBase] by stress strength, ±10 % jitter.
-  double _drawNodDepth(double strength) {
-    final double jitter = _nodJitter * (2 * _rng.nextDouble() - 1);
-    return _nodBase *
-        _lerp(0.75, 1.25, strength.clamp(0.0, 1.0)) *
-        (1 + jitter);
+  /// Per nod, in time order: its depth ([nodDepthFor] ±[_nodJitter]), its
+  /// release (±10 %) and its roll accent. A weak stress (under 0.4) is
+  /// swapped for a roll accent half the time; any other gets one too
+  /// [_accentChance] of the time. Accents alternate sides.
+  void _drawNods() {
+    final int n = _nods.length;
+    _nodDepth = List<double>.filled(n, 0);
+    _nodReleaseOf = List<double>.filled(n, _nodRelease);
+    _accent = List<double>.filled(n, 0);
+    for (int i = 0; i < n; i++) {
+      final double strength = _nods[i].strength;
+      final double jitter = _nodJitter * (2 * _rng.nextDouble() - 1);
+      final double release = 0.9 + 0.2 * _rng.nextDouble();
+      final double roll = _rng.nextDouble();
+      final bool swap = strength < 0.4 && roll < 0.5;
+      _nodDepth[i] = swap ? 0 : nodDepthFor(strength) * (1 + jitter);
+      _nodReleaseOf[i] = _nodRelease * release;
+      if (swap || roll > 1 - _accentChance) {
+        _accent[i] = _accentSign;
+        _accentSign = -_accentSign;
+      }
+    }
   }
 
   void _complete() {
@@ -525,6 +825,9 @@ class FacePerformer {
       _speaking = false;
       _completed = true;
       _endClock = _clock;
+      if (_settleArmed) {
+        _startSettle();
+      }
     }
   }
 
@@ -536,6 +839,8 @@ class FacePerformer {
     _completed = false;
     _timeline = null;
     _prerollStart = -100;
+    _settleArmed = false;
+    _settleStart = -100;
   }
 
   // — speech helpers —
@@ -651,6 +956,58 @@ class FacePerformer {
     return b;
   }
 
+  /// End of the last sounding span (s), or the timeline's duration.
+  static double _voiceEndOf(SpeechTimeline tl) {
+    for (int i = tl.visemes.length - 1; i >= 0; i--) {
+      if (tl.visemes[i].viseme != Viseme.sil) {
+        return _s(tl.visemes[i].end);
+      }
+    }
+    return _s(tl.duration);
+  }
+
+  /// The pitch peak a question rises on: the last one within the final
+  /// 600 ms of the voice.
+  static ProsodyMark? _finalRise(SpeechTimeline tl) {
+    final double end = _voiceEndOf(tl);
+    ProsodyMark? last;
+    for (final ProsodyMark m in tl.marks) {
+      final double at = _s(m.at);
+      if (m.kind == ProsodyMarkKind.pitchPeak &&
+          at >= end - 0.6 &&
+          at <= end + 0.1) {
+        last = m;
+      }
+    }
+    return last;
+  }
+
+  /// Where a question's final rising syllable peaks (s): its pitch peak when
+  /// there is one, else 60 % into the last vowel, no earlier than 200 ms
+  /// before the voice ends.
+  static double _risingSyllable(SpeechTimeline tl, ProsodyMark? rise) {
+    if (rise != null) {
+      return _s(rise.at);
+    }
+    final double end = _voiceEndOf(tl);
+    for (int i = tl.visemes.length - 1; i >= 0; i--) {
+      final VisemeSpan v = tl.visemes[i];
+      if (_vowels.contains(v.viseme)) {
+        final double start = _s(v.start);
+        return math.max(start + 0.6 * (_s(v.end) - start), end - 0.2);
+      }
+    }
+    return end - 0.2;
+  }
+
+  static const Set<Viseme> _vowels = <Viseme>{
+    Viseme.aa,
+    Viseme.e,
+    Viseme.ih,
+    Viseme.oh,
+    Viseme.ou,
+  };
+
   /// Start of the first p/b/m span after [pos], if any.
   static Duration? _nextSealStart(SpeechTimeline tl, Duration pos) {
     for (final VisemeSpan s in tl.visemes) {
@@ -694,8 +1051,9 @@ class FacePerformer {
     if (_inhaling) {
       jaw = math.max(jaw, 0.12 * _breath);
     }
+    jaw = math.max(jaw, _partedJaw * _parted);
     jaw += _pop * m;
-    double press = _lerp(au[_pressI], _press.x, m);
+    double press = _lerp(au[_pressI], _press.x, m) * (1 - _parted);
     if (_sealed) {
       jaw = 0;
       press = math.max(press, 0.6);
@@ -707,15 +1065,26 @@ class FacePerformer {
       math.max(_pucker.x, 0.3 * au[_puckerI]),
       m,
     );
-    au[_stretchI] = _lerp(au[_stretchI], _stretch.x + 0.5 * au[_stretchI], m);
-    // a rounded vowel keeps its shape whatever the mood: the corners give way
+    // a rounded vowel keeps its shape whatever the mood: the corners and the
+    // mood's own spread give way
     final double round = (_pucker.x / 0.3).clamp(0.0, 1.0) * m;
+    au[_stretchI] = _lerp(
+      au[_stretchI],
+      _stretch.x + 0.5 * au[_stretchI] * (1 - round),
+      m,
+    );
     final double pull = 1 - 0.8 * round;
     // an open jaw from a downturned mouth reads as a wince: the frown eases
     final double depress =
         pull * (1 - 0.4 * ((jaw - 0.15) / 0.3).clamp(0.0, 1.0) * m);
     au[_pullI] *= pull;
     au[_depressI] *= depress;
+    // the full stop relaxes the corners: a softer mouth, a lighter frown
+    if (_valence >= -0.3) {
+      au[_pullI] += 0.06 * _relax;
+    } else {
+      au[_depressI] *= 1 - 0.25 * _relax;
+    }
     au[_innerI] += _innerUp.x;
     au[_outerI] += _outerUp.x;
 
@@ -734,7 +1103,7 @@ class FacePerformer {
         } else if (i == _sideOuterI) {
           v += sign * _outerSide.x;
         } else if (i == _sidePullI) {
-          v *= pull;
+          v = v * pull + (side == 0 ? _idleCornerL : _idleCornerR);
         } else if (i == _sideDepressI) {
           v *= depress;
         }
@@ -742,10 +1111,14 @@ class FacePerformer {
       }
     }
     out[_tuckO] = (_tuck.x * m).clamp(0.0, 1.0);
-    out[_tongueO] = (_tongue.x * m).clamp(0.0, 1.0);
-    out[_breathO] = reduceMotion ? 0 : _breath.clamp(0.0, 1.0);
-    out[_rollO] = reduceMotion ? 0 : _roll.x.clamp(-1.0, 1.0);
-    out[_nodO] = reduceMotion ? 0 : (nod + _lift.x).clamp(-1.0, 1.0);
+    out[_tongueO] = math
+        .max(_tongue.x * m, _thNow ? VisemeBlender.thTongue : 0.0)
+        .clamp(0.0, 1.0);
+    out[_breathO] = reduceMotion
+        ? 0
+        : math.max(_breath, _idleBreath).clamp(0.0, 1.0);
+    out[_rollO] = reduceMotion ? 0 : (_roll.x + _idleRoll).clamp(-1.0, 1.0);
+    out[_nodO] = reduceMotion ? 0 : (nod + _lift.x + _idleNod).clamp(-1.0, 1.0);
     final bool autoBlink = !(_speaking || _clock - _endClock < _autoBlinkHold);
 
     // a still face returns the previous frame: no allocation
@@ -788,39 +1161,55 @@ class FacePerformer {
 
   // — curves —
 
-  /// Brow beat around a pitch peak: an 18 % dip just before it
-  /// (anticipation), an eased 120 ms attack, a 160 ms top, then an eased
-  /// 400 ms return to the mood's own brows (the brow spring adds the
-  /// overshoot).
+  /// Brow beat around a pitch peak, no plateau: an 18 % dip just before it
+  /// (anticipation), an eased 150 ms rise to a 12 % overshoot at the peak,
+  /// then a decay that gives the overshoot back within ~100 ms and eases out
+  /// to the mood's own brows over 600 ms.
   static double _peakEnvelope(double tau) {
-    if (tau < -0.25 || tau > 0.56) {
+    if (tau < -0.32 || tau > 0.6) {
       return 0;
     }
-    final double dip = -0.18 * _gauss(tau, -0.17, 0.04);
-    if (tau < -0.12) {
-      return dip;
+    if (tau < -0.15) {
+      final double s = math.sin(math.pi * (tau + 0.32) / 0.17);
+      return -0.18 * s * s;
     }
     if (tau < 0) {
-      return dip + _smoothstep((tau + 0.12) / 0.12);
+      return 1.12 * _smoothstep((tau + 0.15) / 0.15);
     }
-    if (tau <= 0.16) {
-      return 1;
+    return _easeRelease(tau / 0.6) + 0.12 * math.exp(-tau / 0.05);
+  }
+
+  /// A question's final rise: an eased 300 ms rise to a 12 % overshoot at
+  /// [tau] 0, settling to 1 over 150 ms and held.
+  static double _questionRise(double tau) {
+    if (tau < -0.3) {
+      return 0;
     }
-    return _easeRelease((tau - 0.16) / 0.4);
+    if (tau < 0) {
+      return 1.12 * _smoothstep((tau + 0.3) / 0.3);
+    }
+    return 1.12 - 0.12 * _smoothstep(tau / 0.15);
   }
 
   /// A nod on a stressed syllable (pitch units, down is negative) of [depth]
-  /// (about 3-5 degrees: a nod that reads at phone size): an 18 %
-  /// anticipation lift, the beat at the mark, an eased-out return over
-  /// [_nodRelease] with a 12 % overshoot back up.
-  static double _nodCurve(double tau, double depth) {
+  /// (about 3-8 degrees: a nod that reads at phone size): an 18 %
+  /// anticipation lift, the beat at the mark (a stronger stress dips more
+  /// slowly), an eased-out return over [release] with a 12 % overshoot back
+  /// up.
+  static double _nodCurve(
+    double tau,
+    double depth,
+    double strength,
+    double release,
+  ) {
+    final double attack = 0.055 + 0.03 * strength.clamp(0.0, 1.0);
     final double beat = tau <= 0
-        ? _gauss(tau, 0, 0.07)
-        : _easeRelease(tau / _nodRelease);
+        ? _gauss(tau, 0, attack)
+        : _easeRelease(tau / release);
     return -depth *
         (beat -
             0.18 * _gauss(tau, -0.13, 0.05) -
-            0.12 * _gauss(tau, 0.17, 0.06));
+            0.12 * _gauss(tau, release * 0.8, 0.06));
   }
 
   /// 1 → 0 over x in [0, 1] with an ease-out: it leaves smoothly (zero slope
@@ -861,14 +1250,6 @@ class _Spring {
     final double e = math.exp(-omega * h);
     x = target + (c1 + c2 * h) * e;
     v = (c2 - omega * (c1 + c2 * h)) * e;
-    _snap(target);
-  }
-
-  /// An underdamped step (damping ratio [zeta] < 1): it overshoots, then
-  /// settles. Semi-implicit Euler; [h] is a substep of at most 1/120 s.
-  void stepUnder(double target, double omega, double zeta, double h) {
-    v += (-2 * zeta * omega * v - omega * omega * (x - target)) * h;
-    x += v * h;
     _snap(target);
   }
 

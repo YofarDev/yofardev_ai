@@ -749,8 +749,28 @@ class _Analysis {
           kind: ProsodyMarkKind.pitchPeak,
           at: frameCentre(f),
           strength: ((f0[f] / median - 1) / 0.30).clamp(0.0, 1.0),
+          slope: _riseInto(f),
         ),
     ];
+  }
+
+  /// How steeply the voice rose into the peak at frame [f]: its rise over
+  /// the lowest voiced f0 in the 200 ms before it, 60 % being full scale
+  /// (TTS statements rise 10-50 % into their peaks, a question's last
+  /// syllable more).
+  double _riseInto(int f) {
+    final Float64List f0 = _smoothF0;
+    final int back =
+        (const Duration(milliseconds: 200).inMicroseconds /
+                SpeechAnalyzer.frameDuration.inMicroseconds)
+            .round();
+    double low = f0[f];
+    for (int k = math.max(0, f - back); k < f; k++) {
+      if (!f0[k].isNaN && f0[k] < low) {
+        low = f0[k];
+      }
+    }
+    return ((f0[f] / low - 1) / 0.6).clamp(0.0, 1.0);
   }
 
   List<ProsodyMark> stresses(List<VisemeSpan> spans, SpeechTimeline lookup) {
@@ -786,10 +806,7 @@ class _Analysis {
       }
       final double prominence = v - math.max(leftMin, rightMin);
       if (prominence < 4) continue;
-      final VisemeSpan? span = lookup.spanAt(frameCentre(f));
-      final double seconds = span == null
-          ? 0.025
-          : (span.end - span.start).inMicroseconds / 1e6;
+      final double seconds = _nucleusSeconds(lookup, frameCentre(f));
       candidates.add((f, prominence * seconds));
       prominences.add(prominence);
     }
@@ -814,6 +831,31 @@ class _Analysis {
           strength: (prominenceOf[f]! / 12).clamp(0.0, 1.0),
         ),
     ];
+  }
+
+  /// Length (s) of the span at [t], a diphthong's two halves (oh then ou,
+  /// back to back) counted as one vowel; 25 ms outside every span.
+  static double _nucleusSeconds(SpeechTimeline lookup, Duration t) {
+    final List<VisemeSpan> v = lookup.visemes;
+    final VisemeSpan? span = lookup.spanAt(t);
+    if (span == null) {
+      return 0.025;
+    }
+    final int i = v.indexOf(span);
+    Duration start = span.start;
+    Duration end = span.end;
+    if (span.viseme == Viseme.oh &&
+        i + 1 < v.length &&
+        v[i + 1].viseme == Viseme.ou &&
+        v[i + 1].start == end) {
+      end = v[i + 1].end;
+    } else if (span.viseme == Viseme.ou &&
+        i > 0 &&
+        v[i - 1].viseme == Viseme.oh &&
+        v[i - 1].end == start) {
+      start = v[i - 1].start;
+    }
+    return (end - start).inMicroseconds / 1e6;
   }
 
   static int _byScore((int, double) a, (int, double) b) {

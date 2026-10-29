@@ -52,9 +52,23 @@ void main() {
         MouthShape.forViseme(Viseme.dd),
         const MouthShape(jaw: 0.25, stretch: 0.2, tongueUp: 0.6),
       );
+      // critic round 7: kk about half the aa jaw; ch rounded and spread
+      expect(
+        MouthShape.forViseme(Viseme.kk),
+        const MouthShape(jaw: 0.35, stretch: 0.1),
+      );
+      expect(
+        MouthShape.forViseme(Viseme.ch),
+        const MouthShape(jaw: 0.15, pucker: 0.7, stretch: 0.38),
+      );
+      expect(
+        MouthShape.forViseme(Viseme.rr),
+        const MouthShape(jaw: 0.2, pucker: 0.7),
+      );
+      // critic round 7: a tight /u/ (a small jaw, fully rounded lips)
       expect(
         MouthShape.forViseme(Viseme.ou),
-        const MouthShape(jaw: 0.25, pucker: 0.95),
+        const MouthShape(jaw: 0.15, pucker: 1),
       );
     });
 

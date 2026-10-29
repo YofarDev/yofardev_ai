@@ -351,6 +351,33 @@ void main() {
       expect(t.isQuestion, isTrue);
     });
 
+    test('a pitch peak carries the slope of the rise into it', () {
+      double finalSlope(double glideLength) {
+        final SpeechTimeline t = _analyzer.analyze(
+          _pcm(
+            _tone(
+              24000,
+              1.6,
+              _closedVowel,
+              glideTo: 190,
+              glideLength: glideLength,
+            ),
+          ),
+        );
+        return t.marks
+            .lastWhere((ProsodyMark m) => m.kind == ProsodyMarkKind.pitchPeak)
+            .slope!;
+      }
+
+      // 140 -> 190 Hz in 200 ms: a 36 % rise (about 30 % once the f0 is
+      // smoothed), half the 60 % full scale
+      expect(finalSlope(0.2), closeTo(0.5, 0.1));
+      // the same rise spread over 1.2 s: under 5 % in the last 200 ms
+      final double gentle = finalSlope(1.2);
+      expect(gentle, greaterThan(0));
+      expect(gentle, lessThan(0.15));
+    });
+
     test('a flat tone is not a question; text decides when given', () {
       final WavPcm flat = _pcm(_tone(24000, 1, _closedVowel));
       expect(_analyzer.analyze(flat).isQuestion, isFalse);
@@ -495,7 +522,8 @@ void main() {
         WavPcm.decode(File('test/fixtures/speech/$name.wav').readAsBytesSync());
 
     /// Each phonemizer token with the span the aligner gave it (the
-    /// aligner's non-silence spans, in token order).
+    /// aligner's non-silence spans, in token order; a diphthong's glide span
+    /// joins its vowel's).
     List<(PhonemeToken, VisemeSpan)> tokenSpans(
       WavPcm pcm,
       String text, {
@@ -510,10 +538,22 @@ void main() {
         text: text,
         language: language,
       )!;
-      final List<VisemeSpan> spans = <VisemeSpan>[
+      final List<VisemeSpan> raw = <VisemeSpan>[
         for (final VisemeSpan s in aligned.spans)
           if (s.viseme != Viseme.sil) s,
       ];
+      final List<VisemeSpan> spans = <VisemeSpan>[];
+      for (int k = 0; k < raw.length; k++) {
+        final PhonemeToken? token = spans.length < tokens.length
+            ? tokens[spans.length]
+            : null;
+        final bool glides =
+            token?.glide != null &&
+            k + 1 < raw.length &&
+            raw[k + 1].viseme == token!.glide &&
+            raw[k + 1].start == raw[k].end;
+        spans.add(glides ? raw[k].copyWith(end: raw[++k].end) : raw[k]);
+      }
       expect(spans, hasLength(tokens.length));
       return <(PhonemeToken, VisemeSpan)>[
         for (int i = 0; i < tokens.length; i++) (tokens[i], spans[i]),
@@ -578,6 +618,28 @@ void main() {
         expectLabels(t, tokens, roundedWords);
       });
     }
+
+    test('so_true: the long o of "so" and "know" glides oh to ou', () {
+      final SpeechTimeline t = _analyzer.analyze(
+        fixture('so_true'),
+        text: 'So true, you know.',
+      );
+      final List<VisemeSpan> v = t.visemes;
+      int glides = 0;
+      for (int i = 0; i + 1 < v.length; i++) {
+        if (v[i].viseme == Viseme.oh &&
+            v[i + 1].viseme == Viseme.ou &&
+            v[i + 1].start == v[i].end) {
+          glides++;
+        }
+      }
+      expect(glides, 2);
+      // "know" ends the sentence on the rounded glide
+      expect(
+        v.lastWhere((VisemeSpan s) => s.viseme != Viseme.sil).viseme,
+        Viseme.ou,
+      );
+    });
 
     test('French: "Bonjour, comment allez-vous ?" aligns with language fr', () {
       final WavPcm pcm = fixture('bonjour');

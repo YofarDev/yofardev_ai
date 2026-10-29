@@ -848,6 +848,55 @@ void main() {
         },
       );
 
+      test('the default pre-roll is 350 ms', () {
+        expect(
+          ChatTtsCubit.defaultSpeechPreroll,
+          const Duration(milliseconds: 350),
+        );
+      });
+
+      test('announces the onset viseme once the analysis is ready', () async {
+        when(
+          () => amplitudeService.analyzeSpeech(
+            any(),
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+          ),
+        ).thenAnswer(
+          (Invocation _) async => const SpeechTimeline(
+            visemes: <VisemeSpan>[
+              VisemeSpan(
+                viseme: Viseme.sil,
+                start: Duration.zero,
+                end: Duration(milliseconds: 40),
+              ),
+              VisemeSpan(
+                viseme: Viseme.pp,
+                start: Duration(milliseconds: 40),
+                end: Duration(milliseconds: 100),
+              ),
+            ],
+            duration: Duration(milliseconds: 100),
+          ),
+        );
+        // the analysis is done before the sentence plays (the usual case:
+        // it ran during the previous sentence)
+        when(() => amplitudeService.extractAmplitudes(any())).thenAnswer((
+          Invocation _,
+        ) async {
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+          return <int>[5];
+        });
+        queue.emitAudioPath('/tmp/tts/5.wav');
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        verify(
+          () => playback.announceSpeech(
+            const Duration(milliseconds: 60),
+            onset: Viseme.pp,
+          ),
+        ).called(1);
+      });
+
       test('an interrupt during the pre-roll drops the sentence', () async {
         queue.emitAudioPath('/tmp/tts/4.wav');
         await Future<void>.delayed(const Duration(milliseconds: 20));

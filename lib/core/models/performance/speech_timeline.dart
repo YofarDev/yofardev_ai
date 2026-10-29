@@ -28,6 +28,11 @@ sealed class ProsodyMark with _$ProsodyMark {
     required Duration at,
     @Default(Duration.zero) Duration length,
     @Default(1.0) double strength,
+
+    /// Pitch peaks only: how steeply the voice rose into the peak, 0 (flat)
+    /// to 1 (a 60 % rise over the 200 ms before it); null when unknown (a
+    /// typical rise).
+    double? slope,
   }) = _ProsodyMark;
 }
 

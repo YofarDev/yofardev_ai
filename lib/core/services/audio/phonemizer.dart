@@ -11,9 +11,14 @@ class PhonemeToken {
     required this.word,
     required this.wordEnd,
     this.pauseAfter = false,
+    this.glide,
   });
 
   final Viseme viseme;
+
+  /// A diphthong's second target: the vowel glides from [viseme] to it over
+  /// its last 40 % (English long o, /oʊ/: oh to ou). Null for a pure phone.
+  final Viseme? glide;
 
   /// A vowel (the syllable nucleus) rather than a consonant or a glide.
   final bool vowel;
@@ -37,14 +42,17 @@ class PhonemeToken {
       other.vowel == vowel &&
       other.word == word &&
       other.wordEnd == wordEnd &&
-      other.pauseAfter == pauseAfter;
+      other.pauseAfter == pauseAfter &&
+      other.glide == glide;
 
   @override
-  int get hashCode => Object.hash(viseme, vowel, word, wordEnd, pauseAfter);
+  int get hashCode =>
+      Object.hash(viseme, vowel, word, wordEnd, pauseAfter, glide);
 
   @override
   String toString() =>
-      'PhonemeToken(${viseme.name}${vowel ? ', vowel' : ''}, word $word'
+      'PhonemeToken(${viseme.name}${glide == null ? '' : '>${glide!.name}'}'
+      '${vowel ? ', vowel' : ''}, word $word'
       '${wordEnd ? ', end' : ''}${pauseAfter ? ', pause' : ''})';
 }
 
@@ -83,18 +91,20 @@ class TextPhonemizer {
       );
       final bool pause = _pause.hasMatch(gap);
       final String phones = french ? FrenchG2p.word(w) : EnglishG2p.word(w);
-      final List<(Viseme, bool)> sounds = <(Viseme, bool)>[
+      final List<String> sounds = <String>[
         for (final String p in phones.split(''))
-          if (_phones[p] != null) _phones[p]!,
+          if (_phones[p] != null) p,
       ];
       for (int k = 0; k < sounds.length; k++) {
+        final (Viseme, bool) sound = _phones[sounds[k]]!;
         out.add(
           PhonemeToken(
-            viseme: sounds[k].$1,
-            vowel: sounds[k].$2,
+            viseme: sound.$1,
+            vowel: sound.$2,
             word: word,
             wordEnd: k == sounds.length - 1,
             pauseAfter: pause && k == sounds.length - 1,
+            glide: french ? null : _englishGlides[sounds[k]],
           ),
         );
       }
@@ -147,6 +157,12 @@ class TextPhonemizer {
     'U': (Viseme.ou, true),
     'y': (Viseme.ou, true),
     'R': (Viseme.rr, true),
+  };
+
+  /// English diphthongs written as one phone: the long o is /oʊ/ (French o
+  /// is pure). /aʊ/ and /aɪ/ are already two phones (`Au`, `Ai`).
+  static const Map<String, Viseme> _englishGlides = <String, Viseme>{
+    'o': Viseme.ou,
   };
 
   /// A run of Latin letters, with inner apostrophes ("don't", "c'est").

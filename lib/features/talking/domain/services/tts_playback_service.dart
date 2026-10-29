@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/performance/speech_timeline.dart';
+import '../../../../core/models/performance/viseme.dart';
 import '../../../../core/utils/logger.dart';
 import '../repositories/talking_repository.dart';
 import 'playback_clock.dart';
@@ -32,10 +33,13 @@ class AnimationCompletedEvent extends PlaybackEvent {
 }
 
 /// Emitted [lead] before a sentence's audio starts: the avatar draws its
-/// breath in that time.
+/// breath in that time, lips parted unless the sentence opens on a lip
+/// closure ([onset], the first sounding viseme, when the analysis is
+/// already known).
 class SpeechPrerollEvent extends PlaybackEvent {
-  const SpeechPrerollEvent(this.lead);
+  const SpeechPrerollEvent(this.lead, {this.onset});
   final Duration lead;
+  final Viseme? onset;
 }
 
 /// Emitted right after [SpeakingStartedEvent] (before the sentence's cues
@@ -121,9 +125,10 @@ class TtsPlaybackService {
     _controller.add(CuesReachedEvent(cues));
   }
 
-  /// Announces that a sentence starts playing in [lead].
-  void announceSpeech(Duration lead) {
-    _controller.add(SpeechPrerollEvent(lead));
+  /// Announces that a sentence starts playing in [lead]; [onset] is its
+  /// first sounding viseme when known.
+  void announceSpeech(Duration lead, {Viseme? onset}) {
+    _controller.add(SpeechPrerollEvent(lead, onset: onset));
   }
 
   /// Ends the current sentence (it finished playing).

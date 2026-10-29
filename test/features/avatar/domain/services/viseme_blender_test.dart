@@ -67,7 +67,8 @@ void main() {
         span(Viseme.aa, 0, 200),
         span(Viseme.ou, 200, 400),
       ]);
-      expect(blender.shapeAt(tl, ms(100)).shape.pucker, 0);
+      // the pre-round starts 110 ms ahead
+      expect(blender.shapeAt(tl, ms(85)).shape.pucker, 0);
       expect(blender.shapeAt(tl, ms(165)).shape.pucker, greaterThan(0.2));
     });
 
@@ -283,6 +284,125 @@ void main() {
       final double ff = blender.shapeAt(tl, ms(100)).shape.lipTuck;
       final double ss = blender.shapeAt(tl, ms(300)).shape.lipTuck;
       expect(ff - ss, greaterThanOrEqualTo(0.9));
+    });
+
+    group('critic round 7', () {
+      test('lips pre-round 110 ms before an ou: no grin into "you"', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.ih, 0, 200),
+          span(Viseme.ou, 200, 400),
+        ]);
+        expect(blender.shapeAt(tl, ms(89)).shape.pucker, 0);
+        // halfway through the 110 ms pre-round: half rounded, half as wide
+        final MouthShape mid = blender.shapeAt(tl, ms(145)).shape;
+        expect(mid.pucker, closeTo(0.5, 1e-9));
+        expect(mid.stretch, lessThanOrEqualTo(0.5 * 0.45 + 1e-9));
+        // never wider than the rounding allows (an sh keeps both: below)
+        for (int t = 90; t < 400; t += 5) {
+          final MouthShape m = blender.shapeAt(tl, ms(t)).shape;
+          expect(m.stretch, lessThanOrEqualTo(1 - m.pucker + 1e-9));
+        }
+      });
+
+      test('sh keeps its spread with its rounding when no ou is near', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.ch, 0, 400),
+        ]);
+        final MouthShape m = blender.shapeAt(tl, ms(200)).shape;
+        expect(m.pucker, closeTo(0.7, 1e-9));
+        expect(m.stretch, closeTo(0.38, 1e-9));
+      });
+
+      test('the pre-round reaches through a consonant', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.ih, 0, 200),
+          span(Viseme.dd, 200, 260),
+          span(Viseme.ou, 260, 460),
+        ]);
+        // 60 ms before the ou: smoothstep(50 / 110) of full rounding
+        const double x = 50 / 110;
+        expect(
+          blender.shapeAt(tl, ms(200)).shape.pucker,
+          closeTo(x * x * (3 - 2 * x), 1e-9),
+        );
+      });
+
+      test('a tight ou mid-span: full pucker, no stretch', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.e, 0, 200),
+          span(Viseme.ou, 200, 600),
+        ]);
+        final MouthShape m = blender.shapeAt(tl, ms(400)).shape;
+        expect(m.pucker, 1);
+        expect(m.stretch, 0);
+        expect(m.jaw, closeTo(0.15 * VisemeBlender.jawGain(1), 1e-9));
+      });
+
+      test('a release into ou opens jaw and rounding on one ramp', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 100),
+          span(Viseme.pp, 100, 200),
+          span(Viseme.ou, 200, 400),
+        ]);
+        // the closure is already rounded as far as a seal allows
+        expect(blender.shapeAt(tl, ms(199)).shape.pucker, closeTo(0.3, 1e-9));
+        final double jawTarget = 0.15 * VisemeBlender.jawGain(1);
+        for (int us = 200000; us < 220000; us += 1000) {
+          final MouthBlend b = blender.shapeAt(tl, Duration(microseconds: us));
+          final double jaw = (b.shape.jaw - b.pop) / jawTarget;
+          final double round = (b.shape.pucker - 0.3) / 0.7;
+          expect(round, closeTo(jaw, 1e-9), reason: '$us us');
+          expect(b.shape.stretch, 0, reason: '$us us');
+        }
+      });
+
+      test('th keeps the tongue up through the whole span', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.ss, 0, 100),
+          span(Viseme.th, 100, 160),
+          span(Viseme.e, 160, 300),
+        ]);
+        for (int t = 100; t < 160; t++) {
+          expect(
+            blender.shapeAt(tl, ms(t)).shape.tongueUp,
+            greaterThanOrEqualTo(0.6),
+            reason: '$t ms',
+          );
+        }
+      });
+
+      test('a vowel opens by its length: 50 % at 40 ms, full from 160 ms', () {
+        expect(VisemeBlender.vowelJawGain(ms(40)), 0.5);
+        expect(VisemeBlender.vowelJawGain(ms(100)), closeTo(0.75, 1e-9));
+        expect(VisemeBlender.vowelJawGain(ms(160)), 1);
+        expect(VisemeBlender.vowelJawGain(ms(400)), 1);
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.pp, 0, 100),
+          span(Viseme.aa, 100, 150),
+          span(Viseme.pp, 150, 250),
+        ]);
+        double peak = 0;
+        for (int t = 100; t < 150; t++) {
+          final double jaw = blender.shapeAt(tl, ms(t)).shape.jaw;
+          peak = jaw > peak ? jaw : peak;
+        }
+        // a 50 ms vowel between closures: half its table jaw, plus the pop
+        final double half =
+            0.9 * VisemeBlender.jawGain(1) * VisemeBlender.vowelJawGain(ms(50));
+        expect(peak, lessThanOrEqualTo(half + VisemeBlender.popJaw + 1e-9));
+        expect(half, lessThan(0.56));
+        // consonants keep their table jaw
+        final SpeechTimeline kk = timeline(<VisemeSpan>[
+          span(Viseme.kk, 0, 50),
+        ]);
+        expect(
+          blender.shapeAt(kk, ms(25)).shape.jaw,
+          closeTo(
+            MouthShape.forViseme(Viseme.kk).jaw * VisemeBlender.jawGain(1),
+            1e-9,
+          ),
+        );
+      });
     });
 
     test('MouthBlend has value equality', () {
