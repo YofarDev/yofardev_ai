@@ -27,7 +27,7 @@ class AppPalette {
   static const Color livingRoomKey = Color(0xFFFFD49A);
   static const Color livingRoomRim = Color(0xFF9FB8E6);
   static const Color livingRoomAmbient = Color(0xFF2C3346);
-  static const Color livingRoomFog = Color(0x00000000);
+  static const Color livingRoomFog = Color(0x33E0BC8C);
   static const Color campfireKey = Color(0xFFFF9A4D);
   static const Color campfireRim = Color(0xFF6F8FD8);
   static const Color campfireAmbient = Color(0xFF141C2C);

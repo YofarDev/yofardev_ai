@@ -59,6 +59,15 @@ CFG: dict[str, Cfg] = {
         rain_loops=[("RainLoop sheets + splashes + RainSteam", 6120)],
         seam_box=(560, 1250, 1080, 1920),  # ground, bushes and rain: clear of the fire and the aurora
     ),
+    "livingRoom": Cfg(
+        patches=[("Plane4 plant pot", (76, 1260, 204, 1325), 28), ("Plane3 TV cabinet", (780, 1170, 950, 1220), 20),
+                 ("Plane2 picture", (830, 430, 970, 620), 12), ("Plane1 mullion", (510, 300, 570, 440), 6),
+                 ("Plane0 moon", (615, 295, 665, 345), 0)],
+        wet=((380, 250, 520, 440), 1.05, 1.6),   # the top-left pane: wet glass and streaks over the night view
+        # glass streaks 20, drips 240 frames: both back at frame 0 after 240
+        rain_loops=[("RainGlass streaks + drips", 240)],
+        seam_box=(360, 230, 720, 700),  # the glass
+    ),
 }
 
 
@@ -146,6 +155,8 @@ def pointer_gates(proj: Path, hits: list[Hit]) -> list[str]:
                 neg = []
             else:
                 lead = moved[2] - 4 if px > 0 else moved[0] + 4
+                # a zone that hangs off the artboard (livingRoom's plant): click just inside the edge
+                lead = min(max(lead, 4.0), 1076.0)
                 left_strip = (rest[0] + moved[0]) / 2 if px > 0 else (rest[2] + moved[2]) / 2
                 pos = [(lead, y) for y in ys]
                 neg = [(left_strip, y) for y in ys]
@@ -190,7 +201,32 @@ def campfire_extras(render: Renderer, out: Path, gates: list[str]) -> None:
                  f"({'ok' if diff <= 2 else 'FAIL'})")
 
 
-EXTRAS = {"campfire": campfire_extras}
+def living_room_extras(render: Renderer, out: Path, gates: list[str]) -> None:
+    """The four events still play (one frame each, mid-event) and the lamp's wall pool follows
+    `lightKey` (a blue key turns the pool blue, history-free: back to the default, back to M5 rest)."""
+    cells = [label(Image.fromarray(render("--advance=1")).convert("RGB").resize((360, 640)), "rest")]
+    for ev, f in (("lightsOff", 60), ("tvOn", 200), ("catWalksBy", 290), ("lightsOn", 60)):
+        pre = ["--data=eventId=lightsOff", "--data=event=1", "--advance=60"] if ev == "lightsOn" else []
+        a = render(*pre, f"--data=eventId={ev}", "--data=event=1", f"--advance={f}")
+        cells.append(label(Image.fromarray(a).convert("RGB").resize((360, 640)), f"{ev} +{f}f"))
+    grid(cells, 5).save(out / "events_strip.png")
+    glass = (330, 200, 750, 730)   # the window at full size: rain 0 / 1 (rows) x frames 0, 10, 60
+    grid([label(Image.fromarray(render(f"--data=rain={r}", f"--advance={f}")).convert("RGB").crop(glass),
+                f"rain {r} f{f - 1}") for r in (0, 1) for f in (1, 11, 61)], 3).save(out / "rain_glass.png")
+    box = (slice(650, 760), slice(140, 205))   # wall left of the shade, inside the pool
+    rest = render("--advance=1").astype(int)[box][..., :3]
+    blue = render("--data=lightKey=FF60A0FF", "--advance=1").astype(int)[box][..., :3]
+    back = render("--data=lightKey=FF60A0FF", "--advance=1", "--data=lightKey=FFFFD49A", "--advance=2"
+                  ).astype(int)[box][..., :3]
+    shift = float((blue[..., 2] - blue[..., 0]).mean() - (rest[..., 2] - rest[..., 0]).mean())
+    drift = int(np.abs(back - rest).max())
+    Image.fromarray(np.concatenate([rest, blue], 1).astype(np.uint8)).resize((400, 320)).save(out / "lamp_key.png")
+    gates.append(f"lamp pool follows lightKey (blue - red, mean, blue key vs default): {shift:+.1f}/255 "
+                 f"({'ok' if shift >= 8 else 'FAIL'}); back to default: max diff {drift}/255 "
+                 f"({'ok' if drift <= 2 else 'FAIL'})")
+
+
+EXTRAS = {"campfire": campfire_extras, "livingRoom": living_room_extras}
 
 
 def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) -> list[str]:

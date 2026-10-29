@@ -204,3 +204,107 @@ def test_contract_check_lints_every_diorama(rml: str) -> None:
     assert bad != rml
     (msg,) = check_contract.diorama_lint({"campfire": bad})
     assert msg.startswith("campfire: colour-script lint")
+
+
+# ---------------------------------------------------------------- livingRoom (M5 Task 4)
+LR_COMMITTED_M4 = "cc90059"   # the M4 living room (+ v8 rain), before its diorama
+LR_PROP_ART = {"lamp": "Lamp", "plant": "Plant", "tv": "TvCorner", "cat": "TvCorner"}
+
+
+@pytest.fixture(scope="module")
+def lr(tmp_path_factory: pytest.TempPathFactory) -> str:
+    out = tmp_path_factory.mktemp("scenes")
+    root = gen_scenes.OUT_ROOT
+    gen_scenes.OUT_ROOT = str(out)
+    try:
+        return Path(gen_scenes.livingRoom()).read_text()
+    finally:
+        gen_scenes.OUT_ROOT = root
+
+
+def test_living_room_is_committed(lr: str) -> None:
+    assert lr == (ROOT / "rive" / "scenes" / "livingRoom" / "livingRoom.rml").read_text()
+
+
+def test_living_room_plane_membership(lr: str) -> None:
+    assert "livingRoom" in gen_scenes.DIORAMAS
+    plane = _plane_of(lr)
+    want = {"emitLit0": 0, "Skyline": 0, "emitMoon": 0, "emitStar0": 0, "WinSky": 0,
+            "Wall": 1, "WinFrame": 1, "MullV": 1, "RainGlass": 1, "PaneClip": 1,
+            "emitLampGlow": 2, "ArtFrame": 2, "FloatingShelf": 2, "CurtainLSway": 2, "Sill": 2, "WalkingCat": 2,
+            "TvCorner": 3, "Floor": 3, "Plank0": 3,
+            "Lamp": 4, "Plant": 4, "Rug": 4, "LampCone": 4}
+    assert {k: plane.get(k) for k in want} == want
+    assert not [k for k, v in plane.items() if v == 5]   # no foreground in the room
+    at = [lr.index(f'name="Plane{k}"') for k in range(4, -1, -1)]
+    assert at == sorted(at) and lr.index('name="Night"') < at[0]
+    # the walking cat shares the plane of the ledge it walks on
+    assert plane["WalkingCat"] == plane["Sill"] == plane["LedgeShadow"]
+
+
+def test_living_room_hit_zones_ride_their_planes(lr: str) -> None:
+    plane = _plane_of(lr)
+    for prop, art in LR_PROP_ART.items():
+        assert plane[f"Hit_{prop}"] == plane[art], prop
+    ab = ET.fromstring(lr).find("Artboard")
+    assert not [c for c in ab if str(c.get("name", "")).startswith("Hit_")]
+    for prop in LR_PROP_ART:
+        assert f'name="Tap_{prop}"' in lr
+
+
+def test_living_room_lint_clean_and_events_intact(lr: str) -> None:
+    assert lint_colours(lr, "livingRoom") == []
+    for ev in gen_scenes.SCENE_EVENTS["livingRoom"]:
+        assert f'key="{ev}"' in lr
+    for anim in ("lights_on", "lights_off", "ev_tvOn", "ev_catWalksBy"):
+        assert f'name="{anim}"' in lr
+
+
+def test_living_room_keeps_its_m4_ids(lr: str) -> None:
+    r = subprocess.run(["git", "show", f"{LR_COMMITTED_M4}:rive/scenes/livingRoom/livingRoom.rml"], cwd=ROOT,
+                       capture_output=True, text=True)
+    if r.returncode:
+        pytest.skip(r.stderr.strip())
+    old, new = _tree(r.stdout), _tree(lr)
+    # deleted on purpose: the lamp glow's M4 mid gradient stop (the pool is two key-coloured fills)
+    missing = set(old) - set(new)
+    assert len(missing) == 1 and old[missing.pop()][0] == "GradientStop"
+    for i, (tag, attrs, _) in old.items():
+        if i in new:
+            assert new[i][0] == tag, i
+    added = set(new) - set(old)
+    assert all(gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
+               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
+
+
+def test_living_room_lamp_pool_and_rain_binds(lr: str) -> None:
+    root = ET.fromstring(lr)
+    props = {e.get("id"): e.get("name") for e in root.iter() if e.tag.startswith("ViewModelProperty")}
+    glow = next(e for e in root.iter("Shape") if e.get("name") == "emitLampGlow")
+    grads = [g for f in glow.findall("Fill") for g in f]
+    assert len(grads) == 2
+    for g in grads:
+        centre = g.findall("GradientStop")[0]
+        (b,) = centre.findall("DataBindContext")
+        assert (props[b.get("sourcePathIds").split("-")[1]], b.get("propertyKey")) == ("lightKey", "38")
+        assert g.findall("GradientStop")[-1].get("colorValue").startswith("00")
+    assert _binds(lr, "RainGlass") == [("rain", "18", None)]
+    rain = next(e for e in root.iter("Node") if e.get("name") == "RainGlass")
+    (clip,) = rain.findall("ClippingShape")
+    src = next(e for e in root.iter() if e.get("id") == clip.get("sourceId"))
+    assert src.get("name") == "PaneClip" and len(src.findall("Rectangle")) == 4
+    assert not src.findall("Fill") and not src.findall("Stroke")
+    for anim, frames, tile in (("amb_RainGlassStreaks", 20, 235.0), ("amb_RainGlassDrips", 240, 470.0)):
+        a = next(e for e in root.iter("LinearAnimation") if e.get("name") == anim)
+        assert a.get("loopValue") == "loop" and int(a.get("duration")) == frames
+        keys = [(int(f.get("frame")), float(f.get("value"))) for f in a.iter("KeyFrameDouble")]
+        assert keys == [(0, 0.0), (frames, tile)]
+    assert gen_scenes.GLASS_RAIN_FRAMES % 20 == 0 and gen_scenes.GLASS_RAIN_FRAMES % 240 == 0
+
+
+def test_living_room_view_sits_behind_an_opening(lr: str) -> None:
+    root = ET.fromstring(lr)
+    for name in ("Wall", "WinFrame"):
+        sh = next(e for e in root.iter("Shape") if e.get("name") == name)
+        assert len(sh.findall("Rectangle")) == 2
+        assert sh.find("Fill").get("fillRule") == "evenOdd"

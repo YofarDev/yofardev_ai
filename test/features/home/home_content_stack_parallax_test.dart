@@ -131,13 +131,13 @@ void main() {
     expect(tilt.active, isFalse);
   });
 
-  test('only the campfire is a diorama in M4', () {
+  test('the campfire and the living room are dioramas (M5)', () {
     expect(
       <AvatarScene>[
         for (final AvatarScene s in AvatarScene.values)
           if (s.isDiorama) s,
       ],
-      <AvatarScene>[AvatarScene.campfire],
+      <AvatarScene>[AvatarScene.livingRoom, AvatarScene.campfire],
     );
   });
 

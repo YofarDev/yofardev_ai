@@ -145,7 +145,7 @@ def living_room(sc: Scene, content: list[El]) -> None:
                glow(sc, "LampContact", 287, 1245, 125, "600D1F20", 0.14),
                S(O, "WindowFloorLight", [(380, 1180), (700, 1180), (1000, 1850), (240, 1850)],
                  sc.vgrad(-340, 340, [("1895C7C4", 0), ("0095C7C4", 1)]))]
-    grain = [S(O, f"FloorJoint{i}", [(-30, y), (1110, y)], L("15E0C7A0", 1.2), closed=False)
+    grain = [S(O, f"FloorJoint{i}", [(-60, y), (1140, y)], L("15E0C7A0", 1.2), closed=False)
              for i, y in enumerate((1290, 1460, 1700))]
     before(content, "Floor", *shadows, *grain)
     # Brushed brass inlay, recessed cabinet join, and ceramic pot lip.

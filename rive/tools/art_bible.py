@@ -103,7 +103,7 @@ class SceneScript:
 SCENES: dict[str, SceneScript] = {
     "livingRoom": SceneScript(
         accent=TOKENS["livingRoomAccent"], key="FFFFD49A", key_dir=2.4, key_intensity=0.85,
-        rim="FF9FB8E6", ambient="FF2C3346", fog="00000000", value=(0.07, 0.92), sat_cap=0.62,
+        rim="FF9FB8E6", ambient="FF2C3346", fog="33E0BC8C", value=(0.07, 0.92), sat_cap=0.62,
         times={"dawn": "FF7A86B8", "day": "FF9CC4E4", "dusk": "FF5A4A78", "night": "FF1A1F38"},
         flicker=0.15,
     ),

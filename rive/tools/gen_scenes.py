@@ -1073,14 +1073,18 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                  paint, x=float((x0 + x1) / 2), y=float((y0 + y1) / 2), name=name, **kw)
 
     floor_y = 1180
-    wall = rect("Wall", -10, -10, W + 10, floor_y, sc.vgrad(-600, 600, [("FF4E4460", 0.0), ("FF7A6680", 1.0)]))
+    # M5 diorama bleed: the wall and the wainscot run 50 px under the floor (Plane3 slides 8 px more
+    # than the wall), the floor 40 px past the frame (gradients keep their artboard span)
+    wall = rect("Wall", -10, -10, W + 10, floor_y + 50, sc.vgrad(-625, 575, [("FF4E4460", 0.0), ("FF7A6680", 1.0)]))
     stripes = [rect(f"Stripe{i}", x, -10, x + 34, floor_y, F("10FFFFFF")) for i, x in enumerate(range(0, W, 90))]
-    wainscot = rect("Wainscot", -10, 1000, W + 10, floor_y, sc.vgrad(-90, 90, [("FF5A4A62", 0.0), ("FF483A50", 1.0)]))
+    wainscot = rect("Wainscot", -10, 1000, W + 10, floor_y + 50,
+                    sc.vgrad(-115, 65, [("FF5A4A62", 0.0), ("FF483A50", 1.0)]))
     rail = rect("Rail", -10, 992, W + 10, 1006, F("FF8A7896"))
-    floor = rect("Floor", -10, floor_y, W + 10, H + 10, sc.vgrad(-370, 370, [("FF9A6844", 0.0), ("FF5E3A24", 1.0)]))
-    planks = [S(O, f"Plank{i}", [(x0, floor_y), (x0 + (x0 - 540) * 1.6, H)], L("40000000", 3), closed=False)
+    floor = rect("Floor", -50, floor_y, W + 50, H + 40, sc.vgrad(-385, 355, [("FF9A6844", 0.0), ("FF5E3A24", 1.0)]))
+    ext = (H + 40 - floor_y) / (H - floor_y)
+    planks = [S(O, f"Plank{i}", [(x0, floor_y), (x0 + (x0 - 540) * 1.6 * ext, H + 40)], L("40000000", 3), closed=False)
               for i, x0 in enumerate(range(-200, 1300, 130))]
-    baseboard = rect("Baseboard", -10, floor_y - 18, W + 10, floor_y + 4, F("FFE8DCCC"))
+    baseboard = rect("Baseboard", -50, floor_y - 18, W + 50, floor_y + 4, F("FFE8DCCC"))
     rug = E(O, "Rug", 540, 1520, 980, 300, sc.rgrad(490, [("FFB8484A", 0.0), ("FF8A2E36", 0.55), ("FF5A1E28", 1.0)]),
             L("FFE8C890", 6))
     rug_in = E(O, "RugInner", 540, 1520, 780, 220, L("CCE8C890", 4))
@@ -1088,11 +1092,13 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
     # window with night sky + skyline, curtains
     # the window sits high: in the app the avatar's head covers the wall below ~y 760
     wx0, wy0, wx1, wy1 = 360, 230, 720, 700
-    sky = rect("WinSky", wx0, wy0, wx1, wy1, sc.vgrad(-260, 260, [("FF1C2450", 0.0), ("FF6A4A80", 1.0)]))
-    city = S(O, "Skyline", [(wx0, wy1, "c"), (wx0, 560, "c"), (400, 560, "c"), (400, 500, "c"), (440, 500, "c"),
+    # the view (Plane0) runs 20 px past the glass: the wall's opening slides 6 / 3.6 px over it
+    sky = rect("WinSky", wx0 - 20, wy0 - 20, wx1 + 20, wy1 + 20,
+               sc.vgrad(-260, 260, [("FF1C2450", 0.0), ("FF6A4A80", 1.0)]))
+    city = S(O, "Skyline", [(wx0 - 20, wy1 + 20, "c"), (wx0 - 20, 560, "c"), (400, 560, "c"), (400, 500, "c"), (440, 500, "c"),
                             (440, 580, "c"), (480, 580, "c"), (480, 460, "c"), (530, 460, "c"), (530, 540, "c"),
                             (580, 540, "c"), (580, 490, "c"), (630, 490, "c"), (630, 570, "c"), (680, 570, "c"),
-                            (680, 520, "c"), (wx1, 520, "c"), (wx1, wy1, "c")], F("FF231C38"))
+                            (680, 520, "c"), (wx1 + 20, 520, "c"), (wx1 + 20, wy1 + 20, "c")], F("FF231C38"))
     rnd = random.Random(3)
     windows_lit = [rect(f"Lit{i}", x, y, x + 8, y + 10, F("FFFFD27A"), opacity=rnd.uniform(0.5, 1))
                    for i, (x, y) in enumerate([(rnd.uniform(400, 700), rnd.uniform(560, 680)) for _ in range(18)])]
@@ -1100,8 +1106,8 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
     frame = rect("WinFrame", wx0 - 14, wy0 - 14, wx1 + 14, wy1 + 14, F("FFE8DCCC"), 6)
     mullion = [rect("MullV", 532, wy0, 548, wy1, F("FFE8DCCC")), rect("MullH", wx0, 458, wx1, 472, F("FFE8DCCC"))]
     # a long ledge under the window runs the width of the wall (the walking cat's stage)
-    sill = rect("Sill", -10, wy1 + 8, W + 10, wy1 + 30, F("FFF2E8DA"), 4)
-    ledge_sh = rect("LedgeShadow", -10, wy1 + 30, W + 10, wy1 + 44, F("40101C1E"))
+    sill = rect("Sill", -30, wy1 + 8, W + 30, wy1 + 30, F("FFF2E8DA"), 4)
+    ledge_sh = rect("LedgeShadow", -30, wy1 + 30, W + 30, wy1 + 44, F("40101C1E"))
     curtain = [(300, 190), (380, 190), (390, 430), (370, 780), (300, 800, "c")]
     curt_l = S(O, "CurtainL", curtain + [(280, 470)], sc.vgrad(-320, 320, [("FFA83A4A", 0.0), ("FF6E1E2E", 1.0)]),
                L(INKC, 3))
@@ -1193,8 +1199,9 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                  sc.vgrad(-800, 800, [("30B8C8FF", 0.0), ("00B8C8FF", 1.0)]), opacity=0.0)
     moon_pool = S(O, "MoonPool", [(380, 1240), (720, 1240), (900, 1560), (240, 1560)],
                   sc.vgrad(-160, 160, [("50B8D0FF", 0.0), ("28B8D0FF", 1.0)]), opacity=0.0)
-    tv_spill = E(O, "TvFloorSpill", 870, 1330, 520, 150, sc.rgrad(260, [("606AD8FF", 0.0), ("006AD8FF", 1.0)]),
-                 opacity=0.0)
+    # a round pool squashed onto the floor (M5: the 520 x 150 ellipse cut its own radial gradient flat)
+    tv_spill = E(O, "TvFloorSpill", 870, 1330, 520, 520, sc.rgrad(260, [("606AD8FF", 0.0), ("006AD8FF", 1.0)]),
+                 opacity=0.0, scaleY=round(150 / 520, 4))
     lights_on = sc.A("lights_on", 1, [sc.T(night, ease=None, opacity=[(0, 0.0)]), sc.T(lamp_glow, ease=None, opacity=[(0, 1.0)]),
                                       sc.T(lamp_cone, ease=None, opacity=[(0, 1.0)]), sc.T(moonbeam, ease=None, opacity=[(0, 0.0)]),
                                       sc.T(moon_pool, ease=None, opacity=[(0, 0.0)]),
@@ -1369,6 +1376,164 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                curt_l_n, curt_r_n, rod, sill, ledge_sh, *mullion, *windows_lit, city, moon, sky, frame, rail, wainscot,
                *stripes, wall]
     return sc.write(content, hits)
+
+
+# ---------------------------------------------------------------- livingRoom diorama (M5 Task 4)
+# Ruling 4 (interior, short depth). Moved one plane from the ruling's table (execution ruling 53):
+# the curtains and the rod (1 -> 2, they hang in front of the frame), the ledge under the window with
+# the walking cat (a wall shelf: 2; on Plane4 the cat would float 13 px off it), the floor with its
+# planks, grain and light pools (4 -> 3: the floor must paint behind the TV unit standing on it).
+# Plane5 stays empty (the room has no foreground).
+LIVING_ROOM_PLANES: dict[str, int | None] = {
+    "Night": None,
+    **dict.fromkeys(("RugInner", "Rug", "Plant", "Lamp", "LamplitDust", "LampCone", "PlantContact",
+                     "LampContact"), 4),
+    **dict.fromkeys(("TvCorner", "MoonBeam", "TvGlow", "MoonPool", "TvFloorSpill", "Plank", "CabinetContact",
+                     "WindowFloorLight", "FloorJoint", "OakGrain", "Floor", "Baseboard"), 3),
+    **dict.fromkeys(("WalkingCat", "CurtainLSway", "CurtainRSway", "Rod", "Sill", "LedgeShadow", "LampGlow",
+                     "WallWarmth", "ArtMountain", "ArtHill", "ArtSun", "ArtCanvas", "ArtMat", "ArtFrame",
+                     "ArtShadow", "ShelfBook", "VaseRim", "CeramicVase", "VaseSprig", "VaseLeaf", "FloatingShelf",
+                     "ShelfShadow"), 2),
+    **dict.fromkeys(("MullV", "MullH", "RainGlass", "PaneClip", "WinFrame", "Rail", "Wainscot", "WallPanel",
+                     "LowerPanel", "CorniceShadow", "CorniceInlay", "WindowCool", "Wall"), 1),
+    **dict.fromkeys(("Lit", "Skyline", "Moon", "Star", "WinSky"), 0),
+    # ruling 3: each hit zone rides the plane of its prop's art (the sleeping cat is on the TV unit)
+    "Hit_lamp": 4, "Hit_plant": 4, "Hit_tv": 3, "Hit_cat": 3,
+}
+# warm dust (`lightFog`) in front of the view through the window and, thinner, the back wall
+LIVING_ROOM_VEILS = ((0.3, 200.0, 480.0), (0.12, 300.0, 1100.0))
+LIVING_ROOM_EMISSIVE = ("Shade", "LampGlow", "TvOn", "TvBlob", "Lit", "Moon", "Star")
+WINDOW_FRAME = (346.0, 216.0, 734.0, 714.0)   # WinFrame's outer edge
+WINDOW_GLASS = (360.0, 230.0, 720.0, 700.0)   # the opening inside it
+WINDOW_PANES = ((360.0, 230.0, 532.0, 458.0), (548.0, 230.0, 720.0, 458.0),
+                (360.0, 472.0, 532.0, 700.0), (548.0, 472.0, 720.0, 700.0))
+# The lamp's wall pool in `lightKey` (ruling 5): a bound colour sets the alpha too, so the M4 falloff
+# (0.44 at the centre, 0.125 half-way, 0 at the edge) is two key-coloured fills fading to clear,
+# (gradient opacity, share of the 350 px radius) each.
+LAMP_POOL = ((0.25, 1.0), (0.2, 0.5))
+# Rain on the glass (ruling 6): a fast sheet of fine streaks seen through the panes and slow drips
+# running down them, each sheet moving one tile per loop (seamless at any frame time, as the
+# campfire's), clipped to the four panes; a wet tint dulls the view. Opacity = `rain`.
+GLASS_STREAKS = (26, 235.0, 20)   # (count, tile px, loop frames)
+GLASS_DRIPS = (10, 470.0, 240)
+GLASS_RAIN_FRAMES = 240            # both sheets are back at frame 0 after this many frames
+GLASS_WET = ("FF7A8898", 0.25)     # wet tint and its opacity at rain 1 (misted glass, lighter than the view)
+ORIGIN = (0.0, 0.0)
+
+
+def _rect_path(d: Doc, x0: float, y0: float, x1: float, y1: float, ox: float = 0.0, oy: float = 0.0,
+               name: str = "Path") -> El:
+    """A Rectangle path covering artboard (x0, y0)-(x1, y1) in a shape placed at (ox, oy)."""
+    return d("Rectangle", width=float(x1 - x0), height=float(y1 - y0), x=float((x0 + x1) / 2 - ox),
+             y=float((y0 + y1) / 2 - oy), name=name)
+
+
+def living_room_light(sc: Scene, content: list[El], d6: Doc) -> None:
+    """The living room's own pass (M5 Task 4): the lamp's wall pool in `lightKey`, an opening in the
+    wall and the frame for the view (Plane0) behind them, stars in that view, rain on the glass bound
+    to `rain`, then the content regrouped back to front by plane (draw order kept inside a plane)."""
+    d5 = sc.d5
+    key = SCENES["livingRoom"].key
+    with sc.minting(d5):
+        # ---- the wall pool takes the key light's colour
+        glow = named(content, "LampGlow")
+        fill0 = next(c for c in glow.children if c.tag == "Fill")
+        g0 = fill0.children[0]
+        r = float(g0.attrs["endX"]) - float(g0.attrs["startX"])
+        g0.children = [g0.children[0], g0.children[-1]]   # the M4 mid stop goes: the falloff is two fills
+        g1 = rad(d5, float(g0.attrs["startX"]), float(g0.attrs["startY"]), r * LAMP_POOL[1][1],
+                 [(key, 0.0), ("00" + key[2:], 1.0)])
+        for g, (op, _) in zip((g0, g1), LAMP_POOL):
+            g.attrs["opacity"] = op
+            centre, edge = g.children[0], g.children[-1]
+            centre.attrs["colorValue"] = key
+            centre.children.append(sc.bind("lightKey", 38))
+            edge.attrs["colorValue"] = "00" + key[2:]
+        glow.children.insert(glow.children.index(fill0) + 1, d5("Fill", g1, name="Fill"))
+
+        # ---- the view sits behind the wall: an opening in the wall, the frame becomes a ring
+        wall, frame = named(content, "Wall"), named(content, "WinFrame")
+        mid = [(a + b) / 2 for a, b in zip(WINDOW_FRAME, WINDOW_GLASS)]   # under the frame's border
+        for shape, hole in ((wall, mid), (frame, WINDOW_GLASS)):
+            ox, oy = float(shape.attrs["x"]), float(shape.attrs["y"])
+            at = next(i for i, c in enumerate(shape.children) if c.tag == "Rectangle")
+            shape.children.insert(at + 1, _rect_path(d5, *hole, ox, oy, name="Opening"))
+            next(c for c in shape.children if c.tag == "Fill").attrs["fillRule"] = "evenOdd"
+        # the cornice ran behind the old sky: it now stops under the frame's border on both sides
+        for name in ("CorniceShadow", "CorniceInlay"):
+            sh = named(content, name)
+            ox = float(sh.attrs["x"])
+            path = next(c for c in sh.children if c.tag == "Rectangle")
+            w = float(path.attrs["width"])
+            x0, x1 = ox - w / 2, ox + w / 2
+            path.attrs.update(width=mid[0] - x0, x=(x0 + mid[0]) / 2 - ox)
+            sh.children.insert(sh.children.index(path) + 1,
+                               d5("Rectangle", width=x1 - mid[2], height=path.attrs["height"],
+                                  x=(mid[2] + x1) / 2 - ox, name="Path"))
+        # the middle wall panel's top ran behind the old sky: it now starts under the ledge
+        panel = named(content, "WallPanel1")
+        path = next(c for c in panel.children if c.tag == "Rectangle")
+        bottom = float(panel.attrs["y"]) + float(path.attrs["height"]) / 2
+        top = WINDOW_GLASS[3] + 19.0
+        panel.attrs["y"] = (top + bottom) / 2
+        path.attrs["height"] = bottom - top
+
+        # ---- stars in the view, above the skyline, clear of the moon
+        rnd = random.Random(zlib.crc32(b"livingRoomStars"))
+        stars = []
+        while len(stars) < 12:
+            x, y = rnd.uniform(WINDOW_GLASS[0] + 6, WINDOW_GLASS[2] - 6), rnd.uniform(WINDOW_GLASS[1] + 8, 440)
+            if math.hypot(x - 640, y - 320) < 50 or WINDOW_PANES[0][2] - 4 < x < WINDOW_PANES[1][0] + 4 \
+                    or WINDOW_PANES[0][3] - 4 < y < WINDOW_PANES[2][1] + 4:
+                continue
+            sz = rnd.choice((2.5, 3.0, 4.0))
+            stars.append(sc.E(ORIGIN, f"Star{len(stars)}", x, y, sz, sz, sc.F("FFF4EEDC"),
+                              opacity=round(rnd.uniform(0.55, 1.0), 2)))
+        before(content, "WinSky", *stars)
+
+        # ---- rain on the glass
+        clip = d5("Shape", *[_rect_path(d5, *p, name="Pane") for p in WINDOW_PANES], x=0.0, y=0.0,
+                  name="PaneClip")
+        r_ = random.Random(zlib.crc32(b"RainGlass"))
+        gx0, gy0, gx1, gy1 = WINDOW_GLASS
+        sheets = []
+        for label_, (n, tile, period) in (("Drips", GLASS_DRIPS), ("Streaks", GLASS_STREAKS)):
+            kids = []
+            for i in range(n):
+                x, u = r_.uniform(gx0 + 4, gx1 - 4), r_.uniform(0, tile)
+                ln = r_.uniform(26, 46) if label_ == "Streaks" else r_.uniform(18, 34)
+                # every copy that is on the glass at some point of the loop (the sheet moves 0 -> tile)
+                for k in range(-2, math.ceil((gy1 - gy0) / tile) + 1):
+                    y = gy0 + u + k * tile
+                    if y + tile + ln + 8 < gy0 or y > gy1:
+                        continue
+                    if label_ == "Streaks":
+                        kids.append(sc.S(ORIGIN, f"GlassStreak{i}_{k + 1}", [(x, y), (x - ln * 0.18, y + ln)],
+                                         sc.L("70C8D4E0", 1.6), closed=False))
+                    else:
+                        kids += [sc.E(ORIGIN, f"GlassDrop{i}_{k + 1}", x, y + ln, 5, 7, sc.F("B0DCE4EC")),
+                                 sc.S(ORIGIN, f"GlassTrail{i}_{k + 1}", [(x, y), (x + 0.6, y + ln - 3)],
+                                      sc.L("50DCE4EC", 2.0), closed=False)]
+            sheet = d5("Node", *kids, x=0.0, y=0.0, name=f"Glass{label_}")
+            sc.ambient(f"RainGlass{label_}", sc.A(f"amb_RainGlass{label_}", period, [
+                sc.T(sheet, ease=None, y=[(0, 0.0, "linear"), (period, tile, "linear")])], loop=True))
+            sheets.append(sheet)
+        wet = d5("Shape", *[_rect_path(d5, *p, name="Pane") for p in WINDOW_PANES], sc.F(GLASS_WET[0]),
+                 x=0.0, y=0.0, opacity=GLASS_WET[1], name="GlassWet")
+        rain = d5("Node", sc.bind("rain", 18), d5("ClippingShape", sourceId=clip.ref(), name="Clip"), *sheets, wet,
+                  x=0.0, y=0.0, opacity=0.0, name="RainGlass")
+        # behind the mullions, in front of the frame (the streaks never leave the panes)
+        before(content, "Lit0", rain, clip)
+
+    # ---- back to front: content is front-most first, planes contiguous, draw order kept inside one
+    def plane(e: El) -> int:
+        name = str(e.attrs.get("name", ""))
+        k = LIVING_ROOM_PLANES[name if name.startswith(HIT_PREFIX) else _root(name)]
+        return 6 if k is None else k
+    content.sort(key=lambda e: -plane(e))
+
+
+DIORAMAS["livingRoom"] = DioramaSpec(LIVING_ROOM_PLANES, LIVING_ROOM_EMISSIVE, LIVING_ROOM_VEILS, living_room_light)
 
 
 # ====================================================================== beach
