@@ -1,0 +1,58 @@
+{
+    "mode": "profile",
+    "livingRoom": {
+        "frames": 647,
+        "build_p50": 9.7,
+        "build_p95": 12.95,
+        "build_p99": 15.19,
+        "raster_p50": 7.65,
+        "raster_p95": 9.61,
+        "raster_p99": 10.29,
+        "total_p95": 21.69,
+        "over_16_6_share": 0.0
+    },
+    "campfire": {
+        "frames": 647,
+        "build_p50": 9.76,
+        "build_p95": 12.87,
+        "build_p99": 14.41,
+        "raster_p50": 7.48,
+        "raster_p95": 9.52,
+        "raster_p99": 10.42,
+        "total_p95": 21.47,
+        "over_16_6_share": 0.0
+    },
+    "campfire_rain1": {
+        "frames": 641,
+        "build_p50": 9.67,
+        "build_p95": 13.06,
+        "build_p99": 14.67,
+        "raster_p50": 7.16,
+        "raster_p95": 9.29,
+        "raster_p99": 10.31,
+        "total_p95": 22.11,
+        "over_16_6_share": 0.0046801872074883
+    },
+    "beach": {
+        "frames": 649,
+        "build_p50": 9.6,
+        "build_p95": 12.63,
+        "build_p99": 14.13,
+        "raster_p50": 7.69,
+        "raster_p95": 9.71,
+        "raster_p99": 11.0,
+        "total_p95": 21.68,
+        "over_16_6_share": 0.0015408320493066256
+    },
+    "deepSpace": {
+        "frames": 643,
+        "build_p50": 9.6,
+        "build_p95": 12.96,
+        "build_p99": 14.82,
+        "raster_p50": 7.66,
+        "raster_p95": 9.65,
+        "raster_p99": 10.53,
+        "total_p95": 21.45,
+        "over_16_6_share": 0.0015552099533437014
+    }
+}
