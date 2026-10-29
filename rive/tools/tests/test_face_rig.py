@@ -61,9 +61,12 @@ def test_lip_tuck_needs_the_jaw_open() -> None:
 def test_nose_wrinkle_lifts_the_upper_lip_a_little() -> None:
     nw, rest = fr.mouth_pose({"auNoseWrinkle": 1.0}), fr.mouth_pose({})
     lift = rest["UpperC"][1] - nw["UpperC"][1]
-    assert 2.0 < lift < 4.5
+    assert 3.5 < lift < 5.0  # critic round 3: ~4 px (a sneer that shows the upper teeth)
     assert nw["LowerC"] == pytest.approx(rest["LowerC"])
-    assert len(fr.NOSE_CREASES) == 3 and fr.NOSE_CREASE_W == 1.8
+    assert nw["CornerR"][1] < rest["CornerR"][1]  # the corners lift a little with it
+    # a crease across the bridge and two bunny lines on each side of it
+    assert len(fr.NOSE_CREASES) == 5 and fr.NOSE_CREASE_W == 1.8
+    assert sum(1 for c in fr.NOSE_CREASES if c[0][0] < 400 and c[-1][0] < c[0][0]) == 2
 
 
 def test_pseudo_amounts() -> None:
@@ -82,7 +85,7 @@ FF = {"auJawDrop": 0.14, "auLipStretch": 0.1, "lipTuck": 1.0}
 SS = {"auJawDrop": 0.14, "auLipStretch": 0.55}
 
 
-INK = 2.7 / 2  # half the mouth line
+INK = fr.MOUTH_INK / 2  # half the mouth line
 
 
 @pytest.mark.parametrize("tuck", [0.2, 0.3, 0.6, 1.0])
@@ -117,9 +120,12 @@ def test_a_rolled_in_tuck_is_not_a_press() -> None:
     """Critic round 2: lipTuck on a closed jaw read like lipPress. Rolled-in lips draw a thinner line,
     pressed lips a thicker one; both push the chin (fold + chin light), rest shows neither."""
     roll, press = {"lipTuck": 1.0}, {"auLipPress": 1.0}
-    thick = lambda env: fr.evaluate(2.7, fr.terms(R=2.4, T=-fr.ROLL_THIN, TK=fr.ROLL_THIN), env)  # noqa: E731
-    assert thick(roll) < 2.7 - 0.5 and thick(press) > 2.7 + 2.0
-    assert thick({**FF}) >= 2.7  # f / v (T - TK <= 0) never thins the line
+    ink = fr.MOUTH_INK
+    thick = lambda env: fr.evaluate(ink, fr.terms(R=fr.PRESS_INK, PJ=-fr.PRESS_INK, T=-fr.ROLL_THIN,  # noqa: E731
+                                                  TK=fr.ROLL_THIN), env)
+    assert thick(roll) < ink - 0.4 and thick(press) > ink + 0.9
+    assert thick(roll) >= fr.END_W  # never under the legibility floor
+    assert thick({**FF}) >= ink  # f / v (T - TK <= 0) never thins the line
     chin = lambda env: min(1.0, max(0.0, fr.evaluate(0.0, fr.CHIN_LIGHT_ON, env)))  # noqa: E731
     assert chin({}) == 0.0 and chin(FF) == 0.0 and chin(roll) == 1.0 and chin(press) == 1.0
 
@@ -523,6 +529,8 @@ FORMULA_POSES = [{}, FF, SS, {"auLipPucker": 0.95, "auJawDrop": 0.34}, ANGRY,
                  {"auBrowInnerUp": 0.75, "auBrowOuterUpR": 0.6, "auLipCornerDepressL": 0.4, "mouth": 2.0},
                  {"tongueUp": 1.0, "auJawDrop": 0.34}, {"auJawDrop": 0.08},
                  {"lipTuck": 0.2, "auJawDrop": 0.03, "auLipStretch": 0.1}, {"lipTuck": 1.0},
+                 {"auLipPucker": 0.6, "auJawDrop": 0.82}, {"auLipPress": 0.4, "auJawDrop": 0.5, "tongueUp": 0.75},
+                 {"auJawDrop": 0.15, "tongueUp": 0.9, "mouth": 0.5},
                  {"lipTuck": 0.05, "auJawDrop": 0.1, "mouth": 0.2}]
 
 
@@ -595,8 +603,9 @@ def test_the_open_mouth_never_kisses_the_chin() -> None:
 
 
 @pytest.mark.parametrize("jaw", [0.14, 0.25, 0.34, 0.6, 1.0])
-@pytest.mark.parametrize("tongue", [0.6, 0.8, 1.0])
+@pytest.mark.parametrize("tongue", [0.6, 0.65, 0.7])
 def test_the_tongue_tip_stops_just_under_the_upper_teeth(jaw: float, tongue: float) -> None:
+    """d / n / l: the tip rises to the back of the upper teeth and stops just under their edge."""
     tip = fr.mouth_pose({"auJawDrop": jaw, "tongueUp": tongue})["TongueTip"][1]
     assert 0.9 <= tip - fr.teeth_edge_y(400.0) <= 2.1  # reads at a moderate tongueUp, never hides
 
@@ -662,3 +671,152 @@ def test_the_dimpler_draws_a_corner_dent() -> None:
     (x0, y0), k = fr.mouth_pose({})["CornerR"], 1
     arc = fr.DIMPLE_ARC(x0, y0, k)
     assert all(x > x0 for x, _ in arc) and arc[0][1] < y0 < arc[-1][1]  # a ")" just outside the corner
+
+
+# ------------------------------------------------------------------ critic round 3: the mouth
+
+OU = {"auLipPucker": 1.0, "auJawDrop": 0.21}
+OH = {"auLipPucker": 0.6, "auJawDrop": 0.82}
+OPEN_POSES = [OU, OH, {"auJawDrop": 1.0, "auLipStretch": 0.15}, {"auJawDrop": 0.34, "auLipStretch": 0.2, "tongueUp": 0.6},
+              {"auJawDrop": 0.48, "auLipStretch": 0.1}, SS, {"auLipPucker": 0.7, "auLipStretch": 0.38, "auJawDrop": 0.2},
+              {"auJawDrop": 0.3, "auLipCornerPull": 1.0}]
+
+
+def test_line_weights_keep_the_bible_ratios_to_the_silhouette() -> None:
+    assert fr.MOUTH_INK / fr.SILHOUETTE_ART == pytest.approx(3 / 5, abs=0.01)
+    assert fr.DETAIL_W / fr.SILHOUETTE_ART == pytest.approx(1.8 / 5, abs=0.01)
+    assert fr.END_W / fr.SILHOUETTE_ART == pytest.approx(1.4 / 5, abs=0.01)
+    assert fr.MOUTH_INK + fr.PRESS_INK <= fr.SILHOUETTE_ART  # pressed lips: never over the chin's weight
+    root = _rml()
+    shapes = {e.get("name"): e for e in root.iter("Shape")}
+    assert float(shapes["MouthLine"].find("Stroke").get("thickness")) == pytest.approx(fr.MOUTH_INK)
+    assert float(shapes["LowerLipBandEdge"].find("Stroke").get("thickness")) == pytest.approx(fr.DETAIL_W)
+    # open strokes are tapered bands with round-capped ends at the line floor, not plain strokes
+    for nm in ("SmileCreaseL", "SmileCreaseR", "TenseCreaseL", "DimpleR", "ChinBulge", "LowerLipShade"):
+        sh = shapes[nm]
+        assert sh.find("Stroke") is None, nm
+        caps = sh.find("PointsPath").findall("StraightVertex")
+        assert len(caps) == 4 and all(float(v.get("radius")) == pytest.approx(fr.END_W / 2, abs=0.01) for v in caps)
+
+
+def test_blunt_bands_taper_to_the_floor() -> None:
+    pts = fr.blunt([(0.0, 0.0), (5.0, 2.0), (10.0, 0.0)], 1.6)
+    width = lambda a, b: ((pts[a][0] - pts[b][0]) ** 2 + (pts[a][1] - pts[b][1]) ** 2) ** 0.5  # noqa: E731
+    assert width(0, 5) == pytest.approx(fr.END_W) and width(2, 3) == pytest.approx(fr.END_W)
+    assert width(1, 4) == pytest.approx(1.6)
+
+
+@pytest.mark.parametrize("env", [{}, *[{a: 1.0} for a in CLOSED_AUS], {"lipTuck": 1.0}, ANGRY,
+                                 {"auLipStretch": 0.3, "auLipPress": 0.6, "auLipCornerDepress": 0.35}])
+def test_a_closed_mouth_keeps_its_line_end(env: dict) -> None:
+    """No opening, no corner handles: the closed line ends as before."""
+    for c in ("CornerL", "CornerR"):
+        up, down = fr.corner_handle_pose(env, c)
+        assert up == pytest.approx(down) and up == pytest.approx(fr.mouth_pose(env)[c])
+
+
+@pytest.mark.parametrize("env", OPEN_POSES)
+def test_open_corners_are_round(env: dict) -> None:
+    """Critic round 3: near-sharp corners read as trapezoids. The corner's handles run straight up
+    and down, each at least 30 % of the opening's height at that side."""
+    m = fr.mouth_pose(env)
+    for side in ("L", "R"):
+        h = m["Lower" + side][1] - m["Upper" + side][1]
+        up, down = fr.corner_handle_pose(env, "Corner" + side)
+        corner = m["Corner" + side]
+        assert up[0] == down[0] == pytest.approx(corner[0])  # vertical: a round end
+        assert corner[1] - up[1] >= 0.3 * h and down[1] - corner[1] >= 0.3 * h
+
+
+@pytest.mark.parametrize("env", [OU, OH])
+def test_round_lips_make_an_oval_not_a_cup(env: dict) -> None:
+    """oh / ou: the corners sit near the opening's middle height (not on its top), and the upper lip
+    arches (its side columns below its centre)."""
+    m = fr.mouth_pose(env)
+    top, bottom = m["UpperC"][1], m["LowerC"][1]
+    mid = (top + bottom) / 2
+    assert abs(m["CornerR"][1] - mid) <= 0.3 * (bottom - top)
+    assert m["UpperR"][1] - top >= 1.5 and bottom - m["LowerR"][1] >= 1.5
+
+
+def test_ou_is_no_dot() -> None:
+    """ou keeps at least 45 % of the rest mouth's width and a fuller lip rim than an open aa."""
+    width = lambda p: p["CornerR"][0] - p["CornerL"][0]  # noqa: E731
+    assert width(fr.mouth_pose(OU)) >= 0.45 * width(fr.mouth_pose({}))
+    rim = lambda env: fr.evaluate(0.0, fr.terms(RJ=fr.RIM_MAX, K=fr.RIM_PUCKER), env)  # noqa: E731
+    assert rim(OU) > rim({"auJawDrop": 1.0}) + 0.4
+
+
+TONGUE_ENVS = [{"auJawDrop": j, "tongueUp": t} for j in (0.15, 0.25, 0.34, 0.5, 1.0) for t in (0.0, 0.6, 0.7, 0.8, 1.0)]
+
+
+@pytest.mark.parametrize("env", TONGUE_ENVS)
+def test_the_tongue_top_is_a_convex_arc(env: dict) -> None:
+    """Critic round 3: a raised tip between low sides made an "M" with two dark triangles. The
+    shoulders stay under the tip and over the base, the slope steepening outward."""
+    m = fr.mouth_pose(env)
+    tip, side = m["TongueTip"][1], m["TongueSideR"][1]
+    rest = fr.mouth_pose({})
+    base = 498.0 + 0.5 * (m["LowerR"][1] - rest["LowerR"][1]) + 0.5 * (m["JawTeeth"][1] - rest["JawTeeth"][1])
+    u = fr.TONGUE_SHOULDER[0]
+    assert 0.0 < side - tip and (side - tip) / u < (base - side) / u
+    assert m["TongueSideL"] == pytest.approx((800.0 - m["TongueSideR"][0], side))
+
+
+def test_th_shows_the_tip_past_the_upper_teeth_and_nn_behind_them() -> None:
+    edge = fr.teeth_edge_y(400.0)
+    for t in (0.8, 0.9, 1.0):
+        th = fr.mouth_pose({"auJawDrop": 0.15, "tongueUp": t})
+        assert th["TongueTip"][1] <= edge - 2.5  # over the teeth's edge
+        u, side = th["TongueSideR"]
+        assert side > fr.teeth_edge_y(u)  # the teeth still show at its sides
+    nn = fr.mouth_pose({"auJawDrop": 0.25, "tongueUp": 0.7})
+    assert nn["TongueTip"][1] > edge
+    kk = fr.mouth_pose({"auJawDrop": 0.48, "auLipStretch": 0.1})  # tongueUp 0: the tongue lies low
+    assert kk["TongueTip"][1] >= kk["LowerC"][1] - INK - fr.RIM_MAX - 1.0
+
+
+def test_a_residual_press_on_an_open_jaw_lifts_the_interior() -> None:
+    """Critic round 3: a press blended into an open jaw read as a dark grimace blob. From press 0.2
+    and jaw ~0.1 the pressed line loses its extra weight and the interior lightens."""
+    lift = lambda env: min(fr.LIFT_MAX, max(0.0, fr.evaluate(-0.8, fr.terms(PJ=4.0), env)))  # noqa: E731
+    assert lift({"auLipPress": 0.75}) == 0.0 and lift({"auJawDrop": 1.0}) == 0.0
+    assert lift({"auLipPress": 0.15, "auJawDrop": 0.5}) == 0.0
+    assert lift({"auLipPress": 0.375, "auJawDrop": 0.5}) == pytest.approx(fr.LIFT_MAX)
+    ink = lambda env: fr.evaluate(fr.MOUTH_INK, fr.terms(R=fr.PRESS_INK, PJ=-fr.PRESS_INK), env)  # noqa: E731
+    assert ink({"auLipPress": 0.375, "auJawDrop": 0.5}) == pytest.approx(fr.MOUTH_INK)
+    m = fr.mouth_pose({"auLipPress": 0.375, "auJawDrop": 0.5})
+    assert fr.teeth_edge_y(400.0) - (m["UpperC"][1] + INK) >= 2.0  # the upper teeth show
+
+
+def test_flare_needs_a_clear_stretch() -> None:
+    """A kk -> ou blend (stretch 0.05) no longer half-shows the teeth; ch keeps its flare."""
+    assert fr.amount({"auLipPucker": 0.5, "auLipStretch": 0.05}, fr.FLARE) == 0.0
+    assert fr.amount({"auLipPucker": 0.7, "auLipStretch": 0.38}, fr.FLARE) == 1.0
+
+
+def test_rolled_in_lips_flatten_and_bulge_the_chin() -> None:
+    rest, roll = fr.mouth_pose({}), fr.mouth_pose({"lipTuck": 1.0})
+    sag = lambda p: p["UpperC"][1] - p["CornerR"][1]  # noqa: E731
+    assert sag(roll) < sag(rest) - 1.0
+    assert fr.evaluate(-0.45, fr.terms(R=2.2, T=2.0, TK=-2.0), {"lipTuck": 1.0}) >= 1.0  # the fold, full
+    assert fr.evaluate(-0.45, fr.terms(R=2.2, T=2.0, TK=-2.0), FF) <= 0.0  # f / v: none
+
+
+def test_the_dimpler_sinks_the_corner_into_a_pocket() -> None:
+    root = _rml()
+    names = {e.get("name") for e in root.iter("Shape")}
+    assert {"DimplePocketL", "DimplePocketR", "DimpleL", "DimpleR"} <= names
+    rest, dm = fr.mouth_pose({}), fr.mouth_pose({"auDimpler": 1.0})
+    assert dm["CornerR"][0] - rest["CornerR"][0] >= 2.5  # pulled back into the cheek
+
+
+def test_corner_handle_bones_ride_their_corners() -> None:
+    root = _rml()
+    bones = {e.get("name"): e for e in root.iter("RootBone") if (e.get("name") or "").startswith("MouthCorner")}
+    for c in ("CornerL", "CornerR"):
+        for tag in ("In", "Out"):
+            b = bones[f"Mouth{c}{tag}"]
+            con = b.find("TranslationConstraint")
+            assert con is not None and con.get("offset") == "true" and con.get("targetId") == bones[f"Mouth{c}"].get("id")
+            assert float(b.get("x")) == 0.0 and float(b.get("y")) == 0.0

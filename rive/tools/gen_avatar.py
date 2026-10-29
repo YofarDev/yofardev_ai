@@ -2024,12 +2024,13 @@ for i, e in enumerate(EYES):
     s_ = -1 if i == 0 else 1
     face_rig.rig_brow(face_au, e["brow_g"].el, named_el(e["brow_g"].el, "BrowShape"), 355.0 if i == 0 else 445.0, s_,
                       HAIR)
-face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "teeth": TEETH, "low_teeth": "FFF1E6E0",
-                                      "tongue": "FFC9666F", "ink": "FF2A1E24", "shine": "B0F6C4BC",
-                                      "lip": "60D0937C", "lip_band": "FFE58A8A", "lip_edge": "B0B85A64", "lip_rim": "FFD27F80",
-                                      "crease": "A0D0937C", "crease_tense": "D0B8786A",
-                                      "dimple": "E8A05A4C"})
-face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "E8A05A4C"})
+face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5E2E3A", "inside_lift": "FF9A5560", "teeth": TEETH,
+                                      "low_teeth": "FFF1E6E0", "tongue": "FFC9666F", "ink": "FF2A1E24",
+                                      "shine": "B0F6C4BC", "lip": "60D0937C", "lip_band": "FFE58A8A",
+                                      "lip_edge": "B0B85A64", "lip_rim": "FFD27F80", "crease": "A0D0937C",
+                                      "crease_tense": "D0B8786A", "bulge": "E8A8644F", "dimple": "FF98503F",
+                                      "pocket": "80985044"})
+face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "FF8E4A40"})
 face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
 face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0), (swing_r.el, swing_l.el))
 face_rig.rig_chin(face_au, head.el, skin_details[2])
