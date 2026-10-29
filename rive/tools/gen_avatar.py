@@ -21,7 +21,7 @@ from avatar_kit import (BEANIE, BEANIE_HI, BEANIE_SH, FRAME, HAIR, HAIR_HI, HAIR
                         HOOD_SH2, INK, IRIS_A, IRIS_B, MOUTH_IN, PI, SCLERA, SKIN, SKIN_SH, SKIN_SH2, STRING,
                         TEETH, TONGUE, WHITE, E, F, L, L1, L2, R, Rig, S, clip_only, d, grad, group, hgrad, ik, mirror,
                         rgrad, vgrad)
-from rml import El, lin, rad, smooth_path, track, write  # noqa: E402
+from rml import Doc, El, lin, rad, smooth_path, track, write  # noqa: E402
 from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
 from head_turn import HeadTurn, rig_head  # noqa: E402
 import face_rig  # noqa: E402
@@ -632,7 +632,8 @@ skin_details = [E(head, "CheekBloom" + tag, x, 437, 65, 44,
                 for tag, x in (("L", 335), ("R", 465))]
 skin_details += [S(head, "ChinLight", [(386, 497), (399, 501), (412, 497)], L("40FFF5E1", 2.5), closed=False)]
 
-# ---- eyes: Eye > [Droop, Squint, EyeMood > Blink > GazeM > GazeP > GazeG > Look(joystick)]
+# ---- eyes: Eye > [GestureClosedLash, GestureLid, EyeMood > Blink > [Lash, LowerLid, Crease,
+#      GazeM > GazeP > GazeG > Look(joystick), White, EyeClip, lid bones]]
 eyes = head.node("Eyes", 400, 385)
 
 
@@ -675,10 +676,11 @@ def build_eye(cx: float, side: int) -> dict:
               clip=clip_src))
     shut = S(blink, "ClosedLash", [(i - 4 * s, 393), (cx - 6 * s, 400), (cx + 12 * s, 400), (o + 9 * s, 391)],
              L("FF2A1B18", 4.2), closed=False, opacity=0.0)
-    blink.el.children = [shut, lash_n.el, lower, crease, lid.el, gaze_m.el, white, clip_src]
-    # mood lids: Droop slides down from the top (sad/angry), Squint slides up from below (happy);
-    # both are clipped to the eye opening (face_rig.py) and slide rather than scale, so their
-    # lash lines keep the line weight
+    # M3: the eye is rebuilt on lid bones (face_rig.rig_lids reshapes EyeClip, White, Lash,
+    # LowerLid and Crease in place). The v5 blink lid, the lash mover, the closed lash and the
+    # mood lids below (droop, squint, squint line) are retired; they are still minted so every
+    # later element keeps its id (keyed ids are the animation contract).
+    blink.el.children = [upper, lower, crease, gaze_m.el, white, clip_src]
     droop = eye.node("Droop", cx, 360)
     # the lowered lid follows the eyeball: a curve, not a ruler line
     droop.add(S(droop, "DroopLash", [(i - 6 * s, 389), (cx, 397), (o + 8 * s, 388)], L("FF2A1B18", 4.5), closed=False),
@@ -690,7 +692,7 @@ def build_eye(cx: float, side: int) -> dict:
                                (i - 10 * s, 424, "c")], F(SKIN), origin=(cx, 412))
     squint_line = S(eye, "SquintLine", [(i - 2 * s, 401.5), (cx + 1 * s, 387), (o + 3 * s, 398.5)],
                     L("D03A2622", 2.2), closed=False, origin=(cx, 412))
-    eye.el.children = [squint_line, squint, droop.el, eye_mood.el]
+    eye.el.children = [eye_mood.el]
     # Gesture lids have their own channels so a facepalm can shut the eyes
     # without stealing the independent mood, blink or pointer-follow tracks.
     gesture_lid = eye.node("GestureLid", cx, 360, scaleY=0.0)
@@ -706,9 +708,12 @@ def build_eye(cx: float, side: int) -> dict:
     brow_g = brow_p.node("BrowG")
     brow_g.add(S(brow_g, "BrowShape", [(cx - 30 * s, 342, "c"), (cx - 8 * s, 335), (cx + 16 * s, 335),
                                        (cx + 36 * s, 344, "c"), (cx + 16 * s, 341), (cx - 8 * s, 341)], F(HAIR)))
-    return {"eye": eye, "mood": eye_mood, "blink": blink, "lid": lid, "lash": lash_n, "shut": shut, "pupil": pupil, "brow_p": brow_p, "gm": gaze_m, "gp": gaze_p, "gg": gaze_g, "look": look,
-            "squint": squint, "squint_line": squint_line, "droop": droop, "brow": brow, "brow_g": brow_g,
-            "gesture_lid": gesture_lid, "gesture_shut": gesture_shut}
+    return {"eye": eye, "mood": eye_mood, "blink": blink, "lash": upper, "lower": lower, "crease": crease,
+            "white": white, "clip": clip_src, "pupil": pupil, "brow_p": brow_p, "gm": gaze_m, "gp": gaze_p,
+            "gg": gaze_g, "look": look, "brow": brow, "brow_g": brow_g, "gesture_lid": gesture_lid,
+            "gesture_shut": gesture_shut, "cx": cx, "s": s,
+            "retired": {"lid": lid, "lash": lash_n, "shut": shut, "squint": squint, "squint_line": squint_line,
+                        "droop": droop}}
 
 
 EYE_L = build_eye(355, -1)
@@ -1168,25 +1173,42 @@ def trig(pn: str) -> El:
              d("TransitionValueTriggerComparator"))
 
 
+# ================================================================ LIDS (M3)
+# Each eye's opening on lid bones (rive/tools/face_rig.py rig_lids), minted from its own id range
+# with the v6 per-side numbers, so the ids of everything in this document stay put. Built before
+# the animations: the blinks key the BlinkDrive constraints.
+lids = face_rig.FaceRig(lambda pn: vpath(pn) if pn in props else (
+    f"{vm.ref()}-{side_props[pn].ref()}" if pn in side_props else f"@{pn}"), start=face_rig.LID_ID_START)
+side_props = face_rig.add_side_numbers(lids.d, vm, inst)
+BLINK_DRIVES = {id(e): face_rig.rig_lids(lids, e, e["cx"], e["s"], "FF2A1B18", "B8603A30", SKIN_SH2, SCLERA,
+                                           "38B07A68")
+                for e in EYES}
+
 # ================================================================ ANIMATIONS
 anims: list[El] = []
 
 
+def seam(tracks: list[El], frames: int, doc: Doc = d) -> None:
+    """A one-frame constant segment at either side of a closed loop makes its seam exact even when
+    the runtime accumulates fractional frames."""
+    if frames <= 4:
+        return
+    for obj in tracks:
+        if obj is None:
+            continue
+        for prop in obj.children:
+            first, last = prop.children[0], prop.children[-1]
+            if (len(prop.children) > 1 and first.attrs["frame"] == 0 and last.attrs["frame"] == frames
+                    and first.attrs["value"] == last.attrs["value"]):
+                if prop.children[1].attrs["frame"] > 1:
+                    prop.children.insert(1, doc(first.tag, **{**first.attrs, "frame": 1}))
+                if prop.children[-2].attrs["frame"] < frames - 1:
+                    prop.children.insert(-1, doc(last.tag, **{**last.attrs, "frame": frames - 1}))
+
+
 def A(name: str, frames: int, tracks: list[El], loop: bool = False) -> El:
-    if loop and frames > 4:
-        # A one-frame constant segment at either side of a closed loop makes
-        # its seam exact even when the runtime accumulates fractional frames.
-        for obj in tracks:
-            if obj is None:
-                continue
-            for prop in obj.children:
-                first, last = prop.children[0], prop.children[-1]
-                if (len(prop.children) > 1 and first.attrs["frame"] == 0 and last.attrs["frame"] == frames
-                        and first.attrs["value"] == last.attrs["value"]):
-                    if prop.children[1].attrs["frame"] > 1:
-                        prop.children.insert(1, d(first.tag, **{**first.attrs, "frame": 1}))
-                    if prop.children[-2].attrs["frame"] < frames - 1:
-                        prop.children.insert(-1, d(last.tag, **{**last.attrs, "frame": frames - 1}))
+    if loop:
+        seam(tracks, frames)
     a = d("LinearAnimation", *[t for t in tracks if t is not None], duration=frames, fps=60,
           loopValue="loop" if loop else None, name=name)
     anims.append(a)
@@ -1239,7 +1261,23 @@ blink_keys = [(0, 0.0), (168, 0.0), (171, 1.0), (173, 1.0), (181, 0.0),
               (560, 0.0), (563, 0.55), (566, 0.55), (572, 0.0), (660, 0.0)]
 
 
-def blink_track(e: dict, keys: list[tuple[int, float]] | None = None) -> list[El]:
+def blink_anim(name: str, frames: int, keys: list[tuple[int, float]] | None = None, loop: bool = False) -> El:
+    """(M3, contract v6) a blink slides the upper lid bones onto the lower lid line: the keys drive
+    each eye's BlinkDrive constraints (0 open .. 1 closed). The v5 tracks are still minted (and
+    dropped) so every later id stays unchanged; the new tracks come from the lid rig's id range."""
+    ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in (keys or blink_keys)]
+    retired = [t for e in EYES for t in retired_blink_track(e, keys)]
+    new = [track(lids.d, c, {"strength": [(f, v, it) for f, v, it in ks]}) for e in EYES for c in BLINK_DRIVES[id(e)]]
+    if loop:
+        seam(new, frames, lids.d)
+    a = A(name, frames, retired + new, loop=loop)
+    a.children = [c for c in a.children if c not in retired]
+    return a
+
+
+def retired_blink_track(e: dict, keys: list[tuple[int, float]] | None = None) -> list[El]:
+    """The v5 blink (lash cross-fade over a sliding skin lid); its tracks are no longer used."""
+    e = {**e, **e["retired"]}
     ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in (keys or blink_keys)]
     # the closed-lash swap lasts exactly while the eye is shut: switch back one frame after
     shut = []
@@ -1259,12 +1297,11 @@ def blink_track(e: dict, keys: list[tuple[int, float]] | None = None) -> list[El
             T(e["shut"], opacity=[(f, o, "hold") for f, o in shut])]
 
 
-blink = A("idle_blink", 660, [t for e in EYES for t in blink_track(e)], loop=True)
+blink = blink_anim("idle_blink", 660, loop=True)
 # contract v5: `autoBlink` false holds the eyes open; the `blink` trigger plays one blink (the app
 # moves blinks into speech pauses)
-blink_hold = A("blink_hold", 1, [t for e in EYES for t in blink_track(e, [(0, 0.0)])])
-blink_once = A("blink_once", 16, [t for e in EYES for t in blink_track(e, [(0, 0.0), (3, 1.0), (5, 1.0), (14, 0.0),
-                                                                            (16, 0.0)])])
+blink_hold = blink_anim("blink_hold", 1, [(0, 0.0)])
+blink_once = blink_anim("blink_once", 16, [(0, 0.0), (3, 1.0), (5, 1.0), (14, 0.0), (16, 0.0)])
 LOOK_X, LOOK_Y = 7.0, 4.5
 look_x = A("look_x", 100, [*[T(e["look"], ease=None, x=[(0, -LOOK_X), (100, LOOK_X)]) for e in EYES],
                            T(head_look, ease=None, rotation=[(0, -0.035), (100, 0.035)])])
@@ -1921,12 +1958,11 @@ artboard = d("Artboard", style, sm, EASE, EASE_OUT, EASE_IN, *EV_GESTURE.values(
 
 # ================================================================ FACE (contract v5 action units)
 # Runs before the head turn so the turn wrappers enclose the face rig. Own id range (face_rig.py).
-face_au = face_rig.FaceRig(vpath)
+face_au = face_rig.FaceRig(lids.path)  # the same paths as the lids (v6 side numbers included)
 for i, e in enumerate(EYES):
     s_ = -1 if i == 0 else 1
     face_rig.rig_brow(face_au, e["brow_g"].el, named_el(e["brow_g"].el, "BrowShape"), 355.0 if i == 0 else 445.0, s_,
                       HAIR, SKIN)
-    face_rig.rig_eye(face_au, e, s_)
 face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "throat": "FF4A1E28", "teeth": TEETH,
                                       "low_teeth": "FFF1E6E0", "tongue": "FFD9737A", "ink": INK, "lip": "60D0937C",
                                       "crease": "A0D0937C"})
@@ -1945,8 +1981,8 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
           "Blush": blush.el, "CheekBloomL": skin_details[0], "CheekBloomR": skin_details[1],
           "ChinLight": skin_details[2], "EarL": ears[0], "EarR": ears[1], "EarInL": ears[2], "EarInR": ears[3],
           "glassesByName": GLASSES, "GlassesSolo": glasses_solo.el, "HairFollow": hair_follow,
-          "LookL": EYE_L["look"].el, "LookR": EYE_R["look"].el, "LashL": EYE_L["lash"].el, "LashR": EYE_R["lash"].el,
-          "BlinkL": EYE_L["blink"].el, "BlinkR": EYE_R["blink"].el, "LidL": EYE_L["lid"].el, "LidR": EYE_R["lid"].el, "HairCap": named_el(hair_front.el, "HairCap"),
+          "LookL": EYE_L["look"].el, "LookR": EYE_R["look"].el,
+          "HairCap": named_el(hair_front.el, "HairCap"),
           "SideLockL": named_el(hair_front.el, "SideLockL"), "SideLockR": named_el(hair_front.el, "SideLockR"),
           "HairBackShape": named_el(hair_back.el, "HairBackShape"), "Cowlick": named_el(tufts.el, "Cowlick"),
           "Cowlick2": named_el(tufts.el, "Cowlick2"), "HatSolo": hat_solo.el,
@@ -1954,5 +1990,7 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)
-write(out, [artboard, *enums.values(), vm, *face_au.converters, *turn.converters])
+# the lids read eyeLeadPitch (contract: looking down drops the upper lids), which the head turn adds
+face_rig.resolve_paths([artboard, *face_au.converters, *lids.converters], {"eyeLeadPitch": turn.path("eyeLeadPitch")})
+write(out, [artboard, *enums.values(), vm, *face_au.converters, *lids.converters, *turn.converters])
 print("wrote", os.path.normpath(out), "next id", d.next)

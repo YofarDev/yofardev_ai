@@ -7,6 +7,7 @@
     dart run tool/face_speech_trace.dart presets > rive/avatar/build/face/presets.json
     dart run tool/face_speech_trace.dart speech <wav> "<text>" [mood] > rive/avatar/build/face/<name>.json
     uv run rive/tools/review_face.py sheets                # au, moods, visemes, yaw (needs presets.json)
+    uv run rive/tools/review_face.py blink                 # lid-sweep strip: neutral, happy, sad (M3)
     uv run rive/tools/review_face.py speech <name> [...]   # strip + GIF per trace
 
 Every cell is a real CLI render of rive/avatar driven through AvatarVM numbers exactly as the app
@@ -40,9 +41,11 @@ AU_NAMES = ("browInnerUp", "browOuterUp", "browLower", "lidTighten", "upperLidRa
 SETTLE = 40  # frames: mood crossfades (240 ms) are done
 
 
-def cli(png: Path, data: dict[str, str], advance: int, blink_at: int | None = None) -> Path:
+def cli(png: Path, data: dict[str, str], advance: int, blink_at: int | None = None, scale: int = 1) -> Path:
     png.parent.mkdir(parents=True, exist_ok=True)
     args = ["rive", str(PROJ), f"--screenshot={png}", *[f"--data={k}={v}" for k, v in data.items()]]
+    if scale != 1:  # supersampled: the artboard laid out at scale x its size
+        args += [f"--viewport={800 * scale}x{1000 * scale}", "--fit=contain"]
     if blink_at is not None and 0 <= blink_at < advance:
         # the pointer move rests the eyes where they already look; it only lets --data step mid-run
         args += [f"--advance={advance - blink_at}", "--pointer=move@400,420", "--data=blink=1",
@@ -57,6 +60,9 @@ def cli(png: Path, data: dict[str, str], advance: int, blink_at: int | None = No
 
 def frame_data(f: dict, mood: str | None = None) -> dict[str, str]:
     d = {f"au{k[0].upper()}{k[1:]}": f"{v:.4f}" for k, v in f["au"].items()}
+    # contract v6 per-side offsets (viewer's left / right), when the trace has them
+    for side, t in (("left", "L"), ("right", "R")):
+        d.update({f"au{k[0].upper()}{k[1:]}{t}": f"{v:.4f}" for k, v in f.get(side, {}).items() if v})
     d.update(lipTuck=f"{f['lipTuck']:.4f}", tongueUp=f"{f['tongueUp']:.4f}", roll=f"{f['roll']:.4f}",
              breath=f"{f['breath']:.4f}", pitch=f"{f['nodPitch']:.4f}",
              autoBlink="true" if f["autoBlink"] else "false")
@@ -85,11 +91,11 @@ def cell(png: Path, box: tuple[int, int, int, int], zoom: float = ZOOM) -> Image
 
 
 def render(jobs: list[tuple[str, dict[str, str], int, int | None]], sub: str,
-           box: tuple[int, int, int, int] = FACE_BOX, zoom: float = ZOOM) -> list[Image.Image]:
+           box: tuple[int, int, int, int] = FACE_BOX, zoom: float = ZOOM, scale: int = 1) -> list[Image.Image]:
     def one(j: tuple[str, dict[str, str], int, int | None]) -> Image.Image:
         tag, data, adv, blink = j
-        png = cli(TMP / sub / (tag.replace(" ", "_").replace("/", "_") + ".png"), data, adv, blink)
-        return label(cell(png, box, zoom), tag)
+        png = cli(TMP / sub / (tag.replace(" ", "_").replace("/", "_") + ".png"), data, adv, blink, scale)
+        return label(cell(png, tuple(v * scale for v in box), zoom / scale), tag)  # type: ignore[arg-type]
     with ThreadPoolExecutor(WORKERS) as ex:
         return list(ex.map(one, jobs))
 
@@ -127,6 +133,25 @@ def sheets() -> None:
     for yaw in ("-0.84", "0", "0.84"):
         jobs.append((f"aa yaw {yaw}", {**talk, "yaw": yaw}, SETTLE, None))
     print("yaw:", sheet(render(jobs, "yaw"), 3, "face_yaw.png"))
+
+
+# ------------------------------------------------------------------ blink (M3 lid sweep)
+
+EYES_BOX = (296, 340, 504, 420)  # both eyes and the glasses
+BLINK_FRAMES = (0, 1, 2, 3, 4, 5, 7, 9, 11, 14)  # frames after the `blink` trigger (blink_once: 16)
+
+
+def blink() -> None:
+    """One row per mood (neutral, happy, sad): the `blink` trigger fired with autoBlink off, then
+    the frames after it. Closed on frames 3-5; the lids reopen to the mood's AU pose."""
+    presets = json.loads((DATA / "presets.json").read_text())
+    jobs = []
+    for m in ("neutral", "happy", "sad"):
+        data = {**frame_data(presets["moods"][m], m), "autoBlink": "false"}
+        for k in BLINK_FRAMES:
+            jobs.append((f"{m} +{k}", data, SETTLE + max(k, 1), k if k else None))
+    cells = render(jobs, "blink", EYES_BOX, 2.0, scale=2)
+    print("blink:", sheet(cells, len(BLINK_FRAMES), "blink.png"))
 
 
 # ------------------------------------------------------------------ speech
@@ -251,6 +276,8 @@ if __name__ == "__main__":
     what = sys.argv[1:] or ["sheets"]
     if what[0] == "sheets":
         sheets()
+    elif what[0] == "blink":
+        blink()
     elif what[0] == "speech":
         for n in what[1:]:
             speech(n)

@@ -52,10 +52,7 @@ BROW_LIFT_PX = 3.0  # brows lift ~3.5 artboard px at eyeLeadPitch -1 (attentive,
 # fringe follow-through: tip travel per unit of lag is boosted at small lags and saturates at
 # +-1 (gain 1.7 - 0.7 |lag|: 1.42x at 0.4, unchanged at 1)
 FRINGE_LAG_GAIN = (1.7, 0.7)
-# looking down (eyeLeadPitch -1): the lash travels like a quarter blink and a skin lid follows it
-LOOK_DOWN_LASH = (3.5, 0.08)  # lash drop (px) and lash flattening (scaleY loss) at -1
-LOOK_DOWN_LID = 0.23  # lid scaleY at -1 (edge just under the dropped lash: ~15 % coverage)
-LOOK_LID_STOPS = ("FFE8C0AA", "FFE8C7B1")  # the avatar's lid skin ramp, graded to value 0.91 (lint)
+# looking down (eyeLeadPitch < 0) drops the upper lid bones (M3: face_rig.LOOK_DOWN_PX)
 # hair follow-through: px of tip travel per unit of lag (the roots stay with the head)
 SIDE_LAG_PX, SIDE_LAG_PITCH_PX = 45.0, 20.0
 TUFT_LAG_PX = 20.0
@@ -419,7 +416,6 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
                         name="EyeLead" + t)
         lx, ly = float(outer.attrs["x"]), float(outer.attrs["y"])
         outer.add(ht.raw("eyeLeadYaw", "x", eye_lead_x(ht, lx, s)), ht.raw("eyeLeadPitch", "y", eye_lead_y(ht, ly)))
-        look_down_lids(ht, t, parts)
         brow: El = parts["Brow" + t]  # type: ignore[assignment]
         bframe = ht.frames[id(ht.parent_of(brow))]
         bw = ht.wrap(brow, (bframe[0] + float(brow.attrs.get("x", 0.0)), bframe[1] + float(brow.attrs.get("y", 0.0))),
@@ -474,37 +470,6 @@ def lag_bend(ht: HeadTurn, target: El, root: tuple[float, float], length: float,
     rot = [(0.0, ()), (-px / length, (r.tok("hairLagYaw"),))]
     sy = [(1.0, ()), (-px_pitch / abs(length), (r.tok("hairLagPitch"),))]
     ht.wrap(target, root, rot=rot, sy=sy, name=str(target.attrs.get("name", "Hair")) + "Lag")
-
-
-def look_down_lids(ht: HeadTurn, t: str, parts: dict[str, object]) -> None:
-    """eyeLeadPitch < 0: the lash drops like a quarter blink and a skin lid (clipped to the eye
-    white, behind the blink lid) follows it, so looking down reads. Zero at rest; the blink lid
-    and the mood lids sit in front, so a blink still closes fully."""
-    d = ht.d
-    s = 1.0 if t == "R" else -1.0
-    cx = 445.0 if t == "R" else 355.0
-    lash: El = parts["Lash" + t]  # type: ignore[assignment]
-    lframe = ht.frames[id(ht.parent_of(lash))]
-    lx, ly = cx - lframe[0], 366.0 - lframe[1]
-    binds = [ht.raw("eyeLeadPitch", "y", ht.neg_part(ly, LOOK_DOWN_LASH[0])),
-             ht.raw("eyeLeadPitch", "scaleY", ht.neg_part(1.0, -LOOK_DOWN_LASH[1]))]
-    parent = ht.parent_of(lash)
-    inner = d("Node", lash, x=-lx, y=-ly, name="LashDrop" + t + "Pivot")
-    parent.children[parent.children.index(lash)] = d("Node", *binds, inner, x=lx, y=ly, name="LashDrop" + t)
-    blink: El = parts["Blink" + t]  # type: ignore[assignment]
-    bframe = ht.frames[id(blink)]
-    clip = next(c for c in blink.children if c.attrs.get("name") == "EyeClip")
-    i, o = cx - 28 * s, cx + 30 * s
-    pts = [(i - 10 * s, 358.0, "c"), (o + 12 * s, 358.0, "c"), (o + 12 * s, 412.0, "c"), (i - 10 * s, 412.0, "c")]
-    path = smooth_path(d, [((x - cx, y - 360.0) + tuple(rest)) for x, y, *rest in pts])
-    fill = d("Fill", d("LinearGradient", d("GradientStop", colorValue=LOOK_LID_STOPS[0], position=0.0),
-                       d("GradientStop", colorValue=LOOK_LID_STOPS[1], position=1.0),
-                       startX=0.0, startY=-2.0, endX=0.0, endY=52.0))
-    shape = d("Shape", d("ClippingShape", sourceId=clip.ref()), path, fill, x=0.0, y=0.0, name="LookDownLid" + t)
-    node = d("Node", ht.raw("eyeLeadPitch", "scaleY", ht.neg_part(0.0, LOOK_DOWN_LID)), shape,
-             x=cx - bframe[0], y=360.0 - bframe[1], scaleY=0.0, name="LookDownLid" + t)
-    lid: El = parts["Lid" + t]  # type: ignore[assignment]
-    blink.children.insert(blink.children.index(lid) + 1, node)
 
 
 def _shapes(e: El) -> list[El]:

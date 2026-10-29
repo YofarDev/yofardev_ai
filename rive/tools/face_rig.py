@@ -5,9 +5,10 @@ head_turn.py wraps the head for yaw / pitch. Every AvatarVM number below maps to
 history-free formula data binds (value = c0 + sum c_i * [prop_i]), the same mechanism as the head
 turn, so a pose depends only on the current numbers:
 
-- `au*` (FACS-lite action units, 0..1): brows are skinned to inner / mid / outer bones; the eye
-  opening, the mood lids (droop, squint crescent), the cheek bloom and the nose bind their own
-  transforms; the mouth is ONE continuous skinned shape on corner, upper and lower lip bones.
+- `au*` (FACS-lite action units, 0..1): brows are skinned to inner / mid / outer bones; each eye
+  is an aperture skinned to upper and lower lid bones (M3, `rig_lids`: blinks slide the upper
+  row onto the lower row through `BlinkDrive` constraints); the cheek bloom and the nose bind
+  their own transforms; the mouth is ONE continuous skinned shape on corner, upper and lower lip bones.
   Its stroke is the closed mouth line, its fill the open mouth; teeth and tongue ride the lip
   bones, clipped by it.
 - `lipTuck` / `tongueUp` (speech): the upper lip lifts off the teeth for f / v; the tongue tip
@@ -24,10 +25,11 @@ from __future__ import annotations
 import math
 from typing import Callable, Mapping, Sequence
 
-from rig_dsl import Formulas, plain_tendon, skinned_path
+from rig_dsl import Formulas, Skeleton, pack, plain_tendon, quantize, skinned_path
 from rml import Doc, El, fill, smooth_path, stroke
 
 ID_START = 950000
+LID_ID_START = 960000  # the lid rig and the v6 side numbers (main-doc ids stay unchanged)
 KEYS = {"x": 13, "y": 14, "rotation": 15, "scaleX": 16, "scaleY": 17, "opacity": 18, "radius": 26, "thickness": 47,
         "boneX": 90,
         "boneY": 91}
@@ -113,8 +115,8 @@ def mouth_pose(env: Mapping[str, float]) -> dict[str, tuple[float, float]]:
 # ------------------------------------------------------------------ the rig
 
 class FaceRig:
-    def __init__(self, path: Callable[[str], str]) -> None:
-        self.d = Doc(client=0, start=ID_START)
+    def __init__(self, path: Callable[[str], str], start: int = ID_START) -> None:
+        self.d = Doc(client=0, start=start)
         self.path = path
         self.f = Formulas(self.d, path)
         self.converters: list[El] = []
@@ -242,39 +244,352 @@ def rig_brow(fr: FaceRig, brow_g: El, shape: El, cx: float, s: int, color: str, 
     brow_g.children[brow_g.children.index(shape)] = new
 
 
-DROOP_TRAVEL = 30.0  # px: from the lid edge resting on the eye's top to the full droop
-SQUINT_TRAVEL = 24.0  # px: from the crescent resting under the eye to the full squint
+# ------------------------------------------------------------------ eyes on lid bones (M3)
+#
+# Each eye is one aperture (the eye opening) skinned to an upper and a lower row of lid bones. A row
+# runs inner corner -> inner -> mid -> outer -> outer corner (u is measured from the eye centre
+# toward its outer corner, so "inner" is toward the face centre); each column has a vertex bone and
+# two handle bones. A handle bone's formula IS the Catmull-Rom tangent of the current vertex
+# formulas (handle = vertex +- k (next - previous), linear in the AUs), so the lids bend smoothly
+# into any pose instead of keeping their rest tangents. The white, iris, pupil and catchlights are
+# clipped by the aperture; the upper lash and the lower lid line are bands whose inner edge IS the
+# aperture's edge on the same bones, so no lid stroke can sit over a visible iris or reach the
+# glasses, and since bones only translate the bands keep their line weight.
+#
+# Every bone's y is one history-free formula of the view-model numbers. A blink is a
+# `TranslationConstraint` named `BlinkDrive` on each upper bone (vertices and handles), targeting
+# its lower twin: its strength (0 open -> 1 closed, keyed by the blink loop / hold / once
+# animations) slides the upper row onto the lower row's CURRENT line, so a blink composes with any
+# AU pose and closes exactly (the strength is the blink's only state; there is no blink
+# view-model number a formula token could read).
+
+LID_COLS: dict[str, float] = {"Inner": -14.0, "Mid": 3.0, "Outer": 18.0}  # u of each bone column
+UPPER_REST: dict[str, float] = {"Inner": 376.5, "Mid": 372.6, "Outer": 374.5}  # rest y
+LOWER_REST: dict[str, float] = {"Inner": 401.5, "Mid": 404.0, "Outer": 401.0}
+EYE_CORNERS: dict[str, tuple[float, float]] = {"In": (-28.0, 392.0), "Out": (29.0, 391.5)}  # (u, y)
+CORNER_RADIUS = 2.5
+LID_GAP = 1.5  # px: an AU pose alone never closes the opening further than this (a blink does)
+EYE_FRAME_DY = 392.0  # the Blink node's art-space y: the bones' frame is (cx, 392)
+SIDED = frozenset({"auBrowInnerUp", "auBrowOuterUp", "auBrowLower", "auLidTighten", "auCheekRaise",
+                   "auLipCornerPull", "auLipCornerDepress"})  # contract v6: au<Name>L / au<Name>R offsets
+SIDE_NUMBERS = tuple(f"{a}{t}" for a in AUS if a in SIDED for t in ("L", "R"))
+LOOK_DOWN = "eyeLeadPitch"  # contract: at - the upper lids drop (~25 % lid coverage at -1)
+DOWN = "@down"  # pseudo-term: max(0, -eyeLeadPitch)
+
+# dy per AU (+ = down). Upper: AU5 lifts it, AU7 lowers it a little, AU1 drops the outer end (sad
+# droop; AU2 takes it back so the surprise pose stays open), AU4 drops the inner end (anger), AU6
+# arches it a little (smiling eyes); looking down drops it.
+UPPER_LID: dict[str, dict[str, float]] = {
+    "Inner": {**terms(UL=-2.5, LT=2.0, BL=9.0, CR=1.5), DOWN: 8.0},
+    "Mid": {**terms(UL=-3.5, LT=2.5, IU=2.5, OU=-1.5, BL=3.5, CR=-2.0), DOWN: 9.5},
+    "Outer": {**terms(UL=-3.0, LT=2.0, IU=11.0, OU=-8.0, BL=0.5, CR=1.5), DOWN: 8.5},
+}
+# Lower: AU7 lifts it; AU6 lifts the middle more than the ends, so the line bows up into a smile
+# crescent over the lower iris; AU5 lets it down a little (a surprised eye shows white below).
+LOWER_LID: dict[str, dict[str, float]] = {
+    "Inner": terms(UL=1.2, LT=-4.0, CR=-19.0),
+    "Mid": terms(UL=1.8, LT=-6.0, CR=-26.0),
+    "Outer": terms(UL=1.2, LT=-5.0, CR=-19.0),
+}
+# The corners never move in a blink; AU7 pulls them in a touch.
+CORNER_LID: dict[str, dict[str, float]] = {"In": terms(LT=-1.0, CR=0.5), "Out": terms(LT=-1.0, CR=0.5)}
+LASH_T: dict[str, float] = {"In": 1.0, "Inner": 2.6, "Mid": 3.8, "Outer": 4.6}  # lash thickness (px)
+LOWER_T: dict[str, float] = {"In": 0.2, "Inner": 0.8, "Mid": 1.3, "Outer": 1.8, "Out": 2.0}
+SEAM = 0.6  # px the lid bands reach into the aperture (no anti-aliasing seam at the edge)
+SHADE_T: dict[str, float] = {"Inner": 3.0, "Mid": 4.2, "Outer": 3.6}  # the upper lid's shadow on the white
+
+Pt2 = tuple[float, float]
 
 
-def rig_eye(fr: FaceRig, eye: Mapping[str, object], s: int) -> None:
-    """Eye opening, mood lids and squint crescent follow the lid / brow / cheek AUs."""
-    mood_el: El = eye["mood"].el  # type: ignore[attr-defined]
-    # (a modest opening: wider eyes jam into the glasses frame)
-    fr.bind_on(mood_el, "scaleY", 1.0, terms(UL=0.13, LT=-0.08))
-    fr.bind_on(mood_el, "scaleX", 1.0, terms(UL=0.06, LT=-0.02))
-    # mood lids stay inside the eye opening (no strokes across the glasses)
-    clip = next(c for c in eye["blink"].el.children if c.attrs.get("name") == "EyeClip")  # type: ignore[attr-defined]
-    for el in (*eye["droop"].el.children, eye["squint"], eye["squint_line"]):  # type: ignore[attr-defined]
-        if el.tag == "Shape":
-            el.children.insert(0, fr.d("ClippingShape", sourceId=clip.ref(), name="EyeOpening"))
-    # The mood lids slide in (a scaled node would thin their lash strokes to scratchy hairlines):
-    # amount a = clamp(c0 + sum c_i AU_i, 0, 1) moves the droop down by DROOP_TRAVEL * a from fully
-    # above the eye, and the squint up by SQUINT_TRAVEL * a from fully below it.
-    droop: El = eye["droop"].el  # type: ignore[attr-defined]
-    dy0 = float(droop.attrs["y"])
-    amount = {"c0": -0.04, **terms(IU=0.42, BL=0.32, LT=0.45, UL=-0.8)}
-    fr.bind_on(droop, "y", dy0 - DROOP_TRAVEL + DROOP_TRAVEL * amount["c0"],
-               {p: DROOP_TRAVEL * c for p, c in amount.items() if p != "c0"}, lo=dy0 - DROOP_TRAVEL, hi=dy0)
-    fr.bind_on(droop, "rotation", 0.0, {"auBrowInnerUp": 0.12 * s, "auBrowLower": -0.2 * s})
-    for k in ("squint", "squint_line"):
-        el: El = eye[k]  # type: ignore[assignment]
-        sy0 = float(el.attrs["y"])
-        sq = {"c0": -0.03, **terms(CR=0.8, LT=0.37)}
-        fr.bind_on(el, "y", sy0 + SQUINT_TRAVEL - SQUINT_TRAVEL * sq["c0"],
-                   {p: -SQUINT_TRAVEL * c for p, c in sq.items() if p != "c0"}, lo=sy0, hi=sy0 + SQUINT_TRAVEL)
-    # the plain lower-lid line gives way to the raised lid
-    lower = next(c for c in eye["blink"].el.children if c.attrs.get("name") == "LowerLid")  # type: ignore[attr-defined]
-    fr.bind_on(lower, "opacity", 1.0, terms(CR=-3.3, LT=-2.0), lo=0.0, hi=1.0)
+def lid_amount(env: Mapping[str, float], au: str, side: str) -> float:
+    """A term's factor as the lid binds read it: an AU plus its side offset clamped 0..1 (unsided
+    AUs raw), or the look-down amount."""
+    if au == DOWN:
+        return max(0.0, -env.get(LOOK_DOWN, 0.0))
+    if au in SIDED:
+        return min(1.0, max(0.0, env.get(au, 0.0) + env.get(au + side, 0.0)))
+    return env.get(au, 0.0)
+
+
+def lid_points(row: str) -> list[tuple[str, float, float, Terms]]:
+    """(bone, u, rest y, dy terms) along a row, inner corner -> outer corner."""
+    rest, table = (UPPER_REST, UPPER_LID) if row == "Upper" else (LOWER_REST, LOWER_LID)
+    (ui, yi), (uo, yo) = EYE_CORNERS["In"], EYE_CORNERS["Out"]
+    return [("CornerIn", ui, yi, CORNER_LID["In"]), *[(row + c, LID_COLS[c], rest[c], table[c]) for c in LID_COLS],
+            ("CornerOut", uo, yo, CORNER_LID["Out"])]
+
+
+def lid_bones() -> dict[str, tuple[float, float, Terms]]:
+    """Every lid bone: (u, rest y, dy terms). Handles (`<vertex>In` toward the inner corner,
+    `<vertex>Out` toward the outer) follow the Catmull-Rom tangent of the rest geometry exactly
+    as rml.smooth_path computes it (handle = vertex -+ k (next - previous))."""
+    out: dict[str, tuple[float, float, Terms]] = {}
+    for row in ("Lower", "Upper"):
+        pts = lid_points(row)
+        for name, u, y, t in pts:
+            out[name] = (u, y, dict(t))
+        for i in range(1, len(pts) - 1):
+            (name, u, y, t), (_, pu, py, pt), (_, nu, ny, nt) = pts[i], pts[i - 1], pts[i + 1]
+            dn, dp = math.hypot(nu - u, ny - y), math.hypot(pu - u, py - y)
+            tot = dn + dp
+            for tag, k in (("In", -dp / (3 * tot)), ("Out", dn / (3 * tot))):
+                out[name + tag] = (u + k * (nu - pu), y + k * (ny - py), add_terms((1.0, t), (k, nt), (-k, pt)))
+    return out
+
+
+def lid_pose(env: Mapping[str, float], s: int, blink: float = 0.0) -> dict[str, Pt2]:
+    """Predicted (u, y) of every lid bone: the bind formulas, then the blink (upper -> lower twin)."""
+    side = "L" if s < 0 else "R"
+    bones = lid_bones()
+    raw = {n: (u, y + sum(c * lid_amount(env, p, side) for p, c in t.items())) for n, (u, y, t) in bones.items()}
+    out = dict(raw)
+    for col in LID_COLS:  # the vertex cap: an AU pose never closes the eye
+        u, y = raw["Upper" + col]
+        out["Upper" + col] = (u, min(y, raw["Lower" + col][1] - LID_GAP))
+    for n in bones:
+        if n.startswith("Upper"):
+            (u, y), (lu, ly) = out[n], out["Lower" + n[5:]]
+            out[n] = (u + blink * (lu - u), y + blink * (ly - y))
+    return out
+
+
+def lid_edge(pose: Mapping[str, Pt2], row: str, samples: int = 8) -> list[Pt2]:
+    """Points along a row's curve (inner corner -> outer corner) for a pose: the cubic segments
+    the aperture draws (corners are straight vertices)."""
+    names = [n for n, *_ in lid_points(row)]
+    out: list[Pt2] = []
+    for a, b in zip(names, names[1:]):
+        p0 = pose[a]
+        p1 = pose[a + "Out"] if not a.startswith("Corner") else p0
+        p2 = pose[b + "In"] if not b.startswith("Corner") else pose[b]
+        p3 = pose[b]
+        for k in range(samples):
+            t = k / samples
+            out.append(tuple(((1 - t) ** 3) * p0[i] + 3 * ((1 - t) ** 2) * t * p1[i] + 3 * (1 - t) * t * t * p2[i]
+                             + t ** 3 * p3[i] for i in range(2)))  # type: ignore[misc]
+    out.append(pose[names[-1]])
+    return out
+
+
+Vert = dict  # {"at": (x, y), "corner": radius | None, "in": (x, y), "out": (x, y), "w": [...]}
+
+
+def eye_edges(cx: float, s: int) -> dict[str, list[Vert]]:
+    """Art-space vertices of the aperture's upper edge (inner corner -> outer corner) and lower
+    edge (outer corner -> inner corner), with handles and skin weights (one bone each)."""
+    bones = lid_bones()
+
+    def at(n: str) -> Pt2:
+        u, y, _ = bones[n]
+        return (cx + s * u, y)
+
+    def vert(n: str, forward: bool) -> Vert:
+        if n.startswith("Corner"):
+            return {"at": at(n), "corner": CORNER_RADIUS, "w": [{n: 1.0}]}
+        a, b = (n + "In", n + "Out") if forward else (n + "Out", n + "In")
+        return {"at": at(n), "corner": None, "in": at(a), "out": at(b), "w": [{n: 1.0}, {a: 1.0}, {b: 1.0}]}
+
+    upper = [vert(n, True) for n, *_ in lid_points("Upper")]
+    lower = [vert(n, False) for n, *_ in reversed(lid_points("Lower"))]
+    return {"upper": upper, "lower": lower}
+
+
+def shifted(v: Vert, dy: float, corner: float | None | str = "keep") -> Vert:
+    out = dict(v)
+    for k in ("at", "in", "out"):
+        if k in v:
+            out[k] = (v[k][0], v[k][1] + dy)
+    if corner != "keep":
+        out["corner"] = corner
+    return out
+
+
+def reversed_edge(vs: Sequence[Vert]) -> list[Vert]:
+    """The same edge traversed the other way (handles and their weights swap)."""
+    return [{**v, "in": v["out"], "out": v["in"], "w": [v["w"][0], v["w"][2], v["w"][1]]} if "in" in v else dict(v)
+            for v in reversed(vs)]
+
+
+def explicit_path(d: Doc, verts: Sequence[Vert], frame: Pt2, tendon: Callable[[str], El],
+                  closed: bool = True) -> tuple[El, Pt2]:
+    """A skinned PointsPath through absolute art-space vertices with explicit handles and weights
+    (rig_dsl.skinned_path derives both; the lids' handles ride their own bones)."""
+    xs = [v["at"][0] for v in verts]
+    ys = [v["at"][1] for v in verts]
+    ox, oy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    n = len(verts)
+    area = sum(verts[i]["at"][0] * verts[(i + 1) % n]["at"][1] - verts[(i + 1) % n]["at"][0] * verts[i]["at"][1]
+               for i in range(n))
+    index: dict[str, int] = {}
+    els: list[El] = []
+    for v in verts:
+        x, y = v["at"]
+        qss = [quantize(dict(w)) for w in v["w"]]
+        for qs in qss:
+            for b, _ in qs:
+                index.setdefault(b, len(index))
+        if "in" not in v:
+            val, ix = pack(qss[0], index)
+            els.append(d("StraightVertex", d("Weight", values=val, indices=ix), x=round(x - ox, 3),
+                         y=round(y - oy, 3), radius=v.get("corner") or None))
+            continue
+        (a, b_), (c, e), (g, h) = (pack(qs, index) for qs in qss)
+        (ix_, iy), (ox_, oy_) = v["in"], v["out"]
+        els.append(d("CubicDetachedVertex",
+                     d("CubicWeight", values=a, indices=b_, inValues=c, inIndices=e, outValues=g, outIndices=h),
+                     x=round(x - ox, 3), y=round(y - oy, 3),
+                     inRotation=round(math.atan2(iy - y, ix_ - x), 4), inDistance=round(math.hypot(ix_ - x, iy - y), 3),
+                     outRotation=round(math.atan2(oy_ - y, ox_ - x), 4),
+                     outDistance=round(math.hypot(ox_ - x, oy_ - y), 3)))
+    path = d("PointsPath", *els, isClosed=closed, isClockwise=area > 0, name="Path")
+    path.add(d("Skin", *[tendon(b) for b in index], tx=ox - frame[0], ty=oy - frame[1]))
+    return path, (ox, oy)
+
+
+def _reshape(target: El, frame: Pt2, path: El, centre: Pt2, *rest: El) -> None:
+    """Swap a shape's geometry and paints in place: its id (the animation contract) survives."""
+    target.children = [path, *rest]
+    target.attrs["x"] = centre[0] - frame[0]
+    target.attrs["y"] = centre[1] - frame[1]
+    for k in ("origin", "opacity"):
+        target.attrs.pop(k, None)
+
+
+class LidFormula:
+    """Token builder for the lid binds: `src` (the bind's source number) is read through the
+    formula input, every other number as a bound token."""
+
+    def __init__(self, fr: "FaceRig", src: str, side: str) -> None:
+        self.f, self.src, self.side = fr.f, src, side
+
+    def ref(self, p: str) -> list[El]:
+        return self.f.inp() if p == self.src else [self.f.bound(p)]
+
+    def amount(self, au: str) -> list[El]:
+        f = self.f
+        if au == DOWN:
+            return f.fn("max", [f.val(0)], [f.val(-1), f.op("*"), *self.ref(LOOK_DOWN)])
+        if au in SIDED:
+            return f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [*self.ref(au), f.op("+"), *self.ref(au + self.side)]))
+        return self.ref(au)
+
+    def linear(self, c0: float, t: Terms) -> list[El]:
+        f = self.f
+        out: list[El] = [f.val(c0)]
+        for p, c in sorted(t.items()):
+            if round(c, 3):
+                out += [f.op("+"), f.val(c), f.op("*"), *self.amount(p)]
+        return out
+
+
+LID_SRC = "auLidTighten"  # every lid formula reads it, so it is each bind's source
+
+
+def rig_lids(fr: "FaceRig", eye: Mapping[str, object], cx: float, s: int, ink: str, lower_ink: str,
+             crease_ink: str, sclera: str, shade_ink: str) -> list[El]:
+    """Rebuild one eye on lid bones inside its Blink node (see the block comment above). Returns the
+    `BlinkDrive` constraints the blink animations key (strength 0 open .. 1 closed)."""
+    d = fr.d
+    side = "L" if s < 0 else "R"
+    blink: El = eye["blink"].el  # type: ignore[attr-defined]
+    frame = (cx, EYE_FRAME_DY)
+    skel = Skeleton(d, "Lids" + side, frame)
+    els: dict[str, El] = {"Anchor": skel.root("Anchor", frame)}
+    lf = LidFormula(fr, LID_SRC, side)
+    f = fr.f
+    specs = lid_bones()
+    drives: list[El] = []
+    for name, (u, y, t) in specs.items():  # lower and corner bones first: the upper ones target them
+        expr = lf.linear(y - frame[1], t)
+        if name in ("Upper" + c for c in LID_COLS):
+            lu, ly, lt = specs["Lower" + name[5:]]
+            expr = f.fn("min", expr, lf.linear(ly - frame[1] - LID_GAP, lt))
+        conv = d("DataConverterFormula", *expr)
+        fr.converters.append(conv)
+        bone = skel.root(name, (cx + s * u, y))
+        bone.children.insert(0, d("DataBindContext", sourcePathIds=fr.path(LID_SRC), propertyKey=KEYS["boneY"],
+                                  converterId=conv.ref()))
+        if name.startswith("Upper"):
+            drive = d("TranslationConstraint", targetId=els["Lower" + name[5:]].ref(), strength=0.0, name="BlinkDrive")
+            bone.add(drive)
+            drives.append(drive)
+        els[name] = bone
+
+    edges = eye_edges(cx, s)
+    up, low = edges["upper"], edges["lower"]
+    tendon = skel.tendon
+    # aperture: the clip source of the eyeball (white, iris, pupil, catchlights)
+    clip: El = eye["clip"]  # type: ignore[assignment]
+    path, c = explicit_path(d, [*up, *low[1:-1]], frame, tendon)
+    _reshape(clip, frame, path, c)
+    # the white: a plain oval behind the eyeball, clipped by the aperture
+    white: El = eye["white"]  # type: ignore[assignment]
+    white.children = [d("ClippingShape", sourceId=clip.ref(), name="Clip"),
+                      d("Ellipse", width=70.0, height=58.0, name="Path"), fill(d, sclera)]
+    white.attrs["x"], white.attrs["y"] = s * 1.0, 388.0 - frame[1]
+
+    def at(u: float, y: float) -> Pt2:
+        return (cx + s * u, y)
+
+    # upper lash: a tapered band whose lower edge is the aperture's upper edge, flicking out past
+    # the outer corner
+    out_w = [{"CornerOut": 1.0}]
+    lash_bottom = [shifted(v, SEAM, corner=None if "in" not in v else "keep") for v in up]
+    tops = reversed_edge([shifted(v, -LASH_T[col] + SEAM) for v, col in zip(up[1:-1], LID_COLS)])
+    in_u, in_y = EYE_CORNERS["In"]
+    lash_pts = [*lash_bottom, {"at": at(36.0, 384.5), "w": out_w}, {"at": at(29.5, 383.0), "w": out_w}, *tops,
+                {"at": at(in_u + 1.0, in_y - LASH_T["In"]), "w": [{"CornerIn": 1.0}]}]
+    lash: El = eye["lash"]  # type: ignore[assignment]
+    path, c = explicit_path(d, lash_pts, frame, tendon)
+    _reshape(lash, frame, path, c, fill(d, ink))
+    # lower lid line: a thin tapered band under the aperture's lower edge, meeting the lash at the
+    # outer corner (no gap) and fading out toward the inner corner
+    low_top = [shifted(v, -SEAM, corner=None if "in" not in v else "keep") for v in low]
+    bottoms = reversed_edge([shifted(v, LOWER_T[col] - SEAM) for v, col in zip(low[1:-1], reversed(LID_COLS))])
+    lower_pts = [*low_top, shifted(low[-1], LOWER_T["In"], corner=None), *bottoms,
+                 shifted(low[0], LOWER_T["Out"], corner=None)]
+    lower: El = eye["lower"]  # type: ignore[assignment]
+    path, c = explicit_path(d, lower_pts, frame, tendon)
+    _reshape(lower, frame, path, c, fill(d, lower_ink))
+    # lid crease: rides the upper row a third of the way (a lifted lid folds under it)
+    crease: El = eye["crease"]  # type: ignore[assignment]
+    cpts = [at(-12.0, 360.0), at(8.0, 356.0), at(32.0, 364.0)]
+    cw = [{"UpperInner": 0.3, "Anchor": 0.7}, {"UpperMid": 0.3, "Anchor": 0.7}, {"UpperOuter": 0.3, "Anchor": 0.7}]
+    path, c = skinned_path(d, cpts, frame, lambda i, _a, h: [cw[i]] if h is None else [cw[i]] * 3, tendon,
+                           closed=False)
+    _reshape(crease, frame, path, c, stroke(d, crease_ink, 2.0))
+    # the upper lid's soft shadow on the white (behind the iris, clipped by the aperture)
+    shade_pts = [*[shifted(v, 0.0, corner=None if "in" not in v else "keep") for v in up],
+                 *reversed_edge([shifted(v, SHADE_T[col]) for v, col in zip(up[1:-1], LID_COLS)])]
+    path, c = explicit_path(d, shade_pts, frame, tendon)
+    shade = d("Shape", d("ClippingShape", sourceId=clip.ref(), name="Clip"), path, fill(d, shade_ink),
+              x=c[0] - frame[0], y=c[1] - frame[1], name="LidShade")
+    blink.children = [lash, lower, crease, *[ch for ch in blink.children if ch.attrs.get("name") == "GazeM"], shade,
+                      white, clip, *els.values()]
+    return drives
+
+
+def add_side_numbers(d: Doc, vm: El, inst: El) -> dict[str, El]:
+    """Contract v6 per-side offsets (number, default 0) in the view model, minted from `d` so the
+    main document's ids do not move."""
+    props = {pn: d("ViewModelPropertyNumber", name=pn) for pn in SIDE_NUMBERS}
+    at = vm.children.index(next(c for c in vm.children if c.tag == "ViewModelInstance"))
+    vm.children[at:at] = list(props.values())
+    inst.children.extend(d("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=p.ref())
+                         for p in props.values())
+    return props
+
+
+def resolve_paths(roots: Sequence[El], paths: Mapping[str, str]) -> None:
+    """Fill in bind paths of numbers that did not exist yet when the lids were rigged
+    (`@<name>` placeholders; the head turn adds eyeLeadPitch to the view model later)."""
+    stack = list(roots)
+    while stack:
+        e = stack.pop()
+        p = e.attrs.get("sourcePathIds")
+        if isinstance(p, str) and p.startswith("@"):
+            e.attrs["sourcePathIds"] = paths[p[1:]]
+        stack.extend(e.children)
 
 
 LIP_TENSION = 1.3
