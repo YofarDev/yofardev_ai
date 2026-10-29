@@ -138,6 +138,18 @@ void main() {
     expect(nasal.end.inMilliseconds ~/ 25, inInclusiveRange(10, 12));
   });
 
+  test('a th keeps two frames (50 ms) even where a vowel fits better', () {
+    // "the": the audio is all vowel, a classifier would label no th at all
+    final SpeechFrames frames = _frames(<(_Kind, int)>[(_Kind.bright, 4)]);
+    final AlignedVisemes a = _aligner.align(<PhonemeToken>[
+      _t(Viseme.th),
+      _t(Viseme.e, vowel: true, end: true),
+    ], frames)!;
+    final VisemeSpan th = _tokenSpans(a).first;
+    expect(th.viseme, Viseme.th);
+    expect(th.end - th.start, greaterThanOrEqualTo(_frame * 2));
+  });
+
   test('a lip closure takes the silent gap between two vowels', () {
     final SpeechFrames frames = _frames(<(_Kind, int)>[
       (_Kind.bright, 8),

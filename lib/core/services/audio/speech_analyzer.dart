@@ -568,8 +568,8 @@ class _Analysis {
       }
     }
 
-    // Short spans merge into their longer neighbour (lip closures and
-    // labiodentals excepted: they must stay visible).
+    // Short spans merge into their longer neighbour (lip closures,
+    // labiodentals and dentals excepted: they must stay visible).
     bool changed = true;
     while (changed && runs.length > 1) {
       changed = false;
@@ -636,8 +636,9 @@ class _Analysis {
     ];
   }
 
-  /// The longer neighbour, preferring one that is not a lip closure or a
-  /// labiodental (growing those would seal the lips where there is sound).
+  /// The longer neighbour, preferring one that is not a lip closure, a
+  /// labiodental or a dental (growing those would seal the lips, or hold the
+  /// tongue out, where there is sound).
   static _Run _mergeTarget(_Run? left, _Run? right) {
     if (left == null) return right!;
     if (right == null) return left;
@@ -649,7 +650,8 @@ class _Analysis {
     return left.length >= right.length ? left : right;
   }
 
-  static bool _protected(Viseme v) => v == Viseme.pp || v == Viseme.ff;
+  static bool _protected(Viseme v) =>
+      v == Viseme.pp || v == Viseme.ff || v == Viseme.th;
 
   static Duration _min(Duration a, Duration b) => a < b ? a : b;
 

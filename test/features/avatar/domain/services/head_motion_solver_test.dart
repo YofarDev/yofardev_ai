@@ -958,11 +958,26 @@ void main() {
       params: const HeadMotionParams(driftYaw: 0, driftPitch: 0, nodDepth: 0),
     );
 
-    // the raw hair offset behind a lag value (the soft limit undone)
+    // the raw hair offset behind a lag value (the soft limit and the face
+    // follow-through gain undone)
     double raw(double lag) {
       final double x = lag / 0.6;
-      return 0.6 * 0.5 * math.log((1 + x) / (1 - x)) / 1.9;
+      return 0.6 * 0.5 * math.log((1 + x) / (1 - x)) / 2.85;
     }
+
+    test('the face follow-through reads: 1.5x the head gain, the roll in full '
+        '(critic M3 round 3)', () {
+      const HeadMotionParams p = HeadMotionParams();
+      expect(p.faceHairGain, closeTo(1.5 * p.hairGain, 1e-9));
+      expect(p.faceHairGain, 2.85);
+      expect(p.faceHairRoll, 1.0);
+      // a 0.1 nod offsets the fringe 1.5x as far as round 2 did (before the
+      // soft limit bends it)
+      final HeadMotionSolver solver = still();
+      solver.followFace(const FaceFrame(nodPitch: -0.1));
+      final HeadPose first = solver.step(const Duration(milliseconds: 1));
+      expect(first.hairLagPitch, closeTo(0.6 * _tanh(2.85 * 0.1 / 0.6), 2e-3));
+    });
 
     test('a nod drives the hair: 12 % overshoot, settled by 250 ms', () {
       final HeadMotionSolver solver = still();
@@ -999,8 +1014,8 @@ void main() {
       final HeadMotionSolver solver = still();
       solver.followFace(const FaceFrame(roll: 0.3));
       final HeadPose p = solver.step(const Duration(milliseconds: 1));
-      // half the roll's lag, as a yaw offset behind it
-      expect(raw(p.hairLagYaw), closeTo(-0.5 * 0.3, 0.002));
+      // the roll's whole lag, as a yaw offset behind it
+      expect(raw(p.hairLagYaw), closeTo(-0.3, 0.002));
       expect(solver.isSettled, isFalse);
       _run(solver, 1);
       expect(solver.pose.hairLagYaw.abs(), lessThan(1e-3));
@@ -1046,4 +1061,9 @@ void main() {
       expect(solver.pose.eyeLeadYaw.abs(), greaterThan(0.1));
     });
   });
+}
+
+double _tanh(double x) {
+  final double e = math.exp(2 * x);
+  return (e - 1) / (e + 1);
 }

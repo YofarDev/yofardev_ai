@@ -50,7 +50,7 @@ class MouthBlend {
 /// ramp. There is no pop into `sil` or into a span shorter than [popMinSpan].
 ///
 /// The result is continuous in time: both lean windows are clamped to half
-/// the span, so they never overlap, and each leak starts exactly where the
+/// the span (a vowel's to [vowelLean] of it), so they never overlap, and each leak starts exactly where the
 /// previous span's anticipation ended.
 ///
 /// The lips round [preRound] ahead of a rounded vowel (`oh`, `ou`: /o/, /u/,
@@ -63,7 +63,8 @@ class MouthBlend {
 /// spread open on the same release ramp (no unrounded frame between a b and
 /// an ou); a `th` keeps the tongue up at [thTongue] or more across its span;
 /// a vowel's jaw scales by its length ([vowelJawGain]), so a vowel squeezed
-/// between two closures opens half way instead of spiking. With
+/// between two closures opens a little less, and its lean windows leave it
+/// a plateau ([vowelLean]). With
 /// [SpeechTimeline.roundedSh] (French) a `ch` is [roundedShShape]: rounded,
 /// barely spread.
 class VisemeBlender {
@@ -101,7 +102,6 @@ class VisemeBlender {
     final bool roundSh = timeline.roundedSh;
     final MouthShape base = _shapeOf(current, roundSh);
     final double half = (end - start) / 2;
-    final double dominance = MouthShape.dominance(current.viseme);
 
     final VisemeSpan? next = index + 1 < spans.length ? spans[index + 1] : null;
     final VisemeSpan? previous = index > 0 ? spans[index - 1] : null;
@@ -116,39 +116,33 @@ class VisemeBlender {
         current.viseme != Viseme.sil &&
         current.end - current.start >= popMinSpan;
 
-    MouthShape shape = base;
-
-    // Leak of the previous span, decaying over the first carry window. After
-    // a closure the pressed lips peel apart this way, but the jaw does not
-    // leak: it bursts open (below).
-    if (hasPrevious) {
-      final double window = _min(carryOver.inMicroseconds.toDouble(), half);
-      if (window > 0 && now < start + window) {
-        final double decay = 1 - _smoothstep((now - start) / window);
-        final double lean = _leanBack(previous, current) * decay;
-        final MouthShape before = shape;
-        shape = shape.lerp(_leakOf(previous, roundSh), lean);
-        if (release) {
-          // the jaw, the rounding and the spread open on the burst (below)
-          shape = shape.copyWith(
-            jaw: before.jaw,
-            pucker: before.pucker,
-            stretch: before.stretch,
-          );
-        }
-      }
-    }
-
-    // Anticipation of the next span, rising over the last window.
-    if (hasNext) {
-      final double window = _min(anticipation.inMicroseconds.toDouble(), half);
-      if (window > 0 && now > end - window) {
-        final double rise = _smoothstep((now - (end - window)) / window);
-        final double pull =
-            MouthShape.dominance(next.viseme) /
-            _max(dominance, MouthShape.dominance(next.viseme));
-        shape = shape.lerp(_shapeOf(next, roundSh), rise * pull);
-      }
+    // A vowel's jaw keeps a plateau of its own: its jaw leans over at most
+    // [vowelLean] of it at each end (everything else, and a consonant, over
+    // up to half), so a normal-length vowel holds its full opening for a
+    // few frames instead of peaking for one.
+    MouthShape shape = _lean(
+      base,
+      current,
+      previous: hasPrevious ? previous : null,
+      next: hasNext ? next : null,
+      now: now,
+      limit: half,
+      release: release,
+      roundSh: roundSh,
+    );
+    if (_isVowel(current.viseme)) {
+      shape = shape.copyWith(
+        jaw: _lean(
+          base,
+          current,
+          previous: hasPrevious ? previous : null,
+          next: hasNext ? next : null,
+          now: now,
+          limit: (end - start) * vowelLean,
+          release: release,
+          roundSh: roundSh,
+        ).jaw,
+      );
     }
 
     // the lips round ahead of a coming rounded vowel; the spread goes first
@@ -180,7 +174,11 @@ class VisemeBlender {
 
     if (release) {
       final double since = now - start;
-      final double burst = releaseBurst.inMicroseconds.toDouble();
+      // a vowel squeezed between closures opens faster (never in one frame)
+      final double burst = _min(
+        releaseBurst.inMicroseconds.toDouble(),
+        shortBurst * (end - start),
+      );
       final double popWindow = _min(
         releasePop.inMicroseconds.toDouble(),
         end - start,
@@ -210,6 +208,54 @@ class VisemeBlender {
       }
     }
     return MouthBlend(shape: shape);
+  }
+
+  /// [base] of [current] leaning on its neighbours at [now] (µs), each lean
+  /// window at most [limit] µs: the leak of [previous] decays over the first
+  /// carry window (after a closure the pressed lips peel apart this way, but
+  /// the jaw, the rounding and the spread do not leak: they burst open on the
+  /// release ramp) and [next] is anticipated over the last window.
+  MouthShape _lean(
+    MouthShape base,
+    VisemeSpan current, {
+    required VisemeSpan? previous,
+    required VisemeSpan? next,
+    required double now,
+    required double limit,
+    required bool release,
+    required bool roundSh,
+  }) {
+    final double start = current.start.inMicroseconds.toDouble();
+    final double end = current.end.inMicroseconds.toDouble();
+    MouthShape shape = base;
+    if (previous != null) {
+      final double window = _min(carryOver.inMicroseconds.toDouble(), limit);
+      if (window > 0 && now < start + window) {
+        final double decay = 1 - _smoothstep((now - start) / window);
+        final double lean = _leanBack(previous, current) * decay;
+        final MouthShape before = shape;
+        shape = shape.lerp(_leakOf(previous, roundSh), lean);
+        if (release) {
+          shape = shape.copyWith(
+            jaw: before.jaw,
+            pucker: before.pucker,
+            stretch: before.stretch,
+          );
+        }
+      }
+    }
+    if (next != null) {
+      final double window = _min(anticipation.inMicroseconds.toDouble(), limit);
+      if (window > 0 && now > end - window) {
+        final double rise = _smoothstep((now - (end - window)) / window);
+        final double dominance = MouthShape.dominance(current.viseme);
+        final double pull =
+            MouthShape.dominance(next.viseme) /
+            _max(dominance, MouthShape.dominance(next.viseme));
+        shape = shape.lerp(_shapeOf(next, roundSh), rise * pull);
+      }
+    }
+    return shape;
   }
 
   /// The rounding at [now] for the first rounded vowel (`oh` or `ou`; only
@@ -314,15 +360,20 @@ class VisemeBlender {
   /// The lips start rounding this long before an ou (/u/, /w/).
   static const Duration preRound = Duration(milliseconds: 110);
 
-  /// The least tongue a th shows anywhere in its span.
-  static const double thTongue = 0.6;
+  /// The least tongue a th shows anywhere in its span (the tip past the
+  /// teeth).
+  static const double thTongue = 0.8;
 
-  /// Jaw scale for a vowel of [length]: half its table jaw at 40 ms or less,
-  /// eased to full at 160 ms (a short vowel between two closures opens part
-  /// way instead of spiking for a frame).
+  /// The most of a vowel each of its two lean windows takes: a 50 % middle
+  /// is the vowel alone.
+  static const double vowelLean = 0.15;
+
+  /// Jaw scale for a vowel of [length]: 0.7 of its table jaw at 40 ms or
+  /// less, eased to full at 100 ms (a short vowel opens a little less; a
+  /// normal one opens all the way).
   static double vowelJawGain(Duration length) {
-    final double x = (length.inMicroseconds / 1000 - 40) / 120;
-    return 0.5 + 0.5 * _smoothstep(x);
+    final double x = (length.inMicroseconds / 1000 - 40) / 60;
+    return 0.7 + 0.3 * _smoothstep(x);
   }
 
   /// Lip press as a p/b/m closure starts: the lips have just met.
@@ -333,8 +384,10 @@ class VisemeBlender {
   static const double sealPress = 0.9;
 
   /// After a closure the mouth reaches the next shape over this window, on
-  /// [releaseRamp]: about three frames at 60 fps, two at 30.
+  /// [releaseRamp]: about three frames at 60 fps, two at 30; into a span
+  /// shorter than 100 ms over [shortBurst] of it (30 ms into a 50 ms vowel).
   static const Duration releaseBurst = Duration(milliseconds: 60);
+  static const double shortBurst = 0.6;
 
   /// The release ramp at [x] (0-1 of [releaseBurst]): an ease-out,
   /// `1 - (1 - x)^2`, fastest as the lips part, settling into the shape.
@@ -353,10 +406,10 @@ class VisemeBlender {
   /// Peak jaw of the release pop, on top of the opening ramp.
   static const double popJaw = 0.08;
 
-  /// Jaw scale for a span of loudness [weight] (0-1): even a soft vowel
-  /// opens about half way, a loud one a third past its table value
-  /// (articulation reads at phone size).
-  static double jawGain(double weight) => 0.45 + 0.75 * weight.clamp(0.0, 1.0);
+  /// Jaw scale for a span of loudness [weight] (0-1): 0.6 of its table
+  /// value for the softest span to 0.9 for the loudest (a soft vowel still
+  /// articulates: the loudness only shades it).
+  static double jawGain(double weight) => 0.6 + 0.3 * weight.clamp(0.0, 1.0);
 
   /// Index of the span covering [t] (start inclusive, end exclusive), or -1.
   static int _indexAt(List<VisemeSpan> spans, Duration t) {

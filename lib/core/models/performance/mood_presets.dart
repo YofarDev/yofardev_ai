@@ -57,13 +57,14 @@ ActionUnits actionUnitsForMood(AvatarMood mood) => switch (mood) {
     lidTighten: 0.05,
     lipCornerDepress: 0.9,
   ),
+  // anger, not a sulk: narrowed eyes, a narrow pressed mouth, the corners
+  // only a little down (a deeper drop is the sad arch), the nose wrinkled
   AvatarMood.angry => const ActionUnits(
     browLower: 0.9,
-    lidTighten: 0.7,
+    lidTighten: 0.6,
     noseWrinkle: 0.3,
-    lipCornerDepress: 0.35,
-    lipStretch: 0.3,
-    lipPress: 0.6,
+    lipCornerDepress: 0.3,
+    lipPress: 0.5,
   ),
   // a dropped jaw with rounded lips: a tall "oh" oval, not a grin; the
   // brows and upper lids as high as they go

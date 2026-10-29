@@ -52,6 +52,22 @@ void main() {
       expect(au.cheekRaise, 0.6);
     });
 
+    test('angry reads as anger, not a sulk (critic M3 round 3)', () {
+      // narrowed eyes, a narrow pressed mouth, the corners only a little
+      // down (not the sad arch), the nose wrinkled, the brows lowered
+      final ActionUnits au = actionUnitsForMood(AvatarMood.angry);
+      expect(au.lidTighten, 0.6);
+      expect(au.lipPress, 0.5);
+      expect(au.lipCornerDepress, 0.3);
+      expect(au.noseWrinkle, 0.3);
+      expect(au.lipStretch, 0);
+      expect(au.browLower, 0.9);
+      expect(
+        au.lipCornerDepress,
+        lessThan(actionUnitsForMood(AvatarMood.sad).lipCornerDepress / 2),
+      );
+    });
+
     test('surprised is a tall oval with the brows and lids up', () {
       final ActionUnits au = actionUnitsForMood(AvatarMood.surprised);
       expect(au.jawDrop, 0.45);

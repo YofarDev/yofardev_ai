@@ -7,6 +7,7 @@ import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/face_frame.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/performance_intent.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/face_performer.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/viseme_blender.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 const Duration _frame = Duration(microseconds: 16667);
@@ -337,7 +338,9 @@ void main() {
       );
       final List<FaceFrame> frames = rig.run(120);
       expect(frames[60].breath, lessThan(0.05)); // ~1 s, mid-phrase
-      expect(frames[107].breath, greaterThan(0.6)); // ~1.8 s, end of pause
+      // ~1.8 s, end of pause: the catch-breath (60 % of the pre-roll breath,
+      // critic M3 round 3)
+      expect(frames[107].breath, closeTo(FacePerformer.catchBreath, 0.01));
     });
 
     test('the question tilt holds after the audio ends', () {
@@ -584,7 +587,8 @@ void main() {
       ],
     );
 
-    test('three stresses of strength 1, 0.5, 1 nod to different depths', () {
+    test('three stresses of strength 1, 0.5, 1: the weak one rests, the '
+        'others nod to different depths', () {
       rig.speak(stresses());
       final List<FaceFrame> frames = rig.run(170);
       double depth(int ms) {
@@ -601,13 +605,11 @@ void main() {
       final double a = depth(500);
       final double b = depth(1300);
       final double c = depth(2100);
-      expect(<double>[a, b, c], everyElement(lessThan(-0.2)));
-      expect((a - b).abs(), greaterThan(0.03));
-      expect((c - b).abs(), greaterThan(0.03));
-      expect((a - c).abs(), greaterThan(0.003));
-      // the weak stress nods least
-      expect(b, greaterThan(a));
-      expect(b, greaterThan(c));
+      expect(<double>[a, c], everyElement(lessThan(-0.2)));
+      // of three in a row the weakest rests (critic M3 round 3)
+      expect(b, greaterThan(-0.02));
+      // consecutive nods alternate deeper and lighter: 20 % apart or more
+      expect((a - c).abs(), greaterThan(0.2 * FacePerformer.nodDepthFor(1)));
     });
 
     test(
@@ -1061,9 +1063,9 @@ void main() {
     });
 
     group('secondary motion', () {
-      test('nod depth follows the stress: 0.4 to 1.0 of the deepest', () {
-        expect(FacePerformer.nodDepthFor(0), closeTo(0.22, 1e-9));
-        expect(FacePerformer.nodDepthFor(0.5), closeTo(0.385, 1e-9));
+      test('nod depth follows the stress: 0.3 to 1.0 of the deepest', () {
+        expect(FacePerformer.nodDepthFor(0), closeTo(0.165, 1e-9));
+        expect(FacePerformer.nodDepthFor(0.5), closeTo(0.3575, 1e-9));
         expect(FacePerformer.nodDepthFor(1), closeTo(0.55, 1e-9));
         rig.speak(
           _timeline(
@@ -1094,8 +1096,11 @@ void main() {
 
         final double weak = low(500);
         final double strong = low(1300);
-        expect(strong, inInclusiveRange(-0.55 * 1.08, -0.55 * 0.9));
-        expect(weak / strong, inInclusiveRange(0.64 * 0.85, 0.64 * 1.18));
+        // the first nod is a deeper one (+5..15 %), the next a lighter one
+        // (-15..35 %): critic M3 round 3 widened the range
+        final double weakNod = FacePerformer.nodDepthFor(0.4);
+        expect(weak, inInclusiveRange(-weakNod * 1.15, -weakNod * 1.05));
+        expect(strong, inInclusiveRange(-0.55 * 0.85, -0.55 * 0.65));
       });
 
       test('some stresses get small roll accents of alternating side', () {
@@ -1245,13 +1250,20 @@ void main() {
         return v;
       }
 
-      // a 75 ms vowel bursts to its 0.375 cap (plus the pop), a 50 ms one
-      // barely opens between its closures
-      expect(FacePerformer.releaseJawCap(_ms(75)), closeTo(0.375, 1e-9));
+      // a 75 ms vowel bursts to its 0.51 cap (plus the pop), a 50 ms one to
+      // its 0.45 (critic M3 round 3: "buy" must read, it was 0.13)
+      expect(FacePerformer.releaseJawCap(_ms(50)), closeTo(0.45, 1e-9));
+      expect(FacePerformer.releaseJawCap(_ms(75)), closeTo(0.5125, 1e-9));
       expect(FacePerformer.releaseJawCap(_ms(400)), 1);
-      expect(peak(350, 425), lessThan(0.55));
-      expect(peak(575, 625), lessThan(0.35));
-      // outside the 50 ms after a release the jaw opens at 8 units/s at most
+      expect(
+        peak(350, 425),
+        inInclusiveRange(0.4, 0.5125 + VisemeBlender.popJaw),
+      );
+      expect(
+        peak(575, 625),
+        inInclusiveRange(0.3, 0.45 + VisemeBlender.popJaw),
+      );
+      // outside the 50 ms after a release the jaw opens at 12 units/s at most
       const List<int> releases = <int>[350, 575, 675];
       for (int i = 1; i < f.length; i++) {
         final bool burst = releases.any(
@@ -1260,7 +1272,7 @@ void main() {
         if (!burst) {
           expect(
             f[i].au.jawDrop - f[i - 1].au.jawDrop,
-            lessThanOrEqualTo(8 / 60 + 1e-6),
+            lessThanOrEqualTo(FacePerformer.jawSlew / 60 + 1e-6),
             reason: '${at(i)} ms',
           );
         }
@@ -1327,7 +1339,7 @@ void main() {
           expect(f[i].au.jawDrop, 0, reason: '${at(i)} ms');
           expect(f[i].au.lipPress, greaterThanOrEqualTo(0.6));
         }
-        if (at(i) >= 200 && at(i) < 300) {
+        if (at(i) >= 220 && at(i) < 300) {
           // from the f into the seal the jaw eases shut (no snap)
           expect(f[i - 1].au.jawDrop - f[i].au.jawDrop, lessThan(0.06));
         }
@@ -1539,7 +1551,7 @@ void main() {
       expect(b.reduce(math.max), inInclusiveRange(0.25, 0.35));
     });
 
-    test('sad keeps 70 % of the neutral jaw and rounding ("the weather")', () {
+    test('sad keeps 75 % of the neutral jaw and rounding ("the weather")', () {
       List<FaceFrame> play(AvatarMood mood) {
         final _Rig r = _Rig();
         r.mood(mood);
@@ -1565,14 +1577,18 @@ void main() {
         final ActionUnits a = sad[i].au;
         final ActionUnits n = neutral[i].au;
         if (n.jawDrop > 0.05) {
+          // a mood damps a viseme by a quarter at most (critic M3 round 3)
           expect(
             a.jawDrop,
-            greaterThanOrEqualTo(0.7 * n.jawDrop),
+            greaterThanOrEqualTo(0.75 * n.jawDrop),
             reason: '$i',
           );
         }
         if (n.lipPucker > 0.05) {
-          expect(a.lipPucker, greaterThanOrEqualTo(0.7 * n.lipPucker));
+          expect(a.lipPucker, greaterThanOrEqualTo(0.75 * n.lipPucker));
+        }
+        if (n.lipStretch > 0.05) {
+          expect(a.lipStretch, greaterThanOrEqualTo(0.75 * n.lipStretch));
         }
         // the frown halves as speech opens the mouth (it read as a slit)
         if (a.jawDrop >= 0.25) {
@@ -1606,6 +1622,325 @@ void main() {
           reason: '$k',
         );
       }
+    });
+  });
+
+  group('M3 critic round 3', () {
+    // frame i of rig.run is stepped at (i + 1) * 16.667 ms
+    double at(int i) => (i + 1) * 16.667;
+
+    /// Spans at a real voice's loudness (weight 0.7, energy 0.7).
+    SpeechTimeline voiced(
+      List<(Viseme, int, int)> spans, {
+      List<ProsodyMark> marks = const <ProsodyMark>[],
+      bool question = false,
+    }) => SpeechTimeline(
+      visemes: <VisemeSpan>[
+        for (final (Viseme v, int a, int b) in spans)
+          VisemeSpan(viseme: v, start: _ms(a), end: _ms(b), weight: 0.7),
+      ],
+      marks: marks,
+      duration: _ms(spans.last.$3),
+      isQuestion: question,
+      energy: List<double>.filled(spans.last.$3 ~/ 25 + 1, 0.7),
+    );
+
+    /// The written jaw's peak over [from, to) ms and how long it stays
+    /// within 10 % of it (ms).
+    (double, double) peakAndHold(List<FaceFrame> f, int from, int to) {
+      double peak = 0;
+      for (int i = 0; i < f.length; i++) {
+        if (at(i) >= from && at(i) < to) {
+          peak = math.max(peak, f[i].au.jawDrop);
+        }
+      }
+      int held = 0;
+      for (int i = 0; i < f.length; i++) {
+        if (at(i) >= from && at(i) < to + 30 && f[i].au.jawDrop >= 0.9 * peak) {
+          held++;
+        }
+      }
+      return (peak, held * 16.667);
+    }
+
+    // "the cat got a bed, a kid": every vowel 120 ms between consonants
+    final List<(Viseme, int, int)> sentence = <(Viseme, int, int)>[
+      (Viseme.kk, 0, 80),
+      (Viseme.aa, 80, 200),
+      (Viseme.dd, 200, 260),
+      (Viseme.oh, 260, 380),
+      (Viseme.nn, 380, 440),
+      (Viseme.e, 440, 560),
+      (Viseme.ss, 560, 620),
+      (Viseme.ih, 620, 740),
+      (Viseme.kk, 740, 800),
+      (Viseme.sil, 800, 1000),
+    ];
+
+    test('a vowel of normal length opens to its size and holds 66 ms', () {
+      rig.speak(voiced(sentence));
+      final List<FaceFrame> f = rig.run(60);
+      final (double aa, double aaHold) = peakAndHold(f, 80, 200);
+      final (double oh, double ohHold) = peakAndHold(f, 260, 380);
+      final (double e, double eHold) = peakAndHold(f, 440, 560);
+      final (double ih, double ihHold) = peakAndHold(f, 620, 740);
+      // the critic's sizes (written numbers): aa >= 0.55, oh ~0.45, e/ih ~0.3
+      expect(aa, inInclusiveRange(0.55, 0.85));
+      expect(oh, inInclusiveRange(0.4, 0.6));
+      expect(e, inInclusiveRange(0.27, 0.5));
+      expect(ih, inInclusiveRange(0.25, 0.4));
+      // each holds its peak two 30 fps frames or more: no one-frame spike
+      for (final double hold in <double>[aaHold, ohHold, eHold, ihHold]) {
+        expect(hold, greaterThanOrEqualTo(66));
+      }
+    });
+
+    test(
+      'a short vowel opens a little less, still past 60 % of a long one',
+      () {
+        rig.speak(
+          voiced(<(Viseme, int, int)>[
+            (Viseme.kk, 0, 80),
+            (Viseme.aa, 80, 140), // 60 ms
+            (Viseme.dd, 140, 200),
+            (Viseme.aa, 200, 320), // 120 ms
+            (Viseme.dd, 320, 400),
+          ]),
+        );
+        final List<FaceFrame> f = rig.run(24);
+        final double short = peakAndHold(f, 80, 140).$1;
+        final double long = peakAndHold(f, 200, 320).$1;
+        expect(short, lessThan(long));
+        expect(short, greaterThan(0.6 * long));
+      },
+    );
+
+    test('a mood damps the opening by a quarter at most', () {
+      double peakFor(AvatarMood mood) {
+        final _Rig r = _Rig();
+        r.mood(mood);
+        r.run(60);
+        r.speak(voiced(sentence));
+        final double p = peakAndHold(r.run(60), 80, 200).$1;
+        r.dispose();
+        return p;
+      }
+
+      final double neutral = peakFor(AvatarMood.neutral);
+      for (final AvatarMood m in AvatarMood.values) {
+        expect(
+          peakFor(m),
+          greaterThanOrEqualTo(0.75 * neutral),
+          reason: m.name,
+        );
+      }
+    });
+
+    group('lip press envelope', () {
+      // "a pop": 150 ms of vowel between two closures
+      final SpeechTimeline pops = voiced(<(Viseme, int, int)>[
+        (Viseme.e, 0, 120),
+        (Viseme.pp, 120, 200),
+        (Viseme.aa, 200, 350),
+        (Viseme.pp, 350, 420),
+        (Viseme.e, 420, 700),
+      ]);
+
+      test('60 ms attack, 40 ms release, nothing in between', () {
+        double env(int ms) => FacePerformer.pressEnvelope(pops, _ms(ms));
+        expect(FacePerformer.pressAttack, 0.06);
+        expect(FacePerformer.pressRelease, 0.04);
+        expect(env(50), 0);
+        expect(env(90), closeTo(0.6 * 0.5, 1e-9)); // half way into the attack
+        expect(env(220), closeTo(0.9 * 0.5, 1e-9)); // half way out
+        for (int t = 240; t < 290; t += 5) {
+          expect(env(t), 0, reason: '$t ms');
+        }
+        expect(env(320), closeTo(0.3, 1e-9));
+      });
+
+      test('the lips part between closures; every closure still seals', () {
+        rig.speak(pops);
+        final List<FaceFrame> f = rig.run(42);
+        double lowest = 1;
+        for (int i = 0; i < f.length; i++) {
+          final double t = at(i);
+          if (t >= 245 && t < 285) {
+            lowest = math.min(lowest, f[i].au.lipPress);
+          }
+          if ((t >= 120 && t < 200) || (t >= 350 && t < 420)) {
+            expect(f[i].au.jawDrop, 0, reason: '$t ms');
+            expect(f[i].au.lipPress, greaterThanOrEqualTo(0.6), reason: '$t');
+          }
+        }
+        expect(lowest, lessThan(0.02));
+      });
+
+      test('a 50 ms vowel between closures still parts the lips', () {
+        rig.speak(
+          voiced(<(Viseme, int, int)>[
+            (Viseme.e, 0, 120),
+            (Viseme.pp, 120, 200),
+            (Viseme.aa, 200, 250),
+            (Viseme.pp, 250, 320),
+            (Viseme.e, 320, 600),
+          ]),
+        );
+        final List<FaceFrame> f = rig.run(24);
+        double lowest = 1;
+        double jaw = 0;
+        for (int i = 0; i < f.length; i++) {
+          if (at(i) >= 200 && at(i) < 250) {
+            lowest = math.min(lowest, f[i].au.lipPress);
+            jaw = math.max(jaw, f[i].au.jawDrop);
+          }
+        }
+        expect(lowest, lessThan(0.2));
+        // and "buy" opens (it peaked at 0.13)
+        expect(jaw, greaterThan(0.35));
+      });
+    });
+
+    test('an utterance-initial p/b/m closes over 90 ms before the audio', () {
+      rig.playback.add(
+        const SpeechPrerollEvent(Duration(milliseconds: 350), onset: Viseme.pp),
+      );
+      final List<FaceFrame> pre = rig.run(21);
+      rig.speak(
+        voiced(<(Viseme, int, int)>[
+          (Viseme.pp, 0, 120),
+          (Viseme.oh, 120, 400),
+        ]),
+      );
+      final List<FaceFrame> f = <FaceFrame>[...pre, ...rig.run(6)];
+      // nothing pressed until 90 ms before the audio
+      expect(pre[14].au.lipPress, 0); // ~-100 ms
+      for (int i = 1; i < f.length; i++) {
+        expect(
+          f[i].au.lipPress - f[i - 1].au.lipPress,
+          lessThan(0.2),
+          reason: 'frame $i',
+        );
+      }
+      expect(pre[20].au.lipPress, closeTo(0.6, 1e-6)); // at the audio
+      expect(pre[20].au.jawDrop, 0);
+      expect(FacePerformer.prerollClose, 0.09);
+    });
+
+    group('the catch-breath', () {
+      test('60 % of the pre-roll breath over 180 ms, 12 % overshoot', () {
+        expect(FacePerformer.catchBreathAt(-0.01, 0.25), 0);
+        expect(FacePerformer.catchBreathAt(0.09, 0.25), closeTo(0.336, 1e-9));
+        expect(FacePerformer.catchBreathAt(0.18, 0.25), closeTo(0.672, 1e-9));
+        expect(FacePerformer.catchBreathAt(0.25, 0.25), lessThan(0.672));
+        expect(FacePerformer.catchBreathAt(0.25, 0.25), greaterThan(0.6));
+        expect(FacePerformer.catchBreathAt(0.66, 0.25), 0);
+        // a pause too short for 150 ms: smaller, never faster
+        expect(FacePerformer.catchBreathAt(0.1, 0.1), closeTo(0.448, 1e-9));
+      });
+
+      test('no shoulder pop: under 0.2 per 30 fps frame', () {
+        rig.speak(
+          voiced(
+            <(Viseme, int, int)>[
+              (Viseme.aa, 0, 800),
+              (Viseme.sil, 800, 1025),
+              (Viseme.aa, 1025, 1600),
+            ],
+            marks: <ProsodyMark>[
+              const ProsodyMark(
+                kind: ProsodyMarkKind.pause,
+                at: Duration(milliseconds: 800),
+                length: Duration(milliseconds: 225),
+              ),
+            ],
+          ),
+        );
+        final List<double> b = <double>[
+          for (final FaceFrame f in rig.run(96)) f.breath,
+        ];
+        double top = 0;
+        // from the pause (800 ms) through the voice's return
+        for (int i = 46; i < b.length; i++) {
+          expect((b[i] - b[i - 2]).abs(), lessThan(0.2), reason: 'frame $i');
+          top = math.max(top, b[i]);
+        }
+        expect(top, closeTo(0.672, 0.01));
+        // the rise from 10 % to 90 % takes 100 ms or more
+        final int r10 = b.indexWhere((double v) => v > 0.1 * top, 40);
+        final int r90 = b.indexWhere((double v) => v > 0.9 * top, 40);
+        expect((r90 - r10) * 16.667, greaterThanOrEqualTo(100));
+      });
+    });
+
+    test('th: a small opening with the tongue past the teeth', () {
+      rig.speak(
+        voiced(<(Viseme, int, int)>[
+          (Viseme.ss, 0, 100),
+          (Viseme.th, 100, 220),
+          (Viseme.e, 220, 400),
+        ]),
+      );
+      final List<FaceFrame> f = rig.run(24);
+      for (int i = 0; i < f.length; i++) {
+        if (at(i) >= 100 && at(i) < 220) {
+          expect(f[i].tongueUp, greaterThanOrEqualTo(0.8), reason: '${at(i)}');
+        }
+      }
+      // mid-span (160 ms): about 0.15
+      expect(f[8].au.jawDrop, inInclusiveRange(0.1, 0.2));
+      expect(VisemeBlender.thTongue, 0.8);
+    });
+
+    test('a question lifts the chin on its final rise instead of nodding', () {
+      rig.speak(
+        voiced(
+          <(Viseme, int, int)>[(Viseme.aa, 0, 2000)],
+          question: true,
+          marks: <ProsodyMark>[
+            const ProsodyMark(
+              kind: ProsodyMarkKind.stress,
+              at: Duration(milliseconds: 500),
+            ),
+            const ProsodyMark(
+              kind: ProsodyMarkKind.stress,
+              at: Duration(milliseconds: 1800),
+            ),
+            const ProsodyMark(
+              kind: ProsodyMarkKind.pitchPeak,
+              at: Duration(milliseconds: 1850),
+              slope: 1,
+            ),
+          ],
+        ),
+      );
+      final List<FaceFrame> f = rig.run(130);
+      double low(int from, int to) {
+        double v = 1;
+        for (int i = 0; i < f.length; i++) {
+          if (at(i) >= from && at(i) < to) {
+            v = math.min(v, f[i].nodPitch);
+          }
+        }
+        return v;
+      }
+
+      double high(int from, int to) {
+        double v = -1;
+        for (int i = 0; i < f.length; i++) {
+          if (at(i) >= from && at(i) < to) {
+            v = math.max(v, f[i].nodPitch);
+          }
+        }
+        return v;
+      }
+
+      expect(low(350, 650), lessThan(-0.3)); // the statement nod
+      // the rise: an up-nod (plus the question's lift), never a dip past
+      // the anticipation
+      expect(high(1750, 2050), greaterThan(0.2));
+      expect(low(1750, 2050), greaterThan(-0.06));
+      expect(FacePerformer.questionNodLift, 0.3);
     });
   });
 

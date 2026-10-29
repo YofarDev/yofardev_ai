@@ -31,7 +31,7 @@ class AlignedVisemes {
 /// the analysis frames.
 ///
 /// Each token holds a run of whole frames, in order: at least 1 frame (2 for
-/// a vowel), at most [_maxVowel] / [_maxConsonant] frames ([_maxStop] for a
+/// a vowel or a th), at most [_maxVowel] / [_maxConsonant] frames ([_maxStop] for a
 /// stop closure: a longer silence is a pause), with a log-normal
 /// duration prior around 90 ms (vowels), 80 ms (fricatives) or 60 ms (the
 /// rest). A silence may be inserted at both ends and after any word: free
@@ -48,6 +48,11 @@ class PhonemeAligner {
 
   static const int _minVowel = 2;
   static const int _minConsonant = 1;
+
+  /// A dental fricative (th: /θ/, /ð/) holds two frames (50 ms) even where
+  /// the audio would give it to a neighbour: the tongue between the teeth is
+  /// the one thing that tells "the" from "e".
+  static const int _minDental = 2;
   static const int _maxVowel = 28;
   static const int _maxConsonant = 16;
   static const int _maxStop = 8;
@@ -147,7 +152,9 @@ class PhonemeAligner {
       final PhonemeToken token = state.token!;
       final _Cls cls = _classOf(token);
       final Float64List cum = emissions.cumulative(cls);
-      final int minD = token.vowel ? _minVowel : _minConsonant;
+      final int minD = token.vowel
+          ? _minVowel
+          : (token.viseme == Viseme.th ? _minDental : _minConsonant);
       final int maxD = token.vowel
           ? _maxVowel
           : (_isStop(token.viseme) ? _maxStop : _maxConsonant);

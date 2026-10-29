@@ -32,7 +32,8 @@ class HeadMotionParams {
     this.hairLagMax = 0.6,
     this.faceHairF = 3.8,
     this.faceHairZeta = 0.53,
-    this.faceHairRoll = 0.5,
+    this.faceHairGain = 2.85,
+    this.faceHairRoll = 1.0,
     this.reduceSettleS = 0.35,
     this.holdMinS = 0.16,
     this.driftAfterS = 1.0,
@@ -130,11 +131,13 @@ class HeadMotionParams {
   /// under-damped spring ([faceHairF] Hz, damping [faceHairZeta], as
   /// integrated at 120 Hz: about 12 % overshoot, within 2 % after ~225 ms,
   /// trailing a steady motion by ~32 ms frame to frame), its offset at
-  /// [hairGain] with no pitch reduction (a nod must read in the fringe). The contract has no roll lag: [faceHairRoll] of
-  /// the roll's lag (roll units) swings the hair sideways through
-  /// `hairLagYaw`.
+  /// [faceHairGain] (1.5x [hairGain]: a nod must read in the fringe) with no
+  /// pitch reduction. The contract has no roll lag: [faceHairRoll] of the
+  /// roll's lag (roll units) swings the hair sideways through `hairLagYaw`
+  /// (all of it: the question tilt shows in the side locks).
   final double faceHairF;
   final double faceHairZeta;
+  final double faceHairGain;
   final double faceHairRoll;
 
   /// Settle time of the critically damped head used by reduce motion.
@@ -749,23 +752,25 @@ class HeadMotionSolver {
       yaw: _clamp1(_yawAxis.pos),
       pitch: _clamp1(_pitchAxis.pos),
       hairLagYaw: _hairLag(
-        _hairYaw - _yawAxis.pos + params.faceHairRoll * (_hairRoll - _faceRoll),
-        1,
+        params.hairGain * (_hairYaw - _yawAxis.pos) +
+            params.faceHairGain * params.faceHairRoll * (_hairRoll - _faceRoll),
       ),
       hairLagPitch: _hairLag(
-        params.hairPitchScale * (_hairPitch - _pitchAxis.pos) +
-            (_hairNod - _faceNod),
-        1,
+        params.hairGain *
+                params.hairPitchScale *
+                (_hairPitch - _pitchAxis.pos) +
+            params.faceHairGain * (_hairNod - _faceNod),
       ),
       eyeLeadYaw: _clamp1(lead),
       eyeLeadPitch: _clamp1(_eyePitch),
     );
   }
 
-  /// Hair offset x gain x [scale], softly limited to [HeadMotionParams.hairLagMax].
-  double _hairLag(double offset, double scale) {
+  /// A hair offset (its gains applied), softly limited to
+  /// [HeadMotionParams.hairLagMax].
+  double _hairLag(double offset) {
     final double max = params.hairLagMax;
-    return max * _tanh(params.hairGain * scale * offset / max);
+    return max * _tanh(offset / max);
   }
 
   void _applyTarget(HeadTarget next) {

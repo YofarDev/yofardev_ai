@@ -39,7 +39,8 @@ sealed class MouthShape with _$MouthShape {
     // the lower lip tucked under the upper teeth (the rig draws a pink
     // band over the teeth edge), lips a little wide, nothing pressed
     Viseme.ff => const MouthShape(jaw: 0.1, stretch: 0.1, lipTuck: 1),
-    Viseme.th => const MouthShape(jaw: 0.25, tongueUp: 1),
+    // the tongue tip between the teeth: a small opening, the tongue up
+    Viseme.th => const MouthShape(jaw: 0.2, tongueUp: 1),
     Viseme.dd => const MouthShape(jaw: 0.25, stretch: 0.2, tongueUp: 0.6),
     // about half the aa jaw once the speech gains apply
     Viseme.kk => const MouthShape(jaw: 0.35, stretch: 0.1),

@@ -598,6 +598,20 @@ void main() {
           ('fine_view', 'A fine view of five vines.', <int>{2}),
         ];
 
+    test('"The sky": the sentence opens on a th of 50 ms or more', () {
+      // the aligner gave the th one frame and the span merge folded it into
+      // the e (critic M3 round 3: "The sky" opened on an e)
+      final SpeechTimeline t = _analyzer.analyze(
+        fixture('blue_sky'),
+        text: 'The sky is blue.',
+      );
+      final VisemeSpan first = t.visemes.firstWhere(
+        (VisemeSpan s) => s.viseme != Viseme.sil,
+      );
+      expect(first.viseme, Viseme.th);
+      expect(first.end - first.start, greaterThanOrEqualTo(_ms(50)));
+    });
+
     for (final (String name, String text, Set<int> roundedWords) in fixtures) {
       test('$name: "$text" is aligned and labelled from the text', () {
         final WavPcm pcm = fixture(name);

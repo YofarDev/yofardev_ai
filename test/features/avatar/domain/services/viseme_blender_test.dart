@@ -77,8 +77,10 @@ void main() {
         span(Viseme.aa, 0, 200),
         span(Viseme.pp, 200, 260),
       ]);
-      expect(blender.shapeAt(tl, ms(165)).shape.jaw, lessThan(0.6));
-      expect(blender.shapeAt(tl, ms(165)).sealed, isFalse);
+      // within the vowel's last 15 % (its jaw holds before that)
+      expect(blender.shapeAt(tl, ms(165)).shape.jaw, closeTo(0.81, 1e-9));
+      expect(blender.shapeAt(tl, ms(185)).shape.jaw, lessThan(0.6));
+      expect(blender.shapeAt(tl, ms(185)).sealed, isFalse);
     });
 
     test('a vowel barely moves a closure: pp is sealed whatever follows', () {
@@ -430,16 +432,17 @@ void main() {
         for (int t = 100; t < 160; t++) {
           expect(
             blender.shapeAt(tl, ms(t)).shape.tongueUp,
-            greaterThanOrEqualTo(0.6),
+            greaterThanOrEqualTo(VisemeBlender.thTongue),
             reason: '$t ms',
           );
         }
       });
 
-      test('a vowel opens by its length: 50 % at 40 ms, full from 160 ms', () {
-        expect(VisemeBlender.vowelJawGain(ms(40)), 0.5);
-        expect(VisemeBlender.vowelJawGain(ms(100)), closeTo(0.75, 1e-9));
-        expect(VisemeBlender.vowelJawGain(ms(160)), 1);
+      test('a vowel opens by its length: 70 % at 40 ms, full from 100 ms', () {
+        // critic M3 round 3: a normal vowel opens all the way
+        expect(VisemeBlender.vowelJawGain(ms(40)), closeTo(0.7, 1e-9));
+        expect(VisemeBlender.vowelJawGain(ms(70)), closeTo(0.85, 1e-9));
+        expect(VisemeBlender.vowelJawGain(ms(100)), 1);
         expect(VisemeBlender.vowelJawGain(ms(400)), 1);
         final SpeechTimeline tl = timeline(<VisemeSpan>[
           span(Viseme.pp, 0, 100),
@@ -451,11 +454,11 @@ void main() {
           final double jaw = blender.shapeAt(tl, ms(t)).shape.jaw;
           peak = jaw > peak ? jaw : peak;
         }
-        // a 50 ms vowel between closures: half its table jaw, plus the pop
-        final double half =
+        // a 50 ms vowel between closures: 72 % of its table jaw, plus the pop
+        final double short =
             0.9 * VisemeBlender.jawGain(1) * VisemeBlender.vowelJawGain(ms(50));
-        expect(peak, lessThanOrEqualTo(half + VisemeBlender.popJaw + 1e-9));
-        expect(half, lessThan(0.56));
+        expect(peak, lessThanOrEqualTo(short + VisemeBlender.popJaw + 1e-9));
+        expect(short, closeTo(0.81 * 0.7222, 1e-3));
         // consonants keep their table jaw
         final SpeechTimeline kk = timeline(<VisemeSpan>[
           span(Viseme.kk, 0, 50),
@@ -467,6 +470,59 @@ void main() {
             1e-9,
           ),
         );
+      });
+    });
+
+    group('critic M3 round 3', () {
+      test("a vowel's jaw holds its middle 70 % (no one-frame peak)", () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.kk, 0, 100),
+          span(Viseme.aa, 100, 300),
+          span(Viseme.dd, 300, 400),
+        ]);
+        final double full = 0.9 * VisemeBlender.jawGain(1);
+        expect(VisemeBlender.vowelLean, 0.15);
+        for (int t = 130; t <= 270; t += 10) {
+          expect(
+            blender.shapeAt(tl, ms(t)).shape.jaw,
+            closeTo(full, 1e-9),
+            reason: '$t ms',
+          );
+        }
+        // the lips still lean over the usual windows: the spread eases in
+        // over 40 ms, not 30
+        expect(blender.shapeAt(tl, ms(130)).shape.stretch, lessThan(0.15));
+      });
+
+      test(
+        'the jaw scales 0.6 to 0.9 by loudness: a soft vowel articulates',
+        () {
+          expect(VisemeBlender.jawGain(0), 0.6);
+          expect(VisemeBlender.jawGain(0.5), closeTo(0.75, 1e-9));
+          expect(VisemeBlender.jawGain(1), closeTo(0.9, 1e-9));
+        },
+      );
+
+      test('a 50 ms vowel after a closure opens over 30 ms', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.pp, 0, 100),
+          span(Viseme.aa, 100, 150),
+          span(Viseme.pp, 150, 250),
+        ]);
+        expect(blender.shapeAt(tl, ms(115)).opening, closeTo(0.75, 1e-9));
+        expect(blender.shapeAt(tl, ms(130)).opening, 1);
+        // a long one keeps the 60 ms ramp
+        final SpeechTimeline long = timeline(<VisemeSpan>[
+          span(Viseme.pp, 0, 100),
+          span(Viseme.aa, 100, 400),
+        ]);
+        expect(blender.shapeAt(long, ms(130)).opening, closeTo(0.75, 1e-9));
+      });
+
+      test('th: a small jaw, the tongue past the teeth', () {
+        expect(MouthShape.forViseme(Viseme.th).jaw, 0.2);
+        expect(MouthShape.forViseme(Viseme.th).tongueUp, 1);
+        expect(VisemeBlender.thTongue, 0.8);
       });
     });
 

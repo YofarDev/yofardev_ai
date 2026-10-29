@@ -23,29 +23,37 @@ import 'viseme_blender.dart';
 /// - **Speech** (from `SpeechTimelineEvent` to completion or stop): the
 ///   [VisemeBlender] shape at the playback position drives fast springs for
 ///   the mouth. Speech wins the jaw and the lip seal; emotion keeps corners,
-///   cheeks, brows and lids. Inside a p/b/m span the jaw is written 0 that very
-///   frame; at the release the jaw, the rounding and the spread follow the
-///   blender's eased release ramp exactly (about 60 ms, never one frame) and
-///   its pop is added on time. Elsewhere the jaw opens at most [jawSlew] per
-///   second, a th holds the tongue up, and a tucked lower lip (f, v) keeps
-///   the jaw at [tuckJawFloor] or more (the lips never meet on an f).
+///   cheeks, brows and lids. Inside a p/b/m span (on the audio's own clock)
+///   the jaw is written 0 that very frame; at the release the jaw, the
+///   rounding and the spread follow the blender's eased release ramp exactly
+///   (60 ms, less into a short vowel, never one frame) and its pop is added
+///   on time; a vowel right after a closure holds at [releaseJawCap] for its
+///   length. Elsewhere the jaw opens at most [jawSlew] per second and eases
+///   shut over the last 40 % (at most 100 ms) of the open stretch before a
+///   closure; the lip press is only [pressEnvelope] around each closure; a
+///   th holds the tongue up, and a tucked lower lip (f, v) keeps the jaw at
+///   [tuckJawFloor] or more (the lips never meet on an f). A mood damps a
+///   viseme by a quarter at most.
 /// - **Breath**: the pre-roll ([SpeechPrerollEvent]) draws an eased breath
 ///   from [breathLead] before the audio, the lips parting with it (no press;
 ///   the jaw peaks at 0.10 150 ms before the audio and is 0.08 at it) into
-///   the first phoneme unless it is a p/b/m; pauses inside the sentence are
-///   breathed for too.
+///   the first phoneme; a p/b/m onset closes and presses them over the last
+///   [prerollClose] instead. Pauses inside the sentence get a smaller
+///   catch-breath ([catchBreathAt]).
 /// - **Prosody acting** (marks are known ahead, so motion anticipates): brow
 ///   beats on the strongest pitch peaks (at most one per 1.5 s, none in the
 ///   0.9 s before a question's rise), at most [browBeatMax], scaled by the
 ///   pitch slope and shaped as an anticipation dip, an eased rise, a 12 %
 ///   overshoot and a decay; nods on stressed syllables (at most one per
-///   450 ms) whose depth follows the stress (0.4–1.0 of [nodDepthFor] at
-///   full strength) with seeded jitter, a few of them swapped for, or
-///   joined by, small roll accents of alternating side. A question lifts
-///   both brows to [questionTop] on its final rising syllable (the only beat
-///   that high), 80 ms ahead of the audio, and holds them with a head tilt
-///   through the listening pause, the gaze locked on the camera
-///   ([FaceFrame.gazeLock]) from 400 ms before the rise. Blinks in pauses;
+///   450 ms, the weakest of each three resting) whose depth follows the
+///   stress ([nodDepthFor]), alternately deeper and lighter with a seeded
+///   attack and release, a few of them swapped for, or joined by, small
+///   roll accents of alternating side. A question lifts both brows to
+///   [questionTop] on its final rising syllable (the only beat that high),
+///   80 ms ahead of the audio, lifts the chin there instead of nodding
+///   ([questionNodLift]), and holds the brows with a head tilt through the
+///   listening pause, the gaze locked on the camera ([FaceFrame.gazeLock])
+///   from 400 ms before the rise. Blinks in pauses;
 ///   each blink the performer fires dips the brows and lifts the cheeks a
 ///   little while the lids are shut.
 /// - **Full stop**: when the voice ends the jaw, rounding and spread ease to
@@ -137,14 +145,30 @@ class FacePerformer {
   static const double _preClose = 0.1;
 
   /// Fastest the jaw opens outside a release burst (units per second): a
-  /// short vowel cannot spike open for one frame.
-  static const double jawSlew = 8;
+  /// short vowel cannot spike open for one frame, a normal one still opens
+  /// all the way (0.2 per frame at 60 fps).
+  static const double jawSlew = 12;
 
   /// How far the jaw bursts open on the release into a span of [length]:
-  /// 0.3 for the shortest vowel (50 ms), 0.3 more per 100 ms, all of it from
-  /// about 280 ms (the release pop rides on top).
+  /// 0.45 for the shortest vowel (50 ms), 0.25 more per 100 ms, all of it
+  /// from 270 ms (the release pop rides on top).
   static double releaseJawCap(Duration length) =>
-      (0.3 + 3.0 * (length.inMicroseconds / 1e6 - 0.05)).clamp(0.3, 1.0);
+      (0.45 + 2.5 * (length.inMicroseconds / 1e6 - 0.05)).clamp(0.45, 1.0);
+
+  /// Lip press envelope of a p/b/m closure: it rises over [pressAttack]
+  /// into the seal and is gone [pressRelease] after the release (no sustain
+  /// between closures; a short gap shortens both, see [pressEnvelope]).
+  static const double pressAttack = 0.06;
+  static const double pressRelease = 0.04;
+
+  /// An utterance-initial p/b/m: the lips close over this long, done as the
+  /// audio starts.
+  static const double prerollClose = 0.09;
+
+  /// The catch-breath in a pause: [catchBreath] of the full pre-roll breath,
+  /// drawn over [catchRise] (see [catchBreathAt]).
+  static const double catchBreath = 0.6;
+  static const double catchRise = 0.18;
 
   /// The breath before speaking starts this long before the audio.
   static const double breathLead = 0.35;
@@ -162,13 +186,18 @@ class FacePerformer {
   /// The full-stop head drop: 2° of the ±15° pitch range.
   static const double _settleDrop = 2 / 15;
 
-  /// Largest nod depth (pitch units, at stress strength 1); the seed jitters
-  /// it ±[_nodJitter].
+  /// Largest nod depth (pitch units, at stress strength 1, before the
+  /// seeded variety: consecutive nods alternate deeper, +5 to +15 %, and
+  /// lighter, -15 to -35 %).
   static const double _nodMax = 0.55;
-  static const double _nodJitter = 0.08;
 
-  /// The nod's eased return to rest after the beat, ±10 % seeded.
+  /// The nod's eased return to rest after the beat, ±25 % seeded; its
+  /// attack is ±30 % seeded too (no two nods share a shape).
   static const double _nodRelease = 0.2;
+
+  /// The chin lift on a question's final rise, as a share of the nod that
+  /// stress would have had (an up-nod instead of a down-nod).
+  static const double questionNodLift = 0.3;
 
   /// Roll accent size (roll units, before the roll spring) and the share of
   /// stresses that get one.
@@ -217,6 +246,7 @@ class FacePerformer {
   /// the viewer's left). Drawn from the seed when the timeline arrives.
   List<double> _nodDepth = const <double>[];
   List<double> _nodReleaseOf = const <double>[];
+  List<double> _nodAttackOf = const <double>[];
   List<double> _accent = const <double>[];
   List<double> _peakSide = const <double>[];
 
@@ -250,6 +280,9 @@ class FacePerformer {
 
   /// The release pop (jaw) at the playback position, added after the spring.
   double _pop = 0;
+
+  /// Lip press of an utterance-initial p/b/m closing during the pre-roll.
+  double _prerollPress = 0;
 
   // — prosody overlays —
   final _Spring _innerUp = _Spring();
@@ -376,11 +409,16 @@ class FacePerformer {
     return true;
   }
 
-  /// Nod depth (pitch units, before jitter) for a stress of [strength]
-  /// (0-1): 0.4 of the deepest nod for the weakest stress, all of it for the
-  /// strongest.
+  /// Nod depth (pitch units, before the seeded variety) for a stress of
+  /// [strength] (0-1): 0.3 of the deepest nod for the weakest stress, all of
+  /// it for the strongest.
   static double nodDepthFor(double strength) =>
-      _nodMax * _lerp(0.4, 1.0, strength.clamp(0.0, 1.0));
+      _nodMax * _lerp(0.3, 1.0, strength.clamp(0.0, 1.0));
+
+  /// The nod's attack (s) for a stress of [strength], before its seeded
+  /// ±30 %: a stronger stress dips more slowly.
+  static double nodAttackFor(double strength) =>
+      0.055 + 0.03 * strength.clamp(0.0, 1.0);
 
   /// Brow beat scale for a pitch peak's [slope] (0.7 flat .. 1.3 steep; 1
   /// when unknown).
@@ -403,6 +441,8 @@ class FacePerformer {
     bool releasing = false;
     bool opening = false;
     double releaseCap = 1;
+    bool afterRelease = false;
+    double closeCap = double.infinity;
     _tuckOpen = 1;
     bool th = false;
     _thNow = false;
@@ -417,7 +457,10 @@ class FacePerformer {
       // audio's own position, unsmoothed
       opening = now.opening < 1;
       speech = opening ? now.shape : ahead.shape;
-      _sealed = ahead.sealed || now.sealed;
+      // the seal is on the audio's own clock: it lands on the closure, not
+      // a read-ahead early (a short vowel between two closures keeps its
+      // opening)
+      _sealed = now.sealed;
       // the pop rides on top, at the audio's own position
       releasing = opening || ahead.pop > 0 || now.pop > 0;
       _pop = now.pop;
@@ -430,21 +473,10 @@ class FacePerformer {
         // until the audio gets there
         speech = speech.copyWith(press: now.shape.press);
       }
-      // ease the jaw shut into a coming seal instead of snapping it there
-      final Duration? seal = _nextSealStart(tl, pos);
-      if (!_sealed && seal != null) {
-        final double ahead = _s(seal - pos);
-        if (ahead < _preClose) {
-          final double k = _smoothstep(ahead / _preClose);
-          _tuckOpen = k;
-          speech = speech.copyWith(
-            jaw: speech.jaw * k,
-            press: math.max(
-              speech.press,
-              VisemeBlender.sealPressStart * (1 - k),
-            ),
-          );
-        }
+      // the lips press only around a closure: its own envelope, nothing
+      // between closures (the open sound's target wins there)
+      if (!_sealed) {
+        speech = speech.copyWith(press: pressEnvelope(tl, pos));
       }
       // the jaw follows the voice's loudness (smoothed ~100 ms), so a long
       // vowel keeps moving; an excited mood speaks with a bigger jaw, a
@@ -456,15 +488,31 @@ class FacePerformer {
       }
       final double life = loud == null
           ? 1 + 0.07 * math.sin(2 * math.pi * 4.3 * _s(pos))
-          : 0.55 + 0.55 * _loudness.clamp(0.0, 1.0);
+          : 0.7 + 0.35 * _loudness.clamp(0.0, 1.0);
       final double excitement = _lerp(0.95, 1.2, (_arousal + 1) / 2);
+      // ease the jaw shut into a coming seal instead of snapping it there,
+      // over at most 40 % of the open stretch before it (a short vowel
+      // between two closures still opens): the jaw stays under the mouth at
+      // the audio's own position eased to 0 at the closure
+      final (Duration, Duration)? seal = _nextSeal(tl, pos);
+      if (!_sealed && seal != null) {
+        final double ahead = _s(seal.$1 - pos);
+        final double window = math.min(_preClose, 0.4 * _s(seal.$1 - seal.$2));
+        if (window > 0 && ahead < window) {
+          final double k = _smoothstep(ahead / window);
+          _tuckOpen = k;
+          closeCap = (now.shape.jaw + now.pop) * excitement * life * k;
+        }
+      }
       final VisemeSpan? span = tl.spanAt(pos);
       th = span?.viseme == Viseme.th;
-      if (releasing && span != null) {
+      afterRelease = span != null && _followsClosure(tl, span);
+      if (afterRelease) {
         releaseCap = releaseJawCap(span.end - span.start);
       }
       // rounded sounds round fully however short (an ou, an oh, a French
-      // sh); a sombre mood narrows the spread a little, never the opening
+      // sh); a sombre mood narrows the spread a fifth, never the opening (a
+      // mood damps a viseme by a quarter at most)
       final bool brief =
           span != null &&
           span.viseme != Viseme.ou &&
@@ -473,7 +521,7 @@ class FacePerformer {
           span.end - span.start < const Duration(milliseconds: 100);
       speech = speech.copyWith(
         jaw: speech.jaw * excitement * life,
-        stretch: _valence < -0.3 ? speech.stretch * 0.7 : speech.stretch,
+        stretch: _valence < -0.3 ? speech.stretch * 0.8 : speech.stretch,
         pucker: brief ? speech.pucker * 0.5 : speech.pucker,
       );
     }
@@ -519,8 +567,13 @@ class FacePerformer {
       for (int i = 0; i < _nods.length; i++) {
         final ProsodyMark m = _nods[i];
         final double tau = posS - _s(m.at);
-        if (_nodDepth[i] > 0) {
-          nod += _nodCurve(tau, _nodDepth[i], m.strength, _nodReleaseOf[i]);
+        if (_nodDepth[i] != 0) {
+          nod += _nodCurve(
+            tau,
+            _nodDepth[i],
+            _nodAttackOf[i],
+            _nodReleaseOf[i],
+          );
         }
         if (_accent[i] != 0) {
           // the roll spring lags ~80 ms: aim the accent that much early
@@ -644,6 +697,11 @@ class FacePerformer {
         _breathDecay.step(0, _omega(_breathSettle), sub);
       }
     }
+    if (_speaking && !settling) {
+      // the press envelope is already eased (a spring would hold it between
+      // closures)
+      _press.land(speech.press);
+    }
     if (opening) {
       // the release ramp is already eased: no second smoothing (the springs
       // would make the first frame after a closure a jump)
@@ -653,15 +711,19 @@ class FacePerformer {
     }
     if (!settling) {
       // a short vowel cannot spike the jaw open in one frame: a release
-      // bursts open only as far as the vowel's length allows, then like any
-      // other opening at [jawSlew]
-      final double limit = releasing
-          ? math.max(releaseCap, jawBefore + jawSlew * h)
-          : jawBefore + jawSlew * h;
+      // bursts open as far as the vowel's length allows and the vowel holds
+      // there (the pop rides on top); any other opening goes at [jawSlew]
+      double limit = jawBefore + jawSlew * h;
+      if (afterRelease) {
+        limit = releasing ? releaseCap : math.min(limit, releaseCap);
+      }
       if (_jaw.x > limit) {
         _jaw.x = limit;
         _jaw.v = math.min(_jaw.v, jawSlew);
       }
+    }
+    if (!settling && _jaw.x > closeCap) {
+      _jaw.land(math.max(0, closeCap));
     }
     if (settling) {
       _settleMouth(sinceStop / _settleS);
@@ -670,6 +732,7 @@ class FacePerformer {
       _tongue.land(VisemeBlender.thTongue);
     }
     _thNow = th;
+    _prerollPress = 0;
     if (!_speaking) {
       _breath = _breathDecay.x;
       _inhaling = false;
@@ -703,7 +766,8 @@ class FacePerformer {
   /// The breath before speaking, [since] the pre-roll started: an eased
   /// inhale from [breathLead] before the audio (rising over ~250 ms, less
   /// for a shorter lead), the lips parted with it; a p/b/m onset closes them
-  /// over the last 100 ms.
+  /// over the last 100 ms and presses them over the last [prerollClose], so
+  /// the seal is made as the audio starts (never in one frame).
   void _preroll(double since) {
     final double lead = _prerollLead;
     final double from = math.max(0, lead - breathLead);
@@ -718,6 +782,9 @@ class FacePerformer {
       final double close = _smoothstep((lead - since) / 0.1);
       _parted *= close;
       _partedJawNow *= close;
+      _prerollPress =
+          VisemeBlender.sealPressStart *
+          _smoothstep((since - (lead - prerollClose)) / prerollClose);
     }
     _breathDecay.x = _breath;
     _breathDecay.v = 0;
@@ -945,24 +1012,55 @@ class FacePerformer {
     return sign * _browSplit * (0.5 + 0.5 * _rng.nextDouble());
   }
 
-  /// Per nod, in time order: its depth ([nodDepthFor] ±[_nodJitter]), its
-  /// release (±10 %) and its roll accent. A weak stress (under 0.4) is
-  /// swapped for a roll accent half the time; any other gets one too
-  /// [_accentChance] of the time. Accents alternate sides.
+  /// Per nod, in time order: its depth ([nodDepthFor], alternately deeper
+  /// and lighter by a seeded share), its attack and release (seeded) and its
+  /// roll accent. Of each three stresses in a row the weakest (the later on
+  /// a tie) rests: no nod. A weak stress (under 0.4) is swapped for a roll
+  /// accent half the time; any other gets one too [_accentChance] of the
+  /// time. Accents alternate sides. A stress on a question's final rise
+  /// (from 350 ms before it) lifts the chin instead ([questionNodLift]) and
+  /// never rests.
   void _drawNods() {
     final int n = _nods.length;
     _nodDepth = List<double>.filled(n, 0);
     _nodReleaseOf = List<double>.filled(n, _nodRelease);
+    _nodAttackOf = List<double>.filled(n, 0.07);
     _accent = List<double>.filled(n, 0);
+    bool rising(int i) =>
+        _questionAt >= 0 && _s(_nods[i].at) >= _questionAt - 0.35;
+    // the resting beats: the weakest of each run of three
+    final List<bool> rest = List<bool>.filled(n, false);
+    final List<int> beats = <int>[
+      for (int i = 0; i < n; i++)
+        if (!rising(i)) i,
+    ];
+    for (int g = 0; g + 2 < beats.length; g += 3) {
+      int weakest = beats[g];
+      for (int k = g + 1; k < g + 3; k++) {
+        if (_nods[beats[k]].strength <= _nods[weakest].strength) {
+          weakest = beats[k];
+        }
+      }
+      rest[weakest] = true;
+    }
+    bool deeper = true;
     for (int i = 0; i < n; i++) {
       final double strength = _nods[i].strength;
-      final double jitter = _nodJitter * (2 * _rng.nextDouble() - 1);
-      final double release = 0.9 + 0.2 * _rng.nextDouble();
+      final double share = _rng.nextDouble();
+      final double release = 0.75 + 0.5 * _rng.nextDouble();
+      final double attack = 0.7 + 0.6 * _rng.nextDouble();
       final double roll = _rng.nextDouble();
-      final bool swap = strength < 0.4 && roll < 0.5;
-      _nodDepth[i] = swap ? 0 : nodDepthFor(strength) * (1 + jitter);
+      final bool swap = !rest[i] && strength < 0.4 && roll < 0.5;
       _nodReleaseOf[i] = _nodRelease * release;
-      if (swap || roll > 1 - _accentChance) {
+      _nodAttackOf[i] = nodAttackFor(strength) * attack;
+      if (rising(i)) {
+        _nodDepth[i] = -questionNodLift * nodDepthFor(strength);
+      } else if (!rest[i] && !swap) {
+        final double variety = deeper ? 1.05 + 0.1 * share : 0.85 - 0.2 * share;
+        deeper = !deeper;
+        _nodDepth[i] = nodDepthFor(strength) * variety;
+      }
+      if (!rising(i) && (swap || roll > 1 - _accentChance)) {
         _accent[i] = _accentSign;
         _accentSign = -_accentSign;
       }
@@ -1063,10 +1161,11 @@ class FacePerformer {
   }
 
   /// The breath: over the leading silence, and again across every pause
-  /// inside the sentence (a new phrase is breathed for). The inhale peaks
-  /// 150 ms before the voice returns (the lips close again by the onset) and
-  /// releases over 400 ms once it is back. Sets [_breathRising] while the
-  /// breath is still being drawn (the lips part only then).
+  /// inside the sentence (a new phrase is breathed for, with a smaller
+  /// [catchBreathAt]). The leading inhale peaks 150 ms before the voice
+  /// returns (the lips close again by the onset) and releases over 400 ms
+  /// once it is back. Sets [_breathRising] while the breath is still being
+  /// drawn (the lips part only then).
   double _breathAt(SpeechTimeline tl, double posS) {
     _breathRising = false;
     double b = 0;
@@ -1097,11 +1196,36 @@ class FacePerformer {
     }
     for (final ProsodyMark m in tl.marks) {
       if (m.kind == ProsodyMarkKind.pause) {
-        final double at = _s(m.at);
-        phase(at, at + math.max(_s(m.length), 0.12), 0.8);
+        final double since = posS - _s(m.at);
+        final double length = math.max(_s(m.length), 0.06);
+        final double v = catchBreathAt(since, length);
+        if (v > b) {
+          b = v;
+          _breathRising = since >= 0 && since < math.min(catchRise, length);
+        }
       }
     }
     return b;
+  }
+
+  /// The catch-breath of a pause of [length] (s), [since] its start: a
+  /// gentle rise over [catchRise] (or the whole pause if shorter, at a
+  /// proportionally smaller size: never faster) to a 12 % overshoot of
+  /// [catchBreath] (60 % of the breath before speaking), settling over
+  /// 100 ms and held; released over 400 ms once the voice is back.
+  static double catchBreathAt(double since, double length) {
+    if (since < 0 || since >= length + 0.4) {
+      return 0;
+    }
+    final double rise = math.min(catchRise, length);
+    final double amount = catchBreath * math.min(1, rise / 0.15);
+    double drawn(double t) => t < rise
+        ? amount * 1.12 * _smoothstep(t / rise)
+        : amount * (1.12 - 0.12 * _smoothstep((t - rise) / 0.1));
+    if (since < length) {
+      return drawn(since);
+    }
+    return drawn(length) * (1 - _smoothstep((since - length) / 0.4));
   }
 
   /// End of the last sounding span (s), or the timeline's duration.
@@ -1156,14 +1280,84 @@ class FacePerformer {
     Viseme.ou,
   };
 
-  /// Start of the first p/b/m span after [pos], if any.
-  static Duration? _nextSealStart(SpeechTimeline tl, Duration pos) {
-    for (final VisemeSpan s in tl.visemes) {
+  /// Whether [span] starts right on the release of a p/b/m closure.
+  static bool _followsClosure(SpeechTimeline tl, VisemeSpan span) {
+    final List<VisemeSpan> v = tl.visemes;
+    for (int i = 1; i < v.length; i++) {
+      if (identical(v[i], span) || v[i] == span) {
+        return v[i - 1].viseme == Viseme.pp && v[i - 1].end >= span.start;
+      }
+    }
+    return false;
+  }
+
+  /// Start of the first p/b/m span after [pos] and the start of the open
+  /// stretch before it (the end of the closure before, or the start of the
+  /// span before it), if any.
+  static (Duration, Duration)? _nextSeal(SpeechTimeline tl, Duration pos) {
+    final List<VisemeSpan> v = tl.visemes;
+    for (int i = 0; i < v.length; i++) {
+      final VisemeSpan s = v[i];
       if (s.start > pos && s.viseme == Viseme.pp) {
-        return s.start;
+        Duration open = i > 0 ? v[i - 1].start : s.start;
+        for (int k = i - 1; k >= 0; k--) {
+          if (v[k].viseme == Viseme.pp || v[k].viseme == Viseme.sil) {
+            open = v[k].end;
+            break;
+          }
+          open = v[k].start;
+        }
+        return (s.start, open);
       }
     }
     return null;
+  }
+
+  /// The lip press around the p/b/m closures of [tl] at [pos], outside the
+  /// closures themselves (inside them the seal presses 0.6 to 0.9): it
+  /// rises eased to [VisemeBlender.sealPressStart] over [pressAttack] into
+  /// each closure and falls from [VisemeBlender.sealPress] to 0 over [pressRelease]
+  /// after its release, each shortened to 60 % / 40 % of the open gap to
+  /// the closure next to it, so the lips always part in between.
+  static double pressEnvelope(SpeechTimeline tl, Duration pos) {
+    final double t = _s(pos);
+    final List<VisemeSpan> v = tl.visemes;
+    double out = 0;
+    double lastSealEnd = double.negativeInfinity;
+    for (int i = 0; i < v.length; i++) {
+      final VisemeSpan s = v[i];
+      if (s.viseme != Viseme.pp) {
+        continue;
+      }
+      final double a = _s(s.start);
+      final double b = _s(s.end);
+      double nextSeal = double.infinity;
+      for (int k = i + 1; k < v.length; k++) {
+        if (v[k].viseme == Viseme.pp) {
+          nextSeal = _s(v[k].start);
+          break;
+        }
+      }
+      final double attack = math.min(pressAttack, 0.6 * (a - lastSealEnd));
+      final double release = math.min(pressRelease, 0.4 * (nextSeal - b));
+      if (attack > 0 && t >= a - attack && t < a) {
+        out = math.max(
+          out,
+          VisemeBlender.sealPressStart *
+              _smoothstep((t - (a - attack)) / attack),
+        );
+      } else if (release > 0 && t >= b && t < b + release) {
+        out = math.max(
+          out,
+          VisemeBlender.sealPress * (1 - _smoothstep((t - b) / release)),
+        );
+      }
+      lastSealEnd = b;
+      if (a - pressAttack > t) {
+        break;
+      }
+    }
+    return out;
   }
 
   /// The strongest marks of [kind], at least [gap] seconds apart, in time
@@ -1208,7 +1402,10 @@ class FacePerformer {
       tuckJawFloor * (tuck / 0.4).clamp(0.0, 1.0) * _tuckOpen,
     );
     jaw += _pop * m;
-    double press = _lerp(au[_pressI], _press.x, m) * (1 - _parted);
+    double press = math.max(
+      _lerp(au[_pressI], _press.x, m) * (1 - _parted),
+      _prerollPress,
+    );
     if (_sealed) {
       jaw = 0;
       press = math.max(press, 0.6);
@@ -1231,8 +1428,7 @@ class FacePerformer {
     final double pull = 1 - 0.8 * round;
     // an open jaw from a downturned mouth reads as a wince and the frown
     // pulls the opening into a slit: the frown halves as speech opens it
-    final double depress =
-        pull * (1 - 0.5 * _smoothstep((jaw - 0.05) / 0.2) * m);
+    final double depress = pull * (1 - 0.5 * _smoothstep((jaw - 0.05) / 0.2));
     au[_pullI] *= pull;
     au[_depressI] *= depress;
     // the full stop relaxes the corners: a softer mouth, a lighter frown
@@ -1356,17 +1552,16 @@ class FacePerformer {
   }
 
   /// A nod on a stressed syllable (pitch units, down is negative) of [depth]
-  /// (about 3-8 degrees: a nod that reads at phone size): an 18 %
-  /// anticipation lift, the beat at the mark (a stronger stress dips more
-  /// slowly), an eased-out return over [release] with a 12 % overshoot back
-  /// up.
+  /// (about 2-9 degrees: a nod that reads at phone size; a negative depth
+  /// lifts the chin): an 18 % anticipation the other way, the beat at the
+  /// mark over [attack], an eased-out return over [release] with a 12 %
+  /// overshoot past rest.
   static double _nodCurve(
     double tau,
     double depth,
-    double strength,
+    double attack,
     double release,
   ) {
-    final double attack = 0.055 + 0.03 * strength.clamp(0.0, 1.0);
     final double beat = tau <= 0
         ? _gauss(tau, 0, attack)
         : _easeRelease(tau / release);
