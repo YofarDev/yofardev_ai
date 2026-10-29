@@ -23,3 +23,7 @@ jaw (table 0.15, a closed "rubber ring" /u/ the M3 critics disliked). `Viseme.ou
 (pucker 1 unchanged). After 16b three fixtures pass 0.22; so_true reaches 0.201 (window) / 0.205
 (sounding), still under the target (ou-heavy text and a 225 ms inner silence). The `pp` closures
 above are unchanged by 16b (jaw 0.00 each; press 0.88 / 0.849 / 0.88).
+
+Note (review, 2026-10-29): another median method (different speaking-frame window) gives
+0.221 / 0.19 / 0.228 / 0.209 for blue_sky / so_true / fine_view / bonjour on the same traces; the
+jaw floor fix (sound on both sides) left the traces identical. Plan ruling 28.
