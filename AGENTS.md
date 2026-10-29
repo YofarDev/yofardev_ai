@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3 and M4) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -160,13 +160,31 @@ on violation.
   rig through `context.tokens.scene.glassTint` / `captionInk`. Presence: the composer reports to
   `ComposerActivityService` (`core/services/presence/`); `PerformanceDirector` turns it into intent
   fields (caret gaze, `lean`, backchannel `nodSerial`, `?`/`!` reactions) and owns the `prop`
-  (`AvatarProp.tablet` for lookup tools and idle stages ≥ 2, gestures dropped while it is out);
+  (`AvatarProp.tablet` for lookup tools and idle stages ≥ 2, `newspaper` for
+  `getMostPopularNewsOfTheDay` since M5; gestures dropped while a prop is out);
   `IdleLadder` (30 s / 2 min / 10 min) freezes under battery saver (`PowerSaverSource`,
   `battery_plus`) or reduce motion. Parallax: `ParallaxSource` (`core/services/motion/`,
   accelerometer via `sensors_plus` on phones, pointer elsewhere) feeds `parallaxX/Y` to diorama
-  scenes only (campfire in M4). Budget: `rml.write()` decimates linear key runs within
+  every scene (all four are dioramas since M5; the tilt sign follows a window: right edge
+  down moves the near planes right). Budget: `rml.write()` decimates linear key runs within
   `rml.TOLERANCES` for every generator; a new baked animation is thinned automatically, so check
   renders, not key counts. Evidence index: `rive/review/m4/README.md`
+- Dioramas, rain, the 3/4 face (contract v8/v8b, moonshot M5): every scene registers a
+  `DioramaSpec` (plane table by element root name, emissive roots, fog veils, a light hook) in
+  `gen_scenes.DIORAMAS`; `Scene.write` moves the `Hit_*` zones into their planes, runs `diorama()`
+  and fits every non-emissive colour (`fit_colour`), so each scene lints clean (`check_contract.py`
+  runs the lint for every diorama). Evidence per scene: `uv run --with pillow --with numpy
+  rive/tools/review_diorama.py <sceneId> [before.webp]`. `SceneVM.rain` (0–1) comes from
+  `WorldStateService` (`core/services/world/`) through `SceneRainWriter`; campfire (streaks, wet
+  ground and tent, steam off the logs, damped flare), beach and the living-room window bind it,
+  deepSpace ignores it. The yaw ±1 face outline is faired in `head_turn.py` (`fair_contour`:
+  convex, largest turn ≤ 1.25 × the rest outline's; `SECTION_BACK_N` ≤ 2.6, `FAR_FLAT` ≤ 0.2;
+  gate `rive/tools/tests/test_head_fairing.py`). The campfire key tints the cheek
+  (`KeyCheekTint`, multiply, × `lightFlicker`). New avatar ids mint from
+  `avatar_kit.M5_ID_START = 1000000` (970000+ is the M3 arm skeleton); new scene ids from
+  970000. Props share one put-away (~420 ms): the director holds gestures until it ends.
+  Emulator frame cost: `integration_test/frame_cost_test.dart` (`flutter drive --profile -d
+  <emulator>`; never the physical phone). Evidence index: `rive/review/m5/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -176,7 +194,7 @@ on violation.
 
 | File | Purpose | Lines |
 |------|---------|-------|
-| `lib/core/di/service_locator.dart` | All DI wiring | 228 |
+| `lib/core/di/service_locator.dart` | All DI wiring | 447 |
 | `lib/features/chat/presentation/bloc/chat_cubit.dart` | Main chat coordinator | 21.5K |
 | `lib/features/chat/domain/services/chat_streaming_service.dart` | Streaming + inline tool calling | 15.6K |
 | `lib/features/sound/domain/services/tts_queue_service.dart` | TTS queue | 5.5K |
@@ -232,4 +250,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-29 (M4)
+**Last Updated**: 2026-10-29 (M5)
