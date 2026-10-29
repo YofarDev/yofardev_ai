@@ -14,7 +14,7 @@
     uv run rive/tools/review_face.py fvs                   # f/v-s-th-pp-oh-ou at phone size (360 px) + close-up
     uv run rive/tools/review_face.py gates                 # history-free and clamp --compare gates (exit 1 on diff)
     uv run rive/tools/review_face.py speech <name> [...]   # strip + GIF per trace
-    uv run rive/tools/review_face.py light                 # v7 light: 4 scene rigs x neutral/happy x yaw
+    uv run rive/tools/review_face.py light [<scene>]       # v7 light: 4 scene rigs x neutral/happy x yaw
                                                            # -1/0/1, campfire flicker strip + GIF, seam,
                                                            # history and silhouette gates (M4, exit 1 on
                                                            # a failed gate) -> rive/review/m4/light/
@@ -668,6 +668,25 @@ def _silhouette(png: Path) -> Image.Image:
     return diff.point(lambda v: 255 if v > 3 else 0).filter(ImageFilter.MaxFilter(5))
 
 
+def light_row(scene: str) -> None:
+    """Re-render one scene's row of the light sheet in place (and alone as light_<scene>.png),
+    e.g. after a light factor changed for that rig; the gates are not re-run."""
+    from art_bible import SCENES
+    jobs = [(f"{scene} {mood} yaw {yaw}", {"autoBlink": "false", **rig_data(scene), **face, "yaw": yaw}, SETTLE, None)
+            for mood, face in (("neutral", {}), ("happy", HAPPY)) for yaw in ("-1", "0", "1")]
+    cells = render(jobs, "light", LIGHT_BOX, 1.0)
+    w, h = cells[0].size
+    row = Image.new("RGB", (w * 6, h), (20, 18, 26))
+    for k, c in enumerate(cells):
+        row.paste(c, (k * w, 0))
+    row.save(LIGHT_OUT / f"light_{scene}.png", optimize=True)
+    sheet_png = LIGHT_OUT / "light_sheet.png"
+    full = Image.open(sheet_png).convert("RGB")
+    full.paste(row, (0, list(SCENES).index(scene) * h))
+    full.save(sheet_png, optimize=True)
+    print("row:", LIGHT_OUT / f"light_{scene}.png", "->", sheet_png)
+
+
 def light() -> None:
     from art_bible import SCENES
     LIGHT_OUT.mkdir(parents=True, exist_ok=True)
@@ -819,7 +838,7 @@ if __name__ == "__main__":
     elif what[0] == "gates":
         gates()
     elif what[0] == "light":
-        light()
+        light_row(what[1]) if len(what) > 1 else light()
     elif what[0] == "speech":
         for n in what[1:]:
             speech(n)

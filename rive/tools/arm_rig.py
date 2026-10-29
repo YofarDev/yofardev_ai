@@ -328,19 +328,20 @@ def rdp(keys: Sequence[tuple[int, tuple[float, ...]]], tol: float) -> list[int]:
     return sorted(keep)
 
 
-def _kf(frame: int, value: float, ease: El | None) -> El:
-    return AD("KeyFrameDouble", frame=frame, value=float(value),
+def _kf(frame: int, value: float, ease: El | None, doc: Doc = AD) -> El:
+    return doc("KeyFrameDouble", frame=frame, value=float(value),
               interpolationType="cubic" if ease is not None else "linear",
               interpolatorId=ease.ref() if ease is not None else None)
 
 
-def _obj(target: El, props: dict[str, list[El]]) -> El:
-    return AD("KeyedObject", *[AD("KeyedProperty", *kfs, property=p) for p, kfs in props.items()],
+def _obj(target: El, props: dict[str, list[El]], doc: Doc = AD) -> El:
+    return doc("KeyedObject", *[doc("KeyedProperty", *kfs, property=p) for p, kfs in props.items()],
               objectId=target.ref())
 
 
-def invert_track(a: dict, invert: bool) -> El:
-    return _obj(a["ik"], {"invertDirection": [AD("KeyFrameBool", frame=0, value=invert, interpolationType="hold")]})
+def invert_track(a: dict, invert: bool, doc: Doc = AD) -> El:
+    return _obj(a["ik"], {"invertDirection": [doc("KeyFrameBool", frame=0, value=invert, interpolationType="hold")]},
+                doc)
 
 
 def rest_tracks(a: dict) -> list[El]:
@@ -355,11 +356,12 @@ def rest_tracks(a: dict) -> list[El]:
 
 
 def gesture_tracks(a: dict, side: int, samples: list[tuple[int, tuple[float, float, float], float, float]],
-                   pose_scales: list[tuple[int, float, float]]) -> tuple[list[El], bool]:
+                   pose_scales: list[tuple[int, float, float]], doc: Doc = AD) -> tuple[list[El], bool]:
     """Target, foreshortening and bend tracks for one arm of one gesture.
 
     samples: (frame, joint rotations from avatar_kit.ik, fs, fs2) every `step` frames;
-    pose_scales: (pose frame, fs, fs2), interpolated with SMOOTHSTEP. Returns (tracks, invert)."""
+    pose_scales: (pose frame, fs, fs2), interpolated with SMOOTHSTEP. Returns (tracks, invert).
+    `doc` mints the elements (M4: the tablet clips take the M4 id range)."""
     keys: list[tuple[int, tuple[float, float]]] = []
     bends: set[int] = set()
     for f, r, fs, fs2 in samples:
@@ -372,8 +374,8 @@ def gesture_tracks(a: dict, side: int, samples: list[tuple[int, tuple[float, flo
     invert = bends == {1}
     assert BEND_OF_INVERT[invert] == (bends.pop() if bends else -1)
     kept = [keys[i] for i in rdp(keys, TARGET_TOL)]
-    tracks = [_obj(a["target"], {"x": [_kf(f, v[0], None) for f, v in kept],
-                                 "y": [_kf(f, v[1], None) for f, v in kept]})]
+    tracks = [_obj(a["target"], {"x": [_kf(f, v[0], None, doc) for f, v in kept],
+                                 "y": [_kf(f, v[1], None, doc) for f, v in kept]}, doc)]
     # foreshortening: pose frames only (drop keys inside constant runs)
     ps = [p for i, p in enumerate(pose_scales)
           if i in (0, len(pose_scales) - 1) or not (pose_scales[i - 1][1:] == p[1:] == pose_scales[i + 1][1:])]
@@ -381,8 +383,8 @@ def gesture_tracks(a: dict, side: int, samples: list[tuple[int, tuple[float, flo
     for bone, prop, fn in (("UpperArm", "length", lambda s, s2: L1 * s), ("Forearm", "length", lambda s, s2: L2 * s2),
                            ("UpperArtBone", "scaleX", lambda s, s2: s), ("ForeArtBone", "scaleX", lambda s, s2: s2),
                            ("ElbowArt", "scaleX", lambda s, s2: (s + s2) / 2)):
-        tracks.append(_obj(b[bone], {prop: [_kf(f, fn(s, s2), SMOOTHSTEP) for f, s, s2 in ps]}))
-    tracks.append(invert_track(a, invert))
+        tracks.append(_obj(b[bone], {prop: [_kf(f, fn(s, s2), SMOOTHSTEP, doc) for f, s, s2 in ps]}, doc))
+    tracks.append(invert_track(a, invert, doc))
     return tracks, invert
 
 

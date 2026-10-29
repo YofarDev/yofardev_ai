@@ -29,6 +29,7 @@ from head_turn import HeadTurn, rig_head  # noqa: E402
 import face_rig  # noqa: E402
 import arm_rig  # noqa: E402
 import avatar_light  # noqa: E402
+import avatar_tablet  # noqa: E402
 from face_rig import NUMBERS as FACE_NUMBERS  # noqa: E402
 
 
@@ -2105,6 +2106,22 @@ light.lean(body.el, body_g.el, avatar_light.parent_of(body_g.el, head_base.el), 
 light_anims, light_layer = light.flicker_layer([light.firelight, *glints])
 artboard.children.extend(light_anims)
 sm.children.append(light_layer)
+
+# ---- M4 Task 5: the tablet prop (avatar_tablet.py; M4 id range, minted after the light rig)
+tablet = avatar_tablet.Tablet(M4, light.path("prop"), light.prop_values, EASE)
+# behind the left arm's swing (first child paints in front), in front of the head and torso, so the
+# slab rides the torso, breath and lean with both hand targets
+shoulder_l = next(e for e in avatar_light.walk(body_g.el) if e.attrs.get("name") == "BreathShoulderLPivot")
+shoulder_l.children.append(tablet.art())
+head_kids.insert(head_kids.index(light.firelight), tablet.screen_glow(face, HEAD_FRAME))
+for g in glints:  # every glasses set: the screen mirrored low in each lens
+    glare_name = next(c for c in g.children if c.tag == "Shape").attrs["name"]
+    tablet.lens_reflect(avatar_light.parent_of(head.el, g), "ScreenReflect" + ("L" if glare_name == "Glare" else "R"),
+                        355.0 if glare_name == "Glare" else 445.0, kit.LENS_CY, HEAD_FRAME)
+prop_anims = tablet.animations({-1: ARM_R, 1: ARM_L})
+artboard.children.extend(prop_anims.values())
+gesture_layer = next(c for c in sm.children if c.tag == "StateMachineLayer" and c.attrs.get("name") == "Gesture")
+sm.children.insert(sm.children.index(gesture_layer) + 1, tablet.layer(prop_anims))
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

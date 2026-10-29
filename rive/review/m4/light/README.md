@@ -5,7 +5,8 @@ AvatarVM light numbers written exactly as `SceneLights.of(scene)` / `art_bible.S
 
 | File | What |
 |---|---|
-| `light_sheet.png` | 4 scene rigs (rows: livingRoom, campfire, beach, deepSpace) × neutral / happy × yaw −1 / 0 / 1, flicker 0 |
+| `light_sheet.png` | 4 scene rigs (rows: livingRoom, campfire, beach, deepSpace) × neutral / happy × yaw −1 / 0 / 1, flicker 0 (campfire row re-rendered after Task 5, `review_face.py light campfire`) |
+| `light_campfire.png` | the campfire row alone, `KeyCheek` at 0.65 × `lightKeyIntensity` |
 | `flicker_strip.png` | campfire rig, full flicker: 10 frames, every 12 frames across one 2 s loop |
 | `flicker.gif` | the same, 60 frames at 30 fps (2 s, one loop) |
 | `lean_wardrobe_check.png` | campfire rig: lean 0, lean 1, sunglasses + beanie at yaw 0.7, batman |
@@ -18,7 +19,8 @@ What the file does (`rive/tools/avatar_light.py`, minted in the M4 id range):
   (3 bible px past the ink's inner half). Linear gradient: clear on the key side, `lightRim` at
   the far side (endpoints ±150 px × `lightKeyX/Y`), gradient opacity = `lightRimIntensity`.
 - **KeyCheek**: radial `lightKey` pool, screen blend, face-clipped, centred 0.35 face widths toward
-  the key from the cheek line, opacity 0.45 × `lightKeyIntensity`, inside the `Firelight` node.
+  the key from the cheek line, opacity 0.65 × `lightKeyIntensity` (Task 5: 0.45 read too faint on
+  the campfire rig), inside the `Firelight` node.
 - **AmbientWash**: face-clipped multiply wash, `lightAmbient` on the far side, opacity
   0.5 × `lightAmbientAmount`.
 - **Glints**: the four lens glints (glasses, sunglasses) take `lightKey`, slide 6 px toward the key,
@@ -45,6 +47,6 @@ Self-check (ruling 17, objective defects only):
 - no clipping, no light outside the silhouette, no pop at the loop seam, no broken shapes with
   hats, sunglasses, costumes, lean or the 3/4 turn.
 
-Known limits: the KeyCheek pool is subtle on the already bright skin (screen blend at the plan's
-0.45); hands get no ambient wash (each hand pose would need its own clipped wash); the campfire
+Known limits: the KeyCheek pool is subtle on the already bright skin (screen blend; raised from the
+plan's 0.45 to 0.65 in Task 5); hands get no ambient wash (each hand pose would need its own clipped wash); the campfire
 scene itself does not bind its light rig yet (Task 6).

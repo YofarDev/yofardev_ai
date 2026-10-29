@@ -10,7 +10,8 @@ number maps straight onto a paint or a transform.
   inner half of the ink line). The stroke's linear gradient is clear on the key side and reaches
   the rim colour at the far side; its opacity is the rim intensity.
 - Key on skin (`KeyCheek`): a radial `lightKey` pool, screen-blended, clipped by the face, centred
-  at the cheek nearest the key, opacity 0.45 x `lightKeyIntensity`, inside the `Firelight` node.
+  at the cheek nearest the key, opacity 0.65 x `lightKeyIntensity` (0.45 read too faint at the
+  campfire, Task 4 review), inside the `Firelight` node.
 - Ambient (`AmbientWash`): a face-clipped multiply wash in `lightAmbient` on the side away from
   the key, opacity 0.5 x `lightAmbientAmount` (gradient opacity).
 - Glasses glint: the lens glints take `lightKey` and slide `GLINT_SLIDE` px toward the key, each
@@ -55,7 +56,7 @@ PX = 2.6 / LINES.silhouette
 RIM_W = round(LINES.interior * PX, 2)  # the rim band: interior weight, 3 bible px
 RIM_REACH = 150.0  # art px from a rim shape's origin to the gradient's lit end (shared converters)
 RIM_STOPS = (0.0, 0.5, 1.0)  # clear .. clear (key side and middle) .. rim (far side)
-KEY_CHEEK = (0.45, 0.35)  # opacity per unit key intensity, centre travel per unit key x/y (face widths)
+KEY_CHEEK = (0.65, 0.35)  # opacity per unit key intensity, centre travel per unit key x/y (face widths)
 FACE_W = 212.0  # art px (face outline x 294..506)
 CHEEK = (400.0, 437.0)  # art space: the cheek line between the two cheek blooms
 CHEEK_SIZE = (150.0, 120.0)
