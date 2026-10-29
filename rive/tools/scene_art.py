@@ -656,7 +656,9 @@ def deep_space(sc: Scene, content: list[El]) -> None:
         volume = S(O, f"MothershipFalloff{i}",
                    [(-46 * width, -235, "c"), (46 * width, -235, "c"),
                     (165 * width, 355, "c"), (-165 * width, 355, "c")],
-                   sc.vgrad(-295 - i * 2.1, 295 + i * 5.3,
+                   # every layer is clear before the shape's bottom (295): a layer still lit there
+                   # cut the beam off with a hard edge (M5 Task 6 self-check)
+                   sc.vgrad(-295 - i * 2.1, 295 - i * 5.3,
                             [(f"{round(alpha):02X}C5F9E5", 0),
                              (f"{round(alpha * .66):02X}B8EAD9", .21 + i * .012),
                              (f"{round(alpha * .23):02X}98D6CF", .61 + i * .009),

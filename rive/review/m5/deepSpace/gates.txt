@@ -1,0 +1,18 @@
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 near asteroid travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 duck travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 saucer travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 planet travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane1 galaxy travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+Plane0 dust lane travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: rubberDuck=Plane4, ufo=Plane3, planet=Plane2: ok
+pointer rubberDuck (Plane4) parallaxX -1: click@746,1230 fires 1, rest-only click@916,1230 fires 0: ok
+pointer rubberDuck (Plane4) parallaxX +1: click@954,1230 fires 1, rest-only click@784,1230 fires 0: ok
+pointer ufo (Plane3) parallaxX -1: click@724,880 fires 1, rest-only click@970,880 fires 0: ok
+pointer ufo (Plane3) parallaxX +1: click@996,880 fires 1, rest-only click@750,880 fires 0: ok
+pointer planet (Plane2) parallaxX -1: click@122,590 fires 1, rest-only click@464,590 fires 0: ok
+pointer planet (Plane2) parallaxX +1: click@478,590 fires 1, rest-only click@136,590 fires 0: ok
+rain: n/a (no rain art); rain 1 vs 0 at rest: 0.0000% pixels differ (ok)
+nebula wash follows lightKey (red - blue, mean, warm key vs default): +16.1/255 (ok); back to default: max diff 0/255 (ok)
+deepSpace.riv 67089 B (budget 409,600): ok
+deepSpace.webp 15032 B (budget 40,960): ok

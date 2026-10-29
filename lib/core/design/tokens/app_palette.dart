@@ -39,7 +39,7 @@ class AppPalette {
   static const Color deepSpaceKey = Color(0xFFCDB8FF);
   static const Color deepSpaceRim = Color(0xFF7FE0FF);
   static const Color deepSpaceAmbient = Color(0xFF120E26);
-  static const Color deepSpaceFog = Color(0x00000000);
+  static const Color deepSpaceFog = Color(0x331E1A44);
 
   /// The UI tints derived from the living-room rig (see `ScenePalette`):
   /// [livingRoomKey] at alpha round(28 x 0.85) and `onSurface` leaned onto

@@ -10,7 +10,8 @@ Writes to rive/review/m5/<sceneId>/ (or --out):
 - `parallax_edges.png`: the same nine renders at half size, only the outer 32 px of the left and
   right edges (columns) and the bottom 32 px (rows), where a plane's bleed would run out;
 - `hit_zones.png`: the render at parallaxX -1 / +1 with every hit zone drawn where it now sits;
-- `rain_strip.png` (scenes that bind `rain`): rain 0 / 0.5 / 1 (rows) x 3 frames (columns);
+- `rain_strip.png` (scenes that bind `rain`): rain 0 / 0.5 / 1 (rows) x 3 frames (columns); a scene
+  without rain art (deepSpace) gets one gate instead: rain 1 changes no pixel at rest;
 - scene extras (campfire: `fire_strip.png`, 10 frames of the firelight loop);
 - `gates.txt`: one `ok` / `FAIL` line per objective gate: opaque frame at every parallax corner,
   plane travel, pointer proofs (`prop_tapped` fires inside each hit zone at its displaced position,
@@ -77,6 +78,12 @@ CFG: dict[str, Cfg] = {
         # streak sheets 18 / 34, splashes 120 frames: all back at frame 0 after 6120
         rain_loops=[("RainLoop sheets + splashes", 6120)],
         seam_box=(300, 1250, 1080, 1920),  # the sand right of the castle
+    ),
+    # no rain art: `rain_loops` stays empty, so the rain gates are n/a (and rain 1 must change nothing)
+    "deepSpace": Cfg(
+        patches=[("Plane5 near asteroid", (100, 1450, 220, 1550), 40), ("Plane4 duck", (800, 1215, 900, 1275), 28),
+                 ("Plane3 saucer", (770, 888, 950, 918), 20), ("Plane2 planet", (230, 520, 370, 660), 12),
+                 ("Plane1 galaxy", (770, 1395, 870, 1445), 6), ("Plane0 dust lane", (40, 330, 140, 400), 0)],
     ),
 }
 
@@ -257,7 +264,34 @@ def beach_extras(render: Renderer, out: Path, gates: list[str]) -> None:
                  f"({'ok' if drift <= 2 else 'FAIL'})")
 
 
-EXTRAS = {"campfire": campfire_extras, "livingRoom": living_room_extras, "beach": beach_extras}
+def deep_space_extras(render: Renderer, out: Path, gates: list[str]) -> None:
+    """The four events still play (one frame each, mid-event), the alien ship's beam still lifts the
+    duck at the parallax extremes (ship and duck share Plane4), and the nebula wash follows
+    `lightKey` (a warm key turns it orange, history-free)."""
+    cells = [label(Image.fromarray(render("--advance=1")).convert("RGB").resize((360, 640)), "rest")]
+    for ev, f in (("meteor", 35), ("warp", 88), ("alienShip", 230), ("nebulaPulse", 60)):
+        a = render(f"--data=eventId={ev}", "--data=event=1", f"--advance={f}")
+        cells.append(label(Image.fromarray(a).convert("RGB").resize((360, 640)), f"{ev} +{f}f"))
+    for px, py in ((-1, -1), (1, 1)):
+        a = render(f"--data=parallaxX={px}", f"--data=parallaxY={py}", "--data=eventId=alienShip", "--data=event=1",
+                   "--advance=230")
+        cells.append(label(Image.fromarray(a).convert("RGB").resize((360, 640)), f"alienShip +230f x{px:+d} y{py:+d}"))
+    grid(cells, 4).save(out / "events_strip.png")
+    box = (slice(440, 520), slice(600, 700))   # inside the nebula wash (Nebula2), right of the planet
+    rest = render("--advance=1").astype(int)[box][..., :3]
+    warm = render("--data=lightKey=FFFF9A4D", "--advance=1").astype(int)[box][..., :3]
+    back = render("--data=lightKey=FFFF9A4D", "--advance=1", "--data=lightKey=FFCDB8FF", "--advance=2"
+                  ).astype(int)[box][..., :3]
+    shift = float((warm[..., 0] - warm[..., 2]).mean() - (rest[..., 0] - rest[..., 2]).mean())
+    drift = int(np.abs(back - rest).max())
+    Image.fromarray(np.concatenate([rest, warm], 1).astype(np.uint8)).resize((400, 160)).save(out / "nebula_key.png")
+    gates.append(f"nebula wash follows lightKey (red - blue, mean, warm key vs default): {shift:+.1f}/255 "
+                 f"({'ok' if shift >= 8 else 'FAIL'}); back to default: max diff {drift}/255 "
+                 f"({'ok' if drift <= 2 else 'FAIL'})")
+
+
+EXTRAS = {"campfire": campfire_extras, "livingRoom": living_room_extras, "beach": beach_extras,
+          "deepSpace": deep_space_extras}
 
 
 def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) -> list[str]:
@@ -325,6 +359,12 @@ def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) 
         gates += pointer_gates(proj, hits)
 
         # ---- rain
+        if 'name="rain"' in rml and not cfg.rain_loops:
+            # a scene without rain art ignores `rain`: the rest frame at rain 1 is the one at rain 0
+            diff = float((np.abs(render("--data=rain=1", "--advance=1").astype(int)
+                                 - render("--advance=1").astype(int)).max(-1) > 0).mean())
+            gates.append(f"rain: n/a (no rain art); rain 1 vs 0 at rest: {diff:.4%} pixels differ "
+                         f"({'ok' if diff == 0 else 'FAIL'})")
         if 'name="rain"' in rml and cfg.rain_loops:
             frames = (1, 41, 81)
             rows = {}

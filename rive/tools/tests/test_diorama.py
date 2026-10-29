@@ -417,3 +417,107 @@ def test_beach_horizon_haze_is_a_band(beach: str) -> None:
             assert stops[0].get("colorValue").startswith("00") and stops[-1].get("colorValue").startswith(
                 "00" if n_stops == 3 else "22")
     assert gen_scenes.SCENES["beach"].fog[:2] != "00"   # the default fog draws
+
+
+# ---------------------------------------------------------------- deepSpace (M5 Task 6)
+DS_M4 = "5b10b23"   # the M4 deep space (+ v8 rain), before its diorama
+DS_PROP_ART = {"planet": "PlanetPlace", "ufo": "UfoFlee", "rubberDuck": "DuckPlace"}
+
+
+@pytest.fixture(scope="module")
+def ds(tmp_path_factory: pytest.TempPathFactory) -> str:
+    out = tmp_path_factory.mktemp("scenes")
+    root = gen_scenes.OUT_ROOT
+    gen_scenes.OUT_ROOT = str(out)
+    try:
+        return Path(gen_scenes.deepSpace()).read_text()
+    finally:
+        gen_scenes.OUT_ROOT = root
+
+
+def test_deep_space_is_committed(ds: str) -> None:
+    assert ds == (ROOT / "rive" / "scenes" / "deepSpace" / "deepSpace.rml").read_text()
+
+
+def test_deep_space_plane_membership(ds: str) -> None:
+    assert "deepSpace" in gen_scenes.DIORAMAS
+    plane = _plane_of(ds)
+    want = {"Void": 0, "emitNebula0": 0, "emitDustStar0": 0, "emitInterstellarDust0": 0,
+            "emitStar0": 1, "emitGalaxy": 1, "emitMeteor": 1, "emitPulseSwellN": 1, "emitPulseRingN0": 1,
+            "PlanetPlace": 2, "Moonlet": 2,
+            "Asteroid2": 3, "UfoFlee": 3,
+            "Asteroid1": 4, "Mothership": 4, "DuckPlace": 4,
+            "Asteroid0": 5}
+    assert {k: plane.get(k) for k in want} == want
+    at = [ds.index(f'name="Plane{k}"') for k in range(5, -1, -1)]
+    assert at == sorted(at)
+    for overlay in ("emitFlash", "emitWarp", "emitWarpCoreN"):
+        assert ds.index(f'name="{overlay}"') < at[0]
+    # the mothership's beam lifts the duck: one plane, so it lands on the duck at every parallax
+    assert plane["Mothership"] == plane["DuckPlace"]
+
+
+def test_a_full_name_overrides_its_root() -> None:
+    spec = DioramaSpec(planes={"Rock": 3, "Rock0": 5}, emissive=(), veils=())
+    assert gen_scenes.plane_of(spec, "Rock0") == 5
+    assert gen_scenes.plane_of(spec, "Rock1") == 3
+    assert gen_scenes.plane_of(spec, "emitRock0") == 5
+    assert gen_scenes.plane_of(spec, "Pebble") == -1
+
+
+def test_deep_space_hit_zones_ride_their_planes(ds: str) -> None:
+    plane = _plane_of(ds)
+    for prop, art in DS_PROP_ART.items():
+        assert plane[f"Hit_{prop}"] == plane[art], prop
+        assert f'name="Tap_{prop}"' in ds
+    ab = ET.fromstring(ds).find("Artboard")
+    assert not [c for c in ab if str(c.get("name", "")).startswith("Hit_")]
+
+
+def test_deep_space_lint_clean_and_events_intact(ds: str) -> None:
+    assert lint_colours(ds, "deepSpace") == []
+    for ev in gen_scenes.SCENE_EVENTS["deepSpace"]:
+        assert f'key="{ev}"' in ds
+    for anim in ("ev_warp", "ev_alienShip", "ev_nebulaPulse", "amb_ufo", "amb_duck", "amb_rocks", "amb_stars"):
+        assert f'name="{anim}"' in ds
+
+
+def test_deep_space_keeps_its_m4_ids(ds: str) -> None:
+    r = subprocess.run(["git", "show", f"{DS_M4}:rive/scenes/deepSpace/deepSpace.rml"], cwd=ROOT,
+                       capture_output=True, text=True)
+    if r.returncode:
+        pytest.skip(r.stderr.strip())
+    old, new = _tree(r.stdout), _tree(ds)
+    assert not set(old) - set(new)
+    for i, (tag, _, _) in old.items():
+        assert new[i][0] == tag, i
+    added = set(new) - set(old)
+    assert all(gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
+               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
+
+
+def test_deep_space_nebula_wash_takes_the_key_and_rain_is_ignored(ds: str) -> None:
+    root = ET.fromstring(ds)
+    props = {e.get("id"): e.get("name") for e in root.iter() if e.tag.startswith("ViewModelProperty")}
+    wash = next(e for e in root.iter("Shape") if e.get("name") == "emit" + gen_scenes.NEBULA_WASH[0])
+    (g,) = [x for f in wash.findall("Fill") for x in f]
+    (b,) = g.findall("GradientStop")[0].findall("DataBindContext")
+    assert (props[b.get("sourcePathIds").split("-")[1]], b.get("propertyKey")) == ("lightKey", "38")
+    assert float(g.get("opacity")) == gen_scenes.NEBULA_WASH[1]
+    # `rain` exists on the SceneVM (contract v8) but nothing binds it
+    rain = next(i for i, n in props.items() if n == "rain")
+    assert not [e for e in root.iter("DataBindContext") if e.get("sourcePathIds", "").endswith(rain)]
+
+
+def test_deep_space_dust_veils_draw(ds: str) -> None:
+    fog = gen_scenes.SCENES["deepSpace"].fog
+    assert fog[:2] != "00"   # a transparent default would draw nothing (ruling 54)
+    root = ET.fromstring(ds)
+    assert [e.get("name") for e in root.iter("Shape") if str(e.get("name", "")).startswith("FogVeil")] == [
+        "FogVeil1", "FogVeil0"]
+    for k, (density, *_) in enumerate(gen_scenes.DEEP_SPACE_VEILS):
+        veil = next(e for e in root.iter("Shape") if e.get("name") == f"FogVeil{k}")
+        assert float(veil.get("opacity")) == gen_scenes.fog_opacity(density, fog)
+        # no horizon in space: the veil covers the frame and its parallax bleed, top to bottom
+        rect = veil.find("Rectangle")
+        assert float(veil.get("y")) <= -60 and float(veil.get("y")) + float(rect.get("height")) >= 1920 + 60

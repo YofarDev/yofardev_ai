@@ -844,8 +844,8 @@ class DioramaSpec:
 
     - `planes`: top-level element name without its index digits (`Star12` -> `Star`) -> plane 0..5
       (0 the sky, 5 the foreground), or `None` for a screen-space overlay (rain, a flash wash) that
-      stays in front of every plane. Hit zones are listed by full name (`Hit_fire`) in the plane of
-      the art they cover (ruling 3). An unlisted top-level element raises `KeyError`.
+      stays in front of every plane. A full name (`Asteroid0`) overrides its root. Hit zones are
+      listed by full name (`Hit_fire`) in the plane of the art they cover (ruling 3). An unlisted top-level element raises `KeyError`.
     - `emissive`: name roots of light sources; they and everything below them are renamed `emit*`
       and skip the colour-script fit (M4 ruling 13).
     - `veils`: (density, y clear, y full) of the `lightFog` veil in front of Plane0, Plane1, ...;
@@ -864,6 +864,13 @@ class DioramaSpec:
 
 def _root(name: object) -> str:
     return str(name).rstrip("0123456789")
+
+
+def plane_of(spec: DioramaSpec, name: str) -> int | None:
+    """The plane `spec` gives a top-level element (-1 when unlisted): its full name if listed (one
+    of deepSpace's asteroids), else its root; an `emit` prefix is ignored."""
+    bare = name.removeprefix(EMISSIVE_PREFIX)
+    return spec.planes.get(bare, spec.planes.get(_root(bare), -1))
 
 
 def diorama(sc: Scene, content: list[El], spec: DioramaSpec) -> None:
@@ -895,7 +902,7 @@ def diorama(sc: Scene, content: list[El], spec: DioramaSpec) -> None:
                 raise KeyError(f"{sc.id} hit zone {name!r} has no plane")
             hits.setdefault(k, []).append(e)
             continue
-        k = spec.planes.get(_root(name.removeprefix(EMISSIVE_PREFIX)), -1)
+        k = plane_of(spec, name)
         if k == -1:
             raise KeyError(f"{sc.id} element {name!r} has no plane")
         if k not in groups:
@@ -1939,6 +1946,61 @@ def beach() -> str:
 
 
 # ====================================================================== deepSpace
+# M5 ruling 4 (Task 6): planes back to front. Space has no ground, so depth reads from size and
+# overlap: the three asteroids sit on three planes by size (a full name overrides the root).
+DEEP_SPACE_PLANES: dict[str, int | None] = {
+    # the warp covers the whole frame (streaks scaled 4.6x, the core 2.4x, a full-frame flash)
+    "Flash": None, "Warp": None, "WarpCoreN": None,
+    "Asteroid0": 5,                                    # the near asteroid (r 70)
+    # the front rock (r 50), the duck and the mothership whose beam lifts it (same plane: the beam
+    # lands on the duck at every parallax)
+    "Asteroid1": 4, "Mothership": 4, "DuckPlace": 4,
+    "Asteroid2": 3, "UfoFlee": 3,                      # the small asteroid (r 36) and the saucer
+    "PlanetPlace": 2, "Moonlet": 2,
+    # the galaxy, the bright stars, the nebula pulse (in front of the stars, as in M4) and the meteor
+    **dict.fromkeys(("Meteor", "Galaxy", "PulseRingN", "PulseSwellN", "Star"), 1),
+    **dict.fromkeys(("Nebula", "DustStar", "InterstellarDust", "Void"), 0),
+    # ruling 3: each hit zone rides the plane of its prop's art
+    "Hit_planet": 2, "Hit_ufo": 3, "Hit_rubberDuck": 4,
+}
+# nebula-tinted dust (`lightFog`) in front of Plane0 and Plane1, even over the whole frame (space has
+# no horizon): clear 1 px above the bleed, full from there down
+DEEP_SPACE_VEILS = ((0.25, -61.0, -60.0), (0.12, -61.0, -60.0))
+DEEP_SPACE_EMISSIVE = ("Star", "DustStar", "Galaxy", "Nebula", "InterstellarDust", "PulseSwellN", "PulseRingN",
+                       "AtmosphericLimb", "ULight", "SLight", "Warp", "WarpCoreN", "Flash", "Meteor")
+NEBULA_WASH = ("Nebula2", 0.2)   # the nebula that takes `lightKey`, and its gradient opacity
+
+
+def deep_space_light(sc: Scene, content: list[El], d6: Doc) -> None:
+    """deepSpace's own pass (M5 Task 6): the nebula wash in `lightKey` (deepSpace ignores `rain`),
+    the moonlet back beside its planet, then the content regrouped back to front by plane (draw
+    order kept inside a plane)."""
+    key = SCENES["deepSpace"].key
+    name, opacity = NEBULA_WASH
+    with sc.minting(sc.d5):
+        # a bound stop colour sets the alpha too: the M4 alpha becomes the gradient's opacity
+        wash = named(content, name)
+        g = next(c for c in wash.children if c.tag == "Fill").children[0]
+        g.attrs["opacity"] = opacity
+        centre, edge = g.children[0], g.children[-1]
+        centre.attrs["colorValue"] = key
+        centre.children.append(sc.bind("lightKey", 38))
+        edge.attrs["colorValue"] = "00" + key[2:]
+    # the moonlet stayed at its pre-M3 spot when the planet group was re-placed, hidden behind the
+    # planet: it moves with the planet (same offset), above the rings' near end
+    moonlet = named(content, "Moonlet")
+    mx, my = place_point("deepSpace", "PlanetPlace", float(moonlet.attrs["x"]), float(moonlet.attrs["y"]))
+    moonlet.attrs.update(x=mx, y=my)
+
+    def plane(e: El) -> int:
+        k = plane_of(DIORAMAS["deepSpace"], str(e.attrs.get("name", "")))
+        return 6 if k is None else k
+    content.sort(key=lambda e: -plane(e))
+
+
+DIORAMAS["deepSpace"] = DioramaSpec(DEEP_SPACE_PLANES, DEEP_SPACE_EMISSIVE, DEEP_SPACE_VEILS, deep_space_light)
+
+
 def deepSpace() -> str:  # noqa: N802
     sc = Scene("deepSpace")
     d = sc.d

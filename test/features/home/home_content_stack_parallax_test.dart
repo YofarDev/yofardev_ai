@@ -131,18 +131,11 @@ void main() {
     expect(tilt.active, isFalse);
   });
 
-  test('the campfire, the living room and the beach are dioramas (M5)', () {
-    expect(
-      <AvatarScene>[
-        for (final AvatarScene s in AvatarScene.values)
-          if (s.isDiorama) s,
-      ],
-      <AvatarScene>[
-        AvatarScene.livingRoom,
-        AvatarScene.campfire,
-        AvatarScene.beach,
-      ],
-    );
+  test('every scene is a diorama (M5)', () {
+    expect(<AvatarScene>[
+      for (final AvatarScene s in AvatarScene.values)
+        if (s.isDiorama) s,
+    ], AvatarScene.values);
   });
 
   testWidgets('without a parallax source the stack has no hover region', (

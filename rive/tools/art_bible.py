@@ -121,7 +121,7 @@ SCENES: dict[str, SceneScript] = {
     ),
     "deepSpace": SceneScript(
         accent=TOKENS["deepSpaceAccent"], key="FFCDB8FF", key_dir=0.9, key_intensity=0.7,
-        rim="FF7FE0FF", ambient="FF120E26", fog="00000000", value=(0.02, 0.95), sat_cap=0.70,
+        rim="FF7FE0FF", ambient="FF120E26", fog="331E1A44", value=(0.02, 0.95), sat_cap=0.70,
         times={"dawn": "FF120E26", "day": "FF120E26", "dusk": "FF120E26", "night": "FF070614"},
         flicker=0.0,
     ),
