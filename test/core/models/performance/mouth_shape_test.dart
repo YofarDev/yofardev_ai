@@ -65,10 +65,10 @@ void main() {
         MouthShape.forViseme(Viseme.rr),
         const MouthShape(jaw: 0.2, pucker: 0.7),
       );
-      // critic round 7: a tight /u/ (a small jaw, fully rounded lips)
+      // ruling 16b: a rounded /u/ keeps a moderate jaw, fully rounded lips
       expect(
         MouthShape.forViseme(Viseme.ou),
-        const MouthShape(jaw: 0.15, pucker: 1),
+        const MouthShape(jaw: 0.28, pucker: 1),
       );
     });
 

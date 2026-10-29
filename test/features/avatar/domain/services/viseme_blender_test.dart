@@ -394,7 +394,7 @@ void main() {
         );
       });
 
-      test('a tight ou mid-span: full pucker, no stretch', () {
+      test('a rounded ou mid-span: full pucker, no stretch', () {
         final SpeechTimeline tl = timeline(<VisemeSpan>[
           span(Viseme.e, 0, 200),
           span(Viseme.ou, 200, 600),
@@ -402,7 +402,7 @@ void main() {
         final MouthShape m = blender.shapeAt(tl, ms(400)).shape;
         expect(m.pucker, 1);
         expect(m.stretch, 0);
-        expect(m.jaw, closeTo(0.15 * VisemeBlender.jawGain(1), 1e-9));
+        expect(m.jaw, closeTo(0.28 * VisemeBlender.jawGain(1), 1e-9));
       });
 
       test('a release into ou opens jaw and rounding on one ramp', () {
@@ -413,7 +413,7 @@ void main() {
         ]);
         // the closure is already rounded as far as a seal allows
         expect(blender.shapeAt(tl, ms(199)).shape.pucker, closeTo(0.3, 1e-9));
-        final double jawTarget = 0.15 * VisemeBlender.jawGain(1);
+        final double jawTarget = 0.28 * VisemeBlender.jawGain(1);
         for (int us = 200000; us < 220000; us += 1000) {
           final MouthBlend b = blender.shapeAt(tl, Duration(microseconds: us));
           final double jaw = (b.shape.jaw - b.pop) / jawTarget;
@@ -598,8 +598,8 @@ void main() {
           span(Viseme.ss, 180, 280),
           span(Viseme.ou, 280, 400),
         ]);
-        // after the pp only the ou counts (0.65 of a tight ou is under the
-        // floor), not the aa before the closure (which would give 0.5)
+        // after the pp only the ou counts (0.65 of its jaw), not the aa before
+        // the closure (which would give 0.5)
         expect(jawAt(tl, 240), lessThan(0.25));
         expect(
           jawAt(tl, 240),

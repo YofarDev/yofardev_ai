@@ -56,8 +56,8 @@ sealed class MouthShape with _$MouthShape {
     Viseme.e => const MouthShape(jaw: 0.5, stretch: 0.55),
     Viseme.ih => const MouthShape(jaw: 0.35, stretch: 0.45),
     Viseme.oh => const MouthShape(jaw: 0.6, pucker: 0.6),
-    // a tight /u/: little jaw, the lips fully rounded
-    Viseme.ou => const MouthShape(jaw: 0.15, pucker: 1),
+    // a rounded /u/: a moderate jaw (0.15 read as a closed rubber ring), the lips fully rounded
+    Viseme.ou => const MouthShape(jaw: 0.28, pucker: 1),
   };
 
   /// How strongly [v] wins when neighbouring visemes overlap (coarticulation):

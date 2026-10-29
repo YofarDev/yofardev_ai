@@ -1203,10 +1203,10 @@ void main() {
         final int onset = (200 / 16.667).ceil() - 1;
         expect(f[onset].au.lipPucker, greaterThan(0.5));
         expect(f[onset].au.lipStretch, lessThan(0.2));
-        // a tight /u/ mid-vowel
+        // a rounded /u/ mid-vowel
         expect(f[22].au.lipPucker, closeTo(1, 0.02));
         expect(f[22].au.lipStretch, closeTo(0, 0.02));
-        expect(f[22].au.jawDrop, lessThan(0.2));
+        expect(f[22].au.jawDrop, lessThan(0.3));
       });
 
       test('th keeps the tongue up in running speech', () {
