@@ -8,6 +8,8 @@ import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:yofardev_ai/core/models/performance/speech_timeline.dart';
 import 'package:yofardev_ai/core/models/performance/viseme.dart';
 import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
+import 'package:yofardev_ai/core/services/audio/phoneme_aligner.dart';
+import 'package:yofardev_ai/core/services/audio/phonemizer.dart';
 import 'package:yofardev_ai/core/services/audio/speech_analyzer.dart';
 import 'package:yofardev_ai/core/services/audio/wav_pcm.dart';
 
@@ -16,6 +18,10 @@ import 'wav_amplitude_extractor_test.dart';
 class _MockAudioAnalyzer extends Mock implements AudioAnalyzer {}
 
 const SpeechAnalyzer _analyzer = SpeechAnalyzer();
+
+/// The audio classifier alone (text alignment off): the fallback path,
+/// where the text is only a hint for p/b/m and f/v.
+const SpeechAnalyzer _classifier = SpeechAnalyzer(alignCostLimit: -1);
 
 /// Harmonics of 140 Hz below 600 Hz (a closed back vowel: oh / ou).
 final Map<double, double> _closedVowel = <double, double>{
@@ -202,15 +208,21 @@ void main() {
         ..._bandNoise(24000, 0.15, 4000, 8000, gain: 0.03),
         ..._tone(24000, 0.5, _openVowel),
       ];
-      final SpeechTimeline withF = _analyzer.analyze(_pcm(signal), text: 'fa');
-      final SpeechTimeline withS = _analyzer.analyze(_pcm(signal), text: 'sa');
+      final SpeechTimeline withF = _classifier.analyze(
+        _pcm(signal),
+        text: 'fa',
+      );
+      final SpeechTimeline withS = _classifier.analyze(
+        _pcm(signal),
+        text: 'sa',
+      );
       expect(withF.spanAt(_ms(60))?.viseme, Viseme.ff);
       expect(withS.spanAt(_ms(60))?.viseme, Viseme.ss);
     });
 
     test('a p/b/m letter with no dip in the audio still gets a pp span', () {
       // "I'm a..." said without a pause: no closure in the signal
-      final SpeechTimeline t = _analyzer.analyze(
+      final SpeechTimeline t = _classifier.analyze(
         _pcm(_tone(24000, 1.0, _openVowel)),
         text: 'aamaa',
       );
@@ -244,7 +256,10 @@ void main() {
       }
 
       test('an 80 ms gap with text "a ba" is a pp of at least 50 ms', () {
-        final SpeechTimeline t = _analyzer.analyze(_pcm(signal), text: 'a ba');
+        final SpeechTimeline t = _classifier.analyze(
+          _pcm(signal),
+          text: 'a ba',
+        );
         _expectWellFormed(t);
         final VisemeSpan? span = closureSpan(t);
         expect(span, isNotNull);
@@ -253,7 +268,10 @@ void main() {
       });
 
       test('with text "a da" the same gap is dd', () {
-        final SpeechTimeline t = _analyzer.analyze(_pcm(signal), text: 'a da');
+        final SpeechTimeline t = _classifier.analyze(
+          _pcm(signal),
+          text: 'a da',
+        );
         _expectWellFormed(t);
         expect(closureSpan(t)?.viseme, Viseme.dd);
         expect(
@@ -263,7 +281,7 @@ void main() {
       });
 
       test('with no text a silent closure may be p/b/m', () {
-        final SpeechTimeline t = _analyzer.analyze(_pcm(signal));
+        final SpeechTimeline t = _classifier.analyze(_pcm(signal));
         expect(closureSpan(t)?.viseme, Viseme.pp);
       });
     });
@@ -410,6 +428,222 @@ void main() {
     });
   });
 
+  group('text alignment on real speech (say fixtures)', () {
+    WavPcm fixture(String name) =>
+        WavPcm.decode(File('test/fixtures/speech/$name.wav').readAsBytesSync());
+
+    /// Each phonemizer token with the span the aligner gave it (the
+    /// aligner's non-silence spans, in token order).
+    List<(PhonemeToken, VisemeSpan)> tokenSpans(
+      WavPcm pcm,
+      String text, {
+      String language = 'en',
+    }) {
+      final List<PhonemeToken> tokens = const TextPhonemizer().phonemize(
+        text,
+        language: language,
+      );
+      final AlignedVisemes aligned = _analyzer.align(
+        pcm,
+        text: text,
+        language: language,
+      )!;
+      final List<VisemeSpan> spans = <VisemeSpan>[
+        for (final VisemeSpan s in aligned.spans)
+          if (s.viseme != Viseme.sil) s,
+      ];
+      expect(spans, hasLength(tokens.length));
+      return <(PhonemeToken, VisemeSpan)>[
+        for (int i = 0; i < tokens.length; i++) (tokens[i], spans[i]),
+      ];
+    }
+
+    Duration centre(VisemeSpan s) => s.start + (s.end - s.start) ~/ 2;
+
+    const Set<Viseme> rounded = <Viseme>{Viseme.ou, Viseme.oh, Viseme.rr};
+
+    /// Rounded vowels stay rounded, and every lip closure and labiodental
+    /// keeps a span of its own of at least 50 ms in the final timeline.
+    void expectLabels(
+      SpeechTimeline t,
+      List<(PhonemeToken, VisemeSpan)> tokens,
+      Set<int> roundedWords,
+    ) {
+      for (final (PhonemeToken token, VisemeSpan span) in tokens) {
+        final VisemeSpan? out = t.spanAt(centre(span));
+        if (token.vowel && roundedWords.contains(token.word)) {
+          expect(
+            rounded,
+            contains(out?.viseme),
+            reason: 'word ${token.word} vowel at ${centre(span)}',
+          );
+        }
+        if (token.viseme == Viseme.ff || token.viseme == Viseme.pp) {
+          expect(
+            out?.viseme,
+            token.viseme,
+            reason: 'word ${token.word} at ${centre(span)}',
+          );
+          expect(out!.end - out.start, greaterThanOrEqualTo(_ms(50)));
+        }
+      }
+    }
+
+    const List<(String, String, Set<int>)> fixtures =
+        <(String, String, Set<int>)>[
+          ('blue_sky', 'The sky is blue.', <int>{3}),
+          ('so_true', 'So true, you know.', <int>{0, 1, 2, 3}),
+          ('fine_view', 'A fine view of five vines.', <int>{2}),
+        ];
+
+    for (final (String name, String text, Set<int> roundedWords) in fixtures) {
+      test('$name: "$text" is aligned and labelled from the text', () {
+        final WavPcm pcm = fixture(name);
+        expect(
+          _analyzer.align(pcm, text: text)!.costPerFrame,
+          lessThanOrEqualTo(SpeechAnalyzer.maxAlignCost),
+        );
+        final SpeechTimeline t = _analyzer.analyze(pcm, text: text);
+        _expectWellFormed(t);
+        expect(t.visemes, isNot(_classifier.analyze(pcm, text: text).visemes));
+        final List<(PhonemeToken, VisemeSpan)> tokens = tokenSpans(pcm, text);
+        expect(
+          tokens.where(
+            ((PhonemeToken, VisemeSpan) x) => x.$1.viseme == Viseme.ff,
+          ),
+          hasLength(name == 'fine_view' ? 6 : 0),
+        );
+        expectLabels(t, tokens, roundedWords);
+      });
+    }
+
+    test('French: "Bonjour, comment allez-vous ?" aligns with language fr', () {
+      final WavPcm pcm = fixture('bonjour');
+      const String text = 'Bonjour, comment allez-vous ?';
+      expect(
+        _analyzer.align(pcm, text: text, language: 'fr')!.costPerFrame,
+        lessThanOrEqualTo(SpeechAnalyzer.maxAlignCost),
+      );
+      final SpeechTimeline t = _analyzer.analyze(
+        pcm,
+        text: text,
+        language: 'fr',
+      );
+      _expectWellFormed(t);
+      expect(t.isQuestion, isTrue);
+      final List<(PhonemeToken, VisemeSpan)> tokens = tokenSpans(
+        pcm,
+        text,
+        language: 'fr',
+      );
+      // b and m close the lips; "jour" and "vous" stay rounded.
+      expect(
+        tokens.where(
+          ((PhonemeToken, VisemeSpan) x) => x.$1.viseme == Viseme.pp,
+        ),
+        hasLength(2),
+      );
+      final List<(PhonemeToken, VisemeSpan)> ou = <(PhonemeToken, VisemeSpan)>[
+        for (final (PhonemeToken, VisemeSpan) x in tokens)
+          if (x.$1.vowel && x.$1.viseme == Viseme.ou) x,
+      ];
+      expect(ou, hasLength(2));
+      expectLabels(t, tokens, <int>{
+        for (final (PhonemeToken, VisemeSpan) x in ou) x.$1.word,
+      });
+    });
+
+    test('text that does not match the audio falls back to the classifier', () {
+      final WavPcm pcm = fixture('blue_sky');
+      const String wrong = 'Completely different words here.';
+      expect(
+        _analyzer.align(pcm, text: wrong)!.costPerFrame,
+        greaterThan(SpeechAnalyzer.maxAlignCost),
+      );
+      expect(
+        _analyzer.analyze(pcm, text: wrong),
+        _classifier.analyze(pcm, text: wrong),
+      );
+    });
+
+    test('odd captions never throw and give a well-formed timeline', () {
+      final WavPcm pcm = fixture('so_true');
+      final List<(String, String)> captions = <(String, String)>[
+        ('', 'en'),
+        ('   ', 'en'),
+        ('😀 **hi** 42', 'en'),
+        ('日本語のテキスト', 'en'),
+        ('https://example.com/a?b=1', 'en'),
+        ('# Title\n- [link](https://x.io) `code`', 'en'),
+        ('1234567890123456789012', 'en'),
+        ('3,14 % & 1 000', 'fr'),
+        ("''' --- ... ?!", 'en'),
+        ('Bonjour, comment allez-vous ?', 'en'),
+        ('So true, you know.', 'fr'),
+        ('So true, you know.', 'xx-YY'),
+        ('a' * 400, 'en'),
+        ('So true, you know. ' * 20, 'en'),
+      ];
+      for (final (String text, String language) in captions) {
+        final SpeechTimeline t = _analyzer.analyze(
+          pcm,
+          text: text,
+          language: language,
+        );
+        _expectWellFormed(t);
+        expect(t.visemes, isNotEmpty, reason: text);
+      }
+    });
+
+    test('prosody comes from the audio, aligned or not', () {
+      final WavPcm pcm = fixture('so_true');
+      const String text = 'So true, you know.';
+      final SpeechTimeline aligned = _analyzer.analyze(pcm, text: text);
+      final SpeechTimeline classified = _classifier.analyze(pcm, text: text);
+      List<ProsodyMark> peaks(SpeechTimeline t) => t.marks
+          .where((ProsodyMark m) => m.kind == ProsodyMarkKind.pitchPeak)
+          .toList();
+      expect(peaks(aligned), peaks(classified));
+      expect(aligned.energy, classified.energy);
+      expect(aligned.duration, classified.duration);
+      expect(aligned.isQuestion, classified.isQuestion);
+      // The comma pause is found either way.
+      expect(
+        aligned.marks.where((ProsodyMark m) => m.kind == ProsodyMarkKind.pause),
+        hasLength(1),
+      );
+    });
+
+    test('a 6 s sentence of real speech analyses in under 150 ms', () {
+      final List<double> samples = <double>[
+        for (final String name in <String>[
+          'blue_sky',
+          'so_true',
+          'fine_view',
+          'so_true',
+        ])
+          ...fixture(name).samples,
+      ];
+      final WavPcm pcm = _pcm(samples, sampleRate: 16000);
+      expect(pcm.duration, greaterThanOrEqualTo(const Duration(seconds: 6)));
+      const String text =
+          'The sky is blue. So true, you know. A fine view of five vines. '
+          'So true, you know.';
+      expect(
+        _analyzer.align(pcm, text: text)!.costPerFrame,
+        lessThanOrEqualTo(SpeechAnalyzer.maxAlignCost),
+      );
+      // One warm-up call (the test runner JITs; the app runs AOT code), then
+      // the 150 ms budget with a generous CI margin.
+      _analyzer.analyze(pcm, text: text);
+      final Stopwatch watch = Stopwatch()..start();
+      final SpeechTimeline t = _analyzer.analyze(pcm, text: text);
+      watch.stop();
+      _expectWellFormed(t);
+      expect(watch.elapsedMilliseconds, lessThan(150));
+    });
+  });
+
   group('AudioAmplitudeService.analyzeSpeech', () {
     late Directory tempDir;
     late AudioAmplitudeService service;
@@ -439,6 +673,18 @@ void main() {
       expect(t!.visemes, isNotEmpty);
       expect(t.duration, _ms(500));
       expect(t.isQuestion, isTrue);
+    });
+
+    test('the language reaches the analyzer', () async {
+      const String path = 'test/fixtures/speech/bonjour.wav';
+      const String text = 'Bonjour, comment allez-vous ?';
+      final SpeechTimeline? t = await service.analyzeSpeech(
+        path,
+        text: text,
+        language: 'fr',
+      );
+      final WavPcm pcm = WavPcm.decode(File(path).readAsBytesSync());
+      expect(t, _analyzer.analyze(pcm, text: text, language: 'fr'));
     });
 
     test('a .mp3 path gives null', () async {

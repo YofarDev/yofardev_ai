@@ -67,20 +67,27 @@ class AudioAmplitudeService {
     }
   }
 
-  /// Viseme spans and prosody marks of a TTS WAV file ([text] is the
-  /// sentence, a hint for the classifier). The decode and analysis run off
-  /// the UI isolate. Never throws: null (logged) for a non-WAV path or any
-  /// error, so the caller falls back to the amplitude timeline.
+  /// Viseme spans and prosody marks of a TTS WAV file. [text] is the
+  /// sentence that was synthesised, in [language] (`en`, `fr` or a locale
+  /// tag): it is aligned to the audio for the viseme labels when it matches.
+  /// The decode and analysis run off the UI isolate. Never throws: null
+  /// (logged) for a non-WAV path or any error, so the caller falls back to
+  /// the amplitude timeline.
   Future<SpeechTimeline?> analyzeSpeech(
     String audioPath, {
     String? text,
+    String language = 'en',
   }) async {
     if (!audioPath.toLowerCase().endsWith('.wav')) {
       return null;
     }
     try {
       final Uint8List wavBytes = await File(audioPath).readAsBytes();
-      final SpeechTimeline timeline = await _analyzeInIsolate(wavBytes, text);
+      final SpeechTimeline timeline = await _analyzeInIsolate(
+        wavBytes,
+        text,
+        language,
+      );
       AppLogger.debug(
         'Analysed ${timeline.visemes.length} viseme spans and '
         '${timeline.marks.length} prosody marks for $audioPath',
@@ -97,13 +104,18 @@ class AudioAmplitudeService {
     }
   }
 
-  /// Static so the isolate closure captures only the bytes and the text
-  /// (never this service and its platform plugin).
+  /// Static so the isolate closure captures only the bytes, the text and
+  /// the language (never this service and its platform plugin).
   static Future<SpeechTimeline> _analyzeInIsolate(
     Uint8List wavBytes,
     String? text,
+    String language,
   ) => Isolate.run<SpeechTimeline>(
-    () => const SpeechAnalyzer().analyze(WavPcm.decode(wavBytes), text: text),
+    () => const SpeechAnalyzer().analyze(
+      WavPcm.decode(wavBytes),
+      text: text,
+      language: language,
+    ),
     debugName: 'speech_analyzer',
   );
 }

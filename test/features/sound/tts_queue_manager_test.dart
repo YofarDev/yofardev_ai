@@ -442,6 +442,65 @@ void main() {
       await subscription.cancel();
     });
 
+    test(
+      'peekLanguage reads the parked language without consuming it',
+      () async {
+        when(
+          () => mockDatasource.synthesize(
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+            voiceEffect: any(named: 'voiceEffect'),
+          ),
+        ).thenAnswer((_) async => '/path/to/raw.wav');
+
+        final Completer<String> emitted = Completer<String>();
+        final StreamSubscription<String> subscription = manager.audioStream
+            .listen(emitted.complete);
+
+        await manager.enqueue(
+          text: 'Bonjour.',
+          language: 'fr',
+          voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+        );
+        final String path = await emitted.future;
+
+        expect(manager.peekLanguage(path), 'fr');
+        expect(manager.peekLanguage(path), 'fr');
+        expect(manager.peekLanguage('/unknown.wav'), isNull);
+        // Playback consumes the sentence: its language goes with it.
+        manager.consumeText(path);
+        expect(manager.peekLanguage(path), isNull);
+
+        await subscription.cancel();
+      },
+    );
+
+    test('clear drops the parked languages', () async {
+      when(
+        () => mockDatasource.synthesize(
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+          voiceEffect: any(named: 'voiceEffect'),
+        ),
+      ).thenAnswer((_) async => '/path/to/raw.wav');
+
+      final Completer<String> emitted = Completer<String>();
+      final StreamSubscription<String> subscription = manager.audioStream
+          .listen(emitted.complete);
+
+      await manager.enqueue(
+        text: 'Hello.',
+        language: 'en',
+        voiceEffect: const VoiceEffect(pitch: 1.0, speedRate: 1.0),
+      );
+      final String path = await emitted.future;
+      expect(manager.peekLanguage(path), 'en');
+      manager.clear();
+      expect(manager.peekLanguage(path), isNull);
+
+      await subscription.cancel();
+    });
+
     test('consumeText returns the sentence once, then null', () async {
       when(
         () => mockDatasource.synthesize(

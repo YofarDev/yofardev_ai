@@ -150,7 +150,8 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     });
 
     // Same for the speech analysis (off the UI isolate). The sentence text
-    // is parked in the queue until playback consumes it: peek, not consume.
+    // and its language are parked in the queue until playback consumes
+    // them: peek, not consume.
     _timelineFutures.putIfAbsent(
       audioPath,
       () =>
@@ -158,6 +159,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
             () => _audioAmplitudeService.analyzeSpeech(
               audioPath,
               text: _ttsQueueManager.peekText(audioPath),
+              language: _ttsQueueManager.peekLanguage(audioPath) ?? 'en',
             ),
           ).then<SpeechTimeline?>(
             (SpeechTimeline? timeline) => timeline,

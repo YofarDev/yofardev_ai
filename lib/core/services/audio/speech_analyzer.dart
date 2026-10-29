@@ -3,55 +3,48 @@ import 'dart:typed_data';
 
 import '../../models/performance/speech_timeline.dart';
 import '../../models/performance/viseme.dart';
+import 'phoneme_aligner.dart';
+import 'phonemizer.dart';
+import 'speech_frames.dart';
 import 'wav_pcm.dart';
 
-/// Acoustic features of one 25 ms analysis frame.
-class SpeechFrameFeatures {
-  const SpeechFrameFeatures({
-    required this.start,
-    required this.rms,
-    required this.db,
-    required this.zcr,
-    required this.bandShares,
-    required this.periodicity,
-    required this.f0,
-  });
+export 'speech_frames.dart';
 
-  /// Start of the frame in the audio.
-  final Duration start;
-
-  /// Linear RMS of the frame's samples.
-  final double rms;
-
-  /// RMS in dB relative to the sentence's 95th-percentile frame RMS.
-  final double db;
-
-  /// Zero-crossing rate (crossings per sample, 0-1).
-  final double zcr;
-
-  /// Energy shares of the bands 80-700, 700-1800, 1800-3500 and 3500-8000 Hz
-  /// (sum 1, or all 0 when the frame has no energy in them).
-  final List<double> bandShares;
-
-  /// Peak of the normalised autocorrelation over 70-400 Hz (0-1).
-  final double periodicity;
-
-  /// Fundamental frequency in Hz when the frame is voiced, else null.
-  final double? f0;
-
-  bool get isVoiced => f0 != null;
-}
-
-/// On-device audio-to-viseme classifier and prosody detector.
+/// On-device audio-to-viseme analysis and prosody detector.
 ///
 /// Pure Dart and deterministic: 25 ms frames, a 512-point Hann FFT centred
 /// on each frame for four band energies, the zero-crossing rate, and f0 from
-/// a normalised autocorrelation. Each frame gets a viseme class, short lip
-/// closures between voiced frames become `pp` when the sentence [text]
-/// allows p/b/m there, classes are smoothed into spans of at least 50 ms,
-/// and pitch peaks, stresses and pauses are marked.
+/// a normalised autocorrelation, computed once per sentence.
+///
+/// With the sentence text, the [TextPhonemizer] gives the phones and the
+/// [PhonemeAligner] places them on the frames: the text decides the labels,
+/// the audio their timing. When the text yields no phones or its alignment
+/// costs more than [alignCostLimit] per frame (the text does not match the
+/// audio), the audio classifier labels the frames instead: each frame gets a
+/// viseme class and short lip closures between voiced frames become `pp`
+/// when the text allows p/b/m there. Either way the classes are smoothed into
+/// spans of at least 50 ms (`pp` and `ff` steal from their neighbours to
+/// reach it), and pitch peaks, stresses and pauses are marked from the audio.
 class SpeechAnalyzer {
-  const SpeechAnalyzer();
+  const SpeechAnalyzer({this.alignCostLimit = maxAlignCost});
+
+  /// Alignment cost per frame (above the audio's own best labelling) over
+  /// which the text is taken not to match the audio, and the audio
+  /// classifier labels the frames instead.
+  ///
+  /// Tuned on the `say` fixtures in `test/fixtures/speech/` (README there).
+  /// Their own sentences align at 0.26 (fine_view), 0.28 (blue_sky,
+  /// so_true) and 0.29 (bonjour, French); each English fixture's text on the
+  /// other two costs 0.62-0.92, and "Completely different words here." on
+  /// blue_sky 1.11. A wider tuning set (38 sentences, 9 macOS voices,
+  /// English and French) stayed at or under 0.39 for the right text, so 0.5
+  /// leaves a margin for other TTS voices; about 16 % of wrong sentences of
+  /// a similar length still pass at 0.5 (they cost label accuracy, never
+  /// timing: the spans still follow the audio).
+  static const double maxAlignCost = 0.5;
+
+  /// See [maxAlignCost]; a negative limit disables the text alignment.
+  final double alignCostLimit;
 
   /// Analysis hop (one frame).
   static const Duration frameDuration = Duration(milliseconds: 25);
@@ -59,7 +52,7 @@ class SpeechAnalyzer {
   static const int _fftSize = 512;
 
   /// Frames this far under the sentence's p95 RMS are silence.
-  static const double _silenceDb = -35;
+  static const double _silenceDb = SpeechFrames.silenceDb;
 
   /// Absolute floor (about -74 dBFS): quieter frames are always silence.
   static const double _silenceFloor = 2e-4;
@@ -101,11 +94,42 @@ class SpeechAnalyzer {
   /// Per-frame acoustic features of [pcm] (exposed for tests and tools).
   List<SpeechFrameFeatures> features(WavPcm pcm) => _Analysis(pcm, null).frames;
 
-  /// The viseme spans and prosody marks of [pcm]; [text] (the sentence that
-  /// was synthesised) is a hint for p/b/m and f/v and decides [isQuestion].
-  SpeechTimeline analyze(WavPcm pcm, {String? text}) {
+  /// The analysis frames of [pcm], as the aligner reads them.
+  SpeechFrames frames(WavPcm pcm) => _Analysis(pcm, null).speechFrames;
+
+  /// The viseme spans and prosody marks of [pcm]. [text] is the sentence
+  /// that was synthesised, in [language] (`en`, `fr` or a locale tag): it is
+  /// aligned to the audio for the viseme labels (or, when it does not match,
+  /// is a hint for p/b/m and f/v), and decides `isQuestion`. Never throws for
+  /// any text.
+  SpeechTimeline analyze(WavPcm pcm, {String? text, String language = 'en'}) {
     final _Analysis a = _Analysis(pcm, text);
-    return a.timeline();
+    final AlignedVisemes? aligned = alignCostLimit < 0 || a.text == null
+        ? null
+        : _alignFrames(a.speechFrames, a.text!, language);
+    final bool accepted =
+        aligned != null && aligned.costPerFrame <= alignCostLimit;
+    return a.timeline(aligned: accepted ? aligned : null);
+  }
+
+  /// The raw alignment of [text] to [pcm], whatever its cost (for tests and
+  /// tools); null when the text has no phones or cannot fit the audio.
+  AlignedVisemes? align(
+    WavPcm pcm, {
+    required String text,
+    String language = 'en',
+  }) => _alignFrames(_Analysis(pcm, null).speechFrames, text, language);
+
+  static AlignedVisemes? _alignFrames(
+    SpeechFrames frames,
+    String text,
+    String language,
+  ) {
+    final List<PhonemeToken> tokens = const TextPhonemizer().phonemize(
+      text,
+      language: language,
+    );
+    return const PhonemeAligner().align(tokens, frames);
   }
 }
 
@@ -153,6 +177,9 @@ class _Analysis {
   }
 
   late final List<SpeechFrameFeatures> frames;
+
+  SpeechFrames get speechFrames =>
+      SpeechFrames(features: frames, duration: duration);
 
   /// Sentence reference RMS (95th percentile of the frame RMS).
   double reference = 0;
@@ -812,12 +839,29 @@ class _Analysis {
     return endHz >= startHz * 1.15;
   }
 
-  SpeechTimeline timeline() {
+  /// Frame classes from an accepted alignment: each frame takes the span
+  /// its start falls in.
+  List<Viseme> alignedClasses(AlignedVisemes aligned) {
+    final List<Viseme> out = List<Viseme>.filled(frameCount, Viseme.sil);
+    int k = 0;
+    for (int f = 0; f < frameCount; f++) {
+      final Duration at = frameStart(f);
+      while (k < aligned.spans.length - 1 && aligned.spans[k].end <= at) {
+        k++;
+      }
+      out[f] = aligned.spans[k].viseme;
+    }
+    return out;
+  }
+
+  SpeechTimeline timeline({AlignedVisemes? aligned}) {
     final bool question = isQuestion();
     if (frameCount == 0) {
       return SpeechTimeline(isQuestion: question);
     }
-    final List<VisemeSpan> visemes = spans(classify());
+    final List<VisemeSpan> visemes = spans(
+      aligned == null ? classify() : alignedClasses(aligned),
+    );
     final SpeechTimeline bare = SpeechTimeline(
       visemes: visemes,
       duration: duration,

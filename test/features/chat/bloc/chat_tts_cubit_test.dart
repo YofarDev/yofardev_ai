@@ -153,8 +153,11 @@ void main() {
         () => mockAmplitudeService.extractAmplitudes(any()),
       ).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
       when(
-        () =>
-            mockAmplitudeService.analyzeSpeech(any(), text: any(named: 'text')),
+        () => mockAmplitudeService.analyzeSpeech(
+          any(),
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+        ),
       ).thenAnswer((_) async => null);
       when(
         () => mockTtsManager.deleteAudio(any()),
@@ -615,10 +618,12 @@ void main() {
         'analyses the parked sentence text on arrival and passes the result',
         () async {
           when(() => mockTtsManager.peekText(path)).thenReturn('Big boat.');
+          when(() => mockTtsManager.peekLanguage(path)).thenReturn('fr');
           when(
             () => mockAmplitudeService.analyzeSpeech(
               path,
               text: any(named: 'text'),
+              language: any(named: 'language'),
             ),
           ).thenAnswer((_) async => analysed);
 
@@ -626,11 +631,31 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 50));
 
           verify(
-            () => mockAmplitudeService.analyzeSpeech(path, text: 'Big boat.'),
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: 'Big boat.',
+              language: 'fr',
+            ),
           ).called(1);
           expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[analysed]);
         },
       );
+
+      test('an unknown language is analysed as English', () async {
+        when(() => mockTtsManager.peekText(path)).thenReturn('Big boat.');
+        when(() => mockTtsManager.peekLanguage(path)).thenReturn(null);
+
+        mockTtsManager.emitAudioPath(path);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        verify(
+          () => mockAmplitudeService.analyzeSpeech(
+            path,
+            text: 'Big boat.',
+            language: 'en',
+          ),
+        ).called(1);
+      });
 
       test(
         'a slow analysis delays playback at most ${ChatTtsCubit.timelineWait.inMilliseconds} ms, then plays with no timeline',
@@ -640,6 +665,7 @@ void main() {
             () => mockAmplitudeService.analyzeSpeech(
               path,
               text: any(named: 'text'),
+              language: any(named: 'language'),
             ),
           ).thenAnswer((_) => never.future);
 
@@ -668,6 +694,7 @@ void main() {
           () => mockAmplitudeService.analyzeSpeech(
             path,
             text: any(named: 'text'),
+            language: any(named: 'language'),
           ),
         ).thenThrow(StateError('boom'));
 
