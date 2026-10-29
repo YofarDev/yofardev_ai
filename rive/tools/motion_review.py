@@ -1,6 +1,7 @@
 """Capture avatar gestures, facial phases and presence with the real Rive renderer.
 
 uv run --with pillow python rive/tools/motion_review.py --label after
+uv run --with pillow python rive/tools/motion_review.py --ik-check   # runtime IK vs the Python solver
 Use --project to review a saved source snapshot; output stays under build/.
 """
 
@@ -9,13 +10,84 @@ from __future__ import annotations
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from html import escape
+import json
+import math
 from pathlib import Path
 import shutil
 import xml.etree.ElementTree as ET
 
 from PIL import Image
 
+import ik_check
 from review import ROOT, run, sheet
+
+IK_GESTURES = ("wave", "laugh", "facepalm", "shrug", "clap", "think")
+IK_TOLERANCE = 2.0  # px: rendered hand vs the Python two-bone solver, per sampled frame
+
+
+def ik_report(project_src: Path, out: Path, step: int = 4) -> bool:
+    """Render the marker copies and compare every sampled frame; writes ik_check.json / .txt."""
+    board = ET.parse(project_src / "avatar.rml").getroot().find("Artboard")
+    arms = ik_check.arms(board)
+    projects = {}
+    for which in ik_check.PASSES:
+        projects[which] = out / f"ik_{which}"
+        ik_check.marker_copy(project_src / "avatar.rml", projects[which], which)
+    durations = {a.get("name"): int(a.get("duration")) for a in board.findall("LinearAnimation")}
+    jobs = []
+    for g in IK_GESTURES:
+        for f in range(0, durations["gesture_" + g] + 1, step):
+            for which in projects:
+                jobs.append((g, f, which))
+
+    def capture(job: tuple[str, int, str]) -> None:
+        g, f, which = job
+        run(projects[which], out / "ik" / which / g / f"{f:04d}.png", f"--data=gestureId={g}", "--data=gesture=true",
+            f"--advance={f + 1}")
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        list(pool.map(capture, jobs))
+    result: dict = {}
+    lines = []
+    worst_all = 0.0
+    for g in IK_GESTURES:
+        ch = ik_check.channels(board, "gesture_" + g)
+        frames = range(0, durations["gesture_" + g] + 1, step)
+        seen = {}
+        for f in frames:
+            img = {w: Image.open(out / "ik" / w / g / f"{f:04d}.png") for w in projects}
+            seen[f] = {arm.side: {**ik_check.find(img["frame"], {k: ik_check.COLOURS[arm.side][k] for k in "OXY"}),
+                                  **ik_check.find(img["joints"], {k: ik_check.COLOURS[arm.side][k] for k in "EW"})}
+                       for arm in arms}
+        # the capture of --advance=N can sit a frame off the animation clock: pick the best offset
+        best = None
+        for offset in (-1, 0, 1):
+            errs = []
+            for f in frames:
+                for arm in arms:
+                    m = seen[f][arm.side]
+                    if not all(k in m for k in "OXYEW"):
+                        continue
+                    elbow, wrist = ik_check.expected(arm, ch, max(0, f + offset))
+                    pe, pw = ik_check.to_image(m, elbow), ik_check.to_image(m, wrist)
+                    errs.append((f, arm.side, math.dist(pw, m["W"]), math.dist(pe, m["E"])))
+            score = max(e[2] for e in errs)
+            if best is None or score < best[0]:
+                best = (score, offset, errs)
+        score, offset, errs = best
+        worst_e = max(e[3] for e in errs)
+        worst_all = max(worst_all, score)
+        result[g] = {"offset": offset, "hand_max_px": round(score, 2), "elbow_max_px": round(worst_e, 2),
+                     "hand_mean_px": round(sum(e[2] for e in errs) / len(errs), 2), "samples": len(errs),
+                     "frames": [[f, s_, round(h, 2), round(e, 2)] for f, s_, h, e in errs]}
+        lines.append(f"{g:10s} offset {offset:+d}  hand max {score:5.2f} px  mean {result[g]['hand_mean_px']:4.2f}"
+                     f"  elbow max {worst_e:5.2f} px  ({len(errs)} arm-frames)")
+    ok = worst_all <= IK_TOLERANCE
+    lines.append(f"{'PASS' if ok else 'FAIL'}: worst hand error {worst_all:.2f} px (tolerance {IK_TOLERANCE} px)")
+    (out / "ik_check.json").write_text(json.dumps(result, indent=1))
+    (out / "ik_check.txt").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines))
+    return ok
 
 
 def main() -> None:
@@ -23,12 +95,16 @@ def main() -> None:
     parser.add_argument("--project", type=Path, default=ROOT / "rive/avatar")
     parser.add_argument("--label", default="after")
     parser.add_argument("--dense", action="store_true", help="Capture at 20 fps for playback")
+    parser.add_argument("--ik-check", action="store_true",
+                        help=f"Compare the rendered elbow and hand with the Python solver (hand within {IK_TOLERANCE} px)")
     args = parser.parse_args()
     out = ROOT / "build/avatar-motion-review" / args.label
     project = out / "source"
     project.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(args.project / "avatar.rml", project / "avatar.rml")
     (project / "rive.yaml").write_text("name: motion\nmain: Avatar\noutput: {dir: build}\n")
+    if args.ik_check:
+        raise SystemExit(0 if ik_report(project, out) else 1)
     board = ET.parse(project / "avatar.rml").getroot().find("Artboard")
     durations = {a.get("name"): int(a.get("duration")) for a in board.findall("LinearAnimation")}
     cases = [(g, [f"--data=gestureId={g}", "--data=gesture=true"], durations["gesture_" + g] + 12)

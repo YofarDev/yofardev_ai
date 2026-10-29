@@ -1,0 +1,7 @@
+wave       offset +0  hand max  0.88 px  mean 0.35  elbow max  0.57 px  (62 arm-frames)
+laugh      offset -1  hand max  0.86 px  mean 0.38  elbow max  0.49 px  (50 arm-frames)
+facepalm   offset +0  hand max  0.75 px  mean 0.23  elbow max  0.44 px  (68 arm-frames)
+shrug      offset +0  hand max  0.44 px  mean 0.15  elbow max  0.32 px  (48 arm-frames)
+clap       offset +0  hand max  0.90 px  mean 0.21  elbow max  0.51 px  (64 arm-frames)
+think      offset +0  hand max  0.75 px  mean 0.24  elbow max  0.53 px  (68 arm-frames)
+PASS: worst hand error 0.90 px (tolerance 2.0 px)

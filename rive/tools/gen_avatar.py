@@ -25,6 +25,7 @@ from rml import Doc, El, lin, rad, smooth_path, track, write  # noqa: E402
 from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
 from head_turn import HeadTurn, rig_head  # noqa: E402
 import face_rig  # noqa: E402
+import arm_rig  # noqa: E402
 from face_rig import NUMBERS as FACE_NUMBERS  # noqa: E402
 
 
@@ -291,11 +292,14 @@ def build_sleeves(rig: Rig, elbow: Rig, side: int) -> tuple[Rig, Rig, dict[str, 
 
 
 def build_arm(rig: Rig, side: int) -> dict:
+    """Arm art; arm_rig.rig_arm then hangs it on the M3 bone chain (the nodes below keep their ids:
+    UpperArt / ForeArt become the sleeve frames on the art bones, Hand rides the Wrist bone; the
+    Elbow node only gives the forearm art its coordinates and is retired)."""
     mx = (lambda x: 800 - x) if side == 1 else (lambda x: x)
-    up_art = rig.node("UpperArt")               # scaleY = foreshortening of the upper arm
-    elbow = rig.node("Elbow", mx(240), 900)     # y keyed with the foreshortening
-    fore_art = elbow.node("ForeArt")            # scaleY = foreshortening of the forearm
-    hand = elbow.node("Hand", mx(240), 1070)    # y keyed with the forearm foreshortening
+    up_art = rig.node("UpperArt")               # upper sleeve frame (on UpperArtBone)
+    elbow = rig.node("Elbow", mx(240), 900)     # retired: forearm art coordinates only
+    fore_art = elbow.node("ForeArt")            # forearm sleeve frame (on ForeArtBone)
+    hand = elbow.node("Hand", mx(240), 1070)    # on the Wrist bone; keyed rotation = the hand's lag
     hand_wave = hand.node("HandWave", scaleX=1.15, scaleY=1.15)
     skin_solo = hand_wave.solo("HandSkin")      # bare hand or costume glove (Top/Costume layers)
     skins: dict[str, El] = {}
@@ -339,11 +343,12 @@ def build_arm(rig: Rig, side: int) -> dict:
     rig.el.children.remove(up_solo.el)
     fore_art.el.children = [fore_solo.el]
     # front-most first: hand > forearm sleeve > upper sleeve
-    elbow.el.children = [hand.el, fore_art.el]
-    rig.el.children = [elbow.el, up_art.el]
-    return {"arm": rig, "elbow": elbow, "hand": hand, "wave": hand_wave, "up_solo": up_solo, "up_art": up_art,
-            "fore_art": fore_art, "pose_sets": pose_sets, "skin_solo": skin_solo, "skins": skins,
-            "fore_solo": fore_solo, "ups": ups, "fores": fores}
+    elbow.el.children = []
+    arm = {"arm": rig, "elbow": elbow, "hand": hand, "wave": hand_wave, "up_solo": up_solo, "up_art": up_art,
+           "fore_art": fore_art, "pose_sets": pose_sets, "skin_solo": skin_solo, "skins": skins,
+           "fore_solo": fore_solo, "ups": ups, "fores": fores}
+    arm_rig.rig_arm(arm, side)
+    return arm
 
 
 ARM_R = build_arm(arm_r, -1)
@@ -1087,6 +1092,10 @@ body_g.el.children = [bubble.el, question.el, clap_fx.el, swing_r.el, swing_l.el
                       top_front.el, chin_sh, neck_sh, neck, top_back.el, back_fx.el, hit_body]
 
 cloth_parts = refine_wardrobe(body_g, head, TF, TB, HATS, ARMS, GLASSES, cape_rig)
+# M3: sleeves and bare arms skinned across the elbow (after the wardrobe pass adds its sleeve details)
+for a in ARMS:
+    arm_rig.continuous_sleeves(a, -1 if a is ARM_R else 1, {oid: SLEEVES[oid][4] for oid in OUTFITS})
+SKINNED_SLEEVES = sum(arm_rig.skin_sleeves(a, -1 if a is ARM_R else 1) for a in ARMS)
 # The cape's attachment remains on the collar; a separate response pivots it
 # while the lower contour ripples. The costume layer only selects visibility.
 cape_anchor = (float(cape_rig.el.attrs["x"]), float(cape_rig.el.attrs["y"]))
@@ -1407,10 +1416,16 @@ def _unwrap(prev: float, v: float) -> float:
 
 def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
              hand: list[tuple[int, str]] | None = None, step: int = 2) -> list[El]:
-    """IK baked along the WRIST path (not joint angles), so the hand travels on a smooth eased
-    arc between key poses and never swings wide. Pose = (frame, wrist|None, finger_deg, fs, fs2)
-    with fs/fs2 the upper/forearm foreshortening. The hand trails the forearm by `lag` frames;
-    `hand` switches the hand drawing [(frame, pose name)]."""
+    """The wrist path is authored (not joint angles), so the hand travels on a smooth eased arc
+    between key poses and never swings wide. Pose = (frame, wrist|None, finger_deg, fs, fs2) with
+    fs/fs2 the upper/forearm foreshortening. The hand trails the forearm by `lag` frames; `hand`
+    switches the hand drawing [(frame, pose name)].
+
+    M3: the runtime IKConstraint poses the arm. The Python solver (avatar_kit.ik) still solves every
+    sample; its forward kinematics give the keyed HandTarget (arm_rig.gesture_tracks), its elbow side
+    the gesture's invertDirection, and its hand angle the Hand rotation keys. The retired shoulder /
+    elbow rotation, joint offset and art scaleY tracks are still built so their main-doc ids stay
+    burnt (every other id is unchanged), then dropped."""
     a = ARMS[0 if side == -1 else 1]
     rest = (800 - REST[0] if side == 1 else REST[0], REST[1])
     P = [(p[0], rest if p[1] is None else p[1], p[2], p[3] if len(p) > 3 else 1.0, p[4] if len(p) > 4 else 1.0)
@@ -1441,6 +1456,7 @@ def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
     frames = sorted(set(list(range(P[0][0], P[-1][0], step)) + [p[0] for p in P]))
     k1, k2, k3, ey, us, hy, fsy = [], [], [], [], [], [], []
     prev = (0.0, 0.0, 0.0)
+    samples: list[tuple[int, tuple[float, float, float], float, float]] = []
     for f in frames:
         rest_pose = any(p[0] == f and p[1] is None for p in poses)
         w, _, fs, fs2 = sample(f)
@@ -1448,6 +1464,7 @@ def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
         r = (0.0, 0.0, 0.0) if rest_pose else ik(side, w, deg_lag, out, fs, fs2)
         r = tuple(_unwrap(pv, v) for pv, v in zip(prev, r))
         prev = r
+        samples.append((f, r, fs, fs2))
         k1.append((f, r[0], "linear"))
         k2.append((f, r[1], "linear"))
         k3.append((f, r[2], "linear"))
@@ -1455,12 +1472,17 @@ def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
         us.append((f, fs, "linear"))
         hy.append((f, L2 * fs2, "linear"))
         fsy.append((f, fs2, "linear"))
-    tr = [T(a["arm"], rotation=k1), T(a["elbow"], rotation=k2, y=ey), T(a["hand"], rotation=k3, y=hy),
-          T(a["up_art"], scaleY=us), T(a["fore_art"], scaleY=fsy)]
+    retired = [T(a["arm"], rotation=k1), T(a["elbow"], rotation=k2, y=ey), T(a["hand"], rotation=k3, y=hy),
+               T(a["up_art"], scaleY=us), T(a["fore_art"], scaleY=fsy)]
+    hand_track = retired[2]
+    hand_track.children = [p for p in hand_track.children if p.attrs["property"] == "rotation"]
+    arm_rig.simplify_track(hand_track, arm_rig.HAND_TOL)
+    tr = [hand_track]
     if hand:
         for solo, ps in a["pose_sets"]:
             tr.append(T(solo, activeComponentId=[(f, ps[n]) for f, n in hand]))
-    return tr
+    ik_tracks, _ = arm_rig.gesture_tracks(a, side, samples, [(p[0], p[3], p[4]) for p in P])
+    return tr + ik_tracks
 
 
 def mirror_poses(poses: list[Pose]) -> list[Pose]:
@@ -1493,6 +1515,13 @@ gesture_rest += [K(spring, rotation=0.0, y=-310.0) for spring in (hair_follow, b
 gesture_rest += [K(part.response, rotation=0.0) for part in cloth_parts]
 gesture_rest += [K(e["gesture_lid"], scaleY=0.0) for e in EYES]
 gesture_rest += [K(e["gesture_shut"], opacity=0.0) for e in EYES] + [K(line_acting, scaleY=1.0, rotation=0.0)]
+# M3: the retired Elbow / UpperArt / ForeArt channels and the Hand y (ids burnt above) give way to the
+# IK rest pose (target, chain lengths, art scales, bend)
+RETIRED_ARM = {a[k].ref() for a in ARMS for k in ("elbow", "up_art", "fore_art")}
+HAND_IDS = {a["hand"].ref() for a in ARMS}
+gesture_rest = [t for t in gesture_rest if t.attrs["objectId"] not in RETIRED_ARM and not (
+    t.attrs["objectId"] in HAND_IDS and t.children[0].attrs["property"] == "y")]
+gesture_rest += [t for a in ARMS for t in arm_rig.rest_tracks(a)]
 g_none = A("gesture_none", 1, gesture_rest)
 
 G: dict[str, El] = {}
@@ -1672,6 +1701,12 @@ def channel_at(keys: list[tuple[float, float]], frame: float) -> float:
             return v0 + (v1 - v0) * _smooth((frame - f0) / (f1 - f0))
     return keys[-1][1]
 
+
+for animation in G.values():
+    keyed = {t.attrs["objectId"] for t in animation.children}
+    for a in ARMS:
+        if a["target"].ref() not in keyed:      # e.g. laugh, nod: the arm hangs at rest, history-free
+            animation.add(*arm_rig.rest_tracks(a))
 
 for animation in G.values():
     duration = int(animation.attrs["duration"])
@@ -1951,7 +1986,7 @@ joy = d("Joystick", posX=400.0, posY=420.0, width=900.0, height=700.0, xId=look_
         handleSourceId=look_handle.ref(), name="Look")
 
 style = d("LayoutComponentStyle", name="Artboard Style")
-artboard = d("Artboard", style, sm, EASE, EASE_OUT, EASE_IN, *EV_GESTURE.values(), *EV_TAP.values(), *EV_PRESENCE.values(), joy,
+artboard = d("Artboard", style, sm, EASE, EASE_OUT, EASE_IN, arm_rig.SMOOTHSTEP, *EV_GESTURE.values(), *EV_TAP.values(), *EV_PRESENCE.values(), joy,
              look_handle, root.el, hit_all, *anims,
              width=float(W), height=float(H), name="Avatar", defaultStateMachineId=sm.ref(), viewModelId=vm.ref(),
              viewModelInstanceId=inst.ref(), styleId=style.ref(), clip=True)
