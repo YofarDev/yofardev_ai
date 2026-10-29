@@ -111,14 +111,17 @@ void main() {
           isNotNull,
           reason: '$property is not a VM enum property',
         );
+        // The VM instance is shared by later tests: restore the default.
+        final String original = enumProperty!.value;
         for (final String value in values) {
-          enumProperty!.value = value;
+          enumProperty.value = value;
           expect(
             enumProperty.value,
             value,
             reason: '$property rejected value "$value"',
           );
         }
+        enumProperty.value = original;
       });
     });
 
