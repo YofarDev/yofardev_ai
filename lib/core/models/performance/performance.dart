@@ -4,6 +4,7 @@ library;
 
 export 'action_unit_sides.dart';
 export 'action_units.dart';
+export 'avatar_prop.dart';
 export 'emotion_space.dart';
 export 'emotion_vector.dart';
 export 'gaze_target.dart';

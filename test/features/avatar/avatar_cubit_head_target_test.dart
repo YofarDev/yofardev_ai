@@ -8,10 +8,12 @@ import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/performance/gaze_target.dart';
 import 'package:yofardev_ai/core/models/result.dart';
+import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/head_target_mapper.dart';
 import 'package:yofardev_ai/features/sound/sound.dart';
 
 class _MockAvatarRepository extends Mock implements AvatarRepository {}
@@ -93,6 +95,47 @@ void main() {
         expect(director.current.gaze, const GazeTarget.user());
       },
     );
+
+    test('turns to the tablet (0.6, -0.5) while a lookup tool runs', () async {
+      final Future<void> turned = expectLater(
+        cubit.stream.map((AvatarState s) => s.headTarget),
+        emitsInOrder(<Matcher>[
+          equals(const HeadTarget(0.6, -0.5, reading: true)),
+          equals(HeadTarget.zero),
+        ]),
+      );
+      director.setActiveTool('getCurrentWeather');
+      director.setActiveTool(null);
+      await turned;
+    });
+
+    test('watches the caret while the user types', () async {
+      final Future<void> watching = expectLater(
+        cubit.stream.map((AvatarState s) => s.headTarget),
+        emits(
+          predicate<HeadTarget>(
+            (HeadTarget t) =>
+                (t.yaw - 0.12).abs() < 1e-9 && t.pitch == kCaretPitch,
+          ),
+        ),
+      );
+      director.setComposer(
+        const ComposerActivity(typing: true, caretFraction: 0.8, lastChar: 'a'),
+      );
+      await watching;
+    });
+
+    test('a tap on the avatar or a prop is user activity', () async {
+      int signals = 0;
+      final StreamSubscription<void> sub = director.activity.listen(
+        (_) => signals++,
+      );
+      cubit.onAvatarTapped('head');
+      cubit.onPropTapped(AvatarScene.livingRoom, 'tv');
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+      expect(signals, 2);
+    });
 
     test('does not emit again when the head target is unchanged', () async {
       director.setActiveTool('web_search');

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/performance/avatar_prop.dart';
 import 'package:yofardev_ai/core/models/performance/gaze_target.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/head_pose.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/head_target_mapper.dart';
@@ -22,7 +23,7 @@ void main() {
 
     test('only a tool-driven glance reads', () {
       expect(headTargetFor(const GazeTarget.away(0.6)).reading, isFalse);
-      expect(headTargetFor(const GazeTarget.caret()).reading, isFalse);
+      expect(headTargetFor(const GazeTarget.caret(0.5)).reading, isFalse);
       expect(
         headTargetFor(
           const GazeTarget.user(),
@@ -67,8 +68,39 @@ void main() {
 
     test('caret looks down at the composer', () {
       expect(
-        headTargetFor(const GazeTarget.caret()),
+        headTargetFor(const GazeTarget.caret(0.5)),
         const HeadTarget(0, -0.8),
+      );
+    });
+
+    test('caret follows the caret across the field', () {
+      expect(headTargetFor(const GazeTarget.caret(0)).yaw, closeTo(-0.2, 1e-9));
+      expect(headTargetFor(const GazeTarget.caret(1)).yaw, closeTo(0.2, 1e-9));
+      expect(
+        headTargetFor(const GazeTarget.caret(0.8)).yaw,
+        closeTo(0.12, 1e-9),
+      );
+      expect(headTargetFor(const GazeTarget.caret(0.8)).pitch, kCaretPitch);
+      expect(headTargetFor(const GazeTarget.caret(9)).yaw, closeTo(0.2, 1e-9));
+    });
+
+    test('a held tablet overrides the gaze: turned and reading', () {
+      const HeadTarget tablet = HeadTarget(0.6, -0.5, reading: true);
+      expect(
+        headTargetFor(const GazeTarget.user(), prop: AvatarProp.tablet),
+        tablet,
+      );
+      expect(
+        headTargetFor(
+          const GazeTarget.away(0.6),
+          activeTool: 'searchGoogle',
+          prop: AvatarProp.tablet,
+        ),
+        tablet,
+      );
+      expect(
+        headTargetFor(const GazeTarget.user(), prop: AvatarProp.none),
+        HeadTarget.zero,
       );
     });
 

@@ -7,14 +7,25 @@ import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
+import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/idle_ladder.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/performance_director.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_cue_service.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 
 class MockTalkingRepository extends Mock implements TalkingRepository {}
+
+class _NoPowerSaver implements PowerSaverSource {
+  @override
+  Future<bool> get isOn async => false;
+
+  @override
+  Stream<bool> get changes => const Stream<bool>.empty();
+}
 
 void main() {
   late AvatarAnimationService animationService;
@@ -305,6 +316,112 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 150));
       await drain();
       expect(director.current.speaking, isFalse);
+    });
+  });
+
+  group('AvatarCueService presence', () {
+    test('composer reports reach the director', () async {
+      final ComposerActivityService composer = ComposerActivityService();
+      addTearDown(composer.dispose);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        composer: composer.activity,
+      );
+      addTearDown(service.dispose);
+
+      composer.report(
+        const ComposerActivity(typing: true, caretFraction: 0.8, lastChar: 'a'),
+      );
+      await drain();
+      expect(director.current.gaze, const GazeTarget.caret(0.8));
+      expect(director.current.lean, 0.6);
+
+      composer.clear();
+      await drain();
+      expect(director.current.lean, 0);
+    });
+
+    test('the ladder follows the director: stages in, activity out', () async {
+      final IdleLadder ladder = IdleLadder(
+        now: () => currentTime,
+        power: _NoPowerSaver(),
+        reduceMotion: () => false,
+      );
+      addTearDown(ladder.dispose);
+      final ComposerActivityService composer = ComposerActivityService();
+      addTearDown(composer.dispose);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        composer: composer.activity,
+        idleLadder: ladder,
+      );
+      addTearDown(service.dispose);
+
+      currentTime = currentTime.add(const Duration(minutes: 11));
+      ladder.tick();
+      await drain();
+      expect(ladder.stage, 3);
+      expect(director.current.idleStage, 3);
+      expect(director.current.prop, AvatarProp.tablet);
+
+      // a tap on the avatar (the cubit calls this) resets both
+      director.onUserActivity();
+      await drain();
+      expect(ladder.stage, 0);
+      expect(director.current.idleStage, 0);
+      expect(director.current.prop, AvatarProp.none);
+
+      // typing resets the ladder too
+      currentTime = currentTime.add(const Duration(minutes: 3));
+      ladder.tick();
+      await drain();
+      expect(director.current.idleStage, 2);
+      composer.report(const ComposerActivity(typing: true, lastChar: 'a'));
+      await drain();
+      expect(ladder.stage, 0);
+      expect(director.current.idleStage, 0);
+    });
+
+    test('speech starting resets a ladder that has the tablet out', () async {
+      final IdleLadder ladder = IdleLadder(
+        now: () => currentTime,
+        power: _NoPowerSaver(),
+        reduceMotion: () => false,
+      );
+      addTearDown(ladder.dispose);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        idleLadder: ladder,
+      );
+      addTearDown(service.dispose);
+
+      currentTime = currentTime.add(const Duration(minutes: 11));
+      ladder.tick();
+      await drain();
+      expect(director.current.prop, AvatarProp.tablet);
+
+      playbackService.startAmplitudeAnimation(
+        'a.wav',
+        <int>[10, 10],
+        const Duration(milliseconds: 50),
+        caption: 'Hello.',
+      );
+      await drain();
+      expect(director.current.speaking, isTrue);
+      expect(director.current.prop, AvatarProp.none);
+      expect(director.current.idleStage, 0);
+      expect(ladder.stage, 0);
+      expect(director.current.gaze, const GazeTarget.user());
+      await Future<void>.delayed(const Duration(milliseconds: 150));
     });
   });
 }

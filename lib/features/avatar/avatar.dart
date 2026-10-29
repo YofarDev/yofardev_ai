@@ -12,6 +12,7 @@ export 'domain/models/performance_intent.dart';
 export 'domain/services/avatar_cue_service.dart';
 export 'domain/services/auto_acting_rules.dart';
 export 'domain/services/face_performer.dart';
+export 'domain/services/idle_ladder.dart';
 export 'domain/services/performance_director.dart';
 export 'domain/services/prop_reaction_service.dart';
 export 'domain/repositories/avatar_repository.dart';

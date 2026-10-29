@@ -11,6 +11,7 @@ import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
 import '../../features/avatar/domain/services/face_performer.dart';
+import '../../features/avatar/domain/services/idle_ladder.dart';
 import '../../features/avatar/domain/services/performance_director.dart';
 import '../../features/chat/domain/repositories/global_memory_repository.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
@@ -64,6 +65,8 @@ import '../services/llm/llm_service_interface.dart';
 import '../services/llm/llm_streaming_service.dart';
 import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
+import '../services/power/power_saver_source.dart';
+import '../services/presence/composer_activity_service.dart';
 import '../services/quality/frame_timing_source.dart';
 import '../services/quality/quality_tier_service.dart';
 import '../services/settings_local_datasource.dart';
@@ -319,6 +322,27 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<PerformanceDirector>(
     () => PerformanceDirector(now: DateTime.now),
   );
+  getIt.registerLazySingleton<ComposerActivityService>(
+    ComposerActivityService.new,
+    dispose: (ComposerActivityService service) => service.dispose(),
+  );
+  getIt.registerLazySingleton<PowerSaverSource>(
+    BatteryPowerSaverSource.new,
+    dispose: (PowerSaverSource source) async {
+      if (source is BatteryPowerSaverSource) {
+        await source.dispose();
+      }
+    },
+  );
+  getIt.registerLazySingleton<IdleLadder>(
+    () => IdleLadder(
+      now: DateTime.now,
+      power: getIt<PowerSaverSource>(),
+      reduceMotion: () =>
+          PlatformDispatcher.instance.accessibilityFeatures.disableAnimations,
+    ),
+    dispose: (IdleLadder ladder) => ladder.dispose(),
+  );
   getIt.registerLazySingleton<AvatarCueService>(
     () => AvatarCueService(
       playbackService: getIt<TtsPlaybackService>(),
@@ -327,9 +351,12 @@ Future<void> setupServiceLocator() async {
       director: getIt<PerformanceDirector>(),
       moods: getIt<AppLifecycleService>().moodEvents,
       toolActivity: getIt<ChatStreamingService>().toolActivity,
+      composer: getIt<ComposerActivityService>().activity,
+      idleLadder: getIt<IdleLadder>(),
     ),
   );
   getIt<AvatarCueService>();
+  unawaited(getIt<IdleLadder>().start());
   // Eager for the same reason: it must see every intent and playback event.
   getIt.registerLazySingleton<FacePerformer>(
     () => FacePerformer(

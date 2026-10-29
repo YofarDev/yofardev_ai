@@ -1,6 +1,7 @@
 import '../../../../core/models/performance/performance.dart';
 
-/// Everything the face rig of `rive/CONTRACT.md` v6 needs for one frame:
+/// Everything the face rig of `rive/CONTRACT.md` v6 (plus the listening
+/// [lean] the v7 rig takes) needs for one frame:
 /// the 14 action units (emotion and speech merged), their per-side offsets
 /// ([left] and [right], the viewer's), the speech mouth extras, head roll,
 /// breath, an additive nod on the head pitch, blink control, and the gaze
@@ -19,6 +20,7 @@ class FaceFrame {
     this.blinkSerial = 0,
     this.gazeLock = false,
     this.saccadeSerial = 0,
+    this.lean = 0,
   });
 
   static const FaceFrame rest = FaceFrame();
@@ -59,6 +61,10 @@ class FaceFrame {
   /// stop).
   final int saccadeSerial;
 
+  /// 0..1: the torso and head tip toward the viewer while the user types
+  /// (0 at rest).
+  final double lean;
+
   Map<String, Object> toJson() => <String, Object>{
     'au': <String, double>{
       'browInnerUp': au.browInnerUp,
@@ -87,6 +93,7 @@ class FaceFrame {
     'blinkSerial': blinkSerial,
     'gazeLock': gazeLock,
     'saccadeSerial': saccadeSerial,
+    'lean': lean,
   };
 
   @override
@@ -103,7 +110,8 @@ class FaceFrame {
       other.autoBlink == autoBlink &&
       other.blinkSerial == blinkSerial &&
       other.gazeLock == gazeLock &&
-      other.saccadeSerial == saccadeSerial;
+      other.saccadeSerial == saccadeSerial &&
+      other.lean == lean;
 
   @override
   int get hashCode => Object.hash(
@@ -119,6 +127,7 @@ class FaceFrame {
     blinkSerial,
     gazeLock,
     saccadeSerial,
+    lean,
   );
 
   @override

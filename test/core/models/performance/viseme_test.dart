@@ -45,7 +45,7 @@ void main() {
       const GazeTarget user = GazeTarget.user();
       final GazeAway away = GazeTarget.away(0.4) as GazeAway;
       final GazePoint point = GazeTarget.point(0.2, 0.8) as GazePoint;
-      const GazeTarget caret = GazeTarget.caret();
+      const GazeTarget caret = GazeTarget.caret(0.5);
 
       expect(user, isA<GazeUser>());
       expect(away, isA<GazeAway>());

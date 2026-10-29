@@ -4,11 +4,13 @@ import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/avatar_gesture.dart';
 import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/services/presence/composer_activity_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../talking/talking.dart';
 import '../models/avatar_animation.dart';
 import '../models/performance_intent.dart';
 import 'avatar_animation_service.dart';
+import 'idle_ladder.dart';
 import 'performance_director.dart';
 
 /// Delivers avatar cues to the animation pipeline at the right moment.
@@ -23,6 +25,12 @@ import 'performance_director.dart';
 /// which owns arbitration: one gesture at a time, a bounded queue and the
 /// cooldown. Scene events are never throttled. The animation is triggered
 /// from the director's `pendingGesture` changes.
+///
+/// Presence: the composer's typing reports go to the director, and the
+/// optional [IdleLadder] is bridged both ways: the director's `activity`
+/// (typing, speech, tools, taps) resets the ladder, and the ladder's stages
+/// become the director's idle stage. The ladder stays owned by the
+/// composition root, which starts it.
 class AvatarCueService {
   AvatarCueService({
     required TtsPlaybackService playbackService,
@@ -31,6 +39,8 @@ class AvatarCueService {
     required PerformanceDirector director,
     Stream<AvatarMood> moods = const Stream<AvatarMood>.empty(),
     Stream<String?> toolActivity = const Stream<String?>.empty(),
+    Stream<ComposerActivity> composer = const Stream<ComposerActivity>.empty(),
+    IdleLadder? idleLadder,
   }) : _animationService = animationService,
        _director = director {
     _subscriptions.add(playbackService.events.listen(_onPlaybackEvent));
@@ -38,6 +48,13 @@ class AvatarCueService {
     _subscriptions.add(director.intents.listen(_onIntent));
     _subscriptions.add(moods.listen(director.setMood));
     _subscriptions.add(toolActivity.listen(director.setActiveTool));
+    _subscriptions.add(composer.listen(director.setComposer));
+    if (idleLadder != null) {
+      _subscriptions.add(
+        director.activity.listen((_) => idleLadder.onActivity()),
+      );
+      _subscriptions.add(idleLadder.stages.listen(director.setIdleStage));
+    }
   }
 
   final AvatarAnimationService _animationService;

@@ -6,6 +6,8 @@ import 'package:yofardev_ai/core/services/agent/tool_registry.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
+import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
+import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
 import 'package:yofardev_ai/core/services/speech/speech_input_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
@@ -61,6 +63,13 @@ void main() {
     expect(getIt<GlobalMemoryService>(), isNotNull);
     expect(getIt<AvatarAnimationService>(), isNotNull);
     expect(getIt<AvatarCueService>(), isNotNull);
+    // Presence: the composer's reports, the power saver and the idle ladder
+    // (started by setup on the real battery source, which reads false where
+    // there is no plugin; no await here: see HomeRepositoryImpl above).
+    expect(getIt<ComposerActivityService>(), isNotNull);
+    expect(getIt<PowerSaverSource>(), isA<BatteryPowerSaverSource>());
+    expect(getIt<IdleLadder>(), same(getIt<IdleLadder>()));
+    expect(getIt<IdleLadder>().stage, 0);
     expect(getIt<PropReactionService>(), isNotNull);
     expect(getIt<TtsQueueService>(), isNotNull);
     expect(getIt<AppLifecycleService>(), isNotNull);

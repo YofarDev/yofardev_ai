@@ -118,6 +118,7 @@ class AvatarCubit extends Cubit<AvatarState> {
     final HeadTarget target = headTargetFor(
       intent.gaze,
       activeTool: intent.activeTool,
+      prop: intent.prop,
     );
     if (target != state.headTarget) {
       _emitIfOpen(state.copyWith(headTarget: target));
@@ -445,6 +446,7 @@ class AvatarCubit extends Cubit<AvatarState> {
   /// A tap on a scene prop triggers its local reaction only: no LLM call
   /// and nothing written to chat history.
   void onPropTapped(AvatarScene scene, String propId) {
+    _director?.onUserActivity();
     final PropReaction? reaction = _propReactions.reactionForProp(
       scene,
       propId,
@@ -461,6 +463,7 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   /// A tap on the avatar itself (zone: head or body per contract).
   void onAvatarTapped(String zone) {
+    _director?.onUserActivity();
     final PropReaction? reaction = _propReactions.reactionForZone(zone);
     if (reaction == null) {
       AppLogger.debug(

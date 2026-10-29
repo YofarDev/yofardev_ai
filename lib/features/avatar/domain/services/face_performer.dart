@@ -66,6 +66,15 @@ import 'viseme_blender.dart';
 ///   starts on an inhale when the idle begins), a micro drift of each lip
 ///   corner and a slow head roll and nod drift, all seeded sine sums.
 ///
+/// - **Presence** (the user typing, from the intent): the listening
+///   [FaceFrame.lean] springs to the intent's `lean`; a new `nodSerial` is
+///   one shallow backchannel nod (half a stress nod's depth, seeded attack
+///   and release); a new `reactionSerial` plays a typed-punctuation
+///   reaction: a `?` lifts both brows by [reactionQuestionBrow] and tilts
+///   the head for 0.9 s, a `!` lifts the outer brows by
+///   [reactionExclaimBrow] and the upper lids by [reactionExclaimLid] for
+///   0.6 s. All eased, with a seeded 0-12 % amplitude variety.
+///
 /// [step] allocates nothing once the face is still: it works in fixed
 /// buffers and returns the previous [FaceFrame] while nothing changed (never
 /// while the idle runs).
@@ -109,6 +118,7 @@ class FacePerformer {
   static const double _browSettle = 0.06;
   static const double _rollSettle = 0.25;
   static const double _breathSettle = 0.4;
+  static const double _leanSettle = 0.45;
 
   /// The speech springs lag their target by about a third of their settle
   /// time; reading the timeline this far ahead puts the mouth on the audio.
@@ -216,6 +226,19 @@ class FacePerformer {
   /// The question's brow peak leads the final rising syllable by this much.
   static const double _questionLead = 0.08;
 
+  /// Typed-punctuation reactions (see the class doc): how high they lift.
+  static const double reactionQuestionBrow = 0.45;
+  static const double reactionQuestionRoll = 0.3;
+  static const double reactionExclaimBrow = 0.5;
+  static const double reactionExclaimLid = 0.4;
+  static const double _questionReactionLen = 0.9;
+  static const double _exclaimReactionLen = 0.6;
+  static const double _reactionAttack = 0.15;
+  static const double _reactionRelease = 0.35;
+
+  /// A backchannel nod is half a mid-strength stress nod.
+  static const double _backchannelShare = 0.5;
+
   // — emotion —
   final Float64List _emotionTarget = Float64List(_auCount);
   final Float64List _sideTarget = Float64List(_sideCount * 2);
@@ -319,6 +342,27 @@ class FacePerformer {
   /// 0..1: the lip corners relaxing after the full stop.
   double _relax = 0;
 
+  // — presence (typing) —
+  final _Spring _lean = _Spring();
+  double _leanTarget = 0;
+  final _Spring _lidUp = _Spring();
+  int _nodSerialSeen = 0;
+  int _reactionSerialSeen = 0;
+
+  /// The backchannel nod: its peak clock, depth, attack and release (the
+  /// nod is over at [_bcEnd]).
+  double _bcPeak = -100;
+  double _bcEnd = -100;
+  double _bcDepth = 0;
+  double _bcAttack = 0.07;
+  double _bcRelease = _nodRelease;
+
+  /// The running reaction: start clock, length, amplitude (1..1.12) and kind.
+  PresenceReaction? _reactKind;
+  double _reactStart = -100;
+  double _reactLen = 0;
+  double _reactAmp = 1;
+
   // — idle life —
   final Float64List _idlePhase;
   final _Spring _idleMix = _Spring();
@@ -372,6 +416,7 @@ class FacePerformer {
     _lift,
     _breathDecay,
     _idleMix,
+    _lidUp,
   ];
 
   /// The latest frame produced by [step].
@@ -388,7 +433,10 @@ class FacePerformer {
     if (_idleOn ||
         _speaking ||
         _clock - _endClock < math.max(_tail, _autoBlinkHold) ||
-        _clock - _settleStart < _settleTotal) {
+        _clock - _settleStart < _settleTotal ||
+        _clock < _bcEnd ||
+        _clock - _reactStart < _reactLen ||
+        !_lean.isAt(_leanTarget)) {
       return false;
     }
     for (int i = 0; i < _auCount; i++) {
@@ -630,6 +678,26 @@ class FacePerformer {
           (1 - _smoothstep((sinceStop - 0.5) / 0.8));
     }
 
+    // a backchannel nod while the user types
+    if (_clock < _bcEnd) {
+      nod += _nodCurve(_clock - _bcPeak, _bcDepth, _bcAttack, _bcRelease);
+    }
+
+    // a typed-punctuation reaction: eased brows, lids and tilt
+    double lidTarget = 0;
+    final double reactAge = _clock - _reactStart;
+    if (reactAge >= 0 && reactAge < _reactLen) {
+      final double e = _reactionEnvelope(reactAge, _reactLen) * _reactAmp;
+      if (_reactKind == PresenceReaction.question) {
+        innerTarget += reactionQuestionBrow * e;
+        outerTarget += reactionQuestionBrow * e;
+        rollTarget += reactionQuestionRoll * e;
+      } else {
+        outerTarget += reactionExclaimBrow * e;
+        lidTarget = reactionExclaimLid * e;
+      }
+    }
+
     // breath over the leading silence, released as speech starts
     _parted = 0;
     if (_speaking && tl != null && pos != null) {
@@ -692,6 +760,8 @@ class FacePerformer {
       _outerSide.step(outerSideTarget, _omega(_browSettle), sub);
       _roll.step(rollTarget, _omega(_rollSettle), sub);
       _lift.step(liftTarget, _omega(_rollSettle), sub);
+      _lean.step(_leanTarget, _omega(_leanSettle), sub);
+      _lidUp.step(lidTarget, _omega(_browSettle), sub);
       _idleMix.step(idleWanted ? 1 : 0, _omega(idleWanted ? 0.8 : 0.2), sub);
       if (!_speaking) {
         _breathDecay.step(0, _omega(_breathSettle), sub);
@@ -927,6 +997,7 @@ class FacePerformer {
     for (int i = 0; i < _restingSprings.length; i++) {
       _restingSprings[i].land(0);
     }
+    _lean.land(_leanTarget);
     _breath = 0;
   }
 
@@ -946,7 +1017,49 @@ class FacePerformer {
     _writeSides(sides.right, _sideTarget, _sideCount);
     _arousal = intent.emotion.arousal;
     _valence = intent.emotion.valence;
+    _leanTarget = intent.lean.clamp(0.0, 1.0);
+    if (intent.nodSerial > _nodSerialSeen) {
+      _nodSerialSeen = intent.nodSerial;
+      _startBackchannel();
+    }
+    if (intent.reactionSerial > _reactionSerialSeen) {
+      _reactionSerialSeen = intent.reactionSerial;
+      final PresenceReaction? kind = intent.reaction;
+      if (kind != null) {
+        _startReaction(kind);
+      }
+    }
   }
+
+  /// One shallow nod, starting now: half a mid-strength stress nod with a
+  /// seeded depth, attack and release (no two share a shape).
+  void _startBackchannel() {
+    if (_speaking) {
+      return;
+    }
+    _bcDepth =
+        _backchannelShare * nodDepthFor(0.5) * (0.9 + 0.2 * _rng.nextDouble());
+    _bcAttack = nodAttackFor(0.5) * (0.7 + 0.6 * _rng.nextDouble());
+    _bcRelease = _nodRelease * (0.75 + 0.5 * _rng.nextDouble());
+    // the dip is a gaussian before the beat: aim the beat three attacks on
+    _bcPeak = _clock + 3 * _bcAttack;
+    _bcEnd = _bcPeak + 1.5 * _bcRelease;
+  }
+
+  void _startReaction(PresenceReaction kind) {
+    _reactKind = kind;
+    _reactStart = _clock;
+    _reactLen = kind == PresenceReaction.question
+        ? _questionReactionLen
+        : _exclaimReactionLen;
+    _reactAmp = 1 + 0.12 * _rng.nextDouble();
+  }
+
+  /// 0..1 envelope of a reaction [age] seconds in, of length [len]: an eased
+  /// attack, a hold, an eased release over its last [_reactionRelease].
+  static double _reactionEnvelope(double age, double len) =>
+      _smoothstep(age / _reactionAttack) *
+      (1 - _smoothstep((age - (len - _reactionRelease)) / _reactionRelease));
 
   void _onPlayback(PlaybackEvent event) {
     switch (event) {
@@ -1439,6 +1552,7 @@ class FacePerformer {
     }
     au[_innerI] += _innerUp.x;
     au[_outerI] += _outerUp.x;
+    au[_upperLidI] += _lidUp.x;
     // a blink the performer fired: the brows dip, the cheeks lift
     final double follow = blinkFollow(_clock - _blinkAt);
     au[_browLowerI] += 0.1 * follow;
@@ -1475,6 +1589,7 @@ class FacePerformer {
         : math.max(_breath, _idleBreath).clamp(0.0, 1.0);
     out[_rollO] = reduceMotion ? 0 : (_roll.x + _idleRoll).clamp(-1.0, 1.0);
     out[_nodO] = reduceMotion ? 0 : (nod + _lift.x + _idleNod).clamp(-1.0, 1.0);
+    out[_leanO] = reduceMotion ? 0 : _lean.x.clamp(0.0, 1.0);
     final bool autoBlink = !(_speaking || _clock - _endClock < _autoBlinkHold);
 
     // a still face returns the previous frame: no allocation
@@ -1506,6 +1621,7 @@ class FacePerformer {
       blinkSerial: _blinkSerial,
       gazeLock: _gazeLock,
       saccadeSerial: _saccadeSerial,
+      lean: out[_leanO],
     );
   }
 
@@ -1635,6 +1751,7 @@ const int _auCount = 14;
 const int _innerI = 0;
 const int _outerI = 1;
 const int _browLowerI = 2;
+const int _upperLidI = 4;
 const int _cheekI = 5;
 const int _pullI = 7;
 const int _depressI = 8;
@@ -1656,7 +1773,8 @@ const int _tongueO = _tuckO + 1;
 const int _breathO = _tuckO + 2;
 const int _rollO = _tuckO + 3;
 const int _nodO = _tuckO + 4;
-const int _outCount = _tuckO + 5;
+const int _leanO = _tuckO + 5;
+const int _outCount = _tuckO + 6;
 
 void _writeAus(ActionUnits a, Float64List to) {
   to[0] = a.browInnerUp;

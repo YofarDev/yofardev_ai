@@ -15,6 +15,7 @@ sealed class GazeTarget with _$GazeTarget {
   /// Looking at a screen-space point.
   const factory GazeTarget.point(double x, double y) = GazePoint;
 
-  /// Looking at the text input caret while composing.
-  const factory GazeTarget.caret() = GazeCaret;
+  /// Looking at the text input caret while composing; [x] is where the caret
+  /// sits across the field, 0 (left) to 1 (right).
+  const factory GazeTarget.caret(double x) = GazeCaret;
 }

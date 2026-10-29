@@ -126,13 +126,13 @@ return caret(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  user,TResult Function( double angle)?  away,TResult Function( double x,  double y)?  point,TResult Function()?  caret,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  user,TResult Function( double angle)?  away,TResult Function( double x,  double y)?  point,TResult Function( double x)?  caret,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case GazeUser() when user != null:
 return user();case GazeAway() when away != null:
 return away(_that.angle);case GazePoint() when point != null:
 return point(_that.x,_that.y);case GazeCaret() when caret != null:
-return caret();case _:
+return caret(_that.x);case _:
   return orElse();
 
 }
@@ -150,13 +150,13 @@ return caret();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  user,required TResult Function( double angle)  away,required TResult Function( double x,  double y)  point,required TResult Function()  caret,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  user,required TResult Function( double angle)  away,required TResult Function( double x,  double y)  point,required TResult Function( double x)  caret,}) {final _that = this;
 switch (_that) {
 case GazeUser():
 return user();case GazeAway():
 return away(_that.angle);case GazePoint():
 return point(_that.x,_that.y);case GazeCaret():
-return caret();}
+return caret(_that.x);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -170,13 +170,13 @@ return caret();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  user,TResult? Function( double angle)?  away,TResult? Function( double x,  double y)?  point,TResult? Function()?  caret,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  user,TResult? Function( double angle)?  away,TResult? Function( double x,  double y)?  point,TResult? Function( double x)?  caret,}) {final _that = this;
 switch (_that) {
 case GazeUser() when user != null:
 return user();case GazeAway() when away != null:
 return away(_that.angle);case GazePoint() when point != null:
 return point(_that.x,_that.y);case GazeCaret() when caret != null:
-return caret();case _:
+return caret(_that.x);case _:
   return null;
 
 }
@@ -358,32 +358,68 @@ as double,
 
 
 class GazeCaret implements GazeTarget {
-  const GazeCaret();
+  const GazeCaret(this.x);
   
 
+ final  double x;
 
-
+/// Create a copy of GazeTarget
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GazeCaretCopyWith<GazeCaret> get copyWith => _$GazeCaretCopyWithImpl<GazeCaret>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is GazeCaret);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GazeCaret&&(identical(other.x, x) || other.x == x));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode {
+    return Object.hash(runtimeType,x);
+}
 
 @override
 String toString() {
-    return 'GazeTarget.caret()';
+    return 'GazeTarget.caret(x: $x)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $GazeCaretCopyWith<$Res> implements $GazeTargetCopyWith<$Res> {
+  factory $GazeCaretCopyWith(GazeCaret value, $Res Function(GazeCaret) _then) = _$GazeCaretCopyWithImpl;
+@useResult
+$Res call({
+ double x
+});
 
 
+
+
+}
+/// @nodoc
+class _$GazeCaretCopyWithImpl<$Res>
+    implements $GazeCaretCopyWith<$Res> {
+  _$GazeCaretCopyWithImpl(this._self, this._then);
+
+  final GazeCaret _self;
+  final $Res Function(GazeCaret) _then;
+
+/// Create a copy of GazeTarget
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? x = null,}) {
+  return _then(GazeCaret(
+null == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
+}
 
 // dart format on

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import '../../../../core/models/avatar_gesture.dart';
 import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/performance/performance.dart';
+import '../../../../core/services/presence/composer_activity_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../models/performance_intent.dart';
 import 'auto_acting_rules.dart';
@@ -24,14 +26,61 @@ class _QueuedGesture {
 /// `auto` request is dropped first. `onGestureDone()` (or a 4 s safety
 /// timeout) plays the next request once the cooldown since the last start
 /// has elapsed. An LLM gesture always outranks an auto gesture.
+///
+/// Presence (M4): the director also turns the composer's typing reports, the
+/// running tool and the idle ladder's stage into intent fields.
+/// - **Gaze**: speaking → user; a running tool → away; composing → the
+///   caret; idle stage 1 → seeded glances (away 0.25–0.45 for 1.2 s every
+///   6–10 s); else user.
+/// - **Prop**: the tablet while a lookup tool runs, and while the idle
+///   ladder has it out (stage 2: 8 s once a minute, stage 3: held); never
+///   while speaking. Gestures requested while a prop is out are dropped.
+/// - **Lean** 0.6 while the user types (0 when speaking), a backchannel
+///   nod when typing resumes after a 600 ms pause or a word ends (at most
+///   one per 2.5 s) and a reaction on a typed `?` / `!` (at most one per
+///   1.2 s).
+/// Speech, a tool starting, composer reports and taps are all activity: the
+/// idle stage goes back to 0 at once and [activity] tells the ladder.
 class PerformanceDirector {
   PerformanceDirector({
     required DateTime Function() now,
     this.gestureCooldown = const Duration(milliseconds: 1500),
-  }) : _now = now;
+    int seed = 11,
+  }) : _now = now,
+       _rng = math.Random(seed);
 
   final DateTime Function() _now;
   final Duration gestureCooldown;
+  final math.Random _rng;
+
+  /// The tools that look something up: the avatar pulls out the tablet.
+  static const Set<String> lookupTools = <String>{
+    'searchGoogle',
+    'getTextContentFromWebsite',
+    'getCurrentWeather',
+    'getMostPopularNewsOfTheDay',
+  };
+
+  /// Lean target while the user types.
+  static const double composingLean = 0.6;
+
+  /// Typing that resumes after this long a pause earns a backchannel nod.
+  static const Duration nodPause = Duration(milliseconds: 600);
+
+  /// Fewest time between two backchannel nods.
+  static const Duration nodGap = Duration(milliseconds: 2500);
+
+  /// Fewest time between two punctuation reactions.
+  static const Duration reactionGap = Duration(milliseconds: 1200);
+
+  /// Stage 2: the tablet is out this long, once per [tabletPeriod].
+  static const Duration tabletHold = Duration(seconds: 8);
+  static const Duration tabletPeriod = Duration(seconds: 60);
+
+  /// Stage 1 glances: how long, and the range between two of them.
+  static const Duration glanceHold = Duration(milliseconds: 1200);
+  static const int _glanceMinMs = 6000;
+  static const int _glanceSpanMs = 4000;
 
   static const Duration _safetyTimeout = Duration(seconds: 4);
   static const int _maxQueueDepth = 2;
@@ -39,6 +88,22 @@ class PerformanceDirector {
   AvatarMood? _mood;
   bool _speaking = false;
   String? _activeTool;
+
+  // — presence —
+  ComposerActivity _composer = ComposerActivity.idle;
+  int _idleStage = 0;
+  bool _idleTablet = false;
+  double? _glance;
+  Timer? _glanceTimer;
+  Timer? _tabletTimer;
+  DateTime? _lastTypedAt;
+  DateTime? _lastNodAt;
+  DateTime? _lastReactionAt;
+  int _nodSerial = 0;
+  PresenceReaction? _reaction;
+  int _reactionSerial = 0;
+  PerformanceIntent? _lastIntent;
+  bool _disposed = false;
 
   AvatarGesture? _playing;
   int _serial = 0;
@@ -49,6 +114,13 @@ class PerformanceDirector {
 
   final StreamController<PerformanceIntent> _controller =
       StreamController<PerformanceIntent>.broadcast();
+  final StreamController<void> _activityController =
+      StreamController<void>.broadcast();
+
+  /// Fires on every sign of the user's (or the avatar's own) presence:
+  /// composer reports, taps, speech and tool starts. The idle ladder resets
+  /// on it.
+  Stream<void> get activity => _activityController.stream;
 
   /// Emits every intent snapshot change.
   Stream<PerformanceIntent> get intents => _controller.stream;
@@ -64,11 +136,47 @@ class PerformanceDirector {
 
   void setSpeaking(bool speaking) {
     _speaking = speaking;
+    if (speaking) {
+      _noteActivity();
+    }
     _emit();
   }
 
   void setActiveTool(String? toolName) {
     _activeTool = toolName;
+    if (toolName != null) {
+      _noteActivity();
+    }
+    _emit();
+  }
+
+  /// The composer's latest report: lean, caret gaze, and (while the user
+  /// types and nothing else has the floor) the backchannel nod and the
+  /// punctuation reaction. Allocates nothing beyond the intent it emits.
+  void setComposer(ComposerActivity activity) {
+    _composer = activity;
+    _noteActivity();
+    if (activity.typing && !_speaking && _activeTool == null) {
+      _typed(activity.lastChar);
+    }
+    _emitIfChanged();
+  }
+
+  /// The idle ladder's stage (0 active, 1 glances, 2 tablet now and then,
+  /// 3 tablet held).
+  void setIdleStage(int stage) {
+    final int next = stage.clamp(0, 3);
+    if (next == _idleStage) {
+      return;
+    }
+    _applyIdleStage(next);
+    _emit();
+  }
+
+  /// The user did something (a tap): the idle stage goes back to 0 and
+  /// [activity] fires.
+  void onUserActivity() {
+    _noteActivity();
     _emit();
   }
 
@@ -78,6 +186,13 @@ class PerformanceDirector {
     AvatarGesture gesture, {
     GestureSource source = GestureSource.llm,
   }) {
+    if (_prop != AvatarProp.none) {
+      AppLogger.debug(
+        'PerformanceDirector: prop out, dropped ${gesture.name}',
+        tag: 'PerformanceDirector',
+      );
+      return;
+    }
     if (_playing == null && _cooldownElapsed) {
       _start(gesture);
       return;
@@ -131,9 +246,13 @@ class PerformanceDirector {
 
   /// Closes the intents stream and cancels all timers.
   Future<void> dispose() async {
+    _disposed = true;
     _safetyTimer?.cancel();
     _cooldownTimer?.cancel();
+    _glanceTimer?.cancel();
+    _tabletTimer?.cancel();
     await _controller.close();
+    await _activityController.close();
   }
 
   // — internals —
@@ -174,6 +293,15 @@ class PerformanceDirector {
     if (_playing != null || _queue.isEmpty) {
       return;
     }
+    if (_prop != AvatarProp.none) {
+      AppLogger.debug(
+        'PerformanceDirector: prop out, dropped ${_queue.length} queued '
+        'gesture(s)',
+        tag: 'PerformanceDirector',
+      );
+      _queue.clear();
+      return;
+    }
     final Duration remaining = _cooldownRemaining;
     if (remaining > Duration.zero) {
       _armCooldownTimer();
@@ -202,6 +330,21 @@ class PerformanceDirector {
     );
   }
 
+  /// The prop held right now: never while speaking; the tablet for a lookup
+  /// tool, the hands free for any other tool, else what the idle ladder says.
+  AvatarProp get _prop {
+    if (_speaking) {
+      return AvatarProp.none;
+    }
+    final String? tool = _activeTool;
+    if (tool != null) {
+      return lookupTools.contains(tool) ? AvatarProp.tablet : AvatarProp.none;
+    }
+    return _idleTablet ? AvatarProp.tablet : AvatarProp.none;
+  }
+
+  bool get _composing => _composer.typing && !_speaking;
+
   PerformanceIntent _buildIntent() {
     final AvatarMood mood = _mood ?? AvatarMood.neutral;
     final GazeTarget gaze;
@@ -209,6 +352,10 @@ class PerformanceDirector {
       gaze = const GazeTarget.user();
     } else if (_activeTool != null) {
       gaze = const GazeTarget.away(0.6);
+    } else if (_composing) {
+      gaze = GazeTarget.caret(_composer.caretFraction.clamp(0.0, 1.0));
+    } else if (_glance != null) {
+      gaze = GazeTarget.away(_glance!);
     } else {
       gaze = const GazeTarget.user();
     }
@@ -220,12 +367,121 @@ class PerformanceDirector {
       pendingGesture: _playing,
       gestureSerial: _serial,
       activeTool: _activeTool,
+      prop: _prop,
+      lean: _composing ? composingLean : 0,
+      nodSerial: _nodSerial,
+      reaction: _reaction,
+      reactionSerial: _reactionSerial,
+      idleStage: _idleStage,
     );
+  }
+
+  // — presence internals —
+
+  /// A sign of presence: the idle ladder starts over, here and in its own
+  /// clock (through [activity]).
+  void _noteActivity() {
+    if (_idleStage != 0) {
+      _applyIdleStage(0);
+    }
+    if (!_activityController.isClosed) {
+      _activityController.add(null);
+    }
+  }
+
+  /// Handles one typed key: the backchannel nod and the punctuation
+  /// reaction, each rate-limited.
+  void _typed(String? char) {
+    final DateTime now = _now();
+    final DateTime? last = _lastTypedAt;
+    final bool resumed = last == null || now.difference(last) >= nodPause;
+    _lastTypedAt = now;
+    final bool wordEnd = char != null && char.trim().isEmpty && char != '';
+    if ((resumed || wordEnd) && _elapsed(_lastNodAt, now, nodGap)) {
+      _nodSerial++;
+      _lastNodAt = now;
+    }
+    final PresenceReaction? reaction = switch (char) {
+      '?' => PresenceReaction.question,
+      '!' => PresenceReaction.exclaim,
+      _ => null,
+    };
+    if (reaction != null && _elapsed(_lastReactionAt, now, reactionGap)) {
+      _reaction = reaction;
+      _reactionSerial++;
+      _lastReactionAt = now;
+    }
+  }
+
+  bool _elapsed(DateTime? since, DateTime now, Duration gap) =>
+      since == null || now.difference(since) >= gap;
+
+  void _applyIdleStage(int stage) {
+    _idleStage = stage;
+    _glanceTimer?.cancel();
+    _glanceTimer = null;
+    _tabletTimer?.cancel();
+    _tabletTimer = null;
+    _glance = null;
+    _idleTablet = false;
+    if (_disposed) {
+      return;
+    }
+    switch (stage) {
+      case 1:
+        _scheduleGlance();
+      case 2:
+        _setTablet(true);
+      case 3:
+        _idleTablet = true;
+    }
+  }
+
+  void _scheduleGlance() {
+    _glanceTimer = Timer(
+      Duration(milliseconds: _glanceMinMs + _rng.nextInt(_glanceSpanMs + 1)),
+      () {
+        final double sign = _rng.nextBool() ? 1 : -1;
+        _glance = sign * (0.25 + 0.2 * _rng.nextDouble());
+        _emit();
+        _glanceTimer = Timer(glanceHold, () {
+          _glance = null;
+          _emit();
+          _scheduleGlance();
+        });
+      },
+    );
+  }
+
+  /// Stage 2: the tablet out for [tabletHold], away for the rest of the
+  /// [tabletPeriod], and round again.
+  void _setTablet(bool out) {
+    _idleTablet = out;
+    _tabletTimer = Timer(out ? tabletHold : tabletPeriod - tabletHold, () {
+      _setTablet(!out);
+      _emit();
+    });
   }
 
   void _emit() {
     if (!_controller.isClosed) {
-      _controller.add(_buildIntent());
+      final PerformanceIntent intent = _buildIntent();
+      _lastIntent = intent;
+      _controller.add(intent);
     }
+  }
+
+  /// Emits only when the snapshot differs from the last one (a stream of
+  /// identical composer reports adds nothing).
+  void _emitIfChanged() {
+    if (_controller.isClosed) {
+      return;
+    }
+    final PerformanceIntent intent = _buildIntent();
+    if (intent == _lastIntent) {
+      return;
+    }
+    _lastIntent = intent;
+    _controller.add(intent);
   }
 }
