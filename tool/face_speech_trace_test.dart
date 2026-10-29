@@ -22,7 +22,11 @@
 //
 // speech: 0.5 s of the mood alone, the sentence (playback position = time
 // since its start), then 1 s after it ends: the timeline and one face frame
-// per 1/60 s. presets: the settled face of every mood, and every viseme's
+// per 1/60 s. As in the app, the sentence is announced
+// `ChatTtsCubit.defaultSpeechPreroll` before its audio (with its first
+// sounding viseme: the analysis is ready by then), and the performer runs
+// with its idle life on. The JSON records the WAV's path (`wav`, from the
+// repo root when inside it) and the pre-roll (`preroll`, ms). presets: the settled face of every mood, and every viseme's
 // mouth through the speech merge at a neutral mood. Every face frame carries
 // the 14 AUs (`au`), the contract v6 per-side offsets (`left` and `right`,
 // the viewer's) and the scalars (FaceFrame.toJson).
@@ -41,6 +45,7 @@ import 'package:yofardev_ai/features/avatar/domain/models/head_pose.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/head_motion_solver.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/performance_intent.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/face_performer.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_tts_cubit.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 const int _fps = 60;
@@ -112,17 +117,28 @@ Future<Map<String, Object>> _speech(
   );
 
   final _Harness h = _Harness()..mood(mood);
+  const Duration preroll = ChatTtsCubit.defaultSpeechPreroll;
+  final int prerollFrames = (preroll.inMicroseconds / _dt.inMicroseconds)
+      .round();
+  Viseme? onset;
+  for (final VisemeSpan s in timeline.visemes) {
+    if (s.viseme != Viseme.sil) {
+      onset = s.viseme;
+      break;
+    }
+  }
   // the head solver as the avatar view runs it (facing the user: idle drift
   // and micro-saccades on top of the face)
   final HeadMotionSolver head = HeadMotionSolver()..setTarget(0, 0);
   final List<Map<String, Object>> frames = <Map<String, Object>>[];
   const int lead = _fps ~/ 2;
+  assert(prerollFrames <= lead, 'the pre-roll must fit the lead-in');
   final int speech = (timeline.duration.inMicroseconds / 16667).ceil();
   final int total = lead + speech + _fps;
   for (int i = 0; i < total; i++) {
-    if (i == lead - 12) {
-      // the cubit announces each sentence 200 ms before playing it
-      h.playback.add(const SpeechPrerollEvent(Duration(milliseconds: 200)));
+    if (i == lead - prerollFrames) {
+      // the cubit announces each sentence its pre-roll before playing it
+      h.playback.add(SpeechPrerollEvent(preroll, onset: onset));
     }
     if (i == lead) {
       h.position = Duration.zero;
@@ -152,6 +168,8 @@ Future<Map<String, Object>> _speech(
   return <String, Object>{
     'fps': _fps,
     'lead': lead / _fps,
+    'wav': _repoRelative(wav),
+    'preroll': preroll.inMilliseconds,
     'text': text,
     'language': language,
     'mood': mood.name,
@@ -175,11 +193,20 @@ Future<Map<String, Object>> _speech(
             'at': m.at.inMilliseconds,
             'length': m.length.inMilliseconds,
             'strength': m.strength,
+            if (m.slope != null) 'slope': m.slope!,
           },
       ],
     },
     'frames': frames,
   };
+}
+
+/// [path] from the repo root (the working directory of `flutter test`) when
+/// it lies inside it, else absolute.
+String _repoRelative(String path) {
+  final String abs = File(path).absolute.path;
+  final String root = '${Directory.current.absolute.path}/';
+  return abs.startsWith(root) ? abs.substring(root.length) : abs;
 }
 
 Map<String, Object> _presets() {

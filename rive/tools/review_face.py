@@ -4,8 +4,9 @@
 # ///
 """Evidence for the M2 face rig and speech -> rive/avatar/review/face/.
 
-    dart run tool/face_speech_trace.dart presets > rive/avatar/build/face/presets.json
-    dart run tool/face_speech_trace.dart speech <wav> "<text>" [mood] > rive/avatar/build/face/<name>.json
+    FACE_TRACE=presets FACE_OUT=rive/avatar/build/face/presets.json flutter test tool/face_speech_trace_test.dart
+    FACE_TRACE=speech FACE_WAV=<wav> FACE_TEXT="<text>" [FACE_MOOD=happy] [FACE_LANG=fr] \
+        FACE_OUT=rive/avatar/build/face/<name>.json flutter test tool/face_speech_trace_test.dart
     uv run rive/tools/review_face.py sheets                # au, moods, visemes, yaw (needs presets.json)
     uv run rive/tools/review_face.py yaw                   # 3/4 sheet + silhouette overlay + overhang gate (M3)
     uv run rive/tools/review_face.py blink                 # lid-sweep strip: neutral, happy, sad (M3)
@@ -26,6 +27,7 @@ from pathlib import Path
 import json
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -39,7 +41,9 @@ OUT = PROJ / "review" / "face"
 DATA = PROJ / "build" / "face"
 TMP = PROJ / "build" / "face_cells"
 WORKERS = 6
-FACE_BOX = (270, 230, 530, 520)  # artboard window around the face
+# The jaw drops the chin ~15 artboard px at auJawDrop 1 (Rive 5ef775a): every face crop reaches
+# below the dropped chin.
+FACE_BOX = (270, 230, 530, 552)  # artboard window around the face, open jaw included
 WIDE_BOX = (180, 150, 620, 700)  # head and shoulders (roll, breath, nods)
 ZOOM = 1.6
 AU_NAMES = ("browInnerUp", "browOuterUp", "browLower", "lidTighten", "upperLidRaise", "cheekRaise",
@@ -142,7 +146,7 @@ def sheets() -> None:
 
 YAWS = ("-1", "-0.5", "0", "0.5", "1")
 YAW_ROWS = (("neutral", "moods"), ("happy", "moods"), ("aa", "visemes"), ("ff", "visemes"))
-YAW_BOX = (226, 236, 574, 540)  # the turned face with both cheeks, the ears and the jaw
+YAW_BOX = (226, 236, 574, 566)  # the turned face with both cheeks, the ears and the open jaw
 YAW_ZOOM = 1.25
 FACE_INK = (110, 235, 255)  # this pose's face silhouette
 REST_INK = (255, 200, 80)  # the same row at yaw 0
@@ -300,8 +304,8 @@ def sides() -> None:
 
 FVS = ("ff", "ss", "th", "pp", "oh", "ou")
 PHONE = 360 / 800  # the artboard laid out 360 px wide, as on a phone
-PHONE_BOX = (300, 300, 500, 520)  # the lower face (artboard px)
-MOUTH_BOX = (350, 452, 450, 517)
+PHONE_BOX = (300, 300, 500, 548)  # the lower face with the dropped chin (artboard px)
+MOUTH_BOX = (350, 452, 450, 536)
 
 
 def fvs() -> None:
@@ -442,21 +446,83 @@ def speech(name: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     cells[0].save(OUT / f"speech_{name}.gif", save_all=True, append_images=cells[1:], duration=33, loop=0,
                   optimize=True)
-    # contact strip: every 2nd rendered frame (15 fps) during speech, face crop
+    # contact strip: every 2nd rendered frame (15 fps) during speech, face crop, each cell labelled
+    # with its time and the viseme (and any mark) under it
     face = []
     for c, i in zip(cells, idx):
-        if frames[i]["speech"] >= 0 and (i // 2) % 2 == 0:
-            w, h = c.size
-            face.append(c.crop((int(w * 0.2), int(h * 0.1), int(w * 0.8), int(h * 0.7))))
+        sp = frames[i]["speech"]
+        if sp >= 0 and (i // 2) % 2 == 0:
+            ms = sp * 1000
+            face.append(strip_cell(c, f"{frames[i]['t']:.2f}s  sp {sp:.2f}", f"{at(ms)} {mark_near(ms)}".strip()))
     print("strip:", sheet(face, 10, f"speech_{name}_strip.png"))
     print("gif:", OUT / f"speech_{name}.gif")
     print("timing:", timing(name, tr, blinks))
 
 
+STRIP_CROP = (0.2, 0.1, 0.8, 0.78)  # share of a WIDE_BOX cell: the face down past the dropped chin
+
+
+def strip_cell(c: Image.Image, *lines: str) -> Image.Image:
+    """One contact-strip cell: the face cropped out of a speech cell, then labelled (the GIF labels
+    sit outside the crop)."""
+    w, h = c.size
+    a, b, x, y = STRIP_CROP
+    return label(c.crop((int(w * a), int(h * b), int(w * x), int(h * y))), *lines)
+
+
+def find_wav(name: str, tr: dict) -> Path | None:
+    """The trace's audio: the path it records (`wav`, from the repo root unless absolute), else
+    build/face/<name>.wav, else the speech fixture of that name."""
+    found = [Path(tr["wav"]) if Path(tr["wav"]).is_absolute() else ROOT / tr["wav"]] if tr.get("wav") else []
+    found += [DATA / f"{name}.wav", ROOT / "test" / "fixtures" / "speech" / f"{name}.wav"]
+    return next((p for p in found if p.exists()), None)
+
+
+def read_wav(path: Path) -> tuple[list[float], int]:
+    """Mono samples in -1..1 and the sample rate of a RIFF WAV: PCM 8/16/24/32-bit or 32-bit float,
+    any rate and channel count (channels averaged), unknown chunks skipped."""
+    data = path.read_bytes()
+    if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+        raise ValueError(f"{path}: not a RIFF WAVE file")
+    fmt: tuple[int, int, int, int] | None = None
+    pcm = b""
+    k = 12
+    while k + 8 <= len(data):
+        tag, size = data[k:k + 4], struct.unpack("<I", data[k + 4:k + 8])[0]
+        body = data[k + 8:k + 8 + size]
+        if tag == b"fmt ":
+            code, channels, rate = struct.unpack("<HHI", body[:8])
+            bits = struct.unpack("<H", body[14:16])[0]
+            if code == 0xFFFE and len(body) >= 26:  # WAVE_FORMAT_EXTENSIBLE: the sub-format code
+                code = struct.unpack("<H", body[24:26])[0]
+            fmt = (code, channels, rate, bits)
+        elif tag == b"data":
+            pcm = body
+        k += 8 + size + (size & 1)
+    if fmt is None:
+        raise ValueError(f"{path}: no fmt chunk")
+    code, channels, rate, bits = fmt
+    width = bits // 8
+    n = len(pcm) // width
+    if code == 3 and width == 4:
+        vals = list(struct.unpack(f"<{n}f", pcm[:4 * n]))
+    elif code == 1 and width == 1:
+        vals = [(v - 128) / 128 for v in pcm[:n]]
+    elif code == 1 and width == 2:
+        vals = [v / 32768 for v in struct.unpack(f"<{n}h", pcm[:2 * n])]
+    elif code == 1 and width == 3:
+        vals = [int.from_bytes(pcm[3 * i:3 * i + 3], "little", signed=True) / 8388608 for i in range(n)]
+    elif code == 1 and width == 4:
+        vals = [v / 2147483648 for v in struct.unpack(f"<{n}i", pcm[:4 * n])]
+    else:
+        raise ValueError(f"{path}: unsupported WAV format {code}, {bits} bits")
+    frames = len(vals) // channels
+    mono = [sum(vals[f * channels:(f + 1) * channels]) / channels for f in range(frames)]
+    return mono, rate
+
+
 def timing(name: str, tr: dict, blinks: list[int]) -> Path:
     """One chart: waveform, viseme row, prosody marks, and the face curves the app writes."""
-    import struct
-    import wave
     frames = tr["frames"]
     fps = tr["fps"]
     lead = tr["lead"]
@@ -469,7 +535,9 @@ def timing(name: str, tr: dict, blinks: list[int]) -> Path:
               ("lipTuck", lambda f: f["lipTuck"], (250, 160, 220)),
               ("browOuterUp", lambda f: f["au"]["browOuterUp"], (250, 230, 120)),
               ("browInnerUp", lambda f: f["au"]["browInnerUp"], (220, 200, 90)),
-              ("nodPitch (x3)", lambda f: 0.5 + 1.5 * f["nodPitch"], (200, 160, 250)),
+              # 0.5 + 0.8 x: a full-strength nod (-0.55) stays in the lane (x3 clipped every nod
+              # past -0.33 into a flat-bottomed "square" dip)
+              ("nodPitch (0.5+0.8x)", lambda f: 0.5 + 0.8 * f["nodPitch"], (200, 160, 250)),
               ("roll", lambda f: f["roll"], (120, 220, 230)),
               ("breath", lambda f: f["breath"], (180, 180, 180))]
     H = 90 + 30 + lane * len(curves) + 20
@@ -480,17 +548,15 @@ def timing(name: str, tr: dict, blinks: list[int]) -> Path:
     def X(t: float) -> float:
         return x0 + (x1 - x0) * t / total
 
-    wav = DATA / f"{name}.wav"
-    if wav.exists():
-        with wave.open(str(wav)) as w:
-            n = w.getnframes()
-            raw = w.readframes(n)
-            sr = w.getframerate()
-        samples = struct.unpack(f"<{n}h", raw[: 2 * n])
+    # the waveform: before, only build/face/<name>.wav was looked for, so the speech fixtures
+    # (test/fixtures/speech, 16 kHz) drew an empty lane
+    wav = find_wav(name, tr)
+    if wav is not None:
+        samples, sr = read_wav(wav)
+        n = len(samples)
         step = max(1, n // (x1 - x0))
         for k in range(0, n, step):
-            seg = samples[k:k + step]
-            a = max(abs(v) for v in seg) / 32768
+            a = min(1.0, max(abs(v) for v in samples[k:k + step]))
             x = X(lead + k / sr)
             dr.line([(x, 45 - 40 * a), (x, 45 + 40 * a)], fill=(110, 110, 130))
     dr.text((6, 40), "audio", fill=(200, 200, 200))
