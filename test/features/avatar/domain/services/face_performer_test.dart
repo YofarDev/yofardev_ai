@@ -1887,8 +1887,8 @@ void main() {
           expect(f[i].tongueUp, greaterThanOrEqualTo(0.8), reason: '${at(i)}');
         }
       }
-      // mid-span (160 ms): about 0.15
-      expect(f[8].au.jawDrop, inInclusiveRange(0.1, 0.2));
+      // mid-span (160 ms): a slow jaw keeps 0.65 of the e's, about 0.25
+      expect(f[8].au.jawDrop, inInclusiveRange(0.2, 0.35));
       expect(VisemeBlender.thTongue, 0.8);
     });
 

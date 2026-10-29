@@ -526,6 +526,157 @@ void main() {
       });
     });
 
+    group('jaw coarticulation (M4)', () {
+      double jawAt(SpeechTimeline tl, int t) =>
+          blender.shapeAt(tl, ms(t)).shape.jaw;
+
+      test('a consonant between two vowels keeps 0.65 of their jaw', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 120),
+          span(Viseme.dd, 120, 180),
+          span(Viseme.aa, 180, 300),
+        ]);
+        final double aa = jawAt(tl, 60);
+        expect(aa, greaterThan(0.7));
+        expect(jawAt(tl, 150), greaterThanOrEqualTo(0.65 * aa - 1e-9));
+        for (int t = 120; t < 180; t++) {
+          expect(
+            jawAt(tl, t),
+            greaterThanOrEqualTo(0.65 * aa - 1e-9),
+            reason: 'at $t ms',
+          );
+        }
+      });
+
+      test('the lift uses the nearest vowels across a consonant run', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 120),
+          span(Viseme.ss, 120, 180),
+          span(Viseme.kk, 180, 240),
+          span(Viseme.aa, 240, 360),
+        ]);
+        final double aa = jawAt(tl, 60);
+        expect(jawAt(tl, 150), greaterThanOrEqualTo(0.65 * aa - 1e-9));
+        expect(jawAt(tl, 210), greaterThanOrEqualTo(0.65 * aa - 1e-9));
+      });
+
+      test('a consonant between an aa and an ou keeps the mean of the two', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 120),
+          span(Viseme.dd, 120, 180),
+          span(Viseme.ou, 180, 300),
+        ]);
+        // 0.65 of the mean of the aa and the ou jaws, not of the aa alone
+        expect(jawAt(tl, 150), lessThan(0.45));
+        expect(jawAt(tl, 150), greaterThan(0.2));
+      });
+
+      test('a closure between vowels still reaches jaw 0 and press 0.85', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 120),
+          span(Viseme.pp, 120, 180),
+          span(Viseme.aa, 180, 300),
+        ]);
+        double press = 0;
+        for (int t = 120; t < 180; t++) {
+          final MouthBlend b = blender.shapeAt(tl, ms(t));
+          expect(b.sealed, isTrue, reason: 'at $t ms');
+          expect(b.shape.jaw, 0, reason: 'at $t ms');
+          press = press < b.shape.press ? b.shape.press : press;
+        }
+        expect(
+          blender.shapeAt(tl, ms(179)).shape.press,
+          greaterThanOrEqualTo(0.85),
+        );
+        expect(press, greaterThanOrEqualTo(0.85));
+      });
+
+      test('the lift ignores a vowel beyond a closure', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 120),
+          span(Viseme.pp, 120, 180),
+          span(Viseme.ss, 180, 280),
+          span(Viseme.ou, 280, 400),
+        ]);
+        // after the pp only the ou counts (0.65 of a tight ou is under the
+        // floor), not the aa before the closure (which would give 0.5)
+        expect(jawAt(tl, 240), lessThan(0.25));
+        expect(
+          jawAt(tl, 240),
+          greaterThanOrEqualTo(VisemeBlender.phraseJawFloor),
+        );
+      });
+
+      test('an f keeps the jaw near shut: the tuck needs it', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 120),
+          span(Viseme.ff, 120, 240),
+          span(Viseme.aa, 240, 360),
+        ]);
+        expect(jawAt(tl, 180), lessThanOrEqualTo(0.15));
+        expect(blender.shapeAt(tl, ms(180)).shape.lipTuck, 1);
+      });
+
+      test('inside a phrase the jaw never drops under 0.12', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.ss, 0, 100),
+          span(Viseme.ou, 100, 220),
+          span(Viseme.nn, 220, 280),
+          span(Viseme.sil, 280, 360),
+          span(Viseme.ss, 360, 440),
+          span(Viseme.ih, 440, 520),
+          span(Viseme.th, 520, 600),
+        ]);
+        for (int t = 0; t < 600; t++) {
+          expect(
+            jawAt(tl, t),
+            greaterThanOrEqualTo(VisemeBlender.phraseJawFloor - 1e-9),
+            reason: 'at $t ms',
+          );
+        }
+      });
+
+      test('a sil of 120 ms or more lets the jaw close', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 150),
+          span(Viseme.sil, 150, 300),
+          span(Viseme.aa, 300, 450),
+        ]);
+        expect(jawAt(tl, 225), lessThan(0.05));
+        expect(jawAt(tl, 150), greaterThan(0.1));
+      });
+
+      test('a consonant after a long silence is not lifted by a far vowel', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 120),
+          span(Viseme.sil, 120, 300),
+          span(Viseme.ss, 300, 360),
+        ]);
+        expect(jawAt(tl, 330), lessThan(0.2));
+      });
+
+      test('the blend stays continuous across the lifted consonant', () {
+        final SpeechTimeline tl = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 120),
+          span(Viseme.dd, 120, 180),
+          span(Viseme.aa, 180, 300),
+          span(Viseme.ss, 300, 360),
+          span(Viseme.e, 360, 480),
+        ]);
+        double? last;
+        for (int us = 0; us < 480000; us += 500) {
+          final double j = blender
+              .shapeAt(tl, Duration(microseconds: us))
+              .shape
+              .jaw;
+          if (last != null) {
+            expect((j - last).abs(), lessThan(0.03), reason: 'at $us us');
+          }
+          last = j;
+        }
+      });
+    });
+
     test('MouthBlend has value equality', () {
       const MouthBlend a = MouthBlend(shape: MouthShape(jaw: 0.5));
       const MouthBlend b = MouthBlend(shape: MouthShape(jaw: 0.5));

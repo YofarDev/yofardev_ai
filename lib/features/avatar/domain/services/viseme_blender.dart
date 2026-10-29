@@ -100,7 +100,7 @@ class VisemeBlender {
       );
     }
     final bool roundSh = timeline.roundedSh;
-    final MouthShape base = _shapeOf(current, roundSh);
+    final MouthShape base = _targetOf(spans, index, roundSh);
     final double half = (end - start) / 2;
 
     final VisemeSpan? next = index + 1 < spans.length ? spans[index + 1] : null;
@@ -122,7 +122,8 @@ class VisemeBlender {
     // few frames instead of peaking for one.
     MouthShape shape = _lean(
       base,
-      current,
+      spans,
+      index,
       previous: hasPrevious ? previous : null,
       next: hasNext ? next : null,
       now: now,
@@ -134,7 +135,8 @@ class VisemeBlender {
       shape = shape.copyWith(
         jaw: _lean(
           base,
-          current,
+          spans,
+          index,
           previous: hasPrevious ? previous : null,
           next: hasNext ? next : null,
           now: now,
@@ -217,7 +219,8 @@ class VisemeBlender {
   /// release ramp) and [next] is anticipated over the last window.
   MouthShape _lean(
     MouthShape base,
-    VisemeSpan current, {
+    List<VisemeSpan> spans,
+    int index, {
     required VisemeSpan? previous,
     required VisemeSpan? next,
     required double now,
@@ -225,6 +228,7 @@ class VisemeBlender {
     required bool release,
     required bool roundSh,
   }) {
+    final VisemeSpan current = spans[index];
     final double start = current.start.inMicroseconds.toDouble();
     final double end = current.end.inMicroseconds.toDouble();
     MouthShape shape = base;
@@ -234,7 +238,7 @@ class VisemeBlender {
         final double decay = 1 - _smoothstep((now - start) / window);
         final double lean = _leanBack(previous, current) * decay;
         final MouthShape before = shape;
-        shape = shape.lerp(_leakOf(previous, roundSh), lean);
+        shape = shape.lerp(_leakOf(spans, index - 1, roundSh), lean);
         if (release) {
           shape = shape.copyWith(
             jaw: before.jaw,
@@ -252,7 +256,7 @@ class VisemeBlender {
         final double pull =
             MouthShape.dominance(next.viseme) /
             _max(dominance, MouthShape.dominance(next.viseme));
-        shape = shape.lerp(_shapeOf(next, roundSh), rise * pull);
+        shape = shape.lerp(_targetOf(spans, index + 1, roundSh), rise * pull);
       }
     }
     return shape;
@@ -331,10 +335,98 @@ class VisemeBlender {
 
   /// What [previous] leaves in the mouth as the next span starts: a closure
   /// leaves its fully compressed lips.
-  static MouthShape _leakOf(VisemeSpan previous, bool roundSh) =>
-      previous.viseme == Viseme.pp
+  static MouthShape _leakOf(List<VisemeSpan> spans, int index, bool roundSh) =>
+      spans[index].viseme == Viseme.pp
       ? _seal(sealPress)
-      : _shapeOf(previous, roundSh);
+      : _targetOf(spans, index, roundSh);
+
+  /// The span's target shape in its context ([_shapeOf] with the jaw as a
+  /// slow articulator): inside a phrase the jaw never falls under
+  /// [phraseJawFloor] (a short `sil` between two sounds included), except
+  /// for a `pp` seal and an `ff` tuck; and a consonant keeps at least
+  /// [consonantJawShare] of the jaw of its neighbouring vowels (the mean
+  /// of the nearest one before and after it in the phrase, the one there is
+  /// when only one side has a vowel). A `pp` and an `ff` close the jaw as
+  /// their lips need.
+  static MouthShape _targetOf(List<VisemeSpan> spans, int index, bool roundSh) {
+    final VisemeSpan span = spans[index];
+    final MouthShape raw = _shapeOf(span, roundSh);
+    final Viseme v = span.viseme;
+    if (v == Viseme.pp || v == Viseme.ff) {
+      return raw;
+    }
+    if (v == Viseme.sil) {
+      return _insidePhrase(spans, index)
+          ? raw.copyWith(jaw: phraseJawFloor)
+          : raw;
+    }
+    double jaw = raw.jaw;
+    if (!_isVowel(v)) {
+      final double? before = _vowelJaw(spans, index, -1, roundSh);
+      final double? after = _vowelJaw(spans, index, 1, roundSh);
+      final double? vowel = before == null
+          ? after
+          : (after == null ? before : (before + after) / 2);
+      if (vowel != null) {
+        jaw = _max(jaw, consonantJawShare * vowel);
+      }
+    }
+    return raw.copyWith(jaw: _max(jaw, phraseJawFloor).clamp(0.0, 1.0));
+  }
+
+  /// The jaw of the nearest vowel from [index] in direction [step] (±1)
+  /// within the phrase: the search stops at a `pp` (the lips close there), at
+  /// a `sil` of [phraseBreak] or more and at a gap that long, and passes
+  /// shorter silences.
+  static double? _vowelJaw(
+    List<VisemeSpan> spans,
+    int index,
+    int step,
+    bool roundSh,
+  ) {
+    for (int i = index + step; i >= 0 && i < spans.length; i += step) {
+      final VisemeSpan s = spans[i];
+      final VisemeSpan toward = spans[i - step];
+      final Duration gap = step > 0
+          ? s.start - toward.end
+          : toward.start - s.end;
+      if (gap >= phraseBreak || s.viseme == Viseme.pp) {
+        return null;
+      }
+      if (s.viseme == Viseme.sil) {
+        if (s.end - s.start >= phraseBreak) {
+          return null;
+        }
+        continue;
+      }
+      if (_isVowel(s.viseme)) {
+        return _shapeOf(s, roundSh).jaw;
+      }
+    }
+    return null;
+  }
+
+  /// A `sil` shorter than [phraseBreak] with a sounding span on each side:
+  /// the voice goes on through it.
+  static bool _insidePhrase(List<VisemeSpan> spans, int index) {
+    final VisemeSpan s = spans[index];
+    if (s.end - s.start >= phraseBreak ||
+        index == 0 ||
+        index + 1 >= spans.length) {
+      return false;
+    }
+    return spans[index - 1].viseme != Viseme.sil &&
+        spans[index + 1].viseme != Viseme.sil;
+  }
+
+  /// A silence this long ends a phrase: the jaw may close in it.
+  static const Duration phraseBreak = Duration(milliseconds: 120);
+
+  /// The lowest jaw anywhere inside a phrase (outside `pp` and `ff`).
+  static const double phraseJawFloor = 0.12;
+
+  /// The share of the neighbouring vowels' jaw a consonant keeps.
+  static const double consonantJawShare = 0.65;
 
   /// A French sh/zh (/ʃ/, /ʒ/, [SpeechTimeline.roundedSh]): the lips round
   /// and push forward, barely spread.
