@@ -31,14 +31,15 @@ const double kCaretYawSpan = 0.4;
 ///   saccades).
 /// - `caret(x)` → a small turn following the caret across the field
 ///   ((x − 0.5) × 0.4), looking down at the composer.
-/// - A held tablet overrides the gaze: (0.6, −0.5), reading.
+/// - A held prop (the tablet or the newspaper) overrides the gaze: (0.6, −0.5),
+///   reading.
 /// - `point(x, y)` with normalized 0..1 screen coordinates.
 HeadTarget headTargetFor(
   GazeTarget gaze, {
   String? activeTool,
   AvatarProp prop = AvatarProp.none,
 }) {
-  if (prop == AvatarProp.tablet) {
+  if (prop != AvatarProp.none) {
     return const HeadTarget(kTabletYaw, kToolPitch, reading: true);
   }
   return switch (gaze) {

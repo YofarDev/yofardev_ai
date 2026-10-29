@@ -208,7 +208,11 @@ abstract final class AvatarRiveContract {
     'soubrette',
     'singularity',
   ];
-  static const List<String> propValues = <String>['none', 'tablet'];
+  static const List<String> propValues = <String>[
+    'none',
+    'tablet',
+    'newspaper',
+  ];
   static const List<String> presenceValues = <String>[
     'onScreen',
     'outOfScreen',

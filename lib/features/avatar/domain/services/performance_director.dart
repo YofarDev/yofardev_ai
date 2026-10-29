@@ -32,8 +32,11 @@ class _QueuedGesture {
 /// - **Gaze**: speaking → user; a running tool → away; composing → the
 ///   caret; idle stage 1 → seeded glances (away 0.25–0.45 for 1.2 s every
 ///   6–10 s); else user.
-/// - **Prop**: the tablet while a lookup tool runs (kept [tabletHoldOver]
-///   after it ends, so back-to-back tools never put it away in between), and
+/// - **Prop**: the tablet while a lookup tool runs, the newspaper while the
+///   news tool runs ([newsTools]); kept [tabletHoldOver] after the tool ends,
+///   so back-to-back tools never put it away in between, but only for a tool
+///   that takes the same prop: a different prop always goes through `none`
+///   first (one intent with no prop, then the new one; never both), and
 ///   while the idle ladder has it out (stage 2: 8 s once a minute, stage 3:
 ///   held); never while speaking. Gestures requested while a prop is out are
 ///   dropped, except that an LLM gesture is activity: it clears the idle
@@ -76,8 +79,20 @@ class PerformanceDirector {
   /// Fewest time between two punctuation reactions.
   static const Duration reactionGap = Duration(milliseconds: 1200);
 
-  /// The tablet stays out this long after a lookup tool ends, so a second
-  /// tool starting right away keeps it.
+  /// The lookup tools that read the newspaper instead of the tablet.
+  static const Set<String> newsTools = <String>{'getMostPopularNewsOfTheDay'};
+
+  /// The prop a tool takes: the newspaper for [newsTools], the tablet for
+  /// the other [lookupTools], none otherwise.
+  static AvatarProp propForTool(String tool) {
+    if (!lookupTools.contains(tool)) {
+      return AvatarProp.none;
+    }
+    return newsTools.contains(tool) ? AvatarProp.newspaper : AvatarProp.tablet;
+  }
+
+  /// The prop stays out this long after a lookup tool ends, so a second
+  /// tool taking the same prop right away keeps it.
   static const Duration tabletHoldOver = Duration(milliseconds: 400);
 
   /// Stage 2: the tablet is out this long, once per [tabletPeriod].
@@ -97,7 +112,7 @@ class PerformanceDirector {
   ActionUnits _face = actionUnitsForMood(AvatarMood.neutral);
   bool _speaking = false;
   String? _activeTool;
-  bool _tabletHeldOver = false;
+  AvatarProp _heldOver = AvatarProp.none;
   Timer? _holdOverTimer;
 
   // — presence —
@@ -160,17 +175,19 @@ class PerformanceDirector {
     final String? previous = _activeTool;
     _activeTool = toolName;
     if (toolName != null) {
+      // The tool's own prop takes over from a held-over one: the same prop
+      // stays out, a different one goes through none first (_add).
       _endHoldOver();
       _noteActivity();
     } else if (previous != null &&
         lookupTools.contains(previous) &&
         !_speaking) {
-      // The tablet outlasts the tool a moment: the next one may follow.
-      _tabletHeldOver = true;
+      // The prop outlasts the tool a moment: the next one may follow.
+      _heldOver = propForTool(previous);
       _holdOverTimer?.cancel();
       _holdOverTimer = Timer(tabletHoldOver, () {
         _holdOverTimer = null;
-        _tabletHeldOver = false;
+        _heldOver = AvatarProp.none;
         _emit();
       });
     }
@@ -395,15 +412,18 @@ class PerformanceDirector {
     }
     final String? tool = _activeTool;
     if (tool != null) {
-      return lookupTools.contains(tool) ? AvatarProp.tablet : AvatarProp.none;
+      return propForTool(tool);
     }
-    return _idleTablet || _tabletHeldOver ? AvatarProp.tablet : AvatarProp.none;
+    if (_heldOver != AvatarProp.none) {
+      return _heldOver;
+    }
+    return _idleTablet ? AvatarProp.tablet : AvatarProp.none;
   }
 
   void _endHoldOver() {
     _holdOverTimer?.cancel();
     _holdOverTimer = null;
-    _tabletHeldOver = false;
+    _heldOver = AvatarProp.none;
   }
 
   bool get _composing => _composer.typing && !_speaking;
@@ -527,10 +547,21 @@ class PerformanceDirector {
 
   void _emit() {
     if (!_controller.isClosed) {
-      final PerformanceIntent intent = _buildIntent();
-      _lastIntent = intent;
-      _controller.add(intent);
+      _add(_buildIntent());
     }
+  }
+
+  /// Adds [intent]; a prop changing straight to another prop is preceded by
+  /// the same intent with no prop, so the two never show together.
+  void _add(PerformanceIntent intent) {
+    final AvatarProp before = _lastIntent?.prop ?? AvatarProp.none;
+    if (before != AvatarProp.none &&
+        intent.prop != AvatarProp.none &&
+        intent.prop != before) {
+      _controller.add(intent.copyWith(prop: AvatarProp.none));
+    }
+    _lastIntent = intent;
+    _controller.add(intent);
   }
 
   /// Emits only when the snapshot differs from the last one (a stream of
@@ -543,7 +574,6 @@ class PerformanceDirector {
     if (intent == _lastIntent) {
       return;
     }
-    _lastIntent = intent;
-    _controller.add(intent);
+    _add(intent);
   }
 }

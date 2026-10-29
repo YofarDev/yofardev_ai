@@ -5,4 +5,7 @@ enum AvatarProp {
 
   /// The tablet: pulled out for a lookup tool or the idle ladder.
   tablet,
+
+  /// The newspaper (contract v8b): read while the news tool runs.
+  newspaper,
 }

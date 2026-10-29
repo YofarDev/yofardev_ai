@@ -104,6 +104,17 @@ void main() {
       );
     });
 
+    test('the newspaper reads in the tablet\'s pose', () {
+      expect(
+        headTargetFor(
+          const GazeTarget.away(0.6),
+          activeTool: 'getMostPopularNewsOfTheDay',
+          prop: AvatarProp.newspaper,
+        ),
+        const HeadTarget(0.6, -0.5, reading: true),
+      );
+    });
+
     test('point maps normalized screen coordinates', () {
       expect(
         headTargetFor(const GazeTarget.point(0.5, 0.5)),

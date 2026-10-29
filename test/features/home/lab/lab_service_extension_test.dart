@@ -131,7 +131,7 @@ void main() {
       <String, String>{'face': '{"nope":0}'},
       <String, String>{'face': '{"auJawDrop":'},
       <String, String>{'face': '[1]'},
-      <String, String>{'prop': 'newspaper'},
+      <String, String>{'prop': 'telescope'},
       <String, String>{'prop': ''},
       <String, String>{'parallax': '{"x":1.5}'},
       <String, String>{'parallax': '{"z":0.1}'},

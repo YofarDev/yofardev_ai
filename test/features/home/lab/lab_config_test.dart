@@ -100,7 +100,7 @@ void main() {
 
     test('rejects an unknown prop and a bad parallax', () {
       for (final Map<String, Object?> bad in <Map<String, Object?>>[
-        <String, Object?>{'prop': 'newspaper'},
+        <String, Object?>{'prop': 'telescope'},
         <String, Object?>{'prop': 1},
         <String, Object?>{'prop': null},
         <String, Object?>{'parallax': 3},

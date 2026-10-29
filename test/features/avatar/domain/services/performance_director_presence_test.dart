@@ -33,18 +33,95 @@ void main() {
         director.dispose();
       });
 
-      test('every lookup tool takes the tablet', () {
+      test('every lookup tool but the news takes the tablet', () {
         final PerformanceDirector director = build();
         for (final String tool in <String>[
           'searchGoogle',
           'getTextContentFromWebsite',
           'getCurrentWeather',
-          'getMostPopularNewsOfTheDay',
         ]) {
           director.setActiveTool(tool);
           expect(director.current.prop, AvatarProp.tablet, reason: tool);
         }
         director.dispose();
+      });
+
+      test('the news tool reads the newspaper', () {
+        final PerformanceDirector director = build();
+        director.setActiveTool('getMostPopularNewsOfTheDay');
+        expect(director.current.prop, AvatarProp.newspaper);
+        expect(director.current.gaze, const GazeTarget.away(0.6));
+        director.dispose();
+      });
+
+      test('news then search: newspaper, none, tablet (never both)', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          final List<AvatarProp> props = <AvatarProp>[];
+          director.intents.listen((PerformanceIntent i) => props.add(i.prop));
+          director.setActiveTool('getMostPopularNewsOfTheDay');
+          advance(async, 100);
+          director.setActiveTool(null);
+          advance(
+            async,
+            200,
+          ); // inside the hold-over: the newspaper is still out
+          expect(director.current.prop, AvatarProp.newspaper);
+          director.setActiveTool('searchGoogle');
+          advance(async, 1000);
+          final List<AvatarProp> changes = <AvatarProp>[
+            for (int k = 0; k < props.length; k++)
+              if (k == 0 || props[k] != props[k - 1]) props[k],
+          ];
+          expect(changes, <AvatarProp>[
+            AvatarProp.newspaper,
+            AvatarProp.none,
+            AvatarProp.tablet,
+          ]);
+          director.dispose();
+        });
+      });
+
+      test('a prop never changes straight into another prop', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          final List<AvatarProp> props = <AvatarProp>[];
+          director.intents.listen((PerformanceIntent i) => props.add(i.prop));
+          director.setActiveTool('searchGoogle');
+          director.setActiveTool('getMostPopularNewsOfTheDay');
+          director.setActiveTool('getCurrentWeather');
+          director.setActiveTool(null);
+          advance(async, 1000);
+          for (int k = 1; k < props.length; k++) {
+            final bool straight =
+                props[k - 1] != AvatarProp.none &&
+                props[k] != AvatarProp.none &&
+                props[k] != props[k - 1];
+            expect(straight, isFalse, reason: '${props[k - 1]} -> ${props[k]}');
+          }
+          expect(props.last, AvatarProp.none);
+          director.dispose();
+        });
+      });
+
+      test('the hold-over keeps the same prop only', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          final List<AvatarProp> props = <AvatarProp>[];
+          director.intents.listen((PerformanceIntent i) => props.add(i.prop));
+          director.setActiveTool('getMostPopularNewsOfTheDay');
+          director.setActiveTool(null);
+          advance(async, 300);
+          director.setActiveTool('getMostPopularNewsOfTheDay');
+          advance(async, 1000);
+          expect(props, everyElement(AvatarProp.newspaper));
+          director.setActiveTool(null);
+          advance(async, 399);
+          expect(director.current.prop, AvatarProp.newspaper);
+          advance(async, 2);
+          expect(director.current.prop, AvatarProp.none);
+          director.dispose();
+        });
       });
 
       test('another tool keeps the hands free and the glance away', () {
