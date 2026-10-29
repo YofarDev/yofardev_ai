@@ -120,3 +120,35 @@ def test_crops_reach_below_the_dropped_chin() -> None:
     assert MOUTH_BOX[3] >= 535
     strip_bottom = WIDE_BOX[1] + STRIP_CROP[3] * (WIDE_BOX[3] - WIDE_BOX[1])
     assert strip_bottom >= 565
+
+
+def _trace_frame(t: float, head: dict | None = None, **extra: object) -> dict:
+    f = {"t": t, "speech": -1, "au": {n: 0.0 for n in review_face.AU_NAMES}, "lipTuck": 0.0, "tongueUp": 0.0,
+         "roll": 0.0, "breath": 0.0, "nodPitch": 0.0, "autoBlink": True, "blinkSerial": 0, **extra}
+    if head is not None:
+        f["head"] = head
+    return f
+
+
+def test_timing_lanes_plot_the_hair_follow_through_and_eye_lead() -> None:
+    lanes = {name.split(" ")[0]: fn for name, fn, _ in review_face.timing_curves()}
+    for key in ("hairLagPitch", "hairLagYaw", "eyeLeadYaw", "eyeLeadPitch"):
+        assert key in lanes
+    head = {"yaw": 0.0, "pitch": 0.0, "hairLagYaw": -0.1, "hairLagPitch": 0.2, "eyeLeadYaw": 0.4, "eyeLeadPitch": -0.2}
+    f = _trace_frame(0, head)
+    assert lanes["hairLagPitch"](f) == pytest.approx(0.7)  # 0.5 + x
+    assert lanes["hairLagYaw"](f) == pytest.approx(0.4)
+    assert lanes["eyeLeadYaw"](f) == pytest.approx(0.7)  # 0.5 + 0.5 x
+    assert lanes["eyeLeadPitch"](f) == pytest.approx(0.4)
+    # a frame without the solver's pose (presets) sits on the lane's middle
+    assert lanes["hairLagPitch"](_trace_frame(0)) == pytest.approx(0.5)
+
+
+def test_timing_chart_has_a_lane_per_curve(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(review_face, "OUT", tmp_path)
+    head = {"yaw": 0.0, "pitch": 0.0, "hairLagYaw": 0.0, "hairLagPitch": 0.1, "eyeLeadYaw": 0.0, "eyeLeadPitch": 0.0}
+    frames = [_trace_frame(i / 60, head, saccadeSerial=int(i > 30), gazeLock=10 < i < 20) for i in range(60)]
+    tr = {"fps": 60, "lead": 0.5, "frames": frames, "timeline": {"visemes": [], "marks": []}}
+    out = review_face.timing("zz_no_such_trace", tr, [])
+    im = Image.open(out)
+    assert im.size == (1800, 90 + 30 + 46 * len(review_face.timing_curves()) + 20)

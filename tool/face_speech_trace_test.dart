@@ -29,7 +29,9 @@
 // repo root when inside it) and the pre-roll (`preroll`, ms). presets: the settled face of every mood, and every viseme's
 // mouth through the speech merge at a neutral mood. Every face frame carries
 // the 14 AUs (`au`), the contract v6 per-side offsets (`left` and `right`,
-// the viewer's) and the scalars (FaceFrame.toJson).
+// the viewer's) and the scalars (FaceFrame.toJson); speech frames also carry
+// the head solver's pose (`head`: yaw, pitch, hairLagYaw, hairLagPitch,
+// eyeLeadYaw, eyeLeadPitch), stepped after the face as the avatar view does.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -156,6 +158,9 @@ Future<Map<String, Object>> _speech(
       h.position = _dt * (i - lead);
     }
     final FaceFrame f = h.performer.step(_dt);
+    // as in the avatar view: the face's nods and roll drive the hair
+    // follow-through and its gaze cues the eyes, then the solver steps
+    head.followFace(f);
     final HeadPose pose = head.step(_dt);
     frames.add(<String, Object>{
       'head': pose.toJson(),

@@ -17,11 +17,14 @@
 
 Every cell is a real CLI render of rive/avatar driven through AvatarVM numbers exactly as the app
 writes them (FaceFrame -> au*, lipTuck, tongueUp, roll, breath, pitch += nodPitch, autoBlink,
-blink). Renders run in parallel on one project (screenshots only, no builds).
+blink; speech traces also carry the head solver's yaw, hairLagYaw, hairLagPitch, eyeLeadYaw and
+eyeLeadPitch, stepped after the face so the hair follows the nods). Renders run in parallel on one
+project (screenshots only, no builds).
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import json
@@ -523,14 +526,17 @@ def read_wav(path: Path) -> tuple[list[float], int]:
     return mono, rate
 
 
-def timing(name: str, tr: dict, blinks: list[int]) -> Path:
-    """One chart: waveform, viseme row, prosody marks, and the face curves the app writes."""
-    frames = tr["frames"]
-    fps = tr["fps"]
-    lead = tr["lead"]
-    total = len(frames) / fps
-    W, lane = 1800, 46
-    curves = [("jawDrop", lambda f: f["au"]["jawDrop"], (240, 200, 120)),
+def head_value(f: dict, key: str) -> float:
+    """A head solver number of a trace frame (0 for a frame without the solver's pose)."""
+    return f.get("head", {}).get(key, 0.0)
+
+
+def timing_curves() -> list[tuple[str, Callable[[dict], float], tuple[int, int, int]]]:
+    """The timing chart's lanes: the face numbers the app writes, then the head solver's hair
+    follow-through and eye lead (signed, drawn around the lane's middle)."""
+    def signed(key: str, gain: float = 1) -> Callable[[dict], float]:
+        return lambda f: 0.5 + 0.5 * gain * head_value(f, key)
+    return [("jawDrop", lambda f: f["au"]["jawDrop"], (240, 200, 120)),
               ("lipPress", lambda f: f["au"]["lipPress"], (230, 110, 110)),
               ("lipPucker", lambda f: f["au"]["lipPucker"], (150, 190, 250)),
               ("lipStretch", lambda f: f["au"]["lipStretch"], (160, 220, 160)),
@@ -541,7 +547,24 @@ def timing(name: str, tr: dict, blinks: list[int]) -> Path:
               # past -0.33 into a flat-bottomed "square" dip)
               ("nodPitch (0.5+0.8x)", lambda f: 0.5 + 0.8 * f["nodPitch"], (200, 160, 250)),
               ("roll", lambda f: f["roll"], (120, 220, 230)),
-              ("breath", lambda f: f["breath"], (180, 180, 180))]
+              ("breath", lambda f: f["breath"], (180, 180, 180)),
+              # the hair lags the head (and the face's nods and roll): 0.5 + x, so a lag shows
+              # above or below the lane's middle
+              ("hairLagPitch (0.5+x)", signed("hairLagPitch", 2), (240, 150, 90)),
+              ("hairLagYaw (0.5+x)", signed("hairLagYaw", 2), (230, 120, 160)),
+              ("eyeLeadYaw (0.5+0.5x)", signed("eyeLeadYaw"), (140, 230, 140)),
+              ("eyeLeadPitch (0.5+0.5x)", signed("eyeLeadPitch"), (110, 200, 160))]
+
+
+def timing(name: str, tr: dict, blinks: list[int]) -> Path:
+    """One chart: waveform, viseme row, prosody marks, blinks (B) and gaze saccades (S) the
+    performer asks for, and the face and head curves the app writes."""
+    frames = tr["frames"]
+    fps = tr["fps"]
+    lead = tr["lead"]
+    total = len(frames) / fps
+    W, lane = 1800, 46
+    curves = timing_curves()
     H = 90 + 30 + lane * len(curves) + 20
     im = Image.new("RGB", (W, H), (20, 18, 26))
     dr = ImageDraw.Draw(im)
@@ -576,6 +599,11 @@ def timing(name: str, tr: dict, blinks: list[int]) -> Path:
     for b in blinks:
         x = X(b / fps)
         dr.text((x - 3, 114), "B", fill=(255, 255, 255))
+    for i in range(1, len(frames)):
+        if frames[i].get("saccadeSerial", 0) != frames[i - 1].get("saccadeSerial", 0):
+            dr.text((X(i / fps) - 3, 114), "S", fill=(140, 230, 140))
+        if frames[i].get("gazeLock") and not frames[i - 1].get("gazeLock"):
+            dr.text((X(i / fps) - 3, 114), "L", fill=(140, 230, 140))
     for i, (nm, fn, col) in enumerate(curves):
         top = 130 + lane * i
         dr.line([(x0, top + lane - 4), (x1, top + lane - 4)], fill=(50, 50, 60))
@@ -584,6 +612,7 @@ def timing(name: str, tr: dict, blinks: list[int]) -> Path:
         dr.line(pts, fill=col, width=2)
     for k in range(int(total) + 1):
         dr.text((X(k) - 4, H - 14), f"{k}s", fill=(150, 150, 150))
+    OUT.mkdir(parents=True, exist_ok=True)
     out = OUT / f"speech_{name}_timing.png"
     im.save(out, optimize=True)
     return out
