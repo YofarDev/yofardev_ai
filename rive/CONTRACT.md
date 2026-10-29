@@ -1,4 +1,4 @@
-# Rive contract (v5)
+# Rive contract (v6)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -52,17 +52,31 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `auLipPress` | number | 0–1: AU24, the lips press together (thin, sealed: p, b, m). |
 | `auJawDrop` | number | 0–1: AU26/27, the jaw opens the mouth (see `mouth`). |
 | `auDimpler` | number | 0–1: AU14, the corners tighten into dimples. |
+| `auBrowInnerUpL` | number | −1–1, default 0: v6 per-side offset, added to `auBrowInnerUp` on the viewer's left side; the sum is clamped 0–1 by the file. |
+| `auBrowInnerUpR` | number | −1–1, default 0: v6 per-side offset, added to `auBrowInnerUp` on the viewer's right side; the sum is clamped 0–1 by the file. |
+| `auBrowOuterUpL` | number | −1–1, default 0: v6 per-side offset, added to `auBrowOuterUp` on the viewer's left side; the sum is clamped 0–1 by the file. |
+| `auBrowOuterUpR` | number | −1–1, default 0: v6 per-side offset, added to `auBrowOuterUp` on the viewer's right side; the sum is clamped 0–1 by the file. |
+| `auBrowLowerL` | number | −1–1, default 0: v6 per-side offset, added to `auBrowLower` on the viewer's left side; the sum is clamped 0–1 by the file. |
+| `auBrowLowerR` | number | −1–1, default 0: v6 per-side offset, added to `auBrowLower` on the viewer's right side; the sum is clamped 0–1 by the file. |
+| `auLidTightenL` | number | −1–1, default 0: v6 per-side offset, added to `auLidTighten` on the viewer's left side; the sum is clamped 0–1 by the file. |
+| `auLidTightenR` | number | −1–1, default 0: v6 per-side offset, added to `auLidTighten` on the viewer's right side; the sum is clamped 0–1 by the file. |
+| `auCheekRaiseL` | number | −1–1, default 0: v6 per-side offset, added to `auCheekRaise` on the viewer's left side; the sum is clamped 0–1 by the file. |
+| `auCheekRaiseR` | number | −1–1, default 0: v6 per-side offset, added to `auCheekRaise` on the viewer's right side; the sum is clamped 0–1 by the file. |
+| `auLipCornerPullL` | number | −1–1, default 0: v6 per-side offset, added to `auLipCornerPull` on the viewer's left side; the sum is clamped 0–1 by the file. |
+| `auLipCornerPullR` | number | −1–1, default 0: v6 per-side offset, added to `auLipCornerPull` on the viewer's right side; the sum is clamped 0–1 by the file. |
+| `auLipCornerDepressL` | number | −1–1, default 0: v6 per-side offset, added to `auLipCornerDepress` on the viewer's left side; the sum is clamped 0–1 by the file. |
+| `auLipCornerDepressR` | number | −1–1, default 0: v6 per-side offset, added to `auLipCornerDepress` on the viewer's right side; the sum is clamped 0–1 by the file. |
 | `lipTuck` | number | 0–1, default 0: the lower lip tucks under the upper teeth (f, v). |
 | `tongueUp` | number | 0–1, default 0: the tongue tip rises to the upper teeth (th, l, d, n). |
 | `roll` | number | −1–1, default 0: head tilt ±6° about the neck, + = toward the viewer's right shoulder. Composes with `yaw`, `pitch`, moods and gestures. |
 | `breath` | number | 0–1, default 0: inhale; the chest and shoulders rise and the head lifts slightly. Composes with the idle breathing. |
 | `autoBlink` | boolean | default true: the built-in idle blink loop runs. False: the eyes stay open except for `blink`. |
-| `blink` | trigger | One blink now, with either `autoBlink` value. |
+| `blink` | trigger | One blink now, with either `autoBlink` value: the upper lids sweep down to the lower lids and back (v6). |
 
 **Idle life**, built into the file with no Dart involvement: blinking, breathing, and eyes that
 follow the pointer or touch.
 
-All `au*`, `lipTuck`, `tongueUp`, `roll` and `breath` numbers are additive and history-free: the
+All `au*` (including the v6 `L`/`R` offsets), `lipTuck`, `tongueUp`, `roll` and `breath` numbers are additive and history-free: the
 pose depends only on the current values. Values outside the range are clamped by the app, not
 the file. The speaking `phase` keeps only a faint sway; the app's prosody drives brows, nods and
 blinks while speaking.

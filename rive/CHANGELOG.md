@@ -6,6 +6,7 @@ Plan B reads this file to find out when it can start the steps that need real as
 Format: `YYYY-MM-DD · A<n> · <contract parts now real> · <notes>`
 
 <!-- entries below, newest first -->
+2026-10-29 · contract · v6: `AvatarVM` gains 14 per-side offsets `au<Name>L` / `au<Name>R` (−1–1, default 0, viewer's left/right) for brow inner up, brow outer up, brow lower, lid tighten, cheek raise, lip corner pull and lip corner depress, added to the symmetric AU and clamped 0–1 by the file; `blink` becomes a lid sweep · moonshot M3 (plan ruling 1); still flat, no nested view models. The rig lands next.
 2026-10-28 · contract · v5: `AvatarVM` gains 14 FACS-lite numbers `au*` (0–1), `lipTuck`, `tongueUp` (0–1), `roll` (−1–1), `breath` (0–1), boolean `autoBlink` (default true) and trigger `blink`; `mood` becomes accents only (the app writes AU presets), `mouth` becomes a legacy jaw alias · moonshot M2; the rig lands next. Flat names, no nested view models yet (M2 plan ruling 1).
 2026-10-28 · contract · `AvatarVM` gains `eyeLeadPitch` (−1–1, default 0, + = looks up; − also drops the upper lids) for the Dart gaze driver · rig follows.
 2026-10-28 · contract · `AvatarVM` gains follow-through offsets `hairLagYaw`, `hairLagPitch`, `eyeLeadYaw` (−1–1, default 0 = locked, same signs as `yaw` / `pitch`) for the Dart spring driver · the rig lands next; Dart driver is a separate task.
