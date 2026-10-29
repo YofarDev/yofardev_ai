@@ -1,4 +1,4 @@
-# Rive contract (v6)
+# Rive contract (v7)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -72,11 +72,22 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `breath` | number | 0–1, default 0: inhale; the chest and shoulders rise and the head lifts slightly. Composes with the idle breathing. |
 | `autoBlink` | boolean | default true: the built-in idle blink loop runs. False: the eyes stay open except for `blink`. |
 | `blink` | trigger | One blink now, with either `autoBlink` value: the upper lids sweep down to the lower lids and back (v6). |
+| `lightKey` | color | v7 light rig: the key light's colour (warm cheek light, glasses glint). Default `FFFFD49A` (livingRoom). |
+| `lightKeyIntensity` | number | 0–1, default 0.85: key light strength. |
+| `lightKeyX` | number | −1–1, default −0.737: direction toward the key light in viewer space, + = the viewer's right. |
+| `lightKeyY` | number | −1–1, default 0.675: the same, + = up. |
+| `lightRim` | color | Rim light colour (the silhouette's back edge, opposite the key). Default `FF9FB8E6`. |
+| `lightRimIntensity` | number | 0–1, default 0.35. |
+| `lightAmbient` | color | Ambient colour the shadow side leans toward. Default `FF2C3346`. |
+| `lightAmbientAmount` | number | 0–1, default 0.35: how far the shadow side leans to `lightAmbient`. |
+| `lightFlicker` | number | 0–1, default 0.15: firelight flicker of the key light on the cheek and glasses, looped inside the file (0 steady, 1 full campfire flicker). |
+| `prop` | enum | none, tablet. v7: tablet = pull the tablet out, then hold it (its screen lights the face); back to none puts it away. Plays on its own layer over the gesture layer. |
+| `lean` | number | 0–1, default 0: listening lean; the torso and head tip toward the viewer and the head lowers a little. Composes with `breath`, gestures and the head turn. |
 
 **Idle life**, built into the file with no Dart involvement: blinking, breathing, and eyes that
 follow the pointer or touch.
 
-All `au*` (including the v6 `L`/`R` offsets), `lipTuck`, `tongueUp`, `roll` and `breath` numbers are additive and history-free: the
+All `au*` (including the v6 `L`/`R` offsets), `lipTuck`, `tongueUp`, `roll`, `breath`, `lean` and `light*` numbers are additive and history-free: the
 pose depends only on the current values. Values outside the range are clamped by the app, not
 the file. The speaking `phase` keeps only a faint sway; the app's prosody drives brows, nods and
 blinks while speaking.
@@ -99,6 +110,13 @@ One file per scene. The app loads them lazily.
 - **View model:** `SceneVM`.
   - `eventId`: enum, with the values for that scene from the table below.
   - `event`: trigger.
+  - `parallaxX`, `parallaxY`: number, −1–1, default 0 (v7): device tilt or pointer offset; a
+    diorama moves its depth planes by it (campfire in v7; the other scenes ignore it).
+  - The scene's light rig as defaults (v7), equal to `rive/tools/art_bible.py` `SCENES`:
+    `lightKey` (color), `lightKeyIntensity`, `lightKeyX`, `lightKeyY` (numbers), `lightRim`
+    (color), `lightRimIntensity` (number), `lightAmbient` (color), `lightFog` (color),
+    `lightFlicker` (number). The app writes the same values to `AvatarVM`; it never reads them
+    back from the file.
 - **Rive event emitted:** `prop_tapped`, with `propId`: string.
 
 | sceneId | eventId values | propId values |
