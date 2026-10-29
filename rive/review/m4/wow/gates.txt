@@ -1,0 +1,15 @@
+ok   wow1_campfire_rain beat 1: bbox (187, 134, 613, 1000), centre 0.50
+ok   wow1_campfire_rain beat 2: bbox (183, 141, 617, 1000), centre 0.50
+ok   wow1_campfire_rain beat 3: bbox (186, 127, 614, 1000), centre 0.50
+ok   wow1_campfire_rain beat 4: bbox (187, 134, 613, 1000), centre 0.50
+ok   wow1_campfire_rain beat 5: bbox (187, 134, 613, 1000), centre 0.50
+ok   wow1_campfire_rain beat 6: bbox (187, 132, 613, 1000), centre 0.50
+ok   wow1_campfire_rain beat 7: bbox (187, 128, 613, 1000), centre 0.50
+ok   wow2_tokyo_weather beat 1: bbox (183, 141, 617, 1000), centre 0.50
+ok   wow2_tokyo_weather beat 2: bbox (187, 137, 740, 1000), centre 0.58
+ok   wow2_tokyo_weather beat 3: bbox (189, 150, 655, 1000), centre 0.53
+ok   wow2_tokyo_weather beat 4: bbox (188, 146, 629, 1000), centre 0.51
+ok   wow2_tokyo_weather beat 5: bbox (187, 128, 613, 1000), centre 0.50
+ok   wow2_tokyo_weather beat 6: bbox (187, 125, 613, 1000), centre 0.50
+ok   flicker.gif: 30 frames, up to 13944 px differ from frame 0 by > 6/255
+ok   parallax_sweep.gif: 12 frames, 15591 px differ between -1 and +1
