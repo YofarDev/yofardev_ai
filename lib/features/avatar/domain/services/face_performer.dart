@@ -195,7 +195,9 @@ class FacePerformer {
   FaceFrame get frame => _frame;
 
   /// True when nothing moves: no speech or tail, every spring at its target
-  /// and blinking handed back to the file.
+  /// and blinking handed back to the file. The [step] that first reports it
+  /// lands every spring exactly on its target, so a view that stops ticking
+  /// here rests on the pose itself, not up to 0.002 short of it.
   bool get isSettled {
     if (_speaking || _clock - _endClock < math.max(_tail, _autoBlinkHold)) {
       return false;
@@ -425,8 +427,26 @@ class FacePerformer {
       }
     }
 
+    if (isSettled) {
+      _snapToTargets();
+    }
     _frame = _compose(nod);
     return _frame;
+  }
+
+  /// Puts every spring on its target, at rest ([isSettled] holds: what is
+  /// left is under the 0.002 tolerance).
+  void _snapToTargets() {
+    for (int i = 0; i < _auCount; i++) {
+      _emotion[i].land(_emotionTarget[i]);
+    }
+    for (int i = 0; i < _sides.length; i++) {
+      _sides[i].land(_sideTarget[i]);
+    }
+    for (int i = 0; i < _restingSprings.length; i++) {
+      _restingSprings[i].land(0);
+    }
+    _breath = 0;
   }
 
   /// Cancels the stream subscriptions (the streams belong to their owners).
@@ -853,6 +873,12 @@ class _Spring {
   }
 
   bool isAt(double target) => (x - target).abs() < 0.002 && v.abs() < 0.01;
+
+  /// Sets the spring at rest on [target].
+  void land(double target) {
+    x = target;
+    v = 0;
+  }
 
   /// Lands exactly on [target] once the remaining motion is invisible, so a
   /// still face produces bit-identical frames.

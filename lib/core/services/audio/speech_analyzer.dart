@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../../models/performance/speech_timeline.dart';
 import '../../models/performance/viseme.dart';
+import '../../utils/logger.dart';
 import 'phoneme_aligner.dart';
 import 'phonemizer.dart';
 import 'speech_frames.dart';
@@ -26,22 +27,34 @@ export 'speech_frames.dart';
 /// spans of at least 50 ms (`pp` and `ff` steal from their neighbours to
 /// reach it), and pitch peaks, stresses and pauses are marked from the audio.
 class SpeechAnalyzer {
-  const SpeechAnalyzer({this.alignCostLimit = maxAlignCost});
+  const SpeechAnalyzer({
+    this.alignCostLimit = maxAlignCost,
+    this.phonemizer = const TextPhonemizer(),
+    this.aligner = const PhonemeAligner(),
+  });
 
-  /// Alignment cost per frame (above the audio's own best labelling) over
-  /// which the text is taken not to match the audio, and the audio
-  /// classifier labels the frames instead.
+  /// Turns the sentence text into phones for [aligner].
+  final TextPhonemizer phonemizer;
+
+  /// Places [phonemizer]'s phones on the analysis frames.
+  final PhonemeAligner aligner;
+
+  /// Alignment cost per sounding frame (above the audio's own best
+  /// labelling) over which the text is taken not to match the audio, and
+  /// the audio classifier labels the frames instead.
   ///
   /// Tuned on the `say` fixtures in `test/fixtures/speech/` (README there).
-  /// Their own sentences align at 0.26 (fine_view), 0.28 (blue_sky,
-  /// so_true) and 0.29 (bonjour, French); each English fixture's text on the
-  /// other two costs 0.62-0.92, and "Completely different words here." on
-  /// blue_sky 1.11. A wider tuning set (38 sentences, 9 macOS voices,
-  /// English and French) stayed at or under 0.39 for the right text, so 0.5
-  /// leaves a margin for other TTS voices; about 16 % of wrong sentences of
-  /// a similar length still pass at 0.5 (they cost label accuracy, never
-  /// timing: the spans still follow the audio).
-  static const double maxAlignCost = 0.5;
+  /// Their own sentences align at 0.31 (fine_view), 0.38 (blue_sky,
+  /// so_true) and 0.39 (bonjour, French), and the same with 1.5 s of
+  /// silence around them; each English fixture's text on the other two
+  /// costs 0.74-1.24, the French sentence read as English on so_true 0.77
+  /// and "Completely different words here." on blue_sky 1.50. A wider
+  /// tuning set (40 sentences, 6 macOS voices, English and French) stayed
+  /// at or under 0.55 for the right text but for one short French question
+  /// (0.65: it falls back, which costs label accuracy only), and about 23 %
+  /// of wrong sentences of a similar length still pass at 0.55 (they cost
+  /// label accuracy, never timing: the spans still follow the audio).
+  static const double maxAlignCost = 0.55;
 
   /// See [maxAlignCost]; a negative limit disables the text alignment.
   final double alignCostLimit;
@@ -113,23 +126,37 @@ class SpeechAnalyzer {
   }
 
   /// The raw alignment of [text] to [pcm], whatever its cost (for tests and
-  /// tools); null when the text has no phones or cannot fit the audio.
+  /// tools); null when the text has no phones, cannot fit the audio, or the
+  /// text step fails.
   AlignedVisemes? align(
     WavPcm pcm, {
     required String text,
     String language = 'en',
   }) => _alignFrames(_Analysis(pcm, null).speechFrames, text, language);
 
-  static AlignedVisemes? _alignFrames(
+  /// The text step. A bug in the phonemizer or the aligner must not lose the
+  /// sentence's timeline: it is logged and the audio classifier labels the
+  /// frames instead (null here).
+  AlignedVisemes? _alignFrames(
     SpeechFrames frames,
     String text,
     String language,
   ) {
-    final List<PhonemeToken> tokens = const TextPhonemizer().phonemize(
-      text,
-      language: language,
-    );
-    return const PhonemeAligner().align(tokens, frames);
+    try {
+      final List<PhonemeToken> tokens = phonemizer.phonemize(
+        text,
+        language: language,
+      );
+      return aligner.align(tokens, frames);
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Text alignment failed; using the audio classifier',
+        tag: 'SpeechAnalyzer',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return null;
+    }
   }
 }
 
@@ -810,10 +837,39 @@ class _Analysis {
     return accepted..sort();
   }
 
+  /// What can follow a sentence's last punctuation without ending it:
+  /// whitespace, quotes, closing brackets, markdown emphasis and emoji (the
+  /// pictograph blocks, with skin tones, flags, keycaps, joiners, variation
+  /// selectors and tag sequences).
+  static final RegExp _trailingDecoration = RegExp(
+    r'''[\s"'`«»“”‘’„‹›)\]}>*_~\u{200D}\u{20E3}\u{FE0E}\u{FE0F}'''
+    r'''\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}'''
+    r'''\u{1F000}-\u{1FAFF}\u{E0020}-\u{E007F}]+$''',
+    unicode: true,
+  );
+
+  /// Trailing exclamation marks (an interrobang `?!` is still a question).
+  static final RegExp _trailingBang = RegExp(r'[!！]+$');
+
+  static final RegExp _terminal = RegExp(r'[.!?…;:。！？．]$');
+
+  /// Whether the sentence asks: decided by the text when it ends on
+  /// punctuation (`?` or `？` once trailing quotes, brackets, markdown, emoji
+  /// and `!` are stripped), else by a final f0 rise in the audio.
   bool isQuestion() {
     final String? t = text;
     if (t != null) {
-      return t.endsWith('?');
+      String end = t.replaceFirst(_trailingDecoration, '');
+      if (_terminal.hasMatch(end)) {
+        String previous;
+        do {
+          previous = end;
+          end = end
+              .replaceFirst(_trailingBang, '')
+              .replaceFirst(_trailingDecoration, '');
+        } while (end != previous);
+        return end.endsWith('?') || end.endsWith('？');
+      }
     }
     int last = -1;
     for (int f = frameCount - 1; f >= 0; f--) {

@@ -17,6 +17,24 @@ import 'wav_amplitude_extractor_test.dart';
 
 class _MockAudioAnalyzer extends Mock implements AudioAnalyzer {}
 
+/// A phonemizer with a G2P bug: it throws for any text.
+class _ThrowingPhonemizer extends TextPhonemizer {
+  const _ThrowingPhonemizer();
+
+  @override
+  List<PhonemeToken> phonemize(String text, {String language = 'en'}) =>
+      throw RangeError('g2p bug');
+}
+
+/// An aligner with a bug: it throws for any input.
+class _ThrowingAligner extends PhonemeAligner {
+  const _ThrowingAligner();
+
+  @override
+  AlignedVisemes? align(List<PhonemeToken> tokens, SpeechFrames frames) =>
+      throw StateError('aligner bug');
+}
+
 const SpeechAnalyzer _analyzer = SpeechAnalyzer();
 
 /// The audio classifier alone (text alignment off): the fallback path,
@@ -343,6 +361,50 @@ void main() {
       expect(_analyzer.analyze(rising, text: 'Fine.').isQuestion, isFalse);
     });
 
+    group('isQuestion reads the cleaned text', () {
+      final WavPcm flat = _pcm(_tone(24000, 1, _closedVowel));
+      final WavPcm rising = _pcm(
+        _tone(24000, 1.6, _closedVowel, glideTo: 190, glideLength: 0.4),
+      );
+
+      for (final String text in <String>[
+        'Ready? 😀',
+        '**Ready?**',
+        '"Ready?"',
+        'Ready?!',
+        'Ready?)',
+        'Ready？',
+        'Ready? 👍🏽 ',
+        '«Ready ?»',
+        '_Ready?_ ~',
+      ]) {
+        test('"$text" is a question', () {
+          expect(_analyzer.analyze(flat, text: text).isQuestion, isTrue);
+        });
+      }
+
+      for (final String text in <String>['Ready.', 'Ready!', 'Ready! 😀']) {
+        test('"$text" is not a question, even on a rising voice', () {
+          expect(_analyzer.analyze(rising, text: text).isQuestion, isFalse);
+        });
+      }
+
+      test('no terminal punctuation: the voice decides', () {
+        for (final String text in <String>['Ready', 'Ready 😀', '**Ready**']) {
+          expect(
+            _analyzer.analyze(rising, text: text).isQuestion,
+            isTrue,
+            reason: text,
+          );
+          expect(
+            _analyzer.analyze(flat, text: text).isQuestion,
+            isFalse,
+            reason: text,
+          );
+        }
+      });
+    });
+
     test('a loud syllable among soft ones is a stress mark', () {
       final SpeechTimeline t = _analyzer.analyze(
         _pcm(<double>[
@@ -563,6 +625,107 @@ void main() {
       expect(
         _analyzer.analyze(pcm, text: wrong),
         _classifier.analyze(pcm, text: wrong),
+      );
+    });
+
+    /// [pcm] with [seconds] of digital silence on both ends.
+    WavPcm padded(WavPcm pcm, double seconds) => WavPcm(
+      sampleRate: pcm.sampleRate,
+      samples: Float32List.fromList(<double>[
+        ..._silence(pcm.sampleRate, seconds),
+        ...pcm.samples,
+        ..._silence(pcm.sampleRate, seconds),
+      ]),
+    );
+
+    test('silent padding does not dilute a wrong caption into a pass', () {
+      final WavPcm pcm = padded(fixture('blue_sky'), 1.5);
+      const String wrong = 'Completely different words here.';
+      expect(
+        _analyzer.align(pcm, text: wrong)!.costPerFrame,
+        greaterThan(SpeechAnalyzer.maxAlignCost),
+      );
+      expect(
+        _analyzer.analyze(pcm, text: wrong),
+        _classifier.analyze(pcm, text: wrong),
+      );
+      // the right text still aligns on the padded audio
+      expect(
+        _analyzer.align(pcm, text: 'The sky is blue.')!.costPerFrame,
+        lessThanOrEqualTo(SpeechAnalyzer.maxAlignCost),
+      );
+    });
+
+    for (final (String name, String text) in <(String, String)>[
+      ('blue_sky', 'So true, you know.'),
+      ('blue_sky', 'A fine view of five vines.'),
+      ('so_true', 'The sky is blue.'),
+      ('so_true', 'A fine view of five vines.'),
+      ('fine_view', 'The sky is blue.'),
+      ('fine_view', 'So true, you know.'),
+    ]) {
+      test('$name with "$text" (another fixture\'s text) falls back', () {
+        final WavPcm pcm = fixture(name);
+        expect(
+          _analyzer.align(pcm, text: text)!.costPerFrame,
+          greaterThan(SpeechAnalyzer.maxAlignCost),
+        );
+        expect(
+          _analyzer.analyze(pcm, text: text),
+          _classifier.analyze(pcm, text: text),
+        );
+      });
+    }
+
+    test('a French caption read as English on so_true falls back', () {
+      final WavPcm pcm = fixture('so_true');
+      const String text = 'Bonjour, comment allez-vous ?';
+      expect(
+        _analyzer.align(pcm, text: text)!.costPerFrame,
+        greaterThan(SpeechAnalyzer.maxAlignCost),
+      );
+      expect(
+        _analyzer.analyze(pcm, text: text),
+        _classifier.analyze(pcm, text: text),
+      );
+    });
+
+    test('captions with no phones give the classifier result', () {
+      final WavPcm pcm = fixture('so_true');
+      for (final String text in <String>[
+        '',
+        '日本語',
+        'https://example.com/a?b=1',
+      ]) {
+        expect(_analyzer.align(pcm, text: text), isNull, reason: text);
+        expect(
+          _analyzer.analyze(pcm, text: text),
+          _classifier.analyze(pcm, text: text),
+          reason: text,
+        );
+      }
+    });
+
+    test('a phonemizer that throws falls back to the classifier', () {
+      final WavPcm pcm = fixture('so_true');
+      const String text = 'So true, you know.';
+      const SpeechAnalyzer broken = SpeechAnalyzer(
+        phonemizer: _ThrowingPhonemizer(),
+      );
+      expect(
+        broken.analyze(pcm, text: text),
+        _classifier.analyze(pcm, text: text),
+      );
+      expect(broken.align(pcm, text: text), isNull);
+    });
+
+    test('an aligner that throws falls back to the classifier', () {
+      final WavPcm pcm = fixture('so_true');
+      const String text = 'So true, you know.';
+      const SpeechAnalyzer broken = SpeechAnalyzer(aligner: _ThrowingAligner());
+      expect(
+        broken.analyze(pcm, text: text),
+        _classifier.analyze(pcm, text: text),
       );
     });
 

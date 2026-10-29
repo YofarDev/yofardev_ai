@@ -70,6 +70,45 @@ void main() {
     expect(sink.calls, <String>['bool autoBlink=false', 'trigger blink']);
   });
 
+  test('a serial that goes down fires no blink', () {
+    writer.write(const FaceFrame(blinkSerial: 3), force: true);
+    sink.calls.clear();
+    writer.write(const FaceFrame());
+    expect(sink.calls.where((String c) => c.startsWith('trigger')), isEmpty);
+    // counting up again from the lower serial blinks
+    writer.write(const FaceFrame(blinkSerial: 1));
+    expect(
+      sink.calls.where((String c) => c.startsWith('trigger')),
+      hasLength(1),
+    );
+  });
+
+  test('a serial that jumps by several fires one blink', () {
+    writer.write(const FaceFrame(blinkSerial: 1), force: true);
+    sink.calls.clear();
+    writer.write(const FaceFrame(blinkSerial: 4));
+    expect(
+      sink.calls.where((String c) => c.startsWith('trigger')),
+      hasLength(1),
+    );
+  });
+
+  test('an AU at 1 with side offsets +1 and -1 is written as is', () {
+    writer.write(
+      const FaceFrame(
+        au: ActionUnits(browLower: 1, lipCornerPull: 1),
+        left: ActionUnitSides(browLower: 1, lipCornerPull: -1),
+        right: ActionUnitSides(browLower: -1, lipCornerPull: 1),
+      ),
+      force: true,
+    );
+    expect(sink.numbers[AvatarRiveContract.propAuBrowLower], 1);
+    expect(sink.numbers[AvatarRiveContract.propAuBrowLowerL], 1);
+    expect(sink.numbers[AvatarRiveContract.propAuBrowLowerR], -1);
+    expect(sink.numbers[AvatarRiveContract.propAuLipCornerPullL], -1);
+    expect(sink.numbers[AvatarRiveContract.propAuLipCornerPullR], 1);
+  });
+
   test('side offsets go to the viewer\'s L and R names, signed', () {
     writer.write(
       const FaceFrame(

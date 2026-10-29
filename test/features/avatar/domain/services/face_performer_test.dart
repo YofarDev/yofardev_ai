@@ -673,6 +673,94 @@ void main() {
       expect(a.au.browInnerUp, 0.4);
     });
 
+    test('the frame that reports settled is exactly on target', () {
+      rig.mood(AvatarMood.thinking);
+      FaceFrame f = rig.performer.step(_frame);
+      int steps = 1;
+      while (!rig.performer.isSettled && steps < 600) {
+        f = rig.performer.step(_frame);
+        steps++;
+      }
+      expect(rig.performer.isSettled, isTrue);
+      // the view stops ticking here: nothing may be left short of the pose
+      expect(
+        _aus(f.au),
+        _aus(actionUnitsForEmotion(emotionForMood(AvatarMood.thinking))),
+      );
+      final ({ActionUnitSides left, ActionUnitSides right}) sides =
+          sidesForEmotion(emotionForMood(AvatarMood.thinking));
+      expect(f.left, sides.left);
+      expect(f.right, sides.right);
+      expect(f.lipTuck, 0);
+      expect(f.roll, 0);
+      expect(f.breath, 0);
+      expect(f.nodPitch, 0);
+    });
+
+    test('after a sentence the settled frame is exactly the mood', () {
+      rig.mood(AvatarMood.happy);
+      rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 400)]));
+      rig.run(24);
+      rig.playback.add(const AnimationCompletedEvent());
+      rig.position = null;
+      FaceFrame f = rig.performer.frame;
+      int steps = 0;
+      while (!rig.performer.isSettled && steps < 600) {
+        f = rig.performer.step(_frame);
+        steps++;
+      }
+      expect(rig.performer.isSettled, isTrue);
+      expect(
+        _aus(f.au),
+        _aus(actionUnitsForEmotion(emotionForMood(AvatarMood.happy))),
+      );
+    });
+
+    test('side offsets stay within -1..1 at every mood extreme', () {
+      final List<EmotionVector> extremes = <EmotionVector>[
+        for (final AvatarMood m in AvatarMood.values) emotionForMood(m),
+        for (final double v in <double>[-1, 1])
+          for (final double a in <double>[-1, 1])
+            EmotionVector(valence: v, arousal: a),
+      ];
+      for (final EmotionVector e in extremes) {
+        final _Rig r = _Rig();
+        r.intents.add(PerformanceIntent(emotion: e));
+        r.speak(
+          _timeline(
+            <(Viseme, int, int)>[(Viseme.aa, 0, 1500)],
+            marks: <ProsodyMark>[
+              const ProsodyMark(
+                kind: ProsodyMarkKind.pitchPeak,
+                at: Duration(milliseconds: 500),
+                strength: 1,
+              ),
+            ],
+            question: true,
+          ),
+        );
+        for (final FaceFrame f in r.run(150)) {
+          for (final ActionUnitSides s in <ActionUnitSides>[f.left, f.right]) {
+            for (final double v in <double>[
+              s.browInnerUp,
+              s.browOuterUp,
+              s.browLower,
+              s.lidTighten,
+              s.cheekRaise,
+              s.lipCornerPull,
+              s.lipCornerDepress,
+            ]) {
+              expect(v, inInclusiveRange(-1.0, 1.0), reason: '$e');
+            }
+          }
+          for (final double v in _aus(f.au)) {
+            expect(v, inInclusiveRange(0.0, 1.0), reason: '$e');
+          }
+        }
+        r.dispose();
+      }
+    });
+
     test('after a sentence the frames settle back to one instance', () {
       rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 400)]));
       rig.run(24);

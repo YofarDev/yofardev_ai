@@ -205,6 +205,65 @@ void main() {
         expect(blender.shapeAt(tl, ms(361)).shape.press, 0);
       });
 
+      test('a closure into silence opens without a pop', () {
+        final SpeechTimeline end = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 200),
+          span(Viseme.pp, 200, 320),
+          span(Viseme.sil, 320, 620),
+        ]);
+        for (int t = 320; t < 420; t += 2) {
+          final MouthBlend b = blender.shapeAt(end, ms(t));
+          expect(b.pop, 0, reason: '$t ms');
+          expect(b.shape.jaw, 0, reason: '$t ms');
+          expect(b.sealed, isFalse, reason: '$t ms');
+        }
+      });
+
+      test('a closure into a span under 50 ms opens without a pop', () {
+        // p, a 20 ms vowel, p again ("pep" said fast)
+        final SpeechTimeline fast = timeline(<VisemeSpan>[
+          span(Viseme.pp, 0, 60),
+          span(Viseme.e, 60, 80),
+          span(Viseme.pp, 80, 140),
+          span(Viseme.aa, 140, 440),
+        ]);
+        for (int t = 60; t < 80; t++) {
+          expect(blender.shapeAt(fast, ms(t)).pop, 0, reason: '$t ms');
+        }
+        // the release into the long vowel still pops
+        expect(blender.shapeAt(fast, ms(150)).pop, greaterThan(0));
+      });
+
+      test('a closure that starts the sentence is sealed from 0', () {
+        final SpeechTimeline first = timeline(<VisemeSpan>[
+          span(Viseme.pp, 0, 80),
+          span(Viseme.aa, 80, 380),
+        ]);
+        for (int t = 0; t < 80; t += 5) {
+          final MouthBlend b = blender.shapeAt(first, ms(t));
+          expect(b.sealed, isTrue, reason: '$t ms');
+          expect(b.shape.jaw, 0, reason: '$t ms');
+        }
+        expect(blender.shapeAt(first, ms(0)).shape.press, closeTo(0.6, 1e-9));
+        expect(blender.shapeAt(first, ms(95)).pop, greaterThan(0));
+      });
+
+      test('two closures back to back stay sealed through the boundary', () {
+        final SpeechTimeline twice = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 200),
+          span(Viseme.pp, 200, 260),
+          span(Viseme.pp, 260, 280),
+          span(Viseme.aa, 280, 580),
+        ]);
+        for (int t = 200; t < 280; t += 2) {
+          final MouthBlend b = blender.shapeAt(twice, ms(t));
+          expect(b.sealed, isTrue, reason: '$t ms');
+          expect(b.shape.jaw, 0, reason: '$t ms');
+          expect(b.pop, 0, reason: '$t ms');
+        }
+        expect(blender.shapeAt(twice, ms(290)).pop, greaterThan(0));
+      });
+
       test('no pop without a closure before the span', () {
         final SpeechTimeline plain = timeline(<VisemeSpan>[
           span(Viseme.aa, 0, 200),

@@ -16,10 +16,12 @@ class AlignedVisemes {
   /// not merged or smoothed.
   final List<VisemeSpan> spans;
 
-  /// Emission and duration cost per frame above the audio's own best
-  /// labelling (each frame its cheapest class): low when the phones fit the
-  /// audio, high when the text does not match it. Measuring above that floor
-  /// keeps an unusual voice or a noisy recording from reading as a mismatch.
+  /// Emission and duration cost above the audio's own best labelling (each
+  /// frame its cheapest class), per sounding (non-silent) frame: low when the
+  /// phones fit the audio, high when the text does not match it. Measuring
+  /// above that floor keeps an unusual voice or a noisy recording from
+  /// reading as a mismatch; counting only sounding frames keeps silence
+  /// around the sentence from diluting the cost.
   final double costPerFrame;
 }
 
@@ -193,9 +195,18 @@ class PhonemeAligner {
       state = predOf[state][end];
       end = u;
     }
+    // Per sounding frame: silence costs nothing either way, so leading or
+    // trailing padding must not dilute a mismatch into a pass.
+    int sounding = 0;
+    for (int f = 0; f < t; f++) {
+      if (!frames.isSilent(f)) {
+        sounding++;
+      }
+    }
     return AlignedVisemes(
       spans: spans.reversed.toList(),
-      costPerFrame: math.max(0, total - emissions.floor()) / t,
+      costPerFrame:
+          math.max(0, total - emissions.floor()) / math.max(1, sounding),
     );
   }
 

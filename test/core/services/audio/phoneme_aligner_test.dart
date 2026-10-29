@@ -219,6 +219,33 @@ void main() {
     expect(fit.costPerFrame, lessThan(misfit.costPerFrame * 0.5));
   });
 
+  test('silent padding does not change the cost per frame', () {
+    final List<PhonemeToken> misfit = <PhonemeToken>[
+      _t(Viseme.aa, vowel: true),
+      _t(Viseme.nn),
+      _t(Viseme.ih, vowel: true),
+      _t(Viseme.pp, end: true),
+    ];
+    const List<(_Kind, int)> speech = <(_Kind, int)>[
+      (_Kind.noise, 8),
+      (_Kind.tone, 12),
+      (_Kind.silence, 4),
+      (_Kind.noise, 6),
+    ];
+    final double bare = _aligner.align(misfit, _frames(speech))!.costPerFrame;
+    final double padded = _aligner
+        .align(
+          misfit,
+          _frames(<(_Kind, int)>[
+            (_Kind.silence, 60),
+            ...speech,
+            (_Kind.silence, 60),
+          ]),
+        )!
+        .costPerFrame;
+    expect(padded, closeTo(bare, bare * 0.1));
+  });
+
   test('empty tokens or empty frames give null', () {
     final SpeechFrames frames = _frames(<(_Kind, int)>[(_Kind.tone, 10)]);
     expect(_aligner.align(const <PhonemeToken>[], frames), isNull);

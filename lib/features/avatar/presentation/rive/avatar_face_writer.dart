@@ -13,8 +13,9 @@ abstract interface class AvatarVmSink {
 /// the 14 per-side `au<Name>L` / `au<Name>R` offsets ([FaceFrame.left] and
 /// [FaceFrame.right]), `lipTuck`, `tongueUp`, `roll` and `breath` when they
 /// move by more than [epsilon], `autoBlink` when it flips, and the `blink`
-/// trigger once per new blink serial (never for the serial seen on the first
-/// write).
+/// trigger when the blink serial goes up: at most one blink per write, however
+/// far it went up, none when it goes down (a source that counts from 0 again)
+/// and none for the serial seen on the first write.
 class AvatarFaceWriter {
   AvatarFaceWriter(this._sink);
 
@@ -35,7 +36,7 @@ class AvatarFaceWriter {
   }
 
   /// Takes [serial] as the last blink serial seen, without firing: the next
-  /// write fires `blink` only if its serial differs from [serial]. Used when
+  /// write fires `blink` only if its serial is above [serial]. Used when
   /// the frames switch source (a lab override and the live performer count
   /// blinks independently).
   void adoptBlinkSerial(int serial) => _blinkSerial = serial;
@@ -72,7 +73,7 @@ class AvatarFaceWriter {
       _autoBlink = face.autoBlink;
     }
     final int? last = _blinkSerial;
-    if (last != null && face.blinkSerial != last) {
+    if (last != null && face.blinkSerial > last) {
       _sink.fireTrigger(AvatarRiveContract.propBlinkTrigger);
     }
     _blinkSerial = face.blinkSerial;

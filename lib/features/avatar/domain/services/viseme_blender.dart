@@ -34,7 +34,8 @@ class MouthBlend {
 /// vowel and an open vowel gives way. A `pp` span is a hard lip seal that
 /// compresses (press [sealPressStart] → [sealPress] across the span) and
 /// releases with a pop: the jaw bursts open within [releaseBurst] and
-/// overshoots the next shape by [popJaw], eased out over [releasePop].
+/// overshoots the next shape by [popJaw], eased out over [releasePop]. There
+/// is no pop into `sil` or into a span shorter than [releasePop].
 ///
 /// The result is continuous in time: both lean windows are clamped to half
 /// the span, so they never overlap, and each leak starts exactly where the
@@ -78,6 +79,12 @@ class VisemeBlender {
     final bool hasPrevious = previous != null && previous.end >= current.start;
 
     final bool release = hasPrevious && previous.viseme == Viseme.pp;
+    // The pop overshoots into a sound: a closure into silence, or into a
+    // span too short to carry it, opens without one (no jaw twitch).
+    final bool pops =
+        release &&
+        current.viseme != Viseme.sil &&
+        current.end - current.start >= releasePop;
 
     MouthShape shape = base;
 
@@ -115,7 +122,7 @@ class VisemeBlender {
       final double popWindow = releasePop.inMicroseconds.toDouble();
       final double opened = shape.jaw * _smoothstep(since / burst);
       double pop = 0;
-      if (since < popWindow) {
+      if (pops && since < popWindow) {
         final double amount =
             popJaw * 0.5 * (1 + math.cos(math.pi * since / popWindow));
         pop = _min(opened + amount, 1) - opened;

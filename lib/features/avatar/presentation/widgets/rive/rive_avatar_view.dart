@@ -277,8 +277,13 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     if (!_solver.driftEnabled &&
         _solver.isSettled &&
         (performer == null || performer.isSettled)) {
-      // At rest: make sure the final values landed, then stop ticking.
+      // At rest: make sure the final values landed, then stop ticking. The
+      // settled performer's frame is exactly on target; writing it in full
+      // keeps a last sub-epsilon step from being skipped.
       _writeHeadPose(pose, force: true);
+      if (performer != null) {
+        _writeFace(widget.faceOverride ?? performer.frame, force: true);
+      }
       _ticker.stop();
     }
   }
