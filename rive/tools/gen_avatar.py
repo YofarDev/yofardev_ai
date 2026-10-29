@@ -2124,10 +2124,22 @@ for g in glints:  # every glasses set: the screen mirrored low in each lens
 prop_anims = tablet.animations({-1: ARM_R, 1: ARM_L})
 artboard.children.extend(prop_anims.values())
 gesture_layer = next(c for c in sm.children if c.tag == "StateMachineLayer" and c.attrs.get("name") == "Gesture")
-sm.children.insert(sm.children.index(gesture_layer) + 1, tablet.layer(prop_anims))
+prop_layer = tablet.layer(prop_anims)
+sm.children.insert(sm.children.index(gesture_layer) + 1, prop_layer)
 
 # ---- M5 Task 7: the key tints the cheek under the screen pool (ruling 7; M5 id range, after the head)
 light.key_cheek_tint(M5, face)
+
+# ---- M5 Task 8: the newspaper prop (ruling 9; contract v8b; M5 id range, after the light): the tablet's
+# clips on a folded broadsheet, a page shadow on the face, its states in the same `Prop` layer
+light.prop_values["newspaper"] = M5("DataEnumValue", key="newspaper", value="newspaper")
+enums["Prop"].add(light.prop_values["newspaper"])
+paper = avatar_tablet.Newspaper(M5, light.path("prop"), light.prop_values, EASE)
+shoulder_l.children.append(paper.art())  # behind the tablet (the two never show together)
+head_kids.insert(head_kids.index(light.firelight), paper.page_shadow(face, HEAD_FRAME))
+paper_anims = paper.animations({-1: ARM_R, 1: ARM_L}, with_none=False)
+artboard.children.extend(paper_anims.values())
+paper.extend_layer(prop_layer, tablet.states, paper_anims)
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

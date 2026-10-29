@@ -30,7 +30,7 @@ Called by gen_avatar.py after the light rig; every element is minted from the M4
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 from typing import Callable, Iterator, Sequence
 
@@ -412,6 +412,9 @@ def _unwrap(prev: float, v: float) -> float:
 class Tablet:
     """Builds the art, the clips and the `Prop` layer into the finished avatar tree."""
 
+    KIND = "tablet"  # the `prop` value and the clip names' middle (prop_<KIND>_out ...)
+    GLOW_PEAK, REFLECT_PEAK = GLOW, REFLECT  # opacities the face light / lens nodes reach while out
+
     def __init__(self, d: Doc, prop_path: str, prop_values: dict[str, El], ease_in_out: El) -> None:
         self.d = d
         self.prop_path = prop_path
@@ -419,6 +422,8 @@ class Tablet:
         self.ease = ease_in_out
         self.glows: list[El] = []
         self.reflects: list[El] = []
+        self.scroll: El | None = None
+        self.states: dict[str, El] = {}
 
     # ---- paints
     def _solid(self, argb: str) -> El:
@@ -598,11 +603,12 @@ class Tablet:
             "rotation": self._linear([(f, tab[f].rot) for f in fr], 0.0005),
             "opacity": [self._kf(f, v, m) for f, v, m in clip.opacity]}))
         tracks.append(self._obj(self.tilt, {"scaleY": self._linear([(f, tab[f].sy) for f in fr], 0.0005)}))
-        tracks.append(self._obj(self.scroll, {"y": [self._kf(f, v, m) for f, v, m in clip.scroll]}))
+        if self.scroll is not None:
+            tracks.append(self._obj(self.scroll, {"y": [self._kf(f, v, m) for f, v, m in clip.scroll]}))
         for g in self.glows:
-            tracks.append(self._obj(g, {"opacity": [self._kf(f, v * GLOW, m) for f, v, m in clip.glow]}))
+            tracks.append(self._obj(g, {"opacity": [self._kf(f, v * self.GLOW_PEAK, m) for f, v, m in clip.glow]}))
         for r in self.reflects:
-            tracks.append(self._obj(r, {"opacity": [self._kf(f, v * REFLECT, m) for f, v, m in clip.glow]}))
+            tracks.append(self._obj(r, {"opacity": [self._kf(f, v * self.REFLECT_PEAK, m) for f, v, m in clip.glow]}))
         for side in (-1, 1):
             tracks += self.arm_tracks(arms[side], side, clip)
         return tracks
@@ -625,11 +631,12 @@ class Tablet:
             property="activeComponentId"), objectId=solo.ref()) for solo, ps in a["pose_sets"]]
         return [hand, *solos, *ik_tracks]
 
-    def animations(self, arms: dict[int, dict]) -> dict[str, El]:
+    def animations(self, arms: dict[int, dict], with_none: bool = True) -> dict[str, El]:
         d = self.d
-        out = {"prop_none": d("LinearAnimation", duration=1, fps=FPS, name="prop_none")}
+        out = {"prop_none": d("LinearAnimation", duration=1, fps=FPS, name="prop_none")} if with_none else {}
         for make in CLIPS:
             clip = make()
+            clip = replace(clip, name=clip.name.replace("tablet", self.KIND))
             out[clip.name] = d("LinearAnimation", *self.clip_tracks(clip, arms), duration=clip.frames, fps=FPS,
                                loopValue="loop" if clip.loop else None, name=clip.name)
         return out
@@ -650,6 +657,7 @@ class Tablet:
 
         none, out, hold, away = (state(n, i) for i, n in enumerate(
             ("prop_none", "prop_tablet_out", "prop_tablet_hold", "prop_tablet_away")))
+        self.states = {"none": none, "out": out, "hold": hold, "away": away}
 
         def go(to: El, *conds: El, ms: int = 0, exit_pct: float | None = None) -> El:
             kw: dict[str, object] = {}
@@ -670,3 +678,132 @@ class Tablet:
                  d("ExitState", x=500.0, y=-100.0),
                  d("EntryState", d("StateTransition", stateToId=none.ref()), x=-100.0, y=-100.0),
                  none, out, hold, away, name="Prop")
+
+
+# ------------------------------------------------------------------ the newspaper (M5 ruling 9)
+# A folded broadsheet on the tablet's footprint (W x H, so the grips, hand targets, timing and the
+# out / hold / away clips are the tablet's own), two pages with generated headline bars, column
+# lines and a photo block, no emissive glow: a soft page shadow falls on the face instead.
+
+PAPER = "FFF2ECDF"
+PAPER_SHADE = "FFE2D9C8"
+PAPER_EDGE = "FFCFC5B2"
+PAPER_LINE = "FF8A8072"
+INK_HEAD = "FF2E2A30"
+INK_TEXT = "FF8F8678"
+PHOTO = "FFB9AE9C"
+FOLD_C = "7A6F60"            # the centre fold's shade (alpha set per stop)
+PAGE_THICK = 3.5             # the stacked sheets' depth (px along the normal)
+SHADOW_C = "FF7A5C52"        # the page's shadow on the face (multiply)
+SHADOW = 0.5                 # its opacity while the paper is out
+
+
+class Newspaper(Tablet):
+    """The newspaper prop: the tablet's clips (renamed prop_newspaper_*) on its own art, minted from
+    the M5 id range; its states join the existing `Prop` layer (extend_layer)."""
+
+    KIND = "newspaper"
+    GLOW_PEAK, REFLECT_PEAK = SHADOW, 0.0
+
+    def _bars(self, name: str, rects: Sequence[tuple[float, float, float, float]], argb: str) -> El:
+        """One shape, one fill, many rectangles (x, y, w, h): cheap columns of type."""
+        d = self.d
+        paths = [d("Rectangle", width=float(w), height=float(h), cornerRadiusTL=float(min(w, h) / 2), x=float(x),
+                   y=float(y), name="Path") for x, y, w, h in rects]
+        return d("Shape", *paths, self._fill(argb), x=0.0, y=0.0, name=name)
+
+    def pages(self) -> list[El]:
+        """Both pages' print (flat frame, centre 0, 0; the fold at x 0), front to back."""
+        pw, top = W / 2, -H / 2
+        heads, text, photos = [], [], []
+        # left page: a two-line headline over two columns of type
+        lx = -pw / 2
+        heads += [(lx, top + 20.0, pw - 30.0, 11.0), (lx - 14.0, top + 36.0, pw - 58.0, 8.0)]
+        for col, cx in enumerate((lx - 28.0, lx + 30.0)):
+            for k in range(9 if col else 8):
+                w = 50.0 if k % 4 != 3 else 34.0
+                text.append((cx - (50.0 - w) / 2, top + 58.0 + 12.0 * k, w, 3.4))
+        # right page: a smaller headline, a photo block and three columns of type under it
+        rx = pw / 2
+        heads.append((rx, top + 20.0, pw - 44.0, 8.0))
+        photos.append((rx - 22.0, top + 54.0, 76.0, 46.0))
+        for k in range(4):
+            text.append((rx + 46.0, top + 38.0 + 11.0 * k, 34.0, 3.0))
+        for col, cx in enumerate((rx - 40.0, rx, rx + 40.0)):
+            for k in range(6):
+                w = 32.0 if (k + col) % 3 != 2 else 22.0
+                text.append((cx - (32.0 - w) / 2, top + 92.0 + 12.0 * k, w, 3.0))
+        return [self._bars("NewsHeadlines", heads, INK_HEAD), self._bars("NewsPhoto", photos, PHOTO),
+                self._bars("NewsColumns", text, INK_TEXT)]
+
+    def art(self) -> El:
+        d = self.d
+        m = plane()
+        phi, sx, sy, theta = svd2(m)
+        n = normal()
+        back = apply(inverse(m), (-n[0] * PAGE_THICK, -n[1] * PAGE_THICK))
+        pw = W / 2
+        fold = self._rect("NewsFold", 28.0, H, 0.0,
+                          d("Fill", self._lin(-14, 0, 14, 0, [("00" + FOLD_C, 0.0), ("48" + FOLD_C, 0.5),
+                                                               ("00" + FOLD_C, 1.0)]), name="Fill"))
+        left = self._rect("NewsPageL", pw, H, 0.0, self._fill(PAPER), self._stroke(PAPER_LINE, 1.0), x=-pw / 2,
+                          radii=(4.0, 0.0, 0.0, 4.0))
+        right = self._rect("NewsPageR", pw, H, 0.0,
+                           d("Fill", self._lin(0, 0, pw, 0, [(PAPER_SHADE, 0.0), (PAPER, 0.35)]), name="Fill"),
+                           self._stroke(PAPER_LINE, 1.0), x=pw / 2, radii=(0.0, 4.0, 4.0, 0.0))
+        edge = self._rect("NewsEdge", W, H, 4.0, self._fill(PAPER_EDGE), self._stroke(PAPER_LINE, 1.0),
+                          x=back[0], y=back[1])
+        face = d("Node", fold, *self.pages(), left, right, edge, x=0.0, y=0.0, rotation=round(theta, 5),
+                 name="NewspaperFace")
+        plane_n = d("Node", face, x=0.0, y=0.0, rotation=round(phi, 5), scaleX=round(sx, 5), scaleY=round(sy, 5),
+                    name="NewspaperPlane")
+        self.tilt = d("Node", plane_n, x=0.0, y=0.0, name="NewspaperTip")
+        hip = hip_pose()
+        self.node = d("Node", self.tilt, x=hip.x - BODY_ORIGIN[0], y=hip.y - BODY_ORIGIN[1], rotation=hip.rot,
+                      opacity=0.0, name="Newspaper")
+        self.tilt.attrs["scaleY"] = hip.sy
+        self._fit(self.node)
+        return self.node
+
+    def page_shadow(self, face: El, head_frame: tuple[float, float]) -> El:
+        """The paper's soft shadow on the face from below (multiply, clipped by the face), opacity
+        keyed 0 -> SHADOW while out (the clips' glow track)."""
+        d = self.d
+        grad = d("RadialGradient", d("GradientStop", colorValue="C0" + SHADOW_C[2:], position=0.0),
+                 d("GradientStop", colorValue="00" + SHADOW_C[2:], position=1.0),
+                 startX=0.0, startY=0.0, endX=150.0, endY=0.0)
+        shape = d("Shape", d("ClippingShape", sourceId=face.ref(), name="Clip"),
+                  d("Ellipse", width=300.0, height=300.0, name="Path"), d("Fill", grad, name="Fill"),
+                  x=0.0, y=0.0, scaleY=0.62, blendModeValue=24, name="PageShadowPool")
+        node = d("Node", shape, x=436.0 - head_frame[0], y=560.0 - head_frame[1], opacity=0.0, name="PageShadow")
+        self._fit(node)
+        self.glows.append(node)
+        return node
+
+    def extend_layer(self, layer: El, tablet: dict[str, El], anims: dict[str, El]) -> None:
+        """Add the newspaper's out / hold / away states to the tablet's `Prop` layer (the layer and
+        every tablet state keep their ids). The two props never show together: each prop's out and
+        hold put it away on any other value, and its put-away only hands over at its end (back to
+        none, then the other prop's out)."""
+        d = self.d
+
+        def go(to: El, *conds: El, ms: int = 0, exit_pct: float | None = None) -> El:
+            kw: dict[str, object] = {}
+            if exit_pct is not None:
+                kw = dict(enableExitTime=True, exitTimeIsPercetange=True, exitTime=exit_pct)
+            return d("StateTransition", *conds, stateToId=to.ref(), duration=ms or None, **kw)
+
+        out, hold, away = (d("AnimationState", animationId=anims[f"prop_newspaper_{c}"].ref(), x=float(160 * i),
+                             y=float(400 + 120 * (i % 2))) for i, c in enumerate(("out", "hold", "away"), start=1))
+        tablet["none"].add(go(out, self._is("newspaper"), ms=BLEND_IN))
+        for st in (out, hold):
+            st.add(go(away, self._is("none"), ms=BLEND_AWAY), go(away, self._is("tablet"), ms=BLEND_AWAY))
+        out.add(go(hold, exit_pct=100))
+        away.add(go(out, self._is("newspaper"), ms=BLEND_BACK, exit_pct=55),
+                 go(hold, self._is("newspaper"), ms=BLEND_BACK),
+                 go(tablet["none"], ms=BLEND_END, exit_pct=100))
+        for st in (tablet["out"], tablet["hold"]):  # the tablet goes away on newspaper too, never both
+            st.add(go(tablet["away"], self._is("newspaper"), ms=BLEND_AWAY))
+        at = layer.children.index(tablet["away"]) + 1
+        layer.children[at:at] = [out, hold, away]
+        self.states = {"out": out, "hold": hold, "away": away}

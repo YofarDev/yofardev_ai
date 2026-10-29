@@ -149,3 +149,57 @@ def test_prop_layer_graph() -> None:
         for tr in s.children:
             if not tr.attrs.get("exitTime") == 100 or s is by_anim["prop_tablet_away"]:
                 assert 0 < int(tr.attrs["duration"]) <= 200
+
+
+def test_newspaper_states_join_the_prop_layer_and_never_show_with_the_tablet() -> None:
+    """M5 ruling 9: the newspaper's out / hold / away join the tablet's `Prop` layer; each prop's out
+    and hold put it away on any other value, and a put-away hands over only at its end (via none)."""
+    d = Doc(start=10)
+    values = {v: d("DataEnumValue", key=v, value=v) for v in ("none", "tablet", "newspaper")}
+    t = tb.Tablet(d, "0:1-0:2", values, d("CubicEaseInterpolator"))
+    names = ["prop_none"] + [f"prop_{k}_{c}" for k in ("tablet", "newspaper") for c in ("out", "hold", "away")]
+    anims = {n: d("LinearAnimation", name=n) for n in names}
+    layer = t.layer(anims)
+    tablet_ids = {s.ref() for s in t.states.values()}
+    tb.Newspaper(d, "0:1-0:2", values, d("CubicEaseInterpolator")).extend_layer(layer, t.states, anims)
+    states = {s.attrs["animationId"]: s for s in layer.children if s.tag == "AnimationState"}
+    by_anim = {n: states[a.ref()] for n, a in anims.items()}
+    assert tablet_ids <= {s.ref() for s in layer.children}  # the tablet's states are kept
+    ref_name = {s.ref(): n for n, s in by_anim.items()}
+
+    def edges(name: str) -> list[tuple[str, str | None, object]]:
+        out = []
+        for tr in by_anim[name].children:
+            cond = next((c for c in tr.children if c.tag == "TransitionViewModelCondition"), None)
+            val = None
+            if cond is not None:
+                vref = next(c for c in cond.children if c.tag == "TransitionValueEnumComparator").attrs["value"]
+                val = next(k for k, v in values.items() if v.ref() == vref)
+            out.append((ref_name[tr.attrs["stateToId"]], val, tr.attrs.get("exitTime")))
+        return out
+
+    assert ("prop_newspaper_out", "newspaper", None) in edges("prop_none")
+    for kind, other in (("tablet", "newspaper"), ("newspaper", "tablet")):
+        for c in ("out", "hold"):
+            e = edges(f"prop_{kind}_{c}")
+            assert (f"prop_{kind}_away", "none", None) in e and (f"prop_{kind}_away", other, None) in e
+            assert not any(to.startswith(f"prop_{other}") for to, _, _ in e)  # never straight to the other
+        away = edges(f"prop_{kind}_away")
+        assert not any(to.startswith(f"prop_{other}") for to, _, _ in away)
+        assert ("prop_none", None, 100) in away  # the other prop comes out only after the put-away
+    assert edges("prop_newspaper_away")[:2] == [("prop_newspaper_out", "newspaper", 55),
+                                               ("prop_newspaper_hold", "newspaper", None)]
+
+
+def test_newspaper_shares_the_tablets_footprint_and_clips() -> None:
+    """The newspaper reuses the tablet's grips, hand targets and timing: same W x H, same clip data,
+    only the names (and no screen glow / reflections) differ."""
+    assert tb.Newspaper.KIND == "newspaper" and tb.Newspaper.REFLECT_PEAK == 0.0
+    assert 0 < tb.Newspaper.GLOW_PEAK <= 0.6  # the page shadow, not a light
+    d = Doc(start=10)
+    paper = tb.Newspaper(d, "0:1-0:2", {}, d("CubicEaseInterpolator"))
+    art = paper.art()
+    names = {e.attrs.get("name") for e in tb.walk(art)}
+    assert {"NewsPageL", "NewsPageR", "NewsFold", "NewsHeadlines", "NewsColumns", "NewsPhoto"} <= names
+    assert not any(str(n).startswith("emit") for n in names)  # no emissive glow
+    assert art.attrs["opacity"] == 0.0  # hidden until its out clip
