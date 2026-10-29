@@ -301,6 +301,23 @@ def webp_size(path: Path) -> tuple[int, int] | None:
     return None
 
 
+def diorama_lint(rml_of: dict[str, str] | None = None) -> list[str]:
+    """M5 Review Focus 5: every diorama scene (`gen_scenes.DIORAMAS`) lints clean against its
+    colour script (`art_bible.lint_colours`); one message per scene with hits. `rml_of` overrides
+    the committed RML per scene (tests)."""
+    import gen_scenes  # noqa: PLC0415 (the generator pulls the scene art; only this check needs it)
+
+    out = []
+    for sid in gen_scenes.DIORAMAS:
+        text = (rml_of or {}).get(sid)
+        if text is None:
+            text = (ROOT / "rive" / "scenes" / sid / f"{sid}.rml").read_text()
+        problems = art_bible.lint_colours(text, sid)
+        if problems:
+            out.append(f"{sid}: colour-script lint, {len(problems)} hit(s), first {problems[0]}")
+    return out
+
+
 def main() -> int:
     c = parse_contract()
     # ---------------- avatar
@@ -369,6 +386,8 @@ def main() -> int:
     if extra:
         err(f"scenes not in the contract: {sorted(extra)}")
     check_ui_kit(c)
+    for e in diorama_lint():
+        err(e)
     if errors:
         print("✗ contract self-check failed:")
         for e in errors:

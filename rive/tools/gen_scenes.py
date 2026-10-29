@@ -7,16 +7,18 @@ the centre band and props sit left/right of where the avatar stands.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from dataclasses import dataclass
 import math
 import os
 import random
 import sys
-from typing import Callable
+from typing import Callable, Iterator
 import zlib
 
 sys.path.insert(0, os.path.dirname(__file__))
 from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, solid, stroke, track, write  # noqa: E402,F401
-from scene_art import place_point, refine_scene, walk  # noqa: E402
+from scene_art import before, named, place_point, refine_scene, walk  # noqa: E402
 from art_bible import EMISSIVE_PREFIX, SCENES, fit_colour  # noqa: E402
 from rig_dsl import Formulas  # noqa: E402
 
@@ -33,6 +35,9 @@ M4_ID_START = 980000  # elements added in moonshot M4 (each scene is its own doc
 # The campfire diorama (M4 Task 6: planes, fog veils, parallax converters, firelight tracks) mints
 # from its own range, so every element the M3/v7 campfire already had keeps its id.
 DIORAMA_ID_START = 990000
+# Moonshot M5 elements (rain binds, steam, the shared diorama's additions) mint from their own
+# range per document (`Scene.d5`), so every M4 id stays.
+M5_ID_START = 970000
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
 
@@ -78,6 +83,35 @@ class Scene:
         self.post_refine: Callable[[list[El]], None] | None = None
         self.roots: list[El] = []
         self.fit = False
+        self.d5 = Doc(client=0, start=M5_ID_START)
+        self._convs: dict[tuple[float, float], El] = {}
+
+    @contextmanager
+    def minting(self, doc: Doc) -> Iterator[None]:
+        """Every helper (S, E, F, T, A, ambient...) mints from `doc` inside the block, so a pass
+        added late (M5) never shifts the ids the main document hands out afterwards."""
+        main, self.d = self.d, doc
+        try:
+            yield
+        finally:
+            self.d = main
+
+    def conv(self, k: float, c: float = 0.0, doc: Doc | None = None) -> El:
+        """One shared `c + k x input` formula converter per (k, c), a root element (history-free
+        bound transforms: parallax travel, rain opacity and scale)."""
+        key = (round(k, 3), round(c, 3))
+        if key not in self._convs:
+            f = Formulas(doc or self.d5, self.vpath)
+            head = [] if key[1] == 0 else [f.val(key[1]), f.op("+")]
+            self._convs[key] = f.d("DataConverterFormula", *head, f.val(key[0]), f.op("*"), *f.inp())
+            self.roots.append(self._convs[key])
+        return self._convs[key]
+
+    def bind(self, prop: str, key: int, conv: El | None = None, doc: Doc | None = None) -> El:
+        """A `DataBindContext` child: SceneVM `prop` -> property `key` (13 x, 14 y, 16 scaleX,
+        17 scaleY, 18 opacity), through `conv` if given."""
+        return (doc or self.d5)("DataBindContext", sourcePathIds=self.vpath(prop), propertyKey=key,
+                                converterId=conv.ref() if conv is not None else None)
 
     def _v7_props(self) -> None:
         """Contract v7 SceneVM numbers: `parallaxX`/`parallaxY` (default 0) and the scene's light rig
@@ -252,7 +286,13 @@ class Scene:
         refine_scene(self, content)
         if self.post_refine is not None:
             self.post_refine(content)
-        if self.fit:
+        spec = DIORAMAS.get(self.id)
+        if spec is not None:
+            # M5 ruling 3: hit zones ride the plane of the art they cover
+            content[0:0] = hits
+            hits = []
+            diorama(self, content, spec)
+        if self.fit or spec is not None:
             self.fit_colours([*hits, *content])
         d = self.d
         sm = d("StateMachine", *self.listeners, *self.layers, name="Main")
@@ -278,14 +318,20 @@ def uniq(keys: list) -> list:
 
 
 def rain_fx(sc: Scene, name: str, col: str, frames: int = 480, extra: list[El] | None = None,
-            darken: str = "FF0A1022", ground: tuple[float, float] = (1200.0, 1900.0)) -> tuple[El, El]:
+            darken: str = "FF0A1022", ground: tuple[float, float] = (1200.0, 1900.0), loop: bool = False,
+            periods: tuple[int, int] = (18, 34)) -> tuple[El, El]:
     """Returns (content node, one-shot anim): fade in, two depth layers of falling rain (near:
-    long, fast, bright; far: short, slow, faint), splashes popping on the ground, fade out."""
+    long, fast, bright; far: short, slow, faint), splashes popping on the ground, fade out.
+
+    `loop` (M5 steady rain): returns (node `name`, the splashes' looping anim) instead: the streaks
+    and splashes only, no fade and no darkening; each streak sheet gets its own `period`-frame loop
+    layer, the splashes loop over `frames`; the caller binds the node's opacity."""
     d = sc.d
     r = random.Random(zlib.crc32(name.encode()))
     tile = 480                      # pattern repeats every `tile` px, so a `tile` shift loops seamlessly
     sheets, tracks = [], []
-    for layer, (n, ln0, ln1, wd, alpha, period) in enumerate([(22, 70, 120, 3.2, "FF", 18), (34, 26, 50, 1.8, "70", 34)]):
+    for layer, (n, ln0, ln1, wd, alpha, period) in enumerate([(22, 70, 120, 3.2, "FF", periods[0]),
+                                                              (34, 26, 50, 1.8, "70", periods[1])]):
         streaks = []
         for i in range(n):
             x, y = r.uniform(-60, W + 60), r.uniform(0, tile)
@@ -296,6 +342,14 @@ def rain_fx(sc: Scene, name: str, col: str, frames: int = 480, extra: list[El] |
                                     sc.L(alpha + col[2:], wd), closed=False))
         sheet = d("Node", *streaks, x=0.0, y=0.0, name=f"RainSheet{layer}")
         sheets.append(sheet)
+        if loop:
+            # its own `period`-frame loop, one tile per cycle: the wrap (tile == 0) is the
+            # animation's, so no fractional frame ever sweeps the sheet back up the tile
+            sc.ambient(f"{name}Sheet{layer}", sc.A(f"amb_{name}Sheet{layer}", period,
+                                                   [sc.T(sheet, ease=None, y=[(0, 0.0, "linear"),
+                                                                              (period, float(tile), "linear")])],
+                                                   loop=True))
+            continue
         saw = []
         for c in range(0, frames, period):
             saw += [(c, 0.0, "linear"), (min(c + period - 1, frames), tile * (period - 1) / period, "linear")]
@@ -310,11 +364,13 @@ def rain_fx(sc: Scene, name: str, col: str, frames: int = 480, extra: list[El] |
         splashes.append(sp)
         ph = r.randint(0, 40)
         op, sxk = [(0, 0.0)], [(0, 0.3)]
-        for c in range(40 + ph, frames - 50, 44):
+        for c in (range(1 + ph, frames - 13, 44) if loop else range(40 + ph, frames - 50, 44)):
             op += [(c, 0.0, "hold"), (c + 1, 1.0), (c + 12, 0.0, "hold")]
             sxk += [(c, 0.3, "hold"), (c + 1, 0.4), (c + 12, 1.3, "hold")]
         tracks.append(sc.T(sp, ease=None, opacity=uniq(op + [(frames, 0.0)]),
                            scaleX=uniq(sxk + [(frames, 0.3)]), scaleY=uniq(sxk + [(frames, 0.3)])))
+    if loop:
+        return d("Node", *splashes, *sheets, x=0.0, y=0.0, name=name), sc.A("amb_" + name, frames, tracks, loop=True)
     dark = d("Shape", d("Rectangle", width=float(W), height=float(H), originX=0.0, originY=0.0, name="Path"),
              sc.vgrad(0, H, [(darken, 0.0), ("80" + darken[2:], 1.0)]), opacity=0.0, name="RainDark")
     group_ = d("Node", *splashes, *sheets, x=0.0, y=0.0, opacity=0.0, name=name)
@@ -609,7 +665,7 @@ def campfire() -> str:
                    for f in samples]))
         sc.ambient(f"Flame{i}", sc.A(f"amb_flame{i}", P,
                    [sc.T(tg, rotation=rot, scaleY=sy, scaleX=sx), *deform], loop=True))
-    fl_keys = [(0, 1.0), (9, 0.8), (17, 0.97), (31, 0.84), (44, 1.0), (58, 0.86), (70, 0.95), (89, 1.0)]
+    fl_keys = CAMPFIRE_FLICKER
     fl_tracks = [sc.T(glow, opacity=fl_keys,
                       scaleX=[(0, 1.0), (40, 1.05), (89, 1.0)], scaleY=[(0, 1.0), (40, 1.05), (89, 1.0)])]
     firelight = sc.A("amb_firelight", 89, fl_tracks, loop=True)
@@ -758,32 +814,21 @@ def campfire() -> str:
                light_pool, fg[2], ground, *hoots, owl, branch, twig, snag,
                *near_trees, mid, *far_trees, far, star_node, *craters, moon, moon_glow, *stars, sky]
     sc.fit = True
-    sc.post_refine = lambda refined: campfire_diorama(sc, refined, firelight, fl_keys)
     return sc.write(content, [hit_fire, hit_tent, hit_owl, hit_sky])
 
 
-# Campfire diorama (M4 ruling 14): six parallax planes, back to front, and the gain of each.
+# ====================================================================== dioramas
+# The shared diorama pass (M4 ruling 14, M5 rulings 2-3): six parallax planes, back to front, and
+# the gain of each. A scene becomes a diorama by registering a `DioramaSpec` in `DIORAMAS`.
 PARALLAX_GAINS = (0.0, 0.15, 0.3, 0.5, 0.7, 1.0)
 PARALLAX_TRAVEL = (40.0, 24.0)  # px of x / y travel at gain 1 and parallaxX / parallaxY = +-1
-# Top-level campfire elements per plane, by name without its index digits. Screen-space overlays
-# (rain, the flare's wash) stay out of the planes: they cover the whole frame.
-CAMPFIRE_PLANES: dict[str, int | None] = {
-    "RainFx": None, "FlareWash": None,
-    "BushL": 5, "BushR": 5,
-    **dict.fromkeys(("Stone", "LogA", "LogB", "LogC", "WetCoalSteam", "CoalBed", "FireFlare", "Smoke", "Firefly",
-                     "TentPlace", "Grass", "TreeGlow", "LightPoolFlicker", "TrailStone", "Path", "Ground"), 4),
-    **dict.fromkeys(("Hoo", "Owl", "OwlGrip", "Branch", "OwlTwig", "OwlSnag", "Pine"), 3),
-    **dict.fromkeys(("ValleyMist", "MidHills"), 2),
-    **dict.fromkeys(("FarPine", "AlpineRidge", "PeakSnow", "MountainShadow", "FarHills"), 1),
-    **dict.fromkeys(("ShootingStar", "Crater", "Moon", "MoonGlow", "Star", "Glint", "Aurora", "Sky"), 0),
-}
 # Fog veils in front of Plane0..2 (ruling 14): (fog density, y where the veil starts clear, y where
 # it reaches the full density). `lightFog`'s own alpha (0x33 for the campfire) would multiply a
 # single fill down to 0.11 / 0.07 / 0.04, which does not read: each veil stacks FOG_FILLS bound
 # fills (1 - (1 - a)^n) and takes the opacity that makes the stack reach the density at the default
 # fog (`fog_opacity`). Another fog colour scales the veils with it, and alpha 0 removes them.
-FOG_VEILS = ((0.55, 700.0, 1000.0), (0.35, 700.0, 1000.0), (0.18, 880.0, 1060.0))
 FOG_FILLS = 4
+HIT_PREFIX = "Hit_"
 
 
 def fog_opacity(density: float, fog: str, fills: int = FOG_FILLS) -> float:
@@ -791,73 +836,86 @@ def fog_opacity(density: float, fog: str, fills: int = FOG_FILLS) -> float:
     a = int(fog[:2], 16) / 255
     stack = 1 - (1 - a) ** fills
     return round(min(1.0, density / stack), 3) if stack > 0 else 0.0
-# Light sources (ruling 13): renamed `emit*` with every node and shape below them, exempt from the
-# colour-script fit. Everything else in the campfire goes through `art_bible.fit_colour`.
-CAMPFIRE_EMISSIVE = ("FireFlare", "Star", "Glint", "Moon", "MoonGlow", "ShootingStar", "CoalBed", "Firefly",
-                     "LogHeat", "TentLantern")
+
+
+@dataclass(frozen=True)
+class DioramaSpec:
+    """What makes a scene a diorama (M5 ruling 2).
+
+    - `planes`: top-level element name without its index digits (`Star12` -> `Star`) -> plane 0..5
+      (0 the sky, 5 the foreground), or `None` for a screen-space overlay (rain, a flash wash) that
+      stays in front of every plane. Hit zones are listed by full name (`Hit_fire`) in the plane of
+      the art they cover (ruling 3). An unlisted top-level element raises `KeyError`.
+    - `emissive`: name roots of light sources; they and everything below them are renamed `emit*`
+      and skip the colour-script fit (M4 ruling 13).
+    - `veils`: (density, y clear, y full) of the `lightFog` veil in front of Plane0, Plane1, ...
+    - `light`: the scene's own pass, run first on the refined content with the diorama's Doc
+      (firelight, lamp pool, rain binds). Elements it adds need a plane entry too; new elements
+      should mint from `sc.d5` (`with sc.minting(sc.d5)`), shared converters from `sc.conv`.
+    """
+
+    planes: dict[str, int | None]
+    emissive: tuple[str, ...]
+    veils: tuple[tuple[float, float, float], ...]
+    light: Callable[[Scene, list[El], Doc], None] | None = None
 
 
 def _root(name: object) -> str:
     return str(name).rstrip("0123456789")
 
 
-def campfire_diorama(sc: Scene, content: list[El], firelight: El, fl_keys: list[tuple[int, float]]) -> None:
-    """Regroups the refined campfire into Plane0..Plane5, adds the fog veils and the firelight on the
-    light pool and tree glow, and names the light sources `emit*`. Minted from DIORAMA_ID_START."""
+def diorama(sc: Scene, content: list[El], spec: DioramaSpec) -> None:
+    """Regroups the refined top-level `content` (front-most first, hit zones included) into
+    Plane5..Plane0 behind the screen overlays, binds each plane to `parallaxX/Y`, adds the fog veils,
+    runs the scene's light hook and names the light sources `emit*`. Minted from DIORAMA_ID_START
+    (so the M4 campfire keeps its ids); the hook's own additions mint from the M5 range."""
     d6 = Doc(client=0, start=DIORAMA_ID_START)
-    f = Formulas(d6, sc.vpath)
-    convs: dict[float, El] = {}
-
-    def conv(k: float) -> El:
-        """One shared `k x input` converter per distinct travel (history-free)."""
-        k = round(k, 3)
-        if k not in convs:
-            convs[k] = d6("DataConverterFormula", f.val(k), f.op("*"), *f.inp())
-            sc.roots.append(convs[k])
-        return convs[k]
-
-    # firelight: amb_firelight's flicker also drives the light pool (through a wrapper: the rain
-    # event keys the pool's own opacity) and the tree glow, a little deeper on the trees.
-    pool = next(e for e in content if e.attrs.get("name") == "LightPool")
-    tree_glow = next(e for e in content if e.attrs.get("name") == "TreeGlow")
-    pool_flicker = d6("Node", pool, x=0.0, y=0.0, name="LightPoolFlicker")
-    content[content.index(pool)] = pool_flicker
-    firelight.add(track(d6, pool_flicker, {"opacity": [(fr, round(0.75 + 1.25 * (v - 0.8), 4)) for fr, v in fl_keys]},
-                        ease=sc.ease),
-                  track(d6, tree_glow, {"opacity": [(fr, round(0.7 + 1.5 * (v - 0.8), 4)) for fr, v in fl_keys]},
-                        ease=sc.ease))
+    pre = len(sc.roots)
+    if spec.light is not None:
+        spec.light(sc, content, d6)
+    late = sc.roots[pre:]   # the hook's converters go after the parallax ones in the file
+    del sc.roots[pre:]
 
     for e in walk(content):
-        if e.tag in ("Shape", "Node") and _root(e.attrs.get("name")) in CAMPFIRE_EMISSIVE:
+        if e.tag in ("Shape", "Node") and _root(e.attrs.get("name")) in spec.emissive:
             for x in walk([e]):
                 if x.tag in ("Shape", "Node") and not str(x.attrs.get("name", "")).startswith(EMISSIVE_PREFIX):
                     x.attrs["name"] = EMISSIVE_PREFIX + str(x.attrs.get("name", ""))
 
     groups: dict[int | None, list[El]] = {}
+    hits: dict[int, list[El]] = {}
     order: list[int | None] = []
     for e in content:
         name = str(e.attrs.get("name", ""))
-        k = CAMPFIRE_PLANES.get(_root(name.removeprefix(EMISSIVE_PREFIX)), -1)
+        if name.startswith(HIT_PREFIX):
+            k = spec.planes.get(name, -1)
+            if k is None or k == -1:
+                raise KeyError(f"{sc.id} hit zone {name!r} has no plane")
+            hits.setdefault(k, []).append(e)
+            continue
+        k = spec.planes.get(_root(name.removeprefix(EMISSIVE_PREFIX)), -1)
         if k == -1:
-            raise KeyError(f"campfire element {name!r} has no plane")
+            raise KeyError(f"{sc.id} element {name!r} has no plane")
         if k not in groups:
             order.append(k)
         groups.setdefault(k, []).append(e)
     # content is front-most first: overlays, then Plane5 .. Plane0, each contiguous (draw order kept)
-    assert order == [None, 5, 4, 3, 2, 1, 0], order
+    planes_seen = [k for k in order if k is not None]
+    if (None in order and order[0] is not None) or planes_seen != sorted(planes_seen, reverse=True):
+        raise ValueError(f"{sc.id}: planes are not contiguous back to front: {order}")
 
     fog = SCENES[sc.id].fog
     planes = []
     for k in range(5, -1, -1):
+        if k not in groups and k not in hits:
+            continue
         gain = PARALLAX_GAINS[k]
         binds = [] if gain == 0 else [
-            d6("DataBindContext", sourcePathIds=sc.vpath("parallaxX"), propertyKey=13,
-               converterId=conv(gain * PARALLAX_TRAVEL[0]).ref()),
-            d6("DataBindContext", sourcePathIds=sc.vpath("parallaxY"), propertyKey=14,
-               converterId=conv(gain * PARALLAX_TRAVEL[1]).ref())]
+            sc.bind("parallaxX", 13, sc.conv(gain * PARALLAX_TRAVEL[0], doc=d6), doc=d6),
+            sc.bind("parallaxY", 14, sc.conv(gain * PARALLAX_TRAVEL[1], doc=d6), doc=d6)]
         veil = None
-        if k < len(FOG_VEILS):
-            density, y0, y1 = FOG_VEILS[k]
+        if k < len(spec.veils):
+            density, y0, y1 = spec.veils[k]
             fills = [d6("Fill", d6("LinearGradient",
                                    d6("GradientStop", colorValue="00" + fog[2:], position=0.0),
                                    d6("GradientStop", d6("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
@@ -867,8 +925,138 @@ def campfire_diorama(sc: Scene, content: list[El], firelight: El, fl_keys: list[
             veil = d6("Shape", d6("Rectangle", width=float(W + 120), height=float(H + 60 - y0), originX=0.0,
                                   originY=0.0, name="Path"),
                       *fills, x=-60.0, y=float(y0), opacity=fog_opacity(density, fog), name=f"FogVeil{k}")
-        planes.append(d6("Node", *binds, veil, *groups[k], x=0.0, y=0.0, name=f"Plane{k}"))
-    content[:] = [*groups[None], *planes]
+        planes.append(d6("Node", *binds, *hits.get(k, []), veil, *groups.get(k, []), x=0.0, y=0.0, name=f"Plane{k}"))
+    content[:] = [*groups.get(None, []), *planes]
+    sc.roots.extend(late)
+
+
+def clone(d: Doc, e: El, **attrs: object) -> El:
+    """A deep copy of `e` with fresh ids from `d` (attributes overridden by `attrs`)."""
+    return d(e.tag, *[clone(d, c) for c in e.children], **{**e.attrs, **attrs})
+
+
+# ---------------------------------------------------------------- campfire
+CAMPFIRE_PLANES: dict[str, int | None] = {
+    "RainLoop": None, "RainFx": None, "FlareWash": None,
+    "BushL": 5, "BushR": 5,
+    **dict.fromkeys(("Stone", "LogA", "LogB", "LogC", "WetCoalSteam", "CoalBed", "RainSteam", "FireFlare", "Smoke",
+                     "Firefly", "TentPlace", "Grass", "TreeGlow", "LightPoolFlicker", "GroundWet", "TrailStone",
+                     "Path", "Ground"), 4),
+    **dict.fromkeys(("Hoo", "Owl", "OwlGrip", "Branch", "OwlTwig", "OwlSnag", "Pine"), 3),
+    **dict.fromkeys(("ValleyMist", "MidHills"), 2),
+    **dict.fromkeys(("FarPine", "AlpineRidge", "PeakSnow", "MountainShadow", "FarHills"), 1),
+    **dict.fromkeys(("ShootingStar", "Crater", "Moon", "MoonGlow", "Star", "Glint", "Aurora", "Sky"), 0),
+    # M5 ruling 3: each hit zone rides the plane of its prop's art
+    "Hit_fire": 4, "Hit_tent": 4, "Hit_owl": 3, "Hit_sky": 0,
+}
+FOG_VEILS = ((0.55, 700.0, 1000.0), (0.35, 700.0, 1000.0), (0.18, 880.0, 1060.0))
+# Light sources (ruling 13): renamed `emit*` with every node and shape below them, exempt from the
+# colour-script fit. Everything else in the campfire goes through `art_bible.fit_colour`.
+CAMPFIRE_EMISSIVE = ("FireFlare", "Star", "Glint", "Moon", "MoonGlow", "ShootingStar", "CoalBed", "Firefly",
+                     "LogHeat", "TentLantern")
+# amb_firelight's flicker keys (frame, glow opacity), 89 frames
+CAMPFIRE_FLICKER = [(0, 1.0), (9, 0.8), (17, 0.97), (31, 0.84), (44, 1.0), (58, 0.86), (70, 0.95), (89, 1.0)]
+# M5 ruling 6: steady rain (`rain` 0..1)
+RAIN_WET = 0.35        # ground and tent darken by up to this x rain
+RAIN_DAMP = 0.15       # the fire shrinks by this x rain
+RAIN_WET_COLOUR = "FF0B1318"   # a cool wet shadow, inside the campfire's colour script
+RAIN_LOOP_FRAMES = 120  # 2 s splash loop; the streak sheets loop on their own periods
+STEAM_FRAMES = 180      # 3 s steam rise loop
+STEAM_PLUMES = ((104, 1140), (134, 1126), (164, 1146), (196, 1120), (228, 1144), (258, 1126), (290, 1138))
+STEAM_PEAK = 0.8       # a plume's opacity at mid-rise (times `rain`)
+
+
+def campfire_light(sc: Scene, content: list[El], d6: Doc) -> None:
+    """Firelight (M4): amb_firelight's flicker also drives the light pool (through a wrapper: the
+    rain event keys the pool's own opacity) and the tree glow, a little deeper on the trees. Then the
+    steady rain binds (M5 ruling 6)."""
+    firelight = next(a for a in sc.anims if a.attrs["name"] == "amb_firelight")
+    pool = next(e for e in content if e.attrs.get("name") == "LightPool")
+    tree_glow = next(e for e in content if e.attrs.get("name") == "TreeGlow")
+    pool_flicker = d6("Node", pool, x=0.0, y=0.0, name="LightPoolFlicker")
+    content[content.index(pool)] = pool_flicker
+    firelight.add(track(d6, pool_flicker, {"opacity": [(fr, round(0.75 + 1.25 * (v - 0.8), 4))
+                                                       for fr, v in CAMPFIRE_FLICKER]}, ease=sc.ease),
+                  track(d6, tree_glow, {"opacity": [(fr, round(0.7 + 1.5 * (v - 0.8), 4))
+                                                    for fr, v in CAMPFIRE_FLICKER]}, ease=sc.ease))
+    campfire_rain(sc, content)
+
+
+def campfire_rain(sc: Scene, content: list[El]) -> None:
+    """Steady rain bound to SceneVM `rain`, history-free (M5 ruling 6): a looping streak layer at
+    opacity `rain` in screen space, the ground and the tent under a wet shadow at RAIN_WET x `rain`,
+    steam rising off the logs at opacity `rain`, the fire scaled by 1 - RAIN_DAMP x `rain`. The
+    `rain` one-shot event plays on top (a shower)."""
+    d5 = sc.d5
+    with sc.minting(d5):
+        streaks, loop = rain_fx(sc, "RainLoop", "88B8C8F0", frames=RAIN_LOOP_FRAMES, loop=True)
+        streaks.attrs["opacity"] = 0.0
+        streaks.children.insert(0, sc.bind("rain", 18))
+        sc.ambient("RainLoop", loop)
+        content.insert(0, streaks)
+
+        wet = sc.conv(RAIN_WET)
+
+        def path_of(shape: El, x: float = 0.0, y: float = 0.0) -> El:
+            p = next(c for c in shape.children if c.tag == "PointsPath")
+            return clone(d5, p, x=x, y=y) if (x, y) != (0.0, 0.0) else clone(d5, p)
+
+        ground = next(e for e in content if e.attrs.get("name") == "Ground")
+        ground_wet = d5("Shape", sc.bind("rain", 18, wet), path_of(ground), sc.F(RAIN_WET_COLOUR),
+                        x=ground.attrs["x"], y=ground.attrs["y"], opacity=0.0, name="GroundWet")
+        # in front of the trail and its stones, behind the light pool, the grass and the tree glow
+        before(content, "TrailStone0", ground_wet)
+
+        tent = named(content, "Tent")
+        lit, shade = named(tent.children, "TentLit"), named(tent.children, "TentShade")
+        lx, ly = float(lit.attrs["x"]), float(lit.attrs["y"])
+        tent_wet = d5("Shape", sc.bind("rain", 18, wet), path_of(lit),
+                      path_of(shade, float(shade.attrs["x"]) - lx, float(shade.attrs["y"]) - ly),
+                      sc.F(RAIN_WET_COLOUR), x=lx, y=ly, opacity=0.0, name="TentWet")
+        # right behind the lantern glow: over the canvas, pole and rope (the thin fold and seam lines
+        # paint in front of the lantern in M4, and moving them would change the dry tent)
+        at = next(i for i, c in enumerate(tent.children) if _root(c.attrs.get("name")).endswith("TentLantern"))
+        tent.children.insert(at + 1, tent_wet)
+
+        plumes, tracks = [], []
+        for i, (bx, by) in enumerate(STEAM_PLUMES):
+            plume = sc.E((0.0, 0.0), f"SteamPlume{i}", bx, by, 88, 88,
+                         sc.rgrad(44, [("B0DCE2DE", 0.0), ("60DCE2DE", 0.45), ("00DCE2DE", 1.0)]),
+                         scaleY=0.75, opacity=0.0)
+            plumes.append(plume)
+            off = (i * 67) % STEAM_FRAMES
+            wrap = STEAM_FRAMES - off       # frame where this plume restarts at the logs (opacity ~0)
+            drift = 26 if i % 2 else -22
+
+            def at(f: int, bx: float = bx, by: float = by, off: int = off, drift: float = drift,
+                   i: int = i) -> tuple[float, float, float, float]:
+                t = ((f + off) % STEAM_FRAMES) / STEAM_FRAMES
+                return (bx + drift * t + 9 * math.sin(2 * math.pi * t * 1.5 + i), by - 250 * t,
+                        0.4 + 1.6 * t, STEAM_PEAK * math.sin(math.pi * t) ** 1.5)
+
+            frames = sorted(set(range(0, STEAM_FRAMES + 1, 6)) | {wrap - 1, wrap})
+            keys = {f: at(f) for f in frames}
+            # the frame before the restart holds, so no fractional frame sweeps the plume back down
+            mode = {f: ("hold" if f == wrap - 1 else "linear") for f in frames}
+            tracks.append(sc.T(plume, ease=None,
+                               x=[(f, keys[f][0], mode[f]) for f in frames],
+                               y=[(f, keys[f][1], mode[f]) for f in frames],
+                               scaleX=[(f, keys[f][2], mode[f]) for f in frames],
+                               scaleY=[(f, keys[f][2] * 0.75, mode[f]) for f in frames],
+                               opacity=[(f, keys[f][3], mode[f]) for f in frames]))
+        steam = d5("Node", sc.bind("rain", 18), *plumes, x=0.0, y=0.0, opacity=0.0, name="RainSteam")
+        sc.ambient("RainSteam", sc.A("amb_RainSteam", STEAM_FRAMES, tracks, loop=True))
+        before(content, "FireFlare", steam)
+
+        flare = next(e for e in content if e.attrs.get("name") == "FireFlare")
+        damp = sc.conv(-RAIN_DAMP, 1.0)
+        flare.children = [d5("Node", sc.bind("rain", 16, damp), sc.bind("rain", 17, damp), *flare.children,
+                             x=0.0, y=0.0, name="FireDamp")]
+
+
+DIORAMAS: dict[str, DioramaSpec] = {
+    "campfire": DioramaSpec(CAMPFIRE_PLANES, CAMPFIRE_EMISSIVE, FOG_VEILS, campfire_light),
+}
 
 
 # ====================================================================== livingRoom
