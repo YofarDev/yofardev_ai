@@ -212,9 +212,12 @@ def test_generated_avatar_declares_every_v5_property() -> None:
     # the old mouth Solos are gone; the continuous mouth exists
     assert 'name="OpenShape"' not in rml and 'name="LineShape"' not in rml
     for name in ("MouthInside", "MouthLine", "MouthTeeth", "MouthTongue", "BreathLift", "HeadRoll", "LowerLipBand",
-                 "PuckerLips", "TenseCreaseL", "NoseWrinkle0", "NoseWrinkle1"):
+                 "LipRim", "ChinBulge", "TenseCreaseL", "NoseWrinkle0", "NoseWrinkle1", "BreathShoulderR",
+                 "BreathShoulderL", "ChinLightJaw"):
         assert f'name="{name}"' in rml, name
     assert 'name="MouthThroat"' not in rml  # one flat interior colour
+    # one lip treatment: no lip cushion cross-fades over the opening (critic round 1)
+    assert 'name="PuckerLips"' not in rml and 'name="PuckerShine"' not in rml
 
 
 # ------------------------------------------------------------------ eyes on lid bones (M3)
@@ -475,3 +478,66 @@ def test_generated_mouth_and_brow_formulas_match_the_model(env: dict) -> None:
         for n, (u, y) in bm.items():
             bx, by = _bone_xy(bones[side][n], env, paths, convs)
             assert (bx, by + 346.0) == pytest.approx((u, y), abs=2e-3), (side, n)
+
+
+# ------------------------------------------------------------------ critic round 1: jaw, lips, visemes, breath
+
+def test_jaw_drops_the_chin_about_half_the_lower_lip() -> None:
+    import head_turn as ht
+    lip = fr.mouth_pose({"auJawDrop": 1.0})["LowerC"][1] - fr.mouth_pose({})["LowerC"][1]
+    chin = ht.jaw_dy("Chin", {"auJawDrop": 1.0})
+    assert 0.5 <= chin / lip <= 0.6
+    assert 12.0 <= chin * 1.18 <= 18.0  # artboard px (the head is drawn at 1.18)
+    # it fades up the jaw line: chin > V > Q > W > J > nothing at the cheekbone
+    drops = [ht.jaw_dy(n, {"auJawDrop": 1.0}) for n in ("Chin", "FVL", "FQR", "FWL", "FJR", "FKL", "FCR")]
+    assert drops == sorted(drops, reverse=True) and drops[-2:] == [0.0, 0.0]
+    assert ht.jaw_dy("FVR", {"auJawDrop": 1.0}) == ht.jaw_dy("FVL", {"auJawDrop": 1.0})
+    assert ht.jaw_dy("Chin", {"mouth": 4.0}) == pytest.approx(ht.jaw_dy("Chin", {"auJawDrop": 4 * fr.JAW_PER_MOUTH}))
+
+
+def test_the_open_mouth_never_kisses_the_chin() -> None:
+    import head_turn as ht
+    for j in (0.0, 0.25, 0.5, 0.75, 1.0):
+        env = {"auJawDrop": j, "auLipStretch": 0.15}
+        lower = fr.mouth_pose(env)["LowerC"][1]
+        assert 511.0 + ht.jaw_dy("Chin", env) - lower >= 6.0 / 1.18 + 12, j  # art bible: >= 6 px gap
+
+
+@pytest.mark.parametrize("jaw", [0.14, 0.25, 0.34, 0.6, 1.0])
+@pytest.mark.parametrize("tongue", [0.6, 0.8, 1.0])
+def test_the_tongue_tip_stops_just_under_the_upper_teeth(jaw: float, tongue: float) -> None:
+    tip = fr.mouth_pose({"auJawDrop": jaw, "tongueUp": tongue})["TongueTip"][1]
+    assert 0.9 <= tip - fr.teeth_edge_y(400.0) <= 2.1  # reads at a moderate tongueUp, never hides
+
+
+def test_nn_shows_the_tongue_tip_and_ss_the_teeth() -> None:
+    nn = fr.mouth_pose({"auJawDrop": 0.25, "tongueUp": 0.7})
+    ss = fr.mouth_pose(SS)
+    assert nn["LowerC"][1] - nn["TongueTip"][1] > 2.5  # a pink tip between the teeth edge and the lip
+    assert ss["LowerC"][1] - ss["JawTeeth"][1] > 1.5  # s: the lower teeth instead
+
+
+def test_pp_presses_a_flat_narrow_line() -> None:
+    rest, pp = fr.mouth_pose({}), fr.mouth_pose({"auLipPress": 0.75})
+    for up, low in UPPER_LOWER:
+        assert pp[up] == pytest.approx(pp[low], abs=1e-9)
+    sag = lambda p: p["UpperC"][1] - p["CornerR"][1]  # noqa: E731
+    assert abs(sag(pp)) < 0.4 * abs(sag(rest))  # flattened
+    width = lambda p: p["CornerR"][0] - p["CornerL"][0]  # noqa: E731
+    assert width(pp) < width(rest) - 5.0  # corners in
+
+
+def test_flare_is_pucker_and_stretch_together() -> None:
+    assert fr.amount({"auLipPucker": 0.8}, fr.FLARE) == 0.0  # rr / ou / oh: plain round lips
+    assert fr.amount({"auLipStretch": 0.55}, fr.FLARE) == 0.0  # s / e
+    assert fr.amount({"auLipPucker": 0.7, "auLipStretch": 0.4}, fr.FLARE) == 1.0  # ch / sh
+    assert fr.base_prop(fr.FLARE) == "auLipPucker"
+
+
+def test_breath_lifts_the_shoulders_more_than_the_head_eased() -> None:
+    shoulder, head = fr.breath_lift(1.0)
+    assert 15.0 <= shoulder <= 20.0  # 1.5-2 % of the 1000 px artboard
+    assert 0 < head < shoulder  # the shoulders rise toward the ears
+    assert fr.breath_lift(0.0) == (0.0, 0.0)
+    assert fr.breath_lift(0.5)[0] == pytest.approx(shoulder / 2)  # smoothstep: soft at both ends
+    assert fr.breath_lift(0.1)[0] < 0.05 * shoulder

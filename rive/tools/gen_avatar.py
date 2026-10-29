@@ -23,6 +23,7 @@ from avatar_kit import (BEANIE, BEANIE_HI, BEANIE_SH, FRAME, HAIR, HAIR_HI, HAIR
                         rgrad, vgrad)
 from rml import Doc, El, lin, rad, smooth_path, track, write  # noqa: E402
 from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
+import head_turn  # noqa: E402
 from head_turn import HeadTurn, rig_head  # noqa: E402
 import face_rig  # noqa: E402
 import arm_rig  # noqa: E402
@@ -2000,11 +2001,12 @@ for i, e in enumerate(EYES):
                       HAIR, SKIN)
 face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "teeth": TEETH, "low_teeth": "FFF1E6E0",
                                       "tongue": "FFC9666F", "ink": "FF2A1E24", "shine": "A0FFF4EC",
-                                      "lip": "60D0937C", "lip_band": "FFE58A8A", "lip_edge": "B0B85A64",
+                                      "lip": "60D0937C", "lip_band": "FFE58A8A", "lip_edge": "B0B85A64", "lip_rim": "FFD27F80",
                                       "crease": "A0D0937C", "crease_tense": "D0B8786A"})
 face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "E0B8786A"})
 face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
-face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0))
+face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0), (swing_r.el, swing_l.el))
+face_rig.rig_chin(face_au, head.el, skin_details[2])
 
 # ================================================================ HEAD TURN (yaw / pitch)
 # The head art above follows AvatarVM `yaw` / `pitch` on one surface model (rive/tools/head_turn.py):
@@ -2023,6 +2025,8 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
           "HairBackShape": named_el(hair_back.el, "HairBackShape"), "Cowlick": named_el(tufts.el, "Cowlick"),
           "Cowlick2": named_el(tufts.el, "Cowlick2"), "HatSolo": hat_solo.el, "MouthClipOrder": face_rig.MOUTH_CLIP_ORDER,
           **{f"Lock{i}Material": named_el(hair_front.el, f"Lock{i}Material") for i in range(len(LOCKS))}}, anims)
+# the jaw drops the chin and the lower jaw contour (face-rig ids, after every head-turn id)
+head_turn.rig_jaw(turn, face_au.d, face_au.path)
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

@@ -340,6 +340,65 @@ CONTOUR = {"T": (506.0, 330.0, 10.0), "S": (508.0, 366.0, 15.0), "C": (506.0, 39
            "J": (481.0, 458.0, 30.0), "W": (467.0, 476.0, 38.0), "Q": (450.0, 490.0, 45.0), "V": (426.0, 505.0, 55.0)}
 
 
+# The jaw (M3 critic round): `auJawDrop` (+ 0.22 x the legacy `mouth`) drops the chin and the lower
+# jaw contour, about 0.55 x the lower lip's 23 px at the chin, fading up the jaw line to nothing at
+# the cheekbone. Art px per unit jaw, added to the contour bones' pitch formulas (screen y in the Head
+# frame), so it composes with every yaw / pitch pose of the 3/4 outline and stays history-free.
+JAW_CONTOUR = {"Chin": 13.0, "V": 11.5, "Q": 7.5, "W": 4.0, "J": 1.5}
+JAW_PER_MOUTH = 0.22
+
+
+def jaw_dy(bone: str, env: dict[str, float]) -> float:
+    """The jaw's screen-y shift of a contour bone ("Chin", "FVL", "FQR", ...)."""
+    px = JAW_CONTOUR.get(bone if bone == "Chin" else bone[1:-1], 0.0)
+    return px * (env.get("auJawDrop", 0.0) + JAW_PER_MOUTH * env.get("mouth", 0.0))
+
+
+def _bone_pitch(name: str) -> Poly:
+    """The pitch poly a contour bone was built with (rig_head)."""
+    if name == "Chin":
+        return pit(511, 60)
+    x, y, zp = CONTOUR[name[1:-1]]
+    return pit(y, zp)
+
+
+def rig_jaw(ht: "HeadTurn", d: Doc, path: Callable[[str], str]) -> list[El]:
+    """Add the jaw drop to the contour bones' pitch binds. The new converters are minted from `d`
+    (the face rig's unkeyed id range) after every head-turn id, so no head-turn id moves; the
+    replaced pitch chains are removed when nothing else reads them. Returns the new converters."""
+    f = r.Formulas(d, path)
+    angle = ht.rig.angle(ht.rig.y_axis)
+    made: dict[tuple[object, ...], El] = {}
+    replaced: set[str] = set()
+    for name, (_x, y, el) in ht.bones.items():
+        if not (name == "Chin" or (name[0] == "F" and name[1:-1] in JAW_CONTOUR and name[-1] in "LR")):
+            continue
+        px = JAW_CONTOUR[name if name == "Chin" else name[1:-1]]
+        poly = r.poly_add(r.poly_shift(_bone_pitch(name), y - HEAD_FRAME[1]),
+                          [(px, (r.tok("auJawDrop"),)), (px * JAW_PER_MOUTH, (r.tok("mouth"),))])
+        key = r.poly_key(poly)
+        if key not in made:
+            conv = d("DataConverterFormula", *f.poly(poly))
+            made[key] = d("DataConverterGroup", d("DataConverterGroupItem", converterId=angle.ref()),
+                          d("DataConverterGroupItem", converterId=conv.ref()))
+            ht.rig.converters += [conv, made[key]]
+        bind = next(c for c in el.children if c.tag == "DataBindContext" and c.attrs.get("propertyKey") == 91)
+        replaced.add(str(bind.attrs["converterId"]))
+        bind.attrs["converterId"] = made[key].ref()
+    used: set[str] = set()
+    stack = [ht.root, *ht.rig.converters]
+    while stack:
+        e = stack.pop()
+        if "converterId" in e.attrs:
+            used.add(str(e.attrs["converterId"]))
+        stack.extend(e.children)
+    dead = {c for c in ht.rig.converters if c.ref() in replaced and c.ref() not in used}
+    dead |= {ht_conv for g in dead for item in g.children[1:] for ht_conv in ht.rig.converters
+             if ht_conv.ref() == item.attrs.get("converterId")}
+    ht.rig.converters[:] = [c for c in ht.rig.converters if c not in dead]
+    return list(made.values())
+
+
 def _face_ang(x: float, y: float) -> float:
     a = math.degrees(math.atan2(y - 400, x - 400))
     return a + 360 if a < -90 else a
