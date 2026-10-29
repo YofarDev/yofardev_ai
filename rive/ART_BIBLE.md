@@ -33,7 +33,7 @@ highlights. It should feel hand-illustrated, and it is generated entirely from c
   | asset | hits | of which saturation |
   |---|---:|---:|
   | livingRoom | 192 | 8 |
-  | campfire | 283 | 138 |
+  | campfire | 283 (0 since the M4 diorama) | 138 |
   | beach | 525 | 79 |
   | deepSpace | 190 | 15 |
   | avatar (living-room light) | 597 | n/a |

@@ -230,7 +230,7 @@ def living_room(sc: Scene, content: list[El]) -> None:
 
 def campfire(sc: Scene, content: list[El]) -> None:
     S, E, F, L, d = sc.S, sc.E, sc.F, sc.L, sc.d
-    recolor(content, {"FF0B1026": "FF071923", "FF1A1B45": "FF102C39", "FF3D2A5C": "FF3C4555",
+    recolor(content, {"FF0B1026": "FF161E30", "FF1A1B45": "FF202F40", "FF3D2A5C": "FF3E4459",
                       "FF6B3A5A": "FF80606A", "FF2A2550": "FF284552", "FF1E1A3C": "FF193943",
                       "FF1A1630": "FF183139", "FF120F22": "FF0A2229", "FF2A2338": "FF253A3A",
                       "FF1C1726": "FF101E25", "FF0E0B16": "FF07171D", "FF2E2638": "FF314042",
