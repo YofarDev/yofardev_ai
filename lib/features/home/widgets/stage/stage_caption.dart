@@ -118,6 +118,7 @@ class _CaptionLine extends StatelessWidget {
                 key: StageCaption.lineKey,
                 text: text,
                 style: context.text.headlineSmall?.copyWith(height: 1.22),
+                color: context.tokens.scene.captionInk,
                 align: TextAlign.start,
               ),
             ),

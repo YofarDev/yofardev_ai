@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/performance/avatar_prop.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_service_extension.dart';
@@ -82,6 +83,13 @@ void main() {
       <String, String>{'face': '{"nope":0}'},
       <String, String>{'face': '{"auJawDrop":'},
       <String, String>{'face': '[1]'},
+      <String, String>{'prop': 'newspaper'},
+      <String, String>{'prop': ''},
+      <String, String>{'parallax': '{"x":1.5}'},
+      <String, String>{'parallax': '{"z":0.1}'},
+      <String, String>{'parallax': '{"x":"left"}'},
+      <String, String>{'parallax': '[0.1,0.2]'},
+      <String, String>{'parallax': '{"x":'},
     ]) {
       test('returns an error and leaves the config alone for $bad', () {
         final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
@@ -96,6 +104,42 @@ void main() {
         expect(notifier.value, LabConfig.initial);
       });
     }
+
+    test('prop and parallax round-trip through configure and state', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      final developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{
+          'scene': 'campfire',
+          'prop': 'tablet',
+          'parallax': '{"x":0.5,"y":-0.25}',
+        },
+      );
+      expect(r.errorCode, isNull);
+      expect(notifier.value.prop, AvatarProp.tablet);
+      expect(notifier.value.parallax, const Offset(0.5, -0.25));
+      final Map<String, Object?> state = _decode(labStateResponse(notifier));
+      expect(state['prop'], 'tablet');
+      expect(state['parallax'], <String, Object?>{'x': 0.5, 'y': -0.25});
+      expect(LabConfig.fromJson(state), notifier.value);
+
+      // A missing axis is 0; the other params keep prop and parallax.
+      labConfigureResponse(notifier, <String, String>{
+        'parallax': '{"y":0.75}',
+      });
+      expect(notifier.value.parallax, const Offset(0, 0.75));
+      labConfigureResponse(notifier, <String, String>{'scene': 'beach'});
+      expect(notifier.value.prop, AvatarProp.tablet);
+
+      labConfigureResponse(notifier, <String, String>{
+        'prop': 'none',
+        'parallax': 'null',
+      });
+      expect(notifier.value.prop, AvatarProp.none);
+      expect(notifier.value.parallax, isNull);
+    });
 
     test('a face object sets the lab face; null goes back to live', () {
       final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(

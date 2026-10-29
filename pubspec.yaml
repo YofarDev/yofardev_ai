@@ -46,6 +46,7 @@ dependencies:
   audioplayers: ^6.6.0
   rive: ^0.14.11
   battery_plus: ^7.1.2
+  sensors_plus: ^7.1.1
 
 dev_dependencies:
   flutter_test:

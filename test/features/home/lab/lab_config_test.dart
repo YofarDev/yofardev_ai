@@ -83,6 +83,41 @@ void main() {
       }
     });
 
+    test('prop and parallax round-trip, default to none and null', () {
+      expect(LabConfig.initial.prop, AvatarProp.none);
+      expect(LabConfig.initial.parallax, isNull);
+      expect(LabConfig.initial.toJson()['prop'], 'none');
+      expect(LabConfig.initial.toJson()['parallax'], isNull);
+      final LabConfig config = LabConfig.initial.copyWith(
+        prop: AvatarProp.tablet,
+        parallax: const Offset(-0.5, 1),
+      );
+      expect(LabConfig.fromJson(config.toJson()), config);
+      expect(config.copyWith(scene: AvatarScene.beach).prop, AvatarProp.tablet);
+      expect(config.copyWith(parallax: null).parallax, isNull);
+      expect(config, isNot(LabConfig.initial));
+    });
+
+    test('rejects an unknown prop and a bad parallax', () {
+      for (final Map<String, Object?> bad in <Map<String, Object?>>[
+        <String, Object?>{'prop': 'newspaper'},
+        <String, Object?>{'prop': 1},
+        <String, Object?>{'prop': null},
+        <String, Object?>{'parallax': 3},
+        <String, Object?>{
+          'parallax': <String, Object?>{'x': 1.01},
+        },
+        <String, Object?>{
+          'parallax': <String, Object?>{'y': 'up'},
+        },
+        <String, Object?>{
+          'parallax': <String, Object?>{'z': 0},
+        },
+      ]) {
+        expect(() => LabConfig.fromJson(bad), throwsFormatException);
+      }
+    });
+
     test('copyWith can clear an override', () {
       final LabConfig set = LabConfig.initial.copyWith(
         accentHueOverride: 90,

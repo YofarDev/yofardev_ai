@@ -16,6 +16,9 @@ import '../tokens/app_tokens.dart';
 /// gets the glass border as its side; any other [ShapeBorder] keeps its own
 /// border. [shape] takes precedence over [borderRadius].
 ///
+/// The scene's key light tints the fill's hue (`scene.glassTint`, derived
+/// from the static light rig, so it never flickers).
+///
 /// The backdrop blur is expensive, so it is applied only when [blur] is true
 /// (use it for a few large surfaces, never for list items).
 class GlassPanel extends StatelessWidget {
@@ -42,7 +45,12 @@ class GlassPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
     final AppGlassStyle style = tokens.glass(level);
-    final Color fill = tokens.glassSurface;
+    // The key light leans the fill's hue toward the scene's glass tint
+    // without making the panel any more opaque.
+    final Color fill = Color.alphaBlend(
+      tokens.scene.glassTint,
+      tokens.glassSurface.withValues(alpha: 1),
+    );
     final Color border = tokens.glassBorder;
     final BorderRadius radius =
         borderRadius ?? BorderRadius.circular(tokens.radius(AppRadius.lg));

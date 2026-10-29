@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
 import '../../../../../core/models/avatar_scene.dart';
+import '../../../../../core/services/motion/parallax_source.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../../../core/design/rive/rive_vm_binding.dart';
 import '../../rive/avatar_rive_contract.dart';
+import '../../rive/scene_parallax_writer.dart';
 import 'latest_load_gate.dart';
 
 /// Rive rendering of the scene currently on screen.
@@ -14,12 +19,19 @@ import 'latest_load_gate.dart';
 /// and disposes the previous file when the scene switches. One-shot scene
 /// events fire from the `sceneEvent` seq in [sceneEvent]; `prop_tapped`
 /// Rive events are forwarded to [onPropTapped].
+///
+/// Parallax (contract v7): [parallax]'s offset is written to `SceneVM`
+/// `parallaxX` / `parallaxY` at most once per frame, and only when an axis
+/// moved by more than 0.001. A non-null [parallaxOverride] (the UI lab) is
+/// written instead of the source.
 class RiveSceneView extends StatefulWidget {
   const RiveSceneView({
     super.key,
     required this.scene,
     required this.sceneEvent,
     this.onPropTapped,
+    this.parallax,
+    this.parallaxOverride,
   });
 
   final AvatarScene scene;
@@ -28,6 +40,12 @@ class RiveSceneView extends StatefulWidget {
   final ({SceneEvent sceneEvent, int seq}) sceneEvent;
 
   final ValueChanged<String>? onPropTapped;
+
+  /// The device tilt or pointer offset; null leaves the scene centred.
+  final ParallaxSource? parallax;
+
+  /// A hand-set offset written instead of [parallax] while non-null.
+  final Offset? parallaxOverride;
 
   @override
   State<RiveSceneView> createState() => _RiveSceneViewState();
@@ -38,6 +56,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
+  SceneParallaxWriter? _parallaxWriter;
+  StreamSubscription<Offset>? _parallaxSub;
+  Offset _parallax = Offset.zero;
+  bool _parallaxFrameScheduled = false;
   AvatarScene? _loadedScene;
   String? _error;
 
@@ -49,7 +71,30 @@ class _RiveSceneViewState extends State<RiveSceneView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _listenParallax();
     _loadScene(widget.scene);
+  }
+
+  void _listenParallax() {
+    unawaited(_parallaxSub?.cancel());
+    final ParallaxSource? source = widget.parallax;
+    _parallax = source?.value ?? Offset.zero;
+    _parallaxSub = source?.values.listen((Offset value) {
+      _parallax = value;
+      _scheduleParallaxWrite();
+    });
+  }
+
+  /// Writes the offset in the next frame, however many updates arrive first.
+  void _scheduleParallaxWrite() {
+    if (_parallaxFrameScheduled || _parallaxWriter == null) {
+      return;
+    }
+    _parallaxFrameScheduled = true;
+    SchedulerBinding.instance.scheduleFrameCallback((Duration _) {
+      _parallaxFrameScheduled = false;
+      _parallaxWriter?.write(widget.parallaxOverride ?? _parallax);
+    });
   }
 
   @override
@@ -64,6 +109,13 @@ class _RiveSceneViewState extends State<RiveSceneView>
   @override
   void didUpdateWidget(RiveSceneView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.parallax != oldWidget.parallax) {
+      _listenParallax();
+    }
+    if (widget.parallaxOverride != oldWidget.parallaxOverride ||
+        widget.parallax != oldWidget.parallax) {
+      _scheduleParallaxWrite();
+    }
     if (widget.scene != oldWidget.scene) {
       _loadScene(widget.scene);
       return;
@@ -88,6 +140,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _loads.cancelAll();
+    unawaited(_parallaxSub?.cancel());
     _teardown();
     super.dispose();
   }
@@ -135,6 +188,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _controller = controller;
         _binding = binding;
         _loadedScene = scene;
+        // A fresh binding has no parallax yet.
+        _parallaxWriter = SceneParallaxWriter(binding.setNumber)
+          ..write(widget.parallaxOverride ?? _parallax, force: true);
       });
     } on Exception catch (e) {
       AppLogger.error(
@@ -156,6 +212,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _file?.dispose();
     _controller = null;
     _binding = null;
+    _parallaxWriter = null;
     _file = null;
     _loadedScene = null;
   }

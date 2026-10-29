@@ -120,8 +120,8 @@ class AvatarCubit extends Cubit<AvatarState> {
       activeTool: intent.activeTool,
       prop: intent.prop,
     );
-    if (target != state.headTarget) {
-      _emitIfOpen(state.copyWith(headTarget: target));
+    if (target != state.headTarget || intent.prop != state.prop) {
+      _emitIfOpen(state.copyWith(headTarget: target, prop: intent.prop));
     }
   }
 

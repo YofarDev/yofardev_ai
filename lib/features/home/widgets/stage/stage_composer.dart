@@ -16,6 +16,7 @@ import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/talking_phase.dart';
 import '../../../../core/services/audio/interruption_service.dart';
+import '../../../../core/services/presence/composer_activity_service.dart';
 import '../../../../core/services/speech/speech_input_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/platform_utils.dart';
@@ -36,6 +37,9 @@ import 'stage_composer_menu.dart';
 /// place.
 ///
 /// [speech] is injected (Home widgets never read the service locator);
+/// [activity] (optional) hears the user typing: a report per edit with the
+/// caret position and the typed character, cleared after a
+/// [typingPause] without edits, on submit, on blur and on dispose.
 /// [pickImage] defaults to the shared gallery picker. [onModeChanged] hears
 /// every mode change (after the frame that shows it), so the Stage can hide
 /// its caption while the composer listens or thinks.
@@ -43,11 +47,13 @@ class StageComposer extends StatefulWidget {
   const StageComposer({
     super.key,
     required this.speech,
+    this.activity,
     this.pickImage = pickImageFile,
     this.onModeChanged,
   });
 
   final SpeechInputService speech;
+  final ComposerActivityService? activity;
   final Future<File?> Function() pickImage;
   final ValueChanged<ComposerOrbState>? onModeChanged;
 
@@ -57,6 +63,22 @@ class StageComposer extends StatefulWidget {
 
   /// Width used when the parent does not bound it (Home always does).
   static const double unboundedWidth = 360;
+
+  /// Typing counts as paused after this long without an edit.
+  static const Duration typingPause = Duration(milliseconds: 1500);
+
+  /// Where the caret of [value] sits across the field, 0..1:
+  /// `selection.baseOffset / text.length`, 0 for empty text or an invalid
+  /// selection.
+  @visibleForTesting
+  static double caretFractionOf(TextEditingValue value) {
+    final int length = value.text.length;
+    final int offset = value.selection.baseOffset;
+    if (length == 0 || offset < 0) {
+      return 0;
+    }
+    return math.min(1.0, offset / length);
+  }
 
   /// How long the orb shows the error state after a failed reply.
   static const Duration errorFlash = Duration(milliseconds: 600);
@@ -82,6 +104,12 @@ class _StageComposerState extends State<StageComposer>
   File? _pickedImage;
   bool _hasText = false;
   bool _listening = false;
+
+  /// The text last reported to [StageComposer.activity], to tell an edit
+  /// from a caret move; [_typing] while a typing report is standing.
+  String _reportedText = '';
+  bool _typing = false;
+  Timer? _typingTimer;
 
   /// A listening tap is waiting for [SpeechInputService.stop]: the orb keeps
   /// its listening look and ignores taps until the words are in.
@@ -118,6 +146,7 @@ class _StageComposerState extends State<StageComposer>
   void initState() {
     super.initState();
     _controller.addListener(_onTextChanged);
+    _focusNode.addListener(_onFocusChanged);
   }
 
   @override
@@ -130,10 +159,13 @@ class _StageComposerState extends State<StageComposer>
     unawaited(_endedSub?.cancel());
     _errorTimer?.cancel();
     _holdTimer?.cancel();
+    _endTyping();
     _controller
       ..removeListener(_onTextChanged)
       ..dispose();
-    _focusNode.dispose();
+    _focusNode
+      ..removeListener(_onFocusChanged)
+      ..dispose();
     _level.dispose();
     _shake.dispose();
     super.dispose();
@@ -144,6 +176,65 @@ class _StageComposerState extends State<StageComposer>
     if (hasText != _hasText) {
       setState(() => _hasText = hasText);
     }
+    _reportTyping();
+  }
+
+  void _onFocusChanged() {
+    if (!_focusNode.hasFocus) {
+      _endTyping();
+    }
+  }
+
+  /// Reports the edit (or the caret move while typing) to the presence
+  /// service and restarts the pause timer.
+  void _reportTyping() {
+    final ComposerActivityService? activity = widget.activity;
+    if (activity == null) {
+      return;
+    }
+    final TextEditingValue value = _controller.value;
+    final String text = value.text;
+    final String previous = _reportedText;
+    _reportedText = text;
+    if (text.isEmpty) {
+      _endTyping();
+      return;
+    }
+    final bool edited = text != previous;
+    if (!_focusNode.hasFocus || (!edited && !_typing)) {
+      // Programmatic text, or a caret move by someone who is not typing.
+      return;
+    }
+    String? lastChar;
+    if (edited && text.length > previous.length) {
+      final int caret = value.selection.baseOffset;
+      final int at = caret > 0 && caret <= text.length
+          ? caret - 1
+          : text.length - 1;
+      lastChar = text[at];
+    }
+    _typing = true;
+    activity.report(
+      ComposerActivity(
+        typing: true,
+        caretFraction: StageComposer.caretFractionOf(value),
+        lastChar: lastChar,
+      ),
+    );
+    _typingTimer?.cancel();
+    _typingTimer = Timer(StageComposer.typingPause, _endTyping);
+  }
+
+  /// Nobody is typing: the pause ran out, or the user submitted, left the
+  /// field, or emptied it.
+  void _endTyping() {
+    _typingTimer?.cancel();
+    _typingTimer = null;
+    if (!_typing) {
+      return;
+    }
+    _typing = false;
+    widget.activity?.clear();
   }
 
   void _haptic() {
@@ -273,6 +364,7 @@ class _StageComposerState extends State<StageComposer>
     final String language = context.read<SettingsCubit>().state.currentLanguage;
     final String? attachedImage = _pickedImage?.path;
     _haptic();
+    _endTyping();
     _controller.clear();
     _focusNode.unfocus();
     setState(() {

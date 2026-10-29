@@ -4,6 +4,7 @@ import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
@@ -65,6 +66,7 @@ import '../services/llm/llm_service_interface.dart';
 import '../services/llm/llm_streaming_service.dart';
 import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
+import '../services/motion/parallax_source.dart';
 import '../services/power/power_saver_source.dart';
 import '../services/presence/composer_activity_service.dart';
 import '../services/quality/frame_timing_source.dart';
@@ -333,6 +335,21 @@ Future<void> setupServiceLocator() async {
         await source.dispose();
       }
     },
+  );
+  // Parallax: the accelerometer's tilt on phones; elsewhere (desktop, web)
+  // the stage reports the pointer. Zero under reduce motion and battery saver.
+  getIt.registerLazySingleton<ParallaxSource>(
+    () => ParallaxSource(
+      accel: PlatformUtils.isMobile()
+          ? accelerometerEventStream(
+              samplingPeriod: SensorInterval.gameInterval,
+            )
+          : null,
+      reduceMotion: () =>
+          PlatformDispatcher.instance.accessibilityFeatures.disableAnimations,
+      power: getIt<PowerSaverSource>(),
+    ),
+    dispose: (ParallaxSource source) => source.dispose(),
   );
   getIt.registerLazySingleton<IdleLadder>(
     () => IdleLadder(

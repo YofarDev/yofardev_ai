@@ -122,6 +122,38 @@ abstract final class AvatarRiveContract {
     ...actionUnitRightProps,
   ];
 
+  // Contract v7: the light rig (colours are ARGB view-model colours, the
+  // numbers are written once per scene change), the held prop and the
+  // listening lean. `lean` (0..1) is written by the face writer.
+  static const String propLightKey = 'lightKey';
+  static const String propLightKeyIntensity = 'lightKeyIntensity';
+  static const String propLightKeyX = 'lightKeyX';
+  static const String propLightKeyY = 'lightKeyY';
+  static const String propLightRim = 'lightRim';
+  static const String propLightRimIntensity = 'lightRimIntensity';
+  static const String propLightAmbient = 'lightAmbient';
+  static const String propLightAmbientAmount = 'lightAmbientAmount';
+  static const String propLightFlicker = 'lightFlicker';
+  static const String propProp = 'prop';
+  static const String propLean = 'lean';
+
+  /// The v7 light numbers on `AvatarVM`, in `LightRig` field order.
+  static const List<String> lightNumberProps = <String>[
+    propLightKeyIntensity,
+    propLightKeyX,
+    propLightKeyY,
+    propLightRimIntensity,
+    propLightAmbientAmount,
+    propLightFlicker,
+  ];
+
+  /// The v7 light colours on `AvatarVM`.
+  static const List<String> lightColorProps = <String>[
+    propLightKey,
+    propLightRim,
+    propLightAmbient,
+  ];
+
   // Enum values, in contract order. On the SM-input fallback an enum property
   // becomes a number: its index in these lists.
   static const List<String> moodValues = <String>[
@@ -176,6 +208,7 @@ abstract final class AvatarRiveContract {
     'soubrette',
     'singularity',
   ];
+  static const List<String> propValues = <String>['none', 'tablet'];
   static const List<String> presenceValues = <String>[
     'onScreen',
     'outOfScreen',
@@ -208,6 +241,15 @@ abstract final class AvatarRiveContract {
   static const double sideMin = -1;
   static const double sideMax = 1;
 
+  /// Range of `lean`, the light intensities, `lightAmbientAmount` and
+  /// `lightFlicker`.
+  static const double leanMin = 0;
+  static const double leanMax = 1;
+
+  /// Range of `lightKeyX` / `lightKeyY` and of the scene's parallax numbers.
+  static const double lightDirMin = -1;
+  static const double lightDirMax = 1;
+
   /// Range of `roll`.
   static const double rollMin = -1;
   static const double rollMax = 1;
@@ -229,6 +271,27 @@ abstract final class AvatarRiveContract {
   static const String sceneViewModel = 'SceneVM';
   static const String scenePropEventId = 'eventId';
   static const String scenePropEventTrigger = 'event';
+
+  // Contract v7 `SceneVM`: the parallax numbers (−1..1, default 0) and the
+  // scene's own light defaults (the app does not write these: it writes the
+  // same rig to `AvatarVM`; the fog is scene-only).
+  static const String scenePropParallaxX = 'parallaxX';
+  static const String scenePropParallaxY = 'parallaxY';
+  static const String scenePropLightFog = 'lightFog';
+
+  /// Names `SceneVM` carries as light defaults (equal to `AvatarVM`'s, plus
+  /// `lightFog`, minus `lightAmbientAmount`).
+  static const List<String> sceneLightProps = <String>[
+    propLightKey,
+    propLightKeyIntensity,
+    propLightKeyX,
+    propLightKeyY,
+    propLightRim,
+    propLightRimIntensity,
+    propLightAmbient,
+    scenePropLightFog,
+    propLightFlicker,
+  ];
   static const String eventPropTapped = 'prop_tapped';
   static const String sceneEventPropIdProperty = 'propId';
 

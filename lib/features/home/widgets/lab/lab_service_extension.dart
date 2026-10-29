@@ -25,7 +25,7 @@ const Set<String> _numericKeys = <String>{
 const Set<String> _boolKeys = <String>{'panelCollapsed'};
 
 /// Keys whose value is a JSON document (`null`/empty clears it).
-const Set<String> _jsonKeys = <String>{'face'};
+const Set<String> _jsonKeys = <String>{'face', 'parallax'};
 
 /// Params the VM service adds to every call; never part of the config.
 const Set<String> _vmParams = <String>{'isolateId'};
@@ -49,8 +49,9 @@ developer.ServiceExtensionResponse _ok(LabConfig config) =>
 
 /// Converts service-extension string params into [LabConfig] JSON values:
 /// numeric keys become numbers (`null`/empty clears an override), boolean
-/// keys take `true`/`false`, `face` is decoded as JSON (`null`/empty goes
-/// back to the live face), the rest stay strings. Throws [FormatException]
+/// keys take `true`/`false`, `face` and `parallax` are decoded as JSON
+/// (`null`/empty goes back to the live face / the live parallax), the rest
+/// (`scene`, `prop`, ...) stay strings. Throws [FormatException]
 /// on a non-numeric number, a non-boolean flag or malformed JSON.
 Map<String, Object?> _paramsToJson(Map<String, String> params) {
   final Map<String, Object?> json = <String, Object?>{};
@@ -97,6 +98,8 @@ Map<String, Object?> _paramsToJson(Map<String, String> params) {
 /// A `face` object replaces the whole lab face (missing names are 0), e.g.
 /// `{"auJawDrop":0.5,"auBrowOuterUpR":0.3,"roll":0.2}`; without a `blink`
 /// count it keeps the current one, so it never fires a blink by itself.
+/// `prop` is `none` or `tablet`; `parallax` is `{"x":0.5,"y":-0.2}` (each
+/// -1..1) or `null`.
 developer.ServiceExtensionResponse labConfigureResponse(
   ValueNotifier<LabConfig>? notifier,
   Map<String, String> params,

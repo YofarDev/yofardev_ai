@@ -82,6 +82,10 @@ void main() {
         AvatarRiveContract.propBreath,
         AvatarRiveContract.propAutoBlink,
         AvatarRiveContract.propBlinkTrigger,
+        ...AvatarRiveContract.lightNumberProps,
+        ...AvatarRiveContract.lightColorProps,
+        AvatarRiveContract.propProp,
+        AvatarRiveContract.propLean,
       ];
       for (final String name in expected) {
         expect(names, contains(name), reason: 'AvatarVM.$name missing');
@@ -98,6 +102,7 @@ void main() {
         AvatarRiveContract.propGlasses: AvatarRiveContract.glassesValues,
         AvatarRiveContract.propCostume: AvatarRiveContract.costumeValues,
         AvatarRiveContract.propPresence: AvatarRiveContract.presenceValues,
+        AvatarRiveContract.propProp: AvatarRiveContract.propValues,
       };
       enumProperties.forEach((String property, List<String> values) {
         final ViewModelInstanceEnum? enumProperty = vmi.enumerator(property);
@@ -166,6 +171,41 @@ void main() {
       }
     });
 
+    test('v7 light numbers, colours, lean and prop', () {
+      for (final String name in <String>[
+        ...AvatarRiveContract.lightNumberProps,
+        AvatarRiveContract.propLean,
+      ]) {
+        final ViewModelInstanceNumber? n = vmi.number(name);
+        expect(n, isNotNull, reason: '$name is not a VM number');
+        n!.value = 0.5;
+        expect(n.value, 0.5, reason: name);
+      }
+      // The direction is a viewer-space vector: both signs are accepted.
+      for (final String name in <String>[
+        AvatarRiveContract.propLightKeyX,
+        AvatarRiveContract.propLightKeyY,
+      ]) {
+        final ViewModelInstanceNumber n = vmi.number(name)!;
+        for (final double v in <double>[
+          AvatarRiveContract.lightDirMin,
+          AvatarRiveContract.lightDirMax,
+        ]) {
+          n.value = v;
+          expect(n.value, v, reason: name);
+        }
+      }
+      expect(vmi.number(AvatarRiveContract.propLean)!.value, 0.5);
+      for (final String name in AvatarRiveContract.lightColorProps) {
+        expect(vmi.color(name), isNotNull, reason: '$name is not a colour');
+      }
+      expect(
+        vmi.enumerator(AvatarRiveContract.propProp)!.value,
+        AvatarRiveContract.propValues.first,
+        reason: 'prop defaults to none',
+      );
+    });
+
     test('autoBlink defaults to true; blink is a trigger', () {
       final ViewModelInstanceBoolean? auto = vmi.boolean(
         AvatarRiveContract.propAutoBlink,
@@ -219,6 +259,27 @@ void main() {
           contains(AvatarRiveContract.scenePropEventTrigger),
           reason: 'SceneVM.event trigger missing in $sceneId',
         );
+
+        // v7: parallax numbers (default 0, range -1..1) and the light rig.
+        for (final String name in <String>[
+          AvatarRiveContract.scenePropParallaxX,
+          AvatarRiveContract.scenePropParallaxY,
+        ]) {
+          expect(names, contains(name), reason: 'SceneVM.$name in $sceneId');
+          final ViewModelInstanceNumber n = vmi.number(name)!;
+          expect(n.value, 0, reason: '$sceneId $name defaults to 0');
+          for (final double v in <double>[
+            AvatarRiveContract.lightDirMin,
+            AvatarRiveContract.lightDirMax,
+          ]) {
+            n.value = v;
+            expect(n.value, v, reason: '$sceneId $name');
+          }
+          n.value = 0;
+        }
+        for (final String name in AvatarRiveContract.sceneLightProps) {
+          expect(names, contains(name), reason: 'SceneVM.$name in $sceneId');
+        }
 
         // Every eventId value for this scene must be accepted.
         final ViewModelInstanceEnum? eventId = vmi.enumerator(

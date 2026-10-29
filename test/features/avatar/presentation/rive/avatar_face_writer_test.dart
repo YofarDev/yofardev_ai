@@ -13,6 +13,7 @@ import 'package:yofardev_ai/features/talking/talking.dart';
 
 class _RecordingSink implements AvatarVmSink {
   final Map<String, double> numbers = <String, double>{};
+  final Map<String, int> colors = <String, int>{};
   final List<String> calls = <String>[];
 
   @override
@@ -23,6 +24,12 @@ class _RecordingSink implements AvatarVmSink {
 
   @override
   void setBool(String name, bool value) => calls.add('bool $name=$value');
+
+  @override
+  void setColor(String name, int argb) {
+    colors[name] = argb;
+    calls.add('color $name');
+  }
 
   @override
   void fireTrigger(String name) => calls.add('trigger $name');
@@ -46,6 +53,7 @@ void main() {
       AvatarRiveContract.propTongueUp,
       AvatarRiveContract.propRoll,
       AvatarRiveContract.propBreath,
+      AvatarRiveContract.propLean,
     });
     expect(sink.calls, contains('bool autoBlink=true'));
     expect(sink.calls.where((String c) => c.startsWith('trigger')), isEmpty);
@@ -60,6 +68,17 @@ void main() {
     writer.write(const FaceFrame(au: ActionUnits(jawDrop: 0.4)));
     expect(sink.calls, <String>['number auJawDrop']);
     expect(sink.numbers[AvatarRiveContract.propAuJawDrop], 0.4);
+  });
+
+  test('lean (v7) is written when it moves by more than the epsilon', () {
+    writer.write(const FaceFrame(lean: 0.6), force: true);
+    expect(sink.numbers[AvatarRiveContract.propLean], 0.6);
+    sink.calls.clear();
+    writer.write(const FaceFrame(lean: 0.6004));
+    expect(sink.calls, isEmpty);
+    writer.write(const FaceFrame(lean: 0.2));
+    expect(sink.calls, <String>['number lean']);
+    expect(sink.numbers[AvatarRiveContract.propLean], 0.2);
   });
 
   test('blink fires once per new serial; autoBlink only when it flips', () {
@@ -195,7 +214,7 @@ void main() {
     writer.write(const FaceFrame(blinkSerial: 5));
     expect(
       sink.calls.where((String c) => c.startsWith('number')),
-      hasLength(32),
+      hasLength(33),
     );
     expect(sink.calls.where((String c) => c.startsWith('trigger')), isEmpty);
   });

@@ -27,6 +27,8 @@ import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/memory_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/res/app_constants.dart';
+import '../../core/services/motion/parallax_source.dart';
+import '../../core/services/presence/composer_activity_service.dart';
 import '../../core/services/speech/speech_input_service.dart';
 import '../../core/widgets/constrained_width.dart';
 import '../../core/l10n/generated/app_localizations.dart';
@@ -62,6 +64,8 @@ class AppRouter {
           // change resizes the frame without rebuilding Home.
           final HomeScreen home = HomeScreen(
             speech: getIt<SpeechInputService>(),
+            composerActivity: getIt<ComposerActivityService>(),
+            parallax: getIt<ParallaxSource>(),
             facePerformer: getIt<FacePerformer>(),
           );
           return MaterialPage<void>(

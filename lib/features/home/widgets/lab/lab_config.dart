@@ -32,6 +32,8 @@ class LabConfig {
     this.radiusScaleOverride,
     this.panelCollapsed = false,
     this.face,
+    this.prop = AvatarProp.none,
+    this.parallax,
   });
 
   /// The lab's starting point.
@@ -64,11 +66,18 @@ class LabConfig {
   /// null shows the live face. See [LabFace].
   final FaceFrame? face;
 
+  /// The prop the stage avatar holds (contract v7 `prop`).
+  final AvatarProp prop;
+
+  /// A hand-set scene parallax offset (contract v7, each axis -1..1); null
+  /// leaves the scene to the live source.
+  final Offset? parallax;
+
   static const double maxGlassAlphaScale = 4;
   static const double maxRadiusScale = 3;
 
   /// Copy with the given fields replaced. Pass `null` explicitly to clear
-  /// [accentHueOverride], [radiusScaleOverride] or [face].
+  /// [accentHueOverride], [radiusScaleOverride], [face] or [parallax].
   LabConfig copyWith({
     AvatarScene? scene,
     LabLayout? layout,
@@ -79,6 +88,8 @@ class LabConfig {
     Object? radiusScaleOverride = _keep,
     bool? panelCollapsed,
     Object? face = _keep,
+    AvatarProp? prop,
+    Object? parallax = _keep,
   }) {
     return LabConfig(
       scene: scene ?? this.scene,
@@ -94,6 +105,10 @@ class LabConfig {
           : (radiusScaleOverride as num?)?.toDouble(),
       panelCollapsed: panelCollapsed ?? this.panelCollapsed,
       face: identical(face, _keep) ? this.face : face as FaceFrame?,
+      prop: prop ?? this.prop,
+      parallax: identical(parallax, _keep)
+          ? this.parallax
+          : parallax as Offset?,
     );
   }
 
@@ -107,6 +122,10 @@ class LabConfig {
     'radiusScaleOverride': radiusScaleOverride,
     'panelCollapsed': panelCollapsed,
     'face': face == null ? null : LabFace.toJson(face!),
+    'prop': prop.name,
+    'parallax': parallax == null
+        ? null
+        : <String, double>{'x': parallax!.dx, 'y': parallax!.dy},
   };
 
   static const Set<String> _keys = <String>{
@@ -119,6 +138,8 @@ class LabConfig {
     'radiusScaleOverride',
     'panelCollapsed',
     'face',
+    'prop',
+    'parallax',
   };
 
   /// Parses [json]. Missing keys take the [initial] values; unknown keys,
@@ -154,6 +175,25 @@ class LabConfig {
           ? _bool(json, 'panelCollapsed')
           : initial.panelCollapsed,
       face: json['face'] == null ? null : LabFace.fromJson(json['face']),
+      prop: _enum(json, 'prop', AvatarProp.values, initial.prop),
+      parallax: json['parallax'] == null ? null : _parallax(json['parallax']),
+    );
+  }
+
+  /// Parses the `parallax` object: `x` and `y`, each -1..1 (a missing axis
+  /// is 0); anything else throws a [FormatException].
+  static Offset _parallax(Object? value) {
+    if (value is! Map<String, Object?>) {
+      throw FormatException('"parallax" must be an object, got $value');
+    }
+    for (final String key in value.keys) {
+      if (key != 'x' && key != 'y') {
+        throw FormatException('Unknown parallax key "$key"');
+      }
+    }
+    return Offset(
+      value.containsKey('x') ? _number(value, 'x', -1, 1) : 0,
+      value.containsKey('y') ? _number(value, 'y', -1, 1) : 0,
     );
   }
 
@@ -232,7 +272,9 @@ class LabConfig {
       other.glassAlphaScale == glassAlphaScale &&
       other.radiusScaleOverride == radiusScaleOverride &&
       other.panelCollapsed == panelCollapsed &&
-      other.face == face;
+      other.face == face &&
+      other.prop == prop &&
+      other.parallax == parallax;
 
   @override
   int get hashCode => Object.hash(
@@ -245,6 +287,8 @@ class LabConfig {
     radiusScaleOverride,
     panelCollapsed,
     face,
+    prop,
+    parallax,
   );
 
   @override

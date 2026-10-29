@@ -5,6 +5,8 @@ import 'package:nested/nested.dart';
 
 import '../../../core/design/design.dart';
 import '../../../core/models/demo_script.dart';
+import '../../../core/services/motion/parallax_source.dart';
+import '../../../core/services/presence/composer_activity_service.dart';
 import '../../../core/services/speech/speech_input_service.dart';
 import '../../../core/utils/logger.dart';
 import '../../avatar/avatar.dart';
@@ -18,12 +20,24 @@ import '../widgets/home_content_stack.dart';
 /// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
 ///
-/// [speech] and [facePerformer] come from the route (Home never reads the
-/// service locator).
+/// [speech], [composerActivity], [parallax] and [facePerformer] come from the
+/// route (Home never reads the service locator).
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.speech, this.facePerformer});
+  const HomeScreen({
+    super.key,
+    required this.speech,
+    this.composerActivity,
+    this.parallax,
+    this.facePerformer,
+  });
 
   final SpeechInputService speech;
+
+  /// Hears the composer's typing (null: nobody listens).
+  final ComposerActivityService? composerActivity;
+
+  /// The scene's parallax offset and the pointer's sink (null: centred).
+  final ParallaxSource? parallax;
 
   /// Drives the avatar's face and speech (null: static mood faces).
   final FacePerformer? facePerformer;
@@ -133,6 +147,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildStage() {
     final Widget stage = HomeContentStack(
       speech: widget.speech,
+      composerActivity: widget.composerActivity,
+      parallax: widget.parallax,
       facePerformer: widget.facePerformer,
       onStartDemo: _startDemoMode,
     );
@@ -150,6 +166,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void didUpdateWidget(HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.speech != oldWidget.speech ||
+        widget.composerActivity != oldWidget.composerActivity ||
+        widget.parallax != oldWidget.parallax ||
         widget.facePerformer != oldWidget.facePerformer) {
       _stage = _buildStage();
     }

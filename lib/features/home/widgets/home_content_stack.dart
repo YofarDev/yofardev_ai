@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/design/design.dart';
 import '../../../core/design/rive/ui_kit.dart';
 import '../../../core/models/talking_phase.dart';
+import '../../../core/services/motion/parallax_source.dart';
+import '../../../core/services/presence/composer_activity_service.dart';
 import '../../../core/services/speech/speech_input_service.dart';
 import '../../avatar/avatar.dart';
 import '../../chat/chat.dart';
@@ -25,16 +27,22 @@ import 'stage/stage_top_bar.dart';
 /// - at the bottom, above the keyboard or the system bar: the running-tool
 ///   chip, the live caption and the [StageComposer].
 ///
-/// [speech] goes to the composer; [onStartDemo] to the More menu.
+/// [speech] and [composerActivity] go to the composer; [onStartDemo] to the
+/// More menu. [parallax] feeds the scene's depth planes, and hears the
+/// pointer's position over the stage (hover, on desktop and web).
 class HomeContentStack extends StatefulWidget {
   const HomeContentStack({
     super.key,
     required this.speech,
+    this.composerActivity,
+    this.parallax,
     this.facePerformer,
     required this.onStartDemo,
   });
 
   final SpeechInputService speech;
+  final ComposerActivityService? composerActivity;
+  final ParallaxSource? parallax;
 
   /// Drives the avatar's face and speech (null: static mood faces).
   final FacePerformer? facePerformer;
@@ -65,22 +73,52 @@ class _HomeContentStackState extends State<HomeContentStack> {
 
   void _onComposerMode(ComposerOrbState mode) => _composerMode.value = mode;
 
+  /// Reports the hover position as -1..1 (0 at the centre, +y up). No
+  /// rebuild: it only feeds the parallax source.
+  void _onHover(PointerEvent event) {
+    final RenderObject? box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || box.size.isEmpty) {
+      return;
+    }
+    final Size size = box.size;
+    widget.parallax?.pointer(
+      Offset(
+        event.localPosition.dx / size.width * 2 - 1,
+        1 - event.localPosition.dy / size.height * 2,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // No MediaQuery read here: the keyboard and the safe area only move the
     // chrome (the slots below), never the Rive views.
-    return Stack(
+    final Widget stack = Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        _RiveStage(facePerformer: widget.facePerformer),
+        _RiveStage(
+          facePerformer: widget.facePerformer,
+          parallax: widget.parallax,
+        ),
         const StageScrim.top(),
         _TopBarSlot(onStartDemo: widget.onStartDemo),
         _BottomChrome(
           composerMode: _composerMode,
           onComposerMode: _onComposerMode,
           speech: widget.speech,
+          composerActivity: widget.composerActivity,
         ),
       ],
+    );
+    final ParallaxSource? parallax = widget.parallax;
+    if (parallax == null) {
+      return stack;
+    }
+    return MouseRegion(
+      opaque: false,
+      onHover: _onHover,
+      onExit: (PointerEvent _) => parallax.pointer(Offset.zero),
+      child: stack,
     );
   }
 }
@@ -88,9 +126,10 @@ class _HomeContentStackState extends State<HomeContentStack> {
 /// The Rive scene with the avatar on it. Const and free of MediaQuery, so
 /// keyboard, inset and theme changes never rebuild it.
 class _RiveStage extends StatelessWidget {
-  const _RiveStage({this.facePerformer});
+  const _RiveStage({this.facePerformer, this.parallax});
 
   final FacePerformer? facePerformer;
+  final ParallaxSource? parallax;
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +141,7 @@ class _RiveStage extends StatelessWidget {
             RiveSceneView(
               scene: avatarState.scene,
               sceneEvent: avatarState.sceneEvent,
+              parallax: parallax,
               onPropTapped: (String propId) {
                 context.read<AvatarCubit>().onPropTapped(
                   avatarState.scene,
@@ -166,11 +206,13 @@ class _BottomChrome extends StatelessWidget {
     required this.composerMode,
     required this.onComposerMode,
     required this.speech,
+    this.composerActivity,
   });
 
   final ValueNotifier<ComposerOrbState> composerMode;
   final ValueChanged<ComposerOrbState> onComposerMode;
   final SpeechInputService speech;
+  final ComposerActivityService? composerActivity;
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +235,11 @@ class _BottomChrome extends StatelessWidget {
             children: <Widget>[
               const StageToolChip(),
               StageCaption(composerMode: composerMode),
-              _Composer(speech: speech, onModeChanged: onComposerMode),
+              _Composer(
+                speech: speech,
+                activity: composerActivity,
+                onModeChanged: onComposerMode,
+              ),
             ],
           ),
         ),
@@ -254,9 +300,14 @@ class _GlowLayer extends StatelessWidget {
 /// The composer once the chat is loaded; until then, its height in empty
 /// space, so the caption above doesn't jump.
 class _Composer extends StatelessWidget {
-  const _Composer({required this.speech, required this.onModeChanged});
+  const _Composer({
+    required this.speech,
+    required this.onModeChanged,
+    this.activity,
+  });
 
   final SpeechInputService speech;
+  final ComposerActivityService? activity;
   final ValueChanged<ComposerOrbState> onModeChanged;
 
   @override
@@ -267,6 +318,10 @@ class _Composer extends StatelessWidget {
     if (initializing) {
       return const SizedBox(height: StageComposer.height);
     }
-    return StageComposer(speech: speech, onModeChanged: onModeChanged);
+    return StageComposer(
+      speech: speech,
+      activity: activity,
+      onModeChanged: onModeChanged,
+    );
   }
 }

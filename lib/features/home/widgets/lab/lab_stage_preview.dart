@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/models/performance/avatar_prop.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../avatar/avatar.dart';
 import '../../../talking/talking.dart';
@@ -20,6 +21,30 @@ typedef LabStageBuilder =
       TalkingState talkingState,
       FaceFrame? face,
     );
+
+/// What the lab's config adds to the stage beyond the [LabStageBuilder]
+/// arguments (contract v7): the held prop and the hand-set parallax. The real
+/// stage reads it from the tree, so a stage builder written for the four
+/// arguments keeps working.
+class LabStageExtras extends InheritedWidget {
+  const LabStageExtras({
+    super.key,
+    required this.prop,
+    required this.parallax,
+    required super.child,
+  });
+
+  final AvatarProp prop;
+  final Offset? parallax;
+
+  /// The extras above [context], or none (no prop, no parallax).
+  static LabStageExtras? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<LabStageExtras>();
+
+  @override
+  bool updateShouldNotify(LabStageExtras oldWidget) =>
+      prop != oldWidget.prop || parallax != oldWidget.parallax;
+}
 
 /// The default [LabStageBuilder]: the real Rive scene and avatar.
 Widget buildLabRiveStage(
@@ -172,19 +197,23 @@ class _LabStagePreviewState extends State<LabStagePreview>
                     child: Stack(
                       fit: StackFit.expand,
                       children: <Widget>[
-                        ValueListenableBuilder<MouthState>(
-                          valueListenable: _syllable,
-                          builder:
-                              (
-                                BuildContext context,
-                                MouthState syllable,
-                                Widget? _,
-                              ) => widget.stageBuilder(
-                                context,
-                                config.scene,
-                                _talkingState(syllable),
-                                config.face,
-                              ),
+                        LabStageExtras(
+                          prop: config.prop,
+                          parallax: config.parallax,
+                          child: ValueListenableBuilder<MouthState>(
+                            valueListenable: _syllable,
+                            builder:
+                                (
+                                  BuildContext context,
+                                  MouthState syllable,
+                                  Widget? _,
+                                ) => widget.stageBuilder(
+                                  context,
+                                  config.scene,
+                                  _talkingState(syllable),
+                                  config.face,
+                                ),
+                          ),
                         ),
                         LabStageLayout(
                           layout: config.layout,
@@ -229,13 +258,23 @@ class LabRiveStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final LabStageExtras? extras = LabStageExtras.maybeOf(context);
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        _LabSceneLayer(key: ValueKey<AvatarScene>(scene), scene: scene),
+        _LabSceneLayer(
+          key: ValueKey<AvatarScene>(scene),
+          scene: scene,
+          parallax: extras?.parallax,
+        ),
         RiveAvatarView(
           key: const ValueKey<String>('lab-avatar'),
-          avatarState: _avatar,
+          // The scene's light rig follows the lab's scene, and the prop the
+          // lab's prop.
+          avatarState: _avatar.copyWith(
+            scene: scene,
+            prop: extras?.prop ?? AvatarProp.none,
+          ),
           talkingState: talkingState,
           faceOverride: face,
         ),
@@ -247,9 +286,10 @@ class LabRiveStage extends StatelessWidget {
 /// One scene's Rive view; logs its lifetime so rapid switching can be checked
 /// for duplicate loads.
 class _LabSceneLayer extends StatefulWidget {
-  const _LabSceneLayer({super.key, required this.scene});
+  const _LabSceneLayer({super.key, required this.scene, this.parallax});
 
   final AvatarScene scene;
+  final Offset? parallax;
 
   @override
   State<_LabSceneLayer> createState() => _LabSceneLayerState();
@@ -276,6 +316,10 @@ class _LabSceneLayerState extends State<_LabSceneLayer> {
 
   @override
   Widget build(BuildContext context) {
-    return RiveSceneView(scene: widget.scene, sceneEvent: _noEvent);
+    return RiveSceneView(
+      scene: widget.scene,
+      sceneEvent: _noEvent,
+      parallaxOverride: widget.parallax,
+    );
   }
 }

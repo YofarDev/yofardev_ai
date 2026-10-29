@@ -5,6 +5,7 @@ import '../../../../core/models/avatar_gesture.dart';
 import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/avatar_status_animation.dart';
+import '../../../../core/models/performance/avatar_prop.dart';
 import '../../domain/models/background_transition.dart';
 import '../../domain/models/head_pose.dart';
 
@@ -42,5 +43,8 @@ sealed class AvatarState with _$AvatarState {
 
     /// Where the head should look, from the director's gaze.
     @Default(HeadTarget.zero) HeadTarget headTarget,
+
+    /// The prop held, from the director's intent (written to Rive `prop`).
+    @Default(AvatarProp.none) AvatarProp prop,
   }) = _AvatarState;
 }

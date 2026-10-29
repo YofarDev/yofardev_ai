@@ -6,12 +6,15 @@ import 'avatar_rive_contract.dart';
 abstract interface class AvatarVmSink {
   void setNumber(String name, double value);
   void setBool(String name, bool value);
+
+  /// Sets a view-model colour from an ARGB int.
+  void setColor(String name, int argb);
   void fireTrigger(String name);
 }
 
-/// Writes [FaceFrame]s to `AvatarVM` (contract v6): the 14 `au*` numbers,
+/// Writes [FaceFrame]s to `AvatarVM` (contract v7): the 14 `au*` numbers,
 /// the 14 per-side `au<Name>L` / `au<Name>R` offsets ([FaceFrame.left] and
-/// [FaceFrame.right]), `lipTuck`, `tongueUp`, `roll` and `breath` when they
+/// [FaceFrame.right]), `lipTuck`, `tongueUp`, `roll`, `breath` and `lean` when they
 /// move by more than [epsilon], `autoBlink` when it flips, and the `blink`
 /// trigger when the blink serial goes up: at most one blink per write, however
 /// far it went up, none when it goes down (a source that counts from 0 again)
@@ -68,6 +71,7 @@ class AvatarFaceWriter {
     _number(AvatarRiveContract.propTongueUp, face.tongueUp, force);
     _number(AvatarRiveContract.propRoll, face.roll, force);
     _number(AvatarRiveContract.propBreath, face.breath, force);
+    _number(AvatarRiveContract.propLean, face.lean, force);
     if (force || _autoBlink != face.autoBlink) {
       _sink.setBool(AvatarRiveContract.propAutoBlink, face.autoBlink);
       _autoBlink = face.autoBlink;

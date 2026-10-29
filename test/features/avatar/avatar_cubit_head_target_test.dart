@@ -6,6 +6,7 @@ import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/performance/avatar_prop.dart';
 import 'package:yofardev_ai/core/models/performance/gaze_target.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
@@ -108,6 +109,23 @@ void main() {
       director.setActiveTool(null);
       await turned;
     });
+
+    test(
+      'holds the tablet while a lookup tool runs, then puts it away',
+      () async {
+        expect(cubit.state.prop, AvatarProp.none);
+        final Future<void> held = expectLater(
+          cubit.stream.map((AvatarState s) => s.prop),
+          emitsInOrder(<Matcher>[
+            equals(AvatarProp.tablet),
+            equals(AvatarProp.none),
+          ]),
+        );
+        director.setActiveTool('getCurrentWeather');
+        director.setActiveTool(null);
+        await held;
+      },
+    );
 
     test('watches the caret while the user types', () async {
       final Future<void> watching = expectLater(

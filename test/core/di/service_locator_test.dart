@@ -6,6 +6,7 @@ import 'package:yofardev_ai/core/services/agent/tool_registry.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
+import 'package:yofardev_ai/core/services/motion/parallax_source.dart';
 import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
 import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
@@ -68,6 +69,8 @@ void main() {
     // there is no plugin; no await here: see HomeRepositoryImpl above).
     expect(getIt<ComposerActivityService>(), isNotNull);
     expect(getIt<PowerSaverSource>(), isA<BatteryPowerSaverSource>());
+    expect(getIt<ParallaxSource>(), same(getIt<ParallaxSource>()));
+    expect(getIt<ParallaxSource>().usesAccelerometer, isFalse);
     expect(getIt<IdleLadder>(), same(getIt<IdleLadder>()));
     expect(getIt<IdleLadder>().stage, 0);
     expect(getIt<PropReactionService>(), isNotNull);

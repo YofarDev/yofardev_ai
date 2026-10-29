@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
+import '../../../../../core/design/tokens/scene_lights.dart';
 import '../../../../../core/models/avatar_mood.dart';
 import '../../../../../core/models/performance/performance.dart';
 import '../../../../../core/utils/logger.dart';
@@ -13,6 +14,7 @@ import '../../../domain/models/head_pose.dart';
 import '../../../domain/services/face_performer.dart';
 import '../../../domain/services/head_motion_solver.dart';
 import '../../rive/avatar_face_writer.dart';
+import '../../rive/avatar_light_writer.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../bloc/avatar_state.dart';
 
@@ -39,6 +41,11 @@ import '../../bloc/avatar_state.dart';
 /// performer (lab, tests) the view writes the current mood's AU preset and
 /// side offsets and keeps driving `mouth` from [TalkingState]. A non-null
 /// [faceOverride] (the UI lab) is written instead of either, with `mouth` 0.
+///
+/// Light and prop (contract v7): the scene's static `LightRig`
+/// (`SceneLights.of(avatarState.scene)`) is written to `AvatarVM` through an
+/// [AvatarLightWriter] on load and when the scene changes, never per frame;
+/// `prop` follows [AvatarState.prop]; `lean` rides in the face frame.
 ///
 /// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped].
 ///
@@ -114,6 +121,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   double? _writtenEyeLeadPitch;
   FaceFrame _face = FaceFrame.rest;
   AvatarFaceWriter? _faceWriter;
+  AvatarLightWriter? _lightWriter;
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
@@ -178,6 +186,9 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     if (binding == null) {
       return;
     }
+    if (widget.avatarState.scene != oldWidget.avatarState.scene) {
+      _lightWriter?.write(SceneLights.of(widget.avatarState.scene));
+    }
     // One-shot cues are detected by seq so a repeated gesture still fires.
     if (widget.avatarState.gestureEvent.seq !=
         oldWidget.avatarState.gestureEvent.seq) {
@@ -238,6 +249,8 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       _writtenYaw = _writtenPitch = _writtenHairYaw = null;
       _writtenHairPitch = _writtenEyeLead = _writtenEyeLeadPitch = null;
       _faceWriter = AvatarFaceWriter(_BindingSink(binding));
+      _lightWriter = AvatarLightWriter(_BindingSink(binding))
+        ..write(SceneLights.of(widget.avatarState.scene));
       _writeFace(widget.faceOverride ?? _liveFace(), force: true);
       _writeHeadPose(_solver.pose);
       _ensureTicking();
@@ -360,6 +373,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     _controller = null;
     _binding = null;
     _faceWriter = null;
+    _lightWriter = null;
     _file = null;
   }
 
@@ -413,6 +427,11 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       AvatarRiveContract.propCostume,
       AvatarRiveContract.costumeValues,
       avatarState.avatar.costume.name,
+    );
+    binding.setEnum(
+      AvatarRiveContract.propProp,
+      AvatarRiveContract.propValues,
+      avatarState.prop.name,
     );
     binding.setEnum(
       AvatarRiveContract.propPresence,
@@ -482,6 +501,9 @@ class _BindingSink implements AvatarVmSink {
 
   @override
   void setBool(String name, bool value) => _binding.setBool(name, value);
+
+  @override
+  void setColor(String name, int argb) => _binding.setColor(name, Color(argb));
 
   @override
   void fireTrigger(String name) => _binding.fireTrigger(name);

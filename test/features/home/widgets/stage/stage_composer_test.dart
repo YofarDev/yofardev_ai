@@ -15,6 +15,7 @@ import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/failure.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/core/services/speech/speech_input_service.dart';
 import 'package:yofardev_ai/features/chat/chat.dart';
 import 'package:yofardev_ai/features/home/widgets/stage/stage_composer.dart';
@@ -178,6 +179,7 @@ void main() {
     Future<File?> Function()? pickImage,
     bool reduceMotion = false,
     ValueChanged<ComposerOrbState>? onModeChanged,
+    ComposerActivityService? activity,
   }) async {
     final Widget app = MultiBlocProvider(
       providers: <SingleChildWidget>[
@@ -194,9 +196,14 @@ void main() {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: pickImage == null
-                  ? StageComposer(speech: speech, onModeChanged: onModeChanged)
+                  ? StageComposer(
+                      speech: speech,
+                      activity: activity,
+                      onModeChanged: onModeChanged,
+                    )
                   : StageComposer(
                       speech: speech,
+                      activity: activity,
                       pickImage: pickImage,
                       onModeChanged: onModeChanged,
                     ),
@@ -274,6 +281,143 @@ void main() {
       ComposerOrbState.idle,
       ComposerOrbState.thinking,
     ]);
+  });
+
+  group('composer activity', () {
+    late ComposerActivityService activity;
+    late List<ComposerActivity> reports;
+
+    setUp(() {
+      activity = ComposerActivityService();
+      reports = <ComposerActivity>[];
+      activity.activity.listen(reports.add);
+    });
+
+    tearDown(() async {
+      await activity.dispose();
+    });
+
+    testWidgets('reports typing with the caret and the typed character, '
+        'and clears after the pause', (WidgetTester tester) async {
+      await pumpComposer(tester, activity: activity);
+      await tester.enterText(find.byType(TextField), 'Hel');
+      await tester.pump();
+      expect(reports, isNotEmpty);
+      expect(reports.last.typing, isTrue);
+      expect(reports.last.lastChar, 'l');
+      expect(reports.last.caretFraction, 1.0);
+
+      // A caret move into the middle updates the fraction, no character.
+      tester.testTextInput.updateEditingValue(
+        const TextEditingValue(
+          text: 'Hel',
+          selection: TextSelection.collapsed(offset: 1),
+        ),
+      );
+      await tester.pump();
+      expect(reports.last.typing, isTrue);
+      expect(reports.last.lastChar, isNull);
+      expect(reports.last.caretFraction, closeTo(1 / 3, 1e-9));
+
+      await tester.pump(
+        StageComposer.typingPause - const Duration(milliseconds: 100),
+      );
+      expect(activity.current.typing, isTrue);
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.idle();
+      expect(activity.current, ComposerActivity.idle);
+      expect(reports.last, ComposerActivity.idle);
+    });
+
+    testWidgets('every edit restarts the pause', (WidgetTester tester) async {
+      await pumpComposer(tester, activity: activity);
+      await tester.enterText(find.byType(TextField), 'a');
+      await tester.pump(const Duration(seconds: 1));
+      await tester.enterText(find.byType(TextField), 'ab');
+      await tester.pump(const Duration(seconds: 1));
+      expect(activity.current.typing, isTrue);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.idle();
+      expect(activity.current.typing, isFalse);
+    });
+
+    testWidgets('clears on submit', (WidgetTester tester) async {
+      await pumpComposer(tester, activity: activity);
+      await tester.enterText(find.byType(TextField), 'Hi');
+      await tester.pump();
+      expect(activity.current.typing, isTrue);
+      await tester.testTextInput.receiveAction(TextInputAction.send);
+      await tester.pump();
+      await tester.idle();
+      expect(activity.current, ComposerActivity.idle);
+      expect(reports.last, ComposerActivity.idle);
+      // The pause timer was cancelled: nothing fires later.
+      final int count = reports.length;
+      await tester.pump(const Duration(seconds: 3));
+      expect(reports, hasLength(count));
+    });
+
+    testWidgets('clears when the field loses focus', (
+      WidgetTester tester,
+    ) async {
+      await pumpComposer(tester, activity: activity);
+      await tester.enterText(find.byType(TextField), 'Hi');
+      await tester.pump();
+      expect(activity.current.typing, isTrue);
+      tester
+          .state<EditableTextState>(find.byType(EditableText))
+          .widget
+          .focusNode
+          .unfocus();
+      await tester.pump();
+      await tester.idle();
+      expect(activity.current, ComposerActivity.idle);
+    });
+
+    testWidgets('emptying the field clears; dispose clears', (
+      WidgetTester tester,
+    ) async {
+      await pumpComposer(tester, activity: activity);
+      await tester.enterText(find.byType(TextField), 'Hi');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), '');
+      await tester.pump();
+      await tester.idle();
+      expect(activity.current, ComposerActivity.idle);
+
+      await tester.enterText(find.byType(TextField), 'Hi');
+      await tester.pump();
+      expect(activity.current.typing, isTrue);
+      await tester.pumpWidget(const SizedBox());
+      await tester.idle();
+      expect(activity.current, ComposerActivity.idle);
+    });
+
+    test('the caret fraction is 0 for empty text or an invalid selection', () {
+      expect(StageComposer.caretFractionOf(TextEditingValue.empty), 0);
+      expect(
+        StageComposer.caretFractionOf(const TextEditingValue(text: 'abc')),
+        0,
+      );
+      expect(
+        StageComposer.caretFractionOf(
+          const TextEditingValue(
+            text: 'abcd',
+            selection: TextSelection.collapsed(offset: 1),
+          ),
+        ),
+        0.25,
+      );
+      expect(
+        StageComposer.caretFractionOf(
+          const TextEditingValue(
+            text: 'abcd',
+            selection: TextSelection.collapsed(offset: 4),
+          ),
+        ),
+        1,
+      );
+    });
   });
 
   testWidgets('typing shows send semantics and submits like AiTextInput', (
