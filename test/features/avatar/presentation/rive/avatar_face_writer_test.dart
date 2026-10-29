@@ -138,6 +138,17 @@ void main() {
     );
   });
 
+  test('an adopted blink serial is a new baseline that does not fire', () {
+    writer.write(const FaceFrame(blinkSerial: 7), force: true);
+    sink.calls.clear();
+    // switching to a source that counts from 0 (the lab override)
+    writer.adoptBlinkSerial(0);
+    writer.write(const FaceFrame());
+    expect(sink.calls.where((String c) => c.startsWith('trigger')), isEmpty);
+    writer.write(const FaceFrame(blinkSerial: 1));
+    expect(sink.calls, contains('trigger blink'));
+  });
+
   test('after a reset the next write is complete and fires no stale blink', () {
     writer.write(const FaceFrame(blinkSerial: 1), force: true);
     writer.reset();

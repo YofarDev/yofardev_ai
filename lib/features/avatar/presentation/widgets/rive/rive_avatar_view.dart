@@ -37,7 +37,8 @@ import '../../bloc/avatar_state.dart';
 /// offsets, `lipTuck`, `tongueUp`, `roll`, `breath`, `autoBlink` and the
 /// `blink` trigger, and adds its nod to `pitch`; `mouth` stays 0. Without a
 /// performer (lab, tests) the view writes the current mood's AU preset and
-/// side offsets and keeps driving `mouth` from [TalkingState].
+/// side offsets and keeps driving `mouth` from [TalkingState]. A non-null
+/// [faceOverride] (the UI lab) is written instead of either, with `mouth` 0.
 ///
 /// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped].
 ///
@@ -49,6 +50,7 @@ class RiveAvatarView extends StatefulWidget {
     required this.talkingState,
     this.headSolver,
     this.facePerformer,
+    this.faceOverride,
     this.onAvatarTapped,
     this.onPresenceDone,
     this.onGestureDone,
@@ -63,6 +65,12 @@ class RiveAvatarView extends StatefulWidget {
 
   /// Drives the face and speech; null writes static mood presets instead.
   final FacePerformer? facePerformer;
+
+  /// A face written instead of the performer's frame (or the static mood
+  /// face) while non-null: the UI lab's hand-set pose. Its `blinkSerial`
+  /// counts from 0 when the override starts; every change of it fires
+  /// `blink`. Back to null, the live face resumes without a blink.
+  final FaceFrame? faceOverride;
   final ValueChanged<String>? onAvatarTapped;
 
   /// Called with the presence value when the avatar finishes walking
@@ -158,6 +166,14 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       // speech or a mood change may have woken the performer
       _ensureTicking();
     }
+    final FaceFrame? override = widget.faceOverride;
+    if ((override == null) != (oldWidget.faceOverride == null)) {
+      // Override and live face count blinks apart: switching never blinks,
+      // except an override that starts with blinks already asked for.
+      _faceWriter?.adoptBlinkSerial(
+        override == null ? _liveFace().blinkSerial : 0,
+      );
+    }
     final RiveVmBinding? binding = _binding;
     if (binding == null) {
       return;
@@ -222,7 +238,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       _writtenYaw = _writtenPitch = _writtenHairYaw = null;
       _writtenHairPitch = _writtenEyeLead = _writtenEyeLeadPitch = null;
       _faceWriter = AvatarFaceWriter(_BindingSink(binding));
-      _writeFace(widget.facePerformer?.frame ?? _staticFace(), force: true);
+      _writeFace(widget.faceOverride ?? _liveFace(), force: true);
       _writeHeadPose(_solver.pose);
       _ensureTicking();
     } on Exception catch (e) {
@@ -252,7 +268,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     final HeadPose pose = _solver.step(dt);
     final FacePerformer? performer = widget.facePerformer;
     if (performer != null) {
-      _writeFace(performer.step(dt));
+      // The performer keeps running under an override, so Reset resumes it
+      // where it would be.
+      final FaceFrame live = performer.step(dt);
+      _writeFace(widget.faceOverride ?? live);
     }
     _writeHeadPose(pose);
     if (!_solver.driftEnabled &&
@@ -313,6 +332,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   /// The face of the current mood, for a view without a performer.
   FaceFrame _staticFace() => RiveAvatarView.staticFace(widget.avatarState.mood);
 
+  /// The face without an override: the performer's current frame, or the
+  /// static mood face.
+  FaceFrame _liveFace() => widget.facePerformer?.frame ?? _staticFace();
+
   /// Writes [face] through the face writer (it skips unchanged numbers and
   /// fires `blink` once per new blink serial).
   void _writeFace(FaceFrame face, {bool force = false}) {
@@ -349,15 +372,18 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       AvatarRiveContract.phaseValues,
       widget.talkingState.phase.name,
     );
-    // With a performer the mouth AUs carry speech; `mouth` (the legacy jaw
-    // alias) must stay 0 so the two never add up.
+    // With a performer (or an override) the mouth AUs carry speech; `mouth`
+    // (the legacy jaw alias) must stay 0 so the two never add up.
+    final FaceFrame? override = widget.faceOverride;
     binding.setNumber(
       AvatarRiveContract.propMouth,
-      widget.facePerformer == null
+      widget.facePerformer == null && override == null
           ? widget.talkingState.mouthState.index.toDouble()
           : 0,
     );
-    if (widget.facePerformer == null) {
+    if (override != null) {
+      _writeFace(override);
+    } else if (widget.facePerformer == null) {
       _writeFace(_staticFace());
     }
     binding.setEnum(

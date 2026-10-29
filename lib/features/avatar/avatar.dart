@@ -3,6 +3,7 @@ library;
 
 export 'presentation/bloc/avatar_cubit.dart';
 export 'presentation/bloc/avatar_state.dart';
+export 'presentation/rive/avatar_rive_contract.dart';
 export 'presentation/widgets/rive/rive_avatar_view.dart';
 export 'presentation/widgets/rive/rive_scene_view.dart';
 export 'domain/services/avatar_animation_service.dart';

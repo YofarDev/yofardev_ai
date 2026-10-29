@@ -11,12 +11,14 @@ import 'lab_config.dart';
 import 'lab_stage_layouts.dart';
 
 /// Builds the stage under the lab's Home chrome: the scene and the character
-/// for [scene], animated per [talkingState].
+/// for [scene], animated per [talkingState], wearing [face] (the lab's
+/// hand-set face) when it is non-null.
 typedef LabStageBuilder =
     Widget Function(
       BuildContext context,
       AvatarScene scene,
       TalkingState talkingState,
+      FaceFrame? face,
     );
 
 /// The default [LabStageBuilder]: the real Rive scene and avatar.
@@ -24,7 +26,8 @@ Widget buildLabRiveStage(
   BuildContext context,
   AvatarScene scene,
   TalkingState talkingState,
-) => LabRiveStage(scene: scene, talkingState: talkingState);
+  FaceFrame? face,
+) => LabRiveStage(scene: scene, talkingState: talkingState, face: face);
 
 /// A mock Home screen for the UI lab's Stage tab: the stage (real Rive scene
 /// and avatar by default) under the chrome of `config.layout`, on a phone
@@ -180,6 +183,7 @@ class _LabStagePreviewState extends State<LabStagePreview>
                                 context,
                                 config.scene,
                                 _talkingState(syllable),
+                                config.face,
                               ),
                         ),
                         LabStageLayout(
@@ -208,10 +212,15 @@ class LabRiveStage extends StatelessWidget {
     super.key,
     required this.scene,
     required this.talkingState,
+    this.face,
   });
 
   final AvatarScene scene;
   final TalkingState talkingState;
+
+  /// The lab's hand-set face, written instead of the live one; null shows
+  /// the live face.
+  final FaceFrame? face;
 
   static const AvatarState _avatar = AvatarState(
     avatar: Avatar(),
@@ -228,6 +237,7 @@ class LabRiveStage extends StatelessWidget {
           key: const ValueKey<String>('lab-avatar'),
           avatarState: _avatar,
           talkingState: talkingState,
+          faceOverride: face,
         ),
       ],
     );

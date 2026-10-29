@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/design/looks/looks.dart';
+import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/performance/performance.dart';
+import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 
 TextTheme _fakeTextTheme(LookFonts fonts, ColorScheme scheme) =>
@@ -92,6 +95,115 @@ void main() {
       expect(cleared.accentHueOverride, isNull);
       expect(cleared.radiusScaleOverride, isNull);
       expect(set.copyWith(scene: AvatarScene.beach).accentHueOverride, 90);
+    });
+  });
+
+  group('LabConfig face', () {
+    test('round-trips a face object by contract names', () {
+      final LabConfig config = LabConfig.fromJson(<String, Object?>{
+        'face': <String, Object?>{
+          'auJawDrop': 0.5,
+          'auBrowOuterUpR': 0.3,
+          'auLipCornerPullL': -0.25,
+          'roll': 0.2,
+          'lipTuck': 1,
+          'blink': 2,
+        },
+      });
+      final FaceFrame face = config.face!;
+      expect(face.au.jawDrop, 0.5);
+      expect(face.right.browOuterUp, 0.3);
+      expect(face.left.lipCornerPull, -0.25);
+      expect(face.roll, 0.2);
+      expect(face.lipTuck, 1);
+      expect(face.blinkSerial, 2);
+      expect(face.autoBlink, isFalse);
+      expect(face.au.browLower, 0);
+
+      final Map<String, Object?> json = config.toJson();
+      final Map<String, Object> faceJson = json['face']! as Map<String, Object>;
+      expect(faceJson.keys, <String>{...LabFace.numberKeys, 'blink'});
+      expect(faceJson['auBrowOuterUpR'], 0.3);
+      expect(LabConfig.fromJson(json), config);
+    });
+
+    test('no face is the live face and round-trips as null', () {
+      expect(LabConfig.initial.face, isNull);
+      expect(LabConfig.initial.toJson()['face'], isNull);
+      expect(LabConfig.fromJson(<String, Object?>{'face': null}).face, isNull);
+    });
+
+    test('rejects unknown names, wrong types and out-of-range values', () {
+      for (final Object? bad in <Object?>[
+        <String, Object?>{'auJawDrop': 2},
+        <String, Object?>{'nope': 0},
+        <String, Object?>{'auJawDrop': -0.1},
+        <String, Object?>{'auBrowOuterUpR': -1.5},
+        <String, Object?>{'roll': 1.01},
+        <String, Object?>{'auJawDrop': '0.5'},
+        <String, Object?>{'auJawDrop': null},
+        <String, Object?>{'blink': -1},
+        <String, Object?>{'blink': 1.5},
+        <String, Object?>{'autoBlink': false},
+        <Object?>[0.5],
+        'auJawDrop',
+      ]) {
+        expect(
+          () => LabConfig.fromJson(<String, Object?>{'face': bad}),
+          throwsFormatException,
+          reason: '$bad',
+        );
+      }
+    });
+
+    test('side offsets and roll take -1..1, the rest 0..1', () {
+      expect(LabFace.range('auBrowLowerL'), (-1.0, 1.0));
+      expect(LabFace.range('roll'), (-1.0, 1.0));
+      expect(LabFace.range('auBrowLower'), (0.0, 1.0));
+      expect(LabFace.range('breath'), (0.0, 1.0));
+      expect(LabFace.numberKeys, hasLength(32));
+    });
+
+    test('copyWith sets and clears the face', () {
+      final LabConfig set = LabConfig.initial.copyWith(face: LabFace.base);
+      expect(set.face, LabFace.base);
+      expect(set, isNot(LabConfig.initial));
+      expect(set.copyWith(scene: AvatarScene.beach).face, LabFace.base);
+      expect(set.copyWith(face: null).face, isNull);
+    });
+
+    test('a mood preset loads its AUs and side offsets', () {
+      final FaceFrame thinking = LabFace.withMood(
+        LabFace.withValue(LabFace.base, 'roll', 0.3),
+        AvatarMood.thinking,
+      );
+      expect(thinking.au, actionUnitsForMood(AvatarMood.thinking));
+      expect(thinking.right.browOuterUp, 0.35);
+      expect(thinking.left.browLower, 0.25);
+      expect(thinking.roll, 0.3);
+      expect(LabFace.hasMood(thinking, AvatarMood.thinking), isTrue);
+      expect(LabFace.hasMood(thinking, AvatarMood.neutral), isFalse);
+    });
+
+    test('a viseme writes its mouth shape and keeps the rest', () {
+      final FaceFrame happy = LabFace.withMood(LabFace.base, AvatarMood.happy);
+      final FaceFrame ff = LabFace.withViseme(happy, Viseme.ff);
+      expect(ff.au.jawDrop, 0.1);
+      expect(ff.au.lipStretch, 0.1);
+      expect(ff.lipTuck, 1);
+      expect(ff.tongueUp, 0);
+      expect(ff.au.cheekRaise, happy.au.cheekRaise);
+      expect(LabFace.hasViseme(ff, Viseme.ff), isTrue);
+      final FaceFrame th = LabFace.withViseme(ff, Viseme.th);
+      expect(th.lipTuck, 0);
+      expect(th.tongueUp, 1);
+    });
+
+    test('blink bumps the serial and keeps the pose', () {
+      final FaceFrame face = LabFace.withValue(LabFace.base, 'auJawDrop', 0.4);
+      final FaceFrame blinked = LabFace.withBlink(face);
+      expect(blinked.blinkSerial, face.blinkSerial + 1);
+      expect(blinked.au, face.au);
     });
   });
 

@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_service_extension.dart';
 
@@ -77,6 +78,10 @@ void main() {
       <String, String>{'accentHueOverride': '400'},
       <String, String>{'glassAlphaScale': 'null'},
       <String, String>{'panelCollapsed': 'maybe'},
+      <String, String>{'face': '{"auJawDrop":2}'},
+      <String, String>{'face': '{"nope":0}'},
+      <String, String>{'face': '{"auJawDrop":'},
+      <String, String>{'face': '[1]'},
     ]) {
       test('returns an error and leaves the config alone for $bad', () {
         final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
@@ -91,6 +96,47 @@ void main() {
         expect(notifier.value, LabConfig.initial);
       });
     }
+
+    test('a face object sets the lab face; null goes back to live', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      final developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{
+          'face': '{"auJawDrop":0.5,"auBrowOuterUpR":0.3,"roll":0.2}',
+        },
+      );
+      expect(r.errorCode, isNull);
+      final FaceFrame face = notifier.value.face!;
+      expect(face.au.jawDrop, 0.5);
+      expect(face.right.browOuterUp, 0.3);
+      expect(face.roll, 0.2);
+      final Map<String, Object?> faceJson =
+          (_decode(r)['face']! as Map<dynamic, dynamic>)
+              .cast<String, Object?>();
+      expect(faceJson['auBrowOuterUpR'], 0.3);
+      expect(faceJson['blink'], 0);
+
+      labConfigureResponse(notifier, <String, String>{'face': 'null'});
+      expect(notifier.value.face, isNull);
+    });
+
+    test('a face without a blink count keeps the current one', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial.copyWith(
+          face: LabFace.withBlink(LabFace.withBlink(LabFace.base)),
+        ),
+      );
+      labConfigureResponse(notifier, <String, String>{
+        'face': '{"auJawDrop":0.2}',
+      });
+      expect(notifier.value.face!.blinkSerial, 2);
+      expect(notifier.value.face!.au.jawDrop, 0.2);
+      labConfigureResponse(notifier, <String, String>{'face': '{"blink":3}'});
+      expect(notifier.value.face!.blinkSerial, 3);
+      expect(notifier.value.face!.au.jawDrop, 0);
+    });
 
     test('returns an error when no lab is mounted', () {
       final developer.ServiceExtensionResponse r = labConfigureResponse(
@@ -107,6 +153,17 @@ void main() {
         LabConfig.initial.copyWith(scene: AvatarScene.campfire),
       );
       expect(_decode(labStateResponse(notifier)), notifier.value.toJson());
+    });
+
+    test('reports the lab face by contract names', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial.copyWith(
+          face: LabFace.withValue(LabFace.base, 'auLidTightenL', -0.5),
+        ),
+      );
+      final Map<String, Object?> state = _decode(labStateResponse(notifier));
+      expect(state, notifier.value.toJson());
+      expect((state['face']! as Map<dynamic, dynamic>)['auLidTightenL'], -0.5);
     });
 
     test('returns an error when no lab is mounted', () {

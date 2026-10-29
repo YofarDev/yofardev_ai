@@ -11,6 +11,7 @@ import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_surfaces_preview.dart';
 import 'package:yofardev_ai/core/design/components/components.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 /// Fake builder: no font is ever loaded.
@@ -18,8 +19,12 @@ TextTheme _fakeTextTheme(LookFonts fonts, ColorScheme scheme) =>
     ThemeData.dark().textTheme;
 
 /// Fake stage: no Rive file is ever decoded.
-Widget _fakeStage(BuildContext context, AvatarScene scene, TalkingState _) =>
-    SizedBox.expand(key: ValueKey<AvatarScene>(scene));
+Widget _fakeStage(
+  BuildContext context,
+  AvatarScene scene,
+  TalkingState _,
+  FaceFrame? _,
+) => SizedBox.expand(key: ValueKey<AvatarScene>(scene));
 
 /// The lab on its Surfaces tab.
 final LabConfig _surfaces = LabConfig.initial.copyWith(tab: LabTab.surfaces);

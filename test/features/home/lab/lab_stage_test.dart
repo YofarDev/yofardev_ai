@@ -7,6 +7,7 @@ import 'package:yofardev_ai/features/home/widgets/lab/lab_caption.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_composer_mock.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
+import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 /// Fake builder: no font is ever loaded.
@@ -22,7 +23,12 @@ class _StageProbe {
 
   (AvatarScene, TalkingPhase) get last => builds.last;
 
-  Widget build(BuildContext context, AvatarScene scene, TalkingState talking) {
+  Widget build(
+    BuildContext context,
+    AvatarScene scene,
+    TalkingState talking,
+    FaceFrame? _,
+  ) {
     builds.add((scene, talking.phase));
     return _ProbeStage(probe: this);
   }

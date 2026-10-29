@@ -34,6 +34,12 @@ class AvatarFaceWriter {
     _blinkSerial = null;
   }
 
+  /// Takes [serial] as the last blink serial seen, without firing: the next
+  /// write fires `blink` only if its serial differs from [serial]. Used when
+  /// the frames switch source (a lab override and the live performer count
+  /// blinks independently).
+  void adoptBlinkSerial(int serial) => _blinkSerial = serial;
+
   /// Writes [face]; [force] writes every number and flag.
   void write(FaceFrame face, {bool force = false}) {
     final ActionUnits a = face.au;
