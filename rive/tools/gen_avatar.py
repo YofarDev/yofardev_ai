@@ -805,6 +805,16 @@ glasses_solo.el.attrs["activeComponentId"] = GLASSES["glasses"].ref()
 hair_front = head.node("HairFront")
 
 
+LOCK_TIP_R = 0.18  # tip radius / base width
+LOCK_S = 0.3  # second harmonic of the lock's bow: the clump's centre line is a slight S
+
+
+def lock_bow(t: float, bend: float) -> float:
+    """Sideways offset of a lock's centre line at t (0 root .. 1 tip): one bow plus a second
+    harmonic (an S that turns the tip back), zero at both ends so root and tip stay put."""
+    return bend * (math.sin(math.pi * t) + LOCK_S * math.sin(2 * math.pi * t))
+
+
 def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: float, bend: float) -> El:
     (rx, ry), (tx, ty) = root_, tip
     dx, dy = tx - rx, ty - ry
@@ -812,10 +822,15 @@ def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: flo
     nx, ny = -dy / ln, dx / ln
 
     def at(t: float, off: float) -> tuple[float, float]:
-        bow = math.sin(math.pi * t) * bend
+        bow = lock_bow(t, bend)
         return (rx + dx * t + nx * (off + bow), ry + dy * t + ny * (off + bow))
-    pts = [at(0, -w / 2), at(0.45, -w * 0.42), at(0.8, -w * 0.2), (tx + nx * bend * 0.1, ty, "c"),
-           at(0.78, w * 0.16), at(0.42, w * 0.44), at(0, w / 2)]
+    # a soft clump, not a spike (art bible §3): the tip is a round cap of radius LOCK_TIP_R x the
+    # base width (two shoulders at that half width, one smooth tip vertex); the centre line is a
+    # slight S (lock_bow). Same vertex count as the M2 spike, so no later id moves.
+    r = LOCK_TIP_R * w
+    tc = 1 - r / ln
+    pts = [at(0, -w / 2), at(0.45, -w * 0.34), at(tc, -r), at(1, 0.0), at(tc, r * 0.9), at(0.43, w * 0.36),
+           at(0, w / 2)]
     base = S(head, name, pts, grad([(HAIR_HI, 0.0), (HAIR, 0.55), (HAIR_SH, 1.0)], -ln / 2, ln / 2), L(HAIR_SH, 1.5))
     # Separate tapered ribbons, clipped to each lock, give the hair a satin
     # surface. They travel with the hair rig, including under hats.
@@ -827,10 +842,12 @@ def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: flo
     return group(name + "Material", light, strand, base)
 
 
-# (the centre locks end above the raised-brow line: their tips must not poke out under a lifted brow)
-LOCKS = [((300, 272), (292, 404), 44, -8), ((330, 246), (318, 360), 50, 12), ((360, 236), (352, 330), 50, 10),
-         ((396, 230), (418, 352), 70, 18), ((436, 234), (452, 334), 52, 10), ((470, 248), (490, 376), 58, 9),
-         ((498, 276), (510, 410), 40, 6), ((380, 236), (372, 318), 30, 6), ((452, 242), (474, 322), 28, 6)]
+# The brows paint under the fringe, so the clumps frame them at rest: the ones over the brows end
+# above them, the centre clump hangs between them, the temple clumps end outside their outer ends
+# (a raised brow slides under the tips).
+LOCKS = [((300, 272), (292, 404), 44, -8), ((330, 246), (304, 352), 50, 12), ((360, 236), (350, 318), 50, 10),
+         ((396, 230), (400, 350), 60, 12), ((436, 234), (454, 320), 52, 10), ((470, 248), (504, 366), 56, 9),
+         ((498, 276), (510, 410), 40, 6), ((380, 236), (374, 312), 30, 6), ((452, 242), (472, 314), 28, 6)]
 hair_front.add(*[lock(f"Lock{i}", *LOCKS[i]) for i in [7, 8, 3, 2, 4, 1, 5, 0, 6]],
                S(head, "HairCap", [(290, 340), (294, 270), (330, 232), (400, 214), (470, 232), (506, 270), (510, 340),
                                    (470, 300), (400, 292), (330, 300)], grad([(HAIR_HI, 0.0), (HAIR, 0.6)], -60, 60),
@@ -1057,11 +1074,12 @@ def hair_spring(name: str, rig: Rig) -> El:
 hair_follow = hair_spring("FringeFollowThrough", hair_front)
 back_follow = hair_spring("BackHairFollowThrough", hair_back)
 tuft_follow = hair_spring("TuftFollowThrough", tufts)
-# Brows paint over the fringe (storybook convention: they must read through the bangs), under the
-# glasses; same frame as the eyes so the head rig and the gesture travel treat them alike.
+# Brows paint under the fringe (M3 critic round: a raised brow drawn over the bangs read as pasted on
+# the hair; the locks now occlude it) and over the face; same frame as the eyes so the head rig and
+# the gesture travel treat them alike.
 brows = d("Node", *[e["brow"].el for e in EYES], x=eyes.el.attrs["x"], y=eyes.el.attrs["y"], name="Brows")
 eyes.el.children = [c for c in eyes.el.children if c not in (EYE_L["brow"].el, EYE_R["brow"].el)]
-head.el.children = [hat_solo.el, sweat_m.el, sweat_p.el, anger.el, glasses_solo.el, brows, hair_follow, laugh.el,
+head.el.children = [hat_solo.el, sweat_m.el, sweat_p.el, anger.el, glasses_solo.el, hair_follow, brows, laugh.el,
                     eyes.el, blush.el, mouth.el, mole, nose_g.el, *skin_details, cheek_sh, face_cast, face, *ears, tufts.el,
                     back_follow, hit_head]
 head.el.children[head.el.children.index(tufts.el)] = tuft_follow
@@ -1193,6 +1211,7 @@ side_props = face_rig.add_side_numbers(lids.d, vm, inst)
 BLINK_DRIVES = {id(e): face_rig.rig_lids(lids, e, e["cx"], e["s"], "FF2A1B18", "B8603A30", SKIN_SH2, SCLERA,
                                            "38B07A68")
                 for e in EYES}
+BLINK_SQUASH = {id(e): face_rig.add_blink_squash(lids, e) for e in EYES}
 
 # ================================================================ ANIMATIONS
 anims: list[El] = []
@@ -1278,6 +1297,8 @@ def blink_anim(name: str, frames: int, keys: list[tuple[int, float]] | None = No
     ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in (keys or blink_keys)]
     retired = [t for e in EYES for t in retired_blink_track(e, keys)]
     new = [track(lids.d, c, {"strength": [(f, v, it) for f, v, it in ks]}) for e in EYES for c in BLINK_DRIVES[id(e)]]
+    new += [track(lids.d, BLINK_SQUASH[id(e)], {"scaleY": [(f, face_rig.blink_squash(v), it) for f, v, it in ks]})
+            for e in EYES]
     if loop:
         seam(new, frames, lids.d)
     a = A(name, frames, retired + new, loop=loop)
@@ -1998,12 +2019,13 @@ face_au = face_rig.FaceRig(lids.path)  # the same paths as the lids (v6 side num
 for i, e in enumerate(EYES):
     s_ = -1 if i == 0 else 1
     face_rig.rig_brow(face_au, e["brow_g"].el, named_el(e["brow_g"].el, "BrowShape"), 355.0 if i == 0 else 445.0, s_,
-                      HAIR, SKIN)
+                      HAIR)
 face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "teeth": TEETH, "low_teeth": "FFF1E6E0",
                                       "tongue": "FFC9666F", "ink": "FF2A1E24", "shine": "A0FFF4EC",
                                       "lip": "60D0937C", "lip_band": "FFE58A8A", "lip_edge": "B0B85A64", "lip_rim": "FFD27F80",
-                                      "crease": "A0D0937C", "crease_tense": "D0B8786A"})
-face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "E0B8786A"})
+                                      "crease": "A0D0937C", "crease_tense": "D0B8786A",
+                                      "dimple": "E8A05A4C"})
+face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "E8A05A4C"})
 face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
 face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0), (swing_r.el, swing_l.el))
 face_rig.rig_chin(face_au, head.el, skin_details[2])

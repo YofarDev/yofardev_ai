@@ -44,6 +44,27 @@ def test_stretch_parts_the_lips_and_press_seals_them() -> None:
         assert angry[up] == pytest.approx(angry[low], abs=1e-9), up
 
 
+def test_lip_tuck_needs_the_jaw_open() -> None:
+    """f / v (tuck with the jaw a little open) is the full tuck; a tuck on a closed jaw rolls the
+    lips in: no lift, no gap, the lips stay one line (critic round 1: it showed a pink band)."""
+    assert fr.amount(FF, fr.TUCK) == pytest.approx(1.0)
+    assert fr.amount({"lipTuck": 1.0}, fr.TUCK) == 0.0
+    assert fr.amount({"lipTuck": 0.5, "auJawDrop": 0.03}, fr.TUCK) == pytest.approx(0.24)
+    tuck = fr.mouth_pose({"lipTuck": 1.0})
+    for up, low in UPPER_LOWER:
+        assert tuck[up] == pytest.approx(tuck[low], abs=1e-9), up
+    rest = fr.mouth_pose({})
+    assert tuck["CornerR"][0] < rest["CornerR"][0] and tuck["CornerL"][0] > rest["CornerL"][0]
+
+
+def test_nose_wrinkle_lifts_the_upper_lip_a_little() -> None:
+    nw, rest = fr.mouth_pose({"auNoseWrinkle": 1.0}), fr.mouth_pose({})
+    lift = rest["UpperC"][1] - nw["UpperC"][1]
+    assert 2.0 < lift < 4.5
+    assert nw["LowerC"] == pytest.approx(rest["LowerC"])
+    assert len(fr.NOSE_CREASES) == 3 and fr.NOSE_CREASE_W == 1.8
+
+
 def test_pseudo_amounts() -> None:
     assert fr.amount({"auLipStretch": 0.55}, fr.PART) == pytest.approx(0.55)
     assert fr.amount({"auLipStretch": 0.3, "auLipPress": 0.6}, fr.PART) == 0.0
@@ -270,15 +291,30 @@ def test_rest_opening_frames_the_iris() -> None:
 
 
 def test_cheek_raise_bows_the_lower_lid_up_into_a_crescent() -> None:
+    p = fr.lid_pose({"auCheekRaise": 1.0}, 1)
+    mid, inner, outer = _y(p, "LowerMid"), _y(p, "LowerInner"), _y(p, "LowerOuter")
+    assert mid <= inner < _y(p, "CornerIn") and mid <= outer + 1.5 and outer < _y(p, "CornerOut")  # an arch (y down)
+    # happy (0.6): the bowl of the rest lid is gone, the lid rises flat to slightly arched
     p = fr.lid_pose(HAPPY, 1)
     mid, inner, outer = _y(p, "LowerMid"), _y(p, "LowerInner"), _y(p, "LowerOuter")
-    assert mid < inner < _y(p, "CornerIn") and mid < outer < _y(p, "CornerOut")  # an arch (y down)
-    # the lower lid covers the lower half of the iris and more
-    assert max(y for _, y in fr.lid_edge(p, "Lower")) < 392.0
-    assert mid < IRIS_BOTTOM - 18.0
+    assert mid <= inner and inner < _y(p, "CornerIn") + 1.0 and outer < _y(p, "CornerOut") + 1.0
+    # happy: the lower lid covers the bottom of the iris, the pupil stays clear
+    p = fr.lid_pose(HAPPY, 1)
+    assert IRIS_BOTTOM - 16.0 < _y(p, "LowerMid") < IRIS_BOTTOM - 8.0
     # its middle rises more than its ends
     rest = fr.lid_pose({}, 1)
-    assert rest["LowerMid"][1] - mid > rest["LowerInner"][1] - inner + 3.0
+    assert rest["LowerMid"][1] - _y(p, "LowerMid") > rest["LowerInner"][1] - _y(p, "LowerInner") + 2.0
+
+
+@pytest.mark.parametrize("s", (-1, 1))
+def test_cheek_raise_narrows_the_eye_from_below_by_at_most_40_percent(s: int) -> None:
+    """AU6 is a smile squint, not a wink (critic round 1): its lower-lid push is capped."""
+    rest, cr = fr.lid_pose({}, s), fr.lid_pose({"auCheekRaise": 1.0, f"auCheekRaise{'L' if s < 0 else 'R'}": 1.0}, s)
+    for col in fr.LID_COLS:
+        height = rest["Lower" + col][1] - rest["Upper" + col][1]
+        assert rest["Lower" + col][1] - cr["Lower" + col][1] <= fr.CHEEK_RAISE_MAX * height + 1e-9, col
+    # the eye stays clearly open (no wink): more than half its height at the middle
+    assert cr["LowerMid"][1] - cr["UpperMid"][1] > 0.5 * (rest["LowerMid"][1] - rest["UpperMid"][1])
 
 
 def test_sad_droops_the_outer_lid_and_angry_the_inner() -> None:
@@ -409,13 +445,29 @@ def test_blinks_key_only_the_blink_drives_and_the_overlays_are_gone() -> None:
         assert not re.search(rf'name="{gone}[LR]?"', rml), gone
     drives = {e.get("id") for e in root.iter("TranslationConstraint") if e.get("name") == "BlinkDrive"}
     assert len(drives) == 2 * 3 * 3  # two eyes x three columns x (vertex, in, out)
+    squash = {e.get("id") for e in root.iter("Node") if e.get("name") == "BlinkSquash"}
+    assert len(squash) == 2
     for anim in root.iter("LinearAnimation"):
         if anim.get("name") not in ("idle_blink", "blink_hold", "blink_once"):
             continue
         keyed = {(o.get("objectId"), p.get("property")) for o in anim.iter("KeyedObject") for p in o}
-        assert keyed == {(i, "strength") for i in drives}, anim.get("name")
-        vals = [float(k.get("value")) for k in anim.iter("KeyFrameDouble")]
-        assert min(vals) == 0.0 and max(vals) <= 1.0
+        assert keyed == {(i, "strength") for i in drives} | {(i, "scaleY") for i in squash}, anim.get("name")
+        for o in anim.iter("KeyedObject"):
+            vals = [float(k.get("value")) for k in o.iter("KeyFrameDouble")]
+            if o.get("objectId") in drives:
+                assert min(vals) == 0.0 and max(vals) <= 1.0
+            else:  # the eyeball squash follows the same keys: 1 open .. 1 - BLINK_SQUASH shut
+                assert max(vals) == 1.0 and min(vals) >= 1.0 - fr.BLINK_SQUASH
+
+
+def test_blink_squash_pivots_on_the_lower_lid_and_wraps_the_gaze() -> None:
+    assert fr.blink_squash(0.0) == 1.0 and fr.blink_squash(1.0) == pytest.approx(1.0 - fr.BLINK_SQUASH)
+    root = _rml()
+    for sq in (e for e in root.iter("Node") if e.get("name") == "BlinkSquash"):
+        assert float(sq.get("y")) + fr.EYE_FRAME_DY == pytest.approx(fr.BLINK_SQUASH_Y)
+        (pivot,) = list(sq)
+        assert pivot.get("name") == "BlinkSquashPivot" and float(pivot.get("y")) == -float(sq.get("y"))
+        assert [c.get("name") for c in pivot] == ["GazeM"]
 
 
 def test_generated_avatar_declares_the_v6_side_numbers() -> None:
@@ -541,3 +593,28 @@ def test_breath_lifts_the_shoulders_more_than_the_head_eased() -> None:
     assert fr.breath_lift(0.0) == (0.0, 0.0)
     assert fr.breath_lift(0.5)[0] == pytest.approx(shoulder / 2)  # smoothstep: soft at both ends
     assert fr.breath_lift(0.1)[0] < 0.05 * shoulder
+
+
+# ---- critic round 1b: fringe, brows, dimple (the generated file)
+
+def test_the_fringe_paints_over_the_brows_and_its_clumps_have_round_tips() -> None:
+    root = _rml()
+    order = [e.get("name") for e in root.iter() if e.get("name") in ("FringeFollowThrough", "TravelBrows")]
+    assert order == ["FringeFollowThrough", "TravelBrows"]  # first declared paints in front
+    locks = [e for e in root.iter("Shape") if re.fullmatch(r"Lock\d", e.get("name") or "")]
+    assert len(locks) == 9
+    for lock in locks:
+        path = lock.find("PointsPath")
+        assert path is not None and path.find("StraightVertex") is None, lock.get("name")  # no hard tip
+    # the brows sit on skin now: no outline stroke
+    for brow in (e for e in root.iter("Shape") if e.get("name") == "BrowShape"):
+        assert brow.find("Stroke") is None
+
+
+def test_the_dimpler_draws_a_corner_dent() -> None:
+    root = _rml()
+    dents = [e for e in root.iter("Shape") if e.get("name") in ("DimpleL", "DimpleR")]
+    assert len(dents) == 2
+    (x0, y0), k = fr.mouth_pose({})["CornerR"], 1
+    arc = fr.DIMPLE_ARC(x0, y0, k)
+    assert all(x > x0 for x, _ in arc) and arc[0][1] < y0 < arc[-1][1]  # a ")" just outside the corner

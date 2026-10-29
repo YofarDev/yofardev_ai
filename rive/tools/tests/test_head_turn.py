@@ -158,3 +158,18 @@ def test_contour_poses_are_history_free_formulas_of_yaw() -> None:
         assert all(set(fs) <= {r.COS, r.SIN} for _, fs in poly)
         assert r.eval_poly(poly, K) == pytest.approx(p - x, abs=0.01)
         assert r.eval_poly(poly, -K) == pytest.approx(m - x, abs=0.01)
+
+
+def test_fringe_parallax_moves_the_front_tips_more_than_the_temples() -> None:
+    front, temple = ht.fringe_parallax(100.0), ht.fringe_parallax(30.0)
+    assert r.eval_poly(front, 0.0) == 0.0
+    assert 15.0 < r.eval_poly(front, K) < 25.0  # ~0.4 x the depth's yaw travel at yaw +1
+    assert r.eval_poly(temple, K) < 0.4 * r.eval_poly(front, K)
+    assert r.eval_poly(front, -K) == pytest.approx(-r.eval_poly(front, K))
+
+
+def test_far_cheek_shade_shows_only_on_the_cheek_turning_away() -> None:
+    assert ht.far_cheek_opacity(0.0, 1.0) == 0.0 and ht.far_cheek_opacity(0.0, -1.0) == 0.0
+    assert ht.far_cheek_opacity(1.0, 1.0) == pytest.approx(ht.FAR_SHADE[3])  # right cheek, turning right
+    assert ht.far_cheek_opacity(1.0, -1.0) == 0.0  # the near cheek stays lit
+    assert ht.far_cheek_opacity(-0.5, -1.0) == pytest.approx(ht.FAR_SHADE[3] / 2)

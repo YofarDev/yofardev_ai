@@ -55,6 +55,10 @@ BROW_LIFT_PX = 3.0  # brows lift ~3.5 artboard px at eyeLeadPitch -1 (attentive,
 # fringe follow-through: tip travel per unit of lag is boosted at small lags and saturates at
 # +-1 (gain 1.7 - 0.7 |lag|: 1.42x at 0.4, unchanged at 1)
 FRINGE_LAG_GAIN = (1.7, 0.7)
+# fringe parallax (critic round 1: the fringe barely moved at 3/4): a clump hangs in front of the
+# forehead, so its tip travels FRINGE_PARALLAX x its own depth's yaw travel further than the art
+# does (root pinned under the cap): ~ +20 px at the centre tips at yaw +-1, little at the temples
+FRINGE_PARALLAX = 0.4
 # looking down (eyeLeadPitch < 0) drops the upper lid bones (M3: face_rig.LOOK_DOWN_PX)
 # hair follow-through: px of tip travel per unit of lag (the roots stay with the head)
 SIDE_LAG_PX, SIDE_LAG_PITCH_PX = 45.0, 20.0
@@ -404,6 +408,45 @@ def _face_ang(x: float, y: float) -> float:
     return a + 360 if a < -90 else a
 
 
+def fringe_parallax(z_tip: float) -> Poly:
+    """Extra screen-x travel of a fringe lock's tip under yaw (on top of the surface model)."""
+    return [(FRINGE_PARALLAX * z_tip, (r.SIN,))]
+
+
+# far-cheek shade (critic round 1, art bible §2: shadows move toward the ambient hue): at 3/4 the
+# cheek turning away darkens toward the night's cool ambient, a soft radial wash clipped by the face
+# that rides the cheek surface and fades in with the turn (0 at rest and on the near side)
+FAR_SHADE = ("34493E78", (497.0, 452.0), 40.0, 0.8)  # colour, art-space centre (right cheek), radius, peak
+
+
+def far_cheek_opacity(yaw: float, side: float) -> float:
+    """Cheek shade opacity (side -1 left, +1 right): peak x max(0, side x yaw) (the bind's formula)."""
+    return FAR_SHADE[3] * max(0.0, min(1.0, side * yaw))
+
+
+def far_cheek_shade(ht: HeadTurn, face: El, cheek_shade: El) -> list[El]:
+    """Mint both cheek shades last (no head-turn id moves), in front of CheekShade."""
+    colour, (x, y), rad_, _ = FAR_SHADE
+    d = ht.d
+    out = []
+    f = ht.rig.f
+    for t, cx, sgn in (("L", 2 * CX - x, -1.0), ("R", x, 1.0)):
+        sh = d("Shape", d("ClippingShape", sourceId=face.ref(), name="Clip"),
+               d("Ellipse", width=2 * rad_, height=2.8 * rad_, name="Path"),
+               d("Fill", d("RadialGradient", d("GradientStop", colorValue=colour, position=0.0),
+                           d("GradientStop", colorValue="00" + colour[2:], position=1.0),
+                           startX=0.0, startY=0.0, endX=rad_ * 1.2, endY=0.0), name="Fill"),
+               x=cx - HEAD_FRAME[0], y=y - HEAD_FRAME[1], name="FarCheekShade" + t)
+        ht.head.children.insert(ht.head.children.index(cheek_shade), sh)
+        ht.frames[id(sh)] = (cx, y)
+        w = ht.wrap(sh, (cx, y), mat(cx, face_z(cx, y)), pit(y, face_z(cx, y)))
+        w.add(ht.raw("yaw", "opacity", [f.val(0), f.op("+"), f.val(FAR_SHADE[3]), f.op("*"),
+                                        *f.fn("max", [f.val(0)], [f.val(sgn), f.op("*"),
+                                                                  *f.fn("min", [f.val(1)], f.inp())])]))
+        out.append(sh)
+    return out
+
+
 def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock_specs: list,
              parts: dict[str, object], anims: list[El]) -> None:
     # ---- bones: contour (section silhouettes), chin, forehead / crown, face interior grid
@@ -521,6 +564,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         g0, g1 = FRINGE_LAG_GAIN
         c = -zt * K_YAW / ln
         rot = poly_add(rot, [(c * g0, (r.tok("hairLagYaw"),)), (-c * g1, (r.tok("hairLagYaw"), tokabs("hairLagYaw")))])
+        rot = poly_add(rot, poly_scale(fringe_parallax(zt), -1.0 / ln))
         sy = poly_add([(1.0, ())], poly_scale(poly_add(pit(ty, zt), poly_scale(pit(ry, zr), -1.0)), 1.0 / ln))
         sy = poly_add(sy, [(-(zt - ZP) * K_PITCH / ln, (r.tok("hairLagPitch"),))])
         ht.wrap(parts[name], (rx, ry), d_root, pit(ry, zr), rot=rot, sy=sy)  # type: ignore[arg-type]
@@ -557,6 +601,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         bw = ht.wrap(brow, (bframe[0] + float(brow.attrs.get("x", 0.0)), bframe[1] + float(brow.attrs.get("y", 0.0))),
                      name="BrowLift" + t)
         bw.add(ht.raw("eyeLeadPitch", "y", ht.neg_part(float(bw.attrs["y"]), -BROW_LIFT_PX)))
+    far_cheek_shade(ht, parts["Face"], parts["CheekShade"])  # type: ignore[arg-type]
     ht.finish()
     for el in late_clips:  # last, so no earlier head-turn id moves
         el.children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
