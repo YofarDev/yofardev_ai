@@ -68,3 +68,41 @@ def test_lint_ignores_numbers_that_look_like_hex_but_reads_colour_keys() -> None
         ]
     )
     assert {p.split(":")[0] for p in lint_colours(rml, "livingRoom")} == {"3"}
+
+
+def test_scene_scripts_carry_flicker_rim_and_ambient() -> None:
+    assert {s: SCENES[s].flicker for s in SCENES} == {
+        "livingRoom": 0.15, "campfire": 1.0, "beach": 0.0, "deepSpace": 0.0,
+    }
+    assert all(s.ambient_amount == 0.35 and s.rim_intensity == 0.35 for s in SCENES.values())
+    assert SCENES["campfire"].key_xy == (-0.49, -0.872)
+
+
+def test_fit_colour_keeps_hue_and_meets_the_scene_caps() -> None:
+    out: str = art_bible.fit_colour("FF0B1026", "campfire")
+    h0, _, _ = art_bible.hsv("FF0B1026")
+    h1, s1, _ = art_bible.hsv(out)
+    assert s1 <= 0.55
+    assert abs(h1 - h0) * 360 <= 1.0
+    assert out.startswith("FF")
+
+
+def test_fit_colour_outputs_lint_clean() -> None:
+    import random
+
+    rng: random.Random = random.Random(7)
+    for scene in SCENES:
+        colours: list[str] = [
+            "FF" + "".join(f"{rng.randrange(256):02X}" for _ in range(3)) for _ in range(300)
+        ] + ["FF000000", "FF0000FF", "FFFF0000", "80FFE0A0", "FF010203"]
+        line: str = " ".join(
+            f'<SolidColor colorValue="{art_bible.fit_colour(c, scene)}"/>' for c in colours
+        )
+        assert lint_colours(line, scene) == [], scene
+
+
+def test_fit_colour_passes_accent_transparent_and_neutral_highlights_unchanged() -> None:
+    for scene, script in SCENES.items():
+        assert art_bible.fit_colour(script.accent, scene) == script.accent
+        assert art_bible.fit_colour("00123456", scene) == "00123456"
+        assert art_bible.fit_colour("FFFFFFFF", scene) == "FFFFFFFF"

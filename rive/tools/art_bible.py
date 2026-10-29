@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import colorsys
+import math
 import re
 import sys
 
@@ -88,6 +89,15 @@ class SceneScript:
     value: tuple[float, float]
     sat_cap: float
     times: dict[str, str]  # sky top colour per time of day (dawn, day, dusk, night)
+    flicker: float = 0.0  # firelight flicker of the key light (0 steady, 1 full campfire)
+    rim_intensity: float = 0.35  # rim light strength (the silhouette's back edge)
+    ambient_amount: float = 0.35  # how far the shadow side leans to the ambient hue
+
+    @property
+    def key_xy(self) -> tuple[float, float]:
+        """Direction toward the key light in viewer space (+x right, +y up), 3 digits: the
+        contract's `lightKeyX`/`lightKeyY` (M4 ruling 4) and the Dart `LightRig.keyX/keyY`."""
+        return round(math.cos(self.key_dir), 3), round(math.sin(self.key_dir), 3)
 
 
 SCENES: dict[str, SceneScript] = {
@@ -95,21 +105,25 @@ SCENES: dict[str, SceneScript] = {
         accent=TOKENS["livingRoomAccent"], key="FFFFD49A", key_dir=2.4, key_intensity=0.85,
         rim="FF9FB8E6", ambient="FF2C3346", fog="00000000", value=(0.07, 0.92), sat_cap=0.62,
         times={"dawn": "FF7A86B8", "day": "FF9CC4E4", "dusk": "FF5A4A78", "night": "FF1A1F38"},
+        flicker=0.15,
     ),
     "campfire": SceneScript(
         accent=TOKENS["campfireAccent"], key="FFFF9A4D", key_dir=4.2, key_intensity=1.0,
         rim="FF6F8FD8", ambient="FF141C2C", fog="3320304A", value=(0.03, 0.95), sat_cap=0.55,
         times={"dawn": "FF4A5A88", "day": "FF7FA9CF", "dusk": "FF3A2E5C", "night": "FF0A1424"},
+        flicker=1.0,
     ),
     "beach": SceneScript(
         accent=TOKENS["beachAccent"], key="FFFFC48A", key_dir=0.35, key_intensity=0.9,
         rim="FFFFE2C4", ambient="FF3E4F6A", fog="22FFD9C0", value=(0.10, 0.97), sat_cap=0.58,
         times={"dawn": "FFF0A98A", "day": "FF8CCBE0", "dusk": "FFE07A6A", "night": "FF16203A"},
+        flicker=0.0,
     ),
     "deepSpace": SceneScript(
         accent=TOKENS["deepSpaceAccent"], key="FFCDB8FF", key_dir=0.9, key_intensity=0.7,
         rim="FF7FE0FF", ambient="FF120E26", fog="00000000", value=(0.02, 0.95), sat_cap=0.70,
         times={"dawn": "FF120E26", "day": "FF120E26", "dusk": "FF120E26", "night": "FF070614"},
+        flicker=0.0,
     ),
 }
 
@@ -187,6 +201,52 @@ def lint_colours(rml: str, scene: str) -> list[str]:
             if s > script.sat_cap:
                 problems.append(f"{lineno}: {c} saturation {s:.2f} > cap {script.sat_cap:.2f}")
     return problems
+
+
+def fit_colour(argb: str, scene: str) -> str:
+    """The nearest colour that passes `lint_colours` for `scene` (M4 ruling 13).
+
+    Hue and alpha are kept; HSV value is clamped into the scene's range and saturation under
+    its cap. The accent, fully transparent colours and near-neutral highlights (saturation at
+    most HIGHLIGHT_SAT_MAX, which may exceed the value range) come back unchanged.
+    """
+    script = SCENES[scene]
+    c = argb.upper()
+    if len(c) == 6:
+        c = "FF" + c
+    if c[:2] == "00" or c == script.accent:
+        return c
+    h, s, v = hsv(c)
+    lo, hi = script.value
+    if s <= HIGHLIGHT_SAT_MAX and v >= lo:
+        return c
+    # Aim a hair inside the bounds so 8-bit rounding cannot push the result back out.
+    s2 = min(s, script.sat_cap - 0.004)
+    v2 = min(max(v, lo + 0.004), hi - 0.004)
+    if (s2, v2) == (s, v):
+        return c
+    def ok(argb8: str) -> bool:
+        _, so, vo = hsv(argb8)
+        return so <= script.sat_cap and lo <= vo and (vo <= hi or so <= HIGHLIGHT_SAT_MAX)
+
+    def hue_err(argb8: str) -> float:
+        d = abs(hsv(argb8)[0] - h)
+        return min(d, 1 - d)
+
+    # 8-bit rounding of a dark colour can turn the hue by a few degrees: search the 27
+    # neighbours of the rounded target for the passing one with the closest hue.
+    for _ in range(8):
+        base = [round(x * 255) for x in colorsys.hsv_to_rgb(h, s2, v2)]
+        cands = [
+            c[:2] + "".join(f"{min(255, max(0, base[i] + o[i])):02X}" for i in range(3))
+            for o in ((dr, dg, db) for dr in (-1, 0, 1) for dg in (-1, 0, 1) for db in (-1, 0, 1))
+        ]
+        good = [x for x in cands if ok(x)]
+        if good:
+            return min(good, key=lambda x: (round(hue_err(x), 4), x != cands[13]))
+        s2 -= 0.004
+        v2 = min(max(v2, lo + 0.008), hi - 0.008)
+    return cands[13]
 
 
 def main(argv: list[str]) -> int:
