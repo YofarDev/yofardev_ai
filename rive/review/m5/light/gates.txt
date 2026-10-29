@@ -1,0 +1,17 @@
+ok  history livingRoom: 0.02% of pixels differ (122 of 800000), max channel delta 1/255, 0 px above 1/255 (control: 0 px, max 1/255)
+ok  history campfire: 0.01% of pixels differ (120 of 800000), max channel delta 1/255, 0 px above 1/255 (control: 0 px, max 1/255)
+ok  history beach: 0.01% of pixels differ (110 of 800000), max channel delta 1/255, 0 px above 1/255 (control: 0 px, max 1/255)
+ok  history deepSpace: 0.02% of pixels differ (130 of 800000), max channel delta 1/255, 0 px above 1/255 (control: 0 px, max 1/255)
+ok  flicker seam: 0.06% of pixels differ (462 of 800000), max channel delta 13/255, 2 px above 1/255 (control: 2 px, max 13/255)
+ok  silhouette livingRoom yaw -1: 29923 px lit, 0 outside
+ok  silhouette livingRoom yaw 0: 29111 px lit, 0 outside
+ok  silhouette livingRoom yaw 1: 31278 px lit, 0 outside
+ok  silhouette campfire yaw -1: 18276 px lit, 0 outside
+ok  silhouette campfire yaw 0: 18683 px lit, 0 outside
+ok  silhouette campfire yaw 1: 17069 px lit, 0 outside
+ok  silhouette beach yaw -1: 31640 px lit, 0 outside
+ok  silhouette beach yaw 0: 28782 px lit, 0 outside
+ok  silhouette beach yaw 1: 28837 px lit, 0 outside
+ok  silhouette deepSpace yaw -1: 31744 px lit, 0 outside
+ok  silhouette deepSpace yaw 0: 30291 px lit, 0 outside
+ok  silhouette deepSpace yaw 1: 31347 px lit, 0 outside

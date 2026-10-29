@@ -2126,6 +2126,9 @@ artboard.children.extend(prop_anims.values())
 gesture_layer = next(c for c in sm.children if c.tag == "StateMachineLayer" and c.attrs.get("name") == "Gesture")
 sm.children.insert(sm.children.index(gesture_layer) + 1, tablet.layer(prop_anims))
 
+# ---- M5 Task 7: the key tints the cheek under the screen pool (ruling 7; M5 id range, after the head)
+light.key_cheek_tint(M5, face)
+
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 # the lids read eyeLeadPitch (contract: looking down drops the upper lids), which the head turn adds

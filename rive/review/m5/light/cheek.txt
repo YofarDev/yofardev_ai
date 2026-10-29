@@ -1,0 +1,7 @@
+M5 ruling 7: cheek-region flicker at the campfire rig (lightFlicker 1), box (338, 462, 362, 494) artboard px, 30 frames across one 2 s loop:
+M5: mean cheek colour (flicker minus steady) spans 11.4/255 over the loop (R -3.1..-0.1  G -23.3..-18.5  B -41.4..-30.0)
+M4: mean cheek colour (flicker minus steady) spans 5.4/255 over the loop (R -2.4..-0.1  G -5.6..-0.3  B -4.7..-0.3)
+ok  gate: M5 delta >= 10/255
+ok  silhouette campfire flicker 1 (tint on) yaw -1: 17772 px lit, 0 outside
+ok  silhouette campfire flicker 1 (tint on) yaw 0: 18078 px lit, 0 outside
+ok  silhouette campfire flicker 1 (tint on) yaw 1: 16500 px lit, 0 outside

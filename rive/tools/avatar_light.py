@@ -16,9 +16,13 @@ number maps straight onto a paint or a transform.
   the key, opacity 0.5 x `lightAmbientAmount` (gradient opacity).
 - Glasses glint: the lens glints take `lightKey` and slide `GLINT_SLIDE` px toward the key, each
   inside a `FirelightGlare` node.
+- Key tint (M5 ruling 7, `KeyCheekTint`, minted from the M5 range): the same pool in `lightKey`,
+  multiply-blended under `KeyCheek`, opacity `KEY_TINT x lightKeyIntensity x lightFlicker` (one
+  converter): the screen pool alone barely shows on bright skin, the multiply shifts its colour,
+  and only a flickering key (the campfire) tints the skin.
 - Flicker: a `Firelight` state-machine layer, a 1D view-model blend on `lightFlicker` between
-  `light_steady` (opacity 1) and `light_flicker` (noise 0.62-1.0 from three prime harmonics of
-  a 2.0 s loop, so the seam is exact).
+  `light_steady` (opacity 1) and `light_flicker` (noise 0.45-1.0, M4 0.62-1.0, from three prime
+  harmonics of a 2.0 s loop, so the seam is exact).
 - `lean`: the body tips toward the viewer about the shoulder line (perspective growth
   `LEAN_SCALE`, a small sink) and the head drops (`LEAN_HEAD_DROP` net at 1).
 """
@@ -57,15 +61,18 @@ RIM_W = round(LINES.interior * PX, 2)  # the rim band: interior weight, 3 bible 
 RIM_REACH = 150.0  # art px from a rim shape's origin to the gradient's lit end (shared converters)
 RIM_STOPS = (0.0, 0.5, 1.0)  # clear .. clear (key side and middle) .. rim (far side)
 KEY_CHEEK = (0.65, 0.35)  # opacity per unit key intensity, centre travel per unit key x/y (face widths)
+KEY_TINT = 1.0  # KeyCheekTint opacity per unit of lightKeyIntensity x lightFlicker (M5 ruling 7)
 FACE_W = 212.0  # art px (face outline x 294..506)
 CHEEK = (400.0, 437.0)  # art space: the cheek line between the two cheek blooms
+# the pool: a w x w circle squashed to h by the shape's scaleY, so the circular radial gradient fades to
+# clear at the whole rim (M5: a w x h ellipse cut the gradient at 0.2 alpha top and bottom, a hard edge)
 CHEEK_SIZE = (150.0, 120.0)
 AMBIENT_GAIN = 0.5
 AMBIENT_STOPS = (0.0, 0.45, 1.0)
 GLINT_SLIDE = 6.0  # art px toward the key at |lightKey| = 1
 
 FLICKER_FRAMES = 120  # 2.0 s at 60 fps
-FLICKER_RANGE = (0.62, 1.0)
+FLICKER_RANGE = (0.45, 1.0)  # M5 ruling 7 (M4: 0.62-1.0 read too steady on the cheek)
 FLICKER_HARMONICS = ((3, 0.5, 0.4), (5, 0.3, 2.1), (7, 0.2, 4.4))  # (cycles per loop, weight, phase)
 FLICKER_STEP = 3  # frames between keys
 
@@ -215,11 +222,43 @@ class AvatarLight:
         shape = d("Shape", self.bind("lightKeyX", "x", reach), self.bind("lightKeyY", "y", -reach),
                   self.bind("lightKeyIntensity", "opacity", k_op),
                   d("ClippingShape", sourceId=face.ref(), name="Clip"),
-                  d("Ellipse", width=w, height=h, name="Path"), d("Fill", grad, name="Fill"),
+                  d("Ellipse", width=w, height=w, name="Path"), d("Fill", grad, name="Fill"),
                   x=round(reach * kx, 3), y=round(-reach * ky, 3), opacity=round(k_op * _LR.key_intensity, 4),
-                  blendModeValue=SCREEN, name="KeyCheek")
+                  scaleY=round(h / w, 4), blendModeValue=SCREEN, name="KeyCheek")
         self.firelight = d("Node", shape, x=CHEEK[0] - head_frame[0], y=CHEEK[1] - head_frame[1], name="Firelight")
         return self.firelight
+
+    def key_cheek_tint(self, m5: Doc, face: El) -> El:
+        """KeyCheekTint (M5 ruling 7): the key pool again, multiply-blended and drawn under KeyCheek in
+        the Firelight node (so the flicker loop drives it too), opacity KEY_TINT x lightKeyIntensity x
+        lightFlicker. New elements mint from `m5`; the pool's position binds reuse KeyCheek's gains."""
+        _, k_xy = KEY_CHEEK
+        reach = k_xy * FACE_W
+        key = str(LIGHT_DEFAULTS["lightKey"][1])
+        kx, ky = _LR.key_xy
+        w, h = CHEEK_SIZE
+        f = Formulas(m5, self.path)
+        conv = m5("DataConverterFormula", f.val(KEY_TINT), f.op("*"), *f.inp(), f.op("*"), f.bound("lightFlicker"))
+        self.converters.append(conv)
+        grad = m5("RadialGradient",
+                  m5("GradientStop", m5("DataBindContext", sourcePathIds=self.path("lightKey"),
+                                         propertyKey=KEYS["stopColor"]), colorValue=key, position=0.0),
+                  m5("GradientStop", colorValue="00" + key[2:], position=1.0),
+                  startX=0.0, startY=0.0, endX=w / 2, endY=0.0)
+        shape = m5("Shape",
+                   m5("DataBindContext", sourcePathIds=self.path("lightKeyX"), propertyKey=KEYS["x"],
+                      converterId=self.gain(reach).ref()),
+                   m5("DataBindContext", sourcePathIds=self.path("lightKeyY"), propertyKey=KEYS["y"],
+                      converterId=self.gain(-reach).ref()),
+                   m5("DataBindContext", sourcePathIds=self.path("lightKeyIntensity"), propertyKey=KEYS["opacity"],
+                      converterId=conv.ref()),
+                   m5("ClippingShape", sourceId=face.ref(), name="Clip"),
+                   m5("Ellipse", width=w, height=w, name="Path"), m5("Fill", grad, name="Fill"),
+                   x=round(reach * kx, 3), y=round(-reach * ky, 3), scaleY=round(h / w, 4),
+                   opacity=round(KEY_TINT * _LR.key_intensity * _LR.flicker, 4), blendModeValue=MULTIPLY,
+                   name="KeyCheekTint")
+        self.firelight.children.append(shape)  # first child paints in front: the tint sits under KeyCheek
+        return shape
 
     def ambient_wash(self, face: El) -> El:
         d = self.d

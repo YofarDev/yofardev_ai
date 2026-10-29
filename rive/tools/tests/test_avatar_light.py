@@ -55,3 +55,51 @@ def test_contract_scene_vm_matches_the_scene_generator() -> None:
         assert {n: t for n, t, _ in gen} == {n: c["scene_vm_props"][n] for n in names}
         want = {**check_contract.scene_light_defaults(sid), "rain": 0.0}
         assert {n: v for n, _, v in gen} == want
+
+
+def _avatar_rml() -> "ET.Element":
+    import xml.etree.ElementTree as ET
+    return ET.parse(Path(__file__).resolve().parents[2] / "avatar" / "avatar.rml").getroot()
+
+
+def test_flicker_reaches_down_to_045() -> None:
+    """M5 ruling 7: the loop's range is 0.45-1.0 at lightFlicker 1 (M4: 0.62-1.0)."""
+    vals = [al.flicker(f) for f in range(al.FLICKER_FRAMES)]
+    assert al.FLICKER_RANGE == (0.45, 1.0)
+    assert min(vals) <= 0.46 and max(vals) >= 0.99
+
+
+def test_key_cheek_tint_multiplies_the_key_under_the_screen_pool() -> None:
+    """M5 ruling 7: KeyCheekTint is the key pool again, multiply-blended, face-clipped, drawn under
+    KeyCheek inside the Firelight node (the flicker loop drives it), opacity KEY_TINT x
+    lightKeyIntensity x lightFlicker through one converter; minted from the M5 range."""
+    root = _avatar_rml()
+    by_id = {e.get("id"): e for e in root.iter() if e.get("id")}
+    fire = next(e for e in root.iter("Node") if e.get("name") == "Firelight")
+    names = [c.get("name") for c in fire]
+    assert names.index("KeyCheek") < names.index("KeyCheekTint")  # first child paints in front
+    tint = next(c for c in fire if c.get("name") == "KeyCheekTint")
+    assert int(tint.get("id").split(":")[1]) >= 1_000_000
+    assert tint.get("blendModeValue") == str(al.MULTIPLY)
+    face = next(e for e in root.iter("Shape") if e.get("name") == "Face")
+    assert tint.find("ClippingShape").get("sourceId") == face.get("id")
+    op = next(b for b in tint.findall("DataBindContext") if b.get("propertyKey") == str(al.KEYS["opacity"]))
+    conv = by_id[op.get("converterId")]
+    vals = [float(t.get("operationValue")) for t in conv.findall("FormulaTokenValue")]
+    assert al.KEY_TINT in vals
+    bound = [b for t in conv.findall("FormulaTokenValue") for b in t.findall("DataBindContext")]
+    assert len(bound) == 1  # lightFlicker, read inside the formula (history-free: no state)
+    stop = tint.find("Fill/RadialGradient/GradientStop/DataBindContext")
+    assert stop is not None and stop.get("propertyKey") == str(al.KEYS["stopColor"])  # lightKey colour
+
+
+def test_key_pools_fade_to_clear_at_their_whole_rim() -> None:
+    """The circular radial gradient must reach clear at the ellipse's rim: a w x w circle squashed
+    by scaleY (a w x h ellipse cut it at 20 % alpha top and bottom)."""
+    root = _avatar_rml()
+    for name in ("KeyCheek", "KeyCheekTint"):
+        sh = next(e for e in root.iter("Shape") if e.get("name") == name)
+        el = sh.find("Ellipse")
+        grad = sh.find("Fill/RadialGradient")
+        assert float(el.get("width")) == float(el.get("height")) == 2 * float(grad.get("endX")), name
+        assert float(sh.get("scaleY")) == al.CHEEK_SIZE[1] / al.CHEEK_SIZE[0]

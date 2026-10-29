@@ -20,6 +20,9 @@
                                                            # -1/0/1, campfire flicker strip + GIF, seam,
                                                            # history and silhouette gates (M4, exit 1 on
                                                            # a failed gate) -> rive/review/m4/light/
+    uv run rive/tools/review_face.py light_m5 [m4.rml]     # M5 firelight on the cheek: cheek flicker numbers
+                                                           # (M5, M4) + the light sheet and gates -> m5/light/
+    uv run rive/tools/review_face.py cheek                 # just the cheek flicker delta (/255)
 
 Every cell is a real CLI render of rive/avatar driven through AvatarVM numbers exactly as the app
 writes them (FaceFrame -> au*, lipTuck, tongueUp, roll, breath, pitch += nodPitch, autoBlink,
@@ -951,6 +954,82 @@ def light_gates() -> None:
         raise SystemExit(f"{bad} light gate(s) failed")
 
 
+# ------------------------------------------------------------------ firelight on the cheek (M5 ruling 7)
+
+M5_LIGHT_OUT = ROOT / "rive" / "review" / "m5" / "light"
+# artboard box on the key-side (viewer's left) lower cheek, inside the face at yaw 0 (>= 5 px from the
+# outline, left of the mouth corner): the campfire key comes from low left, so its pool lands here
+CHEEK_BOX = (338, 462, 362, 494)
+CHEEK_FRAMES = 30  # renders across one 120-frame flicker loop (every 4 frames)
+
+
+def cheek_flicker(proj: Path = PROJ, tag: str = "") -> tuple[float, list[tuple[float, float, float]]]:
+    """Campfire rig: the mean RGB of CHEEK_BOX on CHEEK_FRAMES frames across one flicker loop, each
+    minus the same frame at lightFlicker 0 (steady light: the idle breath and sway cancel, only the
+    flicker's own change is left). Returns (largest channel range of that difference over the loop,
+    in /255: the cheek colour between the flicker's min and max frames; the per-frame differences)."""
+    fl = {"autoBlink": "false", **rig_data("campfire", 1.0)}
+    jobs = [(TMP / "cheek" / f"{tag}{w}{k:02d}.png", {**fl, "lightFlicker": v}, SETTLE + 4 * k)
+            for k in range(CHEEK_FRAMES) for w, v in (("f", "1"), ("s", "0"))]
+    with ThreadPoolExecutor(WORKERS) as ex:
+        pngs = list(ex.map(lambda j: cli(j[0], j[1], j[2], proj=proj), jobs))
+
+    def mean(p: Path) -> tuple[float, float, float]:
+        im = Image.open(p).convert("RGB").crop(CHEEK_BOX)
+        n = im.width * im.height
+        return tuple(sum(px[c] for px in im.get_flattened_data()) / n for c in range(3))  # type: ignore[return-value]
+
+    diffs = []
+    for k in range(CHEEK_FRAMES):
+        on, st = mean(pngs[2 * k]), mean(pngs[2 * k + 1])
+        diffs.append((on[0] - st[0], on[1] - st[1], on[2] - st[2]))
+    return max(max(d[c] for d in diffs) - min(d[c] for d in diffs) for c in range(3)), diffs
+
+
+def tint_silhouette() -> list[str]:
+    """The light sheet's silhouette gate runs at flicker 0, where KeyCheekTint is 0: the same gate at
+    the campfire rig with full flicker, on the loop's brightest frame (frame 45), yaw -1 / 0 / 1."""
+    out = []
+    for yaw in ("-1", "0", "1"):
+        rig = {"autoBlink": "false", **rig_data("campfire", 1.0), "yaw": yaw}
+        on = cli(TMP / "tint_sil" / f"on_{yaw}.png", rig, 46 + 120)
+        off = cli(TMP / "tint_sil" / f"off_{yaw}.png", {**rig, **DARK}, 46 + 120)
+        diff = ImageChops.difference(Image.open(on).convert("RGB"), Image.open(off).convert("RGB")).convert("L")
+        lit = diff.point(lambda v: 255 if v > 2 else 0)
+        n_out = sum(1 for v in ImageChops.subtract(lit, _silhouette(off)).get_flattened_data() if v)
+        n_lit = sum(1 for v in lit.get_flattened_data() if v)
+        out.append(f"{'ok ' if n_out == 0 else 'BAD'} silhouette campfire flicker 1 (tint on) yaw {yaw}: "
+                   f"{n_lit} px lit, {n_out} outside")
+    return out
+
+
+def light_m5(m4_rml: Path | None = None) -> None:
+    """M5 Task 7 evidence -> rive/review/m5/light/: the M4 light sheet, flicker strip / GIF and gates
+    re-rendered, plus the cheek flicker numbers (M5 and, with `m4_rml`, M4). Exit 1 on a failed light
+    gate or a cheek delta under 10/255."""
+    global LIGHT_OUT
+    LIGHT_OUT = M5_LIGHT_OUT
+    lines = ["M5 ruling 7: cheek-region flicker at the campfire rig (lightFlicker 1), box "
+             f"{CHEEK_BOX} artboard px, {CHEEK_FRAMES} frames across one 2 s loop:"]
+    rows = [("M5", PROJ)] + ([("M4", variant("plain", m4_rml, "_m4"))] if m4_rml else [])
+    delta_m5 = 0.0
+    for tag, proj in rows:
+        delta, means = cheek_flicker(proj, tag)
+        rng = "  ".join(f"{c} {min(m[i] for m in means):+.1f}..{max(m[i] for m in means):+.1f}"
+                        for i, c in enumerate("RGB"))
+        lines.append(f"{tag}: mean cheek colour (flicker minus steady) spans {delta:.1f}/255 over the loop ({rng})")
+        if tag == "M5":
+            delta_m5 = delta
+    lines.append(f"{'ok ' if delta_m5 >= 10 else 'BAD'} gate: M5 delta >= 10/255")
+    lines += tint_silhouette()
+    M5_LIGHT_OUT.mkdir(parents=True, exist_ok=True)
+    (M5_LIGHT_OUT / "cheek.txt").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines))
+    light()
+    if any(ln.startswith("BAD") for ln in lines):
+        raise SystemExit("a cheek gate failed")
+
+
 if __name__ == "__main__":
     what = sys.argv[1:] or ["sheets"]
     if what[0] == "sheets":
@@ -967,6 +1046,10 @@ if __name__ == "__main__":
         yaw_sweep(Path(what[1]) if len(what) > 1 else None)
     elif what[0] == "gates":
         gates()
+    elif what[0] == "light_m5":
+        light_m5(Path(what[1]) if len(what) > 1 else None)
+    elif what[0] == "cheek":
+        print(cheek_flicker()[0])
     elif what[0] == "light":
         light_row(what[1]) if len(what) > 1 else light()
     elif what[0] == "speech":
