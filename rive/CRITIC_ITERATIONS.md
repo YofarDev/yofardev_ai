@@ -164,3 +164,18 @@ Speech:
    eased rebounds would need asymmetric AUs and a little noise.
 8. The blink is a cross-fade of lash strokes, not a lid sweep. Plosives have no compression or
    release pop; the upper-teeth edge has a V notch; the interior colour is banded.
+
+## avatar face and speech (M3)
+
+29 October 2026 (`claude/moonshot-m3-42d35b`). Same method and gate as M2 (M3 plan ruling 9):
+a fresh independent opus critic per round, given only the evidence, the art-bible rubric and the
+brief (Wow #1 without the firelight); face ≥ 9.0 and speech ≥ 9.0, at most 6 rounds. Evidence adds
+the per-side AU sheet, the f/v–s–th–pp sheet at phone size, the blink strip, the outlined yaw sheet
+and seven text-aligned speech traces (the three M2 sentences plus the four `test/fixtures/speech`
+WAVs, one in French). Regenerate with `tool/face_speech_trace_test.dart` +
+`uv run rive/tools/review_face.py`. Round 1's critic was harsher than M2's last (it scored the
+same structural areas M2 left open lower), so the M2 and M3 numbers are not on one scale.
+
+| Round | Face | Speech | Main issues |
+|---|---:|---:|---|
+| 1 | 6.8 | 6.5 | lids occlude, f/v reads at phone size, closures land and hold, blinks fall in pauses, per-side AUs behave; still: the jaw drop leaves the chin in place (open mouths clipped by the face, kissing the jawline), a thick faceted lip ring on the rounded shapes only, hard fringe spikes and brows crossing them, iris stubs mid-blink, cheekRaise closes the eye, noseWrinkle and dimpler invisible, pp ≈ sil and kk ≈ aa; no settle at the full stop (the mouth snaps shut then freezes), a 200 ms gasp of a breath with the lips re-closing before the audio, a question brow no bigger than a stress, metronomic square nods and plateau brows, double lip outlines in cross-fades, no pre-rounding or oh→ou glide, th without tongue in speech, one-frame jaw spikes. Evidence bugs: strips unlabelled, audio lane empty on 16 kHz WAVs |
