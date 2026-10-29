@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
+import '../../../../../core/models/avatar_mood.dart';
 import '../../../../../core/models/performance/performance.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../../talking/talking.dart';
@@ -31,11 +32,12 @@ import '../../bloc/avatar_state.dart';
 /// motion); `MediaQuery.disableAnimationsOf` drives the solver's reduce-motion
 /// mode.
 ///
-/// Face (contract v5): a [FacePerformer], stepped by the same ticker, writes
-/// the 14 `au*` numbers, `lipTuck`, `tongueUp`, `roll`, `breath`, `autoBlink`
-/// and the `blink` trigger, and adds its nod to `pitch`; `mouth` stays 0.
-/// Without a performer (lab, tests) the view writes the current mood's AU
-/// preset and keeps driving `mouth` from [TalkingState].
+/// Face (contract v6): a [FacePerformer], stepped by the same ticker, writes
+/// the 14 `au*` numbers, their 14 per-side `au<Name>L` / `au<Name>R`
+/// offsets, `lipTuck`, `tongueUp`, `roll`, `breath`, `autoBlink` and the
+/// `blink` trigger, and adds its nod to `pitch`; `mouth` stays 0. Without a
+/// performer (lab, tests) the view writes the current mood's AU preset and
+/// side offsets and keeps driving `mouth` from [TalkingState].
 ///
 /// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped].
 ///
@@ -69,6 +71,20 @@ class RiveAvatarView extends StatefulWidget {
 
   /// Called when the upper-body gesture finishes (`gesture_done`).
   final VoidCallback? onGestureDone;
+
+  /// The settled face of [mood] (its AU preset and side offsets), written
+  /// when there is no performer.
+  @visibleForTesting
+  static FaceFrame staticFace(AvatarMood mood) {
+    final ({ActionUnitSides left, ActionUnitSides right}) sides = sidesForMood(
+      mood,
+    );
+    return FaceFrame(
+      au: actionUnitsForMood(mood),
+      left: sides.left,
+      right: sides.right,
+    );
+  }
 
   @override
   State<RiveAvatarView> createState() => _RiveAvatarViewState();
@@ -295,8 +311,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   }
 
   /// The face of the current mood, for a view without a performer.
-  FaceFrame _staticFace() =>
-      FaceFrame(au: actionUnitsForMood(widget.avatarState.mood));
+  FaceFrame _staticFace() => RiveAvatarView.staticFace(widget.avatarState.mood);
 
   /// Writes [face] through the face writer (it skips unchanged numbers and
   /// fires `blink` once per new blink serial).

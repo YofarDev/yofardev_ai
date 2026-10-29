@@ -76,6 +76,52 @@ abstract final class AvatarRiveContract {
     propAuDimpler,
   ];
 
+  // Contract v6: signed per-side offsets (−1..1) for seven AUs, added to the
+  // symmetric AU on the viewer's left (`L`) or right (`R`) side; the file
+  // clamps the sum to 0..1.
+  static const String propAuBrowInnerUpL = 'auBrowInnerUpL';
+  static const String propAuBrowInnerUpR = 'auBrowInnerUpR';
+  static const String propAuBrowOuterUpL = 'auBrowOuterUpL';
+  static const String propAuBrowOuterUpR = 'auBrowOuterUpR';
+  static const String propAuBrowLowerL = 'auBrowLowerL';
+  static const String propAuBrowLowerR = 'auBrowLowerR';
+  static const String propAuLidTightenL = 'auLidTightenL';
+  static const String propAuLidTightenR = 'auLidTightenR';
+  static const String propAuCheekRaiseL = 'auCheekRaiseL';
+  static const String propAuCheekRaiseR = 'auCheekRaiseR';
+  static const String propAuLipCornerPullL = 'auLipCornerPullL';
+  static const String propAuLipCornerPullR = 'auLipCornerPullR';
+  static const String propAuLipCornerDepressL = 'auLipCornerDepressL';
+  static const String propAuLipCornerDepressR = 'auLipCornerDepressR';
+
+  /// The 7 viewer's-left offsets, in `ActionUnitSides` field order.
+  static const List<String> actionUnitLeftProps = <String>[
+    propAuBrowInnerUpL,
+    propAuBrowOuterUpL,
+    propAuBrowLowerL,
+    propAuLidTightenL,
+    propAuCheekRaiseL,
+    propAuLipCornerPullL,
+    propAuLipCornerDepressL,
+  ];
+
+  /// The 7 viewer's-right offsets, in `ActionUnitSides` field order.
+  static const List<String> actionUnitRightProps = <String>[
+    propAuBrowInnerUpR,
+    propAuBrowOuterUpR,
+    propAuBrowLowerR,
+    propAuLidTightenR,
+    propAuCheekRaiseR,
+    propAuLipCornerPullR,
+    propAuLipCornerDepressR,
+  ];
+
+  /// All 14 v6 side offsets: the left ones, then the right ones.
+  static const List<String> actionUnitSideProps = <String>[
+    ...actionUnitLeftProps,
+    ...actionUnitRightProps,
+  ];
+
   // Enum values, in contract order. On the SM-input fallback an enum property
   // becomes a number: its index in these lists.
   static const List<String> moodValues = <String>[
@@ -157,6 +203,10 @@ abstract final class AvatarRiveContract {
   /// Range of every `au*` number, `lipTuck`, `tongueUp` and `breath`.
   static const double faceMin = 0;
   static const double faceMax = 1;
+
+  /// Range of the v6 `au<Name>L` / `au<Name>R` side offsets.
+  static const double sideMin = -1;
+  static const double sideMax = 1;
 
   /// Range of `roll`.
   static const double rollMin = -1;

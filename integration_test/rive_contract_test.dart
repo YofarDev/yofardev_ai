@@ -75,6 +75,7 @@ void main() {
         AvatarRiveContract.propEyeLeadYaw,
         AvatarRiveContract.propEyeLeadPitch,
         ...AvatarRiveContract.actionUnitProps,
+        ...AvatarRiveContract.actionUnitSideProps,
         AvatarRiveContract.propLipTuck,
         AvatarRiveContract.propTongueUp,
         AvatarRiveContract.propRoll,
@@ -144,6 +145,23 @@ void main() {
         expect(n!.value, 0, reason: name);
         n.value = 1;
         expect(n.value, 1, reason: name);
+        n.value = 0;
+      }
+    });
+
+    test('v6 side offsets are 14 numbers, default 0, range -1..1', () {
+      expect(AvatarRiveContract.actionUnitSideProps, hasLength(14));
+      for (final String name in AvatarRiveContract.actionUnitSideProps) {
+        final ViewModelInstanceNumber? n = vmi.number(name);
+        expect(n, isNotNull, reason: '$name is not a VM number');
+        expect(n!.value, 0, reason: name);
+        for (final double v in <double>[
+          AvatarRiveContract.sideMin,
+          AvatarRiveContract.sideMax,
+        ]) {
+          n.value = v;
+          expect(n.value, v, reason: name);
+        }
         n.value = 0;
       }
     });

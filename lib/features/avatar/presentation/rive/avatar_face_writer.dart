@@ -9,10 +9,12 @@ abstract interface class AvatarVmSink {
   void fireTrigger(String name);
 }
 
-/// Writes [FaceFrame]s to `AvatarVM` (contract v5): the 14 `au*` numbers,
-/// `lipTuck`, `tongueUp`, `roll` and `breath` when they move by more than
-/// [epsilon], `autoBlink` when it flips, and the `blink` trigger once per new
-/// blink serial (never for the serial seen on the first write).
+/// Writes [FaceFrame]s to `AvatarVM` (contract v6): the 14 `au*` numbers,
+/// the 14 per-side `au<Name>L` / `au<Name>R` offsets ([FaceFrame.left] and
+/// [FaceFrame.right]), `lipTuck`, `tongueUp`, `roll` and `breath` when they
+/// move by more than [epsilon], `autoBlink` when it flips, and the `blink`
+/// trigger once per new blink serial (never for the serial seen on the first
+/// write).
 class AvatarFaceWriter {
   AvatarFaceWriter(this._sink);
 
@@ -53,6 +55,8 @@ class AvatarFaceWriter {
     _number(AvatarRiveContract.propAuLipPress, a.lipPress, force);
     _number(AvatarRiveContract.propAuJawDrop, a.jawDrop, force);
     _number(AvatarRiveContract.propAuDimpler, a.dimpler, force);
+    _sides(AvatarRiveContract.actionUnitLeftProps, face.left, force);
+    _sides(AvatarRiveContract.actionUnitRightProps, face.right, force);
     _number(AvatarRiveContract.propLipTuck, face.lipTuck, force);
     _number(AvatarRiveContract.propTongueUp, face.tongueUp, force);
     _number(AvatarRiveContract.propRoll, face.roll, force);
@@ -66,6 +70,17 @@ class AvatarFaceWriter {
       _sink.fireTrigger(AvatarRiveContract.propBlinkTrigger);
     }
     _blinkSerial = face.blinkSerial;
+  }
+
+  /// Writes one side's offsets to [names] (`ActionUnitSides` field order).
+  void _sides(List<String> names, ActionUnitSides s, bool force) {
+    _number(names[0], s.browInnerUp, force);
+    _number(names[1], s.browOuterUp, force);
+    _number(names[2], s.browLower, force);
+    _number(names[3], s.lidTighten, force);
+    _number(names[4], s.cheekRaise, force);
+    _number(names[5], s.lipCornerPull, force);
+    _number(names[6], s.lipCornerDepress, force);
   }
 
   void _number(String name, double value, bool force) {

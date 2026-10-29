@@ -1,16 +1,31 @@
-// Face and speech traces for the art critic (moonshot M2), driven by the real
-// speech analyzer and FacePerformer at 60 fps. It runs under `flutter test`
-// (the performer reaches Flutter through the talking barrel); arguments come
-// from the environment and the JSON goes to FACE_OUT:
+// Face and speech traces for the art critic (moonshot M2/M3), driven by the
+// real speech analyzer and FacePerformer at 60 fps. It runs under
+// `flutter test` (the performer reaches Flutter through the talking barrel);
+// arguments come from the environment and the JSON goes to FACE_OUT:
 //
 //   FACE_TRACE=presets FACE_OUT=out.json flutter test tool/face_speech_trace_test.dart
 //   FACE_TRACE=speech FACE_WAV=x.wav FACE_TEXT="..." [FACE_MOOD=happy] \
+//     [FACE_LANG=fr] FACE_OUT=out.json flutter test tool/face_speech_trace_test.dart
+//
+// FACE_TEXT is the sentence the WAV says: the analyzer aligns its phonemes
+// (text-informed, in FACE_LANG: `en` by default, `fr`, or a locale tag) to
+// the audio, falling back to the audio classifier when they do not match.
+// The `say` fixtures (commands in test/fixtures/speech/README.md) are ready
+// inputs, e.g.:
+//
+//   FACE_TRACE=speech FACE_WAV=test/fixtures/speech/fine_view.wav \
+//     FACE_TEXT="A fine view of five vines." FACE_OUT=out.json \
+//     flutter test tool/face_speech_trace_test.dart
+//   FACE_TRACE=speech FACE_WAV=test/fixtures/speech/bonjour.wav \
+//     FACE_TEXT="Bonjour, comment allez-vous ?" FACE_LANG=fr \
 //     FACE_OUT=out.json flutter test tool/face_speech_trace_test.dart
 //
 // speech: 0.5 s of the mood alone, the sentence (playback position = time
 // since its start), then 1 s after it ends: the timeline and one face frame
 // per 1/60 s. presets: the settled face of every mood, and every viseme's
-// mouth through the speech merge at a neutral mood.
+// mouth through the speech merge at a neutral mood. Every face frame carries
+// the 14 AUs (`au`), the contract v6 per-side offsets (`left` and `right`,
+// the viewer's) and the scalars (FaceFrame.toJson).
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -73,6 +88,7 @@ void main() {
               env['FACE_WAV']!,
               env['FACE_TEXT']!,
               AvatarMood.values.byName(env['FACE_MOOD'] ?? 'neutral'),
+              env['FACE_LANG'] ?? 'en',
             );
       File(out!).writeAsStringSync(jsonEncode(json));
     },
@@ -86,11 +102,13 @@ Future<Map<String, Object>> _speech(
   String wav,
   String text,
   AvatarMood mood,
+  String language,
 ) async {
   final Uint8List bytes = await File(wav).readAsBytes();
   final SpeechTimeline timeline = const SpeechAnalyzer().analyze(
     WavPcm.decode(bytes),
     text: text,
+    language: language,
   );
 
   final _Harness h = _Harness()..mood(mood);
@@ -135,6 +153,7 @@ Future<Map<String, Object>> _speech(
     'fps': _fps,
     'lead': lead / _fps,
     'text': text,
+    'language': language,
     'mood': mood.name,
     'timeline': <String, Object>{
       'duration': timeline.duration.inMilliseconds,

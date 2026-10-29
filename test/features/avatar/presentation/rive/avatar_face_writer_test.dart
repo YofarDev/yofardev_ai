@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/face_frame.dart';
+import 'package:yofardev_ai/features/avatar/domain/models/performance_intent.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/face_performer.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_face_writer.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_avatar_view.dart';
+import 'package:yofardev_ai/features/talking/talking.dart';
 
 class _RecordingSink implements AvatarVmSink {
   final Map<String, double> numbers = <String, double>{};
@@ -30,10 +37,11 @@ void main() {
     writer = AvatarFaceWriter(sink);
   });
 
-  test('a forced write sets every v5 face property and no blink', () {
+  test('a forced write sets every v6 face property and no blink', () {
     writer.write(const FaceFrame(blinkSerial: 3), force: true);
     expect(sink.numbers.keys, <String>{
       ...AvatarRiveContract.actionUnitProps,
+      ...AvatarRiveContract.actionUnitSideProps,
       AvatarRiveContract.propLipTuck,
       AvatarRiveContract.propTongueUp,
       AvatarRiveContract.propRoll,
@@ -62,6 +70,74 @@ void main() {
     expect(sink.calls, <String>['bool autoBlink=false', 'trigger blink']);
   });
 
+  test('side offsets go to the viewer\'s L and R names, signed', () {
+    writer.write(
+      const FaceFrame(
+        left: ActionUnitSides(browLower: -0.4, lipCornerDepress: 0.2),
+        right: ActionUnitSides(cheekRaise: 0.7),
+      ),
+      force: true,
+    );
+    expect(sink.numbers[AvatarRiveContract.propAuBrowLowerL], -0.4);
+    expect(sink.numbers[AvatarRiveContract.propAuLipCornerDepressL], 0.2);
+    expect(sink.numbers[AvatarRiveContract.propAuCheekRaiseR], 0.7);
+    expect(sink.numbers[AvatarRiveContract.propAuCheekRaiseL], 0);
+    expect(sink.numbers[AvatarRiveContract.propAuBrowLowerR], 0);
+  });
+
+  test('side offsets skip sub-epsilon changes like the AUs', () {
+    writer.write(const FaceFrame(), force: true);
+    sink.calls.clear();
+    writer.write(const FaceFrame(right: ActionUnitSides(browOuterUp: 0.0008)));
+    expect(sink.calls, isEmpty);
+    writer.write(const FaceFrame(right: ActionUnitSides(browOuterUp: -0.3)));
+    expect(sink.calls, <String>['number auBrowOuterUpR']);
+  });
+
+  test('the thinking mood lifts the viewer\'s right outer brow (static)', () {
+    writer.write(RiveAvatarView.staticFace(AvatarMood.thinking), force: true);
+    expect(
+      sink.numbers[AvatarRiveContract.propAuBrowOuterUpR],
+      closeTo(0.35, 1e-9),
+    );
+    expect(
+      sink.numbers[AvatarRiveContract.propAuBrowLowerL],
+      closeTo(0.25, 1e-9),
+    );
+    expect(sink.numbers[AvatarRiveContract.propAuBrowOuterUpL], 0);
+  });
+
+  test('the thinking mood lifts the right outer brow (performer)', () async {
+    final StreamController<PerformanceIntent> intents =
+        StreamController<PerformanceIntent>.broadcast(sync: true);
+    final StreamController<PlaybackEvent> playback =
+        StreamController<PlaybackEvent>.broadcast(sync: true);
+    final FacePerformer performer = FacePerformer(
+      intents: intents.stream,
+      playback: playback.stream,
+      speechPosition: () => null,
+    );
+    addTearDown(() async {
+      await performer.dispose();
+      await intents.close();
+      await playback.close();
+    });
+    writer.write(performer.frame, force: true);
+    intents.add(
+      PerformanceIntent(
+        emotion: emotionForMood(AvatarMood.thinking),
+        face: actionUnitsForMood(AvatarMood.thinking),
+      ),
+    );
+    for (int i = 0; i < 120; i++) {
+      writer.write(performer.step(const Duration(microseconds: 16667)));
+    }
+    expect(
+      sink.numbers[AvatarRiveContract.propAuBrowOuterUpR],
+      closeTo(0.35, 0.02),
+    );
+  });
+
   test('after a reset the next write is complete and fires no stale blink', () {
     writer.write(const FaceFrame(blinkSerial: 1), force: true);
     writer.reset();
@@ -69,7 +145,7 @@ void main() {
     writer.write(const FaceFrame(blinkSerial: 5));
     expect(
       sink.calls.where((String c) => c.startsWith('number')),
-      hasLength(18),
+      hasLength(32),
     );
     expect(sink.calls.where((String c) => c.startsWith('trigger')), isEmpty);
   });
