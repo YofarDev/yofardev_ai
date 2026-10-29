@@ -344,7 +344,9 @@ def gates() -> None:
     different yaw / pitch history leaves a few dozen antialiasing pixels 1/255 apart (16-63 px; the
     pre-Task-6 file shows 23-48 px on the same captures: a renderer artefact, not a pose difference;
     even yaw 1 from the start vs yaw 1 set at frame 20 does it), so they pass when no channel
-    differs by more than 1."""
+    differs by more than 1. Since the jaw drives the outline bones (M3 critic round 1) every pose
+    goes through them, so the same 1/255 tolerance applies to every history gate; clamp gates stay
+    exact."""
     presets = json.loads((DATA / "presets.json").read_text())
     names = sorted({k for f in [*presets["moods"].values(), *presets["visemes"].values()]
                     for k in frame_data(f)} | {au(n, t) for n in SIDED for t in ("L", "R")})
@@ -396,7 +398,7 @@ def gates() -> None:
     bad = 0
     for (tag, cmp), j in zip(res, jobs):
         same = cmp.startswith("0.00% of pixels differ (0 of")
-        if tag.startswith("turn") and not same:
+        if "history" in tag and not same:
             delta = max(ImageChops.difference(Image.open(j[1]).convert("RGB"), Image.open(j[2]).convert("RGB"))
                         .getextrema(), key=lambda e: e[1])[1]
             same = delta <= 1
