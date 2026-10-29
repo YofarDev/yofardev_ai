@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/scene_rain_writer.dart';
@@ -51,23 +51,83 @@ void main() {
     expect(writes, hasLength(3));
   });
 
-  test('a scene switch while raining writes the rain to every new file', () {
-    final WorldStateService world = WorldStateService()..setRain(1);
-    addTearDown(world.dispose);
-    // The scene view builds a fresh writer for each loaded file and writes
-    // the current rain into it with force.
-    for (final AvatarScene scene in <AvatarScene>[
-      AvatarScene.campfire,
-      AvatarScene.deepSpace,
-      AvatarScene.beach,
-    ]) {
-      writes.clear();
-      SceneRainWriter((String n, double v) {
-        writes.add((name: n, value: v));
-      }).write(world.rain.value, force: true);
-      expect(writes, hasLength(1), reason: scene.name);
-      expect(writes.single.name, AvatarRiveContract.scenePropRain);
-      expect(writes.single.value, 1, reason: scene.name);
+  group('SceneRainFollower (the scene view\'s rain logic)', () {
+    late SceneRainFollower follower;
+
+    void Function(String, double) sink(List<double> into) {
+      return (String name, double value) {
+        expect(name, AvatarRiveContract.scenePropRain);
+        into.add(value);
+      };
     }
+
+    setUp(() => follower = SceneRainFollower());
+    tearDown(() => follower.dispose());
+
+    test('a scene switch at rain 1 writes 1 to each new file', () {
+      final WorldStateService world = WorldStateService()..setRain(1);
+      addTearDown(world.dispose);
+      follower.follow(world.rain);
+      for (int i = 0; i < 3; i++) {
+        final List<double> file = <double>[];
+        follower.load(sink(file));
+        expect(file, <double>[1], reason: 'file $i');
+        follower.unload();
+      }
+    });
+
+    test('a loaded file follows the source, writing changes only', () {
+      final ValueNotifier<double> rain = ValueNotifier<double>(0);
+      addTearDown(rain.dispose);
+      final List<double> file = <double>[];
+      follower.follow(rain);
+      follower.load(sink(file));
+      rain.value = 0.5;
+      rain.value = 0.5;
+      rain.value = 0.9;
+      expect(file, <double>[0, 0.5, 0.9]);
+    });
+
+    test('nothing is written before a file is loaded or after unload', () {
+      final ValueNotifier<double> rain = ValueNotifier<double>(0);
+      addTearDown(rain.dispose);
+      final List<double> file = <double>[];
+      follower.follow(rain);
+      rain.value = 1;
+      follower.load(sink(file));
+      expect(file, <double>[1]);
+      follower.unload();
+      rain.value = 0.2;
+      expect(file, <double>[1]);
+    });
+
+    test('a new source replaces the old listener and is written at once', () {
+      final ValueNotifier<double> first = ValueNotifier<double>(0.2);
+      final ValueNotifier<double> second = ValueNotifier<double>(0.8);
+      addTearDown(first.dispose);
+      addTearDown(second.dispose);
+      final List<double> file = <double>[];
+      follower.follow(first);
+      follower.load(sink(file));
+      follower.follow(second);
+      expect(file, <double>[0.2, 0.8]);
+      first.value = 0.4; // no longer followed
+      second.value = 0.6;
+      expect(file, <double>[0.2, 0.8, 0.6]);
+    });
+
+    test('a null source dries the scene; dispose stops listening', () {
+      final ValueNotifier<double> rain = ValueNotifier<double>(0.7);
+      addTearDown(rain.dispose);
+      final List<double> file = <double>[];
+      follower.follow(rain);
+      follower.load(sink(file));
+      follower.follow(null);
+      expect(file, <double>[0.7, 0]);
+      follower.follow(rain);
+      follower.dispose();
+      rain.value = 0.1;
+      expect(file, <double>[0.7, 0, 0.7]);
+    });
   });
 }

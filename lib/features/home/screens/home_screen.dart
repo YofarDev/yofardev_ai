@@ -21,8 +21,8 @@ import '../widgets/home_content_stack.dart';
 /// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
 ///
-/// [speech], [composerActivity], [parallax], [world] and [facePerformer] come from the
-/// route (Home never reads the service locator).
+/// [speech], [composerActivity], [parallax], [world] and [facePerformer] come
+/// from the route (Home never reads the service locator).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,

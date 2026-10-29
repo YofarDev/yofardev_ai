@@ -41,6 +41,12 @@ class _QueuedGesture {
 ///   held); never while speaking. Gestures requested while a prop is out are
 ///   dropped, except that an LLM gesture is activity: it clears the idle
 ///   tablet and the hold-over, and plays.
+/// - **Put-away**: a gesture that could start while the prop is on its way
+///   out (the intent's prop went to `none` less than [propPutAway] ago, e.g.
+///   the first auto gesture of a reply after a lookup tool) waits for the
+///   put-away to finish, as it waits for the cooldown: the Rive layer would
+///   otherwise snap the gesture's arm up when the put-away ends. The
+///   director cannot see that end (M4 ruling 23), so it times it.
 /// - **Lean** 0.6 while the user types (0 when speaking), a backchannel
 ///   nod when typing resumes after a 600 ms pause or a word ends (at most
 ///   one per 2.5 s) and a reaction on a typed `?` / `!` (at most one per
@@ -95,6 +101,11 @@ class PerformanceDirector {
   /// tool taking the same prop right away keeps it.
   static const Duration tabletHoldOver = Duration(milliseconds: 400);
 
+  /// How long the prop takes to go away once the intent's prop is `none`.
+  /// Mirrors the Rive `prop_tablet_away` clip (417 ms; the newspaper reuses
+  /// its timing), rounded up. A gesture waits this long after the prop clears.
+  static const Duration propPutAway = Duration(milliseconds: 420);
+
   /// Stage 2: the tablet is out this long, once per [tabletPeriod].
   static const Duration tabletHold = Duration(seconds: 8);
   static const Duration tabletPeriod = Duration(seconds: 60);
@@ -129,6 +140,7 @@ class PerformanceDirector {
   PresenceReaction? _reaction;
   int _reactionSerial = 0;
   PerformanceIntent? _lastIntent;
+  DateTime? _propClearedAt;
   bool _disposed = false;
 
   AvatarGesture? _playing;
@@ -266,7 +278,7 @@ class PerformanceDirector {
       );
       return;
     }
-    if (_playing == null && _cooldownElapsed) {
+    if (_playing == null && _gestureWait == Duration.zero) {
       _start(gesture);
       return;
     }
@@ -331,14 +343,6 @@ class PerformanceDirector {
 
   // — internals —
 
-  bool get _cooldownElapsed {
-    final DateTime? last = _lastStartAt;
-    if (last == null) {
-      return true;
-    }
-    return _now().difference(last) >= gestureCooldown;
-  }
-
   Duration get _cooldownRemaining {
     final DateTime? last = _lastStartAt;
     if (last == null) {
@@ -348,6 +352,23 @@ class PerformanceDirector {
     return elapsed >= gestureCooldown
         ? Duration.zero
         : gestureCooldown - elapsed;
+  }
+
+  Duration get _putAwayRemaining {
+    final DateTime? cleared = _propClearedAt;
+    if (cleared == null) {
+      return Duration.zero;
+    }
+    final Duration elapsed = _now().difference(cleared);
+    return elapsed >= propPutAway ? Duration.zero : propPutAway - elapsed;
+  }
+
+  /// How long until a gesture may start: the later of the cooldown and the
+  /// prop's put-away.
+  Duration get _gestureWait {
+    final Duration cooldown = _cooldownRemaining;
+    final Duration putAway = _putAwayRemaining;
+    return cooldown > putAway ? cooldown : putAway;
   }
 
   void _start(AvatarGesture gesture) {
@@ -376,8 +397,7 @@ class PerformanceDirector {
       _queue.clear();
       return;
     }
-    final Duration remaining = _cooldownRemaining;
-    if (remaining > Duration.zero) {
+    if (_gestureWait > Duration.zero) {
       _armCooldownTimer();
       return;
     }
@@ -394,7 +414,7 @@ class PerformanceDirector {
     if (_cooldownTimer != null || _queue.isEmpty) {
       return;
     }
-    final Duration remaining = _cooldownRemaining;
+    final Duration remaining = _gestureWait;
     _cooldownTimer = Timer(
       remaining <= Duration.zero ? const Duration(milliseconds: 1) : remaining,
       () {
@@ -559,6 +579,9 @@ class PerformanceDirector {
         intent.prop != AvatarProp.none &&
         intent.prop != before) {
       _controller.add(intent.copyWith(prop: AvatarProp.none));
+    }
+    if (before != AvatarProp.none && intent.prop == AvatarProp.none) {
+      _propClearedAt = _now();
     }
     _lastIntent = intent;
     _controller.add(intent);

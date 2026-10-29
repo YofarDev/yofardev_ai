@@ -86,6 +86,17 @@ def test_planes_must_be_contiguous_back_to_front() -> None:
         diorama(sc, content, DioramaSpec(planes={"Sky": 0, "Ground": 4}, emissive=(), veils=()))
 
 
+def test_interleaved_planes_raise() -> None:
+    sc = Scene("campfire")
+    content = [sc.node("A", 0, 0), sc.node("B", 0, 0), sc.node("C", 0, 0)]  # A and C on 4, B on 3
+    with pytest.raises(ValueError, match="contiguous"):
+        diorama(sc, content, DioramaSpec(planes={"A": 4, "B": 3, "C": 4}, emissive=(), veils=()))
+    # the same planes, grouped, are fine
+    ok = [sc.node("A", 0, 0), sc.node("C", 0, 0), sc.node("B", 0, 0)]
+    diorama(sc, ok, DioramaSpec(planes={"A": 4, "B": 3, "C": 4}, emissive=(), veils=()))
+    assert [e.attrs["name"] for e in ok] == ["Plane4", "Plane3"]
+
+
 def test_empty_planes_are_skipped() -> None:
     sc = Scene("campfire")
     content = [sc.node("Rain", 0, 0), sc.node("Ground", 0, 0), sc.node("Sky", 0, 0)]

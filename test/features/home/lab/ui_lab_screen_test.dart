@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/design/looks/looks.dart';
+import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/features/home/screens/ui_lab_screen.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_service_extension.dart';
@@ -29,12 +30,13 @@ Widget _fakeStage(
 /// The lab on its Surfaces tab.
 final LabConfig _surfaces = LabConfig.initial.copyWith(tab: LabTab.surfaces);
 
-Widget _harness({LabConfig? initial}) => MaterialApp(
+Widget _harness({LabConfig? initial, WorldStateService? world}) => MaterialApp(
   theme: AppTheme.dark,
   home: UiLabScreen(
     textThemeBuilder: _fakeTextTheme,
     initialConfig: initial ?? _surfaces,
     stageBuilder: _fakeStage,
+    world: world,
   ),
 );
 
@@ -51,12 +53,13 @@ void main() {
     WidgetTester tester, {
     LabConfig? initial,
     Size logicalSize = const Size(450, 900),
+    WorldStateService? world,
   }) async {
     tester.view.physicalSize = logicalSize * 2;
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(_harness(initial: initial));
+    await tester.pumpWidget(_harness(initial: initial, world: world));
     await tester.pump();
   }
 
@@ -176,6 +179,19 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     expect(GoogleFonts.config.allowRuntimeFetching, isFalse);
+  });
+
+  testWidgets('closing the lab leaves the world dry', (
+    WidgetTester tester,
+  ) async {
+    final WorldStateService world = WorldStateService();
+    addTearDown(world.dispose);
+    await pumpLab(tester, world: world);
+    world.setRain(1);
+    expect(world.rain.value, 1);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(world.rain.value, 0);
   });
 
   testWidgets('applies the hue override to the preview accent', (

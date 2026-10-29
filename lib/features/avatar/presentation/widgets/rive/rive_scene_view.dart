@@ -68,7 +68,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
   SceneParallaxWriter? _parallaxWriter;
-  SceneRainWriter? _rainWriter;
+  final SceneRainFollower _rain = SceneRainFollower();
   StreamSubscription<Offset>? _parallaxSub;
   Offset _parallax = Offset.zero;
   bool _parallaxFrameScheduled = false;
@@ -88,12 +88,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
     WidgetsBinding.instance.addObserver(this);
     _listenParallax();
     _syncParallaxActive();
-    widget.rain?.addListener(_writeRain);
+    _rain.follow(widget.rain);
     _loadScene(widget.scene);
-  }
-
-  void _writeRain() {
-    _rainWriter?.write(widget.rain?.value ?? 0);
   }
 
   void _listenParallax() {
@@ -151,9 +147,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
       _syncParallaxActive();
     }
     if (widget.rain != oldWidget.rain) {
-      oldWidget.rain?.removeListener(_writeRain);
-      widget.rain?.addListener(_writeRain);
-      _writeRain();
+      _rain.follow(widget.rain);
     }
     if (widget.parallaxOverride != oldWidget.parallaxOverride ||
         widget.parallax != oldWidget.parallax) {
@@ -183,7 +177,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _loads.cancelAll();
-    widget.rain?.removeListener(_writeRain);
+    _rain.dispose();
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
     _teardown();
@@ -237,8 +231,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _parallaxWriter = SceneParallaxWriter(binding.setNumber)
           ..write(widget.parallaxOverride ?? _parallax, force: true);
         // Nor has it the rain: a scene switch writes it to the new file.
-        _rainWriter = SceneRainWriter(binding.setNumber)
-          ..write(widget.rain?.value ?? 0, force: true);
+        _rain.load(binding.setNumber);
         _syncParallaxActive();
       });
     } on Exception catch (e) {
@@ -262,7 +255,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _controller = null;
     _binding = null;
     _parallaxWriter = null;
-    _rainWriter = null;
+    _rain.unload();
     _file = null;
     _loadedScene = null;
   }

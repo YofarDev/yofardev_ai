@@ -67,6 +67,9 @@ class _UiLabScreenState extends State<UiLabScreen> {
   @override
   void dispose() {
     unregisterUiLabExtensions(_config);
+    // The lab's `rain` param is the only thing here that sets the world's
+    // rain: leave the app dry when the lab closes.
+    widget.world?.setRain(0);
     _config.dispose();
     super.dispose();
   }

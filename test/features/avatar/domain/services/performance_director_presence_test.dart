@@ -188,7 +188,7 @@ void main() {
         });
       });
 
-      test('an LLM gesture during the hold-over plays at once', () {
+      test('an LLM gesture during the hold-over waits out the put-away', () {
         fakeAsync((FakeAsync async) {
           final PerformanceDirector director = build();
           director.intents.listen((_) {});
@@ -196,7 +196,84 @@ void main() {
           director.setActiveTool(null);
           director.requestGesture(AvatarGesture.wave);
           expect(director.current.prop, AvatarProp.none);
+          expect(director.current.gestureSerial, 0);
+          advance(async, 419);
+          expect(director.current.gestureSerial, 0);
+          advance(async, 1);
           expect(director.current.pendingGesture, AvatarGesture.wave);
+          director.dispose();
+        });
+      });
+
+      test('a gesture after the tool ends waits for the put-away', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          director.intents.listen((_) {});
+          director.setActiveTool('searchGoogle');
+          advance(async, 2000);
+          director.setActiveTool(null);
+          director.setSpeaking(true);
+          expect(director.current.prop, AvatarProp.none);
+          director.requestGesture(
+            AvatarGesture.wave,
+            source: GestureSource.auto,
+          );
+          expect(director.current.gestureSerial, 0);
+          advance(async, 419);
+          expect(director.current.gestureSerial, 0);
+          advance(async, 1);
+          expect(director.current.gestureSerial, 1);
+          expect(director.current.pendingGesture, AvatarGesture.wave);
+          director.dispose();
+        });
+      });
+
+      test('the newspaper is put away just the same', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          director.intents.listen((_) {});
+          director.setActiveTool('getMostPopularNewsOfTheDay');
+          director.setActiveTool(null);
+          director.setSpeaking(true);
+          director.requestGesture(
+            AvatarGesture.wave,
+            source: GestureSource.auto,
+          );
+          advance(async, 419);
+          expect(director.current.gestureSerial, 0);
+          advance(async, 1);
+          expect(director.current.gestureSerial, 1);
+          director.dispose();
+        });
+      });
+
+      test('a gesture with no prop involved still plays at once', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          director.intents.listen((_) {});
+          director.setSpeaking(true);
+          director.requestGesture(
+            AvatarGesture.wave,
+            source: GestureSource.auto,
+          );
+          expect(director.current.gestureSerial, 1);
+          director.dispose();
+        });
+      });
+
+      test('after the put-away a gesture plays at once again', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          director.intents.listen((_) {});
+          director.setActiveTool('searchGoogle');
+          director.setActiveTool(null);
+          director.setSpeaking(true);
+          advance(async, 5000);
+          director.requestGesture(
+            AvatarGesture.wave,
+            source: GestureSource.auto,
+          );
+          expect(director.current.gestureSerial, 1);
           director.dispose();
         });
       });
@@ -211,7 +288,8 @@ void main() {
 
           // Not queued for later either.
           director.setActiveTool(null);
-          advance(async, 5000);
+          advance(async, 400); // the hold-over ends: the put-away starts
+          advance(async, 4600);
           expect(director.current.pendingGesture, isNull);
 
           director.requestGesture(AvatarGesture.wave);
@@ -572,18 +650,26 @@ void main() {
         });
       });
 
-      test('an LLM gesture clears the idle tablet and plays', () async {
-        final PerformanceDirector director = build();
-        int signals = 0;
-        director.activity.listen((_) => signals++);
-        director.setIdleStage(3);
-        director.requestGesture(AvatarGesture.wave);
-        expect(director.current.idleStage, 0);
-        expect(director.current.prop, AvatarProp.none);
-        expect(director.current.pendingGesture, AvatarGesture.wave);
-        await Future<void>.delayed(Duration.zero);
-        expect(signals, 1, reason: 'the ladder hears it');
-        director.dispose();
+      test('an LLM gesture clears the idle tablet and plays after the '
+          'put-away', () {
+        fakeAsync((FakeAsync async) {
+          final PerformanceDirector director = build();
+          int signals = 0;
+          director.activity.listen((_) => signals++);
+          director.intents.listen((_) {});
+          director.setIdleStage(3);
+          director.requestGesture(AvatarGesture.wave);
+          expect(director.current.idleStage, 0);
+          expect(director.current.prop, AvatarProp.none);
+          expect(director.current.gestureSerial, 0);
+          async.flushMicrotasks();
+          expect(signals, 1, reason: 'the ladder hears it');
+          advance(async, 419);
+          expect(director.current.gestureSerial, 0);
+          advance(async, 1);
+          expect(director.current.pendingGesture, AvatarGesture.wave);
+          director.dispose();
+        });
       });
 
       test('an auto gesture waits while the idle tablet is out', () {

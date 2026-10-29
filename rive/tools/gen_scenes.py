@@ -907,6 +907,9 @@ def diorama(sc: Scene, content: list[El], spec: DioramaSpec) -> None:
             raise KeyError(f"{sc.id} element {name!r} has no plane")
         if k not in groups:
             order.append(k)
+        elif order[-1] != k:
+            raise ValueError(f"{sc.id}: {name!r} (plane {k}) comes back after plane {order[-1]}: "
+                             f"planes are not contiguous back to front: {order}")
         groups.setdefault(k, []).append(e)
     # content is front-most first: overlays, then Plane5 .. Plane0, each contiguous (draw order kept)
     planes_seen = [k for k in order if k is not None]
