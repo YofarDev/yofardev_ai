@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3 and M4) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -151,6 +151,22 @@ on violation.
   `uv run rive/tools/review_face.py` (history gates accept ≤ 1/255 renderer noise, clamp gates are
   exact); the UI lab's `ext.yofardev.uiLab.configure` also takes a `face` JSON (every AU 0..1, side
   offsets −1..1, `lipTuck`/`tongueUp`/`breath`, `roll`, `blink`) to pose the face by hand
+- Light, presence and props (contract v7, moonshot M4): one light rig per scene lives in
+  `rive/tools/art_bible.py` `SCENES`, mirrored by `SceneLights.of(scene)`
+  (`lib/core/design/tokens/scene_lights.dart`, colours in `AppPalette`; a Python test keeps them
+  equal) and exported as `SceneVM` defaults (`check_contract.py` compares). `AvatarLightWriter`
+  writes the `light*` numbers and colours to the avatar once per scene change; the firelight
+  flicker loops inside the files (`lightFlicker` blend), never from Dart. The UI reads the static
+  rig through `context.tokens.scene.glassTint` / `captionInk`. Presence: the composer reports to
+  `ComposerActivityService` (`core/services/presence/`); `PerformanceDirector` turns it into intent
+  fields (caret gaze, `lean`, backchannel `nodSerial`, `?`/`!` reactions) and owns the `prop`
+  (`AvatarProp.tablet` for lookup tools and idle stages ≥ 2, gestures dropped while it is out);
+  `IdleLadder` (30 s / 2 min / 10 min) freezes under battery saver (`PowerSaverSource`,
+  `battery_plus`) or reduce motion. Parallax: `ParallaxSource` (`core/services/motion/`,
+  accelerometer via `sensors_plus` on phones, pointer elsewhere) feeds `parallaxX/Y` to diorama
+  scenes only (campfire in M4). Budget: `rml.write()` decimates linear key runs within
+  `rml.TOLERANCES` for every generator; a new baked animation is thinned automatically, so check
+  renders, not key counts. Evidence index: `rive/review/m4/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -216,4 +232,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-29
+**Last Updated**: 2026-10-29 (M4)
