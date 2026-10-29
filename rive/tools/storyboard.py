@@ -97,8 +97,11 @@ def avatar_capture(beat: Beat, tmp: Path, index: int) -> Image.Image:
     return image
 
 
-def frame(beat: Beat, avatar: Image.Image) -> Image.Image:
-    poster: Image.Image = Image.open(ROOT / f"assets/rive/posters/{beat.scene}.webp").convert("RGBA")
+def frame(beat: Beat, avatar: Image.Image, background: Image.Image | None = None) -> Image.Image:
+    """The beat's cell: the scene poster (or `background`, e.g. a live scene capture) with the
+    avatar composited at the bottom, cropped for the beat's zoom, block-outs on top."""
+    poster: Image.Image = (background if background is not None else
+                           Image.open(ROOT / f"assets/rive/posters/{beat.scene}.webp")).convert("RGBA")
     canvas: Image.Image = poster.resize((CELL_W, CELL_H))
     aw: int = int(CELL_W * 0.95)
     small: Image.Image = avatar.resize((aw, int(avatar.height * aw / avatar.width)))

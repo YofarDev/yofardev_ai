@@ -15,6 +15,7 @@ Rive runs are sequential (one CLI at a time). The tablet out -> hold -> away GIF
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 import subprocess
@@ -135,7 +136,9 @@ def avatar_image(png: Path) -> Image.Image:
     return image
 
 
-def sheet(name: str, shots: list[Shot], out: Path, tmp: Path, notes: list[str]) -> None:
+def sheet(name: str, shots: list[Shot], out: Path, tmp: Path, notes: list[str],
+          background: Callable[[int], Image.Image] | None = None) -> None:
+    """One storyboard sheet; `background(i)` gives beat i's scene image (default: the poster)."""
     cols: int = min(len(shots), 4)
     rows: int = (len(shots) + cols - 1) // cols
     cw, ch, cap = sb.CELL_W, sb.CELL_H, sb.CAPTION_H
@@ -167,7 +170,7 @@ def sheet(name: str, shots: list[Shot], out: Path, tmp: Path, notes: list[str]) 
                 if off + l * sc < x0 or off + r * sc > cw - x0 or top < y0:
                     notes.append(f"FAIL {name} beat {i + 1}: the {s.beat.zoom}x crop cuts the avatar")
             notes.append(f"ok   {name} beat {i + 1}: bbox {bbox}, centre {cx:.2f}")
-        cell: Image.Image = sb.frame(s.beat, av)
+        cell: Image.Image = sb.frame(s.beat, av, background(i) if background else None)
         x, y = (i % cols) * cw, (i // cols) * (ch + cap)
         page.alpha_composite(cell, (x, y))
         page.alpha_composite(sb.caption(s.beat, i + 1), (x, y + ch))
@@ -211,20 +214,22 @@ def flicker_gif(out: Path, tmp: Path, notes: list[str]) -> None:
     save_gif(frames, out / "flicker.gif", 30)
 
 
-def parallax_gif(out: Path, tmp: Path, notes: list[str]) -> None:
-    """The campfire scene alone, parallaxX -1 -> 1 over 12 frames (8 fps: a sweep to read, not real time)."""
+def parallax_gif(out: Path, tmp: Path, notes: list[str], project: Path = CAMPFIRE,
+                 name: str = "parallax_sweep.gif") -> None:
+    """A scene alone (default the campfire), parallaxX -1 -> 1 over 12 frames (8 fps: a sweep to
+    read, not real time)."""
     frames: list[Image.Image] = []
     for k in range(12):
         v: float = -1 + 2 * k / 11
         png: Path = tmp / f"px_{k}.png"
-        capture(CAMPFIRE, (f"--data=parallaxX={v:.3f}", "--fit=contain", "--advance=1"), png)
+        capture(project, (f"--data=parallaxX={v:.3f}", "--fit=contain", "--advance=1"), png)
         im: Image.Image = Image.open(png).convert("RGB").resize((360, 640))
         ImageDraw.Draw(im).text((10, 10), f"parallaxX {v:+.2f}", fill=(255, 210, 90))
         frames.append(im)
     first, last = frames[0].convert("L"), frames[-1].convert("L")
     moved: int = sum(1 for p in ImageChops.difference(first, last).get_flattened_data() if p > 16)
-    notes.append(f"{'ok  ' if moved > 2000 else 'FAIL'} parallax_sweep.gif: 12 frames, {moved} px differ between -1 and +1")
-    save_gif(frames, out / "parallax_sweep.gif", 8)
+    notes.append(f"{'ok  ' if moved > 2000 else 'FAIL'} {name}: 12 frames, {moved} px differ between -1 and +1")
+    save_gif(frames, out / name, 8)
 
 
 def main(out: Path) -> int:
