@@ -2073,6 +2073,9 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
           **{f"Lock{i}Material": named_el(hair_front.el, f"Lock{i}Material") for i in range(len(LOCKS))}}, anims)
 # the jaw drops the chin and the lower jaw contour (face-rig ids, after every head-turn id)
 head_turn.rig_jaw(turn, face_au.d, face_au.path)
+# ---- M5: new elements take their own id range (kit.M5_ID_START), minted in task order (head, light, prop)
+M5 = Doc(client=0, start=kit.M5_ID_START)
+head_turn.m5_three_quarter(turn, M5)  # the mouth foreshortens with the surface (ruling 1d)
 
 # ---- critic round 2: new elements take their own id range (no earlier id moves)
 R2 = Doc(client=0, start=kit.R2_ID_START)

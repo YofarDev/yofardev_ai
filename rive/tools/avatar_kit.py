@@ -118,6 +118,9 @@ def lock_outline(root_: tuple[float, float], tip: tuple[float, float], w: float,
 
 R2_ID_START = 990000  # elements added in critic round 2 (gen_avatar.py mints them last)
 M4_ID_START = 980000  # elements added in moonshot M4 (gen_avatar.py, Doc M4)
+# elements added in moonshot M5 (gen_avatar.py, Doc M5). The plan's 970000 is the M3 arm skeleton's range
+# (arm_rig.ARM_ID_START); 1,000,000+ is free in avatar.rml (M5 execution ruling 30)
+M5_ID_START = 1000000
 
 # The fringe's cast shadow on the forehead: a band under the hairline (cap edge y ~292-300), skinned
 # by the head turn (same 15 points as M2), filled with a fade from FACE_CAST_FADE[0] (alpha at the

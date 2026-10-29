@@ -119,7 +119,10 @@ def _lerp(table: Sequence[tuple[float, float]], y: float) -> float:
 # carries the in-betweens on arcs. All exponents 2 give the M1 ellipse model (ellipse_contour_pose).
 SECTION_FRONT_N = [(330.0, 2.0), (366.0, 2.3), (396.0, 2.7), (428.0, 2.9), (458.0, 2.4), (476.0, 2.1),
                    (490.0, 2.0)]
-SECTION_BACK_N = [(330.0, 2.0), (366.0, 2.0), (396.0, 2.0), (428.0, 2.8), (458.0, 4.0), (476.0, 3.4),
+# M5 ruling 1b: the back exponents are capped at SECTION_BACK_CAP (M4: 2.8 / 4.0 / 3.4 at y 428 / 458 /
+# 476 squared the near jaw into a near-90 deg corner); the fairing pass (fair_contour) does the rest
+SECTION_BACK_CAP = 2.6
+SECTION_BACK_N = [(330.0, 2.0), (366.0, 2.0), (396.0, 2.0), (428.0, 2.6), (458.0, 2.6), (476.0, 2.6),
                   (490.0, 2.6), (505.0, 2.0)]
 
 
@@ -128,24 +131,34 @@ SECTION_BACK_N = [(330.0, 2.0), (366.0, 2.0), (396.0, 2.0), (428.0, 2.8), (458.0
 # section loses FAR_FLAT of its width and depth at the far pose, so the far contour dips in under
 # the cheekbone and the nose tip breaks over it), and the near cheek fills out (the section gains
 # NEAR_FULL of its width at the near pose). Rest poses are unchanged; fit3 carries the in-betweens.
-FAR_FLAT = [(396.0, 0.0), (428.0, 0.237), (458.0, 0.326), (476.0, 0.15), (490.0, 0.15), (505.0, 0.0)]
+# M5 ruling 1b: capped at FAR_FLAT_CAP (M4: 0.237 / 0.326 at y 428 / 458 dug a notch under the far lens)
+FAR_FLAT_CAP = 0.2
+FAR_FLAT = [(396.0, 0.0), (428.0, 0.2), (458.0, 0.2), (476.0, 0.15), (490.0, 0.15), (505.0, 0.0)]
+# the M4 tables, kept for the before / after gate (m4_contour_chain)
+M4_SECTION_BACK_N = [(330.0, 2.0), (366.0, 2.0), (396.0, 2.0), (428.0, 2.8), (458.0, 4.0), (476.0, 3.4),
+                     (490.0, 2.6), (505.0, 2.0)]
+M4_FAR_FLAT = [(396.0, 0.0), (428.0, 0.237), (458.0, 0.326), (476.0, 0.15), (490.0, 0.15), (505.0, 0.0)]
 NEAR_FULL = [(366.0, 0.0), (396.0, 0.06), (428.0, 0.09), (458.0, 0.09), (476.0, 0.05), (490.0, 0.0)]
 
 
-def section(x: float, y: float, round_: bool = False) -> tuple[float, float, float, float, float]:
-    """(w, z0, dd, n_front, n_back) of the right-side contour section through (x, y)."""
+def section(x: float, y: float, round_: bool = False,
+            back: Sequence[tuple[float, float]] | None = None) -> tuple[float, float, float, float, float]:
+    """(w, z0, dd, n_front, n_back) of the right-side contour section through (x, y) (`back`: another
+    SECTION_BACK_N table)."""
     w = x - CX
     dd = 0.82 * w + 8 + 8 * math.exp(-(((y - 396) / 22) ** 2))
     if round_:
         return w, _lerp(Z0, y), dd, 2.0, 2.0
-    return w, _lerp(Z0, y), dd, _lerp(SECTION_FRONT_N, y), _lerp(SECTION_BACK_N, y)
+    return w, _lerp(Z0, y), dd, _lerp(SECTION_FRONT_N, y), _lerp(back or SECTION_BACK_N, y)
 
 
-def contour_pose(x: float, y: float) -> tuple[float, float]:
+def contour_pose(x: float, y: float, back: Sequence[tuple[float, float]] | None = None,
+                 far_flat: Sequence[tuple[float, float]] | None = None) -> tuple[float, float]:
     """Right-side face contour x at yaw -1 (the near side) / +1 (the far side): the silhouettes of
-    the section through (x, y). The left side mirrors it."""
-    w, z0, dd, nf, nb = section(x, y)
-    q, g = _lerp(FAR_FLAT, y), _lerp(NEAR_FULL, y)
+    the section through (x, y), unfaired (M5: `faired_poses` fairs them as one outline). The left
+    side mirrors it. `back` / `far_flat`: other tables (the M4 ones for the before gate)."""
+    w, z0, dd, nf, nb = section(x, y, back=back)
+    q, g = _lerp(far_flat or FAR_FLAT, y), _lerp(NEAR_FULL, y)
     return (CX + r.section_silhouette(w * (1 + g), z0, dd, nf, nb, -K_YAW),
             CX + r.section_silhouette(w * (1 - q), z0, dd * (1 - q), nf, nb, K_YAW))
 
@@ -190,6 +203,15 @@ def foreshorten(x: float, y: float, a: float) -> float:
 
 
 NEAR_WIDEN = 1.12
+MOUTH_SPAN = (372.0, 428.0, 478.0)  # the widest mouth's corners (x left, x right) and its line's height
+
+
+def mouth_width(a: float, n: int = 28) -> float:
+    """Width factor of the mouth at yaw angle `a` (M5 ruling 1d): the mean `foreshorten` of the lip
+    line between the corners (a mark on the surface: the far half narrows, the near half widens up
+    to NEAR_WIDEN). M1-M4 used a flat 0.88."""
+    x0, x1, y = MOUTH_SPAN
+    return sum(foreshorten(x0 + (x1 - x0) * (k + 0.5) / n, y, a) for k in range(n)) / n
 EAR_Z, EAR_NEAR_WIDEN = -12.0, 1.18  # ear depth (behind the yaw axis) and its near-side widening
 
 
@@ -402,6 +424,231 @@ def _bone_pitch(name: str) -> Poly:
     return pit(y, zp)
 
 
+# ------------------------------------------------------------------ the faired 3/4 outline (M5)
+# M5 ruling 1: each contour height's section is solved alone, so at yaw +-1 neighbouring heights could
+# disagree (a notch under the far lens, a cheekbone corner, a hooked far jaw). The yaw +-1 poses of the
+# contour bones are therefore faired as ONE curve, in chain order: convex hull first (a point inside it
+# moves out, along x only: the bones' yaw binds move x, pitch and the jaw move y), then Laplacian steps
+# on the bones' yaw *displacement* (not their positions, so the rest outline's own curvature is kept and
+# only the turn's shear is smoothed) at the bones that break the bound, until the outline is convex and
+# its largest exterior turn is <= FAIR_BOUND x the rest outline's. Rest poses are untouched.
+
+CHAIN = ("FTL", "FSL", "FCL", "FKL", "FJL", "FWL", "FQL", "FVL", "Chin", "FVR", "FQR", "FWR", "FJR", "FKR", "FCR",
+         "FSR", "FTR")
+CHIN_REST = (400.0, 511.0)
+FAIR_BOUND = 1.25  # x the rest outline's largest turn
+FAIR_STEP = 0.3  # Laplacian step (share of the way to the neighbours' interpolated displacement)
+# every faired bone keeps at least this turn (radians): a hull point lying on a straight run would flip
+# into a dent under pitch or the jaw drop (they move the bones' y unevenly)
+FAIR_MIN_TURN = math.radians(4.0)
+
+
+def bone_rest(name: str) -> tuple[float, float]:
+    """Rest art-space position of a contour bone (`FKL`, `Chin`, ...)."""
+    if name == "Chin":
+        return CHIN_REST
+    x, y, _ = CONTOUR[name[1:-1]]
+    return (x if name[-1] == "R" else 2 * CX - x), y
+
+
+def _turns(points: Sequence[Sequence[float]]) -> list[float]:
+    """Signed exterior turn (radians, y down) at every interior point of an open chain; the outline
+    runs FTL -> Chin -> FTR, so a convex face turns negative everywhere."""
+    out = []
+    for p0, p1, p2 in zip(points, points[1:], points[2:]):
+        ax, ay = p1[-2] - p0[-2], p1[-1] - p0[-1]
+        bx, by = p2[-2] - p1[-2], p2[-1] - p1[-1]
+        out.append(math.atan2(ax * by - ay * bx, ax * bx + ay * by))
+    return out
+
+
+def max_turn(points: Sequence[Sequence[float]]) -> float:
+    """Largest exterior turn (radians) between neighbouring points ((x, y) or (name, x, y))."""
+    return max(abs(t) for t in _turns(points))
+
+
+def is_convex(points: Sequence[Sequence[float]], eps: float = 1e-6) -> bool:
+    """True when the open chain bends one way only (no dent; collinear allowed) and less than a full
+    turn in all."""
+    t = _turns(points)
+    return all(v <= eps for v in t) and -sum(t) < 2 * PI
+
+
+def _hull_out(poses: list[tuple[str, float, float]]) -> list[tuple[str, float, float]]:
+    """Move every point strictly inside the chain's convex hull out to the hull, along x (left of the
+    chin to the hull's left edge at its height, right of it to the right edge)."""
+    pts = sorted((x, y) for _, x, y in poses)
+
+    def cross(o: tuple[float, float], a: tuple[float, float], b: tuple[float, float]) -> float:
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    lower: list[tuple[float, float]] = []
+    upper: list[tuple[float, float]] = []
+    for p in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+    for p in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+    hull = lower[:-1] + upper[:-1]
+    ci = [n for n, _, _ in poses].index("Chin")
+    out = []
+    for i, (n, x, y) in enumerate(poses):
+        xs = []
+        for a, b in zip(hull, hull[1:] + hull[:1]):
+            if a[1] != b[1] and (a[1] - y) * (b[1] - y) <= 0:
+                xs.append(a[0] + (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]))
+            elif a[1] == b[1] == y:
+                xs += [a[0], b[0]]
+        if i < ci:
+            x = min(x, *xs)
+        elif i > ci:
+            x = max(x, *xs)
+        out.append((n, x, y))
+    return out
+
+
+Check = tuple[list[tuple[str, float, float]], float, float]  # (posed chain, bound, min turn)
+
+
+def fair_contour(poses: list[tuple[str, float, float]], bound: float, min_turn: float = FAIR_MIN_TURN,
+                 checks: Callable[[list[tuple[str, float, float]]], list[Check]] | None = None
+                 ) -> list[tuple[str, float, float]]:
+    """Faired (name, x, y) of a turned outline given in chain order (FTL ... Chin ... FTR): convex
+    with every interior turn in [-bound, -min_turn] (radians); y and the two chain ends never move. A
+    pose that is already fair comes back unchanged (the rest pose included). `checks` maps the current
+    chain to more posed chains that must be fair too (the same x poses under pitch, the jaw drop and
+    the in-between yaws); a bone failing any of them, or its mirror (the near / far pair), is smoothed."""
+    rest = [bone_rest(n) for n, _, _ in poses]
+    s = [0.0]
+    for a, b in zip(rest, rest[1:]):
+        s.append(s[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    last = len(poses) - 1
+
+    def unfair(cur: list[tuple[str, float, float]]) -> set[int]:
+        out: set[int] = set()
+        for ch, bd, mt in [(cur, bound, min_turn), *(checks(cur) if checks else [])]:
+            out |= {i + 1 for i, v in enumerate(_turns(ch)) if v < -bd or v > -mt}
+        return out | {last - i for i in out}
+
+    cur = list(poses)
+    if not unfair(cur):
+        return cur
+    cur = _hull_out(cur)
+    for _ in range(5000):
+        bad = unfair(cur)
+        if not bad:
+            return cur
+        act = {j for i in bad for j in (i - 1, i, i + 1) if 0 < j < last}
+        d = [p[1] - q[0] for p, q in zip(cur, rest)]
+        nd = list(d)
+        for i in act:
+            w = (s[i] - s[i - 1]) / (s[i + 1] - s[i - 1])
+            nd[i] = d[i] + FAIR_STEP * ((1 - w) * d[i - 1] + w * d[i + 1] - d[i])
+        cur = [(n, q[0] + v, y) for (n, _, y), q, v in zip(cur, rest, nd)]
+    raise ValueError("fair_contour did not converge")
+
+
+def raw_contour_x(name: str, a: float, back: Sequence[tuple[float, float]] | None = None,
+                  far_flat: Sequence[tuple[float, float]] | None = None) -> float:
+    """Unfaired x of a contour bone at yaw angle `a` (the section silhouettes, M3/M4)."""
+    if name == "Chin":
+        zc = CHIN_Z * math.sin(K_YAW)
+        return CHIN_REST[0] + r.eval_poly(poses(CHIN_REST[0] - zc, CHIN_REST[0], CHIN_REST[0] + zc), a)
+    x, y, _ = CONTOUR[name[1:-1]]
+    m, p = contour_pose(x, y, back, far_flat)
+    if name[-1] == "R":
+        return x + r.eval_poly(poses(m, x, p), a)
+    return 2 * CX - x + r.eval_poly(poses(2 * CX - p, 2 * CX - x, 2 * CX - m), a)
+
+
+# the gate grid (Review Focus 3): every in-between yaw x pitch x jaw the outline must stay fair at
+GATE_YAWS = (1.0, 0.5)
+GATE_PITCHES = (-1.0, 0.0, 1.0)
+GATE_JAWS = (0.0, 1.0)
+GATE_MIN_TURN = math.radians(0.5)  # off the main pose, convex with a hair of margin (renderer noise)
+
+
+def _poses_from(fx: dict[str, float]) -> dict[str, tuple[float, float]]:
+    """Right-side (yaw -1, +1) x per section key and "Chin" from the yaw +1 x of every chain bone."""
+    out = {key: (2 * CX - fx["F" + key + "L"], fx["F" + key + "R"]) for key in CONTOUR}
+    out["Chin"] = (2 * CX - fx["Chin"], fx["Chin"])
+    return out
+
+
+def _yaw_poly(name: str, fp: dict[str, tuple[float, float]]) -> Poly:
+    if name == "Chin":
+        m, p = fp["Chin"]
+        return poses(m, CHIN_REST[0], p)
+    x, _, _ = CONTOUR[name[1:-1]]
+    m, p = fp[name[1:-1]]
+    return poses(m, x, p) if name[-1] == "R" else poses(2 * CX - p, 2 * CX - x, 2 * CX - m)
+
+
+def _chain(fp: dict[str, tuple[float, float]], yaw: float, pitch: float, jaw: float) -> list[tuple[str, float, float]]:
+    out = []
+    for n in CHAIN:
+        x, y = bone_rest(n)
+        out.append((n, x + r.eval_poly(_yaw_poly(n, fp), yaw * K_YAW),
+                    y + r.eval_poly(_bone_pitch(n), pitch * K_PITCH) + jaw_dy(n, {"auJawDrop": jaw})))
+    return out
+
+
+def rest_bound(pitch: float = 0.0, jaw: float = 0.0) -> float:
+    """FAIR_BOUND x the largest turn of the unturned outline at that pitch and jaw drop."""
+    rest = {n: (bone_rest(n)[0], bone_rest(n)[0]) for n in ("Chin",)}
+    rest.update({key: (x, x) for key, (x, _, _) in CONTOUR.items()})  # unturned: m = p = rest
+    return FAIR_BOUND * max_turn(_chain(rest, 0.0, pitch, jaw))
+
+
+_FAIRED: dict[str, tuple[float, float]] = {}
+
+
+def faired_poses() -> dict[str, tuple[float, float]]:
+    """Right-side (yaw -1, yaw +1) x of every contour section ("T" ... "V") and of "Chin", from the
+    yaw +1 outline faired once against the whole gate grid (yaw -1 is its mirror image)."""
+    if not _FAIRED:
+        turned = [(n, raw_contour_x(n, K_YAW), bone_rest(n)[1]) for n in CHAIN]
+        grid = [(yw, pt, jw, rest_bound(pt, jw)) for yw in GATE_YAWS for pt in GATE_PITCHES for jw in GATE_JAWS]
+
+        def checks(cur: list[tuple[str, float, float]]) -> list[Check]:
+            fp = _poses_from({n: x for n, x, _ in cur})
+            return [(_chain(fp, yw, pt, jw), bd, GATE_MIN_TURN) for yw, pt, jw, bd in grid]
+
+        fx = {n: x for n, x, _ in fair_contour(turned, rest_bound(), checks=checks)}
+        _FAIRED.update(_poses_from(fx))
+    return _FAIRED
+
+
+def m4_contour_chain(yaw: float = 1.0) -> list[tuple[str, float, float]]:
+    """The M4 outline (uncapped tables, unfaired) at `yaw`, pitch 0, jaw 0: the defect the gate sees."""
+    return [(n, raw_contour_x(n, yaw * K_YAW, M4_SECTION_BACK_N, M4_FAR_FLAT), bone_rest(n)[1]) for n in CHAIN]
+
+
+def bone_yaw_poly(name: str) -> Poly:
+    """The yaw shift poly of a contour bone (through its faired yaw -1 / +1 poses)."""
+    return _yaw_poly(name, faired_poses())
+
+
+def contour_chain(yaw: float, pitch: float = 0.0, jaw: float = 0.0) -> list[tuple[str, float, float]]:
+    """Posed (name, x, y) of the contour bones in chain order, as the rig moves them: x by yaw
+    (-1..1), y by pitch (-1..1) and the jaw drop (auJawDrop 0..1). Rest (0, 0, 0) is the art."""
+    return _chain(faired_poses(), yaw, pitch, jaw)
+
+
+def contour_x_at(y: float, a: float, side: float) -> float:
+    """Screen x of the faired turned outline (right side +1, left -1) at height y (pitch 0, jaw 0),
+    linear between bones."""
+    pts = sorted((yy, x) for n, x, yy in contour_chain(a / K_YAW)
+                 if n != "Chin" and (n[-1] == "R") == (side > 0))
+    for (y0, x0), (y1, x1) in zip(pts, pts[1:]):
+        if y0 <= y <= y1:
+            return x0 + (x1 - x0) * (y - y0) / (y1 - y0)
+    raise ValueError(y)
+
+
 def rig_jaw(ht: "HeadTurn", d: Doc, path: Callable[[str], str]) -> list[El]:
     """Add the jaw drop to the contour bones' pitch binds. The new converters are minted from `d`
     (the face rig's unkeyed id range) after every head-turn id, so no head-turn id moves; the
@@ -487,14 +734,12 @@ def far_cheek_shade(ht: HeadTurn, face: El, cheek_shade: El) -> list[El]:
 def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock_specs: list,
              parts: dict[str, object], anims: list[El]) -> None:
     # ---- bones: contour (section silhouettes), chin, forehead / crown, face interior grid
+    # M5: the yaw +-1 poses come from the faired outline (fair_contour), not straight from the sections
     for n, (x, y, zp) in CONTOUR.items():
         for s, sgn in (("R", 1.0), ("L", -1.0)):
-            m, p = contour_pose(x, y)
             xx = x if sgn > 0 else 2 * CX - x
-            pose = (m, x, p) if sgn > 0 else (2 * CX - p, xx, 2 * CX - m)
-            ht.bone("F" + n + s, xx, y, poses(*pose), pit(y, zp))
-    zc = CHIN_Z * math.sin(K_YAW)
-    ht.bone("Chin", 400.0, 511.0, poses(400 - zc, 400, 400 + zc), pit(511, 60))
+            ht.bone("F" + n + s, xx, y, bone_yaw_poly("F" + n + s), pit(y, zp))
+    ht.bone("Chin", 400.0, 511.0, bone_yaw_poly("Chin"), pit(511, 60))
     for n, x, y in (("FHL", 310.0, 262.0), ("FHC", 400.0, 222.0), ("FHR", 490.0, 262.0)):
         z = shell_z(x - CX, y)
         ht.bone(n, x, y, mat(x, z), pit(y, z))
@@ -536,6 +781,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
     # mouth (every mood and open shape lives in this node): it rides the face surface (MOUTH_Z, a
     # little behind the nose tip and just ahead of the chin, which swings with the outline), its
     # pitch travel is 60 % of the chin's, and every mouth shape is clipped by the face
+    # (M5: the width is rebound to `mouth_width` by m5_three_quarter; the M1 factor keeps its ids here)
     ht.wrap(parts["Mouth"], (400.0, 478.0), mat(400, MOUTH_Z), pit(478, 28), sx=factor(0.88, 0.88))  # type: ignore[arg-type]
     # each face clip keeps its id: the shapes named in `MouthClipOrder` (the face rig's id order; a
     # deleted shape burns its id) clip here, shapes added since clip after every other head-turn id
@@ -733,6 +979,20 @@ SIDE_LOCK_ROOT_Y = 330.0
 MOLE_FADE = (0.6, 0.9)  # yaw: the mole on the right cheek turns behind the nose (full .. gone)
 
 
+NOSE_BREAK = 2.0  # px the far nose tip breaks past the faired far contour at yaw +-1 (M5 ruling 1c: <= 4)
+NOSE_TIP_ENDS = ((392.0, 452.0), (410.0, 440.0))  # the nose art's left (nostril hook) and right ends
+
+
+def nose_tip_travel() -> tuple[float, float]:
+    """(left, right) extra travel of the nose tip at yaw -1 / +1 on top of the nose's own turn: the
+    far end lands NOSE_BREAK px past the faired far contour (M5; M3/M4 used a fixed tip relief)."""
+    (lx, ly), (rx, ry) = NOSE_TIP_ENDS
+    base = NOSE_Z * math.sin(K_YAW)
+    right = contour_x_at(ry, K_YAW, 1.0) + NOSE_BREAK - (rx + base)
+    left = (lx - base) - (contour_x_at(ly, -K_YAW, -1.0) - NOSE_BREAK)
+    return left, right
+
+
 def nose_tip_and_mole(ht: HeadTurn) -> None:
     """Critic round 3 (minted last, so no earlier head-turn id moves): the nose tip stands further
     out than the bridge (NOSE_TIP_RELIEF vs NOSE_RELIEF), so at 3/4 it breaks over the flattened far
@@ -743,14 +1003,15 @@ def nose_tip_and_mole(ht: HeadTurn) -> None:
     # the nose art is drawn turned a touch to the viewer's left (its nostril hooks left), so its right
     # end needs NOSE_TIP_RIGHT more travel to break over the right cheek by as much as the hook does
     # over the left one
-    dz = (NOSE_TIP_Z - NOSE_Z) * math.sin(K_YAW)
+    # M5 ruling 1c: the far tip snaps to the faired far contour (it breaks it by NOSE_BREAK px)
+    tip_l, tip_r = nose_tip_travel()
     nose, shade = named(ht.head, "Nose")[0], named(ht.head, "NoseShade")[0]
-    tip = fit3(-dz, 0.0, dz + NOSE_TIP_RIGHT, K_YAW)
+    tip = fit3(-tip_l, 0.0, tip_r, K_YAW)
     ht.wrap(nose, (400.0, 450.0), dx=tip, name="NoseTip")
     # (y down: a clockwise turn by t moves the shade's bottom by -LEN sin t); the shade follows the
     # tip only NOSE_SHADE_FOLLOW of the way, so it never crosses the far contour's shading band
     k = NOSE_SHADE_FOLLOW / NOSE_SHADE_LEN
-    swing = fit3(math.asin(k * dz), 0.0, -math.asin(k * (dz + NOSE_TIP_RIGHT)), K_YAW)
+    swing = fit3(math.asin(k * tip_l), 0.0, -math.asin(k * tip_r), K_YAW)
     ht.wrap(shade, (404.0, 408.0), rot=swing, name="NoseTipShade")
     # the near side lock: its tip swings back toward the cheek (the ear's lower half shows below
     # the hair, its top half stays under it); nothing on the far side or at rest
@@ -767,6 +1028,22 @@ def nose_tip_and_mole(ht: HeadTurn) -> None:
     mole = named(ht.head, "Mole")[0]
     mole.add(ht.raw("yaw", "opacity", f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [
         f.val(1 + g * lo), f.op("-"), f.val(g), f.op("*"), *f.inp()]))))
+
+
+def m5_three_quarter(ht: HeadTurn, m5: Doc) -> None:
+    """M5 ruling 1d (minted from the M5 range, after every earlier id): the mouth's width follows
+    `mouth_width` (the mean foreshortening of its lip line) instead of the flat M1 0.88. The old
+    width chain is dropped when nothing else reads it."""
+    mouth = named(ht.head, "Mouth")[0]
+    outer = ht.parent_of(ht.parent_of(mouth))
+    bind = next(c for c in outer.children if c.tag == "DataBindContext" and c.attrs.get("propertyKey") == KEYS["scaleX"])
+    f = r.Formulas(m5, ht.path)
+    conv = m5("DataConverterFormula", *f.poly(factor(mouth_width(-K_YAW), mouth_width(K_YAW))))
+    group = m5("DataConverterGroup", m5("DataConverterGroupItem", converterId=ht.rig.angle(ht.rig.x_axis).ref()),
+               m5("DataConverterGroupItem", converterId=conv.ref()))
+    ht.rig.converters += [conv, group]
+    bind.attrs["converterId"] = group.ref()
+    prune_converters(ht)
 
 
 def _clamp(ht: HeadTurn, toks: list[El]) -> list[El]:

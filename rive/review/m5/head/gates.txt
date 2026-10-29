@@ -1,0 +1,42 @@
+M5 ruling 1: the faired 3/4 outline (review_face.py yaw_sweep)
+
+posed contour bones (pytest gate):
+rest outline: largest turn 26.0 deg (bound 1.25 x = 32.5 deg)
+M4 yaw +1: convex False, largest turn 55.0 deg, most concave +54.4 deg
+ok  M5 yaw -1.0 pitch -1 jaw 0: convex True, largest turn 30.9 deg (bound 38.1), least bend -2.0 deg
+ok  M5 yaw -1.0 pitch -1 jaw 1: convex True, largest turn 37.0 deg (bound 45.7), least bend -0.5 deg
+ok  M5 yaw -1.0 pitch +0 jaw 0: convex True, largest turn 26.8 deg (bound 32.5), least bend -4.8 deg
+ok  M5 yaw -1.0 pitch +0 jaw 1: convex True, largest turn 32.6 deg (bound 40.2), least bend -4.5 deg
+ok  M5 yaw -1.0 pitch +1 jaw 0: convex True, largest turn 23.9 deg (bound 24.6), least bend -5.3 deg
+ok  M5 yaw -1.0 pitch +1 jaw 1: convex True, largest turn 28.4 deg (bound 32.5), least bend -5.6 deg
+ok  M5 yaw -0.5 pitch -1 jaw 0: convex True, largest turn 30.6 deg (bound 38.1), least bend -3.4 deg
+ok  M5 yaw -0.5 pitch -1 jaw 1: convex True, largest turn 36.7 deg (bound 45.7), least bend -1.7 deg
+ok  M5 yaw -0.5 pitch +0 jaw 0: convex True, largest turn 26.1 deg (bound 32.5), least bend -6.1 deg
+ok  M5 yaw -0.5 pitch +0 jaw 1: convex True, largest turn 32.3 deg (bound 40.2), least bend -6.0 deg
+ok  M5 yaw -0.5 pitch +1 jaw 0: convex True, largest turn 19.9 deg (bound 24.6), least bend -6.7 deg
+ok  M5 yaw -0.5 pitch +1 jaw 1: convex True, largest turn 26.1 deg (bound 32.5), least bend -6.9 deg
+ok  M5 yaw +0.5 pitch -1 jaw 0: convex True, largest turn 30.6 deg (bound 38.1), least bend -3.4 deg
+ok  M5 yaw +0.5 pitch -1 jaw 1: convex True, largest turn 36.7 deg (bound 45.7), least bend -1.7 deg
+ok  M5 yaw +0.5 pitch +0 jaw 0: convex True, largest turn 26.1 deg (bound 32.5), least bend -6.1 deg
+ok  M5 yaw +0.5 pitch +0 jaw 1: convex True, largest turn 32.3 deg (bound 40.2), least bend -6.0 deg
+ok  M5 yaw +0.5 pitch +1 jaw 0: convex True, largest turn 19.9 deg (bound 24.6), least bend -6.7 deg
+ok  M5 yaw +0.5 pitch +1 jaw 1: convex True, largest turn 26.1 deg (bound 32.5), least bend -6.9 deg
+ok  M5 yaw +1.0 pitch -1 jaw 0: convex True, largest turn 30.9 deg (bound 38.1), least bend -2.0 deg
+ok  M5 yaw +1.0 pitch -1 jaw 1: convex True, largest turn 37.0 deg (bound 45.7), least bend -0.5 deg
+ok  M5 yaw +1.0 pitch +0 jaw 0: convex True, largest turn 26.8 deg (bound 32.5), least bend -4.8 deg
+ok  M5 yaw +1.0 pitch +0 jaw 1: convex True, largest turn 32.6 deg (bound 40.2), least bend -4.5 deg
+ok  M5 yaw +1.0 pitch +1 jaw 0: convex True, largest turn 23.9 deg (bound 24.6), least bend -5.3 deg
+ok  M5 yaw +1.0 pitch +1 jaw 1: convex True, largest turn 28.4 deg (bound 32.5), least bend -5.6 deg
+nose tip: extra travel 35.4 / 38.3 px at yaw -1 / +1 (M4: 13.0 / 19.0); breaks the faired far contour by 2.0 px
+mouth width at yaw +-1: 0.866 (M4: 0.88)
+
+rendered face silhouette, deepest dent below the hairline (px, row):
+M5 neutral   yaw -1 1.1@453  yaw -0.5 0.9@388  yaw 0 0.9@385  yaw 0.5 0.9@439  yaw 1 1.0@518
+M5 happy     yaw -1 1.1@490  yaw -0.5 1.0@500  yaw 0 1.1@507  yaw 0.5 1.1@512  yaw 1 0.9@373
+M5 jaw open  yaw -1 0.9@466  yaw -0.5 1.0@520  yaw 0 1.0@515  yaw 0.5 1.1@511  yaw 1 1.0@501
+M4 neutral   yaw -1 19.1@456  yaw -0.5 3.1@457  yaw 0 0.9@385  yaw 0.5 3.0@458  yaw 1 19.5@456
+M4 happy     yaw -1 19.7@459  yaw -0.5 3.0@461  yaw 0 1.1@507  yaw 0.5 3.0@454  yaw 1 19.2@452
+M4 jaw open  yaw -1 20.6@460  yaw -0.5 3.9@459  yaw 0 1.0@515  yaw 0.5 4.2@459  yaw 1 20.7@458
+
+worst M5 dent: 1.1 px (gate <= 2)
+model gates failed: 0

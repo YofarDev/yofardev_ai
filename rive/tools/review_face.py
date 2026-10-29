@@ -9,6 +9,8 @@
         FACE_OUT=rive/avatar/build/face/<name>.json flutter test tool/face_speech_trace_test.dart
     uv run rive/tools/review_face.py sheets                # au, moods, visemes, yaw (needs presets.json)
     uv run rive/tools/review_face.py yaw                   # 3/4 sheet + silhouette overlay + overhang gate (M3)
+    uv run rive/tools/review_face.py yaw_sweep [m4.rml]    # M5 faired 3/4: yaw sweep sheets, GIF, before /
+                                                           # after vs an older avatar.rml, dent + model gates
     uv run rive/tools/review_face.py blink                 # lid-sweep strip: neutral, happy, sad (M3)
     uv run rive/tools/review_face.py sides                 # v6 per-side offsets alone at +1, clamp cases (M3)
     uv run rive/tools/review_face.py fvs                   # f/v-s-th-pp-oh-ou at phone size (360 px) + close-up
@@ -176,14 +178,18 @@ CLIPPED = ("mouth", "lens", "blush")  # groups clipped by the face: their unclip
 EDGE_YS = (370, 400, 430, 460, 490, 505)  # artboard rows where the silhouette edges are measured
 
 
-def variant(name: str) -> Path:
+def variant(name: str, src: Path | None = None, tag: str = "") -> Path:
     """A throwaway copy of rive/avatar for review renders only: `mask` draws the face shape on top of
     the head in flat magenta (its silhouette, hair and all), `noclip_<group>` removes the face clip
-    from that group (what the clip hides is the overhang)."""
-    out = TMP / "variants" / name
+    from that group (what the clip hides is the overhang). `src`: another avatar.rml (e.g. an older
+    revision, saved under the variant name + `tag`); `plain` copies it unchanged."""
+    out = TMP / "variants" / (name + tag)
     out.mkdir(parents=True, exist_ok=True)
     shutil.copy(PROJ / "rive.yaml", out / "rive.yaml")
-    tree = ET.parse(PROJ / "avatar.rml")
+    if name == "plain":
+        shutil.copy(src or PROJ / "avatar.rml", out / "avatar.rml")
+        return out
+    tree = ET.parse(src or PROJ / "avatar.rml")
     parent = {c: p for p in tree.iter() for c in p}
     face = next(e for e in tree.iter("Shape") if e.get("name") == "Face")
     if name == "mask":
@@ -270,6 +276,128 @@ def yaw_sheet() -> None:
     (OUT / "face_yaw.txt").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
     if worst > 25:
+        raise SystemExit(1)
+
+
+# ------------------------------------------------------------------ the faired 3/4 face (M5)
+
+M5_HEAD_OUT = ROOT / "rive" / "review" / "m5" / "head"
+SWEEP_RIGS = ("campfire", "livingRoom")
+SWEEP_BOX = (230, 250, 570, 560)
+DENT_YS = range(360, 540)  # artboard rows of the face outline below the hairline (hair covers above)
+
+
+def _dent(mask: Image.Image) -> tuple[float, int]:
+    """Deepest dent (px) of the rendered face silhouette below the hairline: per side, how far the
+    edge lies inside the convex envelope of that side's edge points; and its row."""
+    rows = [(y, e) for y in DENT_YS if (e := _edges_at(mask, y))]
+    worst = (0.0, 0)
+    for side in (0, 1):
+        pts = [(y, e[side] * (1 if side else -1)) for y, e in rows]  # make both sides an upper envelope
+        hull: list[tuple[int, int]] = []
+        for p in pts:
+            while len(hull) >= 2 and (hull[-1][0] - hull[-2][0]) * (p[1] - hull[-2][1]) - \
+                    (hull[-1][1] - hull[-2][1]) * (p[0] - hull[-2][0]) >= 0:
+                hull.pop()
+            hull.append(p)
+        for y, v in pts:
+            for (y0, v0), (y1, v1) in zip(hull, hull[1:]):
+                if y0 <= y <= y1:
+                    env = v0 + (v1 - v0) * (y - y0) / (y1 - y0) if y1 > y0 else max(v0, v1)
+                    worst = max(worst, (env - v, y))
+                    break
+    return worst
+
+
+def _model_lines() -> list[str]:
+    """Posed-bone gate numbers (no render): the M4 tables against the faired M5 outline."""
+    sys.path.insert(0, str(HERE))
+    import math as m_
+    import head_turn as ht
+    lines = [f"rest outline: largest turn {m_.degrees(ht.max_turn(ht.contour_chain(0))):.1f} deg "
+             f"(bound {ht.FAIR_BOUND} x = {m_.degrees(ht.rest_bound()):.1f} deg)"]
+    m4 = ht.m4_contour_chain()
+    lines.append(f"M4 yaw +1: convex {ht.is_convex(m4)}, largest turn {m_.degrees(ht.max_turn(m4)):.1f} deg, "
+                 f"most concave {m_.degrees(max(ht._turns(m4))):+.1f} deg")
+    for yaw in (-1.0, -0.5, 0.5, 1.0):
+        for pitch in (-1.0, 0.0, 1.0):
+            for jaw in (0.0, 1.0):
+                c = ht.contour_chain(yaw, pitch, jaw)
+                ok = ht.is_convex(c) and ht.max_turn(c) <= ht.rest_bound(pitch, jaw)
+                lines.append(f"{'ok ' if ok else 'BAD'} M5 yaw {yaw:+.1f} pitch {pitch:+.0f} jaw {jaw:.0f}: convex "
+                             f"{ht.is_convex(c)}, largest turn {m_.degrees(ht.max_turn(c)):.1f} deg "
+                             f"(bound {m_.degrees(ht.rest_bound(pitch, jaw)):.1f}), least bend "
+                             f"{m_.degrees(max(ht._turns(c))):+.1f} deg")
+    left, right = ht.nose_tip_travel()
+    lines.append(f"nose tip: extra travel {left:.1f} / {right:.1f} px at yaw -1 / +1 (M4: 13.0 / 19.0); "
+                 f"breaks the faired far contour by {ht.NOSE_BREAK} px")
+    lines.append(f"mouth width at yaw +-1: {ht.mouth_width(ht.K_YAW):.3f} (M4: 0.88)")
+    return lines
+
+
+def yaw_sweep(m4_rml: Path | None = None) -> None:
+    """M5 ruling 1 evidence -> rive/review/m5/head/: per rig (campfire, livingRoom) a sheet of 5 yaws x
+    neutral / happy / jaw open; an 18-frame yaw -1 -> 1 GIF (campfire, neutral); with `m4_rml` (the
+    M4 avatar.rml) a before / after strip at yaw -1 / +1 and the rendered dent depths of both; and
+    gates.txt (posed-bone numbers and rendered dents). Exit 1 if a model gate fails or a rendered
+    dent is deeper than 2 px."""
+    M5_HEAD_OUT.mkdir(parents=True, exist_ok=True)
+    faces = (("neutral", {}), ("happy", HAPPY), ("jaw open", {"auJawDrop": "1"}))
+
+    def data(sc: str, face: dict[str, str], yaw: str) -> dict[str, str]:
+        return {"autoBlink": "false", **rig_data(sc), **face, "yaw": yaw}
+
+    def run(jobs: list[tuple[Path, dict[str, str], Path]]) -> list[Path]:
+        with ThreadPoolExecutor(WORKERS) as ex:
+            return list(ex.map(lambda j: cli(j[0], j[1], SETTLE, proj=j[2]), jobs))
+
+    tmp = TMP / "m5_head"
+    for sc in SWEEP_RIGS:
+        jobs = [(tmp / f"{sc}_{f}_{y}.png".replace(" ", "_"), data(sc, fd, y), PROJ) for f, fd in faces for y in YAWS]
+        cells = [label(cell(p, SWEEP_BOX, 1.0), f"{sc} {f} yaw {y}")
+                 for p, (f, y) in zip(run(jobs), [(f, y) for f, _ in faces for y in YAWS])]
+        w, h = cells[0].size
+        im = Image.new("RGB", (w * len(YAWS), h * len(faces)), (20, 18, 26))
+        for k, c in enumerate(cells):
+            im.paste(c, ((k % len(YAWS)) * w, (k // len(YAWS)) * h))
+        im.save(M5_HEAD_OUT / f"yaw_sweep_{sc}.png", optimize=True)
+    yaws = [f"{-1 + 2 * k / 17:.4f}" for k in range(18)]
+    gif = [cell(p, SWEEP_BOX, 1.0) for p in run([(tmp / f"gif_{k:02d}.png", data("campfire", {}, y), PROJ)
+                                                for k, y in enumerate(yaws)])]
+    save_gif(gif + gif[-2:0:-1], M5_HEAD_OUT / "yaw_sweep.gif", 12)
+    lines = ["M5 ruling 1: the faired 3/4 outline (review_face.py yaw_sweep)", "", "posed contour bones (pytest gate):",
+             *_model_lines(), "", "rendered face silhouette, deepest dent below the hairline (px, row):"]
+    projs = {"M5": variant("mask")}
+    if m4_rml:
+        projs["M4"] = variant("mask", m4_rml, "_m4")
+        before = variant("plain", m4_rml, "_m4")
+        strip = []
+        for f, fd in (("neutral", {}), ("jaw open", {"auJawDrop": "1"})):
+            for y in ("-1", "1"):
+                b, a = run([(tmp / f"ba_m4_{f}_{y}.png".replace(" ", "_"), data("campfire", fd, y), before),
+                            (tmp / f"ba_m5_{f}_{y}.png".replace(" ", "_"), data("campfire", fd, y), PROJ)])
+                strip += [label(cell(b, SWEEP_BOX, 1.0), f"M4 {f} yaw {y}"), label(cell(a, SWEEP_BOX, 1.0), f"M5 {f} yaw {y}")]
+        w, h = strip[0].size
+        im = Image.new("RGB", (w * 4, h * 2), (20, 18, 26))
+        for k, c in enumerate(strip):
+            im.paste(c, ((k % 4) * w, (k // 4) * h))
+        im.save(M5_HEAD_OUT / "before_after.png", optimize=True)
+    worst = 0.0
+    for tag, proj in projs.items():
+        for f, fd in faces:
+            row = []
+            for y in YAWS:
+                png = cli(tmp / f"dent_{tag}_{f}_{y}.png".replace(" ", "_"), data("campfire", fd, y), SETTLE, proj=proj)
+                depth, at = _dent(_mask(png))
+                row.append(f"yaw {y} {depth:.1f}@{at}")
+                if tag == "M5":
+                    worst = max(worst, depth)
+            lines.append(f"{tag} {f:<9} " + "  ".join(row))
+    bad = [ln for ln in lines if ln.startswith("BAD")]
+    lines += ["", f"worst M5 dent: {worst:.1f} px (gate <= 2)", f"model gates failed: {len(bad)}"]
+    (M5_HEAD_OUT / "gates.txt").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines))
+    if bad or worst > 2:
         raise SystemExit(1)
 
 
@@ -835,6 +963,8 @@ if __name__ == "__main__":
         fvs()
     elif what[0] == "yaw":
         yaw_sheet()
+    elif what[0] == "yaw_sweep":
+        yaw_sweep(Path(what[1]) if len(what) > 1 else None)
     elif what[0] == "gates":
         gates()
     elif what[0] == "light":

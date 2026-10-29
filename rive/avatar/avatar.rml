@@ -19590,7 +19590,7 @@
                                         <Node x="0" y="-82" name="MouthTurn" id="0:901144">
                                           <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="13" converterId="0:901111" id="0:901112"/>
                                           <DataBindContext sourcePathIds="0:14689-0:900001" propertyKey="14" converterId="0:901129" id="0:901130"/>
-                                          <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:901141" id="0:901142"/>
+                                          <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:1000008" id="0:901142"/>
                                           <Node x="0" y="82" name="MouthPivot" id="0:901143">
                                             <Node x="0" y="-82" name="Mouth" id="0:10220">
                                               <Node x="0" y="0" name="Lines" id="0:10221">
@@ -49271,15 +49271,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900106">
-    <FormulaTokenValue operationValue="103.704" id="0:900093"/>
+    <FormulaTokenValue operationValue="114.04" id="0:900093"/>
     <FormulaTokenOperation operationType="0" id="0:900094"/>
-    <FormulaTokenValue operationValue="4.296" id="0:900095"/>
+    <FormulaTokenValue operationValue="-6.04" id="0:900095"/>
     <FormulaTokenOperation operationType="2" id="0:900096"/>
     <FormulaTokenFunction functionType="9" id="0:900098"/>
     <FormulaTokenInput id="0:900097"/>
     <FormulaTokenParenthesisClose id="0:900099"/>
     <FormulaTokenOperation operationType="0" id="0:900100"/>
-    <FormulaTokenValue operationValue="13.761" id="0:900101"/>
+    <FormulaTokenValue operationValue="12.405" id="0:900101"/>
     <FormulaTokenOperation operationType="2" id="0:900102"/>
     <FormulaTokenFunction functionType="10" id="0:900104"/>
     <FormulaTokenInput id="0:900103"/>
@@ -49313,15 +49313,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900143">
-    <FormulaTokenValue operationValue="-103.704" id="0:900130"/>
+    <FormulaTokenValue operationValue="-114.04" id="0:900130"/>
     <FormulaTokenOperation operationType="0" id="0:900131"/>
-    <FormulaTokenValue operationValue="-4.296" id="0:900132"/>
+    <FormulaTokenValue operationValue="6.04" id="0:900132"/>
     <FormulaTokenOperation operationType="2" id="0:900133"/>
     <FormulaTokenFunction functionType="9" id="0:900135"/>
     <FormulaTokenInput id="0:900134"/>
     <FormulaTokenParenthesisClose id="0:900136"/>
     <FormulaTokenOperation operationType="0" id="0:900137"/>
-    <FormulaTokenValue operationValue="13.761" id="0:900138"/>
+    <FormulaTokenValue operationValue="12.405" id="0:900138"/>
     <FormulaTokenOperation operationType="2" id="0:900139"/>
     <FormulaTokenFunction functionType="10" id="0:900141"/>
     <FormulaTokenInput id="0:900140"/>
@@ -49334,15 +49334,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900163">
-    <FormulaTokenValue operationValue="148.827" id="0:900150"/>
+    <FormulaTokenValue operationValue="130.437" id="0:900150"/>
     <FormulaTokenOperation operationType="0" id="0:900151"/>
-    <FormulaTokenValue operationValue="-42.827" id="0:900152"/>
+    <FormulaTokenValue operationValue="-24.437" id="0:900152"/>
     <FormulaTokenOperation operationType="2" id="0:900153"/>
     <FormulaTokenFunction functionType="9" id="0:900155"/>
     <FormulaTokenInput id="0:900154"/>
     <FormulaTokenParenthesisClose id="0:900156"/>
     <FormulaTokenOperation operationType="0" id="0:900157"/>
-    <FormulaTokenValue operationValue="17.324" id="0:900158"/>
+    <FormulaTokenValue operationValue="15.03" id="0:900158"/>
     <FormulaTokenOperation operationType="2" id="0:900159"/>
     <FormulaTokenFunction functionType="10" id="0:900161"/>
     <FormulaTokenInput id="0:900160"/>
@@ -49376,15 +49376,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900200">
-    <FormulaTokenValue operationValue="-148.827" id="0:900187"/>
+    <FormulaTokenValue operationValue="-130.437" id="0:900187"/>
     <FormulaTokenOperation operationType="0" id="0:900188"/>
-    <FormulaTokenValue operationValue="42.827" id="0:900189"/>
+    <FormulaTokenValue operationValue="24.437" id="0:900189"/>
     <FormulaTokenOperation operationType="2" id="0:900190"/>
     <FormulaTokenFunction functionType="9" id="0:900192"/>
     <FormulaTokenInput id="0:900191"/>
     <FormulaTokenParenthesisClose id="0:900193"/>
     <FormulaTokenOperation operationType="0" id="0:900194"/>
-    <FormulaTokenValue operationValue="17.324" id="0:900195"/>
+    <FormulaTokenValue operationValue="15.03" id="0:900195"/>
     <FormulaTokenOperation operationType="2" id="0:900196"/>
     <FormulaTokenFunction functionType="10" id="0:900198"/>
     <FormulaTokenInput id="0:900197"/>
@@ -49397,15 +49397,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900220">
-    <FormulaTokenValue operationValue="76.847" id="0:900207"/>
+    <FormulaTokenValue operationValue="117.301" id="0:900207"/>
     <FormulaTokenOperation operationType="0" id="0:900208"/>
-    <FormulaTokenValue operationValue="20.153" id="0:900209"/>
+    <FormulaTokenValue operationValue="-20.301" id="0:900209"/>
     <FormulaTokenOperation operationType="2" id="0:900210"/>
     <FormulaTokenFunction functionType="9" id="0:900212"/>
     <FormulaTokenInput id="0:900211"/>
     <FormulaTokenParenthesisClose id="0:900213"/>
     <FormulaTokenOperation operationType="0" id="0:900214"/>
-    <FormulaTokenValue operationValue="-8.597" id="0:900215"/>
+    <FormulaTokenValue operationValue="21.377" id="0:900215"/>
     <FormulaTokenOperation operationType="2" id="0:900216"/>
     <FormulaTokenFunction functionType="10" id="0:900218"/>
     <FormulaTokenInput id="0:900217"/>
@@ -49439,15 +49439,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900257">
-    <FormulaTokenValue operationValue="-76.847" id="0:900244"/>
+    <FormulaTokenValue operationValue="-117.301" id="0:900244"/>
     <FormulaTokenOperation operationType="0" id="0:900245"/>
-    <FormulaTokenValue operationValue="-20.153" id="0:900246"/>
+    <FormulaTokenValue operationValue="20.301" id="0:900246"/>
     <FormulaTokenOperation operationType="2" id="0:900247"/>
     <FormulaTokenFunction functionType="9" id="0:900249"/>
     <FormulaTokenInput id="0:900248"/>
     <FormulaTokenParenthesisClose id="0:900250"/>
     <FormulaTokenOperation operationType="0" id="0:900251"/>
-    <FormulaTokenValue operationValue="-8.597" id="0:900252"/>
+    <FormulaTokenValue operationValue="21.377" id="0:900252"/>
     <FormulaTokenOperation operationType="2" id="0:900253"/>
     <FormulaTokenFunction functionType="10" id="0:900255"/>
     <FormulaTokenInput id="0:900254"/>
@@ -49460,15 +49460,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900277">
-    <FormulaTokenValue operationValue="49.341" id="0:900264"/>
+    <FormulaTokenValue operationValue="92.64" id="0:900264"/>
     <FormulaTokenOperation operationType="0" id="0:900265"/>
-    <FormulaTokenValue operationValue="31.659" id="0:900266"/>
+    <FormulaTokenValue operationValue="-11.64" id="0:900266"/>
     <FormulaTokenOperation operationType="2" id="0:900267"/>
     <FormulaTokenFunction functionType="9" id="0:900269"/>
     <FormulaTokenInput id="0:900268"/>
     <FormulaTokenParenthesisClose id="0:900270"/>
     <FormulaTokenOperation operationType="0" id="0:900271"/>
-    <FormulaTokenValue operationValue="-9.487" id="0:900272"/>
+    <FormulaTokenValue operationValue="31.383" id="0:900272"/>
     <FormulaTokenOperation operationType="2" id="0:900273"/>
     <FormulaTokenFunction functionType="10" id="0:900275"/>
     <FormulaTokenInput id="0:900274"/>
@@ -49481,15 +49481,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900314">
-    <FormulaTokenValue operationValue="-49.341" id="0:900301"/>
+    <FormulaTokenValue operationValue="-92.64" id="0:900301"/>
     <FormulaTokenOperation operationType="0" id="0:900302"/>
-    <FormulaTokenValue operationValue="-31.659" id="0:900303"/>
+    <FormulaTokenValue operationValue="11.64" id="0:900303"/>
     <FormulaTokenOperation operationType="2" id="0:900304"/>
     <FormulaTokenFunction functionType="9" id="0:900306"/>
     <FormulaTokenInput id="0:900305"/>
     <FormulaTokenParenthesisClose id="0:900307"/>
     <FormulaTokenOperation operationType="0" id="0:900308"/>
-    <FormulaTokenValue operationValue="-9.487" id="0:900309"/>
+    <FormulaTokenValue operationValue="31.383" id="0:900309"/>
     <FormulaTokenOperation operationType="2" id="0:900310"/>
     <FormulaTokenFunction functionType="10" id="0:900312"/>
     <FormulaTokenInput id="0:900311"/>
@@ -49502,15 +49502,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900334">
-    <FormulaTokenValue operationValue="66.223" id="0:900321"/>
+    <FormulaTokenValue operationValue="72.382" id="0:900321"/>
     <FormulaTokenOperation operationType="0" id="0:900322"/>
-    <FormulaTokenValue operationValue="0.777" id="0:900323"/>
+    <FormulaTokenValue operationValue="-5.382" id="0:900323"/>
     <FormulaTokenOperation operationType="2" id="0:900324"/>
     <FormulaTokenFunction functionType="9" id="0:900326"/>
     <FormulaTokenInput id="0:900325"/>
     <FormulaTokenParenthesisClose id="0:900327"/>
     <FormulaTokenOperation operationType="0" id="0:900328"/>
-    <FormulaTokenValue operationValue="25.88" id="0:900329"/>
+    <FormulaTokenValue operationValue="41.437" id="0:900329"/>
     <FormulaTokenOperation operationType="2" id="0:900330"/>
     <FormulaTokenFunction functionType="10" id="0:900332"/>
     <FormulaTokenInput id="0:900331"/>
@@ -49523,15 +49523,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900371">
-    <FormulaTokenValue operationValue="-66.223" id="0:900358"/>
+    <FormulaTokenValue operationValue="-72.382" id="0:900358"/>
     <FormulaTokenOperation operationType="0" id="0:900359"/>
-    <FormulaTokenValue operationValue="-0.777" id="0:900360"/>
+    <FormulaTokenValue operationValue="5.382" id="0:900360"/>
     <FormulaTokenOperation operationType="2" id="0:900361"/>
     <FormulaTokenFunction functionType="9" id="0:900363"/>
     <FormulaTokenInput id="0:900362"/>
     <FormulaTokenParenthesisClose id="0:900364"/>
     <FormulaTokenOperation operationType="0" id="0:900365"/>
-    <FormulaTokenValue operationValue="25.88" id="0:900366"/>
+    <FormulaTokenValue operationValue="41.437" id="0:900366"/>
     <FormulaTokenOperation operationType="2" id="0:900367"/>
     <FormulaTokenFunction functionType="10" id="0:900369"/>
     <FormulaTokenInput id="0:900368"/>
@@ -49544,15 +49544,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900391">
-    <FormulaTokenValue operationValue="33.081" id="0:900378"/>
+    <FormulaTokenValue operationValue="50.217" id="0:900378"/>
     <FormulaTokenOperation operationType="0" id="0:900379"/>
-    <FormulaTokenValue operationValue="16.919" id="0:900380"/>
+    <FormulaTokenValue operationValue="-0.217" id="0:900380"/>
     <FormulaTokenOperation operationType="2" id="0:900381"/>
     <FormulaTokenFunction functionType="9" id="0:900383"/>
     <FormulaTokenInput id="0:900382"/>
     <FormulaTokenParenthesisClose id="0:900384"/>
     <FormulaTokenOperation operationType="0" id="0:900385"/>
-    <FormulaTokenValue operationValue="59.112" id="0:900386"/>
+    <FormulaTokenValue operationValue="53.538" id="0:900386"/>
     <FormulaTokenOperation operationType="2" id="0:900387"/>
     <FormulaTokenFunction functionType="10" id="0:900389"/>
     <FormulaTokenInput id="0:900388"/>
@@ -49565,15 +49565,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900428">
-    <FormulaTokenValue operationValue="-33.081" id="0:900415"/>
+    <FormulaTokenValue operationValue="-50.217" id="0:900415"/>
     <FormulaTokenOperation operationType="0" id="0:900416"/>
-    <FormulaTokenValue operationValue="-16.919" id="0:900417"/>
+    <FormulaTokenValue operationValue="0.217" id="0:900417"/>
     <FormulaTokenOperation operationType="2" id="0:900418"/>
     <FormulaTokenFunction functionType="9" id="0:900420"/>
     <FormulaTokenInput id="0:900419"/>
     <FormulaTokenParenthesisClose id="0:900421"/>
     <FormulaTokenOperation operationType="0" id="0:900422"/>
-    <FormulaTokenValue operationValue="59.112" id="0:900423"/>
+    <FormulaTokenValue operationValue="53.538" id="0:900423"/>
     <FormulaTokenOperation operationType="2" id="0:900424"/>
     <FormulaTokenFunction functionType="10" id="0:900426"/>
     <FormulaTokenInput id="0:900425"/>
@@ -49586,15 +49586,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900448">
-    <FormulaTokenValue operationValue="32.482" id="0:900435"/>
+    <FormulaTokenValue operationValue="25.164" id="0:900435"/>
     <FormulaTokenOperation operationType="0" id="0:900436"/>
-    <FormulaTokenValue operationValue="-6.482" id="0:900437"/>
+    <FormulaTokenValue operationValue="0.836" id="0:900437"/>
     <FormulaTokenOperation operationType="2" id="0:900438"/>
     <FormulaTokenFunction functionType="9" id="0:900440"/>
     <FormulaTokenInput id="0:900439"/>
     <FormulaTokenParenthesisClose id="0:900441"/>
     <FormulaTokenOperation operationType="0" id="0:900442"/>
-    <FormulaTokenValue operationValue="84" id="0:900443"/>
+    <FormulaTokenValue operationValue="67.55" id="0:900443"/>
     <FormulaTokenOperation operationType="2" id="0:900444"/>
     <FormulaTokenFunction functionType="10" id="0:900446"/>
     <FormulaTokenInput id="0:900445"/>
@@ -49607,15 +49607,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900485">
-    <FormulaTokenValue operationValue="-32.482" id="0:900472"/>
+    <FormulaTokenValue operationValue="-25.164" id="0:900472"/>
     <FormulaTokenOperation operationType="0" id="0:900473"/>
-    <FormulaTokenValue operationValue="6.482" id="0:900474"/>
+    <FormulaTokenValue operationValue="-0.836" id="0:900474"/>
     <FormulaTokenOperation operationType="2" id="0:900475"/>
     <FormulaTokenFunction functionType="9" id="0:900477"/>
     <FormulaTokenInput id="0:900476"/>
     <FormulaTokenParenthesisClose id="0:900478"/>
     <FormulaTokenOperation operationType="0" id="0:900479"/>
-    <FormulaTokenValue operationValue="84" id="0:900480"/>
+    <FormulaTokenValue operationValue="67.55" id="0:900480"/>
     <FormulaTokenOperation operationType="2" id="0:900481"/>
     <FormulaTokenFunction functionType="10" id="0:900483"/>
     <FormulaTokenInput id="0:900482"/>
@@ -49628,7 +49628,7 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900497">
-    <FormulaTokenValue operationValue="84.145" id="0:900492"/>
+    <FormulaTokenValue operationValue="72.679" id="0:900492"/>
     <FormulaTokenOperation operationType="2" id="0:900493"/>
     <FormulaTokenFunction functionType="10" id="0:900495"/>
     <FormulaTokenInput id="0:900494"/>
@@ -50187,21 +50187,6 @@
   <DataConverterGroup id="0:901129">
     <DataConverterGroupItem converterId="0:900067" id="0:901127"/>
     <DataConverterGroupItem converterId="0:901126" id="0:901128"/>
-  </DataConverterGroup>
-
-  <DataConverterFormula id="0:901138">
-    <FormulaTokenValue operationValue="0.104" id="0:901131"/>
-    <FormulaTokenOperation operationType="0" id="0:901132"/>
-    <FormulaTokenValue operationValue="0.896" id="0:901133"/>
-    <FormulaTokenOperation operationType="2" id="0:901134"/>
-    <FormulaTokenFunction functionType="9" id="0:901136"/>
-    <FormulaTokenInput id="0:901135"/>
-    <FormulaTokenParenthesisClose id="0:901137"/>
-  </DataConverterFormula>
-
-  <DataConverterGroup id="0:901141">
-    <DataConverterGroupItem converterId="0:900037" id="0:901139"/>
-    <DataConverterGroupItem converterId="0:901138" id="0:901140"/>
   </DataConverterGroup>
 
   <DataConverterFormula id="0:901183">
@@ -52489,15 +52474,15 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:903368">
-    <FormulaTokenValue operationValue="68.448" id="0:903355"/>
+    <FormulaTokenValue operationValue="34.512" id="0:903355"/>
     <FormulaTokenOperation operationType="0" id="0:903356"/>
-    <FormulaTokenValue operationValue="-165.448" id="0:903357"/>
+    <FormulaTokenValue operationValue="-131.512" id="0:903357"/>
     <FormulaTokenOperation operationType="2" id="0:903358"/>
     <FormulaTokenFunction functionType="9" id="0:903360"/>
     <FormulaTokenInput id="0:903359"/>
     <FormulaTokenParenthesisClose id="0:903361"/>
     <FormulaTokenOperation operationType="0" id="0:903362"/>
-    <FormulaTokenValue operationValue="-3.391" id="0:903363"/>
+    <FormulaTokenValue operationValue="5.702" id="0:903363"/>
     <FormulaTokenOperation operationType="2" id="0:903364"/>
     <FormulaTokenFunction functionType="10" id="0:903366"/>
     <FormulaTokenInput id="0:903365"/>
@@ -52549,15 +52534,15 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:903430">
-    <FormulaTokenValue operationValue="-68.448" id="0:903417"/>
+    <FormulaTokenValue operationValue="-34.512" id="0:903417"/>
     <FormulaTokenOperation operationType="0" id="0:903418"/>
-    <FormulaTokenValue operationValue="165.448" id="0:903419"/>
+    <FormulaTokenValue operationValue="131.512" id="0:903419"/>
     <FormulaTokenOperation operationType="2" id="0:903420"/>
     <FormulaTokenFunction functionType="9" id="0:903422"/>
     <FormulaTokenInput id="0:903421"/>
     <FormulaTokenParenthesisClose id="0:903423"/>
     <FormulaTokenOperation operationType="0" id="0:903424"/>
-    <FormulaTokenValue operationValue="-3.391" id="0:903425"/>
+    <FormulaTokenValue operationValue="5.702" id="0:903425"/>
     <FormulaTokenOperation operationType="2" id="0:903426"/>
     <FormulaTokenFunction functionType="10" id="0:903428"/>
     <FormulaTokenInput id="0:903427"/>
@@ -52588,15 +52573,15 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:903481">
-    <FormulaTokenValue operationValue="-15.387" id="0:903468"/>
+    <FormulaTokenValue operationValue="-39.042" id="0:903468"/>
     <FormulaTokenOperation operationType="0" id="0:903469"/>
-    <FormulaTokenValue operationValue="-46.613" id="0:903470"/>
+    <FormulaTokenValue operationValue="-22.958" id="0:903470"/>
     <FormulaTokenOperation operationType="2" id="0:903471"/>
     <FormulaTokenFunction functionType="9" id="0:903473"/>
     <FormulaTokenInput id="0:903472"/>
     <FormulaTokenParenthesisClose id="0:903474"/>
     <FormulaTokenOperation operationType="0" id="0:903475"/>
-    <FormulaTokenValue operationValue="-50.933" id="0:903476"/>
+    <FormulaTokenValue operationValue="-44.595" id="0:903476"/>
     <FormulaTokenOperation operationType="2" id="0:903477"/>
     <FormulaTokenFunction functionType="10" id="0:903479"/>
     <FormulaTokenInput id="0:903478"/>
@@ -52630,15 +52615,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:903520">
-    <FormulaTokenValue operationValue="15.387" id="0:903507"/>
+    <FormulaTokenValue operationValue="39.042" id="0:903507"/>
     <FormulaTokenOperation operationType="0" id="0:903508"/>
-    <FormulaTokenValue operationValue="46.613" id="0:903509"/>
+    <FormulaTokenValue operationValue="22.958" id="0:903509"/>
     <FormulaTokenOperation operationType="2" id="0:903510"/>
     <FormulaTokenFunction functionType="9" id="0:903512"/>
     <FormulaTokenInput id="0:903511"/>
     <FormulaTokenParenthesisClose id="0:903513"/>
     <FormulaTokenOperation operationType="0" id="0:903514"/>
-    <FormulaTokenValue operationValue="-50.933" id="0:903515"/>
+    <FormulaTokenValue operationValue="-44.595" id="0:903515"/>
     <FormulaTokenOperation operationType="2" id="0:903516"/>
     <FormulaTokenFunction functionType="10" id="0:903518"/>
     <FormulaTokenInput id="0:903517"/>
@@ -52708,15 +52693,15 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:903606">
-    <FormulaTokenValue operationValue="22.392" id="0:903593"/>
+    <FormulaTokenValue operationValue="10.685" id="0:903593"/>
     <FormulaTokenOperation operationType="0" id="0:903594"/>
-    <FormulaTokenValue operationValue="-22.392" id="0:903595"/>
+    <FormulaTokenValue operationValue="-10.685" id="0:903595"/>
     <FormulaTokenOperation operationType="2" id="0:903596"/>
     <FormulaTokenFunction functionType="9" id="0:903598"/>
     <FormulaTokenInput id="0:903597"/>
     <FormulaTokenParenthesisClose id="0:903599"/>
     <FormulaTokenOperation operationType="0" id="0:903600"/>
-    <FormulaTokenValue operationValue="32" id="0:903601"/>
+    <FormulaTokenValue operationValue="73.678" id="0:903601"/>
     <FormulaTokenOperation operationType="2" id="0:903602"/>
     <FormulaTokenFunction functionType="10" id="0:903604"/>
     <FormulaTokenInput id="0:903603"/>
@@ -52729,15 +52714,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:903626">
-    <FormulaTokenValue operationValue="-0.244" id="0:903613"/>
+    <FormulaTokenValue operationValue="-0.125" id="0:903613"/>
     <FormulaTokenOperation operationType="0" id="0:903614"/>
-    <FormulaTokenValue operationValue="0.244" id="0:903615"/>
+    <FormulaTokenValue operationValue="0.125" id="0:903615"/>
     <FormulaTokenOperation operationType="2" id="0:903616"/>
     <FormulaTokenFunction functionType="9" id="0:903618"/>
     <FormulaTokenInput id="0:903617"/>
     <FormulaTokenParenthesisClose id="0:903619"/>
     <FormulaTokenOperation operationType="0" id="0:903620"/>
-    <FormulaTokenValue operationValue="-0.345" id="0:903621"/>
+    <FormulaTokenValue operationValue="-0.812" id="0:903621"/>
     <FormulaTokenOperation operationType="2" id="0:903622"/>
     <FormulaTokenFunction functionType="10" id="0:903624"/>
     <FormulaTokenInput id="0:903623"/>
@@ -52792,15 +52777,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:903686">
-    <FormulaTokenValue operationValue="-54.117" id="0:903673"/>
+    <FormulaTokenValue operationValue="-40.293" id="0:903673"/>
     <FormulaTokenOperation operationType="0" id="0:903674"/>
-    <FormulaTokenValue operationValue="110.117" id="0:903675"/>
+    <FormulaTokenValue operationValue="96.293" id="0:903675"/>
     <FormulaTokenOperation operationType="2" id="0:903676"/>
     <FormulaTokenFunction functionType="9" id="0:903678"/>
     <FormulaTokenInput id="0:903677"/>
     <FormulaTokenParenthesisClose id="0:903679"/>
     <FormulaTokenOperation operationType="0" id="0:903680"/>
-    <FormulaTokenValue operationValue="54.72" id="0:903681"/>
+    <FormulaTokenValue operationValue="58.424" id="0:903681"/>
     <FormulaTokenOperation operationType="2" id="0:903682"/>
     <FormulaTokenFunction functionType="10" id="0:903684"/>
     <FormulaTokenInput id="0:903683"/>
@@ -52813,15 +52798,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:903703">
-    <FormulaTokenValue operationValue="59.803" id="0:903690"/>
+    <FormulaTokenValue operationValue="40.789" id="0:903690"/>
     <FormulaTokenOperation operationType="0" id="0:903691"/>
-    <FormulaTokenValue operationValue="-124.803" id="0:903692"/>
+    <FormulaTokenValue operationValue="-105.789" id="0:903692"/>
     <FormulaTokenOperation operationType="2" id="0:903693"/>
     <FormulaTokenFunction functionType="9" id="0:903695"/>
     <FormulaTokenInput id="0:903694"/>
     <FormulaTokenParenthesisClose id="0:903696"/>
     <FormulaTokenOperation operationType="0" id="0:903697"/>
-    <FormulaTokenValue operationValue="46.218" id="0:903698"/>
+    <FormulaTokenValue operationValue="51.312" id="0:903698"/>
     <FormulaTokenOperation operationType="2" id="0:903699"/>
     <FormulaTokenFunction functionType="10" id="0:903701"/>
     <FormulaTokenInput id="0:903700"/>
@@ -52834,15 +52819,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:903720">
-    <FormulaTokenValue operationValue="-59.803" id="0:903707"/>
+    <FormulaTokenValue operationValue="-40.789" id="0:903707"/>
     <FormulaTokenOperation operationType="0" id="0:903708"/>
-    <FormulaTokenValue operationValue="124.803" id="0:903709"/>
+    <FormulaTokenValue operationValue="105.789" id="0:903709"/>
     <FormulaTokenOperation operationType="2" id="0:903710"/>
     <FormulaTokenFunction functionType="9" id="0:903712"/>
     <FormulaTokenInput id="0:903711"/>
     <FormulaTokenParenthesisClose id="0:903713"/>
     <FormulaTokenOperation operationType="0" id="0:903714"/>
-    <FormulaTokenValue operationValue="46.218" id="0:903715"/>
+    <FormulaTokenValue operationValue="51.312" id="0:903715"/>
     <FormulaTokenOperation operationType="2" id="0:903716"/>
     <FormulaTokenFunction functionType="10" id="0:903718"/>
     <FormulaTokenInput id="0:903717"/>
@@ -53033,6 +53018,19 @@
   <DataConverterGroup id="0:956290">
     <DataConverterGroupItem converterId="0:900067" id="0:956288"/>
     <DataConverterGroupItem converterId="0:956287" id="0:956289"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:1000005">
+    <FormulaTokenValue operationValue="1" id="0:1000000"/>
+    <FormulaTokenOperation operationType="2" id="0:1000001"/>
+    <FormulaTokenFunction functionType="9" id="0:1000003"/>
+    <FormulaTokenInput id="0:1000002"/>
+    <FormulaTokenParenthesisClose id="0:1000004"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:1000008">
+    <DataConverterGroupItem converterId="0:900037" id="0:1000006"/>
+    <DataConverterGroupItem converterId="0:1000005" id="0:1000007"/>
   </DataConverterGroup>
 
   <DataConverterFormula id="0:980082">
