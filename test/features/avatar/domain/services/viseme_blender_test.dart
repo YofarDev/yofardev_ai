@@ -172,6 +172,60 @@ void main() {
       }
     });
 
+    group('plosives (M3)', () {
+      final SpeechTimeline tl = timeline(<VisemeSpan>[
+        span(Viseme.aa, 0, 200),
+        span(Viseme.pp, 200, 320),
+        span(Viseme.e, 320, 620),
+      ]);
+
+      test('the closure compresses: press ramps 0.6 to 0.9, jaw 0', () {
+        double last = 0;
+        for (int us = 200000; us < 320000; us += 1000) {
+          final MouthBlend b = blender.shapeAt(tl, Duration(microseconds: us));
+          expect(b.sealed, isTrue);
+          expect(b.shape.jaw, 0);
+          expect(b.shape.press, greaterThanOrEqualTo(last));
+          last = b.shape.press;
+        }
+        expect(blender.shapeAt(tl, ms(200)).shape.press, closeTo(0.6, 1e-9));
+        expect(last, greaterThanOrEqualTo(0.85));
+      });
+
+      test('the release pops the jaw past the next shape, then settles', () {
+        final double settled = blender.shapeAt(tl, ms(470)).shape.jaw;
+        expect(settled, closeTo(0.5 * VisemeBlender.jawGain(1), 1e-9));
+        final MouthBlend pop = blender.shapeAt(tl, ms(350));
+        expect(pop.shape.jaw, greaterThan(settled));
+        expect(pop.pop, greaterThan(0));
+        expect(pop.sealed, isFalse);
+        expect(blender.shapeAt(tl, ms(371)).pop, 0);
+        // the lips are still pressed as they part, and let go within 40 ms
+        expect(blender.shapeAt(tl, ms(320)).shape.press, closeTo(0.9, 1e-9));
+        expect(blender.shapeAt(tl, ms(361)).shape.press, 0);
+      });
+
+      test('no pop without a closure before the span', () {
+        final SpeechTimeline plain = timeline(<VisemeSpan>[
+          span(Viseme.aa, 0, 200),
+          span(Viseme.e, 200, 500),
+        ]);
+        for (int t = 200; t < 300; t += 5) {
+          expect(blender.shapeAt(plain, ms(t)).pop, 0);
+        }
+      });
+    });
+
+    test('f/v and s differ in the lower lip mid-span', () {
+      final SpeechTimeline tl = timeline(<VisemeSpan>[
+        span(Viseme.ff, 0, 200),
+        span(Viseme.ss, 200, 400),
+      ]);
+      final double ff = blender.shapeAt(tl, ms(100)).shape.lipTuck;
+      final double ss = blender.shapeAt(tl, ms(300)).shape.lipTuck;
+      expect(ff - ss, greaterThanOrEqualTo(0.9));
+    });
+
     test('MouthBlend has value equality', () {
       const MouthBlend a = MouthBlend(shape: MouthShape(jaw: 0.5));
       const MouthBlend b = MouthBlend(shape: MouthShape(jaw: 0.5));
@@ -182,6 +236,7 @@ void main() {
       expect(a, b);
       expect(a.hashCode, b.hashCode);
       expect(a, isNot(c));
+      expect(a, isNot(const MouthBlend(shape: MouthShape(jaw: 0.5), pop: 0.1)));
     });
   });
 }

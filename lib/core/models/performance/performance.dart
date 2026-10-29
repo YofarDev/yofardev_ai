@@ -2,6 +2,7 @@
 /// visemes, gaze, camera, lighting and quality tiers.
 library;
 
+export 'action_unit_sides.dart';
 export 'action_units.dart';
 export 'emotion_space.dart';
 export 'emotion_vector.dart';

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import '../../../../core/models/performance/performance.dart';
 import '../../../talking/talking.dart';
@@ -8,40 +9,50 @@ import '../models/performance_intent.dart';
 import 'viseme_blender.dart';
 
 /// Turns the director's emotion and the speech timeline into one
-/// [FaceFrame] per rendered frame (contract v5 face rig).
+/// [FaceFrame] per rendered frame (contract v6 face rig).
 ///
 /// Pull-based like `HeadMotionSolver`: the avatar view calls [step] from its
-/// frame ticker. Everything is deterministic for a given input sequence.
+/// frame ticker. Everything is deterministic for a given input sequence and
+/// [seed] (the only source of the acting's variety).
 ///
-/// - **Emotion**: each action unit follows a critically damped spring toward
-///   `actionUnitsForEmotion(intent.emotion)`; higher arousal settles faster
+/// - **Emotion**: each action unit and each per-side offset follows a
+///   critically damped spring toward `actionUnitsForEmotion` /
+///   `sidesForEmotion` of the intent's emotion; higher arousal settles faster
 ///   (0.55 s calm, 0.28 s excited). Springs move straight through AU space, so
 ///   a mood change never detours through another expression.
 /// - **Speech** (from `SpeechTimelineEvent` to completion or stop): the
 ///   [VisemeBlender] shape at the playback position drives fast springs for
 ///   the mouth. Speech wins the jaw and the lip seal; emotion keeps corners,
 ///   cheeks, brows and lids. Inside a p/b/m span the jaw is written 0 that very
-///   frame.
+///   frame; at the release the jaw bursts open on a fast spring and the
+///   blender's pop is added on time, after the spring.
 /// - **Prosody acting** (marks are known ahead, so motion anticipates): brow
-///   lifts on the strongest pitch peaks (0.9 s apart), nods on stressed
-///   syllables (at most one per
-///   600 ms), a head tilt and lifted brows at the end of a question, blinks in
-///   pauses, a breath over the leading silence and a small settle at the full
-///   stop.
+///   lifts on the strongest pitch peaks (0.9 s apart), split unevenly between
+///   the two sides; nods on stressed syllables (at most one per 450 ms), deeper
+///   for stronger stresses with a little seeded jitter; both release with an
+///   ease-out. A head tilt and lifted brows at the end of a question, blinks
+///   in pauses, a breath over the leading silence and a small settle at the
+///   full stop.
+///
+/// [step] allocates nothing once the face is still: it works in fixed
+/// buffers and returns the previous [FaceFrame] while nothing changed.
 class FacePerformer {
   FacePerformer({
     required Stream<PerformanceIntent> intents,
     required Stream<PlaybackEvent> playback,
     required Duration? Function() speechPosition,
     VisemeBlender blender = const VisemeBlender(),
+    int seed = 7,
   }) : _speechPosition = speechPosition,
-       _blender = blender {
+       _blender = blender,
+       _rng = math.Random(seed) {
     _intentSub = intents.listen(_onIntent);
     _playbackSub = playback.listen(_onPlayback);
   }
 
   final Duration? Function() _speechPosition;
   final VisemeBlender _blender;
+  final math.Random _rng;
   late final StreamSubscription<PerformanceIntent> _intentSub;
   late final StreamSubscription<PlaybackEvent> _playbackSub;
 
@@ -51,6 +62,9 @@ class FacePerformer {
   static const double _calmSettle = 0.55;
   static const double _excitedSettle = 0.28;
   static const double _speechSettle = 0.06;
+
+  /// The jaw spring right after a closure: the lips burst open.
+  static const double _releaseSettle = 0.025;
   static const double _shapeSettle = 0.12;
   static const double _mixSettle = 0.15;
   static const double _overlaySettle = 0.09;
@@ -72,12 +86,31 @@ class FacePerformer {
   static const double _questionHold = 0.9;
   static const double _preClose = 0.1;
 
+  /// Nod depth (pitch units) at stress strength 0.5; strength scales it
+  /// 0.75–1.25×, the seed jitters it ±[_nodJitter].
+  static const double _nodBase = 0.48;
+  static const double _nodJitter = 0.1;
+
+  /// The nod's eased return to rest after the beat.
+  static const double _nodRelease = 0.22;
+
+  /// Largest left/right split of a pitch-peak brow pulse (each side gets
+  /// 1 ± up to this share of it).
+  static const double _browSplit = 0.15;
+
   // — emotion —
-  List<double> _emotionTarget = List<double>.filled(_auCount, 0);
+  final Float64List _emotionTarget = Float64List(_auCount);
+  final Float64List _sideTarget = Float64List(_sideCount * 2);
   double _arousal = 0;
   double _valence = 0;
   final List<_Spring> _emotion = List<_Spring>.generate(
     _auCount,
+    (_) => _Spring(),
+  );
+
+  /// Left offsets at 0..6, right at 7..13 (`ActionUnitSides` field order).
+  final List<_Spring> _sides = List<_Spring>.generate(
+    _sideCount * 2,
     (_) => _Spring(),
   );
 
@@ -89,6 +122,11 @@ class FacePerformer {
   double _endClock = -100;
   List<ProsodyMark> _nods = const <ProsodyMark>[];
   List<ProsodyMark> _peaks = const <ProsodyMark>[];
+
+  /// Per nod: its depth; per peak: its signed left/right split (+ = more on
+  /// the viewer's left). Drawn from the seed when the timeline arrives.
+  List<double> _nodDepth = const <double>[];
+  List<double> _peakSide = const <double>[];
   final _Spring _jaw = _Spring();
   final _Spring _pucker = _Spring();
   final _Spring _stretch = _Spring();
@@ -97,9 +135,17 @@ class FacePerformer {
   final _Spring _tongue = _Spring();
   final _Spring _mix = _Spring();
 
+  /// The release pop (jaw) at the playback position, added after the spring.
+  double _pop = 0;
+
   // — prosody overlays —
   final _Spring _innerUp = _Spring();
   final _Spring _outerUp = _Spring();
+
+  /// The part of the brow pulse the viewer's left gets on top of the
+  /// symmetric one (the right gets its negative).
+  final _Spring _innerSide = _Spring();
+  final _Spring _outerSide = _Spring();
   final _Spring _roll = _Spring();
   final _Spring _lift = _Spring();
   final _Spring _breathDecay = _Spring();
@@ -122,6 +168,29 @@ class FacePerformer {
 
   FaceFrame _frame = FaceFrame.rest;
 
+  // — fixed output buffers (no per-frame allocation) —
+  final Float64List _au = Float64List(_auCount);
+  final Float64List _out = Float64List(_outCount);
+  final Float64List _last = Float64List(_outCount);
+
+  /// Springs that rest at 0 when the face is still (see [isSettled]).
+  late final List<_Spring> _restingSprings = <_Spring>[
+    _jaw,
+    _pucker,
+    _stretch,
+    _press,
+    _tuck,
+    _tongue,
+    _mix,
+    _innerUp,
+    _outerUp,
+    _innerSide,
+    _outerSide,
+    _roll,
+    _lift,
+    _breathDecay,
+  ];
+
   /// The latest frame produced by [step].
   FaceFrame get frame => _frame;
 
@@ -136,20 +205,17 @@ class FacePerformer {
         return false;
       }
     }
-    return <_Spring>[
-      _jaw,
-      _pucker,
-      _stretch,
-      _press,
-      _tuck,
-      _tongue,
-      _mix,
-      _innerUp,
-      _outerUp,
-      _roll,
-      _lift,
-      _breathDecay,
-    ].every((_Spring s) => s.isAt(0));
+    for (int i = 0; i < _sides.length; i++) {
+      if (!_sides[i].isAt(_sideTarget[i])) {
+        return false;
+      }
+    }
+    for (int i = 0; i < _restingSprings.length; i++) {
+      if (!_restingSprings[i].isAt(0)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /// Advances the performance by [dt] and returns the new frame.
@@ -164,10 +230,24 @@ class FacePerformer {
     // speech mouth target
     MouthShape speech = MouthShape.rest;
     _sealed = false;
+    _pop = 0;
+    bool releasing = false;
     if (_speaking && tl != null && pos != null) {
       final MouthBlend ahead = _blender.shapeAt(tl, pos + _speechLead);
+      final MouthBlend now = _blender.shapeAt(tl, pos);
       speech = ahead.shape;
-      _sealed = ahead.sealed || _blender.shapeAt(tl, pos).sealed;
+      _sealed = ahead.sealed || now.sealed;
+      // the pop rides on top of the spring, at the audio's own position
+      releasing = ahead.pop > 0 || now.pop > 0;
+      _pop = now.pop;
+      if (ahead.pop > 0) {
+        speech = speech.copyWith(jaw: speech.jaw - ahead.pop);
+      }
+      if (now.sealed && now.shape.press > speech.press) {
+        // the read-ahead already sees the release: the lips stay compressed
+        // until the audio gets there
+        speech = speech.copyWith(press: now.shape.press);
+      }
       // ease the jaw shut into a coming seal instead of snapping it there
       final Duration? seal = _nextSealStart(tl, pos);
       if (!_sealed && seal != null) {
@@ -176,7 +256,10 @@ class FacePerformer {
           final double k = _smoothstep(ahead / _preClose);
           speech = speech.copyWith(
             jaw: speech.jaw * k,
-            press: math.max(speech.press, VisemeBlender.sealPress * (1 - k)),
+            press: math.max(
+              speech.press,
+              VisemeBlender.sealPressStart * (1 - k),
+            ),
           );
         }
       }
@@ -207,22 +290,29 @@ class FacePerformer {
     final double? posS = _prosodyPosition(pos);
     double innerTarget = 0;
     double outerTarget = 0;
+    double innerSideTarget = 0;
+    double outerSideTarget = 0;
     double rollTarget = 0;
     double liftTarget = 0;
     double nod = 0;
     if (tl != null && posS != null) {
       final double gain = _lerp(0.7, 1.3, (_arousal + 1) / 2);
       double peak = 0;
-      for (final ProsodyMark m in _peaks) {
+      double split = 0;
+      for (int i = 0; i < _peaks.length; i++) {
+        final ProsodyMark m = _peaks[i];
         // a weak peak still reads: half the beat, plus its strength
-        peak = math.max(
-          peak,
-          (0.5 + 0.5 * m.strength) * _peakEnvelope(posS - _s(m.at)),
-        );
+        final double beat =
+            (0.5 + 0.5 * m.strength) * _peakEnvelope(posS - _s(m.at));
+        if (beat > peak) {
+          peak = beat;
+          split = _peakSide[i];
+        }
       }
-      for (final ProsodyMark m in _nods) {
+      for (int i = 0; i < _nods.length; i++) {
+        final ProsodyMark m = _nods[i];
         final double tau = posS - _s(m.at);
-        nod += _nodCurve(tau, m.strength);
+        nod += _nodCurve(tau, _nodDepth[i]);
         if (_valence >= -0.3) {
           outerTarget += 0.1 * m.strength * _gauss(tau, 0, 0.09);
         }
@@ -230,8 +320,13 @@ class FacePerformer {
       // a sombre mood lifts only the inner brows (an outer lift reads as
       // surprise and contradicts the sadness)
       final bool sombre = _valence < -0.3;
-      innerTarget += (sombre ? 0.35 : 0.3) * gain * peak;
-      outerTarget += (sombre ? 0 : 0.45) * gain * peak;
+      final double innerPulse = (sombre ? 0.35 : 0.3) * gain * peak;
+      final double outerPulse = (sombre ? 0 : 0.45) * gain * peak;
+      innerTarget += innerPulse;
+      outerTarget += outerPulse;
+      // the two brows never lift as one: one side takes a little more
+      innerSideTarget = innerPulse * split;
+      outerSideTarget = outerPulse * split;
       final bool asking =
           tl.isQuestion &&
           (_speaking || (_completed && _clock - _endClock < _questionHold));
@@ -248,7 +343,7 @@ class FacePerformer {
         outerTarget += 0.3 * q;
       }
     }
-    if (_completed) {
+    if (_completed && _clock - _endClock < _tail) {
       // the full stop: a small settle down after the last word
       nod += -0.06 * _gauss(_clock - _endClock, 0.15, 0.1);
     }
@@ -275,7 +370,10 @@ class FacePerformer {
       for (int i = 0; i < _auCount; i++) {
         _emotion[i].step(_emotionTarget[i], wEmotion, sub);
       }
-      _jaw.step(speech.jaw, wSpeech, sub);
+      for (int i = 0; i < _sides.length; i++) {
+        _sides[i].step(_sideTarget[i], wEmotion, sub);
+      }
+      _jaw.step(speech.jaw, releasing ? _omega(_releaseSettle) : wSpeech, sub);
       // lip shape changes take ~3 frames: width never jumps in one frame
       _pucker.step(speech.pucker, _omega(_shapeSettle), sub);
       _stretch.step(speech.stretch, _omega(_shapeSettle), sub);
@@ -285,6 +383,18 @@ class FacePerformer {
       _mix.step(_speaking ? 1 : 0, _omega(_mixSettle), sub);
       _innerUp.stepUnder(innerTarget, _omega(_overlaySettle), _browZeta, sub);
       _outerUp.stepUnder(outerTarget, _omega(_overlaySettle), _browZeta, sub);
+      _innerSide.stepUnder(
+        innerSideTarget,
+        _omega(_overlaySettle),
+        _browZeta,
+        sub,
+      );
+      _outerSide.stepUnder(
+        outerSideTarget,
+        _omega(_overlaySettle),
+        _browZeta,
+        sub,
+      );
       _roll.step(rollTarget, _omega(_rollSettle), sub);
       _lift.step(liftTarget, _omega(_rollSettle), sub);
       if (!_speaking) {
@@ -328,7 +438,11 @@ class FacePerformer {
   // — events —
 
   void _onIntent(PerformanceIntent intent) {
-    _emotionTarget = _toList(actionUnitsForEmotion(intent.emotion));
+    _writeAus(actionUnitsForEmotion(intent.emotion), _emotionTarget);
+    final ({ActionUnitSides left, ActionUnitSides right}) sides =
+        sidesForEmotion(intent.emotion);
+    _writeSides(sides.left, _sideTarget, 0);
+    _writeSides(sides.right, _sideTarget, _sideCount);
     _arousal = intent.emotion.arousal;
     _valence = intent.emotion.valence;
   }
@@ -342,6 +456,13 @@ class FacePerformer {
         _lastPos = Duration.zero;
         _nods = _spaced(timeline.marks, ProsodyMarkKind.stress, _nodGap);
         _peaks = _spaced(timeline.marks, ProsodyMarkKind.pitchPeak, _browGap);
+        // the seeded variety, drawn once per sentence in a fixed order
+        _peakSide = <double>[
+          for (int i = 0; i < _peaks.length; i++) _drawSplit(),
+        ];
+        _nodDepth = <double>[
+          for (final ProsodyMark m in _nods) _drawNodDepth(m.strength),
+        ];
         // a forced blink waits for a real interval into the sentence
         _lastBlink = math.max(_lastBlink, _clock - (_blinkMaxInterval - 2.5));
         _sawPosition = false;
@@ -363,6 +484,20 @@ class FacePerformer {
       default:
         break;
     }
+  }
+
+  /// A brow pulse's signed split: 7.5–15 % to one side, the side seeded.
+  double _drawSplit() {
+    final double sign = _rng.nextBool() ? 1 : -1;
+    return sign * _browSplit * (0.5 + 0.5 * _rng.nextDouble());
+  }
+
+  /// A nod's depth: 0.75–1.25 × [_nodBase] by stress strength, ±10 % jitter.
+  double _drawNodDepth(double strength) {
+    final double jitter = _nodJitter * (2 * _rng.nextDouble() - 1);
+    return _nodBase *
+        _lerp(0.75, 1.25, strength.clamp(0.0, 1.0)) *
+        (1 + jitter);
   }
 
   void _complete() {
@@ -527,44 +662,108 @@ class FacePerformer {
   }
 
   FaceFrame _compose(double nod) {
-    final List<double> e = <double>[for (final _Spring s in _emotion) s.x];
+    // emotion AUs, then the speech merge in place (each AU is read before it
+    // is written)
+    final Float64List au = _au;
+    for (int i = 0; i < _auCount; i++) {
+      au[i] = _emotion[i].x;
+    }
     final double m = _mix.x.clamp(0.0, 1.0);
-    double jaw = _lerp(e[_jawI], math.max(_jaw.x, 0.35 * e[_jawI]), m);
+    final double eJaw = au[_jawI];
+    double jaw = _lerp(eJaw, math.max(_jaw.x, 0.35 * eJaw), m);
     if (_inhaling) {
       jaw = math.max(jaw, 0.12 * _breath);
     }
-    double press = _lerp(e[_pressI], _press.x, m);
+    jaw += _pop * m;
+    double press = _lerp(au[_pressI], _press.x, m);
     if (_sealed) {
       jaw = 0;
       press = math.max(press, 0.6);
     }
-    final List<double> au = List<double>.of(e);
     au[_jawI] = jaw;
     au[_pressI] = press;
     au[_puckerI] = _lerp(
-      e[_puckerI],
-      math.max(_pucker.x, 0.3 * e[_puckerI]),
+      au[_puckerI],
+      math.max(_pucker.x, 0.3 * au[_puckerI]),
       m,
     );
-    au[_stretchI] = _lerp(e[_stretchI], _stretch.x + 0.5 * e[_stretchI], m);
+    au[_stretchI] = _lerp(au[_stretchI], _stretch.x + 0.5 * au[_stretchI], m);
     // a rounded vowel keeps its shape whatever the mood: the corners give way
     final double round = (_pucker.x / 0.3).clamp(0.0, 1.0) * m;
-    au[_pullI] *= 1 - 0.8 * round;
-    au[_depressI] *= 1 - 0.8 * round;
+    final double pull = 1 - 0.8 * round;
     // an open jaw from a downturned mouth reads as a wince: the frown eases
-    au[_depressI] *= 1 - 0.4 * ((jaw - 0.15) / 0.3).clamp(0.0, 1.0) * m;
+    final double depress =
+        pull * (1 - 0.4 * ((jaw - 0.15) / 0.3).clamp(0.0, 1.0) * m);
+    au[_pullI] *= pull;
+    au[_depressI] *= depress;
     au[_innerI] += _innerUp.x;
     au[_outerI] += _outerUp.x;
+
+    final Float64List out = _out;
+    for (int i = 0; i < _auCount; i++) {
+      out[i] = au[i].clamp(0.0, 1.0);
+    }
+    for (int side = 0; side < 2; side++) {
+      final int from = side * _sideCount;
+      final int to = _auCount + from;
+      final double sign = side == 0 ? 1 : -1;
+      for (int i = 0; i < _sideCount; i++) {
+        double v = _sides[from + i].x;
+        if (i == _sideInnerI) {
+          v += sign * _innerSide.x;
+        } else if (i == _sideOuterI) {
+          v += sign * _outerSide.x;
+        } else if (i == _sidePullI) {
+          v *= pull;
+        } else if (i == _sideDepressI) {
+          v *= depress;
+        }
+        out[to + i] = v.clamp(-1.0, 1.0);
+      }
+    }
+    out[_tuckO] = (_tuck.x * m).clamp(0.0, 1.0);
+    out[_tongueO] = (_tongue.x * m).clamp(0.0, 1.0);
+    out[_breathO] = reduceMotion ? 0 : _breath.clamp(0.0, 1.0);
+    out[_rollO] = reduceMotion ? 0 : _roll.x.clamp(-1.0, 1.0);
+    out[_nodO] = reduceMotion ? 0 : (nod + _lift.x).clamp(-1.0, 1.0);
+    final bool autoBlink = !(_speaking || _clock - _endClock < _autoBlinkHold);
+
+    // a still face returns the previous frame: no allocation
+    final bool auSame = _same(0, _auCount);
+    final bool leftSame = _same(_auCount, _sideCount);
+    final bool rightSame = _same(_auCount + _sideCount, _sideCount);
+    final bool restSame = _same(_tuckO, _outCount - _tuckO);
+    if (auSame &&
+        leftSame &&
+        rightSame &&
+        restSame &&
+        autoBlink == _frame.autoBlink &&
+        _blinkSerial == _frame.blinkSerial) {
+      return _frame;
+    }
+    _last.setAll(0, out);
     return FaceFrame(
-      au: _fromList(au),
-      lipTuck: (_tuck.x * m).clamp(0.0, 1.0),
-      tongueUp: (_tongue.x * m).clamp(0.0, 1.0),
-      breath: reduceMotion ? 0 : _breath.clamp(0.0, 1.0),
-      roll: reduceMotion ? 0 : _roll.x.clamp(-1.0, 1.0),
-      nodPitch: reduceMotion ? 0 : (nod + _lift.x).clamp(-1.0, 1.0),
-      autoBlink: !(_speaking || _clock - _endClock < _autoBlinkHold),
+      au: auSame ? _frame.au : _actionUnits(out),
+      left: leftSame ? _frame.left : _sidesOf(out, _auCount),
+      right: rightSame ? _frame.right : _sidesOf(out, _auCount + _sideCount),
+      lipTuck: out[_tuckO],
+      tongueUp: out[_tongueO],
+      breath: out[_breathO],
+      roll: out[_rollO],
+      nodPitch: out[_nodO],
+      autoBlink: autoBlink,
       blinkSerial: _blinkSerial,
     );
+  }
+
+  /// Whether [_out] equals the last frame's values over [from]..+[count].
+  bool _same(int from, int count) {
+    for (int i = from; i < from + count; i++) {
+      if (_out[i] != _last[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // — curves —
@@ -587,18 +786,30 @@ class FacePerformer {
     if (tau <= 0.16) {
       return 1;
     }
-    return 1 - _smoothstep((tau - 0.16) / 0.4);
+    return _easeRelease((tau - 0.16) / 0.4);
   }
 
-  /// A nod on a stressed syllable (pitch units, down is negative): an 18 %
-  /// anticipation lift, the beat at the mark, a 12 % overshoot back up.
-  static double _nodCurve(double tau, double strength) {
-    // 3-5 degrees of pitch: a nod that reads at phone size
-    final double a = 0.35 + 0.25 * strength;
-    return -a *
-        (_gauss(tau, 0, 0.07) -
+  /// A nod on a stressed syllable (pitch units, down is negative) of [depth]
+  /// (about 3-5 degrees: a nod that reads at phone size): an 18 %
+  /// anticipation lift, the beat at the mark, an eased-out return over
+  /// [_nodRelease] with a 12 % overshoot back up.
+  static double _nodCurve(double tau, double depth) {
+    final double beat = tau <= 0
+        ? _gauss(tau, 0, 0.07)
+        : _easeRelease(tau / _nodRelease);
+    return -depth *
+        (beat -
             0.18 * _gauss(tau, -0.13, 0.05) -
             0.12 * _gauss(tau, 0.17, 0.06));
+  }
+
+  /// 1 → 0 over x in [0, 1] with an ease-out: it leaves smoothly (zero slope
+  /// at 0), falls fastest a third of the way in, then decelerates into rest:
+  /// `(1 - x)^3 (1 + 3x)`.
+  static double _easeRelease(double x) {
+    final double c = x.clamp(0.0, 1.0);
+    final double r = 1 - c;
+    return r * r * r * (1 + 3 * c);
   }
 
   static double _gauss(double t, double mu, double sigma) {
@@ -630,6 +841,7 @@ class _Spring {
     final double e = math.exp(-omega * h);
     x = target + (c1 + c2 * h) * e;
     v = (c2 - omega * (c1 + c2 * h)) * e;
+    _snap(target);
   }
 
   /// An underdamped step (damping ratio [zeta] < 1): it overshoots, then
@@ -637,9 +849,19 @@ class _Spring {
   void stepUnder(double target, double omega, double zeta, double h) {
     v += (-2 * zeta * omega * v - omega * omega * (x - target)) * h;
     x += v * h;
+    _snap(target);
   }
 
   bool isAt(double target) => (x - target).abs() < 0.002 && v.abs() < 0.01;
+
+  /// Lands exactly on [target] once the remaining motion is invisible, so a
+  /// still face produces bit-identical frames.
+  void _snap(double target) {
+    if ((x - target).abs() < 1e-6 && v.abs() < 1e-5) {
+      x = target;
+      v = 0;
+    }
+  }
 }
 
 // ActionUnits field order (matches `AvatarRiveContract.actionUnitProps`).
@@ -653,39 +875,73 @@ const int _puckerI = 10;
 const int _pressI = 11;
 const int _jawI = 12;
 
-List<double> _toList(ActionUnits a) => <double>[
-  a.browInnerUp,
-  a.browOuterUp,
-  a.browLower,
-  a.lidTighten,
-  a.upperLidRaise,
-  a.cheekRaise,
-  a.noseWrinkle,
-  a.lipCornerPull,
-  a.lipCornerDepress,
-  a.lipStretch,
-  a.lipPucker,
-  a.lipPress,
-  a.jawDrop,
-  a.dimpler,
-];
+// ActionUnitSides field order.
+const int _sideCount = 7;
+const int _sideInnerI = 0;
+const int _sideOuterI = 1;
+const int _sidePullI = 5;
+const int _sideDepressI = 6;
 
-ActionUnits _fromList(List<double> v) {
-  double c(int i) => v[i].clamp(0.0, 1.0);
-  return ActionUnits(
-    browInnerUp: c(0),
-    browOuterUp: c(1),
-    browLower: c(2),
-    lidTighten: c(3),
-    upperLidRaise: c(4),
-    cheekRaise: c(5),
-    noseWrinkle: c(6),
-    lipCornerPull: c(7),
-    lipCornerDepress: c(8),
-    lipStretch: c(9),
-    lipPucker: c(10),
-    lipPress: c(11),
-    jawDrop: c(12),
-    dimpler: c(13),
-  );
+// Output vector: the AUs, the left and right sides, then the scalars.
+const int _tuckO = _auCount + 2 * _sideCount;
+const int _tongueO = _tuckO + 1;
+const int _breathO = _tuckO + 2;
+const int _rollO = _tuckO + 3;
+const int _nodO = _tuckO + 4;
+const int _outCount = _tuckO + 5;
+
+void _writeAus(ActionUnits a, Float64List to) {
+  to[0] = a.browInnerUp;
+  to[1] = a.browOuterUp;
+  to[2] = a.browLower;
+  to[3] = a.lidTighten;
+  to[4] = a.upperLidRaise;
+  to[5] = a.cheekRaise;
+  to[6] = a.noseWrinkle;
+  to[7] = a.lipCornerPull;
+  to[8] = a.lipCornerDepress;
+  to[9] = a.lipStretch;
+  to[10] = a.lipPucker;
+  to[11] = a.lipPress;
+  to[12] = a.jawDrop;
+  to[13] = a.dimpler;
 }
+
+void _writeSides(ActionUnitSides s, Float64List to, int at) {
+  to[at] = s.browInnerUp;
+  to[at + 1] = s.browOuterUp;
+  to[at + 2] = s.browLower;
+  to[at + 3] = s.lidTighten;
+  to[at + 4] = s.cheekRaise;
+  to[at + 5] = s.lipCornerPull;
+  to[at + 6] = s.lipCornerDepress;
+}
+
+/// The (already clamped) AUs at the start of [v].
+ActionUnits _actionUnits(Float64List v) => ActionUnits(
+  browInnerUp: v[0],
+  browOuterUp: v[1],
+  browLower: v[2],
+  lidTighten: v[3],
+  upperLidRaise: v[4],
+  cheekRaise: v[5],
+  noseWrinkle: v[6],
+  lipCornerPull: v[7],
+  lipCornerDepress: v[8],
+  lipStretch: v[9],
+  lipPucker: v[10],
+  lipPress: v[11],
+  jawDrop: v[12],
+  dimpler: v[13],
+);
+
+/// The (already clamped) side offsets at [at] in [v].
+ActionUnitSides _sidesOf(Float64List v, int at) => ActionUnitSides(
+  browInnerUp: v[at],
+  browOuterUp: v[at + 1],
+  browLower: v[at + 2],
+  lidTighten: v[at + 3],
+  cheekRaise: v[at + 4],
+  lipCornerPull: v[at + 5],
+  lipCornerDepress: v[at + 6],
+);

@@ -36,13 +36,16 @@ sealed class MouthShape with _$MouthShape {
   static MouthShape forViseme(Viseme v) => switch (v) {
     Viseme.sil => rest,
     Viseme.pp => const MouthShape(press: 0.6),
-    Viseme.ff => const MouthShape(jaw: 0.08, lipTuck: 1),
+    // the lower lip tucked under the upper teeth (the rig draws a pink
+    // band over the teeth edge), lips a little wide, nothing pressed
+    Viseme.ff => const MouthShape(jaw: 0.1, stretch: 0.1, lipTuck: 1),
     Viseme.th => const MouthShape(jaw: 0.25, tongueUp: 1),
     Viseme.dd => const MouthShape(jaw: 0.25, stretch: 0.2, tongueUp: 0.6),
     Viseme.kk => const MouthShape(jaw: 0.45, stretch: 0.1),
     Viseme.ch => const MouthShape(jaw: 0.15, pucker: 0.8),
-    // lips parted over clenched teeth
-    Viseme.ss => const MouthShape(jaw: 0.12, stretch: 0.5, lipTuck: 0.35),
+    // both teeth rows together, lips stretched, the lower lip down: the
+    // same jaw as f/v, told apart by the lower lip
+    Viseme.ss => const MouthShape(jaw: 0.1, stretch: 0.55),
     Viseme.nn => const MouthShape(jaw: 0.18, tongueUp: 0.7),
     Viseme.rr => const MouthShape(jaw: 0.2, pucker: 0.7),
     Viseme.aa => const MouthShape(jaw: 0.9, stretch: 0.15),

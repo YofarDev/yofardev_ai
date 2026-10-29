@@ -1,4 +1,5 @@
 import '../avatar_mood.dart';
+import 'action_unit_sides.dart';
 import 'action_units.dart';
 import 'emotion_vector.dart';
 
@@ -90,3 +91,28 @@ ActionUnits actionUnitsForMood(AvatarMood mood) => switch (mood) {
     dimpler: 0.5,
   ),
 };
+
+/// Per-mood side offsets (contract v6, the viewer's left and right), added to
+/// [actionUnitsForMood] on each side. Only the lopsided moods have any.
+({ActionUnitSides left, ActionUnitSides right}) sidesForMood(AvatarMood mood) =>
+    switch (mood) {
+      AvatarMood.neutral ||
+      AvatarMood.happy ||
+      AvatarMood.sad ||
+      AvatarMood.angry ||
+      AvatarMood.surprised => (
+        left: ActionUnitSides.zero,
+        right: ActionUnitSides.zero,
+      ),
+      // one brow knits, the other lifts, the mouth pulled to one side: weighing
+      // it up
+      AvatarMood.thinking => (
+        left: const ActionUnitSides(browLower: 0.25),
+        right: const ActionUnitSides(browOuterUp: 0.35, lipCornerPull: 0.2),
+      ),
+      // a lopsided, sheepish half-smile
+      AvatarMood.embarrassed => (
+        left: const ActionUnitSides(lipCornerPull: 0.25),
+        right: const ActionUnitSides(lipCornerDepress: 0.15),
+      ),
+    };

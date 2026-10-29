@@ -1,11 +1,14 @@
 import '../../../../core/models/performance/performance.dart';
 
-/// Everything the face rig of `rive/CONTRACT.md` v5 needs for one frame:
-/// the 14 action units (emotion and speech merged), the speech mouth extras,
-/// head roll, breath, an additive nod on the head pitch, and blink control.
+/// Everything the face rig of `rive/CONTRACT.md` v6 needs for one frame:
+/// the 14 action units (emotion and speech merged), their per-side offsets
+/// ([left] and [right], the viewer's), the speech mouth extras, head roll,
+/// breath, an additive nod on the head pitch, and blink control.
 class FaceFrame {
   const FaceFrame({
     this.au = ActionUnits.neutral,
+    this.left = ActionUnitSides.zero,
+    this.right = ActionUnitSides.zero,
     this.lipTuck = 0,
     this.tongueUp = 0,
     this.breath = 0,
@@ -18,6 +21,12 @@ class FaceFrame {
   static const FaceFrame rest = FaceFrame();
 
   final ActionUnits au;
+
+  /// −1..1 offsets added to [au] on the viewer's left side (`au<Name>L`).
+  final ActionUnitSides left;
+
+  /// −1..1 offsets added to [au] on the viewer's right side (`au<Name>R`).
+  final ActionUnitSides right;
 
   /// 0..1: the lower lip tucks under the upper teeth (f, v).
   final double lipTuck;
@@ -57,6 +66,8 @@ class FaceFrame {
       'jawDrop': au.jawDrop,
       'dimpler': au.dimpler,
     },
+    'left': _sidesJson(left),
+    'right': _sidesJson(right),
     'lipTuck': lipTuck,
     'tongueUp': tongueUp,
     'breath': breath,
@@ -70,6 +81,8 @@ class FaceFrame {
   bool operator ==(Object other) =>
       other is FaceFrame &&
       other.au == au &&
+      other.left == left &&
+      other.right == right &&
       other.lipTuck == lipTuck &&
       other.tongueUp == tongueUp &&
       other.breath == breath &&
@@ -81,6 +94,8 @@ class FaceFrame {
   @override
   int get hashCode => Object.hash(
     au,
+    left,
+    right,
     lipTuck,
     tongueUp,
     breath,
@@ -93,3 +108,13 @@ class FaceFrame {
   @override
   String toString() => 'FaceFrame(${toJson()})';
 }
+
+Map<String, double> _sidesJson(ActionUnitSides s) => <String, double>{
+  'browInnerUp': s.browInnerUp,
+  'browOuterUp': s.browOuterUp,
+  'browLower': s.browLower,
+  'lidTighten': s.lidTighten,
+  'cheekRaise': s.cheekRaise,
+  'lipCornerPull': s.lipCornerPull,
+  'lipCornerDepress': s.lipCornerDepress,
+};

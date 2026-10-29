@@ -13,11 +13,12 @@ const Duration _frame = Duration(microseconds: 16667);
 Duration _ms(int ms) => Duration(milliseconds: ms);
 
 class _Rig {
-  _Rig() {
+  _Rig({int seed = 7}) {
     performer = FacePerformer(
       intents: intents.stream,
       playback: playback.stream,
       speechPosition: () => position,
+      seed: seed,
     );
   }
 
@@ -461,6 +462,244 @@ void main() {
     rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 500)]));
     rig.run(5);
     expect(rig.performer.isSettled, isFalse);
+  });
+
+  group('M3: per-side action units', () {
+    test('thinking raises the right outer brow within 0.6 s', () {
+      rig.mood(AvatarMood.thinking);
+      final FaceFrame f = rig.run(36).last;
+      expect(f.right.browOuterUp, closeTo(0.35, 0.02));
+      expect(f.right.lipCornerPull, closeTo(0.2, 0.02));
+      expect(f.left.browLower, closeTo(0.25, 0.02));
+      expect(f.left.browOuterUp, closeTo(0, 0.02));
+      // the symmetric preset is untouched
+      expect(f.au.browInnerUp, closeTo(0.4, 0.02));
+    });
+
+    test('a symmetric mood has no side offsets', () {
+      rig.mood(AvatarMood.happy);
+      final FaceFrame f = rig.run(60).last;
+      expect(f.left, ActionUnitSides.zero);
+      expect(f.right, ActionUnitSides.zero);
+    });
+
+    test('pitch-peak brow pulses differ left and right', () {
+      rig.speak(
+        _timeline(
+          <(Viseme, int, int)>[(Viseme.aa, 0, 3000)],
+          marks: <ProsodyMark>[
+            const ProsodyMark(
+              kind: ProsodyMarkKind.pitchPeak,
+              at: Duration(milliseconds: 600),
+            ),
+            const ProsodyMark(
+              kind: ProsodyMarkKind.pitchPeak,
+              at: Duration(milliseconds: 1800),
+            ),
+          ],
+        ),
+      );
+      final List<FaceFrame> frames = rig.run(150);
+      for (final int ms in <int>[650, 1850]) {
+        final FaceFrame f = frames[(ms / 16.667).round() - 1];
+        expect(f.au.browOuterUp, greaterThan(0.2), reason: '$ms ms');
+        expect(
+          (f.left.browOuterUp - f.right.browOuterUp).abs(),
+          greaterThan(0.03),
+          reason: '$ms ms',
+        );
+        // a split of the pulse, not a second pulse
+        expect(f.left.browOuterUp, closeTo(-f.right.browOuterUp, 1e-9));
+      }
+    });
+  });
+
+  group('M3: plosives and f/v', () {
+    SpeechTimeline closure() => _timeline(<(Viseme, int, int)>[
+      (Viseme.aa, 0, 300),
+      (Viseme.pp, 300, 420),
+      (Viseme.e, 420, 900),
+    ]).copyWith(energy: List<double>.filled(40, 1));
+
+    test('a 120 ms closure compresses and releases with a pop', () {
+      rig.speak(closure());
+      final List<FaceFrame> frames = rig.run(50);
+      // frame i is stepped at position (i + 1) * 16.667 ms
+      double at(int i) => (i + 1) * 16.667;
+      final List<FaceFrame> inside = <FaceFrame>[
+        for (int i = 0; i < frames.length; i++)
+          if (at(i) >= 300 && at(i) < 420) frames[i],
+      ];
+      expect(inside, isNotEmpty);
+      expect(inside.every((FaceFrame f) => f.au.jawDrop == 0), isTrue);
+      expect(inside.last.au.lipPress, greaterThanOrEqualTo(0.85));
+      final double popped = frames[26].au.jawDrop; // ~450 ms: +30 ms
+      final double settled = frames[40].au.jawDrop; // ~683 ms: the e itself
+      expect(popped, greaterThan(settled));
+    });
+
+    test('f/v and s mid-span differ in the lower lip', () {
+      rig.speak(
+        _timeline(<(Viseme, int, int)>[
+          (Viseme.ff, 0, 250),
+          (Viseme.ss, 250, 500),
+        ]),
+      );
+      final List<FaceFrame> frames = rig.run(30);
+      final double ff = frames[7].lipTuck; // ~133 ms
+      final double ss = frames[22].lipTuck; // ~383 ms
+      expect(ff - ss, greaterThanOrEqualTo(0.9));
+    });
+  });
+
+  group('M3: acting variety', () {
+    SpeechTimeline stresses() => _timeline(
+      <(Viseme, int, int)>[(Viseme.aa, 0, 3000)],
+      marks: <ProsodyMark>[
+        const ProsodyMark(
+          kind: ProsodyMarkKind.stress,
+          at: Duration(milliseconds: 500),
+        ),
+        const ProsodyMark(
+          kind: ProsodyMarkKind.stress,
+          at: Duration(milliseconds: 1300),
+          strength: 0.5,
+        ),
+        const ProsodyMark(
+          kind: ProsodyMarkKind.stress,
+          at: Duration(milliseconds: 2100),
+        ),
+        const ProsodyMark(
+          kind: ProsodyMarkKind.pitchPeak,
+          at: Duration(milliseconds: 900),
+        ),
+      ],
+    );
+
+    test('three stresses of strength 1, 0.5, 1 nod to different depths', () {
+      rig.speak(stresses());
+      final List<FaceFrame> frames = rig.run(170);
+      double depth(int ms) {
+        double low = 0;
+        for (int i = 0; i < frames.length; i++) {
+          final double t = (i + 1) * 16.667;
+          if ((t - ms).abs() < 150 && frames[i].nodPitch < low) {
+            low = frames[i].nodPitch;
+          }
+        }
+        return low;
+      }
+
+      final double a = depth(500);
+      final double b = depth(1300);
+      final double c = depth(2100);
+      expect(<double>[a, b, c], everyElement(lessThan(-0.2)));
+      expect((a - b).abs(), greaterThan(0.03));
+      expect((c - b).abs(), greaterThan(0.03));
+      expect((a - c).abs(), greaterThan(0.003));
+      // the weak stress nods least
+      expect(b, greaterThan(a));
+      expect(b, greaterThan(c));
+    });
+
+    test(
+      'the nod release eases out: most of the way back in half the time',
+      () {
+        rig.speak(
+          _timeline(
+            <(Viseme, int, int)>[(Viseme.aa, 0, 2000)],
+            marks: <ProsodyMark>[
+              const ProsodyMark(
+                kind: ProsodyMarkKind.stress,
+                at: Duration(milliseconds: 1000),
+              ),
+            ],
+          ),
+        );
+        final List<FaceFrame> frames = rig.run(90);
+        final int bottom = (1000 / 16.667).round() - 1;
+        final double low = frames[bottom].nodPitch;
+        final double half = frames[bottom + 6].nodPitch; // +100 ms of 220 ms
+        expect(low, lessThan(-0.3));
+        expect(half, greaterThan(low * 0.5));
+      },
+    );
+
+    test('the brow pulse releases with an ease-out', () {
+      rig.speak(
+        _timeline(
+          <(Viseme, int, int)>[(Viseme.aa, 0, 2000)],
+          marks: <ProsodyMark>[
+            const ProsodyMark(
+              kind: ProsodyMarkKind.pitchPeak,
+              at: Duration(milliseconds: 1000),
+            ),
+          ],
+        ),
+      );
+      final List<FaceFrame> frames = rig.run(110);
+      double at(int ms) => frames[(ms / 16.667).round() - 1].au.browOuterUp;
+      final double top = at(1100);
+      // the hold ends at +160 ms; halfway through the 400 ms release an
+      // ease-out has given back about two thirds (a smoothstep only half)
+      expect(top, greaterThan(0.3));
+      expect(at(1360), lessThan(0.42 * top));
+      expect(at(1360), greaterThan(0.1 * top));
+    });
+
+    test('the same seed gives the same frames; another seed does not', () {
+      List<FaceFrame> play(int seed) {
+        final _Rig r = _Rig(seed: seed);
+        r.mood(AvatarMood.happy);
+        r.speak(stresses());
+        final List<FaceFrame> out = r.run(170);
+        r.dispose();
+        return out;
+      }
+
+      expect(play(11), play(11));
+      expect(play(11), isNot(play(12)));
+    });
+  });
+
+  group('M3: steady state', () {
+    test('a settled performer returns the same frame without allocating', () {
+      rig.mood(AvatarMood.thinking);
+      rig.run(240);
+      final FaceFrame a = rig.performer.step(_frame);
+      final FaceFrame b = rig.performer.step(_frame);
+      expect(identical(a, b), isTrue);
+      expect(a.right.browOuterUp, 0.35);
+      expect(a.au.browInnerUp, 0.4);
+    });
+
+    test('after a sentence the frames settle back to one instance', () {
+      rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 400)]));
+      rig.run(24);
+      rig.playback.add(const AnimationCompletedEvent());
+      rig.position = null;
+      rig.run(300);
+      expect(
+        identical(rig.performer.step(_frame), rig.performer.frame),
+        isTrue,
+      );
+      expect(rig.performer.isSettled, isTrue);
+    });
+  });
+
+  test('FaceFrame carries the sides in equality and JSON', () {
+    const FaceFrame a = FaceFrame(left: ActionUnitSides(browLower: 0.25));
+    const FaceFrame b = FaceFrame(right: ActionUnitSides(browLower: 0.25));
+    expect(a, isNot(b));
+    expect(a, const FaceFrame(left: ActionUnitSides(browLower: 0.25)));
+    expect(
+      a.hashCode,
+      const FaceFrame(left: ActionUnitSides(browLower: 0.25)).hashCode,
+    );
+    final Map<String, Object> json = b.toJson();
+    expect((json['left']! as Map<String, double>)['browLower'], 0);
+    expect((json['right']! as Map<String, double>)['browLower'], 0.25);
+    expect((json['right']! as Map<String, double>).length, 7);
   });
 
   test('dispose cancels both subscriptions', () async {
