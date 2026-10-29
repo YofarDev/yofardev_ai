@@ -16,7 +16,10 @@ Two mechanisms, chosen so every existing animation keeps working untouched:
 - Skin (the face outline and the two shading shapes that hug it): skinned to RootBones placed
   under the `Head` node, so head gestures (nod, shake, think) carry the bones and the turn
   composes underneath them. Contour bones take their yaw poses from the exact silhouettes of the
-  elliptic sections (smooth jaw at |yaw| = 1); bind transforms are expressed in the Head frame.
+  head sections (M3: superellipse fronts and backs, so the far cheekbone bulges and the near jaw
+  corner holds while the chin swings: the outline changes shape at 3/4); bind transforms are
+  expressed in the Head frame. M3 extras (`three_quarter`): per-side blush, face-clipped lenses,
+  the far temple fade.
 
 New elements use their own id range (ID_START), so no existing component id moves.
 """
@@ -99,13 +102,83 @@ def _lerp(table: Sequence[tuple[float, float]], y: float) -> float:
     return table[-1][1]
 
 
-def contour_pose(x: float, y: float) -> tuple[float, float]:
-    """Right-side face contour x at yaw -1 / +1: the silhouette of the elliptic section."""
+# Face contour sections (M3). Each contour height is a cross-section of the head: half width w (the
+# rest outline), half depth dd (0.82 w + 8, plus a soft cheekbone swell) about a centre z0 (Z0,
+# moving forward toward the chin). Its front half is a superellipse of exponent SECTION_FRONT_N:
+# above 2 the face plane flattens and the cheekbone sits out at its corner, so at yaw +1 the far
+# (right) cheekbone bulges past the old outline. Its back half takes SECTION_BACK_N: the jaw angle,
+# so on the near side the jaw corner stays out while the chin swings toward the turn (the near
+# cheek flattens into one jaw line). The yaw +-1 poses are the sections' exact silhouettes; fit3
+# carries the in-betweens on arcs. All exponents 2 give the M1 ellipse model (ellipse_contour_pose).
+SECTION_FRONT_N = [(330.0, 2.0), (366.0, 2.3), (396.0, 2.7), (428.0, 2.9), (458.0, 2.4), (476.0, 2.1),
+                   (490.0, 2.0)]
+SECTION_BACK_N = [(330.0, 2.0), (366.0, 2.0), (396.0, 2.0), (428.0, 2.8), (458.0, 4.0), (476.0, 3.4),
+                  (490.0, 2.6), (505.0, 2.0)]
+
+
+def section(x: float, y: float, round_: bool = False) -> tuple[float, float, float, float, float]:
+    """(w, z0, dd, n_front, n_back) of the right-side contour section through (x, y)."""
     w = x - CX
     dd = 0.82 * w + 8 + 8 * math.exp(-(((y - 396) / 22) ** 2))
-    e = math.sqrt((w * math.cos(K_YAW)) ** 2 + (dd * math.sin(K_YAW)) ** 2)
-    z0 = _lerp(Z0, y)
-    return CX + e - z0 * math.sin(K_YAW), CX + e + z0 * math.sin(K_YAW)
+    if round_:
+        return w, _lerp(Z0, y), dd, 2.0, 2.0
+    return w, _lerp(Z0, y), dd, _lerp(SECTION_FRONT_N, y), _lerp(SECTION_BACK_N, y)
+
+
+def contour_pose(x: float, y: float) -> tuple[float, float]:
+    """Right-side face contour x at yaw -1 (the near side) / +1 (the far side): the silhouettes of
+    the section through (x, y). The left side mirrors it."""
+    sec = section(x, y)
+    return CX + r.section_silhouette(*sec, -K_YAW), CX + r.section_silhouette(*sec, K_YAW)
+
+
+def ellipse_contour_pose(x: float, y: float) -> tuple[float, float]:
+    """The M1 contour (round elliptic sections): every height slides, none changes shape."""
+    sec = section(x, y, round_=True)
+    return CX + r.section_silhouette(*sec, -K_YAW), CX + r.section_silhouette(*sec, K_YAW)
+
+
+# Features on ONE surface (M3): nose, mouth, chin, mole, cheeks and blush all take their depth from
+# surface_z (+ a relief for the nose tip and the lips), so the mouth leads with the nose and the
+# chin, instead of lagging behind them.
+NOSE_RELIEF = 24.0  # the nose tip stands off the face surface
+LIP_RELIEF = 6.0
+
+
+def face_z(x: float, y: float, relief: float = 0.0) -> float:
+    return surface_z(x - CX, y) + relief
+
+
+MOUTH_Z = face_z(400.0, 478.0, LIP_RELIEF)
+NOSE_Z = face_z(400.0, 440.0, NOSE_RELIEF)
+CHIN_Z = face_z(400.0, 505.0)  # the chin's front, so the jaw outline's lowest point swings with it
+
+
+def foreshorten(x: float, y: float, a: float) -> float:
+    """Width factor of a flat mark (blush, cheek light) lying on the face surface at (x, y) when the
+    head turns by `a`: cos(normal + a) / cos(normal), the normal's angle from the surface slope. The
+    near side's widening is capped at NEAR_WIDEN (a mark turning to face the viewer should not
+    balloon)."""
+    h = 0.5
+    slope = (surface_z(x - CX + h, y) - surface_z(x - CX - h, y)) / (2 * h)
+    n = math.atan(-slope)
+    return min(NEAR_WIDEN, math.cos(n + a) / math.cos(n))
+
+
+NEAR_WIDEN = 1.12
+
+
+# Glasses: the frame plane wraps back from the bridge to the temples (inner end z 110, outer end
+# z 70), so the far lens foreshortens like the far eye does and stays inside the far cheekbone.
+LENS_Z = (110.0, 70.0)
+
+
+def lens_ends(cx: float, a: float) -> tuple[float, float]:
+    """Screen x of a lens's inner and outer frame ends at yaw angle `a` (lens centre cx)."""
+    sgn = 1.0 if cx > CX else -1.0
+    xin, xout = CX + sgn * 2, CX + sgn * 88
+    return (CX + (xin - CX) * math.cos(a) + LENS_Z[0] * math.sin(a),
+            CX + (xout - CX) * math.cos(a) + LENS_Z[1] * math.sin(a))
 
 
 def mat(x: float, z: float) -> Poly:
@@ -281,7 +354,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
             xx = x if sgn > 0 else 2 * CX - x
             pose = (m, x, p) if sgn > 0 else (2 * CX - p, xx, 2 * CX - m)
             ht.bone("F" + n + s, xx, y, poses(*pose), pit(y, zp))
-    zc = _lerp(Z0, 511.0) * math.sin(K_YAW)
+    zc = CHIN_Z * math.sin(K_YAW)
     ht.bone("Chin", 400.0, 511.0, poses(400 - zc, 400, 400 + zc), pit(511, 60))
     for n, x, y in (("FHL", 310.0, 262.0), ("FHC", 400.0, 222.0), ("FHR", 490.0, 262.0)):
         z = shell_z(x - CX, y)
@@ -320,11 +393,11 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         sx = factor(*side((1.0, 1, 0.58), cx)[::2])
         ht.wrap(parts["Eye" + t], (cx, 388.0), mat(cx, 84), pit(388, 104), sx=sx)  # type: ignore[arg-type]
         ht.wrap(parts["Brow" + t], (cx, 346.0), mat(cx, 80), pit(346, 66), sx=factor(*side((1.0, 1, 0.6), cx)[::2]))  # type: ignore[arg-type]
-    ht.wrap(parts["NoseTurn"], (400.0, 440.0), mat(400, 122), pit(440, 118))  # type: ignore[arg-type]
-    # mouth (every mood and open shape lives in this node): it slides with the lower face but
-    # less than the nose (z 70, so it never outruns the chin), its pitch travel is 60 % of the
-    # chin's, and every mouth shape is clipped by the face, so it can never hang below the jaw
-    ht.wrap(parts["Mouth"], (400.0, 478.0), mat(400, 70), pit(478, 28), sx=factor(0.88, 0.88))  # type: ignore[arg-type]
+    ht.wrap(parts["NoseTurn"], (400.0, 440.0), mat(400, NOSE_Z), pit(440, 118))  # type: ignore[arg-type]
+    # mouth (every mood and open shape lives in this node): it rides the face surface (MOUTH_Z, a
+    # little behind the nose tip and just ahead of the chin, which swings with the outline), its
+    # pitch travel is 60 % of the chin's, and every mouth shape is clipped by the face
+    ht.wrap(parts["Mouth"], (400.0, 478.0), mat(400, MOUTH_Z), pit(478, 28), sx=factor(0.88, 0.88))  # type: ignore[arg-type]
     # each face clip keeps its id: the shapes named in `MouthClipOrder` (the face rig's id order; a
     # deleted shape burns its id) clip here, shapes added since clip after every other head-turn id
     mouth_shapes = _shapes(parts["Mouth"])  # type: ignore[arg-type]
@@ -336,11 +409,11 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         else:
             ht.d.next += 1
     late_clips = [e for e in mouth_shapes if str(e.attrs.get("name")) not in clip_order]
-    ht.wrap(parts["Mole"], (456.0, 432.0), mat(456, 80), pit(432, 80))  # type: ignore[arg-type]
+    ht.wrap(parts["Mole"], (456.0, 432.0), mat(456, face_z(456, 432)), pit(432, 80))  # type: ignore[arg-type]
     ht.wrap(parts["Blush"], (400.0, 440.0), mat(400, 90), pit(440, 90), sx=factor(0.82, 0.82))  # type: ignore[arg-type]
-    for nm, x, y, z in (("CheekBloomL", 335.0, 437.0, 72.0), ("CheekBloomR", 465.0, 437.0, 72.0),
-                        ("ChinLight", 400.0, 499.0, 78.0)):
-        sx = factor(*side((1.05, 1, 0.55), x)[::2]) if nm != "ChinLight" else None
+    for nm, x, y in (("CheekBloomL", 335.0, 437.0), ("CheekBloomR", 465.0, 437.0), ("ChinLight", 400.0, 499.0)):
+        z = face_z(x, y)
+        sx = factor(foreshorten(x, y, -K_YAW), foreshorten(x, y, K_YAW)) if nm != "ChinLight" else None
         ht.wrap(parts[nm], (x, y), mat(x, z), pit(y, z), sx=sx)  # type: ignore[arg-type]
     for t, x in (("L", 288.0), ("R", 512.0)):
         sx = factor(*side((1.35, 1, 0.5), x)[::2])
@@ -349,12 +422,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
 
     # ---- glasses: lenses foreshorten on the frame plane, the near temple unfolds, the far folds
     def lens_poses(cx: float) -> tuple[Poly, Poly]:
-        sgn = 1.0 if cx > CX else -1.0
-        xin, xout = CX + sgn * 2, CX + sgn * 88
-
-        def proj(x: float, z: float, a: float) -> float:
-            return CX + (x - CX) * math.cos(a) + z * math.sin(a)
-        ends = {a: (proj(xin, 110, a), proj(xout, 86, a)) for a in (-K_YAW, K_YAW)}
+        ends = {a: lens_ends(cx, a) for a in (-K_YAW, K_YAW)}
         cen = {a: (e[0] + e[1]) / 2 for a, e in ends.items()}
         wid = {a: abs(e[1] - e[0]) / 86 for a, e in ends.items()}
         return poses(cen[-K_YAW], cx, cen[K_YAW]), factor(wid[-K_YAW], wid[K_YAW])
@@ -375,7 +443,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
             ht.wrap(el, (400.0, 376.0), mat(400, 110), pit(376, 110))
         for t, hx in (("L", 311.0), ("R", 489.0)):
             for el in named(grp, "Hinge" + t):
-                ht.wrap(el, (hx + (3 if t == "L" else -3), 372.0), mat(hx, 86), pit(372, 86))
+                ht.wrap(el, (hx + (3 if t == "L" else -3), 372.0), mat(hx, LENS_Z[1]), pit(372, 86))
     temples(ht, groups, parts["GlassesSolo"], parts["HairFollow"], anims)  # type: ignore[arg-type]
 
     # ---- hair: locks turn about their roots (tips sit further forward than roots), the cap and
@@ -433,6 +501,58 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
     ht.finish()
     for el in late_clips:  # last, so no earlier head-turn id moves
         el.children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
+    three_quarter(ht, parts)  # M3, after every M1/M2 element so none of their ids moves
+
+
+BLUSH_Y = 438.0
+
+
+def three_quarter(ht: HeadTurn, parts: dict[str, object]) -> None:
+    """The 3/4 extras (M3): each blush rides its own cheek (surface depth, foreshortened on the far
+    side), the lenses and glares are clipped by the face silhouette, and the far temple arm fades
+    out as it swings behind the head."""
+    face: El = parts["Face"]  # type: ignore[assignment]
+    # ---- blush: the Blush node keeps its M1 wrap (pivot 400, z 90, x0.82); a wrap per side inside
+    # it turns that into the side's own surface point and width (exact at yaw -1, 0, +1)
+    blush: El = parts["Blush"]  # type: ignore[assignment]
+    outer_dx, outer_sx = mat(400, 90), factor(0.82, 0.82)
+    frame = ht.frames[id(blush)]
+    for t, bx in (("L", 338.0), ("R", 462.0)):
+        kids = [c for c in blush.children
+                if c.attrs.get("name") == "Blush" + t or str(c.attrs.get("name", "")).startswith("BlushLine" + t)]
+        group = ht.d("Node", *kids, x=0.0, y=0.0, name="Blush" + t + "Side")
+        blush.children = [c for c in blush.children if c not in kids]
+        blush.children.insert(0 if t == "L" else 1, group)
+        ht.frames[id(group)] = frame
+        z = face_z(bx, BLUSH_Y)
+        dxi, sxi = {}, {}
+        for a in (-K_YAW, K_YAW):
+            so, do = r.eval_poly(outer_sx, a), r.eval_poly(outer_dx, a)
+            target = CX + (bx - CX) * math.cos(a) + z * math.sin(a)
+            dxi[a] = (target - CX - do) / so - bx + CX
+            sxi[a] = foreshorten(bx, BLUSH_Y, a) / so
+        ht.wrap(group, (bx, BLUSH_Y), fit3(dxi[-K_YAW], 0.0, dxi[K_YAW], K_YAW), sx=factor(sxi[-K_YAW], sxi[K_YAW]),
+                name="Blush" + t + "Side")
+    # ---- glasses: lenses, glares and hinges never draw past the face silhouette (looking up while
+    # turned, the far lens's outer rim slips behind the temple instead of hanging over the hair)
+    groups: dict[str, El] = parts["glassesByName"]  # type: ignore[assignment]
+    for g in ("glasses", "sunglasses"):
+        for nm in ("LensL", "LensR", "Glare", "Glare2", "HingeL", "HingeR"):
+            for el in named(groups[g], nm):
+                el.children.insert(0, ht.d("ClippingShape", sourceId=face.ref()))
+    # ---- the far temple arm swings behind the head: opacity max(0, 1 - TEMPLE_FADE max(0, s yaw)),
+    # one converter per side shared by the glasses and sunglasses arms
+    f = ht.rig.f
+    for t, s in (("L", -1.0), ("R", 1.0)):
+        conv = ht.d("DataConverterFormula", *f.fn("max", [f.val(0)], [
+            f.val(1), f.op("-"), f.val(TEMPLE_FADE), f.op("*"), *f.fn("max", [f.val(0)], [f.val(s), f.op("*"), *f.inp()])]))
+        ht.rig.converters.append(conv)
+        for el in named(ht.head, "Temple" + t):
+            el.add(ht.d("DataBindContext", sourcePathIds=ht.path("yaw"), propertyKey=KEYS["opacity"],
+                        converterId=conv.ref()))
+
+
+TEMPLE_FADE = 3.0
 
 
 def _clamp(ht: HeadTurn, toks: list[El]) -> list[El]:
@@ -498,7 +618,7 @@ def temples(ht: HeadTurn, groups: dict[str, El], glasses_solo: El, hair_follow: 
     d = ht.d
     for t, hx, ex in (("L", 311.0, 296.0), ("R", 489.0, 504.0)):
         sgn = 1.0 if t == "R" else -1.0
-        hinge = mat(hx, 86)
+        hinge = mat(hx, LENS_Z[1])  # the hinge sits on the lens's outer frame end
         hinge_far = hx + r.eval_poly(hinge, sgn * K_YAW)
         near_root = CX + sgn * 66.0  # the near ear's root (front edge of the widened ear)
         m, p = (near_root, hinge_far) if sgn > 0 else (hinge_far, near_root)

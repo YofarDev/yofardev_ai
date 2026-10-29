@@ -7,6 +7,7 @@
     dart run tool/face_speech_trace.dart presets > rive/avatar/build/face/presets.json
     dart run tool/face_speech_trace.dart speech <wav> "<text>" [mood] > rive/avatar/build/face/<name>.json
     uv run rive/tools/review_face.py sheets                # au, moods, visemes, yaw (needs presets.json)
+    uv run rive/tools/review_face.py yaw                   # 3/4 sheet + silhouette overlay + overhang gate (M3)
     uv run rive/tools/review_face.py blink                 # lid-sweep strip: neutral, happy, sad (M3)
     uv run rive/tools/review_face.py sides                 # v6 per-side offsets alone at +1, clamp cases (M3)
     uv run rive/tools/review_face.py fvs                   # f/v-s-th-pp-oh-ou at phone size (360 px) + close-up
@@ -24,10 +25,12 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import json
 import re
+import shutil
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -45,9 +48,10 @@ AU_NAMES = ("browInnerUp", "browOuterUp", "browLower", "lidTighten", "upperLidRa
 SETTLE = 40  # frames: mood crossfades (240 ms) are done
 
 
-def cli(png: Path, data: dict[str, str], advance: int, blink_at: int | None = None, scale: float = 1) -> Path:
+def cli(png: Path, data: dict[str, str], advance: int, blink_at: int | None = None, scale: float = 1,
+        proj: Path = PROJ) -> Path:
     png.parent.mkdir(parents=True, exist_ok=True)
-    args = ["rive", str(PROJ), f"--screenshot={png}", *[f"--data={k}={v}" for k, v in data.items()]]
+    args = ["rive", str(proj), f"--screenshot={png}", *[f"--data={k}={v}" for k, v in data.items()]]
     if scale != 1:  # the artboard laid out at scale x its size (supersampled, or phone-sized below 1)
         args += [f"--viewport={round(800 * scale)}x{round(1000 * scale)}", "--fit=contain"]
     if blink_at is not None and 0 <= blink_at < advance:
@@ -56,7 +60,7 @@ def cli(png: Path, data: dict[str, str], advance: int, blink_at: int | None = No
                  f"--advance={blink_at}"]
     else:
         args.append(f"--advance={advance}")
-    res = subprocess.run(args, cwd=PROJ, capture_output=True, text=True)
+    res = subprocess.run(args, cwd=proj, capture_output=True, text=True)
     if res.returncode != 0:
         raise SystemExit(res.stdout[-2000:] + res.stderr[-2000:])
     return png
@@ -131,16 +135,116 @@ def sheets() -> None:
     print("moods:", sheet(render(jobs, "moods"), 4, "moods.png"))
     jobs = [(v, frame_data(f), SETTLE, None) for v, f in presets["visemes"].items()]
     print("visemes:", sheet(render(jobs, "visemes"), 5, "visemes.png"))
-    jobs = []
-    for m in ("happy", "surprised", "sad"):
-        for yaw in ("-0.84", "0", "0.84"):  # the app's widest turn (tool glance, head_target_mapper)
-            d = frame_data(presets["moods"][m], m)
-            d["yaw"] = yaw
-            jobs.append((f"{m} yaw {yaw}", d, SETTLE, None))
-    talk = frame_data(presets["visemes"]["aa"])
-    for yaw in ("-0.84", "0", "0.84"):
-        jobs.append((f"aa yaw {yaw}", {**talk, "yaw": yaw}, SETTLE, None))
-    print("yaw:", sheet(render(jobs, "yaw"), 3, "face_yaw.png"))
+    yaw_sheet()
+
+
+# ------------------------------------------------------------------ 3/4 turn (M3)
+
+YAWS = ("-1", "-0.5", "0", "0.5", "1")
+YAW_ROWS = (("neutral", "moods"), ("happy", "moods"), ("aa", "visemes"), ("ff", "visemes"))
+YAW_BOX = (226, 236, 574, 540)  # the turned face with both cheeks, the ears and the jaw
+YAW_ZOOM = 1.25
+FACE_INK = (110, 235, 255)  # this pose's face silhouette
+REST_INK = (255, 200, 80)  # the same row at yaw 0
+CLIPPED = ("mouth", "lens", "blush")  # groups clipped by the face: their unclipped overhang is the gate
+EDGE_YS = (370, 400, 430, 460, 490, 505)  # artboard rows where the silhouette edges are measured
+
+
+def variant(name: str) -> Path:
+    """A throwaway copy of rive/avatar for review renders only: `mask` draws the face shape on top of
+    the head in flat magenta (its silhouette, hair and all), `noclip_<group>` removes the face clip
+    from that group (what the clip hides is the overhang)."""
+    out = TMP / "variants" / name
+    out.mkdir(parents=True, exist_ok=True)
+    shutil.copy(PROJ / "rive.yaml", out / "rive.yaml")
+    tree = ET.parse(PROJ / "avatar.rml")
+    parent = {c: p for p in tree.iter() for c in p}
+    face = next(e for e in tree.iter("Shape") if e.get("name") == "Face")
+    if name == "mask":
+        holder = parent[face]
+        holder.remove(face)
+        holder.insert(0, face)
+        for paint in face:
+            if paint.tag in ("Fill", "Stroke"):
+                for c in list(paint):
+                    paint.remove(c)
+                ET.SubElement(paint, "SolidColor", colorValue="FFFF00FF", id=f"0:{3_900_000 + len(paint.tag)}")
+    else:
+        group = name.removeprefix("noclip_")
+        roots = {"mouth": ["Mouth"], "blush": ["Blush"], "lens": ["LensL", "LensR", "Glare", "Glare2", "HingeL", "HingeR"]}[group]
+        for top in [e for e in tree.iter() if e.get("name") in roots]:
+            for e in top.iter():
+                for c in [c for c in e if c.tag == "ClippingShape" and c.get("sourceId") == face.get("id")]:
+                    e.remove(c)
+    tree.write(out / "avatar.rml", encoding="unicode")
+    return out
+
+
+def _mask(png: Path) -> Image.Image:
+    r, g, b = Image.open(png).convert("RGB").split()
+    hot = ImageChops.multiply(r.point(lambda v: 255 if v > 170 else 0), b.point(lambda v: 255 if v > 170 else 0))
+    return ImageChops.multiply(hot, g.point(lambda v: 255 if v < 110 else 0))
+
+
+def _edge(mask: Image.Image, size: tuple[int, int]) -> Image.Image:
+    big = mask.resize(size, Image.Resampling.BILINEAR).point(lambda v: 255 if v >= 128 else 0)
+    return ImageChops.subtract(big, big.filter(ImageFilter.MinFilter(3)))
+
+
+def _edges_at(mask: Image.Image, y: int) -> tuple[int, int] | None:
+    row = [x for x in range(mask.width) if mask.getpixel((x, y))]
+    return (row[0], row[-1]) if row else None
+
+
+def _overhang(a: Path, b: Path) -> int:
+    diff = ImageChops.difference(Image.open(a).convert("RGB"), Image.open(b).convert("RGB")).crop(YAW_BOX)
+    return sum(1 for v in diff.convert("L").get_flattened_data() if v > 40)
+
+
+def yaw_sheet() -> None:
+    """Yaw -1 .. 1 x neutral / happy / aa / ff as the app writes them (presets.json). face_yaw.png:
+    the renders; face_yaw_outline.png: the same with the face silhouette traced (cyan: this pose,
+    amber: the row at yaw 0), from a variant that draws the face shape on top in magenta;
+    face_yaw.txt: the silhouette edges per row height and, per clipped group (mouth, lenses,
+    blush), the pixels its face clip hides (0 = nothing hangs past the outline). Exit 1 if any
+    group hangs past the outline by more than 25 px in any cell."""
+    presets = json.loads((DATA / "presets.json").read_text())
+    jobs = [(f"{m} yaw {y}", {**frame_data(presets[k][m], m if k == "moods" else None), "yaw": y,
+                              "autoBlink": "false"}, SETTLE, None)
+            for m, k in YAW_ROWS for y in YAWS]
+    projs = {"": PROJ, **{v: variant(v) for v in ("mask", *(f"noclip_{g}" for g in CLIPPED))}}
+
+    def one(j: tuple[str, dict[str, str], int, int | None], v: str) -> Path:
+        tag, data, adv, _ = j
+        return cli(TMP / "yaw" / (v or "plain") / (tag.replace(" ", "_") + ".png"), data, adv, proj=projs[v])
+    with ThreadPoolExecutor(WORKERS) as ex:
+        pngs = {v: list(ex.map(lambda j, v=v: one(j, v), jobs)) for v in projs}
+    size = (round((YAW_BOX[2] - YAW_BOX[0]) * YAW_ZOOM), round((YAW_BOX[3] - YAW_BOX[1]) * YAW_ZOOM))
+    plain = [label(cell(p, YAW_BOX, YAW_ZOOM), j[0]) for p, j in zip(pngs[""], jobs)]
+    print("yaw:", sheet(plain, len(YAWS), "face_yaw.png"))
+    masks = [_mask(p) for p in pngs["mask"]]
+    traced = []
+    for k, (p, j) in enumerate(zip(pngs[""], jobs)):
+        im = cell(p, YAW_BOX, YAW_ZOOM)
+        rest = masks[k - k % len(YAWS) + YAWS.index("0")]
+        for m, ink in ((rest, REST_INK), (masks[k], FACE_INK)):
+            im.paste(Image.new("RGB", size, ink), (0, 0), _edge(m.crop(YAW_BOX), size))
+        traced.append(label(im, j[0], "cyan: face outline", "amber: same row at yaw 0"))
+    print("yaw outline:", sheet(traced, len(YAWS), "face_yaw_outline.png"))
+    lines = ["3/4 turn evidence (review_face.py yaw): face silhouette edges in artboard px (left / right) and",
+             "per clipped group the pixels its face clip hides (unclipped render vs shipped; 0 = inside)", ""]
+    worst = 0
+    for k, j in enumerate(jobs):
+        edges = [_edges_at(masks[k], y) for y in EDGE_YS]
+        cols = "  ".join(f"y{y} {e[0]}/{e[1]}" if e else f"y{y} -" for y, e in zip(EDGE_YS, edges))
+        over = {g: _overhang(pngs[""][k], pngs[f"noclip_{g}"][k]) for g in CLIPPED}
+        worst = max(worst, *over.values())
+        lines.append(f"{j[0]:<18} {cols}   " + "  ".join(f"{g} {n}" for g, n in over.items()))
+    lines += ["", f"worst overhang: {worst} px (gate <= 25)"]
+    (OUT / "face_yaw.txt").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines))
+    if worst > 25:
+        raise SystemExit(1)
 
 
 # ------------------------------------------------------------------ blink (M3 lid sweep)
@@ -230,7 +334,13 @@ def capture(png: Path, steps: list[tuple[dict[str, str], int]]) -> list[str]:
 
 def gates() -> None:
     """History-free: each pose reached from rest and from a different pose (all numbers rewritten)
-    renders identically; clamp: au=1, L=+1, R=-1 renders identically to L=+1 alone."""
+    renders identically; clamp: au=1, L=+1, R=-1 renders identically to L=+1 alone.
+
+    Turn poses (yaw / pitch, M3 Task 6) are reached from rest and from yaw -1 pitch +1. Any
+    different yaw / pitch history leaves a few dozen antialiasing pixels 1/255 apart (16-63 px; the
+    pre-Task-6 file shows 23-48 px on the same captures: a renderer artefact, not a pose difference;
+    even yaw 1 from the start vs yaw 1 set at frame 20 does it), so they pass when no channel
+    differs by more than 1."""
     presets = json.loads((DATA / "presets.json").read_text())
     names = sorted({k for f in [*presets["moods"].values(), *presets["visemes"].values()]
                     for k in frame_data(f)} | {au(n, t) for n in SIDED for t in ("L", "R")})
@@ -244,6 +354,12 @@ def gates() -> None:
              "smirkL": {au("lipCornerPull", "L"): "1", au("cheekRaise", "L"): "0.5"}}
     other = full({**frame_data(presets["visemes"]["aa"]), **frame_data(presets["moods"]["happy"]),
                   au("browLower", "R"): "1", au("lipCornerDepress", "L"): "1"})
+    # the 3/4 outline (M3 Task 6): contour, features and lens clips are formulas of yaw / pitch
+    turn = {"yaw": "0", "pitch": "0"}
+    turns = {"turnFar": {**turn, "yaw": "1", "pitch": "0.5"},
+             "turnNearFF": {**frame_data(presets["visemes"]["ff"]), "yaw": "-0.5", "pitch": "-1"},
+             "turnHappy": {**frame_data(presets["moods"]["happy"]), **turn, "yaw": "0.75"}}
+    other_turn = {**other, "yaw": "-1", "pitch": "1"}
     out = TMP / "gates"
     out.mkdir(parents=True, exist_ok=True)
     jobs: list[tuple[str, Path, Path, list[str], list[str]]] = []
@@ -251,6 +367,10 @@ def gates() -> None:
         a, b = out / f"hist_{n}_rest.png", out / f"hist_{n}_other.png"
         jobs.append((f"history {n}", a, b, capture(a, [(full({}), 20), (full(d), 40)]),
                      capture(b, [(other, 20), (full(d), 40)])))
+    for n, d in turns.items():
+        a, b = out / f"hist_{n}_rest.png", out / f"hist_{n}_other.png"
+        jobs.append((f"turn history {n}", a, b, capture(a, [(full(turn), 20), (full(d), 40)]),
+                     capture(b, [(other_turn, 20), (full(d), 40)])))
     for n in SIDED:
         a, b = out / f"clamp_{n}.png", out / f"left_{n}.png"
         jobs.append((f"clamp {n}", a, b, capture(a, [(full(clamp_case(n)), 40)]),
@@ -270,8 +390,13 @@ def gates() -> None:
     with ThreadPoolExecutor(WORKERS) as ex:
         res = list(ex.map(run, jobs))
     bad = 0
-    for tag, cmp in res:
+    for (tag, cmp), j in zip(res, jobs):
         same = cmp.startswith("0.00% of pixels differ (0 of")
+        if tag.startswith("turn") and not same:
+            delta = max(ImageChops.difference(Image.open(j[1]).convert("RGB"), Image.open(j[2]).convert("RGB"))
+                        .getextrema(), key=lambda e: e[1])[1]
+            same = delta <= 1
+            cmp += f", max channel delta {delta}/255"
         print(f"{'ok ' if same else 'BAD'} {tag}: {cmp}")
         bad += not same
     if bad:
@@ -406,6 +531,8 @@ if __name__ == "__main__":
         sides()
     elif what[0] == "fvs":
         fvs()
+    elif what[0] == "yaw":
+        yaw_sheet()
     elif what[0] == "gates":
         gates()
     elif what[0] == "speech":

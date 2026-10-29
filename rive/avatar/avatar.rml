@@ -13323,6 +13323,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900001" propertyKey="14" converterId="0:901662" id="0:901663"/>
                                         <Node x="86" y="188" name="HingeLPivot" id="0:901664">
                                           <Shape x="-86" y="-188" name="HingeL" id="0:14560">
+                                            <ClippingShape sourceId="0:9697" id="0:903436"/>
                                             <Ellipse width="5" height="3" name="Path" id="0:14559"/>
                                             <Fill name="Fill" id="0:14558">
                                               <SolidColor colorValue="FFC8BDAD" id="0:14557"/>
@@ -13335,6 +13336,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900001" propertyKey="14" converterId="0:901662" id="0:901684"/>
                                         <Node x="-86" y="188" name="HingeRPivot" id="0:901685">
                                           <Shape x="86" y="-188" name="HingeR" id="0:14564">
+                                            <ClippingShape sourceId="0:9697" id="0:903437"/>
                                             <Ellipse width="5" height="3" name="Path" id="0:14563"/>
                                             <Fill name="Fill" id="0:14562">
                                               <SolidColor colorValue="FFC8BDAD" id="0:14561"/>
@@ -13349,6 +13351,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="18" converterId="0:901536" id="0:901537"/>
                                         <Node x="45" y="173" name="GlarePivot" id="0:901538">
                                           <Shape x="-72" y="-174" name="Glare" id="0:10339">
+                                            <ClippingShape sourceId="0:9697" id="0:903434"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10338">
                                               <CubicDetachedVertex x="2" y="-16" outRotation="-0.7266" outDistance="4.7806" inRotation="2.415" inDistance="11.2749" id="0:10334"/>
                                               <CubicDetachedVertex x="18" y="-16" outRotation="1.8158" outDistance="7.8535" inRotation="4.9574" inDistance="3.1414" id="0:10335"/>
@@ -13368,6 +13371,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="18" converterId="0:901536" id="0:901595"/>
                                         <Node x="-45" y="173" name="Glare2Pivot" id="0:901596">
                                           <Shape x="19" y="-174" name="Glare2" id="0:10347">
+                                            <ClippingShape sourceId="0:9697" id="0:903435"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10346">
                                               <CubicDetachedVertex x="1" y="-16" outRotation="-0.7551" outDistance="4.7238" inRotation="2.3865" inDistance="10.8397" id="0:10342"/>
                                               <CubicDetachedVertex x="17" y="-16" outRotation="1.8158" outDistance="7.8535" inRotation="4.9574" inDistance="3.1414" id="0:10343"/>
@@ -13386,6 +13390,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:901502" id="0:901503"/>
                                         <Node x="45" y="173" name="LensLPivot" id="0:901504">
                                           <Shape x="-45" y="-173" name="LensL" id="0:10357">
+                                            <ClippingShape sourceId="0:9697" id="0:903432"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10356">
                                               <StraightVertex x="-43" y="-23" radius="12" id="0:10352"/>
                                               <StraightVertex x="43" y="-23" radius="12" id="0:10353"/>
@@ -13407,6 +13412,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:901571" id="0:901572"/>
                                         <Node x="-45" y="173" name="LensRPivot" id="0:901573">
                                           <Shape x="45" y="-173" name="LensR" id="0:10367">
+                                            <ClippingShape sourceId="0:9697" id="0:903433"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10366">
                                               <StraightVertex x="-43" y="-23" radius="12" id="0:10362"/>
                                               <StraightVertex x="43" y="-23" radius="12" id="0:10363"/>
@@ -13445,6 +13451,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900001" propertyKey="14" converterId="0:901662" id="0:901714"/>
                                         <Node x="86" y="188" name="HingeLPivot" id="0:901715">
                                           <Shape x="-86" y="-188" name="HingeL" id="0:14568">
+                                            <ClippingShape sourceId="0:9697" id="0:903442"/>
                                             <Ellipse width="5" height="3" name="Path" id="0:14567"/>
                                             <Fill name="Fill" id="0:14566">
                                               <SolidColor colorValue="FFC8BDAD" id="0:14565"/>
@@ -13457,6 +13464,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900001" propertyKey="14" converterId="0:901662" id="0:901718"/>
                                         <Node x="-86" y="188" name="HingeRPivot" id="0:901719">
                                           <Shape x="86" y="-188" name="HingeR" id="0:14572">
+                                            <ClippingShape sourceId="0:9697" id="0:903443"/>
                                             <Ellipse width="5" height="3" name="Path" id="0:14571"/>
                                             <Fill name="Fill" id="0:14570">
                                               <SolidColor colorValue="FFC8BDAD" id="0:14569"/>
@@ -13471,6 +13479,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="18" converterId="0:901536" id="0:901695"/>
                                         <Node x="45" y="173" name="GlarePivot" id="0:901696">
                                           <Shape x="-72" y="-174" name="Glare" id="0:10395">
+                                            <ClippingShape sourceId="0:9697" id="0:903440"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10394">
                                               <CubicDetachedVertex x="2" y="-16" outRotation="-0.7266" outDistance="4.7806" inRotation="2.415" inDistance="11.2749" id="0:10390"/>
                                               <CubicDetachedVertex x="18" y="-16" outRotation="1.8158" outDistance="7.8535" inRotation="4.9574" inDistance="3.1414" id="0:10391"/>
@@ -13490,6 +13499,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="18" converterId="0:901536" id="0:901706"/>
                                         <Node x="-45" y="173" name="Glare2Pivot" id="0:901707">
                                           <Shape x="19" y="-174" name="Glare2" id="0:10403">
+                                            <ClippingShape sourceId="0:9697" id="0:903441"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10402">
                                               <CubicDetachedVertex x="1" y="-16" outRotation="-0.7551" outDistance="4.7238" inRotation="2.3865" inDistance="10.8397" id="0:10398"/>
                                               <CubicDetachedVertex x="17" y="-16" outRotation="1.8158" outDistance="7.8535" inRotation="4.9574" inDistance="3.1414" id="0:10399"/>
@@ -13508,6 +13518,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:901502" id="0:901689"/>
                                         <Node x="45" y="173" name="LensLPivot" id="0:901690">
                                           <Shape x="-45" y="-173" name="LensL" id="0:10415">
+                                            <ClippingShape sourceId="0:9697" id="0:903438"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10414">
                                               <StraightVertex x="-43" y="-23" radius="12" id="0:10410"/>
                                               <StraightVertex x="43" y="-23" radius="12" id="0:10411"/>
@@ -13532,6 +13543,7 @@
                                         <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:901571" id="0:901700"/>
                                         <Node x="-45" y="173" name="LensRPivot" id="0:901701">
                                           <Shape x="45" y="-173" name="LensR" id="0:10427">
+                                            <ClippingShape sourceId="0:9697" id="0:903439"/>
                                             <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:10426">
                                               <StraightVertex x="-43" y="-23" radius="12" id="0:10422"/>
                                               <StraightVertex x="43" y="-23" radius="12" id="0:10423"/>
@@ -14332,6 +14344,7 @@
                                       <Stroke thickness="6" cap="butt" join="round" name="Line" id="0:10376">
                                         <SolidColor colorValue="FF2A1E24" id="0:10375"/>
                                       </Stroke>
+                                      <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="18" converterId="0:903459" id="0:903461"/>
                                     </Shape>
                                     <Shape x="96.5" y="-191" name="TempleR" id="0:10386">
                                       <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:901836">
@@ -14349,6 +14362,7 @@
                                       <Stroke thickness="6" cap="butt" join="round" name="Line" id="0:10382">
                                         <SolidColor colorValue="FF2A1E24" id="0:10381"/>
                                       </Stroke>
+                                      <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="18" converterId="0:903477" id="0:903479"/>
                                     </Shape>
                                   </Node>
                                   <Node x="0" y="0" name="Temples_sunglasses" id="0:901842">
@@ -14368,6 +14382,7 @@
                                       <Stroke thickness="6" cap="butt" join="round" name="Line" id="0:10436">
                                         <SolidColor colorValue="FF2A1E24" id="0:10435"/>
                                       </Stroke>
+                                      <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="18" converterId="0:903459" id="0:903460"/>
                                     </Shape>
                                     <Shape x="96.5" y="-191" name="TempleR" id="0:10446">
                                       <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:901853">
@@ -14385,6 +14400,7 @@
                                       <Stroke thickness="6" cap="butt" join="round" name="Line" id="0:10442">
                                         <SolidColor colorValue="FF2A1E24" id="0:10441"/>
                                       </Stroke>
+                                      <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="18" converterId="0:903477" id="0:903478"/>
                                     </Shape>
                                   </Node>
                                   <Node x="0" y="0" name="Temples_none" id="0:901859"/>
@@ -15241,86 +15257,102 @@
                                     <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:901228" id="0:901229"/>
                                     <Node x="0" y="120" name="BlushPivot" id="0:901230">
                                       <Node x="0" y="-120" name="Blush" opacity="0" id="0:10163">
-                                        <Shape x="-62" y="-2" name="BlushL" id="0:10170">
-                                          <ClippingShape sourceId="0:9697" name="Clip" id="0:10168"/>
-                                          <Ellipse width="54" height="20" name="Path" id="0:10169"/>
-                                          <Fill name="Fill" id="0:10167">
-                                            <RadialGradient startX="0" startY="0" endX="27" endY="0" id="0:10166">
-                                              <GradientStop colorValue="B0F08F86" position="0" id="0:10164"/>
-                                              <GradientStop colorValue="00F08F86" position="1" id="0:10165"/>
-                                            </RadialGradient>
-                                          </Fill>
-                                        </Shape>
-                                        <Shape x="62" y="-2" name="BlushR" id="0:10177">
-                                          <ClippingShape sourceId="0:9697" name="Clip" id="0:10175"/>
-                                          <Ellipse width="54" height="20" name="Path" id="0:10176"/>
-                                          <Fill name="Fill" id="0:10174">
-                                            <RadialGradient startX="0" startY="0" endX="27" endY="0" id="0:10173">
-                                              <GradientStop colorValue="B0F08F86" position="0" id="0:10171"/>
-                                              <GradientStop colorValue="00F08F86" position="1" id="0:10172"/>
-                                            </RadialGradient>
-                                          </Fill>
-                                        </Shape>
-                                        <Shape x="-71" y="-1" name="BlushLineL0" id="0:10184">
-                                          <ClippingShape sourceId="0:9697" name="Clip" id="0:10183"/>
-                                          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10182">
-                                            <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10180"/>
-                                            <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10181"/>
-                                          </PointsPath>
-                                          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10179">
-                                            <SolidColor colorValue="90E07070" id="0:10178"/>
-                                          </Stroke>
-                                        </Shape>
-                                        <Shape x="-62" y="-1" name="BlushLineL1" id="0:10191">
-                                          <ClippingShape sourceId="0:9697" name="Clip" id="0:10190"/>
-                                          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10189">
-                                            <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10187"/>
-                                            <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10188"/>
-                                          </PointsPath>
-                                          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10186">
-                                            <SolidColor colorValue="90E07070" id="0:10185"/>
-                                          </Stroke>
-                                        </Shape>
-                                        <Shape x="-53" y="-1" name="BlushLineL2" id="0:10198">
-                                          <ClippingShape sourceId="0:9697" name="Clip" id="0:10197"/>
-                                          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10196">
-                                            <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10194"/>
-                                            <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10195"/>
-                                          </PointsPath>
-                                          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10193">
-                                            <SolidColor colorValue="90E07070" id="0:10192"/>
-                                          </Stroke>
-                                        </Shape>
-                                        <Shape x="53" y="-1" name="BlushLineR0" id="0:10205">
-                                          <ClippingShape sourceId="0:9697" name="Clip" id="0:10204"/>
-                                          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10203">
-                                            <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10201"/>
-                                            <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10202"/>
-                                          </PointsPath>
-                                          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10200">
-                                            <SolidColor colorValue="90E07070" id="0:10199"/>
-                                          </Stroke>
-                                        </Shape>
-                                        <Shape x="62" y="-1" name="BlushLineR1" id="0:10212">
-                                          <ClippingShape sourceId="0:9697" name="Clip" id="0:10211"/>
-                                          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10210">
-                                            <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10208"/>
-                                            <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10209"/>
-                                          </PointsPath>
-                                          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10207">
-                                            <SolidColor colorValue="90E07070" id="0:10206"/>
-                                          </Stroke>
-                                        </Shape>
-                                        <Shape x="71" y="-1" name="BlushLineR2" id="0:10219">
-                                          <ClippingShape sourceId="0:9697" name="Clip" id="0:10218"/>
-                                          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10217">
-                                            <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10215"/>
-                                            <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10216"/>
-                                          </PointsPath>
-                                          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10214">
-                                            <SolidColor colorValue="90E07070" id="0:10213"/>
-                                          </Stroke>
-                                        </Shape>
+                                        <Node x="-62" y="-2" name="BlushLSideTurn" id="0:903392">
+                                          <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="13" converterId="0:903371" id="0:903372"/>
+                                          <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:903389" id="0:903390"/>
+                                          <Node x="62" y="2" name="BlushLSidePivot" id="0:903391">
+                                            <Node x="0" y="0" name="BlushLSide" id="0:903354">
+                                              <Shape x="-62" y="-2" name="BlushL" id="0:10170">
+                                                <ClippingShape sourceId="0:9697" name="Clip" id="0:10168"/>
+                                                <Ellipse width="54" height="20" name="Path" id="0:10169"/>
+                                                <Fill name="Fill" id="0:10167">
+                                                  <RadialGradient startX="0" startY="0" endX="27" endY="0" id="0:10166">
+                                                    <GradientStop colorValue="B0F08F86" position="0" id="0:10164"/>
+                                                    <GradientStop colorValue="00F08F86" position="1" id="0:10165"/>
+                                                  </RadialGradient>
+                                                </Fill>
+                                              </Shape>
+                                              <Shape x="-71" y="-1" name="BlushLineL0" id="0:10184">
+                                                <ClippingShape sourceId="0:9697" name="Clip" id="0:10183"/>
+                                                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10182">
+                                                  <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10180"/>
+                                                  <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10181"/>
+                                                </PointsPath>
+                                                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10179">
+                                                  <SolidColor colorValue="90E07070" id="0:10178"/>
+                                                </Stroke>
+                                              </Shape>
+                                              <Shape x="-62" y="-1" name="BlushLineL1" id="0:10191">
+                                                <ClippingShape sourceId="0:9697" name="Clip" id="0:10190"/>
+                                                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10189">
+                                                  <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10187"/>
+                                                  <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10188"/>
+                                                </PointsPath>
+                                                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10186">
+                                                  <SolidColor colorValue="90E07070" id="0:10185"/>
+                                                </Stroke>
+                                              </Shape>
+                                              <Shape x="-53" y="-1" name="BlushLineL2" id="0:10198">
+                                                <ClippingShape sourceId="0:9697" name="Clip" id="0:10197"/>
+                                                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10196">
+                                                  <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10194"/>
+                                                  <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10195"/>
+                                                </PointsPath>
+                                                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10193">
+                                                  <SolidColor colorValue="90E07070" id="0:10192"/>
+                                                </Stroke>
+                                              </Shape>
+                                            </Node>
+                                          </Node>
+                                        </Node>
+                                        <Node x="62" y="-2" name="BlushRSideTurn" id="0:903431">
+                                          <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="13" converterId="0:903410" id="0:903411"/>
+                                          <DataBindContext sourcePathIds="0:14689-0:900000" propertyKey="16" converterId="0:903428" id="0:903429"/>
+                                          <Node x="-62" y="2" name="BlushRSidePivot" id="0:903430">
+                                            <Node x="0" y="0" name="BlushRSide" id="0:903393">
+                                              <Shape x="62" y="-2" name="BlushR" id="0:10177">
+                                                <ClippingShape sourceId="0:9697" name="Clip" id="0:10175"/>
+                                                <Ellipse width="54" height="20" name="Path" id="0:10176"/>
+                                                <Fill name="Fill" id="0:10174">
+                                                  <RadialGradient startX="0" startY="0" endX="27" endY="0" id="0:10173">
+                                                    <GradientStop colorValue="B0F08F86" position="0" id="0:10171"/>
+                                                    <GradientStop colorValue="00F08F86" position="1" id="0:10172"/>
+                                                  </RadialGradient>
+                                                </Fill>
+                                              </Shape>
+                                              <Shape x="53" y="-1" name="BlushLineR0" id="0:10205">
+                                                <ClippingShape sourceId="0:9697" name="Clip" id="0:10204"/>
+                                                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10203">
+                                                  <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10201"/>
+                                                  <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10202"/>
+                                                </PointsPath>
+                                                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10200">
+                                                  <SolidColor colorValue="90E07070" id="0:10199"/>
+                                                </Stroke>
+                                              </Shape>
+                                              <Shape x="62" y="-1" name="BlushLineR1" id="0:10212">
+                                                <ClippingShape sourceId="0:9697" name="Clip" id="0:10211"/>
+                                                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10210">
+                                                  <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10208"/>
+                                                  <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10209"/>
+                                                </PointsPath>
+                                                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10207">
+                                                  <SolidColor colorValue="90E07070" id="0:10206"/>
+                                                </Stroke>
+                                              </Shape>
+                                              <Shape x="71" y="-1" name="BlushLineR2" id="0:10219">
+                                                <ClippingShape sourceId="0:9697" name="Clip" id="0:10218"/>
+                                                <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:10217">
+                                                  <CubicDetachedVertex x="-3" y="7" outRotation="-1.1659" outDistance="5.0772" inRotation="1.9757" inDistance="0" id="0:10215"/>
+                                                  <CubicDetachedVertex x="3" y="-7" outRotation="-1.1659" outDistance="0" inRotation="1.9757" inDistance="5.0772" id="0:10216"/>
+                                                </PointsPath>
+                                                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:10214">
+                                                  <SolidColor colorValue="90E07070" id="0:10213"/>
+                                                </Stroke>
+                                              </Shape>
+                                            </Node>
+                                          </Node>
+                                        </Node>
                                       </Node>
                                     </Node>
                                   </Node>
@@ -49102,15 +49134,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900106">
-    <FormulaTokenValue operationValue="89.667" id="0:900093"/>
+    <FormulaTokenValue operationValue="103.704" id="0:900093"/>
     <FormulaTokenOperation operationType="0" id="0:900094"/>
-    <FormulaTokenValue operationValue="18.333" id="0:900095"/>
+    <FormulaTokenValue operationValue="4.296" id="0:900095"/>
     <FormulaTokenOperation operationType="2" id="0:900096"/>
     <FormulaTokenFunction functionType="9" id="0:900098"/>
     <FormulaTokenInput id="0:900097"/>
     <FormulaTokenParenthesisClose id="0:900099"/>
     <FormulaTokenOperation operationType="0" id="0:900100"/>
-    <FormulaTokenValue operationValue="10" id="0:900101"/>
+    <FormulaTokenValue operationValue="13.761" id="0:900101"/>
     <FormulaTokenOperation operationType="2" id="0:900102"/>
     <FormulaTokenFunction functionType="10" id="0:900104"/>
     <FormulaTokenInput id="0:900103"/>
@@ -49144,15 +49176,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900143">
-    <FormulaTokenValue operationValue="-89.667" id="0:900130"/>
+    <FormulaTokenValue operationValue="-103.704" id="0:900130"/>
     <FormulaTokenOperation operationType="0" id="0:900131"/>
-    <FormulaTokenValue operationValue="-18.333" id="0:900132"/>
+    <FormulaTokenValue operationValue="-4.296" id="0:900132"/>
     <FormulaTokenOperation operationType="2" id="0:900133"/>
     <FormulaTokenFunction functionType="9" id="0:900135"/>
     <FormulaTokenInput id="0:900134"/>
     <FormulaTokenParenthesisClose id="0:900136"/>
     <FormulaTokenOperation operationType="0" id="0:900137"/>
-    <FormulaTokenValue operationValue="10" id="0:900138"/>
+    <FormulaTokenValue operationValue="13.761" id="0:900138"/>
     <FormulaTokenOperation operationType="2" id="0:900139"/>
     <FormulaTokenFunction functionType="10" id="0:900141"/>
     <FormulaTokenInput id="0:900140"/>
@@ -49165,15 +49197,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900163">
-    <FormulaTokenValue operationValue="100.316" id="0:900150"/>
+    <FormulaTokenValue operationValue="130.773" id="0:900150"/>
     <FormulaTokenOperation operationType="0" id="0:900151"/>
-    <FormulaTokenValue operationValue="5.684" id="0:900152"/>
+    <FormulaTokenValue operationValue="-24.773" id="0:900152"/>
     <FormulaTokenOperation operationType="2" id="0:900153"/>
     <FormulaTokenFunction functionType="9" id="0:900155"/>
     <FormulaTokenInput id="0:900154"/>
     <FormulaTokenParenthesisClose id="0:900156"/>
     <FormulaTokenOperation operationType="0" id="0:900157"/>
-    <FormulaTokenValue operationValue="14" id="0:900158"/>
+    <FormulaTokenValue operationValue="22.161" id="0:900158"/>
     <FormulaTokenOperation operationType="2" id="0:900159"/>
     <FormulaTokenFunction functionType="10" id="0:900161"/>
     <FormulaTokenInput id="0:900160"/>
@@ -49207,15 +49239,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900200">
-    <FormulaTokenValue operationValue="-100.316" id="0:900187"/>
+    <FormulaTokenValue operationValue="-130.773" id="0:900187"/>
     <FormulaTokenOperation operationType="0" id="0:900188"/>
-    <FormulaTokenValue operationValue="-5.684" id="0:900189"/>
+    <FormulaTokenValue operationValue="24.773" id="0:900189"/>
     <FormulaTokenOperation operationType="2" id="0:900190"/>
     <FormulaTokenFunction functionType="9" id="0:900192"/>
     <FormulaTokenInput id="0:900191"/>
     <FormulaTokenParenthesisClose id="0:900193"/>
     <FormulaTokenOperation operationType="0" id="0:900194"/>
-    <FormulaTokenValue operationValue="14" id="0:900195"/>
+    <FormulaTokenValue operationValue="22.161" id="0:900195"/>
     <FormulaTokenOperation operationType="2" id="0:900196"/>
     <FormulaTokenFunction functionType="10" id="0:900198"/>
     <FormulaTokenInput id="0:900197"/>
@@ -49228,15 +49260,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900220">
-    <FormulaTokenValue operationValue="81.679" id="0:900207"/>
+    <FormulaTokenValue operationValue="143.046" id="0:900207"/>
     <FormulaTokenOperation operationType="0" id="0:900208"/>
-    <FormulaTokenValue operationValue="15.321" id="0:900209"/>
+    <FormulaTokenValue operationValue="-46.046" id="0:900209"/>
     <FormulaTokenOperation operationType="2" id="0:900210"/>
     <FormulaTokenFunction functionType="9" id="0:900212"/>
     <FormulaTokenInput id="0:900211"/>
     <FormulaTokenParenthesisClose id="0:900213"/>
     <FormulaTokenOperation operationType="0" id="0:900214"/>
-    <FormulaTokenValue operationValue="22" id="0:900215"/>
+    <FormulaTokenValue operationValue="22.743" id="0:900215"/>
     <FormulaTokenOperation operationType="2" id="0:900216"/>
     <FormulaTokenFunction functionType="10" id="0:900218"/>
     <FormulaTokenInput id="0:900217"/>
@@ -49270,15 +49302,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900257">
-    <FormulaTokenValue operationValue="-81.679" id="0:900244"/>
+    <FormulaTokenValue operationValue="-143.046" id="0:900244"/>
     <FormulaTokenOperation operationType="0" id="0:900245"/>
-    <FormulaTokenValue operationValue="-15.321" id="0:900246"/>
+    <FormulaTokenValue operationValue="46.046" id="0:900246"/>
     <FormulaTokenOperation operationType="2" id="0:900247"/>
     <FormulaTokenFunction functionType="9" id="0:900249"/>
     <FormulaTokenInput id="0:900248"/>
     <FormulaTokenParenthesisClose id="0:900250"/>
     <FormulaTokenOperation operationType="0" id="0:900251"/>
-    <FormulaTokenValue operationValue="22" id="0:900252"/>
+    <FormulaTokenValue operationValue="22.743" id="0:900252"/>
     <FormulaTokenOperation operationType="2" id="0:900253"/>
     <FormulaTokenFunction functionType="10" id="0:900255"/>
     <FormulaTokenInput id="0:900254"/>
@@ -49291,15 +49323,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900277">
-    <FormulaTokenValue operationValue="69.108" id="0:900264"/>
+    <FormulaTokenValue operationValue="128.814" id="0:900264"/>
     <FormulaTokenOperation operationType="0" id="0:900265"/>
-    <FormulaTokenValue operationValue="11.892" id="0:900266"/>
+    <FormulaTokenValue operationValue="-47.814" id="0:900266"/>
     <FormulaTokenOperation operationType="2" id="0:900267"/>
     <FormulaTokenFunction functionType="9" id="0:900269"/>
     <FormulaTokenInput id="0:900268"/>
     <FormulaTokenParenthesisClose id="0:900270"/>
     <FormulaTokenOperation operationType="0" id="0:900271"/>
-    <FormulaTokenValue operationValue="32" id="0:900272"/>
+    <FormulaTokenValue operationValue="23.405" id="0:900272"/>
     <FormulaTokenOperation operationType="2" id="0:900273"/>
     <FormulaTokenFunction functionType="10" id="0:900275"/>
     <FormulaTokenInput id="0:900274"/>
@@ -49333,15 +49365,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900314">
-    <FormulaTokenValue operationValue="-69.108" id="0:900301"/>
+    <FormulaTokenValue operationValue="-128.814" id="0:900301"/>
     <FormulaTokenOperation operationType="0" id="0:900302"/>
-    <FormulaTokenValue operationValue="-11.892" id="0:900303"/>
+    <FormulaTokenValue operationValue="47.814" id="0:900303"/>
     <FormulaTokenOperation operationType="2" id="0:900304"/>
     <FormulaTokenFunction functionType="9" id="0:900306"/>
     <FormulaTokenInput id="0:900305"/>
     <FormulaTokenParenthesisClose id="0:900307"/>
     <FormulaTokenOperation operationType="0" id="0:900308"/>
-    <FormulaTokenValue operationValue="32" id="0:900309"/>
+    <FormulaTokenValue operationValue="23.405" id="0:900309"/>
     <FormulaTokenOperation operationType="2" id="0:900310"/>
     <FormulaTokenFunction functionType="10" id="0:900312"/>
     <FormulaTokenInput id="0:900311"/>
@@ -49354,15 +49386,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900334">
-    <FormulaTokenValue operationValue="59.599" id="0:900321"/>
+    <FormulaTokenValue operationValue="93.86" id="0:900321"/>
     <FormulaTokenOperation operationType="0" id="0:900322"/>
-    <FormulaTokenValue operationValue="7.401" id="0:900323"/>
+    <FormulaTokenValue operationValue="-26.86" id="0:900323"/>
     <FormulaTokenOperation operationType="2" id="0:900324"/>
     <FormulaTokenFunction functionType="9" id="0:900326"/>
     <FormulaTokenInput id="0:900325"/>
     <FormulaTokenParenthesisClose id="0:900327"/>
     <FormulaTokenOperation operationType="0" id="0:900328"/>
-    <FormulaTokenValue operationValue="40" id="0:900329"/>
+    <FormulaTokenValue operationValue="32.534" id="0:900329"/>
     <FormulaTokenOperation operationType="2" id="0:900330"/>
     <FormulaTokenFunction functionType="10" id="0:900332"/>
     <FormulaTokenInput id="0:900331"/>
@@ -49396,15 +49428,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900371">
-    <FormulaTokenValue operationValue="-59.599" id="0:900358"/>
+    <FormulaTokenValue operationValue="-93.86" id="0:900358"/>
     <FormulaTokenOperation operationType="0" id="0:900359"/>
-    <FormulaTokenValue operationValue="-7.401" id="0:900360"/>
+    <FormulaTokenValue operationValue="26.86" id="0:900360"/>
     <FormulaTokenOperation operationType="2" id="0:900361"/>
     <FormulaTokenFunction functionType="9" id="0:900363"/>
     <FormulaTokenInput id="0:900362"/>
     <FormulaTokenParenthesisClose id="0:900364"/>
     <FormulaTokenOperation operationType="0" id="0:900365"/>
-    <FormulaTokenValue operationValue="40" id="0:900366"/>
+    <FormulaTokenValue operationValue="32.534" id="0:900366"/>
     <FormulaTokenOperation operationType="2" id="0:900367"/>
     <FormulaTokenFunction functionType="10" id="0:900369"/>
     <FormulaTokenInput id="0:900368"/>
@@ -49417,15 +49449,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900391">
-    <FormulaTokenValue operationValue="48.148" id="0:900378"/>
+    <FormulaTokenValue operationValue="60.933" id="0:900378"/>
     <FormulaTokenOperation operationType="0" id="0:900379"/>
-    <FormulaTokenValue operationValue="1.852" id="0:900380"/>
+    <FormulaTokenValue operationValue="-10.933" id="0:900380"/>
     <FormulaTokenOperation operationType="2" id="0:900381"/>
     <FormulaTokenFunction functionType="9" id="0:900383"/>
     <FormulaTokenInput id="0:900382"/>
     <FormulaTokenParenthesisClose id="0:900384"/>
     <FormulaTokenOperation operationType="0" id="0:900385"/>
-    <FormulaTokenValue operationValue="46" id="0:900386"/>
+    <FormulaTokenValue operationValue="42.574" id="0:900386"/>
     <FormulaTokenOperation operationType="2" id="0:900387"/>
     <FormulaTokenFunction functionType="10" id="0:900389"/>
     <FormulaTokenInput id="0:900388"/>
@@ -49459,15 +49491,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900428">
-    <FormulaTokenValue operationValue="-48.148" id="0:900415"/>
+    <FormulaTokenValue operationValue="-60.933" id="0:900415"/>
     <FormulaTokenOperation operationType="0" id="0:900416"/>
-    <FormulaTokenValue operationValue="-1.852" id="0:900417"/>
+    <FormulaTokenValue operationValue="10.933" id="0:900417"/>
     <FormulaTokenOperation operationType="2" id="0:900418"/>
     <FormulaTokenFunction functionType="9" id="0:900420"/>
     <FormulaTokenInput id="0:900419"/>
     <FormulaTokenParenthesisClose id="0:900421"/>
     <FormulaTokenOperation operationType="0" id="0:900422"/>
-    <FormulaTokenValue operationValue="46" id="0:900423"/>
+    <FormulaTokenValue operationValue="42.574" id="0:900423"/>
     <FormulaTokenOperation operationType="2" id="0:900424"/>
     <FormulaTokenFunction functionType="10" id="0:900426"/>
     <FormulaTokenInput id="0:900425"/>
@@ -49543,7 +49575,7 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:900497">
-    <FormulaTokenValue operationValue="58" id="0:900492"/>
+    <FormulaTokenValue operationValue="76.145" id="0:900492"/>
     <FormulaTokenOperation operationType="2" id="0:900493"/>
     <FormulaTokenFunction functionType="10" id="0:900495"/>
     <FormulaTokenInput id="0:900494"/>
@@ -50058,7 +50090,7 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:901078">
-    <FormulaTokenValue operationValue="122" id="0:901073"/>
+    <FormulaTokenValue operationValue="112.55" id="0:901073"/>
     <FormulaTokenOperation operationType="2" id="0:901074"/>
     <FormulaTokenFunction functionType="10" id="0:901076"/>
     <FormulaTokenInput id="0:901075"/>
@@ -50092,7 +50124,7 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:901108">
-    <FormulaTokenValue operationValue="70" id="0:901103"/>
+    <FormulaTokenValue operationValue="87.298" id="0:901103"/>
     <FormulaTokenOperation operationType="2" id="0:901104"/>
     <FormulaTokenFunction functionType="10" id="0:901106"/>
     <FormulaTokenInput id="0:901105"/>
@@ -50147,7 +50179,7 @@
     <FormulaTokenInput id="0:901156"/>
     <FormulaTokenParenthesisClose id="0:901158"/>
     <FormulaTokenOperation operationType="0" id="0:901159"/>
-    <FormulaTokenValue operationValue="80" id="0:901160"/>
+    <FormulaTokenValue operationValue="77.95" id="0:901160"/>
     <FormulaTokenOperation operationType="2" id="0:901161"/>
     <FormulaTokenFunction functionType="10" id="0:901163"/>
     <FormulaTokenInput id="0:901162"/>
@@ -50236,7 +50268,7 @@
     <FormulaTokenInput id="0:901234"/>
     <FormulaTokenParenthesisClose id="0:901236"/>
     <FormulaTokenOperation operationType="0" id="0:901237"/>
-    <FormulaTokenValue operationValue="72" id="0:901238"/>
+    <FormulaTokenValue operationValue="72.374" id="0:901238"/>
     <FormulaTokenOperation operationType="2" id="0:901239"/>
     <FormulaTokenFunction functionType="10" id="0:901241"/>
     <FormulaTokenInput id="0:901240"/>
@@ -50257,7 +50289,7 @@
     <FormulaTokenInput id="0:901252"/>
     <FormulaTokenParenthesisClose id="0:901254"/>
     <FormulaTokenOperation operationType="0" id="0:901255"/>
-    <FormulaTokenValue operationValue="-92" id="0:901256"/>
+    <FormulaTokenValue operationValue="-92.374" id="0:901256"/>
     <FormulaTokenOperation operationType="2" id="0:901257"/>
     <FormulaTokenFunction functionType="10" id="0:901259"/>
     <FormulaTokenInput id="0:901258"/>
@@ -50270,15 +50302,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:901279">
-    <FormulaTokenValue operationValue="-0.493" id="0:901266"/>
+    <FormulaTokenValue operationValue="-0.125" id="0:901266"/>
     <FormulaTokenOperation operationType="0" id="0:901267"/>
-    <FormulaTokenValue operationValue="1.493" id="0:901268"/>
+    <FormulaTokenValue operationValue="1.125" id="0:901268"/>
     <FormulaTokenOperation operationType="2" id="0:901269"/>
     <FormulaTokenFunction functionType="9" id="0:901271"/>
     <FormulaTokenInput id="0:901270"/>
     <FormulaTokenParenthesisClose id="0:901272"/>
     <FormulaTokenOperation operationType="0" id="0:901273"/>
-    <FormulaTokenValue operationValue="0.5" id="0:901274"/>
+    <FormulaTokenValue operationValue="0.541" id="0:901274"/>
     <FormulaTokenOperation operationType="2" id="0:901275"/>
     <FormulaTokenFunction functionType="10" id="0:901277"/>
     <FormulaTokenInput id="0:901276"/>
@@ -50297,7 +50329,7 @@
     <FormulaTokenInput id="0:901288"/>
     <FormulaTokenParenthesisClose id="0:901290"/>
     <FormulaTokenOperation operationType="0" id="0:901291"/>
-    <FormulaTokenValue operationValue="72" id="0:901292"/>
+    <FormulaTokenValue operationValue="72.374" id="0:901292"/>
     <FormulaTokenOperation operationType="2" id="0:901293"/>
     <FormulaTokenFunction functionType="10" id="0:901295"/>
     <FormulaTokenInput id="0:901294"/>
@@ -50310,15 +50342,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:901316">
-    <FormulaTokenValue operationValue="-0.493" id="0:901303"/>
+    <FormulaTokenValue operationValue="-0.125" id="0:901303"/>
     <FormulaTokenOperation operationType="0" id="0:901304"/>
-    <FormulaTokenValue operationValue="1.493" id="0:901305"/>
+    <FormulaTokenValue operationValue="1.125" id="0:901305"/>
     <FormulaTokenOperation operationType="2" id="0:901306"/>
     <FormulaTokenFunction functionType="9" id="0:901308"/>
     <FormulaTokenInput id="0:901307"/>
     <FormulaTokenParenthesisClose id="0:901309"/>
     <FormulaTokenOperation operationType="0" id="0:901310"/>
-    <FormulaTokenValue operationValue="-0.5" id="0:901311"/>
+    <FormulaTokenValue operationValue="-0.541" id="0:901311"/>
     <FormulaTokenOperation operationType="2" id="0:901312"/>
     <FormulaTokenFunction functionType="10" id="0:901314"/>
     <FormulaTokenInput id="0:901313"/>
@@ -50331,7 +50363,7 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:901328">
-    <FormulaTokenValue operationValue="78" id="0:901323"/>
+    <FormulaTokenValue operationValue="77.29" id="0:901323"/>
     <FormulaTokenOperation operationType="2" id="0:901324"/>
     <FormulaTokenFunction functionType="10" id="0:901326"/>
     <FormulaTokenInput id="0:901325"/>
@@ -50352,7 +50384,7 @@
     <FormulaTokenInput id="0:901337"/>
     <FormulaTokenParenthesisClose id="0:901339"/>
     <FormulaTokenOperation operationType="0" id="0:901340"/>
-    <FormulaTokenValue operationValue="-98" id="0:901341"/>
+    <FormulaTokenValue operationValue="-97.29" id="0:901341"/>
     <FormulaTokenOperation operationType="2" id="0:901342"/>
     <FormulaTokenFunction functionType="10" id="0:901344"/>
     <FormulaTokenInput id="0:901343"/>
@@ -50472,7 +50504,7 @@
     <FormulaTokenInput id="0:901456"/>
     <FormulaTokenParenthesisClose id="0:901458"/>
     <FormulaTokenOperation operationType="0" id="0:901459"/>
-    <FormulaTokenValue operationValue="98" id="0:901460"/>
+    <FormulaTokenValue operationValue="90" id="0:901460"/>
     <FormulaTokenOperation operationType="2" id="0:901461"/>
     <FormulaTokenFunction functionType="10" id="0:901463"/>
     <FormulaTokenInput id="0:901462"/>
@@ -50512,7 +50544,7 @@
     <FormulaTokenInput id="0:901490"/>
     <FormulaTokenParenthesisClose id="0:901492"/>
     <FormulaTokenOperation operationType="0" id="0:901493"/>
-    <FormulaTokenValue operationValue="0.279" id="0:901494"/>
+    <FormulaTokenValue operationValue="0.465" id="0:901494"/>
     <FormulaTokenOperation operationType="2" id="0:901495"/>
     <FormulaTokenFunction functionType="10" id="0:901497"/>
     <FormulaTokenInput id="0:901496"/>
@@ -50533,7 +50565,7 @@
     <FormulaTokenInput id="0:901512"/>
     <FormulaTokenParenthesisClose id="0:901514"/>
     <FormulaTokenOperation operationType="0" id="0:901515"/>
-    <FormulaTokenValue operationValue="0.139" id="0:901516"/>
+    <FormulaTokenValue operationValue="0.232" id="0:901516"/>
     <FormulaTokenOperation operationType="2" id="0:901517"/>
     <FormulaTokenFunction functionType="10" id="0:901519"/>
     <FormulaTokenInput id="0:901518"/>
@@ -50567,7 +50599,7 @@
     <FormulaTokenInput id="0:901542"/>
     <FormulaTokenParenthesisClose id="0:901544"/>
     <FormulaTokenOperation operationType="0" id="0:901545"/>
-    <FormulaTokenValue operationValue="98" id="0:901546"/>
+    <FormulaTokenValue operationValue="90" id="0:901546"/>
     <FormulaTokenOperation operationType="2" id="0:901547"/>
     <FormulaTokenFunction functionType="10" id="0:901549"/>
     <FormulaTokenInput id="0:901548"/>
@@ -50586,7 +50618,7 @@
     <FormulaTokenInput id="0:901559"/>
     <FormulaTokenParenthesisClose id="0:901561"/>
     <FormulaTokenOperation operationType="0" id="0:901562"/>
-    <FormulaTokenValue operationValue="-0.279" id="0:901563"/>
+    <FormulaTokenValue operationValue="-0.465" id="0:901563"/>
     <FormulaTokenOperation operationType="2" id="0:901564"/>
     <FormulaTokenFunction functionType="10" id="0:901566"/>
     <FormulaTokenInput id="0:901565"/>
@@ -50607,7 +50639,7 @@
     <FormulaTokenInput id="0:901581"/>
     <FormulaTokenParenthesisClose id="0:901583"/>
     <FormulaTokenOperation operationType="0" id="0:901584"/>
-    <FormulaTokenValue operationValue="-0.139" id="0:901585"/>
+    <FormulaTokenValue operationValue="-0.232" id="0:901585"/>
     <FormulaTokenOperation operationType="2" id="0:901586"/>
     <FormulaTokenFunction functionType="10" id="0:901588"/>
     <FormulaTokenInput id="0:901587"/>
@@ -50662,7 +50694,7 @@
     <FormulaTokenInput id="0:901632"/>
     <FormulaTokenParenthesisClose id="0:901634"/>
     <FormulaTokenOperation operationType="0" id="0:901635"/>
-    <FormulaTokenValue operationValue="86" id="0:901636"/>
+    <FormulaTokenValue operationValue="70" id="0:901636"/>
     <FormulaTokenOperation operationType="2" id="0:901637"/>
     <FormulaTokenFunction functionType="10" id="0:901639"/>
     <FormulaTokenInput id="0:901638"/>
@@ -50704,7 +50736,7 @@
     <FormulaTokenInput id="0:901670"/>
     <FormulaTokenParenthesisClose id="0:901672"/>
     <FormulaTokenOperation operationType="0" id="0:901673"/>
-    <FormulaTokenValue operationValue="86" id="0:901674"/>
+    <FormulaTokenValue operationValue="70" id="0:901674"/>
     <FormulaTokenOperation operationType="2" id="0:901675"/>
     <FormulaTokenFunction functionType="10" id="0:901677"/>
     <FormulaTokenInput id="0:901676"/>
@@ -50723,7 +50755,7 @@
     <FormulaTokenInput id="0:901723"/>
     <FormulaTokenParenthesisClose id="0:901725"/>
     <FormulaTokenOperation operationType="0" id="0:901726"/>
-    <FormulaTokenValue operationValue="86" id="0:901727"/>
+    <FormulaTokenValue operationValue="70" id="0:901727"/>
     <FormulaTokenOperation operationType="2" id="0:901728"/>
     <FormulaTokenFunction functionType="10" id="0:901730"/>
     <FormulaTokenInput id="0:901729"/>
@@ -50757,15 +50789,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:901769">
-    <FormulaTokenValue operationValue="-22.18" id="0:901756"/>
+    <FormulaTokenValue operationValue="7.676" id="0:901756"/>
     <FormulaTokenOperation operationType="0" id="0:901757"/>
-    <FormulaTokenValue operationValue="-81.82" id="0:901758"/>
+    <FormulaTokenValue operationValue="-111.676" id="0:901758"/>
     <FormulaTokenOperation operationType="2" id="0:901759"/>
     <FormulaTokenFunction functionType="9" id="0:901761"/>
     <FormulaTokenInput id="0:901760"/>
     <FormulaTokenParenthesisClose id="0:901762"/>
     <FormulaTokenOperation operationType="0" id="0:901763"/>
-    <FormulaTokenValue operationValue="54.076" id="0:901764"/>
+    <FormulaTokenValue operationValue="46.076" id="0:901764"/>
     <FormulaTokenOperation operationType="2" id="0:901765"/>
     <FormulaTokenFunction functionType="10" id="0:901767"/>
     <FormulaTokenInput id="0:901766"/>
@@ -50799,7 +50831,7 @@
     <FormulaTokenInput id="0:901789"/>
     <FormulaTokenParenthesisClose id="0:901791"/>
     <FormulaTokenOperation operationType="0" id="0:901792"/>
-    <FormulaTokenValue operationValue="86" id="0:901793"/>
+    <FormulaTokenValue operationValue="70" id="0:901793"/>
     <FormulaTokenOperation operationType="2" id="0:901794"/>
     <FormulaTokenFunction functionType="10" id="0:901796"/>
     <FormulaTokenInput id="0:901795"/>
@@ -50812,15 +50844,15 @@
   </DataConverterGroup>
 
   <DataConverterFormula id="0:901818">
-    <FormulaTokenValue operationValue="22.18" id="0:901805"/>
+    <FormulaTokenValue operationValue="-7.676" id="0:901805"/>
     <FormulaTokenOperation operationType="0" id="0:901806"/>
-    <FormulaTokenValue operationValue="81.82" id="0:901807"/>
+    <FormulaTokenValue operationValue="111.676" id="0:901807"/>
     <FormulaTokenOperation operationType="2" id="0:901808"/>
     <FormulaTokenFunction functionType="9" id="0:901810"/>
     <FormulaTokenInput id="0:901809"/>
     <FormulaTokenParenthesisClose id="0:901811"/>
     <FormulaTokenOperation operationType="0" id="0:901812"/>
-    <FormulaTokenValue operationValue="54.076" id="0:901813"/>
+    <FormulaTokenValue operationValue="46.076" id="0:901813"/>
     <FormulaTokenOperation operationType="2" id="0:901814"/>
     <FormulaTokenFunction functionType="10" id="0:901816"/>
     <FormulaTokenInput id="0:901815"/>
@@ -52479,5 +52511,125 @@
     <FormulaTokenInput id="0:903339"/>
     <FormulaTokenParenthesisClose id="0:903342"/>
     <FormulaTokenParenthesisClose id="0:903345"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:903368">
+    <FormulaTokenValue operationValue="-88.012" id="0:903355"/>
+    <FormulaTokenOperation operationType="0" id="0:903356"/>
+    <FormulaTokenValue operationValue="26.012" id="0:903357"/>
+    <FormulaTokenOperation operationType="2" id="0:903358"/>
+    <FormulaTokenFunction functionType="9" id="0:903360"/>
+    <FormulaTokenInput id="0:903359"/>
+    <FormulaTokenParenthesisClose id="0:903361"/>
+    <FormulaTokenOperation operationType="0" id="0:903362"/>
+    <FormulaTokenValue operationValue="-19.686" id="0:903363"/>
+    <FormulaTokenOperation operationType="2" id="0:903364"/>
+    <FormulaTokenFunction functionType="10" id="0:903366"/>
+    <FormulaTokenInput id="0:903365"/>
+    <FormulaTokenParenthesisClose id="0:903367"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:903371">
+    <DataConverterGroupItem converterId="0:900037" id="0:903369"/>
+    <DataConverterGroupItem converterId="0:903368" id="0:903370"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:903386">
+    <FormulaTokenValue operationValue="1.356" id="0:903373"/>
+    <FormulaTokenOperation operationType="0" id="0:903374"/>
+    <FormulaTokenValue operationValue="-0.356" id="0:903375"/>
+    <FormulaTokenOperation operationType="2" id="0:903376"/>
+    <FormulaTokenFunction functionType="9" id="0:903378"/>
+    <FormulaTokenInput id="0:903377"/>
+    <FormulaTokenParenthesisClose id="0:903379"/>
+    <FormulaTokenOperation operationType="0" id="0:903380"/>
+    <FormulaTokenValue operationValue="0.637" id="0:903381"/>
+    <FormulaTokenOperation operationType="2" id="0:903382"/>
+    <FormulaTokenFunction functionType="10" id="0:903384"/>
+    <FormulaTokenInput id="0:903383"/>
+    <FormulaTokenParenthesisClose id="0:903385"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:903389">
+    <DataConverterGroupItem converterId="0:900037" id="0:903387"/>
+    <DataConverterGroupItem converterId="0:903386" id="0:903388"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:903407">
+    <FormulaTokenValue operationValue="88.012" id="0:903394"/>
+    <FormulaTokenOperation operationType="0" id="0:903395"/>
+    <FormulaTokenValue operationValue="-26.012" id="0:903396"/>
+    <FormulaTokenOperation operationType="2" id="0:903397"/>
+    <FormulaTokenFunction functionType="9" id="0:903399"/>
+    <FormulaTokenInput id="0:903398"/>
+    <FormulaTokenParenthesisClose id="0:903400"/>
+    <FormulaTokenOperation operationType="0" id="0:903401"/>
+    <FormulaTokenValue operationValue="-19.686" id="0:903402"/>
+    <FormulaTokenOperation operationType="2" id="0:903403"/>
+    <FormulaTokenFunction functionType="10" id="0:903405"/>
+    <FormulaTokenInput id="0:903404"/>
+    <FormulaTokenParenthesisClose id="0:903406"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:903410">
+    <DataConverterGroupItem converterId="0:900037" id="0:903408"/>
+    <DataConverterGroupItem converterId="0:903407" id="0:903409"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:903425">
+    <FormulaTokenValue operationValue="1.356" id="0:903412"/>
+    <FormulaTokenOperation operationType="0" id="0:903413"/>
+    <FormulaTokenValue operationValue="-0.356" id="0:903414"/>
+    <FormulaTokenOperation operationType="2" id="0:903415"/>
+    <FormulaTokenFunction functionType="9" id="0:903417"/>
+    <FormulaTokenInput id="0:903416"/>
+    <FormulaTokenParenthesisClose id="0:903418"/>
+    <FormulaTokenOperation operationType="0" id="0:903419"/>
+    <FormulaTokenValue operationValue="-0.637" id="0:903420"/>
+    <FormulaTokenOperation operationType="2" id="0:903421"/>
+    <FormulaTokenFunction functionType="10" id="0:903423"/>
+    <FormulaTokenInput id="0:903422"/>
+    <FormulaTokenParenthesisClose id="0:903424"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:903428">
+    <DataConverterGroupItem converterId="0:900037" id="0:903426"/>
+    <DataConverterGroupItem converterId="0:903425" id="0:903427"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:903459">
+    <FormulaTokenFunction functionType="1" id="0:903456"/>
+    <FormulaTokenValue operationValue="0" id="0:903444"/>
+    <FormulaTokenArgumentSeparator id="0:903457"/>
+    <FormulaTokenValue operationValue="1" id="0:903445"/>
+    <FormulaTokenOperation operationType="1" id="0:903446"/>
+    <FormulaTokenValue operationValue="3" id="0:903447"/>
+    <FormulaTokenOperation operationType="2" id="0:903448"/>
+    <FormulaTokenFunction functionType="1" id="0:903453"/>
+    <FormulaTokenValue operationValue="0" id="0:903449"/>
+    <FormulaTokenArgumentSeparator id="0:903454"/>
+    <FormulaTokenValue operationValue="-1" id="0:903450"/>
+    <FormulaTokenOperation operationType="2" id="0:903451"/>
+    <FormulaTokenInput id="0:903452"/>
+    <FormulaTokenParenthesisClose id="0:903455"/>
+    <FormulaTokenParenthesisClose id="0:903458"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:903477">
+    <FormulaTokenFunction functionType="1" id="0:903474"/>
+    <FormulaTokenValue operationValue="0" id="0:903462"/>
+    <FormulaTokenArgumentSeparator id="0:903475"/>
+    <FormulaTokenValue operationValue="1" id="0:903463"/>
+    <FormulaTokenOperation operationType="1" id="0:903464"/>
+    <FormulaTokenValue operationValue="3" id="0:903465"/>
+    <FormulaTokenOperation operationType="2" id="0:903466"/>
+    <FormulaTokenFunction functionType="1" id="0:903471"/>
+    <FormulaTokenValue operationValue="0" id="0:903467"/>
+    <FormulaTokenArgumentSeparator id="0:903472"/>
+    <FormulaTokenValue operationValue="1" id="0:903468"/>
+    <FormulaTokenOperation operationType="2" id="0:903469"/>
+    <FormulaTokenInput id="0:903470"/>
+    <FormulaTokenParenthesisClose id="0:903473"/>
+    <FormulaTokenParenthesisClose id="0:903476"/>
   </DataConverterFormula>
 </Rive>

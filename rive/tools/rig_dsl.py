@@ -129,6 +129,35 @@ def silhouette_dx(side: float, w: float, depth: float, z0: float) -> Poly:
     return [(-side * w, ()), (side, (("sil", w * w, depth * depth),)), (z0, (SIN,))]
 
 
+def section_point(w: float, z0: float, depth: float, n_front: float, n_back: float, t: float) -> tuple[float, float]:
+    """Point (X, Z) of a head cross-section at parameter t (0 = front centre, pi/2 = the side, pi =
+    back centre): the front half (Z >= z0) is a superellipse |X/w|^n + |(Z - z0)/depth|^n = 1 of
+    exponent `n_front`, the back half of `n_back` (2 = an ellipse; higher = squarer: a flat face
+    plane with the cheekbone out at its corner, or a jaw angle at the back)."""
+    c, s = math.cos(t), math.sin(t)
+    n = n_front if c >= 0 else n_back
+    return w * abs(s) ** (2 / n), z0 + depth * math.copysign(abs(c) ** (2 / n), c)
+
+
+def section_silhouette(w: float, z0: float, depth: float, n_front: float, n_back: float, a: float) -> float:
+    """Right-edge screen x (from the yaw axis) of that cross-section turned by yaw `a`: the support
+    function max(X cos a + Z sin a). At a = 0 it is exactly w; a > 0 brings the front half round
+    (the far side of a right edge), a < 0 the back half (the near side)."""
+    def f(t: float) -> float:
+        x, z = section_point(w, z0, depth, n_front, n_back, t)
+        return x * math.cos(a) + z * math.sin(a)
+    n = 720
+    k = max(range(n + 1), key=lambda i: f(PI * i / n))
+    lo, hi = PI * max(0, k - 1) / n, PI * min(n, k + 1) / n
+    for _ in range(60):  # golden-section refinement inside the best bracket
+        m1, m2 = hi - (hi - lo) * 0.618034, lo + (hi - lo) * 0.618034
+        if f(m1) < f(m2):
+            lo = m1
+        else:
+            hi = m2
+    return max(f(PI * k / n), f((lo + hi) / 2))
+
+
 def fit3(at_neg: float, at_zero: float, at_pos: float, k: float) -> Poly:
     """Shift poly (0 at a = 0) through three authored poses: input -1, 0, +1 (angle -k, 0, k).
 

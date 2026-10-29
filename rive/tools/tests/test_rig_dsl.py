@@ -438,3 +438,18 @@ def test_skinned_path_weights_vertices_and_binds_tendons() -> None:
     assert text.count("<Weight") == 1 and text.count("<CubicWeight") == 2 and text.count("<Tendon") == 2
     skin = path.children[-1]
     assert skin.tag == "Skin" and (skin.attrs["tx"], skin.attrs["ty"]) == (3.0, 3.0)
+
+
+def test_section_silhouette_of_an_ellipse_matches_the_closed_form() -> None:
+    for a in (-K, -0.2, 0.0, 0.3, K):
+        e = math.sqrt((90 * math.cos(a)) ** 2 + (70 * math.sin(a)) ** 2) + 12 * math.sin(a)
+        assert r.section_silhouette(90.0, 12.0, 70.0, 2.0, 2.0, a) == pytest.approx(e, abs=0.01)
+
+
+def test_squarer_sections_reach_further_when_turned_but_not_at_rest() -> None:
+    for n in (2.5, 3.0, 4.0):
+        assert r.section_silhouette(100.0, 10.0, 90.0, n, 2.0, 0.0) == pytest.approx(100.0, abs=0.01)
+        assert r.section_silhouette(100.0, 10.0, 90.0, n, 2.0, K) > r.section_silhouette(100.0, 10.0, 90.0, 2.0, 2.0, K)
+        # the front exponent only shapes the front half: the back (near-side) silhouette is unchanged
+        assert r.section_silhouette(100.0, 10.0, 90.0, n, 2.0, -K) == pytest.approx(
+            r.section_silhouette(100.0, 10.0, 90.0, 2.0, 2.0, -K), abs=0.01)
