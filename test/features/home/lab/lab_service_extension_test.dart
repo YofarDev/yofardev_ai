@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/performance/avatar_prop.dart';
+import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_service_extension.dart';
@@ -57,6 +58,53 @@ void main() {
       });
       expect(notifier.value.accentHueOverride, isNull);
       expect(notifier.value.scene, AvatarScene.campfire);
+    });
+
+    test('rain sets the world state and shows in the response and state', () {
+      final WorldStateService world = WorldStateService();
+      addTearDown(world.dispose);
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      final developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{'rain': '0.7', 'scene': 'beach'},
+        world: world,
+      );
+      expect(r.errorCode, isNull);
+      expect(world.rain.value, 0.7);
+      expect(notifier.value.scene, AvatarScene.beach);
+      expect(_decode(r)['rain'], 0.7);
+      expect(_decode(labStateResponse(notifier, world: world))['rain'], 0.7);
+    });
+
+    for (final String bad in <String>['abc', '1.5', '-0.1', '']) {
+      test('rain "$bad" is an error and changes nothing', () {
+        final WorldStateService world = WorldStateService()..setRain(0.2);
+        addTearDown(world.dispose);
+        final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+          LabConfig.initial,
+        );
+        final developer.ServiceExtensionResponse r = labConfigureResponse(
+          notifier,
+          <String, String>{'rain': bad, 'scene': 'beach'},
+          world: world,
+        );
+        expect(r.errorCode, developer.ServiceExtensionResponse.extensionError);
+        expect(world.rain.value, 0.2);
+        expect(notifier.value, LabConfig.initial);
+      });
+    }
+
+    test('rain without a world is an error', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      final developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{'rain': '0.5'},
+      );
+      expect(r.errorCode, developer.ServiceExtensionResponse.extensionError);
     });
 
     test('ignores the isolateId the VM service adds', () {

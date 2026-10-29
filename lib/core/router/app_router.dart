@@ -28,6 +28,7 @@ import '../../features/settings/screens/memory_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/res/app_constants.dart';
 import '../../core/services/motion/parallax_source.dart';
+import '../../core/services/world/world_state_service.dart';
 import '../../core/services/presence/composer_activity_service.dart';
 import '../../core/services/speech/speech_input_service.dart';
 import '../../core/widgets/constrained_width.dart';
@@ -66,6 +67,7 @@ class AppRouter {
             speech: getIt<SpeechInputService>(),
             composerActivity: getIt<ComposerActivityService>(),
             parallax: getIt<ParallaxSource>(),
+            world: getIt<WorldStateService>(),
             facePerformer: getIt<FacePerformer>(),
           );
           return MaterialPage<void>(
@@ -205,7 +207,7 @@ class AppRouter {
           pageBuilder: (BuildContext context, GoRouterState state) =>
               MaterialPage<void>(
                 key: state.pageKey,
-                child: const UiLabScreen(),
+                child: UiLabScreen(world: getIt<WorldStateService>()),
               ),
         ),
     ],

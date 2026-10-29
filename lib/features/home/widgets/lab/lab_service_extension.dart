@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/services/world/world_state_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../avatar/avatar.dart';
 import 'lab_config.dart';
@@ -32,6 +33,7 @@ const Set<String> _vmParams = <String>{'isolateId'};
 
 bool _registered = false;
 ValueNotifier<LabConfig>? _active;
+WorldStateService? _activeWorld;
 
 /// The config of the lab currently mounted, or null. Exposed for tests.
 @visibleForTesting
@@ -44,8 +46,14 @@ developer.ServiceExtensionResponse _error(String message) {
   );
 }
 
-developer.ServiceExtensionResponse _ok(LabConfig config) =>
-    developer.ServiceExtensionResponse.result(jsonEncode(config.toJson()));
+developer.ServiceExtensionResponse _ok(LabConfig config, [double? rain]) =>
+    developer.ServiceExtensionResponse.result(
+      jsonEncode(<String, Object?>{...config.toJson(), _rainKey: ?rain}),
+    );
+
+/// The world-state param: not part of [LabConfig], it goes to
+/// [WorldStateService.setRain].
+const String _rainKey = 'rain';
 
 /// Converts service-extension string params into [LabConfig] JSON values:
 /// numeric keys become numbers (`null`/empty clears an override), boolean
@@ -99,16 +107,33 @@ Map<String, Object?> _paramsToJson(Map<String, String> params) {
 /// `{"auJawDrop":0.5,"auBrowOuterUpR":0.3,"roll":0.2}`; without a `blink`
 /// count it keeps the current one, so it never fires a blink by itself.
 /// `prop` is `none` or `tablet`; `parallax` is `{"x":0.5,"y":-0.2}` (each
-/// -1..1) or `null`.
+/// -1..1) or `null`. `rain` is a number in 0..1 handed to [world]
+/// ([WorldStateService.setRain]); it is rejected when no [world] is given
+/// and, like any invalid input, leaves the config alone.
 developer.ServiceExtensionResponse labConfigureResponse(
   ValueNotifier<LabConfig>? notifier,
-  Map<String, String> params,
-) {
+  Map<String, String> params, {
+  WorldStateService? world,
+}) {
   if (notifier == null) {
     return _error('No UI lab is mounted. Open it first.');
   }
   try {
-    final Map<String, Object?> json = _paramsToJson(params);
+    final Map<String, String> configParams = <String, String>{...params};
+    final String? rainParam = configParams.remove(_rainKey);
+    double? rain;
+    if (rainParam != null) {
+      rain = double.tryParse(rainParam);
+      if (rain == null || rain < 0 || rain > 1) {
+        throw FormatException(
+          '"rain" must be a number in 0..1, got "$rainParam"',
+        );
+      }
+      if (world == null) {
+        throw const FormatException('"rain" needs the world state service');
+      }
+    }
+    final Map<String, Object?> json = _paramsToJson(configParams);
     final Object? face = json['face'];
     final FaceFrame? current = notifier.value.face;
     if (face is Map<String, Object?> &&
@@ -125,7 +150,10 @@ developer.ServiceExtensionResponse labConfigureResponse(
     };
     final LabConfig next = LabConfig.fromJson(merged);
     notifier.value = next;
-    return _ok(next);
+    if (rain != null) {
+      world!.setRain(rain);
+    }
+    return _ok(next, world?.rain.value);
   } on FormatException catch (e) {
     return _error(e.message);
   }
@@ -133,24 +161,29 @@ developer.ServiceExtensionResponse labConfigureResponse(
 
 /// Handler of [uiLabStateExtension]: the current config as JSON.
 developer.ServiceExtensionResponse labStateResponse(
-  ValueNotifier<LabConfig>? notifier,
-) {
+  ValueNotifier<LabConfig>? notifier, {
+  WorldStateService? world,
+}) {
   if (notifier == null) {
     return _error('No UI lab is mounted. Open it first.');
   }
-  return _ok(notifier.value);
+  return _ok(notifier.value, world?.rain.value);
 }
 
 /// Makes [config] the lab the debug service extensions drive, registering the
 /// extensions on first use. `registerExtension` throws when a name is
 /// registered twice in an isolate, so registration happens once per isolate
 /// and calls are routed to the currently mounted notifier. No-op outside
-/// debug builds.
-void registerUiLabExtensions(ValueNotifier<LabConfig> config) {
+/// debug builds. [world] receives the `rain` param.
+void registerUiLabExtensions(
+  ValueNotifier<LabConfig> config, {
+  WorldStateService? world,
+}) {
   if (!kDebugMode) {
     return;
   }
   _active = config;
+  _activeWorld = world;
   if (_registered) {
     return;
   }
@@ -158,12 +191,12 @@ void registerUiLabExtensions(ValueNotifier<LabConfig> config) {
   _register(
     uiLabConfigureExtension,
     (String method, Map<String, String> params) async =>
-        labConfigureResponse(_active, params),
+        labConfigureResponse(_active, params, world: _activeWorld),
   );
   _register(
     uiLabStateExtension,
     (String method, Map<String, String> params) async =>
-        labStateResponse(_active),
+        labStateResponse(_active, world: _activeWorld),
   );
 }
 
@@ -172,6 +205,7 @@ void registerUiLabExtensions(ValueNotifier<LabConfig> config) {
 void unregisterUiLabExtensions(ValueNotifier<LabConfig> config) {
   if (identical(_active, config)) {
     _active = null;
+    _activeWorld = null;
   }
 }
 

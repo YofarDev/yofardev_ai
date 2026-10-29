@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,6 +8,7 @@ import '../../../core/design/design.dart';
 import '../../../core/design/rive/ui_kit.dart';
 import '../../../core/models/talking_phase.dart';
 import '../../../core/services/motion/parallax_source.dart';
+import '../../../core/services/world/world_state_service.dart';
 import '../../../core/services/presence/composer_activity_service.dart';
 import '../../../core/services/speech/speech_input_service.dart';
 import '../../avatar/avatar.dart';
@@ -36,6 +38,7 @@ class HomeContentStack extends StatefulWidget {
     required this.speech,
     this.composerActivity,
     this.parallax,
+    this.world,
     this.facePerformer,
     required this.onStartDemo,
   });
@@ -43,6 +46,9 @@ class HomeContentStack extends StatefulWidget {
   final SpeechInputService speech;
   final ComposerActivityService? composerActivity;
   final ParallaxSource? parallax;
+
+  /// The world the scene shows, its rain (null: dry).
+  final WorldStateService? world;
 
   /// Drives the avatar's face and speech (null: static mood faces).
   final FacePerformer? facePerformer;
@@ -99,6 +105,7 @@ class _HomeContentStackState extends State<HomeContentStack> {
         _RiveStage(
           facePerformer: widget.facePerformer,
           parallax: widget.parallax,
+          rain: widget.world?.rain,
         ),
         const StageScrim.top(),
         _TopBarSlot(
@@ -129,10 +136,11 @@ class _HomeContentStackState extends State<HomeContentStack> {
 /// The Rive scene with the avatar on it. Const and free of MediaQuery, so
 /// keyboard, inset and theme changes never rebuild it.
 class _RiveStage extends StatelessWidget {
-  const _RiveStage({this.facePerformer, this.parallax});
+  const _RiveStage({this.facePerformer, this.parallax, this.rain});
 
   final FacePerformer? facePerformer;
   final ParallaxSource? parallax;
+  final ValueListenable<double>? rain;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +153,7 @@ class _RiveStage extends StatelessWidget {
               scene: avatarState.scene,
               sceneEvent: avatarState.sceneEvent,
               parallax: parallax,
+              rain: rain,
               onPropTapped: (String propId) {
                 context.read<AvatarCubit>().onPropTapped(
                   avatarState.scene,

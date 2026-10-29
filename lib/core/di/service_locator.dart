@@ -75,6 +75,7 @@ import '../services/settings_local_datasource.dart';
 import '../services/speech/speech_input_service.dart';
 import '../services/speech/speech_to_text_input_service.dart';
 import '../services/stream_processor/stream_processor_service.dart';
+import '../services/world/world_state_service.dart';
 import '../../features/chat/domain/services/chat_streaming_service.dart';
 import '../utils/logger.dart';
 
@@ -352,6 +353,11 @@ Future<void> setupServiceLocator() async {
       active: false,
     ),
     dispose: (ParallaxSource source) => source.dispose(),
+  );
+  // The world the scenes show (rain); only the UI lab feeds it until M7-M9.
+  getIt.registerLazySingleton<WorldStateService>(
+    WorldStateService.new,
+    dispose: (WorldStateService world) => world.dispose(),
   );
   getIt.registerLazySingleton<IdleLadder>(
     () => IdleLadder(

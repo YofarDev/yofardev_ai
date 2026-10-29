@@ -6,6 +6,7 @@ import 'package:nested/nested.dart';
 import '../../../core/design/design.dart';
 import '../../../core/models/demo_script.dart';
 import '../../../core/services/motion/parallax_source.dart';
+import '../../../core/services/world/world_state_service.dart';
 import '../../../core/services/presence/composer_activity_service.dart';
 import '../../../core/services/speech/speech_input_service.dart';
 import '../../../core/utils/logger.dart';
@@ -20,7 +21,7 @@ import '../widgets/home_content_stack.dart';
 /// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
 ///
-/// [speech], [composerActivity], [parallax] and [facePerformer] come from the
+/// [speech], [composerActivity], [parallax], [world] and [facePerformer] come from the
 /// route (Home never reads the service locator).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -28,6 +29,7 @@ class HomeScreen extends StatefulWidget {
     required this.speech,
     this.composerActivity,
     this.parallax,
+    this.world,
     this.facePerformer,
   });
 
@@ -38,6 +40,9 @@ class HomeScreen extends StatefulWidget {
 
   /// The scene's parallax offset and the pointer's sink (null: centred).
   final ParallaxSource? parallax;
+
+  /// The world the scene shows, its rain (null: dry).
+  final WorldStateService? world;
 
   /// Drives the avatar's face and speech (null: static mood faces).
   final FacePerformer? facePerformer;
@@ -158,6 +163,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       speech: widget.speech,
       composerActivity: widget.composerActivity,
       parallax: widget.parallax,
+      world: widget.world,
       facePerformer: widget.facePerformer,
       onStartDemo: _startDemoMode,
     );
@@ -177,6 +183,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (widget.speech != oldWidget.speech ||
         widget.composerActivity != oldWidget.composerActivity ||
         widget.parallax != oldWidget.parallax ||
+        widget.world != oldWidget.world ||
         widget.facePerformer != oldWidget.facePerformer) {
       _stage = _buildStage();
     }

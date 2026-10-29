@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:flutter/foundation.dart' show ValueListenable, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
@@ -11,6 +11,7 @@ import '../../../../../core/utils/logger.dart';
 import '../../../../../core/design/rive/rive_vm_binding.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../rive/scene_parallax_writer.dart';
+import '../../rive/scene_rain_writer.dart';
 import 'latest_load_gate.dart';
 
 /// Rive rendering of the scene currently on screen.
@@ -26,6 +27,10 @@ import 'latest_load_gate.dart';
 /// written instead of the source. The source runs (accelerometer
 /// subscribed) only while the loaded scene is a diorama and the app is
 /// resumed.
+///
+/// Rain (contract v8): [rain]'s value is written to `SceneVM` `rain` once
+/// when a scene file loads (so a scene switch while it rains rains in the new
+/// file) and on every change.
 class RiveSceneView extends StatefulWidget {
   const RiveSceneView({
     super.key,
@@ -34,6 +39,7 @@ class RiveSceneView extends StatefulWidget {
     this.onPropTapped,
     this.parallax,
     this.parallaxOverride,
+    this.rain,
   });
 
   final AvatarScene scene;
@@ -49,6 +55,9 @@ class RiveSceneView extends StatefulWidget {
   /// A hand-set offset written instead of [parallax] while non-null.
   final Offset? parallaxOverride;
 
+  /// The steady rain intensity, 0..1; null leaves it dry.
+  final ValueListenable<double>? rain;
+
   @override
   State<RiveSceneView> createState() => _RiveSceneViewState();
 }
@@ -59,6 +68,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
   SceneParallaxWriter? _parallaxWriter;
+  SceneRainWriter? _rainWriter;
   StreamSubscription<Offset>? _parallaxSub;
   Offset _parallax = Offset.zero;
   bool _parallaxFrameScheduled = false;
@@ -78,7 +88,12 @@ class _RiveSceneViewState extends State<RiveSceneView>
     WidgetsBinding.instance.addObserver(this);
     _listenParallax();
     _syncParallaxActive();
+    widget.rain?.addListener(_writeRain);
     _loadScene(widget.scene);
+  }
+
+  void _writeRain() {
+    _rainWriter?.write(widget.rain?.value ?? 0);
   }
 
   void _listenParallax() {
@@ -135,6 +150,11 @@ class _RiveSceneViewState extends State<RiveSceneView>
       _listenParallax();
       _syncParallaxActive();
     }
+    if (widget.rain != oldWidget.rain) {
+      oldWidget.rain?.removeListener(_writeRain);
+      widget.rain?.addListener(_writeRain);
+      _writeRain();
+    }
     if (widget.parallaxOverride != oldWidget.parallaxOverride ||
         widget.parallax != oldWidget.parallax) {
       _scheduleParallaxWrite();
@@ -163,6 +183,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _loads.cancelAll();
+    widget.rain?.removeListener(_writeRain);
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
     _teardown();
@@ -215,6 +236,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
         // A fresh binding has no parallax yet.
         _parallaxWriter = SceneParallaxWriter(binding.setNumber)
           ..write(widget.parallaxOverride ?? _parallax, force: true);
+        // Nor has it the rain: a scene switch writes it to the new file.
+        _rainWriter = SceneRainWriter(binding.setNumber)
+          ..write(widget.rain?.value ?? 0, force: true);
         _syncParallaxActive();
       });
     } on Exception catch (e) {
@@ -238,6 +262,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _controller = null;
     _binding = null;
     _parallaxWriter = null;
+    _rainWriter = null;
     _file = null;
     _loadedScene = null;
   }

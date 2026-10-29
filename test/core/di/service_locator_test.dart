@@ -7,6 +7,7 @@ import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
 import 'package:yofardev_ai/core/services/motion/parallax_source.dart';
+import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
 import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
@@ -71,6 +72,8 @@ void main() {
     expect(getIt<PowerSaverSource>(), isA<BatteryPowerSaverSource>());
     expect(getIt<ParallaxSource>(), same(getIt<ParallaxSource>()));
     expect(getIt<ParallaxSource>().usesAccelerometer, isFalse);
+    expect(getIt<WorldStateService>(), same(getIt<WorldStateService>()));
+    expect(getIt<WorldStateService>().rain.value, 0);
     expect(getIt<IdleLadder>(), same(getIt<IdleLadder>()));
     expect(getIt<IdleLadder>().stage, 0);
     expect(getIt<PropReactionService>(), isNotNull);

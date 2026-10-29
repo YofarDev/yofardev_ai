@@ -280,6 +280,21 @@ void main() {
           }
           n.value = 0;
         }
+        // v8: steady rain intensity, 0..1, default 0.
+        expect(
+          names,
+          contains(AvatarRiveContract.scenePropRain),
+          reason: 'SceneVM.rain in $sceneId',
+        );
+        final ViewModelInstanceNumber rain = vmi.number(
+          AvatarRiveContract.scenePropRain,
+        )!;
+        expect(rain.value, 0, reason: '$sceneId rain defaults to 0');
+        for (final double v in <double>[0, 1]) {
+          rain.value = v;
+          expect(rain.value, v, reason: '$sceneId rain');
+        }
+        rain.value = 0;
         for (final String name in AvatarRiveContract.sceneLightProps) {
           expect(names, contains(name), reason: 'SceneVM.$name in $sceneId');
         }

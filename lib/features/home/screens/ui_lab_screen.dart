@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/design/design.dart';
 import '../../../core/design/looks/looks.dart';
+import '../../../core/services/world/world_state_service.dart';
 import '../../../core/utils/logger.dart';
 import '../widgets/lab/lab_config.dart';
 import '../widgets/lab/lab_controls.dart';
@@ -25,6 +26,7 @@ class UiLabScreen extends StatefulWidget {
     this.textThemeBuilder = googleFontsTextThemeBuilder,
     this.initialConfig = LabConfig.initial,
     this.stageBuilder = buildLabRiveStage,
+    this.world,
   });
 
   /// Builds the look's text theme; tests inject a fake so no font loads.
@@ -35,6 +37,10 @@ class UiLabScreen extends StatefulWidget {
   /// Builds the Stage tab's scene and avatar; tests inject a placeholder as
   /// Rive files are not decoded in widget tests.
   final LabStageBuilder stageBuilder;
+
+  /// The app's world state; the lab's `rain` param sets it and the stage
+  /// shows it (null: no rain control).
+  final WorldStateService? world;
 
   @override
   State<UiLabScreen> createState() => _UiLabScreenState();
@@ -55,7 +61,7 @@ class _UiLabScreenState extends State<UiLabScreen> {
   @override
   void initState() {
     super.initState();
-    registerUiLabExtensions(_config);
+    registerUiLabExtensions(_config, world: widget.world);
   }
 
   @override
@@ -109,6 +115,7 @@ class _UiLabScreenState extends State<UiLabScreen> {
                         child: _PreviewFrame(
                           config: config,
                           stageBuilder: widget.stageBuilder,
+                          world: widget.world,
                         ),
                       ),
                     ),
@@ -135,10 +142,15 @@ class _UiLabScreenState extends State<UiLabScreen> {
 /// The page background under the ambient look theme,
 /// with the tab's content on top.
 class _PreviewFrame extends StatelessWidget {
-  const _PreviewFrame({required this.config, required this.stageBuilder});
+  const _PreviewFrame({
+    required this.config,
+    required this.stageBuilder,
+    this.world,
+  });
 
   final LabConfig config;
   final LabStageBuilder stageBuilder;
+  final WorldStateService? world;
 
   @override
   Widget build(BuildContext context) {
@@ -164,6 +176,7 @@ class _PreviewFrame extends StatelessWidget {
           LabTab.stage => LabStagePreview(
             config: config,
             stageBuilder: stageBuilder,
+            world: world,
           ),
         },
       ),

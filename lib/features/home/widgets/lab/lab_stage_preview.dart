@@ -1,10 +1,12 @@
 // ignore-l10n: debug — the UI lab is debug-only; its strings are hardcoded.
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/performance/avatar_prop.dart';
+import '../../../../core/services/world/world_state_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../avatar/avatar.dart';
 import '../../../talking/talking.dart';
@@ -31,11 +33,15 @@ class LabStageExtras extends InheritedWidget {
     super.key,
     required this.prop,
     required this.parallax,
+    this.rain,
     required super.child,
   });
 
   final AvatarProp prop;
   final Offset? parallax;
+
+  /// The world's rain (contract v8), written to the scene; null: dry.
+  final ValueListenable<double>? rain;
 
   /// The extras above [context], or none (no prop, no parallax).
   static LabStageExtras? maybeOf(BuildContext context) =>
@@ -43,7 +49,9 @@ class LabStageExtras extends InheritedWidget {
 
   @override
   bool updateShouldNotify(LabStageExtras oldWidget) =>
-      prop != oldWidget.prop || parallax != oldWidget.parallax;
+      prop != oldWidget.prop ||
+      parallax != oldWidget.parallax ||
+      rain != oldWidget.rain;
 }
 
 /// The default [LabStageBuilder]: the real Rive scene and avatar.
@@ -66,9 +74,13 @@ class LabStagePreview extends StatefulWidget {
     super.key,
     required this.config,
     this.stageBuilder = buildLabRiveStage,
+    this.world,
   });
 
   final LabConfig config;
+
+  /// The app's world state; its rain is shown on the scene (null: dry).
+  final WorldStateService? world;
 
   /// Injected so widget tests, which cannot decode Rive files, can pass a
   /// placeholder.
@@ -200,6 +212,7 @@ class _LabStagePreviewState extends State<LabStagePreview>
                         LabStageExtras(
                           prop: config.prop,
                           parallax: config.parallax,
+                          rain: widget.world?.rain,
                           child: ValueListenableBuilder<MouthState>(
                             valueListenable: _syllable,
                             builder:
@@ -266,6 +279,7 @@ class LabRiveStage extends StatelessWidget {
           key: ValueKey<AvatarScene>(scene),
           scene: scene,
           parallax: extras?.parallax,
+          rain: extras?.rain,
         ),
         RiveAvatarView(
           key: const ValueKey<String>('lab-avatar'),
@@ -286,10 +300,16 @@ class LabRiveStage extends StatelessWidget {
 /// One scene's Rive view; logs its lifetime so rapid switching can be checked
 /// for duplicate loads.
 class _LabSceneLayer extends StatefulWidget {
-  const _LabSceneLayer({super.key, required this.scene, this.parallax});
+  const _LabSceneLayer({
+    super.key,
+    required this.scene,
+    this.parallax,
+    this.rain,
+  });
 
   final AvatarScene scene;
   final Offset? parallax;
+  final ValueListenable<double>? rain;
 
   @override
   State<_LabSceneLayer> createState() => _LabSceneLayerState();
@@ -320,6 +340,7 @@ class _LabSceneLayerState extends State<_LabSceneLayer> {
       scene: widget.scene,
       sceneEvent: _noEvent,
       parallaxOverride: widget.parallax,
+      rain: widget.rain,
     );
   }
 }
