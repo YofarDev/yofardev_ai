@@ -68,6 +68,16 @@ CFG: dict[str, Cfg] = {
         rain_loops=[("RainGlass streaks + drips", 240)],
         seam_box=(360, 230, 720, 700),  # the glass
     ),
+    "beach": Cfg(
+        # clear of the palm trunk, the umbrella pole and the gull's post (Plane4) that cross the surf
+        patches=[("Plane5 dune grass", (60, 1800, 260, 1880), 40), ("Plane4 towel", (110, 1310, 330, 1370), 28),
+                 ("Plane3 foam lace", (250, 1186, 880, 1204), 20), ("Plane2 wave band", (430, 1105, 860, 1135), 12),
+                 ("Plane1 islet", (770, 958, 860, 986), 6), ("Plane0 sun", (740, 600, 820, 680), 0)],
+        wet=((420, 1480, 740, 1620), 0.6, 0.9),   # open dry sand between the towel and the crab
+        # streak sheets 18 / 34, splashes 120 frames: all back at frame 0 after 6120
+        rain_loops=[("RainLoop sheets + splashes", 6120)],
+        seam_box=(300, 1250, 1080, 1920),  # the sand right of the castle
+    ),
 }
 
 
@@ -226,7 +236,28 @@ def living_room_extras(render: Renderer, out: Path, gates: list[str]) -> None:
                  f"({'ok' if drift <= 2 else 'FAIL'})")
 
 
-EXTRAS = {"campfire": campfire_extras, "livingRoom": living_room_extras}
+def beach_extras(render: Renderer, out: Path, gates: list[str]) -> None:
+    """The four events still play (one frame each, mid-event; the sunset at its peak) and the sun's
+    glow follows `lightKey` (a blue key turns it blue, history-free)."""
+    cells = [label(Image.fromarray(render("--advance=1")).convert("RGB").resize((360, 640)), "rest")]
+    for ev, f in (("bigWave", 60), ("seagulls", 160), ("sunset", 300), ("rain", 200)):
+        a = render(f"--data=eventId={ev}", "--data=event=1", f"--advance={f}")
+        cells.append(label(Image.fromarray(a).convert("RGB").resize((360, 640)), f"{ev} +{f}f"))
+    grid(cells, 5).save(out / "events_strip.png")
+    box = (slice(560, 600), slice(640, 700))   # sky left of the sun disc, inside the glow
+    rest = render("--advance=1").astype(int)[box][..., :3]
+    blue = render("--data=lightKey=FF60A0FF", "--advance=1").astype(int)[box][..., :3]
+    back = render("--data=lightKey=FF60A0FF", "--advance=1", "--data=lightKey=FFFFC48A", "--advance=2"
+                  ).astype(int)[box][..., :3]
+    shift = float((blue[..., 2] - blue[..., 0]).mean() - (rest[..., 2] - rest[..., 0]).mean())
+    drift = int(np.abs(back - rest).max())
+    Image.fromarray(np.concatenate([rest, blue], 1).astype(np.uint8)).resize((480, 160)).save(out / "sun_key.png")
+    gates.append(f"sun glow follows lightKey (blue - red, mean, blue key vs default): {shift:+.1f}/255 "
+                 f"({'ok' if shift >= 8 else 'FAIL'}); back to default: max diff {drift}/255 "
+                 f"({'ok' if drift <= 2 else 'FAIL'})")
+
+
+EXTRAS = {"campfire": campfire_extras, "livingRoom": living_room_extras, "beach": beach_extras}
 
 
 def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) -> list[str]:

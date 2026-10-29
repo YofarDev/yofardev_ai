@@ -848,7 +848,9 @@ class DioramaSpec:
       the art they cover (ruling 3). An unlisted top-level element raises `KeyError`.
     - `emissive`: name roots of light sources; they and everything below them are renamed `emit*`
       and skip the colour-script fit (M4 ruling 13).
-    - `veils`: (density, y clear, y full) of the `lightFog` veil in front of Plane0, Plane1, ...
+    - `veils`: (density, y clear, y full) of the `lightFog` veil in front of Plane0, Plane1, ...;
+      a fourth value (y clear again) makes the veil a band that fades out below `y full` too
+      (the beach's horizon haze) instead of staying full down to the bottom.
     - `light`: the scene's own pass, run first on the refined content with the diorama's Doc
       (firelight, lamp pool, rain binds). Elements it adds need a plane entry too; new elements
       should mint from `sc.d5` (`with sc.minting(sc.d5)`), shared converters from `sc.conv`.
@@ -856,7 +858,7 @@ class DioramaSpec:
 
     planes: dict[str, int | None]
     emissive: tuple[str, ...]
-    veils: tuple[tuple[float, float, float], ...]
+    veils: tuple[tuple[float, ...], ...]
     light: Callable[[Scene, list[El], Doc], None] | None = None
 
 
@@ -915,14 +917,28 @@ def diorama(sc: Scene, content: list[El], spec: DioramaSpec) -> None:
             sc.bind("parallaxY", 14, sc.conv(gain * PARALLAX_TRAVEL[1], doc=d6), doc=d6)]
         veil = None
         if k < len(spec.veils):
-            density, y0, y1 = spec.veils[k]
-            fills = [d6("Fill", d6("LinearGradient",
-                                   d6("GradientStop", colorValue="00" + fog[2:], position=0.0),
-                                   d6("GradientStop", d6("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
-                                                         propertyKey=38), colorValue=fog, position=1.0),
-                                   startX=0.0, startY=0.0, endX=0.0, endY=float(y1 - y0)), name="Fill")
-                     for _ in range(FOG_FILLS)]
-            veil = d6("Shape", d6("Rectangle", width=float(W + 120), height=float(H + 60 - y0), originX=0.0,
+            density, y0, y1, *band = spec.veils[k]
+            if band:
+                # a band: clear at y0, full at y1, clear again at band[0]
+                y2 = band[0]
+                fills = [d6("Fill", d6("LinearGradient",
+                                       d6("GradientStop", colorValue="00" + fog[2:], position=0.0),
+                                       d6("GradientStop", d6("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
+                                                             propertyKey=38), colorValue=fog,
+                                          position=round((y1 - y0) / (y2 - y0), 4)),
+                                       d6("GradientStop", colorValue="00" + fog[2:], position=1.0),
+                                       startX=0.0, startY=0.0, endX=0.0, endY=float(y2 - y0)), name="Fill")
+                         for _ in range(FOG_FILLS)]
+                height = float(y2 - y0)
+            else:
+                fills = [d6("Fill", d6("LinearGradient",
+                                       d6("GradientStop", colorValue="00" + fog[2:], position=0.0),
+                                       d6("GradientStop", d6("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
+                                                             propertyKey=38), colorValue=fog, position=1.0),
+                                       startX=0.0, startY=0.0, endX=0.0, endY=float(y1 - y0)), name="Fill")
+                         for _ in range(FOG_FILLS)]
+                height = float(H + 60 - y0)
+            veil = d6("Shape", d6("Rectangle", width=float(W + 120), height=height, originX=0.0,
                                   originY=0.0, name="Path"),
                       *fills, x=-60.0, y=float(y0), opacity=fog_opacity(density, fog), name=f"FogVeil{k}")
         planes.append(d6("Node", *binds, *hits.get(k, []), veil, *groups.get(k, []), x=0.0, y=0.0, name=f"Plane{k}"))
@@ -1537,6 +1553,89 @@ DIORAMAS["livingRoom"] = DioramaSpec(LIVING_ROOM_PLANES, LIVING_ROOM_EMISSIVE, L
 
 
 # ====================================================================== beach
+# M5 ruling 4 (Task 5): planes back to front. Element roots as `DioramaSpec.planes` reads them.
+BEACH_PLANES: dict[str, int | None] = {
+    "RainLoop": None, "RainFx": None, "SunsetTint": None,
+    "DuneGrass": 5, "DuneWet": 5, "NearDune": 5,
+    # sand props, the palm and the passing flock; the shells and starfish lie on the mid-ground sand
+    # (y 1470-1860, most of them not foreground), so they stay with the castle (ruling 4: 5 -> 4)
+    **dict.fromkeys(("Flock", "Castle", "Flag", "Starfish", "Shell", *(f"ShellRib{i}_" for i in range(4)), "Crab",
+                     "GullPlace", "PalmFrond", "TrunkRing", "PalmTrunk", "Umbrella", "TowelWeave", "TowelFringe",
+                     "Towel", "UShadow"), 4),
+    # the surf line and the ground: the sand moves 4 -> 3, it paints behind the wet band and the foam
+    **dict.fromkeys(("Wash", "Speck", "WetWash", "FoamLace", "Foam", "SandWet", "WetSand", "Sand"), 3),
+    **dict.fromkeys(("BigWave", "BigWaveClip", "Wave"), 2),
+    # the far sea with the horizon, the islands and the sun's glints on the water
+    **dict.fromkeys(("SunsetPath", "Glint", "DistantHeadland", "DistantIslet", "SunReflection", "WaterRiffle",
+                     "Sea"), 1),
+    **dict.fromkeys(("Flyer", "SkyOvercast", "Cloud", "Sun", "SunsetSky", "Sky"), 0),
+    # ruling 3: each hit zone rides the plane of its prop's art
+    "Hit_crab": 4, "Hit_umbrella": 4, "Hit_seagull": 4,
+}
+# sea haze (`lightFog`) at the horizon (y 980): full there, clear high in the sky; in front of the
+# sea it is a band that clears again toward the shore (the fourth value)
+BEACH_VEILS = ((0.45, 560.0, 985.0), (0.25, 760.0, 985.0, 1090.0), (0.12, 860.0, 990.0, 1110.0))
+BEACH_EMISSIVE = ("Sun", "Glint", "SunReflection", "SunsetPath", "SunsetSky")
+# Steady rain (ruling 6): a looping streak layer at opacity `rain`, the dry sand and the near dune under
+# a wet shade and the sky under an overcast, each at a share of `rain`.
+BEACH_RAIN_LOOP_FRAMES = 120   # 2 s splash loop; the streak sheets loop on 18 / 34 frames
+BEACH_WET = ("FF6E6656", 0.4)        # wet-sand shade and its opacity at rain 1
+BEACH_OVERCAST = ("FF8E98A6", 0.45)  # overcast over the sky and the sun, opacity at rain 1
+
+
+def beach_light(sc: Scene, content: list[El], d6: Doc) -> None:
+    """The beach's own pass (M5 Task 5): the sun's glow in `lightKey` (it is the glow that sets in the
+    `sunset` event), then the steady rain bound to `rain` (history-free)."""
+    d5 = sc.d5
+    key = SCENES["beach"].key
+    with sc.minting(d5):
+        # ---- the sunset glow takes the key light's colour: a bound stop sets the alpha too, so the
+        # M4 halo's 0x88 centre becomes the gradient's opacity
+        glow = named(content, "SunGlow")
+        g = next(c for c in glow.children if c.tag == "Fill").children[0]
+        centre, edge = g.children[0], g.children[-1]
+        g.attrs["opacity"] = round(int(str(centre.attrs["colorValue"])[:2], 16) / 255, 3)
+        centre.attrs["colorValue"] = key
+        centre.children.append(sc.bind("lightKey", 38))
+        edge.attrs["colorValue"] = "00" + key[2:]
+        # the glow now goes behind the disc (first child paints in front): over it, a key-coloured
+        # glow would tint the sun itself
+        sun = named(content, "Sun")
+        sun.children.remove(glow)
+        sun.children.append(glow)
+
+        # ---- rain: streaks and splashes in screen space, in front of every plane
+        streaks, loop = rain_fx(sc, "RainLoop", "88C8D6E4", frames=BEACH_RAIN_LOOP_FRAMES, loop=True,
+                                ground=(1250.0, 1900.0))
+        streaks.attrs["opacity"] = 0.0
+        streaks.children.insert(0, sc.bind("rain", 18))
+        sc.ambient("RainLoop", loop)
+        content.insert(0, streaks)
+
+        # ---- the sand darkens (in front of the dry sand and the wet band, behind the foam and specks)
+        sand = named(content, "Sand")
+        rect = next(c for c in sand.children if c.tag == "Rectangle")
+        wet = d5("Shape", sc.bind("rain", 18, sc.conv(BEACH_WET[1])), clone(d5, rect), sc.F(BEACH_WET[0]),
+                 x=sand.attrs["x"], y=sand.attrs["y"], opacity=0.0, name="SandWet")
+        before(content, "WetSand", wet)
+        # the foreground dune too (in front of the dune, behind its grass)
+        dune = named(content, "NearDune")
+        path = next(c for c in dune.children if c.tag == "PointsPath")
+        dune_wet = d5("Shape", sc.bind("rain", 18, sc.conv(BEACH_WET[1])), clone(d5, path), sc.F(BEACH_WET[0]),
+                      x=dune.attrs["x"], y=dune.attrs["y"], opacity=0.0, name="DuneWet")
+        before(content, "NearDune", dune_wet)
+
+        # ---- the sky clouds over: in front of the clouds and the sun, behind the far gulls
+        sky = named(content, "Sky")
+        rect = next(c for c in sky.children if c.tag == "Rectangle")
+        overcast = d5("Shape", sc.bind("rain", 18, sc.conv(BEACH_OVERCAST[1])), clone(d5, rect),
+                      sc.F(BEACH_OVERCAST[0]), x=sky.attrs["x"], y=sky.attrs["y"], opacity=0.0, name="SkyOvercast")
+        before(content, "Cloud0", overcast)
+
+
+DIORAMAS["beach"] = DioramaSpec(BEACH_PLANES, BEACH_EMISSIVE, BEACH_VEILS, beach_light)
+
+
 def beach() -> str:
     sc = Scene("beach")
     d = sc.d
@@ -1547,7 +1646,8 @@ def beach() -> str:
     horizon, shore = 980.0, 1180.0
 
     def full(name: str, paint: El, y0: float = -10, y1: float = H + 10, **kw: object) -> El:
-        return d("Shape", d("Rectangle", width=float(W + 20), height=float(y1 - y0), name="Path"), paint,
+        # M5 diorama bleed: 60 px past each side covers the nearest of these planes' travel (Plane3, 20 px)
+        return d("Shape", d("Rectangle", width=float(W + 120), height=float(y1 - y0), name="Path"), paint,
                  x=float(W / 2), y=float((y0 + y1) / 2), name=name, **kw)
 
     sky = full("Sky", sc.vgrad(-500, 500, [("FF4AA0E0", 0.0), ("FF9AD0F0", 0.7), ("FFFFE4C8", 1.0)]), -10, horizon + 10)
@@ -1570,7 +1670,8 @@ def beach() -> str:
         kp.children[0].attrs["interpolationType"] = "linear"
     cl_tracks = [sc.T(c, x=[(0, float(c.attrs["x"])), (600, float(c.attrs["x"]) + 60 * (1 if i % 2 else -1)),
                             (1200, float(c.attrs["x"]))]) for i, c in enumerate(clouds)]
-    sea = full("Sea", sc.vgrad(-110, 110, [("FF2A7AB8", 0.0), ("FF3AA8C8", 1.0)]), horizon, shore + 10)
+    # the sea runs 40 px under the sand (Plane1 under Plane3, M5 bleed); the gradient keeps its M4 span
+    sea = full("Sea", sc.vgrad(-125, 95, [("FF2A7AB8", 0.0), ("FF3AA8C8", 1.0)]), horizon, shore + 40)
     glints = [d("Shape", d("Rectangle", width=float(rnd.uniform(30, 70)), height=4.0, name="Path"), F("AAFFFFFF"),
                 x=rnd.uniform(40, W - 40), y=rnd.uniform(horizon + 20, shore - 30), name=f"Glint{i}") for i in range(16)]
     gl_tracks = [sc.T(g, ease=None, opacity=[(0, 0.2), ((i * 17) % 100 + 10, 1.0, "linear"), ((i * 17) % 100 + 50, 0.2, "linear"),
@@ -1578,13 +1679,15 @@ def beach() -> str:
     waves = []
     w_tracks = []
     for i, y in enumerate([shore - 70, shore - 30]):
-        pts = [(-40, y)] + [(x, y + (10 if (x // 60) % 2 else -6)) for x in range(20, W + 80, 60)] + [(W + 60, y + 40, "c"),
-                                                                                                  (-40, y + 40, "c")]
+        # the band runs 100 px past the left edge and 120 px past the right (its 30 px drift + Plane2's 12 px)
+        pts = [(-100, y)] + [(x, y + (10 if (x // 60) % 2 else -6)) for x in range(20, W + 80, 60)] + \
+            [(W + 120, y + 40, "c"), (-100, y + 40, "c")]
         wv = S(O, f"Wave{i}", pts, sc.vgrad(-30, 30, [("CCFFFFFF", 0.0), ("0076D0E0", 1.0)]))
         waves.append(wv)
         w_tracks.append(sc.T(wv, x=[(0, float(wv.attrs["x"])), (90, float(wv.attrs["x"]) + 30 * (1 if i else -1)),
                                     (180, float(wv.attrs["x"]))]))
-    sand = full("Sand", sc.vgrad(-370, 370, [("FFF6DCA8", 0.0), ("FFE0B87A", 1.0)]), shore, H + 10)
+    # 50 px below the frame (Plane3's 12 px of y travel); the gradient keeps its M4 span
+    sand = full("Sand", sc.vgrad(-390, 350, [("FFF6DCA8", 0.0), ("FFE0B87A", 1.0)]), shore, H + 50)
     wet = S(O, "WetSand", [(-40, shore), (W + 40, shore), (W + 40, shore + 40), (W / 2, shore + 60), (-40, shore + 40)],
             F("FFD6B07A"))
     foam = S(O, "Foam", [(-40, shore + 4)] + [(x, shore + 22 + (8 if (x // 50) % 2 else 0)) for x in range(0, W + 41, 50)] +

@@ -34,7 +34,7 @@ highlights. It should feel hand-illustrated, and it is generated entirely from c
   |---|---:|---:|
   | livingRoom | 192 (0 since the M5 diorama) | 8 |
   | campfire | 283 (0 since the M4 diorama) | 138 |
-  | beach | 525 | 79 |
+  | beach | 525 (0 since the M5 diorama) | 79 |
   | deepSpace | 190 | 15 |
   | avatar (living-room light) | 597 | n/a |
 

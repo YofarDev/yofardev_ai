@@ -10,11 +10,13 @@ enum AvatarScene {
   static const AvatarScene defaultScene = AvatarScene.livingRoom;
 
   /// Whether the scene is a diorama with depth planes, so its file reads the
-  /// parallax numbers (and the sensors are worth running). Campfire and
-  /// livingRoom so far; beach and deepSpace join when their dioramas are
+  /// parallax numbers (and the sensors are worth running). Campfire,
+  /// livingRoom and beach so far; deepSpace joins when its diorama is
   /// rebuilt (M5).
   bool get isDiorama =>
-      this == AvatarScene.campfire || this == AvatarScene.livingRoom;
+      this == AvatarScene.campfire ||
+      this == AvatarScene.livingRoom ||
+      this == AvatarScene.beach;
 
   /// The scene events this scene's `.riv` state machine can play.
   List<SceneEvent> get allowedEvents => switch (this) {

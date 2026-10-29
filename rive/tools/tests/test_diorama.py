@@ -308,3 +308,112 @@ def test_living_room_view_sits_behind_an_opening(lr: str) -> None:
         sh = next(e for e in root.iter("Shape") if e.get("name") == name)
         assert len(sh.findall("Rectangle")) == 2
         assert sh.find("Fill").get("fillRule") == "evenOdd"
+
+
+# ---------------------------------------------------------------- beach (M5 Task 5)
+BEACH_M4 = "5b10b23"   # the M4 beach (+ v8 rain), before its diorama
+BEACH_PROP_ART = {"crab": "Crab", "umbrella": "Umbrella", "seagull": "GullPlace"}
+
+
+@pytest.fixture(scope="module")
+def beach(tmp_path_factory: pytest.TempPathFactory) -> str:
+    out = tmp_path_factory.mktemp("scenes")
+    root = gen_scenes.OUT_ROOT
+    gen_scenes.OUT_ROOT = str(out)
+    try:
+        return Path(gen_scenes.beach()).read_text()
+    finally:
+        gen_scenes.OUT_ROOT = root
+
+
+def test_beach_is_committed(beach: str) -> None:
+    assert beach == (ROOT / "rive" / "scenes" / "beach" / "beach.rml").read_text()
+
+
+def test_beach_plane_membership(beach: str) -> None:
+    assert "beach" in gen_scenes.DIORAMAS
+    plane = _plane_of(beach)
+    want = {"Sky": 0, "emitSun": 0, "emitSunsetSky": 0, "Cloud0": 0, "Flyer0": 0,
+            "SkyOvercast": 0,
+            "Sea": 1, "DistantIslet": 1, "DistantHeadland": 1, "emitGlint0": 1, "emitSunReflection0": 1,
+            "emitSunsetPath": 1,
+            "Wave0": 2, "BigWave": 2, "BigWaveClip": 2,
+            "Foam": 3, "WetSand": 3, "Sand": 3, "SandWet": 3, "Wash": 3, "WetWash": 3,
+            "Crab": 4, "Umbrella": 4, "GullPlace": 4, "PalmTrunk": 4, "Castle": 4, "Shell0": 4, "Starfish0": 4,
+            "Flock0": 4,
+            "NearDune": 5, "DuneGrass0": 5, "DuneWet": 5}
+    assert {k: plane.get(k) for k in want} == want
+    at = [beach.index(f'name="Plane{k}"') for k in range(5, -1, -1)]
+    assert at == sorted(at)
+    for overlay in ("RainLoop", "RainFx", "SunsetTint"):
+        assert beach.index(f'name="{overlay}"') < at[0]
+    # the big wave and its clip ride the same plane (a clip in another plane would slide off it)
+    assert plane["BigWave"] == plane["BigWaveClip"]
+
+
+def test_beach_hit_zones_ride_their_planes(beach: str) -> None:
+    plane = _plane_of(beach)
+    for prop, art in BEACH_PROP_ART.items():
+        assert plane[f"Hit_{prop}"] == plane[art], prop
+        assert f'name="Tap_{prop}"' in beach
+    ab = ET.fromstring(beach).find("Artboard")
+    assert not [c for c in ab if str(c.get("name", "")).startswith("Hit_")]
+
+
+def test_beach_lint_clean_and_events_intact(beach: str) -> None:
+    assert lint_colours(beach, "beach") == []
+    for ev in gen_scenes.SCENE_EVENTS["beach"]:
+        assert f'key="{ev}"' in beach
+    for anim in ("ev_bigWave", "ev_seagulls", "ev_sunset", "ev_Rain", "amb_sea", "amb_crab"):
+        assert f'name="{anim}"' in beach
+
+
+def test_beach_keeps_its_m4_ids(beach: str) -> None:
+    r = subprocess.run(["git", "show", f"{BEACH_M4}:rive/scenes/beach/beach.rml"], cwd=ROOT,
+                       capture_output=True, text=True)
+    if r.returncode:
+        pytest.skip(r.stderr.strip())
+    old, new = _tree(r.stdout), _tree(beach)
+    assert not set(old) - set(new)
+    for i, (tag, _, _) in old.items():
+        assert new[i][0] == tag, i
+    added = set(new) - set(old)
+    assert all(gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
+               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
+
+
+def test_beach_sun_glow_and_rain_binds(beach: str) -> None:
+    root = ET.fromstring(beach)
+    props = {e.get("id"): e.get("name") for e in root.iter() if e.tag.startswith("ViewModelProperty")}
+    sun = next(e for e in root.iter("Node") if e.get("name") == "emitSun")
+    assert [c.get("name") for c in sun if c.tag == "Shape"] == ["emitSunDisc", "emitSunGlow"]  # glow behind
+    glow = next(c for c in sun if c.get("name") == "emitSunGlow")
+    (g,) = [x for f in glow.findall("Fill") for x in f]
+    (b,) = g.findall("GradientStop")[0].findall("DataBindContext")
+    assert (props[b.get("sourcePathIds").split("-")[1]], b.get("propertyKey")) == ("lightKey", "38")
+    assert float(g.get("opacity")) == pytest.approx(0x88 / 255, abs=1e-3)
+    assert _binds(beach, "RainLoop") == [("rain", "18", None)]
+    (src, key, wet), = _binds(beach, "SandWet")
+    assert (src, key) == ("rain", "18") and _binds(beach, "DuneWet") == [("rain", "18", wet)]
+    assert _formula(beach, wet) == ["FormulaTokenValue:0.4", "FormulaTokenOperation:2", "FormulaTokenInput:"]
+    (_, _, over), = _binds(beach, "SkyOvercast")
+    assert _formula(beach, over) == ["FormulaTokenValue:0.45", "FormulaTokenOperation:2", "FormulaTokenInput:"]
+    for anim, frames in (("amb_RainLoop", 120), ("amb_RainLoopSheet0", 18), ("amb_RainLoopSheet1", 34)):
+        assert re.search(rf'<LinearAnimation duration="{frames}" fps="60" loopValue="loop" name="{anim}"', beach)
+
+
+def test_beach_horizon_haze_is_a_band(beach: str) -> None:
+    root = ET.fromstring(beach)
+    fog = next(e.get("id") for e in root.iter("ViewModelPropertyColor") if e.get("name") == "lightFog")
+    for k, n_stops in ((0, 2), (1, 3), (2, 3)):
+        veil = next(e for e in root.iter("Shape") if e.get("name") == f"FogVeil{k}")
+        fills = veil.findall("Fill")
+        assert len(fills) == gen_scenes.FOG_FILLS
+        for f in fills:
+            stops = f.find("LinearGradient").findall("GradientStop")
+            assert len(stops) == n_stops
+            bound = [s for s in stops if s.find("DataBindContext") is not None]
+            assert len(bound) == 1 and bound[0].find("DataBindContext").get("sourcePathIds").endswith(fog)
+            assert stops[0].get("colorValue").startswith("00") and stops[-1].get("colorValue").startswith(
+                "00" if n_stops == 3 else "22")
+    assert gen_scenes.SCENES["beach"].fog[:2] != "00"   # the default fog draws

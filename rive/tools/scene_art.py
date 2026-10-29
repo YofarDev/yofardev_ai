@@ -522,9 +522,10 @@ def beach(sc: Scene, content: list[El]) -> None:
             x=[(0, x), (start, x), (210, x + (13 if i % 2 else -11)), (360, x)],
             y=[(0, y), (start, y), (210, y + 14 + i * 2), (360, y)]))
     # Foreground dunes and fine beach grass make a coherent depth stack.
-    dunes = [S(O, "NearDune", [(-60, 1928, "c"), (-60, 1690), (130, 1710), (335, 1850), (680, 1870),
-                               (1130, 1780), (1130, 1930, "c")],
-               sc.vgrad(-100, 100, [("FFE5CAA0", 0), ("FFB59873", 1)]))]
+    # the dune runs 40 px below the frame (M5: Plane5 travels 24 px up); the gradient keeps its span
+    dunes = [S(O, "NearDune", [(-60, 1960, "c"), (-60, 1690), (130, 1710), (335, 1850), (680, 1870),
+                               (1130, 1780), (1130, 1960, "c")],
+               sc.vgrad(-115, 85, [("FFE5CAA0", 0), ("FFB59873", 1)]))]
     for i in range(18):
         x = 15 + i * 15
         y = 1765 + i * 5
