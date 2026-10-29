@@ -49,7 +49,8 @@ def test_lip_tuck_needs_the_jaw_open() -> None:
     lips in: no lift, no gap, the lips stay one line (critic round 1: it showed a pink band)."""
     assert fr.amount(FF, fr.TUCK) == pytest.approx(1.0)
     assert fr.amount({"lipTuck": 1.0}, fr.TUCK) == 0.0
-    assert fr.amount({"lipTuck": 0.5, "auJawDrop": 0.03}, fr.TUCK) == pytest.approx(0.24)
+    assert fr.amount({"lipTuck": 0.5, "auJawDrop": 0.03}, fr.TUCK) == pytest.approx(0.9)
+    assert fr.amount({"lipTuck": 0.2, "auJawDrop": 0.1}, fr.TUCK) == pytest.approx(0.6)
     tuck = fr.mouth_pose({"lipTuck": 1.0})
     for up, low in UPPER_LOWER:
         assert tuck[up] == pytest.approx(tuck[low], abs=1e-9), up
@@ -81,14 +82,46 @@ FF = {"auJawDrop": 0.14, "auLipStretch": 0.1, "lipTuck": 1.0}
 SS = {"auJawDrop": 0.14, "auLipStretch": 0.55}
 
 
-def test_ff_lifts_the_lower_lip_onto_the_upper_teeth_edge() -> None:
-    ff = fr.mouth_pose(FF)
-    for n in ("LowerL", "LowerC", "LowerR"):
-        x, y = ff[n]
-        edge = fr.teeth_edge_y(x)
-        assert edge - 2.0 < y < edge + 0.5, n  # the band's top edge meets the teeth edge
-    # the upper lip lifts off the teeth: a strip of upper teeth shows above the band
-    assert fr.teeth_edge_y(400.0) - ff["UpperC"][1] > 4.0
+INK = 2.7 / 2  # half the mouth line
+
+
+@pytest.mark.parametrize("tuck", [0.2, 0.3, 0.6, 1.0])
+@pytest.mark.parametrize("jaw", [0.03, 0.06, 0.1, 0.14, 0.2])
+def test_ff_reads_at_any_small_jaw_and_tuck(tuck: float, jaw: float) -> None:
+    """Critic round 2: f / v read as p / b / m except at the lipTuck peak. From lipTuck 0.2 and jaw
+    0.03 the band is on, a strip of upper teeth shows above it, and it covers the lower outline."""
+    env = {"lipTuck": tuck, "auJawDrop": jaw, "auLipStretch": 0.1}
+    m, band = fr.mouth_pose(env), fr.band_pose(env)
+    assert -1.2 + 4.0 * fr.amount(env, fr.TUCK) >= 1.0  # the band's opacity
+    top, bottom = band[1][1], band[4][1]
+    assert top < fr.teeth_edge_y(400.0) - 1.0  # the band's top over the teeth (no dark sliver)
+    assert top - (m["UpperC"][1] + INK) >= 1.0  # upper teeth above it
+    assert m["LowerC"][1] - INK > top  # the opening reaches under the band: no ink between teeth and lip
+    assert bottom > m["LowerC"][1] + INK + 1.0 and band[3][1] > m["LowerR"][1] + INK  # the lower line is covered
+    assert 7.0 <= bottom - top <= 10.5  # one lower lip, not a slab
+
+
+def test_a_small_jaw_parts_the_lips() -> None:
+    """Critic round 2: jaw 0.08 (before speech) read as a closed line; now the dark mouth shows
+    between the upper teeth's edge and the lower lip's rim, and the tongue stays below it."""
+    env = {"auJawDrop": 0.08}
+    m = fr.mouth_pose(env)
+    rim = min(fr.RIM_MAX, 0.5 * (fr.RIM_PER_JAW * 0.08))
+    assert m["LowerC"][1] - INK - rim - fr.teeth_edge_y(400.0) >= 1.2  # art px (~1.5 px at 1080)
+    assert m["TongueTip"][1] > m["LowerC"][1] - INK
+    assert fr.amount({"auJawDrop": 0.08, "lipTuck": 0.3}, fr.JOPEN) == 0.0  # f / v: under the band
+    assert fr.amount({"mouth": 1.0}, fr.JOPEN) == 1.0
+
+
+def test_a_rolled_in_tuck_is_not_a_press() -> None:
+    """Critic round 2: lipTuck on a closed jaw read like lipPress. Rolled-in lips draw a thinner line,
+    pressed lips a thicker one; both push the chin (fold + chin light), rest shows neither."""
+    roll, press = {"lipTuck": 1.0}, {"auLipPress": 1.0}
+    thick = lambda env: fr.evaluate(2.7, fr.terms(R=2.4, T=-fr.ROLL_THIN, TK=fr.ROLL_THIN), env)  # noqa: E731
+    assert thick(roll) < 2.7 - 0.5 and thick(press) > 2.7 + 2.0
+    assert thick({**FF}) >= 2.7  # f / v (T - TK <= 0) never thins the line
+    chin = lambda env: min(1.0, max(0.0, fr.evaluate(0.0, fr.CHIN_LIGHT_ON, env)))  # noqa: E731
+    assert chin({}) == 0.0 and chin(FF) == 0.0 and chin(roll) == 1.0 and chin(press) == 1.0
 
 
 def test_ss_shows_both_teeth_rows_with_the_lower_lip_down() -> None:
@@ -116,9 +149,13 @@ def test_teeth_edges_are_single_arcs() -> None:
 
 
 def test_pucker_lips_close_in_not_open_up() -> None:
-    rest, k = fr.mouth_pose({}), fr.mouth_pose({"auLipPucker": 1.0})
-    assert k["CornerR"][0] - k["CornerL"][0] < 0.5 * (rest["CornerR"][0] - rest["CornerL"][0])
-    assert k["LowerC"][1] - k["UpperC"][1] < 3.0  # a small opening; the cushion carries the shape
+    """ou (pucker 1, jaw 0.21): narrower than 60 % of the rest mouth, but at least 30 % of it (critic
+    round 2: it read as a dot); oh stays bigger and rounder."""
+    width = lambda p: p["CornerR"][0] - p["CornerL"][0]  # noqa: E731
+    rest = fr.mouth_pose({})
+    ou, oh = fr.mouth_pose({"auLipPucker": 1.0, "auJawDrop": 0.21}), fr.mouth_pose({"auLipPucker": 0.6, "auJawDrop": 0.82})
+    assert 0.3 * width(rest) <= width(ou) < 0.6 * width(rest)
+    assert width(oh) > width(ou) + 4.0 and oh["LowerC"][1] - oh["UpperC"][1] > 1.5 * (ou["LowerC"][1] - ou["UpperC"][1])
 
 
 # ---- per-side (contract v6)
@@ -234,7 +271,7 @@ def test_generated_avatar_declares_every_v5_property() -> None:
     assert 'name="OpenShape"' not in rml and 'name="LineShape"' not in rml
     for name in ("MouthInside", "MouthLine", "MouthTeeth", "MouthTongue", "BreathLift", "HeadRoll", "LowerLipBand",
                  "LipRim", "ChinBulge", "TenseCreaseL", "NoseWrinkle0", "NoseWrinkle1", "BreathShoulderR",
-                 "BreathShoulderL", "ChinLightJaw"):
+                 "BreathShoulderL", "ChinLightJaw", "LowerLipGloss", "MouthTuckLine"):
         assert f'name="{name}"' in rml, name
     assert 'name="MouthThroat"' not in rml  # one flat interior colour
     # one lip treatment: no lip cushion cross-fades over the opening (critic round 1)
@@ -484,7 +521,9 @@ FORMULA_POSES = [{}, FF, SS, {"auLipPucker": 0.95, "auJawDrop": 0.34}, ANGRY,
                  {"auLipCornerPullL": 1.0, "auCheekRaiseL": 0.5}, {"auLipCornerPull": 0.3, "auLipCornerPullR": -1.0},
                  {"auBrowLower": 1.0, "auBrowLowerL": 1.0, "auBrowLowerR": -1.0},
                  {"auBrowInnerUp": 0.75, "auBrowOuterUpR": 0.6, "auLipCornerDepressL": 0.4, "mouth": 2.0},
-                 {"tongueUp": 1.0, "auJawDrop": 0.34}]
+                 {"tongueUp": 1.0, "auJawDrop": 0.34}, {"auJawDrop": 0.08},
+                 {"lipTuck": 0.2, "auJawDrop": 0.03, "auLipStretch": 0.1}, {"lipTuck": 1.0},
+                 {"lipTuck": 0.05, "auJawDrop": 0.1, "mouth": 0.2}]
 
 
 def _bones_by_side(root: "ET.Element") -> dict[str, dict[str, "ET.Element"]]:
@@ -587,10 +626,12 @@ def test_flare_is_pucker_and_stretch_together() -> None:
 
 
 def test_breath_lifts_the_shoulders_more_than_the_head_eased() -> None:
-    shoulder, head = fr.breath_lift(1.0)
-    assert 15.0 <= shoulder <= 20.0  # 1.5-2 % of the 1000 px artboard
-    assert 0 < head < shoulder  # the shoulders rise toward the ears
-    assert fr.breath_lift(0.0) == (0.0, 0.0)
+    """Critic round 2: the head rose more than the shoulders (perking up, not inhaling). The
+    shoulders lead; the head, rigid, rises ~60 % as far."""
+    shoulder, arm, head = fr.breath_lift(1.0)
+    assert 9.0 <= shoulder <= 14.0 and shoulder <= arm <= shoulder + 4.0
+    assert 0.55 <= head / shoulder <= 0.68
+    assert fr.breath_lift(0.0) == (0.0, 0.0, 0.0)
     assert fr.breath_lift(0.5)[0] == pytest.approx(shoulder / 2)  # smoothstep: soft at both ends
     assert fr.breath_lift(0.1)[0] < 0.05 * shoulder
 

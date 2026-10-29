@@ -2021,7 +2021,7 @@ for i, e in enumerate(EYES):
     face_rig.rig_brow(face_au, e["brow_g"].el, named_el(e["brow_g"].el, "BrowShape"), 355.0 if i == 0 else 445.0, s_,
                       HAIR)
 face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5A2630", "teeth": TEETH, "low_teeth": "FFF1E6E0",
-                                      "tongue": "FFC9666F", "ink": "FF2A1E24", "shine": "A0FFF4EC",
+                                      "tongue": "FFC9666F", "ink": "FF2A1E24", "shine": "B0F6C4BC",
                                       "lip": "60D0937C", "lip_band": "FFE58A8A", "lip_edge": "B0B85A64", "lip_rim": "FFD27F80",
                                       "crease": "A0D0937C", "crease_tense": "D0B8786A",
                                       "dimple": "E8A05A4C"})

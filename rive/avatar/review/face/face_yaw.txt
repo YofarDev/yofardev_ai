@@ -2,8 +2,8 @@
 per clipped group the pixels its face clip hides (unclipped render vs shipped; 0 = inside)
 
 neutral yaw -1     y370 263/517  y400 262/513  y430 267/506  y460 281/492  y490 304/454  y505 319/429   mouth 0  lens 0  blush 0
-neutral yaw -0.5   y370 270/520  y400 271/515  y430 279/508  y460 293/493  y490 317/462  y505 333/440   mouth 0  lens 0  blush 0
-neutral yaw 0      y370 275/525  y400 279/521  y430 288/513  y460 302/498  y490 329/472  y505 347/453   mouth 0  lens 0  blush 0
+neutral yaw -0.5   y370 270/521  y400 271/515  y430 279/508  y460 293/493  y490 317/462  y505 333/440   mouth 0  lens 0  blush 0
+neutral yaw 0      y370 275/525  y400 279/521  y430 288/513  y460 302/498  y490 328/472  y505 347/453   mouth 0  lens 0  blush 0
 neutral yaw 0.5    y370 280/531  y400 285/529  y430 293/522  y460 308/507  y490 339/484  y505 360/467   mouth 0  lens 0  blush 0
 neutral yaw 1      y370 284/537  y400 288/539  y430 294/533  y460 309/520  y490 346/497  y505 371/481   mouth 0  lens 0  blush 0
 happy yaw -1       y370 257/509  y400 255/506  y430 261/500  y460 274/484  y490 297/448  y505 313/425   mouth 0  lens 0  blush 0

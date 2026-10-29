@@ -61,14 +61,21 @@ SIDE_NUMBERS = tuple(f"{a}{t}" for a in AUS if a in SIDED for t in ("L", "R"))
 #   TENSE                min(1, 2.5 min(press, stretch)): pressed AND stretched, the squared mouth
 #   FLARE                min(1, 2.5 min(pucker, stretch)): pushed AND stretched lips, the flared
 #                        ch / sh funnel (a squarer opening with the teeth together behind it)
-#   TUCK                 min(lipTuck, 8 jaw): the f / v tuck needs the jaw a little open (f/v jaw
-#                        0.14); a lip tuck on a closed jaw rolls the lips in instead (T - TUCK)
+#   TUCK                 min(1, 3 lipTuck, 30 jaw): the f / v pose, full from lipTuck 0.33 at any jaw
+#                        >= 0.033 (critic round 2: a lipTuck ramp read as p / b / m until its peak);
+#                        a lip tuck on a closed jaw rolls the lips in instead (T - TUCK, <= 0 at f / v)
+#   JOPEN                clamp01(10 jaw + 2.2 mouth - 10 lipTuck): the jaw's first tenth parts the lips
+#                        at once (critic round 2: jaw 0.08 read as a closed line); a lip tuck keeps the
+#                        lower lip under the f / v band instead
 PART = "@part"
 TENSE = "@tense"
 FLARE = "@flare"
 TUCK = "@tuck"
-TUCK_JAW = 8.0
-_SHORT.update(PT=PART, TS=TENSE, FL=FLARE, TK=TUCK)
+JOPEN = "@jopen"
+TUCK_GAIN = 3.0
+TUCK_JAW = 30.0
+JOPEN_GAIN = 10.0
+_SHORT.update(PT=PART, TS=TENSE, FL=FLARE, TK=TUCK, JO=JOPEN)
 
 
 def sided(t: Terms, side: str) -> dict[str, float]:
@@ -98,7 +105,10 @@ def amount(env: Mapping[str, float], key: str) -> float:
     if key == FLARE:
         return min(1.0, 2.5 * min(env.get("auLipPucker", 0.0), env.get("auLipStretch", 0.0)))
     if key == TUCK:
-        return max(0.0, min(env.get("lipTuck", 0.0), TUCK_JAW * env.get("auJawDrop", 0.0)))
+        return max(0.0, min(1.0, TUCK_GAIN * env.get("lipTuck", 0.0), TUCK_JAW * env.get("auJawDrop", 0.0)))
+    if key == JOPEN:
+        jaw = env.get("auJawDrop", 0.0) + JAW_PER_MOUTH * env.get("mouth", 0.0) - env.get("lipTuck", 0.0)
+        return min(1.0, max(0.0, JOPEN_GAIN * jaw))
     return env.get(key, 0.0)
 
 
@@ -106,7 +116,8 @@ def base_prop(key: str) -> str:
     """The view-model number a term key's formula reads first (a bind's source path)."""
     if "|" in key:
         return key.split("|")[0]
-    return {PART: "auLipStretch", TENSE: "auLipPress", FLARE: "auLipPucker", TUCK: "lipTuck"}.get(key, key)
+    return {PART: "auLipStretch", TENSE: "auLipPress", FLARE: "auLipPucker", TUCK: "lipTuck",
+            JOPEN: "auJawDrop"}.get(key, key)
 
 
 def terms(**kw: float) -> dict[str, float]:
@@ -140,18 +151,20 @@ MOUTH_BONES = {
     # TS (the squared angry mouth): the corners turn down and out, sharp, under a flat lip line
     # R (p, b, m): the pressed line flattens (corners down, middles up) and the corners come in
     # T - TK (a lip tuck on a closed jaw): the lips roll in, the corners come in a little
-    "CornerR": ((417.0, 477.0), terms(P=5.0, S=9.5, J=3.0, K=-10.5, R=-4.5, DM=2.0, D=1.0, TS=1.5, T=-1.5, TK=1.5),
+    "CornerR": ((417.0, 477.0), terms(P=5.0, S=9.5, J=3.0, K=-8.2, R=-4.5, DM=2.0, D=1.0, TS=1.5, T=-1.5, TK=1.5),
                 terms(P=-7.0, D=8.5, CR=-1.5, J=5.0, S=2.0, DM=-1.0, TS=4.5, R=1.6)),
     # closed-mouth terms (corners, smile, frown, dimpler, press, tension) move the upper and lower
     # lips together so a closed mouth stays one line; jaw, pucker, nose wrinkle, lip tuck and the
-    # stretch's lip part (PT, sealed again by press) open it
+    # stretch's lip part (PT, sealed again by press) open it. JO: the jaw's first tenth drops the lower
+    # lip (a dark gap at jaw 0.08); TK (f, v): the upper lip lifts off the teeth and the lower lip drops
+    # a little under the tuck band, so the opening reaches under the band's top edge at any jaw
     "UpperR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0, TS=4.0, R=-2.0),
-               terms(P=0.3, D=2.0, J=-2.5, NW=-2.2, TK=-2.5, K=-0.8, PT=-2.2, R=0.3)),
-    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=-3.5, NW=-3.2, TK=-3.0, K=-1.0, PT=-3.0, R=-0.9)),
-    # lip tuck (f, v) lifts the lower lip onto the upper teeth's edge (TEETH_EDGE) at the f/v jaw
+               terms(P=0.3, D=2.0, J=-2.5, NW=-2.2, TK=-3.0, K=-2.1, PT=-2.2, R=0.3)),
+    "UpperC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=-3.5, NW=-3.2, TK=-3.8, K=-2.6, PT=-3.0,
+                                              R=-0.9)),
     "LowerR": ((410.5, 479.0), terms(P=3.0, S=4.0, J=2.0, K=-5.0, TS=4.0, R=-2.0),
-               terms(P=0.3, D=2.0, J=19.0, K=1.0, TK=-0.8, PT=5.5, R=0.3, TU=2.0)),
-    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=23.0, K=1.5, TK=-2.0, PT=7.0, R=-0.9, TU=2.6)),
+               terms(P=0.3, D=2.0, J=16.6, JO=4.3, K=2.7, TK=1.3, PT=5.5, R=0.3, TU=2.0)),
+    "LowerC": ((400.0, 480.0), terms(), terms(P=2.0, D=-1.0, J=20.0, JO=5.5, K=3.4, TK=1.6, PT=7.0, R=-0.9, TU=2.6)),
 }
 # The upper teeth hang from the skull (they do not move): their edge is one arc, y = TEETH_EDGE[0] -
 # TEETH_EDGE[1] (x - 400)^2. The lower teeth ride the jaw only (`JawTeeth`), just behind that edge.
@@ -160,7 +173,8 @@ LOW_TEETH_TOP = (482.2, 0.0104)
 JAW_TEETH = 17.0  # px per unit jaw (the lower lip takes 23)
 # the tongue tip rises to the back of the upper teeth and stops just under their edge, so it reads
 # (a pink tip under the white) from tongueUp ~0.5 at any jaw, not only at 1
-TONGUE_TIP = (483.0, 13.8, -20.0)  # rest y, px per unit jaw, px per unit tongueUp
+# (it rests low: a jaw 0.08 gap shows the dark mouth, not the tongue)
+TONGUE_TIP = (486.0, 13.8, -25.0)  # rest y, px per unit jaw, px per unit tongueUp
 TONGUE_STOP = TEETH_EDGE[0] + 1.0
 
 
@@ -243,7 +257,13 @@ class FaceRig:
             return f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [*ref("auLipStretch"), f.op("-"), f.val(2),
                                                                   f.op("*"), *ref("auLipPress")]))
         if key == TUCK:
-            return f.fn("min", ref("lipTuck"), [f.val(TUCK_JAW), f.op("*"), *ref("auJawDrop")])
+            return f.fn("min", [f.val(1)], f.fn("min", [f.val(TUCK_GAIN), f.op("*"), *ref("lipTuck")],
+                                                [f.val(TUCK_JAW), f.op("*"), *ref("auJawDrop")]))
+        if key == JOPEN:
+            g = JOPEN_GAIN
+            return f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [
+                f.val(g), f.op("*"), *ref("auJawDrop"), f.op("+"), f.val(g * JAW_PER_MOUTH), f.op("*"), *ref("mouth"),
+                f.op("-"), f.val(g), f.op("*"), *ref("lipTuck")]))
         if key in (TENSE, FLARE):
             return f.fn("min", [f.val(1)], [f.val(2.5), f.op("*"),
                                             *f.fn("min", ref("auLipPress" if key == TENSE else "auLipPucker"),
@@ -821,6 +841,43 @@ def DIMPLE_ARC(x0: float, y0: float, k: int) -> list[Pt2]:  # noqa: N802
     return [(x0 + 2.0 * k, y0 - 3.0), (x0 + 3.7 * k, y0 + 0.3), (x0 + 2.2 * k, y0 + 3.4)]
 
 
+ROLL_THIN = 1.0  # px the mouth line loses when a lip tuck rolls the lips in (pressed lips gain 2.4)
+RIM_PER_JAW = 13.0  # rim stroke px per unit jaw (the rim LIP_RIM at jaw ~0.23)
+RIM_PER_PUCKER = 6.0
+RIM_MAX = 2.1  # art px of lip rim at most (aa, oh, ou)
+LIP_SHADE_REST = 0.6  # the lower-lip shade's opacity at rest (its colour carries a stronger alpha)
+PUCKER_SHINE = ((396.5, 477.2), (400.0, 477.9), (403.5, 477.2))  # centre line, on the lower lip's rim
+PUCKER_SHINE_W = 1.6
+# the f / v band: its top edge runs from the mouth corners through the static tuck line, just over
+# the upper teeth's edge (the teeth show above it whatever the jaw); its bottom edge rides the lower lip
+TUCK_LINE = (400.0, 479.8)
+BAND_RIDE = 0.6  # the band's bottom edge follows the lower lip this much (the rest: the tuck line)
+BAND_PTS = [(383.0, 477.0, "c3"), TUCK_LINE, (417.0, 477.0, "c3"), (409.0, 484.6), (400.0, 486.0), (391.0, 484.6)]
+BAND_EDGE_PTS = [(389.5, 483.4), (400.0, 484.8), (410.5, 483.4)]
+
+
+def ride(n: str) -> dict[str, float]:
+    return {n: BAND_RIDE, "TuckLine": 1.0 - BAND_RIDE}
+
+
+def band_weights() -> list[dict[str, float]]:
+    """Skin weights of BAND_PTS: the top corners on the mouth corners (no dark wedge beside them)."""
+    return [{"CornerL": 1.0}, {"TuckLine": 1.0}, {"CornerR": 1.0},
+            ride("LowerR"), ride("LowerC"), ride("LowerL")]
+
+
+def band_pose(env: Mapping[str, float]) -> list[tuple[float, float]]:
+    """Predicted art-space BAND_PTS (tests): each vertex moves by its weighted bones' offsets."""
+    pose = mouth_pose(env)
+    rest = {n: b[0] for n, b in mouth_bones().items()}
+    out = []
+    for p, w in zip(BAND_PTS, band_weights()):
+        dx = sum(c * (pose[n][0] - rest[n][0]) for n, c in w.items() if n != "TuckLine")
+        dy = sum(c * (pose[n][1] - rest[n][1]) for n, c in w.items() if n != "TuckLine")
+        out.append((p[0] + dx, p[1] + dy))
+    return out
+
+
 def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
     """Build the continuous mouth inside `host` (a Node at MOUTH_FRAME, x = y = 0).
 
@@ -853,12 +910,17 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
 
     inside = lip_shape("MouthInside", fr.fill(palette["inside"]))
     line = fr.stroke(palette["ink"], 2.7)
-    # pressed lips (p, b, m) and lips rolled in (a tuck on a closed jaw: T - TK) read as a firmer line
-    fr.bind_on(line, "thickness", 2.7, terms(R=2.4, T=1.3, TK=-1.3))
+    # pressed lips (p, b, m) read as a firmer, thicker line; lips rolled in (a tuck on a closed jaw:
+    # T - TK) as a thinner one (critic round 2: the two read alike)
+    fr.bind_on(line, "thickness", 2.7, terms(R=2.4, T=-ROLL_THIN, TK=ROLL_THIN))
     outline = lip_shape("MouthLine", line)
     # every open shape has the same lips: a thin lip-colour rim inside the ink line (the inner half of
     # a stroke on the opening's own path, clipped by the opening: LIP_RIM px show past the ink)
-    rim = lip_shape("LipRim", fr.stroke(palette["lip_rim"], 2 * (2.7 / 2 + LIP_RIM)))
+    rim_stroke = fr.stroke(palette["lip_rim"], 2 * (2.7 / 2 + LIP_RIM))
+    # the rim grows with the opening (a jaw 0.08 gap stays dark, not lip-coloured) and with rounded
+    # lips pushed forward (o, u, w: a fuller rim)
+    fr.bind_on(rim_stroke, "thickness", 2.7, terms(J=RIM_PER_JAW, K=RIM_PER_PUCKER), hi=2.7 + 2 * RIM_MAX)
+    rim = lip_shape("LipRim", rim_stroke)
     rim.children.insert(0, fr.d("ClippingShape", sourceId=inside.ref(), name="Clip"))
     # rounded lips round the mouth's corners (an oh is an oval, not a box); the tense mouth and the
     # flared ch funnel square them
@@ -885,8 +947,9 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
     lpts = [p if p[2] else p[:2] for p in lpts]
     low_teeth = fr.skinned("MouthLowTeeth", lpts, [one("JawTeeth")] * len(lpts), bones, F,
                            fr.fill(palette["low_teeth"]), clip=inside)
-    # lower teeth for a stretch (s, e, i), steeply (half-opaque teeth over the interior read as mauve)
-    fr.bind_on(low_teeth, "opacity", -1.2, terms(S=4.0), lo=0.0, hi=1.0)
+    # lower teeth for a stretch (s, e, i) and the flared ch / sh funnel, steeply (half-opaque teeth
+    # over the interior read as mauve)
+    fr.bind_on(low_teeth, "opacity", -1.6, terms(S=5.0, FL=3.0), lo=0.0, hi=1.0)
     # a soft tongue: a dome on the jaw, its tip rising to the teeth for th / l / d / n
     tongue = fr.skinned("MouthTongue", [(400.0, 483.0), (416.0, 491.0), (400.0, 500.0), (384.0, 491.0)],
                         [one("TongueTip"), {"LowerR": 0.5, "JawTeeth": 0.5}, {"LowerC": 0.5, "JawTeeth": 0.5},
@@ -894,29 +957,34 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
     lower_lip = fr.skinned("LowerLipShade", [(390.0, 486.0), (400.0, 488.5), (410.0, 486.0)],
                            [one("LowerL"), one("LowerC"), one("LowerR")], bones, F, fr.stroke(palette["lip"], 2.6),
                            closed=False)
-    # the closed mouth's lip shadow only: once the jaw opens it would be a second lower lip under
-    # the opening, and the lip band draws its own lower lip
-    fr.bind_on(lower_lip, "opacity", 1.0, terms(T=-1.5, J=-3.5), lo=0.0, hi=1.0)
+    # the closed mouth's lip shadow (the only mark under the mouth at rest): once the jaw opens it
+    # would be a second lower lip under the opening, and the lip band draws its own lower lip; a lip
+    # tuck (rolled in or f / v) hides it at once, pressed lips mostly, rounded lips too (pulled in
+    # with the lower lip it read as a chin crease under ou)
+    fr.bind_on(lower_lip, "opacity", LIP_SHADE_REST, terms(T=-4.0, J=-2.1, K=-1.5, R=-0.5), lo=0.0, hi=1.0)
+    # rounded lips (o, u, w) push the lower lip forward: a small highlight on its inner rim, inside
+    # the opening (critic round 2: ou read flat)
+    shine = fr.skinned("LowerLipGloss", tapered(PUCKER_SHINE, PUCKER_SHINE_W), [one("LowerC")] * 4, bones, F,
+                       fr.fill(palette["shine"]), clip=inside)
+    fr.bind_on(shine, "opacity", -0.6, terms(K=1.6), lo=0.0, hi=1.0)
     # pressed lips (p, b, m) push the chin up: a short fold under the lower lip
     bulge = fr.skinned("ChinBulge", tapered([(390.5, 491.0), (400.0, 494.0), (409.5, 491.0)], 1.7),
                        [one("LowerL"), one("LowerC"), one("LowerR"), one("LowerC")], bones, F,
                        fr.fill(palette["crease"]))
     fr.bind_on(bulge, "opacity", -0.45, terms(R=2.2, T=1.4, TK=-1.4), lo=0.0, hi=0.9)
-    # f / v: the lower lip tucks up under the upper teeth as a pink band; its top edge is the lower
-    # lip line (on TEETH_EDGE at the f/v jaw) and covers the lower outline (no dark line between the
-    # teeth and the lip), its soft bottom edge a lip shadow
-    band = fr.skinned("LowerLipBand",
-                      [(384.0, 477.4, "c3"), (400.0, 478.2), (416.0, 477.4, "c3"), (409.0, 485.4), (400.0, 487.4),
-                       (391.0, 485.4)],
-                      [{"CornerL": 0.45, "LowerL": 0.55}, one("LowerC"), {"CornerR": 0.45, "LowerR": 0.55},
-                       one("LowerR"), one("LowerC"), one("LowerL")], bones, F, fr.fill(palette["lip_band"]))
-    band_edge = fr.skinned("LowerLipBandEdge", [(389.0, 484.0), (400.0, 487.2), (411.0, 484.0)],
-                           [one("LowerL"), one("LowerC"), one("LowerR")], bones, F,
-                           fr.stroke(palette["lip_edge"], 1.6), closed=False)
-    # a hard switch (tuck 0.5 -> 0.75): a half-faded band over the open mouth reads as a second lip;
-    # only with the jaw a little open (TK): a lip tuck alone rolls the lips in, no pink band
+    # f / v: the lower lip tucks up under the upper teeth as a pink band. Its top edge is the tuck
+    # line (`TUCK_LINE`, a static bone just over the upper teeth's edge, so the teeth show above it
+    # whatever the jaw), its bottom edge rides the lower lip (BAND_RIDE) and covers the lower outline
+    # (no dark line between the teeth and the lip), with a soft lip shadow along it
+    bones["TuckLine"] = (TUCK_LINE, fr.d("RootBone", x=TUCK_LINE[0] - F[0], y=TUCK_LINE[1] - F[1], rotation=0.0,
+                                         length=2.0, name="MouthTuckLine"))
+    band = fr.skinned("LowerLipBand", BAND_PTS, band_weights(), bones, F, fr.fill(palette["lip_band"]))
+    band_edge = fr.skinned("LowerLipBandEdge", BAND_EDGE_PTS, [ride(n) for n in ("LowerL", "LowerC", "LowerR")],
+                           bones, F, fr.stroke(palette["lip_edge"], 1.6), closed=False)
+    # a quick switch (TK 0.3 -> 0.55, lipTuck 0.1 -> 0.18): a half-faded band over the open mouth
+    # reads as a second lip; only with the jaw a hair open (TK): a lip tuck alone rolls the lips in
     for sh in (band, band_edge):
-        fr.bind_on(sh, "opacity", -2.0, terms(TK=4.0), lo=0.0, hi=1.0)
+        fr.bind_on(sh, "opacity", -1.2, terms(TK=4.0), lo=0.0, hi=1.0)
     creases = []
     for side, c in (("L", "CornerL"), ("R", "CornerR")):
         x0, y0 = at(c)
@@ -937,7 +1005,7 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
                         [one(c)] * 4, bones, F, fr.fill(palette["crease_tense"]))
         fr.bind_on(tk, "opacity", -0.1, terms(TS=1.2), lo=0.0, hi=0.85)
         creases.append(tk)
-    group = fr.d("Node", *creases, band_edge, band, bulge, lower_lip, outline, teeth, low_teeth, tongue, rim, inside,
+    group = fr.d("Node", *creases, band_edge, band, bulge, lower_lip, outline, teeth, low_teeth, shine, tongue, rim, inside,
                  *[b for _, b in bones.values()], x=0.0, y=0.0, name="FaceMouth")
     host.add(group)
     return group
@@ -981,23 +1049,29 @@ def rig_cheeks(fr: FaceRig, parent: El, blooms: Sequence[El]) -> None:
 
 # breath = 0..1 (an inhale): eased by smoothstep (the response starts and lands softly whatever the
 # app's ramp), the body lifts and lengthens from the feet, the chest widens a touch and the shoulders
-# rise a little further (toward the ears), so the head lifts less than the shoulders.
-BREATH_BODY = {"y": -2.0, "scaleY": 0.016, "scaleX": 0.005}  # per unit of eased breath (root frame)
-BREATH_SHOULDER = -9.0  # px: both arm swings, on top of the body lift
-SHOULDER_ABOVE_FEET = 280.0  # the arms hang at y 720 on a 1000 px artboard whose feet are at 1000
-HEAD_ABOVE_FEET = 440.0
+# rise a little further (toward the ears). The head rides the neck but does not stretch (it is
+# scaled back about the neck) and sinks a little into the shoulders, so it rises ~60 % as far as
+# the shoulders (critic round 2: it rose more than them and read as perking up, not inhaling).
+BREATH_BODY = {"y": -2.0, "scaleY": 0.024, "scaleX": 0.005}  # per unit of eased breath (root frame)
+BREATH_SHOULDER = -3.0  # px: both arm swings, on top of the body lift
+BREATH_HEAD_SINK = 4.5  # px the head sinks back toward the neck (head frame, + = down)
+SHOULDER_ABOVE_FEET = 375.0  # the hoodie's shoulder line (y 625 on the 1000 px artboard, feet at 1000)
+ARM_ABOVE_FEET = 330.0  # the sleeve tops
+NECK_ABOVE_FEET = 390.0  # the head's roll / breath pivot
 
 
 def smoothstep(b: float) -> float:
     return b * b * (3 - 2 * b)
 
 
-def breath_lift(b: float) -> tuple[float, float]:
-    """(shoulder, head) lift in artboard px at breath `b` (+ = up)."""
+def breath_lift(b: float) -> tuple[float, float, float]:
+    """(shoulder line, sleeve top, head) lift in artboard px at breath `b` (+ = up); the head is rigid
+    (every head point rises as far as the neck, less the sink)."""
     e = smoothstep(b)
     body = -BREATH_BODY["y"] * e
     stretch = BREATH_BODY["scaleY"] * e
-    return body + stretch * SHOULDER_ABOVE_FEET - BREATH_SHOULDER * e, body + stretch * HEAD_ABOVE_FEET
+    return (body + stretch * SHOULDER_ABOVE_FEET, body + stretch * ARM_ABOVE_FEET - BREATH_SHOULDER * e,
+            body + stretch * NECK_ABOVE_FEET - BREATH_HEAD_SINK * e)
 
 
 def eased_breath(fr: FaceRig, key: str, c0: float, c: float) -> El:
@@ -1026,9 +1100,18 @@ def rig_body(fr: FaceRig, root: El, body: El, body_g: El, head_base: El,
     for sw in swings:
         breath_wrap(fr, body_g, sw, "BreathShoulder" + str(sw.attrs.get("name", ""))[-1],
                     {"y": (0.0, BREATH_SHOULDER)})
-    fr.wrap(body_g, head_base, neck, "HeadRoll", [("rotation", 0.0, {"roll": round(math.radians(6), 4)})])
+    roll = fr.wrap(body_g, head_base, neck, "HeadRoll", [("rotation", 0.0, {"roll": round(math.radians(6), 4)})])
+    # the head undoes the body's stretch about the neck (rigid) and sinks a little (BREATH_HEAD_SINK)
+    roll.children[1:1] = [eased_breath(fr, "y", neck[1], BREATH_HEAD_SINK),
+                          eased_breath(fr, "scaleY", 1.0, round(1 / (1 + BREATH_BODY["scaleY"]) - 1, 4))]
 
 
 def rig_chin(fr: FaceRig, parent: El, chin_light: El) -> None:
-    """The chin's light rides the dropping jaw (`head_turn.JAW_CONTOUR`: the chin bone's drop)."""
-    fr.wrap(parent, chin_light, (0.0, 0.0), "ChinLightJaw", [("y", 0.0, terms(J=JAW_CONTOUR["Chin"] * 0.9))])
+    """The chin's light rides the dropping jaw (`head_turn.JAW_CONTOUR`: the chin bone's drop). It
+    shows only when pressed or rolled-in lips push the chin up (critic round 2: at rest it read, with
+    the lower-lip shade, as a goatee / double chin)."""
+    w = fr.wrap(parent, chin_light, (0.0, 0.0), "ChinLightJaw", [("y", 0.0, terms(J=JAW_CONTOUR["Chin"] * 0.9))])
+    fr.bind_on(w, "opacity", 0.0, CHIN_LIGHT_ON, lo=0.0, hi=1.0)
+
+
+CHIN_LIGHT_ON = terms(R=1.4, T=1.4, TK=-1.4)  # the chin light's opacity terms (0 at rest)
