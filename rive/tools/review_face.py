@@ -256,7 +256,7 @@ def yaw_sheet() -> None:
 
 # ------------------------------------------------------------------ blink (M3 lid sweep)
 
-EYES_BOX = (296, 340, 504, 420)  # both eyes and the glasses
+EYES_BOX = (288, 326, 512, 434)  # both eyes and the (taller, M3 round 2) glasses
 BLINK_FRAMES = (0, 1, 2, 3, 4, 5, 7, 9, 11, 14)  # frames after the `blink` trigger (blink_once: 16)
 
 
