@@ -354,7 +354,7 @@ def main() -> int:
             want = {n: (TYPE_OF[t], ev_vals if n == "eventId" else None) for n, t in c["scene_vm_props"].items()}
             if got != want:
                 err(f"{sid}: SceneVM {got} != {want}")
-            check_light_defaults(sid, j, vm, scene_light_defaults(sid))
+            check_light_defaults(sid, j, vm, {**scene_light_defaults(sid), "rain": 0.0})
         if ab:
             evs = events_of(ab)
             if set(evs) != {c["scene_event_name"]}:

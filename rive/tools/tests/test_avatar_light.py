@@ -53,5 +53,5 @@ def test_contract_scene_vm_matches_the_scene_generator() -> None:
         gen = gen_scenes.scene_vm_defaults(sid)
         assert [n for n, _, _ in gen] == names
         assert {n: t for n, t, _ in gen} == {n: c["scene_vm_props"][n] for n in names}
-        want = check_contract.scene_light_defaults(sid)
+        want = {**check_contract.scene_light_defaults(sid), "rain": 0.0}
         assert {n: v for n, _, v in gen} == want

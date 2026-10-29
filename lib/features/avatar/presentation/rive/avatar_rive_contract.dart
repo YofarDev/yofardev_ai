@@ -279,6 +279,10 @@ abstract final class AvatarRiveContract {
   static const String scenePropParallaxY = 'parallaxY';
   static const String scenePropLightFog = 'lightFog';
 
+  /// Contract v8 `SceneVM`: steady rain intensity (0..1, default 0), written
+  /// from the app's world state; a scene without rain art ignores it.
+  static const String scenePropRain = 'rain';
+
   /// Names `SceneVM` carries as light defaults (equal to `AvatarVM`'s, plus
   /// `lightFog`, minus `lightAmbientAmount`).
   static const List<String> sceneLightProps = <String>[

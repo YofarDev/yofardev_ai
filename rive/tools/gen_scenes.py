@@ -37,14 +37,15 @@ OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests poin
 
 
 def scene_vm_defaults(scene_id: str) -> list[tuple[str, str, object]]:
-    """(name, type, default) of the v7 SceneVM numbers and colours, in contract order."""
+    """(name, type, default) of the v7/v8 SceneVM numbers and colours, in contract order."""
     s = SCENES[scene_id]
     kx, ky = s.key_xy
     return [("parallaxX", "number", 0.0), ("parallaxY", "number", 0.0),
             ("lightKey", "color", s.key), ("lightKeyIntensity", "number", s.key_intensity),
             ("lightKeyX", "number", kx), ("lightKeyY", "number", ky), ("lightRim", "color", s.rim),
             ("lightRimIntensity", "number", s.rim_intensity), ("lightAmbient", "color", s.ambient),
-            ("lightFog", "color", s.fog), ("lightFlicker", "number", s.flicker)]
+            ("lightFog", "color", s.fog), ("lightFlicker", "number", s.flicker),
+            ("rain", "number", 0.0)]
 
 
 class Scene:
