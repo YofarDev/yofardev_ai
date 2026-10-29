@@ -191,3 +191,4 @@ construction). Critics disagreed across rounds on the fringe tips and the brow b
 ## M4 self-checks (ruling 17: one line per asset or acting change, no critic rounds)
 
 - 2026-10-29 · Task 1 key decimation · avatar.riv 607,684 → 545,036 B · objective check: no pops, clipping or broken shapes in the before/after captures; edge shifts are sub-pixel (worst gesture frame 0.27 % px > 16/255 at 360 px, the walk-in 1.6 %), walk-in starts on the same frame as v6 · evidence `rive/review/m4/budget/`.
+- 2026-10-29 · Task 4 avatar light rig (v7) · avatar.riv 545,036 → 550,960 B · objective check: no light outside the silhouette (12 renders), history-free (≤ 1/255 bar one 2/255 gradient pixel), no flicker seam; fixed: a torso-outline rim that crossed the hood (dropped) · evidence `rive/review/m4/light/`

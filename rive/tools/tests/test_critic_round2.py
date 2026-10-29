@@ -76,7 +76,12 @@ def test_generated_glasses_frames() -> None:
         for nm in ("Glare", "Glare2"):
             glints = [e for e in grp.iter("Shape") if e.get("name") == nm]
             assert len(glints) == 1
-            assert glints[0].find("Fill/SolidColor").get("colorValue")[2:] == kit.PAPER  # paper white
+            # M4 (contract v7): the glint takes the key light's colour (bound to `lightKey`, default
+            # livingRoom's) and slides toward it; its old alpha became the shape's opacity
+            solid = glints[0].find("Fill/SolidColor")
+            assert solid.get("colorValue") == ab.SCENES["livingRoom"].key
+            assert solid.find("DataBindContext") is not None
+            assert 0.5 <= float(glints[0].get("opacity")) <= 0.75
         st = next(e for e in grp.iter("Shape") if e.get("name") == "Bridge").find("Stroke")
         assert float(st.get("thickness")) <= kit.FRAME_W + 1e-3
     temples = [e for e in root.iter("Shape") if e.get("name") in ("TempleL", "TempleR")]  # the head turn moves them

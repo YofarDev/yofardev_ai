@@ -5047,9 +5047,31 @@
   <ViewModel name="SceneVM" defaultInstanceId="0:22" id="0:23">
     <ViewModelPropertyEnumCustom enumId="0:17" name="eventId" id="0:18"/>
     <ViewModelPropertyTrigger name="event" id="0:19"/>
+    <ViewModelPropertyNumber name="parallaxX" id="0:980000"/>
+    <ViewModelPropertyNumber name="parallaxY" id="0:980002"/>
+    <ViewModelPropertyColor name="lightKey" id="0:980004"/>
+    <ViewModelPropertyNumber name="lightKeyIntensity" id="0:980006"/>
+    <ViewModelPropertyNumber name="lightKeyX" id="0:980008"/>
+    <ViewModelPropertyNumber name="lightKeyY" id="0:980010"/>
+    <ViewModelPropertyColor name="lightRim" id="0:980012"/>
+    <ViewModelPropertyNumber name="lightRimIntensity" id="0:980014"/>
+    <ViewModelPropertyColor name="lightAmbient" id="0:980016"/>
+    <ViewModelPropertyColor name="lightFog" id="0:980018"/>
+    <ViewModelPropertyNumber name="lightFlicker" id="0:980020"/>
     <ViewModelInstance exports="true" name="Default" id="0:22">
       <ViewModelInstanceEnum propertyValue="0:13" viewModelPropertyId="0:18" id="0:20"/>
       <ViewModelInstanceTrigger viewModelPropertyId="0:19" id="0:21"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980000" id="0:980001"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980002" id="0:980003"/>
+      <ViewModelInstanceColor propertyValue="FFCDB8FF" viewModelPropertyId="0:980004" id="0:980005"/>
+      <ViewModelInstanceNumber propertyValue="0.7" viewModelPropertyId="0:980006" id="0:980007"/>
+      <ViewModelInstanceNumber propertyValue="0.622" viewModelPropertyId="0:980008" id="0:980009"/>
+      <ViewModelInstanceNumber propertyValue="0.783" viewModelPropertyId="0:980010" id="0:980011"/>
+      <ViewModelInstanceColor propertyValue="FF7FE0FF" viewModelPropertyId="0:980012" id="0:980013"/>
+      <ViewModelInstanceNumber propertyValue="0.35" viewModelPropertyId="0:980014" id="0:980015"/>
+      <ViewModelInstanceColor propertyValue="FF120E26" viewModelPropertyId="0:980016" id="0:980017"/>
+      <ViewModelInstanceColor propertyValue="00000000" viewModelPropertyId="0:980018" id="0:980019"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980020" id="0:980021"/>
     </ViewModelInstance>
   </ViewModel>
 </Rive>

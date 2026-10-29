@@ -106,3 +106,40 @@ def test_fit_colour_passes_accent_transparent_and_neutral_highlights_unchanged()
         assert art_bible.fit_colour(script.accent, scene) == script.accent
         assert art_bible.fit_colour("00123456", scene) == "00123456"
         assert art_bible.fit_colour("FFFFFFFF", scene) == "FFFFFFFF"
+
+
+SCENE_LIGHTS: Path = ROOT / "lib/core/design/tokens/scene_lights.dart"
+
+
+def dart_scene_lights() -> dict[str, dict[str, str]]:
+    """Per scene, the named arguments of its `LightRig(...)` in scene_lights.dart (raw text)."""
+    text: str = SCENE_LIGHTS.read_text(encoding="utf-8")
+    consts: dict[str, str] = dict(re.findall(r"static const double (_\w+) = ([-\d.]+);", text))
+    out: dict[str, dict[str, str]] = {}
+    for scene, body in re.findall(r"AvatarScene\.(\w+) => LightRig\((.*?)\n\s*\),", text, re.S):
+        args = dict(re.findall(r"(\w+):\s*([^,]+),", body))
+        out[scene] = {k: consts.get(v.strip(), v.strip()) for k, v in args.items()}
+    return out
+
+
+def test_scene_lights_match_art_bible() -> None:
+    """M4 ruling 3: one light table. AppPalette's per-scene colours and SceneLights' numbers equal
+    art_bible.SCENES (key x/y = cos/sin of key_dir to 3 digits)."""
+    palette: dict[str, str] = dart_palette()
+    lights: dict[str, dict[str, str]] = dart_scene_lights()
+    assert set(lights) == set(SCENES)
+    for scene, s in SCENES.items():
+        assert palette[f"{scene}Key"] == s.key, scene
+        assert palette[f"{scene}Rim"] == s.rim, scene
+        assert palette[f"{scene}Ambient"] == s.ambient, scene
+        assert palette[f"{scene}Fog"] == s.fog, scene
+        rig: dict[str, str] = lights[scene]
+        for colour, suffix in (("keyColor", "Key"), ("rimColor", "Rim"), ("ambientColor", "Ambient"),
+                               ("fogColor", "Fog")):
+            assert rig[colour] == f"AppPalette.{scene}{suffix}.toARGB32()", (scene, colour)
+        kx, ky = s.key_xy
+        numbers: dict[str, float] = {"keyIntensity": s.key_intensity, "keyX": kx, "keyY": ky,
+                                     "rimIntensity": s.rim_intensity, "ambientAmount": s.ambient_amount,
+                                     "flicker": s.flicker}
+        for name, want in numbers.items():
+            assert abs(float(rig[name]) - want) < 1e-9, (scene, name, rig[name], want)

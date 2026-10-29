@@ -28,6 +28,7 @@ import head_turn  # noqa: E402
 from head_turn import HeadTurn, rig_head  # noqa: E402
 import face_rig  # noqa: E402
 import arm_rig  # noqa: E402
+import avatar_light  # noqa: E402
 from face_rig import NUMBERS as FACE_NUMBERS  # noqa: E402
 
 
@@ -2078,9 +2079,36 @@ R2 = Doc(client=0, start=kit.R2_ID_START)
 cast_fill = next(c for c in face_cast.children if c.tag == "Fill")
 cast_fill.children = [lin(R2, 0, y0, 0, y1, stops) for y0, y1, stops in [kit.face_cast_fade()]]
 
+# ---- M4 contract v7: the scene light rig, prop and lean (avatar_light.py; M4 id range, minted last)
+light = avatar_light.AvatarLight(M4, vm, inst, enums)
+HEAD_FRAME = (head.ax, head.ay)
+head_kids = head.el.children
+# rim bands: the face outline (a copy skinned to the same turn bones) and the back-hair silhouette,
+# each clipped by its silhouette (no torso rim: the sleeves cover the torso's sides and the hood or
+# collar its shoulder line, so its outline is not the body's silhouette)
+face_path = next(c for c in face.children if c.tag == "PointsPath")
+face_rim = light.rim("RimFace", light.clone(face_path), face, 2.6, float(face.attrs["x"]), float(face.attrs["y"]))
+hair_back_shape = named_el(hair_back.el, "HairBackShape")
+hb_parent = avatar_light.parent_of(head.el, hair_back_shape)
+hb_path = next(c for c in hair_back_shape.children if c.tag == "PointsPath")
+hb_parent.children.insert(hb_parent.children.index(hair_back_shape),
+                          light.rim("RimHair", light.clone(hb_path), hair_back_shape, 2.0,
+                                    float(hair_back_shape.attrs["x"]), float(hair_back_shape.attrs["y"])))
+# key, ambient and rim on the skin: in front of the face and its shading, behind the features
+skin_at = head_kids.index(avatar_light.top_child(head.el, cheek_sh))
+head_kids[skin_at:skin_at] = [face_rim, light.key_cheek(face, HEAD_FRAME), light.ambient_wash(face)]
+# the lens glints take the key colour and slide toward it (every glasses set)
+glints = [light.glint(g, avatar_light.parent_of(head.el, g))
+          for g in [e for e in avatar_light.walk(glasses_solo.el) if e.tag == "Shape"
+                    and e.attrs.get("name") in ("Glare", "Glare2")]]
+light.lean(body.el, body_g.el, avatar_light.parent_of(body_g.el, head_base.el), head_base.el, (body.ax, body.ay))
+light_anims, light_layer = light.flicker_layer([light.firelight, *glints])
+artboard.children.extend(light_anims)
+sm.children.append(light_layer)
+
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 # the lids read eyeLeadPitch (contract: looking down drops the upper lids), which the head turn adds
 face_rig.resolve_paths([artboard, *face_au.converters, *lids.converters], {"eyeLeadPitch": turn.path("eyeLeadPitch")})
-write(out, [artboard, *enums.values(), vm, *face_au.converters, *lids.converters, *turn.converters])
+write(out, [artboard, *enums.values(), vm, *face_au.converters, *lids.converters, *turn.converters, *light.converters])
 print("wrote", os.path.normpath(out), "next id", d.next)

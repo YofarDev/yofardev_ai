@@ -14,6 +14,10 @@
     uv run rive/tools/review_face.py fvs                   # f/v-s-th-pp-oh-ou at phone size (360 px) + close-up
     uv run rive/tools/review_face.py gates                 # history-free and clamp --compare gates (exit 1 on diff)
     uv run rive/tools/review_face.py speech <name> [...]   # strip + GIF per trace
+    uv run rive/tools/review_face.py light                 # v7 light: 4 scene rigs x neutral/happy x yaw
+                                                           # -1/0/1, campfire flicker strip + GIF, seam,
+                                                           # history and silhouette gates (M4, exit 1 on
+                                                           # a failed gate) -> rive/review/m4/light/
 
 Every cell is a real CLI render of rive/avatar driven through AvatarVM numbers exactly as the app
 writes them (FaceFrame -> au*, lipTuck, tongueUp, roll, breath, pitch += nodPitch, autoBlink,
@@ -632,6 +636,174 @@ def timing(name: str, tr: dict, blinks: list[int]) -> Path:
     return out
 
 
+# ------------------------------------------------------------------ light (M4, contract v7)
+
+LIGHT_OUT = ROOT / "rive" / "review" / "m4" / "light"
+LIGHT_BOX = (220, 150, 580, 580)  # head, hair and the top of the hood
+HAPPY = {"mood": "happy", "auCheekRaise": "0.6", "auLidTighten": "0.1", "auLipCornerPull": "0.7",
+         "auBrowOuterUp": "0.3"}  # lib/core/models/performance/mood_presets.dart
+BG = (29, 29, 29)  # the CLI's backdrop
+
+
+def rig_data(scene: str, flicker: float | None = 0.0) -> dict[str, str]:
+    """The AvatarVM light numbers the app writes for `scene` (art_bible.SCENES = SceneLights.of);
+    the flicker is 0 unless asked, so a still is deterministic."""
+    sys.path.insert(0, str(HERE))
+    from art_bible import SCENES
+    s = SCENES[scene]
+    kx, ky = s.key_xy
+    return {"lightKey": s.key, "lightKeyIntensity": str(s.key_intensity), "lightKeyX": str(kx),
+            "lightKeyY": str(ky), "lightRim": s.rim, "lightRimIntensity": str(s.rim_intensity),
+            "lightAmbient": s.ambient, "lightAmbientAmount": str(s.ambient_amount),
+            "lightFlicker": str(s.flicker if flicker is None else flicker)}
+
+
+DARK = {"lightKeyIntensity": "0", "lightRimIntensity": "0", "lightAmbientAmount": "0", "lightFlicker": "0"}
+
+
+def _silhouette(png: Path) -> Image.Image:
+    """Mask of everything the avatar paints (the backdrop is flat BG), grown 2 px for antialiasing."""
+    im = Image.open(png).convert("RGB")
+    diff = ImageChops.difference(im, Image.new("RGB", im.size, BG)).convert("L")
+    return diff.point(lambda v: 255 if v > 3 else 0).filter(ImageFilter.MaxFilter(5))
+
+
+def light() -> None:
+    from art_bible import SCENES
+    LIGHT_OUT.mkdir(parents=True, exist_ok=True)
+    scenes = list(SCENES)
+    jobs: list[tuple[str, dict[str, str], int, int | None]] = []
+    for sc in scenes:
+        for mood, face in (("neutral", {}), ("happy", HAPPY)):
+            for yaw in ("-1", "0", "1"):
+                jobs.append((f"{sc} {mood} yaw {yaw}", {"autoBlink": "false", **rig_data(sc), **face, "yaw": yaw},
+                             SETTLE, None))
+    cells = render(jobs, "light", LIGHT_BOX, 1.0)
+    w, h = cells[0].size
+    out = Image.new("RGB", (w * 6, h * len(scenes)), (20, 18, 26))
+    for k, c in enumerate(cells):
+        out.paste(c, ((k % 6) * w, (k // 6) * h))
+    out.save(LIGHT_OUT / "light_sheet.png", optimize=True)
+    print("sheet:", LIGHT_OUT / "light_sheet.png")
+    # the campfire flicker: 10 frames across one 2 s loop (every 12 frames), plus a 60-frame GIF
+    fl = {"autoBlink": "false", **rig_data("campfire", None)}
+    strip = render([(f"f{SETTLE + 12 * k}", fl, SETTLE + 12 * k, None) for k in range(10)], "flicker",
+                   (280, 280, 520, 520), 1.4)
+    w, h = strip[0].size
+    im = Image.new("RGB", (w * 10, h), (20, 18, 26))
+    for k, c in enumerate(strip):
+        im.paste(c, (k * w, 0))
+    im.save(LIGHT_OUT / "flicker_strip.png", optimize=True)
+    gif = render([(f"g{k}", fl, SETTLE + 2 * k, None) for k in range(60)], "flicker_gif", (280, 280, 520, 520), 1.0,
+                 tag_it=False)
+    save_gif(gif, LIGHT_OUT / "flicker.gif", 30)
+    print("flicker:", LIGHT_OUT / "flicker_strip.png", LIGHT_OUT / "flicker.gif")
+    light_gates()
+
+
+def light_gates() -> None:
+    """Exit 1 on a failed gate.
+    - history: each scene rig reached from the livingRoom default and from another scene's rig
+      (both at flicker 0, the second also from lean 1 / yaw 1) renders the same within the M3
+      ruling-13 tolerance: max channel delta 1, or no more pixels above 1/255 than a control pair
+      with the same lean / yaw history and the target rig in both steps (the renderer's own
+      antialiasing noise; the light numbers then add none), or at most 4 more isolated pixels at
+      2/255 (a gradient ramp re-quantised after a stop colour changes);
+    - seam: the full campfire flicker at frame N and N + 720 (six 2 s loops, every idle loop back in
+      phase) differ in no more pixels above 1/255 than the same pair at flicker 0 (the clock's own
+      noise), so the loop has no seam or drift;
+    - silhouette: every pixel the light changes (rig on vs every light number 0) lies inside the
+      avatar's painted area, for every scene rig at yaw -1, 0 and 1."""
+    from art_bible import SCENES
+    tmp = TMP / "light_gates"
+    tmp.mkdir(parents=True, exist_ok=True)
+    base = {"autoBlink": "false", "yaw": "0"}
+    other_of = {"livingRoom": "campfire", "campfire": "beach", "beach": "deepSpace", "deepSpace": "campfire"}
+    jobs: list[tuple[str, Path, Path, list[str], list[str]]] = []
+    for sc in SCENES:
+        a, b = tmp / f"hist_{sc}_rest.png", tmp / f"hist_{sc}_other.png"
+        # every mid-run --data costs the CLI one frame: both histories write the same keys
+        rig = {**base, **rig_data(sc), "lean": "0"}
+        jobs.append((f"history {sc}", a, b, capture(a, [({**base, **rig_data("livingRoom")}, 20), (rig, 40)]),
+                     capture(b, [({**rig_data(other_of[sc]), "autoBlink": "false", "lean": "1", "yaw": "1"}, 20),
+                                 (rig, 40)])))
+        c = tmp / f"hist_{sc}_control.png"
+        jobs.append((f"control {sc}", a, c, [], capture(c, [({**rig, "lean": "1", "yaw": "1"}, 20), (rig, 40)])))
+    # one loop later is 120 frames, but the idle loops run 360 / 720 frames: 720 frames later every
+    # loop is back in phase, so only a flicker seam (or drift) could differ
+    fl = {**base, **rig_data("campfire", 1.0)}
+    a, b = tmp / "seam_a.png", tmp / "seam_b.png"
+    jobs.append(("flicker seam", a, b, capture(a, [(fl, 61)]), capture(b, [(fl, 781)])))
+    st = {**fl, "lightFlicker": "0"}
+    a0, b0 = tmp / "seam_steady_a.png", tmp / "seam_steady_b.png"
+    jobs.append(("control seam", a0, b0, capture(a0, [(st, 61)]), capture(b0, [(st, 781)])))
+
+    def run(j: tuple[str, Path, Path, list[str], list[str]]) -> tuple[str, str]:
+        tag, a, _b, ca, cb = j
+        if ca:  # a control reuses its gate's first capture (controls run after every gate)
+            r = subprocess.run(ca, cwd=PROJ, capture_output=True, text=True)
+            if r.returncode:
+                raise SystemExit(r.stderr[-2000:])
+        r = subprocess.run([*cb, f"--compare={a}"], cwd=PROJ, capture_output=True, text=True)
+        found = re.search(r"\d+\.\d+% of pixels differ \(\d+ of \d+\)", r.stdout + r.stderr)
+        if not found:
+            raise SystemExit(f"{tag}: no --compare result\n{r.stdout[-1000:]}{r.stderr[-1000:]}")
+        return tag, found.group(0)
+
+    jobs = [j for j in jobs if j[3]] + [j for j in jobs if not j[3]]
+    with ThreadPoolExecutor(WORKERS) as ex:
+        res = list(ex.map(run, [j for j in jobs if j[3]]))
+    with ThreadPoolExecutor(WORKERS) as ex:
+        res += list(ex.map(run, [j for j in jobs if not j[3]]))
+    lines: list[str] = []
+    bad = 0
+    def noise(j: tuple[str, Path, Path, list[str], list[str]]) -> tuple[int, int]:
+        d_ = ImageChops.difference(Image.open(j[1]).convert("RGB"), Image.open(j[2]).convert("RGB"))
+        above = sum(1 for px in d_.get_flattened_data() if max(px) > 1)
+        return max(e[1] for e in d_.getextrema()), above
+
+    stats = {tag: noise(j) for (tag, _), j in zip(res, jobs)}
+    for (tag, cmp), j in zip(res, jobs):
+        if tag.startswith("control"):
+            continue
+        delta, above = stats[tag]
+        ctrl = stats["control " + tag.split(" ", 1)[1].replace("flicker ", "")]
+        # a light stop rewritten mid-run may re-quantise a gradient ramp: a handful of isolated
+        # pixels at 2/255 (seen once, on the cheek wash) is the renderer, not a pose
+        same = delta <= 1 or above <= ctrl[1] or (delta <= 2 and above <= ctrl[1] + 4)
+        lines.append(f"{'ok ' if same else 'BAD'} {tag}: {cmp}, max channel delta {delta}/255, {above} px above "
+                     f"1/255 (control: {ctrl[1]} px, max {ctrl[0]}/255)")
+        bad += not same
+    # silhouette: light on vs off
+    sil_jobs = []
+    for sc in SCENES:
+        for yaw in ("-1", "0", "1"):
+            on, off = tmp / f"sil_{sc}_{yaw}_on.png", tmp / f"sil_{sc}_{yaw}_off.png"
+            sil_jobs.append((sc, yaw, on, off))
+
+    def sil(j: tuple[str, str, Path, Path]) -> str:
+        sc, yaw, on, off = j
+        rig = {**base, **rig_data(sc), "yaw": yaw}
+        cli(on, rig, SETTLE)
+        cli(off, {**rig, **DARK}, SETTLE)
+        mask = _silhouette(off)
+        diff = ImageChops.difference(Image.open(on).convert("RGB"), Image.open(off).convert("RGB")).convert("L")
+        lit = diff.point(lambda v: 255 if v > 2 else 0)
+        outside = ImageChops.subtract(lit, mask)
+        n_out = sum(1 for v in outside.get_flattened_data() if v)
+        n_lit = sum(1 for v in lit.get_flattened_data() if v)
+        return f"{'ok ' if n_out == 0 else 'BAD'} silhouette {sc} yaw {yaw}: {n_lit} px lit, {n_out} outside"
+
+    with ThreadPoolExecutor(WORKERS) as ex:
+        sres = list(ex.map(sil, sil_jobs))
+    lines += sres
+    bad += sum(1 for s_ in sres if s_.startswith("BAD"))
+    (LIGHT_OUT / "gates.txt").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines))
+    if bad:
+        raise SystemExit(f"{bad} light gate(s) failed")
+
+
 if __name__ == "__main__":
     what = sys.argv[1:] or ["sheets"]
     if what[0] == "sheets":
@@ -646,6 +818,8 @@ if __name__ == "__main__":
         yaw_sheet()
     elif what[0] == "gates":
         gates()
+    elif what[0] == "light":
+        light()
     elif what[0] == "speech":
         for n in what[1:]:
             speech(n)

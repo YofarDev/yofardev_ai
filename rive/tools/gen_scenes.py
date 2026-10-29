@@ -16,6 +16,7 @@ import zlib
 sys.path.insert(0, os.path.dirname(__file__))
 from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, solid, stroke, track, write  # noqa: E402,F401
 from scene_art import place_point, refine_scene  # noqa: E402
+from art_bible import SCENES  # noqa: E402
 
 W, H = 1080, 1920
 SCENE_EVENTS = {
@@ -24,6 +25,20 @@ SCENE_EVENTS = {
     "beach": ["bigWave", "seagulls", "sunset", "rain"],
     "deepSpace": ["meteor", "warp", "alienShip", "nebulaPulse"],
 }
+
+
+M4_ID_START = 980000  # elements added in moonshot M4 (each scene is its own document)
+
+
+def scene_vm_defaults(scene_id: str) -> list[tuple[str, str, object]]:
+    """(name, type, default) of the v7 SceneVM numbers and colours, in contract order."""
+    s = SCENES[scene_id]
+    kx, ky = s.key_xy
+    return [("parallaxX", "number", 0.0), ("parallaxY", "number", 0.0),
+            ("lightKey", "color", s.key), ("lightKeyIntensity", "number", s.key_intensity),
+            ("lightKeyX", "number", kx), ("lightKeyY", "number", ky), ("lightRim", "color", s.rim),
+            ("lightRimIntensity", "number", s.rim_intensity), ("lightAmbient", "color", s.ambient),
+            ("lightFog", "color", s.fog), ("lightFlicker", "number", s.flicker)]
 
 
 class Scene:
@@ -50,6 +65,29 @@ class Scene:
                  exports=True, name="Default")
         self.inst = inst
         self.vm = d("ViewModel", self.p_event_id, self.p_event, inst, name="SceneVM", defaultInstanceId=inst.ref())
+        self._v7_props()
+
+    def _v7_props(self) -> None:
+        """Contract v7 SceneVM numbers: `parallaxX`/`parallaxY` (default 0) and the scene's light rig
+        as defaults (art_bible.SCENES, checked by check_contract.py). Minted from the M4 id range so
+        no scene id moves; `self.vpath(name)` binds them."""
+        d4 = self.d4 = Doc(client=0, start=M4_ID_START)
+        self.v7: dict[str, El] = {}
+        vals: list[El] = []
+        for name, typ, default in scene_vm_defaults(self.id):
+            if typ == "color":
+                p = d4("ViewModelPropertyColor", name=name)
+                vals.append(d4("ViewModelInstanceColor", propertyValue=default, viewModelPropertyId=p.ref()))
+            else:
+                p = d4("ViewModelPropertyNumber", name=name)
+                vals.append(d4("ViewModelInstanceNumber", propertyValue=float(default), viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+        at = self.vm.children.index(self.inst)
+        self.vm.children[at:at] = list(self.v7.values())
+        self.inst.children.extend(vals)
+
+    def vpath(self, name: str) -> str:
+        return f"{self.vm.ref()}-{self.v7[name].ref()}"
 
     # ---------------------------------------------------------------- drawing
     def S(self, parent: tuple[float, float], name: str, pts: list, *paints: El | None,

@@ -14,6 +14,9 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import art_bible  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "rive" / "CONTRACT.md"
 errors: list[str] = []
@@ -71,6 +74,7 @@ def parse_contract() -> dict:
     c["scene_artboard"] = ticks(re.search(r"\*\*Artboard:\*\*.*", scene_sec).group(0))[0]
     c["scene_sm"] = ticks(re.search(r"\*\*State machine:\*\*.*", scene_sec).group(0))[0]
     c["scene_vm"] = ticks(re.search(r"\*\*View model:\*\*.*", scene_sec).group(0))[0]
+    c["scene_vm_props"] = scene_vm_props(scene_sec)
     c["scene_event_name"], c["scene_event_prop"] = ticks(re.search(r"\*\*Rive event emitted:\*\*.*", scene_sec).group(0))[:2]
     scenes = {}
     for sid, evs, pids in table_after(scene_sec, r"^\| sceneId"):
@@ -86,6 +90,31 @@ def parse_contract() -> dict:
     m = re.search(r"\*\*Scene posters:\*\* `assets/rive/posters/<sceneId>.webp`.*?(\d+)×(\d+), at most (\d+) KB", text, re.S)
     c["poster"] = (int(m.group(1)), int(m.group(2)), int(m.group(3)) * 1024)
     return c
+
+
+def scene_vm_props(scene_sec: str) -> dict[str, str]:
+    """The SceneVM bullets: `eventId` (enum), `event` (trigger), then every v7 number / colour. A
+    bullet lists names in backticks; a "(type)" or ": type" after a run of names types that run."""
+    vm_at = scene_sec.index("**View model:**")
+    bullets = scene_sec[vm_at:scene_sec.index("**Rive event emitted:**")]
+    props: dict[str, str] = {}
+    for item in re.split(r"\n\s*- ", bullets)[1:]:
+        item = " ".join(item.split())
+        pending: list[str] = []
+        for m in re.finditer(r"`([a-z]\w*)`|\((color|colors|number|numbers|enum|trigger)\)|^[^:]*?:\s*(enum|trigger|number|color)", item):
+            name, typ = m.group(1), m.group(2) or m.group(3)
+            if name:
+                pending.append(name)
+            elif typ and pending:
+                for n in pending:
+                    props[n] = typ.rstrip("s")
+                pending = []
+        if pending and not props.keys() >= set(pending):
+            head = re.search(r":\s*(enum|trigger|number|color)", item)
+            for n in pending:
+                if head and n not in props:
+                    props[n] = head.group(1)
+    return props
 
 
 def inspect(project: Path) -> dict:
@@ -162,6 +191,30 @@ def events_of(ab: dict) -> dict[str, list[dict[str, str]]]:
                    if c.get("type") == "CustomPropertyString"}
         out.setdefault(e["name"], []).append(payload)
     return out
+
+
+def scene_light_defaults(sid: str) -> dict[str, object]:
+    """v7 defaults every scene file must carry (and the avatar, for livingRoom): art_bible.SCENES."""
+    sc = art_bible.SCENES[sid]
+    kx, ky = sc.key_xy
+    return {"parallaxX": 0.0, "parallaxY": 0.0, "lightKey": sc.key, "lightKeyIntensity": sc.key_intensity,
+            "lightKeyX": kx, "lightKeyY": ky, "lightRim": sc.rim, "lightRimIntensity": sc.rim_intensity,
+            "lightAmbient": sc.ambient, "lightFog": sc.fog, "lightFlicker": sc.flicker}
+
+
+def check_light_defaults(label: str, j: dict, vm: dict, want: dict[str, object]) -> None:
+    """The default instance's values for the names in `want` (colours exact, numbers to 1e-4)."""
+    by_id = {p["id"]: p["name"] for p in vm.get("children", []) if p.get("type", "").startswith("ViewModelProperty")}
+    inst = next((i for i in nodes(vm, "ViewModelInstance")), None)
+    got = {by_id.get(v.get("viewModelPropertyId")): v.get("propertyValue") for v in (inst or {}).get("children", [])}
+    for name, val in want.items():
+        g = got.get(name)
+        if isinstance(val, str):
+            ok = isinstance(g, str) and g.upper() == val.upper()
+        else:
+            ok = isinstance(g, (int, float)) and abs(float(g) - float(val)) < 1e-4
+        if not ok:
+            err(f"{label}: `{name}` default {g!r} != art_bible {val!r}")
 
 
 def check_riv_bytes(path: Path, names: list[str]) -> None:
@@ -266,6 +319,10 @@ def main() -> int:
                 err(f"avatar: `{name}` is {gtyp}, contract says {typ}")
             if vals is not None and gvals != vals:
                 err(f"avatar: `{name}` enum values {gvals} != contract {vals}")
+        rig = scene_light_defaults("livingRoom")
+        check_light_defaults("avatar", j, vm, {k: v for k, v in rig.items()
+                                                if k in c["avatar_props"] and not k.startswith("parallax")}
+                             | {"lightAmbientAmount": art_bible.SCENES["livingRoom"].ambient_amount, "lean": 0.0})
     if ab:
         evs = events_of(ab)
         if set(evs) != set(c["avatar_events"]):
@@ -294,9 +351,10 @@ def main() -> int:
         ab, vm = check_common(sid, j, c["scene_artboard"], c["scene_sm"], c["scene_vm"])
         if vm:
             got = vm_props(j, vm)
-            want = {"eventId": ("ViewModelPropertyEnumCustom", ev_vals), "event": ("ViewModelPropertyTrigger", None)}
+            want = {n: (TYPE_OF[t], ev_vals if n == "eventId" else None) for n, t in c["scene_vm_props"].items()}
             if got != want:
                 err(f"{sid}: SceneVM {got} != {want}")
+            check_light_defaults(sid, j, vm, scene_light_defaults(sid))
         if ab:
             evs = events_of(ab)
             if set(evs) != {c["scene_event_name"]}:
@@ -305,7 +363,8 @@ def main() -> int:
             if seen != sorted(prop_ids):
                 err(f"{sid}: propIds {seen} != contract {sorted(prop_ids)}")
         check_riv_bytes(ROOT / "assets" / "rive" / "scenes" / f"{sid}.riv",
-                        [c["scene_artboard"], c["scene_sm"], c["scene_vm"], c["scene_event_name"], *ev_vals, *prop_ids])
+                        [c["scene_artboard"], c["scene_sm"], c["scene_vm"], c["scene_event_name"], *ev_vals, *prop_ids,
+                         *c["scene_vm_props"]])
     extra = {p.stem for p in (ROOT / "assets" / "rive" / "scenes").glob("*.riv")} - set(c["scenes"])
     if extra:
         err(f"scenes not in the contract: {sorted(extra)}")
