@@ -206,6 +206,7 @@ MOUTH_BONES = {
 # The upper teeth hang from the skull (they do not move): their edge is one arc, y = TEETH_EDGE[0] -
 # TEETH_EDGE[1] (x - 400)^2. The lower teeth ride the jaw only (`JawTeeth`), just behind that edge.
 TEETH_EDGE = (482.8, 0.0104)
+LOW_TEETH_RAMP = (0.28, 0.38)  # lipStretch: lower teeth hidden .. fully shown
 LOW_TEETH_TOP = (482.2, 0.0104)
 JAW_TEETH = 17.0  # px per unit jaw (the lower lip takes 23)
 # the tongue tip rises to the back of the upper teeth and stops just under their edge, so it reads
@@ -521,7 +522,9 @@ LOWER_LID: dict[str, dict[str, float]] = {
 # lid's ends: with its capped push it then arches over the iris instead of rising flat; less than
 # M3's 2.5 px, which dragged the upper lid's ends down with them).
 CORNER_LID: dict[str, dict[str, float]] = {"In": terms(LT=-1.0, CR=1.7), "Out": terms(LT=-1.0, CR=1.7)}
-LASH_T: dict[str, float] = {"In": 1.0, "Inner": 2.6, "Mid": 3.8, "Outer": 4.6}  # lash thickness (px)
+LASH_T: dict[str, float] = {"In": 0.7, "Inner": 2.6, "Mid": 3.8, "Outer": 4.6}  # lash thickness (px)
+LASH_IN_BACK = 2.0  # u the lash's inner top point sits inside the corner (a tapered end)
+WING = (35.0, 384.5)  # the lash's outer flick (u, y)
 LOWER_T: dict[str, float] = {"In": 0.2, "Inner": 0.8, "Mid": 1.3, "Outer": 1.8, "Out": 2.0}
 SEAM = 0.6  # px the lid bands reach into the aperture (no anti-aliasing seam at the edge)
 SHADE_T: dict[str, float] = {"Inner": 3.0, "Mid": 4.2, "Outer": 3.6}  # the upper lid's shadow on the white
@@ -765,8 +768,10 @@ def rig_lids(fr: "FaceRig", eye: Mapping[str, object], cx: float, s: int, ink: s
     lash_bottom = [shifted(v, SEAM, corner=None if "in" not in v else "keep") for v in up]
     tops = reversed_edge([shifted(v, -LASH_T[col] + SEAM) for v, col in zip(up[1:-1], LID_COLS)])
     in_u, in_y = EYE_CORNERS["In"]
-    lash_pts = [*lash_bottom, {"at": at(36.0, 384.5), "w": out_w}, {"at": at(29.5, 383.0), "w": out_w}, *tops,
-                {"at": at(in_u + 1.0, in_y - LASH_T["In"]), "w": [{"CornerIn": 1.0}]}]
+    # critic round 3: the inner end tapers to the legibility floor (a closed lid's line ended square
+    # there), its top point set back along the line so the end is a point, not a cut
+    lash_pts = [*lash_bottom, {"at": at(WING[0], WING[1]), "w": out_w}, {"at": at(29.5, 383.0), "w": out_w}, *tops,
+                {"at": at(in_u + LASH_IN_BACK, in_y + SEAM - LASH_T["In"]), "w": [{"CornerIn": 1.0}]}]
     lash: El = eye["lash"]  # type: ignore[assignment]
     path, c = explicit_path(d, lash_pts, frame, tendon)
     _reshape(lash, frame, path, c, fill(d, ink))
@@ -780,8 +785,9 @@ def rig_lids(fr: "FaceRig", eye: Mapping[str, object], cx: float, s: int, ink: s
     path, c = explicit_path(d, lower_pts, frame, tendon)
     _reshape(lower, frame, path, c, fill(d, lower_ink))
     # lid crease: rides the upper row a third of the way (a lifted lid folds under it)
+    # (critic round 3: `rig_crease` replaces this stroke with a tapered band minted later; this
+    # one keeps its id count, so no later lid id moves)
     crease: El = eye["crease"]  # type: ignore[assignment]
-    # critic round 2: the crease sits clear of the taller lens rim (no kissing lines, art bible §3)
     cpts = [at(-12.0, 354.0), at(8.0, 350.0), at(32.0, 357.5)]
     cw = [{"UpperInner": 0.3, "Anchor": 0.7}, {"UpperMid": 0.3, "Anchor": 0.7}, {"UpperOuter": 0.3, "Anchor": 0.7}]
     path, c = skinned_path(d, cpts, frame, lambda i, _a, h: [cw[i]] if h is None else [cw[i]] * 3, tendon,
@@ -822,6 +828,55 @@ def add_blink_squash(fr: "FaceRig", eye: Mapping[str, object]) -> El:
     outer = d("Node", inner, x=0.0, y=dy, name="BlinkSquash")
     blink.children[blink.children.index(gm)] = outer
     return outer
+
+
+# The lid crease (critic round 3): at rest the fold above each eye read as forehead wrinkles and
+# added lines between the brows and the glasses, so it is hidden until the brows lift: opacity
+# clamp01((max(inner up, outer up) - CREASE_FADE[0]) / (CREASE_FADE[1] - CREASE_FADE[0])) per side
+# (the v6 side sums). It is a band tapering to the legibility floor at both ends (no round-capped
+# stroke), and it no longer rides the upper lid: a closing lid dragged it onto the lens's top rim.
+CREASE_FADE = (0.35, 0.8)
+CREASE_PTS = ((-12.0, 353.0), (8.0, 349.0), (32.0, 356.5))  # centre line (u, y), eye-local
+CREASE_W = 1.5  # px at its middle (eye-local: the eye is drawn at 1.06)
+
+
+def crease_opacity(env: Mapping[str, float], side: str) -> float:
+    """The lid crease's opacity on one side ("L" / "R"): the bind's formula."""
+    a = max(lid_amount(env, "auBrowInnerUp", side), lid_amount(env, "auBrowOuterUp", side))
+    lo, hi = CREASE_FADE
+    return min(1.0, max(0.0, (a - lo) / (hi - lo)))
+
+
+def crease_band(cx: float, s: int) -> list[tuple]:
+    """The crease band's outline (art space, eye frame units): `blunt` around CREASE_PTS."""
+    return blunt([(cx + s * u, y) for u, y in CREASE_PTS], CREASE_W, END_W / 1.06)
+
+
+def rig_crease(fr: "FaceRig", eye: Mapping[str, object], cx: float, s: int) -> El:
+    """Replace the eye's crease stroke (its Shape id stays) with a tapered band, hidden at rest and
+    fading in with the brow raise (`crease_opacity`). Minted from `fr` (the face rig's unkeyed
+    range) after the lids, so no lid id moves. Returns the crease."""
+    d, f = fr.d, fr.f
+    side = "L" if s < 0 else "R"
+    crease: El = eye["crease"]  # type: ignore[assignment]
+    band = crease_band(cx, s)
+    xs, ys = [q[0] for q in band], [q[1] for q in band]
+    c = ((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2)
+    path = smooth_path(d, [(round(q[0] - c[0], 3), round(q[1] - c[1], 3), *q[2:]) for q in band])
+    paint = next(ch for ch in crease.children if ch.tag == "Stroke")
+    colour = next(ch for ch in paint.children if ch.tag == "SolidColor").attrs["colorValue"]
+    _reshape(crease, (cx, EYE_FRAME_DY), path, c, fill(d, str(colour)))
+    amt = f.fn("max", fr.amount("auBrowInnerUp|" + side, "auBrowInnerUp"),
+               fr.amount("auBrowOuterUp|" + side, "auBrowInnerUp"))
+    lo, hi = CREASE_FADE
+    g = 1.0 / (hi - lo)
+    conv = d("DataConverterFormula", *f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [
+        f.val(g), f.op("*"), *amt, f.op("-"), f.val(g * lo)])))
+    fr.converters.append(conv)
+    crease.children.insert(0, d("DataBindContext", sourcePathIds=fr.path("auBrowInnerUp"), propertyKey=KEYS["opacity"],
+                                converterId=conv.ref()))
+    crease.attrs["opacity"] = 0.0
+    return crease
 
 
 def add_side_numbers(d: Doc, vm: El, inst: El) -> dict[str, El]:
@@ -1110,8 +1165,10 @@ def rig_mouth(fr: FaceRig, host: El, palette: Mapping[str, str]) -> El:
     low_teeth = fr.skinned("MouthLowTeeth", lpts, [one("JawTeeth")] * len(lpts), bones, F,
                            fr.fill(palette["low_teeth"]), clip=inside)
     # lower teeth for a stretch (s, e, i) and the flared ch / sh funnel, steeply (half-opaque teeth
-    # over the interior read as mauve)
-    fr.bind_on(low_teeth, "opacity", -1.6, terms(S=5.0, FL=3.0), lo=0.0, hi=1.0)
+    # over the interior read as mauve; critic round 3: ih at stretch 0.45 still showed them at 65 %):
+    # hidden up to stretch LOW_TEETH_RAMP[0], full from LOW_TEETH_RAMP[1] (dd 0.2 none, ih 0.45 full)
+    lo_s, hi_s = LOW_TEETH_RAMP
+    fr.bind_on(low_teeth, "opacity", -lo_s / (hi_s - lo_s), terms(S=1 / (hi_s - lo_s), FL=3.0), lo=0.0, hi=1.0)
     # a soft tongue: a broad mound on the jaw whose shoulders rise with its tip (a convex top at any
     # tongueUp, no peak), its base past the corners (critic round 3: a raised tip made an "M")
     u = TONGUE_SHOULDER[0]

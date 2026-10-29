@@ -78,22 +78,29 @@ TIP_AT, TIP_HALF, TIP_R = 0.88, 0.17, 0.24
 # (root, tip, base width, bend) per lock (names Lock0..Lock8; the generator's draw order is
 # separate). Short tips end ~10 px under the hairline, medium ~50, long past the eyes.
 FRINGE_LOCKS: list[tuple[tuple[float, float], tuple[float, float], float, float]] = [
-    ((300, 272), (290, 406), 44, -8), ((328, 248), (306, 348), 48, 11), ((356, 238), (342, 310), 46, 9),
-    ((404, 230), (396, 348), 58, 12), ((452, 236), (466, 312), 48, 10), ((474, 250), (498, 360), 54, 9),
+    ((300, 272), (290, 406), 44, -8), ((328, 248), (306, 348), 48, 11), ((356, 238), (342, 310), 40, 9),
+    ((404, 230), (396, 348), 58, 12), ((452, 236), (466, 312), 42, 10), ((474, 250), (498, 360), 54, 9),
     ((498, 276), (512, 408), 40, 6), ((380, 236), (360, 304), 28, 6), ((440, 240), (450, 306), 28, 6)]
 LOCK_TIERS = {"short": (2, 4, 7, 8), "medium": (1, 3, 5), "long": (0, 6)}
 LOCK_CLUMPS = ((0, 1), (2, 7, 3), (8, 4, 5, 6))  # three clumps; the parting splits the front two
+# critic round 3: the clumps read as drips; widths vary more (the short pairs are thinner than the
+# medium locks) and two medium locks flick their tips outward (px at the tip, + = the lock's left
+# normal), so the fringe reads as hair
+FRINGE_FLICK: dict[int, float] = {1: 7.0, 5: -7.0}
+FLICK_FROM = 0.55  # the flick bends the centre line from here to the tip (quadratic)
 PARTING_X = 422.0  # the parting: right of centre, between the centre lock's root and lock 8's
 
 
-def lock_bow(t: float, bend: float) -> float:
+def lock_bow(t: float, bend: float, flick: float = 0.0) -> float:
     """Sideways offset of a lock's centre line at t (0 root .. 1 tip): one bow plus a second
-    harmonic (an S that turns the tip back), zero at both ends so root and tip stay put."""
-    return bend * (math.sin(math.pi * t) + LOCK_S * math.sin(2 * math.pi * t))
+    harmonic (an S that turns the tip back), zero at both ends so root and tip stay put; a flick
+    then bends the last stretch sideways (the tip moves by `flick`)."""
+    curl = flick * max(0.0, (t - FLICK_FROM) / (1 - FLICK_FROM)) ** 2
+    return bend * (math.sin(math.pi * t) + LOCK_S * math.sin(2 * math.pi * t)) + curl
 
 
-def lock_outline(root_: tuple[float, float], tip: tuple[float, float], w: float,
-                 bend: float) -> tuple[list[tuple], Callable[[float, float], tuple[float, float]]]:
+def lock_outline(root_: tuple[float, float], tip: tuple[float, float], w: float, bend: float,
+                 flick: float = 0.0) -> tuple[list[tuple], Callable[[float, float], tuple[float, float]]]:
     """(outline points, at(t, offset)) of one fringe lock: a tapered clump ending in a soft point."""
     (rx, ry), (tx, ty) = root_, tip
     dx, dy = tx - rx, ty - ry
@@ -101,7 +108,7 @@ def lock_outline(root_: tuple[float, float], tip: tuple[float, float], w: float,
     nx, ny = -dy / ln, dx / ln
 
     def at(t: float, off: float) -> tuple[float, float]:
-        bow = lock_bow(t, bend)
+        bow = lock_bow(t, bend, flick)
         return (rx + dx * t + nx * (off + bow), ry + dy * t + ny * (off + bow))
     r = round(TIP_R * 1.9 * TIP_HALF * w, 2)  # the shoulders sit at TIP_HALF and 0.9 TIP_HALF
     pts: list[tuple] = [at(0, -w / 2), at(0.45, -w * 0.3), at(TIP_AT, -w * TIP_HALF), (*at(1, 0.0), f"c{r}"),

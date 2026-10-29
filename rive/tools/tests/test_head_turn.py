@@ -64,11 +64,47 @@ def test_contour_bones_rest_exactly_on_the_outline(name: str) -> None:
 
 
 def test_far_cheekbone_bulges_past_the_old_outline() -> None:
-    for name in ("C", "K"):
+    x, _, p = pose("C")
+    _, old_p = ht.ellipse_contour_pose(x, ht.CONTOUR["C"][1])
+    assert p - x >= 12  # out past the rest outline
+    assert p - old_p >= 7  # and past the M1 turned outline
+
+
+def test_far_cheek_flattens_under_the_cheekbone() -> None:
+    """Critic round 3: below the cheekbone the far contour comes in past the rest outline (it bulged
+    18 px out), so the line from the cheekbone to the chin is flat, not a swollen cheek."""
+    for name in ("K", "J"):
         x, _, p = pose(name)
-        _, old_p = ht.ellipse_contour_pose(x, ht.CONTOUR[name][1])
-        assert p - x >= 12, name  # out past the rest outline
-        assert p - old_p >= 7, name  # and past the M1 turned outline
+        assert -12 <= p - x <= 0, name
+    assert pose("C")[2] - pose("K")[2] >= 25  # the cheekbone stands out over the flat cheek
+
+
+def test_near_cheek_fills_out() -> None:
+    """Critic round 3: the near cheek holds its place (it slid in ~5 px) instead of shrinking."""
+    for name in ("K", "J"):
+        rest, turned = near_left(name)
+        assert turned - rest <= 1.0, name  # the left side: in would be a larger x
+
+
+def test_nose_tip_breaks_over_the_far_cheek() -> None:
+    """At yaw +-1 the nose tip (art: right end 410 at y 440, the nostril hook 392 at y 452) reaches
+    past the far contour, by a few px, not far out into the hair."""
+    tip = (ht.NOSE_TIP_Z) * math.sin(K)
+    right = 410.0 + tip + ht.NOSE_TIP_RIGHT - contour_at(440.0, K, 1.0)
+    left = contour_at(452.0, -K, -1.0) - (392.0 - tip)
+    for past in (right, left):
+        assert 0.0 <= past <= 8.0, (right, left)
+
+
+def test_chin_swings_with_the_jaw() -> None:
+    """Critic round 3: the chin and the lower jaw swing as one volume (the jaw midpoint moved
+    ~26 artboard px at yaw 1, the chin's centre should travel ~45)."""
+    chin = ht.CHIN_Z * math.sin(K)
+    assert 38 <= chin <= 46
+    for name in ("Q", "V"):
+        x, m, p = pose(name)
+        rest_l, turned_l = near_left(name)
+        assert (p - x) + (turned_l - rest_l) >= 52, name  # both jaw edges at that height move right
 
 
 def test_near_jaw_corner_stays_out_while_the_chin_swings() -> None:
@@ -104,7 +140,7 @@ def test_the_turn_widens_the_face_only_a_little() -> None:
         x, m, p = pose(name)
         rest_w = 2 * (x - CX)
         turned_w = p - (2 * CX - m)
-        assert 0 <= turned_w - rest_w <= 16, name
+        assert abs(turned_w - rest_w) <= 16, name
 
 
 def test_mouth_leads_with_the_nose_and_rides_over_the_chin() -> None:
@@ -131,9 +167,11 @@ def test_far_lens_and_blush_fit_inside_the_far_cheek(a: float) -> None:
     _, outer = ht.lens_ends(400 + far * 45, a)
     assert far * (contour_at(396.0, a, far) - outer) >= 4  # the outer frame end, before its stroke
     bx = 400 + far * 62
-    centre = 400 + (bx - 400) * math.cos(a) + ht.face_z(bx, ht.BLUSH_Y) * math.sin(a)
+    centre = bx + r.eval_poly(ht.face_point(bx, ht.BLUSH_Y, ht.face_z(bx, ht.BLUSH_Y)), a)
     edge = centre + far * 0.75 * 27 * ht.foreshorten(bx, ht.BLUSH_Y, a)  # the visible core of the gradient
-    assert far * (contour_at(ht.BLUSH_Y, a, far) - edge) >= 3
+    # (round 3: the far cheek is flatter and the blush rides it in; the rendered overhang gate,
+    # review_face.py yaw, stays 0 px)
+    assert far * (contour_at(ht.BLUSH_Y, a, far) - edge) >= 2
 
 
 def test_far_lens_foreshortens_like_the_far_eye() -> None:

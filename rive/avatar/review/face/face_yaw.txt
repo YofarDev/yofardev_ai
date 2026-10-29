@@ -1,25 +1,25 @@
 3/4 turn evidence (review_face.py yaw): face silhouette edges in artboard px (left / right) and
 per clipped group the pixels its face clip hides (unclipped render vs shipped; 0 = inside)
 
-neutral yaw -1     y370 263/517  y400 262/513  y430 267/506  y460 281/491  y490 304/454  y505 319/428   mouth 0  lens 0  blush 0
-neutral yaw -0.5   y370 270/520  y400 271/515  y430 279/508  y460 293/493  y490 317/461  y505 333/439   mouth 0  lens 0  blush 0
+neutral yaw -1     y370 265/520  y400 268/519  y430 292/513  y460 310/498  y490 308/448  y505 311/414   mouth 0  lens 0  blush 0
+neutral yaw -0.5   y370 271/522  y400 275/519  y430 289/513  y460 305/499  y490 318/460  y505 328/433   mouth 0  lens 0  blush 0
 neutral yaw 0      y370 275/525  y400 279/521  y430 288/513  y460 302/498  y490 329/471  y505 347/453   mouth 0  lens 0  blush 0
-neutral yaw 0.5    y370 280/531  y400 285/529  y430 293/521  y460 308/507  y490 339/483  y505 361/467   mouth 0  lens 0  blush 0
-neutral yaw 1      y370 284/537  y400 288/539  y430 294/533  y460 309/520  y490 347/496  y505 372/481   mouth 0  lens 0  blush 0
-happy yaw -1       y370 257/509  y400 255/506  y430 261/500  y460 274/484  y490 298/448  y505 313/424   mouth 0  lens 0  blush 0
-happy yaw -0.5     y370 262/512  y400 264/508  y430 272/501  y460 286/486  y490 311/456  y505 328/435   mouth 0  lens 0  blush 0
+neutral yaw 0.5    y370 279/530  y400 282/526  y430 287/511  y460 301/495  y490 341/482  y505 367/472   mouth 0  lens 0  blush 0
+neutral yaw 1      y370 281/535  y400 282/533  y430 287/509  y460 303/490  y490 353/492  y505 386/489   mouth 0  lens 0  blush 0
+happy yaw -1       y370 258/512  y400 260/512  y430 283/507  y460 306/490  y490 305/441  y505 307/411   mouth 0  lens 0  blush 0
+happy yaw -0.5     y370 263/514  y400 267/512  y430 282/507  y460 300/492  y490 313/453  y505 323/429   mouth 0  lens 0  blush 0
 happy yaw 0        y370 267/517  y400 272/514  y430 281/506  y460 296/492  y490 323/466  y505 342/448   mouth 0  lens 0  blush 0
-happy yaw 0.5      y370 272/523  y400 278/522  y430 286/515  y460 301/501  y490 333/478  y505 356/462   mouth 0  lens 0  blush 0
-happy yaw 1        y370 276/530  y400 281/532  y430 288/526  y460 302/513  y490 340/490  y505 367/475   mouth 0  lens 0  blush 0
-aa yaw -1          y370 263/516  y400 261/512  y430 267/506  y460 279/492  y490 299/461  y505 311/441   mouth 0  lens 0  blush 0
-aa yaw -0.5        y370 269/520  y400 271/515  y430 278/507  y460 292/493  y490 312/467  y505 324/451   mouth 0  lens 0  blush 0
+happy yaw 0.5      y370 271/522  y400 275/517  y430 280/504  y460 294/490  y490 334/478  y505 362/467   mouth 0  lens 0  blush 0
+happy yaw 1        y370 273/528  y400 275/522  y430 280/501  y460 295/486  y490 345/489  y505 383/485   mouth 0  lens 0  blush 0
+aa yaw -1          y370 265/519  y400 268/518  y430 291/513  y460 310/499  y490 308/458  y505 308/430   mouth 0  lens 0  blush 0
+aa yaw -0.5        y370 270/521  y400 274/518  y430 288/513  y460 304/500  y490 315/467  y505 321/446   mouth 0  lens 0  blush 0
 aa yaw 0           y370 275/525  y400 279/520  y430 287/512  y460 301/499  y490 323/477  y505 337/462   mouth 0  lens 0  blush 0
-aa yaw 0.5         y370 280/530  y400 285/528  y430 292/521  y460 306/508  y490 332/488  y505 349/475   mouth 0  lens 0  blush 0
-aa yaw 1           y370 283/536  y400 287/538  y430 294/532  y460 307/520  y490 338/500  y505 359/489   mouth 0  lens 0  blush 0
-ff yaw -1          y370 263/516  y400 261/512  y430 267/506  y460 280/491  y490 303/454  y505 317/430   mouth 0  lens 0  blush 0
-ff yaw -0.5        y370 269/520  y400 271/515  y430 278/507  y460 292/492  y490 316/462  y505 331/441   mouth 0  lens 0  blush 0
+aa yaw 0.5         y370 278/529  y400 281/525  y430 286/511  y460 299/495  y490 332/485  y505 353/478   mouth 0  lens 0  blush 0
+aa yaw 1           y370 280/535  y400 281/532  y430 286/509  y460 300/490  y490 341/491  y505 369/491   mouth 0  lens 0  blush 0
+ff yaw -1          y370 265/519  y400 268/518  y430 291/513  y460 309/498  y490 308/449  y505 310/416   mouth 0  lens 0  blush 0
+ff yaw -0.5        y370 270/521  y400 274/518  y430 288/513  y460 305/499  y490 317/461  y505 327/435   mouth 0  lens 0  blush 0
 ff yaw 0           y370 275/525  y400 279/520  y430 287/512  y460 302/498  y490 327/472  y505 345/454   mouth 0  lens 0  blush 0
-ff yaw 0.5         y370 280/530  y400 285/528  y430 292/521  y460 307/507  y490 337/484  y505 359/468   mouth 0  lens 0  blush 0
-ff yaw 1           y370 283/536  y400 287/538  y430 294/532  y460 308/519  y490 345/497  y505 369/482   mouth 0  lens 0  blush 0
+ff yaw 0.5         y370 278/529  y400 281/525  y430 286/511  y460 300/495  y490 339/482  y505 364/473   mouth 0  lens 0  blush 0
+ff yaw 1           y370 280/535  y400 281/532  y430 287/508  y460 302/490  y490 350/492  y505 383/489   mouth 0  lens 0  blush 0
 
 worst overhang: 0 px (gate <= 25)

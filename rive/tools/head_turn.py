@@ -93,8 +93,11 @@ def shell_z(x3: float, y: float) -> float:
     return HAIR_C[1] + HAIR_A[2] * math.sqrt(max(0.0, q))
 
 
-Z0 = [(330.0, 8.0), (366.0, 10.0), (396.0, 14.0), (428.0, 22.0), (458.0, 32.0), (476.0, 40.0), (490.0, 46.0),
-      (505.0, 54.0), (511.0, 58.0)]
+# critic round 3: the lower face is a volume that projects forward (the jaw sections' centres move
+# toward the chin's front), so at 3/4 the chin and the jaw line swing with the turn (the y 505 jaw
+# midpoint travels ~45 artboard px, was ~26) while the near jaw corner holds
+Z0 = [(330.0, 8.0), (366.0, 10.0), (396.0, 14.0), (428.0, 22.0), (458.0, 32.0), (476.0, 46.0), (490.0, 70.0),
+      (505.0, 84.0), (511.0, 88.0)]
 
 
 def _lerp(table: Sequence[tuple[float, float]], y: float) -> float:
@@ -120,6 +123,15 @@ SECTION_BACK_N = [(330.0, 2.0), (366.0, 2.0), (396.0, 2.0), (428.0, 2.8), (458.0
                   (490.0, 2.6), (505.0, 2.0)]
 
 
+# The far and near cheeks (critic round 3: the 3/4 turn slid the features over a face that kept its
+# shape). Storybook 3/4 is drawn, not measured: below the cheekbone the far cheek flattens (its
+# section loses FAR_FLAT of its width and depth at the far pose, so the far contour dips in under
+# the cheekbone and the nose tip breaks over it), and the near cheek fills out (the section gains
+# NEAR_FULL of its width at the near pose). Rest poses are unchanged; fit3 carries the in-betweens.
+FAR_FLAT = [(396.0, 0.0), (428.0, 0.237), (458.0, 0.326), (476.0, 0.15), (490.0, 0.15), (505.0, 0.0)]
+NEAR_FULL = [(366.0, 0.0), (396.0, 0.06), (428.0, 0.09), (458.0, 0.09), (476.0, 0.05), (490.0, 0.0)]
+
+
 def section(x: float, y: float, round_: bool = False) -> tuple[float, float, float, float, float]:
     """(w, z0, dd, n_front, n_back) of the right-side contour section through (x, y)."""
     w = x - CX
@@ -132,8 +144,10 @@ def section(x: float, y: float, round_: bool = False) -> tuple[float, float, flo
 def contour_pose(x: float, y: float) -> tuple[float, float]:
     """Right-side face contour x at yaw -1 (the near side) / +1 (the far side): the silhouettes of
     the section through (x, y). The left side mirrors it."""
-    sec = section(x, y)
-    return CX + r.section_silhouette(*sec, -K_YAW), CX + r.section_silhouette(*sec, K_YAW)
+    w, z0, dd, nf, nb = section(x, y)
+    q, g = _lerp(FAR_FLAT, y), _lerp(NEAR_FULL, y)
+    return (CX + r.section_silhouette(w * (1 + g), z0, dd, nf, nb, -K_YAW),
+            CX + r.section_silhouette(w * (1 - q), z0, dd * (1 - q), nf, nb, K_YAW))
 
 
 def ellipse_contour_pose(x: float, y: float) -> tuple[float, float]:
@@ -145,8 +159,10 @@ def ellipse_contour_pose(x: float, y: float) -> tuple[float, float]:
 # Features on ONE surface (M3): nose, mouth, chin, mole, cheeks and blush all take their depth from
 # surface_z (+ a relief for the nose tip and the lips), so the mouth leads with the nose and the
 # chin, instead of lagging behind them.
-NOSE_RELIEF = 24.0  # the nose tip stands off the face surface
-LIP_RELIEF = 6.0
+NOSE_RELIEF = 30.0  # the nose (bridge) stands off the face surface: it rides under the glasses' bridge
+NOSE_TIP_RELIEF = 56.0  # the nose tip stands further out (round 3: at 3/4 it breaks over the far cheek)
+LIP_RELIEF = 14.0  # the lips ride a little ahead of the chin (the mouth trails the nose by <= 15)
+CHIN_RELIEF = 8.0  # the chin's point stands off the jaw surface (it swings with the jaw sections)
 
 
 def face_z(x: float, y: float, relief: float = 0.0) -> float:
@@ -155,7 +171,11 @@ def face_z(x: float, y: float, relief: float = 0.0) -> float:
 
 MOUTH_Z = face_z(400.0, 478.0, LIP_RELIEF)
 NOSE_Z = face_z(400.0, 440.0, NOSE_RELIEF)
-CHIN_Z = face_z(400.0, 505.0)  # the chin's front, so the jaw outline's lowest point swings with it
+NOSE_TIP_Z = face_z(400.0, 440.0, NOSE_TIP_RELIEF)
+NOSE_SHADE_LEN = 42.0  # the nose shade's top (y 408) to the tip (y 450)
+NOSE_TIP_RIGHT = 6.0  # extra tip travel at yaw +1 (see nose_tip_and_mole)
+NOSE_SHADE_FOLLOW = 0.45  # share of the tip's extra travel the nose shade's bottom takes
+CHIN_Z = face_z(400.0, 505.0, CHIN_RELIEF)  # the chin's front: the jaw outline's lowest point swings with it
 
 
 def foreshorten(x: float, y: float, a: float) -> float:
@@ -184,6 +204,21 @@ def lens_ends(cx: float, a: float) -> tuple[float, float]:
     xin, xout = CX + sgn * 2, CX + sgn * 88
     return (CX + (xin - CX) * math.cos(a) + LENS_Z[0] * math.sin(a),
             CX + (xout - CX) * math.cos(a) + LENS_Z[1] * math.sin(a))
+
+
+def face_point(x: float, y: float, z: float) -> Poly:
+    """Shift poly of a mark on the face surface at (x, y), depth z, that rides the far cheek's
+    flattening and the near cheek's fullness (FAR_FLAT, NEAR_FULL): on the far pose its section is
+    scaled about the section centre like the contour's, on the near pose it moves out with the
+    widened section. Equal to `mat(x, z)` where both tables are 0."""
+    side = 1.0 if x >= CX else -1.0
+    q, g = _lerp(FAR_FLAT, y), _lerp(NEAR_FULL, y)
+    z0 = _lerp(Z0, y)
+    xx = x - CX
+    # far pose: yaw toward this side's sign; near: the other way
+    far = CX + xx * (1 - q) * math.cos(K_YAW) + side * (z0 + (z - z0) * (1 - q)) * math.sin(K_YAW)
+    near = CX + xx * (1 + g) * math.cos(K_YAW) - side * z * math.sin(K_YAW)
+    return poses(*((near, x, far) if side > 0 else (far, x, near)))
 
 
 def mat(x: float, z: float) -> Poly:
@@ -441,7 +476,7 @@ def far_cheek_shade(ht: HeadTurn, face: El, cheek_shade: El) -> list[El]:
                x=cx - HEAD_FRAME[0], y=y - HEAD_FRAME[1], name="FarCheekShade" + t)
         ht.head.children.insert(ht.head.children.index(cheek_shade), sh)
         ht.frames[id(sh)] = (cx, y)
-        w = ht.wrap(sh, (cx, y), mat(cx, face_z(cx, y)), pit(y, face_z(cx, y)))
+        w = ht.wrap(sh, (cx, y), face_point(cx, y, face_z(cx, y)), pit(y, face_z(cx, y)))
         w.add(ht.raw("yaw", "opacity", [f.val(0), f.op("+"), f.val(FAR_SHADE[3]), f.op("*"),
                                         *f.fn("max", [f.val(0)], [f.val(sgn), f.op("*"),
                                                                   *f.fn("min", [f.val(1)], f.inp())])]))
@@ -513,6 +548,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         else:
             ht.d.next += 1
     late_clips = [e for e in mouth_shapes if str(e.attrs.get("name")) not in clip_order]
+    # (round 3: the mole and the cheek blooms take `face_point` poses, rebound last: nose_tip_and_mole)
     ht.wrap(parts["Mole"], (456.0, 432.0), mat(456, face_z(456, 432)), pit(432, 80))  # type: ignore[arg-type]
     ht.wrap(parts["Blush"], (400.0, 440.0), mat(400, 90), pit(440, 90), sx=factor(0.82, 0.82))  # type: ignore[arg-type]
     for nm, x, y in (("CheekBloomL", 335.0, 437.0), ("CheekBloomR", 465.0, 437.0), ("ChinLight", 400.0, 499.0)):
@@ -577,7 +613,10 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
     ht.wrap(parts["HairCap"], (400.0, 277.0), crown_dx, pit(277, 40), sx=crown_sx)  # type: ignore[arg-type]
     ht.wrap(parts["HatSolo"], (400.0, 250.0), crown_dx, pit(250, 30), sx=crown_sx)  # type: ignore[arg-type]
     for t, x in (("L", 288.0), ("R", 512.0)):
-        ox = side((500.0, 512.0, 522.0), x) if x > CX else (2 * CX - 522.0, 288.0, 2 * CX - 500.0)
+        # critic round 3: on the near side the lock moves out over the ear's front (it slid onto the
+        # cheek and left the whole ear standing out); SIDE_LOCK_SWING then tucks its tip back in
+        near_x = 512.0 + SIDE_LOCK_NEAR_OUT
+        ox = (near_x, 512.0, 522.0) if x > CX else (2 * CX - 522.0, 288.0, 2 * CX - near_x)
         sc = side((1.0, 1.0, 0.38), x)
         ht.wrap(parts["SideLock" + t], (x, 398.0), poses(*ox), pit(398, 10), sx=factor(sc[0], sc[2]))  # type: ignore[arg-type]
         side_lock_lag(ht, parts["SideLock" + t], 1.0 if t == "R" else -1.0)  # type: ignore[arg-type]
@@ -637,7 +676,7 @@ def three_quarter(ht: HeadTurn, parts: dict[str, object]) -> None:
         dxi, sxi = {}, {}
         for a in (-K_YAW, K_YAW):
             so, do = r.eval_poly(outer_sx, a), r.eval_poly(outer_dx, a)
-            target = CX + (bx - CX) * math.cos(a) + z * math.sin(a)
+            target = bx + r.eval_poly(face_point(bx, BLUSH_Y, z), a)  # rides the far cheek's flattening
             dxi[a] = (target - CX - do) / so - bx + CX
             sxi[a] = foreshorten(bx, BLUSH_Y, a) / so
         ht.wrap(group, (bx, BLUSH_Y), fit3(dxi[-K_YAW], 0.0, dxi[K_YAW], K_YAW), sx=factor(sxi[-K_YAW], sxi[K_YAW]),
@@ -659,9 +698,75 @@ def three_quarter(ht: HeadTurn, parts: dict[str, object]) -> None:
         for el in named(ht.head, "Temple" + t):
             el.add(ht.d("DataBindContext", sourcePathIds=ht.path("yaw"), propertyKey=KEYS["opacity"],
                         converterId=conv.ref()))
+    nose_tip_and_mole(ht)
 
 
 TEMPLE_FADE = 3.0
+
+
+def rebind_x(ht: HeadTurn, target: El, dx: Poly) -> None:
+    """Point the yaw (x) bind of `target`'s pivot wrapper at a new shift poly (a chain minted now:
+    the wrapper and its bind keep their ids)."""
+    outer = ht.parent_of(ht.parent_of(target))
+    bind = next(c for c in outer.children if c.tag == "DataBindContext" and c.attrs.get("propertyKey") == KEYS["x"])
+    bind.attrs["converterId"] = ht.rig.chain(ht.rig.x_axis, r.poly_shift(dx, float(outer.attrs["x"]))).ref()
+
+
+def prune_converters(ht: HeadTurn) -> None:
+    """Drop the turn's converters nothing reads any more (rebound binds leave their old chains)."""
+    while True:
+        used: set[str] = set()
+        stack = [ht.root, *ht.rig.converters]
+        while stack:
+            e = stack.pop()
+            if "converterId" in e.attrs:
+                used.add(str(e.attrs["converterId"]))
+            stack.extend(e.children)
+        dead = [c for c in ht.rig.converters if c.ref() not in used]
+        if not dead:
+            return
+        ht.rig.converters[:] = [c for c in ht.rig.converters if c not in dead]
+        ht.rig._polys = {k: v for k, v in ht.rig._polys.items() if v not in dead}
+SIDE_LOCK_NEAR_OUT = 14.0  # art px the near side lock moves out at |yaw| 1 (over the ear's front)
+SIDE_LOCK_SWING = 0.2  # rad the near side lock swings its tip back toward the cheek about its root
+SIDE_LOCK_ROOT_Y = 330.0
+MOLE_FADE = (0.6, 0.9)  # yaw: the mole on the right cheek turns behind the nose (full .. gone)
+
+
+def nose_tip_and_mole(ht: HeadTurn) -> None:
+    """Critic round 3 (minted last, so no earlier head-turn id moves): the nose tip stands further
+    out than the bridge (NOSE_TIP_RELIEF vs NOSE_RELIEF), so at 3/4 it breaks over the flattened far
+    cheek while the bridge stays under the glasses' bridge: the nose line slides the extra depth, the
+    shade swings about its top to follow it. The mole on the right cheek fades out as that cheek
+    turns behind the nose (MOLE_FADE)."""
+    f = ht.rig.f
+    # the nose art is drawn turned a touch to the viewer's left (its nostril hooks left), so its right
+    # end needs NOSE_TIP_RIGHT more travel to break over the right cheek by as much as the hook does
+    # over the left one
+    dz = (NOSE_TIP_Z - NOSE_Z) * math.sin(K_YAW)
+    nose, shade = named(ht.head, "Nose")[0], named(ht.head, "NoseShade")[0]
+    tip = fit3(-dz, 0.0, dz + NOSE_TIP_RIGHT, K_YAW)
+    ht.wrap(nose, (400.0, 450.0), dx=tip, name="NoseTip")
+    # (y down: a clockwise turn by t moves the shade's bottom by -LEN sin t); the shade follows the
+    # tip only NOSE_SHADE_FOLLOW of the way, so it never crosses the far contour's shading band
+    k = NOSE_SHADE_FOLLOW / NOSE_SHADE_LEN
+    swing = fit3(math.asin(k * dz), 0.0, -math.asin(k * (dz + NOSE_TIP_RIGHT)), K_YAW)
+    ht.wrap(shade, (404.0, 408.0), rot=swing, name="NoseTipShade")
+    # the near side lock: its tip swings back toward the cheek (the ear's lower half shows below
+    # the hair, its top half stays under it); nothing on the far side or at rest
+    for t, sgn in (("R", 1.0), ("L", -1.0)):
+        lock = named(ht.head, "SideLock" + t)[0]
+        near = SIDE_LOCK_SWING * sgn  # R is near at yaw -1, L at +1
+        rot = fit3(near, 0.0, 0.0, K_YAW) if sgn > 0 else fit3(0.0, 0.0, near, K_YAW)
+        ht.wrap(lock, (CX + sgn * 100.0, SIDE_LOCK_ROOT_Y), rot=rot, name="SideLockTuck" + t)
+    lo, hi = MOLE_FADE
+    g = 1.0 / (hi - lo)
+    for nm, x, y in (("Mole", 456.0, 432.0), ("CheekBloomL", 335.0, 437.0), ("CheekBloomR", 465.0, 437.0)):
+        rebind_x(ht, named(ht.head, nm)[0], face_point(x, y, face_z(x, y)))
+    prune_converters(ht)
+    mole = named(ht.head, "Mole")[0]
+    mole.add(ht.raw("yaw", "opacity", f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [
+        f.val(1 + g * lo), f.op("-"), f.val(g), f.op("*"), *f.inp()]))))
 
 
 def _clamp(ht: HeadTurn, toks: list[El]) -> list[El]:

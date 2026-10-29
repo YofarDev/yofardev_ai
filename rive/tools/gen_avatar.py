@@ -832,7 +832,7 @@ def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: flo
     # a tapered clump ending in a soft point (critic round 2; art bible §3: no hard corner, no ball):
     # the tip is a StraightVertex with a radius of 24 % of the width at its shoulders
     # (kit.lock_outline). Same vertex count as the M2 spike, so no later id moves.
-    pts, at = kit.lock_outline(root_, tip, w, bend)
+    pts, at = kit.lock_outline(root_, tip, w, bend, kit.FRINGE_FLICK.get(int(name[4:]), 0.0))
     ln = math.hypot(tip[0] - root_[0], tip[1] - root_[1])
     base = S(head, name, pts, grad([(HAIR_HI, 0.0), (HAIR, 0.55), (HAIR_SH, 1.0)], -ln / 2, ln / 2), L(HAIR_SH, 1.5))
     # Separate tapered ribbons, clipped to each lock, give the hair a satin
@@ -2034,6 +2034,8 @@ face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "FF8E4A
 face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
 face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0), (swing_r.el, swing_l.el))
 face_rig.rig_chin(face_au, head.el, skin_details[2])
+for e in EYES:  # critic round 3: the lid crease shows only with raised brows, and tapers
+    face_rig.rig_crease(face_au, e, e["cx"], e["s"])
 
 # ================================================================ HEAD TURN (yaw / pitch)
 # The head art above follows AvatarVM `yaw` / `pitch` on one surface model (rive/tools/head_turn.py):
