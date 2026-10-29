@@ -187,3 +187,7 @@ same structural areas M2 left open lower), so the M2 and M3 numbers are not on o
 face 6.8 → 6.8 → 7.2 → 7.2, speech 6.5 → 6.6 → 6.9 → 7.2. Round 4's fixes were not started; its
 issues above are the open list (top: the yaw ±1 shape, the jaw collapsing between vowels, mouth
 construction). Critics disagreed across rounds on the fringe tips and the brow beat density.
+
+## M4 self-checks (ruling 17: one line per asset or acting change, no critic rounds)
+
+- 2026-10-29 · Task 1 key decimation · avatar.riv 607,684 → 545,036 B · objective check: no pops, clipping or broken shapes in the before/after captures; edge shifts are sub-pixel (worst gesture frame 0.27 % px > 16/255 at 360 px, the walk-in 1.6 %), walk-in starts on the same frame as v6 · evidence `rive/review/m4/budget/`.

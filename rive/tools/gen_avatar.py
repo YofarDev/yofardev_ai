@@ -1891,7 +1891,14 @@ P_ON = A("presence_onScreen", 1, [K(root, x=ON_X, y=1000.0), *still()])
 P_OFF = A("presence_outOfScreen", 1, [K(root, x=OFF_X, y=1000.0), *still()])
 P_WALK_OUT = A("presence_walkOut", 96, walk_tracks(96, [(0, 80, ON_X, OFF_X)]))
 P_WALK_IN = A("presence_walkIn", 96, walk_tracks(96, [(0, 80, OFF_X, ON_X)]))
-P_LEAVE = A("presence_leaveAndComeBack", 216, walk_tracks(216, [(0, 80, ON_X, OFF_X), (120, 200, OFF_X, ON_X)]))
+# (M4 ruling 1) leaveAndComeBack chains walkOut -> walkIn on exit time in the Presence layer instead of
+# a third baked walk. The v6 timeline is still minted (and dropped) so every later id stays unchanged.
+walk_tracks(216, [(0, 80, ON_X, OFF_X), (120, 200, OFF_X, ON_X)])
+d("LinearAnimation", name="presence_leaveAndComeBack")
+# the walk back starts where v6's did, 120 frames (2,000 ms) after the walk out began: the exit is
+# checked once per frame, so any value in (1,983.3, 2,000) ms switches on frame 120 (2,000 itself
+# can miss it by a float hair and lose a frame); the middle of that window is robust
+LEAVE_OFF_MS = 1992
 
 # ================================================================ EVENTS + STATE MACHINE
 
@@ -1974,7 +1981,7 @@ ps_on = st(P_ON, 0)
 ps_off = st(P_OFF, 1)
 ps_wout = st(P_WALK_OUT, 2, row=1)
 ps_win = st(P_WALK_IN, 3, row=1)
-ps_leave = st(P_LEAVE, 4, row=1)
+ps_leave = st(P_WALK_OUT, 4, row=1)
 ps_back = st(P_ON, 5)            # "returned" — on screen, waiting for presence to change
 
 
@@ -1992,12 +1999,20 @@ ps_off.add(go(ps_win, enum_is("presence", "onScreen")), go(ps_leave_in := st(P_W
                                                           enum_is("presence", "leaveAndComeBack")))
 ps_wout.add(*after(ps_off, EV_PRESENCE["outOfScreen"]))
 ps_win.add(*after(ps_on, EV_PRESENCE["onScreen"]))
-ps_leave.add(*after(ps_back, EV_PRESENCE["leaveAndComeBack"]))
+after(ps_back, EV_PRESENCE["leaveAndComeBack"])  # v6's walk-out exit, minted and dropped (ids stay)
+# M4: elements added here take their own id range (no earlier id moves)
+M4 = Doc(client=0, start=kit.M4_ID_START)
+ps_leave_back = M4("AnimationState", animationId=P_WALK_IN.ref(), x=800.0, y=220.0)
+ps_leave.add(M4("StateTransition", stateToId=ps_leave_back.ref(), enableExitTime=True,
+                exitTimeIsPercetange=False, exitTime=LEAVE_OFF_MS))
+ps_leave_back.add(M4("StateMachineFireEvent", eventId=EV_PRESENCE["leaveAndComeBack"].ref(), occursValue="atEnd"),
+                  M4("StateTransition", stateToId=ps_back.ref(), enableExitTime=True, exitTimeIsPercetange=True,
+                     exitTime=100))
 ps_leave_in.add(*after(ps_back, EV_PRESENCE["leaveAndComeBack"]))
 ps_back.add(go(ps_wout, enum_is("presence", "outOfScreen")), go(ps_on, enum_is("presence", "onScreen")))
 layers.append(layer("Presence",
                     [go(ps_off, enum_is("presence", "outOfScreen")), go(ps_on)],
-                    [ps_on, ps_off, ps_wout, ps_win, ps_leave, ps_back, ps_leave_in]))
+                    [ps_on, ps_off, ps_wout, ps_win, ps_leave, ps_back, ps_leave_in, ps_leave_back]))
 
 # eye-follow + tap listeners
 look_handle = d("Node", x=400.0, y=420.0, name="LookHandle")
