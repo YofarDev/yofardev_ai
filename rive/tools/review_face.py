@@ -73,6 +73,21 @@ def cli(png: Path, data: dict[str, str], advance: int, blink_at: int | None = No
     return png
 
 
+def gif_durations(n: int, fps: int) -> list[int]:
+    """Per-frame GIF delays (ms) for [n] frames at [fps]: GIF stores whole centiseconds, so the
+    delays follow the ideal clock rounded to 10 ms (30/30/40 at 30 fps) and every second of
+    frames lasts exactly 1000 ms."""
+    def at(k: int) -> int:
+        return int(round(k * 100 / fps)) * 10
+    return [at(k + 1) - at(k) for k in range(n)]
+
+
+def save_gif(frames: list[Image.Image], out: Path, fps: int) -> None:
+    """[frames] as a looping GIF playing at [fps] (see [gif_durations])."""
+    frames[0].save(out, save_all=True, append_images=frames[1:], duration=gif_durations(len(frames), fps),
+                   loop=0, optimize=True)
+
+
 def frame_data(f: dict, mood: str | None = None) -> dict[str, str]:
     d = {f"au{k[0].upper()}{k[1:]}": f"{v:.4f}" for k, v in f["au"].items()}
     # contract v6 per-side offsets (viewer's left / right), when the trace has them
@@ -449,8 +464,7 @@ def speech(name: str) -> None:
         ms = sp * 1000
         label(c, "", f"t {frames[i]['t']:.2f}s", f"{at(ms) if sp >= 0 else 'idle'} {mark_near(ms) if sp >= 0 else ''}")
     OUT.mkdir(parents=True, exist_ok=True)
-    cells[0].save(OUT / f"speech_{name}.gif", save_all=True, append_images=cells[1:], duration=33, loop=0,
-                  optimize=True)
+    save_gif(cells, OUT / f"speech_{name}.gif", 30)
     # contact strip: every 2nd rendered frame (15 fps) during speech, face crop, each cell labelled
     # with its time and the viseme (and any mark) under it
     face = []

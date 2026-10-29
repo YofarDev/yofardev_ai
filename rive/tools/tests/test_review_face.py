@@ -152,3 +152,29 @@ def test_timing_chart_has_a_lane_per_curve(tmp_path: Path, monkeypatch: pytest.M
     out = review_face.timing("zz_no_such_trace", tr, [])
     im = Image.open(out)
     assert im.size == (1800, 90 + 30 + 46 * len(review_face.timing_curves()) + 20)
+
+
+def test_gif_durations_play_at_30_fps_in_centiseconds() -> None:
+    # GIF delays are whole centiseconds: 33 ms rounds to 30 ms (a 10 % fast GIF); the delays
+    # alternate 30/30/40 ms instead, so every second of frames lasts exactly 1000 ms
+    d = review_face.gif_durations(90, 30)
+    assert len(d) == 90
+    assert all(ms % 10 == 0 and ms in (30, 40) for ms in d)
+    assert sum(d[:30]) == 1000 and sum(d) == 3000
+    # never more than 10 ms off the ideal clock
+    clock = 0
+    for k, ms in enumerate(d):
+        clock += ms
+        assert abs(clock - (k + 1) * 1000 / 30) < 10
+
+
+def test_saved_gif_carries_the_30_fps_delays(tmp_path: Path) -> None:
+    frames = [Image.new("RGB", (8, 8), (10 * k, 0, 0)) for k in range(6)]
+    out = tmp_path / "x.gif"
+    review_face.save_gif(frames, out, 30)
+    im = Image.open(out)
+    got = []
+    for k in range(6):
+        im.seek(k)
+        got.append(im.info["duration"])
+    assert sum(got) == 200
