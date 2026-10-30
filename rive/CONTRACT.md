@@ -1,4 +1,4 @@
-# Rive contract (v9)
+# Rive contract (v10)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -121,6 +121,11 @@ One file per scene. The app loads them lazily.
     bind it (rain streaks, wet ground, steam off the campfire logs, streaks on the living-room
     window); deepSpace ignores it. The app writes it from its world state. The `rain` events stay
     one-shot showers on top.
+  - `daylight`, `dusk`: numbers, 0–1, default 0 (v10): the time of day, written by the app from
+    its world clock. daylight 0 is night and 1 full day; dusk peaks at 1 at sunrise and at sunset
+    and is 0 an hour away from them. livingRoom (the window's sky, the skyline's lit windows off by
+    day), campfire (the sky and the stars) and beach (the sky and the sun's glow) bind them;
+    deepSpace ignores them. At 0 / 0 a scene looks exactly as it did before v10 (night).
 - **Rive event emitted:** `prop_tapped`, with `propId`: string.
 - **Front artboard (v9, optional):** a scene file may carry a second artboard `SceneFront`,
   1080×1920 like `Scene`, with a state machine `Main` and the same view model `SceneVM`. It holds
@@ -144,6 +149,7 @@ One file per scene. The app loads them lazily.
 - Vector only. No embedded raster images.
 - Keep blur, feather and mesh deformation to a minimum.
 - `avatar.riv` must stay at or under 600 KB, and each scene at or under 400 KB.
+- `journey.riv` (v10) must stay at or under 160 KB.
 - The avatar plus one scene must run with no visible stutter on a CPU-throttled Android
   emulator.
 - `ui_kit.riv` must stay at or under 150 KB. At most one UI-kit artboard animates continuously
@@ -202,3 +208,33 @@ several artboards. The app loads it lazily, once, and creates one controller per
 **Scene posters:** `assets/rive/posters/<sceneId>.webp`, one per scene in the table above,
 540×960, at most 40 KB each. Rendered from the scene file's rest pose, with no avatar. Used by
 History rows and the Customize sheet.
+
+## `assets/rive/journeys/journey.riv`
+
+v10: the threshold of a scene journey (door, path, portal or rocket), drawn while the avatar
+walks from one scene to the next. The app loads the file when a journey starts and disposes it when
+the journey ends.
+
+- **Artboard:** `Journey`, 800×1000: the avatar's artboard size. The app draws it with the
+  avatar's fit (contain, bottom-centre), above the avatar and below the scene's `SceneFront`.
+  The ground line is y 1000, like the avatar's feet.
+- **State machine:** `Main`.
+- **View model:** `JourneyVM`.
+- **Threshold:** x 640 in artboard space. During a journey the app clips the avatar right of it,
+  so the avatar disappears into (and comes out of) the threshold. Each threshold's occluding part
+  covers x ≥ 640 from y 200 to the ground while it is open.
+- No listeners and no events. At every number 0 the artboard draws nothing.
+
+| JourneyVM property | Type | Values / range |
+|---|---|---|
+| `door` | number | 0–1, default 0: how much of the storybook door shows (it fades and grows in). |
+| `path` | number | 0–1, default 0: how much of the path's near ferns and signpost shows. |
+| `portal` | number | 0–1, default 0: how much of the portal ring shows (it grows from a point). |
+| `rocket` | number | 0–1, default 0: how much of the little rocket shows. |
+| `open` | number | 0–1, default 0: the shown threshold opens: the door leaf swings open on its right hinge, the ferns part, the ring's aperture opens, the rocket's hatch opens. |
+| `lift` | number | 0–1, default 0: the rocket's height off the ground, with its flame; 1 is out of frame at the top. The other thresholds ignore it. |
+| `lightKey` | color | the current scene's key light colour (rim and glow). Default `FFFFD49A`. |
+| `lightAmbient` | color | the current scene's ambient colour (the shadow side). Default `FF2C3346`. |
+
+The app shows one threshold at a time (the other three numbers stay 0).
+
