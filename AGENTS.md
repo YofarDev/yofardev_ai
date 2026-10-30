@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -185,6 +185,22 @@ on violation.
   970000. Props share one put-away (~420 ms): the director holds gestures until it ends.
   Emulator frame cost: `integration_test/frame_cost_test.dart` (`flutter drive --profile -d
   <emulator>`; never the physical phone). Evidence index: `rive/review/m5/README.md`
+- Weather in front, wow captures, gates (contract v9, moonshot M6): a scene file may carry a second
+  artboard `SceneFront` (campfire and beach: near rain sheet, splashes, `lightFog` rain mist, all at
+  opacity `rain`, ids from `gen_scenes.M6_ID_START = 950000`). `RiveSceneView` takes the avatar as
+  `middle` and draws `SceneFront` above it, under `IgnorePointer`, only while rain > 0 (created
+  from the already-loaded file; `SceneFrontFollower` holds the Rive-free logic); the UI lab keeps
+  its avatar across scene layers with a `GlobalKey`. `./scripts/frive.sh` now ends with the
+  objective gates (`rive/tools/rive_gates.py`: parallax, pointer proofs, rain, front layer per built
+  scene, ~2 min each; `FRIVE_GATES=all` adds the ~23 min tablet/newspaper prop gates, run them after
+  any avatar prop or gesture change; `FRIVE_GATES=0` skips). The wows are captured from the running
+  macOS app by `integration_test/wow_capture_test.dart` (`--dart-define=WOW=wow1|wow2`, not in
+  `fverify.sh`): in-memory prefs, no network, the debug `FakeLlmService` (tool rounds via
+  `FakeLlmResponse.toolCalls`; no title call while a script plays), a canned weather tool and macOS
+  `say` through `setupServiceLocator(ttsSynthesizer:, tools:)` (null in production); assembled by
+  `uv run --with pillow --with numpy rive/tools/wow_capture.py <WOW_DIR> rive/review/m6/wow` (GIF,
+  MP4 with sound, beats, gates). Never add a real LLM call to the harness. Evidence index:
+  `rive/review/m6/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -250,4 +266,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-29 (M5)
+**Last Updated**: 2026-10-30 (M6)
