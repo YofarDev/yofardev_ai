@@ -64,17 +64,23 @@ def parse_contract() -> dict:
         values = None
         if typ == "enum":
             vals = re.sub(r"\(.*?\)", "", vals)          # drop notes like "(same as `TalkingPhase`)"
+            vals = re.sub(r"\*\*[^*]*\*\*", "", vals)       # v11: "**v11 (appended):**" before appended values
+            vals = re.sub(r"^\s*v\d+b?:\s*", "", vals)      # v11: a row that starts "v11: none, ..."
             values = [v.strip() for v in vals.split(". ")[0].rstrip(".").split(",")]
         props[name] = (typ, values)
     c["avatar_props"] = props
     events = {}
+    event_values = {}
     for ev, ps in table_after(avatar_sec, r"\*\*Rive events emitted:\*\*"):
         events[ticks(ev)[0]] = ticks(ps)[0]
+        event_values[ticks(ev)[0]] = list(dict.fromkeys(ticks(re.sub(r"\(.*?\)", "", ps))[1:]))  # v11: foley kinds
     c["avatar_events"] = events
+    c["avatar_event_values"] = event_values
     c["scene_artboard"] = ticks(re.search(r"\*\*Artboard:\*\*.*", scene_sec).group(0))[0]
     c["scene_sm"] = ticks(re.search(r"\*\*State machine:\*\*.*", scene_sec).group(0))[0]
     c["scene_vm"] = ticks(re.search(r"\*\*View model:\*\*.*", scene_sec).group(0))[0]
     c["scene_vm_props"] = scene_vm_props(scene_sec)
+    c["scene_npc_values"] = scene_npc_values(scene_sec)   # v11
     c["scene_event_name"], c["scene_event_prop"] = ticks(re.search(r"\*\*Rive event emitted:\*\*.*", scene_sec).group(0))[:2]
     scenes = {}
     for sid, evs, pids in table_after(scene_sec, r"^\| sceneId"):
@@ -111,28 +117,35 @@ def parse_contract() -> dict:
 
 
 def scene_vm_props(scene_sec: str) -> dict[str, str]:
-    """The SceneVM bullets: `eventId` (enum), `event` (trigger), then every v7 number / colour. A
-    bullet lists names in backticks; a "(type)" or ": type" after a run of names types that run."""
+    """The SceneVM bullets: `eventId` (enum), `event` (trigger), then every v7+ number / colour / enum.
+    A bullet that opens with names and `: type` types those names; inside a bullet, a run of names
+    followed by "(type)" types that run. Names mentioned later in a bullet's prose are not typed by it
+    (v11: the `npc` bullet mentions `npcLook` and `npcX`, typed by their own bullets)."""
     vm_at = scene_sec.index("**View model:**")
     bullets = scene_sec[vm_at:scene_sec.index("**Rive event emitted:**")]
     props: dict[str, str] = {}
     for item in re.split(r"\n\s*- ", bullets)[1:]:
         item = " ".join(item.split())
+        lead = re.match(r"((?:`[a-z]\w*`(?:,\s*)?)+):\s*(enum|trigger|numbers?|colors?)\b", item)
+        if lead:
+            for n in re.findall(r"`([a-z]\w*)`", lead.group(1)):
+                props.setdefault(n, lead.group(2).rstrip("s"))
+            continue
         pending: list[str] = []
-        for m in re.finditer(r"`([a-z]\w*)`|\((color|colors|number|numbers|enum|trigger)\)|^[^:]*?:\s*(enum|trigger|number|color)", item):
-            name, typ = m.group(1), m.group(2) or m.group(3)
-            if name:
-                pending.append(name)
-            elif typ and pending:
+        for m in re.finditer(r"`([a-z]\w*)`|\((color|colors|number|numbers|enum|trigger)\)", item):
+            if m.group(1):
+                pending.append(m.group(1))
+            else:
                 for n in pending:
-                    props[n] = typ.rstrip("s")
+                    props.setdefault(n, m.group(2).rstrip("s"))
                 pending = []
-        if pending and not props.keys() >= set(pending):
-            head = re.search(r":\s*(enum|trigger|number|color)", item)
-            for n in pending:
-                if head and n not in props:
-                    props[n] = head.group(1)
     return props
+
+
+def scene_npc_values(scene_sec: str) -> list[str]:
+    """v11: the `npc` enum's values, in contract order ("`npc`: enum, away, rest, ...; default rest")."""
+    m = re.search(r"`npc`: enum, ([^;]+);", " ".join(scene_sec.split()))
+    return [v.strip() for v in m.group(1).split(",")] if m else []
 
 
 def inspect(project: Path) -> dict:
@@ -421,7 +434,8 @@ def main() -> int:
         # every enum value that an event reports must be covered
         cover = {"gesture_done": ("gestureId", c["avatar_props"]["gestureId"][1]),
                  "presence_done": ("presence", c["avatar_props"]["presence"][1]),
-                 "avatar_tapped": ("zone", ["head", "body"])}
+                 "avatar_tapped": ("zone", ["head", "body"]),
+                 "foley": ("kind", c["avatar_event_values"].get("foley", []))}
         for ev, (prop, vals) in cover.items():
             seen = {p.get(prop) for p in evs.get(ev, [])}
             if set(vals) != seen:
@@ -438,10 +452,20 @@ def main() -> int:
         ab, vm = check_common(sid, j, c["scene_artboard"], c["scene_sm"], c["scene_vm"])
         if vm:
             got = vm_props(j, vm)
-            want = {n: (TYPE_OF[t], ev_vals if n == "eventId" else None) for n, t in c["scene_vm_props"].items()}
+            want = {n: (TYPE_OF[t], ev_vals if n == "eventId" else c["scene_npc_values"] if n == "npc" else None)
+                    for n, t in c["scene_vm_props"].items()}
             if got != want:
                 err(f"{sid}: SceneVM {got} != {want}")
-            check_light_defaults(sid, j, vm, {**scene_light_defaults(sid), "rain": 0.0, "daylight": 0.0, "dusk": 0.0})
+            check_light_defaults(sid, j, vm, {**scene_light_defaults(sid), "rain": 0.0, "daylight": 0.0, "dusk": 0.0,
+                                              "fog": 0.0, "npcX": 0.0, "npcLook": 0.0})
+            # v11: `npc` defaults to rest (the v10 look)
+            keys = {v["id"]: v["key"] for e in nodes(j["roots"], "DataEnumCustom") for v in e.get("children", [])
+                    if v.get("type") == "DataEnumValue"}
+            npc_p = next((p["id"] for p in vm.get("children", []) if p.get("name") == "npc"), None)
+            dflt = [keys.get(v.get("propertyValue")) for v in nodes(vm, "ViewModelInstanceEnum")
+                    if v.get("viewModelPropertyId") == npc_p]
+            if dflt != ["rest"]:
+                err(f"{sid}: `npc` default {dflt} != ['rest']")
         if ab:
             evs = events_of(ab)
             if set(evs) != {c["scene_event_name"]}:

@@ -22,6 +22,7 @@ from avatar_kit import (BEANIE, BEANIE_HI, BEANIE_SH, FRAME, HAIR, HAIR_HI, HAIR
                         TEETH, TONGUE, WHITE, E, F, L, L1, L2, R, Rig, S, clip_only, d, grad, group, hgrad, ik, mirror,
                         rgrad, vgrad)
 from rml import Doc, El, lin, rad, smooth_path, solid, track, write  # noqa: E402
+from motion_synth import Beat, action  # noqa: E402
 from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
 import avatar_kit as kit  # noqa: E402
 import head_turn  # noqa: E402
@@ -30,6 +31,8 @@ import face_rig  # noqa: E402
 import arm_rig  # noqa: E402
 import avatar_light  # noqa: E402
 import avatar_tablet  # noqa: E402
+import hand_rig  # noqa: E402
+import jacket_art  # noqa: E402
 from face_rig import NUMBERS as FACE_NUMBERS  # noqa: E402
 
 
@@ -48,6 +51,10 @@ rnd = random.Random(42)
 EASE = d("CubicEaseInterpolator", x1=0.42, y1=0.0, x2=0.58, y2=1.0)
 EASE_OUT = d("CubicEaseInterpolator", x1=0.18, y1=0.7, x2=0.35, y2=1.0)
 EASE_IN = d("CubicEaseInterpolator", x1=0.6, y1=0.0, x2=0.85, y2=0.45)
+# moonshot M8: every element added in M8 takes this id range (the hands' pivots are minted while the arms are
+# built; the rest at the end of the file), so no earlier id moves
+M8 = Doc(client=0, start=kit.M8_ID_START)
+M8A = Doc(client=0, start=kit.M8_ARM_ID_START)  # arm_rig's elements inside the M8 block
 
 # ================================================================ RIG
 root = Rig("Root", 400, 1000)              # presence walks this
@@ -308,6 +315,7 @@ def build_arm(rig: Rig, side: int) -> dict:
     skin_solo = hand_wave.solo("HandSkin")      # bare hand or costume glove (Top/Costume layers)
     skins: dict[str, El] = {}
     pose_sets: list[tuple[Rig, dict[str, El]]] = []
+    drive = hand_rig.drivers(M8, side, (hand_wave.ax, hand_wave.ay))  # M8: one driver set per hand
     for skin, cols in HAND_SKINS.items():
         HC.update(zip(("fill", "shade", "line", "ink"), cols))
         pose_solo = Rig("HandPose", hand_wave.ax, hand_wave.ay, tag="Solo")
@@ -324,9 +332,10 @@ def build_arm(rig: Rig, side: int) -> dict:
                     value = WX + (x - WX) * thumb
                     return 800 - value if side == 1 else value
                 glove_light = {"black": "FF77879F", "metal": "FFDFEDF5", "white": "FFB5C1CC"}[skin]
+                k = 0.82 if name == "up" else 1.0  # M8 review: the `up` hand's shorter fingers carry their seams
                 for i, x in enumerate((217, 232, 248, 263)):
                     g.children.insert(0, S(hand_wave, f"GloveFingerSeam{i}",
-                        [(glove_x(x - 2), WY + 68), (glove_x(x - 2), WY + 83 + i % 2 * 6)],
+                        [(glove_x(x - 2), WY + 68 * k), (glove_x(x - 2), WY + (83 + i % 2 * 6) * k)],
                         L(glove_light, 1.3 if skin == "white" else 1.8), closed=False))
                 if name in ("rest", "back"):
                     for i, x in enumerate((219, 235, 251)):
@@ -335,6 +344,11 @@ def build_arm(rig: Rig, side: int) -> dict:
                             L(glove_light, 1.5), closed=False))
             pose_solo.add(g)
             poses[name] = g
+        # M8 (ruling 2): `back` is the `rest` drawing (the same hand_open call): minted, so every id stays, but
+        # dropped from the tree; every key that picked it now picks `rest`
+        pose_solo.el.children.remove(poses["back"])
+        poses["back"] = poses["rest"]
+        hand_rig.articulate(M8, poses["rest"], side, (hand_wave.ax, hand_wave.ay), drive)
         pose_solo.el.attrs["activeComponentId"] = poses["rest"].ref()
         sk = group("Skin_" + skin, pose_solo.el)
         skin_solo.add(sk)
@@ -342,6 +356,7 @@ def build_arm(rig: Rig, side: int) -> dict:
         pose_sets.append((pose_solo, poses))
     HC.update(zip(("fill", "shade", "line", "ink"), HAND_SKINS["skin"]))
     skin_solo.el.attrs["activeComponentId"] = skins["skin"].ref()
+    hand_wave.el.add(*drive.values())
     up_solo, fore_solo, ups, fores = build_sleeves(rig, elbow, side)
     up_art.el.children = [up_solo.el]
     rig.el.children.remove(up_solo.el)
@@ -350,7 +365,7 @@ def build_arm(rig: Rig, side: int) -> dict:
     elbow.el.children = []
     arm = {"arm": rig, "elbow": elbow, "hand": hand, "wave": hand_wave, "up_solo": up_solo, "up_art": up_art,
            "fore_art": fore_art, "pose_sets": pose_sets, "skin_solo": skin_solo, "skins": skins,
-           "fore_solo": fore_solo, "ups": ups, "fores": fores}
+           "fore_solo": fore_solo, "ups": ups, "fores": fores, "drive": drive}
     arm_rig.rig_arm(arm, side)
     return arm
 
@@ -1137,7 +1152,7 @@ cloth_parts.append(Cloth(cape_life, cape_response, 1.35, 0.8, 0.009))
 CONTRACT_ENUMS = {
     "Mood": ["neutral", "happy", "sad", "angry", "surprised", "thinking", "embarrassed"],
     "Phase": ["idle", "waiting", "generating", "speaking", "error"],
-    "GestureId": ["wave", "laugh", "facepalm", "shrug", "nod", "headshake", "clap", "think"],
+    "GestureId": ["wave", "laugh", "facepalm", "shrug", "nod", "headshake", "clap", "think"],  # + M8's three (end)
     "Hat": HAT_IDS,
     "Top": TOP_IDS,
     "Glasses": ["glasses", "sunglasses"],
@@ -1730,13 +1745,15 @@ def channel_at(keys: list[tuple[float, float]], frame: float) -> float:
     return keys[-1][1]
 
 
-for animation in G.values():
+def rest_arms(animation: El) -> None:
     keyed = {t.attrs["objectId"] for t in animation.children}
     for a in ARMS:
         if a["target"].ref() not in keyed:      # e.g. laugh, nod: the arm hangs at rest, history-free
             animation.add(*arm_rig.rest_tracks(a))
 
-for animation in G.values():
+
+def follow_through(animation: El) -> None:
+    """Hair springs and cloth trail the head and torso of one gesture."""
     duration = int(animation.attrs["duration"])
     turns, rises = head_channel(animation, "rotation"), head_channel(animation, "y")
     for spring, delay, strength in ((hair_follow, 4, 0.65), (back_follow, 6, 0.48), (tuft_follow, 5, 1.15)):
@@ -1758,6 +1775,12 @@ for animation in G.values():
                 impulse += 0.025 * math.sin(f * 0.23 + part.phase) * math.sin(math.pi * f / duration)
             keys.append((f, impulse * part.strength * min(1.0, (duration - f) / 10), "linear"))
         animation.add(T(part.response, ease=None, rotation=keys))
+
+
+for animation in G.values():
+    rest_arms(animation)
+for animation in G.values():
+    follow_through(animation)
 
 # ---- wardrobe switches
 hat_hair = {"noHat": (1, 1, 1), "beanie": (1, 1, 0), "backwardsCap": (1, 1, 0), "frenchBeret": (1, 1, 0),
@@ -2141,9 +2164,185 @@ paper_anims = paper.animations({-1: ARM_R, 1: ARM_L}, with_none=False)
 artboard.children.extend(paper_anims.values())
 paper.extend_layer(prop_layer, tablet.states, paper_anims)
 
+# ================================================================ M8 (contract v11)
+# Hands' poses (hand_rig.py), three gestures, ... all minted in the M8 id range: kit.minting lends it to the main
+# document (and arm_rig's to its own), so the helpers above build them unchanged and no earlier id moves.
+HOOK = (628.0, 560.0)          # contract v11 hook point: the journey door's peg (both artboards share the frame)
+GRAB_CONTACT = 23              # 380 ms at 60 fps: the hand closes on the peg / the collar
+GRAB_FRAMES = 54               # 900 ms
+GRAB_FINGER = -60.0            # the fingers reach up and out to the peg (world degrees, y down)
+GRAB_FS = (0.62, 0.55)         # the arm reaches toward the viewer a little (the door stands in front)
+GRAB_WRIST = (HOOK[0] - hand_rig.GRIP_REACH * math.cos(math.radians(GRAB_FINGER)),
+              HOOK[1] - hand_rig.GRIP_REACH * math.sin(math.radians(GRAB_FINGER)))
+COUNT_STEP = 25                # ~420 ms per number
+M8_TARGET_TOL, M8_HAND_TOL = 2.0, 0.045  # px / rad: the new gestures' arc keys (a pixel or two at the hand)
+
+
+def drive_tracks(side: int, keys: list) -> list[El]:
+    """The hand's digit drivers through [(frame, pose)] (hand_rig.HAND_POSE_DRIVERS names or blends)."""
+    return hand_rig.pose_tracks(d, ARMS[0 if side == -1 else 1]["drive"], side, keys, EASE)
+
+
+def pose_beat(start: int, frames: int, a: str, b: str) -> list:
+    """motion_synth.action on the blend from pose a to b: the digits overshoot and settle (the anticipation and
+    the counter-swing are dropped: on a 6-frame finger pop they are a pixel, and each costs a key per digit)."""
+    keys = action(Beat(start, frames, 0.0, 1.0))
+    return [(f, hand_rig.mix(a, b, t)) for f, t, _ in (keys[0], keys[2], keys[-1])]
+
+
+with kit.minting(d, M8), kit.minting(arm_rig.AD, M8A):
+    G8: dict[str, El] = {}
+    up_l = (0.8, 0.5)  # a raised arm's foreshortening (one level, so the chain lengths key few frames)
+    # thumbsUp: the viewer's-left hand rises in front of the chest, fingers toward the body so the thumb
+    # stands up: an overshooting lift and a settle, then down (the hands' dips and settles under the frame's
+    # bottom edge are left out: nobody sees them, and every pose costs keys)
+    G8["thumbsUp"] = A("gesture_thumbsUp", 84, [
+        *arm_keys(-1, [(0, None, 90), (13, (262, 930), 50, *up_l), (20, (296, 808), -8, *up_l),
+                       (24, (300, 794), -4, *up_l), (30, (299, 802), 0, *up_l), (60, (300, 800), 0, *up_l),
+                       (68, (262, 930), 50, *up_l), (84, None, 90)]),
+        *drive_tracks(-1, [(0, "rest"), (9, "rest"), (17, "thumbsUp"), (62, "thumbsUp"), (71, "rest"),
+                           (84, "rest")]),
+        T(head_g, y=[(20, 0.0), (27, 5.0), (35, -1.5), (42, 0.0)]),  # a nod with the thumb (0 before / after)
+    ])
+    # count: the viewer's-right hand comes up beside the shoulder, fingers up, and counts one, two, three
+    # (index, + middle, + ring) a number every COUNT_STEP frames, each finger popping up with an overshoot
+    # and the head nodding the beat; authored on the left side and mirrored
+    up = (0.8, 0.95)
+    count_l = [(0, None, 90), (13, (214, 880), 20, *up), (19, (178, 704), -70, *up), (23, (170, 638), -84, *up),
+               (28, (172, 648), -80, *up), (96, (172, 646), -80, *up), (104, (204, 830), 20, *up), (120, None, 90)]
+    count_drive = [(0, "rest"), (8, "rest"), (17, "fist"), *pose_beat(20, 6, "fist", "one"),
+                   *pose_beat(20 + COUNT_STEP, 6, "one", "two"), *pose_beat(20 + 2 * COUNT_STEP, 6, "two", "three"),
+                   (96, "three"), (108, "rest"), (120, "rest")]
+    G8["count"] = A("gesture_count", 120, [
+        *arm_keys(1, mirror_poses(count_l)),
+        *drive_tracks(1, count_drive),
+        T(head_g, y=[(f, v) for k in range(3) for f, v in  # a nod per number (0 before / after)
+                     ((20 + k * COUNT_STEP, 0.0), (23 + k * COUNT_STEP, 3.0), (28 + k * COUNT_STEP, 0.0))]),
+    ])
+    # grab: the viewer's-right hand reaches up to the hook, opens, closes to `grip` on the peg at GRAB_CONTACT,
+    # tugs it off (a small lift: the return's anticipation) and swings back to the side
+    w = GRAB_WRIST
+    G8["grab"] = A("gesture_grab", GRAB_FRAMES, [
+        *arm_keys(1, [(0, None, 90), (12, (604, 870), 20, *GRAB_FS),
+                      (18, (w[0] - 4, w[1] + 18), GRAB_FINGER + 6, *GRAB_FS), (21, w, GRAB_FINGER, *GRAB_FS),
+                      (25, w, GRAB_FINGER, *GRAB_FS), (29, (w[0] - 2, w[1] - 8), GRAB_FINGER - 4, *GRAB_FS),
+                      (36, (604, 820), 25, *GRAB_FS), (GRAB_FRAMES, None, 90)]),
+        *drive_tracks(1, [(0, "rest"), (6, "rest"), (14, "spread"), (20, "spread"), (GRAB_CONTACT, "grip"),
+                          (27, "grip"), (36, "rest"), (GRAB_FRAMES, "rest")]),
+        *[T(e["gg"], x=[(0, 0.0), (8, 4.0), (30, 4.0), (44, 0.0)]) for e in EYES],  # a glance at the peg
+    ])
+    for animation in G8.values():
+        rest_arms(animation)  # every gesture keys both arms (history-free, test_arm_rig)
+        # budget (ruling 2): the arc keys within M8_TARGET_TOL px / M8_HAND_TOL rad; no hair or cloth
+        # follow-through: a gesture starts only from gesture_none, which keys them at rest, and no other layer
+        # moves them, so they hold (the head barely moves in these three)
+        for obj in animation.children:
+            if obj.attrs["objectId"] in {a["target"].ref() for a in ARMS}:
+                arm_rig.simplify_track(obj, M8_TARGET_TOL)
+            elif obj.attrs["objectId"] in HAND_IDS:
+                arm_rig.simplify_track(obj, M8_HAND_TOL)
+    # the digits rest every frame unless a later layer keys them (HandRest runs before Gesture)
+    hand_rest = A("hand_rest", 1, [t for a, s_ in ((ARM_R, -1), (ARM_L, 1))
+                                   for t in hand_rig.pose_tracks(d, a["drive"], s_, [(0, "rest")], None,
+                                                                 hold_rest=True)])
+    hr_state = st(hand_rest, 0)
+    sm.children.insert(sm.children.index(gesture_layer), layer("HandRest", hr_state, [hr_state]))
+    # gestureId values appended (contract v11), their gesture_done events and Gesture states
+    ev_at = artboard.children.index(list(EV_PRESENCE.values())[-1]) + 1
+    for i, (gn, ga) in enumerate(G8.items()):
+        val = d("DataEnumValue", key=gn, value=gn)
+        enums["GestureId"].add(val)
+        evals["GestureId"][gn] = val
+        ev = event("gesture_done", "gestureId", gn)
+        artboard.children.insert(ev_at + i, ev)
+        gst = st(ga, len(G) + i + 1,
+                 d("StateMachineFireEvent", eventId=ev.ref(), occursValue="atEnd"),
+                 d("StateTransition", stateToId=gs_idle.ref(), enableExitTime=True, exitTimeIsPercetange=True,
+                   exitTime=100), row=1)
+        gs_idle.add(d("StateTransition", trig("gesture"), enum_is("gestureId", gn), stateToId=gst.ref()))
+        gesture_layer.add(gst)
+    artboard.children.extend([hand_rest, *G8.values()])
+
+    # ---- Task 3: the view model's v11 numbers (appended), the jacket, foley events, the tablet's weather card
+    vm_at = vm.children.index(inst)
+    enums["TabletWeather"] = d("DataEnumCustom", *[d("DataEnumValue", key=w, value=w) for w in avatar_tablet.WEATHER],
+                               name="TabletWeather")
+    evals["TabletWeather"] = {v.attrs["key"]: v for v in enums["TabletWeather"].children}
+    EN_OF["tabletWeather"] = "TabletWeather"
+    new_props = {"jacket": d("ViewModelPropertyBoolean", name="jacket"),
+                 "tabletWeather": d("ViewModelPropertyEnumCustom", enumId=enums["TabletWeather"].ref(),
+                                    name="tabletWeather"),
+                 "tabletTemp": d("ViewModelPropertyNumber", name="tabletTemp")}
+    vm.children[vm_at:vm_at] = list(new_props.values())
+    props.update(new_props)
+    inst.add(d("ViewModelInstanceBoolean", propertyValue=False, viewModelPropertyId=new_props["jacket"].ref()),
+             d("ViewModelInstanceEnum", propertyValue=evals["TabletWeather"]["none"].ref(),
+               viewModelPropertyId=new_props["tabletWeather"].ref()),
+             d("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=new_props["tabletTemp"].ref()))
+
+    # the jacket (jacket_art.py, the journey door's own drawing) hangs at the viewer's-right grip point, under
+    # its Hand (it follows the reach, the walk and the IK), kept upright by a world rotation / scale lock on a
+    # still node; drawn behind the hand (the fist closes in front of the collar)
+    upright = d("Node", x=0.0, y=0.0, name="JacketUpright")
+    jacket_hang = d("Node", d("RotationConstraint", targetId=upright.ref(), sourceSpaceValue="world",
+                              destSpaceValue="world"),
+                    d("ScaleConstraint", targetId=upright.ref(), sourceSpaceValue="world", destSpaceValue="world"),
+                    jacket_art.jacket(d), x=0.0, y=hand_rig.GRIP_REACH, opacity=0.0, name="JacketHang")
+    ARM_L["hand"].el.add(jacket_hang)
+    artboard.children.insert(artboard.children.index(look_handle), upright)
+    # the Jacket layer (after Gesture, before Prop): while `jacket` is true the hand grips and the jacket shows
+    jacket_none = A("jacket_none", 1, [K(jacket_hang, opacity=0.0)])
+    jacket_held = A("jacket_held", 1, [K(jacket_hang, opacity=1.0),
+                                       *hand_rig.pose_tracks(d, ARM_L["drive"], 1, [(0, "grip")], None),
+                                       *[K(solo, activeComponentId=ps["rest"]) for solo, ps in ARM_L["pose_sets"]]])
+
+    def bool_is(pn: str, on: bool) -> El:
+        return d("TransitionViewModelCondition",
+                 d("TransitionPropertyViewModelComparator",
+                   d("BindablePropertyBoolean", d("DataBindContext", sourcePathIds=vpath(pn), propertyKey=634))),
+                 d("TransitionValueBooleanComparator", value=on))
+
+    j_none, j_held = st(jacket_none, 0), st(jacket_held, 1)
+    j_none.add(d("StateTransition", bool_is("jacket", True), stateToId=j_held.ref()))
+    j_held.add(d("StateTransition", bool_is("jacket", False), stateToId=j_none.ref()))
+    sm.children.insert(sm.children.index(gesture_layer) + 1, layer("Jacket", j_none, [j_none, j_held]))
+
+    # foley (contract v11): one `foley` event per kind, fired by timeline keys (KeyFrameCallback on `trigger`)
+    FOLEY = {k: event("foley", "kind", k) for k in ("step", "cloth", "click", "paper")}
+    artboard.children[ev_at + len(G8):ev_at + len(G8)] = list(FOLEY.values())
+
+    def foley_keys(animation: El, kind: str, frames: list[int]) -> None:
+        animation.add(d("KeyedObject", d("KeyedProperty", *[d("KeyFrameCallback", frame=f) for f in frames],
+                                         property="trigger"), objectId=FOLEY[kind].ref()))
+
+    STEPS = kit.footfalls(0, 80, OFF_X - ON_X, STRIDE)  # presence_walkOut / walkIn: (0, 80) over 850 px
+    foley_keys(P_WALK_OUT, "step", STEPS)
+    foley_keys(P_WALK_IN, "step", STEPS)
+    foley_keys(G8["grab"], "cloth", [GRAB_CONTACT])
+    TABLET_CLIPS = {c.name: c for c in (make() for make in avatar_tablet.CLIPS)}
+    out_c, away_c = TABLET_CLIPS["prop_tablet_out"], TABLET_CLIPS["prop_tablet_away"]
+    GRIP_F = out_c.hand[-1][1][0]      # the second hand closes on the slab
+    RELEASE_F = away_c.hand[-1][1][0]  # it lets go first
+    foley_keys(prop_anims["prop_tablet_out"], "click", [GRIP_F])
+    foley_keys(prop_anims["prop_tablet_away"], "click", [RELEASE_F])
+    OPEN_F = avatar_tablet.OUT_BEAT                                   # the sheet lands open at the reading angle
+    FOLD_F = avatar_tablet.stagger(["handR", "handL"])["handL"]      # it folds as the put-away starts
+    foley_keys(paper_anims["prop_newspaper_out"], "paper", [OPEN_F])
+    foley_keys(paper_anims["prop_newspaper_away"], "paper", [FOLD_F])
+
+    # the tablet's weather card: `tabletWeather` picks the card on its own layer, `tabletTemp` binds the digits
+    card = avatar_tablet.WeatherCard(tablet, d, vpath("tabletTemp"))
+    card.build()
+    weather_anims = card.animations()
+    artboard.children.extend([jacket_none, jacket_held, *weather_anims.values()])
+    layers_weather = enum_layer("TabletWeather", "tabletWeather", weather_anims, "none")
+    sm.children.append(layers_weather)
+    m8_converters = card.converters
+
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 # the lids read eyeLeadPitch (contract: looking down drops the upper lids), which the head turn adds
 face_rig.resolve_paths([artboard, *face_au.converters, *lids.converters], {"eyeLeadPitch": turn.path("eyeLeadPitch")})
-write(out, [artboard, *enums.values(), vm, *face_au.converters, *lids.converters, *turn.converters, *light.converters])
+write(out, [artboard, *enums.values(), vm, *face_au.converters, *lids.converters, *turn.converters, *light.converters,
+            *m8_converters])
 print("wrote", os.path.normpath(out), "next id", d.next)

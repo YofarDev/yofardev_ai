@@ -1,0 +1,3 @@
+avatar jacket at the contact (x0, x1, y0, y1): (510, 620, 550, 760) (top: under the closed fist)
+door jacket on the peg (x0, x1, y0, y1): (511, 621, 549, 760)
+left / right / bottom edges differ by 1 / 1 / 0 px (ok)

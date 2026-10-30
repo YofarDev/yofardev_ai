@@ -28,6 +28,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from art_bible import SCENES, fit_colour  # noqa: E402
+import jacket_art  # noqa: E402
 from rig_dsl import Formulas  # noqa: E402
 from rml import Doc, El, ellipse, lin, rad, rect, smooth_path, track, write  # noqa: E402
 
@@ -74,6 +75,14 @@ for _name, _typ, _default in PROPS:
     vm_props[_name] = _p
 inst = d("ViewModelInstance", *vm_vals, exports=True, name="Default")
 vm = d("ViewModel", *vm_props.values(), inst, name="JourneyVM", defaultInstanceId=inst.ref())
+
+
+# v11 (moonshot M8 ruling 5): new elements take their own id range, after the M7 file's last id (1159)
+M8_ID_START = 5000
+d8 = Doc(client=0, start=M8_ID_START)
+vm_props["jacket"] = d8("ViewModelPropertyNumber", name="jacket")
+vm.children.insert(vm.children.index(inst), vm_props["jacket"])
+inst.add(d8("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=vm_props["jacket"].ref()))
 
 
 def vpath(name: str) -> str:
@@ -225,9 +234,34 @@ def door() -> El:
     glow = N("emitDoorGlow", light, x=0.0, y=0.0)
     amb_tracks.append(track(d, glow, {"opacity": [(0, 0.9), (60, 1.0), (120, 0.88), (180, 1.0), (240, 0.9)]},
                             ease=EASE))
-    return N("Door", rim, leaf, spill, glow, shade, frame, step,
+    peg, coat = door_peg()
+    return N("Door", peg, coat, rim, leaf, spill, glow, shade, frame, step,
              bind("door", 18), bind("door", 16, conv(0.08, 0.92)), bind("door", 17, conv(0.08, 0.92)),
              x=DOOR_X, y=GROUND_Y, opacity=0.0)
+
+
+def door_peg() -> tuple[El, El]:
+    """v11: the peg on the left jamb at the hook point and the jacket hanging from it (the avatar's own
+    drawing, jacket_art), its opacity `JourneyVM.jacket`; both inside `Door`, so they share its appear /
+    vanish. The peg is drawn in front of the jacket's collar loop."""
+    hx, hy = jacket_art.HOOK[0] - DOOR_X, jacket_art.HOOK[1] - GROUND_Y
+
+    def fill8(c: str) -> El:
+        return d8("Fill", d8("SolidColor", colorValue=fit(c)), name="Fill")
+
+    def line8(w: float) -> El:
+        return d8("Stroke", d8("SolidColor", colorValue=fit(INK)), thickness=float(w), cap="round", join="round",
+                  name="Line")
+
+    shaft = d8("Shape", d8("Rectangle", width=18.0, height=8.0, cornerRadiusTL=3.0, name="Path"),
+               fill8("FF7A5034"), line8(2.5), x=-3.0, y=0.0, name="DoorPegShaft")
+    knob = d8("Shape", d8("Ellipse", width=13.0, height=13.0, name="Path"), fill8("FF9A6A44"), line8(2.5),
+              x=-12.0, y=0.0, name="DoorPegKnob")
+    peg = d8("Node", knob, shaft, x=hx, y=hy, name="DoorPeg")
+    coat = d8("Node", jacket_art.jacket(d8, "DoorJacket"),
+              d8("DataBindContext", sourcePathIds=vpath("jacket"), propertyKey=18), x=hx, y=hy, opacity=0.0,
+              name="DoorJacketHang")
+    return peg, coat
 
 
 # ---------------------------------------------------------------- path (anchor: bottom centre)

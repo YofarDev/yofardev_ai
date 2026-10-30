@@ -3,8 +3,9 @@ two-bone solver itself lives in rig_dsl)."""
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 import math
-from typing import Callable
+from typing import Callable, Iterator
 
 from rig_dsl import two_bone_dirs, wrap_angle
 from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, stroke
@@ -121,6 +122,37 @@ M4_ID_START = 980000  # elements added in moonshot M4 (gen_avatar.py, Doc M4)
 # elements added in moonshot M5 (gen_avatar.py, Doc M5). The plan's 970000 is the M3 arm skeleton's range
 # (arm_rig.ARM_ID_START); 1,000,000+ is free in avatar.rml (M5 execution ruling 30)
 M5_ID_START = 1000000
+# moonshot M8 (gen_avatar.py, Doc M8): 1,100,000-1,149,999 for the generator's own elements, 1,150,000+ for the
+# arm-rig elements its gestures mint (arm_rig's own document borrows that range); both free in avatar.rml
+M8_ID_START = 1100000
+M8_ARM_ID_START = 1150000
+
+
+def footfalls(f0: int, f1: int, distance: float, stride: float, shift: int = 10) -> list[int]:
+    """The frames of a gen_avatar walk's footfalls (contract v11 foley `step`): the walk's travel is
+    smoothstep over (f0 + shift, f1) (after the weight shift), and a foot lands where the walked distance
+    first reaches k x stride, k = 0 (the push-off) .. distance // stride."""
+    out = []
+    for k in range(int(distance // stride + 1e-9) + 1):
+        for f in range(f0 + shift, f1 + 1):
+            t = (f - f0 - shift) / (f1 - f0 - shift)
+            if distance * t * t * (3 - 2 * t) >= k * stride - 1e-6:
+                out.append(f)
+                break
+    return out
+
+
+@contextmanager
+def minting(src: Doc, dst: Doc) -> Iterator[None]:
+    """Elements `src` mints inside the block take `dst`'s ids (src's own counter is untouched), so the
+    generator's helpers (bound to the main document) can build late additions in a new id range."""
+    saved = src.next
+    src.next = dst.next
+    try:
+        yield
+    finally:
+        dst.next = src.next
+        src.next = saved
 
 # The fringe's cast shadow on the forehead: a band under the hairline (cap edge y ~292-300), skinned
 # by the head turn (same 15 points as M2), filled with a fade from FACE_CAST_FADE[0] (alpha at the

@@ -44,7 +44,8 @@ def test_names_and_view_model(root: ET.Element) -> None:
     (vm,) = root.findall("ViewModel")
     assert vm.get("name") == "JourneyVM" and ab.get("viewModelId") == vm.get("id")
     props = {e.get("name"): e.tag for e in vm if e.tag.startswith("ViewModelProperty")}
-    assert props == {**{n: "ViewModelPropertyNumber" for n in ("door", "path", "portal", "rocket", "open", "lift")},
+    assert props == {**{n: "ViewModelPropertyNumber" for n in ("door", "path", "portal", "rocket", "open", "lift",
+                                                               "jacket")},  # v11: jacket
                      "lightKey": "ViewModelPropertyColor", "lightAmbient": "ViewModelPropertyColor"}
     # draws outside its bounds: the thresholds run past the frame's right edge (landscape windows)
     assert ab.get("clip") == "false"

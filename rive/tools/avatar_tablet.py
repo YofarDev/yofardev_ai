@@ -482,6 +482,7 @@ class Tablet:
             self._rect("TempSub", 54.0, 5.0, 2.5, self._fill(GLYPH_SOFT), x=left + 101.0, y=top + 64.0),
             self._rect("Card", sw - 36.0, 40.0, 12.0, self._fill("70FFFFFF"), x=0.0, y=top + 57.0),
         ]
+        self.weather_parts = weather[:-1]  # M8: the generic card's sun and bars (the weather card swaps them)
         items = []
         y0 = top + 88.0
         for k in range(5):  # periodic: one title + one body line per LIST_PERIOD
@@ -496,7 +497,8 @@ class Tablet:
         self.scroll = self.d("Node", *items, x=0.0, y=0.0, name="ScrollList")
         clip = self.d("Node", self.d("ClippingShape", sourceId=mask.ref(), name="Clip"), self.scroll, x=0.0, y=0.0,
                       name="ListClip")
-        return self.d("Node", clip, *weather, *search, mask, x=0.0, y=0.0, name="emitScreenGlyphs")
+        self.glyphs = self.d("Node", clip, *weather, *search, mask, x=0.0, y=0.0, name="emitScreenGlyphs")
+        return self.glyphs
 
     def art(self) -> El:
         d = self.d
@@ -678,6 +680,243 @@ class Tablet:
                  d("ExitState", x=500.0, y=-100.0),
                  d("EntryState", d("StateTransition", stateToId=none.ref()), x=-100.0, y=-100.0),
                  none, out, hold, away, name="Prop")
+
+
+# ------------------------------------------------------------------ the weather card (moonshot M8, contract v11)
+# `tabletWeather` none keeps the generic card; any other value swaps its sun and bars for that weather's
+# glyph and a signed two-digit seven-segment readout of `tabletTemp`. The segments are data-bound: every
+# segment's opacity is a formula of `tabletTemp` (no state, no keys), chained through three shared
+# converters (`units`, `tens code`, `sign`), so any value renders history-free. The readout shows round(t),
+# clamped to -99..99 (beyond that, the clamped value: the app keeps it within -40..50): the units digit always,
+# the tens digit when it is not 0; a negative number shows its minus in the tens slot when the tens digit is
+# blank (-9 .. -1) and in the sign slot left of it otherwise (-99 .. -10).
+
+WEATHER = ("none", "clear", "clouds", "rain", "snow", "storm", "fog")
+SEGMENTS = "abcdefg"  # top, top right, bottom right, bottom, bottom left, top left, middle
+DIGIT_SEGMENTS = {0: "abcdef", 1: "bc", 2: "abdeg", 3: "abcdg", 4: "bcfg", 5: "acdfg", 6: "acdefg", 7: "abc",
+                  8: "abcdefg", 9: "abcdfg"}
+MINUS_CODE = 10      # the tens slot's code for "a minus here"
+BLANK_CODE = 11      # ... and for "nothing here" (no segment has this bit), so both slots share their masks
+TEMP_CLAMP = 99
+FN = {"round": 2, "floor": 4, "pow": 6, "min": 0, "max": 1}
+OP = {"+": 0, "-": 1, "*": 2, "/": 3, "%": 4}
+# the readout on the card (screen frame, px): digit size, stroke, slot centres
+DIGIT_H, DIGIT_W, SEG_T = 28.0, 15.0, 4.0
+READ_Y = -27.0
+# right of the generic sun's spot: the left hand's thumb rests over the card's left end
+SLOT_X = {"sign": -32.0, "tens": -16.0, "units": 5.0}
+DEGREE = (21.0, -38.0)
+GLYPH_AT = (-68.0, -28.0)
+RAIN_C = "FF3D8BD6"
+STORM_C = "FF5C6E88"
+CLOUD_C = "FFF6FCFF"
+
+
+def mask(seg: str) -> int:
+    """Bit c set when code c lights `seg`: the digits 0-9, MINUS_CODE (g only), BLANK_CODE (none)."""
+    m = sum(1 << dg for dg, segs in DIGIT_SEGMENTS.items() if seg in segs)
+    return m | ((1 << MINUS_CODE) if seg == "g" else 0)
+
+
+def rive_round(x: float) -> int:
+    """Rive's formula `round` (half away from zero)."""
+    return int(math.copysign(math.floor(abs(x) + 0.5), x))
+
+
+def readout(t: float) -> tuple[bool, set[str], set[str]]:
+    """What the formulas light for `t`: (sign slot, tens segments, units segments)."""
+    r = rive_round(t)
+    a = min(TEMP_CLAMP, abs(r))
+    tens, units = a // 10, a % 10
+    neg = r < 0
+    code = tens if tens else (MINUS_CODE if neg else BLANK_CODE)
+    return (neg and tens > 0, {s_ for s_ in SEGMENTS if mask(s_) >> code & 1},
+            {s_ for s_ in SEGMENTS if mask(s_) >> units & 1})
+
+
+def shown(t: float) -> str:
+    """The readout as text (for tests and evidence): a segment set back to its digit or minus."""
+    seg_digit = {frozenset(v): str(k) for k, v in DIGIT_SEGMENTS.items()}
+    sign, tens, units = readout(t)
+    tens_txt = "" if not tens else ("-" if tens == {"g"} else seg_digit[frozenset(tens)])
+    return ("-" if sign else "") + tens_txt + seg_digit[frozenset(units)]
+
+
+class WeatherCard:
+    """Builds the card into a Tablet's screen (minted by `d`, the M8 document)."""
+
+    def __init__(self, tablet: "Tablet", d: Doc, temp_path: str) -> None:
+        self.t = tablet
+        self.d = d
+        self.temp_path = temp_path
+        self.converters: list[El] = []
+        self.glyph_groups: dict[str, El] = {}
+
+    # ---- formula tokens
+    def _v(self, v: float) -> El:
+        return self.d("FormulaTokenValue", operationValue=float(v))
+
+    def _o(self, o: str) -> El:
+        return self.d("FormulaTokenOperation", operationType=OP[o])
+
+    def _f(self, f: str, *args: list[El]) -> list[El]:
+        out = [self.d("FormulaTokenFunction", functionType=FN[f])]
+        for i, a in enumerate(args):
+            if i:
+                out.append(self.d("FormulaTokenArgumentSeparator"))
+            out += a
+        return out + [self.d("FormulaTokenParenthesisClose")]
+
+    def _r(self) -> list[El]:
+        return self._f("round", [self.d("FormulaTokenInput")])
+
+    def _abs(self) -> list[El]:  # min(99, max(r, 0 - r))
+        return self._f("min", [self._v(TEMP_CLAMP)], self._f("max", self._r(), [self._v(0), self._o("-"), *self._r()]))
+
+    def _tens(self) -> list[El]:  # floor(a / 10)
+        return self._f("floor", [*self._abs(), self._o("/"), self._v(10)])
+
+    def _neg(self) -> list[El]:  # min(1, max(0, 0 - r))
+        return self._f("min", [self._v(1)], self._f("max", [self._v(0)], [self._v(0), self._o("-"), *self._r()]))
+
+    def _conv(self, *tokens: El) -> El:
+        c = self.d("DataConverterFormula", *tokens)
+        self.converters.append(c)
+        return c
+
+    def converters_for_slots(self) -> dict[str, El]:
+        units = self._conv(*self._abs(), self._o("-"), self._v(10), self._o("*"), *self._tens())
+        # tens code: T, or (T = 0) MINUS_CODE when r < 0 and BLANK_CODE otherwise:
+        # T + (1 - min(1, T)) * (BLANK_CODE - neg)
+        po, pc = (lambda: self.d("FormulaTokenParenthesisOpen")), (lambda: self.d("FormulaTokenParenthesisClose"))
+        code = self._conv(*self._tens(), self._o("+"), po(), self._v(1), self._o("-"),
+                          *self._f("min", [self._v(1)], self._tens()), pc(), self._o("*"), po(), self._v(BLANK_CODE),
+                          self._o("-"), *self._neg(), pc())
+        sign = self._conv(*self._neg(), self._o("*"), *self._f("min", [self._v(1)], self._tens()))
+        return {"units": units, "tens": code, "sign": sign}
+
+    def bit(self, m: int) -> El:  # floor(m / pow(2, input)) % 2
+        return self._conv(*self._f("floor", [self._v(m), self._o("/"),
+                                             *self._f("pow", [self._v(2)], [self.d("FormulaTokenInput")])]),
+                          self._o("%"), self._v(2))
+
+    # ---- art
+    def _seg(self, name: str, x: float, y: float, w: float, h: float, conv: El) -> El:
+        d = self.d
+        return d("Shape", d("DataBindContext", sourcePathIds=self.temp_path, propertyKey=18, converterId=conv.ref()),
+                 d("Rectangle", width=float(w), height=float(h), cornerRadiusTL=float(min(w, h) / 2), name="Path"),
+                 self.t._fill(GLYPH_INK), x=float(x), y=float(y), opacity=0.0, name=name)
+
+    def readout_art(self) -> El:
+        d = self.d
+        slots = self.converters_for_slots()
+        hw, hh, t = DIGIT_W / 2, DIGIT_H / 2, SEG_T
+        place = {"a": (0.0, -hh + t / 2, DIGIT_W, t), "g": (0.0, 0.0, DIGIT_W, t), "d": (0.0, hh - t / 2, DIGIT_W, t),
+                 "f": (-hw + t / 2, -hh / 2, t, hh + t / 2), "b": (hw - t / 2, -hh / 2, t, hh + t / 2),
+                 "e": (-hw + t / 2, hh / 2, t, hh + t / 2), "c": (hw - t / 2, hh / 2, t, hh + t / 2)}
+        parts: list[El] = []
+        bits = {sg: self.bit(mask(sg)) for sg in SEGMENTS}
+        for slot in ("units", "tens"):
+            cx = SLOT_X[slot]
+            for sg in SEGMENTS:
+                grp = d("DataConverterGroup", d("DataConverterGroupItem", converterId=slots[slot].ref()),
+                        d("DataConverterGroupItem", converterId=bits[sg].ref()))
+                self.converters.append(grp)
+                x, y, w, h = place[sg]
+                parts.append(self._seg(f"Seg{slot.title()}{sg.upper()}", cx + x, READ_Y + y, w, h, grp))
+        parts.append(self._seg("SegSign", SLOT_X["sign"], READ_Y, 9.0, t, slots["sign"]))
+        parts.append(self.t._ellipse("Degree", 6.0, 6.0, self.t._stroke(GLYPH_INK, 2.0), x=DEGREE[0], y=DEGREE[1]))
+        return d("Node", *parts, x=0.0, y=0.0, name="WeatherReadout")
+
+    def _path(self, pts: Sequence[tuple], closed: bool = True) -> El:
+        from rml import smooth_path
+        return smooth_path(self.d, list(pts), closed=closed)
+
+    def _lines(self, name: str, segs: Sequence[Sequence[tuple[float, float]]], argb: str, w: float) -> El:
+        d = self.d
+        paths = [d("PointsPath", *[d("StraightVertex", x=float(x), y=float(y)) for x, y in seg], isClosed=False,
+                   name="Path") for seg in segs]
+        return d("Shape", *paths, self.t._stroke(argb, w), x=0.0, y=0.0, name=name)
+
+    def _cloud(self, name: str, fill: str) -> El:
+        pts = [(-17.0, 4.0, "c4"), (17.0, 4.0, "c4"), (18.0, -3.0), (10.0, -9.0), (0.0, -16.0), (-10.0, -13.0),
+               (-18.0, -3.0)]
+        return self.d("Shape", self._path(pts), self.t._fill(fill), self.t._stroke(GLYPH_INK, 1.8), x=0.0, y=0.0,
+                      name=name)
+
+    def glyph_art(self) -> El:
+        """One cloud (shown, and tinted for storm, by the weather's pose) behind a Solo of the extras: the
+        sun, a second small cloud, rain, snow, a bolt, fog lines."""
+        d, t = self.d, self.t
+        rays = self._lines("WxSunRays", [[(13.0 * math.cos(a), 13.0 * math.sin(a)), (18.0 * math.cos(a), 18.0 * math.sin(a))]
+                                         for a in (math.radians(45.0 * k + 22.5) for k in range(8))], SUN, 2.4)
+        sun = t._ellipse("WxSun", 18.0, 18.0, t._fill(SUN))
+        drops = self._lines("WxDrops", [[(x, 9.0), (x - 3.0, 16.0)] for x in (-9.0, 0.0, 9.0)], RAIN_C, 2.4)
+        flakes = d("Shape", *[d("Ellipse", width=5.0, height=5.0, x=float(x), y=float(y), name="Path")
+                              for x, y in ((-9.0, 11.0), (0.0, 15.0), (9.0, 11.0))],
+                   t._fill(CLOUD_C), t._stroke(GLYPH_INK, 1.2), x=0.0, y=0.0, name="WxFlakes")
+        bolt = d("Shape", self._path([(2.0, 1.0, "c"), (-5.0, 12.0, "c"), (0.0, 12.0, "c"), (-3.0, 20.0, "c"),
+                                      (7.0, 8.0, "c"), (2.0, 8.0, "c"), (5.0, 1.0, "c")]),
+                 t._fill(SUN), t._stroke(GLYPH_INK, 1.2), x=0.0, y=0.0, name="WxBolt")
+        fog = self._lines("WxFog", [[(-16.0, y), (16.0, y)] for y in (-8.0, 0.0, 8.0)], GLYPH_INK, 2.6)
+        far = d("Node", self._cloud("WxCloudSmall", GLYPH_PILL), x=9.0, y=5.0, scaleX=0.62, scaleY=0.62,
+                name="WxCloudFar")
+        extras = {"clear": [rays, sun], "clouds": [far], "rain": [drops], "snow": [flakes], "storm": [bolt],
+                  "fog": [fog]}
+        for k, parts in extras.items():
+            self.glyph_groups[k] = d("Node", *parts, x=0.0, y=0.0, name="Wx_" + k)
+        self.extra_solo = d("Solo", *self.glyph_groups.values(), x=0.0, y=0.0,
+                            activeComponentId=self.glyph_groups["clear"].ref(), name="WeatherExtra")
+        self.cloud = self._cloud("WxCloud", CLOUD_C)
+        self.cloud_colour = next(c for c in self.cloud.children if c.tag == "Fill").children[0]
+        self.cloud_node = d("Node", self.cloud, x=0.0, y=0.0, opacity=0.0, name="WxCloudShown")
+        return d("Node", self.extra_solo, self.cloud_node, x=GLYPH_AT[0], y=GLYPH_AT[1], name="WeatherGlyph")
+
+    def build(self) -> El:
+        """Restructure the screen: the generic sun and bars move into a Solo next to the weather card (same
+        place in the draw order, so `none` draws exactly as before). Returns the outer Solo."""
+        d = self.d
+        saved, self.t.d = self.t.d, d
+        try:
+            parts = self.t.weather_parts
+            at = self.t.glyphs.children.index(parts[0])
+            for p in parts:
+                self.t.glyphs.children.remove(p)
+            self.generic = d("Node", *parts, x=0.0, y=0.0, name="WeatherGeneric")
+            self.glyph_solo = self.glyph_art()
+            self.now = d("Node", self.glyph_solo, self.readout_art(), x=0.0, y=0.0, name="WeatherNow")
+            self.solo = d("Solo", self.generic, self.now, x=0.0, y=0.0, activeComponentId=self.generic.ref(),
+                          name="emitWeather")
+            self.t.glyphs.children.insert(at, self.solo)
+            self.t._fit(self.solo)
+        finally:
+            self.t.d = saved
+        return self.solo
+
+    def animations(self) -> dict[str, El]:
+        """One-frame pose per `tabletWeather` value (the `TabletWeather` layer's states)."""
+        d = self.d
+        out = {}
+        for w in WEATHER:
+            objs = [d("KeyedObject", d("KeyedProperty", d("KeyFrameId", frame=0, value=(
+                self.generic if w == "none" else self.now).ref(), interpolationType="hold"),
+                property="activeComponentId"), objectId=self.solo.ref())]
+            if w != "none":
+                objs.append(d("KeyedObject", d("KeyedProperty", d("KeyFrameId", frame=0,
+                                                                  value=self.glyph_groups[w].ref(),
+                                                                  interpolationType="hold"),
+                                               property="activeComponentId"), objectId=self.extra_solo.ref()))
+                cloudy = w in ("clouds", "rain", "snow", "storm")
+                objs.append(d("KeyedObject", d("KeyedProperty", d("KeyFrameDouble", frame=0, value=float(cloudy),
+                                                                  interpolationType="hold"), property="opacity"),
+                              objectId=self.cloud_node.ref()))
+                if cloudy:
+                    objs.append(d("KeyedObject", d("KeyedProperty", d("KeyFrameColor", frame=0,
+                                                                      value=STORM_C if w == "storm" else CLOUD_C,
+                                                                      interpolationType="hold"),
+                                                   property="colorValue"), objectId=self.cloud_colour.ref()))
+            out[w] = d("LinearAnimation", *objs, duration=1, fps=FPS, name="tablet_weather_" + w)
+        return out
 
 
 # ------------------------------------------------------------------ the newspaper (M5 ruling 9)

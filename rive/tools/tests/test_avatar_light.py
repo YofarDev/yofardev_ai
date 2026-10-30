@@ -48,7 +48,10 @@ def test_rim_band_is_the_interior_weight() -> None:
 
 def test_contract_scene_vm_matches_the_scene_generator() -> None:
     c = check_contract.parse_contract()
-    names = [n for n in c["scene_vm_props"] if n not in ("eventId", "event")]
+    # v11's `fog` / `npc*` mint from the M8 range (gen_scenes.Scene._v11_props), after these
+    v11 = ["fog", "npc", "npcX", "npcLook"]
+    assert [n for n in c["scene_vm_props"]][-4:] == v11
+    names = [n for n in c["scene_vm_props"] if n not in ("eventId", "event", *v11)]
     for sid in SCENES:
         gen = gen_scenes.scene_vm_defaults(sid)
         assert [n for n, _, _ in gen] == names

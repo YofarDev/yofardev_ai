@@ -8,12 +8,12 @@ of `rive/journeys` over a black, then a white, full-frame backdrop added at the 
 and alpha is recovered as 1 - (white - black) / 255 (as M6's `review_diorama.FrontRenderer`).
 
 Writes (unless `--gates-only`): `<family>_strip.png` per family: open 0 / 0.5 / 1 (the rocket adds
-lift 0.08 and 1), composited over every scene's poster with the avatar's rest render, in the phone
+lift 0.08 and 1; the door adds open 1 with its v11 jacket on the peg), composited over every scene's poster with the avatar's rest render, in the phone
 framing the app uses (the scene `Fit.cover`, the avatar and the journey `Fit.contain` at the
 bottom); `sheet.png` (all four strips); `gates.txt`.
 
 Gates (one line each, `ok` or `FAIL`):
-- every number 0, and `open` 1 + `lift` 1 with no family shown: nothing drawn (alpha 0);
+- every number 0, and `open` 1 + `lift` 1 + `jacket` 1 with no family shown: nothing drawn (alpha 0);
 - each family shows only through its own number (cover > 2 % with it at 1, the others 0);
 - open 1: the threshold covers >= 85 % of the band x 650-790, y 200-990 (the rocket's hull: y
   330-830) with alpha > 0.5: the avatar disappears into something solid;
@@ -122,14 +122,16 @@ FAMILY_POSES: dict[str, list[dict[str, float]]] = {
 # lift-off at 0.08: the composite pastes only the artboard box, and higher the nose leaves it (in the
 # app the unclipped artboard keeps drawing above it)
 FAMILY_POSES["rocket"] += [{"open": 0.0, "lift": 0.08}, {"open": 0.0, "lift": 1.0}]
+# v11 (moonshot M8): the door's jacket column (the coat on the peg, the door open as during the grab)
+FAMILY_POSES["door"] += [{"open": 1.0, "jacket": 1.0}]
 
 
 def gates(r: JourneyRenderer) -> list[str]:
     lines = []
     zero = r.render({})
     lines.append(f"all zero draws nothing: max alpha {zero[..., 3].max():.0f} ({'ok' if zero[..., 3].max() < 1 else 'FAIL'})")
-    hidden = r.render({"open": 1.0, "lift": 1.0})
-    lines.append(f"open 1 + lift 1, no family: max alpha {hidden[..., 3].max():.0f} "
+    hidden = r.render({"open": 1.0, "lift": 1.0, "jacket": 1.0})
+    lines.append(f"open 1 + lift 1 + jacket 1, no family: max alpha {hidden[..., 3].max():.0f} "
                  f"({'ok' if hidden[..., 3].max() < 1 else 'FAIL'})")
     for fam in gen_journeys.FAMILIES:
         shown = r.render({fam: 1.0})
