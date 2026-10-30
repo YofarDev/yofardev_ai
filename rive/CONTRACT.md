@@ -209,7 +209,7 @@ are artboard px.
 |---|---|---|---|---|---|---|
 | livingRoom | cord | pull | (270, 770, 370, 940) | 4 | `cord` 0–1 (0) | pull down; springs back; past 0.6 once per pull: `lightsOff` / `lightsOn` alternately |
 | campfire | poke | poke | (0, 1040, 330, 1340) | 4 | `poke` 0–1 (0), `pokeX` −1–1 (0), `pokeY` −1–1 (0) | the stick's tip follows the finger in the box; eased out on release; a stir faster than 900 px/s fires `flare` (once per 3 s) |
-| beach | sand | trail | (120, 1500, 960, 1800) | 4 | `trailN` 0–16 (0), `trailX0`…`trailX15`, `trailY0`…`trailY15` (0), `trailFade` 0–1 (1) | dots in the wet sand ≥ 22 px apart, oldest recycled; `bigWave` washes them away |
+| beach | sand | trail | (830, 1230, 980, 1700) | 4 | `trailN` 0–16 (0), `trailX0`…`trailX15`, `trailY0`…`trailY15` (0), `trailFade` 0–1 (1) | dots in the wet sand ≥ 22 px apart, oldest recycled; `bigWave` washes them away |
 | deepSpace | spin | spin | (150, 440, 450, 740) | 2 | `spin` 0–1 (0), wraps | a horizontal drag turns the planet's bands; inertia |
 | cafe | wipe | trail | (330, 260, 750, 760) | 2 | `trailN`, `trailX*`, `trailY*`, `trailFade` as beach | wipes the misted window; it mists back over 20 s |
 | rooftop | aim | aim | (710, 1011, 978, 1317) | 4 | `aim` −1–1 (0) | a horizontal drag swivels the telescope ±35°; it holds |
