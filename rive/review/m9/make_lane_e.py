@@ -27,7 +27,7 @@ from gen_scenes import V12_REST_AFFORDANCE, rest_masked  # noqa: E402
 OUT = Path(__file__).resolve().parent
 # the region each drag's art may touch (artboard px, parallax 0): the handle's reach plus its art
 ART_BOX = {"livingRoom": (290, 750, 350, 945), "campfire": (0, 1010, 350, 1600),
-           "beach": (100, 1440, 980, 1820), "deepSpace": (145, 435, 455, 745)}
+           "beach": (800, 1200, 1010, 1730), "deepSpace": (145, 435, 455, 745)}
 
 
 def render(scene: str, *args: str, proj: Path | None = None) -> np.ndarray:
@@ -75,9 +75,10 @@ def inside(box: tuple[int, int, int, int] | None, outer: tuple[int, int, int, in
 
 
 def trail_points(n: int = 16) -> list[tuple[float, float]]:
-    """A finger's S-curve across the sand, dots 40 px apart (>= 22, ruling 8)."""
+    """A finger's S-curve down the sand patch right of the avatar (gen_scenes.TRAIL_PATCH), dots about
+    28 px apart (>= 22, ruling 8)."""
     import math
-    return [(200.0 + 40.0 * i, 1640.0 + 90.0 * math.sin(i / 2.4)) for i in range(n)]
+    return [(905.0 + 45.0 * math.sin(i / 2.0), 1262.0 + 27.0 * i) for i in range(n)]
 
 
 def identity(same_as: str = "HEAD") -> list[str]:
@@ -134,8 +135,10 @@ def drags() -> list[str]:
              ("trailN 16 fade 0", ("--data=trailN=16", "--data=trailFade=0")),
              ("trailN 16 fade 0.5", ("--data=trailN=16", "--data=trailFade=0.5"))]
     imgs = many([("beach", (*args, *a, f)) for _, a in cases])
-    sheet([cell(im, (60, 1380, 1020, 1880), lab, 480) for (lab, _), im in zip(cases, imgs)], 2,
-          OUT / "drags/beach_sand.png")
+    # left: the patch at 1:1; right of each pair: the same frame at a phone's scale (~0.55)
+    sheet([cell(im, (700, 1150, 1080, 1760), lab, 380) for (lab, _), im in zip(cases, imgs)]
+          + [cell(im, (0, 900, 1080, 1800), lab + " (phone scale 0.5)", 540) for (lab, _), im in zip(cases[2:3], imgs[2:3])],
+          5, OUT / "drags/beach_sand.png")
     rest = render("beach", f)
     for (lab, _), im in zip(cases, imgs):
         b = diff_box(im, rest)

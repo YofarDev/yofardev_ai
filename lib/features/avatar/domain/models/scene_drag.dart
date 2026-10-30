@@ -176,7 +176,7 @@ abstract final class SceneDrags {
         AvatarScene.beach: SceneDragHandle(
           id: 'sand',
           kind: DragKind.trail,
-          rect: Rect.fromLTRB(120, 1500, 960, 1800),
+          rect: Rect.fromLTRB(830, 1230, 980, 1700),
           plane: 4,
           numbers: _trail,
         ),

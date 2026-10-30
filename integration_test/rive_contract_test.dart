@@ -885,8 +885,8 @@ void main() {
         tester,
         stage,
         box,
-        Offset(rect.left + 80, 1650),
-        Offset(rect.right - 60, 1650),
+        Offset(rect.center.dx, rect.top + 40),
+        Offset(rect.center.dx, rect.bottom - 40),
       );
       // the wave washes the sand (1.2 s), then the trail resets
       await tester.pumpWidget(

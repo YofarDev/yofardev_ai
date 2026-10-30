@@ -2496,7 +2496,7 @@ def deepSpace() -> str:  # noqa: N802
 V12_DRAG_RECTS: dict[str, tuple[str, tuple[float, float, float, float], int]] = {
     "livingRoom": ("cord", (270.0, 770.0, 370.0, 940.0), 4),     # the cord and its bead, on the lamp
     "campfire": ("poke", (0.0, 1040.0, 330.0, 1340.0), 4),      # the lying stick + the tip's box (POKE_HANDLE)
-    "beach": ("sand", (120.0, 1500.0, 960.0, 1800.0), 4),       # the open sand in front of the avatar (as contracted)
+    "beach": ("sand", (830.0, 1230.0, 980.0, 1700.0), 4),       # the sand right of the avatar (fix round 2: TRAIL_PATCH)
     "deepSpace": ("spin", (150.0, 440.0, 450.0, 740.0), 2),     # the planet's disc (r 150 at 300, 590)
 }
 KEY_X, KEY_Y, KEY_ROTATION, KEY_SCALE_X, KEY_SCALE_Y, KEY_OPACITY = 13, 14, 15, 16, 17, 18
@@ -2686,13 +2686,26 @@ def campfire_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
 
 
 # ---------------------------------------------------------------- beach: the trail, the gulls
-TRAIL_DOT = ("B0C49C66", "C0937048", 11.0)   # a damp dimple in the sand, its shaded far rim (the sun is up right), radius
+# Fix round 2 (orchestrator ruling, from the in-app capture): in the app the avatar's bust covers the
+# sand's centre (x ~250-830 from y ~1150) and the composer its bottom (y > ~1720), so the trail moves to
+# the clear sand right of the avatar, by the crab and the water's edge, inside the phone crop
+# (x ~100-980), and its dots double in size: a dark damp centre with a deeper shade up-left (the sun is
+# up right) on a light raised rim, readable at phone size. Consecutive dots >= 22 px apart overlap into
+# a furrow.
+TRAIL_PATCH = (830.0, 1230.0, 980.0, 1700.0)  # the drag handle: where the finger draws (artboard px)
+TRAIL_DOT = ("D0A27A48", "B87A5530", 18.0)    # the damp centre, its shaded side, the dimple's radius
+TRAIL_RIM = ("B8FFF2D4", 9.0)                 # the light rim pushed up around each dimple: a stroke on its edge
+                                              # (dark inside r 13.5, light out to r 22.5; a stroke costs half a shape)
 
 
 def beach_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
     """The trail in the sand (`TrailDots`, the back of Plane4: on the sand, behind every prop on it)
     and the gulls (`npc2`, scene_npc.beach_gulls, in front of the crab)."""
-    content.insert(_top(content, "UShadow") + 1, world_kit.trail_dots(sc, sc.d9, *TRAIL_DOT))
+    dots = world_kit.trail_dots(sc, sc.d9, *TRAIL_DOT)
+    col, w = TRAIL_RIM
+    for mark in (e for e in walk([dots]) if e.attrs.get("name") == "Mark"):
+        mark.children.append(stroke(sc.d9, col, w))   # each TrailDot<i>'s dimple gets its light rim
+    content.insert(_top(content, "UShadow") + 1, dots)
     scene_npc.beach_gulls(sc, content)
 
 
