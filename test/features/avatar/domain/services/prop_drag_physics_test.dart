@@ -283,11 +283,11 @@ void main() {
 
     test('16 dots, the oldest recycled; a tick per 4 dots', () {
       final PropDragPhysics p = _physics(AvatarScene.beach);
-      final Offset a = sand.centerLeft + const Offset(10, 0);
+      final Offset a = sand.topCenter + const Offset(0, 10);
       p.start(a, Duration.zero);
       expect(p.takeCues(), <DragCue>[DragCue.start]);
       for (int i = 1; i <= 19; i++) {
-        p.move(a + Offset(22.0 * i, 0), _ms(16 * i));
+        p.move(a + Offset(0, 22.0 * i), _ms(16 * i));
       }
       // 20 dots laid: 5 ticks; 16 shown; dots 16..19 replaced slots 0..3
       expect(
@@ -295,9 +295,9 @@ void main() {
         hasLength(5),
       );
       expect(p.values['trailN'], 16);
-      expect(p.values['trailX0'], closeTo(a.dx + 22 * 16, 1e-9));
-      expect(p.values['trailX3'], closeTo(a.dx + 22 * 19, 1e-9));
-      expect(p.values['trailX4'], closeTo(a.dx + 22 * 4, 1e-9));
+      expect(p.values['trailY0'], closeTo(a.dy + 22 * 16, 1e-9));
+      expect(p.values['trailY3'], closeTo(a.dy + 22 * 19, 1e-9));
+      expect(p.values['trailY4'], closeTo(a.dy + 22 * 4, 1e-9));
     });
 
     test('dots stay inside the handle', () {

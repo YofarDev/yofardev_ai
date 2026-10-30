@@ -351,6 +351,9 @@ class _RiveStage extends StatelessWidget {
           onDragFoley: foley == null
               ? null
               : (String kind) => foley!.play(kind, haptic: false),
+          onDragStarted: () {
+            context.read<AvatarCubit>().onSceneDragStarted();
+          },
           onDragEvent: (SceneEvent event) {
             context.read<AvatarCubit>().onSceneDragEvent(event);
           },

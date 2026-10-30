@@ -58,6 +58,9 @@ class PropDragController {
   /// A drag's sounds, by foley kind (null: silent).
   ValueChanged<String>? onFoley;
 
+  /// A drag started on the handle: the user is here (null: nobody listens).
+  VoidCallback? onStarted;
+
   /// A drag's scene actions (null: none).
   ValueChanged<SceneEvent>? onSceneEvent;
 
@@ -154,6 +157,9 @@ class PropDragController {
     _moved = false;
     _lastDragMoved = false;
     _endedAt = null;
+    // A frame scheduled for the former file does nothing (the generation
+    // check), and must not keep the next file's first frame from scheduling.
+    _frameScheduled = false;
     _generation++;
   }
 
@@ -186,6 +192,7 @@ class PropDragController {
     _moved = false;
     physics.start(_toHandle(physics.handle, local, box), _now());
     _afterInput(physics);
+    onStarted?.call();
     return true;
   }
 
@@ -285,6 +292,7 @@ class PropDragController {
     onHaptic = null;
     onFoley = null;
     onSceneEvent = null;
+    onStarted = null;
     parallax = _noParallax;
   }
 
@@ -303,7 +311,6 @@ class PropDragController {
     final int generation = _generation;
     _scheduleFrame(() {
       if (generation != _generation) {
-        _frameScheduled = false;
         return;
       }
       frame();

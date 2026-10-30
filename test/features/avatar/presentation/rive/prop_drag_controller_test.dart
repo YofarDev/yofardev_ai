@@ -330,6 +330,43 @@ void main() {
       expect(frames, isEmpty);
       expect(haptics, contains(DragHaptic.impact));
     });
+
+    test('a detach mid-animation: the old callback writes nothing, the next '
+        'file schedules a fresh frame', () {
+      final _Sink old = attach(AvatarScene.beach);
+      final Offset a = c.handleCentre(_box)!;
+      c.start(a, _box);
+      c.update(a + const Offset(40, 0), _box);
+      expect(frames, hasLength(1));
+      final int oldWrites = old.writes.length;
+
+      c.detach();
+      final _Sink next = attach(AvatarScene.beach);
+      expect(c.start(c.handleCentre(_box)!, _box), isTrue);
+      // the stale callback is still queued, and so is a new one
+      expect(frames, hasLength(2));
+
+      frames.first();
+      expect(old.writes, hasLength(oldWrites));
+      expect(next.writes, isEmpty);
+
+      frames.last();
+      expect(old.writes, hasLength(oldWrites));
+      expect(next.writes, isNotEmpty);
+    });
+
+    test('a drag start tells onStarted; a miss does not', () {
+      attach(AvatarScene.livingRoom);
+      int started = 0;
+      c.onStarted = () => started++;
+      expect(c.start(Offset.zero, _box), isFalse);
+      expect(started, 0);
+      expect(c.start(c.handleCentre(_box)!, _box), isTrue);
+      expect(started, 1);
+      c.release();
+      c.onStarted?.call();
+      expect(started, 1);
+    });
   });
 
   group('the real arena sequence (accept + first update, one instant)', () {

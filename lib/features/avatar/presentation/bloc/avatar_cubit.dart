@@ -814,6 +814,12 @@ class AvatarCubit extends Cubit<AvatarState> {
     _applyReaction(reaction);
   }
 
+  /// A drag started on a scene's handle: presence for the idle ladder, even
+  /// when the drag fires no scene event (the sand, the misted window).
+  void onSceneDragStarted() {
+    _director?.onUserActivity();
+  }
+
   /// A scene drag's action (M9 ruling 8: the lamp's cord, the hut's rope,
   /// the campfire's stir): played like any scene event (the scene, the
   /// NPC and the camera hear it), unless a journey runs or [event] is not

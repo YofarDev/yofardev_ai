@@ -1089,6 +1089,38 @@ void main() {
       ]);
     });
 
+    test('a drag start is user activity for the idle ladder, with or without '
+        'a scene event', () async {
+      final PerformanceDirector director = PerformanceDirector(
+        now: DateTime.now,
+      );
+      final AvatarCubit dragCubit = AvatarCubit(
+        MockAvatarRepository(),
+        animationService,
+        MockAudioPlayerService(),
+        MockAppLifecycleService(),
+        PropReactionService(),
+        _FakeSoundRepository(),
+        director: director,
+      );
+      addTearDown(() async {
+        await dragCubit.close();
+        director.dispose();
+      });
+      int activity = 0;
+      final StreamSubscription<void> sub = director.activity.listen(
+        (_) => activity++,
+      );
+      addTearDown(sub.cancel);
+
+      dragCubit.onSceneDragStarted();
+      await drain();
+
+      expect(activity, 1);
+      // nothing else happened: no scene event
+      expect(dragCubit.state.sceneEvent.seq, 0);
+    });
+
     test('a drag action foreign to the scene is ignored', () async {
       cubit.onSceneDragEvent(SceneEvent.bell);
       await drain();

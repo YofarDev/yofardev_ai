@@ -92,6 +92,7 @@ class RiveSceneView extends StatefulWidget {
     this.onDragHaptic,
     this.onDragFoley,
     this.onDragEvent,
+    this.onDragStarted,
   });
 
   final AvatarScene scene;
@@ -160,6 +161,10 @@ class RiveSceneView extends StatefulWidget {
   final ValueChanged<String>? onDragFoley;
   final ValueChanged<SceneEvent>? onDragEvent;
 
+  /// A drag started on the scene's handle (the user is here, even when the
+  /// drag fires no scene event).
+  final VoidCallback? onDragStarted;
+
   @override
   State<RiveSceneView> createState() => _RiveSceneViewState();
 }
@@ -227,6 +232,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
       ..onHaptic = widget.onDragHaptic
       ..onFoley = widget.onDragFoley
       ..onSceneEvent = widget.onDragEvent
+      ..onStarted = widget.onDragStarted
       ..parallax = _dragParallax
       ..enabled = widget.dragsEnabled;
   }
