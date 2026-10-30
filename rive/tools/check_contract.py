@@ -80,6 +80,12 @@ def parse_contract() -> dict:
     for sid, evs, pids in table_after(scene_sec, r"^\| sceneId"):
         scenes[sid] = ([v.strip() for v in evs.split(",")], [v.strip() for v in pids.split(",")])
     c["scenes"] = scenes
+    # v9: which scenes carry the `SceneFront` artboard ("campfire and beach have one; ...")
+    flat = " ".join(scene_sec.split())
+    m = re.search(r"may carry a second artboard `(\w+)`", flat)
+    have = re.search(r"\. ([\w, ]+?) have one;", flat)
+    c["front_artboard"] = m.group(1) if m else None
+    c["front_scenes"] = {s.strip() for s in re.split(r",| and ", have.group(1)) if s.strip()} if have else set()
     ui: dict[str, dict] = {}
     for ab, size, prop, typ, vals in table_after(ui_sec, r"^\| Artboard"):
         a = ui.setdefault(ticks(ab)[0], {"size": tuple(int(v) for v in size.split("×")), "props": {}})
@@ -318,6 +324,30 @@ def diorama_lint(rml_of: dict[str, str] | None = None) -> list[str]:
     return out
 
 
+def check_front(sid: str, j: dict, c: dict, scene_vm: dict) -> None:
+    """Contract v9: `SceneFront` exactly in the scenes the contract names, with a `Main` state
+    machine, the scene's `SceneVM`, and no listeners or events (the app never hit-tests it)."""
+    name = c["front_artboard"]
+    if name is None or not c["front_scenes"]:
+        err("contract: the v9 front artboard paragraph could not be parsed")
+        return
+    fronts = [a for a in j["artboards"] if a.get("name") == name]
+    want = sid in c["front_scenes"]
+    if len(fronts) != (1 if want else 0):
+        err(f"{sid}: {len(fronts)} `{name}` artboards, contract wants {1 if want else 0}")
+        return
+    if not fronts:
+        return
+    ab = fronts[0]
+    sms = {s["id"]: s for s in nodes(ab, "StateMachine")}
+    if sms.get(ab.get("defaultStateMachineId"), {}).get("name") != c["scene_sm"]:
+        err(f"{sid}: `{name}` default state machine is not `{c['scene_sm']}`")
+    if scene_vm and ab.get("viewModelId") != scene_vm.get("id"):
+        err(f"{sid}: `{name}` does not use `{c['scene_vm']}`")
+    if any(n.get("type", "").startswith("StateMachineListener") or n.get("type") == "Event" for n in nodes(ab)):
+        err(f"{sid}: `{name}` has listeners or events (the contract allows none)")
+
+
 def main() -> int:
     c = parse_contract()
     # ---------------- avatar
@@ -379,6 +409,7 @@ def main() -> int:
             seen = sorted(p.get(c["scene_event_prop"], "") for p in evs.get(c["scene_event_name"], []))
             if seen != sorted(prop_ids):
                 err(f"{sid}: propIds {seen} != contract {sorted(prop_ids)}")
+        check_front(sid, j, c, vm)
         check_riv_bytes(ROOT / "assets" / "rive" / "scenes" / f"{sid}.riv",
                         [c["scene_artboard"], c["scene_sm"], c["scene_vm"], c["scene_event_name"], *ev_vals, *prop_ids,
                          *c["scene_vm_props"]])

@@ -313,6 +313,48 @@ void main() {
           );
         }
 
+        // v9: the front artboard exactly where the contract says.
+        final Artboard? front = file.artboard(
+          AvatarRiveContract.sceneFrontArtboard,
+        );
+        if (AvatarRiveContract.sceneFrontScenes.contains(sceneId)) {
+          expect(front, isNotNull, reason: '$sceneId SceneFront');
+          expect(
+            front!.stateMachine(AvatarRiveContract.sceneStateMachine),
+            isNotNull,
+            reason: '$sceneId SceneFront Main',
+          );
+          final RiveWidgetController frontController = RiveWidgetController(
+            file,
+            artboardSelector: ArtboardSelector.byName(
+              AvatarRiveContract.sceneFrontArtboard,
+            ),
+            stateMachineSelector: StateMachineSelector.byName(
+              AvatarRiveContract.sceneStateMachine,
+            ),
+          );
+          final ViewModelInstance frontVmi = frontController.dataBind(
+            DataBind.auto(),
+          );
+          for (final String name in <String>[
+            AvatarRiveContract.scenePropRain,
+            AvatarRiveContract.scenePropParallaxX,
+            AvatarRiveContract.scenePropParallaxY,
+          ]) {
+            expect(
+              frontVmi.number(name),
+              isNotNull,
+              reason: '$sceneId SceneFront $name',
+            );
+          }
+          frontVmi.dispose();
+          frontController.dispose();
+          front.dispose();
+        } else {
+          expect(front, isNull, reason: '$sceneId has no SceneFront');
+        }
+        artboard.dispose();
+
         vmi.dispose();
         controller.dispose();
         file.dispose();

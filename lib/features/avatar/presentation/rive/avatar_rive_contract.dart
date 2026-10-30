@@ -287,6 +287,13 @@ abstract final class AvatarRiveContract {
   /// from the app's world state; a scene without rain art ignores it.
   static const String scenePropRain = 'rain';
 
+  /// Contract v9: the optional artboard drawn above the avatar (weather in
+  /// front of it), with its own `Main` state machine and the same `SceneVM`.
+  static const String sceneFrontArtboard = 'SceneFront';
+
+  /// The scenes whose file has a [sceneFrontArtboard].
+  static const Set<String> sceneFrontScenes = <String>{'campfire', 'beach'};
+
   /// Names `SceneVM` carries as light defaults (equal to `AvatarVM`'s, plus
   /// `lightFog`, minus `lightAmbientAmount`).
   static const List<String> sceneLightProps = <String>[
