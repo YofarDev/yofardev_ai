@@ -689,6 +689,43 @@ void main() {
         },
       );
 
+      test(
+        'the analysis may use the breath before speaking: one ready during the pre-roll is used',
+        () async {
+          // M6: the in-app capture showed the first sentence (no previous
+          // sentence to overlap with) always fell back to amplitudes,
+          // because the wait's clock started with the 350 ms breath.
+          await cubit.close();
+          cubit = ChatTtsCubit(
+            ttsQueueManager: mockTtsManager,
+            audioAmplitudeService: mockAmplitudeService,
+            audioPlayerService: mockPlayerService,
+            interruptionService: interruptionService,
+            ttsPlaybackService: mockTtsPlaybackService,
+            speechPreroll: const Duration(milliseconds: 300),
+          );
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+            ),
+          ).thenAnswer((_) async {
+            // past timelineWait alone, inside breath + timelineWait
+            await Future<void>.delayed(const Duration(milliseconds: 330));
+            return analysed;
+          });
+
+          mockTtsManager.emitAudioPath(path);
+          final Stopwatch watch = Stopwatch()..start();
+          while (mockTtsPlaybackService.timelines.isEmpty &&
+              watch.elapsed < const Duration(seconds: 2)) {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+          expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[analysed]);
+        },
+      );
+
       test('a failed analysis plays with no timeline', () async {
         when(
           () => mockAmplitudeService.analyzeSpeech(

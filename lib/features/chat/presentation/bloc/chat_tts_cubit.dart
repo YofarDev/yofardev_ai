@@ -71,8 +71,9 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   /// closure).
   final Map<String, Viseme> _onsets = <String, Viseme>{};
 
-  /// Longest a sentence waits for its speech analysis before it plays; past
-  /// it the sentence plays with no timeline (the amplitude fallback).
+  /// Longest a sentence waits for its speech analysis after its breath (the
+  /// pre-roll); past it the sentence plays with no timeline (the amplitude
+  /// fallback).
   static const Duration timelineWait = Duration(milliseconds: 150);
 
   /// Time between announcing a sentence and playing it: the avatar draws a
@@ -243,8 +244,9 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         return;
       }
       // The analysis normally finished during the previous sentence; a slow
-      // one never holds the audio back more than [timelineWait]. The wait
-      // runs alongside the breath before speaking.
+      // one never holds the audio back more than [timelineWait] past the
+      // breath before speaking, which it may use whole (the first sentence
+      // has nothing else to overlap with).
       final Future<SpeechTimeline?> pendingTimeline = _takeTimeline(audioPath);
       if (_speechPreroll > Duration.zero) {
         _ttsPlaybackService.announceSpeech(
@@ -331,8 +333,6 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     }
   }
 
-  /// The prefetched analysis of [audioPath], waiting at most [timelineWait];
-  /// null when missing, failed or too slow.
   /// A sentence dropped before it played: its parked text, history entry
   /// and file go.
   void _dropUnplayed(String audioPath) {
@@ -354,13 +354,15 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     return null;
   }
 
+  /// The prefetched analysis of [audioPath], waiting at most the pre-roll
+  /// plus [timelineWait]; null when missing, failed or too slow.
   Future<SpeechTimeline?> _takeTimeline(String audioPath) async {
     final Future<SpeechTimeline?>? pending = _timelineFutures.remove(audioPath);
     if (pending == null) {
       return null;
     }
     return pending.timeout(
-      timelineWait,
+      _speechPreroll + timelineWait,
       onTimeout: () {
         AppLogger.debug(
           'Speech analysis not ready for $audioPath, using amplitudes',
