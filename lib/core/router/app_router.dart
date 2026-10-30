@@ -11,6 +11,7 @@ import 'package:nested/nested.dart';
 import '../../../core/di/service_locator.dart';
 import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/presentation/bloc/avatar_state.dart';
+import '../../features/avatar/domain/services/camera_director.dart';
 import '../../features/avatar/domain/services/face_performer.dart';
 import '../../features/avatar/presentation/rive/rive_lab_screen.dart';
 import '../../features/chat/screens/chat_details_screen.dart';
@@ -69,6 +70,7 @@ class AppRouter {
             parallax: getIt<ParallaxSource>(),
             world: getIt<WorldStateService>(),
             facePerformer: getIt<FacePerformer>(),
+            camera: getIt<CameraDirector>(),
           );
           return MaterialPage<void>(
             key: state.pageKey,

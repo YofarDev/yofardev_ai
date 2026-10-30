@@ -21,7 +21,8 @@ import '../widgets/home_content_stack.dart';
 /// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
 ///
-/// [speech], [composerActivity], [parallax], [world] and [facePerformer] come
+/// [speech], [composerActivity], [parallax], [world], [facePerformer] and
+/// [camera] come
 /// from the route (Home never reads the service locator).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -31,6 +32,7 @@ class HomeScreen extends StatefulWidget {
     this.parallax,
     this.world,
     this.facePerformer,
+    this.camera,
   });
 
   final SpeechInputService speech;
@@ -46,6 +48,9 @@ class HomeScreen extends StatefulWidget {
 
   /// Drives the avatar's face and speech (null: static mood faces).
   final FacePerformer? facePerformer;
+
+  /// Frames the stage (null: no camera, the whole stage always).
+  final CameraDirector? camera;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -165,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       parallax: widget.parallax,
       world: widget.world,
       facePerformer: widget.facePerformer,
+      camera: widget.camera,
       onStartDemo: _startDemoMode,
     );
     if (!kDebugMode) {
@@ -184,7 +190,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         widget.composerActivity != oldWidget.composerActivity ||
         widget.parallax != oldWidget.parallax ||
         widget.world != oldWidget.world ||
-        widget.facePerformer != oldWidget.facePerformer) {
+        widget.facePerformer != oldWidget.facePerformer ||
+        widget.camera != oldWidget.camera) {
       _stage = _buildStage();
     }
   }

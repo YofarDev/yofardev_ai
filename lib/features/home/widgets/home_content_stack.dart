@@ -40,6 +40,7 @@ class HomeContentStack extends StatefulWidget {
     this.parallax,
     this.world,
     this.facePerformer,
+    this.camera,
     required this.onStartDemo,
   });
 
@@ -52,6 +53,9 @@ class HomeContentStack extends StatefulWidget {
 
   /// Drives the avatar's face and speech (null: static mood faces).
   final FacePerformer? facePerformer;
+
+  /// Frames the Rive stage, chrome excluded (null: always the whole stage).
+  final CameraDirector? camera;
   final VoidCallback onStartDemo;
 
   /// The glow's width, relative to the composer pill (the art fills about
@@ -102,10 +106,13 @@ class _HomeContentStackState extends State<HomeContentStack> {
     final Widget stack = Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        _RiveStage(
-          facePerformer: widget.facePerformer,
-          parallax: widget.parallax,
-          rain: widget.world?.rain,
+        _CameraStage(
+          camera: widget.camera,
+          child: _RiveStage(
+            facePerformer: widget.facePerformer,
+            parallax: widget.parallax,
+            rain: widget.world?.rain,
+          ),
         ),
         const StageScrim.top(),
         _TopBarSlot(
@@ -129,6 +136,51 @@ class _HomeContentStackState extends State<HomeContentStack> {
       onHover: _onHover,
       onExit: (PointerEvent _) => parallax.pointer(Offset.zero),
       child: stack,
+    );
+  }
+}
+
+/// Puts [child] (the Rive stage, never the chrome) behind the [camera]'s
+/// [StageCamera], and feeds the director what only the widget tree knows:
+/// the user's reduce-motion setting and the talking phase. Without a
+/// [camera] it is [child] itself.
+class _CameraStage extends StatefulWidget {
+  const _CameraStage({required this.camera, required this.child});
+
+  final CameraDirector? camera;
+  final Widget child;
+
+  @override
+  State<_CameraStage> createState() => _CameraStageState();
+}
+
+class _CameraStageState extends State<_CameraStage> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    widget.camera?.setReduceMotion(MediaQuery.disableAnimationsOf(context));
+  }
+
+  @override
+  void didUpdateWidget(_CameraStage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.camera != oldWidget.camera) {
+      widget.camera?.setReduceMotion(MediaQuery.disableAnimationsOf(context));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final CameraDirector? camera = widget.camera;
+    if (camera == null) {
+      return widget.child;
+    }
+    return BlocListener<TalkingCubit, TalkingState>(
+      listenWhen: (TalkingState previous, TalkingState current) =>
+          previous.phase != current.phase,
+      listener: (BuildContext context, TalkingState state) =>
+          camera.setPhase(state.phase),
+      child: StageCamera(shot: camera.shot, child: widget.child),
     );
   }
 }

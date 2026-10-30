@@ -34,6 +34,7 @@ class LabConfig {
     this.face,
     this.prop = AvatarProp.none,
     this.parallax,
+    this.shot = Shot.wide,
   });
 
   /// The lab's starting point.
@@ -73,6 +74,9 @@ class LabConfig {
   /// leaves the scene to the live source.
   final Offset? parallax;
 
+  /// The camera framing of the stage, cut to by hand (moonshot M7).
+  final Shot shot;
+
   static const double maxGlassAlphaScale = 4;
   static const double maxRadiusScale = 3;
 
@@ -90,6 +94,7 @@ class LabConfig {
     Object? face = _keep,
     AvatarProp? prop,
     Object? parallax = _keep,
+    Shot? shot,
   }) {
     return LabConfig(
       scene: scene ?? this.scene,
@@ -109,6 +114,7 @@ class LabConfig {
       parallax: identical(parallax, _keep)
           ? this.parallax
           : parallax as Offset?,
+      shot: shot ?? this.shot,
     );
   }
 
@@ -126,6 +132,7 @@ class LabConfig {
     'parallax': parallax == null
         ? null
         : <String, double>{'x': parallax!.dx, 'y': parallax!.dy},
+    'shot': shot.name,
   };
 
   static const Set<String> _keys = <String>{
@@ -140,6 +147,7 @@ class LabConfig {
     'face',
     'prop',
     'parallax',
+    'shot',
   };
 
   /// Parses [json]. Missing keys take the [initial] values; unknown keys,
@@ -177,6 +185,7 @@ class LabConfig {
       face: json['face'] == null ? null : LabFace.fromJson(json['face']),
       prop: _enum(json, 'prop', AvatarProp.values, initial.prop),
       parallax: json['parallax'] == null ? null : _parallax(json['parallax']),
+      shot: _enum(json, 'shot', Shot.values, initial.shot),
     );
   }
 
@@ -274,7 +283,8 @@ class LabConfig {
       other.panelCollapsed == panelCollapsed &&
       other.face == face &&
       other.prop == prop &&
-      other.parallax == parallax;
+      other.parallax == parallax &&
+      other.shot == shot;
 
   @override
   int get hashCode => Object.hash(
@@ -289,6 +299,7 @@ class LabConfig {
     face,
     prop,
     parallax,
+    shot,
   );
 
   @override

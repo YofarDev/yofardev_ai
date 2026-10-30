@@ -98,6 +98,21 @@ void main() {
       expect(config, isNot(LabConfig.initial));
     });
 
+    test('shot round-trips and defaults to wide', () {
+      expect(LabConfig.initial.shot, Shot.wide);
+      expect(LabConfig.initial.toJson()['shot'], 'wide');
+      final LabConfig config = LabConfig.initial.copyWith(shot: Shot.closeUp);
+      expect(LabConfig.fromJson(config.toJson()), config);
+      expect(config.copyWith(scene: AvatarScene.beach).shot, Shot.closeUp);
+      expect(config, isNot(LabConfig.initial));
+      for (final Object? bad in <Object?>['dolly', 1, null]) {
+        expect(
+          () => LabConfig.fromJson(<String, Object?>{'shot': bad}),
+          throwsFormatException,
+        );
+      }
+    });
+
     test('rejects an unknown prop and a bad parallax', () {
       for (final Map<String, Object?> bad in <Map<String, Object?>>[
         <String, Object?>{'prop': 'telescope'},

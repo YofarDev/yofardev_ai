@@ -13,6 +13,7 @@ import '../../rive/avatar_rive_contract.dart';
 import '../../rive/scene_front_follower.dart';
 import '../../rive/scene_parallax_writer.dart';
 import '../../rive/scene_rain_writer.dart';
+import '../stage_camera.dart';
 import 'latest_load_gate.dart';
 
 /// Rive rendering of the scene currently on screen.
@@ -382,7 +383,11 @@ class _RiveSceneViewState extends State<RiveSceneView>
     final Widget? middle = widget.middle;
     final RiveWidgetController? front = _frontController;
     final bool loaded = _controller != null && _loadedScene == widget.scene;
-    final Widget back = _back(context);
+    // The camera's texture scale: changes once per shot, not per frame.
+    final RenderResolution resolution = RenderResolution.layout(
+      scale: StageRenderScale.of(context),
+    );
+    final Widget back = _back(context, resolution);
     // A file with a front always sits in the Stack, so the front coming and
     // going never remounts the back.
     if (middle == null && !_hasFront) {
@@ -396,16 +401,24 @@ class _RiveSceneViewState extends State<RiveSceneView>
         ?middle,
         if (front != null && loaded)
           IgnorePointer(
-            child: RiveWidget(controller: front, fit: Fit.cover),
+            child: RiveWidget(
+              controller: front,
+              fit: Fit.cover,
+              renderResolution: resolution,
+            ),
           ),
       ],
     );
   }
 
-  Widget _back(BuildContext context) {
+  Widget _back(BuildContext context, RenderResolution resolution) {
     final RiveWidgetController? controller = _controller;
     if (controller != null && _loadedScene == widget.scene) {
-      return RiveWidget(controller: controller, fit: Fit.cover);
+      return RiveWidget(
+        controller: controller,
+        fit: Fit.cover,
+        renderResolution: resolution,
+      );
     }
     if (_error != null && !kReleaseMode) {
       return ColoredBox(

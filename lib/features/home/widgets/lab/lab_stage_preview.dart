@@ -6,6 +6,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/performance/avatar_prop.dart';
+import '../../../../core/models/performance/shot.dart';
 import '../../../../core/services/world/world_state_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../avatar/avatar.dart';
@@ -128,6 +129,11 @@ class _LabStagePreviewState extends State<LabStagePreview>
   );
   bool _reduceMotion = false;
 
+  /// The camera's command: the lab cuts to `config.shot` by hand.
+  late final ValueNotifier<CameraShot> _camera = ValueNotifier<CameraShot>(
+    CameraShot(shot: widget.config.shot, move: CameraMove.cut),
+  );
+
   bool get _speaking => widget.config.composer == LabComposerState.speaking;
 
   @override
@@ -141,12 +147,20 @@ class _LabStagePreviewState extends State<LabStagePreview>
   void didUpdateWidget(LabStagePreview oldWidget) {
     super.didUpdateWidget(oldWidget);
     _syncMouth();
+    if (widget.config.shot != _camera.value.shot) {
+      _camera.value = CameraShot(
+        shot: widget.config.shot,
+        move: CameraMove.cut,
+        serial: _camera.value.serial + 1,
+      );
+    }
   }
 
   @override
   void dispose() {
     _mouth.dispose();
     _syllable.dispose();
+    _camera.dispose();
     super.dispose();
   }
 
@@ -213,19 +227,22 @@ class _LabStagePreviewState extends State<LabStagePreview>
                           prop: config.prop,
                           parallax: config.parallax,
                           rain: widget.world?.rain,
-                          child: ValueListenableBuilder<MouthState>(
-                            valueListenable: _syllable,
-                            builder:
-                                (
-                                  BuildContext context,
-                                  MouthState syllable,
-                                  Widget? _,
-                                ) => widget.stageBuilder(
-                                  context,
-                                  config.scene,
-                                  _talkingState(syllable),
-                                  config.face,
-                                ),
+                          child: StageCamera(
+                            shot: _camera,
+                            child: ValueListenableBuilder<MouthState>(
+                              valueListenable: _syllable,
+                              builder:
+                                  (
+                                    BuildContext context,
+                                    MouthState syllable,
+                                    Widget? _,
+                                  ) => widget.stageBuilder(
+                                    context,
+                                    config.scene,
+                                    _talkingState(syllable),
+                                    config.face,
+                                  ),
+                            ),
                           ),
                         ),
                         LabStageLayout(

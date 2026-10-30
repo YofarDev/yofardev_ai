@@ -17,6 +17,7 @@ import '../../rive/avatar_face_writer.dart';
 import '../../rive/avatar_light_writer.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../bloc/avatar_state.dart';
+import '../stage_camera.dart';
 
 /// Rive rendering of the avatar, driven entirely by [AvatarState] and
 /// [TalkingState].
@@ -478,6 +479,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
         controller: controller,
         fit: Fit.contain,
         alignment: Alignment.bottomCenter,
+        // The camera's texture scale: changes once per shot, not per frame.
+        renderResolution: RenderResolution.layout(
+          scale: StageRenderScale.of(context),
+        ),
       );
     }
     if (_error != null && !kReleaseMode) {

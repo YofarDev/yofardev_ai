@@ -13,6 +13,8 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/data/datasources/avatar_local_datasource.dart';
 import '../../features/avatar/data/repositories/avatar_repository_impl.dart';
 import '../../features/avatar/domain/repositories/avatar_repository.dart';
+import '../../features/avatar/domain/services/camera_director.dart';
+import '../../features/avatar/domain/services/camera_feed.dart';
 import '../../features/avatar/domain/services/face_performer.dart';
 import '../../features/avatar/domain/services/idle_ladder.dart';
 import '../../features/avatar/domain/services/performance_director.dart';
@@ -466,6 +468,27 @@ Future<void> setupServiceLocator({
     ),
   );
   getIt<FacePerformer>();
+  // The camera director (moonshot M7): eager, so it sees every sentence from
+  // the start. Reduce motion is read here and kept current by the Home stage;
+  // the talking phase comes from the Home stage too.
+  getIt.registerLazySingleton<CameraDirector>(
+    () => CameraDirector(now: DateTime.now)
+      ..setReduceMotion(
+        PlatformDispatcher.instance.accessibilityFeatures.disableAnimations,
+      ),
+    dispose: (CameraDirector camera) => camera.dispose(),
+  );
+  getIt.registerLazySingleton<CameraFeed>(
+    () => CameraFeed(
+      camera: getIt<CameraDirector>(),
+      playback: getIt<TtsPlaybackService>().events,
+      intents: getIt<PerformanceDirector>().intents,
+      animations: getIt<AvatarAnimationService>().animations,
+      emotion: () => getIt<PerformanceDirector>().current.emotion,
+    ),
+    dispose: (CameraFeed feed) => feed.dispose(),
+  );
+  getIt<CameraFeed>();
 
   getIt.registerFactory<DemoCubit>(
     () => DemoCubit(

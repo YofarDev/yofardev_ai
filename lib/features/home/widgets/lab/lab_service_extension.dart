@@ -106,7 +106,9 @@ Map<String, Object?> _paramsToJson(Map<String, String> params) {
 /// A `face` object replaces the whole lab face (missing names are 0), e.g.
 /// `{"auJawDrop":0.5,"auBrowOuterUpR":0.3,"roll":0.2}`; without a `blink`
 /// count it keeps the current one, so it never fires a blink by itself.
-/// `prop` is `none`, `tablet` or `newspaper`; `parallax` is
+/// `prop` is `none`, `tablet` or `newspaper`; `shot` (`wide`, `medium`,
+/// `closeUp` or `propInsert`) cuts the stage camera to that framing;
+/// `parallax` is
 /// `{"x":0.5,"y":-0.2}` (each -1..1) or `null`. `rain` is a number in 0..1
 /// handed to [world] ([WorldStateService.setRain]); it is rejected when no
 /// [world] is given and, like any invalid input, leaves the config alone.

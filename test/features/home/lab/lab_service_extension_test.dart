@@ -189,6 +189,33 @@ void main() {
       expect(notifier.value.parallax, isNull);
     });
 
+    test('shot frames the camera and rejects unknown names', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      for (final String name in <String>[
+        'medium',
+        'closeUp',
+        'propInsert',
+        'wide',
+      ]) {
+        final developer.ServiceExtensionResponse r = labConfigureResponse(
+          notifier,
+          <String, String>{'shot': name},
+        );
+        expect(r.errorCode, isNull);
+        expect(notifier.value.shot.name, name);
+        expect(_decode(labStateResponse(notifier))['shot'], name);
+      }
+      labConfigureResponse(notifier, <String, String>{'shot': 'closeUp'});
+      final developer.ServiceExtensionResponse bad = labConfigureResponse(
+        notifier,
+        <String, String>{'shot': 'dolly'},
+      );
+      expect(bad.errorCode, developer.ServiceExtensionResponse.extensionError);
+      expect(notifier.value.shot.name, 'closeUp');
+    });
+
     test('a face object sets the lab face; null goes back to live', () {
       final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
         LabConfig.initial,
