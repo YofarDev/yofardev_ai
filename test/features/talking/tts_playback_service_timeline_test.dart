@@ -164,6 +164,119 @@ void main() {
     });
   });
 
+  group('replaceTimeline', () {
+    const SpeechTimeline late = SpeechTimeline(
+      visemes: <VisemeSpan>[
+        VisemeSpan(
+          viseme: Viseme.pp,
+          start: Duration.zero,
+          end: Duration(milliseconds: 60),
+        ),
+      ],
+      duration: Duration(milliseconds: 60),
+    );
+    late TtsPlaybackService service;
+    late List<PlaybackEvent> events;
+
+    setUp(() {
+      service = TtsPlaybackService(repository);
+      events = <PlaybackEvent>[];
+      service.events.listen(events.add);
+    });
+
+    tearDown(() => service.dispose());
+
+    Future<void> start(String path) async {
+      service.startAmplitudeAnimation(
+        path,
+        <int>[3, 3, 3],
+        const Duration(seconds: 1),
+        caption: 'Hi there.',
+      );
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    test(
+      'a second timeline event for the playing sentence, marked as a replacement',
+      () async {
+        await start('/a.wav');
+        events.clear();
+
+        expect(service.replaceTimeline('/a.wav', late), isTrue);
+        await Future<void>.delayed(Duration.zero);
+        service.cancelAnimation();
+
+        // nothing else: no new sentence, no cues, no caption
+        expect(events, hasLength(1));
+        final SpeechTimelineEvent event = events.single as SpeechTimelineEvent;
+        expect(event.timeline, late);
+        expect(event.replacesCurrent, isTrue);
+      },
+    );
+
+    test('the first event of a sentence is not a replacement', () async {
+      await start('/a.wav');
+      service.cancelAnimation();
+
+      expect(
+        events.whereType<SpeechTimelineEvent>().single.replacesCurrent,
+        isFalse,
+      );
+    });
+
+    test('nothing for a sentence that was interrupted or stopped', () async {
+      await start('/a.wav');
+      await service.interrupt();
+      events.clear();
+      expect(service.replaceTimeline('/a.wav', late), isFalse);
+
+      await start('/b.wav');
+      await service.stop();
+      await Future<void>.delayed(Duration.zero);
+      events.clear();
+      expect(service.replaceTimeline('/b.wav', late), isFalse);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(events, isEmpty);
+    });
+
+    test('nothing for a sentence that already finished', () {
+      fakeAsync((FakeAsync async) {
+        final _FakeStopwatch stopwatch = _FakeStopwatch();
+        final TtsPlaybackService timed = TtsPlaybackService(
+          repository,
+          tick: const Duration(milliseconds: 10),
+          stopwatchFactory: () => stopwatch,
+        );
+        final List<PlaybackEvent> seen = <PlaybackEvent>[];
+        timed.events.listen(seen.add);
+        timed.startAmplitudeAnimation('/a.wav', <int>[
+          3,
+          3,
+        ], const Duration(milliseconds: 100));
+        stopwatch.advance(const Duration(milliseconds: 200));
+        async.elapse(const Duration(milliseconds: 20));
+        expect(seen.whereType<AnimationCompletedEvent>(), isNotEmpty);
+        seen.clear();
+
+        expect(timed.replaceTimeline('/a.wav', late), isFalse);
+        async.flushMicrotasks();
+        expect(seen, isEmpty);
+        timed.dispose();
+      });
+    });
+
+    test('nothing for the previous sentence once the next one plays', () async {
+      await start('/a.wav');
+      await start('/b.wav');
+      events.clear();
+
+      expect(service.replaceTimeline('/a.wav', late), isFalse);
+      expect(service.replaceTimeline('/b.wav', late), isTrue);
+      service.cancelAnimation();
+    });
+  });
+
   group('speechPosition', () {
     test('without a clock: null before, advancing during, null after stop', () {
       fakeAsync((FakeAsync async) {

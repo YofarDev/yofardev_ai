@@ -43,6 +43,11 @@ class _Rig {
     playback.add(SpeechTimelineEvent(t));
   }
 
+  /// A late analysis of the sentence that plays (the same event the playback
+  /// service sends for it).
+  void replace(SpeechTimeline t) =>
+      playback.add(SpeechTimelineEvent(t, replacesCurrent: true));
+
   /// Steps [n] frames, advancing the speech position with time while speaking.
   List<FaceFrame> run(int n) {
     final List<FaceFrame> out = <FaceFrame>[];
@@ -1941,6 +1946,130 @@ void main() {
       expect(high(1750, 2050), greaterThan(0.2));
       expect(low(1750, 2050), greaterThan(-0.06));
       expect(FacePerformer.questionNodLift, 0.3);
+    });
+  });
+
+  group('a late analysis replaces the timeline mid-sentence', () {
+    const ProsodyMark early = ProsodyMark(
+      kind: ProsodyMarkKind.stress,
+      at: Duration(milliseconds: 200),
+    );
+    const ProsodyMark later = ProsodyMark(
+      kind: ProsodyMarkKind.stress,
+      at: Duration(milliseconds: 1000),
+    );
+
+    test('the visemes follow it from the current position on', () {
+      // the amplitude fallback: one long open sound
+      rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 2000)]));
+      final List<FaceFrame> before = rig.run(18); // ~300 ms
+      expect(before.last.au.jawDrop, greaterThan(0.5));
+      expect(before.every((FaceFrame f) => f.au.lipPress < 0.2), isTrue);
+
+      // the analysis: a lip closure at 450-520 ms
+      rig.replace(
+        _timeline(<(Viseme, int, int)>[
+          (Viseme.aa, 0, 450),
+          (Viseme.pp, 450, 520),
+          (Viseme.aa, 520, 2000),
+        ]),
+      );
+      final List<FaceFrame> after = rig.run(18); // up to ~600 ms
+      // frame i is stepped at position 300 ms + (i + 1) * 16.7 ms
+      final int inside = after.indexWhere(
+        (FaceFrame f) => f.au.lipPress >= 0.6 && f.au.jawDrop == 0,
+      );
+      expect(inside, isNonNegative);
+      final double at = 300 + (inside + 1) * 16.667;
+      expect(at, inInclusiveRange(450 - 17, 520));
+      // the open vowel after it
+      expect(after.last.au.jawDrop, greaterThan(0.4));
+    });
+
+    test('the sentence is not restarted: a nod already played is not '
+        'replayed', () {
+      List<double> nods(bool swap) {
+        final _Rig r = _Rig();
+        r.speak(
+          _timeline(
+            <(Viseme, int, int)>[(Viseme.aa, 0, 2000)],
+            marks: <ProsodyMark>[early],
+          ),
+        );
+        final List<double> out = <double>[
+          for (final FaceFrame f in r.run(18)) f.nodPitch,
+        ];
+        if (swap) {
+          // the analysis carries the same stress, now at the position
+          r.replace(
+            _timeline(
+              <(Viseme, int, int)>[(Viseme.aa, 0, 2000)],
+              marks: <ProsodyMark>[early],
+            ),
+          );
+        }
+        out.addAll(<double>[for (final FaceFrame f in r.run(72)) f.nodPitch]);
+        r.dispose();
+        return out;
+      }
+
+      final List<double> plain = nods(false);
+      final List<double> swapped = nods(true);
+      expect(plain.reduce(math.min), lessThan(-0.05), reason: 'a nod to see');
+      for (int i = 0; i < plain.length; i++) {
+        expect(swapped[i], closeTo(plain[i], 1e-9), reason: 'frame $i');
+      }
+    });
+
+    test('a nod of the analysis still to come is performed', () {
+      rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 2000)]));
+      final List<FaceFrame> frames = rig.run(18);
+      rig.replace(
+        _timeline(
+          <(Viseme, int, int)>[(Viseme.aa, 0, 2000)],
+          marks: <ProsodyMark>[later],
+        ),
+      );
+      frames.addAll(rig.run(90));
+      double low = 0;
+      for (int i = 0; i < frames.length; i++) {
+        final double t = (i + 1) * 16.667;
+        if ((t - 1000).abs() < 150 && frames[i].nodPitch < low) {
+          low = frames[i].nodPitch;
+        }
+      }
+      expect(low, lessThan(-0.1));
+    });
+
+    test('the end of the voice follows the analysis', () {
+      // the fallback voices for 3 s; the analysis says the voice ends at 0.7 s
+      rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 3000)]));
+      rig.run(18);
+      rig.replace(
+        _timeline(<(Viseme, int, int)>[
+          (Viseme.aa, 0, 700),
+          (Viseme.sil, 700, 3000),
+        ]),
+      );
+      final List<FaceFrame> frames = rig.run(120); // to ~2.3 s
+      expect(frames.last.au.jawDrop, lessThan(0.05));
+    });
+
+    test('ignored when no sentence is speaking', () {
+      final List<FaceFrame> idle = rig.run(10);
+      rig.replace(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 2000)]));
+      final List<FaceFrame> after = rig.run(30);
+      expect(idle.every((FaceFrame f) => f.au.jawDrop == 0), isTrue);
+      expect(after.every((FaceFrame f) => f.au.jawDrop == 0), isTrue);
+
+      // nor after the sentence ended or was interrupted
+      rig.speak(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 2000)]));
+      rig.run(10);
+      rig.playback.add(const SpeakingStoppedEvent(interrupted: true));
+      rig.position = null;
+      rig.replace(_timeline(<(Viseme, int, int)>[(Viseme.aa, 0, 2000)]));
+      final List<FaceFrame> cut = rig.run(60);
+      expect(cut.last.au.jawDrop, lessThan(0.05));
     });
   });
 

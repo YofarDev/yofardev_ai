@@ -247,7 +247,22 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       // one never holds the audio back more than [timelineWait] past the
       // breath before speaking, which it may use whole (the first sentence
       // has nothing else to overlap with).
-      final Future<SpeechTimeline?> pendingTimeline = _takeTimeline(audioPath);
+      // The budget (pre-roll + [timelineWait]) starts now, with the breath.
+      bool analysisLate = false;
+      final Future<SpeechTimeline?>? pendingTimeline = _timelineFutures.remove(
+        audioPath,
+      );
+      final Future<SpeechTimeline?>? budgeted = pendingTimeline?.timeout(
+        _speechPreroll + timelineWait,
+        onTimeout: () {
+          AppLogger.debug(
+            'Speech analysis not ready for $audioPath, using amplitudes',
+            tag: 'ChatTtsCubit',
+          );
+          analysisLate = true;
+          return null;
+        },
+      );
       if (_speechPreroll > Duration.zero) {
         _ttsPlaybackService.announceSpeech(
           _speechPreroll,
@@ -255,7 +270,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         );
         await Future<void>.delayed(_speechPreroll);
       }
-      final SpeechTimeline? timeline = await pendingTimeline;
+      final SpeechTimeline? timeline = await budgeted;
       if (interrupted()) {
         _dropUnplayed(audioPath);
         return;
@@ -292,10 +307,26 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       // 5. Wait for playback completion OR interruption before processing next.
       final Completer<void> stopSignal = Completer<void>();
       _currentPlaybackStopSignal = stopSignal;
+
+      // A late analysis joins the sentence the moment it lands, if this
+      // sentence still plays. (The playback service checks the same, for the
+      // sentence that gave way to the next one.)
+      bool sentenceOver = false;
+      if (analysisLate && pendingTimeline != null) {
+        unawaited(
+          pendingTimeline.then((SpeechTimeline? late) {
+            if (late == null || sentenceOver || interrupted()) {
+              return;
+            }
+            _ttsPlaybackService.replaceTimeline(audioPath, late);
+          }),
+        );
+      }
       await Future.any(<Future<void>>[
         _audioPlayerService.onPlaybackComplete.first,
         stopSignal.future,
       ]);
+      sentenceOver = true;
 
       AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
       _amplitudeFutures.remove(audioPath);
@@ -352,25 +383,6 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       }
     }
     return null;
-  }
-
-  /// The prefetched analysis of [audioPath], waiting at most the pre-roll
-  /// plus [timelineWait]; null when missing, failed or too slow.
-  Future<SpeechTimeline?> _takeTimeline(String audioPath) async {
-    final Future<SpeechTimeline?>? pending = _timelineFutures.remove(audioPath);
-    if (pending == null) {
-      return null;
-    }
-    return pending.timeout(
-      _speechPreroll + timelineWait,
-      onTimeout: () {
-        AppLogger.debug(
-          'Speech analysis not ready for $audioPath, using amplitudes',
-          tag: 'ChatTtsCubit',
-        );
-        return null;
-      },
-    );
   }
 
   /// Clear the audio paths list (e.g., when starting a new message)

@@ -111,6 +111,15 @@ class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
   /// Speech timelines passed to [startAmplitudeAnimation], in call order.
   final List<SpeechTimeline?> timelines = <SpeechTimeline?>[];
 
+  /// Late timelines handed to [replaceTimeline], as (audio path, timeline).
+  final List<(String, SpeechTimeline)> replaced = <(String, SpeechTimeline)>[];
+
+  @override
+  bool replaceTimeline(String audioPath, SpeechTimeline timeline) {
+    replaced.add((audioPath, timeline));
+    return true;
+  }
+
   /// Order of the stop-related calls received (see the interruption test).
   final List<String> calls = <String>[];
 
@@ -725,6 +734,111 @@ void main() {
           expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[analysed]);
         },
       );
+
+      group('an analysis landing after the audio started', () {
+        // The wait budget is 150 ms with no pre-roll: 300 ms is late.
+        void lateAnalysis(Duration after) {
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+            ),
+          ).thenAnswer((_) async {
+            await Future<void>.delayed(after);
+            return analysed;
+          });
+        }
+
+        Future<void> untilPlaying() async {
+          final Stopwatch watch = Stopwatch()..start();
+          while (mockTtsPlaybackService.timelines.isEmpty &&
+              watch.elapsed < const Duration(seconds: 2)) {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+        }
+
+        test(
+          'is handed to the playback service for the sentence that plays',
+          () async {
+            lateAnalysis(const Duration(milliseconds: 300));
+
+            mockTtsManager.emitAudioPath(path);
+            await untilPlaying();
+            // the sentence starts on the amplitude fallback...
+            expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[null]);
+            expect(mockTtsPlaybackService.replaced, isEmpty);
+
+            // ...and takes the analysis over once it lands
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+            expect(mockTtsPlaybackService.replaced, <(String, SpeechTimeline)>[
+              (path, analysed),
+            ]);
+            expect(
+              mockTtsPlaybackService.timelines,
+              hasLength(1),
+              reason: 'the sentence is not started a second time',
+            );
+          },
+        );
+
+        test('is dropped when the sentence already ended', () async {
+          lateAnalysis(const Duration(milliseconds: 300));
+
+          mockTtsManager.emitAudioPath(path);
+          await untilPlaying();
+          mockPlayerService.emitPlaybackComplete();
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+
+          expect(mockTtsPlaybackService.replaced, isEmpty);
+        });
+
+        test('is dropped when the speech was interrupted', () async {
+          lateAnalysis(const Duration(milliseconds: 300));
+
+          mockTtsManager.emitAudioPath(path);
+          await untilPlaying();
+          await interruptionService.interrupt();
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+
+          expect(mockTtsPlaybackService.replaced, isEmpty);
+        });
+
+        test(
+          'an on-time analysis is the only timeline: no replacement',
+          () async {
+            lateAnalysis(const Duration(milliseconds: 20));
+
+            mockTtsManager.emitAudioPath(path);
+            await untilPlaying();
+            await Future<void>.delayed(const Duration(milliseconds: 350));
+
+            expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[
+              analysed,
+            ]);
+            expect(mockTtsPlaybackService.replaced, isEmpty);
+          },
+        );
+
+        test('a failed late analysis changes nothing', () async {
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+            ),
+          ).thenAnswer((_) async {
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+            throw StateError('boom');
+          });
+
+          mockTtsManager.emitAudioPath(path);
+          await untilPlaying();
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+
+          expect(mockTtsPlaybackService.replaced, isEmpty);
+        });
+      });
 
       test('a failed analysis plays with no timeline', () async {
         when(

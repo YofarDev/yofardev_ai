@@ -288,6 +288,9 @@ class MockTtsPlaybackService implements TtsPlaybackService {
   @override
   void announceSpeech(Duration lead, {Viseme? onset}) {}
 
+  @override
+  bool replaceTimeline(String audioPath, SpeechTimeline timeline) => false;
+
   final StreamController<PlaybackEvent> _controller =
       StreamController<PlaybackEvent>.broadcast();
 

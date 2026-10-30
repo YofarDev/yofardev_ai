@@ -1066,6 +1066,11 @@ class FacePerformer {
 
   void _onPlayback(PlaybackEvent event) {
     switch (event) {
+      case SpeechTimelineEvent(
+        :final SpeechTimeline timeline,
+        replacesCurrent: true,
+      ):
+        _replaceTimeline(timeline);
       case SpeechTimelineEvent(:final SpeechTimeline timeline):
         _timeline = timeline;
         _speaking = true;
@@ -1120,6 +1125,87 @@ class FacePerformer {
       default:
         break;
     }
+  }
+
+  /// A late speech analysis replaces the timeline of the sentence already
+  /// playing (the one it started with was synthesised from the amplitudes).
+  /// Only the source of the visemes, the voice end and the prosody changes:
+  /// the sentence's own state (breath, settle, blink spacing, the position,
+  /// the nods and brow beats already played, a question's rise already
+  /// begun) is kept, and the seeded draws of what is already on screen are
+  /// not redrawn. Ignored when no sentence is speaking.
+  void _replaceTimeline(SpeechTimeline timeline) {
+    if (!_speaking || _timeline == null) {
+      return;
+    }
+    final double posS = _s(_lastPos);
+    _timeline = timeline;
+    _voiceEnd = _voiceEndOf(timeline);
+
+    // a question's rise that already began keeps playing as it is
+    final bool riseBegun =
+        _questionAt >= 0 && posS >= _questionAt - _questionLead;
+    final ProsodyMark? rise = _finalRise(timeline);
+    if (!riseBegun) {
+      _questionAt = timeline.isQuestion ? _risingSyllable(timeline, rise) : -1;
+      _questionSlope = rise?.slope;
+    }
+
+    // beats already played (or begun) stay with the draws they had; the
+    // analysed ones still to come are added and drawn as for a new sentence
+    final List<ProsodyMark> oldNods = _nods;
+    final List<double> oldDepth = _nodDepth;
+    final List<double> oldRelease = _nodReleaseOf;
+    final List<double> oldAttack = _nodAttackOf;
+    final List<double> oldAccent = _accent;
+    final List<ProsodyMark> oldPeaks = _peaks;
+    final List<double> oldSide = _peakSide;
+    final List<ProsodyMark> keptNods = <ProsodyMark>[
+      for (final ProsodyMark m in oldNods)
+        if (_s(m.at) <= posS) m,
+    ];
+    final List<ProsodyMark> keptPeaks = <ProsodyMark>[
+      for (final ProsodyMark m in oldPeaks)
+        if (_s(m.at) <= posS) m,
+    ];
+    final double lastNod = keptNods.isEmpty ? -100 : _s(keptNods.last.at);
+    final double lastPeak = keptPeaks.isEmpty ? -100 : _s(keptPeaks.last.at);
+    final List<ProsodyMark> newNods = <ProsodyMark>[
+      for (final ProsodyMark m in _spaced(
+        timeline.marks,
+        ProsodyMarkKind.stress,
+        _nodGap,
+      ))
+        if (_s(m.at) > posS && _s(m.at) - lastNod >= _nodGap) m,
+    ];
+    _nods = <ProsodyMark>[...keptNods, ...newNods];
+    _drawNods();
+    for (int i = 0; i < keptNods.length; i++) {
+      final int o = oldNods.indexOf(keptNods[i]);
+      _nodDepth[i] = oldDepth[o];
+      _nodReleaseOf[i] = oldRelease[o];
+      _nodAttackOf[i] = oldAttack[o];
+      _accent[i] = oldAccent[o];
+    }
+
+    final List<ProsodyMark> newPeaks = _spaced(
+      <ProsodyMark>[
+        for (final ProsodyMark m in timeline.marks)
+          if (_s(m.at) > posS &&
+              _s(m.at) - lastPeak >= _browGap &&
+              (_questionAt < 0 ||
+                  (!identical(m, rise) &&
+                      _s(m.at) <= _questionAt - _questionClear)))
+            m,
+      ],
+      ProsodyMarkKind.pitchPeak,
+      _browGap,
+    );
+    _peaks = <ProsodyMark>[...keptPeaks, ...newPeaks];
+    _peakSide = <double>[
+      for (final ProsodyMark m in keptPeaks) oldSide[oldPeaks.indexOf(m)],
+      for (int i = 0; i < newPeaks.length; i++) _drawSplit(),
+    ];
   }
 
   /// A brow pulse's signed split: 7.5–15 % to one side, the side seeded.

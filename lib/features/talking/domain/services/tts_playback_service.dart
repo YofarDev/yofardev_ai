@@ -47,9 +47,18 @@ class SpeechPrerollEvent extends PlaybackEvent {
 /// viseme spans and prosody marks, or a timeline synthesised from the
 /// amplitudes when no analysis is available. Times are relative to the start
 /// of the audio ([TtsPlaybackService.speechPosition]).
+///
+/// A sentence whose analysis landed after its audio started gets a second
+/// event with [replacesCurrent] true ([TtsPlaybackService.replaceTimeline]):
+/// the same sentence, the analysed timeline, same time base. A consumer that
+/// treats a timeline event as the start of a sentence must ignore it.
 class SpeechTimelineEvent extends PlaybackEvent {
-  const SpeechTimelineEvent(this.timeline);
+  const SpeechTimelineEvent(this.timeline, {this.replacesCurrent = false});
   final SpeechTimeline timeline;
+
+  /// True when this swaps the timeline of the sentence already playing (its
+  /// analysis arrived late) instead of starting a sentence.
+  final bool replacesCurrent;
 }
 
 /// Emitted the moment a TTS queue item's audio starts playing (or
@@ -98,6 +107,9 @@ class TtsPlaybackService {
   static const Duration _defaultFrameDuration = Duration(milliseconds: 25);
 
   Timer? _animationTimer;
+
+  /// The audio file of the sentence whose animation runs (null: none).
+  String? _playingAudioPath;
   Stopwatch? _fallbackStopwatch;
   bool _animationCompleted = false;
 
@@ -146,6 +158,19 @@ class TtsPlaybackService {
     await _repository.stop();
   }
 
+  /// Swaps the timeline of the sentence now playing for [timeline], its late
+  /// speech analysis (times relative to the audio start, like the first
+  /// one). Does nothing unless [audioPath] is still the sentence that plays:
+  /// a sentence that ended, was interrupted or was followed by another gets
+  /// nothing. Returns whether the event went out.
+  bool replaceTimeline(String audioPath, SpeechTimeline timeline) {
+    if (_animationTimer == null || _playingAudioPath != audioPath) {
+      return false;
+    }
+    _controller.add(SpeechTimelineEvent(timeline, replacesCurrent: true));
+    return true;
+  }
+
   void startAmplitudeAnimation(
     String audioPath,
     List<int> amplitudes,
@@ -161,6 +186,7 @@ class TtsPlaybackService {
 
     _cancelAnimation();
     _animationCompleted = false;
+    _playingAudioPath = audioPath;
 
     if (amplitudes.isEmpty) {
       AppLogger.debug(
@@ -236,6 +262,7 @@ class TtsPlaybackService {
   void _completeAnimation(Timer timer) {
     timer.cancel();
     _animationTimer = null;
+    _playingAudioPath = null;
     _fallbackStopwatch?.stop();
     _fallbackStopwatch = null;
     _clock?.stop();
@@ -253,6 +280,7 @@ class TtsPlaybackService {
   void _cancelAnimation() {
     _animationTimer?.cancel();
     _animationTimer = null;
+    _playingAudioPath = null;
     _fallbackStopwatch?.stop();
     _fallbackStopwatch = null;
     _clock?.stop();
