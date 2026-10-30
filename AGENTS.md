@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -118,7 +118,7 @@ on violation.
 - Golden tests store reference images under `test/**/goldens/` — only regenerate (`--update-goldens`) when a visual change is intentional
 - Widget tests that need app styling use `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
 - Fonts are bundled in `assets/fonts/google_fonts/` (Fraunces 400/500/600, Manrope 400/500) and runtime fetching is off — a new font weight needs a new TTF there
-- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`, `face`, `parallax`, `prop`, `rain`) and `ext.yofardev.uiLab.state`. `rain` (0..1) goes to `WorldStateService.setRain` (`core/services/world/`, app-lifetime lazy singleton; world sync M7–M9 will feed it from the weather tool) and the scene view writes it to `SceneVM.rain` on every scene load and change. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
+- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`, `face`, `parallax`, `prop`, `rain`, `shot`) and `ext.yofardev.uiLab.state`. `rain` (0..1) goes to `WorldStateService.setRain` (`core/services/world/`, app-lifetime lazy singleton; since M7 also fed by the weather tool and `WorldWeatherSync`) and the scene view writes it to `SceneVM.rain` on every scene load and change; `shot` (`wide|medium|closeUp|propInsert`) cuts the lab's stage camera. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
 - v4 avatar: the character and the 4 scenes are Rive files in `assets/rive/`
   (`avatar.riv` + `scenes/<sceneId>.riv`), rebuilt from RML sources via
   `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
@@ -201,6 +201,31 @@ on violation.
   `uv run --with pillow --with numpy rive/tools/wow_capture.py <WOW_DIR> rive/review/m6/wow` (GIF,
   MP4 with sound, beats, gates). Never add a real LLM call to the harness. Evidence index:
   `rive/review/m6/README.md`
+- Camera, journeys, world clock (contract v10, moonshot M7): `CameraDirector` (avatar domain, rules
+  only: reduce motion → medium locked; journey / scene event → wide; prop → `propInsert`; speaking →
+  cuts only at sentence starts (`CaptionEvent`) plus a slow push-in; composing / thinking → medium;
+  idle → wide) is fed by `CameraFeed` (playback with a 1.5 s reply gap, intents, scene events) and by
+  Home's stage widget (talking phase, reduce motion, journey). `StageCamera` (Rive-free) frames the
+  shot as one `ClipRect`+`Transform` over the composited stage only (scene, avatar, journey, front;
+  never the chrome); `StageFraming` holds the shot rects in the bust-framed `Avatar` artboard and the
+  pan clamp; the Rive views read `StageRenderScale.of` into `RenderResolution.layout` (one texture
+  size per shot, never per frame). A background change (`leaveAndComeBack` + background) is a
+  journey run by `AvatarCubit` (`JourneyPhase`: pull back, open, exit, close, cut, arriveOpen, enter,
+  arriveClose, vanish; timings in `JourneyTiming`; family per pair in `JourneyPlanner`: to deepSpace
+  rocket, from deepSpace portal, livingRoom ↔ outdoors door, campfire ↔ beach path). `JourneyLayer`
+  is the scene view's `middle`: it clips the avatar right of the threshold (artboard x 640) and draws
+  the lazy `assets/rive/journeys/journey.riv` (`gen_journeys.py`, ≤ 160 KB) from
+  `JourneyChoreography`. `RiveSceneView` decodes `AvatarState.preloadScene` during the walk-off and
+  calls `onSceneShown` once the new file is drawn (the cut waits for it, ≤ 3 s). The world clock:
+  `WorldStateService` computes `daylight` / `dusk` once a minute from `SunClock` (sun times from the
+  last own-location weather report, else a 45° N month table), paused with the app; `pinClock` for
+  the lab and the harness; the scene writes them to `SceneVM` (sky-plane veils in livingRoom,
+  campfire, beach) and the avatar's rig leans 35 % toward day light (`SceneLights.at`). Weather: the
+  tool reports own-location results only (`onOwnLocationReport`); `WorldWeatherSync` refreshes every
+  30 min only with a key, an already granted location permission and battery saver off — it never
+  asks. Wow #3 and the four-family tour are captured like M6 (`--dart-define=WOW=wow3|tour`).
+  `frive.sh` builds the journey file and runs `review_time.py` and `review_journey.py` gates too.
+  Evidence index: `rive/review/m7/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -266,4 +291,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-30 (M6)
+**Last Updated**: 2026-10-30 (M7)
