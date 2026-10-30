@@ -25,17 +25,31 @@ import '../stage_camera.dart';
 /// `JourneyVM` numbers ([JourneyChoreography]) and idles once the beat's
 /// moves are done. The light colours follow the scene the avatar is in at
 /// [daylight].
+///
+/// [jacket] (v11 `JourneyVM.jacket`, door only) comes from the cubit's
+/// state, and is written as soon as the widget updates, not on the next
+/// tick: it flips in the same frame as the avatar's `jacket`.
 class JourneyLayer extends StatefulWidget {
   const JourneyLayer({
     super.key,
     required this.avatar,
     required this.journey,
     this.daylight,
+    this.jacket = 0,
   });
 
   final Widget avatar;
   final JourneyState? journey;
   final ValueListenable<double>? daylight;
+
+  /// The jacket on the door's peg, 0..1 (`AvatarState.journeyJacket`).
+  final double jacket;
+
+  /// The peg's jacket written for [journey]: [jacket] on the door, 0 on the
+  /// other thresholds (they have no peg).
+  @visibleForTesting
+  static double journeyJacketOf(JourneyState journey, double jacket) =>
+      journey.hasJacket ? jacket.clamp(0.0, 1.0) : 0;
 
   @override
   State<JourneyLayer> createState() => _JourneyLayerState();
@@ -74,6 +88,10 @@ class _JourneyLayerState extends State<JourneyLayer>
     super.didUpdateWidget(oldWidget);
     if (widget.journey != oldWidget.journey) {
       _sync();
+    }
+    if (widget.jacket != oldWidget.jacket) {
+      // The handoff: this frame, with the avatar's own jacket.
+      _write();
     }
   }
 
@@ -224,6 +242,10 @@ class _JourneyLayerState extends State<JourneyLayer>
     }
     number(AvatarRiveContract.journeyPropOpen, frame.open);
     number(AvatarRiveContract.journeyPropLift, frame.lift);
+    number(
+      AvatarRiveContract.journeyPropJacket,
+      JourneyLayer.journeyJacketOf(journey, widget.jacket),
+    );
     final LightRig rig = SceneLights.at(
       journey.sceneNow,
       widget.daylight?.value ?? 0,

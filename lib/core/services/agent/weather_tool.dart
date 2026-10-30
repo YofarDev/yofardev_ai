@@ -15,11 +15,14 @@ typedef WeatherFetch =
 class WeatherTool extends AgentTool {
   /// [onOwnLocationReport] hears the report of every successful call for the
   /// user's own location (no `location`, empty, or `current`), never one for
-  /// another city. [fetch] is a test seam (default: [WeatherService]).
-  WeatherTool({this.onOwnLocationReport, WeatherFetch? fetch})
+  /// another city. [onReport] hears every successful call, any city (the
+  /// tablet's weather card, M8 ruling 14). [fetch] is a test seam (default:
+  /// [WeatherService]).
+  WeatherTool({this.onOwnLocationReport, this.onReport, WeatherFetch? fetch})
     : _fetch = fetch ?? WeatherService.fetchCurrentWeather;
 
   final void Function(WeatherReport report)? onOwnLocationReport;
+  final void Function(WeatherReport report)? onReport;
   final WeatherFetch _fetch;
 
   @override
@@ -64,19 +67,30 @@ class WeatherTool extends AgentTool {
         apiKey,
       );
       final WeatherReport? report = result.report;
-      if (ownLocation && report != null) {
-        try {
-          onOwnLocationReport?.call(report);
-        } catch (e) {
-          AppLogger.warning(
-            'WeatherTool: report listener failed ($e)',
-            tag: 'WeatherTool',
-          );
+      if (report != null) {
+        _notify(onReport, report);
+        if (ownLocation) {
+          _notify(onOwnLocationReport, report);
         }
       }
       return result.json;
     } catch (e) {
       return 'Error getting weather: $e';
+    }
+  }
+
+  /// Calls [listener]; a throwing listener never loses the answer.
+  void _notify(
+    void Function(WeatherReport report)? listener,
+    WeatherReport report,
+  ) {
+    try {
+      listener?.call(report);
+    } catch (e) {
+      AppLogger.warning(
+        'WeatherTool: report listener failed ($e)',
+        tag: 'WeatherTool',
+      );
     }
   }
 }

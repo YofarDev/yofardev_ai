@@ -17,13 +17,15 @@ import '../../settings/settings.dart';
 import '../../talking/talking.dart';
 import '../widgets/demo_activated_listener.dart';
 import '../widgets/home_content_stack.dart';
+import '../../../core/services/audio/ambient_bed_service.dart';
+import '../../../core/services/audio/foley_service.dart';
 
 /// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
 ///
-/// [speech], [composerActivity], [parallax], [world], [facePerformer] and
-/// [camera] come
-/// from the route (Home never reads the service locator).
+/// [speech], [composerActivity], [parallax], [world], [facePerformer],
+/// [camera], [npc], [foley] and [beds] come from the route (Home never reads
+/// the service locator).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -33,6 +35,9 @@ class HomeScreen extends StatefulWidget {
     this.world,
     this.facePerformer,
     this.camera,
+    this.npc,
+    this.foley,
+    this.beds,
   });
 
   final SpeechInputService speech;
@@ -51,6 +56,15 @@ class HomeScreen extends StatefulWidget {
 
   /// Frames the stage (null: no camera, the whole stage always).
   final CameraDirector? camera;
+
+  /// The scene NPC's behaviour (null: it rests).
+  final NpcDirector? npc;
+
+  /// Foley and haptics from the avatar's events and the taps (null: silent).
+  final FoleyService? foley;
+
+  /// The ambient beds, following the scene (null: silent).
+  final AmbientBedService? beds;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -171,6 +185,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       world: widget.world,
       facePerformer: widget.facePerformer,
       camera: widget.camera,
+      npc: widget.npc,
+      foley: widget.foley,
+      beds: widget.beds,
       onStartDemo: _startDemoMode,
     );
     if (!kDebugMode) {
@@ -191,7 +208,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         widget.parallax != oldWidget.parallax ||
         widget.world != oldWidget.world ||
         widget.facePerformer != oldWidget.facePerformer ||
-        widget.camera != oldWidget.camera) {
+        widget.camera != oldWidget.camera ||
+        widget.npc != oldWidget.npc ||
+        widget.foley != oldWidget.foley ||
+        widget.beds != oldWidget.beds) {
       _stage = _buildStage();
     }
   }

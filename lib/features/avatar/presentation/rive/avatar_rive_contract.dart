@@ -137,6 +137,15 @@ abstract final class AvatarRiveContract {
   static const String propProp = 'prop';
   static const String propLean = 'lean';
 
+  // Contract v11: the held jacket (boolean, flipped at a `grab` contact), the
+  // tablet's weather card (enum [tabletWeatherValues]) and its temperature
+  // (number, °C, rounded by the app, [tabletTempMin]..[tabletTempMax]).
+  static const String propJacket = 'jacket';
+  static const String propTabletWeather = 'tabletWeather';
+  static const String propTabletTemp = 'tabletTemp';
+  static const double tabletTempMin = -40;
+  static const double tabletTempMax = 50;
+
   /// The v7 light numbers on `AvatarVM`, in `LightRig` field order.
   static const List<String> lightNumberProps = <String>[
     propLightKeyIntensity,
@@ -174,6 +183,9 @@ abstract final class AvatarRiveContract {
     'headshake',
     'clap',
     'think',
+    'thumbsUp',
+    'count',
+    'grab',
   ];
   static const List<String> phaseValues = <String>[
     'idle',
@@ -212,6 +224,15 @@ abstract final class AvatarRiveContract {
     'none',
     'tablet',
     'newspaper',
+  ];
+  static const List<String> tabletWeatherValues = <String>[
+    'none',
+    'clear',
+    'clouds',
+    'rain',
+    'snow',
+    'storm',
+    'fog',
   ];
   static const List<String> presenceValues = <String>[
     'onScreen',
@@ -262,6 +283,20 @@ abstract final class AvatarRiveContract {
   static const String eventAvatarTapped = 'avatar_tapped';
   static const String eventGestureDone = 'gesture_done';
   static const String eventPresenceDone = 'presence_done';
+
+  /// v11: a sound belongs to this frame (footfall, cloth, latch, paper).
+  static const String eventFoley = 'foley';
+  static const String avatarEventKindProperty = 'kind';
+  static const String foleyStep = 'step';
+  static const String foleyCloth = 'cloth';
+  static const String foleyClick = 'click';
+  static const String foleyPaper = 'paper';
+  static const List<String> foleyKinds = <String>[
+    foleyStep,
+    foleyCloth,
+    foleyClick,
+    foleyPaper,
+  ];
   static const String avatarEventZoneProperty = 'zone';
   static const String avatarEventGestureIdProperty = 'gestureId';
   static const String avatarEventPresenceProperty = 'presence';
@@ -299,6 +334,23 @@ abstract final class AvatarRiveContract {
   /// at sunrise and sunset. deepSpace ignores both.
   static const String scenePropDaylight = 'daylight';
   static const String scenePropDusk = 'dusk';
+
+  /// Contract v11 `SceneVM`: weather fog (0..1, default 0; deepSpace ignores
+  /// it) and the scene's NPC: its state (enum [npcValues], default `rest`),
+  /// where along its path it is (`npcX`, 0..1) and where it looks
+  /// (`npcLook`, −1..1, + = the viewer's right).
+  static const String scenePropFog = 'fog';
+  static const String scenePropNpc = 'npc';
+  static const String scenePropNpcX = 'npcX';
+  static const String scenePropNpcLook = 'npcLook';
+  static const List<String> npcValues = <String>[
+    'away',
+    'rest',
+    'idle',
+    'move',
+    'notice',
+    'react',
+  ];
 
   /// Names `SceneVM` carries as light defaults (equal to `AvatarVM`'s, plus
   /// `lightFog`, minus `lightAmbientAmount`).
@@ -360,6 +412,13 @@ abstract final class AvatarRiveContract {
 
   /// The rocket's height off the ground (0..1, 1 = out of frame).
   static const String journeyPropLift = 'lift';
+
+  /// v11: the jacket on the door's peg (0..1, door only).
+  static const String journeyPropJacket = 'jacket';
+
+  /// v11: the door's peg, the avatar's `grab` contact (artboard space).
+  static const double journeyHookX = 628;
+  static const double journeyHookY = 560;
 
   /// The current scene's key and ambient colours.
   static const String journeyPropLightKey = 'lightKey';

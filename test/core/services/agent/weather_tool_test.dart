@@ -1,15 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/weather_report.dart';
+import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/services/agent/weather_tool.dart';
+import 'package:yofardev_ai/core/services/world/tablet_weather_source.dart';
+import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 
 void main() {
   const WeatherReport report = WeatherReport(conditionId: 501);
   late List<String> fetchedLocations;
   late List<WeatherReport> reported;
+  late List<WeatherReport> anyCity;
   late bool succeed;
 
   WeatherTool build() => WeatherTool(
     onOwnLocationReport: reported.add,
+    onReport: anyCity.add,
     fetch: (String location, String apiKey) async {
       fetchedLocations.add(location);
       return succeed
@@ -21,6 +26,7 @@ void main() {
   setUp(() {
     fetchedLocations = <String>[];
     reported = <WeatherReport>[];
+    anyCity = <WeatherReport>[];
     succeed = true;
   });
 
@@ -53,6 +59,18 @@ void main() {
     expect(fetchedLocations, <String>['Tokyo']);
   });
 
+  test('every successful call, any city, reaches onReport (the tablet; '
+      'the world hears only its own location)', () async {
+    final WeatherTool tool = build();
+    await run(tool, <String, dynamic>{'location': 'Tokyo'});
+    await run(tool, <String, dynamic>{});
+    expect(anyCity, <WeatherReport>[report, report]);
+    expect(reported, <WeatherReport>[report]);
+    succeed = false;
+    await run(tool, <String, dynamic>{'location': 'Tokyo'});
+    expect(anyCity.length, 2);
+  });
+
   test('a failed call does not report', () async {
     succeed = false;
     final String out = await run(build(), <String, dynamic>{});
@@ -72,8 +90,41 @@ void main() {
   test('a throwing listener does not lose the answer', () async {
     final WeatherTool tool = WeatherTool(
       onOwnLocationReport: (WeatherReport r) => throw StateError('x'),
+      onReport: (WeatherReport r) => throw StateError('y'),
       fetch: (String l, String k) async => (json: 'ok', report: report),
     );
     expect(await run(tool, <String, dynamic>{}), 'ok');
   });
+
+  test(
+    'Tokyo in fog reaches the tablet, never the world (M8 rulings 13-14)',
+    () async {
+      final WorldStateService world = WorldStateService();
+      final TabletWeatherSource tablet = TabletWeatherSource();
+      final List<TabletWeatherReading> readings = <TabletWeatherReading>[];
+      tablet.readings.listen(readings.add);
+      final WeatherTool tool = WeatherTool(
+        onOwnLocationReport: world.applyWeather,
+        onReport: tablet.report,
+        fetch: (String location, String key) async => (
+          json: '{}',
+          report: WeatherReport(
+            conditionId: location == 'current' ? 701 : 741,
+            temperatureC: location == 'current' ? 9 : 14.6,
+          ),
+        ),
+      );
+      await run(tool, <String, dynamic>{'location': 'Tokyo'});
+      await Future<void>.delayed(Duration.zero);
+      expect(world.fog.value, 0);
+      expect(world.rain.value, 0);
+      expect(readings.single.glyph, TabletWeather.fog);
+      expect(readings.single.roundedTemp, 15);
+      // the user's own place moves the world
+      await run(tool, <String, dynamic>{});
+      expect(world.fog.value, 0.5);
+      world.dispose();
+      await tablet.dispose();
+    },
+  );
 }

@@ -3,13 +3,17 @@ import '../../../../core/models/avatar_scene.dart';
 /// The threshold a scene journey walks through (moonshot M7 ruling 5).
 enum JourneyFamily { door, path, portal, rocket }
 
-/// The beats of a scene journey, in order (M7 ruling 9).
+/// The beats of a scene journey, in order (M7 ruling 9, M8 ruling 6).
 enum JourneyPhase {
   /// The camera pulls back to wide.
   pullBack,
 
   /// The threshold appears and opens; the avatar's gaze leads toward it.
   open,
+
+  /// Door only (M8): the avatar reaches for the jacket on the door's peg and
+  /// takes it at [JourneyTiming.grabContact].
+  grab,
 
   /// The avatar walks out through it (until `presence_done(outOfScreen)`).
   exit,
@@ -25,6 +29,10 @@ enum JourneyPhase {
 
   /// The avatar walks in out of it (until `presence_done(onScreen)`).
   enter,
+
+  /// Door only (M8): the avatar hangs the jacket on the new door's peg at
+  /// [JourneyTiming.grabContact].
+  hang,
 
   /// The threshold closes behind the avatar.
   arriveClose,
@@ -50,6 +58,10 @@ class JourneyState {
   final JourneyFamily family;
   final JourneyPhase phase;
   final int serial;
+
+  /// Whether this journey runs the jacket beats ([JourneyPhase.grab] and
+  /// [JourneyPhase.hang]): the door has a peg, the other thresholds do not.
+  bool get hasJacket => family == JourneyFamily.door;
 
   /// The scene the avatar is in during [phase]: [from] until the cut, [to]
   /// from the cut on.
@@ -93,6 +105,12 @@ abstract final class JourneyTiming {
   static const Duration arriveHold = Duration(milliseconds: 150);
   static const Duration arriveOpen = Duration(milliseconds: 350);
   static const Duration vanish = Duration(milliseconds: 300);
+
+  /// The door's jacket beats (M8 ruling 6): the `grab` gesture's length, and
+  /// its contact, when the jacket changes hands.
+  static const Duration grab = Duration(milliseconds: 900);
+  static const Duration hang = Duration(milliseconds: 900);
+  static const Duration grabContact = Duration(milliseconds: 380);
 
   /// Longest wait for a walk's `presence_done` or for the new scene on screen.
   static const Duration waitTimeout = Duration(seconds: 3);

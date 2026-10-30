@@ -82,6 +82,7 @@ flutter:
   assets:
     - assets/
     - assets/sound_effects/
+    - assets/foley/
     - assets/rive/
     - assets/rive/scenes/
     - assets/rive/posters/

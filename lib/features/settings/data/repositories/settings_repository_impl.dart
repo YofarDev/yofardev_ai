@@ -7,7 +7,12 @@ import '../../../../core/repositories/settings_repository.dart';
 import '../../../../core/services/settings_local_datasource.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
+  /// [onSoundEffectsChanged] hears every saved sound-effects value (the live
+  /// setting the foley and the ambient beds follow, M8).
+  SettingsRepositoryImpl({this.onSoundEffectsChanged});
+
   final SettingsLocalDatasource _datasource = SettingsLocalDatasource();
+  final void Function(bool enabled)? onSoundEffectsChanged;
 
   @override
   Future<Result<String?>> getLanguage() async {
@@ -49,6 +54,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<Result<void>> setSoundEffects(bool enabled) async {
     try {
       await _datasource.setSoundEffects(enabled);
+      onSoundEffectsChanged?.call(enabled);
       return Result<void>.ok(null);
     } catch (e, st) {
       return Result<void>.err(

@@ -35,6 +35,7 @@ class LabConfig {
     this.prop = AvatarProp.none,
     this.parallax,
     this.shot = Shot.wide,
+    this.npc,
   });
 
   /// The lab's starting point.
@@ -77,11 +78,16 @@ class LabConfig {
   /// The camera framing of the stage, cut to by hand (moonshot M7).
   final Shot shot;
 
+  /// A hand-set scene NPC pose (contract v11 `npc`, `npcX`, `npcLook`); null
+  /// leaves the NPC at rest.
+  final NpcIntent? npc;
+
   static const double maxGlassAlphaScale = 4;
   static const double maxRadiusScale = 3;
 
   /// Copy with the given fields replaced. Pass `null` explicitly to clear
-  /// [accentHueOverride], [radiusScaleOverride], [face] or [parallax].
+  /// [accentHueOverride], [radiusScaleOverride], [face], [parallax] or
+  /// [npc].
   LabConfig copyWith({
     AvatarScene? scene,
     LabLayout? layout,
@@ -95,6 +101,7 @@ class LabConfig {
     AvatarProp? prop,
     Object? parallax = _keep,
     Shot? shot,
+    Object? npc = _keep,
   }) {
     return LabConfig(
       scene: scene ?? this.scene,
@@ -115,6 +122,7 @@ class LabConfig {
           ? this.parallax
           : parallax as Offset?,
       shot: shot ?? this.shot,
+      npc: identical(npc, _keep) ? this.npc : npc as NpcIntent?,
     );
   }
 
@@ -133,6 +141,13 @@ class LabConfig {
         ? null
         : <String, double>{'x': parallax!.dx, 'y': parallax!.dy},
     'shot': shot.name,
+    'npc': npc == null
+        ? null
+        : <String, Object>{
+            'npc': npc!.npc.name,
+            'npcX': npc!.npcX,
+            'npcLook': npc!.npcLook,
+          },
   };
 
   static const Set<String> _keys = <String>{
@@ -148,6 +163,7 @@ class LabConfig {
     'prop',
     'parallax',
     'shot',
+    'npc',
   };
 
   /// Parses [json]. Missing keys take the [initial] values; unknown keys,
@@ -186,6 +202,28 @@ class LabConfig {
       prop: _enum(json, 'prop', AvatarProp.values, initial.prop),
       parallax: json['parallax'] == null ? null : _parallax(json['parallax']),
       shot: _enum(json, 'shot', Shot.values, initial.shot),
+      npc: json['npc'] == null ? null : _npc(json['npc']),
+    );
+  }
+
+  /// Parses the `npc` object: `npc` (a state name, default rest), `npcX`
+  /// (0..1) and `npcLook` (−1..1), each optional (0); anything else throws a
+  /// [FormatException].
+  static NpcIntent _npc(Object? value) {
+    if (value is! Map<String, Object?>) {
+      throw FormatException('"npc" must be an object, got $value');
+    }
+    for (final String key in value.keys) {
+      if (key != 'npc' && key != 'npcX' && key != 'npcLook') {
+        throw FormatException('Unknown npc key "$key"');
+      }
+    }
+    return NpcIntent(
+      npc: _enum(value, 'npc', NpcState.values, NpcState.rest),
+      npcX: value.containsKey('npcX') ? _number(value, 'npcX', 0, 1) : 0,
+      npcLook: value.containsKey('npcLook')
+          ? _number(value, 'npcLook', -1, 1)
+          : 0,
     );
   }
 
@@ -284,7 +322,8 @@ class LabConfig {
       other.face == face &&
       other.prop == prop &&
       other.parallax == parallax &&
-      other.shot == shot;
+      other.shot == shot &&
+      other.npc == npc;
 
   @override
   int get hashCode => Object.hash(
@@ -300,6 +339,7 @@ class LabConfig {
     prop,
     parallax,
     shot,
+    npc,
   );
 
   @override

@@ -51,6 +51,10 @@ class _QueuedGesture {
 ///   nod when typing resumes after a 600 ms pause or a word ends (at most
 ///   one per 2.5 s) and a reaction on a typed `?` / `!` (at most one per
 ///   1.2 s).
+/// - **Tablet weather** (M8 ruling 14): a reading from [tabletWeather]
+///   that arrives while the tablet is out for [weatherTool] shows on its
+///   card (`tabletWeather` + `tabletTemp`) until the tablet is put away or
+///   another tool takes over; a fresh weather lookup starts blank.
 /// Speech, a tool starting, composer reports and taps are all activity: the
 /// idle stage goes back to 0 at once and [activity] tells the ladder.
 class PerformanceDirector {
@@ -58,8 +62,11 @@ class PerformanceDirector {
     required DateTime Function() now,
     this.gestureCooldown = const Duration(milliseconds: 1500),
     int seed = 11,
+    Stream<TabletWeatherReading>? tabletWeather,
   }) : _now = now,
-       _rng = math.Random(seed);
+       _rng = math.Random(seed) {
+    _tabletWeatherSubscription = tabletWeather?.listen(_onWeatherReading);
+  }
 
   final DateTime Function() _now;
   final Duration gestureCooldown;
@@ -84,6 +91,9 @@ class PerformanceDirector {
 
   /// Fewest time between two punctuation reactions.
   static const Duration reactionGap = Duration(milliseconds: 1200);
+
+  /// The lookup whose reading shows on the tablet's weather card.
+  static const String weatherTool = 'getCurrentWeather';
 
   /// The lookup tools that read the newspaper instead of the tablet.
   static const Set<String> newsTools = <String>{'getMostPopularNewsOfTheDay'};
@@ -143,6 +153,11 @@ class PerformanceDirector {
   DateTime? _propClearedAt;
   bool _disposed = false;
 
+  // — tablet weather —
+  StreamSubscription<TabletWeatherReading>? _tabletWeatherSubscription;
+  bool _weatherLookup = false;
+  TabletWeatherReading? _weatherReading;
+
   AvatarGesture? _playing;
   int _serial = 0;
   DateTime? _lastStartAt;
@@ -186,6 +201,11 @@ class PerformanceDirector {
   void setActiveTool(String? toolName) {
     final String? previous = _activeTool;
     _activeTool = toolName;
+    if (toolName != null && toolName != previous) {
+      // Each lookup starts with a blank card; only a weather lookup fills it.
+      _weatherLookup = toolName == weatherTool;
+      _weatherReading = null;
+    }
     if (toolName != null) {
       // The tool's own prop takes over from a held-over one: the same prop
       // stays out, a different one goes through none first (_add).
@@ -337,6 +357,7 @@ class PerformanceDirector {
     _glanceTimer?.cancel();
     _tabletTimer?.cancel();
     _holdOverTimer?.cancel();
+    await _tabletWeatherSubscription?.cancel();
     await _controller.close();
     await _activityController.close();
   }
@@ -440,6 +461,25 @@ class PerformanceDirector {
     return _idleTablet ? AvatarProp.tablet : AvatarProp.none;
   }
 
+  /// A weather lookup's answer: shown while that lookup's tablet is out.
+  void _onWeatherReading(TabletWeatherReading reading) {
+    if (!_weatherLookup) {
+      return;
+    }
+    _weatherReading = reading;
+    _emit();
+  }
+
+  /// The card for the current prop: the reading while the tablet is out for
+  /// the weather lookup, else the generic card.
+  ({TabletWeather glyph, int temp}) _tabletCard(AvatarProp prop) {
+    final TabletWeatherReading? reading = _weatherReading;
+    if (prop != AvatarProp.tablet || !_weatherLookup || reading == null) {
+      return (glyph: TabletWeather.none, temp: 0);
+    }
+    return (glyph: reading.glyph, temp: reading.roundedTemp);
+  }
+
   void _endHoldOver() {
     _holdOverTimer?.cancel();
     _holdOverTimer = null;
@@ -461,6 +501,8 @@ class PerformanceDirector {
     } else {
       gaze = const GazeTarget.user();
     }
+    final AvatarProp prop = _prop;
+    final ({TabletWeather glyph, int temp}) card = _tabletCard(prop);
     return PerformanceIntent(
       emotion: _emotion,
       face: _face,
@@ -469,12 +511,14 @@ class PerformanceDirector {
       pendingGesture: _playing,
       gestureSerial: _serial,
       activeTool: _activeTool,
-      prop: _prop,
+      prop: prop,
       lean: _composing ? composingLean : 0,
       nodSerial: _nodSerial,
       reaction: _reaction,
       reactionSerial: _reactionSerial,
       idleStage: _idleStage,
+      tabletWeather: card.glyph,
+      tabletTemp: card.temp,
     );
   }
 
@@ -582,6 +626,11 @@ class PerformanceDirector {
     }
     if (before != AvatarProp.none && intent.prop == AvatarProp.none) {
       _propClearedAt = _now();
+    }
+    if (intent.prop == AvatarProp.none) {
+      // Put away: the weather lookup's card goes with it.
+      _weatherLookup = false;
+      _weatherReading = null;
     }
     _lastIntent = intent;
     _controller.add(intent);

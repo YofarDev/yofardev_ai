@@ -7,6 +7,8 @@ import '../../../core/design/design.dart';
 import '../../../core/design/rive/ui_kit.dart';
 import '../../../core/models/avatar_scene.dart';
 import '../../../core/models/talking_phase.dart';
+import '../../../core/services/audio/ambient_bed_service.dart';
+import '../../../core/services/audio/foley_service.dart';
 import '../../../core/services/motion/parallax_source.dart';
 import '../../../core/services/world/world_state_service.dart';
 import '../../../core/services/presence/composer_activity_service.dart';
@@ -41,6 +43,9 @@ class HomeContentStack extends StatefulWidget {
     this.world,
     this.facePerformer,
     this.camera,
+    this.npc,
+    this.foley,
+    this.beds,
     required this.onStartDemo,
   });
 
@@ -56,6 +61,17 @@ class HomeContentStack extends StatefulWidget {
 
   /// Frames the Rive stage, chrome excluded (null: always the whole stage).
   final CameraDirector? camera;
+
+  /// The scene NPC's behaviour (null: it rests): hears the scene, the
+  /// talking phase, reduce motion and the pokes from here.
+  final NpcDirector? npc;
+
+  /// Foley and haptics: the avatar's `foley` events and every tap on a prop
+  /// or the avatar (null: silent).
+  final FoleyService? foley;
+
+  /// The ambient beds: hear the scene from here (null: silent).
+  final AmbientBedService? beds;
   final VoidCallback onStartDemo;
 
   /// The glow's width, relative to the composer pill (the art fills about
@@ -108,10 +124,16 @@ class _HomeContentStackState extends State<HomeContentStack> {
       children: <Widget>[
         _CameraStage(
           camera: widget.camera,
-          child: _RiveStage(
-            facePerformer: widget.facePerformer,
-            parallax: widget.parallax,
-            world: widget.world,
+          child: _StageFeeds(
+            npc: widget.npc,
+            beds: widget.beds,
+            child: _RiveStage(
+              facePerformer: widget.facePerformer,
+              parallax: widget.parallax,
+              world: widget.world,
+              npc: widget.npc,
+              foley: widget.foley,
+            ),
           ),
         ),
         const StageScrim.top(),
@@ -196,13 +218,105 @@ class _CameraStageState extends State<_CameraStage> {
   }
 }
 
+/// Feeds the [npc] director and the ambient [beds] what only the widget tree
+/// knows (M8): the scene on screen (a journey changes it at its cut, where
+/// the beds cross-fade), and for the NPC the talking phase and the user's
+/// reduce-motion setting. With neither it is [child] itself.
+class _StageFeeds extends StatefulWidget {
+  const _StageFeeds({
+    required this.npc,
+    required this.beds,
+    required this.child,
+  });
+
+  final NpcDirector? npc;
+  final AmbientBedService? beds;
+  final Widget child;
+
+  @override
+  State<_StageFeeds> createState() => _StageFeedsState();
+}
+
+class _StageFeedsState extends State<_StageFeeds> {
+  @override
+  void initState() {
+    super.initState();
+    _syncScene();
+  }
+
+  void _syncScene() {
+    if (widget.npc == null && widget.beds == null) {
+      return;
+    }
+    final AvatarScene scene = context.read<AvatarCubit>().state.scene;
+    widget.npc?.setScene(scene);
+    widget.beds?.setScene(scene);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    widget.npc?.setReduceMotion(MediaQuery.disableAnimationsOf(context));
+  }
+
+  @override
+  void didUpdateWidget(_StageFeeds oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.npc != oldWidget.npc || widget.beds != oldWidget.beds) {
+      widget.npc?.setReduceMotion(MediaQuery.disableAnimationsOf(context));
+      _syncScene();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final NpcDirector? npc = widget.npc;
+    final AmbientBedService? beds = widget.beds;
+    if (npc == null && beds == null) {
+      return widget.child;
+    }
+    return MultiBlocListener(
+      listeners: <BlocListener<dynamic, dynamic>>[
+        BlocListener<AvatarCubit, AvatarState>(
+          listenWhen: (AvatarState previous, AvatarState current) =>
+              previous.scene != current.scene,
+          listener: (BuildContext context, AvatarState state) {
+            npc?.setScene(state.scene);
+            beds?.setScene(state.scene);
+          },
+        ),
+        if (npc != null)
+          BlocListener<TalkingCubit, TalkingState>(
+            listenWhen: (TalkingState previous, TalkingState current) =>
+                previous.phase != current.phase,
+            listener: (BuildContext context, TalkingState state) =>
+                npc.setPhase(state.phase),
+          ),
+      ],
+      child: widget.child,
+    );
+  }
+}
+
 /// The Rive scene with the avatar on it. Const and free of MediaQuery, so
 /// keyboard, inset and theme changes never rebuild it.
 class _RiveStage extends StatelessWidget {
-  const _RiveStage({this.facePerformer, this.parallax, this.world});
+  const _RiveStage({
+    this.facePerformer,
+    this.parallax,
+    this.world,
+    this.npc,
+    this.foley,
+  });
 
   final FacePerformer? facePerformer;
   final ParallaxSource? parallax;
+
+  /// The scene NPC (its intent is written to the scene; taps poke it).
+  final NpcDirector? npc;
+
+  /// Plays the avatar's foley; every tap is a haptic.
+  final FoleyService? foley;
 
   /// The weather and the time of day (null: dry, night).
   final WorldStateService? world;
@@ -218,7 +332,11 @@ class _RiveStage extends StatelessWidget {
           rain: world?.rain,
           daylight: world?.daylight,
           dusk: world?.dusk,
+          fog: world?.fog,
+          npc: npc?.intent,
           onPropTapped: (String propId) {
+            foley?.propTap();
+            npc?.poke(propId);
             context.read<AvatarCubit>().onPropTapped(avatarState.scene, propId);
           },
           // M7 journeys: the destination decodes during the walk-off, and
@@ -234,6 +352,7 @@ class _RiveStage extends StatelessWidget {
           middle: JourneyLayer(
             journey: avatarState.journey,
             daylight: world?.daylight,
+            jacket: avatarState.journeyJacket,
             avatar: BlocBuilder<TalkingCubit, TalkingState>(
               // with a face performer the mouth comes from it, not from
               // mouthState: only the phase matters here
@@ -246,8 +365,10 @@ class _RiveStage extends StatelessWidget {
                   facePerformer: facePerformer,
                   daylight: world?.daylight,
                   onAvatarTapped: (String zone) {
+                    foley?.propTap();
                     context.read<AvatarCubit>().onAvatarTapped(zone);
                   },
+                  onFoley: foley?.play,
                   onPresenceDone: (String presence) {
                     context.read<AvatarCubit>().onPresenceDone(presence);
                   },

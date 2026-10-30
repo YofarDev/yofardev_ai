@@ -42,5 +42,11 @@ sealed class PerformanceIntent with _$PerformanceIntent {
 
     /// Idle ladder stage, 0 (active) to 3 (long idle).
     @Default(0) int idleStage,
+
+    /// The tablet's weather card (M8 ruling 14): the looked-up city's glyph
+    /// and rounded °C while the tablet is out for a weather lookup, else
+    /// `none` / 0 (the generic card).
+    @Default(TabletWeather.none) TabletWeather tabletWeather,
+    @Default(0) int tabletTemp,
   }) = _PerformanceIntent;
 }

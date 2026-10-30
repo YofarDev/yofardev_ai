@@ -50,7 +50,12 @@ import '../stage_camera.dart';
 /// avatar relights as soon as the scene state changes, slightly before the
 /// new scene file finishes loading (accepted).
 ///
-/// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped].
+/// Contract v11: `jacket` follows [AvatarState.jacket] (the cubit flips it
+/// at a journey's grab contact), `tabletWeather` / `tabletTemp` the
+/// director's tablet card.
+///
+/// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped],
+/// `foley` events (their `kind`) to [onFoley].
 ///
 /// Rive types never leave `lib/features/avatar/presentation/`.
 class RiveAvatarView extends StatefulWidget {
@@ -64,6 +69,7 @@ class RiveAvatarView extends StatefulWidget {
     this.onAvatarTapped,
     this.onPresenceDone,
     this.onGestureDone,
+    this.onFoley,
     this.daylight,
   });
 
@@ -90,6 +96,10 @@ class RiveAvatarView extends StatefulWidget {
 
   /// Called when the upper-body gesture finishes (`gesture_done`).
   final VoidCallback? onGestureDone;
+
+  /// Called with the `kind` of every `foley` event (v11: a footfall, the
+  /// jacket's cloth, the tablet's click, the newspaper's paper).
+  final ValueChanged<String>? onFoley;
 
   /// The world clock's daylight, 0..1 (M7): the light rig leans toward day
   /// light with it (`SceneLights.at`). Null: the night rig.
@@ -459,6 +469,19 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       AvatarRiveContract.presenceValues,
       avatarState.presence.name,
     );
+    binding.setBool(AvatarRiveContract.propJacket, avatarState.jacket);
+    binding.setEnum(
+      AvatarRiveContract.propTabletWeather,
+      AvatarRiveContract.tabletWeatherValues,
+      avatarState.tabletWeather.name,
+    );
+    binding.setNumber(
+      AvatarRiveContract.propTabletTemp,
+      avatarState.tabletTemp.toDouble().clamp(
+        AvatarRiveContract.tabletTempMin,
+        AvatarRiveContract.tabletTempMax,
+      ),
+    );
   }
 
   void _onRiveEvent(Event event) {
@@ -473,6 +496,15 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     }
     if (event.name == AvatarRiveContract.eventGestureDone) {
       widget.onGestureDone?.call();
+      return;
+    }
+    if (event.name == AvatarRiveContract.eventFoley) {
+      final String? kind = event
+          .stringProperty(AvatarRiveContract.avatarEventKindProperty)
+          ?.value;
+      if (kind != null) {
+        widget.onFoley?.call(kind);
+      }
       return;
     }
     if (event.name == AvatarRiveContract.eventPresenceDone) {

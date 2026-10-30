@@ -19,7 +19,12 @@ mixin _$AvatarState {
  HeadTarget get headTarget;/// The prop held, from the director's intent (written to Rive `prop`).
  AvatarProp get prop;/// The scene journey under way (M7), null when none.
  JourneyState? get journey;/// The scene the stage should decode ahead of a journey's cut.
- AvatarScene? get preloadScene;
+ AvatarScene? get preloadScene;/// The avatar holds the storybook jacket (contract v11 `jacket`): true
+/// from a door journey's grab contact to its hang contact.
+ bool get jacket;/// The jacket on the journey door's peg (`JourneyVM.jacket`, 0..1). It
+/// flips with [jacket] in the same state, so one jacket always shows.
+ double get journeyJacket;/// The tablet's weather card, from the director's intent (v11).
+ TabletWeather get tabletWeather; int get tabletTemp;
 /// Create a copy of AvatarState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,20 +36,20 @@ $AvatarStateCopyWith<AvatarState> get copyWith => _$AvatarStateCopyWithImpl<Avat
 @override
 bool operator ==(Object other) {
   final _this = this as AvatarState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarState&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.statusAnimation, _this.statusAnimation) || other.statusAnimation == _this.statusAnimation)&&(identical(other.baseOriginalWidth, _this.baseOriginalWidth) || other.baseOriginalWidth == _this.baseOriginalWidth)&&(identical(other.baseOriginalHeight, _this.baseOriginalHeight) || other.baseOriginalHeight == _this.baseOriginalHeight)&&(identical(other.scaleFactor, _this.scaleFactor) || other.scaleFactor == _this.scaleFactor)&&(identical(other.avatar, _this.avatar) || other.avatar == _this.avatar)&&(identical(other.avatarConfig, _this.avatarConfig) || other.avatarConfig == _this.avatarConfig)&&(identical(other.previousSpecialsState, _this.previousSpecialsState) || other.previousSpecialsState == _this.previousSpecialsState)&&(identical(other.backgroundTransition, _this.backgroundTransition) || other.backgroundTransition == _this.backgroundTransition)&&(identical(other.mood, _this.mood) || other.mood == _this.mood)&&(identical(other.scene, _this.scene) || other.scene == _this.scene)&&(identical(other.gestureEvent, _this.gestureEvent) || other.gestureEvent == _this.gestureEvent)&&(identical(other.sceneEvent, _this.sceneEvent) || other.sceneEvent == _this.sceneEvent)&&(identical(other.presence, _this.presence) || other.presence == _this.presence)&&(identical(other.headTarget, _this.headTarget) || other.headTarget == _this.headTarget)&&(identical(other.prop, _this.prop) || other.prop == _this.prop)&&(identical(other.journey, _this.journey) || other.journey == _this.journey)&&(identical(other.preloadScene, _this.preloadScene) || other.preloadScene == _this.preloadScene));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AvatarState&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.statusAnimation, _this.statusAnimation) || other.statusAnimation == _this.statusAnimation)&&(identical(other.baseOriginalWidth, _this.baseOriginalWidth) || other.baseOriginalWidth == _this.baseOriginalWidth)&&(identical(other.baseOriginalHeight, _this.baseOriginalHeight) || other.baseOriginalHeight == _this.baseOriginalHeight)&&(identical(other.scaleFactor, _this.scaleFactor) || other.scaleFactor == _this.scaleFactor)&&(identical(other.avatar, _this.avatar) || other.avatar == _this.avatar)&&(identical(other.avatarConfig, _this.avatarConfig) || other.avatarConfig == _this.avatarConfig)&&(identical(other.previousSpecialsState, _this.previousSpecialsState) || other.previousSpecialsState == _this.previousSpecialsState)&&(identical(other.backgroundTransition, _this.backgroundTransition) || other.backgroundTransition == _this.backgroundTransition)&&(identical(other.mood, _this.mood) || other.mood == _this.mood)&&(identical(other.scene, _this.scene) || other.scene == _this.scene)&&(identical(other.gestureEvent, _this.gestureEvent) || other.gestureEvent == _this.gestureEvent)&&(identical(other.sceneEvent, _this.sceneEvent) || other.sceneEvent == _this.sceneEvent)&&(identical(other.presence, _this.presence) || other.presence == _this.presence)&&(identical(other.headTarget, _this.headTarget) || other.headTarget == _this.headTarget)&&(identical(other.prop, _this.prop) || other.prop == _this.prop)&&(identical(other.journey, _this.journey) || other.journey == _this.journey)&&(identical(other.preloadScene, _this.preloadScene) || other.preloadScene == _this.preloadScene)&&(identical(other.jacket, _this.jacket) || other.jacket == _this.jacket)&&(identical(other.journeyJacket, _this.journeyJacket) || other.journeyJacket == _this.journeyJacket)&&(identical(other.tabletWeather, _this.tabletWeather) || other.tabletWeather == _this.tabletWeather)&&(identical(other.tabletTemp, _this.tabletTemp) || other.tabletTemp == _this.tabletTemp));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AvatarState;
-  return Object.hash(runtimeType,_this.status,_this.statusAnimation,_this.baseOriginalWidth,_this.baseOriginalHeight,_this.scaleFactor,_this.avatar,_this.avatarConfig,_this.previousSpecialsState,_this.backgroundTransition,_this.mood,_this.scene,_this.gestureEvent,_this.sceneEvent,_this.presence,_this.headTarget,_this.prop,_this.journey,_this.preloadScene);
+  return Object.hashAll([runtimeType,_this.status,_this.statusAnimation,_this.baseOriginalWidth,_this.baseOriginalHeight,_this.scaleFactor,_this.avatar,_this.avatarConfig,_this.previousSpecialsState,_this.backgroundTransition,_this.mood,_this.scene,_this.gestureEvent,_this.sceneEvent,_this.presence,_this.headTarget,_this.prop,_this.journey,_this.preloadScene,_this.jacket,_this.journeyJacket,_this.tabletWeather,_this.tabletTemp]);
 }
 
 @override
 String toString() {
   final _this = this as AvatarState;
-  return 'AvatarState(status: ${_this.status}, statusAnimation: ${_this.statusAnimation}, baseOriginalWidth: ${_this.baseOriginalWidth}, baseOriginalHeight: ${_this.baseOriginalHeight}, scaleFactor: ${_this.scaleFactor}, avatar: ${_this.avatar}, avatarConfig: ${_this.avatarConfig}, previousSpecialsState: ${_this.previousSpecialsState}, backgroundTransition: ${_this.backgroundTransition}, mood: ${_this.mood}, scene: ${_this.scene}, gestureEvent: ${_this.gestureEvent}, sceneEvent: ${_this.sceneEvent}, presence: ${_this.presence}, headTarget: ${_this.headTarget}, prop: ${_this.prop}, journey: ${_this.journey}, preloadScene: ${_this.preloadScene})';
+  return 'AvatarState(status: ${_this.status}, statusAnimation: ${_this.statusAnimation}, baseOriginalWidth: ${_this.baseOriginalWidth}, baseOriginalHeight: ${_this.baseOriginalHeight}, scaleFactor: ${_this.scaleFactor}, avatar: ${_this.avatar}, avatarConfig: ${_this.avatarConfig}, previousSpecialsState: ${_this.previousSpecialsState}, backgroundTransition: ${_this.backgroundTransition}, mood: ${_this.mood}, scene: ${_this.scene}, gestureEvent: ${_this.gestureEvent}, sceneEvent: ${_this.sceneEvent}, presence: ${_this.presence}, headTarget: ${_this.headTarget}, prop: ${_this.prop}, journey: ${_this.journey}, preloadScene: ${_this.preloadScene}, jacket: ${_this.jacket}, journeyJacket: ${_this.journeyJacket}, tabletWeather: ${_this.tabletWeather}, tabletTemp: ${_this.tabletTemp})';
 }
 
 
@@ -55,7 +60,7 @@ abstract mixin class $AvatarStateCopyWith<$Res>  {
   factory $AvatarStateCopyWith(AvatarState value, $Res Function(AvatarState) _then) = _$AvatarStateCopyWithImpl;
 @useResult
 $Res call({
- AvatarStatus status, AvatarStatusAnimation statusAnimation, double baseOriginalWidth, double baseOriginalHeight, double scaleFactor, Avatar avatar, AvatarConfig avatarConfig, AvatarSpecials previousSpecialsState, BackgroundTransition backgroundTransition, AvatarMood mood, AvatarScene scene, ({AvatarGesture gesture, int seq,}) gestureEvent, ({SceneEvent sceneEvent, int seq,}) sceneEvent, AvatarSpecials presence, HeadTarget headTarget, AvatarProp prop, JourneyState? journey, AvatarScene? preloadScene
+ AvatarStatus status, AvatarStatusAnimation statusAnimation, double baseOriginalWidth, double baseOriginalHeight, double scaleFactor, Avatar avatar, AvatarConfig avatarConfig, AvatarSpecials previousSpecialsState, BackgroundTransition backgroundTransition, AvatarMood mood, AvatarScene scene, ({AvatarGesture gesture, int seq,}) gestureEvent, ({SceneEvent sceneEvent, int seq,}) sceneEvent, AvatarSpecials presence, HeadTarget headTarget, AvatarProp prop, JourneyState? journey, AvatarScene? preloadScene, bool jacket, double journeyJacket, TabletWeather tabletWeather, int tabletTemp
 });
 
 
@@ -72,7 +77,7 @@ class _$AvatarStateCopyWithImpl<$Res>
 
 /// Create a copy of AvatarState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? statusAnimation = null,Object? baseOriginalWidth = null,Object? baseOriginalHeight = null,Object? scaleFactor = null,Object? avatar = null,Object? avatarConfig = null,Object? previousSpecialsState = null,Object? backgroundTransition = null,Object? mood = null,Object? scene = null,Object? gestureEvent = null,Object? sceneEvent = null,Object? presence = null,Object? headTarget = null,Object? prop = null,Object? journey = freezed,Object? preloadScene = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? statusAnimation = null,Object? baseOriginalWidth = null,Object? baseOriginalHeight = null,Object? scaleFactor = null,Object? avatar = null,Object? avatarConfig = null,Object? previousSpecialsState = null,Object? backgroundTransition = null,Object? mood = null,Object? scene = null,Object? gestureEvent = null,Object? sceneEvent = null,Object? presence = null,Object? headTarget = null,Object? prop = null,Object? journey = freezed,Object? preloadScene = freezed,Object? jacket = null,Object? journeyJacket = null,Object? tabletWeather = null,Object? tabletTemp = null,}) {
   return _then(AvatarState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AvatarStatus,statusAnimation: null == statusAnimation ? _self.statusAnimation : statusAnimation // ignore: cast_nullable_to_non_nullable
@@ -92,7 +97,11 @@ as AvatarSpecials,headTarget: null == headTarget ? _self.headTarget : headTarget
 as HeadTarget,prop: null == prop ? _self.prop : prop // ignore: cast_nullable_to_non_nullable
 as AvatarProp,journey: freezed == journey ? _self.journey : journey // ignore: cast_nullable_to_non_nullable
 as JourneyState?,preloadScene: freezed == preloadScene ? _self.preloadScene : preloadScene // ignore: cast_nullable_to_non_nullable
-as AvatarScene?,
+as AvatarScene?,jacket: null == jacket ? _self.jacket : jacket // ignore: cast_nullable_to_non_nullable
+as bool,journeyJacket: null == journeyJacket ? _self.journeyJacket : journeyJacket // ignore: cast_nullable_to_non_nullable
+as double,tabletWeather: null == tabletWeather ? _self.tabletWeather : tabletWeather // ignore: cast_nullable_to_non_nullable
+as TabletWeather,tabletTemp: null == tabletTemp ? _self.tabletTemp : tabletTemp // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 /// Create a copy of AvatarState
@@ -192,10 +201,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AvatarStatus status,  AvatarStatusAnimation statusAnimation,  double baseOriginalWidth,  double baseOriginalHeight,  double scaleFactor,  Avatar avatar,  AvatarConfig avatarConfig,  AvatarSpecials previousSpecialsState,  BackgroundTransition backgroundTransition,  AvatarMood mood,  AvatarScene scene,  ({AvatarGesture gesture, int seq,}) gestureEvent,  ({SceneEvent sceneEvent, int seq,}) sceneEvent,  AvatarSpecials presence,  HeadTarget headTarget,  AvatarProp prop,  JourneyState? journey,  AvatarScene? preloadScene)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AvatarStatus status,  AvatarStatusAnimation statusAnimation,  double baseOriginalWidth,  double baseOriginalHeight,  double scaleFactor,  Avatar avatar,  AvatarConfig avatarConfig,  AvatarSpecials previousSpecialsState,  BackgroundTransition backgroundTransition,  AvatarMood mood,  AvatarScene scene,  ({AvatarGesture gesture, int seq,}) gestureEvent,  ({SceneEvent sceneEvent, int seq,}) sceneEvent,  AvatarSpecials presence,  HeadTarget headTarget,  AvatarProp prop,  JourneyState? journey,  AvatarScene? preloadScene,  bool jacket,  double journeyJacket,  TabletWeather tabletWeather,  int tabletTemp)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AvatarState() when $default != null:
-return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that.baseOriginalHeight,_that.scaleFactor,_that.avatar,_that.avatarConfig,_that.previousSpecialsState,_that.backgroundTransition,_that.mood,_that.scene,_that.gestureEvent,_that.sceneEvent,_that.presence,_that.headTarget,_that.prop,_that.journey,_that.preloadScene);case _:
+return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that.baseOriginalHeight,_that.scaleFactor,_that.avatar,_that.avatarConfig,_that.previousSpecialsState,_that.backgroundTransition,_that.mood,_that.scene,_that.gestureEvent,_that.sceneEvent,_that.presence,_that.headTarget,_that.prop,_that.journey,_that.preloadScene,_that.jacket,_that.journeyJacket,_that.tabletWeather,_that.tabletTemp);case _:
   return orElse();
 
 }
@@ -213,10 +222,10 @@ return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AvatarStatus status,  AvatarStatusAnimation statusAnimation,  double baseOriginalWidth,  double baseOriginalHeight,  double scaleFactor,  Avatar avatar,  AvatarConfig avatarConfig,  AvatarSpecials previousSpecialsState,  BackgroundTransition backgroundTransition,  AvatarMood mood,  AvatarScene scene,  ({AvatarGesture gesture, int seq,}) gestureEvent,  ({SceneEvent sceneEvent, int seq,}) sceneEvent,  AvatarSpecials presence,  HeadTarget headTarget,  AvatarProp prop,  JourneyState? journey,  AvatarScene? preloadScene)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AvatarStatus status,  AvatarStatusAnimation statusAnimation,  double baseOriginalWidth,  double baseOriginalHeight,  double scaleFactor,  Avatar avatar,  AvatarConfig avatarConfig,  AvatarSpecials previousSpecialsState,  BackgroundTransition backgroundTransition,  AvatarMood mood,  AvatarScene scene,  ({AvatarGesture gesture, int seq,}) gestureEvent,  ({SceneEvent sceneEvent, int seq,}) sceneEvent,  AvatarSpecials presence,  HeadTarget headTarget,  AvatarProp prop,  JourneyState? journey,  AvatarScene? preloadScene,  bool jacket,  double journeyJacket,  TabletWeather tabletWeather,  int tabletTemp)  $default,) {final _that = this;
 switch (_that) {
 case _AvatarState():
-return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that.baseOriginalHeight,_that.scaleFactor,_that.avatar,_that.avatarConfig,_that.previousSpecialsState,_that.backgroundTransition,_that.mood,_that.scene,_that.gestureEvent,_that.sceneEvent,_that.presence,_that.headTarget,_that.prop,_that.journey,_that.preloadScene);}
+return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that.baseOriginalHeight,_that.scaleFactor,_that.avatar,_that.avatarConfig,_that.previousSpecialsState,_that.backgroundTransition,_that.mood,_that.scene,_that.gestureEvent,_that.sceneEvent,_that.presence,_that.headTarget,_that.prop,_that.journey,_that.preloadScene,_that.jacket,_that.journeyJacket,_that.tabletWeather,_that.tabletTemp);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -230,10 +239,10 @@ return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AvatarStatus status,  AvatarStatusAnimation statusAnimation,  double baseOriginalWidth,  double baseOriginalHeight,  double scaleFactor,  Avatar avatar,  AvatarConfig avatarConfig,  AvatarSpecials previousSpecialsState,  BackgroundTransition backgroundTransition,  AvatarMood mood,  AvatarScene scene,  ({AvatarGesture gesture, int seq,}) gestureEvent,  ({SceneEvent sceneEvent, int seq,}) sceneEvent,  AvatarSpecials presence,  HeadTarget headTarget,  AvatarProp prop,  JourneyState? journey,  AvatarScene? preloadScene)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AvatarStatus status,  AvatarStatusAnimation statusAnimation,  double baseOriginalWidth,  double baseOriginalHeight,  double scaleFactor,  Avatar avatar,  AvatarConfig avatarConfig,  AvatarSpecials previousSpecialsState,  BackgroundTransition backgroundTransition,  AvatarMood mood,  AvatarScene scene,  ({AvatarGesture gesture, int seq,}) gestureEvent,  ({SceneEvent sceneEvent, int seq,}) sceneEvent,  AvatarSpecials presence,  HeadTarget headTarget,  AvatarProp prop,  JourneyState? journey,  AvatarScene? preloadScene,  bool jacket,  double journeyJacket,  TabletWeather tabletWeather,  int tabletTemp)?  $default,) {final _that = this;
 switch (_that) {
 case _AvatarState() when $default != null:
-return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that.baseOriginalHeight,_that.scaleFactor,_that.avatar,_that.avatarConfig,_that.previousSpecialsState,_that.backgroundTransition,_that.mood,_that.scene,_that.gestureEvent,_that.sceneEvent,_that.presence,_that.headTarget,_that.prop,_that.journey,_that.preloadScene);case _:
+return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that.baseOriginalHeight,_that.scaleFactor,_that.avatar,_that.avatarConfig,_that.previousSpecialsState,_that.backgroundTransition,_that.mood,_that.scene,_that.gestureEvent,_that.sceneEvent,_that.presence,_that.headTarget,_that.prop,_that.journey,_that.preloadScene,_that.jacket,_that.journeyJacket,_that.tabletWeather,_that.tabletTemp);case _:
   return null;
 
 }
@@ -245,7 +254,7 @@ return $default(_that.status,_that.statusAnimation,_that.baseOriginalWidth,_that
 
 
 class _AvatarState extends AvatarState {
-  const _AvatarState({this.status = AvatarStatus.initial, this.statusAnimation = AvatarStatusAnimation.initial, this.baseOriginalWidth = 0.0, this.baseOriginalHeight = 0.0, this.scaleFactor = 1.0, required this.avatar, required this.avatarConfig, this.previousSpecialsState = AvatarSpecials.onScreen, this.backgroundTransition = BackgroundTransition.none, this.mood = AvatarMood.neutral, this.scene = AvatarScene.defaultScene, this.gestureEvent = const (gesture: AvatarGesture.wave, seq: 0), this.sceneEvent = const (sceneEvent: SceneEvent.lightsOff, seq: 0), this.presence = AvatarSpecials.onScreen, this.headTarget = HeadTarget.zero, this.prop = AvatarProp.none, this.journey, this.preloadScene}): super._();
+  const _AvatarState({this.status = AvatarStatus.initial, this.statusAnimation = AvatarStatusAnimation.initial, this.baseOriginalWidth = 0.0, this.baseOriginalHeight = 0.0, this.scaleFactor = 1.0, required this.avatar, required this.avatarConfig, this.previousSpecialsState = AvatarSpecials.onScreen, this.backgroundTransition = BackgroundTransition.none, this.mood = AvatarMood.neutral, this.scene = AvatarScene.defaultScene, this.gestureEvent = const (gesture: AvatarGesture.wave, seq: 0), this.sceneEvent = const (sceneEvent: SceneEvent.lightsOff, seq: 0), this.presence = AvatarSpecials.onScreen, this.headTarget = HeadTarget.zero, this.prop = AvatarProp.none, this.journey, this.preloadScene, this.jacket = false, this.journeyJacket = 0.0, this.tabletWeather = TabletWeather.none, this.tabletTemp = 0}): super._();
   
 
 @override@JsonKey() final  AvatarStatus status;
@@ -270,6 +279,15 @@ class _AvatarState extends AvatarState {
 @override final  JourneyState? journey;
 /// The scene the stage should decode ahead of a journey's cut.
 @override final  AvatarScene? preloadScene;
+/// The avatar holds the storybook jacket (contract v11 `jacket`): true
+/// from a door journey's grab contact to its hang contact.
+@override@JsonKey() final  bool jacket;
+/// The jacket on the journey door's peg (`JourneyVM.jacket`, 0..1). It
+/// flips with [jacket] in the same state, so one jacket always shows.
+@override@JsonKey() final  double journeyJacket;
+/// The tablet's weather card, from the director's intent (v11).
+@override@JsonKey() final  TabletWeather tabletWeather;
+@override@JsonKey() final  int tabletTemp;
 
 /// Create a copy of AvatarState
 /// with the given fields replaced by the non-null parameter values.
@@ -281,18 +299,18 @@ _$AvatarStateCopyWith<_AvatarState> get copyWith => __$AvatarStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AvatarState&&(identical(other.status, status) || other.status == status)&&(identical(other.statusAnimation, statusAnimation) || other.statusAnimation == statusAnimation)&&(identical(other.baseOriginalWidth, baseOriginalWidth) || other.baseOriginalWidth == baseOriginalWidth)&&(identical(other.baseOriginalHeight, baseOriginalHeight) || other.baseOriginalHeight == baseOriginalHeight)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&(identical(other.avatar, avatar) || other.avatar == avatar)&&(identical(other.avatarConfig, avatarConfig) || other.avatarConfig == avatarConfig)&&(identical(other.previousSpecialsState, previousSpecialsState) || other.previousSpecialsState == previousSpecialsState)&&(identical(other.backgroundTransition, backgroundTransition) || other.backgroundTransition == backgroundTransition)&&(identical(other.mood, mood) || other.mood == mood)&&(identical(other.scene, scene) || other.scene == scene)&&(identical(other.gestureEvent, gestureEvent) || other.gestureEvent == gestureEvent)&&(identical(other.sceneEvent, sceneEvent) || other.sceneEvent == sceneEvent)&&(identical(other.presence, presence) || other.presence == presence)&&(identical(other.headTarget, headTarget) || other.headTarget == headTarget)&&(identical(other.prop, prop) || other.prop == prop)&&(identical(other.journey, journey) || other.journey == journey)&&(identical(other.preloadScene, preloadScene) || other.preloadScene == preloadScene));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AvatarState&&(identical(other.status, status) || other.status == status)&&(identical(other.statusAnimation, statusAnimation) || other.statusAnimation == statusAnimation)&&(identical(other.baseOriginalWidth, baseOriginalWidth) || other.baseOriginalWidth == baseOriginalWidth)&&(identical(other.baseOriginalHeight, baseOriginalHeight) || other.baseOriginalHeight == baseOriginalHeight)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&(identical(other.avatar, avatar) || other.avatar == avatar)&&(identical(other.avatarConfig, avatarConfig) || other.avatarConfig == avatarConfig)&&(identical(other.previousSpecialsState, previousSpecialsState) || other.previousSpecialsState == previousSpecialsState)&&(identical(other.backgroundTransition, backgroundTransition) || other.backgroundTransition == backgroundTransition)&&(identical(other.mood, mood) || other.mood == mood)&&(identical(other.scene, scene) || other.scene == scene)&&(identical(other.gestureEvent, gestureEvent) || other.gestureEvent == gestureEvent)&&(identical(other.sceneEvent, sceneEvent) || other.sceneEvent == sceneEvent)&&(identical(other.presence, presence) || other.presence == presence)&&(identical(other.headTarget, headTarget) || other.headTarget == headTarget)&&(identical(other.prop, prop) || other.prop == prop)&&(identical(other.journey, journey) || other.journey == journey)&&(identical(other.preloadScene, preloadScene) || other.preloadScene == preloadScene)&&(identical(other.jacket, jacket) || other.jacket == jacket)&&(identical(other.journeyJacket, journeyJacket) || other.journeyJacket == journeyJacket)&&(identical(other.tabletWeather, tabletWeather) || other.tabletWeather == tabletWeather)&&(identical(other.tabletTemp, tabletTemp) || other.tabletTemp == tabletTemp));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,status,statusAnimation,baseOriginalWidth,baseOriginalHeight,scaleFactor,avatar,avatarConfig,previousSpecialsState,backgroundTransition,mood,scene,gestureEvent,sceneEvent,presence,headTarget,prop,journey,preloadScene);
+    return Object.hashAll([runtimeType,status,statusAnimation,baseOriginalWidth,baseOriginalHeight,scaleFactor,avatar,avatarConfig,previousSpecialsState,backgroundTransition,mood,scene,gestureEvent,sceneEvent,presence,headTarget,prop,journey,preloadScene,jacket,journeyJacket,tabletWeather,tabletTemp]);
 }
 
 @override
 String toString() {
-    return 'AvatarState(status: $status, statusAnimation: $statusAnimation, baseOriginalWidth: $baseOriginalWidth, baseOriginalHeight: $baseOriginalHeight, scaleFactor: $scaleFactor, avatar: $avatar, avatarConfig: $avatarConfig, previousSpecialsState: $previousSpecialsState, backgroundTransition: $backgroundTransition, mood: $mood, scene: $scene, gestureEvent: $gestureEvent, sceneEvent: $sceneEvent, presence: $presence, headTarget: $headTarget, prop: $prop, journey: $journey, preloadScene: $preloadScene)';
+    return 'AvatarState(status: $status, statusAnimation: $statusAnimation, baseOriginalWidth: $baseOriginalWidth, baseOriginalHeight: $baseOriginalHeight, scaleFactor: $scaleFactor, avatar: $avatar, avatarConfig: $avatarConfig, previousSpecialsState: $previousSpecialsState, backgroundTransition: $backgroundTransition, mood: $mood, scene: $scene, gestureEvent: $gestureEvent, sceneEvent: $sceneEvent, presence: $presence, headTarget: $headTarget, prop: $prop, journey: $journey, preloadScene: $preloadScene, jacket: $jacket, journeyJacket: $journeyJacket, tabletWeather: $tabletWeather, tabletTemp: $tabletTemp)';
 }
 
 
@@ -303,7 +321,7 @@ abstract mixin class _$AvatarStateCopyWith<$Res> implements $AvatarStateCopyWith
   factory _$AvatarStateCopyWith(_AvatarState value, $Res Function(_AvatarState) _then) = __$AvatarStateCopyWithImpl;
 @override @useResult
 $Res call({
- AvatarStatus status, AvatarStatusAnimation statusAnimation, double baseOriginalWidth, double baseOriginalHeight, double scaleFactor, Avatar avatar, AvatarConfig avatarConfig, AvatarSpecials previousSpecialsState, BackgroundTransition backgroundTransition, AvatarMood mood, AvatarScene scene, ({AvatarGesture gesture, int seq,}) gestureEvent, ({SceneEvent sceneEvent, int seq,}) sceneEvent, AvatarSpecials presence, HeadTarget headTarget, AvatarProp prop, JourneyState? journey, AvatarScene? preloadScene
+ AvatarStatus status, AvatarStatusAnimation statusAnimation, double baseOriginalWidth, double baseOriginalHeight, double scaleFactor, Avatar avatar, AvatarConfig avatarConfig, AvatarSpecials previousSpecialsState, BackgroundTransition backgroundTransition, AvatarMood mood, AvatarScene scene, ({AvatarGesture gesture, int seq,}) gestureEvent, ({SceneEvent sceneEvent, int seq,}) sceneEvent, AvatarSpecials presence, HeadTarget headTarget, AvatarProp prop, JourneyState? journey, AvatarScene? preloadScene, bool jacket, double journeyJacket, TabletWeather tabletWeather, int tabletTemp
 });
 
 
@@ -320,7 +338,7 @@ class __$AvatarStateCopyWithImpl<$Res>
 
 /// Create a copy of AvatarState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? statusAnimation = null,Object? baseOriginalWidth = null,Object? baseOriginalHeight = null,Object? scaleFactor = null,Object? avatar = null,Object? avatarConfig = null,Object? previousSpecialsState = null,Object? backgroundTransition = null,Object? mood = null,Object? scene = null,Object? gestureEvent = null,Object? sceneEvent = null,Object? presence = null,Object? headTarget = null,Object? prop = null,Object? journey = freezed,Object? preloadScene = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? statusAnimation = null,Object? baseOriginalWidth = null,Object? baseOriginalHeight = null,Object? scaleFactor = null,Object? avatar = null,Object? avatarConfig = null,Object? previousSpecialsState = null,Object? backgroundTransition = null,Object? mood = null,Object? scene = null,Object? gestureEvent = null,Object? sceneEvent = null,Object? presence = null,Object? headTarget = null,Object? prop = null,Object? journey = freezed,Object? preloadScene = freezed,Object? jacket = null,Object? journeyJacket = null,Object? tabletWeather = null,Object? tabletTemp = null,}) {
   return _then(_AvatarState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AvatarStatus,statusAnimation: null == statusAnimation ? _self.statusAnimation : statusAnimation // ignore: cast_nullable_to_non_nullable
@@ -340,7 +358,11 @@ as AvatarSpecials,headTarget: null == headTarget ? _self.headTarget : headTarget
 as HeadTarget,prop: null == prop ? _self.prop : prop // ignore: cast_nullable_to_non_nullable
 as AvatarProp,journey: freezed == journey ? _self.journey : journey // ignore: cast_nullable_to_non_nullable
 as JourneyState?,preloadScene: freezed == preloadScene ? _self.preloadScene : preloadScene // ignore: cast_nullable_to_non_nullable
-as AvatarScene?,
+as AvatarScene?,jacket: null == jacket ? _self.jacket : jacket // ignore: cast_nullable_to_non_nullable
+as bool,journeyJacket: null == journeyJacket ? _self.journeyJacket : journeyJacket // ignore: cast_nullable_to_non_nullable
+as double,tabletWeather: null == tabletWeather ? _self.tabletWeather : tabletWeather // ignore: cast_nullable_to_non_nullable
+as TabletWeather,tabletTemp: null == tabletTemp ? _self.tabletTemp : tabletTemp // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

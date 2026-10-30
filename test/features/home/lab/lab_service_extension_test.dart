@@ -96,6 +96,78 @@ void main() {
       });
     }
 
+    test('fog sets the world state and shows in the response (M8)', () {
+      final WorldStateService world = WorldStateService();
+      addTearDown(world.dispose);
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      final developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{'fog': '0.6'},
+        world: world,
+      );
+      expect(r.errorCode, isNull);
+      expect(world.fog.value, 0.6);
+      expect(_decode(r)['fog'], 0.6);
+      expect(_decode(labStateResponse(notifier, world: world))['fog'], 0.6);
+      // a bad fog leaves the rain alone too
+      final developer.ServiceExtensionResponse bad = labConfigureResponse(
+        notifier,
+        <String, String>{'rain': '0.5', 'fog': '2'},
+        world: world,
+      );
+      expect(bad.errorCode, developer.ServiceExtensionResponse.extensionError);
+      expect(world.rain.value, 0);
+      expect(world.fog.value, 0.6);
+      expect(
+        labConfigureResponse(notifier, <String, String>{
+          'fog': '0.5',
+        }).errorCode,
+        developer.ServiceExtensionResponse.extensionError,
+      );
+    });
+
+    test('npc poses the scene NPC by hand and clears with null (M8)', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      final developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{'npc': '{"npc":"notice","npcX":0.5,"npcLook":-1}'},
+      );
+      expect(r.errorCode, isNull);
+      expect(
+        notifier.value.npc,
+        const NpcIntent(npc: NpcState.notice, npcX: 0.5, npcLook: -1),
+      );
+      expect(_decode(r)['npc'], <String, Object?>{
+        'npc': 'notice',
+        'npcX': 0.5,
+        'npcLook': -1.0,
+      });
+      labConfigureResponse(notifier, <String, String>{'npc': '{"npcX":1}'});
+      expect(notifier.value.npc, const NpcIntent(npcX: 1));
+      for (final String bad in <String>[
+        '{"npc":"sleep"}',
+        '{"npcX":2}',
+        '{"npcLook":-3}',
+        '{"other":1}',
+        '[1]',
+      ]) {
+        expect(
+          labConfigureResponse(notifier, <String, String>{
+            'npc': bad,
+          }).errorCode,
+          developer.ServiceExtensionResponse.extensionError,
+          reason: bad,
+        );
+      }
+      expect(notifier.value.npc, const NpcIntent(npcX: 1));
+      labConfigureResponse(notifier, <String, String>{'npc': 'null'});
+      expect(notifier.value.npc, isNull);
+    });
+
     test('rain without a world is an error', () {
       final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
         LabConfig.initial,

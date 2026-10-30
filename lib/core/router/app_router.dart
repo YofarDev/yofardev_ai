@@ -13,6 +13,7 @@ import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/presentation/bloc/avatar_state.dart';
 import '../../features/avatar/domain/services/camera_director.dart';
 import '../../features/avatar/domain/services/face_performer.dart';
+import '../../features/avatar/domain/services/npc_director.dart';
 import '../../features/avatar/presentation/rive/rive_lab_screen.dart';
 import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
@@ -28,6 +29,8 @@ import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/memory_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/res/app_constants.dart';
+import '../../core/services/audio/ambient_bed_service.dart';
+import '../../core/services/audio/foley_service.dart';
 import '../../core/services/motion/parallax_source.dart';
 import '../../core/services/world/world_state_service.dart';
 import '../../core/services/presence/composer_activity_service.dart';
@@ -71,6 +74,9 @@ class AppRouter {
             world: getIt<WorldStateService>(),
             facePerformer: getIt<FacePerformer>(),
             camera: getIt<CameraDirector>(),
+            npc: getIt<NpcDirector>(),
+            foley: getIt<FoleyService>(),
+            beds: getIt<AmbientBedService>(),
           );
           return MaterialPage<void>(
             key: state.pageKey,

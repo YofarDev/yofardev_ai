@@ -27,6 +27,12 @@ JourneyFrame _at(
   reduceMotion: rm,
 );
 
+/// The layer's peg-jacket rule under test.
+abstract final class JourneyLayerJacket {
+  static double of(JourneyState journey, double jacket) =>
+      JourneyLayer.journeyJacketOf(journey, jacket);
+}
+
 void main() {
   test('no journey draws nothing and clips nothing', () {
     expect(JourneyChoreography.at(null, Duration.zero), JourneyFrame.none);
@@ -41,6 +47,32 @@ void main() {
     expect(_at(JourneyPhase.open, 450).open, 1);
     final JourneyFrame exit = _at(JourneyPhase.exit, 999);
     expect((exit.show, exit.open, exit.clip), (1.0, 1.0, true));
+  });
+
+  test('the door holds open through the jacket beats (M8)', () {
+    for (final JourneyPhase phase in <JourneyPhase>[
+      JourneyPhase.grab,
+      JourneyPhase.hang,
+    ]) {
+      for (final int ms in <int>[0, 380, 900]) {
+        final JourneyFrame f = _at(phase, ms);
+        expect((f.show, f.open, f.clip), (1.0, 1.0, true), reason: '$phase');
+      }
+      expect(JourneyChoreography.settleOf(_j(phase)), Duration.zero);
+    }
+  });
+
+  test('only the door writes the peg jacket (v11)', () {
+    expect(JourneyLayerJacket.of(_j(JourneyPhase.open), 1), 1);
+    expect(JourneyLayerJacket.of(_j(JourneyPhase.grab), 0), 0);
+    expect(JourneyLayerJacket.of(_j(JourneyPhase.vanish), 2), 1);
+    for (final JourneyFamily family in <JourneyFamily>[
+      JourneyFamily.path,
+      JourneyFamily.portal,
+      JourneyFamily.rocket,
+    ]) {
+      expect(JourneyLayerJacket.of(_j(JourneyPhase.open, family), 1), 0);
+    }
   });
 
   test('it closes before the cut and stays shut across it', () {

@@ -25,13 +25,17 @@ class ToolRegistry {
     required AppLifecycleService appLifecycleService,
     List<AgentTool>? tools,
     void Function(WeatherReport report)? onOwnLocationReport,
+    void Function(WeatherReport report)? onWeatherReport,
   }) : _appLifecycleService = appLifecycleService {
     _tools =
         tools ??
         <AgentTool>[
           AlarmTool(),
           AvatarTool(_appLifecycleService),
-          WeatherTool(onOwnLocationReport: onOwnLocationReport),
+          WeatherTool(
+            onOwnLocationReport: onOwnLocationReport,
+            onReport: onWeatherReport,
+          ),
           NewsTool(),
           CharacterCounterTool(),
           CalculatorTool(),

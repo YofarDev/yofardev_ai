@@ -10,7 +10,10 @@ import '../../../../../core/services/motion/parallax_source.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../../../core/design/rive/rive_vm_binding.dart';
 import '../../rive/avatar_rive_contract.dart';
+import '../../../domain/models/npc_intent.dart';
+import '../../rive/scene_fog_writer.dart';
 import '../../rive/scene_front_follower.dart';
+import '../../rive/scene_npc_writer.dart';
 import '../../rive/scene_parallax_writer.dart';
 import '../../rive/scene_rain_writer.dart';
 import '../../rive/scene_time_writer.dart';
@@ -38,6 +41,10 @@ import 'latest_load_gate.dart';
 /// Time of day (contract v10): [daylight] and [dusk] are written to `SceneVM`
 /// on every scene load and change, like the rain.
 ///
+/// Fog and the NPC (contract v11): [fog] and [npc]'s intent (or a non-null
+/// [npcOverride], the UI lab) are written to `SceneVM` on every scene load
+/// and change, like the rain; the fog also goes to the front artboard.
+///
 /// Front (contract v9): a file with a `SceneFront` artboard gets it drawn
 /// above [middle] (the avatar) while it rains, with the same fit, never
 /// hit-tested; [middle] sits between the two at a fixed index, so a scene
@@ -53,6 +60,9 @@ class RiveSceneView extends StatefulWidget {
     this.rain,
     this.daylight,
     this.dusk,
+    this.fog,
+    this.npc,
+    this.npcOverride,
     this.middle,
     this.preload,
     this.onSceneShown,
@@ -78,6 +88,15 @@ class RiveSceneView extends StatefulWidget {
   final ValueListenable<double>? daylight;
   final ValueListenable<double>? dusk;
 
+  /// Weather fog (contract v11), 0..1; null leaves it clear.
+  final ValueListenable<double>? fog;
+
+  /// The scene NPC's intent (contract v11); null leaves it at rest.
+  final ValueListenable<NpcIntent>? npc;
+
+  /// A hand-set NPC intent written instead of [npc] while non-null.
+  final NpcIntent? npcOverride;
+
   /// Drawn over the scene and under its front weather: the avatar.
   final Widget? middle;
 
@@ -100,6 +119,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
   SceneParallaxWriter? _parallaxWriter;
   final SceneRainFollower _rain = SceneRainFollower();
   final SceneTimeFollower _time = SceneTimeFollower();
+  final SceneFogFollower _fog = SceneFogFollower();
+  final SceneFogFollower _frontFog = SceneFogFollower();
+  final SceneNpcFollower _npc = SceneNpcFollower();
   final SceneFrontFollower _front = SceneFrontFollower();
   ValueListenable<double>? _frontRainSource;
   bool _hasFront = false;
@@ -131,6 +153,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _syncParallaxActive();
     _rain.follow(widget.rain);
     _time.follow(widget.daylight, widget.dusk);
+    _fog.follow(widget.fog);
+    _frontFog.follow(widget.fog);
+    _npc.follow(widget.npc, override: widget.npcOverride);
     _followFrontRain();
     _loadScene(widget.scene);
     _startPreload(widget.preload);
@@ -237,6 +262,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
       rain: rain,
       parallax: widget.parallaxOverride ?? _parallax,
     );
+    _frontFog.load(binding.setNumber);
     apply(() {
       _frontController = controller;
       _frontBinding = binding;
@@ -245,6 +271,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
 
   void _teardownFront() {
     _front.detach();
+    _frontFog.unload();
     _frontBinding?.dispose();
     _frontController?.dispose();
     _frontBinding = null;
@@ -317,6 +344,14 @@ class _RiveSceneViewState extends State<RiveSceneView>
         widget.dusk != oldWidget.dusk) {
       _time.follow(widget.daylight, widget.dusk);
     }
+    if (widget.fog != oldWidget.fog) {
+      _fog.follow(widget.fog);
+      _frontFog.follow(widget.fog);
+    }
+    if (widget.npc != oldWidget.npc ||
+        widget.npcOverride != oldWidget.npcOverride) {
+      _npc.follow(widget.npc, override: widget.npcOverride);
+    }
     if (widget.parallaxOverride != oldWidget.parallaxOverride ||
         widget.parallax != oldWidget.parallax) {
       _scheduleParallaxWrite();
@@ -356,6 +391,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _preloadFile = null;
     _rain.dispose();
     _time.dispose();
+    _fog.dispose();
+    _frontFog.dispose();
+    _npc.dispose();
     _frontRainSource?.removeListener(_syncFront);
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
@@ -427,8 +465,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
           ..write(widget.parallaxOverride ?? _parallax, force: true);
         // Nor has it the rain: a scene switch writes it to the new file.
         _rain.load(binding.setNumber);
-        // And the time of day (v10).
+        // And the time of day (v10), the fog and the NPC (v11).
         _time.load(binding.setNumber);
+        _fog.load(binding.setNumber);
+        _npc.load(binding.setEnum, binding.setNumber);
         _syncParallaxActive();
       });
       // The new file's front, if it has one and it rains.
@@ -473,6 +513,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _parallaxWriter = null;
     _rain.unload();
     _time.unload();
+    _fog.unload();
+    _npc.unload();
     _file = null;
     _loadedScene = null;
   }

@@ -82,6 +82,7 @@ abstract final class JourneyChoreography {
           open: ramp(appearMs, JourneyTiming.appear),
           clip: true,
         );
+      case JourneyPhase.grab:
       case JourneyPhase.exit:
         return JourneyFrame(family: family, show: 1, open: 1, clip: true);
       case JourneyPhase.close:
@@ -119,6 +120,7 @@ abstract final class JourneyChoreography {
           clip: true,
         );
       case JourneyPhase.enter:
+      case JourneyPhase.hang:
         return JourneyFrame(family: family, show: 1, open: 1, clip: true);
       case JourneyPhase.arriveClose:
         return JourneyFrame(

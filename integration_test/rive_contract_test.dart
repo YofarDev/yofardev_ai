@@ -86,6 +86,9 @@ void main() {
         ...AvatarRiveContract.lightColorProps,
         AvatarRiveContract.propProp,
         AvatarRiveContract.propLean,
+        AvatarRiveContract.propJacket,
+        AvatarRiveContract.propTabletWeather,
+        AvatarRiveContract.propTabletTemp,
       ];
       for (final String name in expected) {
         expect(names, contains(name), reason: 'AvatarVM.$name missing');
@@ -103,6 +106,8 @@ void main() {
         AvatarRiveContract.propCostume: AvatarRiveContract.costumeValues,
         AvatarRiveContract.propPresence: AvatarRiveContract.presenceValues,
         AvatarRiveContract.propProp: AvatarRiveContract.propValues,
+        AvatarRiveContract.propTabletWeather:
+            AvatarRiveContract.tabletWeatherValues,
       };
       enumProperties.forEach((String property, List<String> values) {
         final ViewModelInstanceEnum? enumProperty = vmi.enumerator(property);
@@ -209,6 +214,104 @@ void main() {
       );
     });
 
+    test('v11: gestureId ends with thumbsUp, count, grab', () {
+      expect(
+        AvatarRiveContract.gestureIdValues.sublist(
+          AvatarRiveContract.gestureIdValues.length - 3,
+        ),
+        <String>['thumbsUp', 'count', 'grab'],
+      );
+      final ViewModelInstanceEnum gesture = vmi.enumerator(
+        AvatarRiveContract.propGestureId,
+      )!;
+      final String original = gesture.value;
+      for (final String value in <String>['thumbsUp', 'count', 'grab']) {
+        gesture.value = value;
+        expect(gesture.value, value);
+      }
+      gesture.value = original;
+    });
+
+    test('v11: jacket, tabletWeather and tabletTemp defaults and ranges', () {
+      final ViewModelInstanceBoolean? jacket = vmi.boolean(
+        AvatarRiveContract.propJacket,
+      );
+      expect(jacket, isNotNull, reason: 'jacket is not a VM boolean');
+      expect(jacket!.value, isFalse, reason: 'jacket defaults to false');
+      jacket.value = true;
+      expect(jacket.value, isTrue);
+      jacket.value = false;
+      expect(
+        vmi.enumerator(AvatarRiveContract.propTabletWeather)!.value,
+        'none',
+        reason: 'tabletWeather defaults to none',
+      );
+      final ViewModelInstanceNumber? temp = vmi.number(
+        AvatarRiveContract.propTabletTemp,
+      );
+      expect(temp, isNotNull, reason: 'tabletTemp is not a VM number');
+      expect(temp!.value, 0, reason: 'tabletTemp defaults to 0');
+      for (final double v in <double>[
+        AvatarRiveContract.tabletTempMin,
+        AvatarRiveContract.tabletTempMax,
+        -9,
+        49,
+      ]) {
+        temp.value = v;
+        expect(temp.value, v);
+      }
+      temp.value = 0;
+    });
+
+    test('v11: a foley step event fires while the avatar walks out', () async {
+      final RiveWidgetController walker = RiveWidgetController(
+        file,
+        artboardSelector: ArtboardSelector.byName(
+          AvatarRiveContract.avatarArtboard,
+        ),
+        stateMachineSelector: StateMachineSelector.byName(
+          AvatarRiveContract.avatarStateMachine,
+        ),
+      );
+      final ViewModelInstance walkVmi = walker.dataBind(DataBind.auto());
+      final List<String> kinds = <String>[];
+      void onEvent(Event event) {
+        if (event.name != AvatarRiveContract.eventFoley) {
+          return;
+        }
+        final String? kind = event
+            .stringProperty(AvatarRiveContract.avatarEventKindProperty)
+            ?.value;
+        if (kind != null) {
+          kinds.add(kind);
+        }
+      }
+
+      walker.stateMachine.addEventListener(onEvent);
+      // settle at rest, then walk out
+      for (int f = 0; f < 30; f++) {
+        walker.stateMachine.advanceAndApply(1 / 60);
+      }
+      expect(kinds, isEmpty, reason: 'no foley at rest');
+      walkVmi.enumerator(AvatarRiveContract.propPresence)!.value =
+          'outOfScreen';
+      for (int f = 0; f < 150; f++) {
+        walker.stateMachine.advanceAndApply(1 / 60);
+        await Future<void>.delayed(Duration.zero);
+      }
+      walker.stateMachine.removeEventListener(onEvent);
+      expect(
+        kinds,
+        contains(AvatarRiveContract.foleyStep),
+        reason: 'presence_walkOut fires step foley',
+      );
+      for (final String kind in kinds) {
+        expect(AvatarRiveContract.foleyKinds, contains(kind));
+      }
+      walkVmi.dispose();
+      walker.dispose();
+    });
+
     test('autoBlink defaults to true; blink is a trigger', () {
       final ViewModelInstanceBoolean? auto = vmi.boolean(
         AvatarRiveContract.propAutoBlink,
@@ -312,6 +415,33 @@ void main() {
         for (final String name in AvatarRiveContract.sceneLightProps) {
           expect(names, contains(name), reason: 'SceneVM.$name in $sceneId');
         }
+        // v11: fog (0..1) and the NPC (npc enum, npcX 0..1, npcLook -1..1),
+        // all at the v10 look by default.
+        final Map<String, List<double>> v11Numbers = <String, List<double>>{
+          AvatarRiveContract.scenePropFog: <double>[0, 1],
+          AvatarRiveContract.scenePropNpcX: <double>[0, 1],
+          AvatarRiveContract.scenePropNpcLook: <double>[-1, 1],
+        };
+        v11Numbers.forEach((String name, List<double> range) {
+          expect(names, contains(name), reason: 'SceneVM.$name in $sceneId');
+          final ViewModelInstanceNumber n = vmi.number(name)!;
+          expect(n.value, 0, reason: '$sceneId $name defaults to 0');
+          for (final double v in range) {
+            n.value = v;
+            expect(n.value, v, reason: '$sceneId $name');
+          }
+          n.value = 0;
+        });
+        final ViewModelInstanceEnum? npc = vmi.enumerator(
+          AvatarRiveContract.scenePropNpc,
+        );
+        expect(npc, isNotNull, reason: 'SceneVM.npc enum in $sceneId');
+        expect(npc!.value, 'rest', reason: '$sceneId npc defaults to rest');
+        for (final String value in AvatarRiveContract.npcValues) {
+          npc.value = value;
+          expect(npc.value, value, reason: '$sceneId npc rejected "$value"');
+        }
+        npc.value = 'rest';
 
         // Every eventId value for this scene must be accepted.
         final ViewModelInstanceEnum? eventId = vmi.enumerator(
@@ -409,6 +539,8 @@ void main() {
         AvatarRiveContract.journeyPropRocket,
         AvatarRiveContract.journeyPropOpen,
         AvatarRiveContract.journeyPropLift,
+        // v11: the jacket on the door's peg
+        AvatarRiveContract.journeyPropJacket,
       ]) {
         final ViewModelInstanceNumber? n = vmi.number(name);
         expect(n, isNotNull, reason: 'JourneyVM.$name');

@@ -108,7 +108,7 @@ class AvatarCubit extends Cubit<AvatarState> {
   final SoundRepository _soundRepository;
 
   /// True when the latest gesture sent to the Rive view came from a prop or
-  /// avatar tap rather than from the director.
+  /// avatar tap, or a journey's jacket beat, rather than from the director.
   bool _propGesturePlaying = false;
   StreamSubscription<AvatarAnimation>? _animationSubscription;
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
@@ -119,8 +119,16 @@ class AvatarCubit extends Cubit<AvatarState> {
   void _handleIntent(PerformanceIntent intent) {
     if (_journeyLead) {
       // The journey's gaze lead holds the head; the prop still follows.
-      if (intent.prop != state.prop) {
-        _emitIfOpen(state.copyWith(prop: intent.prop));
+      if (intent.prop != state.prop ||
+          intent.tabletWeather != state.tabletWeather ||
+          intent.tabletTemp != state.tabletTemp) {
+        _emitIfOpen(
+          state.copyWith(
+            prop: intent.prop,
+            tabletWeather: intent.tabletWeather,
+            tabletTemp: intent.tabletTemp,
+          ),
+        );
       }
       return;
     }
@@ -129,8 +137,18 @@ class AvatarCubit extends Cubit<AvatarState> {
       activeTool: intent.activeTool,
       prop: intent.prop,
     );
-    if (target != state.headTarget || intent.prop != state.prop) {
-      _emitIfOpen(state.copyWith(headTarget: target, prop: intent.prop));
+    if (target != state.headTarget ||
+        intent.prop != state.prop ||
+        intent.tabletWeather != state.tabletWeather ||
+        intent.tabletTemp != state.tabletTemp) {
+      _emitIfOpen(
+        state.copyWith(
+          headTarget: target,
+          prop: intent.prop,
+          tabletWeather: intent.tabletWeather,
+          tabletTemp: intent.tabletTemp,
+        ),
+      );
     }
   }
 
@@ -410,6 +428,13 @@ class AvatarCubit extends Cubit<AvatarState> {
   /// for `presence_done` and the cut for [onSceneShown], each at most
   /// [JourneyTiming.waitTimeout]. The same scene: no journey, the config
   /// lands as it is.
+  ///
+  /// The door (M8 rulings 5–6) adds two jacket beats: `grab` after `open`
+  /// (the jacket hangs on the peg from the door's appear; the `grab` gesture
+  /// reaches for it and, at its contact, the jacket moves to the hand:
+  /// [AvatarState.jacket] true and [AvatarState.journeyJacket] 0 in one
+  /// state) and `hang` after `enter` (the reverse). The jacket leaves with
+  /// the door at the end.
   Future<void> _journey(String chatId, AvatarConfig avatarConfig) async {
     final AvatarScene from = state.scene;
     final AvatarScene to = avatarConfig.background ?? from;
@@ -448,9 +473,28 @@ class AvatarCubit extends Cubit<AvatarState> {
 
     journey = _beat(journey, JourneyPhase.open);
     _journeyLead = true;
-    _emitIfOpen(state.copyWith(journey: journey, headTarget: journeyLead));
+    _emitIfOpen(
+      state.copyWith(
+        journey: journey,
+        headTarget: journeyLead,
+        // the jacket hangs on the peg from the door's appear
+        journeyJacket: journey.hasJacket ? 1 : 0,
+      ),
+    );
     await Future<void>.delayed(JourneyTiming.open);
     if (gone()) return;
+
+    if (journey.hasJacket) {
+      journey = _beat(journey, JourneyPhase.grab);
+      if (!await _jacketBeat(
+        journey,
+        JourneyTiming.grab,
+        toHand: true,
+        gone: gone,
+      )) {
+        return;
+      }
+    }
 
     journey = _beat(journey, JourneyPhase.exit);
     _emitIfOpen(
@@ -495,6 +539,18 @@ class AvatarCubit extends Cubit<AvatarState> {
     await _waitForPresence(AvatarSpecials.onScreen);
     if (gone()) return;
 
+    if (journey.hasJacket) {
+      journey = _beat(journey, JourneyPhase.hang);
+      if (!await _jacketBeat(
+        journey,
+        JourneyTiming.hang,
+        toHand: false,
+        gone: gone,
+      )) {
+        return;
+      }
+    }
+
     journey = _beat(journey, JourneyPhase.arriveClose);
     _emitIfOpen(state.copyWith(journey: journey));
     await Future<void>.delayed(JourneyTiming.close);
@@ -504,7 +560,44 @@ class AvatarCubit extends Cubit<AvatarState> {
     _emitIfOpen(state.copyWith(journey: journey));
     await Future<void>.delayed(JourneyTiming.vanish);
     if (gone()) return;
-    _emitIfOpen(state.copyWith(journey: null, preloadScene: null));
+    _emitIfOpen(
+      state.copyWith(
+        journey: null,
+        preloadScene: null,
+        jacket: false,
+        journeyJacket: 0,
+      ),
+    );
+  }
+
+  /// One jacket beat ([JourneyPhase.grab] or [JourneyPhase.hang]): plays the
+  /// `grab` gesture, swaps the jacket at [JourneyTiming.grabContact] (to the
+  /// hand when [toHand], else to the peg: both values in one state, so the
+  /// two views flip in the same frame) and waits out [length]. False when
+  /// the journey was stopped meanwhile.
+  Future<bool> _jacketBeat(
+    JourneyState journey,
+    Duration length, {
+    required bool toHand,
+    required bool Function() gone,
+  }) async {
+    // The journey's own gesture: its gesture_done must not release the
+    // director's queue.
+    _propGesturePlaying = true;
+    _emitIfOpen(
+      state.copyWith(
+        journey: journey,
+        gestureEvent: (
+          gesture: AvatarGesture.grab,
+          seq: state.gestureEvent.seq + 1,
+        ),
+      ),
+    );
+    await Future<void>.delayed(JourneyTiming.grabContact);
+    if (gone()) return false;
+    _emitIfOpen(state.copyWith(jacket: toHand, journeyJacket: toHand ? 0 : 1));
+    await Future<void>.delayed(length - JourneyTiming.grabContact);
+    return !gone();
   }
 
   /// Bumped by a chat switch: a running journey stops at its next beat.
@@ -514,7 +607,7 @@ class AvatarCubit extends Cubit<AvatarState> {
   /// the preload go, the head returns to the director, the avatar is on
   /// screen; the destination is never applied to the chat it left.
   void _abortJourney() {
-    if (state.journey == null && !_journeyLead) {
+    if (state.journey == null && !_journeyLead && !state.jacket) {
       return;
     }
     _journeyEpoch++;
@@ -526,6 +619,9 @@ class AvatarCubit extends Cubit<AvatarState> {
         journey: null,
         preloadScene: null,
         presence: AvatarSpecials.onScreen,
+        // no jacket left in the hand (nor on a peg) with no journey
+        jacket: false,
+        journeyJacket: 0,
       ),
     );
   }

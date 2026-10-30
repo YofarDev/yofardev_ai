@@ -26,7 +26,7 @@ const Set<String> _numericKeys = <String>{
 const Set<String> _boolKeys = <String>{'panelCollapsed'};
 
 /// Keys whose value is a JSON document (`null`/empty clears it).
-const Set<String> _jsonKeys = <String>{'face', 'parallax'};
+const Set<String> _jsonKeys = <String>{'face', 'parallax', 'npc'};
 
 /// Params the VM service adds to every call; never part of the config.
 const Set<String> _vmParams = <String>{'isolateId'};
@@ -46,14 +46,37 @@ developer.ServiceExtensionResponse _error(String message) {
   );
 }
 
-developer.ServiceExtensionResponse _ok(LabConfig config, [double? rain]) =>
-    developer.ServiceExtensionResponse.result(
-      jsonEncode(<String, Object?>{...config.toJson(), _rainKey: ?rain}),
-    );
+developer.ServiceExtensionResponse _ok(
+  LabConfig config, [
+  WorldStateService? world,
+]) => developer.ServiceExtensionResponse.result(
+  jsonEncode(<String, Object?>{
+    ...config.toJson(),
+    _rainKey: ?world?.rain.value,
+    _fogKey: ?world?.fog.value,
+  }),
+);
 
-/// The world-state param: not part of [LabConfig], it goes to
-/// [WorldStateService.setRain].
+/// The world-state params: not part of [LabConfig], they go to
+/// [WorldStateService.setRain] and [WorldStateService.setFog].
 const String _rainKey = 'rain';
+const String _fogKey = 'fog';
+
+/// Parses a world param (`rain` or `fog`): a number in 0..1, which needs
+/// [world]. Null when [value] is null.
+double? _worldParam(String key, String? value, WorldStateService? world) {
+  if (value == null) {
+    return null;
+  }
+  final double? number = double.tryParse(value);
+  if (number == null || number < 0 || number > 1) {
+    throw FormatException('"$key" must be a number in 0..1, got "$value"');
+  }
+  if (world == null) {
+    throw FormatException('"$key" needs the world state service');
+  }
+  return number;
+}
 
 /// Converts service-extension string params into [LabConfig] JSON values:
 /// numeric keys become numbers (`null`/empty clears an override), boolean
@@ -109,9 +132,12 @@ Map<String, Object?> _paramsToJson(Map<String, String> params) {
 /// `prop` is `none`, `tablet` or `newspaper`; `shot` (`wide`, `medium`,
 /// `closeUp` or `propInsert`) cuts the stage camera to that framing;
 /// `parallax` is
-/// `{"x":0.5,"y":-0.2}` (each -1..1) or `null`. `rain` is a number in 0..1
-/// handed to [world] ([WorldStateService.setRain]); it is rejected when no
-/// [world] is given and, like any invalid input, leaves the config alone.
+/// `{"x":0.5,"y":-0.2}` (each -1..1) or `null`. `npc` poses the scene's NPC
+/// by hand: `{"npc":"notice","npcX":0.5,"npcLook":-1}` (any key optional) or
+/// `null` (back to rest). `rain` and `fog` are numbers in 0..1 handed to
+/// [world] ([WorldStateService.setRain], [WorldStateService.setFog]); they
+/// are rejected when no [world] is given and, like any invalid input, leave
+/// the config alone.
 developer.ServiceExtensionResponse labConfigureResponse(
   ValueNotifier<LabConfig>? notifier,
   Map<String, String> params, {
@@ -122,19 +148,16 @@ developer.ServiceExtensionResponse labConfigureResponse(
   }
   try {
     final Map<String, String> configParams = <String, String>{...params};
-    final String? rainParam = configParams.remove(_rainKey);
-    double? rain;
-    if (rainParam != null) {
-      rain = double.tryParse(rainParam);
-      if (rain == null || rain < 0 || rain > 1) {
-        throw FormatException(
-          '"rain" must be a number in 0..1, got "$rainParam"',
-        );
-      }
-      if (world == null) {
-        throw const FormatException('"rain" needs the world state service');
-      }
-    }
+    final double? rain = _worldParam(
+      _rainKey,
+      configParams.remove(_rainKey),
+      world,
+    );
+    final double? fog = _worldParam(
+      _fogKey,
+      configParams.remove(_fogKey),
+      world,
+    );
     final Map<String, Object?> json = _paramsToJson(configParams);
     final Object? face = json['face'];
     final FaceFrame? current = notifier.value.face;
@@ -155,7 +178,10 @@ developer.ServiceExtensionResponse labConfigureResponse(
     if (rain != null) {
       world!.setRain(rain);
     }
-    return _ok(next, world?.rain.value);
+    if (fog != null) {
+      world!.setFog(fog);
+    }
+    return _ok(next, world);
   } on FormatException catch (e) {
     return _error(e.message);
   }
@@ -169,14 +195,14 @@ developer.ServiceExtensionResponse labStateResponse(
   if (notifier == null) {
     return _error('No UI lab is mounted. Open it first.');
   }
-  return _ok(notifier.value, world?.rain.value);
+  return _ok(notifier.value, world);
 }
 
 /// Makes [config] the lab the debug service extensions drive, registering the
 /// extensions on first use. `registerExtension` throws when a name is
 /// registered twice in an isolate, so registration happens once per isolate
 /// and calls are routed to the currently mounted notifier. No-op outside
-/// debug builds. [world] receives the `rain` param.
+/// debug builds. [world] receives the `rain` and `fog` params.
 void registerUiLabExtensions(
   ValueNotifier<LabConfig> config, {
   WorldStateService? world,

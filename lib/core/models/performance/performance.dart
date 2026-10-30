@@ -14,4 +14,5 @@ export 'mouth_shape.dart';
 export 'quality_tier.dart';
 export 'shot.dart';
 export 'speech_timeline.dart';
+export 'tablet_weather.dart';
 export 'viseme.dart';

@@ -17,6 +17,8 @@ import '../../features/avatar/domain/services/camera_director.dart';
 import '../../features/avatar/domain/services/camera_feed.dart';
 import '../../features/avatar/domain/services/face_performer.dart';
 import '../../features/avatar/domain/services/idle_ladder.dart';
+import '../../features/avatar/domain/services/npc_director.dart';
+import '../../features/avatar/domain/services/npc_feed.dart';
 import '../../features/avatar/domain/services/performance_director.dart';
 import '../../features/chat/domain/repositories/global_memory_repository.dart';
 import '../../features/chat/presentation/bloc/chat_tts_cubit.dart';
@@ -56,10 +58,18 @@ import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/settings/domain/repositories/locale_repository.dart';
 import '../../features/settings/data/repositories/locale_repository_impl.dart';
 import '../services/audio/audio_amplitude_service.dart';
+import '../services/audio/ambient_bed_service.dart';
 import '../services/audio/audio_player_service.dart';
+import '../services/audio/foley_service.dart';
+import '../services/audio/sound_effects_setting.dart';
 import '../services/audio/interruption_service.dart';
 import '../services/audio/voice_effects_service.dart';
+import '../design/tokens/scene_lights.dart';
+import '../models/avatar_scene.dart';
 import '../models/failure.dart';
+import '../models/result.dart';
+import '../../features/avatar/domain/models/avatar_animation.dart';
+import '../../features/avatar/domain/models/performance_intent.dart';
 import '../models/weather_report.dart';
 import '../services/agent/tool_registry.dart';
 import '../services/agent/weather_service.dart';
@@ -83,6 +93,7 @@ import '../services/settings_local_datasource.dart';
 import '../services/speech/speech_input_service.dart';
 import '../services/speech/speech_to_text_input_service.dart';
 import '../services/stream_processor/stream_processor_service.dart';
+import '../services/world/tablet_weather_source.dart';
 import '../services/world/world_lifecycle_observer.dart';
 import '../services/world/world_state_service.dart';
 import '../services/world/world_weather_sync.dart';
@@ -93,14 +104,16 @@ final GetIt getIt = GetIt.instance;
 
 /// Registers every dependency. The overrides are seams for the macOS capture
 /// harness (`integration_test/wow_capture_test.dart`, M6): [ttsSynthesizer]
-/// replaces on-device TTS and [tools] the agent's tool list. Production passes
-/// neither.
+/// replaces on-device TTS, [tools] the agent's tool list and [foleyPlayer]
+/// the foley players (M8: the harness logs what played). Production passes
+/// none of them.
 /// The app lifecycle observer that pauses the world clock and weather sync.
 WorldLifecycleObserver? _worldObserver;
 
 Future<void> setupServiceLocator({
   TtsSynthesizer? ttsSynthesizer,
   List<AgentTool>? tools,
+  FoleyPlayer Function()? foleyPlayer,
 }) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -177,7 +190,15 @@ Future<void> setupServiceLocator({
       // Weather for the user's own location also moves the world's sky.
       onOwnLocationReport: (WeatherReport report) =>
           getIt<WorldStateService>().applyWeather(report),
+      // Any city's weather shows on the tablet (M8 ruling 14), never in the
+      // world.
+      onWeatherReport: (WeatherReport report) =>
+          getIt<TabletWeatherSource>().report(report),
     ),
+  );
+  getIt.registerLazySingleton<TabletWeatherSource>(
+    TabletWeatherSource.new,
+    dispose: (TabletWeatherSource source) => source.dispose(),
   );
 
   // ── Repositories (depend on datasources + services) ──
@@ -185,7 +206,11 @@ Future<void> setupServiceLocator({
     () => AvatarRepositoryImpl(datasource: getIt<AvatarLocalDatasource>()),
   );
   getIt.registerLazySingleton<SettingsRepository>(
-    () => SettingsRepositoryImpl(),
+    () => SettingsRepositoryImpl(
+      // The live setting the foley and the beds follow (M8).
+      onSoundEffectsChanged: (bool enabled) =>
+          getIt<SoundEffectsSetting>().set(enabled),
+    ),
   );
   getIt.registerLazySingleton<ChatRepository>(
     () => YofardevRepositoryImpl(chatDatasource: getIt<ChatLocalDatasource>()),
@@ -212,6 +237,20 @@ Future<void> setupServiceLocator({
     () => AudioAmplitudeService(),
   );
   getIt.registerLazySingleton<VoiceEffectsService>(() => VoiceEffectsService());
+  // Foley, haptics and the ambient beds (moonshot M8 rulings 10-12): they
+  // follow the sound-effects setting (loaded below) and pause with the app.
+  getIt.registerLazySingleton<SoundEffectsSetting>(
+    SoundEffectsSetting.new,
+    dispose: (SoundEffectsSetting setting) => setting.dispose(),
+  );
+  getIt.registerLazySingleton<FoleyService>(
+    () => FoleyService(
+      createPlayer: foleyPlayer ?? AudioPlayersFoleyPlayer.new,
+      haptics: const SystemHaptics(),
+      enabled: getIt<SoundEffectsSetting>().enabled,
+    ),
+    dispose: (FoleyService foley) => foley.dispose(),
+  );
   getIt.registerLazySingleton<TtsQueueService>(
     () => TtsQueueService(
       ttsSynthesizer: ttsSynthesizer ?? getIt<TtsDatasource>(),
@@ -349,7 +388,10 @@ Future<void> setupServiceLocator({
   // streaming cue channel from startup, or cues fired before the first
   // subscription would be lost.
   getIt.registerLazySingleton<PerformanceDirector>(
-    () => PerformanceDirector(now: DateTime.now),
+    () => PerformanceDirector(
+      now: DateTime.now,
+      tabletWeather: getIt<TabletWeatherSource>().readings,
+    ),
   );
   getIt.registerLazySingleton<ComposerActivityService>(
     ComposerActivityService.new,
@@ -456,10 +498,14 @@ Future<void> setupServiceLocator({
     onResume: () {
       getIt<WorldStateService>().start();
       getIt<WorldWeatherSync>().start();
+      getIt<FoleyService>().setPaused(false);
+      getIt<AmbientBedService>().setPaused(false);
     },
     onPause: () {
       getIt<WorldStateService>().pause();
       getIt<WorldWeatherSync>().pause();
+      getIt<FoleyService>().setPaused(true);
+      getIt<AmbientBedService>().setPaused(true);
     },
   );
   WidgetsFlutterBinding.ensureInitialized()
@@ -495,6 +541,54 @@ Future<void> setupServiceLocator({
     dispose: (CameraFeed feed) => feed.dispose(),
   );
   getIt<CameraFeed>();
+  // The scene NPCs (moonshot M8): eager like the camera, so the feed hears
+  // every sentence, scene event and tier change from the start. The scene,
+  // the talking phase, reduce motion and the pokes come from the Home stage.
+  getIt.registerLazySingleton<NpcDirector>(
+    () => NpcDirector(now: DateTime.now),
+    dispose: (NpcDirector npc) => npc.dispose(),
+  );
+  getIt.registerLazySingleton<NpcFeed>(
+    () => NpcFeed(
+      npc: getIt<NpcDirector>(),
+      intents: getIt<PerformanceDirector>().intents,
+      playback: getIt<TtsPlaybackService>().events,
+      animations: getIt<AvatarAnimationService>().animations,
+      userMessages: getIt<ChatStreamingService>().userMessages,
+      rain: getIt<WorldStateService>().rain,
+      tier: getIt<QualityTierService>().current,
+      tierChanges: getIt<QualityTierService>().changes,
+    ),
+    dispose: (NpcFeed feed) => feed.dispose(),
+  );
+  getIt<NpcFeed>();
+  getIt.registerLazySingleton<AmbientBedService>(
+    () => AmbientBedService(
+      createPlayer: AudioPlayersBedPlayer.new,
+      enabled: getIt<SoundEffectsSetting>().enabled,
+      flickerOf: (AvatarScene scene) => SceneLights.of(scene).flicker,
+      rain: getIt<WorldStateService>().rain,
+      speaking: getIt<PerformanceDirector>().intents
+          .map((PerformanceIntent intent) => intent.speaking)
+          .distinct(),
+      flares: getIt<AvatarAnimationService>().animations
+          .where(
+            (AvatarAnimation animation) =>
+                animation is AvatarAnimationSceneEvent &&
+                animation.sceneEvent == SceneEvent.flare,
+          )
+          .map((AvatarAnimation _) {}),
+    ),
+    dispose: (AmbientBedService beds) => beds.dispose(),
+  );
+  unawaited(
+    getIt<SettingsRepository>().getSoundEffects().then(
+      (Result<bool> result) => result.when(
+        err: (Failure failure) {},
+        ok: (bool enabled) => getIt<SoundEffectsSetting>().set(enabled),
+      ),
+    ),
+  );
 
   getIt.registerFactory<DemoCubit>(
     () => DemoCubit(

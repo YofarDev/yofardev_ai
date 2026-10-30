@@ -393,8 +393,26 @@ void main() {
           expect(j().phase, JourneyPhase.open);
           expect(avatarCubit.state.headTarget, AvatarCubit.journeyLead);
 
+          // the jacket hangs on the door's peg from its appear
+          expect(avatarCubit.state.journeyJacket, 1);
+          expect(avatarCubit.state.jacket, isFalse);
+
           async.elapse(JourneyTiming.open);
+          // M8: the door's grab beat, the grab gesture, the contact swap
+          expect(j().phase, JourneyPhase.grab);
+          expect(avatarCubit.state.gestureEvent.gesture, AvatarGesture.grab);
+          expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
+          async.elapse(
+            JourneyTiming.grabContact - const Duration(milliseconds: 1),
+          );
+          expect(avatarCubit.state.jacket, isFalse);
+          expect(avatarCubit.state.journeyJacket, 1);
+          async.elapse(const Duration(milliseconds: 1));
+          expect(avatarCubit.state.jacket, isTrue);
+          expect(avatarCubit.state.journeyJacket, 0);
+          async.elapse(JourneyTiming.grab - JourneyTiming.grabContact);
           expect(j().phase, JourneyPhase.exit);
+          expect(avatarCubit.state.jacket, isTrue);
           expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
           expect(
             avatarCubit.state.statusAnimation,
@@ -431,12 +449,25 @@ void main() {
 
           avatarCubit.onPresenceDone('onScreen');
           async.flushMicrotasks();
+          // M8: the hang beat puts the jacket on the new door's peg
+          expect(j().phase, JourneyPhase.hang);
+          expect(avatarCubit.state.jacket, isTrue);
+          final int grabSeq = avatarCubit.state.gestureEvent.seq;
+          expect(avatarCubit.state.gestureEvent.gesture, AvatarGesture.grab);
+          async.elapse(JourneyTiming.grabContact);
+          expect(avatarCubit.state.jacket, isFalse);
+          expect(avatarCubit.state.journeyJacket, 1);
+          async.elapse(JourneyTiming.hang - JourneyTiming.grabContact);
+          expect(avatarCubit.state.gestureEvent.seq, grabSeq);
           expect(j().phase, JourneyPhase.arriveClose);
           async.elapse(JourneyTiming.close);
           expect(j().phase, JourneyPhase.vanish);
+          expect(avatarCubit.state.journeyJacket, 1);
           async.elapse(JourneyTiming.vanish);
           expect(avatarCubit.state.journey, isNull);
           expect(avatarCubit.state.preloadScene, isNull);
+          expect(avatarCubit.state.jacket, isFalse);
+          expect(avatarCubit.state.journeyJacket, 0);
         });
       });
 
@@ -452,6 +483,10 @@ void main() {
           );
           expect(avatarCubit.state.journey!.family, JourneyFamily.rocket);
           async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          // no peg on the rocket: no jacket beat, straight to the walk
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.exit);
+          expect(avatarCubit.state.journeyJacket, 0);
+          expect(avatarCubit.state.jacket, isFalse);
           avatarCubit.onPresenceDone('outOfScreen');
           async.flushMicrotasks();
           // the close beat includes the lift-off
@@ -472,7 +507,9 @@ void main() {
               specials: AvatarSpecials.leaveAndComeBack,
             ),
           );
-          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          async.elapse(
+            JourneyTiming.pullBack + JourneyTiming.open + JourneyTiming.grab,
+          );
           avatarCubit.onPresenceDone('outOfScreen');
           async.flushMicrotasks();
           async.elapse(JourneyTiming.close);
@@ -496,11 +533,17 @@ void main() {
               specials: AvatarSpecials.leaveAndComeBack,
             ),
           );
-          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          async.elapse(
+            JourneyTiming.pullBack + JourneyTiming.open + JourneyTiming.grab,
+          );
           expect(avatarCubit.state.journey!.phase, JourneyPhase.exit);
+          expect(avatarCubit.state.jacket, isTrue);
           avatarCubit.loadAvatar('chat2');
           async.flushMicrotasks();
           expect(avatarCubit.state.journey, isNull);
+          // the epoch stop also clears the jacket (hand and peg)
+          expect(avatarCubit.state.jacket, isFalse);
+          expect(avatarCubit.state.journeyJacket, 0);
           expect(avatarCubit.state.preloadScene, isNull);
           expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
           // the walk's wait times out later: nothing lands on either chat
@@ -508,6 +551,132 @@ void main() {
           expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
           expect(avatarCubit.state.journey, isNull);
           verifyNever(() => mockAvatarRepository.updateAvatar(any(), any()));
+        });
+      });
+
+      test('a chat switch during the grab never leaves a jacket behind', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.grab);
+          avatarCubit.loadAvatar('chat2');
+          async.flushMicrotasks();
+          // the contact would have come now: it must not
+          async.elapse(const Duration(seconds: 5));
+          expect(avatarCubit.state.journey, isNull);
+          expect(avatarCubit.state.jacket, isFalse);
+          expect(avatarCubit.state.journeyJacket, 0);
+        });
+      });
+
+      test('a chat switch while the jacket is in hand clears it', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.elapse(
+            JourneyTiming.pullBack + JourneyTiming.open + JourneyTiming.grab,
+          );
+          avatarCubit.onPresenceDone('outOfScreen');
+          async.flushMicrotasks();
+          async.elapse(JourneyTiming.close);
+          avatarCubit.onSceneShown(AvatarScene.beach);
+          async.flushMicrotasks();
+          async.elapse(JourneyTiming.arriveOpenOf(JourneyFamily.door));
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.enter);
+          expect(avatarCubit.state.jacket, isTrue);
+          avatarCubit.loadAvatar('chat2');
+          async.flushMicrotasks();
+          expect(avatarCubit.state.jacket, isFalse);
+          expect(avatarCubit.state.journeyJacket, 0);
+          async.elapse(const Duration(seconds: 10));
+          expect(avatarCubit.state.jacket, isFalse);
+        });
+      });
+
+      test('a second scene change runs its own jacket beats after the '
+          'first journey ends', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          final List<(bool, double)> jackets = <(bool, double)>[];
+          final List<JourneyPhase?> phases = <JourneyPhase?>[];
+          avatarCubit.stream.listen((AvatarState s) {
+            jackets.add((s.jacket, s.journeyJacket));
+            if (phases.isEmpty || phases.last != s.journey?.phase) {
+              phases.add(s.journey?.phase);
+            }
+          });
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.livingRoom,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.elapse(const Duration(seconds: 40));
+          expect(avatarCubit.state.journey, isNull);
+          expect(avatarCubit.state.scene, AvatarScene.livingRoom);
+          // never two jackets, never one in hand with no journey
+          for (final (bool hand, double peg) in jackets) {
+            expect(hand && peg > 0, isFalse);
+          }
+          expect(
+            phases.where((JourneyPhase? p) => p == JourneyPhase.grab),
+            hasLength(2),
+          );
+          expect(
+            phases.where((JourneyPhase? p) => p == JourneyPhase.hang),
+            hasLength(2),
+          );
+          expect(avatarCubit.state.jacket, isFalse);
+        });
+      });
+
+      test('the grab gesture_done never reaches the director', () {
+        fakeAsync((FakeAsync async) {
+          final _CountingDirector director = _CountingDirector();
+          final AvatarCubit cubit = AvatarCubit(
+            mockAvatarRepository,
+            mockAnimationService,
+            mockAudioPlayerService,
+            MockAppLifecycleService(),
+            PropReactionService(),
+            _FakeSoundRepository(),
+            director: director,
+          );
+          cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          cubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          expect(cubit.state.journey!.phase, JourneyPhase.grab);
+          cubit.onGestureDone();
+          expect(director.done, 0);
+          cubit.close();
+          director.dispose();
         });
       });
 
@@ -594,7 +763,9 @@ void main() {
               specials: AvatarSpecials.leaveAndComeBack,
             ),
           );
-          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          async.elapse(
+            JourneyTiming.pullBack + JourneyTiming.open + JourneyTiming.grab,
+          );
           avatarCubit.onPresenceDone('onScreen');
           async.flushMicrotasks();
 
@@ -856,4 +1027,17 @@ class _FakeSoundRepository implements SoundRepository {
 
   @override
   Future<Result<bool>> get isPlaying async => Result<bool>.ok(false);
+}
+
+/// Counts the `gesture_done`s forwarded to the director.
+class _CountingDirector extends PerformanceDirector {
+  _CountingDirector() : super(now: DateTime.now);
+
+  int done = 0;
+
+  @override
+  void onGestureDone() {
+    done++;
+    super.onGestureDone();
+  }
 }

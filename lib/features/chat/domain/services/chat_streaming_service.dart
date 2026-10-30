@@ -85,6 +85,13 @@ class ChatStreamingService {
   /// performance director).
   Stream<String?> get toolActivity => _toolActivityController.stream;
 
+  final StreamController<String> _userMessagesController =
+      StreamController<String>.broadcast();
+
+  /// Every prompt the user sends, as a reply to it starts (the scene NPCs
+  /// hear their names in it, M8). Stays on the device.
+  Stream<String> get userMessages => _userMessagesController.stream;
+
   /// Streams a response from the LLM for the given prompt.
   ///
   /// This method:
@@ -113,6 +120,9 @@ class ChatStreamingService {
   }) async {
     // Reset interruption state at start of new conversation
     _interruptionService.reset();
+    if (prompt.trim().isNotEmpty) {
+      _userMessagesController.add(prompt);
+    }
 
     // This reply's own stop signal. The service-wide flag above is reset by
     // the next reply, so a reply still awaiting (a stalled stream, a tool)

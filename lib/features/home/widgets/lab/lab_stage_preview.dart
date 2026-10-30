@@ -35,6 +35,8 @@ class LabStageExtras extends InheritedWidget {
     required this.prop,
     required this.parallax,
     this.rain,
+    this.fog,
+    this.npc,
     required super.child,
   });
 
@@ -44,6 +46,12 @@ class LabStageExtras extends InheritedWidget {
   /// The world's rain (contract v8), written to the scene; null: dry.
   final ValueListenable<double>? rain;
 
+  /// The world's fog (contract v11), written to the scene; null: clear.
+  final ValueListenable<double>? fog;
+
+  /// A hand-set NPC pose (contract v11); null: the NPC rests.
+  final NpcIntent? npc;
+
   /// The extras above [context], or none (no prop, no parallax).
   static LabStageExtras? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<LabStageExtras>();
@@ -52,7 +60,9 @@ class LabStageExtras extends InheritedWidget {
   bool updateShouldNotify(LabStageExtras oldWidget) =>
       prop != oldWidget.prop ||
       parallax != oldWidget.parallax ||
-      rain != oldWidget.rain;
+      rain != oldWidget.rain ||
+      fog != oldWidget.fog ||
+      npc != oldWidget.npc;
 }
 
 /// The default [LabStageBuilder]: the real Rive scene and avatar.
@@ -227,6 +237,8 @@ class _LabStagePreviewState extends State<LabStagePreview>
                           prop: config.prop,
                           parallax: config.parallax,
                           rain: widget.world?.rain,
+                          fog: widget.world?.fog,
+                          npc: config.npc,
                           child: StageCamera(
                             shot: _camera,
                             child: ValueListenableBuilder<MouthState>(
@@ -302,6 +314,8 @@ class _LabRiveStageState extends State<LabRiveStage> {
       scene: widget.scene,
       parallax: extras?.parallax,
       rain: extras?.rain,
+      fog: extras?.fog,
+      npc: extras?.npc,
       middle: RiveAvatarView(
         key: _avatarKey,
         // The scene's light rig follows the lab's scene, and the prop the
@@ -325,12 +339,16 @@ class _LabSceneLayer extends StatefulWidget {
     required this.scene,
     this.parallax,
     this.rain,
+    this.fog,
+    this.npc,
     this.middle,
   });
 
   final AvatarScene scene;
   final Offset? parallax;
   final ValueListenable<double>? rain;
+  final ValueListenable<double>? fog;
+  final NpcIntent? npc;
   final Widget? middle;
 
   @override
@@ -363,6 +381,8 @@ class _LabSceneLayerState extends State<_LabSceneLayer> {
       sceneEvent: _noEvent,
       parallaxOverride: widget.parallax,
       rain: widget.rain,
+      fog: widget.fog,
+      npcOverride: widget.npc,
       middle: widget.middle,
     );
   }

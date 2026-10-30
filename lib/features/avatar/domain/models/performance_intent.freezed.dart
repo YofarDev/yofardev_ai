@@ -20,7 +20,10 @@ mixin _$PerformanceIntent {
  double get lean;/// Increments once per backchannel nod the user's typing earns.
  int get nodSerial;/// The latest typed-punctuation reaction and its counter.
  PresenceReaction? get reaction; int get reactionSerial;/// Idle ladder stage, 0 (active) to 3 (long idle).
- int get idleStage;
+ int get idleStage;/// The tablet's weather card (M8 ruling 14): the looked-up city's glyph
+/// and rounded °C while the tablet is out for a weather lookup, else
+/// `none` / 0 (the generic card).
+ TabletWeather get tabletWeather; int get tabletTemp;
 /// Create a copy of PerformanceIntent
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -32,20 +35,20 @@ $PerformanceIntentCopyWith<PerformanceIntent> get copyWith => _$PerformanceInten
 @override
 bool operator ==(Object other) {
   final _this = this as PerformanceIntent;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PerformanceIntent&&(identical(other.emotion, _this.emotion) || other.emotion == _this.emotion)&&(identical(other.face, _this.face) || other.face == _this.face)&&(identical(other.gaze, _this.gaze) || other.gaze == _this.gaze)&&(identical(other.speaking, _this.speaking) || other.speaking == _this.speaking)&&(identical(other.pendingGesture, _this.pendingGesture) || other.pendingGesture == _this.pendingGesture)&&(identical(other.gestureSerial, _this.gestureSerial) || other.gestureSerial == _this.gestureSerial)&&(identical(other.activeTool, _this.activeTool) || other.activeTool == _this.activeTool)&&(identical(other.prop, _this.prop) || other.prop == _this.prop)&&(identical(other.lean, _this.lean) || other.lean == _this.lean)&&(identical(other.nodSerial, _this.nodSerial) || other.nodSerial == _this.nodSerial)&&(identical(other.reaction, _this.reaction) || other.reaction == _this.reaction)&&(identical(other.reactionSerial, _this.reactionSerial) || other.reactionSerial == _this.reactionSerial)&&(identical(other.idleStage, _this.idleStage) || other.idleStage == _this.idleStage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PerformanceIntent&&(identical(other.emotion, _this.emotion) || other.emotion == _this.emotion)&&(identical(other.face, _this.face) || other.face == _this.face)&&(identical(other.gaze, _this.gaze) || other.gaze == _this.gaze)&&(identical(other.speaking, _this.speaking) || other.speaking == _this.speaking)&&(identical(other.pendingGesture, _this.pendingGesture) || other.pendingGesture == _this.pendingGesture)&&(identical(other.gestureSerial, _this.gestureSerial) || other.gestureSerial == _this.gestureSerial)&&(identical(other.activeTool, _this.activeTool) || other.activeTool == _this.activeTool)&&(identical(other.prop, _this.prop) || other.prop == _this.prop)&&(identical(other.lean, _this.lean) || other.lean == _this.lean)&&(identical(other.nodSerial, _this.nodSerial) || other.nodSerial == _this.nodSerial)&&(identical(other.reaction, _this.reaction) || other.reaction == _this.reaction)&&(identical(other.reactionSerial, _this.reactionSerial) || other.reactionSerial == _this.reactionSerial)&&(identical(other.idleStage, _this.idleStage) || other.idleStage == _this.idleStage)&&(identical(other.tabletWeather, _this.tabletWeather) || other.tabletWeather == _this.tabletWeather)&&(identical(other.tabletTemp, _this.tabletTemp) || other.tabletTemp == _this.tabletTemp));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PerformanceIntent;
-  return Object.hash(runtimeType,_this.emotion,_this.face,_this.gaze,_this.speaking,_this.pendingGesture,_this.gestureSerial,_this.activeTool,_this.prop,_this.lean,_this.nodSerial,_this.reaction,_this.reactionSerial,_this.idleStage);
+  return Object.hash(runtimeType,_this.emotion,_this.face,_this.gaze,_this.speaking,_this.pendingGesture,_this.gestureSerial,_this.activeTool,_this.prop,_this.lean,_this.nodSerial,_this.reaction,_this.reactionSerial,_this.idleStage,_this.tabletWeather,_this.tabletTemp);
 }
 
 @override
 String toString() {
   final _this = this as PerformanceIntent;
-  return 'PerformanceIntent(emotion: ${_this.emotion}, face: ${_this.face}, gaze: ${_this.gaze}, speaking: ${_this.speaking}, pendingGesture: ${_this.pendingGesture}, gestureSerial: ${_this.gestureSerial}, activeTool: ${_this.activeTool}, prop: ${_this.prop}, lean: ${_this.lean}, nodSerial: ${_this.nodSerial}, reaction: ${_this.reaction}, reactionSerial: ${_this.reactionSerial}, idleStage: ${_this.idleStage})';
+  return 'PerformanceIntent(emotion: ${_this.emotion}, face: ${_this.face}, gaze: ${_this.gaze}, speaking: ${_this.speaking}, pendingGesture: ${_this.pendingGesture}, gestureSerial: ${_this.gestureSerial}, activeTool: ${_this.activeTool}, prop: ${_this.prop}, lean: ${_this.lean}, nodSerial: ${_this.nodSerial}, reaction: ${_this.reaction}, reactionSerial: ${_this.reactionSerial}, idleStage: ${_this.idleStage}, tabletWeather: ${_this.tabletWeather}, tabletTemp: ${_this.tabletTemp})';
 }
 
 
@@ -56,7 +59,7 @@ abstract mixin class $PerformanceIntentCopyWith<$Res>  {
   factory $PerformanceIntentCopyWith(PerformanceIntent value, $Res Function(PerformanceIntent) _then) = _$PerformanceIntentCopyWithImpl;
 @useResult
 $Res call({
- EmotionVector emotion, ActionUnits face, GazeTarget gaze, bool speaking, AvatarGesture? pendingGesture, int gestureSerial, String? activeTool, AvatarProp prop, double lean, int nodSerial, PresenceReaction? reaction, int reactionSerial, int idleStage
+ EmotionVector emotion, ActionUnits face, GazeTarget gaze, bool speaking, AvatarGesture? pendingGesture, int gestureSerial, String? activeTool, AvatarProp prop, double lean, int nodSerial, PresenceReaction? reaction, int reactionSerial, int idleStage, TabletWeather tabletWeather, int tabletTemp
 });
 
 
@@ -73,7 +76,7 @@ class _$PerformanceIntentCopyWithImpl<$Res>
 
 /// Create a copy of PerformanceIntent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? emotion = null,Object? face = null,Object? gaze = null,Object? speaking = null,Object? pendingGesture = freezed,Object? gestureSerial = null,Object? activeTool = freezed,Object? prop = null,Object? lean = null,Object? nodSerial = null,Object? reaction = freezed,Object? reactionSerial = null,Object? idleStage = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? emotion = null,Object? face = null,Object? gaze = null,Object? speaking = null,Object? pendingGesture = freezed,Object? gestureSerial = null,Object? activeTool = freezed,Object? prop = null,Object? lean = null,Object? nodSerial = null,Object? reaction = freezed,Object? reactionSerial = null,Object? idleStage = null,Object? tabletWeather = null,Object? tabletTemp = null,}) {
   return _then(PerformanceIntent(
 emotion: null == emotion ? _self.emotion : emotion // ignore: cast_nullable_to_non_nullable
 as EmotionVector,face: null == face ? _self.face : face // ignore: cast_nullable_to_non_nullable
@@ -88,6 +91,8 @@ as double,nodSerial: null == nodSerial ? _self.nodSerial : nodSerial // ignore: 
 as int,reaction: freezed == reaction ? _self.reaction : reaction // ignore: cast_nullable_to_non_nullable
 as PresenceReaction?,reactionSerial: null == reactionSerial ? _self.reactionSerial : reactionSerial // ignore: cast_nullable_to_non_nullable
 as int,idleStage: null == idleStage ? _self.idleStage : idleStage // ignore: cast_nullable_to_non_nullable
+as int,tabletWeather: null == tabletWeather ? _self.tabletWeather : tabletWeather // ignore: cast_nullable_to_non_nullable
+as TabletWeather,tabletTemp: null == tabletTemp ? _self.tabletTemp : tabletTemp // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
@@ -197,10 +202,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( EmotionVector emotion,  ActionUnits face,  GazeTarget gaze,  bool speaking,  AvatarGesture? pendingGesture,  int gestureSerial,  String? activeTool,  AvatarProp prop,  double lean,  int nodSerial,  PresenceReaction? reaction,  int reactionSerial,  int idleStage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( EmotionVector emotion,  ActionUnits face,  GazeTarget gaze,  bool speaking,  AvatarGesture? pendingGesture,  int gestureSerial,  String? activeTool,  AvatarProp prop,  double lean,  int nodSerial,  PresenceReaction? reaction,  int reactionSerial,  int idleStage,  TabletWeather tabletWeather,  int tabletTemp)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PerformanceIntent() when $default != null:
-return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pendingGesture,_that.gestureSerial,_that.activeTool,_that.prop,_that.lean,_that.nodSerial,_that.reaction,_that.reactionSerial,_that.idleStage);case _:
+return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pendingGesture,_that.gestureSerial,_that.activeTool,_that.prop,_that.lean,_that.nodSerial,_that.reaction,_that.reactionSerial,_that.idleStage,_that.tabletWeather,_that.tabletTemp);case _:
   return orElse();
 
 }
@@ -218,10 +223,10 @@ return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pending
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( EmotionVector emotion,  ActionUnits face,  GazeTarget gaze,  bool speaking,  AvatarGesture? pendingGesture,  int gestureSerial,  String? activeTool,  AvatarProp prop,  double lean,  int nodSerial,  PresenceReaction? reaction,  int reactionSerial,  int idleStage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( EmotionVector emotion,  ActionUnits face,  GazeTarget gaze,  bool speaking,  AvatarGesture? pendingGesture,  int gestureSerial,  String? activeTool,  AvatarProp prop,  double lean,  int nodSerial,  PresenceReaction? reaction,  int reactionSerial,  int idleStage,  TabletWeather tabletWeather,  int tabletTemp)  $default,) {final _that = this;
 switch (_that) {
 case _PerformanceIntent():
-return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pendingGesture,_that.gestureSerial,_that.activeTool,_that.prop,_that.lean,_that.nodSerial,_that.reaction,_that.reactionSerial,_that.idleStage);}
+return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pendingGesture,_that.gestureSerial,_that.activeTool,_that.prop,_that.lean,_that.nodSerial,_that.reaction,_that.reactionSerial,_that.idleStage,_that.tabletWeather,_that.tabletTemp);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -235,10 +240,10 @@ return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pending
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( EmotionVector emotion,  ActionUnits face,  GazeTarget gaze,  bool speaking,  AvatarGesture? pendingGesture,  int gestureSerial,  String? activeTool,  AvatarProp prop,  double lean,  int nodSerial,  PresenceReaction? reaction,  int reactionSerial,  int idleStage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( EmotionVector emotion,  ActionUnits face,  GazeTarget gaze,  bool speaking,  AvatarGesture? pendingGesture,  int gestureSerial,  String? activeTool,  AvatarProp prop,  double lean,  int nodSerial,  PresenceReaction? reaction,  int reactionSerial,  int idleStage,  TabletWeather tabletWeather,  int tabletTemp)?  $default,) {final _that = this;
 switch (_that) {
 case _PerformanceIntent() when $default != null:
-return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pendingGesture,_that.gestureSerial,_that.activeTool,_that.prop,_that.lean,_that.nodSerial,_that.reaction,_that.reactionSerial,_that.idleStage);case _:
+return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pendingGesture,_that.gestureSerial,_that.activeTool,_that.prop,_that.lean,_that.nodSerial,_that.reaction,_that.reactionSerial,_that.idleStage,_that.tabletWeather,_that.tabletTemp);case _:
   return null;
 
 }
@@ -250,7 +255,7 @@ return $default(_that.emotion,_that.face,_that.gaze,_that.speaking,_that.pending
 
 
 class _PerformanceIntent implements PerformanceIntent {
-  const _PerformanceIntent({this.emotion = const EmotionVector(), this.face = ActionUnits.neutral, this.gaze = const GazeTarget.user(), this.speaking = false, this.pendingGesture, this.gestureSerial = 0, this.activeTool, this.prop = AvatarProp.none, this.lean = 0, this.nodSerial = 0, this.reaction, this.reactionSerial = 0, this.idleStage = 0});
+  const _PerformanceIntent({this.emotion = const EmotionVector(), this.face = ActionUnits.neutral, this.gaze = const GazeTarget.user(), this.speaking = false, this.pendingGesture, this.gestureSerial = 0, this.activeTool, this.prop = AvatarProp.none, this.lean = 0, this.nodSerial = 0, this.reaction, this.reactionSerial = 0, this.idleStage = 0, this.tabletWeather = TabletWeather.none, this.tabletTemp = 0});
   
 
 @override@JsonKey() final  EmotionVector emotion;
@@ -271,6 +276,11 @@ class _PerformanceIntent implements PerformanceIntent {
 @override@JsonKey() final  int reactionSerial;
 /// Idle ladder stage, 0 (active) to 3 (long idle).
 @override@JsonKey() final  int idleStage;
+/// The tablet's weather card (M8 ruling 14): the looked-up city's glyph
+/// and rounded °C while the tablet is out for a weather lookup, else
+/// `none` / 0 (the generic card).
+@override@JsonKey() final  TabletWeather tabletWeather;
+@override@JsonKey() final  int tabletTemp;
 
 /// Create a copy of PerformanceIntent
 /// with the given fields replaced by the non-null parameter values.
@@ -282,18 +292,18 @@ _$PerformanceIntentCopyWith<_PerformanceIntent> get copyWith => __$PerformanceIn
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PerformanceIntent&&(identical(other.emotion, emotion) || other.emotion == emotion)&&(identical(other.face, face) || other.face == face)&&(identical(other.gaze, gaze) || other.gaze == gaze)&&(identical(other.speaking, speaking) || other.speaking == speaking)&&(identical(other.pendingGesture, pendingGesture) || other.pendingGesture == pendingGesture)&&(identical(other.gestureSerial, gestureSerial) || other.gestureSerial == gestureSerial)&&(identical(other.activeTool, activeTool) || other.activeTool == activeTool)&&(identical(other.prop, prop) || other.prop == prop)&&(identical(other.lean, lean) || other.lean == lean)&&(identical(other.nodSerial, nodSerial) || other.nodSerial == nodSerial)&&(identical(other.reaction, reaction) || other.reaction == reaction)&&(identical(other.reactionSerial, reactionSerial) || other.reactionSerial == reactionSerial)&&(identical(other.idleStage, idleStage) || other.idleStage == idleStage));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PerformanceIntent&&(identical(other.emotion, emotion) || other.emotion == emotion)&&(identical(other.face, face) || other.face == face)&&(identical(other.gaze, gaze) || other.gaze == gaze)&&(identical(other.speaking, speaking) || other.speaking == speaking)&&(identical(other.pendingGesture, pendingGesture) || other.pendingGesture == pendingGesture)&&(identical(other.gestureSerial, gestureSerial) || other.gestureSerial == gestureSerial)&&(identical(other.activeTool, activeTool) || other.activeTool == activeTool)&&(identical(other.prop, prop) || other.prop == prop)&&(identical(other.lean, lean) || other.lean == lean)&&(identical(other.nodSerial, nodSerial) || other.nodSerial == nodSerial)&&(identical(other.reaction, reaction) || other.reaction == reaction)&&(identical(other.reactionSerial, reactionSerial) || other.reactionSerial == reactionSerial)&&(identical(other.idleStage, idleStage) || other.idleStage == idleStage)&&(identical(other.tabletWeather, tabletWeather) || other.tabletWeather == tabletWeather)&&(identical(other.tabletTemp, tabletTemp) || other.tabletTemp == tabletTemp));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,emotion,face,gaze,speaking,pendingGesture,gestureSerial,activeTool,prop,lean,nodSerial,reaction,reactionSerial,idleStage);
+    return Object.hash(runtimeType,emotion,face,gaze,speaking,pendingGesture,gestureSerial,activeTool,prop,lean,nodSerial,reaction,reactionSerial,idleStage,tabletWeather,tabletTemp);
 }
 
 @override
 String toString() {
-    return 'PerformanceIntent(emotion: $emotion, face: $face, gaze: $gaze, speaking: $speaking, pendingGesture: $pendingGesture, gestureSerial: $gestureSerial, activeTool: $activeTool, prop: $prop, lean: $lean, nodSerial: $nodSerial, reaction: $reaction, reactionSerial: $reactionSerial, idleStage: $idleStage)';
+    return 'PerformanceIntent(emotion: $emotion, face: $face, gaze: $gaze, speaking: $speaking, pendingGesture: $pendingGesture, gestureSerial: $gestureSerial, activeTool: $activeTool, prop: $prop, lean: $lean, nodSerial: $nodSerial, reaction: $reaction, reactionSerial: $reactionSerial, idleStage: $idleStage, tabletWeather: $tabletWeather, tabletTemp: $tabletTemp)';
 }
 
 
@@ -304,7 +314,7 @@ abstract mixin class _$PerformanceIntentCopyWith<$Res> implements $PerformanceIn
   factory _$PerformanceIntentCopyWith(_PerformanceIntent value, $Res Function(_PerformanceIntent) _then) = __$PerformanceIntentCopyWithImpl;
 @override @useResult
 $Res call({
- EmotionVector emotion, ActionUnits face, GazeTarget gaze, bool speaking, AvatarGesture? pendingGesture, int gestureSerial, String? activeTool, AvatarProp prop, double lean, int nodSerial, PresenceReaction? reaction, int reactionSerial, int idleStage
+ EmotionVector emotion, ActionUnits face, GazeTarget gaze, bool speaking, AvatarGesture? pendingGesture, int gestureSerial, String? activeTool, AvatarProp prop, double lean, int nodSerial, PresenceReaction? reaction, int reactionSerial, int idleStage, TabletWeather tabletWeather, int tabletTemp
 });
 
 
@@ -321,7 +331,7 @@ class __$PerformanceIntentCopyWithImpl<$Res>
 
 /// Create a copy of PerformanceIntent
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? emotion = null,Object? face = null,Object? gaze = null,Object? speaking = null,Object? pendingGesture = freezed,Object? gestureSerial = null,Object? activeTool = freezed,Object? prop = null,Object? lean = null,Object? nodSerial = null,Object? reaction = freezed,Object? reactionSerial = null,Object? idleStage = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? emotion = null,Object? face = null,Object? gaze = null,Object? speaking = null,Object? pendingGesture = freezed,Object? gestureSerial = null,Object? activeTool = freezed,Object? prop = null,Object? lean = null,Object? nodSerial = null,Object? reaction = freezed,Object? reactionSerial = null,Object? idleStage = null,Object? tabletWeather = null,Object? tabletTemp = null,}) {
   return _then(_PerformanceIntent(
 emotion: null == emotion ? _self.emotion : emotion // ignore: cast_nullable_to_non_nullable
 as EmotionVector,face: null == face ? _self.face : face // ignore: cast_nullable_to_non_nullable
@@ -336,6 +346,8 @@ as double,nodSerial: null == nodSerial ? _self.nodSerial : nodSerial // ignore: 
 as int,reaction: freezed == reaction ? _self.reaction : reaction // ignore: cast_nullable_to_non_nullable
 as PresenceReaction?,reactionSerial: null == reactionSerial ? _self.reactionSerial : reactionSerial // ignore: cast_nullable_to_non_nullable
 as int,idleStage: null == idleStage ? _self.idleStage : idleStage // ignore: cast_nullable_to_non_nullable
+as int,tabletWeather: null == tabletWeather ? _self.tabletWeather : tabletWeather // ignore: cast_nullable_to_non_nullable
+as TabletWeather,tabletTemp: null == tabletTemp ? _self.tabletTemp : tabletTemp // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }

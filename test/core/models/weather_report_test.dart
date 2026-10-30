@@ -97,4 +97,58 @@ void main() {
       expect(r2.rainMmPerHour, 1.0);
     });
   });
+
+  group('temperature (M8 tablet card)', () {
+    test('main.temp is parsed in °C', () {
+      final WeatherReport r = WeatherReport.fromOpenWeather(<String, dynamic>{
+        'weather': <dynamic>[
+          <String, dynamic>{'id': 500},
+        ],
+        'main': <String, dynamic>{'temp': 18.4},
+      });
+      expect(r.temperatureC, 18.4);
+      final WeatherReport r2 = WeatherReport.fromOpenWeather(<String, dynamic>{
+        'weather': <dynamic>[
+          <String, dynamic>{'id': 800},
+        ],
+        'main': <String, dynamic>{'temp': -3},
+      });
+      expect(r2.temperatureC, -3.0);
+    });
+
+    test('no main object: no temperature', () {
+      final WeatherReport r = WeatherReport.fromOpenWeather(<String, dynamic>{
+        'weather': <dynamic>[
+          <String, dynamic>{'id': 800},
+        ],
+      });
+      expect(r.temperatureC, isNull);
+    });
+  });
+
+  group('fogIntensity per condition (M8 ruling 13)', () {
+    final Map<int, double> table = <int, double>{
+      701: 0.5,
+      711: 0.3,
+      721: 0.35,
+      731: 0.25,
+      741: 1.0,
+      751: 0.25,
+      761: 0.25,
+      762: 0,
+      771: 0,
+      781: 0,
+      500: 0,
+      800: 0,
+      804: 0,
+    };
+    table.forEach((int id, double expected) {
+      test('$id -> $expected', () {
+        expect(
+          WeatherReport(conditionId: id).fogIntensity,
+          closeTo(expected, 1e-9),
+        );
+      });
+    });
+  });
 }

@@ -1,13 +1,15 @@
 import 'dart:math' as math;
 
 /// What the world needs from one OpenWeather `/weather` answer: the condition
-/// (for the rain), the measured rain and the sun times (for the clock).
+/// (for the rain and the fog), the measured rain and the sun times (for the clock), and
+/// the temperature (for the tablet's weather card, M8).
 class WeatherReport {
   const WeatherReport({
     required this.conditionId,
     this.rainMmPerHour = 0,
     this.sunrise,
     this.sunset,
+    this.temperatureC,
   });
 
   /// Parses OpenWeather 2.5 `/weather`: `weather[0].id`, optional `rain['1h']`
@@ -34,11 +36,17 @@ class WeatherReport {
             ).toLocal();
     }
 
+    final Object? main = json['main'];
+    final double? temperature = main is Map<String, dynamic>
+        ? (main['temp'] as num?)?.toDouble()
+        : null;
+
     return WeatherReport(
       conditionId: id,
       rainMmPerHour: mm,
       sunrise: sun('sunrise'),
       sunset: sun('sunset'),
+      temperatureC: temperature,
     );
   }
 
@@ -52,12 +60,27 @@ class WeatherReport {
   final DateTime? sunrise;
   final DateTime? sunset;
 
+  /// Measured temperature, °C (`main.temp` with metric units), when known.
+  final double? temperatureC;
+
   /// Steady rain the scenes should show, 0..1: the condition's level, or
   /// `rainMmPerHour / 4` when that is larger.
   double get rainIntensity {
     final double fromMm = (rainMmPerHour / 4).clamp(0.0, 1.0);
     return math.max(_conditionRain(conditionId), fromMm);
   }
+
+  /// Weather fog the scenes should show, 0..1 (M8 ruling 13): 701 mist 0.5,
+  /// 711 smoke 0.3, 721 haze 0.35, 741 fog 1.0, 731 / 751 / 761 dust and
+  /// sand 0.25, anything else 0.
+  double get fogIntensity => switch (conditionId) {
+    701 => 0.5,
+    711 => 0.3,
+    721 => 0.35,
+    741 => 1.0,
+    731 || 751 || 761 => 0.25,
+    _ => 0,
+  };
 
   static double _conditionRain(int id) {
     if (id >= 200 && id < 300) {
@@ -82,5 +105,5 @@ class WeatherReport {
   @override
   String toString() =>
       'WeatherReport(id: $conditionId, rain: $rainMmPerHour mm/h, '
-      'sunrise: $sunrise, sunset: $sunset)';
+      'sunrise: $sunrise, sunset: $sunset, temp: $temperatureC)';
 }
