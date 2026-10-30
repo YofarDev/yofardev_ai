@@ -1,4 +1,4 @@
-# Rive contract (v11)
+# Rive contract (v12)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -147,6 +147,28 @@ One file per scene. The app loads them lazily.
       (+).
     - Its existing prop tap (`cat`, `owl`, `crab`, `ufo`) is how the user pokes it.
     At `npc` rest, `npcX` 0, `npcLook` 0 a scene looks as it did in v10.
+    v12 NPCs of the new scenes: cafe **fish** (a goldfish in a bowl on the counter; path = its swim
+    across the bowl), rooftop **pigeon** (on the parapet; path = its walk along it), mountainHut
+    **dog** (by the stove; path = the stove rug, 0, to the avatar's feet, 1). Their pokes: `fish`,
+    `pigeon`, `dog`.
+  - `npc2`, `npc2X`, `npc2Look` (v12): a second NPC slot with the same values and meaning as `npc`,
+    `npcX`, `npcLook`, but default `away`. Only the beach binds it: **two gulls** on the sand right of
+    the crab (rest standing, idle pecking, move flying across: `npc2X` 0 = landed, 1 = off the frame's
+    right edge, notice heads to the avatar, react a startled flap). Every other scene declares and
+    ignores it. Its poke is the beach's `seagull` prop.
+  - `moonPhase`: number, default −1 (v12): −1 draws the moon as it was drawn before v12; 0–1 draws
+    that phase of the moon (0 new, 0.25 first quarter, 0.5 full, 0.75 last quarter; the northern
+    hemisphere's view: waxing lit on the right). History-free. livingRoom (the window), campfire,
+    cafe (the window), rooftop and mountainHut (the window) bind it; beach and deepSpace ignore it.
+    The app writes it from the local date.
+  - `festive`: number, 0–1, default 0 (v12): December dressing, written by the app from the local
+    date (1 December to 6 January). livingRoom (string lights along the window), cafe (lights in the
+    window, a wreath on the door) and mountainHut (a garland over the stove, a stocking) bind it, with
+    a slow twinkle; the other scenes ignore it. At 0 a scene looks as it did in v11.
+  - The scene's drag handle numbers (v12, table below): every scene declares only its own. The app
+    owns the gesture (Flutter pan recognizer, the handle rect in artboard space) and writes them each
+    frame; the file only draws them, history-free. At their defaults a scene looks as it did in v11.
+- **Scene `rain` in mountainHut** (v12) falls as snow outside the window (never rain).
 - **Rive event emitted:** `prop_tapped`, with `propId`: string.
 - **Front artboard (v9, optional):** a scene file may carry a second artboard `SceneFront`,
   1080×1920 like `Scene`, with a state machine `Main` and the same view model `SceneVM`. It holds
@@ -162,6 +184,32 @@ One file per scene. The app loads them lazily.
 | campfire | flare, rain, shootingStar, owlHoot | fire, tent, owl, sky |
 | beach | bigWave, seagulls, sunset, rain | crab, umbrella, seagull |
 | deepSpace | meteor, warp, alienShip, nebulaPulse | planet, ufo, rubberDuck |
+| cafe | espresso, doorbell, rain, neonFlicker | cup, espresso, window, fish |
+| rooftop | fireworks, plane, shootingStar, windowsLit | telescope, antenna, pigeon, moon |
+| mountainHut | snowfall, flare, aurora, bell | stove, window, dog, bell |
+
+v12 scenes: cafe (a rainy café: rain on the window, the wet street, the window's sky and fog),
+rooftop (a rooftop at night: rain with a `SceneFront`, the sky, fog), mountainHut (a snowy mountain
+hut, inside: snow outside the window from `rain`, the window's sky, fog, the stove's firelight
+flicker). Each binds `parallaxX/Y`, its light rig, `daylight`, `dusk`, `fog`, `npc*` like the others.
+
+### Drag handles (v12)
+
+The user drags these props with one finger. `rect` is (x0, y0, x1, y1) in `Scene` artboard px at
+parallax 0; the handle moves with its plane's parallax (gain × 40 / 24 px at ±1). `trail*` numbers
+are artboard px.
+
+| sceneId | dragId | kind | rect | plane | SceneVM numbers (defaults) | what the app does |
+|---|---|---|---|---|---|---|
+| livingRoom | cord | pull | (300, 760, 380, 1000) | 3 | `cord` 0–1 (0) | pull down; springs back; past 0.6 once per pull: `lightsOff` / `lightsOn` alternately |
+| campfire | poke | poke | (380, 1020, 700, 1340) | 4 | `poke` 0–1 (0), `pokeX` −1–1 (0), `pokeY` −1–1 (0) | the stick's tip follows the finger in the box; eased out on release; a stir faster than 900 px/s fires `flare` (once per 3 s) |
+| beach | sand | trail | (120, 1500, 960, 1800) | 4 | `trailN` 0–16 (0), `trailX0`…`trailX15`, `trailY0`…`trailY15` (0), `trailFade` 0–1 (1) | dots in the wet sand ≥ 22 px apart, oldest recycled; `bigWave` washes them away |
+| deepSpace | spin | spin | (210, 470, 550, 810) | 2 | `spin` 0–1 (0), wraps | a horizontal drag turns the planet's bands; inertia |
+| cafe | wipe | trail | (330, 260, 750, 760) | 1 | `trailN`, `trailX*`, `trailY*`, `trailFade` as beach | wipes the misted window; it mists back over 20 s |
+| rooftop | aim | aim | (700, 1060, 960, 1300) | 4 | `aim` −1–1 (0) | a horizontal drag swivels the telescope ±35°; it holds |
+| mountainHut | rope | pull | (150, 600, 230, 980) | 3 | `rope` 0–1 (0) | pull down; springs back; past 0.6 once per pull: the `bell` event |
+
+The rects are provisional until each scene's art is built; the scene's build commit corrects them.
 
 `livingRoom` is the default scene.
 
@@ -171,6 +219,7 @@ One file per scene. The app loads them lazily.
 - Keep blur, feather and mesh deformation to a minimum.
 - `avatar.riv` must stay at or under 600 KB, and each scene at or under 400 KB.
 - `journey.riv` (v10) must stay at or under 160 KB.
+- Scenes are bundled with the app and loaded lazily (v12: seven scenes, no download).
 - The avatar plus one scene must run with no visible stutter on a CPU-throttled Android
   emulator.
 - `ui_kit.riv` must stay at or under 150 KB. At most one UI-kit artboard animates continuously
@@ -228,7 +277,7 @@ several artboards. The app loads it lazily, once, and creates one controller per
 
 **Scene posters:** `assets/rive/posters/<sceneId>.webp`, one per scene in the table above,
 540×960, at most 40 KB each. Rendered from the scene file's rest pose, with no avatar. Used by
-History rows and the Customize sheet.
+the Stage's scene picker (v12).
 
 ## `assets/rive/journeys/journey.riv`
 
