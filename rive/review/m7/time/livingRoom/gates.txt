@@ -1,0 +1,4 @@
+livingRoom: night identical to HEAD: 0.000 % differ (ok)
+livingRoom: noon brightens the sky by 39.2/255 (want > 12) (ok)
+livingRoom: sunset recolours the horizon band by 14.6/255 (ok)
+livingRoom: ground unchanged at noon: mean delta 0.00/255 (ok)

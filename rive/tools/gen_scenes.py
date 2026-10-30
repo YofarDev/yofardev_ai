@@ -89,6 +89,7 @@ class Scene:
         self.fit = False
         self.d5 = Doc(client=0, start=M5_ID_START)
         self.d6 = Doc(client=0, start=M6_ID_START)
+        self.d7 = Doc(client=0, start=M7_ID_START)
         # contract v9: (content, anims, layers) of the optional `SceneFront` artboard (front_weather)
         self.front: tuple[list[El], list[El], list[El]] | None = None
         self._convs: dict[tuple[float, float], El] = {}
@@ -299,6 +300,7 @@ class Scene:
             content[0:0] = hits
             hits = []
             diorama(self, content, spec)
+            sky_time(self, content)
         if self.fit or spec is not None:
             self.fit_colours([*hits, *content])
         d = self.d
@@ -978,6 +980,62 @@ def diorama(sc: Scene, content: list[El], spec: DioramaSpec) -> None:
         planes.append(d6("Node", *binds, *hits.get(k, []), veil, *groups.get(k, []), x=0.0, y=0.0, name=f"Plane{k}"))
     content[:] = [*groups.get(None, []), *planes]
     sc.roots.extend(late)
+
+
+# ---------------------------------------------------------------- time of day (M7, contract v10)
+# Per scene: the horizon's y in the sky plane and how much of the day veil remains there (the
+# living room's night skyline sits low in the window: the veil thins over it). deepSpace has none.
+TIME_SKY: dict[str, tuple[float, float]] = {"livingRoom": (640.0, 0.45), "campfire": (720.0, 1.0),
+                                            "beach": (985.0, 1.0)}
+# Sky-plane roots the veils go behind (the beach's sun and clouds stay out by day); elsewhere the
+# veils cover the whole sky plane, stars and moon included.
+TIME_BEHIND: dict[str, tuple[str, ...]] = {"beach": ("SunsetSky", "Sky")}
+DAY_VEIL_MAX = 0.8     # M7 ruling 12 (as built): a day sky over the sky plane only, never a relit scene
+DUSK_VEIL_MAX = 0.75
+
+
+def sky_time(sc: Scene, content: list[El]) -> None:
+    """Contract v10: two veils at the front of `Plane0` (the sky; behind every nearer plane and
+    behind the plane's own fog veil): a day sky (`art_bible` `times["day"]`, opaque at the top,
+    thinning to the scene's horizon alpha) at opacity `DAY_VEIL_MAX x daylight`, and a warm
+    twilight band (`times["dusk"]`) peaking just above the horizon at `DUSK_VEIL_MAX x dusk`. Both
+    are invisible at 0, so the night scene renders exactly as before. Minted from `sc.d7`."""
+    if sc.id not in TIME_SKY:
+        return
+    horizon, low = TIME_SKY[sc.id]
+    times = SCENES[sc.id].times
+    plane0 = next(e for e in content if e.tag == "Node" and e.attrs.get("name") == "Plane0")
+    d7 = sc.d7
+    day, dusk = times["day"], times["dusk"]
+
+    def a(colour: str, alpha: float) -> str:
+        return f"{round(alpha * 255):02X}" + colour[2:]
+
+    def veil(name: str, prop: str, k: float, stops: list[tuple[str, float]]) -> El:
+        grad = d7("LinearGradient", *[d7("GradientStop", colorValue=c, position=round(pos, 4)) for c, pos in stops],
+                  startX=0.0, startY=0.0, endX=0.0, endY=float(H))
+        return d7("Shape", sc.bind(prop, 18, sc.conv(k, doc=d7), doc=d7),
+                  d7("Rectangle", width=float(W + 120), height=float(H), originX=0.0, originY=0.0, name="Path"),
+                  d7("Fill", grad, name="Fill"), x=-60.0, y=0.0, opacity=0.0, name=name)
+
+    day_veil = veil("SkyDay", "daylight", DAY_VEIL_MAX,
+                    [(a(day, 1.0), 0.0), (a(day, 1.0), (horizon * 0.55) / H), (a(day, low), horizon / H),
+                     (a(day, low), 1.0)])
+    dusk_veil = veil("SkyDusk", "dusk", DUSK_VEIL_MAX,
+                     [(a(dusk, 0.0), max(0.0, horizon - 560) / H), (a(dusk, 1.0), (horizon - 60) / H),
+                      (a(dusk, 0.0), min(H, horizon + 160) / H)])
+    kids = plane0.children
+    behind = TIME_BEHIND.get(sc.id)
+    if behind:
+        # just in front of the first of those roots: the rest of the sky's art stays in front
+        at = next(i for i, c in enumerate(kids)
+                  if _root(str(c.attrs.get("name", "")).removeprefix(EMISSIVE_PREFIX)) in behind)
+    else:
+        # after the plane's binds, hit zones and fog veil: the front of the sky's own art
+        at = next((i + 1 for i, c in enumerate(kids) if str(c.attrs.get("name", "")).startswith("FogVeil")),
+                  next((i for i, c in enumerate(kids) if c.tag not in ("DataBindContext",)
+                        and not str(c.attrs.get("name", "")).startswith(HIT_PREFIX)), 0))
+    kids[at:at] = [dusk_veil, day_veil]
 
 
 def clone(d: Doc, e: El, **attrs: object) -> El:

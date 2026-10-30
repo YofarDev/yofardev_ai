@@ -1,0 +1,4 @@
+campfire: night identical to HEAD: 0.000 % differ (ok)
+campfire: noon brightens the sky by 98.4/255 (want > 12) (ok)
+campfire: sunset recolours the horizon band by 24.6/255 (ok)
+campfire: ground unchanged at noon: mean delta 0.00/255 (ok)

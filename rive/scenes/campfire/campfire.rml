@@ -10756,6 +10756,29 @@
           </LinearGradient>
         </Fill>
       </Shape>
+      <Shape x="-60" y="0" opacity="0" name="SkyDusk" id="0:940024">
+        <DataBindContext sourcePathIds="0:23-0:980026" propertyKey="18" converterId="0:940020" id="0:940021"/>
+        <Rectangle width="1200" height="1920" originX="0" originY="0" name="Path" id="0:940022"/>
+        <Fill name="Fill" id="0:940023">
+          <LinearGradient startX="0" startY="0" endX="0" endY="1920" id="0:940016">
+            <GradientStop colorValue="003A2E5C" position="0.0833" id="0:940013"/>
+            <GradientStop colorValue="FF3A2E5C" position="0.3438" id="0:940014"/>
+            <GradientStop colorValue="003A2E5C" position="0.4583" id="0:940015"/>
+          </LinearGradient>
+        </Fill>
+      </Shape>
+      <Shape x="-60" y="0" opacity="0" name="SkyDay" id="0:940012">
+        <DataBindContext sourcePathIds="0:23-0:980024" propertyKey="18" converterId="0:940008" id="0:940009"/>
+        <Rectangle width="1200" height="1920" originX="0" originY="0" name="Path" id="0:940010"/>
+        <Fill name="Fill" id="0:940011">
+          <LinearGradient startX="0" startY="0" endX="0" endY="1920" id="0:940004">
+            <GradientStop colorValue="FF7FA9CF" position="0" id="0:940000"/>
+            <GradientStop colorValue="FF7FA9CF" position="0.2063" id="0:940001"/>
+            <GradientStop colorValue="FF7FA9CF" position="0.375" id="0:940002"/>
+            <GradientStop colorValue="FF7FA9CF" position="1" id="0:940003"/>
+          </LinearGradient>
+        </Fill>
+      </Shape>
       <Node x="120" y="180" rotation="0.4883" opacity="0" name="emitShootingStar" id="0:11872">
         <Shape name="emitCore" id="0:11871">
           <Ellipse width="11.2" height="11.2" name="Path" id="0:11868"/>
@@ -20638,5 +20661,17 @@
     <FormulaTokenValue operationValue="-0.15" id="0:974101"/>
     <FormulaTokenOperation operationType="2" id="0:974102"/>
     <FormulaTokenInput id="0:974103"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:940008">
+    <FormulaTokenValue operationValue="0.8" id="0:940005"/>
+    <FormulaTokenOperation operationType="2" id="0:940006"/>
+    <FormulaTokenInput id="0:940007"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:940020">
+    <FormulaTokenValue operationValue="0.75" id="0:940017"/>
+    <FormulaTokenOperation operationType="2" id="0:940018"/>
+    <FormulaTokenInput id="0:940019"/>
   </DataConverterFormula>
 </Rive>
