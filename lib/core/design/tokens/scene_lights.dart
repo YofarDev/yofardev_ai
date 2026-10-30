@@ -1,3 +1,5 @@
+import 'dart:ui' show Color;
+
 import '../../models/avatar_scene.dart';
 import '../../models/performance/light_rig.dart';
 import 'app_palette.dart';
@@ -10,6 +12,33 @@ import 'app_palette.dart';
 abstract final class SceneLights {
   static const double _rimIntensity = 0.35;
   static const double _ambientAmount = 0.35;
+
+  /// How far the key and ambient colours lean toward [AppPalette.dayKey] /
+  /// [AppPalette.dayAmbient] at full daylight (M7 ruling 12).
+  static const double dayLean = 0.35;
+
+  /// The rig of [scene] at the time of day [daylight] (0 night .. 1 day):
+  /// the key and ambient colours lean [dayLean] × daylight toward neutral
+  /// day light; everything else, and deep space, stays the night rig.
+  static LightRig at(AvatarScene scene, double daylight) {
+    final LightRig night = of(scene);
+    final double t = daylight.isNaN ? 0 : daylight.clamp(0.0, 1.0) * dayLean;
+    if (t == 0 || scene == AvatarScene.deepSpace) {
+      return night;
+    }
+    return night.copyWith(
+      keyColor: Color.lerp(
+        Color(night.keyColor),
+        AppPalette.dayKey,
+        t,
+      )!.toARGB32(),
+      ambientColor: Color.lerp(
+        Color(night.ambientColor),
+        AppPalette.dayAmbient,
+        t,
+      )!.toARGB32(),
+    );
+  }
 
   static LightRig of(AvatarScene scene) {
     return switch (scene) {

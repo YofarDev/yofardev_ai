@@ -41,6 +41,11 @@ class AppPalette {
   static const Color deepSpaceAmbient = Color(0xFF120E26);
   static const Color deepSpaceFog = Color(0x331E1A44);
 
+  // Moonshot M7: the neutral daylight the scene rigs lean toward by day
+  // (`SceneLights.at`): a pale warm key and a cool sky fill.
+  static const Color dayKey = Color(0xFFFFF2DC);
+  static const Color dayAmbient = Color(0xFF6E7F9A);
+
   /// The UI tints derived from the living-room rig (see `ScenePalette`):
   /// [livingRoomKey] at alpha round(28 x 0.85) and `onSurface` leaned onto
   /// the key by 0.12 x 0.85. A test pins both against the derivation.

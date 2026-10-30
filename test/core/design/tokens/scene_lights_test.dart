@@ -60,4 +60,35 @@ void main() {
       expect(space.rimColor, 0xFF7FE0FF);
     });
   });
+
+  group('SceneLights.at (M7 time of day)', () {
+    test('night is the static rig, deep space ignores the clock', () {
+      for (final AvatarScene scene in AvatarScene.values) {
+        expect(SceneLights.at(scene, 0), SceneLights.of(scene));
+      }
+      expect(
+        SceneLights.at(AvatarScene.deepSpace, 1),
+        SceneLights.of(AvatarScene.deepSpace),
+      );
+    });
+
+    test('daylight leans only the key and ambient colours', () {
+      final LightRig night = SceneLights.of(AvatarScene.campfire);
+      final LightRig day = SceneLights.at(AvatarScene.campfire, 1);
+      expect(day.keyColor, isNot(night.keyColor));
+      expect(day.ambientColor, isNot(night.ambientColor));
+      expect(
+        day.copyWith(
+          keyColor: night.keyColor,
+          ambientColor: night.ambientColor,
+        ),
+        night,
+      );
+      // the ambient brightens toward the day sky fill, by at most dayLean
+      final int nightBlue = night.ambientColor & 0xFF;
+      final int dayBlue = day.ambientColor & 0xFF;
+      expect(dayBlue, greaterThan(nightBlue));
+      expect(SceneLights.at(AvatarScene.campfire, 7), day, reason: 'clamped');
+    });
+  });
 }

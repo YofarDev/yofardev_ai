@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -48,7 +47,7 @@ class HomeContentStack extends StatefulWidget {
   final ComposerActivityService? composerActivity;
   final ParallaxSource? parallax;
 
-  /// The world the scene shows, its rain (null: dry).
+  /// The world the scene shows: its rain and time of day (null: dry, night).
   final WorldStateService? world;
 
   /// Drives the avatar's face and speech (null: static mood faces).
@@ -111,7 +110,7 @@ class _HomeContentStackState extends State<HomeContentStack> {
           child: _RiveStage(
             facePerformer: widget.facePerformer,
             parallax: widget.parallax,
-            rain: widget.world?.rain,
+            world: widget.world,
           ),
         ),
         const StageScrim.top(),
@@ -188,11 +187,13 @@ class _CameraStageState extends State<_CameraStage> {
 /// The Rive scene with the avatar on it. Const and free of MediaQuery, so
 /// keyboard, inset and theme changes never rebuild it.
 class _RiveStage extends StatelessWidget {
-  const _RiveStage({this.facePerformer, this.parallax, this.rain});
+  const _RiveStage({this.facePerformer, this.parallax, this.world});
 
   final FacePerformer? facePerformer;
   final ParallaxSource? parallax;
-  final ValueListenable<double>? rain;
+
+  /// The weather and the time of day (null: dry, night).
+  final WorldStateService? world;
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +203,9 @@ class _RiveStage extends StatelessWidget {
           scene: avatarState.scene,
           sceneEvent: avatarState.sceneEvent,
           parallax: parallax,
-          rain: rain,
+          rain: world?.rain,
+          daylight: world?.daylight,
+          dusk: world?.dusk,
           onPropTapped: (String propId) {
             context.read<AvatarCubit>().onPropTapped(avatarState.scene, propId);
           },
@@ -220,6 +223,7 @@ class _RiveStage extends StatelessWidget {
                 avatarState: avatarState,
                 talkingState: talkingState,
                 facePerformer: facePerformer,
+                daylight: world?.daylight,
                 onAvatarTapped: (String zone) {
                   context.read<AvatarCubit>().onAvatarTapped(zone);
                 },

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:flutter/foundation.dart' show ValueListenable, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
@@ -64,6 +64,7 @@ class RiveAvatarView extends StatefulWidget {
     this.onAvatarTapped,
     this.onPresenceDone,
     this.onGestureDone,
+    this.daylight,
   });
 
   final AvatarState avatarState;
@@ -89,6 +90,10 @@ class RiveAvatarView extends StatefulWidget {
 
   /// Called when the upper-body gesture finishes (`gesture_done`).
   final VoidCallback? onGestureDone;
+
+  /// The world clock's daylight, 0..1 (M7): the light rig leans toward day
+  /// light with it (`SceneLights.at`). Null: the night rig.
+  final ValueListenable<double>? daylight;
 
   /// The settled face of [mood] (its AU preset and side offsets), written
   /// when there is no performer.
@@ -139,8 +144,16 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       widget.avatarState.headTarget.pitch,
       reading: widget.avatarState.headTarget.reading,
     );
+    widget.daylight?.addListener(_writeLight);
     _load();
   }
+
+  /// The scene's rig at the current daylight (the writer skips an unchanged
+  /// rig).
+  LightRig _rig() =>
+      SceneLights.at(widget.avatarState.scene, widget.daylight?.value ?? 0);
+
+  void _writeLight() => _lightWriter?.write(_rig());
 
   @override
   void didChangeDependencies() {
@@ -165,6 +178,11 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   @override
   void didUpdateWidget(RiveAvatarView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.daylight != oldWidget.daylight) {
+      oldWidget.daylight?.removeListener(_writeLight);
+      widget.daylight?.addListener(_writeLight);
+      _writeLight();
+    }
     if (widget.avatarState.headTarget != oldWidget.avatarState.headTarget) {
       _solver.setTarget(
         widget.avatarState.headTarget.yaw,
@@ -190,7 +208,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       return;
     }
     if (widget.avatarState.scene != oldWidget.avatarState.scene) {
-      _lightWriter?.write(SceneLights.of(widget.avatarState.scene));
+      _writeLight();
     }
     // One-shot cues are detected by seq so a repeated gesture still fires.
     if (widget.avatarState.gestureEvent.seq !=
@@ -208,6 +226,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.daylight?.removeListener(_writeLight);
     _ticker.dispose();
     _teardown();
     super.dispose();
@@ -252,8 +271,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       _writtenYaw = _writtenPitch = _writtenHairYaw = null;
       _writtenHairPitch = _writtenEyeLead = _writtenEyeLeadPitch = null;
       _faceWriter = AvatarFaceWriter(_BindingSink(binding));
-      _lightWriter = AvatarLightWriter(_BindingSink(binding))
-        ..write(SceneLights.of(widget.avatarState.scene));
+      _lightWriter = AvatarLightWriter(_BindingSink(binding))..write(_rig());
       _writeFace(widget.faceOverride ?? _liveFace(), force: true);
       _writeHeadPose(_solver.pose);
       _ensureTicking();

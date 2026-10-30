@@ -13,6 +13,7 @@ import '../../rive/avatar_rive_contract.dart';
 import '../../rive/scene_front_follower.dart';
 import '../../rive/scene_parallax_writer.dart';
 import '../../rive/scene_rain_writer.dart';
+import '../../rive/scene_time_writer.dart';
 import '../stage_camera.dart';
 import 'latest_load_gate.dart';
 
@@ -34,6 +35,9 @@ import 'latest_load_gate.dart';
 /// when a scene file loads (so a scene switch while it rains rains in the new
 /// file) and on every change.
 ///
+/// Time of day (contract v10): [daylight] and [dusk] are written to `SceneVM`
+/// on every scene load and change, like the rain.
+///
 /// Front (contract v9): a file with a `SceneFront` artboard gets it drawn
 /// above [middle] (the avatar) while it rains, with the same fit, never
 /// hit-tested; [middle] sits between the two at a fixed index, so a scene
@@ -47,6 +51,8 @@ class RiveSceneView extends StatefulWidget {
     this.parallax,
     this.parallaxOverride,
     this.rain,
+    this.daylight,
+    this.dusk,
     this.middle,
   });
 
@@ -66,6 +72,10 @@ class RiveSceneView extends StatefulWidget {
   /// The steady rain intensity, 0..1; null leaves it dry.
   final ValueListenable<double>? rain;
 
+  /// The time of day (contract v10), 0..1 each; null leaves it night.
+  final ValueListenable<double>? daylight;
+  final ValueListenable<double>? dusk;
+
   /// Drawn over the scene and under its front weather: the avatar.
   final Widget? middle;
 
@@ -80,6 +90,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   RiveVmBinding? _binding;
   SceneParallaxWriter? _parallaxWriter;
   final SceneRainFollower _rain = SceneRainFollower();
+  final SceneTimeFollower _time = SceneTimeFollower();
   final SceneFrontFollower _front = SceneFrontFollower();
   ValueListenable<double>? _frontRainSource;
   bool _hasFront = false;
@@ -105,6 +116,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _listenParallax();
     _syncParallaxActive();
     _rain.follow(widget.rain);
+    _time.follow(widget.daylight, widget.dusk);
     _followFrontRain();
     _loadScene(widget.scene);
   }
@@ -242,6 +254,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
       _followFrontRain();
       _syncFront(rebuild: false);
     }
+    if (widget.daylight != oldWidget.daylight ||
+        widget.dusk != oldWidget.dusk) {
+      _time.follow(widget.daylight, widget.dusk);
+    }
     if (widget.parallaxOverride != oldWidget.parallaxOverride ||
         widget.parallax != oldWidget.parallax) {
       _scheduleParallaxWrite();
@@ -271,6 +287,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     WidgetsBinding.instance.removeObserver(this);
     _loads.cancelAll();
     _rain.dispose();
+    _time.dispose();
     _frontRainSource?.removeListener(_syncFront);
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
@@ -333,6 +350,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
           ..write(widget.parallaxOverride ?? _parallax, force: true);
         // Nor has it the rain: a scene switch writes it to the new file.
         _rain.load(binding.setNumber);
+        // And the time of day (v10).
+        _time.load(binding.setNumber);
         _syncParallaxActive();
       });
       // The new file's front, if it has one and it rains.
@@ -362,6 +381,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _binding = null;
     _parallaxWriter = null;
     _rain.unload();
+    _time.unload();
     _file = null;
     _loadedScene = null;
   }
