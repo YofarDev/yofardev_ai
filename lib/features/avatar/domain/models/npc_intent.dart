@@ -29,6 +29,10 @@ class NpcIntent {
   /// The v10 look: rest, at its spot, looking ahead.
   static const NpcIntent rest = NpcIntent();
 
+  /// Not drawn, parked off the far end of its path (`npcX` 1): the second
+  /// slot's default (v12 `npc2`, the gulls before they land).
+  static const NpcIntent away = NpcIntent(npc: NpcState.away, npcX: 1);
+
   final NpcState npc;
   final double npcX;
   final double npcLook;

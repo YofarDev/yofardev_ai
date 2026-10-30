@@ -151,4 +151,39 @@ void main() {
       });
     });
   });
+
+  group('latitude', () {
+    Map<String, dynamic> body(Map<String, dynamic> extra) => <String, dynamic>{
+      'weather': <Map<String, dynamic>>[
+        <String, dynamic>{'id': 800},
+      ],
+      ...extra,
+    };
+
+    test('is read from coord.lat (negative south)', () {
+      expect(
+        WeatherReport.fromOpenWeather(
+          body(<String, dynamic>{
+            'coord': <String, dynamic>{'lon': 151.2, 'lat': -33.87},
+          }),
+        ).latitude,
+        closeTo(-33.87, 1e-9),
+      );
+      expect(
+        WeatherReport.fromOpenWeather(
+          body(<String, dynamic>{
+            'coord': <String, dynamic>{'lon': 2.3, 'lat': 48},
+          }),
+        ).latitude,
+        48,
+      );
+    });
+
+    test('is null without coord', () {
+      expect(
+        WeatherReport.fromOpenWeather(body(<String, dynamic>{})).latitude,
+        isNull,
+      );
+    });
+  });
 }

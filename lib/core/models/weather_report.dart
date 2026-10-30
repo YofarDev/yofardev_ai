@@ -10,10 +10,12 @@ class WeatherReport {
     this.sunrise,
     this.sunset,
     this.temperatureC,
+    this.latitude,
   });
 
-  /// Parses OpenWeather 2.5 `/weather`: `weather[0].id`, optional `rain['1h']`
-  /// and `sys.sunrise` / `sys.sunset` (unix seconds, UTC; kept as local times).
+  /// Parses OpenWeather 2.5 `/weather`: `weather[0].id`, optional `rain['1h']`,
+  /// `coord.lat` and `sys.sunrise` / `sys.sunset` (unix seconds, UTC; kept as
+  /// local times).
   factory WeatherReport.fromOpenWeather(Map<String, dynamic> json) {
     final List<dynamic> weather = json['weather'] as List<dynamic>;
     final int id = ((weather.first as Map<String, dynamic>)['id'] as num)
@@ -41,12 +43,18 @@ class WeatherReport {
         ? (main['temp'] as num?)?.toDouble()
         : null;
 
+    final Object? coord = json['coord'];
+    final double? latitude = coord is Map<String, dynamic>
+        ? (coord['lat'] as num?)?.toDouble()
+        : null;
+
     return WeatherReport(
       conditionId: id,
       rainMmPerHour: mm,
       sunrise: sun('sunrise'),
       sunset: sun('sunset'),
       temperatureC: temperature,
+      latitude: latitude,
     );
   }
 
@@ -62,6 +70,10 @@ class WeatherReport {
 
   /// Measured temperature, °C (`main.temp` with metric units), when known.
   final double? temperatureC;
+
+  /// Latitude of the reported place in degrees (north positive), when
+  /// known: the moon is drawn mirrored south of the equator (M9 ruling 12).
+  final double? latitude;
 
   /// Steady rain the scenes should show, 0..1: the condition's level, or
   /// `rainMmPerHour / 4` when that is larger.

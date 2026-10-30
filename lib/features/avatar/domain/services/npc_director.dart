@@ -7,6 +7,7 @@ import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/performance/performance.dart';
 import '../../../../core/models/talking_phase.dart';
 import '../models/npc_intent.dart';
+import 'gull_flock.dart';
 
 /// The NPC each scene has (contract v11): which one, and the prop that pokes
 /// it.
@@ -113,8 +114,14 @@ class _Move {
 ///   after [calmToSleep] of calm it trots back to the rug (0) and rests;
 ///   otherwise it sleeps by the stove.
 ///
+/// - **gulls** (beach only, the second slot, [gullIntent]; see [GullFlock]):
+///   away, they land after [GullFlock.calmToLand] of calm; a `seagulls` or
+///   `bigWave` event, a poke of the [gullPropId] prop, the crab's react (its
+///   poke), the avatar speaking with arousal ≥ [GullFlock.excitedArousal] or
+///   rain ≥ [GullFlock.rainAway] → react, then fly off to away.
+///
 /// **Low tier** ([QualityTier.low]): nothing runs, the NPC holds
-/// [NpcIntent.rest]. **Reduce motion**: no `move` (a position changes only
+/// [NpcIntent.rest] and the gulls stay away. **Reduce motion**: no `move` (a position changes only
 /// while the NPC is away, for [jumpLength]), no `react` (notice instead),
 /// no drift.
 ///
@@ -183,6 +190,9 @@ class NpcDirector {
 
   /// The facing written while moving (its sign is what the art reads).
   static const double moveLook = 0.5;
+
+  /// The beach prop whose tap pokes the gulls (the crab has its own).
+  static const String gullPropId = 'seagull';
 
   /// Where [kind] at path position [x] looks to face the avatar.
   static double lookToAvatar(NpcKind kind, double x) {
@@ -255,6 +265,10 @@ class NpcDirector {
   final ValueNotifier<NpcIntent> _intent = ValueNotifier<NpcIntent>(
     NpcIntent.rest,
   );
+  final ValueNotifier<NpcIntent> _gullIntent = ValueNotifier<NpcIntent>(
+    NpcIntent.away,
+  );
+  final GullFlock _gulls = GullFlock();
 
   // — inputs —
   AvatarScene _scene;
@@ -292,6 +306,10 @@ class NpcDirector {
 
   /// What the scene's NPC does now.
   ValueListenable<NpcIntent> get intent => _intent;
+
+  /// What the beach's gulls do now (the second slot, `npc2*`): away on every
+  /// other scene.
+  ValueListenable<NpcIntent> get gullIntent => _gullIntent;
 
   /// The NPC of the scene on screen.
   NpcKind get kind => NpcKind.of(_scene);
@@ -372,6 +390,16 @@ class NpcDirector {
 
   /// A scene prop was tapped: its NPC's poke.
   void poke(String propId) {
+    if (_scene == AvatarScene.beach) {
+      // the gulls' own prop, and the crab's react startles them too
+      if (propId == gullPropId || propId == NpcKind.crab.propId) {
+        _gulls.startle(_now());
+        if (propId == gullPropId) {
+          _update();
+          return;
+        }
+      }
+    }
     if (propId != kind.propId) {
       return;
     }
@@ -396,6 +424,12 @@ class NpcDirector {
           return;
         }
         _pokedAt = _now();
+      case SceneEvent.seagulls || SceneEvent.bigWave:
+        // a passing flock or a big wave sends the sitting gulls off
+        if (_scene != AvatarScene.beach) {
+          return;
+        }
+        _gulls.startle(_now());
       default:
         return;
     }
@@ -407,6 +441,7 @@ class NpcDirector {
     _timer?.cancel();
     _timer = null;
     _intent.dispose();
+    _gullIntent.dispose();
   }
 
   // — internals —
@@ -475,6 +510,7 @@ class NpcDirector {
     _driftTarget = null;
     _returningHome = false;
     _lampOn = true;
+    _gulls.reset();
   }
 
   void _update() {
@@ -485,6 +521,10 @@ class NpcDirector {
     final NpcIntent next = _evaluate(now);
     if (next != _intent.value) {
       _intent.value = next;
+    }
+    final NpcIntent gulls = _evaluateGulls(now);
+    if (gulls != _gullIntent.value) {
+      _gullIntent.value = gulls;
     }
     _schedule(now);
   }
@@ -516,6 +556,14 @@ class NpcDirector {
     }
     return intent;
   }
+
+  NpcIntent _evaluateGulls(DateTime now) => _gulls.evaluate(
+    now,
+    active: _tier != QualityTier.low && _scene == AvatarScene.beach,
+    rain: _rain,
+    reduceMotion: _reduceMotion,
+    excited: _speaking && _emotion.arousal >= GullFlock.excitedArousal,
+  );
 
   double _xNow(DateTime now) => _move?.xAt(now) ?? _x;
 
@@ -831,13 +879,20 @@ class NpcDirector {
   }
 
   /// Re-evaluates at the next moment the tree can change: every [frame]
-  /// while a move runs, else the earliest pending deadline.
+  /// while a move or a gull flight runs, else the earliest pending deadline.
   void _schedule(DateTime now) {
     _timer?.cancel();
     _timer = null;
     if (_tier == QualityTier.low) {
       return;
     }
+    Duration? delay;
+    void sooner(Duration candidate) {
+      if (delay == null || candidate < delay!) {
+        delay = candidate;
+      }
+    }
+
     final _Move? move = _move;
     if (move != null) {
       // every frame while it walks (only its end for a jump), and exactly
@@ -845,7 +900,16 @@ class NpcDirector {
       final Duration left =
           move.start.add(move.length).difference(now) +
           const Duration(milliseconds: 1);
-      _timer = Timer(move.jump || left < frame ? left : frame, _update);
+      sooner(move.jump || left < frame ? left : frame);
+    }
+    final DateTime? gullChange = _gulls.nextChange;
+    if (_gulls.animating && gullChange != null) {
+      final Duration left =
+          gullChange.difference(now) + const Duration(milliseconds: 1);
+      sooner(left < frame ? left : frame);
+    }
+    if (delay != null) {
+      _timer = Timer(delay!, _update);
       return;
     }
     DateTime? earliest;
@@ -858,6 +922,7 @@ class NpcDirector {
       }
     }
 
+    consider(gullChange);
     final DateTime? poked = _pokedAt;
     if (poked != null) {
       consider(poked.add(reactLength));

@@ -85,4 +85,109 @@ void main() {
     expect(writes, <String>['npc=rest', 'npcX=0.0', 'npcLook=0.0']);
     follower.dispose();
   });
+
+  group('the second slot (npc2, the gulls)', () {
+    test('the property names are the contract v12 ones', () {
+      expect(AvatarRiveContract.scenePropNpc2, 'npc2');
+      expect(AvatarRiveContract.scenePropNpc2X, 'npc2X');
+      expect(AvatarRiveContract.scenePropNpc2Look, 'npc2Look');
+    });
+
+    test('the writer writes npc2* beside npc*, each slot on its own', () {
+      final SceneNpcWriter writer = SceneNpcWriter(
+        setEnum: setEnum,
+        setNumber: setNumber,
+      );
+      writer.write(NpcIntent.rest, second: NpcIntent.away);
+      expect(writes, <String>[
+        'npc=rest',
+        'npcX=0.0',
+        'npcLook=0.0',
+        'npc2=away',
+        'npc2X=1.0',
+        'npc2Look=0.0',
+      ]);
+      writes.clear();
+      // only the gulls move: only npc2* is written
+      writer.write(
+        NpcIntent.rest,
+        second: const NpcIntent(npc: NpcState.move, npcX: 0.6, npcLook: -0.5),
+      );
+      expect(writes, <String>['npc2=move', 'npc2X=0.6', 'npc2Look=-0.5']);
+      writes.clear();
+      // only the first NPC moves: npc2* is not rewritten
+      writer.write(
+        const NpcIntent(npc: NpcState.idle),
+        second: const NpcIntent(npc: NpcState.move, npcX: 0.6, npcLook: -0.5),
+      );
+      expect(writes, <String>['npc=idle']);
+    });
+
+    test('without a second intent npc2* is never written', () {
+      final SceneNpcWriter writer = SceneNpcWriter(
+        setEnum: setEnum,
+        setNumber: setNumber,
+      );
+      writer.write(NpcIntent.rest);
+      expect(writes.where((String w) => w.startsWith('npc2')), isEmpty);
+    });
+
+    test('the follower follows both sources and writes both to a new file', () {
+      final ValueNotifier<NpcIntent> first = ValueNotifier<NpcIntent>(
+        NpcIntent.rest,
+      );
+      final ValueNotifier<NpcIntent> gulls = ValueNotifier<NpcIntent>(
+        NpcIntent.away,
+      );
+      addTearDown(first.dispose);
+      addTearDown(gulls.dispose);
+      final SceneNpcFollower follower = SceneNpcFollower();
+      addTearDown(follower.dispose);
+      follower.follow(first, second: gulls);
+      follower.load(setEnum, setNumber);
+      expect(writes, <String>[
+        'npc=rest',
+        'npcX=0.0',
+        'npcLook=0.0',
+        'npc2=away',
+        'npc2X=1.0',
+        'npc2Look=0.0',
+      ]);
+      writes.clear();
+      gulls.value = const NpcIntent(npc: NpcState.idle);
+      expect(writes, <String>['npc2=idle', 'npc2X=0.0']);
+      writes.clear();
+      follower.unload();
+      follower.load(setEnum, setNumber);
+      expect(writes, hasLength(6), reason: 'a fresh file gets everything');
+    });
+
+    test('a second override wins over the second source', () {
+      final ValueNotifier<NpcIntent> gulls = ValueNotifier<NpcIntent>(
+        NpcIntent.away,
+      );
+      addTearDown(gulls.dispose);
+      final SceneNpcFollower follower = SceneNpcFollower();
+      addTearDown(follower.dispose);
+      follower.follow(null, second: gulls);
+      follower.load(setEnum, setNumber);
+      writes.clear();
+      follower.follow(
+        null,
+        second: gulls,
+        secondOverride: const NpcIntent(npc: NpcState.react),
+      );
+      expect(writes, <String>['npc2=react', 'npc2X=0.0']);
+      writes.clear();
+      gulls.value = const NpcIntent(npc: NpcState.idle);
+      expect(writes, isEmpty, reason: 'the override holds');
+    });
+
+    test('a follower with no second source leaves npc2* alone', () {
+      final SceneNpcFollower follower = SceneNpcFollower();
+      addTearDown(follower.dispose);
+      follower.load(setEnum, setNumber);
+      expect(writes.where((String w) => w.startsWith('npc2')), isEmpty);
+    });
+  });
 }

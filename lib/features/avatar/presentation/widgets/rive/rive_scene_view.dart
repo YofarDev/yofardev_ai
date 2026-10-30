@@ -16,6 +16,7 @@ import '../../rive/scene_front_follower.dart';
 import '../../rive/scene_npc_writer.dart';
 import '../../rive/scene_parallax_writer.dart';
 import '../../rive/scene_rain_writer.dart';
+import '../../rive/scene_sky_writer.dart';
 import '../../rive/scene_time_writer.dart';
 import '../stage_camera.dart';
 import 'latest_load_gate.dart';
@@ -45,6 +46,11 @@ import 'latest_load_gate.dart';
 /// [npcOverride], the UI lab) are written to `SceneVM` on every scene load
 /// and change, like the rain; the fog also goes to the front artboard.
 ///
+/// The sky and the second NPC (contract v12): [moonPhase] and [festive] are
+/// written to `SceneVM` like the time of day, and [npc2] (or [npc2Override],
+/// the UI lab) is the second NPC slot, the beach's gulls (`npc2*`). A file
+/// that does not declare a property ignores the write.
+///
 /// Front (contract v9): a file with a `SceneFront` artboard gets it drawn
 /// above [middle] (the avatar) while it rains, with the same fit, never
 /// hit-tested; [middle] sits between the two at a fixed index, so a scene
@@ -63,6 +69,10 @@ class RiveSceneView extends StatefulWidget {
     this.fog,
     this.npc,
     this.npcOverride,
+    this.moonPhase,
+    this.festive,
+    this.npc2,
+    this.npc2Override,
     this.middle,
     this.preload,
     this.onSceneShown,
@@ -97,6 +107,20 @@ class RiveSceneView extends StatefulWidget {
   /// A hand-set NPC intent written instead of [npc] while non-null.
   final NpcIntent? npcOverride;
 
+  /// The moon's phase (contract v12): 0..1, or -1 for the moon as drawn
+  /// before v12; null leaves it so.
+  final ValueListenable<double>? moonPhase;
+
+  /// The December dressing (contract v12), 0..1; null leaves it off.
+  final ValueListenable<double>? festive;
+
+  /// The second NPC slot's intent (contract v12, the beach's gulls); null
+  /// leaves the file's default (away).
+  final ValueListenable<NpcIntent>? npc2;
+
+  /// A hand-set second-slot intent written instead of [npc2] while non-null.
+  final NpcIntent? npc2Override;
+
   /// Drawn over the scene and under its front weather: the avatar.
   final Widget? middle;
 
@@ -122,6 +146,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   final SceneFogFollower _fog = SceneFogFollower();
   final SceneFogFollower _frontFog = SceneFogFollower();
   final SceneNpcFollower _npc = SceneNpcFollower();
+  final SceneSkyFollower _sky = SceneSkyFollower();
   final SceneFrontFollower _front = SceneFrontFollower();
   ValueListenable<double>? _frontRainSource;
   bool _hasFront = false;
@@ -155,11 +180,19 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _time.follow(widget.daylight, widget.dusk);
     _fog.follow(widget.fog);
     _frontFog.follow(widget.fog);
-    _npc.follow(widget.npc, override: widget.npcOverride);
+    _followNpc();
+    _sky.follow(widget.moonPhase, widget.festive);
     _followFrontRain();
     _loadScene(widget.scene);
     _startPreload(widget.preload);
   }
+
+  void _followNpc() => _npc.follow(
+    widget.npc,
+    override: widget.npcOverride,
+    second: widget.npc2,
+    secondOverride: widget.npc2Override,
+  );
 
   /// Decodes [scene] ahead of the switch to it; drops a preload nobody took.
   Future<void> _startPreload(AvatarScene? scene) async {
@@ -350,8 +383,14 @@ class _RiveSceneViewState extends State<RiveSceneView>
       _frontFog.follow(widget.fog);
     }
     if (widget.npc != oldWidget.npc ||
-        widget.npcOverride != oldWidget.npcOverride) {
-      _npc.follow(widget.npc, override: widget.npcOverride);
+        widget.npcOverride != oldWidget.npcOverride ||
+        widget.npc2 != oldWidget.npc2 ||
+        widget.npc2Override != oldWidget.npc2Override) {
+      _followNpc();
+    }
+    if (widget.moonPhase != oldWidget.moonPhase ||
+        widget.festive != oldWidget.festive) {
+      _sky.follow(widget.moonPhase, widget.festive);
     }
     if (widget.parallaxOverride != oldWidget.parallaxOverride ||
         widget.parallax != oldWidget.parallax) {
@@ -395,6 +434,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _fog.dispose();
     _frontFog.dispose();
     _npc.dispose();
+    _sky.dispose();
     _frontRainSource?.removeListener(_syncFront);
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
@@ -471,6 +511,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _time.load(binding.setNumber);
         _fog.load(binding.setNumber);
         _npc.load(binding.setEnum, binding.setNumber);
+        // And the sky's calendar and the second NPC slot (v12).
+        _sky.load(binding.setNumber);
         _syncParallaxActive();
       });
       // The new file's front, if it has one and it rains.
@@ -532,6 +574,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _time.unload();
     _fog.unload();
     _npc.unload();
+    _sky.unload();
     _file = null;
     _loadedScene = null;
   }

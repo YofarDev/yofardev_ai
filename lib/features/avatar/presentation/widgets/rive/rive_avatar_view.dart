@@ -4,8 +4,10 @@ import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
 import '../../../../../core/design/tokens/scene_lights.dart';
+import '../../../../../core/models/avatar_config.dart';
 import '../../../../../core/models/avatar_mood.dart';
 import '../../../../../core/models/performance/performance.dart';
+import '../../../../../core/models/seasonal_wardrobe.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../../talking/talking.dart';
 import '../../../../../core/design/rive/rive_vm_binding.dart';
@@ -71,6 +73,7 @@ class RiveAvatarView extends StatefulWidget {
     this.onGestureDone,
     this.onFoley,
     this.daylight,
+    this.localDay,
   });
 
   final AvatarState avatarState;
@@ -104,6 +107,11 @@ class RiveAvatarView extends StatefulWidget {
   /// The world clock's daylight, 0..1 (M7): the light rig leans toward day
   /// light with it (`SceneLights.at`). Null: the night rig.
   final ValueListenable<double>? daylight;
+
+  /// The local calendar day (M9 ruling 13): in December a default outfit is
+  /// shown as the December one ([shownWardrobe]; never saved). Null: the
+  /// stored outfit, always.
+  final ValueListenable<DateTime>? localDay;
 
   /// The settled face of [mood] (its AU preset and side offsets), written
   /// when there is no performer.
@@ -155,6 +163,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       reading: widget.avatarState.headTarget.reading,
     );
     widget.daylight?.addListener(_writeLight);
+    widget.localDay?.addListener(_applyContinuousState);
     _load();
   }
 
@@ -192,6 +201,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       oldWidget.daylight?.removeListener(_writeLight);
       widget.daylight?.addListener(_writeLight);
       _writeLight();
+    }
+    if (widget.localDay != oldWidget.localDay) {
+      oldWidget.localDay?.removeListener(_applyContinuousState);
+      widget.localDay?.addListener(_applyContinuousState);
     }
     if (widget.avatarState.headTarget != oldWidget.avatarState.headTarget) {
       _solver.setTarget(
@@ -237,6 +250,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.daylight?.removeListener(_writeLight);
+    widget.localDay?.removeListener(_applyContinuousState);
     _ticker.dispose();
     _teardown();
     super.dispose();
@@ -415,6 +429,11 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       return;
     }
     final AvatarState avatarState = widget.avatarState;
+    final ValueListenable<DateTime>? day = widget.localDay;
+    // what is shown, not what is stored: December dresses the default outfit
+    final Avatar shown = day == null
+        ? avatarState.avatar
+        : shownWardrobe(avatarState.avatar, day.value);
     binding.setEnum(
       AvatarRiveContract.propMood,
       AvatarRiveContract.moodValues,
@@ -442,22 +461,22 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     binding.setEnum(
       AvatarRiveContract.propHat,
       AvatarRiveContract.hatValues,
-      avatarState.avatar.hat.name,
+      shown.hat.name,
     );
     binding.setEnum(
       AvatarRiveContract.propTop,
       AvatarRiveContract.topValues,
-      avatarState.avatar.top.name,
+      shown.top.name,
     );
     binding.setEnum(
       AvatarRiveContract.propGlasses,
       AvatarRiveContract.glassesValues,
-      avatarState.avatar.glasses.name,
+      shown.glasses.name,
     );
     binding.setEnum(
       AvatarRiveContract.propCostume,
       AvatarRiveContract.costumeValues,
-      avatarState.avatar.costume.name,
+      shown.costume.name,
     );
     binding.setEnum(
       AvatarRiveContract.propProp,

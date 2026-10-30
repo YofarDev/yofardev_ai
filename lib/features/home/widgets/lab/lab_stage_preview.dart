@@ -37,6 +37,10 @@ class LabStageExtras extends InheritedWidget {
     this.rain,
     this.fog,
     this.npc,
+    this.npc2,
+    this.moonPhase,
+    this.festive,
+    this.localDay,
     required super.child,
   });
 
@@ -52,6 +56,18 @@ class LabStageExtras extends InheritedWidget {
   /// A hand-set NPC pose (contract v11); null: the NPC rests.
   final NpcIntent? npc;
 
+  /// A hand-set second-slot pose (contract v12, the gulls); null: the live
+  /// gull tree is not running in the lab, so they stay away.
+  final NpcIntent? npc2;
+
+  /// The world's moon phase and December dressing (contract v12), written to
+  /// the scene; null: the moon as drawn, no dressing.
+  final ValueListenable<double>? moonPhase;
+  final ValueListenable<double>? festive;
+
+  /// The world's local day, for the avatar's December outfit.
+  final ValueListenable<DateTime>? localDay;
+
   /// The extras above [context], or none (no prop, no parallax).
   static LabStageExtras? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<LabStageExtras>();
@@ -62,7 +78,11 @@ class LabStageExtras extends InheritedWidget {
       parallax != oldWidget.parallax ||
       rain != oldWidget.rain ||
       fog != oldWidget.fog ||
-      npc != oldWidget.npc;
+      npc != oldWidget.npc ||
+      npc2 != oldWidget.npc2 ||
+      moonPhase != oldWidget.moonPhase ||
+      festive != oldWidget.festive ||
+      localDay != oldWidget.localDay;
 }
 
 /// The default [LabStageBuilder]: the real Rive scene and avatar.
@@ -239,6 +259,10 @@ class _LabStagePreviewState extends State<LabStagePreview>
                           rain: widget.world?.rain,
                           fog: widget.world?.fog,
                           npc: config.npc,
+                          npc2: config.npc2,
+                          moonPhase: widget.world?.moonPhase,
+                          festive: widget.world?.festive,
+                          localDay: widget.world?.localDay,
                           child: StageCamera(
                             shot: _camera,
                             child: ValueListenableBuilder<MouthState>(
@@ -316,6 +340,9 @@ class _LabRiveStageState extends State<LabRiveStage> {
       rain: extras?.rain,
       fog: extras?.fog,
       npc: extras?.npc,
+      npc2: extras?.npc2,
+      moonPhase: extras?.moonPhase,
+      festive: extras?.festive,
       middle: RiveAvatarView(
         key: _avatarKey,
         // The scene's light rig follows the lab's scene, and the prop the
@@ -326,6 +353,7 @@ class _LabRiveStageState extends State<LabRiveStage> {
         ),
         talkingState: widget.talkingState,
         faceOverride: widget.face,
+        localDay: extras?.localDay,
       ),
     );
   }
@@ -341,6 +369,9 @@ class _LabSceneLayer extends StatefulWidget {
     this.rain,
     this.fog,
     this.npc,
+    this.npc2,
+    this.moonPhase,
+    this.festive,
     this.middle,
   });
 
@@ -349,6 +380,9 @@ class _LabSceneLayer extends StatefulWidget {
   final ValueListenable<double>? rain;
   final ValueListenable<double>? fog;
   final NpcIntent? npc;
+  final NpcIntent? npc2;
+  final ValueListenable<double>? moonPhase;
+  final ValueListenable<double>? festive;
   final Widget? middle;
 
   @override
@@ -383,6 +417,9 @@ class _LabSceneLayerState extends State<_LabSceneLayer> {
       rain: widget.rain,
       fog: widget.fog,
       npcOverride: widget.npc,
+      npc2Override: widget.npc2,
+      moonPhase: widget.moonPhase,
+      festive: widget.festive,
       middle: widget.middle,
     );
   }

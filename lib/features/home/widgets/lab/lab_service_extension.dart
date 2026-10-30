@@ -54,6 +54,9 @@ developer.ServiceExtensionResponse _ok(
     ...config.toJson(),
     _rainKey: ?world?.rain.value,
     _fogKey: ?world?.fog.value,
+    _moonPhaseKey: ?world?.moonPhase.value,
+    _festiveKey: ?world?.festive.value,
+    _dateKey: ?(world == null ? null : _formatDate(world.localDay.value)),
   }),
 );
 
@@ -61,6 +64,79 @@ developer.ServiceExtensionResponse _ok(
 /// [WorldStateService.setRain] and [WorldStateService.setFog].
 const String _rainKey = 'rain';
 const String _fogKey = 'fog';
+
+/// The sky params (M9), also world state: `moonPhase` (-1 = the moon as
+/// drawn before v12, 0..1 a phase, `null` back to the calendar), `festive`
+/// (0..1, `null` back to the calendar) and `date` (`YYYY-MM-DD` pins the
+/// clock's date and keeps its time of day, `null` unpins the clock).
+const String _moonPhaseKey = 'moonPhase';
+const String _festiveKey = 'festive';
+const String _dateKey = 'date';
+
+String _formatDate(DateTime day) =>
+    '${day.year.toString().padLeft(4, '0')}-'
+    '${day.month.toString().padLeft(2, '0')}-'
+    '${day.day.toString().padLeft(2, '0')}';
+
+/// A parsed override param: [given] false when the param was absent,
+/// [value] null when it asked to clear the override.
+typedef _Override<T> = ({bool given, T? value});
+
+bool _clears(String value) => value.isEmpty || value == 'null';
+
+/// Parses an override param (`moonPhase` or `festive`): a number in
+/// [min]..[max], or empty / `null` to clear; needs [world].
+_Override<double> _overrideParam(
+  String key,
+  String? value,
+  double min,
+  double max,
+  WorldStateService? world,
+) {
+  if (value == null) {
+    return (given: false, value: null);
+  }
+  if (world == null) {
+    throw FormatException('"$key" needs the world state service');
+  }
+  if (_clears(value)) {
+    return (given: true, value: null);
+  }
+  final double? number = double.tryParse(value);
+  if (number == null || number < min || number > max) {
+    throw FormatException(
+      '"$key" must be a number in $min..$max or null, got "$value"',
+    );
+  }
+  return (given: true, value: number);
+}
+
+final RegExp _datePattern = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$');
+
+/// Parses the `date` param: `YYYY-MM-DD` (a real calendar day), or empty /
+/// `null` to unpin; needs [world].
+_Override<DateTime> _dateParam(String? value, WorldStateService? world) {
+  if (value == null) {
+    return (given: false, value: null);
+  }
+  if (world == null) {
+    throw FormatException('"$_dateKey" needs the world state service');
+  }
+  if (_clears(value)) {
+    return (given: true, value: null);
+  }
+  final RegExpMatch? match = _datePattern.firstMatch(value);
+  if (match != null) {
+    final int year = int.parse(match.group(1)!);
+    final int month = int.parse(match.group(2)!);
+    final int day = int.parse(match.group(3)!);
+    final DateTime parsed = DateTime(year, month, day);
+    if (parsed.year == year && parsed.month == month && parsed.day == day) {
+      return (given: true, value: parsed);
+    }
+  }
+  throw FormatException('"$_dateKey" must be YYYY-MM-DD or null, got "$value"');
+}
 
 /// Parses a world param (`rain` or `fog`): a number in 0..1, which needs
 /// [world]. Null when [value] is null.
@@ -104,6 +180,13 @@ Map<String, Object?> _paramsToJson(Map<String, String> params) {
       json[key] = value.isEmpty ? null : jsonDecode(value);
       return;
     }
+    if (key == 'npc2') {
+      // a state name (`react`), an object like `npc`, or null
+      json[key] = _clears(value)
+          ? null
+          : (value.trimLeft().startsWith('{') ? jsonDecode(value) : value);
+      return;
+    }
     if (!_numericKeys.contains(key)) {
       json[key] = value;
       return;
@@ -134,10 +217,14 @@ Map<String, Object?> _paramsToJson(Map<String, String> params) {
 /// `parallax` is
 /// `{"x":0.5,"y":-0.2}` (each -1..1) or `null`. `npc` poses the scene's NPC
 /// by hand: `{"npc":"notice","npcX":0.5,"npcLook":-1}` (any key optional) or
-/// `null` (back to rest). `rain` and `fog` are numbers in 0..1 handed to
+/// `null` (back to rest). `npc2` poses the beach's gulls the same way, or
+/// by a state name alone (`react`; `move` stands halfway) or `null` (the live
+/// tree). `rain` and `fog` are numbers in 0..1 handed to
 /// [world] ([WorldStateService.setRain], [WorldStateService.setFog]); they
 /// are rejected when no [world] is given and, like any invalid input, leave
-/// the config alone.
+/// the config alone. So do the sky's params: `moonPhase` (-1..1: -1 the moon
+/// as drawn, 0..1 a phase), `festive` (0..1) and `date` (`YYYY-MM-DD`), each
+/// with `null` back to the calendar / the real clock.
 developer.ServiceExtensionResponse labConfigureResponse(
   ValueNotifier<LabConfig>? notifier,
   Map<String, String> params, {
@@ -156,6 +243,24 @@ developer.ServiceExtensionResponse labConfigureResponse(
     final double? fog = _worldParam(
       _fogKey,
       configParams.remove(_fogKey),
+      world,
+    );
+    final _Override<double> moon = _overrideParam(
+      _moonPhaseKey,
+      configParams.remove(_moonPhaseKey),
+      -1,
+      1,
+      world,
+    );
+    final _Override<double> festive = _overrideParam(
+      _festiveKey,
+      configParams.remove(_festiveKey),
+      0,
+      1,
+      world,
+    );
+    final _Override<DateTime> date = _dateParam(
+      configParams.remove(_dateKey),
       world,
     );
     final Map<String, Object?> json = _paramsToJson(configParams);
@@ -180,6 +285,21 @@ developer.ServiceExtensionResponse labConfigureResponse(
     }
     if (fog != null) {
       world!.setFog(fog);
+    }
+    if (moon.given) {
+      world!.setMoonPhase(moon.value);
+    }
+    if (festive.given) {
+      world!.setFestive(festive.value);
+    }
+    if (date.given) {
+      final DateTime? day = date.value;
+      final DateTime now = world!.localNow;
+      world.pinClock(
+        day == null
+            ? null
+            : DateTime(day.year, day.month, day.day, now.hour, now.minute),
+      );
     }
     return _ok(next, world);
   } on FormatException catch (e) {

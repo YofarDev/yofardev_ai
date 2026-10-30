@@ -168,6 +168,175 @@ void main() {
       expect(notifier.value.npc, isNull);
     });
 
+    test('npc2 poses the gulls by state name or object, null clears (M9)', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial.copyWith(scene: AvatarScene.beach),
+      );
+      expect(notifier.value.npc2, isNull);
+      expect(
+        labConfigureResponse(notifier, <String, String>{
+          'npc2': 'react',
+        }).errorCode,
+        isNull,
+      );
+      expect(notifier.value.npc2, const NpcIntent(npc: NpcState.react));
+      labConfigureResponse(notifier, <String, String>{'npc2': 'move'});
+      expect(
+        notifier.value.npc2,
+        const NpcIntent(npc: NpcState.move, npcX: 0.5),
+      );
+      labConfigureResponse(notifier, <String, String>{'npc2': 'away'});
+      expect(notifier.value.npc2, const NpcIntent(npc: NpcState.away));
+      final developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{'npc2': '{"npc":"move","npcX":0.8,"npcLook":0.5}'},
+      );
+      expect(
+        notifier.value.npc2,
+        const NpcIntent(npc: NpcState.move, npcX: 0.8, npcLook: 0.5),
+      );
+      expect(_decode(r)['npc2'], <String, Object?>{
+        'npc': 'move',
+        'npcX': 0.8,
+        'npcLook': 0.5,
+      });
+      // npc is untouched by npc2
+      expect(notifier.value.npc, isNull);
+      labConfigureResponse(notifier, <String, String>{'npc2': 'null'});
+      expect(notifier.value.npc2, isNull);
+      labConfigureResponse(notifier, <String, String>{'npc2': 'idle'});
+      labConfigureResponse(notifier, <String, String>{'npc2': ''});
+      expect(notifier.value.npc2, isNull);
+      for (final String bad in <String>[
+        'sleep',
+        '{"npc":"sleep"}',
+        '{"npcX":2}',
+        '{"bogus":1}',
+      ]) {
+        final developer.ServiceExtensionResponse e = labConfigureResponse(
+          notifier,
+          <String, String>{'npc2': bad},
+        );
+        expect(
+          e.errorCode,
+          developer.ServiceExtensionResponse.extensionError,
+          reason: bad,
+        );
+      }
+      expect(notifier.value.npc2, isNull);
+    });
+
+    group('the sky params (M9)', () {
+      late ValueNotifier<LabConfig> notifier;
+      late WorldStateService world;
+      setUp(() {
+        notifier = ValueNotifier<LabConfig>(LabConfig.initial);
+        world = WorldStateService(now: () => DateTime(2026, 10, 26, 21, 15));
+      });
+      tearDown(() => world.dispose());
+
+      test(
+        'moonPhase and festive are held, and null returns to the calendar',
+        () {
+          final developer.ServiceExtensionResponse r = labConfigureResponse(
+            notifier,
+            <String, String>{'moonPhase': '0.25', 'festive': '1'},
+            world: world,
+          );
+          expect(r.errorCode, isNull);
+          expect(world.moonPhase.value, 0.25);
+          expect(world.festive.value, 1);
+          expect(_decode(r)['moonPhase'], 0.25);
+          expect(_decode(r)['festive'], 1);
+          expect(
+            _decode(labStateResponse(notifier, world: world))['moonPhase'],
+            0.25,
+          );
+          labConfigureResponse(notifier, <String, String>{
+            'moonPhase': '-1',
+          }, world: world);
+          expect(world.moonPhase.value, -1, reason: '-1 = as drawn');
+          labConfigureResponse(notifier, <String, String>{
+            'moonPhase': 'null',
+            'festive': '',
+          }, world: world);
+          expect(world.moonPhase.value, closeTo(0.5, 1 / 29.53));
+          expect(world.festive.value, 0);
+        },
+      );
+
+      test('date pins the clock date and keeps the time of day', () {
+        final developer.ServiceExtensionResponse r = labConfigureResponse(
+          notifier,
+          <String, String>{'date': '2026-12-24'},
+          world: world,
+        );
+        expect(r.errorCode, isNull);
+        expect(world.localNow, DateTime(2026, 12, 24, 21, 15));
+        expect(world.festive.value, 1);
+        expect(world.localDay.value, DateTime(2026, 12, 24));
+        expect(_decode(r)['date'], '2026-12-24');
+        expect(
+          _decode(labStateResponse(notifier, world: world))['date'],
+          '2026-12-24',
+        );
+        labConfigureResponse(notifier, <String, String>{
+          'date': 'null',
+        }, world: world);
+        expect(world.localNow, DateTime(2026, 10, 26, 21, 15));
+        expect(world.festive.value, 0);
+      });
+
+      test('a date moves the moon: the known full moons are full', () {
+        labConfigureResponse(notifier, <String, String>{
+          'date': '2026-11-24',
+        }, world: world);
+        expect(world.moonPhase.value, closeTo(0.5, 1 / 29.53));
+      });
+
+      for (final Map<String, String> bad in <Map<String, String>>[
+        <String, String>{'moonPhase': '1.5'},
+        <String, String>{'moonPhase': '-2'},
+        <String, String>{'moonPhase': 'full'},
+        <String, String>{'festive': '2'},
+        <String, String>{'festive': '-0.1'},
+        <String, String>{'date': '2026-13-01'},
+        <String, String>{'date': '2026-02-30'},
+        <String, String>{'date': '24/12/2026'},
+        <String, String>{'date': '2026-12-24T10:00'},
+      ]) {
+        test('$bad is an error and changes nothing', () {
+          final developer.ServiceExtensionResponse r = labConfigureResponse(
+            notifier,
+            <String, String>{...bad, 'scene': 'beach'},
+            world: world,
+          );
+          expect(
+            r.errorCode,
+            developer.ServiceExtensionResponse.extensionError,
+          );
+          expect(notifier.value.scene, isNot(AvatarScene.beach));
+          expect(world.moonPhase.value, closeTo(0.5, 1 / 29.53));
+          expect(world.festive.value, 0);
+          expect(world.localNow, DateTime(2026, 10, 26, 21, 15));
+        });
+      }
+
+      test('without a world they are errors', () {
+        for (final Map<String, String> params in <Map<String, String>>[
+          <String, String>{'moonPhase': '0.5'},
+          <String, String>{'festive': '1'},
+          <String, String>{'date': '2026-12-24'},
+        ]) {
+          expect(
+            labConfigureResponse(notifier, params).errorCode,
+            developer.ServiceExtensionResponse.extensionError,
+            reason: '$params',
+          );
+        }
+      });
+    });
+
     test('rain without a world is an error', () {
       final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
         LabConfig.initial,

@@ -325,4 +325,48 @@ void main() {
       expect(after.radiusScale, 0.5);
     });
   });
+
+  group('npc2 (the gulls, M9)', () {
+    test('is part of equality and survives a JSON round trip', () {
+      const NpcIntent pose = NpcIntent(
+        npc: NpcState.move,
+        npcX: 0.3,
+        npcLook: -0.5,
+      );
+      final LabConfig withGulls = LabConfig.initial.copyWith(npc2: pose);
+      expect(withGulls, isNot(LabConfig.initial));
+      expect(withGulls.hashCode, isNot(LabConfig.initial.hashCode));
+      expect(LabConfig.fromJson(withGulls.toJson()), withGulls);
+      expect(withGulls.copyWith(npc2: null).npc2, isNull);
+      expect(withGulls.copyWith(scene: AvatarScene.beach).npc2, pose);
+    });
+
+    test('a state name alone is a landed pose, move is halfway', () {
+      expect(
+        LabConfig.fromJson(<String, Object?>{'npc2': 'react'}).npc2,
+        const NpcIntent(npc: NpcState.react),
+      );
+      expect(
+        LabConfig.fromJson(<String, Object?>{'npc2': 'move'}).npc2,
+        const NpcIntent(npc: NpcState.move, npcX: 0.5),
+      );
+      expect(LabConfig.fromJson(<String, Object?>{}).npc2, isNull);
+    });
+
+    test('bad names, keys and ranges throw', () {
+      for (final Object bad in <Object>[
+        'sleep',
+        42,
+        <String, Object?>{'npc': 'sleep'},
+        <String, Object?>{'npc2X': 1},
+        <String, Object?>{'npcX': 1.5},
+      ]) {
+        expect(
+          () => LabConfig.fromJson(<String, Object?>{'npc2': bad}),
+          throwsFormatException,
+          reason: '$bad',
+        );
+      }
+    });
+  });
 }

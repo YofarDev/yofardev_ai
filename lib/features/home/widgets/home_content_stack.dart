@@ -341,6 +341,9 @@ class _RiveStage extends StatelessWidget {
           dusk: world?.dusk,
           fog: world?.fog,
           npc: npc?.intent,
+          npc2: npc?.gullIntent,
+          moonPhase: world?.moonPhase,
+          festive: world?.festive,
           onPropTapped: (String propId) {
             foley?.propTap();
             npc?.poke(propId);
@@ -371,6 +374,7 @@ class _RiveStage extends StatelessWidget {
                   talkingState: talkingState,
                   facePerformer: facePerformer,
                   daylight: world?.daylight,
+                  localDay: world?.localDay,
                   onAvatarTapped: (String zone) {
                     foley?.propTap();
                     context.read<AvatarCubit>().onAvatarTapped(zone);

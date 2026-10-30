@@ -5,15 +5,21 @@ import '../models/avatar_gesture.dart';
 import '../models/avatar_mood.dart';
 import '../models/avatar_scene.dart';
 import '../models/chat.dart';
+import '../models/seasonal_wardrobe.dart';
 import '../models/sound_effects.dart';
 import '../utils/app_utils.dart';
 import 'settings_local_datasource.dart';
 
 class PromptDatasource {
   final SettingsLocalDatasource _settingsDatasource;
+  final DateTime Function() _now;
 
-  PromptDatasource({required SettingsLocalDatasource settingsDatasource})
-    : _settingsDatasource = settingsDatasource;
+  /// [now] is the local clock the seasonal note reads (tests inject it).
+  PromptDatasource({
+    required SettingsLocalDatasource settingsDatasource,
+    DateTime Function()? now,
+  }) : _settingsDatasource = settingsDatasource,
+       _now = now ?? DateTime.now;
 
   Future<String> getSystemPrompt() async {
     final String? language = await _settingsDatasource.getLanguage();
@@ -83,7 +89,14 @@ class PromptDatasource {
       ),
     );
 
-    return systemPrompt.replaceAll(r'$PERSONA', personaStr);
+    systemPrompt = systemPrompt.replaceAll(r'$PERSONA', personaStr);
+
+    // In December the user sees the default outfit as the December one (M9
+    // ruling 13): the LLM is told, so it can play along.
+    final String seasonalNote = decemberWardrobePromptNote(_now());
+    return seasonalNote.isEmpty
+        ? systemPrompt
+        : '$systemPrompt\n\n$seasonalNote';
   }
 
   String _replacePlaceholder(
