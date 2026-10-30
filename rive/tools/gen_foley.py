@@ -7,12 +7,14 @@ No bought assets: every sound is synthesised from a fixed seed with numpy and wr
 - ``cloth_0..1``: a band-passed noise swish, 350 ms;
 - ``click_0``: a two-tick latch, 50 ms;
 - ``paper_0..1``: crinkle bursts, 300 ms;
+- ``bell_0``: the mountain hut's door bell (M9 ruling 9, the `rope` drag): two clapper strikes on
+  inharmonic bell partials, 1 s;
 - ``bed_crackle``: pops and hiss over brown noise, a seamless 8 s loop;
 - ``bed_rain``: pink noise and sparse drops, a seamless 8 s loop.
 
 The beds are built circularly (noise shaped in the frequency domain over exactly the loop length,
 events added modulo the length), so the last sample runs into the first as if the loop never ended.
-Every peak sits below -1 dBFS; the whole set stays under 900 KB.
+Every peak sits below -1 dBFS; the whole set stays under 900 KB (``bell_0`` alone under 48 KB).
 
 Run: ``uv run --with numpy rive/tools/gen_foley.py [--out DIR]``.
 """
@@ -41,6 +43,24 @@ CLOTH_MS = 350
 CLICK_MS = 50
 PAPER_MS = 300
 BED_MS = 8000
+BELL_MS = 1000
+MAX_BELL_BYTES = 48 * 1024
+
+# a small brass bell: (ratio to the strike note, amplitude, decay s) per partial (hum, prime,
+# tierce, quint, nominal and the upper partials: the classic bell spectrum, a little stretched)
+BELL_STRIKE_HZ = 660.0
+BELL_PARTIALS = (
+    (0.5, 0.35, 0.75),
+    (1.0, 1.0, 0.55),
+    (1.19, 0.55, 0.42),
+    (1.51, 0.3, 0.35),
+    (2.0, 0.6, 0.3),
+    (2.52, 0.28, 0.2),
+    (2.69, 0.2, 0.17),
+    (3.03, 0.16, 0.12),
+)
+# the clapper swings back: (at ms, gain) per strike
+BELL_STRIKES = ((2.0, 1.0), (290.0, 0.55))
 
 
 def _n(ms: float) -> int:
@@ -159,6 +179,28 @@ def paper(rng: np.random.Generator, variant: int) -> np.ndarray:
     return _normalise(_fade(x, 1, 15), SHORT_PEAK_DB)
 
 
+def bell(rng: np.random.Generator) -> np.ndarray:
+    """The hut's door bell: each clapper strike excites the partials (a few cents detuned per
+    strike, each with its own decay) under a short bright metallic tick; a fade closes the tail."""
+    n = _n(BELL_MS)
+    x = np.zeros(n)
+    for at_ms, gain in BELL_STRIKES:
+        at = _n(at_ms)
+        t = np.arange(n - at) / RATE
+        ring = np.zeros(n - at)
+        for ratio, amp, decay in BELL_PARTIALS:
+            f = BELL_STRIKE_HZ * ratio * (1.0 + rng.uniform(-0.002, 0.002))
+            phase = rng.uniform(0, 2 * np.pi)
+            ring += amp * np.sin(2 * np.pi * f * t + phase) * np.exp(-t / decay)
+        ring *= 1 - np.exp(-t / 0.0015)  # the strike's attack
+        size = _n(4.0)
+        tick = np.zeros(n - at)
+        tick[:size] = _burst(rng, size, 0.8)
+        tick = _band(tick, 2500.0, 8000.0)
+        x[at:] += gain * (ring + 0.4 * tick / max(1e-9, float(np.max(np.abs(tick)))))
+    return _normalise(_fade(x, 0.3, 160), SHORT_PEAK_DB)
+
+
 def _add_circular(buf: np.ndarray, at: int, grain: np.ndarray) -> None:
     idx = (at + np.arange(len(grain))) % len(buf)
     np.add.at(buf, idx, grain)
@@ -221,6 +263,8 @@ def sounds() -> dict[str, np.ndarray]:
         out[f"paper_{k}"] = paper(rng, k)
     out["bed_crackle"] = bed_crackle(rng)
     out["bed_rain"] = bed_rain(rng)
+    # M9: drawn after the M8 set, so the M8 files keep their bytes
+    out["bell_0"] = bell(rng)
     return out
 
 
@@ -245,6 +289,9 @@ def generate(out_dir: Path = OUT_DIR, log: Callable[[str], None] | None = print)
         write_wav(path, x)
         paths[name] = path
     total = sum(p.stat().st_size for p in paths.values())
+    bell_bytes = paths["bell_0"].stat().st_size
+    if bell_bytes > MAX_BELL_BYTES:
+        raise SystemExit(f"bell_0 over budget: {bell_bytes} B > {MAX_BELL_BYTES} B")
     if total > MAX_TOTAL_BYTES:
         raise SystemExit(f"foley over budget: {total} B > {MAX_TOTAL_BYTES} B")
     if log is not None:

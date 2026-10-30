@@ -175,4 +175,71 @@ void main() {
       expect(haptics.log, isEmpty);
     });
   });
+
+  group('drags (M9 ruling 9)', () {
+    test('the bell rings bell_0; a drag click keeps its haptic to itself', () {
+      fakeAsync((FakeAsync async) {
+        final FoleyService foley = build(async);
+        foley.play('click', haptic: false);
+        foley.play('bell');
+        expect(
+          plays.map((String p) => p.substring(p.indexOf(':') + 1)).toList(),
+          <String>['foley/click_0.wav@0.5', 'foley/bell_0.wav@0.5'],
+        );
+        expect(haptics.log, isEmpty);
+      });
+    });
+
+    test('drag haptics: selection and impact, at least 60 ms apart', () {
+      fakeAsync((FakeAsync async) {
+        final FoleyService foley = build(async);
+        foley.haptic(DragHaptic.selection);
+        async.elapse(const Duration(milliseconds: 59));
+        foley.haptic(DragHaptic.selection);
+        expect(haptics.log, <String>['selection']);
+        async.elapse(const Duration(milliseconds: 1));
+        foley.haptic(DragHaptic.impact);
+        expect(haptics.log, <String>['selection', 'light']);
+        // a spin ticking every frame: at most one per 60 ms
+        for (int k = 0; k < 60; k++) {
+          async.elapse(const Duration(milliseconds: 16));
+          foley.haptic(DragHaptic.selection);
+        }
+        expect(haptics.log.length - 2, inInclusiveRange(14, 16));
+      });
+    });
+
+    test('an impact is never swallowed by a selection click', () {
+      fakeAsync((FakeAsync async) {
+        final FoleyService foley = build(async);
+        // the drag's start click and its threshold impact, one instant
+        foley.haptic(DragHaptic.selection);
+        foley.haptic(DragHaptic.impact);
+        expect(haptics.log, <String>['selection', 'light']);
+        // but a click right after the impact, or a second impact, waits
+        async.elapse(const Duration(milliseconds: 10));
+        foley.haptic(DragHaptic.selection);
+        foley.haptic(DragHaptic.impact);
+        expect(haptics.log, <String>['selection', 'light']);
+        async.elapse(const Duration(milliseconds: 60));
+        foley.haptic(DragHaptic.selection);
+        expect(haptics.log, <String>['selection', 'light', 'selection']);
+      });
+    });
+
+    test('drag haptics follow the sound-effects setting and the pause', () {
+      fakeAsync((FakeAsync async) {
+        final FoleyService foley = build(async);
+        enabled.value = false;
+        foley.haptic(DragHaptic.selection);
+        enabled.value = true;
+        foley.setPaused(true);
+        foley.haptic(DragHaptic.impact);
+        expect(haptics.log, isEmpty);
+        foley.setPaused(false);
+        foley.haptic(DragHaptic.impact);
+        expect(haptics.log, <String>['light']);
+      });
+    });
+  });
 }

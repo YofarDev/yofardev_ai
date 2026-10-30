@@ -50,6 +50,15 @@ class AudioPlayersFoleyPlayer implements FoleyPlayer {
   }
 }
 
+/// The two haptics of a scene drag (moonshot M9 ruling 9).
+enum DragHaptic {
+  /// A drag's start and its steps.
+  selection,
+
+  /// A pull past its threshold, a flare.
+  impact,
+}
+
 /// [HapticsSink] over Flutter's [HapticFeedback].
 class SystemHaptics implements HapticsSink {
   const SystemHaptics();
@@ -69,7 +78,9 @@ class SystemHaptics implements HapticsSink {
 /// [volume] ([stepVolume] for footfalls); a kind repeating within [minGap]
 /// is dropped (a looping clip can never spam it); `click` also fires a light
 /// impact. [propTap] fires a selection click (scene props, the avatar's head
-/// and body).
+/// and body). [haptic] is a scene drag's haptic (M9 ruling 9), at least
+/// [dragHapticGap] apart. `bell` (M9) is the mountain hut's bell, rung by its
+/// rope.
 ///
 /// Silent, and without haptics, while [enabled] (the sound-effects setting)
 /// is off or the app is paused ([setPaused]).
@@ -91,11 +102,15 @@ class FoleyService {
     'cloth': 2,
     'click': 1,
     'paper': 2,
+    'bell': 1,
   };
 
   static const double volume = 0.5;
   static const double stepVolume = 0.35;
   static const Duration minGap = Duration(milliseconds: 90);
+
+  /// Drag haptics closer than this to the previous one are dropped.
+  static const Duration dragHapticGap = Duration(milliseconds: 60);
   static const String assetDir = 'foley';
 
   final FoleyPlayer Function() _createPlayer;
@@ -108,6 +123,8 @@ class FoleyService {
   int _nextPlayer = 0;
   final Map<String, int> _nextVariant = <String, int>{};
   final Map<String, DateTime> _lastPlayed = <String, DateTime>{};
+  DateTime? _lastDragHaptic;
+  DragHaptic? _lastDragHapticKind;
   bool _paused = false;
 
   bool get _audible => _enabled.value && !_paused;
@@ -115,8 +132,9 @@ class FoleyService {
   /// The app went to the background (true) or came back (false).
   void setPaused(bool paused) => _paused = paused;
 
-  /// A `foley` event of [kind].
-  void play(String kind) {
+  /// A `foley` event of [kind]; [haptic] false keeps `click` silent to the
+  /// hand (a drag sends its own haptic).
+  void play(String kind, {bool haptic = true}) {
     final int? count = variants[kind];
     if (count == null) {
       AppLogger.debug('FoleyService: unknown kind $kind', tag: 'FoleyService');
@@ -147,8 +165,33 @@ class FoleyService {
             );
           }),
     );
-    if (kind == 'click') {
+    if (kind == 'click' && haptic) {
       _haptics.lightImpact();
+    }
+  }
+
+  /// A scene drag's haptic; dropped within [dragHapticGap] of the last one,
+  /// except an impact after a selection click (a pull's threshold or a flare
+  /// is never swallowed by the drag's start or steps).
+  void haptic(DragHaptic haptic) {
+    if (!_audible) {
+      return;
+    }
+    final DateTime now = _now();
+    final DateTime? last = _lastDragHaptic;
+    final bool outranks =
+        haptic == DragHaptic.impact &&
+        _lastDragHapticKind == DragHaptic.selection;
+    if (last != null && now.difference(last) < dragHapticGap && !outranks) {
+      return;
+    }
+    _lastDragHaptic = now;
+    _lastDragHapticKind = haptic;
+    switch (haptic) {
+      case DragHaptic.selection:
+        _haptics.selectionClick();
+      case DragHaptic.impact:
+        _haptics.lightImpact();
     }
   }
 

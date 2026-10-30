@@ -1071,6 +1071,30 @@ void main() {
 
       expect(cubit.state.mood, AvatarMood.happy);
     });
+
+    test('a drag action plays as a scene event (everyone hears it)', () async {
+      final List<AvatarAnimation> heard = <AvatarAnimation>[];
+      final StreamSubscription<AvatarAnimation> sub = animationService
+          .animations
+          .listen(heard.add);
+      addTearDown(sub.cancel);
+      expect(cubit.state.scene, AvatarScene.livingRoom);
+      cubit.onSceneDragEvent(SceneEvent.lightsOff);
+      await drain();
+
+      expect(cubit.state.sceneEvent.sceneEvent, SceneEvent.lightsOff);
+      expect(cubit.state.sceneEvent.seq, 1);
+      expect(heard, <AvatarAnimation>[
+        const AvatarAnimation.sceneEvent(SceneEvent.lightsOff),
+      ]);
+    });
+
+    test('a drag action foreign to the scene is ignored', () async {
+      cubit.onSceneDragEvent(SceneEvent.bell);
+      await drain();
+
+      expect(cubit.state.sceneEvent.seq, 0);
+    });
   });
 }
 

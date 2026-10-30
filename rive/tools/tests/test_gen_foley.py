@@ -21,6 +21,7 @@ EXPECTED_MS = {
     **{f"paper_{k}": gf.PAPER_MS for k in range(2)},
     "bed_crackle": gf.BED_MS,
     "bed_rain": gf.BED_MS,
+    "bell_0": gf.BELL_MS,
 }
 BEDS = ("bed_crackle", "bed_rain")
 
@@ -85,6 +86,37 @@ def test_beds_loop_seamlessly(generated: dict[str, Path], name: str) -> None:
 def test_total_size_within_budget(generated: dict[str, Path]) -> None:
     total = sum(p.stat().st_size for p in generated.values())
     assert total <= 900 * 1024
+
+
+def test_bell_within_its_budget(generated: dict[str, Path]) -> None:
+    # M9 ruling 9: the bell is at most 48 KB and keeps the set within 921,600 B
+    assert generated["bell_0"].stat().st_size <= 48 * 1024
+    assert gf.MAX_TOTAL_BYTES == 921_600
+
+
+def test_bell_rings_and_decays(generated: dict[str, Path]) -> None:
+    _, x = _read(generated["bell_0"])
+    spectrum = np.abs(np.fft.rfft(x))
+    freqs = np.fft.rfftfreq(len(x), 1 / 22050)
+    # the strike note carries the most energy around it (a pitched bell, not noise)
+    peak = float(freqs[int(np.argmax(spectrum))])
+    assert any(abs(peak - gf.BELL_STRIKE_HZ * r) < 15 for r, _, _ in gf.BELL_PARTIALS), peak
+    # the ring decays: the last 100 ms are far quieter than the first 100 ms
+    tenth = round(22050 * 0.1)
+    head = float(np.sqrt(np.mean(x[:tenth] ** 2)))
+    tail = float(np.sqrt(np.mean(x[-tenth:] ** 2)))
+    assert tail < head / 8
+
+
+def test_m8_files_keep_their_bytes() -> None:
+    # the bell is drawn after the M8 set from the same seed: the checked-in M8 files are unchanged
+    fresh = gf.sounds()
+    for name in EXPECTED_MS:
+        if name == "bell_0":
+            continue
+        path = gf.OUT_DIR / f"{name}.wav"
+        _, data = _read(path)
+        assert np.array_equal(np.round(np.clip(fresh[name], -1, 1) * 32767) / 32767.0, data), name
 
 
 def test_generation_is_deterministic(tmp_path: Path, generated: dict[str, Path]) -> None:

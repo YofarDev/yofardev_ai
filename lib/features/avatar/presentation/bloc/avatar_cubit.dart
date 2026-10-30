@@ -814,6 +814,22 @@ class AvatarCubit extends Cubit<AvatarState> {
     _applyReaction(reaction);
   }
 
+  /// A scene drag's action (M9 ruling 8: the lamp's cord, the hut's rope,
+  /// the campfire's stir): played like any scene event (the scene, the
+  /// NPC and the camera hear it), unless a journey runs or [event] is not
+  /// one of the scene's.
+  void onSceneDragEvent(SceneEvent event) {
+    if (state.journey != null || !state.scene.allowedEvents.contains(event)) {
+      AppLogger.debug(
+        'AvatarCubit: drag event ${event.name} ignored in ${state.scene.name}',
+        tag: 'AvatarCubit',
+      );
+      return;
+    }
+    _director?.onUserActivity();
+    _animationService.trigger(AvatarAnimation.sceneEvent(event));
+  }
+
   /// A tap on the avatar itself (zone: head or body per contract).
   void onAvatarTapped(String zone) {
     _director?.onUserActivity();

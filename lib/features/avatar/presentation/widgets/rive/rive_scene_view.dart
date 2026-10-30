@@ -6,12 +6,14 @@ import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
 import '../../../../../core/models/avatar_scene.dart';
+import '../../../../../core/services/audio/foley_service.dart' show DragHaptic;
 import '../../../../../core/services/motion/parallax_source.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../../../core/design/rive/rive_vm_binding.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../../domain/models/npc_intent.dart';
 import '../../rive/scene_fog_writer.dart';
+import '../../rive/prop_drag_controller.dart';
 import '../../rive/scene_front_follower.dart';
 import '../../rive/scene_npc_writer.dart';
 import '../../rive/scene_parallax_writer.dart';
@@ -20,6 +22,7 @@ import '../../rive/scene_sky_writer.dart';
 import '../../rive/scene_time_writer.dart';
 import '../stage_camera.dart';
 import 'latest_load_gate.dart';
+import 'scene_drag_surface.dart';
 
 /// Rive rendering of the scene currently on screen.
 ///
@@ -51,6 +54,14 @@ import 'latest_load_gate.dart';
 /// the UI lab) is the second NPC slot, the beach's gulls (`npc2*`). A file
 /// that does not declare a property ignores the write.
 ///
+/// Drags (contract v12, M9 rulings 7–9): the scene layer (never [middle],
+/// never the chrome) carries a pan recognizer for the scene's drag handle,
+/// run by [dragController] (or one of its own): it is attached to each
+/// loaded file, detached on a scene swap (the drag ends, nothing is written
+/// into the new file), released while [dragsEnabled] is false (a journey),
+/// and its cues go to [onDragHaptic], [onDragFoley] and [onDragEvent]. A
+/// `prop_tapped` that ends a drag is dropped.
+///
 /// Front (contract v9): a file with a `SceneFront` artboard gets it drawn
 /// above [middle] (the avatar) while it rains, with the same fit, never
 /// hit-tested; [middle] sits between the two at a fixed index, so a scene
@@ -76,6 +87,11 @@ class RiveSceneView extends StatefulWidget {
     this.middle,
     this.preload,
     this.onSceneShown,
+    this.dragController,
+    this.dragsEnabled = true,
+    this.onDragHaptic,
+    this.onDragFoley,
+    this.onDragEvent,
   });
 
   final AvatarScene scene;
@@ -131,6 +147,19 @@ class RiveSceneView extends StatefulWidget {
   /// Called once a newly loaded scene's first frame is on screen.
   final ValueChanged<AvatarScene>? onSceneShown;
 
+  /// Runs the scene's drag handle (null: the view makes its own). A given
+  /// controller is not disposed by the view: a test drags through it and
+  /// reads the file's numbers back ([PropDragController.readNumber]).
+  final PropDragController? dragController;
+
+  /// False while a journey runs: no new drag, one in flight is released.
+  final bool dragsEnabled;
+
+  /// A drag's haptics, sounds (foley kinds) and scene events.
+  final ValueChanged<DragHaptic>? onDragHaptic;
+  final ValueChanged<String>? onDragFoley;
+  final ValueChanged<SceneEvent>? onDragEvent;
+
   @override
   State<RiveSceneView> createState() => _RiveSceneViewState();
 }
@@ -165,6 +194,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
   /// default scene, then the chat's): only the newest load may publish.
   final LatestLoadGate _loads = LatestLoadGate();
 
+  /// The scene's drag handle (the widget's, or our own).
+  late PropDragController _drags =
+      widget.dragController ?? PropDragController();
+
   /// The decoded [RiveSceneView.preload] file, until a load takes it.
   AvatarScene? _preloadScene;
   File? _preloadFile;
@@ -183,9 +216,22 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _followNpc();
     _sky.follow(widget.moonPhase, widget.festive);
     _followFrontRain();
+    _syncDrags();
     _loadScene(widget.scene);
     _startPreload(widget.preload);
   }
+
+  /// Hands the widget's drag feedback and state to the controller.
+  void _syncDrags() {
+    _drags
+      ..onHaptic = widget.onDragHaptic
+      ..onFoley = widget.onDragFoley
+      ..onSceneEvent = widget.onDragEvent
+      ..parallax = _dragParallax
+      ..enabled = widget.dragsEnabled;
+  }
+
+  Offset _dragParallax() => widget.parallaxOverride ?? _parallax;
 
   void _followNpc() => _npc.follow(
     widget.npc,
@@ -345,7 +391,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Reduce motion is read through a callback: re-push it on a change.
-    MediaQuery.maybeDisableAnimationsOf(context);
+    _drags.reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     widget.parallax?.refresh();
   }
 
@@ -364,6 +410,20 @@ class _RiveSceneViewState extends State<RiveSceneView>
   @override
   void didUpdateWidget(RiveSceneView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.dragController != oldWidget.dragController) {
+      if (oldWidget.dragController == null) {
+        _drags.dispose();
+      } else {
+        _drags.release();
+      }
+      _drags = widget.dragController ?? PropDragController();
+      _drags.reduceMotion =
+          MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+      // A fresh writer assumes the file's defaults: numbers the old
+      // controller left mid-drag are not rewritten (no swap in the app).
+      _attachDrags();
+    }
+    _syncDrags();
     if (widget.parallax != oldWidget.parallax) {
       oldWidget.parallax?.active = false;
       _listenParallax();
@@ -397,6 +457,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
       _scheduleParallaxWrite();
     }
     if (widget.scene != oldWidget.scene) {
+      // A swap ends the drag now: nothing is written into the new file.
+      _drags.detach();
       _loadScene(widget.scene, rebuild: false);
       if (widget.preload != oldWidget.preload) {
         _startPreload(widget.preload);
@@ -405,6 +467,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
     }
     if (widget.preload != oldWidget.preload) {
       _startPreload(widget.preload);
+    }
+    if (widget.sceneEvent.seq != oldWidget.sceneEvent.seq) {
+      // the lamp's state, the wave on the sand
+      _drags.onSceneEventPlayed(widget.sceneEvent.sceneEvent);
     }
     final RiveVmBinding? binding = _binding;
     if (binding == null) {
@@ -439,6 +505,11 @@ class _RiveSceneViewState extends State<RiveSceneView>
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
     _teardown();
+    if (widget.dragController == null) {
+      _drags.dispose();
+    } else {
+      _drags.release();
+    }
     super.dispose();
   }
 
@@ -513,6 +584,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _npc.load(binding.setEnum, binding.setNumber);
         // And the sky's calendar and the second NPC slot (v12).
         _sky.load(binding.setNumber);
+        // And its drag handle (v12).
+        _attachDrags();
         _syncParallaxActive();
       });
       // The new file's front, if it has one and it rains.
@@ -558,7 +631,22 @@ class _RiveSceneViewState extends State<RiveSceneView>
     SchedulerBinding.instance.ensureVisualUpdate();
   }
 
+  /// Attaches the drag controller to the file on screen, if any.
+  void _attachDrags() {
+    final RiveVmBinding? binding = _binding;
+    final AvatarScene? scene = _loadedScene;
+    if (binding == null || scene == null) {
+      return;
+    }
+    _drags.attach(
+      scene,
+      setNumber: binding.setNumber,
+      readNumber: binding.numberValue,
+    );
+  }
+
   void _teardown() {
+    _drags.detach();
     // The front shares the file: it goes first.
     _teardownFront();
     _hasFront = false;
@@ -586,9 +674,18 @@ class _RiveSceneViewState extends State<RiveSceneView>
     final String? propId = event
         .stringProperty(AvatarRiveContract.sceneEventPropIdProperty)
         ?.value;
-    if (propId != null) {
-      widget.onPropTapped?.call(propId);
+    if (propId == null) {
+      return;
     }
+    if (_drags.shouldDropTap()) {
+      // the end of a drag (the cord ends on the lamp), not a tap
+      AppLogger.debug(
+        'RiveSceneView: dropped $propId tap after a drag',
+        tag: 'RiveSceneView',
+      );
+      return;
+    }
+    widget.onPropTapped?.call(propId);
   }
 
   @override
@@ -600,7 +697,12 @@ class _RiveSceneViewState extends State<RiveSceneView>
     final RenderResolution resolution = RenderResolution.layout(
       scale: StageRenderScale.of(context),
     );
-    final Widget back = _back(context, resolution);
+    // The drags hear only the scene layer: the avatar and the chrome above
+    // keep the pointers they claim.
+    final Widget back = SceneDragSurface(
+      controller: _drags,
+      child: _back(context, resolution),
+    );
     // A file with a front always sits in the Stack, so the front coming and
     // going never remounts the back.
     if (middle == null && !_hasFront) {

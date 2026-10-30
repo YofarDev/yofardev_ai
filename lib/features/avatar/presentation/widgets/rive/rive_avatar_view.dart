@@ -61,6 +61,12 @@ import '../stage_camera.dart';
 ///
 /// Rive types never leave `lib/features/avatar/presentation/`.
 class RiveAvatarView extends StatefulWidget {
+  /// How the avatar's Rive widget hit-tests (M9 ruling 7): only its own
+  /// listener zones (head, body) claim a pointer; everywhere else the
+  /// pointer reaches the scene below (its prop taps and its drag handle).
+  static const RiveHitTestBehavior hitTestBehavior =
+      RiveHitTestBehavior.translucent;
+
   const RiveAvatarView({
     super.key,
     required this.avatarState,
@@ -548,6 +554,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
         controller: controller,
         fit: Fit.contain,
         alignment: Alignment.bottomCenter,
+        hitTestBehavior: RiveAvatarView.hitTestBehavior,
         // The camera's texture scale: changes once per shot, not per frame.
         renderResolution: RenderResolution.layout(
           scale: StageRenderScale.of(context),

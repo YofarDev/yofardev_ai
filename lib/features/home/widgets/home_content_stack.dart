@@ -344,6 +344,16 @@ class _RiveStage extends StatelessWidget {
           npc2: npc?.gullIntent,
           moonPhase: world?.moonPhase,
           festive: world?.festive,
+          // M9 drags: none while a journey runs; their haptics and sounds
+          // follow the sound-effects setting like the foley.
+          dragsEnabled: avatarState.journey == null,
+          onDragHaptic: foley?.haptic,
+          onDragFoley: foley == null
+              ? null
+              : (String kind) => foley!.play(kind, haptic: false),
+          onDragEvent: (SceneEvent event) {
+            context.read<AvatarCubit>().onSceneDragEvent(event);
+          },
           onPropTapped: (String propId) {
             foley?.propTap();
             npc?.poke(propId);
