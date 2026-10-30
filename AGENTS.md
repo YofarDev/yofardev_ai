@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -226,6 +226,27 @@ on violation.
   asks. Wow #3 and the four-family tour are captured like M6 (`--dart-define=WOW=wow3|tour`).
   `frive.sh` builds the journey file and runs `review_time.py` and `review_journey.py` gates too.
   Evidence index: `rive/review/m7/README.md`
+- Hands, jacket, NPCs, foley, fog (contract v11, moonshot M8): hand poses are articulation, not
+  geometry (a pose copied per hand skin × side costs ~21 KB): every hand copy's `rest` group has
+  five digit pivots that copy their side's driver (`rive/tools/hand_rig.py`, `HAND_POSE_DRIVERS`;
+  a `HandRest` layer keys the drivers at identity, gestures key only the digits that move); the
+  `back` pose is minted and dropped (= `rest`). New avatar ids mint from `avatar_kit.M8_ID_START =
+  1100000` (arm-rig ids inside it from 1150000), scene ids from `gen_scenes.M8_ID_START = 930000`,
+  journey ids from `gen_journeys.M8_ID_START = 5000`. Gestures `thumbsUp`, `count` (auto-acting
+  on list sentences), `grab` (contact frame 23 ≈ 380 ms at the hook point (628, 560)). The jacket
+  (`jacket_art.py`) is drawn by both `avatar.riv` (`AvatarVM.jacket`, held by the viewer's-right
+  fist) and `journey.riv` (`JourneyVM.jacket` on the door's peg): door journeys add the `grab` and
+  `hang` beats and `AvatarCubit` flips both in one state at the contact. The avatar emits `foley`
+  (`kind`: step, cloth, click, paper) from timeline `KeyFrameCallback` keys; `FoleyService` and
+  `AmbientBedService` (`core/services/audio/`, generated WAVs from `rive/tools/gen_foley.py` in
+  `assets/foley/`) follow the sound-effects setting (`SoundEffectsSetting`). Each scene has one NPC
+  (`rive/tools/scene_npc.py`: cat, owl, crab, alien; `SceneVM.npc` / `npcX` / `npcLook`) run by
+  `NpcDirector` (avatar domain, pure trees; low tier holds `rest`) through `NpcFeed` and
+  `SceneNpcWriter`; `SceneVM.fog` comes from the own-location weather report
+  (`WeatherReport.fogIntensity` → `WorldStateService.fog`). Any city's weather lookup reaches the
+  tablet card (`TabletWeatherSource` → `tabletWeather` / `tabletTemp`), never the world. The wow
+  harness logs foley through `setupServiceLocator(foleyPlayer:)` and adds `WOW=npc`. Evidence
+  index: `rive/review/m8/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -291,4 +312,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-30 (M7)
+**Last Updated**: 2026-10-31 (M8)
