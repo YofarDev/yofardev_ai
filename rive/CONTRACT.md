@@ -175,8 +175,9 @@ One file per scene. The app loads them lazily.
   the weather that falls *in front of* the avatar (a near rain sheet, rain mist, splashes at the
   bottom edge) and binds only `rain`, `parallaxX`, `parallaxY` and `lightFog`; at `rain` 0 it draws
   nothing. It has no listeners and emits no events. The app draws it above the avatar with the same
-  fit as `Scene`, never hit-tests it, and creates it only while `rain` > 0. campfire and beach have
-  one; livingRoom (the rain is outside the window) and deepSpace do not.
+  fit as `Scene`, never hit-tests it, and creates it only while `rain` > 0. campfire, beach and
+  rooftop have one; livingRoom, cafe, mountainHut (the weather is outside the window) and deepSpace
+  do not (rooftop's is v12).
 
 | sceneId | eventId values | propId values |
 |---|---|---|
