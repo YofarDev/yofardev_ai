@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:audio_analyzer/audio_analyzer.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:sensors_plus/sensors_plus.dart';
@@ -55,7 +57,10 @@ import '../services/audio/audio_amplitude_service.dart';
 import '../services/audio/audio_player_service.dart';
 import '../services/audio/interruption_service.dart';
 import '../services/audio/voice_effects_service.dart';
+import '../models/failure.dart';
+import '../models/weather_report.dart';
 import '../services/agent/tool_registry.dart';
+import '../services/agent/weather_service.dart';
 import '../../features/avatar/domain/services/avatar_animation_service.dart';
 import '../../features/avatar/domain/services/avatar_cue_service.dart';
 import '../../features/avatar/domain/services/prop_reaction_service.dart';
@@ -76,7 +81,9 @@ import '../services/settings_local_datasource.dart';
 import '../services/speech/speech_input_service.dart';
 import '../services/speech/speech_to_text_input_service.dart';
 import '../services/stream_processor/stream_processor_service.dart';
+import '../services/world/world_lifecycle_observer.dart';
 import '../services/world/world_state_service.dart';
+import '../services/world/world_weather_sync.dart';
 import '../../features/chat/domain/services/chat_streaming_service.dart';
 import '../utils/logger.dart';
 
@@ -162,6 +169,9 @@ Future<void> setupServiceLocator({
     () => ToolRegistry(
       appLifecycleService: getIt<AppLifecycleService>(),
       tools: tools,
+      // Weather for the user's own location also moves the world's sky.
+      onOwnLocationReport: (WeatherReport report) =>
+          getIt<WorldStateService>().applyWeather(report),
     ),
   );
 
@@ -365,10 +375,48 @@ Future<void> setupServiceLocator({
     ),
     dispose: (ParallaxSource source) => source.dispose(),
   );
-  // The world the scenes show (rain); only the UI lab feeds it until M7-M9.
+  // The world the scenes show: rain and the time of day. The weather tool
+  // (own location) and WorldWeatherSync feed it; the minute clock runs while
+  // the app is in the foreground (WorldLifecycleObserver, below).
   getIt.registerLazySingleton<WorldStateService>(
-    WorldStateService.new,
+    () => WorldStateService(now: DateTime.now),
     dispose: (WorldStateService world) => world.dispose(),
+  );
+  // Refreshes the user's own weather every 30 min, but never asks for the
+  // location permission, never calls without an OpenWeather key and stays
+  // quiet under battery saver.
+  getIt.registerLazySingleton<WorldWeatherSync>(
+    () => WorldWeatherSync(
+      world: getIt<WorldStateService>(),
+      power: getIt<PowerSaverSource>(),
+      readApiKey: () async {
+        final SettingsRepository settings = getIt<SettingsRepository>();
+        final bool enabled = (await settings.getOpenWeatherEnabled()).when(
+          err: (Failure failure) => false,
+          ok: (bool value) => value,
+        );
+        if (!enabled) {
+          return null;
+        }
+        return (await settings.getOpenWeatherKey()).when(
+          err: (Failure failure) => null,
+          ok: (String? key) => key,
+        );
+      },
+      hasLocationPermission: () async {
+        final LocationPermission permission =
+            await Geolocator.checkPermission();
+        return permission == LocationPermission.whileInUse ||
+            permission == LocationPermission.always;
+      },
+      fetchOwnLocation: (String apiKey) async =>
+          (await WeatherService.fetchCurrentWeather(
+            'current',
+            apiKey,
+            allowPermissionPrompt: false,
+          )).report,
+    ),
+    dispose: (WorldWeatherSync sync) => sync.dispose(),
   );
   getIt.registerLazySingleton<IdleLadder>(
     () => IdleLadder(
@@ -393,6 +441,22 @@ Future<void> setupServiceLocator({
   );
   getIt<AvatarCueService>();
   unawaited(getIt<IdleLadder>().start());
+  // App-lifetime world: the clock and the weather sync run while the app is in
+  // the foreground and pause with it (the harness has no key: no call).
+  getIt<WorldStateService>().start();
+  getIt<WorldWeatherSync>().start();
+  WidgetsFlutterBinding.ensureInitialized().addObserver(
+    WorldLifecycleObserver(
+      onResume: () {
+        getIt<WorldStateService>().start();
+        getIt<WorldWeatherSync>().start();
+      },
+      onPause: () {
+        getIt<WorldStateService>().pause();
+        getIt<WorldWeatherSync>().pause();
+      },
+    ),
+  );
   // Eager for the same reason: it must see every intent and playback event.
   getIt.registerLazySingleton<FacePerformer>(
     () => FacePerformer(
