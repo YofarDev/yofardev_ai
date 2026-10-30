@@ -8,7 +8,7 @@ of `rive/journeys` over a black, then a white, full-frame backdrop added at the 
 and alpha is recovered as 1 - (white - black) / 255 (as M6's `review_diorama.FrontRenderer`).
 
 Writes (unless `--gates-only`): `<family>_strip.png` per family: open 0 / 0.5 / 1 (the rocket adds
-lift 0.35 and 1), composited over every scene's poster with the avatar's rest render, in the phone
+lift 0.08 and 1), composited over every scene's poster with the avatar's rest render, in the phone
 framing the app uses (the scene `Fit.cover`, the avatar and the journey `Fit.contain` at the
 bottom); `sheet.png` (all four strips); `gates.txt`.
 
@@ -119,7 +119,9 @@ def cover(a: np.ndarray, box: tuple[int, int, int, int] | None = None, thr: floa
 FAMILY_POSES: dict[str, list[dict[str, float]]] = {
     f: [{"open": 0.0}, {"open": 0.5}, {"open": 1.0}] for f in gen_journeys.FAMILIES
 }
-FAMILY_POSES["rocket"] += [{"open": 0.0, "lift": 0.35}, {"open": 0.0, "lift": 1.0}]
+# lift-off at 0.08: the composite pastes only the artboard box, and higher the nose leaves it (in the
+# app the unclipped artboard keeps drawing above it)
+FAMILY_POSES["rocket"] += [{"open": 0.0, "lift": 0.08}, {"open": 0.0, "lift": 1.0}]
 
 
 def gates(r: JourneyRenderer) -> list[str]:

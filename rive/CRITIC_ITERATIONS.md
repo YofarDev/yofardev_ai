@@ -212,3 +212,7 @@ construction). Critics disagreed across rounds on the fringe tips and the brow b
 
 - 2026-10-30 · Task 2 `SceneFront` (rain in front of the avatar) · campfire.riv 227,517 → 243,975 B, beach.riv 256,807 → 273,016 B, posters unchanged · objective check (Sonnet, both front strips + gates): no seam or hard edge, splashes on the ground line, aligned at both sides; dry front alpha 0, travel ±50 px, loop seam 0 %, `Scene` rest frames pixel-identical to M5.
 - 2026-10-30 · Task 6 Wow #1 and #2 played by the macOS app · no asset change (capture of the real app) · objective check (Sonnet, both beat sheets + 12-frame contact sheets of both GIFs + gates): no blank or frozen frame, avatar never cut, tablet out exactly while the tool runs; noted only: the caption cross-fade overprints two sentences for one frame, two evidence crops cut the thinking bubble / leave the tablet below the frame. All 20 behaviour gates ok.
+
+## M7 self-checks (ruling 17: one line per asset or acting change, no critic rounds)
+
+- 2026-10-30 · Task 7 journey thresholds (door, path, portal, rocket) · new `journey.riv` 20,743 B (budget 160 KB), avatar and scenes untouched · objective check (Sonnet, four strips over every scene's poster + gates): no face covered, no draw-order error, path foliage covers only the shoulder; flagged the rocket's lift-off frame cut flat at the top (an evidence artifact: the composite pasted only the artboard box; pose moved to lift 0.08) and called the open door's doorway light "flat" at the frame edge (taste, kept). 14/14 gates ok.
