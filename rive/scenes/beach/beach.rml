@@ -22522,6 +22522,8 @@
     <ViewModelPropertyColor name="lightFog" id="0:980018"/>
     <ViewModelPropertyNumber name="lightFlicker" id="0:980020"/>
     <ViewModelPropertyNumber name="rain" id="0:980022"/>
+    <ViewModelPropertyNumber name="daylight" id="0:980024"/>
+    <ViewModelPropertyNumber name="dusk" id="0:980026"/>
     <ViewModelInstance exports="true" name="Default" id="0:22">
       <ViewModelInstanceEnum propertyValue="0:13" viewModelPropertyId="0:18" id="0:20"/>
       <ViewModelInstanceTrigger viewModelPropertyId="0:19" id="0:21"/>
@@ -22537,6 +22539,8 @@
       <ViewModelInstanceColor propertyValue="22FFD9C0" viewModelPropertyId="0:980018" id="0:980019"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980020" id="0:980021"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980022" id="0:980023"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980024" id="0:980025"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980026" id="0:980027"/>
     </ViewModelInstance>
   </ViewModel>
 

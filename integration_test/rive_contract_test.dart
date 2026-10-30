@@ -295,6 +295,20 @@ void main() {
           expect(rain.value, v, reason: '$sceneId rain');
         }
         rain.value = 0;
+        // v10: the time of day, 0..1, default 0.
+        for (final String name in <String>[
+          AvatarRiveContract.scenePropDaylight,
+          AvatarRiveContract.scenePropDusk,
+        ]) {
+          expect(names, contains(name), reason: 'SceneVM.$name in $sceneId');
+          final ViewModelInstanceNumber n = vmi.number(name)!;
+          expect(n.value, 0, reason: '$sceneId $name defaults to 0');
+          for (final double v in <double>[0, 1]) {
+            n.value = v;
+            expect(n.value, v, reason: '$sceneId $name');
+          }
+          n.value = 0;
+        }
         for (final String name in AvatarRiveContract.sceneLightProps) {
           expect(names, contains(name), reason: 'SceneVM.$name in $sceneId');
         }
@@ -360,5 +374,57 @@ void main() {
         file.dispose();
       });
     }
+  });
+
+  group('journey.riv matches the contract (v10)', () {
+    test('artboard, SM and JourneyVM numbers and colours', () async {
+      final File? loaded = await File.asset(
+        AvatarRiveContract.journeyAssetPath,
+        riveFactory: Factory.rive,
+      );
+      expect(loaded, isNotNull, reason: 'journey.riv must load');
+      final File file = loaded!;
+      final Artboard? artboard = file.artboard(
+        AvatarRiveContract.journeyArtboard,
+      );
+      expect(artboard, isNotNull);
+      expect(
+        artboard!.stateMachine(AvatarRiveContract.journeyStateMachine),
+        isNotNull,
+      );
+      final RiveWidgetController controller = RiveWidgetController(
+        file,
+        artboardSelector: ArtboardSelector.byName(
+          AvatarRiveContract.journeyArtboard,
+        ),
+        stateMachineSelector: StateMachineSelector.byName(
+          AvatarRiveContract.journeyStateMachine,
+        ),
+      );
+      final ViewModelInstance vmi = controller.dataBind(DataBind.auto());
+      for (final String name in <String>[
+        AvatarRiveContract.journeyPropDoor,
+        AvatarRiveContract.journeyPropPath,
+        AvatarRiveContract.journeyPropPortal,
+        AvatarRiveContract.journeyPropRocket,
+        AvatarRiveContract.journeyPropOpen,
+        AvatarRiveContract.journeyPropLift,
+      ]) {
+        final ViewModelInstanceNumber? n = vmi.number(name);
+        expect(n, isNotNull, reason: 'JourneyVM.$name');
+        expect(n!.value, 0, reason: '$name defaults to 0');
+        n.value = 1;
+        expect(n.value, 1, reason: name);
+        n.value = 0;
+      }
+      for (final String name in <String>[
+        AvatarRiveContract.journeyPropLightKey,
+        AvatarRiveContract.journeyPropLightAmbient,
+      ]) {
+        expect(vmi.color(name), isNotNull, reason: 'JourneyVM.$name');
+      }
+      controller.dispose();
+      file.dispose();
+    });
   });
 }

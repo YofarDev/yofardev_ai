@@ -294,6 +294,12 @@ abstract final class AvatarRiveContract {
   /// The scenes whose file has a [sceneFrontArtboard].
   static const Set<String> sceneFrontScenes = <String>{'campfire', 'beach'};
 
+  /// Contract v10 `SceneVM`: the time of day (0..1, default 0), written from
+  /// the app's world clock. `daylight` 0 is night, 1 full day; `dusk` peaks
+  /// at sunrise and sunset. deepSpace ignores both.
+  static const String scenePropDaylight = 'daylight';
+  static const String scenePropDusk = 'dusk';
+
   /// Names `SceneVM` carries as light defaults (equal to `AvatarVM`'s, plus
   /// `lightFog`, minus `lightAmbientAmount`).
   static const List<String> sceneLightProps = <String>[
@@ -336,4 +342,33 @@ abstract final class AvatarRiveContract {
   /// Asset path for a scene id.
   static String sceneAssetPath(String sceneId) =>
       '$scenesAssetDir/$sceneId.riv';
+
+  // ── assets/rive/journeys/journey.riv (contract v10) ──────────────────────
+  static const String journeyAssetPath = 'assets/rive/journeys/journey.riv';
+  static const String journeyArtboard = 'Journey';
+  static const String journeyStateMachine = 'Main';
+  static const String journeyViewModel = 'JourneyVM';
+
+  /// How much of each threshold shows (0..1); one at a time.
+  static const String journeyPropDoor = 'door';
+  static const String journeyPropPath = 'path';
+  static const String journeyPropPortal = 'portal';
+  static const String journeyPropRocket = 'rocket';
+
+  /// The shown threshold opens (0..1).
+  static const String journeyPropOpen = 'open';
+
+  /// The rocket's height off the ground (0..1, 1 = out of frame).
+  static const String journeyPropLift = 'lift';
+
+  /// The current scene's key and ambient colours.
+  static const String journeyPropLightKey = 'lightKey';
+  static const String journeyPropLightAmbient = 'lightAmbient';
+
+  /// The `Journey` artboard's size: the avatar's.
+  static const double journeyArtboardWidth = 800;
+  static const double journeyArtboardHeight = 1000;
+
+  /// Artboard x right of which the avatar is clipped during a journey.
+  static const double journeyThresholdX = 640;
 }

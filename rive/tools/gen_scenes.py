@@ -40,11 +40,13 @@ DIORAMA_ID_START = 990000
 M5_ID_START = 970000
 # Moonshot M6: the `SceneFront` artboard (contract v9) mints from its own range per document.
 M6_ID_START = 950000
+# Moonshot M7: the time-of-day veils (contract v10 `daylight` / `dusk`) mint from their own range.
+M7_ID_START = 940000
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
 
 def scene_vm_defaults(scene_id: str) -> list[tuple[str, str, object]]:
-    """(name, type, default) of the v7/v8 SceneVM numbers and colours, in contract order."""
+    """(name, type, default) of the v7/v8/v10 SceneVM numbers and colours, in contract order."""
     s = SCENES[scene_id]
     kx, ky = s.key_xy
     return [("parallaxX", "number", 0.0), ("parallaxY", "number", 0.0),
@@ -52,7 +54,7 @@ def scene_vm_defaults(scene_id: str) -> list[tuple[str, str, object]]:
             ("lightKeyX", "number", kx), ("lightKeyY", "number", ky), ("lightRim", "color", s.rim),
             ("lightRimIntensity", "number", s.rim_intensity), ("lightAmbient", "color", s.ambient),
             ("lightFog", "color", s.fog), ("lightFlicker", "number", s.flicker),
-            ("rain", "number", 0.0)]
+            ("rain", "number", 0.0), ("daylight", "number", 0.0), ("dusk", "number", 0.0)]
 
 
 class Scene:

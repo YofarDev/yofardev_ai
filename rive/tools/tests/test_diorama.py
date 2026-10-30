@@ -26,6 +26,7 @@ PROP_ART = {"fire": "emitFireFlare", "tent": "TentPlace", "owl": "Owl", "sky": "
 
 
 @pytest.fixture(scope="module")
+
 def rml(tmp_path_factory: pytest.TempPathFactory) -> str:
     out = tmp_path_factory.mktemp("scenes")
     root = gen_scenes.OUT_ROOT
@@ -128,7 +129,8 @@ def test_campfire_differs_from_m4_only_by_hit_zones_and_rain(rml: str) -> None:
     assert not missing, sorted(missing)[:10]
     # M5 additions, plus M6's `SceneFront` artboard (its own range, test_scene_front.py)
     added = {i for i in set(new) - set(old)
-             if not gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M5_ID_START}
+             if not gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M5_ID_START
+             and not _v10_or_later(new, i)}
     assert all(gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START for i in added), \
         sorted(i for i in added if not gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START)[:10]
     moved = {}
@@ -287,7 +289,7 @@ def test_living_room_keeps_its_m4_ids(lr: str) -> None:
             assert new[i][0] == tag, i
     added = set(new) - set(old)
     assert all(gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
-               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
+               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START or _v10_or_later(new, i) for i in added)
 
 
 def test_living_room_lamp_pool_and_rain_binds(lr: str) -> None:
@@ -392,7 +394,7 @@ def test_beach_keeps_its_m4_ids(beach: str) -> None:
         assert new[i][0] == tag, i
     added = set(new) - set(old)
     assert all(gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
-               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
+               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START or _v10_or_later(new, i) for i in added)
 
 
 def test_beach_sun_glow_and_rain_binds(beach: str) -> None:
@@ -506,7 +508,7 @@ def test_deep_space_keeps_its_m4_ids(ds: str) -> None:
         assert new[i][0] == tag, i
     added = set(new) - set(old)
     assert all(gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
-               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
+               or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START or _v10_or_later(new, i) for i in added)
 
 
 def test_deep_space_nebula_wash_takes_the_key_and_rain_is_ignored(ds: str) -> None:
@@ -534,3 +536,12 @@ def test_deep_space_dust_veils_draw(ds: str) -> None:
         # no horizon in space: the veil covers the frame and its parallax bleed, top to bottom
         rect = veil.find("Rectangle")
         assert float(veil.get("y")) <= -60 and float(veil.get("y")) + float(rect.get("height")) >= 1920 + 60
+
+
+def _v10_or_later(new: dict, i: str) -> bool:
+    """M7 additions: the v10 `daylight` / `dusk` view-model numbers (minted after the v7 props in the M4
+    range) and the time-of-day veils (`M7_ID_START` range)."""
+    n = int(i.split(":")[1])
+    return gen_scenes.M7_ID_START <= n < gen_scenes.M6_ID_START or (
+        gen_scenes.M4_ID_START <= n < gen_scenes.DIORAMA_ID_START
+        and new[i][0] in ("ViewModelPropertyNumber", "ViewModelInstanceNumber"))

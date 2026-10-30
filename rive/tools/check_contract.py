@@ -92,6 +92,18 @@ def parse_contract() -> dict:
         values = [v.strip() for v in vals.split(",")] if typ == "enum" else None
         a["props"][ticks(prop)[0]] = (typ, values)
     c["ui"] = ui
+    # v10: the journey overlay (its own section, last in the file)
+    j_at = text.find("## `assets/rive/journeys/journey.riv`")
+    if j_at >= 0:
+        j_sec = text[j_at:]
+        c["journey"] = {
+            "artboard": ticks(re.search(r"\*\*Artboard:\*\*.*", j_sec).group(0))[0],
+            "size": tuple(int(v) for v in re.search(r"\*\*Artboard:\*\* `\w+`, (\d+)×(\d+)", j_sec).groups()),
+            "sm": ticks(re.search(r"\*\*State machine:\*\*.*", j_sec).group(0))[0],
+            "vm": ticks(re.search(r"\*\*View model:\*\*.*", j_sec).group(0))[0],
+            "props": {ticks(prop)[0]: typ for prop, typ, _ in table_after(j_sec, r"^\| JourneyVM property")},
+            "max": int(re.search(r"`journey.riv` \(v10\) must stay at or under (\d+) KB", text).group(1)) * 1024,
+        }
     c["ui_max"] = int(re.search(r"`ui_kit.riv` must stay at or under (\d+) KB", text).group(1)) * 1024
     m = re.search(r"\*\*Scene posters:\*\* `assets/rive/posters/<sceneId>.webp`.*?(\d+)×(\d+), at most (\d+) KB", text, re.S)
     c["poster"] = (int(m.group(1)), int(m.group(2)), int(m.group(3)) * 1024)
@@ -348,6 +360,34 @@ def check_front(sid: str, j: dict, c: dict, scene_vm: dict) -> None:
         err(f"{sid}: `{name}` has listeners or events (the contract allows none)")
 
 
+def check_journey(c: dict) -> None:
+    """v10: `rive/journeys` builds the `Journey` artboard (size, `Main`, `JourneyVM` with exactly the
+    contract's numbers and colours), with no listener and no event; the built file is in budget."""
+    jc = c.get("journey")
+    if jc is None:
+        err("contract: the v10 journey section could not be parsed")
+        return
+    proj = ROOT / "rive" / "journeys"
+    if not proj.exists():
+        err(f"journey: no project at {proj.relative_to(ROOT)}")
+        return
+    j = inspect(proj)
+    ab, vm = check_common("journey", j, jc["artboard"], jc["sm"], jc["vm"])
+    if ab and (ab.get("width"), ab.get("height")) != jc["size"]:
+        err(f"journey: artboard is {ab.get('width')}×{ab.get('height')}, contract says {jc['size']}")
+    if vm:
+        got = vm_props(j, vm)
+        want = {n: (TYPE_OF[t], None) for n, t in jc["props"].items()}
+        if got != want:
+            err(f"journey: JourneyVM {got} != {want}")
+    if ab and any(n.get("type", "").startswith("StateMachineListener") or n.get("type") == "Event" for n in nodes(ab)):
+        err("journey: listeners or events (the contract allows none)")
+    riv = ROOT / "assets" / "rive" / "journeys" / "journey.riv"
+    check_riv_bytes(riv, [jc["artboard"], jc["sm"], jc["vm"], *jc["props"]])
+    if riv.exists() and riv.stat().st_size > jc["max"]:
+        err(f"journey: {riv.stat().st_size} B over the {jc['max']} B budget")
+
+
 def main() -> int:
     c = parse_contract()
     # ---------------- avatar
@@ -401,7 +441,7 @@ def main() -> int:
             want = {n: (TYPE_OF[t], ev_vals if n == "eventId" else None) for n, t in c["scene_vm_props"].items()}
             if got != want:
                 err(f"{sid}: SceneVM {got} != {want}")
-            check_light_defaults(sid, j, vm, {**scene_light_defaults(sid), "rain": 0.0})
+            check_light_defaults(sid, j, vm, {**scene_light_defaults(sid), "rain": 0.0, "daylight": 0.0, "dusk": 0.0})
         if ab:
             evs = events_of(ab)
             if set(evs) != {c["scene_event_name"]}:
@@ -417,6 +457,7 @@ def main() -> int:
     if extra:
         err(f"scenes not in the contract: {sorted(extra)}")
     check_ui_kit(c)
+    check_journey(c)
     for e in diorama_lint():
         err(e)
     if errors:
@@ -425,7 +466,7 @@ def main() -> int:
             print("  -", e)
         return 1
     print(f"✓ contract self-check: avatar + {len(c['scenes'])} scenes + ui_kit ({len(c['ui'])} artboards) "
-          f"+ {len(c['scenes'])} posters match rive/CONTRACT.md")
+          f"+ {len(c['scenes'])} posters + journey match rive/CONTRACT.md")
     return 0
 
 
