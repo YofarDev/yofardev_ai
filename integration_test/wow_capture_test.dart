@@ -389,10 +389,12 @@ void main() {
       spoke = true;
     }
     final Finder field = find.byType(TextField);
-    events.add(<String, Object?>{
-      'ms': clock.elapsedMilliseconds,
-      'type': 'typing',
-    });
+    if (script.tour.isEmpty) {
+      events.add(<String, Object?>{
+        'ms': clock.elapsedMilliseconds,
+        'type': 'typing',
+      });
+    }
     for (int i = 1; script.tour.isEmpty && i <= script.user.length; i++) {
       await tester.enterText(field, script.user.substring(0, i));
       await tester.pump();

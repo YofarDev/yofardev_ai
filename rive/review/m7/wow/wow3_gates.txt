@@ -1,0 +1,15 @@
+every frame non-empty (0 blank): ok
+captured frames: 273: ok
+network attempts during the run: 0: ok
+camera cuts only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+journeys during the run: 1 (want 1): ok
+journey door → beach: beats pullBack/open/exit/close/cut/arriveOpen/enter/arriveClose/vanish in order: ok
+journey door → beach: family ['door']: ok
+journey door → beach: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey door → beach: avatar off screen only while clipped (0 of 77 samples not): ok
+journey door → beach: scene switched behind the closed threshold (first sample in beach: cut): ok
+the beach at the local sunset: dusk min 1.00 (want >= 0.5): ok
+the reply is spoken: ok
+journey timing: starts 0.06 s after send, lasts 5.87 s: info
+wow3.gif 3436464 B (budget 4194304): ok
+frame cost (macOS desktop, not a tier): build P95 7.29 ms, raster P95 1.14 ms, over 16.6 ms 0.2%: info

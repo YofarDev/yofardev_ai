@@ -393,7 +393,8 @@ def beat_sheet(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> Non
 
 
 def write_gif(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> int:
-    typing = _first(tl["events"], "typing")
+    # the tour has no typing: it starts with its first journey
+    typing = _first(tl["events"], "journey" if tl["wow"] == "tour" else "typing")
     t0 = typing["ms"] - 800 if typing else tl["frames"][0]["ms"]
     idx = resample([f for f in tl["frames"] if f["ms"] >= t0], GIF_FPS)
     width = GIF_W
