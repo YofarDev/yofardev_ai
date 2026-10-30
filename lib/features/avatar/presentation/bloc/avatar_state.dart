@@ -8,10 +8,12 @@ import '../../../../core/models/avatar_status_animation.dart';
 import '../../../../core/models/performance/avatar_prop.dart';
 import '../../domain/models/background_transition.dart';
 import '../../domain/models/head_pose.dart';
+import '../../domain/models/journey.dart';
 
 export '../../../../core/models/avatar_status_animation.dart';
 export '../../domain/models/background_transition.dart';
 export '../../domain/models/head_pose.dart' show HeadTarget;
+export '../../domain/models/journey.dart';
 
 part 'avatar_state.freezed.dart';
 
@@ -46,5 +48,11 @@ sealed class AvatarState with _$AvatarState {
 
     /// The prop held, from the director's intent (written to Rive `prop`).
     @Default(AvatarProp.none) AvatarProp prop,
+
+    /// The scene journey under way (M7), null when none.
+    JourneyState? journey,
+
+    /// The scene the stage should decode ahead of a journey's cut.
+    AvatarScene? preloadScene,
   }) = _AvatarState;
 }

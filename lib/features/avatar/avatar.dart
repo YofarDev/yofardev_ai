@@ -6,6 +6,7 @@ export 'presentation/bloc/avatar_state.dart';
 export 'presentation/rive/avatar_rive_contract.dart';
 export 'presentation/widgets/rive/rive_avatar_view.dart';
 export 'presentation/widgets/stage_camera.dart';
+export 'presentation/widgets/rive/journey_layer.dart';
 export 'presentation/widgets/rive/rive_scene_view.dart';
 export 'domain/services/avatar_animation_service.dart';
 export 'domain/models/face_frame.dart';

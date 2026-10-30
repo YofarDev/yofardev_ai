@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/design/design.dart';
 import '../../../core/design/rive/ui_kit.dart';
+import '../../../core/models/avatar_scene.dart';
 import '../../../core/models/talking_phase.dart';
 import '../../../core/services/motion/parallax_source.dart';
 import '../../../core/services/world/world_state_service.dart';
@@ -174,11 +175,22 @@ class _CameraStageState extends State<_CameraStage> {
     if (camera == null) {
       return widget.child;
     }
-    return BlocListener<TalkingCubit, TalkingState>(
-      listenWhen: (TalkingState previous, TalkingState current) =>
-          previous.phase != current.phase,
-      listener: (BuildContext context, TalkingState state) =>
-          camera.setPhase(state.phase),
+    return MultiBlocListener(
+      listeners: <BlocListener<dynamic, dynamic>>[
+        BlocListener<TalkingCubit, TalkingState>(
+          listenWhen: (TalkingState previous, TalkingState current) =>
+              previous.phase != current.phase,
+          listener: (BuildContext context, TalkingState state) =>
+              camera.setPhase(state.phase),
+        ),
+        // A journey holds the camera wide (M7 ruling 3.2).
+        BlocListener<AvatarCubit, AvatarState>(
+          listenWhen: (AvatarState previous, AvatarState current) =>
+              (previous.journey == null) != (current.journey == null),
+          listener: (BuildContext context, AvatarState state) =>
+              camera.setJourney(state.journey != null),
+        ),
+      ],
       child: StageCamera(shot: camera.shot, child: widget.child),
     );
   }
@@ -209,32 +221,42 @@ class _RiveStage extends StatelessWidget {
           onPropTapped: (String propId) {
             context.read<AvatarCubit>().onPropTapped(avatarState.scene, propId);
           },
+          // M7 journeys: the destination decodes during the walk-off, and
+          // the cut waits for it on screen.
+          preload: avatarState.preloadScene,
+          onSceneShown: (AvatarScene scene) {
+            context.read<AvatarCubit>().onSceneShown(scene);
+          },
           // The avatar, between the scene and its front weather (v9).
           // Narrow scope: only the avatar view depends on the whole
           // TalkingState (mouth + phase); a mouth change must not rebuild
           // the scene view, the glow or the chrome.
-          middle: BlocBuilder<TalkingCubit, TalkingState>(
-            // with a face performer the mouth comes from it, not from
-            // mouthState: only the phase matters here
-            buildWhen: (TalkingState previous, TalkingState current) =>
-                facePerformer == null || previous.phase != current.phase,
-            builder: (BuildContext context, TalkingState talkingState) {
-              return RiveAvatarView(
-                avatarState: avatarState,
-                talkingState: talkingState,
-                facePerformer: facePerformer,
-                daylight: world?.daylight,
-                onAvatarTapped: (String zone) {
-                  context.read<AvatarCubit>().onAvatarTapped(zone);
-                },
-                onPresenceDone: (String presence) {
-                  context.read<AvatarCubit>().onPresenceDone(presence);
-                },
-                onGestureDone: () {
-                  context.read<AvatarCubit>().onGestureDone();
-                },
-              );
-            },
+          middle: JourneyLayer(
+            journey: avatarState.journey,
+            daylight: world?.daylight,
+            avatar: BlocBuilder<TalkingCubit, TalkingState>(
+              // with a face performer the mouth comes from it, not from
+              // mouthState: only the phase matters here
+              buildWhen: (TalkingState previous, TalkingState current) =>
+                  facePerformer == null || previous.phase != current.phase,
+              builder: (BuildContext context, TalkingState talkingState) {
+                return RiveAvatarView(
+                  avatarState: avatarState,
+                  talkingState: talkingState,
+                  facePerformer: facePerformer,
+                  daylight: world?.daylight,
+                  onAvatarTapped: (String zone) {
+                    context.read<AvatarCubit>().onAvatarTapped(zone);
+                  },
+                  onPresenceDone: (String presence) {
+                    context.read<AvatarCubit>().onPresenceDone(presence);
+                  },
+                  onGestureDone: () {
+                    context.read<AvatarCubit>().onGestureDone();
+                  },
+                );
+              },
+            ),
           ),
         );
       },

@@ -371,75 +371,209 @@ void main() {
     group('Avatar Animation from LLM Response', () {
       // The v4 presence flow: walk off (Rive presence = outOfScreen), wait
       // for presence_done, apply the change while hidden, walk back.
-      test('leaveAndComeBack walks off, applies the scene while hidden, '
-          'then walks back', () async {
-        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-        avatarCubit.updateAvatarConfig(
-          'chat1',
-          AvatarConfig(
-            background: AvatarScene.beach,
-            top: AvatarTop.longCoat,
-            specials: AvatarSpecials.leaveAndComeBack,
-          ),
-        );
+      test('a scene change is a journey: pull back, open, walk out, close, '
+          'cut, open, walk in, close, vanish', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.updateAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              top: AvatarTop.longCoat,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          JourneyState j() => avatarCubit.state.journey!;
+          expect(j().phase, JourneyPhase.pullBack);
+          expect(j().family, JourneyFamily.door);
+          expect(avatarCubit.state.preloadScene, AvatarScene.beach);
+          expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
 
-        // Walking off: Rive gets outOfScreen, nothing is applied yet.
-        expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
-        expect(
-          avatarCubit.state.statusAnimation,
-          AvatarStatusAnimation.leaving,
-        );
-        expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
+          async.elapse(JourneyTiming.pullBack);
+          expect(j().phase, JourneyPhase.open);
+          expect(avatarCubit.state.headTarget, AvatarCubit.journeyLead);
 
-        avatarCubit.onPresenceDone('outOfScreen');
-        await Future<void>.delayed(Duration.zero);
+          async.elapse(JourneyTiming.open);
+          expect(j().phase, JourneyPhase.exit);
+          expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
+          expect(
+            avatarCubit.state.statusAnimation,
+            AvatarStatusAnimation.leaving,
+          );
+          expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
 
-        // Hidden: the change lands and the avatar walks back.
-        expect(avatarCubit.state.scene, AvatarScene.beach);
-        expect(avatarCubit.state.avatar.top, AvatarTop.longCoat);
-        expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
-        expect(avatarCubit.state.statusAnimation, AvatarStatusAnimation.coming);
-        verify(
-          () => mockAvatarRepository.updateAvatar('chat1', any()),
-        ).called(1);
+          avatarCubit.onPresenceDone('outOfScreen');
+          async.flushMicrotasks();
+          expect(j().phase, JourneyPhase.close);
+          expect(avatarCubit.state.headTarget, HeadTarget.zero);
+
+          async.elapse(JourneyTiming.close);
+          expect(j().phase, JourneyPhase.cut);
+          // The scene switches with the avatar still off screen.
+          expect(avatarCubit.state.scene, AvatarScene.beach);
+          expect(avatarCubit.state.avatar.top, AvatarTop.longCoat);
+          expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
+          verify(
+            () => mockAvatarRepository.updateAvatar('chat1', any()),
+          ).called(1);
+
+          avatarCubit.onSceneShown(AvatarScene.beach);
+          async.flushMicrotasks();
+          expect(j().phase, JourneyPhase.arriveOpen);
+
+          async.elapse(JourneyTiming.arriveOpenOf(JourneyFamily.door));
+          expect(j().phase, JourneyPhase.enter);
+          expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
+          expect(
+            avatarCubit.state.statusAnimation,
+            AvatarStatusAnimation.coming,
+          );
+
+          avatarCubit.onPresenceDone('onScreen');
+          async.flushMicrotasks();
+          expect(j().phase, JourneyPhase.arriveClose);
+          async.elapse(JourneyTiming.close);
+          expect(j().phase, JourneyPhase.vanish);
+          async.elapse(JourneyTiming.vanish);
+          expect(avatarCubit.state.journey, isNull);
+          expect(avatarCubit.state.preloadScene, isNull);
+        });
       });
 
-      test('animation specials are never persisted to the avatar', () async {
-        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-        avatarCubit.updateAvatarConfig(
-          'chat1',
-          AvatarConfig(
-            background: AvatarScene.beach,
-            specials: AvatarSpecials.leaveAndComeBack,
-          ),
-        );
-        avatarCubit.onPresenceDone('outOfScreen');
-        await Future<void>.delayed(Duration.zero);
+      test('a journey to deep space takes the rocket, which lifts off', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.deepSpace,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          expect(avatarCubit.state.journey!.family, JourneyFamily.rocket);
+          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          avatarCubit.onPresenceDone('outOfScreen');
+          async.flushMicrotasks();
+          // the close beat includes the lift-off
+          async.elapse(JourneyTiming.close);
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.close);
+          async.elapse(JourneyTiming.lift);
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.cut);
+        });
+      });
 
-        expect(avatarCubit.state.avatar.background, AvatarScene.beach);
-        expect(avatarCubit.state.avatar.specials, AvatarSpecials.onScreen);
-        final Avatar saved =
-            verify(
-                  () =>
-                      mockAvatarRepository.updateAvatar('chat1', captureAny()),
-                ).captured.single
-                as Avatar;
-        expect(saved.specials, AvatarSpecials.onScreen);
+      test('the cut waits for the new scene, at most the timeout', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.campfire,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          avatarCubit.onPresenceDone('outOfScreen');
+          async.flushMicrotasks();
+          async.elapse(JourneyTiming.close);
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.cut);
+          // another scene showing does not release it
+          avatarCubit.onSceneShown(AvatarScene.beach);
+          async.elapse(const Duration(seconds: 2));
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.cut);
+          async.elapse(const Duration(seconds: 1));
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.arriveOpen);
+        });
+      });
+
+      test('the same scene needs no journey', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: avatarCubit.state.scene,
+              hat: AvatarHat.beanie,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.flushMicrotasks();
+          expect(avatarCubit.state.journey, isNull);
+          expect(avatarCubit.state.avatar.hat, AvatarHat.beanie);
+        });
+      });
+
+      test('animation specials are never persisted to the avatar', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.updateAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          // no presence_done, no scene shown: the timeouts carry it through
+          async.elapse(const Duration(seconds: 20));
+
+          expect(avatarCubit.state.journey, isNull);
+          expect(avatarCubit.state.avatar.background, AvatarScene.beach);
+          expect(avatarCubit.state.avatar.specials, AvatarSpecials.onScreen);
+          final Avatar saved =
+              verify(
+                    () => mockAvatarRepository.updateAvatar(
+                      'chat1',
+                      captureAny(),
+                    ),
+                  ).captured.single
+                  as Avatar;
+          expect(saved.specials, AvatarSpecials.onScreen);
+        });
       });
 
       test('a presence_done for another value does not advance the walk', () {
-        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-        avatarCubit.onNewAvatarConfig(
-          'chat1',
-          AvatarConfig(
-            background: AvatarScene.beach,
-            specials: AvatarSpecials.leaveAndComeBack,
-          ),
-        );
-        avatarCubit.onPresenceDone('onScreen');
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          avatarCubit.onPresenceDone('onScreen');
+          async.flushMicrotasks();
 
-        expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
-        expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.exit);
+          expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
+          expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
+        });
+      });
+
+      test('a second change waits for the journey in progress', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(hat: AvatarHat.beanie),
+          );
+          async.elapse(const Duration(seconds: 2));
+          // The hat is not applied mid-journey.
+          expect(avatarCubit.state.avatar.hat, isNot(AvatarHat.beanie));
+
+          async.elapse(const Duration(seconds: 20));
+          expect(avatarCubit.state.journey, isNull);
+          expect(avatarCubit.state.scene, AvatarScene.beach);
+          expect(avatarCubit.state.avatar.hat, AvatarHat.beanie);
+        });
       });
 
       test('the change still lands when Rive never reports presence_done', () {
@@ -460,50 +594,7 @@ void main() {
         });
       });
 
-      test('a second change waits for the walk in progress', () async {
-        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-        avatarCubit.onNewAvatarConfig(
-          'chat1',
-          AvatarConfig(
-            background: AvatarScene.beach,
-            specials: AvatarSpecials.leaveAndComeBack,
-          ),
-        );
-        avatarCubit.onNewAvatarConfig(
-          'chat1',
-          AvatarConfig(hat: AvatarHat.beanie),
-        );
-        // The hat is not applied mid-walk.
-        expect(avatarCubit.state.avatar.hat, isNot(AvatarHat.beanie));
-
-        avatarCubit.onPresenceDone('outOfScreen');
-        await Future<void>.delayed(Duration.zero);
-        avatarCubit.onPresenceDone('onScreen');
-        await Future<void>.delayed(Duration.zero);
-        await Future<void>.delayed(Duration.zero);
-
-        expect(avatarCubit.state.scene, AvatarScene.beach);
-        expect(avatarCubit.state.avatar.hat, AvatarHat.beanie);
-      });
-
       // Test: Background change triggers leaveAndComeBack animation
-      test('background change triggers leaving and coming animation', () {
-        // Arrange
-        avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
-
-        // Act
-        final AvatarConfig avatarConfig = AvatarConfig(
-          background: AvatarScene.beach,
-          specials: AvatarSpecials.leaveAndComeBack,
-        );
-        avatarCubit.onNewAvatarConfig('chat1', avatarConfig);
-
-        // Assert - Should trigger leaving animation
-        expect(
-          avatarCubit.state.statusAnimation,
-          AvatarStatusAnimation.leaving,
-        );
-      });
 
       // Test: Clothes change triggers dropping/rising animation
       test('clothes change triggers dropping and rising animation', () {

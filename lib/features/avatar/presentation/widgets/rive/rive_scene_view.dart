@@ -54,6 +54,8 @@ class RiveSceneView extends StatefulWidget {
     this.daylight,
     this.dusk,
     this.middle,
+    this.preload,
+    this.onSceneShown,
   });
 
   final AvatarScene scene;
@@ -78,6 +80,13 @@ class RiveSceneView extends StatefulWidget {
 
   /// Drawn over the scene and under its front weather: the avatar.
   final Widget? middle;
+
+  /// A scene to decode ahead (a journey's destination, M7 ruling 10): when
+  /// [scene] becomes it, the file swaps in the same frame.
+  final AvatarScene? preload;
+
+  /// Called once a newly loaded scene's first frame is on screen.
+  final ValueChanged<AvatarScene>? onSceneShown;
 
   @override
   State<RiveSceneView> createState() => _RiveSceneViewState();
@@ -109,6 +118,11 @@ class _RiveSceneViewState extends State<RiveSceneView>
   /// default scene, then the chat's): only the newest load may publish.
   final LatestLoadGate _loads = LatestLoadGate();
 
+  /// The decoded [RiveSceneView.preload] file, until a load takes it.
+  AvatarScene? _preloadScene;
+  File? _preloadFile;
+  int _preloadTicket = 0;
+
   @override
   void initState() {
     super.initState();
@@ -119,6 +133,50 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _time.follow(widget.daylight, widget.dusk);
     _followFrontRain();
     _loadScene(widget.scene);
+    _startPreload(widget.preload);
+  }
+
+  /// Decodes [scene] ahead of the switch to it; drops a preload nobody took.
+  Future<void> _startPreload(AvatarScene? scene) async {
+    if (scene == _preloadScene) {
+      return;
+    }
+    final int ticket = ++_preloadTicket;
+    _preloadFile?.dispose();
+    _preloadFile = null;
+    _preloadScene = scene;
+    if (scene == null || scene == _loadedScene) {
+      return;
+    }
+    try {
+      final File? file = await File.asset(
+        AvatarRiveContract.sceneAssetPath(scene.name),
+        riveFactory: Factory.rive,
+      );
+      if (!mounted || ticket != _preloadTicket || _preloadScene != scene) {
+        file?.dispose();
+        return;
+      }
+      _preloadFile = file;
+    } on Exception catch (e) {
+      AppLogger.error(
+        'RiveSceneView failed to preload ${scene.name}.riv',
+        tag: 'RiveSceneView',
+        error: e,
+      );
+    }
+  }
+
+  /// The preloaded file of [scene], handed over (null when none is ready).
+  File? _takePreload(AvatarScene scene) {
+    if (_preloadScene != scene) {
+      return null;
+    }
+    final File? file = _preloadFile;
+    _preloadFile = null;
+    _preloadScene = null;
+    _preloadTicket++;
+    return file;
   }
 
   /// Listens to [RiveSceneView.rain] for the front artboard.
@@ -263,8 +321,14 @@ class _RiveSceneViewState extends State<RiveSceneView>
       _scheduleParallaxWrite();
     }
     if (widget.scene != oldWidget.scene) {
-      _loadScene(widget.scene);
+      _loadScene(widget.scene, rebuild: false);
+      if (widget.preload != oldWidget.preload) {
+        _startPreload(widget.preload);
+      }
       return;
+    }
+    if (widget.preload != oldWidget.preload) {
+      _startPreload(widget.preload);
     }
     final RiveVmBinding? binding = _binding;
     if (binding == null) {
@@ -286,6 +350,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _loads.cancelAll();
+    _preloadTicket++;
+    _preloadFile?.dispose();
+    _preloadFile = null;
     _rain.dispose();
     _time.dispose();
     _frontRainSource?.removeListener(_syncFront);
@@ -295,13 +362,21 @@ class _RiveSceneViewState extends State<RiveSceneView>
     super.dispose();
   }
 
-  Future<void> _loadScene(AvatarScene scene) async {
+  /// Loads [scene]'s file, or takes its preload: then the swap happens
+  /// right now, without `setState` when [rebuild] is false (from
+  /// `didUpdateWidget`, whose build follows).
+  Future<void> _loadScene(AvatarScene scene, {bool rebuild = true}) async {
     final int ticket = _loads.begin();
     try {
-      final File? file = await File.asset(
-        AvatarRiveContract.sceneAssetPath(scene.name),
-        riveFactory: Factory.rive,
-      );
+      final File? preloaded = _takePreload(scene);
+      final File? file =
+          preloaded ??
+          await File.asset(
+            AvatarRiveContract.sceneAssetPath(scene.name),
+            riveFactory: Factory.rive,
+          );
+      void apply(VoidCallback change) =>
+          preloaded != null && !rebuild ? change() : setState(change);
       if (!_loads.isLatest(ticket)) {
         // A newer scene load started meanwhile: this result is stale.
         file?.dispose();
@@ -336,7 +411,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
         file.dispose();
         return;
       }
-      setState(() {
+      apply(() {
         // Dispose the previously loaded scene only once the new file is
         // ready, so switching never flashes empty.
         _teardown();
@@ -355,7 +430,17 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _syncParallaxActive();
       });
       // The new file's front, if it has one and it rains.
-      _syncFront();
+      _syncFront(rebuild: preloaded == null || rebuild);
+      // Tell the stage once the new file's first frame is drawn.
+      final ValueChanged<AvatarScene>? shown = widget.onSceneShown;
+      if (shown != null) {
+        SchedulerBinding.instance.addPostFrameCallback((Duration _) {
+          if (mounted && _loadedScene == scene) {
+            shown(scene);
+          }
+        });
+        SchedulerBinding.instance.ensureVisualUpdate();
+      }
     } on Exception catch (e) {
       AppLogger.error(
         'RiveSceneView failed to load ${scene.name}.riv',
