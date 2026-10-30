@@ -9,7 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rive_gates import collect, parse_scenes  # noqa: E402
+from rive_gates import collect, parse_scenes, runs_for  # noqa: E402
 
 KNOWN = ["beach", "campfire", "deepSpace", "livingRoom"]
 
@@ -50,3 +50,9 @@ def test_an_unknown_scene_is_rejected() -> None:
     with pytest.raises(SystemExit) as exc:
         parse_scenes(["campfire", "mars"], KNOWN)
     assert exc.value.code == 2
+
+
+def test_prop_gates_only_with_props() -> None:
+    assert runs_for(["campfire"], KNOWN) == [("review_diorama.py", "campfire", "--gates-only")]
+    assert runs_for(["--props", "campfire"], KNOWN)[-1] == ("motion_review.py", "--gates-only")
+    assert len(runs_for(["--props"], KNOWN)) == len(KNOWN) + 1

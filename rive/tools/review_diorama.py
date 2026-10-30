@@ -518,11 +518,11 @@ def main(argv: list[str]) -> int:
         with tempfile.TemporaryDirectory() as scratch:
             gates = run(scene, None, Path(scratch), opts.get("--same-as"))
         print("\n".join(f"{scene}: {g}" for g in gates))
-        return 1 if any(g.endswith("FAIL") for g in gates) else 0
+        return 1 if any("FAIL" in g for g in gates) else 0
     out = Path(opts["--out"]) if "--out" in opts else ROOT / "rive" / "review" / "m5" / scene
     gates = run(scene, before, out, opts.get("--same-as"))
     print("\n".join(gates))
-    return 1 if any(g.endswith("FAIL") for g in gates) else 0
+    return 1 if any("FAIL" in g for g in gates) else 0
 
 
 if __name__ == "__main__":

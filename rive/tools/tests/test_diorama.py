@@ -126,7 +126,9 @@ def test_campfire_differs_from_m4_only_by_hit_zones_and_rain(rml: str) -> None:
     old, new = _tree(_m4()), _tree(rml)
     missing = set(old) - set(new)
     assert not missing, sorted(missing)[:10]
-    added = set(new) - set(old)
+    # M5 additions, plus M6's `SceneFront` artboard (its own range, test_scene_front.py)
+    added = {i for i in set(new) - set(old)
+             if not gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M5_ID_START}
     assert all(gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START for i in added), \
         sorted(i for i in added if not gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START)[:10]
     moved = {}
@@ -284,7 +286,7 @@ def test_living_room_keeps_its_m4_ids(lr: str) -> None:
         if i in new:
             assert new[i][0] == tag, i
     added = set(new) - set(old)
-    assert all(gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
+    assert all(gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
                or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
 
 
@@ -389,7 +391,7 @@ def test_beach_keeps_its_m4_ids(beach: str) -> None:
     for i, (tag, _, _) in old.items():
         assert new[i][0] == tag, i
     added = set(new) - set(old)
-    assert all(gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
+    assert all(gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
                or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
 
 
@@ -503,7 +505,7 @@ def test_deep_space_keeps_its_m4_ids(ds: str) -> None:
     for i, (tag, _, _) in old.items():
         assert new[i][0] == tag, i
     added = set(new) - set(old)
-    assert all(gen_scenes.M5_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
+    assert all(gen_scenes.M6_ID_START <= int(i.split(":")[1]) < gen_scenes.M4_ID_START
                or int(i.split(":")[1]) >= gen_scenes.DIORAMA_ID_START for i in added)
 
 

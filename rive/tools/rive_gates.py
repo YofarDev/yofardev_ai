@@ -1,10 +1,10 @@
 """The objective Rive gates, run by scripts/frive.sh (M6 ruling 10).
 
-uv run --with pillow --with numpy rive/tools/rive_gates.py [sceneId ...]
+uv run --with pillow --with numpy rive/tools/rive_gates.py [--props] [sceneId ...]
 
 Runs `review_diorama.py --gates-only` for each named scene (every scene in rive/scenes/ when none
-is named), then `motion_review.py --gates-only` (the tablet and newspaper prop gates), streaming
-every line. A line holding the word FAIL fails the run: exit 1. An unknown scene id exits 2.
+is named; about 2 min each), then, with `--props`, `motion_review.py --gates-only` (the tablet and
+newspaper prop gates, about 23 min: M6 execution ruling 28), streaming every line. A line holding the word FAIL fails the run: exit 1. An unknown scene id exits 2.
 """
 
 from __future__ import annotations
@@ -52,12 +52,19 @@ def _stream(script: str, *args: str) -> tuple[list[str], int]:
     return lines, proc.wait()
 
 
+def runs_for(argv: list[str], known: list[str]) -> list[tuple[str, ...]]:
+    """(script, *args) to run: the scene gates, and the prop gates only with `--props`."""
+    scenes = parse_scenes([a for a in argv if a != "--props"], known)
+    runs = [("review_diorama.py", scene, "--gates-only") for scene in scenes]
+    if "--props" in argv:
+        runs.append(("motion_review.py", "--gates-only"))
+    return runs
+
+
 def main(argv: list[str]) -> int:
-    scenes = parse_scenes(argv, known_scenes())
+    runs = runs_for(argv, known_scenes())
     lines: list[str] = []
     crashed = 0
-    runs = [("review_diorama.py", scene, "--gates-only") for scene in scenes]
-    runs.append(("motion_review.py", "--gates-only"))
     for script, *args in runs:
         got, code = _stream(script, *args)
         lines += got

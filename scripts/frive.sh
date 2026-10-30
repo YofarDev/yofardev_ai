@@ -8,9 +8,10 @@
 # Requires: rive CLI (>= 1.8.0) and uv on PATH. Deterministic: generators use fixed seeds and ids.
 # Fails on any build warning, a size over budget (avatar 600 KB, scene 400 KB, UI kit 150 KB,
 # poster 40 KB), or any name that differs from rive/CONTRACT.md (rive/tools/check_contract.py).
-# Then runs the objective gates (rive/tools/rive_gates.py: parallax, plane travel, pointer proofs,
-# rain and front-layer gates per built scene, then the tablet and newspaper prop gates); any FAIL
-# fails the script. FRIVE_GATES=0 ./scripts/frive.sh skips them (sequential renders, minutes).
+# Then runs the objective gates (rive/tools/rive_gates.py): parallax, plane travel, pointer proofs,
+# rain and front-layer gates per built scene (about 2 min each); FRIVE_GATES=all adds the tablet and
+# newspaper prop gates (about 23 min more: run it after any avatar prop or gesture change);
+# FRIVE_GATES=0 skips them. Any FAIL fails the script.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -56,8 +57,11 @@ echo "▸ scene posters"
 uv run --with pillow "$TOOLS/gen_posters.py" "${SCENES[@]}"
 echo "▸ contract self-check"
 uv run "$TOOLS/check_contract.py"
-if [ "${FRIVE_GATES:-1}" != "0" ]; then
-  echo "▸ gates (FRIVE_GATES=0 skips)"
-  uv run --with pillow --with numpy "$TOOLS/rive_gates.py" "${SCENES[@]}"
+GATES="${FRIVE_GATES:-scenes}"
+if [ "$GATES" != "0" ]; then
+  PROPS=()
+  if [ "$GATES" = "all" ]; then PROPS=(--props); fi
+  echo "▸ gates (FRIVE_GATES=0 skips, FRIVE_GATES=all adds the prop gates)"
+  uv run --with pillow --with numpy "$TOOLS/rive_gates.py" ${PROPS[@]+"${PROPS[@]}"} "${SCENES[@]}"
 fi
 echo "✓ done"
