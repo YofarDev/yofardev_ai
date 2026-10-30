@@ -1,0 +1,11 @@
+every frame non-empty (0 blank): ok
+captured frames: 336: ok
+network attempts during the run: 0: ok
+camera cuts only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+living room in every sample (673): ok
+poked: react 28 ms after the tap (want <= 500): ok
+named in the message: notice: ok
+the sad reply: the cat walks to the rug (move in 228 samples, npcX max 1.00, want >= 0.95): ok
+npcX moves smoothly: largest step between samples 0.015 (want <= 0.1): ok
+cat states: rest/react/notice/idle/notice/react/move/idle: info
+npc.gif 3981415 B (budget 4194304): ok
