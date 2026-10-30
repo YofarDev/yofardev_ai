@@ -1,4 +1,4 @@
-# Rive contract (v8b)
+# Rive contract (v9)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -122,6 +122,13 @@ One file per scene. The app loads them lazily.
     window); deepSpace ignores it. The app writes it from its world state. The `rain` events stay
     one-shot showers on top.
 - **Rive event emitted:** `prop_tapped`, with `propId`: string.
+- **Front artboard (v9, optional):** a scene file may carry a second artboard `SceneFront`,
+  1080×1920 like `Scene`, with a state machine `Main` and the same view model `SceneVM`. It holds
+  the weather that falls *in front of* the avatar (a near rain sheet, rain mist, splashes at the
+  bottom edge) and binds only `rain`, `parallaxX`, `parallaxY` and `lightFog`; at `rain` 0 it draws
+  nothing. It has no listeners and emits no events. The app draws it above the avatar with the same
+  fit as `Scene`, never hit-tests it, and creates it only while `rain` > 0. campfire and beach have
+  one; livingRoom (the rain is outside the window) and deepSpace do not.
 
 | sceneId | eventId values | propId values |
 |---|---|---|
