@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -680,6 +682,60 @@ void main() {
         });
       });
 
+      test('a director gesture still playing finishes before the grab, and '
+          'only its gesture_done reaches the director', () {
+        fakeAsync((FakeAsync async) {
+          final _ControllableAnimationService animations =
+              _ControllableAnimationService();
+          final _CountingDirector director = _CountingDirector();
+          final AvatarCubit cubit = AvatarCubit(
+            mockAvatarRepository,
+            animations,
+            mockAudioPlayerService,
+            MockAppLifecycleService(),
+            PropReactionService(),
+            _FakeSoundRepository(),
+            director: director,
+          );
+          cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          animations.controller.add(
+            const AvatarAnimation.gesture(AvatarGesture.wave),
+          );
+          async.flushMicrotasks();
+          expect(cubit.state.gestureEvent.gesture, AvatarGesture.wave);
+          final int waveSeq = cubit.state.gestureEvent.seq;
+
+          cubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          // the grab waits: the wave is still the gesture on screen
+          expect(cubit.state.journey!.phase, JourneyPhase.open);
+          expect(cubit.state.gestureEvent.gesture, AvatarGesture.wave);
+          expect(cubit.state.gestureEvent.seq, waveSeq);
+
+          // the wave ends: its gesture_done reaches the director, then the
+          // grab plays
+          cubit.onGestureDone();
+          async.flushMicrotasks();
+          expect(director.done, 1);
+          expect(cubit.state.journey!.phase, JourneyPhase.grab);
+          expect(cubit.state.gestureEvent.gesture, AvatarGesture.grab);
+          expect(cubit.state.gestureEvent.seq, waveSeq + 1);
+
+          // the grab's own gesture_done is swallowed
+          cubit.onGestureDone();
+          expect(director.done, 1);
+          cubit.close();
+          director.dispose();
+          animations.controller.close();
+        });
+      });
+
       test(
         'the same scene with new clothes still changes them out of sight',
         () {
@@ -1027,6 +1083,15 @@ class _FakeSoundRepository implements SoundRepository {
 
   @override
   Future<Result<bool>> get isPlaying async => Result<bool>.ok(false);
+}
+
+/// An animation service whose stream the test drives.
+class _ControllableAnimationService extends MockAvatarAnimationService {
+  final StreamController<AvatarAnimation> controller =
+      StreamController<AvatarAnimation>.broadcast();
+
+  @override
+  Stream<AvatarAnimation> get animations => controller.stream;
 }
 
 /// Counts the `gesture_done`s forwarded to the director.

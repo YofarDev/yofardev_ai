@@ -101,6 +101,38 @@ void main() {
     });
   });
 
+  test('a weather lookup that starts while speaking shows its reading once '
+      'the tablet comes out', () {
+    fakeAsync((FakeAsync async) {
+      final PerformanceDirector director = build();
+      director.setSpeaking(true);
+      director.setActiveTool('getCurrentWeather');
+      // the avatar is still speaking: no tablet yet, the reading is kept
+      expect(director.current.prop, AvatarProp.none);
+      readings.add(tokyo);
+      director.setSpeaking(false);
+      expect(director.current.prop, AvatarProp.tablet);
+      expect(director.current.tabletWeather, TabletWeather.rain);
+      expect(director.current.tabletTemp, 18);
+      director.dispose();
+    });
+  });
+
+  test('a lookup that ends while speaking leaves no card for later', () {
+    fakeAsync((FakeAsync async) {
+      final PerformanceDirector director = build();
+      director.setSpeaking(true);
+      director.setActiveTool('getCurrentWeather');
+      readings.add(tokyo);
+      director.setActiveTool(null);
+      director.setSpeaking(false);
+      director.setIdleStage(3);
+      expect(director.current.prop, AvatarProp.tablet);
+      expect(director.current.tabletWeather, TabletWeather.none);
+      director.dispose();
+    });
+  });
+
   test('a reading outside a weather lookup is ignored', () {
     fakeAsync((FakeAsync async) {
       final PerformanceDirector director = build();

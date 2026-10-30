@@ -75,7 +75,9 @@ class _Move {
 ///   [wakeArousal]) → idle; after [calmToSleep] of calm it walks to the warm
 ///   spot (lamp on: the rug, 1; lamp off: the cabinet, 0) and sleeps there
 ///   (rest); otherwise it rests where it is. While `catWalksBy` plays
-///   ([catWalksByLength]) it never moves (the walking cat is the other cat).
+///   ([catWalksByLength]) it never starts to move (the walking cat is the other
+///   cat); one caught mid-walk goes `away` until the walking cat has passed
+///   (its walk runs on unseen) and reappears at its target.
 /// - **owl** (campfire): poked → react; rain ≥ [owlRainHunch] → rest
 ///   (hunched); a question in the reply → idle swivel for [questionLength];
 ///   the avatar speaking → notice; otherwise rest (night quiet).
@@ -165,11 +167,25 @@ class NpcDirector {
     'cat',
     'cats',
     'kitty',
-    'chat',
-    'chats',
     'minou',
     'chaton',
     'chatons',
+  };
+
+  /// French "chat" is also an English word ("let's chat", "new chat"): it
+  /// names the cat only right after a French determiner
+  /// ([catFrenchDeterminers]).
+  static const Set<String> catFrenchNames = <String>{'chat', 'chats'};
+  static const Set<String> catFrenchDeterminers = <String>{
+    'le',
+    'ton',
+    'mon',
+    'un',
+    'ce',
+    'les',
+    'tes',
+    'mes',
+    'des',
   };
   static const Set<String> alienNames = <String>{
     'alien',
@@ -204,6 +220,11 @@ class NpcDirector {
   DateTime? _mentionAt;
   DateTime? _questionAt;
   DateTime? _catWalksByUntil;
+
+  /// The cat NPC was mid-walk when `catWalksBy` started: it is `away` (its
+  /// walk runs on unseen and it reappears at its target) until the walking
+  /// cat has passed, so the two never show together.
+  bool _hiddenByWalker = false;
   bool _awake = false;
   DateTime? _activeAt;
   DateTime? _nextDriftAt;
@@ -335,7 +356,7 @@ class NpcDirector {
       NpcKind.alien => alienNames,
       NpcKind.owl || NpcKind.crab => const <String>{},
     };
-    if (names.isNotEmpty && _words(text).any(names.contains)) {
+    if (names.isNotEmpty && _mentions(text, names)) {
       _mentionAt = now;
       changed = true;
     }
@@ -346,6 +367,25 @@ class NpcDirector {
     if (changed) {
       _update();
     }
+  }
+
+  /// Whether [text] has a word of [names] (for the cat, also French "chat"
+  /// after a determiner).
+  bool _mentions(String text, Set<String> names) {
+    final List<String> words = _words(text).toList();
+    for (int i = 0; i < words.length; i++) {
+      final String word = words[i];
+      if (names.contains(word)) {
+        return true;
+      }
+      if (kind == NpcKind.cat &&
+          i > 0 &&
+          catFrenchNames.contains(word) &&
+          catFrenchDeterminers.contains(words[i - 1])) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// The lower-case words of [text] (letters, accents and apostrophes).
@@ -361,6 +401,7 @@ class NpcDirector {
     _mentionAt = null;
     _questionAt = null;
     _catWalksByUntil = null;
+    _hiddenByWalker = false;
     _awake = false;
     _activeAt = null;
     _nextDriftAt = null;
@@ -484,6 +525,14 @@ class NpcDirector {
     final bool walkingCat = walkEnd != null && now.isBefore(walkEnd);
     if (!walkingCat) {
       _catWalksByUntil = null;
+      _hiddenByWalker = false;
+    } else if (_move != null) {
+      _hiddenByWalker = true;
+    }
+    if (_hiddenByWalker) {
+      // Keep the walk running unseen (it is not stopped by the branch rule).
+      _moveTouched = true;
+      return NpcIntent(npc: NpcState.away, npcX: _move?.to ?? _x);
     }
     if (_emotion.valence <= sadValence) {
       _wake(now);

@@ -230,6 +230,11 @@ class PerformanceDirector {
         _heldOver = AvatarProp.none;
         _emit();
       });
+    } else if (toolName == null && previous != null) {
+      // The lookup ended with no tablet to hold over (the avatar is
+      // speaking): its state ends with it.
+      _weatherLookup = false;
+      _weatherReading = null;
     }
     _emit();
   }
@@ -635,8 +640,10 @@ class PerformanceDirector {
     if (before != AvatarProp.none && intent.prop == AvatarProp.none) {
       _propClearedAt = _now();
     }
-    if (intent.prop == AvatarProp.none) {
-      // Put away: the weather lookup's card goes with it.
+    if (before != AvatarProp.none && intent.prop == AvatarProp.none) {
+      // Put away after having been out: the weather lookup's card goes with
+      // it. A lookup that starts while speaking has not had its tablet out
+      // yet, so its state must survive the none intents until it does.
       _weatherLookup = false;
       _weatherReading = null;
     }

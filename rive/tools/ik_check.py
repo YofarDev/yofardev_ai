@@ -131,9 +131,15 @@ def marker_copy(source: Path, dest_dir: Path, which: str) -> None:
     """A review copy of `source` that draws only the `which` pass markers (PASSES)."""
     tree = ET.parse(source)
     root = tree.getroot()
+    removed: set[str] = set()
     for shape in root.iter("Shape"):
         for paint in [c for c in shape if c.tag in ("Fill", "Stroke")]:
+            removed.update(e.get("id") for e in paint.iter() if e.get("id"))
             shape.remove(paint)
+    # keys on a removed paint (M8: the tablet's weather card keys a screen colour) would dangle
+    for parent in list(root.iter()):
+        for keyed in [c for c in parent if c.tag == "KeyedObject" and c.get("objectId") in removed]:
+            parent.remove(keyed)
     board = root.find("Artboard")
     nid = [MARK_ID]
 

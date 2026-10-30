@@ -104,6 +104,30 @@ void main() {
       }
     });
 
+    test('English "chat" is not the cat; French "chat" after a determiner '
+        'is', () {
+      for (final String text in <String>[
+        "let's chat",
+        'start a new chat',
+        'chat with me',
+      ]) {
+        run(AvatarScene.livingRoom, (FakeAsync async, NpcDirector npc) {
+          npc.onUserText(text);
+          expect(state(npc), NpcState.rest, reason: text);
+        });
+      }
+      for (final String text in <String>[
+        'mon chat dort',
+        'tes chats sont là',
+        'Chaton!',
+      ]) {
+        run(AvatarScene.livingRoom, (FakeAsync async, NpcDirector npc) {
+          npc.onUserText(text);
+          expect(state(npc), NpcState.notice, reason: text);
+        });
+      }
+    });
+
     test('a word that only contains the name is not a mention', () {
       run(AvatarScene.livingRoom, (FakeAsync async, NpcDirector npc) {
         npc.onUserText('the category is concatenated');
@@ -204,18 +228,22 @@ void main() {
       });
     });
 
-    test('catWalksBy mid-walk freezes it; the walk resumes after', () {
+    test('catWalksBy mid-walk sends the NPC away; it reappears at its '
+        'target after', () {
       run(AvatarScene.livingRoom, (FakeAsync async, NpcDirector npc) {
         npc.setEmotion(sad);
         ms(async, walk ~/ 3);
         npc.onSceneEvent(SceneEvent.catWalksBy);
-        final double frozen = x(npc);
-        ms(async, 5000);
+        // never two cats: away for the whole walk-by, even once its own
+        // walk would have ended
+        for (int i = 0; i < 10; i++) {
+          expect(state(npc), NpcState.away);
+          ms(async, 1000);
+        }
+        expect(state(npc), NpcState.away);
+        ms(async, 800);
+        // the walking cat has passed: back at the rug
         expect(state(npc), NpcState.idle);
-        expect(x(npc), closeTo(frozen, 0.02));
-        ms(async, 6000);
-        expect(state(npc), isIn(<NpcState>[NpcState.move, NpcState.idle]));
-        ms(async, walk + 100);
         expect(x(npc), 1);
       });
     });

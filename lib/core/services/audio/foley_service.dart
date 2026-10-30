@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../../utils/logger.dart';
+import 'mix_with_others_context.dart';
 
 /// Plays one short sound at a time (a low-latency pool slot).
 abstract interface class FoleyPlayer {
@@ -31,6 +32,7 @@ class AudioPlayersFoleyPlayer implements FoleyPlayer {
     AudioPlayer? player = _player;
     if (player == null) {
       player = _player = AudioPlayer();
+      await player.setAudioContext(mixWithOthersContext());
       await player.setReleaseMode(ReleaseMode.stop);
     }
     await player.stop();

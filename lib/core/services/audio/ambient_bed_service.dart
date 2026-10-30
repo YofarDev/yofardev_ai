@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../models/avatar_scene.dart';
 import '../../utils/logger.dart';
+import 'mix_with_others_context.dart';
 
 /// One looping bed (behind an interface so tests use fakes).
 abstract interface class BedPlayer {
@@ -27,6 +28,7 @@ class AudioPlayersBedPlayer implements BedPlayer {
     AudioPlayer? player = _player;
     if (player == null) {
       player = _player = AudioPlayer();
+      await player.setAudioContext(mixWithOthersContext());
       await player.setReleaseMode(ReleaseMode.loop);
     }
     await player.play(AssetSource(asset), volume: volume);

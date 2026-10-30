@@ -110,6 +110,15 @@ class AvatarCubit extends Cubit<AvatarState> {
   /// True when the latest gesture sent to the Rive view came from a prop or
   /// avatar tap, or a journey's jacket beat, rather than from the director.
   bool _propGesturePlaying = false;
+
+  /// True from the moment a director gesture is sent to the Rive view until
+  /// its `gesture_done` (or [_directorGestureWait] runs out).
+  bool _directorGesturePlaying = false;
+  Completer<void>? _directorGestureDone;
+
+  /// How long a prop-owned gesture waits for a director gesture still
+  /// playing (the director's own safety timeout is 4 s).
+  static const Duration _directorGestureWait = Duration(seconds: 4);
   StreamSubscription<AvatarAnimation>? _animationSubscription;
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
   StreamSubscription<String>? _chatChangedSubscription;
@@ -173,6 +182,7 @@ class AvatarCubit extends Cubit<AvatarState> {
         // The Rive view fires the trigger from a BlocListener keyed on seq,
         // so repeating the same gesture still plays.
         _propGesturePlaying = false;
+        _directorGesturePlaying = true;
         _emitIfOpen(
           state.copyWith(
             gestureEvent: (gesture: gesture, seq: state.gestureEvent.seq + 1),
@@ -485,15 +495,17 @@ class AvatarCubit extends Cubit<AvatarState> {
     if (gone()) return;
 
     if (journey.hasJacket) {
-      journey = _beat(journey, JourneyPhase.grab);
-      if (!await _jacketBeat(
+      final JourneyState? beat = await _jacketBeat(
         journey,
+        JourneyPhase.grab,
         JourneyTiming.grab,
         toHand: true,
         gone: gone,
-      )) {
+      );
+      if (beat == null) {
         return;
       }
+      journey = beat;
     }
 
     journey = _beat(journey, JourneyPhase.exit);
@@ -540,15 +552,17 @@ class AvatarCubit extends Cubit<AvatarState> {
     if (gone()) return;
 
     if (journey.hasJacket) {
-      journey = _beat(journey, JourneyPhase.hang);
-      if (!await _jacketBeat(
+      final JourneyState? beat = await _jacketBeat(
         journey,
+        JourneyPhase.hang,
         JourneyTiming.hang,
         toHand: false,
         gone: gone,
-      )) {
+      );
+      if (beat == null) {
         return;
       }
+      journey = beat;
     }
 
     journey = _beat(journey, JourneyPhase.arriveClose);
@@ -570,17 +584,25 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
   }
 
-  /// One jacket beat ([JourneyPhase.grab] or [JourneyPhase.hang]): plays the
+  /// One jacket beat ([phase]: [JourneyPhase.grab] or [JourneyPhase.hang]),
+  /// started once any director gesture still playing is done: plays the
   /// `grab` gesture, swaps the jacket at [JourneyTiming.grabContact] (to the
   /// hand when [toHand], else to the peg: both values in one state, so the
-  /// two views flip in the same frame) and waits out [length]. False when
-  /// the journey was stopped meanwhile.
-  Future<bool> _jacketBeat(
-    JourneyState journey,
+  /// two views flip in the same frame) and waits out [length]. Returns the
+  /// journey in the new phase, or null when it was stopped meanwhile.
+  Future<JourneyState?> _jacketBeat(
+    JourneyState current,
+    JourneyPhase phase,
     Duration length, {
     required bool toHand,
     required bool Function() gone,
   }) async {
+    // A director gesture still playing owns the next gesture_done: let it
+    // finish first, so the grab's own gesture_done (which is swallowed) is
+    // not mistaken for it and the director's queue is not released early.
+    await _waitForDirectorGesture();
+    if (gone()) return null;
+    final JourneyState journey = _beat(current, phase);
     // The journey's own gesture: its gesture_done must not release the
     // director's queue.
     _propGesturePlaying = true;
@@ -594,10 +616,33 @@ class AvatarCubit extends Cubit<AvatarState> {
       ),
     );
     await Future<void>.delayed(JourneyTiming.grabContact);
-    if (gone()) return false;
+    if (gone()) return null;
     _emitIfOpen(state.copyWith(jacket: toHand, journeyJacket: toHand ? 0 : 1));
     await Future<void>.delayed(length - JourneyTiming.grabContact);
-    return !gone();
+    return gone() ? null : journey;
+  }
+
+  /// Completes once the director gesture playing now (if any) is done, or
+  /// after [_directorGestureWait] (the Rive `gesture_done` may never come).
+  Future<void> _waitForDirectorGesture() async {
+    if (!_directorGesturePlaying) {
+      return;
+    }
+    final Completer<void> completer = Completer<void>();
+    _directorGestureDone = completer;
+    await completer.future.timeout(
+      _directorGestureWait,
+      onTimeout: () {
+        AppLogger.debug(
+          'journey: director gesture_done not received; continuing',
+          tag: 'AvatarCubit',
+        );
+      },
+    );
+    if (identical(_directorGestureDone, completer)) {
+      _directorGestureDone = null;
+    }
+    _directorGesturePlaying = false;
   }
 
   /// Bumped by a chat switch: a running journey stops at its next beat.
@@ -705,6 +750,11 @@ class AvatarCubit extends Cubit<AvatarState> {
     if (_propGesturePlaying) {
       _propGesturePlaying = false;
       return;
+    }
+    _directorGesturePlaying = false;
+    final Completer<void>? waiting = _directorGestureDone;
+    if (waiting != null && !waiting.isCompleted) {
+      waiting.complete();
     }
     _director?.onGestureDone();
   }
