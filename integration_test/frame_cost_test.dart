@@ -17,8 +17,9 @@ import 'package:yofardev_ai/features/avatar/avatar.dart';
 /// Task 10). It is NOT part of `flutter test` or `scripts/fverify.sh`.
 ///
 /// Frame cost (default): the real app's Home on each scene with the avatar on
-/// screen, 10 s each (campfire again at rain 1); build and raster times of
-/// every frame from `FrameTiming`.
+/// screen, 10 s each; build and raster times of
+/// every frame from `FrameTiming`. Campfire and beach are measured again at
+/// rain 1 (M6: their front weather layer is then drawn too).
 ///
 ///     flutter drive --profile -d emulator-5554 \
 ///       --driver=test_driver/integration_test.dart \
@@ -68,10 +69,15 @@ void main() {
       await showScene(scene);
       world.setRain(0);
       report[scene.name] = await _measure(tester, scene.name);
-      if (scene == AvatarScene.campfire) {
+      // At rain 1 the outdoor scenes also draw their front weather over the
+      // avatar (contract v9, M6).
+      if (scene == AvatarScene.campfire || scene == AvatarScene.beach) {
         world.setRain(1);
         await _settle(tester, const Duration(seconds: 2));
-        report['campfire_rain1'] = await _measure(tester, 'campfire_rain1');
+        report['${scene.name}_rain1'] = await _measure(
+          tester,
+          '${scene.name}_rain1',
+        );
         world.setRain(0);
       }
     }

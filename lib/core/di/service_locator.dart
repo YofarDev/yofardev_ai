@@ -37,6 +37,7 @@ import '../../features/sound/presentation/bloc/sound_cubit.dart';
 import '../../features/sound/data/datasources/tts_datasource.dart';
 import '../../features/sound/data/repositories/sound_repository_impl.dart';
 import '../../features/sound/domain/services/tts_queue_service.dart';
+import '../../features/sound/domain/services/tts_synthesizer.dart';
 import '../../features/sound/domain/repositories/sound_repository.dart';
 import '../../features/talking/data/repositories/talking_repository_impl.dart';
 import '../../features/talking/domain/repositories/talking_repository.dart';
@@ -81,7 +82,14 @@ import '../utils/logger.dart';
 
 final GetIt getIt = GetIt.instance;
 
-Future<void> setupServiceLocator() async {
+/// Registers every dependency. The overrides are seams for the macOS capture
+/// harness (`integration_test/wow_capture_test.dart`, M6): [ttsSynthesizer]
+/// replaces on-device TTS and [tools] the agent's tool list. Production passes
+/// neither.
+Future<void> setupServiceLocator({
+  TtsSynthesizer? ttsSynthesizer,
+  List<AgentTool>? tools,
+}) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
   // ── Data sources (register early — no dependencies) ──
@@ -151,7 +159,10 @@ Future<void> setupServiceLocator() async {
 
   // Agent & tool registry
   getIt.registerLazySingleton<ToolRegistry>(
-    () => ToolRegistry(appLifecycleService: getIt<AppLifecycleService>()),
+    () => ToolRegistry(
+      appLifecycleService: getIt<AppLifecycleService>(),
+      tools: tools,
+    ),
   );
 
   // ── Repositories (depend on datasources + services) ──
@@ -188,7 +199,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<VoiceEffectsService>(() => VoiceEffectsService());
   getIt.registerLazySingleton<TtsQueueService>(
     () => TtsQueueService(
-      ttsSynthesizer: getIt<TtsDatasource>(),
+      ttsSynthesizer: ttsSynthesizer ?? getIt<TtsDatasource>(),
       interruptionService: getIt<InterruptionService>(),
       voiceEffectsService: getIt<VoiceEffectsService>(),
     ),
