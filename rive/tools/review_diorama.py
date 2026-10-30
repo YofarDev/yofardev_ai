@@ -17,6 +17,10 @@ Writes to rive/review/m5/<sceneId>/ (or --out):
   plane travel, pointer proofs (`prop_tapped` fires inside each hit zone at its displaced position,
   and not at the rest-only edge it left), rain darkening and loop seams, sizes; with `--same-as`,
   the rest frame at rain 0 is pixel-identical to that revision's scene.
+
+Per-scene configuration: `CFG` / `EXTRAS` below for the four M8 scenes; any other scene (the v12
+ones) reads its scene module's `REVIEW["diorama"]` (`Cfg` kwargs) and `REVIEW["extras"]` (see
+`world_kit` for every `REVIEW` key), so a scene lane never edits this file.
 """
 
 from __future__ import annotations
@@ -26,6 +30,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Callable
 import xml.etree.ElementTree as ET
 
 import numpy as np
@@ -33,6 +38,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gen_scenes import PARALLAX_GAINS, PARALLAX_TRAVEL  # noqa: E402
+import world_kit  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENE_MAX = 409_600
@@ -368,9 +374,21 @@ EXTRAS = {"campfire": campfire_extras, "livingRoom": living_room_extras, "beach"
           "deepSpace": deep_space_extras}
 
 
+def cfg_of(scene: str) -> Cfg:
+    """`CFG[scene]`, else the scene module's `REVIEW["diorama"]` (M9 registry), else the defaults."""
+    if scene in CFG:
+        return CFG[scene]
+    return Cfg(**world_kit.review(scene).get("diorama", {}))
+
+
+def extras_of(scene: str) -> Callable[[Renderer, Path, list[str]], None] | None:
+    """`EXTRAS[scene]`, else the scene module's `REVIEW["extras"]` (M9 registry)."""
+    return EXTRAS.get(scene) or world_kit.review(scene).get("extras")
+
+
 def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) -> list[str]:
     proj = ROOT / "rive" / "scenes" / scene
-    cfg = CFG.get(scene, Cfg())
+    cfg = cfg_of(scene)
     rml = (proj / f"{scene}.rml").read_text()
     out.mkdir(parents=True, exist_ok=True)
     gates: list[str] = []
@@ -483,8 +501,9 @@ def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) 
             gates.append(f"rain 0 rest frames (f0, f60) identical to {same_as}: {worst:.4%} pixels differ "
                          f"({'ok' if worst == 0 else 'FAIL'})")
 
-        if scene in EXTRAS:
-            EXTRAS[scene](render, out, gates)
+        extras = extras_of(scene)
+        if extras is not None:
+            extras(render, out, gates)
         if f'name="{FRONT}"' in rml:
             front_gates(proj, render, out, gates, t)
 

@@ -15,6 +15,11 @@ Writes to rive/review/m8/ (or --out):
   `--same-as` (default 927a606), away draws nothing of the NPC, every state moves and loops back,
   `prop_tapped` fires on the NPC wherever its path takes it (and not where it left), fog changes the
   fog veils only (deepSpace: nothing), budgets.
+
+Per-scene configuration (`npc_cfg`): the tables below for the four M8 scenes; any other scene (the
+v12 ones) reads its scene module's `REVIEW["npc"]` (`crop`, `seam`, `prop`, `waypoints` or `at`,
+optional `fog_box`; see `world_kit`). A scene that does not exist at `--same-as` (a new one) skips
+the gates that compare with that revision (n/a).
 """
 
 from __future__ import annotations
@@ -31,10 +36,13 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import scene_npc  # noqa: E402
+import world_kit  # noqa: E402
 from review_diorama import FrontRenderer, Renderer, grid, label, taps  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-SCENES = ("livingRoom", "campfire", "beach", "deepSpace")
+# the M8 scenes, then every v12 scene whose project exists (world_kit.SCENE_MODULES)
+SCENES = (*world_kit.BUILT_IN_SCENES,
+          *(s for s in world_kit.SCENE_MODULES if (Path(__file__).resolve().parents[2] / "rive" / "scenes" / s).exists()))
 SCENE_MAX = 409_600
 NPC_MAX = 30 * 1024
 SAME_AS = "927a606"
@@ -50,38 +58,48 @@ SEAM = {"livingRoom": {"idle": 360, "move": 30, "notice": 120, "react": 60},
 FOG_BOX = {"livingRoom": (346, 216, 734, 714)}
 
 
+def npc_cfg(scene: str) -> dict:
+    """The scene's NPC review config: `crop` (w, h, dy), `seam` {state: frames}, `prop` (its propId),
+    `waypoints` [(x, y, scale)] along its path (None without a path), `at` (x, y) (no path), `fog_box`
+    (or None), `fog` (False: the scene ignores fog). Built in for the M8 scenes, else the scene
+    module's `REVIEW["npc"]` (M9 registry)."""
+    if scene in CROP:
+        way = {"livingRoom": scene_npc.CAT_WAYPOINTS, "beach": scene_npc.CRAB_WAYPOINTS,
+               "deepSpace": [(x, y, 1.0) for x, y in scene_npc.ufo_waypoints()]}.get(scene)
+        return {"crop": CROP[scene], "seam": SEAM[scene], "prop": NPC_PROP[scene], "waypoints": way,
+                "at": scene_npc.OWL_AT if scene == "campfire" else None, "fog_box": FOG_BOX.get(scene),
+                "fog": scene != "deepSpace"}
+    r = dict(world_kit.review(scene).get("npc", {}))
+    if not r:
+        raise SystemExit(f"review_npc: no NPC config for {scene!r} (its module's REVIEW['npc'])")
+    r.setdefault("waypoints", None)
+    r.setdefault("at", None)
+    r.setdefault("fog_box", None)
+    r.setdefault("fog", True)
+    return r
+
+
 def anchor(scene: str, t: float) -> tuple[float, float]:
     """Where the NPC is on screen at npcX `t` (its paws / feet / the ufo's centre)."""
-    if scene == "campfire":
-        return scene_npc.OWL_AT
-    if scene == "livingRoom":
-        pts = [(x, y) for x, y, _ in scene_npc.CAT_WAYPOINTS]
-    elif scene == "beach":
-        pts = [(x, y) for x, y, _ in scene_npc.CRAB_WAYPOINTS]
-    else:
-        pts = scene_npc.ufo_waypoints()
+    cfg = npc_cfg(scene)
+    if cfg["waypoints"] is None:
+        return tuple(cfg["at"])
+    pts = [(x, y) for x, y, _ in cfg["waypoints"]]
     ts = scene_npc.arc_params(pts)
     return float(np.interp(t, ts, [p[0] for p in pts])), float(np.interp(t, ts, [p[1] for p in pts]))
 
 
 def hit_at(scene: str, t: float, hit0: tuple[float, float]) -> tuple[float, float]:
     """The NPC's hit zone centre at npcX `t` (it follows the art, scaled with it)."""
-    if scene == "livingRoom":
-        w = scene_npc.CAT_WAYPOINTS
-        s0 = scene_npc.TV_SCALE
-    elif scene == "beach":
-        w = scene_npc.CRAB_WAYPOINTS
-        s0 = 1.0
-    else:
-        w = [(x, y, 1.0) for x, y in scene_npc.ufo_waypoints()]
-        s0 = 1.0
+    w = npc_cfg(scene)["waypoints"]
+    s0 = w[0][2]
     ts = scene_npc.arc_params([(x, y) for x, y, _ in w])
     x, y, s = (float(np.interp(t, ts, [p[i] for p in w])) for i in range(3))
     return x + (hit0[0] - w[0][0]) * s / s0, y + (hit0[1] - w[0][1]) * s / s0
 
 
 def crop(img: np.ndarray, scene: str, t: float = 0.0, k: float = 1.0) -> Image.Image:
-    cw, ch, dy = CROP[scene]
+    cw, ch, dy = npc_cfg(scene)["crop"]
     x, y = anchor(scene, t)
     y += dy
     # kept inside the artboard (the crab's far end sits at its right edge)
@@ -92,7 +110,7 @@ def crop(img: np.ndarray, scene: str, t: float = 0.0, k: float = 1.0) -> Image.I
 
 
 def box_of(scene: str, t: float = 0.0, pad: int = 0) -> tuple[int, int, int, int]:
-    cw, ch, dy = CROP[scene]
+    cw, ch, dy = npc_cfg(scene)["crop"]
     x, y = anchor(scene, t)
     y += dy
     return (max(0, int(x - cw / 2) - pad), max(0, int(y - ch / 2) - pad), min(1080, int(x + cw / 2) + pad),
@@ -101,6 +119,10 @@ def box_of(scene: str, t: float = 0.0, pad: int = 0) -> tuple[int, int, int, int
 
 def diff_frac(a: np.ndarray, b: np.ndarray, thr: int = 0) -> float:
     return float((np.abs(a.astype(int) - b.astype(int))[..., :3].max(-1) > thr).mean())
+
+
+def exists_at(rev: str, path: str) -> bool:
+    return subprocess.run(["git", "cat-file", "-e", f"{rev}:{path}"], cwd=ROOT, capture_output=True).returncode == 0
 
 
 def old_project(scene: str, rev: str, tmp: Path) -> Path:
@@ -150,12 +172,17 @@ def run(scene: str, out: Path, same_as: str) -> list[str]:
     with tempfile.TemporaryDirectory() as tmp:
         t = Path(tmp)
         render = Renderer(proj, t)
+        cfg = npc_cfg(scene)
         # ---- rest at the defaults: identical to the M7 file
-        old = old_project(scene, same_as, t)
-        worst = max(diff_frac(render(f"--advance={f}"), render(f"--advance={f}", proj=old)) for f in (1, 2, 31, 61))
-        gates.append(f"rest frames (f0, f1, f30, f60) at the defaults identical to {same_as}: {worst:.4%} differ "
-                     f"({'ok' if worst == 0 else 'FAIL'})")
-        if 'name="SceneFront"' in rml:
+        known = exists_at(same_as, f"rive/scenes/{scene}/{scene}.rml")
+        if known:
+            old = old_project(scene, same_as, t)
+            worst = max(diff_frac(render(f"--advance={f}"), render(f"--advance={f}", proj=old)) for f in (1, 2, 31, 61))
+            gates.append(f"rest frames (f0, f1, f30, f60) at the defaults identical to {same_as}: {worst:.4%} differ "
+                         f"({'ok' if worst == 0 else 'FAIL'})")
+        else:
+            gates.append(f"rest frames identical to {same_as}: n/a, a new scene (ok)")
+        if known and 'name="SceneFront"' in rml:
             fw = max(diff_frac(render("--artboard=SceneFront", "--data=rain=1", f"--advance={f}"),
                                render("--artboard=SceneFront", "--data=rain=1", f"--advance={f}", proj=old))
                      for f in (1, 2, 61))
@@ -190,7 +217,7 @@ def run(scene: str, out: Path, same_as: str) -> list[str]:
         grid(two_x, 4).save(npc_dir / "crop2x.png")
 
         # ---- every state moves, and loops back
-        for st, n in SEAM[scene].items():
+        for st, n in cfg["seam"].items():
             # at its v10 spot (along the path the crop would pick up the scene's own longer loops)
             bx = box_of(scene, 0.0)
             sl = (slice(bx[1], bx[3]), slice(bx[0], bx[2]))
@@ -202,7 +229,7 @@ def run(scene: str, out: Path, same_as: str) -> list[str]:
             gates.append(f"{st}: moves ({moved:.2%} of the crop) and its loop is back after {n} frames "
                          f"({seam:.4%} differ): {'ok' if moved > 0.005 and seam <= 0.001 else 'FAIL'}")
         # rest at the far end of its path (asleep on the rug, the crab still, the ufo moved)
-        if scene in scene_npc.NPC_PATHS:
+        if cfg["waypoints"] is not None:
             cells = []
             for tx in (0.0, 0.25, 0.5, 0.75, 1.0):
                 a = render("--data=npc=move", f"--data=npcX={tx}", "--advance=16")
@@ -215,15 +242,13 @@ def run(scene: str, out: Path, same_as: str) -> list[str]:
             grid(cells, 6).save(npc_dir / "path.png")
             # ---- pointer: the poke follows the NPC
             zones = hit_zones(scene)
-            prop = NPC_PROP[scene]
+            prop = cfg["prop"]
             cx0, cy0, w0, h0 = zones.pop(prop)
-            s0 = scene_npc.TV_SCALE if scene == "livingRoom" else 1.0
-            ws = {"livingRoom": scene_npc.CAT_WAYPOINTS, "beach": scene_npc.CRAB_WAYPOINTS}
+            w = cfg["waypoints"]
+            s0 = w[0][2]
             for tx in (0.0, 0.5, 1.0):
                 hx, hy = hit_at(scene, tx, (cx0, cy0))
-                w = ws.get(scene)
-                k = float(np.interp(tx, scene_npc.arc_params([(x, y) for x, y, _ in w]), [p[2] for p in w])) / s0 \
-                    if w else 1.0
+                k = float(np.interp(tx, scene_npc.arc_params([(x, y) for x, y, _ in w]), [p[2] for p in w])) / s0
                 p = alone((hx, hy, w0 * k, h0 * k), list(zones.values()))
                 if p is None:
                     gates.append(f"pointer {prop} at npcX {tx}: no point inside it alone: FAIL")
@@ -238,9 +263,9 @@ def run(scene: str, out: Path, same_as: str) -> list[str]:
                     ok &= m == 0
                 gates.append(f"{line}: {'ok' if ok else 'FAIL'}")
         else:
-            hx, hy, _, _ = hit_zones(scene)["owl"]
+            hx, hy, _, _ = hit_zones(scene)[cfg["prop"]]
             n = taps(proj, "--data=npc=react", f"--pointer=click@{hx:.0f},{hy:.0f}", "--advance=3")
-            gates.append(f"pointer owl (no path) while reacting: click@{hx:.0f},{hy:.0f} fires {n}: "
+            gates.append(f"pointer {cfg['prop']} (no path) while reacting: click@{hx:.0f},{hy:.0f} fires {n}: "
                          f"{'ok' if n == 1 else 'FAIL'}")
 
         # ---- fog
@@ -248,11 +273,11 @@ def run(scene: str, out: Path, same_as: str) -> list[str]:
         cells = [label(Image.fromarray(shots[f]).convert("RGB").resize((360, 640)), f"fog {f}") for f in (0, 0.5, 1)]
         # (> 2/255: the artboard's outermost column shows the sky plane's veils at 1/255)
         changed = np.abs(shots[1].astype(int) - shots[0].astype(int))[..., :3].max(-1) > 2
-        if scene == "deepSpace":
-            gates.append(f"fog: deepSpace ignores it, fog 1 vs 0: {changed.mean():.4%} differ "
+        if not cfg["fog"]:
+            gates.append(f"fog: {scene} ignores it, fog 1 vs 0: {changed.mean():.4%} differ "
                          f"({'ok' if not changed.any() else 'FAIL'})")
         else:
-            box = FOG_BOX.get(scene)
+            box = cfg["fog_box"]
             if box is not None:
                 out_box = changed.copy()
                 out_box[box[1]:box[3], box[0]:box[2]] = False
@@ -276,13 +301,17 @@ def run(scene: str, out: Path, same_as: str) -> list[str]:
 
     riv = ROOT / "assets" / "rive" / "scenes" / f"{scene}.riv"
     size = riv.stat().st_size
-    old_size = int(subprocess.run(["git", "cat-file", "-s", f"{same_as}:assets/rive/scenes/{scene}.riv"], cwd=ROOT,
-                                  check=True, capture_output=True, text=True).stdout)
-    gates.append(f"{scene}.riv {size:,} B ({size - old_size:+,} B vs {same_as}; budget {SCENE_MAX:,}, NPC + fog "
-                 f"<= {NPC_MAX + 1024:,}): {'ok' if size <= SCENE_MAX and size - old_size <= NPC_MAX + 1024 else 'FAIL'}")
+    if exists_at(same_as, f"assets/rive/scenes/{scene}.riv"):
+        old_size = int(subprocess.run(["git", "cat-file", "-s", f"{same_as}:assets/rive/scenes/{scene}.riv"], cwd=ROOT,
+                                      check=True, capture_output=True, text=True).stdout)
+        gates.append(f"{scene}.riv {size:,} B ({size - old_size:+,} B vs {same_as}; budget {SCENE_MAX:,}, NPC + fog "
+                     f"<= {NPC_MAX + 1024:,}): {'ok' if size <= SCENE_MAX and size - old_size <= NPC_MAX + 1024 else 'FAIL'}")
+    else:
+        gates.append(f"{scene}.riv {size:,} B (a new scene; budget {SCENE_MAX:,}): {'ok' if size <= SCENE_MAX else 'FAIL'}")
     poster = f"assets/rive/posters/{scene}.webp"
-    same = subprocess.run(["git", "diff", "--quiet", same_as, "--", poster], cwd=ROOT).returncode == 0
-    gates.append(f"{poster} unchanged since {same_as}: {'ok' if same else 'FAIL'}")
+    if exists_at(same_as, poster):
+        same = subprocess.run(["git", "diff", "--quiet", same_as, "--", poster], cwd=ROOT).returncode == 0
+        gates.append(f"{poster} unchanged since {same_as}: {'ok' if same else 'FAIL'}")
     (npc_dir / "gates.txt").write_text("\n".join(gates) + "\n")
     return gates
 

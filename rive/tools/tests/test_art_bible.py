@@ -28,7 +28,7 @@ def test_tokens_match_app_palette() -> None:
 
 def test_every_contract_scene_has_a_script_with_its_token_accent() -> None:
     contract: str = (ROOT / "rive/CONTRACT.md").read_text(encoding="utf-8")
-    for scene in ("livingRoom", "campfire", "beach", "deepSpace"):
+    for scene in ("livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut"):
         assert scene in contract
         assert SCENES[scene].accent == TOKENS[f"{scene}Accent"]
         assert set(SCENES[scene].times) == {"dawn", "day", "dusk", "night"}
@@ -73,6 +73,7 @@ def test_lint_ignores_numbers_that_look_like_hex_but_reads_colour_keys() -> None
 def test_scene_scripts_carry_flicker_rim_and_ambient() -> None:
     assert {s: SCENES[s].flicker for s in SCENES} == {
         "livingRoom": 0.15, "campfire": 1.0, "beach": 0.0, "deepSpace": 0.0,
+        "cafe": 0.0, "rooftop": 0.0, "mountainHut": 0.6,
     }
     assert all(s.ambient_amount == 0.35 and s.rim_intensity == 0.35 for s in SCENES.values())
     assert SCENES["campfire"].key_xy == (-0.49, -0.872)
@@ -143,3 +144,20 @@ def test_scene_lights_match_art_bible() -> None:
                                      "flicker": s.flicker}
         for name, want in numbers.items():
             assert abs(float(rig[name]) - want) < 1e-9, (scene, name, rig[name], want)
+
+
+M8_SCENES: tuple[str, ...] = ("livingRoom", "campfire", "beach", "deepSpace")
+
+
+def test_v12_scripts_leave_the_shared_journey_and_jacket_colours_alone() -> None:
+    """M9 rulings 5, 15: journey.riv and avatar.riv keep their bytes, yet gen_journeys.fit and
+    jacket_art.fit_all fit their colours into every scene's script. A v12 script at least as lenient
+    as the four M8 ones together cannot move a colour they already accept."""
+    lo = max(SCENES[s].value[0] for s in M8_SCENES)
+    hi = min(SCENES[s].value[1] for s in M8_SCENES)
+    cap = min(SCENES[s].sat_cap for s in M8_SCENES)
+    for scene in set(SCENES) - set(M8_SCENES):
+        s = SCENES[scene]
+        assert s.value[0] <= lo and s.value[1] >= hi and s.sat_cap >= cap, scene
+        assert s.rim_intensity == 0.35 and s.ambient_amount == 0.35, scene
+        assert set(s.times) == {"dawn", "day", "dusk", "night"}, scene

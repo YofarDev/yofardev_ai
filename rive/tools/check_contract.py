@@ -3,6 +3,13 @@
 Reads the contract tables, runs `rive inspect --json` on each project, and also
 greps the shipped .riv bytes in assets/rive/ so a stale copy fails too.
 Exit code 1 on any mismatch. Run by scripts/frive.sh.
+
+v12 (M9): a scene of the contract table whose project dir `rive/scenes/<id>` does not exist yet is
+listed as pending (its lane builds it) instead of failing; the four M8 scenes are always required.
+Each built scene's `SceneVM` must hold the contract's members in contract order plus its own drag
+numbers (`world_kit.DRAGS`, parsed from the drag table), with their defaults; the v12 members its
+file binds must equal its declaration (`world_kit.declared_binds`), and the members the contract says
+it binds but it does not declare yet are printed as pending (`--strict-binds` makes them errors).
 """
 
 from __future__ import annotations
@@ -16,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import art_bible  # noqa: E402
+import world_kit  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "rive" / "CONTRACT.md"
@@ -86,6 +94,8 @@ def parse_contract() -> dict:
     for sid, evs, pids in table_after(scene_sec, r"^\| sceneId"):
         scenes[sid] = ([v.strip() for v in evs.split(",")], [v.strip() for v in pids.split(",")])
     c["scenes"] = scenes
+    c["drags"] = world_kit.parse_drags(text)            # v12
+    c["v12_binders"] = v12_binders(scene_sec, list(scenes))   # v12: who binds moonPhase, festive, npc2*
     # v9: which scenes carry the `SceneFront` artboard ("campfire and beach have one; ...")
     flat = " ".join(scene_sec.split())
     m = re.search(r"may carry a second artboard `(\w+)`", flat)
@@ -126,10 +136,16 @@ def scene_vm_props(scene_sec: str) -> dict[str, str]:
     props: dict[str, str] = {}
     for item in re.split(r"\n\s*- ", bullets)[1:]:
         item = " ".join(item.split())
-        lead = re.match(r"((?:`[a-z]\w*`(?:,\s*)?)+):\s*(enum|trigger|numbers?|colors?)\b", item)
-        if lead:
+        lead = re.match(r"((?:`[a-z]\w*`(?:,\s*)?)+)(?:\s*\(v\d+\w*\))?:\s*(enum|trigger|numbers?|colors?)?\b", item)
+        if lead and lead.group(2):
             for n in re.findall(r"`([a-z]\w*)`", lead.group(1)):
                 props.setdefault(n, lead.group(2).rstrip("s"))
+            continue
+        same = re.search(r"same values and meaning as ((?:`[a-z]\w*`(?:,\s*|\s*and\s*)?)+)", item)
+        if lead and same:
+            # v12: "`npc2`, `npc2X`, `npc2Look` (v12): ... the same values and meaning as `npc`, `npcX`, `npcLook`"
+            for n, ref in zip(re.findall(r"`([a-z]\w*)`", lead.group(1)), re.findall(r"`([a-z]\w*)`", same.group(1))):
+                props.setdefault(n, props[ref])
             continue
         pending: list[str] = []
         for m in re.finditer(r"`([a-z]\w*)`|\((color|colors|number|numbers|enum|trigger)\)", item):
@@ -140,6 +156,24 @@ def scene_vm_props(scene_sec: str) -> dict[str, str]:
                     props.setdefault(n, m.group(2).rstrip("s"))
                 pending = []
     return props
+
+
+def v12_binders(scene_sec: str, scene_ids: list[str]) -> dict[str, set[str]]:
+    """v12: the scenes the contract says bind `moonPhase`, `festive` and `npc2` (`npc2X`, `npc2Look`
+    with it), read from each bullet's "<scenes> bind(s) it" clause (parentheticals dropped)."""
+    vm_at = scene_sec.index("**View model:**")
+    bullets = scene_sec[vm_at:scene_sec.index("**Rive event emitted:**")]
+    out: dict[str, set[str]] = {}
+    for item in re.split(r"\n\s*- ", bullets)[1:]:
+        item = " ".join(item.split())
+        lead = re.match(r"`(moonPhase|festive|npc2)`", item)
+        if not lead:
+            continue
+        m = re.search(r"([^.;]*?)\bbinds? it\b", re.sub(r"\([^)]*\)", "", item))
+        found = {w for w in re.findall(r"\w+", m.group(1)) if w in scene_ids} if m else set()
+        for n in ((lead.group(1),) if lead.group(1) != "npc2" else world_kit.NPC2_NAMES):
+            out[n] = found
+    return out
 
 
 def scene_npc_values(scene_sec: str) -> list[str]:
@@ -248,6 +282,33 @@ def check_light_defaults(label: str, j: dict, vm: dict, want: dict[str, object])
             err(f"{label}: `{name}` default {g!r} != art_bible {val!r}")
 
 
+def compact(names: set[str]) -> str:
+    """Sorted names, with a complete set of trail numbers shortened to `trail* (34)`."""
+    trail = {n for n, _ in world_kit.TRAIL_NUMBERS}
+    rest = sorted(names - trail) if trail <= names else sorted(names)
+    return ", ".join(rest + ([f"trail* ({len(trail)})"] if trail <= names else []))
+
+
+def check_v12_binds(sid: str, proj: Path, c: dict, pending: list[str]) -> None:
+    """v12: the members the built RML binds equal the scene's declaration; contract binds it does not
+    declare yet are pending (the lanes add them)."""
+    root = ET.parse(proj / f"{sid}.rml").getroot()
+    vm = next((v for v in root.findall("ViewModel") if v.get("name") == c["scene_vm"]), None)
+    if vm is None:
+        return
+    v12 = {n for n, _, _ in world_kit.v12_members(sid)}
+    names = {p.get("id"): p.get("name") for p in vm if p.tag.startswith("ViewModelProperty") and p.get("name") in v12}
+    got = world_kit.bound_names(root, vm.get("id"), names)
+    declared = set(world_kit.declared_binds(sid))
+    if got != declared:
+        err(f"{sid}: v12 members bound in the file {sorted(got)} != declared {sorted(declared)}")
+    want = {n for n, who in c["v12_binders"].items() if sid in who} | set(world_kit.drag_numbers(sid))
+    if want - declared:
+        pending.append(f"{sid}: contract v12 binds not done yet: {compact(want - declared)}")
+    if declared - want:
+        err(f"{sid}: binds {sorted(declared - want)}, which the contract says it ignores")
+
+
 def check_riv_bytes(path: Path, names: list[str]) -> None:
     if not path.exists():
         err(f"missing built file {path.relative_to(ROOT)}")
@@ -307,6 +368,8 @@ def check_ui_kit(c: dict) -> None:
         err(f"ui_kit.riv is {out.stat().st_size} bytes, budget {c['ui_max']}")
     w, h, kb = c["poster"]
     for sid in c["scenes"]:
+        if not scene_built(sid):
+            continue
         poster = ROOT / "assets" / "rive" / "posters" / f"{sid}.webp"
         if not poster.exists():
             err(f"missing poster {poster.relative_to(ROOT)}")
@@ -338,11 +401,15 @@ def diorama_lint(rml_of: dict[str, str] | None = None) -> list[str]:
     the committed RML per scene (tests)."""
     import gen_scenes  # noqa: PLC0415 (the generator pulls the scene art; only this check needs it)
 
+    world_kit.written_scene_modules()   # v12 scene modules register their DioramaSpec on import
     out = []
     for sid in gen_scenes.DIORAMAS:
         text = (rml_of or {}).get(sid)
         if text is None:
-            text = (ROOT / "rive" / "scenes" / sid / f"{sid}.rml").read_text()
+            path = ROOT / "rive" / "scenes" / sid / f"{sid}.rml"
+            if not path.exists() and not scene_built(sid):
+                continue   # a v12 scene its lane has not generated yet
+            text = path.read_text()
         problems = art_bible.lint_colours(text, sid)
         if problems:
             out.append(f"{sid}: colour-script lint, {len(problems)} hit(s), first {problems[0]}")
@@ -401,8 +468,15 @@ def check_journey(c: dict) -> None:
         err(f"journey: {riv.stat().st_size} B over the {jc['max']} B budget")
 
 
-def main() -> int:
+def scene_built(sid: str) -> bool:
+    """False only for a v12 scene whose project dir does not exist yet (pending in its lane)."""
+    return sid not in world_kit.SCENE_MODULES or (ROOT / "rive" / "scenes" / sid).exists()
+
+
+def main(argv: list[str] | None = None) -> int:
+    strict_binds = "--strict-binds" in (argv or [])
     c = parse_contract()
+    pending: list[str] = []
     # ---------------- avatar
     j = inspect(ROOT / "rive" / "avatar")
     ab, vm = check_common("avatar", j, c["avatar_artboard"], c["avatar_sm"], c["avatar_vm"])
@@ -443,29 +517,41 @@ def main() -> int:
     check_riv_bytes(ROOT / "assets" / "rive" / "avatar.riv",
                     [c["avatar_artboard"], c["avatar_sm"], c["avatar_vm"], *c["avatar_props"], *c["avatar_events"]])
     # ---------------- scenes
+    built = []
     for sid, (ev_vals, prop_ids) in c["scenes"].items():
         proj = ROOT / "rive" / "scenes" / sid
         if not proj.exists():
-            err(f"scene `{sid}`: no project at {proj.relative_to(ROOT)}")
+            if scene_built(sid):
+                err(f"scene `{sid}`: no project at {proj.relative_to(ROOT)}")
+            else:
+                pending.append(f"{sid}: not built yet (no {proj.relative_to(ROOT)})")
             continue
+        built.append(sid)
+        drags = [(n, v) for h in c["drags"].get(sid, ()) for n, v in h.numbers]
         j = inspect(proj)
         ab, vm = check_common(sid, j, c["scene_artboard"], c["scene_sm"], c["scene_vm"])
         if vm:
             got = vm_props(j, vm)
-            want = {n: (TYPE_OF[t], ev_vals if n == "eventId" else c["scene_npc_values"] if n == "npc" else None)
+            want = {n: (TYPE_OF[t], ev_vals if n == "eventId" else c["scene_npc_values"] if n in ("npc", "npc2") else None)
                     for n, t in c["scene_vm_props"].items()}
+            want.update({n: (TYPE_OF["number"], None) for n, _ in drags})   # v12: its own drag numbers, last
             if got != want:
                 err(f"{sid}: SceneVM {got} != {want}")
+            elif list(got) != list(want):
+                err(f"{sid}: SceneVM order {list(got)} != contract order {list(want)}")
             check_light_defaults(sid, j, vm, {**scene_light_defaults(sid), "rain": 0.0, "daylight": 0.0, "dusk": 0.0,
-                                              "fog": 0.0, "npcX": 0.0, "npcLook": 0.0})
-            # v11: `npc` defaults to rest (the v10 look)
+                                              "fog": 0.0, "npcX": 0.0, "npcLook": 0.0, "npc2X": 0.0, "npc2Look": 0.0,
+                                              "moonPhase": world_kit.MOON_PHASE_OFF, "festive": 0.0, **dict(drags)})
+            # v11: `npc` defaults to rest (the v10 look); v12: `npc2` to away (not drawn)
             keys = {v["id"]: v["key"] for e in nodes(j["roots"], "DataEnumCustom") for v in e.get("children", [])
                     if v.get("type") == "DataEnumValue"}
-            npc_p = next((p["id"] for p in vm.get("children", []) if p.get("name") == "npc"), None)
-            dflt = [keys.get(v.get("propertyValue")) for v in nodes(vm, "ViewModelInstanceEnum")
-                    if v.get("viewModelPropertyId") == npc_p]
-            if dflt != ["rest"]:
-                err(f"{sid}: `npc` default {dflt} != ['rest']")
+            for slot, want_dflt in (("npc", "rest"), ("npc2", "away")):
+                slot_p = next((p["id"] for p in vm.get("children", []) if p.get("name") == slot), None)
+                dflt = [keys.get(v.get("propertyValue")) for v in nodes(vm, "ViewModelInstanceEnum")
+                        if v.get("viewModelPropertyId") == slot_p]
+                if dflt != [want_dflt]:
+                    err(f"{sid}: `{slot}` default {dflt} != [{want_dflt!r}]")
+        check_v12_binds(sid, proj, c, pending)
         if ab:
             evs = events_of(ab)
             if set(evs) != {c["scene_event_name"]}:
@@ -476,7 +562,7 @@ def main() -> int:
         check_front(sid, j, c, vm)
         check_riv_bytes(ROOT / "assets" / "rive" / "scenes" / f"{sid}.riv",
                         [c["scene_artboard"], c["scene_sm"], c["scene_vm"], c["scene_event_name"], *ev_vals, *prop_ids,
-                         *c["scene_vm_props"]])
+                         *c["scene_vm_props"], *(n for n, _ in drags)])
     extra = {p.stem for p in (ROOT / "assets" / "rive" / "scenes").glob("*.riv")} - set(c["scenes"])
     if extra:
         err(f"scenes not in the contract: {sorted(extra)}")
@@ -484,15 +570,21 @@ def main() -> int:
     check_journey(c)
     for e in diorama_lint():
         err(e)
+    for p in pending:
+        print(f"… pending: {p}")
+    if strict_binds:
+        for p in pending:
+            err(f"pending (--strict-binds): {p}")
     if errors:
         print("✗ contract self-check failed:")
         for e in errors:
             print("  -", e)
         return 1
-    print(f"✓ contract self-check: avatar + {len(c['scenes'])} scenes + ui_kit ({len(c['ui'])} artboards) "
-          f"+ {len(c['scenes'])} posters + journey match rive/CONTRACT.md")
+    print(f"✓ contract self-check: avatar + {len(built)} scenes + ui_kit ({len(c['ui'])} artboards) "
+          f"+ {len(built)} posters + journey match rive/CONTRACT.md"
+          + (f" ({len(c['scenes']) - len(built)} contract scenes pending)" if len(built) < len(c["scenes"]) else ""))
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

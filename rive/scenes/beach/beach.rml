@@ -23839,6 +23839,45 @@
     <ViewModelPropertyEnumCustom enumId="0:930006" name="npc" id="0:930009"/>
     <ViewModelPropertyNumber name="npcX" id="0:930011"/>
     <ViewModelPropertyNumber name="npcLook" id="0:930013"/>
+    <ViewModelPropertyEnumCustom enumId="0:930006" name="npc2" id="0:920000"/>
+    <ViewModelPropertyNumber name="npc2X" id="0:920002"/>
+    <ViewModelPropertyNumber name="npc2Look" id="0:920004"/>
+    <ViewModelPropertyNumber name="moonPhase" id="0:920006"/>
+    <ViewModelPropertyNumber name="festive" id="0:920008"/>
+    <ViewModelPropertyNumber name="trailN" id="0:920010"/>
+    <ViewModelPropertyNumber name="trailX0" id="0:920012"/>
+    <ViewModelPropertyNumber name="trailX1" id="0:920014"/>
+    <ViewModelPropertyNumber name="trailX2" id="0:920016"/>
+    <ViewModelPropertyNumber name="trailX3" id="0:920018"/>
+    <ViewModelPropertyNumber name="trailX4" id="0:920020"/>
+    <ViewModelPropertyNumber name="trailX5" id="0:920022"/>
+    <ViewModelPropertyNumber name="trailX6" id="0:920024"/>
+    <ViewModelPropertyNumber name="trailX7" id="0:920026"/>
+    <ViewModelPropertyNumber name="trailX8" id="0:920028"/>
+    <ViewModelPropertyNumber name="trailX9" id="0:920030"/>
+    <ViewModelPropertyNumber name="trailX10" id="0:920032"/>
+    <ViewModelPropertyNumber name="trailX11" id="0:920034"/>
+    <ViewModelPropertyNumber name="trailX12" id="0:920036"/>
+    <ViewModelPropertyNumber name="trailX13" id="0:920038"/>
+    <ViewModelPropertyNumber name="trailX14" id="0:920040"/>
+    <ViewModelPropertyNumber name="trailX15" id="0:920042"/>
+    <ViewModelPropertyNumber name="trailY0" id="0:920044"/>
+    <ViewModelPropertyNumber name="trailY1" id="0:920046"/>
+    <ViewModelPropertyNumber name="trailY2" id="0:920048"/>
+    <ViewModelPropertyNumber name="trailY3" id="0:920050"/>
+    <ViewModelPropertyNumber name="trailY4" id="0:920052"/>
+    <ViewModelPropertyNumber name="trailY5" id="0:920054"/>
+    <ViewModelPropertyNumber name="trailY6" id="0:920056"/>
+    <ViewModelPropertyNumber name="trailY7" id="0:920058"/>
+    <ViewModelPropertyNumber name="trailY8" id="0:920060"/>
+    <ViewModelPropertyNumber name="trailY9" id="0:920062"/>
+    <ViewModelPropertyNumber name="trailY10" id="0:920064"/>
+    <ViewModelPropertyNumber name="trailY11" id="0:920066"/>
+    <ViewModelPropertyNumber name="trailY12" id="0:920068"/>
+    <ViewModelPropertyNumber name="trailY13" id="0:920070"/>
+    <ViewModelPropertyNumber name="trailY14" id="0:920072"/>
+    <ViewModelPropertyNumber name="trailY15" id="0:920074"/>
+    <ViewModelPropertyNumber name="trailFade" id="0:920076"/>
     <ViewModelInstance exports="true" name="Default" id="0:22">
       <ViewModelInstanceEnum propertyValue="0:13" viewModelPropertyId="0:18" id="0:20"/>
       <ViewModelInstanceTrigger viewModelPropertyId="0:19" id="0:21"/>
@@ -23860,6 +23899,45 @@
       <ViewModelInstanceEnum propertyValue="0:930001" viewModelPropertyId="0:930009" id="0:930010"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:930011" id="0:930012"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:930013" id="0:930014"/>
+      <ViewModelInstanceEnum propertyValue="0:930000" viewModelPropertyId="0:920000" id="0:920001"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920002" id="0:920003"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920004" id="0:920005"/>
+      <ViewModelInstanceNumber propertyValue="-1" viewModelPropertyId="0:920006" id="0:920007"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920008" id="0:920009"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920010" id="0:920011"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920012" id="0:920013"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920014" id="0:920015"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920016" id="0:920017"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920018" id="0:920019"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920020" id="0:920021"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920022" id="0:920023"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920024" id="0:920025"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920026" id="0:920027"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920028" id="0:920029"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920030" id="0:920031"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920032" id="0:920033"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920034" id="0:920035"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920036" id="0:920037"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920038" id="0:920039"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920040" id="0:920041"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920042" id="0:920043"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920044" id="0:920045"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920046" id="0:920047"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920048" id="0:920049"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920050" id="0:920051"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920052" id="0:920053"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920054" id="0:920055"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920056" id="0:920057"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920058" id="0:920059"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920060" id="0:920061"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920062" id="0:920063"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920064" id="0:920065"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920066" id="0:920067"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920068" id="0:920069"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920070" id="0:920071"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920072" id="0:920073"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920074" id="0:920075"/>
+      <ViewModelInstanceNumber propertyValue="1" viewModelPropertyId="0:920076" id="0:920077"/>
     </ViewModelInstance>
   </ViewModel>
 

@@ -12310,6 +12310,12 @@
     <ViewModelPropertyEnumCustom enumId="0:930006" name="npc" id="0:930009"/>
     <ViewModelPropertyNumber name="npcX" id="0:930011"/>
     <ViewModelPropertyNumber name="npcLook" id="0:930013"/>
+    <ViewModelPropertyEnumCustom enumId="0:930006" name="npc2" id="0:920000"/>
+    <ViewModelPropertyNumber name="npc2X" id="0:920002"/>
+    <ViewModelPropertyNumber name="npc2Look" id="0:920004"/>
+    <ViewModelPropertyNumber name="moonPhase" id="0:920006"/>
+    <ViewModelPropertyNumber name="festive" id="0:920008"/>
+    <ViewModelPropertyNumber name="cord" id="0:920010"/>
     <ViewModelInstance exports="true" name="Default" id="0:22">
       <ViewModelInstanceEnum propertyValue="0:13" viewModelPropertyId="0:18" id="0:20"/>
       <ViewModelInstanceTrigger viewModelPropertyId="0:19" id="0:21"/>
@@ -12331,6 +12337,12 @@
       <ViewModelInstanceEnum propertyValue="0:930001" viewModelPropertyId="0:930009" id="0:930010"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:930011" id="0:930012"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:930013" id="0:930014"/>
+      <ViewModelInstanceEnum propertyValue="0:930000" viewModelPropertyId="0:920000" id="0:920001"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920002" id="0:920003"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920004" id="0:920005"/>
+      <ViewModelInstanceNumber propertyValue="-1" viewModelPropertyId="0:920006" id="0:920007"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920008" id="0:920009"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920010" id="0:920011"/>
     </ViewModelInstance>
   </ViewModel>
 

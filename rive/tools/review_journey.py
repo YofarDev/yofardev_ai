@@ -10,7 +10,8 @@ and alpha is recovered as 1 - (white - black) / 255 (as M6's `review_diorama.Fro
 Writes (unless `--gates-only`): `<family>_strip.png` per family: open 0 / 0.5 / 1 (the rocket adds
 lift 0.08 and 1; the door adds open 1 with its v11 jacket on the peg), composited over every scene's poster with the avatar's rest render, in the phone
 framing the app uses (the scene `Fit.cover`, the avatar and the journey `Fit.contain` at the
-bottom); `sheet.png` (all four strips); `gates.txt`.
+bottom; one row per scene with a poster: the M8 four and each built v12 scene); `sheet.png` (all
+four strips); `gates.txt`.
 
 Gates (one line each, `ok` or `FAIL`):
 - every number 0, and `open` 1 + `lift` 1 + `jacket` 1 with no family shown: nothing drawn (alpha 0);
@@ -38,12 +39,15 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(__file__))
 import gen_journeys  # noqa: E402
+import world_kit  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJ = ROOT / "rive" / "journeys"
 AVATAR = ROOT / "rive" / "avatar"
 POSTERS = ROOT / "assets" / "rive" / "posters"
-SCENES = ("livingRoom", "campfire", "beach", "deepSpace")
+# the M8 scenes, then every v12 scene whose poster exists (world_kit.SCENE_MODULES): the strips
+# composite the journeys over each scene's poster
+SCENES = (*world_kit.BUILT_IN_SCENES, *(s for s in world_kit.SCENE_MODULES if (POSTERS / f"{s}.webp").exists()))
 W, H = gen_journeys.W, gen_journeys.H
 BAND = (650, 790, 200, 990)
 # the rocket tapers to its nose and stands on legs: its solid hull spans y 330-830

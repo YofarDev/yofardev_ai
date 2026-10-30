@@ -27,6 +27,10 @@ TOKENS: dict[str, str] = {
     "campfireAccent": "FFFF8552",
     "beachAccent": "FFFF9478",
     "deepSpaceAccent": "FFB79CFF",
+    # contract v12 (M9 ruling 3)
+    "cafeAccent": "FFE8956B",
+    "rooftopAccent": "FF7CB8FF",
+    "mountainHutAccent": "FF86D4C4",
 }
 
 # --- 2. Character palette (ramps: light -> shadow -> deep shadow). Shadows shift toward the
@@ -124,6 +128,34 @@ SCENES: dict[str, SceneScript] = {
         rim="FF7FE0FF", ambient="FF120E26", fog="331E1A44", value=(0.02, 0.95), sat_cap=0.70,
         times={"dawn": "FF120E26", "day": "FF120E26", "dusk": "FF120E26", "night": "FF070614"},
         flicker=0.0,
+    ),
+    # M9 (contract v12, ruling 3). Every v12 colour script is at least as lenient as the four above
+    # together (value low <= 0.10, high >= 0.92, sat cap >= 0.55): the journey and jacket art fit their
+    # colours into every scene's script (gen_journeys.fit, jacket_art.fit_all), and avatar.riv /
+    # journey.riv must not change in M9 (rulings 5, 15). tests/test_art_bible.py holds that.
+    # cafe: a warm pendant lamp from above, a little left; the rainy window's cool light rims the
+    # silhouette; plum-dark shadows; the window's sky behind the rain.
+    "cafe": SceneScript(
+        accent=TOKENS["cafeAccent"], key="FFFFC98A", key_dir=1.9, key_intensity=0.85,
+        rim="FF8FA8D0", ambient="FF2A2433", fog="33A8B4C4", value=(0.06, 0.93), sat_cap=0.6,
+        times={"dawn": "FF7C88B0", "day": "FF9FB4C8", "dusk": "FF5C4E70", "night": "FF1C2034"},
+        flicker=0.0,
+    ),
+    # rooftop: cool moonlight from high right, the city's sodium glow as a warm rim from below,
+    # blue-black shadows, the open night sky.
+    "rooftop": SceneScript(
+        accent=TOKENS["rooftopAccent"], key="FFC4D4FF", key_dir=0.95, key_intensity=0.7,
+        rim="FFFFB27A", ambient="FF161A2E", fog="33303A5C", value=(0.03, 0.95), sat_cap=0.62,
+        times={"dawn": "FF56608E", "day": "FF86B4DA", "dusk": "FF4A3A6C", "night": "FF0E1630"},
+        flicker=0.0,
+    ),
+    # mountainHut: the stove's firelight from low right (a softer flicker than the campfire), the
+    # snowy window's cold light as the rim, warm-dark shadows, a snow-mist fog outside.
+    "mountainHut": SceneScript(
+        accent=TOKENS["mountainHutAccent"], key="FFFFA25A", key_dir=-0.4, key_intensity=0.95,
+        rim="FF8CB4E0", ambient="FF1E1A26", fog="33B8C8DC", value=(0.04, 0.94), sat_cap=0.58,
+        times={"dawn": "FF8A94BC", "day": "FFB4CCE0", "dusk": "FF6A5A84", "night": "FF141C34"},
+        flicker=0.6,
     ),
 }
 

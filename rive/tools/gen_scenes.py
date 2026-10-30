@@ -17,12 +17,17 @@ from typing import Callable, Iterator
 import zlib
 
 sys.path.insert(0, os.path.dirname(__file__))
+if __name__ == "__main__":
+    # run as a script: scene modules (`scene_cafe`, ...) `import gen_scenes` and must get this very module
+    # (its registries: DIORAMAS, TIME_SKY ...), not a second copy
+    sys.modules.setdefault("gen_scenes", sys.modules[__name__])
 from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, solid, stroke, track, write  # noqa: E402,F401
 from scene_art import before, named, place_point, refine_scene, walk  # noqa: E402
 from art_bible import EMISSIVE_PREFIX, SCENES, fit_colour  # noqa: E402
 from rig_dsl import Formulas  # noqa: E402
 import scene_npc  # noqa: E402
 from scene_npc import scene_fog  # noqa: E402
+import world_kit  # noqa: E402
 
 W, H = 1080, 1920
 SCENE_EVENTS = {
@@ -30,6 +35,10 @@ SCENE_EVENTS = {
     "campfire": ["flare", "rain", "shootingStar", "owlHoot"],
     "beach": ["bigWave", "seagulls", "sunset", "rain"],
     "deepSpace": ["meteor", "warp", "alienShip", "nebulaPulse"],
+    # contract v12 (ruling 3): built by their own modules (world_kit.SCENE_MODULES, SCENE_BUILDERS)
+    "cafe": ["espresso", "doorbell", "rain", "neonFlicker"],
+    "rooftop": ["fireworks", "plane", "shootingStar", "windowsLit"],
+    "mountainHut": ["snowfall", "flare", "aurora", "bell"],
 }
 
 
@@ -47,6 +56,20 @@ M7_ID_START = 940000
 # Moonshot M8 (contract v11): `fog`, the NPC view-model numbers and every NPC element mint from their
 # own range per document (`Scene.d8`, see scene_npc.py), so no M7 id moves.
 M8_ID_START = 930000
+# Moonshot M9 (contract v12): the v12 SceneVM members (world_kit.v12_members) and every v12 element mint
+# from their own range per document (`Scene.d9`), so no M8 id moves. The v12 scenes mint from the same
+# ranges as the others (each scene is its own document).
+M9_ID_START = 920000
+# The v12 members each M8 scene binds (world_kit.declared_binds; the v12 scenes declare theirs in their
+# module's `BINDS`). Every scene declares all its v12 members; the unlisted ones are inert. `Scene.write`
+# fails on a bind that is not listed here or a listed member nothing binds; check_contract.py rechecks
+# the built file. Lane E fills these in as it binds them (ruling 19).
+V12_BINDS: dict[str, frozenset[str]] = {
+    "livingRoom": frozenset(),
+    "campfire": frozenset(),
+    "beach": frozenset(),
+    "deepSpace": frozenset(),
+}
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
 
@@ -89,6 +112,10 @@ class Scene:
         self._v7_props()
         self.d8 = Doc(client=0, start=M8_ID_START)
         self._v11_props()
+        self.d9 = Doc(client=0, start=M9_ID_START)
+        self._v12_props()
+        # contract v12: the v12 members this scene binds (the others are declared and inert)
+        self.binds: set[str] = set(world_kit.declared_binds(scene_id))
         # M8 (contract v11): the scene's NPC rig, run on the refined content before the diorama pass
         # (`scene_npc.NPCS`), and the NPC's state enum (a root element after `EventId`).
         self.npc_rig: Callable[[Scene, list[El], list[El]], None] | None = None
@@ -171,6 +198,36 @@ class Scene:
         at = self.vm.children.index(self.inst)
         self.vm.children[at:at] = props
         self.inst.children.extend(vals)
+
+    def _v12_props(self) -> None:
+        """Contract v12 SceneVM members after `npcLook`, in contract order (world_kit.v12_members):
+        `npc2` (enum `NpcState`, default away), `npc2X`, `npc2Look`, `moonPhase` (-1), `festive` (0) and
+        the scene's drag numbers (world_kit.DRAGS). Minted from `d9`, so no older id moves."""
+        d9 = self.d9
+        props, vals = [], []
+        for name, typ, default in world_kit.v12_members(self.id):
+            if typ == "enum":
+                p = d9("ViewModelPropertyEnumCustom", enumId=self.npc_enum.ref(), name=name)
+                vals.append(d9("ViewModelInstanceEnum", propertyValue=self.npc_vals[str(default)].ref(),
+                               viewModelPropertyId=p.ref()))
+            else:
+                p = d9("ViewModelPropertyNumber", name=name)
+                vals.append(d9("ViewModelInstanceNumber", propertyValue=float(default), viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+            props.append(p)
+        at = self.vm.children.index(self.inst)
+        self.vm.children[at:at] = props
+        self.inst.children.extend(vals)
+
+    def check_v12_binds(self, roots: list[El]) -> None:
+        """The v12 members the file binds are exactly `self.binds` (the rest stay declared and inert)."""
+        v12 = {self.v7[n].ref(): n for n, _, _ in world_kit.v12_members(self.id)}
+        got = set()
+        for r in roots:
+            got |= world_kit.bound_names(r, self.vm.ref(), v12)
+        if got != self.binds:
+            raise ValueError(f"{self.id}: v12 binds {sorted(got)} != declared {sorted(self.binds)} "
+                             f"(gen_scenes.V12_BINDS or the scene module's BINDS)")
 
     def vpath(self, name: str) -> str:
         return f"{self.vm.ref()}-{self.v7[name].ref()}"
@@ -347,6 +404,7 @@ class Scene:
         boards = [ab]
         if self.front is not None:
             boards.append(self._front_artboard())
+        self.check_v12_binds([*boards, *self.roots])
         out = os.path.join(OUT_ROOT, self.id, self.id + ".rml")
         os.makedirs(os.path.dirname(out), exist_ok=True)
         write(out, [*boards, self.enum, self.npc_enum, self.vm, *self.roots])
@@ -2416,7 +2474,39 @@ def deepSpace() -> str:  # noqa: N802
     return sc.write(content, hits)
 
 
-if __name__ == "__main__":
-    which = sys.argv[1:] or ["livingRoom", "campfire", "beach", "deepSpace"]
+# ====================================================================== the scene registry (M9)
+def _lazy(scene_id: str) -> Callable[[], str]:
+    """Builds a v12 scene through its own module (imported on first use: `world_kit.scene_module`
+    raises `SceneNotWritten` while its lane has not written it)."""
+    def build() -> str:
+        return getattr(world_kit.scene_module(scene_id), scene_id)()
+    build.__name__ = scene_id
+    return build
+
+
+SCENE_BUILDERS: dict[str, Callable[[], str]] = {
+    "livingRoom": livingRoom, "campfire": campfire, "beach": beach, "deepSpace": deepSpace,
+    **{sid: _lazy(sid) for sid in world_kit.SCENE_MODULES},
+}
+
+
+def main(argv: list[str]) -> int:
+    """`gen_scenes.py [sceneId ...]`: writes the named scenes; with none, the four M8 scenes and every
+    v12 scene whose module exists. An unknown id, or a v12 scene asked for before its module exists,
+    exits 1 with a message."""
+    unknown = [a for a in argv if a not in SCENE_BUILDERS]
+    if unknown:
+        print(f"unknown scene {', '.join(unknown)} (known: {', '.join(SCENE_BUILDERS)})", file=sys.stderr)
+        return 1
+    which = argv or [*world_kit.BUILT_IN_SCENES, *world_kit.written_scene_modules()]
     for name in which:
-        print("wrote", globals()[name]())
+        try:
+            print("wrote", SCENE_BUILDERS[name]())
+        except world_kit.SceneNotWritten as e:
+            print(f"✗ {e}", file=sys.stderr)
+            return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
