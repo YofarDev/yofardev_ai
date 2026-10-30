@@ -244,7 +244,8 @@ def test_living_room_is_committed(lr: str) -> None:
 def test_living_room_plane_membership(lr: str) -> None:
     assert "livingRoom" in gen_scenes.DIORAMAS
     plane = _plane_of(lr)
-    want = {"emitLit0": 0, "Skyline": 0, "emitMoon": 0, "emitStar0": 0, "WinSky": 0,
+    # v12 (M9 lane E): the M8 moon sits in `MoonPhased` beside the phase rig `MoonRig`, both in the sky
+    want = {"emitLit0": 0, "Skyline": 0, "MoonPhased": 0, "MoonRig": 0, "emitStar0": 0, "WinSky": 0,
             "Wall": 1, "WinFrame": 1, "MullV": 1, "RainGlass": 1, "PaneClip": 1,
             "emitLampGlow": 2, "ArtFrame": 2, "FloatingShelf": 2, "CurtainLSway": 2, "Sill": 2, "WalkingCat": 2,
             "TvCorner": 3, "Floor": 3, "Plank0": 3,

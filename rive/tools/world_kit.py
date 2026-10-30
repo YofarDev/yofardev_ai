@@ -304,6 +304,11 @@ def eval_formula(conv: object, x: float, bound: Callable[[str], float] | None = 
 # ====================================================================== the moon (ruling 12)
 MOON_MIRROR_GAIN = 1e5     # the dark side flips sides within |moonPhase - 0.5| < 1e-5 (~25 s of moon age), where it is 0 wide
 _KAPPA = 0.5523            # cubic handle length of a quarter circle, x the radius
+# the dark side is drawn this many px wider than the lit disc (M9 fix round 1): with coincident
+# anti-aliased edges (lit under 0.9-alpha dark) the limb pixels showed ~3x the interior's share of the
+# lit disc, a bright hairline (+19/255 at 1x). A wider bleed overshoots into a dark line (1.25 px:
+# -9/255, the dark over bare sky); 0.6 px keeps the limb profile between interior and sky (+-1/255)
+MOON_DARK_BLEED = 0.6
 
 
 def _half_disc(doc: Doc, r: float, side: float, name: str) -> El:
@@ -329,7 +334,8 @@ def moon_rig(sc: Scene, doc: Doc, cx: float, cy: float, r: float, lit: El, dark:
       (e.g. `sc.E((cx, cy), "MoonLit", cx, cy, 2 * r, 2 * r, sc.F(colour))`, or a node with craters);
     - `MoonDark`, one shape in `dark` (the night sky's colour at 0.9 alpha: a new moon still shows as a
       faint disc) over it, `evenOdd`, holding two paths: the dark half on the unlit side and the
-      terminator, a half ellipse of half-width r x cos(2 pi p) on the lit side of the diameter. At a
+      terminator, a half ellipse of half-width r x cos(2 pi p) on the lit side of the diameter
+      (both MOON_DARK_BLEED px wider than r, so the dark covers the lit disc's anti-aliased limb). At a
       crescent (cos > 0) the terminator adds to the dark half (a dark terminator); at a gibbous
       (cos < 0) it is mirrored into the dark half and even-odd cuts it out (a lit terminator), so the
       lit art shows through unchanged and the dark never overlaps itself (one layer of alpha).
@@ -344,8 +350,9 @@ def moon_rig(sc: Scene, doc: Doc, cx: float, cy: float, r: float, lit: El, dark:
     mirror = _formula(sc, doc, _clamp(f, -1, 1, [f.val(MOON_MIRROR_GAIN / 2), f.op("-"), f.val(MOON_MIRROR_GAIN),
                                                  f.op("*"), *f.inp()]))
     show = _formula(sc, doc, _clamp(f, 0, 1, [f.val(2), f.op("*"), *f.inp(), f.op("+"), f.val(2)]))
-    half = _half_disc(doc, r, -1.0, "DarkHalf")
-    terminator = _half_disc(doc, r, 1.0, "Terminator")
+    rd = r + MOON_DARK_BLEED
+    half = _half_disc(doc, rd, -1.0, "DarkHalf")
+    terminator = _half_disc(doc, rd, 1.0, "Terminator")
     terminator.children.insert(0, _bind(sc, doc, "moonPhase", KEY_SCALE_X, term))
     terminator.attrs["scaleX"] = 1.0   # cos(2 pi x -1): the static value is the default's
     dark_shape = doc("Shape", _bind(sc, doc, "moonPhase", KEY_SCALE_X, mirror), half, terminator,

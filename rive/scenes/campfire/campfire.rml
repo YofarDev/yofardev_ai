@@ -7379,6 +7379,111 @@
           <SolidColor colorValue="00000000" id="0:12243"/>
         </Fill>
       </Shape>
+      <Node x="0" y="0" name="PokeStick" id="0:920153">
+        <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="13" converterId="0:920022" id="0:920151"/>
+        <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="14" converterId="0:920029" id="0:920152"/>
+        <Node x="282" y="1272" name="PokeLift" rotation="2.96" id="0:920149">
+          <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920133" id="0:920134"/>
+          <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="14" converterId="0:920140" id="0:920141"/>
+          <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="15" converterId="0:920147" id="0:920148"/>
+          <Node x="0" y="0" name="PokeTurn" id="0:920127">
+            <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="15" converterId="0:920044" id="0:920126"/>
+            <Node x="0" y="0" name="PokeArt" id="0:920125">
+              <Shape x="5" y="0" name="emitPokeEmber" id="0:920088">
+                <Ellipse width="15" height="10" name="Path" id="0:920087"/>
+                <Fill name="Fill" id="0:920086">
+                  <RadialGradient startX="0" startY="0" endX="8" endY="0" id="0:920085">
+                    <GradientStop colorValue="FFFFE7A0" position="0" name="emit" id="0:920083"/>
+                    <GradientStop colorValue="FFFF8A30" position="1" name="emit" id="0:920084"/>
+                  </RadialGradient>
+                </Fill>
+              </Shape>
+              <Shape x="4" y="0" name="emitPokeGlow" opacity="0.35" id="0:920055">
+                <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="18" converterId="0:920061" id="0:920062"/>
+                <Ellipse width="52" height="52" name="Path" id="0:920054"/>
+                <Fill name="Fill" id="0:920053">
+                  <RadialGradient startX="0" startY="0" endX="26" endY="0" id="0:920052">
+                    <GradientStop colorValue="88FFA040" position="0" name="emit" id="0:920050"/>
+                    <GradientStop colorValue="00FF7A20" position="1" name="emit" id="0:920051"/>
+                  </RadialGradient>
+                </Fill>
+              </Shape>
+              <Shape x="0" y="0" name="PokeChar" id="0:920097">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:920096">
+                  <CubicDetachedVertex x="-1.5" y="0" outRotation="-1.5708" outDistance="1.3333" inRotation="1.5708" inDistance="1.3333" id="0:920091"/>
+                  <StraightVertex x="1" y="-4" id="0:920092"/>
+                  <StraightVertex x="48" y="-4.6" id="0:920093"/>
+                  <StraightVertex x="48" y="4.6" id="0:920094"/>
+                  <StraightVertex x="1" y="4" id="0:920095"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:920090">
+                  <SolidColor colorValue="FF221512" id="0:920089"/>
+                </Fill>
+              </Shape>
+              <Shape x="150" y="0" name="PokeKnot0" id="0:920101">
+                <Ellipse width="9" height="5" name="Path" id="0:920100"/>
+                <Fill name="Fill" id="0:920099">
+                  <SolidColor colorValue="FF39261A" id="0:920098"/>
+                </Fill>
+              </Shape>
+              <Shape x="330" y="0" name="PokeKnot1" id="0:920105">
+                <Ellipse width="9" height="5" name="Path" id="0:920104"/>
+                <Fill name="Fill" id="0:920103">
+                  <SolidColor colorValue="FF39261A" id="0:920102"/>
+                </Fill>
+              </Shape>
+              <Shape x="0" y="0" name="PokeTwig" id="0:920115">
+                <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:920114">
+                  <StraightVertex x="230" y="6" id="0:920110"/>
+                  <CubicDetachedVertex x="264" y="27" outRotation="0.4076" outDistance="3.248" inRotation="3.5492" inDistance="12.7277" id="0:920111"/>
+                  <StraightVertex x="274" y="25" id="0:920112"/>
+                  <StraightVertex x="244" y="4" id="0:920113"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:920107">
+                  <SolidColor colorValue="FF6D4C33" id="0:920106"/>
+                </Fill>
+                <Stroke thickness="1.4" cap="round" join="round" name="Line" id="0:920109">
+                  <SolidColor colorValue="FF19100C" id="0:920108"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="0" name="PokeWood" id="0:920124">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:920123">
+                  <CubicDetachedVertex x="-1.5" y="0" outRotation="-1.5708" outDistance="1.3333" inRotation="1.5708" inDistance="1.3333" id="0:920118"/>
+                  <StraightVertex x="1" y="-4" id="0:920119"/>
+                  <StraightVertex x="760" y="-11" id="0:920120"/>
+                  <StraightVertex x="760" y="11" id="0:920121"/>
+                  <StraightVertex x="1" y="4" id="0:920122"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:920049">
+                  <LinearGradient startX="0" startY="-11" endX="0" endY="11" id="0:920048">
+                    <GradientStop colorValue="FF9A6D46" position="0" id="0:920045"/>
+                    <GradientStop colorValue="FF6D4C33" position="0.55" id="0:920046"/>
+                    <GradientStop colorValue="FF3D2A1C" position="1" id="0:920047"/>
+                  </LinearGradient>
+                </Fill>
+                <Stroke thickness="1.6" cap="round" join="round" name="Line" id="0:920117">
+                  <SolidColor colorValue="FF19100C" id="0:920116"/>
+                </Stroke>
+              </Shape>
+            </Node>
+          </Node>
+        </Node>
+        <Node x="282" y="1272" name="PokeGround" rotation="2.96" id="0:920150">
+          <Shape x="0" y="0" name="PokeShadow" id="0:920071">
+            <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="18" converterId="0:920081" id="0:920082"/>
+            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:920070">
+              <CubicDetachedVertex x="-1.5" y="6" outRotation="-1.5708" outDistance="1.3333" inRotation="1.5708" inDistance="1.3333" id="0:920065"/>
+              <StraightVertex x="1" y="2" id="0:920066"/>
+              <StraightVertex x="760" y="-5" id="0:920067"/>
+              <StraightVertex x="760" y="17" id="0:920068"/>
+              <StraightVertex x="1" y="10" id="0:920069"/>
+            </PointsPath>
+            <Fill name="Fill" id="0:920064">
+              <SolidColor colorValue="58090709" id="0:920063"/>
+            </Fill>
+          </Shape>
+        </Node>
+      </Node>
       <Shape x="326.8744" y="1197.6814" name="Stone1" id="0:1612">
         <Ellipse width="51.6658" height="30.7804" name="Path" id="0:1611"/>
         <Stroke thickness="1.8" cap="round" join="round" name="Line" id="0:1610">
@@ -10972,33 +11077,85 @@
           </Fill>
         </Shape>
       </Node>
-      <Shape x="770" y="700" name="Crater0" id="0:519">
-        <Ellipse width="18" height="18" name="Path" id="0:518"/>
-        <Fill name="Fill" id="0:517">
-          <SolidColor colorValue="33C8A878" id="0:516"/>
-        </Fill>
-      </Shape>
-      <Shape x="788" y="724" name="Crater1" id="0:523">
-        <Ellipse width="12" height="12" name="Path" id="0:522"/>
-        <Fill name="Fill" id="0:521">
-          <SolidColor colorValue="33C8A878" id="0:520"/>
-        </Fill>
-      </Shape>
-      <Shape x="764" y="668" name="Crater2" id="0:527">
-        <Ellipse width="10" height="10" name="Path" id="0:526"/>
-        <Fill name="Fill" id="0:525">
-          <SolidColor colorValue="33C8A878" id="0:524"/>
-        </Fill>
-      </Shape>
-      <Shape x="800" y="690" name="emitMoon" id="0:515">
-        <Ellipse width="120" height="120" name="Path" id="0:514"/>
-        <Fill name="Fill" id="0:513">
-          <RadialGradient startX="-20" startY="-20" endX="60" endY="-20" id="0:512">
-            <GradientStop colorValue="FFFFF6DE" position="0" name="emit" id="0:510"/>
-            <GradientStop colorValue="FFF2DDB0" position="1" name="emit" id="0:511"/>
-          </RadialGradient>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="MoonPhased" id="0:920188">
+        <DataBindContext sourcePathIds="0:23-0:920006" propertyKey="18" converterId="0:920186" id="0:920187"/>
+        <Shape x="770" y="700" name="Crater0" id="0:519">
+          <Ellipse width="18" height="18" name="Path" id="0:518"/>
+          <Fill name="Fill" id="0:517">
+            <SolidColor colorValue="33C8A878" id="0:516"/>
+          </Fill>
+        </Shape>
+        <Shape x="788" y="724" name="Crater1" id="0:523">
+          <Ellipse width="12" height="12" name="Path" id="0:522"/>
+          <Fill name="Fill" id="0:521">
+            <SolidColor colorValue="33C8A878" id="0:520"/>
+          </Fill>
+        </Shape>
+        <Shape x="764" y="668" name="Crater2" id="0:527">
+          <Ellipse width="10" height="10" name="Path" id="0:526"/>
+          <Fill name="Fill" id="0:525">
+            <SolidColor colorValue="33C8A878" id="0:524"/>
+          </Fill>
+        </Shape>
+        <Shape x="800" y="690" name="emitMoon" id="0:515">
+          <Ellipse width="120" height="120" name="Path" id="0:514"/>
+          <Fill name="Fill" id="0:513">
+            <RadialGradient startX="-20" startY="-20" endX="60" endY="-20" id="0:512">
+              <GradientStop colorValue="FFFFF6DE" position="0" name="emit" id="0:510"/>
+              <GradientStop colorValue="FFF2DDB0" position="1" name="emit" id="0:511"/>
+            </RadialGradient>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="800" y="690" opacity="0" name="MoonRig" id="0:920237">
+        <DataBindContext sourcePathIds="0:23-0:920006" propertyKey="18" converterId="0:920222" id="0:920236"/>
+        <Shape x="0" y="0" name="emitMoonDark" id="0:920235">
+          <DataBindContext sourcePathIds="0:23-0:920006" propertyKey="16" converterId="0:920208" id="0:920232"/>
+          <PointsPath isClosed="true" isClockwise="false" name="DarkHalf" id="0:920226">
+            <CubicDetachedVertex x="0" y="-60.6" inRotation="0" inDistance="0" outRotation="3.1416" outDistance="33.4694" id="0:920223"/>
+            <CubicDetachedVertex x="-60.6" y="0" inRotation="-1.5708" inDistance="33.4694" outRotation="1.5708" outDistance="33.4694" id="0:920224"/>
+            <CubicDetachedVertex x="0" y="60.6" inRotation="3.1416" inDistance="33.4694" outRotation="0" outDistance="0" id="0:920225"/>
+          </PointsPath>
+          <PointsPath isClosed="true" isClockwise="true" name="Terminator" scaleX="1" id="0:920230">
+            <DataBindContext sourcePathIds="0:23-0:920006" propertyKey="16" converterId="0:920194" id="0:920231"/>
+            <CubicDetachedVertex x="0" y="-60.6" inRotation="0" inDistance="0" outRotation="0" outDistance="33.4694" id="0:920227"/>
+            <CubicDetachedVertex x="60.6" y="0" inRotation="-1.5708" inDistance="33.4694" outRotation="1.5708" outDistance="33.4694" id="0:920228"/>
+            <CubicDetachedVertex x="0" y="60.6" inRotation="0" inDistance="33.4694" outRotation="0" outDistance="0" id="0:920229"/>
+          </PointsPath>
+          <Fill fillRule="evenOdd" name="Fill" id="0:920234">
+            <SolidColor colorValue="E6414E58" name="emit" id="0:920233"/>
+          </Fill>
+        </Shape>
+        <Node x="0" y="0" name="MoonLitArt" id="0:920172">
+          <Shape x="-30" y="10" name="Crater0" id="0:920157">
+            <Ellipse width="18" height="18" name="Path" id="0:920154"/>
+            <Fill name="Fill" id="0:920156">
+              <SolidColor colorValue="33C8A878" id="0:920155"/>
+            </Fill>
+          </Shape>
+          <Shape x="-12" y="34" name="Crater1" id="0:920161">
+            <Ellipse width="12" height="12" name="Path" id="0:920158"/>
+            <Fill name="Fill" id="0:920160">
+              <SolidColor colorValue="33C8A878" id="0:920159"/>
+            </Fill>
+          </Shape>
+          <Shape x="-36" y="-22" name="Crater2" id="0:920165">
+            <Ellipse width="10" height="10" name="Path" id="0:920162"/>
+            <Fill name="Fill" id="0:920164">
+              <SolidColor colorValue="33C8A878" id="0:920163"/>
+            </Fill>
+          </Shape>
+          <Shape x="0" y="0" name="emitMoonLit" id="0:920171">
+            <Ellipse width="120" height="120" name="Path" id="0:920166"/>
+            <Fill name="Fill" id="0:920170">
+              <RadialGradient startX="-20" startY="-20" endX="60" endY="-20" id="0:920169">
+                <GradientStop colorValue="FFFFF6DE" position="0" name="emit" id="0:920167"/>
+                <GradientStop colorValue="FFF2DDB0" position="1" name="emit" id="0:920168"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+        </Node>
+      </Node>
       <Shape x="800" y="690" name="emitMoonGlow" id="0:505">
         <Ellipse width="420" height="420" name="Path" id="0:504"/>
         <Fill name="Fill" id="0:503">
@@ -21507,6 +21664,146 @@
     <FormulaTokenValue operationValue="0.4" id="0:930035"/>
     <FormulaTokenOperation operationType="2" id="0:930036"/>
     <FormulaTokenInput id="0:930037"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920022">
+    <FormulaTokenValue operationValue="108" id="0:920016"/>
+    <FormulaTokenOperation operationType="2" id="0:920017"/>
+    <FormulaTokenInput id="0:920018"/>
+    <FormulaTokenOperation operationType="2" id="0:920019"/>
+    <FormulaTokenValue operationValue="0" id="0:920021">
+      <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="777" id="0:920020"/>
+    </FormulaTokenValue>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920029">
+    <FormulaTokenValue operationValue="80" id="0:920023"/>
+    <FormulaTokenOperation operationType="2" id="0:920024"/>
+    <FormulaTokenInput id="0:920025"/>
+    <FormulaTokenOperation operationType="2" id="0:920026"/>
+    <FormulaTokenValue operationValue="0" id="0:920028">
+      <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="777" id="0:920027"/>
+    </FormulaTokenValue>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920044">
+    <FormulaTokenValue operationValue="0.075" id="0:920030"/>
+    <FormulaTokenOperation operationType="2" id="0:920031"/>
+    <FormulaTokenInput id="0:920032"/>
+    <FormulaTokenOperation operationType="2" id="0:920033"/>
+    <FormulaTokenValue operationValue="0" id="0:920035">
+      <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="777" id="0:920034"/>
+    </FormulaTokenValue>
+    <FormulaTokenOperation operationType="0" id="0:920036"/>
+    <FormulaTokenValue operationValue="0.044" id="0:920037"/>
+    <FormulaTokenOperation operationType="2" id="0:920038"/>
+    <FormulaTokenValue operationValue="0" id="0:920040">
+      <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="777" id="0:920039"/>
+    </FormulaTokenValue>
+    <FormulaTokenOperation operationType="2" id="0:920041"/>
+    <FormulaTokenValue operationValue="0" id="0:920043">
+      <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="777" id="0:920042"/>
+    </FormulaTokenValue>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920061">
+    <FormulaTokenValue operationValue="0.35" id="0:920056"/>
+    <FormulaTokenOperation operationType="0" id="0:920057"/>
+    <FormulaTokenValue operationValue="0.65" id="0:920058"/>
+    <FormulaTokenOperation operationType="2" id="0:920059"/>
+    <FormulaTokenInput id="0:920060"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920081">
+    <FormulaTokenFunction functionType="1" id="0:920078"/>
+    <FormulaTokenValue operationValue="0" id="0:920077"/>
+    <FormulaTokenArgumentSeparator id="0:920079"/>
+    <FormulaTokenValue operationValue="1" id="0:920072"/>
+    <FormulaTokenOperation operationType="0" id="0:920073"/>
+    <FormulaTokenValue operationValue="-3" id="0:920074"/>
+    <FormulaTokenOperation operationType="2" id="0:920075"/>
+    <FormulaTokenInput id="0:920076"/>
+    <FormulaTokenParenthesisClose id="0:920080"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920133">
+    <FormulaTokenValue operationValue="282" id="0:920128"/>
+    <FormulaTokenOperation operationType="0" id="0:920129"/>
+    <FormulaTokenValue operationValue="-86" id="0:920130"/>
+    <FormulaTokenOperation operationType="2" id="0:920131"/>
+    <FormulaTokenInput id="0:920132"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920140">
+    <FormulaTokenValue operationValue="1272" id="0:920135"/>
+    <FormulaTokenOperation operationType="0" id="0:920136"/>
+    <FormulaTokenValue operationValue="-142" id="0:920137"/>
+    <FormulaTokenOperation operationType="2" id="0:920138"/>
+    <FormulaTokenInput id="0:920139"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920147">
+    <FormulaTokenValue operationValue="2.96" id="0:920142"/>
+    <FormulaTokenOperation operationType="0" id="0:920143"/>
+    <FormulaTokenValue operationValue="-0.66" id="0:920144"/>
+    <FormulaTokenOperation operationType="2" id="0:920145"/>
+    <FormulaTokenInput id="0:920146"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920186">
+    <FormulaTokenFunction functionType="0" id="0:920183"/>
+    <FormulaTokenValue operationValue="1" id="0:920178"/>
+    <FormulaTokenArgumentSeparator id="0:920184"/>
+    <FormulaTokenFunction functionType="1" id="0:920180"/>
+    <FormulaTokenValue operationValue="0" id="0:920179"/>
+    <FormulaTokenArgumentSeparator id="0:920181"/>
+    <FormulaTokenValue operationValue="-1" id="0:920173"/>
+    <FormulaTokenOperation operationType="1" id="0:920174"/>
+    <FormulaTokenValue operationValue="2" id="0:920175"/>
+    <FormulaTokenOperation operationType="2" id="0:920176"/>
+    <FormulaTokenInput id="0:920177"/>
+    <FormulaTokenParenthesisClose id="0:920182"/>
+    <FormulaTokenParenthesisClose id="0:920185"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920194">
+    <FormulaTokenFunction functionType="9" id="0:920192"/>
+    <FormulaTokenValue operationValue="6.283" id="0:920189"/>
+    <FormulaTokenOperation operationType="2" id="0:920190"/>
+    <FormulaTokenInput id="0:920191"/>
+    <FormulaTokenParenthesisClose id="0:920193"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920208">
+    <FormulaTokenFunction functionType="0" id="0:920205"/>
+    <FormulaTokenValue operationValue="1" id="0:920200"/>
+    <FormulaTokenArgumentSeparator id="0:920206"/>
+    <FormulaTokenFunction functionType="1" id="0:920202"/>
+    <FormulaTokenValue operationValue="-1" id="0:920201"/>
+    <FormulaTokenArgumentSeparator id="0:920203"/>
+    <FormulaTokenValue operationValue="50000" id="0:920195"/>
+    <FormulaTokenOperation operationType="1" id="0:920196"/>
+    <FormulaTokenValue operationValue="100000" id="0:920197"/>
+    <FormulaTokenOperation operationType="2" id="0:920198"/>
+    <FormulaTokenInput id="0:920199"/>
+    <FormulaTokenParenthesisClose id="0:920204"/>
+    <FormulaTokenParenthesisClose id="0:920207"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920222">
+    <FormulaTokenFunction functionType="0" id="0:920219"/>
+    <FormulaTokenValue operationValue="1" id="0:920214"/>
+    <FormulaTokenArgumentSeparator id="0:920220"/>
+    <FormulaTokenFunction functionType="1" id="0:920216"/>
+    <FormulaTokenValue operationValue="0" id="0:920215"/>
+    <FormulaTokenArgumentSeparator id="0:920217"/>
+    <FormulaTokenValue operationValue="2" id="0:920209"/>
+    <FormulaTokenOperation operationType="2" id="0:920210"/>
+    <FormulaTokenInput id="0:920211"/>
+    <FormulaTokenOperation operationType="0" id="0:920212"/>
+    <FormulaTokenValue operationValue="2" id="0:920213"/>
+    <FormulaTokenParenthesisClose id="0:920218"/>
+    <FormulaTokenParenthesisClose id="0:920221"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:990024">

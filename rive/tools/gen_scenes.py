@@ -65,10 +65,10 @@ M9_ID_START = 920000
 # fails on a bind that is not listed here or a listed member nothing binds; check_contract.py rechecks
 # the built file. Lane E fills these in as it binds them (ruling 19).
 V12_BINDS: dict[str, frozenset[str]] = {
-    "livingRoom": frozenset(),
-    "campfire": frozenset(),
-    "beach": frozenset(),
-    "deepSpace": frozenset(),
+    "livingRoom": frozenset({"cord", "moonPhase", "festive"}),
+    "campfire": frozenset({"moonPhase", "poke", "pokeX", "pokeY"}),
+    "beach": frozenset({"npc2", "npc2X", "npc2Look", *world_kit.drag_numbers("beach")}),
+    "deepSpace": frozenset({"spin"}),
 }
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
@@ -119,6 +119,9 @@ class Scene:
         # M8 (contract v11): the scene's NPC rig, run on the refined content before the diorama pass
         # (`scene_npc.NPCS`), and the NPC's state enum (a root element after `EventId`).
         self.npc_rig: Callable[[Scene, list[El], list[El]], None] | None = None
+        # M9 (contract v12): the scene's v12 art (drags, moon, December, gulls), run on the refined
+        # content after the NPC rig and before the diorama pass; everything it adds mints from `d9`
+        self.v12_art: Callable[[Scene, list[El], list[El]], None] | None = None
         # M4 dioramas: a hook run on the refined content (planes, veils), extra root elements
         # (converters), and the colour-script fit (ruling 13) for scenes rebuilt under the bible.
         self.post_refine: Callable[[list[El]], None] | None = None
@@ -385,6 +388,8 @@ class Scene:
             self.post_refine(content)
         if self.npc_rig is not None:
             self.npc_rig(self, content, hits)
+        if self.v12_art is not None:
+            self.v12_art(self, content, hits)
         spec = DIORAMAS.get(self.id)
         if spec is not None:
             # M5 ruling 3: hit zones ride the plane of the art they cover
@@ -934,6 +939,7 @@ def campfire() -> str:
     sc.fit = True
     front_weather(sc, "88B8C8F0")  # M6 ruling 8: the campfire RainLoop colour
     sc.npc_rig = scene_npc.campfire_owl   # M8: the owl (contract v11)
+    sc.v12_art = campfire_v12             # M9: the poke stick, the moon's phase (contract v12)
     return sc.write(content, [hit_fire, hit_tent, hit_owl, hit_sky])
 
 
@@ -1139,7 +1145,7 @@ def clone(d: Doc, e: El, **attrs: object) -> El:
 
 
 # ---------------------------------------------------------------- front weather (M6, contract v9)
-FRONT_SCENES = ("campfire", "beach")   # outdoor rain; livingRoom's falls outside the window
+FRONT_SCENES = ("campfire", "beach", "rooftop")   # outdoor rain; livingRoom's falls outside the window
 FRONT_GAIN = 1.25          # nearer than Plane5: the sheet travels 1.25 x PARALLAX_TRAVEL
 FRONT_TILE = 480           # the sheet repeats every tile; one tile per FRONT_SHEET_FRAMES loop
 FRONT_SHEET_FRAMES = 14    # faster than the back sheets (18 / 34): near rain falls past quicker
@@ -1219,13 +1225,14 @@ def front_weather(sc: Scene, col: str, splash_y: tuple[float, float] = (1820.0, 
 CAMPFIRE_PLANES: dict[str, int | None] = {
     "RainLoop": None, "RainFx": None, "FlareWash": None,
     "BushL": 5, "BushR": 5,
-    **dict.fromkeys(("Stone", "LogA", "LogB", "LogC", "WetCoalSteam", "CoalBed", "RainSteam", "FireFlare", "Smoke",
+    **dict.fromkeys(("PokeStick", "Stone", "LogA", "LogB", "LogC", "WetCoalSteam", "CoalBed", "RainSteam", "FireFlare", "Smoke",
                      "Firefly", "TentPlace", "Grass", "TreeGlow", "LightPoolFlicker", "GroundWet", "TrailStone",
                      "Path", "Ground"), 4),
     **dict.fromkeys(("Hoo", "Owl", "OwlNpc", "OwlGrip", "Branch", "OwlTwig", "OwlSnag", "Pine"), 3),
     **dict.fromkeys(("ValleyMist", "MidHills"), 2),
     **dict.fromkeys(("FarPine", "AlpineRidge", "PeakSnow", "MountainShadow", "FarHills"), 1),
-    **dict.fromkeys(("ShootingStar", "Crater", "Moon", "MoonGlow", "Star", "Glint", "Aurora", "Sky"), 0),
+    **dict.fromkeys(("ShootingStar", "MoonPhased", "MoonRig", "Crater", "Moon", "MoonGlow", "Star", "Glint", "Aurora",
+                     "Sky"), 0),
     # M5 ruling 3: each hit zone rides the plane of its prop's art
     "Hit_fire": 4, "Hit_tent": 4, "Hit_owl": 3, "Hit_sky": 0,
 }
@@ -1656,6 +1663,7 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                curt_l_n, curt_r_n, rod, sill, ledge_sh, *mullion, *windows_lit, city, moon, sky, frame, rail, wainscot,
                *stripes, wall]
     sc.npc_rig = lambda s_, c_, h_: scene_npc.living_room_cat(s_, c_, h_, PARALLAX_GAINS, PARALLAX_TRAVEL)  # M8
+    sc.v12_art = living_room_v12   # M9: the lamp's pull cord, the moon's phase, the December lights (v12)
     return sc.write(content, hits)
 
 
@@ -1668,17 +1676,17 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
 LIVING_ROOM_PLANES: dict[str, int | None] = {
     "Night": None,
     # M8: the cat NPC paints in front of the rug; on the cabinet it rides Plane3's travel (scene_npc)
-    **dict.fromkeys(("CatNpc", "RugInner", "Rug", "Plant", "Lamp", "LamplitDust", "LampCone", "PlantContact",
-                     "LampContact"), 4),
+    **dict.fromkeys(("CatNpc", "RugInner", "Rug", "Plant", "LampCord", "Lamp", "LamplitDust", "LampCone",
+                     "PlantContact", "LampContact"), 4),
     **dict.fromkeys(("TvCorner", "MoonBeam", "TvGlow", "MoonPool", "TvFloorSpill", "Plank", "CabinetContact",
                      "WindowFloorLight", "FloorJoint", "OakGrain", "Floor", "Baseboard"), 3),
-    **dict.fromkeys(("WalkingCat", "CurtainLSway", "CurtainRSway", "Rod", "Sill", "LedgeShadow", "LampGlow",
+    **dict.fromkeys(("FestiveLights", "WalkingCat", "CurtainLSway", "CurtainRSway", "Rod", "Sill", "LedgeShadow", "LampGlow",
                      "WallWarmth", "ArtMountain", "ArtHill", "ArtSun", "ArtCanvas", "ArtMat", "ArtFrame",
                      "ArtShadow", "ShelfBook", "VaseRim", "CeramicVase", "VaseSprig", "VaseLeaf", "FloatingShelf",
                      "ShelfShadow"), 2),
     **dict.fromkeys(("MullV", "MullH", "RainGlass", "PaneClip", "WinFrame", "Rail", "Wainscot", "WallPanel",
                      "LowerPanel", "CorniceShadow", "CorniceInlay", "WindowCool", "Wall"), 1),
-    **dict.fromkeys(("Lit", "Skyline", "Moon", "Star", "WinSky"), 0),
+    **dict.fromkeys(("Lit", "Skyline", "MoonPhased", "MoonRig", "Moon", "Star", "WinSky"), 0),
     # ruling 3: each hit zone rides the plane of its prop's art (the sleeping cat is on the TV unit)
     "Hit_lamp": 4, "Hit_plant": 4, "Hit_tv": 3, "Hit_cat": 3,
 }
@@ -1826,8 +1834,8 @@ BEACH_PLANES: dict[str, int | None] = {
     # sand props, the palm and the passing flock; the shells and starfish lie on the mid-ground sand
     # (y 1470-1860, most of them not foreground), so they stay with the castle (ruling 4: 5 -> 4)
     **dict.fromkeys(("Flock", "Castle", "Flag", "Starfish", "Shell", *(f"ShellRib{i}_" for i in range(4)), "Crab", "CrabNpc",
-                     "GullPlace", "PalmFrond", "TrunkRing", "PalmTrunk", "Umbrella", "TowelWeave", "TowelFringe",
-                     "Towel", "UShadow"), 4),
+                     "GullsNpc", "GullPlace", "PalmFrond", "TrunkRing", "PalmTrunk", "Umbrella", "TowelWeave", "TowelFringe",
+                     "Towel", "UShadow", "TrailDots"), 4),
     # the surf line and the ground: the sand moves 4 -> 3, it paints behind the wet band and the foam
     **dict.fromkeys(("Wash", "Speck", "WetWash", "FoamLace", "Foam", "SandWet", "WetSand", "Sand"), 3),
     **dict.fromkeys(("BigWave", "BigWaveClip", "Wave"), 2),
@@ -2203,6 +2211,7 @@ def beach() -> str:
                *waves, sun_path, *glints, sea, *flyers, *clouds, sun, sunset_sky, sky]
     front_weather(sc, "88C8D6E4")  # M6 ruling 8: the beach RainLoop colour
     sc.npc_rig = lambda s_, c_, h_: scene_npc.beach_crab(s_, c_, h_, PARALLAX_GAINS, PARALLAX_TRAVEL)  # M8
+    sc.v12_art = beach_v12   # M9: the trail in the sand, the gulls (contract v12)
     return sc.write(content, hits)
 
 
@@ -2471,7 +2480,256 @@ def deepSpace() -> str:  # noqa: N802
     content = [flash, warp, warp_core_n, met, *rocks, ship, duck_lift, ufo_flee, planet_g, moonlet, galaxy, *rings, swell, *stars,
                *nebulae, bg]
     sc.npc_rig = scene_npc.deep_space_alien   # M8: the alien in the ufo (contract v11)
+    sc.v12_art = deep_space_v12               # M9: the planet's bands spin (contract v12)
     return sc.write(content, hits)
+
+
+# ====================================================================== M9: v12 art in the M8 scenes
+# Lane E (contract v12, rulings 8, 10, 12, 13): the drag art of the four M8 scenes, the beach's gulls
+# (scene_npc.beach_gulls), the moon's phase in livingRoom and campfire, the December lights in the
+# living room. Everything mints from the scene's `d9` (M9_ID_START) with private converters (never
+# `Scene.conv`'s shared cache, whose first caller would move a later pass's ids), and draws nothing at
+# the v12 defaults: each scene renders exactly as in M8. The art is history-free (formula binds on
+# the view-model numbers; the app owns the gestures, ruling 7).
+#
+# The drag handles as built (artboard px at parallax 0; the contract table copies them):
+V12_DRAG_RECTS: dict[str, tuple[str, tuple[float, float, float, float], int]] = {
+    "livingRoom": ("cord", (270.0, 770.0, 370.0, 940.0), 4),     # the cord and its bead, on the lamp
+    "campfire": ("poke", (0.0, 1040.0, 330.0, 1340.0), 4),      # the lying stick + the tip's box (POKE_HANDLE)
+    "beach": ("sand", (120.0, 1500.0, 960.0, 1800.0), 4),       # the open sand in front of the avatar (as contracted)
+    "deepSpace": ("spin", (150.0, 440.0, 450.0, 740.0), 2),     # the planet's disc (r 150 at 300, 590)
+}
+KEY_X, KEY_Y, KEY_ROTATION, KEY_SCALE_X, KEY_SCALE_Y, KEY_OPACITY = 13, 14, 15, 16, 17, 18
+
+
+def _v12_formula(sc: Scene, toks: list[El]) -> El:
+    conv = sc.d9("DataConverterFormula", *toks)
+    sc.roots.append(conv)
+    return conv
+
+
+def _v12_lin(sc: Scene, k: float, c: float = 0.0, lo: float | None = None, hi: float | None = None) -> El:
+    """A private `c + k x input` converter (clamped to [lo, hi] when given), minted from `d9`."""
+    f = Formulas(sc.d9, sc.vpath)
+    toks = [*([] if c == 0 else [f.val(c), f.op("+")]), f.val(k), f.op("*"), *f.inp()]
+    if lo is not None:
+        toks = f.fn("max", [f.val(lo)], toks)
+    if hi is not None:
+        toks = f.fn("min", [f.val(hi)], toks)
+    return _v12_formula(sc, toks)
+
+
+def _v12_bind(sc: Scene, prop: str, key: int, conv: El) -> El:
+    return sc.d9("DataBindContext", sourcePathIds=sc.vpath(prop), propertyKey=key, converterId=conv.ref())
+
+
+def _top(content: list[El], name: str) -> int:
+    return next(i for i, e in enumerate(content) if e.attrs.get("name") == name)
+
+
+def phase_moon(sc: Scene, content: list[El], cx: float, cy: float, r: float, dark: str) -> None:
+    """Ruling 12: the scene's M8 moon (the top-level `Crater*` and `Moon`, contiguous) goes into
+    `MoonPhased` (shown only at `moonPhase` -1, world_kit.hide_when_phased) and `MoonRig` takes over
+    for a phase 0..1, its lit disc a copy of the M8 moon (craters included). `dark` is the sky behind
+    the moon as rendered (glow included) at alpha 0.9; the disc and the dark side skip the colour fit
+    (`emit*`), as the M8 moon does."""
+    d9 = sc.d9
+    kids = [e for e in content if _root(e.attrs.get("name")) in ("Crater", "Moon")]
+    at = content.index(kids[0])
+    assert content[at:at + len(kids)] == kids, "the M8 moon is not contiguous"
+    lit_kids = []
+    for k in kids:
+        c = clone(d9, k, x=round(float(k.attrs["x"]) - cx, 4), y=round(float(k.attrs["y"]) - cy, 4))
+        if k.attrs.get("name") == "Moon":
+            c.attrs["name"] = EMISSIVE_PREFIX + "MoonLit"
+        lit_kids.append(c)
+    lit = d9("Node", *lit_kids, x=0.0, y=0.0, name="MoonLitArt")
+    wrapper = world_kit.hide_when_phased(sc, d9, "MoonPhased", kids)
+    rig = world_kit.moon_rig(sc, d9, cx, cy, r, lit, dark)
+    named([rig], "MoonDark").attrs["name"] = EMISSIVE_PREFIX + "MoonDark"
+    content[at:at + len(kids)] = [wrapper, rig]
+
+
+# ---------------------------------------------------------------- livingRoom: the lamp's pull cord
+LAMP_CORD = (320.0, 758.0)     # where the cord leaves the shade's rim (lamp x 286, rim y 760, half-width 74)
+CORD_LENGTH = 72.0             # the cord at rest, to the bead's knot
+CORD_PULL = 80.0               # px the bead travels at `cord` 1 (the cord stretches, thinning to 55 %)
+CORD_THIN = 0.45
+# Fix round 1 (orchestrator ruling): discoverability beats pixel identity. The cord hangs at its natural
+# length at `cord` 0 (visible); the identity-to-M8 gates exclude exactly `V12_REST_AFFORDANCE`.
+CORD_COLOURS = ("FFE6D8BC", "FFC28C5A", "FF6A4026", "FF2A2030")   # cotton, bead light, bead shade, ink
+# ruling 13: string lights draped under the curtain rod, across the window's top and the curtains
+FESTIVE_POINTS = [(296.0 + 44.0 * i, round(206.0 + 18.0 * (i % 2) + 16.0 * math.sin(math.pi * i / 11), 2))
+                  for i in range(12)]
+FESTIVE_COLOURS = ("FFFFC86A", "FFFF7466")
+LIVING_ROOM_MOON = (640.0, 320.0, 30.0, "E6383C63")   # cx, cy, r, the window's sky by the moon (under the fog veil) at 0.9
+
+
+def lamp_cord(sc: Scene) -> El:
+    """`LampCord` (contract v12 `cord`): a cotton pull cord with a wooden bead under the lamp's shade,
+    hanging at its natural length at `cord` 0 (always drawn: the affordance), stretched down by
+    `CORD_PULL` px at `cord` 1 (the bead follows, the cord thins). History-free."""
+    d9 = sc.d9
+    cotton, light, shade, ink = CORD_COLOURS
+    with sc.minting(d9):
+        line = sc.S(ORIGIN, "CordLine", [(0.0, 0.0), (0.0, CORD_LENGTH)], sc.L(cotton, 2.2), closed=False,
+                    origin=ORIGIN)
+        line.children[0:0] = [_v12_bind(sc, "cord", KEY_SCALE_Y, _v12_lin(sc, CORD_PULL / CORD_LENGTH, 1.0)),
+                              _v12_bind(sc, "cord", KEY_SCALE_X, _v12_lin(sc, -CORD_THIN, 1.0))]
+        bead = sc.node("CordBead", 0.0, CORD_LENGTH,
+                       _v12_bind(sc, "cord", KEY_Y, _v12_lin(sc, CORD_PULL, CORD_LENGTH)),
+                       sc.E(ORIGIN, "BeadGlint", -2.5, 6.0, 3.5, 5.0, sc.F("B0FFF2DC")),
+                       sc.E(ORIGIN, "Bead", 0.0, 10.0, 13.0, 17.0, sc.rgrad(11, [(light, 0.0), (shade, 1.0)], cx=-3, cy=-4),
+                            sc.L(ink, 1.3)),
+                       sc.E(ORIGIN, "CordKnot", 0.0, 1.0, 5.0, 4.0, sc.F(cotton)))
+        return sc.node("LampCord", *LAMP_CORD, bead, line)
+
+
+def living_room_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
+    """The cord (in front of the lamp), the moon's phase in the window, the December lights (the front
+    of the curtains' plane)."""
+    content.insert(_top(content, "Lamp"), lamp_cord(sc))
+    phase_moon(sc, content, *LIVING_ROOM_MOON)
+    content.insert(0, world_kit.festive_lights(sc, sc.d9, FESTIVE_POINTS, FESTIVE_COLOURS))
+
+
+# ---------------------------------------------------------------- campfire: the poke stick
+# Fix round 1 (orchestrator ruling): the stick is visible at rest, lying on the ground left of the fire
+# (outside the avatar's band x 330-750); `poke` 0 -> 1 lifts it into the fire, entering from the lower
+# left (it never passes behind the avatar). Its tip: lerp(POKE_REST, POKE_TIP, poke) + poke x (pokeX,
+# pokeY) x POKE_RANGE; its angle (the stick runs from the tip toward its far end, off the left edge):
+# lerp(POKE_REST_ANGLE, POKE_ANGLE, poke).
+POKE_TIP = (196.0, 1130.0)     # the tip at poke 1, pokeX = pokeY = 0: in the logs, under the flames
+POKE_RANGE = (108.0, 80.0)     # tip travel at pokeX / pokeY = +-1 (times poke): the ember glow stays left of x 330
+POKE_ANGLE = 2.3               # rad: lifted, the stick runs down-left from the tip, off the left edge
+POKE_REST = (282.0, 1272.0)    # the tip lying on the ground, below the front stones
+POKE_REST_ANGLE = 2.96         # rad: lying, the stick runs left and a little down, off the left edge
+POKE_LENGTH = 760.0
+POKE_TURN = (0.075, 0.044)     # rotation per pokeX / pokeY (x poke): the far hand moves less than the tip
+POKE_SHADOW = ("58080608", 6.0, 3.0)   # the stick's shadow on the ground at rest (colour, drop px), fading x 3 poke
+POKE_GLOW_REST = 0.35          # the ember's glow lying on the ground (1 in the fire)
+POKE_HANDLE = (0.0, 1040.0, 330.0, 1340.0)   # the drag handle: the lying stick and the tip's box
+CAMPFIRE_MOON = (800.0, 690.0, 60.0, "E6414E58")   # the sky and the moon's glow, under the fog veils, at 0.9
+# Fix round 1: what draws at the v12 defaults (the affordances), the only boxes the identity-to-M8
+# render gates may exclude (artboard px at parallax 0; review_diorama / review_npc / review_time and
+# rive/review/m9/make_lane_e.py mask them through `rest_masked`).
+V12_REST_AFFORDANCE: dict[str, tuple[tuple[int, int, int, int], ...]] = {
+    "livingRoom": ((306, 752, 334, 860),),     # the cord and its bead at rest
+    "campfire": ((0, 1236, 320, 1344),),       # the stick lying on the ground (and its shadow)
+}
+
+
+def rest_masked(scene: str, new: "np.ndarray", old: "np.ndarray") -> "np.ndarray":  # noqa: F821
+    """`new` with the scene's v12 rest affordances (`V12_REST_AFFORDANCE`) copied from `old`, for the
+    gates that compare a scene at the defaults with a revision drawn before them. Renders of any size
+    (the boxes scale with the height over 1920)."""
+    out = new.copy()
+    k = new.shape[0] / H
+    for x0, y0, x1, y1 in V12_REST_AFFORDANCE.get(scene, ()):
+        a, b, c, e = int(x0 * k), int(y0 * k), int(math.ceil(x1 * k)), int(math.ceil(y1 * k))
+        out[b:e, a:c] = old[b:e, a:c]
+    return out
+
+
+def poke_stick(sc: Scene) -> El:
+    """`PokeStick` (contract v12 `poke`, `pokeX`, `pokeY`): a long stick lying on the ground left of the
+    fire at rest (its charred, faintly glowing tip at `POKE_REST`), lifted into the fire as `poke` goes
+    0 -> 1 (its tip then at `POKE_TIP` + (pokeX, pokeY) x `POKE_RANGE`), always from the lower left.
+    Nodes: `PokeStick` (the aim offset, x poke) > `PokeLift` (position and angle, lerped by poke) >
+    `PokeTurn` (the aim's small turn) > `PokeArt` (drawn along +x from the tip). History-free."""
+    d9 = sc.d9
+    ln = POKE_LENGTH
+    with sc.minting(d9):
+        f = Formulas(d9, sc.vpath)
+        # aim: (pokeX x 120, pokeY x 80) x poke
+        aim_x = _v12_formula(sc, [f.val(POKE_RANGE[0]), f.op("*"), *f.inp(), f.op("*"), f.bound("poke")])
+        aim_y = _v12_formula(sc, [f.val(POKE_RANGE[1]), f.op("*"), *f.inp(), f.op("*"), f.bound("poke")])
+        turn = _v12_formula(sc, [f.val(POKE_TURN[0]), f.op("*"), *f.inp(), f.op("*"), f.bound("poke"), f.op("+"),
+                                 f.val(POKE_TURN[1]), f.op("*"), f.bound("pokeY"), f.op("*"), f.bound("poke")])
+        wood = sc.vgrad(-11, 11, [("FF9A6A40", 0.0), ("FF6E4628", 0.55), ("FF3E2818", 1.0)])
+        body = [(-1.5, 0.0), (1.0, -4.0, "c"), (ln, -11.0, "c"), (ln, 11.0, "c"), (1.0, 4.0, "c")]
+        glow = sc.E(ORIGIN, "emitPokeGlow", 4.0, 0.0, 52.0, 52.0, sc.rgrad(26, [("88FFA040", 0.0), ("00FF7A20", 1.0)]),
+                    opacity=POKE_GLOW_REST)
+        glow.children.insert(0, _v12_bind(sc, "poke", KEY_OPACITY, _v12_lin(sc, 1 - POKE_GLOW_REST, POKE_GLOW_REST)))
+        col, drop, fade = POKE_SHADOW
+        shadow = sc.S(ORIGIN, "PokeShadow", [(x, y + drop) + tuple(r) for x, y, *r in body], sc.F(col), origin=ORIGIN)
+        shadow.children.insert(0, _v12_bind(sc, "poke", KEY_OPACITY, _v12_lin(sc, -fade, 1.0, lo=0.0)))
+        art = sc.node(
+            "PokeArt", 0.0, 0.0,
+            sc.E(ORIGIN, "emitPokeEmber", 5.0, 0.0, 15.0, 10.0,
+                 sc.rgrad(8, [("FFFFE7A0", 0.0), ("FFFF8A30", 1.0)])),
+            glow,
+            sc.S(ORIGIN, "PokeChar", [(-1.5, 0.0), (1.0, -4.0, "c"), (48.0, -4.6, "c"), (48.0, 4.6, "c"), (1.0, 4.0, "c")],
+                 sc.F("FF221512"), origin=ORIGIN),
+            *[sc.E(ORIGIN, f"PokeKnot{i}", x, 0.0, 9.0, 5.0, sc.F("FF3A2416")) for i, x in enumerate((150.0, 330.0))],
+            sc.S(ORIGIN, "PokeTwig", [(230.0, 6.0, "c"), (264.0, 27.0), (274.0, 25.0, "c"), (244.0, 4.0, "c")],
+                 sc.F("FF6E4628"), sc.L("FF1A0F0A", 1.4), origin=ORIGIN),
+            sc.S(ORIGIN, "PokeWood", body, wood, sc.L("FF1A0F0A", 1.6), origin=ORIGIN))
+        turn_node = sc.node("PokeTurn", 0.0, 0.0, _v12_bind(sc, "pokeX", KEY_ROTATION, turn), art)
+        (rx, ry), (tx, ty) = POKE_REST, POKE_TIP
+        lift = sc.node("PokeLift", rx, ry,
+                       _v12_bind(sc, "poke", KEY_X, _v12_lin(sc, tx - rx, rx)),
+                       _v12_bind(sc, "poke", KEY_Y, _v12_lin(sc, ty - ry, ry)),
+                       _v12_bind(sc, "poke", KEY_ROTATION, _v12_lin(sc, POKE_ANGLE - POKE_REST_ANGLE, POKE_REST_ANGLE)),
+                       turn_node, rotation=POKE_REST_ANGLE)
+        # the shadow lies on the ground under the resting stick (it stays there, fading, as the stick rises)
+        ground = sc.node("PokeGround", rx, ry, shadow, rotation=POKE_REST_ANGLE)
+        return sc.node("PokeStick", 0.0, 0.0,
+                       _v12_bind(sc, "pokeX", KEY_X, aim_x), _v12_bind(sc, "pokeY", KEY_Y, aim_y),
+                       lift, ground)
+
+
+def campfire_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
+    """The poke stick (the front of Plane4, in front of the stones, behind the bushes) and the moon's phase."""
+    content.insert(_top(content, "BushR") + 1, poke_stick(sc))
+    phase_moon(sc, content, *CAMPFIRE_MOON)
+
+
+# ---------------------------------------------------------------- beach: the trail, the gulls
+TRAIL_DOT = ("B0C49C66", "C0937048", 11.0)   # a damp dimple in the sand, its shaded far rim (the sun is up right), radius
+
+
+def beach_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
+    """The trail in the sand (`TrailDots`, the back of Plane4: on the sand, behind every prop on it)
+    and the gulls (`npc2`, scene_npc.beach_gulls, in front of the crab)."""
+    content.insert(_top(content, "UShadow") + 1, world_kit.trail_dots(sc, sc.d9, *TRAIL_DOT))
+    scene_npc.beach_gulls(sc, content)
+
+
+# ---------------------------------------------------------------- deepSpace: the planet spins
+SPIN_MARGIN = 3.0      # px past the clip (stroke cap + antialiasing) a band's off-disc copy keeps
+
+
+def deep_space_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
+    """`spin` 0..1 slides each of the planet's cloud bands (`PlanetWeather*`, clipped to the disc) right
+    by its own period x spin, and a copy of it, one period to the left, slides in behind it: spin 1
+    draws exactly what spin 0 does. A band's period is its half-length plus the disc's half-width at
+    its row plus the stroke's cap and a margin, so at spin 0 the copy (and at spin 1 the band) lies
+    wholly outside the clip; the seam between the two is then a few px, like the M8 bands' own gaps at
+    the limb. Short bands near the poles move slower than the equator's (a turning sphere)."""
+    d9 = sc.d9
+    group = next(e for e in walk(content) if e.tag == "Node"
+                 and any(_root(c.attrs.get("name")) == "PlanetWeather" for c in e.children))
+    planet = next(c for c in group.children if c.attrs.get("name") == "Planet")
+    disc = next(c for c in planet.children if c.tag == "Ellipse")
+    r, cy = float(disc.attrs["width"]) / 2, float(planet.attrs["y"])
+    out: list[El] = []
+    for c in group.children:
+        out.append(c)
+        if c.tag != "Shape" or _root(c.attrs.get("name")) != "PlanetWeather":
+            continue
+        x0, y0 = float(c.attrs["x"]), float(c.attrs["y"])
+        path = next(k for k in c.children if k.tag == "PointsPath")
+        xs = [float(v.attrs["x"]) for v in path.children]
+        ys = [float(v.attrs["y"]) + y0 for v in path.children]
+        cap = float(next(k for k in c.children if k.tag == "Stroke").attrs["thickness"]) / 2
+        near = max(0.0, min(abs(y - cy) for y in ys) - cap)
+        period = round((max(xs) - min(xs)) / 2 + math.sqrt(r * r - near * near) + cap + SPIN_MARGIN, 2)
+        copy = clone(d9, c, x=x0 - period, name="PlanetWeatherWrap" + str(c.attrs["name"])[len("PlanetWeather"):])
+        c.children.insert(0, _v12_bind(sc, "spin", KEY_X, _v12_lin(sc, period, x0)))
+        copy.children.insert(0, _v12_bind(sc, "spin", KEY_X, _v12_lin(sc, period, x0 - period)))
+        out.append(copy)
+    group.children[:] = out
 
 
 # ====================================================================== the scene registry (M9)

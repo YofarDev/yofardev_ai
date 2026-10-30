@@ -37,7 +37,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from gen_scenes import PARALLAX_GAINS, PARALLAX_TRAVEL  # noqa: E402
+from gen_scenes import PARALLAX_GAINS, PARALLAX_TRAVEL, rest_masked  # noqa: E402
 import world_kit  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -386,6 +386,13 @@ def extras_of(scene: str) -> Callable[[Renderer, Path, list[str]], None] | None:
     return EXTRAS.get(scene) or world_kit.review(scene).get("extras")
 
 
+def _excl(scene: str) -> str:
+    """The note an identity gate adds when it masks the scene's v12 rest affordances (M9 fix round 1)."""
+    import gen_scenes  # noqa: PLC0415
+    boxes = gen_scenes.V12_REST_AFFORDANCE.get(scene, ())
+    return f" outside the rest affordance {', '.join(map(str, boxes))}" if boxes else ""
+
+
 def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) -> list[str]:
     proj = ROOT / "rive" / "scenes" / scene
     cfg = cfg_of(scene)
@@ -495,10 +502,11 @@ def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) 
             (base / "rive.yaml").write_text((proj / "rive.yaml").read_text())
             worst = 0.0
             for f in (1, 61):
-                a = render(f"--advance={f}").astype(int)
                 b = render(f"--advance={f}", proj=base).astype(int)
+                # M9 fix round 1: the v12 rest affordances (gen_scenes.V12_REST_AFFORDANCE) are excluded
+                a = rest_masked(scene, render(f"--advance={f}").astype(int), b)
                 worst = max(worst, float((np.abs(a - b).max(-1) > 0).mean()))
-            gates.append(f"rain 0 rest frames (f0, f60) identical to {same_as}: {worst:.4%} pixels differ "
+            gates.append(f"rain 0 rest frames (f0, f60) identical to {same_as}{_excl(scene)}: {worst:.4%} pixels differ "
                          f"({'ok' if worst == 0 else 'FAIL'})")
 
         extras = extras_of(scene)

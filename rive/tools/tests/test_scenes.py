@@ -44,9 +44,10 @@ def test_generator_is_deterministic_and_committed(rml: str) -> None:
 def test_six_planes_with_the_ruling_gains(rml: str) -> None:
     assert gen_scenes.PARALLAX_GAINS == (0.0, 0.15, 0.3, 0.5, 0.7, 1.0)
     assert gen_scenes.PARALLAX_TRAVEL == (40.0, 24.0)
-    # M8's fog converters are private (scene_npc.linear: c + k x fog) and may repeat a value
+    # M8's fog converters are private (scene_npc.linear: c + k x fog) and may repeat a value; so are
+    # M9's (the v12 art's own converters, gen_scenes._v12_lin)
     k_of = {i: v for i, v in _converter_values(rml).items()
-            if not gen_scenes.M8_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START}
+            if not gen_scenes.M9_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START}
     assert len(k_of) == len(set(k_of.values()))  # one shared converter per travel
     vm = re.search(r'<ViewModel [^>]*name="SceneVM"', rml)
     assert vm

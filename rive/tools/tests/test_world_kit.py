@@ -110,7 +110,9 @@ def test_moon_at_minus_one_draws_nothing_and_keeps_the_m8_moon(moon: tuple) -> N
     paths = [p.get("name") for p in dark.findall("PointsPath")]
     assert paths == ["DarkHalf", "Terminator"]
     half = dark.find("PointsPath[@name='DarkHalf']")
-    assert max(float(v.get("x")) for v in half) == 0.0 and min(float(v.get("x")) for v in half) == -R
+    # the dark side bleeds MOON_DARK_BLEED px past the lit disc (no lit hairline at its limb)
+    assert max(float(v.get("x")) for v in half) == 0.0
+    assert min(float(v.get("x")) for v in half) == -(R + world_kit.MOON_DARK_BLEED)
     assert [c.get("name") for c in rig if c.tag != "DataBindContext"] == ["MoonDark", "MoonLit"]  # dark in front
 
 

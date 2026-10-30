@@ -26,7 +26,7 @@ import math
 from typing import TYPE_CHECKING
 
 from rig_dsl import Formulas
-from rml import El, ellipse, fill, stroke
+from rml import Doc, El, ellipse, fill, stroke
 from scene_art import named, walk
 
 if TYPE_CHECKING:
@@ -112,8 +112,8 @@ def pw_tokens(f: Formulas, pts: list[tuple[float, float]]) -> list[El]:
     return toks
 
 
-def formula(sc: Scene, toks: list[El]) -> El:
-    conv = sc.d8("DataConverterFormula", *toks)
+def formula(sc: Scene, toks: list[El], doc: Doc | None = None) -> El:
+    conv = (doc or sc.d8)("DataConverterFormula", *toks)
     sc.roots.append(conv)
     return conv
 
@@ -129,12 +129,14 @@ def arc_params(pts: list[tuple[float, float]]) -> list[float]:
 
 def path_binds(sc: Scene, node: El, ts: list[float], xs: list[float], ys: list[float],
                scales: list[float] | None = None, depth: tuple[float, float, tuple[float, float]] | None = None,
-               toward: bool = False) -> None:
-    """Binds `node` x / y (and scaleX / scaleY) to piecewise-linear functions of `npcX`. `depth`
+               toward: bool = False, prop: str = "npcX", doc: Doc | None = None) -> None:
+    """Binds `node` x / y (and scaleX / scaleY) to piecewise-linear functions of `npcX` (`prop`; v12:
+    `npc2X` with `doc` = the scene's d9). `depth`
     (t_from, t_to, (cx, cy)): adds `c * parallax * (1 - D(npcX))`, D ramping 0 -> 1 between the two
     t, so art drawn in a nearer plane rides a farther plane's travel until it steps onto its own;
     with `toward`, `c * parallax * D` instead (it walks off its own plane onto a farther one)."""
-    f = Formulas(sc.d8, sc.vpath)
+    doc = doc or sc.d8
+    f = Formulas(doc, sc.vpath)
     for key, vals, axis in ((13, xs, 0), (14, ys, 1)):
         toks = pw_tokens(f, list(zip(ts, vals)))
         if depth is not None:
@@ -148,11 +150,11 @@ def path_binds(sc: Scene, node: El, ts: list[float], xs: list[float], ys: list[f
             else:
                 toks += [f.op("+"), f.val(c), f.op("*"), f.bound(par), f.op("-"), f.val(c), f.op("*"), f.bound(par),
                          f.op("*"), *ramp]
-        node.children.insert(0, sc.bind("npcX", key, formula(sc, toks), doc=sc.d8))
+        node.children.insert(0, sc.bind(prop, key, formula(sc, toks, doc), doc=doc))
     if scales is not None:
-        conv = formula(sc, pw_tokens(f, list(zip(ts, scales))))
+        conv = formula(sc, pw_tokens(f, list(zip(ts, scales))), doc)
         for key in (17, 16):
-            node.children.insert(0, sc.bind("npcX", key, conv, doc=sc.d8))
+            node.children.insert(0, sc.bind(prop, key, conv, doc=doc))
 
 
 def pivot_wrap(sc: Scene, name: str, x: float, y: float, kids: list[El], **kw: object) -> tuple[El, El]:
@@ -163,10 +165,12 @@ def pivot_wrap(sc: Scene, name: str, x: float, y: float, kids: list[El], **kw: o
     return outer, inner
 
 
-def npc_layer(sc: Scene, anims: dict[str, El | list[El]]) -> None:
+def npc_layer(sc: Scene, anims: dict[str, El | list[El]], slot: str = "npc", look: str = "npcLook",
+              name: str = "Npc", entry: str = "rest") -> None:
     """The `Npc` layer: AnyState -> each state but rest when `npc` equals it, every state -> rest when it
     is rest (blend NPC_BLEND_MS); `notice` (three animations) is a 1D blend on `npcLook` at -1 / 0 /
-    +1. Entry = rest."""
+    +1. Entry = rest. v12: the second slot passes `slot` npc2, `look` npc2Look, `name` Npc2 and `entry`
+    away (its default: the layer starts where the view model does, so nothing is drawn at f0)."""
     d = sc.d
     states: dict[str, El] = {}
     for i, k in enumerate(NPC_STATES):
@@ -174,7 +178,7 @@ def npc_layer(sc: Scene, anims: dict[str, El | list[El]]) -> None:
         pos = {"x": float(160 * i), "y": float(220 + 120 * (i % 2))}
         if isinstance(a, list):
             states[k] = d("BlendState1DViewModel",
-                          d("BindablePropertyNumber", d("DataBindContext", sourcePathIds=sc.vpath("npcLook"),
+                          d("BindablePropertyNumber", d("DataBindContext", sourcePathIds=sc.vpath(look),
                                                         propertyKey=636)),
                           *[d("BlendAnimation1D", animationId=x.ref(), value=v) for x, v in zip(a, (-1.0, 0.0, 1.0))],
                           **pos)
@@ -183,18 +187,18 @@ def npc_layer(sc: Scene, anims: dict[str, El | list[El]]) -> None:
     def is_(k: str) -> El:
         return d("TransitionViewModelCondition",
                  d("TransitionPropertyViewModelComparator",
-                   d("BindablePropertyEnum", d("DataBindContext", sourcePathIds=sc.vpath("npc"), propertyKey=637))),
+                   d("BindablePropertyEnum", d("DataBindContext", sourcePathIds=sc.vpath(slot), propertyKey=637))),
                  d("TransitionValueEnumComparator", value=sc.npc_vals[k].ref()))
     # rest is reached from each state, never from AnyState: an AnyState transition into the state the
     # layer is in restarts it once on the first frame, which left the crab's rest loop (its v10
     # ambient) one frame behind the v10 file
     any_t = [d("StateTransition", is_(k), stateToId=s.ref(), duration=NPC_BLEND_MS)
-             for k, s in states.items() if k != "rest"]
+             for k, s in states.items() if k != entry]
     for k, s in states.items():
-        if k != "rest":
-            s.add(d("BlendStateTransition" if s.tag == "BlendState1DViewModel" else "StateTransition", is_("rest"),
-                    stateToId=states["rest"].ref(), duration=NPC_BLEND_MS))
-    sc.layers.append(sc._layer("Npc", states["rest"], list(states.values()), any_t))
+        if k != entry:
+            s.add(d("BlendStateTransition" if s.tag == "BlendState1DViewModel" else "StateTransition", is_(entry),
+                    stateToId=states[entry].ref(), duration=NPC_BLEND_MS))
+    sc.layers.append(sc._layer(name, states[entry], list(states.values()), any_t))
 
 
 def blend3(fn: object) -> list:
@@ -714,6 +718,158 @@ def beach_crab(sc: Scene, content: list[El], hits: list[El], gains: tuple[float,
             **{lg: {"rotation": [(0, 0.15 * (1 if i < 3 else -1))]} for i, lg in enumerate(legs)},
         })
         npc_layer(sc, anims)
+
+
+# ====================================================================== beach: the gulls (M9, v12 npc2)
+# Ruling 10: the beach's second NPC slot, two storybook gulls on the sand right of (and in front of) the
+# crab. `npc2X` 0 = landed (GULLS_AT), 1 = off the frame's right edge (a climb up and right, history-free:
+# GULL_PATH, constant speed along it). They face left (toward the avatar) while `npc2Look` <= 0 and right
+# while it is > 0, in every state: the app sets it > 0 to fly off (`move` 0 -> 1) and < 0 to land
+# (`move` 1 -> 0). `notice` blends on |npc2Look|: heads up and toward where they face. Default `away`:
+# the layer `Npc2` starts there (nothing drawn). Mints from the scene's d9.
+GULLS_AT = (896.0, 1528.0)
+GULL_FEET = ((-42.0, -12.0, 1.0), (36.0, 12.0, 1.08))    # each gull's feet from the anchor, its scale
+# a climb away from the crab: right first, then up and out past the frame's right edge (+ Plane4's travel)
+GULL_PATH = [(896.0, 1528.0, 1.0), (960.0, 1494.0, 0.98), (1024.0, 1430.0, 0.95), (1086.0, 1350.0, 0.92),
+             (1160.0, 1272.0, 0.88), (1260.0, 1196.0, 0.84)]
+GULL_REST, GULL_IDLE, GULL_MOVE, GULL_NOTICE, GULL_REACT = 240, 180, 24, 120, 36
+GULL_COLOURS = {"white": "FFFFFFFF", "ink": "FF2A3040", "wing": ("FFB8C0CC", "FF7A8494"),
+                "far": ("FF8A94A2", "FF5A6474"), "tip": "FF2A3040", "tail": "FFDDE3EA", "beak": "FFF0B030",
+                "jaw": "FFD08A28", "leg": "FFC7933F", "eye": "FF101010", "shadow": "30805020"}
+
+
+def gull_path() -> tuple[list[float], list[tuple[float, float]], list[float]]:
+    ts = arc_params([(x, y) for x, y, _ in GULL_PATH])
+    return ts, [(x, y) for x, y, _ in GULL_PATH], [s for _, _, s in GULL_PATH]
+
+
+def _gull(sc: Scene, rig: Rig, i: int) -> tuple[El, dict[str, El]]:
+    """One gull, feet at its origin, facing left. Returns its node and the rigged parts."""
+    c = GULL_COLOURS
+    S, E, F = sc.S, sc.E, sc.F
+
+    def wing(name: str, cols: tuple[str, str], x: float, y: float) -> El:
+        # a flight wing pointing up and back from the shoulder; its scaleY flaps it (down = negative)
+        return sc.node(name, x, y,
+                       S(Z, "WingTip", [(9.0, -40.0), (16.0, -50.0, "c"), (15.0, -37.0)], F(c["tip"]), origin=Z),
+                       S(Z, "WingBlade", [(-7.0, 3.0), (-4.0, -14.0), (4.0, -34.0), (16.0, -50.0, "c"), (15.0, -32.0),
+                                          (10.0, -12.0), (7.0, 4.0)],
+                         sc.vgrad(-27, 27, [(cols[0], 0.0), (cols[1], 1.0)]), L(sc, c["ink"], 2), origin=Z),
+                       opacity=0.0)
+
+    eye = E(Z, "GullEye", -9.0, -12.0, 4.5, 4.5, F(c["eye"]))
+    jaw = sc.node("GullJaw", -15.0, -7.0, S(Z, "Jaw", [(0.0, 0.0), (-12.0, 1.0, "c"), (0.0, 3.0)], F(c["jaw"]), origin=Z))
+    head = sc.node(f"Gull{i}Head", -14.0, -36.0, eye,
+                   S(Z, "GullBeak", [(-15.0, -12.0), (-31.0, -9.0, "c"), (-15.0, -6.0)], F(c["beak"]), origin=Z),
+                   jaw, E(Z, "GullHeadShape", -5.0, -10.0, 24.0, 21.0, F(c["white"]), L(sc, c["ink"], 2)))
+    near = wing(f"Gull{i}WingNear", c["wing"], 4.0, -36.0)
+    far = wing(f"Gull{i}WingFar", c["far"], 8.0, -37.0)
+    folded = sc.node(f"Gull{i}Wing", 0.0, 0.0,
+                     S(Z, "FoldTip", [(30.0, -29.0), (42.0, -24.0, "c"), (31.0, -23.0)], F(c["tip"]), origin=Z),
+                     S(Z, "Fold", [(-12.0, -33.0), (10.0, -38.0), (32.0, -31.0), (42.0, -24.0, "c"), (18.0, -21.0),
+                                   (-6.0, -24.0)], sc.vgrad(-9, 9, [(c["wing"][0], 0.0), (c["wing"][1], 1.0)]),
+                       L(sc, c["ink"], 2), origin=Z))
+    legs = sc.node(f"Gull{i}Legs", 0.0, -13.0,
+                   *[S(Z, f"GullLeg{k}", [(x, 0.0), (x - 0.5, 13.0), (x - 7.0, 13.5)], L(sc, c["leg"], 2.8), closed=False,
+                       origin=Z) for k, x in enumerate((-4.0, 4.0))])
+    body = sc.node(f"Gull{i}Body", 0.0, 0.0, head, near, folded,
+                   E(Z, "GullBodyShape", 2.0, -26.0, 50.0, 28.0, F(c["white"]), L(sc, c["ink"], 2)),
+                   S(Z, "GullTail", [(20.0, -30.0), (38.0, -27.0, "c"), (36.0, -21.0, "c"), (20.0, -21.0)],
+                     F(c["tail"]), L(sc, c["ink"], 1.6), origin=Z),
+                   far, legs)
+    shadow = E(Z, f"Gull{i}Shadow", 2.0, 1.0, 46.0, 8.0, F(c["shadow"]))
+    f = Formulas(sc.d9, sc.vpath)
+    face = formula(sc, [f.val(1), f.op("+"), f.val(-2), f.op("*"),
+                        *f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [f.val(40), f.op("*"), *f.inp()]))], sc.d9)
+    facing = sc.node(f"Gull{i}Facing", 0.0, 0.0, sc.bind("npc2Look", 16, face, doc=sc.d9), body, shadow)
+    ox, oy, s = GULL_FEET[i]
+    node = sc.node(f"Gull{i}", ox, oy, facing, scaleX=s, scaleY=s)
+    parts = {"body": rig.reg(body, x=0.0, y=0.0, rotation=0.0, scaleY=1.0),
+             "head": rig.reg(head, rotation=0.0, y=-36.0), "eye": rig.reg(eye, scaleY=1.0),
+             "jaw": rig.reg(jaw, rotation=0.0), "folded": rig.reg(folded, opacity=1.0),
+             "near": rig.reg(near, opacity=0.0, scaleY=1.0), "far": rig.reg(far, opacity=0.0, scaleY=1.0),
+             "legs": rig.reg(legs, scaleY=1.0), "shadow": rig.reg(shadow, opacity=1.0, scaleX=1.0)}
+    return node, parts
+
+
+def beach_gulls(sc: Scene, content: list[El]) -> None:
+    """The gulls (`GullsNpc`, Plane4 in front of the crab) and their `Npc2` layer (see GULLS_AT)."""
+    with sc.minting(sc.d9):
+        rig = Rig(sc)
+        gulls = [_gull(sc, rig, i) for i in range(2)]
+        group = sc.node("GullsNpc", *GULLS_AT, gulls[1][0], gulls[0][0], opacity=0.0)
+        rig.reg(group, opacity=1.0)
+        ts, pts, scales = gull_path()
+        path_binds(sc, group, ts, [p[0] for p in pts], [p[1] for p in pts], scales, prop="npc2X", doc=sc.d9)
+        content.insert(next(i for i, e in enumerate(content) if e.attrs.get("name") == "CrabNpc"), group)
+        g = [p for _, p in gulls]
+
+        def blink(at: int, n: int) -> list:
+            return [(0, 1.0), (at, 1.0), (at + 3, 0.1), (at + 7, 1.0), (n, 1.0)]
+
+        def wave(n: int, period: int, lo: float, hi: float, ph: float) -> list:
+            mid, amp = (hi + lo) / 2, (hi - lo) / 2
+            return [(fr, round(mid + amp * math.cos(2 * math.pi * (fr / period + ph)), 4), "linear")
+                    for fr in range(0, n + 1, 2)]
+
+        def flight(n: int, period: int, i: int) -> dict[El, dict[str, list]]:
+            p = g[i]
+            ph = 0.25 * i
+            return {p["folded"]: {"opacity": [(0, 0.0)]}, p["near"]: {"opacity": [(0, 1.0)],
+                                                                       "scaleY": wave(n, period, -0.8, 1.0, ph)},
+                    p["far"]: {"opacity": [(0, 1.0)], "scaleY": wave(n, period, -0.7, 0.9, ph - 0.08)}}
+
+        anims: dict[str, El | list[El]] = {
+            "away": rig.anim("npc_gulls_away", 1, {group: {"opacity": [(0, 0.0)]}}),
+            "rest": rig.anim("npc_gulls_rest", GULL_REST, {
+                **{p["body"]: {"scaleY": [(0, 1.0), (120 + 30 * i, 1.025), (GULL_REST, 1.0)]} for i, p in enumerate(g)},
+                **{p["eye"]: {"scaleY": blink(70 + 90 * i, GULL_REST)} for i, p in enumerate(g)}}),
+        }
+        n = GULL_IDLE
+        peck = [(0, 0.0), (24, 0.0), (34, -0.32), (52, -0.32), (62, 0.0), (104, 0.0), (114, -0.32), (128, -0.32),
+                (138, 0.0), (n, 0.0)]
+        peck_head = [(0, 0.0), (24, 0.0), (34, -0.85), (38, -0.7), (42, -0.9), (46, -0.72), (52, -0.85), (62, 0.0),
+                     (104, 0.0), (114, -0.85), (119, -0.7), (124, -0.9), (128, -0.85), (138, 0.0), (n, 0.0)]
+        hop = [(0, 0.0)] + [(fr, round(-2.5 * abs(math.sin(math.pi * (fr - a) / 10)), 3), "linear")
+                            for a in (40, 120) for fr in range(a, a + 31, 5)] + [(n, 0.0)]
+        anims["idle"] = rig.anim("npc_gulls_idle", n, {
+            g[0]["body"]: {"rotation": peck}, g[0]["head"]: {"rotation": peck_head},
+            g[0]["eye"]: {"scaleY": blink(160, n)},
+            g[1]["body"]: {"x": [(0, 0.0), (40, 0.0), (70, -10.0), (120, -10.0), (150, 0.0), (n, 0.0)], "y": hop},
+            g[1]["head"]: {"rotation": [(0, 0.0), (20, 0.12), (80, 0.12), (92, -0.1), (160, -0.1), (n, 0.0)]},
+            g[1]["eye"]: {"scaleY": blink(30, n)},
+        })
+        n = GULL_MOVE
+        anims["move"] = rig.anim("npc_gulls_move", n, {
+            **{k: v for i in range(2) for k, v in flight(n, n, i).items()},
+            **{p["legs"]: {"scaleY": [(0, 0.3)]} for p in g},
+            **{p["shadow"]: {"opacity": [(0, 0.0)]} for p in g},
+            **{p["head"]: {"rotation": [(0, 0.08)]} for p in g},
+            **{p["body"]: {"rotation": [(0, 0.12)], "y": wave(n, n, -4.0, 4.0, 0.25 * i + 0.5)} for i, p in enumerate(g)},
+        })
+        n = GULL_NOTICE
+
+        def notice(s: float) -> El:
+            a = abs(s)
+            return rig.anim(f"npc_gulls_notice{'LCR'[int(s) + 1]}", n, {
+                **{p["head"]: {"rotation": [(0, 0.16 + 0.1 * a - 0.03 * i), (60, 0.2 + 0.1 * a - 0.03 * i),
+                                            (n, 0.16 + 0.1 * a - 0.03 * i)], "y": [(0, -38.0)]}
+                   for i, p in enumerate(g)},
+                **{p["body"]: {"scaleY": [(0, 1.05)]} for p in g},
+                **{p["eye"]: {"scaleY": [(0, 1.15)]} for p in g},
+            })
+        anims["notice"] = blend3(notice)
+        n = GULL_REACT
+        anims["react"] = rig.anim("npc_gulls_react", n, {
+            **{k: v for i in range(2) for k, v in flight(n, 12, i).items()},
+            **{p["body"]: {"y": [(0, 0.0), (5, -16.0), (14, -22.0 - 3 * i), (24, -14.0), (32, -3.0), (n, 0.0)],
+                           "rotation": [(0, 0.15)]} for i, p in enumerate(g)},
+            **{p["head"]: {"rotation": [(0, 0.3)]} for p in g},
+            **{p["jaw"]: {"rotation": [(0, -0.55)]} for p in g},
+            **{p["legs"]: {"scaleY": [(0, 0.6)]} for p in g},
+            **{p["shadow"]: {"opacity": [(0, 0.55)], "scaleX": [(0, 0.8)]} for p in g},
+        })
+        npc_layer(sc, anims, slot="npc2", look="npc2Look", name="Npc2", entry="away")
 
 
 # ====================================================================== deepSpace: the alien

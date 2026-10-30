@@ -2138,6 +2138,7 @@
               </Stroke>
             </Shape>
             <Shape x="230" y="698.5" name="PlanetWeather0" id="0:3190">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920026" id="0:920027"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3191"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3189">
                 <CubicDetachedVertex x="-83.7854" y="-0.5" outRotation="0.0742" outDistance="17.978" inRotation="3.2158" inDistance="0" id="0:3185"/>
@@ -2149,7 +2150,21 @@
                 <SolidColor colorValue="283B325E" id="0:3183"/>
               </Stroke>
             </Shape>
+            <Shape x="48.35" y="698.5" name="PlanetWeatherWrap0" id="0:920020">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920033" id="0:920034"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920012"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920017">
+                <CubicDetachedVertex x="-83.7854" y="-0.5" outRotation="0.0742" outDistance="17.978" inRotation="3.2158" inDistance="0" id="0:920013"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0084" outDistance="21.6508" inRotation="3.15" inDistance="17.9457" id="0:920014"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0614" outDistance="16.3138" inRotation="3.0802" inDistance="21.6863" id="0:920015"/>
+                <CubicDetachedVertex x="83.7854" y="-3.5" outRotation="-0.0818" outDistance="0" inRotation="3.0598" inDistance="16.3164" id="0:920016"/>
+              </PointsPath>
+              <Stroke thickness="2" cap="round" join="round" name="Line" id="0:920019">
+                <SolidColor colorValue="283B325E" id="0:920018"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="715.5" name="PlanetWeather1" id="0:3199">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920049" id="0:920050"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3200"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3198">
                 <CubicDetachedVertex x="-104.3024" y="-0.5" outRotation="0.0538" outDistance="24.8033" inRotation="3.1954" inDistance="0" id="0:3194"/>
@@ -2161,7 +2176,21 @@
                 <SolidColor colorValue="25F1DBB7" id="0:3192"/>
               </Stroke>
             </Shape>
+            <Shape x="8.95" y="715.5" name="PlanetWeatherWrap1" id="0:920043">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920056" id="0:920057"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920035"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920040">
+                <CubicDetachedVertex x="-104.3024" y="-0.5" outRotation="0.0538" outDistance="24.8033" inRotation="3.1954" inDistance="0" id="0:920036"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0072" outDistance="21.6628" inRotation="3.1488" inDistance="24.7725" id="0:920037"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0521" outDistance="23.1389" inRotation="3.0895" inDistance="21.6894" id="0:920038"/>
+                <CubicDetachedVertex x="104.3024" y="-3.5" outRotation="-0.0577" outDistance="0" inRotation="3.0839" inDistance="23.1393" id="0:920039"/>
+              </PointsPath>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:920042">
+                <SolidColor colorValue="25F1DBB7" id="0:920041"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="732.5" name="PlanetWeather2" id="0:3208">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920072" id="0:920073"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3209"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3207">
                 <CubicDetachedVertex x="-118.9958" y="-0.5" outRotation="0.0449" outDistance="29.6952" inRotation="3.1865" inDistance="0" id="0:3203"/>
@@ -2173,7 +2202,21 @@
                 <SolidColor colorValue="25F1DBB7" id="0:3201"/>
               </Stroke>
             </Shape>
+            <Shape x="-19.6" y="732.5" name="PlanetWeatherWrap2" id="0:920066">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920079" id="0:920080"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920058"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920063">
+                <CubicDetachedVertex x="-118.9958" y="-0.5" outRotation="0.0449" outDistance="29.6952" inRotation="3.1865" inDistance="0" id="0:920059"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0065" outDistance="21.6678" inRotation="3.1481" inDistance="29.6652" id="0:920060"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0469" outDistance="28.0303" inRotation="3.0946" inDistance="21.6897" id="0:920061"/>
+                <CubicDetachedVertex x="118.9958" y="-3.5" outRotation="-0.0476" outDistance="0" inRotation="3.094" inDistance="28.0303" id="0:920062"/>
+              </PointsPath>
+              <Stroke thickness="4" cap="round" join="round" name="Line" id="0:920065">
+                <SolidColor colorValue="25F1DBB7" id="0:920064"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="749.5" name="PlanetWeather3" id="0:3217">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920095" id="0:920096"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3218"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3216">
                 <CubicDetachedVertex x="-129.8576" y="-0.5" outRotation="0.04" outDistance="33.3126" inRotation="3.1816" inDistance="0" id="0:3212"/>
@@ -2185,7 +2228,21 @@
                 <SolidColor colorValue="283B325E" id="0:3210"/>
               </Stroke>
             </Shape>
+            <Shape x="-38.56" y="749.5" name="PlanetWeatherWrap3" id="0:920089">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920102" id="0:920103"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920081"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920086">
+                <CubicDetachedVertex x="-129.8576" y="-0.5" outRotation="0.04" outDistance="33.3126" inRotation="3.1816" inDistance="0" id="0:920082"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0061" outDistance="21.6705" inRotation="3.1477" inDistance="33.283" id="0:920083"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0438" outDistance="31.6472" inRotation="3.0978" inDistance="21.6897" id="0:920084"/>
+                <CubicDetachedVertex x="129.8576" y="-3.5" outRotation="-0.0421" outDistance="0" inRotation="3.0994" inDistance="31.6473" id="0:920085"/>
+              </PointsPath>
+              <Stroke thickness="2" cap="round" join="round" name="Line" id="0:920088">
+                <SolidColor colorValue="283B325E" id="0:920087"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="766.5" name="PlanetWeather4" id="0:3226">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920118" id="0:920119"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3227"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3225">
                 <CubicDetachedVertex x="-137.797" y="-0.5" outRotation="0.0371" outDistance="35.957" inRotation="3.1787" inDistance="0" id="0:3221"/>
@@ -2197,7 +2254,21 @@
                 <SolidColor colorValue="25F1DBB7" id="0:3219"/>
               </Stroke>
             </Shape>
+            <Shape x="-54.24" y="766.5" name="PlanetWeatherWrap4" id="0:920112">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920125" id="0:920126"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920104"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920109">
+                <CubicDetachedVertex x="-137.797" y="-0.5" outRotation="0.0371" outDistance="35.957" inRotation="3.1787" inDistance="0" id="0:920105"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0058" outDistance="21.6721" inRotation="3.1474" inDistance="35.9278" id="0:920106"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0417" outDistance="34.2914" inRotation="3.0999" inDistance="21.6896" id="0:920107"/>
+                <CubicDetachedVertex x="137.797" y="-3.5" outRotation="-0.0389" outDistance="0" inRotation="3.1027" inDistance="34.2916" id="0:920108"/>
+              </PointsPath>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:920111">
+                <SolidColor colorValue="25F1DBB7" id="0:920110"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="783.5" name="PlanetWeather5" id="0:3235">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920141" id="0:920142"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3236"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3234">
                 <CubicDetachedVertex x="-143.3004" y="-0.5" outRotation="0.0353" outDistance="37.7903" inRotation="3.1769" inDistance="0" id="0:3230"/>
@@ -2209,7 +2280,21 @@
                 <SolidColor colorValue="25F1DBB7" id="0:3228"/>
               </Stroke>
             </Shape>
+            <Shape x="-65.06" y="783.5" name="PlanetWeatherWrap5" id="0:920135">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920148" id="0:920149"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920127"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920132">
+                <CubicDetachedVertex x="-143.3004" y="-0.5" outRotation="0.0353" outDistance="37.7903" inRotation="3.1769" inDistance="0" id="0:920128"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0056" outDistance="21.6731" inRotation="3.1472" inDistance="37.7613" id="0:920129"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0404" outDistance="36.1244" inRotation="3.1012" inDistance="21.6895" id="0:920130"/>
+                <CubicDetachedVertex x="143.3004" y="-3.5" outRotation="-0.0369" outDistance="0" inRotation="3.1047" inDistance="36.1247" id="0:920131"/>
+              </PointsPath>
+              <Stroke thickness="4" cap="round" join="round" name="Line" id="0:920134">
+                <SolidColor colorValue="25F1DBB7" id="0:920133"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="800.5" name="PlanetWeather6" id="0:3244">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920164" id="0:920165"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3245"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3243">
                 <CubicDetachedVertex x="-146.6424" y="-0.5" outRotation="0.0343" outDistance="38.9037" inRotation="3.1759" inDistance="0" id="0:3239"/>
@@ -2221,7 +2306,21 @@
                 <SolidColor colorValue="283B325E" id="0:3237"/>
               </Stroke>
             </Shape>
+            <Shape x="-69.89" y="800.5" name="PlanetWeatherWrap6" id="0:920158">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920171" id="0:920172"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920150"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920155">
+                <CubicDetachedVertex x="-146.6424" y="-0.5" outRotation="0.0343" outDistance="38.9037" inRotation="3.1759" inDistance="0" id="0:920151"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0055" outDistance="21.6736" inRotation="3.1471" inDistance="38.8748" id="0:920152"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0396" outDistance="37.2376" inRotation="3.102" inDistance="21.6895" id="0:920153"/>
+                <CubicDetachedVertex x="146.6424" y="-3.5" outRotation="-0.0358" outDistance="0" inRotation="3.1058" inDistance="37.238" id="0:920154"/>
+              </PointsPath>
+              <Stroke thickness="2" cap="round" join="round" name="Line" id="0:920157">
+                <SolidColor colorValue="283B325E" id="0:920156"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="817.5" name="PlanetWeather7" id="0:3253">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920187" id="0:920188"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3254"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3252">
                 <CubicDetachedVertex x="-147.9696" y="-0.5" outRotation="0.0339" outDistance="39.3458" inRotation="3.1755" inDistance="0" id="0:3248"/>
@@ -2233,7 +2332,21 @@
                 <SolidColor colorValue="25F1DBB7" id="0:3246"/>
               </Stroke>
             </Shape>
+            <Shape x="-72.47" y="817.5" name="PlanetWeatherWrap7" id="0:920181">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920194" id="0:920195"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920173"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920178">
+                <CubicDetachedVertex x="-147.9696" y="-0.5" outRotation="0.0339" outDistance="39.3458" inRotation="3.1755" inDistance="0" id="0:920174"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0055" outDistance="21.6738" inRotation="3.1471" inDistance="39.3169" id="0:920175"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0393" outDistance="37.6796" inRotation="3.1023" inDistance="21.6894" id="0:920176"/>
+                <CubicDetachedVertex x="147.9696" y="-3.5" outRotation="-0.0354" outDistance="0" inRotation="3.1062" inDistance="37.6801" id="0:920177"/>
+              </PointsPath>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:920180">
+                <SolidColor colorValue="25F1DBB7" id="0:920179"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="834.5" name="PlanetWeather8" id="0:3262">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920210" id="0:920211"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3263"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3261">
                 <CubicDetachedVertex x="-147.3363" y="-0.5" outRotation="0.0341" outDistance="39.1348" inRotation="3.1757" inDistance="0" id="0:3257"/>
@@ -2245,7 +2358,21 @@
                 <SolidColor colorValue="25F1DBB7" id="0:3255"/>
               </Stroke>
             </Shape>
+            <Shape x="-72.07" y="834.5" name="PlanetWeatherWrap8" id="0:920204">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920217" id="0:920218"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920196"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920201">
+                <CubicDetachedVertex x="-147.3363" y="-0.5" outRotation="0.0341" outDistance="39.1348" inRotation="3.1757" inDistance="0" id="0:920197"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0055" outDistance="21.6737" inRotation="3.1471" inDistance="39.106" id="0:920198"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0395" outDistance="37.4687" inRotation="3.1021" inDistance="21.6895" id="0:920199"/>
+                <CubicDetachedVertex x="147.3363" y="-3.5" outRotation="-0.0356" outDistance="0" inRotation="3.106" inDistance="37.4692" id="0:920200"/>
+              </PointsPath>
+              <Stroke thickness="4" cap="round" join="round" name="Line" id="0:920203">
+                <SolidColor colorValue="25F1DBB7" id="0:920202"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="851.5" name="PlanetWeather9" id="0:3271">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920233" id="0:920234"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3272"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3270">
                 <CubicDetachedVertex x="-144.717" y="-0.5" outRotation="0.0349" outDistance="38.2622" inRotation="3.1764" inDistance="0" id="0:3266"/>
@@ -2257,7 +2384,21 @@
                 <SolidColor colorValue="283B325E" id="0:3264"/>
               </Stroke>
             </Shape>
+            <Shape x="-66.27" y="851.5" name="PlanetWeatherWrap9" id="0:920227">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920240" id="0:920241"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920219"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920224">
+                <CubicDetachedVertex x="-144.717" y="-0.5" outRotation="0.0349" outDistance="38.2622" inRotation="3.1764" inDistance="0" id="0:920220"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0056" outDistance="21.6733" inRotation="3.1472" inDistance="38.2333" id="0:920221"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.04" outDistance="36.5962" inRotation="3.1015" inDistance="21.6895" id="0:920222"/>
+                <CubicDetachedVertex x="144.717" y="-3.5" outRotation="-0.0364" outDistance="0" inRotation="3.1052" inDistance="36.5966" id="0:920223"/>
+              </PointsPath>
+              <Stroke thickness="2" cap="round" join="round" name="Line" id="0:920226">
+                <SolidColor colorValue="283B325E" id="0:920225"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="868.5" name="PlanetWeather10" id="0:3280">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920256" id="0:920257"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3281"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3279">
                 <CubicDetachedVertex x="-140" y="-0.5" outRotation="0.0363" outDistance="36.6909" inRotation="3.1779" inDistance="0" id="0:3275"/>
@@ -2269,7 +2410,21 @@
                 <SolidColor colorValue="25F1DBB7" id="0:3273"/>
               </Stroke>
             </Shape>
+            <Shape x="-58.05" y="868.5" name="PlanetWeatherWrap10" id="0:920250">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920263" id="0:920264"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920242"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920247">
+                <CubicDetachedVertex x="-140" y="-0.5" outRotation="0.0363" outDistance="36.6909" inRotation="3.1779" inDistance="0" id="0:920243"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0057" outDistance="21.6725" inRotation="3.1473" inDistance="36.6618" id="0:920244"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0412" outDistance="35.0251" inRotation="3.1004" inDistance="21.6896" id="0:920245"/>
+                <CubicDetachedVertex x="140" y="-3.5" outRotation="-0.0381" outDistance="0" inRotation="3.1035" inDistance="35.0254" id="0:920246"/>
+              </PointsPath>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:920249">
+                <SolidColor colorValue="25F1DBB7" id="0:920248"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="885.5" name="PlanetWeather11" id="0:3289">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920279" id="0:920280"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3290"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3288">
                 <CubicDetachedVertex x="-132.9624" y="-0.5" outRotation="0.0388" outDistance="34.3467" inRotation="3.1804" inDistance="0" id="0:3284"/>
@@ -2281,7 +2436,21 @@
                 <SolidColor colorValue="25F1DBB7" id="0:3282"/>
               </Stroke>
             </Shape>
+            <Shape x="-45.44" y="885.5" name="PlanetWeatherWrap11" id="0:920273">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920286" id="0:920287"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920265"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920270">
+                <CubicDetachedVertex x="-132.9624" y="-0.5" outRotation="0.0388" outDistance="34.3467" inRotation="3.1804" inDistance="0" id="0:920266"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.006" outDistance="21.6712" inRotation="3.1475" inDistance="34.3173" id="0:920267"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0429" outDistance="32.6812" inRotation="3.0987" inDistance="21.6897" id="0:920268"/>
+                <CubicDetachedVertex x="132.9624" y="-3.5" outRotation="-0.0408" outDistance="0" inRotation="3.1008" inDistance="32.6813" id="0:920269"/>
+              </PointsPath>
+              <Stroke thickness="4" cap="round" join="round" name="Line" id="0:920272">
+                <SolidColor colorValue="25F1DBB7" id="0:920271"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="902.5" name="PlanetWeather12" id="0:3298">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920302" id="0:920303"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3299"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3297">
                 <CubicDetachedVertex x="-123.2071" y="-0.5" outRotation="0.0429" outDistance="31.0976" inRotation="3.1845" inDistance="0" id="0:3293"/>
@@ -2293,7 +2462,21 @@
                 <SolidColor colorValue="283B325E" id="0:3291"/>
               </Stroke>
             </Shape>
+            <Shape x="-25.33" y="902.5" name="PlanetWeatherWrap12" id="0:920296">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920309" id="0:920310"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920288"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920293">
+                <CubicDetachedVertex x="-123.2071" y="-0.5" outRotation="0.0429" outDistance="31.0976" inRotation="3.1845" inDistance="0" id="0:920289"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0063" outDistance="21.6689" inRotation="3.1479" inDistance="31.0678" id="0:920290"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.0457" outDistance="29.4326" inRotation="3.0959" inDistance="21.6897" id="0:920291"/>
+                <CubicDetachedVertex x="123.2071" y="-3.5" outRotation="-0.0453" outDistance="0" inRotation="3.0963" inDistance="29.4326" id="0:920292"/>
+              </PointsPath>
+              <Stroke thickness="2" cap="round" join="round" name="Line" id="0:920295">
+                <SolidColor colorValue="283B325E" id="0:920294"/>
+              </Stroke>
+            </Shape>
             <Shape x="230" y="919.5" name="PlanetWeather13" id="0:3307">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920325" id="0:920326"/>
               <ClippingShape sourceId="0:630" name="Clip" id="0:3308"/>
               <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:3306">
                 <CubicDetachedVertex x="-110.0136" y="-0.5" outRotation="0.0499" outDistance="26.7045" inRotation="3.1915" inDistance="0" id="0:3302"/>
@@ -2303,6 +2486,19 @@
               </PointsPath>
               <Stroke thickness="3" cap="round" join="round" name="Line" id="0:3301">
                 <SolidColor colorValue="25F1DBB7" id="0:3300"/>
+              </Stroke>
+            </Shape>
+            <Shape x="-1" y="919.5" name="PlanetWeatherWrap13" id="0:920319">
+              <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="13" converterId="0:920332" id="0:920333"/>
+              <ClippingShape sourceId="0:630" name="Clip" id="0:920311"/>
+              <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920316">
+                <CubicDetachedVertex x="-110.0136" y="-0.5" outRotation="0.0499" outDistance="26.7045" inRotation="3.1915" inDistance="0" id="0:920312"/>
+                <CubicDetachedVertex x="-30" y="3.5" outRotation="0.0069" outDistance="21.665" inRotation="3.1485" inDistance="26.674" id="0:920313"/>
+                <CubicDetachedVertex x="35" y="0.5" outRotation="-0.05" outDistance="25.0399" inRotation="3.0916" inDistance="21.6896" id="0:920314"/>
+                <CubicDetachedVertex x="110.0136" y="-3.5" outRotation="-0.0533" outDistance="0" inRotation="3.0883" inDistance="25.0401" id="0:920315"/>
+              </PointsPath>
+              <Stroke thickness="3" cap="round" join="round" name="Line" id="0:920318">
+                <SolidColor colorValue="25F1DBB7" id="0:920317"/>
               </Stroke>
             </Shape>
             <Shape x="230" y="820" name="PlanetTerminator" id="0:3315">
@@ -6399,6 +6595,230 @@
     <FormulaTokenValue operationValue="0.773" id="0:930439"/>
     <FormulaTokenParenthesisClose id="0:930442"/>
     <FormulaTokenParenthesisClose id="0:930445"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920026">
+    <FormulaTokenValue operationValue="230" id="0:920021"/>
+    <FormulaTokenOperation operationType="0" id="0:920022"/>
+    <FormulaTokenValue operationValue="181.65" id="0:920023"/>
+    <FormulaTokenOperation operationType="2" id="0:920024"/>
+    <FormulaTokenInput id="0:920025"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920033">
+    <FormulaTokenValue operationValue="48.35" id="0:920028"/>
+    <FormulaTokenOperation operationType="0" id="0:920029"/>
+    <FormulaTokenValue operationValue="181.65" id="0:920030"/>
+    <FormulaTokenOperation operationType="2" id="0:920031"/>
+    <FormulaTokenInput id="0:920032"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920049">
+    <FormulaTokenValue operationValue="230" id="0:920044"/>
+    <FormulaTokenOperation operationType="0" id="0:920045"/>
+    <FormulaTokenValue operationValue="221.05" id="0:920046"/>
+    <FormulaTokenOperation operationType="2" id="0:920047"/>
+    <FormulaTokenInput id="0:920048"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920056">
+    <FormulaTokenValue operationValue="8.95" id="0:920051"/>
+    <FormulaTokenOperation operationType="0" id="0:920052"/>
+    <FormulaTokenValue operationValue="221.05" id="0:920053"/>
+    <FormulaTokenOperation operationType="2" id="0:920054"/>
+    <FormulaTokenInput id="0:920055"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920072">
+    <FormulaTokenValue operationValue="230" id="0:920067"/>
+    <FormulaTokenOperation operationType="0" id="0:920068"/>
+    <FormulaTokenValue operationValue="249.6" id="0:920069"/>
+    <FormulaTokenOperation operationType="2" id="0:920070"/>
+    <FormulaTokenInput id="0:920071"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920079">
+    <FormulaTokenValue operationValue="-19.6" id="0:920074"/>
+    <FormulaTokenOperation operationType="0" id="0:920075"/>
+    <FormulaTokenValue operationValue="249.6" id="0:920076"/>
+    <FormulaTokenOperation operationType="2" id="0:920077"/>
+    <FormulaTokenInput id="0:920078"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920095">
+    <FormulaTokenValue operationValue="230" id="0:920090"/>
+    <FormulaTokenOperation operationType="0" id="0:920091"/>
+    <FormulaTokenValue operationValue="268.56" id="0:920092"/>
+    <FormulaTokenOperation operationType="2" id="0:920093"/>
+    <FormulaTokenInput id="0:920094"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920102">
+    <FormulaTokenValue operationValue="-38.56" id="0:920097"/>
+    <FormulaTokenOperation operationType="0" id="0:920098"/>
+    <FormulaTokenValue operationValue="268.56" id="0:920099"/>
+    <FormulaTokenOperation operationType="2" id="0:920100"/>
+    <FormulaTokenInput id="0:920101"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920118">
+    <FormulaTokenValue operationValue="230" id="0:920113"/>
+    <FormulaTokenOperation operationType="0" id="0:920114"/>
+    <FormulaTokenValue operationValue="284.24" id="0:920115"/>
+    <FormulaTokenOperation operationType="2" id="0:920116"/>
+    <FormulaTokenInput id="0:920117"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920125">
+    <FormulaTokenValue operationValue="-54.24" id="0:920120"/>
+    <FormulaTokenOperation operationType="0" id="0:920121"/>
+    <FormulaTokenValue operationValue="284.24" id="0:920122"/>
+    <FormulaTokenOperation operationType="2" id="0:920123"/>
+    <FormulaTokenInput id="0:920124"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920141">
+    <FormulaTokenValue operationValue="230" id="0:920136"/>
+    <FormulaTokenOperation operationType="0" id="0:920137"/>
+    <FormulaTokenValue operationValue="295.06" id="0:920138"/>
+    <FormulaTokenOperation operationType="2" id="0:920139"/>
+    <FormulaTokenInput id="0:920140"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920148">
+    <FormulaTokenValue operationValue="-65.06" id="0:920143"/>
+    <FormulaTokenOperation operationType="0" id="0:920144"/>
+    <FormulaTokenValue operationValue="295.06" id="0:920145"/>
+    <FormulaTokenOperation operationType="2" id="0:920146"/>
+    <FormulaTokenInput id="0:920147"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920164">
+    <FormulaTokenValue operationValue="230" id="0:920159"/>
+    <FormulaTokenOperation operationType="0" id="0:920160"/>
+    <FormulaTokenValue operationValue="299.89" id="0:920161"/>
+    <FormulaTokenOperation operationType="2" id="0:920162"/>
+    <FormulaTokenInput id="0:920163"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920171">
+    <FormulaTokenValue operationValue="-69.89" id="0:920166"/>
+    <FormulaTokenOperation operationType="0" id="0:920167"/>
+    <FormulaTokenValue operationValue="299.89" id="0:920168"/>
+    <FormulaTokenOperation operationType="2" id="0:920169"/>
+    <FormulaTokenInput id="0:920170"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920187">
+    <FormulaTokenValue operationValue="230" id="0:920182"/>
+    <FormulaTokenOperation operationType="0" id="0:920183"/>
+    <FormulaTokenValue operationValue="302.47" id="0:920184"/>
+    <FormulaTokenOperation operationType="2" id="0:920185"/>
+    <FormulaTokenInput id="0:920186"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920194">
+    <FormulaTokenValue operationValue="-72.47" id="0:920189"/>
+    <FormulaTokenOperation operationType="0" id="0:920190"/>
+    <FormulaTokenValue operationValue="302.47" id="0:920191"/>
+    <FormulaTokenOperation operationType="2" id="0:920192"/>
+    <FormulaTokenInput id="0:920193"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920210">
+    <FormulaTokenValue operationValue="230" id="0:920205"/>
+    <FormulaTokenOperation operationType="0" id="0:920206"/>
+    <FormulaTokenValue operationValue="302.07" id="0:920207"/>
+    <FormulaTokenOperation operationType="2" id="0:920208"/>
+    <FormulaTokenInput id="0:920209"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920217">
+    <FormulaTokenValue operationValue="-72.07" id="0:920212"/>
+    <FormulaTokenOperation operationType="0" id="0:920213"/>
+    <FormulaTokenValue operationValue="302.07" id="0:920214"/>
+    <FormulaTokenOperation operationType="2" id="0:920215"/>
+    <FormulaTokenInput id="0:920216"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920233">
+    <FormulaTokenValue operationValue="230" id="0:920228"/>
+    <FormulaTokenOperation operationType="0" id="0:920229"/>
+    <FormulaTokenValue operationValue="296.27" id="0:920230"/>
+    <FormulaTokenOperation operationType="2" id="0:920231"/>
+    <FormulaTokenInput id="0:920232"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920240">
+    <FormulaTokenValue operationValue="-66.27" id="0:920235"/>
+    <FormulaTokenOperation operationType="0" id="0:920236"/>
+    <FormulaTokenValue operationValue="296.27" id="0:920237"/>
+    <FormulaTokenOperation operationType="2" id="0:920238"/>
+    <FormulaTokenInput id="0:920239"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920256">
+    <FormulaTokenValue operationValue="230" id="0:920251"/>
+    <FormulaTokenOperation operationType="0" id="0:920252"/>
+    <FormulaTokenValue operationValue="288.05" id="0:920253"/>
+    <FormulaTokenOperation operationType="2" id="0:920254"/>
+    <FormulaTokenInput id="0:920255"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920263">
+    <FormulaTokenValue operationValue="-58.05" id="0:920258"/>
+    <FormulaTokenOperation operationType="0" id="0:920259"/>
+    <FormulaTokenValue operationValue="288.05" id="0:920260"/>
+    <FormulaTokenOperation operationType="2" id="0:920261"/>
+    <FormulaTokenInput id="0:920262"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920279">
+    <FormulaTokenValue operationValue="230" id="0:920274"/>
+    <FormulaTokenOperation operationType="0" id="0:920275"/>
+    <FormulaTokenValue operationValue="275.44" id="0:920276"/>
+    <FormulaTokenOperation operationType="2" id="0:920277"/>
+    <FormulaTokenInput id="0:920278"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920286">
+    <FormulaTokenValue operationValue="-45.44" id="0:920281"/>
+    <FormulaTokenOperation operationType="0" id="0:920282"/>
+    <FormulaTokenValue operationValue="275.44" id="0:920283"/>
+    <FormulaTokenOperation operationType="2" id="0:920284"/>
+    <FormulaTokenInput id="0:920285"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920302">
+    <FormulaTokenValue operationValue="230" id="0:920297"/>
+    <FormulaTokenOperation operationType="0" id="0:920298"/>
+    <FormulaTokenValue operationValue="255.33" id="0:920299"/>
+    <FormulaTokenOperation operationType="2" id="0:920300"/>
+    <FormulaTokenInput id="0:920301"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920309">
+    <FormulaTokenValue operationValue="-25.33" id="0:920304"/>
+    <FormulaTokenOperation operationType="0" id="0:920305"/>
+    <FormulaTokenValue operationValue="255.33" id="0:920306"/>
+    <FormulaTokenOperation operationType="2" id="0:920307"/>
+    <FormulaTokenInput id="0:920308"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920325">
+    <FormulaTokenValue operationValue="230" id="0:920320"/>
+    <FormulaTokenOperation operationType="0" id="0:920321"/>
+    <FormulaTokenValue operationValue="231" id="0:920322"/>
+    <FormulaTokenOperation operationType="2" id="0:920323"/>
+    <FormulaTokenInput id="0:920324"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:920332">
+    <FormulaTokenValue operationValue="-1" id="0:920327"/>
+    <FormulaTokenOperation operationType="0" id="0:920328"/>
+    <FormulaTokenValue operationValue="231" id="0:920329"/>
+    <FormulaTokenOperation operationType="2" id="0:920330"/>
+    <FormulaTokenInput id="0:920331"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:990003">

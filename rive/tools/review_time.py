@@ -76,7 +76,9 @@ def check(scene: str, same_as: str, tmp: Path) -> tuple[list[str], dict[str, np.
         (old / f"{scene}.rml").write_text(got.stdout)
         shutil.copy(proj / "rive.yaml", old / "rive.yaml")
         before = render(old, tmp / f"{scene}_before.png", 0.0, 0.0)
-        diff = float((np.abs(shots["night"] - before).max(axis=2) > 0).mean())
+        # M9 fix round 1: the v12 rest affordances (gen_scenes.V12_REST_AFFORDANCE) are excluded
+        from gen_scenes import rest_masked  # noqa: PLC0415
+        diff = float((np.abs(rest_masked(scene, shots["night"], before) - before).max(axis=2) > 0).mean())
         lines.append(f"{scene}: night identical to {same_as}: {diff * 100:.3f} % differ "
                      f"({'ok' if diff == 0 else 'FAIL'})")
     else:

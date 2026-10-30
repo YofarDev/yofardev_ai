@@ -37,7 +37,8 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import scene_npc  # noqa: E402
 import world_kit  # noqa: E402
-from review_diorama import FrontRenderer, Renderer, grid, label, taps  # noqa: E402
+from review_diorama import FrontRenderer, Renderer, _excl, grid, label, taps  # noqa: E402
+from gen_scenes import rest_masked  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 # the M8 scenes, then every v12 scene whose project exists (world_kit.SCENE_MODULES)
@@ -177,8 +178,11 @@ def run(scene: str, out: Path, same_as: str) -> list[str]:
         known = exists_at(same_as, f"rive/scenes/{scene}/{scene}.rml")
         if known:
             old = old_project(scene, same_as, t)
-            worst = max(diff_frac(render(f"--advance={f}"), render(f"--advance={f}", proj=old)) for f in (1, 2, 31, 61))
-            gates.append(f"rest frames (f0, f1, f30, f60) at the defaults identical to {same_as}: {worst:.4%} differ "
+            # M9 fix round 1: the v12 rest affordances (gen_scenes.V12_REST_AFFORDANCE) are excluded
+            worst = max(diff_frac(rest_masked(scene, render(f"--advance={f}"), b := render(f"--advance={f}", proj=old)),
+                                  b) for f in (1, 2, 31, 61))
+            gates.append(f"rest frames (f0, f1, f30, f60) at the defaults identical to {same_as}{_excl(scene)}: "
+                         f"{worst:.4%} differ "
                          f"({'ok' if worst == 0 else 'FAIL'})")
         else:
             gates.append(f"rest frames identical to {same_as}: n/a, a new scene (ok)")
