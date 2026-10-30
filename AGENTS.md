@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8 and M9) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -119,7 +119,7 @@ on violation.
 - Widget tests that need app styling use `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
 - Fonts are bundled in `assets/fonts/google_fonts/` (Fraunces 400/500/600, Manrope 400/500) and runtime fetching is off — a new font weight needs a new TTF there
 - Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`, `face`, `parallax`, `prop`, `rain`, `shot`) and `ext.yofardev.uiLab.state`. `rain` (0..1) goes to `WorldStateService.setRain` (`core/services/world/`, app-lifetime lazy singleton; since M7 also fed by the weather tool and `WorldWeatherSync`) and the scene view writes it to `SceneVM.rain` on every scene load and change; `shot` (`wide|medium|closeUp|propInsert`) cuts the lab's stage camera. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
-- v4 avatar: the character and the 4 scenes are Rive files in `assets/rive/`
+- v4 avatar: the character and the 7 scenes (4 until M9) are Rive files in `assets/rive/`
   (`avatar.riv` + `scenes/<sceneId>.riv`), rebuilt from RML sources via
   `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
   every artboard/state-machine/view-model/event name; the Dart mirror lives
@@ -247,6 +247,36 @@ on violation.
   tablet card (`TabletWeatherSource` → `tabletWeather` / `tabletTemp`), never the world. The wow
   harness logs foley through `setupServiceLocator(foleyPlayer:)` and adds `WOW=npc`. Evidence
   index: `rive/review/m8/README.md`
+- Seven scenes, drags, the sky's calendar (contract v12, moonshot M9): scenes 5–7 `cafe`, `rooftop`,
+  `mountainHut` each live in their own generator module (`rive/tools/scene_cafe.py`,
+  `scene_rooftop.py`, `scene_mountain_hut.py`, registered lazily in `gen_scenes.SCENE_BUILDERS`; each
+  exports `BINDS` (the v12 members it binds) and `REVIEW` (its per-scene review config) — the review
+  tools and `check_contract.py` read those, so a new scene never edits the shared tools). The shared
+  world kit is `rive/tools/world_kit.py` (`DRAGS` parsed from the contract's drag table, `moon_rig`,
+  `festive_lights`, `trail_dots`); existing scenes mint M9 ids from `gen_scenes.M9_ID_START = 920000`
+  and declare what they bind in `gen_scenes.V12_BINDS`; `scene_art.refine_scene` knows only the four
+  M8 scenes (the new modules skip it). Scenes stay bundled. Journeys: `JourneyPlanner` covers all 42
+  pairs (to deepSpace rocket, from deepSpace portal, campfire ↔ beach path, every other pair door;
+  no new threshold type). Drags are Flutter gestures, not Rive listeners: `SceneDragSurface` (a
+  3 px-accept handle recognizer on the scene layer) → `PropDragController` (Fit.cover + plane
+  parallax → artboard px, tap-after-drag filter, ends on a scene swap) → pure `PropDragPhysics`
+  (pull, poke (absolute, tip box from `gen_scenes.POKE_TIP` / `POKE_RANGE`), trail, spin, aim) →
+  `SceneDragWriter`; `SceneDrags` (domain) mirrors the contract table (a test parses CONTRACT.md).
+  Haptics and the `bell` foley go through `FoleyService.haptic` behind the sound-effects setting (an
+  impact passes the 60 ms gate after a selection click). The avatar's `RiveWidget` hit-tests
+  `transparent` inside `AvatarZoneHitGate`: the avatar claims a pointer only on `HitHead` / `HitBody`
+  (contract v12), the scene behind gets the rest (the eye follow's artboard-wide hit area used to
+  swallow every pointer over the avatar's frame). On macOS an unfocused window pauses Rive's pointer
+  handling (the integration tests pin the app to resumed). `SkyCalendar` (`core/services/world/`, pure) gives the moon phase
+  (mean synodic month; `1 − p` south of the equator once an own-location report gave a latitude) and
+  the festive window (1 Dec – 6 Jan); `WorldStateService.moonPhase` / `festive` → `SceneSkyWriter`.
+  `SceneVM.moonPhase` −1 = the moon as drawn before v12. In December a chat in the default outfit is
+  *shown* in `santaHat` + `christmasSweater` (`seasonal_wardrobe.dart` `shownWardrobe`, never saved;
+  the architecture test bans the substring "Outfit" under lib/). The beach gulls are the second NPC
+  slot (`npc2*`, `GullFlock`). The scene picker is the More menu's "Scenes" row
+  (`ScenePickerSheet`, the same `AvatarChangeRequested` as `change_avatar`). Wow harness:
+  `WOW=scene --dart-define=SCENE=<id>`, `WOW=pairs` (all 42 journeys), `WOW=tour7` (December, full
+  moon). Evidence index: `rive/review/m9/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -312,4 +342,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-31 (M8)
+**Last Updated**: 2026-10-31 (M9)
