@@ -202,15 +202,15 @@ are artboard px.
 
 | sceneId | dragId | kind | rect | plane | SceneVM numbers (defaults) | what the app does |
 |---|---|---|---|---|---|---|
-| livingRoom | cord | pull | (300, 760, 380, 1000) | 3 | `cord` 0–1 (0) | pull down; springs back; past 0.6 once per pull: `lightsOff` / `lightsOn` alternately |
-| campfire | poke | poke | (380, 1020, 700, 1340) | 4 | `poke` 0–1 (0), `pokeX` −1–1 (0), `pokeY` −1–1 (0) | the stick's tip follows the finger in the box; eased out on release; a stir faster than 900 px/s fires `flare` (once per 3 s) |
+| livingRoom | cord | pull | (270, 770, 370, 940) | 4 | `cord` 0–1 (0) | pull down; springs back; past 0.6 once per pull: `lightsOff` / `lightsOn` alternately |
+| campfire | poke | poke | (0, 1040, 330, 1340) | 4 | `poke` 0–1 (0), `pokeX` −1–1 (0), `pokeY` −1–1 (0) | the stick's tip follows the finger in the box; eased out on release; a stir faster than 900 px/s fires `flare` (once per 3 s) |
 | beach | sand | trail | (120, 1500, 960, 1800) | 4 | `trailN` 0–16 (0), `trailX0`…`trailX15`, `trailY0`…`trailY15` (0), `trailFade` 0–1 (1) | dots in the wet sand ≥ 22 px apart, oldest recycled; `bigWave` washes them away |
-| deepSpace | spin | spin | (210, 470, 550, 810) | 2 | `spin` 0–1 (0), wraps | a horizontal drag turns the planet's bands; inertia |
-| cafe | wipe | trail | (330, 260, 750, 760) | 1 | `trailN`, `trailX*`, `trailY*`, `trailFade` as beach | wipes the misted window; it mists back over 20 s |
-| rooftop | aim | aim | (700, 1060, 960, 1300) | 4 | `aim` −1–1 (0) | a horizontal drag swivels the telescope ±35°; it holds |
-| mountainHut | rope | pull | (150, 600, 230, 980) | 3 | `rope` 0–1 (0) | pull down; springs back; past 0.6 once per pull: the `bell` event |
+| deepSpace | spin | spin | (150, 440, 450, 740) | 2 | `spin` 0–1 (0), wraps | a horizontal drag turns the planet's bands; inertia |
+| cafe | wipe | trail | (330, 260, 750, 760) | 2 | `trailN`, `trailX*`, `trailY*`, `trailFade` as beach | wipes the misted window; it mists back over 20 s |
+| rooftop | aim | aim | (710, 1011, 978, 1317) | 4 | `aim` −1–1 (0) | a horizontal drag swivels the telescope ±35°; it holds |
+| mountainHut | rope | pull | (172, 470, 252, 980) | 3 | `rope` 0–1 (0) | pull down; springs back; past 0.6 once per pull: the `bell` event |
 
-The rects are provisional until each scene's art is built; the scene's build commit corrects them.
+The rects are measured from the built art: each covers the prop as it rests and everything its drag moves. The cord and the poke stick draw at rest (v12 affordances); a gull's, the fish's and the pigeon's facing follows the sign of `npc2Look` / `npcLook` (+ = right) while they move.
 
 `livingRoom` is the default scene.
 
