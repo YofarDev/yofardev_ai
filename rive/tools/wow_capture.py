@@ -12,6 +12,10 @@
 - `<wow>_beats.png`: the storyboard beats, each the captured frame nearest its moment;
 - `<wow>_gates.txt`: one `ok` / `FAIL` line per gate (ruling 7), exit 1 on a FAIL;
 - `<wow>_frame_cost.json` when the timing run exists.
+
+M9 (ruling 20) adds `scene_<sceneId>` (an NPC poke, an in-app drag, one reply; the beach's gulls), `pairs`
+(all 42 ordered journeys, frames at 2 fps: a 1 fps GIF at 8x, a 4x silent MP4, a 42-cell beat grid) and
+`tour7` (seven scenes on a December night at a full moon).
 """
 
 from __future__ import annotations
@@ -352,12 +356,306 @@ def gates_tour(tl: dict) -> list[str]:
     return g
 
 
+# ---------------------------------------------------------------- M9: scenes, drags, gulls, pairs, December
+SCENES = ["livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut"]
+NPC_REACT_MS = 200
+# the scenes whose file draws the moon / the festive dressing (M9 rulings 12-13)
+MOON_SCENES = {"livingRoom", "campfire", "rooftop", "mountainHut", "cafe"}
+FESTIVE_SCENES = {"livingRoom", "cafe", "mountainHut"}
+# the pull's action per handle (ruling 8): the scene events it may fire
+PULL_ACTIONS = {"cord": {"lightsOff", "lightsOn"}, "rope": {"bell"}}
+
+
+def ruled_family(origin: str, to: str) -> str:
+    """M9 ruling 5: to deepSpace rocket, from deepSpace portal, campfire <-> beach path, else door."""
+    if to == "deepSpace":
+        return "rocket"
+    if origin == "deepSpace":
+        return "portal"
+    if {origin, to} == {"campfire", "beach"}:
+        return "path"
+    return "door"
+
+
+def _kind(tl: dict) -> str:
+    """The run's script (`scene_<id>` runs are `scene`)."""
+    return tl.get("kind", tl["wow"])
+
+
+def _values(xs: list[dict], key: str) -> list[float]:
+    return [x["drag"].get(key, 0.0) for x in xs if x.get("drag")]
+
+
+def _speaking_common(tl: dict) -> list[str]:
+    """`_common`, with the camera's sentence rule checked while the avatar speaks (a drag's scene event
+    pulls the camera back before the reply; M7 ruling 3 is about speech)."""
+    g = [_line(f"captured frames: {len(tl['frames'])}", len(tl["frames"]) > 0),
+         _line(f"network attempts during the run: {tl['network_attempts']}", tl["network_attempts"] == 0)]
+    ev = tl["events"]
+    starts = [e["ms"] for e in ev if e["type"] == "start"]
+    stops = [e["ms"] for e in ev if e["type"] == "stop"]
+    if starts:
+        talk = _between(tl["samples"], starts[0] - 300, (stops[-1] if stops else 1e12))
+        cuts, ok = cuts_at_sentences(talk, ev)
+        shots = sorted({x["shot"] for x in tl["samples"]})
+        g.append(_line(f"camera cuts while speaking only at sentence starts: {ok} of {cuts} "
+                       f"(shots seen: {', '.join(shots)})", ok == cuts))
+    return g
+
+
+def drag_gates(tl: dict) -> list[str]:
+    """The in-app drag (M9 rulings 7-9): the handle's numbers moved as its kind says, the file got them
+    (read back from the scene's view model), the action fired, and at least one drag haptic."""
+    s, ev, info = tl["samples"], tl["events"], tl.get("drag") or {}
+    start, end = _first(ev, "dragStart"), _first(ev, "dragEnd")
+    if info.get("missing") or not start or not end:
+        return [_line(f"drag performed on the scene's handle ({info.get('id', '?')})", False)]
+    hid, kind, primary = info["id"], info["kind"], info["primary"]
+    during = _between(s, start["ms"], end["ms"])
+    after = _between(s, end["ms"], end["ms"] + 3000)
+    g = [_line(f"{hid} ({kind}): the drag surface took the touch ({sum(1 for x in during if x['dragging'])} "
+               f"dragging samples of {len(during)})", any(x["dragging"] for x in during))]
+    reads = [abs(x["dragRead"]) for x in during + after if x.get("dragRead") is not None]
+    want_read = {"pull": 0.5, "poke": 0.5, "trail": 4, "spin": 0.05, "aim": 0.2}[kind]
+    g.append(_line(f"{hid}: {primary} read back from the scene file: max {max(reads, default=0.0):.2f} "
+                   f"(want >= {want_read})", max(reads, default=0.0) >= want_read))
+    if kind == "pull":
+        peak = max(_values(during, primary), default=0.0)
+        g.append(_line(f"{hid} pulled: peak {peak:.2f} (want >= 0.6)", peak >= 0.6))
+        rest = _values(after, primary)
+        g.append(_line(f"{hid} springs back: {rest[-1] if rest else -1:.2f} 3 s after the release (want <= 0.05)",
+                       bool(rest) and rest[-1] <= 0.05))
+        want = PULL_ACTIONS.get(hid, set())
+        fired = [e["name"] for e in ev if e["type"] == "sceneEvent" and start["ms"] <= e["ms"] <= end["ms"] + 800]
+        g.append(_line(f"{hid}: the action fired ({', '.join(fired) or 'none'}; want one of {sorted(want)})",
+                       bool(want & set(fired))))
+        if hid == "rope":
+            bells = [e for e in foley(ev, "bell") if start["ms"] <= e["ms"] <= end["ms"] + 800]
+            g.append(_line(f"rope: the bell rang ({len(bells)} bell sounds)", len(bells) >= 1))
+    elif kind == "poke":
+        peak = max(_values(during, "poke"), default=0.0)
+        g.append(_line(f"poke: the stick came in (poke peak {peak:.2f}, want >= 0.99)", peak >= 0.99))
+        xs, ys = _values(during, "pokeX"), _values(during, "pokeY")
+        rx = (max(xs) - min(xs)) if xs else 0.0
+        ry = (max(ys) - min(ys)) if ys else 0.0
+        g.append(_line(f"poke: the tip followed the stir (pokeX range {rx:.2f}, pokeY range {ry:.2f}, want >= 0.3 "
+                       f"each)", rx >= 0.3 and ry >= 0.3))
+        rest = _values(after, "poke")
+        g.append(_line(f"poke: eased out after the release (poke {rest[-1] if rest else -1:.2f} 3 s later, "
+                       f"want <= 0.01)", bool(rest) and rest[-1] <= 0.01))
+        flares = [e for e in ev if e["type"] == "sceneEvent" and e["name"] == "flare"
+                  and start["ms"] <= e["ms"] <= end["ms"] + 800]
+        g.append(f"poke: the fast stir flared {len(flares)} time(s) (not required): info")
+    elif kind == "trail":
+        n = max(_values(during + after, "trailN"), default=0.0)
+        g.append(_line(f"{hid}: dots drawn (trailN max {n:.0f}, want >= 4)", n >= 4))
+        fade = min(_values(during, "trailFade"), default=1.0)
+        g.append(_line(f"{hid}: the trail shows while drawing (trailFade min {fade:.2f}, want <= 0.1)", fade <= 0.1))
+        settled = _first(ev, "dragSettled")
+        if hid == "wipe" and settled:
+            # the cafe's window mists back over 20 s (ruling 8); the run waits for it
+            last = s[-1]["drag"] if s and s[-1].get("drag") else {}
+            back = settled["ms"] - end["ms"]
+            g.append(_line(f"wipe: misted back {back / 1000:.1f} s after the stroke (trailFade "
+                           f"{last.get('trailFade', 0.0):.2f}, trailN {last.get('trailN', -1):.0f} at the end; "
+                           f"want 1 and 0)", last.get("trailFade", 0.0) >= 0.99 and last.get("trailN", -1) == 0))
+    elif kind == "spin":
+        vals = _values(during + after, "spin")
+        moved = max((min(v, 1 - v) for v in vals), default=0.0)
+        g.append(_line(f"spin moved: {moved:.2f} of a turn at most (want >= 0.1)", moved >= 0.1))
+        tail = [x["drag"].get("spin", 0.0) for x in after if x["ms"] >= end["ms"] + 2000]
+        g.append(_line(f"spin: the inertia settled within 2 s ({len({round(v, 4) for v in tail})} distinct "
+                       f"values after)", bool(tail) and max(tail) - min(tail) <= 1e-3))
+    elif kind == "aim":
+        at_release = _values(_between(s, end["ms"] - 100, end["ms"]), "aim")
+        a = at_release[-1] if at_release else 0.0
+        later = _values(after, "aim")
+        drift = max((abs(v - a) for v in later), default=1.0)
+        g.append(_line(f"aim moved: {a:.2f} at the release (want |aim| >= 0.2)", abs(a) >= 0.2))
+        g.append(_line(f"aim holds where left: drift {drift:.3f} in the 3 s after (want <= 0.02)", drift <= 0.02))
+    haptics = [e for e in ev if e["type"] == "haptic" and start["ms"] - 50 <= e["ms"] <= end["ms"] + 1500]
+    kinds = sorted({e["kind"] for e in haptics})
+    g.append(_line(f"{hid}: drag haptics {len(haptics)} ({', '.join(kinds) or 'none'}; want >= 1)", len(haptics) >= 1))
+    return g
+
+
+def npc2_states(samples: list[dict]) -> list[str]:
+    seen: list[str] = []
+    for x in samples:
+        if x.get("npc2") and (not seen or seen[-1] != x["npc2"]):
+            seen.append(x["npc2"])
+    return seen
+
+
+def gull_gates(tl: dict) -> list[str]:
+    """The beach's gulls (M9 ruling 10): landed after the calm, then a poke sends them off."""
+    s, ev = tl["samples"], tl["events"]
+    wait, poke = _first(ev, "gullWait"), _first(ev, "gullPoke")
+    if not wait or not poke:
+        return [_line("gulls: waited for the landing, then poked", False)]
+    before = [x for x in s if x["ms"] < poke["ms"]]
+    landed = next((x for x in before if x["npc2"] == "idle" and x["npc2X"] <= 0.01), None)
+    order = npc2_states(before)
+    g = [_line(f"gulls landed before the poke ({'/'.join(order)}; idle at npc2X 0 at "
+               f"{(landed['ms'] / 1000) if landed else -1:.1f} s)",
+               landed is not None and "move" in order and order.index("move") < order.index("idle"))]
+    after = [x for x in s if x["ms"] >= poke["ms"]]
+    react = next((x for x in after if x["npc2"] == "react"), None)
+    g.append(_line(f"gulls startled: react {(react['ms'] - poke['ms']) if react else -1} ms after the poke "
+                   f"(want <= {NPC_REACT_MS})", bool(react and react["ms"] - poke["ms"] <= NPC_REACT_MS)))
+    flying = [x for x in after if x["npc2"] == "move"]
+    gone = next((x for x in after if x["npc2"] == "away" and flying and x["ms"] > flying[0]["ms"]), None)
+    top = max((x["npc2X"] for x in flying), default=0.0)
+    g.append(_line(f"gulls flew off: move in {len(flying)} samples to npc2X {top:.2f}, then away "
+                   f"{'at %.1f s' % (gone['ms'] / 1000) if gone else 'never'}", bool(flying) and gone is not None))
+    return g
+
+
+def gates_scene(tl: dict) -> list[str]:
+    """`WOW=scene` (M9 ruling 20): one scene, its NPC poked, its handle dragged in the app, one reply."""
+    s, ev = tl["samples"], tl["events"]
+    scene = tl["scene"]
+    g = _speaking_common(tl)
+    g.append(_line(f"{scene} in every sample, no journey ({len(s)})",
+                   all(x["scene"] == scene and not x["journey"] for x in s)))
+    g.append(_line(f"the {scene} file on screen in every sample",
+                   all(x.get("fileScene") == scene for x in s)))
+    if scene == "beach":
+        g += gull_gates(tl)
+    poke = next((e for e in ev if e["type"] == "poke"), None)
+    after = [x for x in s if poke and x["ms"] >= poke["ms"]]
+    react = next((x for x in after if x["npc"] == "react"), None)
+    g.append(_line(f"NPC poked ({poke['prop'] if poke else '?'}): react "
+                   f"{(react['ms'] - poke['ms']) if react and poke else -1} ms after the poke (want <= {NPC_REACT_MS})",
+                   bool(react and poke and react["ms"] - poke["ms"] <= NPC_REACT_MS)))
+    g += drag_gates(tl)
+    g.append(_line("the reply is spoken", _first(ev, "start") is not None))
+    played = sorted({e["name"] for e in ev if e["type"] == "sceneEvent"})
+    g.append(f"scene events: {', '.join(played) or 'none'}; NPC states: {'/'.join(npc_states(s))}: info")
+    return g
+
+
+def _runs_with_pairs(tl: dict) -> list[tuple[list[dict], str, str]]:
+    """Each journey's samples with the (from, to) the harness asked for."""
+    asked = [(e["from"], e["to"]) for e in tl["events"] if e["type"] == "journey"]
+    return [(run, a, b) for run, (a, b) in zip(journeys(tl["samples"]), asked)]
+
+
+def _drawn_after_cut(tl: dict, run: list[dict], origin: str, to: str) -> tuple[bool, str]:
+    """The destination's file was loaded behind the closed threshold and drawn before the journey's end,
+    and the origin's file stayed until then."""
+    early = [x for x in run if x.get("fileScene") == to and x["journey"] in PHASES
+             and PHASES.index(x["journey"]) < PHASES.index("close")]
+    first = next((x for x in run if x.get("fileScene") == to), None)
+    if first is None:
+        return False, "never drawn during the journey"
+    if early:
+        return False, f"drawn early ({early[0]['journey']})"
+    return True, f"drawn at {first['journey']}"
+
+
+def gates_pairs(tl: dict) -> list[str]:
+    """`WOW=pairs` (M9 ruling 20): all 42 ordered pairs once, each in its ruled family, the destination drawn
+    after every cut, one jacket at a time on the door, no blank frame (checked on the frames), 0 network."""
+    g = _common(tl)
+    runs = _runs_with_pairs(tl)
+    asked = [(e["from"], e["to"]) for e in tl["events"] if e["type"] == "journey"]
+    every = {(a, b) for a in SCENES for b in SCENES if a != b}
+    g.append(_line(f"journeys during the run: {len(journeys(tl['samples']))} (want {len(every)})",
+                   len(journeys(tl["samples"])) == len(every)))
+    g.append(_line(f"every ordered pair once: {len(set(asked))} distinct of {len(asked)} asked "
+                   f"({len(every - set(asked))} missing)", set(asked) == every and len(asked) == len(every)))
+    bad_family, bad_beats, bad_scene, bad_drawn = [], [], [], []
+    two = none_ = shown_n = doors = 0
+    for run, a, b in runs:
+        want = ruled_family(a, b)
+        fam = {x["family"] for x in run}
+        if fam != {want}:
+            bad_family.append(f"{a}->{b} {sorted(fam)} (want {want})")
+        order = phase_order(run)
+        in_order = [PHASES.index(p) for p in order] == sorted(PHASES.index(p) for p in order)
+        if not (in_order and {"exit", "enter"} <= set(order)):
+            bad_beats.append(f"{a}->{b} {'/'.join(order)}")
+        if run[0]["scene"] != a or run[-1]["scene"] != b:
+            bad_scene.append(f"{a}->{b} ({run[0]['scene']}..{run[-1]['scene']})")
+        ok, why = _drawn_after_cut(tl, run, a, b)
+        if not ok:
+            bad_drawn.append(f"{a}->{b} {why}")
+        if want == "door" and run and "jacket" in run[0]:
+            doors += 1
+            shown = [x for x in run if x["journey"] not in ("pullBack", "vanish")]
+            shown_n += len(shown)
+            two += sum(1 for x in shown if x["jacket"] and x["journeyJacket"] > 0.5)
+            none_ += sum(1 for x in shown if not x["jacket"] and x["journeyJacket"] < 0.5)
+    g.append(_line(f"family per ruling 5: {len(runs) - len(bad_family)}/{len(runs)}"
+                   + (f" (wrong: {'; '.join(bad_family)})" if bad_family else ""), not bad_family and bool(runs)))
+    g.append(_line(f"beats in order with both walks: {len(runs) - len(bad_beats)}/{len(runs)}"
+                   + (f" (bad: {'; '.join(bad_beats)})" if bad_beats else ""), not bad_beats and bool(runs)))
+    g.append(_line(f"from and to scenes as asked: {len(runs) - len(bad_scene)}/{len(runs)}"
+                   + (f" (bad: {'; '.join(bad_scene)})" if bad_scene else ""), not bad_scene and bool(runs)))
+    g.append(_line(f"destination file drawn after the cut: {len(runs) - len(bad_drawn)}/{len(runs)}"
+                   + (f" (bad: {'; '.join(bad_drawn)})" if bad_drawn else ""), not bad_drawn and bool(runs)))
+    g.append(_line(f"door journeys ({doors}): one jacket at a time: {two} samples with two, {none_} with none "
+                   f"(of {shown_n})", doors > 0 and not two and not none_))
+    fams = {}
+    for run, a, b in runs:
+        fams[ruled_family(a, b)] = fams.get(ruled_family(a, b), 0) + 1
+    lengths = [(run[-1]["ms"] - run[0]["ms"]) / 1000 for run, _, _ in runs]
+    if lengths:
+        g.append(f"journeys per family {dict(sorted(fams.items()))}; length mean {statistics.mean(lengths):.2f} s, "
+                 f"max {max(lengths):.2f} s: info")
+    return g
+
+
+def gates_tour7(tl: dict) -> list[str]:
+    """`WOW=tour7` (M9 ruling 20): the seven scenes on a December night at a full moon."""
+    s = tl["samples"]
+    g = _common(tl)
+    runs = journeys(s)
+    want = tl.get("tour", [])
+    g.append(_line(f"journeys during the run: {len(runs)} (want {len(want)})", len(runs) == len(want)))
+    origin = tl["scene"]
+    for run, to in zip(runs, want):
+        g += _journey_gates(run, ruled_family(origin, to), to)
+        origin = to
+    world = max(abs(x["moonPhase"] - 0.5) for x in s)
+    g.append(_line(f"moon phase near full: |moonPhase - 0.5| max {world:.3f} (want <= 0.05)", world <= 0.05))
+    reads = {}
+    for x in s:
+        f = x.get("fileScene")
+        if f in MOON_SCENES and f == x["scene"] and x.get("moonRead") is not None:
+            reads.setdefault(f, []).append(x["moonRead"])
+    seen = {x["scene"] for x in s} & MOON_SCENES
+    worst = max((abs(v - 0.5) for vs in reads.values() for v in vs), default=1.0)
+    g.append(_line(f"moonPhase written to every moon scene's file: {len(reads)}/{len(seen)} scenes read back, worst "
+                   f"|read - 0.5| {worst:.3f} (want <= 0.05)", set(reads) == seen and worst <= 0.05))
+    fest = min(x["festive"] for x in s)
+    g.append(_line(f"December: festive {fest:.2f} in every sample (want 1)", fest >= 0.999))
+    freads = {}
+    for x in s:
+        f = x.get("fileScene")
+        if f in FESTIVE_SCENES and f == x["scene"] and x.get("festiveRead") is not None:
+            freads.setdefault(f, []).append(x["festiveRead"])
+    fseen = {x["scene"] for x in s} & FESTIVE_SCENES
+    fmin = min((v for vs in freads.values() for v in vs), default=0.0)
+    g.append(_line(f"festive written to the indoor scenes' files: {len(freads)}/{len(fseen)} read back, min {fmin:.2f} "
+                   f"(want 1)", set(freads) == fseen and fmin >= 0.999))
+    hats = sorted({x["hat"] for x in s})
+    tops = sorted({x["top"] for x in s})
+    g.append(_line(f"the December outfit shown: hat {hats}, top {tops} (want santaHat, christmasSweater)",
+                   hats == ["santaHat"] and tops == ["christmasSweater"]))
+    families = {x["family"] for run in runs for x in run}
+    g.append(_line(f"every threshold family played: {sorted(families)}",
+                   families == {"door", "path", "portal", "rocket"}))
+    return g
+
+
 # ---------------------------------------------------------------- frames
 def load_frame(path: Path, size: tuple[int, int]) -> Image.Image:
     return Image.frombytes("RGBA", size, path.read_bytes()).convert("RGB")
 
 
-def resample(frames: list[dict], fps: int) -> list[int]:
+def resample(frames: list[dict], fps: float) -> list[int]:
     """Frame indices, one per 1/fps tick from the first capture to the last (nearest earlier)."""
     if not frames:
         return []
@@ -392,6 +690,15 @@ def front_visible(wow_dir: Path, size: tuple[int, int]) -> tuple[bool, float]:
     return ratio <= 0.97, ratio
 
 
+def blank_frame(a: np.ndarray) -> bool:
+    """A frame with nothing on it: uniform (std < 5), or (M9) a near-black stage: the band between the top
+    chips and the composer (rows 12-72 %) uniform or darker than mean 6 (the chrome alone keeps a black
+    stage from looking uniform)."""
+    h = a.shape[0]
+    band = a[int(h * 0.12):int(h * 0.72)]
+    return bool(a.std() < 5 or band.std() < 5 or band.mean() < 6)
+
+
 def beats(tl: dict) -> list[tuple[str, float, float]]:
     """(label, ms, zoom) of the storyboard beats found in the timeline."""
     s, ev = tl["samples"], tl["events"]
@@ -400,6 +707,9 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
     stop_all = [e for e in ev if e["type"] == "stop"]
     end = stop_all[-1]["ms"] if stop_all else tl["frames"][-1]["ms"]
     speaking = [x for x in s if x["speaking"]]
+    kind = _kind(tl)
+    if kind in ("scene", "pairs", "tour7"):
+        return beats_m9(tl)
     if tl["wow"] == "npc":
         def first_state(state: str, after: float = 0) -> float:
             return next((x["ms"] for x in s if x["npc"] == state and x["ms"] >= after), s[-1]["ms"])
@@ -472,6 +782,51 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
                   ("6 answers (nod)", answer[len(answer) // 3]["ms"] if answer else end, 1.0)]
 
 
+
+def beats_m9(tl: dict) -> list[tuple[str, float, float]]:
+    """The M9 runs' beats: a scene's NPC, drag and reply; one arrival per pair; the December tour."""
+    s, ev = tl["samples"], tl["events"]
+    first, last = tl["frames"][0]["ms"], tl["frames"][-1]["ms"]
+    kind = _kind(tl)
+    if kind in ("pairs", "tour7"):
+        out: list[tuple[str, float, float]] = []
+        if kind == "tour7":
+            out.append(("1 livingRoom, Christmas Eve, full moon", first + 800, 1.0))
+        asked = [(e["from"], e["to"]) for e in ev if e["type"] == "journey"]
+        for k, (run, (a, b)) in enumerate(zip(journeys(s), asked)):
+            enter = [x for x in run if x["journey"] == "enter"]
+            ms = enter[int(len(enter) * (0.6 if kind == "tour7" else 0.5))]["ms"] if enter else run[-1]["ms"]
+            if kind == "tour7":
+                out.append((f"{k + 2} {ruled_family(a, b)} -> {b}: walks in", ms, 1.0))
+            else:
+                out.append((f"{k + 1} {a} -> {b} ({ruled_family(a, b)})", ms, 1.0))
+        return out
+    out = [("1 establishing", first + 800, 1.0)]
+    gp = _first(ev, "gullPoke")
+    if gp:
+        fly = next((x["ms"] for x in s if x["ms"] >= gp["ms"] and x["npc2"] == "move"), gp["ms"])
+        out += [("2 the gulls landed", gp["ms"] - 300, 1.0), ("3 poked: they take off", fly + 400, 1.0)]
+    poke = next((e for e in ev if e["type"] == "poke"), None)
+    react = next((x["ms"] for x in s if poke and x["ms"] >= poke["ms"] and x["npc"] == "react"),
+                 poke["ms"] if poke else first)
+    n = len(out) + 1
+    out.append((f"{n} poked: the {poke['prop'] if poke else 'NPC'} reacts", react + 250, 1.0))
+    ds, de = _first(ev, "dragStart"), _first(ev, "dragEnd")
+    info = tl.get("drag") or {}
+    if ds and de and not info.get("missing"):
+        during = _between(s, ds["ms"], de["ms"])
+        key = info["primary"]
+        peak = max(during, key=lambda x: abs(x["drag"].get(key, 0.0)), default=None) if during else None
+        mid = peak["ms"] if peak and key != "trailN" else (ds["ms"] + de["ms"]) / 2
+        out.append((f"{n + 1} drag {info['id']} ({info['kind']})", mid, 1.0))
+        out.append((f"{n + 2} after the drag", min(de["ms"] + 800, last), 1.0))
+    speaking = [x for x in s if x["speaking"]]
+    if speaking:
+        out.append((f"{len(out) + 1} speaks", speaking[len(speaking) // 2]["ms"], 1.0))
+    out.append((f"{len(out) + 1} settled", last - 300, 1.0))
+    return out
+
+
 def crop_zoom(im: Image.Image, zoom: float) -> Image.Image:
     """The face-centred crop the storyboard's close-ups used before M7's camera (the avatar's head
     sits ~43 % down); a capture with the stage camera is never cropped (`beat_sheet`)."""
@@ -485,7 +840,9 @@ def crop_zoom(im: Image.Image, zoom: float) -> Image.Image:
 
 def beat_sheet(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> None:
     cells = []
-    cw = 300
+    many = _kind(tl) == "pairs"
+    cw = 150 if many else 300
+    cols = 7 if many else 8
     chh = int(size[1] * cw / size[0])
     camera = bool(tl["samples"]) and "shot" in tl["samples"][0]
     for label, ms, zoom in beats(tl):
@@ -499,37 +856,68 @@ def beat_sheet(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> Non
         d.text((6, chh + 4), label, fill=(244, 184, 96))
         d.text((6, chh + 18), f"t = {(ms - tl['frames'][0]['ms']) / 1000:.2f} s, frame {i}", fill=(200, 200, 200))
         cells.append(cell)
-    sheet = Image.new("RGB", (len(cells) * (cw + 6) - 6, chh + 34), (10, 10, 10))
+    cols = min(cols, len(cells))
+    rows = -(-len(cells) // cols)
+    sheet = Image.new("RGB", (cols * (cw + 6) - 6, rows * (chh + 40) - 6), (10, 10, 10))
     for k, c in enumerate(cells):
-        sheet.paste(c, (k * (cw + 6), 0))
+        sheet.paste(c, ((k % cols) * (cw + 6), (k // cols) * (chh + 40)))
     sheet.save(out)
 
 
+# M9: (frames per second taken from the capture, playback speed-up) per run kind; the rest: GIF_FPS real time
+GIF_PLANS = {"pairs": (1, 8), "tour7": (6, 1)}
+
+
+def gif_start(tl: dict) -> float:
+    """Where the GIF starts: just before the user types (the tours: the first journey; a scene run: its
+    first action)."""
+    ev = tl["events"]
+    kind = _kind(tl)
+    if kind in ("tour", "pairs", "tour7"):
+        e = _first(ev, "journey")
+        return e["ms"] - 800 if e else tl["frames"][0]["ms"]
+    if kind == "scene":
+        acts = [e["ms"] for e in ev if e["type"] in ("gullWait", "poke")]
+        return min(acts) - 1500 if acts else tl["frames"][0]["ms"]
+    e = _first(ev, "typing")
+    return e["ms"] - 800 if e else tl["frames"][0]["ms"]
+
+
 def write_gif(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> int:
-    # the tour has no typing: it starts with its first journey
-    typing = _first(tl["events"], "journey" if tl["wow"] == "tour" else "typing")
-    t0 = typing["ms"] - 800 if typing else tl["frames"][0]["ms"]
-    idx = resample([f for f in tl["frames"] if f["ms"] >= t0], GIF_FPS)
-    width = GIF_W
-    while True:
+    fps, speed = GIF_PLANS.get(_kind(tl), (GIF_FPS, 1))
+    frames = [f for f in tl["frames"] if f["ms"] >= gif_start(tl)]
+    cache: dict[int, Image.Image] = {}
+
+    def frame(i: int) -> Image.Image:
+        if i not in cache:
+            im = load_frame(wow_dir / "frames" / f"{i:04d}.rgba", size)
+            cache[i] = im.resize((GIF_W, int(size[1] * GIF_W / size[0])), Image.LANCZOS)
+        return cache[i]
+    # narrower first, then fewer frames (the long M9 runs), until under the budget
+    plans = [(w, fps) for w in (GIF_W, GIF_W - 40, GIF_W - 80)]
+    plans += [(GIF_W - 80, fps * k) for k in (0.75, 0.5, 0.35, 0.25)]
+    for width, f in plans:
+        idx = resample(frames, f)
         h = int(size[1] * width / size[0])
-        ims = [load_frame(wow_dir / "frames" / f"{i:04d}.rgba", size).resize((width, h), Image.LANCZOS)
-               for i in idx]
+        ims = [frame(i) if width == GIF_W else frame(i).resize((width, h), Image.LANCZOS) for i in idx]
         pal = [im.quantize(colors=GIF_COLOURS, method=Image.Quantize.MEDIANCUT) for im in ims]
-        pal[0].save(out, save_all=True, append_images=pal[1:], duration=round(1000 / GIF_FPS), loop=0,
+        pal[0].save(out, save_all=True, append_images=pal[1:], duration=round(1000 / (f * speed)), loop=0,
                     optimize=True)
-        if out.stat().st_size <= GIF_MAX or width <= 200:
-            return out.stat().st_size
-        width -= 40
+        if out.stat().st_size <= GIF_MAX:
+            break
+    return out.stat().st_size
 
 
 def write_mp4(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> None:
-    idx = resample(tl["frames"], MP4_FPS)
+    # M9 pairs: the 2 fps capture played 4x fast, silent (hundreds of footsteps)
+    timelapse = _kind(tl) == "pairs"
+    idx = resample(tl["frames"], 2 if timelapse else MP4_FPS)
     with tempfile.TemporaryDirectory() as tmp:
         for k, i in enumerate(idx):
             load_frame(wow_dir / "frames" / f"{i:04d}.rgba", size).save(Path(tmp) / f"{k:05d}.png")
-        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(MP4_FPS), "-i", f"{tmp}/%05d.png"]
-        clips = audio_offsets(tl["events"], tl["audio"], tl["frames"][0]["ms"]) + \
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(8 if timelapse else MP4_FPS), "-i",
+               f"{tmp}/%05d.png"]
+        clips = [] if timelapse else audio_offsets(tl["events"], tl["audio"], tl["frames"][0]["ms"]) + \
             foley_offsets(tl["events"], tl["frames"][0]["ms"])
         for f, _ in clips:
             cmd += ["-i", f]
@@ -578,9 +966,10 @@ def main(argv: list[str]) -> int:
     empty = []
     for f in tl["frames"]:
         a = np.asarray(load_frame(wow_dir / "frames" / f"{f['i']:04d}.rgba", size))
-        if a.std() < 5:
+        if blank_frame(a):
             empty.append(f["i"])
-    gates.append(_line(f"every frame non-empty ({len(empty)} blank)", not empty))
+    gates.append(_line(f"every frame non-empty ({len(empty)} blank or near-black on the stage"
+                       f"{': ' + ', '.join(map(str, empty[:10])) if empty else ''})", not empty))
     try:
         if wow == "wow1":
             ok, share = front_visible(wow_dir, size)
@@ -594,6 +983,12 @@ def main(argv: list[str]) -> int:
             gates += gates_tour(tl)
         elif wow == "npc":
             gates += gates_npc(tl)
+        elif _kind(tl) == "scene":
+            gates += gates_scene(tl)
+        elif wow == "pairs":
+            gates += gates_pairs(tl)
+        elif wow == "tour7":
+            gates += gates_tour7(tl)
         else:
             gates += gates_wow2(tl)
     except (TypeError, ValueError, IndexError, KeyError, AttributeError) as e:
@@ -603,6 +998,7 @@ def main(argv: list[str]) -> int:
     gates.append(_line(f"{wow}.gif {size_gif} B (budget {GIF_MAX})", size_gif <= GIF_MAX))
     if shutil.which("ffmpeg"):
         write_mp4(wow_dir, tl, size, out / f"{wow}.mp4")
+        gates.append(f"{wow}.mp4 {(out / f'{wow}.mp4').stat().st_size} B: info")
     if not any(g.endswith("FAIL") for g in gates):
         beat_sheet(wow_dir, tl, size, out / f"{wow}_beats.png")
     cost = frame_cost(Path(str(wow_dir) + "_timing"))

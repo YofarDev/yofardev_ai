@@ -1,0 +1,14 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 937: ok
+network attempts during the run: 0: ok
+camera cuts only at sentence starts: 0 of 0 (shots seen: propInsert, wide): ok
+journeys during the run: 42 (want 42): ok
+every ordered pair once: 42 distinct of 42 asked (0 missing): ok
+family per ruling 5: 42/42: ok
+beats in order with both walks: 42/42: ok
+from and to scenes as asked: 42/42: ok
+destination file drawn after the cut: 42/42: ok
+door journeys (28): one jacket at a time: 0 samples with two, 0 with none (of 7765): ok
+journeys per family {'door': 28, 'path': 2, 'portal': 6, 'rocket': 6}; length mean 9.79 s, max 10.66 s: info
+pairs.gif 4070691 B (budget 4194304): ok
+pairs.mp4 5378305 B: info

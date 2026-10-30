@@ -1,0 +1,19 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 538: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+beach in every sample, no journey (1075): ok
+the beach file on screen in every sample: ok
+gulls landed before the poke (away/move/idle; idle at npc2X 0 at 10.5 s): ok
+gulls startled: react 15 ms after the poke (want <= 200): ok
+gulls flew off: move in 120 samples to npc2X 1.00, then away at 14.3 s: ok
+NPC poked (crab): react 20 ms after the poke (want <= 200): ok
+sand (trail): the drag surface took the touch (137 dragging samples of 138): ok
+sand: trailN read back from the scene file: max 16.00 (want >= 4): ok
+sand: dots drawn (trailN max 16, want >= 4): ok
+sand: the trail shows while drawing (trailFade min 0.00, want <= 0.1): ok
+sand: drag haptics 17 (selection; want >= 1): ok
+the reply is spoken: ok
+scene events: none; NPC states: rest/react/move/idle/move/idle: info
+scene_beach.gif 3343030 B (budget 4194304): ok
+scene_beach.mp4 1705736 B: info

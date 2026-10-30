@@ -1,0 +1,13 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 275: ok
+network attempts during the run: 0: ok
+camera cuts only at sentence starts: 0 of 0 (shots seen: medium, propInsert, wide): ok
+tool getCurrentWeather running for 2481 ms (want >= 2000): ok
+tablet out while the tool runs: 100% of its samples (want >= 80%): ok
+Tokyo on the tablet: rain 18 °C in 46 samples, 0 wrong: ok
+head turned while the tool runs: median |yaw| 0.60 (want >= 0.3): ok
+the answer is spoken after the tool: ok
+tablet put away 1 s into the answer: 0 samples still holding a prop: ok
+facing the user while answering: median |yaw| 0.00 (want <= 0.15): ok
+wow2.gif 3565814 B (budget 4194304): ok
+wow2.mp4 1458146 B: info

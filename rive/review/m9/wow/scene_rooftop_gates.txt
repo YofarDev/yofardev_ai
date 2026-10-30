@@ -1,0 +1,16 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 302: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 1 of 1 (shots seen: closeUp, medium, wide): ok
+rooftop in every sample, no journey (603): ok
+the rooftop file on screen in every sample: ok
+NPC poked (pigeon): react 24 ms after the poke (want <= 200): ok
+aim (aim): the drag surface took the touch (38 dragging samples of 41): ok
+aim: aim read back from the scene file: max 0.60 (want >= 0.2): ok
+aim moved: -0.60 at the release (want |aim| >= 0.2): ok
+aim holds where left: drift 0.000 in the 3 s after (want <= 0.02): ok
+aim: drag haptics 6 (selection; want >= 1): ok
+the reply is spoken: ok
+scene events: none; NPC states: idle/react/move/idle/move/idle: info
+scene_rooftop.gif 3975815 B (budget 4194304): ok
+scene_rooftop.mp4 1067626 B: info

@@ -235,3 +235,231 @@ def test_foley_offsets_skip_missing_files(tmp_path: Path) -> None:
           {"ms": 700, "type": "caption", "text": "x"}]
     out = wc.foley_offsets(ev, 100, tmp_path)
     assert out == [(str(tmp_path / "assets/foley/step_0.wav"), 400)]
+
+
+# ---------------------------------------------------------------- M9: scenes, drags, gulls, pairs, December
+def _m9(ms: int, **kw: object) -> dict:
+    base = {"ms": ms, "scene": "livingRoom", "journey": None, "family": None, "presence": "onScreen",
+            "shot": "wide", "move": "ease", "shotSerial": 0, "speaking": False, "fileScene": "livingRoom",
+            "dragging": False, "drag": {}, "dragRead": 0.0, "npc": "rest", "npcX": 0.0, "npc2": "away",
+            "npc2X": 1.0, "moonPhase": 0.52, "festive": 1.0, "moonRead": 0.52, "festiveRead": 1.0,
+            "hat": "santaHat", "top": "christmasSweater", "jacket": False, "journeyJacket": 0.0}
+    return {**base, **kw}
+
+
+def test_ruled_family_table() -> None:
+    pairs = [(a, b) for a in wc.SCENES for b in wc.SCENES if a != b]
+    fams = [wc.ruled_family(a, b) for a, b in pairs]
+    assert len(pairs) == 42
+    assert {f: fams.count(f) for f in set(fams)} == {"rocket": 6, "portal": 6, "path": 2, "door": 28}
+    assert wc.ruled_family("campfire", "beach") == "path" and wc.ruled_family("beach", "deepSpace") == "rocket"
+
+
+def _drag_tl(hid: str, kind: str, primary: str, during: list[dict], after: list[dict],
+             extra_events: list[dict] | None = None, haptic: bool = True) -> dict:
+    ev = [{"ms": 1000, "type": "dragStart"}, {"ms": 2000, "type": "dragEnd"}]
+    if haptic:
+        ev.append({"ms": 1010, "type": "haptic", "kind": "selection"})
+    ev += extra_events or []
+    ev.sort(key=lambda e: e["ms"])
+    return {"samples": [_m9(0)] + during + after, "events": ev,
+            "drag": {"id": hid, "kind": kind, "primary": primary}}
+
+
+def _pull(peak: float = 0.9, action: bool = True, back: float = 0.0) -> dict:
+    during = [_m9(1000 + 50 * k, dragging=True, drag={"cord": min(peak, 0.05 * k)}, dragRead=min(peak, 0.05 * k))
+              for k in range(21)]
+    after = [_m9(2000 + 100 * k, drag={"cord": back if k > 5 else 0.5}, dragRead=0.0) for k in range(1, 30)]
+    ev = [{"ms": 1500, "type": "sceneEvent", "name": "lightsOff"}] if action else []
+    return _drag_tl("cord", "pull", "cord", during, after, ev)
+
+
+def test_drag_gates_pull() -> None:
+    ok = wc.drag_gates(_pull())
+    assert all(g.endswith("ok") for g in ok), ok
+    assert any("action" in g and g.endswith("FAIL") for g in wc.drag_gates(_pull(action=False)))
+    assert any("pulled" in g and g.endswith("FAIL") for g in wc.drag_gates(_pull(peak=0.4)))
+    assert any("springs back" in g and g.endswith("FAIL") for g in wc.drag_gates(_pull(back=0.3)))
+    tl = _pull()
+    tl["events"] = [e for e in tl["events"] if e["type"] != "haptic"]
+    assert any("haptics" in g and g.endswith("FAIL") for g in wc.drag_gates(tl))
+    tl = _pull()
+    tl["drag"] = {"missing": True, "id": "cord"}
+    assert wc.drag_gates(tl)[0].endswith("FAIL")
+
+
+def test_drag_gates_rope_needs_the_bell() -> None:
+    during = [_m9(1000 + 50 * k, dragging=True, drag={"rope": 0.05 * k}, dragRead=0.05 * k) for k in range(21)]
+    after = [_m9(2000 + 100 * k, drag={"rope": 0.0}) for k in range(1, 30)]
+    ev = [{"ms": 1500, "type": "sceneEvent", "name": "bell"}]
+    ok = wc.drag_gates(_drag_tl("rope", "pull", "rope", during, after,
+                                ev + [{"ms": 1500, "type": "foley", "kind": "bell"}]))
+    assert all(g.endswith("ok") for g in ok), ok
+    bad = wc.drag_gates(_drag_tl("rope", "pull", "rope", during, after, ev))
+    assert any("bell rang" in g and g.endswith("FAIL") for g in bad)
+
+
+def test_drag_gates_poke() -> None:
+    def tl(stir: float) -> dict:
+        during = [_m9(1000 + 50 * k, dragging=True, dragRead=1.0,
+                      drag={"poke": 1.0, "pokeX": stir * ((k % 4) - 1.5), "pokeY": stir * ((k % 3) - 1)})
+                  for k in range(21)]
+        after = [_m9(2000 + 100 * k, drag={"poke": 0.0, "pokeX": 0.0, "pokeY": 0.0}) for k in range(1, 30)]
+        return _drag_tl("poke", "poke", "poke", during, after)
+    ok = wc.drag_gates(tl(0.4))
+    assert all(g.endswith(("ok", "info")) for g in ok), ok
+    assert any("stir" in g and g.endswith("FAIL") for g in wc.drag_gates(tl(0.05)))
+
+
+def test_drag_gates_trail_spin_aim() -> None:
+    def trail(n: int) -> dict:
+        during = [_m9(1000 + 50 * k, dragging=True, drag={"trailN": min(n, k), "trailFade": 0.0},
+                      dragRead=min(n, k)) for k in range(21)]
+        return _drag_tl("wipe", "trail", "trailN", during, [_m9(2500, drag={"trailN": n, "trailFade": 0.0})])
+    assert all(g.endswith("ok") for g in wc.drag_gates(trail(16)))
+    assert any("dots" in g and g.endswith("FAIL") for g in wc.drag_gates(trail(2)))
+
+    def spin(turn: float) -> dict:
+        during = [_m9(1000 + 50 * k, dragging=True, drag={"spin": turn * k / 20}, dragRead=turn * k / 20)
+                  for k in range(21)]
+        after = [_m9(2000 + 100 * k, drag={"spin": turn + min(k, 10) * 0.01 * (turn > 0)}) for k in range(1, 30)]
+        return _drag_tl("spin", "spin", "spin", during, after)
+    assert all(g.endswith("ok") for g in wc.drag_gates(spin(0.3)))
+    assert any("spin moved" in g and g.endswith("FAIL") for g in wc.drag_gates(spin(0.0)))
+
+    def aim(drift: float) -> dict:
+        during = [_m9(1000 + 50 * k, dragging=True, drag={"aim": -0.03 * k}, dragRead=-0.03 * k) for k in range(21)]
+        after = [_m9(2000 + 100 * k, drag={"aim": -0.6 + drift}) for k in range(1, 30)]
+        return _drag_tl("aim", "aim", "aim", during, after)
+    assert all(g.endswith("ok") for g in wc.drag_gates(aim(0.0)))
+    assert any("holds" in g and g.endswith("FAIL") for g in wc.drag_gates(aim(0.3)))
+
+
+def _gulls(land: bool = True, react_ms: int = 60) -> dict:
+    s = [_m9(t, scene="beach", npc2="away", npc2X=1.0) for t in range(0, 12000, 100)]
+    if land:
+        s += [_m9(12000 + 100 * k, scene="beach", npc2="move", npc2X=1 - k / 25) for k in range(26)]
+        s += [_m9(t, scene="beach", npc2="idle", npc2X=0.0) for t in range(14600, 16000, 100)]
+    s += [_m9(16000 + react_ms, scene="beach", npc2="react", npc2X=0.0)]
+    s += [_m9(16700 + 100 * k, scene="beach", npc2="move", npc2X=k / 15) for k in range(16)]
+    s += [_m9(18400, scene="beach", npc2="away", npc2X=1.0)]
+    return {"samples": s, "events": [{"ms": 0, "type": "gullWait"}, {"ms": 16000, "type": "gullPoke"}]}
+
+
+def test_gull_gates() -> None:
+    ok = wc.gull_gates(_gulls())
+    assert all(g.endswith("ok") for g in ok), ok
+    assert wc.gull_gates(_gulls(land=False))[0].endswith("FAIL")
+    assert any("startled" in g and g.endswith("FAIL") for g in wc.gull_gates(_gulls(react_ms=400)))
+    assert wc.npc2_states(_gulls()["samples"]) == ["away", "move", "idle", "react", "move", "away"]
+
+
+def _scene_tl(react_ms: int = 30) -> dict:
+    tl = _pull()
+    pre = [_m9(t, npc="rest") for t in range(0, 500, 100)] + [_m9(500 + react_ms, npc="react")]
+    talk = [_m9(t, speaking=True) for t in range(5200, 6000, 100)]
+    tl["samples"] = pre + tl["samples"][1:] + talk
+    tl["events"] += [{"ms": 500, "type": "poke", "prop": "cat"}, {"ms": 5200, "type": "start"},
+                     {"ms": 5210, "type": "caption", "text": "x"}, {"ms": 6000, "type": "stop"}]
+    tl["events"].sort(key=lambda e: e["ms"])
+    tl.update({"scene": "livingRoom", "frames": [{"i": 0, "ms": 0}], "network_attempts": 0})
+    return tl
+
+
+def test_gates_scene() -> None:
+    ok = wc.gates_scene(_scene_tl())
+    assert all(g.endswith(("ok", "info")) for g in ok), ok
+    assert any("NPC poked" in g and g.endswith("FAIL") for g in wc.gates_scene(_scene_tl(react_ms=300)))
+    tl = _scene_tl()
+    tl["samples"][3]["fileScene"] = None
+    assert any("file on screen" in g and g.endswith("FAIL") for g in wc.gates_scene(tl))
+    tl = _scene_tl()
+    tl["network_attempts"] = 1
+    assert any("network" in g and g.endswith("FAIL") for g in wc.gates_scene(tl))
+
+
+def _pair_run(t0: int, a: str, b: str, family: str, drawn_at: str = "arriveOpen") -> list[dict]:
+    phases = ["pullBack", "open", "exit", "close", "cut", "arriveOpen", "enter", "arriveClose", "vanish"]
+    if family == "door":
+        phases = ["pullBack", "open", "grab", "exit", "close", "cut", "arriveOpen", "enter", "hang", "arriveClose",
+                  "vanish"]
+    out = []
+    for k, p in enumerate(phases):
+        held = family == "door" and p in ("exit", "close", "cut", "arriveOpen", "enter")
+        new = wc.PHASES.index(p) >= wc.PHASES.index("cut")
+        drawn = wc.PHASES.index(p) >= wc.PHASES.index(drawn_at)
+        out.append(_m9(t0 + 33 * k, journey=p, family=family, scene=b if new else a,
+                       fileScene=b if drawn else a, jacket=held,
+                       journeyJacket=0.0 if held or p in ("pullBack", "vanish") else 1.0))
+    return out
+
+
+def _pairs_tl(bad: str = "") -> dict:
+    s, ev, t = [], [], 0
+    order = [(a, b) for a in wc.SCENES for b in wc.SCENES if a != b]  # not a chain: the gates read the events
+    for a, b in order:
+        fam = wc.ruled_family(a, b)
+        if bad == "family" and (a, b) == ("cafe", "rooftop"):
+            fam = "path"
+        drawn = "exit" if bad == "drawn" and (a, b) == ("beach", "cafe") else "arriveOpen"
+        ev.append({"ms": t, "type": "journey", "from": a, "to": b})
+        s += _pair_run(t + 1, a, b, fam, drawn)
+        s.append(_m9(t + 900, scene=b, fileScene=b))
+        t += 1000
+    return {"samples": s, "events": ev, "frames": [{"i": 0, "ms": 0}], "network_attempts": 0}
+
+
+def test_gates_pairs() -> None:
+    ok = wc.gates_pairs(_pairs_tl())
+    assert all(g.endswith(("ok", "info")) for g in ok), ok
+    assert any("family per ruling 5" in g and g.endswith("FAIL") for g in wc.gates_pairs(_pairs_tl("family")))
+    assert any("drawn after the cut" in g and g.endswith("FAIL") for g in wc.gates_pairs(_pairs_tl("drawn")))
+    tl = _pairs_tl()
+    tl["events"] = tl["events"][:-1]
+    assert any("every ordered pair" in g and g.endswith("FAIL") for g in wc.gates_pairs(tl))
+
+
+def _tour7_tl(**over: object) -> dict:
+    tour = ["cafe", "rooftop", "mountainHut", "campfire", "beach", "deepSpace", "livingRoom"]
+    origin, s, t = "livingRoom", [_m9(0)], 100
+    for to in tour:
+        run = _pair_run(t, origin, to, wc.ruled_family(origin, to))
+        s += [{**x, "presence": "onScreen", "moonRead": 0.52 if x["fileScene"] in wc.MOON_SCENES else None}
+              for x in run]
+        s.append(_m9(t + 600, scene=to, fileScene=to,
+                     moonRead=0.52 if to in wc.MOON_SCENES else None))
+        origin, t = to, t + 1000
+    s = [{**x, **over} for x in s]
+    return {"samples": s, "events": [], "frames": [{"i": 0, "ms": 0}], "network_attempts": 0, "scene": "livingRoom",
+            "tour": tour}
+
+
+def test_gates_tour7() -> None:
+    ok = wc.gates_tour7(_tour7_tl())
+    assert all(g.endswith(("ok", "info")) for g in ok), ok
+    assert any("moon phase" in g and g.endswith("FAIL") for g in wc.gates_tour7(_tour7_tl(moonPhase=0.3)))
+    assert any("December outfit" in g and g.endswith("FAIL") for g in wc.gates_tour7(_tour7_tl(hat="noHat")))
+    assert any("festive" in g and g.endswith("FAIL") for g in wc.gates_tour7(_tour7_tl(festive=0.0)))
+    assert any("moonPhase written" in g and g.endswith("FAIL") for g in wc.gates_tour7(_tour7_tl(moonRead=None)))
+
+
+def test_blank_frame() -> None:
+    import numpy as np
+    rng = np.random.default_rng(1)
+    scene = rng.integers(0, 255, (100, 60, 3)).astype(np.uint8)
+    assert not wc.blank_frame(scene)
+    black_stage = scene.copy()
+    black_stage[12:72] = 0          # chrome above and below, nothing on the stage
+    assert wc.blank_frame(black_stage)
+    assert wc.blank_frame(np.full((100, 60, 3), 128, np.uint8))
+
+
+def test_drag_gates_wipe_mists_back() -> None:
+    during = [_m9(1000 + 50 * k, dragging=True, drag={"trailN": min(16, k), "trailFade": 0.0}, dragRead=min(16, k))
+              for k in range(21)]
+
+    def tl(end_fade: float) -> dict:
+        after = [_m9(22000, drag={"trailN": 0 if end_fade == 1 else 16, "trailFade": end_fade})]
+        return _drag_tl("wipe", "trail", "trailN", during, after, [{"ms": 22100, "type": "dragSettled"}])
+    assert all(g.endswith("ok") for g in wc.drag_gates(tl(1.0)))
+    assert any("misted back" in g and g.endswith("FAIL") for g in wc.drag_gates(tl(0.4)))

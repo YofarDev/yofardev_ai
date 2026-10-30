@@ -104,8 +104,9 @@ final GetIt getIt = GetIt.instance;
 
 /// Registers every dependency. The overrides are seams for the macOS capture
 /// harness (`integration_test/wow_capture_test.dart`, M6): [ttsSynthesizer]
-/// replaces on-device TTS, [tools] the agent's tool list and [foleyPlayer]
-/// the foley players (M8: the harness logs what played). Production passes
+/// replaces on-device TTS, [tools] the agent's tool list, [foleyPlayer]
+/// the foley players (M8: the harness logs what played) and [haptics] the
+/// haptics sink (M9: the harness logs the drag haptics). Production passes
 /// none of them.
 /// The app lifecycle observer that pauses the world clock and weather sync.
 WorldLifecycleObserver? _worldObserver;
@@ -114,6 +115,7 @@ Future<void> setupServiceLocator({
   TtsSynthesizer? ttsSynthesizer,
   List<AgentTool>? tools,
   FoleyPlayer Function()? foleyPlayer,
+  HapticsSink? haptics,
 }) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -246,7 +248,7 @@ Future<void> setupServiceLocator({
   getIt.registerLazySingleton<FoleyService>(
     () => FoleyService(
       createPlayer: foleyPlayer ?? AudioPlayersFoleyPlayer.new,
-      haptics: const SystemHaptics(),
+      haptics: haptics ?? const SystemHaptics(),
       enabled: getIt<SoundEffectsSetting>().enabled,
     ),
     dispose: (FoleyService foley) => foley.dispose(),

@@ -1,0 +1,17 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 295: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+livingRoom in every sample, no journey (589): ok
+the livingRoom file on screen in every sample: ok
+NPC poked (cat): react 26 ms after the poke (want <= 200): ok
+cord (pull): the drag surface took the touch (37 dragging samples of 39): ok
+cord: cord read back from the scene file: max 1.00 (want >= 0.5): ok
+cord pulled: peak 1.00 (want >= 0.6): ok
+cord springs back: 0.00 3 s after the release (want <= 0.05): ok
+cord: the action fired (lightsOff; want one of ['lightsOff', 'lightsOn']): ok
+cord: drag haptics 2 (impact, selection; want >= 1): ok
+the reply is spoken: ok
+scene events: lightsOff; NPC states: rest/react/notice/idle/notice/react/idle: info
+scene_livingRoom.gif 4141133 B (budget 4194304): ok
+scene_livingRoom.mp4 1161483 B: info

@@ -1,0 +1,18 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 309: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+campfire in every sample, no journey (619): ok
+the campfire file on screen in every sample: ok
+NPC poked (owl): react 3 ms after the poke (want <= 200): ok
+poke (poke): the drag surface took the touch (70 dragging samples of 74): ok
+poke: poke read back from the scene file: max 1.00 (want >= 0.5): ok
+poke: the stick came in (poke peak 1.00, want >= 0.99): ok
+poke: the tip followed the stir (pokeX range 0.83, pokeY range 0.75, want >= 0.3 each): ok
+poke: eased out after the release (poke 0.00 3 s later, want <= 0.01): ok
+poke: the fast stir flared 1 time(s) (not required): info
+poke: drag haptics 8 (impact, selection; want >= 1): ok
+the reply is spoken: ok
+scene events: flare; NPC states: rest/react/rest/notice/rest/notice/rest: info
+scene_campfire.gif 3745884 B (budget 4194304): ok
+scene_campfire.mp4 1312313 B: info
