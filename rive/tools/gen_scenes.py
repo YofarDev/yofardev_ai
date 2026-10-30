@@ -21,6 +21,8 @@ from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, solid, stroke, tr
 from scene_art import before, named, place_point, refine_scene, walk  # noqa: E402
 from art_bible import EMISSIVE_PREFIX, SCENES, fit_colour  # noqa: E402
 from rig_dsl import Formulas  # noqa: E402
+import scene_npc  # noqa: E402
+from scene_npc import scene_fog  # noqa: E402
 
 W, H = 1080, 1920
 SCENE_EVENTS = {
@@ -42,6 +44,9 @@ M5_ID_START = 970000
 M6_ID_START = 950000
 # Moonshot M7: the time-of-day veils (contract v10 `daylight` / `dusk`) mint from their own range.
 M7_ID_START = 940000
+# Moonshot M8 (contract v11): `fog`, the NPC view-model numbers and every NPC element mint from their
+# own range per document (`Scene.d8`, see scene_npc.py), so no M7 id moves.
+M8_ID_START = 930000
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
 
@@ -82,6 +87,11 @@ class Scene:
         self.inst = inst
         self.vm = d("ViewModel", self.p_event_id, self.p_event, inst, name="SceneVM", defaultInstanceId=inst.ref())
         self._v7_props()
+        self.d8 = Doc(client=0, start=M8_ID_START)
+        self._v11_props()
+        # M8 (contract v11): the scene's NPC rig, run on the refined content before the diorama pass
+        # (`scene_npc.NPCS`), and the NPC's state enum (a root element after `EventId`).
+        self.npc_rig: Callable[[Scene, list[El], list[El]], None] | None = None
         # M4 dioramas: a hook run on the refined content (planes, veils), extra root elements
         # (converters), and the colour-script fit (ruling 13) for scenes rebuilt under the bible.
         self.post_refine: Callable[[list[El]], None] | None = None
@@ -138,6 +148,28 @@ class Scene:
             self.v7[name] = p
         at = self.vm.children.index(self.inst)
         self.vm.children[at:at] = list(self.v7.values())
+        self.inst.children.extend(vals)
+
+    def _v11_props(self) -> None:
+        """Contract v11 SceneVM members, after `dusk` in contract order: `fog` (number), `npc` (enum
+        `NpcState`, default rest), `npcX`, `npcLook` (numbers, default 0). Minted from `d8`."""
+        from scene_npc import NPC_STATES  # noqa: PLC0415 (scene_npc imports this module)
+        d8 = self.d8
+        self.npc_vals = {v: d8("DataEnumValue", key=v, value=v) for v in NPC_STATES}
+        self.npc_enum = d8("DataEnumCustom", *self.npc_vals.values(), name="NpcState")
+        props, vals = [], []
+        for name in ("fog", "npc", "npcX", "npcLook"):
+            if name == "npc":
+                p = d8("ViewModelPropertyEnumCustom", enumId=self.npc_enum.ref(), name=name)
+                vals.append(d8("ViewModelInstanceEnum", propertyValue=self.npc_vals["rest"].ref(),
+                               viewModelPropertyId=p.ref()))
+            else:
+                p = d8("ViewModelPropertyNumber", name=name)
+                vals.append(d8("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+            props.append(p)
+        at = self.vm.children.index(self.inst)
+        self.vm.children[at:at] = props
         self.inst.children.extend(vals)
 
     def vpath(self, name: str) -> str:
@@ -294,6 +326,8 @@ class Scene:
         refine_scene(self, content)
         if self.post_refine is not None:
             self.post_refine(content)
+        if self.npc_rig is not None:
+            self.npc_rig(self, content, hits)
         spec = DIORAMAS.get(self.id)
         if spec is not None:
             # M5 ruling 3: hit zones ride the plane of the art they cover
@@ -301,6 +335,7 @@ class Scene:
             hits = []
             diorama(self, content, spec)
             sky_time(self, content)
+            scene_fog(self, content)
         if self.fit or spec is not None:
             self.fit_colours([*hits, *content])
         d = self.d
@@ -314,7 +349,7 @@ class Scene:
             boards.append(self._front_artboard())
         out = os.path.join(OUT_ROOT, self.id, self.id + ".rml")
         os.makedirs(os.path.dirname(out), exist_ok=True)
-        write(out, [*boards, self.enum, self.vm, *self.roots])
+        write(out, [*boards, self.enum, self.npc_enum, self.vm, *self.roots])
         with open(os.path.join(os.path.dirname(out), "rive.yaml"), "w") as f:
             f.write(f"name: {self.id}\nmain: Scene\noutput: {{dir: build}}\n"
                     "logs: {file: build/rive.log, problems: build/problems.log}\n")
@@ -840,6 +875,7 @@ def campfire() -> str:
                *near_trees, mid, *far_trees, far, star_node, *craters, moon, moon_glow, *stars, sky]
     sc.fit = True
     front_weather(sc, "88B8C8F0")  # M6 ruling 8: the campfire RainLoop colour
+    sc.npc_rig = scene_npc.campfire_owl   # M8: the owl (contract v11)
     return sc.write(content, [hit_fire, hit_tent, hit_owl, hit_sky])
 
 
@@ -1111,7 +1147,14 @@ def front_weather(sc: Scene, col: str, splash_y: tuple[float, float] = (1820.0, 
                   d6("Rectangle", width=float(W + 2 * FRONT_BLEED), height=float(H + 60 - y0), originX=0.0,
                      originY=0.0, name="Path"),
                   *fills, x=float(-FRONT_BLEED), y=float(y0), opacity=0.0, name="FrontMist")
-    sc.front = ([near, mist], sc.anims, sc.layers)
+    # M8 (contract v11): fog joins the front mist (a veil of its own at `FRONT_FOG_GAIN x fog`)
+    fog_fills = [sc.d8("Fill", sc.d8("LinearGradient",
+                                     sc.d8("GradientStop", colorValue="00" + fog[2:], position=0.0),
+                                     sc.d8("GradientStop", sc.d8("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
+                                                                 propertyKey=38), colorValue=fog, position=1.0),
+                                     startX=0.0, startY=0.0, endX=0.0, endY=float(H - y0)), name="Fill")
+                 for _ in range(FOG_FILLS)]
+    sc.front = ([near, scene_npc.front_fog(sc, y0, FRONT_BLEED, fog_fills), mist], sc.anims, sc.layers)
     sc.anims, sc.layers = main_anims, main_layers
 
 # ---------------------------------------------------------------- campfire
@@ -1121,7 +1164,7 @@ CAMPFIRE_PLANES: dict[str, int | None] = {
     **dict.fromkeys(("Stone", "LogA", "LogB", "LogC", "WetCoalSteam", "CoalBed", "RainSteam", "FireFlare", "Smoke",
                      "Firefly", "TentPlace", "Grass", "TreeGlow", "LightPoolFlicker", "GroundWet", "TrailStone",
                      "Path", "Ground"), 4),
-    **dict.fromkeys(("Hoo", "Owl", "OwlGrip", "Branch", "OwlTwig", "OwlSnag", "Pine"), 3),
+    **dict.fromkeys(("Hoo", "Owl", "OwlNpc", "OwlGrip", "Branch", "OwlTwig", "OwlSnag", "Pine"), 3),
     **dict.fromkeys(("ValleyMist", "MidHills"), 2),
     **dict.fromkeys(("FarPine", "AlpineRidge", "PeakSnow", "MountainShadow", "FarHills"), 1),
     **dict.fromkeys(("ShootingStar", "Crater", "Moon", "MoonGlow", "Star", "Glint", "Aurora", "Sky"), 0),
@@ -1554,6 +1597,7 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                baseboard,
                curt_l_n, curt_r_n, rod, sill, ledge_sh, *mullion, *windows_lit, city, moon, sky, frame, rail, wainscot,
                *stripes, wall]
+    sc.npc_rig = lambda s_, c_, h_: scene_npc.living_room_cat(s_, c_, h_, PARALLAX_GAINS, PARALLAX_TRAVEL)  # M8
     return sc.write(content, hits)
 
 
@@ -1565,7 +1609,8 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
 # Plane5 stays empty (the room has no foreground).
 LIVING_ROOM_PLANES: dict[str, int | None] = {
     "Night": None,
-    **dict.fromkeys(("RugInner", "Rug", "Plant", "Lamp", "LamplitDust", "LampCone", "PlantContact",
+    # M8: the cat NPC paints in front of the rug; on the cabinet it rides Plane3's travel (scene_npc)
+    **dict.fromkeys(("CatNpc", "RugInner", "Rug", "Plant", "Lamp", "LamplitDust", "LampCone", "PlantContact",
                      "LampContact"), 4),
     **dict.fromkeys(("TvCorner", "MoonBeam", "TvGlow", "MoonPool", "TvFloorSpill", "Plank", "CabinetContact",
                      "WindowFloorLight", "FloorJoint", "OakGrain", "Floor", "Baseboard"), 3),
@@ -1722,7 +1767,7 @@ BEACH_PLANES: dict[str, int | None] = {
     "DuneGrass": 5, "DuneWet": 5, "NearDune": 5,
     # sand props, the palm and the passing flock; the shells and starfish lie on the mid-ground sand
     # (y 1470-1860, most of them not foreground), so they stay with the castle (ruling 4: 5 -> 4)
-    **dict.fromkeys(("Flock", "Castle", "Flag", "Starfish", "Shell", *(f"ShellRib{i}_" for i in range(4)), "Crab",
+    **dict.fromkeys(("Flock", "Castle", "Flag", "Starfish", "Shell", *(f"ShellRib{i}_" for i in range(4)), "Crab", "CrabNpc",
                      "GullPlace", "PalmFrond", "TrunkRing", "PalmTrunk", "Umbrella", "TowelWeave", "TowelFringe",
                      "Towel", "UShadow"), 4),
     # the surf line and the ground: the sand moves 4 -> 3, it paints behind the wet band and the foam
@@ -2099,6 +2144,7 @@ def beach() -> str:
                wet_wash, foam, wet, sand, big, wave_clip,
                *waves, sun_path, *glints, sea, *flyers, *clouds, sun, sunset_sky, sky]
     front_weather(sc, "88C8D6E4")  # M6 ruling 8: the beach RainLoop colour
+    sc.npc_rig = lambda s_, c_, h_: scene_npc.beach_crab(s_, c_, h_, PARALLAX_GAINS, PARALLAX_TRAVEL)  # M8
     return sc.write(content, hits)
 
 
@@ -2366,6 +2412,7 @@ def deepSpace() -> str:  # noqa: N802
         sc.prop(pid, h)
     content = [flash, warp, warp_core_n, met, *rocks, ship, duck_lift, ufo_flee, planet_g, moonlet, galaxy, *rings, swell, *stars,
                *nebulae, bg]
+    sc.npc_rig = scene_npc.deep_space_alien   # M8: the alien in the ufo (contract v11)
     return sc.write(content, hits)
 
 

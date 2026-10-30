@@ -187,6 +187,131 @@
         </EntryState>
         <AnimationState animationId="0:3759" x="160" y="100" id="0:3760"/>
       </StateMachineLayer>
+      <StateMachineLayer name="Npc" id="0:930928">
+        <AnyState x="100" y="-100" id="0:930924">
+          <StateTransition stateToId="0:930853" duration="200" id="0:930869">
+            <TransitionViewModelCondition id="0:930868">
+              <TransitionPropertyViewModelComparator id="0:930866">
+                <BindablePropertyEnum id="0:930865">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930864"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930000" id="0:930867"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:930855" duration="200" id="0:930875">
+            <TransitionViewModelCondition id="0:930874">
+              <TransitionPropertyViewModelComparator id="0:930872">
+                <BindablePropertyEnum id="0:930871">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930870"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930002" id="0:930873"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:930856" duration="200" id="0:930881">
+            <TransitionViewModelCondition id="0:930880">
+              <TransitionPropertyViewModelComparator id="0:930878">
+                <BindablePropertyEnum id="0:930877">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930876"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930003" id="0:930879"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:930862" duration="200" id="0:930887">
+            <TransitionViewModelCondition id="0:930886">
+              <TransitionPropertyViewModelComparator id="0:930884">
+                <BindablePropertyEnum id="0:930883">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930882"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930004" id="0:930885"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:930863" duration="200" id="0:930893">
+            <TransitionViewModelCondition id="0:930892">
+              <TransitionPropertyViewModelComparator id="0:930890">
+                <BindablePropertyEnum id="0:930889">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930888"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930005" id="0:930891"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnyState>
+        <ExitState x="500" y="-100" id="0:930925"/>
+        <EntryState x="-100" y="-100" id="0:930927">
+          <StateTransition stateToId="0:930854" id="0:930926"/>
+        </EntryState>
+        <AnimationState animationId="0:930521" x="0" y="220" id="0:930853">
+          <StateTransition stateToId="0:930854" duration="200" id="0:930899">
+            <TransitionViewModelCondition id="0:930898">
+              <TransitionPropertyViewModelComparator id="0:930896">
+                <BindablePropertyEnum id="0:930895">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930894"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:930897"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:930484" x="160" y="340" id="0:930854"/>
+        <AnimationState animationId="0:930594" x="320" y="220" id="0:930855">
+          <StateTransition stateToId="0:930854" duration="200" id="0:930905">
+            <TransitionViewModelCondition id="0:930904">
+              <TransitionPropertyViewModelComparator id="0:930902">
+                <BindablePropertyEnum id="0:930901">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930900"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:930903"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:930649" x="480" y="340" id="0:930856">
+          <StateTransition stateToId="0:930854" duration="200" id="0:930911">
+            <TransitionViewModelCondition id="0:930910">
+              <TransitionPropertyViewModelComparator id="0:930908">
+                <BindablePropertyEnum id="0:930907">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930906"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:930909"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <BlendState1DViewModel x="640" y="220" id="0:930862">
+          <BindablePropertyNumber id="0:930858">
+            <DataBindContext sourcePathIds="0:23-0:930013" propertyKey="636" id="0:930857"/>
+          </BindablePropertyNumber>
+          <BlendAnimation1D animationId="0:930698" value="-1" id="0:930859"/>
+          <BlendAnimation1D animationId="0:930747" value="0" id="0:930860"/>
+          <BlendAnimation1D animationId="0:930796" value="1" id="0:930861"/>
+          <BlendStateTransition stateToId="0:930854" duration="200" id="0:930917">
+            <TransitionViewModelCondition id="0:930916">
+              <TransitionPropertyViewModelComparator id="0:930914">
+                <BindablePropertyEnum id="0:930913">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930912"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:930915"/>
+            </TransitionViewModelCondition>
+          </BlendStateTransition>
+        </BlendState1DViewModel>
+        <AnimationState animationId="0:930852" x="800" y="340" id="0:930863">
+          <StateTransition stateToId="0:930854" duration="200" id="0:930923">
+            <TransitionViewModelCondition id="0:930922">
+              <TransitionPropertyViewModelComparator id="0:930920">
+                <BindablePropertyEnum id="0:930919">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:930918"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:930921"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+      </StateMachineLayer>
     </StateMachine>
     <CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1" id="0:10"/>
     <CubicEaseInterpolator x1="0.15" y1="0" x2="0.25" y2="1" id="0:11"/>
@@ -1304,6 +1429,8 @@
       <DataBindContext sourcePathIds="0:23-0:980000" propertyKey="13" converterId="0:990025" id="0:990026"/>
       <DataBindContext sourcePathIds="0:23-0:980002" propertyKey="14" converterId="0:990030" id="0:990031"/>
       <Shape x="860" y="880" name="Hit_ufo" id="0:2437">
+        <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="14" converterId="0:930446" id="0:930447"/>
+        <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="13" converterId="0:930359" id="0:930360"/>
         <Rectangle width="240" height="130" name="Path" id="0:2434"/>
         <Fill name="Fill" id="0:2436">
           <SolidColor colorValue="00000000" id="0:2435"/>
@@ -1345,334 +1472,463 @@
         </Shape>
       </Node>
       <Node x="0" y="0" name="UfoFlee" id="0:663">
-        <Node x="860" y="900" name="Ufo" id="0:662">
-          <Shape x="-30" y="50" name="TractorParticle0" opacity="0" id="0:3678">
-            <Ellipse width="2" height="4" name="Path" id="0:3677"/>
-            <Fill name="Fill" id="0:3676">
-              <SolidColor colorValue="80B4F1D8" id="0:3675"/>
-            </Fill>
-          </Shape>
-          <Shape x="-18" y="80" name="TractorParticle1" opacity="0" id="0:3692">
-            <Ellipse width="2" height="4" name="Path" id="0:3691"/>
-            <Fill name="Fill" id="0:3690">
-              <SolidColor colorValue="80B4F1D8" id="0:3689"/>
-            </Fill>
-          </Shape>
-          <Shape x="-6" y="110" name="TractorParticle2" opacity="0" id="0:3706">
-            <Ellipse width="2" height="4" name="Path" id="0:3705"/>
-            <Fill name="Fill" id="0:3704">
-              <SolidColor colorValue="80B4F1D8" id="0:3703"/>
-            </Fill>
-          </Shape>
-          <Shape x="6" y="140" name="TractorParticle3" opacity="0" id="0:3720">
-            <Ellipse width="2" height="4" name="Path" id="0:3719"/>
-            <Fill name="Fill" id="0:3718">
-              <SolidColor colorValue="80B4F1D8" id="0:3717"/>
-            </Fill>
-          </Shape>
-          <Shape x="18" y="170" name="TractorParticle4" opacity="0" id="0:3734">
-            <Ellipse width="2" height="4" name="Path" id="0:3733"/>
-            <Fill name="Fill" id="0:3732">
-              <SolidColor colorValue="80B4F1D8" id="0:3731"/>
-            </Fill>
-          </Shape>
-          <Shape x="30" y="200" name="TractorParticle5" opacity="0" id="0:3748">
-            <Ellipse width="2" height="4" name="Path" id="0:3747"/>
-            <Fill name="Fill" id="0:3746">
-              <SolidColor colorValue="80B4F1D8" id="0:3745"/>
-            </Fill>
-          </Shape>
-          <Shape x="-21.5" y="-35.5" name="DomeReflection" id="0:3328">
-            <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:3327">
-              <CubicDetachedVertex x="-13.5" y="14.5" outRotation="-1.1071" outDistance="7.4536" inRotation="2.0344" inDistance="0" id="0:3324"/>
-              <CubicDetachedVertex x="-3.5" y="-5.5" outRotation="-0.8211" outDistance="6.1077" inRotation="2.3205" inDistance="7.1" id="0:3325"/>
-              <CubicDetachedVertex x="13.5" y="-14.5" outRotation="-0.4869" outDistance="0" inRotation="2.6547" inDistance="6.4118" id="0:3326"/>
-            </PointsPath>
-            <Stroke thickness="2" cap="round" join="round" name="Line" id="0:3323">
-              <SolidColor colorValue="A0E4FFF4" id="0:3322"/>
-            </Stroke>
-          </Shape>
-          <Shape x="0" y="6" name="HullInlay" id="0:3332">
-            <Ellipse width="195" height="30" name="Path" id="0:3331"/>
-            <Stroke thickness="1" cap="round" join="round" name="Line" id="0:3330">
-              <SolidColor colorValue="80D6EDF1" id="0:3329"/>
-            </Stroke>
-          </Shape>
-          <Shape x="0" y="28" name="ThrusterBloom" scaleY="0.3" id="0:3338">
-            <Ellipse width="104" height="104" name="Path" id="0:3337"/>
-            <Fill name="Fill" id="0:3336">
-              <RadialGradient startX="0" startY="0" endX="52" endY="0" id="0:3335">
-                <GradientStop colorValue="505EE8CE" position="0" id="0:3333"/>
-                <GradientStop colorValue="005EE8CE" position="1" id="0:3334"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="-80" y="12" name="emitULight0" id="0:667">
-            <Ellipse width="12" height="12" name="Path" id="0:666"/>
-            <Fill name="Fill" id="0:665">
-              <SolidColor colorValue="FFFFE060" name="emit" id="0:664"/>
-            </Fill>
-          </Shape>
-          <Shape x="-40" y="12" name="emitULight1" id="0:671">
-            <Ellipse width="12" height="12" name="Path" id="0:670"/>
-            <Fill name="Fill" id="0:669">
-              <SolidColor colorValue="FFFFE060" name="emit" id="0:668"/>
-            </Fill>
-          </Shape>
-          <Shape x="0" y="12" name="emitULight2" id="0:675">
-            <Ellipse width="12" height="12" name="Path" id="0:674"/>
-            <Fill name="Fill" id="0:673">
-              <SolidColor colorValue="FFFFE060" name="emit" id="0:672"/>
-            </Fill>
-          </Shape>
-          <Shape x="40" y="12" name="emitULight3" id="0:679">
-            <Ellipse width="12" height="12" name="Path" id="0:678"/>
-            <Fill name="Fill" id="0:677">
-              <SolidColor colorValue="FFFFE060" name="emit" id="0:676"/>
-            </Fill>
-          </Shape>
-          <Shape x="80" y="12" name="emitULight4" id="0:683">
-            <Ellipse width="12" height="12" name="Path" id="0:682"/>
-            <Fill name="Fill" id="0:681">
-              <SolidColor colorValue="FFFFE060" name="emit" id="0:680"/>
-            </Fill>
-          </Shape>
-          <Shape x="0" y="-38" name="Dome" id="0:706">
-            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:705">
-              <CubicDetachedVertex x="-54" y="28" outRotation="-2.7393" outDistance="9.5965" inRotation="0.4023" inDistance="24.4558" id="0:700"/>
-              <CubicDetachedVertex x="-40" y="-12" outRotation="-0.8036" outDistance="13.0723" inRotation="2.338" inDistance="12.8593" id="0:701"/>
-              <CubicDetachedVertex x="0" y="-28" outRotation="0" outDistance="13.3333" inRotation="3.1416" inDistance="13.3333" id="0:702"/>
-              <CubicDetachedVertex x="40" y="-12" outRotation="0.8036" outDistance="12.8593" inRotation="3.9452" inDistance="13.0723" id="0:703"/>
-              <CubicDetachedVertex x="54" y="28" outRotation="2.7393" outDistance="24.4558" inRotation="5.8809" inDistance="9.5965" id="0:704"/>
-            </PointsPath>
-            <Fill name="Fill" id="0:697">
-              <LinearGradient startX="0" startY="-30" endX="0" endY="30" id="0:696">
-                <GradientStop colorValue="CCAEE2F0" position="0" id="0:694"/>
-                <GradientStop colorValue="886AA8D0" position="1" id="0:695"/>
-              </LinearGradient>
-            </Fill>
-            <Stroke thickness="1.8" cap="round" join="round" name="Line" id="0:699">
-              <SolidColor colorValue="FF2A3450" id="0:698"/>
-            </Stroke>
-          </Shape>
-          <Shape x="0" y="-30" name="Alien" id="0:710">
-            <Ellipse width="30" height="34" name="Path" id="0:709"/>
-            <Fill name="Fill" id="0:708">
-              <SolidColor colorValue="FF7AE070" id="0:707"/>
-            </Fill>
-          </Shape>
-          <Shape x="0" y="4" name="Saucer" id="0:718">
-            <Ellipse width="220" height="54" name="Path" id="0:717"/>
-            <Fill name="Fill" id="0:714">
-              <RadialGradient startX="0" startY="-14" endX="110" endY="-14" id="0:713">
-                <GradientStop colorValue="FFE0E6F0" position="0" id="0:711"/>
-                <GradientStop colorValue="FF7A8498" position="1" id="0:712"/>
-              </RadialGradient>
-            </Fill>
-            <Stroke thickness="1.8" cap="round" join="round" name="Line" id="0:716">
-              <SolidColor colorValue="FF2A3450" id="0:715"/>
-            </Stroke>
-          </Shape>
-          <Shape x="0" y="160" name="Beam" id="0:693">
-            <Shape x="0" y="0" name="BeamFalloff11" id="0:3482">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3481">
-                <CubicDetachedVertex x="-21" y="-140" outRotation="-1.2966" outDistance="12.5526" inRotation="1.845" inDistance="84.4019" id="0:3477"/>
-                <CubicDetachedVertex x="21" y="-140" outRotation="1.2966" outDistance="84.4019" inRotation="4.4382" inDistance="12.5526" id="0:3478"/>
-                <CubicDetachedVertex x="57.75" y="140" outRotation="1.845" outDistance="28.1433" inRotation="4.9866" inDistance="68.8112" id="0:3479"/>
-                <CubicDetachedVertex x="-57.75" y="140" outRotation="-1.845" outDistance="68.8112" inRotation="1.2966" inDistance="28.1433" id="0:3480"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3476">
-                <LinearGradient startX="0" startY="-165.3" endX="0" endY="191.7" id="0:3475">
-                  <GradientStop colorValue="129CEED7" position="0" id="0:3471"/>
-                  <GradientStop colorValue="0E88D5CB" position="0.301" id="0:3472"/>
-                  <GradientStop colorValue="0379BDC7" position="0.808" id="0:3473"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3474"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff10" id="0:3470">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3469">
-                <CubicDetachedVertex x="-23.6" y="-140" outRotation="-1.2647" outDistance="13.9907" inRotation="1.8769" inDistance="83.8937" id="0:3465"/>
-                <CubicDetachedVertex x="23.6" y="-140" outRotation="1.2647" outDistance="83.8937" inRotation="4.4063" inDistance="13.9907" id="0:3466"/>
-                <CubicDetachedVertex x="64.9" y="140" outRotation="1.8769" outDistance="30.7764" inRotation="5.0185" inDistance="67.108" id="0:3467"/>
-                <CubicDetachedVertex x="-64.9" y="140" outRotation="-1.8769" outDistance="67.108" inRotation="1.2647" inDistance="30.7764" id="0:3468"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3464">
-                <LinearGradient startX="0" startY="-163" endX="0" endY="187" id="0:3463">
-                  <GradientStop colorValue="119CEED7" position="0" id="0:3459"/>
-                  <GradientStop colorValue="0D88D5CB" position="0.29" id="0:3460"/>
-                  <GradientStop colorValue="0379BDC7" position="0.8" id="0:3461"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3462"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff9" id="0:3458">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3457">
-                <CubicDetachedVertex x="-26.2" y="-140" outRotation="-1.2333" outDistance="15.4197" inRotation="1.9083" inDistance="83.4927" id="0:3453"/>
-                <CubicDetachedVertex x="26.2" y="-140" outRotation="1.2333" outDistance="83.4927" inRotation="4.3749" inDistance="15.4197" id="0:3454"/>
-                <CubicDetachedVertex x="72.05" y="140" outRotation="1.9083" outDistance="33.3154" inRotation="5.0499" inDistance="65.5971" id="0:3455"/>
-                <CubicDetachedVertex x="-72.05" y="140" outRotation="-1.9083" outDistance="65.5971" inRotation="1.2333" inDistance="33.3154" id="0:3456"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3452">
-                <LinearGradient startX="0" startY="-160.7" endX="0" endY="182.3" id="0:3451">
-                  <GradientStop colorValue="109CEED7" position="0" id="0:3447"/>
-                  <GradientStop colorValue="0C88D5CB" position="0.279" id="0:3448"/>
-                  <GradientStop colorValue="0379BDC7" position="0.792" id="0:3449"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3450"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff8" id="0:3446">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3445">
-                <CubicDetachedVertex x="-28.8" y="-140" outRotation="-1.2027" outDistance="16.8432" inRotation="1.9389" inDistance="83.1924" id="0:3441"/>
-                <CubicDetachedVertex x="28.8" y="-140" outRotation="1.2027" outDistance="83.1924" inRotation="4.3443" inDistance="16.8432" id="0:3442"/>
-                <CubicDetachedVertex x="79.2" y="140" outRotation="1.9389" outDistance="35.777" inRotation="5.0805" inDistance="64.2585" id="0:3443"/>
-                <CubicDetachedVertex x="-79.2" y="140" outRotation="-1.9389" outDistance="64.2585" inRotation="1.2027" inDistance="35.777" id="0:3444"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3440">
-                <LinearGradient startX="0" startY="-158.4" endX="0" endY="177.6" id="0:3439">
-                  <GradientStop colorValue="0F9CEED7" position="0" id="0:3435"/>
-                  <GradientStop colorValue="0B88D5CB" position="0.268" id="0:3436"/>
-                  <GradientStop colorValue="0279BDC7" position="0.784" id="0:3437"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3438"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff7" id="0:3434">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3433">
-                <CubicDetachedVertex x="-31.4" y="-140" outRotation="-1.1727" outDistance="18.2642" inRotation="1.9689" inDistance="82.9863" id="0:3429"/>
-                <CubicDetachedVertex x="31.4" y="-140" outRotation="1.1727" outDistance="82.9863" inRotation="4.3143" inDistance="18.2642" id="0:3430"/>
-                <CubicDetachedVertex x="86.35" y="140" outRotation="1.9689" outDistance="38.1756" inRotation="5.1105" inDistance="63.075" id="0:3431"/>
-                <CubicDetachedVertex x="-86.35" y="140" outRotation="-1.9689" outDistance="63.075" inRotation="1.1727" inDistance="38.1756" id="0:3432"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3428">
-                <LinearGradient startX="0" startY="-156.1" endX="0" endY="172.9" id="0:3427">
-                  <GradientStop colorValue="0E9CEED7" position="0" id="0:3423"/>
-                  <GradientStop colorValue="0A88D5CB" position="0.257" id="0:3424"/>
-                  <GradientStop colorValue="0279BDC7" position="0.776" id="0:3425"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3426"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff6" id="0:3422">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3421">
-                <CubicDetachedVertex x="-34" y="-140" outRotation="-1.1435" outDistance="19.6857" inRotation="1.9981" inDistance="82.8685" id="0:3417"/>
-                <CubicDetachedVertex x="34" y="-140" outRotation="1.1435" outDistance="82.8685" inRotation="4.2851" inDistance="19.6857" id="0:3418"/>
-                <CubicDetachedVertex x="93.5" y="140" outRotation="1.9981" outDistance="40.5231" inRotation="5.1397" inDistance="62.0311" id="0:3419"/>
-                <CubicDetachedVertex x="-93.5" y="140" outRotation="-1.9981" outDistance="62.0311" inRotation="1.1435" inDistance="40.5231" id="0:3420"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3416">
-                <LinearGradient startX="0" startY="-153.8" endX="0" endY="168.2" id="0:3415">
-                  <GradientStop colorValue="0D9CEED7" position="0" id="0:3411"/>
-                  <GradientStop colorValue="0A88D5CB" position="0.246" id="0:3412"/>
-                  <GradientStop colorValue="0279BDC7" position="0.768" id="0:3413"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3414"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff5" id="0:3410">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3409">
-                <CubicDetachedVertex x="-36.6" y="-140" outRotation="-1.115" outDistance="21.1098" inRotation="2.0266" inDistance="82.8334" id="0:3405"/>
-                <CubicDetachedVertex x="36.6" y="-140" outRotation="1.115" outDistance="82.8334" inRotation="4.2566" inDistance="21.1098" id="0:3406"/>
-                <CubicDetachedVertex x="100.65" y="140" outRotation="2.0266" outDistance="42.8298" inRotation="5.1681" inDistance="61.1133" id="0:3407"/>
-                <CubicDetachedVertex x="-100.65" y="140" outRotation="-2.0266" outDistance="61.1133" inRotation="1.115" inDistance="42.8298" id="0:3408"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3404">
-                <LinearGradient startX="0" startY="-151.5" endX="0" endY="163.5" id="0:3403">
-                  <GradientStop colorValue="0C9CEED7" position="0" id="0:3399"/>
-                  <GradientStop colorValue="0988D5CB" position="0.235" id="0:3400"/>
-                  <GradientStop colorValue="0279BDC7" position="0.76" id="0:3401"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3402"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff4" id="0:3398">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3397">
-                <CubicDetachedVertex x="-39.2" y="-140" outRotation="-1.0873" outDistance="22.5385" inRotation="2.0542" inDistance="82.8755" id="0:3393"/>
-                <CubicDetachedVertex x="39.2" y="-140" outRotation="1.0873" outDistance="82.8755" inRotation="4.2289" inDistance="22.5385" id="0:3394"/>
-                <CubicDetachedVertex x="107.8" y="140" outRotation="2.0542" outDistance="45.1044" inRotation="5.1958" inDistance="60.3096" id="0:3395"/>
-                <CubicDetachedVertex x="-107.8" y="140" outRotation="-2.0542" outDistance="60.3096" inRotation="1.0873" inDistance="45.1044" id="0:3396"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3392">
-                <LinearGradient startX="0" startY="-149.2" endX="0" endY="158.8" id="0:3391">
-                  <GradientStop colorValue="0B9CEED7" position="0" id="0:3387"/>
-                  <GradientStop colorValue="0888D5CB" position="0.224" id="0:3388"/>
-                  <GradientStop colorValue="0279BDC7" position="0.752" id="0:3389"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3390"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff3" id="0:3386">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3385">
-                <CubicDetachedVertex x="-41.8" y="-140" outRotation="-1.0604" outDistance="23.9737" inRotation="2.0811" inDistance="82.9897" id="0:3381"/>
-                <CubicDetachedVertex x="41.8" y="-140" outRotation="1.0604" outDistance="82.9897" inRotation="4.202" inDistance="23.9737" id="0:3382"/>
-                <CubicDetachedVertex x="114.95" y="140" outRotation="2.0811" outDistance="47.3541" inRotation="5.2227" inDistance="59.6093" id="0:3383"/>
-                <CubicDetachedVertex x="-114.95" y="140" outRotation="-2.0811" outDistance="59.6093" inRotation="1.0604" inDistance="47.3541" id="0:3384"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3380">
-                <LinearGradient startX="0" startY="-146.9" endX="0" endY="154.1" id="0:3379">
-                  <GradientStop colorValue="0A9CEED7" position="0" id="0:3375"/>
-                  <GradientStop colorValue="0888D5CB" position="0.213" id="0:3376"/>
-                  <GradientStop colorValue="0279BDC7" position="0.744" id="0:3377"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3378"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff2" id="0:3374">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3373">
-                <CubicDetachedVertex x="-44.4" y="-140" outRotation="-1.0343" outDistance="25.4167" inRotation="2.1073" inDistance="83.1713" id="0:3369"/>
-                <CubicDetachedVertex x="44.4" y="-140" outRotation="1.0343" outDistance="83.1713" inRotation="4.1759" inDistance="25.4167" id="0:3370"/>
-                <CubicDetachedVertex x="122.1" y="140" outRotation="2.1073" outDistance="49.5852" inRotation="5.2489" inDistance="59.0029" id="0:3371"/>
-                <CubicDetachedVertex x="-122.1" y="140" outRotation="-2.1073" outDistance="59.0029" inRotation="1.0343" inDistance="49.5852" id="0:3372"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3368">
-                <LinearGradient startX="0" startY="-144.6" endX="0" endY="149.4" id="0:3367">
-                  <GradientStop colorValue="099CEED7" position="0" id="0:3363"/>
-                  <GradientStop colorValue="0788D5CB" position="0.202" id="0:3364"/>
-                  <GradientStop colorValue="0179BDC7" position="0.736" id="0:3365"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3366"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff1" id="0:3362">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3361">
-                <CubicDetachedVertex x="-47" y="-140" outRotation="-1.009" outDistance="26.8686" inRotation="2.1326" inDistance="83.4159" id="0:3357"/>
-                <CubicDetachedVertex x="47" y="-140" outRotation="1.009" outDistance="83.4159" inRotation="4.1506" inDistance="26.8686" id="0:3358"/>
-                <CubicDetachedVertex x="129.25" y="140" outRotation="2.1326" outDistance="51.8026" inRotation="5.2742" inDistance="58.4819" id="0:3359"/>
-                <CubicDetachedVertex x="-129.25" y="140" outRotation="-2.1326" outDistance="58.4819" inRotation="1.009" inDistance="51.8026" id="0:3360"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3356">
-                <LinearGradient startX="0" startY="-142.3" endX="0" endY="144.7" id="0:3355">
-                  <GradientStop colorValue="089CEED7" position="0" id="0:3351"/>
-                  <GradientStop colorValue="0688D5CB" position="0.191" id="0:3352"/>
-                  <GradientStop colorValue="0179BDC7" position="0.728" id="0:3353"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3354"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <Shape x="0" y="0" name="BeamFalloff0" id="0:3350">
-              <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3349">
-                <CubicDetachedVertex x="-49.6" y="-140" outRotation="-0.9844" outDistance="28.3304" inRotation="2.1571" inDistance="83.7191" id="0:3345"/>
-                <CubicDetachedVertex x="49.6" y="-140" outRotation="0.9844" outDistance="83.7191" inRotation="4.126" inDistance="28.3304" id="0:3346"/>
-                <CubicDetachedVertex x="136.4" y="140" outRotation="2.1571" outDistance="54.0107" inRotation="5.2987" inDistance="58.0389" id="0:3347"/>
-                <CubicDetachedVertex x="-136.4" y="140" outRotation="-2.1571" outDistance="58.0389" inRotation="0.9844" inDistance="54.0107" id="0:3348"/>
-              </PointsPath>
-              <Fill name="Fill" id="0:3344">
-                <LinearGradient startX="0" startY="-140" endX="0" endY="140" id="0:3343">
-                  <GradientStop colorValue="079CEED7" position="0" id="0:3339"/>
-                  <GradientStop colorValue="0588D5CB" position="0.18" id="0:3340"/>
-                  <GradientStop colorValue="0179BDC7" position="0.72" id="0:3341"/>
-                  <GradientStop colorValue="0079BDC7" position="1" id="0:3342"/>
-                </LinearGradient>
-              </Fill>
-            </Shape>
-            <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:692">
-              <CubicDetachedVertex x="-40" y="-140" outRotation="-1.079" outDistance="22.9794" inRotation="2.0626" inDistance="82.9031" id="0:688"/>
-              <CubicDetachedVertex x="40" y="-140" outRotation="1.079" outDistance="82.9031" inRotation="4.2206" inDistance="22.9794" id="0:689"/>
-              <CubicDetachedVertex x="110" y="140" outRotation="2.0626" outDistance="45.799" inRotation="5.2042" inDistance="60.0836" id="0:690"/>
-              <CubicDetachedVertex x="-110" y="140" outRotation="-2.0626" outDistance="60.0836" inRotation="1.079" inDistance="45.799" id="0:691"/>
-            </PointsPath>
-          </Shape>
+        <Node x="860" y="900" name="UfoPath" id="0:930099">
+          <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="14" converterId="0:930272" id="0:930273"/>
+          <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="13" converterId="0:930185" id="0:930186"/>
+          <Node x="-860" y="-900" name="UfoPathPivot" id="0:930098">
+            <Node x="860" y="900" name="Ufo" id="0:662">
+              <Shape x="-30" y="50" name="TractorParticle0" opacity="0" id="0:3678">
+                <Ellipse width="2" height="4" name="Path" id="0:3677"/>
+                <Fill name="Fill" id="0:3676">
+                  <SolidColor colorValue="80B4F1D8" id="0:3675"/>
+                </Fill>
+              </Shape>
+              <Shape x="-18" y="80" name="TractorParticle1" opacity="0" id="0:3692">
+                <Ellipse width="2" height="4" name="Path" id="0:3691"/>
+                <Fill name="Fill" id="0:3690">
+                  <SolidColor colorValue="80B4F1D8" id="0:3689"/>
+                </Fill>
+              </Shape>
+              <Shape x="-6" y="110" name="TractorParticle2" opacity="0" id="0:3706">
+                <Ellipse width="2" height="4" name="Path" id="0:3705"/>
+                <Fill name="Fill" id="0:3704">
+                  <SolidColor colorValue="80B4F1D8" id="0:3703"/>
+                </Fill>
+              </Shape>
+              <Shape x="6" y="140" name="TractorParticle3" opacity="0" id="0:3720">
+                <Ellipse width="2" height="4" name="Path" id="0:3719"/>
+                <Fill name="Fill" id="0:3718">
+                  <SolidColor colorValue="80B4F1D8" id="0:3717"/>
+                </Fill>
+              </Shape>
+              <Shape x="18" y="170" name="TractorParticle4" opacity="0" id="0:3734">
+                <Ellipse width="2" height="4" name="Path" id="0:3733"/>
+                <Fill name="Fill" id="0:3732">
+                  <SolidColor colorValue="80B4F1D8" id="0:3731"/>
+                </Fill>
+              </Shape>
+              <Shape x="30" y="200" name="TractorParticle5" opacity="0" id="0:3748">
+                <Ellipse width="2" height="4" name="Path" id="0:3747"/>
+                <Fill name="Fill" id="0:3746">
+                  <SolidColor colorValue="80B4F1D8" id="0:3745"/>
+                </Fill>
+              </Shape>
+              <Shape x="-21.5" y="-35.5" name="DomeReflection" id="0:3328">
+                <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:3327">
+                  <CubicDetachedVertex x="-13.5" y="14.5" outRotation="-1.1071" outDistance="7.4536" inRotation="2.0344" inDistance="0" id="0:3324"/>
+                  <CubicDetachedVertex x="-3.5" y="-5.5" outRotation="-0.8211" outDistance="6.1077" inRotation="2.3205" inDistance="7.1" id="0:3325"/>
+                  <CubicDetachedVertex x="13.5" y="-14.5" outRotation="-0.4869" outDistance="0" inRotation="2.6547" inDistance="6.4118" id="0:3326"/>
+                </PointsPath>
+                <Stroke thickness="2" cap="round" join="round" name="Line" id="0:3323">
+                  <SolidColor colorValue="A0E4FFF4" id="0:3322"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="6" name="HullInlay" id="0:3332">
+                <Ellipse width="195" height="30" name="Path" id="0:3331"/>
+                <Stroke thickness="1" cap="round" join="round" name="Line" id="0:3330">
+                  <SolidColor colorValue="80D6EDF1" id="0:3329"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="28" name="ThrusterBloom" scaleY="0.3" id="0:3338">
+                <Ellipse width="104" height="104" name="Path" id="0:3337"/>
+                <Fill name="Fill" id="0:3336">
+                  <RadialGradient startX="0" startY="0" endX="52" endY="0" id="0:3335">
+                    <GradientStop colorValue="505EE8CE" position="0" id="0:3333"/>
+                    <GradientStop colorValue="005EE8CE" position="1" id="0:3334"/>
+                  </RadialGradient>
+                </Fill>
+              </Shape>
+              <Shape x="-80" y="12" name="emitULight0" id="0:667">
+                <Ellipse width="12" height="12" name="Path" id="0:666"/>
+                <Fill name="Fill" id="0:665">
+                  <SolidColor colorValue="FFFFE060" name="emit" id="0:664"/>
+                </Fill>
+              </Shape>
+              <Shape x="-40" y="12" name="emitULight1" id="0:671">
+                <Ellipse width="12" height="12" name="Path" id="0:670"/>
+                <Fill name="Fill" id="0:669">
+                  <SolidColor colorValue="FFFFE060" name="emit" id="0:668"/>
+                </Fill>
+              </Shape>
+              <Shape x="0" y="12" name="emitULight2" id="0:675">
+                <Ellipse width="12" height="12" name="Path" id="0:674"/>
+                <Fill name="Fill" id="0:673">
+                  <SolidColor colorValue="FFFFE060" name="emit" id="0:672"/>
+                </Fill>
+              </Shape>
+              <Shape x="40" y="12" name="emitULight3" id="0:679">
+                <Ellipse width="12" height="12" name="Path" id="0:678"/>
+                <Fill name="Fill" id="0:677">
+                  <SolidColor colorValue="FFFFE060" name="emit" id="0:676"/>
+                </Fill>
+              </Shape>
+              <Shape x="80" y="12" name="emitULight4" id="0:683">
+                <Ellipse width="12" height="12" name="Path" id="0:682"/>
+                <Fill name="Fill" id="0:681">
+                  <SolidColor colorValue="FFFFE060" name="emit" id="0:680"/>
+                </Fill>
+              </Shape>
+              <Shape x="0" y="-38" name="Dome" id="0:706">
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:705">
+                  <CubicDetachedVertex x="-54" y="28" outRotation="-2.7393" outDistance="9.5965" inRotation="0.4023" inDistance="24.4558" id="0:700"/>
+                  <CubicDetachedVertex x="-40" y="-12" outRotation="-0.8036" outDistance="13.0723" inRotation="2.338" inDistance="12.8593" id="0:701"/>
+                  <CubicDetachedVertex x="0" y="-28" outRotation="0" outDistance="13.3333" inRotation="3.1416" inDistance="13.3333" id="0:702"/>
+                  <CubicDetachedVertex x="40" y="-12" outRotation="0.8036" outDistance="12.8593" inRotation="3.9452" inDistance="13.0723" id="0:703"/>
+                  <CubicDetachedVertex x="54" y="28" outRotation="2.7393" outDistance="24.4558" inRotation="5.8809" inDistance="9.5965" id="0:704"/>
+                </PointsPath>
+                <Fill name="Fill" id="0:697">
+                  <LinearGradient startX="0" startY="-30" endX="0" endY="30" id="0:696">
+                    <GradientStop colorValue="CCAEE2F0" position="0" id="0:694"/>
+                    <GradientStop colorValue="886AA8D0" position="1" id="0:695"/>
+                  </LinearGradient>
+                </Fill>
+                <Stroke thickness="1.8" cap="round" join="round" name="Line" id="0:699">
+                  <SolidColor colorValue="FF2A3450" id="0:698"/>
+                </Stroke>
+              </Shape>
+              <Node x="0" y="-14" opacity="0" name="AlienNpc" id="0:930097">
+                <Node x="0" y="0" name="AlienBob" id="0:930096">
+                  <Node x="10" y="-10" opacity="0" name="AlienArm" id="0:930087">
+                    <Shape x="9" y="-22" name="AlienHand" id="0:930079">
+                      <Ellipse width="8" height="8" name="Path" id="0:930078"/>
+                      <Fill name="Fill" id="0:930075">
+                        <SolidColor colorValue="FF8EE884" id="0:930074"/>
+                      </Fill>
+                      <Stroke thickness="1.152" cap="round" join="round" name="Line" id="0:930077">
+                        <SolidColor colorValue="FF24502E" id="0:930076"/>
+                      </Stroke>
+                    </Shape>
+                    <Shape x="0" y="0" name="AlienArmShape" id="0:930086">
+                      <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:930085">
+                        <CubicDetachedVertex x="0" y="0" outRotation="-0.9098" outDistance="3.8006" inRotation="2.2318" inDistance="0" id="0:930082"/>
+                        <CubicDetachedVertex x="7" y="-9" outRotation="-1.1284" outDistance="3.3087" inRotation="2.0132" inDistance="3.6992" id="0:930083"/>
+                        <CubicDetachedVertex x="9" y="-19" outRotation="-1.3734" outDistance="0" inRotation="1.7682" inDistance="3.3993" id="0:930084"/>
+                      </PointsPath>
+                      <Stroke thickness="3.24" cap="round" join="round" name="Line" id="0:930081">
+                        <SolidColor colorValue="FF4FB45E" id="0:930080"/>
+                      </Stroke>
+                    </Shape>
+                  </Node>
+                  <Node x="0" y="-22" name="AlienHead" id="0:930073">
+                    <Node x="0" y="0" name="AlienEyes" id="0:930031">
+                      <Shape x="-8.6" y="-3.2" name="AlienGlint0" id="0:930018">
+                        <Ellipse width="3.2" height="3.2" name="Path" id="0:930017"/>
+                        <Fill name="Fill" id="0:930016">
+                          <SolidColor colorValue="D8FFFFFF" id="0:930015"/>
+                        </Fill>
+                      </Shape>
+                      <Shape x="-7" y="0" name="AlienEye0" rotation="-0.25" id="0:930022">
+                        <Ellipse width="10" height="13" name="Path" id="0:930021"/>
+                        <Fill name="Fill" id="0:930020">
+                          <SolidColor colorValue="FF101820" id="0:930019"/>
+                        </Fill>
+                      </Shape>
+                      <Shape x="5.4" y="-3.2" name="AlienGlint1" id="0:930026">
+                        <Ellipse width="3.2" height="3.2" name="Path" id="0:930025"/>
+                        <Fill name="Fill" id="0:930024">
+                          <SolidColor colorValue="D8FFFFFF" id="0:930023"/>
+                        </Fill>
+                      </Shape>
+                      <Shape x="7" y="0" name="AlienEye1" rotation="0.25" id="0:930030">
+                        <Ellipse width="10" height="13" name="Path" id="0:930029"/>
+                        <Fill name="Fill" id="0:930028">
+                          <SolidColor colorValue="FF101820" id="0:930027"/>
+                        </Fill>
+                      </Shape>
+                    </Node>
+                    <Shape x="0" y="-3.5" name="AlienHeadShape" id="0:930072">
+                      <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:930071">
+                        <CubicDetachedVertex x="-15" y="6.5" outRotation="-2.1588" outDistance="2.8826" inRotation="0.9828" inDistance="3.1266" id="0:930062"/>
+                        <CubicDetachedVertex x="-17" y="-2.5" outRotation="-1.2847" outDistance="3.1632" inRotation="1.8568" inDistance="2.7435" id="0:930063"/>
+                        <CubicDetachedVertex x="-10" y="-10.5" outRotation="-0.5317" outDistance="3.219" inRotation="2.6099" inDistance="3.3554" id="0:930064"/>
+                        <CubicDetachedVertex x="0" y="-12.5" outRotation="0" outDistance="3.3333" inRotation="3.1416" inDistance="3.3333" id="0:930065"/>
+                        <CubicDetachedVertex x="10" y="-10.5" outRotation="0.5317" outDistance="3.3554" inRotation="3.6733" inDistance="3.219" id="0:930066"/>
+                        <CubicDetachedVertex x="17" y="-2.5" outRotation="1.2847" outDistance="2.7435" inRotation="4.4263" inDistance="3.1632" id="0:930067"/>
+                        <CubicDetachedVertex x="15" y="6.5" outRotation="2.1588" outDistance="3.1266" inRotation="5.3004" inDistance="2.8826" id="0:930068"/>
+                        <CubicDetachedVertex x="7" y="12.5" outRotation="2.8753" outDistance="4.434" inRotation="6.0169" inDistance="3.1672" id="0:930069"/>
+                        <CubicDetachedVertex x="-7" y="12.5" outRotation="-2.8753" outDistance="3.1672" inRotation="0.2663" inDistance="4.434" id="0:930070"/>
+                      </PointsPath>
+                      <Fill name="Fill" id="0:930059">
+                        <LinearGradient startX="0" startY="-14" endX="0" endY="10" id="0:930058">
+                          <GradientStop colorValue="FF8EE884" position="0" id="0:930056"/>
+                          <GradientStop colorValue="FF4FB45E" position="1" id="0:930057"/>
+                        </LinearGradient>
+                      </Fill>
+                      <Stroke thickness="1.44" cap="round" join="round" name="Line" id="0:930061">
+                        <SolidColor colorValue="FF24502E" id="0:930060"/>
+                      </Stroke>
+                    </Shape>
+                    <Node x="-6" y="-13" name="AlienAntenna0" id="0:930043">
+                      <Shape x="-5" y="-12" name="AlienBulb0" id="0:930035">
+                        <Ellipse width="5.5" height="5.5" name="Path" id="0:930034"/>
+                        <Fill name="Fill" id="0:930033">
+                          <SolidColor colorValue="FFF2DE68" id="0:930032"/>
+                        </Fill>
+                      </Shape>
+                      <Shape x="0" y="0" name="AlienStalk0" id="0:930042">
+                        <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:930041">
+                          <CubicDetachedVertex x="0" y="0" outRotation="-1.8925" outDistance="2.1082" inRotation="1.249" inDistance="0" id="0:930038"/>
+                          <CubicDetachedVertex x="-2" y="-6" outRotation="-1.9974" outDistance="1.9321" inRotation="1.1442" inDistance="2.0956" id="0:930039"/>
+                          <CubicDetachedVertex x="-5" y="-11" outRotation="-2.1112" outDistance="0" inRotation="1.0304" inDistance="1.9437" id="0:930040"/>
+                        </PointsPath>
+                        <Stroke thickness="1.872" cap="round" join="round" name="Line" id="0:930037">
+                          <SolidColor colorValue="FF4FB45E" id="0:930036"/>
+                        </Stroke>
+                      </Shape>
+                    </Node>
+                    <Node x="6" y="-13" name="AlienAntenna1" id="0:930055">
+                      <Shape x="5" y="-12" name="AlienBulb1" id="0:930047">
+                        <Ellipse width="5.5" height="5.5" name="Path" id="0:930046"/>
+                        <Fill name="Fill" id="0:930045">
+                          <SolidColor colorValue="FFF2DE68" id="0:930044"/>
+                        </Fill>
+                      </Shape>
+                      <Shape x="0" y="0" name="AlienStalk1" id="0:930054">
+                        <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:930053">
+                          <CubicDetachedVertex x="0" y="0" outRotation="-1.249" outDistance="2.1082" inRotation="1.8925" inDistance="0" id="0:930050"/>
+                          <CubicDetachedVertex x="2" y="-6" outRotation="-1.1442" outDistance="1.9321" inRotation="1.9974" inDistance="2.0956" id="0:930051"/>
+                          <CubicDetachedVertex x="5" y="-11" outRotation="-1.0304" outDistance="0" inRotation="2.1112" inDistance="1.9437" id="0:930052"/>
+                        </PointsPath>
+                        <Stroke thickness="1.872" cap="round" join="round" name="Line" id="0:930049">
+                          <SolidColor colorValue="FF4FB45E" id="0:930048"/>
+                        </Stroke>
+                      </Shape>
+                    </Node>
+                  </Node>
+                  <Shape x="0" y="-6" name="AlienTorso" id="0:930095">
+                    <Ellipse width="18" height="15" name="Path" id="0:930094"/>
+                    <Fill name="Fill" id="0:930091">
+                      <LinearGradient startX="0" startY="-8" endX="0" endY="8" id="0:930090">
+                        <GradientStop colorValue="FF8EE884" position="0" id="0:930088"/>
+                        <GradientStop colorValue="FF4FB45E" position="1" id="0:930089"/>
+                      </LinearGradient>
+                    </Fill>
+                    <Stroke thickness="1.296" cap="round" join="round" name="Line" id="0:930093">
+                      <SolidColor colorValue="FF24502E" id="0:930092"/>
+                    </Stroke>
+                  </Shape>
+                </Node>
+              </Node>
+              <Shape x="0" y="-30" name="Alien" id="0:710">
+                <Ellipse width="30" height="34" name="Path" id="0:709"/>
+                <Fill name="Fill" id="0:708">
+                  <SolidColor colorValue="FF7AE070" id="0:707"/>
+                </Fill>
+              </Shape>
+              <Shape x="0" y="4" name="Saucer" id="0:718">
+                <Ellipse width="220" height="54" name="Path" id="0:717"/>
+                <Fill name="Fill" id="0:714">
+                  <RadialGradient startX="0" startY="-14" endX="110" endY="-14" id="0:713">
+                    <GradientStop colorValue="FFE0E6F0" position="0" id="0:711"/>
+                    <GradientStop colorValue="FF7A8498" position="1" id="0:712"/>
+                  </RadialGradient>
+                </Fill>
+                <Stroke thickness="1.8" cap="round" join="round" name="Line" id="0:716">
+                  <SolidColor colorValue="FF2A3450" id="0:715"/>
+                </Stroke>
+              </Shape>
+              <Shape x="0" y="160" name="Beam" id="0:693">
+                <Shape x="0" y="0" name="BeamFalloff11" id="0:3482">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3481">
+                    <CubicDetachedVertex x="-21" y="-140" outRotation="-1.2966" outDistance="12.5526" inRotation="1.845" inDistance="84.4019" id="0:3477"/>
+                    <CubicDetachedVertex x="21" y="-140" outRotation="1.2966" outDistance="84.4019" inRotation="4.4382" inDistance="12.5526" id="0:3478"/>
+                    <CubicDetachedVertex x="57.75" y="140" outRotation="1.845" outDistance="28.1433" inRotation="4.9866" inDistance="68.8112" id="0:3479"/>
+                    <CubicDetachedVertex x="-57.75" y="140" outRotation="-1.845" outDistance="68.8112" inRotation="1.2966" inDistance="28.1433" id="0:3480"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3476">
+                    <LinearGradient startX="0" startY="-165.3" endX="0" endY="191.7" id="0:3475">
+                      <GradientStop colorValue="129CEED7" position="0" id="0:3471"/>
+                      <GradientStop colorValue="0E88D5CB" position="0.301" id="0:3472"/>
+                      <GradientStop colorValue="0379BDC7" position="0.808" id="0:3473"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3474"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff10" id="0:3470">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3469">
+                    <CubicDetachedVertex x="-23.6" y="-140" outRotation="-1.2647" outDistance="13.9907" inRotation="1.8769" inDistance="83.8937" id="0:3465"/>
+                    <CubicDetachedVertex x="23.6" y="-140" outRotation="1.2647" outDistance="83.8937" inRotation="4.4063" inDistance="13.9907" id="0:3466"/>
+                    <CubicDetachedVertex x="64.9" y="140" outRotation="1.8769" outDistance="30.7764" inRotation="5.0185" inDistance="67.108" id="0:3467"/>
+                    <CubicDetachedVertex x="-64.9" y="140" outRotation="-1.8769" outDistance="67.108" inRotation="1.2647" inDistance="30.7764" id="0:3468"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3464">
+                    <LinearGradient startX="0" startY="-163" endX="0" endY="187" id="0:3463">
+                      <GradientStop colorValue="119CEED7" position="0" id="0:3459"/>
+                      <GradientStop colorValue="0D88D5CB" position="0.29" id="0:3460"/>
+                      <GradientStop colorValue="0379BDC7" position="0.8" id="0:3461"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3462"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff9" id="0:3458">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3457">
+                    <CubicDetachedVertex x="-26.2" y="-140" outRotation="-1.2333" outDistance="15.4197" inRotation="1.9083" inDistance="83.4927" id="0:3453"/>
+                    <CubicDetachedVertex x="26.2" y="-140" outRotation="1.2333" outDistance="83.4927" inRotation="4.3749" inDistance="15.4197" id="0:3454"/>
+                    <CubicDetachedVertex x="72.05" y="140" outRotation="1.9083" outDistance="33.3154" inRotation="5.0499" inDistance="65.5971" id="0:3455"/>
+                    <CubicDetachedVertex x="-72.05" y="140" outRotation="-1.9083" outDistance="65.5971" inRotation="1.2333" inDistance="33.3154" id="0:3456"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3452">
+                    <LinearGradient startX="0" startY="-160.7" endX="0" endY="182.3" id="0:3451">
+                      <GradientStop colorValue="109CEED7" position="0" id="0:3447"/>
+                      <GradientStop colorValue="0C88D5CB" position="0.279" id="0:3448"/>
+                      <GradientStop colorValue="0379BDC7" position="0.792" id="0:3449"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3450"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff8" id="0:3446">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3445">
+                    <CubicDetachedVertex x="-28.8" y="-140" outRotation="-1.2027" outDistance="16.8432" inRotation="1.9389" inDistance="83.1924" id="0:3441"/>
+                    <CubicDetachedVertex x="28.8" y="-140" outRotation="1.2027" outDistance="83.1924" inRotation="4.3443" inDistance="16.8432" id="0:3442"/>
+                    <CubicDetachedVertex x="79.2" y="140" outRotation="1.9389" outDistance="35.777" inRotation="5.0805" inDistance="64.2585" id="0:3443"/>
+                    <CubicDetachedVertex x="-79.2" y="140" outRotation="-1.9389" outDistance="64.2585" inRotation="1.2027" inDistance="35.777" id="0:3444"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3440">
+                    <LinearGradient startX="0" startY="-158.4" endX="0" endY="177.6" id="0:3439">
+                      <GradientStop colorValue="0F9CEED7" position="0" id="0:3435"/>
+                      <GradientStop colorValue="0B88D5CB" position="0.268" id="0:3436"/>
+                      <GradientStop colorValue="0279BDC7" position="0.784" id="0:3437"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3438"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff7" id="0:3434">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3433">
+                    <CubicDetachedVertex x="-31.4" y="-140" outRotation="-1.1727" outDistance="18.2642" inRotation="1.9689" inDistance="82.9863" id="0:3429"/>
+                    <CubicDetachedVertex x="31.4" y="-140" outRotation="1.1727" outDistance="82.9863" inRotation="4.3143" inDistance="18.2642" id="0:3430"/>
+                    <CubicDetachedVertex x="86.35" y="140" outRotation="1.9689" outDistance="38.1756" inRotation="5.1105" inDistance="63.075" id="0:3431"/>
+                    <CubicDetachedVertex x="-86.35" y="140" outRotation="-1.9689" outDistance="63.075" inRotation="1.1727" inDistance="38.1756" id="0:3432"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3428">
+                    <LinearGradient startX="0" startY="-156.1" endX="0" endY="172.9" id="0:3427">
+                      <GradientStop colorValue="0E9CEED7" position="0" id="0:3423"/>
+                      <GradientStop colorValue="0A88D5CB" position="0.257" id="0:3424"/>
+                      <GradientStop colorValue="0279BDC7" position="0.776" id="0:3425"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3426"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff6" id="0:3422">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3421">
+                    <CubicDetachedVertex x="-34" y="-140" outRotation="-1.1435" outDistance="19.6857" inRotation="1.9981" inDistance="82.8685" id="0:3417"/>
+                    <CubicDetachedVertex x="34" y="-140" outRotation="1.1435" outDistance="82.8685" inRotation="4.2851" inDistance="19.6857" id="0:3418"/>
+                    <CubicDetachedVertex x="93.5" y="140" outRotation="1.9981" outDistance="40.5231" inRotation="5.1397" inDistance="62.0311" id="0:3419"/>
+                    <CubicDetachedVertex x="-93.5" y="140" outRotation="-1.9981" outDistance="62.0311" inRotation="1.1435" inDistance="40.5231" id="0:3420"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3416">
+                    <LinearGradient startX="0" startY="-153.8" endX="0" endY="168.2" id="0:3415">
+                      <GradientStop colorValue="0D9CEED7" position="0" id="0:3411"/>
+                      <GradientStop colorValue="0A88D5CB" position="0.246" id="0:3412"/>
+                      <GradientStop colorValue="0279BDC7" position="0.768" id="0:3413"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3414"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff5" id="0:3410">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3409">
+                    <CubicDetachedVertex x="-36.6" y="-140" outRotation="-1.115" outDistance="21.1098" inRotation="2.0266" inDistance="82.8334" id="0:3405"/>
+                    <CubicDetachedVertex x="36.6" y="-140" outRotation="1.115" outDistance="82.8334" inRotation="4.2566" inDistance="21.1098" id="0:3406"/>
+                    <CubicDetachedVertex x="100.65" y="140" outRotation="2.0266" outDistance="42.8298" inRotation="5.1681" inDistance="61.1133" id="0:3407"/>
+                    <CubicDetachedVertex x="-100.65" y="140" outRotation="-2.0266" outDistance="61.1133" inRotation="1.115" inDistance="42.8298" id="0:3408"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3404">
+                    <LinearGradient startX="0" startY="-151.5" endX="0" endY="163.5" id="0:3403">
+                      <GradientStop colorValue="0C9CEED7" position="0" id="0:3399"/>
+                      <GradientStop colorValue="0988D5CB" position="0.235" id="0:3400"/>
+                      <GradientStop colorValue="0279BDC7" position="0.76" id="0:3401"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3402"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff4" id="0:3398">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3397">
+                    <CubicDetachedVertex x="-39.2" y="-140" outRotation="-1.0873" outDistance="22.5385" inRotation="2.0542" inDistance="82.8755" id="0:3393"/>
+                    <CubicDetachedVertex x="39.2" y="-140" outRotation="1.0873" outDistance="82.8755" inRotation="4.2289" inDistance="22.5385" id="0:3394"/>
+                    <CubicDetachedVertex x="107.8" y="140" outRotation="2.0542" outDistance="45.1044" inRotation="5.1958" inDistance="60.3096" id="0:3395"/>
+                    <CubicDetachedVertex x="-107.8" y="140" outRotation="-2.0542" outDistance="60.3096" inRotation="1.0873" inDistance="45.1044" id="0:3396"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3392">
+                    <LinearGradient startX="0" startY="-149.2" endX="0" endY="158.8" id="0:3391">
+                      <GradientStop colorValue="0B9CEED7" position="0" id="0:3387"/>
+                      <GradientStop colorValue="0888D5CB" position="0.224" id="0:3388"/>
+                      <GradientStop colorValue="0279BDC7" position="0.752" id="0:3389"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3390"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff3" id="0:3386">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3385">
+                    <CubicDetachedVertex x="-41.8" y="-140" outRotation="-1.0604" outDistance="23.9737" inRotation="2.0811" inDistance="82.9897" id="0:3381"/>
+                    <CubicDetachedVertex x="41.8" y="-140" outRotation="1.0604" outDistance="82.9897" inRotation="4.202" inDistance="23.9737" id="0:3382"/>
+                    <CubicDetachedVertex x="114.95" y="140" outRotation="2.0811" outDistance="47.3541" inRotation="5.2227" inDistance="59.6093" id="0:3383"/>
+                    <CubicDetachedVertex x="-114.95" y="140" outRotation="-2.0811" outDistance="59.6093" inRotation="1.0604" inDistance="47.3541" id="0:3384"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3380">
+                    <LinearGradient startX="0" startY="-146.9" endX="0" endY="154.1" id="0:3379">
+                      <GradientStop colorValue="0A9CEED7" position="0" id="0:3375"/>
+                      <GradientStop colorValue="0888D5CB" position="0.213" id="0:3376"/>
+                      <GradientStop colorValue="0279BDC7" position="0.744" id="0:3377"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3378"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff2" id="0:3374">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3373">
+                    <CubicDetachedVertex x="-44.4" y="-140" outRotation="-1.0343" outDistance="25.4167" inRotation="2.1073" inDistance="83.1713" id="0:3369"/>
+                    <CubicDetachedVertex x="44.4" y="-140" outRotation="1.0343" outDistance="83.1713" inRotation="4.1759" inDistance="25.4167" id="0:3370"/>
+                    <CubicDetachedVertex x="122.1" y="140" outRotation="2.1073" outDistance="49.5852" inRotation="5.2489" inDistance="59.0029" id="0:3371"/>
+                    <CubicDetachedVertex x="-122.1" y="140" outRotation="-2.1073" outDistance="59.0029" inRotation="1.0343" inDistance="49.5852" id="0:3372"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3368">
+                    <LinearGradient startX="0" startY="-144.6" endX="0" endY="149.4" id="0:3367">
+                      <GradientStop colorValue="099CEED7" position="0" id="0:3363"/>
+                      <GradientStop colorValue="0788D5CB" position="0.202" id="0:3364"/>
+                      <GradientStop colorValue="0179BDC7" position="0.736" id="0:3365"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3366"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff1" id="0:3362">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3361">
+                    <CubicDetachedVertex x="-47" y="-140" outRotation="-1.009" outDistance="26.8686" inRotation="2.1326" inDistance="83.4159" id="0:3357"/>
+                    <CubicDetachedVertex x="47" y="-140" outRotation="1.009" outDistance="83.4159" inRotation="4.1506" inDistance="26.8686" id="0:3358"/>
+                    <CubicDetachedVertex x="129.25" y="140" outRotation="2.1326" outDistance="51.8026" inRotation="5.2742" inDistance="58.4819" id="0:3359"/>
+                    <CubicDetachedVertex x="-129.25" y="140" outRotation="-2.1326" outDistance="58.4819" inRotation="1.009" inDistance="51.8026" id="0:3360"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3356">
+                    <LinearGradient startX="0" startY="-142.3" endX="0" endY="144.7" id="0:3355">
+                      <GradientStop colorValue="089CEED7" position="0" id="0:3351"/>
+                      <GradientStop colorValue="0688D5CB" position="0.191" id="0:3352"/>
+                      <GradientStop colorValue="0179BDC7" position="0.728" id="0:3353"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3354"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <Shape x="0" y="0" name="BeamFalloff0" id="0:3350">
+                  <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:3349">
+                    <CubicDetachedVertex x="-49.6" y="-140" outRotation="-0.9844" outDistance="28.3304" inRotation="2.1571" inDistance="83.7191" id="0:3345"/>
+                    <CubicDetachedVertex x="49.6" y="-140" outRotation="0.9844" outDistance="83.7191" inRotation="4.126" inDistance="28.3304" id="0:3346"/>
+                    <CubicDetachedVertex x="136.4" y="140" outRotation="2.1571" outDistance="54.0107" inRotation="5.2987" inDistance="58.0389" id="0:3347"/>
+                    <CubicDetachedVertex x="-136.4" y="140" outRotation="-2.1571" outDistance="58.0389" inRotation="0.9844" inDistance="54.0107" id="0:3348"/>
+                  </PointsPath>
+                  <Fill name="Fill" id="0:3344">
+                    <LinearGradient startX="0" startY="-140" endX="0" endY="140" id="0:3343">
+                      <GradientStop colorValue="079CEED7" position="0" id="0:3339"/>
+                      <GradientStop colorValue="0588D5CB" position="0.18" id="0:3340"/>
+                      <GradientStop colorValue="0179BDC7" position="0.72" id="0:3341"/>
+                      <GradientStop colorValue="0079BDC7" position="1" id="0:3342"/>
+                    </LinearGradient>
+                  </Fill>
+                </Shape>
+                <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:692">
+                  <CubicDetachedVertex x="-40" y="-140" outRotation="-1.079" outDistance="22.9794" inRotation="2.0626" inDistance="82.9031" id="0:688"/>
+                  <CubicDetachedVertex x="40" y="-140" outRotation="1.079" outDistance="82.9031" inRotation="4.2206" inDistance="22.9794" id="0:689"/>
+                  <CubicDetachedVertex x="110" y="140" outRotation="2.0626" outDistance="45.799" inRotation="5.2042" inDistance="60.0836" id="0:690"/>
+                  <CubicDetachedVertex x="-110" y="140" outRotation="-2.0626" outDistance="60.0836" inRotation="1.079" inDistance="45.799" id="0:691"/>
+                </PointsPath>
+              </Shape>
+            </Node>
+          </Node>
         </Node>
       </Node>
     </Node>
@@ -5129,6 +5385,595 @@
         </KeyedProperty>
       </KeyedObject>
     </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" loopValue="loop" name="npc_alien_rest" id="0:930484">
+      <KeyedObject objectId="0:710" id="0:930450">
+        <KeyedProperty property="opacity" id="0:930449">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930448"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930031" id="0:930457">
+        <KeyedProperty property="x" id="0:930452">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930451"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930454">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930453"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930456">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930455"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930043" id="0:930460">
+        <KeyedProperty property="rotation" id="0:930459">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930458"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930055" id="0:930463">
+        <KeyedProperty property="rotation" id="0:930462">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930461"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930087" id="0:930468">
+        <KeyedProperty property="opacity" id="0:930465">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930464"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930467">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930466"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930096" id="0:930477">
+        <KeyedProperty property="y" id="0:930470">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930469"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930472">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930471"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930474">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930473"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930476">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930475"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930097" id="0:930480">
+        <KeyedProperty property="opacity" id="0:930479">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930478"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930099" id="0:930483">
+        <KeyedProperty property="rotation" id="0:930482">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930481"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" loopValue="loop" name="npc_alien_away" id="0:930521">
+      <KeyedObject objectId="0:710" id="0:930487">
+        <KeyedProperty property="opacity" id="0:930486">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930485"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930031" id="0:930494">
+        <KeyedProperty property="x" id="0:930489">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930488"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930491">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930490"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930493">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930492"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930043" id="0:930497">
+        <KeyedProperty property="rotation" id="0:930496">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930495"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930055" id="0:930500">
+        <KeyedProperty property="rotation" id="0:930499">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930498"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930087" id="0:930505">
+        <KeyedProperty property="opacity" id="0:930502">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930501"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930504">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930503"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930096" id="0:930514">
+        <KeyedProperty property="y" id="0:930507">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930506"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930509">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930508"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930511">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930510"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930513">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930512"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930097" id="0:930517">
+        <KeyedProperty property="opacity" id="0:930516">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930515"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930099" id="0:930520">
+        <KeyedProperty property="rotation" id="0:930519">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930518"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="240" fps="60" loopValue="loop" name="npc_alien_idle" id="0:930594">
+      <KeyedObject objectId="0:710" id="0:930524">
+        <KeyedProperty property="opacity" id="0:930523">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930522"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930031" id="0:930537">
+        <KeyedProperty property="x" id="0:930532">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930525"/>
+          <KeyFrameDouble frame="1" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930584"/>
+          <KeyFrameDouble frame="40" value="-3.5" interpolationType="cubic" interpolatorId="0:10" id="0:930526"/>
+          <KeyFrameDouble frame="90" value="-3.5" interpolationType="cubic" interpolatorId="0:10" id="0:930527"/>
+          <KeyFrameDouble frame="110" value="3.5" interpolationType="cubic" interpolatorId="0:10" id="0:930528"/>
+          <KeyFrameDouble frame="160" value="3.5" interpolationType="cubic" interpolatorId="0:10" id="0:930529"/>
+          <KeyFrameDouble frame="180" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930530"/>
+          <KeyFrameDouble frame="239" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930585"/>
+          <KeyFrameDouble frame="240" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930531"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930534">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930533"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930536">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930535"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930043" id="0:930545">
+        <KeyedProperty property="rotation" id="0:930544">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930538"/>
+          <KeyFrameDouble frame="1" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930586"/>
+          <KeyFrameDouble frame="40" value="-0.3" interpolationType="cubic" interpolatorId="0:10" id="0:930539"/>
+          <KeyFrameDouble frame="70" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930540"/>
+          <KeyFrameDouble frame="100" value="-0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930541"/>
+          <KeyFrameDouble frame="130" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930542"/>
+          <KeyFrameDouble frame="239" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930587"/>
+          <KeyFrameDouble frame="240" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930543"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930055" id="0:930553">
+        <KeyedProperty property="rotation" id="0:930552">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930546"/>
+          <KeyFrameDouble frame="1" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930588"/>
+          <KeyFrameDouble frame="50" value="0.3" interpolationType="cubic" interpolatorId="0:10" id="0:930547"/>
+          <KeyFrameDouble frame="80" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930548"/>
+          <KeyFrameDouble frame="110" value="0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930549"/>
+          <KeyFrameDouble frame="140" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930550"/>
+          <KeyFrameDouble frame="239" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930589"/>
+          <KeyFrameDouble frame="240" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930551"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930087" id="0:930558">
+        <KeyedProperty property="opacity" id="0:930555">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930554"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930557">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930556"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930096" id="0:930577">
+        <KeyedProperty property="y" id="0:930564">
+          <KeyFrameDouble frame="0" value="9" interpolationType="cubic" interpolatorId="0:10" id="0:930559"/>
+          <KeyFrameDouble frame="1" value="9" interpolationType="cubic" interpolatorId="0:10" id="0:930590"/>
+          <KeyFrameDouble frame="30" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930560"/>
+          <KeyFrameDouble frame="200" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930561"/>
+          <KeyFrameDouble frame="232" value="9" interpolationType="cubic" interpolatorId="0:10" id="0:930562"/>
+          <KeyFrameDouble frame="239" value="9" interpolationType="cubic" interpolatorId="0:10" id="0:930591"/>
+          <KeyFrameDouble frame="240" value="9" interpolationType="cubic" interpolatorId="0:10" id="0:930563"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930572">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930565"/>
+          <KeyFrameDouble frame="1" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930592"/>
+          <KeyFrameDouble frame="50" value="-0.08" interpolationType="cubic" interpolatorId="0:10" id="0:930566"/>
+          <KeyFrameDouble frame="90" value="-0.08" interpolationType="cubic" interpolatorId="0:10" id="0:930567"/>
+          <KeyFrameDouble frame="110" value="0.08" interpolationType="cubic" interpolatorId="0:10" id="0:930568"/>
+          <KeyFrameDouble frame="160" value="0.08" interpolationType="cubic" interpolatorId="0:10" id="0:930569"/>
+          <KeyFrameDouble frame="180" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930570"/>
+          <KeyFrameDouble frame="239" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930593"/>
+          <KeyFrameDouble frame="240" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930571"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930574">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930573"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930576">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930575"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930097" id="0:930580">
+        <KeyedProperty property="opacity" id="0:930579">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930578"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930099" id="0:930583">
+        <KeyedProperty property="rotation" id="0:930582">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930581"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="120" fps="60" loopValue="loop" name="npc_alien_move" id="0:930649">
+      <KeyedObject objectId="0:710" id="0:930597">
+        <KeyedProperty property="opacity" id="0:930596">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930595"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930031" id="0:930604">
+        <KeyedProperty property="x" id="0:930599">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930598"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930601">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930600"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930603">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930602"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930043" id="0:930609">
+        <KeyedProperty property="rotation" id="0:930608">
+          <KeyFrameDouble frame="0" value="0.2" interpolationType="cubic" interpolatorId="0:10" id="0:930605"/>
+          <KeyFrameDouble frame="1" value="0.2" interpolationType="cubic" interpolatorId="0:10" id="0:930641"/>
+          <KeyFrameDouble frame="60" value="0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930606"/>
+          <KeyFrameDouble frame="119" value="0.2" interpolationType="cubic" interpolatorId="0:10" id="0:930642"/>
+          <KeyFrameDouble frame="120" value="0.2" interpolationType="cubic" interpolatorId="0:10" id="0:930607"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930055" id="0:930614">
+        <KeyedProperty property="rotation" id="0:930613">
+          <KeyFrameDouble frame="0" value="0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930610"/>
+          <KeyFrameDouble frame="1" value="0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930643"/>
+          <KeyFrameDouble frame="60" value="0.2" interpolationType="cubic" interpolatorId="0:10" id="0:930611"/>
+          <KeyFrameDouble frame="119" value="0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930644"/>
+          <KeyFrameDouble frame="120" value="0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930612"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930087" id="0:930619">
+        <KeyedProperty property="opacity" id="0:930616">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930615"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930618">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930617"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930096" id="0:930631">
+        <KeyedProperty property="y" id="0:930621">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930620"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930626">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930622"/>
+          <KeyFrameDouble frame="1" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930645"/>
+          <KeyFrameDouble frame="30" value="0.08" interpolationType="cubic" interpolatorId="0:10" id="0:930623"/>
+          <KeyFrameDouble frame="90" value="-0.08" interpolationType="cubic" interpolatorId="0:10" id="0:930624"/>
+          <KeyFrameDouble frame="119" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930646"/>
+          <KeyFrameDouble frame="120" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930625"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930628">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930627"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930630">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930629"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930097" id="0:930634">
+        <KeyedProperty property="opacity" id="0:930633">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930632"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930099" id="0:930640">
+        <KeyedProperty property="rotation" id="0:930639">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930635"/>
+          <KeyFrameDouble frame="1" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930647"/>
+          <KeyFrameDouble frame="30" value="-0.05" interpolationType="cubic" interpolatorId="0:10" id="0:930636"/>
+          <KeyFrameDouble frame="90" value="0.05" interpolationType="cubic" interpolatorId="0:10" id="0:930637"/>
+          <KeyFrameDouble frame="119" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930648"/>
+          <KeyFrameDouble frame="120" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930638"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="120" fps="60" loopValue="loop" name="npc_alien_noticeL" id="0:930698">
+      <KeyedObject objectId="0:710" id="0:930652">
+        <KeyedProperty property="opacity" id="0:930651">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930650"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930031" id="0:930659">
+        <KeyedProperty property="x" id="0:930654">
+          <KeyFrameDouble frame="0" value="-3.5" interpolationType="cubic" interpolatorId="0:10" id="0:930653"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930656">
+          <KeyFrameDouble frame="0" value="1.18" interpolationType="cubic" interpolatorId="0:10" id="0:930655"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930658">
+          <KeyFrameDouble frame="0" value="1.18" interpolationType="cubic" interpolatorId="0:10" id="0:930657"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930043" id="0:930664">
+        <KeyedProperty property="rotation" id="0:930663">
+          <KeyFrameDouble frame="0" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930660"/>
+          <KeyFrameDouble frame="1" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930692"/>
+          <KeyFrameDouble frame="60" value="-0.25" interpolationType="cubic" interpolatorId="0:10" id="0:930661"/>
+          <KeyFrameDouble frame="119" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930693"/>
+          <KeyFrameDouble frame="120" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930662"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930055" id="0:930669">
+        <KeyedProperty property="rotation" id="0:930668">
+          <KeyFrameDouble frame="0" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930665"/>
+          <KeyFrameDouble frame="1" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930694"/>
+          <KeyFrameDouble frame="60" value="0.25" interpolationType="cubic" interpolatorId="0:10" id="0:930666"/>
+          <KeyFrameDouble frame="119" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930695"/>
+          <KeyFrameDouble frame="120" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930667"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930087" id="0:930674">
+        <KeyedProperty property="opacity" id="0:930671">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930670"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930673">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930672"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930096" id="0:930685">
+        <KeyedProperty property="y" id="0:930676">
+          <KeyFrameDouble frame="0" value="-2" interpolationType="cubic" interpolatorId="0:10" id="0:930675"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930680">
+          <KeyFrameDouble frame="0" value="-0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930677"/>
+          <KeyFrameDouble frame="1" value="-0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930696"/>
+          <KeyFrameDouble frame="60" value="-0.07" interpolationType="cubic" interpolatorId="0:10" id="0:930678"/>
+          <KeyFrameDouble frame="119" value="-0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930697"/>
+          <KeyFrameDouble frame="120" value="-0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930679"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930682">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930681"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930684">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930683"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930097" id="0:930688">
+        <KeyedProperty property="opacity" id="0:930687">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930686"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930099" id="0:930691">
+        <KeyedProperty property="rotation" id="0:930690">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930689"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="120" fps="60" loopValue="loop" name="npc_alien_noticeC" id="0:930747">
+      <KeyedObject objectId="0:710" id="0:930701">
+        <KeyedProperty property="opacity" id="0:930700">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930699"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930031" id="0:930708">
+        <KeyedProperty property="x" id="0:930703">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930702"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930705">
+          <KeyFrameDouble frame="0" value="1.18" interpolationType="cubic" interpolatorId="0:10" id="0:930704"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930707">
+          <KeyFrameDouble frame="0" value="1.18" interpolationType="cubic" interpolatorId="0:10" id="0:930706"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930043" id="0:930713">
+        <KeyedProperty property="rotation" id="0:930712">
+          <KeyFrameDouble frame="0" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930709"/>
+          <KeyFrameDouble frame="1" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930741"/>
+          <KeyFrameDouble frame="60" value="-0.25" interpolationType="cubic" interpolatorId="0:10" id="0:930710"/>
+          <KeyFrameDouble frame="119" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930742"/>
+          <KeyFrameDouble frame="120" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930711"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930055" id="0:930718">
+        <KeyedProperty property="rotation" id="0:930717">
+          <KeyFrameDouble frame="0" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930714"/>
+          <KeyFrameDouble frame="1" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930743"/>
+          <KeyFrameDouble frame="60" value="0.25" interpolationType="cubic" interpolatorId="0:10" id="0:930715"/>
+          <KeyFrameDouble frame="119" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930744"/>
+          <KeyFrameDouble frame="120" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930716"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930087" id="0:930723">
+        <KeyedProperty property="opacity" id="0:930720">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930719"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930722">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930721"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930096" id="0:930734">
+        <KeyedProperty property="y" id="0:930725">
+          <KeyFrameDouble frame="0" value="-2" interpolationType="cubic" interpolatorId="0:10" id="0:930724"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930729">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930726"/>
+          <KeyFrameDouble frame="1" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930745"/>
+          <KeyFrameDouble frame="60" value="0.03" interpolationType="cubic" interpolatorId="0:10" id="0:930727"/>
+          <KeyFrameDouble frame="119" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930746"/>
+          <KeyFrameDouble frame="120" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930728"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930731">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930730"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930733">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930732"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930097" id="0:930737">
+        <KeyedProperty property="opacity" id="0:930736">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930735"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930099" id="0:930740">
+        <KeyedProperty property="rotation" id="0:930739">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930738"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="120" fps="60" loopValue="loop" name="npc_alien_noticeR" id="0:930796">
+      <KeyedObject objectId="0:710" id="0:930750">
+        <KeyedProperty property="opacity" id="0:930749">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930748"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930031" id="0:930757">
+        <KeyedProperty property="x" id="0:930752">
+          <KeyFrameDouble frame="0" value="3.5" interpolationType="cubic" interpolatorId="0:10" id="0:930751"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930754">
+          <KeyFrameDouble frame="0" value="1.18" interpolationType="cubic" interpolatorId="0:10" id="0:930753"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930756">
+          <KeyFrameDouble frame="0" value="1.18" interpolationType="cubic" interpolatorId="0:10" id="0:930755"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930043" id="0:930762">
+        <KeyedProperty property="rotation" id="0:930761">
+          <KeyFrameDouble frame="0" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930758"/>
+          <KeyFrameDouble frame="1" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930790"/>
+          <KeyFrameDouble frame="60" value="-0.25" interpolationType="cubic" interpolatorId="0:10" id="0:930759"/>
+          <KeyFrameDouble frame="119" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930791"/>
+          <KeyFrameDouble frame="120" value="-0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930760"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930055" id="0:930767">
+        <KeyedProperty property="rotation" id="0:930766">
+          <KeyFrameDouble frame="0" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930763"/>
+          <KeyFrameDouble frame="1" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930792"/>
+          <KeyFrameDouble frame="60" value="0.25" interpolationType="cubic" interpolatorId="0:10" id="0:930764"/>
+          <KeyFrameDouble frame="119" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930793"/>
+          <KeyFrameDouble frame="120" value="0.15" interpolationType="cubic" interpolatorId="0:10" id="0:930765"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930087" id="0:930772">
+        <KeyedProperty property="opacity" id="0:930769">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930768"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930771">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930770"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930096" id="0:930783">
+        <KeyedProperty property="y" id="0:930774">
+          <KeyFrameDouble frame="0" value="-2" interpolationType="cubic" interpolatorId="0:10" id="0:930773"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930778">
+          <KeyFrameDouble frame="0" value="0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930775"/>
+          <KeyFrameDouble frame="1" value="0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930794"/>
+          <KeyFrameDouble frame="60" value="0.13" interpolationType="cubic" interpolatorId="0:10" id="0:930776"/>
+          <KeyFrameDouble frame="119" value="0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930795"/>
+          <KeyFrameDouble frame="120" value="0.1" interpolationType="cubic" interpolatorId="0:10" id="0:930777"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930780">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930779"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930782">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930781"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930097" id="0:930786">
+        <KeyedProperty property="opacity" id="0:930785">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930784"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930099" id="0:930789">
+        <KeyedProperty property="rotation" id="0:930788">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930787"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="60" fps="60" loopValue="loop" name="npc_alien_react" id="0:930852">
+      <KeyedObject objectId="0:710" id="0:930799">
+        <KeyedProperty property="opacity" id="0:930798">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930797"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930031" id="0:930810">
+        <KeyedProperty property="x" id="0:930801">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930800"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930803">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930802"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930809">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930804"/>
+          <KeyFrameDouble frame="1" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930846"/>
+          <KeyFrameDouble frame="24" value="1" interpolationType="hold" id="0:930805"/>
+          <KeyFrameDouble frame="25" value="0.25" interpolationType="cubic" interpolatorId="0:10" id="0:930806"/>
+          <KeyFrameDouble frame="29" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930807"/>
+          <KeyFrameDouble frame="59" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930847"/>
+          <KeyFrameDouble frame="60" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930808"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930043" id="0:930813">
+        <KeyedProperty property="rotation" id="0:930812">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930811"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930055" id="0:930816">
+        <KeyedProperty property="rotation" id="0:930815">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930814"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930087" id="0:930825">
+        <KeyedProperty property="opacity" id="0:930818">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930817"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930824">
+          <KeyFrameDouble frame="0" value="-0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930819"/>
+          <KeyFrameDouble frame="1" value="-0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930848"/>
+          <KeyFrameDouble frame="15" value="0.45" interpolationType="cubic" interpolatorId="0:10" id="0:930820"/>
+          <KeyFrameDouble frame="30" value="-0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930821"/>
+          <KeyFrameDouble frame="45" value="0.45" interpolationType="cubic" interpolatorId="0:10" id="0:930822"/>
+          <KeyFrameDouble frame="59" value="-0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930849"/>
+          <KeyFrameDouble frame="60" value="-0.35" interpolationType="cubic" interpolatorId="0:10" id="0:930823"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930096" id="0:930839">
+        <KeyedProperty property="y" id="0:930832">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930826"/>
+          <KeyFrameDouble frame="1" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930850"/>
+          <KeyFrameDouble frame="8" value="-4" interpolationType="cubic" interpolatorId="0:10" id="0:930827"/>
+          <KeyFrameDouble frame="16" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930828"/>
+          <KeyFrameDouble frame="38" value="-4" interpolationType="cubic" interpolatorId="0:10" id="0:930829"/>
+          <KeyFrameDouble frame="46" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930830"/>
+          <KeyFrameDouble frame="59" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930851"/>
+          <KeyFrameDouble frame="60" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930831"/>
+        </KeyedProperty>
+        <KeyedProperty property="rotation" id="0:930834">
+          <KeyFrameDouble frame="0" value="-0.06" interpolationType="cubic" interpolatorId="0:10" id="0:930833"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX" id="0:930836">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930835"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY" id="0:930838">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930837"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930097" id="0:930842">
+        <KeyedProperty property="opacity" id="0:930841">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930840"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930099" id="0:930845">
+        <KeyedProperty property="rotation" id="0:930844">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930843"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
   </Artboard>
 
   <DataEnumCustom name="EventId" id="0:17">
@@ -5136,6 +5981,15 @@
     <DataEnumValue key="warp" value="warp" id="0:14"/>
     <DataEnumValue key="alienShip" value="alienShip" id="0:15"/>
     <DataEnumValue key="nebulaPulse" value="nebulaPulse" id="0:16"/>
+  </DataEnumCustom>
+
+  <DataEnumCustom name="NpcState" id="0:930006">
+    <DataEnumValue key="away" value="away" id="0:930000"/>
+    <DataEnumValue key="rest" value="rest" id="0:930001"/>
+    <DataEnumValue key="idle" value="idle" id="0:930002"/>
+    <DataEnumValue key="move" value="move" id="0:930003"/>
+    <DataEnumValue key="notice" value="notice" id="0:930004"/>
+    <DataEnumValue key="react" value="react" id="0:930005"/>
   </DataEnumCustom>
 
   <ViewModel name="SceneVM" defaultInstanceId="0:22" id="0:23">
@@ -5155,6 +6009,10 @@
     <ViewModelPropertyNumber name="rain" id="0:980022"/>
     <ViewModelPropertyNumber name="daylight" id="0:980024"/>
     <ViewModelPropertyNumber name="dusk" id="0:980026"/>
+    <ViewModelPropertyNumber name="fog" id="0:930007"/>
+    <ViewModelPropertyEnumCustom enumId="0:930006" name="npc" id="0:930009"/>
+    <ViewModelPropertyNumber name="npcX" id="0:930011"/>
+    <ViewModelPropertyNumber name="npcLook" id="0:930013"/>
     <ViewModelInstance exports="true" name="Default" id="0:22">
       <ViewModelInstanceEnum propertyValue="0:13" viewModelPropertyId="0:18" id="0:20"/>
       <ViewModelInstanceTrigger viewModelPropertyId="0:19" id="0:21"/>
@@ -5172,8 +6030,364 @@
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980022" id="0:980023"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980024" id="0:980025"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:980026" id="0:980027"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:930007" id="0:930008"/>
+      <ViewModelInstanceEnum propertyValue="0:930001" viewModelPropertyId="0:930009" id="0:930010"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:930011" id="0:930012"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:930013" id="0:930014"/>
     </ViewModelInstance>
   </ViewModel>
+
+  <DataConverterFormula id="0:930185">
+    <FormulaTokenValue operationValue="860" id="0:930100"/>
+    <FormulaTokenOperation operationType="0" id="0:930101"/>
+    <FormulaTokenValue operationValue="-565.319" id="0:930102"/>
+    <FormulaTokenOperation operationType="2" id="0:930103"/>
+    <FormulaTokenFunction functionType="0" id="0:930112"/>
+    <FormulaTokenValue operationValue="0.176" id="0:930104"/>
+    <FormulaTokenArgumentSeparator id="0:930113"/>
+    <FormulaTokenFunction functionType="1" id="0:930109"/>
+    <FormulaTokenValue operationValue="0" id="0:930105"/>
+    <FormulaTokenArgumentSeparator id="0:930110"/>
+    <FormulaTokenInput id="0:930106"/>
+    <FormulaTokenOperation operationType="1" id="0:930107"/>
+    <FormulaTokenValue operationValue="0" id="0:930108"/>
+    <FormulaTokenParenthesisClose id="0:930111"/>
+    <FormulaTokenParenthesisClose id="0:930114"/>
+    <FormulaTokenOperation operationType="0" id="0:930115"/>
+    <FormulaTokenValue operationValue="-697.865" id="0:930116"/>
+    <FormulaTokenOperation operationType="2" id="0:930117"/>
+    <FormulaTokenFunction functionType="0" id="0:930126"/>
+    <FormulaTokenValue operationValue="0.142" id="0:930118"/>
+    <FormulaTokenArgumentSeparator id="0:930127"/>
+    <FormulaTokenFunction functionType="1" id="0:930123"/>
+    <FormulaTokenValue operationValue="0" id="0:930119"/>
+    <FormulaTokenArgumentSeparator id="0:930124"/>
+    <FormulaTokenInput id="0:930120"/>
+    <FormulaTokenOperation operationType="1" id="0:930121"/>
+    <FormulaTokenValue operationValue="0.176" id="0:930122"/>
+    <FormulaTokenParenthesisClose id="0:930125"/>
+    <FormulaTokenParenthesisClose id="0:930128"/>
+    <FormulaTokenOperation operationType="0" id="0:930129"/>
+    <FormulaTokenValue operationValue="-761.476" id="0:930130"/>
+    <FormulaTokenOperation operationType="2" id="0:930131"/>
+    <FormulaTokenFunction functionType="0" id="0:930140"/>
+    <FormulaTokenValue operationValue="0.13" id="0:930132"/>
+    <FormulaTokenArgumentSeparator id="0:930141"/>
+    <FormulaTokenFunction functionType="1" id="0:930137"/>
+    <FormulaTokenValue operationValue="0" id="0:930133"/>
+    <FormulaTokenArgumentSeparator id="0:930138"/>
+    <FormulaTokenInput id="0:930134"/>
+    <FormulaTokenOperation operationType="1" id="0:930135"/>
+    <FormulaTokenValue operationValue="0.319" id="0:930136"/>
+    <FormulaTokenParenthesisClose id="0:930139"/>
+    <FormulaTokenParenthesisClose id="0:930142"/>
+    <FormulaTokenOperation operationType="0" id="0:930143"/>
+    <FormulaTokenValue operationValue="-678.585" id="0:930144"/>
+    <FormulaTokenOperation operationType="2" id="0:930145"/>
+    <FormulaTokenFunction functionType="0" id="0:930154"/>
+    <FormulaTokenValue operationValue="0.145" id="0:930146"/>
+    <FormulaTokenArgumentSeparator id="0:930155"/>
+    <FormulaTokenFunction functionType="1" id="0:930151"/>
+    <FormulaTokenValue operationValue="0" id="0:930147"/>
+    <FormulaTokenArgumentSeparator id="0:930152"/>
+    <FormulaTokenInput id="0:930148"/>
+    <FormulaTokenOperation operationType="1" id="0:930149"/>
+    <FormulaTokenValue operationValue="0.448" id="0:930150"/>
+    <FormulaTokenParenthesisClose id="0:930153"/>
+    <FormulaTokenParenthesisClose id="0:930156"/>
+    <FormulaTokenOperation operationType="0" id="0:930157"/>
+    <FormulaTokenValue operationValue="-540.765" id="0:930158"/>
+    <FormulaTokenOperation operationType="2" id="0:930159"/>
+    <FormulaTokenFunction functionType="0" id="0:930168"/>
+    <FormulaTokenValue operationValue="0.18" id="0:930160"/>
+    <FormulaTokenArgumentSeparator id="0:930169"/>
+    <FormulaTokenFunction functionType="1" id="0:930165"/>
+    <FormulaTokenValue operationValue="0" id="0:930161"/>
+    <FormulaTokenArgumentSeparator id="0:930166"/>
+    <FormulaTokenInput id="0:930162"/>
+    <FormulaTokenOperation operationType="1" id="0:930163"/>
+    <FormulaTokenValue operationValue="0.593" id="0:930164"/>
+    <FormulaTokenParenthesisClose id="0:930167"/>
+    <FormulaTokenParenthesisClose id="0:930170"/>
+    <FormulaTokenOperation operationType="0" id="0:930171"/>
+    <FormulaTokenValue operationValue="-426.692" id="0:930172"/>
+    <FormulaTokenOperation operationType="2" id="0:930173"/>
+    <FormulaTokenFunction functionType="0" id="0:930182"/>
+    <FormulaTokenValue operationValue="0.227" id="0:930174"/>
+    <FormulaTokenArgumentSeparator id="0:930183"/>
+    <FormulaTokenFunction functionType="1" id="0:930179"/>
+    <FormulaTokenValue operationValue="0" id="0:930175"/>
+    <FormulaTokenArgumentSeparator id="0:930180"/>
+    <FormulaTokenInput id="0:930176"/>
+    <FormulaTokenOperation operationType="1" id="0:930177"/>
+    <FormulaTokenValue operationValue="0.773" id="0:930178"/>
+    <FormulaTokenParenthesisClose id="0:930181"/>
+    <FormulaTokenParenthesisClose id="0:930184"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:930272">
+    <FormulaTokenValue operationValue="900" id="0:930187"/>
+    <FormulaTokenOperation operationType="0" id="0:930188"/>
+    <FormulaTokenValue operationValue="-510.204" id="0:930189"/>
+    <FormulaTokenOperation operationType="2" id="0:930190"/>
+    <FormulaTokenFunction functionType="0" id="0:930199"/>
+    <FormulaTokenValue operationValue="0.176" id="0:930191"/>
+    <FormulaTokenArgumentSeparator id="0:930200"/>
+    <FormulaTokenFunction functionType="1" id="0:930196"/>
+    <FormulaTokenValue operationValue="0" id="0:930192"/>
+    <FormulaTokenArgumentSeparator id="0:930197"/>
+    <FormulaTokenInput id="0:930193"/>
+    <FormulaTokenOperation operationType="1" id="0:930194"/>
+    <FormulaTokenValue operationValue="0" id="0:930195"/>
+    <FormulaTokenParenthesisClose id="0:930198"/>
+    <FormulaTokenParenthesisClose id="0:930201"/>
+    <FormulaTokenOperation operationType="0" id="0:930202"/>
+    <FormulaTokenValue operationValue="-304.95" id="0:930203"/>
+    <FormulaTokenOperation operationType="2" id="0:930204"/>
+    <FormulaTokenFunction functionType="0" id="0:930213"/>
+    <FormulaTokenValue operationValue="0.142" id="0:930205"/>
+    <FormulaTokenArgumentSeparator id="0:930214"/>
+    <FormulaTokenFunction functionType="1" id="0:930210"/>
+    <FormulaTokenValue operationValue="0" id="0:930206"/>
+    <FormulaTokenArgumentSeparator id="0:930211"/>
+    <FormulaTokenInput id="0:930207"/>
+    <FormulaTokenOperation operationType="1" id="0:930208"/>
+    <FormulaTokenValue operationValue="0.176" id="0:930209"/>
+    <FormulaTokenParenthesisClose id="0:930212"/>
+    <FormulaTokenParenthesisClose id="0:930215"/>
+    <FormulaTokenOperation operationType="0" id="0:930216"/>
+    <FormulaTokenValue operationValue="25.74" id="0:930217"/>
+    <FormulaTokenOperation operationType="2" id="0:930218"/>
+    <FormulaTokenFunction functionType="0" id="0:930227"/>
+    <FormulaTokenValue operationValue="0.13" id="0:930219"/>
+    <FormulaTokenArgumentSeparator id="0:930228"/>
+    <FormulaTokenFunction functionType="1" id="0:930224"/>
+    <FormulaTokenValue operationValue="0" id="0:930220"/>
+    <FormulaTokenArgumentSeparator id="0:930225"/>
+    <FormulaTokenInput id="0:930221"/>
+    <FormulaTokenOperation operationType="1" id="0:930222"/>
+    <FormulaTokenValue operationValue="0.319" id="0:930223"/>
+    <FormulaTokenParenthesisClose id="0:930226"/>
+    <FormulaTokenParenthesisClose id="0:930229"/>
+    <FormulaTokenOperation operationType="0" id="0:930230"/>
+    <FormulaTokenValue operationValue="346.021" id="0:930231"/>
+    <FormulaTokenOperation operationType="2" id="0:930232"/>
+    <FormulaTokenFunction functionType="0" id="0:930241"/>
+    <FormulaTokenValue operationValue="0.145" id="0:930233"/>
+    <FormulaTokenArgumentSeparator id="0:930242"/>
+    <FormulaTokenFunction functionType="1" id="0:930238"/>
+    <FormulaTokenValue operationValue="0" id="0:930234"/>
+    <FormulaTokenArgumentSeparator id="0:930239"/>
+    <FormulaTokenInput id="0:930235"/>
+    <FormulaTokenOperation operationType="1" id="0:930236"/>
+    <FormulaTokenValue operationValue="0.448" id="0:930237"/>
+    <FormulaTokenParenthesisClose id="0:930240"/>
+    <FormulaTokenParenthesisClose id="0:930243"/>
+    <FormulaTokenOperation operationType="0" id="0:930244"/>
+    <FormulaTokenValue operationValue="536.143" id="0:930245"/>
+    <FormulaTokenOperation operationType="2" id="0:930246"/>
+    <FormulaTokenFunction functionType="0" id="0:930255"/>
+    <FormulaTokenValue operationValue="0.18" id="0:930247"/>
+    <FormulaTokenArgumentSeparator id="0:930256"/>
+    <FormulaTokenFunction functionType="1" id="0:930252"/>
+    <FormulaTokenValue operationValue="0" id="0:930248"/>
+    <FormulaTokenArgumentSeparator id="0:930253"/>
+    <FormulaTokenInput id="0:930249"/>
+    <FormulaTokenOperation operationType="1" id="0:930250"/>
+    <FormulaTokenValue operationValue="0.593" id="0:930251"/>
+    <FormulaTokenParenthesisClose id="0:930254"/>
+    <FormulaTokenParenthesisClose id="0:930257"/>
+    <FormulaTokenOperation operationType="0" id="0:930258"/>
+    <FormulaTokenValue operationValue="630.869" id="0:930259"/>
+    <FormulaTokenOperation operationType="2" id="0:930260"/>
+    <FormulaTokenFunction functionType="0" id="0:930269"/>
+    <FormulaTokenValue operationValue="0.227" id="0:930261"/>
+    <FormulaTokenArgumentSeparator id="0:930270"/>
+    <FormulaTokenFunction functionType="1" id="0:930266"/>
+    <FormulaTokenValue operationValue="0" id="0:930262"/>
+    <FormulaTokenArgumentSeparator id="0:930267"/>
+    <FormulaTokenInput id="0:930263"/>
+    <FormulaTokenOperation operationType="1" id="0:930264"/>
+    <FormulaTokenValue operationValue="0.773" id="0:930265"/>
+    <FormulaTokenParenthesisClose id="0:930268"/>
+    <FormulaTokenParenthesisClose id="0:930271"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:930359">
+    <FormulaTokenValue operationValue="860" id="0:930274"/>
+    <FormulaTokenOperation operationType="0" id="0:930275"/>
+    <FormulaTokenValue operationValue="-565.319" id="0:930276"/>
+    <FormulaTokenOperation operationType="2" id="0:930277"/>
+    <FormulaTokenFunction functionType="0" id="0:930286"/>
+    <FormulaTokenValue operationValue="0.176" id="0:930278"/>
+    <FormulaTokenArgumentSeparator id="0:930287"/>
+    <FormulaTokenFunction functionType="1" id="0:930283"/>
+    <FormulaTokenValue operationValue="0" id="0:930279"/>
+    <FormulaTokenArgumentSeparator id="0:930284"/>
+    <FormulaTokenInput id="0:930280"/>
+    <FormulaTokenOperation operationType="1" id="0:930281"/>
+    <FormulaTokenValue operationValue="0" id="0:930282"/>
+    <FormulaTokenParenthesisClose id="0:930285"/>
+    <FormulaTokenParenthesisClose id="0:930288"/>
+    <FormulaTokenOperation operationType="0" id="0:930289"/>
+    <FormulaTokenValue operationValue="-697.865" id="0:930290"/>
+    <FormulaTokenOperation operationType="2" id="0:930291"/>
+    <FormulaTokenFunction functionType="0" id="0:930300"/>
+    <FormulaTokenValue operationValue="0.142" id="0:930292"/>
+    <FormulaTokenArgumentSeparator id="0:930301"/>
+    <FormulaTokenFunction functionType="1" id="0:930297"/>
+    <FormulaTokenValue operationValue="0" id="0:930293"/>
+    <FormulaTokenArgumentSeparator id="0:930298"/>
+    <FormulaTokenInput id="0:930294"/>
+    <FormulaTokenOperation operationType="1" id="0:930295"/>
+    <FormulaTokenValue operationValue="0.176" id="0:930296"/>
+    <FormulaTokenParenthesisClose id="0:930299"/>
+    <FormulaTokenParenthesisClose id="0:930302"/>
+    <FormulaTokenOperation operationType="0" id="0:930303"/>
+    <FormulaTokenValue operationValue="-761.476" id="0:930304"/>
+    <FormulaTokenOperation operationType="2" id="0:930305"/>
+    <FormulaTokenFunction functionType="0" id="0:930314"/>
+    <FormulaTokenValue operationValue="0.13" id="0:930306"/>
+    <FormulaTokenArgumentSeparator id="0:930315"/>
+    <FormulaTokenFunction functionType="1" id="0:930311"/>
+    <FormulaTokenValue operationValue="0" id="0:930307"/>
+    <FormulaTokenArgumentSeparator id="0:930312"/>
+    <FormulaTokenInput id="0:930308"/>
+    <FormulaTokenOperation operationType="1" id="0:930309"/>
+    <FormulaTokenValue operationValue="0.319" id="0:930310"/>
+    <FormulaTokenParenthesisClose id="0:930313"/>
+    <FormulaTokenParenthesisClose id="0:930316"/>
+    <FormulaTokenOperation operationType="0" id="0:930317"/>
+    <FormulaTokenValue operationValue="-678.585" id="0:930318"/>
+    <FormulaTokenOperation operationType="2" id="0:930319"/>
+    <FormulaTokenFunction functionType="0" id="0:930328"/>
+    <FormulaTokenValue operationValue="0.145" id="0:930320"/>
+    <FormulaTokenArgumentSeparator id="0:930329"/>
+    <FormulaTokenFunction functionType="1" id="0:930325"/>
+    <FormulaTokenValue operationValue="0" id="0:930321"/>
+    <FormulaTokenArgumentSeparator id="0:930326"/>
+    <FormulaTokenInput id="0:930322"/>
+    <FormulaTokenOperation operationType="1" id="0:930323"/>
+    <FormulaTokenValue operationValue="0.448" id="0:930324"/>
+    <FormulaTokenParenthesisClose id="0:930327"/>
+    <FormulaTokenParenthesisClose id="0:930330"/>
+    <FormulaTokenOperation operationType="0" id="0:930331"/>
+    <FormulaTokenValue operationValue="-540.765" id="0:930332"/>
+    <FormulaTokenOperation operationType="2" id="0:930333"/>
+    <FormulaTokenFunction functionType="0" id="0:930342"/>
+    <FormulaTokenValue operationValue="0.18" id="0:930334"/>
+    <FormulaTokenArgumentSeparator id="0:930343"/>
+    <FormulaTokenFunction functionType="1" id="0:930339"/>
+    <FormulaTokenValue operationValue="0" id="0:930335"/>
+    <FormulaTokenArgumentSeparator id="0:930340"/>
+    <FormulaTokenInput id="0:930336"/>
+    <FormulaTokenOperation operationType="1" id="0:930337"/>
+    <FormulaTokenValue operationValue="0.593" id="0:930338"/>
+    <FormulaTokenParenthesisClose id="0:930341"/>
+    <FormulaTokenParenthesisClose id="0:930344"/>
+    <FormulaTokenOperation operationType="0" id="0:930345"/>
+    <FormulaTokenValue operationValue="-426.692" id="0:930346"/>
+    <FormulaTokenOperation operationType="2" id="0:930347"/>
+    <FormulaTokenFunction functionType="0" id="0:930356"/>
+    <FormulaTokenValue operationValue="0.227" id="0:930348"/>
+    <FormulaTokenArgumentSeparator id="0:930357"/>
+    <FormulaTokenFunction functionType="1" id="0:930353"/>
+    <FormulaTokenValue operationValue="0" id="0:930349"/>
+    <FormulaTokenArgumentSeparator id="0:930354"/>
+    <FormulaTokenInput id="0:930350"/>
+    <FormulaTokenOperation operationType="1" id="0:930351"/>
+    <FormulaTokenValue operationValue="0.773" id="0:930352"/>
+    <FormulaTokenParenthesisClose id="0:930355"/>
+    <FormulaTokenParenthesisClose id="0:930358"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:930446">
+    <FormulaTokenValue operationValue="880" id="0:930361"/>
+    <FormulaTokenOperation operationType="0" id="0:930362"/>
+    <FormulaTokenValue operationValue="-510.204" id="0:930363"/>
+    <FormulaTokenOperation operationType="2" id="0:930364"/>
+    <FormulaTokenFunction functionType="0" id="0:930373"/>
+    <FormulaTokenValue operationValue="0.176" id="0:930365"/>
+    <FormulaTokenArgumentSeparator id="0:930374"/>
+    <FormulaTokenFunction functionType="1" id="0:930370"/>
+    <FormulaTokenValue operationValue="0" id="0:930366"/>
+    <FormulaTokenArgumentSeparator id="0:930371"/>
+    <FormulaTokenInput id="0:930367"/>
+    <FormulaTokenOperation operationType="1" id="0:930368"/>
+    <FormulaTokenValue operationValue="0" id="0:930369"/>
+    <FormulaTokenParenthesisClose id="0:930372"/>
+    <FormulaTokenParenthesisClose id="0:930375"/>
+    <FormulaTokenOperation operationType="0" id="0:930376"/>
+    <FormulaTokenValue operationValue="-304.95" id="0:930377"/>
+    <FormulaTokenOperation operationType="2" id="0:930378"/>
+    <FormulaTokenFunction functionType="0" id="0:930387"/>
+    <FormulaTokenValue operationValue="0.142" id="0:930379"/>
+    <FormulaTokenArgumentSeparator id="0:930388"/>
+    <FormulaTokenFunction functionType="1" id="0:930384"/>
+    <FormulaTokenValue operationValue="0" id="0:930380"/>
+    <FormulaTokenArgumentSeparator id="0:930385"/>
+    <FormulaTokenInput id="0:930381"/>
+    <FormulaTokenOperation operationType="1" id="0:930382"/>
+    <FormulaTokenValue operationValue="0.176" id="0:930383"/>
+    <FormulaTokenParenthesisClose id="0:930386"/>
+    <FormulaTokenParenthesisClose id="0:930389"/>
+    <FormulaTokenOperation operationType="0" id="0:930390"/>
+    <FormulaTokenValue operationValue="25.74" id="0:930391"/>
+    <FormulaTokenOperation operationType="2" id="0:930392"/>
+    <FormulaTokenFunction functionType="0" id="0:930401"/>
+    <FormulaTokenValue operationValue="0.13" id="0:930393"/>
+    <FormulaTokenArgumentSeparator id="0:930402"/>
+    <FormulaTokenFunction functionType="1" id="0:930398"/>
+    <FormulaTokenValue operationValue="0" id="0:930394"/>
+    <FormulaTokenArgumentSeparator id="0:930399"/>
+    <FormulaTokenInput id="0:930395"/>
+    <FormulaTokenOperation operationType="1" id="0:930396"/>
+    <FormulaTokenValue operationValue="0.319" id="0:930397"/>
+    <FormulaTokenParenthesisClose id="0:930400"/>
+    <FormulaTokenParenthesisClose id="0:930403"/>
+    <FormulaTokenOperation operationType="0" id="0:930404"/>
+    <FormulaTokenValue operationValue="346.021" id="0:930405"/>
+    <FormulaTokenOperation operationType="2" id="0:930406"/>
+    <FormulaTokenFunction functionType="0" id="0:930415"/>
+    <FormulaTokenValue operationValue="0.145" id="0:930407"/>
+    <FormulaTokenArgumentSeparator id="0:930416"/>
+    <FormulaTokenFunction functionType="1" id="0:930412"/>
+    <FormulaTokenValue operationValue="0" id="0:930408"/>
+    <FormulaTokenArgumentSeparator id="0:930413"/>
+    <FormulaTokenInput id="0:930409"/>
+    <FormulaTokenOperation operationType="1" id="0:930410"/>
+    <FormulaTokenValue operationValue="0.448" id="0:930411"/>
+    <FormulaTokenParenthesisClose id="0:930414"/>
+    <FormulaTokenParenthesisClose id="0:930417"/>
+    <FormulaTokenOperation operationType="0" id="0:930418"/>
+    <FormulaTokenValue operationValue="536.143" id="0:930419"/>
+    <FormulaTokenOperation operationType="2" id="0:930420"/>
+    <FormulaTokenFunction functionType="0" id="0:930429"/>
+    <FormulaTokenValue operationValue="0.18" id="0:930421"/>
+    <FormulaTokenArgumentSeparator id="0:930430"/>
+    <FormulaTokenFunction functionType="1" id="0:930426"/>
+    <FormulaTokenValue operationValue="0" id="0:930422"/>
+    <FormulaTokenArgumentSeparator id="0:930427"/>
+    <FormulaTokenInput id="0:930423"/>
+    <FormulaTokenOperation operationType="1" id="0:930424"/>
+    <FormulaTokenValue operationValue="0.593" id="0:930425"/>
+    <FormulaTokenParenthesisClose id="0:930428"/>
+    <FormulaTokenParenthesisClose id="0:930431"/>
+    <FormulaTokenOperation operationType="0" id="0:930432"/>
+    <FormulaTokenValue operationValue="630.869" id="0:930433"/>
+    <FormulaTokenOperation operationType="2" id="0:930434"/>
+    <FormulaTokenFunction functionType="0" id="0:930443"/>
+    <FormulaTokenValue operationValue="0.227" id="0:930435"/>
+    <FormulaTokenArgumentSeparator id="0:930444"/>
+    <FormulaTokenFunction functionType="1" id="0:930440"/>
+    <FormulaTokenValue operationValue="0" id="0:930436"/>
+    <FormulaTokenArgumentSeparator id="0:930441"/>
+    <FormulaTokenInput id="0:930437"/>
+    <FormulaTokenOperation operationType="1" id="0:930438"/>
+    <FormulaTokenValue operationValue="0.773" id="0:930439"/>
+    <FormulaTokenParenthesisClose id="0:930442"/>
+    <FormulaTokenParenthesisClose id="0:930445"/>
+  </DataConverterFormula>
 
   <DataConverterFormula id="0:990003">
     <FormulaTokenValue operationValue="40" id="0:990000"/>

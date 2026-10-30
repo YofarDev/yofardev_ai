@@ -1,0 +1,14 @@
+rest frames (f0, f1, f30, f60) at the defaults identical to 927a606: 0.0000% differ (ok)
+SceneFront at rain 1 / fog 0 (f0, f1, f60) identical to 927a606: 0.0000% differ (ok)
+away: the NPC's crop changes (10.71% of it), nothing else does (0.0000%): ok
+idle: moves (20.29% of the crop) and its loop is back after 240 frames (0.0000% differ): ok
+move: moves (10.40% of the crop) and its loop is back after 240 frames (0.0000% differ): ok
+notice: moves (1.58% of the crop) and its loop is back after 240 frames (0.0000% differ): ok
+react: moves (19.10% of the crop) and its loop is back after 240 frames (0.0000% differ): ok
+pointer crab at npcX 0.0: click@860,1380 fires 1: ok
+pointer crab at npcX 0.5: click@921,1282 fires 1: ok
+pointer crab at npcX 1.0: click@1016,1219 fires 1, its v10 spot click@860,1380 fires 0: ok
+fog: changes 29.23% of the frame (ok)
+SceneFront fog joins the mist: bottom 200 rows alpha +36.3/255 at fog 1 (ok)
+beach.riv 285,130 B (+11,757 B vs 927a606; budget 409,600, NPC + fog <= 31,744): ok
+assets/rive/posters/beach.webp unchanged since 927a606: ok

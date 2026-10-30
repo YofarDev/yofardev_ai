@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[3]
 M4_COMMIT = "5b10b23"
 M4_RML = "rive/scenes/campfire/campfire.rml"
 # propId -> the top-level art its hit zone covers
-PROP_ART = {"fire": "emitFireFlare", "tent": "TentPlace", "owl": "Owl", "sky": "Sky"}
+PROP_ART = {"fire": "emitFireFlare", "tent": "TentPlace", "owl": "OwlNpc", "sky": "Sky"}   # M8: the owl NPC wrapper
 
 
 @pytest.fixture(scope="module")
@@ -137,10 +137,10 @@ def test_campfire_differs_from_m4_only_by_hit_zones_and_rain(rml: str) -> None:
     for i, (tag, attrs, parent) in old.items():
         ntag, nattrs, nparent = new[i]
         assert (ntag, nattrs) == (tag, attrs), (i, tag, attrs.get("name"))
-        if nparent != parent:
+        if nparent != parent and not _m8(nparent):
             moved[attrs.get("name")] = new[nparent][1].get("name")
     # the only re-parented M4 elements: the hit zones (into their planes) and the fire (into the
-    # rain damper)
+    # rain damper); M8 wraps the owl's parts in its NPC rig (new parents in the M8 range)
     assert moved == {"Hit_fire": "Plane4", "Hit_tent": "Plane4", "Hit_owl": "Plane3", "Hit_sky": "Plane0",
                      "emitFire": "emitFireDamp"}
     names = {new[i][1].get("name") for i in added}
@@ -327,7 +327,7 @@ def test_living_room_view_sits_behind_an_opening(lr: str) -> None:
 
 # ---------------------------------------------------------------- beach (M5 Task 5)
 BEACH_M4 = "5b10b23"   # the M4 beach (+ v8 rain), before its diorama
-BEACH_PROP_ART = {"crab": "Crab", "umbrella": "Umbrella", "seagull": "GullPlace"}
+BEACH_PROP_ART = {"crab": "CrabNpc", "umbrella": "Umbrella", "seagull": "GullPlace"}
 
 
 @pytest.fixture(scope="module")
@@ -354,7 +354,7 @@ def test_beach_plane_membership(beach: str) -> None:
             "emitSunsetPath": 1,
             "Wave0": 2, "BigWave": 2, "BigWaveClip": 2,
             "Foam": 3, "WetSand": 3, "Sand": 3, "SandWet": 3, "Wash": 3, "WetWash": 3,
-            "Crab": 4, "Umbrella": 4, "GullPlace": 4, "PalmTrunk": 4, "Castle": 4, "Shell0": 4, "Starfish0": 4,
+            "CrabNpc": 4, "Umbrella": 4, "GullPlace": 4, "PalmTrunk": 4, "Castle": 4, "Shell0": 4, "Starfish0": 4,
             "Flock0": 4,
             "NearDune": 5, "DuneGrass0": 5, "DuneWet": 5}
     assert {k: plane.get(k) for k in want} == want
@@ -538,10 +538,15 @@ def test_deep_space_dust_veils_draw(ds: str) -> None:
         assert float(veil.get("y")) <= -60 and float(veil.get("y")) + float(rect.get("height")) >= 1920 + 60
 
 
+def _m8(i: str | None) -> bool:
+    """An M8 element (contract v11: fog, the NPC rigs; `M8_ID_START` range)."""
+    return i is not None and gen_scenes.M8_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START
+
+
 def _v10_or_later(new: dict, i: str) -> bool:
     """M7 additions: the v10 `daylight` / `dusk` view-model numbers (minted after the v7 props in the M4
-    range) and the time-of-day veils (`M7_ID_START` range)."""
+    range) and the time-of-day veils (`M7_ID_START` range); M8's (contract v11) from `M8_ID_START`."""
     n = int(i.split(":")[1])
-    return gen_scenes.M7_ID_START <= n < gen_scenes.M6_ID_START or (
+    return _m8(i) or gen_scenes.M7_ID_START <= n < gen_scenes.M6_ID_START or (
         gen_scenes.M4_ID_START <= n < gen_scenes.DIORAMA_ID_START
         and new[i][0] in ("ViewModelPropertyNumber", "ViewModelInstanceNumber"))
