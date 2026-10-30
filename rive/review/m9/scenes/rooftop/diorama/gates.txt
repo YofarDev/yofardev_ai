@@ -1,0 +1,29 @@
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 pot travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 tripod travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 near windows travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 water tank travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane1 bridge tower travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+Plane0 moon travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: telescope=Plane4, antenna=Plane4, pigeon=Plane4, moon=Plane0: ok
+pointer telescope (Plane4) parallaxX -1: click@693,1162 fires 1, rest-only click@953,1162 fires 0: ok
+pointer telescope (Plane4) parallaxX +1: click@991,1162 fires 1, rest-only click@731,1162 fires 0: ok
+pointer antenna (Plane4) parallaxX -1: click@4,730 fires 1, rest-only click@198,730 fires 0: ok
+pointer antenna (Plane4) parallaxX +1: click@236,730 fires 1, rest-only click@26,730 fires 0: ok
+pointer pigeon (Plane4) parallaxX -1: click@711,950 fires 1, rest-only click@851,950 fires 0: ok
+pointer pigeon (Plane4) parallaxX +1: click@889,950 fires 1, rest-only click@749,950 fires 0: ok
+pointer moon (Plane0) parallaxX -1: click@300,300 fires 1: ok
+pointer moon (Plane0) parallaxX +1: click@300,300 fires 1: ok
+wet ground (median luminance rain 1 / rain 0): 24.0/29.5 = 0.81 (want 0.55..0.9): ok
+RainLoop sheets + splashes + ParapetRain seam (frame 0 vs 6120, rain 1, box (300, 1200, 1080, 1920), pixels changed beyond rain 0): 0.0182% (ok)
+city glow follows lightRim (blue - red, mean, blue rim vs default): +32.8/255 (ok); back to default: max diff 0/255 (ok)
+aim -1: changes 18.26% of the handle rect (710, 1011, 978, 1317), 0.0000% outside it (ok)
+aim +0.5: changes 16.25% of the handle rect (710, 1011, 978, 1317), 0.0000% outside it (ok)
+aim +1: changes 18.29% of the handle rect (710, 1011, 978, 1317), 0.0000% outside it (ok)
+front at rain 0: max alpha 0/255 (ok)
+front at rain 1: streak cover (alpha > 0.25, y < 1100) 1.63% (want 0.3..6%): ok
+front at rain 1: bottom 80 rows mean alpha (mist + splashes) 0.219 (want 0.08..0.3): ok
+front sheet travel at parallaxX -1/+1: -50/+50 px (want -/+50): ok
+front loop seam (frame 0 vs 840, rain 1): 0.0000% (ok)
+rooftop.riv 154732 B (budget 409,600): ok
+rooftop.webp 22386 B (budget 40,960): ok

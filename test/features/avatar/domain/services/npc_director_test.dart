@@ -723,18 +723,18 @@ void main() {
       });
     });
 
-    test('trot rate 1.152 npcX/s (~0.87 s for the whole path), facing left '
+    test('trot rate 1.042 npcX/s (~0.96 s for the whole path), facing left '
         'toward the avatar and right on the way back', () {
-      expect(NpcDirector.dogTrotRate, 1.152);
+      expect(NpcDirector.dogTrotRate, 1.042);
       expect(
         NpcDirector.dogTrotLength.inMilliseconds,
-        inInclusiveRange(867, 869),
+        inInclusiveRange(958, 961),
       );
       run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
         npc.setEmotion(sad);
         expect(state(npc), NpcState.move);
         expect(look(npc), -0.5);
-        ms(async, 860);
+        ms(async, 950);
         expect(state(npc), NpcState.move);
         ms(async, 20);
         expect(state(npc), NpcState.idle);
@@ -743,7 +743,7 @@ void main() {
         ms(async, 20500);
         expect(state(npc), NpcState.move);
         expect(look(npc), 0.5);
-        ms(async, 900);
+        ms(async, 1000);
         expect(state(npc), NpcState.rest);
         expect(x(npc), 0);
       });

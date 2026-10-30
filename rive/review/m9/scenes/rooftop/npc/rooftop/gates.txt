@@ -1,0 +1,12 @@
+rest frames identical to 927a606: n/a, a new scene (ok)
+away: the NPC's crop changes (7.00% of it), nothing else does (0.0000%): ok
+idle: moves (13.60% of the crop) and its loop is back after 240 frames (0.0000% differ): ok
+move: moves (8.61% of the crop) and its loop is back after 32 frames (0.0000% differ): ok
+notice: moves (4.49% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+react: moves (20.75% of the crop) and its loop is back after 48 frames (0.0000% differ): ok
+pointer pigeon at npcX 0.0: click@800,950 fires 1: ok
+pointer pigeon at npcX 0.5: click@900,950 fires 1: ok
+pointer pigeon at npcX 1.0: click@1000,950 fires 1, its v10 spot click@800,950 fires 0: ok
+fog: changes 16.09% of the frame (ok)
+SceneFront fog joins the mist: bottom 200 rows alpha +49.7/255 at fog 1 (ok)
+rooftop.riv 154,732 B (a new scene; budget 409,600): ok

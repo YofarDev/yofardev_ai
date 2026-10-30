@@ -21,8 +21,9 @@ def rml(tmp_path_factory: pytest.TempPathFactory) -> dict[str, ET.Element]:
     root = gen_scenes.OUT_ROOT
     gen_scenes.OUT_ROOT = str(out)
     try:
-        return {sid: ET.fromstring(Path(getattr(gen_scenes, sid)()).read_text())
-                for sid in ("campfire", "beach", "livingRoom", "deepSpace")}
+        # v12: rooftop (its own module, scene_rooftop.py) carries a front too
+        return {sid: ET.fromstring(Path(gen_scenes.SCENE_BUILDERS[sid]()).read_text())
+                for sid in ("campfire", "beach", "livingRoom", "deepSpace", "rooftop")}
     finally:
         gen_scenes.OUT_ROOT = root
 
@@ -47,7 +48,7 @@ def _converter_k(doc: ET.Element, conv_id: str) -> float:
 
 
 def test_front_only_in_outdoor_scenes(rml: dict[str, ET.Element]) -> None:
-    assert set(FRONT_SCENES) == {"campfire", "beach"}
+    assert set(FRONT_SCENES) == {"campfire", "beach", "rooftop"}
     for sid, doc in rml.items():
         assert (_front(doc) is not None) == (sid in FRONT_SCENES), sid
         # the main artboard stays first, so `rive.yaml main: Scene` and every render keep working

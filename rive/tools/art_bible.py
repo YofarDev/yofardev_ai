@@ -141,10 +141,11 @@ SCENES: dict[str, SceneScript] = {
         times={"dawn": "FF7C88B0", "day": "FF9FB4C8", "dusk": "FF5C4E70", "night": "FF1C2034"},
         flicker=0.0,
     ),
-    # rooftop: cool moonlight from high right, the city's sodium glow as a warm rim from below,
-    # blue-black shadows, the open night sky.
+    # rooftop: cool moonlight from high left (the moon hangs upper-left, M9 fix round 1: the mirror of
+    # 0.95, pi - 0.95), the city's sodium glow as a warm rim from below, blue-black shadows, the open
+    # night sky.
     "rooftop": SceneScript(
-        accent=TOKENS["rooftopAccent"], key="FFC4D4FF", key_dir=0.95, key_intensity=0.7,
+        accent=TOKENS["rooftopAccent"], key="FFC4D4FF", key_dir=2.1916, key_intensity=0.7,
         rim="FFFFB27A", ambient="FF161A2E", fog="33303A5C", value=(0.03, 0.95), sat_cap=0.62,
         times={"dawn": "FF56608E", "day": "FF86B4DA", "dusk": "FF4A3A6C", "night": "FF0E1630"},
         flicker=0.0,

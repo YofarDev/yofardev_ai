@@ -1,0 +1,23 @@
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 plant leaves travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 table top travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 espresso body travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 mullion travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane1 lamp post travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+Plane0 moon travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: cup=Plane4, espresso=Plane3, fish=Plane3, window=Plane2: ok
+pointer cup (Plane4) parallaxX -1: click@781,1030 fires 1, rest-only click@901,1030 fires 0: ok
+pointer cup (Plane4) parallaxX +1: click@939,1030 fires 1, rest-only click@819,1030 fires 0: ok
+pointer espresso (Plane3) parallaxX -1: click@39,939 fires 1, rest-only click@195,939 fires 0: ok
+pointer espresso (Plane3) parallaxX +1: click@221,939 fires 1, rest-only click@65,939 fires 0: ok
+pointer fish (Plane3) parallaxX -1: click@216,962 fires 1, rest-only click@266,962 fires 0: ok
+pointer fish (Plane3) parallaxX +1: click@292,962 fires 1, rest-only click@242,962 fires 0: ok
+pointer window (Plane2) parallaxX -1: click@292,510 fires 1, rest-only click@774,510 fires 0: ok
+pointer window (Plane2) parallaxX +1: click@788,510 fires 1, rest-only click@306,510 fires 0: ok
+wet ground (median luminance rain 1 / rain 0): 156.0/142.2 = 1.10 (want 1.02..1.8): ok
+RainGlass streaks + drips seam (frame 0 vs 240, rain 1, box (330, 260, 750, 760), pixels changed beyond rain 0): 0.0000% (ok)
+wall pool follows lightKey (blue - red, mean, blue key vs default): +16.9/255 (ok); back to default: max diff 0/255 (ok)
+wipe: 16 spots change 9.98% of the handle rect (330.0, 260.0, 750.0, 760.0), 0 px outside (ok)
+wipe: trailFade 1 hides every spot: 0 px differ from rest (ok)
+cafe.riv 125039 B (budget 409,600): ok
+cafe.webp 30156 B (budget 40,960): ok

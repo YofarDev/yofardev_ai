@@ -57,8 +57,9 @@ void main() {
       expect(cafe.ambientColor, 0xFF2A2433);
       expect(cafe.fogColor, 0x33A8B4C4);
       final LightRig roof = SceneLights.of(AvatarScene.rooftop);
-      expect(roof.keyX, closeTo(math.cos(0.95), 0.001));
-      expect(roof.keyY, closeTo(math.sin(0.95), 0.001));
+      // moonlight from the upper left, where the moon hangs (M9 fix round 1)
+      expect(roof.keyX, closeTo(math.cos(2.1916), 0.001));
+      expect(roof.keyY, closeTo(math.sin(2.1916), 0.001));
       expect(roof.keyColor, 0xFFC4D4FF);
       expect(roof.keyIntensity, 0.7);
       expect(roof.rimColor, 0xFFFFB27A);

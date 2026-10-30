@@ -164,8 +164,8 @@ class NpcDirector {
 
   // M9 ruling 11, rates measured from the built art (rive/tools/scene_npc.py):
   // the fish swims its ~28 px bowl at 0.5 npcX/s, the pigeon walks at
-  // 0.354 npcX/s (whole path ~2.8 s) and the dog trots at 1.152 npcX/s (whole
-  // path ~0.87 s), all without foot slide. Partial moves take distance / rate.
+  // 0.354 npcX/s (whole path ~2.8 s) and the dog trots at 1.042 npcX/s (whole
+  // path ~0.96 s), all without foot slide. Partial moves take distance / rate.
   static const Duration fishReactLength = Duration(milliseconds: 1200);
   static const Duration fishNoticeLength = Duration(seconds: 3);
   static const double fishSwimRate = 0.5;
@@ -185,7 +185,7 @@ class NpcDirector {
   static const Duration pigeonAwayLength = Duration(seconds: 10);
   static const Duration pigeonWalkMinGap = Duration(seconds: 12);
   static const Duration pigeonWalkMaxGap = Duration(seconds: 20);
-  static const double dogTrotRate = 1.152;
+  static const double dogTrotRate = 1.042;
 
   /// The whole path, 0 → 1 (~0.87 s).
   static final Duration dogTrotLength = travelTime(1, dogTrotRate);

@@ -105,7 +105,7 @@ abstract final class SceneLights {
       AvatarScene.rooftop => LightRig(
         keyColor: AppPalette.rooftopKey.toARGB32(),
         keyIntensity: 0.7,
-        keyX: 0.582,
+        keyX: -0.582,
         keyY: 0.813,
         rimColor: AppPalette.rooftopRim.toARGB32(),
         rimIntensity: _rimIntensity,
