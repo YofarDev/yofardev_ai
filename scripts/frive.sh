@@ -8,6 +8,9 @@
 # Requires: rive CLI (>= 1.8.0) and uv on PATH. Deterministic: generators use fixed seeds and ids.
 # Fails on any build warning, a size over budget (avatar 600 KB, scene 400 KB, UI kit 150 KB,
 # poster 40 KB), or any name that differs from rive/CONTRACT.md (rive/tools/check_contract.py).
+# Then runs the objective gates (rive/tools/rive_gates.py: parallax, plane travel, pointer proofs,
+# rain and front-layer gates per built scene, then the tablet and newspaper prop gates); any FAIL
+# fails the script. FRIVE_GATES=0 ./scripts/frive.sh skips them (sequential renders, minutes).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -53,4 +56,8 @@ echo "▸ scene posters"
 uv run --with pillow "$TOOLS/gen_posters.py" "${SCENES[@]}"
 echo "▸ contract self-check"
 uv run "$TOOLS/check_contract.py"
+if [ "${FRIVE_GATES:-1}" != "0" ]; then
+  echo "▸ gates (FRIVE_GATES=0 skips)"
+  uv run --with pillow --with numpy "$TOOLS/rive_gates.py" "${SCENES[@]}"
+fi
 echo "✓ done"

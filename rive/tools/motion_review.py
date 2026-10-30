@@ -4,6 +4,7 @@ uv run --with pillow python rive/tools/motion_review.py --label after
 uv run --with pillow python rive/tools/motion_review.py --ik-check   # runtime IK vs the Python solver
 uv run --with pillow python rive/tools/motion_review.py --tablet     # the tablet prop (M4) -> rive/review/m4/tablet
 uv run --with pillow python rive/tools/motion_review.py --newspaper  # the newspaper prop (M5) -> rive/review/m5/newspaper
+uv run --with pillow --with numpy python rive/tools/motion_review.py --gates-only  # tablet + newspaper gates, temp output
 Use --project to review a saved source snapshot; output stays under build/.
 """
 
@@ -17,6 +18,7 @@ import json
 import math
 from pathlib import Path
 import shutil
+import tempfile
 import xml.etree.ElementTree as ET
 
 from PIL import Image, ImageChops
@@ -176,11 +178,14 @@ def _steps(frames: list[Image.Image]) -> list[float]:
     return out
 
 
-def tablet_review(project: Path, out: Path, kind: str = "tablet") -> bool:
+def tablet_review(project: Path, out: Path, kind: str = "tablet", dest: Path | None = None,
+                  gate_lines: list[str] | None = None) -> bool:
     """Contact sheets (out / hold / away, 10 frames each, reading gaze), the out -> hold -> away
     GIF, the hold-loop seam, the Review Focus 1 interruptions (pop check), and the IK check, for
-    the `kind` prop (tablet: M4; newspaper: M5, plus the hand-overs to and from the tablet)."""
-    dest = PROP_OUT[kind]
+    the `kind` prop (tablet: M4; newspaper: M5, plus the hand-overs to and from the tablet).
+    `dest` redirects the evidence (default PROP_OUT[kind]); `gate_lines` collects the lines instead
+    of printing them (the `--gates-only` mode)."""
+    dest = dest or PROP_OUT[kind]
     dest.mkdir(parents=True, exist_ok=True)
     board = ET.parse(project / "avatar.rml").getroot().find("Artboard")
     dur = {a.get("name"): int(a.get("duration")) for a in board.findall("LinearAnimation")}
@@ -305,8 +310,32 @@ def tablet_review(project: Path, out: Path, kind: str = "tablet") -> bool:
     lines += ik_lines
     ok = ok and ik_ok
     (dest / "gates.txt").write_text("\n".join(lines) + "\n")
-    print("\n".join(lines))
+    if gate_lines is None:
+        print("\n".join(lines))
+    else:
+        gate_lines.extend(lines)
     return ok
+
+
+def gates_only(project_src: Path) -> int:
+    """frive.sh (M6 ruling 10): the tablet and newspaper reviews into a scratch dir, gate lines
+    only (prefixed `tablet: ` / `newspaper: `; a `BAD` verdict is printed as `FAIL`)."""
+    failed = False
+    with tempfile.TemporaryDirectory() as scratch:
+        for kind in ("tablet", "newspaper"):
+            out = Path(scratch) / kind
+            project = out / "source"
+            project.mkdir(parents=True)
+            shutil.copyfile(project_src / "avatar.rml", project / "avatar.rml")
+            (project / "rive.yaml").write_text("name: motion\nmain: Avatar\noutput: {dir: build}\n")
+            lines: list[str] = []
+            ok = tablet_review(project, out, kind, dest=out / "evidence", gate_lines=lines)
+            failed = failed or not ok
+            for line in lines:
+                if line.startswith("BAD"):
+                    line = "FAIL" + line[3:]
+                print(f"{kind}: {line}", flush=True)
+    return 1 if failed else 0
 
 
 def main() -> None:
@@ -318,9 +347,13 @@ def main() -> None:
                         help="Tablet prop evidence (sheets, GIF, seam, interruptions, IK) -> rive/review/m4/tablet/")
     parser.add_argument("--newspaper", action="store_true",
                         help="Newspaper prop evidence (as --tablet, plus the tablet hand-overs) -> rive/review/m5/newspaper/")
+    parser.add_argument("--gates-only", action="store_true",
+                        help="Tablet and newspaper gate lines only, into a temp dir; exit 1 on FAIL (frive.sh)")
     parser.add_argument("--ik-check", action="store_true",
                         help=f"Compare the rendered elbow and hand with the Python solver (hand within {IK_TOLERANCE} px)")
     args = parser.parse_args()
+    if args.gates_only:
+        raise SystemExit(gates_only(args.project))
     out = ROOT / "build/avatar-motion-review" / args.label
     project = out / "source"
     project.mkdir(parents=True, exist_ok=True)
