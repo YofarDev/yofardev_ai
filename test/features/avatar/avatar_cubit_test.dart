@@ -486,20 +486,73 @@ void main() {
         });
       });
 
-      test('the same scene needs no journey', () {
+      test('a chat switch mid-journey stops it before the cut', () {
         fakeAsync((FakeAsync async) {
           avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
           avatarCubit.onNewAvatarConfig(
             'chat1',
             AvatarConfig(
-              background: avatarCubit.state.scene,
-              hat: AvatarHat.beanie,
+              background: AvatarScene.beach,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          async.elapse(JourneyTiming.pullBack + JourneyTiming.open);
+          expect(avatarCubit.state.journey!.phase, JourneyPhase.exit);
+          avatarCubit.loadAvatar('chat2');
+          async.flushMicrotasks();
+          expect(avatarCubit.state.journey, isNull);
+          expect(avatarCubit.state.preloadScene, isNull);
+          expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
+          // the walk's wait times out later: nothing lands on either chat
+          async.elapse(const Duration(seconds: 20));
+          expect(avatarCubit.state.scene, isNot(AvatarScene.beach));
+          expect(avatarCubit.state.journey, isNull);
+          verifyNever(() => mockAvatarRepository.updateAvatar(any(), any()));
+        });
+      });
+
+      test(
+        'the same scene with new clothes still changes them out of sight',
+        () {
+          fakeAsync((FakeAsync async) {
+            avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+            avatarCubit.onNewAvatarConfig(
+              'chat1',
+              AvatarConfig(
+                background: avatarCubit.state.scene,
+                top: AvatarTop.longCoat,
+                specials: AvatarSpecials.leaveAndComeBack,
+              ),
+            );
+            async.flushMicrotasks();
+            expect(avatarCubit.state.journey, isNull);
+            expect(avatarCubit.state.presence, AvatarSpecials.outOfScreen);
+            expect(avatarCubit.state.avatar.top, isNot(AvatarTop.longCoat));
+            async.elapse(const Duration(seconds: 10));
+            expect(avatarCubit.state.avatar.top, AvatarTop.longCoat);
+            expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
+          });
+        },
+      );
+
+      test('the same scene needs no journey', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          final AvatarScene scene = avatarCubit.state.scene;
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: scene,
               specials: AvatarSpecials.leaveAndComeBack,
             ),
           );
           async.flushMicrotasks();
           expect(avatarCubit.state.journey, isNull);
-          expect(avatarCubit.state.avatar.hat, AvatarHat.beanie);
+          expect(avatarCubit.state.presence, AvatarSpecials.onScreen);
+          expect(avatarCubit.state.scene, scene);
+          verify(
+            () => mockAvatarRepository.updateAvatar('chat1', any()),
+          ).called(1);
         });
       });
 

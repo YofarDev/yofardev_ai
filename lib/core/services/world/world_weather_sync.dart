@@ -81,8 +81,11 @@ class WorldWeatherSync {
       if (!await _hasLocationPermission() || !_active) {
         return;
       }
-      _lastFetchAt = _now();
       final WeatherReport? report = await _fetchOwnLocation(key);
+      if (report != null) {
+        // only a fetch that brought a report holds off the next resume
+        _lastFetchAt = _now();
+      }
       if (report != null && _active) {
         _world.applyWeather(report);
       }

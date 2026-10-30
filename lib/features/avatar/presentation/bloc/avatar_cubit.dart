@@ -220,6 +220,8 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void loadAvatar(String chatId) async {
+    // Another chat: a journey under way belongs to the chat it started in.
+    _abortJourney();
     _emitIfOpen(state.copyWith(status: AvatarStatus.loading));
     final Result<Chat> result = await _avatarRepository.getChat(chatId);
     if (isClosed) return;
@@ -416,10 +418,23 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
     if (isClosed) return;
     if (to == from) {
-      _updateAvatar(chatId, landing);
+      final bool clothes =
+          avatarConfig.hat != null ||
+          avatarConfig.top != null ||
+          avatarConfig.glasses != null ||
+          avatarConfig.costume != null;
+      if (clothes) {
+        // No journey, but the clothes still change out of sight.
+        await _walkOffAndBack(chatId, avatarConfig, clothesChange: true);
+      } else {
+        _updateAvatar(chatId, landing);
+      }
       return;
     }
     final JourneyFamily family = JourneyPlanner.familyFor(from, to);
+    final int epoch = _journeyEpoch;
+    // A chat switch (loadAvatar) mid-journey stops it before the next beat.
+    bool gone() => isClosed || epoch != _journeyEpoch;
     JourneyState journey = JourneyState(
       from: from,
       to: to,
@@ -429,13 +444,13 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
     _emitIfOpen(state.copyWith(journey: journey, preloadScene: to));
     await Future<void>.delayed(JourneyTiming.pullBack);
-    if (isClosed) return;
+    if (gone()) return;
 
     journey = _beat(journey, JourneyPhase.open);
     _journeyLead = true;
     _emitIfOpen(state.copyWith(journey: journey, headTarget: journeyLead));
     await Future<void>.delayed(JourneyTiming.open);
-    if (isClosed) return;
+    if (gone()) return;
 
     journey = _beat(journey, JourneyPhase.exit);
     _emitIfOpen(
@@ -447,13 +462,13 @@ class AvatarCubit extends Cubit<AvatarState> {
       ),
     );
     await _waitForPresence(AvatarSpecials.outOfScreen);
-    if (isClosed) return;
+    if (gone()) return;
     _releaseLead();
 
     journey = _beat(journey, JourneyPhase.close);
     _emitIfOpen(state.copyWith(journey: journey));
     await Future<void>.delayed(JourneyTiming.closeOf(family));
-    if (isClosed) return;
+    if (gone()) return;
 
     journey = _beat(journey, JourneyPhase.cut);
     final Future<void> shown = _waitForScene(to);
@@ -461,12 +476,12 @@ class AvatarCubit extends Cubit<AvatarState> {
     // The scene switches with the avatar still off screen.
     _updateAvatar(chatId, landing, presence: AvatarSpecials.outOfScreen);
     await shown;
-    if (isClosed) return;
+    if (gone()) return;
 
     journey = _beat(journey, JourneyPhase.arriveOpen);
     _emitIfOpen(state.copyWith(journey: journey));
     await Future<void>.delayed(JourneyTiming.arriveOpenOf(family));
-    if (isClosed) return;
+    if (gone()) return;
 
     journey = _beat(journey, JourneyPhase.enter);
     _emitIfOpen(
@@ -478,17 +493,41 @@ class AvatarCubit extends Cubit<AvatarState> {
       ),
     );
     await _waitForPresence(AvatarSpecials.onScreen);
-    if (isClosed) return;
+    if (gone()) return;
 
     journey = _beat(journey, JourneyPhase.arriveClose);
     _emitIfOpen(state.copyWith(journey: journey));
     await Future<void>.delayed(JourneyTiming.close);
-    if (isClosed) return;
+    if (gone()) return;
 
     journey = _beat(journey, JourneyPhase.vanish);
     _emitIfOpen(state.copyWith(journey: journey));
     await Future<void>.delayed(JourneyTiming.vanish);
+    if (gone()) return;
     _emitIfOpen(state.copyWith(journey: null, preloadScene: null));
+  }
+
+  /// Bumped by a chat switch: a running journey stops at its next beat.
+  int _journeyEpoch = 0;
+
+  /// Stops a journey under way (a chat switch): the threshold, the clip and
+  /// the preload go, the head returns to the director, the avatar is on
+  /// screen; the destination is never applied to the chat it left.
+  void _abortJourney() {
+    if (state.journey == null && !_journeyLead) {
+      return;
+    }
+    _journeyEpoch++;
+    _sceneShown = null;
+    _awaitedScene = null;
+    _releaseLead();
+    _emitIfOpen(
+      state.copyWith(
+        journey: null,
+        preloadScene: null,
+        presence: AvatarSpecials.onScreen,
+      ),
+    );
   }
 
   JourneyState _beat(JourneyState journey, JourneyPhase phase) {

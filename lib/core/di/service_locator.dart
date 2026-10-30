@@ -95,6 +95,9 @@ final GetIt getIt = GetIt.instance;
 /// harness (`integration_test/wow_capture_test.dart`, M6): [ttsSynthesizer]
 /// replaces on-device TTS and [tools] the agent's tool list. Production passes
 /// neither.
+/// The app lifecycle observer that pauses the world clock and weather sync.
+WorldLifecycleObserver? _worldObserver;
+
 Future<void> setupServiceLocator({
   TtsSynthesizer? ttsSynthesizer,
   List<AgentTool>? tools,
@@ -447,18 +450,21 @@ Future<void> setupServiceLocator({
   // the foreground and pause with it (the harness has no key: no call).
   getIt<WorldStateService>().start();
   getIt<WorldWeatherSync>().start();
-  WidgetsFlutterBinding.ensureInitialized().addObserver(
-    WorldLifecycleObserver(
-      onResume: () {
-        getIt<WorldStateService>().start();
-        getIt<WorldWeatherSync>().start();
-      },
-      onPause: () {
-        getIt<WorldStateService>().pause();
-        getIt<WorldWeatherSync>().pause();
-      },
-    ),
+  // One observer, however often setup runs (tests, the capture harness); it
+  // resolves the current singletons when it fires.
+  _worldObserver ??= WorldLifecycleObserver(
+    onResume: () {
+      getIt<WorldStateService>().start();
+      getIt<WorldWeatherSync>().start();
+    },
+    onPause: () {
+      getIt<WorldStateService>().pause();
+      getIt<WorldWeatherSync>().pause();
+    },
   );
+  WidgetsFlutterBinding.ensureInitialized()
+    ..removeObserver(_worldObserver!)
+    ..addObserver(_worldObserver!);
   // Eager for the same reason: it must see every intent and playback event.
   getIt.registerLazySingleton<FacePerformer>(
     () => FacePerformer(

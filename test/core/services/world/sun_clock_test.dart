@@ -145,4 +145,15 @@ void main() {
       }
     });
   });
+
+  test('a report whose sunset does not follow its sunrise uses the table', () {
+    final DateTime noon = DateTime(2026, 5, 25, 12);
+    final ({double daylight, double dusk}) polar = SunClock.at(
+      noon,
+      sunrise: DateTime(2026, 5, 25, 3),
+      sunset: DateTime(2026, 5, 26, 0, 30),
+    );
+    expect(polar, SunClock.at(noon));
+    expect(polar.daylight, greaterThan(0.9));
+  });
 }

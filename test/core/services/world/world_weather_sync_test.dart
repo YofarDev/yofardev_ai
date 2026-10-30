@@ -74,6 +74,19 @@ void main() {
     });
   });
 
+  test('a failed fetch does not hold off the next resume', () {
+    fakeAsync((FakeAsync async) {
+      next = null;
+      final WorldWeatherSync sync = build()..start();
+      async.flushMicrotasks();
+      sync.pause();
+      sync.start();
+      async.flushMicrotasks();
+      expect(fetches, 2);
+      sync.dispose();
+    });
+  });
+
   test('every 30 minutes while active, not after pause', () {
     fakeAsync((FakeAsync async) {
       final WorldWeatherSync sync = build()..start();

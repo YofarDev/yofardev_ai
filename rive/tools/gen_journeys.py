@@ -1,4 +1,4 @@
-"""Generates rive/journeys/journey.rml: the scene-journey thresholds (contract v10,
+"""Generates rive/journeys/journeys.rml (built to assets/rive/journeys/journey.riv): the scene-journey thresholds (contract v10,
 `assets/rive/journeys/journey.riv`; moonshot M7 rulings 5-7, 11).
 
 One artboard `Journey`, 800 x 1000 (the avatar's), drawn by the app above the avatar with the

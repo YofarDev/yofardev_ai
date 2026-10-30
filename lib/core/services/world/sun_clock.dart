@@ -30,6 +30,9 @@ class SunClock {
   /// hour after sunrise (mirrored at sunset), then to 1 at solar noon.
   static const double _twilightTop = 0.85;
 
+  /// The shortest day a report may describe (minutes of local clock).
+  static const double _minDayMinutes = 180;
+
   /// The clock at [local]. [sunrise] / [sunset] only matter by their time of
   /// day (a report from another day is shifted onto [local]'s day); when
   /// either is null the month table is used.
@@ -39,10 +42,15 @@ class SunClock {
     DateTime? sunset,
   }) {
     final double t = _minutes(local);
-    final ({double sunrise, double sunset}) sun =
-        (sunrise != null && sunset != null)
+    ({double sunrise, double sunset}) sun = (sunrise != null && sunset != null)
         ? (sunrise: _minutes(sunrise), sunset: _minutes(sunset))
         : _monthSun(local);
+    // A report whose sunset does not follow its sunrise by at least 3 h on
+    // the local clock (a polar summer, a place in another time zone) cannot
+    // be drawn as one day: the month table stands in.
+    if (sun.sunset - sun.sunrise < _minDayMinutes) {
+      sun = _monthSun(local);
+    }
     return (
       daylight: _daylight(t, sun.sunrise, sun.sunset).clamp(0.0, 1.0),
       dusk: _dusk(t, sun.sunrise, sun.sunset).clamp(0.0, 1.0),

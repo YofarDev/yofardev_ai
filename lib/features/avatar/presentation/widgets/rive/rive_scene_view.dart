@@ -145,7 +145,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _preloadFile?.dispose();
     _preloadFile = null;
     _preloadScene = scene;
-    if (scene == null || scene == _loadedScene) {
+    // nothing to decode for the scene on screen or already loading
+    if (scene == null || scene == _loadedScene || scene == widget.scene) {
       return;
     }
     try {
@@ -367,8 +368,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
   /// `didUpdateWidget`, whose build follows).
   Future<void> _loadScene(AvatarScene scene, {bool rebuild = true}) async {
     final int ticket = _loads.begin();
+    File? preloaded;
     try {
-      final File? preloaded = _takePreload(scene);
+      preloaded = _takePreload(scene);
       final File? file =
           preloaded ??
           await File.asset(
@@ -442,6 +444,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
         SchedulerBinding.instance.ensureVisualUpdate();
       }
     } on Exception catch (e) {
+      // a taken preload that never got installed is ours to drop
+      if (preloaded != null && !identical(preloaded, _file)) {
+        preloaded.dispose();
+      }
       AppLogger.error(
         'RiveSceneView failed to load ${scene.name}.riv',
         tag: 'RiveSceneView',
