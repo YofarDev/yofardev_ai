@@ -97,8 +97,15 @@ def _line(text: str, ok: bool) -> str:
 
 
 def _common(tl: dict) -> list[str]:
-    return [_line(f"captured frames: {len(tl['frames'])}", len(tl["frames"]) > 0),
-            _line(f"network attempts during the run: {tl['network_attempts']}", tl["network_attempts"] == 0)]
+    g = [_line(f"captured frames: {len(tl['frames'])}", len(tl["frames"]) > 0),
+         _line(f"network attempts during the run: {tl['network_attempts']}", tl["network_attempts"] == 0)]
+    if tl["samples"] and "shotSerial" in tl["samples"][0]:
+        # M7: the stage camera cuts only at sentence starts (ruling 3)
+        cuts, ok = cuts_at_sentences(tl["samples"], tl["events"])
+        shots = sorted({x["shot"] for x in tl["samples"]})
+        g.append(_line(f"camera cuts only at sentence starts: {ok} of {cuts} (shots seen: {', '.join(shots)})",
+                       ok == cuts))
+    return g
 
 
 def gates_wow1(tl: dict, front_visible: bool) -> list[str]:
@@ -152,6 +159,109 @@ def gates_wow2(tl: dict) -> list[str]:
     return g
 
 
+# ---------------------------------------------------------------- M7: journeys
+PHASES = ["pullBack", "open", "exit", "close", "cut", "arriveOpen", "enter", "arriveClose", "vanish"]
+# beats in which the avatar is clipped at the threshold (journey_choreography.dart)
+CLIPPED = {"open", "exit", "close", "cut", "arriveOpen", "enter", "arriveClose"}
+
+
+def journeys(samples: list[dict]) -> list[list[dict]]:
+    """The samples of each journey (consecutive runs with a journey phase)."""
+    runs: list[list[dict]] = []
+    current: list[dict] = []
+    for x in samples:
+        if x.get("journey"):
+            current.append(x)
+        elif current:
+            runs.append(current)
+            current = []
+    if current:
+        runs.append(current)
+    return runs
+
+
+def phase_order(run: list[dict]) -> list[str]:
+    seen: list[str] = []
+    for x in run:
+        if not seen or seen[-1] != x["journey"]:
+            seen.append(x["journey"])
+    return seen
+
+
+def _journey_gates(run: list[dict], want_family: str, to: str) -> list[str]:
+    g = []
+    order = phase_order(run)
+    # a short beat can fall between two samples (33 ms): keep the order, allow gaps
+    in_order = [PHASES.index(p) for p in order] == sorted(PHASES.index(p) for p in order)
+    # the cut lasts one frame when the preload is ready: it may fall between two samples
+    g.append(_line(f"journey {want_family} → {to}: beats {'/'.join(order)} in order", in_order and
+                   {"exit", "enter"} <= set(order) and bool({"cut", "arriveOpen"} & set(order))))
+    fam = {x["family"] for x in run}
+    g.append(_line(f"journey {want_family} → {to}: family {sorted(fam)}", fam == {want_family}))
+    after_pull = [x for x in run if x["journey"] != "pullBack"]
+    wide = sum(1 for x in after_pull if x["shot"] == "wide") / len(after_pull) if after_pull else 0.0
+    g.append(_line(f"journey {want_family} → {to}: camera wide after the pull-back in {wide:.0%} of samples "
+                   f"(want >= 95%)", wide >= 0.95))
+    off = [x for x in run if x["presence"] != "onScreen"]
+    unclipped = [x for x in off if x["journey"] not in CLIPPED]
+    g.append(_line(f"journey {want_family} → {to}: avatar off screen only while clipped ({len(unclipped)} of "
+                   f"{len(off)} samples not)", not unclipped))
+    first_new = next((x for x in run if x["scene"] == to), None)
+    at_cut = first_new is not None and PHASES.index(first_new["journey"]) >= PHASES.index("cut")
+    g.append(_line(f"journey {want_family} → {to}: scene switched behind the closed threshold "
+                   f"(first sample in {to}: {first_new['journey'] if first_new else 'never'})", at_cut))
+    return g
+
+
+def cuts_at_sentences(samples: list[dict], events: list[dict]) -> tuple[int, int]:
+    """(camera cuts, those within 300 ms after a caption: a sentence start)."""
+    caps = [e["ms"] for e in events if e["type"] == "caption"]
+    cuts, ok = 0, 0
+    last = None
+    for x in samples:
+        serial = x.get("shotSerial")
+        if last is not None and serial != last and x.get("move") == "cut":
+            cuts += 1
+            if any(0 <= x["ms"] - c <= 300 for c in caps):
+                ok += 1
+        last = serial
+    return cuts, ok
+
+
+def gates_wow3(tl: dict) -> list[str]:
+    s, ev = tl["samples"], tl["events"]
+    g = _common(tl)
+    runs = journeys(s)
+    g.append(_line(f"journeys during the run: {len(runs)} (want 1)", len(runs) == 1))
+    if runs:
+        g += _journey_gates(runs[0], "door", "beach")
+    beach = [x for x in s if x["scene"] == "beach"]
+    dusk = min((x["dusk"] for x in beach), default=0.0)
+    g.append(_line(f"the beach at the local sunset: dusk min {dusk:.2f} (want >= 0.5)", dusk >= 0.5 and bool(beach)))
+    g.append(_line("the reply is spoken", _first(ev, "start") is not None))
+    send = _first(ev, "send")
+    if runs and send:
+        g.append(f"journey timing: starts {(runs[0][0]['ms'] - send['ms']) / 1000:.2f} s after send, lasts "
+                 f"{(runs[0][-1]['ms'] - runs[0][0]['ms']) / 1000:.2f} s: info")
+    return g
+
+
+TOUR_FAMILIES = {"campfire": "door", "beach": "path", "deepSpace": "rocket", "livingRoom": "portal"}
+
+
+def gates_tour(tl: dict) -> list[str]:
+    s = tl["samples"]
+    g = _common(tl)
+    runs = journeys(s)
+    want = tl.get("tour", [])
+    g.append(_line(f"journeys during the run: {len(runs)} (want {len(want)})", len(runs) == len(want)))
+    for run, to in zip(runs, want):
+        g += _journey_gates(run, TOUR_FAMILIES[to], to)
+    families = {x["family"] for run in runs for x in run}
+    g.append(_line(f"every threshold family played: {sorted(families)}", families == set(TOUR_FAMILIES.values())))
+    return g
+
+
 # ---------------------------------------------------------------- frames
 def load_frame(path: Path, size: tuple[int, int]) -> Image.Image:
     return Image.frombytes("RGBA", size, path.read_bytes()).convert("RGB")
@@ -200,6 +310,28 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
     stop_all = [e for e in ev if e["type"] == "stop"]
     end = stop_all[-1]["ms"] if stop_all else tl["frames"][-1]["ms"]
     speaking = [x for x in s if x["speaking"]]
+    if tl["wow"] in ("wow3", "tour"):
+        out: list[tuple[str, float, float]] = []
+        runs = journeys(s)
+        if tl["wow"] == "wow3":
+            send = _first(ev, "send")
+            out.append(("1 the user asks", send["ms"] - 300, 1.0))
+        for k, run in enumerate(runs):
+            def at(phase: str, frac: float = 0.0) -> float:
+                xs = [x for x in run if x["journey"] == phase]
+                return xs[min(len(xs) - 1, int(frac * len(xs)))]["ms"] if xs else run[0]["ms"]
+            tag = f"{run[0]['family']} → {run[-1]['scene']}"
+            if tl["wow"] == "wow3":
+                out += [("2 wide: the camera pulls back", at("open"), 1.0),
+                        ("3 the door opens, gaze leads", at("open", 0.9), 1.0),
+                        ("4 walks out through it", at("exit", 0.5), 1.0),
+                        ("5 match cut: the same door, the beach", at("arriveOpen", 0.2), 1.0),
+                        ("6 walks in at sunset", at("enter", 0.6), 1.0),
+                        ("7 settled", min(run[-1]["ms"] + 1500, tl["frames"][-1]["ms"]), 1.0)]
+            else:
+                out += [(f"{2 * k + 1} {tag}: walks out", at("exit", 0.5), 1.0),
+                        (f"{2 * k + 2} {tag}: walks in", at("enter", 0.5), 1.0)]
+        return out
     if tl["wow"] == "wow1":
         typing, send = _first(ev, "typing"), _first(ev, "send")
         lean = max(_between(s, typing["ms"], send["ms"] + 300), key=lambda x: x["lean"])
@@ -228,7 +360,8 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
 
 
 def crop_zoom(im: Image.Image, zoom: float) -> Image.Image:
-    """The face-centred crop the storyboard's close-ups use (the avatar's head sits ~43 % down)."""
+    """The face-centred crop the storyboard's close-ups used before M7's camera (the avatar's head
+    sits ~43 % down); a capture with the stage camera is never cropped (`beat_sheet`)."""
     if zoom == 1.0:
         return im
     w, h = im.size
@@ -241,7 +374,10 @@ def beat_sheet(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> Non
     cells = []
     cw = 300
     chh = int(size[1] * cw / size[0])
+    camera = bool(tl["samples"]) and "shot" in tl["samples"][0]
     for label, ms, zoom in beats(tl):
+        if camera:
+            zoom = 1.0   # M7: the frames are already framed by the stage camera
         i = nearest(tl["frames"], ms)
         im = crop_zoom(load_frame(wow_dir / "frames" / f"{i:04d}.rgba", size), zoom).resize((cw, chh))
         cell = Image.new("RGB", (cw, chh + 34), (22, 18, 29))
@@ -337,6 +473,10 @@ def main(argv: list[str]) -> int:
                                 f"(rain mist: wet / dry median luminance inside the hoodie {share:.3f}, "
                                 f"want <= 0.97)")
                       for g in gates_wow1(tl, ok)]
+        elif wow == "wow3":
+            gates += gates_wow3(tl)
+        elif wow == "tour":
+            gates += gates_tour(tl)
         else:
             gates += gates_wow2(tl)
     except (TypeError, ValueError, IndexError, KeyError, AttributeError) as e:

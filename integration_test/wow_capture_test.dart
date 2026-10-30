@@ -16,6 +16,8 @@ import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/models/llm_config.dart';
+import 'package:yofardev_ai/core/models/performance/shot.dart';
+import 'package:yofardev_ai/core/models/weather_report.dart';
 import 'package:yofardev_ai/core/services/llm/fake_llm_service.dart';
 import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
@@ -56,16 +58,29 @@ class _Script {
     required this.rain,
     required this.user,
     required this.responses,
+    this.clock,
+    this.tour = const <AvatarScene>[],
   });
 
   final AvatarScene scene;
   final double rain;
   final String user;
   final List<FakeLlmResponse> responses;
+
+  /// The local time the world clock is pinned to (M7: Wow #3 at sunset);
+  /// null leaves the real clock.
+  final ({int hour, int minute})? clock;
+
+  /// M7 `tour`: scene journeys driven one after another, no speech.
+  final List<AvatarScene> tour;
 }
 
-String _answer(String text, String mood) =>
-    jsonEncode(<String, String>{'text': text, 'mood': mood});
+String _answer(String text, String mood, {String? background}) => jsonEncode(
+  <String, String>{'text': text, 'mood': mood, 'background': ?background},
+);
+
+/// The pinned sun (M7 Wow #3): sunset at 18:00 local, sunrise 07:30.
+const ({int hour, int minute}) _sunset = (hour: 18, minute: 0);
 
 final Map<String, _Script> _scripts = <String, _Script>{
   // Campfire at night, raining (world sync is M7–M9: the harness sets it).
@@ -106,6 +121,39 @@ final Map<String, _Script> _scripts = <String, _Script>{
           'happy',
         ),
       ),
+    ],
+  ),
+  // M7 Wow #3: changing scene is a journey (living room → beach, the door),
+  // landing at the user's local sunset (the harness pins the clock).
+  'wow3': _Script(
+    scene: AvatarScene.livingRoom,
+    rain: 0,
+    user: 'Can we go to the beach? I want to see the sunset.',
+    clock: _sunset,
+    responses: <FakeLlmResponse>[
+      FakeLlmResponse(
+        jsonBody: _answer(
+          "Let's go! Grab your sandals. "
+              'Here we are, just in time for the sunset.',
+          'happy',
+          background: 'beach',
+        ),
+      ),
+    ],
+  ),
+  // M7: one journey per threshold family, no speech (door, path, rocket,
+  // portal), in the morning.
+  'tour': _Script(
+    scene: AvatarScene.livingRoom,
+    rain: 0,
+    user: '',
+    clock: (hour: 10, minute: 0),
+    responses: <FakeLlmResponse>[],
+    tour: <AvatarScene>[
+      AvatarScene.campfire,
+      AvatarScene.beach,
+      AvatarScene.deepSpace,
+      AvatarScene.livingRoom,
     ],
   ),
 };
@@ -187,15 +235,33 @@ void main() {
     final PerformanceDirector director = getIt<PerformanceDirector>();
     final FacePerformer performer = getIt<FacePerformer>();
     final WorldStateService world = getIt<WorldStateService>();
+    final CameraDirector camera = getIt<CameraDirector>();
 
     if (!chat.state.functionCallingEnabled) {
       chat.toggleFunctionCalling();
     }
+    // A new chat starts on a random background: set the script's scene on
+    // the chat too, so a reply's background change is seen as a change.
+    await chat.updateAvatarOpenedChat(AvatarConfig(background: script.scene));
     avatar.onNewAvatarConfig(
       chat.state.currentChat.id,
       AvatarConfig(background: script.scene),
     );
     world.setRain(script.rain);
+    final ({int hour, int minute})? pinned = script.clock;
+    if (pinned != null) {
+      final DateTime now = DateTime.now();
+      DateTime at(int h, int m) => DateTime(now.year, now.month, now.day, h, m);
+      world.applyWeather(
+        WeatherReport(
+          conditionId: 800,
+          sunrise: at(7, 30),
+          sunset: at(_sunset.hour, _sunset.minute),
+        ),
+      );
+      world.pinClock(at(pinned.hour, pinned.minute));
+      addTearDown(() => world.pinClock(null));
+    }
     await _settle(tester, const Duration(seconds: 4));
     expect(avatar.state.scene, script.scene);
 
@@ -264,6 +330,16 @@ void main() {
         'tuck': face.lipTuck,
         'scene': avatar.state.scene.name,
         'rain': world.rain.value,
+        // M7: the journey, the camera and the clock
+        'journey': avatar.state.journey?.phase.name,
+        'family': avatar.state.journey?.family.name,
+        'presence': avatar.state.presence.name,
+        'preload': avatar.state.preloadScene?.name,
+        'shot': camera.shot.value.shot.name,
+        'move': camera.shot.value.move.name,
+        'shotSerial': camera.shot.value.serial,
+        'daylight': world.daylight.value,
+        'dusk': world.dusk.value,
       });
     }
 
@@ -286,12 +362,38 @@ void main() {
 
     // establishing shot, then the user types (composer activity → lean)
     await _settle(tester, const Duration(seconds: 2));
+    if (script.tour.isNotEmpty) {
+      // M7 tour: one journey after another, each to its end
+      for (final AvatarScene to in script.tour) {
+        events.add(<String, Object?>{
+          'ms': clock.elapsedMilliseconds,
+          'type': 'journey',
+          'to': to.name,
+        });
+        avatar.onNewAvatarConfig(
+          chat.state.currentChat.id,
+          AvatarConfig(
+            background: to,
+            specials: AvatarSpecials.leaveAndComeBack,
+          ),
+        );
+        final int limit = clock.elapsedMilliseconds + 20000;
+        await _settle(tester, const Duration(milliseconds: 300));
+        while (avatar.state.journey != null &&
+            clock.elapsedMilliseconds < limit) {
+          await tester.pump();
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+        await _settle(tester, const Duration(milliseconds: 1200));
+      }
+      spoke = true;
+    }
     final Finder field = find.byType(TextField);
     events.add(<String, Object?>{
       'ms': clock.elapsedMilliseconds,
       'type': 'typing',
     });
-    for (int i = 1; i <= script.user.length; i++) {
+    for (int i = 1; script.tour.isEmpty && i <= script.user.length; i++) {
       await tester.enterText(field, script.user.substring(0, i));
       await tester.pump();
       await Future<void>.delayed(const Duration(milliseconds: 90));
@@ -301,7 +403,9 @@ void main() {
       'ms': clock.elapsedMilliseconds,
       'type': 'send',
     });
-    await tester.testTextInput.receiveAction(TextInputAction.send);
+    if (script.tour.isEmpty) {
+      await tester.testTextInput.receiveAction(TextInputAction.send);
+    }
 
     // until the reply has been spoken and the face has settled
     final int deadline = clock.elapsedMilliseconds + 45000;
@@ -312,6 +416,7 @@ void main() {
       if (consumed &&
           spoke &&
           !speaking &&
+          avatar.state.journey == null &&
           clock.elapsedMilliseconds - lastStop > 1800) {
         break;
       }
@@ -319,7 +424,14 @@ void main() {
     sampler.cancel();
     await grabber.stop();
     if (_capture && script.rain > 0) {
-      // the front layer's proof: the same pose wet, then dry
+      // the front layer's proof: the same pose wet, then dry, both in the
+      // wide shot (M7: the camera pulls back 2.5 s after the reply, in 1.5 s)
+      final int wideBy = clock.elapsedMilliseconds + 8000;
+      while (camera.shot.value.shot != Shot.wide &&
+          clock.elapsedMilliseconds < wideBy) {
+        await _settle(tester, const Duration(milliseconds: 200));
+      }
+      await _settle(tester, const Duration(milliseconds: 1800));
       await grabber.grabOnce('wet');
       world.setRain(0);
       await _settle(tester, const Duration(milliseconds: 1200));
@@ -337,6 +449,7 @@ void main() {
       'capture': _capture,
       'scene': script.scene.name,
       'rain': script.rain,
+      'tour': <String>[for (final AvatarScene s in script.tour) s.name],
       'user': script.user,
       'reply': script.responses
           .where((FakeLlmResponse r) => r.toolCalls.isEmpty)

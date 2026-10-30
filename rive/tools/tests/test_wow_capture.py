@@ -7,6 +7,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import wow_capture as wc  # noqa: E402
 from wow_capture import audio_offsets, bilabial_words, closures, gates_wow1, gates_wow2  # noqa: E402
 
 
@@ -103,3 +104,61 @@ def test_wow2_gates_pass_and_fail() -> None:
     assert any("put away" in g and g.endswith("FAIL") for g in gates_wow2(_wow2(samples=held)))
     turned = [{**s, "yaw": 0.6} for s in _wow2()["samples"]]
     assert any("answer" in g and g.endswith("FAIL") for g in gates_wow2(_wow2(samples=turned)))
+
+
+def _journey_samples(t0: int, to: str, family: str, origin: str = "livingRoom", clipped: bool = True,
+                     switch_at: str = "cut", wide: bool = True) -> list[dict]:
+    phases = ["pullBack", "open", "exit", "close", "cut", "arriveOpen", "enter", "arriveClose", "vanish"]
+    out = []
+    ms = t0
+    for p in phases:
+        for _ in range(3):
+            off = p in ("exit", "close", "cut", "arriveOpen")
+            out.append({"ms": ms, "journey": p, "family": family,
+                        "presence": "outOfScreen" if off else "onScreen",
+                        "scene": to if wc.PHASES.index(p) >= wc.PHASES.index(switch_at) else origin,
+                        "shot": "wide" if (wide or p == "pullBack") else "medium", "move": "ease",
+                        "shotSerial": 1, "dusk": 1.0})
+            ms += 33
+    if not clipped:
+        out[1]["presence"] = "outOfScreen"   # off screen during the pull-back: not clipped
+    return out
+
+
+def _wow3(**kw: object) -> dict:
+    s = [{"ms": 0, "journey": None, "family": None, "presence": "onScreen", "scene": "livingRoom",
+          "shot": "medium", "move": "ease", "shotSerial": 0, "dusk": 1.0}]
+    s += _journey_samples(100, "beach", "door", **kw)
+    s += [{"ms": 2000, "journey": None, "family": None, "presence": "onScreen", "scene": "beach",
+           "shot": "wide", "move": "ease", "shotSerial": 1, "dusk": 1.0},
+          {"ms": 2300, "journey": None, "family": None, "presence": "onScreen", "scene": "beach",
+           "shot": "medium", "move": "cut", "shotSerial": 2, "dusk": 1.0}]
+    ev = [{"ms": 50, "type": "send"}, {"ms": 2200, "type": "start"}, {"ms": 2210, "type": "caption", "text": "x"}]
+    return {"frames": [{"i": 0, "ms": 0}], "network_attempts": 0, "samples": s, "events": ev}
+
+
+def test_wow3_gates_pass_and_fail() -> None:
+    ok = wc.gates_wow3(_wow3())
+    assert not [g for g in ok if g.endswith("FAIL")], ok
+    assert any(g.endswith("FAIL") for g in wc.gates_wow3(_wow3(clipped=False)))
+    assert any(g.endswith("FAIL") for g in wc.gates_wow3(_wow3(switch_at="close")))
+    assert any(g.endswith("FAIL") for g in wc.gates_wow3(_wow3(wide=False)))
+    bad_cut = _wow3()
+    bad_cut["events"][-1]["ms"] = 1000   # the cut lands 1.3 s after the caption: not a sentence start
+    assert any(g.endswith("FAIL") and "sentence" in g for g in wc.gates_wow3(bad_cut))
+
+
+def test_tour_gates_need_every_family() -> None:
+    s = []
+    origin = "livingRoom"
+    for k, to in enumerate(["campfire", "beach", "deepSpace", "livingRoom"]):
+        s += _journey_samples(k * 1000, to, wc.TOUR_FAMILIES[to], origin=origin)
+        s.append({"ms": k * 1000 + 990, "journey": None, "family": None, "presence": "onScreen", "scene": to,
+                  "shot": "wide", "move": "ease", "shotSerial": 1, "dusk": 0.0})
+        origin = to
+    tl = {"frames": [{"i": 0, "ms": 0}], "network_attempts": 0, "samples": s, "events": [],
+          "tour": ["campfire", "beach", "deepSpace", "livingRoom"]}
+    ok = wc.gates_tour(tl)
+    assert not [g for g in ok if g.endswith("FAIL")], ok
+    tl["tour"] = tl["tour"][:3]
+    assert any(g.endswith("FAIL") for g in wc.gates_tour(tl))
