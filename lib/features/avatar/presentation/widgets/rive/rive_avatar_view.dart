@@ -20,6 +20,7 @@ import '../../rive/avatar_light_writer.dart';
 import '../../rive/avatar_rive_contract.dart';
 import '../../bloc/avatar_state.dart';
 import '../stage_camera.dart';
+import 'avatar_zone_hit_gate.dart';
 
 /// Rive rendering of the avatar, driven entirely by [AvatarState] and
 /// [TalkingState].
@@ -61,11 +62,18 @@ import '../stage_camera.dart';
 ///
 /// Rive types never leave `lib/features/avatar/presentation/`.
 class RiveAvatarView extends StatefulWidget {
-  /// How the avatar's Rive widget hit-tests (M9 ruling 7): only its own
-  /// listener zones (head, body) claim a pointer; everywhere else the
-  /// pointer reaches the scene below (its prop taps and its drag handle).
+  /// How the avatar's Rive widget hit-tests (M9 ruling 7): its listeners
+  /// (the eye follow over the whole artboard, the head and body taps) hear
+  /// every pointer and never stop one; an [AvatarZoneHitGate] around it
+  /// claims a pointer only on the head and body zones, so everywhere else
+  /// the pointer also reaches the scene below (its prop taps and its drag
+  /// handle).
   static const RiveHitTestBehavior hitTestBehavior =
-      RiveHitTestBehavior.translucent;
+      RiveHitTestBehavior.transparent;
+
+  /// How the avatar's artboard is laid out: contain, feet on the bottom.
+  static const Fit fit = Fit.contain;
+  static const Alignment alignment = Alignment.bottomCenter;
 
   const RiveAvatarView({
     super.key,
@@ -157,6 +165,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
+  AvatarTapZones? _zones;
   String? _error;
 
   @override
@@ -295,6 +304,12 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
         _file = file;
         _controller = controller;
         _binding = binding;
+        _zones = AvatarTapZones(
+          controller.artboard,
+          controller.stateMachine,
+          fit: RiveAvatarView.fit,
+          alignment: RiveAvatarView.alignment,
+        );
       });
       _applyContinuousState();
       // A fresh binding has none of the head numbers yet.
@@ -417,6 +432,8 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
 
   void _teardown() {
     final RiveWidgetController? controller = _controller;
+    _zones?.dispose();
+    _zones = null;
     _binding?.dispose();
     controller?.stateMachine.removeEventListener(_onRiveEvent);
     controller?.dispose();
@@ -542,6 +559,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     }
   }
 
+  /// Whether a pointer at [local] lands on the head or body zone.
+  bool _claimsPointer(Offset local, Size size) =>
+      _zones?.claims(local, size) ?? false;
+
   @override
   Widget build(BuildContext context) {
     final RiveWidgetController? controller = _controller;
@@ -550,14 +571,17 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       // whole artboard to fit, and bottom-center anchors the feet to the
       // screen bottom on viewports taller than the 800x1000 artboard aspect
       // (default center alignment would float the character mid-screen).
-      return RiveWidget(
-        controller: controller,
-        fit: Fit.contain,
-        alignment: Alignment.bottomCenter,
-        hitTestBehavior: RiveAvatarView.hitTestBehavior,
-        // The camera's texture scale: changes once per shot, not per frame.
-        renderResolution: RenderResolution.layout(
-          scale: StageRenderScale.of(context),
+      return AvatarZoneHitGate(
+        claims: _claimsPointer,
+        child: RiveWidget(
+          controller: controller,
+          fit: RiveAvatarView.fit,
+          alignment: RiveAvatarView.alignment,
+          hitTestBehavior: RiveAvatarView.hitTestBehavior,
+          // The camera's texture scale: changes once per shot, not per frame.
+          renderResolution: RenderResolution.layout(
+            scale: StageRenderScale.of(context),
+          ),
         ),
       );
     }

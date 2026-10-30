@@ -9,6 +9,7 @@ import 'package:yofardev_ai/core/models/performance/shot.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/scene_drag.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/prop_drag_controller.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/stage_framing.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/avatar_zone_hit_gate.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_avatar_view.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/stage_camera.dart';
@@ -17,8 +18,9 @@ import '../../../../helpers/rive_test_assets.dart';
 
 const Size _phone = Size(390, 844);
 
-/// The avatar as the real one hit-tests (`RiveHitTestBehavior.translucent`):
-/// only its own zones claim a pointer; elsewhere it lets it through.
+/// The avatar as the real one hit-tests (a transparent Rive widget inside an
+/// `AvatarZoneHitGate`): only its own zones claim a pointer; elsewhere it
+/// lets it through.
 class _FakeAvatar extends StatelessWidget {
   const _FakeAvatar({required this.head, required this.onHead});
 
@@ -311,18 +313,81 @@ void main() {
     });
   });
 
-  test('the real avatar view hit-tests translucent (Review Focus 1)', () {
-    expect(RiveAvatarView.hitTestBehavior, RiveHitTestBehavior.translucent);
-    // and its RiveWidget uses it (the native runtime cannot load in a test)
+  test('the real avatar view: transparent Rive inside a zone gate '
+      '(Review Focus 1)', () {
+    expect(RiveAvatarView.hitTestBehavior, RiveHitTestBehavior.transparent);
+    // and its RiveWidget uses it, inside the gate (the native runtime
+    // cannot load in a test)
     final String src = File(
       'lib/features/avatar/presentation/widgets/rive/rive_avatar_view.dart',
     ).readAsStringSync();
-    final int widget = src.indexOf('return RiveWidget(');
+    final int gate = src.indexOf('return AvatarZoneHitGate(');
+    expect(gate, greaterThan(-1));
+    final int widget = src.indexOf('child: RiveWidget(', gate);
     expect(widget, greaterThan(-1));
     expect(
       src.substring(widget, src.indexOf(');', widget)),
       contains('hitTestBehavior: RiveAvatarView.hitTestBehavior'),
     );
+  });
+
+  group('AvatarZoneHitGate', () {
+    // A zone in the top-left quarter; the child hears every pointer (as the
+    // transparent Rive widget's listeners do), the layer below hears the
+    // ones the gate does not claim.
+    Future<({List<String> child, List<String> below})> pumpGate(
+      WidgetTester tester,
+    ) async {
+      final List<String> child = <String>[];
+      final List<String> below = <String>[];
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => below.add('tap'),
+              ),
+              AvatarZoneHitGate(
+                claims: (Offset local, Size size) =>
+                    local.dx < size.width / 2 && local.dy < size.height / 2,
+                child: Listener(
+                  behavior: HitTestBehavior.translucent,
+                  onPointerDown: (PointerDownEvent _) => child.add('down'),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      return (child: child, below: below);
+    }
+
+    testWidgets('a pointer on a zone stays with the avatar', (
+      WidgetTester tester,
+    ) async {
+      final ({List<String> child, List<String> below}) heard = await pumpGate(
+        tester,
+      );
+      await tester.tapAt(const Offset(10, 10));
+      expect(heard.child, <String>['down']);
+      expect(heard.below, isEmpty);
+    });
+
+    testWidgets('elsewhere the avatar hears it and so does the scene', (
+      WidgetTester tester,
+    ) async {
+      final ({List<String> child, List<String> below}) heard = await pumpGate(
+        tester,
+      );
+      final Size size = tester.getSize(find.byType(AvatarZoneHitGate));
+      await tester.tapAt(Offset(size.width - 10, size.height - 10));
+      expect(heard.child, <String>['down']);
+      expect(heard.below, <String>['tap']);
+    });
   });
 }
 

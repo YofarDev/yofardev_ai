@@ -514,6 +514,18 @@ abstract final class AvatarRiveContract {
   static String sceneAssetPath(String sceneId) =>
       '$scenesAssetDir/$sceneId.riv';
 
+  /// Scene posters (v12): one `<sceneId>.webp` per scene, rendered from the
+  /// scene's rest pose, [posterWidth]×[posterHeight], at most
+  /// [posterMaxBytes] each.
+  static const String postersAssetDir = 'assets/rive/posters';
+  static const int posterWidth = 540;
+  static const int posterHeight = 960;
+  static const int posterMaxBytes = 40 * 1024;
+
+  /// Poster asset path for a scene id.
+  static String posterAssetPath(String sceneId) =>
+      '$postersAssetDir/$sceneId.webp';
+
   // ── assets/rive/journeys/journey.riv (contract v10) ──────────────────────
   static const String journeyAssetPath = 'assets/rive/journeys/journey.riv';
   static const String journeyArtboard = 'Journey';

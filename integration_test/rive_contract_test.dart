@@ -1,17 +1,48 @@
+import 'dart:async';
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
 import 'package:rive/rive.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/services/audio/foley_service.dart'
+    show DragHaptic;
+import 'package:yofardev_ai/features/avatar/domain/models/scene_drag.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/prop_drag_physics.dart';
+import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
+import 'package:yofardev_ai/features/avatar/presentation/rive/prop_drag_controller.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/avatar_zone_hit_gate.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_avatar_view.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
+import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
 
 /// Keeps the `.riv` files in line with `rive/CONTRACT.md`: every name in
 /// [AvatarRiveContract] must exist in the shipped assets.
 ///
 /// Runs on macOS (`flutter test integration_test/rive_contract_test.dart
 /// -d macos`). Rive listener event names can't be enumerated through the
-/// runtime API, so only the data-binding surface is asserted: artboards,
-/// state machines, view model property names, and every enum value (read
-/// back after setting it).
+/// runtime API, so the data-binding surface is asserted directly
+/// (artboards, state machines, view model property names, every enum value
+/// read back after setting it) and the scenes' `propId`s are found by
+/// tapping a grid over each real scene.
+///
+/// v12 (M9): the drag handles run on the real runtime: one real drag per
+/// handle through a real `RiveSceneView` and `PropDragController`, the
+/// numbers read back from the file's view model; the avatar's translucent
+/// hit test over the scene; the café wipe's darken blend in a rendered frame.
+/// These run with the window's frames fully live, in real time.
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final IntegrationTestWidgetsFlutterBinding binding =
+      IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  binding.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
 
   group('avatar.riv matches the contract', () {
     late File file;
@@ -312,6 +343,42 @@ void main() {
       walker.dispose();
     });
 
+    test('v12: the tap zones are found by name; the eye follow covers '
+        'the whole artboard', () {
+      controller.stateMachine.advanceAndApply(0);
+      final AvatarTapZones zones = AvatarTapZones(
+        controller.artboard,
+        controller.stateMachine,
+        fit: RiveAvatarView.fit,
+        alignment: RiveAvatarView.alignment,
+      );
+      expect(
+        zones.found,
+        isTrue,
+        reason:
+            '${AvatarTapZones.headZone} and ${AvatarTapZones.bodyZone} '
+            'in avatar.riv',
+      );
+      // laid out at its own size, a local point is an artboard point
+      const Size frame = Size(800, 1000);
+      expect(zones.claims(const Offset(400, 360), frame), isTrue);
+      expect(zones.claims(const Offset(400, 820), frame), isTrue);
+      // above the head and beside the body: Rive's own hit test says yes
+      // (the eye follow's full-artboard hit area), the zones say no
+      for (final Offset free in <Offset>[
+        const Offset(400, 40),
+        const Offset(60, 500),
+      ]) {
+        expect(
+          controller.stateMachine.hitTest(Vec2D.fromOffset(free)),
+          isTrue,
+          reason: 'the eye follow hears $free',
+        );
+        expect(zones.claims(free, frame), isFalse, reason: '$free is free');
+      }
+      zones.dispose();
+    });
+
     test('autoBlink defaults to true; blink is a trigger', () {
       final ViewModelInstanceBoolean? auto = vmi.boolean(
         AvatarRiveContract.propAutoBlink,
@@ -443,6 +510,97 @@ void main() {
         }
         npc.value = 'rest';
 
+        // v12: the second NPC slot (default away; only the beach draws it),
+        // the moon phase (default -1: the moon as drawn before v12) and the
+        // December dressing.
+        final ViewModelInstanceEnum? npc2 = vmi.enumerator(
+          AvatarRiveContract.scenePropNpc2,
+        );
+        expect(npc2, isNotNull, reason: 'SceneVM.npc2 enum in $sceneId');
+        expect(npc2!.value, 'away', reason: '$sceneId npc2 defaults to away');
+        for (final String value in AvatarRiveContract.npcValues) {
+          npc2.value = value;
+          expect(npc2.value, value, reason: '$sceneId npc2 rejected "$value"');
+        }
+        npc2.value = 'away';
+        final Map<String, ({double rest, List<double> range})> v12Numbers =
+            <String, ({double rest, List<double> range})>{
+              AvatarRiveContract.scenePropNpc2X: (
+                rest: 0,
+                range: <double>[0, 1],
+              ),
+              AvatarRiveContract.scenePropNpc2Look: (
+                rest: 0,
+                range: <double>[-1, 1],
+              ),
+              AvatarRiveContract.scenePropMoonPhase: (
+                rest: AvatarRiveContract.moonPhaseDefault,
+                range: <double>[
+                  AvatarRiveContract.moonPhaseMin,
+                  0.25,
+                  0.5,
+                  AvatarRiveContract.moonPhaseMax,
+                  AvatarRiveContract.moonPhaseDefault,
+                ],
+              ),
+              AvatarRiveContract.scenePropFestive: (
+                rest: 0,
+                range: <double>[
+                  AvatarRiveContract.festiveMin,
+                  AvatarRiveContract.festiveMax,
+                ],
+              ),
+            };
+        // v12 drag handle numbers: the scene's own, at their defaults
+        // (trailFade 1), and none of another scene's.
+        final SceneDragHandle handle = SceneDrags.of(
+          AvatarScene.values.byName(sceneId),
+        )!;
+        expect(
+          handle.numbers.map((DragNumber n) => n.name).toSet(),
+          AvatarRiveContract.sceneDragProps[sceneId]!.toSet(),
+          reason: '$sceneId: SceneDrags mirrors the contract',
+        );
+        for (final DragNumber n in handle.numbers) {
+          v12Numbers[n.name] = (rest: n.value, range: _dragRange(n.name));
+        }
+        v12Numbers.forEach((
+          String name,
+          ({double rest, List<double> range}) spec,
+        ) {
+          expect(names, contains(name), reason: 'SceneVM.$name in $sceneId');
+          final ViewModelInstanceNumber n = vmi.number(name)!;
+          expect(n.value, spec.rest, reason: '$sceneId $name default');
+          for (final double v in spec.range) {
+            n.value = v;
+            expect(n.value, v, reason: '$sceneId $name');
+          }
+          n.value = spec.rest;
+        });
+        final Set<String> foreignDrags = <String>{
+          for (final List<String> own
+              in AvatarRiveContract.sceneDragProps.values)
+            ...own,
+        }.difference(AvatarRiveContract.sceneDragProps[sceneId]!.toSet());
+        for (final String name in foreignDrags) {
+          expect(
+            names,
+            isNot(contains(name)),
+            reason: '$sceneId declares only its own drag numbers ($name)',
+          );
+        }
+
+        // The eventId enum holds exactly the contract's values, in order.
+        final List<String> contractEvents =
+            AvatarRiveContract.sceneEvents[sceneId]!;
+        expect(
+          file.enums.any((DataEnum e) => listEquals(e.values, contractEvents)),
+          isTrue,
+          reason:
+              '$sceneId: no enum equals $contractEvents; file has '
+              '${file.enums.map((DataEnum e) => '${e.name}: ${e.values}')}',
+        );
+
         // Every eventId value for this scene must be accepted.
         final ViewModelInstanceEnum? eventId = vmi.enumerator(
           AvatarRiveContract.scenePropEventId,
@@ -559,4 +717,883 @@ void main() {
       file.dispose();
     });
   });
+
+  group('scene posters (v12)', () {
+    for (final String sceneId in AvatarRiveContract.sceneIds) {
+      test('$sceneId.webp exists, 540x960, within budget', () async {
+        final ByteData data = await rootBundle.load(
+          AvatarRiveContract.posterAssetPath(sceneId),
+        );
+        expect(data.lengthInBytes, greaterThan(0));
+        expect(
+          data.lengthInBytes,
+          lessThanOrEqualTo(AvatarRiveContract.posterMaxBytes),
+          reason: '$sceneId poster budget',
+        );
+        final ui.Codec codec = await ui.instantiateImageCodec(
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        );
+        final ui.FrameInfo frame = await codec.getNextFrame();
+        expect(frame.image.width, AvatarRiveContract.posterWidth);
+        expect(frame.image.height, AvatarRiveContract.posterHeight);
+        frame.image.dispose();
+        codec.dispose();
+      });
+    }
+  });
+
+  group('scene propIds on the real runtime (grid of taps)', () {
+    for (final String sceneId in AvatarRiveContract.sceneIds) {
+      testWidgets('$sceneId: every tap target is a contract propId', (
+        WidgetTester tester,
+      ) async {
+        final AvatarScene scene = AvatarScene.values.byName(sceneId);
+        final _Stage stage = _Stage();
+        final Size box = _stageBox(tester);
+        await tester.pumpWidget(_stageApp(scene, stage, box));
+        await _waitLoaded(tester, stage, scene);
+
+        final Map<String, Offset> hits = await _scanProps(tester, stage, box);
+        expect(
+          hits.keys.toSet(),
+          AvatarRiveContract.sceneProps[sceneId]!.toSet(),
+          reason: '$sceneId prop_tapped ids (first hits: $hits)',
+        );
+        await _unmount(tester);
+      });
+    }
+  });
+
+  group('v12 drag handles on the real runtime', () {
+    testWidgets('livingRoom cord: pull past 0.6 fires lightsOff, springs '
+        'back', (WidgetTester tester) async {
+      await _pullTest(
+        tester,
+        AvatarScene.livingRoom,
+        AvatarRiveContract.scenePropCord,
+        SceneEvent.lightsOff,
+        expectedFoley: <String>['click'],
+      );
+    });
+
+    testWidgets('mountainHut rope: pull past 0.6 rings the bell, springs '
+        'back', (WidgetTester tester) async {
+      await _pullTest(
+        tester,
+        AvatarScene.mountainHut,
+        AvatarRiveContract.scenePropRope,
+        SceneEvent.bell,
+        expectedFoley: <String>['click', 'bell'],
+      );
+    });
+
+    testWidgets('campfire poke: the tip follows the finger, a fast stir '
+        'flares, it eases out', (WidgetTester tester) async {
+      const AvatarScene scene = AvatarScene.campfire;
+      final _Stage stage = _Stage();
+      final Size box = _stageBox(tester);
+      await tester.pumpWidget(_stageApp(scene, stage, box));
+      await _waitLoaded(tester, stage, scene);
+      final PropDragController drags = stage.drags;
+      final double scale = SceneDrags.coverScale(box);
+      final Offset origin = tester.getTopLeft(find.byType(RiveSceneView));
+      // Poke is absolute: start on the stick's tip.
+      final Offset tip =
+          origin + SceneDrags.toLocal(PropDragPhysics.pokeTip, box);
+      expect(drags.readNumber(AvatarRiveContract.scenePropPoke), 0);
+
+      final TestGesture gesture = await tester.startGesture(tip);
+      Offset at = tip;
+      // past the 3 px accept, then hold while the stick slides in (120 ms)
+      at = await _stepTo(tester, gesture, at, tip + const Offset(4, 0), 2);
+      await _live(tester, const Duration(milliseconds: 250));
+      expect(
+        drags.readNumber(AvatarRiveContract.scenePropPoke),
+        greaterThan(0.95),
+        reason: 'the stick shows while held',
+      );
+      // a slow stir: a 30 px circle (artboard) in 0.8 s, ~240 px/s
+      const int steps = 48;
+      for (int i = 1; i <= steps; i++) {
+        final double a = 2 * math.pi * i / steps;
+        final Offset target =
+            tip + Offset(math.cos(a) - 1, math.sin(a)) * 30 * scale;
+        at = await _stepTo(tester, gesture, at, target, 1);
+      }
+      at = await _stepTo(tester, gesture, at, tip + Offset(60, 40) * scale, 6);
+      await _live(tester, const Duration(milliseconds: 150));
+      final Offset finger = SceneDrags.toArtboard(at - origin, box);
+      final double pokeX = drags.readNumber(AvatarRiveContract.scenePropPokeX)!;
+      final double pokeY = drags.readNumber(AvatarRiveContract.scenePropPokeY)!;
+      expect(pokeX, inInclusiveRange(-1, 1));
+      expect(pokeY, inInclusiveRange(-1, 1));
+      expect(
+        pokeX,
+        closeTo(
+          ((finger.dx - PropDragPhysics.pokeTip.dx) /
+                  PropDragPhysics.pokeRange.dx)
+              .clamp(-1.0, 1.0),
+          0.05,
+        ),
+        reason: 'the tip is under the finger (x)',
+      );
+      expect(
+        pokeY,
+        closeTo(
+          ((finger.dy - PropDragPhysics.pokeTip.dy) /
+                  PropDragPhysics.pokeRange.dy)
+              .clamp(-1.0, 1.0),
+          0.05,
+        ),
+        reason: 'the tip is under the finger (y)',
+      );
+      expect(pokeX, greaterThan(0.4), reason: 'the tip moved right');
+      expect(
+        stage.events,
+        isNot(contains(SceneEvent.flare)),
+        reason: 'a slow stir does not flare',
+      );
+      // a fast stir: back and forth over 120 px (artboard), 20 px every
+      // 10 ms of real time (~2000 px/s; a pumped frame is too slow here)
+      final Offset swing = Offset(20, 0) * scale;
+      for (int i = 0; i < 48; i++) {
+        at += (i ~/ 6).isEven ? -swing : swing;
+        await gesture.moveTo(at);
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      await gesture.up();
+      expect(stage.events, <SceneEvent>[SceneEvent.flare]);
+      expect(stage.haptics, contains(DragHaptic.impact));
+      // eased out (450 ms), then back to its defaults
+      await _live(tester, const Duration(milliseconds: 900));
+      expect(drags.readNumber(AvatarRiveContract.scenePropPoke), 0);
+      expect(drags.readNumber(AvatarRiveContract.scenePropPokeX), 0);
+      expect(drags.readNumber(AvatarRiveContract.scenePropPokeY), 0);
+      await _unmount(tester);
+    });
+
+    testWidgets('beach sand: a stroke lays dots, bigWave washes them', (
+      WidgetTester tester,
+    ) async {
+      const AvatarScene scene = AvatarScene.beach;
+      final _Stage stage = _Stage();
+      final Size box = _stageBox(tester);
+      await tester.pumpWidget(_stageApp(scene, stage, box));
+      await _waitLoaded(tester, stage, scene);
+      final Rect rect = SceneDrags.of(scene)!.rect;
+      await _trailStroke(
+        tester,
+        stage,
+        box,
+        Offset(rect.left + 80, 1650),
+        Offset(rect.right - 60, 1650),
+      );
+      // the wave washes the sand (1.2 s), then the trail resets
+      await tester.pumpWidget(
+        _stageApp(
+          scene,
+          stage,
+          box,
+          sceneEvent: (sceneEvent: SceneEvent.bigWave, seq: 1),
+        ),
+      );
+      await _live(tester, const Duration(milliseconds: 1700));
+      expect(stage.drags.readNumber(AvatarRiveContract.scenePropTrailN), 0);
+      expect(stage.drags.readNumber(AvatarRiveContract.scenePropTrailFade), 1);
+      await _unmount(tester);
+    });
+
+    testWidgets('cafe wipe: a stroke lays dots on the window', (
+      WidgetTester tester,
+    ) async {
+      const AvatarScene scene = AvatarScene.cafe;
+      final _Stage stage = _Stage();
+      final Size box = _stageBox(tester);
+      await tester.pumpWidget(_stageApp(scene, stage, box));
+      await _waitLoaded(tester, stage, scene);
+      await _trailStroke(
+        tester,
+        stage,
+        box,
+        const Offset(350, 330),
+        const Offset(730, 700),
+      );
+      await _unmount(tester);
+    });
+
+    testWidgets('deepSpace spin: a flick turns with inertia, a long drag '
+        'wraps', (WidgetTester tester) async {
+      const AvatarScene scene = AvatarScene.deepSpace;
+      final _Stage stage = _Stage();
+      final Size box = _stageBox(tester);
+      await tester.pumpWidget(_stageApp(scene, stage, box));
+      await _waitLoaded(tester, stage, scene);
+      final PropDragController drags = stage.drags;
+      const String spin = AvatarRiveContract.scenePropSpin;
+      final double scale = SceneDrags.coverScale(box);
+      final Offset centre =
+          tester.getTopLeft(find.byType(RiveSceneView)) +
+          drags.handleCentre(box)!;
+      expect(drags.readNumber(spin), 0);
+
+      // a flick: released while moving, the bands keep turning
+      await tester.timedDragFrom(
+        centre,
+        const Offset(60, 0),
+        const Duration(milliseconds: 120),
+      );
+      await tester.pump();
+      final double atRelease = drags.readNumber(spin)!;
+      final List<double> coasting = await _sample(
+        drags,
+        spin,
+        () => _live(tester, const Duration(milliseconds: 1500)),
+      );
+      final double s1 = drags.readNumber(spin)!;
+      expect(s1, isNot(0), reason: 'the flick turned the bands');
+      expect(s1, inInclusiveRange(0, 1));
+      expect(s1, lessThan(1));
+      expect(
+        _circular(s1, atRelease),
+        greaterThan(0.01),
+        reason: 'inertia carried the spin past the release',
+      );
+      for (final double v in coasting) {
+        expect(v, inInclusiveRange(0, 1));
+        expect(v, lessThan(1));
+      }
+
+      // a slow drag of 1.25 turns, held still before the release: it wraps
+      const double turns = 1.25;
+      final double dx = turns * PropDragPhysics.spinPxPerTurn * scale;
+      final TestGesture gesture = await tester.startGesture(centre);
+      final int steps = (dx / 6).ceil();
+      final List<double> wrapping = await _sample(drags, spin, () async {
+        await _stepTo(tester, gesture, centre, centre + Offset(dx, 0), steps);
+        await _live(tester, const Duration(milliseconds: 200));
+        await gesture.up();
+        await _live(tester, const Duration(milliseconds: 300));
+      });
+      final double s2 = drags.readNumber(spin)!;
+      expect(
+        _circular(s2, (s1 + turns) % 1),
+        lessThan(0.02),
+        reason: 'spin $s1 + $turns turns wraps to ${(s1 + turns) % 1}',
+      );
+      for (final double v in wrapping) {
+        expect(v, inInclusiveRange(0, 1));
+        expect(v, lessThan(1));
+      }
+      expect(stage.haptics, contains(DragHaptic.selection));
+      await _unmount(tester);
+    });
+
+    testWidgets('rooftop aim: a horizontal drag swivels and holds', (
+      WidgetTester tester,
+    ) async {
+      const AvatarScene scene = AvatarScene.rooftop;
+      final _Stage stage = _Stage();
+      final Size box = _stageBox(tester);
+      await tester.pumpWidget(_stageApp(scene, stage, box));
+      await _waitLoaded(tester, stage, scene);
+      final PropDragController drags = stage.drags;
+      const String aim = AvatarRiveContract.scenePropAim;
+      final double scale = SceneDrags.coverScale(box);
+      final Rect rect = SceneDrags.of(scene)!.rect;
+      final Offset centre =
+          tester.getTopLeft(find.byType(RiveSceneView)) +
+          drags.handleCentre(box)!;
+      expect(drags.readNumber(aim), 0);
+
+      const double logical = 40;
+      final TestGesture gesture = await tester.startGesture(centre);
+      await _stepTo(
+        tester,
+        gesture,
+        centre,
+        centre + const Offset(logical, 0),
+        8,
+      );
+      await _live(tester, const Duration(milliseconds: 150));
+      await gesture.up();
+      await _live(tester, const Duration(milliseconds: 100));
+      final double held = drags.readNumber(aim)!;
+      expect(
+        held,
+        closeTo(logical / scale / rect.width, 0.03),
+        reason: 'rect.width artboard px per unit',
+      );
+      await _live(tester, const Duration(milliseconds: 600));
+      expect(drags.readNumber(aim), held, reason: 'the telescope holds');
+
+      // far left: clamped at -1
+      await tester.timedDragFrom(
+        centre,
+        Offset(-1.5 * rect.width * scale, 0),
+        const Duration(milliseconds: 500),
+      );
+      await _live(tester, const Duration(milliseconds: 300));
+      expect(drags.readNumber(aim), -1);
+      await _unmount(tester);
+    });
+  });
+
+  group('the avatar over the scene (zone hit gate, v12)', () {
+    testWidgets('head and body taps reach the avatar; scene props and the '
+        'cord reach the scene through it', (WidgetTester tester) async {
+      const AvatarScene scene = AvatarScene.livingRoom;
+      final _Stage stage = _Stage();
+      final Size box = _stageBox(tester);
+      await tester.pumpWidget(_stageApp(scene, stage, box, withAvatar: true));
+      await _waitLoaded(tester, stage, scene);
+      for (int i = 0; i < 100 && _rive(tester, 'Avatar') == null; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(_rive(tester, 'Avatar'), isNotNull, reason: 'avatar.riv loaded');
+      await _live(tester, const Duration(milliseconds: 500));
+      final Offset origin = tester.getTopLeft(find.byType(RiveSceneView));
+
+      // The avatar's zones: HitHead (400, 360) and HitBody (400, 820) in
+      // its 800x1000 artboard, drawn contain + bottom-centre.
+      for (final (String zone, Offset point) in <(String, Offset)>[
+        (AvatarRiveContract.zoneHead, const Offset(400, 360)),
+        (AvatarRiveContract.zoneBody, const Offset(400, 820)),
+      ]) {
+        stage.avatarTaps.clear();
+        final int props = stage.props.length;
+        _keepResumed();
+        await tester.tapAt(origin + _avatarToLocal(point, box));
+        _deliverEvents(tester);
+        expect(stage.avatarTaps, <String>[zone], reason: '$zone tap');
+        expect(
+          stage.props.length,
+          props,
+          reason: 'the $zone tap does not reach the scene',
+        );
+      }
+
+      // The cord (outside the avatar's zones) drags through the avatar.
+      final Offset cord = stage.drags.handleCentre(box)!;
+      expect(
+        _inAvatarZone(cord, box),
+        isFalse,
+        reason: 'the cord is outside the avatar zones at this size',
+      );
+      final List<double> samples = await _sample(
+        stage.drags,
+        AvatarRiveContract.scenePropCord,
+        () => tester.timedDragFrom(
+          origin + cord,
+          const Offset(0, 66),
+          const Duration(milliseconds: 500),
+        ),
+      );
+      expect(samples.reduce(math.max), greaterThan(0.6));
+      expect(stage.events, <SceneEvent>[SceneEvent.lightsOff]);
+
+      // Scene props outside the avatar's zones answer taps through it.
+      stage.avatarTaps.clear();
+      final Map<String, Offset> hits = await _scanProps(tester, stage, box);
+      // ignore: avoid_print
+      print(
+        'through the avatar: $hits; avatar taps by zone: '
+        '${<String, int>{for (final String z in stage.avatarTaps.toSet()) z: stage.avatarTaps.where((String t) => t == z).length}}',
+      );
+      expect(
+        hits.keys.toSet().intersection(<String>{'plant', 'tv'}),
+        isNotEmpty,
+        reason: 'plant or tv reached through the avatar layer: $hits',
+      );
+      expect(stage.avatarTaps.toSet(), <String>{
+        AvatarRiveContract.zoneHead,
+        AvatarRiveContract.zoneBody,
+      }, reason: 'the scan hit both avatar zones');
+      await _unmount(tester);
+    });
+  });
+
+  group('cafe wipe renders with the darken blend (rive_native)', () {
+    testWidgets('a wiped dot darkens the mist and never brightens the glass', (
+      WidgetTester tester,
+    ) async {
+      const AvatarScene scene = AvatarScene.cafe;
+      final _Stage stage = _Stage();
+      final Size box = _stageBox(tester);
+      await tester.pumpWidget(_stageApp(scene, stage, box));
+      await _waitLoaded(tester, stage, scene);
+      await _live(tester, const Duration(milliseconds: 500));
+      final _Rgba rest = await _grab(tester);
+
+      await _trailStroke(
+        tester,
+        stage,
+        box,
+        const Offset(350, 290),
+        const Offset(730, 740),
+      );
+      await _live(tester, const Duration(milliseconds: 300));
+      final _Rgba wiped = await _grab(tester);
+
+      final int n = stage.drags
+          .readNumber(AvatarRiveContract.scenePropTrailN)!
+          .round();
+      // TRAIL_TINT FF4E5870 (rive/tools/scene_cafe.py), opaque at a dot's
+      // centre: darken keeps min(tint, glass) per channel; a plain source-
+      // over would paint the tint, brightening any channel below it.
+      const List<int> tint = <int>[0x4E, 0x58, 0x70];
+      int darkened = 0;
+      int belowTint = 0;
+      final List<String> log = <String>[];
+      for (int i = 0; i < n; i++) {
+        final Offset dot = Offset(
+          stage.drags.readNumber(AvatarRiveContract.scenePropTrailX[i])!,
+          stage.drags.readNumber(AvatarRiveContract.scenePropTrailY[i])!,
+        );
+        final Offset local = SceneDrags.toLocal(dot, box);
+        final List<double> before = rest.mean(local);
+        final List<double> after = wiped.mean(local);
+        log.add(
+          'dot $i $dot: ${before.map((double v) => v.round())} -> '
+          '${after.map((double v) => v.round())}',
+        );
+        for (int c = 0; c < 3; c++) {
+          expect(
+            after[c],
+            lessThanOrEqualTo(before[c] + 8),
+            reason: 'darken never brightens (dot $i channel $c)\n$log',
+          );
+          if (before[c] < tint[c] - 12) {
+            belowTint++;
+          }
+        }
+        if (<int>[0, 1, 2].any((int c) => before[c] - after[c] >= 12)) {
+          darkened++;
+        }
+      }
+      // ignore: avoid_print
+      print(log.join('\n'));
+      expect(n, greaterThanOrEqualTo(4));
+      expect(darkened, greaterThanOrEqualTo(3), reason: 'the wipe shows\n$log');
+      expect(
+        belowTint,
+        greaterThan(0),
+        reason:
+            'some dot sits on glass darker than the tint (else the '
+            'no-brighten check cannot tell darken from source-over)\n$log',
+      );
+      await _unmount(tester);
+    });
+  });
+}
+
+/// The test range of a v12 drag number (contract "Drag handles (v12)").
+List<double> _dragRange(String name) {
+  if (name.startsWith('trailX')) {
+    return <double>[0, SceneDrags.artboard.width];
+  }
+  if (name.startsWith('trailY')) {
+    return <double>[0, SceneDrags.artboard.height];
+  }
+  switch (name) {
+    case AvatarRiveContract.scenePropTrailN:
+      return <double>[0, AvatarRiveContract.trailMaxDots.toDouble()];
+    case AvatarRiveContract.scenePropPokeX:
+    case AvatarRiveContract.scenePropPokeY:
+    case AvatarRiveContract.scenePropAim:
+      return <double>[-1, 1];
+    default:
+      // cord, rope, poke, spin, trailFade
+      return <double>[0, 0.5, 1];
+  }
+}
+
+/// What a mounted stage heard.
+class _Stage {
+  final PropDragController drags = PropDragController();
+  final List<String> props = <String>[];
+  final List<SceneEvent> events = <SceneEvent>[];
+  final List<DragHaptic> haptics = <DragHaptic>[];
+  final List<String> foley = <String>[];
+  final List<String> avatarTaps = <String>[];
+}
+
+final GlobalKey _stageKey = GlobalKey();
+
+/// A portrait stage the size of the window's height (9:16, the scene
+/// artboard's own ratio, so `Fit.cover` shows all of it).
+Size _stageBox(WidgetTester tester) {
+  final Size window = tester.view.physicalSize / tester.view.devicePixelRatio;
+  final double height = math.min(window.height, 640).floorToDouble();
+  return Size(
+    height * SceneDrags.artboard.width / SceneDrags.artboard.height,
+    height,
+  );
+}
+
+/// The real scene view (real file, real drag controller) in the top-left
+/// corner, optionally with the real avatar view as its `middle` (as Home
+/// mounts it, minus the journey layer and the cubits: the avatar gets a
+/// fixed default state and talking idle).
+Widget _stageApp(
+  AvatarScene scene,
+  _Stage stage,
+  Size box, {
+  ({SceneEvent sceneEvent, int seq}) sceneEvent = (
+    sceneEvent: SceneEvent.lightsOff,
+    seq: 0,
+  ),
+  bool withAvatar = false,
+}) {
+  return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Align(
+      alignment: Alignment.topLeft,
+      child: RepaintBoundary(
+        key: _stageKey,
+        child: SizedBox.fromSize(
+          size: box,
+          child: RiveSceneView(
+            scene: scene,
+            sceneEvent: sceneEvent,
+            dragController: stage.drags,
+            onPropTapped: stage.props.add,
+            onDragEvent: stage.events.add,
+            onDragHaptic: stage.haptics.add,
+            onDragFoley: stage.foley.add,
+            middle: withAvatar
+                ? RiveAvatarView(
+                    avatarState: AvatarState(
+                      avatar: const Avatar(),
+                      avatarConfig: const AvatarConfig(),
+                      scene: scene,
+                    ),
+                    talkingState: const TalkingState.idle(),
+                    onAvatarTapped: stage.avatarTaps.add,
+                  )
+                : null,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Waits (real time) until [scene]'s file is loaded and its drag handle
+/// attached, then lets it draw a few frames.
+Future<void> _waitLoaded(
+  WidgetTester tester,
+  _Stage stage,
+  AvatarScene scene,
+) async {
+  _keepResumed();
+  for (int i = 0; i < 200 && stage.drags.scene != scene; i++) {
+    await tester.pump(const Duration(milliseconds: 25));
+  }
+  expect(stage.drags.scene, scene, reason: '${scene.name}.riv loaded');
+  await _live(tester, const Duration(milliseconds: 300));
+}
+
+/// Keeps the app resumed. The macOS test window can turn inactive mid-run
+/// (it loses focus: seen about 30 s into a full run), and both Rive views
+/// then pause their controllers, which ignore pointers while paused. These
+/// tests are about drags and hit tests, not the lifecycle.
+void _keepResumed() {
+  final WidgetsBinding binding = WidgetsBinding.instance;
+  if (binding.lifecycleState != AppLifecycleState.resumed) {
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+  }
+}
+
+/// Unmounts the stage (the view lets go of the files).
+Future<void> _unmount(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump();
+}
+
+/// Lets [time] pass for real, frames running.
+Future<void> _live(WidgetTester tester, Duration time) async {
+  final Stopwatch clock = Stopwatch()..start();
+  while (clock.elapsed < time) {
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+}
+
+/// Moves [gesture] from [from] to [to] in [steps] moves, one frame (16 ms,
+/// real time) apart. Returns [to].
+Future<Offset> _stepTo(
+  WidgetTester tester,
+  TestGesture gesture,
+  Offset from,
+  Offset to,
+  int steps,
+) async {
+  for (int i = 1; i <= steps; i++) {
+    await gesture.moveTo(Offset.lerp(from, to, i / steps)!);
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  return to;
+}
+
+/// [name] read back from the view model every 8 ms while [action] runs.
+Future<List<double>> _sample(
+  PropDragController drags,
+  String name,
+  Future<void> Function() action,
+) async {
+  final List<double> samples = <double>[];
+  void read() {
+    final double? v = drags.readNumber(name);
+    if (v != null) {
+      samples.add(v);
+    }
+  }
+
+  read();
+  final Timer timer = Timer.periodic(
+    const Duration(milliseconds: 8),
+    (Timer _) => read(),
+  );
+  await action();
+  timer.cancel();
+  read();
+  return samples;
+}
+
+/// Distance between two wrapped 0..1 values.
+double _circular(double a, double b) {
+  final double d = (a - b).abs() % 1;
+  return math.min(d, 1 - d);
+}
+
+/// A pull: down 66 px (≥ 60, past 0.6 of the 100 artboard px travel at any
+/// stage size here), released; the number goes over 0.6 while held, springs
+/// back to ~0, and the action fires once.
+Future<void> _pullTest(
+  WidgetTester tester,
+  AvatarScene scene,
+  String number,
+  SceneEvent action, {
+  required List<String> expectedFoley,
+}) async {
+  final _Stage stage = _Stage();
+  final Size box = _stageBox(tester);
+  await tester.pumpWidget(_stageApp(scene, stage, box));
+  await _waitLoaded(tester, stage, scene);
+  final PropDragController drags = stage.drags;
+  expect(drags.readNumber(number), 0, reason: '$number default');
+  final Offset centre =
+      tester.getTopLeft(find.byType(RiveSceneView)) + drags.handleCentre(box)!;
+
+  final List<double> pulled = await _sample(
+    drags,
+    number,
+    () => tester.timedDragFrom(
+      centre,
+      const Offset(0, 66),
+      const Duration(milliseconds: 500),
+    ),
+  );
+  expect(
+    pulled.reduce(math.max),
+    greaterThan(PropDragPhysics.pullFire),
+    reason: '$number during the pull',
+  );
+  await _live(tester, const Duration(milliseconds: 900));
+  expect(
+    drags.readNumber(number),
+    lessThan(0.02),
+    reason: '$number springs back',
+  );
+  expect(stage.events, <SceneEvent>[action]);
+  expect(stage.foley, expectedFoley);
+  expect(stage.haptics.first, DragHaptic.selection);
+  expect(stage.haptics, contains(DragHaptic.impact));
+  expect(
+    stage.props,
+    isEmpty,
+    reason: 'a pull that ends on a prop is not a tap',
+  );
+  await _unmount(tester);
+}
+
+/// A stroke across a trail handle from [from] to [to] (artboard px): dots
+/// are laid (trailN >= 4), visible (trailFade ~0), on the stroke's line and
+/// inside the handle's rect.
+Future<void> _trailStroke(
+  WidgetTester tester,
+  _Stage stage,
+  Size box,
+  Offset from,
+  Offset to,
+) async {
+  final PropDragController drags = stage.drags;
+  final SceneDragHandle handle = drags.handle!;
+  expect(drags.readNumber(AvatarRiveContract.scenePropTrailN), 0);
+  expect(drags.readNumber(AvatarRiveContract.scenePropTrailFade), 1);
+  final Offset origin = tester.getTopLeft(find.byType(RiveSceneView));
+  final Offset start = origin + SceneDrags.toLocal(from, box);
+  final Offset end = origin + SceneDrags.toLocal(to, box);
+  await tester.timedDragFrom(
+    start,
+    end - start,
+    const Duration(milliseconds: 700),
+  );
+  await _live(tester, const Duration(milliseconds: 250));
+  final int n = drags.readNumber(AvatarRiveContract.scenePropTrailN)!.round();
+  expect(n, greaterThanOrEqualTo(4), reason: '${handle.id} trailN');
+  expect(n, lessThanOrEqualTo(AvatarRiveContract.trailMaxDots));
+  expect(
+    drags.readNumber(AvatarRiveContract.scenePropTrailFade),
+    lessThan(0.05),
+    reason: '${handle.id} dots visible',
+  );
+  for (int i = 0; i < n; i++) {
+    final Offset dot = Offset(
+      drags.readNumber(AvatarRiveContract.scenePropTrailX[i])!,
+      drags.readNumber(AvatarRiveContract.scenePropTrailY[i])!,
+    );
+    expect(
+      handle.rect.inflate(0.5).contains(dot),
+      isTrue,
+      reason: '${handle.id} dot $i $dot inside ${handle.rect}',
+    );
+    // on the stroke's line (the finger path, sampled at 60 Hz)
+    final Offset d = to - from;
+    final double off =
+        ((dot - from).dx * d.dy - (dot - from).dy * d.dx).abs() / d.distance;
+    expect(off, lessThan(6), reason: '${handle.id} dot $i $dot on the stroke');
+  }
+  expect(stage.haptics, contains(DragHaptic.selection));
+}
+
+/// The loaded [RiveWidget] controller showing [artboard] (null: none yet).
+RiveWidgetController? _rive(WidgetTester tester, String artboard) {
+  for (final RiveWidget w in tester.widgetList<RiveWidget>(
+    find.byType(RiveWidget),
+  )) {
+    if (w.controller.artboard.name == artboard) {
+      return w.controller;
+    }
+  }
+  return null;
+}
+
+/// Delivers the Rive events the last pointers reported now (they are
+/// otherwise handed to listeners at the next advance), so each tap's events
+/// can be told apart.
+void _deliverEvents(WidgetTester tester) {
+  for (final String artboard in <String>[
+    AvatarRiveContract.sceneArtboard,
+    AvatarRiveContract.avatarArtboard,
+  ]) {
+    _rive(tester, artboard)?.stateMachine.advanceAndApply(0);
+  }
+}
+
+/// Taps a 30 px grid over the whole scene artboard; returns every `propId`
+/// heard with the first artboard point that hit it.
+Future<Map<String, Offset>> _scanProps(
+  WidgetTester tester,
+  _Stage stage,
+  Size box,
+) async {
+  const double step = 30;
+  final Offset origin = tester.getTopLeft(find.byType(RiveSceneView));
+  final Map<String, Offset> hits = <String, Offset>{};
+  for (double y = step / 2; y < SceneDrags.artboard.height; y += step) {
+    for (double x = step / 2; x < SceneDrags.artboard.width; x += step) {
+      final int before = stage.props.length;
+      _keepResumed();
+      await tester.tapAt(origin + SceneDrags.toLocal(Offset(x, y), box));
+      _deliverEvents(tester);
+      for (final String id in stage.props.sublist(before)) {
+        hits.putIfAbsent(id, () => Offset(x, y));
+      }
+    }
+    await tester.pump();
+  }
+  return hits;
+}
+
+/// An avatar artboard point (800x1000, contain + bottom-centre) in the
+/// stage box.
+Offset _avatarToLocal(Offset point, Size box) {
+  final double scale = math.min(
+    box.width / AvatarRiveContract.journeyArtboardWidth,
+    box.height / AvatarRiveContract.journeyArtboardHeight,
+  );
+  final Offset origin = Offset(
+    (box.width - AvatarRiveContract.journeyArtboardWidth * scale) / 2,
+    box.height - AvatarRiveContract.journeyArtboardHeight * scale,
+  );
+  return origin + point * scale;
+}
+
+/// Whether a stage [local] point is inside the avatar's HitHead ellipse
+/// (400, 360, 300x360) or HitBody rect (400, 820, 460x380) at rest.
+bool _inAvatarZone(Offset local, Size box) {
+  final double scale = math.min(
+    box.width / AvatarRiveContract.journeyArtboardWidth,
+    box.height / AvatarRiveContract.journeyArtboardHeight,
+  );
+  final Offset origin = _avatarToLocal(Offset.zero, box);
+  final Offset p = (local - origin) / scale;
+  final double ex = (p.dx - 400) / 150;
+  final double ey = (p.dy - 360) / 180;
+  final bool head = ex * ex + ey * ey <= 1;
+  final bool body = Rect.fromCenter(
+    center: const Offset(400, 820),
+    width: 460,
+    height: 380,
+  ).contains(p);
+  return head || body;
+}
+
+/// The stage's rendered pixels (the Rive textures included).
+class _Rgba {
+  _Rgba(this.bytes, this.width, this.height);
+
+  final Uint8List bytes;
+  final int width;
+  final int height;
+
+  /// The mean RGB of the 3x3 pixels around [local].
+  List<double> mean(Offset local) {
+    final List<double> sum = <double>[0, 0, 0];
+    int count = 0;
+    for (int dy = -1; dy <= 1; dy++) {
+      for (int dx = -1; dx <= 1; dx++) {
+        final int x = local.dx.round() + dx;
+        final int y = local.dy.round() + dy;
+        if (x < 0 || y < 0 || x >= width || y >= height) {
+          continue;
+        }
+        final int i = (y * width + x) * 4;
+        for (int c = 0; c < 3; c++) {
+          sum[c] += bytes[i + c];
+        }
+        count++;
+      }
+    }
+    return sum.map((double s) => s / math.max(count, 1)).toList();
+  }
+}
+
+/// Grabs the stage's repaint boundary (`OffsetLayer.toImage` includes the
+/// Rive textures; see `support/frame_grabber.dart`) at 1 px per logical px.
+Future<_Rgba> _grab(WidgetTester tester) async {
+  await tester.pump();
+  final RenderRepaintBoundary boundary = tester.renderObject(
+    find.byKey(_stageKey),
+  );
+  final OffsetLayer layer = boundary.debugLayer! as OffsetLayer;
+  final ui.Image image = await layer.toImage(Offset.zero & boundary.size);
+  final ByteData data = (await image.toByteData())!;
+  final _Rgba rgba = _Rgba(
+    data.buffer.asUint8List(),
+    image.width,
+    image.height,
+  );
+  image.dispose();
+  return rgba;
 }
