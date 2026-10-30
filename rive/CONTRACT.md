@@ -1,4 +1,4 @@
-# Rive contract (v10)
+# Rive contract (v11)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -25,7 +25,7 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `mood` | enum | neutral, happy, sad, angry, surprised, thinking, embarrassed. **v5: accents only**: blush, sweat drop, anger mark, head tilt/drop, gaze offset, pupil size and the thinking mouth skew. The face's muscles (brows, lids, cheeks, nose, mouth shape) come only from the `au*` numbers; the app writes each mood's AU preset. |
 | `mouth` | number | 0–4: closed, slightly, semi, open, wide (same order as `MouthState`). **v5: legacy alias**: the jaw opens by `auJawDrop` + 0.22 × `mouth`. Write `mouth` or the mouth AUs, not both. |
 | `phase` | enum | idle, waiting, generating, speaking, error (same as `TalkingPhase`) |
-| `gestureId` | enum | wave, laugh, facepalm, shrug, nod, headshake, clap, think |
+| `gestureId` | enum | wave, laugh, facepalm, shrug, nod, headshake, clap, think, **v11 (appended):** thumbsUp, count, grab. `thumbsUp`: the viewer's-left hand rises, thumb up. `count`: the viewer's-right hand counts one, two, three (index, + middle, + ring), about 420 ms per number. `grab` (about 900 ms): the viewer's-right hand reaches to the hook point (628, 560) in this artboard, closes to a grip at 380 ms (the contact) and comes back to the side; with `jacket` true the same clip opens the hand at the contact (the app swaps `jacket` there). |
 | `gesture` | trigger | Plays `gestureId` on the upper-body layer. Mood and mouth keep running. |
 | `hat` | enum | noHat, beanie, backwardsCap, frenchBeret, swimCap, santaHat, redMagaCap |
 | `top` | enum | pinkHoodie, longCoat, tshirt, underwear, swimsuit, christmasSweater, blackSuitAndTie |
@@ -83,6 +83,9 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `lightFlicker` | number | 0–1, default 0.15: firelight flicker of the key light on the cheek and glasses, looped inside the file (0 steady, 1 full campfire flicker). |
 | `prop` | enum | none, tablet, newspaper. v7: tablet = pull the tablet out, then hold it (its screen lights the face); back to none puts it away. v8b: newspaper (appended, index 2) = the same out / hold / away with a folded broadsheet (no glow; a soft page shadow on the face). Only one prop shows: a prop changed to another is put away first. Plays on its own layer over the gesture layer. |
 | `lean` | number | 0–1, default 0: listening lean; the torso and head tip toward the viewer and the head lowers a little. Composes with `breath`, gestures and the head turn. |
+| `jacket` | boolean | v11, default false: the viewer's-right hand holds the storybook jacket (closed grip, the jacket hanging from the fist; it follows the reach, the walk and the IK). False: no jacket. It shows or goes in one frame: the app flips it at a `grab` contact, while the journey door's peg shows the other copy. |
+| `tabletWeather` | enum | v11: none, clear, clouds, rain, snow, storm, fog. The tablet's weather card: `none` (default) keeps the generic card; any other value shows that glyph and the `tabletTemp` readout. |
+| `tabletTemp` | number | v11, −40–50, default 0: the temperature on the tablet's weather card in °C (the app rounds it), a signed two-digit seven-segment readout; shown only when `tabletWeather` is not none. |
 
 **Idle life**, built into the file with no Dart involvement: blinking, breathing, and eyes that
 follow the pointer or touch.
@@ -99,6 +102,7 @@ blinks while speaking.
 | `avatar_tapped` | `zone`: string, `head` or `body` |
 | `gesture_done` | `gestureId`: string |
 | `presence_done` | `presence`: string |
+| `foley` | `kind`: string, v11: `step` (every footfall of the walk out and the walk in), `cloth` (the `grab` contact), `click` (the tablet's grip and release), `paper` (the newspaper opening and folding). Fired by timeline keys, several per clip; the app plays a sound and, for `click`, a haptic. |
 
 ## `assets/rive/scenes/<sceneId>.riv`
 
@@ -126,6 +130,23 @@ One file per scene. The app loads them lazily.
     and is 0 an hour away from them. livingRoom (the window's sky, the skyline's lit windows off by
     day), campfire (the sky and the stars) and beach (the sky and the sun's glow) bind them;
     deepSpace ignores them. At 0 / 0 a scene looks exactly as it did before v10 (night).
+  - `fog`: number, 0–1, default 0 (v11): weather fog or mist, written by the app from its world
+    state. livingRoom (outside the window), campfire and beach thicken their fog veils (campfire and
+    beach also in `SceneFront`'s mist); deepSpace ignores it. At 0 a scene looks as it did in v10.
+  - The scene's NPC (v11), one per scene: livingRoom **cat** (the sleeping cat; its path runs from
+    the cabinet, 0, to the rug in the lamp's pool, 1), campfire **owl** (on its bough; its path is
+    unused), beach **crab** (its path runs along the wet sand from its v10 spot), deepSpace
+    **alien** (in the ufo; its path is the ufo's drift). The app runs its behaviour; the file only
+    draws it:
+    - `npc`: enum, away, rest, idle, move, notice, react; default rest (the v10 look). away: not
+      drawn. idle: awake, small life. move: its walk / scuttle / drift cycle while `npcX` changes.
+      notice: it looks at the avatar (`npcLook` aims it). react: one short reaction loop (cat hop,
+      owl wing flap, crab claw snap, alien wave). State changes blend in 200 ms or less.
+    - `npcX`: number, 0–1, default 0: where along its path it is (0 = its v10 spot), history-free.
+    - `npcLook`: number, −1–1, default 0: its head and eyes toward the viewer's left (−) or right
+      (+).
+    - Its existing prop tap (`cat`, `owl`, `crab`, `ufo`) is how the user pokes it.
+    At `npc` rest, `npcX` 0, `npcLook` 0 a scene looks as it did in v10.
 - **Rive event emitted:** `prop_tapped`, with `propId`: string.
 - **Front artboard (v9, optional):** a scene file may carry a second artboard `SceneFront`,
   1080×1920 like `Scene`, with a state machine `Main` and the same view model `SceneVM`. It holds
@@ -235,6 +256,11 @@ the journey ends.
 | `lift` | number | 0–1, default 0: the rocket's height off the ground, with its flame; 1 is out of frame at the top. The other thresholds ignore it. |
 | `lightKey` | color | the current scene's key light colour (rim and glow). Default `FFFFD49A`. |
 | `lightAmbient` | color | the current scene's ambient colour (the shadow side). Default `FF2C3346`. |
+| `jacket` | number | v11, 0–1, default 0: the storybook jacket hanging on the door's peg (door only; the peg shows with the door). The app sets it to 0 at the avatar's grab contact and back to 1 when the avatar hangs it on the next door. |
 
 The app shows one threshold at a time (the other three numbers stay 0).
+
+**Hook point (v11):** the door's peg is at (628, 560) in artboard space (the same point as the
+avatar's `grab` contact, since both artboards share the frame). Its jacket is the same drawing as
+the avatar's held jacket, so the handoff at the contact shows one jacket.
 
