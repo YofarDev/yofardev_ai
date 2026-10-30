@@ -53,10 +53,12 @@ void main() {
       director.setActiveTool('getCurrentWeather');
       readings.add(tokyo);
       director.setActiveTool(null);
-      advance(async, 200);
+      // execution ruling 32: a card is held longer than a plain hold-over,
+      // so the avatar reads it
+      advance(async, PerformanceDirector.weatherCardHold.inMilliseconds - 100);
       expect(director.current.prop, AvatarProp.tablet);
       expect(director.current.tabletWeather, TabletWeather.rain);
-      advance(async, 400);
+      advance(async, 200);
       expect(director.current.prop, AvatarProp.none);
       expect(director.current.tabletWeather, TabletWeather.none);
       expect(director.current.tabletTemp, 0);
@@ -69,6 +71,17 @@ void main() {
       director.setIdleStage(3);
       expect(director.current.prop, AvatarProp.tablet);
       expect(director.current.tabletWeather, TabletWeather.none);
+      director.dispose();
+    });
+  });
+
+  test('a weather lookup without a reading keeps the short hold-over', () {
+    fakeAsync((FakeAsync async) {
+      final PerformanceDirector director = build();
+      director.setActiveTool('getCurrentWeather');
+      director.setActiveTool(null);
+      advance(async, PerformanceDirector.tabletHoldOver.inMilliseconds + 100);
+      expect(director.current.prop, AvatarProp.none);
       director.dispose();
     });
   });

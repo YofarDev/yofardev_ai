@@ -162,3 +162,76 @@ def test_tour_gates_need_every_family() -> None:
     assert not [g for g in ok if g.endswith("FAIL")], ok
     tl["tour"] = tl["tour"][:3]
     assert any(g.endswith("FAIL") for g in wc.gates_tour(tl))
+
+
+# ---------------------------------------------------------------- M8: jacket, foley, NPCs
+def _j(ms: int, phase: str, jacket: bool, peg: float, scene: str = "livingRoom") -> dict:
+    return _s(ms, journey=phase, family="door", presence="onScreen", shot="wide", scene=scene,
+              jacket=jacket, journeyJacket=peg)
+
+
+def _door_run() -> list[dict]:
+    run = [_j(0, "pullBack", False, 0.0), _j(100, "open", False, 1.0), _j(200, "grab", False, 1.0),
+           _j(300, "grab", True, 0.0), _j(400, "exit", True, 0.0), _j(1900, "exit", True, 0.0),
+           _j(2000, "close", True, 0.0), _j(2100, "arriveOpen", True, 0.0, scene="beach"),
+           _j(2200, "enter", True, 0.0, scene="beach"), _j(3700, "enter", True, 0.0, scene="beach"),
+           _j(3800, "hang", True, 0.0, scene="beach"), _j(3900, "hang", False, 1.0, scene="beach"),
+           _j(4000, "arriveClose", False, 1.0, scene="beach"), _j(4100, "vanish", False, 0.0, scene="beach")]
+    return run
+
+
+def _foley_events() -> list[dict]:
+    ev = [{"ms": 250, "type": "foley", "kind": "cloth"}, {"ms": 3850, "type": "foley", "kind": "cloth"}]
+    ev += [{"ms": 450 + 240 * k, "type": "foley", "kind": "step"} for k in range(6)]
+    ev += [{"ms": 2250 + 240 * k, "type": "foley", "kind": "step"} for k in range(6)]
+    return ev
+
+
+def test_jacket_gates_pass_on_a_clean_handoff() -> None:
+    lines = wc.jacket_gates(_door_run(), _foley_events())
+    assert lines and all(line.endswith("ok") for line in lines), lines
+
+
+def test_jacket_gates_catch_two_jackets_and_missing_steps() -> None:
+    run = _door_run()
+    run[3]["journeyJacket"] = 1.0  # the peg still shows while the hand holds it
+    ev = [e for e in _foley_events() if not (e["kind"] == "step" and e["ms"] > 2000)]
+    lines = wc.jacket_gates(run, ev)
+    assert any("one jacket at a time" in line and line.endswith("FAIL") for line in lines)
+    assert any("footsteps during enter" in line and line.endswith("FAIL") for line in lines)
+
+
+def test_jacket_gates_need_grab_before_exit() -> None:
+    run = [x for x in _door_run() if x["journey"] != "grab"]
+    assert wc.jacket_gates(run, _foley_events())[0].endswith("FAIL")
+
+
+def test_phase_order_knows_grab_and_hang() -> None:
+    assert wc.PHASES.index("grab") == wc.PHASES.index("open") + 1
+    assert wc.PHASES.index("hang") == wc.PHASES.index("enter") + 1
+    assert wc.phase_order(_door_run())[:3] == ["pullBack", "open", "grab"]
+
+
+def _n(ms: int, npc: str, x: float = 0.0) -> dict:
+    return _s(ms, scene="livingRoom", npc=npc, npcX=x, npcLook=0.0, shotSerial=0, shot="wide", move="ease")
+
+
+def test_gates_npc() -> None:
+    samples = [_n(0, "rest"), _n(1000, "rest"), _n(1100, "react"), _n(3000, "notice"), _n(6000, "notice")]
+    samples += [_n(6000 + 100 * k, "move", min(1.0, k * 0.04)) for k in range(1, 27)]
+    samples += [_n(9000, "idle", 1.0)]
+    tl = {"samples": samples, "frames": [{"i": 0, "ms": 0}], "network_attempts": 0,
+          "events": [{"ms": 1000, "type": "poke"}, {"ms": 2900, "type": "send"}]}
+    lines = wc.gates_npc(tl)
+    assert all(line.endswith(("ok", "info")) for line in lines), lines
+    assert wc.npc_states(samples) == ["rest", "react", "notice", "move", "idle"]
+
+
+def test_foley_offsets_skip_missing_files(tmp_path: Path) -> None:
+    (tmp_path / "assets/foley").mkdir(parents=True)
+    (tmp_path / "assets/foley/step_0.wav").write_bytes(b"RIFF")
+    ev = [{"ms": 500, "type": "foley", "kind": "step", "file": "assets/foley/step_0.wav"},
+          {"ms": 600, "type": "foley", "kind": "step", "file": "assets/foley/nope.wav"},
+          {"ms": 700, "type": "caption", "text": "x"}]
+    out = wc.foley_offsets(ev, 100, tmp_path)
+    assert out == [(str(tmp_path / "assets/foley/step_0.wav"), 400)]

@@ -111,6 +111,11 @@ class PerformanceDirector {
   /// tool taking the same prop right away keeps it.
   static const Duration tabletHoldOver = Duration(milliseconds: 400);
 
+  /// A weather lookup's card stays out this long after its tool ends, so the
+  /// avatar reads the result (M8 execution ruling 32: the report lands as
+  /// the tool ends, and 400 ms hid the card again before it read).
+  static const Duration weatherCardHold = Duration(milliseconds: 1500);
+
   /// How long the prop takes to go away once the intent's prop is `none`.
   /// Mirrors the Rive `prop_tablet_away` clip (417 ms; the newspaper reuses
   /// its timing), rounded up. A gesture waits this long after the prop clears.
@@ -217,7 +222,10 @@ class PerformanceDirector {
       // The prop outlasts the tool a moment: the next one may follow.
       _heldOver = propForTool(previous);
       _holdOverTimer?.cancel();
-      _holdOverTimer = Timer(tabletHoldOver, () {
+      final Duration hold = _weatherReading != null
+          ? weatherCardHold
+          : tabletHoldOver;
+      _holdOverTimer = Timer(hold, () {
         _holdOverTimer = null;
         _heldOver = AvatarProp.none;
         _emit();

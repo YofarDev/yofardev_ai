@@ -69,6 +69,13 @@ def audio_offsets(events: list[dict], audio: list[dict], t0: int) -> list[tuple[
     return out
 
 
+def foley_offsets(events: list[dict], t0: int, root: Path | None = None) -> list[tuple[str, int]]:
+    """(wav, ms after t0) for each logged foley sound (M8: the harness logs the asset it played)."""
+    base = root or Path(__file__).resolve().parents[2]
+    return [(str(base / e["file"]), e["ms"] - t0) for e in events
+            if e["type"] == "foley" and e.get("file") and (base / e["file"]).exists()]
+
+
 def longest_closure(samples: list[dict]) -> dict:
     """The sample in the middle of the longest closed-lips run while speaking (a single grabbed frame
     lands inside a 66 ms window, so the middle of the longest run is the one most likely shown)."""
@@ -144,6 +151,13 @@ def gates_wow2(tl: dict) -> list[str]:
     g.append(_line(f"tool getCurrentWeather running for {span} ms (want >= 2000)", span >= 2000))
     tablet = sum(1 for x in tool if x["prop"] == "tablet") / len(tool) if tool else 0.0
     g.append(_line(f"tablet out while the tool runs: {tablet:.0%} of its samples (want >= 80%)", tablet >= 0.8))
+    if tool and "tabletWeather" in tool[0]:
+        # M8 ruling 14: the looked-up city's weather on the screen once the canned report is in
+        # the report lands as the tool ends: look from the tool's start to the end of the run
+        card = [x for x in s if x["ms"] >= tool[0]["ms"] and x["prop"] == "tablet" and x["tabletWeather"] != "none"]
+        right = [x for x in card if x["tabletWeather"] == "rain" and x["tabletTemp"] == 18]
+        g.append(_line(f"Tokyo on the tablet: rain 18 °C in {len(right)} samples, {len(card) - len(right)} wrong",
+                       bool(right) and len(right) == len(card)))
     yaw = statistics.median(abs(x["yaw"]) for x in tool) if tool else 0.0
     g.append(_line(f"head turned while the tool runs: median |yaw| {yaw:.2f} (want >= 0.3)", yaw >= 0.3))
     start = _first(ev, "start", tool[-1]["ms"]) if tool else None
@@ -160,9 +174,11 @@ def gates_wow2(tl: dict) -> list[str]:
 
 
 # ---------------------------------------------------------------- M7: journeys
-PHASES = ["pullBack", "open", "exit", "close", "cut", "arriveOpen", "enter", "arriveClose", "vanish"]
+# M8: the door family adds `grab` (after open) and `hang` (after enter)
+PHASES = ["pullBack", "open", "grab", "exit", "close", "cut", "arriveOpen", "enter", "hang", "arriveClose",
+          "vanish"]
 # beats in which the avatar is clipped at the threshold (journey_choreography.dart)
-CLIPPED = {"open", "exit", "close", "cut", "arriveOpen", "enter", "arriveClose"}
+CLIPPED = {"open", "grab", "exit", "close", "cut", "arriveOpen", "enter", "hang", "arriveClose"}
 
 
 def journeys(samples: list[dict]) -> list[list[dict]]:
@@ -239,10 +255,84 @@ def gates_wow3(tl: dict) -> list[str]:
     dusk = min((x["dusk"] for x in beach), default=0.0)
     g.append(_line(f"the beach at the local sunset: dusk min {dusk:.2f} (want >= 0.5)", dusk >= 0.5 and bool(beach)))
     g.append(_line("the reply is spoken", _first(ev, "start") is not None))
+    if runs and "jacket" in runs[0][0]:
+        g += jacket_gates(runs[0], ev)
     send = _first(ev, "send")
     if runs and send:
         g.append(f"journey timing: starts {(runs[0][0]['ms'] - send['ms']) / 1000:.2f} s after send, lasts "
                  f"{(runs[0][-1]['ms'] - runs[0][0]['ms']) / 1000:.2f} s: info")
+    return g
+
+
+# ---------------------------------------------------------------- M8: the jacket, foley, NPCs
+FOLEY_MIN_STEPS = 6  # footfalls per walk (a 1.6 s walk over 850 px at a 170 px stride: about 5 strides)
+
+
+def foley(events: list[dict], kind: str | None = None) -> list[dict]:
+    return [e for e in events if e["type"] == "foley" and (kind is None or e["kind"] == kind)]
+
+
+def jacket_gates(run: list[dict], events: list[dict]) -> list[str]:
+    """The door journey's jacket (M8 rulings 5-6, 18): grabbed before the walk out, hung after the walk in,
+    always on exactly one of the peg and the hand, steps during both walks and a cloth sound at each contact."""
+    g = []
+    order = phase_order(run)
+    g.append(_line(f"jacket beats: grab before exit, hang after enter ({'/'.join(order)})",
+                   "grab" in order and "hang" in order and order.index("grab") < order.index("exit")
+                   and order.index("hang") > order.index("enter")))
+    shown = [x for x in run if x["journey"] not in ("pullBack", "vanish")]
+    both = [x for x in shown if x["jacket"] and x["journeyJacket"] > 0.5]
+    none_ = [x for x in shown if not x["jacket"] and x["journeyJacket"] < 0.5]
+    g.append(_line(f"one jacket at a time: {len(both)} samples with two, {len(none_)} with none "
+                   f"(of {len(shown)})", not both and not none_))
+    held = [x for x in run if x["journey"] in ("exit", "enter")]
+    g.append(_line(f"the jacket in the hand on both walks: {sum(1 for x in held if x['jacket'])} of {len(held)}",
+                   bool(held) and all(x["jacket"] for x in held)))
+    for walk in ("exit", "enter"):
+        xs = [x["ms"] for x in run if x["journey"] == walk]
+        steps = [e for e in foley(events, "step") if xs and xs[0] - 50 <= e["ms"] <= xs[-1] + 200] if xs else []
+        g.append(_line(f"footsteps during {walk}: {len(steps)} (want >= {FOLEY_MIN_STEPS})",
+                       len(steps) >= FOLEY_MIN_STEPS))
+    contacts = []
+    for beat in ("grab", "hang"):
+        xs = [x["ms"] for x in run if x["journey"] == beat]
+        if xs:
+            contacts.append(sum(1 for e in foley(events, "cloth") if xs[0] <= e["ms"] <= xs[-1] + 100))
+    g.append(_line(f"a cloth sound at each contact: {contacts} (want [1, 1])", contacts == [1, 1]))
+    end = run[-1]
+    g.append(_line(f"the jacket left with the door: hand {end['jacket']} at the last journey sample",
+                   not end["jacket"]))
+    return g
+
+
+def npc_states(samples: list[dict]) -> list[str]:
+    seen: list[str] = []
+    for x in samples:
+        if x.get("npc") and (not seen or seen[-1] != x["npc"]):
+            seen.append(x["npc"])
+    return seen
+
+
+def gates_npc(tl: dict) -> list[str]:
+    """`WOW=npc` (M8 ruling 18): poke the cat, name it, then a sad reply; the cat's intents follow."""
+    s, ev = tl["samples"], tl["events"]
+    g = _common(tl)
+    g.append(_line(f"living room in every sample ({len(s)})", all(x["scene"] == "livingRoom" for x in s)))
+    poke = _first(ev, "poke")
+    after = [x for x in s if poke and x["ms"] >= poke["ms"]]
+    react = next((x for x in after if x["npc"] == "react"), None)
+    g.append(_line(f"poked: react {((react['ms'] - poke['ms']) if react and poke else -1)} ms after the tap "
+                   f"(want <= 500)", bool(react and poke and react["ms"] - poke["ms"] <= 500)))
+    send = _first(ev, "send")
+    named = [x for x in s if send and x["ms"] >= send["ms"]]
+    g.append(_line("named in the message: notice", any(x["npc"] == "notice" for x in named)))
+    moved = [x for x in named if x["npc"] == "move"]
+    reached = max((x["npcX"] for x in named), default=0.0)
+    g.append(_line(f"the sad reply: the cat walks to the rug (move in {len(moved)} samples, npcX max "
+                   f"{reached:.2f}, want >= 0.95)", bool(moved) and reached >= 0.95))
+    x_jump = max((abs(b["npcX"] - a["npcX"]) for a, b in zip(s, s[1:])), default=0.0)
+    g.append(_line(f"npcX moves smoothly: largest step between samples {x_jump:.3f} (want <= 0.1)", x_jump <= 0.1))
+    g.append(f"cat states: {'/'.join(npc_states(s))}: info")
     return g
 
 
@@ -310,6 +400,17 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
     stop_all = [e for e in ev if e["type"] == "stop"]
     end = stop_all[-1]["ms"] if stop_all else tl["frames"][-1]["ms"]
     speaking = [x for x in s if x["speaking"]]
+    if tl["wow"] == "npc":
+        def first_state(state: str, after: float = 0) -> float:
+            return next((x["ms"] for x in s if x["npc"] == state and x["ms"] >= after), s[-1]["ms"])
+        poke, send = _first(ev, "poke"), _first(ev, "send")
+        moving = [x for x in s if x["npc"] == "move"]
+        rug = next((x["ms"] for x in s if x["npcX"] >= 0.99), s[-1]["ms"])
+        return [("1 the cat asleep", first + 800, 1.0),
+                ("2 poked: it reacts", first_state("react", poke["ms"] if poke else 0) + 300, 1.0),
+                ("3 named: it notices", first_state("notice", send["ms"] if send else 0) + 300, 1.0),
+                ("4 the avatar is sad: the cat walks over", moving[len(moving) // 2]["ms"] if moving else rug, 1.0),
+                ("5 by the avatar on the rug", min(rug + 800, tl["frames"][-1]["ms"]), 1.0)]
     if tl["wow"] in ("wow3", "tour"):
         out: list[tuple[str, float, float]] = []
         runs = journeys(s)
@@ -322,12 +423,17 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
                 return xs[min(len(xs) - 1, int(frac * len(xs)))]["ms"] if xs else run[0]["ms"]
             tag = f"{run[0]['family']} → {run[-1]['scene']}"
             if tl["wow"] == "wow3":
+                grabbed = any(x["journey"] == "grab" for x in run)
                 out += [("2 wide: the camera pulls back", at("open"), 1.0),
-                        ("3 the door opens, gaze leads", at("open", 0.9), 1.0),
+                        ("3 grabs the jacket from the peg" if grabbed else "3 the door opens, gaze leads",
+                         at("grab", 0.45) if grabbed else at("open", 0.9), 1.0),
                         ("4 walks out through it", at("exit", 0.5), 1.0),
                         ("5 match cut: the same door, the beach", at("arriveOpen", 0.2), 1.0),
-                        ("6 walks in at sunset", at("enter", 0.6), 1.0),
-                        ("7 settled", min(run[-1]["ms"] + 1500, tl["frames"][-1]["ms"]), 1.0)]
+                        ("6 walks in at sunset", at("enter", 0.6), 1.0)]
+                if any(x["journey"] == "hang" for x in run):
+                    out.append(("7 hangs the jacket on the door", at("hang", 0.5), 1.0))
+                out.append(("8 settled" if grabbed else "7 settled",
+                            min(run[-1]["ms"] + 1500, tl["frames"][-1]["ms"]), 1.0))
             else:
                 out += [(f"{2 * k + 1} {tag}: walks out", at("exit", 0.5), 1.0),
                         (f"{2 * k + 2} {tag}: walks in", at("enter", 0.5), 1.0)]
@@ -351,12 +457,19 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
     tool = [x for x in s if x["tool"] == "getCurrentWeather"]
     answer = [x for x in speaking if x["ms"] > tool[-1]["ms"]] if tool else speaking
     send = _first(ev, "send")
-    return [("1 the user asks", send["ms"] - 300, 1.0),
-            ("2 tool starts: head turns", tool[0]["ms"] + 350, 1.0),
-            ("3 tablet out, screen lights the face", tool[0]["ms"] + 1200, 1.0),
-            ("4 eyes on the screen", tool[len(tool) * 3 // 4]["ms"], 1.6),
-            ("5 glances back, tablet away", tool[-1]["ms"] + 1300, 1.0),
-            ("6 answers (nod)", answer[len(answer) // 3]["ms"] if answer else end, 1.0)]
+    card = [x for x in s if tool and x["ms"] >= tool[0]["ms"] and x["prop"] == "tablet"
+            and x.get("tabletWeather", "none") != "none"]
+    out = [("1 the user asks", send["ms"] - 300, 1.0),
+           ("2 tool starts: head turns", tool[0]["ms"] + 350, 1.0),
+           ("3 tablet out, screen lights the face", tool[0]["ms"] + 1200, 1.0),
+           ("4 eyes on the screen", tool[len(tool) * 3 // 4]["ms"], 1.6)]
+    if card:
+        # M8: the looked-up city's weather on the screen (ruling 14)
+        out.append((f"4b Tokyo on the screen: {card[0]['tabletWeather']} {card[0]['tabletTemp']} °C",
+                    card[len(card) // 2]["ms"], 2.0))
+    gone = (card[-1]["ms"] + 500) if card else tool[-1]["ms"] + 1300
+    return out + [("5 glances back, tablet away", gone, 1.0),
+                  ("6 answers (nod)", answer[len(answer) // 3]["ms"] if answer else end, 1.0)]
 
 
 def crop_zoom(im: Image.Image, zoom: float) -> Image.Image:
@@ -416,7 +529,8 @@ def write_mp4(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> None
         for k, i in enumerate(idx):
             load_frame(wow_dir / "frames" / f"{i:04d}.rgba", size).save(Path(tmp) / f"{k:05d}.png")
         cmd = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(MP4_FPS), "-i", f"{tmp}/%05d.png"]
-        clips = audio_offsets(tl["events"], tl["audio"], tl["frames"][0]["ms"])
+        clips = audio_offsets(tl["events"], tl["audio"], tl["frames"][0]["ms"]) + \
+            foley_offsets(tl["events"], tl["frames"][0]["ms"])
         for f, _ in clips:
             cmd += ["-i", f]
         w, h = size[0] // 2 * 2, size[1] // 2 * 2
@@ -478,6 +592,8 @@ def main(argv: list[str]) -> int:
             gates += gates_wow3(tl)
         elif wow == "tour":
             gates += gates_tour(tl)
+        elif wow == "npc":
+            gates += gates_npc(tl)
         else:
             gates += gates_wow2(tl)
     except (TypeError, ValueError, IndexError, KeyError, AttributeError) as e:

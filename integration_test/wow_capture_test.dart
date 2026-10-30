@@ -18,7 +18,9 @@ import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/models/llm_config.dart';
 import 'package:yofardev_ai/core/models/performance/shot.dart';
 import 'package:yofardev_ai/core/models/weather_report.dart';
+import 'package:yofardev_ai/core/services/audio/foley_service.dart';
 import 'package:yofardev_ai/core/services/llm/fake_llm_service.dart';
+import 'package:yofardev_ai/core/services/world/tablet_weather_source.dart';
 import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/head_target_mapper.dart';
@@ -60,6 +62,7 @@ class _Script {
     required this.responses,
     this.clock,
     this.tour = const <AvatarScene>[],
+    this.poke,
   });
 
   final AvatarScene scene;
@@ -73,6 +76,9 @@ class _Script {
 
   /// M7 `tour`: scene journeys driven one after another, no speech.
   final List<AvatarScene> tour;
+
+  /// M8 `npc`: the scene prop poked (as a tap would) before the user types.
+  final String? poke;
 }
 
 String _answer(String text, String mood, {String? background}) => jsonEncode(
@@ -133,10 +139,27 @@ final Map<String, _Script> _scripts = <String, _Script>{
     responses: <FakeLlmResponse>[
       FakeLlmResponse(
         jsonBody: _answer(
-          "Let's go! Grab your sandals. "
+          "Let's go! Let me grab my jacket. "
               'Here we are, just in time for the sunset.',
           'happy',
           background: 'beach',
+        ),
+      ),
+    ],
+  ),
+  // M8: the living-room cat's behaviour tree: poked, named, then a sad reply
+  // (it walks to the rug by the avatar).
+  'npc': _Script(
+    scene: AvatarScene.livingRoom,
+    rain: 0,
+    user: 'Is your cat awake?',
+    poke: 'cat',
+    responses: <FakeLlmResponse>[
+      FakeLlmResponse(
+        jsonBody: _answer(
+          'She just woke up. '
+              'I miss the days she slept on my lap, I feel a bit lonely.',
+          'sad',
         ),
       ),
     ],
@@ -175,6 +198,24 @@ class _NoNetwork extends HttpOverrides {
         );
       };
   }
+}
+
+/// Plays like the app's foley player and logs what played (M8 ruling 18),
+/// so the capture can gate the footsteps and mix them into the MP4.
+class _LoggingFoleyPlayer implements FoleyPlayer {
+  _LoggingFoleyPlayer(this.log);
+
+  final List<({DateTime at, String asset})> log;
+  final AudioPlayersFoleyPlayer _player = AudioPlayersFoleyPlayer();
+
+  @override
+  Future<void> play(String asset, double volume) {
+    log.add((at: DateTime.now(), asset: asset));
+    return _player.play(asset, volume);
+  }
+
+  @override
+  Future<void> dispose() => _player.dispose();
 }
 
 void main() {
@@ -220,9 +261,16 @@ void main() {
     });
 
     final SayTtsSynthesizer tts = SayTtsSynthesizer(audioDir);
+    final List<({DateTime at, String asset})> foleyLog =
+        <({DateTime at, String asset})>[];
     await setupServiceLocator(
       ttsSynthesizer: tts,
-      tools: <CannedWeatherTool>[CannedWeatherTool()],
+      tools: <CannedWeatherTool>[
+        CannedWeatherTool(
+          onReport: (WeatherReport r) => getIt<TabletWeatherSource>().report(r),
+        ),
+      ],
+      foleyPlayer: () => _LoggingFoleyPlayer(foleyLog),
     );
     await bootstrapApp();
     await tester.pumpWidget(const App());
@@ -236,6 +284,7 @@ void main() {
     final FacePerformer performer = getIt<FacePerformer>();
     final WorldStateService world = getIt<WorldStateService>();
     final CameraDirector camera = getIt<CameraDirector>();
+    final NpcDirector npc = getIt<NpcDirector>();
 
     if (!chat.state.functionCallingEnabled) {
       chat.toggleFunctionCalling();
@@ -269,6 +318,7 @@ void main() {
 
     // ---- recording
     final Stopwatch clock = Stopwatch()..start();
+    final DateTime clockStart = DateTime.now();
     final List<Map<String, Object?>> samples = <Map<String, Object?>>[];
     final List<Map<String, Object?>> events = <Map<String, Object?>>[];
     bool speaking = false;
@@ -340,6 +390,14 @@ void main() {
         'shotSerial': camera.shot.value.serial,
         'daylight': world.daylight.value,
         'dusk': world.dusk.value,
+        // M8: the jacket, the tablet card, the scene's NPC
+        'jacket': avatar.state.jacket,
+        'journeyJacket': avatar.state.journeyJacket,
+        'tabletWeather': intent.tabletWeather.name,
+        'tabletTemp': intent.tabletTemp,
+        'npc': npc.intent.value.npc.name,
+        'npcX': npc.intent.value.npcX,
+        'npcLook': npc.intent.value.npcLook,
       });
     }
 
@@ -388,6 +446,16 @@ void main() {
       }
       spoke = true;
     }
+    final String? poke = script.poke;
+    if (poke != null) {
+      events.add(<String, Object?>{
+        'ms': clock.elapsedMilliseconds,
+        'type': 'poke',
+        'prop': poke,
+      });
+      npc.poke(poke);
+      await _settle(tester, const Duration(seconds: 3));
+    }
     final Finder field = find.byType(TextField);
     if (script.tour.isEmpty) {
       events.add(<String, Object?>{
@@ -423,6 +491,10 @@ void main() {
         break;
       }
     }
+    if (script.poke != null) {
+      // the cat's walk to the rug outlasts the reply
+      await _settle(tester, const Duration(seconds: 5));
+    }
     sampler.cancel();
     await grabber.stop();
     if (_capture && script.rain > 0) {
@@ -443,6 +515,19 @@ void main() {
       SchedulerBinding.instance.removeTimingsCallback(onTimings);
     }
     await playback.cancel();
+    for (final ({DateTime at, String asset}) f in foleyLog) {
+      final String name = f.asset.split('/').last;
+      events.add(<String, Object?>{
+        'ms': f.at.difference(clockStart).inMilliseconds,
+        'type': 'foley',
+        'kind': name.substring(0, name.lastIndexOf('_')),
+        'file': 'assets/${f.asset}',
+      });
+    }
+    events.sort(
+      (Map<String, Object?> a, Map<String, Object?> b) =>
+          (a['ms']! as int).compareTo(b['ms']! as int),
+    );
     FakeLlmService().deactivate();
     HttpOverrides.global = null;
 
