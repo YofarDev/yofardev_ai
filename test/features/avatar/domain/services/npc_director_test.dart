@@ -487,6 +487,53 @@ void main() {
       expect(firstSwim(), firstSwim());
     });
 
+    test('swim rate 0.5 npcX/s (at least 1 s); faces right while npcLook >= 0, '
+        'left while < 0, and keeps the last sign when idle', () {
+      expect(NpcDirector.fishSwimRate, 0.5);
+      expect(NpcDirector.fishSwimLength, const Duration(seconds: 2));
+      expect(
+        NpcDirector.travelTime(0.1, 0.5),
+        const Duration(milliseconds: 200),
+      );
+      expect(NpcDirector.facing(NpcKind.fish, 0, 1), NpcDirector.fishMoveLook);
+      expect(NpcDirector.facing(NpcKind.fish, 1, 0), -NpcDirector.fishMoveLook);
+      run(AvatarScene.cafe, (FakeAsync async, NpcDirector npc) {
+        // starts facing right
+        expect(look(npc), greaterThanOrEqualTo(0));
+        final List<(double x, double look, int at)> moving =
+            <(double, double, int)>[];
+        double settledX = 0;
+        int moves = 0;
+        int? swimStart;
+        npc.intent.addListener(() {
+          final NpcIntent i = npc.intent.value;
+          if (i.npc == NpcState.move) {
+            swimStart ??= async.elapsed.inMilliseconds;
+            moving.add((i.npcX, i.npcLook, async.elapsed.inMilliseconds));
+          } else if (swimStart != null) {
+            moves++;
+            final int took = async.elapsed.inMilliseconds - swimStart!;
+            final double distance = (i.npcX - settledX).abs();
+            // distance / 0.5 npcX/s, but never under 1 s
+            final double expectedMs = math.max(1000, distance / 0.5 * 1000);
+            expect(took, inInclusiveRange(expectedMs, expectedMs + 40));
+            // every frame of the swim faces the way it goes, small
+            for (final (double, double, int) f in moving) {
+              expect(f.$2.abs(), NpcDirector.fishMoveLook);
+              expect(f.$2 > 0, i.npcX > settledX);
+            }
+            // idle after the swim keeps that sign
+            expect(i.npcLook < 0, i.npcX < settledX);
+            settledX = i.npcX;
+            moving.clear();
+            swimStart = null;
+          }
+        });
+        ms(async, 120000);
+        expect(moves, greaterThan(3));
+      });
+    });
+
     test('reduce motion: it idles in place and a poke only notices', () {
       run(AvatarScene.cafe, (FakeAsync async, NpcDirector npc) {
         npc.setReduceMotion(true);
@@ -520,6 +567,34 @@ void main() {
         ms(async, NpcDirector.pigeonWalkLength.inMilliseconds + 100);
         expect(x(npc), 0);
         expect(state(npc), NpcState.idle);
+      });
+    });
+
+    test('walk rate 0.354 npcX/s: the whole path in ~2.8 s, facing '
+        'right as npcX grows and left as it falls', () {
+      expect(NpcDirector.pigeonWalkRate, 0.354);
+      expect(
+        NpcDirector.pigeonWalkLength.inMilliseconds,
+        inInclusiveRange(2824, 2826),
+      );
+      expect(NpcDirector.facing(NpcKind.pigeon, 0, 1), 0.5);
+      expect(NpcDirector.facing(NpcKind.pigeon, 1, 0), -0.5);
+      run(AvatarScene.rooftop, (FakeAsync async, NpcDirector npc) {
+        npc.poke('pigeon');
+        ms(async, 800 + 10);
+        expect(look(npc), 0.5);
+        // half way in time is half way in distance (eased, symmetric)
+        ms(async, 1404);
+        expect(x(npc), closeTo(0.5, 0.05));
+        ms(async, 1500);
+        expect(state(npc), NpcState.idle);
+        expect(x(npc), 1);
+        // back after 10 s, walking left
+        ms(async, 10500);
+        expect(state(npc), NpcState.move);
+        expect(look(npc), -0.5);
+        ms(async, NpcDirector.pigeonWalkLength.inMilliseconds + 100);
+        expect(x(npc), 0);
       });
     });
 
@@ -645,6 +720,32 @@ void main() {
         ms(async, NpcDirector.dogTrotLength.inMilliseconds ~/ 2 + 100);
         expect(state(npc), NpcState.idle);
         expect(x(npc), 1);
+      });
+    });
+
+    test('trot rate 1.152 npcX/s (~0.87 s for the whole path), facing left '
+        'toward the avatar and right on the way back', () {
+      expect(NpcDirector.dogTrotRate, 1.152);
+      expect(
+        NpcDirector.dogTrotLength.inMilliseconds,
+        inInclusiveRange(867, 869),
+      );
+      run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
+        npc.setEmotion(sad);
+        expect(state(npc), NpcState.move);
+        expect(look(npc), -0.5);
+        ms(async, 860);
+        expect(state(npc), NpcState.move);
+        ms(async, 20);
+        expect(state(npc), NpcState.idle);
+        expect(x(npc), 1);
+        npc.setEmotion(const EmotionVector());
+        ms(async, 20500);
+        expect(state(npc), NpcState.move);
+        expect(look(npc), 0.5);
+        ms(async, 900);
+        expect(state(npc), NpcState.rest);
+        expect(x(npc), 0);
       });
     });
 

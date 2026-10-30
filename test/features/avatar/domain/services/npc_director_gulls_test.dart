@@ -64,7 +64,7 @@ void main() {
       expect(gulls(npc), NpcState.away);
       ms(async, 200);
       expect(gulls(npc), NpcState.move);
-      expect(npc.gullIntent.value.npcLook, lessThan(0));
+      expect(npc.gullIntent.value.npcLook, GullFlock.landLook);
       ms(async, 1250);
       expect(gullX(npc), inInclusiveRange(0.2, 0.8));
       ms(async, 1300);
@@ -89,7 +89,7 @@ void main() {
         expect(gulls(npc), NpcState.react);
         ms(async, 200);
         expect(gulls(npc), NpcState.move);
-        expect(npc.gullIntent.value.npcLook, greaterThan(0));
+        expect(npc.gullIntent.value.npcLook, GullFlock.flyOffLook);
         ms(async, 700);
         expect(gullX(npc), closeTo(0.5, 0.1));
         ms(async, 900);

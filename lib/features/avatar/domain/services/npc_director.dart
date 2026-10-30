@@ -129,8 +129,10 @@ class _Move {
 /// centre-standing avatar the NPC is: every v10 spot is right of it (look
 /// −[lookAmount]); the cat on the rug (`npcX` ≥ [catCrossesAt]) and the ufo
 /// drifted left (`npcX` ≥ [alienCrossesAt]) look right (+). While it moves,
-/// `npcLook` is its facing ([moveLook]): the cat and the ufo go left as
-/// `npcX` grows, the crab, the pigeon and the fish right.
+/// `npcLook` is its facing ([moveLook]): the cat, the dog and the ufo go left
+/// as `npcX` grows, the crab and the pigeon right. The fish faces right while
+/// `npcLook` ≥ 0 and left while < 0 in every state, so it swims with a small
+/// ±[fishMoveLook] and keeps its last facing sign when idle.
 class NpcDirector {
   NpcDirector({
     required DateTime Function() now,
@@ -160,19 +162,33 @@ class NpcDirector {
   static const Duration driftMaxGap = Duration(seconds: 14);
   static const Duration jumpLength = Duration(milliseconds: 400);
 
-  // M9 ruling 11. The walk lengths are provisional until the NPC art
-  // (rive/tools/scene_npc.py) lands.
+  // M9 ruling 11, rates measured from the built art (rive/tools/scene_npc.py):
+  // the fish swims its ~28 px bowl at 0.5 npcX/s, the pigeon walks at
+  // 0.354 npcX/s (whole path ~2.8 s) and the dog trots at 1.152 npcX/s (whole
+  // path ~0.87 s), all without foot slide. Partial moves take distance / rate.
   static const Duration fishReactLength = Duration(milliseconds: 1200);
   static const Duration fishNoticeLength = Duration(seconds: 3);
-  static const Duration fishSwimLength = Duration(milliseconds: 2500);
+  static const double fishSwimRate = 0.5;
+
+  /// The shortest swim, whatever the distance.
+  static const Duration fishSwimMinLength = Duration(seconds: 1);
+
+  /// The whole bowl, 0 → 1.
+  static final Duration fishSwimLength = travelTime(1, fishSwimRate);
   static const Duration fishSwimMinGap = Duration(seconds: 10);
   static const Duration fishSwimMaxGap = Duration(seconds: 16);
   static const Duration pigeonReactLength = Duration(milliseconds: 800);
-  static const Duration pigeonWalkLength = Duration(seconds: 3);
+  static const double pigeonWalkRate = 0.354;
+
+  /// The whole path, 0 → 1 (~2.8 s).
+  static final Duration pigeonWalkLength = travelTime(1, pigeonWalkRate);
   static const Duration pigeonAwayLength = Duration(seconds: 10);
   static const Duration pigeonWalkMinGap = Duration(seconds: 12);
   static const Duration pigeonWalkMaxGap = Duration(seconds: 20);
-  static const Duration dogTrotLength = Duration(seconds: 5);
+  static const double dogTrotRate = 1.152;
+
+  /// The whole path, 0 → 1 (~0.87 s).
+  static final Duration dogTrotLength = travelTime(1, dogTrotRate);
 
   /// How often a move is re-eased (the scene writes `npcX` on change).
   static const Duration frame = Duration(milliseconds: 33);
@@ -191,6 +207,16 @@ class NpcDirector {
   /// The facing written while moving (its sign is what the art reads).
   static const double moveLook = 0.5;
 
+  /// The fish's facing while swimming: only the sign counts (right while
+  /// `npcLook` ≥ 0, left while < 0), so it stays small.
+  static const double fishMoveLook = 0.01;
+
+  /// How long covering [distance] of `npcX` takes at [rate] npcX/s.
+  static Duration travelTime(double distance, double rate) => Duration(
+    microseconds: (distance.abs() / rate * Duration.microsecondsPerSecond)
+        .round(),
+  );
+
   /// The beach prop whose tap pokes the gulls (the crab has its own).
   static const String gullPropId = 'seagull';
 
@@ -208,8 +234,12 @@ class NpcDirector {
   /// The facing of [kind] moving from [from] to [to].
   static double facing(NpcKind kind, double from, double to) {
     final bool growing = to > from;
-    final bool goesRight =
-        kind == NpcKind.crab || kind == NpcKind.pigeon || kind == NpcKind.fish;
+    if (kind == NpcKind.fish) {
+      // faces right while npcLook >= 0 (the art), so a swim to a higher
+      // npcX is +, to a lower one -
+      return growing ? fishMoveLook : -fishMoveLook;
+    }
+    final bool goesRight = kind == NpcKind.crab || kind == NpcKind.pigeon;
     final bool goesLeft = goesRight ? !growing : growing;
     return goesLeft ? -moveLook : moveLook;
   }
@@ -300,6 +330,9 @@ class NpcDirector {
 
   /// The pigeon walked away after a poke and is on its way back.
   bool _returningHome = false;
+
+  /// The fish's last facing (see [_fish]); it starts facing right.
+  bool _fishFacesLeft = false;
 
   Timer? _timer;
   bool _disposed = false;
@@ -509,6 +542,7 @@ class NpcDirector {
     _nextDriftAt = null;
     _driftTarget = null;
     _returningHome = false;
+    _fishFacesLeft = false;
     _lampOn = true;
     _gulls.reset();
   }
@@ -609,6 +643,23 @@ class NpcDirector {
       npc: NpcState.move,
       npcX: active.xAt(now),
       npcLook: facing(kind, active.from, active.to),
+    );
+  }
+
+  /// Like [_goTo], over distance / [rate] (at least [minLength]).
+  NpcIntent _goAt(
+    double target,
+    double rate,
+    DateTime now, {
+    required NpcState arrived,
+    Duration minLength = Duration.zero,
+  }) {
+    final Duration length = travelTime(target - _xNow(now), rate);
+    return _goTo(
+      target,
+      length < minLength ? minLength : length,
+      now,
+      arrived: arrived,
     );
   }
 
@@ -761,11 +812,14 @@ class NpcDirector {
     );
   }
 
-  /// Idle, with a move to a random `npcX` of [length] every [minGap] to
-  /// [maxGap]; none under reduce motion.
+  /// Idle, with a move to a random `npcX` every [minGap] to [maxGap]: of
+  /// [length], or distance / [rate] (at least [minLength]); none under reduce
+  /// motion.
   NpcIntent _wander(
     DateTime now, {
-    required Duration length,
+    Duration? length,
+    double? rate,
+    Duration minLength = Duration.zero,
     required Duration minGap,
     required Duration maxGap,
   }) {
@@ -774,15 +828,19 @@ class NpcDirector {
     }
     final double? target = _driftTarget;
     if (target != null && (_move != null && _move!.to == target)) {
-      return _goTo(target, length, now, arrived: NpcState.idle);
+      return _goTo(target, _move!.length, now, arrived: NpcState.idle);
     }
     _driftTarget = null;
     final DateTime next = _nextDriftAt ??= now.add(_gap(minGap, maxGap));
     if (!now.isBefore(next)) {
       final double to = _random.nextDouble();
+      Duration span = length ?? travelTime(to - _xNow(now), rate!);
+      if (span < minLength) {
+        span = minLength;
+      }
       _driftTarget = to;
-      _nextDriftAt = now.add(length).add(_gap(minGap, maxGap));
-      return _goTo(to, length, now, arrived: NpcState.idle);
+      _nextDriftAt = now.add(span).add(_gap(minGap, maxGap));
+      return _goTo(to, span, now, arrived: NpcState.idle);
     }
     return _at(NpcState.idle, now);
   }
@@ -792,7 +850,21 @@ class NpcDirector {
     return min + Duration(milliseconds: _random.nextInt(span + 1));
   }
 
+  /// The fish faces right while `npcLook` >= 0 and left while < 0, in every
+  /// state: whatever it shows keeps the last facing sign.
   NpcIntent _fish(DateTime now) {
+    final NpcIntent raw = _fishRaw(now);
+    if (raw.npcLook < 0) {
+      _fishFacesLeft = true;
+    } else if (raw.npcLook > 0) {
+      _fishFacesLeft = false;
+    } else if (_fishFacesLeft) {
+      return NpcIntent(npc: raw.npc, npcX: raw.npcX, npcLook: -fishMoveLook);
+    }
+    return raw;
+  }
+
+  NpcIntent _fishRaw(DateTime now) {
     if (_pokedAt != null) {
       if (_within(_pokedAt, now, fishReactLength)) {
         return _react(now, look: _toAvatar(now));
@@ -807,7 +879,8 @@ class NpcDirector {
     }
     return _wander(
       now,
-      length: fishSwimLength,
+      rate: fishSwimRate,
+      minLength: fishSwimMinLength,
       minGap: fishSwimMinGap,
       maxGap: fishSwimMaxGap,
     );
@@ -823,7 +896,7 @@ class NpcDirector {
         now,
         pigeonReactLength + pigeonWalkLength + pigeonAwayLength,
       )) {
-        return _goTo(1, pigeonWalkLength, now, arrived: NpcState.idle);
+        return _goAt(1, pigeonWalkRate, now, arrived: NpcState.idle);
       }
       _pokedAt = null;
       _returningHome = true;
@@ -837,12 +910,12 @@ class NpcDirector {
         _returningHome = false;
         _nextDriftAt = null;
       } else {
-        return _goTo(0, pigeonWalkLength, now, arrived: NpcState.idle);
+        return _goAt(0, pigeonWalkRate, now, arrived: NpcState.idle);
       }
     }
     return _wander(
       now,
-      length: pigeonWalkLength,
+      rate: pigeonWalkRate,
       minGap: pigeonWalkMinGap,
       maxGap: pigeonWalkMaxGap,
     );
@@ -855,7 +928,7 @@ class NpcDirector {
     }
     if (_emotion.valence <= sadValence) {
       _wake(now);
-      return _goTo(1, dogTrotLength, now, arrived: NpcState.idle);
+      return _goAt(1, dogTrotRate, now, arrived: NpcState.idle);
     }
     if (_speaking && _emotion.arousal >= wakeArousal) {
       _wake(now);
@@ -866,12 +939,7 @@ class NpcDirector {
     if (_within(_activeAt, now, calmToSleep)) {
       return _at(NpcState.idle, now);
     }
-    final NpcIntent intent = _goTo(
-      0,
-      dogTrotLength,
-      now,
-      arrived: NpcState.rest,
-    );
+    final NpcIntent intent = _goAt(0, dogTrotRate, now, arrived: NpcState.rest);
     if (intent.npc == NpcState.rest) {
       _awake = false;
     }

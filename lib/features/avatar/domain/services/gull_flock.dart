@@ -7,12 +7,13 @@ import '../models/npc_intent.dart';
 /// output a [NpcIntent] for `npc2`, `npc2X` and `npc2Look`.
 ///
 /// They start `away` (off the right edge, `npc2X` 1). After [calmToLand] of
-/// calm they land (`move`, `npc2X` 1 → 0 over [landLength], then `idle`: they
-/// peck on the sand). Anything that startles them ([startle]: a `seagulls` or
+/// calm they land (`move`, `npc2X` 1 → 0 over [landLength] facing left,
+/// `npc2Look` [landLook], then `idle`: they peck on the sand). Anything that startles them ([startle]: a `seagulls` or
 /// `bigWave` event, a poke of the `seagull` prop, the crab's react) or, while
 /// they stand there, rain ≥ [rainAway] or the avatar speaking with arousal ≥
 /// [excitedArousal] makes them `react` for [reactLength] and then fly off
-/// (`move`, `npc2X` 0 → 1 over [fleeLength]) to `away`. The calm timer
+/// (`move`, `npc2X` 0 → 1 over [fleeLength] facing right, `npc2Look`
+/// [flyOffLook]) to `away`. The calm timer
 /// restarts at every disturbance, and rain ≥ [rainAway] or an excited avatar
 /// keep them away. Under reduce motion nothing flies: they appear and vanish
 /// (after [jumpLength] away on landing).
@@ -38,9 +39,13 @@ class GullFlock {
   /// The avatar speaking with at least this arousal scares them.
   static const double excitedArousal = 0.7;
 
-  /// The facing written in flight (its sign is what the art reads): left when
-  /// they land (`npc2X` falling), right when they fly off.
-  static const double moveLook = 0.5;
+  /// The facing written when they fly off (`npc2X` 0 → 1): the art faces
+  /// right while `npc2Look` > 0.
+  static const double flyOffLook = 1;
+
+  /// The facing written when they land (`npc2X` 1 → 0): left while
+  /// `npc2Look` ≤ 0.
+  static const double landLook = -1;
 
   /// The `npc2X` of a landed flock.
   static const double landedX = 0;
@@ -237,14 +242,14 @@ class GullFlock {
     _Phase.landing => NpcIntent(
       npc: NpcState.move,
       npcX: _x(now),
-      npcLook: -moveLook,
+      npcLook: landLook,
     ),
     _Phase.landed => const NpcIntent(npc: NpcState.idle, npcX: landedX),
     _Phase.startled => const NpcIntent(npc: NpcState.react, npcX: landedX),
     _Phase.fleeing => NpcIntent(
       npc: NpcState.move,
       npcX: _x(now),
-      npcLook: moveLook,
+      npcLook: flyOffLook,
     ),
   };
 }

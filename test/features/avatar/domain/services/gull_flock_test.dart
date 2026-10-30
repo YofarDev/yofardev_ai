@@ -44,10 +44,12 @@ void main() {
     NpcIntent landing = eval(12.0);
     expect(landing.npc, NpcState.move);
     expect(landing.npcX, closeTo(1, 1e-6));
-    expect(landing.npcLook, lessThan(0), reason: 'flying left');
+    expect(landing.npcLook, GullFlock.landLook, reason: 'flying left');
+    expect(GullFlock.landLook, -1);
     landing = eval(13.25);
     expect(landing.npc, NpcState.move);
     expect(landing.npcX, closeTo(0.5, 1e-6));
+    expect(landing.npcLook, -1);
     final NpcIntent landed = eval(14.5);
     expect(landed, const NpcIntent(npc: NpcState.idle));
     expect(eval(60), const NpcIntent(npc: NpcState.idle));
@@ -72,7 +74,8 @@ void main() {
     final NpcIntent fleeStart = eval(20.6);
     expect(fleeStart.npc, NpcState.move);
     expect(fleeStart.npcX, closeTo(0, 1e-6));
-    expect(fleeStart.npcLook, greaterThan(0), reason: 'flying right');
+    expect(fleeStart.npcLook, GullFlock.flyOffLook, reason: 'flying right');
+    expect(GullFlock.flyOffLook, 1);
     final NpcIntent mid = eval(21.35);
     expect(mid.npc, NpcState.move);
     expect(mid.npcX, closeTo(0.5, 1e-6));
@@ -105,7 +108,7 @@ void main() {
     final NpcIntent out = eval(13.25);
     expect(out.npc, NpcState.move);
     expect(out.npcX, closeTo(0.5, 1e-6));
-    expect(out.npcLook, greaterThan(0));
+    expect(out.npcLook, GullFlock.flyOffLook);
     // half the way left: 0.75 s
     expect(eval(13.25 + 0.375).npcX, greaterThan(0.5));
     expect(eval(14.1), NpcIntent.away);
