@@ -184,7 +184,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
         return;
       }
       _preloadFile = file;
-    } on Exception catch (e) {
+    } on Object catch (e) {
+      // A missing asset throws a FlutterError (an Error, not an Exception).
       AppLogger.error(
         'RiveSceneView failed to preload ${scene.name}.riv',
         tag: 'RiveSceneView',
@@ -425,6 +426,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
       if (file == null) {
         if (mounted) {
           setState(() => _error = '${scene.name}.riv could not be decoded');
+          _announceShown(scene, loaded: false);
         }
         return;
       }
@@ -474,16 +476,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
       // The new file's front, if it has one and it rains.
       _syncFront(rebuild: preloaded == null || rebuild);
       // Tell the stage once the new file's first frame is drawn.
-      final ValueChanged<AvatarScene>? shown = widget.onSceneShown;
-      if (shown != null) {
-        SchedulerBinding.instance.addPostFrameCallback((Duration _) {
-          if (mounted && _loadedScene == scene) {
-            shown(scene);
-          }
-        });
-        SchedulerBinding.instance.ensureVisualUpdate();
-      }
-    } on Exception catch (e) {
+      _announceShown(scene, loaded: true);
+    } on Object catch (e) {
+      // A missing asset throws a FlutterError (an Error, not an Exception):
+      // it is shown like a decode failure, never left to escape.
       // a taken preload that never got installed is ours to drop
       if (preloaded != null && !identical(preloaded, _file)) {
         preloaded.dispose();
@@ -495,8 +491,29 @@ class _RiveSceneViewState extends State<RiveSceneView>
       );
       if (mounted && _loads.isLatest(ticket)) {
         setState(() => _error = e.toString());
+        _announceShown(scene, loaded: false);
       }
     }
+  }
+
+  /// Tells the stage the new scene is on screen once its first frame is
+  /// drawn. A scene that failed to load ([loaded] false) is announced too, so
+  /// a journey's cut does not wait out its timeout for a file that will never
+  /// draw.
+  void _announceShown(AvatarScene scene, {required bool loaded}) {
+    final ValueChanged<AvatarScene>? shown = widget.onSceneShown;
+    if (shown == null) {
+      return;
+    }
+    SchedulerBinding.instance.addPostFrameCallback((Duration _) {
+      final bool current = loaded
+          ? _loadedScene == scene
+          : widget.scene == scene && _loadedScene != scene;
+      if (mounted && current) {
+        shown(scene);
+      }
+    });
+    SchedulerBinding.instance.ensureVisualUpdate();
   }
 
   void _teardown() {

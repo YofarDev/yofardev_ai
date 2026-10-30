@@ -14,7 +14,10 @@ enum NpcKind {
   cat('cat'),
   owl('owl'),
   crab('crab'),
-  alien('ufo');
+  alien('ufo'),
+  fish('fish'),
+  pigeon('pigeon'),
+  dog('dog');
 
   const NpcKind(this.propId);
 
@@ -26,6 +29,9 @@ enum NpcKind {
     AvatarScene.campfire => NpcKind.owl,
     AvatarScene.beach => NpcKind.crab,
     AvatarScene.deepSpace => NpcKind.alien,
+    AvatarScene.cafe => NpcKind.fish,
+    AvatarScene.rooftop => NpcKind.pigeon,
+    AvatarScene.mountainHut => NpcKind.dog,
   };
 }
 
@@ -63,9 +69,9 @@ class _Move {
   bool done(DateTime now) => progress(now) >= 1;
 }
 
-/// The behaviour trees of the scene NPCs (moonshot M8 ruling 9), one per
-/// scene, pure: an injected clock and [math.Random], inputs through setters
-/// (fed by `NpcFeed` and the Home stage), output [intent].
+/// The behaviour trees of the scene NPCs (moonshot M8 ruling 9, M9 ruling 11),
+/// one per scene, pure: an injected clock and [math.Random], inputs through
+/// setters (fed by `NpcFeed` and the Home stage), output [intent].
 ///
 /// - **cat** (livingRoom, priority order): poked → react [reactLength], then
 ///   notice [pokeNoticeLength]; its name in a message ([catNames]) → notice
@@ -90,6 +96,22 @@ class _Move {
 ///   the avatar thinks (waiting / generating); otherwise idle, drifting
 ///   (`move`, [driftLength]) to a random `npcX` every [driftMinGap] to
 ///   [driftMaxGap].
+/// - **fish** (cafe): poked → react [fishReactLength], then notice
+///   [fishNoticeLength]; the avatar speaking → notice; otherwise idle, with
+///   a swim ([fishSwimLength]) to a random `npcX` every [fishSwimMinGap] to
+///   [fishSwimMaxGap].
+/// - **pigeon** (rooftop): poked, or `fireworks` → react
+///   [pigeonReactLength], then walks away (`npcX` → 1 over
+///   [pigeonWalkLength]) and back after [pigeonAwayLength]; rain ≥
+///   [pigeonRainRest] → rest; otherwise idle, with a walk to a random `npcX`
+///   every [pigeonWalkMinGap] to [pigeonWalkMaxGap].
+/// - **dog** (mountainHut, like the cat): poked → react [reactLength], then
+///   notice [pokeNoticeLength]; its name ([dogNames]) → notice
+///   [mentionNoticeLength], then react; the avatar sad (valence ≤
+///   [sadValence]) → trots to the avatar (`npcX` → 1 over [dogTrotLength])
+///   and sits (idle); woken (speech with arousal ≥ [wakeArousal]) → idle;
+///   after [calmToSleep] of calm it trots back to the rug (0) and rests;
+///   otherwise it sleeps by the stove.
 ///
 /// **Low tier** ([QualityTier.low]): nothing runs, the NPC holds
 /// [NpcIntent.rest]. **Reduce motion**: no `move` (a position changes only
@@ -101,7 +123,7 @@ class _Move {
 /// −[lookAmount]); the cat on the rug (`npcX` ≥ [catCrossesAt]) and the ufo
 /// drifted left (`npcX` ≥ [alienCrossesAt]) look right (+). While it moves,
 /// `npcLook` is its facing ([moveLook]): the cat and the ufo go left as
-/// `npcX` grows, the crab right.
+/// `npcX` grows, the crab, the pigeon and the fish right.
 class NpcDirector {
   NpcDirector({
     required DateTime Function() now,
@@ -131,6 +153,20 @@ class NpcDirector {
   static const Duration driftMaxGap = Duration(seconds: 14);
   static const Duration jumpLength = Duration(milliseconds: 400);
 
+  // M9 ruling 11. The walk lengths are provisional until the NPC art
+  // (rive/tools/scene_npc.py) lands.
+  static const Duration fishReactLength = Duration(milliseconds: 1200);
+  static const Duration fishNoticeLength = Duration(seconds: 3);
+  static const Duration fishSwimLength = Duration(milliseconds: 2500);
+  static const Duration fishSwimMinGap = Duration(seconds: 10);
+  static const Duration fishSwimMaxGap = Duration(seconds: 16);
+  static const Duration pigeonReactLength = Duration(milliseconds: 800);
+  static const Duration pigeonWalkLength = Duration(seconds: 3);
+  static const Duration pigeonAwayLength = Duration(seconds: 10);
+  static const Duration pigeonWalkMinGap = Duration(seconds: 12);
+  static const Duration pigeonWalkMaxGap = Duration(seconds: 20);
+  static const Duration dogTrotLength = Duration(seconds: 5);
+
   /// How often a move is re-eased (the scene writes `npcX` on change).
   static const Duration frame = Duration(milliseconds: 33);
 
@@ -139,9 +175,11 @@ class NpcDirector {
   static const double wakeArousal = 0.6;
   static const double owlRainHunch = 0.5;
   static const double crabRainHide = 0.2;
+  static const double pigeonRainRest = 0.5;
   static const double lookAmount = 0.7;
   static const double catCrossesAt = 0.9;
   static const double alienCrossesAt = 0.55;
+  static const double dogCrossesAt = 0.9;
 
   /// The facing written while moving (its sign is what the art reads).
   static const double moveLook = 0.5;
@@ -151,7 +189,8 @@ class NpcDirector {
     final bool leftOfAvatar = switch (kind) {
       NpcKind.cat => x >= catCrossesAt,
       NpcKind.alien => x >= alienCrossesAt,
-      NpcKind.owl || NpcKind.crab => false,
+      NpcKind.dog => x >= dogCrossesAt,
+      NpcKind.owl || NpcKind.crab || NpcKind.fish || NpcKind.pigeon => false,
     };
     return leftOfAvatar ? lookAmount : -lookAmount;
   }
@@ -159,7 +198,9 @@ class NpcDirector {
   /// The facing of [kind] moving from [from] to [to].
   static double facing(NpcKind kind, double from, double to) {
     final bool growing = to > from;
-    final bool goesLeft = kind == NpcKind.crab ? !growing : growing;
+    final bool goesRight =
+        kind == NpcKind.crab || kind == NpcKind.pigeon || kind == NpcKind.fish;
+    final bool goesLeft = goesRight ? !growing : growing;
     return goesLeft ? -moveLook : moveLook;
   }
 
@@ -186,6 +227,19 @@ class NpcDirector {
     'tes',
     'mes',
     'des',
+  };
+  static const Set<String> dogNames = <String>{
+    'dog',
+    'dogs',
+    'doggy',
+    'puppy',
+    'puppies',
+    'chien',
+    'chiens',
+    'toutou',
+    'toutous',
+    'chiot',
+    'chiots',
   };
   static const Set<String> alienNames = <String>{
     'alien',
@@ -229,6 +283,9 @@ class NpcDirector {
   DateTime? _activeAt;
   DateTime? _nextDriftAt;
   double? _driftTarget;
+
+  /// The pigeon walked away after a poke and is on its way back.
+  bool _returningHome = false;
 
   Timer? _timer;
   bool _disposed = false;
@@ -333,6 +390,12 @@ class NpcDirector {
         if (_scene == AvatarScene.livingRoom) {
           _catWalksByUntil = _now().add(catWalksByLength);
         }
+      case SceneEvent.fireworks:
+        // the bang startles the pigeon like a poke
+        if (kind != NpcKind.pigeon) {
+          return;
+        }
+        _pokedAt = _now();
       default:
         return;
     }
@@ -354,7 +417,11 @@ class NpcDirector {
     final Set<String> names = switch (kind) {
       NpcKind.cat => catNames,
       NpcKind.alien => alienNames,
-      NpcKind.owl || NpcKind.crab => const <String>{},
+      NpcKind.dog => dogNames,
+      NpcKind.owl ||
+      NpcKind.crab ||
+      NpcKind.fish ||
+      NpcKind.pigeon => const <String>{},
     };
     if (names.isNotEmpty && _mentions(text, names)) {
       _mentionAt = now;
@@ -406,6 +473,7 @@ class NpcDirector {
     _activeAt = null;
     _nextDriftAt = null;
     _driftTarget = null;
+    _returningHome = false;
     _lampOn = true;
   }
 
@@ -437,6 +505,9 @@ class NpcDirector {
       NpcKind.owl => _owl(now),
       NpcKind.crab => _crab(now),
       NpcKind.alien => _alien(now),
+      NpcKind.fish => _fish(now),
+      NpcKind.pigeon => _pigeon(now),
+      NpcKind.dog => _dog(now),
     };
     if (!_moveTouched && _move != null) {
       // Another branch took over: the walk stops where it is.
@@ -498,7 +569,10 @@ class NpcDirector {
     _activeAt = now;
   }
 
-  NpcIntent _cat(DateTime now) {
+  /// The pet branches the cat and the dog share (they outrank everything):
+  /// a poke (react, then notice) and its name (notice, then react); both wake
+  /// it. Null when neither is under way.
+  NpcIntent? _petAttention(DateTime now) {
     if (_pokedAt != null) {
       if (_within(_pokedAt, now, reactLength)) {
         _wake(now);
@@ -520,6 +594,14 @@ class NpcDirector {
         return _react(now, look: _toAvatar(now));
       }
       _mentionAt = null;
+    }
+    return null;
+  }
+
+  NpcIntent _cat(DateTime now) {
+    final NpcIntent? attention = _petAttention(now);
+    if (attention != null) {
+      return attention;
     }
     final DateTime? walkEnd = _catWalksByUntil;
     final bool walkingCat = walkEnd != null && now.isBefore(walkEnd);
@@ -623,24 +705,129 @@ class NpcDirector {
     if (_reduceMotion) {
       return _at(NpcState.idle, now);
     }
+    return _wander(
+      now,
+      length: driftLength,
+      minGap: driftMinGap,
+      maxGap: driftMaxGap,
+    );
+  }
+
+  /// Idle, with a move to a random `npcX` of [length] every [minGap] to
+  /// [maxGap]; none under reduce motion.
+  NpcIntent _wander(
+    DateTime now, {
+    required Duration length,
+    required Duration minGap,
+    required Duration maxGap,
+  }) {
+    if (_reduceMotion) {
+      return _at(NpcState.idle, now);
+    }
     final double? target = _driftTarget;
     if (target != null && (_move != null && _move!.to == target)) {
-      return _goTo(target, driftLength, now, arrived: NpcState.idle);
+      return _goTo(target, length, now, arrived: NpcState.idle);
     }
     _driftTarget = null;
-    final DateTime next = _nextDriftAt ??= now.add(_driftGap());
+    final DateTime next = _nextDriftAt ??= now.add(_gap(minGap, maxGap));
     if (!now.isBefore(next)) {
       final double to = _random.nextDouble();
       _driftTarget = to;
-      _nextDriftAt = now.add(driftLength).add(_driftGap());
-      return _goTo(to, driftLength, now, arrived: NpcState.idle);
+      _nextDriftAt = now.add(length).add(_gap(minGap, maxGap));
+      return _goTo(to, length, now, arrived: NpcState.idle);
     }
     return _at(NpcState.idle, now);
   }
 
-  Duration _driftGap() {
-    final int span = driftMaxGap.inMilliseconds - driftMinGap.inMilliseconds;
-    return driftMinGap + Duration(milliseconds: _random.nextInt(span + 1));
+  Duration _gap(Duration min, Duration max) {
+    final int span = max.inMilliseconds - min.inMilliseconds;
+    return min + Duration(milliseconds: _random.nextInt(span + 1));
+  }
+
+  NpcIntent _fish(DateTime now) {
+    if (_pokedAt != null) {
+      if (_within(_pokedAt, now, fishReactLength)) {
+        return _react(now, look: _toAvatar(now));
+      }
+      if (_within(_pokedAt, now, fishReactLength + fishNoticeLength)) {
+        return _at(NpcState.notice, now, look: _toAvatar(now));
+      }
+      _pokedAt = null;
+    }
+    if (_speaking) {
+      return _at(NpcState.notice, now, look: _toAvatar(now));
+    }
+    return _wander(
+      now,
+      length: fishSwimLength,
+      minGap: fishSwimMinGap,
+      maxGap: fishSwimMaxGap,
+    );
+  }
+
+  NpcIntent _pigeon(DateTime now) {
+    if (_pokedAt != null) {
+      if (_within(_pokedAt, now, pigeonReactLength)) {
+        return _react(now, look: _toAvatar(now));
+      }
+      if (_within(
+        _pokedAt,
+        now,
+        pigeonReactLength + pigeonWalkLength + pigeonAwayLength,
+      )) {
+        return _goTo(1, pigeonWalkLength, now, arrived: NpcState.idle);
+      }
+      _pokedAt = null;
+      _returningHome = true;
+      _driftTarget = null;
+    }
+    if (_rain >= pigeonRainRest) {
+      return _at(NpcState.rest, now);
+    }
+    if (_returningHome) {
+      if (_move == null && _x.abs() < 1e-6) {
+        _returningHome = false;
+        _nextDriftAt = null;
+      } else {
+        return _goTo(0, pigeonWalkLength, now, arrived: NpcState.idle);
+      }
+    }
+    return _wander(
+      now,
+      length: pigeonWalkLength,
+      minGap: pigeonWalkMinGap,
+      maxGap: pigeonWalkMaxGap,
+    );
+  }
+
+  NpcIntent _dog(DateTime now) {
+    final NpcIntent? attention = _petAttention(now);
+    if (attention != null) {
+      return attention;
+    }
+    if (_emotion.valence <= sadValence) {
+      _wake(now);
+      return _goTo(1, dogTrotLength, now, arrived: NpcState.idle);
+    }
+    if (_speaking && _emotion.arousal >= wakeArousal) {
+      _wake(now);
+    }
+    if (!_awake) {
+      return _at(NpcState.rest, now);
+    }
+    if (_within(_activeAt, now, calmToSleep)) {
+      return _at(NpcState.idle, now);
+    }
+    final NpcIntent intent = _goTo(
+      0,
+      dogTrotLength,
+      now,
+      arrived: NpcState.rest,
+    );
+    if (intent.npc == NpcState.rest) {
+      _awake = false;
+    }
+    return intent;
   }
 
   /// Re-evaluates at the next moment the tree can change: every [frame]
@@ -676,6 +863,12 @@ class NpcDirector {
       consider(poked.add(reactLength));
       consider(poked.add(reactLength + pokeNoticeLength));
       consider(poked.add(reactLength + crabScuttleLength + crabAwayLength));
+      consider(poked.add(fishReactLength));
+      consider(poked.add(fishReactLength + fishNoticeLength));
+      consider(poked.add(pigeonReactLength));
+      consider(
+        poked.add(pigeonReactLength + pigeonWalkLength + pigeonAwayLength),
+      );
     }
     final DateTime? mention = _mentionAt;
     if (mention != null) {
@@ -687,7 +880,9 @@ class NpcDirector {
     if (_awake) {
       consider(_activeAt?.add(calmToSleep));
     }
-    if (kind == NpcKind.alien) {
+    if (kind == NpcKind.alien ||
+        kind == NpcKind.fish ||
+        kind == NpcKind.pigeon) {
       consider(_nextDriftAt);
     }
     final DateTime? at = earliest;

@@ -112,6 +112,46 @@ void main() {
     });
   });
 
+  test('cafe and rooftop rain beds: 0.12 × and 0.25 ×; mountainHut has none '
+      '(it snows)', () {
+    fakeAsync((FakeAsync async) {
+      rain.value = 1;
+      final AmbientBedService service = build(async, scene: AvatarScene.cafe);
+      async.elapse(const Duration(seconds: 1));
+      expect(service.rainVolumeNow, closeTo(0.12, 1e-9));
+      expect(service.crackleVolumeNow, 0);
+      service.setScene(AvatarScene.rooftop);
+      async.elapse(const Duration(seconds: 1));
+      expect(service.rainVolumeNow, closeTo(0.25, 1e-9));
+      expect(service.crackleVolumeNow, 0);
+      service.setScene(AvatarScene.mountainHut);
+      async.elapse(const Duration(seconds: 1));
+      expect(service.rainVolumeNow, 0);
+      expect(service.rainPlaying, isFalse);
+      service.dispose();
+    });
+  });
+
+  test('mountainHut: the stove crackles at 0.6 × the campfire level, a flare '
+      'swells it', () {
+    fakeAsync((FakeAsync async) {
+      final AmbientBedService service = build(
+        async,
+        scene: AvatarScene.mountainHut,
+      );
+      async.elapse(const Duration(seconds: 1));
+      expect(service.crackleVolumeNow, closeTo(0.6 * 0.18, 1e-9));
+      expect(service.cracklePlaying, isTrue);
+      flares.add(null);
+      async.elapse(const Duration(milliseconds: 900));
+      expect(service.crackleVolumeNow, closeTo(0.6 * 0.35, 1e-9));
+      service.setScene(AvatarScene.cafe);
+      async.elapse(const Duration(seconds: 1));
+      expect(service.crackleVolumeNow, 0);
+      service.dispose();
+    });
+  });
+
   test('a flare swells the crackle to 0.35 for 2 s', () {
     fakeAsync((FakeAsync async) {
       final AmbientBedService service = build(

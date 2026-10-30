@@ -303,7 +303,7 @@ void main() {
       for (final AvatarScene scene in AvatarScene.values) {
         expect(parameter.description, contains(scene.name));
       }
-      expect(parameter.description, isNot(contains('mountain')));
+      expect(parameter.description, isNot(contains('snowyMountain')));
       expect(parameter.description, isNot(contains('pirate')));
     });
 

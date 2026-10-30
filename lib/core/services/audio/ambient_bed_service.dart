@@ -49,12 +49,14 @@ class AudioPlayersBedPlayer implements BedPlayer {
 
 /// The two ambient beds (moonshot M8 ruling 12), driven by the scene state:
 ///
-/// - **crackle** (campfire only): [crackleVolume] × (0.6 + 0.4 × the scene's
+/// - **crackle** (campfire, and mountainHut's stove at [hutCrackleScale] of
+///   the campfire's level): [crackleVolume] × (0.6 + 0.4 × the campfire's
 ///   flicker); a `flare` ([onFlare]) swells it to [flareVolume] for
 ///   [flareLength];
 /// - **rain**: the world's rain × [rainVolumeOutdoors] in campfire and
-///   beach, × [rainVolumeIndoors] in livingRoom (behind the window), 0 in
-///   deepSpace.
+///   beach, × [rainVolumeIndoors] in livingRoom (behind the window),
+///   × [rainVolumeRooftop] on the rooftop, × [rainVolumeBehindGlass] in the
+///   cafe (behind its glass), 0 in deepSpace and mountainHut (it snows there).
 ///
 /// Every volume eases linearly over [ease] (a scene change, at a journey's
 /// cut, cross-fades the two); both duck to [duck] while the avatar speaks. A
@@ -95,6 +97,12 @@ class AmbientBedService {
   static const Duration flareLength = Duration(seconds: 2);
   static const double rainVolumeOutdoors = 0.25;
   static const double rainVolumeIndoors = 0.12;
+  static const double rainVolumeBehindGlass = 0.12;
+  static const double rainVolumeRooftop = 0.25;
+
+  /// The stove in mountainHut crackles at this fraction of the campfire's
+  /// level (M9 ruling 3).
+  static const double hutCrackleScale = 0.6;
   static const double duck = 0.5;
   static const Duration ease = Duration(milliseconds: 800);
 
@@ -147,9 +155,10 @@ class AmbientBedService {
     _update();
   }
 
-  /// A `flare` scene event (campfire): the crackle swells for a moment.
+  /// A `flare` scene event (campfire, mountainHut): the crackle swells for a
+  /// moment.
   void onFlare() {
-    if (_scene != AvatarScene.campfire) {
+    if (_crackleScale(_scene) == 0) {
       return;
     }
     _flareUntil = _now().add(flareLength);
@@ -181,15 +190,29 @@ class AmbientBedService {
 
   bool get _silent => !_enabled.value || _paused;
 
+  static double _crackleScale(AvatarScene scene) => switch (scene) {
+    AvatarScene.campfire => 1,
+    AvatarScene.mountainHut => hutCrackleScale,
+    AvatarScene.livingRoom ||
+    AvatarScene.beach ||
+    AvatarScene.deepSpace ||
+    AvatarScene.cafe ||
+    AvatarScene.rooftop => 0,
+  };
+
   double _crackleTarget(DateTime now) {
-    if (_scene != AvatarScene.campfire) {
+    final double scale = _crackleScale(_scene);
+    if (scale == 0) {
       return 0;
     }
     final DateTime? until = _flareUntil;
     final double base = until != null && now.isBefore(until)
         ? flareVolume
-        : crackleVolume * (0.6 + 0.4 * _flickerOf(_scene).clamp(0.0, 1.0));
-    return base * (_speaking ? duck : 1);
+        // the campfire's level, whichever fire is burning (the hut's stove
+        // is that, scaled)
+        : crackleVolume *
+              (0.6 + 0.4 * _flickerOf(AvatarScene.campfire).clamp(0.0, 1.0));
+    return base * scale * (_speaking ? duck : 1);
   }
 
   double _rainTarget() {
@@ -197,7 +220,9 @@ class AmbientBedService {
     final double scale = switch (_scene) {
       AvatarScene.campfire || AvatarScene.beach => rainVolumeOutdoors,
       AvatarScene.livingRoom => rainVolumeIndoors,
-      AvatarScene.deepSpace => 0,
+      AvatarScene.cafe => rainVolumeBehindGlass,
+      AvatarScene.rooftop => rainVolumeRooftop,
+      AvatarScene.deepSpace || AvatarScene.mountainHut => 0,
     };
     return rain * scale * (_speaking ? duck : 1);
   }

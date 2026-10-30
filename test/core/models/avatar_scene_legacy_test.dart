@@ -13,8 +13,6 @@ void main() {
         'classroom',
         'office',
         'mall',
-        'restaurant',
-        'parisianCafe',
         'hallMansion',
         'artGallery',
         'cinema',
@@ -42,7 +40,6 @@ void main() {
         'park',
         'sakuraTrees',
         'japaneseGarden',
-        'snowyMountain',
         'campfire',
       ];
       for (final String name in nature) {
@@ -69,11 +66,39 @@ void main() {
       }
     });
 
-    test('urban/night backgrounds map to deepSpace', () {
-      const List<String> urban = <String>[
-        'deepSpace',
+    test('cafés and restaurants map to cafe (M9)', () {
+      for (final String name in <String>['restaurant', 'parisianCafe']) {
+        expect(
+          sceneFromStoredBackground(name),
+          AvatarScene.cafe,
+          reason: '$name should map to cafe',
+        );
+      }
+    });
+
+    test('night-city backgrounds map to rooftop (M9)', () {
+      for (final String name in <String>[
         'cityscrape',
         'balconyViewOfCityByNight',
+      ]) {
+        expect(
+          sceneFromStoredBackground(name),
+          AvatarScene.rooftop,
+          reason: '$name should map to rooftop',
+        );
+      }
+    });
+
+    test('snowyMountain maps to mountainHut (M9)', () {
+      expect(
+        sceneFromStoredBackground('snowyMountain'),
+        AvatarScene.mountainHut,
+      );
+    });
+
+    test('urban/space backgrounds map to deepSpace', () {
+      const List<String> urban = <String>[
+        'deepSpace',
         'street',
         'facadeMansion',
       ];

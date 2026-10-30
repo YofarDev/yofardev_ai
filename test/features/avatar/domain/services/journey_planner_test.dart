@@ -4,36 +4,70 @@ import 'package:yofardev_ai/features/avatar/domain/models/journey.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/journey_planner.dart';
 
 void main() {
-  test('the twelve directed journeys (M7 ruling 5)', () {
-    const AvatarScene lr = AvatarScene.livingRoom;
-    const AvatarScene cf = AvatarScene.campfire;
-    const AvatarScene be = AvatarScene.beach;
-    const AvatarScene ds = AvatarScene.deepSpace;
-    final Map<(AvatarScene, AvatarScene), JourneyFamily> want =
-        <(AvatarScene, AvatarScene), JourneyFamily>{
-          (lr, cf): JourneyFamily.door,
-          (lr, be): JourneyFamily.door,
-          (lr, ds): JourneyFamily.rocket,
-          (cf, lr): JourneyFamily.door,
-          (cf, be): JourneyFamily.path,
-          (cf, ds): JourneyFamily.rocket,
-          (be, lr): JourneyFamily.door,
-          (be, cf): JourneyFamily.path,
-          (be, ds): JourneyFamily.rocket,
-          (ds, lr): JourneyFamily.portal,
-          (ds, cf): JourneyFamily.portal,
-          (ds, be): JourneyFamily.portal,
+  test('all 42 directed journeys of the seven scenes (M9 ruling 5)', () {
+    JourneyFamily expected(AvatarScene from, AvatarScene to) {
+      if (to == AvatarScene.deepSpace) {
+        return JourneyFamily.rocket;
+      }
+      if (from == AvatarScene.deepSpace) {
+        return JourneyFamily.portal;
+      }
+      const Set<AvatarScene> outdoors = <AvatarScene>{
+        AvatarScene.campfire,
+        AvatarScene.beach,
+      };
+      if (outdoors.contains(from) && outdoors.contains(to)) {
+        return JourneyFamily.path;
+      }
+      return JourneyFamily.door;
+    }
+
+    // The table, written out by hand: row = from, column = to, in
+    // AvatarScene order.
+    const JourneyFamily d = JourneyFamily.door;
+    const JourneyFamily r = JourneyFamily.rocket;
+    const JourneyFamily p = JourneyFamily.portal;
+    const JourneyFamily w = JourneyFamily.path;
+    const Map<AvatarScene, List<JourneyFamily?>> table =
+        <AvatarScene, List<JourneyFamily?>>{
+          //                       lr    cf    be    ds    cafe  roof  hut
+          AvatarScene.livingRoom: <JourneyFamily?>[null, d, d, r, d, d, d],
+          AvatarScene.campfire: <JourneyFamily?>[d, null, w, r, d, d, d],
+          AvatarScene.beach: <JourneyFamily?>[d, w, null, r, d, d, d],
+          AvatarScene.deepSpace: <JourneyFamily?>[p, p, p, null, p, p, p],
+          AvatarScene.cafe: <JourneyFamily?>[d, d, d, r, null, d, d],
+          AvatarScene.rooftop: <JourneyFamily?>[d, d, d, r, d, null, d],
+          AvatarScene.mountainHut: <JourneyFamily?>[d, d, d, r, d, d, null],
         };
-    expect(want, hasLength(12));
-    want.forEach(((AvatarScene, AvatarScene) pair, JourneyFamily family) {
-      expect(
-        JourneyPlanner.familyFor(pair.$1, pair.$2),
-        family,
-        reason: '$pair',
-      );
+    int pairs = 0;
+    final Map<JourneyFamily, int> counts = <JourneyFamily, int>{};
+    for (final AvatarScene from in AvatarScene.values) {
+      for (final AvatarScene to in AvatarScene.values) {
+        if (from == to) {
+          continue;
+        }
+        pairs++;
+        final JourneyFamily family = JourneyPlanner.familyFor(from, to);
+        expect(
+          family,
+          table[from]![to.index],
+          reason: '${from.name} -> ${to.name}',
+        );
+        expect(
+          family,
+          expected(from, to),
+          reason: '${from.name} -> ${to.name}',
+        );
+        counts[family] = (counts[family] ?? 0) + 1;
+      }
+    }
+    expect(pairs, 42);
+    expect(counts, <JourneyFamily, int>{
+      JourneyFamily.rocket: 6,
+      JourneyFamily.portal: 6,
+      JourneyFamily.path: 2,
+      JourneyFamily.door: 28,
     });
-    // every family is used
-    expect(want.values.toSet(), JourneyFamily.values.toSet());
   });
 
   test('the scene is the origin until the cut, the destination after', () {

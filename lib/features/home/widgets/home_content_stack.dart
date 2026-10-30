@@ -7,6 +7,7 @@ import '../../../core/design/design.dart';
 import '../../../core/design/rive/ui_kit.dart';
 import '../../../core/models/avatar_scene.dart';
 import '../../../core/models/talking_phase.dart';
+import '../../../core/services/app_lifecycle_service.dart';
 import '../../../core/services/audio/ambient_bed_service.dart';
 import '../../../core/services/audio/foley_service.dart';
 import '../../../core/services/motion/parallax_source.dart';
@@ -46,6 +47,7 @@ class HomeContentStack extends StatefulWidget {
     this.npc,
     this.foley,
     this.beds,
+    this.lifecycle,
     required this.onStartDemo,
   });
 
@@ -72,6 +74,10 @@ class HomeContentStack extends StatefulWidget {
 
   /// The ambient beds: hear the scene from here (null: silent).
   final AmbientBedService? beds;
+
+  /// Carries a scene pick from the More menu to the chat (null: no scene
+  /// picker in the menu).
+  final AppLifecycleService? lifecycle;
   final VoidCallback onStartDemo;
 
   /// The glow's width, relative to the composer pill (the art fills about
@@ -140,6 +146,7 @@ class _HomeContentStackState extends State<HomeContentStack> {
         _TopBarSlot(
           onStartDemo: widget.onStartDemo,
           onTouch: widget.composerActivity?.touch,
+          lifecycle: widget.lifecycle,
         ),
         _BottomChrome(
           composerMode: _composerMode,
@@ -387,10 +394,11 @@ class _RiveStage extends StatelessWidget {
 
 /// The History / More chips, below the top safe area.
 class _TopBarSlot extends StatelessWidget {
-  const _TopBarSlot({required this.onStartDemo, this.onTouch});
+  const _TopBarSlot({required this.onStartDemo, this.onTouch, this.lifecycle});
 
   final VoidCallback onStartDemo;
   final VoidCallback? onTouch;
+  final AppLifecycleService? lifecycle;
 
   @override
   Widget build(BuildContext context) {
@@ -398,7 +406,11 @@ class _TopBarSlot extends StatelessWidget {
       top: MediaQuery.paddingOf(context).top + AppSpace.sm,
       left: AppSpace.lg,
       right: AppSpace.sm,
-      child: StageTopBar(onStartDemo: onStartDemo, onTouch: onTouch),
+      child: StageTopBar(
+        onStartDemo: onStartDemo,
+        onTouch: onTouch,
+        lifecycle: lifecycle,
+      ),
     );
   }
 }

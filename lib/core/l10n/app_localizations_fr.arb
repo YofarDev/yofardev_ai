@@ -157,5 +157,14 @@
   "languageNameEnglish": "English",
   "languageNameFrench": "Français",
   "stageMenu": "Menu",
-  "stageLanguageSwitch": "Langue : {language}"
+  "stageLanguageSwitch": "Langue : {language}",
+  "stageScenes": "Décors",
+  "scenePickerTitle": "Choisir un décor",
+  "sceneLivingRoom": "Salon",
+  "sceneCampfire": "Feu de camp",
+  "sceneBeach": "Plage",
+  "sceneDeepSpace": "Espace",
+  "sceneCafe": "Café",
+  "sceneRooftop": "Toit-terrasse",
+  "sceneMountainHut": "Refuge"
 }

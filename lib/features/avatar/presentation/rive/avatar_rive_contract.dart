@@ -326,8 +326,12 @@ abstract final class AvatarRiveContract {
   /// front of it), with its own `Main` state machine and the same `SceneVM`.
   static const String sceneFrontArtboard = 'SceneFront';
 
-  /// The scenes whose file has a [sceneFrontArtboard].
-  static const Set<String> sceneFrontScenes = <String>{'campfire', 'beach'};
+  /// The scenes whose file has a [sceneFrontArtboard] (rooftop since v12).
+  static const Set<String> sceneFrontScenes = <String>{
+    'campfire',
+    'beach',
+    'rooftop',
+  };
 
   /// Contract v10 `SceneVM`: the time of day (0..1, default 0), written from
   /// the app's world clock. `daylight` 0 is night, 1 full day; `dusk` peaks
@@ -352,6 +356,112 @@ abstract final class AvatarRiveContract {
     'react',
   ];
 
+  /// Contract v12 `SceneVM`: the second NPC slot (beach's gulls; the other
+  /// scenes declare and ignore it). Same values and meaning as [scenePropNpc],
+  /// [scenePropNpcX] and [scenePropNpcLook]; `npc2` defaults to `away`.
+  static const String scenePropNpc2 = 'npc2';
+  static const String scenePropNpc2X = 'npc2X';
+  static const String scenePropNpc2Look = 'npc2Look';
+
+  /// Contract v12 `SceneVM`: the moon phase (number; [moonPhaseDefault] = the
+  /// moon as drawn before v12, 0..1 = that phase: 0 new, 0.25 first quarter,
+  /// 0.5 full, 0.75 last quarter) and December dressing (0..1, default 0).
+  static const String scenePropMoonPhase = 'moonPhase';
+  static const String scenePropFestive = 'festive';
+  static const double moonPhaseDefault = -1;
+  static const double moonPhaseMin = 0;
+  static const double moonPhaseMax = 1;
+  static const double festiveMin = 0;
+  static const double festiveMax = 1;
+
+  // Contract v12 drag handle numbers on `SceneVM` (table in CONTRACT.md):
+  // each scene declares only its own; the app writes them every frame.
+  /// livingRoom `cord` (pull): 0..1.
+  static const String scenePropCord = 'cord';
+
+  /// campfire `poke`: 0..1 the stick shows; `pokeX` / `pokeY` −1..1 the tip.
+  static const String scenePropPoke = 'poke';
+  static const String scenePropPokeX = 'pokeX';
+  static const String scenePropPokeY = 'pokeY';
+
+  /// beach `sand` and cafe `wipe` (trail): 0..[trailMaxDots] dots drawn,
+  /// their artboard-px positions, and 0..1 fade (1 = gone).
+  static const String scenePropTrailN = 'trailN';
+  static const String scenePropTrailFade = 'trailFade';
+  static const int trailMaxDots = 16;
+
+  /// `trailX0`…`trailX15`.
+  static const List<String> scenePropTrailX = <String>[
+    'trailX0',
+    'trailX1',
+    'trailX2',
+    'trailX3',
+    'trailX4',
+    'trailX5',
+    'trailX6',
+    'trailX7',
+    'trailX8',
+    'trailX9',
+    'trailX10',
+    'trailX11',
+    'trailX12',
+    'trailX13',
+    'trailX14',
+    'trailX15',
+  ];
+
+  /// `trailY0`…`trailY15`.
+  static const List<String> scenePropTrailY = <String>[
+    'trailY0',
+    'trailY1',
+    'trailY2',
+    'trailY3',
+    'trailY4',
+    'trailY5',
+    'trailY6',
+    'trailY7',
+    'trailY8',
+    'trailY9',
+    'trailY10',
+    'trailY11',
+    'trailY12',
+    'trailY13',
+    'trailY14',
+    'trailY15',
+  ];
+
+  /// deepSpace `spin`: 0..1 = one revolution of the planet's bands (wraps).
+  static const String scenePropSpin = 'spin';
+
+  /// rooftop `aim`: −1..1, the telescope's swivel (±35°).
+  static const String scenePropAim = 'aim';
+
+  /// mountainHut `rope` (pull): 0..1.
+  static const String scenePropRope = 'rope';
+
+  /// Every v12 drag number, by scene (the numbers a scene declares for its
+  /// drag handle; defaults render the scene as it was in v11).
+  static const Map<String, List<String>> sceneDragProps =
+      <String, List<String>>{
+        'livingRoom': <String>[scenePropCord],
+        'campfire': <String>[scenePropPoke, scenePropPokeX, scenePropPokeY],
+        'beach': <String>[
+          scenePropTrailN,
+          scenePropTrailFade,
+          ...scenePropTrailX,
+          ...scenePropTrailY,
+        ],
+        'deepSpace': <String>[scenePropSpin],
+        'cafe': <String>[
+          scenePropTrailN,
+          scenePropTrailFade,
+          ...scenePropTrailX,
+          ...scenePropTrailY,
+        ],
+        'rooftop': <String>[scenePropAim],
+        'mountainHut': <String>[scenePropRope],
+      };
+
   /// Names `SceneVM` carries as light defaults (equal to `AvatarVM`'s, plus
   /// `lightFog`, minus `lightAmbientAmount`).
   static const List<String> sceneLightProps = <String>[
@@ -374,6 +484,9 @@ abstract final class AvatarRiveContract {
     'campfire',
     'beach',
     'deepSpace',
+    'cafe',
+    'rooftop',
+    'mountainHut',
   ];
   static const String defaultSceneId = 'livingRoom';
 
@@ -383,12 +496,18 @@ abstract final class AvatarRiveContract {
     'campfire': <String>['flare', 'rain', 'shootingStar', 'owlHoot'],
     'beach': <String>['bigWave', 'seagulls', 'sunset', 'rain'],
     'deepSpace': <String>['meteor', 'warp', 'alienShip', 'nebulaPulse'],
+    'cafe': <String>['espresso', 'doorbell', 'rain', 'neonFlicker'],
+    'rooftop': <String>['fireworks', 'plane', 'shootingStar', 'windowsLit'],
+    'mountainHut': <String>['snowfall', 'flare', 'aurora', 'bell'],
   };
   static const Map<String, List<String>> sceneProps = <String, List<String>>{
     'livingRoom': <String>['lamp', 'tv', 'cat', 'plant'],
     'campfire': <String>['fire', 'tent', 'owl', 'sky'],
     'beach': <String>['crab', 'umbrella', 'seagull'],
     'deepSpace': <String>['planet', 'ufo', 'rubberDuck'],
+    'cafe': <String>['cup', 'espresso', 'window', 'fish'],
+    'rooftop': <String>['telescope', 'antenna', 'pigeon', 'moon'],
+    'mountainHut': <String>['stove', 'window', 'dog', 'bell'],
   };
 
   /// Asset path for a scene id.

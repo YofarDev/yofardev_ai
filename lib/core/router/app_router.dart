@@ -29,6 +29,7 @@ import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/memory_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/res/app_constants.dart';
+import '../../core/services/app_lifecycle_service.dart';
 import '../../core/services/audio/ambient_bed_service.dart';
 import '../../core/services/audio/foley_service.dart';
 import '../../core/services/motion/parallax_source.dart';
@@ -77,6 +78,7 @@ class AppRouter {
             npc: getIt<NpcDirector>(),
             foley: getIt<FoleyService>(),
             beds: getIt<AmbientBedService>(),
+            lifecycle: getIt<AppLifecycleService>(),
           );
           return MaterialPage<void>(
             key: state.pageKey,

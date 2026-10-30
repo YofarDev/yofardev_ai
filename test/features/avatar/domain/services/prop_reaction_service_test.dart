@@ -19,6 +19,9 @@ void main() {
         'campfire': <String>['fire', 'tent', 'owl', 'sky'],
         'beach': <String>['crab', 'umbrella', 'seagull'],
         'deepSpace': <String>['planet', 'ufo', 'rubberDuck'],
+        'cafe': <String>['cup', 'espresso', 'window', 'fish'],
+        'rooftop': <String>['telescope', 'antenna', 'pigeon', 'moon'],
+        'mountainHut': <String>['stove', 'window', 'dog', 'bell'],
       };
       propsByScene.forEach((String sceneId, List<String> props) {
         final AvatarScene scene = AvatarScene.values.byName(sceneId);
@@ -53,6 +56,17 @@ void main() {
         'planet',
         'ufo',
         'rubberDuck',
+        'cup',
+        'espresso',
+        'window',
+        'fish',
+        'telescope',
+        'antenna',
+        'pigeon',
+        'moon',
+        'stove',
+        'dog',
+        'bell',
       ];
       for (final String propId in allProps) {
         for (final AvatarScene scene in AvatarScene.values) {

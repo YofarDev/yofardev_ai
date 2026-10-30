@@ -41,6 +41,33 @@ void main() {
       expect(SceneLights.of(AvatarScene.livingRoom).flicker, 0.15);
       expect(SceneLights.of(AvatarScene.beach).flicker, 0.0);
       expect(SceneLights.of(AvatarScene.deepSpace).flicker, 0.0);
+      expect(SceneLights.of(AvatarScene.cafe).flicker, 0.0);
+      expect(SceneLights.of(AvatarScene.rooftop).flicker, 0.0);
+      // the stove: a softer flicker than the campfire
+      expect(SceneLights.of(AvatarScene.mountainHut).flicker, 0.6);
+    });
+
+    test('the M9 scenes keep their art bible rigs (contract v12)', () {
+      final LightRig cafe = SceneLights.of(AvatarScene.cafe);
+      expect(cafe.keyX, closeTo(math.cos(1.9), 0.001));
+      expect(cafe.keyY, closeTo(math.sin(1.9), 0.001));
+      expect(cafe.keyColor, 0xFFFFC98A);
+      expect(cafe.keyIntensity, 0.85);
+      expect(cafe.rimColor, 0xFF8FA8D0);
+      expect(cafe.ambientColor, 0xFF2A2433);
+      expect(cafe.fogColor, 0x33A8B4C4);
+      final LightRig roof = SceneLights.of(AvatarScene.rooftop);
+      expect(roof.keyX, closeTo(math.cos(0.95), 0.001));
+      expect(roof.keyY, closeTo(math.sin(0.95), 0.001));
+      expect(roof.keyColor, 0xFFC4D4FF);
+      expect(roof.keyIntensity, 0.7);
+      expect(roof.rimColor, 0xFFFFB27A);
+      final LightRig hut = SceneLights.of(AvatarScene.mountainHut);
+      expect(hut.keyX, closeTo(math.cos(-0.4), 0.001));
+      expect(hut.keyY, closeTo(math.sin(-0.4), 0.001));
+      expect(hut.keyColor, 0xFFFFA25A);
+      expect(hut.keyIntensity, 0.95);
+      expect(hut.fogColor, 0x33B8C8DC);
     });
 
     test('the other scenes keep their art bible direction and colours', () {

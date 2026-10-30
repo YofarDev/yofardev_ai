@@ -542,4 +542,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String stageLanguageSwitch(Object language) {
     return 'Langue : $language';
   }
+
+  @override
+  String get stageScenes => 'Décors';
+
+  @override
+  String get scenePickerTitle => 'Choisir un décor';
+
+  @override
+  String get sceneLivingRoom => 'Salon';
+
+  @override
+  String get sceneCampfire => 'Feu de camp';
+
+  @override
+  String get sceneBeach => 'Plage';
+
+  @override
+  String get sceneDeepSpace => 'Espace';
+
+  @override
+  String get sceneCafe => 'Café';
+
+  @override
+  String get sceneRooftop => 'Toit-terrasse';
+
+  @override
+  String get sceneMountainHut => 'Refuge';
 }

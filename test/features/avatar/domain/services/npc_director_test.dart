@@ -8,8 +8,8 @@ import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/npc_intent.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/npc_director.dart';
 
-/// Moonshot M8 ruling 9: the four NPC behaviour trees, on a fake clock and a
-/// seeded random.
+/// Moonshot M8 ruling 9 and M9 ruling 11: the seven NPC behaviour trees, on a
+/// fake clock and a seeded random.
 void main() {
   final DateTime start = DateTime(2026, 10, 31, 20);
 
@@ -43,12 +43,17 @@ void main() {
   const EmotionVector happy = EmotionVector(valence: 0.6, arousal: 0.4);
   const EmotionVector excited = EmotionVector(valence: 0.3, arousal: 0.8);
 
-  test('every NPC but the drifting alien starts at the v10 look', () {
+  test('only the wandering NPCs start idle; the others start at rest', () {
+    const Set<AvatarScene> wanderers = <AvatarScene>{
+      AvatarScene.deepSpace,
+      AvatarScene.cafe,
+      AvatarScene.rooftop,
+    };
     for (final AvatarScene scene in AvatarScene.values) {
       run(scene, (FakeAsync async, NpcDirector npc) {
         expect(
           npc.intent.value,
-          scene == AvatarScene.deepSpace
+          wanderers.contains(scene)
               ? const NpcIntent(npc: NpcState.idle)
               : NpcIntent.rest,
           reason: scene.name,
@@ -62,6 +67,9 @@ void main() {
     expect(NpcKind.of(AvatarScene.campfire).propId, 'owl');
     expect(NpcKind.of(AvatarScene.beach).propId, 'crab');
     expect(NpcKind.of(AvatarScene.deepSpace).propId, 'ufo');
+    expect(NpcKind.of(AvatarScene.cafe).propId, 'fish');
+    expect(NpcKind.of(AvatarScene.rooftop).propId, 'pigeon');
+    expect(NpcKind.of(AvatarScene.mountainHut).propId, 'dog');
   });
 
   group('cat', () {
@@ -423,6 +431,271 @@ void main() {
       }
 
       expect(drift(), drift());
+    });
+  });
+
+  group('fish (cafe)', () {
+    test('poked: react 1.2 s, then notice 3 s, then idle', () {
+      run(AvatarScene.cafe, (FakeAsync async, NpcDirector npc) {
+        npc.poke('cup');
+        expect(state(npc), NpcState.idle);
+        npc.poke('fish');
+        expect(state(npc), NpcState.react);
+        ms(async, 1199);
+        expect(state(npc), NpcState.react);
+        ms(async, 2);
+        expect(state(npc), NpcState.notice);
+        expect(look(npc), -NpcDirector.lookAmount);
+        ms(async, 2990);
+        expect(state(npc), NpcState.notice);
+        ms(async, 20);
+        expect(state(npc), NpcState.idle);
+      });
+    });
+
+    test('the avatar speaking: notice toward it', () {
+      run(AvatarScene.cafe, (FakeAsync async, NpcDirector npc) {
+        npc.setSpeaking(true);
+        expect(state(npc), NpcState.notice);
+        npc.setSpeaking(false);
+        expect(state(npc), NpcState.idle);
+      });
+    });
+
+    test('swims to a random npcX every 10 to 16 s', () {
+      run(AvatarScene.cafe, (FakeAsync async, NpcDirector npc) {
+        ms(async, 9900);
+        expect(state(npc), NpcState.idle);
+        ms(async, 6200);
+        expect(state(npc), NpcState.move);
+        ms(async, NpcDirector.fishSwimLength.inMilliseconds + 100);
+        expect(state(npc), NpcState.idle);
+        expect(x(npc), inExclusiveRange(0, 1));
+      });
+    });
+
+    test('the same seed swims the same way', () {
+      double firstSwim() {
+        double result = -1;
+        run(AvatarScene.cafe, (FakeAsync async, NpcDirector npc) {
+          ms(async, 16100 + NpcDirector.fishSwimLength.inMilliseconds + 100);
+          result = x(npc);
+        });
+        return result;
+      }
+
+      expect(firstSwim(), firstSwim());
+    });
+
+    test('reduce motion: it idles in place and a poke only notices', () {
+      run(AvatarScene.cafe, (FakeAsync async, NpcDirector npc) {
+        npc.setReduceMotion(true);
+        ms(async, 60000);
+        expect(state(npc), NpcState.idle);
+        expect(x(npc), 0);
+        npc.poke('fish');
+        expect(state(npc), NpcState.notice);
+      });
+    });
+  });
+
+  group('pigeon (rooftop)', () {
+    test('poked: react 0.8 s, walks away, back after 10 s', () {
+      run(AvatarScene.rooftop, (FakeAsync async, NpcDirector npc) {
+        npc.poke('pigeon');
+        expect(state(npc), NpcState.react);
+        ms(async, 801);
+        expect(state(npc), NpcState.move);
+        // walking right as npcX grows
+        expect(look(npc), NpcDirector.moveLook);
+        ms(async, NpcDirector.pigeonWalkLength.inMilliseconds + 100);
+        expect(state(npc), NpcState.idle);
+        expect(x(npc), 1);
+        ms(async, 9000);
+        expect(state(npc), NpcState.idle);
+        expect(x(npc), 1);
+        ms(async, 1500);
+        // back on its way to the spot
+        expect(state(npc), NpcState.move);
+        ms(async, NpcDirector.pigeonWalkLength.inMilliseconds + 100);
+        expect(x(npc), 0);
+        expect(state(npc), NpcState.idle);
+      });
+    });
+
+    test('fireworks startle it like a poke; elsewhere they do nothing', () {
+      run(AvatarScene.rooftop, (FakeAsync async, NpcDirector npc) {
+        npc.onSceneEvent(SceneEvent.fireworks);
+        expect(state(npc), NpcState.react);
+      });
+      run(AvatarScene.cafe, (FakeAsync async, NpcDirector npc) {
+        npc.onSceneEvent(SceneEvent.fireworks);
+        expect(state(npc), NpcState.idle);
+      });
+    });
+
+    test('rain >= 0.5: rest; a poke still reacts', () {
+      run(AvatarScene.rooftop, (FakeAsync async, NpcDirector npc) {
+        npc.setRain(0.4);
+        expect(state(npc), NpcState.idle);
+        npc.setRain(0.5);
+        expect(state(npc), NpcState.rest);
+        ms(async, 60000);
+        expect(state(npc), NpcState.rest);
+        expect(x(npc), 0);
+        npc.poke('pigeon');
+        expect(state(npc), NpcState.react);
+        npc.setRain(0);
+        expect(state(npc), NpcState.react);
+      });
+    });
+
+    test('walks to a random npcX every 12 to 20 s', () {
+      run(AvatarScene.rooftop, (FakeAsync async, NpcDirector npc) {
+        final List<int> moveStarts = <int>[];
+        npc.intent.addListener(() {
+          if (state(npc) == NpcState.move && moveStarts.isEmpty) {
+            moveStarts.add(async.elapsed.inMilliseconds);
+          }
+        });
+        ms(async, 11900);
+        expect(state(npc), NpcState.idle);
+        expect(moveStarts, isEmpty);
+        ms(async, 8200);
+        expect(moveStarts, hasLength(1));
+        expect(moveStarts.single, inInclusiveRange(12000, 20100));
+        ms(async, NpcDirector.pigeonWalkLength.inMilliseconds + 100);
+        expect(state(npc), NpcState.idle);
+      });
+    });
+
+    test('reduce motion: it idles in place; poked it notices, then goes and '
+        'comes back by jumps while away', () {
+      run(AvatarScene.rooftop, (FakeAsync async, NpcDirector npc) {
+        npc.setReduceMotion(true);
+        final List<NpcState> states = <NpcState>[];
+        void record() => states.add(state(npc));
+        npc.intent.addListener(record);
+        ms(async, 30000);
+        expect(state(npc), NpcState.idle);
+        npc.poke('pigeon');
+        expect(state(npc), NpcState.notice);
+        ms(async, 60000);
+        expect(x(npc), 0);
+        expect(states, isNot(contains(NpcState.move)));
+        expect(states, isNot(contains(NpcState.react)));
+        npc.intent.removeListener(record);
+      });
+    });
+  });
+
+  group('dog (mountainHut)', () {
+    test('poked: react 1.6 s, then notice 4 s toward the avatar', () {
+      run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
+        npc.poke('stove');
+        expect(state(npc), NpcState.rest);
+        npc.poke('dog');
+        expect(state(npc), NpcState.react);
+        ms(async, 1599);
+        expect(state(npc), NpcState.react);
+        ms(async, 2);
+        expect(state(npc), NpcState.notice);
+        expect(look(npc), -NpcDirector.lookAmount);
+        ms(async, 3990);
+        expect(state(npc), NpcState.notice);
+        ms(async, 20);
+        expect(state(npc), NpcState.idle);
+      });
+    });
+
+    test('its name in a message: notice 1.5 s, then react', () {
+      for (final String text in <String>[
+        'My dog is asleep',
+        'what a good doggy!',
+        'a puppy',
+        'Le chien dort',
+        'mon toutou',
+        'un chiot!',
+      ]) {
+        run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
+          npc.onUserText(text);
+          expect(state(npc), NpcState.notice, reason: text);
+          ms(async, 1501);
+          expect(state(npc), NpcState.react, reason: text);
+          ms(async, 1600);
+          expect(state(npc), NpcState.idle, reason: text);
+        });
+      }
+    });
+
+    test('a word that only contains the name is not a mention', () {
+      run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
+        npc.onUserText('the dogma of hotdogs and a chienne');
+        expect(state(npc), NpcState.rest);
+      });
+    });
+
+    test('the avatar sad: trots to the avatar, sits there', () {
+      run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
+        npc.setEmotion(sad);
+        expect(state(npc), NpcState.move);
+        ms(async, NpcDirector.dogTrotLength.inMilliseconds ~/ 2);
+        expect(state(npc), NpcState.move);
+        expect(x(npc), inExclusiveRange(0.2, 0.8));
+        ms(async, NpcDirector.dogTrotLength.inMilliseconds ~/ 2 + 100);
+        expect(state(npc), NpcState.idle);
+        expect(x(npc), 1);
+      });
+    });
+
+    test('woken by excited speech, back to the rug and asleep after 20 s of '
+        'calm', () {
+      run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
+        npc.setEmotion(excited);
+        expect(state(npc), NpcState.rest);
+        npc.setSpeaking(true);
+        expect(state(npc), NpcState.idle);
+        npc.setSpeaking(false);
+        ms(async, 19900);
+        expect(state(npc), NpcState.idle);
+        // it was never away from the rug: asleep again at once
+        ms(async, 200);
+        expect(state(npc), NpcState.rest);
+        expect(x(npc), 0);
+      });
+    });
+
+    test('after trotting to the avatar it goes back to the rug after 20 s', () {
+      run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
+        npc.setEmotion(sad);
+        ms(async, NpcDirector.dogTrotLength.inMilliseconds + 100);
+        expect(x(npc), 1);
+        npc.setEmotion(const EmotionVector());
+        ms(async, 19800);
+        expect(state(npc), NpcState.idle);
+        ms(async, 400);
+        expect(state(npc), NpcState.move);
+        ms(async, NpcDirector.dogTrotLength.inMilliseconds + 100);
+        expect(state(npc), NpcState.rest);
+        expect(x(npc), 0);
+      });
+    });
+
+    test('calm speech does not wake it', () {
+      run(AvatarScene.mountainHut, (FakeAsync async, NpcDirector npc) {
+        npc.setEmotion(const EmotionVector(valence: 0.2, arousal: 0.3));
+        npc.setSpeaking(true);
+        expect(state(npc), NpcState.rest);
+      });
+    });
+
+    test('toward the avatar: like the cat, it faces right at the avatar\'s '
+        'feet; moving, it goes left as npcX grows', () {
+      expect(NpcDirector.lookToAvatar(NpcKind.dog, 0), lessThan(0));
+      expect(NpcDirector.lookToAvatar(NpcKind.dog, 1), greaterThan(0));
+      expect(NpcDirector.facing(NpcKind.dog, 0, 1), lessThan(0));
+      expect(NpcDirector.facing(NpcKind.pigeon, 0, 1), greaterThan(0));
+      expect(NpcDirector.facing(NpcKind.fish, 1, 0), lessThan(0));
     });
   });
 

@@ -397,5 +397,14 @@
   "languageNameEnglish": "English",
   "languageNameFrench": "Français",
   "stageMenu": "Menu",
-  "stageLanguageSwitch": "Language: {language}"
+  "stageLanguageSwitch": "Language: {language}",
+  "stageScenes": "Scenes",
+  "scenePickerTitle": "Choose a scene",
+  "sceneLivingRoom": "Living room",
+  "sceneCampfire": "Campfire",
+  "sceneBeach": "Beach",
+  "sceneDeepSpace": "Deep space",
+  "sceneCafe": "Café",
+  "sceneRooftop": "Rooftop",
+  "sceneMountainHut": "Mountain hut"
 }

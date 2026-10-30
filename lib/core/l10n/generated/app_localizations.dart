@@ -1045,6 +1045,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language: {language}'**
   String stageLanguageSwitch(Object language);
+
+  /// No description provided for @stageScenes.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenes'**
+  String get stageScenes;
+
+  /// No description provided for @scenePickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a scene'**
+  String get scenePickerTitle;
+
+  /// No description provided for @sceneLivingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Living room'**
+  String get sceneLivingRoom;
+
+  /// No description provided for @sceneCampfire.
+  ///
+  /// In en, this message translates to:
+  /// **'Campfire'**
+  String get sceneCampfire;
+
+  /// No description provided for @sceneBeach.
+  ///
+  /// In en, this message translates to:
+  /// **'Beach'**
+  String get sceneBeach;
+
+  /// No description provided for @sceneDeepSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep space'**
+  String get sceneDeepSpace;
+
+  /// No description provided for @sceneCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Café'**
+  String get sceneCafe;
+
+  /// No description provided for @sceneRooftop.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooftop'**
+  String get sceneRooftop;
+
+  /// No description provided for @sceneMountainHut.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain hut'**
+  String get sceneMountainHut;
 }
 
 class _AppLocalizationsDelegate

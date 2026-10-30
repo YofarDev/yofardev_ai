@@ -39,6 +39,9 @@ const _$AvatarSceneEnumMap = {
   AvatarScene.campfire: 'campfire',
   AvatarScene.beach: 'beach',
   AvatarScene.deepSpace: 'deepSpace',
+  AvatarScene.cafe: 'cafe',
+  AvatarScene.rooftop: 'rooftop',
+  AvatarScene.mountainHut: 'mountainHut',
 };
 
 const _$AvatarHatEnumMap = {
