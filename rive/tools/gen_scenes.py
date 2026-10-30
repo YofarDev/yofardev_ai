@@ -38,6 +38,8 @@ DIORAMA_ID_START = 990000
 # Moonshot M5 elements (rain binds, steam, the shared diorama's additions) mint from their own
 # range per document (`Scene.d5`), so every M4 id stays.
 M5_ID_START = 970000
+# Moonshot M6: the `SceneFront` artboard (contract v9) mints from its own range per document.
+M6_ID_START = 950000
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
 
@@ -84,6 +86,9 @@ class Scene:
         self.roots: list[El] = []
         self.fit = False
         self.d5 = Doc(client=0, start=M5_ID_START)
+        self.d6 = Doc(client=0, start=M6_ID_START)
+        # contract v9: (content, anims, layers) of the optional `SceneFront` artboard (front_weather)
+        self.front: tuple[list[El], list[El], list[El]] | None = None
         self._convs: dict[tuple[float, float], El] = {}
 
     @contextmanager
@@ -300,13 +305,29 @@ class Scene:
         ab = d("Artboard", style, sm, self.ease, self.ease_out, self.ease_in, *self.events, *hits, *content, *self.anims,
                width=float(W), height=float(H), name="Scene", defaultStateMachineId=sm.ref(),
                viewModelId=self.vm.ref(), viewModelInstanceId=self.inst.ref(), styleId=style.ref(), clip=True)
+        boards = [ab]
+        if self.front is not None:
+            boards.append(self._front_artboard())
         out = os.path.join(OUT_ROOT, self.id, self.id + ".rml")
         os.makedirs(os.path.dirname(out), exist_ok=True)
-        write(out, [ab, self.enum, self.vm, *self.roots])
+        write(out, [*boards, self.enum, self.vm, *self.roots])
         with open(os.path.join(os.path.dirname(out), "rive.yaml"), "w") as f:
             f.write(f"name: {self.id}\nmain: Scene\noutput: {{dir: build}}\n"
                     "logs: {file: build/rive.log, problems: build/problems.log}\n")
         return os.path.normpath(out)
+
+
+    def _front_artboard(self) -> El:
+        """Contract v9 `SceneFront`: the weather in front of the avatar, same `SceneVM`, its own `Main`
+        state machine of ambient loops, no listeners or events. Colours go through the scene's fit."""
+        content, anims, layers = self.front
+        self.fit_colours(content)
+        d = self.d6
+        sm = d("StateMachine", *layers, name="Main")
+        style = d("LayoutComponentStyle", name="Artboard Style")
+        return d("Artboard", style, sm, *content, *anims, x=float(W + 200), y=0.0, width=float(W), height=float(H),
+                 name="SceneFront", defaultStateMachineId=sm.ref(), viewModelId=self.vm.ref(),
+                 viewModelInstanceId=self.inst.ref(), styleId=style.ref(), clip=True)
 
 
 def uniq(keys: list) -> list:
@@ -814,6 +835,7 @@ def campfire() -> str:
                light_pool, fg[2], ground, *hoots, owl, branch, twig, snag,
                *near_trees, mid, *far_trees, far, star_node, *craters, moon, moon_glow, *stars, sky]
     sc.fit = True
+    front_weather(sc, "88B8C8F0")  # M6 ruling 8: the campfire RainLoop colour
     return sc.write(content, [hit_fire, hit_tent, hit_owl, hit_sky])
 
 
@@ -960,6 +982,77 @@ def clone(d: Doc, e: El, **attrs: object) -> El:
     """A deep copy of `e` with fresh ids from `d` (attributes overridden by `attrs`)."""
     return d(e.tag, *[clone(d, c) for c in e.children], **{**e.attrs, **attrs})
 
+
+
+# ---------------------------------------------------------------- front weather (M6, contract v9)
+FRONT_SCENES = ("campfire", "beach")   # outdoor rain; livingRoom's falls outside the window
+FRONT_GAIN = 1.25          # nearer than Plane5: the sheet travels 1.25 x PARALLAX_TRAVEL
+FRONT_TILE = 480           # the sheet repeats every tile; one tile per FRONT_SHEET_FRAMES loop
+FRONT_SHEET_FRAMES = 14    # faster than the back sheets (18 / 34): near rain falls past quicker
+FRONT_SPLASH_FRAMES = 120
+FRONT_MIST = (0.18, 1200.0)  # rain mist density at rain 1, y where it starts clear (full at the bottom)
+FRONT_BLEED = 120          # px past each side, more than the sheet's 50 px travel
+
+
+def front_weather(sc: Scene, col: str, splash_y: tuple[float, float] = (1820.0, 1900.0)) -> None:
+    """M6 ruling 8: sets `sc.front` to the `SceneFront` artboard's content: a near rain sheet (fewer,
+    longer, wider, fainter streaks than the back sheets; parallax gain 1.25) with splashes along the
+    bottom edge, all at opacity `rain`, and a rain mist of `lightFog` rising from the bottom at
+    `fog_opacity(0.18) x rain`. `col` is the scene's rain colour (its alpha is replaced). Everything
+    mints from `sc.d6`; history-free binds only."""
+    d6 = sc.d6
+    main_anims, main_layers = sc.anims, sc.layers
+    sc.anims, sc.layers = [], []
+    r = random.Random(zlib.crc32(("front" + sc.id).encode()))
+    with sc.minting(d6):
+        streaks = []
+        for i in range(12):
+            x, y = r.uniform(-FRONT_BLEED, W + FRONT_BLEED), r.uniform(0, FRONT_TILE)
+            ln = r.uniform(160, 260)
+            for k in range(-1, H // FRONT_TILE + 1):
+                streaks.append(sc.S((0, 0), f"FrontDrop{i}_{k + 1}",
+                                    [(x, y + k * FRONT_TILE), (x - ln * 0.22, y + k * FRONT_TILE + ln)],
+                                    sc.L("50" + col[2:], 5.0), closed=False))
+        sheet = d6("Node", *streaks, x=0.0, y=0.0, name="FrontSheet")
+        sc.ambient("FrontSheet", sc.A("amb_FrontSheet", FRONT_SHEET_FRAMES,
+                                      [sc.T(sheet, ease=None, y=[(0, 0.0, "linear"),
+                                                                 (FRONT_SHEET_FRAMES, float(FRONT_TILE), "linear")])],
+                                      loop=True))
+        splashes, tracks = [], []
+        for i in range(10):
+            x, y = r.uniform(40, W - 40), r.uniform(*splash_y)
+            sp = d6("Node", sc.E((x, y), "Ring", x, y, 48, 12, sc.L("A0" + col[2:], 3)),
+                    sc.S((x, y), "Kick", [(x - 12, y - 3), (x - 18, y - 22)], sc.L("90" + col[2:], 3), closed=False),
+                    sc.S((x, y), "Kick2", [(x + 12, y - 3), (x + 18, y - 22)], sc.L("90" + col[2:], 3), closed=False),
+                    x=x, y=y, opacity=0.0, name=f"FrontSplash{i}")
+            splashes.append(sp)
+            ph = r.randint(0, 40)
+            op, sxk = [(0, 0.0)], [(0, 0.3)]
+            for c in range(1 + ph, FRONT_SPLASH_FRAMES - 13, 44):
+                op += [(c, 0.0, "hold"), (c + 1, 1.0), (c + 12, 0.0, "hold")]
+                sxk += [(c, 0.3, "hold"), (c + 1, 0.4), (c + 12, 1.3, "hold")]
+            tracks.append(sc.T(sp, ease=None, opacity=uniq(op + [(FRONT_SPLASH_FRAMES, 0.0)]),
+                               scaleX=uniq(sxk + [(FRONT_SPLASH_FRAMES, 0.3)]),
+                               scaleY=uniq(sxk + [(FRONT_SPLASH_FRAMES, 0.3)])))
+        sc.ambient("FrontSplash", sc.A("amb_FrontSplash", FRONT_SPLASH_FRAMES, tracks, loop=True))
+        near = d6("Node", sc.bind("rain", 18, doc=d6),
+                  sc.bind("parallaxX", 13, sc.conv(FRONT_GAIN * PARALLAX_TRAVEL[0], doc=d6), doc=d6),
+                  sc.bind("parallaxY", 14, sc.conv(FRONT_GAIN * PARALLAX_TRAVEL[1], doc=d6), doc=d6),
+                  *splashes, sheet, x=0.0, y=0.0, opacity=0.0, name="FrontRain")
+        density, y0 = FRONT_MIST
+        fog = SCENES[sc.id].fog
+        fills = [d6("Fill", d6("LinearGradient",
+                               d6("GradientStop", colorValue="00" + fog[2:], position=0.0),
+                               d6("GradientStop", d6("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
+                                                     propertyKey=38), colorValue=fog, position=1.0),
+                               startX=0.0, startY=0.0, endX=0.0, endY=float(H - y0)), name="Fill")
+                 for _ in range(FOG_FILLS)]
+        mist = d6("Shape", sc.bind("rain", 18, sc.conv(fog_opacity(density, fog), doc=d6), doc=d6),
+                  d6("Rectangle", width=float(W + 2 * FRONT_BLEED), height=float(H + 60 - y0), originX=0.0,
+                     originY=0.0, name="Path"),
+                  *fills, x=float(-FRONT_BLEED), y=float(y0), opacity=0.0, name="FrontMist")
+    sc.front = ([near, mist], sc.anims, sc.layers)
+    sc.anims, sc.layers = main_anims, main_layers
 
 # ---------------------------------------------------------------- campfire
 CAMPFIRE_PLANES: dict[str, int | None] = {
@@ -1945,6 +2038,7 @@ def beach() -> str:
     content = [rain_node, sunset_tint, *flock, *castle, *deco, crab, gull, post, umb, towel, umb_shadow, wash, *specks,
                wet_wash, foam, wet, sand, big, wave_clip,
                *waves, sun_path, *glints, sea, *flyers, *clouds, sun, sunset_sky, sky]
+    front_weather(sc, "88C8D6E4")  # M6 ruling 8: the beach RainLoop colour
     return sc.write(content, hits)
 
 

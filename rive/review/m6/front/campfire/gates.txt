@@ -1,0 +1,25 @@
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 BushL travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 tent travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 near pine travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane1 snow peak travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+hit zones inside planes: fire=Plane4, tent=Plane4, owl=Plane3, sky=Plane0: ok
+pointer fire (Plane4) parallaxX -1: click@22,1044 fires 1, rest-only click@332,1044 fires 0: ok
+pointer fire (Plane4) parallaxX +1: click@370,1044 fires 1, rest-only click@60,1044 fires 0: ok
+pointer tent (Plane4) parallaxX -1: click@692,1036 fires 1, rest-only click@1002,1036 fires 0: ok
+pointer tent (Plane4) parallaxX +1: click@1040,1036 fires 1, rest-only click@730,1036 fires 0: ok
+pointer owl (Plane3) parallaxX -1: click@813,704 fires 1, rest-only click@929,704 fires 0: ok
+pointer owl (Plane3) parallaxX +1: click@955,704 fires 1, rest-only click@839,704 fires 0: ok
+pointer sky (Plane0) parallaxX -1: click@540,330 fires 1: ok
+pointer sky (Plane0) parallaxX +1: click@540,330 fires 1: ok
+wet ground (median luminance rain 1 / rain 0): 32.5/39.8 = 0.82 (want 0.6..0.85): ok
+RainLoop sheets + splashes + RainSteam seam (frame 0 vs 6120, rain 1, box (560, 1250, 1080, 1920), pixels changed beyond rain 0): 0.0172% (ok)
+rain 0 rest frames (f0, f60) identical to 5911460: 0.0000% pixels differ (ok)
+firelight seam (pool region, frame 0 vs 89): max channel diff 0/255 (ok)
+front at rain 0: max alpha 0/255 (ok)
+front at rain 1: streak cover (alpha > 0.25, y < 1100) 1.56% (want 0.3..6%): ok
+front at rain 1: bottom 80 rows mean alpha (mist + splashes) 0.221 (want 0.08..0.3): ok
+front sheet travel at parallaxX -1/+1: -50/+50 px (want -/+50): ok
+front loop seam (frame 0 vs 840, rain 1): 0.0000% (ok)
+campfire.riv 243975 B (budget 409,600): ok
+campfire.webp 19042 B (budget 40,960): ok

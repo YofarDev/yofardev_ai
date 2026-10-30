@@ -2,7 +2,7 @@
 real CLI renders of `rive/scenes/<sceneId>`, 1080x1920, `--fit=contain`.
 
     uv run --with pillow --with numpy rive/tools/review_diorama.py <sceneId> [<before poster.webp>]
-        [--out=<dir>] [--same-as=<git rev>]
+        [--out=<dir>] [--same-as=<git rev>] [--gates-only]
 
 Writes to rive/review/m5/<sceneId>/ (or --out):
 - `poster_before_after.png` (when a before poster is given): the old poster beside the current one;
@@ -290,6 +290,80 @@ def deep_space_extras(render: Renderer, out: Path, gates: list[str]) -> None:
                  f"({'ok' if drift <= 2 else 'FAIL'})")
 
 
+
+FRONT = "SceneFront"
+FRONT_TRAVEL = 50            # px at parallaxX +-1: gain 1.25 x 40 (gen_scenes.FRONT_GAIN)
+FRONT_LOOP = 840             # lcm of the sheet (14) and splash (120) loops
+
+
+class FrontRenderer:
+    """Renders the `SceneFront` artboard as RGBA. The CLI paints every screenshot over its own grey,
+    so the front is rendered twice over a full-frame black, then white, backdrop shape added at the
+    back of the artboard in a scratch copy: alpha = 1 - (white - black) / 255."""
+
+    def __init__(self, proj: Path, tmp: Path) -> None:
+        rml = (proj / f"{proj.name}.rml").read_text()
+        at = rml.index('name="SceneFront"')
+        cut = rml.index("<LinearAnimation", at)   # after the front's drawables: paints behind them all
+        self.projects = []
+        for i, col in enumerate(("FF000000", "FFFFFFFF")):
+            d = tmp / f"front{i}" / proj.name
+            d.mkdir(parents=True)
+            backdrop = (f'<Shape x="-200.0" y="-200.0" name="Backdrop" id="0:5999990">'
+                        f'<Rectangle width="1480.0" height="2320.0" originX="0.0" originY="0.0" name="Path" '
+                        f'id="0:5999991"/><Fill name="Fill" id="0:5999992"><SolidColor colorValue="{col}" '
+                        f'id="0:5999993"/></Fill></Shape>\n    ')
+            (d / f"{proj.name}.rml").write_text(rml[:cut] + backdrop + rml[cut:])
+            (d / "rive.yaml").write_text((proj / "rive.yaml").read_text())
+            self.projects.append(d)
+        self.render = Renderer(proj, tmp)
+
+    def __call__(self, *args: str) -> np.ndarray:
+        black, white = (self.render(f"--artboard={FRONT}", *args, proj=p).astype(float)[..., :3]
+                        for p in self.projects)
+        alpha = np.clip(1 - (white - black).mean(-1) / 255, 0, 1)
+        rgb = np.where(alpha[..., None] > 1e-3, black / np.maximum(alpha[..., None], 1e-3), 0)
+        return np.dstack([np.clip(rgb, 0, 255), alpha * 255]).astype(np.uint8)
+
+
+def front_gates(proj: Path, render: Renderer, out: Path, gates: list[str], tmp: Path) -> None:
+    """M6 ruling 8 (contract v9): the front artboard draws nothing dry, rain and mist at rain 1
+    (visible, not a curtain), travels 1.25x Plane5 with parallax, loops seamlessly, and its
+    composite over the scene reads at rain 0 / 0.5 / 1 (`front_strip.png`)."""
+    front = FrontRenderer(proj, tmp)
+    dry = front("--advance=31")
+    gates.append(f"front at rain 0: max alpha {int(dry[..., 3].max())}/255 ({'ok' if dry[..., 3].max() == 0 else 'FAIL'})")
+    wet = front("--data=rain=1", "--advance=31")
+    a = wet[..., 3].astype(float) / 255
+    streak = float((a[:1100] > 0.25).mean())     # above the mist: the near sheet only
+    mist = float(a[-80:].mean())                  # the bottom band: mist plus splashes
+    gates.append(f"front at rain 1: streak cover (alpha > 0.25, y < 1100) {streak:.2%} (want 0.3..6%): "
+                 f"{'ok' if 0.003 <= streak <= 0.06 else 'FAIL'}")
+    gates.append(f"front at rain 1: bottom 80 rows mean alpha (mist + splashes) {mist:.3f} (want 0.08..0.3): "
+                 f"{'ok' if 0.08 <= mist <= 0.3 else 'FAIL'}")
+    ref = a[100:1000, 200:880]
+    got = []
+    for px in (-1, 1):
+        img = front("--data=rain=1", f"--data=parallaxX={px}", "--advance=31")[..., 3].astype(float) / 255
+        errs = {dx: float(np.abs(img[100:1000, 200 + dx:880 + dx] - ref).mean()) for dx in range(-80, 81)}
+        got.append(min(errs, key=errs.get))
+    gates.append(f"front sheet travel at parallaxX -1/+1: {got[0]:+d}/{got[1]:+d} px (want -/+{FRONT_TRAVEL}): "
+                 f"{'ok' if got == [-FRONT_TRAVEL, FRONT_TRAVEL] else 'FAIL'}")
+    f0 = front("--data=rain=1", "--advance=1")[..., 3].astype(int)
+    fn = front("--data=rain=1", f"--advance={FRONT_LOOP + 1}")[..., 3].astype(int)
+    seam = float((np.abs(f0 - fn) > 8).mean())
+    gates.append(f"front loop seam (frame 0 vs {FRONT_LOOP}, rain 1): {seam:.4%} ({'ok' if seam <= 0.001 else 'FAIL'})")
+    cells = []
+    for rain in (0, 0.5, 1):
+        back = Image.fromarray(render(f"--data=rain={rain}", "--advance=31")).convert("RGBA")
+        lay = Image.fromarray(front(f"--data=rain={rain}", "--advance=31"), "RGBA")
+        cells.append(label(Image.alpha_composite(back, lay).convert("RGB").resize((360, 640)),
+                           f"scene + front, rain {rain}"))
+    grey = Image.new("RGBA", wet.shape[1::-1], (128, 128, 128, 255))
+    cells.append(label(Image.alpha_composite(grey, Image.fromarray(wet, "RGBA")).convert("RGB").resize((360, 640)),
+                       "front alone, rain 1, on grey"))
+    grid(cells, 4).save(out / "front_strip.png")
+
 EXTRAS = {"campfire": campfire_extras, "livingRoom": living_room_extras, "beach": beach_extras,
           "deepSpace": deep_space_extras}
 
@@ -411,6 +485,8 @@ def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) 
 
         if scene in EXTRAS:
             EXTRAS[scene](render, out, gates)
+        if f'name="{FRONT}"' in rml:
+            front_gates(proj, render, out, gates, t)
 
     riv = ROOT / "assets" / "rive" / "scenes" / f"{scene}.riv"
     poster = ROOT / "assets" / "rive" / "posters" / f"{scene}.webp"
@@ -430,13 +506,19 @@ def run(scene: str, before: Path | None, out: Path, same_as: str | None = None) 
 
 
 def main(argv: list[str]) -> int:
-    opts = {a.split("=", 1)[0]: a.split("=", 1)[1] for a in argv if a.startswith("--")}
+    opts = {a.split("=", 1)[0]: a.split("=", 1)[1] for a in argv if a.startswith("--") and "=" in a}
     pos = [a for a in argv if not a.startswith("--")]
     if not pos:
         print(__doc__)
         return 2
     scene = pos[0]
     before = Path(pos[1]) if len(pos) > 1 else None
+    if "--gates-only" in argv:
+        # frive.sh (M6 ruling 10): the gates alone; the sheets land in a scratch dir and vanish
+        with tempfile.TemporaryDirectory() as scratch:
+            gates = run(scene, None, Path(scratch), opts.get("--same-as"))
+        print("\n".join(f"{scene}: {g}" for g in gates))
+        return 1 if any(g.endswith("FAIL") for g in gates) else 0
     out = Path(opts["--out"]) if "--out" in opts else ROOT / "rive" / "review" / "m5" / scene
     gates = run(scene, before, out, opts.get("--same-as"))
     print("\n".join(gates))
