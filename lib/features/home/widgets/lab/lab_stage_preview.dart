@@ -248,8 +248,9 @@ class _LabStagePreviewState extends State<LabStagePreview>
 
 /// The real stage: one Rive scene, keyed by scene (a scene switch disposes
 /// the old file and loads the new one, nothing else does), with one avatar on
-/// top that lives as long as the stage.
-class LabRiveStage extends StatelessWidget {
+/// top that lives as long as the stage (a [GlobalKey] carries it into each
+/// new scene layer, under the scene's front weather).
+class LabRiveStage extends StatefulWidget {
   const LabRiveStage({
     super.key,
     required this.scene,
@@ -264,35 +265,37 @@ class LabRiveStage extends StatelessWidget {
   /// the live face.
   final FaceFrame? face;
 
+  @override
+  State<LabRiveStage> createState() => _LabRiveStageState();
+}
+
+class _LabRiveStageState extends State<LabRiveStage> {
   static const AvatarState _avatar = AvatarState(
     avatar: Avatar(),
     avatarConfig: AvatarConfig(),
   );
 
+  final GlobalKey _avatarKey = GlobalKey(debugLabel: 'lab-avatar');
+
   @override
   Widget build(BuildContext context) {
     final LabStageExtras? extras = LabStageExtras.maybeOf(context);
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        _LabSceneLayer(
-          key: ValueKey<AvatarScene>(scene),
-          scene: scene,
-          parallax: extras?.parallax,
-          rain: extras?.rain,
+    return _LabSceneLayer(
+      key: ValueKey<AvatarScene>(widget.scene),
+      scene: widget.scene,
+      parallax: extras?.parallax,
+      rain: extras?.rain,
+      middle: RiveAvatarView(
+        key: _avatarKey,
+        // The scene's light rig follows the lab's scene, and the prop the
+        // lab's prop.
+        avatarState: _avatar.copyWith(
+          scene: widget.scene,
+          prop: extras?.prop ?? AvatarProp.none,
         ),
-        RiveAvatarView(
-          key: const ValueKey<String>('lab-avatar'),
-          // The scene's light rig follows the lab's scene, and the prop the
-          // lab's prop.
-          avatarState: _avatar.copyWith(
-            scene: scene,
-            prop: extras?.prop ?? AvatarProp.none,
-          ),
-          talkingState: talkingState,
-          faceOverride: face,
-        ),
-      ],
+        talkingState: widget.talkingState,
+        faceOverride: widget.face,
+      ),
     );
   }
 }
@@ -305,11 +308,13 @@ class _LabSceneLayer extends StatefulWidget {
     required this.scene,
     this.parallax,
     this.rain,
+    this.middle,
   });
 
   final AvatarScene scene;
   final Offset? parallax;
   final ValueListenable<double>? rain;
+  final Widget? middle;
 
   @override
   State<_LabSceneLayer> createState() => _LabSceneLayerState();
@@ -341,6 +346,7 @@ class _LabSceneLayerState extends State<_LabSceneLayer> {
       sceneEvent: _noEvent,
       parallaxOverride: widget.parallax,
       rain: widget.rain,
+      middle: widget.middle,
     );
   }
 }

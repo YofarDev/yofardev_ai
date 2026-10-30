@@ -10,6 +10,7 @@ import '../../../../../core/services/motion/parallax_source.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../../../core/design/rive/rive_vm_binding.dart';
 import '../../rive/avatar_rive_contract.dart';
+import '../../rive/scene_front_follower.dart';
 import '../../rive/scene_parallax_writer.dart';
 import '../../rive/scene_rain_writer.dart';
 import 'latest_load_gate.dart';
@@ -31,6 +32,11 @@ import 'latest_load_gate.dart';
 /// Rain (contract v8): [rain]'s value is written to `SceneVM` `rain` once
 /// when a scene file loads (so a scene switch while it rains rains in the new
 /// file) and on every change.
+///
+/// Front (contract v9): a file with a `SceneFront` artboard gets it drawn
+/// above [middle] (the avatar) while it rains, with the same fit, never
+/// hit-tested; [middle] sits between the two at a fixed index, so a scene
+/// switch never remounts it.
 class RiveSceneView extends StatefulWidget {
   const RiveSceneView({
     super.key,
@@ -40,6 +46,7 @@ class RiveSceneView extends StatefulWidget {
     this.parallax,
     this.parallaxOverride,
     this.rain,
+    this.middle,
   });
 
   final AvatarScene scene;
@@ -58,6 +65,9 @@ class RiveSceneView extends StatefulWidget {
   /// The steady rain intensity, 0..1; null leaves it dry.
   final ValueListenable<double>? rain;
 
+  /// Drawn over the scene and under its front weather: the avatar.
+  final Widget? middle;
+
   @override
   State<RiveSceneView> createState() => _RiveSceneViewState();
 }
@@ -69,6 +79,11 @@ class _RiveSceneViewState extends State<RiveSceneView>
   RiveVmBinding? _binding;
   SceneParallaxWriter? _parallaxWriter;
   final SceneRainFollower _rain = SceneRainFollower();
+  final SceneFrontFollower _front = SceneFrontFollower();
+  ValueListenable<double>? _frontRainSource;
+  bool _hasFront = false;
+  RiveWidgetController? _frontController;
+  RiveVmBinding? _frontBinding;
   StreamSubscription<Offset>? _parallaxSub;
   Offset _parallax = Offset.zero;
   bool _parallaxFrameScheduled = false;
@@ -89,7 +104,66 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _listenParallax();
     _syncParallaxActive();
     _rain.follow(widget.rain);
+    _followFrontRain();
     _loadScene(widget.scene);
+  }
+
+  /// Listens to [RiveSceneView.rain] for the front artboard.
+  void _followFrontRain() {
+    _frontRainSource?.removeListener(_syncFront);
+    _frontRainSource = widget.rain;
+    _frontRainSource?.addListener(_syncFront);
+  }
+
+  /// Creates the front controller when it starts raining on a file with a
+  /// front, drops it when the rain stops, and writes the rain in between.
+  /// [rebuild] false applies it without `setState` (from `didUpdateWidget`,
+  /// whose build follows anyway).
+  void _syncFront({bool rebuild = true}) {
+    void apply(VoidCallback change) => rebuild ? setState(change) : change();
+    final double rain = widget.rain?.value ?? 0;
+    final File? file = _file;
+    final bool show =
+        file != null &&
+        SceneFrontFollower.shouldShow(hasFront: _hasFront, rain: rain);
+    if (!show) {
+      if (_frontController != null) {
+        apply(_teardownFront);
+      }
+      return;
+    }
+    if (_frontController != null) {
+      _front.rain(rain);
+      return;
+    }
+    final RiveWidgetController controller = RiveWidgetController(
+      file,
+      artboardSelector: ArtboardSelector.byName(
+        AvatarRiveContract.sceneFrontArtboard,
+      ),
+      stateMachineSelector: StateMachineSelector.byName(
+        AvatarRiveContract.sceneStateMachine,
+      ),
+    );
+    controller.active = _resumed;
+    final RiveVmBinding binding = RiveVmBinding(controller);
+    _front.attach(
+      binding.setNumber,
+      rain: rain,
+      parallax: widget.parallaxOverride ?? _parallax,
+    );
+    apply(() {
+      _frontController = controller;
+      _frontBinding = binding;
+    });
+  }
+
+  void _teardownFront() {
+    _front.detach();
+    _frontBinding?.dispose();
+    _frontController?.dispose();
+    _frontBinding = null;
+    _frontController = null;
   }
 
   void _listenParallax() {
@@ -110,7 +184,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _parallaxFrameScheduled = true;
     SchedulerBinding.instance.scheduleFrameCallback((Duration _) {
       _parallaxFrameScheduled = false;
-      _parallaxWriter?.write(widget.parallaxOverride ?? _parallax);
+      final Offset offset = widget.parallaxOverride ?? _parallax;
+      _parallaxWriter?.write(offset);
+      _front.parallax(offset);
     });
   }
 
@@ -136,6 +212,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     if (controller != null) {
       controller.active = state == AppLifecycleState.resumed;
     }
+    _frontController?.active = state == AppLifecycleState.resumed;
   }
 
   @override
@@ -148,6 +225,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
     }
     if (widget.rain != oldWidget.rain) {
       _rain.follow(widget.rain);
+      _followFrontRain();
+      _syncFront(rebuild: false);
     }
     if (widget.parallaxOverride != oldWidget.parallaxOverride ||
         widget.parallax != oldWidget.parallax) {
@@ -178,6 +257,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     WidgetsBinding.instance.removeObserver(this);
     _loads.cancelAll();
     _rain.dispose();
+    _frontRainSource?.removeListener(_syncFront);
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
     _teardown();
@@ -213,6 +293,12 @@ class _RiveSceneViewState extends State<RiveSceneView>
       );
       final RiveVmBinding binding = RiveVmBinding(controller);
       controller.stateMachine.addEventListener(_onRiveEvent);
+      // Contract v9: does this file carry the front weather?
+      final Artboard? front = file.artboard(
+        AvatarRiveContract.sceneFrontArtboard,
+      );
+      final bool hasFront = front != null;
+      front?.dispose();
       if (!mounted) {
         binding.dispose();
         controller.dispose();
@@ -227,6 +313,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _controller = controller;
         _binding = binding;
         _loadedScene = scene;
+        _hasFront = hasFront;
         // A fresh binding has no parallax yet.
         _parallaxWriter = SceneParallaxWriter(binding.setNumber)
           ..write(widget.parallaxOverride ?? _parallax, force: true);
@@ -234,6 +321,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _rain.load(binding.setNumber);
         _syncParallaxActive();
       });
+      // The new file's front, if it has one and it rains.
+      _syncFront();
     } on Exception catch (e) {
       AppLogger.error(
         'RiveSceneView failed to load ${scene.name}.riv',
@@ -247,6 +336,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
   }
 
   void _teardown() {
+    // The front shares the file: it goes first.
+    _teardownFront();
+    _hasFront = false;
     final RiveWidgetController? controller = _controller;
     _binding?.dispose();
     controller?.stateMachine.removeEventListener(_onRiveEvent);
@@ -274,6 +366,28 @@ class _RiveSceneViewState extends State<RiveSceneView>
 
   @override
   Widget build(BuildContext context) {
+    final Widget? middle = widget.middle;
+    final RiveWidgetController? front = _frontController;
+    final bool loaded = _controller != null && _loadedScene == widget.scene;
+    final Widget back = _back(context);
+    if (middle == null && front == null) {
+      return back;
+    }
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        back,
+        // index 1 whatever the back shows: the avatar is never remounted
+        ?middle,
+        if (front != null && loaded)
+          IgnorePointer(
+            child: RiveWidget(controller: front, fit: Fit.cover),
+          ),
+      ],
+    );
+  }
+
+  Widget _back(BuildContext context) {
     final RiveWidgetController? controller = _controller;
     if (controller != null && _loadedScene == widget.scene) {
       return RiveWidget(controller: controller, fit: Fit.cover);

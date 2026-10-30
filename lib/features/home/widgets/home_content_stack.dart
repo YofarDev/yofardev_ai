@@ -146,47 +146,40 @@ class _RiveStage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AvatarCubit, AvatarState>(
       builder: (BuildContext context, AvatarState avatarState) {
-        return Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            RiveSceneView(
-              scene: avatarState.scene,
-              sceneEvent: avatarState.sceneEvent,
-              parallax: parallax,
-              rain: rain,
-              onPropTapped: (String propId) {
-                context.read<AvatarCubit>().onPropTapped(
-                  avatarState.scene,
-                  propId,
-                );
-              },
-            ),
-            // Narrow scope: only the avatar view depends on the whole
-            // TalkingState (mouth + phase); a mouth change must not
-            // rebuild the scene view, the glow or the chrome.
-            BlocBuilder<TalkingCubit, TalkingState>(
-              // with a face performer the mouth comes from it, not from
-              // mouthState: only the phase matters here
-              buildWhen: (TalkingState previous, TalkingState current) =>
-                  facePerformer == null || previous.phase != current.phase,
-              builder: (BuildContext context, TalkingState talkingState) {
-                return RiveAvatarView(
-                  avatarState: avatarState,
-                  talkingState: talkingState,
-                  facePerformer: facePerformer,
-                  onAvatarTapped: (String zone) {
-                    context.read<AvatarCubit>().onAvatarTapped(zone);
-                  },
-                  onPresenceDone: (String presence) {
-                    context.read<AvatarCubit>().onPresenceDone(presence);
-                  },
-                  onGestureDone: () {
-                    context.read<AvatarCubit>().onGestureDone();
-                  },
-                );
-              },
-            ),
-          ],
+        return RiveSceneView(
+          scene: avatarState.scene,
+          sceneEvent: avatarState.sceneEvent,
+          parallax: parallax,
+          rain: rain,
+          onPropTapped: (String propId) {
+            context.read<AvatarCubit>().onPropTapped(avatarState.scene, propId);
+          },
+          // The avatar, between the scene and its front weather (v9).
+          // Narrow scope: only the avatar view depends on the whole
+          // TalkingState (mouth + phase); a mouth change must not rebuild
+          // the scene view, the glow or the chrome.
+          middle: BlocBuilder<TalkingCubit, TalkingState>(
+            // with a face performer the mouth comes from it, not from
+            // mouthState: only the phase matters here
+            buildWhen: (TalkingState previous, TalkingState current) =>
+                facePerformer == null || previous.phase != current.phase,
+            builder: (BuildContext context, TalkingState talkingState) {
+              return RiveAvatarView(
+                avatarState: avatarState,
+                talkingState: talkingState,
+                facePerformer: facePerformer,
+                onAvatarTapped: (String zone) {
+                  context.read<AvatarCubit>().onAvatarTapped(zone);
+                },
+                onPresenceDone: (String presence) {
+                  context.read<AvatarCubit>().onPresenceDone(presence);
+                },
+                onGestureDone: () {
+                  context.read<AvatarCubit>().onGestureDone();
+                },
+              );
+            },
+          ),
         );
       },
     );
