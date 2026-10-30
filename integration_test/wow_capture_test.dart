@@ -138,6 +138,12 @@ void main() {
     final _Script script = _scripts[_wow]!;
     final _NoNetwork network = _NoNetwork();
     HttpOverrides.global = network;
+    // A failing step still restores the process (the explicit cleanup below
+    // runs on success; both are idempotent).
+    addTearDown(() {
+      HttpOverrides.global = null;
+      FakeLlmService().deactivate();
+    });
 
     final Directory root = Directory(
       '${(await getTemporaryDirectory()).path}/wow/'
@@ -265,10 +271,13 @@ void main() {
       const Duration(milliseconds: 33),
       (_) => sample(),
     );
+    addTearDown(sampler.cancel);
     final RenderView view = tester.binding.renderViews.first;
     final FrameGrabber grabber = FrameGrabber(view, frameDir);
     final List<FrameTiming> timings = <FrameTiming>[];
     void onTimings(List<FrameTiming> t) => timings.addAll(t);
+    addTearDown(grabber.stop);
+    addTearDown(playback.cancel);
     if (_capture) {
       grabber.start(clock);
     } else {

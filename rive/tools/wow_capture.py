@@ -176,16 +176,20 @@ def nearest(frames: list[dict], ms: float) -> int:
 
 
 def front_visible(wow_dir: Path, size: tuple[int, int]) -> tuple[bool, float]:
-    """Wet vs dry frame over the avatar's torso (where only the front layer can add rain)."""
+    """Wet vs dry frame inside the avatar's hoodie. The avatar is opaque there, so the scene's own
+    rain is behind it and only the front layer can change it; at any one instant the sparse near
+    streaks may miss the box, but the rain mist darkens all of it. Passes when the wet median
+    luminance is at most 0.97 of the dry one (idle motion moves edges, not the median)."""
     wet, dry = wow_dir / "wet.rgba", wow_dir / "dry.rgba"
     if not (wet.exists() and dry.exists()):
-        return False, 0.0
-    a = np.asarray(load_frame(wet, size)).astype(int)
-    b = np.asarray(load_frame(dry, size)).astype(int)
+        return False, 1.0
+    weights = np.array([0.2126, 0.7152, 0.0722])
+    a = np.asarray(load_frame(wet, size)).astype(float) @ weights
+    b = np.asarray(load_frame(dry, size)).astype(float) @ weights
     w, h = size
-    box = (slice(int(h * 0.62), int(h * 0.86)), slice(int(w * 0.3), int(w * 0.7)))
-    share = float((np.abs(a[box] - b[box]).max(-1) > 30).mean())
-    return share > 0.01, share
+    box = (slice(int(h * 0.66), int(h * 0.84)), slice(int(w * 0.38), int(w * 0.62)))
+    ratio = float(np.median(a[box]) / max(np.median(b[box]), 1e-6))
+    return ratio <= 0.97, ratio
 
 
 def beats(tl: dict) -> list[tuple[str, float, float]]:
@@ -326,17 +330,24 @@ def main(argv: list[str]) -> int:
         if a.std() < 5:
             empty.append(f["i"])
     gates.append(_line(f"every frame non-empty ({len(empty)} blank)", not empty))
-    if wow == "wow1":
-        ok, share = front_visible(wow_dir, size)
-        gates += [g.replace("(wet vs dry frame, avatar box)", f"(wet vs dry frame, avatar box: {share:.1%} px)")
-                  for g in gates_wow1(tl, ok)]
-    else:
-        gates += gates_wow2(tl)
+    try:
+        if wow == "wow1":
+            ok, share = front_visible(wow_dir, size)
+            gates += [g.replace("(wet vs dry frame, avatar box)",
+                                f"(rain mist: wet / dry median luminance inside the hoodie {share:.3f}, "
+                                f"want <= 0.97)")
+                      for g in gates_wow1(tl, ok)]
+        else:
+            gates += gates_wow2(tl)
+    except (TypeError, ValueError, IndexError, KeyError, AttributeError) as e:
+        # an event or a sample the gates need is missing: a verdict, not a crash
+        gates.append(_line(f"timeline incomplete ({type(e).__name__}: {e})", False))
     size_gif = write_gif(wow_dir, tl, size, out / f"{wow}.gif")
     gates.append(_line(f"{wow}.gif {size_gif} B (budget {GIF_MAX})", size_gif <= GIF_MAX))
     if shutil.which("ffmpeg"):
         write_mp4(wow_dir, tl, size, out / f"{wow}.mp4")
-    beat_sheet(wow_dir, tl, size, out / f"{wow}_beats.png")
+    if not any(g.endswith("FAIL") for g in gates):
+        beat_sheet(wow_dir, tl, size, out / f"{wow}_beats.png")
     cost = frame_cost(Path(str(wow_dir) + "_timing"))
     if cost:
         (out / f"{wow}_frame_cost.json").write_text(json.dumps(cost, indent=1) + "\n")

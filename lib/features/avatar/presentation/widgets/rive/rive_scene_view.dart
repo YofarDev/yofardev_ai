@@ -120,11 +120,24 @@ class _RiveSceneViewState extends State<RiveSceneView>
   /// [rebuild] false applies it without `setState` (from `didUpdateWidget`,
   /// whose build follows anyway).
   void _syncFront({bool rebuild = true}) {
+    if (rebuild &&
+        SchedulerBinding.instance.schedulerPhase ==
+            SchedulerPhase.persistentCallbacks) {
+      // Notified mid-frame (build or layout): rebuild after it.
+      SchedulerBinding.instance.addPostFrameCallback((Duration _) {
+        if (mounted) {
+          _syncFront();
+        }
+      });
+      return;
+    }
     void apply(VoidCallback change) => rebuild ? setState(change) : change();
     final double rain = widget.rain?.value ?? 0;
     final File? file = _file;
+    // Only the file of the scene on screen (not one a switch is replacing).
     final bool show =
         file != null &&
+        _loadedScene == widget.scene &&
         SceneFrontFollower.shouldShow(hasFront: _hasFront, rain: rain);
     if (!show) {
       if (_frontController != null) {
@@ -370,7 +383,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
     final RiveWidgetController? front = _frontController;
     final bool loaded = _controller != null && _loadedScene == widget.scene;
     final Widget back = _back(context);
-    if (middle == null && front == null) {
+    // A file with a front always sits in the Stack, so the front coming and
+    // going never remounts the back.
+    if (middle == null && !_hasFront) {
       return back;
     }
     return Stack(

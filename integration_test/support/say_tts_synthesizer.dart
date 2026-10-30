@@ -35,6 +35,7 @@ class SayTtsSynthesizer implements TtsSynthesizer {
       path,
       '--file-format=WAVE',
       '--data-format=LEI16@24000',
+      '--',
       text,
     ]);
     if (result.exitCode != 0) {
