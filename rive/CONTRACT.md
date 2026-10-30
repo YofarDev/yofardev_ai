@@ -87,6 +87,11 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `tabletWeather` | enum | v11: none, clear, clouds, rain, snow, storm, fog. The tablet's weather card: `none` (default) keeps the generic card; any other value shows that glyph and the `tabletTemp` readout. |
 | `tabletTemp` | number | v11, −40–50, default 0: the temperature on the tablet's weather card in °C (the app rounds it), a signed two-digit seven-segment readout; shown only when `tabletWeather` is not none. |
 
+**Tap zones (v12):** the `avatar_tapped` listeners target two named shapes, `HitHead` (an ellipse,
+`zone` head) and `HitBody` (a rectangle, `zone` body). The app reads their bounds each pointer to
+decide where the avatar claims a pointer: only there; everywhere else the pointer also reaches the
+scene below (its prop taps and drag handles), while the eye follow still hears it.
+
 **Idle life**, built into the file with no Dart involvement: blinking, breathing, and eyes that
 follow the pointer or touch.
 
