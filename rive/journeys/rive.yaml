@@ -1,0 +1,4 @@
+name: journeys
+main: Journey
+output: {dir: build}
+logs: {file: build/rive.log, problems: build/problems.log}

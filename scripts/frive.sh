@@ -2,14 +2,15 @@
 # Rebuild every .riv in assets/rive/ from the generators in rive/tools/.
 #   ./scripts/frive.sh            # all: avatar, every scene, the UI kit and the scene posters
 #   ./scripts/frive.sh campfire   # avatar + UI kit + the named scenes (and their posters) only
-# The UI kit (rive/ui_kit -> assets/rive/ui/ui_kit.riv) is always rebuilt: it takes under a second.
+# The UI kit (rive/ui_kit -> assets/rive/ui/ui_kit.riv) and the journey thresholds (rive/journeys ->
+# assets/rive/journeys/journey.riv, M7) are always rebuilt: each takes under a second.
 # Posters (assets/rive/posters/<sceneId>.webp) come from rive/tools/gen_posters.py (needs Pillow,
 # pulled in through `uv run --with pillow`).
 # Requires: rive CLI (>= 1.8.0) and uv on PATH. Deterministic: generators use fixed seeds and ids.
 # Fails on any build warning, a size over budget (avatar 600 KB, scene 400 KB, UI kit 150 KB,
-# poster 40 KB), or any name that differs from rive/CONTRACT.md (rive/tools/check_contract.py).
+# journey 160 KB, poster 40 KB), or any name that differs from rive/CONTRACT.md (rive/tools/check_contract.py).
 # Then runs the objective gates (rive/tools/rive_gates.py): parallax, plane travel, pointer proofs,
-# rain and front-layer gates per built scene (about 2 min each); FRIVE_GATES=all adds the tablet and
+# rain and front-layer gates per built scene (about 2 min each), the journey gates (about 40 s); FRIVE_GATES=all adds the tablet and
 # newspaper prop gates (about 23 min more: run it after any avatar prop or gesture change);
 # FRIVE_GATES=0 skips them. Any FAIL fails the script.
 set -euo pipefail
@@ -20,6 +21,7 @@ OUT="$ROOT/assets/rive"
 AVATAR_MAX=$((600 * 1024))
 SCENE_MAX=$((400 * 1024))
 UI_KIT_MAX=$((150 * 1024))
+JOURNEY_MAX=$((160 * 1024))
 
 SCENES=("$@")
 if [ ${#SCENES[@]} -eq 0 ]; then
@@ -46,6 +48,7 @@ echo "▸ generating RML"
 uv run "$TOOLS/gen_avatar.py" >/dev/null
 uv run "$TOOLS/gen_scenes.py" "${SCENES[@]}" >/dev/null
 uv run "$TOOLS/gen_ui_kit.py" >/dev/null
+uv run "$TOOLS/gen_journeys.py" >/dev/null
 
 echo "▸ building"
 build "$ROOT/rive/avatar" "$OUT/avatar.riv" "$AVATAR_MAX"
@@ -53,6 +56,7 @@ for s in "${SCENES[@]}"; do
   build "$ROOT/rive/scenes/$s" "$OUT/scenes/$s.riv" "$SCENE_MAX"
 done
 build "$ROOT/rive/ui_kit" "$OUT/ui/ui_kit.riv" "$UI_KIT_MAX"
+build "$ROOT/rive/journeys" "$OUT/journeys/journey.riv" "$JOURNEY_MAX"
 echo "▸ scene posters"
 uv run --with pillow "$TOOLS/gen_posters.py" "${SCENES[@]}"
 echo "▸ contract self-check"
