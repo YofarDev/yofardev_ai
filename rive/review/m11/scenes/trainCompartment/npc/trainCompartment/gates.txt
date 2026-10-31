@@ -1,0 +1,11 @@
+rest frames identical to 927a606: n/a, a new scene (ok)
+away: the NPC's crop changes (4.88% of it), nothing else does (0.0000%): ok
+idle: moves (4.11% of the crop) and its loop is back after 1800 frames (0.0000% differ): ok
+move: moves (8.53% of the crop) and its loop is back after 1800 frames (0.0000% differ): ok
+notice: moves (3.12% of the crop) and its loop is back after 1800 frames (0.0000% differ): ok
+react: moves (17.66% of the crop) and its loop is back after 1800 frames (0.0000% differ): ok
+pointer ladybug at npcX 0.0: click@294,890 fires 1: ok
+pointer ladybug at npcX 0.5: click@352,890 fires 1: ok
+pointer ladybug at npcX 1.0: click@410,890 fires 1, its v10 spot click@294,890 fires 0: ok
+fog: changes 9.80% of the frame, 0.0000% outside the window (ok)
+trainCompartment.riv 97,163 B (a new scene; budget 409,600): ok
