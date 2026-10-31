@@ -85,6 +85,7 @@ import '../services/llm/llm_streaming_service.dart';
 import '../services/llm/llm_streaming_service_interface.dart';
 import '../services/prompt_datasource.dart';
 import '../services/motion/parallax_source.dart';
+import '../services/motion/reduce_motion_source.dart';
 import '../services/power/power_saver_source.dart';
 import '../services/presence/composer_activity_service.dart';
 import '../services/quality/frame_timing_source.dart';
@@ -129,6 +130,12 @@ Future<void> setupServiceLocator({
   );
   getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
   getIt.registerLazySingleton<InterruptionService>(() => InterruptionService());
+  // The system's reduce-motion switch, followed live (M11 ruling 18): the
+  // services below that are not widgets read it through here.
+  getIt.registerLazySingleton<ReduceMotionSource>(
+    ReduceMotionSource.platform,
+    dispose: (ReduceMotionSource source) => source.dispose(),
+  );
   // Lazy: no mic permission or recognizer setup until the first start().
   getIt.registerLazySingleton<SpeechInputService>(
     () => SpeechToTextInputService(),
@@ -348,6 +355,8 @@ Future<void> setupServiceLocator({
       getIt<PropReactionService>(),
       getIt<SoundRepository>(),
       director: getIt<PerformanceDirector>(),
+      // Reduce motion turns a journey into a cross-fade cut (ruling 18).
+      reduceMotion: () => getIt<ReduceMotionSource>().value,
     ),
   );
   getIt.registerFactory<TalkingCubit>(
@@ -432,8 +441,7 @@ Future<void> setupServiceLocator({
               samplingPeriod: SensorInterval.gameInterval,
             )
           : null,
-      reduceMotion: () =>
-          PlatformDispatcher.instance.accessibilityFeatures.disableAnimations,
+      reduceMotion: () => getIt<ReduceMotionSource>().value,
       power: getIt<PowerSaverSource>(),
       // The scene view turns it on while a diorama is on screen.
       active: false,
@@ -487,8 +495,7 @@ Future<void> setupServiceLocator({
     () => IdleLadder(
       now: DateTime.now,
       power: getIt<PowerSaverSource>(),
-      reduceMotion: () =>
-          PlatformDispatcher.instance.accessibilityFeatures.disableAnimations,
+      reduceMotion: () => getIt<ReduceMotionSource>().value,
     ),
     dispose: (IdleLadder ladder) => ladder.dispose(),
   );
@@ -544,10 +551,9 @@ Future<void> setupServiceLocator({
   // the start. Reduce motion is read here and kept current by the Home stage;
   // the talking phase comes from the Home stage too.
   getIt.registerLazySingleton<CameraDirector>(
-    () => CameraDirector(now: DateTime.now)
-      ..setReduceMotion(
-        PlatformDispatcher.instance.accessibilityFeatures.disableAnimations,
-      ),
+    () =>
+        CameraDirector(now: DateTime.now)
+          ..setReduceMotion(getIt<ReduceMotionSource>().value),
     dispose: (CameraDirector camera) => camera.dispose(),
   );
   getIt.registerLazySingleton<CameraFeed>(
@@ -584,6 +590,18 @@ Future<void> setupServiceLocator({
     dispose: (NpcFeed feed) => feed.dispose(),
   );
   getIt<NpcFeed>();
+  // Reduce motion followed live by the services that are not widgets (M11
+  // ruling 18): the parallax reads 0, the idle ladder holds, the camera
+  // locks medium and the NPCs jump as soon as the switch flips. (The Home
+  // stage also pushes MediaQuery's flag to the camera and the NPCs.)
+  getIt<ReduceMotionSource>().addListener(() {
+    final bool reduce = getIt<ReduceMotionSource>().value;
+    getIt<ParallaxSource>().refresh();
+    getIt<IdleLadder>().tick();
+    getIt<CameraDirector>().setReduceMotion(reduce);
+    getIt<NpcDirector>().setReduceMotion(reduce);
+  });
+  getIt<NpcDirector>().setReduceMotion(getIt<ReduceMotionSource>().value);
   getIt.registerLazySingleton<AmbientBedService>(
     () => AmbientBedService(
       createPlayer: AudioPlayersBedPlayer.new,

@@ -50,7 +50,9 @@ abstract final class JourneyChoreography {
     Duration elapsed, {
     bool reduceMotion = false,
   }) {
-    if (journey == null) {
+    // A reduced journey (a cross-fade cut) draws no threshold and never
+    // clips the avatar.
+    if (journey == null || journey.reduced) {
       return JourneyFrame.none;
     }
     final JourneyFamily family = journey.family;

@@ -65,6 +65,8 @@ class _Chip extends StatelessWidget {
           liveRegion: true,
           child: AppPill(
             label: toolLabel(AppLocalizations.of(context), kind),
+            // large text (M11 ruling 19): the line wraps, never cut
+            maxLines: 2,
             leading: ToolIcon(
               kind: kind,
               running: true,

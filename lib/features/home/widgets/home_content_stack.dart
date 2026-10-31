@@ -27,6 +27,7 @@ import 'stage/stage_caption.dart';
 import 'stage/stage_caption_bubble.dart';
 import 'stage/stage_composer.dart';
 import 'stage/stage_scrim.dart';
+import 'stage/stage_semantics.dart';
 import 'stage/stage_tool_chip.dart';
 import 'stage/stage_top_bar.dart';
 
@@ -131,6 +132,9 @@ class _HomeContentStackState extends State<HomeContentStack>
     StageComposer.height,
   );
 
+  /// The scene's drag handle: the stage's screen-reader action runs it.
+  final PropDragController _drags = PropDragController();
+
   bool _resumed =
       WidgetsBinding.instance.lifecycleState == null ||
       WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
@@ -191,8 +195,18 @@ class _HomeContentStackState extends State<HomeContentStack>
     _cameraView.dispose();
     _bubbleShown.dispose();
     _composerHeight.dispose();
+    _drags.dispose();
     super.dispose();
   }
+
+  /// A prop's screen-reader action: what a tap on it runs (the Rive file's
+  /// own tap animation aside).
+  void _onPropAction(String propId) => tapProp(
+    context.read<AvatarCubit>(),
+    propId,
+    foley: widget.foley,
+    npc: widget.npc,
+  );
 
   void _onComposerMode(ComposerOrbState mode) => _composerMode.value = mode;
 
@@ -216,27 +230,41 @@ class _HomeContentStackState extends State<HomeContentStack>
   Widget build(BuildContext context) {
     // No MediaQuery read here: the keyboard and the safe area only move the
     // chrome (the slots below), never the Rive views.
+    // Screen-reader order (M11 ruling 20): the top chips, the stage, then
+    // the bottom chrome (tool chip, caption, composer).
     final Widget stack = Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        _CameraStage(
-          camera: widget.camera,
-          view: _cameraView,
-          child: _StageFeeds(
-            npc: widget.npc,
-            beds: widget.beds,
-            child: _RiveStage(
-              facePerformer: widget.facePerformer,
-              parallax: widget.parallax,
-              world: widget.world,
-              npc: widget.npc,
-              foley: widget.foley,
-              mouthAnchor: _mouth,
-              tier: widget.quality?.tier,
-              onStageShown: widget.quality?.notifyStageShown,
+        Semantics(
+          sortKey: const OrdinalSortKey(1),
+          container: true,
+          child: StageSemantics(
+            composerMode: _composerMode,
+            onProp: _onPropAction,
+            onDrag: () => _drags.performAccessibilityAction(),
+            child: _CameraStage(
+              camera: widget.camera,
+              view: _cameraView,
+              child: _StageFeeds(
+                npc: widget.npc,
+                beds: widget.beds,
+                child: _RiveStage(
+                  facePerformer: widget.facePerformer,
+                  parallax: widget.parallax,
+                  world: widget.world,
+                  npc: widget.npc,
+                  foley: widget.foley,
+                  mouthAnchor: _mouth,
+                  tier: widget.quality?.tier,
+                  onStageShown: widget.quality?.notifyStageShown,
+                  dragController: _drags,
+                ),
+              ),
             ),
           ),
         ),
+        // Reduce motion: a journey is a cross-fade cut through this.
+        const _JourneyFade(),
         const StageScrim.top(),
         _TopBarSlot(
           onStartDemo: widget.onStartDemo,
@@ -253,6 +281,7 @@ class _HomeContentStackState extends State<HomeContentStack>
           bubbleShown: _bubbleShown,
           composerHeight: _composerHeight,
           tier: widget.quality?.tier,
+          foley: widget.foley,
         ),
         // Low tier: the mouth is read once per sentence (M11 ruling 13).
         BlocListener<CaptionCubit, CaptionState>(
@@ -273,6 +302,45 @@ class _HomeContentStackState extends State<HomeContentStack>
       onHover: _onHover,
       onExit: (PointerEvent _) => parallax.pointer(Offset.zero),
       child: stack,
+    );
+  }
+}
+
+/// What a tap on [propId] in the scene on screen runs, from Rive's
+/// `prop_tapped` or the stage's screen-reader action: the tap's haptic, the
+/// NPC's poke and the prop's reaction ([AvatarCubit.onPropTapped]).
+@visibleForTesting
+void tapProp(
+  AvatarCubit cubit,
+  String propId, {
+  FoleyService? foley,
+  NpcDirector? npc,
+}) {
+  foley?.propTap();
+  npc?.poke(propId);
+  cubit.onPropTapped(cubit.state.scene, propId);
+}
+
+/// Reduce motion (M11 ruling 18): a journey is a cross-fade cut. While a
+/// reduced journey has the stage faded out ([JourneyState.fadedOut]) the
+/// stage fades to the background colour over [JourneyTiming.reducedFade]
+/// and back once the new scene shows. Under the chrome; it never takes a
+/// pointer.
+class _JourneyFade extends StatelessWidget {
+  const _JourneyFade();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: BlocSelector<AvatarCubit, AvatarState, bool>(
+        selector: (AvatarState state) => state.journey?.fadedOut ?? false,
+        builder: (BuildContext context, bool faded) => AnimatedOpacity(
+          key: const ValueKey<String>('journey-fade'),
+          opacity: faded ? 1 : 0,
+          duration: JourneyTiming.reducedFade,
+          child: ColoredBox(color: context.tokens.background),
+        ),
+      ),
     );
   }
 }
@@ -428,6 +496,7 @@ class _StageFeedsState extends State<_StageFeeds> {
 /// keyboard, inset and theme changes never rebuild it.
 class _RiveStage extends StatelessWidget {
   const _RiveStage({
+    this.dragController,
     this.facePerformer,
     this.parallax,
     this.world,
@@ -440,6 +509,9 @@ class _RiveStage extends StatelessWidget {
 
   /// Hears the avatar's mouth each frame (the speech bubble's anchor).
   final MouthAnchorSource? mouthAnchor;
+
+  /// Runs the scene's drag handle (the stage's screen-reader action too).
+  final PropDragController? dragController;
 
   /// The quality tier in force (null: ultra).
   final ValueListenable<QualityTier>? tier;
@@ -479,6 +551,7 @@ class _RiveStage extends StatelessWidget {
           autumn: world?.autumn,
           // M9 drags: none while a journey runs; their haptics and sounds
           // follow the sound-effects setting like the foley.
+          dragController: dragController,
           dragsEnabled: avatarState.journey == null,
           onDragHaptic: foley?.haptic,
           onDragFoley: foley == null
@@ -490,11 +563,12 @@ class _RiveStage extends StatelessWidget {
           onDragEvent: (SceneEvent event) {
             context.read<AvatarCubit>().onSceneDragEvent(event);
           },
-          onPropTapped: (String propId) {
-            foley?.propTap();
-            npc?.poke(propId);
-            context.read<AvatarCubit>().onPropTapped(avatarState.scene, propId);
-          },
+          onPropTapped: (String propId) => tapProp(
+            context.read<AvatarCubit>(),
+            propId,
+            foley: foley,
+            npc: npc,
+          ),
           // M7 journeys: the destination decodes during the walk-off, and
           // the cut waits for it on screen.
           preload: avatarState.preloadScene,
@@ -560,10 +634,14 @@ class _TopBarSlot extends StatelessWidget {
       top: MediaQuery.paddingOf(context).top + AppSpace.sm,
       left: AppSpace.lg,
       right: AppSpace.sm,
-      child: StageTopBar(
-        onStartDemo: onStartDemo,
-        onTouch: onTouch,
-        lifecycle: lifecycle,
+      child: Semantics(
+        sortKey: const OrdinalSortKey(0),
+        container: true,
+        child: StageTopBar(
+          onStartDemo: onStartDemo,
+          onTouch: onTouch,
+          lifecycle: lifecycle,
+        ),
       ),
     );
   }
@@ -583,7 +661,11 @@ class _BottomChrome extends StatelessWidget {
     this.cameraView,
     this.composerActivity,
     this.tier,
+    this.foley,
   });
+
+  /// The composer's mic haptic goes through it (null: none).
+  final FoleyService? foley;
 
   final ValueNotifier<ComposerOrbState> composerMode;
   final ValueChanged<ComposerOrbState> onComposerMode;
@@ -620,7 +702,7 @@ class _BottomChrome extends StatelessWidget {
       padding.right + AppSpace.lg,
       bottom + toolChipReserve,
     );
-    return Stack(
+    final Widget chrome = Stack(
       fit: StackFit.expand,
       children: <Widget>[
         // Lifted with the keyboard, so it stays behind the caption.
@@ -645,6 +727,7 @@ class _BottomChrome extends StatelessWidget {
                   speech: speech,
                   activity: composerActivity,
                   onModeChanged: onComposerMode,
+                  foley: foley,
                 ),
               ),
             ],
@@ -662,6 +745,12 @@ class _BottomChrome extends StatelessWidget {
           ),
         ),
       ],
+    );
+    // After the top chips and the stage for a screen reader.
+    return Semantics(
+      sortKey: const OrdinalSortKey(2),
+      container: true,
+      child: chrome,
     );
   }
 }
@@ -765,7 +854,10 @@ class _Composer extends StatelessWidget {
     required this.speech,
     required this.onModeChanged,
     this.activity,
+    this.foley,
   });
+
+  final FoleyService? foley;
 
   final SpeechInputService speech;
   final ComposerActivityService? activity;
@@ -779,10 +871,12 @@ class _Composer extends StatelessWidget {
     if (initializing) {
       return const SizedBox(height: StageComposer.height);
     }
+    final FoleyService? foley = this.foley;
     return StageComposer(
       speech: speech,
       activity: activity,
       onModeChanged: onModeChanged,
+      onHaptic: foley == null ? null : () => foley.haptic(DragHaptic.impact),
     );
   }
 }

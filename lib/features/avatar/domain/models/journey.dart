@@ -44,6 +44,12 @@ enum JourneyPhase {
 /// A scene journey under way: from where to where, through which threshold,
 /// and the current beat. [serial] increments on every phase change, so a view
 /// restarts its beat clock even if a phase repeats.
+///
+/// A [reduced] journey (reduce motion, M11 ruling 18) is a cross-fade cut: no
+/// threshold, no walk, no jacket beats. It runs only [JourneyPhase.close]
+/// (the stage fades out over [JourneyTiming.reducedFade]), [JourneyPhase.cut]
+/// (the scene changes behind the fade) and [JourneyPhase.vanish] (it fades
+/// back in); see [fadedOut].
 class JourneyState {
   const JourneyState({
     required this.from,
@@ -51,6 +57,7 @@ class JourneyState {
     required this.family,
     required this.phase,
     required this.serial,
+    this.reduced = false,
   });
 
   final AvatarScene from;
@@ -59,9 +66,17 @@ class JourneyState {
   final JourneyPhase phase;
   final int serial;
 
+  /// A cross-fade cut instead of a walk (reduce motion).
+  final bool reduced;
+
+  /// Whether a [reduced] journey has the stage faded out now (its `close`
+  /// and `cut` beats).
+  bool get fadedOut =>
+      reduced && (phase == JourneyPhase.close || phase == JourneyPhase.cut);
+
   /// Whether this journey runs the jacket beats ([JourneyPhase.grab] and
   /// [JourneyPhase.hang]): the door has a peg, the other thresholds do not.
-  bool get hasJacket => family == JourneyFamily.door;
+  bool get hasJacket => !reduced && family == JourneyFamily.door;
 
   /// The scene the avatar is in during [phase]: [from] until the cut, [to]
   /// from the cut on.
@@ -73,6 +88,7 @@ class JourneyState {
     family: family,
     phase: phase,
     serial: serial + 1,
+    reduced: reduced,
   );
 
   @override
@@ -82,14 +98,16 @@ class JourneyState {
       other.to == to &&
       other.family == family &&
       other.phase == phase &&
-      other.serial == serial;
+      other.serial == serial &&
+      other.reduced == reduced;
 
   @override
-  int get hashCode => Object.hash(from, to, family, phase, serial);
+  int get hashCode => Object.hash(from, to, family, phase, serial, reduced);
 
   @override
   String toString() =>
-      'JourneyState(${from.name} → ${to.name}, ${family.name}, ${phase.name}, #$serial)';
+      'JourneyState(${from.name} → ${to.name}, ${family.name}, ${phase.name}, '
+      '#$serial${reduced ? ', reduced' : ''})';
 }
 
 /// How long the timed beats last (M7 ruling 9). The walks and the cut wait
@@ -111,6 +129,10 @@ abstract final class JourneyTiming {
   static const Duration grab = Duration(milliseconds: 900);
   static const Duration hang = Duration(milliseconds: 900);
   static const Duration grabContact = Duration(milliseconds: 380);
+
+  /// Reduce motion (M11 ruling 18): each half of the cross-fade cut, the
+  /// stage fading out before the cut and back in after it.
+  static const Duration reducedFade = Duration(milliseconds: 200);
 
   /// Longest wait for a walk's `presence_done` or for the new scene on screen.
   static const Duration waitTimeout = Duration(seconds: 3);

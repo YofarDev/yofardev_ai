@@ -482,6 +482,61 @@ void main() {
       expect(events, <SceneEvent>[SceneEvent.lightsOff, SceneEvent.lightsOff]);
     });
   });
+
+  group('the screen-reader action (M11 ruling 17)', () {
+    test('without a handle on screen it does nothing', () {
+      expect(c.performAccessibilityAction(), isFalse);
+    });
+
+    test('the cord: lights off, then on, through the same cues as a pull', () {
+      int started = 0;
+      c.onStarted = () => started++;
+      final _Sink sink = attach(AvatarScene.livingRoom);
+      expect(c.performAccessibilityAction(), isTrue);
+      expect(started, 1);
+      expect(events, <SceneEvent>[SceneEvent.lightsOff]);
+      expect(sounds, <String>['click']);
+      expect(haptics, <DragHaptic>[DragHaptic.selection, DragHaptic.impact]);
+      settle();
+      expect(sink.vm['cord'], 0);
+      c.onSceneEventPlayed(SceneEvent.lightsOff);
+      expect(c.performAccessibilityAction(), isTrue);
+      expect(events, <SceneEvent>[SceneEvent.lightsOff, SceneEvent.lightsOn]);
+    });
+
+    test("the hut's rope rings the bell; the train's chain whistles", () {
+      attach(AvatarScene.mountainHut);
+      c.performAccessibilityAction();
+      expect(events, <SceneEvent>[SceneEvent.bell]);
+      expect(sounds, <String>['click', 'bell']);
+      events.clear();
+      attach(AvatarScene.trainCompartment);
+      c.performAccessibilityAction();
+      expect(events, <SceneEvent>[SceneEvent.whistle]);
+    });
+
+    test('the campfire stir flares', () {
+      attach(AvatarScene.campfire);
+      c.performAccessibilityAction();
+      expect(events, <SceneEvent>[SceneEvent.flare]);
+      expect(haptics.last, DragHaptic.impact);
+    });
+
+    test('the spin turns 1/8 and writes it, with no inertia', () {
+      final _Sink sink = attach(AvatarScene.deepSpace);
+      c.performAccessibilityAction();
+      pumpFrames();
+      expect(sink.vm['spin'], closeTo(0.125, 1e-9));
+      expect(c.animating, isFalse);
+    });
+
+    test('disabled (a journey runs): nothing', () {
+      attach(AvatarScene.livingRoom);
+      c.enabled = false;
+      expect(c.performAccessibilityAction(), isFalse);
+      expect(events, isEmpty);
+    });
+  });
 }
 
 class _SilentPlayer implements FoleyPlayer {

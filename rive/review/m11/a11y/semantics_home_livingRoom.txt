@@ -1,0 +1,115 @@
+# Home, the stage in livingRoom (en, 390×844)
+
+## debugDumpSemanticsTree (traversal order)
+
+SemanticsNode#0
+ │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+ │
+ └─SemanticsNode#1
+   │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+   │ textDirection: ltr
+   │
+   └─SemanticsNode#2
+     │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+     │ sortKey: OrdinalSortKey#702e4(order: 0.0)
+     │
+     └─SemanticsNode#3
+       │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+       │ flags: scopesRoute
+       │
+       ├─SemanticsNode#6
+       │ │ Rect.fromLTRB(16.0, 8.0, 382.0, 56.0)
+       │ │ sortKey: OrdinalSortKey#702e4(order: 0.0)
+       │ │
+       │ ├─SemanticsNode#7
+       │ │ │ Rect.fromLTRB(0.0, 0.0, 93.8, 48.0)
+       │ │ │ actions: focus, tap
+       │ │ │ flags: isFocusable
+       │ │ │
+       │ │ └─SemanticsNode#8
+       │ │     Rect.fromLTRB(0.0, 0.0, 93.8, 48.0)
+       │ │     actions: tap
+       │ │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+       │ │       hasSelectedState
+       │ │     label: "History"
+       │ │     textDirection: ltr
+       │ │
+       │ └─SemanticsNode#9
+       │   │ Rect.fromLTRB(318.0, 0.0, 366.0, 48.0)
+       │   │ actions: focus, tap
+       │   │ flags: isFocusable
+       │   │ traversalParentIdentifier: _OverlayPortalState#a8c54
+       │   │
+       │   └─SemanticsNode#10
+       │       Rect.fromLTRB(0.0, 0.0, 48.0, 48.0)
+       │       actions: tap
+       │       flags: isButton, hasEnabledState, isEnabled, isFocusable
+       │       label: "Menu"
+       │       textDirection: ltr
+       │
+       ├─SemanticsNode#4
+       │ │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+       │ │ sortKey: OrdinalSortKey#9a45c(order: 1.0)
+       │ │
+       │ └─SemanticsNode#5
+       │     Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+       │     actions: customAction
+       │     customActions: Tap the lamp, Tap the TV, Poke the cat, Tap the
+       │       plant, Pull the lamp cord
+       │     label: "Yofardev AI in the Living room scene"
+       │     value: "idle"
+       │     textDirection: ltr
+       │
+       └─SemanticsNode#11
+         │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+         │ sortKey: OrdinalSortKey#89c74(order: 2.0)
+         │
+         ├─SemanticsNode#12
+         │ │ Rect.fromLTRB(20.0, 780.0, 68.0, 828.0)
+         │ │ actions: focus, tap
+         │ │ flags: isFocusable
+         │ │ traversalParentIdentifier: _OverlayPortalState#8a808
+         │ │
+         │ └─SemanticsNode#13
+         │     Rect.fromLTRB(0.0, 0.0, 48.0, 48.0)
+         │     actions: tap
+         │     flags: isButton, hasEnabledState, isEnabled, isFocusable
+         │     label: "More options"
+         │     textDirection: ltr
+         │
+         ├─SemanticsNode#14
+         │   Rect.fromLTRB(68.0, 780.0, 322.0, 828.0)
+         │   actions: focus, tap
+         │   flags: isTextField, hasEnabledState, isEnabled, isMultiline,
+         │     isFocusable
+         │   label: "Ask anything…"
+         │   textDirection: ltr
+         │   currentValueLength: 0
+         │   inputType: text
+         │
+         └─SemanticsNode#15
+           │ Rect.fromLTRB(322.0, 780.0, 370.0, 828.0)
+           │ actions: focus, tap
+           │ flags: isFocusable
+           │
+           └─SemanticsNode#16
+               Rect.fromLTRB(0.0, 0.0, 48.0, 48.0)
+               actions: tap
+               flags: isButton, hasEnabledState, isEnabled, isFocusable
+               label: "Talk"
+               textDirection: ltr
+
+
+## Screen-reader walk (simulatedAccessibilityTraversal)
+
+1. "History" [button]
+2. "Menu" [button]
+3. "Yofardev AI in the Living room scene", value "idle"
+   - action: Tap the lamp
+   - action: Tap the TV
+   - action: Poke the cat
+   - action: Tap the plant
+   - action: Pull the lamp cord
+4. "More options" [button]
+5. "Ask anything…" [text field]
+6. "Talk" [button]

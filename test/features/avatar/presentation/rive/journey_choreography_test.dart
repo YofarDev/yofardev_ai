@@ -147,4 +147,36 @@ void main() {
     active.value = true;
     expect(clipper.getClip(const Size(800, 1000)).right, 640);
   });
+
+  test('a reduced journey (reduce motion, M11 ruling 18) draws nothing and '
+      'never clips; it fades out only in close and cut', () {
+    for (final JourneyFamily family in JourneyFamily.values) {
+      for (final JourneyPhase phase in JourneyPhase.values) {
+        final JourneyState journey = JourneyState(
+          from: AvatarScene.livingRoom,
+          to: AvatarScene.beach,
+          family: family,
+          phase: phase,
+          serial: 1,
+          reduced: true,
+        );
+        for (final bool rm in <bool>[false, true]) {
+          expect(
+            JourneyChoreography.at(
+              journey,
+              const Duration(milliseconds: 100),
+              reduceMotion: rm,
+            ),
+            JourneyFrame.none,
+          );
+        }
+        expect(
+          journey.fadedOut,
+          phase == JourneyPhase.close || phase == JourneyPhase.cut,
+        );
+        expect(journey.hasJacket, isFalse);
+        expect(journey.next(JourneyPhase.vanish).reduced, isTrue);
+      }
+    }
+  });
 }

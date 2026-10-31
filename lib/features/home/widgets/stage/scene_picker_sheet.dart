@@ -41,7 +41,11 @@ String sceneName(AppLocalizations l10n, AvatarScene scene) => switch (scene) {
 };
 
 /// A glass bottom sheet with one tile per scene: its poster and localized
-/// name, the scene on screen marked. Picking another scene emits
+/// name, the scene on screen marked. Three columns, two from a text scale of
+/// [largeTextScale] (M11 ruling 19: the names wrap to two lines).
+///
+/// For a screen reader every tile is a button with the scene's name, the
+/// scene on screen selected with a "current scene" hint (M11 ruling 20). Picking another scene emits
 /// [sceneChangeRequest] through [lifecycle] and closes the sheet; every tile
 /// is disabled while a journey runs. Needs an [AvatarCubit] above it (see
 /// [show]).
@@ -52,6 +56,22 @@ class ScenePickerSheet extends StatelessWidget {
 
   /// Called after a pick (the sheet closes itself).
   final VoidCallback? onPicked;
+
+  /// From this text scale on, the grid has two columns, not three.
+  static const double largeTextScale = 1.5;
+
+  /// Below this screen width the grid has two columns too (a three-column
+  /// tile would cut "Train compartment").
+  static const double narrowWidth = 375;
+
+  /// The grid's columns at [textScale] (`TextScaler.scale(1)`) on a screen
+  /// [width] wide.
+  static int columnsFor(double textScale, double width) =>
+      textScale >= largeTextScale || width < narrowWidth ? 2 : 3;
+
+  /// A tile name's lines at [textScale]: two, three from 2.0 (a long word
+  /// such as "Compartiment" then needs its own line on a narrow phone).
+  static int nameLinesFor(double textScale) => textScale >= 2 ? 3 : 2;
 
   /// Opens the sheet over [context]'s navigator. The sheet is a new route, so
   /// the [AvatarCubit] is handed over explicitly.
@@ -83,6 +103,15 @@ class ScenePickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
+    final int columns = columnsFor(textScale, MediaQuery.sizeOf(context).width);
+    final int nameLines = nameLinesFor(textScale);
+    // Taller tiles under large text: the name takes up to [nameLines].
+    final double aspect = textScale >= 2
+        ? 0.56
+        : textScale >= largeTextScale
+        ? 0.66
+        : 0.72;
     return BlocSelector<
       AvatarCubit,
       AvatarState,
@@ -122,16 +151,19 @@ class ScenePickerSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpace.md),
                       GridView.count(
-                        crossAxisCount: 3,
+                        crossAxisCount: columns,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         mainAxisSpacing: AppSpace.sm,
                         crossAxisSpacing: AppSpace.sm,
-                        childAspectRatio: 0.72,
+                        childAspectRatio: aspect,
                         children: <Widget>[
                           for (final AvatarScene scene in AvatarScene.values)
                             _SceneTile(
+                              key: ValueKey<String>('scene-tile-${scene.name}'),
                               scene: scene,
+                              currentHint: l10n.scenePickerCurrentHint,
+                              nameLines: nameLines,
                               label: sceneName(l10n, scene),
                               current: scene == now.scene,
                               enabled: !now.traveling,
@@ -151,7 +183,10 @@ class ScenePickerSheet extends StatelessWidget {
 
 class _SceneTile extends StatelessWidget {
   const _SceneTile({
+    super.key,
     required this.scene,
+    required this.currentHint,
+    required this.nameLines,
     required this.label,
     required this.current,
     required this.enabled,
@@ -160,6 +195,12 @@ class _SceneTile extends StatelessWidget {
 
   final AvatarScene scene;
   final String label;
+
+  /// Read after the name on the scene on screen.
+  final String currentHint;
+
+  /// The name's lines at most.
+  final int nameLines;
   final bool current;
   final bool enabled;
   final VoidCallback onTap;
@@ -188,6 +229,7 @@ class _SceneTile extends StatelessWidget {
           focusable: tap != null,
           focused: states.focused,
           label: label,
+          hint: current ? currentHint : null,
           onTap: tap,
           excludeSemantics: true,
           child: Opacity(
@@ -251,7 +293,7 @@ class _SceneTile extends StatelessWidget {
                             width: double.infinity,
                             child: Text(
                               label,
-                              maxLines: 2,
+                              maxLines: nameLines,
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                               style: context.text.labelLarge?.copyWith(

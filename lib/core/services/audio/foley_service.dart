@@ -59,7 +59,17 @@ enum DragHaptic {
   impact,
 }
 
-/// [HapticsSink] over Flutter's [HapticFeedback].
+/// [HapticsSink] over Flutter's [HapticFeedback]: the only haptic path in
+/// `lib/` (M11 ruling 22; `test/haptics_path_test.dart` bans any other).
+///
+/// The system's haptics switch wins: on Android [HapticFeedback] runs
+/// `View.performHapticFeedback` without `FLAG_IGNORE_GLOBAL_SETTING`, so
+/// "touch feedback" off silences it; on iOS it drives a
+/// `UIFeedbackGenerator`, which the system's "System Haptics" switch gates.
+/// The app's own sound-effects setting gates it as well ([FoleyService]
+/// is silent, haptics included, while it is off). No direct vibration
+/// (a `Vibration` plugin, `HapticFeedback.vibrate`, a platform channel)
+/// ever bypasses either switch.
 class SystemHaptics implements HapticsSink {
   const SystemHaptics();
 

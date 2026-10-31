@@ -9,7 +9,9 @@ import 'package:yofardev_ai/core/services/audio/foley_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/sound_effects_setting.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
+import 'package:yofardev_ai/core/models/performance/shot.dart';
 import 'package:yofardev_ai/core/services/motion/parallax_source.dart';
+import 'package:yofardev_ai/core/services/motion/reduce_motion_source.dart';
 import 'package:yofardev_ai/core/services/world/tablet_weather_source.dart';
 import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
@@ -112,5 +114,22 @@ void main() {
     expect(getIt<SoundCubit>(), isNotNull);
     expect(getIt<TalkingCubit>(), isNotNull);
     expect(getIt<CaptionCubit>(), isNotNull);
+
+    // M11 ruling 18: reduce motion is followed live by the services that
+    // are not widgets (the camera locks medium the moment it flips).
+    final TestWidgetsFlutterBinding binding =
+        TestWidgetsFlutterBinding.ensureInitialized();
+    addTearDown(binding.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    expect(getIt<ReduceMotionSource>().value, isFalse);
+    expect(getIt<CameraDirector>().shot.value.shot, Shot.wide);
+    binding.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    expect(getIt<ReduceMotionSource>().value, isTrue);
+    expect(getIt<CameraDirector>().shot.value.shot, Shot.medium);
+    expect(getIt<IdleLadder>().stage, 0);
+    expect(getIt<ParallaxSource>().value, Offset.zero);
+    binding.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures();
+    expect(getIt<ReduceMotionSource>().value, isFalse);
   });
 }

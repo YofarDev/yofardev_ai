@@ -4,7 +4,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/components/components.dart';
@@ -50,12 +49,18 @@ class StageComposer extends StatefulWidget {
     this.activity,
     this.pickImage = pickImageFile,
     this.onModeChanged,
+    this.onHaptic,
   });
 
   final SpeechInputService speech;
   final ComposerActivityService? activity;
   final Future<File?> Function() pickImage;
   final ValueChanged<ComposerOrbState>? onModeChanged;
+
+  /// The light impact when the mic starts or stops, on phones (null: none).
+  /// Home routes it through `FoleyService.haptic`, so the sound-effects
+  /// setting and the system's haptics switch both gate it (M11 ruling 22).
+  final VoidCallback? onHaptic;
 
   static const double height = 56;
   static const double orbSize = 48;
@@ -240,7 +245,7 @@ class _StageComposerState extends State<StageComposer>
 
   void _haptic() {
     if (PlatformUtils.isMobile()) {
-      unawaited(HapticFeedback.lightImpact());
+      widget.onHaptic?.call();
     }
   }
 

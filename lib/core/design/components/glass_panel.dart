@@ -21,6 +21,11 @@ import '../tokens/app_tokens.dart';
 ///
 /// The backdrop blur is expensive, so it is applied only when [blur] is true
 /// (use it for a few large surfaces, never for list items).
+///
+/// With the system's high-contrast setting on (`MediaQuery.highContrastOf`,
+/// M11 ruling 23: the closest flag Flutter exposes to iOS "reduce
+/// transparency") the panel is solid: the opaque surface colour, a full
+/// opacity outline and no blur, whatever [level] and [blur] say.
 class GlassPanel extends StatelessWidget {
   const GlassPanel({
     super.key,
@@ -44,6 +49,9 @@ class GlassPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppTokens tokens = context.tokens;
+    if (MediaQuery.maybeHighContrastOf(context) ?? false) {
+      return _solid(context, tokens);
+    }
     final AppGlassStyle style = tokens.glass(level);
     // The key light leans the fill's hue toward the scene's glass tint
     // without making the panel any more opaque.
@@ -106,6 +114,34 @@ class GlassPanel extends StatelessWidget {
     return ClipPath(
       clipper: ShapeBorderClipper(shape: customShape),
       child: blurred,
+    );
+  }
+
+  /// High contrast: the surface colour, opaque, with a solid outline.
+  Widget _solid(BuildContext context, AppTokens tokens) {
+    final Color surface = context.colors.surface.withValues(alpha: 1);
+    final BorderSide side = BorderSide(
+      color: tokens.glassBorder.withValues(alpha: 1),
+      width: tokens.outlineWidth,
+    );
+    final ShapeBorder? customShape = shape;
+    final Decoration decoration = customShape == null
+        ? BoxDecoration(
+            color: surface,
+            borderRadius:
+                borderRadius ??
+                BorderRadius.circular(tokens.radius(AppRadius.lg)),
+            border: Border.fromBorderSide(side),
+          )
+        : ShapeDecoration(
+            color: surface,
+            shape: customShape is OutlinedBorder
+                ? customShape.copyWith(side: side)
+                : customShape,
+          );
+    return DecoratedBox(
+      decoration: decoration,
+      child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
     );
   }
 }

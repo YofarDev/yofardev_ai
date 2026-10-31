@@ -1117,6 +1117,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Library'**
   String get sceneLibrary;
+
+  /// No description provided for @stageSemanticsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} in the {scene} scene'**
+  String stageSemanticsLabel(Object name, Object scene);
+
+  /// No description provided for @stagePhaseIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'idle'**
+  String get stagePhaseIdle;
+
+  /// No description provided for @stagePhaseListening.
+  ///
+  /// In en, this message translates to:
+  /// **'listening'**
+  String get stagePhaseListening;
+
+  /// No description provided for @stagePhaseThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'thinking'**
+  String get stagePhaseThinking;
+
+  /// No description provided for @stagePhaseSpeaking.
+  ///
+  /// In en, this message translates to:
+  /// **'speaking'**
+  String get stagePhaseSpeaking;
+
+  /// No description provided for @scenePickerCurrentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Current scene'**
+  String get scenePickerCurrentHint;
+
+  /// No description provided for @stagePropLamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the lamp'**
+  String get stagePropLamp;
+
+  /// No description provided for @stagePropTv.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the TV'**
+  String get stagePropTv;
+
+  /// No description provided for @stagePropCat.
+  ///
+  /// In en, this message translates to:
+  /// **'Poke the cat'**
+  String get stagePropCat;
+
+  /// No description provided for @stagePropPlant.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the plant'**
+  String get stagePropPlant;
+
+  /// No description provided for @stagePropFire.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the fire'**
+  String get stagePropFire;
+
+  /// No description provided for @stagePropTent.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the tent'**
+  String get stagePropTent;
+
+  /// No description provided for @stagePropOwl.
+  ///
+  /// In en, this message translates to:
+  /// **'Poke the owl'**
+  String get stagePropOwl;
+
+  /// No description provided for @stagePropSky.
+  ///
+  /// In en, this message translates to:
+  /// **'Look at the sky'**
+  String get stagePropSky;
+
+  /// No description provided for @stagePropCrab.
+  ///
+  /// In en, this message translates to:
+  /// **'Poke the crab'**
+  String get stagePropCrab;
+
+  /// No description provided for @stagePropUmbrella.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the umbrella'**
+  String get stagePropUmbrella;
+
+  /// No description provided for @stagePropSeagull.
+  ///
+  /// In en, this message translates to:
+  /// **'Poke the seagull'**
+  String get stagePropSeagull;
+
+  /// No description provided for @stagePropPlanet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the planet'**
+  String get stagePropPlanet;
+
+  /// No description provided for @stagePropUfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the UFO'**
+  String get stagePropUfo;
+
+  /// No description provided for @stagePropRubberDuck.
+  ///
+  /// In en, this message translates to:
+  /// **'Squeeze the rubber duck'**
+  String get stagePropRubberDuck;
+
+  /// No description provided for @stagePropCup.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the cup'**
+  String get stagePropCup;
+
+  /// No description provided for @stagePropEspresso.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the espresso machine'**
+  String get stagePropEspresso;
+
+  /// No description provided for @stagePropWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the window'**
+  String get stagePropWindow;
+
+  /// No description provided for @stagePropFish.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the fish'**
+  String get stagePropFish;
+
+  /// No description provided for @stagePropTelescope.
+  ///
+  /// In en, this message translates to:
+  /// **'Look through the telescope'**
+  String get stagePropTelescope;
+
+  /// No description provided for @stagePropAntenna.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the antenna'**
+  String get stagePropAntenna;
+
+  /// No description provided for @stagePropPigeon.
+  ///
+  /// In en, this message translates to:
+  /// **'Poke the pigeon'**
+  String get stagePropPigeon;
+
+  /// No description provided for @stagePropMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Look at the moon'**
+  String get stagePropMoon;
+
+  /// No description provided for @stagePropStove.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the stove'**
+  String get stagePropStove;
+
+  /// No description provided for @stagePropDog.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet the dog'**
+  String get stagePropDog;
+
+  /// No description provided for @stagePropBell.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring the bell'**
+  String get stagePropBell;
+
+  /// No description provided for @stagePropLantern.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the lantern'**
+  String get stagePropLantern;
+
+  /// No description provided for @stagePropPinwheel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the pinwheel'**
+  String get stagePropPinwheel;
+
+  /// No description provided for @stagePropSquirrel.
+  ///
+  /// In en, this message translates to:
+  /// **'Poke the squirrel'**
+  String get stagePropSquirrel;
+
+  /// No description provided for @stagePropWoodpile.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the woodpile'**
+  String get stagePropWoodpile;
+
+  /// No description provided for @stagePropSuitcase.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the suitcase'**
+  String get stagePropSuitcase;
+
+  /// No description provided for @stagePropLadybug.
+  ///
+  /// In en, this message translates to:
+  /// **'Poke the ladybug'**
+  String get stagePropLadybug;
+
+  /// No description provided for @stagePropBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the book'**
+  String get stagePropBook;
+
+  /// No description provided for @stagePropGlobe.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin the globe'**
+  String get stagePropGlobe;
+
+  /// No description provided for @stagePropClock.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the clock'**
+  String get stagePropClock;
+
+  /// No description provided for @stagePropMouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Poke the mouse'**
+  String get stagePropMouse;
+
+  /// No description provided for @stageDragCord.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull the lamp cord'**
+  String get stageDragCord;
+
+  /// No description provided for @stageDragPoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Stir the fire'**
+  String get stageDragPoke;
+
+  /// No description provided for @stageDragSand.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw in the sand'**
+  String get stageDragSand;
+
+  /// No description provided for @stageDragSpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin the planet'**
+  String get stageDragSpin;
+
+  /// No description provided for @stageDragWipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Wipe the misted window'**
+  String get stageDragWipe;
+
+  /// No description provided for @stageDragAim.
+  ///
+  /// In en, this message translates to:
+  /// **'Swivel the telescope'**
+  String get stageDragAim;
+
+  /// No description provided for @stageDragRope.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull the bell rope'**
+  String get stageDragRope;
+
+  /// No description provided for @stageDragPinwheel.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin the pinwheel'**
+  String get stageDragPinwheel;
+
+  /// No description provided for @stageDragChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull the chain'**
+  String get stageDragChain;
+
+  /// No description provided for @stageDragLadder.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide the ladder'**
+  String get stageDragLadder;
 }
 
 class _AppLocalizationsDelegate

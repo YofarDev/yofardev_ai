@@ -226,6 +226,24 @@ class PropDragController {
     _afterInput(physics);
   }
 
+  /// A screen reader's custom action on the scene's handle (M11 ruling 17):
+  /// one drag's worth through the same physics and cues as a finger
+  /// ([PropDragPhysics.accessibilityAction]): the pull's threshold action
+  /// (the cord's lights, the rope's bell, the chain's whistle), a 1/8 turn,
+  /// an aim step of 0.25, one trail stroke, one stir (`flare`). Returns
+  /// whether it ran (false without a handle on screen, while disabled, or
+  /// while a finger holds it).
+  bool performAccessibilityAction() {
+    final PropDragPhysics? physics = _physics;
+    if (!_enabled || physics == null || physics.dragging) {
+      return false;
+    }
+    onStarted?.call();
+    physics.accessibilityAction(_now());
+    _afterInput(physics);
+    return true;
+  }
+
   /// A `prop_tapped` arrived: whether it belongs to a drag (drop it).
   bool shouldDropTap() {
     if (dragging && _moved) {

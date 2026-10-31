@@ -5,6 +5,7 @@ export 'presentation/bloc/avatar_cubit.dart';
 export 'presentation/bloc/avatar_state.dart';
 export 'presentation/rive/avatar_rive_contract.dart';
 export 'presentation/rive/mouth_anchor_source.dart';
+export 'presentation/rive/prop_drag_controller.dart' show PropDragController;
 export 'presentation/rive/stage_framing.dart';
 export 'presentation/widgets/rive/rive_avatar_view.dart';
 export 'presentation/widgets/stage_camera.dart';
@@ -13,6 +14,8 @@ export 'presentation/widgets/rive/rive_scene_view.dart';
 export 'domain/services/avatar_animation_service.dart';
 export 'domain/models/face_frame.dart';
 export 'domain/models/npc_intent.dart';
+export 'domain/models/scene_drag.dart'
+    show DragKind, SceneDragHandle, SceneDrags;
 export 'domain/models/performance_intent.dart';
 export 'domain/services/avatar_cue_service.dart';
 export 'domain/services/auto_acting_rules.dart';

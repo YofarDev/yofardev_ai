@@ -578,4 +578,159 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sceneLibrary => 'Bibliothèque';
+
+  @override
+  String stageSemanticsLabel(Object name, Object scene) {
+    return '$name dans le décor $scene';
+  }
+
+  @override
+  String get stagePhaseIdle => 'au repos';
+
+  @override
+  String get stagePhaseListening => 'à l’écoute';
+
+  @override
+  String get stagePhaseThinking => 'réfléchit';
+
+  @override
+  String get stagePhaseSpeaking => 'parle';
+
+  @override
+  String get scenePickerCurrentHint => 'Décor actuel';
+
+  @override
+  String get stagePropLamp => 'Toucher la lampe';
+
+  @override
+  String get stagePropTv => 'Toucher la télé';
+
+  @override
+  String get stagePropCat => 'Taquiner le chat';
+
+  @override
+  String get stagePropPlant => 'Toucher la plante';
+
+  @override
+  String get stagePropFire => 'Toucher le feu';
+
+  @override
+  String get stagePropTent => 'Toucher la tente';
+
+  @override
+  String get stagePropOwl => 'Taquiner le hibou';
+
+  @override
+  String get stagePropSky => 'Regarder le ciel';
+
+  @override
+  String get stagePropCrab => 'Taquiner le crabe';
+
+  @override
+  String get stagePropUmbrella => 'Toucher le parasol';
+
+  @override
+  String get stagePropSeagull => 'Taquiner la mouette';
+
+  @override
+  String get stagePropPlanet => 'Toucher la planète';
+
+  @override
+  String get stagePropUfo => 'Toucher l’OVNI';
+
+  @override
+  String get stagePropRubberDuck => 'Presser le canard en plastique';
+
+  @override
+  String get stagePropCup => 'Toucher la tasse';
+
+  @override
+  String get stagePropEspresso => 'Lancer la machine à expresso';
+
+  @override
+  String get stagePropWindow => 'Toucher la fenêtre';
+
+  @override
+  String get stagePropFish => 'Toucher le poisson';
+
+  @override
+  String get stagePropTelescope => 'Regarder dans le télescope';
+
+  @override
+  String get stagePropAntenna => 'Toucher l’antenne';
+
+  @override
+  String get stagePropPigeon => 'Taquiner le pigeon';
+
+  @override
+  String get stagePropMoon => 'Regarder la lune';
+
+  @override
+  String get stagePropStove => 'Toucher le poêle';
+
+  @override
+  String get stagePropDog => 'Caresser le chien';
+
+  @override
+  String get stagePropBell => 'Sonner la cloche';
+
+  @override
+  String get stagePropLantern => 'Toucher la lanterne';
+
+  @override
+  String get stagePropPinwheel => 'Toucher le moulinet';
+
+  @override
+  String get stagePropSquirrel => 'Taquiner l’écureuil';
+
+  @override
+  String get stagePropWoodpile => 'Toucher le tas de bois';
+
+  @override
+  String get stagePropSuitcase => 'Toucher la valise';
+
+  @override
+  String get stagePropLadybug => 'Taquiner la coccinelle';
+
+  @override
+  String get stagePropBook => 'Ouvrir le livre';
+
+  @override
+  String get stagePropGlobe => 'Faire tourner le globe';
+
+  @override
+  String get stagePropClock => 'Toucher l’horloge';
+
+  @override
+  String get stagePropMouse => 'Taquiner la souris';
+
+  @override
+  String get stageDragCord => 'Tirer le cordon de la lampe';
+
+  @override
+  String get stageDragPoke => 'Attiser le feu';
+
+  @override
+  String get stageDragSand => 'Dessiner dans le sable';
+
+  @override
+  String get stageDragSpin => 'Faire tourner la planète';
+
+  @override
+  String get stageDragWipe => 'Essuyer la vitre embuée';
+
+  @override
+  String get stageDragAim => 'Pivoter le télescope';
+
+  @override
+  String get stageDragRope => 'Tirer la corde de la cloche';
+
+  @override
+  String get stageDragPinwheel => 'Faire tourner le moulinet';
+
+  @override
+  String get stageDragChain => 'Tirer la chaîne d’alarme';
+
+  @override
+  String get stageDragLadder => 'Faire glisser l’échelle';
 }

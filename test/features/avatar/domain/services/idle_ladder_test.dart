@@ -164,6 +164,22 @@ void main() {
       ladder.dispose();
     });
 
+    test('reduce motion turned on mid-stage drops it to 0 at the next tick '
+        '(followed live, M11 ruling 18)', () {
+      final IdleLadder ladder = build();
+      at(ladder, 200);
+      expect(ladder.stage, 2);
+      final List<int> seen = <int>[];
+      ladder.stages.listen(seen.add);
+      reduce = true;
+      // the ReduceMotionSource listener ticks the ladder on the change
+      ladder.tick();
+      expect(ladder.stage, 0);
+      at(ladder, 900);
+      expect(ladder.stage, 0, reason: 'it holds');
+      ladder.dispose();
+    });
+
     test('the periodic check climbs the stages by itself', () {
       fakeAsync((FakeAsync async) {
         clock = DateTime(2026, 10, 29, 12);

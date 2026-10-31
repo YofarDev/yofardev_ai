@@ -36,7 +36,9 @@ class AvatarCubit extends Cubit<AvatarState> {
     this._propReactions,
     this._soundRepository, {
     PerformanceDirector? director,
+    bool Function()? reduceMotion,
   }) : _director = director,
+       _reduceMotion = reduceMotion ?? _motionOn,
        super(
          const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()),
        ) {
@@ -106,6 +108,12 @@ class AvatarCubit extends Cubit<AvatarState> {
   /// for the safety timeout. Optional for tests that do not exercise it.
   final PerformanceDirector? _director;
   final SoundRepository _soundRepository;
+
+  /// The system's reduce-motion switch, read when a journey starts (M11
+  /// ruling 18: on, a scene change is a cross-fade cut).
+  final bool Function() _reduceMotion;
+
+  static bool _motionOn() => false;
 
   /// True when the latest gesture sent to the Rive view came from a prop or
   /// avatar tap, or a journey's jacket beat, rather than from the director.
@@ -498,6 +506,10 @@ class AvatarCubit extends Cubit<AvatarState> {
     final int epoch = _journeyEpoch;
     // A chat switch (loadAvatar) mid-journey stops it before the next beat.
     bool gone() => isClosed || epoch != _journeyEpoch;
+    if (_reduceMotion()) {
+      await _reducedJourney(chatId, landing, from, to, family, gone);
+      return;
+    }
     JourneyState journey = JourneyState(
       from: from,
       to: to,
@@ -610,6 +622,46 @@ class AvatarCubit extends Cubit<AvatarState> {
         journeyJacket: 0,
       ),
     );
+  }
+
+  /// The journey under reduce motion (M11 ruling 18): a cross-fade cut. The
+  /// stage fades out ([JourneyPhase.close], [JourneyTiming.reducedFade]; the
+  /// destination decodes meanwhile), the scene changes behind it with the
+  /// avatar on screen and the chat saves it ([JourneyPhase.cut], which waits
+  /// for the new file on screen like a full journey), then it fades back in
+  /// ([JourneyPhase.vanish]). No threshold, no walk, no jacket beats.
+  Future<void> _reducedJourney(
+    String chatId,
+    AvatarConfig landing,
+    AvatarScene from,
+    AvatarScene to,
+    JourneyFamily family,
+    bool Function() gone,
+  ) async {
+    JourneyState journey = JourneyState(
+      from: from,
+      to: to,
+      family: family,
+      phase: JourneyPhase.close,
+      serial: ++_journeySerial,
+      reduced: true,
+    );
+    _emitIfOpen(state.copyWith(journey: journey, preloadScene: to));
+    await Future<void>.delayed(JourneyTiming.reducedFade);
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.cut);
+    final Future<void> shown = _waitForScene(to);
+    _emitIfOpen(state.copyWith(journey: journey));
+    _updateAvatar(chatId, landing);
+    await shown;
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.vanish);
+    _emitIfOpen(state.copyWith(journey: journey));
+    await Future<void>.delayed(JourneyTiming.reducedFade);
+    if (gone()) return;
+    _emitIfOpen(state.copyWith(journey: null, preloadScene: null));
   }
 
   /// One jacket beat ([phase]: [JourneyPhase.grab] or [JourneyPhase.hang]),

@@ -105,7 +105,8 @@ class _JourneyLayerState extends State<JourneyLayer>
 
   void _sync() {
     final JourneyState? journey = widget.journey;
-    if (journey == null) {
+    // A reduced journey (a cross-fade cut) has no threshold to load.
+    if (journey == null || journey.reduced) {
       _ticker.stop();
       _serial = null;
       _clip.value = false;

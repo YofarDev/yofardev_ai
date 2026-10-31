@@ -195,6 +195,31 @@ abstract class PropDragPhysics {
     _halt();
   }
 
+  /// A screen reader's custom action on the handle (M11 ruling 17): one
+  /// drag's worth, all at [t], so no velocity is measured (no fling). A
+  /// pull goes all the way down and lets go (its threshold action, the
+  /// spring back); a spin turns [accessibleSpinStep]; an aim steps
+  /// [accessibleAimStep] (back the other way at either end); a trail lays
+  /// one short stroke; a poke stirs once and fires `flare` (cooldown
+  /// permitting). Ignored while a finger holds the handle.
+  void accessibilityAction(Duration t) {
+    if (_dragging) {
+      return;
+    }
+    _accessibilityAction(t);
+  }
+
+  /// spin: the turn one accessibility action gives (1/8 turn).
+  static const double accessibleSpinStep = 1 / 8;
+
+  /// aim: the step one accessibility action gives.
+  static const double accessibleAimStep = 0.25;
+
+  /// trail: the dots one accessibility stroke lays.
+  static const int accessibleTrailDots = 5;
+
+  void _accessibilityAction(Duration t);
+
   void _start(Offset p, Duration t);
   void _move(Offset p, Duration t);
   void _end(Duration t);
@@ -331,6 +356,14 @@ class _PullPhysics extends PropDragPhysics {
 
   @override
   void _halt() => _releaseAt = null;
+
+  @override
+  void _accessibilityAction(Duration t) {
+    final Offset top = handle.rect.topCenter;
+    start(top, t);
+    move(top.translate(0, PropDragPhysics.pullTravel), t);
+    end(t);
+  }
 }
 
 // ---------------------------------------------------------------- poke
@@ -480,6 +513,23 @@ class _PokePhysics extends PropDragPhysics {
   void _halt() {
     _fadeAt = null;
     _samples.clear();
+  }
+
+  @override
+  void _accessibilityAction(Duration t) {
+    const Offset tip = PropDragPhysics.pokeTip;
+    const Offset range = PropDragPhysics.pokeRange;
+    start(tip, t);
+    // one stir: right, left, back to the middle (two reversals)
+    move(tip.translate(range.dx * 0.6, 0), t);
+    move(tip.translate(-range.dx * 0.6, 0), t);
+    move(tip, t);
+    final Duration? last = _lastFlare;
+    if (last == null || t - last >= PropDragPhysics.flareCooldown) {
+      _lastFlare = t;
+      _cues.add(DragCue.flare);
+    }
+    end(t);
   }
 }
 
@@ -631,6 +681,25 @@ class _TrailPhysics extends PropDragPhysics {
 
   @override
   void _halt() => _fadeAt = null;
+
+  /// Accessibility strokes laid so far: each one a row lower (it cycles).
+  int _strokes = 0;
+
+  @override
+  void _accessibilityAction(Duration t) {
+    final double length =
+        PropDragPhysics.trailSpacing *
+        (PropDragPhysics.accessibleTrailDots - 1);
+    final double y =
+        handle.rect.top + handle.rect.height * (0.2 + 0.15 * (_strokes % 5));
+    final double x0 =
+        handle.rect.left +
+        math.max(0, (handle.rect.width - length) / 2).toDouble();
+    _strokes++;
+    start(Offset(x0, y), t);
+    move(Offset(x0 + length, y), t);
+    end(t);
+  }
 }
 
 // ---------------------------------------------------------------- spin
@@ -720,6 +789,20 @@ class _SpinPhysics extends PropDragPhysics {
     _flingAt = null;
     _samples.clear();
   }
+
+  @override
+  void _accessibilityAction(Duration t) {
+    final Offset at = handle.rect.center;
+    start(at, t);
+    move(
+      at.translate(
+        PropDragPhysics.spinPxPerTurn * PropDragPhysics.accessibleSpinStep,
+        0,
+      ),
+      t,
+    );
+    end(t);
+  }
 }
 
 // ---------------------------------------------------------------- aim
@@ -760,4 +843,27 @@ class _AimPhysics extends PropDragPhysics {
 
   @override
   void _halt() {}
+
+  /// The accessibility step's direction: right until the end, then back.
+  int _accessibleDir = 1;
+
+  @override
+  void _accessibilityAction(Duration t) {
+    final double value = _values[_name]!;
+    if (value + PropDragPhysics.accessibleAimStep * _accessibleDir > 1 + 1e-9 ||
+        value + PropDragPhysics.accessibleAimStep * _accessibleDir <
+            -1 - 1e-9) {
+      _accessibleDir = -_accessibleDir;
+    }
+    final Offset at = handle.rect.center;
+    start(at, t);
+    move(
+      at.translate(
+        handle.rect.width * PropDragPhysics.accessibleAimStep * _accessibleDir,
+        0,
+      ),
+      t,
+    );
+    end(t);
+  }
 }

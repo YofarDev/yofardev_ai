@@ -16,6 +16,7 @@ import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
+import 'package:yofardev_ai/features/avatar/presentation/rive/journey_choreography.dart';
 
 class MockAvatarRepository extends Mock implements AvatarRepository {}
 
@@ -1299,6 +1300,132 @@ void main() {
       await drain();
 
       expect(cubit.state.sceneEvent.seq, 0);
+    });
+  });
+
+  group('reduce motion: a journey is a cross-fade cut (M11 ruling 18)', () {
+    late MockAvatarRepository repository;
+    late bool reduce;
+    late AvatarCubit cubit;
+
+    setUpAll(() {
+      registerFallbackValue(const Avatar());
+      registerFallbackValue(const AvatarConfig());
+    });
+
+    setUp(() {
+      repository = MockAvatarRepository();
+      when(
+        () => repository.updateAvatar(any(), any()),
+      ).thenAnswer((_) async => Result<void>.ok(null));
+      when(() => repository.getChat(any())).thenAnswer(
+        (_) async => Result<Chat>.err(const StorageFailure('no chat')),
+      );
+      reduce = true;
+      cubit = AvatarCubit(
+        repository,
+        MockAvatarAnimationService(),
+        MockAudioPlayerService(),
+        MockAppLifecycleService(),
+        PropReactionService(),
+        _FakeSoundRepository(),
+        reduceMotion: () => reduce,
+      );
+    });
+
+    tearDown(() => cubit.close());
+
+    void changeScene(AvatarScene scene, {AvatarTop? top}) =>
+        cubit.onNewAvatarConfig(
+          'chat1',
+          AvatarConfig(
+            background: scene,
+            top: top,
+            specials: AvatarSpecials.leaveAndComeBack,
+          ),
+        );
+
+    test(
+      'fade out, cut (saved, no walk), fade in: no threshold, no jacket',
+      () {
+        fakeAsync((FakeAsync async) {
+          cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          // livingRoom → beach is a door journey: its jacket beats are skipped
+          changeScene(AvatarScene.beach, top: AvatarTop.longCoat);
+          JourneyState j() => cubit.state.journey!;
+          expect(j().reduced, isTrue);
+          expect(j().phase, JourneyPhase.close);
+          expect(j().fadedOut, isTrue);
+          expect(j().hasJacket, isFalse);
+          expect(cubit.state.preloadScene, AvatarScene.beach);
+          expect(cubit.state.presence, AvatarSpecials.onScreen);
+          expect(cubit.state.scene, AvatarScene.livingRoom);
+          // the overlay draws nothing for it
+          expect(
+            JourneyChoreography.at(j(), Duration.zero, reduceMotion: true),
+            JourneyFrame.none,
+          );
+
+          async.elapse(JourneyTiming.reducedFade);
+          expect(j().phase, JourneyPhase.cut);
+          expect(j().fadedOut, isTrue);
+          // the scene and the clothes land with the avatar on screen, saved
+          expect(cubit.state.scene, AvatarScene.beach);
+          expect(cubit.state.avatar.top, AvatarTop.longCoat);
+          expect(cubit.state.presence, AvatarSpecials.onScreen);
+          expect(cubit.state.statusAnimation, AvatarStatusAnimation.initial);
+          verify(() => repository.updateAvatar('chat1', any())).called(1);
+
+          // the fade back waits for the new file on screen
+          async.elapse(const Duration(milliseconds: 500));
+          expect(j().phase, JourneyPhase.cut);
+          cubit.onSceneShown(AvatarScene.beach);
+          async.flushMicrotasks();
+          expect(j().phase, JourneyPhase.vanish);
+          expect(j().fadedOut, isFalse);
+
+          async.elapse(JourneyTiming.reducedFade);
+          expect(cubit.state.journey, isNull);
+          expect(cubit.state.preloadScene, isNull);
+          // never a walk, a grab or a jacket
+          expect(cubit.state.jacket, isFalse);
+          expect(cubit.state.journeyJacket, 0);
+          expect(cubit.state.gestureEvent.seq, 0);
+        });
+      },
+    );
+
+    test('the cut still arrives when the new scene never shows', () {
+      fakeAsync((FakeAsync async) {
+        changeScene(AvatarScene.deepSpace);
+        async.elapse(JourneyTiming.reducedFade + JourneyTiming.waitTimeout);
+        expect(cubit.state.journey!.phase, JourneyPhase.vanish);
+        async.elapse(JourneyTiming.reducedFade);
+        expect(cubit.state.journey, isNull);
+        expect(cubit.state.scene, AvatarScene.deepSpace);
+      });
+    });
+
+    test('the switch is read when a journey starts: off, it walks', () {
+      fakeAsync((FakeAsync async) {
+        reduce = false;
+        changeScene(AvatarScene.campfire);
+        expect(cubit.state.journey!.reduced, isFalse);
+        expect(cubit.state.journey!.phase, JourneyPhase.pullBack);
+      });
+    });
+
+    test('a chat switch during the fade stops it before the cut', () {
+      fakeAsync((FakeAsync async) {
+        changeScene(AvatarScene.cafe);
+        expect(cubit.state.journey, isNotNull);
+        cubit.loadAvatar('chat2');
+        async.flushMicrotasks();
+        async.elapse(JourneyTiming.reducedFade * 3);
+        expect(cubit.state.journey, isNull);
+        expect(cubit.state.scene, isNot(AvatarScene.cafe));
+        verifyNever(() => repository.updateAvatar('chat1', any()));
+      });
     });
   });
 }
