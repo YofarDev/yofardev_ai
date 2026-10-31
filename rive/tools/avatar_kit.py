@@ -129,6 +129,9 @@ M8_ARM_ID_START = 1150000
 # moonshot M10 (gen_avatar.py, Doc M10): the wardrobe dedupe's keys, the tints, the mouth anchor and the
 # signatures (free in avatar.rml)
 M10_ID_START = 1200000
+M10_TINT_ID_START = 1210000  # Task 2b: the tint fills, `topTint` / `hatTint` and `MouthAnchor`
+M10_SIG_ID_START = 1220000   # Task 2c: the costume signatures (the generator's own elements)
+M10_SIG_ARM_ID_START = 1235000  # Task 2c: the arm-rig elements the signatures mint (arm_rig's document)
 
 
 def footfalls(f0: int, f1: int, distance: float, stride: float, shift: int = 10) -> list[int]:

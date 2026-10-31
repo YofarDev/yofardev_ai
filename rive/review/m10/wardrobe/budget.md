@@ -41,3 +41,20 @@ the peak + mid frame of all 11 gestures, 5 hand skins × 4 drawn poses, 6 switch
 prefix) against M9: 258 at 0 px, 7 at max 1/255 (≤ 20 px, renderer noise); every sequence's end state
 equals the new file rendered directly at the same frame (16 at 0 px, 9 at max 1/255). `rest_sheet.png`: the
 11 outfits at rest, new file.
+
+## Tasks 2b–2c: tints, the mouth anchor, the signatures
+
+| Step | `avatar.riv` bytes | Δ |
+|---|---:|---:|
+| after 2a (dedupe) | 477,174 | |
+| after 2b (57 tint fills, `topTint` / `hatTint`, `MouthAnchor`) | 479,262 | +2,088 |
+| after 2c (5 signature clips, their states and event, `LaserLoop`, `ScanSweep` / `AuraSwell`) | 488,418 | +9,156 |
+| **M10 line** | 564,776 | headroom 76,358 |
+
+Signature clip keys (each clip's content removed and rebuilt): batman 2,213 B, robocop 1,381 B, soubrette 2,843 B,
+singularity 1,463 B; `none` keeps only the arms' rest keys (256 B). Each is under the 5 KB of ruling 6.
+
+Gates: identity at the defaults (`gates.txt`, 277 cases incl. each costume's loop at frames 120 / 400 / 640): 0
+failing; tints off = M9 everywhere. `anchor.txt`: 14 frames, the anchor at most 2.90 px from the lips' centre (6 px
+allowed). `signatures.txt`: no pops except robocop's held-key steps (on purpose); the frame after each clip equals the
+costume never gestured (0 px).

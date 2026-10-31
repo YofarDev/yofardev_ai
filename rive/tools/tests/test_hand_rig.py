@@ -194,7 +194,7 @@ def _layer(board: ET.Element, name: str) -> ET.Element:
 
 def test_gesture_ids_events_and_states(root: ET.Element, board: ET.Element) -> None:
     enum = next(e for e in root.iter("DataEnumCustom") if e.get("name") == "GestureId")
-    assert [v.get("key") for v in enum] == OLD_GESTURES + NEW_GESTURES
+    assert [v.get("key") for v in enum] == OLD_GESTURES + NEW_GESTURES + ["signature"]  # v13 appends signature
     ids = {e.get("id"): e for e in root.iter() if e.get("id")}
     layer = _layer(board, "Gesture")
     for g in NEW_GESTURES:

@@ -2258,6 +2258,7 @@ with kit.minting(d, M8), kit.minting(arm_rig.AD, M8A):
         evals["GestureId"][gn] = val
         ev = event("gesture_done", "gestureId", gn)
         artboard.children.insert(ev_at + i, ev)
+        EV_G8_LAST = ev
         gst = st(ga, len(G) + i + 1,
                  d("StateMachineFireEvent", eventId=ev.ref(), occursValue="atEnd"),
                  d("StateTransition", stateToId=gs_idle.ref(), enableExitTime=True, exitTimeIsPercetange=True,
@@ -2365,11 +2366,202 @@ for a in ARMS:
     WARDROBE_MERGES.append(wardrobe_dedupe.Merge(a["skin_solo"].el, dict(a["skins"]), "Skin_shared",
                                                  {s: [HAND_CLIPS[s]] for s in HAND_SKINS}))
 wardrobe_dedupe.dedupe(M10, artboard, WARDROBE_MERGES)
+for a in ARMS:  # later clips key the surviving hand's pose switch only (the bare skin's set)
+    a["pose_sets"] = a["pose_sets"][:1]
 for a in ARMS:  # the sets that had one outfit already: named by their kind too
     for groups, prefix in ((a["ups"], "Up_"), (a["fores"], "Fore_")):
         for oid, g in groups.items():
             if g.attrs["name"] == prefix + oid:
                 g.attrs["name"] = prefix + SLEEVES[oid][4]
+
+# ================================================================ M10 (ruling 5, contract v13): tints, the mouth anchor
+# `topTint` / `hatTint`: every painted garment shape of a top (front, back, the top-only sleeve sets) and of a hat
+# gains a second fill over its own fill (under its ink stroke: a shape's later paints draw over the earlier
+# ones), blend mode color, whose colour binds the AvatarVM colour. Alpha 0 (the default) draws nothing. Never
+# ink, seams, stitches, prints, buttons, trims and shines, skin, hands, the hair, a costume or the sleeve kinds
+# a costume wears.
+COLOR_BLEND = 27  # Rive BlendMode.color: hue and saturation from the tint, lightness from the garment
+TOP_TINTED: dict[str, tuple[str, ...]] = {
+    "pinkHoodie": ("CollarL", "CollarR", "Torso", "HoodBack", "ChestShade", "Fold1", "Fold2"),
+    "longCoat": ("Torso", "LapelL", "LapelR", "CoatCollar", "Belt", "Belt2", "CoatFold"),
+    "tshirt": ("Torso", "TeeFold", "TeeFold2"),
+    "underwear": ("Tank",),
+    "swimsuit": ("SwimTop", "SwimPanelLeft", "SwimPanelRight"),
+    "christmasSweater": ("Torso",),
+    "blackSuitAndTie": ("Torso", "LapelL", "LapelR"),
+}
+SLEEVE_TINTED: dict[str, tuple[str, ...]] = {  # the sleeve sets only tops wear (`bare` is skin)
+    "Up_long": ("Sleeve", "ElbowWeb", "Fold", "Fold2"), "Fore_long": ("Sleeve", "Cuff", "TrenchCuffTab"),
+    "Up_short": ("TeeSleeve", "TeeUnderarm"),
+}
+HAT_TINTED: dict[str, tuple[str, ...]] = {
+    "beanie": ("Dome", "Band"), "backwardsCap": ("Crown", "BillBack", "Button"), "frenchBeret": ("Beret", "Stem"),
+    "swimCap": ("SwimCap",), "santaHat": ("SantaCone", "Tip"), "redMagaCap": ("MagaCrown", "Bill", "BillUnder", "Button"),
+}
+M10T = Doc(client=0, start=kit.M10_TINT_ID_START)
+TINT_FILLS: dict[str, list[El]] = {"topTint": [], "hatTint": []}
+with kit.minting(d, M10T):
+    vm_at = vm.children.index(inst)
+    tint_props = {pn: d("ViewModelPropertyColor", name=pn) for pn in ("topTint", "hatTint")}
+    vm.children[vm_at:vm_at] = list(tint_props.values())
+    props.update(tint_props)
+    inst.add(*[d("ViewModelInstanceColor", propertyValue="00000000", viewModelPropertyId=p.ref())
+               for p in tint_props.values()])
+
+    def tint(group_: El, names: tuple[str, ...], pn: str) -> None:
+        for nm in names:
+            shapes = [e for e in _walk(group_) if e.tag == "Shape" and e.attrs.get("name") == nm]
+            assert shapes, (group_.attrs.get("name"), nm)
+            for sh in shapes:
+                at = max(i for i, c in enumerate(sh.children) if c.tag == "Fill") + 1
+                fill_ = d("Fill", d("SolidColor", d("DataBindContext", sourcePathIds=vpath(pn), propertyKey=37),
+                                    colorValue="00000000"), blendModeValue=COLOR_BLEND, name="Tint")
+                sh.children.insert(at, fill_)
+                TINT_FILLS[pn].append(fill_)
+
+    for oid, names in TOP_TINTED.items():
+        for group_ in (TF[oid], TB[oid]):
+            present = tuple(n for n in names if any(e.attrs.get("name") == n for e in _walk(group_)))
+            tint(group_, present, "topTint")
+        assert all(any(e.attrs.get("name") == n for g in (TF[oid], TB[oid]) for e in _walk(g)) for n in names), oid
+    for a in ARMS:
+        for g in [*a["up_solo"].el.children, *a["fore_solo"].el.children]:
+            if g.attrs["name"] in SLEEVE_TINTED:
+                tint(g, SLEEVE_TINTED[g.attrs["name"]], "topTint")
+    for hid, names in HAT_TINTED.items():
+        tint(HATS[hid], names, "hatTint")
+
+    # MouthAnchor (contract v13): the centre of the lips. It rides the upper lip's centre bone (inside the head
+    # turn, the mood offset and the lip shapes' own motion) and a world translation constraint at strength 0.5
+    # pulls it halfway to the lower lip's centre bone, so an open jaw keeps it mid-opening. Draws nothing.
+    lip_bones = {e.attrs["name"]: e for e in _walk(mouth.el) if e.tag == "RootBone"}
+    MOUTH_ANCHOR = d("Node", d("TranslationConstraint", targetId=lip_bones["MouthLowerC"].ref(), strength=0.5,
+                               name="MidLip"), x=0.0, y=0.0, name="MouthAnchor")
+    lip_bones["MouthUpperC"].add(MOUTH_ANCHOR)
+
+# ================================================================ M10 (ruling 6, contract v13): the costume signatures
+# `gestureId` signature (appended): one Gesture state per costume, entered on the trigger when gestureId is
+# signature AND costume is that costume (none: a 6-frame no-op); every state fires gesture_done (signature) at its
+# end like the others. Keys on the rig only: the arm IK targets and digit drivers, BodyGesture / HeadGesture, the
+# cloth Response nodes, and three costume effects. The costume layer runs after the gesture layer and keys the
+# scanner's sweep, the aura's breathing and the laser's flashes in its loops, so the signatures key new wrapper
+# nodes inside the scanner and the aura (offset and scale compose with the loop), and the laser's loop moves from
+# costume_singularity to a `LaserLoop` layer before the gesture layer (same keys, same start frame), so a signature
+# can flash it.
+M10S = Doc(client=0, start=kit.M10_SIG_ID_START)
+M10SA = Doc(client=0, start=kit.M10_SIG_ARM_ID_START)
+SIGNATURE_FRAMES = {"batman": 66, "robocop": 72, "soubrette": 72, "singularity": 72, "none": 6}
+cloth_by_name = {part.response.attrs["name"]: part.response for part in cloth_parts}
+with kit.minting(d, M10S), kit.minting(arm_rig.AD, M10SA):
+    scan_sweep = d("Node", *scan.el.children, x=0.0, y=0.0, name="ScanSweep")
+    scan.el.children = [scan_sweep]
+    aura_swell = d("Node", *aura_rig.el.children, x=0.0, y=0.0, name="AuraSwell")
+    aura_rig.el.children = [aura_swell]
+    laser_track = next(o for o in COSTUME_ANIMS["singularity"].children if o.attrs.get("objectId") == laser.ref())
+    COSTUME_ANIMS["singularity"].children.remove(laser_track)
+    laser_loop = d("LinearAnimation", laser_track, duration=COSTUME_FRAMES["singularity"], fps=60, loopValue="loop",
+                   name="laser_loop")
+    laser_off = d("LinearAnimation", duration=1, fps=60, name="laser_off")
+    ll_off, ll_on = st(laser_off, 0), st(laser_loop, 1)
+    sm.children.insert(sm.children.index(gesture_layer), layer(
+        "LaserLoop", ll_off, [ll_off, ll_on],
+        [d("StateTransition", enum_is("costume", "singularity"), stateToId=ll_on.ref()),
+         d("StateTransition", enum_not("costume", "singularity"), stateToId=ll_off.ref())]))
+    g_none.add(K(scan_sweep, x=0.0), K(aura_swell, scaleX=1.0, scaleY=1.0), K(body_g, scaleY=1.0))
+
+    SIG: dict[str, El] = {}
+    # batman: the viewer's-left hand grips the cape's edge at the side and sweeps it across the chest to the far
+    # shoulder (Dracula), holds, and lets it fall back; the cape swings after the arm, the torso turns into it
+    n = SIGNATURE_FRAMES["batman"]
+    SIG["batman"] = A("gesture_signature_batman", n, [
+        *arm_keys(-1, [(0, None, 90), (7, (238, 1082), 94), (16, (286, 880), 20, 0.85, 0.75),
+                       (27, (430, 700), -12, 0.78, 0.55), (31, (444, 692), -8, 0.76, 0.55),
+                       (44, (446, 694), -8, 0.76, 0.55), (55, (286, 880), 40, 0.85, 0.75), (n, None, 90)],
+                  lag=2),
+        *drive_tracks(-1, [(0, "rest"), (10, "rest"), (16, "grip"), (46, "grip"), (54, "rest"), (n, "rest")]),
+        T(cloth_by_name["CapeResponse"], rotation=[(0, 0.0), (14, -0.015), (30, 0.1), (36, 0.085), (46, 0.07),
+                                                   (56, -0.035), (n, 0.0)]),
+        T(body_g, rotation=[(0, 0.0), (10, 0.008), (28, -0.022), (44, -0.02), (58, 0.004), (n, 0.0)]),
+        T(head_g, rotation=[(0, 0.0), (28, 0.04), (44, 0.035), (60, 0.0), (n, 0.0)]),
+    ])
+    # robocop: a stepped (held-key) scan, head left-right with the scanner sweeping fast, then a stepped salute
+    n = SIGNATURE_FRAMES["robocop"]
+    salute = arm_keys(-1, [(0, None, 90), (6, (238, 1080), 94), (14, (286, 870), 10, 0.8), (20, (306, 640), -60, 0.65),
+                           (26, (284, 470), -72, 0.6), (52, (284, 470), -72, 0.6), (58, (286, 870), 30, 0.8),
+                           (64, (242, 1078), 92), (n, None, 90)],
+                      hand=[(0, "rest"), (18, "edge"), (58, "rest")], step=4)
+    for obj in salute:
+        for prop in obj.children:
+            if prop.attrs["property"] != "activeComponentId":
+                for kf in prop.children:
+                    kf.attrs.update(interpolationType="hold")
+                    kf.attrs.pop("interpolatorId", None)
+    SIG["robocop"] = A("gesture_signature_robocop", n, [
+        *salute,
+        T(head_g, rotation=[(0, 0.0, "hold"), (4, -0.06, "hold"), (10, 0.06, "hold"), (16, -0.03, "hold"),
+                            (22, 0.0, "hold"), (28, -0.04, "hold"), (54, 0.0, "hold"), (n, 0.0, "hold")]),
+        T(scan_sweep, ease=None, x=[(0, 0.0), (4, -70.0), (10, 70.0), (16, -70.0), (22, 40.0), (26, 0.0), (n, 0.0)]),
+        T(body_g, y=[(0, 0.0, "hold"), (26, -3.0, "hold"), (54, 0.0, "hold"), (n, 0.0, "hold")]),
+    ])
+    # soubrette: a curtsy: the hands take the skirt out to the sides, the body dips with a tilt of the head and
+    # rises; the apron swings after the dip
+    n = SIGNATURE_FRAMES["soubrette"]
+    curtsy = [(0, None, 90), (12, (206, 1074), 104), (28, (184, 1084), 112, 1.0, 0.95), (44, (186, 1082), 112, 1.0, 0.95),
+              (60, (236, 1078), 94), (n, None, 90)]
+    SIG["soubrette"] = A("gesture_signature_soubrette", n, [
+        *arm_keys(-1, curtsy, lag=2),
+        *arm_keys(1, mirror_poses(curtsy), lag=3),
+        *drive_tracks(-1, [(0, "rest"), (14, "rest"), (24, "pinch"), (46, "pinch"), (58, "rest"), (n, "rest")]),
+        *drive_tracks(1, [(0, "rest"), (14, "rest"), (24, "pinch"), (46, "pinch"), (58, "rest"), (n, "rest")]),
+        T(body_g, y=[(0, 0.0), (8, -3.0), (30, 32.0), (44, 31.0), (62, 0.0), (n, 0.0)],
+          rotation=[(0, 0.0), (30, 0.02), (44, 0.016), (62, 0.0), (n, 0.0)]),
+        T(head_g, rotation=[(0, 0.0), (30, 0.12), (46, 0.1), (64, 0.0), (n, 0.0)],
+          y=[(0, 0.0), (30, 8.0), (46, 7.0), (64, 0.0), (n, 0.0)]),
+        T(cloth_by_name["ApronBibResponse"], rotation=[(0, 0.0), (12, 0.0), (24, 0.03), (36, -0.08), (48, 0.045),
+                                                       (60, -0.02), (n, 0.0)]),
+    ])
+    # singularity: levitation: the body rises 18 px, hovers with the arms floating out, the aura swells, the laser
+    # eyes flash once, and it settles back
+    n = SIGNATURE_FRAMES["singularity"]
+    float_l = [(0, None, 90), (30, (214, 1054), 104, 1.0, 0.95), (50, (212, 1050), 106, 1.0, 0.95), (n, None, 90)]
+    SIG["singularity"] = A("gesture_signature_singularity", n, [
+        *arm_keys(-1, float_l, lag=3),
+        *arm_keys(1, mirror_poses(float_l), lag=4),
+        # the head rises 18 px: 10 px of lift and a 1.35 % stretch about the artboard's bottom edge (BodyGesture's
+        # origin), so the torso's hem (authored to y 1010) never lifts off the frame's bottom
+        T(body_g, y=[(0, 0.0), (8, 2.0), (30, -10.0), (40, -9.0), (50, -10.0), (66, 0.0), (n, 0.0)],
+          scaleY=[(0, 1.0), (30, 1.0135), (40, 1.012), (50, 1.0135), (66, 1.0), (n, 1.0)]),
+        T(aura_swell, scaleX=[(0, 1.0), (30, 1.18), (50, 1.14), (66, 1.0), (n, 1.0)],
+          scaleY=[(0, 1.0), (30, 1.18), (50, 1.14), (66, 1.0), (n, 1.0)]),
+        T(laser, ease=None, opacity=[(0, 0.0, "hold"), (36, 0.0, "linear"), (39, 0.75, "linear"), (46, 0.55, "linear"),
+                                     (54, 0.0, "hold"), (n, 0.0, "hold")]),
+    ])
+    SIG["none"] = d("LinearAnimation", duration=SIGNATURE_FRAMES["none"], fps=60, name="gesture_signature_none")
+    for c, animation in SIG.items():
+        rest_arms(animation)  # none too: every gesture keys both arms (history-free, test_arm_rig)
+        if c == "none":
+            continue
+        for obj in animation.children:
+            if c == "robocop":
+                continue  # held keys: nothing to thin
+            if obj.attrs["objectId"] in {a["target"].ref() for a in ARMS}:
+                arm_rig.simplify_track(obj, M8_TARGET_TOL)
+            elif obj.attrs["objectId"] in HAND_IDS:
+                arm_rig.simplify_track(obj, M8_HAND_TOL)
+    sig_value = d("DataEnumValue", key="signature", value="signature")
+    enums["GestureId"].add(sig_value)
+    evals["GestureId"]["signature"] = sig_value
+    ev_sig = event("gesture_done", "gestureId", "signature")
+    artboard.children.insert(artboard.children.index(EV_G8_LAST) + 1, ev_sig)
+    for i, (c, animation) in enumerate(SIG.items()):
+        gst = st(animation, len(G) + len(G8) + 1 + i,
+                 d("StateMachineFireEvent", eventId=ev_sig.ref(), occursValue="atEnd"),
+                 d("StateTransition", stateToId=gs_idle.ref(), enableExitTime=True, exitTimeIsPercetange=True,
+                   exitTime=100), row=2)
+        gs_idle.add(d("StateTransition", trig("gesture"), enum_is("gestureId", "signature"), enum_is("costume", c),
+                      stateToId=gst.ref()))
+        gesture_layer.add(gst)
+    artboard.children.extend([laser_off, laser_loop, *SIG.values()])
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

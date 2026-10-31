@@ -12,7 +12,7 @@ hang below the 1000 px frame) with the rive CLI, in parallel scratch projects.
 Cases (each M9 vs new; ok = at most 1/255 per channel, i.e. renderer noise, or no differing pixel):
 - every outfit (7 tops, 4 costumes over the default top; hat noHat) at rest (frame 1) and at the peak
   frame (largest hand-target travel; mid-clip for head-only gestures) and the mid frame of all 11
-  gestures;
+  gestures; each costume's loop at frames 120, 400 and 640 (singularity's laser flash);
 - every hand skin (bare via the default top, black batman, metal robocop, stars singularity, white
   soubrette) in each drawn pose (palm, edge, point, up; review_hands.posed forces it on both files);
 - switch-order sequences (`--data` mid-run steps): top A -> costume -> none -> top B and costume ->
@@ -60,6 +60,7 @@ SEQUENCES = [
     [("costume", "soubrette"), ("top", "blackSuitAndTie"), ("costume", "none"), ("top", "underwear")],
 ]
 STEP = 3  # frames between sequence steps
+LOOP_FRAMES = (120, 400, 640)  # singularity flashes its laser over frames 612-700
 
 
 def outfit_args(o: str) -> list[str]:
@@ -167,6 +168,9 @@ def main() -> int:
                     cases.append((f"{o} {g} f{f}", "", outfit_args(o) + [f"--data=gestureId={g}",
                                                                           "--data=gesture=true", f"--advance={f + 1}"],
                                   None))
+        for o in COSTUMES:  # the costume loops (M10 moved the laser's flashes to their own layer)
+            for f in LOOP_FRAMES:
+                cases.append((f"{o} loop f{f}", "", outfit_args(o) + [f"--advance={f + 1}"], None))
         if not args.quick:
             for skin, costume in SKIN_COSTUME.items():
                 for pose in DRAWN_POSES:
@@ -216,8 +220,10 @@ def main() -> int:
             ok_all &= ok
             if keep is not None:
                 rest[label.split()[0]] = (keep, res[0].split(": ", 1)[1].split(" vs")[0])
-        fails = sum("FAIL" in ln for ln in lines)
-        lines.append(f"TOTAL: {len(cases)} cases, {fails} failing lines ({'ok' if ok_all else 'FAIL'})")
+        fails = sum("FAIL" in ln.split(" [parallel run")[0] for ln in lines)
+        retried = sum("re-rendered alone" in ln for ln in lines)
+        lines.append(f"TOTAL: {len(cases)} cases, {fails} failing lines, {retried} re-rendered alone after parallel "
+                     f"noise ({'ok' if ok_all else 'FAIL'})")
         print("\n".join(lines))
         (out / "gates.txt").write_text("\n".join(lines) + "\n")
         cells = []

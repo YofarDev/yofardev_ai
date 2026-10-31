@@ -20,6 +20,7 @@ import 'package:yofardev_ai/features/avatar/presentation/bloc/avatar_state.dart'
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/prop_drag_controller.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/avatar_zone_hit_gate.dart';
+import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/mouth_anchor_reader.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_avatar_view.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/rive_scene_view.dart';
 import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dart';
@@ -37,7 +38,7 @@ import 'package:yofardev_ai/features/talking/presentation/bloc/talking_state.dar
 /// v12 (M9): the drag handles run on the real runtime: one real drag per
 /// handle through a real `RiveSceneView` and `PropDragController`, the
 /// numbers read back from the file's view model; the avatar's translucent
-/// hit test over the scene; the café wipe's darken blend in a rendered frame.
+/// hit test over the scene; the café wipe's holes in the mist in a rendered frame.
 /// These run with the window's frames fully live, in real time.
 void main() {
   final IntegrationTestWidgetsFlutterBinding binding =
@@ -245,13 +246,12 @@ void main() {
       );
     });
 
-    test('v11: gestureId ends with thumbsUp, count, grab', () {
-      expect(
-        AvatarRiveContract.gestureIdValues.sublist(
-          AvatarRiveContract.gestureIdValues.length - 3,
-        ),
-        <String>['thumbsUp', 'count', 'grab'],
-      );
+    test('v11: gestureId appends thumbsUp, count, grab after the M1 eight', () {
+      expect(AvatarRiveContract.gestureIdValues.sublist(8, 11), <String>[
+        'thumbsUp',
+        'count',
+        'grab',
+      ]);
       final ViewModelInstanceEnum gesture = vmi.enumerator(
         AvatarRiveContract.propGestureId,
       )!;
@@ -377,6 +377,109 @@ void main() {
         expect(zones.claims(free, frame), isFalse, reason: '$free is free');
       }
       zones.dispose();
+    });
+
+    test('v13: topTint and hatTint are colours, transparent by default', () {
+      for (final String name in <String>[
+        AvatarRiveContract.propTopTint,
+        AvatarRiveContract.propHatTint,
+      ]) {
+        final ViewModelInstanceColor? tint = vmi.color(name);
+        expect(tint, isNotNull, reason: '$name is not a VM colour');
+        expect(tint!.value.a, 0, reason: '$name defaults to alpha 0');
+      }
+    });
+
+    test('v13: gestureId ends with signature; each costume plays it and '
+        'fires gesture_done', () async {
+      expect(AvatarRiveContract.gestureIdValues.last, 'signature');
+      for (final String costume in AvatarRiveContract.costumeValues) {
+        final RiveWidgetController actor = RiveWidgetController(
+          file,
+          artboardSelector: ArtboardSelector.byName(
+            AvatarRiveContract.avatarArtboard,
+          ),
+          stateMachineSelector: StateMachineSelector.byName(
+            AvatarRiveContract.avatarStateMachine,
+          ),
+        );
+        final ViewModelInstance actorVmi = actor.dataBind(DataBind.auto());
+        final List<String> done = <String>[];
+        void onEvent(Event event) {
+          if (event.name != AvatarRiveContract.eventGestureDone) {
+            return;
+          }
+          final String? id = event
+              .stringProperty(AvatarRiveContract.avatarEventGestureIdProperty)
+              ?.value;
+          if (id != null) {
+            done.add(id);
+          }
+        }
+
+        actor.stateMachine.addEventListener(onEvent);
+        actorVmi.enumerator(AvatarRiveContract.propCostume)!.value = costume;
+        for (int f = 0; f < 10; f++) {
+          actor.stateMachine.advanceAndApply(1 / 60);
+        }
+        actorVmi.enumerator(AvatarRiveContract.propGestureId)!.value =
+            'signature';
+        actorVmi.trigger(AvatarRiveContract.propGestureTrigger)!.trigger();
+        // every signature lasts at most 1.2 s (72 frames)
+        for (int f = 0; f < 100 && done.isEmpty; f++) {
+          actor.stateMachine.advanceAndApply(1 / 60);
+          await Future<void>.delayed(Duration.zero);
+        }
+        actor.stateMachine.removeEventListener(onEvent);
+        expect(done, <String>['signature'], reason: 'costume $costume');
+        actorVmi.dispose();
+        actor.dispose();
+      }
+    });
+
+    test('v13: MouthAnchor is found and follows the head', () {
+      final RiveWidgetController head = RiveWidgetController(
+        file,
+        artboardSelector: ArtboardSelector.byName(
+          AvatarRiveContract.avatarArtboard,
+        ),
+        stateMachineSelector: StateMachineSelector.byName(
+          AvatarRiveContract.avatarStateMachine,
+        ),
+      );
+      final ViewModelInstance headVmi = head.dataBind(DataBind.auto());
+      final MouthAnchorReader reader = MouthAnchorReader(head.artboard);
+      expect(reader.found, isTrue, reason: 'MouthAnchor in avatar.riv');
+      Offset settle() {
+        for (int f = 0; f < 40; f++) {
+          head.stateMachine.advanceAndApply(1 / 60);
+        }
+        return reader.read()!;
+      }
+
+      final Offset rest = settle();
+      // ignore: avoid_print
+      print('MouthAnchor at rest: $rest');
+      expect(rest.dx, inInclusiveRange(340, 460), reason: 'centred: $rest');
+      expect(rest.dy, inInclusiveRange(300, 650), reason: 'on the face: $rest');
+      headVmi.number(AvatarRiveContract.propYaw)!.value = 1;
+      final Offset turned = settle();
+      expect(
+        (turned.dx - rest.dx).abs(),
+        greaterThan(5),
+        reason: 'yaw moves the mouth: $rest -> $turned',
+      );
+      headVmi.number(AvatarRiveContract.propYaw)!.value = 0;
+      headVmi.number(AvatarRiveContract.propAuJawDrop)!.value = 1;
+      final Offset open = settle();
+      expect(
+        open.dy,
+        greaterThan(rest.dy + 1),
+        reason: 'the jaw lowers the anchor: $rest -> $open',
+      );
+      reader.dispose();
+      headVmi.dispose();
+      head.dispose();
     });
 
     test('autoBlink defaults to true; blink is a trigger', () {
@@ -523,34 +626,36 @@ void main() {
           expect(npc2.value, value, reason: '$sceneId npc2 rejected "$value"');
         }
         npc2.value = 'away';
-        final Map<String, ({double rest, List<double> range})> v12Numbers =
-            <String, ({double rest, List<double> range})>{
-              AvatarRiveContract.scenePropNpc2X: (
-                rest: 0,
-                range: <double>[0, 1],
-              ),
-              AvatarRiveContract.scenePropNpc2Look: (
-                rest: 0,
-                range: <double>[-1, 1],
-              ),
-              AvatarRiveContract.scenePropMoonPhase: (
-                rest: AvatarRiveContract.moonPhaseDefault,
-                range: <double>[
-                  AvatarRiveContract.moonPhaseMin,
-                  0.25,
-                  0.5,
-                  AvatarRiveContract.moonPhaseMax,
-                  AvatarRiveContract.moonPhaseDefault,
-                ],
-              ),
-              AvatarRiveContract.scenePropFestive: (
-                rest: 0,
-                range: <double>[
-                  AvatarRiveContract.festiveMin,
-                  AvatarRiveContract.festiveMax,
-                ],
-              ),
-            };
+        final Map<String, ({double rest, List<double> range})>
+        v12Numbers = <String, ({double rest, List<double> range})>{
+          AvatarRiveContract.scenePropNpc2X: (rest: 0, range: <double>[0, 1]),
+          AvatarRiveContract.scenePropNpc2Look: (
+            rest: 0,
+            range: <double>[-1, 1],
+          ),
+          AvatarRiveContract.scenePropMoonPhase: (
+            rest: AvatarRiveContract.moonPhaseDefault,
+            range: <double>[
+              AvatarRiveContract.moonPhaseMin,
+              0.25,
+              0.5,
+              AvatarRiveContract.moonPhaseMax,
+              AvatarRiveContract.moonPhaseDefault,
+            ],
+          ),
+          AvatarRiveContract.scenePropFestive: (
+            rest: 0,
+            range: <double>[
+              AvatarRiveContract.festiveMin,
+              AvatarRiveContract.festiveMax,
+            ],
+          ),
+          // v13: every scene declares night (the beach binds it)
+          AvatarRiveContract.scenePropNight: (
+            rest: 0,
+            range: <double>[0, 0.5, 1],
+          ),
+        };
         // v12 drag handle numbers: the scene's own, at their defaults
         // (trailFade 1), and none of another scene's.
         final SceneDragHandle handle = SceneDrags.of(
@@ -1112,8 +1217,67 @@ void main() {
     });
   });
 
-  group('cafe wipe renders with the darken blend (rive_native)', () {
-    testWidgets('a wiped dot darkens the mist and never brightens the glass', (
+  group('v13 tints render on rive_native (color blend)', () {
+    /// Pixels of the avatar's torso that read blue (B > R + 30) in a
+    /// portrait stage: the pink hoodie has none.
+    Future<int> bluePixels(WidgetTester tester, Avatar avatar) async {
+      final _Stage stage = _Stage();
+      final Size box = _stageBox(tester);
+      await tester.pumpWidget(
+        _stageApp(
+          AvatarScene.livingRoom,
+          stage,
+          box,
+          withAvatar: true,
+          avatar: avatar,
+        ),
+      );
+      await _waitLoaded(tester, stage, AvatarScene.livingRoom);
+      await _live(tester, const Duration(milliseconds: 800));
+      final _Rgba frame = await _grab(tester);
+      // the avatar's 800x1000 artboard, contained and bottom-centred
+      final double scale = math.min(box.width / 800, box.height / 1000);
+      final double left = (box.width - 800 * scale) / 2;
+      final double top = box.height - 1000 * scale;
+      int blue = 0;
+      for (double y = 720; y < 980; y += 6) {
+        for (double x = 260; x < 540; x += 6) {
+          final List<double> c = frame.mean(
+            Offset(left + x * scale, top + y * scale),
+          );
+          if (c[2] > c[0] + 30) {
+            blue++;
+          }
+        }
+      }
+      await _unmount(tester);
+      return blue;
+    }
+
+    testWidgets('a blue topTint turns the hoodie blue; a costume ignores it', (
+      WidgetTester tester,
+    ) async {
+      final int plain = await bluePixels(tester, const Avatar());
+      final int tinted = await bluePixels(
+        tester,
+        const Avatar(topTint: AvatarTint.blue),
+      );
+      final int costumed = await bluePixels(
+        tester,
+        const Avatar(topTint: AvatarTint.blue, costume: AvatarCostume.batman),
+      );
+      // ignore: avoid_print
+      print(
+        'blue torso samples: plain $plain, tinted $tinted, '
+        'batman + tint $costumed',
+      );
+      expect(tinted, greaterThan(plain + 100), reason: 'the tint shows');
+      expect(costumed, lessThan(plain + 20), reason: 'no tint on a costume');
+    });
+  });
+
+  group('cafe wipe cuts the mist (rive_native)', () {
+    testWidgets('a wiped dot clears the mist: the view shows through', (
       WidgetTester tester,
     ) async {
       const AvatarScene scene = AvatarScene.cafe;
@@ -1137,12 +1301,12 @@ void main() {
       final int n = stage.drags
           .readNumber(AvatarRiveContract.scenePropTrailN)!
           .round();
-      // TRAIL_TINT FF4E5870 (rive/tools/scene_cafe.py), opaque at a dot's
-      // centre: darken keeps min(tint, glass) per channel; a plain source-
-      // over would paint the tint, brightening any channel below it.
-      const List<int> tint = <int>[0x4E, 0x58, 0x70];
-      int darkened = 0;
-      int belowTint = 0;
+      // M10: each dot is a hole in the mist (an isHole path under the
+      // clockwise fill rule, rive/tools/scene_cafe.py `wipe_holes`); where
+      // the runtime cuts it the view behind the glass shows, brighter or
+      // darker than the mist: the pixel moves. A runtime that ignored the
+      // hole would leave the mist unchanged.
+      int cleared = 0;
       final List<String> log = <String>[];
       for (int i = 0; i < n; i++) {
         final Offset dot = Offset(
@@ -1156,31 +1320,14 @@ void main() {
           'dot $i $dot: ${before.map((double v) => v.round())} -> '
           '${after.map((double v) => v.round())}',
         );
-        for (int c = 0; c < 3; c++) {
-          expect(
-            after[c],
-            lessThanOrEqualTo(before[c] + 8),
-            reason: 'darken never brightens (dot $i channel $c)\n$log',
-          );
-          if (before[c] < tint[c] - 12) {
-            belowTint++;
-          }
-        }
-        if (<int>[0, 1, 2].any((int c) => before[c] - after[c] >= 12)) {
-          darkened++;
+        if (<int>[0, 1, 2].any((int c) => (before[c] - after[c]).abs() >= 12)) {
+          cleared++;
         }
       }
       // ignore: avoid_print
       print(log.join('\n'));
       expect(n, greaterThanOrEqualTo(4));
-      expect(darkened, greaterThanOrEqualTo(3), reason: 'the wipe shows\n$log');
-      expect(
-        belowTint,
-        greaterThan(0),
-        reason:
-            'some dot sits on glass darker than the tint (else the '
-            'no-brighten check cannot tell darken from source-over)\n$log',
-      );
+      expect(cleared, greaterThanOrEqualTo(3), reason: 'the wipe shows\n$log');
       await _unmount(tester);
     });
   });
@@ -1243,6 +1390,7 @@ Widget _stageApp(
     seq: 0,
   ),
   bool withAvatar = false,
+  Avatar avatar = const Avatar(),
 }) {
   return MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -1263,7 +1411,7 @@ Widget _stageApp(
             middle: withAvatar
                 ? RiveAvatarView(
                     avatarState: AvatarState(
-                      avatar: const Avatar(),
+                      avatar: avatar,
                       avatarConfig: const AvatarConfig(),
                       scene: scene,
                     ),
