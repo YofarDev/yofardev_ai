@@ -475,10 +475,13 @@ def station_layer(sc: Scene) -> El:
                        E(O, "Globe", lx, 530, 22, 26, F("FFFFF2C8")),
                        sc.S(O, "Rod", [(lx, 470), (lx, 518)], sc.L("FF1A1C24", 3.0), closed=False),
                        x=0.0, y=0.0, name="StationLamp"))
-    # the name board under the canopy, over the door (abstract letters), and a clock
-    letters = [seg(sc, x, 500, x, 518) for x in (590.0, 612.0, 640.0, 688.0, 710.0)] + \
-              [seg(sc, 590, 500, 604, 500), seg(sc, 640, 509, 660, 509), seg(sc, 664, 500, 664, 518),
-               seg(sc, 688, 518, 700, 518), seg(sc, 710, 500, 722, 509), seg(sc, 722, 509, 710, 518)]
+    # the name board under the canopy, over the door: a winged-wheel railway emblem (no fake letters,
+    # M11 defect pass), 11 strokes: a hexagon rim, three spokes, a wing stroke each side; and a clock
+    ecx, ecy, er = 653.0, 509.0, 13.0
+    rim = [(ecx + er * math.cos(math.pi / 3 * k), ecy + er * math.sin(math.pi / 3 * k)) for k in range(7)]
+    letters = [seg(sc, *rim[k], *rim[k + 1]) for k in range(6)] + \
+              [seg(sc, *rim[k], *rim[k + 3]) for k in range(3)] + \
+              [seg(sc, ecx - er - 6, ecy, ecx - er - 40, ecy - 6), seg(sc, ecx + er + 6, ecy, ecx + er + 40, ecy - 6)]
     board = d("Node", multi(sc, "SignLetters", letters, sc.L("FFF0EEE6", 3.4)),
               box(sc, "SignBoard", 574, 490, 732, 528, F("FF223C5A"), sc.L("FFF0EEE6", 2.0), r=4),
               sc.S(O, "SignHangers", [(590, 472), (590, 490)], sc.L("FF1A1C24", 2.0), closed=False),
@@ -1056,7 +1059,9 @@ def ladybug_npc(sc: Scene, content: list[El], hits: list[El]) -> None:
                sc.vgrad(-12, 12, [(LB_RED, 0.0), (LB_RED_SH, 1.0)]), L("FF4A1414", 1.4), tension=0.9),
              x=hinge[0], y=hinge[1], name="LbCase")
     rig.reg(case, rotation=0.0)
-    wing = d("Node", S(hinge, "Wing", [(14, -24), (-6, -34), (-30, -32), (-40, -24), (-26, -18), (0, -20)],
+    # the hindwing stays within ~one body length behind the hinge (M11 defect pass: the longer one reached
+    # over the left curtain's edge at npcX 0)
+    wing = d("Node", S(hinge, "Wing", [(14, -24), (-4, -32), (-20, -31), (-27, -24), (-18, -18), (0, -20)],
                        F("80E8DCC8"), L("A0B8A890", 1.0), tension=0.8),
              x=hinge[0], y=hinge[1], opacity=0.0, name="LbWing")
     rig.reg(wing, opacity=0.0, rotation=0.0)

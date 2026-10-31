@@ -823,14 +823,14 @@
               <Node x="-18" y="-4" name="LbBody" id="0:930186">
                 <Node x="18" y="4" name="LbWingPivot" id="0:930184">
                   <Node x="12" y="-22" opacity="0" name="LbWing" id="0:930124">
-                    <Shape x="-25" y="-4" name="Wing" id="0:930123">
+                    <Shape x="-18.5" y="-3" name="Wing" id="0:930123">
                       <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:930122">
-                        <CubicDetachedVertex x="27" y="2" outRotation="-1.9757" outDistance="2.4599" inRotation="1.1659" inDistance="1.6018" id="0:930116"/>
-                        <CubicDetachedVertex x="7" y="-8" outRotation="-2.9617" outDistance="6.184" inRotation="0.1799" inDistance="5.7417" id="0:930117"/>
-                        <CubicDetachedVertex x="-17" y="-6" outRotation="2.8555" outDistance="3.2808" inRotation="5.9971" inDistance="6.1699" id="0:930118"/>
-                        <CubicDetachedVertex x="-27" y="2" outRotation="1.2925" outDistance="2.1093" inRotation="4.4341" inDistance="1.7734" id="0:930119"/>
-                        <CubicDetachedVertex x="-13" y="8" outRotation="0.0997" outDistance="6.7672" inRotation="3.2413" inDistance="3.9527" id="0:930120"/>
-                        <CubicDetachedVertex x="13" y="6" outRotation="-0.1489" outDistance="3.8646" inRotation="2.9927" inDistance="6.9214" id="0:930121"/>
+                        <CubicDetachedVertex x="20.5" y="1" outRotation="-1.8925" outDistance="1.9395" inRotation="1.249" inDistance="1.4336" id="0:930116"/>
+                        <CubicDetachedVertex x="2.5" y="-7" outRotation="-2.9385" outDistance="4.1534" inRotation="0.203" inDistance="5.1034" id="0:930117"/>
+                        <CubicDetachedVertex x="-13.5" y="-6" outRotation="2.8069" outDistance="2.4791" inRotation="5.9484" inDistance="4.0147" id="0:930118"/>
+                        <CubicDetachedVertex x="-20.5" y="1" outRotation="1.4181" outDistance="1.8314" inRotation="4.5597" inDistance="1.6761" id="0:930119"/>
+                        <CubicDetachedVertex x="-11.5" y="7" outRotation="0.1471" outDistance="4.5569" inRotation="3.2887" inDistance="2.7216" id="0:930120"/>
+                        <CubicDetachedVertex x="6.5" y="5" outRotation="-0.1853" outDistance="3.8693" inRotation="2.9562" inDistance="4.8128" id="0:930121"/>
                       </PointsPath>
                       <Fill name="Fill" id="0:930113">
                         <SolidColor colorValue="80E8DCC8" id="0:930112"/>
@@ -3799,48 +3799,48 @@
         <Node x="0" y="0" name="StationSign" id="0:1351">
           <Shape x="0" y="0" name="SignLetters" id="0:1332">
             <PointsPath isClosed="false" name="Path" id="0:1299">
-              <StraightVertex x="590" y="500" id="0:1297"/>
-              <StraightVertex x="590" y="518" id="0:1298"/>
+              <StraightVertex x="666" y="509" id="0:1297"/>
+              <StraightVertex x="659.5" y="520.2583" id="0:1298"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1302">
-              <StraightVertex x="612" y="500" id="0:1300"/>
-              <StraightVertex x="612" y="518" id="0:1301"/>
+              <StraightVertex x="659.5" y="520.2583" id="0:1300"/>
+              <StraightVertex x="646.5" y="520.2583" id="0:1301"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1305">
-              <StraightVertex x="640" y="500" id="0:1303"/>
-              <StraightVertex x="640" y="518" id="0:1304"/>
+              <StraightVertex x="646.5" y="520.2583" id="0:1303"/>
+              <StraightVertex x="640" y="509" id="0:1304"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1308">
-              <StraightVertex x="688" y="500" id="0:1306"/>
-              <StraightVertex x="688" y="518" id="0:1307"/>
+              <StraightVertex x="640" y="509" id="0:1306"/>
+              <StraightVertex x="646.5" y="497.7417" id="0:1307"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1311">
-              <StraightVertex x="710" y="500" id="0:1309"/>
-              <StraightVertex x="710" y="518" id="0:1310"/>
+              <StraightVertex x="646.5" y="497.7417" id="0:1309"/>
+              <StraightVertex x="659.5" y="497.7417" id="0:1310"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1314">
-              <StraightVertex x="590" y="500" id="0:1312"/>
-              <StraightVertex x="604" y="500" id="0:1313"/>
+              <StraightVertex x="659.5" y="497.7417" id="0:1312"/>
+              <StraightVertex x="666" y="509" id="0:1313"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1317">
-              <StraightVertex x="640" y="509" id="0:1315"/>
-              <StraightVertex x="660" y="509" id="0:1316"/>
+              <StraightVertex x="666" y="509" id="0:1315"/>
+              <StraightVertex x="640" y="509" id="0:1316"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1320">
-              <StraightVertex x="664" y="500" id="0:1318"/>
-              <StraightVertex x="664" y="518" id="0:1319"/>
+              <StraightVertex x="659.5" y="520.2583" id="0:1318"/>
+              <StraightVertex x="646.5" y="497.7417" id="0:1319"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1323">
-              <StraightVertex x="688" y="518" id="0:1321"/>
-              <StraightVertex x="700" y="518" id="0:1322"/>
+              <StraightVertex x="646.5" y="520.2583" id="0:1321"/>
+              <StraightVertex x="659.5" y="497.7417" id="0:1322"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1326">
-              <StraightVertex x="710" y="500" id="0:1324"/>
-              <StraightVertex x="722" y="509" id="0:1325"/>
+              <StraightVertex x="634" y="509" id="0:1324"/>
+              <StraightVertex x="600" y="503" id="0:1325"/>
             </PointsPath>
             <PointsPath isClosed="false" name="Path" id="0:1329">
-              <StraightVertex x="722" y="509" id="0:1327"/>
-              <StraightVertex x="710" y="518" id="0:1328"/>
+              <StraightVertex x="672" y="509" id="0:1327"/>
+              <StraightVertex x="706" y="503" id="0:1328"/>
             </PointsPath>
             <Stroke thickness="3.4" cap="round" join="round" name="Line" id="0:1331">
               <SolidColor colorValue="FFF0EEE6" id="0:1330"/>
