@@ -600,6 +600,16 @@ Future<void> setupServiceLocator({
                 animation.sceneEvent == SceneEvent.flare,
           )
           .map((AvatarAnimation _) {}),
+      // M11 ruling 11: the wind bed follows the own-location report's wind
+      wind: getIt<WorldStateService>().wind,
+      gusts: getIt<AvatarAnimationService>().animations
+          .where(
+            (AvatarAnimation animation) =>
+                animation is AvatarAnimationSceneEvent &&
+                animation.sceneEvent == SceneEvent.gust,
+          )
+          .map((AvatarAnimation _) {}),
+      assetAvailable: bundledAssetExists,
     ),
     dispose: (AmbientBedService beds) => beds.dispose(),
   );

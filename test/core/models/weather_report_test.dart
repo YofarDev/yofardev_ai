@@ -186,4 +186,83 @@ void main() {
       );
     });
   });
+
+  group('wind (M11 ruling 11)', () {
+    Map<String, dynamic> body(Map<String, dynamic> extra) => <String, dynamic>{
+      'weather': <Map<String, dynamic>>[
+        <String, dynamic>{'id': 803},
+      ],
+      ...extra,
+    };
+
+    test('wind.speed (m/s, units=metric) is parsed; ints are accepted', () {
+      // the shape of a real OpenWeather 2.5 /weather answer
+      final WeatherReport r = WeatherReport.fromOpenWeather(<String, dynamic>{
+        'coord': <String, dynamic>{'lon': 2.35, 'lat': 48.85},
+        'weather': <Map<String, dynamic>>[
+          <String, dynamic>{'id': 803, 'main': 'Clouds'},
+        ],
+        'main': <String, dynamic>{'temp': 11.2, 'humidity': 81},
+        'wind': <String, dynamic>{'speed': 6.17, 'deg': 230, 'gust': 11.3},
+        'sys': <String, dynamic>{'sunrise': 1700000000, 'sunset': 1700040000},
+      });
+      expect(r.windSpeed, closeTo(6.17, 1e-9));
+      expect(
+        WeatherReport.fromOpenWeather(
+          body(<String, dynamic>{
+            'wind': <String, dynamic>{'speed': 3},
+          }),
+        ).windSpeed,
+        3.0,
+      );
+    });
+
+    test('no wind object, no speed or a non-number: unknown', () {
+      expect(
+        WeatherReport.fromOpenWeather(body(<String, dynamic>{})).windSpeed,
+        isNull,
+      );
+      expect(
+        WeatherReport.fromOpenWeather(
+          body(<String, dynamic>{
+            'wind': <String, dynamic>{'deg': 90},
+          }),
+        ).windSpeed,
+        isNull,
+      );
+      expect(
+        WeatherReport.fromOpenWeather(
+          body(<String, dynamic>{'wind': 'calm'}),
+        ).windSpeed,
+        isNull,
+      );
+      expect(const WeatherReport(conditionId: 800).windIntensity, isNull);
+    });
+
+    test('windIntensity = clamp(speed / 12, 0, 1)', () {
+      final Map<double, double> table = <double, double>{
+        0: 0,
+        3: 0.25,
+        6: 0.5,
+        9: 0.75,
+        12: 1,
+        20: 1,
+        -1: 0,
+      };
+      table.forEach((double speed, double expected) {
+        expect(
+          WeatherReport(conditionId: 800, windSpeed: speed).windIntensity,
+          closeTo(expected, 1e-9),
+          reason: '$speed m/s',
+        );
+      });
+      expect(
+        const WeatherReport(
+          conditionId: 800,
+          windSpeed: double.nan,
+        ).windIntensity,
+        isNull,
+      );
+    });
+  });
 }

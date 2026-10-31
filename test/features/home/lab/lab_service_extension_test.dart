@@ -342,6 +342,105 @@ void main() {
       });
     });
 
+    group('the season and wind params (M11)', () {
+      late ValueNotifier<LabConfig> notifier;
+      late WorldStateService world;
+      setUp(() {
+        notifier = ValueNotifier<LabConfig>(LabConfig.initial);
+        // 26 October: full autumn, no spring
+        world = WorldStateService(now: () => DateTime(2026, 10, 26, 21, 15));
+      });
+      tearDown(() => world.dispose());
+
+      test('spring and autumn are held; null returns to the calendar', () {
+        final developer.ServiceExtensionResponse r = labConfigureResponse(
+          notifier,
+          <String, String>{'spring': '0.75', 'autumn': '0.25'},
+          world: world,
+        );
+        expect(r.errorCode, isNull);
+        expect(world.spring.value, 0.75);
+        expect(world.autumn.value, 0.25);
+        expect(_decode(r)['spring'], 0.75);
+        expect(_decode(r)['autumn'], 0.25);
+        expect(
+          _decode(labStateResponse(notifier, world: world))['autumn'],
+          0.25,
+        );
+        labConfigureResponse(notifier, <String, String>{
+          'spring': 'null',
+          'autumn': '',
+        }, world: world);
+        expect(world.spring.value, 0);
+        expect(world.autumn.value, 1);
+      });
+
+      test('a date moves the seasons', () {
+        labConfigureResponse(notifier, <String, String>{
+          'date': '2026-03-03',
+        }, world: world);
+        expect(world.spring.value, closeTo(3 / 7, 1e-9));
+        expect(world.autumn.value, 0);
+      });
+
+      test('wind sets the world wind; null is unknown again', () {
+        expect(
+          _decode(labStateResponse(notifier, world: world)),
+          isNot(contains('wind')),
+        );
+        final developer.ServiceExtensionResponse r = labConfigureResponse(
+          notifier,
+          <String, String>{'wind': '0.8'},
+          world: world,
+        );
+        expect(r.errorCode, isNull);
+        expect(world.wind.value, 0.8);
+        expect(_decode(r)['wind'], 0.8);
+        labConfigureResponse(notifier, <String, String>{
+          'wind': 'null',
+        }, world: world);
+        expect(world.wind.value, isNull);
+      });
+
+      for (final Map<String, String> bad in <Map<String, String>>[
+        <String, String>{'spring': '1.5'},
+        <String, String>{'spring': 'yes'},
+        <String, String>{'autumn': '-0.1'},
+        <String, String>{'wind': '2'},
+        <String, String>{'wind': 'gale'},
+      ]) {
+        test('$bad is an error and changes nothing', () {
+          final developer.ServiceExtensionResponse r = labConfigureResponse(
+            notifier,
+            <String, String>{...bad, 'scene': 'beach'},
+            world: world,
+          );
+          expect(
+            r.errorCode,
+            developer.ServiceExtensionResponse.extensionError,
+          );
+          expect(notifier.value.scene, isNot(AvatarScene.beach));
+          expect(world.spring.value, 0);
+          expect(world.autumn.value, 1);
+          expect(world.wind.value, isNull);
+        });
+      }
+
+      test('without a world they are errors', () {
+        for (final Map<String, String> params in <Map<String, String>>[
+          <String, String>{'spring': '0.5'},
+          <String, String>{'autumn': '1'},
+          <String, String>{'wind': '0.5'},
+        ]) {
+          expect(
+            labConfigureResponse(notifier, params).errorCode,
+            developer.ServiceExtensionResponse.extensionError,
+            reason: '$params',
+          );
+        }
+      });
+    });
+
     test('rain without a world is an error', () {
       final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
         LabConfig.initial,

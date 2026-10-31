@@ -475,6 +475,8 @@ class _RiveStage extends StatelessWidget {
           npc2: npc?.gullIntent,
           moonPhase: world?.moonPhase,
           festive: world?.festive,
+          spring: world?.spring,
+          autumn: world?.autumn,
           // M9 drags: none while a journey runs; their haptics and sounds
           // follow the sound-effects setting like the foley.
           dragsEnabled: avatarState.journey == null,

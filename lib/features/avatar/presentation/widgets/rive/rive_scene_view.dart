@@ -19,6 +19,7 @@ import '../../rive/scene_front_follower.dart';
 import '../../rive/scene_npc_writer.dart';
 import '../../rive/scene_parallax_writer.dart';
 import '../../rive/scene_rain_writer.dart';
+import '../../rive/scene_season_writer.dart';
 import '../../rive/scene_sky_writer.dart';
 import '../../rive/scene_tier_writer.dart';
 import '../../rive/scene_time_writer.dart';
@@ -64,6 +65,9 @@ import 'scene_drag_surface.dart';
 /// and its cues go to [onDragHaptic], [onDragFoley] and [onDragEvent]. A
 /// `prop_tapped` that ends a drag is dropped.
 ///
+/// The seasons (contract v14, M11 ruling 9): [spring] and [autumn] are
+/// written to `SceneVM` on every scene load and change, like the sky.
+///
 /// The quality tier (contract v14, M11 ruling 13): [tier] is written to
 /// `SceneVM.tier` on every scene load and change. On low the front is never
 /// created, the parallax is not written (the scene stays centred, the
@@ -89,6 +93,8 @@ class RiveSceneView extends StatefulWidget {
     this.npcOverride,
     this.moonPhase,
     this.festive,
+    this.spring,
+    this.autumn,
     this.npc2,
     this.npc2Override,
     this.middle,
@@ -138,6 +144,10 @@ class RiveSceneView extends StatefulWidget {
 
   /// The December dressing (contract v12), 0..1; null leaves it off.
   final ValueListenable<double>? festive;
+
+  /// The seasonal dressing (contract v14), 0..1 each; null leaves it off.
+  final ValueListenable<double>? spring;
+  final ValueListenable<double>? autumn;
 
   /// The second NPC slot's intent (contract v12, the beach's gulls); null
   /// leaves the file's default (away).
@@ -208,6 +218,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   final SceneFogFollower _frontFog = SceneFogFollower();
   final SceneNpcFollower _npc = SceneNpcFollower();
   final SceneSkyFollower _sky = SceneSkyFollower();
+  final SceneSeasonFollower _season = SceneSeasonFollower();
   final SceneFrontFollower _front = SceneFrontFollower();
   final SceneTierFollower _tier = SceneTierFollower();
   ValueListenable<double>? _frontRainSource;
@@ -248,6 +259,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _frontFog.follow(widget.fog);
     _followNpc();
     _sky.follow(widget.moonPhase, widget.festive);
+    _season.follow(widget.spring, widget.autumn);
     _tier.follow(widget.tier);
     widget.tier?.addListener(_onTier);
     _followFrontRain();
@@ -514,6 +526,10 @@ class _RiveSceneViewState extends State<RiveSceneView>
         widget.festive != oldWidget.festive) {
       _sky.follow(widget.moonPhase, widget.festive);
     }
+    if (widget.spring != oldWidget.spring ||
+        widget.autumn != oldWidget.autumn) {
+      _season.follow(widget.spring, widget.autumn);
+    }
     if (widget.tier != oldWidget.tier) {
       oldWidget.tier?.removeListener(_onTier);
       widget.tier?.addListener(_onTier);
@@ -571,6 +587,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _frontFog.dispose();
     _npc.dispose();
     _sky.dispose();
+    _season.dispose();
     widget.tier?.removeListener(_onTier);
     _tier.dispose();
     _frontRainSource?.removeListener(_syncFront);
@@ -656,7 +673,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _npc.load(binding.setEnum, binding.setNumber);
         // And the sky's calendar and the second NPC slot (v12).
         _sky.load(binding.setNumber);
-        // And the quality tier (v14).
+        // And the seasons and the quality tier (v14).
+        _season.load(binding.setNumber);
         _tier.load(binding.setEnum);
         // And its drag handle (v12).
         _attachDrags();
@@ -737,6 +755,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _fog.unload();
     _npc.unload();
     _sky.unload();
+    _season.unload();
     _tier.unload();
     _file = null;
     _loadedScene = null;

@@ -84,6 +84,7 @@ void main() {
     expect(getIt<SoundEffectsSetting>().enabled.value, isTrue);
     expect(getIt<FoleyService>(), same(getIt<FoleyService>()));
     expect(getIt<AmbientBedService>().cracklePlaying, isFalse);
+    expect(getIt<AmbientBedService>().windPlaying, isFalse);
     expect(getIt<IdleLadder>(), same(getIt<IdleLadder>()));
     expect(getIt<IdleLadder>().stage, 0);
     expect(getIt<PropReactionService>(), isNotNull);

@@ -41,6 +41,8 @@ class LabStageExtras extends InheritedWidget {
     this.npc2,
     this.moonPhase,
     this.festive,
+    this.spring,
+    this.autumn,
     this.localDay,
     this.topTint = AvatarTint.none,
     this.hatTint = AvatarTint.none,
@@ -69,6 +71,10 @@ class LabStageExtras extends InheritedWidget {
   final ValueListenable<double>? moonPhase;
   final ValueListenable<double>? festive;
 
+  /// The world's seasons (contract v14), written to the scene; null: off.
+  final ValueListenable<double>? spring;
+  final ValueListenable<double>? autumn;
+
   /// The world's local day, for the avatar's December outfit.
   final ValueListenable<DateTime>? localDay;
 
@@ -93,6 +99,8 @@ class LabStageExtras extends InheritedWidget {
       npc2 != oldWidget.npc2 ||
       moonPhase != oldWidget.moonPhase ||
       festive != oldWidget.festive ||
+      spring != oldWidget.spring ||
+      autumn != oldWidget.autumn ||
       localDay != oldWidget.localDay ||
       topTint != oldWidget.topTint ||
       hatTint != oldWidget.hatTint ||
@@ -280,6 +288,8 @@ class _LabStagePreviewState extends State<LabStagePreview>
                           npc2: config.npc2,
                           moonPhase: widget.world?.moonPhase,
                           festive: widget.world?.festive,
+                          spring: widget.world?.spring,
+                          autumn: widget.world?.autumn,
                           localDay: widget.world?.localDay,
                           topTint: config.topTint,
                           hatTint: config.hatTint,
@@ -364,6 +374,8 @@ class _LabRiveStageState extends State<LabRiveStage> {
       npc2: extras?.npc2,
       moonPhase: extras?.moonPhase,
       festive: extras?.festive,
+      spring: extras?.spring,
+      autumn: extras?.autumn,
       tier: extras?.tier,
       middle: RiveAvatarView(
         key: _avatarKey,
@@ -399,6 +411,8 @@ class _LabSceneLayer extends StatefulWidget {
     this.npc2,
     this.moonPhase,
     this.festive,
+    this.spring,
+    this.autumn,
     this.middle,
     this.tier,
   });
@@ -411,6 +425,8 @@ class _LabSceneLayer extends StatefulWidget {
   final NpcIntent? npc2;
   final ValueListenable<double>? moonPhase;
   final ValueListenable<double>? festive;
+  final ValueListenable<double>? spring;
+  final ValueListenable<double>? autumn;
   final Widget? middle;
   final ValueListenable<QualityTier>? tier;
 
@@ -449,6 +465,8 @@ class _LabSceneLayerState extends State<_LabSceneLayer> {
       npc2Override: widget.npc2,
       moonPhase: widget.moonPhase,
       festive: widget.festive,
+      spring: widget.spring,
+      autumn: widget.autumn,
       middle: widget.middle,
       tier: widget.tier,
     );

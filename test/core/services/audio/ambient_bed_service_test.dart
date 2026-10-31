@@ -38,11 +38,17 @@ void main() {
   late ValueNotifier<double> rain;
   late StreamController<bool> speaking;
   late StreamController<void> flares;
+  late ValueNotifier<double?> wind;
+  late StreamController<void> gusts;
 
   /// campfire flicker 1.0, the others 0 (as `SceneLights`).
   double flicker(AvatarScene scene) => scene == AvatarScene.campfire ? 1 : 0;
 
-  AmbientBedService build(FakeAsync async, {AvatarScene? scene}) {
+  AmbientBedService build(
+    FakeAsync async, {
+    AvatarScene? scene,
+    Future<bool> Function(String asset)? assetAvailable,
+  }) {
     final DateTime start = DateTime(2026, 10, 31);
     return AmbientBedService(
       createPlayer: () {
@@ -56,6 +62,9 @@ void main() {
       rain: rain,
       speaking: speaking.stream,
       flares: flares.stream,
+      wind: wind,
+      gusts: gusts.stream,
+      assetAvailable: assetAvailable,
       scene: scene ?? AvatarScene.defaultScene,
     );
   }
@@ -66,10 +75,13 @@ void main() {
     rain = ValueNotifier<double>(0);
     speaking = StreamController<bool>.broadcast(sync: true);
     flares = StreamController<void>.broadcast(sync: true);
+    wind = ValueNotifier<double?>(null);
+    gusts = StreamController<void>.broadcast(sync: true);
   });
   tearDown(() {
     enabled.dispose();
     rain.dispose();
+    wind.dispose();
   });
 
   _FakeBed bed(String name) => beds.firstWhere(
@@ -292,6 +304,195 @@ void main() {
       expect(beds, isEmpty);
       expect(async.pendingTimers, isEmpty);
       service.dispose();
+    });
+  });
+
+  group('wind bed (M11 ruling 11)', () {
+    test('forestCabin: 0.22 × 0.5 without a report, × (0.5 + 0.5 × wind) '
+        'with one', () {
+      fakeAsync((FakeAsync async) {
+        final AmbientBedService service = build(
+          async,
+          scene: AvatarScene.forestCabin,
+        );
+        async.elapse(const Duration(seconds: 1));
+        expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+        expect(service.windPlaying, isTrue);
+        expect(bed('wind').log.first, 'start foley/bed_wind.wav');
+        wind.value = 1;
+        async.elapse(const Duration(seconds: 1));
+        expect(service.windVolumeNow, closeTo(0.22, 1e-9));
+        expect(bed('wind').volume, closeTo(0.22, 1e-9));
+        wind.value = 0.5;
+        async.elapse(const Duration(seconds: 1));
+        expect(service.windVolumeNow, closeTo(0.165, 1e-9));
+        wind.value = 0;
+        async.elapse(const Duration(seconds: 1));
+        expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+        service.dispose();
+      });
+    });
+
+    test('per-scene base at full wind; every other scene is silent', () {
+      fakeAsync((FakeAsync async) {
+        wind.value = 1;
+        final AmbientBedService service = build(
+          async,
+          scene: AvatarScene.rooftop,
+        );
+        final Map<AvatarScene, double> base = <AvatarScene, double>{
+          AvatarScene.rooftop: 0.18,
+          AvatarScene.beach: 0.12,
+          AvatarScene.campfire: 0.10,
+          AvatarScene.mountainHut: 0.06,
+          AvatarScene.forestCabin: 0.22,
+          AvatarScene.livingRoom: 0,
+          AvatarScene.deepSpace: 0,
+          AvatarScene.cafe: 0,
+          AvatarScene.trainCompartment: 0,
+          AvatarScene.library: 0,
+        };
+        expect(base.keys.toSet(), AvatarScene.values.toSet());
+        base.forEach((AvatarScene scene, double expected) {
+          service.setScene(scene);
+          async.elapse(const Duration(seconds: 1));
+          expect(
+            service.windVolumeNow,
+            closeTo(expected, 1e-9),
+            reason: scene.name,
+          );
+          expect(service.windPlaying, expected > 0, reason: scene.name);
+        });
+        service.dispose();
+      });
+    });
+
+    test('a gust swells it to 1.5 × the base for 2 s; elsewhere nothing', () {
+      fakeAsync((FakeAsync async) {
+        final AmbientBedService service = build(
+          async,
+          scene: AvatarScene.forestCabin,
+        );
+        async.elapse(const Duration(seconds: 1));
+        gusts.add(null);
+        async.elapse(const Duration(milliseconds: 900));
+        expect(service.windVolumeNow, closeTo(0.22 * 1.5, 1e-9));
+        async.elapse(const Duration(milliseconds: 1200));
+        async.elapse(const Duration(milliseconds: 900));
+        expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+        expect(async.pendingTimers, isEmpty);
+        service.setScene(AvatarScene.library);
+        async.elapse(const Duration(seconds: 1));
+        gusts.add(null);
+        async.elapse(const Duration(milliseconds: 900));
+        expect(service.windVolumeNow, 0);
+        expect(service.windPlaying, isFalse);
+        service.dispose();
+      });
+    });
+
+    test('a gust and a flare overlapping both end', () {
+      fakeAsync((FakeAsync async) {
+        final AmbientBedService service = build(
+          async,
+          scene: AvatarScene.campfire,
+        );
+        async.elapse(const Duration(seconds: 1));
+        flares.add(null);
+        async.elapse(const Duration(milliseconds: 500));
+        gusts.add(null);
+        async.elapse(const Duration(milliseconds: 900));
+        expect(service.crackleVolumeNow, closeTo(0.35, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.10 * 1.5, 1e-9));
+        async.elapse(const Duration(seconds: 4));
+        expect(service.crackleVolumeNow, closeTo(0.18, 1e-9));
+        expect(service.windVolumeNow, closeTo(0.05, 1e-9));
+        expect(async.pendingTimers, isEmpty);
+        service.dispose();
+      });
+    });
+
+    test(
+      'ducks while the avatar speaks; the setting off and pause stop it',
+      () {
+        fakeAsync((FakeAsync async) {
+          wind.value = 1;
+          final AmbientBedService service = build(
+            async,
+            scene: AvatarScene.forestCabin,
+          );
+          async.elapse(const Duration(seconds: 1));
+          speaking.add(true);
+          async.elapse(const Duration(seconds: 1));
+          expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+          service.setPaused(true);
+          expect(service.windPlaying, isFalse);
+          expect(bed('wind').playing, isFalse);
+          service.setPaused(false);
+          async.elapse(const Duration(seconds: 1));
+          expect(service.windPlaying, isTrue);
+          enabled.value = false;
+          expect(service.windPlaying, isFalse);
+          expect(async.pendingTimers, isEmpty);
+          service.dispose();
+        });
+      },
+    );
+
+    test('a missing asset: the wind bed never starts, the others still do', () {
+      fakeAsync((FakeAsync async) {
+        final List<String> asked = <String>[];
+        rain.value = 1;
+        final AmbientBedService service = build(
+          async,
+          scene: AvatarScene.forestCabin,
+          assetAvailable: (String asset) async {
+            asked.add(asset);
+            return asset != AmbientBedService.windAsset;
+          },
+        );
+        async.elapse(const Duration(seconds: 2));
+        expect(asked, <String>[AmbientBedService.windAsset]);
+        expect(service.windPlaying, isFalse);
+        expect(service.windVolumeNow, 0);
+        expect(service.rainPlaying, isTrue);
+        expect(
+          beds.any((_FakeBed b) => b.log.contains('start foley/bed_wind.wav')),
+          isFalse,
+        );
+        service.dispose();
+      });
+    });
+
+    test('a found asset starts the bed once the check answers', () {
+      fakeAsync((FakeAsync async) {
+        final Completer<bool> found = Completer<bool>();
+        final AmbientBedService service = build(
+          async,
+          scene: AvatarScene.forestCabin,
+          assetAvailable: (String asset) => found.future,
+        );
+        async.elapse(const Duration(seconds: 1));
+        expect(service.windPlaying, isFalse);
+        found.complete(true);
+        async.elapse(const Duration(seconds: 1));
+        expect(service.windPlaying, isTrue);
+        expect(service.windVolumeNow, closeTo(0.11, 1e-9));
+        service.dispose();
+      });
+    });
+
+    test('a failing check counts as missing', () {
+      fakeAsync((FakeAsync async) {
+        final AmbientBedService service = build(
+          async,
+          scene: AvatarScene.forestCabin,
+          assetAvailable: (String asset) async => throw StateError('no'),
+        );
+        async.elapse(const Duration(seconds: 1));
+        expect(service.windPlaying, isFalse);
+        service.dispose();
+      });
     });
   });
 }

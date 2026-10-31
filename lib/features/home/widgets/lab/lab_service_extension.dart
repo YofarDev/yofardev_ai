@@ -69,6 +69,9 @@ developer.ServiceExtensionResponse _ok(
     _fogKey: ?world?.fog.value,
     _moonPhaseKey: ?world?.moonPhase.value,
     _festiveKey: ?world?.festive.value,
+    _springKey: ?world?.spring.value,
+    _autumnKey: ?world?.autumn.value,
+    _windKey: ?world?.wind.value,
     _dateKey: ?(world == null ? null : _formatDate(world.localDay.value)),
   }),
 );
@@ -114,6 +117,14 @@ const String _moonPhaseKey = 'moonPhase';
 const String _festiveKey = 'festive';
 const String _dateKey = 'date';
 
+/// The season and wind params (M11), world state too: `spring` and `autumn`
+/// (0..1, `null` back to the calendar) and `wind` (0..1, `null` = unknown,
+/// as before any own-location weather report). A real report replaces a
+/// hand-set wind, as it does the rain.
+const String _springKey = 'spring';
+const String _autumnKey = 'autumn';
+const String _windKey = 'wind';
+
 String _formatDate(DateTime day) =>
     '${day.year.toString().padLeft(4, '0')}-'
     '${day.month.toString().padLeft(2, '0')}-'
@@ -125,7 +136,8 @@ typedef _Override<T> = ({bool given, T? value});
 
 bool _clears(String value) => value.isEmpty || value == 'null';
 
-/// Parses an override param (`moonPhase` or `festive`): a number in
+/// Parses an override param (`moonPhase`, `festive`, `spring`, `autumn` or
+/// `wind`): a number in
 /// [min]..[max], or empty / `null` to clear; needs [world].
 _Override<double> _overrideParam(
   String key,
@@ -267,7 +279,9 @@ Map<String, Object?> _paramsToJson(Map<String, String> params) {
 /// are rejected when no [world] is given and, like any invalid input, leave
 /// the config alone. So do the sky's params: `moonPhase` (-1..1: -1 the moon
 /// as drawn, 0..1 a phase), `festive` (0..1) and `date` (`YYYY-MM-DD`), each
-/// with `null` back to the calendar / the real clock. `tier` (`low`,
+/// with `null` back to the calendar / the real clock, and the seasons'
+/// `spring` / `autumn` (0..1, `null` back to the calendar) and `wind` (0..1,
+/// `null` = unknown). `tier` (`low`,
 /// `high`, `ultra`, or `auto`) forces the [quality] tier (rejected without
 /// one).
 developer.ServiceExtensionResponse labConfigureResponse(
@@ -301,6 +315,27 @@ developer.ServiceExtensionResponse labConfigureResponse(
     final _Override<double> festive = _overrideParam(
       _festiveKey,
       configParams.remove(_festiveKey),
+      0,
+      1,
+      world,
+    );
+    final _Override<double> spring = _overrideParam(
+      _springKey,
+      configParams.remove(_springKey),
+      0,
+      1,
+      world,
+    );
+    final _Override<double> autumn = _overrideParam(
+      _autumnKey,
+      configParams.remove(_autumnKey),
+      0,
+      1,
+      world,
+    );
+    final _Override<double> wind = _overrideParam(
+      _windKey,
+      configParams.remove(_windKey),
       0,
       1,
       world,
@@ -341,6 +376,15 @@ developer.ServiceExtensionResponse labConfigureResponse(
     }
     if (festive.given) {
       world!.setFestive(festive.value);
+    }
+    if (spring.given) {
+      world!.setSpring(spring.value);
+    }
+    if (autumn.given) {
+      world!.setAutumn(autumn.value);
+    }
+    if (wind.given) {
+      world!.setWind(wind.value);
     }
     if (date.given) {
       final DateTime? day = date.value;
