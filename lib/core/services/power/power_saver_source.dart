@@ -35,18 +35,18 @@ class BatteryPowerSaverSource implements PowerSaverSource {
 
   late final StreamController<bool> _controller;
   Timer? _timer;
+
+  /// The value [changes] last emitted (false before any).
   bool _last = false;
   bool _failed = false;
   bool _disposed = false;
 
   static Future<bool> _readBattery() => Battery().isInBatterySaveMode;
 
+  /// A one-off read: it never touches what [changes] last emitted, so a
+  /// read between two polls cannot swallow a transition.
   @override
-  Future<bool> get isOn async {
-    final bool value = await _safeRead();
-    _last = value;
-    return value;
-  }
+  Future<bool> get isOn => _safeRead();
 
   @override
   Stream<bool> get changes => _controller.stream;

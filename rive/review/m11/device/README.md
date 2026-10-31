@@ -19,7 +19,8 @@ Everything comes from one harness, `integration_test/frame_cost_test.dart`, driv
   A loaded host slows `flutter drive` and the emulator, not the phone's frames, but the number
   makes reruns comparable.
 - The harness forces each tier with `QualityTierService.forceTier`, so the thermal, battery and
-  drift caps never interfere during a pass; the phone's own benchmark is printed as `benchmark` in
+  drift caps never interfere during a pass (the app's own benchmark waits while a tier is forced);
+  the phone's own benchmark is read 8 s after the last pass and printed as `benchmark` in
   the report (what the app would pick by itself).
 
 ## 1. Frame cost per scene × tier

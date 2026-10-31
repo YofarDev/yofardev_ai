@@ -60,6 +60,7 @@ class _FakeTimingSource implements FrameTimingSource {
 
 class _FakeThermal implements ThermalSource {
   ThermalLevel level = ThermalLevel.nominal;
+  bool fails = false;
   final StreamController<ThermalLevel> _controller =
       StreamController<ThermalLevel>.broadcast();
 
@@ -69,7 +70,12 @@ class _FakeThermal implements ThermalSource {
   }
 
   @override
-  Future<ThermalLevel> get current async => level;
+  Future<ThermalLevel> get current async {
+    if (fails) {
+      throw StateError('no thermal');
+    }
+    return level;
+  }
 
   @override
   Stream<ThermalLevel> get changes => _controller.stream;
@@ -746,6 +752,125 @@ void main() {
         h.power.set(false);
         h.async.flushMicrotasks();
         expect(h.service.driftWatching, isTrue);
+      });
+    });
+  });
+
+  group('QualityTierService review fixes', () {
+    const Map<String, Object> ultraPrefs = <String, Object>{
+      'quality_tier': 'ultra',
+      'quality_tier_bench': QualityTierService.benchVersion,
+    };
+
+    test('no benchmark while battery saver caps the tier; it runs once the '
+        'cap lifts', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        h.power.on = true;
+        h.init();
+        h.service.notifyStageShown();
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 0);
+        h.power.set(false);
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
+      });
+    });
+
+    test('no benchmark while forced or under a thermal cap', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        h.init();
+        h.service.forceTier(QualityTier.low);
+        h.service.notifyStageShown();
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 0);
+        h.thermal.set(ThermalLevel.moderate);
+        h.async.flushMicrotasks();
+        h.service.forceTier(null);
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 0, reason: 'thermal cap');
+        h.thermal.set(ThermalLevel.nominal);
+        h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 120));
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
+      });
+    });
+
+    test('a cap arriving mid-probe discards the result and re-runs later', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        h.init();
+        h.service.notifyStageShown();
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
+        h.feed(const Duration(milliseconds: 1000), frameMs: 3);
+        h.power.set(true);
+        h.async.flushMicrotasks();
+        h.feed(const Duration(milliseconds: 2200), frameMs: 3);
+        h.settle();
+        expect(h.storedString('quality_tier'), isNull);
+        expect(h.service.benchmark, QualityTier.high);
+        h.power.set(false);
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 2);
+        h.feed(const Duration(milliseconds: 3200), frameMs: 3);
+        h.settle();
+        expect(h.storedString('quality_tier'), 'ultra');
+      });
+    });
+
+    test('the drift watch rests under a thermal cap: no session drop', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async, prefs: ultraPrefs);
+        h.init();
+        h.service.setStageActive(true);
+        h.thermal.set(ThermalLevel.moderate);
+        h.async.flushMicrotasks();
+        expect(h.service.driftWatching, isFalse);
+        h.feed(const Duration(seconds: 40), frameMs: 20);
+        h.thermal.set(ThermalLevel.nominal);
+        h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 120));
+        expect(h.service.current, QualityTier.ultra);
+        expect(h.service.driftCap, isNull);
+        expect(h.service.driftWatching, isTrue);
+      });
+    });
+
+    test('a tier change resets the drift streak', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async, prefs: ultraPrefs);
+        h.service.setStageActive(true);
+        // Two bad windows at high (the default before init).
+        h.feed(const Duration(seconds: 20), frameMs: 16);
+        h.init(); // the stored ultra lands: a tier change
+        h.feed(const Duration(seconds: 10), frameMs: 16);
+        expect(h.service.driftCap, isNull);
+        expect(h.service.current, QualityTier.ultra);
+      });
+    });
+
+    test('dispose mid-probe ends the probe and leaves no timer', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        bool done = false;
+        unawaited(h.service.probe().then((_) => done = true));
+        h.async.elapse(const Duration(milliseconds: 500));
+        h.service.dispose();
+        h.async.flushMicrotasks();
+        expect(done, isTrue);
+        expect(h.async.nonPeriodicTimerCount, 0);
+      });
+    });
+
+    test('a failing thermal read is logged, not thrown', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async, prefs: ultraPrefs);
+        h.thermal.fails = true;
+        h.init();
+        expect(h.service.current, QualityTier.ultra);
       });
     });
   });

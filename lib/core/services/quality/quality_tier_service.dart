@@ -50,15 +50,19 @@ enum ThermalCap {
 ///   of `max(build, raster)`, the fps validity rule; ultra ≤ 3.3 ms, high ≤
 ///   6.6 ms, else low. Run once per [benchVersion]: started when the stage
 ///   first shows a scene ([notifyStageShown]), or [stageFallback] after the
-///   first frame when no scene shows. A tier stored by an older bench is used
-///   until the re-run lands. `high` before any benchmark.
+///   first frame when no scene shows. It never runs while a cap or a force
+///   is in force (the stage would be drawn at that tier): it waits for them
+///   to lift, and a probe they interrupt is discarded and run again. A tier
+///   stored by an older bench is used until the re-run lands. `high` before
+///   any benchmark.
 /// - **Thermal** ([ThermalSource]): moderate caps one tier below the
 ///   benchmark, severe / critical cap low. A worse level applies at once; a
 ///   looser cap only after [thermalRelief] continuously at a level that
 ///   allows it (hysteresis).
 /// - **Battery saver** ([PowerSaverSource]): on caps low, off lifts it.
 /// - **Drift** ([FrameDriftWatch], while the stage is active
-///   ([setStageActive]) and nothing is forced): three 10 s windows in a row
+///   ([setStageActive]), nothing is forced and no thermal cap holds; a tier
+///   change starts its count over): three 10 s windows in a row
 ///   over the tier's budget × 1.25 drop one tier for the rest of the session
 ///   (never restored in-session, never persisted).
 class QualityTierService {
@@ -120,6 +124,14 @@ class QualityTierService {
 
   bool _needsBench = false;
   bool _benchStarted = false;
+
+  /// The stage showed (or the fallback fired): a benchmark is wanted.
+  bool _benchWanted = false;
+
+  /// A cap or a force came in while the probe ran: its result is discarded.
+  bool _benchTainted = false;
+  Timer? _probeTimer;
+  Completer<List<double>>? _probeWindowDone;
   bool _probing = false;
   bool _stageActive = false;
   bool _stageShown = false;
@@ -315,11 +327,18 @@ class QualityTierService {
     }
     _subscriptions.add(_thermal.changes.listen(_onThermal));
     unawaited(
-      _thermal.current.then((ThermalLevel level) {
-        if (!_disposed) {
-          _onThermal(level);
-        }
-      }),
+      _thermal.current
+          .then((ThermalLevel level) {
+            if (!_disposed) {
+              _onThermal(level);
+            }
+          })
+          .catchError((Object error) {
+            AppLogger.warning(
+              'QualityTier: thermal state unavailable ($error)',
+              tag: _tag,
+            );
+          }),
     );
     final PowerSaverSource? power = _power;
     if (power != null) {
@@ -430,48 +449,108 @@ class QualityTierService {
     if (next != _tier.value) {
       _tier.value = next;
       _changes.add(next);
+      // The drift budget changed: a streak judged at the old tier is void.
+      _drift.reset();
+    }
+    if (_probing && _benchBlocked) {
+      _benchTainted = true;
     }
     _syncDrift();
+    _maybeStartBench();
   }
+
+  /// The stage is drawn at a capped or forced tier: a benchmark now would
+  /// measure that tier, not the device.
+  bool get _benchBlocked =>
+      _forced != null || _powerSaver || _thermalCap != ThermalCap.none;
 
   void _syncDrift() {
     if (_disposed) {
       return;
     }
+    // Under a thermal cap the frames are slow because the device is hot:
+    // never a session-long drift drop.
     _drift.active =
         _stageActive &&
         _forced == null &&
+        _thermalCap == ThermalCap.none &&
         !_probing &&
         current != QualityTier.low;
   }
 
+  /// The benchmark is wanted (the stage showed, or the fallback fired); it
+  /// starts as soon as nothing caps or forces the tier.
   void _startBench() {
-    if (_disposed || !_needsBench || _benchStarted) {
+    if (_disposed || !_needsBench) {
+      return;
+    }
+    _benchWanted = true;
+    _fallbackTimer?.cancel();
+    _fallbackTimer = null;
+    if (_benchBlocked && !_benchStarted) {
+      AppLogger.debug(
+        'QualityTier: benchmark waits for the caps to lift',
+        tag: _tag,
+      );
+    }
+    _maybeStartBench();
+  }
+
+  void _maybeStartBench() {
+    if (_disposed ||
+        !_needsBench ||
+        !_benchWanted ||
+        _benchStarted ||
+        _probing ||
+        _benchBlocked) {
       return;
     }
     _benchStarted = true;
-    _fallbackTimer?.cancel();
-    _fallbackTimer = null;
     unawaited(probe());
   }
 
   /// Runs up to [_maxProbeAttempts] collection windows and returns the tier
   /// derived from the first valid attempt (stored with [benchVersion]); when
   /// every attempt is invalid the benchmark is returned unchanged.
+  ///
+  /// A cap or a force arriving while it runs discards the result; the
+  /// benchmark then runs again once nothing caps the tier.
   Future<QualityTier> probe() async {
     _probing = true;
+    _benchTainted = _benchBlocked;
     _syncDrift();
     try {
       return await _probe();
     } finally {
       _probing = false;
       _syncDrift();
+      _maybeStartBench();
     }
+  }
+
+  /// Whether the probe must stop: disposed, or its frames were drawn at a
+  /// capped tier (then the benchmark is armed again).
+  bool _probeVoid() {
+    if (_disposed) {
+      return true;
+    }
+    if (!_benchTainted) {
+      return false;
+    }
+    AppLogger.debug(
+      'QualityTier: the tier was capped during the probe, result discarded',
+      tag: _tag,
+    );
+    _benchStarted = false;
+    return true;
   }
 
   Future<QualityTier> _probe() async {
     for (int attempt = 1; attempt <= _maxProbeAttempts; attempt++) {
       final List<double>? frameMs = await _collectFrameMs();
+      if (_probeVoid()) {
+        return _benchmark;
+      }
       final int frames = frameMs?.length ?? 0;
       final bool valid =
           frameMs != null &&
@@ -520,7 +599,11 @@ class QualityTierService {
 
   /// Collects per-frame ms over [probeWindow]; null when no frame arrived.
   Future<List<double>?> _collectFrameMs() async {
+    if (_disposed) {
+      return null;
+    }
     final Completer<List<double>> completer = Completer<List<double>>();
+    _probeWindowDone = completer;
     final List<double> frameMs = <double>[];
     final StreamSubscription<List<FrameTiming>> subscription = _source.timings
         .listen((List<FrameTiming> batch) {
@@ -528,12 +611,14 @@ class QualityTierService {
             frameMs.add(FrameStats.worstMs(timing));
           }
         });
-    Timer(probeWindow, () {
+    _probeTimer = Timer(probeWindow, () {
+      _probeTimer = null;
       if (!completer.isCompleted) {
         completer.complete(List<double>.of(frameMs));
       }
     });
     final List<double> collected = await completer.future;
+    _probeWindowDone = null;
     // Broadcast subscriptions cancel without further work; the future only
     // completes on a later microtask/event, so do not await it here.
     unawaited(subscription.cancel());
@@ -568,6 +653,12 @@ class QualityTierService {
     _disposed = true;
     _fallbackTimer?.cancel();
     _reliefTimer?.cancel();
+    _probeTimer?.cancel();
+    _probeTimer = null;
+    final Completer<List<double>>? window = _probeWindowDone;
+    if (window != null && !window.isCompleted) {
+      window.complete(<double>[]);
+    }
     _drift.dispose();
     for (final StreamSubscription<dynamic> subscription in _subscriptions) {
       unawaited(subscription.cancel());

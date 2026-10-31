@@ -105,6 +105,13 @@ class FrameDriftWatch {
         : DriftWindow.withinBudget;
   }
 
+  /// Drops the window in progress and the streak (the tier, so the budget,
+  /// changed); sampling goes on.
+  void reset() {
+    _frameMs = <double>[];
+    _streak = 0;
+  }
+
   void _start() {
     _frameMs = <double>[];
     _subscription = _source.timings.listen(_onTimings);

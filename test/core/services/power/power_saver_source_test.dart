@@ -60,5 +60,28 @@ void main() {
         source.dispose();
       });
     });
+
+    test('an isOn read between polls never swallows a transition', () {
+      fakeAsync((FakeAsync async) {
+        bool value = false;
+        final BatteryPowerSaverSource source = BatteryPowerSaverSource(
+          read: () async => value,
+          pollInterval: const Duration(seconds: 60),
+        );
+        final List<bool> seen = <bool>[];
+        final StreamSubscription<bool> subscription = source.changes.listen(
+          seen.add,
+        );
+        value = true;
+        bool? read;
+        source.isOn.then((bool on) => read = on);
+        async.flushMicrotasks();
+        expect(read, isTrue);
+        async.elapse(const Duration(seconds: 60));
+        expect(seen, <bool>[true]);
+        subscription.cancel();
+        source.dispose();
+      });
+    });
   });
 }

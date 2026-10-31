@@ -185,5 +185,21 @@ void main() {
         expect(source.controller.hasListener, isFalse);
       });
     });
+
+    test('reset drops the window in progress and the streak', () {
+      fakeAsync((FakeAsync async) {
+        watch.active = true;
+        feed(async, const Duration(seconds: 25), 12);
+        expect(watch.streak, 2);
+        watch.reset();
+        expect(watch.streak, 0);
+        // Without the reset the window ending at 30 s would be the third.
+        feed(async, const Duration(seconds: 15), 12);
+        expect(watch.streak, 2);
+        expect(drifts, 0);
+        feed(async, const Duration(seconds: 10), 12);
+        expect(drifts, 1);
+      });
+    });
   });
 }

@@ -100,8 +100,15 @@ void main() {
           : const bool.fromEnvironment('dart.vm.profile')
           ? 'profile'
           : 'debug',
-      'benchmark': quality.benchmark.name,
     };
+
+    /// The app's own tier, read last: its benchmark waits while a tier is
+    /// forced and needs ~3 s of unforced stage once released (8 s here).
+    Future<void> readBenchmark() async {
+      quality.forceTier(null);
+      await _settle(tester, const Duration(seconds: 8));
+      report['benchmark'] = quality.benchmark.name;
+    }
 
     if (_phase == 'battery') {
       final QualityTier tier = QualityTier.values.byName(_batteryTier);
@@ -109,7 +116,7 @@ void main() {
       quality.forceTier(tier);
       report['tier'] = tier.name;
       report['samples'] = await _battery(tester, quality);
-      quality.forceTier(null);
+      await readBenchmark();
       binding.reportData = report;
       return;
     }
@@ -151,7 +158,7 @@ void main() {
         }
       }
     }
-    quality.forceTier(null);
+    await readBenchmark();
     // ignore: avoid_print
     print('FRAME_COST_REPORT ${jsonEncode(report)}');
     binding.reportData = report;
