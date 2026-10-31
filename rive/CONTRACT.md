@@ -1,4 +1,4 @@
-# Rive contract (v12)
+# Rive contract (v13)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -25,7 +25,7 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `mood` | enum | neutral, happy, sad, angry, surprised, thinking, embarrassed. **v5: accents only**: blush, sweat drop, anger mark, head tilt/drop, gaze offset, pupil size and the thinking mouth skew. The face's muscles (brows, lids, cheeks, nose, mouth shape) come only from the `au*` numbers; the app writes each mood's AU preset. |
 | `mouth` | number | 0–4: closed, slightly, semi, open, wide (same order as `MouthState`). **v5: legacy alias**: the jaw opens by `auJawDrop` + 0.22 × `mouth`. Write `mouth` or the mouth AUs, not both. |
 | `phase` | enum | idle, waiting, generating, speaking, error (same as `TalkingPhase`) |
-| `gestureId` | enum | wave, laugh, facepalm, shrug, nod, headshake, clap, think, **v11 (appended):** thumbsUp, count, grab. `thumbsUp`: the viewer's-left hand rises, thumb up. `count`: the viewer's-right hand counts one, two, three (index, + middle, + ring), about 420 ms per number. `grab` (about 900 ms): the viewer's-right hand reaches to the hook point (628, 560) in this artboard, closes to a grip at 380 ms (the contact) and comes back to the side; with `jacket` true the same clip opens the hand at the contact (the app swaps `jacket` there). |
+| `gestureId` | enum | wave, laugh, facepalm, shrug, nod, headshake, clap, think, **v11 (appended):** thumbsUp, count, grab, **v13 (appended):** signature. `thumbsUp`: the viewer's-left hand rises, thumb up. `count`: the viewer's-right hand counts one, two, three (index, + middle, + ring), about 420 ms per number. `grab` (about 900 ms): the viewer's-right hand reaches to the hook point (628, 560) in this artboard, closes to a grip at 380 ms (the contact) and comes back to the side; with `jacket` true the same clip opens the hand at the contact (the app swaps `jacket` there). v13 `signature` (≤ 1.2 s): the worn costume's signature move: batman a cape sweep, robocop a stepped scan-and-salute, soubrette a curtsy, singularity a levitation with one laser flash; with `costume` none a 6-frame no-op. Like every gesture it ends with `gesture_done`. |
 | `gesture` | trigger | Plays `gestureId` on the upper-body layer. Mood and mouth keep running. |
 | `hat` | enum | noHat, beanie, backwardsCap, frenchBeret, swimCap, santaHat, redMagaCap |
 | `top` | enum | pinkHoodie, longCoat, tshirt, underwear, swimsuit, christmasSweater, blackSuitAndTie |
@@ -86,6 +86,14 @@ Design: `docs/superpowers/specs/2026-10-22-rive-v4-design.md`.
 | `jacket` | boolean | v11, default false: the viewer's-right hand holds the storybook jacket (closed grip, the jacket hanging from the fist; it follows the reach, the walk and the IK). False: no jacket. It shows or goes in one frame: the app flips it at a `grab` contact, while the journey door's peg shows the other copy. |
 | `tabletWeather` | enum | v11: none, clear, clouds, rain, snow, storm, fog. The tablet's weather card: `none` (default) keeps the generic card; any other value shows that glyph and the `tabletTemp` readout. |
 | `tabletTemp` | number | v11, −40–50, default 0: the temperature on the tablet's weather card in °C (the app rounds it), a signed two-digit seven-segment readout; shown only when `tabletWeather` is not none. |
+| `topTint` | color | v13, default `00000000`: a colour variant of the top. Every painted shape of the top (front, back, sleeves; base and shade, never ink, seams, prints or skin) has a second fill over its own, blend mode **color** (hue and saturation from the tint, lightness from the garment), bound to this colour; its alpha is the amount. Alpha 0 draws nothing (as v12). The app writes alpha 0 while a costume is worn. |
+| `hatTint` | color | v13, default `00000000`: the same for the hat (never the hair or a costume head). |
+
+**Mouth anchor (v13):** a named `Node` `MouthAnchor` at the centre of the lips, inside the head's
+turn pivot, so its world transform follows the head turn, pitch, roll, jaw, breath, lean and the
+walk (it is not skinned and draws nothing). The app reads its world translation (artboard px) once per
+frame to anchor the speech bubble beside the mouth; a file without it means no anchor (the classic
+caption).
 
 **Tap zones (v12):** the `avatar_tapped` listeners target two named shapes, `HitHead` (an ellipse,
 `zone` head) and `HitBody` (a rectangle, `zone` body). The app reads their bounds each pointer to
@@ -170,6 +178,10 @@ One file per scene. The app loads them lazily.
     date (1 December to 6 January). livingRoom (string lights along the window), cafe (lights in the
     window, a wreath on the door) and mountainHut (a garland over the stove, a stocking) bind it, with
     a slow twinkle; the other scenes ignore it. At 0 a scene looks as it did in v11.
+  - `night`: number, 0–1, default 0 (v13): how much of the night shows, written by the app from its
+    world clock as `(1 − daylight) × (1 − dusk)`. The beach binds it (a night sky over its sunset,
+    the sun's glow off, stars, a darker sea and sand); every other scene declares and ignores it. At 0
+    a scene looks as it did in v12 (so the beach's sunset stays the look of an app that never writes it).
   - The scene's drag handle numbers (v12, table below): every scene declares only its own. The app
     owns the gesture (Flutter pan recognizer, the handle rect in artboard space) and writes them each
     frame; the file only draws them, history-free. At their defaults a scene looks as it did in v11.
