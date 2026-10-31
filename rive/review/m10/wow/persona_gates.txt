@@ -1,0 +1,21 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 638: ok
+network attempts during the run: 0: ok
+camera cuts at sentence starts 3 of 3 (shots seen: closeUp, medium, wide): info
+persona runs: doomer, coach, philosopher (want coach, doomer, philosopher): ok
+doomer: profile armed before the user typed: ok
+doomer: the reply is spoken: ok
+doomer: pitch read back from AvatarVM in 100% of 289 speaking samples (want >= 90%): ok
+doomer: gestures shrug, shrug; mean pitch -0.227, lean 0.000 (max 0.000), roll -0.020; listening lean 0.60: info
+coach: profile armed before the user typed: ok
+coach: the reply is spoken: ok
+coach: pitch read back from AvatarVM in 100% of 289 speaking samples (want >= 90%): ok
+coach: gestures thumbsUp, count, thumbsUp, think; mean pitch 0.025, lean 0.200 (max 0.200), roll 0.051; listening lean 0.60: info
+philosopher: profile armed before the user typed: ok
+philosopher: the reply is spoken: ok
+philosopher: pitch read back from AvatarVM in 100% of 289 speaking samples (want >= 90%): ok
+philosopher: gestures think, think, think; mean pitch -0.125, lean 0.050 (max 0.050), roll 0.099; listening lean 0.60: info
+the three runs' gesture lists differ pairwise (shrug,shrug | think,think,think | thumbsUp,count,thumbsUp,think): ok
+mean pitch doomer -0.227 < philosopher -0.125 < coach 0.025: ok
+persona.mp4: 12.0 s at 10 fps, 486 px wide, 631937 B (want <= 12 s, <= 12 fps, <= 720 px): ok
+persona_sheet.webp 104648 B: info

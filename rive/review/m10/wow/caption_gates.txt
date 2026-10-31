@@ -1,0 +1,16 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 605: ok
+network attempts during the run: 0: ok
+camera cuts at sentence starts 2 of 3 (shots seen: closeUp, medium, wide): info
+caption passes: default, reduceMotion, textScale (want default, reduceMotion, textScale): ok
+never both captions: 0 samples with both visible, longest run 0 (want <= 1: a cross-fade): ok
+default: bubble 99%, classic 0% of 314 speaking samples (shots closeUp, medium): info
+default: the bubble shows in 99% of the speaking samples (want >= 50%): ok
+default: the mouth anchor read in 100% of them (want >= 90%): ok
+default: the bubble followed the mouth (140 moves over 4 sentences): info
+reduceMotion: bubble 99%, classic 0% of 315 speaking samples (shots medium): info
+reduceMotion: the bubble placed per sentence (4 sentences with it, moves [0, 0, 0, 0]; want >= 1 sentence, <= 1 move each): ok
+textScale: bubble 0%, classic 100% of 313 speaking samples (shots closeUp, medium): info
+textScale 1.6: classic only (0 samples with the bubble, classic in 100% of the speaking samples, want 0 and >= 50%): ok
+caption.mp4: 12.0 s at 10 fps, 486 px wide, 572213 B (want <= 12 s, <= 12 fps, <= 720 px): ok
+caption_sheet.webp 98950 B: info

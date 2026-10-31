@@ -1,0 +1,45 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 752: ok
+network attempts during the run: 0: ok
+camera cuts at sentence starts 0 of 0 (shots seen: medium, wide): info
+living room in every sample (2277): ok
+wardrobe turns: 7 (topTint blue, hatTint red, batman, robocop, soubrette, singularity, back to normal; want 7): ok
+topTint blue: tints read back topTint #E64F7FCF (want a colour), hatTint #00000000 (want transparent), as written in the last 10 samples: ok
+topTint blue: costume read back none (want none): ok
+topTint blue: walked off and back (2 presence_done, want >= 2): ok
+topTint blue: no signature (0 played): ok
+topTint blue: gestures none: info
+hatTint red: tints read back topTint #E64F7FCF (want a colour), hatTint #E6D65A4E (want a colour), as written in the last 10 samples: ok
+hatTint red: costume read back none (want none): ok
+hatTint red: walked off and back (2 presence_done, want >= 2): ok
+hatTint red: no signature (0 played): ok
+hatTint red: gestures none: info
+batman: tints read back topTint #00000000 (want transparent), hatTint #00000000 (want transparent), as written in the last 10 samples: ok
+batman: costume read back batman (want batman): ok
+batman: walked off and back (2 presence_done, want >= 2): ok
+batman: signature played 1 time(s) (want 1) in batman, gestureId read back signature in 45 samples, gesture_done 1140 ms after it (want <= 2500): ok
+batman: gestures signature: info
+robocop: tints read back topTint #00000000 (want transparent), hatTint #00000000 (want transparent), as written in the last 10 samples: ok
+robocop: costume read back robocop (want robocop): ok
+robocop: walked off and back (2 presence_done, want >= 2): ok
+robocop: signature played 1 time(s) (want 1) in robocop, gestureId read back signature in 46 samples, gesture_done 1253 ms after it (want <= 2500): ok
+robocop: gestures signature: info
+soubrette: tints read back topTint #00000000 (want transparent), hatTint #00000000 (want transparent), as written in the last 10 samples: ok
+soubrette: costume read back soubrette (want soubrette): ok
+soubrette: walked off and back (2 presence_done, want >= 2): ok
+soubrette: signature played 1 time(s) (want 1) in soubrette, gestureId read back signature in 46 samples, gesture_done 1232 ms after it (want <= 2500): ok
+soubrette: gestures signature: info
+singularity: tints read back topTint #00000000 (want transparent), hatTint #00000000 (want transparent), as written in the last 10 samples: ok
+singularity: costume read back singularity (want singularity): ok
+singularity: walked off and back (2 presence_done, want >= 2): ok
+singularity: signature played 1 time(s) (want 1) in singularity, gestureId read back signature in 45 samples, gesture_done 1237 ms after it (want <= 2500): ok
+singularity: gestures signature: info
+back to normal: tints read back topTint #00000000 (want transparent), hatTint #E6D65A4E (want a colour), as written in the last 10 samples: ok
+back to normal: costume read back none (want none): ok
+back to normal: walked off and back (2 presence_done, want >= 2): ok
+back to normal: no signature (0 played): ok
+back to normal: gestures none: info
+topTint: a colour after 'topTint blue' (#E64F7FCF), transparent under batman (#00000000): ok
+hatTint: a colour after 'hatTint red' (#E6D65A4E), transparent under batman (#00000000): ok
+wardrobe.mp4: 10.0 s at 10 fps, 486 px wide, 407517 B (want <= 12 s, <= 12 fps, <= 720 px): ok
+wardrobe_sheet.webp 87484 B: info

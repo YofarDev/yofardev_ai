@@ -102,4 +102,19 @@ void main() {
     await tester.pump();
     expect(camera.shot.value.shot, Shot.medium);
   });
+
+  testWidgets(
+    'reduce motion turned on while the stage stands: the shot changes in the '
+    'build, the speech bubble hears it after the frame',
+    (WidgetTester tester) async {
+      await pumpStack(tester, director: camera);
+      expect(camera.shot.value.shot, Shot.wide);
+      // the system setting flips: the stage tells the camera mid-build
+      await pumpStack(tester, director: camera, disableAnimations: true);
+      expect(tester.takeException(), isNull);
+      expect(camera.shot.value.shot, Shot.medium);
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

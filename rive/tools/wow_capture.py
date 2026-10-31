@@ -13,6 +13,10 @@
 - `<wow>_gates.txt`: one `ok` / `FAIL` line per gate (ruling 7), exit 1 on a FAIL;
 - `<wow>_frame_cost.json` when the timing run exists.
 
+M10 (rulings 11, 18, 20) adds `wardrobe`, `persona` and `caption` (several user turns each): no GIF; one silent
+`<wow>.mp4` reel (<= 12 s, 10 fps, <= 720 px: the four signatures / the middle of each persona's speech / the
+default caption pass), a `<wow>_sheet.webp` contact sheet and the gates.
+
 M9 (ruling 20) adds `scene_<sceneId>` (an NPC poke, an in-app drag, one reply; the beach's gulls), `pairs`
 (all 42 ordered journeys, frames at 2 fps: a 1 fps GIF at 8x, a 4x silent MP4, a 42-cell beat grid) and
 `tour7` (seven scenes on a December night at a full moon).
@@ -650,6 +654,376 @@ def gates_tour7(tl: dict) -> list[str]:
     return g
 
 
+# ---------------------------------------------------------------- M10: wardrobe, personas, captions
+M10_KINDS = {"wardrobe", "persona", "caption"}
+COSTUMES = ["batman", "robocop", "soubrette", "singularity"]
+# the signature clip is <= 1.2 s (ruling 6); its gesture_done must land within this after the trigger
+SIGNATURE_DONE_MS = 2500
+# (topTint drawn, hatTint drawn, costume) at each wardrobe turn's end
+WARDROBE_WANT = {"topTint blue": (True, False, "none"), "hatTint red": (True, True, "none"),
+                 **{c: (False, False, c) for c in COSTUMES}, "back to normal": (False, True, "none")}
+PERSONA_ORDER = ["doomer", "philosopher", "coach"]  # mean pitch ascending (body_language.dart postures)
+CAPTION_PASSES = ["default", "reduceMotion", "textScale"]
+BUBBLE_SHARE_MIN = 0.5
+ANCHOR_SHARE_MIN = 0.9
+BUBBLE_MOVE_DP = 1.0
+# evidence caps (ruling 18): one silent reel per run, the contact sheet as WebP
+REEL_MAX_S = 12.0
+REEL_FPS = 10
+REEL_MAX_W = 720
+
+
+def turn_windows(tl: dict) -> list[tuple[dict, float, float]]:
+    """(the `turn` event, its start, its end) per user turn: from the `turn` event to its `turnEnd` (else the
+    next turn, else the last sample)."""
+    ev = tl["events"]
+    turns = [e for e in ev if e["type"] == "turn"]
+    last = tl["samples"][-1]["ms"] if tl["samples"] else 0
+    out = []
+    for k, t in enumerate(turns):
+        end = next((e["ms"] for e in ev if e["type"] == "turnEnd" and e.get("i") == t.get("i")), None)
+        if end is None:
+            end = turns[k + 1]["ms"] if k + 1 < len(turns) else last
+        out.append((t, t["ms"], end))
+    return out
+
+
+def alpha(argb: int | None) -> int:
+    return -1 if argb is None else (int(argb) >> 24) & 0xFF
+
+
+def _hex(argb: int | None) -> str:
+    return "none" if argb is None else f"#{int(argb) & 0xFFFFFFFF:08X}"
+
+
+def _in(ev: list[dict], kind: str, a: float, b: float, **match: object) -> list[dict]:
+    return [e for e in ev if e["type"] == kind and a <= e["ms"] <= b and all(e.get(k) == v for k, v in match.items())]
+
+
+def _m10_common(tl: dict) -> list[str]:
+    """Frames and the network as gates; the camera's sentence rule as info (the M10 runs walk and gesture
+    between sentences)."""
+    g = [_line(f"captured frames: {len(tl['frames'])}", len(tl["frames"]) > 0),
+         _line(f"network attempts during the run: {tl['network_attempts']}", tl["network_attempts"] == 0)]
+    if tl["samples"] and "shotSerial" in tl["samples"][0]:
+        cuts, ok = cuts_at_sentences(tl["samples"], tl["events"])
+        shots = sorted({x["shot"] for x in tl["samples"]})
+        g.append(f"camera cuts at sentence starts {ok} of {cuts} (shots seen: {', '.join(shots)}): info")
+    return g
+
+
+def _settled(samples: list[dict], end: float, n: int = 10) -> list[dict]:
+    """The last [n] samples before a turn's end (its settled state)."""
+    return [x for x in samples if x["ms"] <= end][-n:]
+
+
+def gates_wardrobe(tl: dict) -> list[str]:
+    """`WOW=wardrobe` (M10 rulings 5-6, 20): each tint read back from the file as written (a colour, then
+    transparent under a costume); each costume plays `signature` once, ended by the file's `gesture_done`;
+    the plain outfit plays none; every turn walks off and back (two `presence_done`)."""
+    s, ev = tl["samples"], tl["events"]
+    g = _m10_common(tl)
+    g.append(_line(f"living room in every sample ({len(s)})", all(x["scene"] == "livingRoom" for x in s)))
+    turns = turn_windows(tl)
+    labels = [t["label"] for t, _, _ in turns]
+    g.append(_line(f"wardrobe turns: {len(turns)} ({', '.join(labels)}; want {len(WARDROBE_WANT)})",
+                   labels == list(WARDROBE_WANT)))
+    read: dict[str, dict] = {}
+    for t, a, b in turns:
+        label = t["label"]
+        want = WARDROBE_WANT.get(label)
+        last = _settled(s, b)
+        if want is None or not last:
+            g.append(_line(f"{label}: settled samples", False))
+            continue
+        top_on, hat_on, costume = want
+        x = last[-1]
+        read[label] = x
+        exact = all(y.get("vmTopTint") == y["tintTopWant"] and y.get("vmHatTint") == y["tintHatWant"] for y in last)
+        shape = (alpha(x.get("vmTopTint")) > 0) == top_on and (alpha(x.get("vmHatTint")) > 0) == hat_on \
+            and alpha(x.get("vmTopTint")) >= 0 and alpha(x.get("vmHatTint")) >= 0
+        g.append(_line(f"{label}: tints read back topTint {_hex(x.get('vmTopTint'))} (want "
+                       f"{'a colour' if top_on else 'transparent'}), hatTint {_hex(x.get('vmHatTint'))} (want "
+                       f"{'a colour' if hat_on else 'transparent'}), as written in the last {len(last)} samples",
+                       exact and shape))
+        g.append(_line(f"{label}: costume read back {x.get('vmCostume')} (want {costume})",
+                       all(y.get("vmCostume") == costume for y in last)))
+        walks = _in(ev, "presenceDone", a, b)
+        g.append(_line(f"{label}: walked off and back ({len(walks)} presence_done, want >= 2)", len(walks) >= 2))
+        sigs = _in(ev, "gesture", a, b, name="signature")
+        if label in COSTUMES:
+            done = [d for sig in sigs[:1] for d in _in(ev, "gestureDone", sig["ms"] + 1, sig["ms"] + SIGNATURE_DONE_MS)]
+            vm = [y for sig in sigs[:1] for y in _between(s, sig["ms"], sig["ms"] + 1500)
+                  if y.get("vmGesture") == "signature"]
+            worn = sigs[0].get("costume") if sigs else None
+            g.append(_line(f"{label}: signature played {len(sigs)} time(s) (want 1) in {worn}, gestureId read back "
+                           f"signature in {len(vm)} samples, gesture_done "
+                           f"{(done[0]['ms'] - sigs[0]['ms']) if done else -1} ms after it "
+                           f"(want <= {SIGNATURE_DONE_MS})",
+                           len(sigs) == 1 and worn == label and bool(vm) and bool(done)))
+        else:
+            g.append(_line(f"{label}: no signature ({len(sigs)} played)", not sigs))
+        played = [e["name"] for e in _in(ev, "gesture", a, b)]
+        g.append(f"{label}: gestures {', '.join(played) or 'none'}: info")
+    for key, on, off in (("vmTopTint", "topTint blue", "batman"), ("vmHatTint", "hatTint red", "batman")):
+        if on in read and off in read:
+            ok = alpha(read[on].get(key)) > 0 and alpha(read[off].get(key)) == 0
+            g.append(_line(f"{key[2:3].lower()}{key[3:]}: a colour after '{on}' ({_hex(read[on].get(key))}), "
+                           f"transparent under {off} ({_hex(read[off].get(key))})", ok))
+    return g
+
+
+def _mean(xs: list[float]) -> float:
+    return statistics.mean(xs) if xs else float("nan")
+
+
+def persona_runs(tl: dict) -> dict[str, dict]:
+    """Per persona turn: the gestures sent to the file and the AvatarVM lean / pitch / roll read back while
+    speaking."""
+    s, ev = tl["samples"], tl["events"]
+    out: dict[str, dict] = {}
+    for t, a, b in turn_windows(tl):
+        send = next((e["ms"] for e in _in(ev, "send", a, b)), a)
+        spk = [x for x in _between(s, send, b) if x["speaking"]]
+        read = [x for x in spk if x.get("vmPitch") is not None]
+        out[t["persona"]] = {
+            "armed": bool(t.get("profileArmed")),
+            "spoke": bool(_in(ev, "start", send, b)),
+            "gestures": [e["name"] for e in _in(ev, "gesture", send, b)],
+            "speaking": len(spk), "read": len(read),
+            "pitch": _mean([x["vmPitch"] for x in read]),
+            "lean": _mean([x["vmLean"] for x in read if x.get("vmLean") is not None]),
+            "leanMax": max((x["vmLean"] for x in read if x.get("vmLean") is not None), default=float("nan")),
+            "roll": _mean([x["vmRoll"] for x in read if x.get("vmRoll") is not None]),
+            "listenLean": max((x["lean"] for x in _between(s, a, send)), default=0.0),
+        }
+    return out
+
+
+def gates_persona(tl: dict) -> list[str]:
+    """`WOW=persona` (M10 ruling 11): one scripted reply as the doomer, the coach and the philosopher; the
+    runs differ (gesture lists pairwise, mean AvatarVM pitch doomer < philosopher < coach)."""
+    g = _m10_common(tl)
+    runs = persona_runs(tl)
+    g.append(_line(f"persona runs: {', '.join(runs)} (want {', '.join(sorted(PERSONA_ORDER))})",
+                   set(runs) == set(PERSONA_ORDER)))
+    for p, r in runs.items():
+        g.append(_line(f"{p}: profile armed before the user typed", r["armed"]))
+        g.append(_line(f"{p}: the reply is spoken", r["spoke"]))
+        share = r["read"] / r["speaking"] if r["speaking"] else 0.0
+        g.append(_line(f"{p}: pitch read back from AvatarVM in {share:.0%} of {r['speaking']} speaking samples "
+                       f"(want >= 90%)", share >= 0.9))
+        g.append(f"{p}: gestures {', '.join(r['gestures']) or 'none'}; mean pitch {r['pitch']:.3f}, lean "
+                 f"{r['lean']:.3f} (max {r['leanMax']:.3f}), roll {r['roll']:.3f}; listening lean "
+                 f"{r['listenLean']:.2f}: info")
+    if set(runs) == set(PERSONA_ORDER):
+        lists = [tuple(runs[p]["gestures"]) for p in PERSONA_ORDER]
+        distinct = len(set(lists)) == len(lists)
+        shown = " | ".join(",".join(x) or "-" for x in lists)
+        g.append(_line(f"the three runs' gesture lists differ pairwise ({shown})", distinct))
+        pitches = [runs[p]["pitch"] for p in PERSONA_ORDER]
+        ordered = all(x < y for x, y in zip(pitches, pitches[1:]))
+        g.append(_line("mean pitch " + " < ".join(f"{p} {v:.3f}" for p, v in zip(PERSONA_ORDER, pitches)), ordered))
+    return g
+
+
+def _runs_of(flags: list[bool]) -> list[int]:
+    """The lengths of the runs of True in [flags]."""
+    out, n = [], 0
+    for f in flags:
+        if f:
+            n += 1
+        elif n:
+            out.append(n)
+            n = 0
+    if n:
+        out.append(n)
+    return out
+
+
+def bubble_moves(samples: list[dict]) -> dict[int, int]:
+    """Per sentence (`captionSeq`), how often the visible bubble moved by more than [BUBBLE_MOVE_DP] between
+    two consecutive visible samples."""
+    moves: dict[int, int] = {}
+    prev: dict[int, list[float]] = {}
+    for x in samples:
+        rect = x.get("bubbleRect")
+        if not x.get("bubble") or not rect:
+            continue
+        seq = x["captionSeq"]
+        moves.setdefault(seq, 0)
+        p = prev.get(seq)
+        if p and (abs(rect[0] - p[0]) > BUBBLE_MOVE_DP or abs(rect[1] - p[1]) > BUBBLE_MOVE_DP):
+            moves[seq] += 1
+        prev[seq] = rect
+    return moves
+
+
+def caption_passes(tl: dict) -> dict[str, list[dict]]:
+    """Per pass, its samples from the send to the turn's end."""
+    s, ev = tl["samples"], tl["events"]
+    out = {}
+    for t, a, b in turn_windows(tl):
+        send = next((e["ms"] for e in _in(ev, "send", a, b)), a)
+        out[t["label"]] = _between(s, send, b)
+    return out
+
+
+def gates_caption(tl: dict) -> list[str]:
+    """`WOW=caption` (M10 rulings 12-14): the bubble carries most of the default pass's sentences, the mouth
+    anchor is read, the bubble and the classic caption never show together (a one-sample cross-fade
+    tolerated), reduce motion places the bubble once per sentence (one re-placement jump allowed when the face
+    comes under it), text scale 1.6 shows only the classic caption."""
+    g = _m10_common(tl)
+    passes = caption_passes(tl)
+    g.append(_line(f"caption passes: {', '.join(passes)} (want {', '.join(CAPTION_PASSES)})",
+                   list(passes) == CAPTION_PASSES))
+    allx = [x for xs in passes.values() for x in xs]
+    both = _runs_of([bool(x.get("bubble")) and bool(x.get("classic")) for x in allx])
+    g.append(_line(f"never both captions: {sum(both)} samples with both visible, longest run {max(both, default=0)} "
+                   f"(want <= 1: a cross-fade)", max(both, default=0) <= 1))
+    for name in CAPTION_PASSES:
+        xs = passes.get(name, [])
+        spk = [x for x in xs if x["speaking"] and x.get("captionOn")]
+        if not spk:
+            g.append(_line(f"{name}: speaking samples with a caption", False))
+            continue
+        bub = sum(1 for x in spk if x.get("bubble")) / len(spk)
+        cla = sum(1 for x in spk if x.get("classic")) / len(spk)
+        shots = sorted({x["shot"] for x in spk})
+        g.append(f"{name}: bubble {bub:.0%}, classic {cla:.0%} of {len(spk)} speaking samples (shots "
+                 f"{', '.join(shots)}): info")
+        if name == "default":
+            g.append(_line(f"default: the bubble shows in {bub:.0%} of the speaking samples (want >= "
+                           f"{BUBBLE_SHARE_MIN:.0%})", bub >= BUBBLE_SHARE_MIN))
+            anchor = sum(1 for x in spk if x.get("anchor")) / len(spk)
+            g.append(_line(f"default: the mouth anchor read in {anchor:.0%} of them (want >= {ANCHOR_SHARE_MIN:.0%})",
+                           anchor >= ANCHOR_SHARE_MIN))
+            moves = bubble_moves(xs)
+            g.append(f"default: the bubble followed the mouth ({sum(moves.values())} moves over "
+                     f"{len(moves)} sentences): info")
+        elif name == "reduceMotion":
+            moves = bubble_moves(xs)
+            g.append(_line(f"reduceMotion: the bubble placed per sentence ({len(moves)} sentences with it, moves "
+                           f"{[moves[k] for k in sorted(moves)]}; want >= 1 sentence, <= 1 move each)",
+                           bool(moves) and all(v <= 1 for v in moves.values())))
+        elif name == "textScale":
+            n = sum(1 for x in xs if x.get("bubble"))
+            g.append(_line(f"textScale 1.6: classic only ({n} samples with the bubble, classic in {cla:.0%} of the "
+                           f"speaking samples, want 0 and >= {BUBBLE_SHARE_MIN:.0%})",
+                           n == 0 and cla >= BUBBLE_SHARE_MIN))
+    return g
+
+
+def beats_m10(tl: dict) -> list[tuple[str, float, float]]:
+    """The M10 contact sheets: the wardrobe's states and signatures; per persona listening, speaking and its
+    first gesture; per caption pass the middle of each sentence."""
+    s, ev = tl["samples"], tl["events"]
+    first, last = tl["frames"][0]["ms"], tl["frames"][-1]["ms"]
+    kind = _kind(tl)
+    out: list[tuple[str, float, float]] = []
+    if kind == "wardrobe":
+        out.append(("1 start: pink hoodie, no hat", first + 800, 1.0))
+        for t, a, b in turn_windows(tl):
+            label, n = t["label"], len(out) + 1
+            sig = _in(ev, "gesture", a, b, name="signature")
+            if sig:
+                out.append((f"{n} {label}: signature", sig[0]["ms"] + 600, 1.0))
+            else:
+                x = (_settled(s, b) or [{}])[-1]
+                out.append((f"{n} {label}: top {_hex(x.get('vmTopTint'))} hat {_hex(x.get('vmHatTint'))}",
+                            b - 300, 1.0))
+        return out
+    if kind == "persona":
+        runs = persona_runs(tl)
+        for t, a, b in turn_windows(tl):
+            p = t["persona"]
+            send = next((e["ms"] for e in _in(ev, "send", a, b)), a)
+            spk = [x for x in _between(s, send, b) if x["speaking"]]
+            gest = _in(ev, "gesture", send, b)
+            out.append((f"{p}: listening", send - 200, 1.0))
+            if spk:
+                out.append((f"{p}: speaking, pitch {runs[p]['pitch']:.2f}", spk[len(spk) // 2]["ms"], 1.0))
+            if gest:
+                out.append((f"{p}: {gest[0]['name']}", gest[0]["ms"] + 500, 1.0))
+        return out
+    per_pass = {"default": 4, "reduceMotion": 2, "textScale": 2}
+    for name, xs in caption_passes(tl).items():
+        seqs: dict[int, list[dict]] = {}
+        for x in xs:
+            if x["speaking"] and x.get("captionOn"):
+                seqs.setdefault(x["captionSeq"], []).append(x)
+        for k, seq in enumerate(sorted(seqs)[:per_pass.get(name, 2)]):
+            mid = seqs[seq][len(seqs[seq]) // 2]
+            shown = "bubble" if mid.get("bubble") else "classic" if mid.get("classic") else "none"
+            out.append((f"{name} s{k + 1}: {shown}, {mid['shot']}", mid["ms"], 1.0))
+    return out or [("run", (first + last) / 2, 1.0)]
+
+
+def reel_segments(tl: dict) -> list[tuple[float, float]]:
+    """The MP4's segments (ms), at most [REEL_MAX_S] in all: the four signatures; the middle of each persona's
+    speech; the default caption pass from its first caption."""
+    s, ev = tl["samples"], tl["events"]
+    kind = _kind(tl)
+    segs: list[tuple[float, float]] = []
+    if kind == "wardrobe":
+        segs = [(e["ms"] - 300, e["ms"] + 2200) for e in ev if e["type"] == "gesture" and e["name"] == "signature"]
+        if not segs:
+            segs = [(b - 1500, b) for _, _, b in turn_windows(tl)]
+    elif kind == "persona":
+        for _, a, b in turn_windows(tl):
+            spk = [x["ms"] for x in _between(s, a, b) if x["speaking"]]
+            if spk:
+                mid = spk[len(spk) // 2]
+                segs.append((mid - 2000, mid + 2000))
+    else:
+        windows = turn_windows(tl)
+        cap = next((e["ms"] for e in ev if e["type"] == "caption"), None)
+        if windows and cap is not None:
+            segs = [(cap - 300, min(windows[0][2], cap - 300 + REEL_MAX_S * 1000))]
+    out, total = [], 0.0
+    for a, b in segs:
+        room = REEL_MAX_S * 1000 - total
+        if room <= 0:
+            break
+        b = min(b, a + room)
+        out.append((a, b))
+        total += b - a
+    return out
+
+
+def reel_indices(frames: list[dict], segs: list[tuple[float, float]], fps: float = REEL_FPS) -> list[int]:
+    """One frame per 1/fps tick through each segment (nearest earlier capture), segments back to back."""
+    out: list[int] = []
+    for a, b in segs:
+        inside = [f for f in frames if f["ms"] <= b]
+        if not inside:
+            continue
+        j = 0
+        for k in range(int((b - a) * fps / 1000)):
+            t = a + k * 1000 / fps
+            while j + 1 < len(inside) and inside[j + 1]["ms"] <= t:
+                j += 1
+            out.append(inside[j]["i"])
+    return out
+
+
+def write_reel(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> tuple[float, int]:
+    """The run's one silent MP4 (ruling 18): <= 12 s, 10 fps, <= 720 px wide. Returns (seconds, width)."""
+    idx = reel_indices(tl["frames"], reel_segments(tl))
+    width = min(REEL_MAX_W, size[0]) // 2 * 2
+    if not idx:
+        return 0.0, width
+    with tempfile.TemporaryDirectory() as tmp:
+        for k, i in enumerate(idx):
+            load_frame(wow_dir / "frames" / f"{i:04d}.rgba", size).save(Path(tmp) / f"{k:05d}.png")
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(REEL_FPS), "-i", f"{tmp}/%05d.png",
+               "-vf", f"scale={width}:-2,format=yuv420p", "-an", "-c:v", "libx264", "-crf", "24", "-pix_fmt",
+               "yuv420p", str(out)]
+        subprocess.run(cmd, check=True)
+    return len(idx) / REEL_FPS, width
+
+
 # ---------------------------------------------------------------- frames
 def load_frame(path: Path, size: tuple[int, int]) -> Image.Image:
     return Image.frombytes("RGBA", size, path.read_bytes()).convert("RGB")
@@ -708,6 +1082,8 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
     end = stop_all[-1]["ms"] if stop_all else tl["frames"][-1]["ms"]
     speaking = [x for x in s if x["speaking"]]
     kind = _kind(tl)
+    if kind in M10_KINDS:
+        return beats_m10(tl)
     if kind in ("scene", "pairs", "tour7"):
         return beats_m9(tl)
     if tl["wow"] == "npc":
@@ -841,8 +1217,9 @@ def crop_zoom(im: Image.Image, zoom: float) -> Image.Image:
 def beat_sheet(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> None:
     cells = []
     many = _kind(tl) == "pairs"
-    cw = 150 if many else 300
-    cols = 7 if many else 8
+    m10 = _kind(tl) in M10_KINDS
+    cw = 150 if many else 240 if m10 else 300
+    cols = 7 if many else 4 if m10 else 8
     chh = int(size[1] * cw / size[0])
     camera = bool(tl["samples"]) and "shot" in tl["samples"][0]
     for label, ms, zoom in beats(tl):
@@ -861,7 +1238,10 @@ def beat_sheet(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> Non
     sheet = Image.new("RGB", (cols * (cw + 6) - 6, rows * (chh + 40) - 6), (10, 10, 10))
     for k, c in enumerate(cells):
         sheet.paste(c, ((k % cols) * (cw + 6), (k // cols) * (chh + 40)))
-    sheet.save(out)
+    if out.suffix == ".webp":
+        sheet.save(out, quality=80, method=6)
+    else:
+        sheet.save(out)
 
 
 # M9: (frames per second taken from the capture, playback speed-up) per run kind; the rest: GIF_FPS real time
@@ -953,6 +1333,28 @@ def frame_cost(timing_dir: Path) -> dict | None:
             "note": "macOS desktop (debug build, Skia; not a device tier)"}
 
 
+def main_m10(wow_dir: Path, out: Path, tl: dict, size: tuple[int, int], gates: list[str]) -> int:
+    """The M10 runs (ruling 18): gates, one silent reel (<= 12 s, 10 fps, <= 720 px) and a WebP contact sheet;
+    no GIF. The sheet is written even when a gate fails (it is how a failure is looked at)."""
+    wow = tl["wow"]
+    try:
+        gates += {"wardrobe": gates_wardrobe, "persona": gates_persona, "caption": gates_caption}[_kind(tl)](tl)
+    except (TypeError, ValueError, IndexError, KeyError, AttributeError) as e:
+        gates.append(_line(f"timeline incomplete ({type(e).__name__}: {e})", False))
+    if shutil.which("ffmpeg"):
+        secs, width = write_reel(wow_dir, tl, size, out / f"{wow}.mp4")
+        mp4 = out / f"{wow}.mp4"
+        gates.append(_line(f"{wow}.mp4: {secs:.1f} s at {REEL_FPS} fps, {width} px wide, "
+                           f"{mp4.stat().st_size if mp4.exists() else 0} B (want <= {REEL_MAX_S:.0f} s, <= 12 fps, "
+                           f"<= {REEL_MAX_W} px)", 0 < secs <= REEL_MAX_S and width <= REEL_MAX_W))
+    sheet = out / f"{wow}_sheet.webp"
+    beat_sheet(wow_dir, tl, size, sheet)
+    gates.append(f"{sheet.name} {sheet.stat().st_size} B: info")
+    (out / f"{wow}_gates.txt").write_text("\n".join(gates) + "\n")
+    print("\n".join(gates))
+    return 1 if any(g.endswith("FAIL") for g in gates) else 0
+
+
 def main(argv: list[str]) -> int:
     if len(argv) != 2:
         print(__doc__)
@@ -970,6 +1372,8 @@ def main(argv: list[str]) -> int:
             empty.append(f["i"])
     gates.append(_line(f"every frame non-empty ({len(empty)} blank or near-black on the stage"
                        f"{': ' + ', '.join(map(str, empty[:10])) if empty else ''})", not empty))
+    if _kind(tl) in M10_KINDS:
+        return main_m10(wow_dir, out, tl, size, gates)
     try:
         if wow == "wow1":
             ok, share = front_visible(wow_dir, size)

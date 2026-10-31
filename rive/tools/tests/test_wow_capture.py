@@ -463,3 +463,158 @@ def test_drag_gates_wipe_mists_back() -> None:
         return _drag_tl("wipe", "trail", "trailN", during, after, [{"ms": 22100, "type": "dragSettled"}])
     assert all(g.endswith("ok") for g in wc.drag_gates(tl(1.0)))
     assert any("misted back" in g and g.endswith("FAIL") for g in wc.drag_gates(tl(0.4)))
+
+
+# ---------------------------------------------------------------- M10: wardrobe, personas, captions
+BLUE, RED = 0xE64F7FCF, 0xE6D65A4E
+
+
+def _m10(ms: int, **kw: object) -> dict:
+    base = {"ms": ms, "scene": "livingRoom", "speaking": False, "shot": "medium", "move": "ease", "shotSerial": 0,
+            "lean": 0.0, "vmTopTint": 0, "tintTopWant": 0, "vmHatTint": 0, "tintHatWant": 0, "vmCostume": "none",
+            "vmGesture": "none", "captionSeq": 0, "captionOn": False}
+    return {**base, **kw}
+
+
+def _wardrobe_tl(bad: str = "") -> dict:
+    s, ev = [], []
+    for k, (label, (top_on, hat_on, costume)) in enumerate(wc.WARDROBE_WANT.items()):
+        t0 = k * 5000
+        ev += [{"ms": t0, "type": "turn", "i": k, "label": label}, {"ms": t0 + 500, "type": "send", "turn": k},
+               {"ms": t0 + 1500, "type": "presenceDone"}, {"ms": t0 + 2800, "type": "presenceDone"},
+               {"ms": t0 + 4900, "type": "turnEnd", "i": k, "label": label}]
+        sig = costume != "none" or (bad == "normal-signature" and label == "back to normal")
+        if sig and not (bad == "no-signature" and label == "robocop"):
+            ev.append({"ms": t0 + 3000, "type": "gesture", "name": "signature", "costume": costume})
+            if not (bad == "no-done" and label == "soubrette"):
+                ev.append({"ms": t0 + 4000, "type": "gestureDone", "gestureId": "signature"})
+        top = BLUE if top_on else 0
+        hat = RED if hat_on else 0
+        for t in range(t0, t0 + 5000, 100):
+            read_top = BLUE if bad == "tint-under-costume" and costume == "batman" else top
+            gesture = "signature" if sig and t0 + 3000 <= t < t0 + 4000 else "none"
+            s.append(_m10(t, vmTopTint=read_top, tintTopWant=top, vmHatTint=hat, tintHatWant=hat,
+                          vmCostume=costume, vmGesture=gesture))
+    ev.sort(key=lambda e: e["ms"])
+    return {"wow": "wardrobe", "kind": "wardrobe", "samples": s, "events": ev, "frames": [{"i": 0, "ms": 0}],
+            "network_attempts": 0}
+
+
+def test_gates_wardrobe() -> None:
+    ok = wc.gates_wardrobe(_wardrobe_tl())
+    assert all(g.endswith(("ok", "info")) for g in ok), [g for g in ok if g.endswith("FAIL")]
+    bad = wc.gates_wardrobe(_wardrobe_tl("tint-under-costume"))
+    assert any(g.startswith("batman: tints") and g.endswith("FAIL") for g in bad)
+    assert any(g.startswith("topTint: a colour") and g.endswith("FAIL") for g in bad)
+    assert any(g.startswith("robocop: signature") and g.endswith("FAIL")
+               for g in wc.gates_wardrobe(_wardrobe_tl("no-signature")))
+    assert any(g.startswith("soubrette: signature") and g.endswith("FAIL")
+               for g in wc.gates_wardrobe(_wardrobe_tl("no-done")))
+    assert any(g.startswith("back to normal: no signature") and g.endswith("FAIL")
+               for g in wc.gates_wardrobe(_wardrobe_tl("normal-signature")))
+    tl = _wardrobe_tl()
+    tl["network_attempts"] = 1
+    assert any("network" in g and g.endswith("FAIL") for g in wc.gates_wardrobe(tl))
+
+
+def _persona_tl(gestures: dict | None = None, pitch: dict | None = None) -> dict:
+    gestures = gestures or {"doomer": ["shrug"], "coach": ["thumbsUp", "clap", "thumbsUp"],
+                            "philosopher": ["think", "think"]}
+    pitch = pitch or {"doomer": -0.2, "coach": 0.08, "philosopher": -0.08}
+    s, ev = [], []
+    for k, p in enumerate(["doomer", "coach", "philosopher"]):
+        t0 = k * 10000
+        ev += [{"ms": t0, "type": "turn", "i": k, "label": p, "persona": p, "profileArmed": True},
+               {"ms": t0 + 1500, "type": "send", "turn": k}, {"ms": t0 + 2000, "type": "start"},
+               {"ms": t0 + 9000, "type": "turnEnd", "i": k, "label": p}]
+        ev += [{"ms": t0 + 2500 + 1000 * j, "type": "gesture", "name": g} for j, g in enumerate(gestures[p])]
+        s += [_m10(t, lean=0.6) for t in range(t0, t0 + 1500, 100)]
+        s += [_m10(t, speaking=True, vmPitch=pitch[p] + 0.01 * (t % 3), vmLean=0.1, vmRoll=0.0)
+              for t in range(t0 + 2000, t0 + 8000, 100)]
+    ev.sort(key=lambda e: e["ms"])
+    return {"wow": "persona", "kind": "persona", "samples": s, "events": ev, "frames": [{"i": 0, "ms": 0}],
+            "network_attempts": 0}
+
+
+def test_gates_persona() -> None:
+    ok = wc.gates_persona(_persona_tl())
+    assert all(g.endswith(("ok", "info")) for g in ok), [g for g in ok if g.endswith("FAIL")]
+    same = wc.gates_persona(_persona_tl(gestures={p: ["nod"] for p in ("doomer", "coach", "philosopher")}))
+    assert any("differ pairwise" in g and g.endswith("FAIL") for g in same)
+    flat = wc.gates_persona(_persona_tl(pitch={"doomer": 0.0, "coach": 0.0, "philosopher": 0.0}))
+    assert any(g.startswith("mean pitch") and g.endswith("FAIL") for g in flat)
+    tl = _persona_tl()
+    for x in tl["samples"]:
+        x.pop("vmPitch", None)
+    assert any("read back from AvatarVM" in g and g.endswith("FAIL") for g in wc.gates_persona(tl))
+
+
+def _caption_tl(bad: str = "") -> dict:
+    s, ev = [], []
+    for k, name in enumerate(wc.CAPTION_PASSES):
+        t0 = k * 20000
+        ev += [{"ms": t0, "type": "turn", "i": k, "label": name}, {"ms": t0 + 1000, "type": "send", "turn": k},
+               {"ms": t0 + 2000, "type": "caption", "text": "a"}, {"ms": t0 + 19000, "type": "turnEnd", "i": k}]
+        for j, t in enumerate(range(t0 + 2000, t0 + 18000, 100)):
+            seq = 4 * k + 1 + j // 40
+            within = j % 40
+            if name == "textScale":
+                bubble = bad == "bubble-at-1.6" and j == 5
+                classic = not bubble
+            else:
+                share = 0.3 if bad == "few-bubbles" and name == "default" else 0.8
+                bubble = within < 40 * share
+                classic = not bubble
+            if bad == "both" and name == "default" and j in (3, 4):
+                classic = True
+            x = 100 + (within * 2 if name == "default" else 0)
+            if bad == "drift" and name == "reduceMotion" and within in (5, 10):
+                x += 10 * within
+            s.append(_m10(t, speaking=True, captionOn=True, captionSeq=seq, bubble=bubble, classic=classic,
+                          bubbleRect=[float(x), 200.0, 180.0, 90.0] if bubble else None,
+                          anchor=[400.0, 380.0]))
+    ev.sort(key=lambda e: e["ms"])
+    return {"wow": "caption", "kind": "caption", "samples": s, "events": ev, "frames": [{"i": 0, "ms": 0}],
+            "network_attempts": 0}
+
+
+def test_gates_caption() -> None:
+    ok = wc.gates_caption(_caption_tl())
+    assert all(g.endswith(("ok", "info")) for g in ok), [g for g in ok if g.endswith("FAIL")]
+    assert any(g.startswith("default: the bubble shows") and g.endswith("FAIL")
+               for g in wc.gates_caption(_caption_tl("few-bubbles")))
+    assert any(g.startswith("never both") and g.endswith("FAIL") for g in wc.gates_caption(_caption_tl("both")))
+    assert any(g.startswith("reduceMotion: the bubble placed") and g.endswith("FAIL")
+               for g in wc.gates_caption(_caption_tl("drift")))
+    assert any(g.startswith("textScale 1.6") and g.endswith("FAIL")
+               for g in wc.gates_caption(_caption_tl("bubble-at-1.6")))
+
+
+def test_bubble_moves_counts_jumps_per_sentence() -> None:
+    xs = [_m10(0, bubble=True, captionSeq=1, bubbleRect=[10.0, 10.0, 5.0, 5.0]),
+          _m10(33, bubble=True, captionSeq=1, bubbleRect=[10.5, 10.0, 5.0, 5.0]),   # under 1 dp: no move
+          _m10(66, bubble=True, captionSeq=1, bubbleRect=[30.0, 10.0, 5.0, 5.0]),
+          _m10(99, bubble=False, captionSeq=1, bubbleRect=None),
+          _m10(132, bubble=True, captionSeq=2, bubbleRect=[90.0, 10.0, 5.0, 5.0])]   # new sentence: no move
+    assert wc.bubble_moves(xs) == {1: 1, 2: 0}
+
+
+def test_reel_is_capped_at_twelve_seconds() -> None:
+    tl = _wardrobe_tl()
+    segs = wc.reel_segments(tl)
+    assert len(segs) == 4 and sum(b - a for a, b in segs) <= wc.REEL_MAX_S * 1000
+    frames = [{"i": k, "ms": 100 * k} for k in range(400)]
+    idx = wc.reel_indices(frames, segs)
+    assert len(idx) == 100   # 4 x 2.5 s at 10 fps
+    assert len(wc.reel_indices(frames, [(0, 30000)])) == 300
+    tl = _persona_tl()
+    assert sum(b - a for a, b in wc.reel_segments(tl)) <= wc.REEL_MAX_S * 1000
+    tl = _caption_tl()
+    (a, b), = wc.reel_segments(tl)
+    assert b - a == wc.REEL_MAX_S * 1000
+
+
+def test_beats_m10_sheets_have_8_to_16_cells() -> None:
+    for tl in (_wardrobe_tl(), _persona_tl(), _caption_tl()):
+        n = len(wc.beats(tl))
+        assert 8 <= n <= 16, (tl["kind"], n)

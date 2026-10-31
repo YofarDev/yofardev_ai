@@ -75,7 +75,18 @@ class StageCameraView extends ChangeNotifier {
     }
   }
 
-  void _moved() => notifyListeners();
+  void _moved() {
+    // A shot set while the tree builds (reduce motion switched on: the
+    // stage tells the camera director from didChangeDependencies) reaches
+    // the listeners once the frame is over: one of them (the speech bubble)
+    // is not below the camera and may rebuild.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      _movedAfterFrame();
+      return;
+    }
+    notifyListeners();
+  }
 
   void _movedAfterFrame() {
     SchedulerBinding.instance.addPostFrameCallback((Duration _) {

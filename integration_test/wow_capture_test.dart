@@ -15,12 +15,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yofardev_ai/app.dart';
 import 'package:yofardev_ai/core/di/service_locator.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
+import 'package:yofardev_ai/core/models/function_info.dart';
 import 'package:yofardev_ai/core/models/llm_config.dart';
-import 'package:yofardev_ai/core/models/performance/shot.dart';
+import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/models/seasonal_wardrobe.dart';
 import 'package:yofardev_ai/core/models/weather_report.dart';
+import 'package:yofardev_ai/core/services/agent/agent_tool.dart';
+import 'package:yofardev_ai/core/services/agent/avatar_tool.dart';
+import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/foley_service.dart';
 import 'package:yofardev_ai/core/services/llm/fake_llm_service.dart';
 import 'package:yofardev_ai/core/services/world/tablet_weather_source.dart';
@@ -28,10 +34,13 @@ import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/scene_drag.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/head_target_mapper.dart';
+import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_tint_writer.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/prop_drag_controller.dart';
 import 'package:yofardev_ai/features/avatar/presentation/widgets/rive/scene_drag_surface.dart';
 import 'package:yofardev_ai/features/chat/chat.dart';
 import 'package:yofardev_ai/features/home/widgets/home_content_stack.dart';
+import 'package:yofardev_ai/features/home/widgets/stage/stage_caption.dart';
+import 'package:yofardev_ai/features/home/widgets/stage/stage_caption_bubble.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 import 'support/canned_weather_tool.dart';
@@ -67,6 +76,17 @@ import 'support/say_tts_synthesizer.dart';
 /// frames); `tour7` chains the seven scenes on a pinned December night at a
 /// full moon.
 ///
+/// M10 (ruling 20; several user turns each, frames every 100 ms):
+/// `wardrobe` dresses the avatar through `change_avatar` tool rounds in the
+/// living room at noon (a blue hoodie, a red beanie, the four costumes, each
+/// with its signature move, back to normal) and reads the tints, the costume
+/// and `gestureId` back from the avatar file; `persona` speaks one scripted
+/// reply as the doomer, the coach and the philosopher (the current chat's
+/// persona) and reads lean, pitch and roll back from `AvatarVM`; `caption`
+/// speaks one four-sentence reply three times (default, reduce motion, text
+/// scale 1.6) and samples the speech bubble, the classic caption, the mouth
+/// anchor and the shot.
+///
 /// Output: `~/Library/Caches/fr.yofardev.yofardevAi/wow/<wow>[_<scene>][_timing]/`,
 /// printed as `WOW_DIR <path>`.
 const String _wow = String.fromEnvironment('WOW', defaultValue: 'wow1');
@@ -90,6 +110,38 @@ class _SceneRun {
   final String reply;
 }
 
+/// M10: one user turn of a multi-turn run (its own scripted responses), and
+/// how the app is set before it.
+class _Turn {
+  const _Turn({
+    required this.label,
+    required this.user,
+    required this.responses,
+    this.persona,
+    this.reduceMotion = false,
+    this.textScale = 1,
+    this.signature = false,
+  });
+
+  /// The beat's name in the timeline (`turn` / `turnEnd` events).
+  final String label;
+  final String user;
+  final List<FakeLlmResponse> responses;
+
+  /// `persona`: the current chat's persona for this turn (null: unchanged).
+  final ChatPersona? persona;
+
+  /// `caption`: the platform's reduce motion (`disableAnimations`).
+  final bool reduceMotion;
+
+  /// `caption`: the platform's text scale.
+  final double textScale;
+
+  /// `wardrobe`: a costume goes on, so the turn waits for its signature
+  /// move's `gesture_done`.
+  final bool signature;
+}
+
 class _Script {
   const _Script({
     required this.scene,
@@ -103,7 +155,16 @@ class _Script {
     this.sceneRun,
     this.frameInterval = const Duration(milliseconds: 66),
     this.defaultOutfit = false,
+    this.turns = const <_Turn>[],
+    this.captionsOn = false,
   });
+
+  /// M10: user turns played one after another ([responses] is all of
+  /// theirs, in order); empty: the single [user] line.
+  final List<_Turn> turns;
+
+  /// M10 `caption`: captions are switched on before the run.
+  final bool captionsOn;
 
   final AvatarScene scene;
   final double rain;
@@ -219,6 +280,138 @@ _Script _sceneScript(AvatarScene scene) {
     ],
   );
 }
+
+/// M10: a fixed noon in October (daylight; never December, whose festive
+/// outfit rule would dress the default outfit).
+final DateTime _m10Noon = DateTime(2026, 10, 31, 12);
+
+/// M10: a turn's scripted responses (a `change_avatar` round first when
+/// [avatarArgs] is given, then the spoken answer).
+List<FakeLlmResponse> _turnResponses(
+  String reply, {
+  String mood = 'happy',
+  Map<String, dynamic>? avatarArgs,
+}) => <FakeLlmResponse>[
+  if (avatarArgs != null)
+    FakeLlmResponse(
+      jsonBody: '',
+      toolCalls: <FakeToolCall>[
+        FakeToolCall(name: 'change_avatar', arguments: avatarArgs),
+      ],
+    ),
+  FakeLlmResponse(jsonBody: _answer(reply, mood)),
+];
+
+/// M10: a multi-turn script (its responses are all of its turns').
+_Script _turnScript(
+  List<_Turn> turns, {
+  bool defaultOutfit = false,
+  bool captionsOn = false,
+}) => _Script(
+  scene: AvatarScene.livingRoom,
+  rain: 0,
+  user: turns.map((_Turn t) => t.user).join(' | '),
+  pinnedAt: _m10Noon,
+  defaultOutfit: defaultOutfit,
+  captionsOn: captionsOn,
+  frameInterval: const Duration(milliseconds: 100),
+  turns: turns,
+  responses: <FakeLlmResponse>[for (final _Turn t in turns) ...t.responses],
+);
+
+/// M10 `wardrobe`: the tints, then each costume (its signature after the
+/// walk back), then back to the plain hoodie (the red beanie stays).
+_Script _wardrobeScript() {
+  _Turn costume(String name, String user, String reply) => _Turn(
+    label: name,
+    user: user,
+    signature: true,
+    responses: _turnResponses(
+      reply,
+      avatarArgs: <String, dynamic>{'costume': name},
+    ),
+  );
+  return _turnScript(defaultOutfit: true, <_Turn>[
+    _Turn(
+      label: 'topTint blue',
+      user: 'Can your hoodie be blue?',
+      responses: _turnResponses(
+        'Blue it is. Same hoodie, new colour.',
+        avatarArgs: <String, dynamic>{'top': 'pinkHoodie', 'topTint': 'blue'},
+      ),
+    ),
+    _Turn(
+      label: 'hatTint red',
+      user: 'Add a red beanie.',
+      responses: _turnResponses(
+        'A red beanie, nice and warm.',
+        avatarArgs: <String, dynamic>{'hat': 'beanie', 'hatTint': 'red'},
+      ),
+    ),
+    costume('batman', 'Be Batman!', 'I am the night.'),
+    costume('robocop', 'Now Robocop.', 'Scanning. All clear.'),
+    costume('soubrette', 'Try the soubrette.', 'Enchantée!'),
+    costume('singularity', 'And the singularity?', 'I contain multitudes.'),
+    _Turn(
+      label: 'back to normal',
+      user: 'Back to your plain hoodie.',
+      responses: _turnResponses(
+        'Back to normal, beanie and all.',
+        avatarArgs: <String, dynamic>{'costume': 'none', 'topTint': 'none'},
+      ),
+    ),
+  ]);
+}
+
+/// M10 `persona`: one reply with a yes, a list, an exclamation and a
+/// question (every auto rule fires), spoken by three personas.
+const String _personaReply =
+    'Yes, I have a plan for your week. '
+    'First rest, second walk, third read a little. '
+    'You are going to love it! '
+    'Shall we start tomorrow?';
+
+_Script _personaScript() => _turnScript(<_Turn>[
+  for (final ChatPersona p in <ChatPersona>[
+    ChatPersona.doomer,
+    ChatPersona.coach,
+    ChatPersona.philosopher,
+  ])
+    _Turn(
+      label: p.name,
+      user: 'Plan my week?',
+      persona: p,
+      responses: _turnResponses(_personaReply),
+    ),
+]);
+
+/// M10 `caption`: four sentences, short to long (the last one the longest a
+/// bubble takes), three passes.
+const String _captionReply =
+    'Good morning! '
+    'The sun is already over the rooftops. '
+    'I made a pot of tea while you were away. '
+    'Tell me, what would you like to do first today, read or go out?';
+
+_Script _captionScript() => _turnScript(captionsOn: true, <_Turn>[
+  _Turn(
+    label: 'default',
+    user: 'Morning!',
+    responses: _turnResponses(_captionReply),
+  ),
+  _Turn(
+    label: 'reduceMotion',
+    user: 'Morning again!',
+    reduceMotion: true,
+    responses: _turnResponses(_captionReply),
+  ),
+  _Turn(
+    label: 'textScale',
+    user: 'And once more!',
+    textScale: 1.6,
+    responses: _turnResponses(_captionReply),
+  ),
+]);
 
 final Map<String, _Script> _scripts = <String, _Script>{
   // Campfire at night, raining (world sync is M7–M9: the harness sets it).
@@ -342,7 +535,93 @@ final Map<String, _Script> _scripts = <String, _Script>{
       AvatarScene.livingRoom,
     ],
   ),
+  // M10: the wardrobe (tints, the four signatures), three personas, the
+  // speech bubble (default, reduce motion, large text).
+  'wardrobe': _wardrobeScript(),
+  'persona': _personaScript(),
+  'caption': _captionScript(),
 };
+
+/// M10: `change_avatar` for the harness's tool list (which replaces the
+/// app's): the real [AvatarTool], built on first use (the lifecycle service
+/// it talks to exists only once the service locator ran).
+class _AvatarToolProxy extends AgentTool {
+  late final AvatarTool _tool = AvatarTool(getIt<AppLifecycleService>());
+
+  @override
+  String get name => 'change_avatar';
+
+  @override
+  String get description => _tool.description;
+
+  @override
+  List<Parameter> get parameters => _tool.parameters;
+
+  @override
+  Map<String, String> get requiredConfigKeys => _tool.requiredConfigKeys;
+
+  @override
+  Future<dynamic> execute(
+    Map<String, dynamic> args,
+    Map<String, dynamic> configValues,
+  ) => _tool.execute(args, configValues);
+}
+
+/// M10: how visible [element] is: the product of the opacities above it
+/// (`Opacity` widgets and `FadeTransition`s), 0..1.
+double _opacityOf(Element element) {
+  double opacity = 1;
+  element.visitAncestorElements((Element e) {
+    final Widget w = e.widget;
+    if (w is Opacity) {
+      opacity *= w.opacity;
+    } else if (w is FadeTransition) {
+      opacity *= w.opacity.value;
+    }
+    return opacity > 0;
+  });
+  return opacity;
+}
+
+/// M10 `caption`: what the stage's caption shows now: the bubble (most
+/// visible copy, its rect on screen) and the classic line, each visible at
+/// an opacity of at least 0.5.
+Map<String, Object?> _captionSample() {
+  Element? best;
+  double bestOpacity = 0;
+  for (final Element e in find.byKey(StageCaptionBubble.bubbleKey).evaluate()) {
+    final double o = _opacityOf(e);
+    if (best == null || o > bestOpacity) {
+      best = e;
+      bestOpacity = o;
+    }
+  }
+  Rect? rect;
+  final RenderObject? box = best?.renderObject;
+  if (box is RenderBox && box.hasSize && box.attached) {
+    rect = box.localToGlobal(Offset.zero) & box.size;
+  }
+  double classic = 0;
+  for (final Element e in find.byKey(StageCaption.lineKey).evaluate()) {
+    classic = math.max(classic, _opacityOf(e));
+  }
+  final Iterable<Element> bubbles = find.byType(StageCaptionBubble).evaluate();
+  final StageCaptionBubble? widget = bubbles.isEmpty
+      ? null
+      : bubbles.first.widget as StageCaptionBubble;
+  final Offset? anchor = widget?.anchor.value;
+  return <String, Object?>{
+    'bubble': bestOpacity >= 0.5,
+    'bubbleOpacity': bestOpacity,
+    'bubbleRect': rect == null
+        ? null
+        : <double>[rect.left, rect.top, rect.width, rect.height],
+    'bubbleFlag': widget?.shown.value,
+    'classic': classic >= 0.5,
+    'classicOpacity': classic,
+    'anchor': anchor == null ? null : <double>[anchor.dx, anchor.dy],
+  };
+}
 
 /// Refuses every connection and counts the attempts (ruling 2). Creating a
 /// client is fine (the app makes one at startup); opening a socket is not.
@@ -517,11 +796,13 @@ void main() {
           <({DateTime at, String kind})>[];
       await setupServiceLocator(
         ttsSynthesizer: tts,
-        tools: <CannedWeatherTool>[
+        tools: <AgentTool>[
           CannedWeatherTool(
             onReport: (WeatherReport r) =>
                 getIt<TabletWeatherSource>().report(r),
           ),
+          // M10 wardrobe: the real change_avatar
+          _AvatarToolProxy(),
         ],
         foleyPlayer: () => _LoggingFoleyPlayer(foleyLog),
         haptics: _LoggingHaptics(hapticLog),
@@ -542,6 +823,10 @@ void main() {
 
       if (!chat.state.functionCallingEnabled) {
         chat.toggleFunctionCalling();
+      }
+      final CaptionCubit captions = home.read<CaptionCubit>();
+      if (script.captionsOn && !captions.state.enabled) {
+        await captions.toggle();
       }
       // A new chat starts on a random background: set the script's scene on
       // the chat too, so a reply's background change is seen as a change.
@@ -614,12 +899,14 @@ void main() {
       bool speaking = false;
       bool spoke = false;
       int lastStop = 0;
+      int lastStart = -1;
       final StreamSubscription<PlaybackEvent> playback =
           getIt<TtsPlaybackService>().events.listen((PlaybackEvent e) {
             switch (e) {
               case SpeakingStartedEvent():
                 speaking = true;
                 spoke = true;
+                lastStart = clock.elapsedMilliseconds;
                 log('start');
               case SpeakingStoppedEvent(:final bool interrupted):
                 speaking = false;
@@ -635,6 +922,9 @@ void main() {
           });
       // M9: every scene event played (a drag's action, a journey's)
       int sceneEventSeq = avatar.state.sceneEvent.seq;
+      // M10: every gesture sent to the avatar file (its `gesture` trigger)
+      int gestureSeq = avatar.state.gestureEvent.seq;
+      int lastSignature = -1;
       final StreamSubscription<AvatarState> sceneEvents = avatar.stream.listen((
         AvatarState s,
       ) {
@@ -645,7 +935,37 @@ void main() {
             'scene': s.scene.name,
           });
         }
+        if (s.gestureEvent.seq != gestureSeq) {
+          gestureSeq = s.gestureEvent.seq;
+          if (s.gestureEvent.gesture == AvatarGesture.signature) {
+            lastSignature = clock.elapsedMilliseconds;
+          }
+          log('gesture', <String, Object?>{
+            'name': s.gestureEvent.gesture.name,
+            'costume': s.avatar.costume.name,
+          });
+        }
       });
+      // M10: the avatar file read back (the live avatar view's state), and
+      // its `gesture_done` / `presence_done` events, polled per sample
+      AvatarFileReadBack? avatarFile;
+      int avatarLookups = 0;
+      AvatarFileReadBack? avatarFileNow() {
+        if (avatarFile == null || avatarLookups++ % 30 == 0) {
+          final Iterable<Element> found = find
+              .byType(RiveAvatarView)
+              .evaluate();
+          final Element? e = found.isEmpty ? null : found.first;
+          avatarFile = e is StatefulElement && e.state is AvatarFileReadBack
+              ? e.state as AvatarFileReadBack
+              : null;
+        }
+        return avatarFile;
+      }
+
+      int gestureDones = 0;
+      int presenceDones = 0;
+      int lastGestureDone = -1;
       String? lastFile;
       void sample() {
         final PerformanceIntent intent = director.current;
@@ -666,6 +986,28 @@ void main() {
           avatar.state.avatar,
           world.localDay.value,
         );
+        final AvatarFileReadBack? vm = avatarFileNow();
+        if (vm != null) {
+          // the file's own events (a new view counts from 0 again)
+          if (vm.gestureDoneCount < gestureDones) {
+            gestureDones = 0;
+          }
+          if (vm.presenceDoneCount < presenceDones) {
+            presenceDones = 0;
+          }
+          for (; gestureDones < vm.gestureDoneCount; gestureDones++) {
+            lastGestureDone = clock.elapsedMilliseconds;
+            log('gestureDone', <String, Object?>{
+              'gestureId': vm.enumValue(AvatarRiveContract.propGestureId),
+            });
+          }
+          for (; presenceDones < vm.presenceDoneCount; presenceDones++) {
+            log('presenceDone', <String, Object?>{
+              'presence': avatar.state.presence.name,
+            });
+          }
+        }
+        final ({int top, int hat}) tintWant = AvatarTintWriter.colorsFor(shown);
         samples.add(<String, Object?>{
           'ms': clock.elapsedMilliseconds,
           'phase': talking.state.phase.name,
@@ -719,6 +1061,32 @@ void main() {
           'festiveRead': d?.readNumber('festive'),
           'hat': shown.hat.name,
           'top': shown.top.name,
+          // M10: the wardrobe and the persona's body, as written and as the
+          // avatar file holds them
+          'costume': shown.costume.name,
+          'topTint': shown.topTint.name,
+          'hatTint': shown.hatTint.name,
+          'tintTopWant': tintWant.top,
+          'tintHatWant': tintWant.hat,
+          'vmTopTint': vm?.colorValue(AvatarRiveContract.propTopTint),
+          'vmHatTint': vm?.colorValue(AvatarRiveContract.propHatTint),
+          'vmCostume': vm?.enumValue(AvatarRiveContract.propCostume),
+          'vmTop': vm?.enumValue(AvatarRiveContract.propTop),
+          'vmHat': vm?.enumValue(AvatarRiveContract.propHat),
+          'vmGesture': vm?.enumValue(AvatarRiveContract.propGestureId),
+          'vmLean': vm?.numberValue(AvatarRiveContract.propLean),
+          'vmPitch': vm?.numberValue(AvatarRiveContract.propPitch),
+          'vmRoll': vm?.numberValue(AvatarRiveContract.propRoll),
+          'faceLean': face.lean,
+          'faceRoll': face.roll,
+          'nodPitch': face.nodPitch,
+          'persona': chat.state.currentChat.persona.name,
+          'chatStatus': chat.state.status.name,
+          'gestureSerial': intent.gestureSerial,
+          'captionSeq': captions.state.seq,
+          'captionOn':
+              captions.state.enabled && (captions.state.text ?? '').isNotEmpty,
+          if (_wow == 'caption') ..._captionSample(),
         });
       }
 
@@ -801,17 +1169,114 @@ void main() {
         await _settle(tester, const Duration(seconds: 3));
       }
       final Finder field = find.byType(TextField);
-      if (script.tour.isEmpty) {
+      // M10: the user turns, one after another, each to its end
+      bool reducedMotion = false;
+      double textScale = 1;
+      addTearDown(() {
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue();
+        tester.platformDispatcher.clearTextScaleFactorTestValue();
+      });
+      for (int k = 0; k < script.turns.length; k++) {
+        final _Turn turn = script.turns[k];
+        final ChatPersona? persona = turn.persona;
+        if (persona != null) {
+          // the current chat's persona (as a chat started with it): the
+          // avatar's body language follows it through the lifecycle service
+          final Chat c = chat.state.currentChat.copyWith(persona: persona);
+          chat.setOpenedChat(c);
+          chat.setCurrentChat(c);
+        }
+        if (turn.reduceMotion != reducedMotion) {
+          reducedMotion = turn.reduceMotion;
+          if (reducedMotion) {
+            tester.platformDispatcher.accessibilityFeaturesTestValue =
+                const FakeAccessibilityFeatures(disableAnimations: true);
+          } else {
+            tester.platformDispatcher.clearAccessibilityFeaturesTestValue();
+          }
+        }
+        if (turn.textScale != textScale) {
+          textScale = turn.textScale;
+          if (textScale == 1) {
+            tester.platformDispatcher.clearTextScaleFactorTestValue();
+          } else {
+            tester.platformDispatcher.textScaleFactorTestValue = textScale;
+          }
+        }
+        await _settle(tester, const Duration(milliseconds: 1500));
+        final int turnStart = clock.elapsedMilliseconds;
+        final ChatPersona current = chat.state.currentChat.persona;
+        log('turn', <String, Object?>{
+          'i': k,
+          'label': turn.label,
+          'persona': current.name,
+          'profileArmed': director.profile == BodyLanguageProfile.of(current),
+          'reduceMotion': reducedMotion,
+          'textScale': textScale,
+          'signature': turn.signature,
+        });
+        final int remainingAfter =
+            FakeLlmService().remainingResponses - turn.responses.length;
+        log('typing', <String, Object?>{'turn': k});
+        // the previous send unfocused the field: a tap focuses it again (a
+        // fresh text input connection for the typed text)
+        await tester.tap(field);
+        await _settle(tester, const Duration(milliseconds: 300));
+        for (int i = 1; i <= turn.user.length; i++) {
+          await tester.enterText(field, turn.user.substring(0, i));
+          await tester.pump();
+          await Future<void>.delayed(const Duration(milliseconds: 70));
+        }
+        await _settle(tester, const Duration(milliseconds: 400));
+        log('send', <String, Object?>{
+          'turn': k,
+          'field': tester.widget<TextField>(field).controller?.text,
+          'chatStatus': chat.state.status.name,
+        });
+        await tester.testTextInput.receiveAction(TextInputAction.send);
+        // until the reply is spoken, the avatar is back on screen and (a
+        // costume put on) its signature has played: at most 6 s more for it
+        final int by = clock.elapsedMilliseconds + 45000;
+        int? readyAt;
+        while (clock.elapsedMilliseconds < by) {
+          await tester.pump();
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          final int now = clock.elapsedMilliseconds;
+          final bool ready =
+              FakeLlmService().remainingResponses <= remainingAfter &&
+              lastStart >= turnStart &&
+              !speaking &&
+              avatar.state.journey == null &&
+              avatar.state.presence == AvatarSpecials.onScreen &&
+              now - lastStop > 1500;
+          if (!ready) {
+            readyAt = null;
+            continue;
+          }
+          readyAt ??= now;
+          final bool signed =
+              lastSignature >= turnStart && lastGestureDone > lastSignature;
+          if (!turn.signature || signed || now - readyAt > 6000) {
+            break;
+          }
+        }
+        await _settle(tester, const Duration(milliseconds: 800));
+        log('turnEnd', <String, Object?>{'i': k, 'label': turn.label});
+      }
+      final bool oneLine = script.tour.isEmpty && script.turns.isEmpty;
+      if (oneLine) {
         log('typing');
       }
-      for (int i = 1; script.tour.isEmpty && i <= script.user.length; i++) {
+      for (int i = 1; oneLine && i <= script.user.length; i++) {
         await tester.enterText(field, script.user.substring(0, i));
         await tester.pump();
         await Future<void>.delayed(const Duration(milliseconds: 90));
       }
-      await _settle(tester, const Duration(milliseconds: 500));
-      log('send');
-      if (script.tour.isEmpty) {
+      if (script.turns.isEmpty) {
+        await _settle(tester, const Duration(milliseconds: 500));
+        log('send');
+      }
+      if (oneLine) {
         await tester.testTextInput.receiveAction(TextInputAction.send);
       }
 
@@ -908,6 +1373,17 @@ void main() {
                 ?.toIso8601String(),
         'drag': dragInfo,
         'user': script.user,
+        'turns': <Map<String, Object?>>[
+          for (final _Turn t in script.turns)
+            <String, Object?>{
+              'label': t.label,
+              'user': t.user,
+              'persona': t.persona?.name,
+              'reduceMotion': t.reduceMotion,
+              'textScale': t.textScale,
+              'signature': t.signature,
+            },
+        ],
         'reply': script.responses
             .where((FakeLlmResponse r) => r.toolCalls.isEmpty)
             .map((FakeLlmResponse r) => jsonDecode(r.jsonBody)['text'])
@@ -945,6 +1421,8 @@ void main() {
     timeout: Timeout(
       _wow == 'pairs'
           ? const Duration(minutes: 20)
+          : _wow == 'wardrobe'
+          ? const Duration(minutes: 8)
           : const Duration(minutes: 5),
     ),
   );

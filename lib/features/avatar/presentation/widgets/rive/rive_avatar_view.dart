@@ -162,8 +162,30 @@ class RiveAvatarView extends StatefulWidget {
   State<RiveAvatarView> createState() => _RiveAvatarViewState();
 }
 
+/// What the bound avatar file holds and reports, read back (the in-app
+/// captures of `integration_test/wow_capture_test.dart`, moonshot M10). A
+/// live [RiveAvatarView]'s state implements it: every value is null while
+/// no file is bound. Rive-free.
+abstract interface class AvatarFileReadBack {
+  /// The `AvatarVM` number [name] as the file holds it now.
+  double? numberValue(String name);
+
+  /// The `AvatarVM` colour [name] as the file holds it now (ARGB).
+  int? colorValue(String name);
+
+  /// The `AvatarVM` enum [name]'s value name as the file holds it now.
+  String? enumValue(String name);
+
+  /// How many `gesture_done` events the file emitted so far.
+  int get gestureDoneCount;
+
+  /// How many `presence_done` events the file emitted so far.
+  int get presenceDoneCount;
+}
+
 class _RiveAvatarViewState extends State<RiveAvatarView>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin
+    implements AvatarFileReadBack {
   /// Smallest change worth writing to the view model.
   static const double _writeEpsilon = 0.001;
 
@@ -186,6 +208,24 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   AvatarTapZones? _zones;
   MouthAnchorReader? _mouth;
   String? _error;
+
+  int _gestureDones = 0;
+  int _presenceDones = 0;
+
+  @override
+  int get gestureDoneCount => _gestureDones;
+
+  @override
+  int get presenceDoneCount => _presenceDones;
+
+  @override
+  double? numberValue(String name) => _binding?.numberValue(name);
+
+  @override
+  int? colorValue(String name) => _binding?.colorValue(name)?.toARGB32();
+
+  @override
+  String? enumValue(String name) => _binding?.enumValue(name);
 
   @override
   void initState() {
@@ -585,6 +625,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       return;
     }
     if (event.name == AvatarRiveContract.eventGestureDone) {
+      _gestureDones++;
       widget.onGestureDone?.call();
       return;
     }
@@ -598,6 +639,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       return;
     }
     if (event.name == AvatarRiveContract.eventPresenceDone) {
+      _presenceDones++;
       final String? presence = event
           .stringProperty(AvatarRiveContract.avatarEventPresenceProperty)
           ?.value;
