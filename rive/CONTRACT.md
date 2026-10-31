@@ -1,4 +1,4 @@
-# Rive contract (v13)
+# Rive contract (v14)
 
 **This file is the single source of truth shared by both agents.**
 
@@ -164,6 +164,10 @@ One file per scene. The app loads them lazily.
     across the bowl), rooftop **pigeon** (on the parapet; path = its walk along it), mountainHut
     **dog** (by the stove; path = the stove rug, 0, to the avatar's feet, 1). Their pokes: `fish`,
     `pigeon`, `dog`.
+    v14 NPCs: forestCabin **squirrel** (on the porch rail; path = the rail, 0, to the maple's trunk, 1;
+    react a tail-puff hop), trainCompartment **ladybug** (on the window sill; path = along the sill;
+    react a wing flutter), library **mouse** (by the bottom shelf; path = the shelf, 0, to the reading
+    chair's foot, 1; rest asleep curled; react a jump). Their pokes: `squirrel`, `ladybug`, `mouse`.
   - `npc2`, `npc2X`, `npc2Look` (v12): a second NPC slot with the same values and meaning as `npc`,
     `npcX`, `npcLook`, but default `away`. Only the beach binds it: **two gulls** on the sand right of
     the crab (rest standing, idle pecking, move flying across: `npc2X` 0 = landed, 1 = off the frame's
@@ -172,16 +176,32 @@ One file per scene. The app loads them lazily.
   - `moonPhase`: number, default −1 (v12): −1 draws the moon as it was drawn before v12; 0–1 draws
     that phase of the moon (0 new, 0.25 first quarter, 0.5 full, 0.75 last quarter; the northern
     hemisphere's view: waxing lit on the right). History-free. livingRoom (the window), campfire,
-    cafe (the window), rooftop and mountainHut (the window) bind it; beach and deepSpace ignore it.
+    cafe (the window), rooftop, mountainHut (the window), v14 forestCabin (the sky over the forest),
+    trainCompartment (the window) and library (the tall window) bind it; beach and deepSpace ignore it.
     The app writes it from the local date.
   - `festive`: number, 0–1, default 0 (v12): December dressing, written by the app from the local
     date (1 December to 6 January). livingRoom (string lights along the window), cafe (lights in the
-    window, a wreath on the door) and mountainHut (a garland over the stove, a stocking) bind it, with
+    window, a wreath on the door), mountainHut (a garland over the stove, a stocking), v14 forestCabin
+    (a wreath on the door, lights along the porch) and library (a garland on the shelves) bind it, with
     a slow twinkle; the other scenes ignore it. At 0 a scene looks as it did in v11.
   - `night`: number, 0–1, default 0 (v13): how much of the night shows, written by the app from its
     world clock as `(1 − daylight) × (1 − dusk)`. The beach binds it (a night sky over its sunset,
     the sun's glow off, stars, a darker sea and sand); every other scene declares and ignores it. At 0
     a scene looks as it did in v12 (so the beach's sunset stays the look of an app that never writes it).
+  - `tier`: enum, low, high, ultra; default **ultra** (v14): the device's quality tier, written by the
+    app on load and on every change. ultra draws everything (the v13 look). high halves the dense
+    effects (the second rain or snow sheet, twinkle and particle copies beyond the first half,
+    splashes). low also thins the fog veils to one fill, stops the decorative ambient loops that are not
+    light (steam, dust, drifting leaves beyond the first third), and draws the blend-mode glows that are
+    not the time of day or the light rig at normal blend, and hides any feathered element. Every scene
+    binds it; at ultra a scene looks as it did in v13.
+  - `spring`, `autumn`: numbers, 0–1, default 0 (v14): seasonal dressing, written by the app from the
+    local date (meteorological seasons, each 1 inside its window and ramping over its first and last
+    7 days; swapped south of the equator). forestCabin (spring blossom on the maple and the path; autumn
+    red-gold leaves, a leaf drift and a pumpkin by the step), campfire (the clearing's ferns and ground:
+    spring flowers, autumn leaves), livingRoom (a vase of tulips on the sill in spring, a small pumpkin
+    and leaves in autumn) and trainCompartment (the landscape's trees: blossom, autumn colours) bind
+    them; the others declare and ignore them. At 0 / 0 a scene looks as it did in v13.
   - The scene's drag handle numbers (v12, table below): every scene declares only its own. The app
     owns the gesture (Flutter pan recognizer, the handle rect in artboard space) and writes them each
     frame; the file only draws them, history-free. At their defaults a scene looks as it did in v11.
@@ -194,7 +214,8 @@ One file per scene. The app loads them lazily.
   nothing. It has no listeners and emits no events. The app draws it above the avatar with the same
   fit as `Scene`, never hit-tests it, and creates it only while `rain` > 0. campfire, beach and
   rooftop have one; livingRoom, cafe, mountainHut (the weather is outside the window) and deepSpace
-  do not (rooftop's is v12).
+  do not (rooftop's is v12). v14: forestCabin has one (the porch is open to the rain);
+  trainCompartment and library do not (their rain is on the glass).
 
 | sceneId | eventId values | propId values |
 |---|---|---|
@@ -205,11 +226,27 @@ One file per scene. The app loads them lazily.
 | cafe | espresso, doorbell, rain, neonFlicker | cup, espresso, window, fish |
 | rooftop | fireworks, plane, shootingStar, windowsLit | telescope, antenna, pigeon, moon |
 | mountainHut | snowfall, flare, aurora, bell | stove, window, dog, bell |
+| forestCabin | gust, fireflies, rain, lanternFlicker | lantern, pinwheel, squirrel, woodpile |
+| trainCompartment | tunnel, whistle, station, rain | window, lamp, suitcase, ladybug |
+| library | lightning, bookFlutter, clockChime, rain | book, globe, clock, mouse |
 
 v12 scenes: cafe (a rainy café: rain on the window, the wet street, the window's sky and fog),
 rooftop (a rooftop at night: rain with a `SceneFront`, the sky, fog), mountainHut (a snowy mountain
 hut, inside: snow outside the window from `rain`, the window's sky, fog, the stove's firelight
 flicker). Each binds `parallaxX/Y`, its light rig, `daylight`, `dusk`, `fog`, `npc*` like the others.
+
+v14 scenes: forestCabin (a log cabin's porch at the forest's edge, outdoors: rain with a `SceneFront`,
+the sky, fog, the lantern's flicker; `gust` blows leaves or petals across, `fireflies` rise at dusk and
+night), trainCompartment (inside a sleeper compartment, the landscape scrolling past the window on its
+own planes; rain slants on the glass; `tunnel` darkens the window and the compartment's lamp takes over,
+`station` slows the landscape to a platform and back, `whistle` puffs steam past the window),
+library (a tall library at night: shelves, a rolling ladder, a reading lamp, a tall arched window with
+rain; `lightning` flashes the window and throws the shelves' shadows, `bookFlutter` sends a book flying
+off a shelf and back, `clockChime` swings the clock's pendulum wider). Each binds `parallaxX/Y`, its
+light rig, `daylight`, `dusk`, `fog`, `moonPhase`, `npc*`, `rain`, `tier` and its drag numbers;
+forestCabin and library also `festive` (a wreath on the door and lights along the porch; a garland on
+the shelves); forestCabin and trainCompartment also `spring` and `autumn`. `npc2` and `night` are
+declared and ignored.
 
 ### Drag handles (v12)
 
@@ -226,6 +263,9 @@ are artboard px.
 | cafe | wipe | trail | (330, 260, 750, 760) | 2 | `trailN`, `trailX*`, `trailY*`, `trailFade` as beach | wipes the misted window; it mists back over 20 s |
 | rooftop | aim | aim | (710, 1011, 978, 1317) | 4 | `aim` −1–1 (0) | a horizontal drag swivels the telescope ±35°; it holds |
 | mountainHut | rope | pull | (172, 470, 252, 980) | 3 | `rope` 0–1 (0) | pull down; springs back; past 0.6 once per pull: the `bell` event |
+| forestCabin | pinwheel | spin | (790, 860, 990, 1120) | 4 | `pinwheel` 0–1 (0), wraps | a horizontal drag turns the pinwheel on the rail post; inertia |
+| trainCompartment | chain | pull | (800, 300, 880, 760) | 3 | `chain` 0–1 (0) | pull down; springs back; past 0.6 once per pull: the `whistle` event |
+| library | ladder | aim | (120, 520, 420, 1460) | 3 | `ladder` −1–1 (0) | a horizontal drag slides the ladder along its rail; it holds |
 
 The rects are measured from the built art: each covers the prop as it rests and everything its drag moves. The cord and the poke stick draw at rest (v12 affordances); a gull's, the fish's and the pigeon's facing follows the sign of `npc2Look` / `npcLook` (+ = right) while they move.
 
@@ -237,7 +277,7 @@ The rects are measured from the built art: each covers the prop as it rests and 
 - Keep blur, feather and mesh deformation to a minimum.
 - `avatar.riv` must stay at or under 600 KB, and each scene at or under 400 KB.
 - `journey.riv` (v10) must stay at or under 160 KB.
-- Scenes are bundled with the app and loaded lazily (v12: seven scenes, no download).
+- Scenes are bundled with the app and loaded lazily (v12: seven scenes; v14: ten, no download).
 - The avatar plus one scene must run with no visible stutter on a CPU-throttled Android
   emulator.
 - `ui_kit.riv` must stay at or under 150 KB. At most one UI-kit artboard animates continuously
