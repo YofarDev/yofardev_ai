@@ -109,6 +109,12 @@ class FacePerformer {
   final math.Random _rng;
   late final StreamSubscription<PerformanceIntent> _intentSub;
   late final StreamSubscription<PlaybackEvent> _playbackSub;
+  final StreamController<void> _wakes = StreamController<void>.broadcast();
+
+  /// Fires after each director intent: a view that stopped stepping a
+  /// settled performer starts again (a mood or a persona's posture can
+  /// change while nothing else moves, e.g. under reduce motion).
+  Stream<void> get wakes => _wakes.stream;
 
   /// Living idle while not speaking (breath, lip corners, head drift). Off,
   /// the face rests still and [isSettled] can report true.
@@ -1037,6 +1043,7 @@ class FacePerformer {
   Future<void> dispose() async {
     await _intentSub.cancel();
     await _playbackSub.cancel();
+    await _wakes.close();
   }
 
   // — events —
@@ -1072,6 +1079,9 @@ class FacePerformer {
       if (kind != null) {
         _startReaction(kind);
       }
+    }
+    if (!_wakes.isClosed) {
+      _wakes.add(null);
     }
   }
 

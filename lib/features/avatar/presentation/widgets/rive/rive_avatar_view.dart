@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart'
     show ValueListenable, kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
@@ -191,6 +193,9 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
 
   late final HeadMotionSolver _solver = widget.headSolver ?? HeadMotionSolver();
   late final Ticker _ticker = createTicker(_onTick);
+
+  /// The performer's wakes restart a ticker that stopped at rest.
+  StreamSubscription<void>? _wakeSub;
   Duration _lastElapsed = Duration.zero;
   double? _writtenYaw;
   double? _writtenPitch;
@@ -238,6 +243,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     );
     widget.daylight?.addListener(_writeLight);
     widget.localDay?.addListener(_applyContinuousState);
+    _wakeSub = widget.facePerformer?.wakes.listen((_) => _ensureTicking());
     _load();
   }
 
@@ -271,6 +277,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   @override
   void didUpdateWidget(RiveAvatarView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.facePerformer != oldWidget.facePerformer) {
+      _wakeSub?.cancel();
+      _wakeSub = widget.facePerformer?.wakes.listen((_) => _ensureTicking());
+    }
     if (widget.daylight != oldWidget.daylight) {
       oldWidget.daylight?.removeListener(_writeLight);
       widget.daylight?.addListener(_writeLight);
@@ -329,6 +339,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     WidgetsBinding.instance.removeObserver(this);
     widget.daylight?.removeListener(_writeLight);
     widget.localDay?.removeListener(_applyContinuousState);
+    _wakeSub?.cancel();
     _ticker.dispose();
     _teardown();
     super.dispose();

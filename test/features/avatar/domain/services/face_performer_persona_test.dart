@@ -65,6 +65,31 @@ void main() {
   final BodyLanguageProfile doomer = BodyLanguageProfile.of(ChatPersona.doomer);
   final BodyLanguageProfile coach = BodyLanguageProfile.of(ChatPersona.coach);
 
+  group('wakes', () {
+    test(
+      'a settled performer announces a new posture, so a view ticks again',
+      () async {
+        rig.performer.reduceMotion = true;
+        rig.send();
+        rig.run(2);
+        expect(rig.performer.isSettled, isTrue);
+        int wakes = 0;
+        final StreamSubscription<void> sub = rig.performer.wakes.listen(
+          (_) => wakes++,
+        );
+        rig.send(body: doomer);
+        await Future<void>.delayed(Duration.zero);
+        expect(wakes, 1);
+        // reduce motion: the posture lands in one step
+        expect(
+          rig.run(1 / 60).last.nodPitch,
+          closeTo(doomer.posture.pitch, 1e-6),
+        );
+        await sub.cancel();
+      },
+    );
+  });
+
   group('posture', () {
     test('normal leaves the face at rest', () {
       rig.send();

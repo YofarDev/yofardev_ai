@@ -342,9 +342,26 @@ def window(sc: Scene) -> tuple[list[El], dict[str, El]]:
     keep["shower_glass"] = shower
     # the `wipe` drag (M10): 16 wiped spots cut the mist (holes, `clockwise` fill rule), so a wipe
     # reveals the view as clear glass; two thinner mist rings soften each stroke's edge (`wipe_holes`)
+    _reserve_m9_wipe_ids(sc, clip)
     wipe = wipe_holes(sc, mist)
     return [rain, shower, *wipe, mist, clip, bevel, frame], keep
 
+
+def _reserve_m9_wipe_ids(sc: Scene, clip: El) -> None:
+    """Mints and drops the M9 wipe (`world_kit.trail_dots` + its darken fills and clip) from `sc.d9`
+    exactly as M9 did, so every `d9` id minted after it keeps its M9 value (existing ids never move;
+    the M10 wipe mints from `sc.d10`). Its converters are taken back off the scene's roots."""
+    d9, roots = sc.d9, len(sc.roots)
+    dots = world_kit.trail_dots(sc, d9, "FF4E5870", "00E8F0F8", 28.0)
+    for dot in dots.children:
+        if dot.tag != "Node":
+            continue
+        for part in dot.children:
+            if part.tag == "Shape" and part.attrs.get("name") == "Mark":
+                d9("Fill", rad(d9, 0, 0, 28.0, [("FF4E5870", 0.0), ("FF4E5870", 0.5), ("004E5870", 1.0)]),
+                   name="Fill")
+    d9("ClippingShape", sourceId=clip.ref(), name="Clip")
+    del sc.roots[roots:]
 
 def wipe_holes(sc: Scene, mist: El) -> list[El]:
     """The café's `wipe` drag (contract v12 numbers, M10 art): wiped spot i (shown while i < `trailN`, at

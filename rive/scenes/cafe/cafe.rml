@@ -38,21 +38,21 @@
         </EntryState>
         <AnimationState animationId="0:1331" x="160" y="100" id="0:1332"/>
       </StateMachineLayer>
-      <StateMachineLayer name="FestiveTwinkleWreath" id="0:920256">
-        <AnyState x="100" y="-100" id="0:920252"/>
-        <ExitState x="500" y="-100" id="0:920253"/>
-        <EntryState x="-100" y="-100" id="0:920255">
-          <StateTransition stateToId="0:920251" id="0:920254"/>
+      <StateMachineLayer name="FestiveTwinkleWreath" id="0:920735">
+        <AnyState x="100" y="-100" id="0:920731"/>
+        <ExitState x="500" y="-100" id="0:920732"/>
+        <EntryState x="-100" y="-100" id="0:920734">
+          <StateTransition stateToId="0:920730" id="0:920733"/>
         </EntryState>
-        <AnimationState animationId="0:920250" x="160" y="100" id="0:920251"/>
+        <AnimationState animationId="0:920729" x="160" y="100" id="0:920730"/>
       </StateMachineLayer>
-      <StateMachineLayer name="FestiveTwinkle" id="0:920527">
-        <AnyState x="100" y="-100" id="0:920523"/>
-        <ExitState x="500" y="-100" id="0:920524"/>
-        <EntryState x="-100" y="-100" id="0:920526">
-          <StateTransition stateToId="0:920522" id="0:920525"/>
+      <StateMachineLayer name="FestiveTwinkle" id="0:921006">
+        <AnyState x="100" y="-100" id="0:921002"/>
+        <ExitState x="500" y="-100" id="0:921003"/>
+        <EntryState x="-100" y="-100" id="0:921005">
+          <StateTransition stateToId="0:921001" id="0:921004"/>
         </EntryState>
-        <AnimationState animationId="0:920521" x="160" y="100" id="0:920522"/>
+        <AnimationState animationId="0:921000" x="160" y="100" id="0:921001"/>
       </StateMachineLayer>
       <StateMachineLayer name="CupSteam" id="0:3185">
         <AnyState x="100" y="-100" id="0:3181"/>
@@ -1388,353 +1388,353 @@
           <SolidColor colorValue="00000000" id="0:3469"/>
         </Fill>
       </Shape>
-      <Node x="0" y="0" opacity="0" name="FestiveLights" id="0:920529">
-        <DataBindContext sourcePathIds="0:23-0:920008" propertyKey="18" converterId="0:920269" id="0:920528"/>
-        <Node x="0" y="0" name="emitBulbsA" id="0:920480">
-          <Shape x="304" y="253.4" name="emitBulb0" id="0:920279">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920276"/>
-            <Fill name="Fill" id="0:920278">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920277"/>
+      <Node x="0" y="0" opacity="0" name="FestiveLights" id="0:921008">
+        <DataBindContext sourcePathIds="0:23-0:920008" propertyKey="18" converterId="0:920748" id="0:921007"/>
+        <Node x="0" y="0" name="emitBulbsA" id="0:920959">
+          <Shape x="304" y="253.4" name="emitBulb0" id="0:920758">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920755"/>
+            <Fill name="Fill" id="0:920757">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920756"/>
             </Fill>
           </Shape>
-          <Shape x="304" y="248" name="emitGlow0" id="0:920275">
-            <Ellipse width="48" height="48" name="Path" id="0:920270"/>
-            <Fill name="Fill" id="0:920274">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920273">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920271"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920272"/>
+          <Shape x="304" y="248" name="emitGlow0" id="0:920754">
+            <Ellipse width="48" height="48" name="Path" id="0:920749"/>
+            <Fill name="Fill" id="0:920753">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920752">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920750"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920751"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="351.2" y="273.4" name="emitBulb2" id="0:920299">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920296"/>
-            <Fill name="Fill" id="0:920298">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920297"/>
+          <Shape x="351.2" y="273.4" name="emitBulb2" id="0:920778">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920775"/>
+            <Fill name="Fill" id="0:920777">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920776"/>
             </Fill>
           </Shape>
-          <Shape x="351.2" y="268" name="emitGlow2" id="0:920295">
-            <Ellipse width="48" height="48" name="Path" id="0:920290"/>
-            <Fill name="Fill" id="0:920294">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920293">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920291"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920292"/>
+          <Shape x="351.2" y="268" name="emitGlow2" id="0:920774">
+            <Ellipse width="48" height="48" name="Path" id="0:920769"/>
+            <Fill name="Fill" id="0:920773">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920772">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920770"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920771"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="398.4" y="285.7" name="emitBulb4" id="0:920319">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920316"/>
-            <Fill name="Fill" id="0:920318">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920317"/>
+          <Shape x="398.4" y="285.7" name="emitBulb4" id="0:920798">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920795"/>
+            <Fill name="Fill" id="0:920797">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920796"/>
             </Fill>
           </Shape>
-          <Shape x="398.4" y="280.3" name="emitGlow4" id="0:920315">
-            <Ellipse width="48" height="48" name="Path" id="0:920310"/>
-            <Fill name="Fill" id="0:920314">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920313">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920311"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920312"/>
+          <Shape x="398.4" y="280.3" name="emitGlow4" id="0:920794">
+            <Ellipse width="48" height="48" name="Path" id="0:920789"/>
+            <Fill name="Fill" id="0:920793">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920792">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920790"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920791"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="445.6" y="285.7" name="emitBulb6" id="0:920339">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920336"/>
-            <Fill name="Fill" id="0:920338">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920337"/>
+          <Shape x="445.6" y="285.7" name="emitBulb6" id="0:920818">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920815"/>
+            <Fill name="Fill" id="0:920817">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920816"/>
             </Fill>
           </Shape>
-          <Shape x="445.6" y="280.3" name="emitGlow6" id="0:920335">
-            <Ellipse width="48" height="48" name="Path" id="0:920330"/>
-            <Fill name="Fill" id="0:920334">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920333">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920331"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920332"/>
+          <Shape x="445.6" y="280.3" name="emitGlow6" id="0:920814">
+            <Ellipse width="48" height="48" name="Path" id="0:920809"/>
+            <Fill name="Fill" id="0:920813">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920812">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920810"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920811"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="492.8" y="273.4" name="emitBulb8" id="0:920359">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920356"/>
-            <Fill name="Fill" id="0:920358">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920357"/>
+          <Shape x="492.8" y="273.4" name="emitBulb8" id="0:920838">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920835"/>
+            <Fill name="Fill" id="0:920837">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920836"/>
             </Fill>
           </Shape>
-          <Shape x="492.8" y="268" name="emitGlow8" id="0:920355">
-            <Ellipse width="48" height="48" name="Path" id="0:920350"/>
-            <Fill name="Fill" id="0:920354">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920353">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920351"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920352"/>
+          <Shape x="492.8" y="268" name="emitGlow8" id="0:920834">
+            <Ellipse width="48" height="48" name="Path" id="0:920829"/>
+            <Fill name="Fill" id="0:920833">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920832">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920830"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920831"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="540" y="253.4" name="emitBulb10" id="0:920379">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920376"/>
-            <Fill name="Fill" id="0:920378">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920377"/>
+          <Shape x="540" y="253.4" name="emitBulb10" id="0:920858">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920855"/>
+            <Fill name="Fill" id="0:920857">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920856"/>
             </Fill>
           </Shape>
-          <Shape x="540" y="248" name="emitGlow10" id="0:920375">
-            <Ellipse width="48" height="48" name="Path" id="0:920370"/>
-            <Fill name="Fill" id="0:920374">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920373">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920371"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920372"/>
+          <Shape x="540" y="248" name="emitGlow10" id="0:920854">
+            <Ellipse width="48" height="48" name="Path" id="0:920849"/>
+            <Fill name="Fill" id="0:920853">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920852">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920850"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920851"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="587.2" y="273.4" name="emitBulb12" id="0:920399">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920396"/>
-            <Fill name="Fill" id="0:920398">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920397"/>
+          <Shape x="587.2" y="273.4" name="emitBulb12" id="0:920878">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920875"/>
+            <Fill name="Fill" id="0:920877">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920876"/>
             </Fill>
           </Shape>
-          <Shape x="587.2" y="268" name="emitGlow12" id="0:920395">
-            <Ellipse width="48" height="48" name="Path" id="0:920390"/>
-            <Fill name="Fill" id="0:920394">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920393">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920391"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920392"/>
+          <Shape x="587.2" y="268" name="emitGlow12" id="0:920874">
+            <Ellipse width="48" height="48" name="Path" id="0:920869"/>
+            <Fill name="Fill" id="0:920873">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920872">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920870"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920871"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="634.4" y="285.7" name="emitBulb14" id="0:920419">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920416"/>
-            <Fill name="Fill" id="0:920418">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920417"/>
+          <Shape x="634.4" y="285.7" name="emitBulb14" id="0:920898">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920895"/>
+            <Fill name="Fill" id="0:920897">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920896"/>
             </Fill>
           </Shape>
-          <Shape x="634.4" y="280.3" name="emitGlow14" id="0:920415">
-            <Ellipse width="48" height="48" name="Path" id="0:920410"/>
-            <Fill name="Fill" id="0:920414">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920413">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920411"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920412"/>
+          <Shape x="634.4" y="280.3" name="emitGlow14" id="0:920894">
+            <Ellipse width="48" height="48" name="Path" id="0:920889"/>
+            <Fill name="Fill" id="0:920893">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920892">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920890"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920891"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="681.6" y="285.7" name="emitBulb16" id="0:920439">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920436"/>
-            <Fill name="Fill" id="0:920438">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920437"/>
+          <Shape x="681.6" y="285.7" name="emitBulb16" id="0:920918">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920915"/>
+            <Fill name="Fill" id="0:920917">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920916"/>
             </Fill>
           </Shape>
-          <Shape x="681.6" y="280.3" name="emitGlow16" id="0:920435">
-            <Ellipse width="48" height="48" name="Path" id="0:920430"/>
-            <Fill name="Fill" id="0:920434">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920433">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920431"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920432"/>
+          <Shape x="681.6" y="280.3" name="emitGlow16" id="0:920914">
+            <Ellipse width="48" height="48" name="Path" id="0:920909"/>
+            <Fill name="Fill" id="0:920913">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920912">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920910"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920911"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="728.8" y="273.4" name="emitBulb18" id="0:920459">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920456"/>
-            <Fill name="Fill" id="0:920458">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920457"/>
+          <Shape x="728.8" y="273.4" name="emitBulb18" id="0:920938">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920935"/>
+            <Fill name="Fill" id="0:920937">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920936"/>
             </Fill>
           </Shape>
-          <Shape x="728.8" y="268" name="emitGlow18" id="0:920455">
-            <Ellipse width="48" height="48" name="Path" id="0:920450"/>
-            <Fill name="Fill" id="0:920454">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920453">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920451"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920452"/>
+          <Shape x="728.8" y="268" name="emitGlow18" id="0:920934">
+            <Ellipse width="48" height="48" name="Path" id="0:920929"/>
+            <Fill name="Fill" id="0:920933">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920932">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920930"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920931"/>
               </RadialGradient>
             </Fill>
           </Shape>
-          <Shape x="776" y="253.4" name="emitBulb20" id="0:920479">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920476"/>
-            <Fill name="Fill" id="0:920478">
-              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920477"/>
+          <Shape x="776" y="253.4" name="emitBulb20" id="0:920958">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920955"/>
+            <Fill name="Fill" id="0:920957">
+              <SolidColor colorValue="FFFFD27A" name="emit" id="0:920956"/>
             </Fill>
           </Shape>
-          <Shape x="776" y="248" name="emitGlow20" id="0:920475">
-            <Ellipse width="48" height="48" name="Path" id="0:920470"/>
-            <Fill name="Fill" id="0:920474">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920473">
-                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920471"/>
-                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920472"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-        </Node>
-        <Node x="0" y="0" name="emitBulbsB" id="0:920481">
-          <Shape x="327.6" y="263.9" name="emitBulb1" id="0:920289">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920286"/>
-            <Fill name="Fill" id="0:920288">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920287"/>
-            </Fill>
-          </Shape>
-          <Shape x="327.6" y="258.5" name="emitGlow1" id="0:920285">
-            <Ellipse width="48" height="48" name="Path" id="0:920280"/>
-            <Fill name="Fill" id="0:920284">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920283">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920281"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920282"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="374.8" y="280.9" name="emitBulb3" id="0:920309">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920306"/>
-            <Fill name="Fill" id="0:920308">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920307"/>
-            </Fill>
-          </Shape>
-          <Shape x="374.8" y="275.5" name="emitGlow3" id="0:920305">
-            <Ellipse width="48" height="48" name="Path" id="0:920300"/>
-            <Fill name="Fill" id="0:920304">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920303">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920301"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920302"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="422" y="287.4" name="emitBulb5" id="0:920329">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920326"/>
-            <Fill name="Fill" id="0:920328">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920327"/>
-            </Fill>
-          </Shape>
-          <Shape x="422" y="282" name="emitGlow5" id="0:920325">
-            <Ellipse width="48" height="48" name="Path" id="0:920320"/>
-            <Fill name="Fill" id="0:920324">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920323">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920321"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920322"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="469.2" y="280.9" name="emitBulb7" id="0:920349">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920346"/>
-            <Fill name="Fill" id="0:920348">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920347"/>
-            </Fill>
-          </Shape>
-          <Shape x="469.2" y="275.5" name="emitGlow7" id="0:920345">
-            <Ellipse width="48" height="48" name="Path" id="0:920340"/>
-            <Fill name="Fill" id="0:920344">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920343">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920341"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920342"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="516.4" y="263.9" name="emitBulb9" id="0:920369">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920366"/>
-            <Fill name="Fill" id="0:920368">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920367"/>
-            </Fill>
-          </Shape>
-          <Shape x="516.4" y="258.5" name="emitGlow9" id="0:920365">
-            <Ellipse width="48" height="48" name="Path" id="0:920360"/>
-            <Fill name="Fill" id="0:920364">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920363">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920361"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920362"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="563.6" y="263.9" name="emitBulb11" id="0:920389">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920386"/>
-            <Fill name="Fill" id="0:920388">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920387"/>
-            </Fill>
-          </Shape>
-          <Shape x="563.6" y="258.5" name="emitGlow11" id="0:920385">
-            <Ellipse width="48" height="48" name="Path" id="0:920380"/>
-            <Fill name="Fill" id="0:920384">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920383">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920381"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920382"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="610.8" y="280.9" name="emitBulb13" id="0:920409">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920406"/>
-            <Fill name="Fill" id="0:920408">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920407"/>
-            </Fill>
-          </Shape>
-          <Shape x="610.8" y="275.5" name="emitGlow13" id="0:920405">
-            <Ellipse width="48" height="48" name="Path" id="0:920400"/>
-            <Fill name="Fill" id="0:920404">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920403">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920401"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920402"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="658" y="287.4" name="emitBulb15" id="0:920429">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920426"/>
-            <Fill name="Fill" id="0:920428">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920427"/>
-            </Fill>
-          </Shape>
-          <Shape x="658" y="282" name="emitGlow15" id="0:920425">
-            <Ellipse width="48" height="48" name="Path" id="0:920420"/>
-            <Fill name="Fill" id="0:920424">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920423">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920421"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920422"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="705.2" y="280.9" name="emitBulb17" id="0:920449">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920446"/>
-            <Fill name="Fill" id="0:920448">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920447"/>
-            </Fill>
-          </Shape>
-          <Shape x="705.2" y="275.5" name="emitGlow17" id="0:920445">
-            <Ellipse width="48" height="48" name="Path" id="0:920440"/>
-            <Fill name="Fill" id="0:920444">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920443">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920441"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920442"/>
-              </RadialGradient>
-            </Fill>
-          </Shape>
-          <Shape x="752.4" y="263.9" name="emitBulb19" id="0:920469">
-            <Ellipse width="18" height="22.5" name="Path" id="0:920466"/>
-            <Fill name="Fill" id="0:920468">
-              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920467"/>
-            </Fill>
-          </Shape>
-          <Shape x="752.4" y="258.5" name="emitGlow19" id="0:920465">
-            <Ellipse width="48" height="48" name="Path" id="0:920460"/>
-            <Fill name="Fill" id="0:920464">
-              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920463">
-                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920461"/>
-                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920462"/>
+          <Shape x="776" y="248" name="emitGlow20" id="0:920954">
+            <Ellipse width="48" height="48" name="Path" id="0:920949"/>
+            <Fill name="Fill" id="0:920953">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920952">
+                <GradientStop colorValue="66FFD27A" position="0" name="emit" id="0:920950"/>
+                <GradientStop colorValue="00FFD27A" position="1" name="emit" id="0:920951"/>
               </RadialGradient>
             </Fill>
           </Shape>
         </Node>
-        <Shape x="0" y="0" name="FestiveWire" id="0:920506">
-          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920503">
-            <CubicDetachedVertex x="304" y="248" outRotation="0.4186" outDistance="8.6101" inRotation="3.5602" inDistance="0" id="0:920482"/>
-            <CubicDetachedVertex x="327.6" y="258.5" outRotation="0.4008" outDistance="8.4787" inRotation="3.5424" inDistance="8.6087" id="0:920483"/>
-            <CubicDetachedVertex x="351.2" y="268" outRotation="0.3457" outDistance="8.2486" inRotation="3.4873" inDistance="8.4741" id="0:920484"/>
-            <CubicDetachedVertex x="374.8" y="275.5" outRotation="0.2549" outDistance="8.0162" inRotation="3.3965" inDistance="8.2425" id="0:920485"/>
-            <CubicDetachedVertex x="398.4" y="280.3" outRotation="0.1369" outDistance="7.8707" inRotation="3.2784" inDistance="8.0111" id="0:920486"/>
-            <CubicDetachedVertex x="422" y="282" outRotation="0" outDistance="7.8667" inRotation="3.1416" inDistance="7.8667" id="0:920487"/>
-            <CubicDetachedVertex x="445.6" y="280.3" outRotation="-0.1369" outDistance="8.0111" inRotation="3.0047" inDistance="7.8707" id="0:920488"/>
-            <CubicDetachedVertex x="469.2" y="275.5" outRotation="-0.2549" outDistance="8.2425" inRotation="2.8867" inDistance="8.0162" id="0:920489"/>
-            <CubicDetachedVertex x="492.8" y="268" outRotation="-0.3457" outDistance="8.4741" inRotation="2.7959" inDistance="8.2486" id="0:920490"/>
-            <CubicDetachedVertex x="516.4" y="258.5" outRotation="-0.4008" outDistance="8.6087" inRotation="2.7408" inDistance="8.4787" id="0:920491"/>
-            <CubicDetachedVertex x="540" y="248" outRotation="0" outDistance="7.8667" inRotation="3.1416" inDistance="7.8667" id="0:920492"/>
-            <CubicDetachedVertex x="563.6" y="258.5" outRotation="0.4008" outDistance="8.4787" inRotation="3.5424" inDistance="8.6087" id="0:920493"/>
-            <CubicDetachedVertex x="587.2" y="268" outRotation="0.3457" outDistance="8.2486" inRotation="3.4873" inDistance="8.4741" id="0:920494"/>
-            <CubicDetachedVertex x="610.8" y="275.5" outRotation="0.2549" outDistance="8.0162" inRotation="3.3965" inDistance="8.2425" id="0:920495"/>
-            <CubicDetachedVertex x="634.4" y="280.3" outRotation="0.1369" outDistance="7.8707" inRotation="3.2784" inDistance="8.0111" id="0:920496"/>
-            <CubicDetachedVertex x="658" y="282" outRotation="0" outDistance="7.8667" inRotation="3.1416" inDistance="7.8667" id="0:920497"/>
-            <CubicDetachedVertex x="681.6" y="280.3" outRotation="-0.1369" outDistance="8.0111" inRotation="3.0047" inDistance="7.8707" id="0:920498"/>
-            <CubicDetachedVertex x="705.2" y="275.5" outRotation="-0.2549" outDistance="8.2425" inRotation="2.8867" inDistance="8.0162" id="0:920499"/>
-            <CubicDetachedVertex x="728.8" y="268" outRotation="-0.3457" outDistance="8.4741" inRotation="2.7959" inDistance="8.2486" id="0:920500"/>
-            <CubicDetachedVertex x="752.4" y="258.5" outRotation="-0.4008" outDistance="8.6087" inRotation="2.7408" inDistance="8.4787" id="0:920501"/>
-            <CubicDetachedVertex x="776" y="248" outRotation="-0.4186" outDistance="0" inRotation="2.723" inDistance="8.6101" id="0:920502"/>
+        <Node x="0" y="0" name="emitBulbsB" id="0:920960">
+          <Shape x="327.6" y="263.9" name="emitBulb1" id="0:920768">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920765"/>
+            <Fill name="Fill" id="0:920767">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920766"/>
+            </Fill>
+          </Shape>
+          <Shape x="327.6" y="258.5" name="emitGlow1" id="0:920764">
+            <Ellipse width="48" height="48" name="Path" id="0:920759"/>
+            <Fill name="Fill" id="0:920763">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920762">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920760"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920761"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="374.8" y="280.9" name="emitBulb3" id="0:920788">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920785"/>
+            <Fill name="Fill" id="0:920787">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920786"/>
+            </Fill>
+          </Shape>
+          <Shape x="374.8" y="275.5" name="emitGlow3" id="0:920784">
+            <Ellipse width="48" height="48" name="Path" id="0:920779"/>
+            <Fill name="Fill" id="0:920783">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920782">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920780"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920781"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="422" y="287.4" name="emitBulb5" id="0:920808">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920805"/>
+            <Fill name="Fill" id="0:920807">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920806"/>
+            </Fill>
+          </Shape>
+          <Shape x="422" y="282" name="emitGlow5" id="0:920804">
+            <Ellipse width="48" height="48" name="Path" id="0:920799"/>
+            <Fill name="Fill" id="0:920803">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920802">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920800"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920801"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="469.2" y="280.9" name="emitBulb7" id="0:920828">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920825"/>
+            <Fill name="Fill" id="0:920827">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920826"/>
+            </Fill>
+          </Shape>
+          <Shape x="469.2" y="275.5" name="emitGlow7" id="0:920824">
+            <Ellipse width="48" height="48" name="Path" id="0:920819"/>
+            <Fill name="Fill" id="0:920823">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920822">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920820"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920821"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="516.4" y="263.9" name="emitBulb9" id="0:920848">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920845"/>
+            <Fill name="Fill" id="0:920847">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920846"/>
+            </Fill>
+          </Shape>
+          <Shape x="516.4" y="258.5" name="emitGlow9" id="0:920844">
+            <Ellipse width="48" height="48" name="Path" id="0:920839"/>
+            <Fill name="Fill" id="0:920843">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920842">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920840"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920841"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="563.6" y="263.9" name="emitBulb11" id="0:920868">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920865"/>
+            <Fill name="Fill" id="0:920867">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920866"/>
+            </Fill>
+          </Shape>
+          <Shape x="563.6" y="258.5" name="emitGlow11" id="0:920864">
+            <Ellipse width="48" height="48" name="Path" id="0:920859"/>
+            <Fill name="Fill" id="0:920863">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920862">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920860"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920861"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="610.8" y="280.9" name="emitBulb13" id="0:920888">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920885"/>
+            <Fill name="Fill" id="0:920887">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920886"/>
+            </Fill>
+          </Shape>
+          <Shape x="610.8" y="275.5" name="emitGlow13" id="0:920884">
+            <Ellipse width="48" height="48" name="Path" id="0:920879"/>
+            <Fill name="Fill" id="0:920883">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920882">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920880"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920881"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="658" y="287.4" name="emitBulb15" id="0:920908">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920905"/>
+            <Fill name="Fill" id="0:920907">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920906"/>
+            </Fill>
+          </Shape>
+          <Shape x="658" y="282" name="emitGlow15" id="0:920904">
+            <Ellipse width="48" height="48" name="Path" id="0:920899"/>
+            <Fill name="Fill" id="0:920903">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920902">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920900"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920901"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="705.2" y="280.9" name="emitBulb17" id="0:920928">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920925"/>
+            <Fill name="Fill" id="0:920927">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920926"/>
+            </Fill>
+          </Shape>
+          <Shape x="705.2" y="275.5" name="emitGlow17" id="0:920924">
+            <Ellipse width="48" height="48" name="Path" id="0:920919"/>
+            <Fill name="Fill" id="0:920923">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920922">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920920"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920921"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+          <Shape x="752.4" y="263.9" name="emitBulb19" id="0:920948">
+            <Ellipse width="18" height="22.5" name="Path" id="0:920945"/>
+            <Fill name="Fill" id="0:920947">
+              <SolidColor colorValue="FFFF8A7A" name="emit" id="0:920946"/>
+            </Fill>
+          </Shape>
+          <Shape x="752.4" y="258.5" name="emitGlow19" id="0:920944">
+            <Ellipse width="48" height="48" name="Path" id="0:920939"/>
+            <Fill name="Fill" id="0:920943">
+              <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920942">
+                <GradientStop colorValue="66FF8A7A" position="0" name="emit" id="0:920940"/>
+                <GradientStop colorValue="00FF8A7A" position="1" name="emit" id="0:920941"/>
+              </RadialGradient>
+            </Fill>
+          </Shape>
+        </Node>
+        <Shape x="0" y="0" name="FestiveWire" id="0:920985">
+          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:920982">
+            <CubicDetachedVertex x="304" y="248" outRotation="0.4186" outDistance="8.6101" inRotation="3.5602" inDistance="0" id="0:920961"/>
+            <CubicDetachedVertex x="327.6" y="258.5" outRotation="0.4008" outDistance="8.4787" inRotation="3.5424" inDistance="8.6087" id="0:920962"/>
+            <CubicDetachedVertex x="351.2" y="268" outRotation="0.3457" outDistance="8.2486" inRotation="3.4873" inDistance="8.4741" id="0:920963"/>
+            <CubicDetachedVertex x="374.8" y="275.5" outRotation="0.2549" outDistance="8.0162" inRotation="3.3965" inDistance="8.2425" id="0:920964"/>
+            <CubicDetachedVertex x="398.4" y="280.3" outRotation="0.1369" outDistance="7.8707" inRotation="3.2784" inDistance="8.0111" id="0:920965"/>
+            <CubicDetachedVertex x="422" y="282" outRotation="0" outDistance="7.8667" inRotation="3.1416" inDistance="7.8667" id="0:920966"/>
+            <CubicDetachedVertex x="445.6" y="280.3" outRotation="-0.1369" outDistance="8.0111" inRotation="3.0047" inDistance="7.8707" id="0:920967"/>
+            <CubicDetachedVertex x="469.2" y="275.5" outRotation="-0.2549" outDistance="8.2425" inRotation="2.8867" inDistance="8.0162" id="0:920968"/>
+            <CubicDetachedVertex x="492.8" y="268" outRotation="-0.3457" outDistance="8.4741" inRotation="2.7959" inDistance="8.2486" id="0:920969"/>
+            <CubicDetachedVertex x="516.4" y="258.5" outRotation="-0.4008" outDistance="8.6087" inRotation="2.7408" inDistance="8.4787" id="0:920970"/>
+            <CubicDetachedVertex x="540" y="248" outRotation="0" outDistance="7.8667" inRotation="3.1416" inDistance="7.8667" id="0:920971"/>
+            <CubicDetachedVertex x="563.6" y="258.5" outRotation="0.4008" outDistance="8.4787" inRotation="3.5424" inDistance="8.6087" id="0:920972"/>
+            <CubicDetachedVertex x="587.2" y="268" outRotation="0.3457" outDistance="8.2486" inRotation="3.4873" inDistance="8.4741" id="0:920973"/>
+            <CubicDetachedVertex x="610.8" y="275.5" outRotation="0.2549" outDistance="8.0162" inRotation="3.3965" inDistance="8.2425" id="0:920974"/>
+            <CubicDetachedVertex x="634.4" y="280.3" outRotation="0.1369" outDistance="7.8707" inRotation="3.2784" inDistance="8.0111" id="0:920975"/>
+            <CubicDetachedVertex x="658" y="282" outRotation="0" outDistance="7.8667" inRotation="3.1416" inDistance="7.8667" id="0:920976"/>
+            <CubicDetachedVertex x="681.6" y="280.3" outRotation="-0.1369" outDistance="8.0111" inRotation="3.0047" inDistance="7.8707" id="0:920977"/>
+            <CubicDetachedVertex x="705.2" y="275.5" outRotation="-0.2549" outDistance="8.2425" inRotation="2.8867" inDistance="8.0162" id="0:920978"/>
+            <CubicDetachedVertex x="728.8" y="268" outRotation="-0.3457" outDistance="8.4741" inRotation="2.7959" inDistance="8.2486" id="0:920979"/>
+            <CubicDetachedVertex x="752.4" y="258.5" outRotation="-0.4008" outDistance="8.6087" inRotation="2.7408" inDistance="8.4787" id="0:920980"/>
+            <CubicDetachedVertex x="776" y="248" outRotation="-0.4186" outDistance="0" inRotation="2.723" inDistance="8.6101" id="0:920981"/>
           </PointsPath>
-          <Stroke thickness="2.4" cap="round" join="round" name="Line" id="0:920505">
-            <SolidColor colorValue="FF2A3328" id="0:920504"/>
+          <Stroke thickness="2.4" cap="round" join="round" name="Line" id="0:920984">
+            <SolidColor colorValue="FF2A3328" id="0:920983"/>
           </Stroke>
         </Shape>
       </Node>
@@ -1863,130 +1863,130 @@
       </Shape>
       <Node x="1030" y="920" name="DoorLeaf" id="0:2624">
         <Node x="-90" y="-248" opacity="0" name="Wreath" id="0:2623">
-          <DataBindContext sourcePathIds="0:23-0:920008" propertyKey="18" id="0:920259"/>
-          <Node x="-940" y="-672" opacity="0" name="WreathLights" id="0:920258">
-            <DataBindContext sourcePathIds="0:23-0:920008" propertyKey="18" converterId="0:920152" id="0:920257"/>
-            <Node x="0" y="0" name="emitBulbsA" id="0:920223">
-              <Shape x="940" y="641.4" name="emitBulb0" id="0:920162">
-                <Ellipse width="18" height="22.5" name="Path" id="0:920159"/>
-                <Fill name="Fill" id="0:920161">
-                  <SolidColor colorValue="FFFFE08A" name="emit" id="0:920160"/>
+          <DataBindContext sourcePathIds="0:23-0:920008" propertyKey="18" id="0:920738"/>
+          <Node x="-940" y="-672" opacity="0" name="WreathLights" id="0:920737">
+            <DataBindContext sourcePathIds="0:23-0:920008" propertyKey="18" converterId="0:920631" id="0:920736"/>
+            <Node x="0" y="0" name="emitBulbsA" id="0:920702">
+              <Shape x="940" y="641.4" name="emitBulb0" id="0:920641">
+                <Ellipse width="18" height="22.5" name="Path" id="0:920638"/>
+                <Fill name="Fill" id="0:920640">
+                  <SolidColor colorValue="FFFFE08A" name="emit" id="0:920639"/>
                 </Fill>
               </Shape>
-              <Shape x="940" y="636" name="emitGlow0" id="0:920158">
-                <Ellipse width="48" height="48" name="Path" id="0:920153"/>
-                <Fill name="Fill" id="0:920157">
-                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920156">
-                    <GradientStop colorValue="66FFE08A" position="0" name="emit" id="0:920154"/>
-                    <GradientStop colorValue="00FFE08A" position="1" name="emit" id="0:920155"/>
+              <Shape x="940" y="636" name="emitGlow0" id="0:920637">
+                <Ellipse width="48" height="48" name="Path" id="0:920632"/>
+                <Fill name="Fill" id="0:920636">
+                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920635">
+                    <GradientStop colorValue="66FFE08A" position="0" name="emit" id="0:920633"/>
+                    <GradientStop colorValue="00FFE08A" position="1" name="emit" id="0:920634"/>
                   </RadialGradient>
                 </Fill>
               </Shape>
-              <Shape x="971.2" y="695.4" name="emitBulb2" id="0:920182">
-                <Ellipse width="18" height="22.5" name="Path" id="0:920179"/>
-                <Fill name="Fill" id="0:920181">
-                  <SolidColor colorValue="FFFFE08A" name="emit" id="0:920180"/>
+              <Shape x="971.2" y="695.4" name="emitBulb2" id="0:920661">
+                <Ellipse width="18" height="22.5" name="Path" id="0:920658"/>
+                <Fill name="Fill" id="0:920660">
+                  <SolidColor colorValue="FFFFE08A" name="emit" id="0:920659"/>
                 </Fill>
               </Shape>
-              <Shape x="971.2" y="690" name="emitGlow2" id="0:920178">
-                <Ellipse width="48" height="48" name="Path" id="0:920173"/>
-                <Fill name="Fill" id="0:920177">
-                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920176">
-                    <GradientStop colorValue="66FFE08A" position="0" name="emit" id="0:920174"/>
-                    <GradientStop colorValue="00FFE08A" position="1" name="emit" id="0:920175"/>
+              <Shape x="971.2" y="690" name="emitGlow2" id="0:920657">
+                <Ellipse width="48" height="48" name="Path" id="0:920652"/>
+                <Fill name="Fill" id="0:920656">
+                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920655">
+                    <GradientStop colorValue="66FFE08A" position="0" name="emit" id="0:920653"/>
+                    <GradientStop colorValue="00FFE08A" position="1" name="emit" id="0:920654"/>
                   </RadialGradient>
                 </Fill>
               </Shape>
-              <Shape x="908.8" y="695.4" name="emitBulb4" id="0:920202">
-                <Ellipse width="18" height="22.5" name="Path" id="0:920199"/>
-                <Fill name="Fill" id="0:920201">
-                  <SolidColor colorValue="FFFFE08A" name="emit" id="0:920200"/>
+              <Shape x="908.8" y="695.4" name="emitBulb4" id="0:920681">
+                <Ellipse width="18" height="22.5" name="Path" id="0:920678"/>
+                <Fill name="Fill" id="0:920680">
+                  <SolidColor colorValue="FFFFE08A" name="emit" id="0:920679"/>
                 </Fill>
               </Shape>
-              <Shape x="908.8" y="690" name="emitGlow4" id="0:920198">
-                <Ellipse width="48" height="48" name="Path" id="0:920193"/>
-                <Fill name="Fill" id="0:920197">
-                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920196">
-                    <GradientStop colorValue="66FFE08A" position="0" name="emit" id="0:920194"/>
-                    <GradientStop colorValue="00FFE08A" position="1" name="emit" id="0:920195"/>
+              <Shape x="908.8" y="690" name="emitGlow4" id="0:920677">
+                <Ellipse width="48" height="48" name="Path" id="0:920672"/>
+                <Fill name="Fill" id="0:920676">
+                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920675">
+                    <GradientStop colorValue="66FFE08A" position="0" name="emit" id="0:920673"/>
+                    <GradientStop colorValue="00FFE08A" position="1" name="emit" id="0:920674"/>
                   </RadialGradient>
                 </Fill>
               </Shape>
-              <Shape x="940" y="641.4" name="emitBulb6" id="0:920222">
-                <Ellipse width="18" height="22.5" name="Path" id="0:920219"/>
-                <Fill name="Fill" id="0:920221">
-                  <SolidColor colorValue="FFFFE08A" name="emit" id="0:920220"/>
+              <Shape x="940" y="641.4" name="emitBulb6" id="0:920701">
+                <Ellipse width="18" height="22.5" name="Path" id="0:920698"/>
+                <Fill name="Fill" id="0:920700">
+                  <SolidColor colorValue="FFFFE08A" name="emit" id="0:920699"/>
                 </Fill>
               </Shape>
-              <Shape x="940" y="636" name="emitGlow6" id="0:920218">
-                <Ellipse width="48" height="48" name="Path" id="0:920213"/>
-                <Fill name="Fill" id="0:920217">
-                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920216">
-                    <GradientStop colorValue="66FFE08A" position="0" name="emit" id="0:920214"/>
-                    <GradientStop colorValue="00FFE08A" position="1" name="emit" id="0:920215"/>
-                  </RadialGradient>
-                </Fill>
-              </Shape>
-            </Node>
-            <Node x="0" y="0" name="emitBulbsB" id="0:920224">
-              <Shape x="971.2" y="659.4" name="emitBulb1" id="0:920172">
-                <Ellipse width="18" height="22.5" name="Path" id="0:920169"/>
-                <Fill name="Fill" id="0:920171">
-                  <SolidColor colorValue="FFFF9A8A" name="emit" id="0:920170"/>
-                </Fill>
-              </Shape>
-              <Shape x="971.2" y="654" name="emitGlow1" id="0:920168">
-                <Ellipse width="48" height="48" name="Path" id="0:920163"/>
-                <Fill name="Fill" id="0:920167">
-                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920166">
-                    <GradientStop colorValue="66FF9A8A" position="0" name="emit" id="0:920164"/>
-                    <GradientStop colorValue="00FF9A8A" position="1" name="emit" id="0:920165"/>
-                  </RadialGradient>
-                </Fill>
-              </Shape>
-              <Shape x="940" y="713.4" name="emitBulb3" id="0:920192">
-                <Ellipse width="18" height="22.5" name="Path" id="0:920189"/>
-                <Fill name="Fill" id="0:920191">
-                  <SolidColor colorValue="FFFF9A8A" name="emit" id="0:920190"/>
-                </Fill>
-              </Shape>
-              <Shape x="940" y="708" name="emitGlow3" id="0:920188">
-                <Ellipse width="48" height="48" name="Path" id="0:920183"/>
-                <Fill name="Fill" id="0:920187">
-                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920186">
-                    <GradientStop colorValue="66FF9A8A" position="0" name="emit" id="0:920184"/>
-                    <GradientStop colorValue="00FF9A8A" position="1" name="emit" id="0:920185"/>
-                  </RadialGradient>
-                </Fill>
-              </Shape>
-              <Shape x="908.8" y="659.4" name="emitBulb5" id="0:920212">
-                <Ellipse width="18" height="22.5" name="Path" id="0:920209"/>
-                <Fill name="Fill" id="0:920211">
-                  <SolidColor colorValue="FFFF9A8A" name="emit" id="0:920210"/>
-                </Fill>
-              </Shape>
-              <Shape x="908.8" y="654" name="emitGlow5" id="0:920208">
-                <Ellipse width="48" height="48" name="Path" id="0:920203"/>
-                <Fill name="Fill" id="0:920207">
-                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920206">
-                    <GradientStop colorValue="66FF9A8A" position="0" name="emit" id="0:920204"/>
-                    <GradientStop colorValue="00FF9A8A" position="1" name="emit" id="0:920205"/>
+              <Shape x="940" y="636" name="emitGlow6" id="0:920697">
+                <Ellipse width="48" height="48" name="Path" id="0:920692"/>
+                <Fill name="Fill" id="0:920696">
+                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920695">
+                    <GradientStop colorValue="66FFE08A" position="0" name="emit" id="0:920693"/>
+                    <GradientStop colorValue="00FFE08A" position="1" name="emit" id="0:920694"/>
                   </RadialGradient>
                 </Fill>
               </Shape>
             </Node>
-            <Shape x="0" y="0" name="FestiveWire" id="0:920235">
-              <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:920232">
-                <CubicDetachedVertex x="940" y="636" outRotation="0.5233" outDistance="12.0067" inRotation="3.6649" inDistance="0" id="0:920225"/>
-                <CubicDetachedVertex x="971.2" y="654" outRotation="1.0469" outDistance="10.3913" inRotation="4.1885" inDistance="10.3971" id="0:920226"/>
-                <CubicDetachedVertex x="971.2" y="690" outRotation="2.0947" outDistance="10.3971" inRotation="5.2363" inDistance="10.3913" id="0:920227"/>
-                <CubicDetachedVertex x="940" y="708" outRotation="3.1416" outDistance="10.4" inRotation="6.2832" inDistance="10.4" id="0:920228"/>
-                <CubicDetachedVertex x="908.8" y="690" outRotation="-2.0947" outDistance="10.3913" inRotation="1.0469" inDistance="10.3971" id="0:920229"/>
-                <CubicDetachedVertex x="908.8" y="654" outRotation="-1.0469" outDistance="10.3971" inRotation="2.0947" inDistance="10.3913" id="0:920230"/>
-                <CubicDetachedVertex x="940" y="636" outRotation="-0.5233" outDistance="0" inRotation="2.6183" inDistance="12.0067" id="0:920231"/>
+            <Node x="0" y="0" name="emitBulbsB" id="0:920703">
+              <Shape x="971.2" y="659.4" name="emitBulb1" id="0:920651">
+                <Ellipse width="18" height="22.5" name="Path" id="0:920648"/>
+                <Fill name="Fill" id="0:920650">
+                  <SolidColor colorValue="FFFF9A8A" name="emit" id="0:920649"/>
+                </Fill>
+              </Shape>
+              <Shape x="971.2" y="654" name="emitGlow1" id="0:920647">
+                <Ellipse width="48" height="48" name="Path" id="0:920642"/>
+                <Fill name="Fill" id="0:920646">
+                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920645">
+                    <GradientStop colorValue="66FF9A8A" position="0" name="emit" id="0:920643"/>
+                    <GradientStop colorValue="00FF9A8A" position="1" name="emit" id="0:920644"/>
+                  </RadialGradient>
+                </Fill>
+              </Shape>
+              <Shape x="940" y="713.4" name="emitBulb3" id="0:920671">
+                <Ellipse width="18" height="22.5" name="Path" id="0:920668"/>
+                <Fill name="Fill" id="0:920670">
+                  <SolidColor colorValue="FFFF9A8A" name="emit" id="0:920669"/>
+                </Fill>
+              </Shape>
+              <Shape x="940" y="708" name="emitGlow3" id="0:920667">
+                <Ellipse width="48" height="48" name="Path" id="0:920662"/>
+                <Fill name="Fill" id="0:920666">
+                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920665">
+                    <GradientStop colorValue="66FF9A8A" position="0" name="emit" id="0:920663"/>
+                    <GradientStop colorValue="00FF9A8A" position="1" name="emit" id="0:920664"/>
+                  </RadialGradient>
+                </Fill>
+              </Shape>
+              <Shape x="908.8" y="659.4" name="emitBulb5" id="0:920691">
+                <Ellipse width="18" height="22.5" name="Path" id="0:920688"/>
+                <Fill name="Fill" id="0:920690">
+                  <SolidColor colorValue="FFFF9A8A" name="emit" id="0:920689"/>
+                </Fill>
+              </Shape>
+              <Shape x="908.8" y="654" name="emitGlow5" id="0:920687">
+                <Ellipse width="48" height="48" name="Path" id="0:920682"/>
+                <Fill name="Fill" id="0:920686">
+                  <RadialGradient startX="0" startY="0" endX="24" endY="0" id="0:920685">
+                    <GradientStop colorValue="66FF9A8A" position="0" name="emit" id="0:920683"/>
+                    <GradientStop colorValue="00FF9A8A" position="1" name="emit" id="0:920684"/>
+                  </RadialGradient>
+                </Fill>
+              </Shape>
+            </Node>
+            <Shape x="0" y="0" name="FestiveWire" id="0:920714">
+              <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:920711">
+                <CubicDetachedVertex x="940" y="636" outRotation="0.5233" outDistance="12.0067" inRotation="3.6649" inDistance="0" id="0:920704"/>
+                <CubicDetachedVertex x="971.2" y="654" outRotation="1.0469" outDistance="10.3913" inRotation="4.1885" inDistance="10.3971" id="0:920705"/>
+                <CubicDetachedVertex x="971.2" y="690" outRotation="2.0947" outDistance="10.3971" inRotation="5.2363" inDistance="10.3913" id="0:920706"/>
+                <CubicDetachedVertex x="940" y="708" outRotation="3.1416" outDistance="10.4" inRotation="6.2832" inDistance="10.4" id="0:920707"/>
+                <CubicDetachedVertex x="908.8" y="690" outRotation="-2.0947" outDistance="10.3913" inRotation="1.0469" inDistance="10.3971" id="0:920708"/>
+                <CubicDetachedVertex x="908.8" y="654" outRotation="-1.0469" outDistance="10.3971" inRotation="2.0947" inDistance="10.3913" id="0:920709"/>
+                <CubicDetachedVertex x="940" y="636" outRotation="-0.5233" outDistance="0" inRotation="2.6183" inDistance="12.0067" id="0:920710"/>
               </PointsPath>
-              <Stroke thickness="2.4" cap="round" join="round" name="Line" id="0:920234">
-                <SolidColor colorValue="FF2A3328" id="0:920233"/>
+              <Stroke thickness="2.4" cap="round" join="round" name="Line" id="0:920713">
+                <SolidColor colorValue="FF2A3328" id="0:920712"/>
               </Stroke>
             </Shape>
           </Node>
@@ -8173,43 +8173,43 @@
         </KeyedProperty>
       </KeyedObject>
     </LinearAnimation>
-    <LinearAnimation duration="240" fps="60" loopValue="loop" name="amb_festiveWreath" id="0:920250">
-      <KeyedObject objectId="0:920223" id="0:920240">
-        <KeyedProperty property="opacity" id="0:920239">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920236"/>
-          <KeyFrameDouble frame="1" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920246"/>
-          <KeyFrameDouble frame="120" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920237"/>
-          <KeyFrameDouble frame="239" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920247"/>
-          <KeyFrameDouble frame="240" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920238"/>
+    <LinearAnimation duration="240" fps="60" loopValue="loop" name="amb_festiveWreath" id="0:920729">
+      <KeyedObject objectId="0:920702" id="0:920719">
+        <KeyedProperty property="opacity" id="0:920718">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920715"/>
+          <KeyFrameDouble frame="1" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920725"/>
+          <KeyFrameDouble frame="120" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920716"/>
+          <KeyFrameDouble frame="239" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920726"/>
+          <KeyFrameDouble frame="240" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920717"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920224" id="0:920245">
-        <KeyedProperty property="opacity" id="0:920244">
-          <KeyFrameDouble frame="0" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920241"/>
-          <KeyFrameDouble frame="1" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920248"/>
-          <KeyFrameDouble frame="120" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920242"/>
-          <KeyFrameDouble frame="239" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920249"/>
-          <KeyFrameDouble frame="240" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920243"/>
+      <KeyedObject objectId="0:920703" id="0:920724">
+        <KeyedProperty property="opacity" id="0:920723">
+          <KeyFrameDouble frame="0" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920720"/>
+          <KeyFrameDouble frame="1" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920727"/>
+          <KeyFrameDouble frame="120" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920721"/>
+          <KeyFrameDouble frame="239" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920728"/>
+          <KeyFrameDouble frame="240" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920722"/>
         </KeyedProperty>
       </KeyedObject>
     </LinearAnimation>
-    <LinearAnimation duration="240" fps="60" loopValue="loop" name="amb_festive" id="0:920521">
-      <KeyedObject objectId="0:920480" id="0:920511">
-        <KeyedProperty property="opacity" id="0:920510">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920507"/>
-          <KeyFrameDouble frame="1" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920517"/>
-          <KeyFrameDouble frame="120" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920508"/>
-          <KeyFrameDouble frame="239" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920518"/>
-          <KeyFrameDouble frame="240" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920509"/>
+    <LinearAnimation duration="240" fps="60" loopValue="loop" name="amb_festive" id="0:921000">
+      <KeyedObject objectId="0:920959" id="0:920990">
+        <KeyedProperty property="opacity" id="0:920989">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920986"/>
+          <KeyFrameDouble frame="1" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920996"/>
+          <KeyFrameDouble frame="120" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920987"/>
+          <KeyFrameDouble frame="239" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920997"/>
+          <KeyFrameDouble frame="240" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920988"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920481" id="0:920516">
-        <KeyedProperty property="opacity" id="0:920515">
-          <KeyFrameDouble frame="0" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920512"/>
-          <KeyFrameDouble frame="1" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920519"/>
-          <KeyFrameDouble frame="120" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920513"/>
-          <KeyFrameDouble frame="239" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920520"/>
-          <KeyFrameDouble frame="240" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920514"/>
+      <KeyedObject objectId="0:920960" id="0:920995">
+        <KeyedProperty property="opacity" id="0:920994">
+          <KeyFrameDouble frame="0" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920991"/>
+          <KeyFrameDouble frame="1" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920998"/>
+          <KeyFrameDouble frame="120" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:920992"/>
+          <KeyFrameDouble frame="239" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920999"/>
+          <KeyFrameDouble frame="240" value="0.4" interpolationType="cubic" interpolatorId="0:10" id="0:920993"/>
         </KeyedProperty>
       </KeyedObject>
     </LinearAnimation>
@@ -12137,28 +12137,28 @@
     <FormulaTokenInput id="0:911289"/>
   </DataConverterFormula>
 
-  <DataConverterFormula id="0:920152">
-    <FormulaTokenFunction functionType="0" id="0:920149"/>
-    <FormulaTokenValue operationValue="1" id="0:920144"/>
-    <FormulaTokenArgumentSeparator id="0:920150"/>
-    <FormulaTokenFunction functionType="1" id="0:920146"/>
-    <FormulaTokenValue operationValue="0" id="0:920145"/>
-    <FormulaTokenArgumentSeparator id="0:920147"/>
-    <FormulaTokenInput id="0:920143"/>
-    <FormulaTokenParenthesisClose id="0:920148"/>
-    <FormulaTokenParenthesisClose id="0:920151"/>
+  <DataConverterFormula id="0:920631">
+    <FormulaTokenFunction functionType="0" id="0:920628"/>
+    <FormulaTokenValue operationValue="1" id="0:920623"/>
+    <FormulaTokenArgumentSeparator id="0:920629"/>
+    <FormulaTokenFunction functionType="1" id="0:920625"/>
+    <FormulaTokenValue operationValue="0" id="0:920624"/>
+    <FormulaTokenArgumentSeparator id="0:920626"/>
+    <FormulaTokenInput id="0:920622"/>
+    <FormulaTokenParenthesisClose id="0:920627"/>
+    <FormulaTokenParenthesisClose id="0:920630"/>
   </DataConverterFormula>
 
-  <DataConverterFormula id="0:920269">
-    <FormulaTokenFunction functionType="0" id="0:920266"/>
-    <FormulaTokenValue operationValue="1" id="0:920261"/>
-    <FormulaTokenArgumentSeparator id="0:920267"/>
-    <FormulaTokenFunction functionType="1" id="0:920263"/>
-    <FormulaTokenValue operationValue="0" id="0:920262"/>
-    <FormulaTokenArgumentSeparator id="0:920264"/>
-    <FormulaTokenInput id="0:920260"/>
-    <FormulaTokenParenthesisClose id="0:920265"/>
-    <FormulaTokenParenthesisClose id="0:920268"/>
+  <DataConverterFormula id="0:920748">
+    <FormulaTokenFunction functionType="0" id="0:920745"/>
+    <FormulaTokenValue operationValue="1" id="0:920740"/>
+    <FormulaTokenArgumentSeparator id="0:920746"/>
+    <FormulaTokenFunction functionType="1" id="0:920742"/>
+    <FormulaTokenValue operationValue="0" id="0:920741"/>
+    <FormulaTokenArgumentSeparator id="0:920743"/>
+    <FormulaTokenInput id="0:920739"/>
+    <FormulaTokenParenthesisClose id="0:920744"/>
+    <FormulaTokenParenthesisClose id="0:920747"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:3637">
