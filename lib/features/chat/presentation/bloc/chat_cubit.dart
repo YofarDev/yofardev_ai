@@ -192,6 +192,19 @@ class ChatCubit extends Cubit<ChatState> {
     return super.close();
   }
 
+  /// Announces the current chat's persona whenever another chat becomes
+  /// current (or its persona changes): the avatar's body language follows
+  /// it through [AppLifecycleService] (M10 ruling 10), like the mood.
+  @override
+  void onChange(Change<ChatState> change) {
+    super.onChange(change);
+    final Chat before = change.currentState.currentChat;
+    final Chat after = change.nextState.currentChat;
+    if (before.id != after.id || before.persona != after.persona) {
+      _appLifecycleService.emitPersonaChanged(after.persona);
+    }
+  }
+
   /// Initialize the chat system
   Future<void> init() async {
     await getCurrentChat();

@@ -483,6 +483,8 @@ Future<void> setupServiceLocator({
       streamingCues: getIt<ChatStreamingService>().streamingCues,
       director: getIt<PerformanceDirector>(),
       moods: getIt<AppLifecycleService>().moodEvents,
+      // The current chat's persona sets the body language (M10 ruling 10).
+      personas: getIt<AppLifecycleService>().personaEvents,
       toolActivity: getIt<ChatStreamingService>().toolActivity,
       composer: getIt<ComposerActivityService>().activity,
       idleLadder: getIt<IdleLadder>(),

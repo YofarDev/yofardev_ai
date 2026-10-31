@@ -62,6 +62,39 @@ void main() {
       ladder.dispose();
     });
 
+    test('the threshold scale stretches or shortens every stage', () {
+      final IdleLadder ladder = build();
+      expect(ladder.thresholdScale, 1);
+      ladder.thresholdScale = 0.7;
+      at(ladder, 20);
+      expect(ladder.stage, 0);
+      at(ladder, 21);
+      expect(ladder.stage, 1);
+      at(ladder, 84);
+      expect(ladder.stage, 2);
+      at(ladder, 420);
+      expect(ladder.stage, 3);
+      ladder.onActivity();
+      ladder.thresholdScale = 1.4;
+      final DateTime from = clock;
+      clock = from.add(const Duration(seconds: 41));
+      ladder.tick();
+      expect(ladder.stage, 0);
+      clock = from.add(const Duration(seconds: 42));
+      ladder.tick();
+      expect(ladder.stage, 1);
+      ladder.dispose();
+    });
+
+    test('a scale change re-reads the stage at once', () {
+      final IdleLadder ladder = build();
+      at(ladder, 25);
+      expect(ladder.stage, 0);
+      ladder.thresholdScale = 0.7;
+      expect(ladder.stage, 1);
+      ladder.dispose();
+    });
+
     test('activity goes back to 0 and the count starts over', () {
       final IdleLadder ladder = build();
       at(ladder, 700);

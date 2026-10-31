@@ -4,6 +4,7 @@ import '../models/app_lifecycle_event.dart';
 import '../models/avatar_config.dart';
 import '../models/avatar_mood.dart';
 import '../models/avatar_status_animation.dart';
+import '../models/chat.dart';
 import '../models/chat_entry.dart';
 import '../models/chat_status.dart';
 import '../models/demo_script.dart';
@@ -45,6 +46,8 @@ class AppLifecycleService {
       StreamController<AvatarChangeRequested>.broadcast();
   final StreamController<AvatarMood> _moodController =
       StreamController<AvatarMood>.broadcast();
+  final StreamController<ChatPersona> _personaController =
+      StreamController<ChatPersona>.broadcast();
 
   // Public streams for cubits to subscribe to
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
@@ -65,6 +68,10 @@ class AppLifecycleService {
   /// invalid values arrive as neutral). A reply without a mood keeps the
   /// previous one, so nothing is emitted for it.
   Stream<AvatarMood> get moodEvents => _moodController.stream;
+
+  /// The persona of the current chat, announced whenever the current chat
+  /// changes (M10 ruling 10): the avatar's body language follows it.
+  Stream<ChatPersona> get personaEvents => _personaController.stream;
 
   /// Emit event when a new chat entry is created.
   ///
@@ -224,6 +231,14 @@ class AppLifecycleService {
     _avatarChangeRequestedController.add(request);
   }
 
+  /// Emit the persona of the chat that just became current.
+  ///
+  /// [ChatCubit] emits it; `AvatarCueService` turns it into the director's
+  /// body-language profile.
+  void emitPersonaChanged(ChatPersona persona) {
+    _personaController.add(persona);
+  }
+
   /// Dispose all stream controllers.
   ///
   /// Call this when the app is shutting down.
@@ -235,5 +250,7 @@ class AppLifecycleService {
     _talkingStateChangedController.close();
     _demoScriptChangedController.close();
     _avatarChangeRequestedController.close();
+    _moodController.close();
+    _personaController.close();
   }
 }

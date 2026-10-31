@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
@@ -317,6 +318,80 @@ void main() {
       await drain();
       expect(director.current.speaking, isFalse);
     });
+  });
+
+  group('AvatarCueService persona', () {
+    test(
+      'the chat persona sets the director profile and the ladder scale',
+      () async {
+        final StreamController<ChatPersona> personas =
+            StreamController<ChatPersona>.broadcast();
+        addTearDown(personas.close);
+        final IdleLadder ladder = IdleLadder(
+          now: () => currentTime,
+          power: _NoPowerSaver(),
+          reduceMotion: () => false,
+        );
+        addTearDown(ladder.dispose);
+        final AvatarCueService service = AvatarCueService(
+          playbackService: playbackService,
+          animationService: animationService,
+          streamingCues: streamingCuesController.stream,
+          director: director,
+          personas: personas.stream,
+          idleLadder: ladder,
+        );
+        addTearDown(service.dispose);
+
+        expect(director.profile, BodyLanguageProfile.normal);
+        expect(ladder.thresholdScale, 1);
+        personas.add(ChatPersona.philosopher);
+        await drain();
+        final BodyLanguageProfile philosopher = BodyLanguageProfile.of(
+          ChatPersona.philosopher,
+        );
+        expect(director.profile, philosopher);
+        expect(director.current.body, philosopher);
+        expect(ladder.thresholdScale, philosopher.idle.ladderScale);
+
+        personas.add(ChatPersona.normal);
+        await drain();
+        expect(director.profile, BodyLanguageProfile.normal);
+        expect(ladder.thresholdScale, 1);
+      },
+    );
+
+    test(
+      'an LLM-cued sentence counts toward the sentence index, unswapped',
+      () async {
+        final StreamController<ChatPersona> personas =
+            StreamController<ChatPersona>.broadcast();
+        addTearDown(personas.close);
+        final AvatarCueService service = AvatarCueService(
+          playbackService: playbackService,
+          animationService: animationService,
+          streamingCues: streamingCuesController.stream,
+          director: director,
+          personas: personas.stream,
+        );
+        addTearDown(service.dispose);
+        personas.add(ChatPersona.coach);
+        await drain();
+        expect(director.sentenceIndex, 0);
+        playbackService.startAmplitudeAnimation(
+          'a.wav',
+          <int>[10, 10],
+          const Duration(milliseconds: 50),
+          caption: 'Go!',
+          cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+        );
+        await drain();
+        expect(director.sentenceIndex, 1);
+        // the LLM's wave plays, unswapped
+        expect(director.current.pendingGesture, AvatarGesture.wave);
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      },
+    );
   });
 
   group('AvatarCueService presence', () {

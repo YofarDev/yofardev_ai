@@ -154,8 +154,10 @@ void main() {
   group('ChatCubit', () {
     late ChatCubit chatsCubit;
     late MockChatRepository mockChatRepository;
+    late MockAppLifecycleService lifecycle;
 
     setUp(() {
+      lifecycle = MockAppLifecycleService();
       // Create mock services
       mockChatRepository = MockChatRepository();
       final MockSettingsRepository mockSettingsRepository =
@@ -261,7 +263,7 @@ void main() {
           interruptionService: MockInterruptionService(),
           chatEntryService: MockChatEntryService(),
         ),
-        appLifecycleService: MockAppLifecycleService(),
+        appLifecycleService: lifecycle,
         globalMemoryService: createMockGlobalMemoryService(),
         demoService: MockDemoService(),
       );
@@ -315,6 +317,33 @@ void main() {
 
         expect(chatsCubit.state.currentChat.id, testChat.id);
         expect(chatsCubit.state.currentChat.language, testChat.language);
+      });
+    });
+
+    group('persona of the current chat', () {
+      test('a loaded chat announces its persona', () async {
+        when(() => mockChatRepository.getCurrentChat()).thenAnswer(
+          (_) async => Result<Chat>.ok(
+            const Chat(id: 'doom', persona: ChatPersona.doomer),
+          ),
+        );
+        await chatsCubit.getCurrentChat();
+        expect(lifecycle.personas, <ChatPersona>[ChatPersona.doomer]);
+      });
+
+      test('switching chats announces each new persona', () {
+        chatsCubit.setCurrentChat(
+          const Chat(id: 'a', persona: ChatPersona.coach),
+        );
+        // the same chat updated (a streamed reply) announces nothing new
+        chatsCubit.updateChatStreaming(
+          const Chat(id: 'a', persona: ChatPersona.coach, title: 'x'),
+        );
+        chatsCubit.setCurrentChat(const Chat(id: 'b'));
+        expect(lifecycle.personas, <ChatPersona>[
+          ChatPersona.coach,
+          ChatPersona.normal,
+        ]);
       });
     });
 
@@ -1211,6 +1240,12 @@ void main() {
 }
 
 class MockAppLifecycleService extends Mock implements AppLifecycleService {
+  /// The personas the cubit announced, in order.
+  final List<ChatPersona> personas = <ChatPersona>[];
+
+  @override
+  void emitPersonaChanged(ChatPersona persona) => personas.add(persona);
+
   @override
   Stream<AvatarChangeRequested> get avatarChangeRequestedEvents =>
       const Stream<AvatarChangeRequested>.empty();

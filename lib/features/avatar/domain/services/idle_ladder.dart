@@ -7,7 +7,8 @@ import '../../../../core/services/power/power_saver_source.dart';
 /// 0 active; 1 after 30 s (glances around); 2 after 2 min (plays with the
 /// tablet now and then); 3 after 10 min (the tablet stays out). Any
 /// [onActivity] (typing, speech, a tool, a tap) starts over at 0. Battery
-/// saver or reduce motion hold the ladder at 0.
+/// saver or reduce motion hold the ladder at 0. The persona's idle style
+/// stretches or shortens every threshold ([thresholdScale], M10 ruling 9).
 ///
 /// The clock is injected; a periodic timer calls [tick] once a second, and
 /// tests call [tick] themselves.
@@ -48,6 +49,20 @@ class IdleLadder {
   /// Emits the new stage whenever it changes.
   Stream<int> get stages => _controller.stream;
 
+  double _thresholdScale = 1;
+
+  /// Every threshold × this (0.7 fidgety .. 1.4 calm; 1 = [thresholds]).
+  /// A change re-reads the stage at once.
+  double get thresholdScale => _thresholdScale;
+
+  set thresholdScale(double value) {
+    if (value == _thresholdScale || value <= 0) {
+      return;
+    }
+    _thresholdScale = value;
+    tick();
+  }
+
   /// Reads the power saver state, follows its changes and starts the
   /// periodic check. The idle time counts from now.
   Future<void> start() async {
@@ -80,12 +95,18 @@ class IdleLadder {
     final Duration idle = _now().difference(_lastActivity);
     int next = 0;
     for (int i = 0; i < thresholds.length; i++) {
-      if (idle >= thresholds[i]) {
+      if (idle >= _scaled(thresholds[i])) {
         next = i + 1;
       }
     }
     _set(next);
   }
+
+  Duration _scaled(Duration threshold) => _thresholdScale == 1
+      ? threshold
+      : Duration(
+          microseconds: (threshold.inMicroseconds * _thresholdScale).round(),
+        );
 
   void _set(int next) {
     if (next == _stage || _disposed) {

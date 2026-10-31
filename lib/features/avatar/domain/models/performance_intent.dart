@@ -48,5 +48,10 @@ sealed class PerformanceIntent with _$PerformanceIntent {
     /// `none` / 0 (the generic card).
     @Default(TabletWeather.none) TabletWeather tabletWeather,
     @Default(0) int tabletTemp,
+
+    /// The current chat persona's body language (M10 ruling 9): its posture
+    /// and motion scale drive the face performer. It changes only between
+    /// sentences.
+    @Default(BodyLanguageProfile.normal) BodyLanguageProfile body,
   }) = _PerformanceIntent;
 }

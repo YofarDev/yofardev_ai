@@ -1,4 +1,37 @@
 import '../../../../core/models/avatar_gesture.dart';
+import '../../../../core/models/performance/performance.dart';
+
+/// The auto gestures of [sentence] in a persona's body language (moonshot
+/// M10 ruling 9): the rules' gestures ([gesturesFor]) each swapped through
+/// [profile]'s bias, or, on a beat ([isBeat]), the persona's beat gesture.
+/// Deterministic: the swap is picked by the sentence's [index]. The normal
+/// profile returns [gesturesFor] unchanged. The gesture rate (how many of
+/// these fire) is the director's, not this function's.
+List<AvatarGesture> personaGesturesFor(
+  String sentence,
+  BodyLanguageProfile profile,
+  int index,
+) {
+  final List<AvatarGesture> base = gesturesFor(sentence);
+  if (profile.gestureBias.isEmpty) {
+    return base;
+  }
+  if (base.isEmpty) {
+    final AvatarGesture? beat = isBeat(sentence)
+        ? profile.beatFor(index)
+        : null;
+    return beat == null ? const <AvatarGesture>[] : <AvatarGesture>[beat];
+  }
+  return <AvatarGesture>[
+    for (final AvatarGesture gesture in base) profile.swapFor(gesture, index),
+  ];
+}
+
+/// A beat: an emphatic sentence (ending on `!`) the rules leave bare.
+bool isBeat(String sentence) {
+  final String text = sentence.trim();
+  return text.endsWith('!') && gesturesFor(text).isEmpty;
+}
 
 /// Pure auto-acting rules: which gesture a sentence suggests on its own.
 /// Auto requests lose to LLM cues and are rate-limited by the cooldown.

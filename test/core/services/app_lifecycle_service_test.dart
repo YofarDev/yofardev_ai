@@ -6,6 +6,7 @@ import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
@@ -235,6 +236,22 @@ void main() {
         service.emitChatChanged('chat2');
         await Future<dynamic>.delayed(const Duration(milliseconds: 10));
         expect(events, equals(<String>['chat1', 'chat2']));
+
+        await subscription.cancel();
+      });
+    });
+
+    group('emitPersonaChanged', () {
+      test('emits the current chat persona', () async {
+        final List<ChatPersona> events = <ChatPersona>[];
+        final StreamSubscription<ChatPersona> subscription = service
+            .personaEvents
+            .listen(events.add);
+
+        service.emitPersonaChanged(ChatPersona.doomer);
+        service.emitPersonaChanged(ChatPersona.normal);
+        await Future<dynamic>.delayed(const Duration(milliseconds: 10));
+        expect(events, <ChatPersona>[ChatPersona.doomer, ChatPersona.normal]);
 
         await subscription.cancel();
       });

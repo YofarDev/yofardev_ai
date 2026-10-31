@@ -75,6 +75,16 @@ import 'viseme_blender.dart';
 ///   [reactionExclaimBrow] and the upper lids by [reactionExclaimLid] for
 ///   0.6 s. All eased, with a seeded 0-12 % amplitude variety.
 ///
+/// - **Body language** (the intent's `body`, M10 ruling 9): its posture
+///   offsets are added to [FaceFrame.lean], [FaceFrame.nodPitch] and
+///   [FaceFrame.roll], eased over [postureEase] from wherever they are (under
+///   [reduceMotion]: applied at once, the only head motion left); its
+///   `motionScale` scales the stress nods, roll accents, brow beats and the
+///   question's tilt (latched per sentence: a change never jumps mid-way),
+///   and the backchannel nods and typed-punctuation reactions (at their
+///   start). The caps and clamps stay as they are. The normal profile
+///   changes nothing.
+///
 /// [step] allocates nothing once the face is still: it works in fixed
 /// buffers and returns the previous [FaceFrame] while nothing changed (never
 /// while the idle runs).
@@ -239,6 +249,9 @@ class FacePerformer {
   /// A backchannel nod is half a mid-strength stress nod.
   static const double _backchannelShare = 0.5;
 
+  /// A persona's posture eases in over this long (s).
+  static const double postureEase = 0.6;
+
   // — emotion —
   final Float64List _emotionTarget = Float64List(_auCount);
   final Float64List _sideTarget = Float64List(_sideCount * 2);
@@ -363,6 +376,15 @@ class FacePerformer {
   double _reactLen = 0;
   double _reactAmp = 1;
 
+  // — body language —
+  BodyPosture _postureFrom = BodyPosture.zero;
+  BodyPosture _postureTo = BodyPosture.zero;
+  double _postureStart = -100;
+
+  /// The profile's motion scale now, and as latched for the sentence.
+  double _motion = 1;
+  double _sentenceMotion = 1;
+
   // — idle life —
   final Float64List _idlePhase;
   final _Spring _idleMix = _Spring();
@@ -436,6 +458,7 @@ class FacePerformer {
         _clock - _settleStart < _settleTotal ||
         _clock < _bcEnd ||
         _clock - _reactStart < _reactLen ||
+        _postureEasing ||
         !_lean.isAt(_leanTarget)) {
       return false;
     }
@@ -477,6 +500,10 @@ class FacePerformer {
   FaceFrame step(Duration dt) {
     final double h = (dt.inMicroseconds / 1e6).clamp(0.0, _maxDt);
     _clock += h;
+    if (reduceMotion) {
+      // no easing under reduce motion: the posture is where it goes
+      _postureStart = -100;
+    }
 
     final Duration? pos = _currentPosition();
     final SpeechTimeline? tl = _timeline;
@@ -625,7 +652,11 @@ class FacePerformer {
         }
         if (_accent[i] != 0) {
           // the roll spring lags ~80 ms: aim the accent that much early
-          rollTarget += _accentRoll * _accent[i] * _gauss(tau, -0.04, 0.12);
+          rollTarget +=
+              _accentRoll *
+              _sentenceMotion *
+              _accent[i] *
+              _gauss(tau, -0.04, 0.12);
         }
       }
       // a sombre mood lifts only the inner brows (an outer lift reads as
@@ -634,10 +665,11 @@ class FacePerformer {
       final bool sombre = _valence < -0.3;
       const double cap = browBeatMax / 1.12;
       final double innerPulse =
-          math.min((sombre ? 0.35 : 0.3) * gain * amp, cap) * env;
+          math.min((sombre ? 0.35 : 0.3) * gain * amp * _sentenceMotion, cap) *
+          env;
       final double outerPulse = sombre
           ? 0.0
-          : math.min(0.45 * gain * amp, cap) * env;
+          : math.min(0.45 * gain * amp * _sentenceMotion, cap) * env;
       innerTarget += innerPulse;
       outerTarget += outerPulse;
       // the two brows never lift as one: one side takes a little more
@@ -661,8 +693,8 @@ class FacePerformer {
         if (!sombre) {
           outerTarget += math.max(0, top - _emotionTarget[_outerI]) * q;
         }
-        rollTarget += 0.9 * tilt;
-        liftTarget = 0.12 * tilt;
+        rollTarget += 0.9 * _sentenceMotion * tilt;
+        liftTarget = 0.12 * _sentenceMotion * tilt;
         // the eyes stay on the listener through the last word and the tilt
         gazeLock = tau >= _questionLead - 0.4 && hold > 0.05;
       }
@@ -1018,6 +1050,18 @@ class FacePerformer {
     _arousal = intent.emotion.arousal;
     _valence = intent.emotion.valence;
     _leanTarget = intent.lean.clamp(0.0, 1.0);
+    final BodyLanguageProfile body = intent.body;
+    _motion = body.motionScale;
+    if (body.posture != _postureTo) {
+      // ease on from wherever the posture is now
+      _postureFrom = BodyPosture(
+        lean: _postureAxis(_postureFrom.lean, _postureTo.lean),
+        pitch: _postureAxis(_postureFrom.pitch, _postureTo.pitch),
+        roll: _postureAxis(_postureFrom.roll, _postureTo.roll),
+      );
+      _postureTo = body.posture;
+      _postureStart = reduceMotion ? -100 : _clock;
+    }
     if (intent.nodSerial > _nodSerialSeen) {
       _nodSerialSeen = intent.nodSerial;
       _startBackchannel();
@@ -1038,7 +1082,10 @@ class FacePerformer {
       return;
     }
     _bcDepth =
-        _backchannelShare * nodDepthFor(0.5) * (0.9 + 0.2 * _rng.nextDouble());
+        _backchannelShare *
+        nodDepthFor(0.5) *
+        (0.9 + 0.2 * _rng.nextDouble()) *
+        _motion;
     _bcAttack = nodAttackFor(0.5) * (0.7 + 0.6 * _rng.nextDouble());
     _bcRelease = _nodRelease * (0.75 + 0.5 * _rng.nextDouble());
     // the dip is a gaussian before the beat: aim the beat three attacks on
@@ -1055,7 +1102,7 @@ class FacePerformer {
     _reactLen = kind == PresenceReaction.question
         ? _questionReactionLen
         : _exclaimReactionLen;
-    _reactAmp = 1 + 0.12 * _rng.nextDouble();
+    _reactAmp = (1 + 0.12 * _rng.nextDouble()) * _motion;
   }
 
   /// 0..1 envelope of a reaction [age] seconds in, of length [len]: an eased
@@ -1084,6 +1131,8 @@ class FacePerformer {
             ? _risingSyllable(timeline, rise)
             : -1;
         _questionSlope = rise?.slope;
+        // a new sentence takes the body language's motion scale
+        _sentenceMotion = _motion;
         _nods = _spaced(timeline.marks, ProsodyMarkKind.stress, _nodGap);
         // statement beats: the strongest, 1.5 s apart, clear of the
         // question's rise (it is the one that stands out)
@@ -1256,11 +1305,12 @@ class FacePerformer {
       _nodReleaseOf[i] = _nodRelease * release;
       _nodAttackOf[i] = nodAttackFor(strength) * attack;
       if (rising(i)) {
-        _nodDepth[i] = -questionNodLift * nodDepthFor(strength);
+        _nodDepth[i] =
+            -questionNodLift * nodDepthFor(strength) * _sentenceMotion;
       } else if (!rest[i] && !swap) {
         final double variety = deeper ? 1.05 + 0.1 * share : 0.85 - 0.2 * share;
         deeper = !deeper;
-        _nodDepth[i] = nodDepthFor(strength) * variety;
+        _nodDepth[i] = nodDepthFor(strength) * variety * _sentenceMotion;
       }
       if (!rising(i) && (swap || roll > 1 - _accentChance)) {
         _accent[i] = _accentSign;
@@ -1676,9 +1726,22 @@ class FacePerformer {
     out[_breathO] = reduceMotion
         ? 0
         : math.max(_breath, _idleBreath).clamp(0.0, 1.0);
-    out[_rollO] = reduceMotion ? 0 : (_roll.x + _idleRoll).clamp(-1.0, 1.0);
-    out[_nodO] = reduceMotion ? 0 : (nod + _lift.x + _idleNod).clamp(-1.0, 1.0);
-    out[_leanO] = reduceMotion ? 0 : _lean.x.clamp(0.0, 1.0);
+    // the persona's posture rides on top (alone under reduce motion)
+    final double postureLean = _postureAxis(_postureFrom.lean, _postureTo.lean);
+    final double posturePitch = _postureAxis(
+      _postureFrom.pitch,
+      _postureTo.pitch,
+    );
+    final double postureRoll = _postureAxis(_postureFrom.roll, _postureTo.roll);
+    out[_rollO] = reduceMotion
+        ? postureRoll.clamp(-1.0, 1.0)
+        : (_roll.x + _idleRoll + postureRoll).clamp(-1.0, 1.0);
+    out[_nodO] = reduceMotion
+        ? posturePitch.clamp(-1.0, 1.0)
+        : (nod + _lift.x + _idleNod + posturePitch).clamp(-1.0, 1.0);
+    out[_leanO] = reduceMotion
+        ? postureLean.clamp(0.0, 1.0)
+        : (_lean.x + postureLean).clamp(0.0, 1.0);
     final bool autoBlink = !(_speaking || _clock - _endClock < _autoBlinkHold);
 
     // a still face returns the previous frame: no allocation
@@ -1712,6 +1775,20 @@ class FacePerformer {
       saccadeSerial: _saccadeSerial,
       lean: out[_leanO],
     );
+  }
+
+  /// True while a posture change is easing in.
+  bool get _postureEasing =>
+      !reduceMotion && _clock - _postureStart < postureEase;
+
+  /// One posture axis now: [from] → [to] along a smoothstep over
+  /// [postureEase] (at [to] once done, or under reduce motion).
+  double _postureAxis(double from, double to) {
+    if (!_postureEasing) {
+      return to;
+    }
+    return from +
+        (to - from) * _smoothstep((_clock - _postureStart) / postureEase);
   }
 
   /// Whether [_out] equals the last frame's values over [from]..+[count].

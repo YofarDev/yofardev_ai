@@ -4,6 +4,8 @@ import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/avatar_gesture.dart';
 import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/models/chat.dart';
+import '../../../../core/models/performance/performance.dart';
 import '../../../../core/services/presence/composer_activity_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../talking/talking.dart';
@@ -31,6 +33,12 @@ import 'performance_director.dart';
 /// (typing, speech, tools, taps) resets the ladder, and the ladder's stages
 /// become the director's idle stage. The ladder stays owned by the
 /// composition root, which starts it.
+///
+/// Body language (M10 ruling 10): the current chat's persona ([personas],
+/// announced by the chat like the mood) becomes the director's
+/// [BodyLanguageProfile] (applied at the next sentence) and the ladder's
+/// threshold scale. Every caption counts as a sentence for the profile's
+/// deterministic gesture swaps, an LLM-cued one included.
 class AvatarCueService {
   AvatarCueService({
     required TtsPlaybackService playbackService,
@@ -38,6 +46,7 @@ class AvatarCueService {
     required Stream<List<AvatarCue>> streamingCues,
     required PerformanceDirector director,
     Stream<AvatarMood> moods = const Stream<AvatarMood>.empty(),
+    Stream<ChatPersona> personas = const Stream<ChatPersona>.empty(),
     Stream<String?> toolActivity = const Stream<String?>.empty(),
     Stream<ComposerActivity> composer = const Stream<ComposerActivity>.empty(),
     IdleLadder? idleLadder,
@@ -47,6 +56,13 @@ class AvatarCueService {
     _subscriptions.add(streamingCues.listen(_onCues));
     _subscriptions.add(director.intents.listen(_onIntent));
     _subscriptions.add(moods.listen(director.setMood));
+    _subscriptions.add(
+      personas.listen((ChatPersona persona) {
+        final BodyLanguageProfile profile = BodyLanguageProfile.of(persona);
+        director.setProfile(profile);
+        idleLadder?.thresholdScale = profile.idle.ladderScale;
+      }),
+    );
     _subscriptions.add(toolActivity.listen(director.setActiveTool));
     _subscriptions.add(composer.listen(director.setComposer));
     if (idleLadder != null) {
@@ -82,10 +98,8 @@ class AvatarCueService {
         _director.setSpeaking(false);
       case CaptionEvent(:final String text):
         // Auto-acting rules read each sentence as it starts playing, unless
-        // the LLM already chose a gesture for it.
-        if (!_sentenceHasGestureCue) {
-          _director.onSentence(text);
-        }
+        // the LLM already chose a gesture for it (it still takes an index).
+        _director.onSentence(text, autoActing: !_sentenceHasGestureCue);
         _sentenceHasGestureCue = false;
       case MouthStateUpdatedEvent() ||
           SpeechTimelineEvent() ||

@@ -57,6 +57,15 @@ class _QueuedGesture {
 ///   another tool takes over; a fresh weather lookup starts blank.
 /// Speech, a tool starting, composer reports and taps are all activity: the
 /// idle stage goes back to 0 at once and [activity] tells the ladder.
+///
+/// Body language (M10 ruling 9): [setProfile] arms the current chat
+/// persona's [BodyLanguageProfile], at once while silent, else at the end of
+/// the sentence playing (no posture change mid-sentence). Its gesture bias
+/// swaps the auto gestures ([personaGesturesFor], by the sentence's index),
+/// its rate thins them below 1 (a running credit: no RNG) and divides the
+/// cooldown, its idle style sets the glance period and the idle prop, and
+/// the intent carries it (`body`) to the face. LLM gestures are never
+/// swapped nor thinned. The normal profile changes nothing.
 class PerformanceDirector {
   PerformanceDirector({
     required DateTime Function() now,
@@ -163,6 +172,12 @@ class PerformanceDirector {
   bool _weatherLookup = false;
   TabletWeatherReading? _weatherReading;
 
+  // — body language —
+  BodyLanguageProfile _profile = BodyLanguageProfile.normal;
+  BodyLanguageProfile? _pendingProfile;
+  double _autoCredit = 0;
+  int _sentenceIndex = 0;
+
   AvatarGesture? _playing;
   int _serial = 0;
   DateTime? _lastStartAt;
@@ -186,6 +201,27 @@ class PerformanceDirector {
   /// Latest intent snapshot.
   PerformanceIntent get current => _buildIntent();
 
+  /// The body language in effect (a [setProfile] made while speaking waits
+  /// for the sentence to end).
+  BodyLanguageProfile get profile => _profile;
+
+  /// How many sentences [onSentence] has seen: the index the next one gets.
+  int get sentenceIndex => _sentenceIndex;
+
+  /// Arms [profile] (the current chat persona's body language): now while
+  /// silent, at the end of the sentence playing otherwise.
+  void setProfile(BodyLanguageProfile profile) {
+    if (profile == (_pendingProfile ?? _profile)) {
+      return;
+    }
+    if (_speaking) {
+      _pendingProfile = profile;
+      return;
+    }
+    _applyProfile(profile);
+    _emit();
+  }
+
   /// Arms the director's mood (emotion + face presets follow it).
   void setMood(AvatarMood? mood) {
     final AvatarMood resolved = mood ?? AvatarMood.neutral;
@@ -196,6 +232,11 @@ class PerformanceDirector {
 
   void setSpeaking(bool speaking) {
     _speaking = speaking;
+    final BodyLanguageProfile? pending = _pendingProfile;
+    if (pending != null) {
+      // a sentence boundary: the persona changed during the last sentence
+      _applyProfile(pending);
+    }
     if (speaking) {
       _endHoldOver();
       _noteActivity();
@@ -354,11 +395,23 @@ class PerformanceDirector {
     _playNext();
   }
 
-  /// Auto-acting entry point: derives gestures from the sentence and
-  /// requests them as `auto`.
-  void onSentence(String text) {
-    for (final AvatarGesture gesture in gesturesFor(text)) {
-      requestGesture(gesture, source: GestureSource.auto);
+  /// Auto-acting entry point: derives gestures from the sentence (in the
+  /// profile's body language) and requests them as `auto`. Every sentence
+  /// takes the next index; [autoActing] false (the LLM cued this one) only
+  /// counts it.
+  void onSentence(String text, {bool autoActing = true}) {
+    final int index = _sentenceIndex++;
+    if (!autoActing) {
+      return;
+    }
+    for (final AvatarGesture gesture in personaGesturesFor(
+      text,
+      _profile,
+      index,
+    )) {
+      if (_autoFires()) {
+        requestGesture(gesture, source: GestureSource.auto);
+      }
     }
   }
 
@@ -377,15 +430,47 @@ class PerformanceDirector {
 
   // — internals —
 
+  void _applyProfile(BodyLanguageProfile profile) {
+    _pendingProfile = null;
+    _profile = profile;
+    // the first candidate after a change always fires
+    _autoCredit = 1 - math.min(1.0, profile.gestureRate);
+  }
+
+  /// Whether the next auto gesture fires at the profile's rate: always at 1
+  /// or more, else a running credit of `rate` per candidate (deterministic).
+  bool _autoFires() {
+    final double weight = math.min(1.0, _profile.gestureRate);
+    if (weight >= 1) {
+      return true;
+    }
+    _autoCredit += weight;
+    if (_autoCredit >= 1 - 1e-9) {
+      _autoCredit -= 1;
+      return true;
+    }
+    return false;
+  }
+
+  /// [gestureCooldown] / the profile's gesture rate.
+  Duration get _cooldown {
+    final double rate = _profile.gestureRate;
+    if (rate == 1 || rate <= 0) {
+      return gestureCooldown;
+    }
+    return Duration(
+      microseconds: (gestureCooldown.inMicroseconds / rate).round(),
+    );
+  }
+
   Duration get _cooldownRemaining {
     final DateTime? last = _lastStartAt;
     if (last == null) {
       return Duration.zero;
     }
     final Duration elapsed = _now().difference(last);
-    return elapsed >= gestureCooldown
-        ? Duration.zero
-        : gestureCooldown - elapsed;
+    final Duration cooldown = _cooldown;
+    return elapsed >= cooldown ? Duration.zero : cooldown - elapsed;
   }
 
   Duration get _putAwayRemaining {
@@ -459,7 +544,8 @@ class PerformanceDirector {
   }
 
   /// The prop held right now: never while speaking; the tablet for a lookup
-  /// tool, the hands free for any other tool, else what the idle ladder says.
+  /// tool, the hands free for any other tool, else what the idle ladder says
+  /// (the profile's idle prop).
   AvatarProp get _prop {
     if (_speaking) {
       return AvatarProp.none;
@@ -471,7 +557,7 @@ class PerformanceDirector {
     if (_heldOver != AvatarProp.none) {
       return _heldOver;
     }
-    return _idleTablet ? AvatarProp.tablet : AvatarProp.none;
+    return _idleTablet ? _profile.idle.prop : AvatarProp.none;
   }
 
   /// A weather lookup's answer: shown while that lookup's tablet is out.
@@ -532,6 +618,7 @@ class PerformanceDirector {
       idleStage: _idleStage,
       tabletWeather: card.glyph,
       tabletTemp: card.temp,
+      body: _profile,
     );
   }
 
@@ -597,8 +684,10 @@ class PerformanceDirector {
   }
 
   void _scheduleGlance() {
+    // the same seeded draw for every profile, stretched by its glance period
+    final int ms = _glanceMinMs + _rng.nextInt(_glanceSpanMs + 1);
     _glanceTimer = Timer(
-      Duration(milliseconds: _glanceMinMs + _rng.nextInt(_glanceSpanMs + 1)),
+      Duration(milliseconds: (ms * _profile.idle.glancePeriodScale).round()),
       () {
         final double sign = _rng.nextBool() ? 1 : -1;
         _glance = sign * (0.25 + 0.2 * _rng.nextDouble());
