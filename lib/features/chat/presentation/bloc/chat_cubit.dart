@@ -420,16 +420,23 @@ class ChatCubit extends Cubit<ChatState> {
 
   /// Update the chat state (both current and opened) without saving to the repo
   /// Ideal for rapid real-time streaming updates
+  ///
+  /// The streamed chat was captured when the message was sent: it keeps the
+  /// opened chat's avatar, which a tool (`change_avatar`) may have changed
+  /// since.
   void updateChatStreaming(Chat chat) {
+    final Chat streamed = chat.id == state.openedChat.id
+        ? chat.copyWith(avatar: state.openedChat.avatar)
+        : chat;
     // Also update the corresponding chat in chatsList to keep it in sync
     final List<Chat> updatedChatsList = state.chatsList
-        .map((Chat c) => c.id == chat.id ? chat : c)
+        .map((Chat c) => c.id == streamed.id ? streamed : c)
         .toList();
 
     emit(
       state.copyWith(
-        currentChat: chat,
-        openedChat: chat,
+        currentChat: streamed,
+        openedChat: streamed,
         chatsList: updatedChatsList,
         status: ChatStatus.streaming,
       ),
@@ -666,6 +673,11 @@ class ChatCubit extends Cubit<ChatState> {
         if (isClosed) return;
         emit(state.copyWith(activeTool: toolName));
       },
+      // The avatar a tool set mid-reply (updateAvatarOpenedChat) is kept in
+      // the completed and stored chat.
+      currentAvatar: () => state.openedChat.id == currentChat.id
+          ? state.openedChat.avatar
+          : currentChat.avatar,
     );
   }
 

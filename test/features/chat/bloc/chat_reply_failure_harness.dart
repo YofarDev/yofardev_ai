@@ -71,6 +71,7 @@ class ScriptedStreamingService extends Mock implements ChatStreamingService {
     required void Function(Chat finalChat) onStreamComplete,
     required void Function(String error) onError,
     void Function(String? toolName)? onToolActivity,
+    Avatar Function()? currentAvatar,
   }) async {
     started.complete();
     await release.future;
