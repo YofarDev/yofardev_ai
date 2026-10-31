@@ -52,8 +52,9 @@ def test_contract_scene_vm_matches_the_scene_generator() -> None:
     # `npc2*`, `moonPhase`, `festive` from the M9 range (Scene._v12_props, world_kit.v12_members) after them
     v11 = ["fog", "npc", "npcX", "npcLook"]
     v12 = ["npc2", "npc2X", "npc2Look", "moonPhase", "festive"]
-    assert [n for n in c["scene_vm_props"]][-9:] == v11 + v12
-    names = [n for n in c["scene_vm_props"] if n not in ("eventId", "event", *v11, *v12)]
+    v13 = ["night"]   # M10: from the M10 range (Scene._v13_props, world_kit.v13_members)
+    assert [n for n in c["scene_vm_props"]][-10:] == v11 + v12 + v13
+    names = [n for n in c["scene_vm_props"] if n not in ("eventId", "event", *v11, *v12, *v13)]
     for sid in SCENES:
         gen = gen_scenes.scene_vm_defaults(sid)
         assert [n for n, _, _ in gen] == names

@@ -1,0 +1,27 @@
+ok cafe wipe: 16 spots change 11.75% of the handle rect, 0 px outside
+ok cafe wipe: trailFade 1 draws nothing (0 px differ from rest)
+ok cafe wipe: trailN 0 is M9 (0 px differ)
+ok cafe wipe M10: contrast in the stroke's core x1.22 of rest (clear glass, >= 1.15)
+ok cafe wipe M9: contrast in the stroke's core x0.16 of rest (reference)
+ok deepSpace spin M9: widest band gap per spin k/16 [0, 8, 9, 8, 9, 9, 8, 11, 8, 13, 12, 12, 13, 12, 12, 10] px (reference)
+ok deepSpace spin M10: widest band gap per spin k/16 [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 1, 1, 0, 0] px (< 4)
+ok deepSpace spin: spin 1 draws spin 0 (0 px differ)
+ok deepSpace spin: spin 0 is M9 (0 px differ)
+ok beach night 1: sky luminance x0.20 of night 0 (<= 0.35)
+ok beach night 1: sea luminance x0.49 of night 0 (<= 0.6)
+ok beach night 1: sand luminance x0.47 of night 0 (<= 0.6)
+ok beach night 1: sun glow luminance x0.17 of night 0 (<= 0.35)
+ok beach night 1: 207 star px stand out of the sky (>= 60)
+ok beach night 0 = M9 at rest (0 px differ)
+ok beach night 0 = M9 at --data=daylight=1 (0 px differ)
+ok beach night 0 = M9 at --data=dusk=1 (0 px differ)
+ok rooftop daylight 0.5: roof floor mean luminance 42.5 -> 68.9 (+26.4, >= 6)
+ok rooftop daylight 1.0: roof floor mean luminance 42.5 -> 95.1 (+52.6, >= 12)
+ok rooftop daylight 1: the sky and the skyline above the parapet unchanged (0 px differ above y 900)
+ok identity livingRoom: v13 defaults = M9 at rest, f90, noon, dusk, rain, fog, parallax
+ok identity campfire: v13 defaults = M9 at rest, f90, noon, dusk, rain, fog, parallax
+ok identity beach: v13 defaults = M9 at rest, f90, noon, dusk, rain, fog, parallax
+ok identity deepSpace: v13 defaults = M9 at rest, f90, noon, dusk, rain, fog, parallax
+ok identity cafe: v13 defaults = M9 at rest, f90, noon, dusk, rain, fog, parallax
+ok identity rooftop: v13 defaults = M9 at rest, f90, dusk, rain, fog, parallax
+ok identity mountainHut: v13 defaults = M9 at rest, f90, noon, dusk, rain, fog, parallax

@@ -9,6 +9,8 @@ existing scenes (`gen_scenes.py`) share for the v12 `SceneVM` members:
 - `DRAGS`: the contract's "Drag handles (v12)" table, parsed from `rive/CONTRACT.md` at import (the
   contract is the single source: a scene lane corrects a rect there, never here).
 - `v12_members(sid)`: the v12 `SceneVM` members of a scene, in contract order, with their defaults.
+- `v13_members(sid)`, `vm_tail(sid)`, `declared_v13_binds(sid)` (M10, contract v13): `night`, declared
+  by every scene after `festive` (before the drag numbers), bound where `gen_scenes.V13_BINDS` says.
 - `declared_binds(sid)`: which v12 members the scene's file binds (built-ins: `gen_scenes.V12_BINDS`;
   v12 scenes: the module-level `BINDS` set). `Scene.write` and `check_contract.py` hold the file to it.
 - `review(sid)`: the scene module's module-level `REVIEW` dict (empty when there is none), read by the
@@ -18,7 +20,8 @@ existing scenes (`gen_scenes.py`) share for the v12 `SceneVM` members:
     `wet` ((x0, y0, x1, y1), lo, hi), `rain_loops` [(name, frames)], `seam_box` (x0, y0, x1, y1).
   - `"extras"`: `fn(render, out: Path, gates: list[str]) -> None`, the scene's own evidence and gates
     in `review_diorama.py` (`render(*rive_args) -> np.ndarray` RGBA 1080x1920).
-  - `"time"`: `{"sky_box": (x0, y0, x1, y1), "dusk_box": (x0, y0, x1, y1), "noon_gain": 12.0}` for
+  - `"time"`: `{"sky_box": (x0, y0, x1, y1), "dusk_box": (x0, y0, x1, y1), "noon_gain": 12.0}` (M10: optional
+    `"ground_lift"`, the least the day may brighten the bottom quarter, else it must not change) for
     `review_time.py`; without it the scene must ignore the clock (noon changes no pixel).
   - `"npc"`: for `review_npc.py`: `crop` (w, h, dy above the anchor), `seam` {state: loop frames},
     `prop` (the NPC's propId), `waypoints` [(x, y, scale)] along its path at npcX 0 .. 1 (screen
@@ -177,6 +180,26 @@ def v12_members(scene_id: str) -> list[tuple[str, str, object]]:
     return [("npc2", "enum", "away"), ("npc2X", "number", 0.0), ("npc2Look", "number", 0.0),
             ("moonPhase", "number", MOON_PHASE_OFF), ("festive", "number", 0.0),
             *((n, "number", v) for h in DRAGS.get(scene_id, ()) for n, v in h.numbers)]
+
+
+def v13_members(scene_id: str) -> list[tuple[str, str, object]]:
+    """(name, type, default) of the v13 SceneVM members: `night` (0). Every scene declares them after
+    `festive` and before its drag numbers (contract order); `declared_v13_binds` says who binds them."""
+    return [("night", "number", 0.0)]
+
+
+def vm_tail(scene_id: str) -> list[tuple[str, str, object]]:
+    """Every SceneVM member after `npcLook`, in contract order: the v12 members without the drag
+    numbers, the v13 members, then the scene's drag numbers (the contract lists them last)."""
+    drags = set(drag_numbers(scene_id))
+    v12 = v12_members(scene_id)
+    return [m for m in v12 if m[0] not in drags] + v13_members(scene_id) + [m for m in v12 if m[0] in drags]
+
+
+def declared_v13_binds(scene_id: str) -> frozenset[str]:
+    """The v13 members the scene's file binds (`gen_scenes.V13_BINDS`; M10: only the beach's `night`)."""
+    import gen_scenes  # noqa: PLC0415 (gen_scenes imports this module)
+    return frozenset(gen_scenes.V13_BINDS.get(scene_id, ()))
 
 
 def declared_binds(scene_id: str) -> frozenset[str]:

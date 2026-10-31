@@ -21607,6 +21607,7 @@
     <ViewModelPropertyNumber name="npc2Look" id="0:920004"/>
     <ViewModelPropertyNumber name="moonPhase" id="0:920006"/>
     <ViewModelPropertyNumber name="festive" id="0:920008"/>
+    <ViewModelPropertyNumber name="night" id="0:910000"/>
     <ViewModelPropertyNumber name="poke" id="0:920010"/>
     <ViewModelPropertyNumber name="pokeX" id="0:920012"/>
     <ViewModelPropertyNumber name="pokeY" id="0:920014"/>
@@ -21636,6 +21637,7 @@
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920004" id="0:920005"/>
       <ViewModelInstanceNumber propertyValue="-1" viewModelPropertyId="0:920006" id="0:920007"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920008" id="0:920009"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:910000" id="0:910001"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920010" id="0:920011"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920012" id="0:920013"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920014" id="0:920015"/>

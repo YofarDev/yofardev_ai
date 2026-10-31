@@ -188,7 +188,9 @@ def test_v12_members_follow_the_v11_ones_in_contract_order(sid: str) -> None:
     props = [p.attrs["name"] for p in sc.vm.children if p.tag.startswith("ViewModelProperty")]
     c = check_contract.parse_contract()
     assert props == [*c["scene_vm_props"], *names]
-    assert props[-5 - len(names):] == ["npc2", "npc2X", "npc2Look", "moonPhase", "festive", *names][-5 - len(names):]
+    assert props[-6 - len(names):] == ["npc2", "npc2X", "npc2Look", "moonPhase", "festive", "night", *names]
+    assert sc.v7["night"].attrs["name"] == "night"   # contract v13 (M10), from the M10 range
+    assert gen_scenes.M10_ID_START <= int(sc.v7["night"].ref().split(":")[1]) < gen_scenes.M9_ID_START
     dflt = {sc.v7[n].ref(): n for n, _, _ in world_kit.v12_members(sid)}
     vals = {dflt[v.attrs["viewModelPropertyId"]]: v.attrs["propertyValue"] for v in sc.inst.children
             if v.attrs.get("viewModelPropertyId") in dflt}
@@ -218,7 +220,7 @@ def test_contract_says_who_binds_the_v12_members() -> None:
     assert c["v12_binders"] == {
         "npc2": {"beach"}, "npc2X": {"beach"}, "npc2Look": {"beach"},
         "moonPhase": {"livingRoom", "campfire", "cafe", "rooftop", "mountainHut"},
-        "festive": {"livingRoom", "cafe", "mountainHut"}}
+        "festive": {"livingRoom", "cafe", "mountainHut"}, "night": {"beach"}}   # v13 night (M10)
     assert c["scene_vm_props"]["npc2"] == "enum" and c["scene_vm_props"]["npc2X"] == "number"
     assert set(c["scenes"]) == set(ALL)
     for sid in world_kit.BUILT_IN_SCENES:

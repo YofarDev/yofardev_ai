@@ -14,8 +14,8 @@ Layout (1080 x 1920, the avatar stands at x 330..750 from y 700 down, so the pro
   window).
 - **Plane2** (the window): the frame with its six panes, the condensation (always there, thicker on
   the lower panes), the rain on the glass (`rain`: streaks and drips clipped to the panes, the
-  `rain` event's shower on top) and the wiped spots of the `wipe` drag (`world_kit.trail_dots`, a
-  cool multiply that clears the mist, clipped to the panes). The prop `window`.
+  `rain` event's shower on top) and the wiped spots of the `wipe` drag (M10: holes in the mist with
+  a stepped soft edge, `wipe_holes`: a wipe reads as clear glass). The prop `window`.
 - **Plane3** (the back wall, in front of the recessed window): the wall with its opening, the
   festive string lights along the top of the opening (`festive`), the counter with the espresso
   machine (prop + `espresso` event) and the goldfish bowl (the NPC **fish**, prop `fish`), the shelf,
@@ -52,7 +52,6 @@ import world_kit  # noqa: E402
 SCENE_ID = "cafe"
 O = (0.0, 0.0)
 INK = "FF2A2030"
-DARKEN = 16                         # Rive BlendMode: overlapping wiped spots never compound
 
 # ---------------------------------------------------------------- layout (artboard px)
 FLOOR_Y = 1226.0
@@ -98,8 +97,11 @@ GLASS_WET = ("FF7A8898", 0.18)       # wet tint over the panes at rain 1
 STREAK_COLOUR = "80CCD8E4"
 REFLECT_REST = 0.3                   # the street's reflections at rain 0 (an evening street is damp)
 MIST = "C8D2DC"                      # condensation colour (alpha per gradient stop)
-TRAIL_R = 28.0                       # a wiped spot's radius (dots >= 22 px apart: one wiped stroke)
-TRAIL_TINT = "FF4E5870"              # darkens mist and view down to a cool clear-glass tone (soft edge)
+TRAIL_R = 28.0                       # a wiped spot's reach (dots >= 22 px apart: one wiped stroke)
+# M10: a wiped spot is a hole in the mist of radius WIPE_R; its edge steps back to the mist through
+# thinner mist rings (radius inside which the ring is clear, the mist's opacity in the ring)
+WIPE_R = 30.0
+WIPE_RINGS = ((26.0, 0.72), (22.0, 0.46), (18.0, 0.24), (14.0, 0.08))
 
 # ---------------------------------------------------------------- events (frames at 60 fps)
 CUP_STEAM_FRAMES = 180
@@ -117,7 +119,7 @@ PLANES: dict[str, int | None] = {
                      "CounterRail", "CounterPanel", "CounterTop", "Counter", "Sill", "SillShadow",
                      "WinReveal", "WallWarmth", "Cornice", "Rail", "WainscotPanelHi", "WainscotPanel", "Wainscot",
                      "WallpaperPrint", "Wallpaper", "Wall"), 3),
-    **dict.fromkeys(("TrailDots", "RainGlass", "ShowerGlass", "Mist", "PaneClip", "WinBevel", "WinFrame"), 2),
+    **dict.fromkeys(("WipeMistBack", "WipeRing", "WipeClip", "RainGlass", "ShowerGlass", "Mist", "PaneClip", "WinBevel", "WinFrame"), 2),
     **dict.fromkeys(("StreetDay", "ShowerSheen", "StreetReflect", "LampHead", "LampGlow", "LampPost",
                      "StreetSheen", "Street"), 1),
     **dict.fromkeys(("NeonFlick", "LitWin", "DarkWin", "Shopfront", "Awning", "AwningBase", "Kerb",
@@ -338,23 +340,84 @@ def window(sc: Scene) -> tuple[list[El], dict[str, El]]:
     shower = d("Node", d("ClippingShape", sourceId=clip.ref(), name="Clip"), *shower_sheets, x=0.0, y=0.0,
                opacity=0.0, name="ShowerGlass")
     keep["shower_glass"] = shower
-    # the `wipe` drag: 16 wiped spots, a soft cool multiply that clears the mist, clipped to the panes
-    d9 = sc.d9
-    dots = world_kit.trail_dots(sc, d9, TRAIL_TINT, "00E8F0F8", TRAIL_R)
-    for dot in dots.children:
-        if dot.tag != "Node":
-            continue
-        # a wiped spot has no glint (one per dot would bead the stroke)
-        dot.children = [c for c in dot.children if c.attrs.get("name") != "Highlight"]
-        for part in dot.children:
-            if part.tag == "Shape" and part.attrs.get("name") == "Mark":
-                part.children = [c for c in part.children if c.tag != "Fill"] + [
-                    d9("Fill", rad(d9, 0, 0, TRAIL_R, [(TRAIL_TINT, 0.0), (TRAIL_TINT, 0.5),
-                                                        ("00" + TRAIL_TINT[2:], 1.0)]), name="Fill")]
-                part.attrs["blendModeValue"] = DARKEN
-    at = next(i for i, c in enumerate(dots.children) if c.tag != "DataBindContext")
-    dots.children.insert(at, d9("ClippingShape", sourceId=clip.ref(), name="Clip"))
-    return [rain, shower, dots, mist, clip, bevel, frame], keep
+    # the `wipe` drag (M10): 16 wiped spots cut the mist (holes, `clockwise` fill rule), so a wipe
+    # reveals the view as clear glass; two thinner mist rings soften each stroke's edge (`wipe_holes`)
+    wipe = wipe_holes(sc, mist)
+    return [rain, shower, *wipe, mist, clip, bevel, frame], keep
+
+
+def wipe_holes(sc: Scene, mist: El) -> list[El]:
+    """The café's `wipe` drag (contract v12 numbers, M10 art): wiped spot i (shown while i < `trailN`, at
+    (`trailX<i>`, `trailY<i>`)) is a hole of radius WIPE_R[0] in the `Mist` (an `Ellipse` with `isHole`,
+    the mist's fill on the `clockwise` rule: the union of the holes is clear glass, overlapping spots
+    never compound). Each spot's size is s_i = clamp(trailN - i) x (1 - trailFade^4) and the mist comes
+    back over the spots at opacity `trailFade` (`WipeMistBack`): the glass hazes over evenly and the
+    holes close late, and at the defaults (`trailN` 0, `trailFade` 1) every hole has no area, so
+    the mist draws exactly as before. The soft edge: per ring (r, k) of WIPE_RINGS, the mist again at
+    opacity k x (1 - trailFade), holed at r and clipped to the union of the previous radius's discs
+    (`WipeClip*`), i.e. a band just inside the stroke's edge. Returns the roots for Plane2 (front first)."""
+    d10 = sc.d10
+    f = Formulas(d10, sc.vpath)
+    grow = []
+    for i in range(world_kit.TRAIL_DOTS):
+        fade4 = [f.bound("trailFade"), f.op("*"), f.bound("trailFade"), f.op("*"), f.bound("trailFade"), f.op("*"),
+                 f.bound("trailFade")]
+        toks = [*f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [*f.inp(), f.op("-"), f.val(i)])), f.op("*"),
+                *f.fn("max", [f.val(0)], [f.val(1), f.op("-"), *fade4])]
+        conv = d10("DataConverterFormula", *toks)
+        sc.roots.append(conv)
+        grow.append(conv)
+
+    def spots(r: float, hole: bool) -> list[El]:
+        out = []
+        for i in range(world_kit.TRAIL_DOTS):
+            out.append(d10("Ellipse", world_kit._bind(sc, d10, f"trailX{i}", world_kit.KEY_X, None),
+                           world_kit._bind(sc, d10, f"trailY{i}", world_kit.KEY_Y, None),
+                           world_kit._bind(sc, d10, "trailN", 16, grow[i]),
+                           world_kit._bind(sc, d10, "trailN", 17, grow[i]),
+                           width=2 * r, height=2 * r, x=0.0, y=0.0, scaleX=0.0, scaleY=0.0,
+                           isHole=True if hole else None, name=f"Wipe{i}"))
+        return out
+
+    def clockwise(shape: El) -> None:
+        for c in shape.children:
+            if c.tag == "Fill":
+                c.attrs["fillRule"] = "clockwise"
+
+    clockwise(mist)
+    mist.children[len(PANES):len(PANES)] = spots(WIPE_R, True)
+    grad = next(c for c in mist.children if c.tag == "Fill").children[0]
+    out: list[El] = []
+    clips: list[El] = []
+    outer = WIPE_R
+    for j, (r, k) in enumerate(WIPE_RINGS):
+        src = d10("Shape", *spots(outer, False), x=0.0, y=0.0, name=f"WipeClip{j}")
+        stops = [d10("GradientStop", colorValue=g.attrs["colorValue"], position=g.attrs["position"])
+                 for g in grad.children]
+        ring = d10("Shape", *[_rect_path(d10, *p, name="Pane") for p in PANES], *spots(r, True),
+                   d10("Fill", d10("LinearGradient", *stops, **{a: grad.attrs[a] for a in
+                                                                 ("startX", "startY", "endX", "endY")}),
+                       fillRule="clockwise", name="Fill"), x=0.0, y=0.0, name="Ring")
+        # the ring thins as the mist comes back (k x (1 - trailFade)): under the returning haze a full ring
+        # would over-mist the stroke's edge into bright beads
+        thin = d10("DataConverterFormula", f.val(k), f.op("-"), f.val(k), f.op("*"), *f.inp())
+        sc.roots.append(thin)
+        out.append(d10("Node", world_kit._bind(sc, d10, "trailFade", world_kit.KEY_OPACITY, thin),
+                       d10("ClippingShape", sourceId=src.ref(), name="Clip"), ring, x=0.0, y=0.0,
+                       opacity=k, name=f"WipeRing{j}"))
+        clips.append(src)
+        outer = r
+    # misting back: the mist again, clipped to the wiped spots, at opacity `trailFade` (a haze that
+    # thickens evenly while the spots shrink only late, so a fading stroke never beads)
+    back = d10("Shape", *[_rect_path(d10, *p, name="Pane") for p in PANES],
+               d10("Fill", d10("LinearGradient", *[d10("GradientStop", colorValue=g.attrs["colorValue"],
+                                                       position=g.attrs["position"]) for g in grad.children],
+                               **{a: grad.attrs[a] for a in ("startX", "startY", "endX", "endY")}), name="Fill"),
+               x=0.0, y=0.0, name="Haze")
+    haze = d10("Node", world_kit._bind(sc, d10, "trailFade", world_kit.KEY_OPACITY, None),
+               d10("ClippingShape", sourceId=clips[0].ref(), name="Clip"), back, x=0.0, y=0.0, opacity=1.0,
+               name="WipeMistBack")
+    return [haze, *out, *clips]
 
 
 def _glass_sheets(sc: Scene, prefix: str, specs: tuple, seed: bytes, long: bool = False) -> list[El]:

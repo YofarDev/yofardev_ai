@@ -79,7 +79,7 @@ def test_artboard_state_machine_and_view_model_in_contract_order(tree: ET.Elemen
     assert (ab.get("width"), ab.get("height")) == ("1080", "1920")
     assert [s.get("name") for s in ab.iter("StateMachine")] == ["Main"]
     want = ["eventId", "event", *(n for n, _, _ in gen_scenes.scene_vm_defaults("mountainHut")), "fog", "npc", "npcX",
-            "npcLook", *(n for n, _, _ in world_kit.v12_members("mountainHut"))]
+            "npcLook", *(n for n, _, _ in world_kit.vm_tail("mountainHut"))]
     assert list(_vm_names(tree).values()) == want
     assert want[-1] == "rope"
     events = next(e for e in tree.iter("DataEnumCustom") if e.get("name") == "EventId")

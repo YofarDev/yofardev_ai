@@ -76,7 +76,7 @@ def test_artboard_state_machine_and_one_artboard(doc: ET.Element) -> None:
 
 def test_scene_vm_holds_every_contract_member_in_order(doc: ET.Element) -> None:
     want = ["eventId", "event", *(n for n, _, _ in gen_scenes.scene_vm_defaults(SID)), "fog", "npc", "npcX",
-            "npcLook", *(n for n, _, _ in world_kit.v12_members(SID))]
+            "npcLook", *(n for n, _, _ in world_kit.vm_tail(SID))]
     assert [p.get("name") for p in _vm(doc) if p.tag.startswith("ViewModelProperty")] == want
     # the drag numbers are the trail's (contract: `wipe`, kind trail)
     assert world_kit.drag_numbers(SID) == tuple(n for n, _ in world_kit.TRAIL_NUMBERS)
@@ -157,15 +157,16 @@ def test_v12_binds_moon_festive_and_the_wipe(doc: ET.Element) -> None:
     assert not got & set(world_kit.NPC2_NAMES)
 
 
-def test_wipe_marks_sit_at_their_planes_origin_clipped_to_the_panes(doc: ET.Element) -> None:
+def test_wipe_cuts_holes_in_the_mist_at_the_planes_origin(doc: ET.Element) -> None:
+    # M10 (plan ruling 15): the wiped spots are holes in the `Mist` (no darken marks any more); the
+    # holes' formulas and the soft rings are covered by test_m10_notes.py
     plane2 = next(c for c in _board(doc) if c.get("name") == "Plane2")
-    dots = next(c for c in plane2 if c.get("name") == "TrailDots")
-    assert (float(dots.get("x")), float(dots.get("y"))) == (0.0, 0.0)
-    clip = dots.find("ClippingShape")
-    pane_clip = next(c for c in plane2 if c.get("name") == "PaneClip")
-    assert clip is not None and clip.get("sourceId") == pane_clip.get("id")
-    marks = [m for m in dots.iter("Shape") if m.get("name") == "Mark"]
-    assert len(marks) == world_kit.TRAIL_DOTS and {m.get("blendModeValue") for m in marks} == {"16"}
+    assert not [c for c in plane2 if c.get("name") == "TrailDots"]
+    mist = next(c for c in plane2 if c.get("name") == "Mist")
+    assert (float(mist.get("x")), float(mist.get("y"))) == (0.0, 0.0)
+    holes = [e for e in mist if e.tag == "Ellipse"]
+    assert len(holes) == world_kit.TRAIL_DOTS and {h.get("isHole") for h in holes} == {"true"}
+    assert not [e for e in plane2.iter() if e.get("blendModeValue") == "16"]
     # the proof stroke stays inside the handle rect by a spot's radius
     x0, y0, x1, y1 = scene_cafe.GLASS
     r = scene_cafe.TRAIL_R

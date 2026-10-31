@@ -108,7 +108,10 @@ def test_v12_art_mints_from_the_m9_range(rml: dict[str, ET.Element], sid: str) -
             assert M9_RANGE[0] <= _n(e.get("id")) < M9_RANGE[1], (name, e.tag, e.get("name"), e.get("id"))
     if sid == "deepSpace":
         wraps = [e for e in doc.iter("Shape") if str(e.get("name", "")).startswith("PlanetWeatherWrap")]
-        assert wraps and all(M9_RANGE[0] <= _n(e.get("id")) < M9_RANGE[1] for w in wraps for e in w.iter())
+        # M10: each band and copy gained one opacity bind (the seam fix) from the M10 range
+        m10 = [e for w in wraps for e in w.iter() if not M9_RANGE[0] <= _n(e.get("id")) < M9_RANGE[1]]
+        assert wraps and all(gen_scenes.M10_ID_START <= _n(e.get("id")) < M9_RANGE[0] and e.tag == "DataBindContext"
+                             and e.get("propertyKey") == "18" for e in m10) and len(m10) == len(wraps)
 
 
 @pytest.mark.parametrize("sid", SCENES)
@@ -238,10 +241,14 @@ def test_spin_wraps_one_period_per_band(rml: dict[str, ET.Element]) -> None:
         period = _at(doc, b, X, 1.0) - x0
         assert _at(doc, copy, X, 1.0) == pytest.approx(x0)       # spin 1: the copy is where the band was
         assert _at(doc, copy, X, 0.0) == pytest.approx(x0 - period)
-        # at spin 0 the copy (and at 1 the band) lies wholly outside the disc it is clipped to
+        # M10 (the seam): the period is the stroke's own length less 1 px, so the copy's end overlaps
+        # the band's start and the join never opens; the copy is hidden at spin 0 and the band at
+        # spin 1, so both ends draw the M9 rest (rive/tools/review_m10_notes.py renders the gate)
         xs = [float(v.get("x")) for v in b.find("PointsPath")]
-        ys = [float(v.get("y")) + float(b.get("y")) for v in b.find("PointsPath")]
         cap = float(b.find("Stroke").get("thickness")) / 2
-        near = max(0.0, min(abs(y - float(planet.get("y"))) for y in ys) - cap)
-        assert (max(xs) - min(xs)) / 2 + cap + math.sqrt(r * r - near * near) < period < 2 * r + 2 * cap + 10
+        assert period == pytest.approx(max(xs) - min(xs) + 2 * cap - gen_scenes.SPIN_OVERLAP, abs=0.01)
+        assert period < 2 * r + 2 * cap
+        assert [_at(doc, copy, OP, s) for s in (0.0, 0.5, 1.0)] == [0.0, 1.0, 1.0]
+        assert [_at(doc, b, OP, s) for s in (0.0, 0.5, 1.0)] == [1.0, 1.0, 0.0]
+        assert float(copy.get("opacity")) == 0.0 and b.get("opacity") is None
         assert copy.find("ClippingShape").get("sourceId") == planet.get("id")

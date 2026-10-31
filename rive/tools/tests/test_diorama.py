@@ -541,8 +541,9 @@ def test_deep_space_dust_veils_draw(ds: str) -> None:
 
 def _m8(i: str | None) -> bool:
     """An M8 element (contract v11: fog, the NPC rigs; `M8_ID_START` range) or a later one (M9, contract
-    v12: the v12 view-model members and world-kit art; `M9_ID_START` range)."""
-    return i is not None and gen_scenes.M9_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START
+    v12: the v12 view-model members and world-kit art; `M9_ID_START` range; M10, contract v13: `night`
+    and the M10 notes' art; `M10_ID_START` range)."""
+    return i is not None and gen_scenes.M10_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START
 
 
 def _v10_or_later(new: dict, i: str) -> bool:

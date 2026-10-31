@@ -9,7 +9,8 @@ Per scene: `time_strip.png` (night, sunrise / sunset, morning, noon: `daylight` 
 - noon brightens the sky (mean luminance of the scene's sky box up by > 12/255) for livingRoom,
   campfire, beach, and changes no pixel for deepSpace (it ignores the clock);
 - sunset recolours the band above the horizon (mean abs delta > 6/255) where a scene binds dusk;
-- the ground (bottom 25 %) moves < 3/255 at noon: the veils touch the sky plane only.
+- the ground (bottom 25 %) moves < 3/255 at noon: the veils touch the sky plane only (M10 ruling 15: a
+  scene whose `REVIEW["time"]` sets `ground_lift` must instead brighten it by at least that at noon).
 
 A scene not configured below (the v12 ones) reads its scene module's `REVIEW["time"]`
 (`sky_box`, `dusk_box`, optional `noon_gain`; see `world_kit`); without it the scene must ignore the
@@ -102,7 +103,14 @@ def check(scene: str, same_as: str, tmp: Path) -> tuple[list[str], dict[str, np.
         lines.append(f"{scene}: ignores the clock: {same * 100:.3f} % differ at noon ({'ok' if same == 0 else 'FAIL'})")
     ground = slice(int(h * 0.75), h)
     dg = float(np.abs(shots["noon"][ground] - shots["night"][ground]).mean())
-    lines.append(f"{scene}: ground unchanged at noon: mean delta {dg:.2f}/255 ({'ok' if dg < 3 else 'FAIL'})")
+    lift = world_kit.review(scene).get("time", {}).get("ground_lift")
+    if lift is None:
+        lines.append(f"{scene}: ground unchanged at noon: mean delta {dg:.2f}/255 ({'ok' if dg < 3 else 'FAIL'})")
+    else:
+        # M10 ruling 15: this scene's day also lifts its ground (the rooftop's roof and parapet)
+        gain = lum(shots["noon"][ground]) - lum(shots["night"][ground])
+        lines.append(f"{scene}: the day lifts the ground at noon by {gain:.1f}/255 (want >= {lift:.0f}) "
+                     f"({'ok' if gain >= lift else 'FAIL'})")
     return lines, shots
 
 

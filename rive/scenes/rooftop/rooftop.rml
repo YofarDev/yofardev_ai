@@ -4952,6 +4952,16 @@
           </Shape>
         </Node>
       </Node>
+      <Shape x="540" y="1486" opacity="0" blendModeValue="14" name="RoofDay" id="0:910008">
+        <DataBindContext sourcePathIds="0:23-0:980024" propertyKey="18" id="0:910002"/>
+        <Rectangle width="1200" height="1008" name="Path" id="0:910003"/>
+        <Fill name="Fill" id="0:910007">
+          <LinearGradient startX="0" startY="-504" endX="0" endY="504" id="0:910006">
+            <GradientStop colorValue="FF4A4B5E" position="0" id="0:910004"/>
+            <GradientStop colorValue="FF3A3B4E" position="1" id="0:910005"/>
+          </LinearGradient>
+        </Fill>
+      </Shape>
       <Shape x="0" y="0" name="ParapetCapLight" id="0:2502">
         <PointsPath isClosed="false" name="Path" id="0:2499">
           <StraightVertex x="-60" y="987.5" id="0:2497"/>
@@ -13037,6 +13047,7 @@
     <ViewModelPropertyNumber name="npc2Look" id="0:920004"/>
     <ViewModelPropertyNumber name="moonPhase" id="0:920006"/>
     <ViewModelPropertyNumber name="festive" id="0:920008"/>
+    <ViewModelPropertyNumber name="night" id="0:910000"/>
     <ViewModelPropertyNumber name="aim" id="0:920010"/>
     <ViewModelInstance exports="true" name="Default" id="0:22">
       <ViewModelInstanceEnum propertyValue="0:13" viewModelPropertyId="0:18" id="0:20"/>
@@ -13064,6 +13075,7 @@
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920004" id="0:920005"/>
       <ViewModelInstanceNumber propertyValue="-1" viewModelPropertyId="0:920006" id="0:920007"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920008" id="0:920009"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:910000" id="0:910001"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920010" id="0:920011"/>
     </ViewModelInstance>
   </ViewModel>

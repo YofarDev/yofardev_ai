@@ -10,6 +10,8 @@ Each built scene's `SceneVM` must hold the contract's members in contract order 
 numbers (`world_kit.DRAGS`, parsed from the drag table), with their defaults; the v12 members its
 file binds must equal its declaration (`world_kit.declared_binds`), and the members the contract says
 it binds but it does not declare yet are printed as pending (`--strict-binds` makes them errors).
+v13 (M10): every scene declares `night` (default 0) after `festive`, before its drag numbers; the scenes
+that bind it must equal `world_kit.declared_v13_binds` (the contract: the beach).
 """
 
 from __future__ import annotations
@@ -160,13 +162,13 @@ def scene_vm_props(scene_sec: str) -> dict[str, str]:
 
 def v12_binders(scene_sec: str, scene_ids: list[str]) -> dict[str, set[str]]:
     """v12: the scenes the contract says bind `moonPhase`, `festive` and `npc2` (`npc2X`, `npc2Look`
-    with it), read from each bullet's "<scenes> bind(s) it" clause (parentheticals dropped)."""
+    with it), v13 `night`, read from each bullet's "<scenes> bind(s) it" clause (parentheticals dropped)."""
     vm_at = scene_sec.index("**View model:**")
     bullets = scene_sec[vm_at:scene_sec.index("**Rive event emitted:**")]
     out: dict[str, set[str]] = {}
     for item in re.split(r"\n\s*- ", bullets)[1:]:
         item = " ".join(item.split())
-        lead = re.match(r"`(moonPhase|festive|npc2)`", item)
+        lead = re.match(r"`(moonPhase|festive|npc2|night)`", item)   # v13: `night`
         if not lead:
             continue
         m = re.search(r"([^.;]*?)\bbinds? it\b", re.sub(r"\([^)]*\)", "", item))
@@ -290,23 +292,29 @@ def compact(names: set[str]) -> str:
 
 
 def check_v12_binds(sid: str, proj: Path, c: dict, pending: list[str]) -> None:
-    """v12: the members the built RML binds equal the scene's declaration; contract binds it does not
-    declare yet are pending (the lanes add them)."""
+    """v12 / v13: the members the built RML binds equal the scene's declaration (v12:
+    `world_kit.declared_binds`, v13: `world_kit.declared_v13_binds`); contract binds it does not declare
+    yet are pending (the lanes add them)."""
     root = ET.parse(proj / f"{sid}.rml").getroot()
     vm = next((v for v in root.findall("ViewModel") if v.get("name") == c["scene_vm"]), None)
     if vm is None:
         return
-    v12 = {n for n, _, _ in world_kit.v12_members(sid)}
-    names = {p.get("id"): p.get("name") for p in vm if p.tag.startswith("ViewModelProperty") and p.get("name") in v12}
-    got = world_kit.bound_names(root, vm.get("id"), names)
-    declared = set(world_kit.declared_binds(sid))
-    if got != declared:
-        err(f"{sid}: v12 members bound in the file {sorted(got)} != declared {sorted(declared)}")
-    want = {n for n, who in c["v12_binders"].items() if sid in who} | set(world_kit.drag_numbers(sid))
-    if want - declared:
-        pending.append(f"{sid}: contract v12 binds not done yet: {compact(want - declared)}")
-    if declared - want:
-        err(f"{sid}: binds {sorted(declared - want)}, which the contract says it ignores")
+    for label, members, declared in (
+            ("v12", world_kit.v12_members(sid), set(world_kit.declared_binds(sid))),
+            ("v13", world_kit.v13_members(sid), set(world_kit.declared_v13_binds(sid)))):
+        names_ = {n for n, _, _ in members}
+        names = {p.get("id"): p.get("name") for p in vm
+                 if p.tag.startswith("ViewModelProperty") and p.get("name") in names_}
+        got = world_kit.bound_names(root, vm.get("id"), names)
+        if got != declared:
+            err(f"{sid}: {label} members bound in the file {sorted(got)} != declared {sorted(declared)}")
+        want = {n for n, who in c["v12_binders"].items() if sid in who and n in names_}
+        if label == "v12":
+            want |= set(world_kit.drag_numbers(sid))
+        if want - declared:
+            pending.append(f"{sid}: contract {label} binds not done yet: {compact(want - declared)}")
+        if declared - want:
+            err(f"{sid}: binds {sorted(declared - want)}, which the contract says it ignores")
 
 
 def check_riv_bytes(path: Path, names: list[str]) -> None:
@@ -541,7 +549,8 @@ def main(argv: list[str] | None = None) -> int:
                 err(f"{sid}: SceneVM order {list(got)} != contract order {list(want)}")
             check_light_defaults(sid, j, vm, {**scene_light_defaults(sid), "rain": 0.0, "daylight": 0.0, "dusk": 0.0,
                                               "fog": 0.0, "npcX": 0.0, "npcLook": 0.0, "npc2X": 0.0, "npc2Look": 0.0,
-                                              "moonPhase": world_kit.MOON_PHASE_OFF, "festive": 0.0, **dict(drags)})
+                                              "moonPhase": world_kit.MOON_PHASE_OFF, "festive": 0.0, "night": 0.0,
+                                              **dict(drags)})
             # v11: `npc` defaults to rest (the v10 look); v12: `npc2` to away (not drawn)
             keys = {v["id"]: v["key"] for e in nodes(j["roots"], "DataEnumCustom") for v in e.get("children", [])
                     if v.get("type") == "DataEnumValue"}

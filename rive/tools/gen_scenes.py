@@ -70,6 +70,14 @@ V12_BINDS: dict[str, frozenset[str]] = {
     "beach": frozenset({"npc2", "npc2X", "npc2Look", *world_kit.drag_numbers("beach")}),
     "deepSpace": frozenset({"spin"}),
 }
+# Moonshot M10 (contract v13): `night` (every scene declares it) and every M10 element (the café wipe's
+# holes, the deepSpace band overlap, the beach's night, the rooftop's day lift) mint from their own range
+# per document (`Scene.d10`), so no M9 id moves. The v12 scene modules mint from the same range.
+M10_ID_START = 910000
+# The v13 members each scene binds (world_kit.declared_v13_binds); the others declare `night` inertly.
+V13_BINDS: dict[str, frozenset[str]] = {
+    "beach": frozenset({"night"}),
+}
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
 
@@ -114,14 +122,21 @@ class Scene:
         self._v11_props()
         self.d9 = Doc(client=0, start=M9_ID_START)
         self._v12_props()
+        self.d10 = Doc(client=0, start=M10_ID_START)
+        self._v13_props()
         # contract v12: the v12 members this scene binds (the others are declared and inert)
         self.binds: set[str] = set(world_kit.declared_binds(scene_id))
+        # contract v13 (M10): the v13 members this scene binds (`night`: only the beach)
+        self.binds13: set[str] = set(world_kit.declared_v13_binds(scene_id))
         # M8 (contract v11): the scene's NPC rig, run on the refined content before the diorama pass
         # (`scene_npc.NPCS`), and the NPC's state enum (a root element after `EventId`).
         self.npc_rig: Callable[[Scene, list[El], list[El]], None] | None = None
         # M9 (contract v12): the scene's v12 art (drags, moon, December, gulls), run on the refined
         # content after the NPC rig and before the diorama pass; everything it adds mints from `d9`
         self.v12_art: Callable[[Scene, list[El], list[El]], None] | None = None
+        # M10 (contract v13): the scene's v13 art, run on the planes after the diorama, sky-time and fog
+        # passes (so it can sit in front of a plane's veils) and before the colour fit; mints from `d10`
+        self.v13_art: Callable[[Scene, list[El]], None] | None = None
         # M4 dioramas: a hook run on the refined content (planes, veils), extra root elements
         # (converters), and the colour-script fit (ruling 13) for scenes rebuilt under the bible.
         self.post_refine: Callable[[list[El]], None] | None = None
@@ -222,15 +237,37 @@ class Scene:
         self.vm.children[at:at] = props
         self.inst.children.extend(vals)
 
+    def _v13_props(self) -> None:
+        """Contract v13 SceneVM members (world_kit.v13_members: `night`, default 0), after `festive` and
+        before the scene's drag numbers (contract order). Minted from `d10`, so no older id moves."""
+        d10 = self.d10
+        drags = set(world_kit.drag_numbers(self.id))
+        props, vals = [], []
+        for name, _typ, default in world_kit.v13_members(self.id):
+            p = d10("ViewModelPropertyNumber", name=name)
+            vals.append(d10("ViewModelInstanceNumber", propertyValue=float(default), viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+            props.append(p)
+        kids = self.vm.children
+        at = next((i for i, c in enumerate(kids) if c.attrs.get("name") in drags), kids.index(self.inst))
+        kids[at:at] = props
+        ikids = self.inst.children
+        drag_ids = {self.v7[n].ref() for n in drags}
+        at = next((i for i, c in enumerate(ikids) if c.attrs.get("viewModelPropertyId") in drag_ids), len(ikids))
+        ikids[at:at] = vals
+
     def check_v12_binds(self, roots: list[El]) -> None:
-        """The v12 members the file binds are exactly `self.binds` (the rest stay declared and inert)."""
-        v12 = {self.v7[n].ref(): n for n, _, _ in world_kit.v12_members(self.id)}
-        got = set()
-        for r in roots:
-            got |= world_kit.bound_names(r, self.vm.ref(), v12)
-        if got != self.binds:
-            raise ValueError(f"{self.id}: v12 binds {sorted(got)} != declared {sorted(self.binds)} "
-                             f"(gen_scenes.V12_BINDS or the scene module's BINDS)")
+        """The v12 members the file binds are exactly `self.binds`, the v13 ones exactly `self.binds13`
+        (the rest stay declared and inert)."""
+        for label, members, want, where in (
+                ("v12", world_kit.v12_members(self.id), self.binds, "gen_scenes.V12_BINDS or the scene module's BINDS"),
+                ("v13", world_kit.v13_members(self.id), self.binds13, "gen_scenes.V13_BINDS")):
+            names = {self.v7[n].ref(): n for n, _, _ in members}
+            got = set()
+            for r in roots:
+                got |= world_kit.bound_names(r, self.vm.ref(), names)
+            if got != want:
+                raise ValueError(f"{self.id}: {label} binds {sorted(got)} != declared {sorted(want)} ({where})")
 
     def vpath(self, name: str) -> str:
         return f"{self.vm.ref()}-{self.v7[name].ref()}"
@@ -398,6 +435,8 @@ class Scene:
             diorama(self, content, spec)
             sky_time(self, content)
             scene_fog(self, content)
+        if self.v13_art is not None:
+            self.v13_art(self, content)
         if self.fit or spec is not None:
             self.fit_colours([*hits, *content])
         d = self.d
@@ -1829,7 +1868,7 @@ DIORAMAS["livingRoom"] = DioramaSpec(LIVING_ROOM_PLANES, LIVING_ROOM_EMISSIVE, L
 # ====================================================================== beach
 # M5 ruling 4 (Task 5): planes back to front. Element roots as `DioramaSpec.planes` reads them.
 BEACH_PLANES: dict[str, int | None] = {
-    "RainLoop": None, "RainFx": None, "SunsetTint": None,
+    "RainLoop": None, "RainFx": None, "SunsetTint": None, "NightTint": None,
     "DuneGrass": 5, "DuneWet": 5, "NearDune": 5,
     # sand props, the palm and the passing flock; the shells and starfish lie on the mid-ground sand
     # (y 1470-1860, most of them not foreground), so they stay with the castle (ruling 4: 5 -> 4)
@@ -2212,6 +2251,7 @@ def beach() -> str:
     front_weather(sc, "88C8D6E4")  # M6 ruling 8: the beach RainLoop colour
     sc.npc_rig = lambda s_, c_, h_: scene_npc.beach_crab(s_, c_, h_, PARALLAX_GAINS, PARALLAX_TRAVEL)  # M8
     sc.v12_art = beach_v12   # M9: the trail in the sand, the gulls (contract v12)
+    sc.v13_art = beach_night  # M10: the beach's night (contract v13 `night`)
     return sc.write(content, hits)
 
 
@@ -2519,6 +2559,14 @@ def _v12_lin(sc: Scene, k: float, c: float = 0.0, lo: float | None = None, hi: f
     return _v12_formula(sc, toks)
 
 
+def _m10_formula(sc: Scene, toks: Callable[[Formulas], list[El]]) -> El:
+    """A private formula converter minted from `d10` (M10), a root element of the scene file."""
+    f = Formulas(sc.d10, sc.vpath)
+    conv = sc.d10("DataConverterFormula", *toks(f))
+    sc.roots.append(conv)
+    return conv
+
+
 def _v12_bind(sc: Scene, prop: str, key: int, conv: El) -> El:
     return sc.d9("DataBindContext", sourcePathIds=sc.vpath(prop), propertyKey=key, converterId=conv.ref())
 
@@ -2709,38 +2757,99 @@ def beach_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
     scene_npc.beach_gulls(sc, content)
 
 
+# ---------------------------------------------------------------- beach: the night (M10, contract v13)
+# `night` (0-1, the app writes (1 - daylight) x (1 - dusk)) hides the beach's sunset: an opaque night sky
+# over the whole sky plane (in front of its haze, clouds and sun), the sun's glow off, a few stars in
+# front of it, and a moonlight shade over the whole frame (a screen-space multiply in front of every plane
+# and the rain: the sky, stars, sea, reflections, sand, the palm and the props darken and cool together).
+# Everything is a formula / opacity bind on `night`, so night 0 is M9 exactly.
+NIGHT_SKY = ("FF243052", "FF34446A", "FF56648C")   # zenith, mid sky, horizon haze (before the shade)
+NIGHT_SHADE = "FF6B7AA8"                            # the multiply at night 1 (x 0.42, 0.48, 0.66)
+NIGHT_SUN_GAIN = 2.0                                 # the sun's disc and glow: opacity max(0, 1 - 2 night)
+NIGHT_STARS = [(96, 152, 3.2), (214, 306, 2.4), (318, 96, 2.8), (402, 238, 2.0), (520, 168, 3.4), (612, 330, 2.2),
+               (688, 118, 2.6), (842, 214, 3.0), (948, 92, 2.2), (1010, 300, 2.8), (150, 470, 2.0), (446, 420, 2.4),
+               (900, 452, 2.0), (760, 520, 1.8), (60, 640, 1.8), (1030, 600, 2.0)]
+
+
+def beach_night(sc: Scene, content: list[El]) -> None:
+    d10 = sc.d10
+    plane0 = next(e for e in content if e.tag == "Node" and e.attrs.get("name") == "Plane0")
+    sky = next(e for e in plane0.children if e.attrs.get("name") == "Sky")
+    rect = next(c for c in sky.children if c.tag == "Rectangle")
+    w, h = float(rect.attrs["width"]) + 2 * FRONT_BLEED, float(rect.attrs["height"]) + FRONT_BLEED
+    sx, sy = float(sky.attrs["x"]), float(sky.attrs["y"])
+    horizon = TIME_SKY["beach"][0]
+    zen, mid, haze = NIGHT_SKY
+    top = sy - h / 2
+    stops = [(zen, 0.0), (mid, (horizon - 380 - top) / h), (haze, (horizon - top) / h), (haze, 1.0)]
+    night_sky = d10("Shape", d10("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18),
+                    d10("Rectangle", width=w, height=h, name="Path"),
+                    d10("Fill", d10("LinearGradient", *[d10("GradientStop", colorValue=c, position=round(p, 4))
+                                                        for c, p in stops],
+                                    startX=0.0, startY=-h / 2, endX=0.0, endY=h / 2), name="Fill"),
+                    x=sx, y=sy, opacity=0.0, name="SkyNight")
+    stars = d10("Node", d10("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18),
+                *[d10("Shape", ellipse(d10, 2 * r, 2 * r), d10("Fill", d10("SolidColor", colorValue="FFF4F0DC"),
+                                                                 name="Fill"),
+                      x=float(x), y=float(y), opacity=round(0.55 + 0.45 * (r - 1.8) / 1.6, 3), name="emitNightStar")
+                  for x, y, r in NIGHT_STARS],
+                x=0.0, y=0.0, opacity=0.0, name="emitNightStars")
+    at = next(i for i, c in enumerate(plane0.children) if c.tag != "DataBindContext"
+              and not str(c.attrs.get("name", "")).startswith(HIT_PREFIX))
+    plane0.children[at:at] = [stars, night_sky]
+    # the sun and its glow go out by half night (they would show through the half-night sky as a dim disc)
+    out = _m10_formula(sc, lambda f: f.fn("max", [f.val(0)], [f.val(1), f.op("-"), f.val(NIGHT_SUN_GAIN), f.op("*"),
+                                                              *f.inp()]))
+    for name in ("emitSunGlow", "emitSunDisc"):
+        part = next(e for e in walk(content) if e.attrs.get("name") in (name, name.removeprefix("emit")))
+        part.children.insert(0, d10("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18,
+                                    converterId=out.ref()))
+    # the moonlight shade: a screen-space multiply over the whole frame, in front of the planes and rain
+    tint = d10("Shape", d10("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18),
+               d10("Rectangle", width=float(W + 2 * FRONT_BLEED), height=float(H + 2 * FRONT_BLEED), name="Path"),
+               d10("Fill", d10("SolidColor", colorValue=NIGHT_SHADE), name="Fill"),
+               x=W / 2, y=H / 2, opacity=0.0, blendModeValue=24, name="NightTint")
+    content.insert(0, tint)
+
+
 # ---------------------------------------------------------------- deepSpace: the planet spins
-SPIN_MARGIN = 3.0      # px past the clip (stroke cap + antialiasing) a band's off-disc copy keeps
+SPIN_OVERLAP = 1.0     # px the copy's stroke overlaps the band's at their join (M10: the seam closes)
+SPIN_HIDE_GAIN = 1e4   # the copy shows for spin > 0, the band for spin < 1 (formula slope)
 
 
 def deep_space_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
     """`spin` 0..1 slides each of the planet's cloud bands (`PlanetWeather*`, clipped to the disc) right
     by its own period x spin, and a copy of it, one period to the left, slides in behind it: spin 1
-    draws exactly what spin 0 does. A band's period is its half-length plus the disc's half-width at
-    its row plus the stroke's cap and a margin, so at spin 0 the copy (and at spin 1 the band) lies
-    wholly outside the clip; the seam between the two is then a few px, like the M8 bands' own gaps at
-    the limb. Short bands near the poles move slower than the equator's (a turning sphere)."""
-    d9 = sc.d9
+    draws exactly what spin 0 does. M10 (the seam): a band's period is its own stroke length (its x
+    extent plus both caps) less SPIN_OVERLAP, so the copy's end overlaps the band's start by 1 px and
+    the join never opens a gap. At spin 0 the copy would then show in the band's limb gap, so it is
+    hidden there (opacity min(1, spin x 1e4)), and the band is hidden at spin 1 (where the copy has
+    taken its place): spin 0 and spin 1 draw the M9 rest exactly. Short bands near the poles move
+    slower than the equator's (a turning sphere)."""
+    d9, d10 = sc.d9, sc.d10
     group = next(e for e in walk(content) if e.tag == "Node"
                  and any(_root(c.attrs.get("name")) == "PlanetWeather" for c in e.children))
-    planet = next(c for c in group.children if c.attrs.get("name") == "Planet")
-    disc = next(c for c in planet.children if c.tag == "Ellipse")
-    r, cy = float(disc.attrs["width"]) / 2, float(planet.attrs["y"])
+    show_copy = _m10_formula(sc, lambda f: f.fn("min", [f.val(1)], [f.val(SPIN_HIDE_GAIN), f.op("*"), *f.inp()]))
+    show_band = _m10_formula(sc, lambda f: f.fn("min", [f.val(1)], [f.val(SPIN_HIDE_GAIN), f.op("-"),
+                                                                    f.val(SPIN_HIDE_GAIN), f.op("*"), *f.inp()]))
     out: list[El] = []
     for c in group.children:
         out.append(c)
         if c.tag != "Shape" or _root(c.attrs.get("name")) != "PlanetWeather":
             continue
-        x0, y0 = float(c.attrs["x"]), float(c.attrs["y"])
+        x0 = float(c.attrs["x"])
         path = next(k for k in c.children if k.tag == "PointsPath")
         xs = [float(v.attrs["x"]) for v in path.children]
-        ys = [float(v.attrs["y"]) + y0 for v in path.children]
         cap = float(next(k for k in c.children if k.tag == "Stroke").attrs["thickness"]) / 2
-        near = max(0.0, min(abs(y - cy) for y in ys) - cap)
-        period = round((max(xs) - min(xs)) / 2 + math.sqrt(r * r - near * near) + cap + SPIN_MARGIN, 2)
+        period = round(max(xs) - min(xs) + 2 * cap - SPIN_OVERLAP, 2)
         copy = clone(d9, c, x=x0 - period, name="PlanetWeatherWrap" + str(c.attrs["name"])[len("PlanetWeather"):])
         c.children.insert(0, _v12_bind(sc, "spin", KEY_X, _v12_lin(sc, period, x0)))
         copy.children.insert(0, _v12_bind(sc, "spin", KEY_X, _v12_lin(sc, period, x0 - period)))
+        c.children.insert(1, d10("DataBindContext", sourcePathIds=sc.vpath("spin"), propertyKey=KEY_OPACITY,
+                                 converterId=show_band.ref()))
+        copy.children.insert(1, d10("DataBindContext", sourcePathIds=sc.vpath("spin"), propertyKey=KEY_OPACITY,
+                                    converterId=show_copy.ref()))
+        copy.attrs["opacity"] = 0.0
         out.append(copy)
     group.children[:] = out
 

@@ -70,7 +70,7 @@ def test_artboard_and_state_machine(doc: ET.Element) -> None:
 def test_scene_vm_members_in_contract_order(doc: ET.Element) -> None:
     got = [p.get("name") for p in _vm(doc) if p.tag.startswith("ViewModelProperty")]
     want = ["eventId", "event", *(n for n, _, _ in gen_scenes.scene_vm_defaults("rooftop")),
-            "fog", "npc", "npcX", "npcLook", *(n for n, _, _ in world_kit.v12_members("rooftop"))]
+            "fog", "npc", "npcX", "npcLook", *(n for n, _, _ in world_kit.vm_tail("rooftop"))]
     assert got == want
     assert world_kit.drag_numbers("rooftop") == ("aim",)
     defaults = {}

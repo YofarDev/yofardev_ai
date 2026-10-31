@@ -474,6 +474,13 @@
     <Event name="prop_tapped" id="0:11271">
       <CustomPropertyString propertyValue="seagull" name="propId" id="0:11270"/>
     </Event>
+    <Shape x="540" y="960" opacity="0" blendModeValue="24" name="NightTint" id="0:910093">
+      <DataBindContext sourcePathIds="0:23-0:910000" propertyKey="18" id="0:910089"/>
+      <Rectangle width="1320" height="2160" name="Path" id="0:910090"/>
+      <Fill name="Fill" id="0:910092">
+        <SolidColor colorValue="FF6B7AA8" id="0:910091"/>
+      </Fill>
+    </Shape>
     <Node x="0" y="0" name="RainLoop" opacity="0" id="0:972824">
       <DataBindContext sourcePathIds="0:23-0:980022" propertyKey="18" id="0:972826"/>
       <Node x="355.6264" y="1592.1437" opacity="0" name="Splash0" id="0:972057">
@@ -13239,6 +13246,117 @@
       </Shape>
     </Node>
     <Node x="0" y="0" name="Plane0" id="0:990125">
+      <Node x="0" y="0" opacity="0" name="emitNightStars" id="0:910076">
+        <DataBindContext sourcePathIds="0:23-0:910000" propertyKey="18" id="0:910011"/>
+        <Shape x="96" y="152" opacity="0.944" name="emitNightStar" id="0:910015">
+          <Ellipse width="6.4" height="6.4" name="Path" id="0:910012"/>
+          <Fill name="Fill" id="0:910014">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910013"/>
+          </Fill>
+        </Shape>
+        <Shape x="214" y="306" opacity="0.719" name="emitNightStar" id="0:910019">
+          <Ellipse width="4.8" height="4.8" name="Path" id="0:910016"/>
+          <Fill name="Fill" id="0:910018">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910017"/>
+          </Fill>
+        </Shape>
+        <Shape x="318" y="96" opacity="0.831" name="emitNightStar" id="0:910023">
+          <Ellipse width="5.6" height="5.6" name="Path" id="0:910020"/>
+          <Fill name="Fill" id="0:910022">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910021"/>
+          </Fill>
+        </Shape>
+        <Shape x="402" y="238" opacity="0.606" name="emitNightStar" id="0:910027">
+          <Ellipse width="4" height="4" name="Path" id="0:910024"/>
+          <Fill name="Fill" id="0:910026">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910025"/>
+          </Fill>
+        </Shape>
+        <Shape x="520" y="168" opacity="1" name="emitNightStar" id="0:910031">
+          <Ellipse width="6.8" height="6.8" name="Path" id="0:910028"/>
+          <Fill name="Fill" id="0:910030">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910029"/>
+          </Fill>
+        </Shape>
+        <Shape x="612" y="330" opacity="0.663" name="emitNightStar" id="0:910035">
+          <Ellipse width="4.4" height="4.4" name="Path" id="0:910032"/>
+          <Fill name="Fill" id="0:910034">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910033"/>
+          </Fill>
+        </Shape>
+        <Shape x="688" y="118" opacity="0.775" name="emitNightStar" id="0:910039">
+          <Ellipse width="5.2" height="5.2" name="Path" id="0:910036"/>
+          <Fill name="Fill" id="0:910038">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910037"/>
+          </Fill>
+        </Shape>
+        <Shape x="842" y="214" opacity="0.888" name="emitNightStar" id="0:910043">
+          <Ellipse width="6" height="6" name="Path" id="0:910040"/>
+          <Fill name="Fill" id="0:910042">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910041"/>
+          </Fill>
+        </Shape>
+        <Shape x="948" y="92" opacity="0.663" name="emitNightStar" id="0:910047">
+          <Ellipse width="4.4" height="4.4" name="Path" id="0:910044"/>
+          <Fill name="Fill" id="0:910046">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910045"/>
+          </Fill>
+        </Shape>
+        <Shape x="1010" y="300" opacity="0.831" name="emitNightStar" id="0:910051">
+          <Ellipse width="5.6" height="5.6" name="Path" id="0:910048"/>
+          <Fill name="Fill" id="0:910050">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910049"/>
+          </Fill>
+        </Shape>
+        <Shape x="150" y="470" opacity="0.606" name="emitNightStar" id="0:910055">
+          <Ellipse width="4" height="4" name="Path" id="0:910052"/>
+          <Fill name="Fill" id="0:910054">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910053"/>
+          </Fill>
+        </Shape>
+        <Shape x="446" y="420" opacity="0.719" name="emitNightStar" id="0:910059">
+          <Ellipse width="4.8" height="4.8" name="Path" id="0:910056"/>
+          <Fill name="Fill" id="0:910058">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910057"/>
+          </Fill>
+        </Shape>
+        <Shape x="900" y="452" opacity="0.606" name="emitNightStar" id="0:910063">
+          <Ellipse width="4" height="4" name="Path" id="0:910060"/>
+          <Fill name="Fill" id="0:910062">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910061"/>
+          </Fill>
+        </Shape>
+        <Shape x="760" y="520" opacity="0.55" name="emitNightStar" id="0:910067">
+          <Ellipse width="3.6" height="3.6" name="Path" id="0:910064"/>
+          <Fill name="Fill" id="0:910066">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910065"/>
+          </Fill>
+        </Shape>
+        <Shape x="60" y="640" opacity="0.55" name="emitNightStar" id="0:910071">
+          <Ellipse width="3.6" height="3.6" name="Path" id="0:910068"/>
+          <Fill name="Fill" id="0:910070">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910069"/>
+          </Fill>
+        </Shape>
+        <Shape x="1030" y="600" opacity="0.606" name="emitNightStar" id="0:910075">
+          <Ellipse width="4" height="4" name="Path" id="0:910072"/>
+          <Fill name="Fill" id="0:910074">
+            <SolidColor colorValue="FFF4F0DC" name="emit" id="0:910073"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Shape x="540" y="490" opacity="0" name="SkyNight" id="0:910010">
+        <DataBindContext sourcePathIds="0:23-0:910000" propertyKey="18" id="0:910002"/>
+        <Rectangle width="1440" height="1120" name="Path" id="0:910003"/>
+        <Fill name="Fill" id="0:910009">
+          <LinearGradient startX="0" startY="-560" endX="0" endY="560" id="0:910008">
+            <GradientStop colorValue="FF243052" position="0" id="0:910004"/>
+            <GradientStop colorValue="FF34446A" position="0.6027" id="0:910005"/>
+            <GradientStop colorValue="FF56648C" position="0.942" id="0:910006"/>
+            <GradientStop colorValue="FF56648C" position="1" id="0:910007"/>
+          </LinearGradient>
+        </Fill>
+      </Shape>
       <Shape x="-60" y="560" opacity="1" name="FogVeil0" id="0:990124">
         <DataBindContext sourcePathIds="0:23-0:930007" propertyKey="18" converterId="0:931521" id="0:931522"/>
         <Rectangle width="1200" height="1420" originX="0" originY="0" name="Path" id="0:990123"/>
@@ -13400,6 +13518,7 @@
       </Node>
       <Node x="780" y="640" name="emitSun" id="0:50">
         <Shape x="0" y="0" name="emitSunDisc" id="0:49">
+          <DataBindContext sourcePathIds="0:23-0:910000" propertyKey="18" converterId="0:910086" id="0:910088"/>
           <Ellipse width="120" height="120" name="Path" id="0:48"/>
           <Fill name="Fill" id="0:47">
             <RadialGradient startX="0" startY="0" endX="60" endY="0" id="0:46">
@@ -13409,6 +13528,7 @@
           </Fill>
         </Shape>
         <Shape x="0" y="0" name="emitSunGlow" id="0:43">
+          <DataBindContext sourcePathIds="0:23-0:910000" propertyKey="18" converterId="0:910086" id="0:910087"/>
           <Ellipse width="360" height="360" name="Path" id="0:42"/>
           <Fill name="Fill" id="0:41">
             <RadialGradient startX="0" startY="0" endX="180" endY="0" opacity="0.533" id="0:40">
@@ -26072,6 +26192,7 @@
     <ViewModelPropertyNumber name="npc2Look" id="0:920004"/>
     <ViewModelPropertyNumber name="moonPhase" id="0:920006"/>
     <ViewModelPropertyNumber name="festive" id="0:920008"/>
+    <ViewModelPropertyNumber name="night" id="0:910000"/>
     <ViewModelPropertyNumber name="trailN" id="0:920010"/>
     <ViewModelPropertyNumber name="trailX0" id="0:920012"/>
     <ViewModelPropertyNumber name="trailX1" id="0:920014"/>
@@ -26132,6 +26253,7 @@
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920004" id="0:920005"/>
       <ViewModelInstanceNumber propertyValue="-1" viewModelPropertyId="0:920006" id="0:920007"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920008" id="0:920009"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:910000" id="0:910001"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920010" id="0:920011"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920012" id="0:920013"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920014" id="0:920015"/>
@@ -27195,5 +27317,17 @@
     <FormulaTokenValue operationValue="0.65" id="0:931537"/>
     <FormulaTokenOperation operationType="2" id="0:931538"/>
     <FormulaTokenInput id="0:931539"/>
+  </DataConverterFormula>
+
+  <DataConverterFormula id="0:910086">
+    <FormulaTokenFunction functionType="1" id="0:910083"/>
+    <FormulaTokenValue operationValue="0" id="0:910077"/>
+    <FormulaTokenArgumentSeparator id="0:910084"/>
+    <FormulaTokenValue operationValue="1" id="0:910078"/>
+    <FormulaTokenOperation operationType="1" id="0:910079"/>
+    <FormulaTokenValue operationValue="2" id="0:910080"/>
+    <FormulaTokenOperation operationType="2" id="0:910081"/>
+    <FormulaTokenInput id="0:910082"/>
+    <FormulaTokenParenthesisClose id="0:910085"/>
   </DataConverterFormula>
 </Rive>

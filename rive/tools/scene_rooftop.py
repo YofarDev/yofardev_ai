@@ -81,13 +81,14 @@ RAIN_LOOP_FRAMES = 120     # splash loops; the streak sheets loop on 18 / 34 fra
 WET = ("FF0A0C16", 0.32)   # the roof's wet film and its opacity at rain 1
 OVERCAST = ("FF3C4258", 0.38)   # the sky clouds over at rain 1
 DAY_DIM = 0.75             # the lit windows fade by this x daylight
+DAY_LIFT = ("FF4A4B5E", "FF3A3B4E")   # M10: the screen colour over the parapet (top) and the roof (bottom) at noon
 
 ROOFTOP_PLANES: dict[str, int | None] = {
     "RainLoop": None,
     **dict.fromkeys(("Vent", "PotPlant"), 5),
     **dict.fromkeys(("Telescope", "PigeonNpc", "Antenna", "ParapetRain", "ParapetCapLight", "ParapetCap",
                      "ParapetBricks", "ParapetWall", "RoofWet", "ParapetShadow", "RoofSeam", "GravelLight",
-                     "GravelDark", "RoofFloor"), 4),
+                     "GravelDark", "RoofFloor", "RoofDay"), 4),
     **dict.fromkeys(("NearWarmth", "NearWindowsLit", "NearLights", "NearPanes", "NearFrames", "NearDish",
                      "NearCornice", "NearFacade"), 3),
     **dict.fromkeys(("MidBlink", "MidLightsWarm", "MidLightsDim", "MidLightsCool", "WaterTower", "MidRoof",
@@ -345,6 +346,7 @@ def rooftop() -> str:
                airliner, star_node, moon_rig, moon_drawn, moon_glow, *glints, *stars, city_glow, sky]
     front_weather(sc, RAIN_COL)
     sc.npc_rig = rooftop_pigeon
+    sc.v13_art = rooftop_day_lift   # M10 (ruling 15): daylight lifts the roof and the parapet
     with _own_refine():
         return sc.write(content, [hit_telescope, hit_antenna, hit_pigeon, hit_moon])
 
@@ -672,6 +674,27 @@ def _pot_plant(sc: Scene) -> El:
 
 
 # ====================================================================== the light hook
+def rooftop_day_lift(sc: Scene, content: list[El]) -> None:
+    """M10 (plan ruling 15, the owner's note "dark roof at noon"): a `screen` overlay of DAY_LIFT over
+    the parapet and the roof floor (Plane4, in front of the cap's light line, the wall, the floor, its
+    seams, gravel and wet film; behind the rain on the cap, the telescope, the pigeon and the antenna),
+    at opacity `daylight`: by day the tar roof and the bricks lift toward a lit grey and keep their
+    texture (screen keeps the differences). Invisible at daylight 0, so the night is M9 exactly.
+    Mints from `d10`."""
+    d10 = sc.d10
+    plane4 = next(e for e in content if e.tag == "Node" and e.attrs.get("name") == "Plane4")
+    y0, y1 = CAP_TOP - 4, H + 70
+    top, bottom = DAY_LIFT
+    lift = d10("Shape", d10("DataBindContext", sourcePathIds=sc.vpath("daylight"), propertyKey=18),
+               d10("Rectangle", width=float(W + 120), height=float(y1 - y0), name="Path"),
+               d10("Fill", d10("LinearGradient", d10("GradientStop", colorValue=top, position=0.0),
+                               d10("GradientStop", colorValue=bottom, position=1.0),
+                               startX=0.0, startY=-(y1 - y0) / 2, endX=0.0, endY=(y1 - y0) / 2), name="Fill"),
+               x=W / 2, y=(y0 + y1) / 2, opacity=0.0, blendModeValue=14, name="RoofDay")
+    at = next(i for i, c in enumerate(plane4.children) if c.attrs.get("name") == "ParapetCapLight")
+    plane4.children.insert(at, lift)
+
+
 def rooftop_light(sc: Scene, content: list[El], d6: Doc) -> None:
     """The rooftop's own pass: the city glow takes `lightRim` and the moon's halo `lightKey` (bound
     stops; the gradient opacity carries their alpha), the day dims the lit windows, then the steady
@@ -967,7 +990,8 @@ REVIEW: dict = {
         "seam_box": (300, 1200, 1080, 1920),
     },
     "extras": _extras,
-    "time": {"sky_box": (0, 0, 1080, 560), "dusk_box": (330, 560, 750, 840), "noon_gain": 12.0},
+    "time": {"sky_box": (0, 0, 1080, 560), "dusk_box": (330, 560, 750, 840), "noon_gain": 12.0,
+             "ground_lift": 12.0},   # M10 ruling 15: the day lifts the roof (`rooftop_day_lift`)
     "npc": {"crop": (220, 170, -30), "seam": {"idle": PIGEON_IDLE, "move": PIGEON_WALK, "notice": PIGEON_NOTICE,
                                               "react": PIGEON_REACT},
             "prop": "pigeon", "waypoints": PIGEON_WAYPOINTS},

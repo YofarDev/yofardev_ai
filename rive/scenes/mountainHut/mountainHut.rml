@@ -10687,6 +10687,7 @@
     <ViewModelPropertyNumber name="npc2Look" id="0:920004"/>
     <ViewModelPropertyNumber name="moonPhase" id="0:920006"/>
     <ViewModelPropertyNumber name="festive" id="0:920008"/>
+    <ViewModelPropertyNumber name="night" id="0:910000"/>
     <ViewModelPropertyNumber name="rope" id="0:920010"/>
     <ViewModelInstance exports="true" name="Default" id="0:22">
       <ViewModelInstanceEnum propertyValue="0:13" viewModelPropertyId="0:18" id="0:20"/>
@@ -10714,6 +10715,7 @@
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920004" id="0:920005"/>
       <ViewModelInstanceNumber propertyValue="-1" viewModelPropertyId="0:920006" id="0:920007"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920008" id="0:920009"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:910000" id="0:910001"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920010" id="0:920011"/>
     </ViewModelInstance>
   </ViewModel>
