@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show ValueListenable, kReleaseMode;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
@@ -18,9 +19,11 @@ import '../../../domain/services/head_motion_solver.dart';
 import '../../rive/avatar_face_writer.dart';
 import '../../rive/avatar_light_writer.dart';
 import '../../rive/avatar_rive_contract.dart';
+import '../../rive/mouth_anchor_source.dart';
 import '../../bloc/avatar_state.dart';
 import '../stage_camera.dart';
 import 'avatar_zone_hit_gate.dart';
+import 'mouth_anchor_reader.dart';
 
 /// Rive rendering of the avatar, driven entirely by [AvatarState] and
 /// [TalkingState].
@@ -60,6 +63,10 @@ import 'avatar_zone_hit_gate.dart';
 /// Rive → state: `avatar_tapped` events are forwarded to [onAvatarTapped],
 /// `foley` events (their `kind`) to [onFoley].
 ///
+/// Contract v13 (M10 ruling 12): after every advance of the state machine
+/// the `MouthAnchor`'s world translation is reported to [mouthAnchor] (the
+/// speech bubble's anchor); a file without it, or the web, reports none.
+///
 /// Rive types never leave `lib/features/avatar/presentation/`.
 class RiveAvatarView extends StatefulWidget {
   /// How the avatar's Rive widget hit-tests (M9 ruling 7): its listeners
@@ -88,6 +95,7 @@ class RiveAvatarView extends StatefulWidget {
     this.onFoley,
     this.daylight,
     this.localDay,
+    this.mouthAnchor,
   });
 
   final AvatarState avatarState;
@@ -126,6 +134,10 @@ class RiveAvatarView extends StatefulWidget {
   /// shown as the December one ([shownWardrobe]; never saved). Null: the
   /// stored outfit, always.
   final ValueListenable<DateTime>? localDay;
+
+  /// Hears the mouth's position (artboard px) once per advance; null: not
+  /// read.
+  final MouthAnchorSource? mouthAnchor;
 
   /// The settled face of [mood] (its AU preset and side offsets), written
   /// when there is no performer.
@@ -166,6 +178,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
   AvatarTapZones? _zones;
+  MouthAnchorReader? _mouth;
   String? _error;
 
   @override
@@ -220,6 +233,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     if (widget.localDay != oldWidget.localDay) {
       oldWidget.localDay?.removeListener(_applyContinuousState);
       widget.localDay?.addListener(_applyContinuousState);
+    }
+    if (widget.mouthAnchor != oldWidget.mouthAnchor) {
+      oldWidget.mouthAnchor?.clear();
+      _reportMouth();
     }
     if (widget.avatarState.headTarget != oldWidget.avatarState.headTarget) {
       _solver.setTarget(
@@ -283,7 +300,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
         }
         return;
       }
-      final RiveWidgetController controller = RiveWidgetController(
+      final _AvatarRiveController controller = _AvatarRiveController(
         file,
         artboardSelector: ArtboardSelector.byName(
           AvatarRiveContract.avatarArtboard,
@@ -310,7 +327,18 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
           fit: RiveAvatarView.fit,
           alignment: RiveAvatarView.alignment,
         );
+        // The web has no anchor (ruling 12): the classic caption.
+        _mouth = kIsWeb ? null : MouthAnchorReader(controller.artboard);
       });
+      if (_mouth != null && !_mouth!.found) {
+        AppLogger.info(
+          'avatar.riv has no ${MouthAnchorReader.node}: classic captions',
+          tag: 'RiveAvatarView',
+        );
+      }
+      // From the first advance on: before it the world transforms are not
+      // computed yet.
+      controller.onAdvanced = _reportMouth;
       _applyContinuousState();
       // A fresh binding has none of the head numbers yet.
       _writtenYaw = _writtenPitch = _writtenHairYaw = null;
@@ -430,8 +458,18 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     _faceWriter?.write(face, force: force);
   }
 
+  /// Reports the mouth where the last advance left it (none without a
+  /// reader or a `MouthAnchor`).
+  void _reportMouth() => widget.mouthAnchor?.report(_mouth?.read());
+
   void _teardown() {
     final RiveWidgetController? controller = _controller;
+    if (controller is _AvatarRiveController) {
+      controller.onAdvanced = null;
+    }
+    widget.mouthAnchor?.clear();
+    _mouth?.dispose();
+    _mouth = null;
     _zones?.dispose();
     _zones = null;
     _binding?.dispose();
@@ -594,6 +632,25 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       );
     }
     return const SizedBox.expand();
+  }
+}
+
+/// The avatar's controller: calls [onAdvanced] after every advance of its
+/// state machine (the frame's pose is final then), for the mouth anchor.
+final class _AvatarRiveController extends RiveWidgetController {
+  _AvatarRiveController(
+    super.file, {
+    super.artboardSelector,
+    super.stateMachineSelector,
+  });
+
+  VoidCallback? onAdvanced;
+
+  @override
+  bool advance(double elapsedSeconds) {
+    final bool more = super.advance(elapsedSeconds);
+    onAdvanced?.call();
+    return more;
   }
 }
 

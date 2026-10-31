@@ -4,6 +4,8 @@ library;
 export 'presentation/bloc/avatar_cubit.dart';
 export 'presentation/bloc/avatar_state.dart';
 export 'presentation/rive/avatar_rive_contract.dart';
+export 'presentation/rive/mouth_anchor_source.dart';
+export 'presentation/rive/stage_framing.dart';
 export 'presentation/widgets/rive/rive_avatar_view.dart';
 export 'presentation/widgets/stage_camera.dart';
 export 'presentation/widgets/rive/journey_layer.dart';

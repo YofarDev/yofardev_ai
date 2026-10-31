@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/design/components/components.dart';
 import '../../../core/design/design.dart';
 import '../../../core/design/rive/ui_kit.dart';
 import '../../../core/models/avatar_scene.dart';
@@ -18,6 +20,7 @@ import '../../avatar/avatar.dart';
 import '../../chat/chat.dart';
 import '../../talking/talking.dart';
 import 'stage/stage_caption.dart';
+import 'stage/stage_caption_bubble.dart';
 import 'stage/stage_composer.dart';
 import 'stage/stage_scrim.dart';
 import 'stage/stage_tool_chip.dart';
@@ -30,7 +33,9 @@ import 'stage/stage_top_bar.dart';
 /// - the History / More chips on top ([StageTopBar]);
 /// - the [StatusGlow] behind the composer, shaped by the talking phase;
 /// - at the bottom, above the keyboard or the system bar: the running-tool
-///   chip, the live caption and the [StageComposer].
+///   chip, the live caption and the [StageComposer];
+/// - the speech bubble beside the avatar's mouth ([StageCaptionBubble], M10),
+///   which carries the live caption whenever it can.
 ///
 /// [speech] and [composerActivity] go to the composer; [onStartDemo] to the
 /// More menu. [parallax] feeds the scene's depth planes, and hears the
@@ -97,9 +102,21 @@ class _HomeContentStackState extends State<HomeContentStack> {
   final ValueNotifier<ComposerOrbState> _composerMode =
       ValueNotifier<ComposerOrbState>(ComposerOrbState.idle);
 
+  /// The avatar's mouth (artboard px), for the speech bubble.
+  final MouthAnchorSource _mouth = MouthAnchorSource();
+
+  /// What the camera frames, for the speech bubble.
+  final StageCameraView _cameraView = StageCameraView();
+
+  /// Whether the bubble carries the caption (the classic one then hides).
+  final ValueNotifier<bool> _bubbleShown = ValueNotifier<bool>(false);
+
   @override
   void dispose() {
     _composerMode.dispose();
+    _mouth.dispose();
+    _cameraView.dispose();
+    _bubbleShown.dispose();
     super.dispose();
   }
 
@@ -130,6 +147,7 @@ class _HomeContentStackState extends State<HomeContentStack> {
       children: <Widget>[
         _CameraStage(
           camera: widget.camera,
+          view: _cameraView,
           child: _StageFeeds(
             npc: widget.npc,
             beds: widget.beds,
@@ -139,6 +157,7 @@ class _HomeContentStackState extends State<HomeContentStack> {
               world: widget.world,
               npc: widget.npc,
               foley: widget.foley,
+              mouthAnchor: _mouth,
             ),
           ),
         ),
@@ -153,6 +172,9 @@ class _HomeContentStackState extends State<HomeContentStack> {
           onComposerMode: _onComposerMode,
           speech: widget.speech,
           composerActivity: widget.composerActivity,
+          mouthAnchor: _mouth.anchor,
+          cameraView: widget.camera == null ? null : _cameraView,
+          bubbleShown: _bubbleShown,
         ),
       ],
     );
@@ -174,9 +196,16 @@ class _HomeContentStackState extends State<HomeContentStack> {
 /// the user's reduce-motion setting and the talking phase. Without a
 /// [camera] it is [child] itself.
 class _CameraStage extends StatefulWidget {
-  const _CameraStage({required this.camera, required this.child});
+  const _CameraStage({
+    required this.camera,
+    required this.view,
+    required this.child,
+  });
 
   final CameraDirector? camera;
+
+  /// Published with what the camera frames (the speech bubble reads it).
+  final StageCameraView view;
   final Widget child;
 
   @override
@@ -220,7 +249,11 @@ class _CameraStageState extends State<_CameraStage> {
               camera.setJourney(state.journey != null),
         ),
       ],
-      child: StageCamera(shot: camera.shot, child: widget.child),
+      child: StageCamera(
+        shot: camera.shot,
+        view: widget.view,
+        child: widget.child,
+      ),
     );
   }
 }
@@ -314,7 +347,11 @@ class _RiveStage extends StatelessWidget {
     this.world,
     this.npc,
     this.foley,
+    this.mouthAnchor,
   });
+
+  /// Hears the avatar's mouth each frame (the speech bubble's anchor).
+  final MouthAnchorSource? mouthAnchor;
 
   final FacePerformer? facePerformer;
   final ParallaxSource? parallax;
@@ -388,6 +425,7 @@ class _RiveStage extends StatelessWidget {
                   facePerformer: facePerformer,
                   daylight: world?.daylight,
                   localDay: world?.localDay,
+                  mouthAnchor: mouthAnchor,
                   onAvatarTapped: (String zone) {
                     foley?.propTap();
                     context.read<AvatarCubit>().onAvatarTapped(zone);
@@ -440,6 +478,9 @@ class _BottomChrome extends StatelessWidget {
     required this.composerMode,
     required this.onComposerMode,
     required this.speech,
+    required this.mouthAnchor,
+    required this.bubbleShown,
+    this.cameraView,
     this.composerActivity,
   });
 
@@ -448,11 +489,31 @@ class _BottomChrome extends StatelessWidget {
   final SpeechInputService speech;
   final ComposerActivityService? composerActivity;
 
+  /// The avatar's mouth (artboard px) and the camera, for the bubble.
+  final ValueListenable<Offset?> mouthAnchor;
+  final StageCameraView? cameraView;
+
+  /// Whether the bubble carries the caption.
+  final ValueNotifier<bool> bubbleShown;
+
+  /// The height the running-tool chip may take above the composer.
+  static const double toolChipReserve = AppPill.hitHeight + AppSpace.sm;
+
   @override
   Widget build(BuildContext context) {
     final double keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final double bottom =
         math.max(keyboard, MediaQuery.paddingOf(context).bottom) + AppSpace.md;
+    // The bubble stays between the top chips and the tool chip / composer.
+    final EdgeInsets bubbleReserved = EdgeInsets.fromLTRB(
+      AppSpace.lg,
+      MediaQuery.paddingOf(context).top +
+          AppSpace.sm +
+          AppIconButton.hitSize +
+          AppSpace.sm,
+      AppSpace.lg,
+      bottom + StageComposer.height + toolChipReserve,
+    );
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
@@ -468,13 +529,25 @@ class _BottomChrome extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               const StageToolChip(),
-              StageCaption(composerMode: composerMode),
+              StageCaption(
+                composerMode: composerMode,
+                bubbleShown: bubbleShown,
+              ),
               _Composer(
                 speech: speech,
                 activity: composerActivity,
                 onModeChanged: onComposerMode,
               ),
             ],
+          ),
+        ),
+        Positioned.fill(
+          child: StageCaptionBubble(
+            composerMode: composerMode,
+            anchor: mouthAnchor,
+            shown: bubbleShown,
+            camera: cameraView,
+            reserved: bubbleReserved,
           ),
         ),
       ],

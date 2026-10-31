@@ -3,6 +3,9 @@ import 'dart:ui';
 
 import '../../../../core/models/performance/shot.dart';
 
+/// A camera framing of the stage: `p' = zoom * p + translate` (stage px).
+typedef StageFrame = ({double zoom, Offset translate});
+
 /// Where a [Shot] puts the stage (moonshot M7 ruling 2), as pure geometry.
 ///
 /// A shot is a rect of the `Avatar` artboard (800 x 1000, the bust: head top
@@ -24,6 +27,9 @@ import '../../../../core/models/performance/shot.dart';
 abstract final class StageFraming {
   /// The size of the `Avatar` artboard.
   static const Size artboard = Size(800, 1000);
+
+  /// No zoom, no move: the stage as the avatar view lays it out.
+  static const StageFrame identity = (zoom: 1, translate: Offset.zero);
 
   /// The focus sits at this fraction of the viewport's height (headroom).
   static const double focusHeight = 0.45;
@@ -64,13 +70,9 @@ abstract final class StageFraming {
   /// [focusHeight] of its height; `translate` is then clamped so the zoomed
   /// stage always covers the viewport (no edge shows). `wide` is the identity
   /// whatever the creep.
-  static ({double zoom, Offset translate}) of(
-    Shot shot,
-    Size stage, {
-    double creep = 0,
-  }) {
+  static StageFrame of(Shot shot, Size stage, {double creep = 0}) {
     if (shot == Shot.wide || stage.isEmpty) {
-      return (zoom: 1, translate: Offset.zero);
+      return identity;
     }
     // The artboard on the stage: contain, bottom-centre.
     final double scale = math.min(
@@ -102,6 +104,37 @@ abstract final class StageFraming {
       0.0,
     );
     return (zoom: zoom, translate: Offset(x, y));
+  }
+
+  /// How many stage px one artboard px covers under [frame]: the avatar's
+  /// contain scale times the camera's zoom (0 on an empty stage).
+  static double stageScale(Size stage, [StageFrame frame = identity]) {
+    if (stage.isEmpty) {
+      return 0;
+    }
+    return math.min(
+          stage.width / artboard.width,
+          stage.height / artboard.height,
+        ) *
+        frame.zoom;
+  }
+
+  /// An artboard point [p] (avatar artboard px, the `Avatar` artboard's
+  /// top-left at 0, 0) in stage-local px: through the avatar view's fit
+  /// (contain, bottom-centre, on the whole [stage] box), then the camera's
+  /// [frame] (`p' = zoom * p + translate`).
+  static Offset artboardToStage(
+    Offset p,
+    Size stage, {
+    StageFrame frame = identity,
+  }) {
+    final double scale = stageScale(stage);
+    final double left = (stage.width - artboard.width * scale) / 2;
+    final double top = stage.height - artboard.height * scale;
+    return Offset(
+      (left + p.dx * scale) * frame.zoom + frame.translate.dx,
+      (top + p.dy * scale) * frame.zoom + frame.translate.dy,
+    );
   }
 }
 

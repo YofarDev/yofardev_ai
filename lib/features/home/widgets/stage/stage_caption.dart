@@ -19,10 +19,19 @@ import 'stage_line.dart';
 /// sentences of a streamed reply (the composer thinking, the avatar idle)
 /// keep the lingering caption instead of fading it out and in again. Each
 /// new sentence ([CaptionState.seq]) fades in; a tap turns captions off.
+///
+/// While [bubbleShown] is true the speech bubble beside the mouth carries
+/// the caption (M10 ruling 13) and this one stays empty; it is the fallback
+/// of ruling 14 (no anchor, a screen reader, large text...).
 class StageCaption extends StatelessWidget {
-  const StageCaption({super.key, required this.composerMode});
+  const StageCaption({super.key, required this.composerMode, this.bubbleShown});
 
   final ValueListenable<ComposerOrbState> composerMode;
+
+  /// Whether the bubble shows the caption instead (null: never).
+  final ValueListenable<bool>? bubbleShown;
+
+  static final ValueListenable<bool> _never = ValueNotifier<bool>(false);
 
   static const Key lineKey = ValueKey<String>('stage-caption-line');
 
@@ -40,49 +49,58 @@ class StageCaption extends StatelessWidget {
     final bool generating = context.select<TalkingCubit, bool>(
       (TalkingCubit cubit) => cubit.state.phase == TalkingPhase.generating,
     );
-    return ValueListenableBuilder<ComposerOrbState>(
-      valueListenable: composerMode,
-      builder: (BuildContext context, ComposerOrbState mode, Widget? _) =>
-          BlocBuilder<CaptionCubit, CaptionState>(
-            builder: (BuildContext context, CaptionState state) {
-              final String? text =
-                  state.enabled && !hiddenDuring(mode, generating: generating)
-                  ? state.text
-                  : null;
-              return AnimatedSize(
-                duration: duration,
-                curve: AppMotion.standard,
-                alignment: Alignment.bottomCenter,
-                child: AnimatedSwitcher(
-                  duration: duration,
-                  switchInCurve: AppMotion.standard,
-                  switchOutCurve: AppMotion.standard,
-                  layoutBuilder: (Widget? current, List<Widget> previous) =>
-                      Stack(
-                        alignment: AlignmentDirectional.bottomStart,
-                        children: <Widget>[...previous, ?current],
-                      ),
-                  transitionBuilder:
-                      (Widget child, Animation<double> animation) =>
-                          FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0, 0.12),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
+    return ValueListenableBuilder<bool>(
+      valueListenable: bubbleShown ?? _never,
+      builder: (BuildContext context, bool bubble, Widget? _) =>
+          ValueListenableBuilder<ComposerOrbState>(
+            valueListenable: composerMode,
+            builder: (BuildContext context, ComposerOrbState mode, Widget? _) =>
+                BlocBuilder<CaptionCubit, CaptionState>(
+                  builder: (BuildContext context, CaptionState state) {
+                    final String? text =
+                        state.enabled &&
+                            !bubble &&
+                            !hiddenDuring(mode, generating: generating)
+                        ? state.text
+                        : null;
+                    return AnimatedSize(
+                      duration: duration,
+                      curve: AppMotion.standard,
+                      alignment: Alignment.bottomCenter,
+                      child: AnimatedSwitcher(
+                        duration: duration,
+                        switchInCurve: AppMotion.standard,
+                        switchOutCurve: AppMotion.standard,
+                        layoutBuilder:
+                            (Widget? current, List<Widget> previous) => Stack(
+                              alignment: AlignmentDirectional.bottomStart,
+                              children: <Widget>[...previous, ?current],
                             ),
-                          ),
-                  child: text == null || text.isEmpty
-                      ? const SizedBox(
-                          key: ValueKey<String>('no-caption'),
-                          width: double.infinity,
-                        )
-                      : _CaptionLine(key: ValueKey<int>(state.seq), text: text),
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) =>
+                                FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, 0.12),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                ),
+                        child: text == null || text.isEmpty
+                            ? const SizedBox(
+                                key: ValueKey<String>('no-caption'),
+                                width: double.infinity,
+                              )
+                            : _CaptionLine(
+                                key: ValueKey<int>(state.seq),
+                                text: text,
+                              ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
           ),
     );
   }

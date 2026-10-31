@@ -33,6 +33,47 @@ class StageRenderScale extends InheritedWidget {
       scale != oldWidget.scale;
 }
 
+/// What a [StageCamera] frames right now, for the chrome drawn over the
+/// stage outside the camera (M10 ruling 12: the speech bubble maps the
+/// mouth to the screen through it).
+///
+/// [frame] is computed when read, so it is exact for the frame being
+/// built; it notifies whenever the camera moves (a command, each frame of a
+/// glide or a creep, a new stage size), never from inside a build. Without
+/// a camera attached it is the identity on no stage.
+class StageCameraView extends ChangeNotifier {
+  _StageCameraState? _camera;
+
+  /// The stage box the camera frames (null before its first layout).
+  Size? get size => _camera?._size;
+
+  /// The framing on screen now (`p' = zoom * p + translate`).
+  StageFrame get frame {
+    final _StageCameraState? camera = _camera;
+    final Size? size = camera?._size;
+    if (camera == null || size == null) {
+      return StageFraming.identity;
+    }
+    return camera._framingAt(size);
+  }
+
+  /// The shot the camera was last told to frame.
+  Shot get shot => _camera?._command.shot ?? Shot.wide;
+
+  void _attach(_StageCameraState camera) {
+    _camera = camera;
+    notifyListeners();
+  }
+
+  void _detach(_StageCameraState camera) {
+    if (_camera == camera) {
+      _camera = null;
+    }
+  }
+
+  void _moved() => notifyListeners();
+}
+
 /// The camera over the stage: transforms [child] (the Rive scene, the avatar
 /// and their layers, all locked together) to frame the director's
 /// [CameraShot]s. Rive-free; the geometry is [StageFraming].
@@ -44,16 +85,24 @@ class StageRenderScale extends InheritedWidget {
 /// runs only while something moves; at rest the camera costs nothing. A
 /// change of the stage's size reframes at once.
 class StageCamera extends StatefulWidget {
-  const StageCamera({super.key, required this.shot, required this.child});
+  const StageCamera({
+    super.key,
+    required this.shot,
+    required this.child,
+    this.view,
+  });
 
   final ValueListenable<CameraShot> shot;
   final Widget child;
+
+  /// Published with what the camera frames, for the chrome (null: none).
+  final StageCameraView? view;
 
   @override
   State<StageCamera> createState() => _StageCameraState();
 }
 
-typedef _Framing = ({double zoom, Offset translate});
+typedef _Framing = StageFrame;
 
 class _StageCameraState extends State<StageCamera>
     with SingleTickerProviderStateMixin {
@@ -80,6 +129,7 @@ class _StageCameraState extends State<StageCamera>
     _command = widget.shot.value;
     _creepFrom = _command.creep;
     widget.shot.addListener(_onShot);
+    widget.view?._attach(this);
   }
 
   @override
@@ -90,11 +140,16 @@ class _StageCameraState extends State<StageCamera>
       widget.shot.addListener(_onShot);
       _onShot();
     }
+    if (widget.view != oldWidget.view) {
+      oldWidget.view?._detach(this);
+      widget.view?._attach(this);
+    }
   }
 
   @override
   void dispose() {
     widget.shot.removeListener(_onShot);
+    widget.view?._detach(this);
     _ticker.dispose();
     _frame.dispose();
     super.dispose();
@@ -170,6 +225,7 @@ class _StageCameraState extends State<StageCamera>
     // A new command may change the render scale: rebuild once.
     setState(() {});
     _frame.value++;
+    widget.view?._moved();
   }
 
   void _onTick(Duration elapsed) {
@@ -183,6 +239,7 @@ class _StageCameraState extends State<StageCamera>
       _settle();
     }
     _frame.value++;
+    widget.view?._moved();
   }
 
   @override
@@ -194,9 +251,20 @@ class _StageCameraState extends State<StageCamera>
           return widget.child;
         }
         final Size size = constraints.biggest;
-        if (_size != null && _size != size) {
-          // The framing depends on the aspect: reframe instantly.
-          _settle();
+        if (_size != size) {
+          if (_size != null) {
+            // The framing depends on the aspect: reframe instantly.
+            _settle();
+          }
+          // Inside a build: the view hears it after the frame.
+          final StageCameraView? view = widget.view;
+          if (view != null) {
+            WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+              if (mounted && view._camera == this) {
+                view._moved();
+              }
+            });
+          }
         }
         _size = size;
         final double renderScale = cameraRenderScale(
