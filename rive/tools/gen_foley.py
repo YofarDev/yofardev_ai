@@ -10,11 +10,16 @@ No bought assets: every sound is synthesised from a fixed seed with numpy and wr
 - ``bell_0``: the mountain hut's door bell (M9 ruling 9, the `rope` drag): two clapper strikes on
   inharmonic bell partials, 1 s;
 - ``bed_crackle``: pops and hiss over brown noise, a seamless 8 s loop;
-- ``bed_rain``: pink noise and sparse drops, a seamless 8 s loop.
+- ``bed_rain``: pink noise and sparse drops, a seamless 8 s loop;
+- ``bed_wind`` (M11 ruling 11): pink-ish noise through a slow gusting band-pass (a four-band filter bank
+  whose centre and level follow two gust cycles), a seamless 2.7 s loop (an equal-power crossfade of the
+  noise's run-on into its head; the gusts are periodic over the loop), mono **16 kHz** 16-bit, at most
+  88,000 B (``WIND_RATE``, ``MAX_WIND_BYTES``), from its own seed so the earlier files keep their bytes.
 
 The beds are built circularly (noise shaped in the frequency domain over exactly the loop length,
 events added modulo the length), so the last sample runs into the first as if the loop never ended.
-Every peak sits below -1 dBFS; the whole set stays under 900 KB (``bell_0`` alone under 48 KB).
+Every peak sits below -1 dBFS; the whole set stays under 900 KB (``bell_0`` alone under 48 KB,
+``bed_wind`` under 88,000 B).
 
 Run: ``uv run --with numpy rive/tools/gen_foley.py [--out DIR]``.
 """
@@ -45,6 +50,13 @@ PAPER_MS = 300
 BED_MS = 8000
 BELL_MS = 1000
 MAX_BELL_BYTES = 48 * 1024
+# M11 ruling 11: the wind bed (foley 830,932 B + <= 88,000 B <= 921,600 B)
+WIND_RATE = 16000
+WIND_MS = 2700                      # 43,200 samples: 86,444 B with the header
+WIND_XFADE_MS = 400                 # the loop's crossfade (equal power: the noise is uncorrelated)
+WIND_SEED = 11_2026
+MAX_WIND_BYTES = 88_000
+WIND_BANDS = (190.0, 320.0, 540.0, 900.0)   # the filter bank's centres (Hz), a gust sweeps across them
 
 # a small brass bell: (ratio to the strike note, amplitude, decay s) per partial (hum, prime,
 # tierce, quint, nominal and the upper partials: the classic bell spectrum, a little stretched)
@@ -250,6 +262,57 @@ def bed_rain(rng: np.random.Generator) -> np.ndarray:
     return _normalise(x, BED_PEAK_DB)
 
 
+def _band_at(x: np.ndarray, lo: float, hi: float, rate: int, tilt: float = 0.0) -> np.ndarray:
+    """`_band` at another sample rate (soft 1-octave skirts, optional 1/f tilt), circular over len(x)."""
+    spec = np.fft.rfft(x)
+    f = np.maximum(np.fft.rfftfreq(len(x), 1.0 / rate), 1.0)
+    gain = 1.0 / (1.0 + (lo / f) ** 4) / (1.0 + (f / hi) ** 4) * f ** (-tilt)
+    gain[0] = 0.0
+    return np.fft.irfft(spec * gain, n=len(x))
+
+
+def wind_gust(n: int) -> tuple[np.ndarray, np.ndarray]:
+    """(level, sweep) over one loop of `n` samples, both periodic over it: the level rises and falls
+    with one slow gust and a smaller second one (0.35..1), the sweep (0..1) moves the band up as it
+    blows harder, a little behind the level."""
+    ph = 2 * np.pi * np.arange(n) / n
+    level = 0.68 + 0.22 * np.sin(ph - 0.6) + 0.1 * np.sin(2 * ph + 1.3)
+    sweep = np.clip(0.5 + 0.38 * np.sin(ph - 1.0) + 0.12 * np.sin(2 * ph + 0.7), 0.0, 1.0)
+    return level, sweep
+
+
+def bed_wind(rng: np.random.Generator) -> np.ndarray:
+    """Wind: pink-ish noise through a slow gusting band-pass, a seamless loop at `WIND_RATE`.
+
+    The noise runs `WIND_XFADE_MS` past the loop; each of the four bands (`WIND_BANDS`) is weighted by
+    a Gaussian in log-frequency around the gust's sweep, times the gust's level; then the run-on is
+    crossfaded (equal power) into the head, so the last sample runs into the first. The gust curves are
+    periodic over the loop, so the crossfade never meets a level step."""
+    n = int(round(WIND_RATE * WIND_MS / 1000))
+    xf = int(round(WIND_RATE * WIND_XFADE_MS / 1000))
+    total = n + xf
+    noise = rng.standard_normal(total)
+    level, sweep = wind_gust(n)
+    level = np.concatenate([level, level[:xf]])
+    sweep = np.concatenate([sweep, sweep[:xf]])
+    logc = np.log2(np.array(WIND_BANDS))
+    centre = logc[0] + sweep * (logc[-1] - logc[0])
+    x = np.zeros(total)
+    for c in WIND_BANDS:
+        band = _band_at(noise, c / 1.6, c * 1.6, WIND_RATE, tilt=0.5)
+        band /= float(np.std(band))
+        x += band * np.exp(-0.5 * ((np.log2(c) - centre) / 0.55) ** 2)
+    # a faint airy hiss on top, louder in the gusts
+    hiss = _band_at(noise[::-1].copy(), 1200.0, 4200.0, WIND_RATE)
+    hiss /= float(np.std(hiss))
+    x = x * level + 0.12 * hiss * level ** 2
+    w = np.sin(0.5 * np.pi * np.arange(xf) / xf)            # 0 -> 1 over the head
+    loop = x[:n].copy()
+    loop[:xf] = x[:xf] * w + x[n:] * np.cos(0.5 * np.pi * np.arange(xf) / xf)
+    loop -= float(np.mean(loop))
+    return _normalise(loop, BED_PEAK_DB)
+
+
 def sounds() -> dict[str, np.ndarray]:
     """Every foley file, by name (no extension), from the fixed seed."""
     rng = np.random.default_rng(SEED)
@@ -265,18 +328,23 @@ def sounds() -> dict[str, np.ndarray]:
     out["bed_rain"] = bed_rain(rng)
     # M9: drawn after the M8 set, so the M8 files keep their bytes
     out["bell_0"] = bell(rng)
+    # M11: its own seed and rate (`RATES`)
+    out["bed_wind"] = bed_wind(np.random.default_rng(WIND_SEED))
     return out
+
+
+RATES: dict[str, int] = {"bed_wind": WIND_RATE}   # every other file is at RATE
 
 
 def to_pcm16(x: np.ndarray) -> bytes:
     return (np.clip(x, -1.0, 1.0) * 32767.0).round().astype("<i2").tobytes()
 
 
-def write_wav(path: Path, x: np.ndarray) -> None:
+def write_wav(path: Path, x: np.ndarray, rate: int = RATE) -> None:
     with wave.open(str(path), "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
-        w.setframerate(RATE)
+        w.setframerate(rate)
         w.writeframes(to_pcm16(x))
 
 
@@ -286,12 +354,15 @@ def generate(out_dir: Path = OUT_DIR, log: Callable[[str], None] | None = print)
     paths: dict[str, Path] = {}
     for name, x in sounds().items():
         path = out_dir / f"{name}.wav"
-        write_wav(path, x)
+        write_wav(path, x, RATES.get(name, RATE))
         paths[name] = path
     total = sum(p.stat().st_size for p in paths.values())
     bell_bytes = paths["bell_0"].stat().st_size
     if bell_bytes > MAX_BELL_BYTES:
         raise SystemExit(f"bell_0 over budget: {bell_bytes} B > {MAX_BELL_BYTES} B")
+    wind_bytes = paths["bed_wind"].stat().st_size
+    if wind_bytes > MAX_WIND_BYTES:
+        raise SystemExit(f"bed_wind over budget: {wind_bytes} B > {MAX_WIND_BYTES} B")
     if total > MAX_TOTAL_BYTES:
         raise SystemExit(f"foley over budget: {total} B > {MAX_TOTAL_BYTES} B")
     if log is not None:

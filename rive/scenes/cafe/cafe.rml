@@ -726,6 +726,7 @@
         </Fill>
       </Shape>
       <Node x="0" y="0" name="CupSteam" id="0:3143">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900149"/>
         <Shape x="853" y="974" name="CupWisp0" opacity="0" id="0:3126">
           <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:3125">
             <CubicDetachedVertex x="-1" y="32" outRotation="-1.2793" outDistance="6.9602" inRotation="1.8623" inDistance="0" id="0:3121"/>
@@ -2369,12 +2370,15 @@
             <SolidColor colorValue="C0CDE5ED" id="0:3659"/>
           </Fill>
         </Shape>
-        <Shape x="10" y="-44" name="FishSplash1" opacity="0" id="0:3666">
-          <Ellipse width="5" height="8" name="Path" id="0:3665"/>
-          <Fill name="Fill" id="0:3664">
-            <SolidColor colorValue="C0CDE5ED" id="0:3663"/>
-          </Fill>
-        </Shape>
+        <Node x="0" y="0" name="TierFishSplash1" id="0:900151">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900150"/>
+          <Shape x="10" y="-44" name="FishSplash1" opacity="0" id="0:3666">
+            <Ellipse width="5" height="8" name="Path" id="0:3665"/>
+            <Fill name="Fill" id="0:3664">
+              <SolidColor colorValue="C0CDE5ED" id="0:3663"/>
+            </Fill>
+          </Shape>
+        </Node>
         <Node x="0" y="0" name="FishSwim" id="0:3640">
           <Node x="0" y="0" name="FishFacing" id="0:3639">
             <DataBindContext sourcePathIds="0:23-0:930013" propertyKey="16" converterId="0:3637" id="0:3638"/>
@@ -4694,6 +4698,7 @@
             </Stroke>
           </Shape>
           <Shape x="641.8568" y="223.5283" name="GlassStreak15_1" id="0:970551">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900148"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970550">
               <CubicDetachedVertex x="3.5001" y="-21.8759" outRotation="1.7295" outDistance="14.7694" inRotation="4.871" inDistance="0" id="0:970548"/>
               <CubicDetachedVertex x="-3.5001" y="21.8759" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.7694" id="0:970549"/>
@@ -4703,6 +4708,7 @@
             </Stroke>
           </Shape>
           <Shape x="641.8568" y="473.5283" name="GlassStreak15_2" id="0:970557">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900147"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970556">
               <CubicDetachedVertex x="3.5001" y="-21.8759" outRotation="1.7295" outDistance="14.7694" inRotation="4.871" inDistance="0" id="0:970554"/>
               <CubicDetachedVertex x="-3.5001" y="21.8759" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.7694" id="0:970555"/>
@@ -4712,6 +4718,7 @@
             </Stroke>
           </Shape>
           <Shape x="641.8568" y="723.5283" name="GlassStreak15_3" id="0:970563">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900146"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970562">
               <CubicDetachedVertex x="3.5001" y="-21.8759" outRotation="1.7295" outDistance="14.7694" inRotation="4.871" inDistance="0" id="0:970560"/>
               <CubicDetachedVertex x="-3.5001" y="21.8759" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.7694" id="0:970561"/>
@@ -4721,6 +4728,7 @@
             </Stroke>
           </Shape>
           <Shape x="629.7716" y="58.1035" name="GlassStreak16_1" id="0:970569">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900145"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970568">
               <CubicDetachedVertex x="2.9382" y="-18.3638" outRotation="1.7295" outDistance="12.3983" inRotation="4.871" inDistance="0" id="0:970566"/>
               <CubicDetachedVertex x="-2.9382" y="18.3638" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.3983" id="0:970567"/>
@@ -4730,6 +4738,7 @@
             </Stroke>
           </Shape>
           <Shape x="629.7716" y="308.1035" name="GlassStreak16_2" id="0:970575">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900144"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970574">
               <CubicDetachedVertex x="2.9382" y="-18.3638" outRotation="1.7295" outDistance="12.3983" inRotation="4.871" inDistance="0" id="0:970572"/>
               <CubicDetachedVertex x="-2.9382" y="18.3638" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.3983" id="0:970573"/>
@@ -4739,6 +4748,7 @@
             </Stroke>
           </Shape>
           <Shape x="629.7716" y="558.1035" name="GlassStreak16_3" id="0:970581">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900143"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970580">
               <CubicDetachedVertex x="2.9382" y="-18.3638" outRotation="1.7295" outDistance="12.3983" inRotation="4.871" inDistance="0" id="0:970578"/>
               <CubicDetachedVertex x="-2.9382" y="18.3638" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.3983" id="0:970579"/>
@@ -4748,6 +4758,7 @@
             </Stroke>
           </Shape>
           <Shape x="598.0315" y="65.3167" name="GlassStreak17_1" id="0:970587">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900142"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970586">
               <CubicDetachedVertex x="3.3089" y="-20.6805" outRotation="1.7295" outDistance="13.9624" inRotation="4.871" inDistance="0" id="0:970584"/>
               <CubicDetachedVertex x="-3.3089" y="20.6805" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.9624" id="0:970585"/>
@@ -4757,6 +4768,7 @@
             </Stroke>
           </Shape>
           <Shape x="598.0315" y="315.3167" name="GlassStreak17_2" id="0:970593">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900141"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970592">
               <CubicDetachedVertex x="3.3089" y="-20.6805" outRotation="1.7295" outDistance="13.9624" inRotation="4.871" inDistance="0" id="0:970590"/>
               <CubicDetachedVertex x="-3.3089" y="20.6805" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.9624" id="0:970591"/>
@@ -4766,6 +4778,7 @@
             </Stroke>
           </Shape>
           <Shape x="598.0315" y="565.3167" name="GlassStreak17_3" id="0:970599">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900140"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970598">
               <CubicDetachedVertex x="3.3089" y="-20.6805" outRotation="1.7295" outDistance="13.9624" inRotation="4.871" inDistance="0" id="0:970596"/>
               <CubicDetachedVertex x="-3.3089" y="20.6805" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.9624" id="0:970597"/>
@@ -4775,6 +4788,7 @@
             </Stroke>
           </Shape>
           <Shape x="590.9815" y="4.8223" name="GlassStreak18_0" id="0:970605">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900139"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970604">
               <CubicDetachedVertex x="2.0671" y="-12.9191" outRotation="1.7295" outDistance="8.7223" inRotation="4.871" inDistance="0" id="0:970602"/>
               <CubicDetachedVertex x="-2.0671" y="12.9191" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="8.7223" id="0:970603"/>
@@ -4784,6 +4798,7 @@
             </Stroke>
           </Shape>
           <Shape x="590.9815" y="254.8223" name="GlassStreak18_1" id="0:970611">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900138"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970610">
               <CubicDetachedVertex x="2.0671" y="-12.9191" outRotation="1.7295" outDistance="8.7223" inRotation="4.871" inDistance="0" id="0:970608"/>
               <CubicDetachedVertex x="-2.0671" y="12.9191" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="8.7223" id="0:970609"/>
@@ -4793,6 +4808,7 @@
             </Stroke>
           </Shape>
           <Shape x="590.9815" y="504.8223" name="GlassStreak18_2" id="0:970617">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900137"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970616">
               <CubicDetachedVertex x="2.0671" y="-12.9191" outRotation="1.7295" outDistance="8.7223" inRotation="4.871" inDistance="0" id="0:970614"/>
               <CubicDetachedVertex x="-2.0671" y="12.9191" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="8.7223" id="0:970615"/>
@@ -4802,6 +4818,7 @@
             </Stroke>
           </Shape>
           <Shape x="590.9815" y="754.8223" name="GlassStreak18_3" id="0:970623">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900136"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970622">
               <CubicDetachedVertex x="2.0671" y="-12.9191" outRotation="1.7295" outDistance="8.7223" inRotation="4.871" inDistance="0" id="0:970620"/>
               <CubicDetachedVertex x="-2.0671" y="12.9191" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="8.7223" id="0:970621"/>
@@ -4811,6 +4828,7 @@
             </Stroke>
           </Shape>
           <Shape x="460.1126" y="43.3653" name="GlassStreak19_1" id="0:970629">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900135"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970628">
               <CubicDetachedVertex x="2.3122" y="-14.4512" outRotation="1.7295" outDistance="9.7567" inRotation="4.871" inDistance="0" id="0:970626"/>
               <CubicDetachedVertex x="-2.3122" y="14.4512" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.7567" id="0:970627"/>
@@ -4820,6 +4838,7 @@
             </Stroke>
           </Shape>
           <Shape x="460.1126" y="293.3653" name="GlassStreak19_2" id="0:970635">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900134"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970634">
               <CubicDetachedVertex x="2.3122" y="-14.4512" outRotation="1.7295" outDistance="9.7567" inRotation="4.871" inDistance="0" id="0:970632"/>
               <CubicDetachedVertex x="-2.3122" y="14.4512" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.7567" id="0:970633"/>
@@ -4829,6 +4848,7 @@
             </Stroke>
           </Shape>
           <Shape x="460.1126" y="543.3653" name="GlassStreak19_3" id="0:970641">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900133"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970640">
               <CubicDetachedVertex x="2.3122" y="-14.4512" outRotation="1.7295" outDistance="9.7567" inRotation="4.871" inDistance="0" id="0:970638"/>
               <CubicDetachedVertex x="-2.3122" y="14.4512" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.7567" id="0:970639"/>
@@ -4838,6 +4858,7 @@
             </Stroke>
           </Shape>
           <Shape x="593.6558" y="169.8235" name="GlassStreak20_1" id="0:970647">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900132"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970646">
               <CubicDetachedVertex x="2.8371" y="-17.7322" outRotation="1.7295" outDistance="11.9718" inRotation="4.871" inDistance="0" id="0:970644"/>
               <CubicDetachedVertex x="-2.8371" y="17.7322" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="11.9718" id="0:970645"/>
@@ -4847,6 +4868,7 @@
             </Stroke>
           </Shape>
           <Shape x="593.6558" y="419.8235" name="GlassStreak20_2" id="0:970653">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900131"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970652">
               <CubicDetachedVertex x="2.8371" y="-17.7322" outRotation="1.7295" outDistance="11.9718" inRotation="4.871" inDistance="0" id="0:970650"/>
               <CubicDetachedVertex x="-2.8371" y="17.7322" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="11.9718" id="0:970651"/>
@@ -4856,6 +4878,7 @@
             </Stroke>
           </Shape>
           <Shape x="593.6558" y="669.8235" name="GlassStreak20_3" id="0:970659">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900130"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970658">
               <CubicDetachedVertex x="2.8371" y="-17.7322" outRotation="1.7295" outDistance="11.9718" inRotation="4.871" inDistance="0" id="0:970656"/>
               <CubicDetachedVertex x="-2.8371" y="17.7322" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="11.9718" id="0:970657"/>
@@ -4865,6 +4888,7 @@
             </Stroke>
           </Shape>
           <Shape x="514.9049" y="59.4353" name="GlassStreak21_1" id="0:970665">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900129"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970664">
               <CubicDetachedVertex x="2.2965" y="-14.3534" outRotation="1.7295" outDistance="9.6906" inRotation="4.871" inDistance="0" id="0:970662"/>
               <CubicDetachedVertex x="-2.2965" y="14.3534" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.6906" id="0:970663"/>
@@ -4874,6 +4898,7 @@
             </Stroke>
           </Shape>
           <Shape x="514.9049" y="309.4353" name="GlassStreak21_2" id="0:970671">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900128"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970670">
               <CubicDetachedVertex x="2.2965" y="-14.3534" outRotation="1.7295" outDistance="9.6906" inRotation="4.871" inDistance="0" id="0:970668"/>
               <CubicDetachedVertex x="-2.2965" y="14.3534" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.6906" id="0:970669"/>
@@ -4883,6 +4908,7 @@
             </Stroke>
           </Shape>
           <Shape x="514.9049" y="559.4353" name="GlassStreak21_3" id="0:970677">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900127"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970676">
               <CubicDetachedVertex x="2.2965" y="-14.3534" outRotation="1.7295" outDistance="9.6906" inRotation="4.871" inDistance="0" id="0:970674"/>
               <CubicDetachedVertex x="-2.2965" y="14.3534" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.6906" id="0:970675"/>
@@ -4892,6 +4918,7 @@
             </Stroke>
           </Shape>
           <Shape x="578.739" y="207.9195" name="GlassStreak22_1" id="0:970683">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900126"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970682">
               <CubicDetachedVertex x="3.0236" y="-18.8972" outRotation="1.7295" outDistance="12.7584" inRotation="4.871" inDistance="0" id="0:970680"/>
               <CubicDetachedVertex x="-3.0236" y="18.8972" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.7584" id="0:970681"/>
@@ -4901,6 +4928,7 @@
             </Stroke>
           </Shape>
           <Shape x="578.739" y="457.9195" name="GlassStreak22_2" id="0:970689">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900125"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970688">
               <CubicDetachedVertex x="3.0236" y="-18.8972" outRotation="1.7295" outDistance="12.7584" inRotation="4.871" inDistance="0" id="0:970686"/>
               <CubicDetachedVertex x="-3.0236" y="18.8972" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.7584" id="0:970687"/>
@@ -4910,6 +4938,7 @@
             </Stroke>
           </Shape>
           <Shape x="578.739" y="707.9195" name="GlassStreak22_3" id="0:970695">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900123"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970694">
               <CubicDetachedVertex x="3.0236" y="-18.8972" outRotation="1.7295" outDistance="12.7584" inRotation="4.871" inDistance="0" id="0:970692"/>
               <CubicDetachedVertex x="-3.0236" y="18.8972" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.7584" id="0:970693"/>
@@ -4919,6 +4948,7 @@
             </Stroke>
           </Shape>
           <Shape x="378.2402" y="90.8561" name="GlassStreak23_1" id="0:970701">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900121"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970700">
               <CubicDetachedVertex x="3.3237" y="-20.7729" outRotation="1.7295" outDistance="14.0248" inRotation="4.871" inDistance="0" id="0:970698"/>
               <CubicDetachedVertex x="-3.3237" y="20.7729" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.0248" id="0:970699"/>
@@ -4928,6 +4958,7 @@
             </Stroke>
           </Shape>
           <Shape x="378.2402" y="340.8561" name="GlassStreak23_2" id="0:970707">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900119"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970706">
               <CubicDetachedVertex x="3.3237" y="-20.7729" outRotation="1.7295" outDistance="14.0248" inRotation="4.871" inDistance="0" id="0:970704"/>
               <CubicDetachedVertex x="-3.3237" y="20.7729" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.0248" id="0:970705"/>
@@ -4937,6 +4968,7 @@
             </Stroke>
           </Shape>
           <Shape x="378.2402" y="590.8561" name="GlassStreak23_3" id="0:970713">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900117"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970712">
               <CubicDetachedVertex x="3.3237" y="-20.7729" outRotation="1.7295" outDistance="14.0248" inRotation="4.871" inDistance="0" id="0:970710"/>
               <CubicDetachedVertex x="-3.3237" y="20.7729" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.0248" id="0:970711"/>
@@ -4946,6 +4978,7 @@
             </Stroke>
           </Shape>
           <Shape x="426.9002" y="193.3624" name="GlassStreak24_1" id="0:970719">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900115"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970718">
               <CubicDetachedVertex x="3.3303" y="-20.8146" outRotation="1.7295" outDistance="14.0529" inRotation="4.871" inDistance="0" id="0:970716"/>
               <CubicDetachedVertex x="-3.3303" y="20.8146" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.0529" id="0:970717"/>
@@ -4955,6 +4988,7 @@
             </Stroke>
           </Shape>
           <Shape x="426.9002" y="443.3624" name="GlassStreak24_2" id="0:970725">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900113"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970724">
               <CubicDetachedVertex x="3.3303" y="-20.8146" outRotation="1.7295" outDistance="14.0529" inRotation="4.871" inDistance="0" id="0:970722"/>
               <CubicDetachedVertex x="-3.3303" y="20.8146" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.0529" id="0:970723"/>
@@ -4964,6 +4998,7 @@
             </Stroke>
           </Shape>
           <Shape x="426.9002" y="693.3624" name="GlassStreak24_3" id="0:970731">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900111"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970730">
               <CubicDetachedVertex x="3.3303" y="-20.8146" outRotation="1.7295" outDistance="14.0529" inRotation="4.871" inDistance="0" id="0:970728"/>
               <CubicDetachedVertex x="-3.3303" y="20.8146" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.0529" id="0:970729"/>
@@ -4973,6 +5008,7 @@
             </Stroke>
           </Shape>
           <Shape x="386.2804" y="95.1562" name="GlassStreak25_1" id="0:970737">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900109"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970736">
               <CubicDetachedVertex x="3.1285" y="-19.5534" outRotation="1.7295" outDistance="13.2014" inRotation="4.871" inDistance="0" id="0:970734"/>
               <CubicDetachedVertex x="-3.1285" y="19.5534" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.2014" id="0:970735"/>
@@ -4982,6 +5018,7 @@
             </Stroke>
           </Shape>
           <Shape x="386.2804" y="345.1562" name="GlassStreak25_2" id="0:970743">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900107"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970742">
               <CubicDetachedVertex x="3.1285" y="-19.5534" outRotation="1.7295" outDistance="13.2014" inRotation="4.871" inDistance="0" id="0:970740"/>
               <CubicDetachedVertex x="-3.1285" y="19.5534" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.2014" id="0:970741"/>
@@ -4991,6 +5028,7 @@
             </Stroke>
           </Shape>
           <Shape x="386.2804" y="595.1562" name="GlassStreak25_3" id="0:970749">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900105"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970748">
               <CubicDetachedVertex x="3.1285" y="-19.5534" outRotation="1.7295" outDistance="13.2014" inRotation="4.871" inDistance="0" id="0:970746"/>
               <CubicDetachedVertex x="-3.1285" y="19.5534" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.2014" id="0:970747"/>
@@ -5000,6 +5038,7 @@
             </Stroke>
           </Shape>
           <Shape x="576.3095" y="124.0759" name="GlassStreak26_1" id="0:970755">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900103"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970754">
               <CubicDetachedVertex x="2.8812" y="-18.0074" outRotation="1.7295" outDistance="12.1576" inRotation="4.871" inDistance="0" id="0:970752"/>
               <CubicDetachedVertex x="-2.8812" y="18.0074" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.1576" id="0:970753"/>
@@ -5009,6 +5048,7 @@
             </Stroke>
           </Shape>
           <Shape x="576.3095" y="374.0759" name="GlassStreak26_2" id="0:970761">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900101"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970760">
               <CubicDetachedVertex x="2.8812" y="-18.0074" outRotation="1.7295" outDistance="12.1576" inRotation="4.871" inDistance="0" id="0:970758"/>
               <CubicDetachedVertex x="-2.8812" y="18.0074" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.1576" id="0:970759"/>
@@ -5018,6 +5058,7 @@
             </Stroke>
           </Shape>
           <Shape x="576.3095" y="624.0759" name="GlassStreak26_3" id="0:970767">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900099"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970766">
               <CubicDetachedVertex x="2.8812" y="-18.0074" outRotation="1.7295" outDistance="12.1576" inRotation="4.871" inDistance="0" id="0:970764"/>
               <CubicDetachedVertex x="-2.8812" y="18.0074" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="12.1576" id="0:970765"/>
@@ -5027,6 +5068,7 @@
             </Stroke>
           </Shape>
           <Shape x="645.9637" y="104.8701" name="GlassStreak27_1" id="0:970773">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900097"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970772">
               <CubicDetachedVertex x="3.1144" y="-19.4649" outRotation="1.7295" outDistance="13.1416" inRotation="4.871" inDistance="0" id="0:970770"/>
               <CubicDetachedVertex x="-3.1144" y="19.4649" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.1416" id="0:970771"/>
@@ -5036,6 +5078,7 @@
             </Stroke>
           </Shape>
           <Shape x="645.9637" y="354.8701" name="GlassStreak27_2" id="0:970779">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900095"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970778">
               <CubicDetachedVertex x="3.1144" y="-19.4649" outRotation="1.7295" outDistance="13.1416" inRotation="4.871" inDistance="0" id="0:970776"/>
               <CubicDetachedVertex x="-3.1144" y="19.4649" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.1416" id="0:970777"/>
@@ -5045,6 +5088,7 @@
             </Stroke>
           </Shape>
           <Shape x="645.9637" y="604.8701" name="GlassStreak27_3" id="0:970785">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900093"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970784">
               <CubicDetachedVertex x="3.1144" y="-19.4649" outRotation="1.7295" outDistance="13.1416" inRotation="4.871" inDistance="0" id="0:970782"/>
               <CubicDetachedVertex x="-3.1144" y="19.4649" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.1416" id="0:970783"/>
@@ -5054,6 +5098,7 @@
             </Stroke>
           </Shape>
           <Shape x="610.8289" y="155.6245" name="GlassStreak28_1" id="0:970791">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900091"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970790">
               <CubicDetachedVertex x="2.2779" y="-14.237" outRotation="1.7295" outDistance="9.612" inRotation="4.871" inDistance="0" id="0:970788"/>
               <CubicDetachedVertex x="-2.2779" y="14.237" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.612" id="0:970789"/>
@@ -5063,6 +5108,7 @@
             </Stroke>
           </Shape>
           <Shape x="610.8289" y="405.6245" name="GlassStreak28_2" id="0:970797">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900089"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970796">
               <CubicDetachedVertex x="2.2779" y="-14.237" outRotation="1.7295" outDistance="9.612" inRotation="4.871" inDistance="0" id="0:970794"/>
               <CubicDetachedVertex x="-2.2779" y="14.237" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.612" id="0:970795"/>
@@ -5072,6 +5118,7 @@
             </Stroke>
           </Shape>
           <Shape x="610.8289" y="655.6245" name="GlassStreak28_3" id="0:970803">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900087"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970802">
               <CubicDetachedVertex x="2.2779" y="-14.237" outRotation="1.7295" outDistance="9.612" inRotation="4.871" inDistance="0" id="0:970800"/>
               <CubicDetachedVertex x="-2.2779" y="14.237" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="9.612" id="0:970801"/>
@@ -5081,6 +5128,7 @@
             </Stroke>
           </Shape>
           <Shape x="723.641" y="34.0426" name="GlassStreak29_1" id="0:970809">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900085"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970808">
               <CubicDetachedVertex x="2.8205" y="-17.6283" outRotation="1.7295" outDistance="11.9016" inRotation="4.871" inDistance="0" id="0:970806"/>
               <CubicDetachedVertex x="-2.8205" y="17.6283" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="11.9016" id="0:970807"/>
@@ -5090,6 +5138,7 @@
             </Stroke>
           </Shape>
           <Shape x="723.641" y="284.0426" name="GlassStreak29_2" id="0:970815">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900083"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970814">
               <CubicDetachedVertex x="2.8205" y="-17.6283" outRotation="1.7295" outDistance="11.9016" inRotation="4.871" inDistance="0" id="0:970812"/>
               <CubicDetachedVertex x="-2.8205" y="17.6283" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="11.9016" id="0:970813"/>
@@ -5099,6 +5148,7 @@
             </Stroke>
           </Shape>
           <Shape x="723.641" y="534.0426" name="GlassStreak29_3" id="0:970821">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900081"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970820">
               <CubicDetachedVertex x="2.8205" y="-17.6283" outRotation="1.7295" outDistance="11.9016" inRotation="4.871" inDistance="0" id="0:970818"/>
               <CubicDetachedVertex x="-2.8205" y="17.6283" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="11.9016" id="0:970819"/>
@@ -5754,6 +5804,7 @@
             </Stroke>
           </Shape>
           <Shape x="382.6703" y="181.2877" name="ShowerStreak20_1" id="0:947">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900124"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:946">
               <CubicDetachedVertex x="3.6729" y="-22.9554" outRotation="1.7295" outDistance="15.4983" inRotation="4.871" inDistance="0" id="0:944"/>
               <CubicDetachedVertex x="-3.6729" y="22.9554" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="15.4983" id="0:945"/>
@@ -5763,6 +5814,7 @@
             </Stroke>
           </Shape>
           <Shape x="382.6703" y="431.2877" name="ShowerStreak20_2" id="0:953">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900122"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:952">
               <CubicDetachedVertex x="3.6729" y="-22.9554" outRotation="1.7295" outDistance="15.4983" inRotation="4.871" inDistance="0" id="0:950"/>
               <CubicDetachedVertex x="-3.6729" y="22.9554" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="15.4983" id="0:951"/>
@@ -5772,6 +5824,7 @@
             </Stroke>
           </Shape>
           <Shape x="382.6703" y="681.2877" name="ShowerStreak20_3" id="0:959">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900120"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:958">
               <CubicDetachedVertex x="3.6729" y="-22.9554" outRotation="1.7295" outDistance="15.4983" inRotation="4.871" inDistance="0" id="0:956"/>
               <CubicDetachedVertex x="-3.6729" y="22.9554" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="15.4983" id="0:957"/>
@@ -5781,6 +5834,7 @@
             </Stroke>
           </Shape>
           <Shape x="345.1001" y="195.2949" name="ShowerStreak21_1" id="0:965">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900118"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:964">
               <CubicDetachedVertex x="5.1473" y="-32.1704" outRotation="1.7295" outDistance="21.7197" inRotation="4.871" inDistance="0" id="0:962"/>
               <CubicDetachedVertex x="-5.1473" y="32.1704" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="21.7197" id="0:963"/>
@@ -5790,6 +5844,7 @@
             </Stroke>
           </Shape>
           <Shape x="345.1001" y="445.2949" name="ShowerStreak21_2" id="0:971">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900116"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970">
               <CubicDetachedVertex x="5.1473" y="-32.1704" outRotation="1.7295" outDistance="21.7197" inRotation="4.871" inDistance="0" id="0:968"/>
               <CubicDetachedVertex x="-5.1473" y="32.1704" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="21.7197" id="0:969"/>
@@ -5799,6 +5854,7 @@
             </Stroke>
           </Shape>
           <Shape x="345.1001" y="695.2949" name="ShowerStreak21_3" id="0:977">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900114"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:976">
               <CubicDetachedVertex x="5.1473" y="-32.1704" outRotation="1.7295" outDistance="21.7197" inRotation="4.871" inDistance="0" id="0:974"/>
               <CubicDetachedVertex x="-5.1473" y="32.1704" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="21.7197" id="0:975"/>
@@ -5808,6 +5864,7 @@
             </Stroke>
           </Shape>
           <Shape x="654.3946" y="70.9651" name="ShowerStreak22_1" id="0:983">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900112"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:982">
               <CubicDetachedVertex x="3.5062" y="-21.9137" outRotation="1.7295" outDistance="14.795" inRotation="4.871" inDistance="0" id="0:980"/>
               <CubicDetachedVertex x="-3.5062" y="21.9137" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.795" id="0:981"/>
@@ -5817,6 +5874,7 @@
             </Stroke>
           </Shape>
           <Shape x="654.3946" y="320.9651" name="ShowerStreak22_2" id="0:989">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900110"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:988">
               <CubicDetachedVertex x="3.5062" y="-21.9137" outRotation="1.7295" outDistance="14.795" inRotation="4.871" inDistance="0" id="0:986"/>
               <CubicDetachedVertex x="-3.5062" y="21.9137" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.795" id="0:987"/>
@@ -5826,6 +5884,7 @@
             </Stroke>
           </Shape>
           <Shape x="654.3946" y="570.9651" name="ShowerStreak22_3" id="0:995">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900108"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:994">
               <CubicDetachedVertex x="3.5062" y="-21.9137" outRotation="1.7295" outDistance="14.795" inRotation="4.871" inDistance="0" id="0:992"/>
               <CubicDetachedVertex x="-3.5062" y="21.9137" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.795" id="0:993"/>
@@ -5835,6 +5894,7 @@
             </Stroke>
           </Shape>
           <Shape x="331.9056" y="131.1474" name="ShowerStreak23_1" id="0:1001">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900106"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1000">
               <CubicDetachedVertex x="4.8464" y="-30.2899" outRotation="1.7295" outDistance="20.4501" inRotation="4.871" inDistance="0" id="0:998"/>
               <CubicDetachedVertex x="-4.8464" y="30.2899" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="20.4501" id="0:999"/>
@@ -5844,6 +5904,7 @@
             </Stroke>
           </Shape>
           <Shape x="331.9056" y="381.1474" name="ShowerStreak23_2" id="0:1007">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900104"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1006">
               <CubicDetachedVertex x="4.8464" y="-30.2899" outRotation="1.7295" outDistance="20.4501" inRotation="4.871" inDistance="0" id="0:1004"/>
               <CubicDetachedVertex x="-4.8464" y="30.2899" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="20.4501" id="0:1005"/>
@@ -5853,6 +5914,7 @@
             </Stroke>
           </Shape>
           <Shape x="331.9056" y="631.1474" name="ShowerStreak23_3" id="0:1013">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900102"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1012">
               <CubicDetachedVertex x="4.8464" y="-30.2899" outRotation="1.7295" outDistance="20.4501" inRotation="4.871" inDistance="0" id="0:1010"/>
               <CubicDetachedVertex x="-4.8464" y="30.2899" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="20.4501" id="0:1011"/>
@@ -5862,6 +5924,7 @@
             </Stroke>
           </Shape>
           <Shape x="661.8811" y="128.672" name="ShowerStreak24_1" id="0:1019">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900100"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1018">
               <CubicDetachedVertex x="3.3178" y="-20.7363" outRotation="1.7295" outDistance="14" inRotation="4.871" inDistance="0" id="0:1016"/>
               <CubicDetachedVertex x="-3.3178" y="20.7363" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14" id="0:1017"/>
@@ -5871,6 +5934,7 @@
             </Stroke>
           </Shape>
           <Shape x="661.8811" y="378.672" name="ShowerStreak24_2" id="0:1025">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900098"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1024">
               <CubicDetachedVertex x="3.3178" y="-20.7363" outRotation="1.7295" outDistance="14" inRotation="4.871" inDistance="0" id="0:1022"/>
               <CubicDetachedVertex x="-3.3178" y="20.7363" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14" id="0:1023"/>
@@ -5880,6 +5944,7 @@
             </Stroke>
           </Shape>
           <Shape x="661.8811" y="628.672" name="ShowerStreak24_3" id="0:1031">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900096"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1030">
               <CubicDetachedVertex x="3.3178" y="-20.7363" outRotation="1.7295" outDistance="14" inRotation="4.871" inDistance="0" id="0:1028"/>
               <CubicDetachedVertex x="-3.3178" y="20.7363" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14" id="0:1029"/>
@@ -5889,6 +5954,7 @@
             </Stroke>
           </Shape>
           <Shape x="564.6947" y="149.2838" name="ShowerStreak25_1" id="0:1037">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900094"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1036">
               <CubicDetachedVertex x="4.0832" y="-25.5198" outRotation="1.7295" outDistance="17.2296" inRotation="4.871" inDistance="0" id="0:1034"/>
               <CubicDetachedVertex x="-4.0832" y="25.5198" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.2296" id="0:1035"/>
@@ -5898,6 +5964,7 @@
             </Stroke>
           </Shape>
           <Shape x="564.6947" y="399.2838" name="ShowerStreak25_2" id="0:1043">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900092"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1042">
               <CubicDetachedVertex x="4.0832" y="-25.5198" outRotation="1.7295" outDistance="17.2296" inRotation="4.871" inDistance="0" id="0:1040"/>
               <CubicDetachedVertex x="-4.0832" y="25.5198" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.2296" id="0:1041"/>
@@ -5907,6 +5974,7 @@
             </Stroke>
           </Shape>
           <Shape x="564.6947" y="649.2838" name="ShowerStreak25_3" id="0:1049">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900090"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1048">
               <CubicDetachedVertex x="4.0832" y="-25.5198" outRotation="1.7295" outDistance="17.2296" inRotation="4.871" inDistance="0" id="0:1046"/>
               <CubicDetachedVertex x="-4.0832" y="25.5198" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.2296" id="0:1047"/>
@@ -5916,6 +5984,7 @@
             </Stroke>
           </Shape>
           <Shape x="605.9723" y="19.9677" name="ShowerStreak26_0" id="0:1055">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900088"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1054">
               <CubicDetachedVertex x="3.4966" y="-21.8536" outRotation="1.7295" outDistance="14.7544" inRotation="4.871" inDistance="0" id="0:1052"/>
               <CubicDetachedVertex x="-3.4966" y="21.8536" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.7544" id="0:1053"/>
@@ -5925,6 +5994,7 @@
             </Stroke>
           </Shape>
           <Shape x="605.9723" y="269.9677" name="ShowerStreak26_1" id="0:1061">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900086"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1060">
               <CubicDetachedVertex x="3.4966" y="-21.8536" outRotation="1.7295" outDistance="14.7544" inRotation="4.871" inDistance="0" id="0:1058"/>
               <CubicDetachedVertex x="-3.4966" y="21.8536" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.7544" id="0:1059"/>
@@ -5934,6 +6004,7 @@
             </Stroke>
           </Shape>
           <Shape x="605.9723" y="519.9677" name="ShowerStreak26_2" id="0:1067">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900084"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1066">
               <CubicDetachedVertex x="3.4966" y="-21.8536" outRotation="1.7295" outDistance="14.7544" inRotation="4.871" inDistance="0" id="0:1064"/>
               <CubicDetachedVertex x="-3.4966" y="21.8536" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.7544" id="0:1065"/>
@@ -5943,6 +6014,7 @@
             </Stroke>
           </Shape>
           <Shape x="605.9723" y="769.9677" name="ShowerStreak26_3" id="0:1073">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900082"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1072">
               <CubicDetachedVertex x="3.4966" y="-21.8536" outRotation="1.7295" outDistance="14.7544" inRotation="4.871" inDistance="0" id="0:1070"/>
               <CubicDetachedVertex x="-3.4966" y="21.8536" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.7544" id="0:1071"/>
@@ -5952,6 +6024,7 @@
             </Stroke>
           </Shape>
           <Shape x="677.0927" y="66.3342" name="ShowerStreak27_1" id="0:1079">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900080"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1078">
               <CubicDetachedVertex x="3.4447" y="-21.5293" outRotation="1.7295" outDistance="14.5354" inRotation="4.871" inDistance="0" id="0:1076"/>
               <CubicDetachedVertex x="-3.4447" y="21.5293" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.5354" id="0:1077"/>
@@ -5961,6 +6034,7 @@
             </Stroke>
           </Shape>
           <Shape x="677.0927" y="316.3342" name="ShowerStreak27_2" id="0:1085">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900079"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1084">
               <CubicDetachedVertex x="3.4447" y="-21.5293" outRotation="1.7295" outDistance="14.5354" inRotation="4.871" inDistance="0" id="0:1082"/>
               <CubicDetachedVertex x="-3.4447" y="21.5293" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.5354" id="0:1083"/>
@@ -5970,6 +6044,7 @@
             </Stroke>
           </Shape>
           <Shape x="677.0927" y="566.3342" name="ShowerStreak27_3" id="0:1091">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900078"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1090">
               <CubicDetachedVertex x="3.4447" y="-21.5293" outRotation="1.7295" outDistance="14.5354" inRotation="4.871" inDistance="0" id="0:1088"/>
               <CubicDetachedVertex x="-3.4447" y="21.5293" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.5354" id="0:1089"/>
@@ -5979,6 +6054,7 @@
             </Stroke>
           </Shape>
           <Shape x="341.8132" y="70.9563" name="ShowerStreak28_1" id="0:1097">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900077"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1096">
               <CubicDetachedVertex x="4.4726" y="-27.9539" outRotation="1.7295" outDistance="18.8729" inRotation="4.871" inDistance="0" id="0:1094"/>
               <CubicDetachedVertex x="-4.4726" y="27.9539" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="18.8729" id="0:1095"/>
@@ -5988,6 +6064,7 @@
             </Stroke>
           </Shape>
           <Shape x="341.8132" y="320.9563" name="ShowerStreak28_2" id="0:1103">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900076"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1102">
               <CubicDetachedVertex x="4.4726" y="-27.9539" outRotation="1.7295" outDistance="18.8729" inRotation="4.871" inDistance="0" id="0:1100"/>
               <CubicDetachedVertex x="-4.4726" y="27.9539" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="18.8729" id="0:1101"/>
@@ -5997,6 +6074,7 @@
             </Stroke>
           </Shape>
           <Shape x="341.8132" y="570.9563" name="ShowerStreak28_3" id="0:1109">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900075"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1108">
               <CubicDetachedVertex x="4.4726" y="-27.9539" outRotation="1.7295" outDistance="18.8729" inRotation="4.871" inDistance="0" id="0:1106"/>
               <CubicDetachedVertex x="-4.4726" y="27.9539" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="18.8729" id="0:1107"/>
@@ -6006,6 +6084,7 @@
             </Stroke>
           </Shape>
           <Shape x="445.2063" y="54.83" name="ShowerStreak29_1" id="0:1115">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900074"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1114">
               <CubicDetachedVertex x="5.4595" y="-34.1217" outRotation="1.7295" outDistance="23.0371" inRotation="4.871" inDistance="0" id="0:1112"/>
               <CubicDetachedVertex x="-5.4595" y="34.1217" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="23.0371" id="0:1113"/>
@@ -6015,6 +6094,7 @@
             </Stroke>
           </Shape>
           <Shape x="445.2063" y="304.83" name="ShowerStreak29_2" id="0:1121">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900073"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1120">
               <CubicDetachedVertex x="5.4595" y="-34.1217" outRotation="1.7295" outDistance="23.0371" inRotation="4.871" inDistance="0" id="0:1118"/>
               <CubicDetachedVertex x="-5.4595" y="34.1217" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="23.0371" id="0:1119"/>
@@ -6024,6 +6104,7 @@
             </Stroke>
           </Shape>
           <Shape x="445.2063" y="554.83" name="ShowerStreak29_3" id="0:1127">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900072"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1126">
               <CubicDetachedVertex x="5.4595" y="-34.1217" outRotation="1.7295" outDistance="23.0371" inRotation="4.871" inDistance="0" id="0:1124"/>
               <CubicDetachedVertex x="-5.4595" y="34.1217" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="23.0371" id="0:1125"/>
@@ -6033,6 +6114,7 @@
             </Stroke>
           </Shape>
           <Shape x="405.2828" y="120.2394" name="ShowerStreak30_1" id="0:1133">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900071"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1132">
               <CubicDetachedVertex x="3.5313" y="-22.0704" outRotation="1.7295" outDistance="14.9007" inRotation="4.871" inDistance="0" id="0:1130"/>
               <CubicDetachedVertex x="-3.5313" y="22.0704" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.9007" id="0:1131"/>
@@ -6042,6 +6124,7 @@
             </Stroke>
           </Shape>
           <Shape x="405.2828" y="370.2394" name="ShowerStreak30_2" id="0:1139">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900070"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1138">
               <CubicDetachedVertex x="3.5313" y="-22.0704" outRotation="1.7295" outDistance="14.9007" inRotation="4.871" inDistance="0" id="0:1136"/>
               <CubicDetachedVertex x="-3.5313" y="22.0704" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.9007" id="0:1137"/>
@@ -6051,6 +6134,7 @@
             </Stroke>
           </Shape>
           <Shape x="405.2828" y="620.2394" name="ShowerStreak30_3" id="0:1145">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900069"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1144">
               <CubicDetachedVertex x="3.5313" y="-22.0704" outRotation="1.7295" outDistance="14.9007" inRotation="4.871" inDistance="0" id="0:1142"/>
               <CubicDetachedVertex x="-3.5313" y="22.0704" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.9007" id="0:1143"/>
@@ -6060,6 +6144,7 @@
             </Stroke>
           </Shape>
           <Shape x="586.6217" y="-28.6582" name="ShowerStreak31_0" id="0:1151">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900068"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1150">
               <CubicDetachedVertex x="5.3677" y="-33.5478" outRotation="1.7295" outDistance="22.6497" inRotation="4.871" inDistance="0" id="0:1148"/>
               <CubicDetachedVertex x="-5.3677" y="33.5478" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="22.6497" id="0:1149"/>
@@ -6069,6 +6154,7 @@
             </Stroke>
           </Shape>
           <Shape x="586.6217" y="221.3418" name="ShowerStreak31_1" id="0:1157">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900067"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1156">
               <CubicDetachedVertex x="5.3677" y="-33.5478" outRotation="1.7295" outDistance="22.6497" inRotation="4.871" inDistance="0" id="0:1154"/>
               <CubicDetachedVertex x="-5.3677" y="33.5478" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="22.6497" id="0:1155"/>
@@ -6078,6 +6164,7 @@
             </Stroke>
           </Shape>
           <Shape x="586.6217" y="471.3418" name="ShowerStreak31_2" id="0:1163">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900066"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1162">
               <CubicDetachedVertex x="5.3677" y="-33.5478" outRotation="1.7295" outDistance="22.6497" inRotation="4.871" inDistance="0" id="0:1160"/>
               <CubicDetachedVertex x="-5.3677" y="33.5478" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="22.6497" id="0:1161"/>
@@ -6087,6 +6174,7 @@
             </Stroke>
           </Shape>
           <Shape x="586.6217" y="721.3418" name="ShowerStreak31_3" id="0:1169">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900065"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1168">
               <CubicDetachedVertex x="5.3677" y="-33.5478" outRotation="1.7295" outDistance="22.6497" inRotation="4.871" inDistance="0" id="0:1166"/>
               <CubicDetachedVertex x="-5.3677" y="33.5478" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="22.6497" id="0:1167"/>
@@ -6096,6 +6184,7 @@
             </Stroke>
           </Shape>
           <Shape x="420.4613" y="12.2617" name="ShowerStreak32_0" id="0:1175">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900064"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1174">
               <CubicDetachedVertex x="3.3169" y="-20.7307" outRotation="1.7295" outDistance="13.9962" inRotation="4.871" inDistance="0" id="0:1172"/>
               <CubicDetachedVertex x="-3.3169" y="20.7307" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.9962" id="0:1173"/>
@@ -6105,6 +6194,7 @@
             </Stroke>
           </Shape>
           <Shape x="420.4613" y="262.2617" name="ShowerStreak32_1" id="0:1181">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900063"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1180">
               <CubicDetachedVertex x="3.3169" y="-20.7307" outRotation="1.7295" outDistance="13.9962" inRotation="4.871" inDistance="0" id="0:1178"/>
               <CubicDetachedVertex x="-3.3169" y="20.7307" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.9962" id="0:1179"/>
@@ -6114,6 +6204,7 @@
             </Stroke>
           </Shape>
           <Shape x="420.4613" y="512.2617" name="ShowerStreak32_2" id="0:1187">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900062"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1186">
               <CubicDetachedVertex x="3.3169" y="-20.7307" outRotation="1.7295" outDistance="13.9962" inRotation="4.871" inDistance="0" id="0:1184"/>
               <CubicDetachedVertex x="-3.3169" y="20.7307" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.9962" id="0:1185"/>
@@ -6123,6 +6214,7 @@
             </Stroke>
           </Shape>
           <Shape x="420.4613" y="762.2617" name="ShowerStreak32_3" id="0:1193">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900061"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1192">
               <CubicDetachedVertex x="3.3169" y="-20.7307" outRotation="1.7295" outDistance="13.9962" inRotation="4.871" inDistance="0" id="0:1190"/>
               <CubicDetachedVertex x="-3.3169" y="20.7307" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="13.9962" id="0:1191"/>
@@ -6132,6 +6224,7 @@
             </Stroke>
           </Shape>
           <Shape x="582.7447" y="157.3722" name="ShowerStreak33_1" id="0:1199">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900060"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1198">
               <CubicDetachedVertex x="4.2645" y="-26.6533" outRotation="1.7295" outDistance="17.9949" inRotation="4.871" inDistance="0" id="0:1196"/>
               <CubicDetachedVertex x="-4.2645" y="26.6533" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.9949" id="0:1197"/>
@@ -6141,6 +6234,7 @@
             </Stroke>
           </Shape>
           <Shape x="582.7447" y="407.3722" name="ShowerStreak33_2" id="0:1205">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900059"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1204">
               <CubicDetachedVertex x="4.2645" y="-26.6533" outRotation="1.7295" outDistance="17.9949" inRotation="4.871" inDistance="0" id="0:1202"/>
               <CubicDetachedVertex x="-4.2645" y="26.6533" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.9949" id="0:1203"/>
@@ -6150,6 +6244,7 @@
             </Stroke>
           </Shape>
           <Shape x="582.7447" y="657.3722" name="ShowerStreak33_3" id="0:1211">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900058"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1210">
               <CubicDetachedVertex x="4.2645" y="-26.6533" outRotation="1.7295" outDistance="17.9949" inRotation="4.871" inDistance="0" id="0:1208"/>
               <CubicDetachedVertex x="-4.2645" y="26.6533" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.9949" id="0:1209"/>
@@ -6159,6 +6254,7 @@
             </Stroke>
           </Shape>
           <Shape x="612.5144" y="66.189" name="ShowerStreak34_1" id="0:1217">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900057"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1216">
               <CubicDetachedVertex x="4.3529" y="-27.2057" outRotation="1.7295" outDistance="18.3678" inRotation="4.871" inDistance="0" id="0:1214"/>
               <CubicDetachedVertex x="-4.3529" y="27.2057" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="18.3678" id="0:1215"/>
@@ -6168,6 +6264,7 @@
             </Stroke>
           </Shape>
           <Shape x="612.5144" y="316.189" name="ShowerStreak34_2" id="0:1223">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900056"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1222">
               <CubicDetachedVertex x="4.3529" y="-27.2057" outRotation="1.7295" outDistance="18.3678" inRotation="4.871" inDistance="0" id="0:1220"/>
               <CubicDetachedVertex x="-4.3529" y="27.2057" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="18.3678" id="0:1221"/>
@@ -6177,6 +6274,7 @@
             </Stroke>
           </Shape>
           <Shape x="612.5144" y="566.189" name="ShowerStreak34_3" id="0:1229">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900055"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1228">
               <CubicDetachedVertex x="4.3529" y="-27.2057" outRotation="1.7295" outDistance="18.3678" inRotation="4.871" inDistance="0" id="0:1226"/>
               <CubicDetachedVertex x="-4.3529" y="27.2057" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="18.3678" id="0:1227"/>
@@ -6186,6 +6284,7 @@
             </Stroke>
           </Shape>
           <Shape x="598.569" y="-18.6833" name="ShowerStreak35_0" id="0:1235">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900054"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1234">
               <CubicDetachedVertex x="3.7946" y="-23.7164" outRotation="1.7295" outDistance="16.012" inRotation="4.871" inDistance="0" id="0:1232"/>
               <CubicDetachedVertex x="-3.7946" y="23.7164" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="16.012" id="0:1233"/>
@@ -6195,6 +6294,7 @@
             </Stroke>
           </Shape>
           <Shape x="598.569" y="231.3167" name="ShowerStreak35_1" id="0:1241">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900053"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1240">
               <CubicDetachedVertex x="3.7946" y="-23.7164" outRotation="1.7295" outDistance="16.012" inRotation="4.871" inDistance="0" id="0:1238"/>
               <CubicDetachedVertex x="-3.7946" y="23.7164" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="16.012" id="0:1239"/>
@@ -6204,6 +6304,7 @@
             </Stroke>
           </Shape>
           <Shape x="598.569" y="481.3167" name="ShowerStreak35_2" id="0:1247">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900052"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1246">
               <CubicDetachedVertex x="3.7946" y="-23.7164" outRotation="1.7295" outDistance="16.012" inRotation="4.871" inDistance="0" id="0:1244"/>
               <CubicDetachedVertex x="-3.7946" y="23.7164" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="16.012" id="0:1245"/>
@@ -6213,6 +6314,7 @@
             </Stroke>
           </Shape>
           <Shape x="598.569" y="731.3167" name="ShowerStreak35_3" id="0:1253">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900051"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1252">
               <CubicDetachedVertex x="3.7946" y="-23.7164" outRotation="1.7295" outDistance="16.012" inRotation="4.871" inDistance="0" id="0:1250"/>
               <CubicDetachedVertex x="-3.7946" y="23.7164" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="16.012" id="0:1251"/>
@@ -6222,6 +6324,7 @@
             </Stroke>
           </Shape>
           <Shape x="591.3684" y="170.5762" name="ShowerStreak36_1" id="0:1259">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900050"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1258">
               <CubicDetachedVertex x="5.2185" y="-32.6155" outRotation="1.7295" outDistance="22.0202" inRotation="4.871" inDistance="0" id="0:1256"/>
               <CubicDetachedVertex x="-5.2185" y="32.6155" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="22.0202" id="0:1257"/>
@@ -6231,6 +6334,7 @@
             </Stroke>
           </Shape>
           <Shape x="591.3684" y="420.5762" name="ShowerStreak36_2" id="0:1265">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900049"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1264">
               <CubicDetachedVertex x="5.2185" y="-32.6155" outRotation="1.7295" outDistance="22.0202" inRotation="4.871" inDistance="0" id="0:1262"/>
               <CubicDetachedVertex x="-5.2185" y="32.6155" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="22.0202" id="0:1263"/>
@@ -6240,6 +6344,7 @@
             </Stroke>
           </Shape>
           <Shape x="591.3684" y="670.5762" name="ShowerStreak36_3" id="0:1271">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900048"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1270">
               <CubicDetachedVertex x="5.2185" y="-32.6155" outRotation="1.7295" outDistance="22.0202" inRotation="4.871" inDistance="0" id="0:1268"/>
               <CubicDetachedVertex x="-5.2185" y="32.6155" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="22.0202" id="0:1269"/>
@@ -6249,6 +6354,7 @@
             </Stroke>
           </Shape>
           <Shape x="689.7761" y="124.8367" name="ShowerStreak37_1" id="0:1277">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900047"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1276">
               <CubicDetachedVertex x="3.3763" y="-21.1019" outRotation="1.7295" outDistance="14.2469" inRotation="4.871" inDistance="0" id="0:1274"/>
               <CubicDetachedVertex x="-3.3763" y="21.1019" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.2469" id="0:1275"/>
@@ -6258,6 +6364,7 @@
             </Stroke>
           </Shape>
           <Shape x="689.7761" y="374.8367" name="ShowerStreak37_2" id="0:1283">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900046"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1282">
               <CubicDetachedVertex x="3.3763" y="-21.1019" outRotation="1.7295" outDistance="14.2469" inRotation="4.871" inDistance="0" id="0:1280"/>
               <CubicDetachedVertex x="-3.3763" y="21.1019" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.2469" id="0:1281"/>
@@ -6267,6 +6374,7 @@
             </Stroke>
           </Shape>
           <Shape x="689.7761" y="624.8367" name="ShowerStreak37_3" id="0:1289">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900045"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1288">
               <CubicDetachedVertex x="3.3763" y="-21.1019" outRotation="1.7295" outDistance="14.2469" inRotation="4.871" inDistance="0" id="0:1286"/>
               <CubicDetachedVertex x="-3.3763" y="21.1019" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="14.2469" id="0:1287"/>
@@ -6276,6 +6384,7 @@
             </Stroke>
           </Shape>
           <Shape x="629.9882" y="95.7649" name="ShowerStreak38_1" id="0:1295">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900044"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1294">
               <CubicDetachedVertex x="4.2037" y="-26.273" outRotation="1.7295" outDistance="17.7381" inRotation="4.871" inDistance="0" id="0:1292"/>
               <CubicDetachedVertex x="-4.2037" y="26.273" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.7381" id="0:1293"/>
@@ -6285,6 +6394,7 @@
             </Stroke>
           </Shape>
           <Shape x="629.9882" y="345.7649" name="ShowerStreak38_2" id="0:1301">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900043"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1300">
               <CubicDetachedVertex x="4.2037" y="-26.273" outRotation="1.7295" outDistance="17.7381" inRotation="4.871" inDistance="0" id="0:1298"/>
               <CubicDetachedVertex x="-4.2037" y="26.273" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.7381" id="0:1299"/>
@@ -6294,6 +6404,7 @@
             </Stroke>
           </Shape>
           <Shape x="629.9882" y="595.7649" name="ShowerStreak38_3" id="0:1307">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900042"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1306">
               <CubicDetachedVertex x="4.2037" y="-26.273" outRotation="1.7295" outDistance="17.7381" inRotation="4.871" inDistance="0" id="0:1304"/>
               <CubicDetachedVertex x="-4.2037" y="26.273" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="17.7381" id="0:1305"/>
@@ -6303,6 +6414,7 @@
             </Stroke>
           </Shape>
           <Shape x="392.6181" y="58.0988" name="ShowerStreak39_1" id="0:1313">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900041"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1312">
               <CubicDetachedVertex x="4.7437" y="-29.648" outRotation="1.7295" outDistance="20.0167" inRotation="4.871" inDistance="0" id="0:1310"/>
               <CubicDetachedVertex x="-4.7437" y="29.648" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="20.0167" id="0:1311"/>
@@ -6312,6 +6424,7 @@
             </Stroke>
           </Shape>
           <Shape x="392.6181" y="308.0988" name="ShowerStreak39_2" id="0:1319">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900040"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1318">
               <CubicDetachedVertex x="4.7437" y="-29.648" outRotation="1.7295" outDistance="20.0167" inRotation="4.871" inDistance="0" id="0:1316"/>
               <CubicDetachedVertex x="-4.7437" y="29.648" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="20.0167" id="0:1317"/>
@@ -6321,6 +6434,7 @@
             </Stroke>
           </Shape>
           <Shape x="392.6181" y="558.0988" name="ShowerStreak39_3" id="0:1325">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900039"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1324">
               <CubicDetachedVertex x="4.7437" y="-29.648" outRotation="1.7295" outDistance="20.0167" inRotation="4.871" inDistance="0" id="0:1322"/>
               <CubicDetachedVertex x="-4.7437" y="29.648" outRotation="1.7295" outDistance="0" inRotation="4.871" inDistance="20.0167" id="0:1323"/>
@@ -7376,30 +7490,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990059">
-          <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990058">
-            <GradientStop colorValue="00A8B4C4" position="0" id="0:990055"/>
-            <GradientStop colorValue="33A8B4C4" position="1" id="0:990057">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990056"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990064">
-          <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990063">
-            <GradientStop colorValue="00A8B4C4" position="0" id="0:990060"/>
-            <GradientStop colorValue="33A8B4C4" position="1" id="0:990062">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990061"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990069">
-          <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990068">
-            <GradientStop colorValue="00A8B4C4" position="0" id="0:990065"/>
-            <GradientStop colorValue="33A8B4C4" position="1" id="0:990067">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990066"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills1" id="0:900154">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900152"/>
+          <Rectangle width="1200" height="1420" originX="0" originY="0" name="Path" id="0:900153"/>
+          <Fill name="Fill" id="0:990059">
+            <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990058">
+              <GradientStop colorValue="00A8B4C4" position="0" id="0:990055"/>
+              <GradientStop colorValue="33A8B4C4" position="1" id="0:990057">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990056"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990064">
+            <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990063">
+              <GradientStop colorValue="00A8B4C4" position="0" id="0:990060"/>
+              <GradientStop colorValue="33A8B4C4" position="1" id="0:990062">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990061"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990069">
+            <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990068">
+              <GradientStop colorValue="00A8B4C4" position="0" id="0:990065"/>
+              <GradientStop colorValue="33A8B4C4" position="1" id="0:990067">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990066"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Shape x="540" y="705" name="StreetDay" opacity="0" id="0:482">
         <DataBindContext sourcePathIds="0:23-0:980024" propertyKey="18" converterId="0:940003" id="0:940004"/>
@@ -7702,30 +7820,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990082">
-          <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990081">
-            <GradientStop colorValue="00A8B4C4" position="0" id="0:990078"/>
-            <GradientStop colorValue="33A8B4C4" position="1" id="0:990080">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990079"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990087">
-          <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990086">
-            <GradientStop colorValue="00A8B4C4" position="0" id="0:990083"/>
-            <GradientStop colorValue="33A8B4C4" position="1" id="0:990085">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990084"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990092">
-          <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990091">
-            <GradientStop colorValue="00A8B4C4" position="0" id="0:990088"/>
-            <GradientStop colorValue="33A8B4C4" position="1" id="0:990090">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990089"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills0" id="0:900157">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900155"/>
+          <Rectangle width="1200" height="1600" originX="0" originY="0" name="Path" id="0:900156"/>
+          <Fill name="Fill" id="0:990082">
+            <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990081">
+              <GradientStop colorValue="00A8B4C4" position="0" id="0:990078"/>
+              <GradientStop colorValue="33A8B4C4" position="1" id="0:990080">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990079"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990087">
+            <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990086">
+              <GradientStop colorValue="00A8B4C4" position="0" id="0:990083"/>
+              <GradientStop colorValue="33A8B4C4" position="1" id="0:990085">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990084"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990092">
+            <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990091">
+              <GradientStop colorValue="00A8B4C4" position="0" id="0:990088"/>
+              <GradientStop colorValue="33A8B4C4" position="1" id="0:990090">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990089"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Shape x="-60" y="0" opacity="0" name="SkyDusk" id="0:940029">
         <DataBindContext sourcePathIds="0:23-0:980026" propertyKey="18" converterId="0:940025" id="0:940026"/>
@@ -12404,4 +12526,42 @@
     <FormulaTokenOperation operationType="2" id="0:930154"/>
     <FormulaTokenInput id="0:930155"/>
   </DataConverterFormula>
+
+  <DataConverterToNumber id="0:900010"/>
+
+  <DataConverterFormula id="0:900022">
+    <FormulaTokenFunction functionType="0" id="0:900019"/>
+    <FormulaTokenValue operationValue="1" id="0:900014"/>
+    <FormulaTokenArgumentSeparator id="0:900020"/>
+    <FormulaTokenFunction functionType="1" id="0:900016"/>
+    <FormulaTokenValue operationValue="0" id="0:900015"/>
+    <FormulaTokenArgumentSeparator id="0:900017"/>
+    <FormulaTokenInput id="0:900011"/>
+    <FormulaTokenOperation operationType="1" id="0:900012"/>
+    <FormulaTokenValue operationValue="1" id="0:900013"/>
+    <FormulaTokenParenthesisClose id="0:900018"/>
+    <FormulaTokenParenthesisClose id="0:900021"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900025">
+    <DataConverterGroupItem converterId="0:900010" id="0:900023"/>
+    <DataConverterGroupItem converterId="0:900022" id="0:900024"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:900035">
+    <FormulaTokenFunction functionType="0" id="0:900032"/>
+    <FormulaTokenValue operationValue="1" id="0:900027"/>
+    <FormulaTokenArgumentSeparator id="0:900033"/>
+    <FormulaTokenFunction functionType="1" id="0:900029"/>
+    <FormulaTokenValue operationValue="0" id="0:900028"/>
+    <FormulaTokenArgumentSeparator id="0:900030"/>
+    <FormulaTokenInput id="0:900026"/>
+    <FormulaTokenParenthesisClose id="0:900031"/>
+    <FormulaTokenParenthesisClose id="0:900034"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900038">
+    <DataConverterGroupItem converterId="0:900010" id="0:900036"/>
+    <DataConverterGroupItem converterId="0:900035" id="0:900037"/>
+  </DataConverterGroup>
 </Rive>

@@ -784,6 +784,7 @@
         </Fill>
       </Shape>
       <Node x="0" y="0" name="TeaSteam" id="0:3767">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900216" id="0:900219"/>
         <Shape x="800" y="846" name="TeaPuff0" opacity="0" id="0:3564">
           <Ellipse width="20" height="20" name="Path" id="0:3563"/>
           <Fill name="Fill" id="0:3562">
@@ -1146,6 +1147,7 @@
         </Shape>
       </Node>
       <Node x="0" y="0" name="LampDust" id="0:3248">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900216" id="0:900217"/>
         <Shape x="90.8408" y="803.5824" name="Mote0" id="0:3227">
           <Ellipse width="3.4" height="3.4" name="Path" id="0:3226"/>
           <Fill name="Fill" id="0:3225">
@@ -2854,301 +2856,304 @@
             <SolidColor colorValue="90CCD8E6" id="0:1884"/>
           </Stroke>
         </Shape>
-        <Node x="0" y="0" opacity="0" name="GlassStreaksB" id="0:2276">
-          <DataBindContext sourcePathIds="0:23-0:980022" propertyKey="18" converterId="0:2275" id="0:970000"/>
-          <Shape x="0" y="0" name="StreakSheetB" id="0:2119">
-            <PointsPath isClosed="false" name="Path" id="0:1903">
-              <StraightVertex x="1039.5425" y="705.8612" id="0:1901"/>
-              <StraightVertex x="1027.0433" y="716.2772" id="0:1902"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1906">
-              <StraightVertex x="859.5425" y="855.8612" id="0:1904"/>
-              <StraightVertex x="847.0433" y="866.2772" id="0:1905"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1909">
-              <StraightVertex x="924.5835" y="337.6126" id="0:1907"/>
-              <StraightVertex x="909.1704" y="350.4569" id="0:1908"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1912">
-              <StraightVertex x="744.5835" y="487.6126" id="0:1910"/>
-              <StraightVertex x="729.1704" y="500.4569" id="0:1911"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1915">
-              <StraightVertex x="564.5835" y="637.6126" id="0:1913"/>
-              <StraightVertex x="549.1704" y="650.4569" id="0:1914"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1918">
-              <StraightVertex x="384.5835" y="787.6126" id="0:1916"/>
-              <StraightVertex x="369.1704" y="800.4569" id="0:1917"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1921">
-              <StraightVertex x="409.6093" y="313.9942" id="0:1919"/>
-              <StraightVertex x="387.8104" y="332.1599" id="0:1920"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1924">
-              <StraightVertex x="1029.7002" y="736.5935" id="0:1922"/>
-              <StraightVertex x="1011.8514" y="751.4674" id="0:1923"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1927">
-              <StraightVertex x="849.7002" y="886.5935" id="0:1925"/>
-              <StraightVertex x="831.8514" y="901.4674" id="0:1926"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1930">
-              <StraightVertex x="816.066" y="339.2618" id="0:1928"/>
-              <StraightVertex x="793.267" y="358.2609" id="0:1929"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1933">
-              <StraightVertex x="636.066" y="489.2618" id="0:1931"/>
-              <StraightVertex x="613.267" y="508.2609" id="0:1932"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1936">
-              <StraightVertex x="456.066" y="639.2618" id="0:1934"/>
-              <StraightVertex x="433.267" y="658.2609" id="0:1935"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1939">
-              <StraightVertex x="276.066" y="789.2618" id="0:1937"/>
-              <StraightVertex x="253.267" y="808.2609" id="0:1938"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1942">
-              <StraightVertex x="725.6901" y="364.4554" id="0:1940"/>
-              <StraightVertex x="706.0503" y="380.8219" id="0:1941"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1945">
-              <StraightVertex x="545.6901" y="514.4554" id="0:1943"/>
-              <StraightVertex x="526.0503" y="530.8219" id="0:1944"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1948">
-              <StraightVertex x="365.6901" y="664.4554" id="0:1946"/>
-              <StraightVertex x="346.0503" y="680.8219" id="0:1947"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1951">
-              <StraightVertex x="941.8698" y="291.4847" id="0:1949"/>
-              <StraightVertex x="922.9503" y="307.251" id="0:1950"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1954">
-              <StraightVertex x="761.8698" y="441.4847" id="0:1952"/>
-              <StraightVertex x="742.9503" y="457.251" id="0:1953"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1957">
-              <StraightVertex x="581.8698" y="591.4847" id="0:1955"/>
-              <StraightVertex x="562.9503" y="607.251" id="0:1956"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1960">
-              <StraightVertex x="401.8698" y="741.4847" id="0:1958"/>
-              <StraightVertex x="382.9503" y="757.251" id="0:1959"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1963">
-              <StraightVertex x="873.3928" y="329.9419" id="0:1961"/>
-              <StraightVertex x="855.1181" y="345.1708" id="0:1962"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1966">
-              <StraightVertex x="693.3928" y="479.9419" id="0:1964"/>
-              <StraightVertex x="675.1181" y="495.1708" id="0:1965"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1969">
-              <StraightVertex x="513.3928" y="629.9419" id="0:1967"/>
-              <StraightVertex x="495.1181" y="645.1708" id="0:1968"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1972">
-              <StraightVertex x="333.3928" y="779.9419" id="0:1970"/>
-              <StraightVertex x="315.1181" y="795.1708" id="0:1971"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1975">
-              <StraightVertex x="990.3841" y="636.7219" id="0:1973"/>
-              <StraightVertex x="973.5058" y="650.7871" id="0:1974"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1978">
-              <StraightVertex x="810.3841" y="786.7219" id="0:1976"/>
-              <StraightVertex x="793.5058" y="800.7871" id="0:1977"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1981">
-              <StraightVertex x="694.8971" y="284.6476" id="0:1979"/>
-              <StraightVertex x="678.6793" y="298.1624" id="0:1980"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1984">
-              <StraightVertex x="514.8971" y="434.6476" id="0:1982"/>
-              <StraightVertex x="498.6793" y="448.1624" id="0:1983"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1987">
-              <StraightVertex x="334.8971" y="584.6476" id="0:1985"/>
-              <StraightVertex x="318.6793" y="598.1624" id="0:1986"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1990">
-              <StraightVertex x="886.3217" y="365.5513" id="0:1988"/>
-              <StraightVertex x="863.4725" y="384.5922" id="0:1989"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1993">
-              <StraightVertex x="706.3217" y="515.5513" id="0:1991"/>
-              <StraightVertex x="683.4725" y="534.5922" id="0:1992"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1996">
-              <StraightVertex x="526.3217" y="665.5513" id="0:1994"/>
-              <StraightVertex x="503.4725" y="684.5922" id="0:1995"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:1999">
-              <StraightVertex x="346.3217" y="815.5513" id="0:1997"/>
-              <StraightVertex x="323.4725" y="834.5922" id="0:1998"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2002">
-              <StraightVertex x="503.283" y="352.8755" id="0:2000"/>
-              <StraightVertex x="488.6507" y="365.0691" id="0:2001"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2005">
-              <StraightVertex x="323.283" y="502.8755" id="0:2003"/>
-              <StraightVertex x="308.6507" y="515.0691" id="0:2004"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2008">
-              <StraightVertex x="1020.0314" y="324.9175" id="0:2006"/>
-              <StraightVertex x="1002.9462" y="339.1551" id="0:2007"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2011">
-              <StraightVertex x="840.0314" y="474.9175" id="0:2009"/>
-              <StraightVertex x="822.9462" y="489.1551" id="0:2010"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2014">
-              <StraightVertex x="660.0314" y="624.9175" id="0:2012"/>
-              <StraightVertex x="642.9462" y="639.1551" id="0:2013"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2017">
-              <StraightVertex x="480.0314" y="774.9175" id="0:2015"/>
-              <StraightVertex x="462.9462" y="789.1551" id="0:2016"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2020">
-              <StraightVertex x="345.0952" y="400.2228" id="0:2018"/>
-              <StraightVertex x="329.132" y="413.5254" id="0:2019"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2023">
-              <StraightVertex x="912.8453" y="344.9074" id="0:2021"/>
-              <StraightVertex x="895.5388" y="359.3295" id="0:2022"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2026">
-              <StraightVertex x="732.8453" y="494.9074" id="0:2024"/>
-              <StraightVertex x="715.5388" y="509.3295" id="0:2025"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2029">
-              <StraightVertex x="552.8453" y="644.9074" id="0:2027"/>
-              <StraightVertex x="535.5388" y="659.3295" id="0:2028"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2032">
-              <StraightVertex x="372.8453" y="794.9074" id="0:2030"/>
-              <StraightVertex x="355.5388" y="809.3295" id="0:2031"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2035">
-              <StraightVertex x="845.0503" y="346.5554" id="0:2033"/>
-              <StraightVertex x="822.0694" y="365.7061" id="0:2034"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2038">
-              <StraightVertex x="665.0503" y="496.5554" id="0:2036"/>
-              <StraightVertex x="642.0694" y="515.7061" id="0:2037"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2041">
-              <StraightVertex x="485.0503" y="646.5554" id="0:2039"/>
-              <StraightVertex x="462.0694" y="665.7061" id="0:2040"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2044">
-              <StraightVertex x="305.0503" y="796.5554" id="0:2042"/>
-              <StraightVertex x="282.0694" y="815.7061" id="0:2043"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2047">
-              <StraightVertex x="937.2371" y="489.3084" id="0:2045"/>
-              <StraightVertex x="918.5483" y="504.8824" id="0:2046"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2050">
-              <StraightVertex x="757.2371" y="639.3084" id="0:2048"/>
-              <StraightVertex x="738.5483" y="654.8824" id="0:2049"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2053">
-              <StraightVertex x="577.2371" y="789.3084" id="0:2051"/>
-              <StraightVertex x="558.5483" y="804.8824" id="0:2052"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2056">
-              <StraightVertex x="954.8956" y="557.9065" id="0:2054"/>
-              <StraightVertex x="940.9218" y="569.5513" id="0:2055"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2059">
-              <StraightVertex x="774.8956" y="707.9065" id="0:2057"/>
-              <StraightVertex x="760.9218" y="719.5513" id="0:2058"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2062">
-              <StraightVertex x="594.8956" y="857.9065" id="0:2060"/>
-              <StraightVertex x="580.9218" y="869.5513" id="0:2061"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2065">
-              <StraightVertex x="1018.7387" y="710.077" id="0:2063"/>
-              <StraightVertex x="1003.4535" y="722.8146" id="0:2064"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2068">
-              <StraightVertex x="838.7387" y="860.077" id="0:2066"/>
-              <StraightVertex x="823.4535" y="872.8146" id="0:2067"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2071">
-              <StraightVertex x="1046.2596" y="583.8335" id="0:2069"/>
-              <StraightVertex x="1029.4903" y="597.8079" id="0:2070"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2074">
-              <StraightVertex x="866.2596" y="733.8335" id="0:2072"/>
-              <StraightVertex x="849.4903" y="747.8079" id="0:2073"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2077">
-              <StraightVertex x="686.2596" y="883.8335" id="0:2075"/>
-              <StraightVertex x="669.4903" y="897.8079" id="0:2076"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2080">
-              <StraightVertex x="977.6698" y="654.8036" id="0:2078"/>
-              <StraightVertex x="957.6109" y="671.5193" id="0:2079"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2083">
-              <StraightVertex x="797.6698" y="804.8036" id="0:2081"/>
-              <StraightVertex x="777.6109" y="821.5193" id="0:2082"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2086">
-              <StraightVertex x="332.2627" y="382.4348" id="0:2084"/>
-              <StraightVertex x="316.5811" y="395.5028" id="0:2085"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2089">
-              <StraightVertex x="690.9085" y="376.0593" id="0:2087"/>
-              <StraightVertex x="675.9558" y="388.5199" id="0:2088"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2092">
-              <StraightVertex x="510.9085" y="526.0593" id="0:2090"/>
-              <StraightVertex x="495.9558" y="538.5199" id="0:2091"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2095">
-              <StraightVertex x="330.9085" y="676.0593" id="0:2093"/>
-              <StraightVertex x="315.9558" y="688.5199" id="0:2094"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2098">
-              <StraightVertex x="564.918" y="290.311" id="0:2096"/>
-              <StraightVertex x="546.7391" y="305.4601" id="0:2097"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2101">
-              <StraightVertex x="384.918" y="440.311" id="0:2099"/>
-              <StraightVertex x="366.7391" y="455.4601" id="0:2100"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2104">
-              <StraightVertex x="953.5309" y="795.7216" id="0:2102"/>
-              <StraightVertex x="933.5495" y="812.3728" id="0:2103"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2107">
-              <StraightVertex x="976.0491" y="360.986" id="0:2105"/>
-              <StraightVertex x="953.6618" y="379.6421" id="0:2106"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2110">
-              <StraightVertex x="796.0491" y="510.986" id="0:2108"/>
-              <StraightVertex x="773.6618" y="529.6421" id="0:2109"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2113">
-              <StraightVertex x="616.0491" y="660.986" id="0:2111"/>
-              <StraightVertex x="593.6618" y="679.6421" id="0:2112"/>
-            </PointsPath>
-            <PointsPath isClosed="false" name="Path" id="0:2116">
-              <StraightVertex x="436.0491" y="810.986" id="0:2114"/>
-              <StraightVertex x="413.6618" y="829.6421" id="0:2115"/>
-            </PointsPath>
-            <Stroke thickness="1.4" cap="round" join="round" name="Line" id="0:2118">
-              <SolidColor colorValue="68C4D0E0" id="0:2117"/>
-            </Stroke>
-          </Shape>
+        <Node x="0" y="0" name="TierGlassStreaksB" id="0:900221">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900203" id="0:900220"/>
+          <Node x="0" y="0" opacity="0" name="GlassStreaksB" id="0:2276">
+            <DataBindContext sourcePathIds="0:23-0:980022" propertyKey="18" converterId="0:2275" id="0:970000"/>
+            <Shape x="0" y="0" name="StreakSheetB" id="0:2119">
+              <PointsPath isClosed="false" name="Path" id="0:1903">
+                <StraightVertex x="1039.5425" y="705.8612" id="0:1901"/>
+                <StraightVertex x="1027.0433" y="716.2772" id="0:1902"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1906">
+                <StraightVertex x="859.5425" y="855.8612" id="0:1904"/>
+                <StraightVertex x="847.0433" y="866.2772" id="0:1905"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1909">
+                <StraightVertex x="924.5835" y="337.6126" id="0:1907"/>
+                <StraightVertex x="909.1704" y="350.4569" id="0:1908"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1912">
+                <StraightVertex x="744.5835" y="487.6126" id="0:1910"/>
+                <StraightVertex x="729.1704" y="500.4569" id="0:1911"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1915">
+                <StraightVertex x="564.5835" y="637.6126" id="0:1913"/>
+                <StraightVertex x="549.1704" y="650.4569" id="0:1914"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1918">
+                <StraightVertex x="384.5835" y="787.6126" id="0:1916"/>
+                <StraightVertex x="369.1704" y="800.4569" id="0:1917"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1921">
+                <StraightVertex x="409.6093" y="313.9942" id="0:1919"/>
+                <StraightVertex x="387.8104" y="332.1599" id="0:1920"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1924">
+                <StraightVertex x="1029.7002" y="736.5935" id="0:1922"/>
+                <StraightVertex x="1011.8514" y="751.4674" id="0:1923"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1927">
+                <StraightVertex x="849.7002" y="886.5935" id="0:1925"/>
+                <StraightVertex x="831.8514" y="901.4674" id="0:1926"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1930">
+                <StraightVertex x="816.066" y="339.2618" id="0:1928"/>
+                <StraightVertex x="793.267" y="358.2609" id="0:1929"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1933">
+                <StraightVertex x="636.066" y="489.2618" id="0:1931"/>
+                <StraightVertex x="613.267" y="508.2609" id="0:1932"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1936">
+                <StraightVertex x="456.066" y="639.2618" id="0:1934"/>
+                <StraightVertex x="433.267" y="658.2609" id="0:1935"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1939">
+                <StraightVertex x="276.066" y="789.2618" id="0:1937"/>
+                <StraightVertex x="253.267" y="808.2609" id="0:1938"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1942">
+                <StraightVertex x="725.6901" y="364.4554" id="0:1940"/>
+                <StraightVertex x="706.0503" y="380.8219" id="0:1941"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1945">
+                <StraightVertex x="545.6901" y="514.4554" id="0:1943"/>
+                <StraightVertex x="526.0503" y="530.8219" id="0:1944"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1948">
+                <StraightVertex x="365.6901" y="664.4554" id="0:1946"/>
+                <StraightVertex x="346.0503" y="680.8219" id="0:1947"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1951">
+                <StraightVertex x="941.8698" y="291.4847" id="0:1949"/>
+                <StraightVertex x="922.9503" y="307.251" id="0:1950"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1954">
+                <StraightVertex x="761.8698" y="441.4847" id="0:1952"/>
+                <StraightVertex x="742.9503" y="457.251" id="0:1953"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1957">
+                <StraightVertex x="581.8698" y="591.4847" id="0:1955"/>
+                <StraightVertex x="562.9503" y="607.251" id="0:1956"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1960">
+                <StraightVertex x="401.8698" y="741.4847" id="0:1958"/>
+                <StraightVertex x="382.9503" y="757.251" id="0:1959"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1963">
+                <StraightVertex x="873.3928" y="329.9419" id="0:1961"/>
+                <StraightVertex x="855.1181" y="345.1708" id="0:1962"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1966">
+                <StraightVertex x="693.3928" y="479.9419" id="0:1964"/>
+                <StraightVertex x="675.1181" y="495.1708" id="0:1965"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1969">
+                <StraightVertex x="513.3928" y="629.9419" id="0:1967"/>
+                <StraightVertex x="495.1181" y="645.1708" id="0:1968"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1972">
+                <StraightVertex x="333.3928" y="779.9419" id="0:1970"/>
+                <StraightVertex x="315.1181" y="795.1708" id="0:1971"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1975">
+                <StraightVertex x="990.3841" y="636.7219" id="0:1973"/>
+                <StraightVertex x="973.5058" y="650.7871" id="0:1974"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1978">
+                <StraightVertex x="810.3841" y="786.7219" id="0:1976"/>
+                <StraightVertex x="793.5058" y="800.7871" id="0:1977"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1981">
+                <StraightVertex x="694.8971" y="284.6476" id="0:1979"/>
+                <StraightVertex x="678.6793" y="298.1624" id="0:1980"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1984">
+                <StraightVertex x="514.8971" y="434.6476" id="0:1982"/>
+                <StraightVertex x="498.6793" y="448.1624" id="0:1983"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1987">
+                <StraightVertex x="334.8971" y="584.6476" id="0:1985"/>
+                <StraightVertex x="318.6793" y="598.1624" id="0:1986"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1990">
+                <StraightVertex x="886.3217" y="365.5513" id="0:1988"/>
+                <StraightVertex x="863.4725" y="384.5922" id="0:1989"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1993">
+                <StraightVertex x="706.3217" y="515.5513" id="0:1991"/>
+                <StraightVertex x="683.4725" y="534.5922" id="0:1992"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1996">
+                <StraightVertex x="526.3217" y="665.5513" id="0:1994"/>
+                <StraightVertex x="503.4725" y="684.5922" id="0:1995"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:1999">
+                <StraightVertex x="346.3217" y="815.5513" id="0:1997"/>
+                <StraightVertex x="323.4725" y="834.5922" id="0:1998"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2002">
+                <StraightVertex x="503.283" y="352.8755" id="0:2000"/>
+                <StraightVertex x="488.6507" y="365.0691" id="0:2001"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2005">
+                <StraightVertex x="323.283" y="502.8755" id="0:2003"/>
+                <StraightVertex x="308.6507" y="515.0691" id="0:2004"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2008">
+                <StraightVertex x="1020.0314" y="324.9175" id="0:2006"/>
+                <StraightVertex x="1002.9462" y="339.1551" id="0:2007"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2011">
+                <StraightVertex x="840.0314" y="474.9175" id="0:2009"/>
+                <StraightVertex x="822.9462" y="489.1551" id="0:2010"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2014">
+                <StraightVertex x="660.0314" y="624.9175" id="0:2012"/>
+                <StraightVertex x="642.9462" y="639.1551" id="0:2013"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2017">
+                <StraightVertex x="480.0314" y="774.9175" id="0:2015"/>
+                <StraightVertex x="462.9462" y="789.1551" id="0:2016"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2020">
+                <StraightVertex x="345.0952" y="400.2228" id="0:2018"/>
+                <StraightVertex x="329.132" y="413.5254" id="0:2019"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2023">
+                <StraightVertex x="912.8453" y="344.9074" id="0:2021"/>
+                <StraightVertex x="895.5388" y="359.3295" id="0:2022"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2026">
+                <StraightVertex x="732.8453" y="494.9074" id="0:2024"/>
+                <StraightVertex x="715.5388" y="509.3295" id="0:2025"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2029">
+                <StraightVertex x="552.8453" y="644.9074" id="0:2027"/>
+                <StraightVertex x="535.5388" y="659.3295" id="0:2028"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2032">
+                <StraightVertex x="372.8453" y="794.9074" id="0:2030"/>
+                <StraightVertex x="355.5388" y="809.3295" id="0:2031"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2035">
+                <StraightVertex x="845.0503" y="346.5554" id="0:2033"/>
+                <StraightVertex x="822.0694" y="365.7061" id="0:2034"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2038">
+                <StraightVertex x="665.0503" y="496.5554" id="0:2036"/>
+                <StraightVertex x="642.0694" y="515.7061" id="0:2037"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2041">
+                <StraightVertex x="485.0503" y="646.5554" id="0:2039"/>
+                <StraightVertex x="462.0694" y="665.7061" id="0:2040"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2044">
+                <StraightVertex x="305.0503" y="796.5554" id="0:2042"/>
+                <StraightVertex x="282.0694" y="815.7061" id="0:2043"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2047">
+                <StraightVertex x="937.2371" y="489.3084" id="0:2045"/>
+                <StraightVertex x="918.5483" y="504.8824" id="0:2046"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2050">
+                <StraightVertex x="757.2371" y="639.3084" id="0:2048"/>
+                <StraightVertex x="738.5483" y="654.8824" id="0:2049"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2053">
+                <StraightVertex x="577.2371" y="789.3084" id="0:2051"/>
+                <StraightVertex x="558.5483" y="804.8824" id="0:2052"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2056">
+                <StraightVertex x="954.8956" y="557.9065" id="0:2054"/>
+                <StraightVertex x="940.9218" y="569.5513" id="0:2055"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2059">
+                <StraightVertex x="774.8956" y="707.9065" id="0:2057"/>
+                <StraightVertex x="760.9218" y="719.5513" id="0:2058"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2062">
+                <StraightVertex x="594.8956" y="857.9065" id="0:2060"/>
+                <StraightVertex x="580.9218" y="869.5513" id="0:2061"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2065">
+                <StraightVertex x="1018.7387" y="710.077" id="0:2063"/>
+                <StraightVertex x="1003.4535" y="722.8146" id="0:2064"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2068">
+                <StraightVertex x="838.7387" y="860.077" id="0:2066"/>
+                <StraightVertex x="823.4535" y="872.8146" id="0:2067"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2071">
+                <StraightVertex x="1046.2596" y="583.8335" id="0:2069"/>
+                <StraightVertex x="1029.4903" y="597.8079" id="0:2070"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2074">
+                <StraightVertex x="866.2596" y="733.8335" id="0:2072"/>
+                <StraightVertex x="849.4903" y="747.8079" id="0:2073"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2077">
+                <StraightVertex x="686.2596" y="883.8335" id="0:2075"/>
+                <StraightVertex x="669.4903" y="897.8079" id="0:2076"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2080">
+                <StraightVertex x="977.6698" y="654.8036" id="0:2078"/>
+                <StraightVertex x="957.6109" y="671.5193" id="0:2079"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2083">
+                <StraightVertex x="797.6698" y="804.8036" id="0:2081"/>
+                <StraightVertex x="777.6109" y="821.5193" id="0:2082"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2086">
+                <StraightVertex x="332.2627" y="382.4348" id="0:2084"/>
+                <StraightVertex x="316.5811" y="395.5028" id="0:2085"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2089">
+                <StraightVertex x="690.9085" y="376.0593" id="0:2087"/>
+                <StraightVertex x="675.9558" y="388.5199" id="0:2088"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2092">
+                <StraightVertex x="510.9085" y="526.0593" id="0:2090"/>
+                <StraightVertex x="495.9558" y="538.5199" id="0:2091"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2095">
+                <StraightVertex x="330.9085" y="676.0593" id="0:2093"/>
+                <StraightVertex x="315.9558" y="688.5199" id="0:2094"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2098">
+                <StraightVertex x="564.918" y="290.311" id="0:2096"/>
+                <StraightVertex x="546.7391" y="305.4601" id="0:2097"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2101">
+                <StraightVertex x="384.918" y="440.311" id="0:2099"/>
+                <StraightVertex x="366.7391" y="455.4601" id="0:2100"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2104">
+                <StraightVertex x="953.5309" y="795.7216" id="0:2102"/>
+                <StraightVertex x="933.5495" y="812.3728" id="0:2103"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2107">
+                <StraightVertex x="976.0491" y="360.986" id="0:2105"/>
+                <StraightVertex x="953.6618" y="379.6421" id="0:2106"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2110">
+                <StraightVertex x="796.0491" y="510.986" id="0:2108"/>
+                <StraightVertex x="773.6618" y="529.6421" id="0:2109"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2113">
+                <StraightVertex x="616.0491" y="660.986" id="0:2111"/>
+                <StraightVertex x="593.6618" y="679.6421" id="0:2112"/>
+              </PointsPath>
+              <PointsPath isClosed="false" name="Path" id="0:2116">
+                <StraightVertex x="436.0491" y="810.986" id="0:2114"/>
+                <StraightVertex x="413.6618" y="829.6421" id="0:2115"/>
+              </PointsPath>
+              <Stroke thickness="1.4" cap="round" join="round" name="Line" id="0:2118">
+                <SolidColor colorValue="68C4D0E0" id="0:2117"/>
+              </Stroke>
+            </Shape>
+          </Node>
         </Node>
         <Shape x="0" y="0" name="BeadSheet" id="0:2247">
           <Ellipse width="3.4129" height="4.2661" x="752.8691" y="393.1664" name="Path" id="0:2134"/>
@@ -3316,30 +3321,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990059">
-          <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990058">
-            <GradientStop colorValue="00B8B0C8" position="0" id="0:990055"/>
-            <GradientStop colorValue="33B8B0C8" position="1" id="0:990057">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990056"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990064">
-          <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990063">
-            <GradientStop colorValue="00B8B0C8" position="0" id="0:990060"/>
-            <GradientStop colorValue="33B8B0C8" position="1" id="0:990062">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990061"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990069">
-          <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990068">
-            <GradientStop colorValue="00B8B0C8" position="0" id="0:990065"/>
-            <GradientStop colorValue="33B8B0C8" position="1" id="0:990067">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990066"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills1" id="0:900225">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900216" id="0:900223"/>
+          <Rectangle width="1200" height="1280" originX="0" originY="0" name="Path" id="0:900224"/>
+          <Fill name="Fill" id="0:990059">
+            <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990058">
+              <GradientStop colorValue="00B8B0C8" position="0" id="0:990055"/>
+              <GradientStop colorValue="33B8B0C8" position="1" id="0:990057">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990056"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990064">
+            <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990063">
+              <GradientStop colorValue="00B8B0C8" position="0" id="0:990060"/>
+              <GradientStop colorValue="33B8B0C8" position="1" id="0:990062">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990061"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990069">
+            <LinearGradient startX="0" startY="0" endX="0" endY="240" id="0:990068">
+              <GradientStop colorValue="00B8B0C8" position="0" id="0:990065"/>
+              <GradientStop colorValue="33B8B0C8" position="1" id="0:990067">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990066"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Node x="0" y="0" name="WhistleSteam" id="0:1667">
         <Node x="0" y="0" name="SteamPuffsA" id="0:1665">
@@ -3385,6 +3394,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="SteamPuffsB" id="0:1666">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900203" id="0:900222"/>
           <Shape x="0" y="0" name="Puff1" opacity="0" id="0:1622">
             <Ellipse width="120" height="84" name="Path" id="0:1621"/>
             <Fill name="Fill" id="0:1620">
@@ -4850,30 +4860,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990082">
-          <LinearGradient startX="0" startY="0" endX="0" endY="200" id="0:990081">
-            <GradientStop colorValue="00B8B0C8" position="0" id="0:990078"/>
-            <GradientStop colorValue="33B8B0C8" position="1" id="0:990080">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990079"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990087">
-          <LinearGradient startX="0" startY="0" endX="0" endY="200" id="0:990086">
-            <GradientStop colorValue="00B8B0C8" position="0" id="0:990083"/>
-            <GradientStop colorValue="33B8B0C8" position="1" id="0:990085">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990084"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990092">
-          <LinearGradient startX="0" startY="0" endX="0" endY="200" id="0:990091">
-            <GradientStop colorValue="00B8B0C8" position="0" id="0:990088"/>
-            <GradientStop colorValue="33B8B0C8" position="1" id="0:990090">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990089"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills0" id="0:900228">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900216" id="0:900226"/>
+          <Rectangle width="1200" height="1420" originX="0" originY="0" name="Path" id="0:900227"/>
+          <Fill name="Fill" id="0:990082">
+            <LinearGradient startX="0" startY="0" endX="0" endY="200" id="0:990081">
+              <GradientStop colorValue="00B8B0C8" position="0" id="0:990078"/>
+              <GradientStop colorValue="33B8B0C8" position="1" id="0:990080">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990079"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990087">
+            <LinearGradient startX="0" startY="0" endX="0" endY="200" id="0:990086">
+              <GradientStop colorValue="00B8B0C8" position="0" id="0:990083"/>
+              <GradientStop colorValue="33B8B0C8" position="1" id="0:990085">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990084"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990092">
+            <LinearGradient startX="0" startY="0" endX="0" endY="200" id="0:990091">
+              <GradientStop colorValue="00B8B0C8" position="0" id="0:990088"/>
+              <GradientStop colorValue="33B8B0C8" position="1" id="0:990090">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990089"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Shape x="-60" y="0" opacity="0" name="SkyDusk" id="0:940029">
         <DataBindContext sourcePathIds="0:23-0:980026" propertyKey="18" converterId="0:940025" id="0:940026"/>
@@ -5452,6 +5466,7 @@
         </Shape>
       </Node>
       <Node x="0" y="0" name="emitStarTwinkleB" id="0:152">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900203" id="0:900218"/>
         <Shape x="618.6026" y="486.8474" name="emitStar5" opacity="0.82" id="0:55">
           <Ellipse width="3.6" height="3.6" name="Path" id="0:54"/>
           <Fill name="Fill" id="0:53">
@@ -8229,4 +8244,42 @@
     <FormulaTokenOperation operationType="2" id="0:931059"/>
     <FormulaTokenInput id="0:931060"/>
   </DataConverterFormula>
+
+  <DataConverterToNumber id="0:900188"/>
+
+  <DataConverterFormula id="0:900200">
+    <FormulaTokenFunction functionType="0" id="0:900197"/>
+    <FormulaTokenValue operationValue="1" id="0:900192"/>
+    <FormulaTokenArgumentSeparator id="0:900198"/>
+    <FormulaTokenFunction functionType="1" id="0:900194"/>
+    <FormulaTokenValue operationValue="0" id="0:900193"/>
+    <FormulaTokenArgumentSeparator id="0:900195"/>
+    <FormulaTokenInput id="0:900189"/>
+    <FormulaTokenOperation operationType="1" id="0:900190"/>
+    <FormulaTokenValue operationValue="1" id="0:900191"/>
+    <FormulaTokenParenthesisClose id="0:900196"/>
+    <FormulaTokenParenthesisClose id="0:900199"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900203">
+    <DataConverterGroupItem converterId="0:900188" id="0:900201"/>
+    <DataConverterGroupItem converterId="0:900200" id="0:900202"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:900213">
+    <FormulaTokenFunction functionType="0" id="0:900210"/>
+    <FormulaTokenValue operationValue="1" id="0:900205"/>
+    <FormulaTokenArgumentSeparator id="0:900211"/>
+    <FormulaTokenFunction functionType="1" id="0:900207"/>
+    <FormulaTokenValue operationValue="0" id="0:900206"/>
+    <FormulaTokenArgumentSeparator id="0:900208"/>
+    <FormulaTokenInput id="0:900204"/>
+    <FormulaTokenParenthesisClose id="0:900209"/>
+    <FormulaTokenParenthesisClose id="0:900212"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900216">
+    <DataConverterGroupItem converterId="0:900188" id="0:900214"/>
+    <DataConverterGroupItem converterId="0:900213" id="0:900215"/>
+  </DataConverterGroup>
 </Rive>

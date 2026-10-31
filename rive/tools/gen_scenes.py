@@ -90,7 +90,39 @@ M11_ID_START = 900000
 # The v14 members the shared passes bind per scene (world_kit.declared_v14_binds unites this with a
 # scene module's `BINDS14`); the others declare `tier`, `spring`, `autumn` inertly. Lane W fills it in
 # (`tier` everywhere through the tier gate; `spring` / `autumn` in livingRoom and campfire).
-V14_BINDS: dict[str, frozenset[str]] = {}
+V14_BINDS: dict[str, frozenset[str]] = {
+    **{sid: frozenset({"tier"}) for sid in (*world_kit.BUILT_IN_SCENES, *world_kit.SCENE_MODULES)},
+    # ruling 9: the seasons in two old scenes (the window sill, the clearing)
+    "livingRoom": frozenset({"tier", "spring", "autumn"}),
+    "campfire": frozenset({"tier", "spring", "autumn"}),
+}
+# M11 ruling 13 (contract v14 `tier`): the element roots (`world_kit.gate_root`: no `emit` prefix, no
+# trailing digits) the shared tier pass (`world_kit.tier_gate`, run by `Scene.write`) hides per tier in the
+# four M8 scenes ("high": hidden at high and low, "low": at low only); a scene module keeps its own
+# `TIER_GATES`. Every fog veil also keeps one fill at low (the pass does that for any scene).
+TIER_GATES: dict[str, dict[str, tuple[str, ...]]] = {
+    "livingRoom": {
+        # the second half of the window's rain streak columns, the city windows' blinks, the lamp's dust
+        "high": (*(f"GlassStreak{i}_" for i in range(13, 26)), "GlassStreak13_-", "GlassStreak18_-",
+                 "Lit10", "Lit11", "Lit13", "Lit14", "Lit16", "Lit17", *(f"LamplitDust{i}" for i in range(5, 9))),
+        "low": ("LamplitDust",),
+    },
+    "campfire": {
+        "high": ("RainSheet1", *(f"Splash{i}" for i in range(8, 16)), *(f"FrontSplash{i}" for i in range(5, 10)),
+                 *(f"Star{i}" for i in range(35, 66, 5)), "Glint2", "Glint3", *(f"Spark{i}" for i in range(4, 8)),
+                 "Firefly3", "Firefly4", *(f"SteamPlume{i}" for i in range(4, 7)), "WetCoalSteam2", "WetCoalSteam3"),
+        "low": ("Smoke", "SteamPlume", "WetCoalSteam"),   # smoke and steam (the fire, its sparks and the flies are light)
+    },
+    "beach": {
+        "high": ("RainSheet1", *(f"Splash{i}" for i in range(8, 16)), *(f"FrontSplash{i}" for i in range(5, 10)),
+                 *(f"Glint{i}" for i in range(8, 16))),
+        "low": ("Flyer",),   # the two far birds crossing the sky
+    },
+    "deepSpace": {
+        "high": (*(f"Star{i}" for i in range(56, 105, 8)), *(f"TractorParticle{i}" for i in range(3, 6))),
+        "low": ("TractorParticle",),   # the tractor beam's dust
+    },
+}
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
 
@@ -154,6 +186,9 @@ class Scene:
         # M10 (contract v13): the scene's v13 art, run on the planes after the diorama, sky-time and fog
         # passes (so it can sit in front of a plane's veils) and before the colour fit; mints from `d10`
         self.v13_art: Callable[[Scene, list[El]], None] | None = None
+        # M11 (contract v14): the scene's seasonal art (`spring` / `autumn`), run on the planes after the
+        # v13 art and before the colour fit; mints from `d11` (before the tier gate, which runs last)
+        self.v14_art: Callable[[Scene, list[El]], None] | None = None
         # M4 dioramas: a hook run on the refined content (planes, veils), extra root elements
         # (converters), and the colour-script fit (ruling 13) for scenes rebuilt under the bible.
         self.post_refine: Callable[[list[El]], None] | None = None
@@ -483,8 +518,15 @@ class Scene:
             scene_fog(self, content)
         if self.v13_art is not None:
             self.v13_art(self, content)
+        if self.v14_art is not None:
+            self.v14_art(self, content)
         if self.fit or spec is not None:
             self.fit_colours([*hits, *content])
+        if "tier" in self.binds14:
+            # M11 ruling 13: the tier gate, last (minted from d11 after every other M11 element)
+            front_content, front_anims = (self.front[0], self.front[1]) if self.front is not None else ([], [])
+            self.tier_report = world_kit.tier_gate(self, self.d11, [content, front_content],
+                                                   [*self.anims, *front_anims], world_kit.tier_gates(self.id))
         d = self.d
         sm = d("StateMachine", *self.listeners, *self.layers, name="Main")
         style = d("LayoutComponentStyle", name="Artboard Style")
@@ -1025,6 +1067,7 @@ def campfire() -> str:
     front_weather(sc, "88B8C8F0")  # M6 ruling 8: the campfire RainLoop colour
     sc.npc_rig = scene_npc.campfire_owl   # M8: the owl (contract v11)
     sc.v12_art = campfire_v12             # M9: the poke stick, the moon's phase (contract v12)
+    sc.v14_art = campfire_seasons         # M11: spring flowers, autumn leaves and rust ferns (contract v14)
     return sc.write(content, [hit_fire, hit_tent, hit_owl, hit_sky])
 
 
@@ -1751,6 +1794,7 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                *stripes, wall]
     sc.npc_rig = lambda s_, c_, h_: scene_npc.living_room_cat(s_, c_, h_, PARALLAX_GAINS, PARALLAX_TRAVEL)  # M8
     sc.v12_art = living_room_v12   # M9: the lamp's pull cord, the moon's phase, the December lights (v12)
+    sc.v14_art = living_room_seasons   # M11: tulips / a pumpkin on the sill (contract v14)
     return sc.write(content, hits)
 
 
@@ -2903,6 +2947,141 @@ def deep_space_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
 
 
 # ====================================================================== the scene registry (M9)
+# ---------------------------------------------------------------- seasons (M11 ruling 9, contract v14)
+# `spring` / `autumn` (0-1, the app writes them from the local date, ramping over a week) dress two old
+# scenes: a node per season at opacity = the number (a direct bind, history-free; static 0, so at 0 / 0 the
+# renderer skips it and the scene is v13 exactly). Everything mints from `d11`.
+SILL_TOP = 708.0                    # livingRoom: the ledge under the window (Sill, Plane2), its top edge
+TULIPS_AT = 642.0                   # the vase's centre x: the right pane's foot, clear of the curtain and
+                                    # above the avatar's head (the head covers the wall below ~y 760)
+TULIPS = ((-16, 76, -0.22, "FFE0485A"), (-5, 92, -0.07, "FFF27A8C"), (6, 86, 0.1, "FFF2C24A"),
+          (16, 72, 0.26, "FFE0485A"), (0, 66, 0.0, "FFF4A0B4"))   # (dx at the vase mouth, height, lean, petals)
+PUMPKIN = (628.0, 50.0, 34.0)       # centre x, width, height (on the sill)
+SILL_LEAVES = ((578, -5, 11.0, 1.9, "FFC8602C"), (598, -3, 9.0, 0.5, "FFD89A3A"), (672, -4, 10.0, -1.2, "FFB84A2A"))                    # (x, dy above the sill top, r, turn, colour)
+# campfire: the clearing's ground is Plane4 (in front of Ground and the path, behind the wet film, the
+# light pool and the grass, so rain darkens and the fire lights them like the ground)
+CLEARING_FLOWERS = ((64, 1296), (150, 1330), (36, 1420), (160, 1450), (90, 1530), (40, 1640), (190, 1600),
+                    (900, 1262), (990, 1300), (1036, 1404), (940, 1440), (860, 1520), (1010, 1560), (920, 1660),
+                    (330, 1290), (720, 1300))
+FLOWER_COLOURS = ("FFF4F0E4", "FFF4D25A", "FFE89AB8", "FFB8A6E8")
+AUTUMN_GROUND = ("FFC8602C", "FFD89A3A", "FFB84A2A", "FF8A4A2A", "FFE0B050")
+RUST_FERN = "FF7A3A22"              # the grass tufts in autumn (an overlay in the tuft's own shape)
+
+
+def _maple(cx: float, cy: float, r: float, ang: float, squash: float = 1.0) -> list[tuple]:
+    """A five-lobed leaf of radius `r` at (cx, cy), turned by `ang`: rounded lobes, sharp notches, a short
+    stalk; `squash` flattens it vertically (a leaf lying on the ground, seen at an angle)."""
+    pts: list[tuple] = []
+    for i in range(10):
+        a = ang - math.pi / 2 + math.pi * i / 5
+        rr = r * (1.0 if i == 0 else 0.86) if i % 2 == 0 else r * 0.42
+        p = (round(cx + rr * math.cos(a), 2), round(cy + squash * rr * math.sin(a), 2))
+        pts.append(p if i % 2 == 0 else (*p, "c"))
+        if i == 5:   # the stalk, between the two lower lobes
+            sa = ang + math.pi / 2
+            pts[-1:] = [(round(cx + r * 0.36 * math.cos(sa - 0.25), 2), round(cy + squash * r * 0.36 * math.sin(sa - 0.25), 2), "c"),
+                        (round(cx + r * 0.62 * math.cos(sa), 2), round(cy + squash * r * 0.62 * math.sin(sa), 2), "c"),
+                        (round(cx + r * 0.36 * math.cos(sa + 0.25), 2), round(cy + squash * r * 0.36 * math.sin(sa + 0.25), 2), "c")]
+    return pts
+
+
+def _season_node(sc: Scene, season: str, name: str, kids: list[El]) -> El:
+    return sc.d11("Node", sc.bind(season, 18, doc=sc.d11), *kids, x=0.0, y=0.0, opacity=0.0, name=name)
+
+
+def _plane(content: list[El], k: int) -> El:
+    return next(e for e in content if e.attrs.get("name") == f"Plane{k}")
+
+
+def living_room_seasons(sc: Scene, content: list[El]) -> None:
+    """A glass vase of tulips on the sill in spring (`SpringSill`), a small pumpkin and a few fallen
+    leaves there in autumn (`AutumnSill`); Plane2, in front of the ledge, behind the walking cat and the
+    curtains."""
+    O = (0.0, 0.0)
+    with sc.minting(sc.d11):
+        S, E, F, L = sc.S, sc.E, sc.F, sc.L
+        cx, top = TULIPS_AT, SILL_TOP
+        vase = [E(O, "VaseGlint", cx - 7, top - 30, 4, 24, F("80FFFFFF")),
+                S(O, "VaseWater", [(cx - 11, top - 20), (cx + 11, top - 20), (cx + 10, top - 2, "c"),
+                                   (cx - 10, top - 2, "c")], F("8090B8C0")),
+                S(O, "TulipVase", [(cx - 10, top - 46, "c"), (cx + 10, top - 46, "c"), (cx + 13, top - 24),
+                                   (cx + 11, top - 1, "c"), (cx - 11, top - 1, "c"), (cx - 13, top - 24)],
+                  F("70C8E0E8"), L("B0E8F4F8", 2))]
+        stems, heads = [], []
+        for i, (dx, h, lean, col) in enumerate(TULIPS):
+            bx, by = cx + dx * 0.4, top - 40
+            tx, ty = cx + dx + math.sin(lean) * h * 0.4, top - 40 - h
+            stems.append(S(O, f"TulipStem{i}", [(bx, by), ((bx + tx) / 2 + lean * 8, (by + ty) / 2), (tx, ty)],
+                           L("FF4E7A3A", 3), closed=False))
+            heads.append(S(O, f"Tulip{i}", [(tx - 9, ty - 15, "c"), (tx - 3, ty - 8), (tx, ty - 16, "c"), (tx + 3, ty - 8),
+                                            (tx + 9, ty - 15, "c"), (tx + 8, ty - 2), (tx, ty + 4), (tx - 8, ty - 2)],
+                           F(col), L("40301A20", 1.5)))
+        leaves = [S(O, "TulipLeafL", [(cx - 4, top - 40), (cx - 26, top - 84, "c"), (cx - 8, top - 58)], F("FF5E8A44")),
+                  S(O, "TulipLeafR", [(cx + 4, top - 40), (cx + 24, top - 76, "c"), (cx + 8, top - 56)], F("FF6A9A4E"))]
+        spring = _season_node(sc, "spring", "SpringSill", [*vase, *heads, *leaves, *stems,
+                                                            E(O, "TulipShadow", cx, top + 1, 40, 6, F("40101C1E"))])
+        px, pw, ph = PUMPKIN
+        pumpkin = [S(O, "PumpkinStem", [(px - 2, top - ph + 2), (px - 1, top - ph - 10), (px + 6, top - ph - 13, "c"),
+                                        (px + 3, top - ph - 8), (px + 3, top - ph + 2)], F("FF5A4A2A")),
+                   *(S(O, f"PumpkinRib{i}", [(px + dx, top - ph + 3), (px + dx * 1.5, top - ph / 2), (px + dx, top - 2)],
+                       L("60803010", 2), closed=False) for i, dx in enumerate((-10, 0, 10))),
+                   E(O, "PumpkinGlint", px - 12, top - ph * 0.62, 7, 12, F("50FFE0A0")),
+                   E(O, "Pumpkin", px, top - ph / 2, pw, ph, F("FFE07A2A"), L("FF8A3A14", 2)),
+                   E(O, "PumpkinShadow", px + 4, top + 1, pw + 8, 7, F("40101C1E"))]
+        fallen = [S(O, f"SillLeaf{i}", _maple(x, top + dy, r, a, squash=0.5), F(col)) for i, (x, dy, r, a, col) in enumerate(SILL_LEAVES)]
+        autumn = _season_node(sc, "autumn", "AutumnSill", [*fallen, *pumpkin])
+    kids = _plane(content, 2).children
+    at = next(i for i, c in enumerate(kids) if c.attrs.get("name") == "Sill")
+    kids[at:at] = [spring, autumn]
+
+
+def campfire_seasons(sc: Scene, content: list[El]) -> None:
+    """Spring flowers in the clearing (`SpringGround`: small five-petal clusters at its edges, clear of the
+    fire and the avatar), autumn leaves on the ground (`AutumnGround`) and the grass tufts turned rust
+    (`AutumnFerns`: a rust copy of each tuft in front of it); Plane4."""
+    O = (0.0, 0.0)
+    rnd = random.Random(1109)
+    plane = _plane(content, 4)
+    kids = plane.children
+    with sc.minting(sc.d11):
+        S, E, F = sc.S, sc.E, sc.F
+        flowers = []
+        for i, (x, y) in enumerate(CLEARING_FLOWERS):
+            for j in range(3):
+                fx, fy = x + rnd.uniform(-30, 30), y + rnd.uniform(-14, 14)
+                r = rnd.uniform(8.0, 11.5) * (0.8 + 0.4 * (y - 1260) / 400)   # nearer = bigger
+                col = FLOWER_COLOURS[(i + j) % len(FLOWER_COLOURS)]
+                turn = rnd.uniform(0, math.pi)
+                # five round petals (a smooth ten-point star), squashed: seen from above at an angle
+                petals = [(round(fx + (r if k % 2 == 0 else r * 0.45) * math.cos(turn + k * math.pi / 5), 2),
+                           round(fy + 0.7 * (r if k % 2 == 0 else r * 0.45) * math.sin(turn + k * math.pi / 5), 2))
+                          for k in range(10)]
+                flowers += [E(O, f"FlowerHeart{i}_{j}", fx, fy, r * 0.6, r * 0.42, F("FFE8A030")),
+                            S(O, f"Flower{i}_{j}", petals, F(col))]
+        spring = _season_node(sc, "spring", "SpringGround", flowers)
+        fallen = []
+        for i in range(36):
+            side = i % 4
+            x = (rnd.uniform(-10, 300), rnd.uniform(780, 1090), rnd.uniform(300, 780), rnd.uniform(-10, 1090))[side]
+            y = (rnd.uniform(1250, 1700), rnd.uniform(1230, 1700), rnd.uniform(1700, 1900), rnd.uniform(1200, 1320))[side]
+            r = rnd.uniform(12.0, 17.0) * (0.75 + 0.5 * (y - 1200) / 700)   # nearer = bigger
+            fallen.append(S(O, f"GroundLeaf{i}", _maple(x, y, r, rnd.uniform(0, math.tau), squash=0.62),
+                            F(AUTUMN_GROUND[i % len(AUTUMN_GROUND)])))
+        ground = _season_node(sc, "autumn", "AutumnGround", fallen)
+        ferns = []
+        for g in (c for c in kids if str(c.attrs.get("name", "")).startswith("Grass")):
+            path = next(c for c in g.children if c.tag == "PointsPath")
+            verts = [sc.d11(v.tag, **v.attrs) for v in path.children]
+            ferns.append(sc.d11("Shape", sc.d11("PointsPath", *verts, **path.attrs), F(RUST_FERN),
+                                **{k: v for k, v in g.attrs.items() if k != "name"},
+                                name="Rust" + str(g.attrs["name"])))
+        rust = _season_node(sc, "autumn", "AutumnFerns", ferns)
+    first_grass = next(i for i, c in enumerate(kids) if str(c.attrs.get("name", "")).startswith("Grass"))
+    kids[first_grass:first_grass] = [rust]
+    at = next(i for i, c in enumerate(kids) if c.attrs.get("name") == "GroundWet") + 1
+    kids[at:at] = [ground, spring]
+
+
 def _lazy(scene_id: str) -> Callable[[], str]:
     """Builds a module scene (v12, v14) through its own module (imported on first use: `world_kit.scene_module`
     raises `SceneNotWritten` while its lane has not written it)."""

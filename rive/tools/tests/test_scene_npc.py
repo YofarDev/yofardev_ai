@@ -364,4 +364,7 @@ def test_built_scene_budgets(sid: str) -> None:
     # the NPC (<= 30 KB) plus the fog binds (a few hundred bytes)
     # M9 / M10 grew the beach past the NPC's line on purpose: the gulls and the trail (contract v12), then
     # the night (contract v13, M10: ~1.6 KB)
-    assert size - int(old) <= NPC_MAX + 1024 + (2048 if sid == "beach" else 0), (sid, size, int(old))
+    # M11 (contract v14): the tier gate in every scene (~0.3-1.9 KB), the seasons in livingRoom (tulips, a
+    # pumpkin: ~6.5 KB) and campfire (flowers, leaves, rust tufts: ~41 KB)
+    m11 = {"livingRoom": 8192, "campfire": 44 * 1024}.get(sid, 2048)
+    assert size - int(old) <= NPC_MAX + 1024 + (2048 if sid == "beach" else 0) + m11, (sid, size, int(old))

@@ -423,7 +423,7 @@ def test_beach_horizon_haze_is_a_band(beach: str) -> None:
     fog = next(e.get("id") for e in root.iter("ViewModelPropertyColor") if e.get("name") == "lightFog")
     for k, n_stops in ((0, 2), (1, 3), (2, 3)):
         veil = next(e for e in root.iter("Shape") if e.get("name") == f"FogVeil{k}")
-        fills = veil.findall("Fill")
+        fills = veil.findall("Fill") + veil.findall("Shape/Fill")   # M11: fills 2..4 in the tier gate's child
         assert len(fills) == gen_scenes.FOG_FILLS
         for f in fills:
             stops = f.find("LinearGradient").findall("GradientStop")

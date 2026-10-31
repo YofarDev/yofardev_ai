@@ -1600,60 +1600,87 @@
           </Fill>
         </Shape>
       </Node>
-      <Shape x="207.029" y="953.4014" name="LamplitDust0" opacity="0" id="0:7100">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7099"/>
-        <Fill name="Fill" id="0:7098">
-          <SolidColor colorValue="FFE9D7AE" id="0:7097"/>
-        </Fill>
-      </Shape>
-      <Shape x="399.5228" y="720.2934" name="LamplitDust1" opacity="0" id="0:7118">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7117"/>
-        <Fill name="Fill" id="0:7116">
-          <SolidColor colorValue="FFE9D7AE" id="0:7115"/>
-        </Fill>
-      </Shape>
-      <Shape x="368.9801" y="724.7864" name="LamplitDust2" opacity="0" id="0:7136">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7135"/>
-        <Fill name="Fill" id="0:7134">
-          <SolidColor colorValue="FFE9D7AE" id="0:7133"/>
-        </Fill>
-      </Shape>
-      <Shape x="277.3645" y="1097.9532" name="LamplitDust3" opacity="0" id="0:7154">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7153"/>
-        <Fill name="Fill" id="0:7152">
-          <SolidColor colorValue="FFE9D7AE" id="0:7151"/>
-        </Fill>
-      </Shape>
-      <Shape x="252.9361" y="990.6678" name="LamplitDust4" opacity="0" id="0:7172">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7171"/>
-        <Fill name="Fill" id="0:7170">
-          <SolidColor colorValue="FFE9D7AE" id="0:7169"/>
-        </Fill>
-      </Shape>
-      <Shape x="206.0784" y="1080.2192" name="LamplitDust5" opacity="0" id="0:7190">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7189"/>
-        <Fill name="Fill" id="0:7188">
-          <SolidColor colorValue="FFE9D7AE" id="0:7187"/>
-        </Fill>
-      </Shape>
-      <Shape x="288.2137" y="651.8362" name="LamplitDust6" opacity="0" id="0:7208">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7207"/>
-        <Fill name="Fill" id="0:7206">
-          <SolidColor colorValue="FFE9D7AE" id="0:7205"/>
-        </Fill>
-      </Shape>
-      <Shape x="220.5075" y="880.6876" name="LamplitDust7" opacity="0" id="0:7226">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7225"/>
-        <Fill name="Fill" id="0:7224">
-          <SolidColor colorValue="FFE9D7AE" id="0:7223"/>
-        </Fill>
-      </Shape>
-      <Shape x="354.983" y="929.2235" name="LamplitDust8" opacity="0" id="0:7244">
-        <Ellipse width="2.5" height="2.5" name="Path" id="0:7243"/>
-        <Fill name="Fill" id="0:7242">
-          <SolidColor colorValue="FFE9D7AE" id="0:7241"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierLamplitDust0" id="0:900352">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900281" id="0:900351"/>
+        <Shape x="207.029" y="953.4014" name="LamplitDust0" opacity="0" id="0:7100">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7099"/>
+          <Fill name="Fill" id="0:7098">
+            <SolidColor colorValue="FFE9D7AE" id="0:7097"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLamplitDust1" id="0:900350">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900281" id="0:900349"/>
+        <Shape x="399.5228" y="720.2934" name="LamplitDust1" opacity="0" id="0:7118">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7117"/>
+          <Fill name="Fill" id="0:7116">
+            <SolidColor colorValue="FFE9D7AE" id="0:7115"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLamplitDust2" id="0:900348">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900281" id="0:900347"/>
+        <Shape x="368.9801" y="724.7864" name="LamplitDust2" opacity="0" id="0:7136">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7135"/>
+          <Fill name="Fill" id="0:7134">
+            <SolidColor colorValue="FFE9D7AE" id="0:7133"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLamplitDust3" id="0:900346">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900281" id="0:900345"/>
+        <Shape x="277.3645" y="1097.9532" name="LamplitDust3" opacity="0" id="0:7154">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7153"/>
+          <Fill name="Fill" id="0:7152">
+            <SolidColor colorValue="FFE9D7AE" id="0:7151"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLamplitDust4" id="0:900342">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900281" id="0:900341"/>
+        <Shape x="252.9361" y="990.6678" name="LamplitDust4" opacity="0" id="0:7172">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7171"/>
+          <Fill name="Fill" id="0:7170">
+            <SolidColor colorValue="FFE9D7AE" id="0:7169"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLamplitDust5" id="0:900338">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900337"/>
+        <Shape x="206.0784" y="1080.2192" name="LamplitDust5" opacity="0" id="0:7190">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7189"/>
+          <Fill name="Fill" id="0:7188">
+            <SolidColor colorValue="FFE9D7AE" id="0:7187"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLamplitDust6" id="0:900336">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900335"/>
+        <Shape x="288.2137" y="651.8362" name="LamplitDust6" opacity="0" id="0:7208">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7207"/>
+          <Fill name="Fill" id="0:7206">
+            <SolidColor colorValue="FFE9D7AE" id="0:7205"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLamplitDust7" id="0:900332">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900331"/>
+        <Shape x="220.5075" y="880.6876" name="LamplitDust7" opacity="0" id="0:7226">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7225"/>
+          <Fill name="Fill" id="0:7224">
+            <SolidColor colorValue="FFE9D7AE" id="0:7223"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLamplitDust8" id="0:900328">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900327"/>
+        <Shape x="354.983" y="929.2235" name="LamplitDust8" opacity="0" id="0:7244">
+          <Ellipse width="2.5" height="2.5" name="Path" id="0:7243"/>
+          <Fill name="Fill" id="0:7242">
+            <SolidColor colorValue="FFE9D7AE" id="0:7241"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="286" y="1010" name="LampCone" id="0:385">
         <Shape x="0" y="0" name="LamplightFalloff13" id="0:7412">
           <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:7411">
@@ -4082,6 +4109,331 @@
           <SolidColor colorValue="FF3A2A20" id="0:363"/>
         </Fill>
       </Shape>
+      <Node x="0" y="0" opacity="0" name="SpringSill" id="0:900158">
+        <DataBindContext sourcePathIds="0:23-0:900006" propertyKey="18" id="0:900157"/>
+        <Shape x="635" y="678" name="VaseGlint" id="0:900013">
+          <Ellipse width="4" height="24" name="Path" id="0:900012"/>
+          <Fill name="Fill" id="0:900011">
+            <SolidColor colorValue="80FFFFFF" id="0:900010"/>
+          </Fill>
+        </Shape>
+        <Shape x="642" y="697" name="VaseWater" id="0:900021">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900020">
+            <CubicDetachedVertex x="-11" y="-9" outRotation="-0.7086" outDistance="5.0672" inRotation="2.433" inDistance="4.1523" id="0:900016"/>
+            <CubicDetachedVertex x="11" y="-9" outRotation="0.7086" outDistance="4.1523" inRotation="3.8502" inDistance="5.0672" id="0:900017"/>
+            <StraightVertex x="10" y="9" id="0:900018"/>
+            <StraightVertex x="-10" y="9" id="0:900019"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900015">
+            <SolidColor colorValue="8090B8C0" id="0:900014"/>
+          </Fill>
+        </Shape>
+        <Shape x="642" y="684.5" name="TulipVase" id="0:900033">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900032">
+            <StraightVertex x="-10" y="-22.5" id="0:900026"/>
+            <StraightVertex x="10" y="-22.5" id="0:900027"/>
+            <CubicDetachedVertex x="13" y="-0.5" outRotation="1.5486" outDistance="7.6481" inRotation="4.6902" inDistance="7.3556" id="0:900028"/>
+            <StraightVertex x="11" y="22.5" id="0:900029"/>
+            <StraightVertex x="-11" y="22.5" id="0:900030"/>
+            <CubicDetachedVertex x="-13" y="-0.5" outRotation="-1.5486" outDistance="7.3556" inRotation="1.593" inDistance="7.6481" id="0:900031"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900023">
+            <SolidColor colorValue="70C8E0E8" id="0:900022"/>
+          </Fill>
+          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:900025">
+            <SolidColor colorValue="B0E8F4F8" id="0:900024"/>
+          </Stroke>
+        </Shape>
+        <Shape x="619.3658" y="586" name="Tulip0" id="0:900054">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900053">
+            <StraightVertex x="-9" y="-9" id="0:900045"/>
+            <CubicDetachedVertex x="-3" y="-2" outRotation="-0.1107" outDistance="1.4518" inRotation="3.0309" inDistance="1.5666" id="0:900046"/>
+            <StraightVertex x="0" y="-10" id="0:900047"/>
+            <CubicDetachedVertex x="3" y="-2" outRotation="0.1107" outDistance="1.5666" inRotation="3.2522" inDistance="1.4518" id="0:900048"/>
+            <StraightVertex x="9" y="-9" id="0:900049"/>
+            <CubicDetachedVertex x="8" y="4" outRotation="2.0132" outDistance="3.0418" inRotation="5.1548" inDistance="3.9661" id="0:900050"/>
+            <CubicDetachedVertex x="0" y="10" outRotation="3.1416" outDistance="2.6667" inRotation="6.2832" inDistance="2.6667" id="0:900051"/>
+            <CubicDetachedVertex x="-8" y="4" outRotation="-2.0132" outDistance="3.9661" inRotation="1.1284" inDistance="3.0418" id="0:900052"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900042">
+            <SolidColor colorValue="FFDF5767" id="0:900041"/>
+          </Fill>
+          <Stroke thickness="1.5" cap="round" join="round" name="Line" id="0:900044">
+            <SolidColor colorValue="40301A20" id="0:900043"/>
+          </Stroke>
+        </Shape>
+        <Shape x="634.4261" y="570" name="Tulip1" id="0:900075">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900074">
+            <StraightVertex x="-9" y="-9" id="0:900066"/>
+            <CubicDetachedVertex x="-3" y="-2" outRotation="-0.1107" outDistance="1.4518" inRotation="3.0309" inDistance="1.5666" id="0:900067"/>
+            <StraightVertex x="0" y="-10" id="0:900068"/>
+            <CubicDetachedVertex x="3" y="-2" outRotation="0.1107" outDistance="1.5666" inRotation="3.2522" inDistance="1.4518" id="0:900069"/>
+            <StraightVertex x="9" y="-9" id="0:900070"/>
+            <CubicDetachedVertex x="8" y="4" outRotation="2.0132" outDistance="3.0418" inRotation="5.1548" inDistance="3.9661" id="0:900071"/>
+            <CubicDetachedVertex x="0" y="10" outRotation="3.1416" outDistance="2.6667" inRotation="6.2832" inDistance="2.6667" id="0:900072"/>
+            <CubicDetachedVertex x="-8" y="4" outRotation="-2.0132" outDistance="3.9661" inRotation="1.1284" inDistance="3.0418" id="0:900073"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900063">
+            <SolidColor colorValue="FFE97788" id="0:900062"/>
+          </Fill>
+          <Stroke thickness="1.5" cap="round" join="round" name="Line" id="0:900065">
+            <SolidColor colorValue="40301A20" id="0:900064"/>
+          </Stroke>
+        </Shape>
+        <Shape x="651.4343" y="576" name="Tulip2" id="0:900096">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900095">
+            <StraightVertex x="-9" y="-9" id="0:900087"/>
+            <CubicDetachedVertex x="-3" y="-2" outRotation="-0.1107" outDistance="1.4518" inRotation="3.0309" inDistance="1.5666" id="0:900088"/>
+            <StraightVertex x="0" y="-10" id="0:900089"/>
+            <CubicDetachedVertex x="3" y="-2" outRotation="0.1107" outDistance="1.5666" inRotation="3.2522" inDistance="1.4518" id="0:900090"/>
+            <StraightVertex x="9" y="-9" id="0:900091"/>
+            <CubicDetachedVertex x="8" y="4" outRotation="2.0132" outDistance="3.0418" inRotation="5.1548" inDistance="3.9661" id="0:900092"/>
+            <CubicDetachedVertex x="0" y="10" outRotation="3.1416" outDistance="2.6667" inRotation="6.2832" inDistance="2.6667" id="0:900093"/>
+            <CubicDetachedVertex x="-8" y="4" outRotation="-2.0132" outDistance="3.9661" inRotation="1.1284" inDistance="3.0418" id="0:900094"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900084">
+            <SolidColor colorValue="FFE9C059" id="0:900083"/>
+          </Fill>
+          <Stroke thickness="1.5" cap="round" join="round" name="Line" id="0:900086">
+            <SolidColor colorValue="40301A20" id="0:900085"/>
+          </Stroke>
+        </Shape>
+        <Shape x="665.4039" y="590" name="Tulip3" id="0:900117">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900116">
+            <StraightVertex x="-9" y="-9" id="0:900108"/>
+            <CubicDetachedVertex x="-3" y="-2" outRotation="-0.1107" outDistance="1.4518" inRotation="3.0309" inDistance="1.5666" id="0:900109"/>
+            <StraightVertex x="0" y="-10" id="0:900110"/>
+            <CubicDetachedVertex x="3" y="-2" outRotation="0.1107" outDistance="1.5666" inRotation="3.2522" inDistance="1.4518" id="0:900111"/>
+            <StraightVertex x="9" y="-9" id="0:900112"/>
+            <CubicDetachedVertex x="8" y="4" outRotation="2.0132" outDistance="3.0418" inRotation="5.1548" inDistance="3.9661" id="0:900113"/>
+            <CubicDetachedVertex x="0" y="10" outRotation="3.1416" outDistance="2.6667" inRotation="6.2832" inDistance="2.6667" id="0:900114"/>
+            <CubicDetachedVertex x="-8" y="4" outRotation="-2.0132" outDistance="3.9661" inRotation="1.1284" inDistance="3.0418" id="0:900115"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900105">
+            <SolidColor colorValue="FFDF5767" id="0:900104"/>
+          </Fill>
+          <Stroke thickness="1.5" cap="round" join="round" name="Line" id="0:900107">
+            <SolidColor colorValue="40301A20" id="0:900106"/>
+          </Stroke>
+        </Shape>
+        <Shape x="642" y="596" name="Tulip4" id="0:900138">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900137">
+            <StraightVertex x="-9" y="-9" id="0:900129"/>
+            <CubicDetachedVertex x="-3" y="-2" outRotation="-0.1107" outDistance="1.4518" inRotation="3.0309" inDistance="1.5666" id="0:900130"/>
+            <StraightVertex x="0" y="-10" id="0:900131"/>
+            <CubicDetachedVertex x="3" y="-2" outRotation="0.1107" outDistance="1.5666" inRotation="3.2522" inDistance="1.4518" id="0:900132"/>
+            <StraightVertex x="9" y="-9" id="0:900133"/>
+            <CubicDetachedVertex x="8" y="4" outRotation="2.0132" outDistance="3.0418" inRotation="5.1548" inDistance="3.9661" id="0:900134"/>
+            <CubicDetachedVertex x="0" y="10" outRotation="3.1416" outDistance="2.6667" inRotation="6.2832" inDistance="2.6667" id="0:900135"/>
+            <CubicDetachedVertex x="-8" y="4" outRotation="-2.0132" outDistance="3.9661" inRotation="1.1284" inDistance="3.0418" id="0:900136"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900126">
+            <SolidColor colorValue="FFE999AC" id="0:900125"/>
+          </Fill>
+          <Stroke thickness="1.5" cap="round" join="round" name="Line" id="0:900128">
+            <SolidColor colorValue="40301A20" id="0:900127"/>
+          </Stroke>
+        </Shape>
+        <Shape x="627" y="646" name="TulipLeafL" id="0:900145">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900144">
+            <CubicDetachedVertex x="11" y="22" outRotation="-2.1763" outDistance="7.6671" inRotation="0.9653" inDistance="2.8738" id="0:900141"/>
+            <StraightVertex x="-11" y="-22" id="0:900142"/>
+            <CubicDetachedVertex x="7" y="4" outRotation="1.1071" outDistance="6.0397" inRotation="4.2487" inDistance="10.3581" id="0:900143"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900140">
+            <SolidColor colorValue="FF5E8A44" id="0:900139"/>
+          </Fill>
+        </Shape>
+        <Shape x="656" y="650" name="TulipLeafR" id="0:900152">
+          <PointsPath isClosed="true" isClockwise="false" name="Path" id="0:900151">
+            <CubicDetachedVertex x="-10" y="18" outRotation="-0.8961" outDistance="6.0962" inRotation="2.2455" inDistance="2.4413" id="0:900148"/>
+            <StraightVertex x="10" y="-18" id="0:900149"/>
+            <CubicDetachedVertex x="-6" y="2" outRotation="2.0779" outDistance="5.377" inRotation="5.2195" inDistance="8.3505" id="0:900150"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900147">
+            <SolidColor colorValue="FF6A9A4E" id="0:900146"/>
+          </Fill>
+        </Shape>
+        <Shape x="627.4829" y="630" name="TulipStem0" id="0:900040">
+          <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:900039">
+            <CubicDetachedVertex x="8.1171" y="38" outRotation="-1.8251" outDistance="13.0876" inRotation="1.3165" inDistance="0" id="0:900036"/>
+            <CubicDetachedVertex x="-1.76" y="0" outRotation="-1.7812" outDistance="12.8301" inRotation="1.3604" inDistance="13.0747" id="0:900037"/>
+            <CubicDetachedVertex x="-8.1171" y="-38" outRotation="-1.7366" outDistance="0" inRotation="1.405" inDistance="12.8427" id="0:900038"/>
+          </PointsPath>
+          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:900035">
+            <SolidColor colorValue="FF4E7A3A" id="0:900034"/>
+          </Stroke>
+        </Shape>
+        <Shape x="637.2131" y="622" name="TulipStem1" id="0:900061">
+          <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:900060">
+            <CubicDetachedVertex x="2.7869" y="46" outRotation="-1.6434" outDistance="15.3739" inRotation="1.4982" inDistance="0" id="0:900057"/>
+            <CubicDetachedVertex x="-0.56" y="0" outRotation="-1.6313" outDistance="15.3502" inRotation="1.5103" inDistance="15.3727" id="0:900058"/>
+            <CubicDetachedVertex x="-2.7869" y="-46" outRotation="-1.6192" outDistance="0" inRotation="1.5224" inDistance="15.3513" id="0:900059"/>
+          </PointsPath>
+          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:900056">
+            <SolidColor colorValue="FF4E7A3A" id="0:900055"/>
+          </Stroke>
+        </Shape>
+        <Shape x="647.9171" y="625" name="TulipStem2" id="0:900082">
+          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:900081">
+            <CubicDetachedVertex x="-3.5171" y="43" outRotation="-1.4707" outDistance="14.4054" inRotation="1.6709" inDistance="0" id="0:900078"/>
+            <CubicDetachedVertex x="0.8" y="0" outRotation="-1.4892" outDistance="14.3595" inRotation="1.6524" inDistance="14.4029" id="0:900079"/>
+            <CubicDetachedVertex x="3.5171" y="-43" outRotation="-1.5077" outDistance="0" inRotation="1.6339" inDistance="14.3619" id="0:900080"/>
+          </PointsPath>
+          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:900077">
+            <SolidColor colorValue="FF4E7A3A" id="0:900076"/>
+          </Stroke>
+        </Shape>
+        <Shape x="656.902" y="632" name="TulipStem3" id="0:900103">
+          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:900102">
+            <CubicDetachedVertex x="-8.502" y="36" outRotation="-1.2849" outDistance="12.5077" inRotation="1.8567" inDistance="0" id="0:900099"/>
+            <CubicDetachedVertex x="2.08" y="0" outRotation="-1.3389" outDistance="12.1712" inRotation="1.8027" inDistance="12.489" id="0:900100"/>
+            <CubicDetachedVertex x="8.502" y="-36" outRotation="-1.3943" outDistance="0" inRotation="1.7473" inDistance="12.1894" id="0:900101"/>
+          </PointsPath>
+          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:900098">
+            <SolidColor colorValue="FF4E7A3A" id="0:900097"/>
+          </Stroke>
+        </Shape>
+        <Shape x="642" y="635" name="TulipStem4" id="0:900124">
+          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:900123">
+            <CubicDetachedVertex x="0" y="33" outRotation="-1.5708" outDistance="11" inRotation="1.5708" inDistance="0" id="0:900120"/>
+            <CubicDetachedVertex x="0" y="0" outRotation="-1.5708" outDistance="11" inRotation="1.5708" inDistance="11" id="0:900121"/>
+            <CubicDetachedVertex x="0" y="-33" outRotation="-1.5708" outDistance="0" inRotation="1.5708" inDistance="11" id="0:900122"/>
+          </PointsPath>
+          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:900119">
+            <SolidColor colorValue="FF4E7A3A" id="0:900118"/>
+          </Stroke>
+        </Shape>
+        <Shape x="642" y="709" name="TulipShadow" id="0:900156">
+          <Ellipse width="40" height="6" name="Path" id="0:900155"/>
+          <Fill name="Fill" id="0:900154">
+            <SolidColor colorValue="40101C1E" id="0:900153"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" opacity="0" name="AutumnSill" id="0:900252">
+        <DataBindContext sourcePathIds="0:23-0:900008" propertyKey="18" id="0:900251"/>
+        <Shape x="578.685" y="703.43" name="SillLeaf0" id="0:900218">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900217">
+            <CubicDetachedVertex x="9.725" y="1.35" outRotation="2.1686" outDistance="0.5643" inRotation="5.3102" inDistance="0.4721" id="0:900205"/>
+            <StraightVertex x="1.975" y="1.46" id="0:900206"/>
+            <CubicDetachedVertex x="-0.825" y="4.3" outRotation="-3.1342" outDistance="0.8949" inRotation="0.0074" inDistance="0.9151" id="0:900207"/>
+            <StraightVertex x="-3.455" y="1.42" id="0:900208"/>
+            <CubicDetachedVertex x="-9.725" y="0.96" outRotation="-2.1017" outDistance="0.3561" inRotation="1.0399" inDistance="0.4208" id="0:900209"/>
+            <StraightVertex x="-4.635" y="-0.59" id="0:900210"/>
+            <StraightVertex x="-7.135" y="-1.53" id="0:900211"/>
+            <StraightVertex x="-3.995" y="-1.51" id="0:900212"/>
+            <CubicDetachedVertex x="-6.125" y="-4.3" outRotation="-0.349" outDistance="0.7433" inRotation="2.7926" inDistance="0.4556" id="0:900213"/>
+            <StraightVertex x="-0.615" y="-2.74" id="0:900214"/>
+            <CubicDetachedVertex x="4.985" y="-4.21" outRotation="0.3593" outDistance="0.566" inRotation="3.5009" inDistance="0.9793" id="0:900215"/>
+            <StraightVertex x="3.725" y="-1.11" id="0:900216"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900204">
+            <SolidColor colorValue="FFC8764D" id="0:900203"/>
+          </Fill>
+        </Shape>
+        <Shape x="598.31" y="704.945" name="SillLeaf1" id="0:900234">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900233">
+            <CubicDetachedVertex x="4" y="-3.895" outRotation="0.2654" outDistance="0.5181" inRotation="3.407" inDistance="0.829" id="0:900221"/>
+            <StraightVertex x="3.11" y="-0.755" id="0:900222"/>
+            <CubicDetachedVertex x="7.3" y="0.775" outRotation="1.9346" outDistance="0.4133" inRotation="5.0762" inDistance="0.3642" id="0:900223"/>
+            <StraightVertex x="2.28" y="1.425" id="0:900224"/>
+            <CubicDetachedVertex x="0.68" y="3.895" outRotation="3.0827" outDistance="0.5609" inRotation="6.2243" inDistance="0.571" id="0:900225"/>
+            <StraightVertex x="-1.11" y="1.625" id="0:900226"/>
+            <StraightVertex x="-2.99" y="2.505" id="0:900227"/>
+            <StraightVertex x="-2.52" y="1.245" id="0:900228"/>
+            <CubicDetachedVertex x="-7.3" y="1.715" outRotation="-2.343" outDistance="0.3187" inRotation="0.7986" inDistance="0.3979" id="0:900229"/>
+            <StraightVertex x="-4.02" y="-0.295" id="0:900230"/>
+            <CubicDetachedVertex x="-5.62" y="-2.755" outRotation="-0.4398" outDistance="0.7454" inRotation="2.7018" inDistance="0.4445" id="0:900231"/>
+            <StraightVertex x="-0.79" y="-1.815" id="0:900232"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900220">
+            <SolidColor colorValue="FFD8A453" id="0:900219"/>
+          </Fill>
+        </Shape>
+        <Shape x="671.5" y="703.665" name="SillLeaf2" id="0:900250">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900249">
+            <CubicDetachedVertex x="-8.82" y="-1.475" outRotation="-0.9095" outDistance="0.5348" inRotation="2.2321" inDistance="0.4367" id="0:900237"/>
+            <StraightVertex x="-1.77" y="-1.435" id="0:900238"/>
+            <CubicDetachedVertex x="0.99" y="-3.955" outRotation="0.0284" outDistance="0.7871" inRotation="3.17" inDistance="0.8569" id="0:900239"/>
+            <StraightVertex x="3.16" y="-1.295" id="0:900240"/>
+            <CubicDetachedVertex x="8.82" y="-0.765" outRotation="1.1137" outDistance="0.3192" inRotation="4.2552" inDistance="0.368" id="0:900241"/>
+            <StraightVertex x="4.07" y="0.555" id="0:900242"/>
+            <StraightVertex x="6.28" y="1.455" id="0:900243"/>
+            <StraightVertex x="3.43" y="1.385" id="0:900244"/>
+            <CubicDetachedVertex x="5.15" y="3.955" outRotation="2.8217" outDistance="0.694" inRotation="5.9633" inDistance="0.4191" id="0:900245"/>
+            <StraightVertex x="0.26" y="2.435" id="0:900246"/>
+            <CubicDetachedVertex x="-4.94" y="3.665" outRotation="-2.7516" outDistance="0.5077" inRotation="0.3899" inDistance="0.869" id="0:900247"/>
+            <StraightVertex x="-3.56" y="0.865" id="0:900248"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900236">
+            <SolidColor colorValue="FFB76148" id="0:900235"/>
+          </Fill>
+        </Shape>
+        <Shape x="630" y="668.5" name="PumpkinStem" id="0:900167">
+          <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:900166">
+            <CubicDetachedVertex x="-4" y="7.5" outRotation="-1.8925" outDistance="2.9793" inRotation="1.249" inDistance="1.2371" id="0:900161"/>
+            <CubicDetachedVertex x="-3" y="-4.5" outRotation="-1.0808" outDistance="2.1954" inRotation="2.0608" inDistance="3.4713" id="0:900162"/>
+            <StraightVertex x="4" y="-7.5" id="0:900163"/>
+            <CubicDetachedVertex x="1" y="-2.5" outRotation="1.7682" outDistance="3.2209" inRotation="4.9098" inDistance="1.8781" id="0:900164"/>
+            <CubicDetachedVertex x="1" y="7.5" outRotation="2.0344" outDistance="1.2423" inRotation="5.176" inDistance="2.4845" id="0:900165"/>
+          </PointsPath>
+          <Fill name="Fill" id="0:900160">
+            <SolidColor colorValue="FF5A4A2A" id="0:900159"/>
+          </Fill>
+        </Shape>
+        <Shape x="615.5" y="691.5" name="PumpkinRib0" id="0:900174">
+          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:900173">
+            <CubicDetachedVertex x="2.5" y="-14.5" outRotation="1.9138" outDistance="4.9554" inRotation="5.0554" inDistance="0" id="0:900170"/>
+            <CubicDetachedVertex x="-2.5" y="-0.5" outRotation="1.5708" outDistance="4.9823" inRotation="4.7124" inDistance="4.6844" id="0:900171"/>
+            <CubicDetachedVertex x="2.5" y="14.5" outRotation="1.249" outDistance="0" inRotation="4.3906" inDistance="5.2705" id="0:900172"/>
+          </PointsPath>
+          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:900169">
+            <SolidColor colorValue="607F4832" id="0:900168"/>
+          </Stroke>
+        </Shape>
+        <Shape x="628" y="691.5" name="PumpkinRib1" id="0:900181">
+          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:900180">
+            <CubicDetachedVertex x="0" y="-14.5" outRotation="1.5708" outDistance="4.6667" inRotation="4.7124" inDistance="0" id="0:900177"/>
+            <CubicDetachedVertex x="0" y="-0.5" outRotation="1.5708" outDistance="5" inRotation="4.7124" inDistance="4.6667" id="0:900178"/>
+            <CubicDetachedVertex x="0" y="14.5" outRotation="1.5708" outDistance="0" inRotation="4.7124" inDistance="5" id="0:900179"/>
+          </PointsPath>
+          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:900176">
+            <SolidColor colorValue="607F4832" id="0:900175"/>
+          </Stroke>
+        </Shape>
+        <Shape x="640.5" y="691.5" name="PumpkinRib2" id="0:900188">
+          <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:900187">
+            <CubicDetachedVertex x="-2.5" y="-14.5" outRotation="1.2278" outDistance="4.9554" inRotation="4.3694" inDistance="0" id="0:900184"/>
+            <CubicDetachedVertex x="2.5" y="-0.5" outRotation="1.5708" outDistance="4.9823" inRotation="4.7124" inDistance="4.6844" id="0:900185"/>
+            <CubicDetachedVertex x="-2.5" y="14.5" outRotation="1.8925" outDistance="0" inRotation="5.0341" inDistance="5.2705" id="0:900186"/>
+          </PointsPath>
+          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:900183">
+            <SolidColor colorValue="607F4832" id="0:900182"/>
+          </Stroke>
+        </Shape>
+        <Shape x="616" y="686.92" name="PumpkinGlint" id="0:900192">
+          <Ellipse width="7" height="12" name="Path" id="0:900191"/>
+          <Fill name="Fill" id="0:900190">
+            <SolidColor colorValue="50E9CD93" id="0:900189"/>
+          </Fill>
+        </Shape>
+        <Shape x="628" y="691" name="Pumpkin" id="0:900198">
+          <Ellipse width="50" height="34" name="Path" id="0:900197"/>
+          <Fill name="Fill" id="0:900194">
+            <SolidColor colorValue="FFE19356" id="0:900193"/>
+          </Fill>
+          <Stroke thickness="2" cap="round" join="round" name="Line" id="0:900196">
+            <SolidColor colorValue="FF895035" id="0:900195"/>
+          </Stroke>
+        </Shape>
+        <Shape x="632" y="709" name="PumpkinShadow" id="0:900202">
+          <Ellipse width="58" height="7" name="Path" id="0:900201"/>
+          <Fill name="Fill" id="0:900200">
+            <SolidColor colorValue="40101C1E" id="0:900199"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="540" y="719" name="Sill" id="0:302">
         <Rectangle width="1140" height="22" cornerRadiusTL="4" cornerRadiusTR="4" cornerRadiusBL="4" cornerRadiusBR="4" name="Path" id="0:301"/>
         <Fill name="Fill" id="0:300">
@@ -4249,30 +4601,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990048">
-          <LinearGradient startX="0" startY="0" endX="0" endY="800" id="0:990047">
-            <GradientStop colorValue="00E0BC8C" position="0" id="0:990044"/>
-            <GradientStop colorValue="33E0BC8C" position="1" id="0:990046">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990045"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990053">
-          <LinearGradient startX="0" startY="0" endX="0" endY="800" id="0:990052">
-            <GradientStop colorValue="00E0BC8C" position="0" id="0:990049"/>
-            <GradientStop colorValue="33E0BC8C" position="1" id="0:990051">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990050"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990058">
-          <LinearGradient startX="0" startY="0" endX="0" endY="800" id="0:990057">
-            <GradientStop colorValue="00E0BC8C" position="0" id="0:990054"/>
-            <GradientStop colorValue="33E0BC8C" position="1" id="0:990056">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990055"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills1" id="0:900355">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900281" id="0:900353"/>
+          <Rectangle width="1200" height="1680" originX="0" originY="0" name="Path" id="0:900354"/>
+          <Fill name="Fill" id="0:990048">
+            <LinearGradient startX="0" startY="0" endX="0" endY="800" id="0:990047">
+              <GradientStop colorValue="00E0BC8C" position="0" id="0:990044"/>
+              <GradientStop colorValue="33E0BC8C" position="1" id="0:990046">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990045"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990053">
+            <LinearGradient startX="0" startY="0" endX="0" endY="800" id="0:990052">
+              <GradientStop colorValue="00E0BC8C" position="0" id="0:990049"/>
+              <GradientStop colorValue="33E0BC8C" position="1" id="0:990051">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990050"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990058">
+            <LinearGradient startX="0" startY="0" endX="0" endY="800" id="0:990057">
+              <GradientStop colorValue="00E0BC8C" position="0" id="0:990054"/>
+              <GradientStop colorValue="33E0BC8C" position="1" id="0:990056">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990055"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Shape x="540" y="465" name="MullV" id="0:294">
         <Rectangle width="16" height="470" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:293"/>
@@ -4992,6 +5348,7 @@
             </Stroke>
           </Shape>
           <Shape x="369.313" y="-14.3269" name="GlassStreak13_-1" id="0:970546">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900322"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970545">
               <CubicDetachedVertex x="2.6769" y="-14.8715" outRotation="1.7489" outDistance="10.0737" inRotation="4.8905" inDistance="0" id="0:970543"/>
               <CubicDetachedVertex x="-2.6769" y="14.8715" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.0737" id="0:970544"/>
@@ -5001,6 +5358,7 @@
             </Stroke>
           </Shape>
           <Shape x="369.313" y="220.6731" name="GlassStreak13_0" id="0:970552">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900321"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970551">
               <CubicDetachedVertex x="2.6769" y="-14.8715" outRotation="1.7489" outDistance="10.0737" inRotation="4.8905" inDistance="0" id="0:970549"/>
               <CubicDetachedVertex x="-2.6769" y="14.8715" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.0737" id="0:970550"/>
@@ -5010,6 +5368,7 @@
             </Stroke>
           </Shape>
           <Shape x="369.313" y="455.6731" name="GlassStreak13_1" id="0:970558">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900320"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970557">
               <CubicDetachedVertex x="2.6769" y="-14.8715" outRotation="1.7489" outDistance="10.0737" inRotation="4.8905" inDistance="0" id="0:970555"/>
               <CubicDetachedVertex x="-2.6769" y="14.8715" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.0737" id="0:970556"/>
@@ -5019,6 +5378,7 @@
             </Stroke>
           </Shape>
           <Shape x="369.313" y="690.6731" name="GlassStreak13_2" id="0:970564">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900319"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970563">
               <CubicDetachedVertex x="2.6769" y="-14.8715" outRotation="1.7489" outDistance="10.0737" inRotation="4.8905" inDistance="0" id="0:970561"/>
               <CubicDetachedVertex x="-2.6769" y="14.8715" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.0737" id="0:970562"/>
@@ -5028,6 +5388,7 @@
             </Stroke>
           </Shape>
           <Shape x="544.996" y="109.5904" name="GlassStreak14_0" id="0:970570">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900318"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970569">
               <CubicDetachedVertex x="2.6667" y="-14.8148" outRotation="1.7489" outDistance="10.0353" inRotation="4.8905" inDistance="0" id="0:970567"/>
               <CubicDetachedVertex x="-2.6667" y="14.8148" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.0353" id="0:970568"/>
@@ -5037,6 +5398,7 @@
             </Stroke>
           </Shape>
           <Shape x="544.996" y="344.5904" name="GlassStreak14_1" id="0:970576">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900317"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970575">
               <CubicDetachedVertex x="2.6667" y="-14.8148" outRotation="1.7489" outDistance="10.0353" inRotation="4.8905" inDistance="0" id="0:970573"/>
               <CubicDetachedVertex x="-2.6667" y="14.8148" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.0353" id="0:970574"/>
@@ -5046,6 +5408,7 @@
             </Stroke>
           </Shape>
           <Shape x="544.996" y="579.5904" name="GlassStreak14_2" id="0:970582">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900316"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970581">
               <CubicDetachedVertex x="2.6667" y="-14.8148" outRotation="1.7489" outDistance="10.0353" inRotation="4.8905" inDistance="0" id="0:970579"/>
               <CubicDetachedVertex x="-2.6667" y="14.8148" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.0353" id="0:970580"/>
@@ -5055,6 +5418,7 @@
             </Stroke>
           </Shape>
           <Shape x="656.4961" y="105.8304" name="GlassStreak15_0" id="0:970588">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900315"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970587">
               <CubicDetachedVertex x="3.9634" y="-22.0189" outRotation="1.7489" outDistance="14.9152" inRotation="4.8905" inDistance="0" id="0:970585"/>
               <CubicDetachedVertex x="-3.9634" y="22.0189" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.9152" id="0:970586"/>
@@ -5064,6 +5428,7 @@
             </Stroke>
           </Shape>
           <Shape x="656.4961" y="340.8304" name="GlassStreak15_1" id="0:970594">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900314"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970593">
               <CubicDetachedVertex x="3.9634" y="-22.0189" outRotation="1.7489" outDistance="14.9152" inRotation="4.8905" inDistance="0" id="0:970591"/>
               <CubicDetachedVertex x="-3.9634" y="22.0189" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.9152" id="0:970592"/>
@@ -5073,6 +5438,7 @@
             </Stroke>
           </Shape>
           <Shape x="656.4961" y="575.8304" name="GlassStreak15_2" id="0:970600">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900313"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970599">
               <CubicDetachedVertex x="3.9634" y="-22.0189" outRotation="1.7489" outDistance="14.9152" inRotation="4.8905" inDistance="0" id="0:970597"/>
               <CubicDetachedVertex x="-3.9634" y="22.0189" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.9152" id="0:970598"/>
@@ -5082,6 +5448,7 @@
             </Stroke>
           </Shape>
           <Shape x="632.7422" y="201.8889" name="GlassStreak16_0" id="0:970606">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900312"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970605">
               <CubicDetachedVertex x="3.096" y="-17.1999" outRotation="1.7489" outDistance="11.6509" inRotation="4.8905" inDistance="0" id="0:970603"/>
               <CubicDetachedVertex x="-3.096" y="17.1999" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.6509" id="0:970604"/>
@@ -5091,6 +5458,7 @@
             </Stroke>
           </Shape>
           <Shape x="632.7422" y="436.8889" name="GlassStreak16_1" id="0:970612">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900311"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970611">
               <CubicDetachedVertex x="3.096" y="-17.1999" outRotation="1.7489" outDistance="11.6509" inRotation="4.8905" inDistance="0" id="0:970609"/>
               <CubicDetachedVertex x="-3.096" y="17.1999" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.6509" id="0:970610"/>
@@ -5100,6 +5468,7 @@
             </Stroke>
           </Shape>
           <Shape x="632.7422" y="671.8889" name="GlassStreak16_2" id="0:970618">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900310"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970617">
               <CubicDetachedVertex x="3.096" y="-17.1999" outRotation="1.7489" outDistance="11.6509" inRotation="4.8905" inDistance="0" id="0:970615"/>
               <CubicDetachedVertex x="-3.096" y="17.1999" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.6509" id="0:970616"/>
@@ -5109,6 +5478,7 @@
             </Stroke>
           </Shape>
           <Shape x="430.8602" y="185.6182" name="GlassStreak17_0" id="0:970624">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900309"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970623">
               <CubicDetachedVertex x="2.5231" y="-14.0172" outRotation="1.7489" outDistance="9.495" inRotation="4.8905" inDistance="0" id="0:970621"/>
               <CubicDetachedVertex x="-2.5231" y="14.0172" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="9.495" id="0:970622"/>
@@ -5118,6 +5488,7 @@
             </Stroke>
           </Shape>
           <Shape x="430.8602" y="420.6182" name="GlassStreak17_1" id="0:970630">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900308"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970629">
               <CubicDetachedVertex x="2.5231" y="-14.0172" outRotation="1.7489" outDistance="9.495" inRotation="4.8905" inDistance="0" id="0:970627"/>
               <CubicDetachedVertex x="-2.5231" y="14.0172" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="9.495" id="0:970628"/>
@@ -5127,6 +5498,7 @@
             </Stroke>
           </Shape>
           <Shape x="430.8602" y="655.6182" name="GlassStreak17_2" id="0:970636">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900307"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970635">
               <CubicDetachedVertex x="2.5231" y="-14.0172" outRotation="1.7489" outDistance="9.495" inRotation="4.8905" inDistance="0" id="0:970633"/>
               <CubicDetachedVertex x="-2.5231" y="14.0172" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="9.495" id="0:970634"/>
@@ -5136,6 +5508,7 @@
             </Stroke>
           </Shape>
           <Shape x="514.8759" y="3.7341" name="GlassStreak18_-1" id="0:970642">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900306"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970641">
               <CubicDetachedVertex x="3.8201" y="-21.2226" outRotation="1.7489" outDistance="14.3758" inRotation="4.8905" inDistance="0" id="0:970639"/>
               <CubicDetachedVertex x="-3.8201" y="21.2226" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.3758" id="0:970640"/>
@@ -5145,6 +5518,7 @@
             </Stroke>
           </Shape>
           <Shape x="514.8759" y="238.7341" name="GlassStreak18_0" id="0:970648">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900305"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970647">
               <CubicDetachedVertex x="3.8201" y="-21.2226" outRotation="1.7489" outDistance="14.3758" inRotation="4.8905" inDistance="0" id="0:970645"/>
               <CubicDetachedVertex x="-3.8201" y="21.2226" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.3758" id="0:970646"/>
@@ -5154,6 +5528,7 @@
             </Stroke>
           </Shape>
           <Shape x="514.8759" y="473.7341" name="GlassStreak18_1" id="0:970654">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900304"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970653">
               <CubicDetachedVertex x="3.8201" y="-21.2226" outRotation="1.7489" outDistance="14.3758" inRotation="4.8905" inDistance="0" id="0:970651"/>
               <CubicDetachedVertex x="-3.8201" y="21.2226" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.3758" id="0:970652"/>
@@ -5163,6 +5538,7 @@
             </Stroke>
           </Shape>
           <Shape x="514.8759" y="708.7341" name="GlassStreak18_2" id="0:970660">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900303"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970659">
               <CubicDetachedVertex x="3.8201" y="-21.2226" outRotation="1.7489" outDistance="14.3758" inRotation="4.8905" inDistance="0" id="0:970657"/>
               <CubicDetachedVertex x="-3.8201" y="21.2226" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.3758" id="0:970658"/>
@@ -5172,6 +5548,7 @@
             </Stroke>
           </Shape>
           <Shape x="572.516" y="122.015" name="GlassStreak19_0" id="0:970666">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900302"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970665">
               <CubicDetachedVertex x="2.9405" y="-16.3359" outRotation="1.7489" outDistance="11.0656" inRotation="4.8905" inDistance="0" id="0:970663"/>
               <CubicDetachedVertex x="-2.9405" y="16.3359" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.0656" id="0:970664"/>
@@ -5181,6 +5558,7 @@
             </Stroke>
           </Shape>
           <Shape x="572.516" y="357.015" name="GlassStreak19_1" id="0:970672">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900301"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970671">
               <CubicDetachedVertex x="2.9405" y="-16.3359" outRotation="1.7489" outDistance="11.0656" inRotation="4.8905" inDistance="0" id="0:970669"/>
               <CubicDetachedVertex x="-2.9405" y="16.3359" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.0656" id="0:970670"/>
@@ -5190,6 +5568,7 @@
             </Stroke>
           </Shape>
           <Shape x="572.516" y="592.015" name="GlassStreak19_2" id="0:970678">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900300"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970677">
               <CubicDetachedVertex x="2.9405" y="-16.3359" outRotation="1.7489" outDistance="11.0656" inRotation="4.8905" inDistance="0" id="0:970675"/>
               <CubicDetachedVertex x="-2.9405" y="16.3359" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.0656" id="0:970676"/>
@@ -5199,6 +5578,7 @@
             </Stroke>
           </Shape>
           <Shape x="568.9515" y="168.9011" name="GlassStreak20_0" id="0:970684">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900299"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970683">
               <CubicDetachedVertex x="3.6159" y="-20.0881" outRotation="1.7489" outDistance="13.6073" inRotation="4.8905" inDistance="0" id="0:970681"/>
               <CubicDetachedVertex x="-3.6159" y="20.0881" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="13.6073" id="0:970682"/>
@@ -5208,6 +5588,7 @@
             </Stroke>
           </Shape>
           <Shape x="568.9515" y="403.9011" name="GlassStreak20_1" id="0:970690">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900298"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970689">
               <CubicDetachedVertex x="3.6159" y="-20.0881" outRotation="1.7489" outDistance="13.6073" inRotation="4.8905" inDistance="0" id="0:970687"/>
               <CubicDetachedVertex x="-3.6159" y="20.0881" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="13.6073" id="0:970688"/>
@@ -5217,6 +5598,7 @@
             </Stroke>
           </Shape>
           <Shape x="568.9515" y="638.9011" name="GlassStreak20_2" id="0:970696">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900297"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970695">
               <CubicDetachedVertex x="3.6159" y="-20.0881" outRotation="1.7489" outDistance="13.6073" inRotation="4.8905" inDistance="0" id="0:970693"/>
               <CubicDetachedVertex x="-3.6159" y="20.0881" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="13.6073" id="0:970694"/>
@@ -5226,6 +5608,7 @@
             </Stroke>
           </Shape>
           <Shape x="489.9803" y="64.671" name="GlassStreak21_0" id="0:970702">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900296"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970701">
               <CubicDetachedVertex x="2.898" y="-16.0997" outRotation="1.7489" outDistance="10.9057" inRotation="4.8905" inDistance="0" id="0:970699"/>
               <CubicDetachedVertex x="-2.898" y="16.0997" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.9057" id="0:970700"/>
@@ -5235,6 +5618,7 @@
             </Stroke>
           </Shape>
           <Shape x="489.9803" y="299.671" name="GlassStreak21_1" id="0:970708">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900295"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970707">
               <CubicDetachedVertex x="2.898" y="-16.0997" outRotation="1.7489" outDistance="10.9057" inRotation="4.8905" inDistance="0" id="0:970705"/>
               <CubicDetachedVertex x="-2.898" y="16.0997" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.9057" id="0:970706"/>
@@ -5244,6 +5628,7 @@
             </Stroke>
           </Shape>
           <Shape x="489.9803" y="534.671" name="GlassStreak21_2" id="0:970714">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900294"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970713">
               <CubicDetachedVertex x="2.898" y="-16.0997" outRotation="1.7489" outDistance="10.9057" inRotation="4.8905" inDistance="0" id="0:970711"/>
               <CubicDetachedVertex x="-2.898" y="16.0997" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.9057" id="0:970712"/>
@@ -5253,6 +5638,7 @@
             </Stroke>
           </Shape>
           <Shape x="576.238" y="124.7562" name="GlassStreak22_0" id="0:970720">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900293"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970719">
               <CubicDetachedVertex x="3.0755" y="-17.0862" outRotation="1.7489" outDistance="11.5739" inRotation="4.8905" inDistance="0" id="0:970717"/>
               <CubicDetachedVertex x="-3.0755" y="17.0862" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.5739" id="0:970718"/>
@@ -5262,6 +5648,7 @@
             </Stroke>
           </Shape>
           <Shape x="576.238" y="359.7562" name="GlassStreak22_1" id="0:970726">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900292"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970725">
               <CubicDetachedVertex x="3.0755" y="-17.0862" outRotation="1.7489" outDistance="11.5739" inRotation="4.8905" inDistance="0" id="0:970723"/>
               <CubicDetachedVertex x="-3.0755" y="17.0862" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.5739" id="0:970724"/>
@@ -5271,6 +5658,7 @@
             </Stroke>
           </Shape>
           <Shape x="576.238" y="594.7562" name="GlassStreak22_2" id="0:970732">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900291"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970731">
               <CubicDetachedVertex x="3.0755" y="-17.0862" outRotation="1.7489" outDistance="11.5739" inRotation="4.8905" inDistance="0" id="0:970729"/>
               <CubicDetachedVertex x="-3.0755" y="17.0862" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="11.5739" id="0:970730"/>
@@ -5280,6 +5668,7 @@
             </Stroke>
           </Shape>
           <Shape x="478.8938" y="25.9403" name="GlassStreak23_0" id="0:970738">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900290"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970737">
               <CubicDetachedVertex x="2.8456" y="-15.8091" outRotation="1.7489" outDistance="10.7088" inRotation="4.8905" inDistance="0" id="0:970735"/>
               <CubicDetachedVertex x="-2.8456" y="15.8091" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.7088" id="0:970736"/>
@@ -5289,6 +5678,7 @@
             </Stroke>
           </Shape>
           <Shape x="478.8938" y="260.9403" name="GlassStreak23_1" id="0:970744">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900289"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970743">
               <CubicDetachedVertex x="2.8456" y="-15.8091" outRotation="1.7489" outDistance="10.7088" inRotation="4.8905" inDistance="0" id="0:970741"/>
               <CubicDetachedVertex x="-2.8456" y="15.8091" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.7088" id="0:970742"/>
@@ -5298,6 +5688,7 @@
             </Stroke>
           </Shape>
           <Shape x="478.8938" y="495.9403" name="GlassStreak23_2" id="0:970750">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900288"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970749">
               <CubicDetachedVertex x="2.8456" y="-15.8091" outRotation="1.7489" outDistance="10.7088" inRotation="4.8905" inDistance="0" id="0:970747"/>
               <CubicDetachedVertex x="-2.8456" y="15.8091" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="10.7088" id="0:970748"/>
@@ -5307,6 +5698,7 @@
             </Stroke>
           </Shape>
           <Shape x="672.875" y="185.1799" name="GlassStreak24_0" id="0:970756">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900287"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970755">
               <CubicDetachedVertex x="3.1986" y="-17.7701" outRotation="1.7489" outDistance="12.0372" inRotation="4.8905" inDistance="0" id="0:970753"/>
               <CubicDetachedVertex x="-3.1986" y="17.7701" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="12.0372" id="0:970754"/>
@@ -5316,6 +5708,7 @@
             </Stroke>
           </Shape>
           <Shape x="672.875" y="420.1799" name="GlassStreak24_1" id="0:970762">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900286"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970761">
               <CubicDetachedVertex x="3.1986" y="-17.7701" outRotation="1.7489" outDistance="12.0372" inRotation="4.8905" inDistance="0" id="0:970759"/>
               <CubicDetachedVertex x="-3.1986" y="17.7701" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="12.0372" id="0:970760"/>
@@ -5325,6 +5718,7 @@
             </Stroke>
           </Shape>
           <Shape x="672.875" y="655.1799" name="GlassStreak24_2" id="0:970768">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900285"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970767">
               <CubicDetachedVertex x="3.1986" y="-17.7701" outRotation="1.7489" outDistance="12.0372" inRotation="4.8905" inDistance="0" id="0:970765"/>
               <CubicDetachedVertex x="-3.1986" y="17.7701" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="12.0372" id="0:970766"/>
@@ -5334,6 +5728,7 @@
             </Stroke>
           </Shape>
           <Shape x="511.6412" y="47.5705" name="GlassStreak25_0" id="0:970774">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900284"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970773">
               <CubicDetachedVertex x="3.8738" y="-21.5214" outRotation="1.7489" outDistance="14.5781" inRotation="4.8905" inDistance="0" id="0:970771"/>
               <CubicDetachedVertex x="-3.8738" y="21.5214" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.5781" id="0:970772"/>
@@ -5343,6 +5738,7 @@
             </Stroke>
           </Shape>
           <Shape x="511.6412" y="282.5705" name="GlassStreak25_1" id="0:970780">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900283"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970779">
               <CubicDetachedVertex x="3.8738" y="-21.5214" outRotation="1.7489" outDistance="14.5781" inRotation="4.8905" inDistance="0" id="0:970777"/>
               <CubicDetachedVertex x="-3.8738" y="21.5214" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.5781" id="0:970778"/>
@@ -5352,6 +5748,7 @@
             </Stroke>
           </Shape>
           <Shape x="511.6412" y="517.5705" name="GlassStreak25_2" id="0:970786">
+            <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900282"/>
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:970785">
               <CubicDetachedVertex x="3.8738" y="-21.5214" outRotation="1.7489" outDistance="14.5781" inRotation="4.8905" inDistance="0" id="0:970783"/>
               <CubicDetachedVertex x="-3.8738" y="21.5214" outRotation="1.7489" outDistance="0" inRotation="4.8905" inDistance="14.5781" id="0:970784"/>
@@ -5510,30 +5907,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990071">
-          <LinearGradient startX="0" startY="0" endX="0" endY="280" id="0:990070">
-            <GradientStop colorValue="00E0BC8C" position="0" id="0:990067"/>
-            <GradientStop colorValue="33E0BC8C" position="1" id="0:990069">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990068"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990076">
-          <LinearGradient startX="0" startY="0" endX="0" endY="280" id="0:990075">
-            <GradientStop colorValue="00E0BC8C" position="0" id="0:990072"/>
-            <GradientStop colorValue="33E0BC8C" position="1" id="0:990074">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990073"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990081">
-          <LinearGradient startX="0" startY="0" endX="0" endY="280" id="0:990080">
-            <GradientStop colorValue="00E0BC8C" position="0" id="0:990077"/>
-            <GradientStop colorValue="33E0BC8C" position="1" id="0:990079">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990078"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills0" id="0:900358">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900281" id="0:900356"/>
+          <Rectangle width="1200" height="1780" originX="0" originY="0" name="Path" id="0:900357"/>
+          <Fill name="Fill" id="0:990071">
+            <LinearGradient startX="0" startY="0" endX="0" endY="280" id="0:990070">
+              <GradientStop colorValue="00E0BC8C" position="0" id="0:990067"/>
+              <GradientStop colorValue="33E0BC8C" position="1" id="0:990069">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990068"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990076">
+            <LinearGradient startX="0" startY="0" endX="0" endY="280" id="0:990075">
+              <GradientStop colorValue="00E0BC8C" position="0" id="0:990072"/>
+              <GradientStop colorValue="33E0BC8C" position="1" id="0:990074">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990073"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990081">
+            <LinearGradient startX="0" startY="0" endX="0" endY="280" id="0:990080">
+              <GradientStop colorValue="00E0BC8C" position="0" id="0:990077"/>
+              <GradientStop colorValue="33E0BC8C" position="1" id="0:990079">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990078"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Shape x="-60" y="0" opacity="0" name="SkyDusk" id="0:940024">
         <DataBindContext sourcePathIds="0:23-0:980026" propertyKey="18" converterId="0:940020" id="0:940021"/>
@@ -5618,54 +6019,72 @@
           <SolidColor colorValue="FFFFD27A" name="emit" id="0:247"/>
         </Fill>
       </Shape>
-      <Shape x="605.4234" y="572.6838" name="emitLit10" opacity="0.6755" id="0:254">
-        <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:253"/>
-        <Fill name="Fill" id="0:252">
-          <SolidColor colorValue="FFFFD27A" name="emit" id="0:251"/>
-        </Fill>
-      </Shape>
-      <Shape x="631.4691" y="635.9319" name="emitLit11" opacity="0.7925" id="0:258">
-        <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:257"/>
-        <Fill name="Fill" id="0:256">
-          <SolidColor colorValue="FFFFD27A" name="emit" id="0:255"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierLit10" id="0:900344">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900343"/>
+        <Shape x="605.4234" y="572.6838" name="emitLit10" opacity="0.6755" id="0:254">
+          <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:253"/>
+          <Fill name="Fill" id="0:252">
+            <SolidColor colorValue="FFFFD27A" name="emit" id="0:251"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLit11" id="0:900340">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900339"/>
+        <Shape x="631.4691" y="635.9319" name="emitLit11" opacity="0.7925" id="0:258">
+          <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:257"/>
+          <Fill name="Fill" id="0:256">
+            <SolidColor colorValue="FFFFD27A" name="emit" id="0:255"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="494.3803" y="568.7214" name="emitLit12" opacity="0.7921" id="0:262">
         <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:261"/>
         <Fill name="Fill" id="0:260">
           <SolidColor colorValue="FFFFD27A" name="emit" id="0:259"/>
         </Fill>
       </Shape>
-      <Shape x="663.6582" y="621.7299" name="emitLit13" opacity="0.9521" id="0:266">
-        <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:265"/>
-        <Fill name="Fill" id="0:264">
-          <SolidColor colorValue="FFFFD27A" name="emit" id="0:263"/>
-        </Fill>
-      </Shape>
-      <Shape x="619.6472" y="670.4575" name="emitLit14" opacity="0.841" id="0:270">
-        <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:269"/>
-        <Fill name="Fill" id="0:268">
-          <SolidColor colorValue="FFFFD27A" name="emit" id="0:267"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierLit13" id="0:900334">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900333"/>
+        <Shape x="663.6582" y="621.7299" name="emitLit13" opacity="0.9521" id="0:266">
+          <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:265"/>
+          <Fill name="Fill" id="0:264">
+            <SolidColor colorValue="FFFFD27A" name="emit" id="0:263"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLit14" id="0:900330">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900329"/>
+        <Shape x="619.6472" y="670.4575" name="emitLit14" opacity="0.841" id="0:270">
+          <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:269"/>
+          <Fill name="Fill" id="0:268">
+            <SolidColor colorValue="FFFFD27A" name="emit" id="0:267"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="618.2388" y="675.5318" name="emitLit15" opacity="0.9645" id="0:274">
         <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:273"/>
         <Fill name="Fill" id="0:272">
           <SolidColor colorValue="FFFFD27A" name="emit" id="0:271"/>
         </Fill>
       </Shape>
-      <Shape x="522.489" y="661.1091" name="emitLit16" opacity="0.9282" id="0:278">
-        <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:277"/>
-        <Fill name="Fill" id="0:276">
-          <SolidColor colorValue="FFFFD27A" name="emit" id="0:275"/>
-        </Fill>
-      </Shape>
-      <Shape x="537.3863" y="677.2704" name="emitLit17" opacity="0.9955" id="0:282">
-        <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:281"/>
-        <Fill name="Fill" id="0:280">
-          <SolidColor colorValue="FFFFD27A" name="emit" id="0:279"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierLit16" id="0:900326">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900325"/>
+        <Shape x="522.489" y="661.1091" name="emitLit16" opacity="0.9282" id="0:278">
+          <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:277"/>
+          <Fill name="Fill" id="0:276">
+            <SolidColor colorValue="FFFFD27A" name="emit" id="0:275"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierLit17" id="0:900324">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900268" id="0:900323"/>
+        <Shape x="537.3863" y="677.2704" name="emitLit17" opacity="0.9955" id="0:282">
+          <Rectangle width="8" height="10" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:281"/>
+          <Fill name="Fill" id="0:280">
+            <SolidColor colorValue="FFFFD27A" name="emit" id="0:279"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="540" y="590" name="Skyline" id="0:210">
         <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:209">
           <StraightVertex x="-200" y="130" id="0:191"/>
@@ -13452,4 +13871,42 @@
     <FormulaTokenOperation operationType="2" id="0:932734"/>
     <FormulaTokenInput id="0:932735"/>
   </DataConverterFormula>
+
+  <DataConverterToNumber id="0:900253"/>
+
+  <DataConverterFormula id="0:900265">
+    <FormulaTokenFunction functionType="0" id="0:900262"/>
+    <FormulaTokenValue operationValue="1" id="0:900257"/>
+    <FormulaTokenArgumentSeparator id="0:900263"/>
+    <FormulaTokenFunction functionType="1" id="0:900259"/>
+    <FormulaTokenValue operationValue="0" id="0:900258"/>
+    <FormulaTokenArgumentSeparator id="0:900260"/>
+    <FormulaTokenInput id="0:900254"/>
+    <FormulaTokenOperation operationType="1" id="0:900255"/>
+    <FormulaTokenValue operationValue="1" id="0:900256"/>
+    <FormulaTokenParenthesisClose id="0:900261"/>
+    <FormulaTokenParenthesisClose id="0:900264"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900268">
+    <DataConverterGroupItem converterId="0:900253" id="0:900266"/>
+    <DataConverterGroupItem converterId="0:900265" id="0:900267"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:900278">
+    <FormulaTokenFunction functionType="0" id="0:900275"/>
+    <FormulaTokenValue operationValue="1" id="0:900270"/>
+    <FormulaTokenArgumentSeparator id="0:900276"/>
+    <FormulaTokenFunction functionType="1" id="0:900272"/>
+    <FormulaTokenValue operationValue="0" id="0:900271"/>
+    <FormulaTokenArgumentSeparator id="0:900273"/>
+    <FormulaTokenInput id="0:900269"/>
+    <FormulaTokenParenthesisClose id="0:900274"/>
+    <FormulaTokenParenthesisClose id="0:900277"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900281">
+    <DataConverterGroupItem converterId="0:900253" id="0:900279"/>
+    <DataConverterGroupItem converterId="0:900278" id="0:900280"/>
+  </DataConverterGroup>
 </Rive>

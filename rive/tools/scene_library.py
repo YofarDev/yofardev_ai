@@ -33,7 +33,8 @@ bookcase's bottom shelf, 1 = at the reading chair's front foot (`MOUSE_WAYPOINTS
 follows `npcX`.
 
 `TIER_GATES` names the element roots lane W's tier pass hides (high: the second half of every dense rain
-sheet; low: also the dust motes). This module never binds `tier`.
+sheet; low: also the dust motes, the clouds' drift, the window's cold spill and the glass's sheen). This module
+never binds `tier`.
 
 Built through gen_scenes.Scene; mints its own scene document (each scene is its own document).
 """
@@ -147,7 +148,10 @@ BINDS14: set[str] = set()   # `tier` is bound by lane W's shared pass; no season
 # of every dense rain sheet), "low" at low only (decorative ambient loops that are not light).
 TIER_GATES: dict[str, tuple[str, ...]] = {
     "high": ("GlassStreaksB", "GlassDripsB", "ViewRainB", "ShowerStreaksB"),
-    "low": ("DustMotes",),
+    # + (lane W, M11 ruling 15: the bench needs them for low's 0.8 x ultra) the clouds' slow drift behind the
+    # window (a decorative loop), the window's faint cold spill on the wall and the glass's sheen (decorative
+    # overlays, not the lamp's light)
+    "low": ("DustMotes", "Clouds", "WindowSpill", "GlassSheen"),
 }
 
 

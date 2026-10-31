@@ -1333,6 +1333,7 @@
         </Fill>
       </Shape>
       <Node x="0" y="0" name="emitDustMotes" id="0:6103">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900043"/>
         <Shape x="147.3787" y="974.6508" name="emitMote0" opacity="0" id="0:5687">
           <Ellipse width="4" height="4" name="Path" id="0:5686"/>
           <Fill name="Fill" id="0:5685">
@@ -2751,6 +2752,7 @@
         </Fill>
       </Shape>
       <Shape x="540" y="600" name="emitWindowSpill" id="0:4787">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900040"/>
         <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:4782">
           <StraightVertex x="232" y="460" id="0:4765"/>
           <StraightVertex x="-232" y="460" id="0:4766"/>
@@ -4587,6 +4589,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="ShowerStreaksB" id="0:3873">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900045"/>
           <Shape x="405.2217" y="97.9262" name="ShowerStreak1_1" id="0:2773">
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:2772">
               <CubicDetachedVertex x="4.518" y="-28.2375" outRotation="1.7295" outDistance="19.0644" inRotation="4.871" inDistance="0" id="0:2770"/>
@@ -5696,6 +5699,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="GlassDripsB" id="0:1860">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900044"/>
           <Shape x="674.397" y="-2.9247" name="GlassDrop1_1" id="0:1542">
             <Ellipse width="5" height="7" name="Path" id="0:1541"/>
             <Fill name="Fill" id="0:1540">
@@ -6573,6 +6577,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="GlassStreaksB" id="0:2699">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900042"/>
           <Shape x="659.5787" y="28.0878" name="GlassStreak1_1" id="0:1905">
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1904">
               <CubicDetachedVertex x="2.7326" y="-17.0787" outRotation="1.7295" outDistance="11.5306" inRotation="4.871" inDistance="0" id="0:1902"/>
@@ -7230,6 +7235,7 @@
         </Shape>
       </Node>
       <Shape x="540" y="600" name="GlassSheen" id="0:1489">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900041"/>
         <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:1482">
           <StraightVertex x="140" y="394" id="0:1465"/>
           <StraightVertex x="-140" y="394" id="0:1466"/>
@@ -7303,30 +7309,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990060">
-          <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990059">
-            <GradientStop colorValue="00706A78" position="0" id="0:990056"/>
-            <GradientStop colorValue="33706A78" position="1" id="0:990058">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990057"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990065">
-          <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990064">
-            <GradientStop colorValue="00706A78" position="0" id="0:990061"/>
-            <GradientStop colorValue="33706A78" position="1" id="0:990063">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990062"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990070">
-          <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990069">
-            <GradientStop colorValue="00706A78" position="0" id="0:990066"/>
-            <GradientStop colorValue="33706A78" position="1" id="0:990068">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990067"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills0" id="0:900049">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900047"/>
+          <Rectangle width="1200" height="1280" originX="0" originY="0" name="Path" id="0:900048"/>
+          <Fill name="Fill" id="0:990060">
+            <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990059">
+              <GradientStop colorValue="00706A78" position="0" id="0:990056"/>
+              <GradientStop colorValue="33706A78" position="1" id="0:990058">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990057"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990065">
+            <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990064">
+              <GradientStop colorValue="00706A78" position="0" id="0:990061"/>
+              <GradientStop colorValue="33706A78" position="1" id="0:990063">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990062"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990070">
+            <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990069">
+              <GradientStop colorValue="00706A78" position="0" id="0:990066"/>
+              <GradientStop colorValue="33706A78" position="1" id="0:990068">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990067"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Shape x="-60" y="0" opacity="0" name="SkyDusk" id="0:940024">
         <DataBindContext sourcePathIds="0:23-0:980026" propertyKey="18" converterId="0:940020" id="0:940021"/>
@@ -8139,6 +8149,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="ViewRainB" id="0:1375">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900046"/>
           <Shape x="531.8923" y="44.6632" name="ViewStreak1_1" id="0:359">
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:358">
               <CubicDetachedVertex x="3.7858" y="-21.032" outRotation="1.7489" outDistance="14.2467" inRotation="4.8905" inDistance="0" id="0:356"/>
@@ -9210,6 +9221,7 @@
         </Shape>
       </Node>
       <Node x="0" y="0" name="Clouds" id="0:173">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900039"/>
         <Shape x="476.1003" y="420" name="Cloud0" id="0:136">
           <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:135">
             <CubicDetachedVertex x="117.0997" y="0" outRotation="1.5708" outDistance="4.7108" inRotation="4.7124" inDistance="4.7108" id="0:121"/>
@@ -12136,4 +12148,42 @@
     <FormulaTokenOperation operationType="2" id="0:931341"/>
     <FormulaTokenInput id="0:931342"/>
   </DataConverterFormula>
+
+  <DataConverterToNumber id="0:900010"/>
+
+  <DataConverterFormula id="0:900022">
+    <FormulaTokenFunction functionType="0" id="0:900019"/>
+    <FormulaTokenValue operationValue="1" id="0:900014"/>
+    <FormulaTokenArgumentSeparator id="0:900020"/>
+    <FormulaTokenFunction functionType="1" id="0:900016"/>
+    <FormulaTokenValue operationValue="0" id="0:900015"/>
+    <FormulaTokenArgumentSeparator id="0:900017"/>
+    <FormulaTokenInput id="0:900011"/>
+    <FormulaTokenOperation operationType="1" id="0:900012"/>
+    <FormulaTokenValue operationValue="1" id="0:900013"/>
+    <FormulaTokenParenthesisClose id="0:900018"/>
+    <FormulaTokenParenthesisClose id="0:900021"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900025">
+    <DataConverterGroupItem converterId="0:900010" id="0:900023"/>
+    <DataConverterGroupItem converterId="0:900022" id="0:900024"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:900035">
+    <FormulaTokenFunction functionType="0" id="0:900032"/>
+    <FormulaTokenValue operationValue="1" id="0:900027"/>
+    <FormulaTokenArgumentSeparator id="0:900033"/>
+    <FormulaTokenFunction functionType="1" id="0:900029"/>
+    <FormulaTokenValue operationValue="0" id="0:900028"/>
+    <FormulaTokenArgumentSeparator id="0:900030"/>
+    <FormulaTokenInput id="0:900026"/>
+    <FormulaTokenParenthesisClose id="0:900031"/>
+    <FormulaTokenParenthesisClose id="0:900034"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900038">
+    <DataConverterGroupItem converterId="0:900010" id="0:900036"/>
+    <DataConverterGroupItem converterId="0:900035" id="0:900037"/>
+  </DataConverterGroup>
 </Rive>

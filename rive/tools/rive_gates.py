@@ -3,7 +3,9 @@
 uv run --with pillow --with numpy rive/tools/rive_gates.py [--props] [sceneId ...]
 
 Runs `review_diorama.py --gates-only` for each named scene (every scene in rive/scenes/ when none
-is named; about 2 min each), the time-of-day gates for those scenes (`review_time.py --gates-only`, M7, about 10 s each), the
+is named; about 2 min each), the time-of-day gates for those scenes (`review_time.py --gates-only`, M7, about 10 s each), the tier bench
+gates for those scenes (`rive_bench.py --gates-only`, M11 ruling 15: low render p95 <= 0.8 x ultra's, high
+<= 1.02 x; about 35 s each), the
 journey threshold gates (`review_journey.py --gates-only`, M7, about 40 s), then, with `--props`, `motion_review.py --gates-only` (the tablet and
 newspaper prop gates, about 23 min: M6 execution ruling 28), streaming every line. A line holding the word FAIL fails the run: exit 1. An unknown scene id exits 2.
 """
@@ -58,6 +60,7 @@ def runs_for(argv: list[str], known: list[str]) -> list[tuple[str, ...]]:
     scenes = parse_scenes([a for a in argv if a != "--props"], known)
     runs = [("review_diorama.py", scene, "--gates-only") for scene in scenes]
     runs.append(("review_time.py", *scenes, "--gates-only"))
+    runs.append(("rive_bench.py", *scenes, "--gates-only"))   # M11 ruling 15: the tier bench, ~35 s a scene
     runs.append(("review_journey.py", "--gates-only"))
     if "--props" in argv:
         runs.append(("motion_review.py", "--gates-only"))

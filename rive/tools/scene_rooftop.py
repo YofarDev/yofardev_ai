@@ -108,6 +108,15 @@ ROOFTOP_VEILS = ((0.3, 480.0, 1000.0), (0.2, 760.0, 1000.0), (0.12, 800.0, 1030.
 # contract v12: the v12 members this file binds (world_kit.declared_binds; Scene.write and
 # check_contract.py hold the file to it)
 BINDS: set[str] = {"moonPhase", *world_kit.drag_numbers(SID)}
+# M11 ruling 13 (contract v14 `tier`): what the shared tier pass (world_kit.tier_gate) hides. "high": at
+# high and low (the second rain / snow sheet, the second half of the splashes and of every twinkle or
+# particle loop's copies, by full name); "low": at low only (decorative ambient loops that are not light).
+TIER_GATES: dict[str, tuple[str, ...]] = {
+    "high": ("RainSheet1", *(f"Splash{i}" for i in range(8, 16)), *(f"CapSplash{i}" for i in range(7, 14)),
+             *(f"FrontSplash{i}" for i in range(5, 10)), *(f"Star{i}" for i in range(35, 61, 5)), "Glint2", "Glint3",
+             *(f"MidBlink{i}" for i in range(3, 6))),
+    "low": (),   # nothing decorative that is not light (the beacon, the windows, the stars are); the veils thin
+}
 
 
 # ====================================================================== drawing helpers

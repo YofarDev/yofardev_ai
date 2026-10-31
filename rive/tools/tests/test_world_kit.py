@@ -213,6 +213,7 @@ def test_v12_binds_must_match_the_declaration() -> None:
     rig = world_kit.moon_rig(sc, sc.d9, 0.0, 0.0, R, sc.E((0.0, 0.0), "MoonLit", 0, 0, 2 * R, 2 * R, sc.F("FFFFFFFF")),
                              "E6000000")
     sc.binds = set()
+    sc.binds14 = set()   # only the v12 check under test (nothing here binds the M11 tier gate)
     with pytest.raises(ValueError, match="moonPhase"):
         sc.check_v12_binds([rig, *sc.roots])
     sc.binds = {"moonPhase"}
@@ -357,11 +358,13 @@ def test_v14_binds_must_match_the_declaration() -> None:
 
 
 def test_v14_binds_come_from_the_shared_table_and_the_module(monkeypatch: pytest.MonkeyPatch) -> None:
-    assert gen_scenes.V14_BINDS == {}   # lane W fills it in (the tier gate, the seasons in two old scenes)
+    # lane W: the tier gate binds `tier` in every scene; the seasons in two old scenes (ruling 9)
+    assert set(gen_scenes.V14_BINDS) == set(ALL) and all("tier" in v for v in gen_scenes.V14_BINDS.values())
+    assert gen_scenes.V14_BINDS["livingRoom"] == gen_scenes.V14_BINDS["campfire"] == {"tier", "spring", "autumn"}
     for sid in ALL:
         own = (frozenset(getattr(world_kit.written_scene_modules()[sid], "BINDS14", ()))
                if sid in world_kit.written_scene_modules() else frozenset())
-        assert world_kit.declared_v14_binds(sid) == own, sid
+        assert world_kit.declared_v14_binds(sid) == own | gen_scenes.V14_BINDS[sid], sid
     monkeypatch.setitem(gen_scenes.V14_BINDS, "livingRoom", frozenset({"tier", "spring"}))
     monkeypatch.setitem(gen_scenes.V14_BINDS, "fake14", frozenset({"tier"}))
     assert world_kit.declared_v14_binds("livingRoom") == {"tier", "spring"}

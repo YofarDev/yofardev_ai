@@ -77,7 +77,9 @@ def test_front_artboard_shape(rml: dict[str, ET.Element], sid: str) -> None:
     fog = {id(x) for f in front if f.get("name") == "FrontFog" for x in f.iter()}
     for e in front.iter():
         if e.get("id") is not None and id(e) not in fog:
-            assert int(e.get("id").split(":")[1]) >= M6_ID_START, (e.tag, e.get("name"))
+            n = int(e.get("id").split(":")[1])
+            # M11: the tier gate's wrappers and binds (world_kit.tier_gate, `Scene.d11`)
+            assert n >= M6_ID_START or gen_scenes.M11_ID_START <= n < gen_scenes.M10_ID_START, (e.tag, e.get("name"))
     assert all(gen_scenes.M8_ID_START <= int(x.get("id").split(":")[1]) < gen_scenes.M7_ID_START
                for f in front if f.get("name") == "FrontFog" for x in f.iter() if x.get("id"))
 

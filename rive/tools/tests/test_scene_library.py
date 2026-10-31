@@ -103,8 +103,8 @@ def test_tier_gates_name_dense_fx_roots_present_in_the_file(tree: ET.Element) ->
     # every dense sheet has its first half kept (A) and its second half gated (B)
     for r in lib.TIER_GATES["high"]:
         assert r.endswith("B") and r[:-1] + "A" in names
-    # the tier is never bound here (lane W's shared pass binds it)
-    assert "tier" not in _bound(_artboard(tree), tree)
+    # the tier is bound by lane W's shared pass (world_kit.tier_gate), never by this module
+    assert "tier" in _bound(_artboard(tree), tree) and "tier" not in lib.BINDS14
 
 
 def test_artboard_state_machine_and_view_model_in_contract_order(tree: ET.Element) -> None:

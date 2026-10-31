@@ -147,7 +147,8 @@ def test_rope_drag_binds_the_rope_the_toggle_and_the_bell_tilt(tree: ET.Element)
 def test_moon_snow_fog_festive_binds(tree: ET.Element) -> None:
     assert _bound(_named(tree, "MoonRig"), tree) == {"moonPhase"}
     assert "moonPhase" in _bound(_named(tree, "MoonDrawn"), tree)
-    assert _bound(_named(tree, "SnowNear"), tree) == {"rain"} and _bound(_named(tree, "SnowFar"), tree) == {"rain"}
+    assert _bound(_named(tree, "SnowNear"), tree) == {"rain"}
+    assert _bound(_named(tree, "SnowFar"), tree) == {"rain", "tier"}   # M11: its sheet is the high tier's gate
     assert "festive" in _bound(_named(tree, "FestiveDecor"), tree)
     assert "festive" in _bound(_named(tree, "FestiveLights"), tree)
     assert "fog" in _bound(_named(tree, "FogVeil0"), tree) and "fog" in _bound(_named(tree, "FogBank"), tree)

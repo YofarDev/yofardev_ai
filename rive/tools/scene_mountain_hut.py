@@ -111,6 +111,15 @@ EVENT_FRAMES = {"snowfall": 420, "flare": 130, "aurora": 480, "bell": 150}
 
 # ---------------------------------------------------------------- v12 members this file binds
 BINDS: set[str] = {"moonPhase", "festive", *world_kit.drag_numbers(SCENE_ID)}
+# M11 ruling 13 (contract v14 `tier`): what the shared tier pass (world_kit.tier_gate) hides. "high": at
+# high and low (the second rain / snow sheet, the second half of the splashes and of every twinkle or
+# particle loop's copies, by full name); "low": at low only (decorative ambient loops that are not light).
+TIER_GATES: dict[str, tuple[str, ...]] = {
+    "high": ("SnowFarSheet", "Star8", "Star12", *(f"Spark{i}" for i in range(6, 12))),
+    # the kettle's steam; the window's frost and its faint cool spill on the wall (decorative overlays, not the
+    # stove's light: the bench needs them for low's 0.8 x ultra, rive_bench.py)
+    "low": ("SteamPuff", "Frost", "WallCool"),
+}
 
 
 # ====================================================================== helpers

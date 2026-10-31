@@ -15,7 +15,8 @@ that bind it must equal `world_kit.declared_v13_binds` (the contract: the beach)
 v14 (M11): every scene declares `tier` (enum `Tier`: low, high, ultra in contract order, default ultra),
 `spring` and `autumn` (default 0) after `night`, before its drag numbers; the v14 members its file binds
 must equal `world_kit.declared_v14_binds`; members the contract says it binds but it does not declare
-yet are pending (lane W binds `tier` everywhere), binds the contract says it ignores are errors. The
+yet are pending (M11 lane W: the shared tier gate binds `tier` in every scene, the seasons bind `spring`
+and `autumn` in livingRoom and campfire), binds the contract says it ignores are errors. The
 three v14 scenes (forestCabin, trainCompartment, library) are pending until their project dir exists,
 like the v12 ones were; forestCabin carries a `SceneFront` ("v14: forestCabin has one").
 """

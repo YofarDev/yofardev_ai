@@ -237,21 +237,22 @@ def test_moon_rain_fog_seasons_festive_binds(tree: ET.Element) -> None:
     assert "fog" in _bound(_named(tree, "FogVeil0"), tree) and "fog" in _bound(_named(tree, "FogBank"), tree)
     assert {"daylight"} == _bound(_named(tree, "SkyDay"), tree) and {"dusk"} == _bound(_named(tree, "SkyDusk"), tree)
     assert "daylight" in _bound(_named(tree, "DayLift"), tree)
+    # (M11: the drifts' later copies also carry the shared tier gate, world_kit.tier_gate)
     for name in ("MapleBlossom", "PathFlowers", "PetalDrift"):
-        assert _bound(_named(tree, name), tree) == {"spring"}, name
+        assert _bound(_named(tree, name), tree) - {"tier"} == {"spring"}, name
     for name in ("MapleAutumn", "GroundLeaves", "PorchLeaves", "LeafDrift", "Pumpkin"):
-        assert _bound(_named(tree, name), tree) == {"autumn"}, name
+        assert _bound(_named(tree, name), tree) - {"tier"} == {"autumn"}, name
     for name in ("Wreath", "FestiveLights"):
         assert "festive" in _bound(_named(tree, name), tree), name
     # the gust's leaves: green at 0 / 0, petals in spring, red-gold in autumn
     assert _bound(_named(tree, "GustLeaves"), tree) >= {"spring", "autumn"}
-    # bound v14 members: exactly the module's declaration (the tier comes later from lane W)
+    # bound v14 members: exactly the module's declaration and the shared tier gate (lane W)
     vm = _vm(tree)
     v14 = {p.get("id"): p.get("name") for p in vm if p.get("name") in ("tier", "spring", "autumn")}
     got = set()
     for root in [*tree.findall("Artboard"), *tree.findall("DataConverterFormula")]:
         got |= world_kit.bound_names(root, vm.get("id"), v14)
-    assert got == cab.BINDS14
+    assert got == cab.BINDS14 | {"tier"} == world_kit.declared_v14_binds(SID)
 
 
 def test_scene_front(tree: ET.Element) -> None:

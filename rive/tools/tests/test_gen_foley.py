@@ -39,7 +39,7 @@ def _read(path: Path) -> tuple[wave._wave_params, np.ndarray]:
 
 
 def test_the_set_is_complete(generated: dict[str, Path]) -> None:
-    assert set(generated) == set(EXPECTED_MS)
+    assert set(generated) == set(EXPECTED_MS) | {"bed_wind"}   # M11: the wind bed (its own rate, below)
 
 
 @pytest.mark.parametrize("name", sorted(EXPECTED_MS))
@@ -85,7 +85,46 @@ def test_beds_loop_seamlessly(generated: dict[str, Path], name: str) -> None:
 
 def test_total_size_within_budget(generated: dict[str, Path]) -> None:
     total = sum(p.stat().st_size for p in generated.values())
-    assert total <= 900 * 1024
+    assert total <= 900 * 1024 == 921_600
+
+
+# ---------------------------------------------------------------- the wind bed (M11 ruling 11)
+def test_wind_bed_format_length_and_budget(generated: dict[str, Path]) -> None:
+    params, data = _read(generated["bed_wind"])
+    assert (params.nchannels, params.sampwidth, params.framerate) == (1, 2, 16000)
+    assert params.nframes == round(16000 * gf.WIND_MS / 1000) == len(data)
+    assert generated["bed_wind"].stat().st_size <= gf.MAX_WIND_BYTES == 88_000
+    peak = float(np.max(np.abs(data)))
+    assert 10 ** (-12 / 20) < peak <= 10 ** (-1 / 20)
+
+
+def test_wind_bed_loops_seamlessly(generated: dict[str, Path]) -> None:
+    _, x = _read(generated["bed_wind"])
+    ms10 = 160
+    rms = [float(np.sqrt(np.mean(x[i:i + ms10] ** 2))) for i in range(0, len(x) - ms10, ms10)]
+    join = np.concatenate([x[-ms10 // 2:], x[:ms10 // 2]])
+    rms_join = float(np.sqrt(np.mean(join ** 2)))
+    # the join's 10 ms carry a level inside the loop's own range (no dip, no bump)
+    assert min(rms) * 0.8 <= rms_join <= max(rms) * 1.2
+    # and its step is no bigger than the signal's own steps; no DC to thump at the wrap
+    assert abs(x[0] - x[-1]) <= float(np.percentile(np.abs(np.diff(x)), 99.9))
+    assert abs(float(np.mean(x))) < 0.01
+
+
+def test_wind_bed_gusts() -> None:
+    level, sweep = gf.wind_gust(1000)
+    # periodic over the loop (the crossfade never meets a level step) and it really gusts
+    assert abs(level[0] - level[-1]) < 0.01 and abs(sweep[0] - sweep[-1]) < 0.01
+    assert level.max() / level.min() > 1.8 and sweep.min() >= 0 and sweep.max() <= 1
+
+
+def test_wind_bed_is_checked_in_and_fresh() -> None:
+    path = gf.OUT_DIR / "bed_wind.wav"
+    assert path.exists(), "run gen_foley.py"
+    _, data = _read(path)
+    assert np.array_equal(np.round(np.clip(gf.sounds()["bed_wind"], -1, 1) * 32767) / 32767.0, data)
+    total = sum(p.stat().st_size for p in gf.OUT_DIR.glob("*.wav"))
+    assert total <= 921_600
 
 
 def test_bell_within_its_budget(generated: dict[str, Path]) -> None:

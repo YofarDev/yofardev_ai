@@ -138,6 +138,15 @@ WALL_POOL_AT = (200.0, 700.0, 340.0)
 
 # contract v12: the members this file binds (Scene.check_v12_binds, check_contract.py)
 BINDS: set[str] = {"moonPhase", "festive", *world_kit.drag_numbers(SCENE_ID)}
+# M11 ruling 13 (contract v14 `tier`): what the shared tier pass (world_kit.tier_gate) hides. "high": at
+# high and low (the second rain / snow sheet, the second half of the splashes and of every twinkle or
+# particle loop's copies, by full name); "low": at low only (decorative ambient loops that are not light).
+TIER_GATES: dict[str, tuple[str, ...]] = {
+    # the second half of the window's and the shower glass's streak columns (`<prefix>Streak<i>_<k>`)
+    "high": (*(f"GlassStreak{i}_" for i in range(15, 30)), *(f"ShowerStreak{i}_" for i in range(20, 40)),
+             "FishSplash1"),
+    "low": ("CupSteam",),   # the cup's steam wisps
+}
 
 
 # ====================================================================== small drawing helpers

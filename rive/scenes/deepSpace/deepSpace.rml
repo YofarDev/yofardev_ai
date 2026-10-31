@@ -1477,42 +1477,60 @@
           <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="13" converterId="0:930185" id="0:930186"/>
           <Node x="-860" y="-900" name="UfoPathPivot" id="0:930098">
             <Node x="860" y="900" name="Ufo" id="0:662">
-              <Shape x="-30" y="50" name="TractorParticle0" opacity="0" id="0:3678">
-                <Ellipse width="2" height="4" name="Path" id="0:3677"/>
-                <Fill name="Fill" id="0:3676">
-                  <SolidColor colorValue="80B4F1D8" id="0:3675"/>
-                </Fill>
-              </Shape>
-              <Shape x="-18" y="80" name="TractorParticle1" opacity="0" id="0:3692">
-                <Ellipse width="2" height="4" name="Path" id="0:3691"/>
-                <Fill name="Fill" id="0:3690">
-                  <SolidColor colorValue="80B4F1D8" id="0:3689"/>
-                </Fill>
-              </Shape>
-              <Shape x="-6" y="110" name="TractorParticle2" opacity="0" id="0:3706">
-                <Ellipse width="2" height="4" name="Path" id="0:3705"/>
-                <Fill name="Fill" id="0:3704">
-                  <SolidColor colorValue="80B4F1D8" id="0:3703"/>
-                </Fill>
-              </Shape>
-              <Shape x="6" y="140" name="TractorParticle3" opacity="0" id="0:3720">
-                <Ellipse width="2" height="4" name="Path" id="0:3719"/>
-                <Fill name="Fill" id="0:3718">
-                  <SolidColor colorValue="80B4F1D8" id="0:3717"/>
-                </Fill>
-              </Shape>
-              <Shape x="18" y="170" name="TractorParticle4" opacity="0" id="0:3734">
-                <Ellipse width="2" height="4" name="Path" id="0:3733"/>
-                <Fill name="Fill" id="0:3732">
-                  <SolidColor colorValue="80B4F1D8" id="0:3731"/>
-                </Fill>
-              </Shape>
-              <Shape x="30" y="200" name="TractorParticle5" opacity="0" id="0:3748">
-                <Ellipse width="2" height="4" name="Path" id="0:3747"/>
-                <Fill name="Fill" id="0:3746">
-                  <SolidColor colorValue="80B4F1D8" id="0:3745"/>
-                </Fill>
-              </Shape>
+              <Node x="0" y="0" name="TierTractorParticle0" id="0:900064">
+                <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900063"/>
+                <Shape x="-30" y="50" name="TractorParticle0" opacity="0" id="0:3678">
+                  <Ellipse width="2" height="4" name="Path" id="0:3677"/>
+                  <Fill name="Fill" id="0:3676">
+                    <SolidColor colorValue="80B4F1D8" id="0:3675"/>
+                  </Fill>
+                </Shape>
+              </Node>
+              <Node x="0" y="0" name="TierTractorParticle1" id="0:900062">
+                <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900061"/>
+                <Shape x="-18" y="80" name="TractorParticle1" opacity="0" id="0:3692">
+                  <Ellipse width="2" height="4" name="Path" id="0:3691"/>
+                  <Fill name="Fill" id="0:3690">
+                    <SolidColor colorValue="80B4F1D8" id="0:3689"/>
+                  </Fill>
+                </Shape>
+              </Node>
+              <Node x="0" y="0" name="TierTractorParticle2" id="0:900060">
+                <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900059"/>
+                <Shape x="-6" y="110" name="TractorParticle2" opacity="0" id="0:3706">
+                  <Ellipse width="2" height="4" name="Path" id="0:3705"/>
+                  <Fill name="Fill" id="0:3704">
+                    <SolidColor colorValue="80B4F1D8" id="0:3703"/>
+                  </Fill>
+                </Shape>
+              </Node>
+              <Node x="0" y="0" name="TierTractorParticle3" id="0:900058">
+                <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900057"/>
+                <Shape x="6" y="140" name="TractorParticle3" opacity="0" id="0:3720">
+                  <Ellipse width="2" height="4" name="Path" id="0:3719"/>
+                  <Fill name="Fill" id="0:3718">
+                    <SolidColor colorValue="80B4F1D8" id="0:3717"/>
+                  </Fill>
+                </Shape>
+              </Node>
+              <Node x="0" y="0" name="TierTractorParticle4" id="0:900056">
+                <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900055"/>
+                <Shape x="18" y="170" name="TractorParticle4" opacity="0" id="0:3734">
+                  <Ellipse width="2" height="4" name="Path" id="0:3733"/>
+                  <Fill name="Fill" id="0:3732">
+                    <SolidColor colorValue="80B4F1D8" id="0:3731"/>
+                  </Fill>
+                </Shape>
+              </Node>
+              <Node x="0" y="0" name="TierTractorParticle5" id="0:900054">
+                <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900053"/>
+                <Shape x="30" y="200" name="TractorParticle5" opacity="0" id="0:3748">
+                  <Ellipse width="2" height="4" name="Path" id="0:3747"/>
+                  <Fill name="Fill" id="0:3746">
+                    <SolidColor colorValue="80B4F1D8" id="0:3745"/>
+                  </Fill>
+                </Shape>
+              </Node>
               <Shape x="-21.5" y="-35.5" name="DomeReflection" id="0:3328">
                 <PointsPath isClosed="false" isClockwise="true" name="Path" id="0:3327">
                   <CubicDetachedVertex x="-13.5" y="14.5" outRotation="-1.1071" outDistance="7.4536" inRotation="2.0344" inDistance="0" id="0:3324"/>
@@ -2621,30 +2639,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990059">
-          <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990058">
-            <GradientStop colorValue="001E1A44" position="0" id="0:990055"/>
-            <GradientStop colorValue="331E1A44" position="1" id="0:990057">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990056"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990064">
-          <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990063">
-            <GradientStop colorValue="001E1A44" position="0" id="0:990060"/>
-            <GradientStop colorValue="331E1A44" position="1" id="0:990062">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990061"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990069">
-          <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990068">
-            <GradientStop colorValue="001E1A44" position="0" id="0:990065"/>
-            <GradientStop colorValue="331E1A44" position="1" id="0:990067">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990066"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills1" id="0:900067">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900065"/>
+          <Rectangle width="1200" height="2041" originX="0" originY="0" name="Path" id="0:900066"/>
+          <Fill name="Fill" id="0:990059">
+            <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990058">
+              <GradientStop colorValue="001E1A44" position="0" id="0:990055"/>
+              <GradientStop colorValue="331E1A44" position="1" id="0:990057">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990056"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990064">
+            <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990063">
+              <GradientStop colorValue="001E1A44" position="0" id="0:990060"/>
+              <GradientStop colorValue="331E1A44" position="1" id="0:990062">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990061"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990069">
+            <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990068">
+              <GradientStop colorValue="001E1A44" position="0" id="0:990065"/>
+              <GradientStop colorValue="331E1A44" position="1" id="0:990067">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990066"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Node x="1000" y="300" rotation="2.4038" opacity="0" name="emitMeteor" id="0:983">
         <Shape name="emitCore" id="0:982">
@@ -3073,12 +3095,15 @@
           <SolidColor colorValue="FFFFFFFF" name="emit" id="0:311"/>
         </Fill>
       </Shape>
-      <Shape x="396.7289" y="956.6208" name="emitStar56" opacity="0.9391" id="0:318">
-        <Ellipse width="2" height="2" name="Path" id="0:317"/>
-        <Fill name="Fill" id="0:316">
-          <SolidColor colorValue="FFFFE6C8" name="emit" id="0:315"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierStar56" id="0:900052">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900051"/>
+        <Shape x="396.7289" y="956.6208" name="emitStar56" opacity="0.9391" id="0:318">
+          <Ellipse width="2" height="2" name="Path" id="0:317"/>
+          <Fill name="Fill" id="0:316">
+            <SolidColor colorValue="FFFFE6C8" name="emit" id="0:315"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="461.86" y="1167.9043" name="emitStar57" opacity="0.7966" id="0:328">
         <Ellipse width="3" height="3" name="Path" id="0:327"/>
         <Fill name="Fill" id="0:326">
@@ -3121,12 +3146,15 @@
           <SolidColor colorValue="FFFFE6C8" name="emit" id="0:349"/>
         </Fill>
       </Shape>
-      <Shape x="561.7664" y="400.4561" name="emitStar64" opacity="0.8697" id="0:356">
-        <Ellipse width="2.4" height="2.4" name="Path" id="0:355"/>
-        <Fill name="Fill" id="0:354">
-          <SolidColor colorValue="FFCFE0FF" name="emit" id="0:353"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierStar64" id="0:900050">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900049"/>
+        <Shape x="561.7664" y="400.4561" name="emitStar64" opacity="0.8697" id="0:356">
+          <Ellipse width="2.4" height="2.4" name="Path" id="0:355"/>
+          <Fill name="Fill" id="0:354">
+            <SolidColor colorValue="FFCFE0FF" name="emit" id="0:353"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="290.0548" y="545.9102" name="emitStar65" opacity="0.9626" id="0:366">
         <Ellipse width="3" height="3" name="Path" id="0:365"/>
         <Fill name="Fill" id="0:364">
@@ -3169,12 +3197,15 @@
           <SolidColor colorValue="FFFFE6C8" name="emit" id="0:387"/>
         </Fill>
       </Shape>
-      <Shape x="945.5885" y="379.1005" name="emitStar72" opacity="0.8921" id="0:394">
-        <Ellipse width="2" height="2" name="Path" id="0:393"/>
-        <Fill name="Fill" id="0:392">
-          <SolidColor colorValue="FFFFE6C8" name="emit" id="0:391"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierStar72" id="0:900048">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900047"/>
+        <Shape x="945.5885" y="379.1005" name="emitStar72" opacity="0.8921" id="0:394">
+          <Ellipse width="2" height="2" name="Path" id="0:393"/>
+          <Fill name="Fill" id="0:392">
+            <SolidColor colorValue="FFFFE6C8" name="emit" id="0:391"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="902.2431" y="938.3437" name="emitStar73" opacity="0.9854" id="0:404">
         <Ellipse width="2.4" height="2.4" name="Path" id="0:403"/>
         <Fill name="Fill" id="0:402">
@@ -3217,12 +3248,15 @@
           <SolidColor colorValue="FFFFFFFF" name="emit" id="0:425"/>
         </Fill>
       </Shape>
-      <Shape x="722.6979" y="213.027" name="emitStar80" opacity="0.518" id="0:432">
-        <Ellipse width="3" height="3" name="Path" id="0:431"/>
-        <Fill name="Fill" id="0:430">
-          <SolidColor colorValue="FFFFE6C8" name="emit" id="0:429"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierStar80" id="0:900046">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900045"/>
+        <Shape x="722.6979" y="213.027" name="emitStar80" opacity="0.518" id="0:432">
+          <Ellipse width="3" height="3" name="Path" id="0:431"/>
+          <Fill name="Fill" id="0:430">
+            <SolidColor colorValue="FFFFE6C8" name="emit" id="0:429"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="564.0697" y="1030.5775" name="emitStar81" opacity="0.9593" id="0:442">
         <Ellipse width="4.2" height="4.2" name="Path" id="0:441"/>
         <Fill name="Fill" id="0:440">
@@ -3265,12 +3299,15 @@
           <SolidColor colorValue="FFFFFFFF" name="emit" id="0:463"/>
         </Fill>
       </Shape>
-      <Shape x="795.1005" y="293.0603" name="emitStar88" opacity="0.7822" id="0:470">
-        <Ellipse width="4.2" height="4.2" name="Path" id="0:469"/>
-        <Fill name="Fill" id="0:468">
-          <SolidColor colorValue="FFCFE0FF" name="emit" id="0:467"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierStar88" id="0:900044">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900043"/>
+        <Shape x="795.1005" y="293.0603" name="emitStar88" opacity="0.7822" id="0:470">
+          <Ellipse width="4.2" height="4.2" name="Path" id="0:469"/>
+          <Fill name="Fill" id="0:468">
+            <SolidColor colorValue="FFCFE0FF" name="emit" id="0:467"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="38.5105" y="1568.4362" name="emitStar89" opacity="0.6095" id="0:480">
         <Ellipse width="2.4" height="2.4" name="Path" id="0:479"/>
         <Fill name="Fill" id="0:478">
@@ -3313,12 +3350,15 @@
           <SolidColor colorValue="FFFFFFFF" name="emit" id="0:501"/>
         </Fill>
       </Shape>
-      <Shape x="564.4908" y="1829.455" name="emitStar96" opacity="0.7728" id="0:508">
-        <Ellipse width="4.2" height="4.2" name="Path" id="0:507"/>
-        <Fill name="Fill" id="0:506">
-          <SolidColor colorValue="FFFFE6C8" name="emit" id="0:505"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierStar96" id="0:900042">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900041"/>
+        <Shape x="564.4908" y="1829.455" name="emitStar96" opacity="0.7728" id="0:508">
+          <Ellipse width="4.2" height="4.2" name="Path" id="0:507"/>
+          <Fill name="Fill" id="0:506">
+            <SolidColor colorValue="FFFFE6C8" name="emit" id="0:505"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="432.4512" y="1419.6968" name="emitStar97" opacity="0.6415" id="0:518">
         <Ellipse width="4.2" height="4.2" name="Path" id="0:517"/>
         <Fill name="Fill" id="0:516">
@@ -3361,12 +3401,15 @@
           <SolidColor colorValue="FFFFE6C8" name="emit" id="0:539"/>
         </Fill>
       </Shape>
-      <Shape x="580.7236" y="1887.6836" name="emitStar104" opacity="0.5928" id="0:546">
-        <Ellipse width="3" height="3" name="Path" id="0:545"/>
-        <Fill name="Fill" id="0:544">
-          <SolidColor colorValue="FFFFE6C8" name="emit" id="0:543"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierStar104" id="0:900040">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900039"/>
+        <Shape x="580.7236" y="1887.6836" name="emitStar104" opacity="0.5928" id="0:546">
+          <Ellipse width="3" height="3" name="Path" id="0:545"/>
+          <Fill name="Fill" id="0:544">
+            <SolidColor colorValue="FFFFE6C8" name="emit" id="0:543"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="790.4302" y="651.9276" name="emitStar105" opacity="0.7528" id="0:556">
         <Ellipse width="4.2" height="4.2" name="Path" id="0:555"/>
         <Fill name="Fill" id="0:554">
@@ -3409,30 +3452,34 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Fill name="Fill" id="0:990082">
-          <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990081">
-            <GradientStop colorValue="001E1A44" position="0" id="0:990078"/>
-            <GradientStop colorValue="331E1A44" position="1" id="0:990080">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990079"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990087">
-          <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990086">
-            <GradientStop colorValue="001E1A44" position="0" id="0:990083"/>
-            <GradientStop colorValue="331E1A44" position="1" id="0:990085">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990084"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
-        <Fill name="Fill" id="0:990092">
-          <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990091">
-            <GradientStop colorValue="001E1A44" position="0" id="0:990088"/>
-            <GradientStop colorValue="331E1A44" position="1" id="0:990090">
-              <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990089"/>
-            </GradientStop>
-          </LinearGradient>
-        </Fill>
+        <Shape x="0" y="0" name="TierFogFills0" id="0:900070">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900068"/>
+          <Rectangle width="1200" height="2041" originX="0" originY="0" name="Path" id="0:900069"/>
+          <Fill name="Fill" id="0:990082">
+            <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990081">
+              <GradientStop colorValue="001E1A44" position="0" id="0:990078"/>
+              <GradientStop colorValue="331E1A44" position="1" id="0:990080">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990079"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990087">
+            <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990086">
+              <GradientStop colorValue="001E1A44" position="0" id="0:990083"/>
+              <GradientStop colorValue="331E1A44" position="1" id="0:990085">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990084"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+          <Fill name="Fill" id="0:990092">
+            <LinearGradient startX="0" startY="0" endX="0" endY="1" id="0:990091">
+              <GradientStop colorValue="001E1A44" position="0" id="0:990088"/>
+              <GradientStop colorValue="331E1A44" position="1" id="0:990090">
+                <DataBindContext sourcePathIds="0:23-0:980018" propertyKey="38" id="0:990089"/>
+              </GradientStop>
+            </LinearGradient>
+          </Fill>
+        </Shape>
       </Shape>
       <Shape x="300" y="700" name="emitNebula0" scaleY="0.7" id="0:36">
         <Ellipse width="1040" height="1040" name="Path" id="0:35"/>
@@ -6938,4 +6985,42 @@
     <FormulaTokenOperation operationType="2" id="0:990046"/>
     <FormulaTokenInput id="0:990047"/>
   </DataConverterFormula>
+
+  <DataConverterToNumber id="0:900010"/>
+
+  <DataConverterFormula id="0:900022">
+    <FormulaTokenFunction functionType="0" id="0:900019"/>
+    <FormulaTokenValue operationValue="1" id="0:900014"/>
+    <FormulaTokenArgumentSeparator id="0:900020"/>
+    <FormulaTokenFunction functionType="1" id="0:900016"/>
+    <FormulaTokenValue operationValue="0" id="0:900015"/>
+    <FormulaTokenArgumentSeparator id="0:900017"/>
+    <FormulaTokenInput id="0:900011"/>
+    <FormulaTokenOperation operationType="1" id="0:900012"/>
+    <FormulaTokenValue operationValue="1" id="0:900013"/>
+    <FormulaTokenParenthesisClose id="0:900018"/>
+    <FormulaTokenParenthesisClose id="0:900021"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900025">
+    <DataConverterGroupItem converterId="0:900010" id="0:900023"/>
+    <DataConverterGroupItem converterId="0:900022" id="0:900024"/>
+  </DataConverterGroup>
+
+  <DataConverterFormula id="0:900035">
+    <FormulaTokenFunction functionType="0" id="0:900032"/>
+    <FormulaTokenValue operationValue="1" id="0:900027"/>
+    <FormulaTokenArgumentSeparator id="0:900033"/>
+    <FormulaTokenFunction functionType="1" id="0:900029"/>
+    <FormulaTokenValue operationValue="0" id="0:900028"/>
+    <FormulaTokenArgumentSeparator id="0:900030"/>
+    <FormulaTokenInput id="0:900026"/>
+    <FormulaTokenParenthesisClose id="0:900031"/>
+    <FormulaTokenParenthesisClose id="0:900034"/>
+  </DataConverterFormula>
+
+  <DataConverterGroup id="0:900038">
+    <DataConverterGroupItem converterId="0:900010" id="0:900036"/>
+    <DataConverterGroupItem converterId="0:900035" id="0:900037"/>
+  </DataConverterGroup>
 </Rive>

@@ -506,3 +506,165 @@ def trail_dots(sc: Scene, doc: Doc, colour: str, highlight: str, r: float) -> El
                         x=0.0, y=0.0, opacity=0.0, name=f"TrailDot{i}"))
     return doc("Node", _bind(sc, doc, "trailFade", KEY_OPACITY, fade), *dots, x=0.0, y=0.0, opacity=0.0,
                name="TrailDots")
+
+
+# ====================================================================== the tier gate (M11 ruling 13)
+# contract v14 `tier` (enum low / high / ultra, default ultra = the v13 look). `DataConverterToNumber`
+# turns the value into its index in the enum (low 0, high 1, ultra 2; `DataConverterEnumToUint` chained
+# into a formula draws 0 at every value, rive 1.8.0); a clamp formula then gives the
+# gated element's opacity. "high": the dense effects, drawn at ultra only (hidden at high and low);
+# "low": drawn at high and ultra (hidden at low only). An element at opacity 0 is skipped by the
+# renderer (its subtree costs nothing to draw; measured in rive_bench.py).
+TIER_LEVELS = ("high", "low")
+TIER_OPACITY = {"high": (0.0, 0.0, 1.0), "low": (0.0, 1.0, 1.0)}   # opacity at low, high, ultra
+TIER_WRAP_PREFIX = "Tier"            # an identity node holding the gate of an element that cannot carry it
+TIER_FOG_FILLS = "TierFogFills"      # the fills 2..n of a fog veil, moved to a child shape hidden at low
+FOG_VEIL = re.compile(r"FogVeil\d+")
+EMIT = "emit"
+
+
+def gate_root(name: object) -> str:
+    """The name a `TIER_GATES` entry matches: the element's name without the diorama's `emit` prefix
+    and without trailing digits (`emitSplash12` -> `Splash`)."""
+    return str(name).removeprefix(EMIT).rstrip("0123456789")
+
+
+def tier_gates(scene_id: str) -> dict[str, tuple[str, ...]]:
+    """The scene's `TIER_GATES` ({"high": roots, "low": roots}): the scene module's own table, else
+    `gen_scenes.TIER_GATES[scene_id]` (the four M8 scenes); {} when there is none."""
+    if scene_id in SCENE_MODULES:
+        try:
+            gates = getattr(scene_module(scene_id), "TIER_GATES", None)
+        except SceneNotWritten:
+            gates = None
+        if gates is not None:
+            return {k: tuple(v) for k, v in gates.items()}
+    import gen_scenes  # noqa: PLC0415 (gen_scenes imports this module)
+    return {k: tuple(v) for k, v in getattr(gen_scenes, "TIER_GATES", {}).get(scene_id, {}).items()}
+
+
+@dataclass
+class TierGateReport:
+    """What `tier_gate` did: per level, the names of the elements it gated (in tree order), and the fog
+    veils it thinned."""
+
+    gated: dict[str, list[str]]
+    veils: list[str]
+
+
+def _opacity_is_free(e: El, keyed: set[str]) -> bool:
+    """True when `e` may carry the tier bind itself: its opacity is neither keyed nor bound, and is 1."""
+    if e.id in keyed:
+        return False
+    if any(c.tag == "DataBindContext" and str(c.attrs.get("propertyKey")) == str(KEY_OPACITY) for c in e.children):
+        return False
+    return float(e.attrs.get("opacity", 1.0)) == 1.0
+
+
+def _keyed_opacity(anims: list[El]) -> set[str]:
+    out: set[str] = set()
+    for a in anims:
+        for ko in a.children:
+            if ko.tag == "KeyedObject" and any(kp.attrs.get("property") in ("opacity", KEY_OPACITY, str(KEY_OPACITY))
+                                               for kp in ko.children):
+                out.add(str(ko.attrs["objectId"]))
+    return out
+
+
+def _feathered(e: El) -> bool:
+    return e.tag == "Shape" and any(p.tag in ("Fill", "Stroke") and any(f.tag == "Feather" for f in p.children)
+                                    for p in e.children)
+
+
+def tier_gate(sc: Scene, doc: Doc, trees: list[list[El]], anims: list[El],
+              gates: dict[str, tuple[str, ...]]) -> TierGateReport:
+    """Binds the scene's `tier` (contract v14) so that, history-free:
+
+    - every element (any depth, in every list of `trees`, e.g. the `Scene` and `SceneFront` contents)
+      whose `gate_root` (or its full name without `emit`, e.g. `Splash12`: one copy of a numbered set) is
+      in `gates["high"]` draws at ultra only, and `gates["low"]` at high and ultra (an element inside an
+      already gated one is left alone);
+    - every fog veil (`FogVeil<k>`, the diorama's stacked fills) keeps one fill at low: fills 2..n move
+      to a child shape `TierFogFills<k>` (the same rectangle at the veil's origin: it takes the veil's
+      transform and opacity, `fog` included, and paints behind the veil's own fill) drawn at high and
+      ultra (identical
+      paints, so ultra composites exactly as before);
+    - every feathered shape is hidden at low (contract v14; none exists today).
+
+    The bind sits on the element itself when its opacity is free (not keyed, not bound, 1), else on an
+    identity node `Tier<Name>` that wraps it in place (draw order kept). Everything mints from `doc` (a
+    scene's `d11`); the converters (`DataConverterToNumber` chained into a clamp formula per level) are
+    private root elements. A name in `gates` that matches nothing raises `KeyError`."""
+    f = Formulas(doc, sc.vpath)
+    to_num = doc("DataConverterToNumber")
+    sc.roots.append(to_num)
+    group: dict[str, El] = {}
+    for level, shift in (("high", 1.0), ("low", 0.0)):
+        inner = [*f.inp(), f.op("-"), f.val(shift)] if shift else f.inp()
+        formula = _formula(sc, doc, _clamp(f, 0, 1, inner))
+        group[level] = doc("DataConverterGroup", doc("DataConverterGroupItem", converterId=to_num.ref()),
+                           doc("DataConverterGroupItem", converterId=formula.ref()))
+        sc.roots.append(group[level])
+
+    def bind(level: str) -> El:
+        return doc("DataBindContext", sourcePathIds=sc.vpath("tier"), propertyKey=KEY_OPACITY,
+                   converterId=group[level].ref())
+
+    want = {lvl: set(gates.get(lvl, ())) for lvl in TIER_LEVELS}
+    both = want["high"] & want["low"]
+    if both:
+        raise ValueError(f"{sc.id}: tier gate names in both levels: {sorted(both)}")
+    keyed = _keyed_opacity(anims)
+    hits: list[tuple[list[El], int, str]] = []    # (parent's children, index, level)
+    veils: list[tuple[list[El], int]] = []
+    seen: dict[str, set[str]] = {lvl: set() for lvl in TIER_LEVELS}
+
+    def visit(kids: list[El]) -> None:
+        for i, e in enumerate(kids):
+            if e.tag not in ("Node", "Shape"):
+                continue
+            full = str(e.attrs.get("name", "")).removeprefix(EMIT)
+            root = gate_root(full)
+            level = next((lvl for lvl in TIER_LEVELS if root in want[lvl] or full in want[lvl]), None)
+            if level is None and _feathered(e):
+                level = "low"
+            if level is not None:
+                hits.append((kids, i, level))
+                seen[level] |= {root, full}
+                continue
+            if e.tag == "Shape" and FOG_VEIL.fullmatch(str(e.attrs.get("name", ""))) \
+                    and sum(1 for c in e.children if c.tag == "Fill") > 1:
+                veils.append((kids, i))
+            visit(e.children)
+
+    for tree in trees:
+        visit(tree)
+    missing = {lvl: sorted(want[lvl] - seen[lvl]) for lvl in TIER_LEVELS if want[lvl] - seen[lvl]}
+    if missing:
+        raise KeyError(f"{sc.id}: tier gate names match no element: {missing}")
+
+    report = TierGateReport({lvl: [] for lvl in TIER_LEVELS}, [])
+    # wrap from the back of each list so the recorded indices stay valid
+    for kids, i, level in sorted(hits, key=lambda h: -h[1]):
+        e = kids[i]
+        report.gated[level].append(str(e.attrs.get("name", "")))
+        if _opacity_is_free(e, keyed):
+            e.children.insert(0, bind(level))
+        else:
+            name = str(e.attrs.get("name", "")).removeprefix(EMIT)
+            kids[i] = doc("Node", bind(level), e, x=0.0, y=0.0, name=TIER_WRAP_PREFIX + name[:1].upper() + name[1:])
+    for kids, i in sorted(veils, key=lambda v: -v[1]):
+        veil = kids[i]
+        fills = [c for c in veil.children if c.tag == "Fill"]
+        rect = next(c for c in veil.children if c.tag == "Rectangle")
+        veil.children = [c for c in veil.children if c not in fills[1:]]
+        name = str(veil.attrs["name"])
+        # a child shape paints behind its parent's fill (rive 1.5.1+): identical paints, so the stack
+        # composites exactly as the four fills of one shape did
+        veil.children.append(doc("Shape", bind("low"), doc("Rectangle", **rect.attrs), *fills[1:], x=0.0, y=0.0,
+                                 name=TIER_FOG_FILLS + name.removeprefix("FogVeil")))
+        report.veils.append(name)
+    for lvl in TIER_LEVELS:
+        report.gated[lvl].reverse()
+    report.veils.reverse()
+    return report

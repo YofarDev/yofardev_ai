@@ -55,6 +55,7 @@ def test_an_unknown_scene_is_rejected() -> None:
 def test_prop_gates_only_with_props() -> None:
     assert runs_for(["campfire"], KNOWN) == [("review_diorama.py", "campfire", "--gates-only"),
                                              ("review_time.py", "campfire", "--gates-only"),
+                                             ("rive_bench.py", "campfire", "--gates-only"),
                                              ("review_journey.py", "--gates-only")]
     assert runs_for(["--props", "campfire"], KNOWN)[-1] == ("motion_review.py", "--gates-only")
-    assert len(runs_for(["--props"], KNOWN)) == len(KNOWN) + 3
+    assert len(runs_for(["--props"], KNOWN)) == len(KNOWN) + 4
