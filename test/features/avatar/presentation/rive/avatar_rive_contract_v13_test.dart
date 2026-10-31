@@ -29,8 +29,12 @@ void main() {
         .toList();
   }
 
-  test('the contract is v13', () {
-    expect(lines.first, '# Rive contract (v13)');
+  test('the contract is v13 or later', () {
+    final RegExpMatch? m = RegExp(
+      r'^# Rive contract \(v(\d+)\)$',
+    ).firstMatch(lines.first);
+    expect(m, isNotNull, reason: lines.first);
+    expect(int.parse(m!.group(1)!), greaterThanOrEqualTo(13));
   });
 
   test('topTint and hatTint are colours, default 00000000', () {

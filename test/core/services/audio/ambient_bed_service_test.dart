@@ -132,6 +132,35 @@ void main() {
     });
   });
 
+  test('the v14 scenes: forestCabin is outdoors (0.25 ×), the train and the '
+      'library hear it behind glass (0.12 ×); none crackles', () {
+    fakeAsync((FakeAsync async) {
+      rain.value = 1;
+      final AmbientBedService service = build(
+        async,
+        scene: AvatarScene.forestCabin,
+      );
+      async.elapse(const Duration(seconds: 1));
+      expect(service.rainVolumeNow, closeTo(0.25, 1e-9));
+      expect(service.crackleVolumeNow, 0);
+      for (final AvatarScene scene in <AvatarScene>[
+        AvatarScene.trainCompartment,
+        AvatarScene.library,
+      ]) {
+        service.setScene(scene);
+        async.elapse(const Duration(seconds: 1));
+        expect(service.rainVolumeNow, closeTo(0.12, 1e-9), reason: scene.name);
+        expect(service.crackleVolumeNow, 0, reason: scene.name);
+        expect(service.cracklePlaying, isFalse, reason: scene.name);
+      }
+      // a flare in a scene without a fire does not crackle
+      flares.add(null);
+      async.elapse(const Duration(milliseconds: 900));
+      expect(service.crackleVolumeNow, 0);
+      service.dispose();
+    });
+  });
+
   test('mountainHut: the stove crackles at 0.6 × the campfire level, a flare '
       'swells it', () {
     fakeAsync((FakeAsync async) {

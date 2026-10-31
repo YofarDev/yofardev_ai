@@ -558,4 +558,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sceneMountainHut => 'Mountain hut';
+
+  @override
+  String get sceneForestCabin => 'Forest cabin';
+
+  @override
+  String get sceneTrainCompartment => 'Train compartment';
+
+  @override
+  String get sceneLibrary => 'Library';
 }

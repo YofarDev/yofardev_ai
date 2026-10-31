@@ -406,5 +406,8 @@
   "sceneDeepSpace": "Deep space",
   "sceneCafe": "Café",
   "sceneRooftop": "Rooftop",
-  "sceneMountainHut": "Mountain hut"
+  "sceneMountainHut": "Mountain hut",
+  "sceneForestCabin": "Forest cabin",
+  "sceneTrainCompartment": "Train compartment",
+  "sceneLibrary": "Library"
 }

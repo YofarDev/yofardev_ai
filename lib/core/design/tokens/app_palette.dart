@@ -21,6 +21,9 @@ class AppPalette {
   static const Color cafeAccent = Color(0xFFE8956B);
   static const Color rooftopAccent = Color(0xFF7CB8FF);
   static const Color mountainHutAccent = Color(0xFF86D4C4);
+  static const Color forestCabinAccent = Color(0xFFA6CF6E);
+  static const Color trainCompartmentAccent = Color(0xFFF59AB5);
+  static const Color libraryAccent = Color(0xFFE9CF6A);
 
   /// [livingRoomAccent] at the look's 35 % glow alpha (0x59).
   static const Color livingRoomGlow = Color(0x59F4B860);
@@ -57,6 +60,20 @@ class AppPalette {
   static const Color mountainHutRim = Color(0xFF8CB4E0);
   static const Color mountainHutAmbient = Color(0xFF1E1A26);
   static const Color mountainHutFog = Color(0x33B8C8DC);
+
+  // Moonshot M11 scenes (contract v14).
+  static const Color forestCabinKey = Color(0xFFFFC27A);
+  static const Color forestCabinRim = Color(0xFF9CC8F0);
+  static const Color forestCabinAmbient = Color(0xFF1A2A22);
+  static const Color forestCabinFog = Color(0x33B4C4B0);
+  static const Color trainCompartmentKey = Color(0xFFFFCF94);
+  static const Color trainCompartmentRim = Color(0xFF94B4DC);
+  static const Color trainCompartmentAmbient = Color(0xFF2E2236);
+  static const Color trainCompartmentFog = Color(0x33B8B0C8);
+  static const Color libraryKey = Color(0xFFFFD27A);
+  static const Color libraryRim = Color(0xFF8AA4CC);
+  static const Color libraryAmbient = Color(0xFF1C1612);
+  static const Color libraryFog = Color(0x33706A78);
 
   // Moonshot M7: the neutral daylight the scene rigs lean toward by day
   // (`SceneLights.at`): a pale warm key and a cool sky fill.

@@ -91,7 +91,7 @@ void main() {
     late Map<String, _Row> table;
     setUpAll(() => table = _parseDragTable());
 
-    test('one handle per scene, the seven scenes', () {
+    test('one handle per scene, every scene', () {
       expect(table.keys.toSet(), AvatarRiveContract.sceneIds.toSet());
       expect(
         SceneDrags.handles.keys.map((AvatarScene s) => s.name).toSet(),

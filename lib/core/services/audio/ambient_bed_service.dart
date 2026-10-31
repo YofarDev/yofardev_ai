@@ -53,10 +53,12 @@ class AudioPlayersBedPlayer implements BedPlayer {
 ///   the campfire's level): [crackleVolume] × (0.6 + 0.4 × the campfire's
 ///   flicker); a `flare` ([onFlare]) swells it to [flareVolume] for
 ///   [flareLength];
-/// - **rain**: the world's rain × [rainVolumeOutdoors] in campfire and
-///   beach, × [rainVolumeIndoors] in livingRoom (behind the window),
-///   × [rainVolumeRooftop] on the rooftop, × [rainVolumeBehindGlass] in the
-///   cafe (behind its glass), 0 in deepSpace and mountainHut (it snows there).
+/// - **rain**: the world's rain × [rainVolumeOutdoors] in campfire, beach
+///   and on forestCabin's porch, × [rainVolumeIndoors] in livingRoom (behind
+///   the window), × [rainVolumeRooftop] on the rooftop,
+///   × [rainVolumeBehindGlass] in the cafe, the train compartment and the
+///   library (behind their glass), 0 in deepSpace and mountainHut (it snows
+///   there).
 ///
 /// Every volume eases linearly over [ease] (a scene change, at a journey's
 /// cut, cross-fades the two); both duck to [duck] while the avatar speaks. A
@@ -197,7 +199,10 @@ class AmbientBedService {
     AvatarScene.beach ||
     AvatarScene.deepSpace ||
     AvatarScene.cafe ||
-    AvatarScene.rooftop => 0,
+    AvatarScene.rooftop ||
+    AvatarScene.forestCabin ||
+    AvatarScene.trainCompartment ||
+    AvatarScene.library => 0,
   };
 
   double _crackleTarget(DateTime now) {
@@ -218,9 +223,13 @@ class AmbientBedService {
   double _rainTarget() {
     final double rain = (_rainSource?.value ?? 0).clamp(0.0, 1.0);
     final double scale = switch (_scene) {
-      AvatarScene.campfire || AvatarScene.beach => rainVolumeOutdoors,
+      AvatarScene.campfire ||
+      AvatarScene.beach ||
+      AvatarScene.forestCabin => rainVolumeOutdoors,
       AvatarScene.livingRoom => rainVolumeIndoors,
-      AvatarScene.cafe => rainVolumeBehindGlass,
+      AvatarScene.cafe ||
+      AvatarScene.trainCompartment ||
+      AvatarScene.library => rainVolumeBehindGlass,
       AvatarScene.rooftop => rainVolumeRooftop,
       AvatarScene.deepSpace || AvatarScene.mountainHut => 0,
     };

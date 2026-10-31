@@ -148,6 +148,35 @@ void main() {
       }
     });
 
+    test('the M11 scenes clear 4.5:1 for onAccent and the caption '
+        '(ruling 21)', () {
+      const Map<AvatarScene, Color> accents = <AvatarScene, Color>{
+        AvatarScene.forestCabin: Color(0xFFA6CF6E),
+        AvatarScene.trainCompartment: Color(0xFFF59AB5),
+        AvatarScene.library: Color(0xFFE9CF6A),
+      };
+      for (final MapEntry<AvatarScene, Color> e in accents.entries) {
+        final ScenePalette p = of(e.key);
+        expect(p.accent, e.value, reason: e.key.name);
+        expect(
+          contrastRatio(p.onAccent, p.accent),
+          greaterThanOrEqualTo(4.5),
+          reason: e.key.name,
+        );
+        expect(p.glow, e.value.withAlpha(0x59), reason: e.key.name);
+        // The caption sits on glass: the scene's glassTint over the surface.
+        final Color glass = Color.alphaBlend(
+          p.glassTint,
+          UiLooks.storybook.surface,
+        );
+        expect(
+          contrastRatio(p.captionInk, glass),
+          greaterThanOrEqualTo(4.5),
+          reason: e.key.name,
+        );
+      }
+    });
+
     test('the default light is neutral', () {
       final ScenePalette p = ScenePalette.fromAccent(
         const Color(0xFFF4B860),

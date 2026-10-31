@@ -32,7 +32,8 @@ typedef DragFrameScheduler = void Function(VoidCallback callback);
 /// Cues go out as [onHaptic] (start and steps: selection; a pull's
 /// threshold and a flare: impact), [onFoley] (`click` at a pull's threshold,
 /// `bell` for the hut's rope) and [onSceneEvent] (the cord's `lightsOff` /
-/// `lightsOn` alternately, the rope's `bell`, the poke's `flare`).
+/// `lightsOn` alternately, the rope's `bell`, the train chain's `whistle`,
+/// the poke's `flare`).
 /// [onSceneEvent] echoes of the scene's own events keep the lamp's state and
 /// wash the beach's trail on a `bigWave`.
 ///
@@ -344,6 +345,8 @@ class PropDragController {
       case AvatarScene.mountainHut:
         onFoley?.call('bell');
         onSceneEvent?.call(SceneEvent.bell);
+      case AvatarScene.trainCompartment:
+        onSceneEvent?.call(SceneEvent.whistle);
       default:
         break;
     }

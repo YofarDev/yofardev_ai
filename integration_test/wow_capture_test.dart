@@ -71,10 +71,12 @@ import 'support/say_tts_synthesizer.dart';
 /// M9 (ruling 20): `scene` starts in `SCENE` at a pinned evening, pokes its
 /// NPC through the director, drags its handle with synthesised pointer
 /// gestures on the real scene view, then speaks one short reply (the beach
-/// first waits for the gulls to land and startles them); `pairs` runs all 42
-/// ordered scene pairs as one Eulerian circuit from the living room (sparse
-/// frames); `tour7` chains the seven scenes on a pinned December night at a
-/// full moon.
+/// first waits for the gulls to land and startles them); `pairs` runs every
+/// ordered scene pair (M11: all 90 of the ten scenes, derived from
+/// `AvatarScene.values`) as one Eulerian circuit from the living room (sparse
+/// frames); `tour7` chains the seven M9 scenes on a pinned December night at
+/// a full moon. M11: `scene` covers the three v14 scenes too
+/// (`SCENE=forestCabin|trainCompartment|library`).
 ///
 /// M10 (ruling 20; several user turns each, frames every 100 ms):
 /// `wardrobe` dresses the avatar through `change_avatar` tool rounds in the
@@ -239,6 +241,22 @@ const Map<AvatarScene, _SceneRun> _sceneRuns = <AvatarScene, _SceneRun>{
     npcProp: 'dog',
     user: 'It is snowing again.',
     reply: 'Perfect night to stay by the stove with the dog.',
+  ),
+  // M11 (ruling 7): the three v14 scenes.
+  AvatarScene.forestCabin: _SceneRun(
+    npcProp: 'squirrel',
+    user: 'What a lovely porch.',
+    reply: 'The squirrel thinks so too. It runs this whole yard.',
+  ),
+  AvatarScene.trainCompartment: _SceneRun(
+    npcProp: 'ladybug',
+    user: 'Where is this train going?',
+    reply: 'Somewhere green. A ladybug is riding with us on the sill.',
+  ),
+  AvatarScene.library: _SceneRun(
+    npcProp: 'mouse',
+    user: 'Is that a mouse by the shelf?',
+    reply: 'Shh, the mouse is reading. Or sleeping. Hard to tell.',
   ),
 };
 
@@ -506,7 +524,8 @@ final Map<String, _Script> _scripts = <String, _Script>{
   ),
   // M9: one scene (SCENE): its NPC, its drag, a short reply.
   'scene': _sceneScript(AvatarScene.values.byName(_sceneArg)),
-  // M9: all 42 ordered pairs back to back, no speech, sparse frames.
+  // M9 / M11: every ordered pair (90 over the ten scenes) back to back, no
+  // speech, sparse frames.
   'pairs': _Script(
     scene: AvatarScene.livingRoom,
     rain: 0,
@@ -719,8 +738,11 @@ List<Offset> _dragPath(SceneDragHandle handle) {
       line(Offset(0, h * 0.5), 10);
       line(Offset(w, h), 10);
     case DragKind.spin:
-      // a fling to the right
-      line(const Offset(300, 0), 12);
+      // a fling toward the frame's centre (M11: the pinwheel sits by the
+      // right edge, so it is flung left)
+      final double toward =
+          handle.rect.center.dx > SceneDrags.artboard.width / 2 ? -1 : 1;
+      line(Offset(300 * toward, 0), 12);
     case DragKind.aim:
       // a slow swing to the left, then held
       line(const Offset(-160, 0), 5);

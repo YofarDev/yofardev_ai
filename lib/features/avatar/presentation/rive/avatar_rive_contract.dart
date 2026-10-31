@@ -335,11 +335,13 @@ abstract final class AvatarRiveContract {
   /// front of it), with its own `Main` state machine and the same `SceneVM`.
   static const String sceneFrontArtboard = 'SceneFront';
 
-  /// The scenes whose file has a [sceneFrontArtboard] (rooftop since v12).
+  /// The scenes whose file has a [sceneFrontArtboard] (rooftop since v12,
+  /// forestCabin since v14).
   static const Set<String> sceneFrontScenes = <String>{
     'campfire',
     'beach',
     'rooftop',
+    'forestCabin',
   };
 
   /// Contract v10 `SceneVM`: the time of day (0..1, default 0), written from
@@ -395,6 +397,15 @@ abstract final class AvatarRiveContract {
   static const String scenePropTier = 'tier';
   static const List<String> tierValues = <String>['low', 'high', 'ultra'];
   static const String tierDefault = 'ultra';
+
+  /// Contract v14 `SceneVM`: seasonal dressing (0..1, default 0 = the v13
+  /// look), written from the local date (M11 ruling 9). forestCabin,
+  /// campfire, livingRoom and trainCompartment bind them; the others declare
+  /// and ignore them.
+  static const String scenePropSpring = 'spring';
+  static const String scenePropAutumn = 'autumn';
+  static const double seasonMin = 0;
+  static const double seasonMax = 1;
 
   // Contract v12 drag handle numbers on `SceneVM` (table in CONTRACT.md):
   // each scene declares only its own; the app writes them every frame.
@@ -461,6 +472,15 @@ abstract final class AvatarRiveContract {
   /// mountainHut `rope` (pull): 0..1.
   static const String scenePropRope = 'rope';
 
+  /// forestCabin `pinwheel` (spin, v14): 0..1 = one turn (wraps).
+  static const String scenePropPinwheel = 'pinwheel';
+
+  /// trainCompartment `chain` (pull, v14): 0..1.
+  static const String scenePropChain = 'chain';
+
+  /// library `ladder` (aim, v14): −1..1, the ladder along its rail.
+  static const String scenePropLadder = 'ladder';
+
   /// Every v12 drag number, by scene (the numbers a scene declares for its
   /// drag handle; defaults render the scene as it was in v11).
   static const Map<String, List<String>> sceneDragProps =
@@ -482,6 +502,9 @@ abstract final class AvatarRiveContract {
         ],
         'rooftop': <String>[scenePropAim],
         'mountainHut': <String>[scenePropRope],
+        'forestCabin': <String>[scenePropPinwheel],
+        'trainCompartment': <String>[scenePropChain],
+        'library': <String>[scenePropLadder],
       };
 
   /// Names `SceneVM` carries as light defaults (equal to `AvatarVM`'s, plus
@@ -509,6 +532,9 @@ abstract final class AvatarRiveContract {
     'cafe',
     'rooftop',
     'mountainHut',
+    'forestCabin',
+    'trainCompartment',
+    'library',
   ];
   static const String defaultSceneId = 'livingRoom';
 
@@ -521,6 +547,9 @@ abstract final class AvatarRiveContract {
     'cafe': <String>['espresso', 'doorbell', 'rain', 'neonFlicker'],
     'rooftop': <String>['fireworks', 'plane', 'shootingStar', 'windowsLit'],
     'mountainHut': <String>['snowfall', 'flare', 'aurora', 'bell'],
+    'forestCabin': <String>['gust', 'fireflies', 'rain', 'lanternFlicker'],
+    'trainCompartment': <String>['tunnel', 'whistle', 'station', 'rain'],
+    'library': <String>['lightning', 'bookFlutter', 'clockChime', 'rain'],
   };
   static const Map<String, List<String>> sceneProps = <String, List<String>>{
     'livingRoom': <String>['lamp', 'tv', 'cat', 'plant'],
@@ -530,6 +559,9 @@ abstract final class AvatarRiveContract {
     'cafe': <String>['cup', 'espresso', 'window', 'fish'],
     'rooftop': <String>['telescope', 'antenna', 'pigeon', 'moon'],
     'mountainHut': <String>['stove', 'window', 'dog', 'bell'],
+    'forestCabin': <String>['lantern', 'pinwheel', 'squirrel', 'woodpile'],
+    'trainCompartment': <String>['window', 'lamp', 'suitcase', 'ladybug'],
+    'library': <String>['book', 'globe', 'clock', 'mouse'],
   };
 
   /// Asset path for a scene id.

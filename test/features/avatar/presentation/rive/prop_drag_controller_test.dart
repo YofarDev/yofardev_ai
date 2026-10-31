@@ -289,6 +289,42 @@ void main() {
       expect(haptics, <DragHaptic>[DragHaptic.selection, DragHaptic.impact]);
     });
 
+    test('the train\'s chain blows the whistle (M11 ruling 8)', () {
+      attach(AvatarScene.trainCompartment);
+      pull(c.handle!, 70);
+      expect(sounds, <String>['click']);
+      expect(events, <SceneEvent>[SceneEvent.whistle]);
+      expect(haptics, <DragHaptic>[DragHaptic.selection, DragHaptic.impact]);
+    });
+
+    test('the pinwheel and the ladder click as they turn and slide', () {
+      for (final AvatarScene scene in <AvatarScene>[
+        AvatarScene.forestCabin,
+        AvatarScene.library,
+      ]) {
+        haptics.clear();
+        events.clear();
+        attach(scene);
+        final Offset a = c.handleCentre(_box)!;
+        c.start(a, _box);
+        for (int i = 1; i <= 6; i++) {
+          now += const Duration(milliseconds: 200);
+          c.update(a + Offset(20.0 * i, 0), _box);
+        }
+        c.end();
+        settle();
+        expect(haptics.first, DragHaptic.selection, reason: scene.name);
+        expect(haptics.length, greaterThan(1), reason: scene.name);
+        expect(
+          haptics.every((DragHaptic h) => h == DragHaptic.selection),
+          isTrue,
+          reason: scene.name,
+        );
+        expect(events, isEmpty, reason: scene.name);
+        c.detach();
+      }
+    });
+
     test('a fast stir flares the campfire', () {
       attach(AvatarScene.campfire);
       final Offset a = c.handleCentre(_box)!;

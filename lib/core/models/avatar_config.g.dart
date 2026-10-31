@@ -58,6 +58,9 @@ const _$AvatarSceneEnumMap = {
   AvatarScene.cafe: 'cafe',
   AvatarScene.rooftop: 'rooftop',
   AvatarScene.mountainHut: 'mountainHut',
+  AvatarScene.forestCabin: 'forestCabin',
+  AvatarScene.trainCompartment: 'trainCompartment',
+  AvatarScene.library: 'library',
 };
 
 const _$AvatarHatEnumMap = {

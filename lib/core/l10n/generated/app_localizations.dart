@@ -1099,6 +1099,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mountain hut'**
   String get sceneMountainHut;
+
+  /// No description provided for @sceneForestCabin.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest cabin'**
+  String get sceneForestCabin;
+
+  /// No description provided for @sceneTrainCompartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Train compartment'**
+  String get sceneTrainCompartment;
+
+  /// No description provided for @sceneLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get sceneLibrary;
 }
 
 class _AppLocalizationsDelegate

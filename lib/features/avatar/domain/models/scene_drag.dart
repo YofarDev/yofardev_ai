@@ -36,7 +36,8 @@ class SceneDragHandle {
     required this.numbers,
   });
 
-  /// The `dragId` (`cord`, `poke`, `sand`, `spin`, `wipe`, `aim`, `rope`).
+  /// The `dragId` (`cord`, `poke`, `sand`, `spin`, `wipe`, `aim`, `rope`,
+  /// `pinwheel`, `chain`, `ladder`).
   final String id;
   final DragKind kind;
 
@@ -56,7 +57,7 @@ class SceneDragHandle {
   };
 }
 
-/// The v12 drag handles, one per scene: the Dart mirror of the contract's
+/// The v12 / v14 drag handles, one per scene: the Dart mirror of the contract's
 /// "Drag handles (v12)" table (an equality test parses `rive/CONTRACT.md`),
 /// and the geometry that places them on screen.
 abstract final class SceneDrags {
@@ -207,6 +208,28 @@ abstract final class SceneDrags {
           rect: Rect.fromLTRB(172, 470, 252, 980),
           plane: 3,
           numbers: <DragNumber>[(name: 'rope', value: 0)],
+        ),
+        // v14 (M11 ruling 8): existing kinds only.
+        AvatarScene.forestCabin: SceneDragHandle(
+          id: 'pinwheel',
+          kind: DragKind.spin,
+          rect: Rect.fromLTRB(883, 908, 987, 1068),
+          plane: 3,
+          numbers: <DragNumber>[(name: 'pinwheel', value: 0)],
+        ),
+        AvatarScene.trainCompartment: SceneDragHandle(
+          id: 'chain',
+          kind: DragKind.pull,
+          rect: Rect.fromLTRB(893, 292, 974, 807),
+          plane: 3,
+          numbers: <DragNumber>[(name: 'chain', value: 0)],
+        ),
+        AvatarScene.library: SceneDragHandle(
+          id: 'ladder',
+          kind: DragKind.aim,
+          rect: Rect.fromLTRB(671, 278, 1080, 1221),
+          plane: 3,
+          numbers: <DragNumber>[(name: 'ladder', value: 0)],
         ),
       };
 

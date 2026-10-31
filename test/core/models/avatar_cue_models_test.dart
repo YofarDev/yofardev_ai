@@ -98,6 +98,44 @@ void main() {
       expect(AvatarScene.cafe.allowedEvents, isNot(contains(SceneEvent.bell)));
     });
 
+    test('the v14 scenes: rain everywhere, their own events nowhere else '
+        '(M11)', () {
+      const Map<AvatarScene, List<SceneEvent>> own =
+          <AvatarScene, List<SceneEvent>>{
+            AvatarScene.forestCabin: <SceneEvent>[
+              SceneEvent.gust,
+              SceneEvent.fireflies,
+              SceneEvent.lanternFlicker,
+            ],
+            AvatarScene.trainCompartment: <SceneEvent>[
+              SceneEvent.tunnel,
+              SceneEvent.whistle,
+              SceneEvent.station,
+            ],
+            AvatarScene.library: <SceneEvent>[
+              SceneEvent.lightning,
+              SceneEvent.bookFlutter,
+              SceneEvent.clockChime,
+            ],
+          };
+      own.forEach((AvatarScene scene, List<SceneEvent> events) {
+        expect(scene.allowedEvents, contains(SceneEvent.rain));
+        expect(scene.allowedEvents, containsAll(events));
+        for (final AvatarScene other in AvatarScene.values) {
+          if (other == scene) {
+            continue;
+          }
+          for (final SceneEvent event in events) {
+            expect(
+              other.allowedEvents,
+              isNot(contains(event)),
+              reason: '${other.name} ${event.name}',
+            );
+          }
+        }
+      });
+    });
+
     test('every scene is a diorama (it reads the parallax numbers)', () {
       for (final AvatarScene scene in AvatarScene.values) {
         expect(scene.isDiorama, isTrue, reason: scene.name);

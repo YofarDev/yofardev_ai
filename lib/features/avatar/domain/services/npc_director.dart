@@ -18,7 +18,10 @@ enum NpcKind {
   alien('ufo'),
   fish('fish'),
   pigeon('pigeon'),
-  dog('dog');
+  dog('dog'),
+  squirrel('squirrel'),
+  ladybug('ladybug'),
+  mouse('mouse');
 
   const NpcKind(this.propId);
 
@@ -33,6 +36,9 @@ enum NpcKind {
     AvatarScene.cafe => NpcKind.fish,
     AvatarScene.rooftop => NpcKind.pigeon,
     AvatarScene.mountainHut => NpcKind.dog,
+    AvatarScene.forestCabin => NpcKind.squirrel,
+    AvatarScene.trainCompartment => NpcKind.ladybug,
+    AvatarScene.library => NpcKind.mouse,
   };
 }
 
@@ -70,7 +76,8 @@ class _Move {
   bool done(DateTime now) => progress(now) >= 1;
 }
 
-/// The behaviour trees of the scene NPCs (moonshot M8 ruling 9, M9 ruling 11),
+/// The behaviour trees of the scene NPCs (moonshot M8 ruling 9, M9 ruling 11,
+/// M11 ruling 7),
 /// one per scene, pure: an injected clock and [math.Random], inputs through
 /// setters (fed by `NpcFeed` and the Home stage), output [intent].
 ///
@@ -113,6 +120,24 @@ class _Move {
 ///   and sits (idle); woken (speech with arousal ≥ [wakeArousal]) → idle;
 ///   after [calmToSleep] of calm it trots back to the rug (0) and rests;
 ///   otherwise it sleeps by the stove.
+/// - **squirrel** (forestCabin): poked → react [squirrelReactLength], then
+///   scampers to the maple's trunk (`npcX` → 1 at [squirrelRunRate]) and back
+///   after [squirrelAwayLength]; a `gust` → react [squirrelReactLength]; rain
+///   ≥ [squirrelRainShelter] → to the trunk (1) and rest, back to the rail
+///   once it is dry; otherwise idle, with a dash to a random `npcX` every
+///   [squirrelDashMinGap] to [squirrelDashMaxGap].
+/// - **ladybug** (trainCompartment): poked → react [ladybugReactLength], then
+///   idle; a `tunnel` → rest for [tunnelLength] (the event's length);
+///   otherwise idle, with a walk to a random `npcX` every [ladybugWalkMinGap]
+///   to [ladybugWalkMaxGap].
+/// - **mouse** (library): asleep (rest) by the bottom shelf; poked → react
+///   [mouseReactLength], then runs to its shelf (0) and rests; `lightning` →
+///   react [mouseReactLength], then the same; its name ([mouseNames]) →
+///   notice [mentionNoticeLength]; the avatar speaking with arousal ≥
+///   [wakeArousal] → notice; each wakes it. Awake, it idles with a scurry to a
+///   random `npcX` every [mouseScurryMinGap] to [mouseScurryMaxGap] (the only
+///   use of its move cycle; M11 interpretation); after [calmToSleep] of calm
+///   it scurries back to the shelf and sleeps.
 ///
 /// - **gulls** (beach only, the second slot, [gullIntent]; see [GullFlock]):
 ///   away, they land after [GullFlock.calmToLand] of calm; a `seagulls` or
@@ -130,7 +155,11 @@ class _Move {
 /// −[lookAmount]); the cat on the rug (`npcX` ≥ [catCrossesAt]) and the ufo
 /// drifted left (`npcX` ≥ [alienCrossesAt]) look right (+). While it moves,
 /// `npcLook` is its facing ([moveLook]): the cat, the dog and the ufo go left
-/// as `npcX` grows, the crab and the pigeon right. The fish faces right while
+/// as `npcX` grows, the crab and the pigeon right. The squirrel sits on the
+/// rail right of the avatar and climbs the maple left of it
+/// ([squirrelCrossesAt]); it runs left as `npcX` grows. The ladybug's sill is
+/// left of the avatar (look +), the mouse's shelf and chair right of it (look
+/// −); both go right as `npcX` grows. The fish faces right while
 /// `npcLook` ≥ 0 and left while < 0 in every state, so it swims with a small
 /// ±[fishMoveLook] and keeps its last facing sign when idle.
 class NpcDirector {
@@ -190,6 +219,39 @@ class NpcDirector {
   /// The whole path, 0 → 1 (~0.87 s).
   static final Duration dogTrotLength = travelTime(1, dogTrotRate);
 
+  // M11 ruling 7. The squirrel's and the ladybug's rates are measured from
+  // the built art (`scene_forest_cabin.squirrel_run_speed()` 0.1767 npcX/s,
+  // `scene_train.ladybug_walk_speed()` 0.1735 npcX/s: no foot slide); the
+  // mouse's is an estimate until `scene_library` gives a stride (re-measure
+  // as M9 did for the fish, pigeon and dog).
+  static const Duration squirrelReactLength = Duration(milliseconds: 800);
+  static const double squirrelRunRate = 0.177;
+
+  /// The whole path, rail to branch (~5.6 s).
+  static final Duration squirrelRunLength = travelTime(1, squirrelRunRate);
+  static const Duration squirrelAwayLength = Duration(seconds: 8);
+  static const Duration squirrelDashMinGap = Duration(seconds: 12);
+  static const Duration squirrelDashMaxGap = Duration(seconds: 20);
+  static const double squirrelRainShelter = 0.5;
+  static const double squirrelCrossesAt = 0.5;
+  static const Duration ladybugReactLength = Duration(milliseconds: 600);
+  static const double ladybugWalkRate = 0.173;
+
+  /// The whole sill, 0 → 1 (~5.8 s).
+  static final Duration ladybugWalkLength = travelTime(1, ladybugWalkRate);
+  static const Duration ladybugWalkMinGap = Duration(seconds: 10);
+  static const Duration ladybugWalkMaxGap = Duration(seconds: 16);
+
+  /// The train's `tunnel` event (180 frames at 60 fps).
+  static const Duration tunnelLength = Duration(seconds: 3);
+  static const Duration mouseReactLength = Duration(milliseconds: 600);
+  static const double mouseScurryRate = 0.6;
+
+  /// The whole path, shelf to chair (~1.7 s).
+  static final Duration mouseScurryLength = travelTime(1, mouseScurryRate);
+  static const Duration mouseScurryMinGap = Duration(seconds: 10);
+  static const Duration mouseScurryMaxGap = Duration(seconds: 16);
+
   /// How often a move is re-eased (the scene writes `npcX` on change).
   static const Duration frame = Duration(milliseconds: 33);
 
@@ -226,7 +288,13 @@ class NpcDirector {
       NpcKind.cat => x >= catCrossesAt,
       NpcKind.alien => x >= alienCrossesAt,
       NpcKind.dog => x >= dogCrossesAt,
-      NpcKind.owl || NpcKind.crab || NpcKind.fish || NpcKind.pigeon => false,
+      NpcKind.squirrel => x >= squirrelCrossesAt,
+      NpcKind.ladybug => true,
+      NpcKind.owl ||
+      NpcKind.crab ||
+      NpcKind.fish ||
+      NpcKind.pigeon ||
+      NpcKind.mouse => false,
     };
     return leftOfAvatar ? lookAmount : -lookAmount;
   }
@@ -239,7 +307,11 @@ class NpcDirector {
       // npcX is +, to a lower one -
       return growing ? fishMoveLook : -fishMoveLook;
     }
-    final bool goesRight = kind == NpcKind.crab || kind == NpcKind.pigeon;
+    final bool goesRight =
+        kind == NpcKind.crab ||
+        kind == NpcKind.pigeon ||
+        kind == NpcKind.ladybug ||
+        kind == NpcKind.mouse;
     final bool goesLeft = goesRight ? !growing : growing;
     return goesLeft ? -moveLook : moveLook;
   }
@@ -281,6 +353,7 @@ class NpcDirector {
     'chiot',
     'chiots',
   };
+  static const Set<String> mouseNames = <String>{'mouse', 'mice', 'souris'};
   static const Set<String> alienNames = <String>{
     'alien',
     'aliens',
@@ -318,6 +391,9 @@ class NpcDirector {
   DateTime? _mentionAt;
   DateTime? _questionAt;
   DateTime? _catWalksByUntil;
+  DateTime? _gustAt;
+  DateTime? _tunnelAt;
+  DateTime? _lightningAt;
 
   /// The cat NPC was mid-walk when `catWalksBy` started: it is `away` (its
   /// walk runs on unseen and it reappears at its target) until the walking
@@ -328,7 +404,8 @@ class NpcDirector {
   DateTime? _nextDriftAt;
   double? _driftTarget;
 
-  /// The pigeon walked away after a poke and is on its way back.
+  /// The pigeon (or the squirrel) walked away after a poke, or the squirrel
+  /// sheltered from the rain, and is on its way back.
   bool _returningHome = false;
 
   /// The fish's last facing (see [_fish]); it starts facing right.
@@ -457,6 +534,21 @@ class NpcDirector {
           return;
         }
         _pokedAt = _now();
+      case SceneEvent.gust:
+        if (kind != NpcKind.squirrel) {
+          return;
+        }
+        _gustAt = _now();
+      case SceneEvent.tunnel:
+        if (kind != NpcKind.ladybug) {
+          return;
+        }
+        _tunnelAt = _now();
+      case SceneEvent.lightning:
+        if (kind != NpcKind.mouse) {
+          return;
+        }
+        _lightningAt = _now();
       case SceneEvent.seagulls || SceneEvent.bigWave:
         // a passing flock or a big wave sends the sitting gulls off
         if (_scene != AvatarScene.beach) {
@@ -486,10 +578,13 @@ class NpcDirector {
       NpcKind.cat => catNames,
       NpcKind.alien => alienNames,
       NpcKind.dog => dogNames,
+      NpcKind.mouse => mouseNames,
       NpcKind.owl ||
       NpcKind.crab ||
       NpcKind.fish ||
-      NpcKind.pigeon => const <String>{},
+      NpcKind.pigeon ||
+      NpcKind.squirrel ||
+      NpcKind.ladybug => const <String>{},
     };
     if (names.isNotEmpty && _mentions(text, names)) {
       _mentionAt = now;
@@ -536,6 +631,9 @@ class NpcDirector {
     _mentionAt = null;
     _questionAt = null;
     _catWalksByUntil = null;
+    _gustAt = null;
+    _tunnelAt = null;
+    _lightningAt = null;
     _hiddenByWalker = false;
     _awake = false;
     _activeAt = null;
@@ -582,6 +680,9 @@ class NpcDirector {
       NpcKind.fish => _fish(now),
       NpcKind.pigeon => _pigeon(now),
       NpcKind.dog => _dog(now),
+      NpcKind.squirrel => _squirrel(now),
+      NpcKind.ladybug => _ladybug(now),
+      NpcKind.mouse => _mouse(now),
     };
     if (!_moveTouched && _move != null) {
       // Another branch took over: the walk stops where it is.
@@ -946,6 +1047,112 @@ class NpcDirector {
     return intent;
   }
 
+  NpcIntent _squirrel(DateTime now) {
+    if (_pokedAt != null) {
+      if (_within(_pokedAt, now, squirrelReactLength)) {
+        return _react(now, look: _toAvatar(now));
+      }
+      if (_within(
+        _pokedAt,
+        now,
+        squirrelReactLength + squirrelRunLength + squirrelAwayLength,
+      )) {
+        return _goAt(1, squirrelRunRate, now, arrived: NpcState.idle);
+      }
+      _pokedAt = null;
+      _returningHome = true;
+      _driftTarget = null;
+    }
+    if (_within(_gustAt, now, squirrelReactLength)) {
+      return _react(now, look: _toAvatar(now));
+    }
+    _gustAt = null;
+    if (_rain >= squirrelRainShelter) {
+      _returningHome = true;
+      _driftTarget = null;
+      return _goAt(1, squirrelRunRate, now, arrived: NpcState.rest);
+    }
+    if (_returningHome) {
+      if (_move == null && _x.abs() < 1e-6) {
+        _returningHome = false;
+        _nextDriftAt = null;
+      } else {
+        return _goAt(0, squirrelRunRate, now, arrived: NpcState.idle);
+      }
+    }
+    return _wander(
+      now,
+      rate: squirrelRunRate,
+      minGap: squirrelDashMinGap,
+      maxGap: squirrelDashMaxGap,
+    );
+  }
+
+  NpcIntent _ladybug(DateTime now) {
+    if (_within(_pokedAt, now, ladybugReactLength)) {
+      return _react(now, look: _toAvatar(now));
+    }
+    _pokedAt = null;
+    if (_within(_tunnelAt, now, tunnelLength)) {
+      return _at(NpcState.rest, now);
+    }
+    _tunnelAt = null;
+    return _wander(
+      now,
+      rate: ladybugWalkRate,
+      minGap: ladybugWalkMinGap,
+      maxGap: ladybugWalkMaxGap,
+    );
+  }
+
+  /// The mouse goes back to sleep: by its shelf (0), wherever it was.
+  void _mouseSleeps() {
+    _awake = false;
+    _activeAt = null;
+    _nextDriftAt = null;
+    _driftTarget = null;
+  }
+
+  NpcIntent _mouse(DateTime now) {
+    if (_pokedAt != null) {
+      if (_within(_pokedAt, now, mouseReactLength)) {
+        return _react(now, look: _toAvatar(now));
+      }
+      _pokedAt = null;
+      _mouseSleeps();
+    }
+    if (_lightningAt != null) {
+      if (_within(_lightningAt, now, mouseReactLength)) {
+        return _react(now, look: _toAvatar(now));
+      }
+      _lightningAt = null;
+      _mouseSleeps();
+    }
+    if (_mentionAt != null) {
+      if (_within(_mentionAt, now, mentionNoticeLength)) {
+        _wake(now);
+        return _at(NpcState.notice, now, look: _toAvatar(now));
+      }
+      _mentionAt = null;
+    }
+    if (_speaking && _emotion.arousal >= wakeArousal) {
+      _wake(now);
+      return _at(NpcState.notice, now, look: _toAvatar(now));
+    }
+    if (_awake && _within(_activeAt, now, calmToSleep)) {
+      return _wander(
+        now,
+        rate: mouseScurryRate,
+        minGap: mouseScurryMinGap,
+        maxGap: mouseScurryMaxGap,
+      );
+    }
+    if (_awake) {
+      _mouseSleeps();
+    }
+    return _goAt(0, mouseScurryRate, now, arrived: NpcState.rest);
+  }
+
   /// Re-evaluates at the next moment the tree can change: every [frame]
   /// while a move or a gull flight runs, else the earliest pending deadline.
   void _schedule(DateTime now) {
@@ -1002,7 +1209,16 @@ class NpcDirector {
       consider(
         poked.add(pigeonReactLength + pigeonWalkLength + pigeonAwayLength),
       );
+      consider(poked.add(squirrelReactLength));
+      consider(
+        poked.add(squirrelReactLength + squirrelRunLength + squirrelAwayLength),
+      );
+      consider(poked.add(ladybugReactLength));
+      consider(poked.add(mouseReactLength));
     }
+    consider(_gustAt?.add(squirrelReactLength));
+    consider(_tunnelAt?.add(tunnelLength));
+    consider(_lightningAt?.add(mouseReactLength));
     final DateTime? mention = _mentionAt;
     if (mention != null) {
       consider(mention.add(mentionNoticeLength));
@@ -1015,7 +1231,10 @@ class NpcDirector {
     }
     if (kind == NpcKind.alien ||
         kind == NpcKind.fish ||
-        kind == NpcKind.pigeon) {
+        kind == NpcKind.pigeon ||
+        kind == NpcKind.squirrel ||
+        kind == NpcKind.ladybug ||
+        kind == NpcKind.mouse) {
       consider(_nextDriftAt);
     }
     final DateTime? at = earliest;

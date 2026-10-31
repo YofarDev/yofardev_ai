@@ -470,4 +470,77 @@ void main() {
       expect(p.values['aim'], -1);
     });
   });
+
+  group('the v14 handles (M11 ruling 8: existing kinds)', () {
+    test('the pinwheel spins like the planet: wraps, a tick per 1/8 turn, '
+        'inertia', () {
+      final Rect post = SceneDrags.of(AvatarScene.forestCabin)!.rect;
+      final PropDragPhysics p = _physics(AvatarScene.forestCabin);
+      final Offset a = post.centerLeft;
+      p.start(a, Duration.zero);
+      expect(p.takeCues(), <DragCue>[DragCue.start]);
+      p.move(a + const Offset(PropDragPhysics.spinPxPerTurn / 8, 0), _ms(500));
+      expect(p.values['pinwheel'], closeTo(0.125, 1e-9));
+      expect(p.takeCues(), <DragCue>[DragCue.tick]);
+      p.move(a - const Offset(PropDragPhysics.spinPxPerTurn / 8, 0), _ms(900));
+      expect(p.values['pinwheel'], closeTo(0.875, 1e-9));
+      // a fling keeps turning
+      p.start(a, _ms(2000));
+      for (int i = 1; i <= 6; i++) {
+        p.move(a + Offset(30.0 * i, 0), _ms(2000 + 16 * i));
+      }
+      p.end(_ms(2096));
+      expect(p.animating, isTrue);
+      _settle(p, _ms(2096));
+      expect(p.values['pinwheel'], inInclusiveRange(0, 1));
+    });
+
+    test('the chain pulls like the cord: 0.6 fires once, springs back', () {
+      final Rect chain = SceneDrags.of(AvatarScene.trainCompartment)!.rect;
+      final PropDragPhysics p = _physics(AvatarScene.trainCompartment);
+      final Offset grab = Offset(chain.center.dx, chain.top + 20);
+      p.start(grab, Duration.zero);
+      p.move(grab + const Offset(0, 59), _ms(16));
+      expect(p.takeCues(), <DragCue>[DragCue.start]);
+      p.move(grab + const Offset(0, 61), _ms(32));
+      expect(p.takeCues(), <DragCue>[DragCue.pullFired]);
+      p.move(grab + const Offset(0, 95), _ms(48));
+      expect(p.takeCues(), isEmpty);
+      p.end(_ms(64));
+      _settle(p, _ms(64));
+      expect(p.values['chain'], 0);
+    });
+
+    test('the chain under reduce motion returns in one frame', () {
+      final Rect chain = SceneDrags.of(AvatarScene.trainCompartment)!.rect;
+      final PropDragPhysics p = _physics(
+        AvatarScene.trainCompartment,
+        reduceMotion: true,
+      );
+      p.start(chain.center, Duration.zero);
+      p.move(chain.center + const Offset(0, 80), _ms(16));
+      p.end(_ms(32));
+      expect(p.values['chain'], 0);
+      expect(p.animating, isFalse);
+    });
+
+    test('the ladder aims -1..1 along its rail and holds; a tick per 0.1', () {
+      final Rect rail = SceneDrags.of(AvatarScene.library)!.rect;
+      final PropDragPhysics p = _physics(AvatarScene.library);
+      final Offset a = rail.center;
+      p.start(a, Duration.zero);
+      p.takeCues();
+      for (int i = 1; i <= 5; i++) {
+        p.move(a - Offset(rail.width * 0.05 * i, 0), _ms(16 * i));
+      }
+      expect(p.values['ladder'], closeTo(-0.25, 1e-9));
+      // 0, -0.1 and -0.2 crossed
+      expect(p.takeCues(), hasLength(3));
+      p.move(a + Offset(rail.width * 3, 0), _ms(160));
+      expect(p.values['ladder'], 1);
+      p.end(_ms(176));
+      expect(p.animating, isFalse);
+      expect(p.values['ladder'], 1);
+    });
+  });
 }

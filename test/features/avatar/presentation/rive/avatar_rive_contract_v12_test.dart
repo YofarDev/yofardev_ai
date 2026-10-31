@@ -33,8 +33,8 @@ void main() {
     }
   });
 
-  test('the scene ids are the seven AvatarScene names, in order', () {
-    expect(AvatarRiveContract.sceneIds, <String>[
+  test('the scene ids start with the seven v12 names, in order', () {
+    expect(AvatarRiveContract.sceneIds.take(7).toList(), <String>[
       'livingRoom',
       'campfire',
       'beach',
@@ -44,6 +44,10 @@ void main() {
       'mountainHut',
     ]);
     expect(table.keys.toList(), AvatarRiveContract.sceneIds);
+    expect(
+      AvatarScene.values.map((AvatarScene s) => s.name).toList(),
+      AvatarRiveContract.sceneIds,
+    );
   });
 
   test('events and props equal the contract table row by row', () {
@@ -71,7 +75,7 @@ void main() {
 
   test('the new SceneEvent values are appended in contract order', () {
     expect(
-      SceneEvent.values.skip(15).map((SceneEvent e) => e.name).toList(),
+      SceneEvent.values.skip(15).take(9).map((SceneEvent e) => e.name).toList(),
       <String>[
         'espresso',
         'doorbell',
@@ -87,11 +91,18 @@ void main() {
   });
 
   test('rooftop has a SceneFront next to campfire and beach', () {
-    expect(AvatarRiveContract.sceneFrontScenes, <String>{
-      'campfire',
-      'beach',
-      'rooftop',
-    });
+    expect(
+      AvatarRiveContract.sceneFrontScenes,
+      containsAll(<String>{'campfire', 'beach', 'rooftop'}),
+    );
+    for (final String id in <String>[
+      'livingRoom',
+      'deepSpace',
+      'cafe',
+      'mountainHut',
+    ]) {
+      expect(AvatarRiveContract.sceneFrontScenes, isNot(contains(id)));
+    }
   });
 
   test('the v12 SceneVM names', () {

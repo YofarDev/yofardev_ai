@@ -569,4 +569,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sceneMountainHut => 'Refuge';
+
+  @override
+  String get sceneForestCabin => 'Cabane en forêt';
+
+  @override
+  String get sceneTrainCompartment => 'Compartiment de train';
+
+  @override
+  String get sceneLibrary => 'Bibliothèque';
 }

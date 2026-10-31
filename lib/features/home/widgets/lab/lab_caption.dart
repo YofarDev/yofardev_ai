@@ -44,6 +44,10 @@ class LabCaption extends StatelessWidget {
     AvatarScene.cafe => 'The goldfish judges every croissant I order.',
     AvatarScene.rooftop => 'That pigeon owns this roof. I just pay rent.',
     AvatarScene.mountainHut => 'The dog snores louder than the stove crackles.',
+    AvatarScene.forestCabin => 'The squirrel left me one acorn. Very generous.',
+    AvatarScene.trainCompartment =>
+      'A ladybug bought the cheapest ticket on board.',
+    AvatarScene.library => 'The mouse has read every book on the bottom shelf.',
   };
 
   @override

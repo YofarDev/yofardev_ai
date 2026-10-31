@@ -4,6 +4,7 @@ import 'package:yofardev_ai/core/models/avatar_mood.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/sound_effects.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/prop_reaction_service.dart';
+import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
 
 void main() {
   late PropReactionService service;
@@ -14,15 +15,13 @@ void main() {
 
   group('PropReactionService prop table', () {
     test('every contract propId has a reaction in its scene', () {
-      final Map<String, List<String>> propsByScene = <String, List<String>>{
-        'livingRoom': <String>['lamp', 'tv', 'cat', 'plant'],
-        'campfire': <String>['fire', 'tent', 'owl', 'sky'],
-        'beach': <String>['crab', 'umbrella', 'seagull'],
-        'deepSpace': <String>['planet', 'ufo', 'rubberDuck'],
-        'cafe': <String>['cup', 'espresso', 'window', 'fish'],
-        'rooftop': <String>['telescope', 'antenna', 'pigeon', 'moon'],
-        'mountainHut': <String>['stove', 'window', 'dog', 'bell'],
-      };
+      // the Dart contract mirror (its v12 / v14 tests parse CONTRACT.md)
+      final Map<String, List<String>> propsByScene =
+          AvatarRiveContract.sceneProps;
+      expect(
+        propsByScene.keys.toSet(),
+        AvatarScene.values.map((AvatarScene s) => s.name).toSet(),
+      );
       propsByScene.forEach((String sceneId, List<String> props) {
         final AvatarScene scene = AvatarScene.values.byName(sceneId);
         for (final String propId in props) {
@@ -41,33 +40,10 @@ void main() {
     });
 
     test('reactions only use known sounds, moods and gestures', () {
-      final List<String> allProps = <String>[
-        'lamp',
-        'tv',
-        'cat',
-        'plant',
-        'fire',
-        'tent',
-        'owl',
-        'sky',
-        'crab',
-        'umbrella',
-        'seagull',
-        'planet',
-        'ufo',
-        'rubberDuck',
-        'cup',
-        'espresso',
-        'window',
-        'fish',
-        'telescope',
-        'antenna',
-        'pigeon',
-        'moon',
-        'stove',
-        'dog',
-        'bell',
-      ];
+      final List<String> allProps = <String>{
+        for (final List<String> props in AvatarRiveContract.sceneProps.values)
+          ...props,
+      }.toList();
       for (final String propId in allProps) {
         for (final AvatarScene scene in AvatarScene.values) {
           final PropReaction? reaction = service.reactionForProp(scene, propId);
@@ -97,6 +73,18 @@ void main() {
         service.reactionForProp(AvatarScene.deepSpace, 'ufo')!.mood,
         AvatarMood.surprised,
       );
+      // M11: the three v14 NPCs are cute too
+      for (final (AvatarScene scene, String npc) in <(AvatarScene, String)>[
+        (AvatarScene.forestCabin, 'squirrel'),
+        (AvatarScene.trainCompartment, 'ladybug'),
+        (AvatarScene.library, 'mouse'),
+      ]) {
+        expect(
+          service.reactionForProp(scene, npc)!.soundEffect,
+          SoundEffects.uwu,
+          reason: npc,
+        );
+      }
     });
   });
 

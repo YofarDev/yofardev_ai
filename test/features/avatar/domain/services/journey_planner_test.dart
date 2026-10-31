@@ -4,7 +4,7 @@ import 'package:yofardev_ai/features/avatar/domain/models/journey.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/journey_planner.dart';
 
 void main() {
-  test('all 42 directed journeys of the seven scenes (M9 ruling 5)', () {
+  test('all 90 directed journeys of the ten scenes (M11 ruling 6)', () {
     JourneyFamily expected(AvatarScene from, AvatarScene to) {
       if (to == AvatarScene.deepSpace) {
         return JourneyFamily.rocket;
@@ -15,6 +15,7 @@ void main() {
       const Set<AvatarScene> outdoors = <AvatarScene>{
         AvatarScene.campfire,
         AvatarScene.beach,
+        AvatarScene.forestCabin,
       };
       if (outdoors.contains(from) && outdoors.contains(to)) {
         return JourneyFamily.path;
@@ -28,22 +29,37 @@ void main() {
     const JourneyFamily r = JourneyFamily.rocket;
     const JourneyFamily p = JourneyFamily.portal;
     const JourneyFamily w = JourneyFamily.path;
-    const Map<AvatarScene, List<JourneyFamily?>> table =
-        <AvatarScene, List<JourneyFamily?>>{
-          //                       lr    cf    be    ds    cafe  roof  hut
-          AvatarScene.livingRoom: <JourneyFamily?>[null, d, d, r, d, d, d],
-          AvatarScene.campfire: <JourneyFamily?>[d, null, w, r, d, d, d],
-          AvatarScene.beach: <JourneyFamily?>[d, w, null, r, d, d, d],
-          AvatarScene.deepSpace: <JourneyFamily?>[p, p, p, null, p, p, p],
-          AvatarScene.cafe: <JourneyFamily?>[d, d, d, r, null, d, d],
-          AvatarScene.rooftop: <JourneyFamily?>[d, d, d, r, d, null, d],
-          AvatarScene.mountainHut: <JourneyFamily?>[d, d, d, r, d, d, null],
-        };
+    const JourneyFamily? o = null;
+    const Map<AvatarScene, List<JourneyFamily?>>
+    table = <AvatarScene, List<JourneyFamily?>>{
+      //                 lr cf be ds ca rt mh fc tc li
+      AvatarScene.livingRoom: <JourneyFamily?>[o, d, d, r, d, d, d, d, d, d],
+      AvatarScene.campfire: <JourneyFamily?>[d, o, w, r, d, d, d, w, d, d],
+      AvatarScene.beach: <JourneyFamily?>[d, w, o, r, d, d, d, w, d, d],
+      AvatarScene.deepSpace: <JourneyFamily?>[p, p, p, o, p, p, p, p, p, p],
+      AvatarScene.cafe: <JourneyFamily?>[d, d, d, r, o, d, d, d, d, d],
+      AvatarScene.rooftop: <JourneyFamily?>[d, d, d, r, d, o, d, d, d, d],
+      AvatarScene.mountainHut: <JourneyFamily?>[
+        d, d, d, r, d, d, o, d, d, d, //
+      ],
+      AvatarScene.forestCabin: <JourneyFamily?>[
+        d, w, w, r, d, d, d, o, d, d, //
+      ],
+      AvatarScene.trainCompartment: <JourneyFamily?>[
+        d, d, d, r, d, d, d, d, o, d, //
+      ],
+      AvatarScene.library: <JourneyFamily?>[d, d, d, r, d, d, d, d, d, o],
+    };
+    expect(table.keys.toList(), AvatarScene.values);
+    for (final List<JourneyFamily?> row in table.values) {
+      expect(row, hasLength(AvatarScene.values.length));
+    }
     int pairs = 0;
     final Map<JourneyFamily, int> counts = <JourneyFamily, int>{};
     for (final AvatarScene from in AvatarScene.values) {
       for (final AvatarScene to in AvatarScene.values) {
         if (from == to) {
+          expect(table[from]![to.index], isNull);
           continue;
         }
         pairs++;
@@ -61,12 +77,12 @@ void main() {
         counts[family] = (counts[family] ?? 0) + 1;
       }
     }
-    expect(pairs, 42);
+    expect(pairs, 90);
     expect(counts, <JourneyFamily, int>{
-      JourneyFamily.rocket: 6,
-      JourneyFamily.portal: 6,
-      JourneyFamily.path: 2,
-      JourneyFamily.door: 28,
+      JourneyFamily.rocket: 9,
+      JourneyFamily.portal: 9,
+      JourneyFamily.path: 6,
+      JourneyFamily.door: 66,
     });
   });
 

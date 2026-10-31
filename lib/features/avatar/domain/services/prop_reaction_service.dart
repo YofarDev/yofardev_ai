@@ -109,6 +109,39 @@ class PropReactionService {
           mood: AvatarMood.happy,
           soundEffect: SoundEffects.christmasBells,
         ),
+        // forestCabin
+        'forestCabin/lantern': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.magicWand,
+        ),
+        'forestCabin/pinwheel': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.whoosh,
+        ),
+        'forestCabin/squirrel': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.uwu,
+        ),
+        'forestCabin/woodpile': PropReaction(gesture: AvatarGesture.thumbsUp),
+        // trainCompartment
+        'trainCompartment/window': PropReaction(gesture: AvatarGesture.think),
+        'trainCompartment/lamp': PropReaction(soundEffect: SoundEffects.whoosh),
+        'trainCompartment/suitcase': PropReaction(gesture: AvatarGesture.shrug),
+        'trainCompartment/ladybug': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.uwu,
+        ),
+        // library
+        'library/book': PropReaction(gesture: AvatarGesture.think),
+        'library/globe': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.whoosh,
+        ),
+        'library/clock': PropReaction(gesture: AvatarGesture.nod),
+        'library/mouse': PropReaction(
+          mood: AvatarMood.surprised,
+          soundEffect: SoundEffects.uwu,
+        ),
       };
 
   static const Map<String, PropReaction>

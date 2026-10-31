@@ -45,6 +45,37 @@ void main() {
       expect(SceneLights.of(AvatarScene.rooftop).flicker, 0.0);
       // the stove: a softer flicker than the campfire
       expect(SceneLights.of(AvatarScene.mountainHut).flicker, 0.6);
+      // M11 ruling 3: the lantern, the train's lamp, the lamp and candles
+      expect(SceneLights.of(AvatarScene.forestCabin).flicker, 0.2);
+      expect(SceneLights.of(AvatarScene.trainCompartment).flicker, 0.05);
+      expect(SceneLights.of(AvatarScene.library).flicker, 0.1);
+    });
+
+    test('the M11 scenes keep their art bible rigs (contract v14)', () {
+      final LightRig cabin = SceneLights.of(AvatarScene.forestCabin);
+      expect(cabin.keyX, closeTo(math.cos(0.3), 0.001));
+      expect(cabin.keyY, closeTo(math.sin(0.3), 0.001));
+      expect(cabin.keyColor, 0xFFFFC27A);
+      expect(cabin.keyIntensity, 0.9);
+      expect(cabin.rimColor, 0xFF9CC8F0);
+      expect(cabin.ambientColor, 0xFF1A2A22);
+      expect(cabin.fogColor, 0x33B4C4B0);
+      final LightRig train = SceneLights.of(AvatarScene.trainCompartment);
+      expect(train.keyX, closeTo(math.cos(2.2), 0.001));
+      expect(train.keyY, closeTo(math.sin(2.2), 0.001));
+      expect(train.keyColor, 0xFFFFCF94);
+      expect(train.keyIntensity, 0.85);
+      expect(train.rimColor, 0xFF94B4DC);
+      expect(train.ambientColor, 0xFF2E2236);
+      expect(train.fogColor, 0x33B8B0C8);
+      final LightRig library = SceneLights.of(AvatarScene.library);
+      expect(library.keyX, closeTo(math.cos(3.5416), 0.001));
+      expect(library.keyY, closeTo(math.sin(3.5416), 0.001));
+      expect(library.keyColor, 0xFFFFD27A);
+      expect(library.keyIntensity, 0.8);
+      expect(library.rimColor, 0xFF8AA4CC);
+      expect(library.ambientColor, 0xFF1C1612);
+      expect(library.fogColor, 0x33706A78);
     });
 
     test('the M9 scenes keep their art bible rigs (contract v12)', () {

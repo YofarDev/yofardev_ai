@@ -7,7 +7,10 @@ enum AvatarScene {
   deepSpace,
   cafe,
   rooftop,
-  mountainHut;
+  mountainHut,
+  forestCabin,
+  trainCompartment,
+  library;
 
   /// The scene used when nothing else is set (new chats, unmappable values).
   static const AvatarScene defaultScene = AvatarScene.livingRoom;
@@ -22,7 +25,10 @@ enum AvatarScene {
     AvatarScene.deepSpace ||
     AvatarScene.cafe ||
     AvatarScene.rooftop ||
-    AvatarScene.mountainHut => true,
+    AvatarScene.mountainHut ||
+    AvatarScene.forestCabin ||
+    AvatarScene.trainCompartment ||
+    AvatarScene.library => true,
   };
 
   /// The scene events this scene's `.riv` state machine can play.
@@ -69,11 +75,29 @@ enum AvatarScene {
       SceneEvent.aurora,
       SceneEvent.bell,
     ],
+    AvatarScene.forestCabin => const <SceneEvent>[
+      SceneEvent.gust,
+      SceneEvent.fireflies,
+      SceneEvent.rain,
+      SceneEvent.lanternFlicker,
+    ],
+    AvatarScene.trainCompartment => const <SceneEvent>[
+      SceneEvent.tunnel,
+      SceneEvent.whistle,
+      SceneEvent.station,
+      SceneEvent.rain,
+    ],
+    AvatarScene.library => const <SceneEvent>[
+      SceneEvent.lightning,
+      SceneEvent.bookFlutter,
+      SceneEvent.clockChime,
+      SceneEvent.rain,
+    ],
   };
 }
 
 /// Every scene's `eventId` values, in contract order. `rain` is shared by
-/// campfire, beach and cafe, `shootingStar` by campfire and rooftop, `flare`
+/// campfire, beach, cafe and the three v14 scenes, `shootingStar` by campfire and rooftop, `flare`
 /// by campfire and mountainHut; per-scene validity is decided by
 /// [AvatarScene.allowedEvents].
 enum SceneEvent {
@@ -101,6 +125,15 @@ enum SceneEvent {
   snowfall,
   aurora,
   bell,
+  gust,
+  fireflies,
+  lanternFlicker,
+  tunnel,
+  whistle,
+  station,
+  lightning,
+  bookFlutter,
+  clockChime,
 }
 
 /// v3 photo-background names mapped to the nearest scene. Used when stored
@@ -109,7 +142,6 @@ enum SceneEvent {
 const Map<String, AvatarScene> _legacyBackgroundToScene = <String, AvatarScene>{
   // Indoors → livingRoom
   'bedroom': AvatarScene.livingRoom,
-  'library': AvatarScene.livingRoom,
   'classroom': AvatarScene.livingRoom,
   'office': AvatarScene.livingRoom,
   'mall': AvatarScene.livingRoom,
@@ -120,7 +152,6 @@ const Map<String, AvatarScene> _legacyBackgroundToScene = <String, AvatarScene>{
   'christmasLivingRoom': AvatarScene.livingRoom,
   // Nature → campfire
   'lake': AvatarScene.campfire,
-  'forest': AvatarScene.campfire,
   'park': AvatarScene.campfire,
   'sakuraTrees': AvatarScene.campfire,
   'japaneseGarden': AvatarScene.campfire,
@@ -140,6 +171,11 @@ const Map<String, AvatarScene> _legacyBackgroundToScene = <String, AvatarScene>{
   // Snow → mountainHut (M9)
   'snowyMountain': AvatarScene.mountainHut,
   'mountainHut': AvatarScene.mountainHut,
+  // The v14 scenes (M11 ruling 5: the nearest scene)
+  'forest': AvatarScene.forestCabin,
+  'forestCabin': AvatarScene.forestCabin,
+  'trainCompartment': AvatarScene.trainCompartment,
+  'library': AvatarScene.library,
   // Space and the rest of the urban set → deepSpace
   'deepSpace': AvatarScene.deepSpace,
   'street': AvatarScene.deepSpace,

@@ -35,6 +35,9 @@ String sceneName(AppLocalizations l10n, AvatarScene scene) => switch (scene) {
   AvatarScene.cafe => l10n.sceneCafe,
   AvatarScene.rooftop => l10n.sceneRooftop,
   AvatarScene.mountainHut => l10n.sceneMountainHut,
+  AvatarScene.forestCabin => l10n.sceneForestCabin,
+  AvatarScene.trainCompartment => l10n.sceneTrainCompartment,
+  AvatarScene.library => l10n.sceneLibrary,
 };
 
 /// A glass bottom sheet with one tile per scene: its poster and localized

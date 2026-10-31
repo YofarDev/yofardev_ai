@@ -166,5 +166,8 @@
   "sceneDeepSpace": "Espace",
   "sceneCafe": "Café",
   "sceneRooftop": "Toit-terrasse",
-  "sceneMountainHut": "Refuge"
+  "sceneMountainHut": "Refuge",
+  "sceneForestCabin": "Cabane en forêt",
+  "sceneTrainCompartment": "Compartiment de train",
+  "sceneLibrary": "Bibliothèque"
 }

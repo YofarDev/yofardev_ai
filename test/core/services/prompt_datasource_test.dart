@@ -73,6 +73,32 @@ void main() {
     expect(prompt, isNot(contains('signature')));
   });
 
+  test('the ten scenes and their events are listed (M11)', () async {
+    when(() => settings.getBaseSystemPrompt('en')).thenAnswer(
+      (_) async => r'$PERSONA scenes: $backgroundList events: $sceneEventList',
+    );
+    final String prompt = await promptOn(DateTime(2026, 6, 1));
+    expect(
+      prompt,
+      contains(
+        'scenes: livingRoom, campfire, beach, deepSpace, cafe, rooftop, '
+        'mountainHut, forestCabin, trainCompartment, library, ',
+      ),
+    );
+    expect(
+      prompt,
+      contains('forestCabin: gust, fireflies, rain, lanternFlicker, ; '),
+    );
+    expect(
+      prompt,
+      contains('trainCompartment: tunnel, whistle, station, rain, ; '),
+    );
+    expect(
+      prompt,
+      contains('library: lightning, bookFlutter, clockChime, rain, ; '),
+    );
+  });
+
   test('both shipped prompts list the tints', () {
     for (final String lang in <String>['en', 'fr']) {
       final String text = File(

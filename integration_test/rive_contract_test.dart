@@ -656,6 +656,30 @@ void main() {
             range: <double>[0, 0.5, 1],
           ),
         };
+        // v14: the seasons, 0..1, default 0 (every scene declares them).
+        v12Numbers[AvatarRiveContract.scenePropSpring] = (
+          rest: 0,
+          range: <double>[0, 0.5, 1],
+        );
+        v12Numbers[AvatarRiveContract.scenePropAutumn] = (
+          rest: 0,
+          range: <double>[0, 0.5, 1],
+        );
+        // v14: the quality tier, default ultra (the v13 look).
+        final ViewModelInstanceEnum? tier = vmi.enumerator(
+          AvatarRiveContract.scenePropTier,
+        );
+        expect(tier, isNotNull, reason: 'SceneVM.tier enum in $sceneId');
+        expect(
+          tier!.value,
+          AvatarRiveContract.tierDefault,
+          reason: '$sceneId tier defaults to ultra',
+        );
+        for (final String value in AvatarRiveContract.tierValues) {
+          tier.value = value;
+          expect(tier.value, value, reason: '$sceneId tier rejected "$value"');
+        }
+        tier.value = AvatarRiveContract.tierDefault;
         // v12 drag handle numbers: the scene's own, at their defaults
         // (trailFade 1), and none of another scene's.
         final SceneDragHandle handle = SceneDrags.of(
@@ -1028,118 +1052,54 @@ void main() {
 
     testWidgets('deepSpace spin: a flick turns with inertia, a long drag '
         'wraps', (WidgetTester tester) async {
-      const AvatarScene scene = AvatarScene.deepSpace;
-      final _Stage stage = _Stage();
-      final Size box = _stageBox(tester);
-      await tester.pumpWidget(_stageApp(scene, stage, box));
-      await _waitLoaded(tester, stage, scene);
-      final PropDragController drags = stage.drags;
-      const String spin = AvatarRiveContract.scenePropSpin;
-      final double scale = SceneDrags.coverScale(box);
-      final Offset centre =
-          tester.getTopLeft(find.byType(RiveSceneView)) +
-          drags.handleCentre(box)!;
-      expect(drags.readNumber(spin), 0);
+      await _spinTest(
+        tester,
+        AvatarScene.deepSpace,
+        AvatarRiveContract.scenePropSpin,
+        turns: 1.25,
+      );
+    });
 
-      // a flick: released while moving, the bands keep turning
-      await tester.timedDragFrom(
-        centre,
-        const Offset(60, 0),
-        const Duration(milliseconds: 120),
+    testWidgets('forestCabin pinwheel (v14): a flick turns with inertia, a '
+        'long drag wraps', (WidgetTester tester) async {
+      // leftward: the pinwheel sits by the right edge
+      await _spinTest(
+        tester,
+        AvatarScene.forestCabin,
+        AvatarRiveContract.scenePropPinwheel,
+        turns: -0.75,
       );
-      await tester.pump();
-      final double atRelease = drags.readNumber(spin)!;
-      final List<double> coasting = await _sample(
-        drags,
-        spin,
-        () => _live(tester, const Duration(milliseconds: 1500)),
-      );
-      final double s1 = drags.readNumber(spin)!;
-      expect(s1, isNot(0), reason: 'the flick turned the bands');
-      expect(s1, inInclusiveRange(0, 1));
-      expect(s1, lessThan(1));
-      expect(
-        _circular(s1, atRelease),
-        greaterThan(0.01),
-        reason: 'inertia carried the spin past the release',
-      );
-      for (final double v in coasting) {
-        expect(v, inInclusiveRange(0, 1));
-        expect(v, lessThan(1));
-      }
+    });
 
-      // a slow drag of 1.25 turns, held still before the release: it wraps
-      const double turns = 1.25;
-      final double dx = turns * PropDragPhysics.spinPxPerTurn * scale;
-      final TestGesture gesture = await tester.startGesture(centre);
-      final int steps = (dx / 6).ceil();
-      final List<double> wrapping = await _sample(drags, spin, () async {
-        await _stepTo(tester, gesture, centre, centre + Offset(dx, 0), steps);
-        await _live(tester, const Duration(milliseconds: 200));
-        await gesture.up();
-        await _live(tester, const Duration(milliseconds: 300));
-      });
-      final double s2 = drags.readNumber(spin)!;
-      expect(
-        _circular(s2, (s1 + turns) % 1),
-        lessThan(0.02),
-        reason: 'spin $s1 + $turns turns wraps to ${(s1 + turns) % 1}',
+    testWidgets('trainCompartment chain (v14): pull past 0.6 blows the '
+        'whistle, springs back', (WidgetTester tester) async {
+      await _pullTest(
+        tester,
+        AvatarScene.trainCompartment,
+        AvatarRiveContract.scenePropChain,
+        SceneEvent.whistle,
+        expectedFoley: <String>['click'],
       );
-      for (final double v in wrapping) {
-        expect(v, inInclusiveRange(0, 1));
-        expect(v, lessThan(1));
-      }
-      expect(stage.haptics, contains(DragHaptic.selection));
-      await _unmount(tester);
     });
 
     testWidgets('rooftop aim: a horizontal drag swivels and holds', (
       WidgetTester tester,
     ) async {
-      const AvatarScene scene = AvatarScene.rooftop;
-      final _Stage stage = _Stage();
-      final Size box = _stageBox(tester);
-      await tester.pumpWidget(_stageApp(scene, stage, box));
-      await _waitLoaded(tester, stage, scene);
-      final PropDragController drags = stage.drags;
-      const String aim = AvatarRiveContract.scenePropAim;
-      final double scale = SceneDrags.coverScale(box);
-      final Rect rect = SceneDrags.of(scene)!.rect;
-      final Offset centre =
-          tester.getTopLeft(find.byType(RiveSceneView)) +
-          drags.handleCentre(box)!;
-      expect(drags.readNumber(aim), 0);
-
-      const double logical = 40;
-      final TestGesture gesture = await tester.startGesture(centre);
-      await _stepTo(
+      await _aimTest(
         tester,
-        gesture,
-        centre,
-        centre + const Offset(logical, 0),
-        8,
+        AvatarScene.rooftop,
+        AvatarRiveContract.scenePropAim,
       );
-      await _live(tester, const Duration(milliseconds: 150));
-      await gesture.up();
-      await _live(tester, const Duration(milliseconds: 100));
-      final double held = drags.readNumber(aim)!;
-      expect(
-        held,
-        closeTo(logical / scale / rect.width, 0.03),
-        reason: 'rect.width artboard px per unit',
-      );
-      await _live(tester, const Duration(milliseconds: 600));
-      expect(drags.readNumber(aim), held, reason: 'the telescope holds');
+    });
 
-      // far left: clamped at -1
-      await tester.timedDragFrom(
-        centre,
-        Offset(-1.5 * rect.width * scale, 0),
-        const Duration(milliseconds: 500),
+    testWidgets('library ladder (v14): a horizontal drag slides and holds', (
+      WidgetTester tester,
+    ) async {
+      await _aimTest(
+        tester,
+        AvatarScene.library,
+        AvatarRiveContract.scenePropLadder,
       );
-      await _live(tester, const Duration(milliseconds: 300));
-      expect(drags.readNumber(aim), -1);
-      await _unmount(tester);
     });
   });
 
@@ -1347,9 +1307,10 @@ List<double> _dragRange(String name) {
     case AvatarRiveContract.scenePropPokeX:
     case AvatarRiveContract.scenePropPokeY:
     case AvatarRiveContract.scenePropAim:
+    case AvatarRiveContract.scenePropLadder:
       return <double>[-1, 1];
     default:
-      // cord, rope, poke, spin, trailFade
+      // cord, rope, poke, spin, trailFade, pinwheel, chain
       return <double>[0, 0.5, 1];
   }
 }
@@ -1511,6 +1472,119 @@ Future<List<double>> _sample(
 double _circular(double a, double b) {
   final double d = (a - b).abs() % 1;
   return math.min(d, 1 - d);
+}
+
+/// A spin handle: a flick turns with inertia, a slow drag of [turns] (sign =
+/// direction) wraps, within 0..1 all along.
+Future<void> _spinTest(
+  WidgetTester tester,
+  AvatarScene scene,
+  String spin, {
+  required double turns,
+}) async {
+  final _Stage stage = _Stage();
+  final Size box = _stageBox(tester);
+  await tester.pumpWidget(_stageApp(scene, stage, box));
+  await _waitLoaded(tester, stage, scene);
+  final PropDragController drags = stage.drags;
+  final double scale = SceneDrags.coverScale(box);
+  final Offset centre =
+      tester.getTopLeft(find.byType(RiveSceneView)) + drags.handleCentre(box)!;
+  expect(drags.readNumber(spin), 0);
+
+  // a flick: released while moving, the bands keep turning
+  await tester.timedDragFrom(
+    centre,
+    Offset(turns.sign * 60, 0),
+    const Duration(milliseconds: 120),
+  );
+  await tester.pump();
+  final double atRelease = drags.readNumber(spin)!;
+  final List<double> coasting = await _sample(
+    drags,
+    spin,
+    () => _live(tester, const Duration(milliseconds: 1500)),
+  );
+  final double s1 = drags.readNumber(spin)!;
+  expect(s1, isNot(0), reason: 'the flick turned the bands');
+  expect(s1, inInclusiveRange(0, 1));
+  expect(s1, lessThan(1));
+  expect(
+    _circular(s1, atRelease),
+    greaterThan(0.01),
+    reason: 'inertia carried the spin past the release',
+  );
+  for (final double v in coasting) {
+    expect(v, inInclusiveRange(0, 1));
+    expect(v, lessThan(1));
+  }
+
+  // a slow drag of [turns] turns, held still before the release: it wraps
+  final double dx = turns * PropDragPhysics.spinPxPerTurn * scale;
+  final TestGesture gesture = await tester.startGesture(centre);
+  final int steps = (dx.abs() / 6).ceil();
+  final List<double> wrapping = await _sample(drags, spin, () async {
+    await _stepTo(tester, gesture, centre, centre + Offset(dx, 0), steps);
+    await _live(tester, const Duration(milliseconds: 200));
+    await gesture.up();
+    await _live(tester, const Duration(milliseconds: 300));
+  });
+  final double s2 = drags.readNumber(spin)!;
+  expect(
+    _circular(s2, (s1 + turns) % 1),
+    lessThan(0.02),
+    reason: 'spin $s1 + $turns turns wraps to ${(s1 + turns) % 1}',
+  );
+  for (final double v in wrapping) {
+    expect(v, inInclusiveRange(0, 1));
+    expect(v, lessThan(1));
+  }
+  expect(stage.haptics, contains(DragHaptic.selection));
+  await _unmount(tester);
+}
+
+/// An aim handle: a horizontal drag moves [aim] by rect.width artboard px
+/// per unit and holds; far left clamps at -1.
+Future<void> _aimTest(
+  WidgetTester tester,
+  AvatarScene scene,
+  String aim,
+) async {
+  final _Stage stage = _Stage();
+  final Size box = _stageBox(tester);
+  await tester.pumpWidget(_stageApp(scene, stage, box));
+  await _waitLoaded(tester, stage, scene);
+  final PropDragController drags = stage.drags;
+  final double scale = SceneDrags.coverScale(box);
+  final Rect rect = SceneDrags.of(scene)!.rect;
+  final Offset centre =
+      tester.getTopLeft(find.byType(RiveSceneView)) + drags.handleCentre(box)!;
+  expect(drags.readNumber(aim), 0);
+
+  const double logical = 40;
+  final TestGesture gesture = await tester.startGesture(centre);
+  await _stepTo(tester, gesture, centre, centre + const Offset(logical, 0), 8);
+  await _live(tester, const Duration(milliseconds: 150));
+  await gesture.up();
+  await _live(tester, const Duration(milliseconds: 100));
+  final double held = drags.readNumber(aim)!;
+  expect(
+    held,
+    closeTo(logical / scale / rect.width, 0.03),
+    reason: 'rect.width artboard px per unit',
+  );
+  await _live(tester, const Duration(milliseconds: 600));
+  expect(drags.readNumber(aim), held, reason: '$aim holds');
+
+  // far left: clamped at -1
+  await tester.timedDragFrom(
+    centre,
+    Offset(-1.5 * rect.width * scale, 0),
+    const Duration(milliseconds: 500),
+  );
+  await _live(tester, const Duration(milliseconds: 300));
+  expect(drags.readNumber(aim), -1);
+  await _unmount(tester);
 }
 
 /// A pull: down 66 px (≥ 60, past 0.6 of the 100 artboard px travel at any

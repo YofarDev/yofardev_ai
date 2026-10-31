@@ -69,7 +69,7 @@ void main() {
         scene: scene,
       );
 
-  testWidgets('shows the seven scenes with their English names', (
+  testWidgets('shows the ten scenes with their English names', (
     WidgetTester tester,
   ) async {
     await openSheet(tester);
@@ -82,6 +82,9 @@ void main() {
       'Café',
       'Rooftop',
       'Mountain hut',
+      'Forest cabin',
+      'Train compartment',
+      'Library',
     ]) {
       expect(find.text(name), findsOneWidget, reason: name);
     }
@@ -99,6 +102,9 @@ void main() {
       'Café',
       'Toit-terrasse',
       'Refuge',
+      'Cabane en forêt',
+      'Compartiment de train',
+      'Bibliothèque',
     ]) {
       expect(find.text(name), findsOneWidget, reason: name);
     }
@@ -166,6 +172,9 @@ void main() {
       AvatarScene.cafe,
       AvatarScene.rooftop,
       AvatarScene.mountainHut,
+      AvatarScene.forestCabin,
+      AvatarScene.trainCompartment,
+      AvatarScene.library,
     ]) {
       expect(fallbackOf(scene), findsOneWidget, reason: scene.name);
     }
