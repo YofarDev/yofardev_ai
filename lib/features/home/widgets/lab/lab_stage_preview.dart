@@ -41,6 +41,8 @@ class LabStageExtras extends InheritedWidget {
     this.moonPhase,
     this.festive,
     this.localDay,
+    this.topTint = AvatarTint.none,
+    this.hatTint = AvatarTint.none,
     required super.child,
   });
 
@@ -68,6 +70,10 @@ class LabStageExtras extends InheritedWidget {
   /// The world's local day, for the avatar's December outfit.
   final ValueListenable<DateTime>? localDay;
 
+  /// The stage avatar's wardrobe tints (contract v13).
+  final AvatarTint topTint;
+  final AvatarTint hatTint;
+
   /// The extras above [context], or none (no prop, no parallax).
   static LabStageExtras? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<LabStageExtras>();
@@ -82,7 +88,9 @@ class LabStageExtras extends InheritedWidget {
       npc2 != oldWidget.npc2 ||
       moonPhase != oldWidget.moonPhase ||
       festive != oldWidget.festive ||
-      localDay != oldWidget.localDay;
+      localDay != oldWidget.localDay ||
+      topTint != oldWidget.topTint ||
+      hatTint != oldWidget.hatTint;
 }
 
 /// The default [LabStageBuilder]: the real Rive scene and avatar.
@@ -263,6 +271,8 @@ class _LabStagePreviewState extends State<LabStagePreview>
                           moonPhase: widget.world?.moonPhase,
                           festive: widget.world?.festive,
                           localDay: widget.world?.localDay,
+                          topTint: config.topTint,
+                          hatTint: config.hatTint,
                           child: StageCamera(
                             shot: _camera,
                             child: ValueListenableBuilder<MouthState>(
@@ -350,6 +360,10 @@ class _LabRiveStageState extends State<LabRiveStage> {
         avatarState: _avatar.copyWith(
           scene: widget.scene,
           prop: extras?.prop ?? AvatarProp.none,
+          avatar: Avatar(
+            topTint: extras?.topTint ?? AvatarTint.none,
+            hatTint: extras?.hatTint ?? AvatarTint.none,
+          ),
         ),
         talkingState: widget.talkingState,
         faceOverride: widget.face,

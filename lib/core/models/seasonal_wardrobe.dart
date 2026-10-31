@@ -1,12 +1,13 @@
 import 'avatar_config.dart';
 
-/// The avatar's December outfit (moonshot M9 ruling 13).
+/// The avatar's December outfit (moonshot M9 ruling 13, M10 ruling 5).
 ///
 /// From 1 to 31 December a chat whose stored outfit is the default (hat
-/// `noHat`, top `pinkHoodie`, costume `none`) is *shown* in `santaHat` and
-/// `christmasSweater`. Never saved: the stored [Avatar] is untouched, so
-/// anything the user or the LLM chose (any other hat, top or a costume) wins,
-/// and on 1 January the avatar is back in its stored outfit.
+/// `noHat`, top `pinkHoodie`, costume `none`, and no tint on either) is
+/// *shown* in `santaHat` and `christmasSweater`. Never saved: the stored
+/// [Avatar] is untouched, so anything the user or the LLM chose (any other
+/// hat, top, a tint or a costume) wins, and on 1 January the avatar is back
+/// in its stored outfit.
 Avatar shownWardrobe(Avatar stored, DateTime local) {
   if (local.month != DateTime.december) {
     return stored;
@@ -14,7 +15,9 @@ Avatar shownWardrobe(Avatar stored, DateTime local) {
   final bool usesDefaults =
       stored.hat == AvatarHat.noHat &&
       stored.top == AvatarTop.pinkHoodie &&
-      stored.costume == AvatarCostume.none;
+      stored.costume == AvatarCostume.none &&
+      stored.topTint == AvatarTint.none &&
+      stored.hatTint == AvatarTint.none;
   if (!usesDefaults) {
     return stored;
   }
@@ -31,7 +34,7 @@ String decemberWardrobePromptNote(DateTime local) {
     return '';
   }
   return 'It is December: while the avatar keeps its default outfit (hat '
-      'noHat, top pinkHoodie, costume none), the user sees it in its '
-      'December outfit, a santaHat and a christmasSweater. Any hat, top or '
-      'costume you choose replaces it.';
+      'noHat, top pinkHoodie, costume none, no topTint or hatTint), the user '
+      'sees it in its December outfit, a santaHat and a christmasSweater. Any '
+      'hat, top, tint or costume you choose replaces it.';
 }

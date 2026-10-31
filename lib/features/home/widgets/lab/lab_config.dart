@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/performance/performance.dart';
@@ -37,6 +38,8 @@ class LabConfig {
     this.shot = Shot.wide,
     this.npc,
     this.npc2,
+    this.topTint = AvatarTint.none,
+    this.hatTint = AvatarTint.none,
   });
 
   /// The lab's starting point.
@@ -87,6 +90,10 @@ class LabConfig {
   /// the beach's gulls); null leaves them to the live tree.
   final NpcIntent? npc2;
 
+  /// The stage avatar's wardrobe tints (contract v13 `topTint` / `hatTint`).
+  final AvatarTint topTint;
+  final AvatarTint hatTint;
+
   static const double maxGlassAlphaScale = 4;
   static const double maxRadiusScale = 3;
 
@@ -108,6 +115,8 @@ class LabConfig {
     Shot? shot,
     Object? npc = _keep,
     Object? npc2 = _keep,
+    AvatarTint? topTint,
+    AvatarTint? hatTint,
   }) {
     return LabConfig(
       scene: scene ?? this.scene,
@@ -130,6 +139,8 @@ class LabConfig {
       shot: shot ?? this.shot,
       npc: identical(npc, _keep) ? this.npc : npc as NpcIntent?,
       npc2: identical(npc2, _keep) ? this.npc2 : npc2 as NpcIntent?,
+      topTint: topTint ?? this.topTint,
+      hatTint: hatTint ?? this.hatTint,
     );
   }
 
@@ -162,6 +173,8 @@ class LabConfig {
             'npcX': npc2!.npcX,
             'npcLook': npc2!.npcLook,
           },
+    'topTint': topTint.name,
+    'hatTint': hatTint.name,
   };
 
   static const Set<String> _keys = <String>{
@@ -179,6 +192,8 @@ class LabConfig {
     'shot',
     'npc',
     'npc2',
+    'topTint',
+    'hatTint',
   };
 
   /// Parses [json]. Missing keys take the [initial] values; unknown keys,
@@ -219,6 +234,8 @@ class LabConfig {
       shot: _enum(json, 'shot', Shot.values, initial.shot),
       npc: json['npc'] == null ? null : _npc(json['npc']),
       npc2: json['npc2'] == null ? null : _npc2(json['npc2']),
+      topTint: _enum(json, 'topTint', AvatarTint.values, initial.topTint),
+      hatTint: _enum(json, 'hatTint', AvatarTint.values, initial.hatTint),
     );
   }
 
@@ -356,7 +373,9 @@ class LabConfig {
       other.parallax == parallax &&
       other.shot == shot &&
       other.npc == npc &&
-      other.npc2 == npc2;
+      other.npc2 == npc2 &&
+      other.topTint == topTint &&
+      other.hatTint == hatTint;
 
   @override
   int get hashCode => Object.hash(
@@ -374,6 +393,8 @@ class LabConfig {
     shot,
     npc,
     npc2,
+    topTint,
+    hatTint,
   );
 
   @override

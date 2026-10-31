@@ -146,7 +146,9 @@ class ChatCubit extends Cubit<ChatState> {
         actualAvatarConfig.hat != null ||
         actualAvatarConfig.top != null ||
         actualAvatarConfig.glasses != null ||
-        actualAvatarConfig.costume != null) {
+        actualAvatarConfig.costume != null ||
+        actualAvatarConfig.topTint != null ||
+        actualAvatarConfig.hatTint != null) {
       AppLogger.debug(
         'ChatCubit: calling updateAvatarOpenedChat with new avatar config',
         tag: 'ChatCubit',
@@ -299,6 +301,8 @@ class ChatCubit extends Cubit<ChatState> {
             top: newChat.avatar.top,
             glasses: newChat.avatar.glasses,
             costume: newChat.avatar.costume,
+            topTint: newChat.avatar.topTint,
+            hatTint: newChat.avatar.hatTint,
           ),
         );
       },
@@ -336,6 +340,8 @@ class ChatCubit extends Cubit<ChatState> {
       glasses: avatarConfig.glasses ?? chat.avatar.glasses,
       specials: avatarConfig.specials ?? chat.avatar.specials,
       costume: avatarConfig.costume ?? chat.avatar.costume,
+      topTint: avatarConfig.topTint ?? chat.avatar.topTint,
+      hatTint: avatarConfig.hatTint ?? chat.avatar.hatTint,
     );
     final Chat updatedChat = chat.copyWith(avatar: avatar);
 
@@ -631,6 +637,8 @@ class ChatCubit extends Cubit<ChatState> {
               top: finalChat.avatar.top,
               glasses: finalChat.avatar.glasses,
               costume: finalChat.avatar.costume,
+              topTint: finalChat.avatar.topTint,
+              hatTint: finalChat.avatar.hatTint,
               specials: finalChat.avatar.specials,
             );
 

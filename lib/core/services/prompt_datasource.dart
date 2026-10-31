@@ -56,6 +56,11 @@ class PromptDatasource {
     );
     systemPrompt = _replacePlaceholder(
       systemPrompt,
+      r'$tintList',
+      AvatarTint.values,
+    );
+    systemPrompt = _replacePlaceholder(
+      systemPrompt,
       r'$soundEffectsList',
       SoundEffects.values,
     );
@@ -67,7 +72,7 @@ class PromptDatasource {
     systemPrompt = _replacePlaceholder(
       systemPrompt,
       r'$gestureList',
-      AvatarGesture.values,
+      AvatarGesture.llmCues,
     );
     systemPrompt = systemPrompt.replaceAll(
       r'$sceneEventList',

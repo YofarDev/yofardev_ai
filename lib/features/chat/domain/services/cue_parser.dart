@@ -116,7 +116,7 @@ class CueParser {
 
   AvatarCue? _resolveCue(String kind, String name) {
     if (kind == 'g') {
-      final AvatarGesture? gesture = AvatarGesture.values.firstWhereOrNull(
+      final AvatarGesture? gesture = AvatarGesture.llmCues.firstWhereOrNull(
         (AvatarGesture g) => g.name == name,
       );
       if (gesture == null) {

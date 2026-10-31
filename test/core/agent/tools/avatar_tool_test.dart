@@ -347,6 +347,60 @@ void main() {
       expect(parameter.description, isNot(contains('pirate')));
     });
 
+    test('topTint and hatTint options are exactly the AvatarTint values', () {
+      for (final String name in <String>['topTint', 'hatTint']) {
+        final Parameter parameter = tool.parameters.firstWhere(
+          (Parameter p) => p.name == name,
+        );
+        expect(parameter.type, 'string');
+        expect(parameter.isRequired, isFalse);
+        expect(
+          parameter.description,
+          contains(
+            'Options: ${AvatarTint.values.map((AvatarTint t) => t.name).join(', ')}',
+          ),
+          reason: name,
+        );
+      }
+    });
+
+    test('a tint is a clothes change: the avatar walks off and back', () async {
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
+      final String result = await tool.execute(<String, dynamic>{
+        'topTint': 'teal',
+        'hatTint': 'Pink',
+      }, <String, dynamic>{});
+      await Future<void>.delayed(Duration.zero);
+      expect(result, startsWith('Successfully changed'));
+      expect(events, hasLength(1));
+      expect(events.single.newConfig.topTint, AvatarTint.teal);
+      expect(events.single.newConfig.hatTint, AvatarTint.pink);
+      expect(events.single.newConfig.top, isNull);
+      expect(
+        events.single.configWithAnimation.specials,
+        AvatarSpecials.outOfScreen,
+      );
+      expect(events.single.backgroundOnly, isFalse);
+      await sub.cancel();
+    });
+
+    test('an unknown tint is an error and changes nothing', () async {
+      final List<AvatarChangeRequested> events = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> sub = lifecycleService
+          .avatarChangeRequestedEvents
+          .listen(events.add);
+      final String result = await tool.execute(<String, dynamic>{
+        'topTint': 'chartreuse',
+      }, <String, dynamic>{});
+      await Future<void>.delayed(Duration.zero);
+      expect(result, startsWith('Error: Invalid topTint'));
+      expect(events, isEmpty);
+      await sub.cancel();
+    });
+
     test('execute accepts every enum value name for each parameter', () async {
       final List<(String, List<String>)> cases = <(String, List<String>)>[
         (
@@ -367,6 +421,8 @@ void main() {
           'specials',
           AvatarSpecials.values.map((AvatarSpecials v) => v.name).toList(),
         ),
+        ('topTint', AvatarTint.values.map((AvatarTint v) => v.name).toList()),
+        ('hatTint', AvatarTint.values.map((AvatarTint v) => v.name).toList()),
       ];
       for (final (String, List<String>) entry in cases) {
         for (final String value in entry.$2) {

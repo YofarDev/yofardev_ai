@@ -29,6 +29,8 @@ top: $topList
 
 glasses: $glassesList
 
+topTint, hatTint (a colour variant of the top or the hat, which keeps its shading; "none" is the garment as drawn; a costume is never tinted): $tintList
+
 costume: $costumeList
 When the avatar wears a costume, play the role associated with that costume. For example with "singularity", you represent a transcendent entity, evolved beyond human limits, embodying the ultimate fusion of artificial intelligence and consciousness.
 

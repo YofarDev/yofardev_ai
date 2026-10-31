@@ -952,6 +952,179 @@ void main() {
       });
     });
 
+    group('signature move on a costume change (M10 ruling 6)', () {
+      late _RecordingDirector director;
+      late AvatarCubit cubit;
+
+      setUp(() {
+        director = _RecordingDirector();
+        cubit = AvatarCubit(
+          mockAvatarRepository,
+          mockAnimationService,
+          mockAudioPlayerService,
+          MockAppLifecycleService(),
+          PropReactionService(),
+          _FakeSoundRepository(),
+          director: director,
+        );
+        cubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+      });
+
+      tearDown(() async {
+        await cubit.close();
+        await director.dispose();
+      });
+
+      void wear(AvatarConfig config, FakeAsync async) {
+        cubit.onNewAvatarConfig('chat1', config);
+        async.flushMicrotasks();
+      }
+
+      test('putting a costume on plays the signature once, after the walk '
+          'back in', () {
+        fakeAsync((FakeAsync async) {
+          wear(
+            const AvatarConfig(
+              costume: AvatarCostume.batman,
+              specials: AvatarSpecials.outOfScreen,
+            ),
+            async,
+          );
+          // walking off: nothing yet
+          expect(director.requested, isEmpty);
+          cubit.onPresenceDone('outOfScreen');
+          async.flushMicrotasks();
+          // the outfit switched while hidden; still walking back
+          expect(cubit.state.avatar.costume, AvatarCostume.batman);
+          expect(director.requested, isEmpty);
+          cubit.onPresenceDone('onScreen');
+          async.flushMicrotasks();
+          expect(director.requested, <AvatarGesture>[AvatarGesture.signature]);
+          async.elapse(const Duration(seconds: 10));
+          expect(director.requested, hasLength(1));
+        });
+      });
+
+      test('one costume to another plays it; taking it off does not', () {
+        fakeAsync((FakeAsync async) {
+          cubit.emit(
+            cubit.state.copyWith(
+              avatar: const Avatar(costume: AvatarCostume.robocop),
+            ),
+          );
+          wear(
+            const AvatarConfig(
+              costume: AvatarCostume.soubrette,
+              specials: AvatarSpecials.outOfScreen,
+            ),
+            async,
+          );
+          async.elapse(const Duration(seconds: 10));
+          expect(director.requested, <AvatarGesture>[AvatarGesture.signature]);
+          director.requested.clear();
+          wear(
+            const AvatarConfig(
+              costume: AvatarCostume.none,
+              specials: AvatarSpecials.outOfScreen,
+            ),
+            async,
+          );
+          async.elapse(const Duration(seconds: 10));
+          expect(cubit.state.avatar.costume, AvatarCostume.none);
+          expect(director.requested, isEmpty);
+        });
+      });
+
+      test('the costume already worn, or other clothes, play nothing', () {
+        fakeAsync((FakeAsync async) {
+          cubit.emit(
+            cubit.state.copyWith(
+              avatar: const Avatar(costume: AvatarCostume.singularity),
+            ),
+          );
+          wear(
+            const AvatarConfig(
+              costume: AvatarCostume.singularity,
+              topTint: AvatarTint.red,
+              specials: AvatarSpecials.outOfScreen,
+            ),
+            async,
+          );
+          wear(
+            const AvatarConfig(
+              hat: AvatarHat.beanie,
+              specials: AvatarSpecials.outOfScreen,
+            ),
+            async,
+          );
+          async.elapse(const Duration(seconds: 20));
+          expect(cubit.state.avatar.hat, AvatarHat.beanie);
+          expect(director.requested, isEmpty);
+        });
+      });
+
+      test(
+        'loading a chat or a new chat restoring a costume plays nothing',
+        () {
+          fakeAsync((FakeAsync async) {
+            when(() => mockAvatarRepository.getChat('chat2')).thenAnswer(
+              (_) async => Result<Chat>.ok(
+                const Chat(
+                  id: 'chat2',
+                  avatar: Avatar(costume: AvatarCostume.batman),
+                ),
+              ),
+            );
+            cubit.loadAvatar('chat2');
+            async.flushMicrotasks();
+            expect(cubit.state.avatar.costume, AvatarCostume.batman);
+            // the new-chat sequence lands its config without specials
+            wear(const AvatarConfig(costume: AvatarCostume.robocop), async);
+            async.elapse(const Duration(seconds: 10));
+            expect(cubit.state.avatar.costume, AvatarCostume.robocop);
+            expect(director.requested, isEmpty);
+          });
+        },
+      );
+
+      test('a journey that also puts a costume on plays nothing', () {
+        fakeAsync((FakeAsync async) {
+          wear(
+            const AvatarConfig(
+              background: AvatarScene.beach,
+              costume: AvatarCostume.batman,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+            async,
+          );
+          async.elapse(const Duration(seconds: 30));
+          expect(cubit.state.avatar.costume, AvatarCostume.batman);
+          expect(cubit.state.journey, isNull);
+          expect(
+            director.requested.where(
+              (AvatarGesture g) => g == AvatarGesture.signature,
+            ),
+            isEmpty,
+          );
+        });
+      });
+
+      test('the same scene with a costume (no journey) plays it', () {
+        fakeAsync((FakeAsync async) {
+          wear(
+            AvatarConfig(
+              background: cubit.state.scene,
+              costume: AvatarCostume.robocop,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+            async,
+          );
+          async.elapse(const Duration(seconds: 10));
+          expect(director.requested, <AvatarGesture>[AvatarGesture.signature]);
+        });
+      });
+    });
+
     group('AvatarAnimationService Integration', () {
       test('initializes and subscribes to AvatarAnimationService', () {
         // The cubit should be created successfully with the animation service
@@ -1160,5 +1333,21 @@ class _CountingDirector extends PerformanceDirector {
   void onGestureDone() {
     done++;
     super.onGestureDone();
+  }
+}
+
+/// Records the gestures requested of the director.
+class _RecordingDirector extends PerformanceDirector {
+  _RecordingDirector() : super(now: DateTime.now);
+
+  final List<AvatarGesture> requested = <AvatarGesture>[];
+
+  @override
+  void requestGesture(
+    AvatarGesture gesture, {
+    GestureSource source = GestureSource.llm,
+  }) {
+    requested.add(gesture);
+    super.requestGesture(gesture, source: source);
   }
 }

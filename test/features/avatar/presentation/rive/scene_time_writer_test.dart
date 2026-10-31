@@ -19,6 +19,7 @@ void main() {
     expect(writes, <(String, double)>[
       (AvatarRiveContract.scenePropDaylight, 0.4),
       (AvatarRiveContract.scenePropDusk, 1),
+      (AvatarRiveContract.scenePropNight, 0),
     ]);
     follower.dispose();
   });
@@ -35,6 +36,7 @@ void main() {
     daylight.value = 1.5;
     expect(writes, <(String, double)>[
       (AvatarRiveContract.scenePropDaylight, 1),
+      (AvatarRiveContract.scenePropNight, 0),
     ]);
     follower.dispose();
   });
@@ -46,14 +48,68 @@ void main() {
       ..load(sink);
     writes.clear();
     follower.load(sink);
-    expect(writes, <(String, double)>[
+    expect(writes.take(2), <(String, double)>[
       (AvatarRiveContract.scenePropDaylight, 0.7),
       (AvatarRiveContract.scenePropDusk, 0),
     ]);
+    expect(writes.last.$1, AvatarRiveContract.scenePropNight);
+    expect(writes.last.$2, closeTo(0.3, 1e-9));
     writes.clear();
     follower.unload();
     daylight.value = 0.2;
     expect(writes, isEmpty);
     follower.dispose();
+  });
+
+  group('night (contract v13)', () {
+    test('night = (1 − daylight) × (1 − dusk)', () {
+      for (final (double d, double k, double n) c in <(double, double, double)>[
+        (0, 0, 1),
+        (1, 0, 0),
+        (0, 1, 0),
+        (0.5, 0, 0.5),
+        (0.2, 0.5, 0.4),
+        (0.75, 0.75, 0.0625),
+        (2, -1, 0), // clamped: full day
+      ]) {
+        expect(
+          SceneTimeFollower.nightOf(c.$1, c.$2),
+          closeTo(c.$3, 1e-9),
+          reason: 'daylight ${c.$1}, dusk ${c.$2}',
+        );
+      }
+      expect(SceneTimeFollower.nightOf(double.nan, double.nan), 1);
+    });
+
+    test('deep night is written as 1 and follows the clock', () {
+      final ValueNotifier<double> daylight = ValueNotifier<double>(0);
+      final ValueNotifier<double> dusk = ValueNotifier<double>(0);
+      final SceneTimeFollower follower = SceneTimeFollower()
+        ..follow(daylight, dusk)
+        ..load(sink);
+      expect(writes.last, (AvatarRiveContract.scenePropNight, 1));
+      writes.clear();
+      dusk.value = 0.5;
+      expect(writes, <(String, double)>[
+        (AvatarRiveContract.scenePropDusk, 0.5),
+        (AvatarRiveContract.scenePropNight, 0.5),
+      ]);
+      writes.clear();
+      dusk.value = 0.5004;
+      expect(writes, isEmpty, reason: 'below epsilon');
+      follower.dispose();
+    });
+
+    test('without a clock night stays 0: the v12 look (lab, tests)', () {
+      final SceneTimeFollower follower = SceneTimeFollower()
+        ..follow(null, null)
+        ..load(sink);
+      expect(writes, <(String, double)>[
+        (AvatarRiveContract.scenePropDaylight, 0),
+        (AvatarRiveContract.scenePropDusk, 0),
+        (AvatarRiveContract.scenePropNight, 0),
+      ]);
+      follower.dispose();
+    });
   });
 }

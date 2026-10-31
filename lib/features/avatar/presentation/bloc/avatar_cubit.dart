@@ -414,12 +414,38 @@ class AvatarCubit extends Cubit<AvatarState> {
             : AvatarStatusAnimation.coming,
       ),
     );
+    final AvatarCostume before = state.avatar.costume;
     // Transition values are never persisted: the avatar ends on screen.
     _updateAvatar(
       chatId,
       avatarConfig.copyWith(specials: AvatarSpecials.onScreen),
     );
+    final AvatarCostume worn = state.avatar.costume;
     await _waitForPresence(AvatarSpecials.onScreen);
+    if (isClosed) return;
+    _playSignatureIfPutOn(before, worn);
+  }
+
+  /// M10 ruling 6: a costume just put on ([before] → [worn], [worn] not
+  /// none) plays its signature move once, back on screen after the outfit
+  /// switch. Only a walk-off clothes change gets here: a chat load, the
+  /// new-chat sequence (no walk) and a journey never play it. Requested of
+  /// the director like an LLM gesture (it waits for a gesture playing and
+  /// the cooldown; a prop still out for a running tool drops it); without a
+  /// director (tests, the lab) nothing plays. Skipped when the costume
+  /// changed again meanwhile (a chat switch).
+  void _playSignatureIfPutOn(AvatarCostume before, AvatarCostume worn) {
+    if (worn == AvatarCostume.none ||
+        worn == before ||
+        state.avatar.costume != worn ||
+        state.journey != null) {
+      return;
+    }
+    AppLogger.debug(
+      'AvatarCubit: ${worn.name} put on, signature move',
+      tag: 'AvatarCubit',
+    );
+    _director?.requestGesture(AvatarGesture.signature);
   }
 
   // ---------------------------------------------------------------- journeys
@@ -457,7 +483,9 @@ class AvatarCubit extends Cubit<AvatarState> {
           avatarConfig.hat != null ||
           avatarConfig.top != null ||
           avatarConfig.glasses != null ||
-          avatarConfig.costume != null;
+          avatarConfig.costume != null ||
+          avatarConfig.topTint != null ||
+          avatarConfig.hatTint != null;
       if (clothes) {
         // No journey, but the clothes still change out of sight.
         await _walkOffAndBack(chatId, avatarConfig, clothesChange: true);
@@ -780,6 +808,8 @@ class AvatarCubit extends Cubit<AvatarState> {
       specials: avatarConfig.specials ?? state.avatar.specials,
       background: avatarConfig.background ?? state.avatar.background,
       costume: avatarConfig.costume ?? state.avatar.costume,
+      topTint: avatarConfig.topTint ?? state.avatar.topTint,
+      hatTint: avatarConfig.hatTint ?? state.avatar.hatTint,
     );
     _emitIfOpen(
       state.copyWith(

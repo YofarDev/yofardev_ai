@@ -131,7 +131,11 @@ class AppLifecycleService {
         (avatarConfig.hat != null &&
             avatarConfig.hat != currentAvatarConfig.hat) ||
         (avatarConfig.costume != null &&
-            avatarConfig.costume != currentAvatarConfig.costume);
+            avatarConfig.costume != currentAvatarConfig.costume) ||
+        (avatarConfig.topTint != null &&
+            avatarConfig.topTint != currentAvatarConfig.topTint) ||
+        (avatarConfig.hatTint != null &&
+            avatarConfig.hatTint != currentAvatarConfig.hatTint);
 
     AppLogger.debug(
       'backgroundChanged=$backgroundChanged, clothesChanged=$clothesChanged',
@@ -166,7 +170,9 @@ class AppLifecycleService {
         finalAvatarConfig.top != null ||
         finalAvatarConfig.glasses != null ||
         finalAvatarConfig.hat != null ||
-        finalAvatarConfig.costume != null) {
+        finalAvatarConfig.costume != null ||
+        finalAvatarConfig.topTint != null ||
+        finalAvatarConfig.hatTint != null) {
       AppLogger.debug(
         'Emitting new chat entry event with config: '
         'bg=${finalAvatarConfig.background}, '

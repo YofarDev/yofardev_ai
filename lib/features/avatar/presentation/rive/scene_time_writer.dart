@@ -3,8 +3,15 @@ import 'package:flutter/foundation.dart';
 import 'avatar_rive_contract.dart';
 
 /// Follows the world clock's `daylight` and `dusk` and writes them to the
-/// loaded scene file (`SceneVM`, contract v10): the scene view's clock logic,
-/// free of Rive so it can be tested.
+/// loaded scene file (`SceneVM`, contract v10), with `night` (contract v13,
+/// [nightOf]): the scene view's clock logic, free of Rive so it can be
+/// tested.
+///
+/// `night` is written to every scene: a file without it (all but the beach
+/// bind nothing, and older files lack it) ignores the write, as the binding
+/// resolves a missing property once and skips it. Without a [daylight]
+/// source (no world clock: the lab, tests) `night` stays 0, the v12 look,
+/// while `daylight` / `dusk` are still written as 0.
 ///
 /// Like `SceneRainFollower`: [follow] swaps the sources, [load] writes the
 /// current values into a fresh file even when they equal what the previous
@@ -16,9 +23,18 @@ class SceneTimeFollower {
   void Function(String name, double value)? _setNumber;
   double? _writtenDaylight;
   double? _writtenDusk;
+  double? _writtenNight;
 
   /// Smallest change worth writing.
   static const double epsilon = 0.001;
+
+  /// How much of the night shows (contract v13): `(1 − daylight) ×
+  /// (1 − dusk)`, each clamped to 0..1 (NaN is 0).
+  static double nightOf(double daylight, double dusk) {
+    final double d = daylight.isNaN ? 0 : daylight.clamp(0.0, 1.0);
+    final double k = dusk.isNaN ? 0 : dusk.clamp(0.0, 1.0);
+    return (1 - d) * (1 - k);
+  }
 
   /// Follows [daylight] and [dusk] (null: night) in place of the previous
   /// sources, and writes them to the loaded file, if any.
@@ -43,6 +59,7 @@ class SceneTimeFollower {
     _setNumber = setNumber;
     _writtenDaylight = null;
     _writtenDusk = null;
+    _writtenNight = null;
     _write();
   }
 
@@ -74,6 +91,12 @@ class SceneTimeFollower {
     if (lastDusk == null || (dusk - lastDusk).abs() > epsilon) {
       set(AvatarRiveContract.scenePropDusk, dusk);
       _writtenDusk = dusk;
+    }
+    final double night = _daylight == null ? 0 : nightOf(daylight, dusk);
+    final double? lastNight = _writtenNight;
+    if (lastNight == null || (night - lastNight).abs() > epsilon) {
+      set(AvatarRiveContract.scenePropNight, night);
+      _writtenNight = night;
     }
   }
 }

@@ -19,6 +19,7 @@ import '../../../domain/services/head_motion_solver.dart';
 import '../../rive/avatar_face_writer.dart';
 import '../../rive/avatar_light_writer.dart';
 import '../../rive/avatar_rive_contract.dart';
+import '../../rive/avatar_tint_writer.dart';
 import '../../rive/mouth_anchor_source.dart';
 import '../../bloc/avatar_state.dart';
 import '../stage_camera.dart';
@@ -55,6 +56,10 @@ import 'mouth_anchor_reader.dart';
 /// `prop` follows [AvatarState.prop]; `lean` rides in the face frame. The
 /// avatar relights as soon as the scene state changes, slightly before the
 /// new scene file finishes loading (accepted).
+///
+/// Contract v13: `topTint` / `hatTint` follow the shown avatar's tints
+/// ([AvatarTintWriter]: the `WardrobeTints` colours, transparent while a
+/// costume is worn).
 ///
 /// Contract v11: `jacket` follows [AvatarState.jacket] (the cubit flips it
 /// at a journey's grab contact), `tabletWeather` / `tabletTemp` the
@@ -174,6 +179,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   FaceFrame _face = FaceFrame.rest;
   AvatarFaceWriter? _faceWriter;
   AvatarLightWriter? _lightWriter;
+  AvatarTintWriter? _tintWriter;
   File? _file;
   RiveWidgetController? _controller;
   RiveVmBinding? _binding;
@@ -339,6 +345,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       // From the first advance on: before it the world transforms are not
       // computed yet.
       controller.onAdvanced = _reportMouth;
+      _tintWriter = AvatarTintWriter(_BindingSink(binding));
       _applyContinuousState();
       // A fresh binding has none of the head numbers yet.
       _writtenYaw = _writtenPitch = _writtenHairYaw = null;
@@ -480,6 +487,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     _binding = null;
     _faceWriter = null;
     _lightWriter = null;
+    _tintWriter = null;
     _file = null;
   }
 
@@ -539,6 +547,8 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       AvatarRiveContract.costumeValues,
       shown.costume.name,
     );
+    // v13: the shown outfit's colour variants (none under a costume).
+    _tintWriter?.write(shown);
     binding.setEnum(
       AvatarRiveContract.propProp,
       AvatarRiveContract.propValues,

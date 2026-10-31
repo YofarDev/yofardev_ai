@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
@@ -52,6 +54,33 @@ void main() {
     ]) {
       final String prompt = await promptOn(day);
       expect(prompt, isNot(contains('December outfit')), reason: '$day');
+    }
+  });
+
+  test('the tints are listed; the signature move is not an LLM cue', () async {
+    when(() => settings.getBaseSystemPrompt('en')).thenAnswer(
+      (_) async => r'$PERSONA tints: $tintList gestures: $gestureList',
+    );
+    final String prompt = await promptOn(DateTime(2026, 6, 1));
+    expect(
+      prompt,
+      contains(
+        'tints: none, red, orange, yellow, green, teal, blue, purple, pink, '
+        'grey, ',
+      ),
+    );
+    expect(prompt, contains('grab, '));
+    expect(prompt, isNot(contains('signature')));
+  });
+
+  test('both shipped prompts list the tints', () {
+    for (final String lang in <String>['en', 'fr']) {
+      final String text = File(
+        'assets/txt/system_prompt_$lang.txt',
+      ).readAsStringSync();
+      expect(text, contains(r'$tintList'), reason: lang);
+      expect(text, contains('topTint'), reason: lang);
+      expect(text, contains('hatTint'), reason: lang);
     }
   });
 

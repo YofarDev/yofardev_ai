@@ -2,6 +2,8 @@ import 'dart:ui' show Offset;
 
 import 'package:rive/rive.dart';
 
+import '../../rive/avatar_rive_contract.dart';
+
 /// Reads the avatar file's `MouthAnchor` (contract v13: a named `Node` at the
 /// centre of the lips, inside the head's turn pivot) the way
 /// `AvatarTapZones` reads `HitHead`: `artboard.component(name)` and its
@@ -16,7 +18,7 @@ class MouthAnchorReader {
       _bounds = artboard.bounds;
 
   /// The contract v13 name of the mouth's node.
-  static const String node = 'MouthAnchor';
+  static const String node = AvatarRiveContract.mouthAnchorNode;
 
   final Component? _anchor;
   final AABB _bounds;

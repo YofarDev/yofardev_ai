@@ -146,6 +146,14 @@ abstract final class AvatarRiveContract {
   static const double tabletTempMin = -40;
   static const double tabletTempMax = 50;
 
+  // Contract v13: the wardrobe's colour variants (ARGB colours, default
+  // `00000000` = none: drawn with blend mode color over the top's / hat's
+  // painted shapes; the app writes alpha 0 while a costume is worn) and the
+  // mouth's named node (its world translation anchors the speech bubble).
+  static const String propTopTint = 'topTint';
+  static const String propHatTint = 'hatTint';
+  static const String mouthAnchorNode = 'MouthAnchor';
+
   /// The v7 light numbers on `AvatarVM`, in `LightRig` field order.
   static const List<String> lightNumberProps = <String>[
     propLightKeyIntensity,
@@ -186,6 +194,7 @@ abstract final class AvatarRiveContract {
     'thumbsUp',
     'count',
     'grab',
+    'signature',
   ];
   static const List<String> phaseValues = <String>[
     'idle',
@@ -373,6 +382,11 @@ abstract final class AvatarRiveContract {
   static const double moonPhaseMax = 1;
   static const double festiveMin = 0;
   static const double festiveMax = 1;
+
+  /// Contract v13 `SceneVM`: how much of the night shows (0..1, default 0 =
+  /// the v12 look), written as `(1 − daylight) × (1 − dusk)`; the beach binds
+  /// it, every other scene declares and ignores it.
+  static const String scenePropNight = 'night';
 
   // Contract v12 drag handle numbers on `SceneVM` (table in CONTRACT.md):
   // each scene declares only its own; the app writes them every frame.

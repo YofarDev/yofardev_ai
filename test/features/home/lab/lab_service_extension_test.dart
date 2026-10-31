@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/performance/avatar_prop.dart';
 import 'package:yofardev_ai/core/services/world/world_state_service.dart';
@@ -455,6 +456,35 @@ void main() {
       );
       expect(bad.errorCode, developer.ServiceExtensionResponse.extensionError);
       expect(notifier.value.shot.name, 'closeUp');
+    });
+
+    test('topTint and hatTint tint the stage avatar; unknown names are '
+        'errors (M10)', () {
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      expect(notifier.value.topTint, AvatarTint.none);
+      final developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{'topTint': 'teal', 'hatTint': 'pink'},
+      );
+      expect(r.errorCode, isNull);
+      expect(notifier.value.topTint, AvatarTint.teal);
+      expect(notifier.value.hatTint, AvatarTint.pink);
+      final Map<String, Object?> state = _decode(labStateResponse(notifier));
+      expect(state['topTint'], 'teal');
+      expect(state['hatTint'], 'pink');
+      // another key keeps them
+      labConfigureResponse(notifier, <String, String>{'scene': 'beach'});
+      expect(notifier.value.topTint, AvatarTint.teal);
+      final developer.ServiceExtensionResponse bad = labConfigureResponse(
+        notifier,
+        <String, String>{'topTint': 'chartreuse'},
+      );
+      expect(bad.errorCode, developer.ServiceExtensionResponse.extensionError);
+      expect(notifier.value.topTint, AvatarTint.teal);
+      labConfigureResponse(notifier, <String, String>{'topTint': 'none'});
+      expect(notifier.value.topTint, AvatarTint.none);
     });
 
     test('a face object sets the lab face; null goes back to live', () {

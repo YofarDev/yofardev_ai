@@ -66,4 +66,26 @@ void main() {
     expect(decemberWardrobePromptNote(DateTime(2027, 1, 1)), isEmpty);
     expect(decemberWardrobePromptNote(DateTime(2026, 11, 30)), isEmpty);
   });
+
+  test('a tinted default outfit is no longer the default (M10)', () {
+    final DateTime december = DateTime(2026, 12, 10);
+    for (final Avatar tinted in <Avatar>[
+      defaults.copyWith(topTint: AvatarTint.teal),
+      defaults.copyWith(hatTint: AvatarTint.red),
+      defaults.copyWith(topTint: AvatarTint.grey, hatTint: AvatarTint.pink),
+    ]) {
+      expect(shownWardrobe(tinted, december), tinted);
+    }
+    // both tints none: still the December outfit
+    final Avatar untinted = defaults.copyWith(
+      topTint: AvatarTint.none,
+      hatTint: AvatarTint.none,
+    );
+    expect(shownWardrobe(untinted, december).hat, AvatarHat.santaHat);
+    expect(shownWardrobe(untinted, december).topTint, AvatarTint.none);
+  });
+
+  test('the December prompt note says a tint replaces it', () {
+    expect(decemberWardrobePromptNote(DateTime(2026, 12, 1)), contains('tint'));
+  });
 }
