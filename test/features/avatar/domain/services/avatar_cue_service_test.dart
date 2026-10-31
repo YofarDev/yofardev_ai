@@ -382,9 +382,11 @@ void main() {
           idleLadder: ladder,
         );
         addTearDown(service.dispose);
+        // a long sentence (2 s), so a loaded test machine never ends it
+        // before the persona arrives
         playbackService.startAmplitudeAnimation(
           'a.wav',
-          <int>[10, 10],
+          List<int>.filled(40, 10),
           const Duration(milliseconds: 50),
           caption: 'Hello there.',
         );
@@ -395,8 +397,11 @@ void main() {
         // the director holds the profile until the sentence ends: so does the ladder
         expect(director.profile, BodyLanguageProfile.normal);
         expect(ladder.thresholdScale, 1);
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-        await drain();
+        for (int i = 0; i < 100 && director.current.speaking; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await drain();
+        }
+        expect(director.current.speaking, isFalse);
         final BodyLanguageProfile coach = BodyLanguageProfile.of(
           ChatPersona.coach,
         );

@@ -52,14 +52,34 @@ abstract final class StageBubbleLayout {
   /// Where the tail sits on a side bubble (towards the face).
   static const double sideTailAt = 0.86;
 
+  /// How far (artboard px) the face may sway, nod or lean under a bubble
+  /// that does not follow (reduce motion): it is placed this much further
+  /// off the face.
+  static const double driftMargin = 48;
+
+  /// Ticks in a row the bubble must cover the face before it is moved off
+  /// it or handed to the classic caption (a lagging follow is no cover).
+  static const int coverFrames = 6;
+
+  /// A move of the mouth on the stage this big in one go is a camera cut:
+  /// the bubble is laid out again and jumps instead of gliding.
+  static const double cutJump = 48;
+
   /// The face's box around the mouth [anchor] (stage px), [scale] stage px
-  /// per artboard px (`StageFraming.stageScale`).
-  static Rect keepOut(Offset anchor, double scale) => Rect.fromLTRB(
-    anchor.dx - faceKeepOut.left * scale,
-    anchor.dy - faceKeepOut.top * scale,
-    anchor.dx + faceKeepOut.right * scale,
-    anchor.dy + faceKeepOut.bottom * scale,
-  );
+  /// per artboard px (`StageFraming.stageScale`), grown by [margin]
+  /// artboard px on every side.
+  static Rect keepOut(Offset anchor, double scale, {double margin = 0}) =>
+      Rect.fromLTRB(
+        anchor.dx - (faceKeepOut.left + margin) * scale,
+        anchor.dy - (faceKeepOut.top + margin) * scale,
+        anchor.dx + (faceKeepOut.right + margin) * scale,
+        anchor.dy + (faceKeepOut.bottom + margin) * scale,
+      );
+
+  /// Whether a [bubble] covers the face [keepOut]: it reaches into it by
+  /// more than [gap] (the gap a placed bubble keeps is its tolerance).
+  static bool covers(Rect bubble, Rect keepOut) =>
+      bubble.overlaps(keepOut.deflate(gap));
 
   /// The side and the widest bubble for a sentence spoken with the mouth at
   /// [anchor] on a [stage] whose chrome leaves [safe].
@@ -68,8 +88,9 @@ abstract final class StageBubbleLayout {
     required Rect safe,
     required Offset anchor,
     required double scale,
+    double margin = 0,
   }) {
-    final Rect face = keepOut(anchor, scale);
+    final Rect face = keepOut(anchor, scale, margin: margin);
     final double widest = stage.width * maxWidthFactor;
     final double roomLeft = face.left - gap - safe.left;
     final double roomRight = safe.right - face.right - gap;
@@ -167,6 +188,9 @@ class BubbleFollow {
 
   /// Where the bubble's anchor is now.
   Offset get position => _position;
+
+  /// The target it moves to (the last one outside the deadband).
+  Offset get aim => _target;
 
   /// Whether it rests on its target.
   bool get isSettled => _position == _target && _velocity == Offset.zero;

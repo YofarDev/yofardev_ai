@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/performance/shot.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/stage_framing.dart';
@@ -89,6 +90,43 @@ void main() {
     expect(midZoom, lessThan(StageFraming.of(Shot.medium, _stage).zoom));
     await tester.pumpAndSettle();
     expect(view.frame, StageFraming.of(Shot.medium, _stage));
+  });
+
+  testWidgets(
+    'attaching and detaching tell after the frame, never in a build',
+    (WidgetTester tester) async {
+      final List<SchedulerPhase> phases = <SchedulerPhase>[];
+      view.addListener(
+        () => phases.add(SchedulerBinding.instance.schedulerPhase),
+      );
+      await mount(tester);
+      expect(phases, isNotEmpty);
+      expect(phases, isNot(contains(SchedulerPhase.persistentCallbacks)));
+      phases.clear();
+      await tester.pumpWidget(const SizedBox());
+      expect(phases, isNotEmpty, reason: 'a detach is a change too');
+      expect(phases, isNot(contains(SchedulerPhase.persistentCallbacks)));
+    },
+  );
+
+  testWidgets('a disposed view hears nothing late', (
+    WidgetTester tester,
+  ) async {
+    final StageCameraView late = StageCameraView();
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: StageCamera(
+          shot: shot,
+          view: late,
+          child: const SizedBox.expand(),
+        ),
+      ),
+    );
+    await tester.pumpWidget(const SizedBox());
+    late.dispose();
+    await tester.pump();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a removed camera leaves the identity', (

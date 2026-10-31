@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/design/components/components.dart';
@@ -111,12 +113,19 @@ class _HomeContentStackState extends State<HomeContentStack> {
   /// Whether the bubble carries the caption (the classic one then hides).
   final ValueNotifier<bool> _bubbleShown = ValueNotifier<bool>(false);
 
+  /// The composer's laid-out height (it grows to four lines), for the
+  /// bubble's safe area.
+  final ValueNotifier<double> _composerHeight = ValueNotifier<double>(
+    StageComposer.height,
+  );
+
   @override
   void dispose() {
     _composerMode.dispose();
     _mouth.dispose();
     _cameraView.dispose();
     _bubbleShown.dispose();
+    _composerHeight.dispose();
     super.dispose();
   }
 
@@ -175,6 +184,7 @@ class _HomeContentStackState extends State<HomeContentStack> {
           mouthAnchor: _mouth.anchor,
           cameraView: widget.camera == null ? null : _cameraView,
           bubbleShown: _bubbleShown,
+          composerHeight: _composerHeight,
         ),
       ],
     );
@@ -480,6 +490,7 @@ class _BottomChrome extends StatelessWidget {
     required this.speech,
     required this.mouthAnchor,
     required this.bubbleShown,
+    required this.composerHeight,
     this.cameraView,
     this.composerActivity,
   });
@@ -496,6 +507,9 @@ class _BottomChrome extends StatelessWidget {
   /// Whether the bubble carries the caption.
   final ValueNotifier<bool> bubbleShown;
 
+  /// Written with the composer's height as laid out.
+  final ValueNotifier<double> composerHeight;
+
   /// The height the running-tool chip may take above the composer.
   static const double toolChipReserve = AppPill.hitHeight + AppSpace.sm;
 
@@ -504,15 +518,14 @@ class _BottomChrome extends StatelessWidget {
     final double keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final double bottom =
         math.max(keyboard, MediaQuery.paddingOf(context).bottom) + AppSpace.md;
-    // The bubble stays between the top chips and the tool chip / composer.
+    // The bubble stays between the top chips and the tool chip / composer
+    // (whose measured height the bubble adds), off the side insets.
+    final EdgeInsets padding = MediaQuery.paddingOf(context);
     final EdgeInsets bubbleReserved = EdgeInsets.fromLTRB(
-      AppSpace.lg,
-      MediaQuery.paddingOf(context).top +
-          AppSpace.sm +
-          AppIconButton.hitSize +
-          AppSpace.sm,
-      AppSpace.lg,
-      bottom + StageComposer.height + toolChipReserve,
+      padding.left + AppSpace.lg,
+      padding.top + AppSpace.sm + AppIconButton.hitSize + AppSpace.sm,
+      padding.right + AppSpace.lg,
+      bottom + toolChipReserve,
     );
     return Stack(
       fit: StackFit.expand,
@@ -533,10 +546,13 @@ class _BottomChrome extends StatelessWidget {
                 composerMode: composerMode,
                 bubbleShown: bubbleShown,
               ),
-              _Composer(
-                speech: speech,
-                activity: composerActivity,
-                onModeChanged: onComposerMode,
+              _HeightReporter(
+                height: composerHeight,
+                child: _Composer(
+                  speech: speech,
+                  activity: composerActivity,
+                  onModeChanged: onComposerMode,
+                ),
               ),
             ],
           ),
@@ -548,10 +564,54 @@ class _BottomChrome extends StatelessWidget {
             shown: bubbleShown,
             camera: cameraView,
             reserved: bubbleReserved,
+            composerHeight: composerHeight,
           ),
         ),
       ],
     );
+  }
+}
+
+/// Writes its child's laid-out height to [height] after the frame (a
+/// listener may rebuild, which a layout must not), only when it changes.
+class _HeightReporter extends SingleChildRenderObjectWidget {
+  const _HeightReporter({required this.height, required super.child});
+
+  final ValueNotifier<double> height;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderHeightReporter(height);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderHeightReporter renderObject,
+  ) {
+    renderObject.height = height;
+  }
+}
+
+class _RenderHeightReporter extends RenderProxyBox {
+  _RenderHeightReporter(this.height);
+
+  ValueNotifier<double> height;
+  double? _reported;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final double h = size.height;
+    if (h == _reported) {
+      return;
+    }
+    _reported = h;
+    final ValueNotifier<double> target = height;
+    SchedulerBinding.instance.addPostFrameCallback((Duration _) {
+      if (attached && _reported == h) {
+        target.value = h;
+      }
+    });
   }
 }
 

@@ -43,6 +43,7 @@ class StageRenderScale extends InheritedWidget {
 /// a camera attached it is the identity on no stage.
 class StageCameraView extends ChangeNotifier {
   _StageCameraState? _camera;
+  bool _disposed = false;
 
   /// The stage box the camera frames (null before its first layout).
   Size? get size => _camera?._size;
@@ -60,18 +61,35 @@ class StageCameraView extends ChangeNotifier {
   /// The shot the camera was last told to frame.
   Shot get shot => _camera?._command.shot ?? Shot.wide;
 
+  // Attach and detach happen while the tree builds or unmounts: listeners
+  // may rebuild, so they hear it once the frame is over.
   void _attach(_StageCameraState camera) {
     _camera = camera;
-    notifyListeners();
+    _movedAfterFrame();
   }
 
   void _detach(_StageCameraState camera) {
     if (_camera == camera) {
       _camera = null;
+      _movedAfterFrame();
     }
   }
 
   void _moved() => notifyListeners();
+
+  void _movedAfterFrame() {
+    SchedulerBinding.instance.addPostFrameCallback((Duration _) {
+      if (!_disposed) {
+        notifyListeners();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 }
 
 /// The camera over the stage: transforms [child] (the Rive scene, the avatar
@@ -257,14 +275,7 @@ class _StageCameraState extends State<StageCamera>
             _settle();
           }
           // Inside a build: the view hears it after the frame.
-          final StageCameraView? view = widget.view;
-          if (view != null) {
-            WidgetsBinding.instance.addPostFrameCallback((Duration _) {
-              if (mounted && view._camera == this) {
-                view._moved();
-              }
-            });
-          }
+          widget.view?._movedAfterFrame();
         }
         _size = size;
         final double renderScale = cameraRenderScale(

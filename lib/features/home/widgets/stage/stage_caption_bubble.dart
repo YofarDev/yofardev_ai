@@ -54,7 +54,13 @@ enum CaptionFallback {
 /// size and text are laid out once per sentence; it then follows the mouth
 /// ([anchor], artboard px, mapped through the avatar's fit and the
 /// [camera]) with a critically damped ~8 Hz follow that ignores moves under
-/// 1 dp. Reduce motion: placed once per sentence, never follows, a plain
+/// 1 dp. A follow that lags a few frames behind the face is tolerated (the
+/// gap it keeps); a cover that lasts [StageBubbleLayout.coverFrames] ticks,
+/// or a camera cut, re-places the bubble (laid out again for the new
+/// framing if needed) with a jump, and only a sentence that fits nowhere
+/// goes to the classic caption. Reduce motion: placed once per sentence a
+/// [StageBubbleLayout.driftMargin] further off the face, never follows
+/// (one jump only if the face still comes under it), a plain
 /// [AppMotion.fast] fade.
 ///
 /// [shown] is true while the bubble stands in for the classic
@@ -68,6 +74,7 @@ class StageCaptionBubble extends StatefulWidget {
     required this.shown,
     this.camera,
     this.reserved = EdgeInsets.zero,
+    this.composerHeight,
   });
 
   final ValueListenable<ComposerOrbState> composerMode;
@@ -83,6 +90,10 @@ class StageCaptionBubble extends StatefulWidget {
 
   /// The stage's edges the chrome takes; the bubble stays inside the rest.
   final EdgeInsets reserved;
+
+  /// The composer's height as laid out (it grows to four lines), taken off
+  /// the bottom on top of [reserved] (null: nothing more).
+  final ValueListenable<double>? composerHeight;
 
   static const Key bubbleKey = ValueKey<String>('stage-caption-bubble');
   static const Key textKey = ValueKey<String>('stage-caption-bubble-text');
@@ -104,21 +115,6 @@ class StageCaptionBubble extends StatefulWidget {
     AppSpace.lg,
     AppSpace.md,
   );
-
-  /// The fill the caption ink sits on, over a [backdrop] (the scene): the
-  /// backing, then the glass at [glassAlpha] (a `GlassPanel` gradient runs
-  /// from its level's `fillAlpha` to 0.4 of it).
-  static Color fillOver(AppTokens tokens, Color backdrop, double glassAlpha) {
-    final Color backing = tokens.glassSurface.withValues(alpha: backingAlpha);
-    final Color glass = Color.alphaBlend(
-      tokens.scene.glassTint,
-      tokens.glassSurface.withValues(alpha: 1),
-    );
-    return Color.alphaBlend(
-      glass.withValues(alpha: glassAlpha),
-      Color.alphaBlend(backing, backdrop),
-    );
-  }
 
   /// Why the classic caption must show, sentence aside (null: the bubble
   /// may). [anchor] is the mouth on a [stage] in stage px.
@@ -191,18 +187,29 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
   Rect _safe = Rect.zero;
   bool _reduceMotion = false;
 
+  /// What the last build gave the text layout (a re-layout between builds
+  /// uses them).
+  TextStyle? _style;
+  TextScaler _scaler = TextScaler.noScaling;
+  TextDirection _direction = TextDirection.ltr;
+
   /// The sentence on the bubble (kept while it fades out).
   _Sentence? _sentence;
 
   /// The sentence the bubble is showing now (null: fading out or none).
   _Sentence? _active;
 
-  /// A sentence that stopped fitting while it followed: classic until the
-  /// next one.
+  /// A sentence that no longer fits anywhere: classic until the next one.
   int? _stuckSeq;
 
   BubbleFollow? _follow;
   Offset _topLeft = Offset.zero;
+
+  /// The stage scale the bubble was last placed at.
+  double _placedScale = 0;
+
+  /// Ticks in a row the bubble has covered the face.
+  int _covering = 0;
 
   /// What the last build saw of the anchor and the shot (a change of either
   /// rebuilds; a move does not).
@@ -216,6 +223,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
     super.initState();
     widget.anchor.addListener(_onMoved);
     widget.camera?.addListener(_onMoved);
+    widget.composerHeight?.addListener(_onComposer);
   }
 
   @override
@@ -229,12 +237,17 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
       oldWidget.camera?.removeListener(_onMoved);
       widget.camera?.addListener(_onMoved);
     }
+    if (widget.composerHeight != oldWidget.composerHeight) {
+      oldWidget.composerHeight?.removeListener(_onComposer);
+      widget.composerHeight?.addListener(_onComposer);
+    }
   }
 
   @override
   void dispose() {
     widget.anchor.removeListener(_onMoved);
     widget.camera?.removeListener(_onMoved);
+    widget.composerHeight?.removeListener(_onComposer);
     _ticker.dispose();
     _moves.dispose();
     super.dispose();
@@ -255,7 +268,21 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
 
   double get _scale => StageFraming.stageScale(_stage, _frame);
 
+  /// The face box the bubble keeps clear of when placed: grown by the drift
+  /// margin under reduce motion (the bubble will not follow the face).
+  Rect _placeKeepOut(Offset anchor, double scale) => StageBubbleLayout.keepOut(
+    anchor,
+    scale,
+    margin: _reduceMotion ? StageBubbleLayout.driftMargin : 0,
+  );
+
   bool _usable(Offset? p) => p != null && (Offset.zero & _stage).contains(p);
+
+  void _onComposer() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   /// The anchor or the camera moved (never during a build).
   void _onMoved() {
@@ -268,20 +295,29 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
       return;
     }
     final _Sentence? sentence = _active;
-    if (sentence == null || p == null) {
+    final BubbleFollow? follow = _follow;
+    if (sentence == null || follow == null || p == null) {
       return;
     }
     if (_reduceMotion) {
-      // Placed once, never follows; the face moving under it sends the
-      // sentence to the classic caption.
-      final Rect rect = _topLeft & sentence.size;
-      if (rect.overlaps(StageBubbleLayout.keepOut(p, _scale))) {
-        _stick(sentence);
+      // Placed once, never follows: only the face really moving under it
+      // moves it (one jump), or hands it to the classic caption.
+      if (StageBubbleLayout.covers(
+        _topLeft & sentence.size,
+        StageBubbleLayout.keepOut(p, _scale),
+      )) {
+        _rescue(sentence, p);
       }
       return;
     }
-    final BubbleFollow? follow = _follow;
-    if (follow != null && follow.target(p) && !_ticker.isActive) {
+    if ((p - follow.aim).distance > StageBubbleLayout.cutJump) {
+      // A camera cut: lay the sentence out for the new framing and jump.
+      _rescue(sentence, p, relayoutFirst: true);
+      return;
+    }
+    final bool retarget = follow.target(p);
+    final bool rescaled = (_scale - _placedScale).abs() > 1e-4;
+    if ((retarget || rescaled) && !_ticker.isActive) {
       _lastTick = Duration.zero;
       _ticker.start();
     }
@@ -299,6 +335,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
     }
     follow.step(dt);
     final double scale = _scale;
+    _placedScale = scale;
     final BubblePlacement? at = StageBubbleLayout.place(
       side: sentence.side,
       size: sentence.size,
@@ -307,22 +344,81 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
       safe: _safe,
       tailAt: sentence.tailAt,
     );
-    if (at == null ||
-        at.rect.overlaps(StageBubbleLayout.keepOut(target, scale))) {
-      _stick(sentence);
+    if (at == null) {
+      // No room on its side any more (the face came closer to the edge, or
+      // the camera zoomed): re-placed, or laid out again, at once.
+      _rescue(sentence, target);
       return;
     }
     _topLeft = at.rect.topLeft;
     _moves.moved();
-    if (follow.isSettled) {
+    // A follow lagging a few frames behind the face is no cover; a cover
+    // that lasts is moved off (or handed over).
+    final bool covering = StageBubbleLayout.covers(
+      at.rect,
+      StageBubbleLayout.keepOut(target, scale),
+    );
+    _covering = covering ? _covering + 1 : 0;
+    if (_covering >= StageBubbleLayout.coverFrames) {
+      _covering = 0;
+      _rescue(sentence, target);
+      return;
+    }
+    if (follow.isSettled && _covering == 0) {
       _ticker.stop();
     }
   }
 
-  /// [sentence] no longer fits: the classic caption takes it over.
-  void _stick(_Sentence sentence) {
+  /// [sentence] covers the face (or no longer fits) with the mouth at
+  /// [anchor]: re-placed there if it still fits (same layout, else laid out
+  /// again), jumping; otherwise the classic caption until the next one.
+  void _rescue(
+    _Sentence sentence,
+    Offset anchor, {
+    bool relayoutFirst = false,
+  }) {
+    final double scale = _scale;
+    if (!relayoutFirst) {
+      final BubblePlacement? at = StageBubbleLayout.place(
+        side: sentence.side,
+        size: sentence.size,
+        anchor: anchor,
+        keepOut: _placeKeepOut(anchor, scale),
+        safe: _safe,
+        tailAt: sentence.tailAt,
+      );
+      if (at != null) {
+        _jump(anchor, at);
+        return;
+      }
+    }
+    final (_Sentence?, BubblePlacement?, CaptionFallback?) laid = _measure(
+      sentence.seq,
+      sentence.text,
+      anchor,
+      sentence.key,
+    );
+    final _Sentence? next = laid.$1;
+    final BubblePlacement? at = laid.$2;
+    if (next != null && at != null) {
+      setState(() {
+        _adopt(next, at, anchor);
+        _active = next;
+      });
+      return;
+    }
     _ticker.stop();
     setState(() => _stuckSeq = sentence.seq);
+  }
+
+  /// Moves the bubble at once to [at], the follow with it.
+  void _jump(Offset anchor, BubblePlacement at) {
+    _ticker.stop();
+    _covering = 0;
+    _follow?.jump(anchor);
+    _placedScale = _scale;
+    _topLeft = at.rect.topLeft;
+    _moves.moved();
   }
 
   /// Tells [StageCaptionBubble.shown] after this frame (a listener may
@@ -342,37 +438,33 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
     });
   }
 
-  /// The bubble for the sentence [text] ([seq]), laid out once; null with
-  /// the reason the classic caption shows instead.
-  (_Sentence?, CaptionFallback?) _layOut(
-    BuildContext context,
+  /// The bubble for the sentence [text] ([seq]) with the mouth at
+  /// [anchor], laid out for the current framing: the sentence and where it
+  /// goes, or why the classic caption shows instead. No side effects.
+  (_Sentence?, BubblePlacement?, CaptionFallback?) _measure(
     int seq,
     String text,
     Offset anchor,
-    TextStyle? style,
-    TextScaler scaler,
+    Object key,
   ) {
-    final Object key = (seq, text, _stage, _safe, scaler, style);
-    final _Sentence? cached = _sentence;
-    if (cached != null && cached.key == key) {
-      return (cached, null);
-    }
     final double scale = _scale;
+    final double margin = _reduceMotion ? StageBubbleLayout.driftMargin : 0;
     final BubblePlan plan = StageBubbleLayout.plan(
       stage: _stage,
       safe: _safe,
       anchor: anchor,
       scale: scale,
+      margin: margin,
     );
     final EdgeInsets pad = StageCaptionBubble.padding;
     final double textMax = plan.maxWidth - pad.horizontal;
     if (textMax <= 0) {
-      return (null, CaptionFallback.noRoom);
+      return (null, null, CaptionFallback.noRoom);
     }
     final TextPainter painter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: Directionality.of(context),
-      textScaler: scaler,
+      text: TextSpan(text: text, style: _style),
+      textDirection: _direction,
+      textScaler: _scaler,
       textWidthBasis: TextWidthBasis.longestLine,
     )..layout(maxWidth: textMax);
     final int lines = painter.computeLineMetrics().length;
@@ -384,31 +476,74 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
     );
     painter.dispose();
     if (lines > StageBubbleLayout.maxLines) {
-      return (null, CaptionFallback.tooLong);
+      return (null, null, CaptionFallback.tooLong);
     }
     final BubblePlacement? at = StageBubbleLayout.place(
       side: plan.side,
       size: size,
       anchor: anchor,
-      keepOut: StageBubbleLayout.keepOut(anchor, scale),
+      keepOut: _placeKeepOut(anchor, scale),
       safe: _safe,
     );
     if (at == null) {
-      return (null, CaptionFallback.noRoom);
+      return (null, null, CaptionFallback.noRoom);
     }
-    final _Sentence sentence = _Sentence(
-      seq: seq,
-      text: text,
-      key: key,
-      side: plan.side,
-      size: size,
-      tailAt: at.tailAt,
+    return (
+      _Sentence(
+        seq: seq,
+        text: text,
+        key: key,
+        side: plan.side,
+        size: size,
+        tailAt: at.tailAt,
+      ),
+      at,
+      null,
     );
+  }
+
+  /// Makes [sentence] the bubble's, placed at [at] for the mouth at
+  /// [anchor] (a new sentence starts where it is laid out).
+  void _adopt(_Sentence sentence, BubblePlacement at, Offset anchor) {
     _sentence = sentence;
-    // A new sentence starts where it is laid out.
     _ticker.stop();
+    _covering = 0;
     _follow = BubbleFollow(anchor);
+    _placedScale = _scale;
     _topLeft = at.rect.topLeft;
+  }
+
+  /// The sentence's layout, cached while nothing it depends on changes (the
+  /// text, the stage and its chrome, the type, the shot and the zoom).
+  (_Sentence?, CaptionFallback?) _layOut(int seq, String text, Offset anchor) {
+    final Object key = (
+      seq,
+      text,
+      _stage,
+      _safe,
+      _scaler,
+      _style,
+      _reduceMotion,
+      _shot,
+      // a creep re-lays out only at a rebuild, by 5 % steps
+      (_frame.zoom * 20).round(),
+    );
+    final _Sentence? cached = _sentence;
+    if (cached != null && cached.key == key) {
+      return (cached, null);
+    }
+    final (_Sentence?, BubblePlacement?, CaptionFallback?) laid = _measure(
+      seq,
+      text,
+      anchor,
+      key,
+    );
+    final _Sentence? sentence = laid.$1;
+    final BubblePlacement? at = laid.$2;
+    if (sentence == null || at == null) {
+      return (null, laid.$3);
+    }
+    _adopt(sentence, at, anchor);
     return (sentence, null);
   }
 
@@ -416,7 +551,8 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
   Widget build(BuildContext context) {
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
     final bool screenReader = MediaQuery.accessibleNavigationOf(context);
-    final TextScaler scaler = MediaQuery.textScalerOf(context);
+    _scaler = MediaQuery.textScalerOf(context);
+    _direction = Directionality.of(context);
     final bool generating = context.select<TalkingCubit, bool>(
       (TalkingCubit cubit) => cubit.state.phase == TalkingPhase.generating,
     );
@@ -425,7 +561,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
           cubit.state.journey != null ||
           cubit.state.presence != AvatarSpecials.onScreen,
     );
-    final TextStyle? style = context.text.titleLarge?.copyWith(
+    _style = context.text.titleLarge?.copyWith(
       height: 1.22,
       color: context.tokens.scene.captionInk,
     );
@@ -437,7 +573,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
           r.left,
           r.top,
           _stage.width - r.right,
-          _stage.height - r.bottom,
+          _stage.height - r.bottom - (widget.composerHeight?.value ?? 0),
         );
         return ValueListenableBuilder<ComposerOrbState>(
           valueListenable: widget.composerMode,
@@ -449,7 +585,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
                   _shot = _currentShot;
                   CaptionFallback? reason = StageCaptionBubble.fallbackFor(
                     screenReader: screenReader,
-                    textScale: scaler.scale(1),
+                    textScale: _scaler.scale(1),
                     walking: walking,
                     shot: _shot,
                     anchor: anchor,
@@ -471,14 +607,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
                     if (_stuckSeq == caption.seq) {
                       reason = CaptionFallback.noRoom;
                     } else {
-                      (sentence, reason) = _layOut(
-                        context,
-                        caption.seq,
-                        text,
-                        anchor,
-                        style,
-                        scaler,
-                      );
+                      (sentence, reason) = _layOut(caption.seq, text, anchor);
                     }
                   }
                   _publishShown(reason == null);
@@ -489,7 +618,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
                   if (sentence == null) {
                     _ticker.stop();
                   }
-                  return _visual(context, style);
+                  return _visual(context, _style);
                 },
               ),
         );

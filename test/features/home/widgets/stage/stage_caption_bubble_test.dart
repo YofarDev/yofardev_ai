@@ -1,8 +1,14 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:yofardev_ai/core/design/components/components.dart';
 import 'package:yofardev_ai/core/design/design.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
@@ -28,14 +34,19 @@ const Size _portrait = Size(390, 844);
 /// The chrome's reserve: chips on top, tool chip and composer below.
 const EdgeInsets _reserved = EdgeInsets.fromLTRB(16, 72, 16, 140);
 
+/// The whole test stage, for pixel sampling.
+const Key _stageKey = ValueKey<String>('test-stage');
+
 void main() {
   late StageHarness h;
   late ValueNotifier<ComposerOrbState> mode;
   late ValueNotifier<Offset?> anchor;
   late ValueNotifier<bool> shown;
   late StageCameraView camera;
+  late ValueNotifier<CameraShot> shots;
 
   setUp(() {
+    shots = ValueNotifier<CameraShot>(CameraShot.initial);
     h = StageHarness();
     mode = ValueNotifier<ComposerOrbState>(ComposerOrbState.speaking);
     anchor = ValueNotifier<Offset?>(_mouth);
@@ -48,6 +59,7 @@ void main() {
     anchor.dispose();
     shown.dispose();
     camera.dispose();
+    shots.dispose();
   });
 
   /// The bubble over a [size] stage, the classic caption at the bottom, with
@@ -62,16 +74,14 @@ void main() {
     Shot? shot,
     AvatarScene scene = AvatarScene.livingRoom,
     Widget? backdrop,
+    ValueListenable<double>? composerHeight,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final ValueNotifier<CameraShot> shots = ValueNotifier<CameraShot>(
-      shot == null
-          ? CameraShot.initial
-          : CameraShot(shot: shot, move: CameraMove.cut, serial: 1),
-    );
-    addTearDown(shots.dispose);
+    if (shot != null) {
+      shots.value = CameraShot(shot: shot, move: CameraMove.cut, serial: 1);
+    }
     await tester.pumpWidget(
       h.app(
         Builder(
@@ -82,30 +92,37 @@ void main() {
               textScaler: TextScaler.linear(textScale),
             ),
             child: Scaffold(
-              body: Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  ?backdrop,
-                  if (shot != null)
-                    StageCamera(
-                      shot: shots,
-                      view: camera,
-                      child: const SizedBox.expand(),
+              body: RepaintBoundary(
+                key: _stageKey,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    ?backdrop,
+                    if (shot != null)
+                      StageCamera(
+                        shot: shots,
+                        view: camera,
+                        child: const SizedBox.expand(),
+                      ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: StageCaption(
+                        composerMode: mode,
+                        bubbleShown: shown,
+                      ),
                     ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: StageCaption(composerMode: mode, bubbleShown: shown),
-                  ),
-                  Positioned.fill(
-                    child: StageCaptionBubble(
-                      composerMode: mode,
-                      anchor: anchor,
-                      shown: shown,
-                      camera: camera,
-                      reserved: _reserved,
+                    Positioned.fill(
+                      child: StageCaptionBubble(
+                        composerMode: mode,
+                        anchor: anchor,
+                        shown: shown,
+                        camera: camera,
+                        reserved: _reserved,
+                        composerHeight: composerHeight,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -218,11 +235,10 @@ void main() {
         anchor.value = a;
         await pump(tester);
         await say(tester, CaptionState(text: _line, seq: a.dx.round()));
-        if (shown.value) {
-          expectBubbleClear(tester, _landscape, a);
-        } else {
-          expect(classic(), findsOneWidget);
-        }
+        // every one of these leaves room beside the face
+        expect(shown.value, isTrue, reason: '$a');
+        expect(classic(), findsNothing, reason: '$a');
+        expectBubbleClear(tester, _landscape, a);
       }
     });
 
@@ -351,19 +367,228 @@ void main() {
       );
     });
 
-    testWidgets('reduce motion: the face moving under it hands over', (
+    testWidgets(
+      'reduce motion: the face moving where nothing fits hands over',
+      (WidgetTester tester) async {
+        await pump(tester, size: _portrait, reduceMotion: true);
+        await say(tester, const CaptionState(text: _line, seq: 1));
+        expect(shown.value, isTrue);
+        // the head rises onto the bubble: it jumps over the head once
+        anchor.value = _mouth + const Offset(0, -330);
+        await tester.pump();
+        await tester.pump();
+        expect(shown.value, isTrue);
+        // and again, up under the top chips: no room over it, none beside
+        anchor.value = _mouth + const Offset(0, -718);
+        await tester.pump();
+        await tester.pump();
+        await tester.pump(AppMotion.slow);
+        expect(shown.value, isFalse);
+        expect(classic(), findsOneWidget);
+      },
+    );
+  });
+
+  group('stays through the face\'s own moves', () {
+    /// The face's box now, through the live camera.
+    Rect faceNow(Size size) {
+      final StageFrame frame = camera.frame;
+      return StageBubbleLayout.keepOut(
+        StageFraming.artboardToStage(anchor.value!, size, frame: frame),
+        StageFraming.stageScale(size, frame),
+      );
+    }
+
+    /// Yaw sways, nods and leans of 20–60 artboard px around the mouth.
+    const List<Offset> moves = <Offset>[
+      Offset(-20, 0),
+      Offset(20, 0),
+      Offset(-40, 0),
+      Offset(40, 0),
+      Offset(-60, 0),
+      Offset(60, 0),
+      Offset(0, -40),
+      Offset(0, 40),
+      Offset(-30, 20),
+      Offset(30, -20),
+      Offset.zero,
+    ];
+
+    for (final bool reduce in <bool>[false, true]) {
+      for (final Size size in <Size>[_landscape, _portrait]) {
+        final String label =
+            '${reduce ? 'reduce motion' : 'follow'}, '
+            '${size == _landscape ? 'landscape' : 'portrait'}';
+        testWidgets('$label: a sway, a nod, a lean keep the bubble', (
+          WidgetTester tester,
+        ) async {
+          await pump(tester, size: size, reduceMotion: reduce);
+          await say(tester, const CaptionState(text: _line, seq: 1));
+          expect(shown.value, isTrue);
+          final Rect placed = tester.getRect(bubble());
+          for (final Offset m in moves) {
+            // a sway takes a few frames, like the head does
+            for (int i = 1; i <= 4; i++) {
+              anchor.value = _mouth + m * (i / 4);
+              await tester.pump(const Duration(milliseconds: 16));
+            }
+            for (int i = 0; i < 20; i++) {
+              await tester.pump(const Duration(milliseconds: 16));
+            }
+            expect(shown.value, isTrue, reason: 'ejected at $m');
+            expect(bubble(), findsOneWidget);
+            expect(classic(), findsNothing);
+            final Rect rect = tester.getRect(bubble());
+            expect(
+              StageBubbleLayout.covers(rect, faceNow(size)),
+              isFalse,
+              reason: 'covers the face at $m',
+            );
+            if (reduce) {
+              expect(rect, placed, reason: 'reduce motion moved it at $m');
+            }
+          }
+        });
+      }
+    }
+
+    testWidgets('follow: a sudden head turn under the bubble moves it off', (
+      WidgetTester tester,
+    ) async {
+      await pump(tester);
+      await say(tester, const CaptionState(text: _line, seq: 1));
+      // a turn of 100 artboard px towards the (left) bubble in one frame
+      anchor.value = _mouth + const Offset(-100, 0);
+      await tester.pumpAndSettle();
+      expect(shown.value, isTrue);
+      expect(
+        StageBubbleLayout.covers(tester.getRect(bubble()), faceNow(_landscape)),
+        isFalse,
+      );
+    });
+
+    testWidgets('reduce motion: a large turn under it re-places it once', (
       WidgetTester tester,
     ) async {
       await pump(tester, reduceMotion: true);
       await say(tester, const CaptionState(text: _line, seq: 1));
-      // the head swings left, under the left-side bubble
-      anchor.value = _mouth + const Offset(-300, 0);
+      final Rect placed = tester.getRect(bubble());
+      anchor.value = _mouth + const Offset(-160, 0);
       await tester.pump();
       await tester.pump();
       await tester.pump(AppMotion.slow);
-      expect(shown.value, isFalse);
-      expect(classic(), findsOneWidget);
+      expect(shown.value, isTrue);
+      final Rect rect = tester.getRect(bubble());
+      expect(rect, isNot(placed));
+      expect(StageBubbleLayout.covers(rect, faceNow(_landscape)), isFalse);
     });
+  });
+
+  group('camera', () {
+    Rect faceNow(Size size) {
+      final StageFrame frame = camera.frame;
+      return StageBubbleLayout.keepOut(
+        StageFraming.artboardToStage(anchor.value!, size, frame: frame),
+        StageFraming.stageScale(size, frame),
+      );
+    }
+
+    for (final Size size in <Size>[_landscape, _portrait]) {
+      testWidgets('a cut to a close-up re-lays out and jumps ($size)', (
+        WidgetTester tester,
+      ) async {
+        await pump(tester, size: size, shot: Shot.wide);
+        await say(tester, const CaptionState(text: _line, seq: 1));
+        shots.value = const CameraShot(
+          shot: Shot.closeUp,
+          move: CameraMove.cut,
+          serial: 2,
+        );
+        await tester.pump();
+        await tester.pump();
+        // at once, no glide into the new face box
+        expect(shown.value, isTrue);
+        expect(
+          tester.getRect(bubble()).overlaps(faceNow(size)),
+          isFalse,
+          reason: 'over the close-up face right after the cut',
+        );
+        await tester.pump(AppMotion.slow);
+        expect(shown.value, isTrue);
+        expect(tester.getRect(bubble()).overlaps(faceNow(size)), isFalse);
+      });
+    }
+
+    testWidgets('a cut within the same shot (creep reset) jumps too', (
+      WidgetTester tester,
+    ) async {
+      await pump(tester, shot: Shot.wide);
+      await say(tester, const CaptionState(text: _line, seq: 1));
+      shots.value = const CameraShot(
+        shot: Shot.wide,
+        move: CameraMove.cut,
+        serial: 2,
+      );
+      shots.value = const CameraShot(
+        shot: Shot.medium,
+        move: CameraMove.cut,
+        creep: 0.1,
+        serial: 3,
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(shown.value, isTrue);
+      expect(tester.getRect(bubble()).overlaps(faceNow(_landscape)), isFalse);
+    });
+
+    testWidgets('a creep (zoom only, the mouth still) re-places the bubble', (
+      WidgetTester tester,
+    ) async {
+      await pump(tester, shot: Shot.medium);
+      await say(tester, const CaptionState(text: _line, seq: 1));
+      shots.value = const CameraShot(
+        shot: Shot.medium,
+        move: CameraMove.ease,
+        creep: 0.25,
+        creepDuration: Duration(seconds: 2),
+        serial: 2,
+      );
+      for (int i = 0; i < 140; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(
+          StageBubbleLayout.covers(
+            tester.getRect(bubble()),
+            faceNow(_landscape),
+          ),
+          isFalse,
+          reason: 'frame $i',
+        );
+      }
+      await tester.pumpAndSettle();
+      expect(shown.value, isTrue);
+      expect(tester.getRect(bubble()).overlaps(faceNow(_landscape)), isFalse);
+    });
+  });
+
+  testWidgets('stays above a composer grown to several lines', (
+    WidgetTester tester,
+  ) async {
+    final ValueNotifier<double> composer = ValueNotifier<double>(56);
+    addTearDown(composer.dispose);
+    anchor.value = const Offset(400, 900); // low: clamped on the bottom
+    await pump(tester, composerHeight: composer);
+    await say(tester, const CaptionState(text: _line, seq: 1));
+    expect(
+      tester.getRect(bubble()).bottom,
+      lessThanOrEqualTo(_landscape.height - _reserved.bottom - 56 + 0.01),
+    );
+    composer.value = 150;
+    await tester.pump();
+    await say(tester, const CaptionState(text: 'Second moon.', seq: 2));
+    expect(
+      tester.getRect(bubble()).bottom,
+      lessThanOrEqualTo(_landscape.height - _reserved.bottom - 150 + 0.01),
+    );
   });
 
   group('fallbacks: the classic caption', () {
@@ -503,32 +728,64 @@ void main() {
     expect(reason(anchor: const Offset(-1, 100)), CaptionFallback.offStage);
   });
 
-  group('contrast', () {
+  group('contrast (sampled from the rendered bubble)', () {
+    /// The opaque colour at [p] of the test stage's last frame.
+    Future<Color> sample(WidgetTester tester, Offset p) async {
+      final RenderRepaintBoundary boundary = tester
+          .renderObject<RenderRepaintBoundary>(find.byKey(_stageKey));
+      final ui.Image image = (await tester.runAsync(() => boundary.toImage()))!;
+      final ByteData bytes = (await tester.runAsync<ByteData?>(
+        () => image.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!;
+      final int i = (p.dy.round() * image.width + p.dx.round()) * 4;
+      final Color c = Color.fromARGB(
+        255,
+        bytes.getUint8(i),
+        bytes.getUint8(i + 1),
+        bytes.getUint8(i + 2),
+      );
+      image.dispose();
+      return c;
+    }
+
     for (final AvatarScene scene in AvatarScene.values) {
-      test('${scene.name}: the caption ink keeps 4.5:1 on the bubble', () {
+      testWidgets('${scene.name}: the caption ink keeps 4.5:1 on the bubble', (
+        WidgetTester tester,
+      ) async {
         final AppTokens tokens = AppTheme.forScene(
           scene,
         ).extension<AppTokens>()!;
-        final double glass = tokens
-            .glass(StageCaptionBubble.glassLevel)
-            .fillAlpha;
         for (final Color backdrop in <Color>[
           const Color(0xFFFFFFFF),
           const Color(0xFF000000),
           tokens.scene.accent,
           tokens.scene.captionInk,
         ]) {
-          for (final double alpha in <double>[glass, glass * 0.4]) {
-            final double ratio = contrastRatio(
-              tokens.scene.captionInk,
-              StageCaptionBubble.fillOver(tokens, backdrop, alpha),
-            );
+          await pump(
+            tester,
+            scene: scene,
+            backdrop: ColoredBox(color: backdrop),
+          );
+          await say(tester, const CaptionState(text: _line, seq: 1));
+          final Rect rect = tester.getRect(bubble());
+          final double midY =
+              rect.top + (rect.height - SpeechBubbleBorder.tailHeight) / 2;
+          // inside the text padding, on both ends of the glass gradient
+          for (final Offset p in <Offset>[
+            Offset(rect.left + 8, midY),
+            Offset(rect.right - 8, midY),
+            Offset(rect.center.dx, rect.top + 5),
+          ]) {
+            final Color fill = await sample(tester, p);
+            final double ratio = contrastRatio(tokens.scene.captionInk, fill);
             expect(
               ratio,
               greaterThanOrEqualTo(4.5),
-              reason: 'over $backdrop at glass $alpha: $ratio',
+              reason: 'over $backdrop at $p (fill $fill): $ratio',
             );
           }
+          h.caption.emit(const CaptionState());
+          await tester.pumpWidget(const SizedBox());
         }
       });
     }

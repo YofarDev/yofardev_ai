@@ -21,6 +21,60 @@ void main() {
     });
   });
 
+  group('keepOut margin and covers', () {
+    test('a margin (artboard px) grows the box on every side', () {
+      final Rect k = StageBubbleLayout.keepOut(
+        const Offset(500, 400),
+        0.5,
+        margin: 48,
+      );
+      expect(k.left, 500 - (150 + 48) * 0.5);
+      expect(k.right, 500 + (150 + 48) * 0.5);
+      expect(k.top, 400 - (190 + 48) * 0.5);
+      expect(k.bottom, 400 + (70 + 48) * 0.5);
+    });
+
+    test('covers: a gap of tolerance inside the face box', () {
+      const Rect face = Rect.fromLTRB(100, 100, 300, 300);
+      // touching the face box, or reaching into it by less than the gap
+      expect(
+        StageBubbleLayout.covers(const Rect.fromLTRB(0, 100, 100, 200), face),
+        isFalse,
+      );
+      expect(
+        StageBubbleLayout.covers(
+          const Rect.fromLTRB(0, 100, 100 + StageBubbleLayout.gap - 1, 200),
+          face,
+        ),
+        isFalse,
+      );
+      expect(
+        StageBubbleLayout.covers(
+          const Rect.fromLTRB(0, 100, 100 + StageBubbleLayout.gap + 1, 200),
+          face,
+        ),
+        isTrue,
+      );
+    });
+
+    test('plan with a margin leaves less room beside the face', () {
+      final BubblePlan bare = StageBubbleLayout.plan(
+        stage: _wide,
+        safe: _wideSafe,
+        anchor: const Offset(900, 384),
+        scale: 0.8,
+      );
+      final BubblePlan held = StageBubbleLayout.plan(
+        stage: _wide,
+        safe: _wideSafe,
+        anchor: const Offset(900, 384),
+        scale: 0.8,
+        margin: 48,
+      );
+      expect(held.maxWidth, closeTo(bare.maxWidth - 48 * 0.8, 1e-9));
+    });
+  });
+
   group('plan', () {
     test('landscape, mouth centred: beside the face', () {
       final BubblePlan plan = StageBubbleLayout.plan(
@@ -258,6 +312,14 @@ void main() {
       f.step(const Duration(seconds: 2));
       expect(f.position.dx, closeTo(100, 1e-3));
       expect(f.position.dy, closeTo(100, 1e-3));
+    });
+
+    test('aim is the accepted target', () {
+      final BubbleFollow f = BubbleFollow(Offset.zero);
+      f.target(const Offset(0.5, 0));
+      expect(f.aim, Offset.zero);
+      f.target(const Offset(5, 0));
+      expect(f.aim, const Offset(5, 0));
     });
 
     test('jump goes there at once', () {
