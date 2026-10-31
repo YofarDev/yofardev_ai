@@ -670,6 +670,7 @@ def gates_tour7(tl: dict) -> list[str]:
 
 # ---------------------------------------------------------------- M10: wardrobe, personas, captions
 M10_KINDS = {"wardrobe", "persona", "caption"}
+M11_SHEET_RUNS = {"pairs"}   # M11 ruling 25: the M11 runs (pairs, scene) write a reel + WebP sheet, no GIF
 COSTUMES = ["batman", "robocop", "soubrette", "singularity"]
 # the signature clip is <= 1.2 s (ruling 6); its gesture_done must land within this after the trigger
 SIGNATURE_DONE_MS = 2500
@@ -990,11 +991,16 @@ def reel_segments(tl: dict) -> list[tuple[float, float]]:
             if spk:
                 mid = spk[len(spk) // 2]
                 segs.append((mid - 2000, mid + 2000))
-    else:
+    elif kind == "caption":
         windows = turn_windows(tl)
         cap = next((e["ms"] for e in ev if e["type"] == "caption"), None)
         if windows and cap is not None:
             segs = [(cap - 300, min(windows[0][2], cap - 300 + REEL_MAX_S * 1000))]
+    if not segs and tl["frames"]:
+        # M11 runs (pairs, scene): four 3 s windows spread evenly over the run
+        t0, t1 = tl["frames"][0]["ms"], tl["frames"][-1]["ms"]
+        n, w = 4, REEL_MAX_S * 1000 / 4
+        segs = [(t0 + (t1 - t0 - w) * k / (n - 1), t0 + (t1 - t0 - w) * k / (n - 1) + w) for k in range(n)]
     out, total = [], 0.0
     for a, b in segs:
         room = REEL_MAX_S * 1000 - total
@@ -1412,13 +1418,25 @@ def main(argv: list[str]) -> int:
     except (TypeError, ValueError, IndexError, KeyError, AttributeError) as e:
         # an event or a sample the gates need is missing: a verdict, not a crash
         gates.append(_line(f"timeline incomplete ({type(e).__name__}: {e})", False))
-    size_gif = write_gif(wow_dir, tl, size, out / f"{wow}.gif")
-    gates.append(_line(f"{wow}.gif {size_gif} B (budget {GIF_MAX})", size_gif <= GIF_MAX))
-    if shutil.which("ffmpeg"):
-        write_mp4(wow_dir, tl, size, out / f"{wow}.mp4")
-        gates.append(f"{wow}.mp4 {(out / f'{wow}.mp4').stat().st_size} B: info")
-    if not any(g.endswith("FAIL") for g in gates):
-        beat_sheet(wow_dir, tl, size, out / f"{wow}_beats.png")
+    if wow in M11_SHEET_RUNS or _kind(tl) == "scene":
+        # M11 ruling 25: no GIF; one short silent reel (<= 12 s) and a WebP contact sheet
+        if shutil.which("ffmpeg"):
+            mp4 = out / f"{wow}.mp4"
+            secs, width = write_reel(wow_dir, tl, size, mp4)
+            gates.append(_line(f"{wow}.mp4: {secs:.1f} s at {REEL_FPS} fps, {width} px wide, "
+                               f"{mp4.stat().st_size if mp4.exists() else 0} B (want <= {REEL_MAX_S:.0f} s, "
+                               f"<= {REEL_MAX_W} px)", 0 < secs <= REEL_MAX_S and width <= REEL_MAX_W))
+        sheet = out / f"{wow}_sheet.webp"
+        beat_sheet(wow_dir, tl, size, sheet)
+        gates.append(f"{sheet.name} {sheet.stat().st_size} B: info")
+    else:
+        size_gif = write_gif(wow_dir, tl, size, out / f"{wow}.gif")
+        gates.append(_line(f"{wow}.gif {size_gif} B (budget {GIF_MAX})", size_gif <= GIF_MAX))
+        if shutil.which("ffmpeg"):
+            write_mp4(wow_dir, tl, size, out / f"{wow}.mp4")
+            gates.append(f"{wow}.mp4 {(out / f'{wow}.mp4').stat().st_size} B: info")
+        if not any(g.endswith("FAIL") for g in gates):
+            beat_sheet(wow_dir, tl, size, out / f"{wow}_beats.png")
     cost = frame_cost(Path(str(wow_dir) + "_timing"))
     if cost:
         (out / f"{wow}_frame_cost.json").write_text(json.dumps(cost, indent=1) + "\n")

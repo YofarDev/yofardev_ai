@@ -1,0 +1,16 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 291: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+forestCabin in every sample, no journey (580): ok
+the forestCabin file on screen in every sample: ok
+NPC poked (squirrel): react 23 ms after the poke (want <= 200): ok
+pinwheel (spin): the drag surface took the touch (21 dragging samples of 22): ok
+pinwheel: pinwheel read back from the scene file: max 0.99 (want >= 0.05): ok
+pinwheel moved: 0.48 of a turn at most (want >= 0.1): ok
+pinwheel: the inertia settled within 2 s (1 distinct values after): ok
+pinwheel: drag haptics 4 (selection; want >= 1): ok
+the reply is spoken: ok
+scene events: none; NPC states: idle/react/move/idle/move: info
+scene_forestCabin.mp4: 11.9 s at 10 fps, 486 px wide, 371137 B (want <= 12 s, <= 720 px): ok
+scene_forestCabin_sheet.webp 82780 B: info
