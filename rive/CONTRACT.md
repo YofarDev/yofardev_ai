@@ -263,9 +263,9 @@ are artboard px.
 | cafe | wipe | trail | (330, 260, 750, 760) | 2 | `trailN`, `trailX*`, `trailY*`, `trailFade` as beach | wipes the misted window; it mists back over 20 s |
 | rooftop | aim | aim | (710, 1011, 978, 1317) | 4 | `aim` −1–1 (0) | a horizontal drag swivels the telescope ±35°; it holds |
 | mountainHut | rope | pull | (172, 470, 252, 980) | 3 | `rope` 0–1 (0) | pull down; springs back; past 0.6 once per pull: the `bell` event |
-| forestCabin | pinwheel | spin | (790, 860, 990, 1120) | 4 | `pinwheel` 0–1 (0), wraps | a horizontal drag turns the pinwheel on the rail post; inertia |
-| trainCompartment | chain | pull | (800, 300, 880, 760) | 3 | `chain` 0–1 (0) | pull down; springs back; past 0.6 once per pull: the `whistle` event |
-| library | ladder | aim | (120, 520, 420, 1460) | 3 | `ladder` −1–1 (0) | a horizontal drag slides the ladder along its rail; it holds |
+| forestCabin | pinwheel | spin | (883, 908, 987, 1068) | 3 | `pinwheel` 0–1 (0), wraps | a horizontal drag turns the pinwheel on the rail post; inertia |
+| trainCompartment | chain | pull | (893, 292, 974, 807) | 3 | `chain` 0–1 (0) | pull down; springs back; past 0.6 once per pull: the `whistle` event |
+| library | ladder | aim | (671, 278, 1080, 1221) | 3 | `ladder` −1–1 (0) | a horizontal drag slides the ladder along its rail; it holds |
 
 The rects are measured from the built art: each covers the prop as it rests and everything its drag moves. The cord and the poke stick draw at rest (v12 affordances); a gull's, the fish's and the pigeon's facing follows the sign of `npc2Look` / `npcLook` (+ = right) while they move.
 
