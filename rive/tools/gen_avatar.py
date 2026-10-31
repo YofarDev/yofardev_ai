@@ -6,7 +6,9 @@ OWN nodes (HeadMood, HeadPhase, HeadLook, HeadGesture, GazeM/GazeP/GazeG...) so
 mood, phase, gestures, blinking and eye-follow compose additively.
 Wardrobe/costumes are `Solo` switches: Hat/Top/Glasses layers pick a child, the
 later Costume layer overrides them while a costume is on (its `none` state keys
-nothing, which hands control back).
+no switch, which hands control back). M10: one sleeve set per sleeve kind and one
+hand for every skin (wardrobe_dedupe.py); the paint of a shared set is keyed in the
+clips that pick it (sleeves: top_*; the hand: every costume_* clip, none = bare skin).
 """
 
 from __future__ import annotations
@@ -33,6 +35,7 @@ import avatar_light  # noqa: E402
 import avatar_tablet  # noqa: E402
 import hand_rig  # noqa: E402
 import jacket_art  # noqa: E402
+import wardrobe_dedupe  # noqa: E402
 from face_rig import NUMBERS as FACE_NUMBERS  # noqa: E402
 
 
@@ -2338,6 +2341,35 @@ with kit.minting(d, M8), kit.minting(arm_rig.AD, M8A):
     layers_weather = enum_layer("TabletWeather", "tabletWeather", weather_anims, "none")
     sm.children.append(layers_weather)
     m8_converters = card.converters
+
+# ================================================================ M10 (ruling 3): the wardrobe dedupe
+# One sleeve set per sleeve kind and one hand for the five skins: the first member of each class keeps its ids,
+# the others' copies are dropped, and each member's paint is keyed in the clips that choose it (see
+# wardrobe_dedupe.py). Sleeves are chosen by the Top layer only (costumes wear kinds no top wears), so their
+# colours key in the top_* clips; the hand's paint is a function of the costume alone (none = bare skin), so it
+# keys in the costume_* clips, costume_none included: whatever the Top layer did before, the later Costume layer
+# decides.
+M10 = Doc(client=0, start=kit.M10_ID_START)
+SLEEVE_KINDS = list(dict.fromkeys(SLEEVES[o][4] for o in OUTFITS))
+HAND_CLIPS = {"skin": none_anim, **{COSTUME_HANDS[c]: COSTUME_ANIMS[c] for c in COSTUMES}}
+WARDROBE_MERGES: list[wardrobe_dedupe.Merge] = []
+for a in ARMS:
+    for kind in SLEEVE_KINDS:
+        oids = [o for o in OUTFITS if SLEEVES[o][4] == kind]
+        if len(oids) < 2:
+            continue
+        assert all(o in TOP_IDS for o in oids), kind
+        for solo, groups, prefix in ((a["up_solo"].el, a["ups"], "Up_"), (a["fore_solo"].el, a["fores"], "Fore_")):
+            WARDROBE_MERGES.append(wardrobe_dedupe.Merge(solo, {o: groups[o] for o in oids}, prefix + kind,
+                                                         {o: [TOP_ANIMS[o]] for o in oids}))
+    WARDROBE_MERGES.append(wardrobe_dedupe.Merge(a["skin_solo"].el, dict(a["skins"]), "Skin_shared",
+                                                 {s: [HAND_CLIPS[s]] for s in HAND_SKINS}))
+wardrobe_dedupe.dedupe(M10, artboard, WARDROBE_MERGES)
+for a in ARMS:  # the sets that had one outfit already: named by their kind too
+    for groups, prefix in ((a["ups"], "Up_"), (a["fores"], "Fore_")):
+        for oid, g in groups.items():
+            if g.attrs["name"] == prefix + oid:
+                g.attrs["name"] = prefix + SLEEVES[oid][4]
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)

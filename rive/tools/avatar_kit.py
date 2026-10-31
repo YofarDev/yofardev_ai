@@ -126,6 +126,9 @@ M5_ID_START = 1000000
 # arm-rig elements its gestures mint (arm_rig's own document borrows that range); both free in avatar.rml
 M8_ID_START = 1100000
 M8_ARM_ID_START = 1150000
+# moonshot M10 (gen_avatar.py, Doc M10): the wardrobe dedupe's keys, the tints, the mouth anchor and the
+# signatures (free in avatar.rml)
+M10_ID_START = 1200000
 
 
 def footfalls(f0: int, f1: int, distance: float, stride: float, shift: int = 10) -> list[int]:

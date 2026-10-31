@@ -25,7 +25,9 @@ OLD_GESTURES = ["wave", "laugh", "facepalm", "shrug", "nod", "headshake", "clap"
 NEW_GESTURES = ["thumbsUp", "count", "grab"]
 HOOK = (628.0, 560.0)
 CONTACT = 23
-SKINS = 5
+SKINS = 5         # hand skins drawn per side in M7 / M8
+HAND_COPIES = 1   # M10 (ruling 3): one hand drawing per side, the five skins keyed in the costume clips
+WARDROBE_SOLOS = ("UpperSleeve", "ForeSleeve", "HandSkin")
 
 
 # ------------------------------------------------------------------ the pose table
@@ -112,7 +114,7 @@ def test_every_hand_copy_has_five_pivots_on_its_sides_drivers(root: ET.Element) 
     parents = _parent_map(root)
     ids = {e.get("id"): e for e in root.iter() if e.get("id")}
     rests = [e for e in root.iter("Node") if e.get("name") == "Hand_rest"]
-    assert len(rests) == 2 * SKINS
+    assert len(rests) == 2 * HAND_COPIES
     for g in rests:
         side = _arm_of(g, parents)
         pivots = [c for c in g if c.tag == "Node" and c.get("name", "").startswith("Pv")]
@@ -151,19 +153,33 @@ def base_root() -> ET.Element:
     return ET.fromstring(text)
 
 
+def m10_dedupe_dropped(base_root: ET.Element, new_ids: set[str]) -> set[str]:
+    """Ids the M10 wardrobe dedupe drops (ruling 3): the wardrobe copies that did not survive (a sleeve set
+    per outfit, a hand per skin; their unique pieces moved into the survivor and keep their ids) and the
+    keys that targeted them (duplicates of the survivor's keys)."""
+    copies = {e.get("id") for s in base_root.iter("Solo") if s.get("name") in WARDROBE_SOLOS for g in s
+              if g.get("id") not in new_ids for e in g.iter()} - new_ids
+    keys = {e.get("id") for o in base_root.iter("KeyedObject") if o.get("objectId") in copies for e in o.iter()}
+    return copies | keys
+
+
 def test_existing_ids_never_move(root: ET.Element, base_root: ET.Element) -> None:
     """Every M7 element keeps its id, tag and name; only the dropped `back` groups are gone; every new
-    element takes the M8 range."""
+    element takes the M8 range. M10: the wardrobe dedupe drops the copies that did not survive and renames
+    the survivors (`Up_long`, `Skin_shared`, ...); its keys take the M10 range."""
     new = {e.get("id"): e for e in root.iter() if e.get("id")}
     old = {e.get("id"): e for e in base_root.iter() if e.get("id")}
     dropped = {e.get("id") for g in base_root.iter("Node") if g.get("name") == "Hand_back" for e in g.iter()}
     assert len([g for g in base_root.iter("Node") if g.get("name") == "Hand_back"]) == 2 * SKINS
+    deduped = m10_dedupe_dropped(base_root, set(new))
+    renamed = {g.get("id") for s in base_root.iter("Solo") if s.get("name") in WARDROBE_SOLOS for g in s}
     for i, e in old.items():
-        if i in dropped:
+        if i in dropped or i in deduped:
             assert i not in new
             continue
         assert i in new, (e.tag, e.get("name"), i)
-        assert (new[i].tag, new[i].get("name")) == (e.tag, e.get("name")), i
+        assert new[i].tag == e.tag, i
+        assert i in renamed or new[i].get("name") == e.get("name"), i
     for i in set(new) - set(old):
         assert int(i.split(":")[1]) >= kit.M8_ID_START, (new[i].tag, new[i].get("name"), i)
 
