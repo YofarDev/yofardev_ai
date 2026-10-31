@@ -105,7 +105,7 @@ class AppLifecycleService {
 
     // The reply's mood applies when the reply starts and persists until a
     // later reply sets a new one; no mood field means no change.
-    if (avatarConfig.mood != null) {
+    if (avatarConfig.mood != null && !_moodController.isClosed) {
       _moodController.add(avatarConfig.mood!);
     }
 
@@ -236,6 +236,9 @@ class AppLifecycleService {
   /// [ChatCubit] emits it; `AvatarCueService` turns it into the director's
   /// body-language profile.
   void emitPersonaChanged(ChatPersona persona) {
+    if (_personaController.isClosed) {
+      return;
+    }
     _personaController.add(persona);
   }
 

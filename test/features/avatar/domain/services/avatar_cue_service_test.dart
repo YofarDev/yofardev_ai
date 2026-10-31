@@ -362,6 +362,50 @@ void main() {
     );
 
     test(
+      'a persona change mid-sentence moves the ladder pace at the sentence end',
+      () async {
+        final StreamController<ChatPersona> personas =
+            StreamController<ChatPersona>.broadcast();
+        addTearDown(personas.close);
+        final IdleLadder ladder = IdleLadder(
+          now: () => currentTime,
+          power: _NoPowerSaver(),
+          reduceMotion: () => false,
+        );
+        addTearDown(ladder.dispose);
+        final AvatarCueService service = AvatarCueService(
+          playbackService: playbackService,
+          animationService: animationService,
+          streamingCues: streamingCuesController.stream,
+          director: director,
+          personas: personas.stream,
+          idleLadder: ladder,
+        );
+        addTearDown(service.dispose);
+        playbackService.startAmplitudeAnimation(
+          'a.wav',
+          <int>[10, 10],
+          const Duration(milliseconds: 50),
+          caption: 'Hello there.',
+        );
+        await drain();
+        expect(director.current.speaking, isTrue);
+        personas.add(ChatPersona.coach);
+        await drain();
+        // the director holds the profile until the sentence ends: so does the ladder
+        expect(director.profile, BodyLanguageProfile.normal);
+        expect(ladder.thresholdScale, 1);
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        await drain();
+        final BodyLanguageProfile coach = BodyLanguageProfile.of(
+          ChatPersona.coach,
+        );
+        expect(director.profile, coach);
+        expect(ladder.thresholdScale, coach.idle.ladderScale);
+      },
+    );
+
+    test(
       'an LLM-cued sentence counts toward the sentence index, unswapped',
       () async {
         final StreamController<ChatPersona> personas =

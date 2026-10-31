@@ -51,7 +51,8 @@ class AvatarCueService {
     Stream<ComposerActivity> composer = const Stream<ComposerActivity>.empty(),
     IdleLadder? idleLadder,
   }) : _animationService = animationService,
-       _director = director {
+       _director = director,
+       _idleLadder = idleLadder {
     _subscriptions.add(playbackService.events.listen(_onPlaybackEvent));
     _subscriptions.add(streamingCues.listen(_onCues));
     _subscriptions.add(director.intents.listen(_onIntent));
@@ -60,7 +61,7 @@ class AvatarCueService {
       personas.listen((ChatPersona persona) {
         final BodyLanguageProfile profile = BodyLanguageProfile.of(persona);
         director.setProfile(profile);
-        idleLadder?.thresholdScale = profile.idle.ladderScale;
+        _syncLadderPace();
       }),
     );
     _subscriptions.add(toolActivity.listen(director.setActiveTool));
@@ -75,6 +76,14 @@ class AvatarCueService {
 
   final AvatarAnimationService _animationService;
   final PerformanceDirector _director;
+  final IdleLadder? _idleLadder;
+
+  /// The ladder's pace follows the profile the director has applied, so a
+  /// persona that changes mid-sentence changes both at the sentence's end.
+  void _syncLadderPace() {
+    _idleLadder?.thresholdScale = _director.profile.idle.ladderScale;
+  }
+
   final List<StreamSubscription<dynamic>> _subscriptions =
       <StreamSubscription<dynamic>>[];
 
@@ -94,8 +103,10 @@ class AvatarCueService {
       case SpeakingStartedEvent():
         _sentenceHasGestureCue = false;
         _director.setSpeaking(true);
+        _syncLadderPace();
       case SpeakingStoppedEvent() || AnimationCompletedEvent():
         _director.setSpeaking(false);
+        _syncLadderPace();
       case CaptionEvent(:final String text):
         // Auto-acting rules read each sentence as it starts playing, unless
         // the LLM already chose a gesture for it (it still takes an index).

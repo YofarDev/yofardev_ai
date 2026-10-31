@@ -206,7 +206,9 @@ const Map<ChatPersona, BodyLanguageProfile> _profiles =
       ),
       // Why: today's avatar, unchanged (the identity).
       ChatPersona.normal: BodyLanguageProfile.normal,
-      // Why: the slump — head down, leaning back, little energy; agreement
+      // Why: the slump — head down, leaning in less while listening (lean is
+      // 0–1, so the negative offset only shows against the listening lean),
+      // little energy; agreement
       // and emphasis both come out as a resigned shrug; drifts off sooner and
       // glances slowly.
       ChatPersona.doomer: BodyLanguageProfile(
