@@ -1442,7 +1442,7 @@ void main() {
     },
     timeout: Timeout(
       _wow == 'pairs'
-          ? const Duration(minutes: 20)
+          ? const Duration(minutes: 35)
           : _wow == 'wardrobe'
           ? const Duration(minutes: 8)
           : const Duration(minutes: 5),

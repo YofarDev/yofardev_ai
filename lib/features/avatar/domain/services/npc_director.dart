@@ -307,14 +307,40 @@ class NpcDirector {
       // npcX is +, to a lower one -
       return growing ? fishMoveLook : -fishMoveLook;
     }
+    if (kind == NpcKind.mouse) {
+      // the mouse's path runs left and down to npcX ~0.58, then right
+      // (`scene_library.mouse_path()`): face the way the paw line moves
+      return _mousePathX(to) > _mousePathX(from) ? moveLook : -moveLook;
+    }
     final bool goesRight =
         kind == NpcKind.crab ||
         kind == NpcKind.pigeon ||
-        kind == NpcKind.ladybug ||
-        kind == NpcKind.mouse;
+        kind == NpcKind.ladybug;
     final bool goesLeft = goesRight ? !growing : growing;
     return goesLeft ? -moveLook : moveLook;
   }
+
+  /// `scene_library.mouse_path()`: the npcX of each waypoint and its paw
+  /// line's x in the artboard.
+  static const List<double> _mousePathT = <double>[0, 0.2677, 0.5756, 1];
+  static const List<double> _mousePathXs = <double>[790, 756, 736, 836];
+
+  static double _mousePathX(double t) {
+    final double c = t.clamp(0.0, 1.0);
+    for (int i = 1; i < _mousePathT.length; i++) {
+      if (c <= _mousePathT[i]) {
+        final double f =
+            (c - _mousePathT[i - 1]) / (_mousePathT[i] - _mousePathT[i - 1]);
+        return _mousePathXs[i - 1] +
+            f * (_mousePathXs[i] - _mousePathXs[i - 1]);
+      }
+    }
+    return _mousePathXs.last;
+  }
+
+  /// The shortest wander of the v14 NPCs: a random target next to the
+  /// current spot would otherwise flicker idle → move → idle.
+  static const Duration v14WanderMinLength = Duration(milliseconds: 800);
 
   static const Set<String> catNames = <String>{
     'cat',
@@ -1083,6 +1109,7 @@ class NpcDirector {
     return _wander(
       now,
       rate: squirrelRunRate,
+      minLength: v14WanderMinLength,
       minGap: squirrelDashMinGap,
       maxGap: squirrelDashMaxGap,
     );
@@ -1100,6 +1127,7 @@ class NpcDirector {
     return _wander(
       now,
       rate: ladybugWalkRate,
+      minLength: v14WanderMinLength,
       minGap: ladybugWalkMinGap,
       maxGap: ladybugWalkMaxGap,
     );
@@ -1143,6 +1171,7 @@ class NpcDirector {
       return _wander(
         now,
         rate: mouseScurryRate,
+        minLength: v14WanderMinLength,
         minGap: mouseScurryMinGap,
         maxGap: mouseScurryMaxGap,
       );

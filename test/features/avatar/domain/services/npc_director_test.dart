@@ -1046,8 +1046,9 @@ void main() {
         npc.poke('mouse');
         ms(async, 601);
         expect(state(npc), NpcState.move);
-        // back toward the shelf: npcX falls, it faces left
-        expect(look(npc), lessThan(0));
+        // back toward the shelf: npcX falls; it faces the way its paw line
+        // moves on the path (right while it climbs back from below the bend)
+        expect(look(npc), NpcDirector.facing(NpcKind.mouse, away, 0));
         ms(async, scurry + 100);
         expect(state(npc), NpcState.rest);
         expect(x(npc), 0);
@@ -1116,6 +1117,10 @@ void main() {
     test('facing: right as npcX grows, left as it falls; rate', () {
       expect(NpcDirector.facing(NpcKind.mouse, 0, 1), greaterThan(0));
       expect(NpcDirector.facing(NpcKind.mouse, 1, 0), lessThan(0));
+      // the path runs left to npcX ~0.58 first (scene_library.mouse_path)
+      expect(NpcDirector.facing(NpcKind.mouse, 0, 0.5), lessThan(0));
+      expect(NpcDirector.facing(NpcKind.mouse, 0.5, 0), greaterThan(0));
+      expect(NpcDirector.facing(NpcKind.mouse, 0.6, 1), greaterThan(0));
       expect(NpcDirector.lookToAvatar(NpcKind.mouse, 0), lessThan(0));
       expect(NpcDirector.lookToAvatar(NpcKind.mouse, 1), lessThan(0));
       expect(
