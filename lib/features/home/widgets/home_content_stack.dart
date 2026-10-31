@@ -700,7 +700,8 @@ class _BottomChrome extends StatelessWidget {
       padding.left + AppSpace.lg,
       padding.top + AppSpace.sm + AppIconButton.hitSize + AppSpace.sm,
       padding.right + AppSpace.lg,
-      bottom + toolChipReserve,
+      // the tool chip wraps to two lines under large text (M11 ruling 19)
+      bottom + toolChipReserve * MediaQuery.textScalerOf(context).scale(1),
     );
     final Widget chrome = Stack(
       fit: StackFit.expand,

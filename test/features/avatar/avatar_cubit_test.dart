@@ -474,6 +474,23 @@ void main() {
         });
       });
 
+      test('a prop tap during a journey is ignored (M11 review)', () {
+        fakeAsync((FakeAsync async) {
+          avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);
+          avatarCubit.onNewAvatarConfig(
+            'chat1',
+            AvatarConfig(
+              background: AvatarScene.deepSpace,
+              specials: AvatarSpecials.leaveAndComeBack,
+            ),
+          );
+          expect(avatarCubit.state.journey, isNotNull);
+          final int seq = avatarCubit.state.gestureEvent.seq;
+          avatarCubit.onPropTapped(AvatarScene.livingRoom, 'tv');
+          expect(avatarCubit.state.gestureEvent.seq, seq);
+        });
+      });
+
       test('a journey to deep space takes the rocket, which lifts off', () {
         fakeAsync((FakeAsync async) {
           avatarCubit.setValuesBasedOnScreenWidth(screenWidth: 400);

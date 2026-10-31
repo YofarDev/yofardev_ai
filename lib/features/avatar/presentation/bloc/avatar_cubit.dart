@@ -879,8 +879,16 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   /// A tap on a scene prop triggers its local reaction only: no LLM call
-  /// and nothing written to chat history.
+  /// and nothing written to chat history. Ignored while a journey runs (a
+  /// screen reader's prop action can arrive then; M11 review).
   void onPropTapped(AvatarScene scene, String propId) {
+    if (state.journey != null) {
+      AppLogger.debug(
+        'AvatarCubit: prop $propId ignored during a journey',
+        tag: 'AvatarCubit',
+      );
+      return;
+    }
     _director?.onUserActivity();
     final PropReaction? reaction = _propReactions.reactionForProp(
       scene,
