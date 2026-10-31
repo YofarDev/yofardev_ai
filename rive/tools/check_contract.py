@@ -12,6 +12,12 @@ file binds must equal its declaration (`world_kit.declared_binds`), and the memb
 it binds but it does not declare yet are printed as pending (`--strict-binds` makes them errors).
 v13 (M10): every scene declares `night` (default 0) after `festive`, before its drag numbers; the scenes
 that bind it must equal `world_kit.declared_v13_binds` (the contract: the beach).
+v14 (M11): every scene declares `tier` (enum `Tier`: low, high, ultra in contract order, default ultra),
+`spring` and `autumn` (default 0) after `night`, before its drag numbers; the v14 members its file binds
+must equal `world_kit.declared_v14_binds`; members the contract says it binds but it does not declare
+yet are pending (lane W binds `tier` everywhere), binds the contract says it ignores are errors. The
+three v14 scenes (forestCabin, trainCompartment, library) are pending until their project dir exists,
+like the v12 ones were; forestCabin carries a `SceneFront` ("v14: forestCabin has one").
 """
 
 from __future__ import annotations
@@ -91,6 +97,7 @@ def parse_contract() -> dict:
     c["scene_vm"] = ticks(re.search(r"\*\*View model:\*\*.*", scene_sec).group(0))[0]
     c["scene_vm_props"] = scene_vm_props(scene_sec)
     c["scene_npc_values"] = scene_npc_values(scene_sec)   # v11
+    c["scene_tier_values"], c["scene_tier_default"] = scene_tier_values(scene_sec)   # v14
     c["scene_event_name"], c["scene_event_prop"] = ticks(re.search(r"\*\*Rive event emitted:\*\*.*", scene_sec).group(0))[:2]
     scenes = {}
     for sid, evs, pids in table_after(scene_sec, r"^\| sceneId"):
@@ -104,6 +111,9 @@ def parse_contract() -> dict:
     have = re.search(r"\. ([\w, ]+?) have one;", flat)
     c["front_artboard"] = m.group(1) if m else None
     c["front_scenes"] = {s.strip() for s in re.split(r",| and ", have.group(1)) if s.strip()} if have else set()
+    # v14: a later version's sentence adds scenes ("v14: forestCabin has one (...)")
+    for later in re.finditer(r"\bv\d+: ([\w, ]+?) ha(?:s|ve) one\b", flat):
+        c["front_scenes"] |= {s.strip() for s in re.split(r",| and ", later.group(1)) if s.strip()}
     ui: dict[str, dict] = {}
     for ab, size, prop, typ, vals in table_after(ui_sec, r"^\| Artboard"):
         a = ui.setdefault(ticks(ab)[0], {"size": tuple(int(v) for v in size.split("×")), "props": {}})
@@ -160,22 +170,39 @@ def scene_vm_props(scene_sec: str) -> dict[str, str]:
     return props
 
 
+BINDER_MEMBERS = ("moonPhase", "festive", "npc2", "night", "tier", "spring", "autumn")
+
+
 def v12_binders(scene_sec: str, scene_ids: list[str]) -> dict[str, set[str]]:
     """v12: the scenes the contract says bind `moonPhase`, `festive` and `npc2` (`npc2X`, `npc2Look`
-    with it), v13 `night`, read from each bullet's "<scenes> bind(s) it" clause (parentheticals dropped)."""
+    with it), v13 `night`, v14 `tier`, `spring` and `autumn`, read from each bullet's "<scenes> bind(s)
+    it / them" clause (parentheticals dropped; "Every scene binds it" = every scene of the table). A
+    bullet that opens with several names (v14 "`spring`, `autumn`: ...") gives each the same scenes."""
     vm_at = scene_sec.index("**View model:**")
     bullets = scene_sec[vm_at:scene_sec.index("**Rive event emitted:**")]
+    alt = "|".join(BINDER_MEMBERS)
     out: dict[str, set[str]] = {}
     for item in re.split(r"\n\s*- ", bullets)[1:]:
         item = " ".join(item.split())
-        lead = re.match(r"`(moonPhase|festive|npc2|night)`", item)   # v13: `night`
+        lead = re.match(rf"((?:`(?:{alt})`(?:,\s*)?)+)", item)
         if not lead:
             continue
-        m = re.search(r"([^.;]*?)\bbinds? it\b", re.sub(r"\([^)]*\)", "", item))
-        found = {w for w in re.findall(r"\w+", m.group(1)) if w in scene_ids} if m else set()
-        for n in ((lead.group(1),) if lead.group(1) != "npc2" else world_kit.NPC2_NAMES):
-            out[n] = found
+        m = re.search(r"([^.;]*?)\bbinds? (?:it|them)\b", re.sub(r"\([^)]*\)", "", item))
+        if m and re.search(r"\bevery scene\b", m.group(1), re.I):
+            found = set(scene_ids)
+        else:
+            found = {w for w in re.findall(r"\w+", m.group(1)) if w in scene_ids} if m else set()
+        for name in re.findall(r"`(\w+)`", lead.group(1)):
+            for n in ((name,) if name != "npc2" else world_kit.NPC2_NAMES):
+                out[n] = set(found)
     return out
+
+
+def scene_tier_values(scene_sec: str) -> tuple[list[str], str | None]:
+    """v14: the `tier` enum's values in contract order and its default ("`tier`: enum, low, high,
+    ultra; default **ultra** (v14)")."""
+    m = re.search(r"`tier`: enum, ([^;]+); default \**(\w+)\**", " ".join(scene_sec.split()))
+    return ([v.strip() for v in m.group(1).split(",")], m.group(2)) if m else ([], None)
 
 
 def scene_npc_values(scene_sec: str) -> list[str]:
@@ -292,16 +319,17 @@ def compact(names: set[str]) -> str:
 
 
 def check_v12_binds(sid: str, proj: Path, c: dict, pending: list[str]) -> None:
-    """v12 / v13: the members the built RML binds equal the scene's declaration (v12:
-    `world_kit.declared_binds`, v13: `world_kit.declared_v13_binds`); contract binds it does not declare
-    yet are pending (the lanes add them)."""
+    """v12 / v13 / v14: the members the built RML binds equal the scene's declaration (v12:
+    `world_kit.declared_binds`, v13: `world_kit.declared_v13_binds`, v14: `world_kit.declared_v14_binds`);
+    contract binds it does not declare yet are pending (the lanes add them)."""
     root = ET.parse(proj / f"{sid}.rml").getroot()
     vm = next((v for v in root.findall("ViewModel") if v.get("name") == c["scene_vm"]), None)
     if vm is None:
         return
     for label, members, declared in (
             ("v12", world_kit.v12_members(sid), set(world_kit.declared_binds(sid))),
-            ("v13", world_kit.v13_members(sid), set(world_kit.declared_v13_binds(sid)))):
+            ("v13", world_kit.v13_members(sid), set(world_kit.declared_v13_binds(sid))),
+            ("v14", world_kit.v14_members(sid), set(world_kit.declared_v14_binds(sid)))):
         names_ = {n for n, _, _ in members}
         names = {p.get("id"): p.get("name") for p in vm
                  if p.tag.startswith("ViewModelProperty") and p.get("name") in names_}
@@ -477,7 +505,8 @@ def check_journey(c: dict) -> None:
 
 
 def scene_built(sid: str) -> bool:
-    """False only for a v12 scene whose project dir does not exist yet (pending in its lane)."""
+    """False only for a module scene (v12, v14) whose project dir does not exist yet (pending in its
+    lane)."""
     return sid not in world_kit.SCENE_MODULES or (ROOT / "rive" / "scenes" / sid).exists()
 
 
@@ -540,8 +569,9 @@ def main(argv: list[str] | None = None) -> int:
         ab, vm = check_common(sid, j, c["scene_artboard"], c["scene_sm"], c["scene_vm"])
         if vm:
             got = vm_props(j, vm)
-            want = {n: (TYPE_OF[t], ev_vals if n == "eventId" else c["scene_npc_values"] if n in ("npc", "npc2") else None)
-                    for n, t in c["scene_vm_props"].items()}
+            enum_vals = {"eventId": ev_vals, "npc": c["scene_npc_values"], "npc2": c["scene_npc_values"],
+                         "tier": c["scene_tier_values"]}   # v14: `tier`
+            want = {n: (TYPE_OF[t], enum_vals.get(n)) for n, t in c["scene_vm_props"].items()}
             want.update({n: (TYPE_OF["number"], None) for n, _ in drags})   # v12: its own drag numbers, last
             if got != want:
                 err(f"{sid}: SceneVM {got} != {want}")
@@ -550,11 +580,12 @@ def main(argv: list[str] | None = None) -> int:
             check_light_defaults(sid, j, vm, {**scene_light_defaults(sid), "rain": 0.0, "daylight": 0.0, "dusk": 0.0,
                                               "fog": 0.0, "npcX": 0.0, "npcLook": 0.0, "npc2X": 0.0, "npc2Look": 0.0,
                                               "moonPhase": world_kit.MOON_PHASE_OFF, "festive": 0.0, "night": 0.0,
-                                              **dict(drags)})
-            # v11: `npc` defaults to rest (the v10 look); v12: `npc2` to away (not drawn)
+                                              "spring": 0.0, "autumn": 0.0, **dict(drags)})
+            # v11: `npc` defaults to rest (the v10 look); v12: `npc2` to away (not drawn); v14: `tier` to
+            # ultra (the v13 look)
             keys = {v["id"]: v["key"] for e in nodes(j["roots"], "DataEnumCustom") for v in e.get("children", [])
                     if v.get("type") == "DataEnumValue"}
-            for slot, want_dflt in (("npc", "rest"), ("npc2", "away")):
+            for slot, want_dflt in (("npc", "rest"), ("npc2", "away"), ("tier", c["scene_tier_default"])):
                 slot_p = next((p["id"] for p in vm.get("children", []) if p.get("name") == slot), None)
                 dflt = [keys.get(v.get("propertyValue")) for v in nodes(vm, "ViewModelInstanceEnum")
                         if v.get("viewModelPropertyId") == slot_p]

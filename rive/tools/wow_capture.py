@@ -20,6 +20,9 @@ default caption pass), a `<wow>_sheet.webp` contact sheet and the gates.
 M9 (ruling 20) adds `scene_<sceneId>` (an NPC poke, an in-app drag, one reply; the beach's gulls), `pairs`
 (all 42 ordered journeys, frames at 2 fps: a 1 fps GIF at 8x, a 4x silent MP4, a 42-cell beat grid) and
 `tour7` (seven scenes on a December night at a full moon).
+
+M11 (contract v14): the scene list, the moon and festive scenes come from rive/CONTRACT.md (ten scenes,
+`pairs` = all 90 ordered journeys); the path family joins the three open-air scenes (M11 ruling 6).
 """
 
 from __future__ import annotations
@@ -35,6 +38,9 @@ import tempfile
 
 import numpy as np
 from PIL import Image, ImageDraw
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import check_contract  # noqa: E402
 
 GIF_FPS = 8
 GIF_W = 280
@@ -361,22 +367,28 @@ def gates_tour(tl: dict) -> list[str]:
 
 
 # ---------------------------------------------------------------- M9: scenes, drags, gulls, pairs, December
-SCENES = ["livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut"]
+# M11: the contract's scene table, in its order (contract v14: ten scenes)
+_CONTRACT = check_contract.parse_contract()
+SCENES = list(_CONTRACT["scenes"])
 NPC_REACT_MS = 200
-# the scenes whose file draws the moon / the festive dressing (M9 rulings 12-13)
-MOON_SCENES = {"livingRoom", "campfire", "rooftop", "mountainHut", "cafe"}
-FESTIVE_SCENES = {"livingRoom", "cafe", "mountainHut"}
+# the scenes whose file draws the moon / the festive dressing (M9 rulings 12-13; the contract's binders)
+MOON_SCENES = set(_CONTRACT["v12_binders"]["moonPhase"])
+FESTIVE_SCENES = set(_CONTRACT["v12_binders"]["festive"])
+# the open-air scenes whose journeys between each other take the path (M9 ruling 5, M11 ruling 6)
+PATH_SCENES = {"campfire", "beach", "forestCabin"}
 # the pull's action per handle (ruling 8): the scene events it may fire
-PULL_ACTIONS = {"cord": {"lightsOff", "lightsOn"}, "rope": {"bell"}}
+PULL_ACTIONS = {"cord": {"lightsOff", "lightsOn"}, "rope": {"bell"},
+                "chain": {"whistle"}}   # M11 ruling 8: the train's whistle chain
 
 
 def ruled_family(origin: str, to: str) -> str:
-    """M9 ruling 5: to deepSpace rocket, from deepSpace portal, campfire <-> beach path, else door."""
+    """M9 ruling 5, M11 ruling 6: to deepSpace rocket, from deepSpace portal, between two of the open-air
+    scenes (campfire, beach, forestCabin) path, else door."""
     if to == "deepSpace":
         return "rocket"
     if origin == "deepSpace":
         return "portal"
-    if {origin, to} == {"campfire", "beach"}:
+    if origin in PATH_SCENES and to in PATH_SCENES:
         return "path"
     return "door"
 
@@ -464,19 +476,21 @@ def drag_gates(tl: dict) -> list[str]:
                            f"{last.get('trailFade', 0.0):.2f}, trailN {last.get('trailN', -1):.0f} at the end; "
                            f"want 1 and 0)", last.get("trailFade", 0.0) >= 0.99 and last.get("trailN", -1) == 0))
     elif kind == "spin":
-        vals = _values(during + after, "spin")
+        # the handle's own number (deepSpace `spin`; M11 forestCabin `pinwheel`)
+        vals = _values(during + after, primary)
         moved = max((min(v, 1 - v) for v in vals), default=0.0)
-        g.append(_line(f"spin moved: {moved:.2f} of a turn at most (want >= 0.1)", moved >= 0.1))
-        tail = [x["drag"].get("spin", 0.0) for x in after if x["ms"] >= end["ms"] + 2000]
-        g.append(_line(f"spin: the inertia settled within 2 s ({len({round(v, 4) for v in tail})} distinct "
+        g.append(_line(f"{primary} moved: {moved:.2f} of a turn at most (want >= 0.1)", moved >= 0.1))
+        tail = [x["drag"].get(primary, 0.0) for x in after if x["ms"] >= end["ms"] + 2000]
+        g.append(_line(f"{primary}: the inertia settled within 2 s ({len({round(v, 4) for v in tail})} distinct "
                        f"values after)", bool(tail) and max(tail) - min(tail) <= 1e-3))
     elif kind == "aim":
-        at_release = _values(_between(s, end["ms"] - 100, end["ms"]), "aim")
+        # the handle's own number (rooftop `aim`; M11 library `ladder`)
+        at_release = _values(_between(s, end["ms"] - 100, end["ms"]), primary)
         a = at_release[-1] if at_release else 0.0
-        later = _values(after, "aim")
+        later = _values(after, primary)
         drift = max((abs(v - a) for v in later), default=1.0)
-        g.append(_line(f"aim moved: {a:.2f} at the release (want |aim| >= 0.2)", abs(a) >= 0.2))
-        g.append(_line(f"aim holds where left: drift {drift:.3f} in the 3 s after (want <= 0.02)", drift <= 0.02))
+        g.append(_line(f"{primary} moved: {a:.2f} at the release (want |{primary}| >= 0.2)", abs(a) >= 0.2))
+        g.append(_line(f"{primary} holds where left: drift {drift:.3f} in the 3 s after (want <= 0.02)", drift <= 0.02))
     haptics = [e for e in ev if e["type"] == "haptic" and start["ms"] - 50 <= e["ms"] <= end["ms"] + 1500]
     kinds = sorted({e["kind"] for e in haptics})
     g.append(_line(f"{hid}: drag haptics {len(haptics)} ({', '.join(kinds) or 'none'}; want >= 1)", len(haptics) >= 1))
@@ -559,7 +573,7 @@ def _drawn_after_cut(tl: dict, run: list[dict], origin: str, to: str) -> tuple[b
 
 
 def gates_pairs(tl: dict) -> list[str]:
-    """`WOW=pairs` (M9 ruling 20): all 42 ordered pairs once, each in its ruled family, the destination drawn
+    """`WOW=pairs` (M9 ruling 20; M11: 90 pairs): every ordered pair of `SCENES` once, each in its ruled family, the destination drawn
     after every cut, one jacket at a time on the door, no blank frame (checked on the frames), 0 network."""
     g = _common(tl)
     runs = _runs_with_pairs(tl)

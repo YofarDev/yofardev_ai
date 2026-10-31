@@ -39,6 +39,10 @@ SCENE_EVENTS = {
     "cafe": ["espresso", "doorbell", "rain", "neonFlicker"],
     "rooftop": ["fireworks", "plane", "shootingStar", "windowsLit"],
     "mountainHut": ["snowfall", "flare", "aurora", "bell"],
+    # contract v14 (M11 ruling 2): built by their own modules too
+    "forestCabin": ["gust", "fireflies", "rain", "lanternFlicker"],
+    "trainCompartment": ["tunnel", "whistle", "station", "rain"],
+    "library": ["lightning", "bookFlutter", "clockChime", "rain"],
 }
 
 
@@ -78,6 +82,15 @@ M10_ID_START = 910000
 V13_BINDS: dict[str, frozenset[str]] = {
     "beach": frozenset({"night"}),
 }
+# Moonshot M11 (contract v14): `tier`, `spring`, `autumn` (every scene declares them) and every M11
+# element added to an existing scene (the tier gate, spring / autumn in livingRoom and campfire) mint
+# from their own range per document (`Scene.d11`), so no M10 id moves. The v14 scene modules mint their
+# v14 members from the same range (each scene is its own document).
+M11_ID_START = 900000
+# The v14 members the shared passes bind per scene (world_kit.declared_v14_binds unites this with a
+# scene module's `BINDS14`); the others declare `tier`, `spring`, `autumn` inertly. Lane W fills it in
+# (`tier` everywhere through the tier gate; `spring` / `autumn` in livingRoom and campfire).
+V14_BINDS: dict[str, frozenset[str]] = {}
 OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
 
 
@@ -124,10 +137,14 @@ class Scene:
         self._v12_props()
         self.d10 = Doc(client=0, start=M10_ID_START)
         self._v13_props()
+        self.d11 = Doc(client=0, start=M11_ID_START)
+        self._v14_props()
         # contract v12: the v12 members this scene binds (the others are declared and inert)
         self.binds: set[str] = set(world_kit.declared_binds(scene_id))
         # contract v13 (M10): the v13 members this scene binds (`night`: only the beach)
         self.binds13: set[str] = set(world_kit.declared_v13_binds(scene_id))
+        # contract v14 (M11): the v14 members this scene binds (`tier`, `spring`, `autumn`)
+        self.binds14: set[str] = set(world_kit.declared_v14_binds(scene_id))
         # M8 (contract v11): the scene's NPC rig, run on the refined content before the diorama pass
         # (`scene_npc.NPCS`), and the NPC's state enum (a root element after `EventId`).
         self.npc_rig: Callable[[Scene, list[El], list[El]], None] | None = None
@@ -256,12 +273,41 @@ class Scene:
         at = next((i for i, c in enumerate(ikids) if c.attrs.get("viewModelPropertyId") in drag_ids), len(ikids))
         ikids[at:at] = vals
 
+    def _v14_props(self) -> None:
+        """Contract v14 SceneVM members (world_kit.v14_members): `tier` (enum `Tier`: low, high, ultra;
+        default ultra, a root element after `NpcState`), `spring`, `autumn` (0), after `night` and before
+        the scene's drag numbers (contract order). Minted from `d11`, so no older id moves."""
+        d11 = self.d11
+        self.tier_vals = {v: d11("DataEnumValue", key=v, value=v) for v in world_kit.TIER_VALUES}
+        self.tier_enum = d11("DataEnumCustom", *self.tier_vals.values(), name="Tier")
+        drags = set(world_kit.drag_numbers(self.id))
+        props, vals = [], []
+        for name, typ, default in world_kit.v14_members(self.id):
+            if typ == "enum":
+                p = d11("ViewModelPropertyEnumCustom", enumId=self.tier_enum.ref(), name=name)
+                vals.append(d11("ViewModelInstanceEnum", propertyValue=self.tier_vals[str(default)].ref(),
+                                viewModelPropertyId=p.ref()))
+            else:
+                p = d11("ViewModelPropertyNumber", name=name)
+                vals.append(d11("ViewModelInstanceNumber", propertyValue=float(default), viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+            props.append(p)
+        kids = self.vm.children
+        at = next((i for i, c in enumerate(kids) if c.attrs.get("name") in drags), kids.index(self.inst))
+        kids[at:at] = props
+        ikids = self.inst.children
+        drag_ids = {self.v7[n].ref() for n in drags}
+        at = next((i for i, c in enumerate(ikids) if c.attrs.get("viewModelPropertyId") in drag_ids), len(ikids))
+        ikids[at:at] = vals
+
     def check_v12_binds(self, roots: list[El]) -> None:
-        """The v12 members the file binds are exactly `self.binds`, the v13 ones exactly `self.binds13`
-        (the rest stay declared and inert)."""
+        """The v12 members the file binds are exactly `self.binds`, the v13 ones exactly `self.binds13`,
+        the v14 ones exactly `self.binds14` (the rest stay declared and inert)."""
         for label, members, want, where in (
                 ("v12", world_kit.v12_members(self.id), self.binds, "gen_scenes.V12_BINDS or the scene module's BINDS"),
-                ("v13", world_kit.v13_members(self.id), self.binds13, "gen_scenes.V13_BINDS")):
+                ("v13", world_kit.v13_members(self.id), self.binds13, "gen_scenes.V13_BINDS"),
+                ("v14", world_kit.v14_members(self.id), self.binds14,
+                 "gen_scenes.V14_BINDS or the scene module's BINDS14")):
             names = {self.v7[n].ref(): n for n, _, _ in members}
             got = set()
             for r in roots:
@@ -451,7 +497,7 @@ class Scene:
         self.check_v12_binds([*boards, *self.roots])
         out = os.path.join(OUT_ROOT, self.id, self.id + ".rml")
         os.makedirs(os.path.dirname(out), exist_ok=True)
-        write(out, [*boards, self.enum, self.npc_enum, self.vm, *self.roots])
+        write(out, [*boards, self.enum, self.npc_enum, self.tier_enum, self.vm, *self.roots])
         with open(os.path.join(os.path.dirname(out), "rive.yaml"), "w") as f:
             f.write(f"name: {self.id}\nmain: Scene\noutput: {{dir: build}}\n"
                     "logs: {file: build/rive.log, problems: build/problems.log}\n")
@@ -1184,7 +1230,9 @@ def clone(d: Doc, e: El, **attrs: object) -> El:
 
 
 # ---------------------------------------------------------------- front weather (M6, contract v9)
-FRONT_SCENES = ("campfire", "beach", "rooftop")   # outdoor rain; livingRoom's falls outside the window
+# outdoor rain (contract v9 / v12 / v14); livingRoom's falls outside the window. forestCabin's module
+# (contract v14) builds its own front (`Scene.front`); check_contract.py holds every file to the contract
+FRONT_SCENES = ("campfire", "beach", "rooftop", "forestCabin")
 FRONT_GAIN = 1.25          # nearer than Plane5: the sheet travels 1.25 x PARALLAX_TRAVEL
 FRONT_TILE = 480           # the sheet repeats every tile; one tile per FRONT_SHEET_FRAMES loop
 FRONT_SHEET_FRAMES = 14    # faster than the back sheets (18 / 34): near rain falls past quicker
@@ -2856,7 +2904,7 @@ def deep_space_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
 
 # ====================================================================== the scene registry (M9)
 def _lazy(scene_id: str) -> Callable[[], str]:
-    """Builds a v12 scene through its own module (imported on first use: `world_kit.scene_module`
+    """Builds a module scene (v12, v14) through its own module (imported on first use: `world_kit.scene_module`
     raises `SceneNotWritten` while its lane has not written it)."""
     def build() -> str:
         return getattr(world_kit.scene_module(scene_id), scene_id)()
@@ -2872,8 +2920,8 @@ SCENE_BUILDERS: dict[str, Callable[[], str]] = {
 
 def main(argv: list[str]) -> int:
     """`gen_scenes.py [sceneId ...]`: writes the named scenes; with none, the four M8 scenes and every
-    v12 scene whose module exists. An unknown id, or a v12 scene asked for before its module exists,
-    exits 1 with a message."""
+    module scene (v12, v14) whose module exists. An unknown id, or a module scene asked for before its
+    module exists, exits 1 with a message."""
     unknown = [a for a in argv if a not in SCENE_BUILDERS]
     if unknown:
         print(f"unknown scene {', '.join(unknown)} (known: {', '.join(SCENE_BUILDERS)})", file=sys.stderr)

@@ -13,6 +13,22 @@ from art_bible import RUBRIC, SCENES, TOKENS, lint_colours
 
 ROOT: Path = Path(__file__).resolve().parents[3]
 PALETTE: Path = ROOT / "lib/core/design/tokens/app_palette.dart"
+AVATAR_SCENE: Path = ROOT / "lib/core/models/avatar_scene.dart"
+V14_SCENES: tuple[str, ...] = ("forestCabin", "trainCompartment", "library")
+
+
+def dart_scenes() -> set[str]:
+    """The values of the Dart `AvatarScene` enum."""
+    text: str = AVATAR_SCENE.read_text(encoding="utf-8")
+    body: str = re.search(r"enum AvatarScene \{(.*?);", text, re.S).group(1)
+    return set(re.findall(r"\b(\w+)\b", body))
+
+
+def dart_pending(scene: str) -> bool:
+    """M11 (contract v14): the Python tools learn the three new scenes first (Task 1b), the Dart mirror
+    (`AvatarScene`, AppPalette, SceneLights) follows in lane D-scenes. A v14 scene is pending on the Dart
+    side only while `AvatarScene` lacks it; once the enum has it, its tokens and rig must match."""
+    return scene in V14_SCENES and scene not in dart_scenes()
 
 
 def dart_palette() -> dict[str, str]:
@@ -23,12 +39,14 @@ def dart_palette() -> dict[str, str]:
 def test_tokens_match_app_palette() -> None:
     dart: dict[str, str] = dart_palette()
     for name, argb in TOKENS.items():
+        if name.endswith("Accent") and dart_pending(name[: -len("Accent")]):
+            continue
         assert dart[name] == argb, name
 
 
 def test_every_contract_scene_has_a_script_with_its_token_accent() -> None:
     contract: str = (ROOT / "rive/CONTRACT.md").read_text(encoding="utf-8")
-    for scene in ("livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut"):
+    for scene in ("livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut", *V14_SCENES):
         assert scene in contract
         assert SCENES[scene].accent == TOKENS[f"{scene}Accent"]
         assert set(SCENES[scene].times) == {"dawn", "day", "dusk", "night"}
@@ -74,6 +92,7 @@ def test_scene_scripts_carry_flicker_rim_and_ambient() -> None:
     assert {s: SCENES[s].flicker for s in SCENES} == {
         "livingRoom": 0.15, "campfire": 1.0, "beach": 0.0, "deepSpace": 0.0,
         "cafe": 0.0, "rooftop": 0.0, "mountainHut": 0.6,
+        "forestCabin": 0.2, "trainCompartment": 0.05, "library": 0.1,   # M11 ruling 3
     }
     assert all(s.ambient_amount == 0.35 and s.rim_intensity == 0.35 for s in SCENES.values())
     assert SCENES["campfire"].key_xy == (-0.49, -0.872)
@@ -128,8 +147,10 @@ def test_scene_lights_match_art_bible() -> None:
     art_bible.SCENES (key x/y = cos/sin of key_dir to 3 digits)."""
     palette: dict[str, str] = dart_palette()
     lights: dict[str, dict[str, str]] = dart_scene_lights()
-    assert set(lights) == set(SCENES)
+    assert set(lights) == {sc for sc in SCENES if not dart_pending(sc)}
     for scene, s in SCENES.items():
+        if dart_pending(scene):
+            continue
         assert palette[f"{scene}Key"] == s.key, scene
         assert palette[f"{scene}Rim"] == s.rim, scene
         assert palette[f"{scene}Ambient"] == s.ambient, scene
@@ -161,3 +182,14 @@ def test_v12_scripts_leave_the_shared_journey_and_jacket_colours_alone() -> None
         assert s.value[0] <= lo and s.value[1] >= hi and s.sat_cap >= cap, scene
         assert s.rim_intensity == 0.35 and s.ambient_amount == 0.35, scene
         assert set(s.times) == {"dawn", "day", "dusk", "night"}, scene
+
+
+def test_v14_scripts_follow_ruling_3() -> None:
+    """M11 ruling 3: the three v14 rigs (key side, flicker); the leniency rule is the test above."""
+    assert {sc: TOKENS[f"{sc}Accent"] for sc in V14_SCENES} == {
+        "forestCabin": "FFA6CF6E", "trainCompartment": "FFF59AB5", "library": "FFE9CF6A"}
+    fc, tr, lib = (SCENES[sc] for sc in V14_SCENES)
+    assert fc.key_xy[0] > 0.9 and 0 < fc.key_xy[1] < 0.5            # low, from the right
+    assert tr.key_xy[0] < 0 < tr.key_xy[1]                          # from above left
+    assert lib.key_xy[0] < -0.9 and lib.key_xy[1] < 0               # from low left
+    assert (fc.flicker, tr.flicker, lib.flicker) == (0.2, 0.05, 0.1)

@@ -162,9 +162,9 @@ def test_existing_ids_never_move(rml: dict[str, ET.Element], sid: str) -> None:
     for i, e in old.items():
         assert (new[i].tag, new[i].attrib) == (e.tag, e.attrib), (i, e.tag, e.get("name"))
     added = set(new) - set(old)
-    # M8 additions, and M9's (contract v12) and M10's (v13) from their own ranges below it
-    assert all(gen_scenes.M10_ID_START <= _n(i) < gen_scenes.M7_ID_START for i in added), \
-        sorted(i for i in added if not gen_scenes.M10_ID_START <= _n(i) < gen_scenes.M7_ID_START)[:10]
+    # M8 additions, and M9's (contract v12), M10's (v13) and M11's (v14) from their own ranges below it
+    assert all(gen_scenes.M11_ID_START <= _n(i) < gen_scenes.M7_ID_START for i in added), \
+        sorted(i for i in added if not gen_scenes.M11_ID_START <= _n(i) < gen_scenes.M7_ID_START)[:10]
 
 
 # ---------------------------------------------------------------- view model
@@ -175,7 +175,7 @@ def test_scene_vm_gains_fog_and_the_npc(rml: dict[str, ET.Element], sid: str) ->
     doc = rml[sid]
     vm = _vm(doc)
     names = [p.get("name") for p in vm if p.tag.startswith("ViewModelProperty")]
-    v12 = [n for n, _, _ in gen_scenes.world_kit.vm_tail(sid)]   # contract v12 (M9) and v13 (M10) members follow
+    v12 = [n for n, _, _ in gen_scenes.world_kit.vm_tail(sid)]   # contract v12 (M9), v13 (M10), v14 (M11) follow
     assert names[names.index("dusk") + 1:] == ["fog", "npc", "npcX", "npcLook", *v12]
     by_name = {p.get("name"): p for p in vm if p.tag.startswith("ViewModelProperty")}
     for n in ("fog", "npcX", "npcLook"):

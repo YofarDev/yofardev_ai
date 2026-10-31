@@ -13021,6 +13021,12 @@
     <DataEnumValue key="react" value="react" id="0:930005"/>
   </DataEnumCustom>
 
+  <DataEnumCustom name="Tier" id="0:900003">
+    <DataEnumValue key="low" value="low" id="0:900000"/>
+    <DataEnumValue key="high" value="high" id="0:900001"/>
+    <DataEnumValue key="ultra" value="ultra" id="0:900002"/>
+  </DataEnumCustom>
+
   <ViewModel name="SceneVM" defaultInstanceId="0:22" id="0:23">
     <ViewModelPropertyEnumCustom enumId="0:17" name="eventId" id="0:18"/>
     <ViewModelPropertyTrigger name="event" id="0:19"/>
@@ -13048,6 +13054,9 @@
     <ViewModelPropertyNumber name="moonPhase" id="0:920006"/>
     <ViewModelPropertyNumber name="festive" id="0:920008"/>
     <ViewModelPropertyNumber name="night" id="0:910000"/>
+    <ViewModelPropertyEnumCustom enumId="0:900003" name="tier" id="0:900004"/>
+    <ViewModelPropertyNumber name="spring" id="0:900006"/>
+    <ViewModelPropertyNumber name="autumn" id="0:900008"/>
     <ViewModelPropertyNumber name="aim" id="0:920010"/>
     <ViewModelInstance exports="true" name="Default" id="0:22">
       <ViewModelInstanceEnum propertyValue="0:13" viewModelPropertyId="0:18" id="0:20"/>
@@ -13076,6 +13085,9 @@
       <ViewModelInstanceNumber propertyValue="-1" viewModelPropertyId="0:920006" id="0:920007"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920008" id="0:920009"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:910000" id="0:910001"/>
+      <ViewModelInstanceEnum propertyValue="0:900002" viewModelPropertyId="0:900004" id="0:900005"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:900006" id="0:900007"/>
+      <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:900008" id="0:900009"/>
       <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:920010" id="0:920011"/>
     </ViewModelInstance>
   </ViewModel>

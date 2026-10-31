@@ -31,6 +31,10 @@ TOKENS: dict[str, str] = {
     "cafeAccent": "FFE8956B",
     "rooftopAccent": "FF7CB8FF",
     "mountainHutAccent": "FF86D4C4",
+    # contract v14 (M11 ruling 2)
+    "forestCabinAccent": "FFA6CF6E",
+    "trainCompartmentAccent": "FFF59AB5",
+    "libraryAccent": "FFE9CF6A",
 }
 
 # --- 2. Character palette (ramps: light -> shadow -> deep shadow). Shadows shift toward the
@@ -157,6 +161,35 @@ SCENES: dict[str, SceneScript] = {
         rim="FF8CB4E0", ambient="FF1E1A26", fog="33B8C8DC", value=(0.04, 0.94), sat_cap=0.58,
         times={"dawn": "FF8A94BC", "day": "FFB4CCE0", "dusk": "FF6A5A84", "night": "FF141C34"},
         flicker=0.6,
+    ),
+    # M11 (contract v14, ruling 3; a scene lane may retune only its own entry). The M9 rule above holds
+    # for these too: each is at least as lenient as the four M8 scripts together (value low <= 0.10,
+    # high >= 0.92, sat cap >= 0.55), so avatar.riv and journey.riv keep their bytes.
+    # forestCabin: the low warm sun / the porch lantern from the right, the open sky's blue as the rim,
+    # forest-green-dark shadows, a green-grey forest mist; the lantern flickers a little.
+    "forestCabin": SceneScript(
+        accent=TOKENS["forestCabinAccent"], key="FFFFC27A", key_dir=0.3, key_intensity=0.9,
+        rim="FF9CC8F0", ambient="FF1A2A22", fog="33B4C4B0", value=(0.05, 0.94), sat_cap=0.62,
+        times={"dawn": "FF8A9CB8", "day": "FF9CCBE8", "dusk": "FF6A5878", "night": "FF141E30"},
+        flicker=0.2,
+    ),
+    # trainCompartment: the compartment lamp, warm from above left; the window's cool daylight rims the
+    # silhouette; plum shadows; the window's sky over the running landscape. A steady lamp (a faint
+    # flicker from the train's motion).
+    "trainCompartment": SceneScript(
+        accent=TOKENS["trainCompartmentAccent"], key="FFFFCF94", key_dir=2.2, key_intensity=0.85,
+        rim="FF94B4DC", ambient="FF2E2236", fog="33B8B0C8", value=(0.06, 0.93), sat_cap=0.6,
+        times={"dawn": "FF8890B8", "day": "FFA4C8E0", "dusk": "FF7A5A7C", "night": "FF161C34"},
+        flicker=0.05,
+    ),
+    # library: the green-shaded reading lamp, warm gold from low left (the mirror of mountainHut's
+    # -0.4, pi + 0.4); the storm window's cold light as the rim; brown-black shadows; a dusty haze. The
+    # lamp and the candles flicker a little.
+    "library": SceneScript(
+        accent=TOKENS["libraryAccent"], key="FFFFD27A", key_dir=3.5416, key_intensity=0.8,
+        rim="FF8AA4CC", ambient="FF1C1612", fog="33706A78", value=(0.04, 0.93), sat_cap=0.58,
+        times={"dawn": "FF6E7898", "day": "FF8EA6BC", "dusk": "FF4E4462", "night": "FF10141F"},
+        flicker=0.1,
     ),
 }
 

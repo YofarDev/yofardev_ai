@@ -1,18 +1,23 @@
 """Moonshot M9 (contract v12): the shared world kit and the scene registry.
 
-Everything a scene module (`scene_cafe.py`, `scene_rooftop.py`, `scene_mountain_hut.py`) or the
-existing scenes (`gen_scenes.py`) share for the v12 `SceneVM` members:
+Everything a scene module (`scene_cafe.py`, `scene_rooftop.py`, `scene_mountain_hut.py`; M11, contract
+v14: `scene_forest_cabin.py`, `scene_train.py`, `scene_library.py`) or the existing scenes
+(`gen_scenes.py`) share for the v12+ `SceneVM` members:
 
-- `SCENE_MODULES`: the v12 scenes and the module that builds each (`<module>.<sceneId>()` returns the
-  written RML path, like `gen_scenes.livingRoom`). `scene_module(sid)` imports it, raising
-  `SceneNotWritten` with a clear message while its lane has not written it yet.
+- `SCENE_MODULES`: the module scenes (v12 and v14) and the module that builds each
+  (`<module>.<sceneId>()` returns the written RML path, like `gen_scenes.livingRoom`).
+  `scene_module(sid)` imports it, raising `SceneNotWritten` with a clear message while its lane has not
+  written it yet.
 - `DRAGS`: the contract's "Drag handles (v12)" table, parsed from `rive/CONTRACT.md` at import (the
   contract is the single source: a scene lane corrects a rect there, never here).
 - `v12_members(sid)`: the v12 `SceneVM` members of a scene, in contract order, with their defaults.
 - `v13_members(sid)`, `vm_tail(sid)`, `declared_v13_binds(sid)` (M10, contract v13): `night`, declared
   by every scene after `festive` (before the drag numbers), bound where `gen_scenes.V13_BINDS` says.
+- `v14_members(sid)`, `declared_v14_binds(sid)` (M11, contract v14): `tier` (enum `Tier` low / high /
+  ultra, default ultra), `spring`, `autumn` (0), declared by every scene after `night` (before the drag
+  numbers), bound where `gen_scenes.V14_BINDS` (shared passes, any scene) or the module's `BINDS14` says.
 - `declared_binds(sid)`: which v12 members the scene's file binds (built-ins: `gen_scenes.V12_BINDS`;
-  v12 scenes: the module-level `BINDS` set). `Scene.write` and `check_contract.py` hold the file to it.
+  module scenes: the module-level `BINDS` set). `Scene.write` and `check_contract.py` hold the file to it.
 - `review(sid)`: the scene module's module-level `REVIEW` dict (empty when there is none), read by the
   review tools for any scene they do not configure themselves. Keys (all optional):
 
@@ -27,6 +32,17 @@ existing scenes (`gen_scenes.py`) share for the v12 `SceneVM` members:
     `prop` (the NPC's propId), `waypoints` [(x, y, scale)] along its path at npcX 0 .. 1 (screen
     anchor of the NPC and its scale; scale 1 at npcX 0 for a flat path), or `at` (x, y) for an NPC
     without a path, and optional `fog_box` (x0, y0, x1, y1): the only region fog may change.
+
+A scene module defines, at module level:
+
+- `<sceneId>()`: builds the scene (a `gen_scenes.Scene` subclass's `write`) and returns the RML path
+  (`gen_scenes.SCENE_BUILDERS` calls it lazily; `SceneNotWritten` while the module does not exist);
+- `BINDS`: the v12 members its file binds (`npc2*`, `moonPhase`, `festive`, and its own drag numbers,
+  `world_kit.drag_numbers(sid)`); `declared_binds` reads it;
+- `BINDS14` (M11, contract v14): the v14 members its own art binds (`tier`, `spring`, `autumn`); missing
+  = none; `declared_v14_binds` unites it with `gen_scenes.V14_BINDS[sid]` (what the shared passes bind
+  there). The v13 `night` is bound only by the beach (contract), so a module declares no v13 binds;
+- `REVIEW` (optional): the review tools' configuration, above (`review(sid)`).
 
 The helpers below draw the v12 world art, history-free (formula converters on the view-model
 numbers, never a state), invisible at the contract defaults so a scene renders exactly as before:
@@ -64,24 +80,27 @@ CONTRACT = Path(__file__).resolve().parents[1] / "CONTRACT.md"
 # v12 scenes (ruling 1) -> the module whose function `<sceneId>()` builds it (ruling 19: one module
 # per scene lane). The four M8 scenes are built in gen_scenes.py.
 SCENE_MODULES: dict[str, str] = {"cafe": "scene_cafe", "rooftop": "scene_rooftop",
-                                 "mountainHut": "scene_mountain_hut"}
+                                 "mountainHut": "scene_mountain_hut",
+                                 # contract v14 (M11 ruling 1): scenes 8-10, one module per scene lane
+                                 "forestCabin": "scene_forest_cabin", "trainCompartment": "scene_train",
+                                 "library": "scene_library"}
 BUILT_IN_SCENES: tuple[str, ...] = ("livingRoom", "campfire", "beach", "deepSpace")
 
 
 class SceneNotWritten(RuntimeError):
-    """A v12 scene whose module its lane has not written yet."""
+    """A module scene (v12, v14) whose module its lane has not written yet."""
 
 
 def scene_module(scene_id: str) -> ModuleType:
-    """The module building v12 scene `scene_id` (imported once). Raises `SceneNotWritten` when the
-    module file does not exist yet, `KeyError` for an id that is not a v12 scene."""
+    """The module building module scene `scene_id` (imported once). Raises `SceneNotWritten` when the
+    module file does not exist yet, `KeyError` for an id that is not a module scene."""
     name = SCENE_MODULES[scene_id]
     try:
         return importlib.import_module(name)
     except ModuleNotFoundError as e:
         if e.name != name:
             raise
-        raise SceneNotWritten(f"scene {scene_id!r} is in contract v12, but rive/tools/{name}.py does not exist yet "
+        raise SceneNotWritten(f"scene {scene_id!r} is in the contract, but rive/tools/{name}.py does not exist yet "
                               f"(its scene lane writes it)") from None
 
 
@@ -188,12 +207,25 @@ def v13_members(scene_id: str) -> list[tuple[str, str, object]]:
     return [("night", "number", 0.0)]
 
 
+TIER_VALUES = ("low", "high", "ultra")   # contract v14 `tier` enum, in contract order
+TIER_DEFAULT = "ultra"                    # the v13 look: a file nobody writes is unchanged
+
+
+def v14_members(scene_id: str) -> list[tuple[str, str, object]]:
+    """(name, type, default) of the v14 SceneVM members: `tier` (enum `Tier`, low / high / ultra,
+    default ultra), `spring`, `autumn` (0). Every scene declares them after `night` and before its drag
+    numbers (contract order); `declared_v14_binds` says who binds them."""
+    return [("tier", "enum", TIER_DEFAULT), ("spring", "number", 0.0), ("autumn", "number", 0.0)]
+
+
 def vm_tail(scene_id: str) -> list[tuple[str, str, object]]:
     """Every SceneVM member after `npcLook`, in contract order: the v12 members without the drag
-    numbers, the v13 members, then the scene's drag numbers (the contract lists them last)."""
+    numbers, the v13 members, the v14 members, then the scene's drag numbers (the contract lists them
+    last)."""
     drags = set(drag_numbers(scene_id))
     v12 = v12_members(scene_id)
-    return [m for m in v12 if m[0] not in drags] + v13_members(scene_id) + [m for m in v12 if m[0] in drags]
+    return ([m for m in v12 if m[0] not in drags] + v13_members(scene_id) + v14_members(scene_id)
+            + [m for m in v12 if m[0] in drags])
 
 
 def declared_v13_binds(scene_id: str) -> frozenset[str]:
@@ -202,9 +234,24 @@ def declared_v13_binds(scene_id: str) -> frozenset[str]:
     return frozenset(gen_scenes.V13_BINDS.get(scene_id, ()))
 
 
+def declared_v14_binds(scene_id: str) -> frozenset[str]:
+    """The v14 members (`tier`, `spring`, `autumn`) the scene's file binds: `gen_scenes.V14_BINDS`
+    (any scene: the shared M11 passes, e.g. the tier gate, declare there what they bind in every scene,
+    module scenes included) united with a module scene's own `BINDS14` (what its module binds itself;
+    missing = none). Empty for a module scene whose module is not written yet."""
+    import gen_scenes  # noqa: PLC0415 (gen_scenes imports this module)
+    shared = frozenset(gen_scenes.V14_BINDS.get(scene_id, ()))
+    if scene_id in SCENE_MODULES:
+        try:
+            return shared | frozenset(getattr(scene_module(scene_id), "BINDS14", ()))
+        except SceneNotWritten:
+            return frozenset()
+    return shared
+
+
 def declared_binds(scene_id: str) -> frozenset[str]:
     """The v12 members the scene's file binds (the rest are declared and inert): `gen_scenes.V12_BINDS`
-    for the M8 scenes, the scene module's `BINDS` for the v12 ones (empty while not written)."""
+    for the M8 scenes, the scene module's `BINDS` for the module ones (empty while not written)."""
     if scene_id in SCENE_MODULES:
         try:
             return frozenset(getattr(scene_module(scene_id), "BINDS", ()))

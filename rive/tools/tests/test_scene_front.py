@@ -13,6 +13,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import gen_scenes  # noqa: E402
 from gen_scenes import FRONT_GAIN, FRONT_SCENES, M6_ID_START, PARALLAX_TRAVEL  # noqa: E402
+import world_kit  # noqa: E402
+
+# contract v14: forestCabin's front is built by its own module; until its lane writes it, the front
+# scenes checked here are the ones that can be built
+_WRITTEN = set(world_kit.written_scene_modules())
+BUILT_FRONTS = [sid for sid in FRONT_SCENES if sid not in world_kit.SCENE_MODULES or sid in _WRITTEN]
+NO_FRONT = ("livingRoom", "deepSpace")
 
 
 @pytest.fixture(scope="module")
@@ -21,9 +28,9 @@ def rml(tmp_path_factory: pytest.TempPathFactory) -> dict[str, ET.Element]:
     root = gen_scenes.OUT_ROOT
     gen_scenes.OUT_ROOT = str(out)
     try:
-        # v12: rooftop (its own module, scene_rooftop.py) carries a front too
+        # v12: rooftop (its own module, scene_rooftop.py) carries a front too; v14: forestCabin once written
         return {sid: ET.fromstring(Path(gen_scenes.SCENE_BUILDERS[sid]()).read_text())
-                for sid in ("campfire", "beach", "livingRoom", "deepSpace", "rooftop")}
+                for sid in (*BUILT_FRONTS, *NO_FRONT)}
     finally:
         gen_scenes.OUT_ROOT = root
 
@@ -48,14 +55,14 @@ def _converter_k(doc: ET.Element, conv_id: str) -> float:
 
 
 def test_front_only_in_outdoor_scenes(rml: dict[str, ET.Element]) -> None:
-    assert set(FRONT_SCENES) == {"campfire", "beach", "rooftop"}
+    assert set(FRONT_SCENES) == {"campfire", "beach", "rooftop", "forestCabin"}
     for sid, doc in rml.items():
         assert (_front(doc) is not None) == (sid in FRONT_SCENES), sid
         # the main artboard stays first, so `rive.yaml main: Scene` and every render keep working
         assert doc.find("Artboard").get("name") == "Scene"
 
 
-@pytest.mark.parametrize("sid", FRONT_SCENES)
+@pytest.mark.parametrize("sid", BUILT_FRONTS)
 def test_front_artboard_shape(rml: dict[str, ET.Element], sid: str) -> None:
     doc = rml[sid]
     front = _front(doc)
@@ -75,7 +82,7 @@ def test_front_artboard_shape(rml: dict[str, ET.Element], sid: str) -> None:
                for f in front if f.get("name") == "FrontFog" for x in f.iter() if x.get("id"))
 
 
-@pytest.mark.parametrize("sid", FRONT_SCENES)
+@pytest.mark.parametrize("sid", BUILT_FRONTS)
 def test_front_binds_rain_and_parallax(rml: dict[str, ET.Element], sid: str) -> None:
     doc = rml[sid]
     paths = _vm_paths(doc)

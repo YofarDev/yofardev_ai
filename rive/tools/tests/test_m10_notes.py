@@ -87,7 +87,8 @@ def test_every_scene_declares_night_after_festive_before_its_drags(rml: dict[str
     doc = rml[sid]
     names = list(_props(doc).values())
     drags = list(world_kit.drag_numbers(sid))
-    assert names[names.index("festive") + 1:] == ["night", *drags]
+    v14 = [n for n, _, _ in world_kit.v14_members(sid)]   # contract v14 (M11) follows `night`
+    assert names[names.index("festive") + 1:] == ["night", *v14, *drags]
     vm = _vm(doc)
     night = next(p for p in vm if p.get("name") == "night")
     assert night.tag == "ViewModelPropertyNumber" and M10_RANGE[0] <= _n(night.get("id")) < M10_RANGE[1]
@@ -110,7 +111,8 @@ def test_m10_art_mints_from_the_m10_range_only(rml: dict[str, ET.Element], sid: 
     ids = [_n(e.get("id")) for e in rml[sid].iter() if e.get("id")]
     assert len(ids) == len(set(ids))
     m10 = [i for i in ids if M10_RANGE[0] <= i < M10_RANGE[1]]
-    assert m10 and not [i for i in ids if i < M10_RANGE[0] and i >= 900000]
+    # below the M10 range only M11's own range (contract v14, `Scene.d11`) may appear
+    assert m10 and not [i for i in ids if i < M10_RANGE[0] and i >= 890000 and i < gen_scenes.M11_ID_START]
 
 
 # ====================================================================== café: the wipe clears the glass

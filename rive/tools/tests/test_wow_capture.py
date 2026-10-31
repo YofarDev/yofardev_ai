@@ -250,9 +250,21 @@ def _m9(ms: int, **kw: object) -> dict:
 def test_ruled_family_table() -> None:
     pairs = [(a, b) for a in wc.SCENES for b in wc.SCENES if a != b]
     fams = [wc.ruled_family(a, b) for a, b in pairs]
-    assert len(pairs) == 42
-    assert {f: fams.count(f) for f in set(fams)} == {"rocket": 6, "portal": 6, "path": 2, "door": 28}
+    # M11 ruling 6: ten scenes, 90 pairs; the path joins the three open-air scenes
+    assert wc.SCENES == ["livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut",
+                         "forestCabin", "trainCompartment", "library"]
+    assert len(pairs) == 90
+    assert {f: fams.count(f) for f in set(fams)} == {"rocket": 9, "portal": 9, "path": 6, "door": 66}
     assert wc.ruled_family("campfire", "beach") == "path" and wc.ruled_family("beach", "deepSpace") == "rocket"
+    assert wc.ruled_family("forestCabin", "campfire") == wc.ruled_family("beach", "forestCabin") == "path"
+    assert wc.ruled_family("forestCabin", "library") == wc.ruled_family("trainCompartment", "beach") == "door"
+    assert wc.ruled_family("deepSpace", "forestCabin") == "portal" and wc.ruled_family("library", "deepSpace") == "rocket"
+
+
+def test_moon_and_festive_scenes_come_from_the_contract() -> None:
+    assert wc.MOON_SCENES == {"livingRoom", "campfire", "cafe", "rooftop", "mountainHut", "forestCabin",
+                              "trainCompartment", "library"}
+    assert wc.FESTIVE_SCENES == {"livingRoom", "cafe", "mountainHut", "forestCabin", "library"}
 
 
 def _drag_tl(hid: str, kind: str, primary: str, during: list[dict], after: list[dict],
@@ -618,3 +630,17 @@ def test_beats_m10_sheets_have_8_to_16_cells() -> None:
     for tl in (_wardrobe_tl(), _persona_tl(), _caption_tl()):
         n = len(wc.beats(tl))
         assert 8 <= n <= 16, (tl["kind"], n)
+
+
+def test_drag_gates_read_the_v14_handles_own_numbers() -> None:
+    """M11: forestCabin's `pinwheel` (spin), library's `ladder` (aim), the train's `chain` (pull)."""
+    during = [_m9(1000 + 50 * k, dragging=True, drag={"pinwheel": 0.3 * k / 20}, dragRead=0.3 * k / 20)
+              for k in range(21)]
+    after = [_m9(2000 + 100 * k, drag={"pinwheel": 0.3 + min(k, 10) * 0.01}) for k in range(1, 30)]
+    g = wc.drag_gates(_drag_tl("pinwheel", "spin", "pinwheel", during, after))
+    assert all(x.endswith("ok") for x in g) and any("pinwheel moved" in x for x in g), g
+    during = [_m9(1000 + 50 * k, dragging=True, drag={"ladder": -0.03 * k}, dragRead=-0.03 * k) for k in range(21)]
+    after = [_m9(2000 + 100 * k, drag={"ladder": -0.6}) for k in range(1, 30)]
+    g = wc.drag_gates(_drag_tl("ladder", "aim", "ladder", during, after))
+    assert all(x.endswith("ok") for x in g) and any("ladder holds" in x for x in g), g
+    assert wc.PULL_ACTIONS["chain"] == {"whistle"}

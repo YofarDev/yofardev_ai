@@ -21,7 +21,9 @@ from rml import El, render  # noqa: E402
 import world_kit  # noqa: E402
 from world_kit import DRAGS, TRAIL_DOTS, eval_formula  # noqa: E402
 
-ALL = ("livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut")
+ALL = ("livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut",
+       "forestCabin", "trainCompartment", "library")   # contract v14 (M11): scenes 8-10
+V14 = ("forestCabin", "trainCompartment", "library")
 R = 80.0
 
 
@@ -169,7 +171,10 @@ def test_drags_parse_the_contract_table() -> None:
     assert set(DRAGS) == set(ALL)
     kinds = {sid: [h.kind for h in hs] for sid, hs in DRAGS.items()}
     assert kinds == {"livingRoom": ["pull"], "campfire": ["poke"], "beach": ["trail"], "deepSpace": ["spin"],
-                     "cafe": ["trail"], "rooftop": ["aim"], "mountainHut": ["pull"]}
+                     "cafe": ["trail"], "rooftop": ["aim"], "mountainHut": ["pull"],
+                     "forestCabin": ["spin"], "trainCompartment": ["pull"], "library": ["aim"]}   # v14 (M11 ruling 8)
+    assert {sid: DRAGS[sid][0].numbers for sid in V14} == {
+        "forestCabin": (("pinwheel", 0.0),), "trainCompartment": (("chain", 0.0),), "library": (("ladder", 0.0),)}
     assert DRAGS["campfire"][0].numbers == (("poke", 0.0), ("pokeX", 0.0), ("pokeY", 0.0))
     assert DRAGS["cafe"][0].numbers == DRAGS["beach"][0].numbers == world_kit.TRAIL_NUMBERS
     assert world_kit.TRAIL_NUMBERS[0] == ("trailN", 0.0) and world_kit.TRAIL_NUMBERS[-1] == ("trailFade", 1.0)
@@ -188,7 +193,9 @@ def test_v12_members_follow_the_v11_ones_in_contract_order(sid: str) -> None:
     props = [p.attrs["name"] for p in sc.vm.children if p.tag.startswith("ViewModelProperty")]
     c = check_contract.parse_contract()
     assert props == [*c["scene_vm_props"], *names]
-    assert props[-6 - len(names):] == ["npc2", "npc2X", "npc2Look", "moonPhase", "festive", "night", *names]
+    assert props[-9 - len(names):] == ["npc2", "npc2X", "npc2Look", "moonPhase", "festive", "night",
+                                       "tier", "spring", "autumn", *names]   # v14 (M11) after `night`
+    assert props[props.index("npcLook") + 1:] == [n for n, _, _ in world_kit.vm_tail(sid)]
     assert sc.v7["night"].attrs["name"] == "night"   # contract v13 (M10), from the M10 range
     assert gen_scenes.M10_ID_START <= int(sc.v7["night"].ref().split(":")[1]) < gen_scenes.M9_ID_START
     dflt = {sc.v7[n].ref(): n for n, _, _ in world_kit.v12_members(sid)}
@@ -219,8 +226,13 @@ def test_contract_says_who_binds_the_v12_members() -> None:
     c = check_contract.parse_contract()
     assert c["v12_binders"] == {
         "npc2": {"beach"}, "npc2X": {"beach"}, "npc2Look": {"beach"},
-        "moonPhase": {"livingRoom", "campfire", "cafe", "rooftop", "mountainHut"},
-        "festive": {"livingRoom", "cafe", "mountainHut"}, "night": {"beach"}}   # v13 night (M10)
+        "moonPhase": {"livingRoom", "campfire", "cafe", "rooftop", "mountainHut", *V14},   # v14 adds the new three
+        "festive": {"livingRoom", "cafe", "mountainHut", "forestCabin", "library"},
+        "night": {"beach"},   # v13 night (M10)
+        # v14 (M11): every scene binds the tier; four scenes the seasons
+        "tier": set(ALL),
+        "spring": {"forestCabin", "campfire", "livingRoom", "trainCompartment"},
+        "autumn": {"forestCabin", "campfire", "livingRoom", "trainCompartment"}}
     assert c["scene_vm_props"]["npc2"] == "enum" and c["scene_vm_props"]["npc2X"] == "number"
     assert set(c["scenes"]) == set(ALL)
     for sid in world_kit.BUILT_IN_SCENES:
@@ -234,8 +246,12 @@ def test_scene_builders_cover_every_scene() -> None:
     assert set(gen_scenes.SCENE_BUILDERS) == set(gen_scenes.SCENE_EVENTS) == set(ALL)
     assert {sid: evs for sid, (evs, _) in c["scenes"].items()} == gen_scenes.SCENE_EVENTS
     assert set(world_kit.SCENE_MODULES) | set(world_kit.BUILT_IN_SCENES) == set(ALL)
+    assert {sid: world_kit.SCENE_MODULES[sid] for sid in V14} == {
+        "forestCabin": "scene_forest_cabin", "trainCompartment": "scene_train", "library": "scene_library"}
     assert gen_scenes.M9_ID_START == 920000
+    assert gen_scenes.M11_ID_START == 900000 < gen_scenes.M10_ID_START
     assert set(art_bible.SCENES) == set(ALL)
+    assert set(gen_scenes.FRONT_SCENES) == c["front_scenes"] == {"campfire", "beach", "rooftop", "forestCabin"}
 
 
 @pytest.fixture
@@ -289,3 +305,85 @@ def test_eval_formula_follows_runtime_precedence() -> None:
     sc = gen_scenes.Scene("beach")
     conv = sc.conv(2.0, 3.0)      # 3 + 2 x input
     assert eval_formula(conv, 5.0) == 13.0
+
+
+# ====================================================================== contract v14 (M11)
+@pytest.mark.parametrize("sid", ALL)
+def test_v14_members_follow_night_with_their_defaults_and_ids(sid: str) -> None:
+    sc = gen_scenes.Scene(sid)
+    assert [(n, t) for n, t, _ in world_kit.v14_members(sid)] == [("tier", "enum"), ("spring", "number"),
+                                                                ("autumn", "number")]
+    props = [p.attrs["name"] for p in sc.vm.children if p.tag.startswith("ViewModelProperty")]
+    drags = list(world_kit.drag_numbers(sid))
+    assert props[props.index("night") + 1:] == ["tier", "spring", "autumn", *drags]
+    # the instance lists its values in the same order
+    by_id = {sc.v7[n].ref(): n for n in props if n in sc.v7}
+    inst = [by_id[v.attrs["viewModelPropertyId"]] for v in sc.inst.children
+            if v.attrs.get("viewModelPropertyId") in by_id]
+    assert inst[inst.index("night") + 1:] == ["tier", "spring", "autumn", *drags]
+    # `tier`: its own enum `Tier` (low, high, ultra), default ultra; the seasons default 0
+    assert sc.tier_enum.attrs["name"] == "Tier"
+    assert [v.attrs["key"] for v in sc.tier_enum.children] == list(world_kit.TIER_VALUES) == ["low", "high", "ultra"]
+    assert sc.v7["tier"].tag == "ViewModelPropertyEnumCustom" and sc.v7["tier"].attrs["enumId"] == sc.tier_enum.ref()
+    vals = {by_id[v.attrs["viewModelPropertyId"]]: v for v in sc.inst.children
+            if v.attrs.get("viewModelPropertyId") in by_id}
+    assert vals["tier"].tag == "ViewModelInstanceEnum" and vals["tier"].attrs["propertyValue"] == sc.tier_vals["ultra"].ref()
+    assert vals["spring"].attrs["propertyValue"] == vals["autumn"].attrs["propertyValue"] == 0.0
+    # every v14 element mints from the M11 range (no older id moves)
+    for e in (sc.tier_enum, *sc.tier_enum.children, *(sc.v7[n] for n in ("tier", "spring", "autumn")),
+              *(vals[n] for n in ("tier", "spring", "autumn"))):
+        assert gen_scenes.M11_ID_START <= int(e.ref().split(":")[1]) < gen_scenes.M10_ID_START, e.tag
+
+
+def test_contract_parses_the_tier_enum() -> None:
+    c = check_contract.parse_contract()
+    assert (c["scene_tier_values"], c["scene_tier_default"]) == (["low", "high", "ultra"], "ultra")
+    assert world_kit.TIER_DEFAULT == "ultra"
+    assert [c["scene_vm_props"][n] for n in ("tier", "spring", "autumn")] == ["enum", "number", "number"]
+    assert list(c["scene_vm_props"])[-4:] == ["night", "tier", "spring", "autumn"]
+
+
+def test_v14_binds_must_match_the_declaration() -> None:
+    sc = gen_scenes.Scene("livingRoom")
+    sc.binds = set()   # only the v14 check under test (nothing here binds the scene's v12 members)
+    probe = sc.d11("Node", sc.bind("spring", 18, doc=sc.d11), x=0.0, y=0.0, name="Probe")
+    with pytest.raises(ValueError, match="v14 binds"):
+        sc.check_v12_binds([probe, *sc.roots])
+    sc.binds14 = {"spring"}
+    sc.check_v12_binds([probe, *sc.roots])
+    sc.binds14 = {"spring", "tier"}
+    with pytest.raises(ValueError, match="tier"):
+        sc.check_v12_binds([probe, *sc.roots])
+
+
+def test_v14_binds_come_from_the_shared_table_and_the_module(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert gen_scenes.V14_BINDS == {}   # lane W fills it in (the tier gate, the seasons in two old scenes)
+    for sid in ALL:
+        assert world_kit.declared_v14_binds(sid) == frozenset(), sid
+    monkeypatch.setitem(gen_scenes.V14_BINDS, "livingRoom", frozenset({"tier", "spring"}))
+    monkeypatch.setitem(gen_scenes.V14_BINDS, "fake14", frozenset({"tier"}))
+    assert world_kit.declared_v14_binds("livingRoom") == {"tier", "spring"}
+    mod = types.ModuleType("scene_fake_m11_test")
+    mod.BINDS = {"moonPhase"}
+    mod.BINDS14 = {"autumn"}
+    monkeypatch.setitem(sys.modules, "scene_fake_m11_test", mod)
+    monkeypatch.setitem(world_kit.SCENE_MODULES, "fake14", "scene_fake_m11_test")
+    # a module scene: the shared table united with the module's own `BINDS14`
+    assert world_kit.declared_v14_binds("fake14") == {"tier", "autumn"}
+    del mod.BINDS14
+    assert world_kit.declared_v14_binds("fake14") == {"tier"}
+
+
+@pytest.mark.parametrize("sid", V14)
+def test_v14_scenes_are_pending_until_their_module_exists(sid: str) -> None:
+    if sid in world_kit.written_scene_modules():
+        pytest.skip(f"{sid}: its module exists (its lane's tests cover it)")
+    with pytest.raises(world_kit.SceneNotWritten, match=world_kit.SCENE_MODULES[sid]):
+        gen_scenes.SCENE_BUILDERS[sid]()
+    assert world_kit.review(sid) == {}
+    assert world_kit.declared_binds(sid) == world_kit.declared_v14_binds(sid) == frozenset()
+    if not (check_contract.ROOT / "rive" / "scenes" / sid).exists():
+        assert not check_contract.scene_built(sid)   # check_contract lists it as pending, not an error
+    # a scene that is not written still has everything the shared tools need from the registries
+    assert gen_scenes.SCENE_EVENTS[sid] == check_contract.parse_contract()["scenes"][sid][0]
+    assert sid in art_bible.SCENES and sid in DRAGS
