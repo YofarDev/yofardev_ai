@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8 and M9) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8, M9 and M10) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -118,7 +118,7 @@ on violation.
 - Golden tests store reference images under `test/**/goldens/` — only regenerate (`--update-goldens`) when a visual change is intentional
 - Widget tests that need app styling use `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
 - Fonts are bundled in `assets/fonts/google_fonts/` (Fraunces 400/500/600, Manrope 400/500) and runtime fetching is off — a new font weight needs a new TTF there
-- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`, `face`, `parallax`, `prop`, `rain`, `shot`) and `ext.yofardev.uiLab.state`. `rain` (0..1) goes to `WorldStateService.setRain` (`core/services/world/`, app-lifetime lazy singleton; since M7 also fed by the weather tool and `WorldWeatherSync`) and the scene view writes it to `SceneVM.rain` on every scene load and change; `shot` (`wide|medium|closeUp|propInsert`) cuts the lab's stage camera. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
+- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`, `face`, `parallax`, `prop`, `rain`, `shot`, `topTint`, `hatTint`) and `ext.yofardev.uiLab.state`. `rain` (0..1) goes to `WorldStateService.setRain` (`core/services/world/`, app-lifetime lazy singleton; since M7 also fed by the weather tool and `WorldWeatherSync`) and the scene view writes it to `SceneVM.rain` on every scene load and change; `shot` (`wide|medium|closeUp|propInsert`) cuts the lab's stage camera. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
 - v4 avatar: the character and the 7 scenes (4 until M9) are Rive files in `assets/rive/`
   (`avatar.riv` + `scenes/<sceneId>.riv`), rebuilt from RML sources via
   `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
@@ -277,6 +277,33 @@ on violation.
   (`ScenePickerSheet`, the same `AvatarChangeRequested` as `change_avatar`). Wow harness:
   `WOW=scene --dart-define=SCENE=<id>`, `WOW=pairs` (all 42 journeys), `WOW=tour7` (December, full
   moon). Evidence index: `rive/review/m9/README.md`
+- Wardrobe 2.0, persona body language, speech bubbles (contract v13, moonshot M10): the wardrobe is
+  deduped after the avatar is built (`rive/tools/wardrobe_dedupe.py`): one sleeve set per sleeve kind
+  and one shared hand (`Skin_shared`), each outfit's paint / opacity / seam thickness keyed in its
+  `top_*` or `costume_*` clip (the hand's paint in every costume clip, `costume_none` included); the
+  pass refuses to merge copies that differ in anything else. Identity to M9 is the gate
+  (`uv run --with pillow --with numpy rive/tools/review_wardrobe_identity.py`, 277 cases). Colour
+  variants: `topTint` / `hatTint` colours bound to a second color-blend (27) `Tint` fill on the listed
+  garment shapes (`TOP_TINTED`, `SLEEVE_TINTED`, `HAT_TINTED` in `gen_avatar.py`; never ink, prints,
+  skin, costumes); Dart `AvatarTint` + `WardrobeTints` (`core/design/tokens/`, the palette of record),
+  stored under the map keys `topTint` / `hatTint` (missing = none), written transparent under a
+  costume (`AvatarTintWriter`). `gestureId` `signature` plays the worn costume's move (transitions
+  check gestureId and costume); `AvatarCubit` requests it once after a walk-off puts a new costume on;
+  it is not an LLM cue. New avatar ids from `avatar_kit.M10_ID_START = 1200000` (tints 1210000,
+  signatures 1220000, their arm keys 1235000); scene ids from `gen_scenes.M10_ID_START = 910000`.
+  Personas: `BodyLanguageProfile.of(ChatPersona)` (`core/models/performance/body_language.dart`;
+  `normal` is the identity) reaches `AvatarCueService` through `AppLifecycleService.personaEvents`
+  (the current chat's persona) and arms the director (gesture rate, auto-gesture swaps, idle prop,
+  glance period; applied at the next sentence), `FacePerformer` (posture eased 600 ms, motion scale)
+  and the `IdleLadder` pace; trace: `flutter test tool/body_language_trace_test.dart`. Captions: the
+  avatar file's `MouthAnchor` node (on the upper-lip bone) is read after each advance
+  (`MouthAnchorReader` → `MouthAnchorSource`), mapped by `StageFraming.artboardToStage` through the
+  avatar fit and `StageCameraView`; `StageCaptionBubble` sits beside the face or over the head with a
+  brows-to-chin keep-out, follows at 8 Hz, and hands over to the classic `StageCaption` for screen
+  readers, text scale ≥ 1.5, journeys, prop inserts, no anchor or no fit; reduce motion places it once
+  per sentence. `SceneVM.night` = (1 − daylight) × (1 − dusk) (0 without a world clock); only the beach
+  binds it. Wow harness: `WOW=wardrobe|persona|caption` (contact sheet + one short MP4, no GIF).
+  Evidence index: `rive/review/m10/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -342,4 +369,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-31 (M9)
+**Last Updated**: 2026-10-31 (M10)
