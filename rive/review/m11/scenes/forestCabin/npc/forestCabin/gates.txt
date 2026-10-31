@@ -1,0 +1,12 @@
+rest frames identical to 927a606: n/a, a new scene (ok)
+away: the NPC's crop changes (11.27% of it), nothing else does (0.0000%): ok
+idle: moves (31.35% of the crop) and its loop is back after 240 frames (0.0000% differ): ok
+move: moves (39.81% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+notice: moves (31.88% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+react: moves (52.48% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+pointer squirrel at npcX 0.0: click@850,1016 fires 1: ok
+pointer squirrel at npcX 0.5: click@541,1204 fires 1: ok
+pointer squirrel at npcX 1.0: click@262,1068 fires 1, its v10 spot click@850,1016 fires 0: ok
+fog: changes 8.57% of the frame (ok)
+SceneFront fog joins the mist: bottom 200 rows alpha +49.7/255 at fog 1 (ok)
+forestCabin.riv 179,035 B (a new scene; budget 409,600): ok

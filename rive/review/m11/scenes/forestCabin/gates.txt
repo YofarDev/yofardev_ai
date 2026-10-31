@@ -1,0 +1,55 @@
+# forestCabin (M11 lane S1) — objective gates
+
+## review_diorama.py forestCabin (parallax, pointers, rain, front, drag, budgets)
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 fern travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 woodpile travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 door travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 maple trunk travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane1 birch travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+Plane0 moon travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: woodpile=Plane4, lantern=Plane3, pinwheel=Plane3, squirrel=Plane3: ok
+pointer woodpile (Plane4) parallaxX -1: click@7,1371 fires 1, rest-only click@295,1371 fires 0: ok
+pointer woodpile (Plane4) parallaxX +1: click@333,1371 fires 1, rest-only click@45,1371 fires 0: ok
+pointer lantern (Plane3) parallaxX -1: click@768,810 fires 1, rest-only click@850,810 fires 0: ok
+pointer lantern (Plane3) parallaxX +1: click@876,810 fires 1, rest-only click@794,810 fires 0: ok
+pointer pinwheel (Plane3) parallaxX -1: click@865,960 fires 1, rest-only click@979,960 fires 0: ok
+pointer pinwheel (Plane3) parallaxX +1: click@1005,960 fires 1, rest-only click@891,960 fires 0: ok
+pointer squirrel (Plane3) parallaxX -1: click@784,1016 fires 1, rest-only click@890,1016 fires 0: ok
+pointer squirrel (Plane3) parallaxX +1: click@916,1016 fires 1, rest-only click@810,1016 fires 0: ok
+wet ground (median luminance rain 1 / rain 0): 41.1/55.1 = 0.75 (want 0.5..0.9): ok
+RainLoop sheets + splashes seam (frame 0 vs 6120, rain 1, box (0, 1300, 1080, 1920), pixels changed beyond rain 0): 0.0160% (ok)
+pinwheel drag: pixels changed at pinwheel 0.125 .. 1 outside (883.0, 908.0, 987.0, 1068.0): 0.0000% (changed bbox (889, 912, 983, 1008)) (ok)
+pinwheel a half turn reads (four colours): max diff 134/255 (ok); pinwheel 1 wraps to 0: max diff 3/255 (ok); 0.6 -> 0 vs never turned: max diff 2/255 (ok)
+front at rain 0: max alpha 0/255 (ok)
+front at rain 1: streak cover (alpha > 0.25, y < 1100) 1.80% (want 0.3..6%): ok
+front at rain 1: bottom 80 rows mean alpha (mist + splashes) 0.219 (want 0.08..0.3): ok
+front sheet travel at parallaxX -1/+1: -50/+50 px (want -/+50): ok
+front loop seam (frame 0 vs 840, rain 1): 0.0000% (ok)
+forestCabin.riv 179035 B (budget 409,600): ok
+forestCabin.webp 31762 B (budget 40,960): ok
+
+## review_npc.py forestCabin (the squirrel, fog)
+rest frames identical to 927a606: n/a, a new scene (ok)
+away: the NPC's crop changes (11.27% of it), nothing else does (0.0000%): ok
+idle: moves (31.35% of the crop) and its loop is back after 240 frames (0.0000% differ): ok
+move: moves (39.81% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+notice: moves (31.88% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+react: moves (52.48% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+pointer squirrel at npcX 0.0: click@850,1016 fires 1: ok
+pointer squirrel at npcX 0.5: click@541,1204 fires 1: ok
+pointer squirrel at npcX 1.0: click@262,1068 fires 1, its v10 spot click@850,1016 fires 0: ok
+fog: changes 8.57% of the frame (ok)
+SceneFront fog joins the mist: bottom 200 rows alpha +49.7/255 at fog 1 (ok)
+forestCabin.riv 179,035 B (a new scene; budget 409,600): ok
+
+## review_time.py forestCabin
+forestCabin: night identical to HEAD: n/a, a new scene (ok)
+forestCabin: noon brightens the sky by 135.4/255 (want > 12) (ok)
+forestCabin: sunset recolours the horizon band by 33.0/255 (ok)
+forestCabin: the day lifts the ground at noon by 30.4/255 (want >= 6) (ok)
+
+## by hand
+squirrel NPC bytes: 179,035 B with it vs 162,902 B with a stub = 16,133 B (budget 30,720): ok
+frive.sh forestCabin: check_contract ok, rive_gates 45 lines ok, done
+pytest rive/tools/tests/test_scene_forest_cabin.py: 14 passed

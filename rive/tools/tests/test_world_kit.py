@@ -359,7 +359,9 @@ def test_v14_binds_must_match_the_declaration() -> None:
 def test_v14_binds_come_from_the_shared_table_and_the_module(monkeypatch: pytest.MonkeyPatch) -> None:
     assert gen_scenes.V14_BINDS == {}   # lane W fills it in (the tier gate, the seasons in two old scenes)
     for sid in ALL:
-        assert world_kit.declared_v14_binds(sid) == frozenset(), sid
+        own = (frozenset(getattr(world_kit.written_scene_modules()[sid], "BINDS14", ()))
+               if sid in world_kit.written_scene_modules() else frozenset())
+        assert world_kit.declared_v14_binds(sid) == own, sid
     monkeypatch.setitem(gen_scenes.V14_BINDS, "livingRoom", frozenset({"tier", "spring"}))
     monkeypatch.setitem(gen_scenes.V14_BINDS, "fake14", frozenset({"tier"}))
     assert world_kit.declared_v14_binds("livingRoom") == {"tier", "spring"}
