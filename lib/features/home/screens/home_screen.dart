@@ -6,6 +6,7 @@ import 'package:nested/nested.dart';
 import '../../../core/design/design.dart';
 import '../../../core/models/demo_script.dart';
 import '../../../core/services/motion/parallax_source.dart';
+import '../../../core/services/quality/quality_tier_service.dart';
 import '../../../core/services/world/world_state_service.dart';
 import '../../../core/services/app_lifecycle_service.dart';
 import '../../../core/services/presence/composer_activity_service.dart';
@@ -25,8 +26,8 @@ import '../../../core/services/audio/foley_service.dart';
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
 ///
 /// [speech], [composerActivity], [parallax], [world], [facePerformer],
-/// [camera], [npc], [foley], [beds] and [lifecycle] come from the route (Home
-/// never reads the service locator).
+/// [camera], [npc], [foley], [beds], [lifecycle] and [quality] come from the
+/// route (Home never reads the service locator).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -40,6 +41,7 @@ class HomeScreen extends StatefulWidget {
     this.foley,
     this.beds,
     this.lifecycle,
+    this.quality,
   });
 
   final SpeechInputService speech;
@@ -71,6 +73,10 @@ class HomeScreen extends StatefulWidget {
   /// Carries a scene pick from the More menu to the chat (null: the menu has
   /// no scene picker).
   final AppLifecycleService? lifecycle;
+
+  /// The quality tier in force, told when the stage shows and is active
+  /// (null: ultra, no benchmark from here).
+  final QualityTierService? quality;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -195,6 +201,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       foley: widget.foley,
       beds: widget.beds,
       lifecycle: widget.lifecycle,
+      quality: widget.quality,
       onStartDemo: _startDemoMode,
     );
     if (!kDebugMode) {
@@ -219,7 +226,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         widget.npc != oldWidget.npc ||
         widget.foley != oldWidget.foley ||
         widget.beds != oldWidget.beds ||
-        widget.lifecycle != oldWidget.lifecycle) {
+        widget.lifecycle != oldWidget.lifecycle ||
+        widget.quality != oldWidget.quality) {
       _stage = _buildStage();
     }
   }

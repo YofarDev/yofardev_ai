@@ -6,6 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/models/performance/avatar_prop.dart';
+import 'package:yofardev_ai/core/models/performance/quality_tier.dart';
+import 'package:yofardev_ai/core/services/quality/frame_timing_source.dart';
+import 'package:yofardev_ai/core/services/quality/quality_tier_service.dart';
+import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
 import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
@@ -581,6 +585,69 @@ void main() {
       expect(activeUiLabConfig, same(second));
       unregisterUiLabExtensions(second);
       expect(activeUiLabConfig, isNull);
+    });
+  });
+
+  group('tier (M11)', () {
+    QualityTierService quality() {
+      final QualityTierService service = QualityTierService(
+        timingSource: SchedulerFrameTimingSource(),
+        settings: SettingsLocalDatasource(),
+      );
+      addTearDown(service.dispose);
+      return service;
+    }
+
+    test('low / high / ultra force the tier, auto releases it', () {
+      final QualityTierService q = quality();
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      developer.ServiceExtensionResponse r = labConfigureResponse(
+        notifier,
+        <String, String>{'tier': 'low'},
+        quality: q,
+      );
+      expect(q.forced, QualityTier.low);
+      expect(q.current, QualityTier.low);
+      expect(_decode(r)['tier'], 'low');
+      expect(_decode(r)['tierEffective'], 'low');
+      expect(uiLabForcedTier, isTrue);
+      r = labConfigureResponse(notifier, <String, String>{
+        'tier': 'ultra',
+      }, quality: q);
+      expect(q.current, QualityTier.ultra);
+      r = labConfigureResponse(notifier, <String, String>{
+        'tier': 'auto',
+      }, quality: q);
+      expect(q.forced, isNull);
+      expect(q.current, QualityTier.high);
+      expect(_decode(r)['tier'], 'auto');
+      expect(
+        _decode(labStateResponse(notifier, quality: q))['tierEffective'],
+        'high',
+      );
+      expect(uiLabForcedTier, isFalse);
+    });
+
+    test('a bad tier, or no tier service, is an error and changes nothing', () {
+      final QualityTierService q = quality();
+      final ValueNotifier<LabConfig> notifier = ValueNotifier<LabConfig>(
+        LabConfig.initial,
+      );
+      final developer.ServiceExtensionResponse bad = labConfigureResponse(
+        notifier,
+        <String, String>{'tier': 'medium', 'scene': 'beach'},
+        quality: q,
+      );
+      expect(bad.errorCode, developer.ServiceExtensionResponse.extensionError);
+      expect(q.forced, isNull);
+      expect(notifier.value, LabConfig.initial);
+      final developer.ServiceExtensionResponse none = labConfigureResponse(
+        notifier,
+        <String, String>{'tier': 'low'},
+      );
+      expect(none.errorCode, developer.ServiceExtensionResponse.extensionError);
     });
   });
 }

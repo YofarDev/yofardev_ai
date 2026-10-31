@@ -33,6 +33,7 @@ import '../../core/services/app_lifecycle_service.dart';
 import '../../core/services/audio/ambient_bed_service.dart';
 import '../../core/services/audio/foley_service.dart';
 import '../../core/services/motion/parallax_source.dart';
+import '../../core/services/quality/quality_tier_service.dart';
 import '../../core/services/world/world_state_service.dart';
 import '../../core/services/presence/composer_activity_service.dart';
 import '../../core/services/speech/speech_input_service.dart';
@@ -79,6 +80,7 @@ class AppRouter {
             foley: getIt<FoleyService>(),
             beds: getIt<AmbientBedService>(),
             lifecycle: getIt<AppLifecycleService>(),
+            quality: getIt<QualityTierService>(),
           );
           return MaterialPage<void>(
             key: state.pageKey,
@@ -217,7 +219,10 @@ class AppRouter {
           pageBuilder: (BuildContext context, GoRouterState state) =>
               MaterialPage<void>(
                 key: state.pageKey,
-                child: UiLabScreen(world: getIt<WorldStateService>()),
+                child: UiLabScreen(
+                  world: getIt<WorldStateService>(),
+                  quality: getIt<QualityTierService>(),
+                ),
               ),
         ),
     ],

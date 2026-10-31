@@ -1,5 +1,6 @@
 import 'dart:ui' show Offset;
 
+import '../../../../core/models/performance/performance.dart';
 import 'scene_parallax_writer.dart';
 import 'scene_rain_writer.dart';
 
@@ -15,9 +16,13 @@ class SceneFrontFollower {
   SceneRainWriter? _rain;
   SceneParallaxWriter? _parallax;
 
-  /// Whether the front artboard should be live.
-  static bool shouldShow({required bool hasFront, required double rain}) =>
-      hasFront && rain > SceneRainWriter.epsilon;
+  /// Whether the front artboard should be live: never on the low tier (M11
+  /// ruling 13).
+  static bool shouldShow({
+    required bool hasFront,
+    required double rain,
+    QualityTier tier = QualityTier.ultra,
+  }) => tier.allowsSceneFront && hasFront && rain > SceneRainWriter.epsilon;
 
   /// Whether a front binding is attached.
   bool get attached => _rain != null;

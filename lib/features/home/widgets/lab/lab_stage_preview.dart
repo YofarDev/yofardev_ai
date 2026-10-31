@@ -6,6 +6,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_scene.dart';
 import '../../../../core/models/performance/avatar_prop.dart';
+import '../../../../core/models/performance/quality_tier.dart';
 import '../../../../core/models/performance/shot.dart';
 import '../../../../core/services/world/world_state_service.dart';
 import '../../../../core/utils/logger.dart';
@@ -43,6 +44,7 @@ class LabStageExtras extends InheritedWidget {
     this.localDay,
     this.topTint = AvatarTint.none,
     this.hatTint = AvatarTint.none,
+    this.tier,
     required super.child,
   });
 
@@ -74,6 +76,9 @@ class LabStageExtras extends InheritedWidget {
   final AvatarTint topTint;
   final AvatarTint hatTint;
 
+  /// The quality tier the stage follows (M11); null: ultra.
+  final ValueListenable<QualityTier>? tier;
+
   /// The extras above [context], or none (no prop, no parallax).
   static LabStageExtras? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<LabStageExtras>();
@@ -90,7 +95,8 @@ class LabStageExtras extends InheritedWidget {
       festive != oldWidget.festive ||
       localDay != oldWidget.localDay ||
       topTint != oldWidget.topTint ||
-      hatTint != oldWidget.hatTint;
+      hatTint != oldWidget.hatTint ||
+      tier != oldWidget.tier;
 }
 
 /// The default [LabStageBuilder]: the real Rive scene and avatar.
@@ -114,9 +120,13 @@ class LabStagePreview extends StatefulWidget {
     required this.config,
     this.stageBuilder = buildLabRiveStage,
     this.world,
+    this.tier,
   });
 
   final LabConfig config;
+
+  /// The quality tier the stage follows (null: ultra).
+  final ValueListenable<QualityTier>? tier;
 
   /// The app's world state; its rain is shown on the scene (null: dry).
   final WorldStateService? world;
@@ -273,6 +283,7 @@ class _LabStagePreviewState extends State<LabStagePreview>
                           localDay: widget.world?.localDay,
                           topTint: config.topTint,
                           hatTint: config.hatTint,
+                          tier: widget.tier,
                           child: StageCamera(
                             shot: _camera,
                             child: ValueListenableBuilder<MouthState>(
@@ -353,6 +364,7 @@ class _LabRiveStageState extends State<LabRiveStage> {
       npc2: extras?.npc2,
       moonPhase: extras?.moonPhase,
       festive: extras?.festive,
+      tier: extras?.tier,
       middle: RiveAvatarView(
         key: _avatarKey,
         // The scene's light rig follows the lab's scene, and the prop the
@@ -368,6 +380,7 @@ class _LabRiveStageState extends State<LabRiveStage> {
         talkingState: widget.talkingState,
         faceOverride: widget.face,
         localDay: extras?.localDay,
+        tier: extras?.tier,
       ),
     );
   }
@@ -387,6 +400,7 @@ class _LabSceneLayer extends StatefulWidget {
     this.moonPhase,
     this.festive,
     this.middle,
+    this.tier,
   });
 
   final AvatarScene scene;
@@ -398,6 +412,7 @@ class _LabSceneLayer extends StatefulWidget {
   final ValueListenable<double>? moonPhase;
   final ValueListenable<double>? festive;
   final Widget? middle;
+  final ValueListenable<QualityTier>? tier;
 
   @override
   State<_LabSceneLayer> createState() => _LabSceneLayerState();
@@ -435,6 +450,7 @@ class _LabSceneLayerState extends State<_LabSceneLayer> {
       moonPhase: widget.moonPhase,
       festive: widget.festive,
       middle: widget.middle,
+      tier: widget.tier,
     );
   }
 }

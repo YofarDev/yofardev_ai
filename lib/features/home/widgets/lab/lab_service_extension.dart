@@ -4,6 +4,8 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/models/performance/quality_tier.dart';
+import '../../../../core/services/quality/quality_tier_service.dart';
 import '../../../../core/services/world/world_state_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../avatar/avatar.dart';
@@ -34,6 +36,12 @@ const Set<String> _vmParams = <String>{'isolateId'};
 bool _registered = false;
 ValueNotifier<LabConfig>? _active;
 WorldStateService? _activeWorld;
+QualityTierService? _activeQuality;
+bool _forcedTier = false;
+
+/// Whether a `tier` param forced the tier since the lab opened (the lab
+/// releases it when it closes).
+bool get uiLabForcedTier => _forcedTier;
 
 /// The config of the lab currently mounted, or null. Exposed for tests.
 @visibleForTesting
@@ -49,9 +57,14 @@ developer.ServiceExtensionResponse _error(String message) {
 developer.ServiceExtensionResponse _ok(
   LabConfig config, [
   WorldStateService? world,
+  QualityTierService? quality,
 ]) => developer.ServiceExtensionResponse.result(
   jsonEncode(<String, Object?>{
     ...config.toJson(),
+    _tierKey: ?(quality == null
+        ? null
+        : (quality.forced == null ? _tierAuto : quality.current.name)),
+    _tierEffectiveKey: ?quality?.current.name,
     _rainKey: ?world?.rain.value,
     _fogKey: ?world?.fog.value,
     _moonPhaseKey: ?world?.moonPhase.value,
@@ -64,6 +77,34 @@ developer.ServiceExtensionResponse _ok(
 /// [WorldStateService.setRain] and [WorldStateService.setFog].
 const String _rainKey = 'rain';
 const String _fogKey = 'fog';
+
+/// The quality tier (M11): `low`, `high` or `ultra` forces it
+/// ([QualityTierService.forceTier]), `auto` back to the computed tier.
+/// The state also reports `tierEffective`, the tier in force.
+const String _tierKey = 'tier';
+const String _tierAuto = 'auto';
+const String _tierEffectiveKey = 'tierEffective';
+
+/// Parses the `tier` param: given false when absent, value null for `auto`.
+_Override<QualityTier> _tierParam(String? value, QualityTierService? quality) {
+  if (value == null) {
+    return (given: false, value: null);
+  }
+  if (quality == null) {
+    throw FormatException('"$_tierKey" needs the quality tier service');
+  }
+  if (value == _tierAuto) {
+    return (given: true, value: null);
+  }
+  for (final QualityTier tier in QualityTier.values) {
+    if (tier.name == value) {
+      return (given: true, value: tier);
+    }
+  }
+  throw FormatException(
+    '"$_tierKey" must be low, high, ultra or auto, got "$value"',
+  );
+}
 
 /// The sky params (M9), also world state: `moonPhase` (-1 = the moon as
 /// drawn before v12, 0..1 a phase, `null` back to the calendar), `festive`
@@ -226,11 +267,14 @@ Map<String, Object?> _paramsToJson(Map<String, String> params) {
 /// are rejected when no [world] is given and, like any invalid input, leave
 /// the config alone. So do the sky's params: `moonPhase` (-1..1: -1 the moon
 /// as drawn, 0..1 a phase), `festive` (0..1) and `date` (`YYYY-MM-DD`), each
-/// with `null` back to the calendar / the real clock.
+/// with `null` back to the calendar / the real clock. `tier` (`low`,
+/// `high`, `ultra`, or `auto`) forces the [quality] tier (rejected without
+/// one).
 developer.ServiceExtensionResponse labConfigureResponse(
   ValueNotifier<LabConfig>? notifier,
   Map<String, String> params, {
   WorldStateService? world,
+  QualityTierService? quality,
 }) {
   if (notifier == null) {
     return _error('No UI lab is mounted. Open it first.');
@@ -264,6 +308,10 @@ developer.ServiceExtensionResponse labConfigureResponse(
     final _Override<DateTime> date = _dateParam(
       configParams.remove(_dateKey),
       world,
+    );
+    final _Override<QualityTier> tier = _tierParam(
+      configParams.remove(_tierKey),
+      quality,
     );
     final Map<String, Object?> json = _paramsToJson(configParams);
     final Object? face = json['face'];
@@ -303,7 +351,11 @@ developer.ServiceExtensionResponse labConfigureResponse(
             : DateTime(day.year, day.month, day.day, now.hour, now.minute),
       );
     }
-    return _ok(next, world);
+    if (tier.given) {
+      quality!.forceTier(tier.value);
+      _forcedTier = tier.value != null;
+    }
+    return _ok(next, world, quality);
   } on FormatException catch (e) {
     return _error(e.message);
   }
@@ -313,11 +365,12 @@ developer.ServiceExtensionResponse labConfigureResponse(
 developer.ServiceExtensionResponse labStateResponse(
   ValueNotifier<LabConfig>? notifier, {
   WorldStateService? world,
+  QualityTierService? quality,
 }) {
   if (notifier == null) {
     return _error('No UI lab is mounted. Open it first.');
   }
-  return _ok(notifier.value, world);
+  return _ok(notifier.value, world, quality);
 }
 
 /// Makes [config] the lab the debug service extensions drive, registering the
@@ -328,25 +381,32 @@ developer.ServiceExtensionResponse labStateResponse(
 void registerUiLabExtensions(
   ValueNotifier<LabConfig> config, {
   WorldStateService? world,
+  QualityTierService? quality,
 }) {
   if (!kDebugMode) {
     return;
   }
   _active = config;
   _activeWorld = world;
+  _activeQuality = quality;
+  _forcedTier = false;
   if (_registered) {
     return;
   }
   _registered = true;
   _register(
     uiLabConfigureExtension,
-    (String method, Map<String, String> params) async =>
-        labConfigureResponse(_active, params, world: _activeWorld),
+    (String method, Map<String, String> params) async => labConfigureResponse(
+      _active,
+      params,
+      world: _activeWorld,
+      quality: _activeQuality,
+    ),
   );
   _register(
     uiLabStateExtension,
     (String method, Map<String, String> params) async =>
-        labStateResponse(_active, world: _activeWorld),
+        labStateResponse(_active, world: _activeWorld, quality: _activeQuality),
   );
 }
 
@@ -356,6 +416,7 @@ void unregisterUiLabExtensions(ValueNotifier<LabConfig> config) {
   if (identical(_active, config)) {
     _active = null;
     _activeWorld = null;
+    _activeQuality = null;
   }
 }
 

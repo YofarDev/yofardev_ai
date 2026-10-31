@@ -10,11 +10,13 @@ import '../../../core/design/components/components.dart';
 import '../../../core/design/design.dart';
 import '../../../core/design/rive/ui_kit.dart';
 import '../../../core/models/avatar_scene.dart';
+import '../../../core/models/performance/performance.dart';
 import '../../../core/models/talking_phase.dart';
 import '../../../core/services/app_lifecycle_service.dart';
 import '../../../core/services/audio/ambient_bed_service.dart';
 import '../../../core/services/audio/foley_service.dart';
 import '../../../core/services/motion/parallax_source.dart';
+import '../../../core/services/quality/quality_tier_service.dart';
 import '../../../core/services/world/world_state_service.dart';
 import '../../../core/services/presence/composer_activity_service.dart';
 import '../../../core/services/speech/speech_input_service.dart';
@@ -42,6 +44,11 @@ import 'stage/stage_top_bar.dart';
 /// [speech] and [composerActivity] go to the composer; [onStartDemo] to the
 /// More menu. [parallax] feeds the scene's depth planes, and hears the
 /// pointer's position over the stage (hover, on desktop and web).
+///
+/// [quality] (M11 rulings 12–13) gates the stage per tier (the scene, the
+/// avatar, the bubble and the mouth anchor's cadence follow its tier), starts
+/// the benchmark when the first scene shows and lets the drift watch sample
+/// while the stage is on screen with the app resumed.
 class HomeContentStack extends StatefulWidget {
   const HomeContentStack({
     super.key,
@@ -55,6 +62,7 @@ class HomeContentStack extends StatefulWidget {
     this.foley,
     this.beds,
     this.lifecycle,
+    this.quality,
     required this.onStartDemo,
   });
 
@@ -85,6 +93,9 @@ class HomeContentStack extends StatefulWidget {
   /// Carries a scene pick from the More menu to the chat (null: no scene
   /// picker in the menu).
   final AppLifecycleService? lifecycle;
+
+  /// The quality tier in force (null: ultra, nothing reported).
+  final QualityTierService? quality;
   final VoidCallback onStartDemo;
 
   /// The glow's width, relative to the composer pill (the art fills about
@@ -98,7 +109,8 @@ class HomeContentStack extends StatefulWidget {
   State<HomeContentStack> createState() => _HomeContentStackState();
 }
 
-class _HomeContentStackState extends State<HomeContentStack> {
+class _HomeContentStackState extends State<HomeContentStack>
+    with WidgetsBindingObserver {
   /// The composer's mode, for the caption (which hides while it listens or
   /// thinks) without rebuilding the rest of the stage.
   final ValueNotifier<ComposerOrbState> _composerMode =
@@ -119,8 +131,61 @@ class _HomeContentStackState extends State<HomeContentStack> {
     StageComposer.height,
   );
 
+  bool _resumed =
+      WidgetsBinding.instance.lifecycleState == null ||
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+  bool _onScreen = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _followTier(null);
+  }
+
+  @override
+  void didUpdateWidget(HomeContentStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.quality != oldWidget.quality) {
+      oldWidget.quality?.setStageActive(false);
+      _followTier(oldWidget.quality);
+      _syncStageActive();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Covered by another route, the stage's tickers are muted.
+    _onScreen = TickerMode.valuesOf(context).enabled;
+    _syncStageActive();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _resumed = state == AppLifecycleState.resumed;
+    _syncStageActive();
+  }
+
+  /// The drift watch samples only while the stage is seen.
+  void _syncStageActive() =>
+      widget.quality?.setStageActive(_resumed && _onScreen);
+
+  void _followTier(QualityTierService? old) {
+    old?.tier.removeListener(_onTier);
+    widget.quality?.tier.addListener(_onTier);
+    _onTier();
+  }
+
+  /// The mouth anchor's reading cadence follows the tier.
+  void _onTier() =>
+      _mouth.tier = widget.quality?.tier.value ?? QualityTier.ultra;
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.quality?.tier.removeListener(_onTier);
+    widget.quality?.setStageActive(false);
     _composerMode.dispose();
     _mouth.dispose();
     _cameraView.dispose();
@@ -167,6 +232,8 @@ class _HomeContentStackState extends State<HomeContentStack> {
               npc: widget.npc,
               foley: widget.foley,
               mouthAnchor: _mouth,
+              tier: widget.quality?.tier,
+              onStageShown: widget.quality?.notifyStageShown,
             ),
           ),
         ),
@@ -185,6 +252,15 @@ class _HomeContentStackState extends State<HomeContentStack> {
           cameraView: widget.camera == null ? null : _cameraView,
           bubbleShown: _bubbleShown,
           composerHeight: _composerHeight,
+          tier: widget.quality?.tier,
+        ),
+        // Low tier: the mouth is read once per sentence (M11 ruling 13).
+        BlocListener<CaptionCubit, CaptionState>(
+          listenWhen: (CaptionState previous, CaptionState current) =>
+              previous.seq != current.seq,
+          listener: (BuildContext context, CaptionState state) =>
+              _mouth.requestReading(),
+          child: const SizedBox.shrink(),
         ),
       ],
     );
@@ -358,10 +434,18 @@ class _RiveStage extends StatelessWidget {
     this.npc,
     this.foley,
     this.mouthAnchor,
+    this.tier,
+    this.onStageShown,
   });
 
   /// Hears the avatar's mouth each frame (the speech bubble's anchor).
   final MouthAnchorSource? mouthAnchor;
+
+  /// The quality tier in force (null: ultra).
+  final ValueListenable<QualityTier>? tier;
+
+  /// A scene is on screen (the tier benchmark may start).
+  final VoidCallback? onStageShown;
 
   final FacePerformer? facePerformer;
   final ParallaxSource? parallax;
@@ -414,7 +498,9 @@ class _RiveStage extends StatelessWidget {
           preload: avatarState.preloadScene,
           onSceneShown: (AvatarScene scene) {
             context.read<AvatarCubit>().onSceneShown(scene);
+            onStageShown?.call();
           },
+          tier: tier,
           // The avatar, between the scene and its front weather (v9).
           // Narrow scope: only the avatar view depends on the whole
           // TalkingState (mouth + phase); a mouth change must not rebuild
@@ -436,6 +522,7 @@ class _RiveStage extends StatelessWidget {
                   daylight: world?.daylight,
                   localDay: world?.localDay,
                   mouthAnchor: mouthAnchor,
+                  tier: tier,
                   onAvatarTapped: (String zone) {
                     foley?.propTap();
                     context.read<AvatarCubit>().onAvatarTapped(zone);
@@ -493,6 +580,7 @@ class _BottomChrome extends StatelessWidget {
     required this.composerHeight,
     this.cameraView,
     this.composerActivity,
+    this.tier,
   });
 
   final ValueNotifier<ComposerOrbState> composerMode;
@@ -509,6 +597,9 @@ class _BottomChrome extends StatelessWidget {
 
   /// Written with the composer's height as laid out.
   final ValueNotifier<double> composerHeight;
+
+  /// The quality tier in force, for the bubble's placement.
+  final ValueListenable<QualityTier>? tier;
 
   /// The height the running-tool chip may take above the composer.
   static const double toolChipReserve = AppPill.hitHeight + AppSpace.sm;
@@ -565,6 +656,7 @@ class _BottomChrome extends StatelessWidget {
             camera: cameraView,
             reserved: bubbleReserved,
             composerHeight: composerHeight,
+            tier: tier,
           ),
         ),
       ],

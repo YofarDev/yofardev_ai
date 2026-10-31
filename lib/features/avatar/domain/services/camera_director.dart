@@ -19,7 +19,9 @@ import '../../../../core/models/talking_phase.dart';
 /// 7. otherwise, 2.5 s later: `wide`, eased 1.5 s.
 ///
 /// Cuts only come from [onSentence] (and the one reduce-motion lock); every
-/// other change eases. A command equal to the current one is never emitted.
+/// other change eases. On the low quality tier ([setTier], M11 ruling 13)
+/// there is no creep: a sentence cuts with none and a held sentence adds
+/// none. A command equal to the current one is never emitted.
 class CameraDirector {
   /// [now] is the injected clock (kept for symmetry with the other avatar
   /// services); the hold and idle delays run on timers, so tests drive them
@@ -80,6 +82,7 @@ class CameraDirector {
   );
 
   bool _reduceMotion = false;
+  QualityTier _tier = QualityTier.ultra;
   bool _journey = false;
   bool _sceneHold = false;
   AvatarProp _prop = AvatarProp.none;
@@ -101,6 +104,11 @@ class CameraDirector {
   void setReduceMotion(bool value) {
     _reduceMotion = value;
     _evaluate();
+  }
+
+  /// The quality tier in force: low drops the slow push-in.
+  void setTier(QualityTier value) {
+    _tier = value;
   }
 
   void setJourney(bool value) {
@@ -178,7 +186,11 @@ class CameraDirector {
     final bool hold =
         change < minCutChange && (_framedBySentence || current.shot == target);
 
+    final bool creeps = _tier.allowsCameraCreep;
     if (hold) {
+      if (!creeps) {
+        return;
+      }
       final double creep = (_creep + creepPerSentence).clamp(0.0, maxCreep);
       if (creep <= current.creep) {
         _creep = creep;
@@ -197,14 +209,14 @@ class CameraDirector {
       return;
     }
 
-    _creep = creepPerSentence;
+    _creep = creeps ? creepPerSentence : 0;
     _framedBySentence = true;
     _emit(
       CameraShot(
         shot: target,
         move: CameraMove.cut,
-        creep: creepPerSentence,
-        creepDuration: creepDuration,
+        creep: _creep,
+        creepDuration: creeps ? creepDuration : Duration.zero,
         serial: current.serial + 1,
       ),
     );

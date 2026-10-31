@@ -89,6 +89,7 @@ import '../services/power/power_saver_source.dart';
 import '../services/presence/composer_activity_service.dart';
 import '../services/quality/frame_timing_source.dart';
 import '../services/quality/quality_tier_service.dart';
+import '../services/quality/thermal_source.dart';
 import '../services/settings_local_datasource.dart';
 import '../services/speech/speech_input_service.dart';
 import '../services/speech/speech_to_text_input_service.dart';
@@ -271,11 +272,26 @@ Future<void> setupServiceLocator({
   getIt.registerLazySingleton<FrameTimingSource>(
     () => SchedulerFrameTimingSource(),
   );
+  // Moonshot M11: the thermal state through our own channel where the
+  // native side implements it; elsewhere always nominal.
+  getIt.registerLazySingleton<ThermalSource>(
+    () =>
+        !kIsWeb &&
+            (defaultTargetPlatform == TargetPlatform.android ||
+                defaultTargetPlatform == TargetPlatform.iOS ||
+                defaultTargetPlatform == TargetPlatform.macOS)
+        ? MethodChannelThermalSource()
+        : const NominalThermalSource(),
+  );
+  // The effective tier = min(benchmark, thermal, battery saver, drift).
   getIt.registerLazySingleton<QualityTierService>(
     () => QualityTierService(
       timingSource: getIt<FrameTimingSource>(),
       settings: getIt<SettingsLocalDatasource>(),
+      thermal: getIt<ThermalSource>(),
+      power: getIt<PowerSaverSource>(),
     ),
+    dispose: (QualityTierService quality) => quality.dispose(),
   );
   getIt.registerLazySingleton<PlaybackClock>(
     () => PlaybackClock(
@@ -541,6 +557,8 @@ Future<void> setupServiceLocator({
       intents: getIt<PerformanceDirector>().intents,
       animations: getIt<AvatarAnimationService>().animations,
       emotion: () => getIt<PerformanceDirector>().current.emotion,
+      tier: getIt<QualityTierService>().current,
+      tierChanges: getIt<QualityTierService>().changes,
     ),
     dispose: (CameraFeed feed) => feed.dispose(),
   );

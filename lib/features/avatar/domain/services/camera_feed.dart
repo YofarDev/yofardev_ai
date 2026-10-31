@@ -18,7 +18,8 @@ import 'camera_director.dart';
 ///   [emotion]'s intensity, `max(|valence|, arousal) x intensity`;
 /// - the performance director's intents: the prop, and the listening lean
 ///   (the user typing) as composing;
-/// - the animation service: scene events pull the camera back.
+/// - the animation service: scene events pull the camera back;
+/// - the quality tier (M11: low has no slow push-in).
 ///
 /// The talking phase and reduce motion come from the widget layer (see
 /// `HomeContentStack`). The camera director stays owned by the composition
@@ -30,8 +31,14 @@ class CameraFeed {
     required Stream<PerformanceIntent> intents,
     required Stream<AvatarAnimation> animations,
     required EmotionVector Function() emotion,
+    QualityTier tier = QualityTier.ultra,
+    Stream<QualityTier>? tierChanges,
   }) : _camera = camera,
        _emotion = emotion {
+    camera.setTier(tier);
+    if (tierChanges != null) {
+      _subscriptions.add(tierChanges.listen(camera.setTier));
+    }
     _subscriptions
       ..add(playback.listen(_onPlayback))
       ..add(intents.listen(_onIntent))

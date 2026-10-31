@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/performance/quality_tier.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -75,6 +76,7 @@ void main() {
     AvatarScene scene = AvatarScene.livingRoom,
     Widget? backdrop,
     ValueListenable<double>? composerHeight,
+    ValueListenable<QualityTier>? tier,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -119,6 +121,7 @@ void main() {
                         camera: camera,
                         reserved: _reserved,
                         composerHeight: composerHeight,
+                        tier: tier,
                       ),
                     ),
                   ],
@@ -347,6 +350,32 @@ void main() {
           )
           .where((Transform t) => t.transform.getMaxScaleOnAxis() != 1);
       expect(scales, isEmpty);
+    });
+
+    testWidgets('the low tier places it once, like reduce motion', (
+      WidgetTester tester,
+    ) async {
+      final ValueNotifier<QualityTier> tier = ValueNotifier<QualityTier>(
+        QualityTier.low,
+      );
+      addTearDown(tier.dispose);
+      await pump(tester, tier: tier);
+      await say(tester, const CaptionState(text: _line, seq: 1));
+      final Rect start = tester.getRect(bubble());
+      anchor.value = _mouth + const Offset(0, -25);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(tester.getRect(bubble()), start);
+
+      // high follows again (the next sentence is laid out for it).
+      tier.value = QualityTier.high;
+      await tester.pump();
+      await say(tester, const CaptionState(text: _line, seq: 2));
+      final Rect second = tester.getRect(bubble());
+      anchor.value = _mouth;
+      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(tester.getRect(bubble()), isNot(second));
     });
 
     testWidgets('reduce motion: fades in over AppMotion.fast', (

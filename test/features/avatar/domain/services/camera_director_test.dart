@@ -723,4 +723,31 @@ void main() {
       });
     });
   });
+
+  group('quality tier (M11 ruling 13)', () {
+    test('low: sentences cut with no creep and a held sentence adds none', () {
+      _run((FakeAsync async, CameraDirector d, List<CameraShot> shots) {
+        d.setTier(QualityTier.low);
+        d.setSpeaking(true);
+        d.onSentence('One.', intensity: 0);
+        expect(shots, hasLength(1));
+        _expectShot(shots.single, Shot.medium, CameraMove.cut, creep: 0);
+        expect(shots.single.creepDuration, Duration.zero);
+        d.onSentence('Two.', intensity: 0);
+        expect(shots, hasLength(1));
+        d.onSentence('Three?', intensity: 0);
+        _expectShot(shots.last, Shot.closeUp, CameraMove.cut, creep: 0);
+      });
+    });
+
+    test('high keeps the push-in', () {
+      _run((FakeAsync async, CameraDirector d, List<CameraShot> shots) {
+        d.setTier(QualityTier.high);
+        d.setSpeaking(true);
+        d.onSentence('One.', intensity: 0);
+        d.onSentence('Two.', intensity: 0);
+        _expectShot(shots.last, Shot.medium, CameraMove.ease, creep: 0.08);
+      });
+    });
+  });
 }

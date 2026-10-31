@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/design/design.dart';
 import '../../../core/design/looks/looks.dart';
+import '../../../core/services/quality/quality_tier_service.dart';
 import '../../../core/services/world/world_state_service.dart';
 import '../../../core/utils/logger.dart';
 import '../widgets/lab/lab_config.dart';
@@ -27,6 +28,7 @@ class UiLabScreen extends StatefulWidget {
     this.initialConfig = LabConfig.initial,
     this.stageBuilder = buildLabRiveStage,
     this.world,
+    this.quality,
   });
 
   /// Builds the look's text theme; tests inject a fake so no font loads.
@@ -41,6 +43,11 @@ class UiLabScreen extends StatefulWidget {
   /// The app's world state; the lab's `rain` param sets it and the stage
   /// shows it (null: no rain control).
   final WorldStateService? world;
+
+  /// The quality tier; the lab's `tier` param forces it and the stage
+  /// follows it (null: ultra, no tier control). A tier the lab forced is
+  /// released when the lab closes.
+  final QualityTierService? quality;
 
   @override
   State<UiLabScreen> createState() => _UiLabScreenState();
@@ -61,7 +68,11 @@ class _UiLabScreenState extends State<UiLabScreen> {
   @override
   void initState() {
     super.initState();
-    registerUiLabExtensions(_config, world: widget.world);
+    registerUiLabExtensions(
+      _config,
+      world: widget.world,
+      quality: widget.quality,
+    );
   }
 
   @override
@@ -70,6 +81,9 @@ class _UiLabScreenState extends State<UiLabScreen> {
     // The lab's `rain` param is the only thing here that sets the world's
     // rain: leave the app dry when the lab closes.
     widget.world?.setRain(0);
+    if (uiLabForcedTier) {
+      widget.quality?.forceTier(null);
+    }
     _config.dispose();
     super.dispose();
   }
@@ -119,6 +133,7 @@ class _UiLabScreenState extends State<UiLabScreen> {
                           config: config,
                           stageBuilder: widget.stageBuilder,
                           world: widget.world,
+                          quality: widget.quality,
                         ),
                       ),
                     ),
@@ -149,11 +164,13 @@ class _PreviewFrame extends StatelessWidget {
     required this.config,
     required this.stageBuilder,
     this.world,
+    this.quality,
   });
 
   final LabConfig config;
   final LabStageBuilder stageBuilder;
   final WorldStateService? world;
+  final QualityTierService? quality;
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +197,7 @@ class _PreviewFrame extends StatelessWidget {
             config: config,
             stageBuilder: stageBuilder,
             world: world,
+            tier: quality?.tier,
           ),
         },
       ),

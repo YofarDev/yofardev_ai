@@ -1,9 +1,43 @@
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/mouth_anchor_source.dart';
 
 void main() {
+  group('reading cadence (M11 ruling 13)', () {
+    List<bool> takes(MouthAnchorSource source, int n) =>
+        List<bool>.generate(n, (_) => source.takeReading());
+
+    test('ultra reads every advance', () {
+      final MouthAnchorSource source = MouthAnchorSource();
+      expect(takes(source, 4), <bool>[true, true, true, true]);
+      source.dispose();
+    });
+
+    test('high reads every 2nd advance', () {
+      final MouthAnchorSource source = MouthAnchorSource()
+        ..tier = QualityTier.high;
+      expect(takes(source, 6), <bool>[true, false, true, false, true, false]);
+      source.dispose();
+    });
+
+    test('low reads once, then once per sentence and after a clear', () {
+      final MouthAnchorSource source = MouthAnchorSource()
+        ..tier = QualityTier.low;
+      expect(takes(source, 3), <bool>[true, false, false]);
+      source.requestReading();
+      expect(takes(source, 3), <bool>[true, false, false]);
+      source.clear();
+      expect(takes(source, 2), <bool>[true, false]);
+      // Back up a tier: read at once, then at that cadence.
+      source.tier = QualityTier.ultra;
+      expect(takes(source, 2), <bool>[true, true]);
+      source.dispose();
+      expect(source.takeReading(), isFalse);
+    });
+  });
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late MouthAnchorSource source;

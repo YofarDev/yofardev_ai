@@ -103,6 +103,7 @@ class RiveAvatarView extends StatefulWidget {
     this.daylight,
     this.localDay,
     this.mouthAnchor,
+    this.tier,
   });
 
   final AvatarState avatarState;
@@ -145,6 +146,11 @@ class RiveAvatarView extends StatefulWidget {
   /// Hears the mouth's position (artboard px) once per advance; null: not
   /// read.
   final MouthAnchorSource? mouthAnchor;
+
+  /// The quality tier in force (M11 ruling 13; null: ultra): low writes the
+  /// tints transparent, and the mouth anchor is read at the [mouthAnchor]'s
+  /// cadence.
+  final ValueListenable<QualityTier>? tier;
 
   /// The settled face of [mood] (its AU preset and side offsets), written
   /// when there is no performer.
@@ -243,6 +249,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     );
     widget.daylight?.addListener(_writeLight);
     widget.localDay?.addListener(_applyContinuousState);
+    widget.tier?.addListener(_applyContinuousState);
     _wakeSub = widget.facePerformer?.wakes.listen((_) => _ensureTicking());
     _load();
   }
@@ -289,6 +296,10 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     if (widget.localDay != oldWidget.localDay) {
       oldWidget.localDay?.removeListener(_applyContinuousState);
       widget.localDay?.addListener(_applyContinuousState);
+    }
+    if (widget.tier != oldWidget.tier) {
+      oldWidget.tier?.removeListener(_applyContinuousState);
+      widget.tier?.addListener(_applyContinuousState);
     }
     if (widget.mouthAnchor != oldWidget.mouthAnchor) {
       oldWidget.mouthAnchor?.clear();
@@ -339,6 +350,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
     WidgetsBinding.instance.removeObserver(this);
     widget.daylight?.removeListener(_writeLight);
     widget.localDay?.removeListener(_applyContinuousState);
+    widget.tier?.removeListener(_applyContinuousState);
     _wakeSub?.cancel();
     _ticker.dispose();
     _teardown();
@@ -395,7 +407,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       }
       // From the first advance on: before it the world transforms are not
       // computed yet.
-      controller.onAdvanced = _reportMouth;
+      controller.onAdvanced = _onAdvanced;
       _tintWriter = AvatarTintWriter(_BindingSink(binding));
       _applyContinuousState();
       // A fresh binding has none of the head numbers yet.
@@ -520,6 +532,15 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
   /// reader or a `MouthAnchor`).
   void _reportMouth() => widget.mouthAnchor?.report(_mouth?.read());
 
+  /// After every advance: reads the mouth when the anchor's cadence (the
+  /// tier) asks for it.
+  void _onAdvanced() {
+    final MouthAnchorSource? anchor = widget.mouthAnchor;
+    if (anchor != null && anchor.takeReading()) {
+      _reportMouth();
+    }
+  }
+
   void _teardown() {
     final RiveWidgetController? controller = _controller;
     if (controller is _AvatarRiveController) {
@@ -599,7 +620,7 @@ class _RiveAvatarViewState extends State<RiveAvatarView>
       shown.costume.name,
     );
     // v13: the shown outfit's colour variants (none under a costume).
-    _tintWriter?.write(shown);
+    _tintWriter?.write(shown, tier: widget.tier?.value ?? QualityTier.ultra);
     binding.setEnum(
       AvatarRiveContract.propProp,
       AvatarRiveContract.propValues,

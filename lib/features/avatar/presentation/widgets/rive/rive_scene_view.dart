@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:rive/rive.dart';
 
 import '../../../../../core/models/avatar_scene.dart';
+import '../../../../../core/models/performance/performance.dart';
 import '../../../../../core/services/audio/foley_service.dart' show DragHaptic;
 import '../../../../../core/services/motion/parallax_source.dart';
 import '../../../../../core/utils/logger.dart';
@@ -19,6 +20,7 @@ import '../../rive/scene_npc_writer.dart';
 import '../../rive/scene_parallax_writer.dart';
 import '../../rive/scene_rain_writer.dart';
 import '../../rive/scene_sky_writer.dart';
+import '../../rive/scene_tier_writer.dart';
 import '../../rive/scene_time_writer.dart';
 import '../stage_camera.dart';
 import 'latest_load_gate.dart';
@@ -62,6 +64,11 @@ import 'scene_drag_surface.dart';
 /// and its cues go to [onDragHaptic], [onDragFoley] and [onDragEvent]. A
 /// `prop_tapped` that ends a drag is dropped.
 ///
+/// The quality tier (contract v14, M11 ruling 13): [tier] is written to
+/// `SceneVM.tier` on every scene load and change. On low the front is never
+/// created, the parallax is not written (the scene stays centred, the
+/// sensors are off) and the drags see no parallax.
+///
 /// Front (contract v9): a file with a `SceneFront` artboard gets it drawn
 /// above [middle] (the avatar) while it rains, with the same fit, never
 /// hit-tested; [middle] sits between the two at a fixed index, so a scene
@@ -93,6 +100,7 @@ class RiveSceneView extends StatefulWidget {
     this.onDragFoley,
     this.onDragEvent,
     this.onDragStarted,
+    this.tier,
   });
 
   final AvatarScene scene;
@@ -165,6 +173,25 @@ class RiveSceneView extends StatefulWidget {
   /// drag fires no scene event).
   final VoidCallback? onDragStarted;
 
+  /// The quality tier in force (null: ultra, nothing written).
+  final ValueListenable<QualityTier>? tier;
+
+  /// Whether the parallax sensors run: a loaded diorama, the app resumed,
+  /// above the low tier (M11 ruling 13).
+  static bool sensorsActive({
+    required bool resumed,
+    required AvatarScene? loaded,
+    required QualityTier tier,
+  }) => resumed && (loaded?.isDiorama ?? false) && tier.allowsParallax;
+
+  /// The parallax the scene is given: the [override] (the UI lab) or the
+  /// [live] offset, none on the low tier.
+  static Offset shownParallax({
+    required Offset live,
+    Offset? override,
+    required QualityTier tier,
+  }) => tier.allowsParallax ? (override ?? live) : Offset.zero;
+
   @override
   State<RiveSceneView> createState() => _RiveSceneViewState();
 }
@@ -182,6 +209,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   final SceneNpcFollower _npc = SceneNpcFollower();
   final SceneSkyFollower _sky = SceneSkyFollower();
   final SceneFrontFollower _front = SceneFrontFollower();
+  final SceneTierFollower _tier = SceneTierFollower();
   ValueListenable<double>? _frontRainSource;
   bool _hasFront = false;
   RiveWidgetController? _frontController;
@@ -220,6 +248,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _frontFog.follow(widget.fog);
     _followNpc();
     _sky.follow(widget.moonPhase, widget.festive);
+    _tier.follow(widget.tier);
+    widget.tier?.addListener(_onTier);
     _followFrontRain();
     _syncDrags();
     _loadScene(widget.scene);
@@ -237,7 +267,28 @@ class _RiveSceneViewState extends State<RiveSceneView>
       ..enabled = widget.dragsEnabled;
   }
 
-  Offset _dragParallax() => widget.parallaxOverride ?? _parallax;
+  Offset _dragParallax() => _shownParallax;
+
+  /// The tier in force (ultra without a source).
+  QualityTier get _tierNow => widget.tier?.value ?? QualityTier.ultra;
+
+  /// The offset the scene shows: none on the low tier.
+  Offset get _shownParallax => RiveSceneView.shownParallax(
+    live: _parallax,
+    override: widget.parallaxOverride,
+    tier: _tierNow,
+  );
+
+  /// The tier changed: the sensors, the parallax and the front follow it
+  /// (the follower writes `tier` itself).
+  void _onTier() {
+    if (!mounted) {
+      return;
+    }
+    _syncParallaxActive();
+    _scheduleParallaxWrite();
+    _syncFront();
+  }
 
   void _followNpc() => _npc.follow(
     widget.npc,
@@ -321,7 +372,11 @@ class _RiveSceneViewState extends State<RiveSceneView>
     final bool show =
         file != null &&
         _loadedScene == widget.scene &&
-        SceneFrontFollower.shouldShow(hasFront: _hasFront, rain: rain);
+        SceneFrontFollower.shouldShow(
+          hasFront: _hasFront,
+          rain: rain,
+          tier: _tierNow,
+        );
     if (!show) {
       if (_frontController != null) {
         apply(_teardownFront);
@@ -343,11 +398,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     );
     controller.active = _resumed;
     final RiveVmBinding binding = RiveVmBinding(controller);
-    _front.attach(
-      binding.setNumber,
-      rain: rain,
-      parallax: widget.parallaxOverride ?? _parallax,
-    );
+    _front.attach(binding.setNumber, rain: rain, parallax: _shownParallax);
     _frontFog.load(binding.setNumber);
     apply(() {
       _frontController = controller;
@@ -382,15 +433,20 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _parallaxFrameScheduled = true;
     SchedulerBinding.instance.scheduleFrameCallback((Duration _) {
       _parallaxFrameScheduled = false;
-      final Offset offset = widget.parallaxOverride ?? _parallax;
+      final Offset offset = _shownParallax;
       _parallaxWriter?.write(offset);
       _front.parallax(offset);
     });
   }
 
-  /// The sensors run only for a loaded diorama while the app is resumed.
+  /// The sensors run only for a loaded diorama while the app is resumed,
+  /// above the low tier.
   void _syncParallaxActive() {
-    widget.parallax?.active = _resumed && (_loadedScene?.isDiorama ?? false);
+    widget.parallax?.active = RiveSceneView.sensorsActive(
+      resumed: _resumed,
+      loaded: _loadedScene,
+      tier: _tierNow,
+    );
   }
 
   @override
@@ -458,6 +514,14 @@ class _RiveSceneViewState extends State<RiveSceneView>
         widget.festive != oldWidget.festive) {
       _sky.follow(widget.moonPhase, widget.festive);
     }
+    if (widget.tier != oldWidget.tier) {
+      oldWidget.tier?.removeListener(_onTier);
+      widget.tier?.addListener(_onTier);
+      _tier.follow(widget.tier);
+      _syncParallaxActive();
+      _scheduleParallaxWrite();
+      _syncFront(rebuild: false);
+    }
     if (widget.parallaxOverride != oldWidget.parallaxOverride ||
         widget.parallax != oldWidget.parallax) {
       _scheduleParallaxWrite();
@@ -507,6 +571,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _frontFog.dispose();
     _npc.dispose();
     _sky.dispose();
+    widget.tier?.removeListener(_onTier);
+    _tier.dispose();
     _frontRainSource?.removeListener(_syncFront);
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
@@ -581,7 +647,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _hasFront = hasFront;
         // A fresh binding has no parallax yet.
         _parallaxWriter = SceneParallaxWriter(binding.setNumber)
-          ..write(widget.parallaxOverride ?? _parallax, force: true);
+          ..write(_shownParallax, force: true);
         // Nor has it the rain: a scene switch writes it to the new file.
         _rain.load(binding.setNumber);
         // And the time of day (v10), the fog and the NPC (v11).
@@ -590,6 +656,8 @@ class _RiveSceneViewState extends State<RiveSceneView>
         _npc.load(binding.setEnum, binding.setNumber);
         // And the sky's calendar and the second NPC slot (v12).
         _sky.load(binding.setNumber);
+        // And the quality tier (v14).
+        _tier.load(binding.setEnum);
         // And its drag handle (v12).
         _attachDrags();
         _syncParallaxActive();
@@ -669,6 +737,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _fog.unload();
     _npc.unload();
     _sky.unload();
+    _tier.unload();
     _file = null;
     _loadedScene = null;
   }

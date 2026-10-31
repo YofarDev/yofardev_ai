@@ -388,6 +388,14 @@ abstract final class AvatarRiveContract {
   /// it, every other scene declares and ignores it.
   static const String scenePropNight = 'night';
 
+  /// Contract v14 `SceneVM`: the device's quality tier (enum [tierValues],
+  /// default [tierDefault] = the v13 look), written by the app on every scene
+  /// load and tier change (M11 ruling 13); an older file without it ignores
+  /// the write.
+  static const String scenePropTier = 'tier';
+  static const List<String> tierValues = <String>['low', 'high', 'ultra'];
+  static const String tierDefault = 'ultra';
+
   // Contract v12 drag handle numbers on `SceneVM` (table in CONTRACT.md):
   // each scene declares only its own; the app writes them every frame.
   /// livingRoom `cord` (pull): 0..1.

@@ -179,4 +179,33 @@ void main() {
       expect(shots, isEmpty);
     });
   });
+
+  test('the feed hands the tier and its changes to the camera', () {
+    fakeAsync((FakeAsync async) {
+      final StreamController<QualityTier> tiers =
+          StreamController<QualityTier>.broadcast();
+      final CameraDirector camera = CameraDirector(now: DateTime.now);
+      final CameraFeed feed = CameraFeed(
+        camera: camera,
+        playback: const Stream<PlaybackEvent>.empty(),
+        intents: const Stream<PerformanceIntent>.empty(),
+        animations: const Stream<AvatarAnimation>.empty(),
+        emotion: () => const EmotionVector(),
+        tier: QualityTier.low,
+        tierChanges: tiers.stream,
+      );
+      camera.setSpeaking(true);
+      camera.onSentence('One.', intensity: 0);
+      expect(camera.shot.value.creep, 0);
+      tiers.add(QualityTier.ultra);
+      async.flushMicrotasks();
+      camera.setSpeaking(false);
+      camera.setSpeaking(true);
+      camera.onSentence('Two?', intensity: 0.9);
+      camera.onSentence('Three.', intensity: 0);
+      expect(camera.shot.value.creep, greaterThan(0));
+      feed.dispose();
+      camera.dispose();
+    });
+  });
 }

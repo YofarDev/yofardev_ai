@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/tokens/wardrobe_tints.dart';
 import 'package:yofardev_ai/core/models/avatar_config.dart';
+import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_face_writer.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_rive_contract.dart';
 import 'package:yofardev_ai/features/avatar/presentation/rive/avatar_tint_writer.dart';
@@ -83,5 +84,20 @@ void main() {
     writer.reset();
     writer.write(tinted.copyWith(hatTint: AvatarTint.yellow));
     expect(sink.colors, hasLength(2));
+  });
+
+  test('the low tier writes the tints transparent; high keeps them', () {
+    const Avatar tinted = Avatar(
+      topTint: AvatarTint.teal,
+      hatTint: AvatarTint.red,
+    );
+    writer.write(tinted, tier: QualityTier.low);
+    expect(sink.colors, <(String, int)>[(top, none), (hat, none)]);
+    sink.colors.clear();
+    writer.write(tinted, tier: QualityTier.high);
+    expect(sink.colors, <(String, int)>[
+      (top, WardrobeTints.teal.toARGB32()),
+      (hat, WardrobeTints.red.toARGB32()),
+    ]);
   });
 }

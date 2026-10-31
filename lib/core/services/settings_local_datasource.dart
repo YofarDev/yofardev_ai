@@ -30,6 +30,10 @@ class SettingsLocalDatasource {
   // Avatar quality tier probe
   static const String _qualityTierKey = 'quality_tier';
 
+  /// The benchmark version the stored tier came from (M11: 2; absent = an
+  /// older one).
+  static const String _qualityTierBenchKey = 'quality_tier_bench';
+
   // Generic helper methods to reduce boilerplate
   Future<Result<String>> _getStringKey(String keyName) async {
     try {
@@ -259,4 +263,36 @@ class SettingsLocalDatasource {
 
   Future<Result<void>> setQualityTier(String tier) =>
       _setStringKey(_qualityTierKey, tier);
+
+  /// The benchmark version of the stored tier (0 when none is stored).
+  Future<Result<int>> getQualityTierBench() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      return Result<int>.ok(prefs.getInt(_qualityTierBenchKey) ?? 0);
+    } catch (e, st) {
+      return Result<int>.err(
+        mapExceptionToFailure(
+          e,
+          stackTrace: st,
+          tag: 'SettingsLocalDatasource',
+        ),
+      );
+    }
+  }
+
+  Future<Result<void>> setQualityTierBench(int version) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_qualityTierBenchKey, version);
+      return Result<void>.ok(null);
+    } catch (e, st) {
+      return Result<void>.err(
+        mapExceptionToFailure(
+          e,
+          stackTrace: st,
+          tag: 'SettingsLocalDatasource',
+        ),
+      );
+    }
+  }
 }

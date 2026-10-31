@@ -8,6 +8,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/design/rive/ui_kit.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/performance/quality_tier.dart';
 import '../../../../core/models/performance/shot.dart';
 import '../../../../core/models/talking_phase.dart';
 import '../../../avatar/avatar.dart';
@@ -61,7 +62,8 @@ enum CaptionFallback {
 /// goes to the classic caption. Reduce motion: placed once per sentence a
 /// [StageBubbleLayout.driftMargin] further off the face, never follows
 /// (one jump only if the face still comes under it), a plain
-/// [AppMotion.fast] fade.
+/// [AppMotion.fast] fade. The low quality [tier] (M11 ruling 13) places it
+/// the same way.
 ///
 /// [shown] is true while the bubble stands in for the classic
 /// [StageCaption] (which then hides); false for any [CaptionFallback]. A
@@ -75,9 +77,13 @@ class StageCaptionBubble extends StatefulWidget {
     this.camera,
     this.reserved = EdgeInsets.zero,
     this.composerHeight,
+    this.tier,
   });
 
   final ValueListenable<ComposerOrbState> composerMode;
+
+  /// The quality tier in force (null: ultra); low places like reduce motion.
+  final ValueListenable<QualityTier>? tier;
 
   /// The mouth in avatar-artboard px; null: no anchor.
   final ValueListenable<Offset?> anchor;
@@ -224,6 +230,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
     widget.anchor.addListener(_onMoved);
     widget.camera?.addListener(_onMoved);
     widget.composerHeight?.addListener(_onComposer);
+    widget.tier?.addListener(_onComposer);
   }
 
   @override
@@ -241,6 +248,10 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
       oldWidget.composerHeight?.removeListener(_onComposer);
       widget.composerHeight?.addListener(_onComposer);
     }
+    if (widget.tier != oldWidget.tier) {
+      oldWidget.tier?.removeListener(_onComposer);
+      widget.tier?.addListener(_onComposer);
+    }
   }
 
   @override
@@ -248,6 +259,7 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
     widget.anchor.removeListener(_onMoved);
     widget.camera?.removeListener(_onMoved);
     widget.composerHeight?.removeListener(_onComposer);
+    widget.tier?.removeListener(_onComposer);
     _ticker.dispose();
     _moves.dispose();
     super.dispose();
@@ -549,7 +561,9 @@ class _StageCaptionBubbleState extends State<StageCaptionBubble>
 
   @override
   Widget build(BuildContext context) {
-    _reduceMotion = MediaQuery.disableAnimationsOf(context);
+    _reduceMotion =
+        MediaQuery.disableAnimationsOf(context) ||
+        (widget.tier?.value.placesCaptionOnce ?? false);
     final bool screenReader = MediaQuery.accessibleNavigationOf(context);
     _scaler = MediaQuery.textScalerOf(context);
     _direction = Directionality.of(context);
