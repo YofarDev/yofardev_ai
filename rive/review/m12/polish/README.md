@@ -181,3 +181,8 @@ Results:
 - All world states: 0 px in livingRoom, deepSpace, beach, cafe and forestCabin.
 - Settled NPC states: at most 27 px at 1/255 (edge noise), all in the NPC's box.
 - The deliberate changes: the rooftop telescope and pigeon, and the fish's notice at -0.7.
+
+# M12 lane P2: the forestCabin birches and the beach umbrella pole at night
+
+- **Birches** (`scene_forest_cabin.BIRCHES`): the two trunks ran up from their M11 flat tops (y 700 / 752) to y 584 / 610, inside the band the maple crown and the porch eave cover at every parallax corner, season and tier, so they read as trees going up behind them; two bark marks per trunk (`BirchMarksUp`, ids 880113–880130 after lane Q's) carry the marks upwards. Only the trunk stretch changes (bbox ⊂ (448, 609, 511, 760), every tier × world state × parallax); during the gust's left swing a 1–2 px sliver of Birch0 shows beside the crown down from y ≈ 590, never its cap. `birch_pole.webp`, top row and bottom left.
+- **Umbrella pole at night** (`gen_scenes.beach_night`, `NIGHT_POLE`): a copy of `UPole` in weathered grey (`UPoleNight`, ids 880185–880191, behind the canopy) sits on the pole at opacity `night`, so under the moonlight shade the pole reads (70, 75, 95) instead of (99, 113, 156), darker than the sand (95, 103, 130). Night 0 is 0 px vs HEAD in every tier and world state (the wow #3 sunset included); night 0.5 / 1 differ only on the pole (bbox (217, 987, 232, 1332)). `birch_pole.webp`, bottom right.

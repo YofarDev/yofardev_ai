@@ -35,12 +35,12 @@ member that some bind references.
 |---|---|---|
 | livingRoom | rest, rain 1, noon, dusk, festive, spring 1, autumn 1 | 127,866 / 129,174 |
 | campfire | rest, rain 1 + SceneFront, noon, dusk, spring 1, autumn 1 | 99,084 / 92,808 |
-| beach | rest, rain 1 + SceneFront, night 1, noon, dusk | 105,102 / 102,060 |
+| beach | rest, rain 1 + SceneFront, night 1, noon, dusk | 105,032 / 102,098 (lane P2: the pole at night) |
 | deepSpace | rest, rain 1 (deepSpace ignores rain, and binds neither time of day nor festive) | 21,296 / 21,750 |
 | cafe | rest, rain 1, noon, dusk, festive | 102,296 / 101,978 |
 | rooftop | rest, rain 1 + SceneFront, noon, dusk | 73,126 / 66,596 |
 | mountainHut | rest, rain 1, noon, dusk, festive | 106,690 / 105,418 |
-| forestCabin | rest, rain 1 + SceneFront, noon, dusk, festive, spring 1, autumn 1 | 174,826 / 165,296 |
+| forestCabin | rest, rain 1 + SceneFront, noon, dusk, festive, spring 1, autumn 1 | 175,592 / 165,582 (lane P2: the birches) |
 | trainCompartment | rest, rain 1, noon, dusk, spring 1, autumn 1 | 110,890 / 109,678 |
 | library | rest, rain 1, noon, dusk, festive | 140,270 / 124,626 |
 

@@ -8784,8 +8784,21 @@
             <SolidColor colorValue="C0262224" id="0:742"/>
           </Stroke>
         </Shape>
-        <Shape x="462" y="925" name="BirchTrunk" id="0:750">
-          <Rectangle width="15" height="450" cornerRadiusTL="7.5" cornerRadiusTR="7.5" cornerRadiusBL="7.5" cornerRadiusBR="7.5" name="Path" id="0:749"/>
+        <Shape x="0" y="0" name="BirchMarksUp" id="0:880121">
+          <PointsPath isClosed="false" name="Path" id="0:880115">
+            <StraightVertex x="455.5" y="684" id="0:880113"/>
+            <StraightVertex x="463.5" y="686" id="0:880114"/>
+          </PointsPath>
+          <PointsPath isClosed="false" name="Path" id="0:880118">
+            <StraightVertex x="455.5" y="638" id="0:880116"/>
+            <StraightVertex x="461.25" y="640" id="0:880117"/>
+          </PointsPath>
+          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:880120">
+            <SolidColor colorValue="C0262224" id="0:880119"/>
+          </Stroke>
+        </Shape>
+        <Shape x="462" y="867" name="BirchTrunk" id="0:750">
+          <Rectangle width="15" height="566" cornerRadiusTL="7.5" cornerRadiusTR="7.5" cornerRadiusBL="7.5" cornerRadiusBR="7.5" name="Path" id="0:749"/>
           <Fill name="Fill" id="0:748">
             <LinearGradient startX="-7.5" startY="0" endX="7.5" endY="0" id="0:747">
               <GradientStop colorValue="FFD8D2C4" position="0" id="0:745"/>
@@ -8832,8 +8845,21 @@
             <SolidColor colorValue="C0262224" id="0:776"/>
           </Stroke>
         </Shape>
-        <Shape x="500" y="951" name="BirchTrunk" id="0:784">
-          <Rectangle width="11" height="398" cornerRadiusTL="5.5" cornerRadiusTR="5.5" cornerRadiusBL="5.5" cornerRadiusBR="5.5" name="Path" id="0:783"/>
+        <Shape x="0" y="0" name="BirchMarksUp" id="0:880130">
+          <PointsPath isClosed="false" name="Path" id="0:880124">
+            <StraightVertex x="495.5" y="736" id="0:880122"/>
+            <StraightVertex x="501.1" y="738" id="0:880123"/>
+          </PointsPath>
+          <PointsPath isClosed="false" name="Path" id="0:880127">
+            <StraightVertex x="495.5" y="690" id="0:880125"/>
+            <StraightVertex x="499.45" y="692" id="0:880126"/>
+          </PointsPath>
+          <Stroke thickness="3" cap="round" join="round" name="Line" id="0:880129">
+            <SolidColor colorValue="C0262224" id="0:880128"/>
+          </Stroke>
+        </Shape>
+        <Shape x="500" y="880" name="BirchTrunk" id="0:784">
+          <Rectangle width="11" height="540" cornerRadiusTL="5.5" cornerRadiusTR="5.5" cornerRadiusBL="5.5" cornerRadiusBR="5.5" name="Path" id="0:783"/>
           <Fill name="Fill" id="0:782">
             <LinearGradient startX="-5.5" startY="0" endX="5.5" endY="0" id="0:781">
               <GradientStop colorValue="FFD8D2C4" position="0" id="0:779"/>

@@ -84,6 +84,11 @@ PINWHEEL_HUB = (935.0, 960.0)
 PINWHEEL_R = 46.0
 TRUNK_BASE = (175.0, 1250.0)
 CROWN_PIVOT = (190.0, 790.0)
+# The two birches of the forest wall: (x, width, M11 top, M12 top). M11 cut them off at the forest wall's tips (a flat
+# rounded end with no crown); M12 runs each trunk up into the band the maple crown and the porch eave cover in every
+# parallax / season / tier (probed: Birch0 hidden over y 572..606, Birch1 over 589..665), so it reads as a tree going
+# up behind them. The bark marks keep the M11 top's spacing; the two added per trunk mint from the M12 range.
+BIRCHES = ((462.0, 15.0, 700.0, 584.0), (500.0, 11.0, 752.0, 610.0))
 BRANCH_SEAT = (262.0, 1108.0)               # the squirrel's seat on the maple's low branch (npcX 1)
 WOODPILE = (36.0, 1290.0, 304.0, 1452.0)
 PUMPKIN = (826.0, 1268.0)
@@ -351,11 +356,11 @@ def forestCabin() -> str:  # noqa: N802 (scene ids are contract names)
     forest_far = tree_row("ForestFar", (585, 660), 46, 96, 7, [("FF1E3438", 0.0), ("FF16262A", 0.6), ("FF132022", 1.0)])
     forest_near = tree_row("ForestNear", (690, 760), 60, 120, 11, [("FF17282A", 0.0), ("FF101C1C", 1.0)])
     birches = []
-    for i, (x, w_, top) in enumerate(((462.0, 15.0, 700.0), (500.0, 11.0, 752.0))):
+    for i, (x, w_, top, top12) in enumerate(BIRCHES):
         marks = [(x - w_ / 2 + 1, y_, x + w_ * (0.1 if k % 2 else -0.05), y_ + 2)
                  for k, y_ in enumerate(range(int(top) + 30, 1130, 46))]
         birches.append(d("Node", lines(sc, "BirchMarks", marks, "C0262224", 3),
-                         rect(sc, "BirchTrunk", x - w_ / 2, top, x + w_ / 2, 1150, sc.d("Fill", lin(
+                         rect(sc, "BirchTrunk", x - w_ / 2, top12, x + w_ / 2, 1150, sc.d("Fill", lin(
                              sc.d, -w_ / 2, 0, w_ / 2, 0, [("FFD8D2C4", 0.0), ("FFA8A498", 1.0)]), name="Fill"),
                               r=w_ / 2),
                          x=0.0, y=0.0, name=f"Birch{i}"))
@@ -691,9 +696,20 @@ def forestCabin() -> str:  # noqa: N802 (scene ids are contract names)
 
     with sc.minting(sc.d8):
         squirrel = squirrel_npc(sc, hits)
+    with sc.minting(scene_npc.own_m12(sc)):   # after the squirrel's NpcDraw (lane Q), so none of its ids move
+        for birch, (x, w_, top, _) in zip(birches, BIRCHES):
+            birch.children.insert(1, birch_marks_up(sc, x, w_, top))
     content = [*overlays, *plane5, *plane4, squirrel, *plane3_front, *plane2, *plane1, *plane0]
     front_weather(sc, RAIN_COL, splash_y=(1830.0, 1905.0))
     return sc.write(content, hits)
+
+
+def birch_marks_up(sc: Scene, x: float, w_: float, top: float) -> El:
+    """M12: two bark marks on the stretch a birch's trunk gained above its M11 top (the M11 marks' spacing and
+    alternation, carried upwards)."""
+    marks = [(x - w_ / 2 + 1, y_, x + w_ * (0.1 if k % 2 else -0.05), y_ + 2)
+             for k, y_ in ((-1, int(top) + 30 - 46), (-2, int(top) + 30 - 92))]
+    return lines(sc, "BirchMarksUp", marks, "C0262224", 3)
 
 
 # ====================================================================== rain

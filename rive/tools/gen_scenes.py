@@ -2887,6 +2887,10 @@ NIGHT_SUN_GAIN = 2.0                                 # the sun's disc and glow: 
 NIGHT_STARS = [(96, 152, 3.2), (214, 306, 2.4), (318, 96, 2.8), (402, 238, 2.0), (520, 168, 3.4), (612, 330, 2.2),
                (688, 118, 2.6), (842, 214, 3.0), (948, 92, 2.2), (1010, 300, 2.8), (150, 470, 2.0), (446, 420, 2.4),
                (900, 452, 2.0), (760, 520, 1.8), (60, 640, 1.8), (1030, 600, 2.0)]
+# M12 (polish): the umbrella's near-white pole (FFEDEDED) kept reading as a lit line at night, brighter than the
+# canopy's red and the sand around it under the shade. A copy of the pole in a weathered grey sits on it at
+# opacity `night`, so at night 1 the shade multiplies the grey (night 0 draws M11 exactly).
+NIGHT_POLE = "FFA79C90"
 
 
 def beach_night(sc: Scene, content: list[El]) -> None:
@@ -2928,6 +2932,15 @@ def beach_night(sc: Scene, content: list[El]) -> None:
                d10("Fill", d10("SolidColor", colorValue=NIGHT_SHADE), name="Fill"),
                x=W / 2, y=H / 2, opacity=0.0, blendModeValue=24, name="NightTint")
     content.insert(0, tint)
+    # M12: the pole dims with the canopy (its own ids, after lane Q's gulls in the scene's M12 range)
+    d12 = scene_npc.own_m12(sc)
+    umb = next(e for e in walk(content) if e.attrs.get("name") == "Umbrella")
+    at = next(i for i, c in enumerate(umb.children) if c.attrs.get("name") == "UPole")
+    pole = clone(d12, umb.children[at], name="UPoleNight", opacity=0.0)
+    paint = next(s for k in pole.children if k.tag == "Stroke" for s in k.children if s.tag == "SolidColor")
+    paint.attrs["colorValue"] = NIGHT_POLE
+    pole.children.insert(0, d12("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18))
+    umb.children.insert(at, pole)   # in front of the pole, behind the canopy
 
 
 # ---------------------------------------------------------------- deepSpace: the planet spins

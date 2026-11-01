@@ -11089,6 +11089,16 @@
             </Shape>
           </Node>
         </Node>
+        <Shape x="225" y="1160" name="UPoleNight" opacity="0" id="0:880190">
+          <DataBindContext sourcePathIds="0:23-0:910000" propertyKey="18" id="0:880191"/>
+          <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:880187">
+            <CubicDetachedVertex x="-5" y="-170" outRotation="1.5414" outDistance="113.3823" inRotation="4.683" inDistance="0" id="0:880185"/>
+            <CubicDetachedVertex x="5" y="170" outRotation="1.5414" outDistance="0" inRotation="4.683" inDistance="113.3823" id="0:880186"/>
+          </PointsPath>
+          <Stroke thickness="5.04" cap="round" join="round" name="Line" id="0:880189">
+            <SolidColor colorValue="FFA79C90" id="0:880188"/>
+          </Stroke>
+        </Shape>
         <Shape x="225" y="1160" name="UPole" id="0:606">
           <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:605">
             <CubicDetachedVertex x="-5" y="-170" outRotation="1.5414" outDistance="113.3823" inRotation="4.683" inDistance="0" id="0:603"/>
