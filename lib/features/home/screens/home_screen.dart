@@ -21,6 +21,7 @@ import '../widgets/demo_activated_listener.dart';
 import '../widgets/home_content_stack.dart';
 import '../../../core/services/audio/ambient_bed_service.dart';
 import '../../../core/services/audio/foley_service.dart';
+import '../../sound/sound.dart';
 
 /// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
@@ -42,6 +43,7 @@ class HomeScreen extends StatefulWidget {
     this.beds,
     this.lifecycle,
     this.quality,
+    this.voiceEngine,
   });
 
   final SpeechInputService speech;
@@ -66,6 +68,9 @@ class HomeScreen extends StatefulWidget {
 
   /// Foley and haptics from the avatar's events and the taps (null: silent).
   final FoleyService? foley;
+
+  /// The Kokoro voice's install, for the first-run notice (null: none).
+  final TtsEngineStatusService? voiceEngine;
 
   /// The ambient beds, following the scene (null: silent).
   final AmbientBedService? beds;
@@ -202,6 +207,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       beds: widget.beds,
       lifecycle: widget.lifecycle,
       quality: widget.quality,
+      voiceEngine: widget.voiceEngine,
       onStartDemo: _startDemoMode,
     );
     if (!kDebugMode) {
@@ -227,7 +233,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         widget.foley != oldWidget.foley ||
         widget.beds != oldWidget.beds ||
         widget.lifecycle != oldWidget.lifecycle ||
-        widget.quality != oldWidget.quality) {
+        widget.quality != oldWidget.quality ||
+        widget.voiceEngine != oldWidget.voiceEngine) {
       _stage = _buildStage();
     }
   }

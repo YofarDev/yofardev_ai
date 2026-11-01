@@ -16,6 +16,7 @@ import '../widgets/api_key_field.dart';
 import '../widgets/persona_dropdown.dart';
 import '../widgets/settings_app_bar.dart';
 import '../widgets/sound_effects_toggle.dart';
+import '../widgets/tts_voice_status_tile.dart';
 import '../widgets/task_llm_config_tile.dart';
 import '../widgets/function_calling_config_tile.dart';
 import '../widgets/username_field.dart';
@@ -133,6 +134,23 @@ class SettingsPageState extends State<SettingsPage> {
                           });
                         },
                       ),
+                      if (!kIsWeb) ...<Widget>[
+                        const SizedBox(height: 16),
+                        BlocBuilder<SettingsCubit, SettingsState>(
+                          buildWhen:
+                              (SettingsState previous, SettingsState current) =>
+                                  previous.ttsEngineStatus !=
+                                  current.ttsEngineStatus,
+                          builder:
+                              (BuildContext context, SettingsState state) =>
+                                  TtsVoiceStatusTile(
+                                    status: state.ttsEngineStatus,
+                                    onInstall: () => context
+                                        .read<SettingsCubit>()
+                                        .installTtsVoice(),
+                                  ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       const TaskLlmConfigTile(),
                       const SizedBox(height: 16),

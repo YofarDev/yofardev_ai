@@ -28,6 +28,7 @@ import '../../features/settings/screens/llm/llm_selection_page.dart';
 import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/memory_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/sound/sound.dart';
 import '../../core/res/app_constants.dart';
 import '../../core/services/app_lifecycle_service.dart';
 import '../../core/services/audio/ambient_bed_service.dart';
@@ -81,6 +82,7 @@ class AppRouter {
             beds: getIt<AmbientBedService>(),
             lifecycle: getIt<AppLifecycleService>(),
             quality: getIt<QualityTierService>(),
+            voiceEngine: getIt<TtsEngineStatusService>(),
           );
           return MaterialPage<void>(
             key: state.pageKey,

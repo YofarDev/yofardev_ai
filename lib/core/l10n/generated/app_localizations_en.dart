@@ -722,4 +722,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stageDragLadder => 'Slide the ladder';
+
+  @override
+  String get ttsVoiceTitle => 'Kokoro voice';
+
+  @override
+  String get ttsVoiceSource =>
+      'One-time 132 MB download from GitHub (k2-fsa/sherpa-onnx). After that, everything stays on this device.';
+
+  @override
+  String get ttsVoiceNotInstalled => 'Not installed yet';
+
+  @override
+  String ttsVoiceDownloading(Object percent) {
+    return 'Downloading… $percent%';
+  }
+
+  @override
+  String get ttsVoiceDownloadingStarted => 'Downloading…';
+
+  @override
+  String get ttsVoiceExtracting => 'Installing…';
+
+  @override
+  String get ttsVoiceLoading => 'Loading…';
+
+  @override
+  String get ttsVoiceReady => 'Ready, on this device';
+
+  @override
+  String get ttsVoiceFailed => 'Install failed';
+
+  @override
+  String get ttsVoiceRetry => 'Retry';
+
+  @override
+  String get ttsVoiceDownload => 'Download';
+
+  @override
+  String get ttsVoiceFallbackNote => 'Until then, the backup voice speaks.';
+
+  @override
+  String get ttsVoiceBannerTitle => 'Installing the new voice';
+
+  @override
+  String get ttsVoiceDismiss => 'Hide';
 }

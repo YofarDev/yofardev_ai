@@ -6,6 +6,8 @@ PODS:
     - OrderedSet (~> 6.0.3)
   - FlutterMacOS (1.0.0)
   - OrderedSet (6.0.3)
+  - sherpa_onnx_macos (1.13.3):
+    - FlutterMacOS
   - supertonic_flutter (0.0.1):
     - FlutterMacOS
 
@@ -13,6 +15,7 @@ DEPENDENCIES:
   - audio_analyzer (from `Flutter/ephemeral/.symlinks/plugins/audio_analyzer/macos`)
   - flutter_inappwebview_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - sherpa_onnx_macos (from `Flutter/ephemeral/.symlinks/plugins/sherpa_onnx_macos/macos`)
   - supertonic_flutter (from `Flutter/ephemeral/.symlinks/plugins/supertonic_flutter/macos`)
 
 SPEC REPOS:
@@ -26,6 +29,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
+  sherpa_onnx_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/sherpa_onnx_macos/macos
   supertonic_flutter:
     :path: Flutter/ephemeral/.symlinks/plugins/supertonic_flutter/macos
 
@@ -34,6 +39,7 @@ SPEC CHECKSUMS:
   flutter_inappwebview_macos: bdf207b8f4ebd58e86ae06cd96b147de99a67c9b
   FlutterMacOS: c232990155153907050900a2e175c7773903ba4e
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
+  sherpa_onnx_macos: b4e1b91349769180bd5005fb56a956816dc76513
   supertonic_flutter: f54a197dc675f78077d568204974ba2ec0e862e1
 
 PODFILE CHECKSUM: 52317a890328a0f75248e2c1b8a43a37f8da563c

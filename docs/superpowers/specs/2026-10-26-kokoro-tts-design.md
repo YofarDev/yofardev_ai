@@ -1,6 +1,8 @@
 # Kokoro on-device TTS (replacing Supertonic)
 
-> Status: **design approved 2026-10-26** (approach A, shared-handle engine). Nothing built yet.
+> Status: **built 2026-11-01** on branch `feat/kokoro-tts`. Differences from this design, found while
+> building (see "Build notes" at the end): `sherpa_onnx` pinned to **1.13.3** (not 1.13.8), Supertonic
+> kept as the fallback voice, espeak voice `fr` (not `fr-fr`), US lexicon only, peak-normalized output.
 > Companion implementation plan: to be created via the writing-plans workflow.
 > Replaces the `supertonic_flutter` integration shipped with v3.0.
 
@@ -355,3 +357,36 @@ if (PlatformUtils.checkPlatform() != 'Web') {
 - Chunked streaming playback via `generateWithCallback` (approach B worker isolate).
 - Wi-Fi-only download gating / download size warning dialog.
 - Self-hosted model mirror; additional languages (`es`, `it`, `pt`, `ja`, `zh`, `hi`).
+
+## 11. Build notes (2026-11-01)
+
+- **ONNX Runtime clash on Android.** `supertonic_flutter` stays (the owner asked for Supertonic as the
+  fallback voice), and its `flutter_onnxruntime` pulls `onnxruntime-android` from Maven (1.28.0) while
+  sherpa-onnx bundles its own `libonnxruntime.so` (1.28.2 in 1.13.8). The exports are version-tagged
+  (`OrtGetApiBase@@VERS_x`), so one library cannot serve both and two cannot be packaged. sherpa-onnx
+  1.13.0–1.13.3 bundle ORT 1.24.3, which Maven has: we pin `sherpa_onnx` 1.13.3 (plus every platform
+  package via `dependency_overrides`; the caret otherwise floats them to 1.13.8), force the Maven
+  artifact to 1.24.3 in `android/app/build.gradle` and `pickFirst` the `.so`. Supertonic thereby runs on
+  ORT 1.24.3 instead of 1.28.0 (it loses the 1.28 KleidiAI conv memory fix on arm64).
+- **espeak voice.** `fr-fr` is not a voice file in `espeak-ng-data/lang/` and makes sherpa-onnx throw a
+  C++ exception that aborts the process; `fr` works.
+- **Lexicons.** Passing both `lexicon-us-en.txt` and `lexicon-gb-en.txt` logs a duplicate-word warning per
+  shared word; `af_heart` is American, so only the US lexicon is passed. `dictDir` is ignored by the 1.13.x
+  Dart API (Chinese only).
+- **Loudness.** Kokoro peaks near 0.47 (RMS ≈ 0.09), which keeps the amplitude lip-sync in its lower
+  mouth states; samples are peak-normalized to 0.95 (gain ≤ 4×) before the WAV is written.
+- **Fallback.** `FallbackTtsSynthesizer` (sound domain) tries Kokoro, then Supertonic: while the model
+  downloads or loads, for languages other than fr/en, and when one sentence fails. Supertonic warms up at
+  launch only while Kokoro's model is not on disk. **Android only**: on macOS (and presumably iOS)
+  `onnxruntime-objc` 1.28 (flutter_onnxruntime) binds to sherpa's `libonnxruntime.1.24.4.dylib`,
+  `GetApi` returns null and the app segfaults in `Ort::Env::Env`; there the fallback is off and those
+  sentences stay text-only.
+- **Supertonic was already broken on fresh installs** (pre-existing, not fixed here): `assets/onnx/tts.json`
+  is bundled but `assets/onnx/*.onnx` is gitignored and absent, so `ModelDownloader.assetsExist()` is
+  true, the asset copy throws, and Supertonic never initializes unless its cache was filled earlier.
+- **First-run UX.** Install starts at launch (all platforms but web, macOS included). Home shows
+  `StageVoiceNotice` above the tool chip while downloading / installing or after a failure (Retry, Hide);
+  Settings shows `TtsVoiceStatusTile` (status, progress, Download / Retry, size and source).
+- **No timings.** sherpa-onnx's `GeneratedAudio` has samples and a sample rate only; visemes keep coming
+  from `SpeechAnalyzer` on the WAV.
+

@@ -141,7 +141,7 @@ on violation.
   enum only drives accents (blush, sweat, anger mark). Visemes come from `SpeechAnalyzer` on the TTS
   WAV, aligned to the sentence text (`TextPhonemizer`, rule-based en/fr G2P in
   `core/services/audio/g2p/`; `maxAlignCost` falls back to the audio classifier on a mismatch;
-  Kokoro is deferred); `ChatTtsCubit` announces each sentence 350 ms early (`SpeechPrerollEvent`,
+  Kokoro's sherpa-onnx API exposes no phoneme timings, so the same analysis runs on its WAVs); `ChatTtsCubit` announces each sentence 350 ms early (`SpeechPrerollEvent`,
   with its onset viseme) for the breath, and waits that out before playing; the performer also runs
   an idle life (`idle`, off in most tests), and `TtsPlaybackService.interrupt()` (not `stop()`)
   marks a user interruption. In the Rive file the blink is a lid sweep on lid bones (`BlinkDrive`),
@@ -348,6 +348,25 @@ on violation.
   wows: `wow_capture_test.dart --dart-define=TIER=ultra|low` (wow1 pinned to 22:00), assembled without a
   GIF; `rive/tools/wow_compare.py` writes the then-vs-now sheets. Moonshot report:
   `rive/review/m12/README.md`
+- TTS (Kokoro, 2026-11-01): the default voice is Kokoro-82M v1.0 int8 through `sherpa_onnx`
+  **pinned 1.13.3** (all eight `sherpa_onnx_*` platform packages pinned in `dependency_overrides`):
+  2.x dropped espeak-ng, and 1.13.3 is the last release whose bundled ONNX Runtime (1.24.3 on
+  Android) exists on Maven, so `android/app/build.gradle` forces
+  `com.microsoft.onnxruntime:onnxruntime-android:1.24.3` for `flutter_onnxruntime` (Supertonic) and
+  picks one `libonnxruntime.so` — both sides must load the same version-tagged ORT, or the APK
+  fails to package / link. Never bump either side alone. The model (~132 MB) is downloaded once from
+  GitHub releases (k2-fsa/sherpa-onnx `tts-models`) into `<appSupport>/tts/<modelId>/`
+  (`KokoroModelStore`) and loaded by `KokoroTtsService` (`TtsEngineStatusService`, sound barrel);
+  status shows in Settings (`TtsVoiceStatusTile`) and on Home (`StageVoiceNotice`). French =
+  `ff_siwis` (sid 30) with espeak voice **`fr`** (`fr-fr` is not a voice file, and sherpa aborts
+  the process on an unknown voice), English = `af_heart` (sid 3) with the US lexicon. Output is
+  peak-normalized (`normalizePeak`, Kokoro speaks at ~half scale). `FallbackTtsSynthesizer`
+  speaks Supertonic (`TtsDatasource`) while Kokoro is not ready, for other languages, or when a
+  sentence fails — **Android only**: on macOS/iOS flutter_onnxruntime's ORT 1.28 wrapper binds to
+  sherpa's ORT 1.24 dylib and segfaults in `Ort::Env`, so there those sentences stay text-only. Real-engine check: `flutter test integration_test/kokoro_tts_test.dart -d macos`
+  (not in `fverify.sh`). The pure-Dart sherpa example must never load the pub-cache dylib directly
+  on macOS (an aborted run left the file un-rsync-able by Xcode; `rm -rf` the package and
+  `flutter pub get` fixes it)
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)

@@ -32,6 +32,7 @@ Also, the app is probably only working on Android (needs to test more on iOS).
 - **Task-specific LLM configuration** — Configure different LLMs for different tasks (coding, creative, general)
 - **LLM-generated chat titles** — Auto-generated titles after first message
 - **Interrupt handling** — Stop button to cancel playback mid-response
+- **On-device Kokoro voice** — Kokoro-82M (sherpa-onnx) speaks French and English fully offline after a one-time ~132 MB model download from GitHub; Supertonic is the fallback voice
 - **Lip-sync animation** — Amplitude-based mouth movement
 
 ### Function Calling

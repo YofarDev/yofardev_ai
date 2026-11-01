@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/llm_config.dart';
@@ -9,6 +11,7 @@ import '../../../../core/services/llm/llm_service_interface.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../../chat/chat.dart';
+import '../../../sound/sound.dart';
 import '../../../../core/repositories/settings_repository.dart';
 import 'settings_state.dart';
 
@@ -18,14 +21,38 @@ class SettingsCubit extends Cubit<SettingsState> {
     required SettingsRepository settingsRepository,
     required LlmServiceInterface llmService,
     GlobalMemoryRepository? globalMemoryRepository,
+    TtsEngineStatusService? ttsEngineStatusService,
   }) : _settingsRepository = settingsRepository,
        _llmService = llmService,
        _globalMemoryRepository = globalMemoryRepository,
-       super(SettingsState.initial());
+       _ttsEngineStatusService = ttsEngineStatusService,
+       super(
+         SettingsState.initial().copyWith(
+           ttsEngineStatus:
+               ttsEngineStatusService?.current ??
+               const TtsEngineStatus.notInstalled(),
+         ),
+       ) {
+    _ttsEngineSubscription = ttsEngineStatusService?.status.listen(
+      (TtsEngineStatus status) => emit(state.copyWith(ttsEngineStatus: status)),
+    );
+  }
 
   final SettingsRepository _settingsRepository;
   final LlmServiceInterface _llmService;
   final GlobalMemoryRepository? _globalMemoryRepository;
+  final TtsEngineStatusService? _ttsEngineStatusService;
+  StreamSubscription<TtsEngineStatus>? _ttsEngineSubscription;
+
+  /// Starts (or retries) the Kokoro voice install; progress arrives through
+  /// [SettingsState.ttsEngineStatus].
+  Future<void> installTtsVoice() async => _ttsEngineStatusService?.install();
+
+  @override
+  Future<void> close() async {
+    await _ttsEngineSubscription?.cancel();
+    return super.close();
+  }
 
   /// Load all settings
   Future<void> loadSettings() async {

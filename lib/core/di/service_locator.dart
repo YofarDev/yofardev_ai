@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -40,7 +41,15 @@ import '../../features/settings/presentation/bloc/settings_cubit.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../repositories/settings_repository.dart';
 import '../../features/sound/presentation/bloc/sound_cubit.dart';
+import '../../features/sound/data/datasources/kokoro_tts_datasource.dart';
 import '../../features/sound/data/datasources/tts_datasource.dart';
+import '../../features/sound/data/kokoro/kokoro_engine.dart';
+import '../../features/sound/data/kokoro/kokoro_engine_factory.dart';
+import '../../features/sound/data/kokoro/kokoro_model_store.dart';
+import '../../features/sound/data/kokoro/kokoro_tts_service.dart';
+import '../../features/sound/data/kokoro/model_archive_extractor.dart';
+import '../../features/sound/domain/services/fallback_tts_synthesizer.dart';
+import '../../features/sound/domain/services/tts_engine_status_service.dart';
 import '../../features/sound/data/repositories/sound_repository_impl.dart';
 import '../../features/sound/domain/services/tts_queue_service.dart';
 import '../../features/sound/domain/services/tts_synthesizer.dart';
@@ -129,6 +138,25 @@ Future<void> setupServiceLocator({
     () => AvatarLocalDatasource(),
   );
   getIt.registerLazySingleton<TtsDatasource>(() => TtsDatasource());
+  // Kokoro, the default voice: a one-time ~132 MB model download from
+  // GitHub releases (k2-fsa/sherpa-onnx), then fully on-device.
+  getIt.registerLazySingleton<KokoroModelStore>(
+    () => KokoroModelStore(
+      client: http.Client(),
+      extractor: const ArchivePackageExtractor(),
+      supportDirectoryProvider: getApplicationSupportDirectory,
+    ),
+  );
+  getIt.registerLazySingleton<KokoroEngine>(createKokoroEngine);
+  getIt.registerLazySingleton<TtsEngineStatusService>(
+    () => KokoroTtsService(
+      store: getIt<KokoroModelStore>(),
+      engine: getIt<KokoroEngine>(),
+    ),
+  );
+  getIt.registerLazySingleton<KokoroTtsDatasource>(
+    () => KokoroTtsDatasource(engine: getIt<KokoroEngine>()),
+  );
   getIt.registerLazySingleton<InterruptionService>(() => InterruptionService());
   // The system's reduce-motion switch, followed live (M11 ruling 18): the
   // services below that are not widgets read it through here.
@@ -263,7 +291,18 @@ Future<void> setupServiceLocator({
   );
   getIt.registerLazySingleton<TtsQueueService>(
     () => TtsQueueService(
-      ttsSynthesizer: ttsSynthesizer ?? getIt<TtsDatasource>(),
+      // Kokoro first; Supertonic while Kokoro is not ready, for languages
+      // Kokoro lacks, or when a sentence fails. Not on Apple platforms:
+      // there flutter_onnxruntime (Supertonic) binds to sherpa-onnx's older
+      // ONNX Runtime and crashes the app, so those sentences stay text-only.
+      ttsSynthesizer:
+          ttsSynthesizer ??
+          FallbackTtsSynthesizer(
+            primary: getIt<KokoroTtsDatasource>(),
+            fallback: _supertonicFallbackSupported
+                ? getIt<TtsDatasource>()
+                : null,
+          ),
       interruptionService: getIt<InterruptionService>(),
       voiceEffectsService: getIt<VoiceEffectsService>(),
     ),
@@ -654,6 +693,7 @@ Future<void> setupServiceLocator({
       settingsRepository: getIt<SettingsRepository>(),
       llmService: getIt<LlmServiceInterface>(),
       globalMemoryRepository: getIt<GlobalMemoryRepository>(),
+      ttsEngineStatusService: getIt<TtsEngineStatusService>(),
     ),
   );
   getIt.registerFactory<HomeCubit>(
@@ -671,14 +711,30 @@ Future<void> bootstrapApp() async {
   // when none is stored. Startup never waits for it.
   unawaited(getIt<QualityTierService>().init());
 
-  // Optional TTS warmup: startup must never be blocked by it.
-  if (PlatformUtils.checkPlatform() != 'Web' &&
-      PlatformUtils.checkPlatform() != 'MacOS') {
-    unawaited(
-      TtsDatasource.initSupertonic().catchError((Object error, StackTrace st) {
-        // Startup should never be blocked by optional TTS warmup.
-      }),
-    );
+  // TTS warmup: startup must never be blocked by it. Kokoro installs (the
+  // first launch downloads its model) and loads in the background; until it
+  // is ready, Supertonic speaks, so it warms up only when Kokoro's model is
+  // not on disk yet.
+  if (PlatformUtils.checkPlatform() != 'Web') {
+    unawaited(getIt<TtsEngineStatusService>().install());
+    if (_supertonicFallbackSupported) {
+      unawaited(_warmUpFallbackVoice());
+    }
+  }
+}
+
+/// Supertonic (flutter_onnxruntime) shares sherpa-onnx's ONNX Runtime only
+/// on Android (`android/app/build.gradle` aligns them); on macOS and iOS its
+/// ORT 1.28 wrapper binds to sherpa's 1.24 library and crashes the app.
+bool get _supertonicFallbackSupported =>
+    PlatformUtils.checkPlatform() == 'Android';
+
+Future<void> _warmUpFallbackVoice() async {
+  try {
+    if (await getIt<KokoroModelStore>().isInstalled()) return;
+    await TtsDatasource.initSupertonic();
+  } catch (_) {
+    // Startup should never be blocked by optional TTS warmup.
   }
 }
 

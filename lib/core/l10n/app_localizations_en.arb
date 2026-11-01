@@ -460,5 +460,19 @@
   "stageDragRope": "Pull the bell rope",
   "stageDragPinwheel": "Spin the pinwheel",
   "stageDragChain": "Pull the chain",
-  "stageDragLadder": "Slide the ladder"
+  "stageDragLadder": "Slide the ladder",
+  "ttsVoiceTitle": "Kokoro voice",
+  "ttsVoiceSource": "One-time 132 MB download from GitHub (k2-fsa/sherpa-onnx). After that, everything stays on this device.",
+  "ttsVoiceNotInstalled": "Not installed yet",
+  "ttsVoiceDownloading": "Downloading… {percent}%",
+  "ttsVoiceDownloadingStarted": "Downloading…",
+  "ttsVoiceExtracting": "Installing…",
+  "ttsVoiceLoading": "Loading…",
+  "ttsVoiceReady": "Ready, on this device",
+  "ttsVoiceFailed": "Install failed",
+  "ttsVoiceRetry": "Retry",
+  "ttsVoiceDownload": "Download",
+  "ttsVoiceFallbackNote": "Until then, the backup voice speaks.",
+  "ttsVoiceBannerTitle": "Installing the new voice",
+  "ttsVoiceDismiss": "Hide"
 }

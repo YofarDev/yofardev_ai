@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SettingsState {
 
- TaskLlmConfig? get taskLlmConfig; List<LlmConfig> get availableLlmConfigs; String? get selectedLlmConfigId; String? get googleSearchKey; String? get googleSearchEngineId; bool get googleSearchEnabled; String? get openWeatherKey; bool get openWeatherEnabled; String? get newYorkTimesKey; bool get newYorkTimesEnabled; bool get memoryEnabled; List<GlobalMemoryItem> get memoryItems; String? get username; String? get systemPrompt; ChatPersona get persona; bool get soundEffectsEnabled; String get currentLanguage; bool get hasError; Failure? get error;
+ TaskLlmConfig? get taskLlmConfig; List<LlmConfig> get availableLlmConfigs; String? get selectedLlmConfigId; String? get googleSearchKey; String? get googleSearchEngineId; bool get googleSearchEnabled; String? get openWeatherKey; bool get openWeatherEnabled; String? get newYorkTimesKey; bool get newYorkTimesEnabled; bool get memoryEnabled; List<GlobalMemoryItem> get memoryItems; String? get username; String? get systemPrompt; ChatPersona get persona; bool get soundEffectsEnabled; TtsEngineStatus get ttsEngineStatus; String get currentLanguage; bool get hasError; Failure? get error;
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $SettingsStateCopyWith<SettingsState> get copyWith => _$SettingsStateCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as SettingsState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.taskLlmConfig, _this.taskLlmConfig) || other.taskLlmConfig == _this.taskLlmConfig)&&const DeepCollectionEquality().equals(other.availableLlmConfigs, _this.availableLlmConfigs)&&(identical(other.selectedLlmConfigId, _this.selectedLlmConfigId) || other.selectedLlmConfigId == _this.selectedLlmConfigId)&&(identical(other.googleSearchKey, _this.googleSearchKey) || other.googleSearchKey == _this.googleSearchKey)&&(identical(other.googleSearchEngineId, _this.googleSearchEngineId) || other.googleSearchEngineId == _this.googleSearchEngineId)&&(identical(other.googleSearchEnabled, _this.googleSearchEnabled) || other.googleSearchEnabled == _this.googleSearchEnabled)&&(identical(other.openWeatherKey, _this.openWeatherKey) || other.openWeatherKey == _this.openWeatherKey)&&(identical(other.openWeatherEnabled, _this.openWeatherEnabled) || other.openWeatherEnabled == _this.openWeatherEnabled)&&(identical(other.newYorkTimesKey, _this.newYorkTimesKey) || other.newYorkTimesKey == _this.newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, _this.newYorkTimesEnabled) || other.newYorkTimesEnabled == _this.newYorkTimesEnabled)&&(identical(other.memoryEnabled, _this.memoryEnabled) || other.memoryEnabled == _this.memoryEnabled)&&const DeepCollectionEquality().equals(other.memoryItems, _this.memoryItems)&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.systemPrompt, _this.systemPrompt) || other.systemPrompt == _this.systemPrompt)&&(identical(other.persona, _this.persona) || other.persona == _this.persona)&&(identical(other.soundEffectsEnabled, _this.soundEffectsEnabled) || other.soundEffectsEnabled == _this.soundEffectsEnabled)&&(identical(other.currentLanguage, _this.currentLanguage) || other.currentLanguage == _this.currentLanguage)&&(identical(other.hasError, _this.hasError) || other.hasError == _this.hasError)&&(identical(other.error, _this.error) || other.error == _this.error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.taskLlmConfig, _this.taskLlmConfig) || other.taskLlmConfig == _this.taskLlmConfig)&&const DeepCollectionEquality().equals(other.availableLlmConfigs, _this.availableLlmConfigs)&&(identical(other.selectedLlmConfigId, _this.selectedLlmConfigId) || other.selectedLlmConfigId == _this.selectedLlmConfigId)&&(identical(other.googleSearchKey, _this.googleSearchKey) || other.googleSearchKey == _this.googleSearchKey)&&(identical(other.googleSearchEngineId, _this.googleSearchEngineId) || other.googleSearchEngineId == _this.googleSearchEngineId)&&(identical(other.googleSearchEnabled, _this.googleSearchEnabled) || other.googleSearchEnabled == _this.googleSearchEnabled)&&(identical(other.openWeatherKey, _this.openWeatherKey) || other.openWeatherKey == _this.openWeatherKey)&&(identical(other.openWeatherEnabled, _this.openWeatherEnabled) || other.openWeatherEnabled == _this.openWeatherEnabled)&&(identical(other.newYorkTimesKey, _this.newYorkTimesKey) || other.newYorkTimesKey == _this.newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, _this.newYorkTimesEnabled) || other.newYorkTimesEnabled == _this.newYorkTimesEnabled)&&(identical(other.memoryEnabled, _this.memoryEnabled) || other.memoryEnabled == _this.memoryEnabled)&&const DeepCollectionEquality().equals(other.memoryItems, _this.memoryItems)&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.systemPrompt, _this.systemPrompt) || other.systemPrompt == _this.systemPrompt)&&(identical(other.persona, _this.persona) || other.persona == _this.persona)&&(identical(other.soundEffectsEnabled, _this.soundEffectsEnabled) || other.soundEffectsEnabled == _this.soundEffectsEnabled)&&(identical(other.ttsEngineStatus, _this.ttsEngineStatus) || other.ttsEngineStatus == _this.ttsEngineStatus)&&(identical(other.currentLanguage, _this.currentLanguage) || other.currentLanguage == _this.currentLanguage)&&(identical(other.hasError, _this.hasError) || other.hasError == _this.hasError)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SettingsState;
-  return Object.hashAll([runtimeType,_this.taskLlmConfig,const DeepCollectionEquality().hash(_this.availableLlmConfigs),_this.selectedLlmConfigId,_this.googleSearchKey,_this.googleSearchEngineId,_this.googleSearchEnabled,_this.openWeatherKey,_this.openWeatherEnabled,_this.newYorkTimesKey,_this.newYorkTimesEnabled,_this.memoryEnabled,const DeepCollectionEquality().hash(_this.memoryItems),_this.username,_this.systemPrompt,_this.persona,_this.soundEffectsEnabled,_this.currentLanguage,_this.hasError,_this.error]);
+  return Object.hashAll([runtimeType,_this.taskLlmConfig,const DeepCollectionEquality().hash(_this.availableLlmConfigs),_this.selectedLlmConfigId,_this.googleSearchKey,_this.googleSearchEngineId,_this.googleSearchEnabled,_this.openWeatherKey,_this.openWeatherEnabled,_this.newYorkTimesKey,_this.newYorkTimesEnabled,_this.memoryEnabled,const DeepCollectionEquality().hash(_this.memoryItems),_this.username,_this.systemPrompt,_this.persona,_this.soundEffectsEnabled,_this.ttsEngineStatus,_this.currentLanguage,_this.hasError,_this.error]);
 }
 
 @override
 String toString() {
   final _this = this as SettingsState;
-  return 'SettingsState(taskLlmConfig: ${_this.taskLlmConfig}, availableLlmConfigs: ${_this.availableLlmConfigs}, selectedLlmConfigId: ${_this.selectedLlmConfigId}, googleSearchKey: ${_this.googleSearchKey}, googleSearchEngineId: ${_this.googleSearchEngineId}, googleSearchEnabled: ${_this.googleSearchEnabled}, openWeatherKey: ${_this.openWeatherKey}, openWeatherEnabled: ${_this.openWeatherEnabled}, newYorkTimesKey: ${_this.newYorkTimesKey}, newYorkTimesEnabled: ${_this.newYorkTimesEnabled}, memoryEnabled: ${_this.memoryEnabled}, memoryItems: ${_this.memoryItems}, username: ${_this.username}, systemPrompt: ${_this.systemPrompt}, persona: ${_this.persona}, soundEffectsEnabled: ${_this.soundEffectsEnabled}, currentLanguage: ${_this.currentLanguage}, hasError: ${_this.hasError}, error: ${_this.error})';
+  return 'SettingsState(taskLlmConfig: ${_this.taskLlmConfig}, availableLlmConfigs: ${_this.availableLlmConfigs}, selectedLlmConfigId: ${_this.selectedLlmConfigId}, googleSearchKey: ${_this.googleSearchKey}, googleSearchEngineId: ${_this.googleSearchEngineId}, googleSearchEnabled: ${_this.googleSearchEnabled}, openWeatherKey: ${_this.openWeatherKey}, openWeatherEnabled: ${_this.openWeatherEnabled}, newYorkTimesKey: ${_this.newYorkTimesKey}, newYorkTimesEnabled: ${_this.newYorkTimesEnabled}, memoryEnabled: ${_this.memoryEnabled}, memoryItems: ${_this.memoryItems}, username: ${_this.username}, systemPrompt: ${_this.systemPrompt}, persona: ${_this.persona}, soundEffectsEnabled: ${_this.soundEffectsEnabled}, ttsEngineStatus: ${_this.ttsEngineStatus}, currentLanguage: ${_this.currentLanguage}, hasError: ${_this.hasError}, error: ${_this.error})';
 }
 
 
@@ -51,11 +51,11 @@ abstract mixin class $SettingsStateCopyWith<$Res>  {
   factory $SettingsStateCopyWith(SettingsState value, $Res Function(SettingsState) _then) = _$SettingsStateCopyWithImpl;
 @useResult
 $Res call({
- TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? selectedLlmConfigId, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled, bool memoryEnabled, List<GlobalMemoryItem> memoryItems, String? username, String? systemPrompt, ChatPersona persona, bool soundEffectsEnabled, String currentLanguage, bool hasError, Failure? error
+ TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? selectedLlmConfigId, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled, bool memoryEnabled, List<GlobalMemoryItem> memoryItems, String? username, String? systemPrompt, ChatPersona persona, bool soundEffectsEnabled, TtsEngineStatus ttsEngineStatus, String currentLanguage, bool hasError, Failure? error
 });
 
 
-$TaskLlmConfigCopyWith<$Res>? get taskLlmConfig;
+$TaskLlmConfigCopyWith<$Res>? get taskLlmConfig;$TtsEngineStatusCopyWith<$Res> get ttsEngineStatus;
 
 }
 /// @nodoc
@@ -68,7 +68,7 @@ class _$SettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? selectedLlmConfigId = freezed,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,Object? memoryEnabled = null,Object? memoryItems = null,Object? username = freezed,Object? systemPrompt = freezed,Object? persona = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? hasError = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? selectedLlmConfigId = freezed,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,Object? memoryEnabled = null,Object? memoryItems = null,Object? username = freezed,Object? systemPrompt = freezed,Object? persona = null,Object? soundEffectsEnabled = null,Object? ttsEngineStatus = null,Object? currentLanguage = null,Object? hasError = null,Object? error = freezed,}) {
   return _then(SettingsState(
 taskLlmConfig: freezed == taskLlmConfig ? _self.taskLlmConfig : taskLlmConfig // ignore: cast_nullable_to_non_nullable
 as TaskLlmConfig?,availableLlmConfigs: null == availableLlmConfigs ? _self.availableLlmConfigs : availableLlmConfigs // ignore: cast_nullable_to_non_nullable
@@ -86,7 +86,8 @@ as List<GlobalMemoryItem>,username: freezed == username ? _self.username : usern
 as String?,systemPrompt: freezed == systemPrompt ? _self.systemPrompt : systemPrompt // ignore: cast_nullable_to_non_nullable
 as String?,persona: null == persona ? _self.persona : persona // ignore: cast_nullable_to_non_nullable
 as ChatPersona,soundEffectsEnabled: null == soundEffectsEnabled ? _self.soundEffectsEnabled : soundEffectsEnabled // ignore: cast_nullable_to_non_nullable
-as bool,currentLanguage: null == currentLanguage ? _self.currentLanguage : currentLanguage // ignore: cast_nullable_to_non_nullable
+as bool,ttsEngineStatus: null == ttsEngineStatus ? _self.ttsEngineStatus : ttsEngineStatus // ignore: cast_nullable_to_non_nullable
+as TtsEngineStatus,currentLanguage: null == currentLanguage ? _self.currentLanguage : currentLanguage // ignore: cast_nullable_to_non_nullable
 as String,hasError: null == hasError ? _self.hasError : hasError // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as Failure?,
@@ -103,6 +104,15 @@ $TaskLlmConfigCopyWith<$Res>? get taskLlmConfig {
 
   return $TaskLlmConfigCopyWith<$Res>(_self.taskLlmConfig!, (value) {
     return _then(_self.copyWith(taskLlmConfig: value));
+  });
+}/// Create a copy of SettingsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TtsEngineStatusCopyWith<$Res> get ttsEngineStatus {
+  
+  return $TtsEngineStatusCopyWith<$Res>(_self.ttsEngineStatus, (value) {
+    return _then(_self.copyWith(ttsEngineStatus: value));
   });
 }
 }
@@ -183,10 +193,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  Failure? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  TtsEngineStatus ttsEngineStatus,  String currentLanguage,  bool hasError,  Failure? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingsState() when $default != null:
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.error);case _:
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.ttsEngineStatus,_that.currentLanguage,_that.hasError,_that.error);case _:
   return orElse();
 
 }
@@ -204,10 +214,10 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmC
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  Failure? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  TtsEngineStatus ttsEngineStatus,  String currentLanguage,  bool hasError,  Failure? error)  $default,) {final _that = this;
 switch (_that) {
 case _SettingsState():
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.error);}
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.ttsEngineStatus,_that.currentLanguage,_that.hasError,_that.error);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -221,10 +231,10 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmC
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  String currentLanguage,  bool hasError,  Failure? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TaskLlmConfig? taskLlmConfig,  List<LlmConfig> availableLlmConfigs,  String? selectedLlmConfigId,  String? googleSearchKey,  String? googleSearchEngineId,  bool googleSearchEnabled,  String? openWeatherKey,  bool openWeatherEnabled,  String? newYorkTimesKey,  bool newYorkTimesEnabled,  bool memoryEnabled,  List<GlobalMemoryItem> memoryItems,  String? username,  String? systemPrompt,  ChatPersona persona,  bool soundEffectsEnabled,  TtsEngineStatus ttsEngineStatus,  String currentLanguage,  bool hasError,  Failure? error)?  $default,) {final _that = this;
 switch (_that) {
 case _SettingsState() when $default != null:
-return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.currentLanguage,_that.hasError,_that.error);case _:
+return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmConfigId,_that.googleSearchKey,_that.googleSearchEngineId,_that.googleSearchEnabled,_that.openWeatherKey,_that.openWeatherEnabled,_that.newYorkTimesKey,_that.newYorkTimesEnabled,_that.memoryEnabled,_that.memoryItems,_that.username,_that.systemPrompt,_that.persona,_that.soundEffectsEnabled,_that.ttsEngineStatus,_that.currentLanguage,_that.hasError,_that.error);case _:
   return null;
 
 }
@@ -236,7 +246,7 @@ return $default(_that.taskLlmConfig,_that.availableLlmConfigs,_that.selectedLlmC
 
 
 class _SettingsState implements SettingsState {
-  const _SettingsState({this.taskLlmConfig = null,  List<LlmConfig> availableLlmConfigs = const <LlmConfig>[], this.selectedLlmConfigId = null, this.googleSearchKey = null, this.googleSearchEngineId = null, this.googleSearchEnabled = true, this.openWeatherKey = null, this.openWeatherEnabled = true, this.newYorkTimesKey = null, this.newYorkTimesEnabled = true, this.memoryEnabled = true,  List<GlobalMemoryItem> memoryItems = const <GlobalMemoryItem>[], this.username = null, this.systemPrompt = null, this.persona = ChatPersona.assistant, this.soundEffectsEnabled = true, this.currentLanguage = 'fr', this.hasError = false, this.error}): _availableLlmConfigs = availableLlmConfigs,_memoryItems = memoryItems;
+  const _SettingsState({this.taskLlmConfig = null,  List<LlmConfig> availableLlmConfigs = const <LlmConfig>[], this.selectedLlmConfigId = null, this.googleSearchKey = null, this.googleSearchEngineId = null, this.googleSearchEnabled = true, this.openWeatherKey = null, this.openWeatherEnabled = true, this.newYorkTimesKey = null, this.newYorkTimesEnabled = true, this.memoryEnabled = true,  List<GlobalMemoryItem> memoryItems = const <GlobalMemoryItem>[], this.username = null, this.systemPrompt = null, this.persona = ChatPersona.assistant, this.soundEffectsEnabled = true, this.ttsEngineStatus = const TtsEngineStatus.notInstalled(), this.currentLanguage = 'fr', this.hasError = false, this.error}): _availableLlmConfigs = availableLlmConfigs,_memoryItems = memoryItems;
   
 
 @override@JsonKey() final  TaskLlmConfig? taskLlmConfig;
@@ -267,6 +277,7 @@ class _SettingsState implements SettingsState {
 @override@JsonKey() final  String? systemPrompt;
 @override@JsonKey() final  ChatPersona persona;
 @override@JsonKey() final  bool soundEffectsEnabled;
+@override@JsonKey() final  TtsEngineStatus ttsEngineStatus;
 @override@JsonKey() final  String currentLanguage;
 @override@JsonKey() final  bool hasError;
 @override final  Failure? error;
@@ -281,18 +292,18 @@ _$SettingsStateCopyWith<_SettingsState> get copyWith => __$SettingsStateCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other.availableLlmConfigs, _availableLlmConfigs)&&(identical(other.selectedLlmConfigId, selectedLlmConfigId) || other.selectedLlmConfigId == selectedLlmConfigId)&&(identical(other.googleSearchKey, googleSearchKey) || other.googleSearchKey == googleSearchKey)&&(identical(other.googleSearchEngineId, googleSearchEngineId) || other.googleSearchEngineId == googleSearchEngineId)&&(identical(other.googleSearchEnabled, googleSearchEnabled) || other.googleSearchEnabled == googleSearchEnabled)&&(identical(other.openWeatherKey, openWeatherKey) || other.openWeatherKey == openWeatherKey)&&(identical(other.openWeatherEnabled, openWeatherEnabled) || other.openWeatherEnabled == openWeatherEnabled)&&(identical(other.newYorkTimesKey, newYorkTimesKey) || other.newYorkTimesKey == newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, newYorkTimesEnabled) || other.newYorkTimesEnabled == newYorkTimesEnabled)&&(identical(other.memoryEnabled, memoryEnabled) || other.memoryEnabled == memoryEnabled)&&const DeepCollectionEquality().equals(other.memoryItems, _memoryItems)&&(identical(other.username, username) || other.username == username)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.taskLlmConfig, taskLlmConfig) || other.taskLlmConfig == taskLlmConfig)&&const DeepCollectionEquality().equals(other.availableLlmConfigs, _availableLlmConfigs)&&(identical(other.selectedLlmConfigId, selectedLlmConfigId) || other.selectedLlmConfigId == selectedLlmConfigId)&&(identical(other.googleSearchKey, googleSearchKey) || other.googleSearchKey == googleSearchKey)&&(identical(other.googleSearchEngineId, googleSearchEngineId) || other.googleSearchEngineId == googleSearchEngineId)&&(identical(other.googleSearchEnabled, googleSearchEnabled) || other.googleSearchEnabled == googleSearchEnabled)&&(identical(other.openWeatherKey, openWeatherKey) || other.openWeatherKey == openWeatherKey)&&(identical(other.openWeatherEnabled, openWeatherEnabled) || other.openWeatherEnabled == openWeatherEnabled)&&(identical(other.newYorkTimesKey, newYorkTimesKey) || other.newYorkTimesKey == newYorkTimesKey)&&(identical(other.newYorkTimesEnabled, newYorkTimesEnabled) || other.newYorkTimesEnabled == newYorkTimesEnabled)&&(identical(other.memoryEnabled, memoryEnabled) || other.memoryEnabled == memoryEnabled)&&const DeepCollectionEquality().equals(other.memoryItems, _memoryItems)&&(identical(other.username, username) || other.username == username)&&(identical(other.systemPrompt, systemPrompt) || other.systemPrompt == systemPrompt)&&(identical(other.persona, persona) || other.persona == persona)&&(identical(other.soundEffectsEnabled, soundEffectsEnabled) || other.soundEffectsEnabled == soundEffectsEnabled)&&(identical(other.ttsEngineStatus, ttsEngineStatus) || other.ttsEngineStatus == ttsEngineStatus)&&(identical(other.currentLanguage, currentLanguage) || other.currentLanguage == currentLanguage)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(_availableLlmConfigs),selectedLlmConfigId,googleSearchKey,googleSearchEngineId,googleSearchEnabled,openWeatherKey,openWeatherEnabled,newYorkTimesKey,newYorkTimesEnabled,memoryEnabled,const DeepCollectionEquality().hash(_memoryItems),username,systemPrompt,persona,soundEffectsEnabled,currentLanguage,hasError,error]);
+    return Object.hashAll([runtimeType,taskLlmConfig,const DeepCollectionEquality().hash(_availableLlmConfigs),selectedLlmConfigId,googleSearchKey,googleSearchEngineId,googleSearchEnabled,openWeatherKey,openWeatherEnabled,newYorkTimesKey,newYorkTimesEnabled,memoryEnabled,const DeepCollectionEquality().hash(_memoryItems),username,systemPrompt,persona,soundEffectsEnabled,ttsEngineStatus,currentLanguage,hasError,error]);
 }
 
 @override
 String toString() {
-    return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs, selectedLlmConfigId: $selectedLlmConfigId, googleSearchKey: $googleSearchKey, googleSearchEngineId: $googleSearchEngineId, googleSearchEnabled: $googleSearchEnabled, openWeatherKey: $openWeatherKey, openWeatherEnabled: $openWeatherEnabled, newYorkTimesKey: $newYorkTimesKey, newYorkTimesEnabled: $newYorkTimesEnabled, memoryEnabled: $memoryEnabled, memoryItems: $memoryItems, username: $username, systemPrompt: $systemPrompt, persona: $persona, soundEffectsEnabled: $soundEffectsEnabled, currentLanguage: $currentLanguage, hasError: $hasError, error: $error)';
+    return 'SettingsState(taskLlmConfig: $taskLlmConfig, availableLlmConfigs: $availableLlmConfigs, selectedLlmConfigId: $selectedLlmConfigId, googleSearchKey: $googleSearchKey, googleSearchEngineId: $googleSearchEngineId, googleSearchEnabled: $googleSearchEnabled, openWeatherKey: $openWeatherKey, openWeatherEnabled: $openWeatherEnabled, newYorkTimesKey: $newYorkTimesKey, newYorkTimesEnabled: $newYorkTimesEnabled, memoryEnabled: $memoryEnabled, memoryItems: $memoryItems, username: $username, systemPrompt: $systemPrompt, persona: $persona, soundEffectsEnabled: $soundEffectsEnabled, ttsEngineStatus: $ttsEngineStatus, currentLanguage: $currentLanguage, hasError: $hasError, error: $error)';
 }
 
 
@@ -303,11 +314,11 @@ abstract mixin class _$SettingsStateCopyWith<$Res> implements $SettingsStateCopy
   factory _$SettingsStateCopyWith(_SettingsState value, $Res Function(_SettingsState) _then) = __$SettingsStateCopyWithImpl;
 @override @useResult
 $Res call({
- TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? selectedLlmConfigId, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled, bool memoryEnabled, List<GlobalMemoryItem> memoryItems, String? username, String? systemPrompt, ChatPersona persona, bool soundEffectsEnabled, String currentLanguage, bool hasError, Failure? error
+ TaskLlmConfig? taskLlmConfig, List<LlmConfig> availableLlmConfigs, String? selectedLlmConfigId, String? googleSearchKey, String? googleSearchEngineId, bool googleSearchEnabled, String? openWeatherKey, bool openWeatherEnabled, String? newYorkTimesKey, bool newYorkTimesEnabled, bool memoryEnabled, List<GlobalMemoryItem> memoryItems, String? username, String? systemPrompt, ChatPersona persona, bool soundEffectsEnabled, TtsEngineStatus ttsEngineStatus, String currentLanguage, bool hasError, Failure? error
 });
 
 
-@override $TaskLlmConfigCopyWith<$Res>? get taskLlmConfig;
+@override $TaskLlmConfigCopyWith<$Res>? get taskLlmConfig;@override $TtsEngineStatusCopyWith<$Res> get ttsEngineStatus;
 
 }
 /// @nodoc
@@ -320,7 +331,7 @@ class __$SettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? selectedLlmConfigId = freezed,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,Object? memoryEnabled = null,Object? memoryItems = null,Object? username = freezed,Object? systemPrompt = freezed,Object? persona = null,Object? soundEffectsEnabled = null,Object? currentLanguage = null,Object? hasError = null,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? taskLlmConfig = freezed,Object? availableLlmConfigs = null,Object? selectedLlmConfigId = freezed,Object? googleSearchKey = freezed,Object? googleSearchEngineId = freezed,Object? googleSearchEnabled = null,Object? openWeatherKey = freezed,Object? openWeatherEnabled = null,Object? newYorkTimesKey = freezed,Object? newYorkTimesEnabled = null,Object? memoryEnabled = null,Object? memoryItems = null,Object? username = freezed,Object? systemPrompt = freezed,Object? persona = null,Object? soundEffectsEnabled = null,Object? ttsEngineStatus = null,Object? currentLanguage = null,Object? hasError = null,Object? error = freezed,}) {
   return _then(_SettingsState(
 taskLlmConfig: freezed == taskLlmConfig ? _self.taskLlmConfig : taskLlmConfig // ignore: cast_nullable_to_non_nullable
 as TaskLlmConfig?,availableLlmConfigs: null == availableLlmConfigs ? _self._availableLlmConfigs : availableLlmConfigs // ignore: cast_nullable_to_non_nullable
@@ -338,7 +349,8 @@ as List<GlobalMemoryItem>,username: freezed == username ? _self.username : usern
 as String?,systemPrompt: freezed == systemPrompt ? _self.systemPrompt : systemPrompt // ignore: cast_nullable_to_non_nullable
 as String?,persona: null == persona ? _self.persona : persona // ignore: cast_nullable_to_non_nullable
 as ChatPersona,soundEffectsEnabled: null == soundEffectsEnabled ? _self.soundEffectsEnabled : soundEffectsEnabled // ignore: cast_nullable_to_non_nullable
-as bool,currentLanguage: null == currentLanguage ? _self.currentLanguage : currentLanguage // ignore: cast_nullable_to_non_nullable
+as bool,ttsEngineStatus: null == ttsEngineStatus ? _self.ttsEngineStatus : ttsEngineStatus // ignore: cast_nullable_to_non_nullable
+as TtsEngineStatus,currentLanguage: null == currentLanguage ? _self.currentLanguage : currentLanguage // ignore: cast_nullable_to_non_nullable
 as String,hasError: null == hasError ? _self.hasError : hasError // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as Failure?,
@@ -356,6 +368,15 @@ $TaskLlmConfigCopyWith<$Res>? get taskLlmConfig {
 
   return $TaskLlmConfigCopyWith<$Res>(_self.taskLlmConfig!, (value) {
     return _then(_self.copyWith(taskLlmConfig: value));
+  });
+}/// Create a copy of SettingsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TtsEngineStatusCopyWith<$Res> get ttsEngineStatus {
+  
+  return $TtsEngineStatusCopyWith<$Res>(_self.ttsEngineStatus, (value) {
+    return _then(_self.copyWith(ttsEngineStatus: value));
   });
 }
 }

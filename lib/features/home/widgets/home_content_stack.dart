@@ -15,6 +15,7 @@ import '../../../core/models/talking_phase.dart';
 import '../../../core/services/app_lifecycle_service.dart';
 import '../../../core/services/audio/ambient_bed_service.dart';
 import '../../../core/services/audio/foley_service.dart';
+import '../../sound/sound.dart';
 import '../../../core/services/motion/parallax_source.dart';
 import '../../../core/services/quality/quality_tier_service.dart';
 import '../../../core/services/world/world_state_service.dart';
@@ -29,6 +30,7 @@ import 'stage/stage_composer.dart';
 import 'stage/stage_scrim.dart';
 import 'stage/stage_semantics.dart';
 import 'stage/stage_tool_chip.dart';
+import 'stage/stage_voice_notice.dart';
 import 'stage/stage_top_bar.dart';
 
 /// Home's "Stage": the Rive scene with the avatar on it, and the chrome
@@ -64,6 +66,7 @@ class HomeContentStack extends StatefulWidget {
     this.beds,
     this.lifecycle,
     this.quality,
+    this.voiceEngine,
     required this.onStartDemo,
   });
 
@@ -87,6 +90,10 @@ class HomeContentStack extends StatefulWidget {
   /// Foley and haptics: the avatar's `foley` events and every tap on a prop
   /// or the avatar (null: silent).
   final FoleyService? foley;
+
+  /// The Kokoro voice's install, for the first-run notice above the tool
+  /// chip (null: no notice).
+  final TtsEngineStatusService? voiceEngine;
 
   /// The ambient beds: hear the scene from here (null: silent).
   final AmbientBedService? beds;
@@ -282,6 +289,7 @@ class _HomeContentStackState extends State<HomeContentStack>
           composerHeight: _composerHeight,
           tier: widget.quality?.tier,
           foley: widget.foley,
+          voiceEngine: widget.voiceEngine,
         ),
         // Low tier: the mouth is read once per sentence (M11 ruling 13).
         BlocListener<CaptionCubit, CaptionState>(
@@ -662,10 +670,14 @@ class _BottomChrome extends StatelessWidget {
     this.composerActivity,
     this.tier,
     this.foley,
+    this.voiceEngine,
   });
 
   /// The composer's mic haptic goes through it (null: none).
   final FoleyService? foley;
+
+  /// The Kokoro voice's install (null: no first-run notice).
+  final TtsEngineStatusService? voiceEngine;
 
   final ValueNotifier<ComposerOrbState> composerMode;
   final ValueChanged<ComposerOrbState> onComposerMode;
@@ -719,6 +731,7 @@ class _BottomChrome extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              StageVoiceNotice(engine: voiceEngine),
               const StageToolChip(),
               StageCaption(
                 composerMode: composerMode,

@@ -220,5 +220,19 @@
   "stageDragRope": "Tirer la corde de la cloche",
   "stageDragPinwheel": "Faire tourner le moulinet",
   "stageDragChain": "Tirer la chaîne d’alarme",
-  "stageDragLadder": "Faire glisser l’échelle"
+  "stageDragLadder": "Faire glisser l’échelle",
+  "ttsVoiceTitle": "Voix Kokoro",
+  "ttsVoiceSource": "Téléchargement unique de 132 Mo depuis GitHub (k2-fsa/sherpa-onnx). Ensuite, tout reste sur l'appareil.",
+  "ttsVoiceNotInstalled": "Pas encore installée",
+  "ttsVoiceDownloading": "Téléchargement… {percent} %",
+  "ttsVoiceDownloadingStarted": "Téléchargement…",
+  "ttsVoiceExtracting": "Installation…",
+  "ttsVoiceLoading": "Chargement…",
+  "ttsVoiceReady": "Prête, sur cet appareil",
+  "ttsVoiceFailed": "Échec de l'installation",
+  "ttsVoiceRetry": "Réessayer",
+  "ttsVoiceDownload": "Télécharger",
+  "ttsVoiceFallbackNote": "En attendant, la voix de secours parle.",
+  "ttsVoiceBannerTitle": "Installation de la nouvelle voix",
+  "ttsVoiceDismiss": "Masquer"
 }

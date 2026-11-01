@@ -5,6 +5,7 @@ import '../../../../core/models/task_llm_config.dart';
 import '../../../../core/models/global_memory.dart';
 import '../../../../core/models/llm_config.dart';
 import '../../../../core/models/chat.dart';
+import '../../../sound/sound.dart';
 
 part 'settings_state.freezed.dart';
 
@@ -31,6 +32,8 @@ sealed class SettingsState with _$SettingsState {
     @Default(null) String? systemPrompt,
     @Default(ChatPersona.assistant) ChatPersona persona,
     @Default(true) bool soundEffectsEnabled,
+    // The Kokoro voice's install (download, extraction, engine load):
+    @Default(TtsEngineStatus.notInstalled()) TtsEngineStatus ttsEngineStatus,
     // App-level settings (moved from ChatCubit):
     @Default('fr') String currentLanguage,
     // Error fields:

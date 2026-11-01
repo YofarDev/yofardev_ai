@@ -1423,6 +1423,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Slide the ladder'**
   String get stageDragLadder;
+
+  /// No description provided for @ttsVoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kokoro voice'**
+  String get ttsVoiceTitle;
+
+  /// No description provided for @ttsVoiceSource.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time 132 MB download from GitHub (k2-fsa/sherpa-onnx). After that, everything stays on this device.'**
+  String get ttsVoiceSource;
+
+  /// No description provided for @ttsVoiceNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed yet'**
+  String get ttsVoiceNotInstalled;
+
+  /// No description provided for @ttsVoiceDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading… {percent}%'**
+  String ttsVoiceDownloading(Object percent);
+
+  /// No description provided for @ttsVoiceDownloadingStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get ttsVoiceDownloadingStarted;
+
+  /// No description provided for @ttsVoiceExtracting.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing…'**
+  String get ttsVoiceExtracting;
+
+  /// No description provided for @ttsVoiceLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get ttsVoiceLoading;
+
+  /// No description provided for @ttsVoiceReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready, on this device'**
+  String get ttsVoiceReady;
+
+  /// No description provided for @ttsVoiceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Install failed'**
+  String get ttsVoiceFailed;
+
+  /// No description provided for @ttsVoiceRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get ttsVoiceRetry;
+
+  /// No description provided for @ttsVoiceDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get ttsVoiceDownload;
+
+  /// No description provided for @ttsVoiceFallbackNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Until then, the backup voice speaks.'**
+  String get ttsVoiceFallbackNote;
+
+  /// No description provided for @ttsVoiceBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing the new voice'**
+  String get ttsVoiceBannerTitle;
+
+  /// No description provided for @ttsVoiceDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get ttsVoiceDismiss;
 }
 
 class _AppLocalizationsDelegate

@@ -37,6 +37,21 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    // sherpa_onnx (Kokoro TTS) bundles its own libonnxruntime.so, and
+    // flutter_onnxruntime (Supertonic, the fallback voice) pulls another one
+    // from Maven. Their exported symbols are version-tagged, so both sides
+    // must load the same ONNX Runtime: sherpa_onnx is pinned to 1.13.3
+    // (ORT 1.24.3) and the Maven artifact is forced to 1.24.3 below.
+    packagingOptions {
+        jniLibs {
+            pickFirsts += ["**/libonnxruntime.so"]
+        }
+    }
+}
+
+configurations.configureEach {
+    resolutionStrategy.force("com.microsoft.onnxruntime:onnxruntime-android:1.24.3")
 }
 
 flutter {

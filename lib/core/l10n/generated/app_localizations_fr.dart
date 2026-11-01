@@ -733,4 +733,49 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get stageDragLadder => 'Faire glisser l’échelle';
+
+  @override
+  String get ttsVoiceTitle => 'Voix Kokoro';
+
+  @override
+  String get ttsVoiceSource =>
+      'Téléchargement unique de 132 Mo depuis GitHub (k2-fsa/sherpa-onnx). Ensuite, tout reste sur l\'appareil.';
+
+  @override
+  String get ttsVoiceNotInstalled => 'Pas encore installée';
+
+  @override
+  String ttsVoiceDownloading(Object percent) {
+    return 'Téléchargement… $percent %';
+  }
+
+  @override
+  String get ttsVoiceDownloadingStarted => 'Téléchargement…';
+
+  @override
+  String get ttsVoiceExtracting => 'Installation…';
+
+  @override
+  String get ttsVoiceLoading => 'Chargement…';
+
+  @override
+  String get ttsVoiceReady => 'Prête, sur cet appareil';
+
+  @override
+  String get ttsVoiceFailed => 'Échec de l\'installation';
+
+  @override
+  String get ttsVoiceRetry => 'Réessayer';
+
+  @override
+  String get ttsVoiceDownload => 'Télécharger';
+
+  @override
+  String get ttsVoiceFallbackNote => 'En attendant, la voix de secours parle.';
+
+  @override
+  String get ttsVoiceBannerTitle => 'Installation de la nouvelle voix';
+
+  @override
+  String get ttsVoiceDismiss => 'Masquer';
 }
