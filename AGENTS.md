@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8, M9 and M10, 2026-11-01 M11) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8, M9 and M10, 2026-11-01 M11 and M12) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -333,6 +333,21 @@ on violation.
   journeys = a 200 ms dip-cut (`JourneyState.reduced`), `GlassPanel` opaque under high contrast,
   haptics only through `FoleyService` (`test/haptics_path_test.dart`). Evidence index:
   `rive/review/m11/README.md`
+- Polish and the last gates (moonshot M12, contract v14 unchanged): **a key's ease must live in the key's
+  own artboard** (Rive resolves `interpolatorId` per artboard; the `SceneFront` splashes were silently
+  dropped M6–M11 because their keys used the `Scene` artboard's ease): `Scene._own_eases` copies them
+  (`Scene.d12`, shared M12 ids from `gen_scenes.M12_ID_START = 890000`; module M12 ids from 880000 via
+  `scene_npc.own_m12`), and a pytest checks every artboard; `integration_test/front_splash_test.dart`
+  (macOS) checks the splashes in in-app grabs. **NPC drawing copies switch on their own 0 ms layer**
+  (`scene_npc.draw_layer` → `NpcDraw` / `Npc2Draw`) while poses blend 200 ms on `Npc`: never key a copy's
+  opacity in a pose animation (it ghosts through the blend). The bench gate (`rive_bench.py`) re-measures
+  a failing scene once after the load wait and writes to `--out` (default `rive/review/m12/perf/`). The
+  frame-cost harness takes `SCENES=` (narrow) and `REPS=` (alternate dry / rain passes; compare medians
+  within one run). The front layer (a second Rive render target) stays at high and ultra; its emulator
+  cost is intermittent, the owner's phone run decides (`rive/review/m12/device/README.md` § 1b). The final
+  wows: `wow_capture_test.dart --dart-define=TIER=ultra|low` (wow1 pinned to 22:00), assembled without a
+  GIF; `rive/tools/wow_compare.py` writes the then-vs-now sheets. Moonshot report:
+  `rive/review/m12/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -398,4 +413,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-11-01 (M11)
+**Last Updated**: 2026-11-01 (M12, the moonshot's last milestone)
