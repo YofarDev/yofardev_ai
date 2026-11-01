@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,19 +8,31 @@ import '../../../../core/design/components/components.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../../../../core/router/route_constants.dart';
+import '../../../../core/services/app_lifecycle_service.dart';
 import '../../../chat/chat.dart';
 import '../../../settings/settings.dart';
 import '../../../talking/talking.dart';
+import 'scene_picker_sheet.dart';
 import 'stage_menu.dart';
 
 /// The chips on top of the Stage: History on the left, the More menu on the
-/// right (new chat, language, captions, settings, demo).
+/// right (new chat, language, captions, scenes, settings, demo).
 ///
 /// [onStartDemo] plays the demo on the current chat (Home owns it).
+/// [lifecycle] carries a scene pick to the chat (null: no Scenes row).
+/// [onTouch] hears every tap on a chip or a menu row (presence for the
+/// avatar's idle ladder).
 class StageTopBar extends StatelessWidget {
-  const StageTopBar({super.key, required this.onStartDemo});
+  const StageTopBar({
+    super.key,
+    required this.onStartDemo,
+    this.onTouch,
+    this.lifecycle,
+  });
 
   final VoidCallback onStartDemo;
+  final VoidCallback? onTouch;
+  final AppLifecycleService? lifecycle;
 
   @override
   Widget build(BuildContext context) {
@@ -30,19 +44,28 @@ class StageTopBar extends StatelessWidget {
           child: AppPill(
             label: l10n.stageHistory,
             icon: Icons.history_rounded,
-            onTap: () => context.push(RouteConstants.chats),
+            onTap: () {
+              onTouch?.call();
+              unawaited(context.push(RouteConstants.chats));
+            },
           ),
         ),
-        _MoreMenu(onStartDemo: onStartDemo),
+        _MoreMenu(
+          onStartDemo: onStartDemo,
+          onTouch: onTouch,
+          lifecycle: lifecycle,
+        ),
       ],
     );
   }
 }
 
 class _MoreMenu extends StatefulWidget {
-  const _MoreMenu({required this.onStartDemo});
+  const _MoreMenu({required this.onStartDemo, this.onTouch, this.lifecycle});
 
   final VoidCallback onStartDemo;
+  final VoidCallback? onTouch;
+  final AppLifecycleService? lifecycle;
 
   @override
   State<_MoreMenu> createState() => _MoreMenuState();
@@ -53,6 +76,7 @@ class _MoreMenuState extends State<_MoreMenu> {
 
   /// Closes the menu, then runs [action].
   VoidCallback _then(VoidCallback action) => () {
+    widget.onTouch?.call();
     _menu.close();
     action();
   };
@@ -66,6 +90,7 @@ class _MoreMenuState extends State<_MoreMenu> {
     final bool captions = context.select<CaptionCubit, bool>(
       (CaptionCubit cubit) => cubit.state.enabled,
     );
+    final AppLifecycleService? lifecycle = widget.lifecycle;
     final String otherLanguage = language == 'fr' ? 'en' : 'fr';
     final String otherLanguageName = otherLanguage == 'fr'
         ? l10n.languageNameFrench
@@ -99,6 +124,20 @@ class _MoreMenuState extends State<_MoreMenu> {
               label: captions ? l10n.stageHideCaptions : l10n.stageShowCaptions,
               onTap: _then(() => context.read<CaptionCubit>().toggle()),
             ),
+            if (lifecycle != null)
+              StageMenuRow(
+                icon: Icons.landscape_outlined,
+                label: l10n.stageScenes,
+                onTap: _then(
+                  () => unawaited(
+                    ScenePickerSheet.show(
+                      context,
+                      lifecycle: lifecycle,
+                      onPicked: widget.onTouch,
+                    ),
+                  ),
+                ),
+              ),
             StageMenuRow(
               icon: Icons.settings_outlined,
               label: l10n.settings,
@@ -115,8 +154,10 @@ class _MoreMenuState extends State<_MoreMenu> {
       builder:
           (BuildContext context, MenuController controller, Widget? child) =>
               AppIconButton(
-                onPressed: () =>
-                    controller.isOpen ? controller.close() : controller.open(),
+                onPressed: () {
+                  widget.onTouch?.call();
+                  controller.isOpen ? controller.close() : controller.open();
+                },
                 icon: Icons.more_horiz_rounded,
                 semanticLabel: l10n.stageMenu,
                 active: controller.isOpen,

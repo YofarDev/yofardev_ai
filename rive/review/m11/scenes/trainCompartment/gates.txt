@@ -1,0 +1,50 @@
+trainCompartment (M11 lane S2): objective gates, 2026-10-31
+
+## review_diorama.py (parallax, planes, pointers, rain seam, seasons, chain drag, budgets)
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 armrest pad travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 bench seat travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 suitcase travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 transom latch travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane0 moon travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: lamp=Plane3, suitcase=Plane3, ladybug=Plane3, window=Plane2: ok
+pointer lamp (Plane3) parallaxX -1: click@69,634 fires 1, rest-only click@165,634 fires 0: ok
+pointer lamp (Plane3) parallaxX +1: click@191,634 fires 1, rest-only click@95,634 fires 0: ok
+pointer suitcase (Plane3) parallaxX -1: click@200,201 fires 1, rest-only click@466,201 fires 0: ok
+pointer suitcase (Plane3) parallaxX +1: click@492,201 fires 1, rest-only click@226,201 fires 0: ok
+pointer ladybug (Plane3) parallaxX -1: click@240,890 fires 1, rest-only click@322,890 fires 0: ok
+pointer ladybug (Plane3) parallaxX +1: click@348,890 fires 1, rest-only click@266,890 fires 0: ok
+pointer window (Plane2) parallaxX -1: click@232,643 fires 1, rest-only click@834,643 fires 0: ok
+pointer window (Plane2) parallaxX +1: click@848,643 fires 1, rest-only click@246,643 fires 0: ok
+Glass streaks + beads (with the landscape) seam (frame 0 vs 1800, rain 1, box (240, 456, 840, 888), pixels changed beyond rain 0): 0.0000% (ok)
+spring 1: changes 9.57% of the window, 0 px outside it (ok)
+autumn 1: changes 9.77% of the window, 0 px outside it (ok)
+chain drag: pixels changed at chain 0.5 / 1 outside (893.0, 292.0, 974.0, 807.0): 0.0000% (changed bbox (908, 306, 959, 807)) (ok)
+chain drag history-free: chain 1 -> 0 vs never pulled (rect), max diff 1/255 (ok)
+trainCompartment.riv 97163 B (budget 409,600): ok
+trainCompartment.webp 26348 B (budget 40,960): ok
+
+## review_npc.py (ladybug, fog)
+rest frames identical to 927a606: n/a, a new scene (ok)
+away: the NPC's crop changes (4.88% of it), nothing else does (0.0000%): ok
+idle: moves (4.11% of the crop) and its loop is back after 1800 frames (0.0000% differ): ok
+move: moves (8.53% of the crop) and its loop is back after 1800 frames (0.0000% differ): ok
+notice: moves (3.12% of the crop) and its loop is back after 1800 frames (0.0000% differ): ok
+react: moves (17.66% of the crop) and its loop is back after 1800 frames (0.0000% differ): ok
+pointer ladybug at npcX 0.0: click@294,890 fires 1: ok
+pointer ladybug at npcX 0.5: click@352,890 fires 1: ok
+pointer ladybug at npcX 1.0: click@410,890 fires 1, its v10 spot click@294,890 fires 0: ok
+fog: changes 9.80% of the frame, 0.0000% outside the window (ok)
+trainCompartment.riv 97,163 B (a new scene; budget 409,600): ok
+
+## review_time.py (daylight / dusk)
+trainCompartment: night identical to HEAD: n/a, a new scene (ok)
+trainCompartment: noon brightens the sky by 111.4/255 (want > 12) (ok)
+trainCompartment: sunset recolours the horizon band by 44.3/255 (ok)
+trainCompartment: ground unchanged at noon: mean delta 0.00/255 (ok)
+
+## other checks
+frive.sh trainCompartment: ✓ done (check_contract.py clean; tier pending lane W)
+NPC bytes (scene built without the ladybug): 97,163 - 87,346 = 9,817 B (budget 30,720): ok
+pytest rive/tools/tests: 888 passed, 3 skipped; 1 failure outside this lane (test_world_kit.py::test_v14_binds_come_from_the_shared_table_and_the_module expects no module BINDS14)
+self-check (sheets): moon was clipped by the far ridge's peaks -> raised to y 590; ladybug's wing case opened downward -> sign fixed; chain clip cut the swung tassel -> widened; ladybug rested against the left drape -> path moved right; rain beads read as snow -> softened. No clipping, gaps under parallax +-1, or z-order faults left.

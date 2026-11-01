@@ -23,6 +23,20 @@ _Avatar _$AvatarFromJson(Map<String, dynamic> json) => _Avatar(
   costume:
       $enumDecodeNullable(_$AvatarCostumeEnumMap, json['costume']) ??
       AvatarCostume.none,
+  topTint:
+      $enumDecodeNullable(
+        _$AvatarTintEnumMap,
+        json['topTint'],
+        unknownValue: AvatarTint.none,
+      ) ??
+      AvatarTint.none,
+  hatTint:
+      $enumDecodeNullable(
+        _$AvatarTintEnumMap,
+        json['hatTint'],
+        unknownValue: AvatarTint.none,
+      ) ??
+      AvatarTint.none,
 );
 
 Map<String, dynamic> _$AvatarToJson(_Avatar instance) => <String, dynamic>{
@@ -32,6 +46,8 @@ Map<String, dynamic> _$AvatarToJson(_Avatar instance) => <String, dynamic>{
   'glasses': _$AvatarGlassesEnumMap[instance.glasses]!,
   'specials': _$AvatarSpecialsEnumMap[instance.specials]!,
   'costume': _$AvatarCostumeEnumMap[instance.costume]!,
+  'topTint': _$AvatarTintEnumMap[instance.topTint]!,
+  'hatTint': _$AvatarTintEnumMap[instance.hatTint]!,
 };
 
 const _$AvatarSceneEnumMap = {
@@ -39,6 +55,12 @@ const _$AvatarSceneEnumMap = {
   AvatarScene.campfire: 'campfire',
   AvatarScene.beach: 'beach',
   AvatarScene.deepSpace: 'deepSpace',
+  AvatarScene.cafe: 'cafe',
+  AvatarScene.rooftop: 'rooftop',
+  AvatarScene.mountainHut: 'mountainHut',
+  AvatarScene.forestCabin: 'forestCabin',
+  AvatarScene.trainCompartment: 'trainCompartment',
+  AvatarScene.library: 'library',
 };
 
 const _$AvatarHatEnumMap = {
@@ -80,6 +102,19 @@ const _$AvatarCostumeEnumMap = {
   AvatarCostume.singularity: 'singularity',
 };
 
+const _$AvatarTintEnumMap = {
+  AvatarTint.none: 'none',
+  AvatarTint.red: 'red',
+  AvatarTint.orange: 'orange',
+  AvatarTint.yellow: 'yellow',
+  AvatarTint.green: 'green',
+  AvatarTint.teal: 'teal',
+  AvatarTint.blue: 'blue',
+  AvatarTint.purple: 'purple',
+  AvatarTint.pink: 'pink',
+  AvatarTint.grey: 'grey',
+};
+
 _AvatarConfig _$AvatarConfigFromJson(Map<String, dynamic> json) =>
     _AvatarConfig(
       background: const SceneNameConverter().fromJson(
@@ -90,6 +125,16 @@ _AvatarConfig _$AvatarConfigFromJson(Map<String, dynamic> json) =>
       glasses: $enumDecodeNullable(_$AvatarGlassesEnumMap, json['glasses']),
       specials: $enumDecodeNullable(_$AvatarSpecialsEnumMap, json['specials']),
       costume: $enumDecodeNullable(_$AvatarCostumeEnumMap, json['costume']),
+      topTint: $enumDecodeNullable(
+        _$AvatarTintEnumMap,
+        json['topTint'],
+        unknownValue: JsonKey.nullForUndefinedEnumValue,
+      ),
+      hatTint: $enumDecodeNullable(
+        _$AvatarTintEnumMap,
+        json['hatTint'],
+        unknownValue: JsonKey.nullForUndefinedEnumValue,
+      ),
       soundEffect: const SoundEffectConverter().fromJson(
         json['soundEffect'] as String?,
       ),
@@ -104,6 +149,8 @@ Map<String, dynamic> _$AvatarConfigToJson(_AvatarConfig instance) =>
       'glasses': _$AvatarGlassesEnumMap[instance.glasses],
       'specials': _$AvatarSpecialsEnumMap[instance.specials],
       'costume': _$AvatarCostumeEnumMap[instance.costume],
+      'topTint': _$AvatarTintEnumMap[instance.topTint],
+      'hatTint': _$AvatarTintEnumMap[instance.hatTint],
       'soundEffect': const SoundEffectConverter().toJson(instance.soundEffect),
       'mood': const MoodConverter().toJson(instance.mood),
     };

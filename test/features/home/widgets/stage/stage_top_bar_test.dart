@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,7 +8,10 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:yofardev_ai/core/design/components/components.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
+import 'package:yofardev_ai/core/models/app_lifecycle_event.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/core/router/route_constants.dart';
+import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/features/home/widgets/stage/stage_menu.dart';
 import 'package:yofardev_ai/features/home/widgets/stage/stage_top_bar.dart';
 import 'package:yofardev_ai/features/settings/settings.dart';
@@ -211,5 +216,95 @@ void main() {
     await tester.tap(find.text('Play the demo'));
     await tester.pumpAndSettle();
     expect(demos, 1);
+  });
+
+  group('Scenes row', () {
+    late AppLifecycleService lifecycle;
+    late GoRouter sceneRouter;
+
+    setUp(() {
+      lifecycle = AppLifecycleService();
+      sceneRouter = GoRouter(
+        routes: <RouteBase>[
+          GoRoute(
+            path: RouteConstants.home,
+            builder: (BuildContext context, GoRouterState state) => Scaffold(
+              body: SafeArea(
+                child: StageTopBar(onStartDemo: () {}, lifecycle: lifecycle),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+
+    tearDown(() {
+      sceneRouter.dispose();
+      lifecycle.dispose();
+    });
+
+    Future<void> pumpSceneBar(WidgetTester tester, Locale locale) async {
+      tester.view
+        ..physicalSize = const Size(390, 844)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(h.routerApp(sceneRouter, locale: locale));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(AppIconButton));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('without a lifecycle service the menu has no Scenes row', (
+      WidgetTester tester,
+    ) async {
+      await pumpBar(tester);
+      await openMenu(tester);
+      expect(find.text('Scenes'), findsNothing);
+    });
+
+    for (final Locale locale in const <Locale>[Locale('fr'), Locale('en')]) {
+      testWidgets(
+        'the six-row menu fits every label (${locale.languageCode})',
+        (WidgetTester tester) async {
+          await pumpSceneBar(tester, locale);
+          final Finder labels = find.descendant(
+            of: find.byType(StageMenuPanel),
+            matching: find.byType(Text),
+          );
+          expect(labels, findsNWidgets(6));
+          for (final Element label in labels.evaluate()) {
+            final RenderParagraph paragraph =
+                label.findRenderObject()! as RenderParagraph;
+            expect(paragraph.didExceedMaxLines, isFalse);
+            expect(paragraph.size.height, lessThan(30), reason: 'one line');
+          }
+          expect(
+            find.text(locale.languageCode == 'fr' ? 'Décors' : 'Scenes'),
+            findsOneWidget,
+          );
+        },
+      );
+    }
+
+    testWidgets('More → Scenes opens the picker and a pick emits', (
+      WidgetTester tester,
+    ) async {
+      final List<AvatarChangeRequested> requests = <AvatarChangeRequested>[];
+      final StreamSubscription<AvatarChangeRequested> subscription = lifecycle
+          .avatarChangeRequestedEvents
+          .listen(requests.add);
+      addTearDown(subscription.cancel);
+      await pumpSceneBar(tester, const Locale('en'));
+      await tester.tap(find.text('Scenes'));
+      await tester.pumpAndSettle();
+      expect(find.text('Choose a scene'), findsOneWidget);
+      expect(find.text('New chat'), findsNothing, reason: 'the menu closed');
+
+      await tester.tap(find.text('Mountain hut'));
+      await tester.pumpAndSettle();
+      expect(requests.single.newConfig.background, AvatarScene.mountainHut);
+      expect(requests.single.backgroundOnly, isTrue);
+      expect(find.text('Choose a scene'), findsNothing);
+    });
   });
 }

@@ -50,6 +50,19 @@ void main() {
       expect(au.scale(0).jawDrop, 0);
     });
 
+    test('lerp at 0, 0.5 and 1', () {
+      const ActionUnits a = ActionUnits(cheekRaise: 0.2, jawDrop: 0.8);
+      const ActionUnits b = ActionUnits(cheekRaise: 0.6, lipPress: 0.4);
+      expect(a.lerp(b, 0), a);
+      expect(a.lerp(b, 1), b);
+      final ActionUnits mid = a.lerp(b, 0.5);
+      expect(mid.cheekRaise, closeTo(0.4, 1e-9));
+      expect(mid.jawDrop, closeTo(0.4, 1e-9));
+      expect(mid.lipPress, closeTo(0.2, 1e-9));
+      expect(a.lerp(b, 5).cheekRaise, 1);
+      expect(a.lerp(b, -5).jawDrop, 1);
+    });
+
     test('value equality holds', () {
       const ActionUnits a = ActionUnits(cheekRaise: 0.5);
       const ActionUnits b = ActionUnits(cheekRaise: 0.5);

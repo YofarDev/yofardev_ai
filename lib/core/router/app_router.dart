@@ -11,6 +11,9 @@ import 'package:nested/nested.dart';
 import '../../../core/di/service_locator.dart';
 import '../../features/avatar/presentation/bloc/avatar_cubit.dart';
 import '../../features/avatar/presentation/bloc/avatar_state.dart';
+import '../../features/avatar/domain/services/camera_director.dart';
+import '../../features/avatar/domain/services/face_performer.dart';
+import '../../features/avatar/domain/services/npc_director.dart';
 import '../../features/avatar/presentation/rive/rive_lab_screen.dart';
 import '../../features/chat/screens/chat_details_screen.dart';
 import '../../features/chat/screens/chats_list_screen.dart';
@@ -26,6 +29,13 @@ import '../../features/settings/screens/llm/task_llm_config_page.dart';
 import '../../features/settings/screens/memory_page.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../core/res/app_constants.dart';
+import '../../core/services/app_lifecycle_service.dart';
+import '../../core/services/audio/ambient_bed_service.dart';
+import '../../core/services/audio/foley_service.dart';
+import '../../core/services/motion/parallax_source.dart';
+import '../../core/services/quality/quality_tier_service.dart';
+import '../../core/services/world/world_state_service.dart';
+import '../../core/services/presence/composer_activity_service.dart';
 import '../../core/services/speech/speech_input_service.dart';
 import '../../core/widgets/constrained_width.dart';
 import '../../core/l10n/generated/app_localizations.dart';
@@ -61,6 +71,16 @@ class AppRouter {
           // change resizes the frame without rebuilding Home.
           final HomeScreen home = HomeScreen(
             speech: getIt<SpeechInputService>(),
+            composerActivity: getIt<ComposerActivityService>(),
+            parallax: getIt<ParallaxSource>(),
+            world: getIt<WorldStateService>(),
+            facePerformer: getIt<FacePerformer>(),
+            camera: getIt<CameraDirector>(),
+            npc: getIt<NpcDirector>(),
+            foley: getIt<FoleyService>(),
+            beds: getIt<AmbientBedService>(),
+            lifecycle: getIt<AppLifecycleService>(),
+            quality: getIt<QualityTierService>(),
           );
           return MaterialPage<void>(
             key: state.pageKey,
@@ -199,7 +219,10 @@ class AppRouter {
           pageBuilder: (BuildContext context, GoRouterState state) =>
               MaterialPage<void>(
                 key: state.pageKey,
-                child: const UiLabScreen(),
+                child: UiLabScreen(
+                  world: getIt<WorldStateService>(),
+                  quality: getIt<QualityTierService>(),
+                ),
               ),
         ),
     ],

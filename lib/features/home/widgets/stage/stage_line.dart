@@ -10,11 +10,15 @@ class StageLine extends StatelessWidget {
     required this.text,
     required this.style,
     required this.align,
+    this.color,
   });
 
   final String text;
   final TextStyle? style;
   final TextAlign align;
+
+  /// The text colour; null is the theme's `onSurface`.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +27,7 @@ class StageLine extends StatelessWidget {
       text,
       align: align,
       style: style?.copyWith(
-        color: context.colors.onSurface,
+        color: color ?? context.colors.onSurface,
         shadows: <Shadow>[
           Shadow(color: ink.withValues(alpha: 0.9), blurRadius: 18),
           Shadow(color: ink.withValues(alpha: 0.7), blurRadius: 4),

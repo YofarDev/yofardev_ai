@@ -1,0 +1,32 @@
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 stack candle travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 chair back travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 desk drawer travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 clock face travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane1 oculus travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+Plane0 moon travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: mouse=Plane4, globe=Plane4, book=Plane3, clock=Plane2: ok
+pointer mouse (Plane4) parallaxX -1: click@711,1214 fires 1, rest-only click@831,1214 fires 0: ok
+pointer mouse (Plane4) parallaxX +1: click@869,1214 fires 1, rest-only click@749,1214 fires 0: ok
+pointer globe (Plane4) parallaxX -1: click@64,1354 fires 1, rest-only click@242,1354 fires 0: ok
+pointer globe (Plane4) parallaxX +1: click@280,1354 fires 1, rest-only click@102,1354 fires 0: ok
+pointer book (Plane3) parallaxX -1: click@179,1076 fires 1, rest-only click@335,1076 fires 0: ok
+pointer book (Plane3) parallaxX +1: click@361,1076 fires 1, rest-only click@205,1076 fires 0: ok
+pointer clock (Plane2) parallaxX -1: click@234,836 fires 1, rest-only click@386,836 fires 0: ok
+pointer clock (Plane2) parallaxX +1: click@400,836 fires 1, rest-only click@248,836 fires 0: ok
+wet ground (median luminance rain 1 / rain 0): 82.6/71.2 = 1.16 (want 1.0..1.8): ok
+RainGlass streaks + drips + ViewRain seam (frame 0 vs 240, rain 1, box (400, 300, 680, 994), pixels changed beyond rain 0): 0.0041% (ok)
+ladder drag: pixels changed at ladder -1 / -0.5 / 0.5 / 1 outside (671.0, 278.0, 1080.0, 1221.0): 0.0000% (changed bbox (677, 283, 1080, 1210); least share of the rect changed 19.19%) (ok)
+ladder drag history-free: ladder 1 -> 0 vs never moved (the rect), max diff 1/255 (ok)
+library.riv 160988 B (budget 409,600): ok
+library.webp 39168 B (budget 40,960): ok
+
+# lane S3 (library), 2026-10-31
+./scripts/frive.sh library: ✓ done (build 0 errors / 0 warnings, check_contract.py clean, rive_gates: 40 lines ok)
+library.riv 160,988 B (budget 409,600; aim 250 KB): ok; poster library.webp 39,168 B (budget 40,960): ok
+mouse NPC cost: 10,939 B (the scene built with a one-node stub NPC is 150,049 B; budget 30 KB): ok
+ladder drag rect (contract row, measured): (671, 278, 1080, 1221), Plane3; pixel proof changed bbox (677, 283, 1080, 1210) at ladder -1 / -0.5 / 0.5 / 1, nothing outside: ok
+npc/library/gates.txt: every state moves and loops back, away hides only the mouse, the poke follows npcX 0 / 0.5 / 1, fog stays inside the window: ok
+time/library/gates.txt: noon brightens the window's sky, dusk recolours the horizon band, the floor never changes: ok
+pytest rive/tools/tests/test_scene_library.py: 13 passed
+self-check (one pass, objective defects): (1) the mouse's path ran in front of the reading chair's arm while it was still behind the chair's front -> rerouted round the chair's left side; (2) the leaded lines of the upper panes ran through the moon -> leading on the lower panes only; (3) the lightning's glass flash hid the bolt and the floor flood washed the room out -> flash 0.6 / 0.55, flood alpha 0x50; (4) the flying book read too small -> 1.5x in flight; (5) the ladder's floor shadow fell outside the first rect -> in the rect. Known, kept: at ladder +1 the ladder's right stile runs off the artboard's right edge with the bookcase (the bookcase itself continues off-frame); state changes crossfade the asleep and awake drawings for 200 ms (the M8 blend).

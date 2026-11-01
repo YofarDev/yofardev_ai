@@ -73,6 +73,75 @@ class PropReactionService {
           gesture: AvatarGesture.laugh,
           soundEffect: SoundEffects.uwu,
         ),
+        // cafe
+        'cafe/cup': PropReaction(mood: AvatarMood.happy),
+        'cafe/espresso': PropReaction(
+          mood: AvatarMood.happy,
+          gesture: AvatarGesture.thumbsUp,
+        ),
+        'cafe/window': PropReaction(gesture: AvatarGesture.think),
+        'cafe/fish': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.uwu,
+        ),
+        // rooftop
+        'rooftop/telescope': PropReaction(gesture: AvatarGesture.think),
+        'rooftop/antenna': PropReaction(gesture: AvatarGesture.shrug),
+        'rooftop/pigeon': PropReaction(
+          gesture: AvatarGesture.nod,
+          soundEffect: SoundEffects.uwu,
+        ),
+        'rooftop/moon': PropReaction(
+          mood: AvatarMood.happy,
+          gesture: AvatarGesture.think,
+        ),
+        // mountainHut
+        'mountainHut/stove': PropReaction(
+          mood: AvatarMood.happy,
+          gesture: AvatarGesture.thumbsUp,
+        ),
+        'mountainHut/window': PropReaction(gesture: AvatarGesture.think),
+        'mountainHut/dog': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.uwu,
+        ),
+        'mountainHut/bell': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.christmasBells,
+        ),
+        // forestCabin
+        'forestCabin/lantern': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.magicWand,
+        ),
+        'forestCabin/pinwheel': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.whoosh,
+        ),
+        'forestCabin/squirrel': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.uwu,
+        ),
+        'forestCabin/woodpile': PropReaction(gesture: AvatarGesture.thumbsUp),
+        // trainCompartment
+        'trainCompartment/window': PropReaction(gesture: AvatarGesture.think),
+        'trainCompartment/lamp': PropReaction(soundEffect: SoundEffects.whoosh),
+        'trainCompartment/suitcase': PropReaction(gesture: AvatarGesture.shrug),
+        'trainCompartment/ladybug': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.uwu,
+        ),
+        // library
+        'library/book': PropReaction(gesture: AvatarGesture.think),
+        'library/globe': PropReaction(
+          mood: AvatarMood.happy,
+          soundEffect: SoundEffects.whoosh,
+        ),
+        'library/clock': PropReaction(gesture: AvatarGesture.nod),
+        'library/mouse': PropReaction(
+          mood: AvatarMood.surprised,
+          soundEffect: SoundEffects.uwu,
+        ),
       };
 
   static const Map<String, PropReaction>

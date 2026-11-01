@@ -7,6 +7,7 @@ import 'package:yofardev_ai/core/models/avatar_scene.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_caption.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
+import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 /// The bundled app fonts (Storybook: Fraunces display, Manrope text), which
@@ -15,8 +16,12 @@ import 'package:yofardev_ai/features/talking/talking.dart';
 TextTheme _bundledTextTheme(LookFonts _, ColorScheme scheme) =>
     googleFontsTextThemeBuilder(UiLooks.storybook.fonts, scheme);
 
-Widget _emptyStage(BuildContext context, AvatarScene scene, TalkingState _) =>
-    const SizedBox.expand();
+Widget _emptyStage(
+  BuildContext context,
+  AvatarScene scene,
+  TalkingState _,
+  FaceFrame? _,
+) => const SizedBox.expand();
 
 void main() {
   setUp(() => GoogleFonts.config.allowRuntimeFetching = false);

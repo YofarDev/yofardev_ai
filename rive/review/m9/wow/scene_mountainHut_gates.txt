@@ -1,0 +1,18 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 281: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+mountainHut in every sample, no journey (561): ok
+the mountainHut file on screen in every sample: ok
+NPC poked (dog): react 26 ms after the poke (want <= 200): ok
+rope (pull): the drag surface took the touch (37 dragging samples of 40): ok
+rope: rope read back from the scene file: max 1.00 (want >= 0.5): ok
+rope pulled: peak 1.00 (want >= 0.6): ok
+rope springs back: 0.00 3 s after the release (want <= 0.05): ok
+rope: the action fired (bell; want one of ['bell']): ok
+rope: the bell rang (1 bell sounds): ok
+rope: drag haptics 2 (impact, selection; want >= 1): ok
+the reply is spoken: ok
+scene events: bell; NPC states: rest/react/notice/idle/notice/react/idle: info
+scene_mountainHut.gif 3649685 B (budget 4194304): ok
+scene_mountainHut.mp4 1077323 B: info

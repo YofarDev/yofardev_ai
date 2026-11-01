@@ -1,0 +1,10 @@
+mountainHut rest -> idle: own px 668; old worst ghost 99.6% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+mountainHut idle -> rest: own px 16040; old worst ghost 95.7% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+mountainHut idle -> move: own px 10609; old worst ghost 96.8% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+mountainHut move -> idle: own px 3385; old worst ghost 86.3% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+mountainHut rest -> move: own px 4509; old worst ghost 99.7% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+mountainHut move -> rest: own px 11129; old worst ghost 90.0% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+mountainHut rest -> react: own px 267; old worst ghost 99.6% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+mountainHut react -> rest: own px 14348; old worst ghost 90.5% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+mountainHut notice -> move: own px 11430; old worst ghost 92.6% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+wrote /Users/yofardev/development/Projects/Flutter/yofardev_ai/.claude/worktrees/moonshot-m12-b091c8/rive/review/m12/polish/ghost_mountainHut.webp

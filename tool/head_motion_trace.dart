@@ -27,7 +27,7 @@ void main() {
     _Beat(0, GazeTarget.user()),
     _Beat(0.8, GazeTarget.away(0.6), tool: 'web_search'),
     _Beat(3.2, GazeTarget.user()),
-    _Beat(4.6, GazeTarget.caret()),
+    _Beat(4.6, GazeTarget.caret(0.5)),
   ];
 
   final HeadMotionSolver solver = HeadMotionSolver();

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -7,6 +9,7 @@ import 'package:yofardev_ai/core/design/rive/ui_kit.dart';
 import 'package:yofardev_ai/core/design/rive/ui_kit_file.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
+import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/features/chat/chat.dart';
 import 'package:yofardev_ai/features/home/screens/home_screen.dart';
 import 'package:yofardev_ai/features/home/widgets/stage/stage_caption.dart';
@@ -49,6 +52,30 @@ void main() {
       matching: find.byType(GlassPanel),
     ),
   );
+
+  testWidgets('resuming the app counts as presence for the avatar', (
+    WidgetTester tester,
+  ) async {
+    final ComposerActivityService activity = ComposerActivityService();
+    addTearDown(activity.dispose);
+    final List<ComposerActivity> seen = <ComposerActivity>[];
+    final StreamSubscription<ComposerActivity> sub = activity.activity.listen(
+      seen.add,
+    );
+    addTearDown(sub.cancel);
+    await tester.pumpWidget(
+      h.app(HomeScreen(speech: h.speech, composerActivity: activity)),
+    );
+    await tester.pump();
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(seen, isEmpty);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(seen, hasLength(1));
+    expect(seen.single.edited, isFalse);
+  });
 
   testWidgets('the old Home chrome is gone', (WidgetTester tester) async {
     await pumpHome(tester);

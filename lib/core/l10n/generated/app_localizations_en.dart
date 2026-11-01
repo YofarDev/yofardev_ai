@@ -531,4 +531,195 @@ class AppLocalizationsEn extends AppLocalizations {
   String stageLanguageSwitch(Object language) {
     return 'Language: $language';
   }
+
+  @override
+  String get stageScenes => 'Scenes';
+
+  @override
+  String get scenePickerTitle => 'Choose a scene';
+
+  @override
+  String get sceneLivingRoom => 'Living room';
+
+  @override
+  String get sceneCampfire => 'Campfire';
+
+  @override
+  String get sceneBeach => 'Beach';
+
+  @override
+  String get sceneDeepSpace => 'Deep space';
+
+  @override
+  String get sceneCafe => 'Café';
+
+  @override
+  String get sceneRooftop => 'Rooftop';
+
+  @override
+  String get sceneMountainHut => 'Mountain hut';
+
+  @override
+  String get sceneForestCabin => 'Forest cabin';
+
+  @override
+  String get sceneTrainCompartment => 'Train compartment';
+
+  @override
+  String get sceneLibrary => 'Library';
+
+  @override
+  String stageSemanticsLabel(Object name, Object scene) {
+    return '$name in the $scene scene';
+  }
+
+  @override
+  String get stagePhaseIdle => 'idle';
+
+  @override
+  String get stagePhaseListening => 'listening';
+
+  @override
+  String get stagePhaseThinking => 'thinking';
+
+  @override
+  String get stagePhaseSpeaking => 'speaking';
+
+  @override
+  String get scenePickerCurrentHint => 'Current scene';
+
+  @override
+  String get stagePropLamp => 'Tap the lamp';
+
+  @override
+  String get stagePropTv => 'Tap the TV';
+
+  @override
+  String get stagePropCat => 'Poke the cat';
+
+  @override
+  String get stagePropPlant => 'Tap the plant';
+
+  @override
+  String get stagePropFire => 'Tap the fire';
+
+  @override
+  String get stagePropTent => 'Tap the tent';
+
+  @override
+  String get stagePropOwl => 'Poke the owl';
+
+  @override
+  String get stagePropSky => 'Look at the sky';
+
+  @override
+  String get stagePropCrab => 'Poke the crab';
+
+  @override
+  String get stagePropUmbrella => 'Tap the umbrella';
+
+  @override
+  String get stagePropSeagull => 'Poke the seagull';
+
+  @override
+  String get stagePropPlanet => 'Tap the planet';
+
+  @override
+  String get stagePropUfo => 'Tap the UFO';
+
+  @override
+  String get stagePropRubberDuck => 'Squeeze the rubber duck';
+
+  @override
+  String get stagePropCup => 'Tap the cup';
+
+  @override
+  String get stagePropEspresso => 'Start the espresso machine';
+
+  @override
+  String get stagePropWindow => 'Tap the window';
+
+  @override
+  String get stagePropFish => 'Tap the fish';
+
+  @override
+  String get stagePropTelescope => 'Look through the telescope';
+
+  @override
+  String get stagePropAntenna => 'Tap the antenna';
+
+  @override
+  String get stagePropPigeon => 'Poke the pigeon';
+
+  @override
+  String get stagePropMoon => 'Look at the moon';
+
+  @override
+  String get stagePropStove => 'Tap the stove';
+
+  @override
+  String get stagePropDog => 'Pet the dog';
+
+  @override
+  String get stagePropBell => 'Ring the bell';
+
+  @override
+  String get stagePropLantern => 'Tap the lantern';
+
+  @override
+  String get stagePropPinwheel => 'Tap the pinwheel';
+
+  @override
+  String get stagePropSquirrel => 'Poke the squirrel';
+
+  @override
+  String get stagePropWoodpile => 'Tap the woodpile';
+
+  @override
+  String get stagePropSuitcase => 'Tap the suitcase';
+
+  @override
+  String get stagePropLadybug => 'Poke the ladybug';
+
+  @override
+  String get stagePropBook => 'Open the book';
+
+  @override
+  String get stagePropGlobe => 'Spin the globe';
+
+  @override
+  String get stagePropClock => 'Tap the clock';
+
+  @override
+  String get stagePropMouse => 'Poke the mouse';
+
+  @override
+  String get stageDragCord => 'Pull the lamp cord';
+
+  @override
+  String get stageDragPoke => 'Stir the fire';
+
+  @override
+  String get stageDragSand => 'Draw in the sand';
+
+  @override
+  String get stageDragSpin => 'Spin the planet';
+
+  @override
+  String get stageDragWipe => 'Wipe the misted window';
+
+  @override
+  String get stageDragAim => 'Swivel the telescope';
+
+  @override
+  String get stageDragRope => 'Pull the bell rope';
+
+  @override
+  String get stageDragPinwheel => 'Spin the pinwheel';
+
+  @override
+  String get stageDragChain => 'Pull the chain';
+
+  @override
+  String get stageDragLadder => 'Slide the ladder';
 }

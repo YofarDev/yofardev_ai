@@ -4,6 +4,7 @@ import '../../models/avatar_scene.dart';
 import '../looks/look_fonts.dart';
 import '../looks/look_theme.dart';
 import '../looks/ui_look_presets.dart';
+import '../tokens/scene_lights.dart';
 
 /// The app's theme: Storybook night (plum ink, warm paper text, Fraunces and
 /// Manrope), its accent lit by the current scene. Use [forScene] in the app
@@ -20,6 +21,7 @@ abstract final class AppTheme {
       () => buildLookTheme(
         UiLooks.storybook,
         scene,
+        light: SceneLights.of(scene),
         textThemeBuilder: googleFontsTextThemeBuilder,
       ),
     );

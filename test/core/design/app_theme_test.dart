@@ -14,6 +14,12 @@ const Map<AvatarScene, Color> _accents = <AvatarScene, Color>{
   AvatarScene.campfire: Color(0xFFFF8552),
   AvatarScene.beach: Color(0xFFFF9478),
   AvatarScene.deepSpace: Color(0xFFB79CFF),
+  AvatarScene.cafe: Color(0xFFE8956B),
+  AvatarScene.rooftop: Color(0xFF7CB8FF),
+  AvatarScene.mountainHut: Color(0xFF86D4C4),
+  AvatarScene.forestCabin: Color(0xFFA6CF6E),
+  AvatarScene.trainCompartment: Color(0xFFF59AB5),
+  AvatarScene.library: Color(0xFFE9CF6A),
 };
 
 Color _container(Color accent) =>

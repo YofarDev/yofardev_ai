@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import colorsys
+import math
 import re
 import sys
 
@@ -26,6 +27,14 @@ TOKENS: dict[str, str] = {
     "campfireAccent": "FFFF8552",
     "beachAccent": "FFFF9478",
     "deepSpaceAccent": "FFB79CFF",
+    # contract v12 (M9 ruling 3)
+    "cafeAccent": "FFE8956B",
+    "rooftopAccent": "FF7CB8FF",
+    "mountainHutAccent": "FF86D4C4",
+    # contract v14 (M11 ruling 2)
+    "forestCabinAccent": "FFA6CF6E",
+    "trainCompartmentAccent": "FFF59AB5",
+    "libraryAccent": "FFE9CF6A",
 }
 
 # --- 2. Character palette (ramps: light -> shadow -> deep shadow). Shadows shift toward the
@@ -88,28 +97,99 @@ class SceneScript:
     value: tuple[float, float]
     sat_cap: float
     times: dict[str, str]  # sky top colour per time of day (dawn, day, dusk, night)
+    flicker: float = 0.0  # firelight flicker of the key light (0 steady, 1 full campfire)
+    rim_intensity: float = 0.35  # rim light strength (the silhouette's back edge)
+    ambient_amount: float = 0.35  # how far the shadow side leans to the ambient hue
+
+    @property
+    def key_xy(self) -> tuple[float, float]:
+        """Direction toward the key light in viewer space (+x right, +y up), 3 digits: the
+        contract's `lightKeyX`/`lightKeyY` (M4 ruling 4) and the Dart `LightRig.keyX/keyY`."""
+        return round(math.cos(self.key_dir), 3), round(math.sin(self.key_dir), 3)
 
 
 SCENES: dict[str, SceneScript] = {
     "livingRoom": SceneScript(
         accent=TOKENS["livingRoomAccent"], key="FFFFD49A", key_dir=2.4, key_intensity=0.85,
-        rim="FF9FB8E6", ambient="FF2C3346", fog="00000000", value=(0.07, 0.92), sat_cap=0.62,
+        rim="FF9FB8E6", ambient="FF2C3346", fog="33E0BC8C", value=(0.07, 0.92), sat_cap=0.62,
         times={"dawn": "FF7A86B8", "day": "FF9CC4E4", "dusk": "FF5A4A78", "night": "FF1A1F38"},
+        flicker=0.15,
     ),
     "campfire": SceneScript(
         accent=TOKENS["campfireAccent"], key="FFFF9A4D", key_dir=4.2, key_intensity=1.0,
         rim="FF6F8FD8", ambient="FF141C2C", fog="3320304A", value=(0.03, 0.95), sat_cap=0.55,
         times={"dawn": "FF4A5A88", "day": "FF7FA9CF", "dusk": "FF3A2E5C", "night": "FF0A1424"},
+        flicker=1.0,
     ),
     "beach": SceneScript(
         accent=TOKENS["beachAccent"], key="FFFFC48A", key_dir=0.35, key_intensity=0.9,
         rim="FFFFE2C4", ambient="FF3E4F6A", fog="22FFD9C0", value=(0.10, 0.97), sat_cap=0.58,
         times={"dawn": "FFF0A98A", "day": "FF8CCBE0", "dusk": "FFE07A6A", "night": "FF16203A"},
+        flicker=0.0,
     ),
     "deepSpace": SceneScript(
         accent=TOKENS["deepSpaceAccent"], key="FFCDB8FF", key_dir=0.9, key_intensity=0.7,
-        rim="FF7FE0FF", ambient="FF120E26", fog="00000000", value=(0.02, 0.95), sat_cap=0.70,
+        rim="FF7FE0FF", ambient="FF120E26", fog="331E1A44", value=(0.02, 0.95), sat_cap=0.70,
         times={"dawn": "FF120E26", "day": "FF120E26", "dusk": "FF120E26", "night": "FF070614"},
+        flicker=0.0,
+    ),
+    # M9 (contract v12, ruling 3). Every v12 colour script is at least as lenient as the four above
+    # together (value low <= 0.10, high >= 0.92, sat cap >= 0.55): the journey and jacket art fit their
+    # colours into every scene's script (gen_journeys.fit, jacket_art.fit_all), and avatar.riv /
+    # journey.riv must not change in M9 (rulings 5, 15). tests/test_art_bible.py holds that.
+    # cafe: a warm pendant lamp from above, a little left; the rainy window's cool light rims the
+    # silhouette; plum-dark shadows; the window's sky behind the rain.
+    "cafe": SceneScript(
+        accent=TOKENS["cafeAccent"], key="FFFFC98A", key_dir=1.9, key_intensity=0.85,
+        rim="FF8FA8D0", ambient="FF2A2433", fog="33A8B4C4", value=(0.06, 0.93), sat_cap=0.6,
+        times={"dawn": "FF7C88B0", "day": "FF9FB4C8", "dusk": "FF5C4E70", "night": "FF1C2034"},
+        flicker=0.0,
+    ),
+    # rooftop: cool moonlight from high left (the moon hangs upper-left, M9 fix round 1: the mirror of
+    # 0.95, pi - 0.95), the city's sodium glow as a warm rim from below, blue-black shadows, the open
+    # night sky.
+    "rooftop": SceneScript(
+        accent=TOKENS["rooftopAccent"], key="FFC4D4FF", key_dir=2.1916, key_intensity=0.7,
+        rim="FFFFB27A", ambient="FF161A2E", fog="33303A5C", value=(0.03, 0.95), sat_cap=0.62,
+        times={"dawn": "FF56608E", "day": "FF86B4DA", "dusk": "FF4A3A6C", "night": "FF0E1630"},
+        flicker=0.0,
+    ),
+    # mountainHut: the stove's firelight from low right (a softer flicker than the campfire), the
+    # snowy window's cold light as the rim, warm-dark shadows, a snow-mist fog outside.
+    "mountainHut": SceneScript(
+        accent=TOKENS["mountainHutAccent"], key="FFFFA25A", key_dir=-0.4, key_intensity=0.95,
+        rim="FF8CB4E0", ambient="FF1E1A26", fog="33B8C8DC", value=(0.04, 0.94), sat_cap=0.58,
+        times={"dawn": "FF8A94BC", "day": "FFB4CCE0", "dusk": "FF6A5A84", "night": "FF141C34"},
+        flicker=0.6,
+    ),
+    # M11 (contract v14, ruling 3; a scene lane may retune only its own entry). The M9 rule above holds
+    # for these too: each is at least as lenient as the four M8 scripts together (value low <= 0.10,
+    # high >= 0.92, sat cap >= 0.55), so avatar.riv and journey.riv keep their bytes.
+    # forestCabin: the low warm sun / the porch lantern from the right, the open sky's blue as the rim,
+    # forest-green-dark shadows, a green-grey forest mist; the lantern flickers a little.
+    "forestCabin": SceneScript(
+        accent=TOKENS["forestCabinAccent"], key="FFFFC27A", key_dir=0.3, key_intensity=0.9,
+        rim="FF9CC8F0", ambient="FF1A2A22", fog="33B4C4B0", value=(0.05, 0.94), sat_cap=0.62,
+        times={"dawn": "FF8A9CB8", "day": "FF9CCBE8", "dusk": "FF6A5878", "night": "FF141E30"},
+        flicker=0.2,
+    ),
+    # trainCompartment: the compartment lamp, warm from above left; the window's cool daylight rims the
+    # silhouette; plum shadows; the window's sky over the running landscape. A steady lamp (a faint
+    # flicker from the train's motion).
+    "trainCompartment": SceneScript(
+        accent=TOKENS["trainCompartmentAccent"], key="FFFFCF94", key_dir=2.2, key_intensity=0.85,
+        rim="FF94B4DC", ambient="FF2E2236", fog="33B8B0C8", value=(0.06, 0.93), sat_cap=0.6,
+        times={"dawn": "FF8890B8", "day": "FFA4C8E0", "dusk": "FF7A5A7C", "night": "FF161C34"},
+        flicker=0.05,
+    ),
+    # library: the green-shaded reading lamp, warm gold from low left (the mirror of mountainHut's
+    # -0.4, pi + 0.4); the storm window's cold light as the rim; brown-black shadows; a dusty haze. The
+    # lamp and the candles flicker a little.
+    "library": SceneScript(
+        accent=TOKENS["libraryAccent"], key="FFFFD27A", key_dir=3.5416, key_intensity=0.8,
+        rim="FF8AA4CC", ambient="FF1C1612", fog="33706A78", value=(0.04, 0.93), sat_cap=0.58,
+        times={"dawn": "FF6E7898", "day": "FF8EA6BC", "dusk": "FF4E4462", "night": "FF10141F"},
+        flicker=0.1,
     ),
 }
 
@@ -187,6 +267,52 @@ def lint_colours(rml: str, scene: str) -> list[str]:
             if s > script.sat_cap:
                 problems.append(f"{lineno}: {c} saturation {s:.2f} > cap {script.sat_cap:.2f}")
     return problems
+
+
+def fit_colour(argb: str, scene: str) -> str:
+    """The nearest colour that passes `lint_colours` for `scene` (M4 ruling 13).
+
+    Hue and alpha are kept; HSV value is clamped into the scene's range and saturation under
+    its cap. The accent, fully transparent colours and near-neutral highlights (saturation at
+    most HIGHLIGHT_SAT_MAX, which may exceed the value range) come back unchanged.
+    """
+    script = SCENES[scene]
+    c = argb.upper()
+    if len(c) == 6:
+        c = "FF" + c
+    if c[:2] == "00" or c == script.accent:
+        return c
+    h, s, v = hsv(c)
+    lo, hi = script.value
+    if s <= HIGHLIGHT_SAT_MAX and v >= lo:
+        return c
+    # Aim a hair inside the bounds so 8-bit rounding cannot push the result back out.
+    s2 = min(s, script.sat_cap - 0.004)
+    v2 = min(max(v, lo + 0.004), hi - 0.004)
+    if (s2, v2) == (s, v):
+        return c
+    def ok(argb8: str) -> bool:
+        _, so, vo = hsv(argb8)
+        return so <= script.sat_cap and lo <= vo and (vo <= hi or so <= HIGHLIGHT_SAT_MAX)
+
+    def hue_err(argb8: str) -> float:
+        d = abs(hsv(argb8)[0] - h)
+        return min(d, 1 - d)
+
+    # 8-bit rounding of a dark colour can turn the hue by a few degrees: search the 27
+    # neighbours of the rounded target for the passing one with the closest hue.
+    for _ in range(8):
+        base = [round(x * 255) for x in colorsys.hsv_to_rgb(h, s2, v2)]
+        cands = [
+            c[:2] + "".join(f"{min(255, max(0, base[i] + o[i])):02X}" for i in range(3))
+            for o in ((dr, dg, db) for dr in (-1, 0, 1) for dg in (-1, 0, 1) for db in (-1, 0, 1))
+        ]
+        good = [x for x in cands if ok(x)]
+        if good:
+            return min(good, key=lambda x: (round(hue_err(x), 4), x != cands[13]))
+        s2 -= 0.004
+        v2 = min(max(v2, lo + 0.008), hi - 0.008)
+    return cands[13]
 
 
 def main(argv: list[str]) -> int:

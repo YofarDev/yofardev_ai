@@ -1,30 +1,110 @@
 import 'dart:async';
 import 'dart:ui' show FrameTiming;
 
-import '../../models/performance/performance.dart';
-import '../../utils/logger.dart';
-import 'frame_timing_source.dart';
-import '../../models/result.dart';
-import '../settings_local_datasource.dart';
+import 'package:flutter/foundation.dart';
 
-/// Quality-tier probe (M0 method): collects per-frame
-/// `max(buildDuration, rasterDuration)` from [FrameTiming] over a probe
-/// window, takes the P95, and maps it to a quality tier. A probe whose fps is
-/// below 0.9 x refresh is invalid and never changes the stored tier, unless it
-/// has enough frames and its P95 is over the refresh budget (a device too slow
-/// to hold its refresh rate): that device is rated low. At most two attempts
-/// run per [probe] call.
+import '../../models/performance/performance.dart';
+import '../../models/result.dart';
+import '../../utils/logger.dart';
+import '../power/power_saver_source.dart';
+import '../settings_local_datasource.dart';
+import 'frame_drift_watch.dart';
+import 'frame_stats.dart';
+import 'frame_timing_source.dart';
+import 'thermal_source.dart';
+
+/// The thermal cap on the tier (moonshot M11 ruling 12), strictest last.
+enum ThermalCap {
+  /// Nominal or light: no cap.
+  none,
+
+  /// Moderate: one tier below the benchmark.
+  oneBelow,
+
+  /// Severe or critical: low.
+  low;
+
+  static ThermalCap of(ThermalLevel level) => switch (level) {
+    ThermalLevel.nominal || ThermalLevel.light => ThermalCap.none,
+    ThermalLevel.moderate => ThermalCap.oneBelow,
+    ThermalLevel.severe || ThermalLevel.critical => ThermalCap.low,
+  };
+
+  /// The tier this cap allows under [benchmark].
+  QualityTier capOf(QualityTier benchmark) => switch (this) {
+    ThermalCap.none => benchmark,
+    ThermalCap.oneBelow => benchmark.oneBelow,
+    ThermalCap.low => QualityTier.low,
+  };
+}
+
+/// The quality tier in force (moonshot M11 ruling 12):
+///
+///     effective = min(benchmark, thermal cap, battery cap, drift cap)
+///
+/// never above the benchmark; a [forceTier] override (the UI lab, the
+/// frame-cost harness) wins over everything. [current] is the effective tier
+/// and [changes] / [tier] emit only when it changes.
+///
+/// - **Benchmark** (the M0 probe, [probe]): a 3 s `FrameTiming` window, P95
+///   of `max(build, raster)`, the fps validity rule; ultra ≤ 3.3 ms, high ≤
+///   6.6 ms, else low. Run once per [benchVersion]: started when the stage
+///   first shows a scene ([notifyStageShown]), or [stageFallback] after the
+///   first frame when no scene shows. It never runs while a cap or a force
+///   is in force (the stage would be drawn at that tier): it waits for them
+///   to lift, and a probe they interrupt is discarded and run again. A tier
+///   stored by an older bench is used until the re-run lands. `high` before
+///   any benchmark.
+/// - **Thermal** ([ThermalSource]): moderate caps one tier below the
+///   benchmark, severe / critical cap low. A worse level applies at once; a
+///   looser cap only after [thermalRelief] continuously at a level that
+///   allows it (hysteresis).
+/// - **Battery saver** ([PowerSaverSource]): on caps low, off lifts it.
+/// - **Drift** ([FrameDriftWatch], while the stage is active
+///   ([setStageActive]), nothing is forced and no thermal cap holds; a tier
+///   change starts its count over): three 10 s windows in a row
+///   over the tier's budget × 1.25 drop one tier for the rest of the session
+///   (never restored in-session, never persisted).
 class QualityTierService {
   QualityTierService({
     required FrameTimingSource timingSource,
     required SettingsLocalDatasource settings,
+    ThermalSource thermal = const NominalThermalSource(),
+    PowerSaverSource? power,
     this.probeWindow = const Duration(seconds: 3),
+    this.stageFallback = const Duration(seconds: 10),
+    this.thermalRelief = const Duration(seconds: 120),
+    Duration driftWindow = const Duration(seconds: 10),
   }) : _source = timingSource,
-       _settings = settings;
+       _settings = settings,
+       _thermal = thermal,
+       _power = power {
+    _drift = FrameDriftWatch(
+      source: timingSource,
+      tier: () => current,
+      onDrift: _onDrift,
+      window: driftWindow,
+    );
+  }
+
+  static const String _tag = 'QualityTier';
+
+  /// The benchmark's version: a stored tier from an older one re-runs once.
+  static const int benchVersion = 2;
 
   final FrameTimingSource _source;
   final SettingsLocalDatasource _settings;
+  final ThermalSource _thermal;
+  final PowerSaverSource? _power;
   final Duration probeWindow;
+
+  /// How long after the first frame the benchmark waits for a scene.
+  final Duration stageFallback;
+
+  /// How long a looser thermal cap must hold before it applies.
+  final Duration thermalRelief;
+
+  late final FrameDriftWatch _drift;
 
   static const int _maxProbeAttempts = 2;
 
@@ -35,26 +115,67 @@ class QualityTierService {
   /// apply (a nearly idle window says nothing about device speed).
   static const int _minOverBudgetFrames = 20;
 
-  QualityTier _current = QualityTier.high;
+  QualityTier _benchmark = QualityTier.high;
+  ThermalCap _thermalCap = ThermalCap.none;
+  ThermalLevel _thermalLevel = ThermalLevel.nominal;
+  bool _powerSaver = false;
+  QualityTier? _driftCap;
+  QualityTier? _forced;
+
+  bool _needsBench = false;
+  bool _benchStarted = false;
+
+  /// The stage showed (or the fallback fired): a benchmark is wanted.
+  bool _benchWanted = false;
+
+  /// A cap or a force came in while the probe ran: its result is discarded.
+  bool _benchTainted = false;
+  Timer? _probeTimer;
+  Completer<List<double>>? _probeWindowDone;
+  bool _probing = false;
+  bool _stageActive = false;
+  bool _stageShown = false;
+  bool _disposed = false;
+  Timer? _fallbackTimer;
+  Timer? _reliefTimer;
+  ThermalCap? _reliefTarget;
+  final List<StreamSubscription<dynamic>> _subscriptions =
+      <StreamSubscription<dynamic>>[];
+
+  final ValueNotifier<QualityTier> _tier = ValueNotifier<QualityTier>(
+    QualityTier.high,
+  );
 
   final StreamController<QualityTier> _changes =
       StreamController<QualityTier>.broadcast();
 
-  /// The tier currently in force; `high` before any probe.
-  QualityTier get current => _current;
+  /// The tier in force; `high` before any benchmark.
+  QualityTier get current => _tier.value;
 
-  /// Emits every persisted tier change.
+  /// The tier in force, for widgets.
+  ValueListenable<QualityTier> get tier => _tier;
+
+  /// Emits every change of the tier in force.
   Stream<QualityTier> get changes => _changes.stream;
 
+  /// The benchmark's tier (stored or measured; `high` before any).
+  QualityTier get benchmark => _benchmark;
+
+  /// The forced tier, if any.
+  QualityTier? get forced => _forced;
+
+  /// The thermal cap in force.
+  ThermalCap get thermalCap => _thermalCap;
+
+  /// The session's drift cap, if a drift happened.
+  QualityTier? get driftCap => _driftCap;
+
+  /// Whether the drift watch samples now.
+  @visibleForTesting
+  bool get driftWatching => _drift.active;
+
   /// Nearest-rank P95 of the given per-frame durations in ms.
-  static double p95Ms(List<double> frameMs) {
-    if (frameMs.isEmpty) {
-      return 0;
-    }
-    final List<double> sorted = List<double>.of(frameMs)..sort();
-    final int rank = (sorted.length * 0.95).ceil();
-    return sorted[rank - 1];
-  }
+  static double p95Ms(List<double> frameMs) => FrameStats.p95Ms(frameMs);
 
   /// Maps a P95 frame time to a tier: ultra ≤ 3.3 ms, high ≤ 6.6 ms, else low.
   static QualityTier tierFor(double p95MsValue) {
@@ -96,39 +217,340 @@ class QualityTierService {
     return p95Ms > 1000 / refreshRate;
   }
 
-  /// Loads the stored tier; when none is stored, schedules a probe after the
-  /// first frame without awaiting it (startup is never blocked).
+  /// The effective tier: [forced] if set, else the lowest of the benchmark
+  /// and the caps.
+  static QualityTier effective({
+    required QualityTier benchmark,
+    ThermalCap thermal = ThermalCap.none,
+    bool powerSaver = false,
+    QualityTier? driftCap,
+    QualityTier? forced,
+  }) {
+    if (forced != null) {
+      return forced;
+    }
+    return QualityTier.lowest(<QualityTier>[
+      benchmark,
+      thermal.capOf(benchmark),
+      if (powerSaver) QualityTier.low,
+      ?driftCap,
+    ]);
+  }
+
+  /// Loads the stored tier, starts following the thermal state and battery
+  /// saver, and arms the benchmark when none of the current version is
+  /// stored (startup never waits for it).
   Future<void> init() async {
+    _follow();
     final Result<String> stored = await _settings.getQualityTier();
+    final Result<int> bench = await _settings.getQualityTierBench();
     final String? storedName = stored.getOrNull;
+    QualityTier? storedTier;
     if (storedName != null && storedName.isNotEmpty) {
       try {
-        _current = QualityTier.values.byName(storedName);
-        AppLogger.debug(
-          'QualityTier: loaded stored tier ${_current.name}',
-          tag: 'QualityTier',
-        );
-        return;
+        storedTier = QualityTier.values.byName(storedName);
       } on ArgumentError {
         AppLogger.error(
           'QualityTier: unknown stored tier "$storedName", keeping high',
-          tag: 'QualityTier',
+          tag: _tag,
         );
       }
     }
+    if (storedTier != null) {
+      _benchmark = storedTier;
+      _recompute();
+    }
+    final int storedBench = bench.getOrNull ?? 0;
+    if (storedTier != null && storedBench >= benchVersion) {
+      AppLogger.debug(
+        'QualityTier: loaded stored tier ${storedTier.name} (bench '
+        '$storedBench)',
+        tag: _tag,
+      );
+      return;
+    }
     AppLogger.debug(
-      'QualityTier: no stored tier, scheduling probe after the first frame',
-      tag: 'QualityTier',
+      storedTier == null
+          ? 'QualityTier: no stored tier, benchmark armed'
+          : 'QualityTier: tier ${storedTier.name} is from bench $storedBench, '
+                're-benchmark armed',
+      tag: _tag,
     );
-    unawaited(_source.firstFrameDrawn.then((_) => probe()));
+    _needsBench = true;
+    if (_stageShown) {
+      // The stage beat the stored-tier read: benchmark now.
+      _startBench();
+      return;
+    }
+    unawaited(
+      _source.firstFrameDrawn.then((_) {
+        if (_disposed || _benchStarted) {
+          return;
+        }
+        _fallbackTimer = Timer(stageFallback, () {
+          _fallbackTimer = null;
+          AppLogger.debug(
+            'QualityTier: no scene shown within '
+            '${stageFallback.inSeconds} s, benchmarking anyway',
+            tag: _tag,
+          );
+          _startBench();
+        });
+      }),
+    );
+  }
+
+  /// The stage shows a scene: the benchmark starts (once) if one is armed.
+  void notifyStageShown() {
+    _stageShown = true;
+    _startBench();
+  }
+
+  /// Whether the stage is on screen with the app resumed: the drift watch
+  /// samples only then.
+  void setStageActive(bool active) {
+    _stageActive = active;
+    _syncDrift();
+  }
+
+  /// Forces [tier] over everything (null: back to the computed tier). Debug
+  /// and test hook (the UI lab, the frame-cost harness).
+  void forceTier(QualityTier? tier) {
+    _forced = tier;
+    AppLogger.debug('QualityTier: forced ${tier?.name ?? 'off'}', tag: _tag);
+    _recompute();
+  }
+
+  void _follow() {
+    if (_subscriptions.isNotEmpty) {
+      return;
+    }
+    _subscriptions.add(_thermal.changes.listen(_onThermal));
+    unawaited(
+      _thermal.current
+          .then((ThermalLevel level) {
+            if (!_disposed) {
+              _onThermal(level);
+            }
+          })
+          .catchError((Object error) {
+            AppLogger.warning(
+              'QualityTier: thermal state unavailable ($error)',
+              tag: _tag,
+            );
+          }),
+    );
+    final PowerSaverSource? power = _power;
+    if (power != null) {
+      _subscriptions.add(
+        power.changes.listen(
+          _onPowerSaver,
+          onError: (Object error) => AppLogger.warning(
+            'QualityTier: power saver stream error ($error)',
+            tag: _tag,
+          ),
+        ),
+      );
+      unawaited(
+        power.isOn
+            .then((bool on) {
+              if (!_disposed) {
+                _onPowerSaver(on);
+              }
+            })
+            .catchError((Object error) {
+              AppLogger.warning(
+                'QualityTier: power saver unavailable ($error)',
+                tag: _tag,
+              );
+            }),
+      );
+    }
+  }
+
+  void _onThermal(ThermalLevel level) {
+    _thermalLevel = level;
+    final ThermalCap next = ThermalCap.of(level);
+    if (next.index >= _thermalCap.index) {
+      // Worse (or the same): at once, and any pending relief is off.
+      _reliefTimer?.cancel();
+      _reliefTimer = null;
+      _reliefTarget = null;
+      if (next != _thermalCap) {
+        _thermalCap = next;
+        AppLogger.debug(
+          'QualityTier: thermal ${level.name} -> cap ${next.name}',
+          tag: _tag,
+        );
+        _recompute();
+      }
+      return;
+    }
+    // Looser: only after it held for [thermalRelief]. A different looser
+    // level starts the wait over (the cap it would lift to changed).
+    if (_reliefTimer != null && _reliefTarget == next) {
+      return;
+    }
+    _reliefTimer?.cancel();
+    _reliefTarget = next;
+    _reliefTimer = Timer(thermalRelief, () {
+      _reliefTimer = null;
+      _reliefTarget = null;
+      if (next.index < _thermalCap.index) {
+        _thermalCap = next;
+        AppLogger.debug(
+          'QualityTier: thermal ${_thermalLevel.name} held '
+          '${thermalRelief.inSeconds} s -> cap ${next.name}',
+          tag: _tag,
+        );
+        _recompute();
+      }
+    });
+  }
+
+  void _onPowerSaver(bool on) {
+    if (on == _powerSaver) {
+      return;
+    }
+    _powerSaver = on;
+    AppLogger.debug(
+      'QualityTier: battery saver ${on ? 'on' : 'off'}',
+      tag: _tag,
+    );
+    _recompute();
+  }
+
+  void _onDrift() {
+    final QualityTier from = current;
+    final QualityTier next = from.oneBelow;
+    if (next == from) {
+      return;
+    }
+    _driftCap = next;
+    AppLogger.info(
+      'QualityTier: sustained frame drift at ${from.name}, '
+      '${next.name} for the session',
+      tag: _tag,
+    );
+    _recompute();
+  }
+
+  void _recompute() {
+    if (_disposed) {
+      return;
+    }
+    final QualityTier next = effective(
+      benchmark: _benchmark,
+      thermal: _thermalCap,
+      powerSaver: _powerSaver,
+      driftCap: _driftCap,
+      forced: _forced,
+    );
+    if (next != _tier.value) {
+      _tier.value = next;
+      _changes.add(next);
+      // The drift budget changed: a streak judged at the old tier is void.
+      _drift.reset();
+    }
+    if (_probing && _benchBlocked) {
+      _benchTainted = true;
+    }
+    _syncDrift();
+    _maybeStartBench();
+  }
+
+  /// The stage is drawn at a capped or forced tier: a benchmark now would
+  /// measure that tier, not the device.
+  bool get _benchBlocked =>
+      _forced != null || _powerSaver || _thermalCap != ThermalCap.none;
+
+  void _syncDrift() {
+    if (_disposed) {
+      return;
+    }
+    // Under a thermal cap the frames are slow because the device is hot:
+    // never a session-long drift drop.
+    _drift.active =
+        _stageActive &&
+        _forced == null &&
+        _thermalCap == ThermalCap.none &&
+        !_probing &&
+        current != QualityTier.low;
+  }
+
+  /// The benchmark is wanted (the stage showed, or the fallback fired); it
+  /// starts as soon as nothing caps or forces the tier.
+  void _startBench() {
+    if (_disposed || !_needsBench) {
+      return;
+    }
+    _benchWanted = true;
+    _fallbackTimer?.cancel();
+    _fallbackTimer = null;
+    if (_benchBlocked && !_benchStarted) {
+      AppLogger.debug(
+        'QualityTier: benchmark waits for the caps to lift',
+        tag: _tag,
+      );
+    }
+    _maybeStartBench();
+  }
+
+  void _maybeStartBench() {
+    if (_disposed ||
+        !_needsBench ||
+        !_benchWanted ||
+        _benchStarted ||
+        _probing ||
+        _benchBlocked) {
+      return;
+    }
+    _benchStarted = true;
+    unawaited(probe());
   }
 
   /// Runs up to [_maxProbeAttempts] collection windows and returns the tier
-  /// derived from the first valid attempt; when every attempt is invalid the
-  /// stored tier is returned unchanged.
+  /// derived from the first valid attempt (stored with [benchVersion]); when
+  /// every attempt is invalid the benchmark is returned unchanged.
+  ///
+  /// A cap or a force arriving while it runs discards the result; the
+  /// benchmark then runs again once nothing caps the tier.
   Future<QualityTier> probe() async {
+    _probing = true;
+    _benchTainted = _benchBlocked;
+    _syncDrift();
+    try {
+      return await _probe();
+    } finally {
+      _probing = false;
+      _syncDrift();
+      _maybeStartBench();
+    }
+  }
+
+  /// Whether the probe must stop: disposed, or its frames were drawn at a
+  /// capped tier (then the benchmark is armed again).
+  bool _probeVoid() {
+    if (_disposed) {
+      return true;
+    }
+    if (!_benchTainted) {
+      return false;
+    }
+    AppLogger.debug(
+      'QualityTier: the tier was capped during the probe, result discarded',
+      tag: _tag,
+    );
+    _benchStarted = false;
+    return true;
+  }
+
+  Future<QualityTier> _probe() async {
     for (int attempt = 1; attempt <= _maxProbeAttempts; attempt++) {
       final List<double>? frameMs = await _collectFrameMs();
+      if (_probeVoid()) {
+        return _benchmark;
+      }
       final int frames = frameMs?.length ?? 0;
       final bool valid =
           frameMs != null &&
@@ -147,9 +569,9 @@ class QualityTierService {
           AppLogger.debug(
             'QualityTier: probe attempt $attempt too slow to hold the '
             'refresh rate: P95=${p95.toStringAsFixed(2)} ms -> low',
-            tag: 'QualityTier',
+            tag: _tag,
           );
-          await _storeTier(QualityTier.low);
+          await _storeBenchmark(QualityTier.low);
           return QualityTier.low;
         }
       }
@@ -158,62 +580,91 @@ class QualityTierService {
           'QualityTier: probe attempt $attempt invalid ($frames frames '
           'in ${probeWindow.inMilliseconds} ms), '
           '${attempt < _maxProbeAttempts ? 're-probing' : 'giving up'}',
-          tag: 'QualityTier',
+          tag: _tag,
         );
         continue;
       }
       final double p95 = p95Ms(frameMs);
       final QualityTier tier = tierFor(p95);
       AppLogger.debug(
-        'QualityTier: probe attempt $attempt valid: P95=${p95.toStringAsFixed(2)} ms -> ${tier.name}',
-        tag: 'QualityTier',
+        'QualityTier: probe attempt $attempt valid: '
+        'P95=${p95.toStringAsFixed(2)} ms -> ${tier.name}',
+        tag: _tag,
       );
-      await _storeTier(tier);
+      await _storeBenchmark(tier);
       return tier;
     }
-    return _current;
+    return _benchmark;
   }
 
   /// Collects per-frame ms over [probeWindow]; null when no frame arrived.
   Future<List<double>?> _collectFrameMs() async {
+    if (_disposed) {
+      return null;
+    }
     final Completer<List<double>> completer = Completer<List<double>>();
+    _probeWindowDone = completer;
     final List<double> frameMs = <double>[];
     final StreamSubscription<List<FrameTiming>> subscription = _source.timings
         .listen((List<FrameTiming> batch) {
           for (final FrameTiming timing in batch) {
-            final Duration worst = timing.buildDuration > timing.rasterDuration
-                ? timing.buildDuration
-                : timing.rasterDuration;
-            frameMs.add(worst.inMicroseconds / 1000);
+            frameMs.add(FrameStats.worstMs(timing));
           }
         });
-    Timer(probeWindow, () {
+    _probeTimer = Timer(probeWindow, () {
+      _probeTimer = null;
       if (!completer.isCompleted) {
         completer.complete(List<double>.of(frameMs));
       }
     });
     final List<double> collected = await completer.future;
+    _probeWindowDone = null;
     // Broadcast subscriptions cancel without further work; the future only
     // completes on a later microtask/event, so do not await it here.
     unawaited(subscription.cancel());
     return collected.isEmpty ? null : collected;
   }
 
-  Future<void> _storeTier(QualityTier tier) async {
+  Future<void> _storeBenchmark(QualityTier tier) async {
     final Result<void> stored = await _settings.setQualityTier(tier.name);
     if (!stored.isOk) {
       AppLogger.error(
         'QualityTier: failed to persist tier ${tier.name}',
-        tag: 'QualityTier',
+        tag: _tag,
       );
       return;
     }
-    _current = tier;
-    _changes.add(tier);
+    final Result<void> version = await _settings.setQualityTierBench(
+      benchVersion,
+    );
+    if (!version.isOk) {
+      AppLogger.error(
+        'QualityTier: failed to persist the bench version',
+        tag: _tag,
+      );
+    }
+    _needsBench = false;
+    _benchmark = tier;
+    _recompute();
   }
 
-  /// Closes the change stream.
+  /// Stops the watch and the timers, closes the change stream.
   void dispose() {
+    _disposed = true;
+    _fallbackTimer?.cancel();
+    _reliefTimer?.cancel();
+    _probeTimer?.cancel();
+    _probeTimer = null;
+    final Completer<List<double>>? window = _probeWindowDone;
+    if (window != null && !window.isCompleted) {
+      window.complete(<double>[]);
+    }
+    _drift.dispose();
+    for (final StreamSubscription<dynamic> subscription in _subscriptions) {
+      unawaited(subscription.cancel());
+    }
+    _subscriptions.clear();
     _changes.close();
+    _tier.dispose();
   }
 }

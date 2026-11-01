@@ -1,0 +1,17 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 312: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+trainCompartment in every sample, no journey (624): ok
+the trainCompartment file on screen in every sample: ok
+NPC poked (ladybug): react 23 ms after the poke (want <= 200): ok
+chain (pull): the drag surface took the touch (37 dragging samples of 39): ok
+chain: chain read back from the scene file: max 1.00 (want >= 0.5): ok
+chain pulled: peak 1.00 (want >= 0.6): ok
+chain springs back: 0.00 3 s after the release (want <= 0.05): ok
+chain: the action fired (whistle; want one of ['whistle']): ok
+chain: drag haptics 2 (impact, selection; want >= 1): ok
+the reply is spoken: ok
+scene events: whistle; NPC states: idle/react/idle/move/idle: info
+scene_trainCompartment.mp4: 11.9 s at 10 fps, 486 px wide, 414750 B (want <= 12 s, <= 720 px): ok
+scene_trainCompartment_sheet.webp 77312 B: info

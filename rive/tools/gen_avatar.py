@@ -6,7 +6,9 @@ OWN nodes (HeadMood, HeadPhase, HeadLook, HeadGesture, GazeM/GazeP/GazeG...) so
 mood, phase, gestures, blinking and eye-follow compose additively.
 Wardrobe/costumes are `Solo` switches: Hat/Top/Glasses layers pick a child, the
 later Costume layer overrides them while a costume is on (its `none` state keys
-nothing, which hands control back).
+no switch, which hands control back). M10: one sleeve set per sleeve kind and one
+hand for every skin (wardrobe_dedupe.py); the paint of a shared set is keyed in the
+clips that pick it (sleeves: top_*; the hand: every costume_* clip, none = bare skin).
 """
 
 from __future__ import annotations
@@ -21,9 +23,20 @@ from avatar_kit import (BEANIE, BEANIE_HI, BEANIE_SH, FRAME, HAIR, HAIR_HI, HAIR
                         HOOD_SH2, INK, IRIS_A, IRIS_B, MOUTH_IN, PI, SCLERA, SKIN, SKIN_SH, SKIN_SH2, STRING,
                         TEETH, TONGUE, WHITE, E, F, L, L1, L2, R, Rig, S, clip_only, d, grad, group, hgrad, ik, mirror,
                         rgrad, vgrad)
-from rml import El, lin, rad, smooth_path, track, write  # noqa: E402
+from rml import Doc, El, lin, rad, smooth_path, solid, track, write  # noqa: E402
+from motion_synth import Beat, action  # noqa: E402
 from wardrobe_art import Cloth, refine as refine_wardrobe  # noqa: E402
+import avatar_kit as kit  # noqa: E402
+import head_turn  # noqa: E402
 from head_turn import HeadTurn, rig_head  # noqa: E402
+import face_rig  # noqa: E402
+import arm_rig  # noqa: E402
+import avatar_light  # noqa: E402
+import avatar_tablet  # noqa: E402
+import hand_rig  # noqa: E402
+import jacket_art  # noqa: E402
+import wardrobe_dedupe  # noqa: E402
+from face_rig import NUMBERS as FACE_NUMBERS  # noqa: E402
 
 
 def named_el(root_el: El, name: str) -> El:
@@ -41,6 +54,10 @@ rnd = random.Random(42)
 EASE = d("CubicEaseInterpolator", x1=0.42, y1=0.0, x2=0.58, y2=1.0)
 EASE_OUT = d("CubicEaseInterpolator", x1=0.18, y1=0.7, x2=0.35, y2=1.0)
 EASE_IN = d("CubicEaseInterpolator", x1=0.6, y1=0.0, x2=0.85, y2=0.45)
+# moonshot M8: every element added in M8 takes this id range (the hands' pivots are minted while the arms are
+# built; the rest at the end of the file), so no earlier id moves
+M8 = Doc(client=0, start=kit.M8_ID_START)
+M8A = Doc(client=0, start=kit.M8_ARM_ID_START)  # arm_rig's elements inside the M8 block
 
 # ================================================================ RIG
 root = Rig("Root", 400, 1000)              # presence walks this
@@ -289,15 +306,19 @@ def build_sleeves(rig: Rig, elbow: Rig, side: int) -> tuple[Rig, Rig, dict[str, 
 
 
 def build_arm(rig: Rig, side: int) -> dict:
+    """Arm art; arm_rig.rig_arm then hangs it on the M3 bone chain (the nodes below keep their ids:
+    UpperArt / ForeArt become the sleeve frames on the art bones, Hand rides the Wrist bone; the
+    Elbow node only gives the forearm art its coordinates and is retired)."""
     mx = (lambda x: 800 - x) if side == 1 else (lambda x: x)
-    up_art = rig.node("UpperArt")               # scaleY = foreshortening of the upper arm
-    elbow = rig.node("Elbow", mx(240), 900)     # y keyed with the foreshortening
-    fore_art = elbow.node("ForeArt")            # scaleY = foreshortening of the forearm
-    hand = elbow.node("Hand", mx(240), 1070)    # y keyed with the forearm foreshortening
+    up_art = rig.node("UpperArt")               # upper sleeve frame (on UpperArtBone)
+    elbow = rig.node("Elbow", mx(240), 900)     # retired: forearm art coordinates only
+    fore_art = elbow.node("ForeArt")            # forearm sleeve frame (on ForeArtBone)
+    hand = elbow.node("Hand", mx(240), 1070)    # on the Wrist bone; keyed rotation = the hand's lag
     hand_wave = hand.node("HandWave", scaleX=1.15, scaleY=1.15)
     skin_solo = hand_wave.solo("HandSkin")      # bare hand or costume glove (Top/Costume layers)
     skins: dict[str, El] = {}
     pose_sets: list[tuple[Rig, dict[str, El]]] = []
+    drive = hand_rig.drivers(M8, side, (hand_wave.ax, hand_wave.ay))  # M8: one driver set per hand
     for skin, cols in HAND_SKINS.items():
         HC.update(zip(("fill", "shade", "line", "ink"), cols))
         pose_solo = Rig("HandPose", hand_wave.ax, hand_wave.ay, tag="Solo")
@@ -314,9 +335,10 @@ def build_arm(rig: Rig, side: int) -> dict:
                     value = WX + (x - WX) * thumb
                     return 800 - value if side == 1 else value
                 glove_light = {"black": "FF77879F", "metal": "FFDFEDF5", "white": "FFB5C1CC"}[skin]
+                k = 0.82 if name == "up" else 1.0  # M8 review: the `up` hand's shorter fingers carry their seams
                 for i, x in enumerate((217, 232, 248, 263)):
                     g.children.insert(0, S(hand_wave, f"GloveFingerSeam{i}",
-                        [(glove_x(x - 2), WY + 68), (glove_x(x - 2), WY + 83 + i % 2 * 6)],
+                        [(glove_x(x - 2), WY + 68 * k), (glove_x(x - 2), WY + (83 + i % 2 * 6) * k)],
                         L(glove_light, 1.3 if skin == "white" else 1.8), closed=False))
                 if name in ("rest", "back"):
                     for i, x in enumerate((219, 235, 251)):
@@ -325,6 +347,11 @@ def build_arm(rig: Rig, side: int) -> dict:
                             L(glove_light, 1.5), closed=False))
             pose_solo.add(g)
             poses[name] = g
+        # M8 (ruling 2): `back` is the `rest` drawing (the same hand_open call): minted, so every id stays, but
+        # dropped from the tree; every key that picked it now picks `rest`
+        pose_solo.el.children.remove(poses["back"])
+        poses["back"] = poses["rest"]
+        hand_rig.articulate(M8, poses["rest"], side, (hand_wave.ax, hand_wave.ay), drive)
         pose_solo.el.attrs["activeComponentId"] = poses["rest"].ref()
         sk = group("Skin_" + skin, pose_solo.el)
         skin_solo.add(sk)
@@ -332,16 +359,18 @@ def build_arm(rig: Rig, side: int) -> dict:
         pose_sets.append((pose_solo, poses))
     HC.update(zip(("fill", "shade", "line", "ink"), HAND_SKINS["skin"]))
     skin_solo.el.attrs["activeComponentId"] = skins["skin"].ref()
+    hand_wave.el.add(*drive.values())
     up_solo, fore_solo, ups, fores = build_sleeves(rig, elbow, side)
     up_art.el.children = [up_solo.el]
     rig.el.children.remove(up_solo.el)
     fore_art.el.children = [fore_solo.el]
     # front-most first: hand > forearm sleeve > upper sleeve
-    elbow.el.children = [hand.el, fore_art.el]
-    rig.el.children = [elbow.el, up_art.el]
-    return {"arm": rig, "elbow": elbow, "hand": hand, "wave": hand_wave, "up_solo": up_solo, "up_art": up_art,
-            "fore_art": fore_art, "pose_sets": pose_sets, "skin_solo": skin_solo, "skins": skins,
-            "fore_solo": fore_solo, "ups": ups, "fores": fores}
+    elbow.el.children = []
+    arm = {"arm": rig, "elbow": elbow, "hand": hand, "wave": hand_wave, "up_solo": up_solo, "up_art": up_art,
+           "fore_art": fore_art, "pose_sets": pose_sets, "skin_solo": skin_solo, "skins": skins,
+           "fore_solo": fore_solo, "ups": ups, "fores": fores, "drive": drive}
+    arm_rig.rig_arm(arm, side)
+    return arm
 
 
 ARM_R = build_arm(arm_r, -1)
@@ -610,8 +639,9 @@ neck_sh = S(body_g, "NeckShade", [(368, 480), (432, 480), (432, 540), (400, 566)
 face_pts = [(294, 330), (298, 402), (316, 452), (350, 488), (386, 508), (400, 511), (414, 508), (450, 488),
             (484, 452), (502, 402), (506, 330), (490, 262), (400, 222), (310, 262)]
 face = S(head, "Face", face_pts, rgrad(235, [("FFFFE6CF", 0.0), (SKIN, 0.6), ("FFE8B299", 1.0)], cx=-48, cy=-62), L(INK, 2.6))
-FACE_CAST_PTS = [(298, 300), (330, 330), (370, 336), (400, 330), (440, 340), (480, 332), (502, 300), (504, 352),
-                 (490, 360), (470, 352), (440, 362), (400, 356), (360, 362), (320, 356), (300, 366)]
+# the fringe's shadow on the forehead (critic round 2: no tan stripe across the brows): it hugs the
+# hairline and fades out above the brows (a gradient minted at the end, kit.FACE_CAST_FADE)
+FACE_CAST_PTS = kit.FACE_CAST_PTS
 CHEEK_SH_PTS = [(502, 360), (498, 410), (484, 452), (452, 490), (424, 509), (446, 484), (474, 446), (488, 404)]
 face_cast = S(head, "FaceCast", FACE_CAST_PTS, F(SKIN_SH))
 cheek_sh = S(head, "CheekShade", CHEEK_SH_PTS, F(SKIN_SH))
@@ -630,7 +660,8 @@ skin_details = [E(head, "CheekBloom" + tag, x, 437, 65, 44,
                 for tag, x in (("L", 335), ("R", 465))]
 skin_details += [S(head, "ChinLight", [(386, 497), (399, 501), (412, 497)], L("40FFF5E1", 2.5), closed=False)]
 
-# ---- eyes: Eye > [Droop, Squint, EyeMood > Blink > GazeM > GazeP > GazeG > Look(joystick)]
+# ---- eyes: Eye > [GestureClosedLash, GestureLid, EyeMood > Blink > [Lash, LowerLid, Crease,
+#      GazeM > GazeP > GazeG > Look(joystick), White, EyeClip, lid bones]]
 eyes = head.node("Eyes", 400, 385)
 
 
@@ -673,18 +704,23 @@ def build_eye(cx: float, side: int) -> dict:
               clip=clip_src))
     shut = S(blink, "ClosedLash", [(i - 4 * s, 393), (cx - 6 * s, 400), (cx + 12 * s, 400), (o + 9 * s, 391)],
              L("FF2A1B18", 4.2), closed=False, opacity=0.0)
-    blink.el.children = [shut, lash_n.el, lower, crease, lid.el, gaze_m.el, white, clip_src]
-    # mood lids: Droop comes down from the top (sad/angry), Squint rises from below (happy)
-    droop = eye.node("Droop", cx, 360, scaleY=0.0)
-    droop.add(S(droop, "DroopLash", [(i - 6 * s, 392), (cx, 394), (o + 8 * s, 390)], L("FF2A1B18", 4.5), closed=False),
-              S(droop, "DroopLid", [(i - 8 * s, 352, "c"), (o + 10 * s, 352, "c"), (o + 10 * s, 392), (cx, 396),
-                                    (i - 8 * s, 393)], F(SKIN)))
+    # M3: the eye is rebuilt on lid bones (face_rig.rig_lids reshapes EyeClip, White, Lash,
+    # LowerLid and Crease in place). The v5 blink lid, the lash mover, the closed lash and the
+    # mood lids below (droop, squint, squint line) are retired; they are still minted so every
+    # later element keeps its id (keyed ids are the animation contract).
+    blink.el.children = [upper, lower, crease, gaze_m.el, white, clip_src]
+    droop = eye.node("Droop", cx, 360)
+    # the lowered lid follows the eyeball: a curve, not a ruler line
+    droop.add(S(droop, "DroopLash", [(i - 6 * s, 389), (cx, 397), (o + 8 * s, 388)], L("FF2A1B18", 4.5), closed=False),
+              S(droop, "DroopLid", [(i - 8 * s, 352, "c"), (o + 10 * s, 352, "c"), (o + 10 * s, 389), (cx, 398),
+                                    (i - 8 * s, 390)], F(SKIN)))
     # happy: the lower lid rises into a crescent that hides most of the iris
-    squint = S(eye, "Squint", [(i - 8 * s, 402), (cx - 4 * s, 381), (cx + 8 * s, 380), (o + 8 * s, 396),
-                               (o + 10 * s, 420, "c"), (i - 10 * s, 420, "c")], F(SKIN), origin=(cx, 412), scaleY=0.0)
-    squint_line = S(eye, "SquintLine", [(i - 3 * s, 400), (cx - 4 * s, 383.5), (cx + 8 * s, 383), (o + 4 * s, 395)],
-                    L("FF2A1B18", 3.2), closed=False, origin=(cx, 412), scaleY=0.0)
-    eye.el.children = [squint_line, squint, droop.el, eye_mood.el]
+    # happy: one smooth upward arc (no waves) in a thin warm ink
+    squint = S(eye, "Squint", [(i - 8 * s, 404), (cx + 1 * s, 385), (o + 8 * s, 399), (o + 10 * s, 424, "c"),
+                               (i - 10 * s, 424, "c")], F(SKIN), origin=(cx, 412))
+    squint_line = S(eye, "SquintLine", [(i - 2 * s, 401.5), (cx + 1 * s, 387), (o + 3 * s, 398.5)],
+                    L("D03A2622", 2.2), closed=False, origin=(cx, 412))
+    eye.el.children = [eye_mood.el]
     # Gesture lids have their own channels so a facepalm can shut the eyes
     # without stealing the independent mood, blink or pointer-follow tracks.
     gesture_lid = eye.node("GestureLid", cx, 360, scaleY=0.0)
@@ -700,9 +736,12 @@ def build_eye(cx: float, side: int) -> dict:
     brow_g = brow_p.node("BrowG")
     brow_g.add(S(brow_g, "BrowShape", [(cx - 30 * s, 342, "c"), (cx - 8 * s, 335), (cx + 16 * s, 335),
                                        (cx + 36 * s, 344, "c"), (cx + 16 * s, 341), (cx - 8 * s, 341)], F(HAIR)))
-    return {"eye": eye, "mood": eye_mood, "blink": blink, "lid": lid, "lash": lash_n, "shut": shut, "pupil": pupil, "brow_p": brow_p, "gm": gaze_m, "gp": gaze_p, "gg": gaze_g, "look": look,
-            "squint": squint, "squint_line": squint_line, "droop": droop, "brow": brow, "brow_g": brow_g,
-            "gesture_lid": gesture_lid, "gesture_shut": gesture_shut}
+    return {"eye": eye, "mood": eye_mood, "blink": blink, "lash": upper, "lower": lower, "crease": crease,
+            "white": white, "clip": clip_src, "pupil": pupil, "brow_p": brow_p, "gm": gaze_m, "gp": gaze_p,
+            "gg": gaze_g, "look": look, "brow": brow, "brow_g": brow_g, "gesture_lid": gesture_lid,
+            "gesture_shut": gesture_shut, "cx": cx, "s": s,
+            "retired": {"lid": lid, "lash": lash_n, "shut": shut, "squint": squint, "squint_line": squint_line,
+                        "droop": droop}}
 
 
 EYE_L = build_eye(355, -1)
@@ -711,83 +750,34 @@ EYES = [EYE_L, EYE_R]
 eyes.el.children.sort(key=lambda c: 0 if c.attrs.get("name", "").startswith("Brow") else 1)
 
 blush = head.node("Blush", 400, 440, opacity=0.0)
-blush.add(*[E(blush, "Blush" + t, x, 438, 54, 20, rgrad(27, [("B0F08F86", 0.0), ("00F08F86", 1.0)]))
+blush.add(*[E(blush, "Blush" + t, x, 438, 54, 20, rgrad(27, [("B0F08F86", 0.0), ("00F08F86", 1.0)]), clip=face)
             for t, x in (("L", 338), ("R", 462))],
-          *[S(blush, f"BlushLine{t}{k}", [(x - 12 + k * 9, 446), (x - 6 + k * 9, 432)], L("90E07070", 2), closed=False)
+          *[S(blush, f"BlushLine{t}{k}", [(x - 12 + k * 9, 446), (x - 6 + k * 9, 432)], L("90E07070", 2), closed=False,
+              clip=face)
             for t, x in (("L", 338), ("R", 462)) for k in range(3)])
 
-# ---- mouth: closed lines (mood) / opening (mouth blend)
+# ---- mouth: one continuous skinned mouth (rive/tools/face_rig.py) inside MouthActing (gesture
+# squash) > MouthMood (the thinking skew, keyed by moods). Lines keeps its name for the head rig.
 mouth = head.node("Mouth", 400, 478)
 lines = mouth.node("Lines")
-LINES = {
-    "neutral": S(mouth, "LineNeutral", [(383, 477), (400, 480), (417, 477)], L(INK, 2.7), closed=False),
-    "smile": S(mouth, "LineSmile", [(378, 472), (390, 482), (400, 484), (410, 482), (422, 472)], L(INK, 3), closed=False),
-    "frown": S(mouth, "LineFrown", [(380, 486), (390, 479), (400, 477), (410, 479), (420, 486)], L(INK, 3), closed=False),
-    "tight": S(mouth, "LineTight", [(386, 482), (400, 479), (414, 482)], L(INK, 4), closed=False),
-    "o": E(mouth, "LineO", 400, 482, 14, 17, F(MOUTH_IN), L(INK, 3)),
-    "side": S(mouth, "LineSide", [(384, 482), (400, 481), (412, 478), (420, 472)], L(INK, 3), closed=False),
-    "wavy": S(mouth, "LineWavy", [(380, 481), (388, 476), (396, 482), (404, 476), (412, 482), (420, 477)], L(INK, 2.8),
-              closed=False),
-}
-line_solo = lines.solo("LineShape")
-LINE_G = {k: group("Line_" + k, v) for k, v in LINES.items()}
-line_solo.add(*LINE_G.values())
-line_solo.el.attrs["activeComponentId"] = LINE_G["neutral"].ref()
-line_acting = d("Node", line_solo.el, x=0.0, y=0.0, name="MouthActing")
+mouth_mood = d("Node", x=0.0, y=0.0, name="MouthMood")
+line_acting = d("Node", mouth_mood, x=0.0, y=0.0, name="MouthActing")
 lines.el.children = [line_acting]
-open_ = mouth.node("Open", 400, 474, scaleY=0.0, opacity=0.0)
-open_mood = open_.node("OpenMood")
-viseme = open_mood.node("Viseme", 400, 474)        # speaking varies the width (wide / round / narrow)
-open_solo = viseme.solo("OpenShape")               # mood picks the open-mouth drawing
-
-
-def open_shape(name: str, pts: list, top_teeth: bool = True, low_teeth: bool = False, tongue: bool = True) -> El:
-    src = clip_only(S(viseme, name + "Clip", pts))
-    xs = [p[0] for p in pts]
-    ys = [p[1] for p in pts]
-    parts: list[El] = []
-    if top_teeth:
-        parts.append(S(viseme, name + "Teeth", [(min(xs) - 4, min(ys) - 6), (max(xs) + 4, min(ys) - 6),
-                                                (max(xs) + 2, min(ys) + 7), (400, min(ys) + 9), (min(xs) - 2, min(ys) + 7)],
-                       F(TEETH), clip=src))
-    if low_teeth:
-        parts.append(S(viseme, name + "LowTeeth", [(min(xs) - 2, max(ys) - 7), (400, max(ys) - 9),
-                                                   (max(xs) + 2, max(ys) - 7), (max(xs) + 4, max(ys) + 6),
-                                                   (min(xs) - 4, max(ys) + 6)], F("FFF1E6E0"), clip=src))
-    if tongue:
-        parts.append(E(viseme, name + "Tongue", 400, max(ys) - 2, (max(xs) - min(xs)) * 0.62, 16, F(TONGUE), clip=src))
-    parts.append(S(viseme, name + "Inside", pts, vgrad(min(ys), max(ys), "FF4E1C20", MOUTH_IN), L(INK, 2.6)))
-    return group("Open_" + name, *parts, src)
-
-
-OPEN = {
-    "smile": open_shape("Smile", [(372, 471), (400, 469), (428, 471), (422, 490), (400, 503), (378, 490)]),
-    # sad talks through a downturned arch (corners low), never a neutral O
-    "frown": open_shape("Frown", [(370, 494), (380, 480), (392, 472), (408, 472), (420, 480), (430, 494), (416, 492),
-                                  (400, 488), (384, 492)], top_teeth=False),
-    "angry": open_shape("Angry", [(366, 471), (400, 474), (434, 471), (431, 494), (400, 492), (369, 494)],
-                        low_teeth=True, tongue=False),
-    "o": open_shape("O", [(400, 466), (413, 472), (417, 487), (410, 501), (400, 504), (390, 501), (383, 487),
-                          (387, 472)], top_teeth=False),
-    "side": open_shape("Side", [(378, 476), (402, 472), (430, 466), (426, 486), (406, 499), (384, 491)]),
-    "small": open_shape("Small", [(384, 474), (400, 472), (416, 474), (412, 488), (400, 494), (388, 488)],
-                        top_teeth=False),
-}
-open_solo.add(*OPEN.values())
-open_solo.el.attrs["activeComponentId"] = OPEN["smile"].ref()
 
 # ---- mood / phase / gesture overlays on the face
 sweat_m = head.node("SweatMood", 300, 330, opacity=0.0)
 SWEAT = [(0, -26), (8, -6), (10, 6), (0, 14), (-10, 6), (-8, -6)]
 sweat_m.add(S(sweat_m, "Drop", [(300 + x, 330 + y) for x, y in SWEAT], vgrad(-20, 14, "FFE6F6FF", "FF8CC8F0"),
               L("FF3A7AB0", 2.5)))
-anger = head.node("AngerMark", 490, 270, opacity=0.0)
+# the anger vein sits at the temple, in the palette's error red (#FF6B6B)
+AX, AY = 482.0, 292.0
+anger = head.node("AngerMark", AX, AY, opacity=0.0)
 for k in range(4):
     a = k * PI / 2 + PI / 4
-    p0 = (490 + 17 * math.cos(a - 0.5), 270 + 17 * math.sin(a - 0.5))
-    p1 = (490 + 8 * math.cos(a), 270 + 8 * math.sin(a))
-    p2 = (490 + 17 * math.cos(a + 0.5), 270 + 17 * math.sin(a + 0.5))
-    anger.add(S(anger, f"Vein{k}", [p0, p1, p2], L("FFE0303A", 4.5), closed=False))
+    p0 = (AX + 15 * math.cos(a - 0.5), AY + 15 * math.sin(a - 0.5))
+    p1 = (AX + 7 * math.cos(a), AY + 7 * math.sin(a))
+    p2 = (AX + 15 * math.cos(a + 0.5), AY + 15 * math.sin(a + 0.5))
+    anger.add(S(anger, f"Vein{k}", [p0, p1, p2], L("FFFF6B6B", 4.2), closed=False))
 laugh = head.node("LaughFace", 400, 420, opacity=0.0)
 laugh.add(*[S(laugh, f"LaughEye{t}", [(x - 22, 396), (x, 376), (x + 22, 396)], L("FF2A1B18", 5), closed=False)
             for t, x in (("L", 355), ("R", 445))],
@@ -812,23 +802,44 @@ sweat_p.add(S(sweat_p, "Drop", [(508 + x, 300 + y) for x, y in SWEAT], vgrad(-20
 glasses_solo = head.solo("GlassesSolo")
 
 
-def glasses_set(name: str, lens_fill: El | str, glare_a: str) -> El:
+def glasses_set(name: str, clear: bool, glint_a: str) -> El:
+    """Critic round 2: the frame at interior weight in the 85 % warm ink, corners >= 30 % of the
+    lens height, one paper-white glint per lens (the clear lenses lose their tint). Every lens mints
+    exactly as many ids as the M2 lens did (`pad`), so no later id moves."""
+    def pad(start: int, count: int) -> None:
+        assert d.next - start <= count, (d.next - start, count)
+        d.next = start + count
+
     def lens(cx: float, t: str) -> El:
-        pts = [(cx - 43, 364, "c12"), (cx + 43, 364, "c12"), (cx + 41, 410, "c14"), (cx - 41, 410, "c14")]
-        lf = lens_fill if isinstance(lens_fill, str) else None
-        paint = F(lf) if lf else d("Fill", lin(d, 0, -24, 0, 24, [("F0181820", 0.0), ("F0383A48", 1.0)]), name="Fill")
-        return S(head, "Lens" + t, pts, paint, L(FRAME, 4.2))
+        start = d.next
+        if clear:  # a tapered ring: outer minus inner rounded rectangle (even-odd), no lens tint
+            rects = []
+            for dy, w, h, rt, rb, _ in kit.lens_ring().values():
+                rects.append(d("Rectangle", width=w, height=h, linkCornerRadius=False, cornerRadiusTL=rt,
+                               cornerRadiusTR=rt, cornerRadiusBL=rb, cornerRadiusBR=rb, y=round(dy, 3), name="Path"))
+            ring = d("Fill", solid(d, kit.FRAME_INK), fillRule="evenOdd", name="Fill")
+            pad(start, 9)  # the Shape keeps the M2 lens's id (it is minted last)
+            el = d("Shape", *rects, ring, x=cx - head.ax, y=kit.LENS_CY - head.ay, name="Lens" + t)
+        else:  # sunglasses: a dark lens, the same soft rectangle, a slightly fuller bottom
+            hw, hh = kit.LENS_W / 2, kit.LENS_H / 2 - 3
+            y0 = kit.LENS_CY
+            pts = [(cx - hw, y0 - hh, "c16"), (cx + hw, y0 - hh, "c16"), (cx + hw, y0 + hh, "c22"),
+                   (cx - hw, y0 + hh, "c22")]
+            paint = d("Fill", lin(d, 0, -24, 0, 24, [("F0181820", 0.0), ("F0383A48", 1.0)]), name="Fill")
+            el = S(head, "Lens" + t, pts, paint, L(kit.FRAME_INK, kit.FRAME_W))
+        pad(start, 12 if not clear else 10)
+        return el
     return group(name,
-                 S(head, "Glare", [(330, 370), (346, 370), (322, 402), (310, 402)], F(glare_a)),
-                 S(head, "Glare2", [(420, 370), (436, 370), (412, 402), (402, 402)], F(glare_a)),
+                 S(head, "Glare", kit.lens_glint(355), F(glint_a + kit.PAPER)),
+                 S(head, "Glare2", kit.lens_glint(445), F(glint_a + kit.PAPER)),
                  lens(355, "L"), lens(445, "R"),
-                 S(head, "Bridge", [(398, 378), (400, 374), (402, 378)], L(FRAME, 5), closed=False),
-                 S(head, "TempleL", [(311, 370), (296, 368)], L(FRAME, 6), closed=False),
-                 S(head, "TempleR", [(489, 370), (504, 368)], L(FRAME, 6), closed=False))
+                 S(head, "Bridge", [(398, 378), (400, 375), (402, 378)], L(kit.FRAME_INK, kit.FRAME_W), closed=False),
+                 S(head, "TempleL", [(311, 370), (296, 368)], L(kit.FRAME_INK, 1.2 * kit.FRAME_W), closed=False),
+                 S(head, "TempleR", [(489, 370), (504, 368)], L(kit.FRAME_INK, 1.2 * kit.FRAME_W), closed=False))
 
 
-GLASSES = {"glasses": glasses_set("G_glasses", "14B8D8F0", "40FFFFFF"),
-           "sunglasses": glasses_set("G_sunglasses", None, "55FFFFFF"),  # type: ignore[arg-type]
+GLASSES = {"glasses": glasses_set("G_glasses", True, "B8"),
+           "sunglasses": glasses_set("G_sunglasses", False, "90"),
            "none": group("G_none")}
 glasses_solo.add(*GLASSES.values())
 glasses_solo.el.attrs["activeComponentId"] = GLASSES["glasses"].ref()
@@ -838,16 +849,11 @@ hair_front = head.node("HairFront")
 
 
 def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: float, bend: float) -> El:
-    (rx, ry), (tx, ty) = root_, tip
-    dx, dy = tx - rx, ty - ry
-    ln = math.hypot(dx, dy)
-    nx, ny = -dy / ln, dx / ln
-
-    def at(t: float, off: float) -> tuple[float, float]:
-        bow = math.sin(math.pi * t) * bend
-        return (rx + dx * t + nx * (off + bow), ry + dy * t + ny * (off + bow))
-    pts = [at(0, -w / 2), at(0.45, -w * 0.42), at(0.8, -w * 0.2), (tx + nx * bend * 0.1, ty, "c"),
-           at(0.78, w * 0.16), at(0.42, w * 0.44), at(0, w / 2)]
+    # a tapered clump ending in a soft point (critic round 2; art bible §3: no hard corner, no ball):
+    # the tip is a StraightVertex with a radius of 24 % of the width at its shoulders
+    # (kit.lock_outline). Same vertex count as the M2 spike, so no later id moves.
+    pts, at = kit.lock_outline(root_, tip, w, bend, kit.FRINGE_FLICK.get(int(name[4:]), 0.0))
+    ln = math.hypot(tip[0] - root_[0], tip[1] - root_[1])
     base = S(head, name, pts, grad([(HAIR_HI, 0.0), (HAIR, 0.55), (HAIR_SH, 1.0)], -ln / 2, ln / 2), L(HAIR_SH, 1.5))
     # Separate tapered ribbons, clipped to each lock, give the hair a satin
     # surface. They travel with the hair rig, including under hats.
@@ -859,17 +865,21 @@ def lock(name: str, root_: tuple[float, float], tip: tuple[float, float], w: flo
     return group(name + "Material", light, strand, base)
 
 
-LOCKS = [((300, 272), (292, 404), 44, -8), ((330, 246), (318, 366), 50, 12), ((360, 236), (350, 338), 50, 10),
-         ((396, 230), (420, 368), 70, 18), ((436, 234), (452, 334), 52, 10), ((470, 248), (490, 376), 58, 9),
-         ((498, 276), (510, 410), 40, 6), ((380, 236), (372, 318), 30, 6), ((452, 242), (474, 322), 28, 6)]
+# The brows paint under the fringe (a raised brow slides under the tips). Critic round 2: three
+# length tiers in four clumps, parted right of centre. Long: the temple locks (0, 6). Medium: the
+# outer brow-end locks (1, 5) and the centre lock (3), which sweeps left from the parting and hangs
+# between the brows. Short: a pair over each brow (2 + 7, 4 + 8, tips converging), ending well above
+# it so the bigger brow raise still reads (kit.LOCK_TIERS, kit.LOCK_CLUMPS).
+LOCKS = kit.FRINGE_LOCKS
+# side locks: their roots reach up under the cap (hidden at rest), so at 3/4 the shifted cap never
+# uncovers a sliver of temple skin above the near lock (critic round 2)
+SIDE_LOCK = [(296, 300), (314, 370), (308, 430), (296, 466, "c"), (290, 420), (290, 346)]
 hair_front.add(*[lock(f"Lock{i}", *LOCKS[i]) for i in [7, 8, 3, 2, 4, 1, 5, 0, 6]],
                S(head, "HairCap", [(290, 340), (294, 270), (330, 232), (400, 214), (470, 232), (506, 270), (510, 340),
                                    (470, 300), (400, 292), (330, 300)], grad([(HAIR_HI, 0.0), (HAIR, 0.6)], -60, 60),
                  L(HAIR_SH, 2.4)),
-               S(head, "SideLockL", [(300, 330), (314, 370), (308, 430), (296, 466, "c"), (290, 420), (288, 360)],
-                 F(HAIR), L(HAIR_SH, 2.5)),
-               S(head, "SideLockR", mirror([(300, 330), (314, 370), (308, 430), (296, 466, "c"), (290, 420), (288, 360)]),
-                 F(HAIR), L(HAIR_SH, 2.5)))
+               S(head, "SideLockL", SIDE_LOCK, F(HAIR), L(HAIR_SH, 2.5)),
+               S(head, "SideLockR", mirror(SIDE_LOCK), F(HAIR), L(HAIR_SH, 2.5)))
 hair_back = head.node("HairBack")
 hair_back.add(S(head, "HairBackShape", [(286, 430), (272, 340), (284, 262), (334, 212), (400, 196), (466, 212),
                                         (516, 262), (528, 340), (514, 430), (534, 478, "c"), (500, 466), (488, 420),
@@ -1088,12 +1098,17 @@ def hair_spring(name: str, rig: Rig) -> El:
 hair_follow = hair_spring("FringeFollowThrough", hair_front)
 back_follow = hair_spring("BackHairFollowThrough", hair_back)
 tuft_follow = hair_spring("TuftFollowThrough", tufts)
-head.el.children = [hat_solo.el, sweat_m.el, sweat_p.el, anger.el, glasses_solo.el, hair_follow, laugh.el,
+# Brows paint under the fringe (M3 critic round: a raised brow drawn over the bangs read as pasted on
+# the hair; the locks now occlude it) and over the face; same frame as the eyes so the head rig and
+# the gesture travel treat them alike.
+brows = d("Node", *[e["brow"].el for e in EYES], x=eyes.el.attrs["x"], y=eyes.el.attrs["y"], name="Brows")
+eyes.el.children = [c for c in eyes.el.children if c not in (EYE_L["brow"].el, EYE_R["brow"].el)]
+head.el.children = [hat_solo.el, sweat_m.el, sweat_p.el, anger.el, glasses_solo.el, hair_follow, brows, laugh.el,
                     eyes.el, blush.el, mouth.el, mole, nose_g.el, *skin_details, cheek_sh, face_cast, face, *ears, tufts.el,
                     back_follow, hit_head]
 head.el.children[head.el.children.index(tufts.el)] = tuft_follow
 travel_parts = []
-for part in (eyes.el, glasses_solo.el, mouth.el, nose_g.el, blush.el, mole):
+for part in (eyes.el, brows, glasses_solo.el, mouth.el, nose_g.el, blush.el, mole):
     travel_part = d("Node", part, x=0.0, y=0.0, name="Travel" + str(part.attrs["name"]))
     head.el.children[head.el.children.index(part)] = travel_part
     travel_parts.append(travel_part)
@@ -1120,6 +1135,10 @@ body_g.el.children = [bubble.el, question.el, clap_fx.el, swing_r.el, swing_l.el
                       top_front.el, chin_sh, neck_sh, neck, top_back.el, back_fx.el, hit_body]
 
 cloth_parts = refine_wardrobe(body_g, head, TF, TB, HATS, ARMS, GLASSES, cape_rig)
+# M3: sleeves and bare arms skinned across the elbow (after the wardrobe pass adds its sleeve details)
+for a in ARMS:
+    arm_rig.continuous_sleeves(a, -1 if a is ARM_R else 1, {oid: SLEEVES[oid][4] for oid in OUTFITS})
+SKINNED_SLEEVES = sum(arm_rig.skin_sleeves(a, -1 if a is ARM_R else 1) for a in ARMS)
 # The cape's attachment remains on the collar; a separate response pivots it
 # while the lower contour ripples. The costume layer only selects visibility.
 cape_anchor = (float(cape_rig.el.attrs["x"]), float(cape_rig.el.attrs["y"]))
@@ -1136,7 +1155,7 @@ cloth_parts.append(Cloth(cape_life, cape_response, 1.35, 0.8, 0.009))
 CONTRACT_ENUMS = {
     "Mood": ["neutral", "happy", "sad", "angry", "surprised", "thinking", "embarrassed"],
     "Phase": ["idle", "waiting", "generating", "speaking", "error"],
-    "GestureId": ["wave", "laugh", "facepalm", "shrug", "nod", "headshake", "clap", "think"],
+    "GestureId": ["wave", "laugh", "facepalm", "shrug", "nod", "headshake", "clap", "think"],  # + M8's three (end)
     "Hat": HAT_IDS,
     "Top": TOP_IDS,
     "Glasses": ["glasses", "sunglasses"],
@@ -1153,12 +1172,18 @@ EN_OF = {"mood": "Mood", "phase": "Phase", "gestureId": "GestureId", "hat": "Hat
          "costume": "Costume", "presence": "Presence"}
 DEFAULTS = {"mood": "neutral", "phase": "idle", "gestureId": "wave", "hat": "noHat", "top": "pinkHoodie",
             "glasses": "glasses", "costume": "none", "presence": "onScreen"}
+NUMBER_PROPS = {"mouth", *FACE_NUMBERS}  # contract v5: face action units, speech mouth, roll, breath
+TRIGGER_PROPS = {"gesture", "blink"}
+BOOL_PROPS = {"autoBlink": True}
 props: dict[str, El] = {}
-for pn in ["mood", "mouth", "phase", "gestureId", "gesture", "hat", "top", "glasses", "costume", "presence"]:
-    if pn == "mouth":
+for pn in ["mood", "mouth", "phase", "gestureId", "gesture", "hat", "top", "glasses", "costume", "presence",
+           *FACE_NUMBERS, "autoBlink", "blink"]:
+    if pn in NUMBER_PROPS:
         props[pn] = d("ViewModelPropertyNumber", name=pn)
-    elif pn == "gesture":
+    elif pn in TRIGGER_PROPS:
         props[pn] = d("ViewModelPropertyTrigger", name=pn)
+    elif pn in BOOL_PROPS:
+        props[pn] = d("ViewModelPropertyBoolean", name=pn)
     else:
         props[pn] = d("ViewModelPropertyEnumCustom", enumId=enums[EN_OF[pn]].ref(), name=pn)
 ivals = []
@@ -1166,8 +1191,10 @@ for pn, p in props.items():
     if pn in DEFAULTS:
         ivals.append(d("ViewModelInstanceEnum", propertyValue=evals[EN_OF[pn]][DEFAULTS[pn]].ref(),
                        viewModelPropertyId=p.ref()))
-    elif pn == "mouth":
+    elif pn in NUMBER_PROPS:
         ivals.append(d("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=p.ref()))
+    elif pn in BOOL_PROPS:
+        ivals.append(d("ViewModelInstanceBoolean", propertyValue=BOOL_PROPS[pn], viewModelPropertyId=p.ref()))
     else:
         ivals.append(d("ViewModelInstanceTrigger", viewModelPropertyId=p.ref()))
 inst = d("ViewModelInstance", *ivals, exports=True, name="Default")
@@ -1198,25 +1225,43 @@ def trig(pn: str) -> El:
              d("TransitionValueTriggerComparator"))
 
 
+# ================================================================ LIDS (M3)
+# Each eye's opening on lid bones (rive/tools/face_rig.py rig_lids), minted from its own id range
+# with the v6 per-side numbers, so the ids of everything in this document stay put. Built before
+# the animations: the blinks key the BlinkDrive constraints.
+lids = face_rig.FaceRig(lambda pn: vpath(pn) if pn in props else (
+    f"{vm.ref()}-{side_props[pn].ref()}" if pn in side_props else f"@{pn}"), start=face_rig.LID_ID_START)
+side_props = face_rig.add_side_numbers(lids.d, vm, inst)
+BLINK_DRIVES = {id(e): face_rig.rig_lids(lids, e, e["cx"], e["s"], "FF2A1B18", "B8603A30", SKIN_SH2, SCLERA,
+                                           "38B07A68")
+                for e in EYES}
+BLINK_SQUASH = {id(e): face_rig.add_blink_squash(lids, e) for e in EYES}
+
 # ================================================================ ANIMATIONS
 anims: list[El] = []
 
 
+def seam(tracks: list[El], frames: int, doc: Doc = d) -> None:
+    """A one-frame constant segment at either side of a closed loop makes its seam exact even when
+    the runtime accumulates fractional frames."""
+    if frames <= 4:
+        return
+    for obj in tracks:
+        if obj is None:
+            continue
+        for prop in obj.children:
+            first, last = prop.children[0], prop.children[-1]
+            if (len(prop.children) > 1 and first.attrs["frame"] == 0 and last.attrs["frame"] == frames
+                    and first.attrs["value"] == last.attrs["value"]):
+                if prop.children[1].attrs["frame"] > 1:
+                    prop.children.insert(1, doc(first.tag, **{**first.attrs, "frame": 1}))
+                if prop.children[-2].attrs["frame"] < frames - 1:
+                    prop.children.insert(-1, doc(last.tag, **{**last.attrs, "frame": frames - 1}))
+
+
 def A(name: str, frames: int, tracks: list[El], loop: bool = False) -> El:
-    if loop and frames > 4:
-        # A one-frame constant segment at either side of a closed loop makes
-        # its seam exact even when the runtime accumulates fractional frames.
-        for obj in tracks:
-            if obj is None:
-                continue
-            for prop in obj.children:
-                first, last = prop.children[0], prop.children[-1]
-                if (len(prop.children) > 1 and first.attrs["frame"] == 0 and last.attrs["frame"] == frames
-                        and first.attrs["value"] == last.attrs["value"]):
-                    if prop.children[1].attrs["frame"] > 1:
-                        prop.children.insert(1, d(first.tag, **{**first.attrs, "frame": 1}))
-                    if prop.children[-2].attrs["frame"] < frames - 1:
-                        prop.children.insert(-1, d(last.tag, **{**last.attrs, "frame": frames - 1}))
+    if loop:
+        seam(tracks, frames)
     a = d("LinearAnimation", *[t for t in tracks if t is not None], duration=frames, fps=60,
           loopValue="loop" if loop else None, name=name)
     anims.append(a)
@@ -1269,8 +1314,26 @@ blink_keys = [(0, 0.0), (168, 0.0), (171, 1.0), (173, 1.0), (181, 0.0),
               (560, 0.0), (563, 0.55), (566, 0.55), (572, 0.0), (660, 0.0)]
 
 
-def blink_track(e: dict) -> list[El]:
-    ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in blink_keys]
+def blink_anim(name: str, frames: int, keys: list[tuple[int, float]] | None = None, loop: bool = False) -> El:
+    """(M3, contract v6) a blink slides the upper lid bones onto the lower lid line: the keys drive
+    each eye's BlinkDrive constraints (0 open .. 1 closed). The v5 tracks are still minted (and
+    dropped) so every later id stays unchanged; the new tracks come from the lid rig's id range."""
+    ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in (keys or blink_keys)]
+    retired = [t for e in EYES for t in retired_blink_track(e, keys)]
+    new = [track(lids.d, c, {"strength": [(f, v, it) for f, v, it in ks]}) for e in EYES for c in BLINK_DRIVES[id(e)]]
+    new += [track(lids.d, BLINK_SQUASH[id(e)], {"scaleY": [(f, face_rig.blink_squash(v), it) for f, v, it in ks]})
+            for e in EYES]
+    if loop:
+        seam(new, frames, lids.d)
+    a = A(name, frames, retired + new, loop=loop)
+    a.children = [c for c in a.children if c not in retired]
+    return a
+
+
+def retired_blink_track(e: dict, keys: list[tuple[int, float]] | None = None) -> list[El]:
+    """The v5 blink (lash cross-fade over a sliding skin lid); its tracks are no longer used."""
+    e = {**e, **e["retired"]}
+    ks = [(f, v, EASE_OUT if v > 0.5 else EASE) for f, v in (keys or blink_keys)]
     # the closed-lash swap lasts exactly while the eye is shut: switch back one frame after
     shut = []
     for (f, v, _), nxt in zip(ks, ks[1:] + [None]):
@@ -1278,85 +1341,65 @@ def blink_track(e: dict) -> list[El]:
         shut.append((f, 1.0 if closed else 0.0))
         if closed and nxt is not None and nxt[1] <= 0.99:
             shut.append((f + 1, 0.0))
-    return [T(e["lid"], scaleY=[(f, v, it) for f, v, it in ks]),
+    # a closing lid hides the smile and sad lid strokes, so a closed eye is one clean lash line
+    hide = [(f, max(0.0, 1.0 - 1.6 * v), it) for f, v, it in ks]
+    mood_strokes = [T(e["squint_line"], opacity=hide), T(e["squint"], opacity=hide),
+                    T(named_el(e["droop"].el, "DroopLash"), opacity=hide)]
+    return [*mood_strokes, T(e["lid"], scaleY=[(f, v, it) for f, v, it in ks]),
             T(e["lash"], y=[(f, float(e["lash"].el.attrs["y"]) + 24.0 * v, it) for f, v, it in ks],
               scaleY=[(f, 1.0 - 0.55 * v, it) for f, v, it in ks],
               opacity=[(f, 1.0 - o, "hold") for f, o in shut]),
             T(e["shut"], opacity=[(f, o, "hold") for f, o in shut])]
 
 
-blink = A("idle_blink", 660, [t for e in EYES for t in blink_track(e)], loop=True)
+blink = blink_anim("idle_blink", 660, loop=True)
+# contract v5: `autoBlink` false holds the eyes open; the `blink` trigger plays one blink (the app
+# moves blinks into speech pauses)
+blink_hold = blink_anim("blink_hold", 1, [(0, 0.0)])
+blink_once = blink_anim("blink_once", 16, [(0, 0.0), (3, 1.0), (5, 1.0), (14, 0.0), (16, 0.0)])
 LOOK_X, LOOK_Y = 7.0, 4.5
 look_x = A("look_x", 100, [*[T(e["look"], ease=None, x=[(0, -LOOK_X), (100, LOOK_X)]) for e in EYES],
                            T(head_look, ease=None, rotation=[(0, -0.035), (100, 0.035)])])
 look_y = A("look_y", 100, [T(e["look"], ease=None, y=[(0, -LOOK_Y), (100, LOOK_Y)]) for e in EYES])
 
-# ---- moods: every pose keys every channel so crossfades blend cleanly
-MOOD_DEF = dict(brow=((0, 0.0), (0, 0.0)), droop=(0.0, 0.0), squint=0.0, eye_scale=1.0, gaze=(0, 0), line="neutral",
-                blush=0.0, tilt=0.0, head_y=0.0, open_w=1.0, open_rot=0.0, sweat=0.0, anger=0.0, pupil=1.0)
+# ---- moods (contract v5): accents only. Brows, lids, cheeks, nose and the mouth shape follow the
+# `au*` numbers (rive/tools/face_rig.py); the app writes each mood's AU preset. Every pose keys
+# every accent channel so the 240 ms crossfades blend cleanly.
+MOOD_DEF = dict(gaze=(0, 0), blush=0.0, tilt=0.0, head_y=0.0, mouth_rot=0.0, mouth_x=0.0, sweat=0.0, anger=0.0,
+                pupil=1.0)
 MOOD_SPEC = {
     "neutral": {},
-    "happy": dict(brow=((-6, 0.0), (-6, 0.0)), squint=0.46, line="smile", blush=0.65, tilt=-0.04, open_w=1.15),
-    "sad": dict(brow=((-3, -0.24), (-3, -0.24)), droop=(0.38, -0.18), line="frown", tilt=0.05, head_y=6.0,
-                gaze=(0, 3), open_w=0.9),
-    "angry": dict(brow=((5, 0.28), (5, 0.28)), droop=(0.3, 0.22), line="tight", tilt=-0.02, anger=1.0, open_w=1.1,
-                  pupil=0.85,
-                  head_y=2.0),
-    "surprised": dict(brow=((-17, -0.04), (-17, -0.04)), eye_scale=1.14, line="o", head_y=-6.0, open_w=0.8,
-                      pupil=0.68),
-    "thinking": dict(brow=((-14, -0.1), (3, 0.17)), gaze=(-7, -8), line="side", tilt=0.085, open_rot=-0.12,
-                     head_y=-2.0),
-    "embarrassed": dict(brow=((-2, -0.18), (-2, -0.18)), droop=(0.14, -0.05), gaze=(4, 3), line="wavy", blush=1.0,
-                        sweat=1.0, tilt=0.04, open_w=0.95),
+    "happy": dict(blush=0.65, tilt=-0.04),
+    "sad": dict(tilt=0.05, head_y=6.0, gaze=(0, 9)),
+    "angry": dict(tilt=-0.02, anger=1.0, pupil=0.85, head_y=2.0),
+    "surprised": dict(head_y=-6.0, pupil=0.68),
+    "thinking": dict(gaze=(-7, -8), tilt=0.085, mouth_rot=-0.12, mouth_x=3.0, head_y=-2.0),
+    "embarrassed": dict(gaze=(6, 6), blush=1.0, sweat=1.0, tilt=0.04),
 }
 
 
 def mood_pose(name: str, spec: dict) -> El:
     p = {**MOOD_DEF, **spec}
     tr: list[El] = []
-    for i, e in enumerate(EYES):
-        s = -1 if i == 0 else 1
-        by, br = p["brow"][i]
-        tr.append(K(e["brow"], y=-39.0 + by, rotation=-br * s))
-        dr, drot = p["droop"]
-        tr.append(K(e["droop"], scaleY=dr, rotation=-drot * s))
-        # A warm smile maintains eye contact. The eye-smile is a brief accent,
-        # not a permanent closed-eye mask throughout happy speech.
-        smile_keys = [(0, 0.46), (100, 0.53), (180, 0.46), (203, 0.97), (212, 0.97),
-                      (234, 0.49), (300, 0.53), (360, 0.46)]
-        tr.append(T(e["squint"], scaleY=smile_keys) if name == "happy" else K(e["squint"], scaleY=p["squint"]))
-        tr.append(T(e["squint_line"], scaleY=smile_keys) if name == "happy" else K(e["squint_line"], scaleY=p["squint"]))
-        tr.append(K(e["mood"], scaleX=p["eye_scale"], scaleY=p["eye_scale"]))
+    for e in EYES:
         tr.append(K(e["pupil"], scaleX=p["pupil"], scaleY=p["pupil"]))
         tr.append(K(e["gm"], x=float(p["gaze"][0]), y=float(p["gaze"][1])))
-    tr.append(K(line_solo, activeComponentId=LINE_G[p["line"]]))
-    tr.append(K(open_solo, activeComponentId=OPEN[{"neutral": "smile", "smile": "smile", "frown": "frown",
-                                                  "tight": "angry", "o": "o", "side": "side",
-                                                  "wavy": "small"}[p["line"]]]))
     tr += [K(blush, opacity=p["blush"]), K(head_mood, rotation=p["tilt"], y=p["head_y"]),
-           K(open_mood, scaleX=p["open_w"], rotation=p["open_rot"]), K(sweat_m, opacity=p["sweat"]),
+           K(mouth_mood, rotation=p["mouth_rot"], x=p["mouth_x"]), K(sweat_m, opacity=p["sweat"]),
            K(anger, opacity=p["anger"])]
-    return A("mood_" + name, 360 if name == "happy" else 1, tr, loop=name == "happy")
+    return A("mood_" + name, 1, tr)
 
 
 MOODS = {m: mood_pose(m, spec) for m, spec in MOOD_SPEC.items()}
-
-# ---- mouth 0..4 (closed, slightly, semi, open, wide)
-MOUTH = [(0.0, 0.0, 1.0, 1.0), (0.28, 1.0, 0.0, 0.92), (0.55, 1.0, 0.0, 0.96), (0.85, 1.0, 0.0, 1.0), (1.1, 1.0, 0.0, 1.18)]
-OPEN_Y = float(open_.el.attrs["y"])
-JAW = [0.0, 0.0, 1.0, 3.0, 5.0]     # wide-open levels drop the mouth a touch (jaw)
-mouth_anims = [A(f"mouth_{i}", 1, [K(open_, scaleY=sy, opacity=op, scaleX=sx, y=OPEN_Y + JAW[i]), K(lines, opacity=lo)])
-               for i, (sy, op, lo, sx) in enumerate(MOUTH)]
 
 
 # ---- phases (looping poses; all channels keyed in each)
 def phase_anim(name: str, frames: int, head_y: list | None = None, head_rot: list | None = None,
                gaze: list | None = None, bubble_on: float = 0.0, dot_bounce: bool = False, q_on: float = 0.0,
-               sweat_on: float = 0.0, brow: list | None = None, vis: list | None = None) -> El:
+               sweat_on: float = 0.0, brow: list | None = None) -> El:
     z = [(0, 0.0), (frames, 0.0)]
     tr = [T(head_phase, y=head_y or z, rotation=head_rot or z, x=z)]
     tr += [T(e["brow_p"], y=brow or z) for e in EYES]
-    tr.append(T(viseme, scaleX=vis or [(0, 1.0), (frames, 1.0)]))
     for e in EYES:
         tr.append(T(e["gp"], x=[(f, gx) for f, gx, gy in gaze] if gaze else z,
                     y=[(f, gy) for f, gx, gy in gaze] if gaze else z))
@@ -1391,18 +1434,9 @@ PHASES = {
                           brow=[(0, 0.0), (40, -4.0), (150, -2.0), (200, -5.0), (290, -2.0), (360, 0.0)]),
     "generating": phase_anim("generating", 60, head_rot=[(0, -0.04), (60, -0.04)],
                              gaze=[(0, 5, -5), (60, 5, -5)], bubble_on=1.0, dot_bounce=True),
-    # speaking: irregular beats — head accents land with brow lifts, the width cycles wide/round/narrow
+    # speaking (contract v5): a faint sway only; the app's prosody acting drives brows, nods and blinks
     "speaking": phase_anim("speaking", 420,
-                           head_y=[(0, 0.0), (30, -5.0), (52, 1.0), (96, -1.0), (128, -6.0), (150, 0.5), (210, 0.0),
-                                   (246, -4.0), (270, 1.0), (330, -2.0), (352, -5.5), (380, 0.5), (420, 0.0)],
-                           head_rot=[(0, 0.0), (40, 0.022), (100, -0.012), (140, 0.018), (200, -0.02), (262, 0.016),
-                                     (330, -0.014), (372, 0.01), (420, 0.0)],
-                           gaze=[(0, 0, 0), (60, 3, 0), (110, 3, -1), (190, -2, 0), (300, -3, 1), (360, 1, 0),
-                                 (420, 0, 0)],
-                           brow=[(0, 0.0), (24, -6.0), (44, 0.0), (122, -7.0), (146, 0.0), (240, -4.0), (262, 0.0),
-                                 (346, -6.0), (372, 0.0), (420, 0.0)],
-                           vis=[(0, 1.0)] + [(f, v) for f, v in zip(range(10, 412, 9), [0.84, 1.14, 0.92, 1.06, 0.8, 1.12, 0.95, 0.86, 1.1, 0.9, 1.0, 0.82, 1.15, 0.94, 1.04, 0.85, 1.1, 0.92] * 3)]
-                               + [(420, 1.0)]),
+                           head_rot=[(0, 0.0), (70, 0.008), (160, -0.006), (250, 0.007), (340, -0.005), (420, 0.0)]),
     "error": phase_anim("error", 120, head_rot=[(0, 0.06), (120, 0.06)], gaze=[(0, -4, 2), (120, -4, 2)],
                         q_on=1.0, sweat_on=1.0),
 }
@@ -1428,10 +1462,16 @@ def _unwrap(prev: float, v: float) -> float:
 
 def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
              hand: list[tuple[int, str]] | None = None, step: int = 2) -> list[El]:
-    """IK baked along the WRIST path (not joint angles), so the hand travels on a smooth eased
-    arc between key poses and never swings wide. Pose = (frame, wrist|None, finger_deg, fs, fs2)
-    with fs/fs2 the upper/forearm foreshortening. The hand trails the forearm by `lag` frames;
-    `hand` switches the hand drawing [(frame, pose name)]."""
+    """The wrist path is authored (not joint angles), so the hand travels on a smooth eased arc
+    between key poses and never swings wide. Pose = (frame, wrist|None, finger_deg, fs, fs2) with
+    fs/fs2 the upper/forearm foreshortening. The hand trails the forearm by `lag` frames; `hand`
+    switches the hand drawing [(frame, pose name)].
+
+    M3: the runtime IKConstraint poses the arm. The Python solver (avatar_kit.ik) still solves every
+    sample; its forward kinematics give the keyed HandTarget (arm_rig.gesture_tracks), its elbow side
+    the gesture's invertDirection, and its hand angle the Hand rotation keys. The retired shoulder /
+    elbow rotation, joint offset and art scaleY tracks are still built so their main-doc ids stay
+    burnt (every other id is unchanged), then dropped."""
     a = ARMS[0 if side == -1 else 1]
     rest = (800 - REST[0] if side == 1 else REST[0], REST[1])
     P = [(p[0], rest if p[1] is None else p[1], p[2], p[3] if len(p) > 3 else 1.0, p[4] if len(p) > 4 else 1.0)
@@ -1462,6 +1502,7 @@ def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
     frames = sorted(set(list(range(P[0][0], P[-1][0], step)) + [p[0] for p in P]))
     k1, k2, k3, ey, us, hy, fsy = [], [], [], [], [], [], []
     prev = (0.0, 0.0, 0.0)
+    samples: list[tuple[int, tuple[float, float, float], float, float]] = []
     for f in frames:
         rest_pose = any(p[0] == f and p[1] is None for p in poses)
         w, _, fs, fs2 = sample(f)
@@ -1469,6 +1510,7 @@ def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
         r = (0.0, 0.0, 0.0) if rest_pose else ik(side, w, deg_lag, out, fs, fs2)
         r = tuple(_unwrap(pv, v) for pv, v in zip(prev, r))
         prev = r
+        samples.append((f, r, fs, fs2))
         k1.append((f, r[0], "linear"))
         k2.append((f, r[1], "linear"))
         k3.append((f, r[2], "linear"))
@@ -1476,12 +1518,17 @@ def arm_keys(side: int, poses: list[Pose], out: bool = False, lag: int = 2,
         us.append((f, fs, "linear"))
         hy.append((f, L2 * fs2, "linear"))
         fsy.append((f, fs2, "linear"))
-    tr = [T(a["arm"], rotation=k1), T(a["elbow"], rotation=k2, y=ey), T(a["hand"], rotation=k3, y=hy),
-          T(a["up_art"], scaleY=us), T(a["fore_art"], scaleY=fsy)]
+    retired = [T(a["arm"], rotation=k1), T(a["elbow"], rotation=k2, y=ey), T(a["hand"], rotation=k3, y=hy),
+               T(a["up_art"], scaleY=us), T(a["fore_art"], scaleY=fsy)]
+    hand_track = retired[2]
+    hand_track.children = [p for p in hand_track.children if p.attrs["property"] == "rotation"]
+    arm_rig.simplify_track(hand_track, arm_rig.HAND_TOL)
+    tr = [hand_track]
     if hand:
         for solo, ps in a["pose_sets"]:
             tr.append(T(solo, activeComponentId=[(f, ps[n]) for f, n in hand]))
-    return tr
+    ik_tracks, _ = arm_rig.gesture_tracks(a, side, samples, [(p[0], p[3], p[4]) for p in P])
+    return tr + ik_tracks
 
 
 def mirror_poses(poses: list[Pose]) -> list[Pose]:
@@ -1514,6 +1561,13 @@ gesture_rest += [K(spring, rotation=0.0, y=-310.0) for spring in (hair_follow, b
 gesture_rest += [K(part.response, rotation=0.0) for part in cloth_parts]
 gesture_rest += [K(e["gesture_lid"], scaleY=0.0) for e in EYES]
 gesture_rest += [K(e["gesture_shut"], opacity=0.0) for e in EYES] + [K(line_acting, scaleY=1.0, rotation=0.0)]
+# M3: the retired Elbow / UpperArt / ForeArt channels and the Hand y (ids burnt above) give way to the
+# IK rest pose (target, chain lengths, art scales, bend)
+RETIRED_ARM = {a[k].ref() for a in ARMS for k in ("elbow", "up_art", "fore_art")}
+HAND_IDS = {a["hand"].ref() for a in ARMS}
+gesture_rest = [t for t in gesture_rest if t.attrs["objectId"] not in RETIRED_ARM and not (
+    t.attrs["objectId"] in HAND_IDS and t.children[0].attrs["property"] == "y")]
+gesture_rest += [t for a in ARMS for t in arm_rig.rest_tracks(a)]
 g_none = A("gesture_none", 1, gesture_rest)
 
 G: dict[str, El] = {}
@@ -1694,7 +1748,15 @@ def channel_at(keys: list[tuple[float, float]], frame: float) -> float:
     return keys[-1][1]
 
 
-for animation in G.values():
+def rest_arms(animation: El) -> None:
+    keyed = {t.attrs["objectId"] for t in animation.children}
+    for a in ARMS:
+        if a["target"].ref() not in keyed:      # e.g. laugh, nod: the arm hangs at rest, history-free
+            animation.add(*arm_rig.rest_tracks(a))
+
+
+def follow_through(animation: El) -> None:
+    """Hair springs and cloth trail the head and torso of one gesture."""
     duration = int(animation.attrs["duration"])
     turns, rises = head_channel(animation, "rotation"), head_channel(animation, "y")
     for spring, delay, strength in ((hair_follow, 4, 0.65), (back_follow, 6, 0.48), (tuft_follow, 5, 1.15)):
@@ -1716,6 +1778,12 @@ for animation in G.values():
                 impulse += 0.025 * math.sin(f * 0.23 + part.phase) * math.sin(math.pi * f / duration)
             keys.append((f, impulse * part.strength * min(1.0, (duration - f) / 10), "linear"))
         animation.add(T(part.response, ease=None, rotation=keys))
+
+
+for animation in G.values():
+    rest_arms(animation)
+for animation in G.values():
+    follow_through(animation)
 
 # ---- wardrobe switches
 hat_hair = {"noHat": (1, 1, 1), "beanie": (1, 1, 0), "backwardsCap": (1, 1, 0), "frenchBeret": (1, 1, 0),
@@ -1851,7 +1919,14 @@ P_ON = A("presence_onScreen", 1, [K(root, x=ON_X, y=1000.0), *still()])
 P_OFF = A("presence_outOfScreen", 1, [K(root, x=OFF_X, y=1000.0), *still()])
 P_WALK_OUT = A("presence_walkOut", 96, walk_tracks(96, [(0, 80, ON_X, OFF_X)]))
 P_WALK_IN = A("presence_walkIn", 96, walk_tracks(96, [(0, 80, OFF_X, ON_X)]))
-P_LEAVE = A("presence_leaveAndComeBack", 216, walk_tracks(216, [(0, 80, ON_X, OFF_X), (120, 200, OFF_X, ON_X)]))
+# (M4 ruling 1) leaveAndComeBack chains walkOut -> walkIn on exit time in the Presence layer instead of
+# a third baked walk. The v6 timeline is still minted (and dropped) so every later id stays unchanged.
+walk_tracks(216, [(0, 80, ON_X, OFF_X), (120, 200, OFF_X, ON_X)])
+d("LinearAnimation", name="presence_leaveAndComeBack")
+# the walk back starts where v6's did, 120 frames (2,000 ms) after the walk out began: the exit is
+# checked once per frame, so any value in (1,983.3, 2,000) ms switches on frame 120 (2,000 itself
+# can miss it by a float hair and lose a frame); the middle of that window is robust
+LEAVE_OFF_MS = 1992
 
 # ================================================================ EVENTS + STATE MACHINE
 
@@ -1892,17 +1967,25 @@ s0 = st(wardrobe_life, 0)
 layers.append(layer("WardrobeLife", s0, [s0]))
 s0 = st(cape_ripple, 0)
 layers.append(layer("CapeRipple", s0, [s0]))
-s0 = st(blink, 0)
-layers.append(layer("Blink", s0, [s0]))
+
+
+def auto_blink(on: bool) -> El:
+    return d("TransitionViewModelCondition",
+             d("TransitionPropertyViewModelComparator",
+               d("BindablePropertyBoolean", d("DataBindContext", sourcePathIds=vpath("autoBlink"), propertyKey=634))),
+             d("TransitionValueBooleanComparator", value=on))
+
+
+b_auto, b_hold, b_once = st(blink, 0), st(blink_hold, 1), st(blink_once, 2, row=1)
+b_auto.add(d("StateTransition", auto_blink(False), stateToId=b_hold.ref()))
+b_hold.add(d("StateTransition", auto_blink(True), stateToId=b_auto.ref()))
+b_once.add(d("StateTransition", auto_blink(True), stateToId=b_auto.ref(), enableExitTime=True,
+             exitTimeIsPercetange=True, exitTime=100),
+           d("StateTransition", auto_blink(False), stateToId=b_hold.ref(), enableExitTime=True,
+             exitTimeIsPercetange=True, exitTime=100))
+layers.append(layer("Blink", b_auto, [b_auto, b_hold, b_once],
+                    [d("StateTransition", trig("blink"), stateToId=b_once.ref())]))
 layers.append(enum_layer("Mood", "mood", MOODS, "neutral", 240))
-mouth_conv = d("DataConverterRangeMapper", minInput=0.0, maxInput=4.0, minOutput=0.0, maxOutput=100.0, clampLower=True,
-               clampUpper=True, name="MouthToBlend")
-mouth_blend = d("BlendState1DViewModel",
-                d("BindablePropertyNumber", d("DataBindContext", sourcePathIds=vpath("mouth"), propertyKey=636,
-                                              converterId=mouth_conv.ref())),
-                *[d("BlendAnimation1D", animationId=a.ref(), value=float(i * 25)) for i, a in enumerate(mouth_anims)],
-                x=0.0, y=100.0)
-layers.append(layer("Mouth", mouth_blend, [mouth_blend]))
 layers.append(enum_layer("Phase", "phase", PHASES, "idle", 250))
 
 gs_idle = st(g_none, 0)
@@ -1926,7 +2009,7 @@ ps_on = st(P_ON, 0)
 ps_off = st(P_OFF, 1)
 ps_wout = st(P_WALK_OUT, 2, row=1)
 ps_win = st(P_WALK_IN, 3, row=1)
-ps_leave = st(P_LEAVE, 4, row=1)
+ps_leave = st(P_WALK_OUT, 4, row=1)
 ps_back = st(P_ON, 5)            # "returned" — on screen, waiting for presence to change
 
 
@@ -1944,12 +2027,20 @@ ps_off.add(go(ps_win, enum_is("presence", "onScreen")), go(ps_leave_in := st(P_W
                                                           enum_is("presence", "leaveAndComeBack")))
 ps_wout.add(*after(ps_off, EV_PRESENCE["outOfScreen"]))
 ps_win.add(*after(ps_on, EV_PRESENCE["onScreen"]))
-ps_leave.add(*after(ps_back, EV_PRESENCE["leaveAndComeBack"]))
+after(ps_back, EV_PRESENCE["leaveAndComeBack"])  # v6's walk-out exit, minted and dropped (ids stay)
+# M4: elements added here take their own id range (no earlier id moves)
+M4 = Doc(client=0, start=kit.M4_ID_START)
+ps_leave_back = M4("AnimationState", animationId=P_WALK_IN.ref(), x=800.0, y=220.0)
+ps_leave.add(M4("StateTransition", stateToId=ps_leave_back.ref(), enableExitTime=True,
+                exitTimeIsPercetange=False, exitTime=LEAVE_OFF_MS))
+ps_leave_back.add(M4("StateMachineFireEvent", eventId=EV_PRESENCE["leaveAndComeBack"].ref(), occursValue="atEnd"),
+                  M4("StateTransition", stateToId=ps_back.ref(), enableExitTime=True, exitTimeIsPercetange=True,
+                     exitTime=100))
 ps_leave_in.add(*after(ps_back, EV_PRESENCE["leaveAndComeBack"]))
 ps_back.add(go(ps_wout, enum_is("presence", "outOfScreen")), go(ps_on, enum_is("presence", "onScreen")))
 layers.append(layer("Presence",
                     [go(ps_off, enum_is("presence", "outOfScreen")), go(ps_on)],
-                    [ps_on, ps_off, ps_wout, ps_win, ps_leave, ps_back, ps_leave_in]))
+                    [ps_on, ps_off, ps_wout, ps_win, ps_leave, ps_back, ps_leave_in, ps_leave_back]))
 
 # eye-follow + tap listeners
 look_handle = d("Node", x=400.0, y=420.0, name="LookHandle")
@@ -1964,10 +2055,30 @@ joy = d("Joystick", posX=400.0, posY=420.0, width=900.0, height=700.0, xId=look_
         handleSourceId=look_handle.ref(), name="Look")
 
 style = d("LayoutComponentStyle", name="Artboard Style")
-artboard = d("Artboard", style, sm, EASE, EASE_OUT, EASE_IN, *EV_GESTURE.values(), *EV_TAP.values(), *EV_PRESENCE.values(), joy,
+artboard = d("Artboard", style, sm, EASE, EASE_OUT, EASE_IN, arm_rig.SMOOTHSTEP, *EV_GESTURE.values(), *EV_TAP.values(), *EV_PRESENCE.values(), joy,
              look_handle, root.el, hit_all, *anims,
              width=float(W), height=float(H), name="Avatar", defaultStateMachineId=sm.ref(), viewModelId=vm.ref(),
              viewModelInstanceId=inst.ref(), styleId=style.ref(), clip=True)
+
+# ================================================================ FACE (contract v5 action units)
+# Runs before the head turn so the turn wrappers enclose the face rig. Own id range (face_rig.py).
+face_au = face_rig.FaceRig(lids.path)  # the same paths as the lids (v6 side numbers included)
+for i, e in enumerate(EYES):
+    s_ = -1 if i == 0 else 1
+    face_rig.rig_brow(face_au, e["brow_g"].el, named_el(e["brow_g"].el, "BrowShape"), 355.0 if i == 0 else 445.0, s_,
+                      HAIR)
+face_rig.rig_mouth(face_au, mouth_mood, {"inside": "FF5E2E3A", "inside_lift": "FF9A5560", "teeth": TEETH,
+                                      "low_teeth": "FFF1E6E0", "tongue": "FFC9666F", "ink": "FF2A1E24",
+                                      "shine": "B0F6C4BC", "lip": "60D0937C", "lip_band": "FFE58A8A",
+                                      "lip_edge": "B0B85A64", "lip_rim": "FFD27F80", "crease": "A0D0937C",
+                                      "crease_tense": "D0B8786A", "bulge": "E8A8644F", "dimple": "FF98503F",
+                                      "pocket": "80985044"})
+face_rig.rig_nose(face_au, nose_g.el, (nose_g.ax, nose_g.ay), {"crease": "FF8E4A40"})
+face_rig.rig_cheeks(face_au, head.el, skin_details[:2])
+face_rig.rig_body(face_au, root.el, body.el, body_g.el, head_base.el, (0.0, 610.0 - 1000.0), (swing_r.el, swing_l.el))
+face_rig.rig_chin(face_au, head.el, skin_details[2])
+for e in EYES:  # critic round 3: the lid crease shows only with raised brows, and tapers
+    face_rig.rig_crease(face_au, e, e["cx"], e["s"])
 
 # ================================================================ HEAD TURN (yaw / pitch)
 # The head art above follows AvatarVM `yaw` / `pitch` on one surface model (rive/tools/head_turn.py):
@@ -1980,14 +2091,482 @@ rig_head(turn, face_pts, FACE_CAST_PTS, CHEEK_SH_PTS, [(f"Lock{i}Material", LOCK
           "Blush": blush.el, "CheekBloomL": skin_details[0], "CheekBloomR": skin_details[1],
           "ChinLight": skin_details[2], "EarL": ears[0], "EarR": ears[1], "EarInL": ears[2], "EarInR": ears[3],
           "glassesByName": GLASSES, "GlassesSolo": glasses_solo.el, "HairFollow": hair_follow,
-          "LookL": EYE_L["look"].el, "LookR": EYE_R["look"].el, "LashL": EYE_L["lash"].el, "LashR": EYE_R["lash"].el,
-          "BlinkL": EYE_L["blink"].el, "BlinkR": EYE_R["blink"].el, "LidL": EYE_L["lid"].el, "LidR": EYE_R["lid"].el, "HairCap": named_el(hair_front.el, "HairCap"),
+          "LookL": EYE_L["look"].el, "LookR": EYE_R["look"].el,
+          "HairCap": named_el(hair_front.el, "HairCap"),
           "SideLockL": named_el(hair_front.el, "SideLockL"), "SideLockR": named_el(hair_front.el, "SideLockR"),
           "HairBackShape": named_el(hair_back.el, "HairBackShape"), "Cowlick": named_el(tufts.el, "Cowlick"),
-          "Cowlick2": named_el(tufts.el, "Cowlick2"), "HatSolo": hat_solo.el,
+          "Cowlick2": named_el(tufts.el, "Cowlick2"), "HatSolo": hat_solo.el, "MouthClipOrder": face_rig.MOUTH_CLIP_ORDER,
           **{f"Lock{i}Material": named_el(hair_front.el, f"Lock{i}Material") for i in range(len(LOCKS))}}, anims)
+# the jaw drops the chin and the lower jaw contour (face-rig ids, after every head-turn id)
+head_turn.rig_jaw(turn, face_au.d, face_au.path)
+# ---- M5: new elements take their own id range (kit.M5_ID_START), minted in task order (head, light, prop)
+M5 = Doc(client=0, start=kit.M5_ID_START)
+head_turn.m5_three_quarter(turn, M5)  # the mouth foreshortens with the surface (ruling 1d)
+
+# ---- critic round 2: new elements take their own id range (no earlier id moves)
+R2 = Doc(client=0, start=kit.R2_ID_START)
+# the fringe shadow feathers out: a vertical fade instead of the flat band (its solid colour is burnt)
+cast_fill = next(c for c in face_cast.children if c.tag == "Fill")
+cast_fill.children = [lin(R2, 0, y0, 0, y1, stops) for y0, y1, stops in [kit.face_cast_fade()]]
+
+# ---- M4 contract v7: the scene light rig, prop and lean (avatar_light.py; M4 id range, minted last)
+light = avatar_light.AvatarLight(M4, vm, inst, enums)
+HEAD_FRAME = (head.ax, head.ay)
+head_kids = head.el.children
+# rim bands: the face outline (a copy skinned to the same turn bones) and the back-hair silhouette,
+# each clipped by its silhouette (no torso rim: the sleeves cover the torso's sides and the hood or
+# collar its shoulder line, so its outline is not the body's silhouette)
+face_path = next(c for c in face.children if c.tag == "PointsPath")
+face_rim = light.rim("RimFace", light.clone(face_path), face, 2.6, float(face.attrs["x"]), float(face.attrs["y"]))
+hair_back_shape = named_el(hair_back.el, "HairBackShape")
+hb_parent = avatar_light.parent_of(head.el, hair_back_shape)
+hb_path = next(c for c in hair_back_shape.children if c.tag == "PointsPath")
+hb_parent.children.insert(hb_parent.children.index(hair_back_shape),
+                          light.rim("RimHair", light.clone(hb_path), hair_back_shape, 2.0,
+                                    float(hair_back_shape.attrs["x"]), float(hair_back_shape.attrs["y"])))
+# key, ambient and rim on the skin: in front of the face and its shading, behind the features
+skin_at = head_kids.index(avatar_light.top_child(head.el, cheek_sh))
+head_kids[skin_at:skin_at] = [face_rim, light.key_cheek(face, HEAD_FRAME), light.ambient_wash(face)]
+# the lens glints take the key colour and slide toward it (every glasses set)
+glints = [light.glint(g, avatar_light.parent_of(head.el, g))
+          for g in [e for e in avatar_light.walk(glasses_solo.el) if e.tag == "Shape"
+                    and e.attrs.get("name") in ("Glare", "Glare2")]]
+light.lean(body.el, body_g.el, avatar_light.parent_of(body_g.el, head_base.el), head_base.el, (body.ax, body.ay))
+light_anims, light_layer = light.flicker_layer([light.firelight, *glints])
+artboard.children.extend(light_anims)
+sm.children.append(light_layer)
+
+# ---- M4 Task 5: the tablet prop (avatar_tablet.py; M4 id range, minted after the light rig)
+tablet = avatar_tablet.Tablet(M4, light.path("prop"), light.prop_values, EASE)
+# behind the left arm's swing (first child paints in front), in front of the head and torso, so the
+# slab rides the torso, breath and lean with both hand targets
+shoulder_l = next(e for e in avatar_light.walk(body_g.el) if e.attrs.get("name") == "BreathShoulderLPivot")
+shoulder_l.children.append(tablet.art())
+head_kids.insert(head_kids.index(light.firelight), tablet.screen_glow(face, HEAD_FRAME))
+for g in glints:  # every glasses set: the screen mirrored low in each lens
+    glare_name = next(c for c in g.children if c.tag == "Shape").attrs["name"]
+    tablet.lens_reflect(avatar_light.parent_of(head.el, g), "ScreenReflect" + ("L" if glare_name == "Glare" else "R"),
+                        355.0 if glare_name == "Glare" else 445.0, kit.LENS_CY, HEAD_FRAME)
+prop_anims = tablet.animations({-1: ARM_R, 1: ARM_L})
+artboard.children.extend(prop_anims.values())
+gesture_layer = next(c for c in sm.children if c.tag == "StateMachineLayer" and c.attrs.get("name") == "Gesture")
+prop_layer = tablet.layer(prop_anims)
+sm.children.insert(sm.children.index(gesture_layer) + 1, prop_layer)
+
+# ---- M5 Task 7: the key tints the cheek under the screen pool (ruling 7; M5 id range, after the head)
+light.key_cheek_tint(M5, face)
+
+# ---- M5 Task 8: the newspaper prop (ruling 9; contract v8b; M5 id range, after the light): the tablet's
+# clips on a folded broadsheet, a page shadow on the face, its states in the same `Prop` layer
+light.prop_values["newspaper"] = M5("DataEnumValue", key="newspaper", value="newspaper")
+enums["Prop"].add(light.prop_values["newspaper"])
+paper = avatar_tablet.Newspaper(M5, light.path("prop"), light.prop_values, EASE)
+shoulder_l.children.append(paper.art())  # behind the tablet (the two never show together)
+head_kids.insert(head_kids.index(light.firelight), paper.page_shadow(face, HEAD_FRAME))
+paper_anims = paper.animations({-1: ARM_R, 1: ARM_L}, with_none=False)
+artboard.children.extend(paper_anims.values())
+paper.extend_layer(prop_layer, tablet.states, paper_anims)
+
+# ================================================================ M8 (contract v11)
+# Hands' poses (hand_rig.py), three gestures, ... all minted in the M8 id range: kit.minting lends it to the main
+# document (and arm_rig's to its own), so the helpers above build them unchanged and no earlier id moves.
+HOOK = (628.0, 560.0)          # contract v11 hook point: the journey door's peg (both artboards share the frame)
+GRAB_CONTACT = 23              # 380 ms at 60 fps: the hand closes on the peg / the collar
+GRAB_FRAMES = 54               # 900 ms
+GRAB_FINGER = -60.0            # the fingers reach up and out to the peg (world degrees, y down)
+GRAB_FS = (0.62, 0.55)         # the arm reaches toward the viewer a little (the door stands in front)
+GRAB_WRIST = (HOOK[0] - hand_rig.GRIP_REACH * math.cos(math.radians(GRAB_FINGER)),
+              HOOK[1] - hand_rig.GRIP_REACH * math.sin(math.radians(GRAB_FINGER)))
+COUNT_STEP = 25                # ~420 ms per number
+M8_TARGET_TOL, M8_HAND_TOL = 2.0, 0.045  # px / rad: the new gestures' arc keys (a pixel or two at the hand)
+
+
+def drive_tracks(side: int, keys: list) -> list[El]:
+    """The hand's digit drivers through [(frame, pose)] (hand_rig.HAND_POSE_DRIVERS names or blends)."""
+    return hand_rig.pose_tracks(d, ARMS[0 if side == -1 else 1]["drive"], side, keys, EASE)
+
+
+def pose_beat(start: int, frames: int, a: str, b: str) -> list:
+    """motion_synth.action on the blend from pose a to b: the digits overshoot and settle (the anticipation and
+    the counter-swing are dropped: on a 6-frame finger pop they are a pixel, and each costs a key per digit)."""
+    keys = action(Beat(start, frames, 0.0, 1.0))
+    return [(f, hand_rig.mix(a, b, t)) for f, t, _ in (keys[0], keys[2], keys[-1])]
+
+
+with kit.minting(d, M8), kit.minting(arm_rig.AD, M8A):
+    G8: dict[str, El] = {}
+    up_l = (0.8, 0.5)  # a raised arm's foreshortening (one level, so the chain lengths key few frames)
+    # thumbsUp: the viewer's-left hand rises in front of the chest, fingers toward the body so the thumb
+    # stands up: an overshooting lift and a settle, then down (the hands' dips and settles under the frame's
+    # bottom edge are left out: nobody sees them, and every pose costs keys)
+    G8["thumbsUp"] = A("gesture_thumbsUp", 84, [
+        *arm_keys(-1, [(0, None, 90), (13, (262, 930), 50, *up_l), (20, (296, 808), -8, *up_l),
+                       (24, (300, 794), -4, *up_l), (30, (299, 802), 0, *up_l), (60, (300, 800), 0, *up_l),
+                       (68, (262, 930), 50, *up_l), (84, None, 90)]),
+        *drive_tracks(-1, [(0, "rest"), (9, "rest"), (17, "thumbsUp"), (62, "thumbsUp"), (71, "rest"),
+                           (84, "rest")]),
+        T(head_g, y=[(20, 0.0), (27, 5.0), (35, -1.5), (42, 0.0)]),  # a nod with the thumb (0 before / after)
+    ])
+    # count: the viewer's-right hand comes up beside the shoulder, fingers up, and counts one, two, three
+    # (index, + middle, + ring) a number every COUNT_STEP frames, each finger popping up with an overshoot
+    # and the head nodding the beat; authored on the left side and mirrored
+    up = (0.8, 0.95)
+    count_l = [(0, None, 90), (13, (214, 880), 20, *up), (19, (178, 704), -70, *up), (23, (170, 638), -84, *up),
+               (28, (172, 648), -80, *up), (96, (172, 646), -80, *up), (104, (204, 830), 20, *up), (120, None, 90)]
+    count_drive = [(0, "rest"), (8, "rest"), (17, "fist"), *pose_beat(20, 6, "fist", "one"),
+                   *pose_beat(20 + COUNT_STEP, 6, "one", "two"), *pose_beat(20 + 2 * COUNT_STEP, 6, "two", "three"),
+                   (96, "three"), (108, "rest"), (120, "rest")]
+    G8["count"] = A("gesture_count", 120, [
+        *arm_keys(1, mirror_poses(count_l)),
+        *drive_tracks(1, count_drive),
+        T(head_g, y=[(f, v) for k in range(3) for f, v in  # a nod per number (0 before / after)
+                     ((20 + k * COUNT_STEP, 0.0), (23 + k * COUNT_STEP, 3.0), (28 + k * COUNT_STEP, 0.0))]),
+    ])
+    # grab: the viewer's-right hand reaches up to the hook, opens, closes to `grip` on the peg at GRAB_CONTACT,
+    # tugs it off (a small lift: the return's anticipation) and swings back to the side
+    w = GRAB_WRIST
+    G8["grab"] = A("gesture_grab", GRAB_FRAMES, [
+        *arm_keys(1, [(0, None, 90), (12, (604, 870), 20, *GRAB_FS),
+                      (18, (w[0] - 4, w[1] + 18), GRAB_FINGER + 6, *GRAB_FS), (21, w, GRAB_FINGER, *GRAB_FS),
+                      (25, w, GRAB_FINGER, *GRAB_FS), (29, (w[0] - 2, w[1] - 8), GRAB_FINGER - 4, *GRAB_FS),
+                      (36, (604, 820), 25, *GRAB_FS), (GRAB_FRAMES, None, 90)]),
+        *drive_tracks(1, [(0, "rest"), (6, "rest"), (14, "spread"), (20, "spread"), (GRAB_CONTACT, "grip"),
+                          (27, "grip"), (36, "rest"), (GRAB_FRAMES, "rest")]),
+        *[T(e["gg"], x=[(0, 0.0), (8, 4.0), (30, 4.0), (44, 0.0)]) for e in EYES],  # a glance at the peg
+    ])
+    for animation in G8.values():
+        rest_arms(animation)  # every gesture keys both arms (history-free, test_arm_rig)
+        # budget (ruling 2): the arc keys within M8_TARGET_TOL px / M8_HAND_TOL rad; no hair or cloth
+        # follow-through: a gesture starts only from gesture_none, which keys them at rest, and no other layer
+        # moves them, so they hold (the head barely moves in these three)
+        for obj in animation.children:
+            if obj.attrs["objectId"] in {a["target"].ref() for a in ARMS}:
+                arm_rig.simplify_track(obj, M8_TARGET_TOL)
+            elif obj.attrs["objectId"] in HAND_IDS:
+                arm_rig.simplify_track(obj, M8_HAND_TOL)
+    # the digits rest every frame unless a later layer keys them (HandRest runs before Gesture)
+    hand_rest = A("hand_rest", 1, [t for a, s_ in ((ARM_R, -1), (ARM_L, 1))
+                                   for t in hand_rig.pose_tracks(d, a["drive"], s_, [(0, "rest")], None,
+                                                                 hold_rest=True)])
+    hr_state = st(hand_rest, 0)
+    sm.children.insert(sm.children.index(gesture_layer), layer("HandRest", hr_state, [hr_state]))
+    # gestureId values appended (contract v11), their gesture_done events and Gesture states
+    ev_at = artboard.children.index(list(EV_PRESENCE.values())[-1]) + 1
+    for i, (gn, ga) in enumerate(G8.items()):
+        val = d("DataEnumValue", key=gn, value=gn)
+        enums["GestureId"].add(val)
+        evals["GestureId"][gn] = val
+        ev = event("gesture_done", "gestureId", gn)
+        artboard.children.insert(ev_at + i, ev)
+        EV_G8_LAST = ev
+        gst = st(ga, len(G) + i + 1,
+                 d("StateMachineFireEvent", eventId=ev.ref(), occursValue="atEnd"),
+                 d("StateTransition", stateToId=gs_idle.ref(), enableExitTime=True, exitTimeIsPercetange=True,
+                   exitTime=100), row=1)
+        gs_idle.add(d("StateTransition", trig("gesture"), enum_is("gestureId", gn), stateToId=gst.ref()))
+        gesture_layer.add(gst)
+    artboard.children.extend([hand_rest, *G8.values()])
+
+    # ---- Task 3: the view model's v11 numbers (appended), the jacket, foley events, the tablet's weather card
+    vm_at = vm.children.index(inst)
+    enums["TabletWeather"] = d("DataEnumCustom", *[d("DataEnumValue", key=w, value=w) for w in avatar_tablet.WEATHER],
+                               name="TabletWeather")
+    evals["TabletWeather"] = {v.attrs["key"]: v for v in enums["TabletWeather"].children}
+    EN_OF["tabletWeather"] = "TabletWeather"
+    new_props = {"jacket": d("ViewModelPropertyBoolean", name="jacket"),
+                 "tabletWeather": d("ViewModelPropertyEnumCustom", enumId=enums["TabletWeather"].ref(),
+                                    name="tabletWeather"),
+                 "tabletTemp": d("ViewModelPropertyNumber", name="tabletTemp")}
+    vm.children[vm_at:vm_at] = list(new_props.values())
+    props.update(new_props)
+    inst.add(d("ViewModelInstanceBoolean", propertyValue=False, viewModelPropertyId=new_props["jacket"].ref()),
+             d("ViewModelInstanceEnum", propertyValue=evals["TabletWeather"]["none"].ref(),
+               viewModelPropertyId=new_props["tabletWeather"].ref()),
+             d("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=new_props["tabletTemp"].ref()))
+
+    # the jacket (jacket_art.py, the journey door's own drawing) hangs at the viewer's-right grip point, under
+    # its Hand (it follows the reach, the walk and the IK), kept upright by a world rotation / scale lock on a
+    # still node; drawn behind the hand (the fist closes in front of the collar)
+    upright = d("Node", x=0.0, y=0.0, name="JacketUpright")
+    jacket_hang = d("Node", d("RotationConstraint", targetId=upright.ref(), sourceSpaceValue="world",
+                              destSpaceValue="world"),
+                    d("ScaleConstraint", targetId=upright.ref(), sourceSpaceValue="world", destSpaceValue="world"),
+                    jacket_art.jacket(d), x=0.0, y=hand_rig.GRIP_REACH, opacity=0.0, name="JacketHang")
+    ARM_L["hand"].el.add(jacket_hang)
+    artboard.children.insert(artboard.children.index(look_handle), upright)
+    # the Jacket layer (after Gesture, before Prop): while `jacket` is true the hand grips and the jacket shows
+    jacket_none = A("jacket_none", 1, [K(jacket_hang, opacity=0.0)])
+    jacket_held = A("jacket_held", 1, [K(jacket_hang, opacity=1.0),
+                                       *hand_rig.pose_tracks(d, ARM_L["drive"], 1, [(0, "grip")], None),
+                                       *[K(solo, activeComponentId=ps["rest"]) for solo, ps in ARM_L["pose_sets"]]])
+
+    def bool_is(pn: str, on: bool) -> El:
+        return d("TransitionViewModelCondition",
+                 d("TransitionPropertyViewModelComparator",
+                   d("BindablePropertyBoolean", d("DataBindContext", sourcePathIds=vpath(pn), propertyKey=634))),
+                 d("TransitionValueBooleanComparator", value=on))
+
+    j_none, j_held = st(jacket_none, 0), st(jacket_held, 1)
+    j_none.add(d("StateTransition", bool_is("jacket", True), stateToId=j_held.ref()))
+    j_held.add(d("StateTransition", bool_is("jacket", False), stateToId=j_none.ref()))
+    sm.children.insert(sm.children.index(gesture_layer) + 1, layer("Jacket", j_none, [j_none, j_held]))
+
+    # foley (contract v11): one `foley` event per kind, fired by timeline keys (KeyFrameCallback on `trigger`)
+    FOLEY = {k: event("foley", "kind", k) for k in ("step", "cloth", "click", "paper")}
+    artboard.children[ev_at + len(G8):ev_at + len(G8)] = list(FOLEY.values())
+
+    def foley_keys(animation: El, kind: str, frames: list[int]) -> None:
+        animation.add(d("KeyedObject", d("KeyedProperty", *[d("KeyFrameCallback", frame=f) for f in frames],
+                                         property="trigger"), objectId=FOLEY[kind].ref()))
+
+    STEPS = kit.footfalls(0, 80, OFF_X - ON_X, STRIDE)  # presence_walkOut / walkIn: (0, 80) over 850 px
+    foley_keys(P_WALK_OUT, "step", STEPS)
+    foley_keys(P_WALK_IN, "step", STEPS)
+    foley_keys(G8["grab"], "cloth", [GRAB_CONTACT])
+    TABLET_CLIPS = {c.name: c for c in (make() for make in avatar_tablet.CLIPS)}
+    out_c, away_c = TABLET_CLIPS["prop_tablet_out"], TABLET_CLIPS["prop_tablet_away"]
+    GRIP_F = out_c.hand[-1][1][0]      # the second hand closes on the slab
+    RELEASE_F = away_c.hand[-1][1][0]  # it lets go first
+    foley_keys(prop_anims["prop_tablet_out"], "click", [GRIP_F])
+    foley_keys(prop_anims["prop_tablet_away"], "click", [RELEASE_F])
+    OPEN_F = avatar_tablet.OUT_BEAT                                   # the sheet lands open at the reading angle
+    FOLD_F = avatar_tablet.stagger(["handR", "handL"])["handL"]      # it folds as the put-away starts
+    foley_keys(paper_anims["prop_newspaper_out"], "paper", [OPEN_F])
+    foley_keys(paper_anims["prop_newspaper_away"], "paper", [FOLD_F])
+
+    # the tablet's weather card: `tabletWeather` picks the card on its own layer, `tabletTemp` binds the digits
+    card = avatar_tablet.WeatherCard(tablet, d, vpath("tabletTemp"))
+    card.build()
+    weather_anims = card.animations()
+    artboard.children.extend([jacket_none, jacket_held, *weather_anims.values()])
+    layers_weather = enum_layer("TabletWeather", "tabletWeather", weather_anims, "none")
+    sm.children.append(layers_weather)
+    m8_converters = card.converters
+
+# ================================================================ M10 (ruling 3): the wardrobe dedupe
+# One sleeve set per sleeve kind and one hand for the five skins: the first member of each class keeps its ids,
+# the others' copies are dropped, and each member's paint is keyed in the clips that choose it (see
+# wardrobe_dedupe.py). Sleeves are chosen by the Top layer only (costumes wear kinds no top wears), so their
+# colours key in the top_* clips; the hand's paint is a function of the costume alone (none = bare skin), so it
+# keys in the costume_* clips, costume_none included: whatever the Top layer did before, the later Costume layer
+# decides.
+M10 = Doc(client=0, start=kit.M10_ID_START)
+SLEEVE_KINDS = list(dict.fromkeys(SLEEVES[o][4] for o in OUTFITS))
+HAND_CLIPS = {"skin": none_anim, **{COSTUME_HANDS[c]: COSTUME_ANIMS[c] for c in COSTUMES}}
+WARDROBE_MERGES: list[wardrobe_dedupe.Merge] = []
+for a in ARMS:
+    for kind in SLEEVE_KINDS:
+        oids = [o for o in OUTFITS if SLEEVES[o][4] == kind]
+        if len(oids) < 2:
+            continue
+        assert all(o in TOP_IDS for o in oids), kind
+        for solo, groups, prefix in ((a["up_solo"].el, a["ups"], "Up_"), (a["fore_solo"].el, a["fores"], "Fore_")):
+            WARDROBE_MERGES.append(wardrobe_dedupe.Merge(solo, {o: groups[o] for o in oids}, prefix + kind,
+                                                         {o: [TOP_ANIMS[o]] for o in oids}))
+    WARDROBE_MERGES.append(wardrobe_dedupe.Merge(a["skin_solo"].el, dict(a["skins"]), "Skin_shared",
+                                                 {s: [HAND_CLIPS[s]] for s in HAND_SKINS}))
+wardrobe_dedupe.dedupe(M10, artboard, WARDROBE_MERGES)
+for a in ARMS:  # later clips key the surviving hand's pose switch only (the bare skin's set)
+    a["pose_sets"] = a["pose_sets"][:1]
+for a in ARMS:  # the sets that had one outfit already: named by their kind too
+    for groups, prefix in ((a["ups"], "Up_"), (a["fores"], "Fore_")):
+        for oid, g in groups.items():
+            if g.attrs["name"] == prefix + oid:
+                g.attrs["name"] = prefix + SLEEVES[oid][4]
+
+# ================================================================ M10 (ruling 5, contract v13): tints, the mouth anchor
+# `topTint` / `hatTint`: every painted garment shape of a top (front, back, the top-only sleeve sets) and of a hat
+# gains a second fill over its own fill (under its ink stroke: a shape's later paints draw over the earlier
+# ones), blend mode color, whose colour binds the AvatarVM colour. Alpha 0 (the default) draws nothing. Never
+# ink, seams, stitches, prints, buttons, trims and shines, skin, hands, the hair, a costume or the sleeve kinds
+# a costume wears.
+COLOR_BLEND = 27  # Rive BlendMode.color: hue and saturation from the tint, lightness from the garment
+TOP_TINTED: dict[str, tuple[str, ...]] = {
+    "pinkHoodie": ("CollarL", "CollarR", "Torso", "HoodBack", "ChestShade", "Fold1", "Fold2"),
+    "longCoat": ("Torso", "LapelL", "LapelR", "CoatCollar", "Belt", "Belt2", "CoatFold"),
+    "tshirt": ("Torso", "TeeFold", "TeeFold2"),
+    "underwear": ("Tank",),
+    "swimsuit": ("SwimTop", "SwimPanelLeft", "SwimPanelRight"),
+    "christmasSweater": ("Torso",),
+    "blackSuitAndTie": ("Torso", "LapelL", "LapelR"),
+}
+SLEEVE_TINTED: dict[str, tuple[str, ...]] = {  # the sleeve sets only tops wear (`bare` is skin)
+    "Up_long": ("Sleeve", "ElbowWeb", "Fold", "Fold2"), "Fore_long": ("Sleeve", "Cuff", "TrenchCuffTab"),
+    "Up_short": ("TeeSleeve", "TeeUnderarm"),
+}
+HAT_TINTED: dict[str, tuple[str, ...]] = {
+    "beanie": ("Dome", "Band"), "backwardsCap": ("Crown", "BillBack", "Button"), "frenchBeret": ("Beret", "Stem"),
+    "swimCap": ("SwimCap",), "santaHat": ("SantaCone", "Tip"), "redMagaCap": ("MagaCrown", "Bill", "BillUnder", "Button"),
+}
+M10T = Doc(client=0, start=kit.M10_TINT_ID_START)
+TINT_FILLS: dict[str, list[El]] = {"topTint": [], "hatTint": []}
+with kit.minting(d, M10T):
+    vm_at = vm.children.index(inst)
+    tint_props = {pn: d("ViewModelPropertyColor", name=pn) for pn in ("topTint", "hatTint")}
+    vm.children[vm_at:vm_at] = list(tint_props.values())
+    props.update(tint_props)
+    inst.add(*[d("ViewModelInstanceColor", propertyValue="00000000", viewModelPropertyId=p.ref())
+               for p in tint_props.values()])
+
+    def tint(group_: El, names: tuple[str, ...], pn: str) -> None:
+        for nm in names:
+            shapes = [e for e in _walk(group_) if e.tag == "Shape" and e.attrs.get("name") == nm]
+            assert shapes, (group_.attrs.get("name"), nm)
+            for sh in shapes:
+                at = max(i for i, c in enumerate(sh.children) if c.tag == "Fill") + 1
+                fill_ = d("Fill", d("SolidColor", d("DataBindContext", sourcePathIds=vpath(pn), propertyKey=37),
+                                    colorValue="00000000"), blendModeValue=COLOR_BLEND, name="Tint")
+                sh.children.insert(at, fill_)
+                TINT_FILLS[pn].append(fill_)
+
+    for oid, names in TOP_TINTED.items():
+        for group_ in (TF[oid], TB[oid]):
+            present = tuple(n for n in names if any(e.attrs.get("name") == n for e in _walk(group_)))
+            tint(group_, present, "topTint")
+        assert all(any(e.attrs.get("name") == n for g in (TF[oid], TB[oid]) for e in _walk(g)) for n in names), oid
+    for a in ARMS:
+        for g in [*a["up_solo"].el.children, *a["fore_solo"].el.children]:
+            if g.attrs["name"] in SLEEVE_TINTED:
+                tint(g, SLEEVE_TINTED[g.attrs["name"]], "topTint")
+    for hid, names in HAT_TINTED.items():
+        tint(HATS[hid], names, "hatTint")
+
+    # MouthAnchor (contract v13): the centre of the lips. It rides the upper lip's centre bone (inside the head
+    # turn, the mood offset and the lip shapes' own motion) and a world translation constraint at strength 0.5
+    # pulls it halfway to the lower lip's centre bone, so an open jaw keeps it mid-opening. Draws nothing.
+    lip_bones = {e.attrs["name"]: e for e in _walk(mouth.el) if e.tag == "RootBone"}
+    MOUTH_ANCHOR = d("Node", d("TranslationConstraint", targetId=lip_bones["MouthLowerC"].ref(), strength=0.5,
+                               name="MidLip"), x=0.0, y=0.0, name="MouthAnchor")
+    lip_bones["MouthUpperC"].add(MOUTH_ANCHOR)
+
+# ================================================================ M10 (ruling 6, contract v13): the costume signatures
+# `gestureId` signature (appended): one Gesture state per costume, entered on the trigger when gestureId is
+# signature AND costume is that costume (none: a 6-frame no-op); every state fires gesture_done (signature) at its
+# end like the others. Keys on the rig only: the arm IK targets and digit drivers, BodyGesture / HeadGesture, the
+# cloth Response nodes, and three costume effects. The costume layer runs after the gesture layer and keys the
+# scanner's sweep, the aura's breathing and the laser's flashes in its loops, so the signatures key new wrapper
+# nodes inside the scanner and the aura (offset and scale compose with the loop), and the laser's loop moves from
+# costume_singularity to a `LaserLoop` layer before the gesture layer (same keys, same start frame), so a signature
+# can flash it.
+M10S = Doc(client=0, start=kit.M10_SIG_ID_START)
+M10SA = Doc(client=0, start=kit.M10_SIG_ARM_ID_START)
+SIGNATURE_FRAMES = {"batman": 66, "robocop": 72, "soubrette": 72, "singularity": 72, "none": 6}
+cloth_by_name = {part.response.attrs["name"]: part.response for part in cloth_parts}
+with kit.minting(d, M10S), kit.minting(arm_rig.AD, M10SA):
+    scan_sweep = d("Node", *scan.el.children, x=0.0, y=0.0, name="ScanSweep")
+    scan.el.children = [scan_sweep]
+    aura_swell = d("Node", *aura_rig.el.children, x=0.0, y=0.0, name="AuraSwell")
+    aura_rig.el.children = [aura_swell]
+    laser_track = next(o for o in COSTUME_ANIMS["singularity"].children if o.attrs.get("objectId") == laser.ref())
+    COSTUME_ANIMS["singularity"].children.remove(laser_track)
+    laser_loop = d("LinearAnimation", laser_track, duration=COSTUME_FRAMES["singularity"], fps=60, loopValue="loop",
+                   name="laser_loop")
+    laser_off = d("LinearAnimation", duration=1, fps=60, name="laser_off")
+    ll_off, ll_on = st(laser_off, 0), st(laser_loop, 1)
+    sm.children.insert(sm.children.index(gesture_layer), layer(
+        "LaserLoop", ll_off, [ll_off, ll_on],
+        [d("StateTransition", enum_is("costume", "singularity"), stateToId=ll_on.ref()),
+         d("StateTransition", enum_not("costume", "singularity"), stateToId=ll_off.ref())]))
+    g_none.add(K(scan_sweep, x=0.0), K(aura_swell, scaleX=1.0, scaleY=1.0), K(body_g, scaleY=1.0))
+
+    SIG: dict[str, El] = {}
+    # batman: the viewer's-left hand grips the cape's edge at the side and sweeps it across the chest to the far
+    # shoulder (Dracula), holds, and lets it fall back; the cape swings after the arm, the torso turns into it
+    n = SIGNATURE_FRAMES["batman"]
+    SIG["batman"] = A("gesture_signature_batman", n, [
+        *arm_keys(-1, [(0, None, 90), (7, (238, 1082), 94), (16, (286, 880), 20, 0.85, 0.75),
+                       (27, (430, 700), -12, 0.78, 0.55), (31, (444, 692), -8, 0.76, 0.55),
+                       (44, (446, 694), -8, 0.76, 0.55), (55, (286, 880), 40, 0.85, 0.75), (n, None, 90)],
+                  lag=2),
+        *drive_tracks(-1, [(0, "rest"), (10, "rest"), (16, "grip"), (46, "grip"), (54, "rest"), (n, "rest")]),
+        T(cloth_by_name["CapeResponse"], rotation=[(0, 0.0), (14, -0.015), (30, 0.1), (36, 0.085), (46, 0.07),
+                                                   (56, -0.035), (n, 0.0)]),
+        T(body_g, rotation=[(0, 0.0), (10, 0.008), (28, -0.022), (44, -0.02), (58, 0.004), (n, 0.0)]),
+        T(head_g, rotation=[(0, 0.0), (28, 0.04), (44, 0.035), (60, 0.0), (n, 0.0)]),
+    ])
+    # robocop: a stepped (held-key) scan, head left-right with the scanner sweeping fast, then a stepped salute
+    n = SIGNATURE_FRAMES["robocop"]
+    salute = arm_keys(-1, [(0, None, 90), (6, (238, 1080), 94), (14, (286, 870), 10, 0.8), (20, (306, 640), -60, 0.65),
+                           (26, (284, 470), -72, 0.6), (52, (284, 470), -72, 0.6), (58, (286, 870), 30, 0.8),
+                           (64, (242, 1078), 92), (n, None, 90)],
+                      hand=[(0, "rest"), (18, "edge"), (58, "rest")], step=4)
+    for obj in salute:
+        for prop in obj.children:
+            if prop.attrs["property"] != "activeComponentId":
+                for kf in prop.children:
+                    kf.attrs.update(interpolationType="hold")
+                    kf.attrs.pop("interpolatorId", None)
+    SIG["robocop"] = A("gesture_signature_robocop", n, [
+        *salute,
+        T(head_g, rotation=[(0, 0.0, "hold"), (4, -0.06, "hold"), (10, 0.06, "hold"), (16, -0.03, "hold"),
+                            (22, 0.0, "hold"), (28, -0.04, "hold"), (54, 0.0, "hold"), (n, 0.0, "hold")]),
+        T(scan_sweep, ease=None, x=[(0, 0.0), (4, -70.0), (10, 70.0), (16, -70.0), (22, 40.0), (26, 0.0), (n, 0.0)]),
+        T(body_g, y=[(0, 0.0, "hold"), (26, -3.0, "hold"), (54, 0.0, "hold"), (n, 0.0, "hold")]),
+    ])
+    # soubrette: a curtsy: the hands take the skirt out to the sides, the body dips with a tilt of the head and
+    # rises; the apron swings after the dip
+    n = SIGNATURE_FRAMES["soubrette"]
+    curtsy = [(0, None, 90), (12, (206, 1074), 104), (28, (184, 1084), 112, 1.0, 0.95), (44, (186, 1082), 112, 1.0, 0.95),
+              (60, (236, 1078), 94), (n, None, 90)]
+    SIG["soubrette"] = A("gesture_signature_soubrette", n, [
+        *arm_keys(-1, curtsy, lag=2),
+        *arm_keys(1, mirror_poses(curtsy), lag=3),
+        *drive_tracks(-1, [(0, "rest"), (14, "rest"), (24, "pinch"), (46, "pinch"), (58, "rest"), (n, "rest")]),
+        *drive_tracks(1, [(0, "rest"), (14, "rest"), (24, "pinch"), (46, "pinch"), (58, "rest"), (n, "rest")]),
+        T(body_g, y=[(0, 0.0), (8, -3.0), (30, 32.0), (44, 31.0), (62, 0.0), (n, 0.0)],
+          rotation=[(0, 0.0), (30, 0.02), (44, 0.016), (62, 0.0), (n, 0.0)]),
+        T(head_g, rotation=[(0, 0.0), (30, 0.12), (46, 0.1), (64, 0.0), (n, 0.0)],
+          y=[(0, 0.0), (30, 8.0), (46, 7.0), (64, 0.0), (n, 0.0)]),
+        T(cloth_by_name["ApronBibResponse"], rotation=[(0, 0.0), (12, 0.0), (24, 0.03), (36, -0.08), (48, 0.045),
+                                                       (60, -0.02), (n, 0.0)]),
+    ])
+    # singularity: levitation: the body rises 18 px, hovers with the arms floating out, the aura swells, the laser
+    # eyes flash once, and it settles back
+    n = SIGNATURE_FRAMES["singularity"]
+    float_l = [(0, None, 90), (30, (214, 1054), 104, 1.0, 0.95), (50, (212, 1050), 106, 1.0, 0.95), (n, None, 90)]
+    SIG["singularity"] = A("gesture_signature_singularity", n, [
+        *arm_keys(-1, float_l, lag=3),
+        *arm_keys(1, mirror_poses(float_l), lag=4),
+        # the head rises 18 px: 10 px of lift and a 1.35 % stretch about the artboard's bottom edge (BodyGesture's
+        # origin), so the torso's hem (authored to y 1010) never lifts off the frame's bottom
+        T(body_g, y=[(0, 0.0), (8, 2.0), (30, -10.0), (40, -9.0), (50, -10.0), (66, 0.0), (n, 0.0)],
+          scaleY=[(0, 1.0), (30, 1.0135), (40, 1.012), (50, 1.0135), (66, 1.0), (n, 1.0)]),
+        T(aura_swell, scaleX=[(0, 1.0), (30, 1.18), (50, 1.14), (66, 1.0), (n, 1.0)],
+          scaleY=[(0, 1.0), (30, 1.18), (50, 1.14), (66, 1.0), (n, 1.0)]),
+        T(laser, ease=None, opacity=[(0, 0.0, "hold"), (36, 0.0, "linear"), (39, 0.75, "linear"), (46, 0.55, "linear"),
+                                     (54, 0.0, "hold"), (n, 0.0, "hold")]),
+    ])
+    SIG["none"] = d("LinearAnimation", duration=SIGNATURE_FRAMES["none"], fps=60, name="gesture_signature_none")
+    for c, animation in SIG.items():
+        rest_arms(animation)  # none too: every gesture keys both arms (history-free, test_arm_rig)
+        if c == "none":
+            continue
+        for obj in animation.children:
+            if c == "robocop":
+                continue  # held keys: nothing to thin
+            if obj.attrs["objectId"] in {a["target"].ref() for a in ARMS}:
+                arm_rig.simplify_track(obj, M8_TARGET_TOL)
+            elif obj.attrs["objectId"] in HAND_IDS:
+                arm_rig.simplify_track(obj, M8_HAND_TOL)
+    sig_value = d("DataEnumValue", key="signature", value="signature")
+    enums["GestureId"].add(sig_value)
+    evals["GestureId"]["signature"] = sig_value
+    ev_sig = event("gesture_done", "gestureId", "signature")
+    artboard.children.insert(artboard.children.index(EV_G8_LAST) + 1, ev_sig)
+    for i, (c, animation) in enumerate(SIG.items()):
+        gst = st(animation, len(G) + len(G8) + 1 + i,
+                 d("StateMachineFireEvent", eventId=ev_sig.ref(), occursValue="atEnd"),
+                 d("StateTransition", stateToId=gs_idle.ref(), enableExitTime=True, exitTimeIsPercetange=True,
+                   exitTime=100), row=2)
+        gs_idle.add(d("StateTransition", trig("gesture"), enum_is("gestureId", "signature"), enum_is("costume", c),
+                      stateToId=gst.ref()))
+        gesture_layer.add(gst)
+    artboard.children.extend([laser_off, laser_loop, *SIG.values()])
 
 out = os.path.join(os.path.dirname(__file__), "..", "avatar", "avatar.rml")
 os.makedirs(os.path.dirname(out), exist_ok=True)
-write(out, [artboard, *enums.values(), mouth_conv, vm, *turn.converters])
+# the lids read eyeLeadPitch (contract: looking down drops the upper lids), which the head turn adds
+face_rig.resolve_paths([artboard, *face_au.converters, *lids.converters], {"eyeLeadPitch": turn.path("eyeLeadPitch")})
+write(out, [artboard, *enums.values(), vm, *face_au.converters, *lids.converters, *turn.converters, *light.converters,
+            *m8_converters])
 print("wrote", os.path.normpath(out), "next id", d.next)

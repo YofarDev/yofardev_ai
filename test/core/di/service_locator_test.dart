@@ -4,8 +4,18 @@ import 'package:yofardev_ai/core/di/service_locator.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/core/services/agent/tool_registry.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
+import 'package:yofardev_ai/core/services/audio/ambient_bed_service.dart';
+import 'package:yofardev_ai/core/services/audio/foley_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
+import 'package:yofardev_ai/core/services/audio/sound_effects_setting.dart';
 import 'package:yofardev_ai/core/services/llm/llm_service_interface.dart';
+import 'package:yofardev_ai/core/models/performance/shot.dart';
+import 'package:yofardev_ai/core/services/motion/parallax_source.dart';
+import 'package:yofardev_ai/core/services/motion/reduce_motion_source.dart';
+import 'package:yofardev_ai/core/services/world/tablet_weather_source.dart';
+import 'package:yofardev_ai/core/services/world/world_state_service.dart';
+import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
+import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
 import 'package:yofardev_ai/core/services/speech/speech_input_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
@@ -61,6 +71,24 @@ void main() {
     expect(getIt<GlobalMemoryService>(), isNotNull);
     expect(getIt<AvatarAnimationService>(), isNotNull);
     expect(getIt<AvatarCueService>(), isNotNull);
+    // Presence: the composer's reports, the power saver and the idle ladder
+    // (started by setup on the real battery source, which reads false where
+    // there is no plugin; no await here: see HomeRepositoryImpl above).
+    expect(getIt<ComposerActivityService>(), isNotNull);
+    expect(getIt<PowerSaverSource>(), isA<BatteryPowerSaverSource>());
+    expect(getIt<ParallaxSource>(), same(getIt<ParallaxSource>()));
+    expect(getIt<ParallaxSource>().usesAccelerometer, isFalse);
+    expect(getIt<WorldStateService>(), same(getIt<WorldStateService>()));
+    expect(getIt<WorldStateService>().rain.value, 0);
+    expect(getIt<TabletWeatherSource>(), same(getIt<TabletWeatherSource>()));
+    expect(getIt<NpcDirector>(), same(getIt<NpcDirector>()));
+    expect(getIt<NpcFeed>(), isNotNull);
+    expect(getIt<SoundEffectsSetting>().enabled.value, isTrue);
+    expect(getIt<FoleyService>(), same(getIt<FoleyService>()));
+    expect(getIt<AmbientBedService>().cracklePlaying, isFalse);
+    expect(getIt<AmbientBedService>().windPlaying, isFalse);
+    expect(getIt<IdleLadder>(), same(getIt<IdleLadder>()));
+    expect(getIt<IdleLadder>().stage, 0);
     expect(getIt<PropReactionService>(), isNotNull);
     expect(getIt<TtsQueueService>(), isNotNull);
     expect(getIt<AppLifecycleService>(), isNotNull);
@@ -86,5 +114,22 @@ void main() {
     expect(getIt<SoundCubit>(), isNotNull);
     expect(getIt<TalkingCubit>(), isNotNull);
     expect(getIt<CaptionCubit>(), isNotNull);
+
+    // M11 ruling 18: reduce motion is followed live by the services that
+    // are not widgets (the camera locks medium the moment it flips).
+    final TestWidgetsFlutterBinding binding =
+        TestWidgetsFlutterBinding.ensureInitialized();
+    addTearDown(binding.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    expect(getIt<ReduceMotionSource>().value, isFalse);
+    expect(getIt<CameraDirector>().shot.value.shot, Shot.wide);
+    binding.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    expect(getIt<ReduceMotionSource>().value, isTrue);
+    expect(getIt<CameraDirector>().shot.value.shot, Shot.medium);
+    expect(getIt<IdleLadder>().stage, 0);
+    expect(getIt<ParallaxSource>().value, Offset.zero);
+    binding.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures();
+    expect(getIt<ReduceMotionSource>().value, isFalse);
   });
 }

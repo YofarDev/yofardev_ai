@@ -7,7 +7,6 @@ import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/core/services/audio/voice_effects_service.dart';
-import 'package:yofardev_ai/features/sound/domain/services/tts_synthesizer.dart';
 import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/talking/data/repositories/talking_repository_impl.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';

@@ -94,6 +94,15 @@ void main() {
       expect(result.cues, isEmpty);
     });
 
+    test('the signature move is not an LLM cue: dropped (M10 ruling 6)', () {
+      final CueParser parser = CueParser();
+      final ParsedChunk result = parser.parse('hey [g:signature] there');
+      expect(result.text, 'hey  there');
+      expect(result.cues, isEmpty);
+      expect(AvatarGesture.llmCues, isNot(contains(AvatarGesture.signature)));
+      expect(AvatarGesture.llmCues, hasLength(AvatarGesture.values.length - 1));
+    });
+
     test('an unknown scene event cue is dropped', () {
       final CueParser parser = CueParser(currentScene: AvatarScene.beach);
       final ParsedChunk result = parser.parse('hey [s:volcano] there');

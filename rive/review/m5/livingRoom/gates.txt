@@ -1,0 +1,20 @@
+parallax corners (9 renders, every pixel opaque): ok
+Plane4 plant pot travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 TV cabinet travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 picture travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane1 mullion travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+Plane0 moon travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: lamp=Plane4, plant=Plane4, tv=Plane3, cat=Plane3: ok
+pointer lamp (Plane4) parallaxX -1: click@172,900 fires 1, rest-only click@362,900 fires 0: ok
+pointer lamp (Plane4) parallaxX +1: click@400,900 fires 1, rest-only click@210,900 fires 0: ok
+pointer plant (Plane4) parallaxX -1: click@4,1150 fires 1, rest-only click@276,1264 fires 0: ok
+pointer plant (Plane4) parallaxX +1: click@314,1264 fires 1, rest-only click@4,1150 fires 0: ok
+pointer tv (Plane3) parallaxX -1: click@737,1043 fires 1, rest-only click@959,1043 fires 0: ok
+pointer tv (Plane3) parallaxX +1: click@985,1043 fires 1, rest-only click@763,1043 fires 0: ok
+pointer cat (Plane3) parallaxX -1: click@800,1123 fires 1, rest-only click@946,1123 fires 0: ok
+pointer cat (Plane3) parallaxX +1: click@972,1123 fires 1, rest-only click@826,1123 fires 0: ok
+wet ground (median luminance rain 1 / rain 0): 105.4/93.9 = 1.12 (want 1.05..1.6): ok
+RainGlass streaks + drips seam (frame 0 vs 240, rain 1, box (360, 230, 720, 700), pixels changed beyond rain 0): 0.0018% (ok)
+lamp pool follows lightKey (blue - red, mean, blue key vs default): +32.9/255 (ok); back to default: max diff 0/255 (ok)
+livingRoom.riv 112599 B (budget 409,600): ok
+livingRoom.webp 26524 B (budget 40,960): ok

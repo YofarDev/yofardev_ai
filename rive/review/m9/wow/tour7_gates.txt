@@ -1,0 +1,48 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 1133: ok
+network attempts during the run: 0: ok
+camera cuts only at sentence starts: 0 of 0 (shots seen: wide): ok
+journeys during the run: 7 (want 7): ok
+journey door → cafe: beats pullBack/open/grab/exit/close/arriveOpen/enter/hang/arriveClose/vanish in order: ok
+journey door → cafe: family ['door']: ok
+journey door → cafe: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey door → cafe: avatar off screen only while clipped (0 of 76 samples not): ok
+journey door → cafe: scene switched behind the closed threshold (first sample in cafe: arriveOpen): ok
+journey door → rooftop: beats pullBack/open/grab/exit/close/arriveOpen/enter/hang/arriveClose/vanish in order: ok
+journey door → rooftop: family ['door']: ok
+journey door → rooftop: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey door → rooftop: avatar off screen only while clipped (0 of 76 samples not): ok
+journey door → rooftop: scene switched behind the closed threshold (first sample in rooftop: arriveOpen): ok
+journey door → mountainHut: beats pullBack/open/grab/exit/close/arriveOpen/enter/hang/arriveClose/vanish in order: ok
+journey door → mountainHut: family ['door']: ok
+journey door → mountainHut: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey door → mountainHut: avatar off screen only while clipped (0 of 117 samples not): ok
+journey door → mountainHut: scene switched behind the closed threshold (first sample in mountainHut: arriveOpen): ok
+journey door → campfire: beats pullBack/open/grab/exit/close/cut/arriveOpen/enter/hang/arriveClose/vanish in order: ok
+journey door → campfire: family ['door']: ok
+journey door → campfire: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey door → campfire: avatar off screen only while clipped (0 of 118 samples not): ok
+journey door → campfire: scene switched behind the closed threshold (first sample in campfire: cut): ok
+journey path → beach: beats pullBack/open/exit/close/arriveOpen/enter/arriveClose/vanish in order: ok
+journey path → beach: family ['path']: ok
+journey path → beach: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey path → beach: avatar off screen only while clipped (0 of 118 samples not): ok
+journey path → beach: scene switched behind the closed threshold (first sample in beach: arriveOpen): ok
+journey rocket → deepSpace: beats pullBack/open/exit/close/cut/arriveOpen/enter/arriveClose/vanish in order: ok
+journey rocket → deepSpace: family ['rocket']: ok
+journey rocket → deepSpace: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey rocket → deepSpace: avatar off screen only while clipped (0 of 155 samples not): ok
+journey rocket → deepSpace: scene switched behind the closed threshold (first sample in deepSpace: cut): ok
+journey portal → livingRoom: beats pullBack/open/exit/close/arriveOpen/enter/arriveClose/vanish in order: ok
+journey portal → livingRoom: family ['portal']: ok
+journey portal → livingRoom: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey portal → livingRoom: avatar off screen only while clipped (0 of 117 samples not): ok
+journey portal → livingRoom: scene switched behind the closed threshold (first sample in livingRoom: arriveOpen): ok
+moon phase near full: |moonPhase - 0.5| max 0.022 (want <= 0.05): ok
+moonPhase written to every moon scene's file: 5/5 scenes read back, worst |read - 0.5| 0.022 (want <= 0.05): ok
+December: festive 1.00 in every sample (want 1): ok
+festive written to the indoor scenes' files: 3/3 read back, min 1.00 (want 1): ok
+the December outfit shown: hat ['santaHat'], top ['christmasSweater'] (want santaHat, christmasSweater): ok
+every threshold family played: ['door', 'path', 'portal', 'rocket']: ok
+tour7.gif 4172323 B (budget 4194304): ok
+tour7.mp4 2768284 B: info

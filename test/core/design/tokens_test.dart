@@ -119,6 +119,8 @@ void main() {
         accent: Color(0xFFFF9478),
         onAccent: Color(0xFF16121D),
         glow: Color(0x59FF9478),
+        glassTint: Color(0x19FFC48A),
+        captionInk: Color(0xFFF4E8D5),
       );
       final AppTokens other = AppTokens.dark.copyWith(
         scene: scene,
@@ -136,6 +138,8 @@ void main() {
         accent: Color(0xFFFF9478),
         onAccent: Color(0xFF16121D),
         glow: Color(0x59FF9478),
+        glassTint: Color(0x19FFC48A),
+        captionInk: Color(0xFFF4E8D5),
       );
       final AppTokens changed = AppTokens.dark.copyWith(
         scene: scene,

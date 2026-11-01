@@ -5,12 +5,14 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yofardev_ai/core/models/performance/performance.dart';
+import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
 import 'package:yofardev_ai/core/services/quality/frame_timing_source.dart';
 import 'package:yofardev_ai/core/services/quality/quality_tier_service.dart';
+import 'package:yofardev_ai/core/services/quality/thermal_source.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
 
-FrameTiming _frame(int milliseconds) {
-  final int micros = milliseconds * 1000;
+FrameTiming _frame(num milliseconds) {
+  final int micros = (milliseconds * 1000).round();
   return FrameTiming(
     vsyncStart: 0,
     buildStart: 0,
@@ -56,6 +58,45 @@ class _FakeTimingSource implements FrameTimingSource {
   }
 }
 
+class _FakeThermal implements ThermalSource {
+  ThermalLevel level = ThermalLevel.nominal;
+  bool fails = false;
+  final StreamController<ThermalLevel> _controller =
+      StreamController<ThermalLevel>.broadcast();
+
+  void set(ThermalLevel value) {
+    level = value;
+    _controller.add(value);
+  }
+
+  @override
+  Future<ThermalLevel> get current async {
+    if (fails) {
+      throw StateError('no thermal');
+    }
+    return level;
+  }
+
+  @override
+  Stream<ThermalLevel> get changes => _controller.stream;
+}
+
+class _FakePower implements PowerSaverSource {
+  bool on = false;
+  final StreamController<bool> _controller = StreamController<bool>.broadcast();
+
+  void set(bool value) {
+    on = value;
+    _controller.add(value);
+  }
+
+  @override
+  Future<bool> get isOn async => on;
+
+  @override
+  Stream<bool> get changes => _controller.stream;
+}
+
 /// Drives [QualityTierService.probe] inside a fake clock.
 class _Harness {
   _Harness(
@@ -68,15 +109,69 @@ class _Harness {
       source.drawFirstFrame();
     }
     SharedPreferences.setMockInitialValues(prefs ?? <String, Object>{});
-    service = QualityTierService(timingSource: source, settings: settings);
+    service = QualityTierService(
+      timingSource: source,
+      settings: settings,
+      thermal: thermal,
+      power: power,
+    );
     service.changes.listen(changes.add);
   }
 
   final FakeAsync async;
   final _FakeTimingSource source;
   final SettingsLocalDatasource settings;
+  final _FakeThermal thermal = _FakeThermal();
+  final _FakePower power = _FakePower();
   late final QualityTierService service;
   final List<QualityTier> changes = <QualityTier>[];
+
+  /// Runs [QualityTierService.init] and lets the prefs and the sources
+  /// answer.
+  void init() {
+    unawaited(service.init());
+    settle();
+  }
+
+  void settle() {
+    async.elapse(const Duration(milliseconds: 1));
+    async.flushMicrotasks();
+  }
+
+  /// Emits [fps] frames of [frameMs] per second for [duration], in 100 ms
+  /// batches.
+  void feed(Duration duration, {double fps = 60, num frameMs = 3}) {
+    final int steps = duration.inMilliseconds ~/ 100;
+    final int perBatch = (fps / 10).round();
+    for (int i = 0; i < steps; i++) {
+      source.emit(List<FrameTiming>.generate(perBatch, (_) => _frame(frameMs)));
+      async.flushMicrotasks();
+      async.elapse(const Duration(milliseconds: 100));
+      async.flushMicrotasks();
+    }
+  }
+
+  String? storedString(String key) {
+    String? value;
+    unawaited(
+      SharedPreferences.getInstance().then(
+        (SharedPreferences p) => value = p.getString(key),
+      ),
+    );
+    settle();
+    return value;
+  }
+
+  int? storedInt(String key) {
+    int? value;
+    unawaited(
+      SharedPreferences.getInstance().then(
+        (SharedPreferences p) => value = p.getInt(key),
+      ),
+    );
+    settle();
+    return value;
+  }
 
   /// Runs [QualityTierService.probe] to completion by elapsing the fake clock
   /// and emitting [framesPerWindow[w]] frames of [frameMs] across each
@@ -300,61 +395,481 @@ void main() {
   });
 
   group('QualityTierService.init', () {
-    test('with a stored tier it loads it and does not probe', () {
+    test('a stored tier of the current bench loads and never probes', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(
+          async,
+          prefs: <String, Object>{
+            'quality_tier': 'low',
+            'quality_tier_bench': QualityTierService.benchVersion,
+          },
+        );
+        h.init();
+        h.service.notifyStageShown();
+        h.async.elapse(const Duration(seconds: 30));
+
+        expect(h.service.current, QualityTier.low);
+        expect(h.service.benchmark, QualityTier.low);
+        expect(h.source.listenCount, 0);
+        expect(h.changes, <QualityTier>[QualityTier.low]);
+      });
+    });
+
+    test('a tier from an older bench is kept and re-benchmarked once', () {
       fakeAsync((FakeAsync async) {
         final _Harness h = _Harness(
           async,
           prefs: <String, Object>{'quality_tier': 'low'},
         );
-        unawaited(h.service.init());
-        h.async.elapse(const Duration(milliseconds: 1));
-        h.async.flushMicrotasks();
-        h.async.elapse(const Duration(seconds: 5));
-
+        h.init();
         expect(h.service.current, QualityTier.low);
         expect(h.source.listenCount, 0);
-        expect(h.changes, isEmpty);
+
+        h.service.notifyStageShown();
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
+        h.feed(const Duration(milliseconds: 3200), frameMs: 3);
+        h.settle();
+
+        expect(h.service.current, QualityTier.ultra);
+        expect(h.storedString('quality_tier'), 'ultra');
+        expect(h.storedInt('quality_tier_bench'), 2);
+
+        // A second stage show does not run it again.
+        h.service.notifyStageShown();
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
       });
     });
 
-    test('the probe starts only after the first frame is drawn', () {
+    test('without a stored tier it waits for the stage, not the first '
+        'frame', () {
       fakeAsync((FakeAsync async) {
-        final _Harness h = _Harness(async, firstFrameDrawn: false);
-        unawaited(h.service.init());
+        final _Harness h = _Harness(async);
+        h.init();
         h.async.elapse(const Duration(seconds: 5));
         h.async.flushMicrotasks();
+        expect(h.service.current, QualityTier.high);
+        expect(h.source.listenCount, 0);
 
+        h.service.notifyStageShown();
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
+        h.feed(const Duration(milliseconds: 3200), frameMs: 3);
+        h.settle();
+        expect(h.service.current, QualityTier.ultra);
+      });
+    });
+
+    test('a stage shown before init finished still benchmarks', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        h.service.notifyStageShown();
+        h.init();
+        expect(h.source.listenCount, 1);
+      });
+    });
+
+    test('no scene within the fallback: benchmark after the first frame + '
+        'the fallback', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async, firstFrameDrawn: false);
+        h.init();
+        h.async.elapse(const Duration(seconds: 30));
         expect(h.source.listenCount, 0);
 
         h.source.drawFirstFrame();
         h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 9));
+        expect(h.source.listenCount, 0);
+        h.async.elapse(const Duration(seconds: 1));
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
 
+        // The stage showing later starts nothing more.
+        h.service.notifyStageShown();
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
+      });
+    });
+  });
+
+  group('QualityTierService.effective', () {
+    test('the lowest of the benchmark and the caps, never above the '
+        'benchmark', () {
+      for (final QualityTier bench in QualityTier.values) {
+        expect(QualityTierService.effective(benchmark: bench), bench);
+        expect(
+          QualityTierService.effective(
+            benchmark: bench,
+            thermal: ThermalCap.oneBelow,
+          ),
+          bench.oneBelow,
+        );
+        expect(
+          QualityTierService.effective(
+            benchmark: bench,
+            thermal: ThermalCap.low,
+          ),
+          QualityTier.low,
+        );
+        expect(
+          QualityTierService.effective(benchmark: bench, powerSaver: true),
+          QualityTier.low,
+        );
+        expect(
+          QualityTierService.effective(
+            benchmark: bench,
+            driftCap: QualityTier.ultra,
+          ),
+          bench,
+        );
+      }
+      expect(
+        QualityTierService.effective(
+          benchmark: QualityTier.ultra,
+          driftCap: QualityTier.high,
+          thermal: ThermalCap.oneBelow,
+        ),
+        QualityTier.high,
+      );
+    });
+
+    test('a forced tier wins over everything', () {
+      expect(
+        QualityTierService.effective(
+          benchmark: QualityTier.low,
+          powerSaver: true,
+          thermal: ThermalCap.low,
+          driftCap: QualityTier.low,
+          forced: QualityTier.ultra,
+        ),
+        QualityTier.ultra,
+      );
+    });
+
+    test('thermal levels map to caps', () {
+      expect(ThermalCap.of(ThermalLevel.nominal), ThermalCap.none);
+      expect(ThermalCap.of(ThermalLevel.light), ThermalCap.none);
+      expect(ThermalCap.of(ThermalLevel.moderate), ThermalCap.oneBelow);
+      expect(ThermalCap.of(ThermalLevel.severe), ThermalCap.low);
+      expect(ThermalCap.of(ThermalLevel.critical), ThermalCap.low);
+    });
+  });
+
+  group('QualityTierService caps', () {
+    _Harness ultra(FakeAsync async) {
+      final _Harness h = _Harness(
+        async,
+        prefs: <String, Object>{
+          'quality_tier': 'ultra',
+          'quality_tier_bench': QualityTierService.benchVersion,
+        },
+      );
+      h.init();
+      h.changes.clear();
+      return h;
+    }
+
+    test('moderate caps one below at once; relief only after 120 s at '
+        'nominal / light', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.thermal.set(ThermalLevel.moderate);
+        h.async.flushMicrotasks();
+        expect(h.service.current, QualityTier.high);
+
+        h.thermal.set(ThermalLevel.light);
+        h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 119));
+        expect(h.service.current, QualityTier.high);
+        h.async.elapse(const Duration(seconds: 1));
+        expect(h.service.current, QualityTier.ultra);
+        expect(h.changes, <QualityTier>[QualityTier.high, QualityTier.ultra]);
+      });
+    });
+
+    test('a blip back to moderate restarts the relief wait', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.thermal.set(ThermalLevel.moderate);
+        h.async.flushMicrotasks();
+        h.thermal.set(ThermalLevel.nominal);
+        h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 100));
+        h.thermal.set(ThermalLevel.moderate);
+        h.async.flushMicrotasks();
+        h.thermal.set(ThermalLevel.nominal);
+        h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 100));
+        expect(h.service.current, QualityTier.high);
+        h.async.elapse(const Duration(seconds: 20));
+        expect(h.service.current, QualityTier.ultra);
+      });
+    });
+
+    test('severe and critical cap low; easing to moderate waits, then one '
+        'below', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.thermal.set(ThermalLevel.severe);
+        h.async.flushMicrotasks();
+        expect(h.service.current, QualityTier.low);
+        h.thermal.set(ThermalLevel.critical);
+        h.async.flushMicrotasks();
+        expect(h.service.current, QualityTier.low);
+
+        h.thermal.set(ThermalLevel.moderate);
+        h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 60));
+        expect(h.service.current, QualityTier.low);
+        h.async.elapse(const Duration(seconds: 60));
+        expect(h.service.current, QualityTier.high);
+        expect(h.service.thermalCap, ThermalCap.oneBelow);
+      });
+    });
+
+    test('the thermal state at init applies', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(
+          async,
+          prefs: <String, Object>{
+            'quality_tier': 'ultra',
+            'quality_tier_bench': QualityTierService.benchVersion,
+          },
+        );
+        h.thermal.level = ThermalLevel.severe;
+        h.init();
+        expect(h.service.current, QualityTier.low);
+      });
+    });
+
+    test('battery saver caps low and lifts when off', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.power.set(true);
+        h.async.flushMicrotasks();
+        expect(h.service.current, QualityTier.low);
+        h.power.set(false);
+        h.async.flushMicrotasks();
+        expect(h.service.current, QualityTier.ultra);
+        expect(h.changes, <QualityTier>[QualityTier.low, QualityTier.ultra]);
+      });
+    });
+
+    test('forceTier overrides the caps; null goes back', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.power.set(true);
+        h.async.flushMicrotasks();
+        h.service.forceTier(QualityTier.ultra);
+        expect(h.service.current, QualityTier.ultra);
+        expect(h.service.tier.value, QualityTier.ultra);
+        h.service.forceTier(QualityTier.ultra);
+        h.service.forceTier(null);
+        h.async.flushMicrotasks();
+        expect(h.service.current, QualityTier.low);
+        expect(h.changes, <QualityTier>[
+          QualityTier.low,
+          QualityTier.ultra,
+          QualityTier.low,
+        ]);
+      });
+    });
+  });
+
+  group('QualityTierService drift', () {
+    _Harness ultra(FakeAsync async) {
+      final _Harness h = _Harness(
+        async,
+        prefs: <String, Object>{
+          'quality_tier': 'ultra',
+          'quality_tier_bench': QualityTierService.benchVersion,
+        },
+      );
+      h.init();
+      h.changes.clear();
+      return h;
+    }
+
+    test('three 10 s windows over budget x 1.25 drop one tier, for good', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.service.setStageActive(true);
+        // ultra: 8.3 x 1.25 = 10.4 ms; 12 ms frames are over.
+        h.feed(const Duration(seconds: 20), frameMs: 12);
+        expect(h.service.current, QualityTier.ultra);
+        h.feed(const Duration(seconds: 10), frameMs: 12);
+        expect(h.service.current, QualityTier.high);
+        expect(h.service.driftCap, QualityTier.high);
+
+        // high: 11.1 x 1.25 = 13.9 ms; 12 ms frames are fine there.
+        h.feed(const Duration(seconds: 60), frameMs: 12);
+        expect(h.service.current, QualityTier.high);
+        // Good frames never bring ultra back in the session.
+        h.feed(const Duration(seconds: 60), frameMs: 2);
+        expect(h.service.current, QualityTier.high);
+        expect(h.changes, <QualityTier>[QualityTier.high]);
+      });
+    });
+
+    test('a window within budget breaks the streak', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.service.setStageActive(true);
+        h.feed(const Duration(seconds: 20), frameMs: 12);
+        h.feed(const Duration(seconds: 10), frameMs: 4);
+        h.feed(const Duration(seconds: 20), frameMs: 12);
+        expect(h.service.current, QualityTier.ultra);
+      });
+    });
+
+    test('nothing is sampled while the stage is inactive or a tier is '
+        'forced', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.feed(const Duration(seconds: 40), frameMs: 20);
+        expect(h.service.current, QualityTier.ultra);
+        expect(h.service.driftWatching, isFalse);
+
+        h.service.forceTier(QualityTier.ultra);
+        h.service.setStageActive(true);
+        expect(h.service.driftWatching, isFalse);
+        h.feed(const Duration(seconds: 40), frameMs: 20);
+        h.service.forceTier(null);
+        expect(h.service.current, QualityTier.ultra);
+        expect(h.service.driftWatching, isTrue);
+      });
+    });
+
+    test('the watch rests at low (nothing below it)', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = ultra(async);
+        h.service.setStageActive(true);
+        h.power.set(true);
+        h.async.flushMicrotasks();
+        expect(h.service.driftWatching, isFalse);
+        h.power.set(false);
+        h.async.flushMicrotasks();
+        expect(h.service.driftWatching, isTrue);
+      });
+    });
+  });
+
+  group('QualityTierService review fixes', () {
+    const Map<String, Object> ultraPrefs = <String, Object>{
+      'quality_tier': 'ultra',
+      'quality_tier_bench': QualityTierService.benchVersion,
+    };
+
+    test('no benchmark while battery saver caps the tier; it runs once the '
+        'cap lifts', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        h.power.on = true;
+        h.init();
+        h.service.notifyStageShown();
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 0);
+        h.power.set(false);
+        h.async.flushMicrotasks();
         expect(h.source.listenCount, 1);
       });
     });
 
-    test('without a stored tier it defaults to high and schedules a probe', () {
+    test('no benchmark while forced or under a thermal cap', () {
       fakeAsync((FakeAsync async) {
         final _Harness h = _Harness(async);
-        unawaited(h.service.init());
-        h.async.elapse(const Duration(milliseconds: 1));
+        h.init();
+        h.service.forceTier(QualityTier.low);
+        h.service.notifyStageShown();
         h.async.flushMicrotasks();
-
-        // The scheduled probe has subscribed to the timings stream, but the
-        // tier stays high until a valid probe lands.
+        expect(h.source.listenCount, 0);
+        h.thermal.set(ThermalLevel.moderate);
+        h.async.flushMicrotasks();
+        h.service.forceTier(null);
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 0, reason: 'thermal cap');
+        h.thermal.set(ThermalLevel.nominal);
+        h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 120));
+        h.async.flushMicrotasks();
         expect(h.source.listenCount, 1);
-        expect(h.service.current, QualityTier.high);
+      });
+    });
 
-        // Feed a valid probe to completion.
-        for (int i = 0; i < 7; i++) {
-          h.async.elapse(const Duration(milliseconds: 400));
-          h.source.emit(List<FrameTiming>.generate(28, (_) => _frame(3)));
-          h.async.flushMicrotasks();
-        }
-        h.async.elapse(const Duration(milliseconds: 200));
-        h.async.elapse(const Duration(milliseconds: 1));
+    test('a cap arriving mid-probe discards the result and re-runs later', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        h.init();
+        h.service.notifyStageShown();
         h.async.flushMicrotasks();
+        expect(h.source.listenCount, 1);
+        h.feed(const Duration(milliseconds: 1000), frameMs: 3);
+        h.power.set(true);
+        h.async.flushMicrotasks();
+        h.feed(const Duration(milliseconds: 2200), frameMs: 3);
+        h.settle();
+        expect(h.storedString('quality_tier'), isNull);
+        expect(h.service.benchmark, QualityTier.high);
+        h.power.set(false);
+        h.async.flushMicrotasks();
+        expect(h.source.listenCount, 2);
+        h.feed(const Duration(milliseconds: 3200), frameMs: 3);
+        h.settle();
+        expect(h.storedString('quality_tier'), 'ultra');
+      });
+    });
 
+    test('the drift watch rests under a thermal cap: no session drop', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async, prefs: ultraPrefs);
+        h.init();
+        h.service.setStageActive(true);
+        h.thermal.set(ThermalLevel.moderate);
+        h.async.flushMicrotasks();
+        expect(h.service.driftWatching, isFalse);
+        h.feed(const Duration(seconds: 40), frameMs: 20);
+        h.thermal.set(ThermalLevel.nominal);
+        h.async.flushMicrotasks();
+        h.async.elapse(const Duration(seconds: 120));
+        expect(h.service.current, QualityTier.ultra);
+        expect(h.service.driftCap, isNull);
+        expect(h.service.driftWatching, isTrue);
+      });
+    });
+
+    test('a tier change resets the drift streak', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async, prefs: ultraPrefs);
+        h.service.setStageActive(true);
+        // Two bad windows at high (the default before init).
+        h.feed(const Duration(seconds: 20), frameMs: 16);
+        h.init(); // the stored ultra lands: a tier change
+        h.feed(const Duration(seconds: 10), frameMs: 16);
+        expect(h.service.driftCap, isNull);
+        expect(h.service.current, QualityTier.ultra);
+      });
+    });
+
+    test('dispose mid-probe ends the probe and leaves no timer', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async);
+        bool done = false;
+        unawaited(h.service.probe().then((_) => done = true));
+        h.async.elapse(const Duration(milliseconds: 500));
+        h.service.dispose();
+        h.async.flushMicrotasks();
+        expect(done, isTrue);
+        expect(h.async.nonPeriodicTimerCount, 0);
+      });
+    });
+
+    test('a failing thermal read is logged, not thrown', () {
+      fakeAsync((FakeAsync async) {
+        final _Harness h = _Harness(async, prefs: ultraPrefs);
+        h.thermal.fails = true;
+        h.init();
         expect(h.service.current, QualityTier.ultra);
       });
     });

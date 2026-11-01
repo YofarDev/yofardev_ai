@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/avatar_scene.dart';
+import '../../models/performance/light_rig.dart';
 import '../tokens/app_tokens.dart';
 import '../tokens/scene_palette.dart';
 import 'ui_look.dart';
@@ -18,8 +19,9 @@ ThemeData buildLookTheme(
   UiLook look,
   AvatarScene scene, {
   required LookTextThemeBuilder textThemeBuilder,
+  LightRig? light,
 }) {
-  final ScenePalette palette = look.palette(scene);
+  final ScenePalette palette = look.palette(scene, light: light);
   final AppTokens tokens = AppTokens.dark.copyWith(
     background: look.ink,
     glassSurface: look.glassSurface,

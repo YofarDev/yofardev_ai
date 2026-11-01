@@ -13,6 +13,86 @@ void main() {
   });
 
   group('GlassPanel', () {
+    group('high contrast (M11 ruling 23)', () {
+      Widget highContrast(Widget child) => GoldenTestHelper.makeTestableWidget(
+        child: Builder(
+          builder: (BuildContext context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(highContrast: true),
+            child: child,
+          ),
+        ),
+      );
+
+      testWidgets('draws the opaque surface, with no blur', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          highContrast(
+            const GlassPanel(
+              blur: true,
+              level: AppGlassLevel.thick,
+              child: Text('panel'),
+            ),
+          ),
+        );
+        expect(find.byType(BackdropFilter), findsNothing);
+        expect(find.text('panel'), findsOneWidget);
+        final BuildContext context = tester.element(find.text('panel'));
+        final DecoratedBox box = tester.widget<DecoratedBox>(
+          find.descendant(
+            of: find.byType(GlassPanel),
+            matching: find.byType(DecoratedBox),
+          ),
+        );
+        final BoxDecoration decoration = box.decoration as BoxDecoration;
+        expect(decoration.gradient, isNull);
+        expect(decoration.color, context.colors.surface);
+        expect(decoration.color!.a, 1);
+        expect(decoration.border!.top.color.a, 1);
+      });
+
+      testWidgets('a custom shape is solid too', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          highContrast(
+            const GlassPanel(
+              blur: true,
+              shape: StadiumBorder(),
+              child: Text('pill'),
+            ),
+          ),
+        );
+        expect(find.byType(BackdropFilter), findsNothing);
+        expect(find.byType(ClipPath), findsNothing);
+        final DecoratedBox box = tester.widget<DecoratedBox>(
+          find.descendant(
+            of: find.byType(GlassPanel),
+            matching: find.byType(DecoratedBox),
+          ),
+        );
+        final ShapeDecoration decoration = box.decoration as ShapeDecoration;
+        expect(decoration.color!.a, 1);
+        expect(decoration.gradient, isNull);
+      });
+
+      testWidgets('without it the panel stays translucent glass', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          GoldenTestHelper.makeTestableWidget(
+            child: const GlassPanel(blur: true, child: Text('panel')),
+          ),
+        );
+        final DecoratedBox box = tester.widget<DecoratedBox>(
+          find.descendant(
+            of: find.byType(GlassPanel),
+            matching: find.byType(DecoratedBox),
+          ),
+        );
+        expect((box.decoration as BoxDecoration).gradient, isNotNull);
+        expect(find.byType(BackdropFilter), findsOneWidget);
+      });
+    });
+
     testWidgets('has no BackdropFilter when blur is false', (
       WidgetTester tester,
     ) async {

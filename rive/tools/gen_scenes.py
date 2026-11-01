@@ -7,15 +7,27 @@ the centre band and props sit left/right of where the avatar stands.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from dataclasses import dataclass
 import math
 import os
 import random
 import sys
+from typing import Callable, Iterator
 import zlib
 
 sys.path.insert(0, os.path.dirname(__file__))
+if __name__ == "__main__":
+    # run as a script: scene modules (`scene_cafe`, ...) `import gen_scenes` and must get this very module
+    # (its registries: DIORAMAS, TIME_SKY ...), not a second copy
+    sys.modules.setdefault("gen_scenes", sys.modules[__name__])
 from rml import Doc, El, ellipse, fill, lin, rad, smooth_path, solid, stroke, track, write  # noqa: E402,F401
-from scene_art import place_point, refine_scene  # noqa: E402
+from scene_art import before, named, place_point, refine_scene, walk  # noqa: E402
+from art_bible import EMISSIVE_PREFIX, SCENES, fit_colour  # noqa: E402
+from rig_dsl import Formulas  # noqa: E402
+import scene_npc  # noqa: E402
+from scene_npc import scene_fog  # noqa: E402
+import world_kit  # noqa: E402
 
 W, H = 1080, 1920
 SCENE_EVENTS = {
@@ -23,7 +35,110 @@ SCENE_EVENTS = {
     "campfire": ["flare", "rain", "shootingStar", "owlHoot"],
     "beach": ["bigWave", "seagulls", "sunset", "rain"],
     "deepSpace": ["meteor", "warp", "alienShip", "nebulaPulse"],
+    # contract v12 (ruling 3): built by their own modules (world_kit.SCENE_MODULES, SCENE_BUILDERS)
+    "cafe": ["espresso", "doorbell", "rain", "neonFlicker"],
+    "rooftop": ["fireworks", "plane", "shootingStar", "windowsLit"],
+    "mountainHut": ["snowfall", "flare", "aurora", "bell"],
+    # contract v14 (M11 ruling 2): built by their own modules too
+    "forestCabin": ["gust", "fireflies", "rain", "lanternFlicker"],
+    "trainCompartment": ["tunnel", "whistle", "station", "rain"],
+    "library": ["lightning", "bookFlutter", "clockChime", "rain"],
 }
+
+
+M4_ID_START = 980000  # elements added in moonshot M4 (each scene is its own document)
+# The campfire diorama (M4 Task 6: planes, fog veils, parallax converters, firelight tracks) mints
+# from its own range, so every element the M3/v7 campfire already had keeps its id.
+DIORAMA_ID_START = 990000
+# Moonshot M5 elements (rain binds, steam, the shared diorama's additions) mint from their own
+# range per document (`Scene.d5`), so every M4 id stays.
+M5_ID_START = 970000
+# Moonshot M6: the `SceneFront` artboard (contract v9) mints from its own range per document.
+M6_ID_START = 950000
+# Moonshot M7: the time-of-day veils (contract v10 `daylight` / `dusk`) mint from their own range.
+M7_ID_START = 940000
+# Moonshot M8 (contract v11): `fog`, the NPC view-model numbers and every NPC element mint from their
+# own range per document (`Scene.d8`, see scene_npc.py), so no M7 id moves.
+M8_ID_START = 930000
+# Moonshot M9 (contract v12): the v12 SceneVM members (world_kit.v12_members) and every v12 element mint
+# from their own range per document (`Scene.d9`), so no M8 id moves. The v12 scenes mint from the same
+# ranges as the others (each scene is its own document).
+M9_ID_START = 920000
+# The v12 members each M8 scene binds (world_kit.declared_binds; the v12 scenes declare theirs in their
+# module's `BINDS`). Every scene declares all its v12 members; the unlisted ones are inert. `Scene.write`
+# fails on a bind that is not listed here or a listed member nothing binds; check_contract.py rechecks
+# the built file. Lane E fills these in as it binds them (ruling 19).
+V12_BINDS: dict[str, frozenset[str]] = {
+    "livingRoom": frozenset({"cord", "moonPhase", "festive"}),
+    "campfire": frozenset({"moonPhase", "poke", "pokeX", "pokeY"}),
+    "beach": frozenset({"npc2", "npc2X", "npc2Look", *world_kit.drag_numbers("beach")}),
+    "deepSpace": frozenset({"spin"}),
+}
+# Moonshot M10 (contract v13): `night` (every scene declares it) and every M10 element (the café wipe's
+# holes, the deepSpace band overlap, the beach's night, the rooftop's day lift) mint from their own range
+# per document (`Scene.d10`), so no M9 id moves. The v12 scene modules mint from the same range.
+M10_ID_START = 910000
+# The v13 members each scene binds (world_kit.declared_v13_binds); the others declare `night` inertly.
+V13_BINDS: dict[str, frozenset[str]] = {
+    "beach": frozenset({"night"}),
+}
+# Moonshot M11 (contract v14): `tier`, `spring`, `autumn` (every scene declares them) and every M11
+# element added to an existing scene (the tier gate, spring / autumn in livingRoom and campfire) mint
+# from their own range per document (`Scene.d11`), so no M10 id moves. The v14 scene modules mint their
+# v14 members from the same range (each scene is its own document).
+M11_ID_START = 900000
+# Moonshot M12: shared additions to existing scenes (the `SceneFront`'s own eases, ruling 6) mint from
+# their own range per document (`Scene.d12`), so no M11 id moves.
+M12_ID_START = 890000
+# The v14 members the shared passes bind per scene (world_kit.declared_v14_binds unites this with a
+# scene module's `BINDS14`); the others declare `tier`, `spring`, `autumn` inertly. Lane W fills it in
+# (`tier` everywhere through the tier gate; `spring` / `autumn` in livingRoom and campfire).
+V14_BINDS: dict[str, frozenset[str]] = {
+    **{sid: frozenset({"tier"}) for sid in (*world_kit.BUILT_IN_SCENES, *world_kit.SCENE_MODULES)},
+    # ruling 9: the seasons in two old scenes (the window sill, the clearing)
+    "livingRoom": frozenset({"tier", "spring", "autumn"}),
+    "campfire": frozenset({"tier", "spring", "autumn"}),
+}
+# M11 ruling 13 (contract v14 `tier`): the element roots (`world_kit.gate_root`: no `emit` prefix, no
+# trailing digits) the shared tier pass (`world_kit.tier_gate`, run by `Scene.write`) hides per tier in the
+# four M8 scenes ("high": hidden at high and low, "low": at low only); a scene module keeps its own
+# `TIER_GATES`. Every fog veil also keeps one fill at low (the pass does that for any scene).
+TIER_GATES: dict[str, dict[str, tuple[str, ...]]] = {
+    "livingRoom": {
+        # the second half of the window's rain streak columns, the city windows' blinks, the lamp's dust
+        "high": (*(f"GlassStreak{i}_" for i in range(13, 26)), "GlassStreak13_-", "GlassStreak18_-",
+                 "Lit10", "Lit11", "Lit13", "Lit14", "Lit16", "Lit17", *(f"LamplitDust{i}" for i in range(5, 9))),
+        "low": ("LamplitDust",),
+    },
+    "campfire": {
+        "high": ("RainSheet1", *(f"Splash{i}" for i in range(8, 16)), *(f"FrontSplash{i}" for i in range(5, 10)),
+                 *(f"Star{i}" for i in range(35, 66, 5)), "Glint2", "Glint3", *(f"Spark{i}" for i in range(4, 8)),
+                 "Firefly3", "Firefly4", *(f"SteamPlume{i}" for i in range(4, 7)), "WetCoalSteam2", "WetCoalSteam3"),
+        "low": ("Smoke", "SteamPlume", "WetCoalSteam"),   # smoke and steam (the fire, its sparks and the flies are light)
+    },
+    "beach": {
+        "high": ("RainSheet1", *(f"Splash{i}" for i in range(8, 16)), *(f"FrontSplash{i}" for i in range(5, 10)),
+                 *(f"Glint{i}" for i in range(8, 16))),
+        "low": ("Flyer",),   # the two far birds crossing the sky
+    },
+    "deepSpace": {
+        "high": (*(f"Star{i}" for i in range(56, 105, 8)), *(f"TractorParticle{i}" for i in range(3, 6))),
+        "low": ("TractorParticle",),   # the tractor beam's dust
+    },
+}
+OUT_ROOT = os.path.join(os.path.dirname(__file__), "..", "scenes")  # tests point this at a tmp dir
+
+
+def scene_vm_defaults(scene_id: str) -> list[tuple[str, str, object]]:
+    """(name, type, default) of the v7/v8/v10 SceneVM numbers and colours, in contract order."""
+    s = SCENES[scene_id]
+    kx, ky = s.key_xy
+    return [("parallaxX", "number", 0.0), ("parallaxY", "number", 0.0),
+            ("lightKey", "color", s.key), ("lightKeyIntensity", "number", s.key_intensity),
+            ("lightKeyX", "number", kx), ("lightKeyY", "number", ky), ("lightRim", "color", s.rim),
+            ("lightRimIntensity", "number", s.rim_intensity), ("lightAmbient", "color", s.ambient),
+            ("lightFog", "color", s.fog), ("lightFlicker", "number", s.flicker),
+            ("rain", "number", 0.0), ("daylight", "number", 0.0), ("dusk", "number", 0.0)]
 
 
 class Scene:
@@ -50,6 +165,197 @@ class Scene:
                  exports=True, name="Default")
         self.inst = inst
         self.vm = d("ViewModel", self.p_event_id, self.p_event, inst, name="SceneVM", defaultInstanceId=inst.ref())
+        self._v7_props()
+        self.d8 = Doc(client=0, start=M8_ID_START)
+        self._v11_props()
+        self.d9 = Doc(client=0, start=M9_ID_START)
+        self._v12_props()
+        self.d10 = Doc(client=0, start=M10_ID_START)
+        self._v13_props()
+        self.d11 = Doc(client=0, start=M11_ID_START)
+        self._v14_props()
+        # contract v12: the v12 members this scene binds (the others are declared and inert)
+        self.binds: set[str] = set(world_kit.declared_binds(scene_id))
+        # contract v13 (M10): the v13 members this scene binds (`night`: only the beach)
+        self.binds13: set[str] = set(world_kit.declared_v13_binds(scene_id))
+        # contract v14 (M11): the v14 members this scene binds (`tier`, `spring`, `autumn`)
+        self.binds14: set[str] = set(world_kit.declared_v14_binds(scene_id))
+        # M8 (contract v11): the scene's NPC rig, run on the refined content before the diorama pass
+        # (`scene_npc.NPCS`), and the NPC's state enum (a root element after `EventId`).
+        self.npc_rig: Callable[[Scene, list[El], list[El]], None] | None = None
+        # M9 (contract v12): the scene's v12 art (drags, moon, December, gulls), run on the refined
+        # content after the NPC rig and before the diorama pass; everything it adds mints from `d9`
+        self.v12_art: Callable[[Scene, list[El], list[El]], None] | None = None
+        # M10 (contract v13): the scene's v13 art, run on the planes after the diorama, sky-time and fog
+        # passes (so it can sit in front of a plane's veils) and before the colour fit; mints from `d10`
+        self.v13_art: Callable[[Scene, list[El]], None] | None = None
+        # M11 (contract v14): the scene's seasonal art (`spring` / `autumn`), run on the planes after the
+        # v13 art and before the colour fit; mints from `d11` (before the tier gate, which runs last)
+        self.v14_art: Callable[[Scene, list[El]], None] | None = None
+        # M4 dioramas: a hook run on the refined content (planes, veils), extra root elements
+        # (converters), and the colour-script fit (ruling 13) for scenes rebuilt under the bible.
+        self.post_refine: Callable[[list[El]], None] | None = None
+        self.roots: list[El] = []
+        self.fit = False
+        self.d5 = Doc(client=0, start=M5_ID_START)
+        self.d6 = Doc(client=0, start=M6_ID_START)
+        self.d7 = Doc(client=0, start=M7_ID_START)
+        self.d12 = Doc(client=0, start=M12_ID_START)
+        # contract v9: (content, anims, layers) of the optional `SceneFront` artboard (front_weather)
+        self.front: tuple[list[El], list[El], list[El]] | None = None
+        self._convs: dict[tuple[float, float], El] = {}
+
+    @contextmanager
+    def minting(self, doc: Doc) -> Iterator[None]:
+        """Every helper (S, E, F, T, A, ambient...) mints from `doc` inside the block, so a pass
+        added late (M5) never shifts the ids the main document hands out afterwards."""
+        main, self.d = self.d, doc
+        try:
+            yield
+        finally:
+            self.d = main
+
+    def conv(self, k: float, c: float = 0.0, doc: Doc | None = None) -> El:
+        """One shared `c + k x input` formula converter per (k, c), a root element (history-free
+        bound transforms: parallax travel, rain opacity and scale)."""
+        key = (round(k, 3), round(c, 3))
+        if key not in self._convs:
+            f = Formulas(doc or self.d5, self.vpath)
+            head = [] if key[1] == 0 else [f.val(key[1]), f.op("+")]
+            self._convs[key] = f.d("DataConverterFormula", *head, f.val(key[0]), f.op("*"), *f.inp())
+            self.roots.append(self._convs[key])
+        return self._convs[key]
+
+    def bind(self, prop: str, key: int, conv: El | None = None, doc: Doc | None = None) -> El:
+        """A `DataBindContext` child: SceneVM `prop` -> property `key` (13 x, 14 y, 16 scaleX,
+        17 scaleY, 18 opacity), through `conv` if given."""
+        return (doc or self.d5)("DataBindContext", sourcePathIds=self.vpath(prop), propertyKey=key,
+                                converterId=conv.ref() if conv is not None else None)
+
+    def _v7_props(self) -> None:
+        """Contract v7 SceneVM numbers: `parallaxX`/`parallaxY` (default 0) and the scene's light rig
+        as defaults (art_bible.SCENES, checked by check_contract.py). Minted from the M4 id range so
+        no scene id moves; `self.vpath(name)` binds them."""
+        d4 = self.d4 = Doc(client=0, start=M4_ID_START)
+        self.v7: dict[str, El] = {}
+        vals: list[El] = []
+        for name, typ, default in scene_vm_defaults(self.id):
+            if typ == "color":
+                p = d4("ViewModelPropertyColor", name=name)
+                vals.append(d4("ViewModelInstanceColor", propertyValue=default, viewModelPropertyId=p.ref()))
+            else:
+                p = d4("ViewModelPropertyNumber", name=name)
+                vals.append(d4("ViewModelInstanceNumber", propertyValue=float(default), viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+        at = self.vm.children.index(self.inst)
+        self.vm.children[at:at] = list(self.v7.values())
+        self.inst.children.extend(vals)
+
+    def _v11_props(self) -> None:
+        """Contract v11 SceneVM members, after `dusk` in contract order: `fog` (number), `npc` (enum
+        `NpcState`, default rest), `npcX`, `npcLook` (numbers, default 0). Minted from `d8`."""
+        from scene_npc import NPC_STATES  # noqa: PLC0415 (scene_npc imports this module)
+        d8 = self.d8
+        self.npc_vals = {v: d8("DataEnumValue", key=v, value=v) for v in NPC_STATES}
+        self.npc_enum = d8("DataEnumCustom", *self.npc_vals.values(), name="NpcState")
+        props, vals = [], []
+        for name in ("fog", "npc", "npcX", "npcLook"):
+            if name == "npc":
+                p = d8("ViewModelPropertyEnumCustom", enumId=self.npc_enum.ref(), name=name)
+                vals.append(d8("ViewModelInstanceEnum", propertyValue=self.npc_vals["rest"].ref(),
+                               viewModelPropertyId=p.ref()))
+            else:
+                p = d8("ViewModelPropertyNumber", name=name)
+                vals.append(d8("ViewModelInstanceNumber", propertyValue=0.0, viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+            props.append(p)
+        at = self.vm.children.index(self.inst)
+        self.vm.children[at:at] = props
+        self.inst.children.extend(vals)
+
+    def _v12_props(self) -> None:
+        """Contract v12 SceneVM members after `npcLook`, in contract order (world_kit.v12_members):
+        `npc2` (enum `NpcState`, default away), `npc2X`, `npc2Look`, `moonPhase` (-1), `festive` (0) and
+        the scene's drag numbers (world_kit.DRAGS). Minted from `d9`, so no older id moves."""
+        d9 = self.d9
+        props, vals = [], []
+        for name, typ, default in world_kit.v12_members(self.id):
+            if typ == "enum":
+                p = d9("ViewModelPropertyEnumCustom", enumId=self.npc_enum.ref(), name=name)
+                vals.append(d9("ViewModelInstanceEnum", propertyValue=self.npc_vals[str(default)].ref(),
+                               viewModelPropertyId=p.ref()))
+            else:
+                p = d9("ViewModelPropertyNumber", name=name)
+                vals.append(d9("ViewModelInstanceNumber", propertyValue=float(default), viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+            props.append(p)
+        at = self.vm.children.index(self.inst)
+        self.vm.children[at:at] = props
+        self.inst.children.extend(vals)
+
+    def _v13_props(self) -> None:
+        """Contract v13 SceneVM members (world_kit.v13_members: `night`, default 0), after `festive` and
+        before the scene's drag numbers (contract order). Minted from `d10`, so no older id moves."""
+        d10 = self.d10
+        drags = set(world_kit.drag_numbers(self.id))
+        props, vals = [], []
+        for name, _typ, default in world_kit.v13_members(self.id):
+            p = d10("ViewModelPropertyNumber", name=name)
+            vals.append(d10("ViewModelInstanceNumber", propertyValue=float(default), viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+            props.append(p)
+        kids = self.vm.children
+        at = next((i for i, c in enumerate(kids) if c.attrs.get("name") in drags), kids.index(self.inst))
+        kids[at:at] = props
+        ikids = self.inst.children
+        drag_ids = {self.v7[n].ref() for n in drags}
+        at = next((i for i, c in enumerate(ikids) if c.attrs.get("viewModelPropertyId") in drag_ids), len(ikids))
+        ikids[at:at] = vals
+
+    def _v14_props(self) -> None:
+        """Contract v14 SceneVM members (world_kit.v14_members): `tier` (enum `Tier`: low, high, ultra;
+        default ultra, a root element after `NpcState`), `spring`, `autumn` (0), after `night` and before
+        the scene's drag numbers (contract order). Minted from `d11`, so no older id moves."""
+        d11 = self.d11
+        self.tier_vals = {v: d11("DataEnumValue", key=v, value=v) for v in world_kit.TIER_VALUES}
+        self.tier_enum = d11("DataEnumCustom", *self.tier_vals.values(), name="Tier")
+        drags = set(world_kit.drag_numbers(self.id))
+        props, vals = [], []
+        for name, typ, default in world_kit.v14_members(self.id):
+            if typ == "enum":
+                p = d11("ViewModelPropertyEnumCustom", enumId=self.tier_enum.ref(), name=name)
+                vals.append(d11("ViewModelInstanceEnum", propertyValue=self.tier_vals[str(default)].ref(),
+                                viewModelPropertyId=p.ref()))
+            else:
+                p = d11("ViewModelPropertyNumber", name=name)
+                vals.append(d11("ViewModelInstanceNumber", propertyValue=float(default), viewModelPropertyId=p.ref()))
+            self.v7[name] = p
+            props.append(p)
+        kids = self.vm.children
+        at = next((i for i, c in enumerate(kids) if c.attrs.get("name") in drags), kids.index(self.inst))
+        kids[at:at] = props
+        ikids = self.inst.children
+        drag_ids = {self.v7[n].ref() for n in drags}
+        at = next((i for i, c in enumerate(ikids) if c.attrs.get("viewModelPropertyId") in drag_ids), len(ikids))
+        ikids[at:at] = vals
+
+    def check_v12_binds(self, roots: list[El]) -> None:
+        """The v12 members the file binds are exactly `self.binds`, the v13 ones exactly `self.binds13`,
+        the v14 ones exactly `self.binds14` (the rest stay declared and inert)."""
+        for label, members, want, where in (
+                ("v12", world_kit.v12_members(self.id), self.binds, "gen_scenes.V12_BINDS or the scene module's BINDS"),
+                ("v13", world_kit.v13_members(self.id), self.binds13, "gen_scenes.V13_BINDS"),
+                ("v14", world_kit.v14_members(self.id), self.binds14,
+                 "gen_scenes.V14_BINDS or the scene module's BINDS14")):
+            names = {self.v7[n].ref(): n for n, _, _ in members}
+            got = set()
+            for r in roots:
+                got |= world_kit.bound_names(r, self.vm.ref(), names)
+            if got != want:
+                raise ValueError(f"{self.id}: {label} binds {sorted(got)} != declared {sorted(want)} ({where})")
+
+    def vpath(self, name: str) -> str:
+        return f"{self.vm.ref()}-{self.v7[name].ref()}"
 
     # ---------------------------------------------------------------- drawing
     def S(self, parent: tuple[float, float], name: str, pts: list, *paints: El | None,
@@ -182,21 +488,101 @@ class Scene:
         return d("Shape", d("Rectangle", width=float(w), height=float(h), name="Path"), self.F("00000000"),
                  x=float(cx), y=float(cy), name="Hit_" + name)
 
+    def fit_colours(self, elements: list[El]) -> None:
+        """Ruling 13: every colour passes through `art_bible.fit_colour(c, scene)`, except inside an
+        emissive subtree (a node or shape named `emit*`: fire, sparks, glow, stars). Paints there are
+        named `emit` too, so the line-based `art_bible.py lint` sees the exemption on their line."""
+        def visit(e: El, emit: bool) -> None:
+            emit = emit or str(e.attrs.get("name", "")).startswith(EMISSIVE_PREFIX)
+            if e.tag in ("SolidColor", "GradientStop"):
+                if emit:
+                    e.attrs["name"] = EMISSIVE_PREFIX
+                else:
+                    e.attrs["colorValue"] = fit_colour(str(e.attrs["colorValue"]), self.id)
+            for c in e.children:
+                visit(c, emit)
+        for e in elements:
+            visit(e, False)
+
     def write(self, content: list[El], hits: list[El]) -> str:
         refine_scene(self, content)
+        if self.post_refine is not None:
+            self.post_refine(content)
+        if self.npc_rig is not None:
+            self.npc_rig(self, content, hits)
+        if self.v12_art is not None:
+            self.v12_art(self, content, hits)
+        spec = DIORAMAS.get(self.id)
+        if spec is not None:
+            # M5 ruling 3: hit zones ride the plane of the art they cover
+            content[0:0] = hits
+            hits = []
+            diorama(self, content, spec)
+            sky_time(self, content)
+            scene_fog(self, content)
+        if self.v13_art is not None:
+            self.v13_art(self, content)
+        if self.v14_art is not None:
+            self.v14_art(self, content)
+        if self.fit or spec is not None:
+            self.fit_colours([*hits, *content])
+        if "tier" in self.binds14:
+            # M11 ruling 13: the tier gate, last (minted from d11 after every other M11 element)
+            front_content, front_anims = (self.front[0], self.front[1]) if self.front is not None else ([], [])
+            self.tier_report = world_kit.tier_gate(self, self.d11, [content, front_content],
+                                                   [*self.anims, *front_anims], world_kit.tier_gates(self.id))
         d = self.d
         sm = d("StateMachine", *self.listeners, *self.layers, name="Main")
         style = d("LayoutComponentStyle", name="Artboard Style")
         ab = d("Artboard", style, sm, self.ease, self.ease_out, self.ease_in, *self.events, *hits, *content, *self.anims,
                width=float(W), height=float(H), name="Scene", defaultStateMachineId=sm.ref(),
                viewModelId=self.vm.ref(), viewModelInstanceId=self.inst.ref(), styleId=style.ref(), clip=True)
-        out = os.path.join(os.path.dirname(__file__), "..", "scenes", self.id, self.id + ".rml")
+        boards = [ab]
+        if self.front is not None:
+            boards.append(self._front_artboard())
+        self.check_v12_binds([*boards, *self.roots])
+        out = os.path.join(OUT_ROOT, self.id, self.id + ".rml")
         os.makedirs(os.path.dirname(out), exist_ok=True)
-        write(out, [ab, self.enum, self.vm])
+        write(out, [*boards, self.enum, self.npc_enum, self.tier_enum, self.vm, *self.roots])
         with open(os.path.join(os.path.dirname(out), "rive.yaml"), "w") as f:
             f.write(f"name: {self.id}\nmain: Scene\noutput: {{dir: build}}\n"
                     "logs: {file: build/rive.log, problems: build/problems.log}\n")
         return os.path.normpath(out)
+
+
+    def _own_eases(self, anims: list[El]) -> list[El]:
+        """M12 ruling 6: the runtime resolves a key's `interpolatorId` within the key's own artboard, so
+        the front's keys pointing at the `Scene` artboard's eases were dropped with their keyed objects
+        (the splashes never drew, in the CLI or the app, M6-M11). Each ease the `anims` use gets a copy
+        minted from `d12`, and their keys point at it; the copies go into the front artboard."""
+        shared = {e.ref(): e for e in (self.ease, self.ease_out, self.ease_in)}
+        copies: dict[str, El] = {}
+
+        def visit(e: El) -> None:
+            ref = str(e.attrs.get("interpolatorId"))
+            if ref in shared:   # an ease the front already owns stays
+                if ref not in copies:
+                    copies[ref] = self.d12(shared[ref].tag, **shared[ref].attrs)
+                e.attrs["interpolatorId"] = copies[ref].ref()
+            for c in e.children:
+                visit(c)
+        for a in anims:
+            visit(a)
+        return list(copies.values())
+
+    def _front_artboard(self) -> El:
+        """Contract v9 `SceneFront`: the weather in front of the avatar, same `SceneVM`, its own `Main`
+        state machine of ambient loops, no listeners or events. Colours go through the scene's fit."""
+        content, anims, layers = self.front
+        self.fit_colours(content)
+        eases = self._own_eases(anims)
+        d = self.d6
+        sm = d("StateMachine", *layers, name="Main")
+        style = d("LayoutComponentStyle", name="Artboard Style")
+        return d("Artboard", style, sm, *eases, *content, *anims, x=float(W + 200), y=0.0, width=float(W),
+                 height=float(H),
+                 name="SceneFront", defaultStateMachineId=sm.ref(), viewModelId=self.vm.ref(),
+                 viewModelInstanceId=self.inst.ref(), styleId=style.ref(), clip=True)
 
 
 def uniq(keys: list) -> list:
@@ -208,14 +594,20 @@ def uniq(keys: list) -> list:
 
 
 def rain_fx(sc: Scene, name: str, col: str, frames: int = 480, extra: list[El] | None = None,
-            darken: str = "FF0A1022", ground: tuple[float, float] = (1200.0, 1900.0)) -> tuple[El, El]:
+            darken: str = "FF0A1022", ground: tuple[float, float] = (1200.0, 1900.0), loop: bool = False,
+            periods: tuple[int, int] = (18, 34)) -> tuple[El, El]:
     """Returns (content node, one-shot anim): fade in, two depth layers of falling rain (near:
-    long, fast, bright; far: short, slow, faint), splashes popping on the ground, fade out."""
+    long, fast, bright; far: short, slow, faint), splashes popping on the ground, fade out.
+
+    `loop` (M5 steady rain): returns (node `name`, the splashes' looping anim) instead: the streaks
+    and splashes only, no fade and no darkening; each streak sheet gets its own `period`-frame loop
+    layer, the splashes loop over `frames`; the caller binds the node's opacity."""
     d = sc.d
     r = random.Random(zlib.crc32(name.encode()))
     tile = 480                      # pattern repeats every `tile` px, so a `tile` shift loops seamlessly
     sheets, tracks = [], []
-    for layer, (n, ln0, ln1, wd, alpha, period) in enumerate([(22, 70, 120, 3.2, "FF", 18), (34, 26, 50, 1.8, "70", 34)]):
+    for layer, (n, ln0, ln1, wd, alpha, period) in enumerate([(22, 70, 120, 3.2, "FF", periods[0]),
+                                                              (34, 26, 50, 1.8, "70", periods[1])]):
         streaks = []
         for i in range(n):
             x, y = r.uniform(-60, W + 60), r.uniform(0, tile)
@@ -226,6 +618,14 @@ def rain_fx(sc: Scene, name: str, col: str, frames: int = 480, extra: list[El] |
                                     sc.L(alpha + col[2:], wd), closed=False))
         sheet = d("Node", *streaks, x=0.0, y=0.0, name=f"RainSheet{layer}")
         sheets.append(sheet)
+        if loop:
+            # its own `period`-frame loop, one tile per cycle: the wrap (tile == 0) is the
+            # animation's, so no fractional frame ever sweeps the sheet back up the tile
+            sc.ambient(f"{name}Sheet{layer}", sc.A(f"amb_{name}Sheet{layer}", period,
+                                                   [sc.T(sheet, ease=None, y=[(0, 0.0, "linear"),
+                                                                              (period, float(tile), "linear")])],
+                                                   loop=True))
+            continue
         saw = []
         for c in range(0, frames, period):
             saw += [(c, 0.0, "linear"), (min(c + period - 1, frames), tile * (period - 1) / period, "linear")]
@@ -240,11 +640,13 @@ def rain_fx(sc: Scene, name: str, col: str, frames: int = 480, extra: list[El] |
         splashes.append(sp)
         ph = r.randint(0, 40)
         op, sxk = [(0, 0.0)], [(0, 0.3)]
-        for c in range(40 + ph, frames - 50, 44):
+        for c in (range(1 + ph, frames - 13, 44) if loop else range(40 + ph, frames - 50, 44)):
             op += [(c, 0.0, "hold"), (c + 1, 1.0), (c + 12, 0.0, "hold")]
             sxk += [(c, 0.3, "hold"), (c + 1, 0.4), (c + 12, 1.3, "hold")]
         tracks.append(sc.T(sp, ease=None, opacity=uniq(op + [(frames, 0.0)]),
                            scaleX=uniq(sxk + [(frames, 0.3)]), scaleY=uniq(sxk + [(frames, 0.3)])))
+    if loop:
+        return d("Node", *splashes, *sheets, x=0.0, y=0.0, name=name), sc.A("amb_" + name, frames, tracks, loop=True)
     dark = d("Shape", d("Rectangle", width=float(W), height=float(H), originX=0.0, originY=0.0, name="Path"),
              sc.vgrad(0, H, [(darken, 0.0), ("80" + darken[2:], 1.0)]), opacity=0.0, name="RainDark")
     group_ = d("Node", *splashes, *sheets, x=0.0, y=0.0, opacity=0.0, name=name)
@@ -396,10 +798,10 @@ def campfire() -> str:
                              (-60, 1960, "c")],
                sc.vgrad(-400, 400, [("FF2A2338", 0.0), ("FF1C1726", 1.0)]))
     light_pool = E(O, "LightPool", fire_c[0], fire_c[1] + 50, 1000, 1000,
-                   sc.rgrad(500, [("88FF9A3C", 0.0), ("33FF7A2A", 0.45), ("00FF7A2A", 1.0)]), scaleY=0.42)
+                   sc.rgrad(500, [("B4FF9A3C", 0.0), ("50FF7A2A", 0.45), ("00FF7A2A", 1.0)]), scaleY=0.42)
     # rim light on the nearest trees from the fire
     tree_glow = E(O, "TreeGlow", fire_c[0] - 120, fire_c[1] - 260, 700, 700,
-                  sc.rgrad(350, [("30FF8A3A", 0.0), ("00FF8A3A", 1.0)]))
+                  sc.rgrad(350, [("48FF8A3A", 0.0), ("00FF8A3A", 1.0)]))
     grass = []
     for i in range(26):
         gx = rnd.uniform(-20, W + 20)
@@ -539,10 +941,11 @@ def campfire() -> str:
                    for f in samples]))
         sc.ambient(f"Flame{i}", sc.A(f"amb_flame{i}", P,
                    [sc.T(tg, rotation=rot, scaleY=sy, scaleX=sx), *deform], loop=True))
-    fl_tracks = [sc.T(glow, opacity=[(0, 1.0), (9, 0.8), (17, 0.97), (31, 0.84), (44, 1.0), (58, 0.86), (70, 0.95),
-                                     (89, 1.0)],
+    fl_keys = CAMPFIRE_FLICKER
+    fl_tracks = [sc.T(glow, opacity=fl_keys,
                       scaleX=[(0, 1.0), (40, 1.05), (89, 1.0)], scaleY=[(0, 1.0), (40, 1.05), (89, 1.0)])]
-    sc.ambient("FireLight", sc.A("amb_firelight", 89, fl_tracks, loop=True))
+    firelight = sc.A("amb_firelight", 89, fl_tracks, loop=True)
+    sc.ambient("FireLight", firelight)
     sc.ambient("Sparks", sc.A("amb_sparks", 120, spark_tracks, loop=True))
 
     # smoke wisps drifting up
@@ -686,7 +1089,417 @@ def campfire() -> str:
     content = [rain_node, flare_wash, fg[0], fg[1], *stones_front, *logs, fire_flare, *smoke, *stones_back, tent, *grass, tree_glow,
                light_pool, fg[2], ground, *hoots, owl, branch, twig, snag,
                *near_trees, mid, *far_trees, far, star_node, *craters, moon, moon_glow, *stars, sky]
+    sc.fit = True
+    front_weather(sc, "88B8C8F0")  # M6 ruling 8: the campfire RainLoop colour
+    sc.npc_rig = scene_npc.campfire_owl   # M8: the owl (contract v11)
+    sc.v12_art = campfire_v12             # M9: the poke stick, the moon's phase (contract v12)
+    sc.v14_art = campfire_seasons         # M11: spring flowers, autumn leaves and rust ferns (contract v14)
     return sc.write(content, [hit_fire, hit_tent, hit_owl, hit_sky])
+
+
+# ====================================================================== dioramas
+# The shared diorama pass (M4 ruling 14, M5 rulings 2-3): six parallax planes, back to front, and
+# the gain of each. A scene becomes a diorama by registering a `DioramaSpec` in `DIORAMAS`.
+PARALLAX_GAINS = (0.0, 0.15, 0.3, 0.5, 0.7, 1.0)
+PARALLAX_TRAVEL = (40.0, 24.0)  # px of x / y travel at gain 1 and parallaxX / parallaxY = +-1
+# Fog veils in front of Plane0..2 (ruling 14): (fog density, y where the veil starts clear, y where
+# it reaches the full density). `lightFog`'s own alpha (0x33 for the campfire) would multiply a
+# single fill down to 0.11 / 0.07 / 0.04, which does not read: each veil stacks FOG_FILLS bound
+# fills (1 - (1 - a)^n) and takes the opacity that makes the stack reach the density at the default
+# fog (`fog_opacity`). Another fog colour scales the veils with it, and alpha 0 removes them.
+FOG_FILLS = 4
+HIT_PREFIX = "Hit_"
+
+
+def fog_opacity(density: float, fog: str, fills: int = FOG_FILLS) -> float:
+    """The veil opacity at which `fills` stacked fills of `fog` reach `density` (at most 1)."""
+    a = int(fog[:2], 16) / 255
+    stack = 1 - (1 - a) ** fills
+    return round(min(1.0, density / stack), 3) if stack > 0 else 0.0
+
+
+@dataclass(frozen=True)
+class DioramaSpec:
+    """What makes a scene a diorama (M5 ruling 2).
+
+    - `planes`: top-level element name without its index digits (`Star12` -> `Star`) -> plane 0..5
+      (0 the sky, 5 the foreground), or `None` for a screen-space overlay (rain, a flash wash) that
+      stays in front of every plane. A full name (`Asteroid0`) overrides its root. Hit zones are
+      listed by full name (`Hit_fire`) in the plane of the art they cover (ruling 3). An unlisted top-level element raises `KeyError`.
+    - `emissive`: name roots of light sources; they and everything below them are renamed `emit*`
+      and skip the colour-script fit (M4 ruling 13).
+    - `veils`: (density, y clear, y full) of the `lightFog` veil in front of Plane0, Plane1, ...;
+      a fourth value (y clear again) makes the veil a band that fades out below `y full` too
+      (the beach's horizon haze) instead of staying full down to the bottom.
+    - `light`: the scene's own pass, run first on the refined content with the diorama's Doc
+      (firelight, lamp pool, rain binds). Elements it adds need a plane entry too; new elements
+      should mint from `sc.d5` (`with sc.minting(sc.d5)`), shared converters from `sc.conv`.
+    """
+
+    planes: dict[str, int | None]
+    emissive: tuple[str, ...]
+    veils: tuple[tuple[float, ...], ...]
+    light: Callable[[Scene, list[El], Doc], None] | None = None
+
+
+def _root(name: object) -> str:
+    return str(name).rstrip("0123456789")
+
+
+def plane_of(spec: DioramaSpec, name: str) -> int | None:
+    """The plane `spec` gives a top-level element (-1 when unlisted): its full name if listed (one
+    of deepSpace's asteroids), else its root; an `emit` prefix is ignored."""
+    bare = name.removeprefix(EMISSIVE_PREFIX)
+    return spec.planes.get(bare, spec.planes.get(_root(bare), -1))
+
+
+def diorama(sc: Scene, content: list[El], spec: DioramaSpec) -> None:
+    """Regroups the refined top-level `content` (front-most first, hit zones included) into
+    Plane5..Plane0 behind the screen overlays, binds each plane to `parallaxX/Y`, adds the fog veils,
+    runs the scene's light hook and names the light sources `emit*`. Minted from DIORAMA_ID_START
+    (so the M4 campfire keeps its ids); the hook's own additions mint from the M5 range."""
+    d6 = Doc(client=0, start=DIORAMA_ID_START)
+    pre = len(sc.roots)
+    if spec.light is not None:
+        spec.light(sc, content, d6)
+    late = sc.roots[pre:]   # the hook's converters go after the parallax ones in the file
+    del sc.roots[pre:]
+
+    for e in walk(content):
+        if e.tag in ("Shape", "Node") and _root(e.attrs.get("name")) in spec.emissive:
+            for x in walk([e]):
+                if x.tag in ("Shape", "Node") and not str(x.attrs.get("name", "")).startswith(EMISSIVE_PREFIX):
+                    x.attrs["name"] = EMISSIVE_PREFIX + str(x.attrs.get("name", ""))
+
+    groups: dict[int | None, list[El]] = {}
+    hits: dict[int, list[El]] = {}
+    order: list[int | None] = []
+    for e in content:
+        name = str(e.attrs.get("name", ""))
+        if name.startswith(HIT_PREFIX):
+            k = spec.planes.get(name, -1)
+            if k is None or k == -1:
+                raise KeyError(f"{sc.id} hit zone {name!r} has no plane")
+            hits.setdefault(k, []).append(e)
+            continue
+        k = plane_of(spec, name)
+        if k == -1:
+            raise KeyError(f"{sc.id} element {name!r} has no plane")
+        if k not in groups:
+            order.append(k)
+        elif order[-1] != k:
+            raise ValueError(f"{sc.id}: {name!r} (plane {k}) comes back after plane {order[-1]}: "
+                             f"planes are not contiguous back to front: {order}")
+        groups.setdefault(k, []).append(e)
+    # content is front-most first: overlays, then Plane5 .. Plane0, each contiguous (draw order kept)
+    planes_seen = [k for k in order if k is not None]
+    if (None in order and order[0] is not None) or planes_seen != sorted(planes_seen, reverse=True):
+        raise ValueError(f"{sc.id}: planes are not contiguous back to front: {order}")
+
+    fog = SCENES[sc.id].fog
+    planes = []
+    for k in range(5, -1, -1):
+        if k not in groups and k not in hits:
+            continue
+        gain = PARALLAX_GAINS[k]
+        binds = [] if gain == 0 else [
+            sc.bind("parallaxX", 13, sc.conv(gain * PARALLAX_TRAVEL[0], doc=d6), doc=d6),
+            sc.bind("parallaxY", 14, sc.conv(gain * PARALLAX_TRAVEL[1], doc=d6), doc=d6)]
+        veil = None
+        if k < len(spec.veils):
+            density, y0, y1, *band = spec.veils[k]
+            if band:
+                # a band: clear at y0, full at y1, clear again at band[0]
+                y2 = band[0]
+                fills = [d6("Fill", d6("LinearGradient",
+                                       d6("GradientStop", colorValue="00" + fog[2:], position=0.0),
+                                       d6("GradientStop", d6("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
+                                                             propertyKey=38), colorValue=fog,
+                                          position=round((y1 - y0) / (y2 - y0), 4)),
+                                       d6("GradientStop", colorValue="00" + fog[2:], position=1.0),
+                                       startX=0.0, startY=0.0, endX=0.0, endY=float(y2 - y0)), name="Fill")
+                         for _ in range(FOG_FILLS)]
+                height = float(y2 - y0)
+            else:
+                fills = [d6("Fill", d6("LinearGradient",
+                                       d6("GradientStop", colorValue="00" + fog[2:], position=0.0),
+                                       d6("GradientStop", d6("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
+                                                             propertyKey=38), colorValue=fog, position=1.0),
+                                       startX=0.0, startY=0.0, endX=0.0, endY=float(y1 - y0)), name="Fill")
+                         for _ in range(FOG_FILLS)]
+                height = float(H + 60 - y0)
+            veil = d6("Shape", d6("Rectangle", width=float(W + 120), height=height, originX=0.0,
+                                  originY=0.0, name="Path"),
+                      *fills, x=-60.0, y=float(y0), opacity=fog_opacity(density, fog), name=f"FogVeil{k}")
+        planes.append(d6("Node", *binds, *hits.get(k, []), veil, *groups.get(k, []), x=0.0, y=0.0, name=f"Plane{k}"))
+    content[:] = [*groups.get(None, []), *planes]
+    sc.roots.extend(late)
+
+
+# ---------------------------------------------------------------- time of day (M7, contract v10)
+# Per scene: the horizon's y in the sky plane and how much of the day veil remains there (the
+# living room's night skyline sits low in the window: the veil thins over it). deepSpace has none.
+TIME_SKY: dict[str, tuple[float, float]] = {"livingRoom": (640.0, 0.45), "campfire": (720.0, 1.0),
+                                            "beach": (985.0, 1.0)}
+# Sky-plane roots the veils go behind (the beach's sun and clouds stay out by day); elsewhere the
+# veils cover the whole sky plane, stars and moon included.
+TIME_BEHIND: dict[str, tuple[str, ...]] = {"beach": ("SunsetSky", "Sky")}
+DAY_VEIL_MAX = 0.8     # M7 ruling 12 (as built): a day sky over the sky plane only, never a relit scene
+DUSK_VEIL_MAX = 0.75
+
+
+def sky_time(sc: Scene, content: list[El]) -> None:
+    """Contract v10: two veils at the front of `Plane0` (the sky; behind every nearer plane and
+    behind the plane's own fog veil): a day sky (`art_bible` `times["day"]`, opaque at the top,
+    thinning to the scene's horizon alpha) at opacity `DAY_VEIL_MAX x daylight`, and a warm
+    twilight band (`times["dusk"]`) peaking just above the horizon at `DUSK_VEIL_MAX x dusk`. Both
+    are invisible at 0, so the night scene renders exactly as before. Minted from `sc.d7`."""
+    if sc.id not in TIME_SKY:
+        return
+    horizon, low = TIME_SKY[sc.id]
+    times = SCENES[sc.id].times
+    plane0 = next(e for e in content if e.tag == "Node" and e.attrs.get("name") == "Plane0")
+    d7 = sc.d7
+    day, dusk = times["day"], times["dusk"]
+
+    def a(colour: str, alpha: float) -> str:
+        return f"{round(alpha * 255):02X}" + colour[2:]
+
+    def veil(name: str, prop: str, k: float, stops: list[tuple[str, float]]) -> El:
+        grad = d7("LinearGradient", *[d7("GradientStop", colorValue=c, position=round(pos, 4)) for c, pos in stops],
+                  startX=0.0, startY=0.0, endX=0.0, endY=float(H))
+        return d7("Shape", sc.bind(prop, 18, sc.conv(k, doc=d7), doc=d7),
+                  d7("Rectangle", width=float(W + 120), height=float(H), originX=0.0, originY=0.0, name="Path"),
+                  d7("Fill", grad, name="Fill"), x=-60.0, y=0.0, opacity=0.0, name=name)
+
+    day_veil = veil("SkyDay", "daylight", DAY_VEIL_MAX,
+                    [(a(day, 1.0), 0.0), (a(day, 1.0), (horizon * 0.55) / H), (a(day, low), horizon / H),
+                     (a(day, low), 1.0)])
+    dusk_veil = veil("SkyDusk", "dusk", DUSK_VEIL_MAX,
+                     [(a(dusk, 0.0), max(0.0, horizon - 560) / H), (a(dusk, 1.0), (horizon - 60) / H),
+                      (a(dusk, 0.0), min(H, horizon + 160) / H)])
+    kids = plane0.children
+    behind = TIME_BEHIND.get(sc.id)
+    if behind:
+        # just in front of the first of those roots: the rest of the sky's art stays in front
+        at = next(i for i, c in enumerate(kids)
+                  if _root(str(c.attrs.get("name", "")).removeprefix(EMISSIVE_PREFIX)) in behind)
+    else:
+        # after the plane's binds, hit zones and fog veil: the front of the sky's own art
+        at = next((i + 1 for i, c in enumerate(kids) if str(c.attrs.get("name", "")).startswith("FogVeil")),
+                  next((i for i, c in enumerate(kids) if c.tag not in ("DataBindContext",)
+                        and not str(c.attrs.get("name", "")).startswith(HIT_PREFIX)), 0))
+    kids[at:at] = [dusk_veil, day_veil]
+
+
+def clone(d: Doc, e: El, **attrs: object) -> El:
+    """A deep copy of `e` with fresh ids from `d` (attributes overridden by `attrs`)."""
+    return d(e.tag, *[clone(d, c) for c in e.children], **{**e.attrs, **attrs})
+
+
+
+# ---------------------------------------------------------------- front weather (M6, contract v9)
+# outdoor rain (contract v9 / v12 / v14); livingRoom's falls outside the window. forestCabin's module
+# (contract v14) builds its own front (`Scene.front`); check_contract.py holds every file to the contract
+FRONT_SCENES = ("campfire", "beach", "rooftop", "forestCabin")
+FRONT_GAIN = 1.25          # nearer than Plane5: the sheet travels 1.25 x PARALLAX_TRAVEL
+FRONT_TILE = 480           # the sheet repeats every tile; one tile per FRONT_SHEET_FRAMES loop
+FRONT_SHEET_FRAMES = 14    # faster than the back sheets (18 / 34): near rain falls past quicker
+FRONT_SPLASH_FRAMES = 120
+FRONT_MIST = (0.18, 1200.0)  # rain mist density at rain 1, y where it starts clear (full at the bottom)
+FRONT_BLEED = 120          # px past each side, more than the sheet's 50 px travel
+
+
+def front_weather(sc: Scene, col: str, splash_y: tuple[float, float] = (1820.0, 1900.0)) -> None:
+    """M6 ruling 8: sets `sc.front` to the `SceneFront` artboard's content: a near rain sheet (fewer,
+    longer, wider, fainter streaks than the back sheets; parallax gain 1.25) with splashes along the
+    bottom edge, all at opacity `rain`, and a rain mist of `lightFog` rising from the bottom at
+    `fog_opacity(0.18) x rain`. `col` is the scene's rain colour (its alpha is replaced). Everything
+    mints from `sc.d6`; history-free binds only."""
+    d6 = sc.d6
+    main_anims, main_layers = sc.anims, sc.layers
+    sc.anims, sc.layers = [], []
+    r = random.Random(zlib.crc32(("front" + sc.id).encode()))
+    with sc.minting(d6):
+        streaks = []
+        for i in range(12):
+            x, y = r.uniform(-FRONT_BLEED, W + FRONT_BLEED), r.uniform(0, FRONT_TILE)
+            ln = r.uniform(160, 260)
+            for k in range(-1, H // FRONT_TILE + 1):
+                streaks.append(sc.S((0, 0), f"FrontDrop{i}_{k + 1}",
+                                    [(x, y + k * FRONT_TILE), (x - ln * 0.22, y + k * FRONT_TILE + ln)],
+                                    sc.L("50" + col[2:], 5.0), closed=False))
+        sheet = d6("Node", *streaks, x=0.0, y=0.0, name="FrontSheet")
+        sc.ambient("FrontSheet", sc.A("amb_FrontSheet", FRONT_SHEET_FRAMES,
+                                      [sc.T(sheet, ease=None, y=[(0, 0.0, "linear"),
+                                                                 (FRONT_SHEET_FRAMES, float(FRONT_TILE), "linear")])],
+                                      loop=True))
+        splashes, tracks = [], []
+        for i in range(10):
+            x, y = r.uniform(40, W - 40), r.uniform(*splash_y)
+            sp = d6("Node", sc.E((x, y), "Ring", x, y, 48, 12, sc.L("A0" + col[2:], 3)),
+                    sc.S((x, y), "Kick", [(x - 12, y - 3), (x - 18, y - 22)], sc.L("90" + col[2:], 3), closed=False),
+                    sc.S((x, y), "Kick2", [(x + 12, y - 3), (x + 18, y - 22)], sc.L("90" + col[2:], 3), closed=False),
+                    x=x, y=y, opacity=0.0, name=f"FrontSplash{i}")
+            splashes.append(sp)
+            ph = r.randint(0, 40)
+            op, sxk = [(0, 0.0)], [(0, 0.3)]
+            for c in range(1 + ph, FRONT_SPLASH_FRAMES - 13, 44):
+                op += [(c, 0.0, "hold"), (c + 1, 1.0), (c + 12, 0.0, "hold")]
+                sxk += [(c, 0.3, "hold"), (c + 1, 0.4), (c + 12, 1.3, "hold")]
+            tracks.append(sc.T(sp, ease=None, opacity=uniq(op + [(FRONT_SPLASH_FRAMES, 0.0)]),
+                               scaleX=uniq(sxk + [(FRONT_SPLASH_FRAMES, 0.3)]),
+                               scaleY=uniq(sxk + [(FRONT_SPLASH_FRAMES, 0.3)])))
+        sc.ambient("FrontSplash", sc.A("amb_FrontSplash", FRONT_SPLASH_FRAMES, tracks, loop=True))
+        near = d6("Node", sc.bind("rain", 18, doc=d6),
+                  sc.bind("parallaxX", 13, sc.conv(FRONT_GAIN * PARALLAX_TRAVEL[0], doc=d6), doc=d6),
+                  sc.bind("parallaxY", 14, sc.conv(FRONT_GAIN * PARALLAX_TRAVEL[1], doc=d6), doc=d6),
+                  *splashes, sheet, x=0.0, y=0.0, opacity=0.0, name="FrontRain")
+        density, y0 = FRONT_MIST
+        fog = SCENES[sc.id].fog
+        fills = [d6("Fill", d6("LinearGradient",
+                               d6("GradientStop", colorValue="00" + fog[2:], position=0.0),
+                               d6("GradientStop", d6("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
+                                                     propertyKey=38), colorValue=fog, position=1.0),
+                               startX=0.0, startY=0.0, endX=0.0, endY=float(H - y0)), name="Fill")
+                 for _ in range(FOG_FILLS)]
+        mist = d6("Shape", sc.bind("rain", 18, sc.conv(fog_opacity(density, fog), doc=d6), doc=d6),
+                  d6("Rectangle", width=float(W + 2 * FRONT_BLEED), height=float(H + 60 - y0), originX=0.0,
+                     originY=0.0, name="Path"),
+                  *fills, x=float(-FRONT_BLEED), y=float(y0), opacity=0.0, name="FrontMist")
+    # M8 (contract v11): fog joins the front mist (a veil of its own at `FRONT_FOG_GAIN x fog`)
+    fog_fills = [sc.d8("Fill", sc.d8("LinearGradient",
+                                     sc.d8("GradientStop", colorValue="00" + fog[2:], position=0.0),
+                                     sc.d8("GradientStop", sc.d8("DataBindContext", sourcePathIds=sc.vpath("lightFog"),
+                                                                 propertyKey=38), colorValue=fog, position=1.0),
+                                     startX=0.0, startY=0.0, endX=0.0, endY=float(H - y0)), name="Fill")
+                 for _ in range(FOG_FILLS)]
+    sc.front = ([near, scene_npc.front_fog(sc, y0, FRONT_BLEED, fog_fills), mist], sc.anims, sc.layers)
+    sc.anims, sc.layers = main_anims, main_layers
+
+# ---------------------------------------------------------------- campfire
+CAMPFIRE_PLANES: dict[str, int | None] = {
+    "RainLoop": None, "RainFx": None, "FlareWash": None,
+    "BushL": 5, "BushR": 5,
+    **dict.fromkeys(("PokeStick", "Stone", "LogA", "LogB", "LogC", "WetCoalSteam", "CoalBed", "RainSteam", "FireFlare", "Smoke",
+                     "Firefly", "TentPlace", "Grass", "TreeGlow", "LightPoolFlicker", "GroundWet", "TrailStone",
+                     "Path", "Ground"), 4),
+    **dict.fromkeys(("Hoo", "Owl", "OwlNpc", "OwlGrip", "Branch", "OwlTwig", "OwlSnag", "Pine"), 3),
+    **dict.fromkeys(("ValleyMist", "MidHills"), 2),
+    **dict.fromkeys(("FarPine", "AlpineRidge", "PeakSnow", "MountainShadow", "FarHills"), 1),
+    **dict.fromkeys(("ShootingStar", "MoonPhased", "MoonRig", "Crater", "Moon", "MoonGlow", "Star", "Glint", "Aurora",
+                     "Sky"), 0),
+    # M5 ruling 3: each hit zone rides the plane of its prop's art
+    "Hit_fire": 4, "Hit_tent": 4, "Hit_owl": 3, "Hit_sky": 0,
+}
+FOG_VEILS = ((0.55, 700.0, 1000.0), (0.35, 700.0, 1000.0), (0.18, 880.0, 1060.0))
+# Light sources (ruling 13): renamed `emit*` with every node and shape below them, exempt from the
+# colour-script fit. Everything else in the campfire goes through `art_bible.fit_colour`.
+CAMPFIRE_EMISSIVE = ("FireFlare", "Star", "Glint", "Moon", "MoonGlow", "ShootingStar", "CoalBed", "Firefly",
+                     "LogHeat", "TentLantern")
+# amb_firelight's flicker keys (frame, glow opacity), 89 frames
+CAMPFIRE_FLICKER = [(0, 1.0), (9, 0.8), (17, 0.97), (31, 0.84), (44, 1.0), (58, 0.86), (70, 0.95), (89, 1.0)]
+# M5 ruling 6: steady rain (`rain` 0..1)
+RAIN_WET = 0.35        # ground and tent darken by up to this x rain
+RAIN_DAMP = 0.15       # the fire shrinks by this x rain
+RAIN_WET_COLOUR = "FF0B1318"   # a cool wet shadow, inside the campfire's colour script
+RAIN_LOOP_FRAMES = 120  # 2 s splash loop; the streak sheets loop on their own periods
+STEAM_FRAMES = 180      # 3 s steam rise loop
+STEAM_PLUMES = ((104, 1140), (134, 1126), (164, 1146), (196, 1120), (228, 1144), (258, 1126), (290, 1138))
+STEAM_PEAK = 0.8       # a plume's opacity at mid-rise (times `rain`)
+
+
+def campfire_light(sc: Scene, content: list[El], d6: Doc) -> None:
+    """Firelight (M4): amb_firelight's flicker also drives the light pool (through a wrapper: the
+    rain event keys the pool's own opacity) and the tree glow, a little deeper on the trees. Then the
+    steady rain binds (M5 ruling 6)."""
+    firelight = next(a for a in sc.anims if a.attrs["name"] == "amb_firelight")
+    pool = next(e for e in content if e.attrs.get("name") == "LightPool")
+    tree_glow = next(e for e in content if e.attrs.get("name") == "TreeGlow")
+    pool_flicker = d6("Node", pool, x=0.0, y=0.0, name="LightPoolFlicker")
+    content[content.index(pool)] = pool_flicker
+    firelight.add(track(d6, pool_flicker, {"opacity": [(fr, round(0.75 + 1.25 * (v - 0.8), 4))
+                                                       for fr, v in CAMPFIRE_FLICKER]}, ease=sc.ease),
+                  track(d6, tree_glow, {"opacity": [(fr, round(0.7 + 1.5 * (v - 0.8), 4))
+                                                    for fr, v in CAMPFIRE_FLICKER]}, ease=sc.ease))
+    campfire_rain(sc, content)
+
+
+def campfire_rain(sc: Scene, content: list[El]) -> None:
+    """Steady rain bound to SceneVM `rain`, history-free (M5 ruling 6): a looping streak layer at
+    opacity `rain` in screen space, the ground and the tent under a wet shadow at RAIN_WET x `rain`,
+    steam rising off the logs at opacity `rain`, the fire scaled by 1 - RAIN_DAMP x `rain`. The
+    `rain` one-shot event plays on top (a shower)."""
+    d5 = sc.d5
+    with sc.minting(d5):
+        streaks, loop = rain_fx(sc, "RainLoop", "88B8C8F0", frames=RAIN_LOOP_FRAMES, loop=True)
+        streaks.attrs["opacity"] = 0.0
+        streaks.children.insert(0, sc.bind("rain", 18))
+        sc.ambient("RainLoop", loop)
+        content.insert(0, streaks)
+
+        wet = sc.conv(RAIN_WET)
+
+        def path_of(shape: El, x: float = 0.0, y: float = 0.0) -> El:
+            p = next(c for c in shape.children if c.tag == "PointsPath")
+            return clone(d5, p, x=x, y=y) if (x, y) != (0.0, 0.0) else clone(d5, p)
+
+        ground = next(e for e in content if e.attrs.get("name") == "Ground")
+        ground_wet = d5("Shape", sc.bind("rain", 18, wet), path_of(ground), sc.F(RAIN_WET_COLOUR),
+                        x=ground.attrs["x"], y=ground.attrs["y"], opacity=0.0, name="GroundWet")
+        # in front of the trail and its stones, behind the light pool, the grass and the tree glow
+        before(content, "TrailStone0", ground_wet)
+
+        tent = named(content, "Tent")
+        lit, shade = named(tent.children, "TentLit"), named(tent.children, "TentShade")
+        lx, ly = float(lit.attrs["x"]), float(lit.attrs["y"])
+        tent_wet = d5("Shape", sc.bind("rain", 18, wet), path_of(lit),
+                      path_of(shade, float(shade.attrs["x"]) - lx, float(shade.attrs["y"]) - ly),
+                      sc.F(RAIN_WET_COLOUR), x=lx, y=ly, opacity=0.0, name="TentWet")
+        # right behind the lantern glow: over the canvas, pole and rope (the thin fold and seam lines
+        # paint in front of the lantern in M4, and moving them would change the dry tent)
+        at = next(i for i, c in enumerate(tent.children) if _root(c.attrs.get("name")).endswith("TentLantern"))
+        tent.children.insert(at + 1, tent_wet)
+
+        plumes, tracks = [], []
+        for i, (bx, by) in enumerate(STEAM_PLUMES):
+            plume = sc.E((0.0, 0.0), f"SteamPlume{i}", bx, by, 88, 88,
+                         sc.rgrad(44, [("B0DCE2DE", 0.0), ("60DCE2DE", 0.45), ("00DCE2DE", 1.0)]),
+                         scaleY=0.75, opacity=0.0)
+            plumes.append(plume)
+            off = (i * 67) % STEAM_FRAMES
+            wrap = STEAM_FRAMES - off       # frame where this plume restarts at the logs (opacity ~0)
+            drift = 26 if i % 2 else -22
+
+            def at(f: int, bx: float = bx, by: float = by, off: int = off, drift: float = drift,
+                   i: int = i) -> tuple[float, float, float, float]:
+                t = ((f + off) % STEAM_FRAMES) / STEAM_FRAMES
+                return (bx + drift * t + 9 * math.sin(2 * math.pi * t * 1.5 + i), by - 250 * t,
+                        0.4 + 1.6 * t, STEAM_PEAK * math.sin(math.pi * t) ** 1.5)
+
+            frames = sorted(set(range(0, STEAM_FRAMES + 1, 6)) | {wrap - 1, wrap})
+            keys = {f: at(f) for f in frames}
+            # the frame before the restart holds, so no fractional frame sweeps the plume back down
+            mode = {f: ("hold" if f == wrap - 1 else "linear") for f in frames}
+            tracks.append(sc.T(plume, ease=None,
+                               x=[(f, keys[f][0], mode[f]) for f in frames],
+                               y=[(f, keys[f][1], mode[f]) for f in frames],
+                               scaleX=[(f, keys[f][2], mode[f]) for f in frames],
+                               scaleY=[(f, keys[f][2] * 0.75, mode[f]) for f in frames],
+                               opacity=[(f, keys[f][3], mode[f]) for f in frames]))
+        steam = d5("Node", sc.bind("rain", 18), *plumes, x=0.0, y=0.0, opacity=0.0, name="RainSteam")
+        sc.ambient("RainSteam", sc.A("amb_RainSteam", STEAM_FRAMES, tracks, loop=True))
+        before(content, "FireFlare", steam)
+
+        flare = next(e for e in content if e.attrs.get("name") == "FireFlare")
+        damp = sc.conv(-RAIN_DAMP, 1.0)
+        flare.children = [d5("Node", sc.bind("rain", 16, damp), sc.bind("rain", 17, damp), *flare.children,
+                             x=0.0, y=0.0, name="FireDamp")]
+
+
+DIORAMAS: dict[str, DioramaSpec] = {
+    "campfire": DioramaSpec(CAMPFIRE_PLANES, CAMPFIRE_EMISSIVE, FOG_VEILS, campfire_light),
+}
 
 
 # ====================================================================== livingRoom
@@ -703,14 +1516,18 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                  paint, x=float((x0 + x1) / 2), y=float((y0 + y1) / 2), name=name, **kw)
 
     floor_y = 1180
-    wall = rect("Wall", -10, -10, W + 10, floor_y, sc.vgrad(-600, 600, [("FF4E4460", 0.0), ("FF7A6680", 1.0)]))
+    # M5 diorama bleed: the wall and the wainscot run 50 px under the floor (Plane3 slides 8 px more
+    # than the wall), the floor 40 px past the frame (gradients keep their artboard span)
+    wall = rect("Wall", -10, -10, W + 10, floor_y + 50, sc.vgrad(-625, 575, [("FF4E4460", 0.0), ("FF7A6680", 1.0)]))
     stripes = [rect(f"Stripe{i}", x, -10, x + 34, floor_y, F("10FFFFFF")) for i, x in enumerate(range(0, W, 90))]
-    wainscot = rect("Wainscot", -10, 1000, W + 10, floor_y, sc.vgrad(-90, 90, [("FF5A4A62", 0.0), ("FF483A50", 1.0)]))
+    wainscot = rect("Wainscot", -10, 1000, W + 10, floor_y + 50,
+                    sc.vgrad(-115, 65, [("FF5A4A62", 0.0), ("FF483A50", 1.0)]))
     rail = rect("Rail", -10, 992, W + 10, 1006, F("FF8A7896"))
-    floor = rect("Floor", -10, floor_y, W + 10, H + 10, sc.vgrad(-370, 370, [("FF9A6844", 0.0), ("FF5E3A24", 1.0)]))
-    planks = [S(O, f"Plank{i}", [(x0, floor_y), (x0 + (x0 - 540) * 1.6, H)], L("40000000", 3), closed=False)
+    floor = rect("Floor", -50, floor_y, W + 50, H + 40, sc.vgrad(-385, 355, [("FF9A6844", 0.0), ("FF5E3A24", 1.0)]))
+    ext = (H + 40 - floor_y) / (H - floor_y)
+    planks = [S(O, f"Plank{i}", [(x0, floor_y), (x0 + (x0 - 540) * 1.6 * ext, H + 40)], L("40000000", 3), closed=False)
               for i, x0 in enumerate(range(-200, 1300, 130))]
-    baseboard = rect("Baseboard", -10, floor_y - 18, W + 10, floor_y + 4, F("FFE8DCCC"))
+    baseboard = rect("Baseboard", -50, floor_y - 18, W + 50, floor_y + 4, F("FFE8DCCC"))
     rug = E(O, "Rug", 540, 1520, 980, 300, sc.rgrad(490, [("FFB8484A", 0.0), ("FF8A2E36", 0.55), ("FF5A1E28", 1.0)]),
             L("FFE8C890", 6))
     rug_in = E(O, "RugInner", 540, 1520, 780, 220, L("CCE8C890", 4))
@@ -718,11 +1535,13 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
     # window with night sky + skyline, curtains
     # the window sits high: in the app the avatar's head covers the wall below ~y 760
     wx0, wy0, wx1, wy1 = 360, 230, 720, 700
-    sky = rect("WinSky", wx0, wy0, wx1, wy1, sc.vgrad(-260, 260, [("FF1C2450", 0.0), ("FF6A4A80", 1.0)]))
-    city = S(O, "Skyline", [(wx0, wy1, "c"), (wx0, 560, "c"), (400, 560, "c"), (400, 500, "c"), (440, 500, "c"),
+    # the view (Plane0) runs 20 px past the glass: the wall's opening slides 6 / 3.6 px over it
+    sky = rect("WinSky", wx0 - 20, wy0 - 20, wx1 + 20, wy1 + 20,
+               sc.vgrad(-260, 260, [("FF1C2450", 0.0), ("FF6A4A80", 1.0)]))
+    city = S(O, "Skyline", [(wx0 - 20, wy1 + 20, "c"), (wx0 - 20, 560, "c"), (400, 560, "c"), (400, 500, "c"), (440, 500, "c"),
                             (440, 580, "c"), (480, 580, "c"), (480, 460, "c"), (530, 460, "c"), (530, 540, "c"),
                             (580, 540, "c"), (580, 490, "c"), (630, 490, "c"), (630, 570, "c"), (680, 570, "c"),
-                            (680, 520, "c"), (wx1, 520, "c"), (wx1, wy1, "c")], F("FF231C38"))
+                            (680, 520, "c"), (wx1 + 20, 520, "c"), (wx1 + 20, wy1 + 20, "c")], F("FF231C38"))
     rnd = random.Random(3)
     windows_lit = [rect(f"Lit{i}", x, y, x + 8, y + 10, F("FFFFD27A"), opacity=rnd.uniform(0.5, 1))
                    for i, (x, y) in enumerate([(rnd.uniform(400, 700), rnd.uniform(560, 680)) for _ in range(18)])]
@@ -730,8 +1549,8 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
     frame = rect("WinFrame", wx0 - 14, wy0 - 14, wx1 + 14, wy1 + 14, F("FFE8DCCC"), 6)
     mullion = [rect("MullV", 532, wy0, 548, wy1, F("FFE8DCCC")), rect("MullH", wx0, 458, wx1, 472, F("FFE8DCCC"))]
     # a long ledge under the window runs the width of the wall (the walking cat's stage)
-    sill = rect("Sill", -10, wy1 + 8, W + 10, wy1 + 30, F("FFF2E8DA"), 4)
-    ledge_sh = rect("LedgeShadow", -10, wy1 + 30, W + 10, wy1 + 44, F("40101C1E"))
+    sill = rect("Sill", -30, wy1 + 8, W + 30, wy1 + 30, F("FFF2E8DA"), 4)
+    ledge_sh = rect("LedgeShadow", -30, wy1 + 30, W + 30, wy1 + 44, F("40101C1E"))
     curtain = [(300, 190), (380, 190), (390, 430), (370, 780), (300, 800, "c")]
     curt_l = S(O, "CurtainL", curtain + [(280, 470)], sc.vgrad(-320, 320, [("FFA83A4A", 0.0), ("FF6E1E2E", 1.0)]),
                L(INKC, 3))
@@ -823,8 +1642,9 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                  sc.vgrad(-800, 800, [("30B8C8FF", 0.0), ("00B8C8FF", 1.0)]), opacity=0.0)
     moon_pool = S(O, "MoonPool", [(380, 1240), (720, 1240), (900, 1560), (240, 1560)],
                   sc.vgrad(-160, 160, [("50B8D0FF", 0.0), ("28B8D0FF", 1.0)]), opacity=0.0)
-    tv_spill = E(O, "TvFloorSpill", 870, 1330, 520, 150, sc.rgrad(260, [("606AD8FF", 0.0), ("006AD8FF", 1.0)]),
-                 opacity=0.0)
+    # a round pool squashed onto the floor (M5: the 520 x 150 ellipse cut its own radial gradient flat)
+    tv_spill = E(O, "TvFloorSpill", 870, 1330, 520, 520, sc.rgrad(260, [("606AD8FF", 0.0), ("006AD8FF", 1.0)]),
+                 opacity=0.0, scaleY=round(150 / 520, 4))
     lights_on = sc.A("lights_on", 1, [sc.T(night, ease=None, opacity=[(0, 0.0)]), sc.T(lamp_glow, ease=None, opacity=[(0, 1.0)]),
                                       sc.T(lamp_cone, ease=None, opacity=[(0, 1.0)]), sc.T(moonbeam, ease=None, opacity=[(0, 0.0)]),
                                       sc.T(moon_pool, ease=None, opacity=[(0, 0.0)]),
@@ -998,10 +1818,255 @@ def livingRoom() -> str:  # noqa: N802 (scene ids are contract names)
                baseboard,
                curt_l_n, curt_r_n, rod, sill, ledge_sh, *mullion, *windows_lit, city, moon, sky, frame, rail, wainscot,
                *stripes, wall]
+    sc.npc_rig = lambda s_, c_, h_: scene_npc.living_room_cat(s_, c_, h_, PARALLAX_GAINS, PARALLAX_TRAVEL)  # M8
+    sc.v12_art = living_room_v12   # M9: the lamp's pull cord, the moon's phase, the December lights (v12)
+    sc.v14_art = living_room_seasons   # M11: tulips / a pumpkin on the sill (contract v14)
     return sc.write(content, hits)
 
 
+# ---------------------------------------------------------------- livingRoom diorama (M5 Task 4)
+# Ruling 4 (interior, short depth). Moved one plane from the ruling's table (execution ruling 53):
+# the curtains and the rod (1 -> 2, they hang in front of the frame), the ledge under the window with
+# the walking cat (a wall shelf: 2; on Plane4 the cat would float 13 px off it), the floor with its
+# planks, grain and light pools (4 -> 3: the floor must paint behind the TV unit standing on it).
+# Plane5 stays empty (the room has no foreground).
+LIVING_ROOM_PLANES: dict[str, int | None] = {
+    "Night": None,
+    # M8: the cat NPC paints in front of the rug; on the cabinet it rides Plane3's travel (scene_npc)
+    **dict.fromkeys(("CatNpc", "RugInner", "Rug", "Plant", "LampCord", "Lamp", "LamplitDust", "LampCone",
+                     "PlantContact", "LampContact"), 4),
+    **dict.fromkeys(("TvCorner", "MoonBeam", "TvGlow", "MoonPool", "TvFloorSpill", "Plank", "CabinetContact",
+                     "WindowFloorLight", "FloorJoint", "OakGrain", "Floor", "Baseboard"), 3),
+    **dict.fromkeys(("FestiveLights", "WalkingCat", "CurtainLSway", "CurtainRSway", "Rod", "Sill", "LedgeShadow", "LampGlow",
+                     "WallWarmth", "ArtMountain", "ArtHill", "ArtSun", "ArtCanvas", "ArtMat", "ArtFrame",
+                     "ArtShadow", "ShelfBook", "VaseRim", "CeramicVase", "VaseSprig", "VaseLeaf", "FloatingShelf",
+                     "ShelfShadow"), 2),
+    **dict.fromkeys(("MullV", "MullH", "RainGlass", "PaneClip", "WinFrame", "Rail", "Wainscot", "WallPanel",
+                     "LowerPanel", "CorniceShadow", "CorniceInlay", "WindowCool", "Wall"), 1),
+    **dict.fromkeys(("Lit", "Skyline", "MoonPhased", "MoonRig", "Moon", "Star", "WinSky"), 0),
+    # ruling 3: each hit zone rides the plane of its prop's art (the sleeping cat is on the TV unit)
+    "Hit_lamp": 4, "Hit_plant": 4, "Hit_tv": 3, "Hit_cat": 3,
+}
+# warm dust (`lightFog`) in front of the view through the window and, thinner, the back wall
+LIVING_ROOM_VEILS = ((0.3, 200.0, 480.0), (0.12, 300.0, 1100.0))
+LIVING_ROOM_EMISSIVE = ("Shade", "LampGlow", "TvOn", "TvBlob", "Lit", "Moon", "Star")
+WINDOW_FRAME = (346.0, 216.0, 734.0, 714.0)   # WinFrame's outer edge
+WINDOW_GLASS = (360.0, 230.0, 720.0, 700.0)   # the opening inside it
+WINDOW_PANES = ((360.0, 230.0, 532.0, 458.0), (548.0, 230.0, 720.0, 458.0),
+                (360.0, 472.0, 532.0, 700.0), (548.0, 472.0, 720.0, 700.0))
+# The lamp's wall pool in `lightKey` (ruling 5): a bound colour sets the alpha too, so the M4 falloff
+# (0.44 at the centre, 0.125 half-way, 0 at the edge) is two key-coloured fills fading to clear,
+# (gradient opacity, share of the 350 px radius) each.
+LAMP_POOL = ((0.25, 1.0), (0.2, 0.5))
+# Rain on the glass (ruling 6): a fast sheet of fine streaks seen through the panes and slow drips
+# running down them, each sheet moving one tile per loop (seamless at any frame time, as the
+# campfire's), clipped to the four panes; a wet tint dulls the view. Opacity = `rain`.
+GLASS_STREAKS = (26, 235.0, 20)   # (count, tile px, loop frames)
+GLASS_DRIPS = (10, 470.0, 240)
+GLASS_RAIN_FRAMES = 240            # both sheets are back at frame 0 after this many frames
+GLASS_WET = ("FF7A8898", 0.25)     # wet tint and its opacity at rain 1 (misted glass, lighter than the view)
+ORIGIN = (0.0, 0.0)
+
+
+def _rect_path(d: Doc, x0: float, y0: float, x1: float, y1: float, ox: float = 0.0, oy: float = 0.0,
+               name: str = "Path") -> El:
+    """A Rectangle path covering artboard (x0, y0)-(x1, y1) in a shape placed at (ox, oy)."""
+    return d("Rectangle", width=float(x1 - x0), height=float(y1 - y0), x=float((x0 + x1) / 2 - ox),
+             y=float((y0 + y1) / 2 - oy), name=name)
+
+
+def living_room_light(sc: Scene, content: list[El], d6: Doc) -> None:
+    """The living room's own pass (M5 Task 4): the lamp's wall pool in `lightKey`, an opening in the
+    wall and the frame for the view (Plane0) behind them, stars in that view, rain on the glass bound
+    to `rain`, then the content regrouped back to front by plane (draw order kept inside a plane)."""
+    d5 = sc.d5
+    key = SCENES["livingRoom"].key
+    with sc.minting(d5):
+        # ---- the wall pool takes the key light's colour
+        glow = named(content, "LampGlow")
+        fill0 = next(c for c in glow.children if c.tag == "Fill")
+        g0 = fill0.children[0]
+        r = float(g0.attrs["endX"]) - float(g0.attrs["startX"])
+        g0.children = [g0.children[0], g0.children[-1]]   # the M4 mid stop goes: the falloff is two fills
+        g1 = rad(d5, float(g0.attrs["startX"]), float(g0.attrs["startY"]), r * LAMP_POOL[1][1],
+                 [(key, 0.0), ("00" + key[2:], 1.0)])
+        for g, (op, _) in zip((g0, g1), LAMP_POOL):
+            g.attrs["opacity"] = op
+            centre, edge = g.children[0], g.children[-1]
+            centre.attrs["colorValue"] = key
+            centre.children.append(sc.bind("lightKey", 38))
+            edge.attrs["colorValue"] = "00" + key[2:]
+        glow.children.insert(glow.children.index(fill0) + 1, d5("Fill", g1, name="Fill"))
+
+        # ---- the view sits behind the wall: an opening in the wall, the frame becomes a ring
+        wall, frame = named(content, "Wall"), named(content, "WinFrame")
+        mid = [(a + b) / 2 for a, b in zip(WINDOW_FRAME, WINDOW_GLASS)]   # under the frame's border
+        for shape, hole in ((wall, mid), (frame, WINDOW_GLASS)):
+            ox, oy = float(shape.attrs["x"]), float(shape.attrs["y"])
+            at = next(i for i, c in enumerate(shape.children) if c.tag == "Rectangle")
+            shape.children.insert(at + 1, _rect_path(d5, *hole, ox, oy, name="Opening"))
+            next(c for c in shape.children if c.tag == "Fill").attrs["fillRule"] = "evenOdd"
+        # the cornice ran behind the old sky: it now stops under the frame's border on both sides
+        for name in ("CorniceShadow", "CorniceInlay"):
+            sh = named(content, name)
+            ox = float(sh.attrs["x"])
+            path = next(c for c in sh.children if c.tag == "Rectangle")
+            w = float(path.attrs["width"])
+            x0, x1 = ox - w / 2, ox + w / 2
+            path.attrs.update(width=mid[0] - x0, x=(x0 + mid[0]) / 2 - ox)
+            sh.children.insert(sh.children.index(path) + 1,
+                               d5("Rectangle", width=x1 - mid[2], height=path.attrs["height"],
+                                  x=(mid[2] + x1) / 2 - ox, name="Path"))
+        # the middle wall panel's top ran behind the old sky: it now starts under the ledge
+        panel = named(content, "WallPanel1")
+        path = next(c for c in panel.children if c.tag == "Rectangle")
+        bottom = float(panel.attrs["y"]) + float(path.attrs["height"]) / 2
+        top = WINDOW_GLASS[3] + 19.0
+        panel.attrs["y"] = (top + bottom) / 2
+        path.attrs["height"] = bottom - top
+
+        # ---- stars in the view, above the skyline, clear of the moon
+        rnd = random.Random(zlib.crc32(b"livingRoomStars"))
+        stars = []
+        while len(stars) < 12:
+            x, y = rnd.uniform(WINDOW_GLASS[0] + 6, WINDOW_GLASS[2] - 6), rnd.uniform(WINDOW_GLASS[1] + 8, 440)
+            if math.hypot(x - 640, y - 320) < 50 or WINDOW_PANES[0][2] - 4 < x < WINDOW_PANES[1][0] + 4 \
+                    or WINDOW_PANES[0][3] - 4 < y < WINDOW_PANES[2][1] + 4:
+                continue
+            sz = rnd.choice((2.5, 3.0, 4.0))
+            stars.append(sc.E(ORIGIN, f"Star{len(stars)}", x, y, sz, sz, sc.F("FFF4EEDC"),
+                              opacity=round(rnd.uniform(0.55, 1.0), 2)))
+        before(content, "WinSky", *stars)
+
+        # ---- rain on the glass
+        clip = d5("Shape", *[_rect_path(d5, *p, name="Pane") for p in WINDOW_PANES], x=0.0, y=0.0,
+                  name="PaneClip")
+        r_ = random.Random(zlib.crc32(b"RainGlass"))
+        gx0, gy0, gx1, gy1 = WINDOW_GLASS
+        sheets = []
+        for label_, (n, tile, period) in (("Drips", GLASS_DRIPS), ("Streaks", GLASS_STREAKS)):
+            kids = []
+            for i in range(n):
+                x, u = r_.uniform(gx0 + 4, gx1 - 4), r_.uniform(0, tile)
+                ln = r_.uniform(26, 46) if label_ == "Streaks" else r_.uniform(18, 34)
+                # every copy that is on the glass at some point of the loop (the sheet moves 0 -> tile)
+                for k in range(-2, math.ceil((gy1 - gy0) / tile) + 1):
+                    y = gy0 + u + k * tile
+                    if y + tile + ln + 8 < gy0 or y > gy1:
+                        continue
+                    if label_ == "Streaks":
+                        kids.append(sc.S(ORIGIN, f"GlassStreak{i}_{k + 1}", [(x, y), (x - ln * 0.18, y + ln)],
+                                         sc.L("70C8D4E0", 1.6), closed=False))
+                    else:
+                        kids += [sc.E(ORIGIN, f"GlassDrop{i}_{k + 1}", x, y + ln, 5, 7, sc.F("B0DCE4EC")),
+                                 sc.S(ORIGIN, f"GlassTrail{i}_{k + 1}", [(x, y), (x + 0.6, y + ln - 3)],
+                                      sc.L("50DCE4EC", 2.0), closed=False)]
+            sheet = d5("Node", *kids, x=0.0, y=0.0, name=f"Glass{label_}")
+            sc.ambient(f"RainGlass{label_}", sc.A(f"amb_RainGlass{label_}", period, [
+                sc.T(sheet, ease=None, y=[(0, 0.0, "linear"), (period, tile, "linear")])], loop=True))
+            sheets.append(sheet)
+        wet = d5("Shape", *[_rect_path(d5, *p, name="Pane") for p in WINDOW_PANES], sc.F(GLASS_WET[0]),
+                 x=0.0, y=0.0, opacity=GLASS_WET[1], name="GlassWet")
+        rain = d5("Node", sc.bind("rain", 18), d5("ClippingShape", sourceId=clip.ref(), name="Clip"), *sheets, wet,
+                  x=0.0, y=0.0, opacity=0.0, name="RainGlass")
+        # behind the mullions, in front of the frame (the streaks never leave the panes)
+        before(content, "Lit0", rain, clip)
+
+    # ---- back to front: content is front-most first, planes contiguous, draw order kept inside one
+    def plane(e: El) -> int:
+        name = str(e.attrs.get("name", ""))
+        k = LIVING_ROOM_PLANES[name if name.startswith(HIT_PREFIX) else _root(name)]
+        return 6 if k is None else k
+    content.sort(key=lambda e: -plane(e))
+
+
+DIORAMAS["livingRoom"] = DioramaSpec(LIVING_ROOM_PLANES, LIVING_ROOM_EMISSIVE, LIVING_ROOM_VEILS, living_room_light)
+
+
 # ====================================================================== beach
+# M5 ruling 4 (Task 5): planes back to front. Element roots as `DioramaSpec.planes` reads them.
+BEACH_PLANES: dict[str, int | None] = {
+    "RainLoop": None, "RainFx": None, "SunsetTint": None, "NightTint": None,
+    "DuneGrass": 5, "DuneWet": 5, "NearDune": 5,
+    # sand props, the palm and the passing flock; the shells and starfish lie on the mid-ground sand
+    # (y 1470-1860, most of them not foreground), so they stay with the castle (ruling 4: 5 -> 4)
+    **dict.fromkeys(("Flock", "Castle", "Flag", "Starfish", "Shell", *(f"ShellRib{i}_" for i in range(4)), "Crab", "CrabNpc",
+                     "GullsNpc", "GullPlace", "PalmFrond", "TrunkRing", "PalmTrunk", "Umbrella", "TowelWeave", "TowelFringe",
+                     "Towel", "UShadow", "TrailDots"), 4),
+    # the surf line and the ground: the sand moves 4 -> 3, it paints behind the wet band and the foam
+    **dict.fromkeys(("Wash", "Speck", "WetWash", "FoamLace", "Foam", "SandWet", "WetSand", "Sand"), 3),
+    **dict.fromkeys(("BigWave", "BigWaveClip", "Wave"), 2),
+    # the far sea with the horizon, the islands and the sun's glints on the water
+    **dict.fromkeys(("SunsetPath", "Glint", "DistantHeadland", "DistantIslet", "SunReflection", "WaterRiffle",
+                     "Sea"), 1),
+    **dict.fromkeys(("Flyer", "SkyOvercast", "Cloud", "Sun", "SunsetSky", "Sky"), 0),
+    # ruling 3: each hit zone rides the plane of its prop's art
+    "Hit_crab": 4, "Hit_umbrella": 4, "Hit_seagull": 4,
+}
+# sea haze (`lightFog`) at the horizon (y 980): full there, clear high in the sky; in front of the
+# sea it is a band that clears again toward the shore (the fourth value)
+BEACH_VEILS = ((0.45, 560.0, 985.0), (0.25, 760.0, 985.0, 1090.0), (0.12, 860.0, 990.0, 1110.0))
+BEACH_EMISSIVE = ("Sun", "Glint", "SunReflection", "SunsetPath", "SunsetSky")
+# Steady rain (ruling 6): a looping streak layer at opacity `rain`, the dry sand and the near dune under
+# a wet shade and the sky under an overcast, each at a share of `rain`.
+BEACH_RAIN_LOOP_FRAMES = 120   # 2 s splash loop; the streak sheets loop on 18 / 34 frames
+BEACH_WET = ("FF6E6656", 0.4)        # wet-sand shade and its opacity at rain 1
+BEACH_OVERCAST = ("FF8E98A6", 0.45)  # overcast over the sky and the sun, opacity at rain 1
+
+
+def beach_light(sc: Scene, content: list[El], d6: Doc) -> None:
+    """The beach's own pass (M5 Task 5): the sun's glow in `lightKey` (it is the glow that sets in the
+    `sunset` event), then the steady rain bound to `rain` (history-free)."""
+    d5 = sc.d5
+    key = SCENES["beach"].key
+    with sc.minting(d5):
+        # ---- the sunset glow takes the key light's colour: a bound stop sets the alpha too, so the
+        # M4 halo's 0x88 centre becomes the gradient's opacity
+        glow = named(content, "SunGlow")
+        g = next(c for c in glow.children if c.tag == "Fill").children[0]
+        centre, edge = g.children[0], g.children[-1]
+        g.attrs["opacity"] = round(int(str(centre.attrs["colorValue"])[:2], 16) / 255, 3)
+        centre.attrs["colorValue"] = key
+        centre.children.append(sc.bind("lightKey", 38))
+        edge.attrs["colorValue"] = "00" + key[2:]
+        # the glow now goes behind the disc (first child paints in front): over it, a key-coloured
+        # glow would tint the sun itself
+        sun = named(content, "Sun")
+        sun.children.remove(glow)
+        sun.children.append(glow)
+
+        # ---- rain: streaks and splashes in screen space, in front of every plane
+        streaks, loop = rain_fx(sc, "RainLoop", "88C8D6E4", frames=BEACH_RAIN_LOOP_FRAMES, loop=True,
+                                ground=(1250.0, 1900.0))
+        streaks.attrs["opacity"] = 0.0
+        streaks.children.insert(0, sc.bind("rain", 18))
+        sc.ambient("RainLoop", loop)
+        content.insert(0, streaks)
+
+        # ---- the sand darkens (in front of the dry sand and the wet band, behind the foam and specks)
+        sand = named(content, "Sand")
+        rect = next(c for c in sand.children if c.tag == "Rectangle")
+        wet = d5("Shape", sc.bind("rain", 18, sc.conv(BEACH_WET[1])), clone(d5, rect), sc.F(BEACH_WET[0]),
+                 x=sand.attrs["x"], y=sand.attrs["y"], opacity=0.0, name="SandWet")
+        before(content, "WetSand", wet)
+        # the foreground dune too (in front of the dune, behind its grass)
+        dune = named(content, "NearDune")
+        path = next(c for c in dune.children if c.tag == "PointsPath")
+        dune_wet = d5("Shape", sc.bind("rain", 18, sc.conv(BEACH_WET[1])), clone(d5, path), sc.F(BEACH_WET[0]),
+                      x=dune.attrs["x"], y=dune.attrs["y"], opacity=0.0, name="DuneWet")
+        before(content, "NearDune", dune_wet)
+
+        # ---- the sky clouds over: in front of the clouds and the sun, behind the far gulls
+        sky = named(content, "Sky")
+        rect = next(c for c in sky.children if c.tag == "Rectangle")
+        overcast = d5("Shape", sc.bind("rain", 18, sc.conv(BEACH_OVERCAST[1])), clone(d5, rect),
+                      sc.F(BEACH_OVERCAST[0]), x=sky.attrs["x"], y=sky.attrs["y"], opacity=0.0, name="SkyOvercast")
+        before(content, "Cloud0", overcast)
+
+
+DIORAMAS["beach"] = DioramaSpec(BEACH_PLANES, BEACH_EMISSIVE, BEACH_VEILS, beach_light)
+
+
 def beach() -> str:
     sc = Scene("beach")
     d = sc.d
@@ -1012,7 +2077,8 @@ def beach() -> str:
     horizon, shore = 980.0, 1180.0
 
     def full(name: str, paint: El, y0: float = -10, y1: float = H + 10, **kw: object) -> El:
-        return d("Shape", d("Rectangle", width=float(W + 20), height=float(y1 - y0), name="Path"), paint,
+        # M5 diorama bleed: 60 px past each side covers the nearest of these planes' travel (Plane3, 20 px)
+        return d("Shape", d("Rectangle", width=float(W + 120), height=float(y1 - y0), name="Path"), paint,
                  x=float(W / 2), y=float((y0 + y1) / 2), name=name, **kw)
 
     sky = full("Sky", sc.vgrad(-500, 500, [("FF4AA0E0", 0.0), ("FF9AD0F0", 0.7), ("FFFFE4C8", 1.0)]), -10, horizon + 10)
@@ -1035,7 +2101,8 @@ def beach() -> str:
         kp.children[0].attrs["interpolationType"] = "linear"
     cl_tracks = [sc.T(c, x=[(0, float(c.attrs["x"])), (600, float(c.attrs["x"]) + 60 * (1 if i % 2 else -1)),
                             (1200, float(c.attrs["x"]))]) for i, c in enumerate(clouds)]
-    sea = full("Sea", sc.vgrad(-110, 110, [("FF2A7AB8", 0.0), ("FF3AA8C8", 1.0)]), horizon, shore + 10)
+    # the sea runs 40 px under the sand (Plane1 under Plane3, M5 bleed); the gradient keeps its M4 span
+    sea = full("Sea", sc.vgrad(-125, 95, [("FF2A7AB8", 0.0), ("FF3AA8C8", 1.0)]), horizon, shore + 40)
     glints = [d("Shape", d("Rectangle", width=float(rnd.uniform(30, 70)), height=4.0, name="Path"), F("AAFFFFFF"),
                 x=rnd.uniform(40, W - 40), y=rnd.uniform(horizon + 20, shore - 30), name=f"Glint{i}") for i in range(16)]
     gl_tracks = [sc.T(g, ease=None, opacity=[(0, 0.2), ((i * 17) % 100 + 10, 1.0, "linear"), ((i * 17) % 100 + 50, 0.2, "linear"),
@@ -1043,13 +2110,15 @@ def beach() -> str:
     waves = []
     w_tracks = []
     for i, y in enumerate([shore - 70, shore - 30]):
-        pts = [(-40, y)] + [(x, y + (10 if (x // 60) % 2 else -6)) for x in range(20, W + 80, 60)] + [(W + 60, y + 40, "c"),
-                                                                                                  (-40, y + 40, "c")]
+        # the band runs 100 px past the left edge and 120 px past the right (its 30 px drift + Plane2's 12 px)
+        pts = [(-100, y)] + [(x, y + (10 if (x // 60) % 2 else -6)) for x in range(20, W + 80, 60)] + \
+            [(W + 120, y + 40, "c"), (-100, y + 40, "c")]
         wv = S(O, f"Wave{i}", pts, sc.vgrad(-30, 30, [("CCFFFFFF", 0.0), ("0076D0E0", 1.0)]))
         waves.append(wv)
         w_tracks.append(sc.T(wv, x=[(0, float(wv.attrs["x"])), (90, float(wv.attrs["x"]) + 30 * (1 if i else -1)),
                                     (180, float(wv.attrs["x"]))]))
-    sand = full("Sand", sc.vgrad(-370, 370, [("FFF6DCA8", 0.0), ("FFE0B87A", 1.0)]), shore, H + 10)
+    # 50 px below the frame (Plane3's 12 px of y travel); the gradient keeps its M4 span
+    sand = full("Sand", sc.vgrad(-390, 350, [("FFF6DCA8", 0.0), ("FFE0B87A", 1.0)]), shore, H + 50)
     wet = S(O, "WetSand", [(-40, shore), (W + 40, shore), (W + 40, shore + 40), (W / 2, shore + 60), (-40, shore + 40)],
             F("FFD6B07A"))
     foam = S(O, "Foam", [(-40, shore + 4)] + [(x, shore + 22 + (8 if (x // 50) % 2 else 0)) for x in range(0, W + 41, 50)] +
@@ -1297,10 +2366,69 @@ def beach() -> str:
     content = [rain_node, sunset_tint, *flock, *castle, *deco, crab, gull, post, umb, towel, umb_shadow, wash, *specks,
                wet_wash, foam, wet, sand, big, wave_clip,
                *waves, sun_path, *glints, sea, *flyers, *clouds, sun, sunset_sky, sky]
+    front_weather(sc, "88C8D6E4")  # M6 ruling 8: the beach RainLoop colour
+    sc.npc_rig = lambda s_, c_, h_: scene_npc.beach_crab(s_, c_, h_, PARALLAX_GAINS, PARALLAX_TRAVEL)  # M8
+    sc.v12_art = beach_v12   # M9: the trail in the sand, the gulls (contract v12)
+    sc.v13_art = beach_night  # M10: the beach's night (contract v13 `night`)
     return sc.write(content, hits)
 
 
 # ====================================================================== deepSpace
+# M5 ruling 4 (Task 6): planes back to front. Space has no ground, so depth reads from size and
+# overlap: the three asteroids sit on three planes by size (a full name overrides the root).
+DEEP_SPACE_PLANES: dict[str, int | None] = {
+    # the warp covers the whole frame (streaks scaled 4.6x, the core 2.4x, a full-frame flash)
+    "Flash": None, "Warp": None, "WarpCoreN": None,
+    "Asteroid0": 5,                                    # the near asteroid (r 70)
+    # the front rock (r 50), the duck and the mothership whose beam lifts it (same plane: the beam
+    # lands on the duck at every parallax)
+    "Asteroid1": 4, "Mothership": 4, "DuckPlace": 4,
+    "Asteroid2": 3, "UfoFlee": 3,                      # the small asteroid (r 36) and the saucer
+    "PlanetPlace": 2, "Moonlet": 2,
+    # the galaxy, the bright stars, the nebula pulse (in front of the stars, as in M4) and the meteor
+    **dict.fromkeys(("Meteor", "Galaxy", "PulseRingN", "PulseSwellN", "Star"), 1),
+    **dict.fromkeys(("Nebula", "DustStar", "InterstellarDust", "Void"), 0),
+    # ruling 3: each hit zone rides the plane of its prop's art
+    "Hit_planet": 2, "Hit_ufo": 3, "Hit_rubberDuck": 4,
+}
+# nebula-tinted dust (`lightFog`) in front of Plane0 and Plane1, even over the whole frame (space has
+# no horizon): clear 1 px above the bleed, full from there down
+DEEP_SPACE_VEILS = ((0.25, -61.0, -60.0), (0.12, -61.0, -60.0))
+DEEP_SPACE_EMISSIVE = ("Star", "DustStar", "Galaxy", "Nebula", "InterstellarDust", "PulseSwellN", "PulseRingN",
+                       "AtmosphericLimb", "ULight", "SLight", "Warp", "WarpCoreN", "Flash", "Meteor")
+NEBULA_WASH = ("Nebula2", 0.2)   # the nebula that takes `lightKey`, and its gradient opacity
+
+
+def deep_space_light(sc: Scene, content: list[El], d6: Doc) -> None:
+    """deepSpace's own pass (M5 Task 6): the nebula wash in `lightKey` (deepSpace ignores `rain`),
+    the moonlet back beside its planet, then the content regrouped back to front by plane (draw
+    order kept inside a plane)."""
+    key = SCENES["deepSpace"].key
+    name, opacity = NEBULA_WASH
+    with sc.minting(sc.d5):
+        # a bound stop colour sets the alpha too: the M4 alpha becomes the gradient's opacity
+        wash = named(content, name)
+        g = next(c for c in wash.children if c.tag == "Fill").children[0]
+        g.attrs["opacity"] = opacity
+        centre, edge = g.children[0], g.children[-1]
+        centre.attrs["colorValue"] = key
+        centre.children.append(sc.bind("lightKey", 38))
+        edge.attrs["colorValue"] = "00" + key[2:]
+    # the moonlet stayed at its pre-M3 spot when the planet group was re-placed, hidden behind the
+    # planet: it moves with the planet (same offset), above the rings' near end
+    moonlet = named(content, "Moonlet")
+    mx, my = place_point("deepSpace", "PlanetPlace", float(moonlet.attrs["x"]), float(moonlet.attrs["y"]))
+    moonlet.attrs.update(x=mx, y=my)
+
+    def plane(e: El) -> int:
+        k = plane_of(DIORAMAS["deepSpace"], str(e.attrs.get("name", "")))
+        return 6 if k is None else k
+    content.sort(key=lambda e: -plane(e))
+
+
+DIORAMAS["deepSpace"] = DioramaSpec(DEEP_SPACE_PLANES, DEEP_SPACE_EMISSIVE, DEEP_SPACE_VEILS, deep_space_light)
+
+
 def deepSpace() -> str:  # noqa: N802
     sc = Scene("deepSpace")
     d = sc.d
@@ -1509,10 +2637,522 @@ def deepSpace() -> str:  # noqa: N802
         sc.prop(pid, h)
     content = [flash, warp, warp_core_n, met, *rocks, ship, duck_lift, ufo_flee, planet_g, moonlet, galaxy, *rings, swell, *stars,
                *nebulae, bg]
+    sc.npc_rig = scene_npc.deep_space_alien   # M8: the alien in the ufo (contract v11)
+    sc.v12_art = deep_space_v12               # M9: the planet's bands spin (contract v12)
     return sc.write(content, hits)
 
 
-if __name__ == "__main__":
-    which = sys.argv[1:] or ["livingRoom", "campfire", "beach", "deepSpace"]
+# ====================================================================== M9: v12 art in the M8 scenes
+# Lane E (contract v12, rulings 8, 10, 12, 13): the drag art of the four M8 scenes, the beach's gulls
+# (scene_npc.beach_gulls), the moon's phase in livingRoom and campfire, the December lights in the
+# living room. Everything mints from the scene's `d9` (M9_ID_START) with private converters (never
+# `Scene.conv`'s shared cache, whose first caller would move a later pass's ids), and draws nothing at
+# the v12 defaults: each scene renders exactly as in M8. The art is history-free (formula binds on
+# the view-model numbers; the app owns the gestures, ruling 7).
+#
+# The drag handles as built (artboard px at parallax 0; the contract table copies them):
+V12_DRAG_RECTS: dict[str, tuple[str, tuple[float, float, float, float], int]] = {
+    "livingRoom": ("cord", (270.0, 770.0, 370.0, 940.0), 4),     # the cord and its bead, on the lamp
+    "campfire": ("poke", (0.0, 1040.0, 330.0, 1340.0), 4),      # the lying stick + the tip's box (POKE_HANDLE)
+    "beach": ("sand", (830.0, 1230.0, 980.0, 1700.0), 4),       # the sand right of the avatar (fix round 2: TRAIL_PATCH)
+    "deepSpace": ("spin", (150.0, 440.0, 450.0, 740.0), 2),     # the planet's disc (r 150 at 300, 590)
+}
+KEY_X, KEY_Y, KEY_ROTATION, KEY_SCALE_X, KEY_SCALE_Y, KEY_OPACITY = 13, 14, 15, 16, 17, 18
+
+
+def _v12_formula(sc: Scene, toks: list[El]) -> El:
+    conv = sc.d9("DataConverterFormula", *toks)
+    sc.roots.append(conv)
+    return conv
+
+
+def _v12_lin(sc: Scene, k: float, c: float = 0.0, lo: float | None = None, hi: float | None = None) -> El:
+    """A private `c + k x input` converter (clamped to [lo, hi] when given), minted from `d9`."""
+    f = Formulas(sc.d9, sc.vpath)
+    toks = [*([] if c == 0 else [f.val(c), f.op("+")]), f.val(k), f.op("*"), *f.inp()]
+    if lo is not None:
+        toks = f.fn("max", [f.val(lo)], toks)
+    if hi is not None:
+        toks = f.fn("min", [f.val(hi)], toks)
+    return _v12_formula(sc, toks)
+
+
+def _m10_formula(sc: Scene, toks: Callable[[Formulas], list[El]]) -> El:
+    """A private formula converter minted from `d10` (M10), a root element of the scene file."""
+    f = Formulas(sc.d10, sc.vpath)
+    conv = sc.d10("DataConverterFormula", *toks(f))
+    sc.roots.append(conv)
+    return conv
+
+
+def _v12_bind(sc: Scene, prop: str, key: int, conv: El) -> El:
+    return sc.d9("DataBindContext", sourcePathIds=sc.vpath(prop), propertyKey=key, converterId=conv.ref())
+
+
+def _top(content: list[El], name: str) -> int:
+    return next(i for i, e in enumerate(content) if e.attrs.get("name") == name)
+
+
+def phase_moon(sc: Scene, content: list[El], cx: float, cy: float, r: float, dark: str) -> None:
+    """Ruling 12: the scene's M8 moon (the top-level `Crater*` and `Moon`, contiguous) goes into
+    `MoonPhased` (shown only at `moonPhase` -1, world_kit.hide_when_phased) and `MoonRig` takes over
+    for a phase 0..1, its lit disc a copy of the M8 moon (craters included). `dark` is the sky behind
+    the moon as rendered (glow included) at alpha 0.9; the disc and the dark side skip the colour fit
+    (`emit*`), as the M8 moon does."""
+    d9 = sc.d9
+    kids = [e for e in content if _root(e.attrs.get("name")) in ("Crater", "Moon")]
+    at = content.index(kids[0])
+    assert content[at:at + len(kids)] == kids, "the M8 moon is not contiguous"
+    lit_kids = []
+    for k in kids:
+        c = clone(d9, k, x=round(float(k.attrs["x"]) - cx, 4), y=round(float(k.attrs["y"]) - cy, 4))
+        if k.attrs.get("name") == "Moon":
+            c.attrs["name"] = EMISSIVE_PREFIX + "MoonLit"
+        lit_kids.append(c)
+    lit = d9("Node", *lit_kids, x=0.0, y=0.0, name="MoonLitArt")
+    wrapper = world_kit.hide_when_phased(sc, d9, "MoonPhased", kids)
+    rig = world_kit.moon_rig(sc, d9, cx, cy, r, lit, dark)
+    named([rig], "MoonDark").attrs["name"] = EMISSIVE_PREFIX + "MoonDark"
+    content[at:at + len(kids)] = [wrapper, rig]
+
+
+# ---------------------------------------------------------------- livingRoom: the lamp's pull cord
+LAMP_CORD = (320.0, 758.0)     # where the cord leaves the shade's rim (lamp x 286, rim y 760, half-width 74)
+CORD_LENGTH = 72.0             # the cord at rest, to the bead's knot
+CORD_PULL = 80.0               # px the bead travels at `cord` 1 (the cord stretches, thinning to 55 %)
+CORD_THIN = 0.45
+# Fix round 1 (orchestrator ruling): discoverability beats pixel identity. The cord hangs at its natural
+# length at `cord` 0 (visible); the identity-to-M8 gates exclude exactly `V12_REST_AFFORDANCE`.
+CORD_COLOURS = ("FFE6D8BC", "FFC28C5A", "FF6A4026", "FF2A2030")   # cotton, bead light, bead shade, ink
+# ruling 13: string lights draped under the curtain rod, across the window's top and the curtains
+FESTIVE_POINTS = [(296.0 + 44.0 * i, round(206.0 + 18.0 * (i % 2) + 16.0 * math.sin(math.pi * i / 11), 2))
+                  for i in range(12)]
+FESTIVE_COLOURS = ("FFFFC86A", "FFFF7466")
+LIVING_ROOM_MOON = (640.0, 320.0, 30.0, "E6383C63")   # cx, cy, r, the window's sky by the moon (under the fog veil) at 0.9
+
+
+def lamp_cord(sc: Scene) -> El:
+    """`LampCord` (contract v12 `cord`): a cotton pull cord with a wooden bead under the lamp's shade,
+    hanging at its natural length at `cord` 0 (always drawn: the affordance), stretched down by
+    `CORD_PULL` px at `cord` 1 (the bead follows, the cord thins). History-free."""
+    d9 = sc.d9
+    cotton, light, shade, ink = CORD_COLOURS
+    with sc.minting(d9):
+        line = sc.S(ORIGIN, "CordLine", [(0.0, 0.0), (0.0, CORD_LENGTH)], sc.L(cotton, 2.2), closed=False,
+                    origin=ORIGIN)
+        line.children[0:0] = [_v12_bind(sc, "cord", KEY_SCALE_Y, _v12_lin(sc, CORD_PULL / CORD_LENGTH, 1.0)),
+                              _v12_bind(sc, "cord", KEY_SCALE_X, _v12_lin(sc, -CORD_THIN, 1.0))]
+        bead = sc.node("CordBead", 0.0, CORD_LENGTH,
+                       _v12_bind(sc, "cord", KEY_Y, _v12_lin(sc, CORD_PULL, CORD_LENGTH)),
+                       sc.E(ORIGIN, "BeadGlint", -2.5, 6.0, 3.5, 5.0, sc.F("B0FFF2DC")),
+                       sc.E(ORIGIN, "Bead", 0.0, 10.0, 13.0, 17.0, sc.rgrad(11, [(light, 0.0), (shade, 1.0)], cx=-3, cy=-4),
+                            sc.L(ink, 1.3)),
+                       sc.E(ORIGIN, "CordKnot", 0.0, 1.0, 5.0, 4.0, sc.F(cotton)))
+        return sc.node("LampCord", *LAMP_CORD, bead, line)
+
+
+def living_room_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
+    """The cord (in front of the lamp), the moon's phase in the window, the December lights (the front
+    of the curtains' plane)."""
+    content.insert(_top(content, "Lamp"), lamp_cord(sc))
+    phase_moon(sc, content, *LIVING_ROOM_MOON)
+    content.insert(0, world_kit.festive_lights(sc, sc.d9, FESTIVE_POINTS, FESTIVE_COLOURS))
+
+
+# ---------------------------------------------------------------- campfire: the poke stick
+# Fix round 1 (orchestrator ruling): the stick is visible at rest, lying on the ground left of the fire
+# (outside the avatar's band x 330-750); `poke` 0 -> 1 lifts it into the fire, entering from the lower
+# left (it never passes behind the avatar). Its tip: lerp(POKE_REST, POKE_TIP, poke) + poke x (pokeX,
+# pokeY) x POKE_RANGE; its angle (the stick runs from the tip toward its far end, off the left edge):
+# lerp(POKE_REST_ANGLE, POKE_ANGLE, poke).
+POKE_TIP = (196.0, 1130.0)     # the tip at poke 1, pokeX = pokeY = 0: in the logs, under the flames
+POKE_RANGE = (108.0, 80.0)     # tip travel at pokeX / pokeY = +-1 (times poke): the ember glow stays left of x 330
+POKE_ANGLE = 2.3               # rad: lifted, the stick runs down-left from the tip, off the left edge
+POKE_REST = (282.0, 1272.0)    # the tip lying on the ground, below the front stones
+POKE_REST_ANGLE = 2.96         # rad: lying, the stick runs left and a little down, off the left edge
+POKE_LENGTH = 760.0
+POKE_TURN = (0.075, 0.044)     # rotation per pokeX / pokeY (x poke): the far hand moves less than the tip
+POKE_SHADOW = ("58080608", 6.0, 3.0)   # the stick's shadow on the ground at rest (colour, drop px), fading x 3 poke
+POKE_GLOW_REST = 0.35          # the ember's glow lying on the ground (1 in the fire)
+POKE_HANDLE = (0.0, 1040.0, 330.0, 1340.0)   # the drag handle: the lying stick and the tip's box
+CAMPFIRE_MOON = (800.0, 690.0, 60.0, "E6414E58")   # the sky and the moon's glow, under the fog veils, at 0.9
+# Fix round 1: what draws at the v12 defaults (the affordances), the only boxes the identity-to-M8
+# render gates may exclude (artboard px at parallax 0; review_diorama / review_npc / review_time and
+# rive/review/m9/make_lane_e.py mask them through `rest_masked`).
+V12_REST_AFFORDANCE: dict[str, tuple[tuple[int, int, int, int], ...]] = {
+    "livingRoom": ((306, 752, 334, 860),),     # the cord and its bead at rest
+    "campfire": ((0, 1236, 320, 1344),),       # the stick lying on the ground (and its shadow)
+}
+
+
+def rest_masked(scene: str, new: "np.ndarray", old: "np.ndarray") -> "np.ndarray":  # noqa: F821
+    """`new` with the scene's v12 rest affordances (`V12_REST_AFFORDANCE`) copied from `old`, for the
+    gates that compare a scene at the defaults with a revision drawn before them. Renders of any size
+    (the boxes scale with the height over 1920)."""
+    out = new.copy()
+    k = new.shape[0] / H
+    for x0, y0, x1, y1 in V12_REST_AFFORDANCE.get(scene, ()):
+        a, b, c, e = int(x0 * k), int(y0 * k), int(math.ceil(x1 * k)), int(math.ceil(y1 * k))
+        out[b:e, a:c] = old[b:e, a:c]
+    return out
+
+
+def poke_stick(sc: Scene) -> El:
+    """`PokeStick` (contract v12 `poke`, `pokeX`, `pokeY`): a long stick lying on the ground left of the
+    fire at rest (its charred, faintly glowing tip at `POKE_REST`), lifted into the fire as `poke` goes
+    0 -> 1 (its tip then at `POKE_TIP` + (pokeX, pokeY) x `POKE_RANGE`), always from the lower left.
+    Nodes: `PokeStick` (the aim offset, x poke) > `PokeLift` (position and angle, lerped by poke) >
+    `PokeTurn` (the aim's small turn) > `PokeArt` (drawn along +x from the tip). History-free."""
+    d9 = sc.d9
+    ln = POKE_LENGTH
+    with sc.minting(d9):
+        f = Formulas(d9, sc.vpath)
+        # aim: (pokeX x 120, pokeY x 80) x poke
+        aim_x = _v12_formula(sc, [f.val(POKE_RANGE[0]), f.op("*"), *f.inp(), f.op("*"), f.bound("poke")])
+        aim_y = _v12_formula(sc, [f.val(POKE_RANGE[1]), f.op("*"), *f.inp(), f.op("*"), f.bound("poke")])
+        turn = _v12_formula(sc, [f.val(POKE_TURN[0]), f.op("*"), *f.inp(), f.op("*"), f.bound("poke"), f.op("+"),
+                                 f.val(POKE_TURN[1]), f.op("*"), f.bound("pokeY"), f.op("*"), f.bound("poke")])
+        wood = sc.vgrad(-11, 11, [("FF9A6A40", 0.0), ("FF6E4628", 0.55), ("FF3E2818", 1.0)])
+        body = [(-1.5, 0.0), (1.0, -4.0, "c"), (ln, -11.0, "c"), (ln, 11.0, "c"), (1.0, 4.0, "c")]
+        glow = sc.E(ORIGIN, "emitPokeGlow", 4.0, 0.0, 52.0, 52.0, sc.rgrad(26, [("88FFA040", 0.0), ("00FF7A20", 1.0)]),
+                    opacity=POKE_GLOW_REST)
+        glow.children.insert(0, _v12_bind(sc, "poke", KEY_OPACITY, _v12_lin(sc, 1 - POKE_GLOW_REST, POKE_GLOW_REST)))
+        col, drop, fade = POKE_SHADOW
+        shadow = sc.S(ORIGIN, "PokeShadow", [(x, y + drop) + tuple(r) for x, y, *r in body], sc.F(col), origin=ORIGIN)
+        shadow.children.insert(0, _v12_bind(sc, "poke", KEY_OPACITY, _v12_lin(sc, -fade, 1.0, lo=0.0)))
+        art = sc.node(
+            "PokeArt", 0.0, 0.0,
+            sc.E(ORIGIN, "emitPokeEmber", 5.0, 0.0, 15.0, 10.0,
+                 sc.rgrad(8, [("FFFFE7A0", 0.0), ("FFFF8A30", 1.0)])),
+            glow,
+            sc.S(ORIGIN, "PokeChar", [(-1.5, 0.0), (1.0, -4.0, "c"), (48.0, -4.6, "c"), (48.0, 4.6, "c"), (1.0, 4.0, "c")],
+                 sc.F("FF221512"), origin=ORIGIN),
+            *[sc.E(ORIGIN, f"PokeKnot{i}", x, 0.0, 9.0, 5.0, sc.F("FF3A2416")) for i, x in enumerate((150.0, 330.0))],
+            sc.S(ORIGIN, "PokeTwig", [(230.0, 6.0, "c"), (264.0, 27.0), (274.0, 25.0, "c"), (244.0, 4.0, "c")],
+                 sc.F("FF6E4628"), sc.L("FF1A0F0A", 1.4), origin=ORIGIN),
+            sc.S(ORIGIN, "PokeWood", body, wood, sc.L("FF1A0F0A", 1.6), origin=ORIGIN))
+        turn_node = sc.node("PokeTurn", 0.0, 0.0, _v12_bind(sc, "pokeX", KEY_ROTATION, turn), art)
+        (rx, ry), (tx, ty) = POKE_REST, POKE_TIP
+        lift = sc.node("PokeLift", rx, ry,
+                       _v12_bind(sc, "poke", KEY_X, _v12_lin(sc, tx - rx, rx)),
+                       _v12_bind(sc, "poke", KEY_Y, _v12_lin(sc, ty - ry, ry)),
+                       _v12_bind(sc, "poke", KEY_ROTATION, _v12_lin(sc, POKE_ANGLE - POKE_REST_ANGLE, POKE_REST_ANGLE)),
+                       turn_node, rotation=POKE_REST_ANGLE)
+        # the shadow lies on the ground under the resting stick (it stays there, fading, as the stick rises)
+        ground = sc.node("PokeGround", rx, ry, shadow, rotation=POKE_REST_ANGLE)
+        return sc.node("PokeStick", 0.0, 0.0,
+                       _v12_bind(sc, "pokeX", KEY_X, aim_x), _v12_bind(sc, "pokeY", KEY_Y, aim_y),
+                       lift, ground)
+
+
+def campfire_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
+    """The poke stick (the front of Plane4, in front of the stones, behind the bushes) and the moon's phase."""
+    content.insert(_top(content, "BushR") + 1, poke_stick(sc))
+    phase_moon(sc, content, *CAMPFIRE_MOON)
+
+
+# ---------------------------------------------------------------- beach: the trail, the gulls
+# Fix round 2 (orchestrator ruling, from the in-app capture): in the app the avatar's bust covers the
+# sand's centre (x ~250-830 from y ~1150) and the composer its bottom (y > ~1720), so the trail moves to
+# the clear sand right of the avatar, by the crab and the water's edge, inside the phone crop
+# (x ~100-980), and its dots double in size: a dark damp centre with a deeper shade up-left (the sun is
+# up right) on a light raised rim, readable at phone size. Consecutive dots >= 22 px apart overlap into
+# a furrow.
+TRAIL_PATCH = (830.0, 1230.0, 980.0, 1700.0)  # the drag handle: where the finger draws (artboard px)
+TRAIL_DOT = ("D0A27A48", "B87A5530", 18.0)    # the damp centre, its shaded side, the dimple's radius
+TRAIL_RIM = ("B8FFF2D4", 9.0)                 # the light rim pushed up around each dimple: a stroke on its edge
+                                              # (dark inside r 13.5, light out to r 22.5; a stroke costs half a shape)
+
+
+def beach_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
+    """The trail in the sand (`TrailDots`, the back of Plane4: on the sand, behind every prop on it)
+    and the gulls (`npc2`, scene_npc.beach_gulls, in front of the crab)."""
+    dots = world_kit.trail_dots(sc, sc.d9, *TRAIL_DOT)
+    col, w = TRAIL_RIM
+    for mark in (e for e in walk([dots]) if e.attrs.get("name") == "Mark"):
+        mark.children.append(stroke(sc.d9, col, w))   # each TrailDot<i>'s dimple gets its light rim
+    content.insert(_top(content, "UShadow") + 1, dots)
+    scene_npc.beach_gulls(sc, content)
+
+
+# ---------------------------------------------------------------- beach: the night (M10, contract v13)
+# `night` (0-1, the app writes (1 - daylight) x (1 - dusk)) hides the beach's sunset: an opaque night sky
+# over the whole sky plane (in front of its haze, clouds and sun), the sun's glow off, a few stars in
+# front of it, and a moonlight shade over the whole frame (a screen-space multiply in front of every plane
+# and the rain: the sky, stars, sea, reflections, sand, the palm and the props darken and cool together).
+# Everything is a formula / opacity bind on `night`, so night 0 is M9 exactly.
+NIGHT_SKY = ("FF243052", "FF34446A", "FF56648C")   # zenith, mid sky, horizon haze (before the shade)
+NIGHT_SHADE = "FF6B7AA8"                            # the multiply at night 1 (x 0.42, 0.48, 0.66)
+NIGHT_SUN_GAIN = 2.0                                 # the sun's disc and glow: opacity max(0, 1 - 2 night)
+NIGHT_STARS = [(96, 152, 3.2), (214, 306, 2.4), (318, 96, 2.8), (402, 238, 2.0), (520, 168, 3.4), (612, 330, 2.2),
+               (688, 118, 2.6), (842, 214, 3.0), (948, 92, 2.2), (1010, 300, 2.8), (150, 470, 2.0), (446, 420, 2.4),
+               (900, 452, 2.0), (760, 520, 1.8), (60, 640, 1.8), (1030, 600, 2.0)]
+# M12 (polish): the umbrella's near-white pole (FFEDEDED) kept reading as a lit line at night, brighter than the
+# canopy's red and the sand around it under the shade. A copy of the pole in a weathered grey sits on it at
+# opacity `night`, so at night 1 the shade multiplies the grey (night 0 draws M11 exactly).
+NIGHT_POLE = "FFA79C90"
+
+
+def beach_night(sc: Scene, content: list[El]) -> None:
+    d10 = sc.d10
+    plane0 = next(e for e in content if e.tag == "Node" and e.attrs.get("name") == "Plane0")
+    sky = next(e for e in plane0.children if e.attrs.get("name") == "Sky")
+    rect = next(c for c in sky.children if c.tag == "Rectangle")
+    w, h = float(rect.attrs["width"]) + 2 * FRONT_BLEED, float(rect.attrs["height"]) + FRONT_BLEED
+    sx, sy = float(sky.attrs["x"]), float(sky.attrs["y"])
+    horizon = TIME_SKY["beach"][0]
+    zen, mid, haze = NIGHT_SKY
+    top = sy - h / 2
+    stops = [(zen, 0.0), (mid, (horizon - 380 - top) / h), (haze, (horizon - top) / h), (haze, 1.0)]
+    night_sky = d10("Shape", d10("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18),
+                    d10("Rectangle", width=w, height=h, name="Path"),
+                    d10("Fill", d10("LinearGradient", *[d10("GradientStop", colorValue=c, position=round(p, 4))
+                                                        for c, p in stops],
+                                    startX=0.0, startY=-h / 2, endX=0.0, endY=h / 2), name="Fill"),
+                    x=sx, y=sy, opacity=0.0, name="SkyNight")
+    stars = d10("Node", d10("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18),
+                *[d10("Shape", ellipse(d10, 2 * r, 2 * r), d10("Fill", d10("SolidColor", colorValue="FFF4F0DC"),
+                                                                 name="Fill"),
+                      x=float(x), y=float(y), opacity=round(0.55 + 0.45 * (r - 1.8) / 1.6, 3), name="emitNightStar")
+                  for x, y, r in NIGHT_STARS],
+                x=0.0, y=0.0, opacity=0.0, name="emitNightStars")
+    at = next(i for i, c in enumerate(plane0.children) if c.tag != "DataBindContext"
+              and not str(c.attrs.get("name", "")).startswith(HIT_PREFIX))
+    plane0.children[at:at] = [stars, night_sky]
+    # the sun and its glow go out by half night (they would show through the half-night sky as a dim disc)
+    out = _m10_formula(sc, lambda f: f.fn("max", [f.val(0)], [f.val(1), f.op("-"), f.val(NIGHT_SUN_GAIN), f.op("*"),
+                                                              *f.inp()]))
+    for name in ("emitSunGlow", "emitSunDisc"):
+        part = next(e for e in walk(content) if e.attrs.get("name") in (name, name.removeprefix("emit")))
+        part.children.insert(0, d10("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18,
+                                    converterId=out.ref()))
+    # the moonlight shade: a screen-space multiply over the whole frame, in front of the planes and rain
+    tint = d10("Shape", d10("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18),
+               d10("Rectangle", width=float(W + 2 * FRONT_BLEED), height=float(H + 2 * FRONT_BLEED), name="Path"),
+               d10("Fill", d10("SolidColor", colorValue=NIGHT_SHADE), name="Fill"),
+               x=W / 2, y=H / 2, opacity=0.0, blendModeValue=24, name="NightTint")
+    content.insert(0, tint)
+    # M12: the pole dims with the canopy (its own ids, after lane Q's gulls in the scene's M12 range)
+    d12 = scene_npc.own_m12(sc)
+    umb = next(e for e in walk(content) if e.attrs.get("name") == "Umbrella")
+    at = next(i for i, c in enumerate(umb.children) if c.attrs.get("name") == "UPole")
+    pole = clone(d12, umb.children[at], name="UPoleNight", opacity=0.0)
+    paint = next(s for k in pole.children if k.tag == "Stroke" for s in k.children if s.tag == "SolidColor")
+    paint.attrs["colorValue"] = NIGHT_POLE
+    pole.children.insert(0, d12("DataBindContext", sourcePathIds=sc.vpath("night"), propertyKey=18))
+    umb.children.insert(at, pole)   # in front of the pole, behind the canopy
+
+
+# ---------------------------------------------------------------- deepSpace: the planet spins
+SPIN_OVERLAP = 1.0     # px the copy's stroke overlaps the band's at their join (M10: the seam closes)
+SPIN_HIDE_GAIN = 1e4   # the copy shows for spin > 0, the band for spin < 1 (formula slope)
+
+
+def deep_space_v12(sc: Scene, content: list[El], hits: list[El]) -> None:
+    """`spin` 0..1 slides each of the planet's cloud bands (`PlanetWeather*`, clipped to the disc) right
+    by its own period x spin, and a copy of it, one period to the left, slides in behind it: spin 1
+    draws exactly what spin 0 does. M10 (the seam): a band's period is its own stroke length (its x
+    extent plus both caps) less SPIN_OVERLAP, so the copy's end overlaps the band's start by 1 px and
+    the join never opens a gap. At spin 0 the copy would then show in the band's limb gap, so it is
+    hidden there (opacity min(1, spin x 1e4)), and the band is hidden at spin 1 (where the copy has
+    taken its place): spin 0 and spin 1 draw the M9 rest exactly. Short bands near the poles move
+    slower than the equator's (a turning sphere)."""
+    d9, d10 = sc.d9, sc.d10
+    group = next(e for e in walk(content) if e.tag == "Node"
+                 and any(_root(c.attrs.get("name")) == "PlanetWeather" for c in e.children))
+    show_copy = _m10_formula(sc, lambda f: f.fn("min", [f.val(1)], [f.val(SPIN_HIDE_GAIN), f.op("*"), *f.inp()]))
+    show_band = _m10_formula(sc, lambda f: f.fn("min", [f.val(1)], [f.val(SPIN_HIDE_GAIN), f.op("-"),
+                                                                    f.val(SPIN_HIDE_GAIN), f.op("*"), *f.inp()]))
+    out: list[El] = []
+    for c in group.children:
+        out.append(c)
+        if c.tag != "Shape" or _root(c.attrs.get("name")) != "PlanetWeather":
+            continue
+        x0 = float(c.attrs["x"])
+        path = next(k for k in c.children if k.tag == "PointsPath")
+        xs = [float(v.attrs["x"]) for v in path.children]
+        cap = float(next(k for k in c.children if k.tag == "Stroke").attrs["thickness"]) / 2
+        period = round(max(xs) - min(xs) + 2 * cap - SPIN_OVERLAP, 2)
+        copy = clone(d9, c, x=x0 - period, name="PlanetWeatherWrap" + str(c.attrs["name"])[len("PlanetWeather"):])
+        c.children.insert(0, _v12_bind(sc, "spin", KEY_X, _v12_lin(sc, period, x0)))
+        copy.children.insert(0, _v12_bind(sc, "spin", KEY_X, _v12_lin(sc, period, x0 - period)))
+        c.children.insert(1, d10("DataBindContext", sourcePathIds=sc.vpath("spin"), propertyKey=KEY_OPACITY,
+                                 converterId=show_band.ref()))
+        copy.children.insert(1, d10("DataBindContext", sourcePathIds=sc.vpath("spin"), propertyKey=KEY_OPACITY,
+                                    converterId=show_copy.ref()))
+        copy.attrs["opacity"] = 0.0
+        out.append(copy)
+    group.children[:] = out
+
+
+# ====================================================================== the scene registry (M9)
+# ---------------------------------------------------------------- seasons (M11 ruling 9, contract v14)
+# `spring` / `autumn` (0-1, the app writes them from the local date, ramping over a week) dress two old
+# scenes: a node per season at opacity = the number (a direct bind, history-free; static 0, so at 0 / 0 the
+# renderer skips it and the scene is v13 exactly). Everything mints from `d11`.
+SILL_TOP = 708.0                    # livingRoom: the ledge under the window (Sill, Plane2), its top edge
+TULIPS_AT = 642.0                   # the vase's centre x: the right pane's foot, clear of the curtain and
+                                    # above the avatar's head (the head covers the wall below ~y 760)
+TULIPS = ((-16, 76, -0.22, "FFE0485A"), (-5, 92, -0.07, "FFF27A8C"), (6, 86, 0.1, "FFF2C24A"),
+          (16, 72, 0.26, "FFE0485A"), (0, 66, 0.0, "FFF4A0B4"))   # (dx at the vase mouth, height, lean, petals)
+PUMPKIN = (628.0, 50.0, 34.0)       # centre x, width, height (on the sill)
+SILL_LEAVES = ((578, -5, 11.0, 1.9, "FFC8602C"), (598, -3, 9.0, 0.5, "FFD89A3A"), (672, -4, 10.0, -1.2, "FFB84A2A"))                    # (x, dy above the sill top, r, turn, colour)
+# campfire: the clearing's ground is Plane4 (in front of Ground and the path, behind the wet film, the
+# light pool and the grass, so rain darkens and the fire lights them like the ground)
+CLEARING_FLOWERS = ((64, 1296), (150, 1330), (36, 1420), (160, 1450), (90, 1530), (40, 1640), (190, 1600),
+                    (900, 1262), (990, 1300), (1036, 1404), (940, 1440), (860, 1520), (1010, 1560), (920, 1660),
+                    (330, 1290), (720, 1300))
+FLOWER_COLOURS = ("FFF4F0E4", "FFF4D25A", "FFE89AB8", "FFB8A6E8")
+AUTUMN_GROUND = ("FFC8602C", "FFD89A3A", "FFB84A2A", "FF8A4A2A", "FFE0B050")
+RUST_FERN = "FF7A3A22"              # the grass tufts in autumn (an overlay in the tuft's own shape)
+
+
+def _maple(cx: float, cy: float, r: float, ang: float, squash: float = 1.0) -> list[tuple]:
+    """A five-lobed leaf of radius `r` at (cx, cy), turned by `ang`: rounded lobes, sharp notches, a short
+    stalk; `squash` flattens it vertically (a leaf lying on the ground, seen at an angle)."""
+    pts: list[tuple] = []
+    for i in range(10):
+        a = ang - math.pi / 2 + math.pi * i / 5
+        rr = r * (1.0 if i == 0 else 0.86) if i % 2 == 0 else r * 0.42
+        p = (round(cx + rr * math.cos(a), 2), round(cy + squash * rr * math.sin(a), 2))
+        pts.append(p if i % 2 == 0 else (*p, "c"))
+        if i == 5:   # the stalk, between the two lower lobes
+            sa = ang + math.pi / 2
+            pts[-1:] = [(round(cx + r * 0.36 * math.cos(sa - 0.25), 2), round(cy + squash * r * 0.36 * math.sin(sa - 0.25), 2), "c"),
+                        (round(cx + r * 0.62 * math.cos(sa), 2), round(cy + squash * r * 0.62 * math.sin(sa), 2), "c"),
+                        (round(cx + r * 0.36 * math.cos(sa + 0.25), 2), round(cy + squash * r * 0.36 * math.sin(sa + 0.25), 2), "c")]
+    return pts
+
+
+def _season_node(sc: Scene, season: str, name: str, kids: list[El]) -> El:
+    return sc.d11("Node", sc.bind(season, 18, doc=sc.d11), *kids, x=0.0, y=0.0, opacity=0.0, name=name)
+
+
+def _plane(content: list[El], k: int) -> El:
+    return next(e for e in content if e.attrs.get("name") == f"Plane{k}")
+
+
+def living_room_seasons(sc: Scene, content: list[El]) -> None:
+    """A glass vase of tulips on the sill in spring (`SpringSill`), a small pumpkin and a few fallen
+    leaves there in autumn (`AutumnSill`); Plane2, in front of the ledge, behind the walking cat and the
+    curtains."""
+    O = (0.0, 0.0)
+    with sc.minting(sc.d11):
+        S, E, F, L = sc.S, sc.E, sc.F, sc.L
+        cx, top = TULIPS_AT, SILL_TOP
+        vase = [E(O, "VaseGlint", cx - 7, top - 30, 4, 24, F("80FFFFFF")),
+                S(O, "VaseWater", [(cx - 11, top - 20), (cx + 11, top - 20), (cx + 10, top - 2, "c"),
+                                   (cx - 10, top - 2, "c")], F("8090B8C0")),
+                S(O, "TulipVase", [(cx - 10, top - 46, "c"), (cx + 10, top - 46, "c"), (cx + 13, top - 24),
+                                   (cx + 11, top - 1, "c"), (cx - 11, top - 1, "c"), (cx - 13, top - 24)],
+                  F("70C8E0E8"), L("B0E8F4F8", 2))]
+        stems, heads = [], []
+        for i, (dx, h, lean, col) in enumerate(TULIPS):
+            bx, by = cx + dx * 0.4, top - 40
+            tx, ty = cx + dx + math.sin(lean) * h * 0.4, top - 40 - h
+            stems.append(S(O, f"TulipStem{i}", [(bx, by), ((bx + tx) / 2 + lean * 8, (by + ty) / 2), (tx, ty)],
+                           L("FF4E7A3A", 3), closed=False))
+            heads.append(S(O, f"Tulip{i}", [(tx - 9, ty - 15, "c"), (tx - 3, ty - 8), (tx, ty - 16, "c"), (tx + 3, ty - 8),
+                                            (tx + 9, ty - 15, "c"), (tx + 8, ty - 2), (tx, ty + 4), (tx - 8, ty - 2)],
+                           F(col), L("40301A20", 1.5)))
+        leaves = [S(O, "TulipLeafL", [(cx - 4, top - 40), (cx - 26, top - 84, "c"), (cx - 8, top - 58)], F("FF5E8A44")),
+                  S(O, "TulipLeafR", [(cx + 4, top - 40), (cx + 24, top - 76, "c"), (cx + 8, top - 56)], F("FF6A9A4E"))]
+        spring = _season_node(sc, "spring", "SpringSill", [*vase, *heads, *leaves, *stems,
+                                                            E(O, "TulipShadow", cx, top + 1, 40, 6, F("40101C1E"))])
+        px, pw, ph = PUMPKIN
+        pumpkin = [S(O, "PumpkinStem", [(px - 2, top - ph + 2), (px - 1, top - ph - 10), (px + 6, top - ph - 13, "c"),
+                                        (px + 3, top - ph - 8), (px + 3, top - ph + 2)], F("FF5A4A2A")),
+                   *(S(O, f"PumpkinRib{i}", [(px + dx, top - ph + 3), (px + dx * 1.5, top - ph / 2), (px + dx, top - 2)],
+                       L("60803010", 2), closed=False) for i, dx in enumerate((-10, 0, 10))),
+                   E(O, "PumpkinGlint", px - 12, top - ph * 0.62, 7, 12, F("50FFE0A0")),
+                   E(O, "Pumpkin", px, top - ph / 2, pw, ph, F("FFE07A2A"), L("FF8A3A14", 2)),
+                   E(O, "PumpkinShadow", px + 4, top + 1, pw + 8, 7, F("40101C1E"))]
+        fallen = [S(O, f"SillLeaf{i}", _maple(x, top + dy, r, a, squash=0.5), F(col)) for i, (x, dy, r, a, col) in enumerate(SILL_LEAVES)]
+        autumn = _season_node(sc, "autumn", "AutumnSill", [*fallen, *pumpkin])
+    kids = _plane(content, 2).children
+    at = next(i for i, c in enumerate(kids) if c.attrs.get("name") == "Sill")
+    kids[at:at] = [spring, autumn]
+
+
+def campfire_seasons(sc: Scene, content: list[El]) -> None:
+    """Spring flowers in the clearing (`SpringGround`: small five-petal clusters at its edges, clear of the
+    fire and the avatar), autumn leaves on the ground (`AutumnGround`) and the grass tufts turned rust
+    (`AutumnFerns`: a rust copy of each tuft in front of it); Plane4."""
+    O = (0.0, 0.0)
+    rnd = random.Random(1109)
+    plane = _plane(content, 4)
+    kids = plane.children
+    with sc.minting(sc.d11):
+        S, E, F = sc.S, sc.E, sc.F
+        flowers = []
+        for i, (x, y) in enumerate(CLEARING_FLOWERS):
+            for j in range(3):
+                fx, fy = x + rnd.uniform(-30, 30), y + rnd.uniform(-14, 14)
+                r = rnd.uniform(8.0, 11.5) * (0.8 + 0.4 * (y - 1260) / 400)   # nearer = bigger
+                col = FLOWER_COLOURS[(i + j) % len(FLOWER_COLOURS)]
+                turn = rnd.uniform(0, math.pi)
+                # five round petals (a smooth ten-point star), squashed: seen from above at an angle
+                petals = [(round(fx + (r if k % 2 == 0 else r * 0.45) * math.cos(turn + k * math.pi / 5), 2),
+                           round(fy + 0.7 * (r if k % 2 == 0 else r * 0.45) * math.sin(turn + k * math.pi / 5), 2))
+                          for k in range(10)]
+                flowers += [E(O, f"FlowerHeart{i}_{j}", fx, fy, r * 0.6, r * 0.42, F("FFE8A030")),
+                            S(O, f"Flower{i}_{j}", petals, F(col))]
+        spring = _season_node(sc, "spring", "SpringGround", flowers)
+        fallen = []
+        for i in range(36):
+            side = i % 4
+            x = (rnd.uniform(-10, 300), rnd.uniform(780, 1090), rnd.uniform(300, 780), rnd.uniform(-10, 1090))[side]
+            y = (rnd.uniform(1250, 1700), rnd.uniform(1230, 1700), rnd.uniform(1700, 1900), rnd.uniform(1200, 1320))[side]
+            r = rnd.uniform(12.0, 17.0) * (0.75 + 0.5 * (y - 1200) / 700)   # nearer = bigger
+            fallen.append(S(O, f"GroundLeaf{i}", _maple(x, y, r, rnd.uniform(0, math.tau), squash=0.62),
+                            F(AUTUMN_GROUND[i % len(AUTUMN_GROUND)])))
+        ground = _season_node(sc, "autumn", "AutumnGround", fallen)
+        ferns = []
+        for g in (c for c in kids if str(c.attrs.get("name", "")).startswith("Grass")):
+            path = next(c for c in g.children if c.tag == "PointsPath")
+            verts = [sc.d11(v.tag, **v.attrs) for v in path.children]
+            ferns.append(sc.d11("Shape", sc.d11("PointsPath", *verts, **path.attrs), F(RUST_FERN),
+                                **{k: v for k, v in g.attrs.items() if k != "name"},
+                                name="Rust" + str(g.attrs["name"])))
+        rust = _season_node(sc, "autumn", "AutumnFerns", ferns)
+    first_grass = next(i for i, c in enumerate(kids) if str(c.attrs.get("name", "")).startswith("Grass"))
+    kids[first_grass:first_grass] = [rust]
+    at = next(i for i, c in enumerate(kids) if c.attrs.get("name") == "GroundWet") + 1
+    kids[at:at] = [ground, spring]
+
+
+def _lazy(scene_id: str) -> Callable[[], str]:
+    """Builds a module scene (v12, v14) through its own module (imported on first use: `world_kit.scene_module`
+    raises `SceneNotWritten` while its lane has not written it)."""
+    def build() -> str:
+        return getattr(world_kit.scene_module(scene_id), scene_id)()
+    build.__name__ = scene_id
+    return build
+
+
+SCENE_BUILDERS: dict[str, Callable[[], str]] = {
+    "livingRoom": livingRoom, "campfire": campfire, "beach": beach, "deepSpace": deepSpace,
+    **{sid: _lazy(sid) for sid in world_kit.SCENE_MODULES},
+}
+
+
+def main(argv: list[str]) -> int:
+    """`gen_scenes.py [sceneId ...]`: writes the named scenes; with none, the four M8 scenes and every
+    module scene (v12, v14) whose module exists. An unknown id, or a module scene asked for before its
+    module exists, exits 1 with a message."""
+    unknown = [a for a in argv if a not in SCENE_BUILDERS]
+    if unknown:
+        print(f"unknown scene {', '.join(unknown)} (known: {', '.join(SCENE_BUILDERS)})", file=sys.stderr)
+        return 1
+    which = argv or [*world_kit.BUILT_IN_SCENES, *world_kit.written_scene_modules()]
     for name in which:
-        print("wrote", globals()[name]())
+        try:
+            print("wrote", SCENE_BUILDERS[name]())
+        except world_kit.SceneNotWritten as e:
+            print(f"✗ {e}", file=sys.stderr)
+            return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

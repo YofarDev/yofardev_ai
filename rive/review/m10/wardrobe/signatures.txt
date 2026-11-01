@@ -1,0 +1,4 @@
+signature_batman: 66 frames (1100 ms); pops at none; centroid jerk 5059328 px/s^3; max frame step 0.0062 (median 0.0020); the frame after the clip vs the costume never gestured: 0 px differ, max 0/255
+signature_robocop: 72 frames (1200 ms); pops at [2, 8, 10, 12, 14, 18, 22, 24, 53, 55, 57, 59, 63]; centroid jerk 20935058 px/s^3; max frame step 0.0289 (median 0.0003); the frame after the clip vs the costume never gestured: 0 px differ, max 0/255
+signature_soubrette: 72 frames (1200 ms); pops at none; centroid jerk 4634489 px/s^3; max frame step 0.0156 (median 0.0040); the frame after the clip vs the costume never gestured: 0 px differ, max 0/255
+signature_singularity: 72 frames (1200 ms); pops at none; centroid jerk 11534295 px/s^3; max frame step 0.0027 (median 0.0007); the frame after the clip vs the costume never gestured: 0 px differ, max 0/255

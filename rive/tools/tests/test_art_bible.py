@@ -13,6 +13,22 @@ from art_bible import RUBRIC, SCENES, TOKENS, lint_colours
 
 ROOT: Path = Path(__file__).resolve().parents[3]
 PALETTE: Path = ROOT / "lib/core/design/tokens/app_palette.dart"
+AVATAR_SCENE: Path = ROOT / "lib/core/models/avatar_scene.dart"
+V14_SCENES: tuple[str, ...] = ("forestCabin", "trainCompartment", "library")
+
+
+def dart_scenes() -> set[str]:
+    """The values of the Dart `AvatarScene` enum."""
+    text: str = AVATAR_SCENE.read_text(encoding="utf-8")
+    body: str = re.search(r"enum AvatarScene \{(.*?);", text, re.S).group(1)
+    return set(re.findall(r"\b(\w+)\b", body))
+
+
+def dart_pending(scene: str) -> bool:
+    """M11 (contract v14): the Python tools learn the three new scenes first (Task 1b), the Dart mirror
+    (`AvatarScene`, AppPalette, SceneLights) follows in lane D-scenes. A v14 scene is pending on the Dart
+    side only while `AvatarScene` lacks it; once the enum has it, its tokens and rig must match."""
+    return scene in V14_SCENES and scene not in dart_scenes()
 
 
 def dart_palette() -> dict[str, str]:
@@ -23,12 +39,14 @@ def dart_palette() -> dict[str, str]:
 def test_tokens_match_app_palette() -> None:
     dart: dict[str, str] = dart_palette()
     for name, argb in TOKENS.items():
+        if name.endswith("Accent") and dart_pending(name[: -len("Accent")]):
+            continue
         assert dart[name] == argb, name
 
 
 def test_every_contract_scene_has_a_script_with_its_token_accent() -> None:
     contract: str = (ROOT / "rive/CONTRACT.md").read_text(encoding="utf-8")
-    for scene in ("livingRoom", "campfire", "beach", "deepSpace"):
+    for scene in ("livingRoom", "campfire", "beach", "deepSpace", "cafe", "rooftop", "mountainHut", *V14_SCENES):
         assert scene in contract
         assert SCENES[scene].accent == TOKENS[f"{scene}Accent"]
         assert set(SCENES[scene].times) == {"dawn", "day", "dusk", "night"}
@@ -68,3 +86,110 @@ def test_lint_ignores_numbers_that_look_like_hex_but_reads_colour_keys() -> None
         ]
     )
     assert {p.split(":")[0] for p in lint_colours(rml, "livingRoom")} == {"3"}
+
+
+def test_scene_scripts_carry_flicker_rim_and_ambient() -> None:
+    assert {s: SCENES[s].flicker for s in SCENES} == {
+        "livingRoom": 0.15, "campfire": 1.0, "beach": 0.0, "deepSpace": 0.0,
+        "cafe": 0.0, "rooftop": 0.0, "mountainHut": 0.6,
+        "forestCabin": 0.2, "trainCompartment": 0.05, "library": 0.1,   # M11 ruling 3
+    }
+    assert all(s.ambient_amount == 0.35 and s.rim_intensity == 0.35 for s in SCENES.values())
+    assert SCENES["campfire"].key_xy == (-0.49, -0.872)
+
+
+def test_fit_colour_keeps_hue_and_meets_the_scene_caps() -> None:
+    out: str = art_bible.fit_colour("FF0B1026", "campfire")
+    h0, _, _ = art_bible.hsv("FF0B1026")
+    h1, s1, _ = art_bible.hsv(out)
+    assert s1 <= 0.55
+    assert abs(h1 - h0) * 360 <= 1.0
+    assert out.startswith("FF")
+
+
+def test_fit_colour_outputs_lint_clean() -> None:
+    import random
+
+    rng: random.Random = random.Random(7)
+    for scene in SCENES:
+        colours: list[str] = [
+            "FF" + "".join(f"{rng.randrange(256):02X}" for _ in range(3)) for _ in range(300)
+        ] + ["FF000000", "FF0000FF", "FFFF0000", "80FFE0A0", "FF010203"]
+        line: str = " ".join(
+            f'<SolidColor colorValue="{art_bible.fit_colour(c, scene)}"/>' for c in colours
+        )
+        assert lint_colours(line, scene) == [], scene
+
+
+def test_fit_colour_passes_accent_transparent_and_neutral_highlights_unchanged() -> None:
+    for scene, script in SCENES.items():
+        assert art_bible.fit_colour(script.accent, scene) == script.accent
+        assert art_bible.fit_colour("00123456", scene) == "00123456"
+        assert art_bible.fit_colour("FFFFFFFF", scene) == "FFFFFFFF"
+
+
+SCENE_LIGHTS: Path = ROOT / "lib/core/design/tokens/scene_lights.dart"
+
+
+def dart_scene_lights() -> dict[str, dict[str, str]]:
+    """Per scene, the named arguments of its `LightRig(...)` in scene_lights.dart (raw text)."""
+    text: str = SCENE_LIGHTS.read_text(encoding="utf-8")
+    consts: dict[str, str] = dict(re.findall(r"static const double (_\w+) = ([-\d.]+);", text))
+    out: dict[str, dict[str, str]] = {}
+    for scene, body in re.findall(r"AvatarScene\.(\w+) => LightRig\((.*?)\n\s*\),", text, re.S):
+        args = dict(re.findall(r"(\w+):\s*([^,]+),", body))
+        out[scene] = {k: consts.get(v.strip(), v.strip()) for k, v in args.items()}
+    return out
+
+
+def test_scene_lights_match_art_bible() -> None:
+    """M4 ruling 3: one light table. AppPalette's per-scene colours and SceneLights' numbers equal
+    art_bible.SCENES (key x/y = cos/sin of key_dir to 3 digits)."""
+    palette: dict[str, str] = dart_palette()
+    lights: dict[str, dict[str, str]] = dart_scene_lights()
+    assert set(lights) == {sc for sc in SCENES if not dart_pending(sc)}
+    for scene, s in SCENES.items():
+        if dart_pending(scene):
+            continue
+        assert palette[f"{scene}Key"] == s.key, scene
+        assert palette[f"{scene}Rim"] == s.rim, scene
+        assert palette[f"{scene}Ambient"] == s.ambient, scene
+        assert palette[f"{scene}Fog"] == s.fog, scene
+        rig: dict[str, str] = lights[scene]
+        for colour, suffix in (("keyColor", "Key"), ("rimColor", "Rim"), ("ambientColor", "Ambient"),
+                               ("fogColor", "Fog")):
+            assert rig[colour] == f"AppPalette.{scene}{suffix}.toARGB32()", (scene, colour)
+        kx, ky = s.key_xy
+        numbers: dict[str, float] = {"keyIntensity": s.key_intensity, "keyX": kx, "keyY": ky,
+                                     "rimIntensity": s.rim_intensity, "ambientAmount": s.ambient_amount,
+                                     "flicker": s.flicker}
+        for name, want in numbers.items():
+            assert abs(float(rig[name]) - want) < 1e-9, (scene, name, rig[name], want)
+
+
+M8_SCENES: tuple[str, ...] = ("livingRoom", "campfire", "beach", "deepSpace")
+
+
+def test_v12_scripts_leave_the_shared_journey_and_jacket_colours_alone() -> None:
+    """M9 rulings 5, 15: journey.riv and avatar.riv keep their bytes, yet gen_journeys.fit and
+    jacket_art.fit_all fit their colours into every scene's script. A v12 script at least as lenient
+    as the four M8 ones together cannot move a colour they already accept."""
+    lo = max(SCENES[s].value[0] for s in M8_SCENES)
+    hi = min(SCENES[s].value[1] for s in M8_SCENES)
+    cap = min(SCENES[s].sat_cap for s in M8_SCENES)
+    for scene in set(SCENES) - set(M8_SCENES):
+        s = SCENES[scene]
+        assert s.value[0] <= lo and s.value[1] >= hi and s.sat_cap >= cap, scene
+        assert s.rim_intensity == 0.35 and s.ambient_amount == 0.35, scene
+        assert set(s.times) == {"dawn", "day", "dusk", "night"}, scene
+
+
+def test_v14_scripts_follow_ruling_3() -> None:
+    """M11 ruling 3: the three v14 rigs (key side, flicker); the leniency rule is the test above."""
+    assert {sc: TOKENS[f"{sc}Accent"] for sc in V14_SCENES} == {
+        "forestCabin": "FFA6CF6E", "trainCompartment": "FFF59AB5", "library": "FFE9CF6A"}
+    fc, tr, lib = (SCENES[sc] for sc in V14_SCENES)
+    assert fc.key_xy[0] > 0.9 and 0 < fc.key_xy[1] < 0.5            # low, from the right
+    assert tr.key_xy[0] < 0 < tr.key_xy[1]                          # from above left
+    assert lib.key_xy[0] < -0.9 and lib.key_xy[1] < 0               # from low left
+    assert (fc.flicker, tr.flicker, lib.flicker) == (0.2, 0.05, 0.1)

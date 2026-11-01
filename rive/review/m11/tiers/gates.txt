@@ -1,0 +1,32 @@
+# Tier gates per scene (M11 ruling 13; rive/tools/review_tiers.py)
+
+beach:
+  high (hidden at high and low): Splash{8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15}, RainSheet{1,1}, Glint{8,9,10,11,12,13,14,15}, FrontSplash{5,6,7,8,9}
+  low (hidden at low): Flyer{0,1}
+  fog veils down to one fill at low: FogVeil0, FogVeil1, FogVeil2
+  rest: high changes 1627 px, low 510809 px (of 2073600)
+  rain: high changes 15792 px, low 521868 px (of 2073600)
+  front: high changes 0 px, low 0 px (of 2073600)
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0)  --advance=1: 0 px ok
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0)  --advance=91: 0 px ok
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0) --data=rain=1 --advance=91: 0 px ok
+rooftop:
+  high (hidden at high and low): Splash{8,9,10,11,12,13,14,15}, RainSheet1, CapSplash{7,8,9,10,11,12,13}, MidBlink{3,4,5}, Glint{2,3}, Star{35,40,45,50,55,60}, FrontSplash{5,6,7,8,9}
+  low (hidden at low): -
+  fog veils down to one fill at low: FogVeil0, FogVeil1, FogVeil2
+  rest: high changes 275 px, low 168273 px (of 2073600)
+  rain: high changes 14811 px, low 174991 px (of 2073600)
+  front: high changes 0 px, low 0 px (of 2073600)
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0)  --advance=1: 0 px ok
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0)  --advance=91: 0 px ok
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0) --data=rain=1 --advance=91: 0 px ok
+forestCabin:
+  high (hidden at high and low): LeafDriftC, PetalDriftC, RainSheetFar, ShowerSheetFar, Splash{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}, GustLeafB{0,1,2,3,4,5}, FireflyB{0,1,2,3,4,5,6,7,8,9}, StarTwinkleB{0,1,2,3}
+  low (hidden at low): ChimneySmoke, LeafDriftB, MistDrift, PetalDriftB
+  fog veils down to one fill at low: FogVeil0, FogVeil1
+  rest: high changes 196 px, low 125132 px (of 2073600)
+  rain: high changes 15422 px, low 138067 px (of 2073600)
+  front: high changes 0 px, low 0 px (of 2073600)
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0)  --advance=1: 0 px ok
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0)  --advance=91: 0 px ok
+  identity vs HEAD (default: tier ultra, spring 0, autumn 0) --data=rain=1 --advance=91: 0 px ok

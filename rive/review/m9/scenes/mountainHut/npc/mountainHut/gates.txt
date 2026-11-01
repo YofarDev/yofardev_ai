@@ -1,0 +1,11 @@
+rest frames identical to 927a606: n/a, a new scene (ok)
+away: the NPC's crop changes (10.75% of it), nothing else does (0.0000%): ok
+idle: moves (34.84% of the crop) and its loop is back after 240 frames (0.0000% differ): ok
+move: moves (43.81% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+notice: moves (32.98% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+react: moves (57.35% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+pointer dog at npcX 0.0: click@873,1320 fires 1: ok
+pointer dog at npcX 0.5: click@782,1273 fires 1: ok
+pointer dog at npcX 1.0: click@690,1228 fires 1, its v10 spot click@873,1320 fires 0: ok
+fog: changes 4.95% of the frame, 0.0000% outside the window (ok)
+mountainHut.riv 116,612 B (a new scene; budget 409,600): ok

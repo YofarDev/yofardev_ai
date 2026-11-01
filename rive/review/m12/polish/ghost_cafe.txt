@@ -1,0 +1,8 @@
+cafe rest -> notice@0: own px 140; old worst ghost 98.6% (frames with a ghost > 1 %: 10); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+cafe notice@0 -> rest: own px 7; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+cafe idle -> notice@-0.7: own px 90; old worst ghost 4.4% (frames with a ghost > 1 %: 3); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+cafe notice@-0.7 -> idle: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+cafe react -> notice@-0.7: own px 57; old worst ghost 1.8% (frames with a ghost > 1 %: 2); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+cafe notice@0 -> move: own px 8; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+cafe notice@-0.7 -> notice@0: own px 116; old worst ghost 0.0% (frames with a ghost > 1 %: 0); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+cafe notice@0 -> notice@-0.7: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)

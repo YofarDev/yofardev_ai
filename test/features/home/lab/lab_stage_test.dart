@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yofardev_ai/core/design/looks/looks.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/performance/shot.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_caption.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_composer_mock.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_config.dart';
 import 'package:yofardev_ai/features/home/widgets/lab/lab_stage_preview.dart';
+import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
 
 /// Fake builder: no font is ever loaded.
@@ -22,7 +24,12 @@ class _StageProbe {
 
   (AvatarScene, TalkingPhase) get last => builds.last;
 
-  Widget build(BuildContext context, AvatarScene scene, TalkingState talking) {
+  Widget build(
+    BuildContext context,
+    AvatarScene scene,
+    TalkingState talking,
+    FaceFrame? _,
+  ) {
     builds.add((scene, talking.phase));
     return _ProbeStage(probe: this);
   }
@@ -103,6 +110,36 @@ Future<void> _pump(
 Finder _label(String label) => find.bySemanticsLabel(label);
 
 void main() {
+  group('camera', () {
+    testWidgets('the lab cuts the stage to its shot, wide being the identity', (
+      WidgetTester tester,
+    ) async {
+      final _StageProbe probe = _StageProbe();
+      await _pump(tester, _config(), probe);
+      double zoom() {
+        final Transform transform = tester.widget<Transform>(
+          find.descendant(
+            of: find.byType(StageCamera),
+            matching: find.byType(Transform),
+          ),
+        );
+        return transform.transform.storage[0];
+      }
+
+      expect(zoom(), 1);
+      await tester.pumpWidget(
+        _harness(_config().copyWith(shot: Shot.closeUp), probe),
+      );
+      await tester.pump();
+      expect(zoom(), greaterThan(1.9));
+      await tester.pumpWidget(
+        _harness(_config().copyWith(shot: Shot.wide), probe),
+      );
+      await tester.pump();
+      expect(zoom(), 1);
+    });
+  });
+
   group('layouts', () {
     testWidgets('stage chips: history and more on top, caption, composer', (
       WidgetTester tester,

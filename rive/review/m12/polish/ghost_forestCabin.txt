@@ -1,0 +1,8 @@
+forestCabin rest -> move: own px 3100; old worst ghost 95.5% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+forestCabin move -> rest: own px 374; old worst ghost 90.4% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+forestCabin idle -> move: own px 3137; old worst ghost 92.8% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+forestCabin move -> idle: own px 342; old worst ghost 90.1% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+forestCabin react -> move: own px 4588; old worst ghost 86.2% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+forestCabin move -> react: own px 188; old worst ghost 93.1% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+forestCabin notice -> move: own px 3355; old worst ghost 88.4% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+forestCabin move -> notice: own px 358; old worst ghost 90.2% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)

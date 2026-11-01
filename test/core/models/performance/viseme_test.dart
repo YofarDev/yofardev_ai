@@ -45,7 +45,7 @@ void main() {
       const GazeTarget user = GazeTarget.user();
       final GazeAway away = GazeTarget.away(0.4) as GazeAway;
       final GazePoint point = GazeTarget.point(0.2, 0.8) as GazePoint;
-      const GazeTarget caret = GazeTarget.caret();
+      const GazeTarget caret = GazeTarget.caret(0.5);
 
       expect(user, isA<GazeUser>());
       expect(away, isA<GazeAway>());
@@ -73,28 +73,31 @@ void main() {
       const LightRig rig = LightRig.neutral;
       expect(LightRig.neutral, same(LightRig.neutral));
       expect(rig.keyIntensity, 1);
-      expect(rig.fog, 0);
-      expect(rig.flickerAmount, 0);
-      expect(rig.flickerSeed, 0);
+      expect(rig.rimIntensity, 0.35);
+      expect(rig.ambientAmount, 0.35);
+      expect(rig.flicker, 0);
     });
 
     test('holds the documented fields', () {
       const LightRig rig = LightRig(
-        keyDirection: 1.2,
         keyColor: 0xFFFFFFFF,
         keyIntensity: 0.9,
+        keyX: -0.49,
+        keyY: -0.872,
         rimColor: 0xFFB79CFF,
         rimIntensity: 0.4,
         ambientColor: 0xFF202028,
-        fog: 0.3,
-        flickerSeed: 7,
-        flickerAmount: 0.2,
+        ambientAmount: 0.3,
+        fogColor: 0x3320304A,
+        flicker: 0.2,
       );
-      expect(rig.keyDirection, 1.2);
+      expect(rig.keyX, -0.49);
+      expect(rig.keyY, -0.872);
       expect(rig.keyColor, 0xFFFFFFFF);
       expect(rig.rimColor, 0xFFB79CFF);
       expect(rig.ambientColor, 0xFF202028);
-      expect(rig.flickerSeed, 7);
+      expect(rig.fogColor, 0x3320304A);
+      expect(rig.flicker, 0.2);
     });
   });
 

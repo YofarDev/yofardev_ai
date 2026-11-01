@@ -51,6 +51,7 @@ class _ToolStreamingService extends Mock implements ChatStreamingService {
     required void Function(Chat finalChat) onStreamComplete,
     required void Function(String error) onError,
     void Function(String? toolName)? onToolActivity,
+    Avatar Function()? currentAvatar,
   }) async {
     onToolActivity?.call('getCurrentWeather');
     toolStarted.complete();

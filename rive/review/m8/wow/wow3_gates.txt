@@ -1,0 +1,22 @@
+every frame non-empty (0 blank): ok
+captured frames: 292: ok
+network attempts during the run: 0: ok
+camera cuts only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+journeys during the run: 1 (want 1): ok
+journey door → beach: beats pullBack/open/grab/exit/close/arriveOpen/enter/hang/arriveClose/vanish in order: ok
+journey door → beach: family ['door']: ok
+journey door → beach: camera wide after the pull-back in 100% of samples (want >= 95%): ok
+journey door → beach: avatar off screen only while clipped (0 of 77 samples not): ok
+journey door → beach: scene switched behind the closed threshold (first sample in beach: arriveOpen): ok
+the beach at the local sunset: dusk min 1.00 (want >= 0.5): ok
+the reply is spoken: ok
+jacket beats: grab before exit, hang after enter (pullBack/open/grab/exit/close/arriveOpen/enter/hang/arriveClose/vanish): ok
+one jacket at a time: 0 samples with two, 0 with none (of 205): ok
+the jacket in the hand on both walks: 98 of 98: ok
+footsteps during exit: 6 (want >= 6): ok
+footsteps during enter: 6 (want >= 6): ok
+a cloth sound at each contact: [1, 1] (want [1, 1]): ok
+the jacket left with the door: hand False at the last journey sample: ok
+journey timing: starts 0.05 s after send, lasts 7.68 s: info
+wow3.gif 3752845 B (budget 4194304): ok
+frame cost (macOS desktop, not a tier): build P95 7.82 ms, raster P95 1.2 ms, over 16.6 ms 0.6%: info

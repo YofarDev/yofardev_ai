@@ -85,6 +85,13 @@ class ChatStreamingService {
   /// performance director).
   Stream<String?> get toolActivity => _toolActivityController.stream;
 
+  final StreamController<String> _userMessagesController =
+      StreamController<String>.broadcast();
+
+  /// Every prompt the user sends, as a reply to it starts (the scene NPCs
+  /// hear their names in it, M8). Stays on the device.
+  Stream<String> get userMessages => _userMessagesController.stream;
+
   /// Streams a response from the LLM for the given prompt.
   ///
   /// This method:
@@ -98,6 +105,11 @@ class ChatStreamingService {
   /// [onToolActivity] reports the tool being run: its name right before it
   /// executes, then `null` once the round's tools finished, on error, and
   /// when the reply ends (never twice in a row with the same value).
+  ///
+  /// [currentAvatar] gives the chat's avatar as it is when the reply ends: a
+  /// tool (`change_avatar`) may change it mid-reply, and [currentChat] was
+  /// captured when the message was sent, so the completed (and stored) chat
+  /// wears it instead of the avatar the reply started with.
   Future<void> streamResponse({
     required String prompt,
     required bool onlyText,
@@ -110,9 +122,13 @@ class ChatStreamingService {
     required void Function(Chat finalChat) onStreamComplete,
     required void Function(String error) onError,
     void Function(String? toolName)? onToolActivity,
+    Avatar Function()? currentAvatar,
   }) async {
     // Reset interruption state at start of new conversation
     _interruptionService.reset();
+    if (prompt.trim().isNotEmpty) {
+      _userMessagesController.add(prompt);
+    }
 
     // This reply's own stop signal. The service-wide flag above is reset by
     // the next reply, so a reply still awaiting (a stalled stream, a tool)
@@ -152,6 +168,7 @@ class ChatStreamingService {
         onChatUpdated: onChatUpdated,
         onStreamComplete: onStreamComplete,
         onError: onError,
+        currentAvatar: currentAvatar,
         stopped: stopped.future,
         interrupted: interrupted,
         reportTool: reportTool,
@@ -174,6 +191,7 @@ class ChatStreamingService {
     required void Function(Chat updatedChat) onChatUpdated,
     required void Function(Chat finalChat) onStreamComplete,
     required void Function(String error) onError,
+    required Avatar Function()? currentAvatar,
     required Future<void> stopped,
     required bool Function() interrupted,
     required void Function(String? toolName) reportTool,
@@ -607,7 +625,10 @@ class ChatStreamingService {
       if (interrupted()) {
         // Stopped before the first sentence: keep the prompt (and any tool
         // entries), not an empty reply.
-        chat = _withoutEmptyReply(chat, streamingEntry.id);
+        chat = _withCurrentAvatar(
+          _withoutEmptyReply(chat, streamingEntry.id),
+          currentAvatar,
+        );
         onStreamComplete(chat);
         await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
         return;
@@ -627,6 +648,7 @@ class ChatStreamingService {
       );
       onChatUpdated(chat);
 
+      chat = _withCurrentAvatar(chat, currentAvatar);
       onStreamComplete(chat);
       await _chatRepository.updateChat(id: chat.id, updatedChat: chat);
 
@@ -641,6 +663,13 @@ class ChatStreamingService {
       onError(e.toString());
       return;
     }
+  }
+
+  /// [chat] wearing [currentAvatar]'s avatar (unchanged when null). Only
+  /// the avatar is taken: the reply's entries stay.
+  static Chat _withCurrentAvatar(Chat chat, Avatar Function()? currentAvatar) {
+    if (currentAvatar == null) return chat;
+    return chat.copyWith(avatar: currentAvatar());
   }
 
   /// [chat] without its reply placeholder (entry [replyId], the last one)

@@ -145,7 +145,7 @@ def living_room(sc: Scene, content: list[El]) -> None:
                glow(sc, "LampContact", 287, 1245, 125, "600D1F20", 0.14),
                S(O, "WindowFloorLight", [(380, 1180), (700, 1180), (1000, 1850), (240, 1850)],
                  sc.vgrad(-340, 340, [("1895C7C4", 0), ("0095C7C4", 1)]))]
-    grain = [S(O, f"FloorJoint{i}", [(-30, y), (1110, y)], L("15E0C7A0", 1.2), closed=False)
+    grain = [S(O, f"FloorJoint{i}", [(-60, y), (1140, y)], L("15E0C7A0", 1.2), closed=False)
              for i, y in enumerate((1290, 1460, 1700))]
     before(content, "Floor", *shadows, *grain)
     # Brushed brass inlay, recessed cabinet join, and ceramic pot lip.
@@ -230,7 +230,7 @@ def living_room(sc: Scene, content: list[El]) -> None:
 
 def campfire(sc: Scene, content: list[El]) -> None:
     S, E, F, L, d = sc.S, sc.E, sc.F, sc.L, sc.d
-    recolor(content, {"FF0B1026": "FF071923", "FF1A1B45": "FF102C39", "FF3D2A5C": "FF3C4555",
+    recolor(content, {"FF0B1026": "FF161E30", "FF1A1B45": "FF202F40", "FF3D2A5C": "FF3E4459",
                       "FF6B3A5A": "FF80606A", "FF2A2550": "FF284552", "FF1E1A3C": "FF193943",
                       "FF1A1630": "FF183139", "FF120F22": "FF0A2229", "FF2A2338": "FF253A3A",
                       "FF1C1726": "FF101E25", "FF0E0B16": "FF07171D", "FF2E2638": "FF314042",
@@ -522,9 +522,10 @@ def beach(sc: Scene, content: list[El]) -> None:
             x=[(0, x), (start, x), (210, x + (13 if i % 2 else -11)), (360, x)],
             y=[(0, y), (start, y), (210, y + 14 + i * 2), (360, y)]))
     # Foreground dunes and fine beach grass make a coherent depth stack.
-    dunes = [S(O, "NearDune", [(-60, 1928, "c"), (-60, 1690), (130, 1710), (335, 1850), (680, 1870),
-                               (1130, 1780), (1130, 1930, "c")],
-               sc.vgrad(-100, 100, [("FFE5CAA0", 0), ("FFB59873", 1)]))]
+    # the dune runs 40 px below the frame (M5: Plane5 travels 24 px up); the gradient keeps its span
+    dunes = [S(O, "NearDune", [(-60, 1960, "c"), (-60, 1690), (130, 1710), (335, 1850), (680, 1870),
+                               (1130, 1780), (1130, 1960, "c")],
+               sc.vgrad(-115, 85, [("FFE5CAA0", 0), ("FFB59873", 1)]))]
     for i in range(18):
         x = 15 + i * 15
         y = 1765 + i * 5
@@ -655,7 +656,9 @@ def deep_space(sc: Scene, content: list[El]) -> None:
         volume = S(O, f"MothershipFalloff{i}",
                    [(-46 * width, -235, "c"), (46 * width, -235, "c"),
                     (165 * width, 355, "c"), (-165 * width, 355, "c")],
-                   sc.vgrad(-295 - i * 2.1, 295 + i * 5.3,
+                   # every layer is clear before the shape's bottom (295): a layer still lit there
+                   # cut the beam off with a hard edge (M5 Task 6 self-check)
+                   sc.vgrad(-295 - i * 2.1, 295 - i * 5.3,
                             [(f"{round(alpha):02X}C5F9E5", 0),
                              (f"{round(alpha * .66):02X}B8EAD9", .21 + i * .012),
                              (f"{round(alpha * .23):02X}98D6CF", .61 + i * .009),

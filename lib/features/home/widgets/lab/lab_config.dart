@@ -2,7 +2,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/models/avatar_config.dart';
+import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/models/performance/performance.dart';
+import '../../../avatar/avatar.dart';
 
 /// Which Home layout the lab's Stage tab shows.
 enum LabLayout { stageChips, dock, curtain }
@@ -28,6 +32,14 @@ class LabConfig {
     this.glassAlphaScale = 1,
     this.radiusScaleOverride,
     this.panelCollapsed = false,
+    this.face,
+    this.prop = AvatarProp.none,
+    this.parallax,
+    this.shot = Shot.wide,
+    this.npc,
+    this.npc2,
+    this.topTint = AvatarTint.none,
+    this.hatTint = AvatarTint.none,
   });
 
   /// The lab's starting point.
@@ -56,11 +68,38 @@ class LabConfig {
   /// the whole screen (bar the tab row).
   final bool panelCollapsed;
 
+  /// A hand-set face shown on the stage avatar instead of the live one;
+  /// null shows the live face. See [LabFace].
+  final FaceFrame? face;
+
+  /// The prop the stage avatar holds (contract v7 `prop`).
+  final AvatarProp prop;
+
+  /// A hand-set scene parallax offset (contract v7, each axis -1..1); null
+  /// leaves the scene to the live source.
+  final Offset? parallax;
+
+  /// The camera framing of the stage, cut to by hand (moonshot M7).
+  final Shot shot;
+
+  /// A hand-set scene NPC pose (contract v11 `npc`, `npcX`, `npcLook`); null
+  /// leaves the NPC at rest.
+  final NpcIntent? npc;
+
+  /// A hand-set second-slot pose (contract v12 `npc2`, `npc2X`, `npc2Look`:
+  /// the beach's gulls); null leaves them to the live tree.
+  final NpcIntent? npc2;
+
+  /// The stage avatar's wardrobe tints (contract v13 `topTint` / `hatTint`).
+  final AvatarTint topTint;
+  final AvatarTint hatTint;
+
   static const double maxGlassAlphaScale = 4;
   static const double maxRadiusScale = 3;
 
   /// Copy with the given fields replaced. Pass `null` explicitly to clear
-  /// [accentHueOverride] or [radiusScaleOverride].
+  /// [accentHueOverride], [radiusScaleOverride], [face], [parallax] or
+  /// [npc] or [npc2].
   LabConfig copyWith({
     AvatarScene? scene,
     LabLayout? layout,
@@ -70,6 +109,14 @@ class LabConfig {
     double? glassAlphaScale,
     Object? radiusScaleOverride = _keep,
     bool? panelCollapsed,
+    Object? face = _keep,
+    AvatarProp? prop,
+    Object? parallax = _keep,
+    Shot? shot,
+    Object? npc = _keep,
+    Object? npc2 = _keep,
+    AvatarTint? topTint,
+    AvatarTint? hatTint,
   }) {
     return LabConfig(
       scene: scene ?? this.scene,
@@ -84,6 +131,16 @@ class LabConfig {
           ? this.radiusScaleOverride
           : (radiusScaleOverride as num?)?.toDouble(),
       panelCollapsed: panelCollapsed ?? this.panelCollapsed,
+      face: identical(face, _keep) ? this.face : face as FaceFrame?,
+      prop: prop ?? this.prop,
+      parallax: identical(parallax, _keep)
+          ? this.parallax
+          : parallax as Offset?,
+      shot: shot ?? this.shot,
+      npc: identical(npc, _keep) ? this.npc : npc as NpcIntent?,
+      npc2: identical(npc2, _keep) ? this.npc2 : npc2 as NpcIntent?,
+      topTint: topTint ?? this.topTint,
+      hatTint: hatTint ?? this.hatTint,
     );
   }
 
@@ -96,6 +153,28 @@ class LabConfig {
     'glassAlphaScale': glassAlphaScale,
     'radiusScaleOverride': radiusScaleOverride,
     'panelCollapsed': panelCollapsed,
+    'face': face == null ? null : LabFace.toJson(face!),
+    'prop': prop.name,
+    'parallax': parallax == null
+        ? null
+        : <String, double>{'x': parallax!.dx, 'y': parallax!.dy},
+    'shot': shot.name,
+    'npc': npc == null
+        ? null
+        : <String, Object>{
+            'npc': npc!.npc.name,
+            'npcX': npc!.npcX,
+            'npcLook': npc!.npcLook,
+          },
+    'npc2': npc2 == null
+        ? null
+        : <String, Object>{
+            'npc': npc2!.npc.name,
+            'npcX': npc2!.npcX,
+            'npcLook': npc2!.npcLook,
+          },
+    'topTint': topTint.name,
+    'hatTint': hatTint.name,
   };
 
   static const Set<String> _keys = <String>{
@@ -107,6 +186,14 @@ class LabConfig {
     'glassAlphaScale',
     'radiusScaleOverride',
     'panelCollapsed',
+    'face',
+    'prop',
+    'parallax',
+    'shot',
+    'npc',
+    'npc2',
+    'topTint',
+    'hatTint',
   };
 
   /// Parses [json]. Missing keys take the [initial] values; unknown keys,
@@ -141,6 +228,68 @@ class LabConfig {
       panelCollapsed: json.containsKey('panelCollapsed')
           ? _bool(json, 'panelCollapsed')
           : initial.panelCollapsed,
+      face: json['face'] == null ? null : LabFace.fromJson(json['face']),
+      prop: _enum(json, 'prop', AvatarProp.values, initial.prop),
+      parallax: json['parallax'] == null ? null : _parallax(json['parallax']),
+      shot: _enum(json, 'shot', Shot.values, initial.shot),
+      npc: json['npc'] == null ? null : _npc(json['npc']),
+      npc2: json['npc2'] == null ? null : _npc2(json['npc2']),
+      topTint: _enum(json, 'topTint', AvatarTint.values, initial.topTint),
+      hatTint: _enum(json, 'hatTint', AvatarTint.values, initial.hatTint),
+    );
+  }
+
+  /// Parses the `npc` object: `npc` (a state name, default rest), `npcX`
+  /// (0..1) and `npcLook` (−1..1), each optional (0); anything else throws a
+  /// [FormatException].
+  static NpcIntent _npc(Object? value) {
+    if (value is! Map<String, Object?>) {
+      throw FormatException('"npc" must be an object, got $value');
+    }
+    for (final String key in value.keys) {
+      if (key != 'npc' && key != 'npcX' && key != 'npcLook') {
+        throw FormatException('Unknown npc key "$key"');
+      }
+    }
+    return NpcIntent(
+      npc: _enum(value, 'npc', NpcState.values, NpcState.rest),
+      npcX: value.containsKey('npcX') ? _number(value, 'npcX', 0, 1) : 0,
+      npcLook: value.containsKey('npcLook')
+          ? _number(value, 'npcLook', -1, 1)
+          : 0,
+    );
+  }
+
+  /// Parses `npc2`: a state name alone (`"react"`; `move` stands halfway,
+  /// `npc2X` 0.5, every other state at the landed spot, 0) or the object of
+  /// [_npc]. Anything else throws a [FormatException].
+  static NpcIntent _npc2(Object? value) {
+    if (value is String) {
+      final NpcState state = _enum(
+        <String, Object?>{'npc': value},
+        'npc',
+        NpcState.values,
+        NpcState.away,
+      );
+      return NpcIntent(npc: state, npcX: state == NpcState.move ? 0.5 : 0);
+    }
+    return _npc(value);
+  }
+
+  /// Parses the `parallax` object: `x` and `y`, each -1..1 (a missing axis
+  /// is 0); anything else throws a [FormatException].
+  static Offset _parallax(Object? value) {
+    if (value is! Map<String, Object?>) {
+      throw FormatException('"parallax" must be an object, got $value');
+    }
+    for (final String key in value.keys) {
+      if (key != 'x' && key != 'y') {
+        throw FormatException('Unknown parallax key "$key"');
+      }
+    }
+    return Offset(
+      value.containsKey('x') ? _number(value, 'x', -1, 1) : 0,
+      value.containsKey('y') ? _number(value, 'y', -1, 1) : 0,
     );
   }
 
@@ -218,7 +367,15 @@ class LabConfig {
       other.accentHueOverride == accentHueOverride &&
       other.glassAlphaScale == glassAlphaScale &&
       other.radiusScaleOverride == radiusScaleOverride &&
-      other.panelCollapsed == panelCollapsed;
+      other.panelCollapsed == panelCollapsed &&
+      other.face == face &&
+      other.prop == prop &&
+      other.parallax == parallax &&
+      other.shot == shot &&
+      other.npc == npc &&
+      other.npc2 == npc2 &&
+      other.topTint == topTint &&
+      other.hatTint == hatTint;
 
   @override
   int get hashCode => Object.hash(
@@ -230,10 +387,266 @@ class LabConfig {
     glassAlphaScale,
     radiusScaleOverride,
     panelCollapsed,
+    face,
+    prop,
+    parallax,
+    shot,
+    npc,
+    npc2,
+    topTint,
+    hatTint,
   );
 
   @override
   String toString() => 'LabConfig(${toJson()})';
+}
+
+/// The lab's face controls (contract v6): every number of a lab face goes by
+/// its `AvatarVM` name. A lab face never auto-blinks (a still pose for
+/// screenshots) and has no nod; its `blinkSerial` is `blink` in JSON.
+abstract final class LabFace {
+  /// The 14 action units, 0..1.
+  static const List<String> actionUnitKeys = AvatarRiveContract.actionUnitProps;
+
+  /// The 14 per-side offsets (viewer's left, then right), −1..1.
+  static const List<String> sideKeys = AvatarRiveContract.actionUnitSideProps;
+
+  /// The speech mouth extras and the head: `lipTuck`, `tongueUp`, `breath`
+  /// (0..1) and `roll` (−1..1).
+  static const List<String> extraKeys = <String>[
+    AvatarRiveContract.propLipTuck,
+    AvatarRiveContract.propTongueUp,
+    AvatarRiveContract.propRoll,
+    AvatarRiveContract.propBreath,
+  ];
+
+  /// Every number of a lab face.
+  static const List<String> numberKeys = <String>[
+    ...actionUnitKeys,
+    ...sideKeys,
+    ...extraKeys,
+  ];
+
+  /// JSON key of the blink count (each increase fires one blink).
+  static const String blinkKey = 'blink';
+
+  /// The pose a lab face starts from: the live face of the lab's avatar
+  /// (no performer, neutral mood).
+  static const FaceFrame base = FaceFrame(autoBlink: false);
+
+  /// The (min, max) of the number [key].
+  static (double, double) range(String key) =>
+      sideKeys.contains(key) || key == AvatarRiveContract.propRoll
+      ? (AvatarRiveContract.sideMin, AvatarRiveContract.sideMax)
+      : (AvatarRiveContract.faceMin, AvatarRiveContract.faceMax);
+
+  /// Every number of [face], by name.
+  static Map<String, double> values(FaceFrame face) {
+    final ActionUnits a = face.au;
+    final List<double> au = <double>[
+      a.browInnerUp,
+      a.browOuterUp,
+      a.browLower,
+      a.lidTighten,
+      a.upperLidRaise,
+      a.cheekRaise,
+      a.noseWrinkle,
+      a.lipCornerPull,
+      a.lipCornerDepress,
+      a.lipStretch,
+      a.lipPucker,
+      a.lipPress,
+      a.jawDrop,
+      a.dimpler,
+    ];
+    final List<double> sides = <double>[
+      ..._sideList(face.left),
+      ..._sideList(face.right),
+    ];
+    return <String, double>{
+      for (int i = 0; i < au.length; i++) actionUnitKeys[i]: au[i],
+      for (int i = 0; i < sides.length; i++) sideKeys[i]: sides[i],
+      AvatarRiveContract.propLipTuck: face.lipTuck,
+      AvatarRiveContract.propTongueUp: face.tongueUp,
+      AvatarRiveContract.propRoll: face.roll,
+      AvatarRiveContract.propBreath: face.breath,
+    };
+  }
+
+  /// A lab face from [values] (missing names are 0).
+  static FaceFrame fromValues(
+    Map<String, double> values, {
+    int blinkSerial = 0,
+  }) {
+    double v(String key) => values[key] ?? 0;
+    final List<double> au = <double>[
+      for (final String k in actionUnitKeys) v(k),
+    ];
+    return FaceFrame(
+      au: ActionUnits(
+        browInnerUp: au[0],
+        browOuterUp: au[1],
+        browLower: au[2],
+        lidTighten: au[3],
+        upperLidRaise: au[4],
+        cheekRaise: au[5],
+        noseWrinkle: au[6],
+        lipCornerPull: au[7],
+        lipCornerDepress: au[8],
+        lipStretch: au[9],
+        lipPucker: au[10],
+        lipPress: au[11],
+        jawDrop: au[12],
+        dimpler: au[13],
+      ),
+      left: _sides(AvatarRiveContract.actionUnitLeftProps.map(v).toList()),
+      right: _sides(AvatarRiveContract.actionUnitRightProps.map(v).toList()),
+      lipTuck: v(AvatarRiveContract.propLipTuck),
+      tongueUp: v(AvatarRiveContract.propTongueUp),
+      roll: v(AvatarRiveContract.propRoll),
+      breath: v(AvatarRiveContract.propBreath),
+      autoBlink: false,
+      blinkSerial: blinkSerial,
+    );
+  }
+
+  /// [face] with the number [key] set to [value].
+  static FaceFrame withValue(FaceFrame face, String key, double value) {
+    if (!numberKeys.contains(key)) {
+      throw ArgumentError.value(key, 'key', 'not a lab face number');
+    }
+    return fromValues(<String, double>{
+      ...values(face),
+      key: value,
+    }, blinkSerial: face.blinkSerial);
+  }
+
+  /// [face] with the AU preset and side offsets of [mood] (the mouth
+  /// extras, roll and breath kept).
+  static FaceFrame withMood(FaceFrame face, AvatarMood mood) {
+    final ({ActionUnitSides left, ActionUnitSides right}) sides = sidesForMood(
+      mood,
+    );
+    return FaceFrame(
+      au: actionUnitsForMood(mood),
+      left: sides.left,
+      right: sides.right,
+      lipTuck: face.lipTuck,
+      tongueUp: face.tongueUp,
+      roll: face.roll,
+      breath: face.breath,
+      autoBlink: false,
+      blinkSerial: face.blinkSerial,
+    );
+  }
+
+  /// Whether [face] wears [mood]'s AU preset and side offsets.
+  static bool hasMood(FaceFrame face, AvatarMood mood) {
+    final ({ActionUnitSides left, ActionUnitSides right}) sides = sidesForMood(
+      mood,
+    );
+    return face.au == actionUnitsForMood(mood) &&
+        face.left == sides.left &&
+        face.right == sides.right;
+  }
+
+  /// [face] with [viseme]'s mouth shape: the jaw, pucker, stretch and press
+  /// AUs, `lipTuck` and `tongueUp` (every other number kept).
+  static FaceFrame withViseme(FaceFrame face, Viseme viseme) {
+    final MouthShape m = MouthShape.forViseme(viseme);
+    return FaceFrame(
+      au: face.au.copyWith(
+        jawDrop: m.jaw,
+        lipPucker: m.pucker,
+        lipStretch: m.stretch,
+        lipPress: m.press,
+      ),
+      left: face.left,
+      right: face.right,
+      lipTuck: m.lipTuck,
+      tongueUp: m.tongueUp,
+      roll: face.roll,
+      breath: face.breath,
+      autoBlink: false,
+      blinkSerial: face.blinkSerial,
+    );
+  }
+
+  /// Whether [face]'s mouth is [viseme]'s shape.
+  static bool hasViseme(FaceFrame face, Viseme viseme) {
+    final MouthShape m = MouthShape.forViseme(viseme);
+    return face.au.jawDrop == m.jaw &&
+        face.au.lipPucker == m.pucker &&
+        face.au.lipStretch == m.stretch &&
+        face.au.lipPress == m.press &&
+        face.lipTuck == m.lipTuck &&
+        face.tongueUp == m.tongueUp;
+  }
+
+  /// [face] asking for one more blink.
+  static FaceFrame withBlink(FaceFrame face) =>
+      fromValues(values(face), blinkSerial: face.blinkSerial + 1);
+
+  /// [face] as JSON: every number by name, plus [blinkKey].
+  static Map<String, Object> toJson(FaceFrame face) => <String, Object>{
+    ...values(face),
+    blinkKey: face.blinkSerial,
+  };
+
+  /// Parses a face JSON object. Missing names are 0; unknown names, wrong
+  /// types and out-of-range values throw a [FormatException].
+  static FaceFrame fromJson(Object? json) {
+    if (json is! Map<String, Object?>) {
+      throw FormatException('"face" must be an object, got $json');
+    }
+    final Map<String, double> parsed = <String, double>{};
+    int blinkSerial = 0;
+    json.forEach((String key, Object? value) {
+      if (key == blinkKey) {
+        if (value is! int || value < 0) {
+          throw FormatException(
+            '"face.$key" must be a whole number >= 0, got $value',
+          );
+        }
+        blinkSerial = value;
+        return;
+      }
+      if (!numberKeys.contains(key)) {
+        throw FormatException('Unknown face key "$key"');
+      }
+      if (value is! num || !value.isFinite) {
+        throw FormatException('"face.$key" must be a number, got $value');
+      }
+      final (double min, double max) = range(key);
+      if (value < min || value > max) {
+        throw FormatException(
+          '"face.$key" must be within $min..$max, got $value',
+        );
+      }
+      parsed[key] = value.toDouble();
+    });
+    return fromValues(parsed, blinkSerial: blinkSerial);
+  }
+
+  static List<double> _sideList(ActionUnitSides s) => <double>[
+    s.browInnerUp,
+    s.browOuterUp,
+    s.browLower,
+    s.lidTighten,
+    s.cheekRaise,
+    s.lipCornerPull,
+    s.lipCornerDepress,
+  ];
+
+  static ActionUnitSides _sides(List<double> v) => ActionUnitSides(
+    browInnerUp: v[0],
+    browOuterUp: v[1],
+    browLower: v[2],
+    lidTighten: v[3],
+    cheekRaise: v[4],
+    lipCornerPull: v[5],
+    lipCornerDepress: v[6],
+  );
 }
 
 AppGlassStyle _scaleFill(AppGlassStyle style, double scale) => AppGlassStyle(

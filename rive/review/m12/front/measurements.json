@@ -1,0 +1,3796 @@
+{
+ "device": "emulator-5554 Medium_Phone API 37, host GPU, 60 Hz, flutter drive --profile",
+ "variants": {
+  "base": "the front as shipped (full render scale)",
+  "none": "front never created (rain still 1 in the back)",
+  "static": "front created, drawn ~0.5 s, then its controller inactive (texture kept, not redrawn)",
+  "frontdry": "front created and drawn every frame with its own rain 0 (draws nothing visible)",
+  "s<N>": "front at N % of the back's RenderResolution.layout scale",
+  "flutter": "front from a second decode of the file with Factory.flutter (no native render target)",
+  "<scene> / <scene>_dry": "rain 0 (no front)"
+ },
+ "runs": {
+  "exp1": {
+   "what": "M11 file; experiment knob: base | none | static | s50 | s25; TIERS=high,ultra SECONDS=6 REPS=1",
+   "uptime": [
+    "UPTIME_BEFORE 11:21  up  1:06, 2 users, load averages: 6.10 7.66 8.09",
+    "UPTIME_AFTER 11:27  up  1:12, 2 users, load averages: 10.74 10.97 9.76"
+   ],
+   "passes": [
+    {
+     "pass": "campfire",
+     "tier": "high",
+     "frames": 397,
+     "build_p50": 11.02,
+     "build_p95": 14.74,
+     "raster_p95": 8.2
+    },
+    {
+     "pass": "campfire_rain1_base",
+     "tier": "high",
+     "frames": 334,
+     "build_p50": 12.26,
+     "build_p95": 25.97,
+     "raster_p95": 8.03
+    },
+    {
+     "pass": "campfire_rain1_none",
+     "tier": "high",
+     "frames": 365,
+     "build_p50": 11.87,
+     "build_p95": 15.98,
+     "raster_p95": 8.02
+    },
+    {
+     "pass": "campfire_rain1_static",
+     "tier": "high",
+     "frames": 338,
+     "build_p50": 12.37,
+     "build_p95": 18.18,
+     "raster_p95": 8.12
+    },
+    {
+     "pass": "campfire_rain1_s50",
+     "tier": "high",
+     "frames": 340,
+     "build_p50": 12.41,
+     "build_p95": 16.95,
+     "raster_p95": 7.93
+    },
+    {
+     "pass": "campfire_rain1_s25",
+     "tier": "high",
+     "frames": 289,
+     "build_p50": 13.39,
+     "build_p95": 25.28,
+     "raster_p95": 10.65
+    },
+    {
+     "pass": "campfire",
+     "tier": "ultra",
+     "frames": 307,
+     "build_p50": 13.05,
+     "build_p95": 25.03,
+     "raster_p95": 11.28
+    },
+    {
+     "pass": "campfire_rain1_base",
+     "tier": "ultra",
+     "frames": 321,
+     "build_p50": 12.59,
+     "build_p95": 19.71,
+     "raster_p95": 8.23
+    },
+    {
+     "pass": "campfire_rain1_none",
+     "tier": "ultra",
+     "frames": 322,
+     "build_p50": 12.43,
+     "build_p95": 19.47,
+     "raster_p95": 8.98
+    },
+    {
+     "pass": "campfire_rain1_static",
+     "tier": "ultra",
+     "frames": 333,
+     "build_p50": 12.2,
+     "build_p95": 19.77,
+     "raster_p95": 9.58
+    },
+    {
+     "pass": "campfire_rain1_s50",
+     "tier": "ultra",
+     "frames": 359,
+     "build_p50": 11.74,
+     "build_p95": 16.29,
+     "raster_p95": 7.92
+    },
+    {
+     "pass": "campfire_rain1_s25",
+     "tier": "ultra",
+     "frames": 302,
+     "build_p50": 13.26,
+     "build_p95": 21.1,
+     "raster_p95": 8.45
+    },
+    {
+     "pass": "beach",
+     "tier": "high",
+     "frames": 355,
+     "build_p50": 11.36,
+     "build_p95": 17.71,
+     "raster_p95": 8.98
+    },
+    {
+     "pass": "beach_rain1_base",
+     "tier": "high",
+     "frames": 190,
+     "build_p50": 18.22,
+     "build_p95": 49.54,
+     "raster_p95": 12.95
+    },
+    {
+     "pass": "beach_rain1_none",
+     "tier": "high",
+     "frames": 328,
+     "build_p50": 11.9,
+     "build_p95": 19.17,
+     "raster_p95": 9.2
+    },
+    {
+     "pass": "beach_rain1_static",
+     "tier": "high",
+     "frames": 338,
+     "build_p50": 11.65,
+     "build_p95": 21.98,
+     "raster_p95": 8.97
+    },
+    {
+     "pass": "beach_rain1_s50",
+     "tier": "high",
+     "frames": 397,
+     "build_p50": 10.64,
+     "build_p95": 13.97,
+     "raster_p95": 9.06
+    },
+    {
+     "pass": "beach_rain1_s25",
+     "tier": "high",
+     "frames": 338,
+     "build_p50": 11.72,
+     "build_p95": 17.8,
+     "raster_p95": 9.46
+    },
+    {
+     "pass": "beach",
+     "tier": "ultra",
+     "frames": 255,
+     "build_p50": 15.05,
+     "build_p95": 27.94,
+     "raster_p95": 8.74
+    },
+    {
+     "pass": "beach_rain1_base",
+     "tier": "ultra",
+     "frames": 293,
+     "build_p50": 13.49,
+     "build_p95": 21.79,
+     "raster_p95": 8.12
+    },
+    {
+     "pass": "beach_rain1_none",
+     "tier": "ultra",
+     "frames": 368,
+     "build_p50": 12.0,
+     "build_p95": 14.93,
+     "raster_p95": 8.13
+    },
+    {
+     "pass": "beach_rain1_static",
+     "tier": "ultra",
+     "frames": 403,
+     "build_p50": 10.88,
+     "build_p95": 13.45,
+     "raster_p95": 8.04
+    },
+    {
+     "pass": "beach_rain1_s50",
+     "tier": "ultra",
+     "frames": 402,
+     "build_p50": 10.77,
+     "build_p95": 13.58,
+     "raster_p95": 8.45
+    },
+    {
+     "pass": "beach_rain1_s25",
+     "tier": "ultra",
+     "frames": 357,
+     "build_p50": 12.06,
+     "build_p95": 15.72,
+     "raster_p95": 8.19
+    }
+   ]
+  },
+  "exp2": {
+   "what": "M11 file; base | none | static | s50 | s70; TIERS=high,ultra SECONDS=5 REPS=3",
+   "uptime": [
+    "UPTIME_BEFORE 11:28  up  1:12, 2 users, load averages: 9.05 10.55 9.66",
+    "UPTIME_AFTER 11:39  up  1:24, 2 users, load averages: 6.99 7.65 8.36"
+   ],
+   "passes": [
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "high",
+     "frames": 299,
+     "build_p50": 11.69,
+     "build_p95": 15.93,
+     "raster_p95": 8.07
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "high",
+     "frames": 217,
+     "build_p50": 16.53,
+     "build_p95": 19.88,
+     "raster_p95": 4.57
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "high",
+     "frames": 237,
+     "build_p50": 14.08,
+     "build_p95": 22.91,
+     "raster_p95": 8.35
+    },
+    {
+     "pass": "campfire_rain1_static_r0",
+     "tier": "high",
+     "frames": 269,
+     "build_p50": 12.21,
+     "build_p95": 16.11,
+     "raster_p95": 7.46
+    },
+    {
+     "pass": "campfire_rain1_s50_r0",
+     "tier": "high",
+     "frames": 200,
+     "build_p50": 17.42,
+     "build_p95": 20.48,
+     "raster_p95": 2.97
+    },
+    {
+     "pass": "campfire_rain1_s70_r0",
+     "tier": "high",
+     "frames": 192,
+     "build_p50": 17.72,
+     "build_p95": 21.74,
+     "raster_p95": 3.08
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "high",
+     "frames": 293,
+     "build_p50": 11.82,
+     "build_p95": 15.51,
+     "raster_p95": 7.5
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "high",
+     "frames": 190,
+     "build_p50": 17.61,
+     "build_p95": 20.25,
+     "raster_p95": 3.46
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "high",
+     "frames": 309,
+     "build_p50": 11.36,
+     "build_p95": 14.04,
+     "raster_p95": 8.54
+    },
+    {
+     "pass": "campfire_rain1_static_r1",
+     "tier": "high",
+     "frames": 303,
+     "build_p50": 11.36,
+     "build_p95": 14.0,
+     "raster_p95": 8.54
+    },
+    {
+     "pass": "campfire_rain1_s50_r1",
+     "tier": "high",
+     "frames": 191,
+     "build_p50": 18.87,
+     "build_p95": 24.06,
+     "raster_p95": 4.49
+    },
+    {
+     "pass": "campfire_rain1_s70_r1",
+     "tier": "high",
+     "frames": 210,
+     "build_p50": 17.08,
+     "build_p95": 20.52,
+     "raster_p95": 3.81
+    },
+    {
+     "pass": "campfire_dry_r2",
+     "tier": "high",
+     "frames": 298,
+     "build_p50": 11.06,
+     "build_p95": 14.95,
+     "raster_p95": 9.04
+    },
+    {
+     "pass": "campfire_rain1_base_r2",
+     "tier": "high",
+     "frames": 181,
+     "build_p50": 21.24,
+     "build_p95": 26.41,
+     "raster_p95": 4.23
+    },
+    {
+     "pass": "campfire_rain1_none_r2",
+     "tier": "high",
+     "frames": 279,
+     "build_p50": 12.3,
+     "build_p95": 15.99,
+     "raster_p95": 8.01
+    },
+    {
+     "pass": "campfire_rain1_static_r2",
+     "tier": "high",
+     "frames": 300,
+     "build_p50": 11.77,
+     "build_p95": 14.9,
+     "raster_p95": 8.45
+    },
+    {
+     "pass": "campfire_rain1_s50_r2",
+     "tier": "high",
+     "frames": 201,
+     "build_p50": 17.18,
+     "build_p95": 19.73,
+     "raster_p95": 3.36
+    },
+    {
+     "pass": "campfire_rain1_s70_r2",
+     "tier": "high",
+     "frames": 186,
+     "build_p50": 18.88,
+     "build_p95": 21.47,
+     "raster_p95": 2.6
+    },
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "ultra",
+     "frames": 316,
+     "build_p50": 10.36,
+     "build_p95": 13.64,
+     "raster_p95": 9.06
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 202,
+     "build_p50": 17.39,
+     "build_p95": 20.41,
+     "raster_p95": 4.42
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 240,
+     "build_p50": 13.92,
+     "build_p95": 18.75,
+     "raster_p95": 6.95
+    },
+    {
+     "pass": "campfire_rain1_static_r0",
+     "tier": "ultra",
+     "frames": 285,
+     "build_p50": 11.96,
+     "build_p95": 17.33,
+     "raster_p95": 7.83
+    },
+    {
+     "pass": "campfire_rain1_s50_r0",
+     "tier": "ultra",
+     "frames": 198,
+     "build_p50": 16.84,
+     "build_p95": 19.39,
+     "raster_p95": 3.34
+    },
+    {
+     "pass": "campfire_rain1_s70_r0",
+     "tier": "ultra",
+     "frames": 193,
+     "build_p50": 17.21,
+     "build_p95": 20.81,
+     "raster_p95": 3.24
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "ultra",
+     "frames": 313,
+     "build_p50": 11.32,
+     "build_p95": 14.92,
+     "raster_p95": 8.46
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 203,
+     "build_p50": 16.73,
+     "build_p95": 19.53,
+     "raster_p95": 4.16
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 305,
+     "build_p50": 11.35,
+     "build_p95": 15.22,
+     "raster_p95": 8.23
+    },
+    {
+     "pass": "campfire_rain1_static_r1",
+     "tier": "ultra",
+     "frames": 234,
+     "build_p50": 14.86,
+     "build_p95": 19.43,
+     "raster_p95": 6.93
+    },
+    {
+     "pass": "campfire_rain1_s50_r1",
+     "tier": "ultra",
+     "frames": 194,
+     "build_p50": 17.33,
+     "build_p95": 21.01,
+     "raster_p95": 3.49
+    },
+    {
+     "pass": "campfire_rain1_s70_r1",
+     "tier": "ultra",
+     "frames": 200,
+     "build_p50": 16.94,
+     "build_p95": 19.73,
+     "raster_p95": 3.54
+    },
+    {
+     "pass": "campfire_dry_r2",
+     "tier": "ultra",
+     "frames": 326,
+     "build_p50": 10.6,
+     "build_p95": 13.73,
+     "raster_p95": 8.64
+    },
+    {
+     "pass": "campfire_rain1_base_r2",
+     "tier": "ultra",
+     "frames": 223,
+     "build_p50": 16.05,
+     "build_p95": 19.28,
+     "raster_p95": 4.85
+    },
+    {
+     "pass": "campfire_rain1_none_r2",
+     "tier": "ultra",
+     "frames": 278,
+     "build_p50": 11.93,
+     "build_p95": 19.81,
+     "raster_p95": 7.95
+    },
+    {
+     "pass": "campfire_rain1_static_r2",
+     "tier": "ultra",
+     "frames": 308,
+     "build_p50": 11.09,
+     "build_p95": 15.94,
+     "raster_p95": 8.89
+    },
+    {
+     "pass": "campfire_rain1_s50_r2",
+     "tier": "ultra",
+     "frames": 182,
+     "build_p50": 19.66,
+     "build_p95": 25.99,
+     "raster_p95": 3.3
+    },
+    {
+     "pass": "campfire_rain1_s70_r2",
+     "tier": "ultra",
+     "frames": 195,
+     "build_p50": 16.98,
+     "build_p95": 20.18,
+     "raster_p95": 4.04
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "high",
+     "frames": 306,
+     "build_p50": 10.73,
+     "build_p95": 17.84,
+     "raster_p95": 8.89
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "high",
+     "frames": 222,
+     "build_p50": 15.13,
+     "build_p95": 22.36,
+     "raster_p95": 5.7
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "high",
+     "frames": 314,
+     "build_p50": 10.67,
+     "build_p95": 15.04,
+     "raster_p95": 8.43
+    },
+    {
+     "pass": "beach_rain1_static_r0",
+     "tier": "high",
+     "frames": 337,
+     "build_p50": 10.09,
+     "build_p95": 12.43,
+     "raster_p95": 8.93
+    },
+    {
+     "pass": "beach_rain1_s50_r0",
+     "tier": "high",
+     "frames": 193,
+     "build_p50": 18.25,
+     "build_p95": 23.94,
+     "raster_p95": 3.97
+    },
+    {
+     "pass": "beach_rain1_s70_r0",
+     "tier": "high",
+     "frames": 179,
+     "build_p50": 18.31,
+     "build_p95": 25.17,
+     "raster_p95": 3.49
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "high",
+     "frames": 314,
+     "build_p50": 10.64,
+     "build_p95": 14.3,
+     "raster_p95": 8.55
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "high",
+     "frames": 192,
+     "build_p50": 17.52,
+     "build_p95": 25.5,
+     "raster_p95": 6.14
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "high",
+     "frames": 288,
+     "build_p50": 11.69,
+     "build_p95": 17.3,
+     "raster_p95": 8.35
+    },
+    {
+     "pass": "beach_rain1_static_r1",
+     "tier": "high",
+     "frames": 296,
+     "build_p50": 11.34,
+     "build_p95": 15.49,
+     "raster_p95": 8.18
+    },
+    {
+     "pass": "beach_rain1_s50_r1",
+     "tier": "high",
+     "frames": 194,
+     "build_p50": 17.47,
+     "build_p95": 27.08,
+     "raster_p95": 5.3
+    },
+    {
+     "pass": "beach_rain1_s70_r1",
+     "tier": "high",
+     "frames": 185,
+     "build_p50": 18.48,
+     "build_p95": 24.33,
+     "raster_p95": 4.03
+    },
+    {
+     "pass": "beach_dry_r2",
+     "tier": "high",
+     "frames": 238,
+     "build_p50": 13.38,
+     "build_p95": 23.56,
+     "raster_p95": 8.36
+    },
+    {
+     "pass": "beach_rain1_base_r2",
+     "tier": "high",
+     "frames": 226,
+     "build_p50": 15.54,
+     "build_p95": 20.02,
+     "raster_p95": 5.08
+    },
+    {
+     "pass": "beach_rain1_none_r2",
+     "tier": "high",
+     "frames": 282,
+     "build_p50": 11.51,
+     "build_p95": 17.98,
+     "raster_p95": 8.13
+    },
+    {
+     "pass": "beach_rain1_static_r2",
+     "tier": "high",
+     "frames": 225,
+     "build_p50": 12.69,
+     "build_p95": 23.55,
+     "raster_p95": 9.13
+    },
+    {
+     "pass": "beach_rain1_s50_r2",
+     "tier": "high",
+     "frames": 201,
+     "build_p50": 16.77,
+     "build_p95": 21.16,
+     "raster_p95": 3.87
+    },
+    {
+     "pass": "beach_rain1_s70_r2",
+     "tier": "high",
+     "frames": 202,
+     "build_p50": 16.72,
+     "build_p95": 24.81,
+     "raster_p95": 4.93
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "ultra",
+     "frames": 286,
+     "build_p50": 10.67,
+     "build_p95": 19.28,
+     "raster_p95": 9.22
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 172,
+     "build_p50": 20.07,
+     "build_p95": 33.94,
+     "raster_p95": 7.19
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 315,
+     "build_p50": 10.98,
+     "build_p95": 14.75,
+     "raster_p95": 8.76
+    },
+    {
+     "pass": "beach_rain1_static_r0",
+     "tier": "ultra",
+     "frames": 315,
+     "build_p50": 10.73,
+     "build_p95": 14.25,
+     "raster_p95": 8.83
+    },
+    {
+     "pass": "beach_rain1_s50_r0",
+     "tier": "ultra",
+     "frames": 217,
+     "build_p50": 16.32,
+     "build_p95": 22.41,
+     "raster_p95": 4.57
+    },
+    {
+     "pass": "beach_rain1_s70_r0",
+     "tier": "ultra",
+     "frames": 189,
+     "build_p50": 17.66,
+     "build_p95": 21.34,
+     "raster_p95": 3.56
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "ultra",
+     "frames": 343,
+     "build_p50": 10.4,
+     "build_p95": 12.82,
+     "raster_p95": 8.61
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 197,
+     "build_p50": 16.56,
+     "build_p95": 28.01,
+     "raster_p95": 6.04
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 231,
+     "build_p50": 13.85,
+     "build_p95": 19.47,
+     "raster_p95": 7.39
+    },
+    {
+     "pass": "beach_rain1_static_r1",
+     "tier": "ultra",
+     "frames": 299,
+     "build_p50": 11.42,
+     "build_p95": 15.68,
+     "raster_p95": 8.57
+    },
+    {
+     "pass": "beach_rain1_s50_r1",
+     "tier": "ultra",
+     "frames": 220,
+     "build_p50": 16.11,
+     "build_p95": 19.93,
+     "raster_p95": 4.93
+    },
+    {
+     "pass": "beach_rain1_s70_r1",
+     "tier": "ultra",
+     "frames": 230,
+     "build_p50": 15.5,
+     "build_p95": 19.3,
+     "raster_p95": 4.95
+    },
+    {
+     "pass": "beach_dry_r2",
+     "tier": "ultra",
+     "frames": 324,
+     "build_p50": 10.9,
+     "build_p95": 13.78,
+     "raster_p95": 8.39
+    },
+    {
+     "pass": "beach_rain1_base_r2",
+     "tier": "ultra",
+     "frames": 239,
+     "build_p50": 15.05,
+     "build_p95": 18.08,
+     "raster_p95": 5.19
+    },
+    {
+     "pass": "beach_rain1_none_r2",
+     "tier": "ultra",
+     "frames": 291,
+     "build_p50": 10.96,
+     "build_p95": 16.73,
+     "raster_p95": 8.81
+    },
+    {
+     "pass": "beach_rain1_static_r2",
+     "tier": "ultra",
+     "frames": 264,
+     "build_p50": 13.41,
+     "build_p95": 17.11,
+     "raster_p95": 6.87
+    },
+    {
+     "pass": "beach_rain1_s50_r2",
+     "tier": "ultra",
+     "frames": 179,
+     "build_p50": 21.67,
+     "build_p95": 26.96,
+     "raster_p95": 3.45
+    },
+    {
+     "pass": "beach_rain1_s70_r2",
+     "tier": "ultra",
+     "frames": 183,
+     "build_p50": 20.69,
+     "build_p95": 23.02,
+     "raster_p95": 2.66
+    }
+   ]
+  },
+  "exp3": {
+   "what": "M11 file; base | none | frontdry | s10; TIERS=ultra SECONDS=5 REPS=3",
+   "uptime": [
+    "UPTIME_BEFORE 11:40  up  1:24, 2 users, load averages: 5.72 7.24 8.17",
+    "UPTIME_AFTER 11:45  up  1:30, 2 users, load averages: 7.72 7.63 8.05"
+   ],
+   "passes": [
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "ultra",
+     "frames": 354,
+     "build_p50": 9.37,
+     "build_p95": 11.44,
+     "raster_p95": 9.76
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 331,
+     "build_p50": 9.78,
+     "build_p95": 13.59,
+     "raster_p95": 9.61
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 325,
+     "build_p50": 10.03,
+     "build_p95": 15.35,
+     "raster_p95": 9.54
+    },
+    {
+     "pass": "campfire_rain1_frontdry_r0",
+     "tier": "ultra",
+     "frames": 301,
+     "build_p50": 11.28,
+     "build_p95": 17.81,
+     "raster_p95": 9.32
+    },
+    {
+     "pass": "campfire_rain1_s10_r0",
+     "tier": "ultra",
+     "frames": 339,
+     "build_p50": 10.41,
+     "build_p95": 14.01,
+     "raster_p95": 9.25
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "ultra",
+     "frames": 332,
+     "build_p50": 10.27,
+     "build_p95": 16.39,
+     "raster_p95": 9.09
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 325,
+     "build_p50": 10.79,
+     "build_p95": 15.18,
+     "raster_p95": 9.58
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 295,
+     "build_p50": 11.26,
+     "build_p95": 16.99,
+     "raster_p95": 9.54
+    },
+    {
+     "pass": "campfire_rain1_frontdry_r1",
+     "tier": "ultra",
+     "frames": 359,
+     "build_p50": 9.64,
+     "build_p95": 11.8,
+     "raster_p95": 9.85
+    },
+    {
+     "pass": "campfire_rain1_s10_r1",
+     "tier": "ultra",
+     "frames": 353,
+     "build_p50": 9.83,
+     "build_p95": 12.13,
+     "raster_p95": 9.82
+    },
+    {
+     "pass": "campfire_dry_r2",
+     "tier": "ultra",
+     "frames": 360,
+     "build_p50": 9.36,
+     "build_p95": 10.84,
+     "raster_p95": 9.47
+    },
+    {
+     "pass": "campfire_rain1_base_r2",
+     "tier": "ultra",
+     "frames": 355,
+     "build_p50": 9.37,
+     "build_p95": 10.86,
+     "raster_p95": 9.2
+    },
+    {
+     "pass": "campfire_rain1_none_r2",
+     "tier": "ultra",
+     "frames": 359,
+     "build_p50": 9.88,
+     "build_p95": 12.39,
+     "raster_p95": 9.91
+    },
+    {
+     "pass": "campfire_rain1_frontdry_r2",
+     "tier": "ultra",
+     "frames": 273,
+     "build_p50": 12.22,
+     "build_p95": 18.93,
+     "raster_p95": 7.55
+    },
+    {
+     "pass": "campfire_rain1_s10_r2",
+     "tier": "ultra",
+     "frames": 315,
+     "build_p50": 11.15,
+     "build_p95": 15.2,
+     "raster_p95": 9.38
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "ultra",
+     "frames": 356,
+     "build_p50": 9.48,
+     "build_p95": 11.95,
+     "raster_p95": 9.64
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 357,
+     "build_p50": 9.86,
+     "build_p95": 11.61,
+     "raster_p95": 9.55
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 340,
+     "build_p50": 9.54,
+     "build_p95": 12.79,
+     "raster_p95": 9.41
+    },
+    {
+     "pass": "beach_rain1_frontdry_r0",
+     "tier": "ultra",
+     "frames": 356,
+     "build_p50": 9.91,
+     "build_p95": 12.26,
+     "raster_p95": 9.6
+    },
+    {
+     "pass": "beach_rain1_s10_r0",
+     "tier": "ultra",
+     "frames": 302,
+     "build_p50": 10.63,
+     "build_p95": 16.2,
+     "raster_p95": 9.3
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "ultra",
+     "frames": 275,
+     "build_p50": 11.9,
+     "build_p95": 21.54,
+     "raster_p95": 8.48
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 338,
+     "build_p50": 10.16,
+     "build_p95": 12.85,
+     "raster_p95": 9.68
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 334,
+     "build_p50": 10.79,
+     "build_p95": 13.73,
+     "raster_p95": 8.88
+    },
+    {
+     "pass": "beach_rain1_frontdry_r1",
+     "tier": "ultra",
+     "frames": 328,
+     "build_p50": 11.11,
+     "build_p95": 14.1,
+     "raster_p95": 8.49
+    },
+    {
+     "pass": "beach_rain1_s10_r1",
+     "tier": "ultra",
+     "frames": 319,
+     "build_p50": 10.87,
+     "build_p95": 16.32,
+     "raster_p95": 8.89
+    },
+    {
+     "pass": "beach_dry_r2",
+     "tier": "ultra",
+     "frames": 344,
+     "build_p50": 10.68,
+     "build_p95": 13.49,
+     "raster_p95": 9.0
+    },
+    {
+     "pass": "beach_rain1_base_r2",
+     "tier": "ultra",
+     "frames": 316,
+     "build_p50": 10.55,
+     "build_p95": 15.88,
+     "raster_p95": 8.76
+    },
+    {
+     "pass": "beach_rain1_none_r2",
+     "tier": "ultra",
+     "frames": 293,
+     "build_p50": 11.83,
+     "build_p95": 16.38,
+     "raster_p95": 8.42
+    },
+    {
+     "pass": "beach_rain1_frontdry_r2",
+     "tier": "ultra",
+     "frames": 355,
+     "build_p50": 9.98,
+     "build_p95": 11.73,
+     "raster_p95": 9.19
+    },
+    {
+     "pass": "beach_rain1_s10_r2",
+     "tier": "ultra",
+     "frames": 313,
+     "build_p50": 11.27,
+     "build_p95": 15.74,
+     "raster_p95": 8.88
+    }
+   ]
+  },
+  "exp4": {
+   "what": "M11 file; base | none | static; TIERS=high,ultra SECONDS=6 REPS=4; host sampler",
+   "uptime": [
+    "UPTIME_BEFORE 11:46  up  1:31, 2 users, load averages: 11.41 8.86 8.49",
+    "UPTIME_AFTER 11:58  up  1:42, 2 users, load averages: 10.92 10.26 9.41"
+   ],
+   "passes": [
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "high",
+     "frames": 330,
+     "build_p50": 12.69,
+     "build_p95": 18.36,
+     "raster_p95": 8.86,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.2
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "high",
+     "frames": 339,
+     "build_p50": 12.35,
+     "build_p95": 19.01,
+     "raster_p95": 9.2,
+     "host_rive_cli_busy": 0.86,
+     "host_load1": 9.2
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "high",
+     "frames": 338,
+     "build_p50": 11.24,
+     "build_p95": 20.48,
+     "raster_p95": 9.15,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.5
+    },
+    {
+     "pass": "campfire_rain1_static_r0",
+     "tier": "high",
+     "frames": 345,
+     "build_p50": 11.64,
+     "build_p95": 18.9,
+     "raster_p95": 9.06,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.1
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "high",
+     "frames": 414,
+     "build_p50": 10.23,
+     "build_p95": 12.81,
+     "raster_p95": 9.8,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.6
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "high",
+     "frames": 414,
+     "build_p50": 10.28,
+     "build_p95": 12.65,
+     "raster_p95": 9.29,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "high",
+     "frames": 371,
+     "build_p50": 11.49,
+     "build_p95": 15.3,
+     "raster_p95": 9.04,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "campfire_rain1_static_r1",
+     "tier": "high",
+     "frames": 378,
+     "build_p50": 10.86,
+     "build_p95": 15.42,
+     "raster_p95": 8.8,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.0
+    },
+    {
+     "pass": "campfire_dry_r2",
+     "tier": "high",
+     "frames": 311,
+     "build_p50": 12.44,
+     "build_p95": 23.42,
+     "raster_p95": 9.09,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.6
+    },
+    {
+     "pass": "campfire_rain1_base_r2",
+     "tier": "high",
+     "frames": 330,
+     "build_p50": 12.55,
+     "build_p95": 19.19,
+     "raster_p95": 8.38,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.2
+    },
+    {
+     "pass": "campfire_rain1_none_r2",
+     "tier": "high",
+     "frames": 271,
+     "build_p50": 14.27,
+     "build_p95": 25.43,
+     "raster_p95": 9.29,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.0
+    },
+    {
+     "pass": "campfire_rain1_static_r2",
+     "tier": "high",
+     "frames": 207,
+     "build_p50": 16.91,
+     "build_p95": 32.2,
+     "raster_p95": 9.47,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.5
+    },
+    {
+     "pass": "campfire_dry_r3",
+     "tier": "high",
+     "frames": 212,
+     "build_p50": 17.1,
+     "build_p95": 28.95,
+     "raster_p95": 8.64,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.5
+    },
+    {
+     "pass": "campfire_rain1_base_r3",
+     "tier": "high",
+     "frames": 331,
+     "build_p50": 12.34,
+     "build_p95": 18.25,
+     "raster_p95": 8.43,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.0
+    },
+    {
+     "pass": "campfire_rain1_none_r3",
+     "tier": "high",
+     "frames": 303,
+     "build_p50": 12.91,
+     "build_p95": 21.12,
+     "raster_p95": 8.76,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.3
+    },
+    {
+     "pass": "campfire_rain1_static_r3",
+     "tier": "high",
+     "frames": 285,
+     "build_p50": 13.13,
+     "build_p95": 25.47,
+     "raster_p95": 8.72,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.9
+    },
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "ultra",
+     "frames": 294,
+     "build_p50": 13.47,
+     "build_p95": 20.93,
+     "raster_p95": 8.67,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.8
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 306,
+     "build_p50": 13.48,
+     "build_p95": 20.83,
+     "raster_p95": 8.01,
+     "host_rive_cli_busy": 0.86,
+     "host_load1": 9.4
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 278,
+     "build_p50": 14.3,
+     "build_p95": 21.16,
+     "raster_p95": 7.33,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.3
+    },
+    {
+     "pass": "campfire_rain1_static_r0",
+     "tier": "ultra",
+     "frames": 340,
+     "build_p50": 12.23,
+     "build_p95": 18.9,
+     "raster_p95": 8.13,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "ultra",
+     "frames": 367,
+     "build_p50": 11.66,
+     "build_p95": 16.16,
+     "raster_p95": 8.92,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.3
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 364,
+     "build_p50": 11.92,
+     "build_p95": 15.75,
+     "raster_p95": 8.59,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.7
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 305,
+     "build_p50": 13.33,
+     "build_p95": 20.5,
+     "raster_p95": 8.32,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.5
+    },
+    {
+     "pass": "campfire_rain1_static_r1",
+     "tier": "ultra",
+     "frames": 332,
+     "build_p50": 12.46,
+     "build_p95": 19.85,
+     "raster_p95": 8.72,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.9
+    },
+    {
+     "pass": "campfire_dry_r2",
+     "tier": "ultra",
+     "frames": 290,
+     "build_p50": 13.86,
+     "build_p95": 18.68,
+     "raster_p95": 7.0,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.1
+    },
+    {
+     "pass": "campfire_rain1_base_r2",
+     "tier": "ultra",
+     "frames": 280,
+     "build_p50": 13.45,
+     "build_p95": 23.32,
+     "raster_p95": 8.52,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.7
+    },
+    {
+     "pass": "campfire_rain1_none_r2",
+     "tier": "ultra",
+     "frames": 235,
+     "build_p50": 15.77,
+     "build_p95": 34.59,
+     "raster_p95": 12.11,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.2
+    },
+    {
+     "pass": "campfire_rain1_static_r2",
+     "tier": "ultra",
+     "frames": 290,
+     "build_p50": 13.66,
+     "build_p95": 20.13,
+     "raster_p95": 7.79,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.8
+    },
+    {
+     "pass": "campfire_dry_r3",
+     "tier": "ultra",
+     "frames": 278,
+     "build_p50": 14.11,
+     "build_p95": 20.62,
+     "raster_p95": 8.03,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.3
+    },
+    {
+     "pass": "campfire_rain1_base_r3",
+     "tier": "ultra",
+     "frames": 257,
+     "build_p50": 14.81,
+     "build_p95": 28.5,
+     "raster_p95": 9.12,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.8
+    },
+    {
+     "pass": "campfire_rain1_none_r3",
+     "tier": "ultra",
+     "frames": 165,
+     "build_p50": 24.36,
+     "build_p95": 46.88,
+     "raster_p95": 17.58,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.2
+    },
+    {
+     "pass": "campfire_rain1_static_r3",
+     "tier": "ultra",
+     "frames": 267,
+     "build_p50": 14.44,
+     "build_p95": 21.12,
+     "raster_p95": 7.12,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.0
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "high",
+     "frames": 267,
+     "build_p50": 14.69,
+     "build_p95": 26.31,
+     "raster_p95": 8.64,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.3
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "high",
+     "frames": 341,
+     "build_p50": 12.06,
+     "build_p95": 17.66,
+     "raster_p95": 8.61,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 13.3
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "high",
+     "frames": 221,
+     "build_p50": 17.46,
+     "build_p95": 30.16,
+     "raster_p95": 9.38,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 13.4
+    },
+    {
+     "pass": "beach_rain1_static_r0",
+     "tier": "high",
+     "frames": 354,
+     "build_p50": 12.15,
+     "build_p95": 17.11,
+     "raster_p95": 8.65,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.5
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "high",
+     "frames": 270,
+     "build_p50": 13.74,
+     "build_p95": 20.89,
+     "raster_p95": 8.23,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.5
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "high",
+     "frames": 263,
+     "build_p50": 15.16,
+     "build_p95": 23.71,
+     "raster_p95": 8.53,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.2
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "high",
+     "frames": 356,
+     "build_p50": 11.95,
+     "build_p95": 16.82,
+     "raster_p95": 9.1,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.0
+    },
+    {
+     "pass": "beach_rain1_static_r1",
+     "tier": "high",
+     "frames": 354,
+     "build_p50": 11.99,
+     "build_p95": 17.14,
+     "raster_p95": 8.63,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.0
+    },
+    {
+     "pass": "beach_dry_r2",
+     "tier": "high",
+     "frames": 307,
+     "build_p50": 12.77,
+     "build_p95": 25.02,
+     "raster_p95": 9.03,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.2
+    },
+    {
+     "pass": "beach_rain1_base_r2",
+     "tier": "high",
+     "frames": 266,
+     "build_p50": 14.89,
+     "build_p95": 25.78,
+     "raster_p95": 8.19,
+     "host_rive_cli_busy": 0.86,
+     "host_load1": 11.4
+    },
+    {
+     "pass": "beach_rain1_none_r2",
+     "tier": "high",
+     "frames": 256,
+     "build_p50": 15.11,
+     "build_p95": 25.38,
+     "raster_p95": 8.16,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.8
+    },
+    {
+     "pass": "beach_rain1_static_r2",
+     "tier": "high",
+     "frames": 267,
+     "build_p50": 14.35,
+     "build_p95": 21.07,
+     "raster_p95": 7.67,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.0
+    },
+    {
+     "pass": "beach_dry_r3",
+     "tier": "high",
+     "frames": 322,
+     "build_p50": 12.9,
+     "build_p95": 18.0,
+     "raster_p95": 7.98,
+     "host_rive_cli_busy": 0.83,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "beach_rain1_base_r3",
+     "tier": "high",
+     "frames": 312,
+     "build_p50": 12.91,
+     "build_p95": 19.05,
+     "raster_p95": 7.99,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.0
+    },
+    {
+     "pass": "beach_rain1_none_r3",
+     "tier": "high",
+     "frames": 355,
+     "build_p50": 11.92,
+     "build_p95": 15.86,
+     "raster_p95": 8.56,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.8
+    },
+    {
+     "pass": "beach_rain1_static_r3",
+     "tier": "high",
+     "frames": 348,
+     "build_p50": 11.99,
+     "build_p95": 17.49,
+     "raster_p95": 9.21,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.7
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "ultra",
+     "frames": 386,
+     "build_p50": 11.32,
+     "build_p95": 15.68,
+     "raster_p95": 9.53,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.4
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 271,
+     "build_p50": 14.4,
+     "build_p95": 19.54,
+     "raster_p95": 6.33,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.1
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 354,
+     "build_p50": 12.09,
+     "build_p95": 16.66,
+     "raster_p95": 8.79,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.2
+    },
+    {
+     "pass": "beach_rain1_static_r0",
+     "tier": "ultra",
+     "frames": 364,
+     "build_p50": 11.85,
+     "build_p95": 15.14,
+     "raster_p95": 8.54,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.5
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "ultra",
+     "frames": 397,
+     "build_p50": 10.95,
+     "build_p95": 14.34,
+     "raster_p95": 9.3,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.0
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 373,
+     "build_p50": 11.64,
+     "build_p95": 14.8,
+     "raster_p95": 8.67,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.6
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 393,
+     "build_p50": 11.34,
+     "build_p95": 14.49,
+     "raster_p95": 8.9,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.9
+    },
+    {
+     "pass": "beach_rain1_static_r1",
+     "tier": "ultra",
+     "frames": 329,
+     "build_p50": 11.86,
+     "build_p95": 18.34,
+     "raster_p95": 8.21,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.8
+    },
+    {
+     "pass": "beach_dry_r2",
+     "tier": "ultra",
+     "frames": 322,
+     "build_p50": 12.59,
+     "build_p95": 19.43,
+     "raster_p95": 8.8,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.3
+    },
+    {
+     "pass": "beach_rain1_base_r2",
+     "tier": "ultra",
+     "frames": 387,
+     "build_p50": 11.69,
+     "build_p95": 14.6,
+     "raster_p95": 8.96,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "beach_rain1_none_r2",
+     "tier": "ultra",
+     "frames": 376,
+     "build_p50": 11.78,
+     "build_p95": 14.69,
+     "raster_p95": 8.88,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.8
+    },
+    {
+     "pass": "beach_rain1_static_r2",
+     "tier": "ultra",
+     "frames": 344,
+     "build_p50": 12.54,
+     "build_p95": 16.13,
+     "raster_p95": 8.65,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.2
+    },
+    {
+     "pass": "beach_dry_r3",
+     "tier": "ultra",
+     "frames": 385,
+     "build_p50": 10.71,
+     "build_p95": 14.95,
+     "raster_p95": 8.74,
+     "host_rive_cli_busy": 0.71,
+     "host_load1": 9.1
+    },
+    {
+     "pass": "beach_rain1_base_r3",
+     "tier": "ultra",
+     "frames": 371,
+     "build_p50": 10.88,
+     "build_p95": 15.62,
+     "raster_p95": 8.58,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.9
+    },
+    {
+     "pass": "beach_rain1_none_r3",
+     "tier": "ultra",
+     "frames": 260,
+     "build_p50": 13.46,
+     "build_p95": 22.16,
+     "raster_p95": 6.96,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.6
+    },
+    {
+     "pass": "beach_rain1_static_r3",
+     "tier": "ultra",
+     "frames": 294,
+     "build_p50": 13.72,
+     "build_p95": 20.05,
+     "raster_p95": 7.16,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.5
+    }
+   ]
+  },
+  "exp5": {
+   "what": "M11 file; base | none | flutter | s50; TIERS=high,ultra SECONDS=6 REPS=3; host sampler",
+   "uptime": [
+    "UPTIME_BEFORE 11:58  up  1:42, 2 users, load averages: 9.46 9.97 9.32",
+    "UPTIME_AFTER 12:09  up  1:53, 2 users, load averages: 7.84 9.02 9.25"
+   ],
+   "passes": [
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "high",
+     "frames": 343,
+     "build_p50": 11.14,
+     "build_p95": 20.82,
+     "raster_p95": 8.69,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.4
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "high",
+     "frames": 335,
+     "build_p50": 11.77,
+     "build_p95": 17.44,
+     "raster_p95": 8.13,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.3
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "high",
+     "frames": 247,
+     "build_p50": 13.5,
+     "build_p95": 35.36,
+     "raster_p95": 9.13,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.1
+    },
+    {
+     "pass": "campfire_rain1_flutter_r0",
+     "tier": "high",
+     "frames": 299,
+     "build_p50": 13.1,
+     "build_p95": 20.97,
+     "raster_p95": 8.03,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.5
+    },
+    {
+     "pass": "campfire_rain1_s50_r0",
+     "tier": "high",
+     "frames": 322,
+     "build_p50": 12.7,
+     "build_p95": 16.94,
+     "raster_p95": 7.93,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.0
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "high",
+     "frames": 229,
+     "build_p50": 15.68,
+     "build_p95": 39.1,
+     "raster_p95": 11.94,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.4
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "high",
+     "frames": 317,
+     "build_p50": 12.7,
+     "build_p95": 19.74,
+     "raster_p95": 8.47,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.9
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "high",
+     "frames": 284,
+     "build_p50": 12.85,
+     "build_p95": 27.11,
+     "raster_p95": 9.0,
+     "host_rive_cli_busy": 0.43,
+     "host_load1": 10.4
+    },
+    {
+     "pass": "campfire_rain1_flutter_r1",
+     "tier": "high",
+     "frames": 356,
+     "build_p50": 11.85,
+     "build_p95": 16.85,
+     "raster_p95": 8.86,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.4
+    },
+    {
+     "pass": "campfire_rain1_s50_r1",
+     "tier": "high",
+     "frames": 346,
+     "build_p50": 11.56,
+     "build_p95": 18.17,
+     "raster_p95": 8.86,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.5
+    },
+    {
+     "pass": "campfire_dry_r2",
+     "tier": "high",
+     "frames": 377,
+     "build_p50": 11.34,
+     "build_p95": 15.45,
+     "raster_p95": 9.23,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.6
+    },
+    {
+     "pass": "campfire_rain1_base_r2",
+     "tier": "high",
+     "frames": 255,
+     "build_p50": 14.58,
+     "build_p95": 25.56,
+     "raster_p95": 8.69,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.6
+    },
+    {
+     "pass": "campfire_rain1_none_r2",
+     "tier": "high",
+     "frames": 263,
+     "build_p50": 14.04,
+     "build_p95": 26.87,
+     "raster_p95": 8.02,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.0
+    },
+    {
+     "pass": "campfire_rain1_flutter_r2",
+     "tier": "high",
+     "frames": 334,
+     "build_p50": 11.68,
+     "build_p95": 20.31,
+     "raster_p95": 8.33,
+     "host_rive_cli_busy": 0.57,
+     "host_load1": 9.1
+    },
+    {
+     "pass": "campfire_rain1_s50_r2",
+     "tier": "high",
+     "frames": 385,
+     "build_p50": 10.6,
+     "build_p95": 14.39,
+     "raster_p95": 8.63,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.9
+    },
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "ultra",
+     "frames": 371,
+     "build_p50": 10.45,
+     "build_p95": 15.85,
+     "raster_p95": 9.36,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.8
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 377,
+     "build_p50": 10.85,
+     "build_p95": 14.12,
+     "raster_p95": 8.43,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.6
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 372,
+     "build_p50": 10.58,
+     "build_p95": 14.34,
+     "raster_p95": 8.59,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.0
+    },
+    {
+     "pass": "campfire_rain1_flutter_r0",
+     "tier": "ultra",
+     "frames": 347,
+     "build_p50": 12.01,
+     "build_p95": 16.87,
+     "raster_p95": 7.92,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.9
+    },
+    {
+     "pass": "campfire_rain1_s50_r0",
+     "tier": "ultra",
+     "frames": 386,
+     "build_p50": 10.67,
+     "build_p95": 13.31,
+     "raster_p95": 8.51,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.9
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "ultra",
+     "frames": 397,
+     "build_p50": 10.57,
+     "build_p95": 13.78,
+     "raster_p95": 8.86,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.9
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 380,
+     "build_p50": 10.75,
+     "build_p95": 14.23,
+     "raster_p95": 8.44,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.7
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 371,
+     "build_p50": 10.56,
+     "build_p95": 15.66,
+     "raster_p95": 8.72,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.3
+    },
+    {
+     "pass": "campfire_rain1_flutter_r1",
+     "tier": "ultra",
+     "frames": 332,
+     "build_p50": 12.56,
+     "build_p95": 19.21,
+     "raster_p95": 8.03,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.2
+    },
+    {
+     "pass": "campfire_rain1_s50_r1",
+     "tier": "ultra",
+     "frames": 252,
+     "build_p50": 15.57,
+     "build_p95": 20.54,
+     "raster_p95": 6.75,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.0
+    },
+    {
+     "pass": "campfire_dry_r2",
+     "tier": "ultra",
+     "frames": 321,
+     "build_p50": 12.48,
+     "build_p95": 19.23,
+     "raster_p95": 8.76,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 8.6
+    },
+    {
+     "pass": "campfire_rain1_base_r2",
+     "tier": "ultra",
+     "frames": 334,
+     "build_p50": 12.45,
+     "build_p95": 18.64,
+     "raster_p95": 8.39,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.1
+    },
+    {
+     "pass": "campfire_rain1_none_r2",
+     "tier": "ultra",
+     "frames": 341,
+     "build_p50": 11.78,
+     "build_p95": 19.21,
+     "raster_p95": 8.49,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.5
+    },
+    {
+     "pass": "campfire_rain1_flutter_r2",
+     "tier": "ultra",
+     "frames": 277,
+     "build_p50": 13.82,
+     "build_p95": 22.97,
+     "raster_p95": 8.41,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.8
+    },
+    {
+     "pass": "campfire_rain1_s50_r2",
+     "tier": "ultra",
+     "frames": 247,
+     "build_p50": 13.9,
+     "build_p95": 38.53,
+     "raster_p95": 9.14,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.4
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "high",
+     "frames": 351,
+     "build_p50": 12.28,
+     "build_p95": 16.27,
+     "raster_p95": 7.47,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.2
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "high",
+     "frames": 363,
+     "build_p50": 10.77,
+     "build_p95": 17.0,
+     "raster_p95": 8.66,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.0
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "high",
+     "frames": 376,
+     "build_p50": 10.69,
+     "build_p95": 14.43,
+     "raster_p95": 8.69,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.1
+    },
+    {
+     "pass": "beach_rain1_flutter_r0",
+     "tier": "high",
+     "frames": 410,
+     "build_p50": 10.18,
+     "build_p95": 12.65,
+     "raster_p95": 8.86,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.6
+    },
+    {
+     "pass": "beach_rain1_s50_r0",
+     "tier": "high",
+     "frames": 390,
+     "build_p50": 10.45,
+     "build_p95": 13.8,
+     "raster_p95": 8.73,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.1
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "high",
+     "frames": 393,
+     "build_p50": 10.64,
+     "build_p95": 13.67,
+     "raster_p95": 8.87,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.4
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "high",
+     "frames": 339,
+     "build_p50": 12.22,
+     "build_p95": 20.44,
+     "raster_p95": 7.96,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.9
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "high",
+     "frames": 318,
+     "build_p50": 12.14,
+     "build_p95": 20.26,
+     "raster_p95": 8.41,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.3
+    },
+    {
+     "pass": "beach_rain1_flutter_r1",
+     "tier": "high",
+     "frames": 328,
+     "build_p50": 12.12,
+     "build_p95": 21.18,
+     "raster_p95": 8.49,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 13.0
+    },
+    {
+     "pass": "beach_rain1_s50_r1",
+     "tier": "high",
+     "frames": 365,
+     "build_p50": 11.77,
+     "build_p95": 14.96,
+     "raster_p95": 8.45,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.7
+    },
+    {
+     "pass": "beach_dry_r2",
+     "tier": "high",
+     "frames": 394,
+     "build_p50": 11.03,
+     "build_p95": 14.42,
+     "raster_p95": 8.98,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.9
+    },
+    {
+     "pass": "beach_rain1_base_r2",
+     "tier": "high",
+     "frames": 367,
+     "build_p50": 11.32,
+     "build_p95": 15.27,
+     "raster_p95": 8.71,
+     "host_rive_cli_busy": 0.83,
+     "host_load1": 11.3
+    },
+    {
+     "pass": "beach_rain1_none_r2",
+     "tier": "high",
+     "frames": 345,
+     "build_p50": 11.96,
+     "build_p95": 17.38,
+     "raster_p95": 8.62,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.7
+    },
+    {
+     "pass": "beach_rain1_flutter_r2",
+     "tier": "high",
+     "frames": 353,
+     "build_p50": 11.64,
+     "build_p95": 17.6,
+     "raster_p95": 8.06,
+     "host_rive_cli_busy": 0.43,
+     "host_load1": 10.4
+    },
+    {
+     "pass": "beach_rain1_s50_r2",
+     "tier": "high",
+     "frames": 397,
+     "build_p50": 10.55,
+     "build_p95": 13.28,
+     "raster_p95": 8.62,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.9
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "ultra",
+     "frames": 412,
+     "build_p50": 9.88,
+     "build_p95": 12.4,
+     "raster_p95": 9.36,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 411,
+     "build_p50": 10.12,
+     "build_p95": 12.62,
+     "raster_p95": 8.84,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.4
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 406,
+     "build_p50": 10.66,
+     "build_p95": 13.08,
+     "raster_p95": 8.26,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.5
+    },
+    {
+     "pass": "beach_rain1_flutter_r0",
+     "tier": "ultra",
+     "frames": 417,
+     "build_p50": 10.43,
+     "build_p95": 12.17,
+     "raster_p95": 8.59,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.0
+    },
+    {
+     "pass": "beach_rain1_s50_r0",
+     "tier": "ultra",
+     "frames": 380,
+     "build_p50": 12.58,
+     "build_p95": 14.54,
+     "raster_p95": 6.66,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.0
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "ultra",
+     "frames": 412,
+     "build_p50": 9.99,
+     "build_p95": 12.08,
+     "raster_p95": 8.72,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.4
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 398,
+     "build_p50": 10.39,
+     "build_p95": 12.9,
+     "raster_p95": 8.76,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.4
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 409,
+     "build_p50": 10.12,
+     "build_p95": 12.33,
+     "raster_p95": 8.77,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.5
+    },
+    {
+     "pass": "beach_rain1_flutter_r1",
+     "tier": "ultra",
+     "frames": 375,
+     "build_p50": 11.88,
+     "build_p95": 15.19,
+     "raster_p95": 8.48,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 7.2
+    },
+    {
+     "pass": "beach_rain1_s50_r1",
+     "tier": "ultra",
+     "frames": 301,
+     "build_p50": 13.48,
+     "build_p95": 19.24,
+     "raster_p95": 7.95,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 7.6
+    },
+    {
+     "pass": "beach_dry_r2",
+     "tier": "ultra",
+     "frames": 287,
+     "build_p50": 13.5,
+     "build_p95": 18.92,
+     "raster_p95": 7.65,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 7.9
+    },
+    {
+     "pass": "beach_rain1_base_r2",
+     "tier": "ultra",
+     "frames": 323,
+     "build_p50": 12.75,
+     "build_p95": 18.21,
+     "raster_p95": 7.8,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 7.5
+    },
+    {
+     "pass": "beach_rain1_none_r2",
+     "tier": "ultra",
+     "frames": 283,
+     "build_p50": 14.05,
+     "build_p95": 20.5,
+     "raster_p95": 7.71,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 7.3
+    },
+    {
+     "pass": "beach_rain1_flutter_r2",
+     "tier": "ultra",
+     "frames": 382,
+     "build_p50": 10.8,
+     "build_p95": 14.96,
+     "raster_p95": 8.3,
+     "host_rive_cli_busy": 0.67,
+     "host_load1": 7.6
+    },
+    {
+     "pass": "beach_rain1_s50_r2",
+     "tier": "ultra",
+     "frames": 403,
+     "build_p50": 10.47,
+     "build_p95": 12.75,
+     "raster_p95": 8.47,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.6
+    }
+   ]
+  },
+  "after1": {
+   "what": "M12 file (splashes drawn); base | none | flutter; TIERS=low,high,ultra SECONDS=6 REPS=2; host sampler",
+   "uptime": [
+    "UPTIME_BEFORE 12:31  up  2:15, 1 user, load averages: 6.34 6.02 6.92",
+    "UPTIME_AFTER 12:48  up  2:32, 1 user, load averages: 5.74 7.23 8.07"
+   ],
+   "passes": [
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "low",
+     "frames": 322,
+     "build_p50": 12.11,
+     "build_p95": 20.39,
+     "raster_p95": 9.57,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.0
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "low",
+     "frames": 324,
+     "build_p50": 12.62,
+     "build_p95": 20.32,
+     "raster_p95": 9.36,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.8
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "low",
+     "frames": 227,
+     "build_p50": 16.82,
+     "build_p95": 34.57,
+     "raster_p95": 11.13,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.4
+    },
+    {
+     "pass": "campfire_rain1_flutter_r0",
+     "tier": "low",
+     "frames": 303,
+     "build_p50": 12.66,
+     "build_p95": 21.68,
+     "raster_p95": 9.69,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.7
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "low",
+     "frames": 286,
+     "build_p50": 13.19,
+     "build_p95": 25.49,
+     "raster_p95": 9.91,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.1
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "low",
+     "frames": 267,
+     "build_p50": 14.37,
+     "build_p95": 26.05,
+     "raster_p95": 10.42,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.6
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "low",
+     "frames": 277,
+     "build_p50": 13.43,
+     "build_p95": 29.77,
+     "raster_p95": 10.04,
+     "host_rive_cli_busy": 0.83,
+     "host_load1": 12.0
+    },
+    {
+     "pass": "campfire_rain1_flutter_r1",
+     "tier": "low",
+     "frames": 267,
+     "build_p50": 14.29,
+     "build_p95": 27.81,
+     "raster_p95": 10.69,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.1
+    },
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "high",
+     "frames": 271,
+     "build_p50": 14.04,
+     "build_p95": 24.88,
+     "raster_p95": 9.43,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 16.8
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "high",
+     "frames": 205,
+     "build_p50": 18.81,
+     "build_p95": 34.55,
+     "raster_p95": 11.98,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 16.6
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "high",
+     "frames": 221,
+     "build_p50": 16.66,
+     "build_p95": 30.67,
+     "raster_p95": 11.43,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 16.6
+    },
+    {
+     "pass": "campfire_rain1_flutter_r0",
+     "tier": "high",
+     "frames": 206,
+     "build_p50": 17.66,
+     "build_p95": 29.16,
+     "raster_p95": 10.89,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 17.3
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "high",
+     "frames": 321,
+     "build_p50": 11.73,
+     "build_p95": 19.06,
+     "raster_p95": 8.92,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 16.5
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "high",
+     "frames": 271,
+     "build_p50": 14.37,
+     "build_p95": 21.67,
+     "raster_p95": 9.02,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 15.1
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "high",
+     "frames": 257,
+     "build_p50": 14.56,
+     "build_p95": 22.21,
+     "raster_p95": 8.39,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 14.2
+    },
+    {
+     "pass": "campfire_rain1_flutter_r1",
+     "tier": "high",
+     "frames": 224,
+     "build_p50": 17.13,
+     "build_p95": 29.03,
+     "raster_p95": 11.21,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 13.9
+    },
+    {
+     "pass": "campfire_dry_r0",
+     "tier": "ultra",
+     "frames": 261,
+     "build_p50": 14.67,
+     "build_p95": 21.11,
+     "raster_p95": 9.04,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 13.3
+    },
+    {
+     "pass": "campfire_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 250,
+     "build_p50": 15.64,
+     "build_p95": 24.16,
+     "raster_p95": 9.54,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.3
+    },
+    {
+     "pass": "campfire_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 209,
+     "build_p50": 18.57,
+     "build_p95": 26.99,
+     "raster_p95": 9.63,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.3
+    },
+    {
+     "pass": "campfire_rain1_flutter_r0",
+     "tier": "ultra",
+     "frames": 241,
+     "build_p50": 15.85,
+     "build_p95": 23.7,
+     "raster_p95": 9.63,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 11.7
+    },
+    {
+     "pass": "campfire_dry_r1",
+     "tier": "ultra",
+     "frames": 344,
+     "build_p50": 11.03,
+     "build_p95": 17.93,
+     "raster_p95": 9.42,
+     "host_rive_cli_busy": 0.83,
+     "host_load1": 11.1
+    },
+    {
+     "pass": "campfire_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 296,
+     "build_p50": 12.96,
+     "build_p95": 21.15,
+     "raster_p95": 8.81,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.9
+    },
+    {
+     "pass": "campfire_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 347,
+     "build_p50": 10.9,
+     "build_p95": 16.22,
+     "raster_p95": 9.17,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.5
+    },
+    {
+     "pass": "campfire_rain1_flutter_r1",
+     "tier": "ultra",
+     "frames": 363,
+     "build_p50": 10.6,
+     "build_p95": 15.23,
+     "raster_p95": 9.02,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.5
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "low",
+     "frames": 247,
+     "build_p50": 15.95,
+     "build_p95": 24.29,
+     "raster_p95": 8.61,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.2
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "low",
+     "frames": 313,
+     "build_p50": 12.32,
+     "build_p95": 21.13,
+     "raster_p95": 8.3,
+     "host_rive_cli_busy": 0.83,
+     "host_load1": 10.5
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "low",
+     "frames": 287,
+     "build_p50": 13.04,
+     "build_p95": 25.09,
+     "raster_p95": 9.48,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 12.8
+    },
+    {
+     "pass": "beach_rain1_flutter_r0",
+     "tier": "low",
+     "frames": 297,
+     "build_p50": 13.06,
+     "build_p95": 22.19,
+     "raster_p95": 9.84,
+     "host_rive_cli_busy": 0.71,
+     "host_load1": 12.4
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "low",
+     "frames": 407,
+     "build_p50": 9.91,
+     "build_p95": 13.41,
+     "raster_p95": 9.21,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.5
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "low",
+     "frames": 393,
+     "build_p50": 10.23,
+     "build_p95": 13.99,
+     "raster_p95": 9.82,
+     "host_rive_cli_busy": 0.57,
+     "host_load1": 10.7
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "low",
+     "frames": 247,
+     "build_p50": 16.52,
+     "build_p95": 24.42,
+     "raster_p95": 8.02,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.2
+    },
+    {
+     "pass": "beach_rain1_flutter_r1",
+     "tier": "low",
+     "frames": 345,
+     "build_p50": 11.42,
+     "build_p95": 17.06,
+     "raster_p95": 9.02,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.8
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "high",
+     "frames": 370,
+     "build_p50": 10.37,
+     "build_p95": 15.6,
+     "raster_p95": 9.66,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.8
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "high",
+     "frames": 290,
+     "build_p50": 13.16,
+     "build_p95": 20.95,
+     "raster_p95": 8.81,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.4
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "high",
+     "frames": 339,
+     "build_p50": 11.01,
+     "build_p95": 18.32,
+     "raster_p95": 9.21,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.3
+    },
+    {
+     "pass": "beach_rain1_flutter_r0",
+     "tier": "high",
+     "frames": 354,
+     "build_p50": 10.76,
+     "build_p95": 15.83,
+     "raster_p95": 9.52,
+     "host_rive_cli_busy": 0.86,
+     "host_load1": 10.0
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "high",
+     "frames": 262,
+     "build_p50": 14.6,
+     "build_p95": 23.99,
+     "raster_p95": 8.71,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.9
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "high",
+     "frames": 277,
+     "build_p50": 12.42,
+     "build_p95": 23.56,
+     "raster_p95": 9.22,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.1
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "high",
+     "frames": 322,
+     "build_p50": 11.61,
+     "build_p95": 19.75,
+     "raster_p95": 8.97,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "beach_rain1_flutter_r1",
+     "tier": "high",
+     "frames": 314,
+     "build_p50": 12.18,
+     "build_p95": 18.87,
+     "raster_p95": 9.06,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 9.4
+    },
+    {
+     "pass": "beach_dry_r0",
+     "tier": "ultra",
+     "frames": 318,
+     "build_p50": 11.84,
+     "build_p95": 20.75,
+     "raster_p95": 9.76,
+     "host_rive_cli_busy": 0.86,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "beach_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 368,
+     "build_p50": 10.32,
+     "build_p95": 14.07,
+     "raster_p95": 9.23,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.1
+    },
+    {
+     "pass": "beach_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 191,
+     "build_p50": 19.89,
+     "build_p95": 41.72,
+     "raster_p95": 14.03,
+     "host_rive_cli_busy": 0.43,
+     "host_load1": 9.6
+    },
+    {
+     "pass": "beach_rain1_flutter_r0",
+     "tier": "ultra",
+     "frames": 294,
+     "build_p50": 12.64,
+     "build_p95": 25.18,
+     "raster_p95": 8.89,
+     "host_rive_cli_busy": 1.0,
+     "host_load1": 10.6
+    },
+    {
+     "pass": "beach_dry_r1",
+     "tier": "ultra",
+     "frames": 396,
+     "build_p50": 10.09,
+     "build_p95": 12.55,
+     "raster_p95": 8.91,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.4
+    },
+    {
+     "pass": "beach_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 393,
+     "build_p50": 10.14,
+     "build_p95": 13.63,
+     "raster_p95": 9.23,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.5
+    },
+    {
+     "pass": "beach_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 372,
+     "build_p50": 10.62,
+     "build_p95": 14.88,
+     "raster_p95": 9.16,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.2
+    },
+    {
+     "pass": "beach_rain1_flutter_r1",
+     "tier": "ultra",
+     "frames": 310,
+     "build_p50": 12.04,
+     "build_p95": 22.87,
+     "raster_p95": 9.08,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.3
+    },
+    {
+     "pass": "rooftop_dry_r0",
+     "tier": "low",
+     "frames": 357,
+     "build_p50": 11.41,
+     "build_p95": 19.0,
+     "raster_p95": 9.48,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.3
+    },
+    {
+     "pass": "rooftop_rain1_base_r0",
+     "tier": "low",
+     "frames": 340,
+     "build_p50": 12.28,
+     "build_p95": 17.85,
+     "raster_p95": 8.44,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.5
+    },
+    {
+     "pass": "rooftop_rain1_none_r0",
+     "tier": "low",
+     "frames": 401,
+     "build_p50": 10.39,
+     "build_p95": 13.49,
+     "raster_p95": 8.96,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.0
+    },
+    {
+     "pass": "rooftop_rain1_flutter_r0",
+     "tier": "low",
+     "frames": 399,
+     "build_p50": 10.56,
+     "build_p95": 14.06,
+     "raster_p95": 8.95,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.2
+    },
+    {
+     "pass": "rooftop_dry_r1",
+     "tier": "low",
+     "frames": 409,
+     "build_p50": 10.3,
+     "build_p95": 13.01,
+     "raster_p95": 9.02,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.8
+    },
+    {
+     "pass": "rooftop_rain1_base_r1",
+     "tier": "low",
+     "frames": 399,
+     "build_p50": 10.35,
+     "build_p95": 13.09,
+     "raster_p95": 8.91,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.6
+    },
+    {
+     "pass": "rooftop_rain1_none_r1",
+     "tier": "low",
+     "frames": 407,
+     "build_p50": 9.96,
+     "build_p95": 12.51,
+     "raster_p95": 9.17,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.5
+    },
+    {
+     "pass": "rooftop_rain1_flutter_r1",
+     "tier": "low",
+     "frames": 336,
+     "build_p50": 12.94,
+     "build_p95": 17.09,
+     "raster_p95": 7.29,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.4
+    },
+    {
+     "pass": "rooftop_dry_r0",
+     "tier": "high",
+     "frames": 354,
+     "build_p50": 10.65,
+     "build_p95": 18.7,
+     "raster_p95": 9.09,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.6
+    },
+    {
+     "pass": "rooftop_rain1_base_r0",
+     "tier": "high",
+     "frames": 405,
+     "build_p50": 9.94,
+     "build_p95": 11.94,
+     "raster_p95": 8.88,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.2
+    },
+    {
+     "pass": "rooftop_rain1_none_r0",
+     "tier": "high",
+     "frames": 394,
+     "build_p50": 10.09,
+     "build_p95": 12.75,
+     "raster_p95": 8.99,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 10.2
+    },
+    {
+     "pass": "rooftop_rain1_flutter_r0",
+     "tier": "high",
+     "frames": 396,
+     "build_p50": 9.97,
+     "build_p95": 12.35,
+     "raster_p95": 9.07,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.7
+    },
+    {
+     "pass": "rooftop_dry_r1",
+     "tier": "high",
+     "frames": 414,
+     "build_p50": 9.99,
+     "build_p95": 11.89,
+     "raster_p95": 9.05,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.2
+    },
+    {
+     "pass": "rooftop_rain1_base_r1",
+     "tier": "high",
+     "frames": 326,
+     "build_p50": 12.32,
+     "build_p95": 16.23,
+     "raster_p95": 8.2,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.6
+    },
+    {
+     "pass": "rooftop_rain1_none_r1",
+     "tier": "high",
+     "frames": 296,
+     "build_p50": 13.26,
+     "build_p95": 18.39,
+     "raster_p95": 6.97,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.1
+    },
+    {
+     "pass": "rooftop_rain1_flutter_r1",
+     "tier": "high",
+     "frames": 244,
+     "build_p50": 15.45,
+     "build_p95": 22.96,
+     "raster_p95": 8.11,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.9
+    },
+    {
+     "pass": "rooftop_dry_r0",
+     "tier": "ultra",
+     "frames": 261,
+     "build_p50": 14.2,
+     "build_p95": 20.23,
+     "raster_p95": 7.43,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.5
+    },
+    {
+     "pass": "rooftop_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 300,
+     "build_p50": 13.51,
+     "build_p95": 17.91,
+     "raster_p95": 7.15,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.5
+    },
+    {
+     "pass": "rooftop_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 335,
+     "build_p50": 12.43,
+     "build_p95": 15.68,
+     "raster_p95": 6.77,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.2
+    },
+    {
+     "pass": "rooftop_rain1_flutter_r0",
+     "tier": "ultra",
+     "frames": 352,
+     "build_p50": 11.91,
+     "build_p95": 15.94,
+     "raster_p95": 7.48,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.7
+    },
+    {
+     "pass": "rooftop_dry_r1",
+     "tier": "ultra",
+     "frames": 277,
+     "build_p50": 13.93,
+     "build_p95": 20.71,
+     "raster_p95": 9.78,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.9
+    },
+    {
+     "pass": "rooftop_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 367,
+     "build_p50": 11.9,
+     "build_p95": 15.36,
+     "raster_p95": 7.33,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.9
+    },
+    {
+     "pass": "rooftop_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 341,
+     "build_p50": 12.15,
+     "build_p95": 15.15,
+     "raster_p95": 7.25,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.3
+    },
+    {
+     "pass": "rooftop_rain1_flutter_r1",
+     "tier": "ultra",
+     "frames": 306,
+     "build_p50": 13.21,
+     "build_p95": 17.07,
+     "raster_p95": 7.27,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.2
+    },
+    {
+     "pass": "forestCabin_dry_r0",
+     "tier": "low",
+     "frames": 389,
+     "build_p50": 11.99,
+     "build_p95": 14.77,
+     "raster_p95": 7.31,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.4
+    },
+    {
+     "pass": "forestCabin_rain1_base_r0",
+     "tier": "low",
+     "frames": 388,
+     "build_p50": 11.83,
+     "build_p95": 14.58,
+     "raster_p95": 7.15,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.4
+    },
+    {
+     "pass": "forestCabin_rain1_none_r0",
+     "tier": "low",
+     "frames": 346,
+     "build_p50": 12.43,
+     "build_p95": 16.13,
+     "raster_p95": 7.12,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.2
+    },
+    {
+     "pass": "forestCabin_rain1_flutter_r0",
+     "tier": "low",
+     "frames": 394,
+     "build_p50": 11.93,
+     "build_p95": 14.58,
+     "raster_p95": 7.04,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.4
+    },
+    {
+     "pass": "forestCabin_dry_r1",
+     "tier": "low",
+     "frames": 391,
+     "build_p50": 11.79,
+     "build_p95": 14.49,
+     "raster_p95": 7.44,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.1
+    },
+    {
+     "pass": "forestCabin_rain1_base_r1",
+     "tier": "low",
+     "frames": 354,
+     "build_p50": 12.49,
+     "build_p95": 16.45,
+     "raster_p95": 7.12,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.1
+    },
+    {
+     "pass": "forestCabin_rain1_none_r1",
+     "tier": "low",
+     "frames": 376,
+     "build_p50": 11.86,
+     "build_p95": 15.34,
+     "raster_p95": 7.43,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.4
+    },
+    {
+     "pass": "forestCabin_rain1_flutter_r1",
+     "tier": "low",
+     "frames": 374,
+     "build_p50": 12.16,
+     "build_p95": 15.49,
+     "raster_p95": 7.22,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.4
+    },
+    {
+     "pass": "forestCabin_dry_r0",
+     "tier": "high",
+     "frames": 321,
+     "build_p50": 12.97,
+     "build_p95": 16.03,
+     "raster_p95": 6.94,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.3
+    },
+    {
+     "pass": "forestCabin_rain1_base_r0",
+     "tier": "high",
+     "frames": 354,
+     "build_p50": 11.95,
+     "build_p95": 14.8,
+     "raster_p95": 7.28,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.6
+    },
+    {
+     "pass": "forestCabin_rain1_none_r0",
+     "tier": "high",
+     "frames": 367,
+     "build_p50": 11.78,
+     "build_p95": 14.79,
+     "raster_p95": 7.19,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.3
+    },
+    {
+     "pass": "forestCabin_rain1_flutter_r0",
+     "tier": "high",
+     "frames": 305,
+     "build_p50": 13.34,
+     "build_p95": 16.82,
+     "raster_p95": 6.93,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.2
+    },
+    {
+     "pass": "forestCabin_dry_r1",
+     "tier": "high",
+     "frames": 372,
+     "build_p50": 11.69,
+     "build_p95": 15.17,
+     "raster_p95": 7.41,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.0
+    },
+    {
+     "pass": "forestCabin_rain1_base_r1",
+     "tier": "high",
+     "frames": 364,
+     "build_p50": 11.74,
+     "build_p95": 15.04,
+     "raster_p95": 7.27,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.1
+    },
+    {
+     "pass": "forestCabin_rain1_none_r1",
+     "tier": "high",
+     "frames": 318,
+     "build_p50": 12.74,
+     "build_p95": 16.16,
+     "raster_p95": 7.28,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.8
+    },
+    {
+     "pass": "forestCabin_rain1_flutter_r1",
+     "tier": "high",
+     "frames": 358,
+     "build_p50": 11.74,
+     "build_p95": 15.08,
+     "raster_p95": 7.36,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.3
+    },
+    {
+     "pass": "forestCabin_dry_r0",
+     "tier": "ultra",
+     "frames": 363,
+     "build_p50": 11.71,
+     "build_p95": 15.14,
+     "raster_p95": 7.51,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.2
+    },
+    {
+     "pass": "forestCabin_rain1_base_r0",
+     "tier": "ultra",
+     "frames": 357,
+     "build_p50": 12.02,
+     "build_p95": 15.74,
+     "raster_p95": 7.19,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.2
+    },
+    {
+     "pass": "forestCabin_rain1_none_r0",
+     "tier": "ultra",
+     "frames": 353,
+     "build_p50": 12.03,
+     "build_p95": 15.33,
+     "raster_p95": 7.57,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.3
+    },
+    {
+     "pass": "forestCabin_rain1_flutter_r0",
+     "tier": "ultra",
+     "frames": 340,
+     "build_p50": 12.03,
+     "build_p95": 15.68,
+     "raster_p95": 7.12,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.2
+    },
+    {
+     "pass": "forestCabin_dry_r1",
+     "tier": "ultra",
+     "frames": 350,
+     "build_p50": 12.14,
+     "build_p95": 15.82,
+     "raster_p95": 6.99,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.3
+    },
+    {
+     "pass": "forestCabin_rain1_base_r1",
+     "tier": "ultra",
+     "frames": 316,
+     "build_p50": 12.98,
+     "build_p95": 16.02,
+     "raster_p95": 6.74,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.7
+    },
+    {
+     "pass": "forestCabin_rain1_none_r1",
+     "tier": "ultra",
+     "frames": 351,
+     "build_p50": 12.03,
+     "build_p95": 15.65,
+     "raster_p95": 7.25,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.6
+    },
+    {
+     "pass": "forestCabin_rain1_flutter_r1",
+     "tier": "ultra",
+     "frames": 359,
+     "build_p50": 11.98,
+     "build_p95": 14.8,
+     "raster_p95": 7.38,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.8
+    }
+   ]
+  },
+  "final1": {
+   "what": "M12 file, final code (no knob), harness REPS=3 TIERS=low,high,ultra SECONDS=6; stopped during forestCabin: another app (a separate `flutter run` of fr.yofardev.run_life) took the emulator's foreground at ~13:09, rooftop's passes are disturbed by it",
+   "uptime": [
+    "UPTIME_BEFORE 12:49  up  2:33, 1 user, load averages: 4.22 6.58 7.78",
+    "UPTIME_AFTER 13:18  up  3:03, 1 user, load averages: 6.70 6.42 7.98",
+    "UPTIME_AFTER (killed at 13:12) 13:19  up  3:03, 1 user, load averages: 5.87 6.25 7.90"
+   ],
+   "passes": [
+    {
+     "pass": "campfire_r0",
+     "tier": "low",
+     "frames": 382,
+     "build_p50": 10.48,
+     "build_p95": 13.49,
+     "raster_p95": 8.65,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.0
+    },
+    {
+     "pass": "campfire_rain1_r0",
+     "tier": "low",
+     "frames": 369,
+     "build_p50": 10.49,
+     "build_p95": 13.06,
+     "raster_p95": 8.61,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.0
+    },
+    {
+     "pass": "campfire_r1",
+     "tier": "low",
+     "frames": 333,
+     "build_p50": 10.93,
+     "build_p95": 19.2,
+     "raster_p95": 9.35,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.0
+    },
+    {
+     "pass": "campfire_rain1_r1",
+     "tier": "low",
+     "frames": 336,
+     "build_p50": 11.13,
+     "build_p95": 16.99,
+     "raster_p95": 9.26,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.1
+    },
+    {
+     "pass": "campfire_r2",
+     "tier": "low",
+     "frames": 357,
+     "build_p50": 10.65,
+     "build_p95": 15.26,
+     "raster_p95": 8.95,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.6
+    },
+    {
+     "pass": "campfire_rain1_r2",
+     "tier": "low",
+     "frames": 362,
+     "build_p50": 10.66,
+     "build_p95": 14.21,
+     "raster_p95": 8.8,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.0
+    },
+    {
+     "pass": "campfire_r0",
+     "tier": "high",
+     "frames": 318,
+     "build_p50": 11.15,
+     "build_p95": 17.5,
+     "raster_p95": 9.17,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.9
+    },
+    {
+     "pass": "campfire_rain1_r0",
+     "tier": "high",
+     "frames": 242,
+     "build_p50": 16.71,
+     "build_p95": 20.92,
+     "raster_p95": 3.67,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.1
+    },
+    {
+     "pass": "campfire_r1",
+     "tier": "high",
+     "frames": 372,
+     "build_p50": 10.23,
+     "build_p95": 12.56,
+     "raster_p95": 8.6,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.9
+    },
+    {
+     "pass": "campfire_rain1_r1",
+     "tier": "high",
+     "frames": 219,
+     "build_p50": 17.46,
+     "build_p95": 22.29,
+     "raster_p95": 3.75,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.9
+    },
+    {
+     "pass": "campfire_r2",
+     "tier": "high",
+     "frames": 372,
+     "build_p50": 10.44,
+     "build_p95": 13.44,
+     "raster_p95": 8.68,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.0
+    },
+    {
+     "pass": "campfire_rain1_r2",
+     "tier": "high",
+     "frames": 232,
+     "build_p50": 16.72,
+     "build_p95": 20.47,
+     "raster_p95": 3.73,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.0
+    },
+    {
+     "pass": "campfire_r0",
+     "tier": "ultra",
+     "frames": 273,
+     "build_p50": 13.95,
+     "build_p95": 16.68,
+     "raster_p95": 8.95,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.9
+    },
+    {
+     "pass": "campfire_rain1_r0",
+     "tier": "ultra",
+     "frames": 222,
+     "build_p50": 17.49,
+     "build_p95": 20.43,
+     "raster_p95": 3.85,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.6
+    },
+    {
+     "pass": "campfire_r1",
+     "tier": "ultra",
+     "frames": 367,
+     "build_p50": 10.27,
+     "build_p95": 13.59,
+     "raster_p95": 8.95,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.6
+    },
+    {
+     "pass": "campfire_rain1_r1",
+     "tier": "ultra",
+     "frames": 225,
+     "build_p50": 17.2,
+     "build_p95": 19.89,
+     "raster_p95": 3.69,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.5
+    },
+    {
+     "pass": "campfire_r2",
+     "tier": "ultra",
+     "frames": 315,
+     "build_p50": 11.72,
+     "build_p95": 16.9,
+     "raster_p95": 8.93,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 4.8
+    },
+    {
+     "pass": "campfire_rain1_r2",
+     "tier": "ultra",
+     "frames": 229,
+     "build_p50": 17.16,
+     "build_p95": 21.21,
+     "raster_p95": 4.08,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.0
+    },
+    {
+     "pass": "beach_r0",
+     "tier": "low",
+     "frames": 269,
+     "build_p50": 14.74,
+     "build_p95": 19.35,
+     "raster_p95": 8.36,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 5.8
+    },
+    {
+     "pass": "beach_rain1_r0",
+     "tier": "low",
+     "frames": 359,
+     "build_p50": 10.71,
+     "build_p95": 14.23,
+     "raster_p95": 8.58,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.4
+    },
+    {
+     "pass": "beach_r1",
+     "tier": "low",
+     "frames": 391,
+     "build_p50": 10.41,
+     "build_p95": 13.22,
+     "raster_p95": 8.52,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.3
+    },
+    {
+     "pass": "beach_rain1_r1",
+     "tier": "low",
+     "frames": 340,
+     "build_p50": 11.24,
+     "build_p95": 16.45,
+     "raster_p95": 8.81,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 6.1
+    },
+    {
+     "pass": "beach_r2",
+     "tier": "low",
+     "frames": 271,
+     "build_p50": 13.19,
+     "build_p95": 24.28,
+     "raster_p95": 11.17,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 7.3
+    },
+    {
+     "pass": "beach_rain1_r2",
+     "tier": "low",
+     "frames": 241,
+     "build_p50": 13.63,
+     "build_p95": 39.16,
+     "raster_p95": 15.45,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.9
+    },
+    {
+     "pass": "beach_r0",
+     "tier": "high",
+     "frames": 341,
+     "build_p50": 10.64,
+     "build_p95": 15.2,
+     "raster_p95": 8.61,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.7
+    },
+    {
+     "pass": "beach_rain1_r0",
+     "tier": "high",
+     "frames": 199,
+     "build_p50": 22.71,
+     "build_p95": 30.81,
+     "raster_p95": 5.43,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.3
+    },
+    {
+     "pass": "beach_r1",
+     "tier": "high",
+     "frames": 365,
+     "build_p50": 10.35,
+     "build_p95": 13.14,
+     "raster_p95": 9.19,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 9.2
+    },
+    {
+     "pass": "beach_rain1_r1",
+     "tier": "high",
+     "frames": 239,
+     "build_p50": 16.64,
+     "build_p95": 19.98,
+     "raster_p95": 3.72,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.9
+    },
+    {
+     "pass": "beach_r2",
+     "tier": "high",
+     "frames": 346,
+     "build_p50": 10.8,
+     "build_p95": 14.27,
+     "raster_p95": 9.02,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 8.9
+    },
+    {
+     "pass": "beach_rain1_r2",
+     "tier": "high",
+     "frames": 200,
+     "build_p50": 19.51,
+     "build_p95": 30.46,
+     "raster_p95": 6.45,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 11.5
+    },
+    {
+     "pass": "beach_r0",
+     "tier": "ultra",
+     "frames": 225,
+     "build_p50": 16.39,
+     "build_p95": 31.77,
+     "raster_p95": 12.9,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 13.8
+    },
+    {
+     "pass": "beach_rain1_r0",
+     "tier": "ultra",
+     "frames": 158,
+     "build_p50": 28.37,
+     "build_p95": 51.35,
+     "raster_p95": 10.69,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 15.4
+    },
+    {
+     "pass": "beach_r1",
+     "tier": "ultra",
+     "frames": 241,
+     "build_p50": 16.2,
+     "build_p95": 29.14,
+     "raster_p95": 10.96,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 15.4
+    },
+    {
+     "pass": "beach_rain1_r1",
+     "tier": "ultra",
+     "frames": 219,
+     "build_p50": 18.16,
+     "build_p95": 24.11,
+     "raster_p95": 4.45,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 16.5
+    },
+    {
+     "pass": "beach_r2",
+     "tier": "ultra",
+     "frames": 330,
+     "build_p50": 10.85,
+     "build_p95": 17.79,
+     "raster_p95": 9.16,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 16.2
+    },
+    {
+     "pass": "beach_rain1_r2",
+     "tier": "ultra",
+     "frames": 215,
+     "build_p50": 17.98,
+     "build_p95": 21.79,
+     "raster_p95": 3.93,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 15.0
+    },
+    {
+     "pass": "rooftop_r0",
+     "tier": "low",
+     "frames": 389,
+     "build_p50": 10.49,
+     "build_p95": 13.23,
+     "raster_p95": 8.85,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 13.1
+    },
+    {
+     "pass": "rooftop_rain1_r0",
+     "tier": "low",
+     "frames": 342,
+     "build_p50": 10.92,
+     "build_p95": 16.25,
+     "raster_p95": 8.8,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.9
+    },
+    {
+     "pass": "rooftop_r1",
+     "tier": "low",
+     "frames": 300,
+     "build_p50": 12.91,
+     "build_p95": 19.2,
+     "raster_p95": 9.17,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 12.8
+    },
+    {
+     "pass": "rooftop_rain1_r1",
+     "tier": "low",
+     "frames": 357,
+     "build_p50": 10.39,
+     "build_p95": 17.19,
+     "raster_p95": 10.44,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 13.6
+    },
+    {
+     "pass": "rooftop_r2",
+     "tier": "low",
+     "frames": 374,
+     "build_p50": 10.44,
+     "build_p95": 12.86,
+     "raster_p95": 9.04,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 15.8
+    },
+    {
+     "pass": "rooftop_rain1_r2",
+     "tier": "low",
+     "frames": 301,
+     "build_p50": 12.67,
+     "build_p95": 17.69,
+     "raster_p95": 8.7,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 14.9
+    },
+    {
+     "pass": "rooftop_r0",
+     "tier": "high",
+     "frames": 277,
+     "build_p50": 12.59,
+     "build_p95": 24.16,
+     "raster_p95": 11.69,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 14.6
+    },
+    {
+     "pass": "rooftop_rain1_r0",
+     "tier": "high",
+     "frames": 176,
+     "build_p50": 21.95,
+     "build_p95": 51.28,
+     "raster_p95": 10.73,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 15.0
+    },
+    {
+     "pass": "rooftop_r1",
+     "tier": "high",
+     "frames": 136,
+     "build_p50": 30.81,
+     "build_p95": 58.61,
+     "raster_p95": 18.62,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 16.6
+    },
+    {
+     "pass": "rooftop_r2",
+     "tier": "high",
+     "frames": 181,
+     "build_p50": 21.75,
+     "build_p95": 45.64,
+     "raster_p95": 16.65,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 22.5
+    },
+    {
+     "pass": "rooftop_r0",
+     "tier": "ultra",
+     "frames": 134,
+     "build_p50": 30.86,
+     "build_p95": 62.91,
+     "raster_p95": 24.86,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 28.0
+    },
+    {
+     "pass": "rooftop_r2",
+     "tier": "ultra",
+     "frames": 277,
+     "build_p50": 12.48,
+     "build_p95": 26.18,
+     "raster_p95": 9.6,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 33.1
+    },
+    {
+     "pass": "rooftop_rain1_r2",
+     "tier": "ultra",
+     "frames": 206,
+     "build_p50": 18.16,
+     "build_p95": 35.86,
+     "raster_p95": 8.93,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 30.2
+    },
+    {
+     "pass": "forestCabin_r0",
+     "tier": "low",
+     "frames": 333,
+     "build_p50": 11.37,
+     "build_p95": 20.19,
+     "raster_p95": 9.31,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 35.4
+    },
+    {
+     "pass": "forestCabin_rain1_r0",
+     "tier": "low",
+     "frames": 352,
+     "build_p50": 10.76,
+     "build_p95": 16.52,
+     "raster_p95": 10.72,
+     "host_rive_cli_busy": 0.0,
+     "host_load1": 34.6
+    }
+   ]
+  }
+ }
+}

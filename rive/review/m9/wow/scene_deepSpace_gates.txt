@@ -1,0 +1,16 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 281: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+deepSpace in every sample, no journey (561): ok
+the deepSpace file on screen in every sample: ok
+NPC poked (ufo): react 27 ms after the poke (want <= 200): ok
+spin (spin): the drag surface took the touch (21 dragging samples of 22): ok
+spin: spin read back from the scene file: max 0.48 (want >= 0.05): ok
+spin moved: 0.48 of a turn at most (want >= 0.1): ok
+spin: the inertia settled within 2 s (1 distinct values after): ok
+spin: drag haptics 4 (selection; want >= 1): ok
+the reply is spoken: ok
+scene events: none; NPC states: idle/react/idle/move/idle/notice/rest/idle: info
+scene_deepSpace.gif 3953326 B (budget 4194304): ok
+scene_deepSpace.mp4 1214760 B: info

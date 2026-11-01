@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../models/face_frame.dart';
 import '../models/head_pose.dart';
 
 /// Tunables of the head motion, ported from `perform_turn` /
@@ -29,6 +30,10 @@ class HeadMotionParams {
     this.hairGain = 1.9,
     this.hairPitchScale = 0.5,
     this.hairLagMax = 0.6,
+    this.faceHairF = 3.8,
+    this.faceHairZeta = 0.53,
+    this.faceHairGain = 2.85,
+    this.faceHairRoll = 1.0,
     this.reduceSettleS = 0.35,
     this.holdMinS = 0.16,
     this.driftAfterS = 1.0,
@@ -120,6 +125,20 @@ class HeadMotionParams {
   final double hairGain;
   final double hairPitchScale;
   final double hairLagMax;
+
+  /// Follow-through of the face's own head motion (the speech nods on the
+  /// pitch and the roll, [HeadMotionSolver.followFace]): a faster
+  /// under-damped spring ([faceHairF] Hz, damping [faceHairZeta], as
+  /// integrated at 120 Hz: about 12 % overshoot, within 2 % after ~225 ms,
+  /// trailing a steady motion by ~32 ms frame to frame), its offset at
+  /// [faceHairGain] (1.5x [hairGain]: a nod must read in the fringe) with no
+  /// pitch reduction. The contract has no roll lag: [faceHairRoll] of the
+  /// roll's lag (roll units) swings the hair sideways through `hairLagYaw`
+  /// (all of it: the question tilt shows in the side locks).
+  final double faceHairF;
+  final double faceHairZeta;
+  final double faceHairGain;
+  final double faceHairRoll;
 
   /// Settle time of the critically damped head used by reduce motion.
   final double reduceSettleS;
@@ -226,7 +245,12 @@ class HeadMotionParams {
 /// - While the target is `reading`, the eyes loop lines of 3-4 fixations
 ///   with a fast return sweep; on the user they make micro-saccades.
 /// - Hair follows the head with a slower spring; `hairLag*` is
-///   (hair − head) x gain, softly limited to 0.6, with pitch at 0.6 of it.
+///   (hair − head) x gain, softly limited to 0.6, with pitch at 0.5 of it.
+///   The face's nods and roll ([followFace]) add their own, faster
+///   follow-through to the same two numbers.
+/// - [followFace] also takes the face's gaze cues: a gaze lock holds the
+///   eyes on the user (no micro-saccade), a new saccade serial fires the
+///   next micro-saccade now.
 /// - Once the target has been steady for 1 s a seeded drift (slow sines plus
 ///   an occasional micro-nod) keeps the head alive; at the start of a session
 ///   it fades in within 0.2 s.
@@ -319,6 +343,20 @@ class HeadMotionSolver {
   double _hairPitch = 0;
   double _hairPitchVel = 0;
 
+  // The face's nod and roll (inputs) and the hair springs that chase them.
+  double _faceNod = 0;
+  double _faceRoll = 0;
+  double _hairNod = 0;
+  double _hairNodVel = 0;
+  double _hairRoll = 0;
+  double _hairRollVel = 0;
+  bool _gazeLock = false;
+  int? _saccadeSerial;
+
+  /// A saccade the face asked for, fired once the gaze is free and on the
+  /// user.
+  bool _saccadeWanted = false;
+
   HeadPose _pose = HeadPose.zero;
   bool _reduceMotion = false;
 
@@ -353,6 +391,7 @@ class HeadMotionSolver {
       _hairYawVel = 0;
       _hairPitch = _pitchAxis.pos;
       _hairPitchVel = 0;
+      _lockFaceHair();
       _eye = _yawAxis.pos;
       _eyeVel = 0;
     } else {
@@ -360,10 +399,38 @@ class HeadMotionSolver {
       _hairPitch = _pitchAxis.pos;
       _hairYawVel = 0;
       _hairPitchVel = 0;
+      _lockFaceHair();
       _eye = _yawAxis.pos;
       _eyeVel = 0;
     }
     _pose = _compose();
+  }
+
+  void _lockFaceHair() {
+    _hairNod = _faceNod;
+    _hairNodVel = 0;
+    _hairRoll = _faceRoll;
+    _hairRollVel = 0;
+  }
+
+  /// Takes the face's head motion and gaze cues for the next [step]: its
+  /// nod (added to the pitch) and [FaceFrame.roll] drive the hair's
+  /// follow-through; [FaceFrame.gazeLock] holds the eyes on the user; a
+  /// [FaceFrame.saccadeSerial] above the last one seen fires a
+  /// micro-saccade on the next step, or as soon as a gaze lock lets go (the
+  /// first call only records the serial).
+  void followFace(FaceFrame face) {
+    _faceNod = face.nodPitch;
+    _faceRoll = face.roll;
+    _gazeLock = face.gazeLock;
+    final int? last = _saccadeSerial;
+    _saccadeSerial = face.saccadeSerial;
+    if (last != null && face.saccadeSerial > last) {
+      _saccadeWanted = true;
+    }
+    if (_reduceMotion) {
+      _lockFaceHair();
+    }
   }
 
   /// Whether idle drift keeps the solver moving forever: the caller must
@@ -391,6 +458,10 @@ class HeadMotionSolver {
       return headAtRest && eyePitchAtRest;
     }
     return headAtRest &&
+        (_hairNod - _faceNod).abs() < pos &&
+        (_hairRoll - _faceRoll).abs() < pos &&
+        _hairNodVel.abs() < vel &&
+        _hairRollVel.abs() < vel &&
         (_hairYaw - _yawAxis.pos).abs() < pos &&
         (_hairPitch - _pitchAxis.pos).abs() < pos &&
         _hairYawVel.abs() < vel &&
@@ -499,6 +570,20 @@ class HeadMotionSolver {
             2 * params.hairZeta * hairOmega * _hairPitchVel);
     _hairPitch += h * _hairPitchVel;
 
+    // ... and the face's nod and roll, on the faster follow-through spring.
+    final double faceOmega = 2 * math.pi * params.faceHairF;
+    final double faceDamp = 2 * params.faceHairZeta * faceOmega;
+    _hairNodVel +=
+        h *
+        (faceOmega * faceOmega * (_faceNod - _hairNod) -
+            faceDamp * _hairNodVel);
+    _hairNod += h * _hairNodVel;
+    _hairRollVel +=
+        h *
+        (faceOmega * faceOmega * (_faceRoll - _hairRoll) -
+            faceDamp * _hairRollVel);
+    _hairRoll += h * _hairRollVel;
+
     // The eyes go straight to the target and a little past it (plus the
     // drift, so they ride with the head while it idles).
     final double eyeTarget = _eyeYawGoal(driftYaw);
@@ -565,7 +650,12 @@ class HeadMotionSolver {
           _time >= _nextReadAt) {
         _nextFixation();
       }
-    } else if (_onUser && _time >= _nextMicroAt) {
+    } else if (_gazeLock) {
+      // on the listener: the eyes come back to the camera and stay there
+      _sacGoalYaw = 0;
+      _nextMicroAt = math.max(_nextMicroAt, _time + 0.25);
+    } else if (_onUser && (_time >= _nextMicroAt || _saccadeWanted)) {
+      _saccadeWanted = false;
       // Alternate sides: each micro-saccade is at least [microAmp] and
       // darts across the user.
       _microSign = -_microSign;
@@ -661,20 +751,26 @@ class HeadMotionSolver {
     return HeadPose(
       yaw: _clamp1(_yawAxis.pos),
       pitch: _clamp1(_pitchAxis.pos),
-      hairLagYaw: _hairLag(_hairYaw - _yawAxis.pos, 1),
+      hairLagYaw: _hairLag(
+        params.hairGain * (_hairYaw - _yawAxis.pos) +
+            params.faceHairGain * params.faceHairRoll * (_hairRoll - _faceRoll),
+      ),
       hairLagPitch: _hairLag(
-        _hairPitch - _pitchAxis.pos,
-        params.hairPitchScale,
+        params.hairGain *
+                params.hairPitchScale *
+                (_hairPitch - _pitchAxis.pos) +
+            params.faceHairGain * (_hairNod - _faceNod),
       ),
       eyeLeadYaw: _clamp1(lead),
       eyeLeadPitch: _clamp1(_eyePitch),
     );
   }
 
-  /// Hair offset x gain x [scale], softly limited to [HeadMotionParams.hairLagMax].
-  double _hairLag(double offset, double scale) {
+  /// A hair offset (its gains applied), softly limited to
+  /// [HeadMotionParams.hairLagMax].
+  double _hairLag(double offset) {
     final double max = params.hairLagMax;
-    return max * _tanh(params.hairGain * scale * offset / max);
+    return max * _tanh(offset / max);
   }
 
   void _applyTarget(HeadTarget next) {
@@ -711,6 +807,7 @@ class HeadMotionSolver {
     _sacGoalYaw = 0;
     _sacGoalPitch = 0;
     _nextMicroAt = _time + 0.3;
+    _saccadeWanted = false;
   }
 
   void _updateDriftWeight(double h) {

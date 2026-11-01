@@ -4,10 +4,32 @@ enum AvatarScene {
   livingRoom,
   campfire,
   beach,
-  deepSpace;
+  deepSpace,
+  cafe,
+  rooftop,
+  mountainHut,
+  forestCabin,
+  trainCompartment,
+  library;
 
   /// The scene used when nothing else is set (new chats, unmappable values).
   static const AvatarScene defaultScene = AvatarScene.livingRoom;
+
+  /// Whether the scene is a diorama with depth planes, so its file reads the
+  /// parallax numbers (and the sensors are worth running). Every scene is one
+  /// since M5; the getter stays for a future scene without planes.
+  bool get isDiorama => switch (this) {
+    AvatarScene.livingRoom ||
+    AvatarScene.campfire ||
+    AvatarScene.beach ||
+    AvatarScene.deepSpace ||
+    AvatarScene.cafe ||
+    AvatarScene.rooftop ||
+    AvatarScene.mountainHut ||
+    AvatarScene.forestCabin ||
+    AvatarScene.trainCompartment ||
+    AvatarScene.library => true,
+  };
 
   /// The scene events this scene's `.riv` state machine can play.
   List<SceneEvent> get allowedEvents => switch (this) {
@@ -35,11 +57,48 @@ enum AvatarScene {
       SceneEvent.alienShip,
       SceneEvent.nebulaPulse,
     ],
+    AvatarScene.cafe => const <SceneEvent>[
+      SceneEvent.espresso,
+      SceneEvent.doorbell,
+      SceneEvent.rain,
+      SceneEvent.neonFlicker,
+    ],
+    AvatarScene.rooftop => const <SceneEvent>[
+      SceneEvent.fireworks,
+      SceneEvent.plane,
+      SceneEvent.shootingStar,
+      SceneEvent.windowsLit,
+    ],
+    AvatarScene.mountainHut => const <SceneEvent>[
+      SceneEvent.snowfall,
+      SceneEvent.flare,
+      SceneEvent.aurora,
+      SceneEvent.bell,
+    ],
+    AvatarScene.forestCabin => const <SceneEvent>[
+      SceneEvent.gust,
+      SceneEvent.fireflies,
+      SceneEvent.rain,
+      SceneEvent.lanternFlicker,
+    ],
+    AvatarScene.trainCompartment => const <SceneEvent>[
+      SceneEvent.tunnel,
+      SceneEvent.whistle,
+      SceneEvent.station,
+      SceneEvent.rain,
+    ],
+    AvatarScene.library => const <SceneEvent>[
+      SceneEvent.lightning,
+      SceneEvent.bookFlutter,
+      SceneEvent.clockChime,
+      SceneEvent.rain,
+    ],
   };
 }
 
 /// Every scene's `eventId` values, in contract order. `rain` is shared by
-/// campfire and beach; per-scene validity is decided by
+/// campfire, beach, cafe and the three v14 scenes, `shootingStar` by campfire and rooftop, `flare`
+/// by campfire and mountainHut; per-scene validity is decided by
 /// [AvatarScene.allowedEvents].
 enum SceneEvent {
   lightsOff,
@@ -57,6 +116,24 @@ enum SceneEvent {
   warp,
   alienShip,
   nebulaPulse,
+  espresso,
+  doorbell,
+  neonFlicker,
+  fireworks,
+  plane,
+  windowsLit,
+  snowfall,
+  aurora,
+  bell,
+  gust,
+  fireflies,
+  lanternFlicker,
+  tunnel,
+  whistle,
+  station,
+  lightning,
+  bookFlutter,
+  clockChime,
 }
 
 /// v3 photo-background names mapped to the nearest scene. Used when stored
@@ -65,12 +142,9 @@ enum SceneEvent {
 const Map<String, AvatarScene> _legacyBackgroundToScene = <String, AvatarScene>{
   // Indoors → livingRoom
   'bedroom': AvatarScene.livingRoom,
-  'library': AvatarScene.livingRoom,
   'classroom': AvatarScene.livingRoom,
   'office': AvatarScene.livingRoom,
   'mall': AvatarScene.livingRoom,
-  'restaurant': AvatarScene.livingRoom,
-  'parisianCafe': AvatarScene.livingRoom,
   'hallMansion': AvatarScene.livingRoom,
   'artGallery': AvatarScene.livingRoom,
   'cinema': AvatarScene.livingRoom,
@@ -78,20 +152,32 @@ const Map<String, AvatarScene> _legacyBackgroundToScene = <String, AvatarScene>{
   'christmasLivingRoom': AvatarScene.livingRoom,
   // Nature → campfire
   'lake': AvatarScene.campfire,
-  'forest': AvatarScene.campfire,
   'park': AvatarScene.campfire,
   'sakuraTrees': AvatarScene.campfire,
   'japaneseGarden': AvatarScene.campfire,
-  'snowyMountain': AvatarScene.campfire,
   'campfire': AvatarScene.campfire,
   // Water → beach
   'beach': AvatarScene.beach,
   'tropicalIsland': AvatarScene.beach,
   'swimmingPool': AvatarScene.beach,
-  // Urban/night → deepSpace
+  // Cafés and restaurants → cafe (M9)
+  'restaurant': AvatarScene.cafe,
+  'parisianCafe': AvatarScene.cafe,
+  'cafe': AvatarScene.cafe,
+  // City by night → rooftop (M9)
+  'cityscrape': AvatarScene.rooftop,
+  'balconyViewOfCityByNight': AvatarScene.rooftop,
+  'rooftop': AvatarScene.rooftop,
+  // Snow → mountainHut (M9)
+  'snowyMountain': AvatarScene.mountainHut,
+  'mountainHut': AvatarScene.mountainHut,
+  // The v14 scenes (M11 ruling 5: the nearest scene)
+  'forest': AvatarScene.forestCabin,
+  'forestCabin': AvatarScene.forestCabin,
+  'trainCompartment': AvatarScene.trainCompartment,
+  'library': AvatarScene.library,
+  // Space and the rest of the urban set → deepSpace
   'deepSpace': AvatarScene.deepSpace,
-  'cityscrape': AvatarScene.deepSpace,
-  'balconyViewOfCityByNight': AvatarScene.deepSpace,
   'street': AvatarScene.deepSpace,
   'facadeMansion': AvatarScene.deepSpace,
 };

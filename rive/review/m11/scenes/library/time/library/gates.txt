@@ -1,0 +1,4 @@
+library: night identical to HEAD: n/a, a new scene (ok)
+library: noon brightens the sky by 78.2/255 (want > 12) (ok)
+library: sunset recolours the horizon band by 18.1/255 (ok)
+library: ground unchanged at noon: mean delta 0.00/255 (ok)

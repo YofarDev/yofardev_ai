@@ -1,0 +1,19 @@
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 dune grass travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 towel travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 foam lace travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 wave band travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane1 islet travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+Plane0 sun travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: crab=Plane4, umbrella=Plane4, seagull=Plane4: ok
+pointer crab (Plane4) parallaxX -1: click@746,1380 fires 1, rest-only click@936,1380 fires 0: ok
+pointer crab (Plane4) parallaxX +1: click@974,1380 fires 1, rest-only click@784,1380 fires 0: ok
+pointer umbrella (Plane4) parallaxX -1: click@4,1100 fires 1, rest-only click@406,1100 fires 0: ok
+pointer umbrella (Plane4) parallaxX +1: click@444,1100 fires 1, rest-only click@34,1100 fires 0: ok
+pointer seagull (Plane4) parallaxX -1: click@811,1050 fires 1, rest-only click@941,1050 fires 0: ok
+pointer seagull (Plane4) parallaxX +1: click@979,1050 fires 1, rest-only click@849,1050 fires 0: ok
+wet ground (median luminance rain 1 / rain 0): 158.8/196.5 = 0.81 (want 0.6..0.9): ok
+RainLoop sheets + splashes seam (frame 0 vs 6120, rain 1, box (300, 1250, 1080, 1920), pixels changed beyond rain 0): 0.0019% (ok)
+sun glow follows lightKey (blue - red, mean, blue key vs default): +14.4/255 (ok); back to default: max diff 0/255 (ok)
+beach.riv 256807 B (budget 409,600): ok
+beach.webp 31228 B (budget 40,960): ok

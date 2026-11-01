@@ -16,7 +16,10 @@ Two mechanisms, chosen so every existing animation keeps working untouched:
 - Skin (the face outline and the two shading shapes that hug it): skinned to RootBones placed
   under the `Head` node, so head gestures (nod, shake, think) carry the bones and the turn
   composes underneath them. Contour bones take their yaw poses from the exact silhouettes of the
-  elliptic sections (smooth jaw at |yaw| = 1); bind transforms are expressed in the Head frame.
+  head sections (M3: superellipse fronts and backs, so the far cheekbone bulges and the near jaw
+  corner holds while the chin swings: the outline changes shape at 3/4); bind transforms are
+  expressed in the Head frame. M3 extras (`three_quarter`): per-side blush, face-clipped lenses,
+  the far temple fade.
 
 New elements use their own id range (ID_START), so no existing component id moves.
 """
@@ -27,8 +30,8 @@ import math
 from typing import Callable, Sequence
 
 import rig_dsl as r
-from rig_dsl import (Axis, Chain, Grid, Poly, Weights, fit3, material_dx, pitch_dy, poly_add, poly_scale, quantize,
-                     pack, tokabs)
+from rig_dsl import (Axis, Chain, Grid, Poly, Weights, fit3, material_dx, pitch_dy, plain_tendon, poly_add,
+                     poly_scale, sampled, skinned_path, tokabs)
 from rml import Doc, El, smooth_path  # noqa: F401
 
 ID_START = 900000
@@ -52,10 +55,11 @@ BROW_LIFT_PX = 3.0  # brows lift ~3.5 artboard px at eyeLeadPitch -1 (attentive,
 # fringe follow-through: tip travel per unit of lag is boosted at small lags and saturates at
 # +-1 (gain 1.7 - 0.7 |lag|: 1.42x at 0.4, unchanged at 1)
 FRINGE_LAG_GAIN = (1.7, 0.7)
-# looking down (eyeLeadPitch -1): the lash travels like a quarter blink and a skin lid follows it
-LOOK_DOWN_LASH = (3.5, 0.08)  # lash drop (px) and lash flattening (scaleY loss) at -1
-LOOK_DOWN_LID = 0.23  # lid scaleY at -1 (edge just under the dropped lash: ~15 % coverage)
-LOOK_LID_STOPS = ("FFE8C0AA", "FFE8C7B1")  # the avatar's lid skin ramp, graded to value 0.91 (lint)
+# fringe parallax (critic round 1: the fringe barely moved at 3/4): a clump hangs in front of the
+# forehead, so its tip travels FRINGE_PARALLAX x its own depth's yaw travel further than the art
+# does (root pinned under the cap): ~ +20 px at the centre tips at yaw +-1, little at the temples
+FRINGE_PARALLAX = 0.4
+# looking down (eyeLeadPitch < 0) drops the upper lid bones (M3: face_rig.LOOK_DOWN_PX)
 # hair follow-through: px of tip travel per unit of lag (the roots stay with the head)
 SIDE_LAG_PX, SIDE_LAG_PITCH_PX = 45.0, 20.0
 TUFT_LAG_PX = 20.0
@@ -89,8 +93,11 @@ def shell_z(x3: float, y: float) -> float:
     return HAIR_C[1] + HAIR_A[2] * math.sqrt(max(0.0, q))
 
 
-Z0 = [(330.0, 8.0), (366.0, 10.0), (396.0, 14.0), (428.0, 22.0), (458.0, 32.0), (476.0, 40.0), (490.0, 46.0),
-      (505.0, 54.0), (511.0, 58.0)]
+# critic round 3: the lower face is a volume that projects forward (the jaw sections' centres move
+# toward the chin's front), so at 3/4 the chin and the jaw line swing with the turn (the y 505 jaw
+# midpoint travels ~45 artboard px, was ~26) while the near jaw corner holds
+Z0 = [(330.0, 8.0), (366.0, 10.0), (396.0, 14.0), (428.0, 22.0), (458.0, 32.0), (476.0, 46.0), (490.0, 70.0),
+      (505.0, 84.0), (511.0, 88.0)]
 
 
 def _lerp(table: Sequence[tuple[float, float]], y: float) -> float:
@@ -102,13 +109,138 @@ def _lerp(table: Sequence[tuple[float, float]], y: float) -> float:
     return table[-1][1]
 
 
-def contour_pose(x: float, y: float) -> tuple[float, float]:
-    """Right-side face contour x at yaw -1 / +1: the silhouette of the elliptic section."""
+# Face contour sections (M3). Each contour height is a cross-section of the head: half width w (the
+# rest outline), half depth dd (0.82 w + 8, plus a soft cheekbone swell) about a centre z0 (Z0,
+# moving forward toward the chin). Its front half is a superellipse of exponent SECTION_FRONT_N:
+# above 2 the face plane flattens and the cheekbone sits out at its corner, so at yaw +1 the far
+# (right) cheekbone bulges past the old outline. Its back half takes SECTION_BACK_N: the jaw angle,
+# so on the near side the jaw corner stays out while the chin swings toward the turn (the near
+# cheek flattens into one jaw line). The yaw +-1 poses are the sections' exact silhouettes; fit3
+# carries the in-betweens on arcs. All exponents 2 give the M1 ellipse model (ellipse_contour_pose).
+SECTION_FRONT_N = [(330.0, 2.0), (366.0, 2.3), (396.0, 2.7), (428.0, 2.9), (458.0, 2.4), (476.0, 2.1),
+                   (490.0, 2.0)]
+# M5 ruling 1b: the back exponents are capped at SECTION_BACK_CAP (M4: 2.8 / 4.0 / 3.4 at y 428 / 458 /
+# 476 squared the near jaw into a near-90 deg corner); the fairing pass (fair_contour) does the rest
+SECTION_BACK_CAP = 2.6
+SECTION_BACK_N = [(330.0, 2.0), (366.0, 2.0), (396.0, 2.0), (428.0, 2.6), (458.0, 2.6), (476.0, 2.6),
+                  (490.0, 2.6), (505.0, 2.0)]
+
+
+# The far and near cheeks (critic round 3: the 3/4 turn slid the features over a face that kept its
+# shape). Storybook 3/4 is drawn, not measured: below the cheekbone the far cheek flattens (its
+# section loses FAR_FLAT of its width and depth at the far pose, so the far contour dips in under
+# the cheekbone and the nose tip breaks over it), and the near cheek fills out (the section gains
+# NEAR_FULL of its width at the near pose). Rest poses are unchanged; fit3 carries the in-betweens.
+# M5 ruling 1b: capped at FAR_FLAT_CAP (M4: 0.237 / 0.326 at y 428 / 458 dug a notch under the far lens)
+FAR_FLAT_CAP = 0.2
+FAR_FLAT = [(396.0, 0.0), (428.0, 0.2), (458.0, 0.2), (476.0, 0.15), (490.0, 0.15), (505.0, 0.0)]
+# the M4 tables, kept for the before / after gate (m4_contour_chain)
+M4_SECTION_BACK_N = [(330.0, 2.0), (366.0, 2.0), (396.0, 2.0), (428.0, 2.8), (458.0, 4.0), (476.0, 3.4),
+                     (490.0, 2.6), (505.0, 2.0)]
+M4_FAR_FLAT = [(396.0, 0.0), (428.0, 0.237), (458.0, 0.326), (476.0, 0.15), (490.0, 0.15), (505.0, 0.0)]
+NEAR_FULL = [(366.0, 0.0), (396.0, 0.06), (428.0, 0.09), (458.0, 0.09), (476.0, 0.05), (490.0, 0.0)]
+
+
+def section(x: float, y: float, round_: bool = False,
+            back: Sequence[tuple[float, float]] | None = None) -> tuple[float, float, float, float, float]:
+    """(w, z0, dd, n_front, n_back) of the right-side contour section through (x, y) (`back`: another
+    SECTION_BACK_N table)."""
     w = x - CX
     dd = 0.82 * w + 8 + 8 * math.exp(-(((y - 396) / 22) ** 2))
-    e = math.sqrt((w * math.cos(K_YAW)) ** 2 + (dd * math.sin(K_YAW)) ** 2)
+    if round_:
+        return w, _lerp(Z0, y), dd, 2.0, 2.0
+    return w, _lerp(Z0, y), dd, _lerp(SECTION_FRONT_N, y), _lerp(back or SECTION_BACK_N, y)
+
+
+def contour_pose(x: float, y: float, back: Sequence[tuple[float, float]] | None = None,
+                 far_flat: Sequence[tuple[float, float]] | None = None) -> tuple[float, float]:
+    """Right-side face contour x at yaw -1 (the near side) / +1 (the far side): the silhouettes of
+    the section through (x, y), unfaired (M5: `faired_poses` fairs them as one outline). The left
+    side mirrors it. `back` / `far_flat`: other tables (the M4 ones for the before gate)."""
+    w, z0, dd, nf, nb = section(x, y, back=back)
+    q, g = _lerp(far_flat or FAR_FLAT, y), _lerp(NEAR_FULL, y)
+    return (CX + r.section_silhouette(w * (1 + g), z0, dd, nf, nb, -K_YAW),
+            CX + r.section_silhouette(w * (1 - q), z0, dd * (1 - q), nf, nb, K_YAW))
+
+
+def ellipse_contour_pose(x: float, y: float) -> tuple[float, float]:
+    """The M1 contour (round elliptic sections): every height slides, none changes shape."""
+    sec = section(x, y, round_=True)
+    return CX + r.section_silhouette(*sec, -K_YAW), CX + r.section_silhouette(*sec, K_YAW)
+
+
+# Features on ONE surface (M3): nose, mouth, chin, mole, cheeks and blush all take their depth from
+# surface_z (+ a relief for the nose tip and the lips), so the mouth leads with the nose and the
+# chin, instead of lagging behind them.
+NOSE_RELIEF = 30.0  # the nose (bridge) stands off the face surface: it rides under the glasses' bridge
+NOSE_TIP_RELIEF = 56.0  # the nose tip stands further out (round 3: at 3/4 it breaks over the far cheek)
+LIP_RELIEF = 14.0  # the lips ride a little ahead of the chin (the mouth trails the nose by <= 15)
+CHIN_RELIEF = 8.0  # the chin's point stands off the jaw surface (it swings with the jaw sections)
+
+
+def face_z(x: float, y: float, relief: float = 0.0) -> float:
+    return surface_z(x - CX, y) + relief
+
+
+MOUTH_Z = face_z(400.0, 478.0, LIP_RELIEF)
+NOSE_Z = face_z(400.0, 440.0, NOSE_RELIEF)
+NOSE_TIP_Z = face_z(400.0, 440.0, NOSE_TIP_RELIEF)
+NOSE_SHADE_LEN = 42.0  # the nose shade's top (y 408) to the tip (y 450)
+NOSE_TIP_RIGHT = 6.0  # extra tip travel at yaw +1 (see nose_tip_and_mole)
+NOSE_SHADE_FOLLOW = 0.45  # share of the tip's extra travel the nose shade's bottom takes
+CHIN_Z = face_z(400.0, 505.0, CHIN_RELIEF)  # the chin's front: the jaw outline's lowest point swings with it
+
+
+def foreshorten(x: float, y: float, a: float) -> float:
+    """Width factor of a flat mark (blush, cheek light) lying on the face surface at (x, y) when the
+    head turns by `a`: cos(normal + a) / cos(normal), the normal's angle from the surface slope. The
+    near side's widening is capped at NEAR_WIDEN (a mark turning to face the viewer should not
+    balloon)."""
+    h = 0.5
+    slope = (surface_z(x - CX + h, y) - surface_z(x - CX - h, y)) / (2 * h)
+    n = math.atan(-slope)
+    return min(NEAR_WIDEN, math.cos(n + a) / math.cos(n))
+
+
+NEAR_WIDEN = 1.12
+MOUTH_SPAN = (372.0, 428.0, 478.0)  # the widest mouth's corners (x left, x right) and its line's height
+
+
+def mouth_width(a: float, n: int = 28) -> float:
+    """Width factor of the mouth at yaw angle `a` (M5 ruling 1d): the mean `foreshorten` of the lip
+    line between the corners (a mark on the surface: the far half narrows, the near half widens up
+    to NEAR_WIDEN). M1-M4 used a flat 0.88."""
+    x0, x1, y = MOUTH_SPAN
+    return sum(foreshorten(x0 + (x1 - x0) * (k + 0.5) / n, y, a) for k in range(n)) / n
+EAR_Z, EAR_NEAR_WIDEN = -12.0, 1.18  # ear depth (behind the yaw axis) and its near-side widening
+
+
+# Glasses: the frame plane wraps back from the bridge to the temples (inner end z 110, outer end
+# z 70), so the far lens foreshortens like the far eye does and stays inside the far cheekbone.
+LENS_Z = (110.0, 70.0)
+
+
+def lens_ends(cx: float, a: float) -> tuple[float, float]:
+    """Screen x of a lens's inner and outer frame ends at yaw angle `a` (lens centre cx)."""
+    sgn = 1.0 if cx > CX else -1.0
+    xin, xout = CX + sgn * 2, CX + sgn * 88
+    return (CX + (xin - CX) * math.cos(a) + LENS_Z[0] * math.sin(a),
+            CX + (xout - CX) * math.cos(a) + LENS_Z[1] * math.sin(a))
+
+
+def face_point(x: float, y: float, z: float) -> Poly:
+    """Shift poly of a mark on the face surface at (x, y), depth z, that rides the far cheek's
+    flattening and the near cheek's fullness (FAR_FLAT, NEAR_FULL): on the far pose its section is
+    scaled about the section centre like the contour's, on the near pose it moves out with the
+    widened section. Equal to `mat(x, z)` where both tables are 0."""
+    side = 1.0 if x >= CX else -1.0
+    q, g = _lerp(FAR_FLAT, y), _lerp(NEAR_FULL, y)
     z0 = _lerp(Z0, y)
-    return CX + e - z0 * math.sin(K_YAW), CX + e + z0 * math.sin(K_YAW)
+    xx = x - CX
+    # far pose: yaw toward this side's sign; near: the other way
+    far = CX + xx * (1 - q) * math.cos(K_YAW) + side * (z0 + (z - z0) * (1 - q)) * math.sin(K_YAW)
+    near = CX + xx * (1 + g) * math.cos(K_YAW) - side * z * math.sin(K_YAW)
+    return poses(*((near, x, far) if side > 0 else (far, x, near)))
 
 
 def mat(x: float, z: float) -> Poly:
@@ -242,34 +374,12 @@ class HeadTurn:
              tension: float = 1.0) -> None:
         """Replace `shape`'s path with the same Catmull-Rom path, skinned to the turn bones."""
         d = self.d
-        xs = [p[0] for p in pts]
-        ys = [p[1] for p in pts]
-        ox, oy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-        plain = smooth_path(d, [((p[0] - ox, p[1] - oy) + tuple(p[2:])) for p in pts], closed=closed, tension=tension)
-        index: dict[str, int] = {}
-        verts = []
-        for v, p in zip(plain.children, pts):
-            ax, ay = float(p[0]), float(p[1])
-            if v.tag == "StraightVertex":
-                q = [quantize(wf(ax, ay))]
-            else:
-                rot_o, dist_o = float(v.attrs["outRotation"]), float(v.attrs["outDistance"])
-                rot_i, dist_i = float(v.attrs["inRotation"]), float(v.attrs["inDistance"])
-                q = [quantize(wf(ax, ay)), quantize(wf(ax + math.cos(rot_i) * dist_i, ay + math.sin(rot_i) * dist_i)),
-                     quantize(wf(ax + math.cos(rot_o) * dist_o, ay + math.sin(rot_o) * dist_o))]
-            for qs in q:
-                for b, _ in qs:
-                    index.setdefault(b, len(index))
-            if v.tag == "StraightVertex":
-                val, ix = pack(q[0], index)
-                v.add(d("Weight", values=val, indices=ix))
-            else:
-                (a, b_), (c, e), (f, g) = (pack(x, index) for x in q)
-                v.add(d("CubicWeight", values=a, indices=b_, inValues=c, inIndices=e, outValues=f, outIndices=g))
-            verts.append(v)
-        tendons = [d("Tendon", boneId=self.bones[n][2].ref(), tx=self.bones[n][0] - HEAD_FRAME[0],
-                     ty=self.bones[n][1] - HEAD_FRAME[1]) for n in index]
-        plain.add(d("Skin", *tendons, tx=ox - HEAD_FRAME[0], ty=oy - HEAD_FRAME[1]))
+
+        def tendon(n: str) -> El:
+            x, y, el = self.bones[n]
+            return plain_tendon(d, el, (x, y), HEAD_FRAME)
+
+        plain, _ = skinned_path(d, pts, HEAD_FRAME, sampled(wf), tendon, closed=closed, tension=tension)
         shape.children = [plain if c.tag in ("PointsPath", "Path") else c for c in shape.children]
 
     def finish(self) -> None:
@@ -292,22 +402,344 @@ CONTOUR = {"T": (506.0, 330.0, 10.0), "S": (508.0, 366.0, 15.0), "C": (506.0, 39
            "J": (481.0, 458.0, 30.0), "W": (467.0, 476.0, 38.0), "Q": (450.0, 490.0, 45.0), "V": (426.0, 505.0, 55.0)}
 
 
+# The jaw (M3 critic round): `auJawDrop` (+ 0.22 x the legacy `mouth`) drops the chin and the lower
+# jaw contour, about 0.55 x the lower lip's 23 px at the chin, fading up the jaw line to nothing at
+# the cheekbone. Art px per unit jaw, added to the contour bones' pitch formulas (screen y in the Head
+# frame), so it composes with every yaw / pitch pose of the 3/4 outline and stays history-free.
+JAW_CONTOUR = {"Chin": 13.0, "V": 11.5, "Q": 7.5, "W": 4.0, "J": 1.5}
+JAW_PER_MOUTH = 0.22
+
+
+def jaw_dy(bone: str, env: dict[str, float]) -> float:
+    """The jaw's screen-y shift of a contour bone ("Chin", "FVL", "FQR", ...)."""
+    px = JAW_CONTOUR.get(bone if bone == "Chin" else bone[1:-1], 0.0)
+    return px * (env.get("auJawDrop", 0.0) + JAW_PER_MOUTH * env.get("mouth", 0.0))
+
+
+def _bone_pitch(name: str) -> Poly:
+    """The pitch poly a contour bone was built with (rig_head)."""
+    if name == "Chin":
+        return pit(511, 60)
+    x, y, zp = CONTOUR[name[1:-1]]
+    return pit(y, zp)
+
+
+# ------------------------------------------------------------------ the faired 3/4 outline (M5)
+# M5 ruling 1: each contour height's section is solved alone, so at yaw +-1 neighbouring heights could
+# disagree (a notch under the far lens, a cheekbone corner, a hooked far jaw). The yaw +-1 poses of the
+# contour bones are therefore faired as ONE curve, in chain order: convex hull first (a point inside it
+# moves out, along x only: the bones' yaw binds move x, pitch and the jaw move y), then Laplacian steps
+# on the bones' yaw *displacement* (not their positions, so the rest outline's own curvature is kept and
+# only the turn's shear is smoothed) at the bones that break the bound, until the outline is convex and
+# its largest exterior turn is <= FAIR_BOUND x the rest outline's. Rest poses are untouched.
+
+CHAIN = ("FTL", "FSL", "FCL", "FKL", "FJL", "FWL", "FQL", "FVL", "Chin", "FVR", "FQR", "FWR", "FJR", "FKR", "FCR",
+         "FSR", "FTR")
+CHIN_REST = (400.0, 511.0)
+FAIR_BOUND = 1.25  # x the rest outline's largest turn
+FAIR_STEP = 0.3  # Laplacian step (share of the way to the neighbours' interpolated displacement)
+# every faired bone keeps at least this turn (radians): a hull point lying on a straight run would flip
+# into a dent under pitch or the jaw drop (they move the bones' y unevenly)
+FAIR_MIN_TURN = math.radians(4.0)
+
+
+def bone_rest(name: str) -> tuple[float, float]:
+    """Rest art-space position of a contour bone (`FKL`, `Chin`, ...)."""
+    if name == "Chin":
+        return CHIN_REST
+    x, y, _ = CONTOUR[name[1:-1]]
+    return (x if name[-1] == "R" else 2 * CX - x), y
+
+
+def _turns(points: Sequence[Sequence[float]]) -> list[float]:
+    """Signed exterior turn (radians, y down) at every interior point of an open chain; the outline
+    runs FTL -> Chin -> FTR, so a convex face turns negative everywhere."""
+    out = []
+    for p0, p1, p2 in zip(points, points[1:], points[2:]):
+        ax, ay = p1[-2] - p0[-2], p1[-1] - p0[-1]
+        bx, by = p2[-2] - p1[-2], p2[-1] - p1[-1]
+        out.append(math.atan2(ax * by - ay * bx, ax * bx + ay * by))
+    return out
+
+
+def max_turn(points: Sequence[Sequence[float]]) -> float:
+    """Largest exterior turn (radians) between neighbouring points ((x, y) or (name, x, y))."""
+    return max(abs(t) for t in _turns(points))
+
+
+def is_convex(points: Sequence[Sequence[float]], eps: float = 1e-6) -> bool:
+    """True when the open chain bends one way only (no dent; collinear allowed) and less than a full
+    turn in all."""
+    t = _turns(points)
+    return all(v <= eps for v in t) and -sum(t) < 2 * PI
+
+
+def _hull_out(poses: list[tuple[str, float, float]]) -> list[tuple[str, float, float]]:
+    """Move every point strictly inside the chain's convex hull out to the hull, along x (left of the
+    chin to the hull's left edge at its height, right of it to the right edge)."""
+    pts = sorted((x, y) for _, x, y in poses)
+
+    def cross(o: tuple[float, float], a: tuple[float, float], b: tuple[float, float]) -> float:
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    lower: list[tuple[float, float]] = []
+    upper: list[tuple[float, float]] = []
+    for p in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+    for p in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+    hull = lower[:-1] + upper[:-1]
+    ci = [n for n, _, _ in poses].index("Chin")
+    out = []
+    for i, (n, x, y) in enumerate(poses):
+        xs = []
+        for a, b in zip(hull, hull[1:] + hull[:1]):
+            if a[1] != b[1] and (a[1] - y) * (b[1] - y) <= 0:
+                xs.append(a[0] + (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]))
+            elif a[1] == b[1] == y:
+                xs += [a[0], b[0]]
+        if i < ci:
+            x = min(x, *xs)
+        elif i > ci:
+            x = max(x, *xs)
+        out.append((n, x, y))
+    return out
+
+
+Check = tuple[list[tuple[str, float, float]], float, float]  # (posed chain, bound, min turn)
+
+
+def fair_contour(poses: list[tuple[str, float, float]], bound: float, min_turn: float = FAIR_MIN_TURN,
+                 checks: Callable[[list[tuple[str, float, float]]], list[Check]] | None = None
+                 ) -> list[tuple[str, float, float]]:
+    """Faired (name, x, y) of a turned outline given in chain order (FTL ... Chin ... FTR): convex
+    with every interior turn in [-bound, -min_turn] (radians); y and the two chain ends never move. A
+    pose that is already fair comes back unchanged (the rest pose included). `checks` maps the current
+    chain to more posed chains that must be fair too (the same x poses under pitch, the jaw drop and
+    the in-between yaws); a bone failing any of them, or its mirror (the near / far pair), is smoothed."""
+    rest = [bone_rest(n) for n, _, _ in poses]
+    s = [0.0]
+    for a, b in zip(rest, rest[1:]):
+        s.append(s[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    last = len(poses) - 1
+
+    def unfair(cur: list[tuple[str, float, float]]) -> set[int]:
+        out: set[int] = set()
+        for ch, bd, mt in [(cur, bound, min_turn), *(checks(cur) if checks else [])]:
+            out |= {i + 1 for i, v in enumerate(_turns(ch)) if v < -bd or v > -mt}
+        return out | {last - i for i in out}
+
+    cur = list(poses)
+    if not unfair(cur):
+        return cur
+    cur = _hull_out(cur)
+    for _ in range(5000):
+        bad = unfair(cur)
+        if not bad:
+            return cur
+        act = {j for i in bad for j in (i - 1, i, i + 1) if 0 < j < last}
+        d = [p[1] - q[0] for p, q in zip(cur, rest)]
+        nd = list(d)
+        for i in act:
+            w = (s[i] - s[i - 1]) / (s[i + 1] - s[i - 1])
+            nd[i] = d[i] + FAIR_STEP * ((1 - w) * d[i - 1] + w * d[i + 1] - d[i])
+        cur = [(n, q[0] + v, y) for (n, _, y), q, v in zip(cur, rest, nd)]
+    raise ValueError("fair_contour did not converge")
+
+
+def raw_contour_x(name: str, a: float, back: Sequence[tuple[float, float]] | None = None,
+                  far_flat: Sequence[tuple[float, float]] | None = None) -> float:
+    """Unfaired x of a contour bone at yaw angle `a` (the section silhouettes, M3/M4)."""
+    if name == "Chin":
+        zc = CHIN_Z * math.sin(K_YAW)
+        return CHIN_REST[0] + r.eval_poly(poses(CHIN_REST[0] - zc, CHIN_REST[0], CHIN_REST[0] + zc), a)
+    x, y, _ = CONTOUR[name[1:-1]]
+    m, p = contour_pose(x, y, back, far_flat)
+    if name[-1] == "R":
+        return x + r.eval_poly(poses(m, x, p), a)
+    return 2 * CX - x + r.eval_poly(poses(2 * CX - p, 2 * CX - x, 2 * CX - m), a)
+
+
+# the gate grid (Review Focus 3): every in-between yaw x pitch x jaw the outline must stay fair at
+GATE_YAWS = (1.0, 0.5)
+GATE_PITCHES = (-1.0, 0.0, 1.0)
+GATE_JAWS = (0.0, 1.0)
+GATE_MIN_TURN = math.radians(0.5)  # off the main pose, convex with a hair of margin (renderer noise)
+
+
+def _poses_from(fx: dict[str, float]) -> dict[str, tuple[float, float]]:
+    """Right-side (yaw -1, +1) x per section key and "Chin" from the yaw +1 x of every chain bone."""
+    out = {key: (2 * CX - fx["F" + key + "L"], fx["F" + key + "R"]) for key in CONTOUR}
+    out["Chin"] = (2 * CX - fx["Chin"], fx["Chin"])
+    return out
+
+
+def _yaw_poly(name: str, fp: dict[str, tuple[float, float]]) -> Poly:
+    if name == "Chin":
+        m, p = fp["Chin"]
+        return poses(m, CHIN_REST[0], p)
+    x, _, _ = CONTOUR[name[1:-1]]
+    m, p = fp[name[1:-1]]
+    return poses(m, x, p) if name[-1] == "R" else poses(2 * CX - p, 2 * CX - x, 2 * CX - m)
+
+
+def _chain(fp: dict[str, tuple[float, float]], yaw: float, pitch: float, jaw: float) -> list[tuple[str, float, float]]:
+    out = []
+    for n in CHAIN:
+        x, y = bone_rest(n)
+        out.append((n, x + r.eval_poly(_yaw_poly(n, fp), yaw * K_YAW),
+                    y + r.eval_poly(_bone_pitch(n), pitch * K_PITCH) + jaw_dy(n, {"auJawDrop": jaw})))
+    return out
+
+
+def rest_bound(pitch: float = 0.0, jaw: float = 0.0) -> float:
+    """FAIR_BOUND x the largest turn of the unturned outline at that pitch and jaw drop."""
+    rest = {n: (bone_rest(n)[0], bone_rest(n)[0]) for n in ("Chin",)}
+    rest.update({key: (x, x) for key, (x, _, _) in CONTOUR.items()})  # unturned: m = p = rest
+    return FAIR_BOUND * max_turn(_chain(rest, 0.0, pitch, jaw))
+
+
+_FAIRED: dict[str, tuple[float, float]] = {}
+
+
+def faired_poses() -> dict[str, tuple[float, float]]:
+    """Right-side (yaw -1, yaw +1) x of every contour section ("T" ... "V") and of "Chin", from the
+    yaw +1 outline faired once against the whole gate grid (yaw -1 is its mirror image)."""
+    if not _FAIRED:
+        turned = [(n, raw_contour_x(n, K_YAW), bone_rest(n)[1]) for n in CHAIN]
+        grid = [(yw, pt, jw, rest_bound(pt, jw)) for yw in GATE_YAWS for pt in GATE_PITCHES for jw in GATE_JAWS]
+
+        def checks(cur: list[tuple[str, float, float]]) -> list[Check]:
+            fp = _poses_from({n: x for n, x, _ in cur})
+            return [(_chain(fp, yw, pt, jw), bd, GATE_MIN_TURN) for yw, pt, jw, bd in grid]
+
+        fx = {n: x for n, x, _ in fair_contour(turned, rest_bound(), checks=checks)}
+        _FAIRED.update(_poses_from(fx))
+    return _FAIRED
+
+
+def m4_contour_chain(yaw: float = 1.0) -> list[tuple[str, float, float]]:
+    """The M4 outline (uncapped tables, unfaired) at `yaw`, pitch 0, jaw 0: the defect the gate sees."""
+    return [(n, raw_contour_x(n, yaw * K_YAW, M4_SECTION_BACK_N, M4_FAR_FLAT), bone_rest(n)[1]) for n in CHAIN]
+
+
+def bone_yaw_poly(name: str) -> Poly:
+    """The yaw shift poly of a contour bone (through its faired yaw -1 / +1 poses)."""
+    return _yaw_poly(name, faired_poses())
+
+
+def contour_chain(yaw: float, pitch: float = 0.0, jaw: float = 0.0) -> list[tuple[str, float, float]]:
+    """Posed (name, x, y) of the contour bones in chain order, as the rig moves them: x by yaw
+    (-1..1), y by pitch (-1..1) and the jaw drop (auJawDrop 0..1). Rest (0, 0, 0) is the art."""
+    return _chain(faired_poses(), yaw, pitch, jaw)
+
+
+def contour_x_at(y: float, a: float, side: float) -> float:
+    """Screen x of the faired turned outline (right side +1, left -1) at height y (pitch 0, jaw 0),
+    linear between bones."""
+    pts = sorted((yy, x) for n, x, yy in contour_chain(a / K_YAW)
+                 if n != "Chin" and (n[-1] == "R") == (side > 0))
+    for (y0, x0), (y1, x1) in zip(pts, pts[1:]):
+        if y0 <= y <= y1:
+            return x0 + (x1 - x0) * (y - y0) / (y1 - y0)
+    raise ValueError(y)
+
+
+def rig_jaw(ht: "HeadTurn", d: Doc, path: Callable[[str], str]) -> list[El]:
+    """Add the jaw drop to the contour bones' pitch binds. The new converters are minted from `d`
+    (the face rig's unkeyed id range) after every head-turn id, so no head-turn id moves; the
+    replaced pitch chains are removed when nothing else reads them. Returns the new converters."""
+    f = r.Formulas(d, path)
+    angle = ht.rig.angle(ht.rig.y_axis)
+    made: dict[tuple[object, ...], El] = {}
+    replaced: set[str] = set()
+    for name, (_x, y, el) in ht.bones.items():
+        if not (name == "Chin" or (name[0] == "F" and name[1:-1] in JAW_CONTOUR and name[-1] in "LR")):
+            continue
+        px = JAW_CONTOUR[name if name == "Chin" else name[1:-1]]
+        poly = r.poly_add(r.poly_shift(_bone_pitch(name), y - HEAD_FRAME[1]),
+                          [(px, (r.tok("auJawDrop"),)), (px * JAW_PER_MOUTH, (r.tok("mouth"),))])
+        key = r.poly_key(poly)
+        if key not in made:
+            conv = d("DataConverterFormula", *f.poly(poly))
+            made[key] = d("DataConverterGroup", d("DataConverterGroupItem", converterId=angle.ref()),
+                          d("DataConverterGroupItem", converterId=conv.ref()))
+            ht.rig.converters += [conv, made[key]]
+        bind = next(c for c in el.children if c.tag == "DataBindContext" and c.attrs.get("propertyKey") == 91)
+        replaced.add(str(bind.attrs["converterId"]))
+        bind.attrs["converterId"] = made[key].ref()
+    used: set[str] = set()
+    stack = [ht.root, *ht.rig.converters]
+    while stack:
+        e = stack.pop()
+        if "converterId" in e.attrs:
+            used.add(str(e.attrs["converterId"]))
+        stack.extend(e.children)
+    dead = {c for c in ht.rig.converters if c.ref() in replaced and c.ref() not in used}
+    dead |= {ht_conv for g in dead for item in g.children[1:] for ht_conv in ht.rig.converters
+             if ht_conv.ref() == item.attrs.get("converterId")}
+    ht.rig.converters[:] = [c for c in ht.rig.converters if c not in dead]
+    return list(made.values())
+
+
 def _face_ang(x: float, y: float) -> float:
     a = math.degrees(math.atan2(y - 400, x - 400))
     return a + 360 if a < -90 else a
 
 
+def fringe_parallax(z_tip: float) -> Poly:
+    """Extra screen-x travel of a fringe lock's tip under yaw (on top of the surface model)."""
+    return [(FRINGE_PARALLAX * z_tip, (r.SIN,))]
+
+
+# far-cheek shade (critic round 1): at 3/4 the cheek turning away darkens, a soft radial wash clipped
+# by the face that rides the cheek surface and fades in with the turn (0 at rest and on the near
+# side). Critic round 2: the cool violet read as a bruise; it is the skin-shadow ramp's terracotta
+# now (over the lit skin at its peak it lands between SKIN_SH and SKIN_SH2)
+FAR_SHADE = ("40B0583C", (497.0, 452.0), 40.0, 0.8)  # colour, art-space centre (right cheek), radius, peak
+
+
+def far_cheek_opacity(yaw: float, side: float) -> float:
+    """Cheek shade opacity (side -1 left, +1 right): peak x max(0, side x yaw) (the bind's formula)."""
+    return FAR_SHADE[3] * max(0.0, min(1.0, side * yaw))
+
+
+def far_cheek_shade(ht: HeadTurn, face: El, cheek_shade: El) -> list[El]:
+    """Mint both cheek shades last (no head-turn id moves), in front of CheekShade."""
+    colour, (x, y), rad_, _ = FAR_SHADE
+    d = ht.d
+    out = []
+    f = ht.rig.f
+    for t, cx, sgn in (("L", 2 * CX - x, -1.0), ("R", x, 1.0)):
+        sh = d("Shape", d("ClippingShape", sourceId=face.ref(), name="Clip"),
+               d("Ellipse", width=2 * rad_, height=2.8 * rad_, name="Path"),
+               d("Fill", d("RadialGradient", d("GradientStop", colorValue=colour, position=0.0),
+                           d("GradientStop", colorValue="00" + colour[2:], position=1.0),
+                           startX=0.0, startY=0.0, endX=rad_ * 1.2, endY=0.0), name="Fill"),
+               x=cx - HEAD_FRAME[0], y=y - HEAD_FRAME[1], name="FarCheekShade" + t)
+        ht.head.children.insert(ht.head.children.index(cheek_shade), sh)
+        ht.frames[id(sh)] = (cx, y)
+        w = ht.wrap(sh, (cx, y), face_point(cx, y, face_z(cx, y)), pit(y, face_z(cx, y)))
+        w.add(ht.raw("yaw", "opacity", [f.val(0), f.op("+"), f.val(FAR_SHADE[3]), f.op("*"),
+                                        *f.fn("max", [f.val(0)], [f.val(sgn), f.op("*"),
+                                                                  *f.fn("min", [f.val(1)], f.inp())])]))
+        out.append(sh)
+    return out
+
+
 def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock_specs: list,
              parts: dict[str, object], anims: list[El]) -> None:
     # ---- bones: contour (section silhouettes), chin, forehead / crown, face interior grid
+    # M5: the yaw +-1 poses come from the faired outline (fair_contour), not straight from the sections
     for n, (x, y, zp) in CONTOUR.items():
         for s, sgn in (("R", 1.0), ("L", -1.0)):
-            m, p = contour_pose(x, y)
             xx = x if sgn > 0 else 2 * CX - x
-            pose = (m, x, p) if sgn > 0 else (2 * CX - p, xx, 2 * CX - m)
-            ht.bone("F" + n + s, xx, y, poses(*pose), pit(y, zp))
-    zc = _lerp(Z0, 511.0) * math.sin(K_YAW)
-    ht.bone("Chin", 400.0, 511.0, poses(400 - zc, 400, 400 + zc), pit(511, 60))
+            ht.bone("F" + n + s, xx, y, bone_yaw_poly("F" + n + s), pit(y, zp))
+    ht.bone("Chin", 400.0, 511.0, bone_yaw_poly("Chin"), pit(511, 60))
     for n, x, y in (("FHL", 310.0, 262.0), ("FHC", 400.0, 222.0), ("FHR", 490.0, 262.0)):
         z = shell_z(x - CX, y)
         ht.bone(n, x, y, mat(x, z), pit(y, z))
@@ -345,32 +777,41 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         sx = factor(*side((1.0, 1, 0.58), cx)[::2])
         ht.wrap(parts["Eye" + t], (cx, 388.0), mat(cx, 84), pit(388, 104), sx=sx)  # type: ignore[arg-type]
         ht.wrap(parts["Brow" + t], (cx, 346.0), mat(cx, 80), pit(346, 66), sx=factor(*side((1.0, 1, 0.6), cx)[::2]))  # type: ignore[arg-type]
-    ht.wrap(parts["NoseTurn"], (400.0, 440.0), mat(400, 122), pit(440, 118))  # type: ignore[arg-type]
-    # mouth (every mood and open shape lives in this node): it slides with the lower face but
-    # less than the nose (z 70, so it never outruns the chin), its pitch travel is 60 % of the
-    # chin's, and every mouth shape is clipped by the face, so it can never hang below the jaw
-    ht.wrap(parts["Mouth"], (400.0, 478.0), mat(400, 70), pit(478, 28), sx=factor(0.88, 0.88))  # type: ignore[arg-type]
-    for el in _shapes(parts["Mouth"]):  # type: ignore[arg-type]
-        el.children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
-    ht.wrap(parts["Mole"], (456.0, 432.0), mat(456, 80), pit(432, 80))  # type: ignore[arg-type]
+    ht.wrap(parts["NoseTurn"], (400.0, 440.0), mat(400, NOSE_Z), pit(440, 118))  # type: ignore[arg-type]
+    # mouth (every mood and open shape lives in this node): it rides the face surface (MOUTH_Z, a
+    # little behind the nose tip and just ahead of the chin, which swings with the outline), its
+    # pitch travel is 60 % of the chin's, and every mouth shape is clipped by the face
+    # (M5: the width is rebound to `mouth_width` by m5_three_quarter; the M1 factor keeps its ids here)
+    ht.wrap(parts["Mouth"], (400.0, 478.0), mat(400, MOUTH_Z), pit(478, 28), sx=factor(0.88, 0.88))  # type: ignore[arg-type]
+    # each face clip keeps its id: the shapes named in `MouthClipOrder` (the face rig's id order; a
+    # deleted shape burns its id) clip here, shapes added since clip after every other head-turn id
+    mouth_shapes = _shapes(parts["Mouth"])  # type: ignore[arg-type]
+    clip_order: list[str] = list(parts.get("MouthClipOrder") or [str(e.attrs.get("name")) for e in mouth_shapes])  # type: ignore[call-overload]
+    by_name = {str(e.attrs.get("name")): e for e in mouth_shapes}
+    for nm in clip_order:
+        if nm in by_name:
+            by_name[nm].children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
+        else:
+            ht.d.next += 1
+    late_clips = [e for e in mouth_shapes if str(e.attrs.get("name")) not in clip_order]
+    # (round 3: the mole and the cheek blooms take `face_point` poses, rebound last: nose_tip_and_mole)
+    ht.wrap(parts["Mole"], (456.0, 432.0), mat(456, face_z(456, 432)), pit(432, 80))  # type: ignore[arg-type]
     ht.wrap(parts["Blush"], (400.0, 440.0), mat(400, 90), pit(440, 90), sx=factor(0.82, 0.82))  # type: ignore[arg-type]
-    for nm, x, y, z in (("CheekBloomL", 335.0, 437.0, 72.0), ("CheekBloomR", 465.0, 437.0, 72.0),
-                        ("ChinLight", 400.0, 499.0, 78.0)):
-        sx = factor(*side((1.05, 1, 0.55), x)[::2]) if nm != "ChinLight" else None
+    for nm, x, y in (("CheekBloomL", 335.0, 437.0), ("CheekBloomR", 465.0, 437.0), ("ChinLight", 400.0, 499.0)):
+        z = face_z(x, y)
+        sx = factor(foreshorten(x, y, -K_YAW), foreshorten(x, y, K_YAW)) if nm != "ChinLight" else None
         ht.wrap(parts[nm], (x, y), mat(x, z), pit(y, z), sx=sx)  # type: ignore[arg-type]
+    # critic round 2: the near ear (3/4) sat out past the side lock, detached; it now seats on the
+    # skull contour with its front under the side lock (EAR_Z: less depth behind the yaw axis, so
+    # it travels with the cheek; EAR_NEAR_WIDEN: it turns toward the viewer, but less)
     for t, x in (("L", 288.0), ("R", 512.0)):
-        sx = factor(*side((1.35, 1, 0.5), x)[::2])
+        sx = factor(*side((EAR_NEAR_WIDEN, 1, 0.5), x)[::2])
         for nm in ("Ear" + t, "EarIn" + t):
-            ht.wrap(parts[nm], (x, 398.0), mat(x, -25), pit(398, -48), sx=sx)  # type: ignore[arg-type]
+            ht.wrap(parts[nm], (x, 398.0), mat(x, EAR_Z), pit(398, -48), sx=sx)  # type: ignore[arg-type]
 
     # ---- glasses: lenses foreshorten on the frame plane, the near temple unfolds, the far folds
     def lens_poses(cx: float) -> tuple[Poly, Poly]:
-        sgn = 1.0 if cx > CX else -1.0
-        xin, xout = CX + sgn * 2, CX + sgn * 88
-
-        def proj(x: float, z: float, a: float) -> float:
-            return CX + (x - CX) * math.cos(a) + z * math.sin(a)
-        ends = {a: (proj(xin, 110, a), proj(xout, 86, a)) for a in (-K_YAW, K_YAW)}
+        ends = {a: lens_ends(cx, a) for a in (-K_YAW, K_YAW)}
         cen = {a: (e[0] + e[1]) / 2 for a, e in ends.items()}
         wid = {a: abs(e[1] - e[0]) / 86 for a, e in ends.items()}
         return poses(cen[-K_YAW], cx, cen[K_YAW]), factor(wid[-K_YAW], wid[K_YAW])
@@ -391,7 +832,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
             ht.wrap(el, (400.0, 376.0), mat(400, 110), pit(376, 110))
         for t, hx in (("L", 311.0), ("R", 489.0)):
             for el in named(grp, "Hinge" + t):
-                ht.wrap(el, (hx + (3 if t == "L" else -3), 372.0), mat(hx, 86), pit(372, 86))
+                ht.wrap(el, (hx + (3 if t == "L" else -3), 372.0), mat(hx, LENS_Z[1]), pit(372, 86))
     temples(ht, groups, parts["GlassesSolo"], parts["HairFollow"], anims)  # type: ignore[arg-type]
 
     # ---- hair: locks turn about their roots (tips sit further forward than roots), the cap and
@@ -410,6 +851,7 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
         g0, g1 = FRINGE_LAG_GAIN
         c = -zt * K_YAW / ln
         rot = poly_add(rot, [(c * g0, (r.tok("hairLagYaw"),)), (-c * g1, (r.tok("hairLagYaw"), tokabs("hairLagYaw")))])
+        rot = poly_add(rot, poly_scale(fringe_parallax(zt), -1.0 / ln))
         sy = poly_add([(1.0, ())], poly_scale(poly_add(pit(ty, zt), poly_scale(pit(ry, zr), -1.0)), 1.0 / ln))
         sy = poly_add(sy, [(-(zt - ZP) * K_PITCH / ln, (r.tok("hairLagPitch"),))])
         ht.wrap(parts[name], (rx, ry), d_root, pit(ry, zr), rot=rot, sy=sy)  # type: ignore[arg-type]
@@ -417,7 +859,10 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
     ht.wrap(parts["HairCap"], (400.0, 277.0), crown_dx, pit(277, 40), sx=crown_sx)  # type: ignore[arg-type]
     ht.wrap(parts["HatSolo"], (400.0, 250.0), crown_dx, pit(250, 30), sx=crown_sx)  # type: ignore[arg-type]
     for t, x in (("L", 288.0), ("R", 512.0)):
-        ox = side((500.0, 512.0, 522.0), x) if x > CX else (2 * CX - 522.0, 288.0, 2 * CX - 500.0)
+        # critic round 3: on the near side the lock moves out over the ear's front (it slid onto the
+        # cheek and left the whole ear standing out); SIDE_LOCK_SWING then tucks its tip back in
+        near_x = 512.0 + SIDE_LOCK_NEAR_OUT
+        ox = (near_x, 512.0, 522.0) if x > CX else (2 * CX - 522.0, 288.0, 2 * CX - near_x)
         sc = side((1.0, 1.0, 0.38), x)
         ht.wrap(parts["SideLock" + t], (x, 398.0), poses(*ox), pit(398, 10), sx=factor(sc[0], sc[2]))  # type: ignore[arg-type]
         side_lock_lag(ht, parts["SideLock" + t], 1.0 if t == "R" else -1.0)  # type: ignore[arg-type]
@@ -441,13 +886,164 @@ def rig_head(ht: HeadTurn, face_pts: list, cast_pts: list, cheek_pts: list, lock
                         name="EyeLead" + t)
         lx, ly = float(outer.attrs["x"]), float(outer.attrs["y"])
         outer.add(ht.raw("eyeLeadYaw", "x", eye_lead_x(ht, lx, s)), ht.raw("eyeLeadPitch", "y", eye_lead_y(ht, ly)))
-        look_down_lids(ht, t, parts)
         brow: El = parts["Brow" + t]  # type: ignore[assignment]
         bframe = ht.frames[id(ht.parent_of(brow))]
         bw = ht.wrap(brow, (bframe[0] + float(brow.attrs.get("x", 0.0)), bframe[1] + float(brow.attrs.get("y", 0.0))),
                      name="BrowLift" + t)
         bw.add(ht.raw("eyeLeadPitch", "y", ht.neg_part(float(bw.attrs["y"]), -BROW_LIFT_PX)))
+    far_cheek_shade(ht, parts["Face"], parts["CheekShade"])  # type: ignore[arg-type]
     ht.finish()
+    for el in late_clips:  # last, so no earlier head-turn id moves
+        el.children.insert(0, ht.d("ClippingShape", sourceId=parts["Face"].ref()))  # type: ignore[union-attr]
+    three_quarter(ht, parts)  # M3, after every M1/M2 element so none of their ids moves
+
+
+BLUSH_Y = 438.0
+
+
+def three_quarter(ht: HeadTurn, parts: dict[str, object]) -> None:
+    """The 3/4 extras (M3): each blush rides its own cheek (surface depth, foreshortened on the far
+    side), the lenses and glares are clipped by the face silhouette, and the far temple arm fades
+    out as it swings behind the head."""
+    face: El = parts["Face"]  # type: ignore[assignment]
+    # ---- blush: the Blush node keeps its M1 wrap (pivot 400, z 90, x0.82); a wrap per side inside
+    # it turns that into the side's own surface point and width (exact at yaw -1, 0, +1)
+    blush: El = parts["Blush"]  # type: ignore[assignment]
+    outer_dx, outer_sx = mat(400, 90), factor(0.82, 0.82)
+    frame = ht.frames[id(blush)]
+    for t, bx in (("L", 338.0), ("R", 462.0)):
+        kids = [c for c in blush.children
+                if c.attrs.get("name") == "Blush" + t or str(c.attrs.get("name", "")).startswith("BlushLine" + t)]
+        group = ht.d("Node", *kids, x=0.0, y=0.0, name="Blush" + t + "Side")
+        blush.children = [c for c in blush.children if c not in kids]
+        blush.children.insert(0 if t == "L" else 1, group)
+        ht.frames[id(group)] = frame
+        z = face_z(bx, BLUSH_Y)
+        dxi, sxi = {}, {}
+        for a in (-K_YAW, K_YAW):
+            so, do = r.eval_poly(outer_sx, a), r.eval_poly(outer_dx, a)
+            target = bx + r.eval_poly(face_point(bx, BLUSH_Y, z), a)  # rides the far cheek's flattening
+            dxi[a] = (target - CX - do) / so - bx + CX
+            sxi[a] = foreshorten(bx, BLUSH_Y, a) / so
+        ht.wrap(group, (bx, BLUSH_Y), fit3(dxi[-K_YAW], 0.0, dxi[K_YAW], K_YAW), sx=factor(sxi[-K_YAW], sxi[K_YAW]),
+                name="Blush" + t + "Side")
+    # ---- glasses: lenses, glares and hinges never draw past the face silhouette (looking up while
+    # turned, the far lens's outer rim slips behind the temple instead of hanging over the hair)
+    groups: dict[str, El] = parts["glassesByName"]  # type: ignore[assignment]
+    for g in ("glasses", "sunglasses"):
+        for nm in ("LensL", "LensR", "Glare", "Glare2", "HingeL", "HingeR"):
+            for el in named(groups[g], nm):
+                el.children.insert(0, ht.d("ClippingShape", sourceId=face.ref()))
+    # ---- the far temple arm swings behind the head: opacity max(0, 1 - TEMPLE_FADE max(0, s yaw)),
+    # one converter per side shared by the glasses and sunglasses arms
+    f = ht.rig.f
+    for t, s in (("L", -1.0), ("R", 1.0)):
+        conv = ht.d("DataConverterFormula", *f.fn("max", [f.val(0)], [
+            f.val(1), f.op("-"), f.val(TEMPLE_FADE), f.op("*"), *f.fn("max", [f.val(0)], [f.val(s), f.op("*"), *f.inp()])]))
+        ht.rig.converters.append(conv)
+        for el in named(ht.head, "Temple" + t):
+            el.add(ht.d("DataBindContext", sourcePathIds=ht.path("yaw"), propertyKey=KEYS["opacity"],
+                        converterId=conv.ref()))
+    nose_tip_and_mole(ht)
+
+
+TEMPLE_FADE = 3.0
+
+
+def rebind_x(ht: HeadTurn, target: El, dx: Poly) -> None:
+    """Point the yaw (x) bind of `target`'s pivot wrapper at a new shift poly (a chain minted now:
+    the wrapper and its bind keep their ids)."""
+    outer = ht.parent_of(ht.parent_of(target))
+    bind = next(c for c in outer.children if c.tag == "DataBindContext" and c.attrs.get("propertyKey") == KEYS["x"])
+    bind.attrs["converterId"] = ht.rig.chain(ht.rig.x_axis, r.poly_shift(dx, float(outer.attrs["x"]))).ref()
+
+
+def prune_converters(ht: HeadTurn) -> None:
+    """Drop the turn's converters nothing reads any more (rebound binds leave their old chains)."""
+    while True:
+        used: set[str] = set()
+        stack = [ht.root, *ht.rig.converters]
+        while stack:
+            e = stack.pop()
+            if "converterId" in e.attrs:
+                used.add(str(e.attrs["converterId"]))
+            stack.extend(e.children)
+        dead = [c for c in ht.rig.converters if c.ref() not in used]
+        if not dead:
+            return
+        ht.rig.converters[:] = [c for c in ht.rig.converters if c not in dead]
+        ht.rig._polys = {k: v for k, v in ht.rig._polys.items() if v not in dead}
+SIDE_LOCK_NEAR_OUT = 14.0  # art px the near side lock moves out at |yaw| 1 (over the ear's front)
+SIDE_LOCK_SWING = 0.2  # rad the near side lock swings its tip back toward the cheek about its root
+SIDE_LOCK_ROOT_Y = 330.0
+MOLE_FADE = (0.6, 0.9)  # yaw: the mole on the right cheek turns behind the nose (full .. gone)
+
+
+NOSE_BREAK = 2.0  # px the far nose tip breaks past the faired far contour at yaw +-1 (M5 ruling 1c: <= 4)
+NOSE_TIP_ENDS = ((392.0, 452.0), (410.0, 440.0))  # the nose art's left (nostril hook) and right ends
+
+
+def nose_tip_travel() -> tuple[float, float]:
+    """(left, right) extra travel of the nose tip at yaw -1 / +1 on top of the nose's own turn: the
+    far end lands NOSE_BREAK px past the faired far contour (M5; M3/M4 used a fixed tip relief)."""
+    (lx, ly), (rx, ry) = NOSE_TIP_ENDS
+    base = NOSE_Z * math.sin(K_YAW)
+    right = contour_x_at(ry, K_YAW, 1.0) + NOSE_BREAK - (rx + base)
+    left = (lx - base) - (contour_x_at(ly, -K_YAW, -1.0) - NOSE_BREAK)
+    return left, right
+
+
+def nose_tip_and_mole(ht: HeadTurn) -> None:
+    """Critic round 3 (minted last, so no earlier head-turn id moves): the nose tip stands further
+    out than the bridge (NOSE_TIP_RELIEF vs NOSE_RELIEF), so at 3/4 it breaks over the flattened far
+    cheek while the bridge stays under the glasses' bridge: the nose line slides the extra depth, the
+    shade swings about its top to follow it. The mole on the right cheek fades out as that cheek
+    turns behind the nose (MOLE_FADE)."""
+    f = ht.rig.f
+    # the nose art is drawn turned a touch to the viewer's left (its nostril hooks left), so its right
+    # end needs NOSE_TIP_RIGHT more travel to break over the right cheek by as much as the hook does
+    # over the left one
+    # M5 ruling 1c: the far tip snaps to the faired far contour (it breaks it by NOSE_BREAK px)
+    tip_l, tip_r = nose_tip_travel()
+    nose, shade = named(ht.head, "Nose")[0], named(ht.head, "NoseShade")[0]
+    tip = fit3(-tip_l, 0.0, tip_r, K_YAW)
+    ht.wrap(nose, (400.0, 450.0), dx=tip, name="NoseTip")
+    # (y down: a clockwise turn by t moves the shade's bottom by -LEN sin t); the shade follows the
+    # tip only NOSE_SHADE_FOLLOW of the way, so it never crosses the far contour's shading band
+    k = NOSE_SHADE_FOLLOW / NOSE_SHADE_LEN
+    swing = fit3(math.asin(k * tip_l), 0.0, -math.asin(k * tip_r), K_YAW)
+    ht.wrap(shade, (404.0, 408.0), rot=swing, name="NoseTipShade")
+    # the near side lock: its tip swings back toward the cheek (the ear's lower half shows below
+    # the hair, its top half stays under it); nothing on the far side or at rest
+    for t, sgn in (("R", 1.0), ("L", -1.0)):
+        lock = named(ht.head, "SideLock" + t)[0]
+        near = SIDE_LOCK_SWING * sgn  # R is near at yaw -1, L at +1
+        rot = fit3(near, 0.0, 0.0, K_YAW) if sgn > 0 else fit3(0.0, 0.0, near, K_YAW)
+        ht.wrap(lock, (CX + sgn * 100.0, SIDE_LOCK_ROOT_Y), rot=rot, name="SideLockTuck" + t)
+    lo, hi = MOLE_FADE
+    g = 1.0 / (hi - lo)
+    for nm, x, y in (("Mole", 456.0, 432.0), ("CheekBloomL", 335.0, 437.0), ("CheekBloomR", 465.0, 437.0)):
+        rebind_x(ht, named(ht.head, nm)[0], face_point(x, y, face_z(x, y)))
+    prune_converters(ht)
+    mole = named(ht.head, "Mole")[0]
+    mole.add(ht.raw("yaw", "opacity", f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], [
+        f.val(1 + g * lo), f.op("-"), f.val(g), f.op("*"), *f.inp()]))))
+
+
+def m5_three_quarter(ht: HeadTurn, m5: Doc) -> None:
+    """M5 ruling 1d (minted from the M5 range, after every earlier id): the mouth's width follows
+    `mouth_width` (the mean foreshortening of its lip line) instead of the flat M1 0.88. The old
+    width chain is dropped when nothing else reads it."""
+    mouth = named(ht.head, "Mouth")[0]
+    outer = ht.parent_of(ht.parent_of(mouth))
+    bind = next(c for c in outer.children if c.tag == "DataBindContext" and c.attrs.get("propertyKey") == KEYS["scaleX"])
+    f = r.Formulas(m5, ht.path)
+    conv = m5("DataConverterFormula", *f.poly(factor(mouth_width(-K_YAW), mouth_width(K_YAW))))
+    group = m5("DataConverterGroup", m5("DataConverterGroupItem", converterId=ht.rig.angle(ht.rig.x_axis).ref()),
+               m5("DataConverterGroupItem", converterId=conv.ref()))
+    ht.rig.converters += [conv, group]
+    bind.attrs["converterId"] = group.ref()
+    prune_converters(ht)
 
 
 def _clamp(ht: HeadTurn, toks: list[El]) -> list[El]:
@@ -498,37 +1094,6 @@ def lag_bend(ht: HeadTurn, target: El, root: tuple[float, float], length: float,
     ht.wrap(target, root, rot=rot, sy=sy, name=str(target.attrs.get("name", "Hair")) + "Lag")
 
 
-def look_down_lids(ht: HeadTurn, t: str, parts: dict[str, object]) -> None:
-    """eyeLeadPitch < 0: the lash drops like a quarter blink and a skin lid (clipped to the eye
-    white, behind the blink lid) follows it, so looking down reads. Zero at rest; the blink lid
-    and the mood lids sit in front, so a blink still closes fully."""
-    d = ht.d
-    s = 1.0 if t == "R" else -1.0
-    cx = 445.0 if t == "R" else 355.0
-    lash: El = parts["Lash" + t]  # type: ignore[assignment]
-    lframe = ht.frames[id(ht.parent_of(lash))]
-    lx, ly = cx - lframe[0], 366.0 - lframe[1]
-    binds = [ht.raw("eyeLeadPitch", "y", ht.neg_part(ly, LOOK_DOWN_LASH[0])),
-             ht.raw("eyeLeadPitch", "scaleY", ht.neg_part(1.0, -LOOK_DOWN_LASH[1]))]
-    parent = ht.parent_of(lash)
-    inner = d("Node", lash, x=-lx, y=-ly, name="LashDrop" + t + "Pivot")
-    parent.children[parent.children.index(lash)] = d("Node", *binds, inner, x=lx, y=ly, name="LashDrop" + t)
-    blink: El = parts["Blink" + t]  # type: ignore[assignment]
-    bframe = ht.frames[id(blink)]
-    clip = next(c for c in blink.children if c.attrs.get("name") == "EyeClip")
-    i, o = cx - 28 * s, cx + 30 * s
-    pts = [(i - 10 * s, 358.0, "c"), (o + 12 * s, 358.0, "c"), (o + 12 * s, 412.0, "c"), (i - 10 * s, 412.0, "c")]
-    path = smooth_path(d, [((x - cx, y - 360.0) + tuple(rest)) for x, y, *rest in pts])
-    fill = d("Fill", d("LinearGradient", d("GradientStop", colorValue=LOOK_LID_STOPS[0], position=0.0),
-                       d("GradientStop", colorValue=LOOK_LID_STOPS[1], position=1.0),
-                       startX=0.0, startY=-2.0, endX=0.0, endY=52.0))
-    shape = d("Shape", d("ClippingShape", sourceId=clip.ref()), path, fill, x=0.0, y=0.0, name="LookDownLid" + t)
-    node = d("Node", ht.raw("eyeLeadPitch", "scaleY", ht.neg_part(0.0, LOOK_DOWN_LID)), shape,
-             x=cx - bframe[0], y=360.0 - bframe[1], scaleY=0.0, name="LookDownLid" + t)
-    lid: El = parts["Lid" + t]  # type: ignore[assignment]
-    blink.children.insert(blink.children.index(lid) + 1, node)
-
-
 def _shapes(e: El) -> list[El]:
     out = [e] if e.tag == "Shape" else []
     for c in e.children:
@@ -544,7 +1109,7 @@ def temples(ht: HeadTurn, groups: dict[str, El], glasses_solo: El, hair_follow: 
     d = ht.d
     for t, hx, ex in (("L", 311.0, 296.0), ("R", 489.0, 504.0)):
         sgn = 1.0 if t == "R" else -1.0
-        hinge = mat(hx, 86)
+        hinge = mat(hx, LENS_Z[1])  # the hinge sits on the lens's outer frame end
         hinge_far = hx + r.eval_poly(hinge, sgn * K_YAW)
         near_root = CX + sgn * 66.0  # the near ear's root (front edge of the widened ear)
         m, p = (near_root, hinge_far) if sgn > 0 else (hinge_far, near_root)

@@ -1,0 +1,12 @@
+rest frames (f0, f1, f30, f60) at the defaults identical to 927a606: 0.0000% differ (ok)
+SceneFront at rain 1 / fog 0 (f0, f1, f60) identical to 927a606: 0.0000% differ (ok)
+away: the NPC's crop changes (8.89% of it), nothing else does (0.0000%): ok
+idle: moves (4.48% of the crop) and its loop is back after 1800 frames (0.0186% differ): ok
+move: moves (14.00% of the crop) and its loop is back after 600 frames (0.0186% differ): ok
+notice: moves (1.91% of the crop) and its loop is back after 600 frames (0.0186% differ): ok
+react: moves (13.46% of the crop) and its loop is back after 300 frames (0.0145% differ): ok
+pointer owl (no path) while reacting: click@884,704 fires 1: ok
+fog: changes 20.40% of the frame (ok)
+SceneFront fog joins the mist: bottom 200 rows alpha +49.4/255 at fog 1 (ok)
+campfire.riv 249,842 B (+5,510 B vs 927a606; budget 409,600, NPC + fog <= 31,744): ok
+assets/rive/posters/campfire.webp unchanged since 927a606: ok

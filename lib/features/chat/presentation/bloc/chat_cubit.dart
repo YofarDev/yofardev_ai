@@ -146,7 +146,9 @@ class ChatCubit extends Cubit<ChatState> {
         actualAvatarConfig.hat != null ||
         actualAvatarConfig.top != null ||
         actualAvatarConfig.glasses != null ||
-        actualAvatarConfig.costume != null) {
+        actualAvatarConfig.costume != null ||
+        actualAvatarConfig.topTint != null ||
+        actualAvatarConfig.hatTint != null) {
       AppLogger.debug(
         'ChatCubit: calling updateAvatarOpenedChat with new avatar config',
         tag: 'ChatCubit',
@@ -190,6 +192,19 @@ class ChatCubit extends Cubit<ChatState> {
     await _demoScriptSubscription?.cancel();
     await _avatarChangeRequestedSubscription?.cancel();
     return super.close();
+  }
+
+  /// Announces the current chat's persona whenever another chat becomes
+  /// current (or its persona changes): the avatar's body language follows
+  /// it through [AppLifecycleService] (M10 ruling 10), like the mood.
+  @override
+  void onChange(Change<ChatState> change) {
+    super.onChange(change);
+    final Chat before = change.currentState.currentChat;
+    final Chat after = change.nextState.currentChat;
+    if (before.id != after.id || before.persona != after.persona) {
+      _appLifecycleService.emitPersonaChanged(after.persona);
+    }
   }
 
   /// Initialize the chat system
@@ -286,6 +301,8 @@ class ChatCubit extends Cubit<ChatState> {
             top: newChat.avatar.top,
             glasses: newChat.avatar.glasses,
             costume: newChat.avatar.costume,
+            topTint: newChat.avatar.topTint,
+            hatTint: newChat.avatar.hatTint,
           ),
         );
       },
@@ -323,6 +340,8 @@ class ChatCubit extends Cubit<ChatState> {
       glasses: avatarConfig.glasses ?? chat.avatar.glasses,
       specials: avatarConfig.specials ?? chat.avatar.specials,
       costume: avatarConfig.costume ?? chat.avatar.costume,
+      topTint: avatarConfig.topTint ?? chat.avatar.topTint,
+      hatTint: avatarConfig.hatTint ?? chat.avatar.hatTint,
     );
     final Chat updatedChat = chat.copyWith(avatar: avatar);
 
@@ -401,16 +420,23 @@ class ChatCubit extends Cubit<ChatState> {
 
   /// Update the chat state (both current and opened) without saving to the repo
   /// Ideal for rapid real-time streaming updates
+  ///
+  /// The streamed chat was captured when the message was sent: it keeps the
+  /// opened chat's avatar, which a tool (`change_avatar`) may have changed
+  /// since.
   void updateChatStreaming(Chat chat) {
+    final Chat streamed = chat.id == state.openedChat.id
+        ? chat.copyWith(avatar: state.openedChat.avatar)
+        : chat;
     // Also update the corresponding chat in chatsList to keep it in sync
     final List<Chat> updatedChatsList = state.chatsList
-        .map((Chat c) => c.id == chat.id ? chat : c)
+        .map((Chat c) => c.id == streamed.id ? streamed : c)
         .toList();
 
     emit(
       state.copyWith(
-        currentChat: chat,
-        openedChat: chat,
+        currentChat: streamed,
+        openedChat: streamed,
         chatsList: updatedChatsList,
         status: ChatStatus.streaming,
       ),
@@ -618,6 +644,8 @@ class ChatCubit extends Cubit<ChatState> {
               top: finalChat.avatar.top,
               glasses: finalChat.avatar.glasses,
               costume: finalChat.avatar.costume,
+              topTint: finalChat.avatar.topTint,
+              hatTint: finalChat.avatar.hatTint,
               specials: finalChat.avatar.specials,
             );
 
@@ -645,6 +673,11 @@ class ChatCubit extends Cubit<ChatState> {
         if (isClosed) return;
         emit(state.copyWith(activeTool: toolName));
       },
+      // The avatar a tool set mid-reply (updateAvatarOpenedChat) is kept in
+      // the completed and stored chat.
+      currentAvatar: () => state.openedChat.id == currentChat.id
+          ? state.openedChat.avatar
+          : currentChat.avatar,
     );
   }
 

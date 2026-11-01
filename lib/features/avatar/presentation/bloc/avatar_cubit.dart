@@ -7,6 +7,7 @@ import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_gesture.dart';
 import '../../../../core/models/avatar_mood.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/models/performance/avatar_prop.dart';
 import '../../../../core/models/sound_effects.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
@@ -22,6 +23,7 @@ import '../../../../core/models/chat.dart';
 import '../../domain/models/avatar_animation.dart';
 import '../../domain/models/performance_intent.dart';
 import '../../domain/services/head_target_mapper.dart';
+import '../../domain/services/journey_planner.dart';
 import '../../domain/services/performance_director.dart';
 import 'avatar_state.dart';
 
@@ -34,7 +36,9 @@ class AvatarCubit extends Cubit<AvatarState> {
     this._propReactions,
     this._soundRepository, {
     PerformanceDirector? director,
+    bool Function()? reduceMotion,
   }) : _director = director,
+       _reduceMotion = reduceMotion ?? _motionOn,
        super(
          const AvatarState(avatar: Avatar(), avatarConfig: AvatarConfig()),
        ) {
@@ -105,9 +109,24 @@ class AvatarCubit extends Cubit<AvatarState> {
   final PerformanceDirector? _director;
   final SoundRepository _soundRepository;
 
+  /// The system's reduce-motion switch, read when a journey starts (M11
+  /// ruling 18: on, a scene change is a cross-fade cut).
+  final bool Function() _reduceMotion;
+
+  static bool _motionOn() => false;
+
   /// True when the latest gesture sent to the Rive view came from a prop or
-  /// avatar tap rather than from the director.
+  /// avatar tap, or a journey's jacket beat, rather than from the director.
   bool _propGesturePlaying = false;
+
+  /// True from the moment a director gesture is sent to the Rive view until
+  /// its `gesture_done` (or [_directorGestureWait] runs out).
+  bool _directorGesturePlaying = false;
+  Completer<void>? _directorGestureDone;
+
+  /// How long a prop-owned gesture waits for a director gesture still
+  /// playing (the director's own safety timeout is 4 s).
+  static const Duration _directorGestureWait = Duration(seconds: 4);
   StreamSubscription<AvatarAnimation>? _animationSubscription;
   StreamSubscription<NewChatEntryPayload>? _lifecycleSubscription;
   StreamSubscription<String>? _chatChangedSubscription;
@@ -115,12 +134,38 @@ class AvatarCubit extends Cubit<AvatarState> {
   StreamSubscription<PerformanceIntent>? _intentSubscription;
 
   void _handleIntent(PerformanceIntent intent) {
+    if (_journeyLead) {
+      // The journey's gaze lead holds the head; the prop still follows.
+      if (intent.prop != state.prop ||
+          intent.tabletWeather != state.tabletWeather ||
+          intent.tabletTemp != state.tabletTemp) {
+        _emitIfOpen(
+          state.copyWith(
+            prop: intent.prop,
+            tabletWeather: intent.tabletWeather,
+            tabletTemp: intent.tabletTemp,
+          ),
+        );
+      }
+      return;
+    }
     final HeadTarget target = headTargetFor(
       intent.gaze,
       activeTool: intent.activeTool,
+      prop: intent.prop,
     );
-    if (target != state.headTarget) {
-      _emitIfOpen(state.copyWith(headTarget: target));
+    if (target != state.headTarget ||
+        intent.prop != state.prop ||
+        intent.tabletWeather != state.tabletWeather ||
+        intent.tabletTemp != state.tabletTemp) {
+      _emitIfOpen(
+        state.copyWith(
+          headTarget: target,
+          prop: intent.prop,
+          tabletWeather: intent.tabletWeather,
+          tabletTemp: intent.tabletTemp,
+        ),
+      );
     }
   }
 
@@ -145,6 +190,7 @@ class AvatarCubit extends Cubit<AvatarState> {
         // The Rive view fires the trigger from a BlocListener keyed on seq,
         // so repeating the same gesture still plays.
         _propGesturePlaying = false;
+        _directorGesturePlaying = true;
         _emitIfOpen(
           state.copyWith(
             gestureEvent: (gesture: gesture, seq: state.gestureEvent.seq + 1),
@@ -210,6 +256,8 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void loadAvatar(String chatId) async {
+    // Another chat: a journey under way belongs to the chat it started in.
+    _abortJourney();
     _emitIfOpen(state.copyWith(status: AvatarStatus.loading));
     final Result<Chat> result = await _avatarRepository.getChat(chatId);
     if (isClosed) return;
@@ -311,6 +359,13 @@ class AvatarCubit extends Cubit<AvatarState> {
     );
 
     final AvatarSpecials? specials = avatarConfig.specials;
+    if (specials == AvatarSpecials.leaveAndComeBack &&
+        avatarConfig.background != null) {
+      // M7: a scene change is a journey (the destination is read when it
+      // starts, after any journey already under way).
+      _enqueueTransition(() => _journey(chatId, avatarConfig));
+      return;
+    }
     if (specials == AvatarSpecials.leaveAndComeBack ||
         specials == AvatarSpecials.outOfScreen) {
       // leaveAndComeBack: scene change. outOfScreen: clothes change. Either
@@ -367,12 +422,381 @@ class AvatarCubit extends Cubit<AvatarState> {
             : AvatarStatusAnimation.coming,
       ),
     );
+    final AvatarCostume before = state.avatar.costume;
     // Transition values are never persisted: the avatar ends on screen.
     _updateAvatar(
       chatId,
       avatarConfig.copyWith(specials: AvatarSpecials.onScreen),
     );
+    final AvatarCostume worn = state.avatar.costume;
     await _waitForPresence(AvatarSpecials.onScreen);
+    if (isClosed) return;
+    _playSignatureIfPutOn(before, worn);
+  }
+
+  /// M10 ruling 6: a costume just put on ([before] → [worn], [worn] not
+  /// none) plays its signature move once, back on screen after the outfit
+  /// switch. Only a walk-off clothes change gets here: a chat load, the
+  /// new-chat sequence (no walk) and a journey never play it. Requested of
+  /// the director like an LLM gesture (it waits for a gesture playing and
+  /// the cooldown; a prop still out for a running tool drops it); without a
+  /// director (tests, the lab) nothing plays. Skipped when the costume
+  /// changed again meanwhile (a chat switch).
+  void _playSignatureIfPutOn(AvatarCostume before, AvatarCostume worn) {
+    if (worn == AvatarCostume.none ||
+        worn == before ||
+        state.avatar.costume != worn ||
+        state.journey != null) {
+      return;
+    }
+    AppLogger.debug(
+      'AvatarCubit: ${worn.name} put on, signature move',
+      tag: 'AvatarCubit',
+    );
+    _director?.requestGesture(AvatarGesture.signature);
+  }
+
+  // ---------------------------------------------------------------- journeys
+
+  /// The head looks toward the threshold while it opens (M7 ruling 8).
+  static const HeadTarget journeyLead = HeadTarget(0.6, 0.05);
+
+  bool _journeyLead = false;
+  int _journeySerial = 0;
+  Completer<void>? _sceneShown;
+  AvatarScene? _awaitedScene;
+
+  /// Walks the avatar from the current scene to [avatarConfig]'s through the
+  /// pair's threshold (M7 rulings 5–10): pull back, open, walk out, close,
+  /// cut to the preloaded scene, open, walk in, close, vanish. The walks wait
+  /// for `presence_done` and the cut for [onSceneShown], each at most
+  /// [JourneyTiming.waitTimeout]. The same scene: no journey, the config
+  /// lands as it is.
+  ///
+  /// The door (M8 rulings 5–6) adds two jacket beats: `grab` after `open`
+  /// (the jacket hangs on the peg from the door's appear; the `grab` gesture
+  /// reaches for it and, at its contact, the jacket moves to the hand:
+  /// [AvatarState.jacket] true and [AvatarState.journeyJacket] 0 in one
+  /// state) and `hang` after `enter` (the reverse). The jacket leaves with
+  /// the door at the end.
+  Future<void> _journey(String chatId, AvatarConfig avatarConfig) async {
+    final AvatarScene from = state.scene;
+    final AvatarScene to = avatarConfig.background ?? from;
+    final AvatarConfig landing = avatarConfig.copyWith(
+      specials: AvatarSpecials.onScreen,
+    );
+    if (isClosed) return;
+    if (to == from) {
+      final bool clothes =
+          avatarConfig.hat != null ||
+          avatarConfig.top != null ||
+          avatarConfig.glasses != null ||
+          avatarConfig.costume != null ||
+          avatarConfig.topTint != null ||
+          avatarConfig.hatTint != null;
+      if (clothes) {
+        // No journey, but the clothes still change out of sight.
+        await _walkOffAndBack(chatId, avatarConfig, clothesChange: true);
+      } else {
+        _updateAvatar(chatId, landing);
+      }
+      return;
+    }
+    final JourneyFamily family = JourneyPlanner.familyFor(from, to);
+    final int epoch = _journeyEpoch;
+    // A chat switch (loadAvatar) mid-journey stops it before the next beat.
+    bool gone() => isClosed || epoch != _journeyEpoch;
+    if (_reduceMotion()) {
+      await _reducedJourney(chatId, landing, from, to, family, gone);
+      return;
+    }
+    JourneyState journey = JourneyState(
+      from: from,
+      to: to,
+      family: family,
+      phase: JourneyPhase.pullBack,
+      serial: ++_journeySerial,
+    );
+    _emitIfOpen(state.copyWith(journey: journey, preloadScene: to));
+    await Future<void>.delayed(JourneyTiming.pullBack);
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.open);
+    _journeyLead = true;
+    _emitIfOpen(
+      state.copyWith(
+        journey: journey,
+        headTarget: journeyLead,
+        // the jacket hangs on the peg from the door's appear
+        journeyJacket: journey.hasJacket ? 1 : 0,
+      ),
+    );
+    await Future<void>.delayed(JourneyTiming.open);
+    if (gone()) return;
+
+    if (journey.hasJacket) {
+      final JourneyState? beat = await _jacketBeat(
+        journey,
+        JourneyPhase.grab,
+        JourneyTiming.grab,
+        toHand: true,
+        gone: gone,
+      );
+      if (beat == null) {
+        return;
+      }
+      journey = beat;
+    }
+
+    journey = _beat(journey, JourneyPhase.exit);
+    _emitIfOpen(
+      state.copyWith(
+        journey: journey,
+        statusAnimation: AvatarStatusAnimation.leaving,
+        presence: AvatarSpecials.outOfScreen,
+        previousSpecialsState: AvatarSpecials.outOfScreen,
+      ),
+    );
+    await _waitForPresence(AvatarSpecials.outOfScreen);
+    if (gone()) return;
+    _releaseLead();
+
+    journey = _beat(journey, JourneyPhase.close);
+    _emitIfOpen(state.copyWith(journey: journey));
+    await Future<void>.delayed(JourneyTiming.closeOf(family));
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.cut);
+    final Future<void> shown = _waitForScene(to);
+    _emitIfOpen(state.copyWith(journey: journey));
+    // The scene switches with the avatar still off screen.
+    _updateAvatar(chatId, landing, presence: AvatarSpecials.outOfScreen);
+    await shown;
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.arriveOpen);
+    _emitIfOpen(state.copyWith(journey: journey));
+    await Future<void>.delayed(JourneyTiming.arriveOpenOf(family));
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.enter);
+    _emitIfOpen(
+      state.copyWith(
+        journey: journey,
+        statusAnimation: AvatarStatusAnimation.coming,
+        presence: AvatarSpecials.onScreen,
+        previousSpecialsState: AvatarSpecials.onScreen,
+      ),
+    );
+    await _waitForPresence(AvatarSpecials.onScreen);
+    if (gone()) return;
+
+    if (journey.hasJacket) {
+      final JourneyState? beat = await _jacketBeat(
+        journey,
+        JourneyPhase.hang,
+        JourneyTiming.hang,
+        toHand: false,
+        gone: gone,
+      );
+      if (beat == null) {
+        return;
+      }
+      journey = beat;
+    }
+
+    journey = _beat(journey, JourneyPhase.arriveClose);
+    _emitIfOpen(state.copyWith(journey: journey));
+    await Future<void>.delayed(JourneyTiming.close);
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.vanish);
+    _emitIfOpen(state.copyWith(journey: journey));
+    await Future<void>.delayed(JourneyTiming.vanish);
+    if (gone()) return;
+    _emitIfOpen(
+      state.copyWith(
+        journey: null,
+        preloadScene: null,
+        jacket: false,
+        journeyJacket: 0,
+      ),
+    );
+  }
+
+  /// The journey under reduce motion (M11 ruling 18): a cross-fade cut. The
+  /// stage fades out ([JourneyPhase.close], [JourneyTiming.reducedFade]; the
+  /// destination decodes meanwhile), the scene changes behind it with the
+  /// avatar on screen and the chat saves it ([JourneyPhase.cut], which waits
+  /// for the new file on screen like a full journey), then it fades back in
+  /// ([JourneyPhase.vanish]). No threshold, no walk, no jacket beats.
+  Future<void> _reducedJourney(
+    String chatId,
+    AvatarConfig landing,
+    AvatarScene from,
+    AvatarScene to,
+    JourneyFamily family,
+    bool Function() gone,
+  ) async {
+    JourneyState journey = JourneyState(
+      from: from,
+      to: to,
+      family: family,
+      phase: JourneyPhase.close,
+      serial: ++_journeySerial,
+      reduced: true,
+    );
+    _emitIfOpen(state.copyWith(journey: journey, preloadScene: to));
+    await Future<void>.delayed(JourneyTiming.reducedFade);
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.cut);
+    final Future<void> shown = _waitForScene(to);
+    _emitIfOpen(state.copyWith(journey: journey));
+    _updateAvatar(chatId, landing);
+    await shown;
+    if (gone()) return;
+
+    journey = _beat(journey, JourneyPhase.vanish);
+    _emitIfOpen(state.copyWith(journey: journey));
+    await Future<void>.delayed(JourneyTiming.reducedFade);
+    if (gone()) return;
+    _emitIfOpen(state.copyWith(journey: null, preloadScene: null));
+  }
+
+  /// One jacket beat ([phase]: [JourneyPhase.grab] or [JourneyPhase.hang]),
+  /// started once any director gesture still playing is done: plays the
+  /// `grab` gesture, swaps the jacket at [JourneyTiming.grabContact] (to the
+  /// hand when [toHand], else to the peg: both values in one state, so the
+  /// two views flip in the same frame) and waits out [length]. Returns the
+  /// journey in the new phase, or null when it was stopped meanwhile.
+  Future<JourneyState?> _jacketBeat(
+    JourneyState current,
+    JourneyPhase phase,
+    Duration length, {
+    required bool toHand,
+    required bool Function() gone,
+  }) async {
+    // A director gesture still playing owns the next gesture_done: let it
+    // finish first, so the grab's own gesture_done (which is swallowed) is
+    // not mistaken for it and the director's queue is not released early.
+    await _waitForDirectorGesture();
+    if (gone()) return null;
+    final JourneyState journey = _beat(current, phase);
+    // The journey's own gesture: its gesture_done must not release the
+    // director's queue.
+    _propGesturePlaying = true;
+    _emitIfOpen(
+      state.copyWith(
+        journey: journey,
+        gestureEvent: (
+          gesture: AvatarGesture.grab,
+          seq: state.gestureEvent.seq + 1,
+        ),
+      ),
+    );
+    await Future<void>.delayed(JourneyTiming.grabContact);
+    if (gone()) return null;
+    _emitIfOpen(state.copyWith(jacket: toHand, journeyJacket: toHand ? 0 : 1));
+    await Future<void>.delayed(length - JourneyTiming.grabContact);
+    return gone() ? null : journey;
+  }
+
+  /// Completes once the director gesture playing now (if any) is done, or
+  /// after [_directorGestureWait] (the Rive `gesture_done` may never come).
+  Future<void> _waitForDirectorGesture() async {
+    if (!_directorGesturePlaying) {
+      return;
+    }
+    final Completer<void> completer = Completer<void>();
+    _directorGestureDone = completer;
+    await completer.future.timeout(
+      _directorGestureWait,
+      onTimeout: () {
+        AppLogger.debug(
+          'journey: director gesture_done not received; continuing',
+          tag: 'AvatarCubit',
+        );
+      },
+    );
+    if (identical(_directorGestureDone, completer)) {
+      _directorGestureDone = null;
+    }
+    _directorGesturePlaying = false;
+  }
+
+  /// Bumped by a chat switch: a running journey stops at its next beat.
+  int _journeyEpoch = 0;
+
+  /// Stops a journey under way (a chat switch): the threshold, the clip and
+  /// the preload go, the head returns to the director, the avatar is on
+  /// screen; the destination is never applied to the chat it left.
+  void _abortJourney() {
+    if (state.journey == null && !_journeyLead && !state.jacket) {
+      return;
+    }
+    _journeyEpoch++;
+    _sceneShown = null;
+    _awaitedScene = null;
+    _releaseLead();
+    _emitIfOpen(
+      state.copyWith(
+        journey: null,
+        preloadScene: null,
+        presence: AvatarSpecials.onScreen,
+        // no jacket left in the hand (nor on a peg) with no journey
+        jacket: false,
+        journeyJacket: 0,
+      ),
+    );
+  }
+
+  JourneyState _beat(JourneyState journey, JourneyPhase phase) {
+    AppLogger.debug('journey: $phase', tag: 'AvatarCubit');
+    return journey.next(phase);
+  }
+
+  /// Ends the gaze lead: the head goes back to the director's gaze.
+  void _releaseLead() {
+    _journeyLead = false;
+    final PerformanceDirector? director = _director;
+    if (director != null) {
+      _handleIntent(director.current);
+    } else {
+      _emitIfOpen(state.copyWith(headTarget: HeadTarget.zero));
+    }
+  }
+
+  Future<void> _waitForScene(AvatarScene scene) {
+    final Completer<void> completer = Completer<void>();
+    _sceneShown = completer;
+    _awaitedScene = scene;
+    return completer.future
+        .timeout(
+          JourneyTiming.waitTimeout,
+          onTimeout: () {
+            AppLogger.debug(
+              'journey: ${scene.name} not shown in time; arriving anyway',
+              tag: 'AvatarCubit',
+            );
+          },
+        )
+        .whenComplete(() {
+          if (identical(_sceneShown, completer)) {
+            _sceneShown = null;
+            _awaitedScene = null;
+          }
+        });
+  }
+
+  /// Called by the stage once [scene]'s file is on screen (the journey's cut
+  /// waits for it before the avatar arrives).
+  void onSceneShown(AvatarScene scene) {
+    if (_awaitedScene != scene) return;
+    final Completer<void>? completer = _sceneShown;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
   }
 
   Future<void> _waitForPresence(AvatarSpecials presence) {
@@ -407,6 +831,11 @@ class AvatarCubit extends Cubit<AvatarState> {
       _propGesturePlaying = false;
       return;
     }
+    _directorGesturePlaying = false;
+    final Completer<void>? waiting = _directorGestureDone;
+    if (waiting != null && !waiting.isCompleted) {
+      waiting.complete();
+    }
     _director?.onGestureDone();
   }
 
@@ -419,7 +848,11 @@ class AvatarCubit extends Cubit<AvatarState> {
     }
   }
 
-  void _updateAvatar(String chatId, AvatarConfig avatarConfig) {
+  void _updateAvatar(
+    String chatId,
+    AvatarConfig avatarConfig, {
+    AvatarSpecials presence = AvatarSpecials.onScreen,
+  }) {
     final Avatar avatar = state.avatar.copyWith(
       hat: avatarConfig.hat ?? state.avatar.hat,
       top: avatarConfig.top ?? state.avatar.top,
@@ -427,14 +860,17 @@ class AvatarCubit extends Cubit<AvatarState> {
       specials: avatarConfig.specials ?? state.avatar.specials,
       background: avatarConfig.background ?? state.avatar.background,
       costume: avatarConfig.costume ?? state.avatar.costume,
+      topTint: avatarConfig.topTint ?? state.avatar.topTint,
+      hatTint: avatarConfig.hatTint ?? state.avatar.hatTint,
     );
     _emitIfOpen(
       state.copyWith(
         avatar: avatar,
         scene: avatar.background,
-        // The avatar is on screen once a config lands; walk-off
-        // transitions are driven by _walkOffAndBack.
-        presence: AvatarSpecials.onScreen,
+        // The avatar is on screen once a config lands (a journey's cut keeps
+        // it off screen: its walk in is the next beat); walk-off
+        // transitions are driven by _walkOffAndBack and _journey.
+        presence: presence,
         previousSpecialsState:
             avatarConfig.specials ?? state.previousSpecialsState,
       ),
@@ -443,8 +879,17 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   /// A tap on a scene prop triggers its local reaction only: no LLM call
-  /// and nothing written to chat history.
+  /// and nothing written to chat history. Ignored while a journey runs (a
+  /// screen reader's prop action can arrive then; M11 review).
   void onPropTapped(AvatarScene scene, String propId) {
+    if (state.journey != null) {
+      AppLogger.debug(
+        'AvatarCubit: prop $propId ignored during a journey',
+        tag: 'AvatarCubit',
+      );
+      return;
+    }
+    _director?.onUserActivity();
     final PropReaction? reaction = _propReactions.reactionForProp(
       scene,
       propId,
@@ -459,8 +904,31 @@ class AvatarCubit extends Cubit<AvatarState> {
     _applyReaction(reaction);
   }
 
+  /// A drag started on a scene's handle: presence for the idle ladder, even
+  /// when the drag fires no scene event (the sand, the misted window).
+  void onSceneDragStarted() {
+    _director?.onUserActivity();
+  }
+
+  /// A scene drag's action (M9 ruling 8: the lamp's cord, the hut's rope,
+  /// the campfire's stir): played like any scene event (the scene, the
+  /// NPC and the camera hear it), unless a journey runs or [event] is not
+  /// one of the scene's.
+  void onSceneDragEvent(SceneEvent event) {
+    if (state.journey != null || !state.scene.allowedEvents.contains(event)) {
+      AppLogger.debug(
+        'AvatarCubit: drag event ${event.name} ignored in ${state.scene.name}',
+        tag: 'AvatarCubit',
+      );
+      return;
+    }
+    _director?.onUserActivity();
+    _animationService.trigger(AvatarAnimation.sceneEvent(event));
+  }
+
   /// A tap on the avatar itself (zone: head or body per contract).
   void onAvatarTapped(String zone) {
+    _director?.onUserActivity();
     final PropReaction? reaction = _propReactions.reactionForZone(zone);
     if (reaction == null) {
       AppLogger.debug(
@@ -477,9 +945,19 @@ class AvatarCubit extends Cubit<AvatarState> {
     final AvatarMood? reactionMood = reaction.mood;
     if (reactionMood != null) {
       next = next.copyWith(mood: reactionMood);
+      // the mood enum only carries accents (contract v5): the face itself
+      // follows the director's emotion
+      _director?.setMood(reactionMood);
     }
-    if (reaction.gesture != null) {
-      final AvatarGesture gesture = reaction.gesture!;
+    final AvatarGesture? reactionGesture = reaction.gesture;
+    if (reactionGesture != null && state.prop != AvatarProp.none) {
+      // The hands hold the prop: the mood and the sound still play.
+      AppLogger.debug(
+        'AvatarCubit: prop out, skipped ${reactionGesture.name}',
+        tag: 'AvatarCubit',
+      );
+    } else if (reactionGesture != null) {
+      final AvatarGesture gesture = reactionGesture;
       _propGesturePlaying = true;
       next = next.copyWith(
         gestureEvent: (gesture: gesture, seq: next.gestureEvent.seq + 1),

@@ -1,0 +1,140 @@
+{
+ "mode": "profile",
+ "run1": {
+  "livingRoom": {
+   "frames": 523,
+   "build_p50": 10.46,
+   "build_p95": 21.23,
+   "build_p99": 36.01,
+   "raster_p50": 6.78,
+   "raster_p95": 10.45,
+   "raster_p99": 14.21,
+   "total_p95": 36.11,
+   "over_16_6_share": 0.12619502868068833
+  },
+  "campfire": {
+   "frames": 551,
+   "build_p50": 10.45,
+   "build_p95": 17.26,
+   "build_p99": 24.95,
+   "raster_p50": 7.2,
+   "raster_p95": 10.26,
+   "raster_p99": 12.57,
+   "total_p95": 26.41,
+   "over_16_6_share": 0.06896551724137931
+  },
+  "campfire_rain1": {
+   "frames": 641,
+   "build_p50": 10.02,
+   "build_p95": 13.64,
+   "build_p99": 17.02,
+   "raster_p50": 7.51,
+   "raster_p95": 9.62,
+   "raster_p99": 11.27,
+   "total_p95": 22.5,
+   "over_16_6_share": 0.0124804992199688
+  },
+  "beach": {
+   "frames": 632,
+   "build_p50": 9.77,
+   "build_p95": 13.71,
+   "build_p99": 16.46,
+   "raster_p50": 7.68,
+   "raster_p95": 9.86,
+   "raster_p99": 11.46,
+   "total_p95": 22.57,
+   "over_16_6_share": 0.00949367088607595
+  },
+  "beach_rain1": {
+   "frames": 638,
+   "build_p50": 9.72,
+   "build_p95": 13.09,
+   "build_p99": 15.9,
+   "raster_p50": 7.84,
+   "raster_p95": 9.74,
+   "raster_p99": 10.75,
+   "total_p95": 21.76,
+   "over_16_6_share": 0.006269592476489028
+  },
+  "deepSpace": {
+   "frames": 626,
+   "build_p50": 9.72,
+   "build_p95": 13.57,
+   "build_p99": 19.23,
+   "raster_p50": 7.79,
+   "raster_p95": 9.98,
+   "raster_p99": 11.21,
+   "total_p95": 23.0,
+   "over_16_6_share": 0.020766773162939296
+  }
+ },
+ "run2": {
+  "livingRoom": {
+   "frames": 549,
+   "build_p50": 10.29,
+   "build_p95": 18.72,
+   "build_p99": 27.64,
+   "raster_p50": 7.42,
+   "raster_p95": 10.45,
+   "raster_p99": 13.17,
+   "total_p95": 29.62,
+   "over_16_6_share": 0.08014571948998178
+  },
+  "campfire": {
+   "frames": 627,
+   "build_p50": 9.4,
+   "build_p95": 12.2,
+   "build_p99": 16.51,
+   "raster_p50": 8.13,
+   "raster_p95": 9.92,
+   "raster_p99": 11.6,
+   "total_p95": 22.99,
+   "over_16_6_share": 0.011164274322169059
+  },
+  "campfire_rain1": {
+   "frames": 597,
+   "build_p50": 9.44,
+   "build_p95": 14.23,
+   "build_p99": 22.37,
+   "raster_p50": 8.04,
+   "raster_p95": 10.28,
+   "raster_p99": 12.09,
+   "total_p95": 25.81,
+   "over_16_6_share": 0.03015075376884422
+  },
+  "beach": {
+   "frames": 430,
+   "build_p50": 12.74,
+   "build_p95": 26.11,
+   "build_p99": 41.63,
+   "raster_p50": 7.03,
+   "raster_p95": 11.69,
+   "raster_p99": 19.51,
+   "total_p95": 42.91,
+   "over_16_6_share": 0.28837209302325584
+  },
+  "beach_rain1": {
+   "frames": 384,
+   "build_p50": 12.96,
+   "build_p95": 30.93,
+   "build_p99": 94.87,
+   "raster_p50": 7.0,
+   "raster_p95": 12.21,
+   "raster_p99": 36.35,
+   "total_p95": 52.81,
+   "over_16_6_share": 0.3046875
+  },
+  "deepSpace": {
+   "frames": 489,
+   "build_p50": 11.25,
+   "build_p95": 21.4,
+   "build_p99": 27.12,
+   "raster_p50": 6.95,
+   "raster_p95": 10.63,
+   "raster_p99": 13.06,
+   "total_p95": 33.83,
+   "over_16_6_share": 0.17586912065439672
+  }
+ },
+ "host": "Apple Silicon Mac under load (load average 12-16: other sessions' flutter_tester processes, a game, WindowServer)"
+}

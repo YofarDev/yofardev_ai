@@ -1,0 +1,12 @@
+rest frames (f0, f1, f30, f60) at the defaults identical to 927a606: 0.0000% differ (ok)
+away: the NPC's crop changes (4.93% of it), nothing else does (0.0000%): ok
+idle: moves (2.64% of the crop) and its loop is back after 360 frames (0.0000% differ): ok
+move: moves (6.35% of the crop) and its loop is back after 30 frames (0.0000% differ): ok
+notice: moves (1.73% of the crop) and its loop is back after 120 frames (0.0000% differ): ok
+react: moves (8.79% of the crop) and its loop is back after 60 frames (0.0000% differ): ok
+pointer cat at npcX 0.0: click@886,1123 fires 1: ok
+pointer cat at npcX 0.5: click@654,1261 fires 1: ok
+pointer cat at npcX 1.0: click@320,1424 fires 1, its v10 spot click@886,1123 fires 0: ok
+fog: changes 6.23% of the frame, 0.0000% outside the window (ok)
+livingRoom.riv 139,180 B (+26,224 B vs 927a606; budget 409,600, NPC + fog <= 31,744): ok
+assets/rive/posters/livingRoom.webp unchanged since 927a606: ok

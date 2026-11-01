@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/models/avatar_cue.dart';
 import '../../../../core/models/failure.dart';
+import '../../../../core/models/performance/speech_timeline.dart';
+import '../../../../core/models/performance/viseme.dart';
 import '../../../../core/services/audio/audio_amplitude_service.dart';
 import '../../../../core/services/audio/interruption_service.dart';
 import '../../../../core/services/audio/audio_player_service.dart';
@@ -28,7 +30,9 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
     required AudioPlayerService audioPlayerService,
     required InterruptionService interruptionService,
     required TtsPlaybackService ttsPlaybackService,
+    Duration speechPreroll = defaultSpeechPreroll,
   }) : _ttsQueueManager = ttsQueueManager,
+       _speechPreroll = speechPreroll,
        _audioAmplitudeService = audioAmplitudeService,
        _audioPlayerService = audioPlayerService,
        _interruptionService = interruptionService,
@@ -56,6 +60,33 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   /// blocking the transition. Entries are removed once played / cancelled.
   final Map<String, Future<List<int>>> _amplitudeFutures =
       <String, Future<List<int>>>{};
+
+  /// Speech analysis (visemes + prosody), prefetched on arrival like the
+  /// amplitudes. Never fails: an error resolves to null.
+  final Map<String, Future<SpeechTimeline?>> _timelineFutures =
+      <String, Future<SpeechTimeline?>>{};
+
+  /// The first sounding viseme of each analysis that has finished, for the
+  /// pre-roll (the lips stay parted into the voice unless it opens on a lip
+  /// closure).
+  final Map<String, Viseme> _onsets = <String, Viseme>{};
+
+  /// Longest a sentence waits for its speech analysis after its breath (the
+  /// pre-roll); past it the sentence plays with no timeline (the amplitude
+  /// fallback).
+  static const Duration timelineWait = Duration(milliseconds: 150);
+
+  /// Time between announcing a sentence and playing it: the avatar draws a
+  /// breath before speaking (M2 plan, critic round 3 ruling; 350 ms since
+  /// critic round 7: an eased inhale, not a gasp). The audio of every
+  /// sentence starts this long after it is ready to play.
+  static const Duration defaultSpeechPreroll = Duration(milliseconds: 350);
+
+  final Duration _speechPreroll;
+
+  /// Incremented by every interruption: a sentence waiting out its pre-roll
+  /// does not start after an interrupt.
+  int _generation = 0;
 
   /// Subscribe to TTS audio stream to play audio and extract amplitudes
   void _subscribeToTtsStream() {
@@ -94,8 +125,11 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       _,
     ) async {
       AppLogger.debug('Interrupting active TTS playback', tag: 'ChatTtsCubit');
+      _generation++;
       _pendingPlaybackQueue.clear();
       _amplitudeFutures.clear();
+      _timelineFutures.clear();
+      _onsets.clear();
       clearAudioPaths();
       if (!(_currentPlaybackStopSignal?.isCompleted ?? true)) {
         _currentPlaybackStopSignal!.complete();
@@ -104,7 +138,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       // resync would read position 0 and restart the mouth.
       _ttsPlaybackService.cancelAnimation();
       await _audioPlayerService.stop();
-      await _ttsPlaybackService.stop();
+      await _ttsPlaybackService.interrupt();
     });
   }
 
@@ -124,6 +158,37 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         () => _audioAmplitudeService.extractAmplitudes(audioPath),
       );
     });
+
+    // Same for the speech analysis (off the UI isolate). The sentence text
+    // and its language are parked in the queue until playback consumes
+    // them: peek, not consume.
+    _timelineFutures.putIfAbsent(
+      audioPath,
+      () =>
+          Future<SpeechTimeline?>(
+            () => _audioAmplitudeService.analyzeSpeech(
+              audioPath,
+              text: _ttsQueueManager.peekText(audioPath),
+              language: _ttsQueueManager.peekLanguage(audioPath) ?? 'en',
+            ),
+          ).then<SpeechTimeline?>(
+            (SpeechTimeline? timeline) {
+              final Viseme? onset = _onsetOf(timeline);
+              if (onset != null) {
+                _onsets[audioPath] = onset;
+              }
+              return timeline;
+            },
+            onError: (Object e) {
+              AppLogger.error(
+                'Speech analysis failed for $audioPath',
+                tag: 'ChatTtsCubit',
+                error: e,
+              );
+              return null;
+            },
+          ),
+    );
 
     if (_isPlayingFromQueue) {
       return;
@@ -153,6 +218,10 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
 
   /// Play audio and extract amplitudes
   Future<void> _playAndExtractAmplitudes(String audioPath) async {
+    // An interrupt during any await below drops this sentence instead of
+    // playing it after the user stopped the speech.
+    final int generation = _generation;
+    bool interrupted() => isClosed || generation != _generation;
     try {
       AppLogger.debug(
         'Starting TTS playback for $audioPath',
@@ -169,6 +238,43 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         'Extracted ${amplitudes.length} amplitudes for $audioPath',
         tag: 'ChatTtsCubit',
       );
+
+      if (interrupted()) {
+        _dropUnplayed(audioPath);
+        return;
+      }
+      // The analysis normally finished during the previous sentence; a slow
+      // one never holds the audio back more than [timelineWait] past the
+      // breath before speaking, which it may use whole (the first sentence
+      // has nothing else to overlap with).
+      // The budget (pre-roll + [timelineWait]) starts now, with the breath.
+      bool analysisLate = false;
+      final Future<SpeechTimeline?>? pendingTimeline = _timelineFutures.remove(
+        audioPath,
+      );
+      final Future<SpeechTimeline?>? budgeted = pendingTimeline?.timeout(
+        _speechPreroll + timelineWait,
+        onTimeout: () {
+          AppLogger.debug(
+            'Speech analysis not ready for $audioPath, using amplitudes',
+            tag: 'ChatTtsCubit',
+          );
+          analysisLate = true;
+          return null;
+        },
+      );
+      if (_speechPreroll > Duration.zero) {
+        _ttsPlaybackService.announceSpeech(
+          _speechPreroll,
+          onset: _onsets.remove(audioPath),
+        );
+        await Future<void>.delayed(_speechPreroll);
+      }
+      final SpeechTimeline? timeline = await budgeted;
+      if (interrupted()) {
+        _dropUnplayed(audioPath);
+        return;
+      }
 
       // 2. Add to state for history
       final List<Map<String, dynamic>> currentList =
@@ -195,15 +301,32 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         // Consumed exactly once, here, when this audio starts playing.
         cues: _ttsQueueManager.consumeCues(audioPath),
         caption: _ttsQueueManager.consumeText(audioPath),
+        timeline: timeline,
       );
 
       // 5. Wait for playback completion OR interruption before processing next.
       final Completer<void> stopSignal = Completer<void>();
       _currentPlaybackStopSignal = stopSignal;
+
+      // A late analysis joins the sentence the moment it lands, if this
+      // sentence still plays. (The playback service checks the same, for the
+      // sentence that gave way to the next one.)
+      bool sentenceOver = false;
+      if (analysisLate && pendingTimeline != null) {
+        unawaited(
+          pendingTimeline.then((SpeechTimeline? late) {
+            if (late == null || sentenceOver || interrupted()) {
+              return;
+            }
+            _ttsPlaybackService.replaceTimeline(audioPath, late);
+          }),
+        );
+      }
       await Future.any(<Future<void>>[
         _audioPlayerService.onPlaybackComplete.first,
         stopSignal.future,
       ]);
+      sentenceOver = true;
 
       AppLogger.debug('Audio playback completed', tag: 'ChatTtsCubit');
       _amplitudeFutures.remove(audioPath);
@@ -226,6 +349,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         error: e,
       );
       _currentPlaybackStopSignal = null;
+      _timelineFutures.remove(audioPath);
       // The sentence never played: drop its parked caption text (no-op if
       // it was already consumed).
       _ttsQueueManager.consumeText(audioPath);
@@ -238,6 +362,27 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
         ),
       );
     }
+  }
+
+  /// A sentence dropped before it played: its parked text, history entry
+  /// and file go.
+  void _dropUnplayed(String audioPath) {
+    _amplitudeFutures.remove(audioPath);
+    _timelineFutures.remove(audioPath);
+    _onsets.remove(audioPath);
+    _ttsQueueManager.consumeText(audioPath);
+    _ttsQueueManager.consumeCues(audioPath);
+    unawaited(_ttsQueueManager.deleteAudio(audioPath));
+  }
+
+  /// The first viseme of [timeline] that is not silence, if any.
+  static Viseme? _onsetOf(SpeechTimeline? timeline) {
+    for (final VisemeSpan s in timeline?.visemes ?? const <VisemeSpan>[]) {
+      if (s.viseme != Viseme.sil) {
+        return s.viseme;
+      }
+    }
+    return null;
   }
 
   /// Clear the audio paths list (e.g., when starting a new message)
@@ -324,6 +469,8 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
   Future<void> close() async {
     _pendingPlaybackQueue.clear();
     _amplitudeFutures.clear();
+    _timelineFutures.clear();
+    _onsets.clear();
     if (!(_currentPlaybackStopSignal?.isCompleted ?? true)) {
       _currentPlaybackStopSignal!.complete();
     }

@@ -45,6 +45,8 @@ dependencies:
   go_router: ^18.1.1
   audioplayers: ^6.6.0
   rive: ^0.14.11
+  battery_plus: ^7.1.2
+  sensors_plus: ^7.1.1
 
 dev_dependencies:
   flutter_test:
@@ -80,10 +82,12 @@ flutter:
   assets:
     - assets/
     - assets/sound_effects/
+    - assets/foley/
     - assets/rive/
     - assets/rive/scenes/
     - assets/rive/posters/
     - assets/rive/ui/
+    - assets/rive/journeys/
     - assets/txt/
     - assets/onnx/
     - assets/voice_styles/

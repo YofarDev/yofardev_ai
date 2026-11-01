@@ -1,0 +1,7 @@
+bed_wind.wav (M11 ruling 11; rive/tools/gen_foley.py bed_wind, seed WIND_SEED = 11_2026)
+bytes: 86444 (budget 88000); foley folder total: 917376 B (budget 921600)
+format: mono, 16000 Hz, 16-bit PCM; loop: 43200 samples = 2.700 s (crossfade 400 ms, equal power)
+gusts: level 0.36..1 (one slow gust + a second at twice the rate, periodic over the loop); band sweep over (190.0, 320.0, 540.0, 900.0) Hz
+peak: -3.00 dBFS; mean (DC): +0.00000
+seam: RMS of the 10 ms across the join 0.1359; 10 ms windows inside the loop: min 0.0443, median 0.1486, max 0.2501 -> join / median 0.92 (ok)
+seam step: |x[last] - x[0]| = 0.00613; 99.9th percentile of the loop's own steps 0.16818 (ok)

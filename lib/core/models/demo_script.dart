@@ -1,18 +1,50 @@
 import '../utils/logger.dart';
 
+/// A scripted tool call, as an LLM would request it.
+class FakeToolCall {
+  final String name;
+  final Map<String, dynamic> arguments;
+
+  const FakeToolCall({
+    required this.name,
+    this.arguments = const <String, dynamic>{},
+  });
+
+  factory FakeToolCall.fromJson(Map<String, dynamic> json) {
+    return FakeToolCall(
+      name: json['name'] as String,
+      arguments:
+          (json['arguments'] as Map<String, dynamic>?) ??
+          const <String, dynamic>{},
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{'name': name, 'arguments': arguments};
+  }
+
+  @override
+  String toString() => 'FakeToolCall(name: $name, arguments: $arguments)';
+}
+
 /// Fake LLM response for demo mode
 ///
 /// Contains the JSON response that would normally come from an LLM,
-/// plus optional audio and amplitude data for synchronized TTS playback
+/// plus optional audio and amplitude data for synchronized TTS playback.
+///
+/// A response with non-empty [toolCalls] is a tool round: the fake LLM
+/// streams the calls (no text) and the next queued response is the answer.
 class FakeLlmResponse {
   final String jsonBody;
   final String? audioPath;
   final List<int>? amplitudes;
+  final List<FakeToolCall> toolCalls;
 
   const FakeLlmResponse({
     required this.jsonBody,
     this.audioPath,
     this.amplitudes,
+    this.toolCalls = const <FakeToolCall>[],
   });
 
   /// Create a FakeLlmResponse from JSON
@@ -21,6 +53,9 @@ class FakeLlmResponse {
       jsonBody: json['jsonBody'] as String,
       audioPath: json['audioPath'] as String?,
       amplitudes: json['amplitudes'] as List<int>?,
+      toolCalls: (json['toolCalls'] as List<dynamic>? ?? const <dynamic>[])
+          .map((dynamic e) => FakeToolCall.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -30,13 +65,16 @@ class FakeLlmResponse {
       'jsonBody': jsonBody,
       'audioPath': audioPath,
       'amplitudes': amplitudes,
+      if (toolCalls.isNotEmpty)
+        'toolCalls': toolCalls.map((FakeToolCall c) => c.toJson()).toList(),
     };
   }
 
   @override
   String toString() {
     return 'FakeLlmResponse(jsonBody: $jsonBody, audioPath: $audioPath, '
-        'amplitudes: ${amplitudes?.length ?? 0} values)';
+        'amplitudes: ${amplitudes?.length ?? 0} values, '
+        'toolCalls: ${toolCalls.length})';
   }
 }
 

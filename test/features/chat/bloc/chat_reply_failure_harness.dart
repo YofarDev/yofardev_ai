@@ -15,7 +15,6 @@ import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/voice_effects_service.dart';
-import 'package:yofardev_ai/features/sound/domain/services/tts_synthesizer.dart';
 import 'package:yofardev_ai/features/sound/sound.dart';
 import 'package:yofardev_ai/features/talking/data/repositories/talking_repository_impl.dart';
 import 'package:yofardev_ai/features/talking/talking.dart';
@@ -72,6 +71,7 @@ class ScriptedStreamingService extends Mock implements ChatStreamingService {
     required void Function(Chat finalChat) onStreamComplete,
     required void Function(String error) onError,
     void Function(String? toolName)? onToolActivity,
+    Avatar Function()? currentAvatar,
   }) async {
     started.complete();
     await release.future;

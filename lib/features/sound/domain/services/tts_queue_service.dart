@@ -30,6 +30,10 @@ class TtsQueueService {
   /// Sentence text of completed items, keyed by audio path, until consumed
   /// by the playback side (shown as a live caption while it plays).
   final Map<String, String> _textByPath = <String, String>{};
+
+  /// Language of each parked sentence, keyed by audio path, dropped with its
+  /// text (the speech analysis reads it ahead of playback).
+  final Map<String, String> _languageByPath = <String, String>{};
   final Uuid _uuid = const Uuid();
 
   bool _isProcessing = false;
@@ -89,9 +93,20 @@ class TtsQueueService {
   /// the map never outlives playback.
   String? consumeText(String audioPath) {
     final String? text = _textByPath.remove(audioPath);
+    _languageByPath.remove(audioPath);
     if (text != null) _notifyIfDrained();
     return text;
   }
+
+  /// The sentence text of the item whose audio path is [audioPath], without
+  /// consuming it (the speech analysis reads it ahead of playback); null
+  /// when unknown or already consumed.
+  String? peekText(String audioPath) => _textByPath[audioPath];
+
+  /// The language (as enqueued, e.g. `en` or `fr`) of the item whose audio
+  /// path is [audioPath], without consuming it; null when unknown or already
+  /// consumed.
+  String? peekLanguage(String audioPath) => _languageByPath[audioPath];
 
   /// Deletes a played audio file (scratch cleanup; the synthesizer owns the
   /// IO). Safe to call for a path that no longer exists.
@@ -146,6 +161,7 @@ class TtsQueueService {
     _queue.clear();
     _cuesByPath.clear();
     _textByPath.clear();
+    _languageByPath.clear();
     _isProcessing = false;
     AppLogger.debug('TTS queue cleared', tag: 'TtsQueueService');
   }
@@ -246,6 +262,7 @@ class TtsQueueService {
         _cuesByPath[processedAudioPath] = item.cues;
       }
       _textByPath[processedAudioPath] = item.text;
+      _languageByPath[processedAudioPath] = item.language;
 
       // Update item as completed
       _queue[0] = item.copyWith(

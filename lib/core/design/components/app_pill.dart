@@ -11,6 +11,8 @@ import 'interactive_surface.dart';
 /// (or any 16-20 dp [leading] widget, which wins over [icon]).
 ///
 /// The pill itself is 36 dp tall; the tappable area is at least 48 dp tall.
+/// A label longer than the pill's width is cut after [maxLines] lines (the
+/// pill grows with them: a status pill under large text passes 2).
 class AppPill extends StatelessWidget {
   const AppPill({
     super.key,
@@ -19,6 +21,7 @@ class AppPill extends StatelessWidget {
     this.leading,
     this.onTap,
     this.selected = false,
+    this.maxLines = 1,
   });
 
   final String label;
@@ -26,6 +29,9 @@ class AppPill extends StatelessWidget {
   final Widget? leading;
   final VoidCallback? onTap;
   final bool selected;
+
+  /// The label's lines at most (1: ellipsized on one line).
+  final int maxLines;
 
   static const double height = 36;
   static const double hitHeight = 48;
@@ -68,7 +74,7 @@ class AppPill extends StatelessWidget {
 
         final Widget text = Text(
           label,
-          maxLines: 1,
+          maxLines: maxLines,
           overflow: TextOverflow.ellipsis,
           style: context.text.labelLarge?.copyWith(color: foreground),
         );

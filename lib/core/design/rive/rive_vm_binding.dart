@@ -115,6 +115,23 @@ class RiveVmBinding {
     }
   }
 
+  /// The view model's number [name] as the file holds it now (null when it
+  /// has no such property): a read-back, for the real-runtime tests.
+  double? numberValue(String name) =>
+      _numbers.putIfAbsent(name, () => _viewModelInstance?.number(name))?.value;
+
+  /// The view model's colour [name] as the file holds it now (null when it
+  /// has no such property): a read-back, for the in-app captures.
+  Color? colorValue(String name) =>
+      _colors.putIfAbsent(name, () => _viewModelInstance?.color(name))?.value;
+
+  /// The view model's enum [name] as the file holds it now (its value name;
+  /// null when it has no such property): a read-back, for the in-app
+  /// captures.
+  String? enumValue(String name) => _enums
+      .putIfAbsent(name, () => _viewModelInstance?.enumerator(name))
+      ?.value;
+
   /// Sets a boolean property; falls back to a boolean state-machine input.
   void setBool(String name, bool value) {
     if (_memo.isUnchanged(name, value)) {

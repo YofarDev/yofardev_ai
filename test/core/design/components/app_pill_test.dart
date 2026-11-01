@@ -179,6 +179,8 @@ void main() {
               accent: amber,
               onAccent: Color(0xFF1B1830),
               glow: Color(0x59FFC24B),
+              glassTint: Color(0x18FFD49A),
+              captionInk: Color(0xFFF4E9D6),
             ),
           ),
         ],

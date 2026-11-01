@@ -1,0 +1,8 @@
+deepSpace rest -> idle: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+deepSpace idle -> rest: own px 34; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+deepSpace rest -> move: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+deepSpace move -> rest: own px 29; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+deepSpace rest -> react: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+deepSpace react -> rest: own px 96; old worst ghost 52.1% (frames with a ghost > 1 %: 10); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+deepSpace rest -> notice: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+deepSpace notice -> rest: own px 18; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)

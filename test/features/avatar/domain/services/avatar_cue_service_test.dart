@@ -5,16 +5,28 @@ import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
 import 'package:yofardev_ai/core/models/avatar_gesture.dart';
 import 'package:yofardev_ai/core/models/avatar_mood.dart';
+import 'package:yofardev_ai/core/models/chat.dart';
 import 'package:yofardev_ai/core/models/performance/performance.dart';
 import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/services/power/power_saver_source.dart';
+import 'package:yofardev_ai/core/services/presence/composer_activity_service.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/avatar_animation.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_animation_service.dart';
+import 'package:yofardev_ai/features/avatar/domain/services/idle_ladder.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/performance_director.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/avatar_cue_service.dart';
 import 'package:yofardev_ai/features/talking/domain/repositories/talking_repository.dart';
 import 'package:yofardev_ai/features/talking/domain/services/tts_playback_service.dart';
 
 class MockTalkingRepository extends Mock implements TalkingRepository {}
+
+class _NoPowerSaver implements PowerSaverSource {
+  @override
+  Future<bool> get isOn async => false;
+
+  @override
+  Stream<bool> get changes => const Stream<bool>.empty();
+}
 
 void main() {
   late AvatarAnimationService animationService;
@@ -305,6 +317,268 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 150));
       await drain();
       expect(director.current.speaking, isFalse);
+    });
+  });
+
+  group('AvatarCueService persona', () {
+    test(
+      'the chat persona sets the director profile and the ladder scale',
+      () async {
+        final StreamController<ChatPersona> personas =
+            StreamController<ChatPersona>.broadcast();
+        addTearDown(personas.close);
+        final IdleLadder ladder = IdleLadder(
+          now: () => currentTime,
+          power: _NoPowerSaver(),
+          reduceMotion: () => false,
+        );
+        addTearDown(ladder.dispose);
+        final AvatarCueService service = AvatarCueService(
+          playbackService: playbackService,
+          animationService: animationService,
+          streamingCues: streamingCuesController.stream,
+          director: director,
+          personas: personas.stream,
+          idleLadder: ladder,
+        );
+        addTearDown(service.dispose);
+
+        expect(director.profile, BodyLanguageProfile.normal);
+        expect(ladder.thresholdScale, 1);
+        personas.add(ChatPersona.philosopher);
+        await drain();
+        final BodyLanguageProfile philosopher = BodyLanguageProfile.of(
+          ChatPersona.philosopher,
+        );
+        expect(director.profile, philosopher);
+        expect(director.current.body, philosopher);
+        expect(ladder.thresholdScale, philosopher.idle.ladderScale);
+
+        personas.add(ChatPersona.normal);
+        await drain();
+        expect(director.profile, BodyLanguageProfile.normal);
+        expect(ladder.thresholdScale, 1);
+      },
+    );
+
+    test(
+      'a persona change mid-sentence moves the ladder pace at the sentence end',
+      () async {
+        final StreamController<ChatPersona> personas =
+            StreamController<ChatPersona>.broadcast();
+        addTearDown(personas.close);
+        final IdleLadder ladder = IdleLadder(
+          now: () => currentTime,
+          power: _NoPowerSaver(),
+          reduceMotion: () => false,
+        );
+        addTearDown(ladder.dispose);
+        final AvatarCueService service = AvatarCueService(
+          playbackService: playbackService,
+          animationService: animationService,
+          streamingCues: streamingCuesController.stream,
+          director: director,
+          personas: personas.stream,
+          idleLadder: ladder,
+        );
+        addTearDown(service.dispose);
+        // a long sentence (2 s), so a loaded test machine never ends it
+        // before the persona arrives
+        playbackService.startAmplitudeAnimation(
+          'a.wav',
+          List<int>.filled(40, 10),
+          const Duration(milliseconds: 50),
+          caption: 'Hello there.',
+        );
+        await drain();
+        expect(director.current.speaking, isTrue);
+        personas.add(ChatPersona.coach);
+        await drain();
+        // the director holds the profile until the sentence ends: so does the ladder
+        expect(director.profile, BodyLanguageProfile.normal);
+        expect(ladder.thresholdScale, 1);
+        for (int i = 0; i < 100 && director.current.speaking; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await drain();
+        }
+        expect(director.current.speaking, isFalse);
+        final BodyLanguageProfile coach = BodyLanguageProfile.of(
+          ChatPersona.coach,
+        );
+        expect(director.profile, coach);
+        expect(ladder.thresholdScale, coach.idle.ladderScale);
+      },
+    );
+
+    test(
+      'an LLM-cued sentence counts toward the sentence index, unswapped',
+      () async {
+        final StreamController<ChatPersona> personas =
+            StreamController<ChatPersona>.broadcast();
+        addTearDown(personas.close);
+        final AvatarCueService service = AvatarCueService(
+          playbackService: playbackService,
+          animationService: animationService,
+          streamingCues: streamingCuesController.stream,
+          director: director,
+          personas: personas.stream,
+        );
+        addTearDown(service.dispose);
+        personas.add(ChatPersona.coach);
+        await drain();
+        expect(director.sentenceIndex, 0);
+        playbackService.startAmplitudeAnimation(
+          'a.wav',
+          <int>[10, 10],
+          const Duration(milliseconds: 50),
+          caption: 'Go!',
+          cues: const <AvatarCue>[AvatarCue.gesture(AvatarGesture.wave)],
+        );
+        await drain();
+        expect(director.sentenceIndex, 1);
+        // the LLM's wave plays, unswapped
+        expect(director.current.pendingGesture, AvatarGesture.wave);
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      },
+    );
+  });
+
+  group('AvatarCueService presence', () {
+    test('composer reports reach the director', () async {
+      final ComposerActivityService composer = ComposerActivityService();
+      addTearDown(composer.dispose);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        composer: composer.activity,
+      );
+      addTearDown(service.dispose);
+
+      composer.report(
+        const ComposerActivity(typing: true, caretFraction: 0.8, lastChar: 'a'),
+      );
+      await drain();
+      expect(director.current.gaze, const GazeTarget.caret(0.8));
+      expect(director.current.lean, 0.6);
+
+      composer.clear();
+      await drain();
+      expect(director.current.lean, 0);
+    });
+
+    test('the ladder follows the director: stages in, activity out', () async {
+      final IdleLadder ladder = IdleLadder(
+        now: () => currentTime,
+        power: _NoPowerSaver(),
+        reduceMotion: () => false,
+      );
+      addTearDown(ladder.dispose);
+      final ComposerActivityService composer = ComposerActivityService();
+      addTearDown(composer.dispose);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        composer: composer.activity,
+        idleLadder: ladder,
+      );
+      addTearDown(service.dispose);
+
+      currentTime = currentTime.add(const Duration(minutes: 11));
+      ladder.tick();
+      await drain();
+      expect(ladder.stage, 3);
+      expect(director.current.idleStage, 3);
+      expect(director.current.prop, AvatarProp.tablet);
+
+      // a tap on the avatar (the cubit calls this) resets both
+      director.onUserActivity();
+      await drain();
+      expect(ladder.stage, 0);
+      expect(director.current.idleStage, 0);
+      expect(director.current.prop, AvatarProp.none);
+
+      // typing resets the ladder too
+      currentTime = currentTime.add(const Duration(minutes: 3));
+      ladder.tick();
+      await drain();
+      expect(director.current.idleStage, 2);
+      composer.report(const ComposerActivity(typing: true, lastChar: 'a'));
+      await drain();
+      expect(ladder.stage, 0);
+      expect(director.current.idleStage, 0);
+    });
+
+    test('a composer touch (mic, orb, chip) resets the ladder', () async {
+      final IdleLadder ladder = IdleLadder(
+        now: () => currentTime,
+        power: _NoPowerSaver(),
+        reduceMotion: () => false,
+      );
+      addTearDown(ladder.dispose);
+      final ComposerActivityService composer = ComposerActivityService();
+      addTearDown(composer.dispose);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        composer: composer.activity,
+        idleLadder: ladder,
+      );
+      addTearDown(service.dispose);
+
+      currentTime = currentTime.add(const Duration(minutes: 3));
+      ladder.tick();
+      await drain();
+      expect(ladder.stage, 2);
+
+      composer.touch();
+      await drain();
+      expect(ladder.stage, 0);
+      expect(director.current.idleStage, 0);
+      // a touch is presence, not typing: no lean, no gaze on the caret
+      expect(director.current.lean, 0);
+      expect(director.current.gaze, const GazeTarget.user());
+    });
+
+    test('speech starting resets a ladder that has the tablet out', () async {
+      final IdleLadder ladder = IdleLadder(
+        now: () => currentTime,
+        power: _NoPowerSaver(),
+        reduceMotion: () => false,
+      );
+      addTearDown(ladder.dispose);
+      final AvatarCueService service = AvatarCueService(
+        playbackService: playbackService,
+        animationService: animationService,
+        streamingCues: streamingCuesController.stream,
+        director: director,
+        idleLadder: ladder,
+      );
+      addTearDown(service.dispose);
+
+      currentTime = currentTime.add(const Duration(minutes: 11));
+      ladder.tick();
+      await drain();
+      expect(director.current.prop, AvatarProp.tablet);
+
+      playbackService.startAmplitudeAnimation(
+        'a.wav',
+        <int>[10, 10],
+        const Duration(milliseconds: 50),
+        caption: 'Hello.',
+      );
+      await drain();
+      expect(director.current.speaking, isTrue);
+      expect(director.current.prop, AvatarProp.none);
+      expect(director.current.idleStage, 0);
+      expect(ladder.stage, 0);
+      expect(director.current.gaze, const GazeTarget.user());
+      await Future<void>.delayed(const Duration(milliseconds: 150));
     });
   });
 }

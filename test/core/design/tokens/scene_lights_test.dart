@@ -1,0 +1,153 @@
+import 'dart:math' as math;
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/design/tokens/scene_lights.dart';
+import 'package:yofardev_ai/core/models/avatar_scene.dart';
+import 'package:yofardev_ai/core/models/performance/light_rig.dart';
+
+void main() {
+  group('SceneLights', () {
+    test('defines a rig for every scene', () {
+      for (final AvatarScene scene in AvatarScene.values) {
+        final LightRig rig = SceneLights.of(scene);
+        expect(rig, isNot(LightRig.neutral), reason: scene.name);
+        expect(rig.keyIntensity, inInclusiveRange(0.0, 1.0));
+        expect(rig.keyX * rig.keyX + rig.keyY * rig.keyY, closeTo(1, 0.01));
+      }
+    });
+
+    test('campfire light comes from cos/sin of the art bible angle 4.2', () {
+      final LightRig rig = SceneLights.of(AvatarScene.campfire);
+      expect(rig.keyX, closeTo(math.cos(4.2), 0.001));
+      expect(rig.keyX, closeTo(-0.490, 0.001));
+      expect(rig.keyY, closeTo(-0.872, 0.001));
+      expect(rig.keyColor, 0xFFFF9A4D);
+      expect(rig.keyIntensity, 1.0);
+      expect(rig.rimColor, 0xFF6F8FD8);
+      expect(rig.ambientColor, 0xFF141C2C);
+      expect(rig.fogColor, 0x3320304A);
+      expect(rig.flicker, 1.0);
+    });
+
+    test('rim intensity and ambient amount are shared by every scene', () {
+      for (final AvatarScene scene in AvatarScene.values) {
+        expect(SceneLights.of(scene).rimIntensity, 0.35, reason: scene.name);
+        expect(SceneLights.of(scene).ambientAmount, 0.35, reason: scene.name);
+      }
+    });
+
+    test('flicker: campfire full, living room lamp, others steady', () {
+      expect(SceneLights.of(AvatarScene.campfire).flicker, 1.0);
+      expect(SceneLights.of(AvatarScene.livingRoom).flicker, 0.15);
+      expect(SceneLights.of(AvatarScene.beach).flicker, 0.0);
+      expect(SceneLights.of(AvatarScene.deepSpace).flicker, 0.0);
+      expect(SceneLights.of(AvatarScene.cafe).flicker, 0.0);
+      expect(SceneLights.of(AvatarScene.rooftop).flicker, 0.0);
+      // the stove: a softer flicker than the campfire
+      expect(SceneLights.of(AvatarScene.mountainHut).flicker, 0.6);
+      // M11 ruling 3: the lantern, the train's lamp, the lamp and candles
+      expect(SceneLights.of(AvatarScene.forestCabin).flicker, 0.2);
+      expect(SceneLights.of(AvatarScene.trainCompartment).flicker, 0.05);
+      expect(SceneLights.of(AvatarScene.library).flicker, 0.1);
+    });
+
+    test('the M11 scenes keep their art bible rigs (contract v14)', () {
+      final LightRig cabin = SceneLights.of(AvatarScene.forestCabin);
+      expect(cabin.keyX, closeTo(math.cos(0.3), 0.001));
+      expect(cabin.keyY, closeTo(math.sin(0.3), 0.001));
+      expect(cabin.keyColor, 0xFFFFC27A);
+      expect(cabin.keyIntensity, 0.9);
+      expect(cabin.rimColor, 0xFF9CC8F0);
+      expect(cabin.ambientColor, 0xFF1A2A22);
+      expect(cabin.fogColor, 0x33B4C4B0);
+      final LightRig train = SceneLights.of(AvatarScene.trainCompartment);
+      expect(train.keyX, closeTo(math.cos(2.2), 0.001));
+      expect(train.keyY, closeTo(math.sin(2.2), 0.001));
+      expect(train.keyColor, 0xFFFFCF94);
+      expect(train.keyIntensity, 0.85);
+      expect(train.rimColor, 0xFF94B4DC);
+      expect(train.ambientColor, 0xFF2E2236);
+      expect(train.fogColor, 0x33B8B0C8);
+      final LightRig library = SceneLights.of(AvatarScene.library);
+      expect(library.keyX, closeTo(math.cos(3.5416), 0.001));
+      expect(library.keyY, closeTo(math.sin(3.5416), 0.001));
+      expect(library.keyColor, 0xFFFFD27A);
+      expect(library.keyIntensity, 0.8);
+      expect(library.rimColor, 0xFF8AA4CC);
+      expect(library.ambientColor, 0xFF1C1612);
+      expect(library.fogColor, 0x33706A78);
+    });
+
+    test('the M9 scenes keep their art bible rigs (contract v12)', () {
+      final LightRig cafe = SceneLights.of(AvatarScene.cafe);
+      expect(cafe.keyX, closeTo(math.cos(1.9), 0.001));
+      expect(cafe.keyY, closeTo(math.sin(1.9), 0.001));
+      expect(cafe.keyColor, 0xFFFFC98A);
+      expect(cafe.keyIntensity, 0.85);
+      expect(cafe.rimColor, 0xFF8FA8D0);
+      expect(cafe.ambientColor, 0xFF2A2433);
+      expect(cafe.fogColor, 0x33A8B4C4);
+      final LightRig roof = SceneLights.of(AvatarScene.rooftop);
+      // moonlight from the upper left, where the moon hangs (M9 fix round 1)
+      expect(roof.keyX, closeTo(math.cos(2.1916), 0.001));
+      expect(roof.keyY, closeTo(math.sin(2.1916), 0.001));
+      expect(roof.keyColor, 0xFFC4D4FF);
+      expect(roof.keyIntensity, 0.7);
+      expect(roof.rimColor, 0xFFFFB27A);
+      final LightRig hut = SceneLights.of(AvatarScene.mountainHut);
+      expect(hut.keyX, closeTo(math.cos(-0.4), 0.001));
+      expect(hut.keyY, closeTo(math.sin(-0.4), 0.001));
+      expect(hut.keyColor, 0xFFFFA25A);
+      expect(hut.keyIntensity, 0.95);
+      expect(hut.fogColor, 0x33B8C8DC);
+    });
+
+    test('the other scenes keep their art bible direction and colours', () {
+      final LightRig living = SceneLights.of(AvatarScene.livingRoom);
+      expect(living.keyX, closeTo(math.cos(2.4), 0.001));
+      expect(living.keyY, closeTo(math.sin(2.4), 0.001));
+      expect(living.keyColor, 0xFFFFD49A);
+      expect(living.keyIntensity, 0.85);
+      final LightRig beach = SceneLights.of(AvatarScene.beach);
+      expect(beach.keyX, closeTo(math.cos(0.35), 0.001));
+      expect(beach.keyY, closeTo(math.sin(0.35), 0.001));
+      expect(beach.fogColor, 0x22FFD9C0);
+      final LightRig space = SceneLights.of(AvatarScene.deepSpace);
+      expect(space.keyX, closeTo(math.cos(0.9), 0.001));
+      expect(space.keyY, closeTo(math.sin(0.9), 0.001));
+      expect(space.keyIntensity, 0.7);
+      expect(space.rimColor, 0xFF7FE0FF);
+    });
+  });
+
+  group('SceneLights.at (M7 time of day)', () {
+    test('night is the static rig, deep space ignores the clock', () {
+      for (final AvatarScene scene in AvatarScene.values) {
+        expect(SceneLights.at(scene, 0), SceneLights.of(scene));
+      }
+      expect(
+        SceneLights.at(AvatarScene.deepSpace, 1),
+        SceneLights.of(AvatarScene.deepSpace),
+      );
+    });
+
+    test('daylight leans only the key and ambient colours', () {
+      final LightRig night = SceneLights.of(AvatarScene.campfire);
+      final LightRig day = SceneLights.at(AvatarScene.campfire, 1);
+      expect(day.keyColor, isNot(night.keyColor));
+      expect(day.ambientColor, isNot(night.ambientColor));
+      expect(
+        day.copyWith(
+          keyColor: night.keyColor,
+          ambientColor: night.ambientColor,
+        ),
+        night,
+      );
+      // the ambient brightens toward the day sky fill, by at most dayLean
+      final int nightBlue = night.ambientColor & 0xFF;
+      final int dayBlue = day.ambientColor & 0xFF;
+      expect(dayBlue, greaterThan(nightBlue));
+      expect(SceneLights.at(AvatarScene.campfire, 7), day, reason: 'clamped');
+    });
+  });
+}

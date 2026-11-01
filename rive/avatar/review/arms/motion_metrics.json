@@ -1,0 +1,97 @@
+{
+ "method": "rive/tools/motion_metrics.py on every 2nd frame (fps 30 for jerk), --scale=0.5; before = commit 4f4632f avatar.rml",
+ "before": {
+  "wave": {
+   "pops": 1,
+   "jerk": 631094.8,
+   "max_diff": 0.0264
+  },
+  "laugh": {
+   "pops": 0,
+   "jerk": 264763.3,
+   "max_diff": 0.0216
+  },
+  "facepalm": {
+   "pops": 7,
+   "jerk": 1133245.8,
+   "max_diff": 0.027
+  },
+  "shrug": {
+   "pops": 8,
+   "jerk": 398538.2,
+   "max_diff": 0.033
+  },
+  "nod": {
+   "pops": 0,
+   "jerk": 802971.0,
+   "max_diff": 0.0144
+  },
+  "headshake": {
+   "pops": 0,
+   "jerk": 465222.1,
+   "max_diff": 0.0145
+  },
+  "clap": {
+   "pops": 0,
+   "jerk": 1107952.7,
+   "max_diff": 0.0352
+  },
+  "think": {
+   "pops": 12,
+   "jerk": 582733.7,
+   "max_diff": 0.0189
+  },
+  "presence": {
+   "pops": 46,
+   "jerk": 282810.0,
+   "max_diff": 0.0557
+  }
+ },
+ "after": {
+  "wave": {
+   "pops": 1,
+   "jerk": 625710.6,
+   "max_diff": 0.0259
+  },
+  "laugh": {
+   "pops": 0,
+   "jerk": 265320.6,
+   "max_diff": 0.0216
+  },
+  "facepalm": {
+   "pops": 7,
+   "jerk": 1118239.0,
+   "max_diff": 0.0261
+  },
+  "shrug": {
+   "pops": 8,
+   "jerk": 394509.2,
+   "max_diff": 0.0327
+  },
+  "nod": {
+   "pops": 0,
+   "jerk": 802849.5,
+   "max_diff": 0.0144
+  },
+  "headshake": {
+   "pops": 0,
+   "jerk": 457071.5,
+   "max_diff": 0.0145
+  },
+  "clap": {
+   "pops": 0,
+   "jerk": 1094902.0,
+   "max_diff": 0.033
+  },
+  "think": {
+   "pops": 12,
+   "jerk": 608721.4,
+   "max_diff": 0.0179
+  },
+  "presence": {
+   "pops": 46,
+   "jerk": 281225.7,
+   "max_diff": 0.0556
+  }
+ }
+}

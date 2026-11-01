@@ -1,0 +1,4 @@
+cafe: night identical to HEAD: n/a, a new scene (ok)
+cafe: noon brightens the sky by 79.1/255 (want > 12) (ok)
+cafe: sunset recolours the horizon band by 20.5/255 (ok)
+cafe: ground unchanged at noon: mean delta 0.00/255 (ok)

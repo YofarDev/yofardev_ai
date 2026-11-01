@@ -1,0 +1,34 @@
+ok   firelight close-up: advance 166, cheek blue -45.1/255 vs steady (light gate's loop peak -41.4; gate >= 85 %); sampled 158: 34.4, 162: 41.3, 166: 45.1, 170: 42.7, 174: 38.1
+ok   wow1_campfire_rain: 7 live campfire captures (frames 90..162, --data=rain=1), 1080x1920, none flat
+ok   campfire rain 1 vs 0 (frame 90): 3.5 % of px differ by > 16/255
+ok   wow1_campfire_rain beat 1: bbox (187, 134, 613, 1000), centre 0.50
+ok   wow1_campfire_rain beat 2: bbox (183, 141, 617, 1000), centre 0.50
+ok   wow1_campfire_rain beat 3: bbox (186, 127, 614, 1000), centre 0.50
+ok   wow1_campfire_rain beat 4: bbox (187, 134, 613, 1000), centre 0.50
+ok   wow1_campfire_rain beat 5: bbox (187, 134, 613, 1000), centre 0.50
+ok   wow1_campfire_rain beat 6: bbox (187, 124, 613, 1000), centre 0.50
+ok   wow1_campfire_rain beat 7: bbox (187, 128, 613, 1000), centre 0.50
+ok   wow2_tokyo_weather: 6 live livingRoom captures (frames 90..150, defaults), 1080x1920, none flat
+ok   wow2_tokyo_weather beat 1: bbox (183, 141, 617, 1000), centre 0.50
+ok   wow2_tokyo_weather beat 2: bbox (187, 137, 740, 1000), centre 0.58
+ok   wow2_tokyo_weather beat 3: bbox (189, 150, 655, 1000), centre 0.53
+ok   wow2_tokyo_weather beat 4: bbox (188, 146, 629, 1000), centre 0.51
+ok   wow2_tokyo_weather beat 5: bbox (187, 128, 613, 1000), centre 0.50
+ok   wow2_tokyo_weather beat 6: bbox (187, 125, 613, 1000), centre 0.50
+ok   rain_steam.gif: 60 frames, every frame differs from the last (6427..7428 px > 16/255), 2,725,974 B
+ok   parallax_livingRoom.gif: 12 frames, 32945 px differ between -1 and +1
+ok   parallax_livingRoom.gif: 566,164 B (<= 3,145,728)
+ok   parallax_beach.gif: 12 frames, 28886 px differ between -1 and +1
+ok   parallax_beach.gif: 349,118 B (<= 3,145,728)
+ok   parallax_deepSpace.gif: 12 frames, 13169 px differ between -1 and +1
+ok   parallax_deepSpace.gif: 487,648 B (<= 3,145,728)
+ok   yaw sweep: linked, not copied (rive/review/m5/head/yaw_sweep.gif, 1,074,629 B)
+ok   campfire rig lightKey: art_bible FFFF9A4D, written FFFF9A4D
+ok   campfire rig lightKeyIntensity: art_bible 1.0, written 1.0
+ok   campfire rig lightKeyX: art_bible -0.49, written -0.49
+ok   campfire rig lightKeyY: art_bible -0.872, written -0.872
+ok   campfire rig lightRim: art_bible FF6F8FD8, written FF6F8FD8
+ok   campfire rig lightRimIntensity: art_bible 0.35, written 0.35
+ok   campfire rig lightAmbient: art_bible FF141C2C, written FF141C2C
+ok   campfire rig lightAmbientAmount: art_bible 0.35, written 0.35
+ok   campfire rig lightFlicker: art_bible 1.0, written 1.0

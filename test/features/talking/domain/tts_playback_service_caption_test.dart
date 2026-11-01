@@ -19,20 +19,25 @@ void main() {
 
   tearDown(() => service.dispose());
 
-  test('emits the caption right after SpeakingStartedEvent', () async {
-    service.startAmplitudeAnimation(
-      '/a.wav',
-      <int>[3],
-      const Duration(seconds: 1),
-      caption: 'Hello there.',
-    );
-    await Future<void>.delayed(Duration.zero);
-    service.cancelAnimation();
+  test(
+    'emits the caption right after SpeakingStartedEvent and its timeline',
+    () async {
+      service.startAmplitudeAnimation(
+        '/a.wav',
+        <int>[3],
+        const Duration(seconds: 1),
+        caption: 'Hello there.',
+      );
+      await Future<void>.delayed(Duration.zero);
+      service.cancelAnimation();
 
-    expect(events[0], isA<SpeakingStartedEvent>());
-    expect(events[1], isA<CaptionEvent>());
-    expect((events[1] as CaptionEvent).text, 'Hello there.');
-  });
+      // M2: the sentence's SpeechTimelineEvent sits between the two.
+      expect(events[0], isA<SpeakingStartedEvent>());
+      expect(events[1], isA<SpeechTimelineEvent>());
+      expect(events[2], isA<CaptionEvent>());
+      expect((events[2] as CaptionEvent).text, 'Hello there.');
+    },
+  );
 
   test('cues are emitted before the caption', () async {
     service.startAmplitudeAnimation(
@@ -46,8 +51,9 @@ void main() {
     service.cancelAnimation();
 
     expect(events[0], isA<SpeakingStartedEvent>());
-    expect(events[1], isA<CuesReachedEvent>());
-    expect(events[2], isA<CaptionEvent>());
+    expect(events[1], isA<SpeechTimelineEvent>());
+    expect(events[2], isA<CuesReachedEvent>());
+    expect(events[3], isA<CaptionEvent>());
   });
 
   test('no caption event for an empty or missing caption', () async {

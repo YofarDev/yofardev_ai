@@ -1,0 +1,4 @@
+forestCabin: night identical to HEAD: n/a, a new scene (ok)
+forestCabin: noon brightens the sky by 135.4/255 (want > 12) (ok)
+forestCabin: sunset recolours the horizon band by 33.0/255 (ok)
+forestCabin: the day lifts the ground at noon by 30.4/255 (want >= 6) (ok)

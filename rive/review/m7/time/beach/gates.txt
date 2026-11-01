@@ -1,0 +1,4 @@
+beach: night identical to HEAD: 0.000 % differ (ok)
+beach: noon brightens the sky by 12.0/255 (want > 6) (ok)
+beach: sunset recolours the horizon band by 21.6/255 (ok)
+beach: ground unchanged at noon: mean delta 0.00/255 (ok)

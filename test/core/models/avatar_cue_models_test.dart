@@ -76,6 +76,72 @@ void main() {
       expect(AvatarScene.beach.allowedEvents.contains(SceneEvent.rain), isTrue);
     });
 
+    test('the shared events are valid in each scene that lists them (M9)', () {
+      for (final AvatarScene scene in <AvatarScene>[
+        AvatarScene.campfire,
+        AvatarScene.beach,
+        AvatarScene.cafe,
+      ]) {
+        expect(scene.allowedEvents, contains(SceneEvent.rain));
+      }
+      expect(
+        AvatarScene.rooftop.allowedEvents,
+        contains(SceneEvent.shootingStar),
+      );
+      expect(AvatarScene.mountainHut.allowedEvents, contains(SceneEvent.flare));
+      expect(AvatarScene.mountainHut.allowedEvents, contains(SceneEvent.bell));
+      // the hut snows: it has no rain event
+      expect(
+        AvatarScene.mountainHut.allowedEvents,
+        isNot(contains(SceneEvent.rain)),
+      );
+      expect(AvatarScene.cafe.allowedEvents, isNot(contains(SceneEvent.bell)));
+    });
+
+    test('the v14 scenes: rain everywhere, their own events nowhere else '
+        '(M11)', () {
+      const Map<AvatarScene, List<SceneEvent>> own =
+          <AvatarScene, List<SceneEvent>>{
+            AvatarScene.forestCabin: <SceneEvent>[
+              SceneEvent.gust,
+              SceneEvent.fireflies,
+              SceneEvent.lanternFlicker,
+            ],
+            AvatarScene.trainCompartment: <SceneEvent>[
+              SceneEvent.tunnel,
+              SceneEvent.whistle,
+              SceneEvent.station,
+            ],
+            AvatarScene.library: <SceneEvent>[
+              SceneEvent.lightning,
+              SceneEvent.bookFlutter,
+              SceneEvent.clockChime,
+            ],
+          };
+      own.forEach((AvatarScene scene, List<SceneEvent> events) {
+        expect(scene.allowedEvents, contains(SceneEvent.rain));
+        expect(scene.allowedEvents, containsAll(events));
+        for (final AvatarScene other in AvatarScene.values) {
+          if (other == scene) {
+            continue;
+          }
+          for (final SceneEvent event in events) {
+            expect(
+              other.allowedEvents,
+              isNot(contains(event)),
+              reason: '${other.name} ${event.name}',
+            );
+          }
+        }
+      });
+    });
+
+    test('every scene is a diorama (it reads the parallax numbers)', () {
+      for (final AvatarScene scene in AvatarScene.values) {
+        expect(scene.isDiorama, isTrue, reason: scene.name);
+      }
+    });
+
     test('a scene does not accept another scene’s events', () {
       expect(
         AvatarScene.livingRoom.allowedEvents.contains(SceneEvent.bigWave),

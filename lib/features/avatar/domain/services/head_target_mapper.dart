@@ -1,3 +1,4 @@
+import '../../../../core/models/performance/avatar_prop.dart';
 import '../../../../core/models/performance/gaze_target.dart';
 import '../models/head_pose.dart';
 
@@ -14,6 +15,13 @@ const double kThinkingPitch = 0.2;
 /// Pitch used while watching the text caret.
 const double kCaretPitch = -0.8;
 
+/// Yaw while the tablet is out: held at chest height toward the viewer's
+/// right, a 3/4 turn that keeps the lit face visible.
+const double kTabletYaw = 0.6;
+
+/// How far the head turns across the field's width while watching the caret.
+const double kCaretYawSpan = 0.4;
+
 /// Maps a gaze target to the head target the rig should hold.
 ///
 /// - `user` → (0, 0).
@@ -21,9 +29,19 @@ const double kCaretPitch = -0.8;
 ///   up. While a tool runs it turns further (yaw = angle x 1.4, clamped to
 ///   ±1: 0.6 becomes 0.84), looks down at the tablet and reads (eye
 ///   saccades).
-/// - `caret` → straight on, looking down at the composer.
+/// - `caret(x)` → a small turn following the caret across the field
+///   ((x − 0.5) × 0.4), looking down at the composer.
+/// - A held prop (the tablet or the newspaper) overrides the gaze: (0.6, −0.5),
+///   reading.
 /// - `point(x, y)` with normalized 0..1 screen coordinates.
-HeadTarget headTargetFor(GazeTarget gaze, {String? activeTool}) {
+HeadTarget headTargetFor(
+  GazeTarget gaze, {
+  String? activeTool,
+  AvatarProp prop = AvatarProp.none,
+}) {
+  if (prop != AvatarProp.none) {
+    return const HeadTarget(kTabletYaw, kToolPitch, reading: true);
+  }
   return switch (gaze) {
     GazeUser() => HeadTarget.zero,
     GazeAway(:final double angle) when activeTool != null => HeadTarget(
@@ -35,7 +53,10 @@ HeadTarget headTargetFor(GazeTarget gaze, {String? activeTool}) {
       angle.clamp(-1.0, 1.0),
       kThinkingPitch,
     ),
-    GazeCaret() => const HeadTarget(0, kCaretPitch),
+    GazeCaret(:final double x) => HeadTarget(
+      (x.clamp(0.0, 1.0) - 0.5) * kCaretYawSpan,
+      kCaretPitch,
+    ),
     GazePoint(:final double x, :final double y) => HeadTarget(
       ((x.clamp(0.0, 1.0) - 0.5) * 1.2).clamp(-1.0, 1.0),
       ((0.5 - y.clamp(0.0, 1.0)) * 0.6).clamp(-1.0, 1.0),

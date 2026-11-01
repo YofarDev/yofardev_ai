@@ -1,0 +1,4 @@
+rooftop: night identical to HEAD: n/a, a new scene (ok)
+rooftop: noon brightens the sky by 102.3/255 (want > 12) (ok)
+rooftop: sunset recolours the horizon band by 19.7/255 (ok)
+rooftop: ground unchanged at noon: mean delta 0.00/255 (ok)

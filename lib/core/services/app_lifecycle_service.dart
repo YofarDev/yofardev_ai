@@ -4,6 +4,7 @@ import '../models/app_lifecycle_event.dart';
 import '../models/avatar_config.dart';
 import '../models/avatar_mood.dart';
 import '../models/avatar_status_animation.dart';
+import '../models/chat.dart';
 import '../models/chat_entry.dart';
 import '../models/chat_status.dart';
 import '../models/demo_script.dart';
@@ -45,6 +46,8 @@ class AppLifecycleService {
       StreamController<AvatarChangeRequested>.broadcast();
   final StreamController<AvatarMood> _moodController =
       StreamController<AvatarMood>.broadcast();
+  final StreamController<ChatPersona> _personaController =
+      StreamController<ChatPersona>.broadcast();
 
   // Public streams for cubits to subscribe to
   Stream<NewChatEntryPayload> get newChatEntryEvents =>
@@ -65,6 +68,10 @@ class AppLifecycleService {
   /// invalid values arrive as neutral). A reply without a mood keeps the
   /// previous one, so nothing is emitted for it.
   Stream<AvatarMood> get moodEvents => _moodController.stream;
+
+  /// The persona of the current chat, announced whenever the current chat
+  /// changes (M10 ruling 10): the avatar's body language follows it.
+  Stream<ChatPersona> get personaEvents => _personaController.stream;
 
   /// Emit event when a new chat entry is created.
   ///
@@ -98,7 +105,7 @@ class AppLifecycleService {
 
     // The reply's mood applies when the reply starts and persists until a
     // later reply sets a new one; no mood field means no change.
-    if (avatarConfig.mood != null) {
+    if (avatarConfig.mood != null && !_moodController.isClosed) {
       _moodController.add(avatarConfig.mood!);
     }
 
@@ -124,7 +131,11 @@ class AppLifecycleService {
         (avatarConfig.hat != null &&
             avatarConfig.hat != currentAvatarConfig.hat) ||
         (avatarConfig.costume != null &&
-            avatarConfig.costume != currentAvatarConfig.costume);
+            avatarConfig.costume != currentAvatarConfig.costume) ||
+        (avatarConfig.topTint != null &&
+            avatarConfig.topTint != currentAvatarConfig.topTint) ||
+        (avatarConfig.hatTint != null &&
+            avatarConfig.hatTint != currentAvatarConfig.hatTint);
 
     AppLogger.debug(
       'backgroundChanged=$backgroundChanged, clothesChanged=$clothesChanged',
@@ -159,7 +170,9 @@ class AppLifecycleService {
         finalAvatarConfig.top != null ||
         finalAvatarConfig.glasses != null ||
         finalAvatarConfig.hat != null ||
-        finalAvatarConfig.costume != null) {
+        finalAvatarConfig.costume != null ||
+        finalAvatarConfig.topTint != null ||
+        finalAvatarConfig.hatTint != null) {
       AppLogger.debug(
         'Emitting new chat entry event with config: '
         'bg=${finalAvatarConfig.background}, '
@@ -224,6 +237,17 @@ class AppLifecycleService {
     _avatarChangeRequestedController.add(request);
   }
 
+  /// Emit the persona of the chat that just became current.
+  ///
+  /// [ChatCubit] emits it; `AvatarCueService` turns it into the director's
+  /// body-language profile.
+  void emitPersonaChanged(ChatPersona persona) {
+    if (_personaController.isClosed) {
+      return;
+    }
+    _personaController.add(persona);
+  }
+
   /// Dispose all stream controllers.
   ///
   /// Call this when the app is shutting down.
@@ -235,5 +259,7 @@ class AppLifecycleService {
     _talkingStateChangedController.close();
     _demoScriptChangedController.close();
     _avatarChangeRequestedController.close();
+    _moodController.close();
+    _personaController.close();
   }
 }

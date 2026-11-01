@@ -2,6 +2,7 @@ import '../../models/failure.dart';
 import '../../models/result.dart';
 import '../../repositories/settings_repository.dart';
 import '../../models/function_info.dart';
+import '../../models/weather_report.dart';
 import '../app_lifecycle_service.dart';
 import 'agent_tool.dart';
 import 'alarm_tool.dart';
@@ -23,13 +24,18 @@ class ToolRegistry {
   ToolRegistry({
     required AppLifecycleService appLifecycleService,
     List<AgentTool>? tools,
+    void Function(WeatherReport report)? onOwnLocationReport,
+    void Function(WeatherReport report)? onWeatherReport,
   }) : _appLifecycleService = appLifecycleService {
     _tools =
         tools ??
         <AgentTool>[
           AlarmTool(),
           AvatarTool(_appLifecycleService),
-          WeatherTool(),
+          WeatherTool(
+            onOwnLocationReport: onOwnLocationReport,
+            onReport: onWeatherReport,
+          ),
           NewsTool(),
           CharacterCounterTool(),
           CalculatorTool(),

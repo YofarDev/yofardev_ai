@@ -6,24 +6,42 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
+import '../../models/weather_report.dart';
+
 class WeatherService {
   static const String _baseUrl =
       "https://api.openweathermap.org/data/2.5/weather";
 
+  /// The weather as the JSON string the LLM reads.
   static Future<String> getCurrentWeather(
     String location,
     String apiKey,
   ) async {
+    return (await fetchCurrentWeather(location, apiKey)).json;
+  }
+
+  /// Like [getCurrentWeather], and also the parsed [WeatherReport] when the
+  /// call succeeded (null on any error; [json] then holds the error text).
+  ///
+  /// [allowPermissionPrompt] false makes `current` fail instead of asking for
+  /// the location permission (the background world sync never asks).
+  static Future<({String json, WeatherReport? report})> fetchCurrentWeather(
+    String location,
+    String apiKey, {
+    bool allowPermissionPrompt = true,
+  }) async {
     try {
       if (apiKey.isEmpty) {
-        return "Error: API Key not provided";
+        return (json: "Error: API Key not provided", report: null);
       }
 
       late double latitude;
       late double longitude;
       if (location.toLowerCase() == 'current') {
         // Get current location
-        final Position position = await _determinePosition();
+        final Position position = await _determinePosition(
+          allowPermissionPrompt: allowPermissionPrompt,
+        );
         latitude = position.latitude;
         longitude = position.longitude;
       } else {
@@ -36,7 +54,7 @@ class WeatherService {
           latitude = locations.first.latitude;
           longitude = locations.first.longitude;
         } else {
-          return "Location not found.";
+          return (json: "Location not found.", report: null);
         }
       }
       final Uri url = Uri.parse(
@@ -45,25 +63,38 @@ class WeatherService {
       final http.Response response = await http.get(url);
       if (response.statusCode == 200) {
         final dynamic data = jsonDecode(response.body);
+        final Map<String, dynamic> body = data as Map<String, dynamic>;
+        WeatherReport? report;
+        try {
+          report = WeatherReport.fromOpenWeather(body);
+        } catch (_) {
+          report = null;
+        }
         final Map<String, dynamic> map = <String, dynamic>{
           'description':
-              ((data as Map<String, dynamic>)['weather'] as List<dynamic>)
-                      .first['description']
+              (body['weather'] as List<dynamic>).first['description']
                   as String? ??
               '',
           'temperature_celsius':
-              (data['main'] as Map<String, dynamic>)['temp'] as double?,
+              ((body['main'] as Map<String, dynamic>)['temp'] as num?)
+                  ?.toDouble(),
+          'condition_id': ?report?.conditionId,
         };
-        return jsonEncode(map);
+        return (json: jsonEncode(map), report: report);
       } else {
-        return "Error fetching weather data: ${response.statusCode}";
+        return (
+          json: "Error fetching weather data: ${response.statusCode}",
+          report: null,
+        );
       }
     } catch (e) {
-      return "Error: $e";
+      return (json: "Error: $e", report: null);
     }
   }
 
-  static Future<Position> _determinePosition() async {
+  static Future<Position> _determinePosition({
+    required bool allowPermissionPrompt,
+  }) async {
     bool serviceEnabled;
     LocationPermission permission;
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -75,6 +106,9 @@ class WeatherService {
     }
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
+      if (!allowPermissionPrompt) {
+        return Future<Position>.error('Location permissions are denied');
+      }
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         // Permissions are denied, next time you could try

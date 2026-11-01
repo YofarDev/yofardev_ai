@@ -1,0 +1,219 @@
+# The scene picker over Home, livingRoom current (en)
+
+## debugDumpSemanticsTree (traversal order)
+
+SemanticsNode#0
+ │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+ │
+ └─SemanticsNode#1
+   │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+   │ textDirection: ltr
+   │
+   ├─SemanticsNode#34
+   │ │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+   │ │ sortKey: OrdinalSortKey#702e4(order: 0.0)
+   │ │
+   │ └─SemanticsNode#35
+   │   │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+   │   │
+   │   └─SemanticsNode#36
+   │     │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+   │     │ flags: scopesRoute, namesRoute
+   │     │ label: "Dialog"
+   │     │ textDirection: ltr
+   │     │
+   │     └─SemanticsNode#37
+   │       │ Rect.fromLTRB(24.0, 152.3, 366.0, 820.0)
+   │       │ flags: hasImplicitScrolling
+   │       │ scrollExtentMin: 0.0
+   │       │ scrollPosition: 0.0
+   │       │ scrollExtentMax: 0.0
+   │       │
+   │       ├─SemanticsNode#38
+   │       │   Rect.fromLTRB(0.0, 0.0, 342.0, 28.0)
+   │       │   flags: isHeader
+   │       │   label: "Choose a scene"
+   │       │   textDirection: ltr
+   │       │
+   │       └─SemanticsNode#39
+   │         │ Rect.fromLTRB(0.0, 40.0, 342.0, 667.7)
+   │         │
+   │         └─SemanticsNode#59
+   │           │ Rect.fromLTRB(0.0, 0.0, 342.0, 627.7)
+   │           │ scrollChildren: 10
+   │           │ scrollIndex: 0
+   │           │ scrollExtentMin: 0.0
+   │           │ scrollPosition: 0.0
+   │           │ scrollExtentMax: 0.0
+   │           │
+   │           ├─SemanticsNode#40
+   │           │   Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │   tags: RenderViewport.twoPane
+   │           │   flags: isSelected, isButton, hasEnabledState, isEnabled,
+   │           │     isFocusable, hasSelectedState
+   │           │   label: "Living room"
+   │           │   hint: "Current scene"
+   │           │   textDirection: ltr
+   │           │   indexInParent: 0
+   │           │
+   │           ├─SemanticsNode#41
+   │           │ │ Rect.fromLTRB(116.7, 0.0, 225.3, 150.9)
+   │           │ │ tags: RenderViewport.twoPane
+   │           │ │ actions: focus, tap
+   │           │ │ flags: isFocusable
+   │           │ │ indexInParent: 1
+   │           │ │
+   │           │ └─SemanticsNode#42
+   │           │     Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │     actions: tap
+   │           │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │           │       hasSelectedState
+   │           │     label: "Campfire"
+   │           │     textDirection: ltr
+   │           │
+   │           ├─SemanticsNode#43
+   │           │ │ Rect.fromLTRB(233.3, 0.0, 342.0, 150.9)
+   │           │ │ tags: RenderViewport.twoPane
+   │           │ │ actions: focus, tap
+   │           │ │ flags: isFocusable
+   │           │ │ indexInParent: 2
+   │           │ │
+   │           │ └─SemanticsNode#44
+   │           │     Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │     actions: tap
+   │           │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │           │       hasSelectedState
+   │           │     label: "Beach"
+   │           │     textDirection: ltr
+   │           │
+   │           ├─SemanticsNode#45
+   │           │ │ Rect.fromLTRB(0.0, 158.9, 108.7, 309.9)
+   │           │ │ tags: RenderViewport.twoPane
+   │           │ │ actions: focus, tap
+   │           │ │ flags: isFocusable
+   │           │ │ indexInParent: 3
+   │           │ │
+   │           │ └─SemanticsNode#46
+   │           │     Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │     actions: tap
+   │           │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │           │       hasSelectedState
+   │           │     label: "Deep space"
+   │           │     textDirection: ltr
+   │           │
+   │           ├─SemanticsNode#47
+   │           │ │ Rect.fromLTRB(116.7, 158.9, 225.3, 309.9)
+   │           │ │ tags: RenderViewport.twoPane
+   │           │ │ actions: focus, tap
+   │           │ │ flags: isFocusable
+   │           │ │ indexInParent: 4
+   │           │ │
+   │           │ └─SemanticsNode#48
+   │           │     Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │     actions: tap
+   │           │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │           │       hasSelectedState
+   │           │     label: "Café"
+   │           │     textDirection: ltr
+   │           │
+   │           ├─SemanticsNode#49
+   │           │ │ Rect.fromLTRB(233.3, 158.9, 342.0, 309.9)
+   │           │ │ tags: RenderViewport.twoPane
+   │           │ │ actions: focus, tap
+   │           │ │ flags: isFocusable
+   │           │ │ indexInParent: 5
+   │           │ │
+   │           │ └─SemanticsNode#50
+   │           │     Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │     actions: tap
+   │           │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │           │       hasSelectedState
+   │           │     label: "Rooftop"
+   │           │     textDirection: ltr
+   │           │
+   │           ├─SemanticsNode#51
+   │           │ │ Rect.fromLTRB(0.0, 317.9, 108.7, 468.8)
+   │           │ │ tags: RenderViewport.twoPane
+   │           │ │ actions: focus, tap
+   │           │ │ flags: isFocusable
+   │           │ │ indexInParent: 6
+   │           │ │
+   │           │ └─SemanticsNode#52
+   │           │     Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │     actions: tap
+   │           │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │           │       hasSelectedState
+   │           │     label: "Mountain hut"
+   │           │     textDirection: ltr
+   │           │
+   │           ├─SemanticsNode#53
+   │           │ │ Rect.fromLTRB(116.7, 317.9, 225.3, 468.8)
+   │           │ │ tags: RenderViewport.twoPane
+   │           │ │ actions: focus, tap
+   │           │ │ flags: isFocusable
+   │           │ │ indexInParent: 7
+   │           │ │
+   │           │ └─SemanticsNode#54
+   │           │     Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │     actions: tap
+   │           │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │           │       hasSelectedState
+   │           │     label: "Forest cabin"
+   │           │     textDirection: ltr
+   │           │
+   │           ├─SemanticsNode#55
+   │           │ │ Rect.fromLTRB(233.3, 317.9, 342.0, 468.8)
+   │           │ │ tags: RenderViewport.twoPane
+   │           │ │ actions: focus, tap
+   │           │ │ flags: isFocusable
+   │           │ │ indexInParent: 8
+   │           │ │
+   │           │ └─SemanticsNode#56
+   │           │     Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │           │     actions: tap
+   │           │     flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │           │       hasSelectedState
+   │           │     label: "Train compartment"
+   │           │     textDirection: ltr
+   │           │
+   │           └─SemanticsNode#57
+   │             │ Rect.fromLTRB(0.0, 476.8, 108.7, 627.7)
+   │             │ tags: RenderViewport.twoPane
+   │             │ actions: focus, tap
+   │             │ flags: isFocusable
+   │             │ indexInParent: 9
+   │             │
+   │             └─SemanticsNode#58
+   │                 Rect.fromLTRB(0.0, 0.0, 108.7, 150.9)
+   │                 actions: tap
+   │                 flags: isButton, hasEnabledState, isEnabled, isFocusable,
+   │                   hasSelectedState
+   │                 label: "Library"
+   │                 textDirection: ltr
+   │
+   └─SemanticsNode#32
+     │ Rect.fromLTRB(0.0, 0.0, 390.0, 844.0)
+     │ sortKey: OrdinalSortKey#9a45c(order: 1.0)
+     │
+     └─SemanticsNode#33
+         Rect.fromLTRB(0.0, 0.0, 390.0, 140.3)
+         actions: dismiss, tap
+         label: "Scrim"
+         textDirection: ltr
+
+
+## Screen-reader walk (simulatedAccessibilityTraversal)
+
+1. "Choose a scene" [header]
+2. "Living room", hint "Current scene" [button, selected]
+3. "Campfire" [button]
+4. "Beach" [button]
+5. "Deep space" [button]
+6. "Café" [button]
+7. "Rooftop" [button]
+8. "Mountain hut" [button]
+9. "Forest cabin" [button]
+10. "Train compartment" [button]
+11. "Library" [button]
+12. "Scrim"
+   - action: override of SemanticsAction.tap, hint "Close Bottom Sheet"

@@ -5,6 +5,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:yofardev_ai/core/models/avatar_cue.dart';
+import 'package:yofardev_ai/core/models/performance/speech_timeline.dart';
+import 'package:yofardev_ai/core/models/performance/viseme.dart';
 import 'package:yofardev_ai/core/models/voice_effect.dart';
 import 'package:yofardev_ai/core/services/audio/audio_amplitude_service.dart';
 import 'package:yofardev_ai/core/services/audio/audio_player_service.dart';
@@ -97,12 +99,26 @@ class MockTtsPlaybackService extends Mock implements TtsPlaybackService {
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
     String? caption,
+    SpeechTimeline? timeline,
   }) {
     captions.add(caption);
+    timelines.add(timeline);
   }
 
   /// Captions passed to [startAmplitudeAnimation], in call order.
   final List<String?> captions = <String?>[];
+
+  /// Speech timelines passed to [startAmplitudeAnimation], in call order.
+  final List<SpeechTimeline?> timelines = <SpeechTimeline?>[];
+
+  /// Late timelines handed to [replaceTimeline], as (audio path, timeline).
+  final List<(String, SpeechTimeline)> replaced = <(String, SpeechTimeline)>[];
+
+  @override
+  bool replaceTimeline(String audioPath, SpeechTimeline timeline) {
+    replaced.add((audioPath, timeline));
+    return true;
+  }
 
   /// Order of the stop-related calls received (see the interruption test).
   final List<String> calls = <String>[];
@@ -146,6 +162,13 @@ void main() {
         () => mockAmplitudeService.extractAmplitudes(any()),
       ).thenAnswer((_) async => <int>[10, 20, 30, 40, 50]);
       when(
+        () => mockAmplitudeService.analyzeSpeech(
+          any(),
+          text: any(named: 'text'),
+          language: any(named: 'language'),
+        ),
+      ).thenAnswer((_) async => null);
+      when(
         () => mockTtsManager.deleteAudio(any()),
       ).thenAnswer((Invocation _) async {});
       when(
@@ -158,6 +181,7 @@ void main() {
         () => mockPlayerService.preload(any()),
       ).thenAnswer((Invocation _) async {});
       when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {});
+      when(() => mockTtsPlaybackService.interrupt()).thenAnswer((_) async {});
       when(
         () => mockTtsManager.cueOnlyStream,
       ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
@@ -171,6 +195,7 @@ void main() {
         audioPlayerService: mockPlayerService,
         interruptionService: interruptionService,
         ttsPlaybackService: mockTtsPlaybackService,
+        speechPreroll: Duration.zero,
       );
     });
 
@@ -448,6 +473,7 @@ void main() {
         ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
         when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
         when(() => playback.stop()).thenAnswer((Invocation _) async {});
+        when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
         when(
           () => queue.deleteAudio(any()),
         ).thenAnswer((Invocation _) async {});
@@ -461,6 +487,7 @@ void main() {
           audioPlayerService: player,
           interruptionService: interruption,
           ttsPlaybackService: playback,
+          speechPreroll: Duration.zero,
         );
 
         queue.emitAudioPath('/tmp/tts/1.wav');
@@ -507,6 +534,7 @@ void main() {
       ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
       when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
       when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
       when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
 
       final ChatTtsCubit cubit = ChatTtsCubit(
@@ -515,6 +543,7 @@ void main() {
         audioPlayerService: player,
         interruptionService: interruption,
         ttsPlaybackService: playback,
+        speechPreroll: Duration.zero,
       );
 
       queue.emitAudioPath(wav.path);
@@ -555,6 +584,7 @@ void main() {
       when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
       when(() => queue.consumeText('/tmp/tts/1.wav')).thenReturn('Hi there.');
       when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
       when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
 
       final ChatTtsCubit cubit = ChatTtsCubit(
@@ -563,6 +593,7 @@ void main() {
         audioPlayerService: player,
         interruptionService: interruption,
         ttsPlaybackService: playback,
+        speechPreroll: Duration.zero,
       );
 
       queue.emitAudioPath('/tmp/tts/1.wav');
@@ -577,14 +608,263 @@ void main() {
       playback.dispose();
     });
 
+    // ── Speech timeline prefetch ─────────────────────────────
+
+    group('speech timeline', () {
+      const String path = '/tmp/tts/speech.wav';
+      const SpeechTimeline analysed = SpeechTimeline(
+        visemes: <VisemeSpan>[
+          VisemeSpan(
+            viseme: Viseme.pp,
+            start: Duration.zero,
+            end: Duration(milliseconds: 60),
+          ),
+        ],
+        duration: Duration(milliseconds: 60),
+      );
+
+      test(
+        'analyses the parked sentence text on arrival and passes the result',
+        () async {
+          when(() => mockTtsManager.peekText(path)).thenReturn('Big boat.');
+          when(() => mockTtsManager.peekLanguage(path)).thenReturn('fr');
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+            ),
+          ).thenAnswer((_) async => analysed);
+
+          mockTtsManager.emitAudioPath(path);
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+
+          verify(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: 'Big boat.',
+              language: 'fr',
+            ),
+          ).called(1);
+          expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[analysed]);
+        },
+      );
+
+      test('an unknown language is analysed as English', () async {
+        when(() => mockTtsManager.peekText(path)).thenReturn('Big boat.');
+        when(() => mockTtsManager.peekLanguage(path)).thenReturn(null);
+
+        mockTtsManager.emitAudioPath(path);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        verify(
+          () => mockAmplitudeService.analyzeSpeech(
+            path,
+            text: 'Big boat.',
+            language: 'en',
+          ),
+        ).called(1);
+      });
+
+      test(
+        'a slow analysis delays playback at most ${ChatTtsCubit.timelineWait.inMilliseconds} ms, then plays with no timeline',
+        () async {
+          final Completer<SpeechTimeline?> never = Completer<SpeechTimeline?>();
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+            ),
+          ).thenAnswer((_) => never.future);
+
+          final Stopwatch watch = Stopwatch()..start();
+          mockTtsManager.emitAudioPath(path);
+          while (mockTtsPlaybackService.timelines.isEmpty &&
+              watch.elapsed < const Duration(seconds: 2)) {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+          watch.stop();
+
+          verify(() => mockPlayerService.play(path)).called(1);
+          expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[null]);
+          // The wait plus a generous scheduling margin.
+          expect(
+            watch.elapsed,
+            lessThan(
+              ChatTtsCubit.timelineWait + const Duration(milliseconds: 150),
+            ),
+          );
+        },
+      );
+
+      test(
+        'the analysis may use the breath before speaking: one ready during the pre-roll is used',
+        () async {
+          // M6: the in-app capture showed the first sentence (no previous
+          // sentence to overlap with) always fell back to amplitudes,
+          // because the wait's clock started with the 350 ms breath.
+          await cubit.close();
+          cubit = ChatTtsCubit(
+            ttsQueueManager: mockTtsManager,
+            audioAmplitudeService: mockAmplitudeService,
+            audioPlayerService: mockPlayerService,
+            interruptionService: interruptionService,
+            ttsPlaybackService: mockTtsPlaybackService,
+            speechPreroll: const Duration(milliseconds: 300),
+          );
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+            ),
+          ).thenAnswer((_) async {
+            // past timelineWait alone, inside breath + timelineWait
+            await Future<void>.delayed(const Duration(milliseconds: 330));
+            return analysed;
+          });
+
+          mockTtsManager.emitAudioPath(path);
+          final Stopwatch watch = Stopwatch()..start();
+          while (mockTtsPlaybackService.timelines.isEmpty &&
+              watch.elapsed < const Duration(seconds: 2)) {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+          expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[analysed]);
+        },
+      );
+
+      group('an analysis landing after the audio started', () {
+        // The wait budget is 150 ms with no pre-roll: 300 ms is late.
+        void lateAnalysis(Duration after) {
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+            ),
+          ).thenAnswer((_) async {
+            await Future<void>.delayed(after);
+            return analysed;
+          });
+        }
+
+        Future<void> untilPlaying() async {
+          final Stopwatch watch = Stopwatch()..start();
+          while (mockTtsPlaybackService.timelines.isEmpty &&
+              watch.elapsed < const Duration(seconds: 2)) {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+        }
+
+        test(
+          'is handed to the playback service for the sentence that plays',
+          () async {
+            lateAnalysis(const Duration(milliseconds: 300));
+
+            mockTtsManager.emitAudioPath(path);
+            await untilPlaying();
+            // the sentence starts on the amplitude fallback...
+            expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[null]);
+            expect(mockTtsPlaybackService.replaced, isEmpty);
+
+            // ...and takes the analysis over once it lands
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+            expect(mockTtsPlaybackService.replaced, <(String, SpeechTimeline)>[
+              (path, analysed),
+            ]);
+            expect(
+              mockTtsPlaybackService.timelines,
+              hasLength(1),
+              reason: 'the sentence is not started a second time',
+            );
+          },
+        );
+
+        test('is dropped when the sentence already ended', () async {
+          lateAnalysis(const Duration(milliseconds: 300));
+
+          mockTtsManager.emitAudioPath(path);
+          await untilPlaying();
+          mockPlayerService.emitPlaybackComplete();
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+
+          expect(mockTtsPlaybackService.replaced, isEmpty);
+        });
+
+        test('is dropped when the speech was interrupted', () async {
+          lateAnalysis(const Duration(milliseconds: 300));
+
+          mockTtsManager.emitAudioPath(path);
+          await untilPlaying();
+          await interruptionService.interrupt();
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+
+          expect(mockTtsPlaybackService.replaced, isEmpty);
+        });
+
+        test(
+          'an on-time analysis is the only timeline: no replacement',
+          () async {
+            lateAnalysis(const Duration(milliseconds: 20));
+
+            mockTtsManager.emitAudioPath(path);
+            await untilPlaying();
+            await Future<void>.delayed(const Duration(milliseconds: 350));
+
+            expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[
+              analysed,
+            ]);
+            expect(mockTtsPlaybackService.replaced, isEmpty);
+          },
+        );
+
+        test('a failed late analysis changes nothing', () async {
+          when(
+            () => mockAmplitudeService.analyzeSpeech(
+              path,
+              text: any(named: 'text'),
+              language: any(named: 'language'),
+            ),
+          ).thenAnswer((_) async {
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+            throw StateError('boom');
+          });
+
+          mockTtsManager.emitAudioPath(path);
+          await untilPlaying();
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+
+          expect(mockTtsPlaybackService.replaced, isEmpty);
+        });
+      });
+
+      test('a failed analysis plays with no timeline', () async {
+        when(
+          () => mockAmplitudeService.analyzeSpeech(
+            path,
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+          ),
+        ).thenThrow(StateError('boom'));
+
+        mockTtsManager.emitAudioPath(path);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        verify(() => mockPlayerService.play(path)).called(1);
+        expect(mockTtsPlaybackService.timelines, <SpeechTimeline?>[null]);
+      });
+    });
+
     test(
       'an interruption stops the mouth animation before the player',
       () async {
         when(() => mockPlayerService.stop()).thenAnswer((_) async {
           mockTtsPlaybackService.calls.add('player.stop');
         });
-        when(() => mockTtsPlaybackService.stop()).thenAnswer((_) async {
-          mockTtsPlaybackService.calls.add('playback.stop');
+        when(() => mockTtsPlaybackService.interrupt()).thenAnswer((_) async {
+          mockTtsPlaybackService.calls.add('playback.interrupt');
         });
 
         await interruptionService.interrupt();
@@ -594,7 +874,7 @@ void main() {
         expect(mockTtsPlaybackService.calls, <String>[
           'cancelAnimation',
           'player.stop',
-          'playback.stop',
+          'playback.interrupt',
         ]);
       },
     );
@@ -613,6 +893,7 @@ void main() {
       ).thenAnswer((Invocation _) => interruptions.stream);
       when(() => player.stop()).thenAnswer((Invocation _) async {});
       when(() => playback.stop()).thenAnswer((Invocation _) async {});
+      when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
       when(() => queue.deleteAudio(any())).thenAnswer((Invocation _) async {});
       when(
         () => queue.cueOnlyStream,
@@ -624,6 +905,7 @@ void main() {
         audioPlayerService: player,
         interruptionService: interruption,
         ttsPlaybackService: playback,
+        speechPreroll: Duration.zero,
       );
 
       // Seed one state entry directly through the playback path.
@@ -649,6 +931,131 @@ void main() {
       player.dispose();
       playback.dispose();
       await interruptions.close();
+    });
+
+    group('speech pre-roll', () {
+      late MockTtsQueueService queue;
+      late MockAudioAmplitudeService amplitudeService;
+      late MockAudioPlayerService player;
+      late MockTtsPlaybackService playback;
+      late StreamController<void> interruptions;
+      late ChatTtsCubit cubit;
+
+      setUp(() {
+        queue = MockTtsQueueService();
+        amplitudeService = MockAudioAmplitudeService();
+        player = MockAudioPlayerService();
+        playback = MockTtsPlaybackService();
+        interruptions = StreamController<void>.broadcast();
+        final MockInterruptionService interruption = MockInterruptionService();
+        when(
+          () => interruption.interruptionStream,
+        ).thenAnswer((Invocation _) => interruptions.stream);
+        when(() => player.stop()).thenAnswer((Invocation _) async {});
+        when(() => playback.stop()).thenAnswer((Invocation _) async {});
+        when(() => playback.interrupt()).thenAnswer((Invocation _) async {});
+        when(
+          () => queue.deleteAudio(any()),
+        ).thenAnswer((Invocation _) async {});
+        when(
+          () => queue.cueOnlyStream,
+        ).thenAnswer((_) => const Stream<List<AvatarCue>>.empty());
+        when(
+          () => amplitudeService.extractAmplitudes(any()),
+        ).thenAnswer((Invocation _) async => <int>[5]);
+        when(
+          () => player.play(any()),
+        ).thenAnswer((Invocation _) async => const Duration(seconds: 1));
+        when(() => queue.consumeCues(any())).thenReturn(const <AvatarCue>[]);
+        cubit = ChatTtsCubit(
+          ttsQueueManager: queue,
+          audioAmplitudeService: amplitudeService,
+          audioPlayerService: player,
+          interruptionService: interruption,
+          ttsPlaybackService: playback,
+          speechPreroll: const Duration(milliseconds: 60),
+        );
+      });
+
+      tearDown(() async {
+        await cubit.close();
+        queue.dispose();
+        player.dispose();
+        playback.dispose();
+        await interruptions.close();
+      });
+
+      test(
+        'announces the sentence, then plays it after the pre-roll',
+        () async {
+          queue.emitAudioPath('/tmp/tts/3.wav');
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          verify(
+            () => playback.announceSpeech(const Duration(milliseconds: 60)),
+          ).called(1);
+          verifyNever(() => player.play(any()));
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+          verify(() => player.play('/tmp/tts/3.wav')).called(1);
+        },
+      );
+
+      test('the default pre-roll is 350 ms', () {
+        expect(
+          ChatTtsCubit.defaultSpeechPreroll,
+          const Duration(milliseconds: 350),
+        );
+      });
+
+      test('announces the onset viseme once the analysis is ready', () async {
+        when(
+          () => amplitudeService.analyzeSpeech(
+            any(),
+            text: any(named: 'text'),
+            language: any(named: 'language'),
+          ),
+        ).thenAnswer(
+          (Invocation _) async => const SpeechTimeline(
+            visemes: <VisemeSpan>[
+              VisemeSpan(
+                viseme: Viseme.sil,
+                start: Duration.zero,
+                end: Duration(milliseconds: 40),
+              ),
+              VisemeSpan(
+                viseme: Viseme.pp,
+                start: Duration(milliseconds: 40),
+                end: Duration(milliseconds: 100),
+              ),
+            ],
+            duration: Duration(milliseconds: 100),
+          ),
+        );
+        // the analysis is done before the sentence plays (the usual case:
+        // it ran during the previous sentence)
+        when(() => amplitudeService.extractAmplitudes(any())).thenAnswer((
+          Invocation _,
+        ) async {
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+          return <int>[5];
+        });
+        queue.emitAudioPath('/tmp/tts/5.wav');
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        verify(
+          () => playback.announceSpeech(
+            const Duration(milliseconds: 60),
+            onset: Viseme.pp,
+          ),
+        ).called(1);
+      });
+
+      test('an interrupt during the pre-roll drops the sentence', () async {
+        queue.emitAudioPath('/tmp/tts/4.wav');
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        interruptions.add(null);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        verifyNever(() => player.play(any()));
+        verify(() => queue.deleteAudio('/tmp/tts/4.wav')).called(1);
+      });
     });
 
     // ── ChatTtsState ─────────────────────────────────────────

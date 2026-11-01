@@ -1,2 +1,5 @@
 build/
 __pycache__/
+# face and speech evidence: strips and GIFs are tens of MB; regenerate with rive/tools/review_face.py
+avatar/review/face/*.gif
+avatar/review/face/*_strip.png

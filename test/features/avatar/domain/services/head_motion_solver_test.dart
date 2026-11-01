@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/features/avatar/domain/models/face_frame.dart';
 import 'package:yofardev_ai/features/avatar/domain/models/head_pose.dart';
 import 'package:yofardev_ai/features/avatar/domain/services/head_motion_solver.dart';
 
@@ -951,4 +952,118 @@ void main() {
       expect(lowest, lessThan(-0.4), reason: 'the eyes lock on the user');
     });
   });
+
+  group('HeadMotionSolver follows the face (M3 critic round 2)', () {
+    HeadMotionSolver still() => HeadMotionSolver(
+      params: const HeadMotionParams(driftYaw: 0, driftPitch: 0, nodDepth: 0),
+    );
+
+    // the raw hair offset behind a lag value (the soft limit and the face
+    // follow-through gain undone)
+    double raw(double lag) {
+      final double x = lag / 0.6;
+      return 0.6 * 0.5 * math.log((1 + x) / (1 - x)) / 2.85;
+    }
+
+    test('the face follow-through reads: 1.5x the head gain, the roll in full '
+        '(critic M3 round 3)', () {
+      const HeadMotionParams p = HeadMotionParams();
+      expect(p.faceHairGain, closeTo(1.5 * p.hairGain, 1e-9));
+      expect(p.faceHairGain, 2.85);
+      expect(p.faceHairRoll, 1.0);
+      // a 0.1 nod offsets the fringe 1.5x as far as round 2 did (before the
+      // soft limit bends it)
+      final HeadMotionSolver solver = still();
+      solver.followFace(const FaceFrame(nodPitch: -0.1));
+      final HeadPose first = solver.step(const Duration(milliseconds: 1));
+      expect(first.hairLagPitch, closeTo(0.6 * _tanh(2.85 * 0.1 / 0.6), 2e-3));
+    });
+
+    test('a nod drives the hair: 12 % overshoot, settled by 250 ms', () {
+      final HeadMotionSolver solver = still();
+      solver.followFace(const FaceFrame(nodPitch: -0.2));
+      // the hair starts where the head was: it sits higher than the nod
+      final HeadPose first = solver.step(const Duration(milliseconds: 1));
+      expect(raw(first.hairLagPitch), closeTo(0.2, 0.002));
+      final List<HeadPose> poses = _run(solver, 1);
+      final double under = poses
+          .map((HeadPose p) => raw(p.hairLagPitch))
+          .reduce(math.min);
+      expect(-under / 0.2, inInclusiveRange(0.1, 0.14));
+      for (final HeadPose p in poses.sublist(15)) {
+        expect(raw(p.hairLagPitch).abs(), lessThanOrEqualTo(0.02 * 0.2));
+      }
+      // the head's own pitch is untouched (the view adds the nod)
+      expect(poses.every((HeadPose p) => p.pitch.abs() < 1e-9), isTrue);
+    });
+
+    test('the hair trails a steady nod by 30-40 ms, frame to frame', () {
+      final HeadMotionSolver solver = still();
+      double nod = 0;
+      HeadPose pose = solver.pose;
+      for (int i = 0; i < 36; i++) {
+        nod -= 2 / 60; // 2 pitch units per second, as the view feeds it
+        solver.followFace(FaceFrame(nodPitch: nod));
+        pose = solver.step(_frame);
+      }
+      final double lagS = raw(pose.hairLagPitch) / 2;
+      expect(lagS * 1000, inInclusiveRange(30, 40));
+    });
+
+    test('a roll swings the hair sideways through hairLagYaw', () {
+      final HeadMotionSolver solver = still();
+      solver.followFace(const FaceFrame(roll: 0.3));
+      final HeadPose p = solver.step(const Duration(milliseconds: 1));
+      // the roll's whole lag, as a yaw offset behind it
+      expect(raw(p.hairLagYaw), closeTo(-0.3, 0.002));
+      expect(solver.isSettled, isFalse);
+      _run(solver, 1);
+      expect(solver.pose.hairLagYaw.abs(), lessThan(1e-3));
+    });
+
+    test('reduce motion keeps the hair locked under the face motion', () {
+      final HeadMotionSolver solver = still()..reduceMotion = true;
+      solver.followFace(const FaceFrame(nodPitch: -0.3, roll: 0.3));
+      for (final HeadPose p in _run(solver, 0.5)) {
+        expect(p.hairLagPitch, 0);
+        expect(p.hairLagYaw, 0);
+      }
+    });
+
+    test('a gaze lock holds the eyes on the user', () {
+      final HeadMotionSolver solver = still();
+      solver.followFace(FaceFrame.rest);
+      _run(solver, 0.5); // the first micro-saccade at 0.15 s
+      expect(solver.pose.eyeLeadYaw.abs(), greaterThan(0.1));
+      solver.followFace(const FaceFrame(gazeLock: true));
+      final List<HeadPose> held = _run(solver, 4);
+      for (final HeadPose p in held.sublist(6)) {
+        expect(p.eyeLeadYaw.abs(), lessThan(0.01));
+      }
+    });
+
+    test('a saccade request fires now, or when a gaze lock lets go', () {
+      final HeadMotionSolver solver = still();
+      solver.followFace(FaceFrame.rest);
+      _run(solver, 0.5);
+      final double before = solver.pose.eyeLeadYaw;
+      solver.followFace(const FaceFrame(saccadeSerial: 1));
+      _run(solver, 0.1);
+      // the eyes dart to the other side
+      expect(solver.pose.eyeLeadYaw.sign, -before.sign);
+      expect(solver.pose.eyeLeadYaw.abs(), greaterThan(0.1));
+      // asked for during a lock: it waits for the release
+      solver.followFace(const FaceFrame(gazeLock: true, saccadeSerial: 2));
+      _run(solver, 1);
+      expect(solver.pose.eyeLeadYaw.abs(), lessThan(0.01));
+      solver.followFace(const FaceFrame(saccadeSerial: 2));
+      _run(solver, 0.1);
+      expect(solver.pose.eyeLeadYaw.abs(), greaterThan(0.1));
+    });
+  });
+}
+
+double _tanh(double x) {
+  final double e = math.exp(2 * x);
+  return (e - 1) / (e + 1);
 }

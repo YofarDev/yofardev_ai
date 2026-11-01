@@ -1,9 +1,14 @@
 // ignore-l10n: debug — the UI lab is debug-only; its strings are hardcoded.
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/avatar_scene.dart';
+import '../../../../core/models/performance/avatar_prop.dart';
+import '../../../../core/models/performance/quality_tier.dart';
+import '../../../../core/models/performance/shot.dart';
+import '../../../../core/services/world/world_state_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../avatar/avatar.dart';
 import '../../../talking/talking.dart';
@@ -11,20 +16,104 @@ import 'lab_config.dart';
 import 'lab_stage_layouts.dart';
 
 /// Builds the stage under the lab's Home chrome: the scene and the character
-/// for [scene], animated per [talkingState].
+/// for [scene], animated per [talkingState], wearing [face] (the lab's
+/// hand-set face) when it is non-null.
 typedef LabStageBuilder =
     Widget Function(
       BuildContext context,
       AvatarScene scene,
       TalkingState talkingState,
+      FaceFrame? face,
     );
+
+/// What the lab's config adds to the stage beyond the [LabStageBuilder]
+/// arguments (contract v7): the held prop and the hand-set parallax. The real
+/// stage reads it from the tree, so a stage builder written for the four
+/// arguments keeps working.
+class LabStageExtras extends InheritedWidget {
+  const LabStageExtras({
+    super.key,
+    required this.prop,
+    required this.parallax,
+    this.rain,
+    this.fog,
+    this.npc,
+    this.npc2,
+    this.moonPhase,
+    this.festive,
+    this.spring,
+    this.autumn,
+    this.localDay,
+    this.topTint = AvatarTint.none,
+    this.hatTint = AvatarTint.none,
+    this.tier,
+    required super.child,
+  });
+
+  final AvatarProp prop;
+  final Offset? parallax;
+
+  /// The world's rain (contract v8), written to the scene; null: dry.
+  final ValueListenable<double>? rain;
+
+  /// The world's fog (contract v11), written to the scene; null: clear.
+  final ValueListenable<double>? fog;
+
+  /// A hand-set NPC pose (contract v11); null: the NPC rests.
+  final NpcIntent? npc;
+
+  /// A hand-set second-slot pose (contract v12, the gulls); null: the live
+  /// gull tree is not running in the lab, so they stay away.
+  final NpcIntent? npc2;
+
+  /// The world's moon phase and December dressing (contract v12), written to
+  /// the scene; null: the moon as drawn, no dressing.
+  final ValueListenable<double>? moonPhase;
+  final ValueListenable<double>? festive;
+
+  /// The world's seasons (contract v14), written to the scene; null: off.
+  final ValueListenable<double>? spring;
+  final ValueListenable<double>? autumn;
+
+  /// The world's local day, for the avatar's December outfit.
+  final ValueListenable<DateTime>? localDay;
+
+  /// The stage avatar's wardrobe tints (contract v13).
+  final AvatarTint topTint;
+  final AvatarTint hatTint;
+
+  /// The quality tier the stage follows (M11); null: ultra.
+  final ValueListenable<QualityTier>? tier;
+
+  /// The extras above [context], or none (no prop, no parallax).
+  static LabStageExtras? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<LabStageExtras>();
+
+  @override
+  bool updateShouldNotify(LabStageExtras oldWidget) =>
+      prop != oldWidget.prop ||
+      parallax != oldWidget.parallax ||
+      rain != oldWidget.rain ||
+      fog != oldWidget.fog ||
+      npc != oldWidget.npc ||
+      npc2 != oldWidget.npc2 ||
+      moonPhase != oldWidget.moonPhase ||
+      festive != oldWidget.festive ||
+      spring != oldWidget.spring ||
+      autumn != oldWidget.autumn ||
+      localDay != oldWidget.localDay ||
+      topTint != oldWidget.topTint ||
+      hatTint != oldWidget.hatTint ||
+      tier != oldWidget.tier;
+}
 
 /// The default [LabStageBuilder]: the real Rive scene and avatar.
 Widget buildLabRiveStage(
   BuildContext context,
   AvatarScene scene,
   TalkingState talkingState,
-) => LabRiveStage(scene: scene, talkingState: talkingState);
+  FaceFrame? face,
+) => LabRiveStage(scene: scene, talkingState: talkingState, face: face);
 
 /// A mock Home screen for the UI lab's Stage tab: the stage (real Rive scene
 /// and avatar by default) under the chrome of `config.layout`, on a phone
@@ -38,9 +127,17 @@ class LabStagePreview extends StatefulWidget {
     super.key,
     required this.config,
     this.stageBuilder = buildLabRiveStage,
+    this.world,
+    this.tier,
   });
 
   final LabConfig config;
+
+  /// The quality tier the stage follows (null: ultra).
+  final ValueListenable<QualityTier>? tier;
+
+  /// The app's world state; its rain is shown on the scene (null: dry).
+  final WorldStateService? world;
 
   /// Injected so widget tests, which cannot decode Rive files, can pass a
   /// placeholder.
@@ -88,6 +185,11 @@ class _LabStagePreviewState extends State<LabStagePreview>
   );
   bool _reduceMotion = false;
 
+  /// The camera's command: the lab cuts to `config.shot` by hand.
+  late final ValueNotifier<CameraShot> _camera = ValueNotifier<CameraShot>(
+    CameraShot(shot: widget.config.shot, move: CameraMove.cut),
+  );
+
   bool get _speaking => widget.config.composer == LabComposerState.speaking;
 
   @override
@@ -101,12 +203,20 @@ class _LabStagePreviewState extends State<LabStagePreview>
   void didUpdateWidget(LabStagePreview oldWidget) {
     super.didUpdateWidget(oldWidget);
     _syncMouth();
+    if (widget.config.shot != _camera.value.shot) {
+      _camera.value = CameraShot(
+        shot: widget.config.shot,
+        move: CameraMove.cut,
+        serial: _camera.value.serial + 1,
+      );
+    }
   }
 
   @override
   void dispose() {
     _mouth.dispose();
     _syllable.dispose();
+    _camera.dispose();
     super.dispose();
   }
 
@@ -169,18 +279,38 @@ class _LabStagePreviewState extends State<LabStagePreview>
                     child: Stack(
                       fit: StackFit.expand,
                       children: <Widget>[
-                        ValueListenableBuilder<MouthState>(
-                          valueListenable: _syllable,
-                          builder:
-                              (
-                                BuildContext context,
-                                MouthState syllable,
-                                Widget? _,
-                              ) => widget.stageBuilder(
-                                context,
-                                config.scene,
-                                _talkingState(syllable),
-                              ),
+                        LabStageExtras(
+                          prop: config.prop,
+                          parallax: config.parallax,
+                          rain: widget.world?.rain,
+                          fog: widget.world?.fog,
+                          npc: config.npc,
+                          npc2: config.npc2,
+                          moonPhase: widget.world?.moonPhase,
+                          festive: widget.world?.festive,
+                          spring: widget.world?.spring,
+                          autumn: widget.world?.autumn,
+                          localDay: widget.world?.localDay,
+                          topTint: config.topTint,
+                          hatTint: config.hatTint,
+                          tier: widget.tier,
+                          child: StageCamera(
+                            shot: _camera,
+                            child: ValueListenableBuilder<MouthState>(
+                              valueListenable: _syllable,
+                              builder:
+                                  (
+                                    BuildContext context,
+                                    MouthState syllable,
+                                    Widget? _,
+                                  ) => widget.stageBuilder(
+                                    context,
+                                    config.scene,
+                                    _talkingState(syllable),
+                                    config.face,
+                                  ),
+                            ),
+                          ),
                         ),
                         LabStageLayout(
                           layout: config.layout,
@@ -202,34 +332,68 @@ class _LabStagePreviewState extends State<LabStagePreview>
 
 /// The real stage: one Rive scene, keyed by scene (a scene switch disposes
 /// the old file and loads the new one, nothing else does), with one avatar on
-/// top that lives as long as the stage.
-class LabRiveStage extends StatelessWidget {
+/// top that lives as long as the stage (a [GlobalKey] carries it into each
+/// new scene layer, under the scene's front weather).
+class LabRiveStage extends StatefulWidget {
   const LabRiveStage({
     super.key,
     required this.scene,
     required this.talkingState,
+    this.face,
   });
 
   final AvatarScene scene;
   final TalkingState talkingState;
 
+  /// The lab's hand-set face, written instead of the live one; null shows
+  /// the live face.
+  final FaceFrame? face;
+
+  @override
+  State<LabRiveStage> createState() => _LabRiveStageState();
+}
+
+class _LabRiveStageState extends State<LabRiveStage> {
   static const AvatarState _avatar = AvatarState(
     avatar: Avatar(),
     avatarConfig: AvatarConfig(),
   );
 
+  final GlobalKey _avatarKey = GlobalKey(debugLabel: 'lab-avatar');
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        _LabSceneLayer(key: ValueKey<AvatarScene>(scene), scene: scene),
-        RiveAvatarView(
-          key: const ValueKey<String>('lab-avatar'),
-          avatarState: _avatar,
-          talkingState: talkingState,
+    final LabStageExtras? extras = LabStageExtras.maybeOf(context);
+    return _LabSceneLayer(
+      key: ValueKey<AvatarScene>(widget.scene),
+      scene: widget.scene,
+      parallax: extras?.parallax,
+      rain: extras?.rain,
+      fog: extras?.fog,
+      npc: extras?.npc,
+      npc2: extras?.npc2,
+      moonPhase: extras?.moonPhase,
+      festive: extras?.festive,
+      spring: extras?.spring,
+      autumn: extras?.autumn,
+      tier: extras?.tier,
+      middle: RiveAvatarView(
+        key: _avatarKey,
+        // The scene's light rig follows the lab's scene, and the prop the
+        // lab's prop.
+        avatarState: _avatar.copyWith(
+          scene: widget.scene,
+          prop: extras?.prop ?? AvatarProp.none,
+          avatar: Avatar(
+            topTint: extras?.topTint ?? AvatarTint.none,
+            hatTint: extras?.hatTint ?? AvatarTint.none,
+          ),
         ),
-      ],
+        talkingState: widget.talkingState,
+        faceOverride: widget.face,
+        localDay: extras?.localDay,
+        tier: extras?.tier,
+      ),
     );
   }
 }
@@ -237,9 +401,34 @@ class LabRiveStage extends StatelessWidget {
 /// One scene's Rive view; logs its lifetime so rapid switching can be checked
 /// for duplicate loads.
 class _LabSceneLayer extends StatefulWidget {
-  const _LabSceneLayer({super.key, required this.scene});
+  const _LabSceneLayer({
+    super.key,
+    required this.scene,
+    this.parallax,
+    this.rain,
+    this.fog,
+    this.npc,
+    this.npc2,
+    this.moonPhase,
+    this.festive,
+    this.spring,
+    this.autumn,
+    this.middle,
+    this.tier,
+  });
 
   final AvatarScene scene;
+  final Offset? parallax;
+  final ValueListenable<double>? rain;
+  final ValueListenable<double>? fog;
+  final NpcIntent? npc;
+  final NpcIntent? npc2;
+  final ValueListenable<double>? moonPhase;
+  final ValueListenable<double>? festive;
+  final ValueListenable<double>? spring;
+  final ValueListenable<double>? autumn;
+  final Widget? middle;
+  final ValueListenable<QualityTier>? tier;
 
   @override
   State<_LabSceneLayer> createState() => _LabSceneLayerState();
@@ -266,6 +455,20 @@ class _LabSceneLayerState extends State<_LabSceneLayer> {
 
   @override
   Widget build(BuildContext context) {
-    return RiveSceneView(scene: widget.scene, sceneEvent: _noEvent);
+    return RiveSceneView(
+      scene: widget.scene,
+      sceneEvent: _noEvent,
+      parallaxOverride: widget.parallax,
+      rain: widget.rain,
+      fog: widget.fog,
+      npcOverride: widget.npc,
+      npc2Override: widget.npc2,
+      moonPhase: widget.moonPhase,
+      festive: widget.festive,
+      spring: widget.spring,
+      autumn: widget.autumn,
+      middle: widget.middle,
+      tier: widget.tier,
+    );
   }
 }

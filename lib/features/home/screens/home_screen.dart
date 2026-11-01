@@ -5,6 +5,11 @@ import 'package:nested/nested.dart';
 
 import '../../../core/design/design.dart';
 import '../../../core/models/demo_script.dart';
+import '../../../core/services/motion/parallax_source.dart';
+import '../../../core/services/quality/quality_tier_service.dart';
+import '../../../core/services/world/world_state_service.dart';
+import '../../../core/services/app_lifecycle_service.dart';
+import '../../../core/services/presence/composer_activity_service.dart';
 import '../../../core/services/speech/speech_input_service.dart';
 import '../../../core/utils/logger.dart';
 import '../../avatar/avatar.dart';
@@ -14,15 +19,64 @@ import '../../settings/settings.dart';
 import '../../talking/talking.dart';
 import '../widgets/demo_activated_listener.dart';
 import '../widgets/home_content_stack.dart';
+import '../../../core/services/audio/ambient_bed_service.dart';
+import '../../../core/services/audio/foley_service.dart';
 
 /// Home: the Stage ([HomeContentStack]) full screen. The keyboard does not
 /// resize it: the Stage lifts its own bottom chrome above the keyboard.
 ///
-/// [speech] comes from the route (Home never reads the service locator).
+/// [speech], [composerActivity], [parallax], [world], [facePerformer],
+/// [camera], [npc], [foley], [beds], [lifecycle] and [quality] come from the
+/// route (Home never reads the service locator).
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.speech});
+  const HomeScreen({
+    super.key,
+    required this.speech,
+    this.composerActivity,
+    this.parallax,
+    this.world,
+    this.facePerformer,
+    this.camera,
+    this.npc,
+    this.foley,
+    this.beds,
+    this.lifecycle,
+    this.quality,
+  });
 
   final SpeechInputService speech;
+
+  /// Hears the composer's typing (null: nobody listens).
+  final ComposerActivityService? composerActivity;
+
+  /// The scene's parallax offset and the pointer's sink (null: centred).
+  final ParallaxSource? parallax;
+
+  /// The world the scene shows, its rain (null: dry).
+  final WorldStateService? world;
+
+  /// Drives the avatar's face and speech (null: static mood faces).
+  final FacePerformer? facePerformer;
+
+  /// Frames the stage (null: no camera, the whole stage always).
+  final CameraDirector? camera;
+
+  /// The scene NPC's behaviour (null: it rests).
+  final NpcDirector? npc;
+
+  /// Foley and haptics from the avatar's events and the taps (null: silent).
+  final FoleyService? foley;
+
+  /// The ambient beds, following the scene (null: silent).
+  final AmbientBedService? beds;
+
+  /// Carries a scene pick from the More menu to the chat (null: the menu has
+  /// no scene picker).
+  final AppLifecycleService? lifecycle;
+
+  /// The quality tier in force, told when the stage shows and is active
+  /// (null: ultra, no benchmark from here).
+  final QualityTierService? quality;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -107,6 +161,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  /// Coming back to the app is presence: the idle ladder starts over (the
+  /// avatar would otherwise greet the user with the tablet out).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.composerActivity?.touch();
+    }
+  }
+
   @override
   void didChangeMetrics() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -129,6 +192,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildStage() {
     final Widget stage = HomeContentStack(
       speech: widget.speech,
+      composerActivity: widget.composerActivity,
+      parallax: widget.parallax,
+      world: widget.world,
+      facePerformer: widget.facePerformer,
+      camera: widget.camera,
+      npc: widget.npc,
+      foley: widget.foley,
+      beds: widget.beds,
+      lifecycle: widget.lifecycle,
+      quality: widget.quality,
       onStartDemo: _startDemoMode,
     );
     if (!kDebugMode) {
@@ -144,7 +217,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.speech != oldWidget.speech) {
+    if (widget.speech != oldWidget.speech ||
+        widget.composerActivity != oldWidget.composerActivity ||
+        widget.parallax != oldWidget.parallax ||
+        widget.world != oldWidget.world ||
+        widget.facePerformer != oldWidget.facePerformer ||
+        widget.camera != oldWidget.camera ||
+        widget.npc != oldWidget.npc ||
+        widget.foley != oldWidget.foley ||
+        widget.beds != oldWidget.beds ||
+        widget.lifecycle != oldWidget.lifecycle ||
+        widget.quality != oldWidget.quality) {
       _stage = _buildStage();
     }
   }

@@ -1,0 +1,14 @@
+ok  hold seam: the hold clip alone, first frame vs its last key (scrolled list, closed tilt), max channel delta 0/255
+    plain clips: largest frame-to-frame change 10.40 (mean abs, 0..255, half-size crop)
+    tablet plain clips: 12.02; the wave alone: 6.71; the wave under the tablet's put-away: 12.56
+ok  short_tool: largest step 10.30 at frame 4
+ok  back_early: largest step 7.22 at frame 7
+ok  back_late: largest step 7.66 at frame 8
+ok  gesture_under_away: largest step 11.03 at frame 30
+ok  news_none_tablet: largest step 9.36 at frame 34
+ok  news_to_tablet_direct: largest step 10.40 at frame 4
+ok  tablet_to_news_direct: largest step 12.02 at frame 4
+ik prop_newspaper_out   offset +0  hand max  1.23 px  elbow max  1.08 px  (22 arm-frames)
+ik prop_newspaper_hold  offset +0  hand max  0.37 px  elbow max  0.37 px  (40 arm-frames)
+ik prop_newspaper_away  offset +1  hand max  0.25 px  elbow max  0.29 px  (16 arm-frames)
+ok  ik: worst hand error within 2.0 px

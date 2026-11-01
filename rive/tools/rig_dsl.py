@@ -18,6 +18,12 @@ move on a believable arc.
 Skin. Weights are dicts {bone: w}; `quantize` keeps the 4 largest as bytes summing to 255.
 `Grid` gives bilinear (tent) weights over named bones, `Chain` a 1-D tent along anchors.
 
+Skeletons (v2). `Skeleton` builds RootBone / Bone chains from `BoneSpec`s (head, tail, parent) with
+ids derived from a namespace and the bone name, `auto_weights` skins points by inverse distance
+to the bone segments, `ik` adds an `IKConstraint`, `solve_two_bone` is the offline two-bone
+solver (the authoring check of the runtime IK). `skinned_path` is the shared weighted
+Catmull-Rom path + Skin builder.
+
 Motion. `critically_damped` (exact closed form) and `SecondOrder` (f, zeta, r follower) bake
 review timelines; `simplify` reduces a sampled channel to linear keys within a tolerance.
 """
@@ -27,9 +33,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import math
 import random
-from typing import Callable, Iterable, Sequence, Union
+from typing import Callable, Iterable, Mapping, Sequence, Union
+import weakref
+import zlib
 
-from rml import Doc, El
+from rml import Doc, El, smooth_path
 
 PI = math.pi
 
@@ -119,6 +127,35 @@ def silhouette_dx(side: float, w: float, depth: float, z0: float) -> Poly:
     if w == 0:
         return [(0.0, ()), (z0, (SIN,))]
     return [(-side * w, ()), (side, (("sil", w * w, depth * depth),)), (z0, (SIN,))]
+
+
+def section_point(w: float, z0: float, depth: float, n_front: float, n_back: float, t: float) -> tuple[float, float]:
+    """Point (X, Z) of a head cross-section at parameter t (0 = front centre, pi/2 = the side, pi =
+    back centre): the front half (Z >= z0) is a superellipse |X/w|^n + |(Z - z0)/depth|^n = 1 of
+    exponent `n_front`, the back half of `n_back` (2 = an ellipse; higher = squarer: a flat face
+    plane with the cheekbone out at its corner, or a jaw angle at the back)."""
+    c, s = math.cos(t), math.sin(t)
+    n = n_front if c >= 0 else n_back
+    return w * abs(s) ** (2 / n), z0 + depth * math.copysign(abs(c) ** (2 / n), c)
+
+
+def section_silhouette(w: float, z0: float, depth: float, n_front: float, n_back: float, a: float) -> float:
+    """Right-edge screen x (from the yaw axis) of that cross-section turned by yaw `a`: the support
+    function max(X cos a + Z sin a). At a = 0 it is exactly w; a > 0 brings the front half round
+    (the far side of a right edge), a < 0 the back half (the near side)."""
+    def f(t: float) -> float:
+        x, z = section_point(w, z0, depth, n_front, n_back, t)
+        return x * math.cos(a) + z * math.sin(a)
+    n = 720
+    k = max(range(n + 1), key=lambda i: f(PI * i / n))
+    lo, hi = PI * max(0, k - 1) / n, PI * min(n, k + 1) / n
+    for _ in range(60):  # golden-section refinement inside the best bracket
+        m1, m2 = hi - (hi - lo) * 0.618034, lo + (hi - lo) * 0.618034
+        if f(m1) < f(m2):
+            lo = m1
+        else:
+            hi = m2
+    return max(f(PI * k / n), f((lo + hi) / 2))
 
 
 def fit3(at_neg: float, at_zero: float, at_pos: float, k: float) -> Poly:
@@ -223,7 +260,7 @@ class Axis:
 
 
 @dataclass
-class BoneSpec:
+class DriveSpec:
     name: str
     x: float  # rest position, art space (absolute)
     y: float
@@ -249,7 +286,7 @@ class Rig:
     y_axis: Axis
     offset: tuple[float, float] = (0.0, 0.0)
     live: bool = True  # False: bones without binds (size baselines)
-    bones: dict[str, BoneSpec] = field(default_factory=dict)
+    bones: dict[str, DriveSpec] = field(default_factory=dict)
     binds: list[El] = field(default_factory=list)
     converters: list[El] = field(default_factory=list)
     _angles: dict[str, El] = field(default_factory=dict)
@@ -280,7 +317,7 @@ class Rig:
     def local(self, x: float, y: float) -> tuple[float, float]:
         return -(y - self.origin[1]), x - self.origin[0]
 
-    def bone(self, spec: BoneSpec) -> El:
+    def bone(self, spec: DriveSpec) -> El:
         lx, ly = self.local(spec.x, spec.y)
         binds: list[El] = []
         if self.live and spec.dx is not None:
@@ -295,7 +332,7 @@ class Rig:
         return spec.el
 
     def add_static(self, name: str, el: El, x: float, y: float, rot: float) -> None:
-        self.bones[name] = BoneSpec(name, x, y, rot=rot, el=el)
+        self.bones[name] = DriveSpec(name, x, y, rot=rot, el=el)
 
     def position(self, name: str, ax: float, ay: float, env: dict[str, float] | None = None) -> tuple[float, float]:
         """Predicted art-space position of a bone at axis angles (ax, ay) (no frame roll)."""
@@ -490,6 +527,243 @@ def taper(pts: Sequence[tuple[float, float]], width: float, ends: float = 0.15) 
         left.append((x + nx * w, y + ny * w))
         right.append((x - nx * w, y - ny * w))
     return left + list(reversed(right))
+
+
+def plain_tendon(d: Doc, bone: El, at: tuple[float, float], frame: tuple[float, float]) -> El:
+    """Tendon of an unrotated bone resting at art-space `at`, bind transform in `frame`."""
+    return d("Tendon", boneId=bone.ref(), tx=at[0] - frame[0], ty=at[1] - frame[1])
+
+
+# (index, art-space point, (in handle, out handle) or None for a corner) -> weights: one dict for a
+# corner (StraightVertex), three (vertex, in handle, out handle) for a smooth vertex
+VertexWeights = Callable[[int, tuple[float, float], "tuple[tuple[float, float], tuple[float, float]] | None"],
+                         Sequence[Weights]]
+
+
+def sampled(wf: WeightFn) -> VertexWeights:
+    """Vertex weights read from `wf` at the vertex and at both of its handles."""
+    def f(_i: int, at: tuple[float, float],
+          handles: tuple[tuple[float, float], tuple[float, float]] | None) -> list[Weights]:
+        if handles is None:
+            return [wf(*at)]
+        return [wf(*at), wf(*handles[0]), wf(*handles[1])]
+    return f
+
+
+def skinned_path(d: Doc, pts: Sequence[Pt], frame: tuple[float, float], weights: VertexWeights,
+                 tendon: Callable[[str], El], closed: bool = True,
+                 tension: float = 1.0) -> tuple[El, tuple[float, float]]:
+    """Catmull-Rom PointsPath through absolute art-space `pts` (rml.smooth_path), centred on their
+    bounding box, every vertex weighted by `weights` and a Skin whose tendons come from
+    `tendon(bone)` (bind transforms in `frame`). Returns (path, centre): a Shape holding the path
+    sits at centre - frame."""
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    ox, oy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    path = smooth_path(d, [((p[0] - ox, p[1] - oy) + tuple(p[2:])) for p in pts], closed=closed, tension=tension)
+    index: dict[str, int] = {}
+    for i, (v, p) in enumerate(zip(path.children, pts)):
+        ax, ay = float(p[0]), float(p[1])
+        handles = None
+        if v.tag != "StraightVertex":
+            rot_i, dist_i = float(v.attrs["inRotation"]), float(v.attrs["inDistance"])
+            rot_o, dist_o = float(v.attrs["outRotation"]), float(v.attrs["outDistance"])
+            handles = ((ax + math.cos(rot_i) * dist_i, ay + math.sin(rot_i) * dist_i),
+                       (ax + math.cos(rot_o) * dist_o, ay + math.sin(rot_o) * dist_o))
+        qss = [quantize(dict(w)) for w in weights(i, (ax, ay), handles)]
+        for qs in qss:
+            for b, _ in qs:
+                index.setdefault(b, len(index))
+        if handles is None:
+            val, ix = pack(qss[0], index)
+            v.add(d("Weight", values=val, indices=ix))
+        else:
+            (a, b_), (c, e), (g, h) = (pack(qs, index) for qs in qss)
+            v.add(d("CubicWeight", values=a, indices=b_, inValues=c, inIndices=e, outValues=g, outIndices=h))
+    tendons = [tendon(n) for n in index]
+    path.add(d("Skin", *tendons, tx=ox - frame[0], ty=oy - frame[1]))
+    return path, (ox, oy)
+
+
+# ------------------------------------------------------------------ skeletons (Rig DSL v2)
+
+Seg = tuple[tuple[float, float], tuple[float, float]]
+
+
+def wrap_angle(a: float) -> float:
+    """`a` wrapped to (-pi, pi]."""
+    while a > PI:
+        a -= 2 * PI
+    while a <= -PI:
+        a += 2 * PI
+    return a
+
+
+@dataclass
+class BoneSpec:
+    """A skeleton bone from `head` to `tail` (absolute art space). A child's head is its parent's
+    tail (Rive puts a child `Bone` at its parent's tip); `parent=None` makes a `RootBone`."""
+
+    name: str
+    head: tuple[float, float]
+    tail: tuple[float, float]
+    parent: str | None = None
+
+
+SKELETON_ID_BASE = 2_000_000  # far above every generator's sequential range (Doc ids)
+SKELETON_NS_SPAN = 10_000  # ids per namespace
+SKELETON_NAMESPACES = 1_000
+_SKELETON_IDS: "weakref.WeakKeyDictionary[Doc, set[str]]" = weakref.WeakKeyDictionary()
+
+
+class Skeleton:
+    """Bones with deterministic ids: the id of bone `name` in namespace `ns` is derived from the
+    two strings alone (crc32), never from the doc's counter, so adding, removing or reordering
+    other elements never moves a bone id (keyed and bound ids are the contract). A clash between
+    two names, rare, moves the later one to the next free id; the doc's own counter is not used.
+
+    Root bones live in a node at art-space `frame` (no rotation); every position is given in
+    absolute art space."""
+
+    def __init__(self, doc: Doc, ns: str, frame: tuple[float, float] = (0.0, 0.0)) -> None:
+        self.d = doc
+        self.ns = ns
+        self.frame = frame
+        self.specs: dict[str, BoneSpec] = {}
+        self.els: dict[str, El] = {}
+        self._angle: dict[str, float] = {}
+        self._base = SKELETON_ID_BASE + zlib.crc32(ns.encode()) % SKELETON_NAMESPACES * SKELETON_NS_SPAN
+        self._used = _SKELETON_IDS.setdefault(doc, set())
+
+    def _id(self, name: str) -> str:
+        off = zlib.crc32(name.encode()) % SKELETON_NS_SPAN
+        for k in range(SKELETON_NS_SPAN):
+            ident = f"{self.d.client}:{self._base + (off + k) % SKELETON_NS_SPAN}"
+            if ident not in self._used:
+                self._used.add(ident)
+                return ident
+        raise ValueError(f"skeleton namespace {self.ns!r} is full")
+
+    def _make(self, tag: str, name: str, **attrs: object) -> El:
+        if name in self.els:
+            raise ValueError(f"bone {name!r} already exists in skeleton {self.ns!r}")
+        el = El(tag, (), **attrs, name=name)
+        el.id = self._id(name)
+        self.els[name] = el
+        return el
+
+    def root(self, name: str, at: tuple[float, float]) -> El:
+        """A zero-length RootBone at `at`: the pivot a chain grows from (children start at `at`)."""
+        el = self._make("RootBone", name, x=at[0] - self.frame[0], y=at[1] - self.frame[1], rotation=0.0,
+                        length=0.0)
+        self.specs[name] = BoneSpec(name, at, at, None)
+        self._angle[name] = 0.0
+        return el
+
+    def add(self, spec: BoneSpec) -> El:
+        dx, dy = spec.tail[0] - spec.head[0], spec.tail[1] - spec.head[1]
+        angle, length = math.atan2(dy, dx), math.hypot(dx, dy)
+        if spec.parent is None:
+            el = self._make("RootBone", spec.name, x=spec.head[0] - self.frame[0], y=spec.head[1] - self.frame[1],
+                            rotation=angle, length=length)
+        else:
+            parent = self.specs[spec.parent]  # KeyError: unknown parent
+            if math.hypot(spec.head[0] - parent.tail[0], spec.head[1] - parent.tail[1]) > 1e-6:
+                raise ValueError(f"bone {spec.name!r} must start at the tail of {spec.parent!r} {parent.tail}")
+            el = self._make("Bone", spec.name, rotation=wrap_angle(angle - self._angle[spec.parent]), length=length)
+            self.els[spec.parent].add(el)
+        self.specs[spec.name] = spec
+        self._angle[spec.name] = angle
+        return el
+
+    def bone(self, name: str) -> El:
+        return self.els[name]
+
+    def world(self, name: str) -> tuple[float, float]:
+        """Art-space position of the bone's origin (its head) at bind."""
+        return self.specs[name].head
+
+    def tail(self, name: str) -> tuple[float, float]:
+        return self.specs[name].tail
+
+    def angle(self, name: str) -> float:
+        """World rotation of the bone at bind (radians, y down)."""
+        return self._angle[name]
+
+    def segments(self, names: Iterable[str] | None = None) -> dict[str, Seg]:
+        """{bone: (head, tail)} for `auto_weights` (zero-length roots included only when named)."""
+        keep = list(names) if names is not None else [n for n, s in self.specs.items() if s.head != s.tail]
+        return {n: (self.specs[n].head, self.specs[n].tail) for n in keep}
+
+    def tendon(self, name: str) -> El:
+        """Tendon holding the bone's bind transform (rotation + head) in the skeleton's frame."""
+        c, s = math.cos(self._angle[name]), math.sin(self._angle[name])
+        h = self.specs[name].head
+        return self.d("Tendon", boneId=self.els[name].ref(), xx=round(c, 6), xy=round(s, 6), yx=round(-s, 6),
+                      yy=round(c, 6), tx=h[0] - self.frame[0], ty=h[1] - self.frame[1])
+
+
+def segment_distance(p: tuple[float, float], seg: Seg) -> float:
+    (ax, ay), (bx, by) = seg
+    vx, vy = bx - ax, by - ay
+    ll = vx * vx + vy * vy
+    t = 0.0 if ll == 0 else max(0.0, min(1.0, ((p[0] - ax) * vx + (p[1] - ay) * vy) / ll))
+    return math.hypot(p[0] - (ax + t * vx), p[1] - (ay + t * vy))
+
+
+def auto_weights(pts: Sequence[tuple[float, float]], bones: Mapping[str, Seg], falloff: float = 2.0,
+                 top: int = 4) -> list[Weights]:
+    """Skin weights by inverse distance (power `falloff`) to each bone segment, the `top`
+    strongest kept and normalised (sum 1, quantize-ready). A point on a segment belongs to that
+    bone alone (shared equally where segments meet). Ties keep `bones` order."""
+    names = list(bones)
+    out: list[Weights] = []
+    for p in pts:
+        dist = [segment_distance((float(p[0]), float(p[1])), bones[n]) for n in names]
+        on = [n for n, dd in zip(names, dist) if dd < 1e-9]
+        if on:
+            out.append({n: 1.0 / len(on) for n in on})
+            continue
+        raw = sorted(((dd ** -falloff, i) for i, dd in enumerate(dist)), key=lambda wi: (-wi[0], wi[1]))[:top]
+        tot = sum(w for w, _ in raw)
+        out.append({names[i]: w / tot for w, i in raw})
+    return out
+
+
+def ik(doc: Doc, chain_tip: El, target: El, parent_bone_count: int = 1, invert: bool = False) -> El:
+    """An IKConstraint on `chain_tip` (it and `parent_bone_count` bones above it reach for
+    `target`); `invert` takes the other bend. Added as a child of the tip and returned."""
+    c = doc("IKConstraint", targetId=target.ref(), parentBoneCount=parent_bone_count, invertDirection=invert or None,
+            name="IK")
+    chain_tip.add(c)
+    return c
+
+
+def two_bone_dirs(l1: float, l2: float, target: tuple[float, float], bend: int,
+                  root: tuple[float, float] = (0.0, 0.0)) -> tuple[float, float, tuple[float, float]]:
+    """Two-bone IK, raw: world directions (upper, lower; radians, y down, not wrapped) and the
+    elbow point. A target out of reach is projected onto the reach annulus along root -> target.
+    `bend` +1 gives a positive elbow angle (lower - upper), -1 a negative one."""
+    sx, sy = root
+    tx, ty = target
+    phi = math.atan2(ty - sy, tx - sx)
+    dist = math.hypot(tx - sx, ty - sy)
+    dist = max(abs(l1 - l2) + 1e-6, min(l1 + l2, dist))
+    tx, ty = sx + dist * math.cos(phi), sy + dist * math.sin(phi)
+    cosine = (l1 * l1 + dist * dist - l2 * l2) / (2 * l1 * dist)
+    alpha = math.acos(max(-1.0, min(1.0, cosine)))
+    up = phi - alpha if bend > 0 else phi + alpha
+    ex, ey = sx + l1 * math.cos(up), sy + l1 * math.sin(up)
+    return up, math.atan2(ty - ey, tx - ex), (ex, ey)
+
+
+def solve_two_bone(l1: float, l2: float, target: tuple[float, float], bend: int,
+                   root: tuple[float, float] = (0.0, 0.0)) -> tuple[float, float]:
+    """(shoulder, elbow) in radians: the upper bone's world angle and the elbow's angle relative
+    to it (both wrapped to (-pi, pi]) that put the chain tip on `target` (offline authoring check
+    of the runtime IKConstraint). Unreachable targets clamp along the root -> target line."""
+    up, lo, _ = two_bone_dirs(l1, l2, target, bend, root)
+    return wrap_angle(up), wrap_angle(lo - up)
 
 
 # ------------------------------------------------------------------ motion: springs and keys

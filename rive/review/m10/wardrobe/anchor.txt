@@ -1,0 +1,16 @@
+rest: anchor (399.5, 491.1), lips' centre (399.5, 489.0), 2.12 px (ok)
+yaw -1: anchor (343.3, 491.1), lips' centre (343.5, 489.0), 2.10 px (ok)
+yaw +1: anchor (455.7, 491.1), lips' centre (455.5, 489.0), 2.10 px (ok)
+pitch -1: anchor (399.5, 501.6), lips' centre (399.5, 500.0), 1.61 px (ok)
+pitch +1: anchor (399.5, 472.5), lips' centre (399.5, 470.5), 2.00 px (ok)
+roll -1: anchor (387.2, 491.8), lips' centre (386.5, 489.0), 2.90 px (ok)
+roll +1: anchor (411.9, 491.8), lips' centre (412.5, 489.0), 2.86 px (ok)
+jaw open: anchor (399.5, 504.0), lips' centre (399.5, 503.5), 0.50 px (ok)
+lean 1: anchor (399.5, 501.5), lips' centre (399.5, 499.0), 2.50 px (ok)
+breath 1: anchor (399.5, 484.5), lips' centre (399.5, 482.0), 2.50 px (ok)
+speech mouth 1: anchor (399.5, 496.5), lips' centre (399.5, 495.0), 1.50 px (ok)
+yaw 1 pitch -1 roll 1 jaw 1 lean 1: anchor (465.6, 532.1), lips' centre (466.5, 531.5), 1.08 px (ok)
+walk f30: anchor (581.5, 494.6), lips' centre (581.5, 493.0), 1.61 px (ok)
+walk f40: anchor (740.6, 494.7), lips' centre (740.5, 493.0), 1.75 px (ok)
+magenta = MouthAnchor (probe dot), green = the lip outline, white ring = its bounding-box centre
+TOTAL: ok

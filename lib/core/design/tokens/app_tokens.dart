@@ -72,6 +72,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
       accent: AppPalette.livingRoomAccent,
       onAccent: AppPalette.ink,
       glow: AppPalette.livingRoomGlow,
+      glassTint: AppPalette.livingRoomGlassTint,
+      captionInk: AppPalette.livingRoomCaptionInk,
     ),
     outlineWidth: 1,
     radiusScale: 1.15,

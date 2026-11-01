@@ -37,6 +37,33 @@ enum AvatarSpecials { onScreen, outOfScreen, leaveAndComeBack }
 
 enum AvatarCostume { none, batman, robocop, soubrette, singularity }
 
+/// A colour variant of the top or the hat (contract v13 `topTint` /
+/// `hatTint`, M10 ruling 5): the garment keeps its shading, the tint gives
+/// its hue. `none` is the garment as drawn. Values are only ever appended
+/// (stored chats keep their names); the colours live in `WardrobeTints`
+/// (`core/design/tokens/wardrobe_tints.dart`).
+enum AvatarTint {
+  none,
+  red,
+  orange,
+  yellow,
+  green,
+  teal,
+  blue,
+  purple,
+  pink,
+  grey,
+}
+
+/// Reads a stored tint name: a missing, unknown or non-string value is
+/// [AvatarTint.none], so every chat saved before v13 loads unchanged.
+AvatarTint tintFromStored(Object? value) {
+  if (value is! String) {
+    return AvatarTint.none;
+  }
+  return EnumUtils.firstOrNull(AvatarTint.values, value) ?? AvatarTint.none;
+}
+
 @freezed
 sealed class Avatar with _$Avatar {
   const factory Avatar({
@@ -46,6 +73,12 @@ sealed class Avatar with _$Avatar {
     @Default(AvatarGlasses.glasses) AvatarGlasses glasses,
     @Default(AvatarSpecials.onScreen) AvatarSpecials specials,
     @Default(AvatarCostume.none) AvatarCostume costume,
+    @JsonKey(unknownEnumValue: AvatarTint.none)
+    @Default(AvatarTint.none)
+    AvatarTint topTint,
+    @JsonKey(unknownEnumValue: AvatarTint.none)
+    @Default(AvatarTint.none)
+    AvatarTint hatTint,
   }) = _Avatar;
   const Avatar._();
 
@@ -60,6 +93,8 @@ sealed class Avatar with _$Avatar {
       'glasses': glasses.name,
       'specials': specials.name,
       'costume': costume.name,
+      'topTint': topTint.name,
+      'hatTint': hatTint.name,
     };
   }
 
@@ -80,12 +115,14 @@ sealed class Avatar with _$Avatar {
         AvatarCostume.values,
         map['costume'] as String,
       ),
+      topTint: tintFromStored(map['topTint']),
+      hatTint: tintFromStored(map['hatTint']),
     );
   }
 
   @override
   String toString() {
-    return '"background": "${background.name}",\n"hat": "${hat.name}",\n"top": "${top.name}",\n"glasses": "${glasses.name}",\n"specials": "${specials.name}",\n"costume": "${costume.name}",';
+    return '"background": "${background.name}",\n"hat": "${hat.name}",\n"top": "${top.name}",\n"glasses": "${glasses.name}",\n"specials": "${specials.name}",\n"costume": "${costume.name}",\n"topTint": "${topTint.name}",\n"hatTint": "${hatTint.name}",';
   }
 
   bool get hideBlinkingEyes => costume == AvatarCostume.singularity;
@@ -107,6 +144,10 @@ sealed class AvatarConfig with _$AvatarConfig {
     AvatarGlasses? glasses,
     AvatarSpecials? specials,
     AvatarCostume? costume,
+    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
+    AvatarTint? topTint,
+    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
+    AvatarTint? hatTint,
     @SoundEffectConverter() SoundEffects? soundEffect,
     @MoodConverter() AvatarMood? mood,
   }) = _AvatarConfig;
@@ -142,6 +183,12 @@ sealed class AvatarConfig with _$AvatarConfig {
               AvatarCostume.values,
               map['costume'] as String,
             )
+          : null,
+      topTint: map['topTint'] is String
+          ? EnumUtils.firstOrNull(AvatarTint.values, map['topTint'] as String)
+          : null,
+      hatTint: map['hatTint'] is String
+          ? EnumUtils.firstOrNull(AvatarTint.values, map['hatTint'] as String)
           : null,
       soundEffect: map['soundEffect'] != null
           ? EnumUtils.firstOrNull(

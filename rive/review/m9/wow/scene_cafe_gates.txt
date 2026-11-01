@@ -1,0 +1,17 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+captured frames: 414: ok
+network attempts during the run: 0: ok
+camera cuts while speaking only at sentence starts: 0 of 0 (shots seen: medium, wide): ok
+cafe in every sample, no journey (828): ok
+the cafe file on screen in every sample: ok
+NPC poked (fish): react 22 ms after the poke (want <= 200): ok
+wipe (trail): the drag surface took the touch (81 dragging samples of 82): ok
+wipe: trailN read back from the scene file: max 16.00 (want >= 4): ok
+wipe: dots drawn (trailN max 16, want >= 4): ok
+wipe: the trail shows while drawing (trailFade min 0.00, want <= 0.1): ok
+wipe: misted back 20.1 s after the stroke (trailFade 1.00, trailN 0 at the end; want 1 and 0): ok
+wipe: drag haptics 10 (selection; want >= 1): ok
+the reply is spoken: ok
+scene events: none; NPC states: idle/react/notice/idle/move/idle/notice/idle/notice/idle/move/idle: info
+scene_cafe.gif 3287301 B (budget 4194304): ok
+scene_cafe.mp4 1347689 B: info

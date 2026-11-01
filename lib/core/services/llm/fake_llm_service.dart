@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import '../../../../core/models/demo_script.dart';
 import '../../models/llm_config.dart';
 import '../../models/llm_message.dart';
@@ -27,12 +29,18 @@ class FakeLlmService implements LlmServiceInterface {
 
   FakeLlmService._internal() : _realService = LlmService();
 
-  // Real service for config management
-  final LlmService _realService;
+  /// A non-singleton instance with an injected delegate, for tests.
+  @visibleForTesting
+  FakeLlmService.forTest(LlmServiceInterface delegate)
+    : _realService = delegate;
+
+  // Real service for config management and for calls made while inactive
+  final LlmServiceInterface _realService;
 
   final List<FakeLlmResponse> _responseQueue = <FakeLlmResponse>[];
   bool _isActive = false;
   int _currentIndex = 0;
+  String? _title;
 
   @override
   bool get isActive => _isActive;
@@ -44,10 +52,14 @@ class FakeLlmService implements LlmServiceInterface {
   bool get hasMore => _currentIndex < _responseQueue.length;
 
   /// Activate fake LLM mode with a list of responses
-  void activate(List<FakeLlmResponse> responses) {
+  ///
+  /// [title] is what [generateTitle] returns while active (null when none),
+  /// so a scripted run never makes a real title call.
+  void activate(List<FakeLlmResponse> responses, {String? title}) {
     _responseQueue.clear();
     _responseQueue.addAll(responses);
     _currentIndex = 0;
+    _title = title;
     _isActive = true;
     AppLogger.info(
       'FakeLlmService activated with ${responses.length} responses',
@@ -60,6 +72,7 @@ class FakeLlmService implements LlmServiceInterface {
     _isActive = false;
     _responseQueue.clear();
     _currentIndex = 0;
+    _title = null;
     AppLogger.info('FakeLlmService deactivated', tag: 'FakeLlmService');
   }
 
@@ -126,11 +139,17 @@ class FakeLlmService implements LlmServiceInterface {
     String firstUserMessage, {
     LlmConfig? config,
     String language = 'en',
-  }) => _realService.generateTitle(
-    firstUserMessage,
-    config: config,
-    language: language,
-  );
+  }) async {
+    if (_isActive) {
+      // Scripted run: never leave the process for a title.
+      return _title;
+    }
+    return _realService.generateTitle(
+      firstUserMessage,
+      config: config,
+      language: language,
+    );
+  }
 
   @override
   Future<String?> extractMemory({
@@ -184,6 +203,7 @@ class FakeLlmService implements LlmServiceInterface {
         tag: 'FakeLlmService',
       );
     }
+    // Tool calls are stream-only: here a tool response is just its jsonBody.
     return response.jsonBody;
   }
 
@@ -222,6 +242,22 @@ class FakeLlmService implements LlmServiceInterface {
         'FakeLlmService: Streaming fake response',
         tag: 'FakeLlmService',
       );
+    }
+
+    if (response.toolCalls.isNotEmpty) {
+      // A tool round: the calls only, no text. The streaming service runs the
+      // tools and prompts again, which consumes the next (answer) response.
+      for (int i = 0; i < response.toolCalls.length; i++) {
+        final FakeToolCall call = response.toolCalls[i];
+        yield LlmStreamChunk.toolCallDelta(
+          index: i,
+          id: 'call_$i',
+          name: call.name,
+          argumentsDelta: jsonEncode(call.arguments),
+        );
+      }
+      yield const LlmStreamChunk.complete();
+      return;
     }
 
     yield LlmStreamChunk.text(content: response.jsonBody, isComplete: true);

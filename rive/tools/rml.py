@@ -193,7 +193,85 @@ def track(d: Doc, target: El, props: dict[str, list[tuple[int, float] | tuple[in
     return d("KeyedObject", *kps, objectId=target.ref())
 
 
-def write(path: str, roots: list[El]) -> None:
+# ---------------------------------------------------------------- key decimation (M4 ruling 1)
+
+# Max error per keyed property name, in the property's own units (radians, local px, scale or
+# opacity). A property without an entry (inDistance, strength, length, colours...) keeps every key.
+TOLERANCES: dict[str, float] = {
+    "rotation": 0.002, "x": 0.25, "y": 0.25, "scaleX": 0.002, "scaleY": 0.002, "opacity": 0.002,
+}
+
+
+def _rdp(keys: list[tuple[int, float]], tol: float) -> list[int]:
+    """Indices of `keys` to keep so linear interpolation between kept neighbours stays within
+    `tol` of every dropped key (Ramer-Douglas-Peucker on value error at the dropped frame)."""
+    n = len(keys)
+    if n <= 2 or tol <= 0:
+        return list(range(n))
+    keep = {0, n - 1}
+    stack = [(0, n - 1)]
+    while stack:
+        i0, i1 = stack.pop()
+        (f0, v0), (f1, v1) = keys[i0], keys[i1]
+        worst, at = tol, -1
+        for i in range(i0 + 1, i1):
+            f, v = keys[i]
+            err = abs(v - (v0 + (v1 - v0) * (f - f0) / (f1 - f0)))
+            if err > worst:          # strict: the first worst key wins ties (deterministic)
+                worst, at = err, i
+        if at >= 0:
+            keep.add(at)
+            stack += [(i0, at), (at, i1)]
+    return sorted(keep)
+
+
+def decimate(keys: list[tuple[int, float]], tol: float) -> list[tuple[int, float]]:
+    """The keys of one linear run to keep: first and last always, every dropped key within `tol`
+    of the linear interpolation between its kept neighbours. tol <= 0 keeps everything."""
+    return [keys[i] for i in _rdp(list(keys), tol)]
+
+
+def decimate_property(prop: El, tolerances: dict[str, float] = TOLERANCES) -> int:
+    """Drop the redundant keys of one KeyedProperty in place; returns how many were dropped.
+
+    Only runs of consecutive `linear` segments are thinned (a segment takes the interpolation of
+    its first key): `hold`/`cubic` keys, the first and last key of each run, and every key of a
+    property without a tolerance survive. Kept keys are the same El objects, so they keep ids."""
+    tol = tolerances.get(str(prop.attrs.get("property")), 0.0)
+    kfs = prop.children
+    if tol <= 0 or len(kfs) <= 2 or any(k.tag != "KeyFrameDouble" for k in kfs):
+        return 0
+
+    def linear(k: El) -> bool:
+        return k.attrs.get("interpolationType") == "linear" and k.attrs.get("interpolatorId") is None
+
+    keep: set[int] = set()
+    i, n = 0, len(kfs)
+    while i < n:
+        j = i
+        while j < n - 1 and linear(kfs[j]):
+            j += 1
+        run = [(int(kfs[k].attrs["frame"]), float(kfs[k].attrs["value"])) for k in range(i, j + 1)]
+        keep.update(i + k for k in _rdp(run, tol))
+        i = j + 1 if j > i else i + 1
+    dropped = n - len(keep)
+    if dropped:
+        prop.children = [kfs[k] for k in sorted(keep)]
+    return dropped
+
+
+def decimate_tree(root: El, tolerances: dict[str, float] = TOLERANCES) -> int:
+    """decimate_property on every KeyedProperty under `root`; returns the keys dropped."""
+    if root.tag == "KeyedProperty":
+        return decimate_property(root, tolerances)
+    return sum(decimate_tree(c, tolerances) for c in root.children)
+
+
+def write(path: str, roots: list[El], decimate_keys: bool = True) -> None:
+    """Serialise `roots` as an RML fragment; linear key runs are decimated first (TOLERANCES)."""
+    if decimate_keys:
+        for r in roots:
+            decimate_tree(r)
     body = "\n\n".join(render(r, 1) for r in roots)
     with open(path, "w") as f:
         f.write(f'<Rive version="1" kind="fragment">\n{body}\n</Rive>\n')

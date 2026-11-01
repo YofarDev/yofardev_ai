@@ -1,0 +1,21 @@
+parallax corners (9 renders, every pixel opaque): ok
+Plane5 log basket travel at parallaxX -1/+1: -40/+40 px (want -/+40): ok
+Plane4 rug travel at parallaxX -1/+1: -28/+28 px (want -/+28): ok
+Plane3 stove door travel at parallaxX -1/+1: -20/+20 px (want -/+20): ok
+Plane2 casing edge travel at parallaxX -1/+1: -12/+12 px (want -/+12): ok
+Plane1 mullion travel at parallaxX -1/+1: -6/+6 px (want -/+6): ok
+Plane0 moon travel at parallaxX -1/+1: +0/+0 px (want -/+0): ok
+hit zones inside planes: dog=Plane4, stove=Plane3, bell=Plane3, window=Plane1: ok
+pointer dog (Plane4) parallaxX -1: click@724,1320 fires 1, rest-only click@984,1320 fires 0: ok
+pointer dog (Plane4) parallaxX +1: click@1022,1320 fires 1, rest-only click@762,1320 fires 0: ok
+pointer stove (Plane3) parallaxX -1: click@754,1030 fires 1, rest-only click@1000,1030 fires 0: ok
+pointer stove (Plane3) parallaxX +1: click@1026,1030 fires 1, rest-only click@780,1030 fires 0: ok
+pointer bell (Plane3) parallaxX -1: click@91,520 fires 1, rest-only click@207,520 fires 0: ok
+pointer bell (Plane3) parallaxX +1: click@233,520 fires 1, rest-only click@117,520 fires 0: ok
+pointer window (Plane1) parallaxX -1: click@348,430 fires 1, rest-only click@727,430 fires 0: ok
+pointer window (Plane1) parallaxX +1: click@732,430 fires 1, rest-only click@353,430 fires 0: ok
+Snow sheets + sway (rain draws snow) seam (frame 0 vs 240, rain 1, box (350, 230, 730, 630), pixels changed beyond rain 0): 0.0000% (ok)
+rope drag: pixels changed at rope 0.5 / 1 outside (172.0, 470.0, 252.0, 980.0) (+ the bell's tilt (96.0, 452.0, 232.0, 604.0)): 0.0000% (changed bbox (102, 463, 221, 968)) (ok)
+rope drag history-free: rope 1 -> 0 vs never pulled (rope + bell box), max diff 0/255 (ok)
+mountainHut.riv 116612 B (budget 409,600): ok
+mountainHut.webp 30940 B (budget 40,960): ok

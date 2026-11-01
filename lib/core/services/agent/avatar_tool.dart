@@ -23,7 +23,8 @@ class AvatarTool extends AgentTool {
   @override
   String get description =>
       'Changes the avatar appearance. '
-      'Can change scene (background), hat, top (shirt), glasses, or costume. '
+      'Can change scene (background), hat, top (shirt), the colour of the top '
+      'or hat (topTint, hatTint), glasses, or costume. '
       'All parameters are optional - only include the ones you want to change.';
 
   @override
@@ -43,6 +44,23 @@ class AvatarTool extends AgentTool {
     Parameter(
       name: 'top',
       description: 'Top/shirt. Options: ${_options(AvatarTop.values)}',
+      type: 'string',
+      isRequired: false,
+    ),
+    Parameter(
+      name: 'topTint',
+      description:
+          'Colour variant of the top (keeps its shading; none = as drawn; '
+          'ignored while a costume is worn). '
+          'Options: ${_options(AvatarTint.values)}',
+      type: 'string',
+      isRequired: false,
+    ),
+    Parameter(
+      name: 'hatTint',
+      description:
+          'Colour variant of the hat (none = as drawn; ignored while a '
+          'costume is worn). Options: ${_options(AvatarTint.values)}',
       type: 'string',
       isRequired: false,
     ),
@@ -119,6 +137,26 @@ class AvatarTool extends AgentTool {
         configBuilder.top = top;
       }
 
+      // Parse the tints if provided
+      final String? topTintStr = args['topTint'] as String?;
+      if (topTintStr != null) {
+        final AvatarTint? tint = parseEnumName(AvatarTint.values, topTintStr);
+        if (tint == null) {
+          return 'Error: Invalid topTint "$topTintStr". '
+              'Valid options: ${_options(AvatarTint.values)}';
+        }
+        configBuilder.topTint = tint;
+      }
+      final String? hatTintStr = args['hatTint'] as String?;
+      if (hatTintStr != null) {
+        final AvatarTint? tint = parseEnumName(AvatarTint.values, hatTintStr);
+        if (tint == null) {
+          return 'Error: Invalid hatTint "$hatTintStr". '
+              'Valid options: ${_options(AvatarTint.values)}';
+        }
+        configBuilder.hatTint = tint;
+      }
+
       // Parse glasses if provided
       final String? glassesStr = args['glasses'] as String?;
       if (glassesStr != null) {
@@ -165,11 +203,13 @@ class AvatarTool extends AgentTool {
       if (backgroundStr == null &&
           hatStr == null &&
           topStr == null &&
+          topTintStr == null &&
+          hatTintStr == null &&
           glassesStr == null &&
           costumeStr == null &&
           specialsStr == null) {
         return 'Error: No avatar changes requested. '
-            'Please specify at least one parameter to change (background, hat, top, glasses, costume, or specials).';
+            'Please specify at least one parameter to change (background, hat, top, topTint, hatTint, glasses, costume, or specials).';
       }
 
       // Build the config
@@ -187,6 +227,8 @@ class AvatarTool extends AgentTool {
       final bool clothesChanged =
           hatStr != null ||
           topStr != null ||
+          topTintStr != null ||
+          hatTintStr != null ||
           glassesStr != null ||
           costumeStr != null;
 
@@ -213,6 +255,8 @@ class AvatarTool extends AgentTool {
               backgroundStr != null &&
               hatStr == null &&
               topStr == null &&
+              topTintStr == null &&
+              hatTintStr == null &&
               glassesStr == null &&
               costumeStr == null &&
               specialsStr == null,
@@ -228,6 +272,8 @@ class AvatarTool extends AgentTool {
       if (backgroundStr != null) changes.add('background to $backgroundStr');
       if (hatStr != null) changes.add('hat to $hatStr');
       if (topStr != null) changes.add('top to $topStr');
+      if (topTintStr != null) changes.add('top tint to $topTintStr');
+      if (hatTintStr != null) changes.add('hat tint to $hatTintStr');
       if (glassesStr != null) changes.add('glasses to $glassesStr');
       if (costumeStr != null) changes.add('costume to $costumeStr');
       if (specialsStr != null) changes.add('special effects to $specialsStr');
@@ -256,6 +302,8 @@ class AvatarConfigBuilder {
   AvatarScene? background;
   AvatarHat? hat;
   AvatarTop? top;
+  AvatarTint? topTint;
+  AvatarTint? hatTint;
   AvatarGlasses? glasses;
   AvatarCostume? costume;
   AvatarSpecials? specials;
@@ -265,6 +313,8 @@ class AvatarConfigBuilder {
       background: background,
       hat: hat,
       top: top,
+      topTint: topTint,
+      hatTint: hatTint,
       glasses: glasses,
       costume: costume,
       specials: specials,

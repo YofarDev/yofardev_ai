@@ -1,0 +1,3 @@
+deepSpace: night identical to HEAD: 0.000 % differ (ok)
+deepSpace: ignores the clock: 0.000 % differ at noon (ok)
+deepSpace: ground unchanged at noon: mean delta 0.00/255 (ok)

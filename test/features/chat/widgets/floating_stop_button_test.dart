@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yofardev_ai/core/models/performance/speech_timeline.dart';
+import 'package:yofardev_ai/core/models/performance/viseme.dart';
 import 'package:yofardev_ai/core/models/talking_phase.dart';
 import 'package:yofardev_ai/core/models/result.dart';
 import 'package:mocktail/mocktail.dart';
@@ -283,6 +285,12 @@ class MockStreamProcessorService extends Mock
 class MockTalkingRepository extends Mock implements TalkingRepository {}
 
 class MockTtsPlaybackService implements TtsPlaybackService {
+  @override
+  void announceSpeech(Duration lead, {Viseme? onset}) {}
+
+  @override
+  bool replaceTimeline(String audioPath, SpeechTimeline timeline) => false;
+
   final StreamController<PlaybackEvent> _controller =
       StreamController<PlaybackEvent>.broadcast();
 
@@ -299,13 +307,20 @@ class MockTtsPlaybackService implements TtsPlaybackService {
     Duration audioDuration, {
     List<AvatarCue> cues = const <AvatarCue>[],
     String? caption,
+    SpeechTimeline? timeline,
   }) {}
+
+  @override
+  Duration? get speechPosition => null;
 
   @override
   void fireCues(List<AvatarCue> cues) {}
 
   @override
   Future<void> stop() async {}
+
+  @override
+  Future<void> interrupt() async {}
 
   @override
   void cancelAnimation() {}
@@ -364,6 +379,12 @@ class MockTtsQueueService implements TtsQueueService {
 
   @override
   String? consumeText(String audioPath) => null;
+
+  @override
+  String? peekText(String audioPath) => null;
+
+  @override
+  String? peekLanguage(String audioPath) => null;
 }
 
 class MockAvatarAnimationService implements AvatarAnimationService {
