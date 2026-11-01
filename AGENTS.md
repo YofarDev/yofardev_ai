@@ -14,7 +14,7 @@
 
 > `docs/superpowers/` holds implementation plans and specs: `plans/` (2026-10-22
 > architecture audit + alignment plan, v4 Rive plans A & B, 2026-10-24 pipeline
-> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8, M9 and M10) and `specs/` (rive-v4
+> optimizations, 2026-10-27 Rive moonshot M0 spikes, 2026-10-29 moonshot M3, M4 and M5, 2026-10-30 M6 and M7, 2026-10-31 M8, M9 and M10, 2026-11-01 M11) and `specs/` (rive-v4
 > design, 2026-10-27 Rive moonshot vision). Other references: `README.md`
 > (app overview), `scripts/README.md` (tooling), `rive/README.md` +
 > `rive/CONTRACT.md` (avatar assets).
@@ -118,8 +118,8 @@ on violation.
 - Golden tests store reference images under `test/**/goldens/` — only regenerate (`--update-goldens`) when a visual change is intentional
 - Widget tests that need app styling use `AppTheme.dark`; goldens go through `GoldenTestHelper.init()` + `makeTestableWidget` + `matchGolden`
 - Fonts are bundled in `assets/fonts/google_fonts/` (Fraunces 400/500/600, Manrope 400/500) and runtime fetching is off — a new font weight needs a new TTF there
-- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`, `face`, `parallax`, `prop`, `rain`, `shot`, `topTint`, `hatTint`) and `ext.yofardev.uiLab.state`. `rain` (0..1) goes to `WorldStateService.setRain` (`core/services/world/`, app-lifetime lazy singleton; since M7 also fed by the weather tool and `WorldWeatherSync`) and the scene view writes it to `SceneVM.rain` on every scene load and change; `shot` (`wide|medium|closeUp|propInsert`) cuts the lab's stage camera. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
-- v4 avatar: the character and the 7 scenes (4 until M9) are Rive files in `assets/rive/`
+- Debug-only UI lab (`/ui-lab`; Settings → "UI lab" in debug builds) previews scenes, Home layouts and composer states. VM service extensions `ext.yofardev.uiLab.open` (in `app_router.dart`), `ext.yofardev.uiLab.configure` (JSON-string params: `scene`, `layout`, `composer`, `tab`, `accentHueOverride`, `glassAlphaScale`, `radiusScaleOverride`, `panelCollapsed`, `face`, `parallax`, `prop`, `rain`, `shot`, `topTint`, `hatTint`, `tier` (low|high|ultra|auto: `QualityTierService.forceTier`), `spring`, `autumn` (0..1, null = the calendar), `wind` (0..1, null = unknown)) and `ext.yofardev.uiLab.state`. `rain` (0..1) goes to `WorldStateService.setRain` (`core/services/world/`, app-lifetime lazy singleton; since M7 also fed by the weather tool and `WorldWeatherSync`) and the scene view writes it to `SceneVM.rain` on every scene load and change; `shot` (`wide|medium|closeUp|propInsert`) cuts the lab's stage camera. macOS stops rendering covered Flutter windows — keep the window unoccluded when capturing
+- v4 avatar: the character and the 10 scenes (4 until M9, 7 until M11) are Rive files in `assets/rive/`
   (`avatar.riv` + `scenes/<sceneId>.riv`), rebuilt from RML sources via
   `./scripts/frive.sh`. `rive/CONTRACT.md` is the single source of truth for
   every artboard/state-machine/view-model/event name; the Dart mirror lives
@@ -304,6 +304,35 @@ on violation.
   per sentence. `SceneVM.night` = (1 − daylight) × (1 − dusk) (0 without a world clock); only the beach
   binds it. Wow harness: `WOW=wardrobe|persona|caption` (contact sheet + one short MP4, no GIF).
   Evidence index: `rive/review/m10/README.md`
+- Scenes 8–10, quality tiers, seasons, accessibility (contract v14, moonshot M11): `forestCabin`
+  (`scene_forest_cabin.py`; squirrel, `pinwheel` spin, `SceneFront`), `trainCompartment`
+  (`scene_train.py`; the landscape scrolls on seamless tiles in the window, ladybug, `chain` pull →
+  `whistle`), `library` (`scene_library.py`; storm window, mouse, `ladder` aim); each module exports
+  `BINDS`, `BINDS14` (its v14 binds), `REVIEW` and `TIER_GATES`. Journeys over 90 pairs (path among
+  campfire / beach / forestCabin). Legacy `library` → library, `forest` → forestCabin. **Tiers:**
+  `QualityTierService` gives the effective tier = min(benchmark, thermal cap, battery-saver cap, drift
+  cap); the benchmark (M0 probe, bench version 2) waits for the stage's first scene and for no cap or
+  force; `ThermalSource` is the `yofardev/thermal` channel (Android `PowerManager`, Apple
+  `ProcessInfo.thermalState`; moderate → one tier below, severe / critical → low, lifts after 120 s);
+  `FrameDriftWatch` drops one tier for the session after three 10 s windows over budget × 1.25 (paused
+  under a thermal cap, reset on a tier change). Budgets `QualityTier.frameBudgetMs` 16.7 / 11.1 /
+  8.3 ms. `SceneVM.tier` (default ultra = the v13 look) is written by `SceneTierWriter`; the shared
+  pass `world_kit.tier_gate` hides each scene's `TIER_GATES` names (high: dense FX halves; low: also
+  ambient loops, fog veils to one fill). Low in the app: no `SceneFront`, no parallax, no camera creep,
+  tints transparent, the bubble placed once per sentence; the anchor is read every frame (ultra),
+  every 2nd (high), once per sentence (low). CLI bench: `uv run rive/tools/rive_bench.py` (gate in
+  `rive_gates.py`: low ≤ 0.8 × ultra render p95, best run, load-aware). Frame cost per scene × tier:
+  `integration_test/frame_cost_test.dart` (`TIERS`, `SECONDS`, `PHASE=battery`), steps in
+  `rive/review/m11/device/README.md`. **Seasons:** `SkyCalendar.season` (meteorological, 7-day ramps,
+  south swaps) → `WorldStateService.spring` / `autumn` → `SceneSeasonWriter`; forestCabin, campfire,
+  livingRoom, trainCompartment bind them. Wind: `WeatherReport.windIntensity` (`wind.speed` / 12) →
+  `WorldStateService.wind` → the wind bed (`assets/foley/bed_wind.wav`; scene base × (0.5 + 0.5 ×
+  wind); `gust` swells it). **Accessibility:** `StageSemantics` (one node: scene + phase; a custom
+  action per prop and drag handle via `tapProp` / `PropDragController.performAccessibilityAction`;
+  the Rive layers are excluded), `ReduceMotionSource` (`core/services/motion/`, followed live), reduced
+  journeys = a 200 ms dip-cut (`JourneyState.reduced`), `GlassPanel` opaque under high contrast,
+  haptics only through `FoleyService` (`test/haptics_path_test.dart`). Evidence index:
+  `rive/review/m11/README.md`
 - Fresh worktree: `rive_native` host tests fail with "Failed to lookup symbol 'init'" until
   `mkdir -p build/rive_native && ln -sfn ~/.pub-cache/hosted/pub.dev/rive_native-0.1.11/native build/rive_native/native`
   (gitignored)
@@ -369,4 +398,4 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-10-31 (M10)
+**Last Updated**: 2026-11-01 (M11)
