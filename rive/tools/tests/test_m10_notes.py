@@ -111,8 +111,11 @@ def test_m10_art_mints_from_the_m10_range_only(rml: dict[str, ET.Element], sid: 
     ids = [_n(e.get("id")) for e in rml[sid].iter() if e.get("id")]
     assert len(ids) == len(set(ids))
     m10 = [i for i in ids if M10_RANGE[0] <= i < M10_RANGE[1]]
-    # below the M10 range only M11's own range (contract v14, `Scene.d11`) may appear
-    assert m10 and not [i for i in ids if i < M10_RANGE[0] and i >= 890000 and i < gen_scenes.M11_ID_START]
+    # just below the M11 range (contract v14, `Scene.d11`) only M12's shared additions may appear: the
+    # `SceneFront`'s own eases (`Scene.d12`, M12 ruling 6)
+    assert m10 and not [e.get("id") for e in rml[sid].iter() if e.get("id")
+                        and gen_scenes.M12_ID_START <= _n(e.get("id")) < gen_scenes.M11_ID_START
+                        and e.tag != "CubicEaseInterpolator"]
 
 
 # ====================================================================== café: the wipe clears the glass

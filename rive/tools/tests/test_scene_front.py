@@ -78,8 +78,10 @@ def test_front_artboard_shape(rml: dict[str, ET.Element], sid: str) -> None:
     for e in front.iter():
         if e.get("id") is not None and id(e) not in fog:
             n = int(e.get("id").split(":")[1])
-            # M11: the tier gate's wrappers and binds (world_kit.tier_gate, `Scene.d11`)
-            assert n >= M6_ID_START or gen_scenes.M11_ID_START <= n < gen_scenes.M10_ID_START, (e.tag, e.get("name"))
+            # M11: the tier gate's wrappers and binds (world_kit.tier_gate, `Scene.d11`); M12: the
+            # front's own eases (`Scene.d12`)
+            assert (n >= M6_ID_START or gen_scenes.M11_ID_START <= n < gen_scenes.M10_ID_START
+                    or gen_scenes.M12_ID_START <= n < gen_scenes.M11_ID_START), (e.tag, e.get("name"))
     assert all(gen_scenes.M8_ID_START <= int(x.get("id").split(":")[1]) < gen_scenes.M7_ID_START
                for f in front if f.get("name") == "FrontFog" for x in f.iter() if x.get("id"))
 
@@ -105,3 +107,39 @@ def test_front_binds_rain_and_parallax(rml: dict[str, ET.Element], sid: str) -> 
     assert travel == pytest.approx({"13": FRONT_GAIN * PARALLAX_TRAVEL[0], "14": FRONT_GAIN * PARALLAX_TRAVEL[1]})
     mist_fog = [b for b in tops[1].iter("DataBindContext") if b.get("sourcePathIds") == paths["lightFog"]]
     assert len(mist_fog) == gen_scenes.FOG_FILLS
+
+
+def _foreign_eases(board: ET.Element) -> list[str]:
+    """The `interpolatorId`s a board's keys use that the board does not define. The runtime resolves an
+    interpolator within its own artboard, so a key pointing at another board's ease is dropped (with
+    its whole keyed object: the front's splashes never drew, M6-M11; M12 ruling 6)."""
+    defined = {e.get("id") for e in board.iter() if e.tag.endswith("Interpolator")}
+    return sorted({e.get("interpolatorId") for e in board.iter()
+                   if e.get("interpolatorId") is not None and e.get("interpolatorId") not in defined})
+
+
+@pytest.mark.parametrize("sid", [*BUILT_FRONTS, *NO_FRONT])
+def test_every_key_eases_within_its_own_artboard(rml: dict[str, ET.Element], sid: str) -> None:
+    for board in rml[sid].findall("Artboard"):
+        assert _foreign_eases(board) == [], (sid, board.get("name"))
+
+
+@pytest.mark.parametrize("sid", BUILT_FRONTS)
+def test_front_splashes_keep_their_ease(rml: dict[str, ET.Element], sid: str) -> None:
+    """The splashes pop on the same ease as before (x1 0.42, x2 0.58), now the front's own copy."""
+    front = _front(rml[sid])
+    eases = {e.get("id"): e for e in front.iter("CubicEaseInterpolator")}
+    anim = next(a for a in front.iter("LinearAnimation") if a.get("name") == "amb_FrontSplash")
+    used = {k.get("interpolatorId") for k in anim.iter() if k.get("interpolatorId")}
+    assert len(used) == 1
+    ease = eases[used.pop()]
+    assert [float(ease.get(k)) for k in ("x1", "y1", "x2", "y2")] == [0.42, 0.0, 0.58, 1.0]
+    assert int(ease.get("id").split(":")[1]) >= gen_scenes.M12_ID_START
+
+
+@pytest.mark.parametrize("rml_path", sorted((Path(__file__).resolve().parents[2] / "scenes").glob("*/*.rml")),
+                         ids=lambda p: p.stem)
+def test_committed_scene_files_ease_within_each_artboard(rml_path: Path) -> None:
+    """The committed RML (what `frive.sh` built the .riv from) holds the same rule."""
+    for board in ET.fromstring(rml_path.read_text()).findall("Artboard"):
+        assert _foreign_eases(board) == [], (rml_path.stem, board.get("name"))

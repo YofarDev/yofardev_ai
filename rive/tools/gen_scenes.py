@@ -87,6 +87,9 @@ V13_BINDS: dict[str, frozenset[str]] = {
 # from their own range per document (`Scene.d11`), so no M10 id moves. The v14 scene modules mint their
 # v14 members from the same range (each scene is its own document).
 M11_ID_START = 900000
+# Moonshot M12: shared additions to existing scenes (the `SceneFront`'s own eases, ruling 6) mint from
+# their own range per document (`Scene.d12`), so no M11 id moves.
+M12_ID_START = 890000
 # The v14 members the shared passes bind per scene (world_kit.declared_v14_binds unites this with a
 # scene module's `BINDS14`); the others declare `tier`, `spring`, `autumn` inertly. Lane W fills it in
 # (`tier` everywhere through the tier gate; `spring` / `autumn` in livingRoom and campfire).
@@ -197,6 +200,7 @@ class Scene:
         self.d5 = Doc(client=0, start=M5_ID_START)
         self.d6 = Doc(client=0, start=M6_ID_START)
         self.d7 = Doc(client=0, start=M7_ID_START)
+        self.d12 = Doc(client=0, start=M12_ID_START)
         # contract v9: (content, anims, layers) of the optional `SceneFront` artboard (front_weather)
         self.front: tuple[list[El], list[El], list[El]] | None = None
         self._convs: dict[tuple[float, float], El] = {}
@@ -546,15 +550,37 @@ class Scene:
         return os.path.normpath(out)
 
 
+    def _own_eases(self, anims: list[El]) -> list[El]:
+        """M12 ruling 6: the runtime resolves a key's `interpolatorId` within the key's own artboard, so
+        the front's keys pointing at the `Scene` artboard's eases were dropped with their keyed objects
+        (the splashes never drew, in the CLI or the app, M6-M11). Each ease the `anims` use gets a copy
+        minted from `d12`, and their keys point at it; the copies go into the front artboard."""
+        shared = {e.ref(): e for e in (self.ease, self.ease_out, self.ease_in)}
+        copies: dict[str, El] = {}
+
+        def visit(e: El) -> None:
+            ref = str(e.attrs.get("interpolatorId"))
+            if ref in shared:   # an ease the front already owns stays
+                if ref not in copies:
+                    copies[ref] = self.d12(shared[ref].tag, **shared[ref].attrs)
+                e.attrs["interpolatorId"] = copies[ref].ref()
+            for c in e.children:
+                visit(c)
+        for a in anims:
+            visit(a)
+        return list(copies.values())
+
     def _front_artboard(self) -> El:
         """Contract v9 `SceneFront`: the weather in front of the avatar, same `SceneVM`, its own `Main`
         state machine of ambient loops, no listeners or events. Colours go through the scene's fit."""
         content, anims, layers = self.front
         self.fit_colours(content)
+        eases = self._own_eases(anims)
         d = self.d6
         sm = d("StateMachine", *layers, name="Main")
         style = d("LayoutComponentStyle", name="Artboard Style")
-        return d("Artboard", style, sm, *content, *anims, x=float(W + 200), y=0.0, width=float(W), height=float(H),
+        return d("Artboard", style, sm, *eases, *content, *anims, x=float(W + 200), y=0.0, width=float(W),
+                 height=float(H),
                  name="SceneFront", defaultStateMachineId=sm.ref(), viewModelId=self.vm.ref(),
                  viewModelInstanceId=self.inst.ref(), styleId=style.ref(), clip=True)
 

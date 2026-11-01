@@ -154,17 +154,25 @@ def test_m8_range_is_free_at_m7() -> None:
         assert not [i for i in ids if gen_scenes.M8_ID_START <= i < gen_scenes.M7_ID_START], sid
 
 
+# M12 ruling 6: the `SceneFront`'s own eases (`Scene.d12`)
+M12_EASE = gen_scenes.M12_ID_START
+
+
 @pytest.mark.parametrize("sid", SCENES)
 def test_existing_ids_never_move(rml: dict[str, ET.Element], sid: str) -> None:
     old = {e.get("id"): e for e in _old(sid).iter() if e.get("id")}
     new = {e.get("id"): e for e in rml[sid].iter() if e.get("id")}
     assert not set(old) - set(new), sorted(set(old) - set(new))[:10]
     for i, e in old.items():
-        assert (new[i].tag, new[i].attrib) == (e.tag, e.attrib), (i, e.tag, e.get("name"))
+        attrib = dict(new[i].attrib)
+        if M12_EASE <= _n(attrib.get("interpolatorId", "0:0")) < gen_scenes.M11_ID_START:
+            # M12 ruling 6: a `SceneFront` key points at the front's own copy of the ease it used
+            attrib["interpolatorId"] = e.get("interpolatorId")
+        assert (new[i].tag, attrib) == (e.tag, e.attrib), (i, e.tag, e.get("name"))
     added = set(new) - set(old)
-    # M8 additions, and M9's (contract v12), M10's (v13) and M11's (v14) from their own ranges below it
-    assert all(gen_scenes.M11_ID_START <= _n(i) < gen_scenes.M7_ID_START for i in added), \
-        sorted(i for i in added if not gen_scenes.M11_ID_START <= _n(i) < gen_scenes.M7_ID_START)[:10]
+    # M8 additions, and M9's (contract v12), M10's (v13), M11's (v14) and M12's from their own ranges below it
+    assert all(M12_EASE <= _n(i) < gen_scenes.M7_ID_START for i in added), \
+        sorted(i for i in added if not M12_EASE <= _n(i) < gen_scenes.M7_ID_START)[:10]
 
 
 # ---------------------------------------------------------------- view model

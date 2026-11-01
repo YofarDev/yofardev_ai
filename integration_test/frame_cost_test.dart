@@ -33,7 +33,13 @@ import 'package:yofardev_ai/features/avatar/avatar.dart';
 ///     flutter drive --profile -d <device> \
 ///       --driver=test_driver/integration_test.dart \
 ///       --target=integration_test/frame_cost_test.dart \
-///       [--dart-define=TIERS=low,high,ultra] [--dart-define=SECONDS=8]
+///       [--dart-define=TIERS=low,high,ultra] [--dart-define=SECONDS=8] \
+///       [--dart-define=SCENES=campfire,beach] [--dart-define=REPS=3]
+///
+/// `SCENES` narrows the run to the named [AvatarScene]s, in enum order
+/// (default: every scene; an unknown name fails the run). `REPS` (default 1)
+/// repeats each tier's dry / rain-1 pair that many times, alternating, and
+/// labels the passes `<scene>_r<n>` / `<scene>_rain1_r<n>`.
 ///
 /// Each pass reports frames, P50 / P95 / P99 of build, raster and
 /// max(build, raster), the share of frames whose max(build, raster) is over
@@ -53,6 +59,8 @@ import 'package:yofardev_ai/features/avatar/avatar.dart';
 /// Every number is the device it ran on; an emulator or a Mac is not a tier.
 const String _phase = String.fromEnvironment('PHASE', defaultValue: 'frame');
 const int _seconds = int.fromEnvironment('SECONDS', defaultValue: 8);
+const String _scenes = String.fromEnvironment('SCENES');
+const int _reps = int.fromEnvironment('REPS', defaultValue: 1);
 const String _tiers = String.fromEnvironment(
   'TIERS',
   defaultValue: 'low,high,ultra',
@@ -132,7 +140,9 @@ void main() {
     final Map<String, Object?> results = <String, Object?>{};
     report['results'] = results;
     final WorldStateService world = getIt<WorldStateService>();
-    for (final AvatarScene scene in AvatarScene.values) {
+    final List<AvatarScene> scenes = _selectedScenes();
+    report['scenes'] = scenes.map((AvatarScene s) => s.name).toList();
+    for (final AvatarScene scene in scenes) {
       await showScene(scene);
       final bool front = AvatarRiveContract.sceneFrontScenes.contains(
         scene.name,
@@ -144,17 +154,25 @@ void main() {
         results['${scene.name}_rain1'] = wet;
       }
       for (final QualityTier tier in tiers) {
-        quality.forceTier(tier);
-        world.setRain(0);
-        await _settle(tester, const Duration(seconds: 2));
-        dry[tier.name] = await _measure(scene.name, tier);
-        if (front) {
-          // At rain 1 the front weather is drawn over the avatar too
-          // (contract v9), except on low (ruling 13).
-          world.setRain(1);
-          await _settle(tester, const Duration(seconds: 2));
-          wet[tier.name] = await _measure('${scene.name}_rain1', tier);
+        // REPS > 1 alternates dry and rain passes (M12 lane F: the emulator's
+        // pass-to-pass noise is several ms; compare medians, same run).
+        for (int rep = 0; rep < _reps; rep++) {
+          final String r = _reps > 1 ? '_r$rep' : '';
+          quality.forceTier(tier);
           world.setRain(0);
+          await _settle(tester, const Duration(seconds: 2));
+          dry['${tier.name}$r'] = await _measure('${scene.name}$r', tier);
+          if (front) {
+            // At rain 1 the front weather is drawn over the avatar too
+            // (contract v9), except on low (ruling 13).
+            world.setRain(1);
+            await _settle(tester, const Duration(seconds: 2));
+            wet['${tier.name}$r'] = await _measure(
+              '${scene.name}_rain1$r',
+              tier,
+            );
+            world.setRain(0);
+          }
         }
       }
     }
@@ -163,6 +181,25 @@ void main() {
     print('FRAME_COST_REPORT ${jsonEncode(report)}');
     binding.reportData = report;
   }, timeout: const Timeout(Duration(minutes: 80)));
+}
+
+/// The scenes `SCENES` names (every scene when it is empty), in enum order.
+List<AvatarScene> _selectedScenes() {
+  final Set<String> names = _scenes
+      .split(',')
+      .map((String name) => name.trim())
+      .where((String name) => name.isNotEmpty)
+      .toSet();
+  if (names.isEmpty) {
+    return AvatarScene.values;
+  }
+  for (final String name in names) {
+    // An unknown name fails loudly instead of measuring nothing.
+    AvatarScene.values.byName(name);
+  }
+  return AvatarScene.values
+      .where((AvatarScene scene) => names.contains(scene.name))
+      .toList();
 }
 
 /// Lets real time pass with the engine producing frames.

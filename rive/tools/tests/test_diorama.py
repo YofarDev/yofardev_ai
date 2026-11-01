@@ -543,8 +543,8 @@ def _m8(i: str | None) -> bool:
     """An M8 element (contract v11: fog, the NPC rigs; `M8_ID_START` range) or a later one (M9, contract
     v12: the v12 view-model members and world-kit art; `M9_ID_START` range; M10, contract v13: `night`
     and the M10 notes' art; `M10_ID_START` range; M11, contract v14: `tier`, `spring`, `autumn`;
-    `M11_ID_START` range)."""
-    return i is not None and gen_scenes.M11_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START
+    `M11_ID_START` range; M12: the `SceneFront`'s own eases, `M12_ID_START` range)."""
+    return i is not None and gen_scenes.M12_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START
 
 
 def _v10_or_later(new: dict, i: str) -> bool:
