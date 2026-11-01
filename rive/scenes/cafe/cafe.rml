@@ -187,6 +187,134 @@
           </StateTransition>
         </AnimationState>
       </StateMachineLayer>
+      <StateMachineLayer name="NpcDraw" id="0:880127">
+        <AnyState x="100" y="-100" id="0:880123">
+          <StateTransition stateToId="0:880049" duration="0" id="0:880068">
+            <TransitionViewModelCondition id="0:880067">
+              <TransitionPropertyViewModelComparator id="0:880065">
+                <BindablePropertyEnum id="0:880064">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880063"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930000" id="0:880066"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880051" duration="0" id="0:880074">
+            <TransitionViewModelCondition id="0:880073">
+              <TransitionPropertyViewModelComparator id="0:880071">
+                <BindablePropertyEnum id="0:880070">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880069"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930002" id="0:880072"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880052" duration="0" id="0:880080">
+            <TransitionViewModelCondition id="0:880079">
+              <TransitionPropertyViewModelComparator id="0:880077">
+                <BindablePropertyEnum id="0:880076">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880075"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930003" id="0:880078"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880061" duration="0" id="0:880086">
+            <TransitionViewModelCondition id="0:880085">
+              <TransitionPropertyViewModelComparator id="0:880083">
+                <BindablePropertyEnum id="0:880082">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880081"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930004" id="0:880084"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880062" duration="0" id="0:880092">
+            <TransitionViewModelCondition id="0:880091">
+              <TransitionPropertyViewModelComparator id="0:880089">
+                <BindablePropertyEnum id="0:880088">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880087"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930005" id="0:880090"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnyState>
+        <ExitState x="500" y="-100" id="0:880124"/>
+        <EntryState x="-100" y="-100" id="0:880126">
+          <StateTransition stateToId="0:880050" id="0:880125"/>
+        </EntryState>
+        <AnimationState animationId="0:880006" x="0" y="220" id="0:880049">
+          <StateTransition stateToId="0:880050" duration="0" id="0:880098">
+            <TransitionViewModelCondition id="0:880097">
+              <TransitionPropertyViewModelComparator id="0:880095">
+                <BindablePropertyEnum id="0:880094">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880093"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880096"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880013" x="160" y="340" id="0:880050"/>
+        <AnimationState animationId="0:880020" x="320" y="220" id="0:880051">
+          <StateTransition stateToId="0:880050" duration="0" id="0:880104">
+            <TransitionViewModelCondition id="0:880103">
+              <TransitionPropertyViewModelComparator id="0:880101">
+                <BindablePropertyEnum id="0:880100">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880099"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880102"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880027" x="480" y="340" id="0:880052">
+          <StateTransition stateToId="0:880050" duration="0" id="0:880110">
+            <TransitionViewModelCondition id="0:880109">
+              <TransitionPropertyViewModelComparator id="0:880107">
+                <BindablePropertyEnum id="0:880106">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880105"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880108"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <BlendState1DViewModel x="640" y="220" id="0:880061">
+          <BindablePropertyNumber id="0:880054">
+            <DataBindContext sourcePathIds="0:23-0:930013" propertyKey="636" id="0:880053"/>
+          </BindablePropertyNumber>
+          <BlendAnimation1D animationId="0:880034" value="-1" id="0:880055"/>
+          <BlendAnimation1D animationId="0:880034" value="-0.5" id="0:880056"/>
+          <BlendAnimation1D animationId="0:880041" value="-0.4999" id="0:880057"/>
+          <BlendAnimation1D animationId="0:880041" value="0.4999" id="0:880058"/>
+          <BlendAnimation1D animationId="0:880034" value="0.5" id="0:880059"/>
+          <BlendAnimation1D animationId="0:880034" value="1" id="0:880060"/>
+          <BlendStateTransition stateToId="0:880050" duration="0" id="0:880116">
+            <TransitionViewModelCondition id="0:880115">
+              <TransitionPropertyViewModelComparator id="0:880113">
+                <BindablePropertyEnum id="0:880112">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880111"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880114"/>
+            </TransitionViewModelCondition>
+          </BlendStateTransition>
+        </BlendState1DViewModel>
+        <AnimationState animationId="0:880048" x="800" y="340" id="0:880062">
+          <StateTransition stateToId="0:880050" duration="0" id="0:880122">
+            <TransitionViewModelCondition id="0:880121">
+              <TransitionPropertyViewModelComparator id="0:880119">
+                <BindablePropertyEnum id="0:880118">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880117"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880120"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+      </StateMachineLayer>
       <StateMachineLayer name="Event_espresso" id="0:6248">
         <AnyState x="100" y="-100" id="0:6244"/>
         <ExitState x="500" y="-100" id="0:6245"/>
@@ -6465,7 +6593,7 @@
           </Fill>
         </Shape>
       </Node>
-      <Node x="0" y="0" opacity="0.72" name="WipeRing0" id="0:910744">
+      <Node x="0" y="0" opacity="0.5" name="WipeRing0" id="0:910744">
         <DataBindContext sourcePathIds="0:23-0:920076" propertyKey="18" converterId="0:910741" id="0:910742"/>
         <ClippingShape sourceId="0:910642" name="Clip" id="0:910743"/>
         <Shape x="0" y="0" name="Ring" id="0:910735">
@@ -6475,97 +6603,97 @@
           <Rectangle width="134" height="364" x="397" y="578" name="Pane" id="0:910650"/>
           <Rectangle width="128" height="364" x="540" y="578" name="Pane" id="0:910651"/>
           <Rectangle width="134" height="364" x="683" y="578" name="Pane" id="0:910652"/>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe0" id="0:910657">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe0" id="0:910657">
             <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="13" id="0:910653"/>
             <DataBindContext sourcePathIds="0:23-0:920044" propertyKey="14" id="0:910654"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910031" id="0:910655"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910031" id="0:910656"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe1" id="0:910662">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe1" id="0:910662">
             <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="13" id="0:910658"/>
             <DataBindContext sourcePathIds="0:23-0:920046" propertyKey="14" id="0:910659"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910061" id="0:910660"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910061" id="0:910661"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe2" id="0:910667">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe2" id="0:910667">
             <DataBindContext sourcePathIds="0:23-0:920016" propertyKey="13" id="0:910663"/>
             <DataBindContext sourcePathIds="0:23-0:920048" propertyKey="14" id="0:910664"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910091" id="0:910665"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910091" id="0:910666"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe3" id="0:910672">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe3" id="0:910672">
             <DataBindContext sourcePathIds="0:23-0:920018" propertyKey="13" id="0:910668"/>
             <DataBindContext sourcePathIds="0:23-0:920050" propertyKey="14" id="0:910669"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910121" id="0:910670"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910121" id="0:910671"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe4" id="0:910677">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe4" id="0:910677">
             <DataBindContext sourcePathIds="0:23-0:920020" propertyKey="13" id="0:910673"/>
             <DataBindContext sourcePathIds="0:23-0:920052" propertyKey="14" id="0:910674"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910151" id="0:910675"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910151" id="0:910676"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe5" id="0:910682">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe5" id="0:910682">
             <DataBindContext sourcePathIds="0:23-0:920022" propertyKey="13" id="0:910678"/>
             <DataBindContext sourcePathIds="0:23-0:920054" propertyKey="14" id="0:910679"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910181" id="0:910680"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910181" id="0:910681"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe6" id="0:910687">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe6" id="0:910687">
             <DataBindContext sourcePathIds="0:23-0:920024" propertyKey="13" id="0:910683"/>
             <DataBindContext sourcePathIds="0:23-0:920056" propertyKey="14" id="0:910684"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910211" id="0:910685"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910211" id="0:910686"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe7" id="0:910692">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe7" id="0:910692">
             <DataBindContext sourcePathIds="0:23-0:920026" propertyKey="13" id="0:910688"/>
             <DataBindContext sourcePathIds="0:23-0:920058" propertyKey="14" id="0:910689"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910241" id="0:910690"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910241" id="0:910691"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe8" id="0:910697">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe8" id="0:910697">
             <DataBindContext sourcePathIds="0:23-0:920028" propertyKey="13" id="0:910693"/>
             <DataBindContext sourcePathIds="0:23-0:920060" propertyKey="14" id="0:910694"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910271" id="0:910695"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910271" id="0:910696"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe9" id="0:910702">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe9" id="0:910702">
             <DataBindContext sourcePathIds="0:23-0:920030" propertyKey="13" id="0:910698"/>
             <DataBindContext sourcePathIds="0:23-0:920062" propertyKey="14" id="0:910699"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910301" id="0:910700"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910301" id="0:910701"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe10" id="0:910707">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe10" id="0:910707">
             <DataBindContext sourcePathIds="0:23-0:920032" propertyKey="13" id="0:910703"/>
             <DataBindContext sourcePathIds="0:23-0:920064" propertyKey="14" id="0:910704"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910331" id="0:910705"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910331" id="0:910706"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe11" id="0:910712">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe11" id="0:910712">
             <DataBindContext sourcePathIds="0:23-0:920034" propertyKey="13" id="0:910708"/>
             <DataBindContext sourcePathIds="0:23-0:920066" propertyKey="14" id="0:910709"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910361" id="0:910710"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910361" id="0:910711"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe12" id="0:910717">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe12" id="0:910717">
             <DataBindContext sourcePathIds="0:23-0:920036" propertyKey="13" id="0:910713"/>
             <DataBindContext sourcePathIds="0:23-0:920068" propertyKey="14" id="0:910714"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910391" id="0:910715"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910391" id="0:910716"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe13" id="0:910722">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe13" id="0:910722">
             <DataBindContext sourcePathIds="0:23-0:920038" propertyKey="13" id="0:910718"/>
             <DataBindContext sourcePathIds="0:23-0:920070" propertyKey="14" id="0:910719"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910421" id="0:910720"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910421" id="0:910721"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe14" id="0:910727">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe14" id="0:910727">
             <DataBindContext sourcePathIds="0:23-0:920040" propertyKey="13" id="0:910723"/>
             <DataBindContext sourcePathIds="0:23-0:920072" propertyKey="14" id="0:910724"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910451" id="0:910725"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910451" id="0:910726"/>
           </Ellipse>
-          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe15" id="0:910732">
+          <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe15" id="0:910732">
             <DataBindContext sourcePathIds="0:23-0:920042" propertyKey="13" id="0:910728"/>
             <DataBindContext sourcePathIds="0:23-0:920074" propertyKey="14" id="0:910729"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910481" id="0:910730"/>
@@ -6581,7 +6709,7 @@
           </Fill>
         </Shape>
       </Node>
-      <Node x="0" y="0" opacity="0.46" name="WipeRing1" id="0:910927">
+      <Node x="0" y="0" opacity="0.3" name="WipeRing1" id="0:910927">
         <DataBindContext sourcePathIds="0:23-0:920076" propertyKey="18" converterId="0:910924" id="0:910925"/>
         <ClippingShape sourceId="0:910825" name="Clip" id="0:910926"/>
         <Shape x="0" y="0" name="Ring" id="0:910918">
@@ -6591,97 +6719,97 @@
           <Rectangle width="134" height="364" x="397" y="578" name="Pane" id="0:910833"/>
           <Rectangle width="128" height="364" x="540" y="578" name="Pane" id="0:910834"/>
           <Rectangle width="134" height="364" x="683" y="578" name="Pane" id="0:910835"/>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe0" id="0:910840">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe0" id="0:910840">
             <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="13" id="0:910836"/>
             <DataBindContext sourcePathIds="0:23-0:920044" propertyKey="14" id="0:910837"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910031" id="0:910838"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910031" id="0:910839"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe1" id="0:910845">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe1" id="0:910845">
             <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="13" id="0:910841"/>
             <DataBindContext sourcePathIds="0:23-0:920046" propertyKey="14" id="0:910842"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910061" id="0:910843"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910061" id="0:910844"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe2" id="0:910850">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe2" id="0:910850">
             <DataBindContext sourcePathIds="0:23-0:920016" propertyKey="13" id="0:910846"/>
             <DataBindContext sourcePathIds="0:23-0:920048" propertyKey="14" id="0:910847"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910091" id="0:910848"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910091" id="0:910849"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe3" id="0:910855">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe3" id="0:910855">
             <DataBindContext sourcePathIds="0:23-0:920018" propertyKey="13" id="0:910851"/>
             <DataBindContext sourcePathIds="0:23-0:920050" propertyKey="14" id="0:910852"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910121" id="0:910853"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910121" id="0:910854"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe4" id="0:910860">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe4" id="0:910860">
             <DataBindContext sourcePathIds="0:23-0:920020" propertyKey="13" id="0:910856"/>
             <DataBindContext sourcePathIds="0:23-0:920052" propertyKey="14" id="0:910857"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910151" id="0:910858"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910151" id="0:910859"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe5" id="0:910865">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe5" id="0:910865">
             <DataBindContext sourcePathIds="0:23-0:920022" propertyKey="13" id="0:910861"/>
             <DataBindContext sourcePathIds="0:23-0:920054" propertyKey="14" id="0:910862"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910181" id="0:910863"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910181" id="0:910864"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe6" id="0:910870">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe6" id="0:910870">
             <DataBindContext sourcePathIds="0:23-0:920024" propertyKey="13" id="0:910866"/>
             <DataBindContext sourcePathIds="0:23-0:920056" propertyKey="14" id="0:910867"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910211" id="0:910868"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910211" id="0:910869"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe7" id="0:910875">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe7" id="0:910875">
             <DataBindContext sourcePathIds="0:23-0:920026" propertyKey="13" id="0:910871"/>
             <DataBindContext sourcePathIds="0:23-0:920058" propertyKey="14" id="0:910872"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910241" id="0:910873"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910241" id="0:910874"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe8" id="0:910880">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe8" id="0:910880">
             <DataBindContext sourcePathIds="0:23-0:920028" propertyKey="13" id="0:910876"/>
             <DataBindContext sourcePathIds="0:23-0:920060" propertyKey="14" id="0:910877"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910271" id="0:910878"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910271" id="0:910879"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe9" id="0:910885">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe9" id="0:910885">
             <DataBindContext sourcePathIds="0:23-0:920030" propertyKey="13" id="0:910881"/>
             <DataBindContext sourcePathIds="0:23-0:920062" propertyKey="14" id="0:910882"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910301" id="0:910883"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910301" id="0:910884"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe10" id="0:910890">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe10" id="0:910890">
             <DataBindContext sourcePathIds="0:23-0:920032" propertyKey="13" id="0:910886"/>
             <DataBindContext sourcePathIds="0:23-0:920064" propertyKey="14" id="0:910887"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910331" id="0:910888"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910331" id="0:910889"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe11" id="0:910895">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe11" id="0:910895">
             <DataBindContext sourcePathIds="0:23-0:920034" propertyKey="13" id="0:910891"/>
             <DataBindContext sourcePathIds="0:23-0:920066" propertyKey="14" id="0:910892"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910361" id="0:910893"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910361" id="0:910894"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe12" id="0:910900">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe12" id="0:910900">
             <DataBindContext sourcePathIds="0:23-0:920036" propertyKey="13" id="0:910896"/>
             <DataBindContext sourcePathIds="0:23-0:920068" propertyKey="14" id="0:910897"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910391" id="0:910898"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910391" id="0:910899"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe13" id="0:910905">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe13" id="0:910905">
             <DataBindContext sourcePathIds="0:23-0:920038" propertyKey="13" id="0:910901"/>
             <DataBindContext sourcePathIds="0:23-0:920070" propertyKey="14" id="0:910902"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910421" id="0:910903"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910421" id="0:910904"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe14" id="0:910910">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe14" id="0:910910">
             <DataBindContext sourcePathIds="0:23-0:920040" propertyKey="13" id="0:910906"/>
             <DataBindContext sourcePathIds="0:23-0:920072" propertyKey="14" id="0:910907"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910451" id="0:910908"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910451" id="0:910909"/>
           </Ellipse>
-          <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe15" id="0:910915">
+          <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe15" id="0:910915">
             <DataBindContext sourcePathIds="0:23-0:920042" propertyKey="13" id="0:910911"/>
             <DataBindContext sourcePathIds="0:23-0:920074" propertyKey="14" id="0:910912"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910481" id="0:910913"/>
@@ -6697,7 +6825,7 @@
           </Fill>
         </Shape>
       </Node>
-      <Node x="0" y="0" opacity="0.24" name="WipeRing2" id="0:911110">
+      <Node x="0" y="0" opacity="0.15" name="WipeRing2" id="0:911110">
         <DataBindContext sourcePathIds="0:23-0:920076" propertyKey="18" converterId="0:911107" id="0:911108"/>
         <ClippingShape sourceId="0:911008" name="Clip" id="0:911109"/>
         <Shape x="0" y="0" name="Ring" id="0:911101">
@@ -6707,97 +6835,97 @@
           <Rectangle width="134" height="364" x="397" y="578" name="Pane" id="0:911016"/>
           <Rectangle width="128" height="364" x="540" y="578" name="Pane" id="0:911017"/>
           <Rectangle width="134" height="364" x="683" y="578" name="Pane" id="0:911018"/>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe0" id="0:911023">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe0" id="0:911023">
             <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="13" id="0:911019"/>
             <DataBindContext sourcePathIds="0:23-0:920044" propertyKey="14" id="0:911020"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910031" id="0:911021"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910031" id="0:911022"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe1" id="0:911028">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe1" id="0:911028">
             <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="13" id="0:911024"/>
             <DataBindContext sourcePathIds="0:23-0:920046" propertyKey="14" id="0:911025"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910061" id="0:911026"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910061" id="0:911027"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe2" id="0:911033">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe2" id="0:911033">
             <DataBindContext sourcePathIds="0:23-0:920016" propertyKey="13" id="0:911029"/>
             <DataBindContext sourcePathIds="0:23-0:920048" propertyKey="14" id="0:911030"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910091" id="0:911031"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910091" id="0:911032"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe3" id="0:911038">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe3" id="0:911038">
             <DataBindContext sourcePathIds="0:23-0:920018" propertyKey="13" id="0:911034"/>
             <DataBindContext sourcePathIds="0:23-0:920050" propertyKey="14" id="0:911035"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910121" id="0:911036"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910121" id="0:911037"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe4" id="0:911043">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe4" id="0:911043">
             <DataBindContext sourcePathIds="0:23-0:920020" propertyKey="13" id="0:911039"/>
             <DataBindContext sourcePathIds="0:23-0:920052" propertyKey="14" id="0:911040"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910151" id="0:911041"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910151" id="0:911042"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe5" id="0:911048">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe5" id="0:911048">
             <DataBindContext sourcePathIds="0:23-0:920022" propertyKey="13" id="0:911044"/>
             <DataBindContext sourcePathIds="0:23-0:920054" propertyKey="14" id="0:911045"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910181" id="0:911046"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910181" id="0:911047"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe6" id="0:911053">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe6" id="0:911053">
             <DataBindContext sourcePathIds="0:23-0:920024" propertyKey="13" id="0:911049"/>
             <DataBindContext sourcePathIds="0:23-0:920056" propertyKey="14" id="0:911050"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910211" id="0:911051"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910211" id="0:911052"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe7" id="0:911058">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe7" id="0:911058">
             <DataBindContext sourcePathIds="0:23-0:920026" propertyKey="13" id="0:911054"/>
             <DataBindContext sourcePathIds="0:23-0:920058" propertyKey="14" id="0:911055"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910241" id="0:911056"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910241" id="0:911057"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe8" id="0:911063">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe8" id="0:911063">
             <DataBindContext sourcePathIds="0:23-0:920028" propertyKey="13" id="0:911059"/>
             <DataBindContext sourcePathIds="0:23-0:920060" propertyKey="14" id="0:911060"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910271" id="0:911061"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910271" id="0:911062"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe9" id="0:911068">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe9" id="0:911068">
             <DataBindContext sourcePathIds="0:23-0:920030" propertyKey="13" id="0:911064"/>
             <DataBindContext sourcePathIds="0:23-0:920062" propertyKey="14" id="0:911065"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910301" id="0:911066"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910301" id="0:911067"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe10" id="0:911073">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe10" id="0:911073">
             <DataBindContext sourcePathIds="0:23-0:920032" propertyKey="13" id="0:911069"/>
             <DataBindContext sourcePathIds="0:23-0:920064" propertyKey="14" id="0:911070"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910331" id="0:911071"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910331" id="0:911072"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe11" id="0:911078">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe11" id="0:911078">
             <DataBindContext sourcePathIds="0:23-0:920034" propertyKey="13" id="0:911074"/>
             <DataBindContext sourcePathIds="0:23-0:920066" propertyKey="14" id="0:911075"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910361" id="0:911076"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910361" id="0:911077"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe12" id="0:911083">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe12" id="0:911083">
             <DataBindContext sourcePathIds="0:23-0:920036" propertyKey="13" id="0:911079"/>
             <DataBindContext sourcePathIds="0:23-0:920068" propertyKey="14" id="0:911080"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910391" id="0:911081"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910391" id="0:911082"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe13" id="0:911088">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe13" id="0:911088">
             <DataBindContext sourcePathIds="0:23-0:920038" propertyKey="13" id="0:911084"/>
             <DataBindContext sourcePathIds="0:23-0:920070" propertyKey="14" id="0:911085"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910421" id="0:911086"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910421" id="0:911087"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe14" id="0:911093">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe14" id="0:911093">
             <DataBindContext sourcePathIds="0:23-0:920040" propertyKey="13" id="0:911089"/>
             <DataBindContext sourcePathIds="0:23-0:920072" propertyKey="14" id="0:911090"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910451" id="0:911091"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910451" id="0:911092"/>
           </Ellipse>
-          <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe15" id="0:911098">
+          <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe15" id="0:911098">
             <DataBindContext sourcePathIds="0:23-0:920042" propertyKey="13" id="0:911094"/>
             <DataBindContext sourcePathIds="0:23-0:920074" propertyKey="14" id="0:911095"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910481" id="0:911096"/>
@@ -6813,7 +6941,7 @@
           </Fill>
         </Shape>
       </Node>
-      <Node x="0" y="0" opacity="0.08" name="WipeRing3" id="0:911293">
+      <Node x="0" y="0" opacity="0.05" name="WipeRing3" id="0:911293">
         <DataBindContext sourcePathIds="0:23-0:920076" propertyKey="18" converterId="0:911290" id="0:911291"/>
         <ClippingShape sourceId="0:911191" name="Clip" id="0:911292"/>
         <Shape x="0" y="0" name="Ring" id="0:911284">
@@ -6823,97 +6951,97 @@
           <Rectangle width="134" height="364" x="397" y="578" name="Pane" id="0:911199"/>
           <Rectangle width="128" height="364" x="540" y="578" name="Pane" id="0:911200"/>
           <Rectangle width="134" height="364" x="683" y="578" name="Pane" id="0:911201"/>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe0" id="0:911206">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe0" id="0:911206">
             <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="13" id="0:911202"/>
             <DataBindContext sourcePathIds="0:23-0:920044" propertyKey="14" id="0:911203"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910031" id="0:911204"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910031" id="0:911205"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe1" id="0:911211">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe1" id="0:911211">
             <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="13" id="0:911207"/>
             <DataBindContext sourcePathIds="0:23-0:920046" propertyKey="14" id="0:911208"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910061" id="0:911209"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910061" id="0:911210"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe2" id="0:911216">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe2" id="0:911216">
             <DataBindContext sourcePathIds="0:23-0:920016" propertyKey="13" id="0:911212"/>
             <DataBindContext sourcePathIds="0:23-0:920048" propertyKey="14" id="0:911213"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910091" id="0:911214"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910091" id="0:911215"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe3" id="0:911221">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe3" id="0:911221">
             <DataBindContext sourcePathIds="0:23-0:920018" propertyKey="13" id="0:911217"/>
             <DataBindContext sourcePathIds="0:23-0:920050" propertyKey="14" id="0:911218"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910121" id="0:911219"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910121" id="0:911220"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe4" id="0:911226">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe4" id="0:911226">
             <DataBindContext sourcePathIds="0:23-0:920020" propertyKey="13" id="0:911222"/>
             <DataBindContext sourcePathIds="0:23-0:920052" propertyKey="14" id="0:911223"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910151" id="0:911224"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910151" id="0:911225"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe5" id="0:911231">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe5" id="0:911231">
             <DataBindContext sourcePathIds="0:23-0:920022" propertyKey="13" id="0:911227"/>
             <DataBindContext sourcePathIds="0:23-0:920054" propertyKey="14" id="0:911228"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910181" id="0:911229"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910181" id="0:911230"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe6" id="0:911236">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe6" id="0:911236">
             <DataBindContext sourcePathIds="0:23-0:920024" propertyKey="13" id="0:911232"/>
             <DataBindContext sourcePathIds="0:23-0:920056" propertyKey="14" id="0:911233"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910211" id="0:911234"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910211" id="0:911235"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe7" id="0:911241">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe7" id="0:911241">
             <DataBindContext sourcePathIds="0:23-0:920026" propertyKey="13" id="0:911237"/>
             <DataBindContext sourcePathIds="0:23-0:920058" propertyKey="14" id="0:911238"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910241" id="0:911239"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910241" id="0:911240"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe8" id="0:911246">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe8" id="0:911246">
             <DataBindContext sourcePathIds="0:23-0:920028" propertyKey="13" id="0:911242"/>
             <DataBindContext sourcePathIds="0:23-0:920060" propertyKey="14" id="0:911243"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910271" id="0:911244"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910271" id="0:911245"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe9" id="0:911251">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe9" id="0:911251">
             <DataBindContext sourcePathIds="0:23-0:920030" propertyKey="13" id="0:911247"/>
             <DataBindContext sourcePathIds="0:23-0:920062" propertyKey="14" id="0:911248"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910301" id="0:911249"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910301" id="0:911250"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe10" id="0:911256">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe10" id="0:911256">
             <DataBindContext sourcePathIds="0:23-0:920032" propertyKey="13" id="0:911252"/>
             <DataBindContext sourcePathIds="0:23-0:920064" propertyKey="14" id="0:911253"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910331" id="0:911254"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910331" id="0:911255"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe11" id="0:911261">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe11" id="0:911261">
             <DataBindContext sourcePathIds="0:23-0:920034" propertyKey="13" id="0:911257"/>
             <DataBindContext sourcePathIds="0:23-0:920066" propertyKey="14" id="0:911258"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910361" id="0:911259"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910361" id="0:911260"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe12" id="0:911266">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe12" id="0:911266">
             <DataBindContext sourcePathIds="0:23-0:920036" propertyKey="13" id="0:911262"/>
             <DataBindContext sourcePathIds="0:23-0:920068" propertyKey="14" id="0:911263"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910391" id="0:911264"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910391" id="0:911265"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe13" id="0:911271">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe13" id="0:911271">
             <DataBindContext sourcePathIds="0:23-0:920038" propertyKey="13" id="0:911267"/>
             <DataBindContext sourcePathIds="0:23-0:920070" propertyKey="14" id="0:911268"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910421" id="0:911269"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910421" id="0:911270"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe14" id="0:911276">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe14" id="0:911276">
             <DataBindContext sourcePathIds="0:23-0:920040" propertyKey="13" id="0:911272"/>
             <DataBindContext sourcePathIds="0:23-0:920072" propertyKey="14" id="0:911273"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910451" id="0:911274"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910451" id="0:911275"/>
           </Ellipse>
-          <Ellipse width="28" height="28" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe15" id="0:911281">
+          <Ellipse width="49" height="49" x="0" y="0" scaleX="0" scaleY="0" isHole="true" name="Wipe15" id="0:911281">
             <DataBindContext sourcePathIds="0:23-0:920042" propertyKey="13" id="0:911277"/>
             <DataBindContext sourcePathIds="0:23-0:920074" propertyKey="14" id="0:911278"/>
             <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910481" id="0:911279"/>
@@ -7028,97 +7156,97 @@
         </Ellipse>
       </Shape>
       <Shape x="0" y="0" name="WipeClip1" id="0:910825">
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe0" id="0:910749">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe0" id="0:910749">
           <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="13" id="0:910745"/>
           <DataBindContext sourcePathIds="0:23-0:920044" propertyKey="14" id="0:910746"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910031" id="0:910747"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910031" id="0:910748"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe1" id="0:910754">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe1" id="0:910754">
           <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="13" id="0:910750"/>
           <DataBindContext sourcePathIds="0:23-0:920046" propertyKey="14" id="0:910751"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910061" id="0:910752"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910061" id="0:910753"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe2" id="0:910759">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe2" id="0:910759">
           <DataBindContext sourcePathIds="0:23-0:920016" propertyKey="13" id="0:910755"/>
           <DataBindContext sourcePathIds="0:23-0:920048" propertyKey="14" id="0:910756"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910091" id="0:910757"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910091" id="0:910758"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe3" id="0:910764">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe3" id="0:910764">
           <DataBindContext sourcePathIds="0:23-0:920018" propertyKey="13" id="0:910760"/>
           <DataBindContext sourcePathIds="0:23-0:920050" propertyKey="14" id="0:910761"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910121" id="0:910762"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910121" id="0:910763"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe4" id="0:910769">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe4" id="0:910769">
           <DataBindContext sourcePathIds="0:23-0:920020" propertyKey="13" id="0:910765"/>
           <DataBindContext sourcePathIds="0:23-0:920052" propertyKey="14" id="0:910766"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910151" id="0:910767"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910151" id="0:910768"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe5" id="0:910774">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe5" id="0:910774">
           <DataBindContext sourcePathIds="0:23-0:920022" propertyKey="13" id="0:910770"/>
           <DataBindContext sourcePathIds="0:23-0:920054" propertyKey="14" id="0:910771"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910181" id="0:910772"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910181" id="0:910773"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe6" id="0:910779">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe6" id="0:910779">
           <DataBindContext sourcePathIds="0:23-0:920024" propertyKey="13" id="0:910775"/>
           <DataBindContext sourcePathIds="0:23-0:920056" propertyKey="14" id="0:910776"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910211" id="0:910777"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910211" id="0:910778"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe7" id="0:910784">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe7" id="0:910784">
           <DataBindContext sourcePathIds="0:23-0:920026" propertyKey="13" id="0:910780"/>
           <DataBindContext sourcePathIds="0:23-0:920058" propertyKey="14" id="0:910781"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910241" id="0:910782"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910241" id="0:910783"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe8" id="0:910789">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe8" id="0:910789">
           <DataBindContext sourcePathIds="0:23-0:920028" propertyKey="13" id="0:910785"/>
           <DataBindContext sourcePathIds="0:23-0:920060" propertyKey="14" id="0:910786"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910271" id="0:910787"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910271" id="0:910788"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe9" id="0:910794">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe9" id="0:910794">
           <DataBindContext sourcePathIds="0:23-0:920030" propertyKey="13" id="0:910790"/>
           <DataBindContext sourcePathIds="0:23-0:920062" propertyKey="14" id="0:910791"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910301" id="0:910792"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910301" id="0:910793"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe10" id="0:910799">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe10" id="0:910799">
           <DataBindContext sourcePathIds="0:23-0:920032" propertyKey="13" id="0:910795"/>
           <DataBindContext sourcePathIds="0:23-0:920064" propertyKey="14" id="0:910796"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910331" id="0:910797"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910331" id="0:910798"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe11" id="0:910804">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe11" id="0:910804">
           <DataBindContext sourcePathIds="0:23-0:920034" propertyKey="13" id="0:910800"/>
           <DataBindContext sourcePathIds="0:23-0:920066" propertyKey="14" id="0:910801"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910361" id="0:910802"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910361" id="0:910803"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe12" id="0:910809">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe12" id="0:910809">
           <DataBindContext sourcePathIds="0:23-0:920036" propertyKey="13" id="0:910805"/>
           <DataBindContext sourcePathIds="0:23-0:920068" propertyKey="14" id="0:910806"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910391" id="0:910807"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910391" id="0:910808"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe13" id="0:910814">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe13" id="0:910814">
           <DataBindContext sourcePathIds="0:23-0:920038" propertyKey="13" id="0:910810"/>
           <DataBindContext sourcePathIds="0:23-0:920070" propertyKey="14" id="0:910811"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910421" id="0:910812"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910421" id="0:910813"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe14" id="0:910819">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe14" id="0:910819">
           <DataBindContext sourcePathIds="0:23-0:920040" propertyKey="13" id="0:910815"/>
           <DataBindContext sourcePathIds="0:23-0:920072" propertyKey="14" id="0:910816"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910451" id="0:910817"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910451" id="0:910818"/>
         </Ellipse>
-        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe15" id="0:910824">
+        <Ellipse width="58" height="58" x="0" y="0" scaleX="0" scaleY="0" name="Wipe15" id="0:910824">
           <DataBindContext sourcePathIds="0:23-0:920042" propertyKey="13" id="0:910820"/>
           <DataBindContext sourcePathIds="0:23-0:920074" propertyKey="14" id="0:910821"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910481" id="0:910822"/>
@@ -7126,97 +7254,97 @@
         </Ellipse>
       </Shape>
       <Shape x="0" y="0" name="WipeClip2" id="0:911008">
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe0" id="0:910932">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe0" id="0:910932">
           <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="13" id="0:910928"/>
           <DataBindContext sourcePathIds="0:23-0:920044" propertyKey="14" id="0:910929"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910031" id="0:910930"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910031" id="0:910931"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe1" id="0:910937">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe1" id="0:910937">
           <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="13" id="0:910933"/>
           <DataBindContext sourcePathIds="0:23-0:920046" propertyKey="14" id="0:910934"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910061" id="0:910935"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910061" id="0:910936"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe2" id="0:910942">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe2" id="0:910942">
           <DataBindContext sourcePathIds="0:23-0:920016" propertyKey="13" id="0:910938"/>
           <DataBindContext sourcePathIds="0:23-0:920048" propertyKey="14" id="0:910939"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910091" id="0:910940"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910091" id="0:910941"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe3" id="0:910947">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe3" id="0:910947">
           <DataBindContext sourcePathIds="0:23-0:920018" propertyKey="13" id="0:910943"/>
           <DataBindContext sourcePathIds="0:23-0:920050" propertyKey="14" id="0:910944"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910121" id="0:910945"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910121" id="0:910946"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe4" id="0:910952">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe4" id="0:910952">
           <DataBindContext sourcePathIds="0:23-0:920020" propertyKey="13" id="0:910948"/>
           <DataBindContext sourcePathIds="0:23-0:920052" propertyKey="14" id="0:910949"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910151" id="0:910950"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910151" id="0:910951"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe5" id="0:910957">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe5" id="0:910957">
           <DataBindContext sourcePathIds="0:23-0:920022" propertyKey="13" id="0:910953"/>
           <DataBindContext sourcePathIds="0:23-0:920054" propertyKey="14" id="0:910954"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910181" id="0:910955"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910181" id="0:910956"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe6" id="0:910962">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe6" id="0:910962">
           <DataBindContext sourcePathIds="0:23-0:920024" propertyKey="13" id="0:910958"/>
           <DataBindContext sourcePathIds="0:23-0:920056" propertyKey="14" id="0:910959"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910211" id="0:910960"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910211" id="0:910961"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe7" id="0:910967">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe7" id="0:910967">
           <DataBindContext sourcePathIds="0:23-0:920026" propertyKey="13" id="0:910963"/>
           <DataBindContext sourcePathIds="0:23-0:920058" propertyKey="14" id="0:910964"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910241" id="0:910965"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910241" id="0:910966"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe8" id="0:910972">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe8" id="0:910972">
           <DataBindContext sourcePathIds="0:23-0:920028" propertyKey="13" id="0:910968"/>
           <DataBindContext sourcePathIds="0:23-0:920060" propertyKey="14" id="0:910969"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910271" id="0:910970"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910271" id="0:910971"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe9" id="0:910977">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe9" id="0:910977">
           <DataBindContext sourcePathIds="0:23-0:920030" propertyKey="13" id="0:910973"/>
           <DataBindContext sourcePathIds="0:23-0:920062" propertyKey="14" id="0:910974"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910301" id="0:910975"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910301" id="0:910976"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe10" id="0:910982">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe10" id="0:910982">
           <DataBindContext sourcePathIds="0:23-0:920032" propertyKey="13" id="0:910978"/>
           <DataBindContext sourcePathIds="0:23-0:920064" propertyKey="14" id="0:910979"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910331" id="0:910980"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910331" id="0:910981"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe11" id="0:910987">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe11" id="0:910987">
           <DataBindContext sourcePathIds="0:23-0:920034" propertyKey="13" id="0:910983"/>
           <DataBindContext sourcePathIds="0:23-0:920066" propertyKey="14" id="0:910984"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910361" id="0:910985"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910361" id="0:910986"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe12" id="0:910992">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe12" id="0:910992">
           <DataBindContext sourcePathIds="0:23-0:920036" propertyKey="13" id="0:910988"/>
           <DataBindContext sourcePathIds="0:23-0:920068" propertyKey="14" id="0:910989"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910391" id="0:910990"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910391" id="0:910991"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe13" id="0:910997">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe13" id="0:910997">
           <DataBindContext sourcePathIds="0:23-0:920038" propertyKey="13" id="0:910993"/>
           <DataBindContext sourcePathIds="0:23-0:920070" propertyKey="14" id="0:910994"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910421" id="0:910995"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910421" id="0:910996"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe14" id="0:911002">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe14" id="0:911002">
           <DataBindContext sourcePathIds="0:23-0:920040" propertyKey="13" id="0:910998"/>
           <DataBindContext sourcePathIds="0:23-0:920072" propertyKey="14" id="0:910999"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910451" id="0:911000"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910451" id="0:911001"/>
         </Ellipse>
-        <Ellipse width="44" height="44" x="0" y="0" scaleX="0" scaleY="0" name="Wipe15" id="0:911007">
+        <Ellipse width="55" height="55" x="0" y="0" scaleX="0" scaleY="0" name="Wipe15" id="0:911007">
           <DataBindContext sourcePathIds="0:23-0:920042" propertyKey="13" id="0:911003"/>
           <DataBindContext sourcePathIds="0:23-0:920074" propertyKey="14" id="0:911004"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910481" id="0:911005"/>
@@ -7224,97 +7352,97 @@
         </Ellipse>
       </Shape>
       <Shape x="0" y="0" name="WipeClip3" id="0:911191">
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe0" id="0:911115">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe0" id="0:911115">
           <DataBindContext sourcePathIds="0:23-0:920012" propertyKey="13" id="0:911111"/>
           <DataBindContext sourcePathIds="0:23-0:920044" propertyKey="14" id="0:911112"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910031" id="0:911113"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910031" id="0:911114"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe1" id="0:911120">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe1" id="0:911120">
           <DataBindContext sourcePathIds="0:23-0:920014" propertyKey="13" id="0:911116"/>
           <DataBindContext sourcePathIds="0:23-0:920046" propertyKey="14" id="0:911117"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910061" id="0:911118"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910061" id="0:911119"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe2" id="0:911125">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe2" id="0:911125">
           <DataBindContext sourcePathIds="0:23-0:920016" propertyKey="13" id="0:911121"/>
           <DataBindContext sourcePathIds="0:23-0:920048" propertyKey="14" id="0:911122"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910091" id="0:911123"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910091" id="0:911124"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe3" id="0:911130">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe3" id="0:911130">
           <DataBindContext sourcePathIds="0:23-0:920018" propertyKey="13" id="0:911126"/>
           <DataBindContext sourcePathIds="0:23-0:920050" propertyKey="14" id="0:911127"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910121" id="0:911128"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910121" id="0:911129"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe4" id="0:911135">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe4" id="0:911135">
           <DataBindContext sourcePathIds="0:23-0:920020" propertyKey="13" id="0:911131"/>
           <DataBindContext sourcePathIds="0:23-0:920052" propertyKey="14" id="0:911132"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910151" id="0:911133"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910151" id="0:911134"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe5" id="0:911140">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe5" id="0:911140">
           <DataBindContext sourcePathIds="0:23-0:920022" propertyKey="13" id="0:911136"/>
           <DataBindContext sourcePathIds="0:23-0:920054" propertyKey="14" id="0:911137"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910181" id="0:911138"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910181" id="0:911139"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe6" id="0:911145">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe6" id="0:911145">
           <DataBindContext sourcePathIds="0:23-0:920024" propertyKey="13" id="0:911141"/>
           <DataBindContext sourcePathIds="0:23-0:920056" propertyKey="14" id="0:911142"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910211" id="0:911143"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910211" id="0:911144"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe7" id="0:911150">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe7" id="0:911150">
           <DataBindContext sourcePathIds="0:23-0:920026" propertyKey="13" id="0:911146"/>
           <DataBindContext sourcePathIds="0:23-0:920058" propertyKey="14" id="0:911147"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910241" id="0:911148"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910241" id="0:911149"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe8" id="0:911155">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe8" id="0:911155">
           <DataBindContext sourcePathIds="0:23-0:920028" propertyKey="13" id="0:911151"/>
           <DataBindContext sourcePathIds="0:23-0:920060" propertyKey="14" id="0:911152"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910271" id="0:911153"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910271" id="0:911154"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe9" id="0:911160">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe9" id="0:911160">
           <DataBindContext sourcePathIds="0:23-0:920030" propertyKey="13" id="0:911156"/>
           <DataBindContext sourcePathIds="0:23-0:920062" propertyKey="14" id="0:911157"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910301" id="0:911158"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910301" id="0:911159"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe10" id="0:911165">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe10" id="0:911165">
           <DataBindContext sourcePathIds="0:23-0:920032" propertyKey="13" id="0:911161"/>
           <DataBindContext sourcePathIds="0:23-0:920064" propertyKey="14" id="0:911162"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910331" id="0:911163"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910331" id="0:911164"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe11" id="0:911170">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe11" id="0:911170">
           <DataBindContext sourcePathIds="0:23-0:920034" propertyKey="13" id="0:911166"/>
           <DataBindContext sourcePathIds="0:23-0:920066" propertyKey="14" id="0:911167"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910361" id="0:911168"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910361" id="0:911169"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe12" id="0:911175">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe12" id="0:911175">
           <DataBindContext sourcePathIds="0:23-0:920036" propertyKey="13" id="0:911171"/>
           <DataBindContext sourcePathIds="0:23-0:920068" propertyKey="14" id="0:911172"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910391" id="0:911173"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910391" id="0:911174"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe13" id="0:911180">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe13" id="0:911180">
           <DataBindContext sourcePathIds="0:23-0:920038" propertyKey="13" id="0:911176"/>
           <DataBindContext sourcePathIds="0:23-0:920070" propertyKey="14" id="0:911177"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910421" id="0:911178"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910421" id="0:911179"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe14" id="0:911185">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe14" id="0:911185">
           <DataBindContext sourcePathIds="0:23-0:920040" propertyKey="13" id="0:911181"/>
           <DataBindContext sourcePathIds="0:23-0:920072" propertyKey="14" id="0:911182"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910451" id="0:911183"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="17" converterId="0:910451" id="0:911184"/>
         </Ellipse>
-        <Ellipse width="36" height="36" x="0" y="0" scaleX="0" scaleY="0" name="Wipe15" id="0:911190">
+        <Ellipse width="52" height="52" x="0" y="0" scaleX="0" scaleY="0" name="Wipe15" id="0:911190">
           <DataBindContext sourcePathIds="0:23-0:920042" propertyKey="13" id="0:911186"/>
           <DataBindContext sourcePathIds="0:23-0:920074" propertyKey="14" id="0:911187"/>
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="16" converterId="0:910481" id="0:911188"/>
@@ -8403,16 +8531,6 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:3680"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:3558" id="0:3685">
-        <KeyedProperty property="opacity" id="0:3684">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:3683"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3622" id="0:3688">
-        <KeyedProperty property="opacity" id="0:3687">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:3686"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:3500" id="0:3811">
         <KeyedProperty property="rotation" id="0:3810">
           <KeyFrameDouble frame="0" value="0" interpolationType="linear" id="0:3689"/>
@@ -8696,16 +8814,6 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4010"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:3558" id="0:4015">
-        <KeyedProperty property="opacity" id="0:4014">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:4013"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3622" id="0:4018">
-        <KeyedProperty property="opacity" id="0:4017">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4016"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:3500" id="0:4021">
         <KeyedProperty property="rotation" id="0:4020">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4019"/>
@@ -8843,16 +8951,6 @@
           <KeyFrameDouble frame="210" value="-0.04" interpolationType="cubic" interpolatorId="0:10" id="0:4104"/>
           <KeyFrameDouble frame="239" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4443"/>
           <KeyFrameDouble frame="240" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4105"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3558" id="0:4110">
-        <KeyedProperty property="opacity" id="0:4109">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:4108"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3622" id="0:4113">
-        <KeyedProperty property="opacity" id="0:4112">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4111"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:3500" id="0:4236">
@@ -9242,16 +9340,6 @@
           <KeyFrameDouble frame="40" value="0" interpolationType="linear" id="0:4493"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:3558" id="0:4498">
-        <KeyedProperty property="opacity" id="0:4497">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:4496"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3622" id="0:4501">
-        <KeyedProperty property="opacity" id="0:4500">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4499"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:3500" id="0:4524">
         <KeyedProperty property="rotation" id="0:4523">
           <KeyFrameDouble frame="0" value="0" interpolationType="linear" id="0:4502"/>
@@ -9393,16 +9481,6 @@
       <KeyedObject objectId="0:3623" id="0:4605">
         <KeyedProperty property="rotation" id="0:4604">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4603"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3558" id="0:4608">
-        <KeyedProperty property="opacity" id="0:4607">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:4606"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3622" id="0:4611">
-        <KeyedProperty property="opacity" id="0:4610">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4609"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:3500" id="0:4674">
@@ -9760,16 +9838,6 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4943"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:3558" id="0:4948">
-        <KeyedProperty property="opacity" id="0:4947">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:4946"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3622" id="0:4951">
-        <KeyedProperty property="opacity" id="0:4950">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:4949"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:3500" id="0:5014">
         <KeyedProperty property="rotation" id="0:5013">
           <KeyFrameDouble frame="0" value="0" interpolationType="linear" id="0:4952"/>
@@ -10123,16 +10191,6 @@
       <KeyedObject objectId="0:3623" id="0:5285">
         <KeyedProperty property="rotation" id="0:5284">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:5283"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3558" id="0:5288">
-        <KeyedProperty property="opacity" id="0:5287">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:5286"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3622" id="0:5291">
-        <KeyedProperty property="opacity" id="0:5290">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:5289"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:3500" id="0:5354">
@@ -10508,16 +10566,6 @@
           <KeyFrameDouble frame="72" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:5637"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:3558" id="0:5642">
-        <KeyedProperty property="opacity" id="0:5641">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:5640"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:3622" id="0:5645">
-        <KeyedProperty property="opacity" id="0:5644">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:5643"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:3500" id="0:5668">
         <KeyedProperty property="rotation" id="0:5667">
           <KeyFrameDouble frame="0" value="0" interpolationType="linear" id="0:5646"/>
@@ -10771,6 +10819,90 @@
           <KeyFrameDouble frame="42" value="0" interpolationType="hold" id="0:5823"/>
           <KeyFrameDouble frame="71" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:5880"/>
           <KeyFrameDouble frame="72" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:5824"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_fish_draw_away" id="0:880006">
+      <KeyedObject objectId="0:3558" id="0:880002">
+        <KeyedProperty property="opacity" id="0:880001">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880000"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:3622" id="0:880005">
+        <KeyedProperty property="opacity" id="0:880004">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880003"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_fish_draw_rest" id="0:880013">
+      <KeyedObject objectId="0:3558" id="0:880009">
+        <KeyedProperty property="opacity" id="0:880008">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880007"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:3622" id="0:880012">
+        <KeyedProperty property="opacity" id="0:880011">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880010"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_fish_draw_idle" id="0:880020">
+      <KeyedObject objectId="0:3558" id="0:880016">
+        <KeyedProperty property="opacity" id="0:880015">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880014"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:3622" id="0:880019">
+        <KeyedProperty property="opacity" id="0:880018">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880017"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_fish_draw_move" id="0:880027">
+      <KeyedObject objectId="0:3558" id="0:880023">
+        <KeyedProperty property="opacity" id="0:880022">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880021"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:3622" id="0:880026">
+        <KeyedProperty property="opacity" id="0:880025">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880024"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_fish_draw_notice0" id="0:880034">
+      <KeyedObject objectId="0:3558" id="0:880030">
+        <KeyedProperty property="opacity" id="0:880029">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880028"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:3622" id="0:880033">
+        <KeyedProperty property="opacity" id="0:880032">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880031"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_fish_draw_notice1" id="0:880041">
+      <KeyedObject objectId="0:3558" id="0:880037">
+        <KeyedProperty property="opacity" id="0:880036">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880035"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:3622" id="0:880040">
+        <KeyedProperty property="opacity" id="0:880039">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880038"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_fish_draw_react" id="0:880048">
+      <KeyedObject objectId="0:3558" id="0:880044">
+        <KeyedProperty property="opacity" id="0:880043">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880042"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:3622" id="0:880047">
+        <KeyedProperty property="opacity" id="0:880046">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880045"/>
         </KeyedProperty>
       </KeyedObject>
     </LinearAnimation>
@@ -12240,33 +12372,33 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:910741">
-    <FormulaTokenValue operationValue="0.72" id="0:910736"/>
+    <FormulaTokenValue operationValue="0.5" id="0:910736"/>
     <FormulaTokenOperation operationType="1" id="0:910737"/>
-    <FormulaTokenValue operationValue="0.72" id="0:910738"/>
+    <FormulaTokenValue operationValue="0.5" id="0:910738"/>
     <FormulaTokenOperation operationType="2" id="0:910739"/>
     <FormulaTokenInput id="0:910740"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:910924">
-    <FormulaTokenValue operationValue="0.46" id="0:910919"/>
+    <FormulaTokenValue operationValue="0.3" id="0:910919"/>
     <FormulaTokenOperation operationType="1" id="0:910920"/>
-    <FormulaTokenValue operationValue="0.46" id="0:910921"/>
+    <FormulaTokenValue operationValue="0.3" id="0:910921"/>
     <FormulaTokenOperation operationType="2" id="0:910922"/>
     <FormulaTokenInput id="0:910923"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:911107">
-    <FormulaTokenValue operationValue="0.24" id="0:911102"/>
+    <FormulaTokenValue operationValue="0.15" id="0:911102"/>
     <FormulaTokenOperation operationType="1" id="0:911103"/>
-    <FormulaTokenValue operationValue="0.24" id="0:911104"/>
+    <FormulaTokenValue operationValue="0.15" id="0:911104"/>
     <FormulaTokenOperation operationType="2" id="0:911105"/>
     <FormulaTokenInput id="0:911106"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:911290">
-    <FormulaTokenValue operationValue="0.08" id="0:911285"/>
+    <FormulaTokenValue operationValue="0.05" id="0:911285"/>
     <FormulaTokenOperation operationType="1" id="0:911286"/>
-    <FormulaTokenValue operationValue="0.08" id="0:911287"/>
+    <FormulaTokenValue operationValue="0.05" id="0:911287"/>
     <FormulaTokenOperation operationType="2" id="0:911288"/>
     <FormulaTokenInput id="0:911289"/>
   </DataConverterFormula>

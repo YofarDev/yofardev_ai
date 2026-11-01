@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from art_bible import lint_colours  # noqa: E402
 import gen_scenes  # noqa: E402
+import scene_npc  # noqa: E402
 from gen_scenes import DioramaSpec, Scene, diorama  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -543,8 +544,9 @@ def _m8(i: str | None) -> bool:
     """An M8 element (contract v11: fog, the NPC rigs; `M8_ID_START` range) or a later one (M9, contract
     v12: the v12 view-model members and world-kit art; `M9_ID_START` range; M10, contract v13: `night`
     and the M10 notes' art; `M10_ID_START` range; M11, contract v14: `tier`, `spring`, `autumn`;
-    `M11_ID_START` range; M12: the `SceneFront`'s own eases, `M12_ID_START` range)."""
-    return i is not None and gen_scenes.M12_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START
+    `M11_ID_START` range; M12: the `SceneFront`'s own eases, `M12_ID_START` range; the NPC drawing switches,
+    `scene_npc.M12_ID_START` range)."""
+    return i is not None and scene_npc.M12_ID_START <= int(i.split(":")[1]) < gen_scenes.M7_ID_START
 
 
 def _v10_or_later(new: dict, i: str) -> bool:

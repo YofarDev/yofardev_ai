@@ -149,7 +149,15 @@ def test_aim_swivels_the_tube_and_moon_phase_is_bound(doc: ET.Element) -> None:
     tube = next(e for e in _scene(doc).iter("Node") if e.get("name") == "TubeAim")
     (b,) = [b for b in tube if b.tag == "DataBindContext"]
     assert (b.get("sourcePathIds"), b.get("propertyKey")) == (aim, "15")
-    assert world_kit.eval_formula(convs[b.get("converterId")], 1.0) == pytest.approx(math.radians(35), abs=1e-3)
+    # M12 ruling 8: the tube rests at TUBE_SHOWN (52 deg) and still reaches REST -/+ 35 deg at aim -1 / +1
+    conv = convs[b.get("converterId")]
+    rest = next(e for e in _scene(doc).iter("Node") if e.get("name") == "TubeRest")
+    shown = float(rest.get("rotation"))
+    assert shown == pytest.approx(scene_rooftop.TUBE_SHOWN)
+    for aim, want in ((-1.0, -1.0), (1.0, 1.0), (-2.0, -1.0), (2.0, 1.0)):
+        got = shown + world_kit.eval_formula(conv, aim)
+        assert got == pytest.approx(scene_rooftop.TUBE_REST + want * math.radians(35), abs=2e-3), aim
+    assert world_kit.eval_formula(conv, 0.0) == 0.0
     assert float(tube.get("rotation", 0)) == 0.0   # at the default the tube rests
     vm = _vm(doc)
     v12 = {p.get("id"): p.get("name") for p in vm if p.get("name") in {n for n, _, _ in world_kit.v12_members("rooftop")}}

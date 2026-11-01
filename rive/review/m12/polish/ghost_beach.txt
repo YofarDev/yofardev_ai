@@ -1,0 +1,8 @@
+beach rest -> move: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+beach move -> rest: own px 489; old worst ghost 85.9% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+beach rest -> react: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+beach react -> rest: own px 118; old worst ghost 43.2% (frames with a ghost > 1 %: 7); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+beach idle -> move: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+beach move -> idle: own px 489; old worst ghost 85.9% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+beach notice -> react: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+beach react -> notice: own px 119; old worst ghost 42.9% (frames with a ghost > 1 %: 7); new worst ghost 0.0% (frames with a ghost > 1 %: 0)

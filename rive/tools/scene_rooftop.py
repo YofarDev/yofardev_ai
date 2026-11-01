@@ -58,12 +58,20 @@ RAIN_COL = "88B8C8E0"      # the steady rain's streak colour (alpha replaced in 
 
 # ---------------------------------------------------------------- the telescope (drag `aim`)
 TELESCOPE_PIVOT = (868.0, 1168.0)   # the tripod head: the tube swivels about it
-TUBE_REST = 0.698          # rad: the tube's elevation at aim 0 (40 deg above the horizon, toward the moon)
+TUBE_REST = 0.698          # rad: the M9-M11 elevation at aim 0; the swing's centre (aim -1 / +1 = REST -/+ SWING)
 AIM_SWING = 0.611          # rad per unit of `aim` (35 deg; a formula literal keeps 3 digits)
+# M12 ruling 8 (lane Q): the elevation shown at aim 0 (52 deg): at 40 deg the dew shield's rim reached x 735,
+# inside the avatar's band (x 330..750); now it ends at x ~758. The extremes stay REST -/+ SWING (aim -1 / +1),
+# so the drag's rect (`aim_rect`, the contract's (710, 1011, 978, 1317)) is unchanged: aim < 0 swings
+# (TUBE_SHOWN - REST + SWING) rad per unit, aim > 0 (REST + SWING - TUBE_SHOWN)
+TUBE_SHOWN = 0.9
 TUBE = (-150.0, 96.0, 21.0)  # local x of the objective end and of the eyepiece end, the dew shield's radius
 
 # ---------------------------------------------------------------- the pigeon (NPC)
-PIGEON_WAYPOINTS = [(800.0, CAP_TOP, 1.0), (1000.0, CAP_TOP, 1.0)]   # feet on the cap, npcX 0 -> 1
+# feet on the cap, npcX 0 -> 1 (M12 ruling 8, lane Q: 16 px right of M9-M11's 800 -> 1000, so the resting pigeon's
+# beak clears the avatar's band (x 330..750; its peck reaches ~746); the path keeps its 200 px, so the walk rate
+# the director uses (`pigeon_walk_speed`, 0.354 npcX/s) holds)
+PIGEON_WAYPOINTS = [(816.0, CAP_TOP, 1.0), (1016.0, CAP_TOP, 1.0)]
 PIGEON_SCALE = 1.35        # the rig is drawn ~70 px long; on screen it is this much bigger
 PIGEON_HIT = (0.0, -36.0, 130.0, 104.0)   # the poke zone: (dx, dy) from the feet, width, height
 PIGEON_IDLE, PIGEON_WALK, PIGEON_NOTICE, PIGEON_REACT = 240, 32, 120, 48
@@ -626,10 +634,18 @@ def _telescope(sc: Scene) -> El:
     finder = _rect(sc, "Finder", -66, -27, -22, -19, sc.vgrad(-4, 4, [("FFE6DED2", 0.0), ("FF9C948A", 1.0)]), 3)
     finder_feet = _rects(sc, "FinderFeet", [(-58, -20, -54, -15), (-34, -20, -30, -15)], F("FF5A5A6A"))
     rest = d("Node", glint, lens, knob, finder, finder_feet, rings, dew, eyepiece, focuser, tube,
-             x=0.0, y=0.0, rotation=TUBE_REST, name="TubeRest")
+             x=0.0, y=0.0, rotation=TUBE_SHOWN, name="TubeRest")
     f = Formulas(sc.d9, sc.vpath)
     conv = sc.d9("DataConverterFormula", f.val(AIM_SWING), f.op("*"), *f.inp())
     sc.roots.append(conv)
+    # M12: the converter's tokens rewritten in place (its id stays), minted from the module's M12 range:
+    # (TUBE_SHOWN - lo) x clamp(aim, -1, 0) + (hi - TUBE_SHOWN) x clamp(aim, 0, 1)
+    g = Formulas(scene_npc.own_m12(sc), sc.vpath)
+    lo, hi = TUBE_REST - AIM_SWING, TUBE_REST + AIM_SWING
+    neg = g.fn("max", [g.val(-1)], g.fn("min", [g.val(0)], g.inp()))
+    pos = g.fn("min", [g.val(1)], g.fn("max", [g.val(0)], g.inp()))
+    conv.children[:] = [g.val(round(TUBE_SHOWN - lo, 3)), g.op("*"), *neg, g.op("+"), g.val(round(hi - TUBE_SHOWN, 3)),
+                        g.op("*"), *pos]
     aim = d("Node", sc.d9("DataBindContext", sourcePathIds=sc.vpath("aim"), propertyKey=15, converterId=conv.ref()),
             rest, x=px, y=py, name="TubeAim")
     head = d("Node", _rect(sc, "Cradle", -16, -6, 16, 14, sc.vgrad(-10, 10, [("FF6A6A7C", 0.0), ("FF34344A", 1.0)]), 4),

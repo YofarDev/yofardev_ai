@@ -4043,7 +4043,7 @@
           <SolidColor colorValue="00000000" id="0:3604"/>
         </Fill>
       </Shape>
-      <Shape x="800" y="950" name="Hit_pigeon" id="0:3614">
+      <Shape x="816" y="950" name="Hit_pigeon" id="0:3614">
         <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="14" converterId="0:930265" id="0:930266"/>
         <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="13" converterId="0:930262" id="0:930263"/>
         <Rectangle width="130" height="104" name="Path" id="0:3611"/>
@@ -4054,7 +4054,7 @@
       <Node x="0" y="0" name="Telescope" id="0:3438">
         <Node x="868" y="1168" name="TubeAim" id="0:3380">
           <DataBindContext sourcePathIds="0:23-0:920010" propertyKey="15" converterId="0:920127" id="0:920128"/>
-          <Node x="0" y="0" rotation="0.698" name="TubeRest" id="0:3379">
+          <Node x="0" y="0" rotation="0.9" name="TubeRest" id="0:3379">
             <Node x="0" y="0" name="emitLensGlint" id="0:3353">
               <Shape x="-148" y="-8" name="emitSpot" id="0:3352">
                 <Ellipse width="5" height="9" name="Path" id="0:3351"/>
@@ -4227,7 +4227,7 @@
           </Fill>
         </Shape>
       </Node>
-      <Node x="800" y="986" name="PigeonNpc" id="0:930226">
+      <Node x="816" y="986" name="PigeonNpc" id="0:930226">
         <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="14" converterId="0:930245" id="0:930246"/>
         <DataBindContext sourcePathIds="0:23-0:930011" propertyKey="13" converterId="0:930242" id="0:930243"/>
         <Node x="0" y="0" scaleX="1.35" scaleY="1.35" name="PigeonSize" id="0:930225">
@@ -13252,9 +13252,29 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:920127">
-    <FormulaTokenValue operationValue="0.611" id="0:920124"/>
-    <FormulaTokenOperation operationType="2" id="0:920125"/>
-    <FormulaTokenInput id="0:920126"/>
+    <FormulaTokenValue operationValue="0.813" id="0:880018"/>
+    <FormulaTokenOperation operationType="2" id="0:880019"/>
+    <FormulaTokenFunction functionType="1" id="0:880006"/>
+    <FormulaTokenValue operationValue="-1" id="0:880000"/>
+    <FormulaTokenArgumentSeparator id="0:880007"/>
+    <FormulaTokenFunction functionType="0" id="0:880003"/>
+    <FormulaTokenValue operationValue="0" id="0:880001"/>
+    <FormulaTokenArgumentSeparator id="0:880004"/>
+    <FormulaTokenInput id="0:880002"/>
+    <FormulaTokenParenthesisClose id="0:880005"/>
+    <FormulaTokenParenthesisClose id="0:880008"/>
+    <FormulaTokenOperation operationType="0" id="0:880020"/>
+    <FormulaTokenValue operationValue="0.409" id="0:880021"/>
+    <FormulaTokenOperation operationType="2" id="0:880022"/>
+    <FormulaTokenFunction functionType="0" id="0:880015"/>
+    <FormulaTokenValue operationValue="1" id="0:880009"/>
+    <FormulaTokenArgumentSeparator id="0:880016"/>
+    <FormulaTokenFunction functionType="1" id="0:880012"/>
+    <FormulaTokenValue operationValue="0" id="0:880010"/>
+    <FormulaTokenArgumentSeparator id="0:880013"/>
+    <FormulaTokenInput id="0:880011"/>
+    <FormulaTokenParenthesisClose id="0:880014"/>
+    <FormulaTokenParenthesisClose id="0:880017"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:950941">
@@ -13302,7 +13322,7 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:930242">
-    <FormulaTokenValue operationValue="800" id="0:930227"/>
+    <FormulaTokenValue operationValue="816" id="0:930227"/>
     <FormulaTokenOperation operationType="0" id="0:930228"/>
     <FormulaTokenValue operationValue="200" id="0:930229"/>
     <FormulaTokenOperation operationType="2" id="0:930230"/>
@@ -13324,7 +13344,7 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:930262">
-    <FormulaTokenValue operationValue="800" id="0:930247"/>
+    <FormulaTokenValue operationValue="816" id="0:930247"/>
     <FormulaTokenOperation operationType="0" id="0:930248"/>
     <FormulaTokenValue operationValue="200" id="0:930249"/>
     <FormulaTokenOperation operationType="2" id="0:930250"/>

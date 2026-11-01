@@ -128,12 +128,17 @@ def test_away_draws_nothing_and_the_other_states_show_the_pair(beach: ET.Element
     for k in ("rest", "idle", "move", "react", "notice"):
         for a in states[k]:
             assert set(_keyed(a, group.get("id"), "opacity")) == {1.0}, k
-    # flight shows the spread wings and hides the folded ones; standing does the opposite
+    # flight shows the spread wings and hides the folded ones; standing does the opposite (M12 ruling 7: on
+    # the 0 ms `Npc2Draw` layer, one 1-frame hold per state; the `Npc2` poses no longer key them)
+    draws = {a.get("name"): a for a in beach.iter("LinearAnimation") if a.get("name", "").startswith("npc_gulls_draw_")}
     for i in range(2):
         near, folded = _named(beach, f"Gull{i}WingNear"), _named(beach, f"Gull{i}Wing")
         for k, flying in (("rest", False), ("idle", False), ("move", True), ("react", True)):
-            assert set(_keyed(states[k][0], near.get("id"), "opacity")) == {1.0 if flying else 0.0}, (i, k)
-            assert set(_keyed(states[k][0], folded.get("id"), "opacity")) == {0.0 if flying else 1.0}, (i, k)
+            assert _keyed(states[k][0], near.get("id"), "opacity") == [], (i, k)
+            assert _keyed(states[k][0], folded.get("id"), "opacity") == [], (i, k)
+            d = draws[f"npc_gulls_draw_{k}"]
+            assert _keyed(d, near.get("id"), "opacity") == [1.0 if flying else 0.0], (i, k)
+            assert _keyed(d, folded.get("id"), "opacity") == [0.0 if flying else 1.0], (i, k)
 
 
 def test_gulls_stand_in_front_of_the_crab_on_its_plane(beach: ET.Element) -> None:
@@ -172,9 +177,16 @@ def test_facing_follows_the_sign_of_npc2look(beach: ET.Element) -> None:
 def test_gull_ids_mint_from_the_m9_range(beach: ET.Element) -> None:
     group = _named(beach, "GullsNpc")
     for e in [*group.iter(), _layer(beach, "Npc2"), *[a for a in beach.iter("LinearAnimation")
-                                                      if a.get("name", "").startswith("npc_gulls")]]:
+                                                      if a.get("name", "").startswith("npc_gulls")
+                                                      and not a.get("name", "").startswith("npc_gulls_draw_")]]:
         if e.get("id") is not None:
             assert M9_RANGE[0] <= int(e.get("id").split(":")[1]) < M9_RANGE[1], (e.tag, e.get("name"))
+    # M12 ruling 7: the wings' drawing switch (`Npc2Draw`) mints from scene_npc's own M12 range
+    m12 = (scene_npc.M12_ID_START, gen_scenes.M12_ID_START)
+    for e in [*_layer(beach, "Npc2Draw").iter(), *[a for a in beach.iter("LinearAnimation")
+                                                    if a.get("name", "").startswith("npc_gulls_draw_")]]:
+        if e.get("id") is not None:
+            assert m12[0] <= int(e.get("id").split(":")[1]) < m12[1], (e.tag, e.get("name"))
 
 
 def test_only_the_beach_draws_the_second_slot() -> None:

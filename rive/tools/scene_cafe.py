@@ -99,9 +99,12 @@ REFLECT_REST = 0.3                   # the street's reflections at rain 0 (an ev
 MIST = "C8D2DC"                      # condensation colour (alpha per gradient stop)
 TRAIL_R = 28.0                       # a wiped spot's reach (dots >= 22 px apart: one wiped stroke)
 # M10: a wiped spot is a hole in the mist of radius WIPE_R; its edge steps back to the mist through
-# thinner mist rings (radius inside which the ring is clear, the mist's opacity in the ring)
+# thinner mist rings (radius inside which the ring is clear, the mist's opacity in the ring).
+# M12 ruling 8 (lane Q): the rings sit within 5.5 px of the edge (M10: 16 px, ((26, 0.72), (22, 0.46),
+# (18, 0.24), (14, 0.08))): the inner rings' discs, 22-24 px apart along a stroke, drew a scalloped,
+# violet-grey band inside the stroke; a thin soft edge reads as clean glass
 WIPE_R = 30.0
-WIPE_RINGS = ((26.0, 0.72), (22.0, 0.46), (18.0, 0.24), (14.0, 0.08))
+WIPE_RINGS = ((29.0, 0.5), (27.5, 0.3), (26.0, 0.15), (24.5, 0.05))
 
 # ---------------------------------------------------------------- events (frames at 60 fps)
 CUP_STEAM_FRAMES = 180
@@ -1099,6 +1102,12 @@ def fish_npc(sc: Scene, hit: El) -> El:
                                  (n, 0.0)]}
     anims["react"] = rig.anim("npc_fish_react", n, react)
     npc_layer(sc, anims)
+    # M12 ruling 7 (lane Q): profile / front switch on their own layer in 0 ms; in notice the front view shows
+    # only while |npcLook| < 0.5 (the director's notice look, +-0.7, keeps the profile: no 70/30 mix)
+    side = [(-1.0, profile), (-0.5, profile), (-0.4999, front), (0.4999, front), (0.5, profile), (1.0, profile)]
+    with sc.minting(scene_npc.own_m12(sc)):
+        scene_npc.draw_layer(sc, anims, {"away": profile, "rest": profile, "idle": profile, "move": profile,
+                                         "notice": side, "react": profile}, "npc_fish")
     return npc
 
 

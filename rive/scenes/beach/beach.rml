@@ -437,6 +437,125 @@
           </StateTransition>
         </AnimationState>
       </StateMachineLayer>
+      <StateMachineLayer name="Npc2Draw" id="0:880184">
+        <AnyState x="100" y="-100" id="0:880180">
+          <StateTransition stateToId="0:880115" duration="0" id="0:880125">
+            <TransitionViewModelCondition id="0:880124">
+              <TransitionPropertyViewModelComparator id="0:880122">
+                <BindablePropertyEnum id="0:880121">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880120"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880123"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880116" duration="0" id="0:880131">
+            <TransitionViewModelCondition id="0:880130">
+              <TransitionPropertyViewModelComparator id="0:880128">
+                <BindablePropertyEnum id="0:880127">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880126"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930002" id="0:880129"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880117" duration="0" id="0:880137">
+            <TransitionViewModelCondition id="0:880136">
+              <TransitionPropertyViewModelComparator id="0:880134">
+                <BindablePropertyEnum id="0:880133">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880132"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930003" id="0:880135"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880118" duration="0" id="0:880143">
+            <TransitionViewModelCondition id="0:880142">
+              <TransitionPropertyViewModelComparator id="0:880140">
+                <BindablePropertyEnum id="0:880139">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880138"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930004" id="0:880141"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880119" duration="0" id="0:880149">
+            <TransitionViewModelCondition id="0:880148">
+              <TransitionPropertyViewModelComparator id="0:880146">
+                <BindablePropertyEnum id="0:880145">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880144"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930005" id="0:880147"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnyState>
+        <ExitState x="500" y="-100" id="0:880181"/>
+        <EntryState x="-100" y="-100" id="0:880183">
+          <StateTransition stateToId="0:880114" id="0:880182"/>
+        </EntryState>
+        <AnimationState animationId="0:880018" x="0" y="220" id="0:880114"/>
+        <AnimationState animationId="0:880037" x="160" y="340" id="0:880115">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880155">
+            <TransitionViewModelCondition id="0:880154">
+              <TransitionPropertyViewModelComparator id="0:880152">
+                <BindablePropertyEnum id="0:880151">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880150"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930000" id="0:880153"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880056" x="320" y="220" id="0:880116">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880161">
+            <TransitionViewModelCondition id="0:880160">
+              <TransitionPropertyViewModelComparator id="0:880158">
+                <BindablePropertyEnum id="0:880157">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880156"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930000" id="0:880159"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880075" x="480" y="340" id="0:880117">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880167">
+            <TransitionViewModelCondition id="0:880166">
+              <TransitionPropertyViewModelComparator id="0:880164">
+                <BindablePropertyEnum id="0:880163">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880162"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930000" id="0:880165"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880094" x="640" y="220" id="0:880118">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880173">
+            <TransitionViewModelCondition id="0:880172">
+              <TransitionPropertyViewModelComparator id="0:880170">
+                <BindablePropertyEnum id="0:880169">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880168"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930000" id="0:880171"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880113" x="800" y="340" id="0:880119">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880179">
+            <TransitionViewModelCondition id="0:880178">
+              <TransitionPropertyViewModelComparator id="0:880176">
+                <BindablePropertyEnum id="0:880175">
+                  <DataBindContext sourcePathIds="0:23-0:920000" propertyKey="637" id="0:880174"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930000" id="0:880177"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+      </StateMachineLayer>
       <StateMachineLayer name="RainLoopSheet0" id="0:970804">
         <AnyState x="100" y="-100" id="0:970800"/>
         <ExitState x="500" y="-100" id="0:970801"/>
@@ -22929,23 +23048,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921044"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920601" id="0:921049">
-        <KeyedProperty property="opacity" id="0:921048">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921047"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920556" id="0:921054">
-        <KeyedProperty property="opacity" id="0:921051">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921050"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921053">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921052"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920579" id="0:921059">
-        <KeyedProperty property="opacity" id="0:921056">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921055"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921058">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921057"/>
         </KeyedProperty>
@@ -22995,23 +23103,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921085"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920750" id="0:921090">
-        <KeyedProperty property="opacity" id="0:921089">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921088"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920705" id="0:921095">
-        <KeyedProperty property="opacity" id="0:921092">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921091"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921094">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921093"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920728" id="0:921100">
-        <KeyedProperty property="opacity" id="0:921097">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921096"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921099">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921098"/>
         </KeyedProperty>
@@ -23078,23 +23175,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921136"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920601" id="0:921141">
-        <KeyedProperty property="opacity" id="0:921140">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921139"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920556" id="0:921146">
-        <KeyedProperty property="opacity" id="0:921143">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921142"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921145">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921144"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920579" id="0:921151">
-        <KeyedProperty property="opacity" id="0:921148">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921147"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921150">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921149"/>
         </KeyedProperty>
@@ -23154,23 +23240,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921183"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920750" id="0:921188">
-        <KeyedProperty property="opacity" id="0:921187">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921186"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920705" id="0:921193">
-        <KeyedProperty property="opacity" id="0:921190">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921189"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921192">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921191"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920728" id="0:921198">
-        <KeyedProperty property="opacity" id="0:921195">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921194"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921197">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921196"/>
         </KeyedProperty>
@@ -23260,23 +23335,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921263"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920601" id="0:921268">
-        <KeyedProperty property="opacity" id="0:921267">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921266"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920556" id="0:921273">
-        <KeyedProperty property="opacity" id="0:921270">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921269"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921272">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921271"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920579" id="0:921278">
-        <KeyedProperty property="opacity" id="0:921275">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921274"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921277">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921276"/>
         </KeyedProperty>
@@ -23363,23 +23427,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921333"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920750" id="0:921338">
-        <KeyedProperty property="opacity" id="0:921337">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921336"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920705" id="0:921343">
-        <KeyedProperty property="opacity" id="0:921340">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921339"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921342">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921341"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920728" id="0:921348">
-        <KeyedProperty property="opacity" id="0:921345">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921344"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921347">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921346"/>
         </KeyedProperty>
@@ -23447,15 +23500,7 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921404"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920601" id="0:921409">
-        <KeyedProperty property="opacity" id="0:921408">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921407"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920556" id="0:921426">
-        <KeyedProperty property="opacity" id="0:921411">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921410"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921425">
           <KeyFrameDouble frame="0" value="1" interpolationType="linear" id="0:921412"/>
           <KeyFrameDouble frame="1" value="1" interpolationType="linear" id="0:921534"/>
@@ -23473,9 +23518,6 @@
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920579" id="0:921443">
-        <KeyedProperty property="opacity" id="0:921428">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921427"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921442">
           <KeyFrameDouble frame="0" value="0.801" interpolationType="linear" id="0:921429"/>
           <KeyFrameDouble frame="1" value="0.801" interpolationType="linear" id="0:921536"/>
@@ -23552,15 +23594,7 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921481"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920750" id="0:921486">
-        <KeyedProperty property="opacity" id="0:921485">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921484"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920705" id="0:921503">
-        <KeyedProperty property="opacity" id="0:921488">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921487"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921502">
           <KeyFrameDouble frame="0" value="0.1" interpolationType="linear" id="0:921489"/>
           <KeyFrameDouble frame="1" value="0.1" interpolationType="linear" id="0:921540"/>
@@ -23579,9 +23613,6 @@
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920728" id="0:921520">
-        <KeyedProperty property="opacity" id="0:921505">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921504"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921519">
           <KeyFrameDouble frame="0" value="0.4854" interpolationType="linear" id="0:921506"/>
           <KeyFrameDouble frame="1" value="0.4854" interpolationType="linear" id="0:921542"/>
@@ -23656,23 +23687,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921564"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920601" id="0:921569">
-        <KeyedProperty property="opacity" id="0:921568">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921567"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920556" id="0:921574">
-        <KeyedProperty property="opacity" id="0:921571">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921570"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921573">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921572"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920579" id="0:921579">
-        <KeyedProperty property="opacity" id="0:921576">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921575"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921578">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921577"/>
         </KeyedProperty>
@@ -23726,23 +23746,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921607"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920750" id="0:921612">
-        <KeyedProperty property="opacity" id="0:921611">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921610"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920705" id="0:921617">
-        <KeyedProperty property="opacity" id="0:921614">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921613"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921616">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921615"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920728" id="0:921622">
-        <KeyedProperty property="opacity" id="0:921619">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921618"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921621">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921620"/>
         </KeyedProperty>
@@ -23803,23 +23812,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921658"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920601" id="0:921663">
-        <KeyedProperty property="opacity" id="0:921662">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921661"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920556" id="0:921668">
-        <KeyedProperty property="opacity" id="0:921665">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921664"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921667">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921666"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920579" id="0:921673">
-        <KeyedProperty property="opacity" id="0:921670">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921669"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921672">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921671"/>
         </KeyedProperty>
@@ -23873,23 +23871,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921701"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920750" id="0:921706">
-        <KeyedProperty property="opacity" id="0:921705">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921704"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920705" id="0:921711">
-        <KeyedProperty property="opacity" id="0:921708">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921707"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921710">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921709"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920728" id="0:921716">
-        <KeyedProperty property="opacity" id="0:921713">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921712"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921715">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921714"/>
         </KeyedProperty>
@@ -23950,23 +23937,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921752"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920601" id="0:921757">
-        <KeyedProperty property="opacity" id="0:921756">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921755"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920556" id="0:921762">
-        <KeyedProperty property="opacity" id="0:921759">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921758"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921761">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921760"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920579" id="0:921767">
-        <KeyedProperty property="opacity" id="0:921764">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921763"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921766">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921765"/>
         </KeyedProperty>
@@ -24020,23 +23996,12 @@
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921795"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920750" id="0:921800">
-        <KeyedProperty property="opacity" id="0:921799">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921798"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920705" id="0:921805">
-        <KeyedProperty property="opacity" id="0:921802">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921801"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921804">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921803"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920728" id="0:921810">
-        <KeyedProperty property="opacity" id="0:921807">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921806"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921809">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921808"/>
         </KeyedProperty>
@@ -24100,15 +24065,7 @@
           <KeyFrameDouble frame="0" value="-0.55" interpolationType="cubic" interpolatorId="0:10" id="0:921849"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920601" id="0:921854">
-        <KeyedProperty property="opacity" id="0:921853">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921852"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920556" id="0:921877">
-        <KeyedProperty property="opacity" id="0:921856">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921855"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921876">
           <KeyFrameDouble frame="0" value="1" interpolationType="linear" id="0:921857"/>
           <KeyFrameDouble frame="1" value="1" interpolationType="linear" id="0:921996"/>
@@ -24132,9 +24089,6 @@
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920579" id="0:921900">
-        <KeyedProperty property="opacity" id="0:921879">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921878"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921899">
           <KeyFrameDouble frame="0" value="0.801" interpolationType="linear" id="0:921880"/>
           <KeyFrameDouble frame="1" value="0.801" interpolationType="linear" id="0:921998"/>
@@ -24211,15 +24165,7 @@
           <KeyFrameDouble frame="0" value="-0.55" interpolationType="cubic" interpolatorId="0:10" id="0:921931"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:920750" id="0:921936">
-        <KeyedProperty property="opacity" id="0:921935">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:921934"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:920705" id="0:921959">
-        <KeyedProperty property="opacity" id="0:921938">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921937"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921958">
           <KeyFrameDouble frame="0" value="0.1" interpolationType="linear" id="0:921939"/>
           <KeyFrameDouble frame="1" value="0.1" interpolationType="linear" id="0:922002"/>
@@ -24240,9 +24186,6 @@
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:920728" id="0:921982">
-        <KeyedProperty property="opacity" id="0:921961">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921960"/>
-        </KeyedProperty>
         <KeyedProperty property="scaleY" id="0:921981">
           <KeyFrameDouble frame="0" value="0.4854" interpolationType="linear" id="0:921962"/>
           <KeyFrameDouble frame="1" value="0.4854" interpolationType="linear" id="0:922004"/>
@@ -24283,6 +24226,198 @@
       <KeyedObject objectId="0:920806" id="0:921993">
         <KeyedProperty property="opacity" id="0:921992">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:921991"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_gulls_draw_away" id="0:880018">
+      <KeyedObject objectId="0:920601" id="0:880002">
+        <KeyedProperty property="opacity" id="0:880001">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880000"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920750" id="0:880005">
+        <KeyedProperty property="opacity" id="0:880004">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880003"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920556" id="0:880008">
+        <KeyedProperty property="opacity" id="0:880007">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880006"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920579" id="0:880011">
+        <KeyedProperty property="opacity" id="0:880010">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880009"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920705" id="0:880014">
+        <KeyedProperty property="opacity" id="0:880013">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880012"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920728" id="0:880017">
+        <KeyedProperty property="opacity" id="0:880016">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880015"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_gulls_draw_rest" id="0:880037">
+      <KeyedObject objectId="0:920601" id="0:880021">
+        <KeyedProperty property="opacity" id="0:880020">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880019"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920750" id="0:880024">
+        <KeyedProperty property="opacity" id="0:880023">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880022"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920556" id="0:880027">
+        <KeyedProperty property="opacity" id="0:880026">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880025"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920579" id="0:880030">
+        <KeyedProperty property="opacity" id="0:880029">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880028"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920705" id="0:880033">
+        <KeyedProperty property="opacity" id="0:880032">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880031"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920728" id="0:880036">
+        <KeyedProperty property="opacity" id="0:880035">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880034"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_gulls_draw_idle" id="0:880056">
+      <KeyedObject objectId="0:920601" id="0:880040">
+        <KeyedProperty property="opacity" id="0:880039">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880038"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920750" id="0:880043">
+        <KeyedProperty property="opacity" id="0:880042">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880041"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920556" id="0:880046">
+        <KeyedProperty property="opacity" id="0:880045">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880044"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920579" id="0:880049">
+        <KeyedProperty property="opacity" id="0:880048">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880047"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920705" id="0:880052">
+        <KeyedProperty property="opacity" id="0:880051">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880050"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920728" id="0:880055">
+        <KeyedProperty property="opacity" id="0:880054">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880053"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_gulls_draw_move" id="0:880075">
+      <KeyedObject objectId="0:920601" id="0:880059">
+        <KeyedProperty property="opacity" id="0:880058">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880057"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920750" id="0:880062">
+        <KeyedProperty property="opacity" id="0:880061">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880060"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920556" id="0:880065">
+        <KeyedProperty property="opacity" id="0:880064">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880063"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920579" id="0:880068">
+        <KeyedProperty property="opacity" id="0:880067">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880066"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920705" id="0:880071">
+        <KeyedProperty property="opacity" id="0:880070">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880069"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920728" id="0:880074">
+        <KeyedProperty property="opacity" id="0:880073">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880072"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_gulls_draw_notice" id="0:880094">
+      <KeyedObject objectId="0:920601" id="0:880078">
+        <KeyedProperty property="opacity" id="0:880077">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880076"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920750" id="0:880081">
+        <KeyedProperty property="opacity" id="0:880080">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880079"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920556" id="0:880084">
+        <KeyedProperty property="opacity" id="0:880083">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880082"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920579" id="0:880087">
+        <KeyedProperty property="opacity" id="0:880086">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880085"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920705" id="0:880090">
+        <KeyedProperty property="opacity" id="0:880089">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880088"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920728" id="0:880093">
+        <KeyedProperty property="opacity" id="0:880092">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880091"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_gulls_draw_react" id="0:880113">
+      <KeyedObject objectId="0:920601" id="0:880097">
+        <KeyedProperty property="opacity" id="0:880096">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880095"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920750" id="0:880100">
+        <KeyedProperty property="opacity" id="0:880099">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880098"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920556" id="0:880103">
+        <KeyedProperty property="opacity" id="0:880102">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880101"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920579" id="0:880106">
+        <KeyedProperty property="opacity" id="0:880105">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880104"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920705" id="0:880109">
+        <KeyedProperty property="opacity" id="0:880108">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880107"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:920728" id="0:880112">
+        <KeyedProperty property="opacity" id="0:880111">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880110"/>
         </KeyedProperty>
       </KeyedObject>
     </LinearAnimation>

@@ -171,8 +171,10 @@ def test_existing_ids_never_move(rml: dict[str, ET.Element], sid: str) -> None:
         assert (new[i].tag, attrib) == (e.tag, e.attrib), (i, e.tag, e.get("name"))
     added = set(new) - set(old)
     # M8 additions, and M9's (contract v12), M10's (v13), M11's (v14) and M12's from their own ranges below it
-    assert all(M12_EASE <= _n(i) < gen_scenes.M7_ID_START for i in added), \
-        sorted(i for i in added if not M12_EASE <= _n(i) < gen_scenes.M7_ID_START)[:10]
+    # (M12 lane Q: the NPC drawing switches from scene_npc.M12_ID_START, below the shared M12 range)
+    lo = min(M12_EASE, scene_npc.M12_ID_START)
+    assert all(lo <= _n(i) < gen_scenes.M7_ID_START for i in added), \
+        sorted(i for i in added if not lo <= _n(i) < gen_scenes.M7_ID_START)[:10]
 
 
 # ---------------------------------------------------------------- view model
@@ -255,6 +257,94 @@ def test_away_hides_the_npc_and_rest_is_the_v10_look(rml: dict[str, ET.Element],
         assert _keyed(states["away"][0], el.get("id"), "opacity") == [away_op], name
         assert set(_keyed(states["rest"][0], el.get("id"), "opacity")) == {rest_op}, name
         assert float(el.get("opacity", "1")) == rest_op, name
+
+
+# ---------------------------------------------------------------- M12: the drawing switches (ruling 7)
+# (scene, layer, animation prefix, {state: the drawing copies it shows}); the fish's notice is checked apart
+DRAW_SWITCHES = [
+    ("livingRoom", "NpcDraw", "npc_cat", {"away": ("CatAsleep",), "rest": ("CatAsleep",), "idle": ("CatAwake",),
+                                          "move": ("CatWalk",), "notice": ("CatAwake",), "react": ("CatAwake",)}),
+    ("deepSpace", "NpcDraw", "npc_alien", {"away": ("Alien",), "rest": ("Alien",), "idle": ("AlienNpc",),
+                                           "move": ("AlienNpc",), "notice": ("AlienNpc",), "react": ("AlienNpc",)}),
+    ("beach", "Npc2Draw", "npc_gulls", {
+        **dict.fromkeys(("away", "rest", "idle", "notice"), ("Gull0Wing", "Gull1Wing")),
+        **dict.fromkeys(("move", "react"), ("Gull0WingNear", "Gull0WingFar", "Gull1WingNear", "Gull1WingFar"))}),
+    ("forestCabin", "NpcDraw", "npc_squirrel", {"away": ("SqSit",), "rest": ("SqSit",), "idle": ("SqSit",),
+                                                "move": ("SqRun",), "notice": ("SqSit",), "react": ("SqSit",)}),
+    ("cafe", "NpcDraw", "npc_fish", {k: ("FishProfile",) for k in STATES if k != "notice"}),
+]
+
+
+@pytest.fixture(scope="module")
+def draw_docs(rml: dict[str, ET.Element], tmp_path_factory: pytest.TempPathFactory) -> dict[str, ET.Element]:
+    out = tmp_path_factory.mktemp("draw")
+    root = gen_scenes.OUT_ROOT
+    gen_scenes.OUT_ROOT = str(out)
+    try:
+        return {**rml, **{sid: ET.fromstring(Path(gen_scenes.SCENE_BUILDERS[sid]()).read_text())
+                          for sid in ("cafe", "forestCabin")}}
+    finally:
+        gen_scenes.OUT_ROOT = root
+
+
+def _opacity_keys(anim: ET.Element) -> dict[str, float]:
+    return {ko.get("objectId"): float(kf.get("value")) for ko in anim if ko.tag == "KeyedObject"
+            for kp in ko if kp.get("property") == "opacity" for kf in kp}
+
+
+def _layer_anims(doc: ET.Element, layer: ET.Element) -> list[ET.Element]:
+    anims = _anims(doc)
+    return [anims[s.get("animationId")] for s in layer.iter() if s.tag in ("AnimationState", "BlendAnimation1D")]
+
+
+@pytest.mark.parametrize("sid,layer,prefix,shown", DRAW_SWITCHES, ids=[d[0] for d in DRAW_SWITCHES])
+def test_drawing_switch_cuts_on_its_own_layer(draw_docs: dict[str, ET.Element], sid: str, layer: str, prefix: str,
+                                              shown: dict[str, tuple[str, ...]]) -> None:
+    """M12 ruling 7 (lane Q): every NPC whose states swap drawing copies keys their opacity only on its own
+    0 ms layer (one 1-frame hold per state), so the 200 ms pose blend never cross-fades two copies."""
+    doc = draw_docs[sid]
+    ab = doc.find("Artboard")
+    names = {n for v in shown.values() for n in v} | ({"FishFront"} if sid == "cafe" else set())
+    ids = {n: _named(doc, n).get("id") for n in names}
+    layers = {lay.get("name"): lay for lay in ab.iter("StateMachineLayer")}
+    pose = _layer_anims(doc, layers[layer.replace("Draw", "")])
+    assert not any(set(_opacity_keys(a)) & set(ids.values()) for a in pose)
+    draw = layers[layer]
+    by_name = {a.get("name"): a for a in _layer_anims(doc, draw)}
+    for k, on in shown.items():
+        a = by_name[f"{prefix}_draw_{k}"]
+        assert int(a.get("duration")) == 1
+        assert _opacity_keys(a) == {i: float(n in on) for n, i in ids.items()}, k
+    ts = [t for t in draw.iter() if t.tag in ("StateTransition", "BlendStateTransition") and t.get("stateToId")]
+    assert len(ts) == 2 * (len(STATES) - 1) + 1
+    assert all(int(t.get("duration", "0")) == 0 for t in ts)
+    owners = {a.get("name") for a in _anims(doc).values() if set(_opacity_keys(a)) & set(ids.values())}
+    assert owners == set(by_name)
+
+
+def test_fish_notice_shows_the_front_only_near_look_zero(draw_docs: dict[str, ET.Element]) -> None:
+    """The fish's notice draws its profile at |npcLook| >= 0.5 (the director's notice look is +-0.7: M11 drew a
+    70/30 mix of both copies there) and its front view nearer 0, cut 1e-4 apart on the look."""
+    doc = draw_docs["cafe"]
+    draw = next(lay for lay in doc.find("Artboard").iter("StateMachineLayer") if lay.get("name") == "NpcDraw")
+    prof, front = _named(doc, "FishProfile").get("id"), _named(doc, "FishFront").get("id")
+    anims = _anims(doc)
+    (blend,) = [s for s in draw if s.tag == "BlendState1DViewModel"]
+    steps = [(float(b.get("value")), _opacity_keys(anims[b.get("animationId")])) for b in blend
+             if b.tag == "BlendAnimation1D"]
+    assert [v for v, _ in steps] == [-1.0, -0.5, -0.4999, 0.4999, 0.5, 1.0]
+    for v, keys in steps:
+        assert keys == ({prof: 1.0, front: 0.0} if abs(v) >= 0.5 else {prof: 0.0, front: 1.0}), v
+
+
+def test_alien_away_fades_through_its_wrapper(draw_docs: dict[str, ET.Element]) -> None:
+    doc = draw_docs["deepSpace"]
+    shown = _named(doc, "AlienShown")
+    assert [c.get("name") for c in shown if c.get("name")] == ["AlienNpc", "Alien"]
+    states = _state_anims(doc)
+    for k, anims in states.items():
+        for a in anims:
+            assert _keyed(a, shown.get("id"), "opacity") == [0.0 if k == "away" else 1.0], k
 
 
 # ---------------------------------------------------------------- npcX paths and hit zones

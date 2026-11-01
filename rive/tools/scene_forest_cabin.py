@@ -1273,6 +1273,10 @@ def squirrel_npc(sc: Scene, hits: list[El]) -> El:
         paws: {"y": [(0, 0.0), (8, -8.0), (40, -8.0), (50, 0.0), (n, 0.0)]},
     })
     npc_layer(sc, anims)
+    # M12 ruling 7 (lane Q): the sitting and running drawings switch on their own layer in 0 ms
+    with sc.minting(scene_npc.own_m12(sc)):
+        scene_npc.draw_layer(sc, anims, {"away": sit, "rest": sit, "idle": sit, "move": run, "notice": sit,
+                                         "react": sit}, "npc_squirrel")
     return npc
 
 

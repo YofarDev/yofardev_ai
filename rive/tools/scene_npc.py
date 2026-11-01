@@ -34,6 +34,9 @@ if TYPE_CHECKING:
 
 NPC_STATES = ("away", "rest", "idle", "move", "notice", "react")
 NPC_BLEND_MS = 200
+# M12 ruling 18: this module's own M12 additions (the drawing switches of the cat, the alien and the gulls)
+# mint from a range of their own in each scene document (gen_scenes.M12_ID_START = 890000 is the shared one)
+M12_ID_START = 880000
 FOG_GAIN = 0.45          # ruling 7: a veil thickens by up to this opacity at fog 1
 FRONT_FOG_GAIN = 0.4     # the SceneFront fog veil's opacity at fog 1 (only drawn while rain > 0)
 FOG_VEILS = {"livingRoom": (0,), "campfire": (0, 1, 2), "beach": (0, 1, 2)}   # deepSpace: none
@@ -46,7 +49,9 @@ NPC_ROOTS: dict[str, dict[str, tuple[float, float]]] = {
     "livingRoom": {"CatNpc": (1.0, 0.0)},
     "campfire": {"OwlNpc": (1.0, 0.0)},
     "beach": {"CrabNpc": (1.0, 0.0)},
-    "deepSpace": {"Alien": (1.0, 0.0), "AlienNpc": (0.0, 0.0)},
+    # M12 (lane Q): the v10 `Alien` and the M8 `AlienNpc` switch on `NpcDraw`; `away` hides both through
+    # their wrapper `AlienShown`
+    "deepSpace": {"AlienShown": (1.0, 0.0)},
 }
 
 # ---------------------------------------------------------------- loops (frames at 60 fps)
@@ -94,6 +99,11 @@ class Rig:
             existing.children.extend(tracks)
             return existing
         return self.sc.A(name, frames, tracks, loop=True, seam_hold=frames > 4)
+
+
+def own_m12(sc: Scene) -> Doc:
+    """The scene's document for this module's M12 additions (one per scene build)."""
+    return sc.__dict__.setdefault("_d12_npc", Doc(client=0, start=M12_ID_START))
 
 
 def L(sc: Scene, c: str, w: float) -> El:
@@ -178,10 +188,12 @@ def npc_layer(sc: Scene, anims: dict[str, El | list[El]], slot: str = "npc", loo
         a = anims[k]
         pos = {"x": float(160 * i), "y": float(220 + 120 * (i % 2))}
         if isinstance(a, list):
+            # (M12) a list of (animation, value) pairs places its animations itself (draw_layer's stepped notice)
+            pairs = a if isinstance(a[0], tuple) else list(zip(a, (-1.0, 0.0, 1.0)))
             states[k] = d("BlendState1DViewModel",
                           d("BindablePropertyNumber", d("DataBindContext", sourcePathIds=sc.vpath(look),
                                                         propertyKey=636)),
-                          *[d("BlendAnimation1D", animationId=x.ref(), value=v) for x, v in zip(a, (-1.0, 0.0, 1.0))],
+                          *[d("BlendAnimation1D", animationId=x.ref(), value=v) for x, v in pairs],
                           **pos)
         else:
             states[k] = d("AnimationState", animationId=a.ref(), **pos)
@@ -202,8 +214,8 @@ def npc_layer(sc: Scene, anims: dict[str, El | list[El]], slot: str = "npc", loo
     sc.layers.append(sc._layer(name, states[entry], list(states.values()), any_t))
 
 
-def draw_layer(sc: Scene, anims: dict[str, El | list[El]], shown: dict[str, El], prefix: str,
-               name: str = "NpcDraw") -> El:
+def draw_layer(sc: Scene, anims: dict[str, El | list[El]], shown: dict[str, object], prefix: str,
+               name: str = "NpcDraw", **layer: object) -> El:
     """M12 ruling 7: the NPC's drawing switch on its own state-machine layer (the ghost blends: during the
     `Npc` layer's NPC_BLEND_MS state blend, two drawing copies, e.g. asleep and awake, cross-faded).
 
@@ -213,8 +225,16 @@ def draw_layer(sc: Scene, anims: dict[str, El | list[El]], shown: dict[str, El],
     per state keying every copy (1 for the shown one, 0 for the others), switched on the same `npc`
     conditions in 0 ms: a state change cuts from one drawing to the other on the frame the pose blend
     starts. Removing keys frees ids but moves none; the new elements mint from the scene's current
-    document (call it inside `sc.minting(<the module's own range>)`). Returns the layer."""
-    drawings = list(dict.fromkeys(shown.values()))
+    document (call it inside `sc.minting(<the module's own range>)`). Returns the layer.
+
+    M12 lane Q: a state may show several elements at once (a tuple: both gulls' wings) or none (None);
+    `notice` may be a list of (npcLook value, shown) steps: a 1D blend on the look, so neighbouring steps
+    set 1e-4 apart cut the drawing at a look threshold (the fish: profile at |look| >= 0.5, front nearer 0);
+    `layer` passes `slot` / `look` / `entry` on to npc_layer (the gulls' `Npc2`)."""
+    def els(v: object) -> tuple[El, ...]:
+        return () if v is None else tuple(v) if isinstance(v, tuple) else (v,)  # type: ignore[arg-type]
+    steps = {k: (v if isinstance(v, list) else [(None, v)]) for k, v in shown.items()}
+    drawings = list(dict.fromkeys(e for st in steps.values() for _, v in st for e in els(v)))
     ids = {e.ref() for e in drawings}
     for a in (x for v in anims.values() for x in (v if isinstance(v, list) else [v])):
         kept = []
@@ -225,10 +245,24 @@ def draw_layer(sc: Scene, anims: dict[str, El | list[El]], shown: dict[str, El],
                     continue
             kept.append(ko)
         a.children[:] = kept
-    draws: dict[str, El | list[El]] = {
-        k: sc.A(f"{prefix}_draw_{k}", 1, [sc.T(e, opacity=[(0, 1.0 if e is shown[k] else 0.0)]) for e in drawings])
-        for k in NPC_STATES}
-    npc_layer(sc, draws, name=name, blend_ms=0)
+
+    def draw(label: str, v: object) -> El:
+        on = els(v)
+        return sc.A(f"{prefix}_draw_{label}", 1,
+                    [sc.T(e, opacity=[(0, 1.0 if any(e is o for o in on) else 0.0)]) for e in drawings])
+    draws: dict[str, El | list] = {}
+    for k in NPC_STATES:
+        st = steps[k]
+        if st[0][0] is None:
+            draws[k] = draw(k, st[0][1])
+        else:
+            made: dict[tuple[str, ...], El] = {}
+            for _, v in st:
+                key = tuple(e.ref() for e in els(v))
+                if key not in made:
+                    made[key] = draw(f"{k}{len(made)}", v)
+            draws[k] = [(made[tuple(e.ref() for e in els(v))], float(x)) for x, v in st]
+    npc_layer(sc, draws, name=name, blend_ms=0, **layer)  # type: ignore[arg-type]
     return sc.layers[-1]
 
 
@@ -577,6 +611,10 @@ def living_room_cat(sc: Scene, content: list[El], hits: list[El], gains: tuple[f
             **{p: {"scaleX": [(0, 2.2)]} for p in pupils},
         })
         npc_layer(sc, anims)
+        # M12 ruling 7: the drawing switch on its own layer, cut in 0 ms (no ghost during the pose blend)
+        with sc.minting(own_m12(sc)):
+            draw_layer(sc, anims, {"away": asleep, "rest": asleep, "idle": awake, "move": walker,
+                                   "notice": awake, "react": awake}, "npc_cat")
 
 
 # ====================================================================== campfire: the owl
@@ -901,6 +939,13 @@ def beach_gulls(sc: Scene, content: list[El]) -> None:
             **{p["shadow"]: {"opacity": [(0, 0.55)], "scaleX": [(0, 0.8)]} for p in g},
         })
         npc_layer(sc, anims, slot="npc2", look="npc2Look", name="Npc2", entry="away")
+        # M12 ruling 7 (lane Q): the folded wings and the flying pair switch on their own layer in 0 ms
+        folded = tuple(p["folded"] for p in g)
+        flying = tuple(p[k] for p in g for k in ("near", "far"))
+        with sc.minting(own_m12(sc)):
+            draw_layer(sc, anims, {"away": folded, "rest": folded, "idle": folded, "move": flying,
+                                   "notice": folded, "react": flying}, "npc_gulls", name="Npc2Draw",
+                       slot="npc2", look="npc2Look", entry="away")
 
 
 # ====================================================================== deepSpace: the alien
@@ -1007,6 +1052,18 @@ def deep_space_alien(sc: Scene, content: list[El], hits: list[El]) -> None:
             eyes: {"scaleY": [(0, 1.0), (24, 1.0, "hold"), (25, 0.25), (29, 1.0), (n, 1.0)]},
         })
         npc_layer(sc, anims)
+        # M12 ruling 7 (lane Q): the v10 alien and the M8 one switch on their own layer in 0 ms; `away` keeps
+        # its 200 ms fade through a wrapper at identity around both (keyed 0 in away, 1 elsewhere)
+        with sc.minting(own_m12(sc)):
+            at = ufo.children.index(npc)
+            assert ufo.children[at + 1] is old
+            shown = sc.d("Node", npc, old, x=0.0, y=0.0, name="AlienShown")
+            ufo.children[at:at + 2] = [shown]
+            for k, a in anims.items():
+                for x in (a if isinstance(a, list) else [a]):
+                    x.children.append(sc.T(shown, opacity=[(0, 0.0 if k == "away" else 1.0)]))
+            draw_layer(sc, anims, {"away": old, "rest": old, "idle": npc, "move": npc, "notice": npc,
+                                   "react": npc}, "npc_alien")
 
 
 def _npc_paths() -> dict[str, tuple[str, str, tuple[float, float], tuple[float, float]]]:
