@@ -195,8 +195,13 @@ Future<Map<String, Object?>> _measure(String label, QualityTier tier) async {
   final double over166 = FrameStats.shareOver(worst, 16.6);
   final double buildP95 = FrameStats.p95Ms(build);
   final double rasterP95 = FrameStats.p95Ms(raster);
+  // A pass that drew fewer than 20 frames a second measured nothing (macOS
+  // stops drawing an occluded window; the stage always animates): invalid,
+  // never a pass (M11 Task 10).
+  final bool valid = frames.length >= _seconds * 20;
   final Map<String, Object?> result = <String, Object?>{
     'frames': frames.length,
+    'valid': valid,
     'budget_ms': budget,
     'build_p50': _round(FrameStats.percentileMs(build, 0.50)),
     'build_p95': _round(buildP95),
@@ -208,14 +213,9 @@ Future<Map<String, Object?>> _measure(String label, QualityTier tier) async {
     'worst_p95': _round(worstP95),
     'worst_p99': _round(FrameStats.percentileMs(worst, 0.99)),
     'over_budget_share': _round(overShare, 4),
-    'pass':
-        frames.isNotEmpty && worstP95 <= budget && overShare <= _maxOverShare,
+    'pass': valid && worstP95 <= budget && overShare <= _maxOverShare,
     'over_16_6_share': _round(over166, 4),
-    'm6_pass':
-        frames.isNotEmpty &&
-        over166 <= 0.01 &&
-        buildP95 <= 14 &&
-        rasterP95 <= 14,
+    'm6_pass': valid && over166 <= 0.01 && buildP95 <= 14 && rasterP95 <= 14,
   };
   // ignore: avoid_print
   print('FRAME_COST $label ${tier.name} ${jsonEncode(result)}');
