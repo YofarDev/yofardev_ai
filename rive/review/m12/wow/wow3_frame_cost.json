@@ -1,0 +1,9 @@
+{
+ "frames": 1379,
+ "build_p50": 2.57,
+ "build_p95": 7.43,
+ "raster_p50": 0.8,
+ "raster_p95": 1.13,
+ "over_16_6_share": 0.0058,
+ "note": "macOS desktop (debug build, Skia; not a device tier)"
+}

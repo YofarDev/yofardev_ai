@@ -1093,6 +1093,34 @@ def blank_frame(a: np.ndarray) -> bool:
     return bool(a.std() < 5 or band.std() < 5 or band.mean() < 6)
 
 
+FROZEN_MAX_MS = 500
+
+
+def frozen_stretch(wow_dir: Path, frames: list[dict], size: tuple[int, int]) -> tuple[float, float]:
+    """(longest ms, its start ms) over which consecutive captures are byte-identical. A live stage is
+    never still (idle life, loops, flicker); macOS stops rendering a covered window and the grabber then
+    keeps writing the same frame (M12 execution: a frozen wow1 run held the resting face and passed)."""
+    longest, at, start, prev = 0.0, 0.0, None, None
+    w, h = size
+    for f in frames:
+        raw = (wow_dir / "frames" / f"{f['i']:04d}.rgba").read_bytes()[: w * h * 4]
+        if prev is not None and raw == prev[1]:
+            start = prev[0] if start is None else start
+            if f["ms"] - start > longest:
+                longest, at = f["ms"] - start, start
+        else:
+            start = None
+        prev = (f["ms"], raw)
+    return longest, at
+
+
+def gate_frozen(wow_dir: Path, frames: list[dict], size: tuple[int, int]) -> str:
+    longest, at = frozen_stretch(wow_dir, frames, size)
+    where = f" from {at / 1000:.1f} s" if longest else ""
+    return _line(f"no frozen stretch: longest run of identical frames {longest:.0f} ms{where} "
+                 f"(want < {FROZEN_MAX_MS} ms; a covered window stops rendering)", longest < FROZEN_MAX_MS)
+
+
 def beats(tl: dict) -> list[tuple[str, float, float]]:
     """(label, ms, zoom) of the storyboard beats found in the timeline."""
     s, ev = tl["samples"], tl["events"]
@@ -1441,12 +1469,16 @@ def main(argv: list[str]) -> int:
             empty.append(f["i"])
     gates.append(_line(f"every frame non-empty ({len(empty)} blank or near-black on the stage"
                        f"{': ' + ', '.join(map(str, empty[:10])) if empty else ''})", not empty))
+    if tl.get("tier") and _kind(tl) in M12_FINAL_RUNS:
+        gates.append(gate_frozen(wow_dir, tl["frames"], size))
     if _kind(tl) in M10_KINDS:
         return main_m10(wow_dir, out, tl, size, gates)
     try:
         if _kind(tl) == "wow1":
             ok, share = front_visible(wow_dir, size)
             if tl.get("tier") == "low":
+                if not ((wow_dir / "wet.rgba").exists() and (wow_dir / "dry.rgba").exists()):
+                    raise ValueError("wet.rgba / dry.rgba missing: the no-front gate cannot be read")
                 # M12 ruling 12: low never creates the front, so the hoodie stays dry
                 gates += [g.replace("front rain drawn over the avatar (wet vs dry frame, avatar box)",
                                     f"low tier: no front over the avatar (wet / dry median luminance inside the "

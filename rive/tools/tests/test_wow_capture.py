@@ -658,3 +658,20 @@ def test_m12_final_window_keeps_the_last_beat_within_12_s(monkeypatch) -> None:
     assert (t0, t1) == (9500.0, 21500.0) and t1 - t0 <= wc.REEL_MAX_S * 1000
     monkeypatch.setattr(wc, "beats", lambda _: [("b", 39000.0, 1.0)])
     assert wc.final_window(tl)[1] == 39900   # never past the last frame
+
+
+def test_m12_frozen_stretch_gate(tmp_path: Path) -> None:
+    """M12 execution: a window macOS stops rendering keeps the grabber writing the same frame; the gates
+    must fail on it (a frozen run kept the resting brows and passed the question's brow gate)."""
+    size = (4, 4)
+    (tmp_path / "frames").mkdir()
+    frames = []
+    for i in range(20):
+        # frames 5..14 repeat frame 5: a 900 ms freeze at 100 ms a frame
+        level = 5 if 5 <= i <= 14 else i
+        (tmp_path / "frames" / f"{i:04d}.rgba").write_bytes(bytes([level * 10] * (size[0] * size[1] * 4)))
+        frames.append({"i": i, "ms": i * 100})
+    longest, at = wc.frozen_stretch(tmp_path, frames, size)
+    assert (longest, at) == (900, 500)
+    assert wc.gate_frozen(tmp_path, frames, size).endswith("FAIL")
+    assert wc.gate_frozen(tmp_path, frames[:6] + frames[15:], size).endswith("ok")

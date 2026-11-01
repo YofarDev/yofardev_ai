@@ -1,0 +1,13 @@
+every frame non-empty (0 blank or near-black on the stage): ok
+no frozen stretch: longest run of identical frames 0 ms (want < 500 ms; a covered window stops rendering): ok
+captured frames: 283: ok
+network attempts during the run: 0: ok
+camera cuts only at sentence starts: 1 of 1 (shots seen: closeUp, medium, wide): ok
+campfire at rain 1 in every sample (565): ok
+listening lean while the user types: max 0.60 (want > 0.3): ok
+inhale before the first audio: breath max 1.00 in the 400 ms before it (want > 0.5): ok
+lip closures while speaking: 11 for 9 p/b/m words (want >= 6.3): ok
+brows up at the question's end: inner + outer max 1.83 in its last 600 ms (want >= 0.3): ok
+front rain drawn over the avatar (rain mist: wet / dry median luminance inside the hoodie 0.948, want <= 0.97): ok
+wow1.mp4: 12.0 s at 12 fps, 486 px wide, with sound, 1118480 B (want <= 12 s, <= 720 px): ok
+frame cost (macOS desktop, not a tier): build P95 6.56 ms, raster P95 1.11 ms, over 16.6 ms 0.3%: info
