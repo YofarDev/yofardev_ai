@@ -1084,6 +1084,23 @@ def front_visible(wow_dir: Path, size: tuple[int, int]) -> tuple[bool, float]:
     return ratio <= 0.97, ratio
 
 
+def wet_dry_live(wow_dir: Path, size: tuple[int, int]) -> float:
+    """The low-tier no-front gate's positive control (M12 review): the share of pixels that changed by more
+    than 24 between the wet and the dry grab in the stage's left third (scene only: the avatar stands in the
+    middle). The scene's own rain and loops always move it (wow1 at low: 0.063); two identical grabs (a
+    frozen window, a failed rain write) give 0, which the hoodie ratio alone would read as "no front"."""
+    a = np.asarray(load_frame(wow_dir / "wet.rgba", size)).astype(int)
+    b = np.asarray(load_frame(wow_dir / "dry.rgba", size)).astype(int)
+    if blank_frame(a) or blank_frame(b):
+        return 0.0
+    h, w = a.shape[:2]
+    strip = (slice(int(h * 0.12), int(h * 0.72)), slice(0, int(w * 0.3)))
+    return float((np.abs(a[strip] - b[strip]).max(axis=-1) > 24).mean())
+
+
+WET_DRY_LIVE_MIN = 0.02
+
+
 def blank_frame(a: np.ndarray) -> bool:
     """A frame with nothing on it: uniform (std < 5), or (M9) a near-black stage: the band between the top
     chips and the composer (rows 12-72 %) uniform or darker than mean 6 (the chrome alone keeps a black
@@ -1145,7 +1162,7 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
                 ("3 named: it notices", first_state("notice", send["ms"] if send else 0) + 300, 1.0),
                 ("4 the avatar is sad: the cat walks over", moving[len(moving) // 2]["ms"] if moving else rug, 1.0),
                 ("5 by the avatar on the rug", min(rug + 800, tl["frames"][-1]["ms"]), 1.0)]
-    if tl["wow"] in ("wow3", "tour"):
+    if kind in ("wow3", "tour"):
         out: list[tuple[str, float, float]] = []
         runs = journeys(s)
         if _kind(tl) == "wow3":
@@ -1382,10 +1399,12 @@ def write_final(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> tu
     where they played. Returns (seconds, width)."""
     t0, t1 = final_window(tl)
     frames = [f for f in tl["frames"] if t0 <= f["ms"] <= t1]
-    idx = resample(frames, FINAL_FPS)
+    idx = resample(frames, FINAL_FPS)[: int(REEL_MAX_S * FINAL_FPS)]
     width = min(REEL_MAX_W, size[0]) // 2 * 2
     if not idx:
         return 0.0, width
+    # the sound lines up with the first frame shown, which can land a grab interval after t0
+    t0 = frames[0]["ms"]
     with tempfile.TemporaryDirectory() as tmp:
         for k, i in enumerate(idx):
             load_frame(wow_dir / "frames" / f"{i:04d}.rgba", size).save(Path(tmp) / f"{k:05d}.png")
@@ -1484,6 +1503,10 @@ def main(argv: list[str]) -> int:
                                     f"low tier: no front over the avatar (wet / dry median luminance inside the "
                                     f"hoodie {share:.3f}, want > 0.97)")
                           for g in gates_wow1(tl, not ok)]
+                live = wet_dry_live(wow_dir, size)
+                gates.append(_line(f"low tier: the wet and dry grabs are live and differ outside the avatar ("
+                                   f"{live:.3f} of the stage's left third changed, want >= {WET_DRY_LIVE_MIN})",
+                                   live >= WET_DRY_LIVE_MIN))
             else:
                 gates += [g.replace("(wet vs dry frame, avatar box)",
                                     f"(rain mist: wet / dry median luminance inside the hoodie {share:.3f}, "
@@ -1491,15 +1514,15 @@ def main(argv: list[str]) -> int:
                           for g in gates_wow1(tl, ok)]
         elif _kind(tl) == "wow3":
             gates += gates_wow3(tl)
-        elif wow == "tour":
+        elif _kind(tl) == "tour":
             gates += gates_tour(tl)
-        elif wow == "npc":
+        elif _kind(tl) == "npc":
             gates += gates_npc(tl)
         elif _kind(tl) == "scene":
             gates += gates_scene(tl)
-        elif wow == "pairs":
+        elif _kind(tl) == "pairs":
             gates += gates_pairs(tl)
-        elif wow == "tour7":
+        elif _kind(tl) == "tour7":
             gates += gates_tour7(tl)
         elif _kind(tl) == "wow2":
             gates += gates_wow2(tl)
@@ -1517,8 +1540,11 @@ def main(argv: list[str]) -> int:
                 gates.append(_line(f"{wow}.mp4: {secs:.1f} s at {FINAL_FPS} fps, {width} px wide, with sound, "
                                    f"{mp4.stat().st_size if mp4.exists() else 0} B (want <= {REEL_MAX_S:.0f} s, "
                                    f"<= {REEL_MAX_W} px)", 0 < secs <= REEL_MAX_S and width <= REEL_MAX_W))
+            else:
+                # the final MP4 is the deliverable: without ffmpeg it is missing, not skipped
+                gates.append(_line(f"{wow}.mp4: ffmpeg not on PATH, the final MP4 was not written", False))
             beat_sheet(wow_dir, tl, size, out / f"{wow}_beats.png")
-    elif wow in M11_SHEET_RUNS or _kind(tl) == "scene":
+    elif _kind(tl) in M11_SHEET_RUNS or _kind(tl) == "scene":
         # M11 ruling 25: no GIF; one short silent reel (<= 12 s) and a WebP contact sheet
         if shutil.which("ffmpeg"):
             mp4 = out / f"{wow}.mp4"

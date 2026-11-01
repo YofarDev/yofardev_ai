@@ -44,15 +44,17 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
     out_dir = Path(argv[0])
+    skipped = 0
     for wow, (milestone, before) in EARLIER.items():
         after = out_dir / f"{wow}_beats.png"
         if not after.exists() or not before.exists():
             print(f"{wow}: skipped (missing {after if not after.exists() else before})")
+            skipped += 1
             continue
         out = out_dir / f"{wow}_then_now.webp"
         compare(before, after, (f"{wow} - {milestone}", f"{wow} - M12 (final re-shoot)"), out)
         print(f"{out.name} {out.stat().st_size} B")
-    return 0
+    return 1 if skipped else 0
 
 
 if __name__ == "__main__":

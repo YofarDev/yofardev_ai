@@ -9,3 +9,4 @@ inhale before the first audio: breath max 1.00 in the 400 ms before it (want > 0
 lip closures while speaking: 11 for 9 p/b/m words (want >= 6.3): ok
 brows up at the question's end: inner + outer max 1.84 in its last 600 ms (want >= 0.3): ok
 low tier: no front over the avatar (wet / dry median luminance inside the hoodie 1.000, want > 0.97): ok
+low tier: the wet and dry grabs are live and differ outside the avatar (0.063 of the stage's left third changed, want >= 0.02): ok

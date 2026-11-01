@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
+import numpy as np
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import wow_capture as wc  # noqa: E402
@@ -675,3 +677,18 @@ def test_m12_frozen_stretch_gate(tmp_path: Path) -> None:
     assert (longest, at) == (900, 500)
     assert wc.gate_frozen(tmp_path, frames, size).endswith("FAIL")
     assert wc.gate_frozen(tmp_path, frames[:6] + frames[15:], size).endswith("ok")
+
+
+def test_m12_low_no_front_gate_needs_live_grabs(tmp_path: Path) -> None:
+    """M12 review: wet / dry grabs that are identical read as "no front" (ratio 1.0); the positive control
+    must fail them, and pass grabs whose scene (left third) changed."""
+    size = (40, 40)
+    rng = np.random.default_rng(1)
+    dry = rng.integers(40, 200, (size[1], size[0], 4), dtype=np.uint8)
+    (tmp_path / "dry.rgba").write_bytes(dry.tobytes())
+    (tmp_path / "wet.rgba").write_bytes(dry.tobytes())
+    assert wc.wet_dry_live(tmp_path, size) == 0.0
+    wet = dry.copy()
+    wet[:, :12, :3] = 255 - wet[:, :12, :3]
+    (tmp_path / "wet.rgba").write_bytes(wet.tobytes())
+    assert wc.wet_dry_live(tmp_path, size) >= wc.WET_DRY_LIVE_MIN
