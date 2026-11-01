@@ -778,6 +778,13 @@ void main() {
               reason: '$sceneId SceneFront $name',
             );
           }
+          // v14: the front's own view-model instance carries the tier too
+          // (the app writes it there; its splash halves are tier-gated).
+          expect(
+            frontVmi.enumerator(AvatarRiveContract.scenePropTier)?.value,
+            AvatarRiveContract.tierDefault,
+            reason: '$sceneId SceneFront tier',
+          );
           frontVmi.dispose();
           frontController.dispose();
           front.dispose();

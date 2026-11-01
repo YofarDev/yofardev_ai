@@ -221,6 +221,9 @@ class _RiveSceneViewState extends State<RiveSceneView>
   final SceneSeasonFollower _season = SceneSeasonFollower();
   final SceneFrontFollower _front = SceneFrontFollower();
   final SceneTierFollower _tier = SceneTierFollower();
+  // `SceneFront` has its own view-model instance: its tier-gated front FX
+  // (splash halves) read their own `tier` (M11 whole-branch review).
+  final SceneTierFollower _frontTier = SceneTierFollower();
   ValueListenable<double>? _frontRainSource;
   bool _hasFront = false;
   RiveWidgetController? _frontController;
@@ -261,6 +264,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _sky.follow(widget.moonPhase, widget.festive);
     _season.follow(widget.spring, widget.autumn);
     _tier.follow(widget.tier);
+    _frontTier.follow(widget.tier);
     widget.tier?.addListener(_onTier);
     _followFrontRain();
     _syncDrags();
@@ -412,6 +416,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     final RiveVmBinding binding = RiveVmBinding(controller);
     _front.attach(binding.setNumber, rain: rain, parallax: _shownParallax);
     _frontFog.load(binding.setNumber);
+    _frontTier.load(binding.setEnum);
     apply(() {
       _frontController = controller;
       _frontBinding = binding;
@@ -421,6 +426,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
   void _teardownFront() {
     _front.detach();
     _frontFog.unload();
+    _frontTier.unload();
     _frontBinding?.dispose();
     _frontController?.dispose();
     _frontBinding = null;
@@ -534,6 +540,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
       oldWidget.tier?.removeListener(_onTier);
       widget.tier?.addListener(_onTier);
       _tier.follow(widget.tier);
+      _frontTier.follow(widget.tier);
       _syncParallaxActive();
       _scheduleParallaxWrite();
       _syncFront(rebuild: false);
@@ -590,6 +597,7 @@ class _RiveSceneViewState extends State<RiveSceneView>
     _season.dispose();
     widget.tier?.removeListener(_onTier);
     _tier.dispose();
+    _frontTier.dispose();
     _frontRainSource?.removeListener(_syncFront);
     unawaited(_parallaxSub?.cancel());
     widget.parallax?.active = false;
