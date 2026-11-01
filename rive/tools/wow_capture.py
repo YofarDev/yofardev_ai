@@ -1106,7 +1106,7 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
         return beats_m10(tl)
     if kind in ("scene", "pairs", "tour7"):
         return beats_m9(tl)
-    if tl["wow"] == "npc":
+    if _kind(tl) == "npc":
         def first_state(state: str, after: float = 0) -> float:
             return next((x["ms"] for x in s if x["npc"] == state and x["ms"] >= after), s[-1]["ms"])
         poke, send = _first(ev, "poke"), _first(ev, "send")
@@ -1120,7 +1120,7 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
     if tl["wow"] in ("wow3", "tour"):
         out: list[tuple[str, float, float]] = []
         runs = journeys(s)
-        if tl["wow"] == "wow3":
+        if _kind(tl) == "wow3":
             send = _first(ev, "send")
             out.append(("1 the user asks", send["ms"] - 300, 1.0))
         for k, run in enumerate(runs):
@@ -1128,7 +1128,7 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
                 xs = [x for x in run if x["journey"] == phase]
                 return xs[min(len(xs) - 1, int(frac * len(xs)))]["ms"] if xs else run[0]["ms"]
             tag = f"{run[0]['family']} → {run[-1]['scene']}"
-            if tl["wow"] == "wow3":
+            if _kind(tl) == "wow3":
                 grabbed = any(x["journey"] == "grab" for x in run)
                 out += [("2 wide: the camera pulls back", at("open"), 1.0),
                         ("3 grabs the jacket from the peg" if grabbed else "3 the door opens, gaze leads",
@@ -1144,7 +1144,7 @@ def beats(tl: dict) -> list[tuple[str, float, float]]:
                 out += [(f"{2 * k + 1} {tag}: walks out", at("exit", 0.5), 1.0),
                         (f"{2 * k + 2} {tag}: walks in", at("enter", 0.5), 1.0)]
         return out
-    if tl["wow"] == "wow1":
+    if _kind(tl) == "wow1":
         typing, send = _first(ev, "typing"), _first(ev, "send")
         lean = max(_between(s, typing["ms"], send["ms"] + 300), key=lambda x: x["lean"])
         pre = max(_between(s, start["ms"] - 400, start["ms"] + 100), key=lambda x: x["breath"])
@@ -1335,6 +1335,55 @@ def write_mp4(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> None
         subprocess.run(cmd, check=True)
 
 
+# M12 (rulings 10-12): the final re-shoot of the three wows, run with a forced `TIER`
+M12_FINAL_RUNS = {"wow1", "wow2", "wow3"}
+FINAL_FPS = 12
+
+
+def final_window(tl: dict) -> tuple[float, float]:
+    """The M12 cut (<= 12 s): from just before the user types to 1.5 s after the last beat; when that is
+    longer than 12 s, the start moves later so every beat after it, and the last, stay in."""
+    start = gif_start(tl)
+    last = max(ms for _, ms, _ in beats(tl))
+    end = min(tl["frames"][-1]["ms"], last + 1500)
+    return max(start, end - REEL_MAX_S * 1000), end
+
+
+def write_final(wow_dir: Path, tl: dict, size: tuple[int, int], out: Path) -> tuple[float, int]:
+    """The M12 MP4: the `final_window` at 12 fps, <= 720 px wide, with the sentence WAVs and the foley muxed
+    where they played. Returns (seconds, width)."""
+    t0, t1 = final_window(tl)
+    frames = [f for f in tl["frames"] if t0 <= f["ms"] <= t1]
+    idx = resample(frames, FINAL_FPS)
+    width = min(REEL_MAX_W, size[0]) // 2 * 2
+    if not idx:
+        return 0.0, width
+    with tempfile.TemporaryDirectory() as tmp:
+        for k, i in enumerate(idx):
+            load_frame(wow_dir / "frames" / f"{i:04d}.rgba", size).save(Path(tmp) / f"{k:05d}.png")
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(FINAL_FPS), "-i", f"{tmp}/%05d.png"]
+        clips = [(f, int(ms)) for f, ms in audio_offsets(tl["events"], tl["audio"], t0) +
+                 foley_offsets(tl["events"], t0) if ms < t1 - t0]
+        for f, _ in clips:
+            cmd += ["-i", f]
+        vf = f"[0:v]scale={width}:-2,format=yuv420p[v]"
+        if clips:
+            # a clip that started before the cut is trimmed to the cut's start
+            parts = []
+            for k, (_, ms) in enumerate(clips):
+                trim = f"atrim=start={-ms / 1000:.3f}," if ms < 0 else ""
+                parts.append(f"[{k + 1}:a]{trim}asetpts=PTS-STARTPTS,adelay={max(0, ms)}|{max(0, ms)}[a{k}]")
+            mix = "".join(f"[a{k}]" for k in range(len(clips))) + \
+                f"amix=inputs={len(clips)}:normalize=0,apad[a]"
+            cmd += ["-filter_complex", f"{vf};{';'.join(parts)};{mix}", "-map", "[v]", "-map", "[a]", "-shortest",
+                    "-c:a", "aac", "-b:a", "96k"]
+        else:
+            cmd += ["-filter_complex", vf, "-map", "[v]"]
+        cmd += ["-c:v", "libx264", "-crf", "24", "-pix_fmt", "yuv420p", str(out)]
+        subprocess.run(cmd, check=True)
+    return len(idx) / FINAL_FPS, width
+
+
 def frame_cost(timing_dir: Path) -> dict | None:
     p = timing_dir / "timeline.json"
     if not p.exists():
@@ -1395,13 +1444,20 @@ def main(argv: list[str]) -> int:
     if _kind(tl) in M10_KINDS:
         return main_m10(wow_dir, out, tl, size, gates)
     try:
-        if wow == "wow1":
+        if _kind(tl) == "wow1":
             ok, share = front_visible(wow_dir, size)
-            gates += [g.replace("(wet vs dry frame, avatar box)",
-                                f"(rain mist: wet / dry median luminance inside the hoodie {share:.3f}, "
-                                f"want <= 0.97)")
-                      for g in gates_wow1(tl, ok)]
-        elif wow == "wow3":
+            if tl.get("tier") == "low":
+                # M12 ruling 12: low never creates the front, so the hoodie stays dry
+                gates += [g.replace("front rain drawn over the avatar (wet vs dry frame, avatar box)",
+                                    f"low tier: no front over the avatar (wet / dry median luminance inside the "
+                                    f"hoodie {share:.3f}, want > 0.97)")
+                          for g in gates_wow1(tl, not ok)]
+            else:
+                gates += [g.replace("(wet vs dry frame, avatar box)",
+                                    f"(rain mist: wet / dry median luminance inside the hoodie {share:.3f}, "
+                                    f"want <= 0.97)")
+                          for g in gates_wow1(tl, ok)]
+        elif _kind(tl) == "wow3":
             gates += gates_wow3(tl)
         elif wow == "tour":
             gates += gates_tour(tl)
@@ -1413,12 +1469,24 @@ def main(argv: list[str]) -> int:
             gates += gates_pairs(tl)
         elif wow == "tour7":
             gates += gates_tour7(tl)
-        else:
+        elif _kind(tl) == "wow2":
             gates += gates_wow2(tl)
+        else:
+            raise ValueError(f"no gates for run kind {_kind(tl)}")
     except (TypeError, ValueError, IndexError, KeyError, AttributeError) as e:
         # an event or a sample the gates need is missing: a verdict, not a crash
         gates.append(_line(f"timeline incomplete ({type(e).__name__}: {e})", False))
-    if wow in M11_SHEET_RUNS or _kind(tl) == "scene":
+    if tl.get("tier") and _kind(tl) in M12_FINAL_RUNS:
+        # M12 rulings 10, 12: no GIF; a tier other than ultra is gates only
+        if tl["tier"] == "ultra":
+            if shutil.which("ffmpeg"):
+                mp4 = out / f"{wow}.mp4"
+                secs, width = write_final(wow_dir, tl, size, mp4)
+                gates.append(_line(f"{wow}.mp4: {secs:.1f} s at {FINAL_FPS} fps, {width} px wide, with sound, "
+                                   f"{mp4.stat().st_size if mp4.exists() else 0} B (want <= {REEL_MAX_S:.0f} s, "
+                                   f"<= {REEL_MAX_W} px)", 0 < secs <= REEL_MAX_S and width <= REEL_MAX_W))
+            beat_sheet(wow_dir, tl, size, out / f"{wow}_beats.png")
+    elif wow in M11_SHEET_RUNS or _kind(tl) == "scene":
         # M11 ruling 25: no GIF; one short silent reel (<= 12 s) and a WebP contact sheet
         if shutil.which("ffmpeg"):
             mp4 = out / f"{wow}.mp4"

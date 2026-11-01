@@ -644,3 +644,17 @@ def test_drag_gates_read_the_v14_handles_own_numbers() -> None:
     g = wc.drag_gates(_drag_tl("ladder", "aim", "ladder", during, after))
     assert all(x.endswith("ok") for x in g) and any("ladder holds" in x for x in g), g
     assert wc.PULL_ACTIONS["chain"] == {"whistle"}
+
+
+def test_m12_final_window_keeps_the_last_beat_within_12_s(monkeypatch) -> None:
+    """M12 ruling 10: the cut starts just before the typing, unless that makes it longer than 12 s; then
+    it starts later and still ends 1.5 s after the last beat."""
+    tl = {"frames": [{"i": i, "ms": i * 100} for i in range(400)], "events": [], "wow": "wow1"}
+    monkeypatch.setattr(wc, "gif_start", lambda _: 1000.0)
+    monkeypatch.setattr(wc, "beats", lambda _: [("a", 2000.0, 1.0), ("b", 8000.0, 1.0)])
+    assert wc.final_window(tl) == (1000.0, 9500.0)
+    monkeypatch.setattr(wc, "beats", lambda _: [("a", 2000.0, 1.0), ("b", 20000.0, 1.0)])
+    t0, t1 = wc.final_window(tl)
+    assert (t0, t1) == (9500.0, 21500.0) and t1 - t0 <= wc.REEL_MAX_S * 1000
+    monkeypatch.setattr(wc, "beats", lambda _: [("b", 39000.0, 1.0)])
+    assert wc.final_window(tl)[1] == 39900   # never past the last frame

@@ -29,6 +29,7 @@ import 'package:yofardev_ai/core/services/agent/avatar_tool.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/foley_service.dart';
 import 'package:yofardev_ai/core/services/llm/fake_llm_service.dart';
+import 'package:yofardev_ai/core/services/quality/quality_tier_service.dart';
 import 'package:yofardev_ai/core/services/world/tablet_weather_source.dart';
 import 'package:yofardev_ai/core/services/world/world_state_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
@@ -95,6 +96,11 @@ const String _sceneArg = String.fromEnvironment(
   defaultValue: 'livingRoom',
 );
 const bool _capture = bool.fromEnvironment('CAPTURE', defaultValue: true);
+
+/// M12 (rulings 11–12): `TIER=ultra|high|low` forces the quality tier for the
+/// run (`QualityTierService.forceTier`); empty (the default) leaves the app's
+/// own tier, as before M12. A tier other than ultra suffixes the run name.
+const String _tierArg = String.fromEnvironment('TIER');
 
 /// M9 `scene`: what the run says and pokes in one scene.
 class _SceneRun {
@@ -430,10 +436,12 @@ _Script _captionScript() => _turnScript(captionsOn: true, <_Turn>[
 ]);
 
 final Map<String, _Script> _scripts = <String, _Script>{
-  // Campfire at night, raining (world sync is M7–M9: the harness sets it).
+  // Campfire at night, raining (world sync is M7–M9: the harness sets it;
+  // M12 ruling 11: the clock is pinned to the night).
   'wow1': _Script(
     scene: AvatarScene.campfire,
     rain: 1,
+    clock: (hour: 22, minute: 0),
     user: 'Can you tell me a story by the fire?',
     responses: <FakeLlmResponse>[
       FakeLlmResponse(
@@ -768,7 +776,13 @@ void main() {
       IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   binding.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
 
-  final String runName = _wow == 'scene' ? 'scene_$_sceneArg' : _wow;
+  final String baseName = _wow == 'scene' ? 'scene_$_sceneArg' : _wow;
+  final QualityTier? forcedTier = _tierArg.isEmpty
+      ? null
+      : QualityTier.values.byName(_tierArg);
+  final String runName = forcedTier == null || forcedTier == QualityTier.ultra
+      ? baseName
+      : '${baseName}_${forcedTier.name}';
 
   testWidgets(
     'wow capture: $runName',
@@ -860,7 +874,6 @@ void main() {
           : AvatarConfig(background: script.scene);
       await chat.updateAvatarOpenedChat(start);
       avatar.onNewAvatarConfig(chat.state.currentChat.id, start);
-      world.setRain(script.rain);
       final ({int hour, int minute})? pinned = script.clock;
       final DateTime? pinnedAt = script.pinnedAt;
       if (pinned != null || pinnedAt != null) {
@@ -876,6 +889,13 @@ void main() {
         );
         world.pinClock(pinnedAt ?? at(pinned!.hour, pinned.minute));
         addTearDown(() => world.pinClock(null));
+      }
+      // After the clock: `applyWeather` sets the rain from its report.
+      world.setRain(script.rain);
+      if (forcedTier != null) {
+        final QualityTierService quality = getIt<QualityTierService>();
+        quality.forceTier(forcedTier);
+        addTearDown(() => quality.forceTier(null));
       }
       await _settle(tester, const Duration(seconds: 4));
       expect(avatar.state.scene, script.scene);
@@ -1376,6 +1396,7 @@ void main() {
         'wow': runName,
         'kind': _wow,
         'capture': _capture,
+        'tier': forcedTier?.name,
         'scene': script.scene.name,
         'rain': script.rain,
         'tour': <String>[for (final AvatarScene s in script.tour) s.name],
