@@ -355,6 +355,125 @@
           </StateTransition>
         </AnimationState>
       </StateMachineLayer>
+      <StateMachineLayer name="NpcDraw" id="0:880183">
+        <AnyState x="100" y="-100" id="0:880179">
+          <StateTransition stateToId="0:880113" duration="0" id="0:880124">
+            <TransitionViewModelCondition id="0:880123">
+              <TransitionPropertyViewModelComparator id="0:880121">
+                <BindablePropertyEnum id="0:880120">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880119"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930000" id="0:880122"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880115" duration="0" id="0:880130">
+            <TransitionViewModelCondition id="0:880129">
+              <TransitionPropertyViewModelComparator id="0:880127">
+                <BindablePropertyEnum id="0:880126">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880125"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930002" id="0:880128"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880116" duration="0" id="0:880136">
+            <TransitionViewModelCondition id="0:880135">
+              <TransitionPropertyViewModelComparator id="0:880133">
+                <BindablePropertyEnum id="0:880132">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880131"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930003" id="0:880134"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880117" duration="0" id="0:880142">
+            <TransitionViewModelCondition id="0:880141">
+              <TransitionPropertyViewModelComparator id="0:880139">
+                <BindablePropertyEnum id="0:880138">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880137"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930004" id="0:880140"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+          <StateTransition stateToId="0:880118" duration="0" id="0:880148">
+            <TransitionViewModelCondition id="0:880147">
+              <TransitionPropertyViewModelComparator id="0:880145">
+                <BindablePropertyEnum id="0:880144">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880143"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930005" id="0:880146"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnyState>
+        <ExitState x="500" y="-100" id="0:880180"/>
+        <EntryState x="-100" y="-100" id="0:880182">
+          <StateTransition stateToId="0:880114" id="0:880181"/>
+        </EntryState>
+        <AnimationState animationId="0:880077" x="0" y="220" id="0:880113">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880154">
+            <TransitionViewModelCondition id="0:880153">
+              <TransitionPropertyViewModelComparator id="0:880151">
+                <BindablePropertyEnum id="0:880150">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880149"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880152"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880084" x="160" y="340" id="0:880114"/>
+        <AnimationState animationId="0:880091" x="320" y="220" id="0:880115">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880160">
+            <TransitionViewModelCondition id="0:880159">
+              <TransitionPropertyViewModelComparator id="0:880157">
+                <BindablePropertyEnum id="0:880156">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880155"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880158"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880098" x="480" y="340" id="0:880116">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880166">
+            <TransitionViewModelCondition id="0:880165">
+              <TransitionPropertyViewModelComparator id="0:880163">
+                <BindablePropertyEnum id="0:880162">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880161"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880164"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880105" x="640" y="220" id="0:880117">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880172">
+            <TransitionViewModelCondition id="0:880171">
+              <TransitionPropertyViewModelComparator id="0:880169">
+                <BindablePropertyEnum id="0:880168">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880167"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880170"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+        <AnimationState animationId="0:880112" x="800" y="340" id="0:880118">
+          <StateTransition stateToId="0:880114" duration="0" id="0:880178">
+            <TransitionViewModelCondition id="0:880177">
+              <TransitionPropertyViewModelComparator id="0:880175">
+                <BindablePropertyEnum id="0:880174">
+                  <DataBindContext sourcePathIds="0:23-0:930009" propertyKey="637" id="0:880173"/>
+                </BindablePropertyEnum>
+              </TransitionPropertyViewModelComparator>
+              <TransitionValueEnumComparator value="0:930001" id="0:880176"/>
+            </TransitionViewModelCondition>
+          </StateTransition>
+        </AnimationState>
+      </StateMachineLayer>
     </StateMachine>
     <CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1" id="0:10"/>
     <CubicEaseInterpolator x1="0.15" y1="0" x2="0.25" y2="1" id="0:11"/>
@@ -1333,7 +1452,7 @@
         </Fill>
       </Shape>
       <Node x="0" y="0" name="emitDustMotes" id="0:6103">
-        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900043"/>
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900077"/>
         <Shape x="147.3787" y="974.6508" name="emitMote0" opacity="0" id="0:5687">
           <Ellipse width="4" height="4" name="Path" id="0:5686"/>
           <Fill name="Fill" id="0:5685">
@@ -2752,7 +2871,7 @@
         </Fill>
       </Shape>
       <Shape x="540" y="600" name="emitWindowSpill" id="0:4787">
-        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900040"/>
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900064"/>
         <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:4782">
           <StraightVertex x="232" y="460" id="0:4765"/>
           <StraightVertex x="-232" y="460" id="0:4766"/>
@@ -2867,6 +2986,7 @@
           </Fill>
         </Shape>
         <Shape x="0" y="0" name="CaseRTops" id="0:4693">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900073"/>
           <Rectangle width="25.3414" height="3" x="769.3992" y="141.7849" name="Path" id="0:4390"/>
           <Rectangle width="16.7972" height="3" x="803.4968" y="134.4226" name="Path" id="0:4394"/>
           <Rectangle width="23.2807" height="3" x="824.3199" y="131.9247" name="Path" id="0:4398"/>
@@ -2958,6 +3078,7 @@
           </Fill>
         </Shape>
         <Shape x="0" y="0" name="CaseRBands" id="0:4690">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900070"/>
           <Rectangle width="21.3414" height="3" x="769.3992" y="154.0191" name="Path" id="0:4391"/>
           <Rectangle width="21.3414" height="2" x="769.3992" y="160.5191" name="Path" id="0:4392"/>
           <Rectangle width="12.7972" height="3" x="803.4968" y="144.7817" name="Path" id="0:4395"/>
@@ -3281,6 +3402,7 @@
           </Fill>
         </Shape>
         <Shape x="0" y="0" name="CaseLTops" id="0:4324">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900074"/>
           <Rectangle width="29.8852" height="3" x="-34.7926" y="160.509" name="Path" id="0:4072"/>
           <Rectangle width="24.4159" height="3" x="-6.9989" y="159.9444" name="Path" id="0:4076"/>
           <Rectangle width="29.1715" height="3" x="20.7677" y="145.2307" name="Path" id="0:4080"/>
@@ -3351,6 +3473,7 @@
           </Fill>
         </Shape>
         <Shape x="0" y="0" name="CaseLBands" id="0:4321">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900071"/>
           <Rectangle width="25.8852" height="3" x="-34.7926" y="172.6585" name="Path" id="0:4073"/>
           <Rectangle width="25.8852" height="2" x="-34.7926" y="179.1585" name="Path" id="0:4074"/>
           <Rectangle width="20.4159" height="3" x="-6.9989" y="171.171" name="Path" id="0:4077"/>
@@ -4589,7 +4712,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="ShowerStreaksB" id="0:3873">
-          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900045"/>
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900079"/>
           <Shape x="405.2217" y="97.9262" name="ShowerStreak1_1" id="0:2773">
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:2772">
               <CubicDetachedVertex x="4.518" y="-28.2375" outRotation="1.7295" outDistance="19.0644" inRotation="4.871" inDistance="0" id="0:2770"/>
@@ -5699,7 +5822,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="GlassDripsB" id="0:1860">
-          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900044"/>
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900078"/>
           <Shape x="674.397" y="-2.9247" name="GlassDrop1_1" id="0:1542">
             <Ellipse width="5" height="7" name="Path" id="0:1541"/>
             <Fill name="Fill" id="0:1540">
@@ -6577,7 +6700,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="GlassStreaksB" id="0:2699">
-          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900042"/>
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900076"/>
           <Shape x="659.5787" y="28.0878" name="GlassStreak1_1" id="0:1905">
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:1904">
               <CubicDetachedVertex x="2.7326" y="-17.0787" outRotation="1.7295" outDistance="11.5306" inRotation="4.871" inDistance="0" id="0:1902"/>
@@ -7235,7 +7358,7 @@
         </Shape>
       </Node>
       <Shape x="540" y="600" name="GlassSheen" id="0:1489">
-        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900041"/>
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900066"/>
         <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:1482">
           <StraightVertex x="140" y="394" id="0:1465"/>
           <StraightVertex x="-140" y="394" id="0:1466"/>
@@ -7309,9 +7432,9 @@
             </GradientStop>
           </LinearGradient>
         </Fill>
-        <Shape x="0" y="0" name="TierFogFills0" id="0:900049">
-          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900047"/>
-          <Rectangle width="1200" height="1280" originX="0" originY="0" name="Path" id="0:900048"/>
+        <Shape x="0" y="0" name="TierFogFills0" id="0:900083">
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900081"/>
+          <Rectangle width="1200" height="1280" originX="0" originY="0" name="Path" id="0:900082"/>
           <Fill name="Fill" id="0:990060">
             <LinearGradient startX="0" startY="0" endX="0" endY="260" id="0:990059">
               <GradientStop colorValue="00706A78" position="0" id="0:990056"/>
@@ -8149,7 +8272,7 @@
           </Shape>
         </Node>
         <Node x="0" y="0" name="ViewRainB" id="0:1375">
-          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900046"/>
+          <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900025" id="0:900080"/>
           <Shape x="531.8923" y="44.6632" name="ViewStreak1_1" id="0:359">
             <PointsPath isClosed="false" isClockwise="false" name="Path" id="0:358">
               <CubicDetachedVertex x="3.7858" y="-21.032" outRotation="1.7489" outDistance="14.2467" inRotation="4.8905" inDistance="0" id="0:356"/>
@@ -9002,36 +9125,42 @@
         </Fill>
       </Shape>
       <Shape x="400.5" y="906" name="emitLitWin0" id="0:255">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900075"/>
         <Rectangle width="9" height="12" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:254"/>
         <Fill name="Fill" id="0:253">
           <SolidColor colorValue="FFE8BC6A" name="emit" id="0:252"/>
         </Fill>
       </Shape>
       <Shape x="428.5" y="928" name="emitLitWin1" id="0:259">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900072"/>
         <Rectangle width="9" height="12" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:258"/>
         <Fill name="Fill" id="0:257">
           <SolidColor colorValue="FFE8BC6A" name="emit" id="0:256"/>
         </Fill>
       </Shape>
       <Shape x="514" y="889.5" name="emitLitWin2" id="0:263">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900069"/>
         <Rectangle width="8" height="11" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:262"/>
         <Fill name="Fill" id="0:261">
           <SolidColor colorValue="FFE8BC6A" name="emit" id="0:260"/>
         </Fill>
       </Shape>
       <Shape x="608.5" y="906" name="emitLitWin3" id="0:267">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900068"/>
         <Rectangle width="9" height="12" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:266"/>
         <Fill name="Fill" id="0:265">
           <SolidColor colorValue="FFE8BC6A" name="emit" id="0:264"/>
         </Fill>
       </Shape>
       <Shape x="654.5" y="876" name="emitLitWin4" id="0:271">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900067"/>
         <Rectangle width="9" height="12" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:270"/>
         <Fill name="Fill" id="0:269">
           <SolidColor colorValue="FFE8BC6A" name="emit" id="0:268"/>
         </Fill>
       </Shape>
       <Shape x="576.5" y="766" name="emitLitWin5" id="0:275">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900065"/>
         <Rectangle width="7" height="12" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:274"/>
         <Fill name="Fill" id="0:273">
           <SolidColor colorValue="FFE8BC6A" name="emit" id="0:272"/>
@@ -9221,7 +9350,7 @@
         </Shape>
       </Node>
       <Node x="0" y="0" name="Clouds" id="0:173">
-        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900039"/>
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900063"/>
         <Shape x="476.1003" y="420" name="Cloud0" id="0:136">
           <PointsPath isClosed="true" isClockwise="true" name="Path" id="0:135">
             <CubicDetachedVertex x="117.0997" y="0" outRotation="1.5708" outDistance="4.7108" inRotation="4.7124" inDistance="4.7108" id="0:121"/>
@@ -9286,78 +9415,114 @@
           </Fill>
         </Shape>
       </Node>
-      <Shape x="653.8998" y="477.9441" name="emitStar0" opacity="0.67" id="0:35">
-        <Ellipse width="2.4" height="2.4" name="Path" id="0:34"/>
-        <Fill name="Fill" id="0:33">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:32"/>
-        </Fill>
-      </Shape>
-      <Shape x="445.7532" y="272.7672" name="emitStar1" opacity="0.78" id="0:39">
-        <Ellipse width="2.4" height="2.4" name="Path" id="0:38"/>
-        <Fill name="Fill" id="0:37">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:36"/>
-        </Fill>
-      </Shape>
-      <Shape x="554.9376" y="441.0082" name="emitStar2" opacity="0.71" id="0:43">
-        <Ellipse width="3" height="3" name="Path" id="0:42"/>
-        <Fill name="Fill" id="0:41">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:40"/>
-        </Fill>
-      </Shape>
-      <Shape x="488.9547" y="374.6052" name="emitStar3" opacity="0.64" id="0:47">
-        <Ellipse width="3" height="3" name="Path" id="0:46"/>
-        <Fill name="Fill" id="0:45">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:44"/>
-        </Fill>
-      </Shape>
-      <Shape x="640.4414" y="431.4861" name="emitStar4" opacity="0.86" id="0:51">
-        <Ellipse width="3.6" height="3.6" name="Path" id="0:50"/>
-        <Fill name="Fill" id="0:49">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:48"/>
-        </Fill>
-      </Shape>
-      <Shape x="483.9651" y="492.904" name="emitStar5" opacity="0.87" id="0:55">
-        <Ellipse width="3.6" height="3.6" name="Path" id="0:54"/>
-        <Fill name="Fill" id="0:53">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:52"/>
-        </Fill>
-      </Shape>
-      <Shape x="599.3123" y="253.2096" name="emitStar6" opacity="0.58" id="0:59">
-        <Ellipse width="2.4" height="2.4" name="Path" id="0:58"/>
-        <Fill name="Fill" id="0:57">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:56"/>
-        </Fill>
-      </Shape>
-      <Shape x="592.2236" y="526.2025" name="emitStar7" opacity="0.58" id="0:63">
-        <Ellipse width="3" height="3" name="Path" id="0:62"/>
-        <Fill name="Fill" id="0:61">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:60"/>
-        </Fill>
-      </Shape>
-      <Shape x="504.5899" y="574.3684" name="emitStar8" opacity="0.91" id="0:67">
-        <Ellipse width="3" height="3" name="Path" id="0:66"/>
-        <Fill name="Fill" id="0:65">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:64"/>
-        </Fill>
-      </Shape>
-      <Shape x="660.1651" y="389.021" name="emitStar9" opacity="0.69" id="0:71">
-        <Ellipse width="2.4" height="2.4" name="Path" id="0:70"/>
-        <Fill name="Fill" id="0:69">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:68"/>
-        </Fill>
-      </Shape>
-      <Shape x="449.2908" y="595.1385" name="emitStar10" opacity="0.59" id="0:75">
-        <Ellipse width="3" height="3" name="Path" id="0:74"/>
-        <Fill name="Fill" id="0:73">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:72"/>
-        </Fill>
-      </Shape>
-      <Shape x="448.4953" y="462.678" name="emitStar11" opacity="0.61" id="0:79">
-        <Ellipse width="3" height="3" name="Path" id="0:78"/>
-        <Fill name="Fill" id="0:77">
-          <SolidColor colorValue="FFF0EEE4" name="emit" id="0:76"/>
-        </Fill>
-      </Shape>
+      <Node x="0" y="0" name="TierStar0" id="0:900062">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900061"/>
+        <Shape x="653.8998" y="477.9441" name="emitStar0" opacity="0.67" id="0:35">
+          <Ellipse width="2.4" height="2.4" name="Path" id="0:34"/>
+          <Fill name="Fill" id="0:33">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:32"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar1" id="0:900060">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900059"/>
+        <Shape x="445.7532" y="272.7672" name="emitStar1" opacity="0.78" id="0:39">
+          <Ellipse width="2.4" height="2.4" name="Path" id="0:38"/>
+          <Fill name="Fill" id="0:37">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:36"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar2" id="0:900058">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900057"/>
+        <Shape x="554.9376" y="441.0082" name="emitStar2" opacity="0.71" id="0:43">
+          <Ellipse width="3" height="3" name="Path" id="0:42"/>
+          <Fill name="Fill" id="0:41">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:40"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar3" id="0:900056">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900055"/>
+        <Shape x="488.9547" y="374.6052" name="emitStar3" opacity="0.64" id="0:47">
+          <Ellipse width="3" height="3" name="Path" id="0:46"/>
+          <Fill name="Fill" id="0:45">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:44"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar4" id="0:900054">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900053"/>
+        <Shape x="640.4414" y="431.4861" name="emitStar4" opacity="0.86" id="0:51">
+          <Ellipse width="3.6" height="3.6" name="Path" id="0:50"/>
+          <Fill name="Fill" id="0:49">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:48"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar5" id="0:900052">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900051"/>
+        <Shape x="483.9651" y="492.904" name="emitStar5" opacity="0.87" id="0:55">
+          <Ellipse width="3.6" height="3.6" name="Path" id="0:54"/>
+          <Fill name="Fill" id="0:53">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:52"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar6" id="0:900050">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900049"/>
+        <Shape x="599.3123" y="253.2096" name="emitStar6" opacity="0.58" id="0:59">
+          <Ellipse width="2.4" height="2.4" name="Path" id="0:58"/>
+          <Fill name="Fill" id="0:57">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:56"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar7" id="0:900048">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900047"/>
+        <Shape x="592.2236" y="526.2025" name="emitStar7" opacity="0.58" id="0:63">
+          <Ellipse width="3" height="3" name="Path" id="0:62"/>
+          <Fill name="Fill" id="0:61">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:60"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar8" id="0:900046">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900045"/>
+        <Shape x="504.5899" y="574.3684" name="emitStar8" opacity="0.91" id="0:67">
+          <Ellipse width="3" height="3" name="Path" id="0:66"/>
+          <Fill name="Fill" id="0:65">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:64"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar9" id="0:900044">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900043"/>
+        <Shape x="660.1651" y="389.021" name="emitStar9" opacity="0.69" id="0:71">
+          <Ellipse width="2.4" height="2.4" name="Path" id="0:70"/>
+          <Fill name="Fill" id="0:69">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:68"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar10" id="0:900042">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900041"/>
+        <Shape x="449.2908" y="595.1385" name="emitStar10" opacity="0.59" id="0:75">
+          <Ellipse width="3" height="3" name="Path" id="0:74"/>
+          <Fill name="Fill" id="0:73">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:72"/>
+          </Fill>
+        </Shape>
+      </Node>
+      <Node x="0" y="0" name="TierStar11" id="0:900040">
+        <DataBindContext sourcePathIds="0:23-0:900004" propertyKey="18" converterId="0:900038" id="0:900039"/>
+        <Shape x="448.4953" y="462.678" name="emitStar11" opacity="0.61" id="0:79">
+          <Ellipse width="3" height="3" name="Path" id="0:78"/>
+          <Fill name="Fill" id="0:77">
+            <SolidColor colorValue="FFF0EEE4" name="emit" id="0:76"/>
+          </Fill>
+        </Shape>
+      </Node>
       <Shape x="540" y="570" name="Sky" id="0:31">
         <Rectangle width="380" height="920" cornerRadiusTL="0" cornerRadiusTR="0" cornerRadiusBL="0" cornerRadiusBR="0" name="Path" id="0:30"/>
         <Fill name="Fill" id="0:29">
@@ -10497,11 +10662,6 @@
           <KeyFrameDouble frame="240" value="-82" interpolationType="cubic" interpolatorId="0:10" id="0:930533"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930089" id="0:930538">
-        <KeyedProperty property="opacity" id="0:930537">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930536"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930102" id="0:930541">
         <KeyedProperty property="rotation" id="0:930540">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930539"/>
@@ -10563,11 +10723,6 @@
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930573"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930220" id="0:930578">
-        <KeyedProperty property="opacity" id="0:930577">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930576"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930222" id="0:930581">
         <KeyedProperty property="opacity" id="0:930580">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930579"/>
@@ -10602,11 +10757,6 @@
         </KeyedProperty>
         <KeyedProperty property="y" id="0:930607">
           <KeyFrameDouble frame="0" value="-66" interpolationType="cubic" interpolatorId="0:10" id="0:930606"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:930089" id="0:930611">
-        <KeyedProperty property="opacity" id="0:930610">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930609"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:930102" id="0:930614">
@@ -10670,11 +10820,6 @@
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930646"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930220" id="0:930651">
-        <KeyedProperty property="opacity" id="0:930650">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930649"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930222" id="0:930654">
         <KeyedProperty property="opacity" id="0:930653">
           <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930652"/>
@@ -10709,11 +10854,6 @@
         </KeyedProperty>
         <KeyedProperty property="y" id="0:930672">
           <KeyFrameDouble frame="0" value="-66" interpolationType="cubic" interpolatorId="0:10" id="0:930671"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:930089" id="0:930676">
-        <KeyedProperty property="opacity" id="0:930675">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930674"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:930102" id="0:930703">
@@ -10841,11 +10981,6 @@
           <KeyFrameDouble frame="240" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930763"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930220" id="0:930768">
-        <KeyedProperty property="opacity" id="0:930767">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930766"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930222" id="0:930771">
         <KeyedProperty property="opacity" id="0:930770">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930769"/>
@@ -10880,11 +11015,6 @@
         </KeyedProperty>
         <KeyedProperty property="y" id="0:930801">
           <KeyFrameDouble frame="0" value="-66" interpolationType="cubic" interpolatorId="0:10" id="0:930800"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:930089" id="0:930805">
-        <KeyedProperty property="opacity" id="0:930804">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930803"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:930102" id="0:930808">
@@ -10987,11 +11117,6 @@
           <KeyFrameDouble frame="12" value="0.96" interpolationType="cubic" interpolatorId="0:10" id="0:930859"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930220" id="0:930864">
-        <KeyedProperty property="opacity" id="0:930863">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930862"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930222" id="0:930867">
         <KeyedProperty property="opacity" id="0:930866">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930865"/>
@@ -11026,11 +11151,6 @@
         </KeyedProperty>
         <KeyedProperty property="y" id="0:930905">
           <KeyFrameDouble frame="0" value="-66" interpolationType="cubic" interpolatorId="0:10" id="0:930904"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:930089" id="0:930909">
-        <KeyedProperty property="opacity" id="0:930908">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930907"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:930102" id="0:930919">
@@ -11115,11 +11235,6 @@
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930957"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930220" id="0:930962">
-        <KeyedProperty property="opacity" id="0:930961">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930960"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930222" id="0:930965">
         <KeyedProperty property="opacity" id="0:930964">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:930963"/>
@@ -11154,11 +11269,6 @@
         </KeyedProperty>
         <KeyedProperty property="y" id="0:930991">
           <KeyFrameDouble frame="0" value="-66" interpolationType="cubic" interpolatorId="0:10" id="0:930990"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:930089" id="0:930995">
-        <KeyedProperty property="opacity" id="0:930994">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:930993"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:930102" id="0:931005">
@@ -11243,11 +11353,6 @@
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931043"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930220" id="0:931048">
-        <KeyedProperty property="opacity" id="0:931047">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931046"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930222" id="0:931051">
         <KeyedProperty property="opacity" id="0:931050">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931049"/>
@@ -11282,11 +11387,6 @@
         </KeyedProperty>
         <KeyedProperty property="y" id="0:931077">
           <KeyFrameDouble frame="0" value="-66" interpolationType="cubic" interpolatorId="0:10" id="0:931076"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:930089" id="0:931081">
-        <KeyedProperty property="opacity" id="0:931080">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:931079"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:930102" id="0:931091">
@@ -11371,11 +11471,6 @@
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931129"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930220" id="0:931134">
-        <KeyedProperty property="opacity" id="0:931133">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931132"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930222" id="0:931137">
         <KeyedProperty property="opacity" id="0:931136">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931135"/>
@@ -11410,11 +11505,6 @@
         </KeyedProperty>
         <KeyedProperty property="y" id="0:931163">
           <KeyFrameDouble frame="0" value="-66" interpolationType="cubic" interpolatorId="0:10" id="0:931162"/>
-        </KeyedProperty>
-      </KeyedObject>
-      <KeyedObject objectId="0:930089" id="0:931167">
-        <KeyedProperty property="opacity" id="0:931166">
-          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:931165"/>
         </KeyedProperty>
       </KeyedObject>
       <KeyedObject objectId="0:930102" id="0:931170">
@@ -11523,14 +11613,81 @@
           <KeyFrameDouble frame="36" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931233"/>
         </KeyedProperty>
       </KeyedObject>
-      <KeyedObject objectId="0:930220" id="0:931238">
-        <KeyedProperty property="opacity" id="0:931237">
-          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931236"/>
-        </KeyedProperty>
-      </KeyedObject>
       <KeyedObject objectId="0:930222" id="0:931241">
         <KeyedProperty property="opacity" id="0:931240">
           <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:931239"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_mouse_draw_away" id="0:880077">
+      <KeyedObject objectId="0:930089" id="0:880073">
+        <KeyedProperty property="opacity" id="0:880072">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880071"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930220" id="0:880076">
+        <KeyedProperty property="opacity" id="0:880075">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880074"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_mouse_draw_rest" id="0:880084">
+      <KeyedObject objectId="0:930089" id="0:880080">
+        <KeyedProperty property="opacity" id="0:880079">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880078"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930220" id="0:880083">
+        <KeyedProperty property="opacity" id="0:880082">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880081"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_mouse_draw_idle" id="0:880091">
+      <KeyedObject objectId="0:930089" id="0:880087">
+        <KeyedProperty property="opacity" id="0:880086">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880085"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930220" id="0:880090">
+        <KeyedProperty property="opacity" id="0:880089">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880088"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_mouse_draw_move" id="0:880098">
+      <KeyedObject objectId="0:930089" id="0:880094">
+        <KeyedProperty property="opacity" id="0:880093">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880092"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930220" id="0:880097">
+        <KeyedProperty property="opacity" id="0:880096">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880095"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_mouse_draw_notice" id="0:880105">
+      <KeyedObject objectId="0:930089" id="0:880101">
+        <KeyedProperty property="opacity" id="0:880100">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880099"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930220" id="0:880104">
+        <KeyedProperty property="opacity" id="0:880103">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880102"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation duration="1" fps="60" name="npc_mouse_draw_react" id="0:880112">
+      <KeyedObject objectId="0:930089" id="0:880108">
+        <KeyedProperty property="opacity" id="0:880107">
+          <KeyFrameDouble frame="0" value="0" interpolationType="cubic" interpolatorId="0:10" id="0:880106"/>
+        </KeyedProperty>
+      </KeyedObject>
+      <KeyedObject objectId="0:930220" id="0:880111">
+        <KeyedProperty property="opacity" id="0:880110">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" interpolatorId="0:10" id="0:880109"/>
         </KeyedProperty>
       </KeyedObject>
     </LinearAnimation>
@@ -11746,31 +11903,83 @@
   </DataConverterFormula>
 
   <DataConverterFormula id="0:920451">
-    <FormulaTokenValue operationValue="11.667" id="0:920448"/>
-    <FormulaTokenOperation operationType="2" id="0:920449"/>
-    <FormulaTokenInput id="0:920450"/>
+    <FormulaTokenValue operationValue="11.667" id="0:880018"/>
+    <FormulaTokenOperation operationType="2" id="0:880019"/>
+    <FormulaTokenFunction functionType="1" id="0:880006"/>
+    <FormulaTokenValue operationValue="-1" id="0:880000"/>
+    <FormulaTokenArgumentSeparator id="0:880007"/>
+    <FormulaTokenFunction functionType="0" id="0:880003"/>
+    <FormulaTokenValue operationValue="0" id="0:880001"/>
+    <FormulaTokenArgumentSeparator id="0:880004"/>
+    <FormulaTokenInput id="0:880002"/>
+    <FormulaTokenParenthesisClose id="0:880005"/>
+    <FormulaTokenParenthesisClose id="0:880008"/>
+    <FormulaTokenOperation operationType="0" id="0:880020"/>
+    <FormulaTokenValue operationValue="7" id="0:880021"/>
+    <FormulaTokenOperation operationType="2" id="0:880022"/>
+    <FormulaTokenFunction functionType="0" id="0:880015"/>
+    <FormulaTokenValue operationValue="1" id="0:880009"/>
+    <FormulaTokenArgumentSeparator id="0:880016"/>
+    <FormulaTokenFunction functionType="1" id="0:880012"/>
+    <FormulaTokenValue operationValue="0" id="0:880010"/>
+    <FormulaTokenArgumentSeparator id="0:880013"/>
+    <FormulaTokenInput id="0:880011"/>
+    <FormulaTokenParenthesisClose id="0:880014"/>
+    <FormulaTokenParenthesisClose id="0:880017"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:920456">
-    <FormulaTokenValue operationValue="11.667" id="0:920453"/>
-    <FormulaTokenOperation operationType="2" id="0:920454"/>
-    <FormulaTokenInput id="0:920455"/>
+    <FormulaTokenValue operationValue="11.667" id="0:880041"/>
+    <FormulaTokenOperation operationType="2" id="0:880042"/>
+    <FormulaTokenFunction functionType="1" id="0:880029"/>
+    <FormulaTokenValue operationValue="-1" id="0:880023"/>
+    <FormulaTokenArgumentSeparator id="0:880030"/>
+    <FormulaTokenFunction functionType="0" id="0:880026"/>
+    <FormulaTokenValue operationValue="0" id="0:880024"/>
+    <FormulaTokenArgumentSeparator id="0:880027"/>
+    <FormulaTokenInput id="0:880025"/>
+    <FormulaTokenParenthesisClose id="0:880028"/>
+    <FormulaTokenParenthesisClose id="0:880031"/>
+    <FormulaTokenOperation operationType="0" id="0:880043"/>
+    <FormulaTokenValue operationValue="7" id="0:880044"/>
+    <FormulaTokenOperation operationType="2" id="0:880045"/>
+    <FormulaTokenFunction functionType="0" id="0:880038"/>
+    <FormulaTokenValue operationValue="1" id="0:880032"/>
+    <FormulaTokenArgumentSeparator id="0:880039"/>
+    <FormulaTokenFunction functionType="1" id="0:880035"/>
+    <FormulaTokenValue operationValue="0" id="0:880033"/>
+    <FormulaTokenArgumentSeparator id="0:880036"/>
+    <FormulaTokenInput id="0:880034"/>
+    <FormulaTokenParenthesisClose id="0:880037"/>
+    <FormulaTokenParenthesisClose id="0:880040"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:920471">
-    <FormulaTokenFunction functionType="0" id="0:920468"/>
-    <FormulaTokenValue operationValue="1045" id="0:920467"/>
-    <FormulaTokenArgumentSeparator id="0:920469"/>
-    <FormulaTokenFunction functionType="1" id="0:920464"/>
-    <FormulaTokenValue operationValue="765" id="0:920463"/>
-    <FormulaTokenArgumentSeparator id="0:920465"/>
-    <FormulaTokenValue operationValue="905" id="0:920458"/>
-    <FormulaTokenOperation operationType="0" id="0:920459"/>
-    <FormulaTokenValue operationValue="140" id="0:920460"/>
-    <FormulaTokenOperation operationType="2" id="0:920461"/>
-    <FormulaTokenInput id="0:920462"/>
-    <FormulaTokenParenthesisClose id="0:920466"/>
-    <FormulaTokenParenthesisClose id="0:920470"/>
+    <FormulaTokenValue operationValue="905" id="0:880064"/>
+    <FormulaTokenOperation operationType="0" id="0:880065"/>
+    <FormulaTokenValue operationValue="140" id="0:880066"/>
+    <FormulaTokenOperation operationType="2" id="0:880067"/>
+    <FormulaTokenFunction functionType="1" id="0:880052"/>
+    <FormulaTokenValue operationValue="-1" id="0:880046"/>
+    <FormulaTokenArgumentSeparator id="0:880053"/>
+    <FormulaTokenFunction functionType="0" id="0:880049"/>
+    <FormulaTokenValue operationValue="0" id="0:880047"/>
+    <FormulaTokenArgumentSeparator id="0:880050"/>
+    <FormulaTokenInput id="0:880048"/>
+    <FormulaTokenParenthesisClose id="0:880051"/>
+    <FormulaTokenParenthesisClose id="0:880054"/>
+    <FormulaTokenOperation operationType="0" id="0:880068"/>
+    <FormulaTokenValue operationValue="84" id="0:880069"/>
+    <FormulaTokenOperation operationType="2" id="0:880070"/>
+    <FormulaTokenFunction functionType="0" id="0:880061"/>
+    <FormulaTokenValue operationValue="1" id="0:880055"/>
+    <FormulaTokenArgumentSeparator id="0:880062"/>
+    <FormulaTokenFunction functionType="1" id="0:880058"/>
+    <FormulaTokenValue operationValue="0" id="0:880056"/>
+    <FormulaTokenArgumentSeparator id="0:880059"/>
+    <FormulaTokenInput id="0:880057"/>
+    <FormulaTokenParenthesisClose id="0:880060"/>
+    <FormulaTokenParenthesisClose id="0:880063"/>
   </DataConverterFormula>
 
   <DataConverterFormula id="0:930212">

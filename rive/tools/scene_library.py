@@ -19,7 +19,8 @@ Storybook night: the green-shaded reading lamp on the desk at the left is the wa
   slots back), `festive`: a pine garland with small lights along a shelf of each bookcase.
 - Plane3: the reading desk at the left with the green banker's lamp, an open book (prop `book`) and a
   candle; the brass rail along the right bookcase and the rolling ladder on it (the `ladder` aim drag:
-  -1..1 slides it by +-`LADDER_TRAVEL` px, history-free; its wheels turn with it); dust motes in the
+  -1..0 slides it left by up to `LADDER_TRAVEL` px, 0..1 right by up to `LADDER_TRAVEL_R` px (M12: its
+  stile stays on the artboard at +1), history-free; its wheels turn with it); dust motes in the
   lamp's light.
 - Plane4, the floor: planks, the rug, the lamp's pool (`lightKey`), the globe on its stand (prop `globe`),
   the reading chair, the mouse (NPC `mouse`), the `lightning` event's window light thrown on the floor.
@@ -33,7 +34,8 @@ bookcase's bottom shelf, 1 = at the reading chair's front foot (`MOUSE_WAYPOINTS
 follows `npcX`.
 
 `TIER_GATES` names the element roots lane W's tier pass hides (high: the second half of every dense rain
-sheet; low: also the dust motes, the clouds' drift, the window's cold spill and the glass's sheen). This module
+sheet; low: also the dust motes, the clouds' drift, the window's cold spill, the glass's sheen and, M12, the
+book tops' sheen, the spines' gold bands, the stars and the town's lit windows). This module
 never binds `tier`.
 
 Built through gen_scenes.Scene; mints its own scene document (each scene is its own document).
@@ -52,12 +54,20 @@ sys.path.insert(0, os.path.dirname(__file__))
 import gen_scenes  # noqa: E402
 from gen_scenes import DIORAMAS, TIME_SKY, DioramaSpec, Scene, W, H, uniq  # noqa: E402
 from rig_dsl import Formulas  # noqa: E402
-from rml import El, ellipse, lin, rad, smooth_path  # noqa: E402
+from rml import Doc, El, ellipse, lin, rad, smooth_path  # noqa: E402
 import scene_npc  # noqa: E402
 from scene_npc import Rig, arc_params, blend3, npc_layer, path_binds  # noqa: E402
 import world_kit  # noqa: E402
 
 SCENE_ID = "library"
+# M12 ruling 18: this module's own M12 additions (the NPC's `NpcDraw` layer) mint from a new range after
+# its own (the shared M12 range is gen_scenes.M12_ID_START = 890000), so no earlier id moves.
+M12_ID_START = 880000
+
+
+def own_m12(sc: Scene) -> Doc:
+    """The scene's document for this module's M12 additions (one per scene build)."""
+    return sc.__dict__.setdefault("_d12_library", Doc(client=0, start=M12_ID_START))
 O = (0.0, 0.0)
 Z = (0.0, 0.0)
 INK = "FF2A2026"
@@ -106,7 +116,11 @@ DESK_CANDLE = (24.0, 1088.0)
 RAIL_Y = 300.0                                # the ladder's brass rail (Plane3)
 RAIL_X = (700.0, 1160.0)
 LADDER_X = 905.0                              # the ladder's centre at ladder 0
-LADDER_TRAVEL = 140.0                         # px at ladder +-1
+LADDER_TRAVEL = 140.0                         # px at ladder -1 (to the left)
+# px at ladder +1 (M12 ruling 8: 140 took the right stile and wheel off the artboard's right edge; 84 keeps
+# the whole ladder, its floor shadow included, inside x <= 1077 while the contract rect stays (its right edge
+# is the artboard's, clamped, for any travel >= 81)
+LADDER_TRAVEL_R = 84.0
 LADDER_HW = (44.0, 58.0)                      # half widths at the top and the feet (stile centres)
 LADDER_FOOT_Y = 1186.0
 STILE_W = 14.0
@@ -151,7 +165,11 @@ TIER_GATES: dict[str, tuple[str, ...]] = {
     # + (lane W, M11 ruling 15: the bench needs them for low's 0.8 x ultra) the clouds' slow drift behind the
     # window (a decorative loop), the window's faint cold spill on the wall and the glass's sheen (decorative
     # overlays, not the lamp's light)
-    "low": ("DustMotes", "Clouds", "WindowSpill", "GlassSheen"),
+    # + (lane W, M12 ruling 3: low <= 0.7 x ultra; the bench names the bookcases as the cost) the book tops'
+    # sheen and the spines' gold bands (dense decorative detail: ~330 small rects over both bookcases; the
+    # books, shelves and the light stay), the twinkling stars and the town's lit windows in the view
+    "low": ("DustMotes", "Clouds", "WindowSpill", "GlassSheen", "CaseLTops", "CaseRTops", "CaseLBands", "CaseRBands",
+            "Star", "LitWin"),
 }
 
 
@@ -827,18 +845,35 @@ def ladder_points() -> list[tuple[float, float]]:
     return out
 
 
+def ladder_shift(v: float) -> float:
+    """The ladder's x offset (px) at `ladder` = v: -LADDER_TRAVEL at -1, +LADDER_TRAVEL_R at +1, linear on
+    each side, clamped outside -1..1."""
+    return LADDER_TRAVEL * max(-1.0, min(0.0, v)) + LADDER_TRAVEL_R * min(1.0, max(0.0, v))
+
+
 def ladder_rect(pad: float = 6.0) -> tuple[float, float, float, float]:
     """The ladder's art box over every `ladder` in -1..1 (artboard px at parallax 0), clamped to the
     artboard: the drag handle's rect (contract v12 drag table, library `ladder`)."""
     xs = [x for x, _ in ladder_points()]
     ys = [y for _, y in ladder_points()]
-    return (float(math.floor(min(xs) - LADDER_TRAVEL - pad)), float(math.floor(min(ys) - pad)),
-            float(min(W, math.ceil(max(xs) + LADDER_TRAVEL + pad))), float(math.ceil(max(ys) + pad)))
+    return (float(math.floor(min(xs) + ladder_shift(-1.0) - pad)), float(math.floor(min(ys) - pad)),
+            float(min(W, math.ceil(max(xs) + ladder_shift(1.0) + pad))), float(math.ceil(max(ys) + pad)))
+
+
+def ladder_conv(sc: Scene, conv: El, k: float, c: float = 0.0) -> El:
+    """Rewrites `conv` (a converter `lin_conv` minted, so every M11 id stays) in place to
+    `c + k x ladder_shift(input)`, its tokens minted from the module's M12 range (`own_m12`)."""
+    f = Formulas(own_m12(sc), sc.vpath)
+    neg = f.fn("max", [f.val(-1)], f.fn("min", [f.val(0)], f.inp()))
+    pos = f.fn("min", [f.val(1)], f.fn("max", [f.val(0)], f.inp()))
+    conv.children[:] = [*([f.val(c), f.op("+")] if c else []), f.val(k * LADDER_TRAVEL), f.op("*"), *neg, f.op("+"),
+                        f.val(k * LADDER_TRAVEL_R), f.op("*"), *pos]
+    return conv
 
 
 def ladder(sc: Scene) -> El:
     """The rolling ladder: two stiles hooked over the rail, eleven rungs, two wheels. Its node's x is
-    `LADDER_X + LADDER_TRAVEL x ladder` (clamped), its wheels turn by the distance rolled (history-free)."""
+    `LADDER_X + ladder_shift(ladder)` (clamped), its wheels turn by the distance rolled (history-free)."""
     S, E, F, L, d = sc.S, sc.E, sc.F, sc.L, sc.d
     hw0, hw1 = LADDER_HW
     y0, y1 = RAIL_Y + 2, LADDER_FOOT_Y
@@ -862,7 +897,8 @@ def ladder(sc: Scene) -> El:
                   sc.L("FF3A3440", 5))
     wheels = []
     for k, s in enumerate((-1, 1)):
-        spin = d("Node", sc.bind("ladder", 15, lin_conv(sc, LADDER_TRAVEL / WHEEL_R), doc=sc.d9),
+        spin = d("Node", sc.bind("ladder", 15, ladder_conv(sc, lin_conv(sc, LADDER_TRAVEL / WHEEL_R), 1.0 / WHEEL_R),
+                                 doc=sc.d9),
                  multi(sc, f"WheelSpoke{k}", [smooth_path(d, [(-WHEEL_R + 3, 0, "c"), (WHEEL_R - 3, 0, "c")], closed=False),
                                               smooth_path(d, [(0, -WHEEL_R + 3, "c"), (0, WHEEL_R - 3, "c")], closed=False)],
                        sc.L("FF8A8490", 2)),
@@ -873,8 +909,9 @@ def ladder(sc: Scene) -> El:
     brackets = multi(sc, "FootBrackets", [rect_path(sc, s * hw1 - 8, y1 - 10, s * hw1 + 8, y1 + 6, r=2) for s in (-1, 1)],
                      F("FF8A6428"))
     shadow = E(O, "LadderShadow", 0, y1 + 22, 2 * hw1 + 60, 14, F("50100806"))
-    lo, hi = LADDER_X - LADDER_TRAVEL, LADDER_X + LADDER_TRAVEL
-    return d("Node", sc.bind("ladder", 13, lin_conv(sc, LADDER_TRAVEL, LADDER_X, lo=lo, hi=hi), doc=sc.d9),
+    lo, hi = LADDER_X - LADDER_TRAVEL, LADDER_X + LADDER_TRAVEL   # (M11 minting; ladder_conv rewrites the formula)
+    x_conv = ladder_conv(sc, lin_conv(sc, LADDER_TRAVEL, LADDER_X, lo=lo, hi=hi), 1.0, LADDER_X)
+    return d("Node", sc.bind("ladder", 13, x_conv, doc=sc.d9),
              *wheels, brackets, hooks, rung_shadow, rungs, *stiles, shadow, x=LADDER_X, y=0.0, name="Ladder")
 
 
@@ -1198,6 +1235,10 @@ def mouse_npc(sc: Scene, content: list[El], hits: list[El]) -> None:
         eye: {"scaleY": [(0, 1.0), (10, 1.25), (26, 1.25), (n, 1.0)]},
     })
     npc_layer(sc, anims)
+    # M12 ruling 7: the drawing switch on its own layer, cut in 0 ms (no ghost during the pose blend)
+    with sc.minting(own_m12(sc)):
+        scene_npc.draw_layer(sc, anims, {"away": asleep, "rest": asleep, "idle": awake, "move": awake,
+                                         "notice": awake, "react": awake}, "npc_mouse")
 
 
 # ====================================================================== the diorama

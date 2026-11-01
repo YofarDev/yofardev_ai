@@ -166,11 +166,12 @@ def pivot_wrap(sc: Scene, name: str, x: float, y: float, kids: list[El], **kw: o
 
 
 def npc_layer(sc: Scene, anims: dict[str, El | list[El]], slot: str = "npc", look: str = "npcLook",
-              name: str = "Npc", entry: str = "rest") -> None:
+              name: str = "Npc", entry: str = "rest", blend_ms: int = NPC_BLEND_MS) -> None:
     """The `Npc` layer: AnyState -> each state but rest when `npc` equals it, every state -> rest when it
-    is rest (blend NPC_BLEND_MS); `notice` (three animations) is a 1D blend on `npcLook` at -1 / 0 /
-    +1. Entry = rest. v12: the second slot passes `slot` npc2, `look` npc2Look, `name` Npc2 and `entry`
-    away (its default: the layer starts where the view model does, so nothing is drawn at f0)."""
+    is rest (blend `blend_ms`, NPC_BLEND_MS); `notice` (three animations) is a 1D blend on `npcLook` at
+    -1 / 0 / +1. Entry = rest. v12: the second slot passes `slot` npc2, `look` npc2Look, `name` Npc2 and
+    `entry` away (its default: the layer starts where the view model does, so nothing is drawn at f0).
+    M12: `draw_layer` passes `blend_ms` 0 for the drawing switch."""
     d = sc.d
     states: dict[str, El] = {}
     for i, k in enumerate(NPC_STATES):
@@ -192,13 +193,43 @@ def npc_layer(sc: Scene, anims: dict[str, El | list[El]], slot: str = "npc", loo
     # rest is reached from each state, never from AnyState: an AnyState transition into the state the
     # layer is in restarts it once on the first frame, which left the crab's rest loop (its v10
     # ambient) one frame behind the v10 file
-    any_t = [d("StateTransition", is_(k), stateToId=s.ref(), duration=NPC_BLEND_MS)
+    any_t = [d("StateTransition", is_(k), stateToId=s.ref(), duration=blend_ms)
              for k, s in states.items() if k != entry]
     for k, s in states.items():
         if k != entry:
             s.add(d("BlendStateTransition" if s.tag == "BlendState1DViewModel" else "StateTransition", is_(entry),
-                    stateToId=states[entry].ref(), duration=NPC_BLEND_MS))
+                    stateToId=states[entry].ref(), duration=blend_ms))
     sc.layers.append(sc._layer(name, states[entry], list(states.values()), any_t))
+
+
+def draw_layer(sc: Scene, anims: dict[str, El | list[El]], shown: dict[str, El], prefix: str,
+               name: str = "NpcDraw") -> El:
+    """M12 ruling 7: the NPC's drawing switch on its own state-machine layer (the ghost blends: during the
+    `Npc` layer's NPC_BLEND_MS state blend, two drawing copies, e.g. asleep and awake, cross-faded).
+
+    `shown[state]` is the drawing copy each of NPC_STATES draws (its opacity was keyed by every pose
+    animation through `Rig`). Those opacity keys leave the pose animations in `anims` (the `Npc` layer
+    keeps blending the poses), and the layer `name` holds one 1-frame animation `<prefix>_draw_<state>`
+    per state keying every copy (1 for the shown one, 0 for the others), switched on the same `npc`
+    conditions in 0 ms: a state change cuts from one drawing to the other on the frame the pose blend
+    starts. Removing keys frees ids but moves none; the new elements mint from the scene's current
+    document (call it inside `sc.minting(<the module's own range>)`). Returns the layer."""
+    drawings = list(dict.fromkeys(shown.values()))
+    ids = {e.ref() for e in drawings}
+    for a in (x for v in anims.values() for x in (v if isinstance(v, list) else [v])):
+        kept = []
+        for ko in a.children:
+            if ko.tag == "KeyedObject" and ko.attrs.get("objectId") in ids:
+                ko.children[:] = [kp for kp in ko.children if kp.attrs.get("property") != "opacity"]
+                if not ko.children:
+                    continue
+            kept.append(ko)
+        a.children[:] = kept
+    draws: dict[str, El | list[El]] = {
+        k: sc.A(f"{prefix}_draw_{k}", 1, [sc.T(e, opacity=[(0, 1.0 if e is shown[k] else 0.0)]) for e in drawings])
+        for k in NPC_STATES}
+    npc_layer(sc, draws, name=name, blend_ms=0)
+    return sc.layers[-1]
 
 
 def blend3(fn: object) -> list:

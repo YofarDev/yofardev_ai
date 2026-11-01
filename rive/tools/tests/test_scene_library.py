@@ -99,7 +99,8 @@ def test_tier_gates_name_dense_fx_roots_present_in_the_file(tree: ET.Element) ->
     for tier, roots in lib.TIER_GATES.items():
         assert roots, tier
         for r in roots:
-            assert r in names or "emit" + r in names, (tier, r)
+            # a root, or (M12: Star, LitWin) the root of a numbered set
+            assert r in names or "emit" + r in names or any(world_kit.gate_root(n) == r for n in names), (tier, r)
     # every dense sheet has its first half kept (A) and its second half gated (B)
     for r in lib.TIER_GATES["high"]:
         assert r.endswith("B") and r[:-1] + "A" in names
@@ -206,14 +207,17 @@ def test_ladder_drag_is_history_free_and_its_rect_covers_it(tree: ET.Element) ->
     binds = _own_binds(ladder, tree)
     assert set(binds) == {X} and binds[X][0] == "ladder"
     assert float(ladder.get("x")) == lib.LADDER_X == world_kit.eval_formula(binds[X][1], 0.0)
-    for v in (-1.0, -0.5, 0.5, 1.0):
-        assert world_kit.eval_formula(binds[X][1], v) == pytest.approx(lib.LADDER_X + lib.LADDER_TRAVEL * v, abs=0.01)
-    assert world_kit.eval_formula(binds[X][1], 3.0) == pytest.approx(lib.LADDER_X + lib.LADDER_TRAVEL)   # clamped
+    # M12 ruling 8: LADDER_TRAVEL px to the left at -1, LADDER_TRAVEL_R to the right at +1, clamped
+    for v, dx in ((-1.0, -lib.LADDER_TRAVEL), (-0.5, -lib.LADDER_TRAVEL / 2), (0.5, lib.LADDER_TRAVEL_R / 2),
+                  (1.0, lib.LADDER_TRAVEL_R), (3.0, lib.LADDER_TRAVEL_R), (-3.0, -lib.LADDER_TRAVEL)):
+        assert lib.ladder_shift(v) == pytest.approx(dx)
+        assert world_kit.eval_formula(binds[X][1], v) == pytest.approx(lib.LADDER_X + dx, abs=0.01)
     for k in range(2):
         wheel = _named(tree, f"LadderWheel{k}")
         wb = _own_binds(wheel, tree)
         assert wb[ROT][0] == "ladder"
-        assert world_kit.eval_formula(wb[ROT][1], 1.0) == pytest.approx(lib.LADDER_TRAVEL / lib.WHEEL_R, rel=1e-3)
+        for v in (-1.0, 1.0):   # the wheels turn by the distance rolled
+            assert world_kit.eval_formula(wb[ROT][1], v) == pytest.approx(lib.ladder_shift(v) / lib.WHEEL_R, rel=1e-3)
     # only the ladder and its wheels read `ladder` (the rail stays)
     assert _bound(_named(tree, "LadderRail"), tree) == set()
     # the contract's row is the measured rect; it covers the ladder's art at every ladder value
@@ -222,10 +226,11 @@ def test_ladder_drag_is_history_free_and_its_rect_covers_it(tree: ET.Element) ->
     assert h.rect == lib.LADDER_RECT
     x0, y0, x1, y1 = h.rect
     assert 0 <= x0 < x1 <= gen_scenes.W and 0 <= y0 < y1 <= gen_scenes.H
+    assert h.rect == (671.0, 278.0, 1080.0, 1221.0)   # M12 ruling 8 kept the contract's rect
     for v in (-1.0, 0.0, 0.5, 1.0):
         for px, py in lib.ladder_points():
-            px += lib.LADDER_TRAVEL * v
-            assert x0 <= px <= x1 or px > gen_scenes.W, (v, px)
+            px += lib.ladder_shift(v)
+            assert x0 <= px <= x1 <= gen_scenes.W, (v, px)   # M12: the whole ladder stays on the artboard
             assert y0 <= py <= y1
     assert _plane(tree, "Ladder") == lib.LADDER_PLANE
 
@@ -257,3 +262,36 @@ def test_calm_and_complete_at_the_defaults(tree: ET.Element) -> None:
 def test_riv_and_poster_within_budget() -> None:
     assert RIV.exists() and RIV.stat().st_size <= 409_600
     assert POSTER.exists() and POSTER.stat().st_size <= 40_960
+
+
+def test_mouse_drawing_switch_cuts_on_its_own_layer(tree: ET.Element) -> None:
+    """M12 ruling 7: the drawing copies' opacity is keyed only by the `NpcDraw` layer (one 1-frame hold per
+    state, every transition 0 ms), so the `Npc` layer's 200 ms pose blend never cross-fades two copies."""
+    ab = _artboard(tree)
+    ids = {n: _named(tree, n).get("id") for n in ("MouseAsleep", "MouseAwake", "MouseAwake")}
+    layers = {lay.get("name"): lay for lay in ab.iter("StateMachineLayer")}
+    anims = {a.get("id"): a for a in ab.iter("LinearAnimation")}
+
+    def keyed(anim: ET.Element) -> dict[str, float]:
+        return {ko.get("objectId"): float(kf.get("value")) for ko in anim if ko.tag == "KeyedObject"
+                for kp in ko if kp.get("property") == "opacity" for kf in kp}
+
+    def anims_of(layer: ET.Element) -> list[ET.Element]:
+        return [anims[s.get("animationId")] for s in layer.iter() if s.tag in ("AnimationState", "BlendAnimation1D")]
+    pose = anims_of(layers["Npc"])
+    assert len(pose) == 8 and not any(set(keyed(a)) & set(ids.values()) for a in pose)
+    draw = layers["NpcDraw"]
+    shown = {"away": "MouseAsleep", "rest": "MouseAsleep", "idle": "MouseAwake", "move": "MouseAwake", "notice": "MouseAwake",
+             "react": "MouseAwake"}
+    by_name = {a.get("name"): a for a in anims_of(draw)}
+    assert sorted(by_name) == sorted(f"npc_mouse_draw_{k}" for k in scene_npc.NPC_STATES)
+    for k, n in shown.items():
+        a = by_name[f"npc_mouse_draw_{k}"]
+        assert int(a.get("duration")) == 1
+        assert keyed(a) == {i: float(i == ids[n]) for i in ids.values()}, k
+    ts = [t for t in draw.iter() if t.tag in ("StateTransition", "BlendStateTransition") and t.get("stateToId")]
+    assert len(ts) == 2 * (len(scene_npc.NPC_STATES) - 1) + 1     # AnyState -> 5, 5 -> rest, entry -> rest
+    assert all(int(t.get("duration", "0")) == 0 for t in ts)
+    # only this layer keys the copies' opacity anywhere in the file
+    owners = {a.get("name") for a in anims.values() if set(keyed(a)) & set(ids.values())}
+    assert owners == set(by_name)

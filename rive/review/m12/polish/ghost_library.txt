@@ -1,0 +1,9 @@
+library rest -> idle: own px 52; old worst ghost 98.1% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+library idle -> rest: own px 1240; old worst ghost 89.9% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+library rest -> react: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+library react -> rest: own px 972; old worst ghost 39.9% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+library rest -> notice: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+library notice -> rest: own px 1723; old worst ghost 59.2% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+library rest -> move: own px 0; old n/a (the incoming drawing covers the outgoing one: see the strip); new n/a (the incoming drawing covers the outgoing one: see the strip)
+library move -> rest: own px 1360; old worst ghost 80.4% (frames with a ghost > 1 %: 11); new worst ghost 0.0% (frames with a ghost > 1 %: 0)
+wrote /Users/yofardev/development/Projects/Flutter/yofardev_ai/.claude/worktrees/moonshot-m12-b091c8/rive/review/m12/polish/ghost_library.webp

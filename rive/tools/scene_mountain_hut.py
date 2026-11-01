@@ -48,12 +48,15 @@ sys.path.insert(0, os.path.dirname(__file__))
 import gen_scenes  # noqa: E402
 from gen_scenes import DIORAMAS, TIME_SKY, DioramaSpec, Scene, W, H, uniq  # noqa: E402
 from rig_dsl import Formulas  # noqa: E402
-from rml import El, ellipse, lin, rad, smooth_path  # noqa: E402
+from rml import Doc, El, ellipse, lin, rad, smooth_path  # noqa: E402
 import scene_npc  # noqa: E402
 from scene_npc import Rig, arc_params, blend3, npc_layer, path_binds  # noqa: E402
 import world_kit  # noqa: E402
 
 SCENE_ID = "mountainHut"
+# M12 ruling 18: this module's own M12 additions (the NPC's `NpcDraw` layer) mint from a new range after
+# its own (the shared M12 range is gen_scenes.M12_ID_START = 890000), so no earlier id moves.
+M12_ID_START = 880000
 O = (0.0, 0.0)
 Z = (0.0, 0.0)
 INK = "FF2E2228"
@@ -118,7 +121,9 @@ TIER_GATES: dict[str, tuple[str, ...]] = {
     "high": ("SnowFarSheet", "Star8", "Star12", *(f"Spark{i}" for i in range(6, 12))),
     # the kettle's steam; the window's frost and its faint cool spill on the wall (decorative overlays, not the
     # stove's light: the bench needs them for low's 0.8 x ultra, rive_bench.py)
-    "low": ("SteamPuff", "Frost", "WallCool"),
+    # + (M12 ruling 3: low <= 0.7 x ultra) the upper wall's shade (a decorative overlay inside the wall's clip, as
+    # WallCool) and the twinkling stars in the view
+    "low": ("SteamPuff", "Frost", "WallCool", "WallShade", "Star"),
 }
 
 
@@ -1007,6 +1012,10 @@ def dog_npc(sc: Scene, content: list[El], hits: list[El]) -> None:
         **{e: {"scaleY": [(0, 1.0), (14, 0.15), (34, 0.15), (40, 1.0), (n, 1.0)]} for e in eyes},
     })
     npc_layer(sc, anims)
+    # M12 ruling 7: the drawing switch on its own layer, cut in 0 ms (no ghost during the pose blend)
+    with sc.minting(Doc(client=0, start=M12_ID_START)):
+        scene_npc.draw_layer(sc, anims, {"away": asleep, "rest": asleep, "idle": awake, "move": walker,
+                                         "notice": awake, "react": awake}, "npc_dog")
 
 
 # ====================================================================== the diorama

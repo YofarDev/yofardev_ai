@@ -101,3 +101,48 @@ def test_high_over_the_limit_fails_only_when_every_repeat_costs_more() -> None:
     # low has no such allowance
     b.runs["low"] = [_run(0.85), _run(0.95), _run(0.82), _run(0.9), _run(0.88)]
     assert rive_bench.gate_lines(b)[0].endswith("FAIL")
+
+
+def _bench(scene: str, low: float, high: float = 1.0) -> rive_bench.SceneBench:
+    return rive_bench.SceneBench(scene, {"ultra": [_run(1.0)] * 5, "low": [_run(low)] * 5, "high": [_run(high)] * 5})
+
+
+def test_a_passing_scene_is_measured_once() -> None:
+    calls: list[int] = []
+    notes: list[str] = []
+
+    def run() -> rive_bench.SceneBench:
+        calls.append(1)
+        return _bench("library", 0.7)
+    b = rive_bench.bench_gated(run, note=notes.append)
+    assert len(calls) == 1 and b.first is None and not notes
+    assert all("retried" not in line and line.endswith(" ok") for line in rive_bench.gate_lines(b))
+
+
+def test_a_failed_scene_is_measured_again_and_passes_on_the_re_run() -> None:
+    # M12 ruling 4: library low 0.824 under load, 0.780 re-run alone (M11 ruling 43)
+    runs = iter([_bench("library", 0.824), _bench("library", 0.78)])
+    notes: list[str] = []
+    b = rive_bench.bench_gated(lambda: next(runs), note=notes.append)
+    assert b.first is not None and b.ratio("low") == pytest.approx(0.78)
+    low, high = rive_bench.gate_lines(b)
+    assert "retried: first 0.824 over" in low and low.endswith(" ok")
+    assert "retried: first 1.000 within" in high and high.endswith(" ok")
+    assert rive_gates.collect([low, high, *notes])     # neither the lines nor the note say FAIL
+    assert len(notes) == 1 and "measuring once more" in notes[0]
+    assert b.summary()["retried"]["low"]["ratio_p95"] == pytest.approx(0.824)
+
+
+def test_a_scene_fails_only_when_the_re_run_fails_too() -> None:
+    runs = iter([_bench("mountainHut", 0.83), _bench("mountainHut", 0.85)])
+    b = rive_bench.bench_gated(lambda: next(runs), note=lambda _: None)
+    low = rive_bench.gate_lines(b)[0]
+    assert "retried: first 0.830 over" in low and low.endswith("FAIL")
+    assert rive_gates.collect([low]) is False
+    # a tier that passed the first time is not failed by the re-run
+    runs = iter([_bench("cafe", 0.85, 1.0), _bench("cafe", 0.7, 1.2)])
+    b = rive_bench.bench_gated(lambda: next(runs), note=lambda _: None)
+    low, high = rive_bench.gate_lines(b)
+    assert low.endswith(" ok") and "retried: first 1.000 within" in high and "FAIL" not in high
+    with pytest.raises(StopIteration):     # never a third measurement
+        next(runs)

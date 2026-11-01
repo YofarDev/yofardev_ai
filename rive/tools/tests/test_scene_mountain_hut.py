@@ -160,3 +160,36 @@ def test_moon_snow_fog_festive_binds(tree: ET.Element) -> None:
 def test_riv_within_budget() -> None:
     assert RIV.exists()
     assert RIV.stat().st_size <= 409_600
+
+
+def test_dog_drawing_switch_cuts_on_its_own_layer(tree: ET.Element) -> None:
+    """M12 ruling 7: the drawing copies' opacity is keyed only by the `NpcDraw` layer (one 1-frame hold per
+    state, every transition 0 ms), so the `Npc` layer's 200 ms pose blend never cross-fades two copies."""
+    ab = _artboard(tree)
+    ids = {n: _named(tree, n).get("id") for n in ("DogAsleep", "DogSit", "DogWalk")}
+    layers = {lay.get("name"): lay for lay in ab.iter("StateMachineLayer")}
+    anims = {a.get("id"): a for a in ab.iter("LinearAnimation")}
+
+    def keyed(anim: ET.Element) -> dict[str, float]:
+        return {ko.get("objectId"): float(kf.get("value")) for ko in anim if ko.tag == "KeyedObject"
+                for kp in ko if kp.get("property") == "opacity" for kf in kp}
+
+    def anims_of(layer: ET.Element) -> list[ET.Element]:
+        return [anims[s.get("animationId")] for s in layer.iter() if s.tag in ("AnimationState", "BlendAnimation1D")]
+    pose = anims_of(layers["Npc"])
+    assert len(pose) == 8 and not any(set(keyed(a)) & set(ids.values()) for a in pose)
+    draw = layers["NpcDraw"]
+    shown = {"away": "DogAsleep", "rest": "DogAsleep", "idle": "DogSit", "move": "DogWalk", "notice": "DogSit",
+             "react": "DogSit"}
+    by_name = {a.get("name"): a for a in anims_of(draw)}
+    assert sorted(by_name) == sorted(f"npc_dog_draw_{k}" for k in scene_npc.NPC_STATES)
+    for k, n in shown.items():
+        a = by_name[f"npc_dog_draw_{k}"]
+        assert int(a.get("duration")) == 1
+        assert keyed(a) == {i: float(i == ids[n]) for i in ids.values()}, k
+    ts = [t for t in draw.iter() if t.tag in ("StateTransition", "BlendStateTransition") and t.get("stateToId")]
+    assert len(ts) == 2 * (len(scene_npc.NPC_STATES) - 1) + 1     # AnyState -> 5, 5 -> rest, entry -> rest
+    assert all(int(t.get("duration", "0")) == 0 for t in ts)
+    # only this layer keys the copies' opacity anywhere in the file
+    owners = {a.get("name") for a in anims.values() if set(keyed(a)) & set(ids.values())}
+    assert owners == set(by_name)

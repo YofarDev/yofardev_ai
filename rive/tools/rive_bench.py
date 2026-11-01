@@ -1,6 +1,6 @@
 """The CLI bench per scene and quality tier (moonshot M11 ruling 15, contract v14 `tier`).
 
-    uv run rive/tools/rive_bench.py [sceneId ...] [--repeats=N] [--frames=N] [--rain] [--gates-only]
+    uv run rive/tools/rive_bench.py [sceneId ...] [--repeats=N] [--frames=N] [--rain] [--gates-only] [--out=DIR]
 
 For every scene (default: every project in rive/scenes/) x tier (low, high, ultra) runs
 `rive rive/scenes/<id> --bench=<frames> --data=tier=<t>` (headless, a fresh build each time) `--repeats`
@@ -12,11 +12,16 @@ core count, and records the load it ran at. Each stat (advance / render mean, p5
 the tier ratio is the best (least disturbed) render p95 of the tier over the best of ultra. `uptime` is recorded before and after. `--rain` benches each tier again at rain 1
 (recorded, not gated).
 
-Writes `rive/review/m11/perf/bench.md` (table) and `bench.json`, unless `--gates-only`, which prints
-the gate lines only (run by rive_gates.py, so by scripts/frive.sh). The gate (ruling 15), per scene at
+Writes `bench.md` (table) and `bench.json` into `--out` (default `rive/review/m12/perf/`; M11's own
+evidence stays in `rive/review/m11/perf/`), unless `--gates-only`, which prints the gate lines only (run
+by rive_gates.py, so by scripts/frive.sh). The gate (ruling 15), per scene at
 rest: low's render p95 <= LOW_MAX x ultra's, high's <= HIGH_MAX x ultra's (the 2 % is noise), where a high
 over 1.02 fails only when every paired repeat is over ultra (the 2 % is below this host's noise: identical
 files measure 0.97-1.04; see `gate_lines`). A line with FAIL fails the gates.
+
+M12 ruling 4: a scene whose gate fails is measured once more (after the load wait, `bench_gated`) and a
+tier fails only when it fails in both measurements; such a line ends its numbers with `retried` and the
+first measurement's ratio (the line shows the re-run's numbers).
 """
 
 from __future__ import annotations
@@ -34,7 +39,7 @@ from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENES_DIR = ROOT / "rive" / "scenes"
-OUT = ROOT / "rive" / "review" / "m11" / "perf"
+OUT = ROOT / "rive" / "review" / "m12" / "perf"
 TIERS = ("ultra", "high", "low")
 LOW_MAX = 0.8
 HIGH_MAX = 1.02
@@ -103,6 +108,7 @@ class SceneBench:
     runs: dict[str, list[dict[str, dict[str, float]]]] = field(default_factory=dict)
     load: float = 0.0        # the 1-min load when the scene started
     redone: int = 0          # preempted runs redone
+    first: SceneBench | None = None   # M12 ruling 4: the failed first measurement this one re-ran
 
     def median(self, tier: str, what: str, stat: str) -> float:
         return statistics.median(r[what][stat] for r in self.runs[tier])
@@ -115,7 +121,9 @@ class SceneBench:
         return min(r["render"]["p95"] for r in self.runs[tier]) / min(r["render"]["p95"] for r in self.runs["ultra"])
 
     def summary(self) -> dict[str, object]:
-        return {"load": self.load, "redone": self.redone,
+        retried = {} if self.first is None else {"retried": {"load": self.first.load, **{
+            t: {"ratio_p95": round(self.first.ratio(t), 4)} for t in TIERS}}}
+        return {"load": self.load, "redone": self.redone, **retried,
                 **{t: {"render": {s: round(self.median(t, "render", s), 4) for s in STATS},
                        "advance": {s: round(self.median(t, "advance", s), 4) for s in STATS},
                        "ratio_p95": round(self.ratio(t), 4), "repeats": len(self.runs[t])} for t in TIERS}}
@@ -126,25 +134,59 @@ def paired(b: SceneBench, tier: str) -> list[float]:
     return [t["render"]["p95"] / u["render"]["p95"] for t, u in zip(b.runs[tier], b.runs["ultra"])]
 
 
+GATED = (("low", LOW_MAX), ("high", HIGH_MAX))
+
+
+def verdict(b: SceneBench, tier: str, limit: float) -> str:
+    """One tier's ruling-15 verdict: "ok", "ok (noise: ...)" or "FAIL". low: the best p95 ratio <= LOW_MAX.
+    high: the ratio <= HIGH_MAX, or, above it, not every repeat over 1 (no measurable cost: at rest high
+    draws all but a few twinkle copies of ultra, so its ratio is the host's noise, measured 0.97-1.04 for
+    identical files; a high that really cost more than ultra would come out over 1 in every paired repeat)."""
+    r = b.ratio(tier)
+    pr = paired(b, tier)
+    if r <= limit:
+        return "ok"
+    if tier == "high" and not all(x > 1.0 for x in pr):
+        return f"ok (noise: {sum(x <= 1.0 for x in pr)} of {len(pr)} repeats at or under ultra)"
+    return "FAIL"
+
+
+def failed(b: SceneBench) -> bool:
+    """True when a gated tier of this measurement fails."""
+    return any(verdict(b, tier, limit) == "FAIL" for tier, limit in GATED)
+
+
 def gate_lines(b: SceneBench) -> list[str]:
-    """The ruling-15 verdicts of one scene. low: the median paired p95 ratio <= LOW_MAX. high: the ratio
-    <= HIGH_MAX, or, above it, not every repeat over 1 (no measurable cost: at rest high draws all but a
-    few twinkle copies of ultra, so its ratio is the host's noise, measured 0.97-1.04 for identical files;
-    a high that really cost more than ultra would come out over 1 in every paired repeat)."""
+    """The ruling-15 verdicts of one scene (`verdict`). A re-run (M12 ruling 4: `b.first` holds the failed
+    first measurement) fails a tier only when the first measurement failed it too; its line says `retried`
+    and gives the first ratio (`over` the limit or within it)."""
     out = []
-    for tier, limit in (("low", LOW_MAX), ("high", HIGH_MAX)):
-        r = b.ratio(tier)
-        pr = paired(b, tier)
-        if r <= limit:
-            verdict = "ok"
-        elif tier == "high" and not all(x > 1.0 for x in pr):
-            verdict = f"ok (noise: {sum(x <= 1.0 for x in pr)} of {len(pr)} repeats at or under ultra)"
-        else:
-            verdict = "FAIL"
-        out.append(f"bench {b.scene}: {tier} render p95 {b.median(tier, 'render', 'p95'):.3f} ms = {r:.3f} x ultra "
-                   f"{b.median('ultra', 'render', 'p95'):.3f} ms (<= {limit}; load {b.load:.1f}, {b.redone} redone) "
-                   f"{verdict}")
+    for tier, limit in GATED:
+        v = verdict(b, tier, limit)
+        retry = ""
+        if b.first is not None:
+            fv = verdict(b.first, tier, limit)
+            retry = f", retried: first {b.first.ratio(tier):.3f} {'over' if fv == 'FAIL' else 'within'}"
+            if v == "FAIL" and fv != "FAIL":
+                v = "ok (the first measurement passed)"
+        out.append(f"bench {b.scene}: {tier} render p95 {b.median(tier, 'render', 'p95'):.3f} ms = {b.ratio(tier):.3f} x "
+                   f"ultra {b.median('ultra', 'render', 'p95'):.3f} ms (<= {limit}; load {b.load:.1f}, {b.redone} redone"
+                   f"{retry}) {v}")
     return out
+
+
+def bench_gated(run: Callable[[], SceneBench], note: Callable[[str], None] = print) -> SceneBench:
+    """M12 ruling 4: `run()` (one scene's measurement, its load wait included); when a gate fails, `run()`
+    once more and return the re-run with the failed first one in `first` (a busy host squeezes the tier
+    ratios toward 1: a scene fails only when the re-run fails too)."""
+    b = run()
+    if not failed(b):
+        return b
+    note(f"bench {b.scene}: over the line ({', '.join(f'{t} {b.ratio(t):.3f}' for t, _ in GATED)}); "
+         "measuring once more after the load wait")
+    again = run()
+    again.first = b
+    return again
 
 
 def bench_once(scene: str, tier: str, frames: int, rain: bool = False) -> dict[str, dict[str, float]]:
@@ -196,7 +238,9 @@ def markdown(rest: list[SceneBench], rain: list[SceneBench], meta: dict[str, obj
              f"Host load (1 / 5 / 15 min) before: {lb[0]:.2f} / {lb[1]:.2f} / {lb[2]:.2f}; "
              f"after: {la[0]:.2f} / {la[1]:.2f} / {la[2]:.2f}.", "",
              f"Gate (every scene, at rest): low p95 <= {LOW_MAX} x ultra, high p95 <= {HIGH_MAX} x ultra (above "
-             "it, a FAIL only when every paired repeat is over ultra: identical files measure 0.97-1.04 here).", ""]
+             "it, a FAIL only when every paired repeat is over ultra: identical files measure 0.97-1.04 here). A scene "
+             "whose gate fails is measured once more after the load wait and fails only if the re-run fails too "
+             "(M12 ruling 4: the table shows the re-run, its gate line says `retried`).", ""]
     lines += table(rest, "At rest (rain 0)")
     if rain:
         lines += table(rain, "Rain 1 (recorded, not gated; the app never creates SceneFront at low)")
@@ -224,8 +268,10 @@ def main(argv: list[str]) -> int:
     load_before = uptime()
     rest: list[SceneBench] = []
     rain: list[SceneBench] = []
+    out = Path(opts["--out"]) if "--out" in opts else OUT
     for s in scenes:
-        rest.append(bench_scene(s, repeats, frames, load=wait_for_load(max_wait, cores)))
+        rest.append(bench_gated(lambda s=s: bench_scene(s, repeats, frames, load=wait_for_load(max_wait, cores)),
+                                note=lambda m: print(m, flush=True)))
         for line in gate_lines(rest[-1]):
             print(line, flush=True)
         if "--rain" in opts and not gates_only:
@@ -236,13 +282,13 @@ def main(argv: list[str]) -> int:
         return 0
     meta = {"rive": rive_version(), "frames": frames, "repeats": repeats, "viewport": "1080x1920 @1x", "cores": cores,
             "load_before": load_before, "load_after": load_after, "low_max": LOW_MAX, "high_max": HIGH_MAX}
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "bench.json").write_text(json.dumps({
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "bench.json").write_text(json.dumps({
         "meta": meta, "rest": {b.scene: b.summary() for b in rest},
         "rain": {b.scene: b.summary() for b in rain},
         "runs": {"rest": {b.scene: b.runs for b in rest}, "rain": {b.scene: b.runs for b in rain}}}, indent=1) + "\n")
-    (OUT / "bench.md").write_text(markdown(rest, rain, meta))
-    print(f"wrote {OUT / 'bench.md'} and bench.json")
+    (out / "bench.md").write_text(markdown(rest, rain, meta))
+    print(f"wrote {out / 'bench.md'} and bench.json")
     return 0
 
 
