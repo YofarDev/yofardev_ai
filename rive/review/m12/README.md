@@ -17,6 +17,15 @@ cheap Sonnet defect-only pass. The owner judges at the end. The plan, rulings 1â
 The quarter's exit gate ("every tier passes its performance gate") is still the owner's to judge, on the
 mid-tier phone ([device/README.md](device/README.md)). Neither the emulator nor macOS is a tier.
 
+## Final gates
+
+- `dart fix --apply` and `dart format .`: no changes.
+- `./scripts/fverify.sh`: analyze clean, 2,647 tests green.
+- pytest `rive/tools/tests`: 987 passed, 3 skipped.
+- macOS `integration_test/rive_contract_test.dart`: 59 / 59.
+- `FRIVE_GATES=all ./scripts/frive.sh`: 328 gate lines ok, 0 FAIL. Every asset rebuilt byte-identical to the committed files.
+- Whole-branch Sonnet review: 0 high, 2 medium (both fixed in `62241c4`, with five lows).
+
 ## Evidence index
 
 | Set | What | Where |
