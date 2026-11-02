@@ -21,6 +21,7 @@ void main() {
     FakeModelServer? server,
     FakeExtractor? extractor,
     FakeKokoroEngine? engine,
+    FakeVoiceBlender? blender,
   }) => KokoroTtsService(
     store: KokoroModelStore(
       client: (server ?? FakeModelServer()).client(),
@@ -31,6 +32,7 @@ void main() {
       requiredPaths: testRequiredPaths,
     ),
     engine: engine ?? FakeKokoroEngine(),
+    voiceBlender: blender ?? FakeVoiceBlender(),
   );
 
   test('starts not installed, ends ready after download and load', () async {
@@ -84,6 +86,35 @@ void main() {
 
     expect((subject.current as TtsEngineFailed).failure, isA<TtsFailure>());
   });
+
+  test('the voices are blended before the engine loads', () async {
+    final FakeVoiceBlender blender = FakeVoiceBlender();
+    final FakeKokoroEngine engine = FakeKokoroEngine();
+    final KokoroTtsService subject = service(blender: blender, engine: engine);
+
+    await subject.install();
+
+    expect(blender.applied, hasLength(1));
+    expect(blender.applied.single.root, engine.loadedPaths!.root);
+  });
+
+  test(
+    'a blend failure is failed(TtsFailure) and the engine stays unloaded',
+    () async {
+      final FakeKokoroEngine engine = FakeKokoroEngine();
+      final KokoroTtsService subject = service(
+        blender: FakeVoiceBlender(
+          error: const FileSystemException('bad voices'),
+        ),
+        engine: engine,
+      );
+
+      await subject.install();
+
+      expect((subject.current as TtsEngineFailed).failure, isA<TtsFailure>());
+      expect(engine.isLoaded, isFalse);
+    },
+  );
 
   test('retry after a failure installs', () async {
     final FakeModelServer server = FakeModelServer(status: 503);

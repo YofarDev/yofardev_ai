@@ -390,3 +390,12 @@ if (PlatformUtils.checkPlatform() != 'Web') {
 - **No timings.** sherpa-onnx's `GeneratedAudio` has samples and a sample rate only; visemes keep coming
   from `SpeechAnalyzer` on the WAV.
 
+- **French voice (2026-11-02, owner's pick).** `ff_siwis` is female (median F0 204 Hz), so French speaks a
+  blend of Kokoro style tensors instead: 30 % `ff_siwis` + 70 % `im_nicola` (male, Italian), median
+  F0 ≈ 125 Hz, measured with Praat on 12 candidate samples (pure male voices `im_nicola` 95 Hz,
+  `em_alex` 133 Hz, `pm_alex` 135 Hz; other blends 149–170 Hz; DSP pitch shifts 156–166 Hz, rejected
+  as processed-sounding and a native dependency). `voices.bin` has exactly 54 speakers, so the blend
+  overwrites the unused Chinese male slot 50 (`zm_yunxi`) in place after install
+  (`KokoroVoiceBlender`, `.voice-blend` marker with the recipe; existing installs are patched, no
+  re-download). The Italian accent on French is audible; the 30 % `ff_siwis` keeps the French rhythm.
+  English stays `af_heart`.

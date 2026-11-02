@@ -8,17 +8,21 @@ import '../../domain/tts_engine_status.dart';
 import 'kokoro_engine.dart';
 import 'kokoro_model_paths.dart';
 import 'kokoro_model_store.dart';
+import 'voice_blender.dart';
 
 /// Installs the Kokoro model and loads the engine, publishing each step.
 class KokoroTtsService implements TtsEngineStatusService {
   KokoroTtsService({
     required KokoroModelStore store,
     required KokoroEngine engine,
+    required VoiceBlender voiceBlender,
   }) : _store = store,
-       _engine = engine;
+       _engine = engine,
+       _voiceBlender = voiceBlender;
 
   final KokoroModelStore _store;
   final KokoroEngine _engine;
+  final VoiceBlender _voiceBlender;
   final StreamController<TtsEngineStatus> _controller =
       StreamController<TtsEngineStatus>.broadcast();
 
@@ -67,17 +71,18 @@ class KokoroTtsService implements TtsEngineStatusService {
     }
     try {
       _emit(const TtsEngineStatus.loading());
+      await _voiceBlender.apply(paths);
       await _engine.load(paths);
       AppLogger.info('Kokoro voice ready', tag: 'KokoroTtsService');
       _emit(const TtsEngineStatus.ready());
     } catch (e, st) {
       AppLogger.error(
-        'Kokoro engine failed to load',
+        'Kokoro voice failed to load',
         tag: 'KokoroTtsService',
         error: e,
         stackTrace: st,
       );
-      _emit(TtsEngineStatus.failed(TtsFailure('engine load failed', e)));
+      _emit(TtsEngineStatus.failed(TtsFailure('voice load failed', e)));
     }
   }
 

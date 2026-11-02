@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:yofardev_ai/features/sound/data/kokoro/kokoro_engine.dart';
 import 'package:yofardev_ai/features/sound/data/kokoro/kokoro_model_paths.dart';
 import 'package:yofardev_ai/features/sound/data/kokoro/model_archive_extractor.dart';
+import 'package:yofardev_ai/features/sound/data/kokoro/voice_blender.dart';
 
 const String testModelId = 'kokoro-test';
 const List<String> testRequiredPaths = <String>['model.onnx', 'voices.bin'];
@@ -129,5 +130,19 @@ class FakeKokoroEngine implements KokoroEngine {
     calls.add(
       SynthesisCall(text: text, sid: sid, lang: lang, outputPath: outputPath),
     );
+  }
+}
+
+class FakeVoiceBlender implements VoiceBlender {
+  FakeVoiceBlender({this.error});
+
+  final Object? error;
+  final List<KokoroModelPaths> applied = <KokoroModelPaths>[];
+
+  @override
+  Future<void> apply(KokoroModelPaths paths) async {
+    final Object? failure = error;
+    if (failure != null) throw failure;
+    applied.add(paths);
   }
 }

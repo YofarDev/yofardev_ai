@@ -358,8 +358,13 @@ on violation.
   GitHub releases (k2-fsa/sherpa-onnx `tts-models`) into `<appSupport>/tts/<modelId>/`
   (`KokoroModelStore`) and loaded by `KokoroTtsService` (`TtsEngineStatusService`, sound barrel);
   status shows in Settings (`TtsVoiceStatusTile`) and on Home (`StageVoiceNotice`). French =
-  `ff_siwis` (sid 30) with espeak voice **`fr`** (`fr-fr` is not a voice file, and sherpa aborts
-  the process on an unknown voice), English = `af_heart` (sid 3) with the US lexicon. Output is
+  a male-leaning blend, 30 % `ff_siwis` + 70 % `im_nicola` (median pitch ~125 Hz vs 204 Hz for
+  `ff_siwis` alone), written by `KokoroVoiceBlender` into the unused `voices.bin` slot 50
+  (`zm_yunxi`; `KokoroModelSpec.voiceBlendSlot`, sid = the slot) after each install and before the
+  engine loads (idempotent via a `.voice-blend` marker holding the recipe, so existing installs
+  get it without a re-download; change the recipe and it is re-applied), with espeak voice **`fr`**
+  (`fr-fr` is not a voice file, and sherpa aborts the process on an unknown voice), English =
+  `af_heart` (sid 3) with the US lexicon. Output is
   peak-normalized (`normalizePeak`, Kokoro speaks at ~half scale). `FallbackTtsSynthesizer`
   speaks Supertonic (`TtsDatasource`) while Kokoro is not ready, for other languages, or when a
   sentence fails — **Android only**: on macOS/iOS flutter_onnxruntime's ORT 1.28 wrapper binds to

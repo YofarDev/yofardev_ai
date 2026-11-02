@@ -47,6 +47,7 @@ import '../../features/sound/data/kokoro/kokoro_engine.dart';
 import '../../features/sound/data/kokoro/kokoro_engine_factory.dart';
 import '../../features/sound/data/kokoro/kokoro_model_store.dart';
 import '../../features/sound/data/kokoro/kokoro_tts_service.dart';
+import '../../features/sound/data/kokoro/voice_blender.dart';
 import '../../features/sound/data/kokoro/model_archive_extractor.dart';
 import '../../features/sound/domain/services/fallback_tts_synthesizer.dart';
 import '../../features/sound/domain/services/tts_engine_status_service.dart';
@@ -152,6 +153,7 @@ Future<void> setupServiceLocator({
     () => KokoroTtsService(
       store: getIt<KokoroModelStore>(),
       engine: getIt<KokoroEngine>(),
+      voiceBlender: const KokoroVoiceBlender(),
     ),
   );
   getIt.registerLazySingleton<KokoroTtsDatasource>(

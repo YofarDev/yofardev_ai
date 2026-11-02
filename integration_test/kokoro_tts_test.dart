@@ -25,6 +25,7 @@ import 'package:yofardev_ai/features/sound/data/kokoro/kokoro_engine_factory.dar
 import 'package:yofardev_ai/features/sound/data/kokoro/kokoro_model_store.dart';
 import 'package:yofardev_ai/features/sound/data/kokoro/kokoro_tts_service.dart';
 import 'package:yofardev_ai/features/sound/data/kokoro/model_archive_extractor.dart';
+import 'package:yofardev_ai/features/sound/data/kokoro/voice_blender.dart';
 import 'package:yofardev_ai/features/sound/domain/tts_engine_status.dart';
 
 void main() {
@@ -41,6 +42,7 @@ void main() {
         supportDirectoryProvider: getApplicationSupportDirectory,
       ),
       engine: engine,
+      voiceBlender: const KokoroVoiceBlender(),
     );
 
     await tester.runAsync(() async {

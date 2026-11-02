@@ -28,12 +28,12 @@ void main() {
     expect(subject, isA<TtsSynthesizer>());
   });
 
-  test('French speaks ff_siwis through espeak fr', () async {
+  test('French speaks the blended voice slot through espeak fr', () async {
     final String path = await say('fr');
 
     expect(path, '/tmp/1700000000000.wav');
     final SynthesisCall call = engine.calls.single;
-    expect(call.sid, KokoroModelSpec.sidFrench);
+    expect(call.sid, KokoroModelSpec.voiceBlendSlot);
     expect(call.lang, 'fr');
     expect(call.outputPath, path);
     expect(call.text, 'Bonjour');
