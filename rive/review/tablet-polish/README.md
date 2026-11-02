@@ -39,6 +39,9 @@ lift-to-hold handoff.
 - Python generator suite: 991 passed, 3 skipped.
 - [Tablet renderer gates](tablet-gates.txt): exact loop seam, interruption checks
   pass, maximum hand-position error 0.52 px (limit 2 px).
+- [Newspaper and prop handoff gates](newspaper-gates.txt): exact loop seam;
+  short tools, early/late re-entry, gestures during put-away and all three
+  tablet/newspaper handoff cases pass. Maximum hand error is 1.23 px (limit 2 px).
 - `dart fix --apply` and `dart format .`: no Dart changes.
 - `./scripts/fverify.sh`: format and analysis clean; 2647 tests passed.
 
