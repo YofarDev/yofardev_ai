@@ -351,6 +351,79 @@ void main() {
       });
     });
 
+    group('openChatById', () {
+      test('no-op when the chat is already opened', () async {
+        const Chat testChat = Chat(id: 'already-open');
+        chatsCubit.setOpenedChat(testChat);
+        final ChatState before = chatsCubit.state;
+
+        await chatsCubit.openChatById('already-open');
+
+        expect(chatsCubit.state, same(before));
+        verifyNever(() => mockChatRepository.getChat(any()));
+      });
+
+      test(
+        'opens from the chatsList cache without a repository load',
+        () async {
+          const Chat cachedChat = Chat(id: 'cached-id', title: 'Cached');
+          chatsCubit.emit(
+            chatsCubit.state.copyWith(chatsList: <Chat>[cachedChat]),
+          );
+
+          await chatsCubit.openChatById('cached-id');
+
+          expect(chatsCubit.state.openedChat, cachedChat);
+          verifyNever(() => mockChatRepository.getChat(any()));
+        },
+      );
+
+      test('repository error surfaces as ChatStatus.error', () async {
+        when(() => mockChatRepository.getChat(any())).thenAnswer(
+          (_) async => Result<Chat?>.err(const StorageFailure('boom')),
+        );
+
+        await chatsCubit.openChatById('missing-id');
+
+        expect(chatsCubit.state.status, ChatStatus.error);
+        expect(chatsCubit.state.error, isA<StorageFailure>());
+      });
+    });
+
+    group('deleteChat / fetchChatsList race', () {
+      test('an in-flight fetch does not resurrect a deleted chat', () async {
+        final Completer<Result<List<Chat>>> fetchCompleter =
+            Completer<Result<List<Chat>>>();
+        when(
+          () => mockChatRepository.getChatsList(),
+        ).thenAnswer((_) => fetchCompleter.future);
+
+        // Fetch stays in flight while the delete happens.
+        final Future<void> fetching = chatsCubit.fetchChatsList();
+        await Future<void>.delayed(Duration.zero);
+
+        await chatsCubit.deleteChat('dead-id');
+        expect(
+          chatsCubit.state.chatsList.where((Chat c) => c.id == 'dead-id'),
+          isEmpty,
+        );
+
+        // The fetch resolves with a stale list still holding the chat.
+        fetchCompleter.complete(
+          Result<List<Chat>>.ok(const <Chat>[
+            Chat(id: 'dead-id'),
+            Chat(id: 'live-id'),
+          ]),
+        );
+        await fetching;
+
+        expect(
+          chatsCubit.state.chatsList.map((Chat c) => c.id).toList(),
+          <String>['live-id'],
+        );
+      });
+    });
+
     group('updateBackgroundOpenedChat', () {
       test('should update background of opened chat', () async {
         const Chat testChat = Chat(id: 'test-chat');

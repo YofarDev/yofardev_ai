@@ -122,9 +122,10 @@ class AppRouter {
           GoRoute(
             path: ':id',
             pageBuilder: (BuildContext context, GoRouterState state) {
+              final String? chatId = state.pathParameters['id'];
               return MaterialPage<void>(
                 key: state.pageKey,
-                child: const ConstrainedWidth(child: ChatDetailsPage()),
+                child: ConstrainedWidth(child: ChatDetailsPage(chatId: chatId)),
               );
             },
           ),

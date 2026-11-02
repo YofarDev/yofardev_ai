@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
@@ -23,7 +24,9 @@ import '../widgets/chat_details_background.dart';
 import '../widgets/floating_stop_button.dart';
 
 class ChatDetailsPage extends StatefulWidget {
-  const ChatDetailsPage({super.key});
+  const ChatDetailsPage({super.key, this.chatId});
+
+  final String? chatId;
 
   @override
   State<ChatDetailsPage> createState() => _ChatDetailsPageState();
@@ -31,6 +34,20 @@ class ChatDetailsPage extends StatefulWidget {
 
 class _ChatDetailsPageState extends State<ChatDetailsPage> {
   bool _showEverything = false;
+  bool _requestedChat = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_requestedChat || widget.chatId == null) {
+      return;
+    }
+    final ChatCubit cubit = context.read<ChatCubit>();
+    if (cubit.state.openedChat.id != widget.chatId) {
+      _requestedChat = true;
+      unawaited(cubit.openChatById(widget.chatId!));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

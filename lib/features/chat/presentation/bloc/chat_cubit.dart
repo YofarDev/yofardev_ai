@@ -76,6 +76,22 @@ class ChatCubit extends Cubit<ChatState> {
   StreamSubscription<NewChatEntryPayload>? _newChatEntrySubscription;
   StreamSubscription<AvatarChangeRequested>? _avatarChangeRequestedSubscription;
 
+  /// Chats whose deletion is in flight; a concurrent [fetchChatsList] must
+  /// not resurrect them in the emitted list. The value records whether the
+  /// repository delete has completed; an id leaves the set only once the
+  /// delete is done AND no fetch is outstanding (otherwise the racing fetch
+  /// would still resurrect it).
+  final Map<String, bool> _pendingDeletedChatIds = <String, bool>{};
+  int _inFlightFetches = 0;
+
+  void _drainPendingDeletedIds() {
+    if (_inFlightFetches == 0) {
+      _pendingDeletedChatIds.removeWhere(
+        (String id, bool completed) => completed,
+      );
+    }
+  }
+
   /// Handle avatar change requests emitted by AvatarTool.
   ///
   /// Persists the new avatar and triggers the animation.
@@ -205,16 +221,26 @@ class ChatCubit extends Cubit<ChatState> {
   /// Fetch the list of all chats
   Future<void> fetchChatsList() async {
     emit(state.copyWith(status: ChatStatus.loading));
-    final Result<List<Chat>> result = await _chatRepository.getChatsList();
-    result.when(
-      err: (Failure failure) {
-        emit(state.copyWith(status: ChatStatus.error, error: failure));
-      },
-      ok: (List<Chat> chatsList) {
-        final List<Chat> reversed = chatsList.reversed.toList();
-        emit(state.copyWith(status: ChatStatus.success, chatsList: reversed));
-      },
-    );
+    _inFlightFetches += 1;
+    try {
+      final Result<List<Chat>> result = await _chatRepository.getChatsList();
+      result.when(
+        err: (Failure failure) {
+          emit(state.copyWith(status: ChatStatus.error, error: failure));
+        },
+        ok: (List<Chat> chatsList) {
+          final List<Chat> reversed = chatsList
+              .where((Chat c) => !_pendingDeletedChatIds.containsKey(c.id))
+              .toList()
+              .reversed
+              .toList();
+          emit(state.copyWith(status: ChatStatus.success, chatsList: reversed));
+        },
+      );
+    } finally {
+      _inFlightFetches -= 1;
+      _drainPendingDeletedIds();
+    }
   }
 
   /// Create a new chat
@@ -268,15 +294,57 @@ class ChatCubit extends Cubit<ChatState> {
   /// Delete a chat by ID
   Future<void> deleteChat(String id) async {
     emit(state.copyWith(status: ChatStatus.updating));
-    final Result<void> result = await _chatRepository.deleteChat(id);
+    _pendingDeletedChatIds[id] = false;
+    try {
+      final Result<void> result = await _chatRepository.deleteChat(id);
+      result.when(
+        err: (Failure failure) {
+          emit(state.copyWith(status: ChatStatus.error, error: failure));
+        },
+        ok: (_) {
+          final List<Chat> chatsList = List<Chat>.from(state.chatsList);
+          chatsList.removeWhere((Chat element) => element.id == id);
+          emit(
+            state.copyWith(chatsList: chatsList, status: ChatStatus.success),
+          );
+        },
+      );
+      _pendingDeletedChatIds[id] = true;
+    } finally {
+      _drainPendingDeletedIds();
+    }
+  }
+
+  /// Opens the chat with [chatId]: no-op when it is already the opened chat,
+  /// otherwise loads it (list cache first, then the repository) and emits the
+  /// same state `setOpenedChat` produces. Makes /chats/:id self-sufficient.
+  Future<void> openChatById(String chatId) async {
+    if (state.openedChat.id == chatId) {
+      return;
+    }
+    Chat? cached;
+    for (final Chat c in state.chatsList) {
+      if (c.id == chatId) {
+        cached = c;
+        break;
+      }
+    }
+    if (cached != null) {
+      setOpenedChat(cached);
+      return;
+    }
+    final Result<Chat?> result = await _chatRepository.getChat(chatId);
+    if (isClosed) {
+      return;
+    }
     result.when(
-      err: (Failure failure) {
-        emit(state.copyWith(status: ChatStatus.error, error: failure));
-      },
-      ok: (_) {
-        final List<Chat> chatsList = List<Chat>.from(state.chatsList);
-        chatsList.removeWhere((Chat element) => element.id == id);
-        emit(state.copyWith(chatsList: chatsList, status: ChatStatus.success));
+      err: (Failure failure) => _failReply(failure),
+      ok: (Chat? chat) {
+        if (chat == null) {
+          _failReply(StorageFailure('Chat not found', chatId));
+        } else {
+          setOpenedChat(chat);
+        }
       },
     );
   }
