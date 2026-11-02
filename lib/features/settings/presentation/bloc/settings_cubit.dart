@@ -33,9 +33,12 @@ class SettingsCubit extends Cubit<SettingsState> {
                const TtsEngineStatus.notInstalled(),
          ),
        ) {
-    _ttsEngineSubscription = ttsEngineStatusService?.status.listen(
-      (TtsEngineStatus status) => emit(state.copyWith(ttsEngineStatus: status)),
-    );
+    _ttsEngineSubscription = ttsEngineStatusService?.status.listen((
+      TtsEngineStatus status,
+    ) {
+      if (isClosed) return;
+      emit(state.copyWith(ttsEngineStatus: status));
+    });
   }
 
   final SettingsRepository _settingsRepository;
@@ -81,6 +84,7 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: e,
       );
+      if (isClosed) return;
       emit(
         state.copyWith(
           hasError: true,
@@ -95,6 +99,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     await _llmService.init();
     final List<LlmConfig> configs = _llmService.getAllConfigs();
     final String? selectedId = _llmService.getCurrentConfig()?.id;
+    if (isClosed) return;
     emit(
       state.copyWith(
         availableLlmConfigs: configs,
@@ -127,6 +132,7 @@ class SettingsCubit extends Cubit<SettingsState> {
         .getTaskLlmConfig();
     result.when(
       err: (Failure failure) {
+        if (isClosed) return;
         AppLogger.error(
           'Failed to load task LLM config',
           tag: 'SettingsCubit',
@@ -134,7 +140,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         );
         emit(state.copyWith(taskLlmConfig: const TaskLlmConfig()));
       },
-      ok: (TaskLlmConfig config) => emit(state.copyWith(taskLlmConfig: config)),
+      ok: (TaskLlmConfig config) {
+        if (isClosed) return;
+        emit(state.copyWith(taskLlmConfig: config));
+      },
     );
   }
 
@@ -149,7 +158,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(taskLlmConfig: config)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(taskLlmConfig: config));
+      },
     );
   }
 
@@ -164,7 +176,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(systemPrompt: prompt)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(systemPrompt: prompt));
+      },
     );
   }
 
@@ -177,7 +192,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(username: username)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(username: username));
+      },
     );
   }
 
@@ -190,7 +208,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(persona: persona)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(persona: persona));
+      },
     );
   }
 
@@ -199,6 +220,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     final Result<String?> result = await _settingsRepository.getUsername();
     result.when(
       err: (Failure failure) {
+        if (isClosed) return;
         AppLogger.error(
           'Failed to load username',
           tag: 'SettingsCubit',
@@ -206,7 +228,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         );
         emit(state.copyWith(username: null));
       },
-      ok: (String? username) => emit(state.copyWith(username: username)),
+      ok: (String? username) {
+        if (isClosed) return;
+        emit(state.copyWith(username: username));
+      },
     );
   }
 
@@ -215,6 +240,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     final Result<String> result = await _settingsRepository.getSystemPrompt();
     result.when(
       err: (Failure failure) {
+        if (isClosed) return;
         AppLogger.error(
           'Failed to load system prompt',
           tag: 'SettingsCubit',
@@ -222,7 +248,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         );
         emit(state.copyWith(systemPrompt: null));
       },
-      ok: (String prompt) => emit(state.copyWith(systemPrompt: prompt)),
+      ok: (String prompt) {
+        if (isClosed) return;
+        emit(state.copyWith(systemPrompt: prompt));
+      },
     );
   }
 
@@ -231,6 +260,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     final Result<ChatPersona> result = await _settingsRepository.getPersona();
     result.when(
       err: (Failure failure) {
+        if (isClosed) return;
         AppLogger.error(
           'Failed to load persona',
           tag: 'SettingsCubit',
@@ -238,7 +268,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         );
         emit(state.copyWith(persona: ChatPersona.assistant));
       },
-      ok: (ChatPersona persona) => emit(state.copyWith(persona: persona)),
+      ok: (ChatPersona persona) {
+        if (isClosed) return;
+        emit(state.copyWith(persona: persona));
+      },
     );
   }
 
@@ -254,6 +287,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     final String? key = keyResult.getOrNull;
     final String? id = idResult.getOrNull;
     final bool enabled = enabledResult.getOrNull ?? true;
+    if (isClosed) return;
 
     emit(
       state.copyWith(
@@ -275,7 +309,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(googleSearchKey: key)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(googleSearchKey: key));
+      },
     );
   }
 
@@ -289,7 +326,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(googleSearchEngineId: id)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(googleSearchEngineId: id));
+      },
     );
   }
 
@@ -303,7 +343,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(googleSearchEnabled: enabled)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(googleSearchEnabled: enabled));
+      },
     );
   }
 
@@ -316,7 +359,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
     final String? key = keyResult.getOrNull;
     final bool enabled = enabledResult.getOrNull ?? true;
-
+    if (isClosed) return;
     emit(state.copyWith(openWeatherKey: key, openWeatherEnabled: enabled));
   }
 
@@ -331,7 +374,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(openWeatherKey: key)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(openWeatherKey: key));
+      },
     );
   }
 
@@ -346,7 +392,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(openWeatherEnabled: enabled)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(openWeatherEnabled: enabled));
+      },
     );
   }
 
@@ -359,7 +408,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
     final String? key = keyResult.getOrNull;
     final bool enabled = enabledResult.getOrNull ?? true;
-
+    if (isClosed) return;
     emit(state.copyWith(newYorkTimesKey: key, newYorkTimesEnabled: enabled));
   }
 
@@ -374,7 +423,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(newYorkTimesKey: key)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(newYorkTimesKey: key));
+      },
     );
   }
 
@@ -388,7 +440,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(newYorkTimesEnabled: enabled)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(newYorkTimesEnabled: enabled));
+      },
     );
   }
 
@@ -403,9 +458,14 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> loadCurrentLanguage() async {
     final Result<String?> result = await _settingsRepository.getLanguage();
     result.when(
-      err: (Failure failure) => emit(state.copyWith(currentLanguage: 'fr')),
-      ok: (String? language) =>
-          emit(state.copyWith(currentLanguage: language ?? 'fr')),
+      err: (Failure failure) {
+        if (isClosed) return;
+        emit(state.copyWith(currentLanguage: 'fr'));
+      },
+      ok: (String? language) {
+        if (isClosed) return;
+        emit(state.copyWith(currentLanguage: language ?? 'fr'));
+      },
     );
   }
 
@@ -418,7 +478,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(currentLanguage: language)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(currentLanguage: language));
+      },
     );
   }
 
@@ -426,9 +489,14 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> loadSoundEffects() async {
     final Result<bool> result = await _settingsRepository.getSoundEffects();
     result.when(
-      err: (Failure failure) =>
-          emit(state.copyWith(soundEffectsEnabled: false)),
-      ok: (bool enabled) => emit(state.copyWith(soundEffectsEnabled: enabled)),
+      err: (Failure failure) {
+        if (isClosed) return;
+        emit(state.copyWith(soundEffectsEnabled: false));
+      },
+      ok: (bool enabled) {
+        if (isClosed) return;
+        emit(state.copyWith(soundEffectsEnabled: enabled));
+      },
     );
   }
 
@@ -443,7 +511,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(soundEffectsEnabled: soundEffectsEnabled));
+      },
     );
   }
 
@@ -456,7 +527,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (bool enabled) => emit(state.copyWith(memoryEnabled: enabled)),
+      ok: (bool enabled) {
+        if (isClosed) return;
+        emit(state.copyWith(memoryEnabled: enabled));
+      },
     );
   }
 
@@ -471,7 +545,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(memoryEnabled: enabled)),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(memoryEnabled: enabled));
+      },
     );
   }
 
@@ -489,8 +566,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (GlobalMemory memory) =>
-          emit(state.copyWith(memoryItems: memory.items)),
+      ok: (GlobalMemory memory) {
+        if (isClosed) return;
+        emit(state.copyWith(memoryItems: memory.items));
+      },
     );
   }
 
@@ -505,8 +584,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (GlobalMemory memory) =>
-          emit(state.copyWith(memoryItems: memory.items)),
+      ok: (GlobalMemory memory) {
+        if (isClosed) return;
+        emit(state.copyWith(memoryItems: memory.items));
+      },
     );
   }
 
@@ -520,7 +601,10 @@ class SettingsCubit extends Cubit<SettingsState> {
         tag: 'SettingsCubit',
         error: failure,
       ),
-      ok: (_) => emit(state.copyWith(memoryItems: <GlobalMemoryItem>[])),
+      ok: (_) {
+        if (isClosed) return;
+        emit(state.copyWith(memoryItems: <GlobalMemoryItem>[]));
+      },
     );
   }
 }

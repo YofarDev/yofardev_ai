@@ -675,7 +675,10 @@ Future<void> setupServiceLocator({
   unawaited(
     getIt<SettingsRepository>().getSoundEffects().then(
       (Result<bool> result) => result.when(
-        err: (Failure failure) {},
+        err: (Failure failure) => AppLogger.warning(
+          'Failed to load the sound-effects setting at startup: $failure',
+          tag: 'ServiceLocator',
+        ),
         ok: (bool enabled) => getIt<SoundEffectsSetting>().set(enabled),
       ),
     ),

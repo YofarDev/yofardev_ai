@@ -359,13 +359,12 @@ void main() {
     });
 
     group('updateBackgroundOpenedChat', () {
-      test('should update background of opened chat', () {
+      test('should update background of opened chat', () async {
         const Chat testChat = Chat(id: 'test-chat');
 
         chatsCubit.setOpenedChat(testChat);
-        // Note: This method is async but we don't await in test
-        // as it makes external service calls
-        chatsCubit.updateBackgroundOpenedChat(AvatarScene.beach);
+        // The state update lands only after the repository save completes.
+        await chatsCubit.updateBackgroundOpenedChat(AvatarScene.beach);
 
         // Verify state was updated
         expect(
@@ -376,7 +375,7 @@ void main() {
     });
 
     group('updateAvatarOpenedChat', () {
-      test('should update avatar config of opened chat', () {
+      test('should update avatar config of opened chat', () async {
         const Chat testChat = Chat(id: 'test-chat');
 
         const AvatarConfig newConfig = AvatarConfig(
@@ -386,9 +385,8 @@ void main() {
         );
 
         chatsCubit.setOpenedChat(testChat);
-        // Note: This method is async but we don't await in test
-        // as it makes external service calls
-        chatsCubit.updateAvatarOpenedChat(newConfig);
+        // The state update lands only after the repository save completes.
+        await chatsCubit.updateAvatarOpenedChat(newConfig);
 
         expect(
           chatsCubit.state.openedChat.avatar.background,
@@ -398,7 +396,7 @@ void main() {
         expect(chatsCubit.state.openedChat.avatar.top, AvatarTop.longCoat);
       });
 
-      test('should update only specified avatar fields', () {
+      test('should update only specified avatar fields', () async {
         const Chat testChat = Chat(id: 'test-chat');
 
         const AvatarConfig partialConfig = AvatarConfig(
@@ -407,7 +405,7 @@ void main() {
         );
 
         chatsCubit.setOpenedChat(testChat);
-        chatsCubit.updateAvatarOpenedChat(partialConfig);
+        await chatsCubit.updateAvatarOpenedChat(partialConfig);
 
         expect(chatsCubit.state.openedChat.avatar.hat, AvatarHat.beanie);
         // Unchanged fields

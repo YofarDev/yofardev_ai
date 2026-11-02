@@ -256,11 +256,14 @@ class AvatarCubit extends Cubit<AvatarState> {
   }
 
   void loadAvatar(String chatId) async {
+    // Latest request wins: a rapid chat switch must not let the older
+    // getChat result overwrite the newer chat's avatar/scene.
+    final int epoch = ++_loadEpoch;
     // Another chat: a journey under way belongs to the chat it started in.
     _abortJourney();
     _emitIfOpen(state.copyWith(status: AvatarStatus.loading));
     final Result<Chat> result = await _avatarRepository.getChat(chatId);
-    if (isClosed) return;
+    if (isClosed || epoch != _loadEpoch) return;
     result.when(
       err: (Failure failure) {
         // This is expected for new chats - no custom avatar saved yet
@@ -727,6 +730,7 @@ class AvatarCubit extends Cubit<AvatarState> {
 
   /// Bumped by a chat switch: a running journey stops at its next beat.
   int _journeyEpoch = 0;
+  int _loadEpoch = 0;
 
   /// Stops a journey under way (a chat switch): the threshold, the clip and
   /// the preload go, the head returns to the director, the avatar is on

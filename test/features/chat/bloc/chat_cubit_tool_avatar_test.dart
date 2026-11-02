@@ -12,6 +12,9 @@ import 'package:yofardev_ai/core/models/chat_entry.dart';
 import 'package:yofardev_ai/core/models/demo_script.dart';
 import 'package:yofardev_ai/core/models/function_info.dart';
 import 'package:yofardev_ai/core/models/llm_config.dart';
+import 'package:yofardev_ai/core/models/failure.dart';
+import 'package:yofardev_ai/core/models/result.dart';
+import 'package:yofardev_ai/core/repositories/chat_repository.dart';
 import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/core/services/agent/avatar_tool.dart';
 import 'package:yofardev_ai/core/services/agent/tool_registry.dart';
@@ -29,6 +32,7 @@ import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
+import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/demo/demo.dart';
 import 'package:yofardev_ai/core/services/settings_local_datasource.dart';
 
@@ -44,6 +48,21 @@ class _MockChatTitleService extends Mock implements ChatTitleService {}
 class _MockGlobalMemoryService extends Mock implements GlobalMemoryService {}
 
 class _MockDemoService extends Mock implements DemoService {}
+
+/// The real chat repository with [updateAvatar] stubbed, so avatar-save
+/// failures and successes are observable without touching storage.
+class _StubbedUpdateAvatarRepository extends YofardevRepositoryImpl {
+  _StubbedUpdateAvatarRepository({
+    required super.chatDatasource,
+    required this.saveResult,
+  });
+
+  final Result<void> saveResult;
+
+  @override
+  Future<Result<void>> updateAvatar(String chatId, Avatar avatar) async =>
+      saveResult;
+}
 
 class _FakePromptDatasource implements PromptDatasource {
   @override
@@ -91,11 +110,39 @@ void main() {
   late ChatLocalDatasource datasource;
   late ChatCubit cubit;
   late FakeLlmService llm;
+  late _MockChatTitleService titles;
 
   const Chat seeded = Chat(
     id: 'chat-1',
     avatar: Avatar(background: AvatarScene.livingRoom),
   );
+
+  /// Builds a ChatCubit around [repository] with the file's standard fakes.
+  ChatCubit buildCubit(ChatRepository repository) {
+    final _MockGlobalMemoryService memory = _MockGlobalMemoryService();
+    when(() => memory.updateMemory(any())).thenAnswer((_) async {});
+    when(() => memory.buildMemoryMessage()).thenAnswer((_) async => null);
+    return ChatCubit(
+      chatRepository: repository,
+      settingsRepository: _MockSettingsRepository(),
+      avatarAnimationService: _MockAvatarAnimationService(),
+      chatTitleService: titles,
+      chatStreamingService: ChatStreamingService(
+        chatRepository: repository,
+        llmService: llm,
+        streamProcessor: StreamProcessorService(),
+        promptDatasource: _FakePromptDatasource(),
+        interruptionService: InterruptionService(),
+        chatEntryService: _FakeChatEntryService(),
+        toolRegistry: _OpenToolRegistry(lifecycle),
+        settingsRepository: _MockSettingsRepository(),
+        globalMemoryService: memory,
+      ),
+      appLifecycleService: lifecycle,
+      globalMemoryService: memory,
+      demoService: _MockDemoService(),
+    );
+  }
 
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -123,32 +170,10 @@ void main() {
     );
     llm = FakeLlmService.forTest(delegate);
 
-    final _MockGlobalMemoryService memory = _MockGlobalMemoryService();
-    when(() => memory.updateMemory(any())).thenAnswer((_) async {});
-    when(() => memory.buildMemoryMessage()).thenAnswer((_) async => null);
-    final _MockChatTitleService titles = _MockChatTitleService();
+    titles = _MockChatTitleService();
     when(() => titles.shouldGenerateTitle(any())).thenReturn(false);
 
-    cubit = ChatCubit(
-      chatRepository: repository,
-      settingsRepository: _MockSettingsRepository(),
-      avatarAnimationService: _MockAvatarAnimationService(),
-      chatTitleService: titles,
-      chatStreamingService: ChatStreamingService(
-        chatRepository: repository,
-        llmService: llm,
-        streamProcessor: StreamProcessorService(),
-        promptDatasource: _FakePromptDatasource(),
-        interruptionService: InterruptionService(),
-        chatEntryService: _FakeChatEntryService(),
-        toolRegistry: _OpenToolRegistry(lifecycle),
-        settingsRepository: _MockSettingsRepository(),
-        globalMemoryService: memory,
-      ),
-      appLifecycleService: lifecycle,
-      globalMemoryService: memory,
-      demoService: _MockDemoService(),
-    );
+    cubit = buildCubit(repository);
     cubit
       ..setOpenedChat(seeded)
       ..setCurrentChat(seeded);
@@ -217,5 +242,43 @@ void main() {
     // Hat under 'top', top under 'bottom' (the v1 field mapping).
     expect(avatar['top'], 'beanie');
     expect(avatar['bottom'], 'longCoat');
+  });
+
+  group('updateAvatarOpenedChat persistence', () {
+    Future<ChatCubit> stubbedCubit(Result<void> saveResult) async {
+      final ChatCubit c = buildCubit(
+        _StubbedUpdateAvatarRepository(
+          chatDatasource: datasource,
+          saveResult: saveResult,
+        ),
+      );
+      c
+        ..setOpenedChat(seeded)
+        ..setCurrentChat(seeded);
+      await c.updateAvatarOpenedChat(const AvatarConfig(hat: AvatarHat.beanie));
+      return c;
+    }
+
+    test(
+      'a failed avatar save surfaces ChatStatus.error with the failure',
+      () async {
+        final ChatCubit c = await stubbedCubit(
+          const Result<void>.err(StorageFailure('disk full')),
+        );
+        addTearDown(c.close);
+        expect(c.state.status, ChatStatus.error);
+        expect(c.state.error, isA<StorageFailure>());
+        // The optimistic state update is rolled back to the stored avatar.
+        expect(c.state.openedChat.avatar, seeded.avatar);
+      },
+    );
+
+    test('a successful save still reaches ChatStatus.success', () async {
+      final ChatCubit c = await stubbedCubit(const Result<void>.ok(null));
+      addTearDown(c.close);
+      expect(c.state.status, ChatStatus.success);
+      expect(c.state.openedChat.avatar.hat, AvatarHat.beanie);
+      expect(c.state.currentChat.avatar.hat, AvatarHat.beanie);
+    });
   });
 }

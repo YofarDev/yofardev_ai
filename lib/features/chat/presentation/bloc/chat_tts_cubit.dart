@@ -355,6 +355,7 @@ class ChatTtsCubit extends Cubit<ChatTtsState> {
       _ttsQueueManager.consumeText(audioPath);
       removeWaitingSentence(audioPath);
       unawaited(_ttsQueueManager.deleteAudio(audioPath));
+      if (isClosed) return;
       emit(
         state.copyWith(
           hasError: true,

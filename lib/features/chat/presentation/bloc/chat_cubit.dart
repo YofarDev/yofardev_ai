@@ -351,20 +351,37 @@ class ChatCubit extends Cubit<ChatState> {
         .map((Chat c) => c.id == updatedChat.id ? updatedChat : c)
         .toList();
 
-    emit(
-      state.copyWith(
-        openedChat: updatedChat,
-        currentChat: updatedChat,
-        chatsList: updatedChatsList,
-        status: ChatStatus.success,
-      ),
-    );
-
     AppLogger.debug(
       'ChatCubit.updateAvatarOpenedChat: saving to repository, chat.id=${chat.id}, new avatar bg=${avatar.background}',
       tag: 'ChatCubit',
     );
-    await _chatRepository.updateAvatar(chat.id, avatar);
+    final Result<void> saveResult = await _chatRepository.updateAvatar(
+      chat.id,
+      avatar,
+    );
+    if (isClosed) {
+      return;
+    }
+    saveResult.when(
+      err: (Failure failure) {
+        AppLogger.error(
+          'Failed to save avatar change for chat ${chat.id}',
+          error: failure,
+          tag: 'ChatCubit',
+        );
+        emit(state.copyWith(status: ChatStatus.error, error: failure));
+      },
+      ok: (_) {
+        emit(
+          state.copyWith(
+            openedChat: updatedChat,
+            currentChat: updatedChat,
+            chatsList: updatedChatsList,
+            status: ChatStatus.success,
+          ),
+        );
+      },
+    );
 
     AppLogger.debug(
       'ChatCubit.updateAvatarOpenedChat: completed, state.currentChat.avatar.bg=${state.currentChat.avatar.background}',
@@ -386,15 +403,33 @@ class ChatCubit extends Cubit<ChatState> {
         .map((Chat c) => c.id == updatedChat.id ? updatedChat : c)
         .toList();
 
-    emit(
-      state.copyWith(
-        openedChat: updatedChat,
-        currentChat: updatedChat,
-        chatsList: updatedChatsList,
-        status: ChatStatus.success,
-      ),
+    final Result<void> saveResult = await _chatRepository.updateAvatar(
+      chat.id,
+      updatedChat.avatar,
     );
-    await _chatRepository.updateAvatar(chat.id, updatedChat.avatar);
+    if (isClosed) {
+      return;
+    }
+    saveResult.when(
+      err: (Failure failure) {
+        AppLogger.error(
+          'Failed to save background change for chat ${chat.id}',
+          error: failure,
+          tag: 'ChatCubit',
+        );
+        emit(state.copyWith(status: ChatStatus.error, error: failure));
+      },
+      ok: (_) {
+        emit(
+          state.copyWith(
+            openedChat: updatedChat,
+            currentChat: updatedChat,
+            chatsList: updatedChatsList,
+            status: ChatStatus.success,
+          ),
+        );
+      },
+    );
   }
 
   /// Toggle function calling feature
@@ -425,6 +460,7 @@ class ChatCubit extends Cubit<ChatState> {
   /// opened chat's avatar, which a tool (`change_avatar`) may have changed
   /// since.
   void updateChatStreaming(Chat chat) {
+    if (isClosed) return;
     final Chat streamed = chat.id == state.openedChat.id
         ? chat.copyWith(avatar: state.openedChat.avatar)
         : chat;
@@ -483,6 +519,7 @@ class ChatCubit extends Cubit<ChatState> {
             );
           },
           ok: (Chat? updatedChat) {
+            if (isClosed) return;
             if (updatedChat != null) {
               // Update currentChat and openedChat if this is the current chat
               final Chat? currentChat = state.currentChat.id == chatId
@@ -519,7 +556,9 @@ class ChatCubit extends Cubit<ChatState> {
       // Remove from generating set
       final Set<String> updatedIds = state.generatingTitleChatIds.toSet()
         ..remove(chatId);
-      emit(state.copyWith(generatingTitleChatIds: updatedIds));
+      if (!isClosed) {
+        emit(state.copyWith(generatingTitleChatIds: updatedIds));
+      }
     }
   }
 
@@ -616,6 +655,7 @@ class ChatCubit extends Cubit<ChatState> {
         updateChatStreaming(updatedChat);
       },
       onStreamComplete: (Chat finalChat) {
+        if (isClosed) return;
         // Stream completed successfully
         // Also update the corresponding chat in chatsList to keep it in sync
         final List<Chat> updatedChatsList = state.chatsList
