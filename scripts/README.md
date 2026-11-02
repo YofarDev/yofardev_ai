@@ -23,8 +23,6 @@ check) require judgment before acting on their output. `fanal` writes a report;
 
 `scripts/fimp.py`, `scripts/render_feature.py`, and `scripts/feature_templates/`
 are supporting assets used by the shell entry points.
-`scripts/verify_template.sh` is a template-maintenance tool and is not part of
-the app itself.
 
 ## Development Commands
 

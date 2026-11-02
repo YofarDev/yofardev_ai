@@ -53,6 +53,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  analyzer: ^13.0.0
   build_runner: ^2.11.1
   json_serializable: ^6.13.0
   flutter_lints:

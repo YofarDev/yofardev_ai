@@ -2,6 +2,45 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/architecture_checker.dart';
+
+/// Architecture gate for this app's `lib/` tree.
+///
+/// Two layers of enforcement:
+///
+/// 1. **The analyzer-based checker** (`test/support/architecture_checker.dart`,
+///    the FlutterForge template checker with this project's documented
+///    adaptations — see that file's header). It enforces, on resolved
+///    imports/declarations (relative and `package:` syntax, conditional
+///    branches, re-export chains included):
+///    - inward dependencies (`presentation → domain ← data`);
+///    - domain purity (no Flutter UI libraries, l10n, router, DI or the
+///      design layer in domain — the app logger is allowed by convention);
+///    - cross-feature access via a feature's public barrel only
+///      (`lib/features/<name>/<name>.dart` — barrels are whole-feature APIs
+///      here and may re-export presentation);
+///    - acyclic feature dependencies (strongly connected features fail);
+///    - `core/` imports no feature internals outside the composition roots;
+///    - no stored Cubit/Bloc fields (nullable, aliased, generic and
+///      inherited types included);
+///    - `getIt` resolution limited to `app.dart`, `service_locator.dart` and
+///      `app_router.dart` (`main.dart` may import the locator for bootstrap
+///      only), registrations only in `service_locator.dart`.
+///
+///    A run with checker errors (syntax problems, unresolved imports) fails
+///    the gate: the checker never passes code it could not analyze.
+///    Rule-by-rule fixtures live in `test/architecture_checker_test.dart`
+///    and `test/architecture_checker_boundaries_test.dart`.
+///
+/// 2. **This file's scan rules** for conventions the analyzer cannot see:
+///    no `fpdart` (banned; errors use `Result<T>`), raw colors and fonts
+///    only in `core/design/` (and `main.dart` for google_fonts), Rive types
+///    only in the avatar presentation layer and `core/design/rive/`, and
+///    the removed look-gate tokens stay removed.
+///
+/// When you add a rule to the flutter-architecture skill, add it to the
+/// checker and give it fixtures in `architecture_checker_test.dart`.
+
 /// Whether the file at [path] may import `package:rive/`: only the avatar
 /// presentation layer and the UI-kit Rive widgets (`core/design/rive/`).
 bool riveImportAllowed(String path) {
@@ -42,16 +81,24 @@ void main() {
       .map((String l) => l.trim())
       .toList();
 
-  test('core does not import features (composition roots excluded)', () {
-    const List<String> allowed = <String>['lib/core/di/', 'lib/core/router/'];
-    for (final File f in files) {
-      if (!f.path.startsWith('lib/core/')) continue;
-      if (allowed.any(f.path.startsWith)) continue;
-      for (final String line in importsOf(f)) {
-        expect(line.contains('features/'), isFalse, reason: '${f.path}: $line');
-      }
-    }
-  });
+  test('lib/ respects the architecture boundaries', () async {
+    final CheckerResult result = await ArchitectureChecker.checkDirectory();
+    expect(
+      result.errors,
+      isEmpty,
+      reason:
+          'The architecture checker could not analyze the following files; '
+          'the gate fails closed until these are fixed:\n'
+          '${result.errors.join('\n')}',
+    );
+    expect(
+      result.violations,
+      isEmpty,
+      reason:
+          'Architecture boundary violations:\n'
+          '${result.violations.join('\n')}',
+    );
+  }, timeout: const Timeout(Duration(minutes: 10)));
 
   test('no fpdart anywhere', () {
     for (final File f in files) {
@@ -63,153 +110,6 @@ void main() {
         );
       }
     }
-  });
-
-  /// Resolves every relative import in [f] to a repo-relative path.
-  List<String> relativeImportTargets(File f) => f
-      .readAsLinesSync()
-      .map((String l) => l.trim())
-      .where((String l) => l.startsWith('import \''))
-      .map((String l) => RegExp(r"import '([^']+)'").firstMatch(l)?.group(1))
-      .whereType<String>()
-      .where((String t) => t.startsWith('.'))
-      .map((String t) => File.fromUri(Uri.file(f.path).resolve(t)).path)
-      .toList();
-
-  test('features import other features only via their public barrel', () {
-    const List<String> barrels = <String>[
-      'talking.dart',
-      'chat.dart',
-      'avatar.dart',
-      'demo.dart',
-      'settings.dart',
-      'sound.dart',
-    ];
-    for (final File f in files) {
-      final List<String> parts = f.path.split('/');
-      if (parts.length < 3 || parts[1] != 'features') continue;
-      final String ownFeature = parts[2];
-      for (final String resolved in relativeImportTargets(f)) {
-        final List<String> t = resolved.split('/');
-        if (t.length > 3 && t[1] == 'features' && t[2] != ownFeature) {
-          expect(
-            barrels.contains(t.last),
-            isTrue,
-            reason: '${f.path} imports feature internals: $resolved',
-          );
-        }
-      }
-    }
-  });
-
-  test('no service resolves a cubit from getIt', () {
-    // Services live both in core and in each feature's domain/services/.
-    final List<String> serviceDirs = <String>[
-      'lib/core/services/',
-      ...Directory('lib/features').listSync().whereType<Directory>().map(
-        (Directory d) => '${d.path}/domain/services/',
-      ),
-    ];
-    for (final String dir in serviceDirs) {
-      if (!Directory(dir).existsSync()) continue;
-      for (final FileSystemEntity entity in Directory(
-        dir,
-      ).listSync(recursive: true)) {
-        if (entity is! File || !entity.path.endsWith('.dart')) continue;
-        for (final String line in entity.readAsLinesSync()) {
-          expect(
-            RegExp(r'getIt<\w*(Cubit|Bloc)>').hasMatch(line),
-            isFalse,
-            reason: '${entity.path}: $line',
-          );
-        }
-      }
-    }
-  });
-
-  test('feature domain imports neither data nor presentation', () {
-    for (final File f in files) {
-      final List<String> parts = f.path.split('/');
-      if (parts.length < 4 || parts[1] != 'features' || parts[2] != 'domain') {
-        continue;
-      }
-      for (final String target in relativeImportTargets(f)) {
-        expect(
-          RegExp(r'/features/[^/]+/(data|presentation)/').hasMatch(target),
-          isFalse,
-          reason: '${f.path}: domain imports layer internals: $target',
-        );
-      }
-    }
-  });
-
-  test('layer rule detects a deliberate domain->data violation (fixture)', () {
-    final File fixture = File(
-      'test/fixtures/architecture/domain_leak_fixture.dart',
-    );
-    expect(fixture.existsSync(), isTrue);
-    final List<String> targets = relativeImportTargets(fixture);
-    expect(
-      targets.any(
-        (String t) =>
-            RegExp(r'/features/[^/]+/(data|presentation)/').hasMatch(t),
-      ),
-      isTrue,
-      reason: 'fixture must violate the rule the previous test enforces',
-    );
-  });
-
-  test('getIt is resolved only in composition roots', () {
-    const List<String> allowlist = <String>[
-      'lib/core/di/service_locator.dart',
-      'lib/app.dart',
-      'lib/core/router/app_router.dart',
-    ];
-    for (final File f in files) {
-      if (allowlist.contains(f.path)) continue;
-      for (final String line in f.readAsLinesSync()) {
-        expect(
-          RegExp(r'\bgetIt[<(]').hasMatch(line),
-          isFalse,
-          reason:
-              '${f.path}: resolves from getIt outside composition roots: $line',
-        );
-      }
-    }
-  });
-
-  test('registrations appear only in service_locator.dart', () {
-    for (final File f in files) {
-      if (f.path == 'lib/core/di/service_locator.dart') continue;
-      for (final String line in f.readAsLinesSync()) {
-        expect(
-          RegExp(
-            r'getIt\.register(LazySingleton|Singleton|Factory)',
-          ).hasMatch(line),
-          isFalse,
-          reason: '${f.path}: DI registration outside service_locator: $line',
-        );
-      }
-    }
-  });
-
-  test('getIt rule detects a deliberate violation (fixture)', () {
-    final String content = File(
-      'test/fixtures/architecture/getit_violation_fixture.dart',
-    ).readAsStringSync();
-    expect(RegExp(r'\bgetIt[<(]').hasMatch(content), isTrue);
-  });
-
-  test('registrations rule detects a deliberate violation (fixture)', () {
-    final String content = File(
-      'test/fixtures/architecture/registration_violation_fixture.dart',
-    ).readAsStringSync();
-    expect(
-      RegExp(
-        r'getIt\.register(LazySingleton|Singleton|Factory)',
-      ).hasMatch(content),
-      isTrue,
-    );
   });
 
   /// `lib/` files outside `lib/core/design/` (the only home of raw colors).

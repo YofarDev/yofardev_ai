@@ -4,7 +4,7 @@ import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/result.dart';
 import '../../../../core/models/avatar_config.dart';
 import '../../../../core/models/chat.dart';
-import '../../domain/repositories/chat_repository.dart';
+import '../../../../core/repositories/chat_repository.dart';
 import '../datasources/chat_local_datasource.dart';
 
 class YofardevRepositoryImpl implements ChatRepository {

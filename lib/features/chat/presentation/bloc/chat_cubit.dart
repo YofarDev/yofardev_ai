@@ -14,7 +14,7 @@ import '../../../avatar/avatar.dart';
 import '../../../../features/chat/domain/services/chat_streaming_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
-import '../../domain/repositories/chat_repository.dart';
+import '../../../../core/repositories/chat_repository.dart';
 import '../../domain/services/chat_title_service.dart';
 import '../../domain/services/global_memory_service.dart';
 import '../../../demo/demo.dart';

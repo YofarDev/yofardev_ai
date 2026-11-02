@@ -5,7 +5,7 @@ import '../../../../core/models/chat.dart';
 import '../../../../core/models/failure.dart';
 import '../../../../core/models/result.dart';
 import '../../../avatar/avatar.dart';
-import '../../../chat/chat.dart';
+import '../../../../core/repositories/chat_repository.dart';
 import '../../domain/repositories/demo_repository.dart';
 
 /// Implementation of DemoRepository using ChatRepository and AvatarRepository.

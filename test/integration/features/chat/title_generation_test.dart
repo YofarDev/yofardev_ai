@@ -22,7 +22,7 @@ import 'package:yofardev_ai/core/services/prompt_datasource.dart';
 import 'package:yofardev_ai/core/services/stream_processor/stream_processor_service.dart';
 import 'package:yofardev_ai/core/services/stream_processor/sentence_chunk.dart';
 import 'package:yofardev_ai/core/models/chat.dart';
-import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/core/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_entry_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';

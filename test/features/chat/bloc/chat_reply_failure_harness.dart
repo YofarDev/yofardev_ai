@@ -7,7 +7,7 @@ import 'package:yofardev_ai/core/repositories/settings_repository.dart';
 import 'package:yofardev_ai/core/services/app_lifecycle_service.dart';
 import 'package:yofardev_ai/core/services/audio/interruption_service.dart';
 import 'package:yofardev_ai/features/avatar/avatar.dart';
-import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/core/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';

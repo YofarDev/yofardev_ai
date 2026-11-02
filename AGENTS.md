@@ -73,9 +73,12 @@ Scripts `fgen`, `fstr`, `fl10n`, `fimp` require [uv](https://docs.astral.sh/uv/)
 2. **No cubit-to-cubit dependencies** - Use domain services
 3. **No cross-feature imports** - Features may only import another feature's
    public API barrel (`lib/features/<name>/<name>.dart`) or `core/services/`.
-   `core/` never imports `features/` (except the composition roots
-   `core/di/` and `core/router/`). The app shell lives in `lib/app.dart`;
-   `lib/main.dart` is bootstrap only.
+   A feature's barrel is its whole public API (it may re-export its
+   presentation layer — that is how Home consumes features). Feature
+   dependencies must stay **acyclic**; a contract two features both need goes
+   into `core/repositories/`. `core/` never imports `features/` (except the
+   composition roots `core/di/` and `core/router/`). The app shell lives in
+   `lib/app.dart`; `lib/main.dart` is bootstrap only.
 4. **`getIt` resolved ONLY in** `lib/core/di/service_locator.dart`,
    `lib/app.dart`, and `lib/core/router/app_router.dart` — everything else
    receives dependencies via constructor injection (enforced by
@@ -88,14 +91,19 @@ Scripts `fgen`, `fstr`, `fl10n`, `fimp` require [uv](https://docs.astral.sh/uv/)
    `AppColors`/`AppPalette`/`Colors.*` (except `Colors.transparent`), and
    `google_fonts` only in `lib/core/design/` and `lib/main.dart` (enforced)
 
-Note: `lib/core/repositories/settings_repository.dart` deliberately stays in
-core (consumed by `core/services/agent`; core may not import features).
-`AvatarRepository`/`GlobalMemoryRepository`/`LocaleRepository` live in their
-owning features' `domain/repositories/` — import via feature barrels.
+Note: `lib/core/repositories/` holds the shared repository contracts —
+`settings_repository.dart` (consumed by `core/services/agent`),
+`chat_repository.dart` (also consumed by demo) and
+`global_memory_repository.dart` (also consumed by settings); keeping them in
+core is what keeps feature dependencies acyclic, and core may not import
+features. `AvatarRepository` (avatar) and `LocaleRepository` (settings) live in
+their owning features' `domain/repositories/` — import via feature barrels.
 
-These layering rules are **enforced by `test/architecture_test.dart`** (it also
-bans `package:fpdart` and checks barrel-only imports), so `flutter test` fails
-on violation.
+These layering rules are **enforced by `test/architecture_test.dart`**: an
+analyzer-based gate (`test/support/architecture_checker.dart`, the FlutterForge
+checker with this project's documented adaptations — whole-feature barrels, the
+app logger allowed in domain) plus scan rules for the fpdart ban, barrel-only
+imports and the design-layer rules, so `flutter test` fails on violation.
 
 ### Conventions
 
@@ -437,4 +445,5 @@ Each feature except `home` exposes a public API barrel at
 
 ---
 
-**Last Updated**: 2026-11-01 (M12, the moonshot's last milestone)
+**Last Updated**: 2026-11-02 (analyzer-based architecture gate from
+FlutterForge, shared repository contracts in `core/repositories/`)

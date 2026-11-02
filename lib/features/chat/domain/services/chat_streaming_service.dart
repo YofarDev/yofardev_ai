@@ -22,7 +22,7 @@ import '../../../../core/services/stream_processor/sentence_chunk.dart';
 import '../../../../core/services/stream_processor/stream_processor_service.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/logger.dart';
-import '../repositories/chat_repository.dart';
+import '../../../../core/repositories/chat_repository.dart';
 import 'chat_entry_service.dart';
 import 'cue_parser.dart';
 import 'global_memory_service.dart';

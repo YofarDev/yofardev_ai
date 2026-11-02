@@ -1,7 +1,7 @@
 import '../../../../core/errors/exception_mapper.dart';
 import '../../../../core/models/global_memory.dart';
 import '../../../../core/models/result.dart';
-import '../../domain/repositories/global_memory_repository.dart';
+import '../../../../core/repositories/global_memory_repository.dart';
 import '../datasources/global_memory_datasource.dart';
 
 class GlobalMemoryRepositoryImpl implements GlobalMemoryRepository {

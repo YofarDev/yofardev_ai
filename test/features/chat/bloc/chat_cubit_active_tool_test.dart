@@ -10,7 +10,7 @@ import 'package:yofardev_ai/features/avatar/avatar.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_streaming_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/chat_title_service.dart';
 import 'package:yofardev_ai/features/chat/domain/services/global_memory_service.dart';
-import 'package:yofardev_ai/features/chat/domain/repositories/chat_repository.dart';
+import 'package:yofardev_ai/core/repositories/chat_repository.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_cubit.dart';
 import 'package:yofardev_ai/features/chat/presentation/bloc/chat_state.dart';
 import 'package:yofardev_ai/features/demo/demo.dart';

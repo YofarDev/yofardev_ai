@@ -3,7 +3,7 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/models/chat.dart';
 import '../../../../core/models/chat_entry.dart';
-import '../repositories/chat_repository.dart';
+import '../../../../core/repositories/chat_repository.dart';
 
 /// Service that handles chat title generation logic.
 ///
